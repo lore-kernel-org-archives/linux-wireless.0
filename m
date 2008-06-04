@@ -1,68 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56345 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751269AbYFRHXH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 03:23:07 -0400
-Subject: Re: BUG: mac80211: Some connections hanging in 2.6.26-rc6...
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrew Price <andy@andrewprice.me.uk>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <g38o2j$1uh$1@ger.gmane.org> (sfid-20080617_181742_447297_198DA5E5)
-References: <g38o2j$1uh$1@ger.gmane.org>
-	 (sfid-20080617_181742_447297_198DA5E5)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RQtJy4eq9DIfVKvm8kVa"
-Date: Wed, 18 Jun 2008 09:22:29 +0200
-Message-Id: <1213773749.3803.155.camel@johannes.berg> (sfid-20080618_092312_001553_C7015F22)
+Received: from c60.cesmail.net ([216.154.195.49]:27624 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752062AbYFDPYS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jun 2008 11:24:18 -0400
+Subject: Re: [PATCH] wireless.h: improve userland include-ability
+From: Pavel Roskin <proski@gnu.org>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, kirill@shutemov.name
+In-Reply-To: <1212587529.32207.82.camel@pmac.infradead.org>
+References: <1212515497-21578-1-git-send-email-linville@tuxdriver.com>
+	 <20080603.120515.193703574.davem@davemloft.net>
+	 <1212587529.32207.82.camel@pmac.infradead.org>
+Content-Type: text/plain
+Date: Wed, 04 Jun 2008 11:24:15 -0400
+Message-Id: <1212593055.13964.15.camel@dv> (sfid-20080604_172421_090871_D7894EE5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2008-06-04 at 14:52 +0100, David Woodhouse wrote:
+> On Tue, 2008-06-03 at 12:05 -0700, David Miller wrote:
+> > Yeah, go check so me magic userspace tool header to see what magic is
+> > needed just to include a core networking header file correctly.
+> > 
+> > No, thanks.
+> 
+> Just to clarify: this is only a problem for userspace, and you're
+> objecting to that? Just including <linux/wireless.h> within the kernel
+> will continue to work.
+> 
+> We've traditionally got away with saying 'caveat emptor' when userspace
+> includes kernel headers -- you _have_ to include the right
+> prerequisites, because the kernel doesn't do it for you.
 
---=-RQtJy4eq9DIfVKvm8kVa
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+That's true, and several programs do it already.  Changing the includes
+would require changes in those programs.  Besides, sys/types.h is still
+included, so it's a half-measure.  If we are going to break things,
+let's go all the way and disable sys/types.h for userspace, and possibly
+some structures that the userspace is not supposed to be using.  But I'm
+afraid there is still a lot of stuff the userspace should know,
+including IFNAMESIZ.  Alternatively, let's sanitize other headers so
+that they can be mixed with libc headers with no consequences.
 
+Hand picking which headers to include in userspace reeks of a hack meant
+to satisfy special needs of some userspace software, while risking to
+break other userspace code.
 
-> This also affects some http requests such as loading slashdot but not
-> others (perhaps small ones?) such as twitter API http requests. It does
-> not seem to affect connections to other machines on my LAN, only ones
-> over the internet.
->=20
-> I've tried tcpdumping to get more info but when I run tcpdump the
-> connections work again (if a tiny bit slower).
+Finally, wireless extensions are not under development.  If should be
+perfectly safe to take the latest wireless.h, copy it to the userspace
+program and rearrange the headers to the heart's content.
 
-Can you try tcpdump with the -p flag? promisc mode might affect things.
+> I believe that the main reason for this patch was that <linux/socket.h>
+> and <linux/if.h> both have problems when you include them in the same C
+> file as the 'proper' glibc equivalent? Is that something we can address,
+> instead of just dropping those includes?
 
-> I've bisected this bug down to 608961a5eca8d3c6bd07172febc27b5559408c5d
-> "mac80211: Use skb_header_cloned() on TX path." and naively reverting
-> this change seems to make the bug go away.
+I don't see such problems in my software, but if others do, they may be
+in a better position to suggest patches.
 
-That's odd, and I can't find an explanation for it off-hand.
-
-johannes
-
---=-RQtJy4eq9DIfVKvm8kVa
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIWLewAAoJEKVg1VMiehFYvL8P/1OtRRSEbKN+uVTNCfB3Thzf
-V4sOT0U7Ku2bVjYfcfKrj5et6nrczA2KY7E2aetSkUAyI9tOzdDvyF1oQuBJ1TIA
-T0AOl7NPz2qRgx4IiMA0MNR3iZdnd3+DSrx/7PjM+dvF8GZfJt3Z9k+ICGPrlUIJ
-OjL0br9o71BCJ3BxRgdCM8mgs6ROD7FZPbqMJHbWqIxT/5nurJWxPIGVl7/3nGCW
-RzszbM94vkW9zulVx3pCoMX30gvGx55f+OLE2jcVcI+87j313dGK4BsOO51ZnGdo
-tlgOR/KOt19zBKn9Dq2FQb/XjpLLdIfZXsW3QPQstwXr0XWHzpbnCbCy7PRWJoUs
-QFFhx4s+0FiJv6HMpMVbMvJgf4A31yzDfEnHXPNcRHsBW0PmJgdxXk3mBJbvvqsz
-zckXjPPuj2nTeanrf9j2aBYA25Y8KOSqwFjvG2AMbxbR7KIFdiIyUR9PpqyQZWds
-VadMmGQcxtnpGwlkx/k9kJGyv2mdqiPIry6cq2Hpgj9NknPkB8CAkpWd3xa2cI+p
-+DM49U5/3QKj7NNc0IEkYNoiaONmto5W6XSLsguW8k9h4Ku+oSKPpxJxk02xXJR3
-feUDfatrxobPKVh4z7SCxyPQOrCqccHhi80Y/cA0w2MO00cQnS43/0NcUtVGtF3R
-y1mkseKcCorYlpoPEZld
-=oEUs
------END PGP SIGNATURE-----
-
---=-RQtJy4eq9DIfVKvm8kVa--
-
+-- 
+Regards,
+Pavel Roskin
