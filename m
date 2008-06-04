@@ -1,73 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36374 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754775AbYFQRKY (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:22874 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751263AbYFDLZI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 13:10:24 -0400
-Subject: Re: [RFC PATCH 7/7] 802.11w: Configuration of MFP
-	disabled/optional/required
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080617160027.897662688@localhost>
-References: <20080617154008.883383150@localhost>
-	 <20080617160027.897662688@localhost>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xOFNyaSzN7OiMRgBB129"
-Date: Tue, 17 Jun 2008 19:09:30 +0200
-Message-Id: <1213722570.3803.92.camel@johannes.berg> (sfid-20080617_191027_230594_C1F02CCC)
-Mime-Version: 1.0
+	Wed, 4 Jun 2008 07:25:08 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so26571fgg.17
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2008 04:25:06 -0700 (PDT)
+Date: Wed, 04 Jun 2008 13:25:00 +0200
+To: "Emmanuel Grumbach" <egrumbach@gmail.com>
+Subject: Re: iwlwifi: Bug - can't connect to WPA PSK access point any more
+From: Barteq <barteqpl@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8;
+	format=flowed	delsp=yes
+MIME-Version: 1.0
+References: <op.ub3jirfui79708@thinkpad> <8704f27d0806020801g1785d067j9c28832a7e5c39e3@mail.gmail.com> <op.ub4p98zui79708@thinkpad> <8704f27d0806030409n7e5ef084x5801871c36b6f846@mail.gmail.com> <op.ub6muuyji79708@thinkpad> <8704f27d0806040040n5aa05b87j10142e31ed1a2b44@mail.gmail.com>
+Message-ID: <op.ub71zybqi79708@thinkpad> (sfid-20080604_132512_740705_1F1F04B8)
+In-Reply-To: <8704f27d0806040040n5aa05b87j10142e31ed1a2b44@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Dnia 04-06-2008 o 09:40:10 Emmanuel Grumbach <egrumbach@gmail.com> =20
+napisa=C5=82(a):
 
---=-xOFNyaSzN7OiMRgBB129
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> black magic here... are you sure there is no other services in the
+> area ? NM avahi and friends ?
+>
 
+Nm works in background with wifi turned off.
+wlan0 is manually turned on again (ifconfig wlan0 up) and then =20
+wpa_supplicant run.
 
-> +#define IEEE80211_MFP_DISABLED 0
-> +#define IEEE80211_MFP_OPTIONAL 1
-> +#define IEEE80211_MFP_REQUIRED 2
-> +	int mfp; /* management frame protection */
+There are no other supplicants.
 
-Maybe an enum would be good?
+Avahi? avahi only works while using ifup (debian/ubuntu specific) or NM=
+=2E
+Wpa_supplicant run by hand doesn't interfere with this service.. If not=
+ - =20
+please tell me how?
 
-> --- wireless-testing.orig/net/mac80211/wext.c
-> +++ wireless-testing/net/mac80211/wext.c
-> @@ -1003,6 +1003,13 @@ static int ieee80211_ioctl_siwauth(struc
->  		else
->  			ret =3D -EOPNOTSUPP;
->  		break;
-> +	case IW_AUTH_MFP:
-> +		if (sdata->vif.type =3D=3D IEEE80211_IF_TYPE_STA ||
-> +		    sdata->vif.type =3D=3D IEEE80211_IF_TYPE_IBSS)
-> +			sdata->u.sta.mfp =3D data->value;
+It's quite black magic for me too.. Im lost from about two months of =20
+fighitng.. First wifi was extremly unstable and associated after 20 =20
+minutes,
+now it sometimes works after 30 min, but just after executing dhclient =
+=20
+connection drops with message about (i don't remeber well and no logs h=
+ere)
+'dropping packet, tkip counter didn't increase' or something like that.
 
-and shouldn't that be used somewhere?
+This list is the last place where I can find any help. Trying to solve =
+my =20
+problems myself, but it took me too long without any positive results.
 
-johannes
-
---=-xOFNyaSzN7OiMRgBB129
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIV+/GAAoJEKVg1VMiehFYsY8QAKDpf5yOpVwpKHGF/b5jlYWb
-uk4fN2iu6hGfeEfQQ9VjtoCyXXv+F0G1+wklKrsAa3NtE7RGowjqthOwQRzHpeQq
-Tqif36PlJuE30ll2srv/imamxlGcZs1X9aW4Zy1aAs6Jxk/VtEkXlBy84FzbSymV
-bGFtca33jiwplhu0j7TaWH41wXxtYabmUL4mEU+GnxAIM25ba0GDbQyxFGCk9BAS
-lVGpepo5uTIreLHyZYkA183X7CkkEQRhIcBt0CKG3bGuGKWtWZmVPu1ge1FJiGaH
-8PV4R3kIwa6CfsKZH0lmrCdZM1wBKSFNGokW2Gp6RwSyUQNE+RdQ5kADjmxGpQeB
-UGlOM4YvGFBV1Caqe92LjecBeRf4UIxbGb/TNoVxtBD2BRPL/mzdXL98Cvm03v/B
-cUmwySeGwJZCQGqjgT2VxpKmYE8FlZ4GX85pmkyWA7qoTeQ1NDhKzypHEv/9cmNv
-0a4AUYbLStQoCGQM/tLPfgKwxxmtLizTMe37jSoq94Hguj3Z/1FMIt+7cwL8grZW
-HWBGoT9nFxcM4OL4f9uhneHjk92yVQQykN35bu8xJI7VjdTiUJ/CJMSIs0LnXtr1
-VLjPQkqAprEAj7NThvCOGyL2OT2G/HTFeMZmJsKUR0Jm5o0i33mX7QadrIk4raUf
-4AH/JtmRQneozFkAaAux
-=UHuR
------END PGP SIGNATURE-----
-
---=-xOFNyaSzN7OiMRgBB129--
-
+Regards,
+Bartek
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
