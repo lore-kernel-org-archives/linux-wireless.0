@@ -1,90 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40543 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752169AbYFIS2r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2008 14:28:47 -0400
-Subject: Re: [PATCH 1/7] mac80211: add helpers for frame control testing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1213035768.5974.46.camel@brick> (sfid-20080609_202251_410579_3BC5FA9B)
-References: <1212774671.6340.75.camel@brick>
-	 (sfid-20080606_195944_782545_6A2B1449)  <1212997265.698.55.camel@johannes.berg>
-	 <1213029086.5974.21.camel@brick>
-	 (sfid-20080609_183129_796413_B211C17A)  <1213032085.22220.1.camel@johannes.berg>
-	 <1213033412.5974.28.camel@brick>
-	 (sfid-20080609_194341_412413_70F0E00E)  <1213033579.22220.8.camel@johannes.berg>
-	 <1213034059.5974.33.camel@brick>
-	 (sfid-20080609_195423_018122_29F9C06D)  <1213034570.22220.18.camel@johannes.berg>
-	 <1213035768.5974.46.camel@brick> (sfid-20080609_202251_410579_3BC5FA9B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PcHtuwgmwZjjbWMgU8KN"
-Date: Mon, 09 Jun 2008 20:27:46 +0200
-Message-Id: <1213036066.22220.20.camel@johannes.berg> (sfid-20080609_202849_916392_B2D775D1)
-Mime-Version: 1.0
+Received: from hostap.isc.org ([149.20.54.63]:52720 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752357AbYFDPz5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jun 2008 11:55:57 -0400
+Date: Wed, 4 Jun 2008 18:55:04 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: mac80211 ad-hoc mode problems
+Message-ID: <20080604155504.GH580@jm.kir.nu> (sfid-20080604_175602_422901_B2B9F87B)
+References: <1212543664.4237.14.camel@localhost.localdomain> <1212570001.14371.16.camel@johannes.berg> <20080604091656.GE580@jm.kir.nu> <1212589104.13676.17.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1212589104.13676.17.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Jun 04, 2008 at 10:18:24AM -0400, Dan Williams wrote:
 
---=-PcHtuwgmwZjjbWMgU8KN
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+> Ok, I'll drop it down to 5 seconds if that's OK with you.  That's still
+> the same amount of time as the wpa_supplicant assoc_failed auth timeout
+> in wpa_supplicant_associate() though, so they could still step on each
+> other.  Not quite sure what to do about that except bump up the
+> wpa_supplicant assoc_failed timeout by a few more seconds?
 
+As long as there is still enough time for the scan to be completed
+before deciding to create a new IBSS. I don't remember how that code
+worked, so I don't know whether 5 second as the IBSS timeout will
+guarantee this for every case. If there are any problems in providing
+such guarantee, I have nothing against increasing the wpa_supplicant
+timeout for IBSS. I might do that anyway since there is not really much
+point in timing out IBSS join/create in most cases.
 
-> OK, just for clarity, could you spell out the helper names you'd like to
-> see, and I'll adjust accordingly, at this point I think you would agree
-> with:
->=20
-> ieee80211_is_data
-> =EF=BB=BFieee80211_is_ctl
-> =EF=BB=BFieee80211_is_mgmt
->=20
-> ieee80211_has_protected
-> =EF=BB=BFieee80211_has_morefrags
-> ieee80211_has_tods
-> ieee80211_has_fromds
-> ieee80211_has_a4
->=20
-> And you'd like to see the following changes:
->=20
-> ieee80211_data_has_qos -> ieee80211_is_data_qos (maybe dataqos)
-> ieee80211_ctl_is_ack -> ieee80211_is_ack
-> =EF=BB=BFieee80211_ctl_is_pspoll -> ieee80211_is_pspoll
-> ieee80211_ctl_is_back_req -> ieee80211_is_back_req
-> =EF=BB=BFieee80211_mgmt_is_beacon -> ieee80211_is_beacon
->=20
-> I agree that does look nicer, and it just has to be clear that these
-> explicity check the ftype as well.
-
-
-> So choose a colour for the bikeshed and I'll get painting ;-)
-
-Heh. Yeah those above seem fine to me. Arguably, "has_protected" sounds
-a bit weird, but I'm not going to argue that, let's just do it.
-
-johannes
-
---=-PcHtuwgmwZjjbWMgU8KN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJITXYOAAoJEKVg1VMiehFYEd4P/2FinHmjZajT3zQY3c0EtpDZ
-YWE0ZZhEMgfzOi/e4QCo+vc1C7/g7HmCjon45iiukLwCI6avgAKqaaR5Y3pXrWPl
-ngdmUzt9zD2t6GdgOZKJA1WdoScsGBUUecFQPOWovtnnuEb95qtvTxSij/gLj/p4
-AaeRB/W8+qz8MeP/TJi4ifRq1DDxvR/lVmei7mtVrh96vW8xyZF8OsGsY4SiNuZl
-TB4Lv54NkO0o1hxa1wI09KRORpolLu6TfEXQ41BVoiEQz2lT7XXzXwldjB3HGZmw
-nww4o2gIDFa/1CCrm1OMTVsNfLeRR5yxDyYsD/jEvbhhGQtVCY+JW8ioJ7ljrMvJ
-oyZR0ezl48iSRWkx+/6s071drT3K9HDwUKoF2f0DDDTdiueIN8dxOe2fBMbmXnd6
-ZA2j9vbfo6lEO5Gt8j6vXmQFF/kHPYU6a0OsOI/d2RSsHV+NauZqxkQ92ur9cnRH
-bLuL0wXF/+4QRDgxh/QiwsIGh4OWjUpz2LA6mQWkSUQuvimBq547mkqI0WMogly/
-ZIc59ku5LvgNyVKuOp7oD09AvgIMoXnQgqrkUC1q4waekp6Z1yBKQGoUUtvYDrtQ
-iAvVxAQEEe8/CgB0lvTEbko2StUxN4HE0amwUiVK+mfyfal1MzwF7wzod1REzUcB
-DKQe4nARhnDxPLFY5u7z
-=YG27
------END PGP SIGNATURE-----
-
---=-PcHtuwgmwZjjbWMgU8KN--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
