@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:12224 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751251AbYFTHHM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2008 03:07:12 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] libertas: make mesh code configurable
-Date: Fri, 20 Jun 2008 09:06:59 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-References: <200806191704.10297.hs4233@mail.mn-solutions.de> <1213889556.8967.29.camel@johannes.berg>
-In-Reply-To: <1213889556.8967.29.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4327 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754172AbYFDV3I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jun 2008 17:29:08 -0400
+Date: Wed, 4 Jun 2008 16:54:20 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-06-03
+Message-ID: <20080604205420.GA32186@tuxdriver.com> (sfid-20080604_232917_305054_D4A528AC)
+References: <20080603190943.GB28966@tuxdriver.com> <20080603.141652.245225529.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200806200906.59479.hs4233@mail.mn-solutions.de> (sfid-20080620_090741_696383_888483F5)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080603.141652.245225529.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Especially for the mesh_dev thing, you should probably have a
-> static inline that returns priv->mesh_dev (mesh case) and NULL
-> (non-mesh case) and rely on the compiler to elide as much code
-> as possible.
->
-> E.g. this:
-> > +#ifdef CONFIG_LIBERTAS_MESH
-> >  	if (priv->mesh_dev && (priv->mesh_connect_status ==
-> > LBS_CONNECTED)) netif_wake_queue(priv->mesh_dev);
-> > +#endif
->
-> wouldn't then need an ifdef.
+On Tue, Jun 03, 2008 at 02:16:52PM -0700, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Tue, 3 Jun 2008 15:09:43 -0400
+> 
+> > Kirill A. Shutemov (1):
+> >       wireless.h: improve userland include-ability
+> 
+> I'm not pulling this into my tree.  I've already replied
+> to that patch posting saying why I don't like this.
 
-Ah, I thought that the compiler would barf about the
-priv->mesh_connect_status, because this is no longer in
-struct lbs_private.
+For the record, I didn't get that posting until just _after_ I got this
+reply from you -- a mail server somewhere must have had indigestion!
 
-So I tried your suggestion and, yes, the compiler barfs:
+> Even if I found this change as the only way to go and therefore
+> had to take it in, the commit log is way too terse about what
+> the problem is.  And it must describe the horrifics that are
+> now necessary to include this file in userspace after the change.
 
-static inline struct net_device *lbs_mesh_dev(struct lbs_private *priv)
-{
-#ifdef CONFIG_LIBERTAS_MESH
-        return priv->mesh_dev;
-#else
-        return NULL;
-#endif
-}
+FWIW, I'll take the blame for the overly terse commit log...
 
-        if (lbs_mesh_dev(priv) && dev == lbs_mesh_dev(priv)) {
-                priv->mesh_open = 1;
-                priv->mesh_connect_status = LBS_CONNECTED;
-                netif_carrier_on(dev);
-        } else {
-                priv->infra_open = 1;
+> There is zero point in us sanitizing kernel headers for userspace
+> usage if this kind of crap is still necessary.  I mean tell me, why
+> should we even bother in that case?  And this is why I'm not taking in
+> this changeset.
 
-                if (priv->connect_status == LBS_CONNECTED)
-                        netif_carrier_on(dev);
-                else
-                        netif_carrier_off(dev);
-        }
+Please see the discussion on the other thread, in case you have
+something to add or something there persuades you.  In the meantime,
+I retract this pull request and will soon follow with a rebased pull
+request that expunges the wireless.h commit.
 
-drivers/net/wireless/libertas/main.c: In function 'lbs_dev_open':
-drivers/net/wireless/libertas/main.c:414: error: 'struct lbs_private' has no member named 'mesh_open'
-drivers/net/wireless/libertas/main.c:415: error: 'struct lbs_private' has no member named 'mesh_connect_status'
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
