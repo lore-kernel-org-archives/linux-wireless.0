@@ -1,52 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.225]:30655 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759566AbYFXLIk (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.182]:9254 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754855AbYFDXHT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 07:08:40 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so7603342rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2008 04:08:37 -0700 (PDT)
-Message-ID: <1ba2fa240806240408r8df7f06te548f55dc0e6eaad@mail.gmail.com> (sfid-20080624_130846_455704_D4579492)
-Date: Tue, 24 Jun 2008 14:08:37 +0300
+	Wed, 4 Jun 2008 19:07:19 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so197036waf.23
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2008 16:07:17 -0700 (PDT)
+Message-ID: <1ba2fa240806041607j10841ac0qb11fe0d0b27953d8@mail.gmail.com> (sfid-20080605_010724_849529_FF21DFFB)
+Date: Thu, 5 Jun 2008 02:07:17 +0300
 From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 4/4] mac80211: add phy information to giwname
-Cc: "Michael Buesch" <mb@bu3sch.de>, linville@tuxdriver.com,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1214305396.8967.283.camel@johannes.berg>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: [PATCH 01/12] rfkill: clarify meaning of rfkill states
+Cc: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Ivo van Doorn" <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, "Dmitry Torokhov" <dtor@mail.ru>
+In-Reply-To: <1212611246.4018.12.camel@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <1214303881-31525-1-git-send-email-tomas.winkler@intel.com>
-	 <1214303881-31525-4-git-send-email-tomas.winkler@intel.com>
-	 <1214303881-31525-5-git-send-email-tomas.winkler@intel.com>
-	 <200806241242.11727.mb@bu3sch.de>
-	 <1ba2fa240806240354n45c144a3n5ac8b08c7da7b7a2@mail.gmail.com>
-	 <1214305396.8967.283.camel@johannes.berg>
+References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
+	 <1212549017-30144-2-git-send-email-hmh@hmh.eng.br>
+	 <1212611246.4018.12.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 24, 2008 at 2:03 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->> Still many people are using wireless extension and this is probably
->> most convenient way to get this info.
->> For example 4956 comes with 3 combinations g, ag, and agn.
->> It's displayed upon iwconfig
->
-> Heh ok. I would just say "print out the rates" but I guess that doesn't
-> work with HT yet.
->
->> >> +             strcat(name, "g");
->> >> +             is_ht |= sband->ht_info.ht_supported;
->> >
->> > What about b-only devices?
+On Wed, Jun 4, 2008 at 11:27 PM, Dan Williams <dcbw@redhat.com> wrote:
+> On Wed, 2008-06-04 at 00:10 -0300, Henrique de Moraes Holschuh wrote:
+>> rfkill really should have been named rfswitch.  As it is, one can get
+>> confused whether RFKILL_STATE_ON means the KILL switch is on (and
+>> therefore, the radio is being *blocked* from operating), or whether it
+>> means the RADIO rf output is on.
 >>
->> See the log message...(known issue). Currently you have to loop over
->> rates to get this info. I wasn't sure if they are any b-only NICs
->> under mac80211 so I didn't run to implement it.
+>> Clearly state that RFKILL_STATE_ON means the radio is *unblocked* from
+>> operating (i.e. there is no rf killing going on).
 >
-> There is, adm8211.
+> Looking over the rfkill stuff again, I think we have a problem.  There
+> are actually 3 states for each radio:
+>
+> a) radio on
+> b) radio off, softkilled by NM, user, or whatever
+> c) radio off, hardkilled by a physical switch
+>
+> I don't think that the rfkill layer can represent this, since the
+> 'state' member of /sys/class/rfkill/rfkillX is only 0 or 1.  You should
+> be able to simulate state (b) by doing "iwconfig wlan0 txpower off".  If
+> the driver doesn't suck, the driver should then rfkill the radio (and
+> thus /sys/class/rfkill/rfkill0/state would be 0), but all killswitches
+> are still "on".  But there's no way to find out that the killswitches
+> are all "on" by reading something in sysfs because their state is not
+> distinct from the radio's state.
+>
+> There are basically two options here:
+>
+> 1) separate switch state from radio state by having something on the
+> _device_
+> like /sys/devices/pci0000:00/0000:00:1e.0/0000:02:02.0/radio_state that
+> is 0 (radio on), 1 (radio off, softkilled), or 2 (radio off,
+> hardkilled).  Keep /sys/class/rfkill/rfkillX as actual killswitches as
+> reported by wireless drivers or by machine-specific BIOS proxy drivers
+> like hp-wmi, and keep the 'state' member rfkillX devices like it is now
+>
+> 2) Change the 'state' member of the /sys/class/rfkill/rfkillX devices to
+> reflect the hardkill and softkill
+>
+> I personally like (1) the best, because there's a clear difference
+> between radio state and switch state, and it would preserve
+> compatibility with the current rfkill system.  If the userspace process
+> doesn't see the 'radio_state' item in sysfs for that specific wireless
+> device, it would fall back to using only /sys/class/rfkill/rfkill0/state
+> and loose the ability to handle softkill.
+>
+SW should be able to more sw radio switch regardless of hw switch so
+I believe it's better to have separate sysfs entry for sw and hw switch states.
+hw sysfs file should be read only.
 
-Okay I will send a patch on top of this one.
+I agree it good to keep radio state separately as well.
+
+Third I think this patch use opposite logic as used currently in
+practice. RFKILL_ON means that radio is off .
+
 Thanks
 Tomas
+
+
+> Thoughts?
+>
+> Dan
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
