@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:13648 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754932AbYFELIr (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.182]:64902 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760752AbYFDMKN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2008 07:08:47 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 3/4] libertas: check for old, unsupported hardware
-Date: Thu, 5 Jun 2008 13:08:35 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200806051308.35863.hs4233@mail.mn-solutions.de> (sfid-20080605_130850_601233_325FD81E)
+	Wed, 4 Jun 2008 08:10:13 -0400
+Received: by py-out-1112.google.com with SMTP id p76so55833pyb.10
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2008 05:10:13 -0700 (PDT)
+Message-Id: <20080604115751.496499508@gmail.com> (sfid-20080604_141044_238914_257AFEE4)
+References: <20080604115633.116832712@gmail.com>
+Date: Wed, 04 Jun 2008 20:56:43 +0900
+From: Akinobu Mita <akinobu.mita@gmail.com>
+To: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [patch -v3 10/22] airo: use simple_read_from_buffer
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+---
+ drivers/net/wireless/airo.c |   15 +++------------
+ 1 file changed, 3 insertions(+), 12 deletions(-)
 
---- linux.orig/drivers/net/wireless/libertas/if_cs.c
-+++ linux/drivers/net/wireless/libertas/if_cs.c
-@@ -268,6 +268,12 @@
- #define IF_CS_SCRATCH_BOOT_OK		0x00
- #define IF_CS_SCRATCH_HELPER_OK		0x5a
+Index: 2.6-git/drivers/net/wireless/airo.c
+===================================================================
+--- 2.6-git.orig/drivers/net/wireless/airo.c
++++ 2.6-git/drivers/net/wireless/airo.c
+@@ -4560,22 +4560,13 @@ static ssize_t proc_read( struct file *f
+ 			  size_t len,
+ 			  loff_t *offset )
+ {
+-	loff_t pos = *offset;
+-	struct proc_data *priv = (struct proc_data*)file->private_data;
++	struct proc_data *priv = file->private_data;
  
-+/*
-+ * Used to detect ancient chips:
-+ */
-+#define IF_CS_PRODUCT_ID		0x0000001C
-+#define IF_CS_CF8385_B1_REV		0x12
-+
+ 	if (!priv->rbuffer)
+ 		return -EINVAL;
  
- /********************************************************************/
- /* I/O and interrupt handling                                       */
-@@ -864,6 +871,12 @@
- 	       p_dev->irq.AssignedIRQ, p_dev->io.BasePort1,
- 	       p_dev->io.BasePort1 + p_dev->io.NumPorts1 - 1);
+-	if (pos < 0)
+-		return -EINVAL;
+-	if (pos >= priv->readlen)
+-		return 0;
+-	if (len > priv->readlen - pos)
+-		len = priv->readlen - pos;
+-	if (copy_to_user(buffer, priv->rbuffer + pos, len))
+-		return -EFAULT;
+-	*offset = pos + len;
+-	return len;
++	return simple_read_from_buffer(buffer, len, offset, priv->rbuffer,
++					priv->readlen);
+ }
  
-+	/* Check if we have a current silicon */
-+	if (if_cs_read8(card, IF_CS_PRODUCT_ID) < IF_CS_CF8385_B1_REV) {
-+		lbs_pr_err("old chips like 8385 rev B1 aren't supported\n");
-+		ret = -ENODEV;
-+		goto out2;
-+	}
- 
- 	/* Load the firmware early, before calling into libertas.ko */
- 	ret = if_cs_prog_helper(card);
+ /*
+
+-- 
