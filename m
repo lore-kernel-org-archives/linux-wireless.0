@@ -1,89 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:11268 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751393AbYFSVJy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 17:09:54 -0400
-Received: by py-out-1112.google.com with SMTP id p76so430050pyb.10
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jun 2008 14:09:53 -0700 (PDT)
-Message-ID: <1ba2fa240806191409k7200ad53y654a7f8a117c8f14@mail.gmail.com> (sfid-20080619_231003_765559_E06B0E08)
-Date: Fri, 20 Jun 2008 00:09:52 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Broken fragmentation
-Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1213899419.8967.59.camel@johannes.berg>
+Received: from ms4.Sony.CO.JP ([211.125.136.198]:62559 "EHLO ms4.sony.co.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753789AbYFDKJd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jun 2008 06:09:33 -0400
+Date: Wed, 04 Jun 2008 19:09:06 +0900
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+To: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 0/12]: Proper compat WEXT support.
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20080603.132755.262737024.davem@davemloft.net>
+References: <20080603.132755.262737024.davem@davemloft.net>
+Message-Id: <20080604184955.B033.40F06B3A@sm.sony.co.jp> (sfid-20080604_120937_470116_E3499E1B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1ba2fa240806190220l18fe5dcdsf44fe81412a5f35d@mail.gmail.com>
-	 <1ba2fa240806190446n4d931e6ara4db156900e59e0d@mail.gmail.com>
-	 <1ba2fa240806190457w20dfe2d5pf06829b26d2722a3@mail.gmail.com>
-	 <1213878207.8967.6.camel@johannes.berg>
-	 <1ba2fa240806190608h3d833dbaua412446e8a9f560d@mail.gmail.com>
-	 <1213881855.8967.19.camel@johannes.berg>
-	 <1ba2fa240806190745u2fe7e435y3ca207af4156767b@mail.gmail.com>
-	 <1213889200.8967.26.camel@johannes.berg>
-	 <1ba2fa240806191113nd6a221eiac9648edd3404a80@mail.gmail.com>
-	 <1213899419.8967.59.camel@johannes.berg>
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 19, 2008 at 9:16 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2008-06-19 at 21:13 +0300, Tomas Winkler wrote:
->> On Thu, Jun 19, 2008 at 6:26 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Thu, 2008-06-19 at 17:45 +0300, Tomas Winkler wrote:
->> >> On Thu, Jun 19, 2008 at 4:24 PM, Johannes Berg
->> >> <johannes@sipsolutions.net> wrote:
->> >> > On Thu, 2008-06-19 at 16:08 +0300, Tomas Winkler wrote:
->> >> >> On Thu, Jun 19, 2008 at 3:23 PM, Johannes Berg
->> >> >> <johannes@sipsolutions.net> wrote:
->> >> >> >
->> >> >> >> > Now it crashes in the driver...maybe the txinfo to cb changes. Looking into it.
->> >> >> >> > Tomas
->> >> >> >> Looks like this is the second part keyconf is null
->> >> >> >
->> >> >> > Part? You mean fragment? What encryption algorithm? I've quickly looked
->> >> >> > and all of them seem to do the control.hw_key assignment in their
->> >> >> > respective _skb handler so it should be done for all fragments.
->> >> >>
->> >> >> The problem is w/o crypto
->> >> >> I think this is not set on each fragment
->> >> >> info->flags |= IEEE80211_TX_CTL_DO_NOT_ENCRYPT;
->> >> >
->> >> > Ouch, you're right, the whole tx info isn't properly initialised for
->> >> > fragments.
->> >> >
->> >> > Can you try putting
->> >> >
->> >> > memcpy(frag->cb, first->cb, sizeof(first->cb));
->> >> >
->> >> > at around line 690 of tx.c where this code is?
->> >> >
->> >> >                frag->priority = first->priority;
->> >> >                skb_reserve(frag, tx->local->tx_headroom +
->> >> >                                  IEEE80211_ENCRYPT_HEADROOM);
->> >> >
->> >> >
->> >> > [now I know what the cause is. I had another patch that used skb_segment
->> >> > to do the fragmentation, but that was dropped and skb_segment does copy
->> >> > skb->cb while our code doesn't]
->> >>
->> >> No crash but still not at home. No fragmented traffic on the air...grrr.
->> >
->> > Hmm, ok. I'll give it a try later.
->>
->> Fragments are in the air but the peer is not able to reassemble them.
->> Something is wrong with the first fragment but I'm not sure yet.
->
-> Hm, ok. got a packet capture? Maybe that was broken before, I remember
-> having problems with fragmentation but putting it down to the
-> known-to-be-completely-broken AP I was using.
 
-It is working the latest problem was caused by the driver, Yet i still
-don't understand the regression
-in the driver.  Would be nice if you can confirm it works also with another HW.
-Sending your patch out.
-Thanks
-Tomas
+Thanks for updating the patch set!!
+
+On Tue, 03 Jun 2008 13:27:55 -0700 (PDT)
+David Miller <davem@davemloft.net> wrote:
+
+
+> This is a refresh of my previous WEXT compat patch set.
+> 
+> I've actually tested these exact patches on sparc64 with a RNDIS based
+> USB wireless device from Linksys.  I was able to perform iwconfig
+> commands, check iwlist, bring up the interface and use it properly.
+> All with 32-bit tools.  I've also done an allmodconfig sanity
+> build check on sparc64.
+> 
+> The one thing I was not able to test yet is wpa_supplicant use, and
+> that likely doesn't work properly yet, but we can fix that on top and
+> these patches do not break native non-compat binaries.  They do make a
+> lot of compat stuff work which wasn't the case before.  So applying
+> this stuff makes sense, and we can get wpa_supplicant working if it
+> isn't working using follow-on patches.
+> 
+> The patch set starts by cleaning up the code so that we can avoid
+> having multiple copies of the WEXT main dispatch routines, one for
+> compat and one for the non-compat case.
+> 
+> Next, basic compat level handling of the WEXT ioctl is added, and the
+> equivalent code in the compat_ioctl.c file is removed.
+> 
+> Finally, compat IWE stream munging is added for the wireless layer.
+> When we get a compat WEXT ioctl request, we set a bit in the request
+> info blob, and the stream building helpers tip off this to format the
+> stream entries properly.
+
+
+I'm testing these patches on my PS3.  I've found a problem.
+
+With 32-bit wireless-tools v28, the bitrates from the scan result were
+wrong (with gelic/rt2x00 driver):
+
+[root@localhost wireless_tools.28]# ./iwlist wlan3 scanning
+Warning: Driver for device wlan3 has been compiled with version 22
+of Wireless Extension, while this program supports up to version 20.
+Some things may be broken...
+
+wlan3     Scan completed :
+          Cell 01 - Address: 00:06:25:C6:B9:A7
+                    ESSID:"planexuser"
+                    Mode:Master
+                    Channel:1
+                    Frequency:2.412 GHz (Channel 1)
+                    Quality=51/100  Signal level=-50 dBm  
+                    Encryption key:on
+                    IE: WPA Version 1
+                        Group Cipher : CCMP 
+                        Pairwise Ciphers (1) : CCMP 
+                        Authentication Suites (1) : PSK  
+                    Bit Rates:0 kb/s; 0 kb/s; 0 kb/s; 0 kb/s; 0 kb/s
+                              0 kb/s; 0 kb/s; 0 kb/s; 0 kb/s; 0 kb/s
+                              0 kb/s; 0 kb/s
+                    Extra:tsf=000000013f454d92
+
+With 32-bit wireless-tools v30 (i.e. the SOIGIWSCAN workaround
+included):
+
+[root@localhost wireless_tools.30]# ./iwlist wlan3 scanning
+wlan3     Scan completed :
+          Cell 01 - Address: 00:06:25:C6:B9:A7
+                    ESSID:"planexuser"
+                    Mode:Master
+                    Channel:1
+                    Frequency:2.412 GHz (Channel 1)
+                    Quality=48/100  Signal level=-68 dBm  
+                    Encryption key:on
+                    IE: WPA Version 1
+                        Group Cipher : CCMP
+                        Pairwise Ciphers (1) : CCMP
+                        Authentication Suites (1) : PSK
+                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 18 Mb/s
+                              24 Mb/s; 36 Mb/s; 54 Mb/s; 6 Mb/s; 9 Mb/s
+                              12 Mb/s; 48 Mb/s
+                    Extra:tsf=000000014e16ea91
+
+I think the callers of iwe_stream_add_value() need to do some
+preparations before the call if iocompat is needed, like the following.
+
+---
+ drivers/net/ps3_gelic_wireless.c |    7 +++++++
+ net/mac80211/mlme.c              |   11 ++++++++++-
+ 2 files changed, 17 insertions(+), 1 deletion(-)
+
+--- a/drivers/net/ps3_gelic_wireless.c
++++ b/drivers/net/ps3_gelic_wireless.c
+@@ -605,7 +605,14 @@ static char *gelic_wl_translate_scan(str
+ 	iwe.cmd = SIOCGIWRATE;
+ 	iwe.u.bitrate.fixed = iwe.u.bitrate.disabled = 0;
+ 	/* to stuff multiple values in one event */
++#ifdef CONFIG_COMPAT
++	if (info->flags & IW_REQUEST_FLAG_COMPAT)
++		tmp = ev + IW_EV_COMPAT_LCP_LEN;
++	else
++		tmp = ev + IW_EV_LCP_LEN;
++#else
+ 	tmp = ev + IW_EV_LCP_LEN;
++#endif
+ 	/* put them in ascendant order (older is first) */
+ 	i = 0;
+ 	j = 0;
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4147,9 +4147,18 @@ ieee80211_sta_scan_result(struct net_dev
+ 
+ 	if (bss && bss->supp_rates_len > 0) {
+ 		/* display all supported rates in readable format */
+-		char *p = current_ev + IW_EV_LCP_LEN;
++		char *p;
+ 		int i;
+ 
++#ifdef CONFIG_COMPAT
++		if (info->flags & IW_REQUEST_FLAG_COMPAT)
++			p = current_ev + IW_EV_COMPAT_LCP_LEN;
++		else
++			p = current_ev + IW_EV_LCP_LEN;
++#else
++		p = current_ev + IW_EV_LCP_LEN;
++#endif
++
+ 		memset(&iwe, 0, sizeof(iwe));
+ 		iwe.cmd = SIOCGIWRATE;
+ 		/* Those two flags are ignored... */
+
+-- 
+Masakazu Mokuno
+
