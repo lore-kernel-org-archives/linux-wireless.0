@@ -1,102 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4079 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754090AbYFMHrH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 03:47:07 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ester Kummer <ester.kummer@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 1/3] iwlwifi: adding channels to sysfs
-Date: Fri, 13 Jun 2008 15:44:53 +0800
-Message-Id: <1213343095-8133-2-git-send-email-yi.zhu@intel.com> (sfid-20080613_094711_143440_9808BC8B)
-In-Reply-To: <1213343095-8133-1-git-send-email-yi.zhu@intel.com>
-References: <1213343095-8133-1-git-send-email-yi.zhu@intel.com>
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:52536 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751649AbYFDDKV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jun 2008 23:10:21 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
+Subject: [GIT PATCH] rkfill improvements for -next
+Date: Wed,  4 Jun 2008 00:10:05 -0300
+Message-Id: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br> (sfid-20080604_051029_761719_9AA9A561)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ester Kummer <ester.kummer@intel.com>
 
-This patch returns channel list to sysfs.
+Hello John,
 
-Signed-off-by: Ester Kummer <ester.kummer@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   58 ++++++++++++++++++++++++++-
- 1 files changed, 56 insertions(+), 2 deletions(-)
+This patch series contains what is ready so far of my rfkill rework
+effort, all of them fully ack'ed by Ivo.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 81a1c22..c179b21 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -4122,8 +4122,62 @@ static DEVICE_ATTR(power_level, S_IWUSR | S_IRUSR, show_power_level,
- static ssize_t show_channels(struct device *d,
- 			     struct device_attribute *attr, char *buf)
- {
--	/* all this shit doesn't belong into sysfs anyway */
--	return 0;
-+
-+	struct iwl_priv *priv = dev_get_drvdata(d);
-+	struct ieee80211_channel *channels = NULL;
-+	const struct ieee80211_supported_band *supp_band = NULL;
-+	int len = 0, i;
-+	int count = 0;
-+
-+	if (!test_bit(STATUS_GEO_CONFIGURED, &priv->status))
-+		return -EAGAIN;
-+
-+	supp_band = iwl_get_hw_mode(priv, IEEE80211_BAND_2GHZ);
-+	channels = supp_band->channels;
-+	count = supp_band->n_channels;
-+
-+	len += sprintf(&buf[len],
-+			"Displaying %d channels in 2.4GHz band "
-+			"(802.11bg):\n", count);
-+
-+	for (i = 0; i < count; i++)
-+		len += sprintf(&buf[len], "%d: %ddBm: BSS%s%s, %s.\n",
-+				ieee80211_frequency_to_channel(
-+				channels[i].center_freq),
-+				channels[i].max_power,
-+				channels[i].flags & IEEE80211_CHAN_RADAR ?
-+				" (IEEE 802.11h required)" : "",
-+				(!(channels[i].flags & IEEE80211_CHAN_NO_IBSS)
-+				|| (channels[i].flags &
-+				IEEE80211_CHAN_RADAR)) ? "" :
-+				", IBSS",
-+				channels[i].flags &
-+				IEEE80211_CHAN_PASSIVE_SCAN ?
-+				"passive only" : "active/passive");
-+
-+	supp_band = iwl_get_hw_mode(priv, IEEE80211_BAND_5GHZ);
-+	channels = supp_band->channels;
-+	count = supp_band->n_channels;
-+
-+	len += sprintf(&buf[len], "Displaying %d channels in 5.2GHz band "
-+			"(802.11a):\n", count);
-+
-+	for (i = 0; i < count; i++)
-+		len += sprintf(&buf[len], "%d: %ddBm: BSS%s%s, %s.\n",
-+				ieee80211_frequency_to_channel(
-+				channels[i].center_freq),
-+				channels[i].max_power,
-+				channels[i].flags & IEEE80211_CHAN_RADAR ?
-+				" (IEEE 802.11h required)" : "",
-+				((channels[i].flags & IEEE80211_CHAN_NO_IBSS)
-+				|| (channels[i].flags &
-+				IEEE80211_CHAN_RADAR)) ? "" :
-+				", IBSS",
-+				channels[i].flags &
-+				IEEE80211_CHAN_PASSIVE_SCAN ?
-+				"passive only" : "active/passive");
-+
-+	return len;
- }
- 
- static DEVICE_ATTR(channels, S_IRUSR, show_channels, NULL);
+It enhances rfkill to the point that it is actually completely useable
+by platform drivers such as thinkpad-acpi, and it also fixes some issues
+that plague the way some drivers like b43 use rfkill.
+
+Note that some of these patches are preparatory work.  No drivers are
+broken by it, but currently broken drivers are not fixed either (drivers
+like b43 need to be reworked to take advantage of the now proper
+read-write rfkill device support, and notifier chain support).
+
+These patches went through a lot of discursion already, available at
+http://thread.gmane.org/gmane.linux.kernel/664500 and a more recent
+thread at http://thread.gmane.org/gmane.linux.kernel/682233.
+
+This series is available as a git branch at:
+git://repo.or.cz/linux-2.6/linux-acpi-2.6/ibm-acpi-2.6.git rfkill
+
+It is based on top of Linus mainline.  It requires commit
+5adad0133907790c50283bf03271d920d6897043, which was recently merged.
+
+Here's the shortlog:
+
+Henrique de Moraes Holschuh (12):
+      rfkill: clarify meaning of rfkill states
+      rfkill: fix minor typo in kernel doc
+      rfkill: handle SW_RFKILL_ALL events
+      rfkill: add parameter to disable radios by default
+      rfkill: add read-write rfkill switch support
+      rfkill: add the WWAN radio type
+      rfkill: rework suspend and resume handlers
+      rfkill: add notifier chains support
+      rfkill: add type string helper
+      rfkill: add uevent notifications
+      rfkill: do not allow userspace to override ALL RADIOS OFF
+      rfkill: document rw rfkill switches and clarify input subsystem interactions
+
+I'd very much like to see this merged in the -next tree, so that it can
+make it to mainline for 2.6.27 when the merge window opens again.
+
 -- 
-1.5.3.6
-
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
