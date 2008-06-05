@@ -1,63 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from astoria.ccjclearline.com ([64.235.106.9]:46250 "EHLO
-	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755992AbYFLTep (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:10143 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752225AbYFERyo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 15:34:45 -0400
-Date: Thu, 12 Jun 2008 15:34:42 -0400 (EDT)
-From: "Robert P. J. Day" <rpjday@crashcourse.ca>
-To: linux-wireless@vger.kernel.org
-cc: linville@tuxdriver.com
-Subject: [PATCH] WIRELESS: Use kernel-supplied ARRAY_SIZE() macro.
-Message-ID: <alpine.LFD.1.10.0806121529270.30641@localhost.localdomain> (sfid-20080612_213449_781793_1EDD4C23)
+	Thu, 5 Jun 2008 13:54:44 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so467592waf.23
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2008 10:54:43 -0700 (PDT)
+Message-ID: <1ba2fa240806051054t26ae5487s531962bf9ebcb2ff@mail.gmail.com> (sfid-20080605_195447_191478_369185C7)
+Date: Thu, 5 Jun 2008 20:54:42 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
+Subject: Re: [PATCH 01/12] rfkill: clarify meaning of rfkill states
+Cc: "Ivo van Doorn" <ivdoorn@gmail.com>,
+	"Dan Williams" <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, "Dmitry Torokhov" <dtor@mail.ru>
+In-Reply-To: <1212687773.13044.1256965165@webmail.messagingengine.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
+	 <1ba2fa240806041607j10841ac0qb11fe0d0b27953d8@mail.gmail.com>
+	 <20080605003808.GA16599@khazad-dum.debian.net>
+	 <200806051803.43193.IvDoorn@gmail.com>
+	 <1ba2fa240806050936o383111cepcd6733d1ed205a26@mail.gmail.com>
+	 <1212687773.13044.1256965165@webmail.messagingengine.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jun 5, 2008 at 8:42 PM, Henrique de Moraes Holschuh
+<hmh@hmh.eng.br> wrote:
+> On Thu, 5 Jun 2008 19:36:26 +0300, "Tomas Winkler" <tomasw@gmail.com> said:
+>> Cannot this be just fixed with ~ sed -s/ON/OFF/g'  over the kernel?
+>
+> Absolutely NOT!
+>
+> You would have patches in flight, not to mention out-of-tree
+> stuff, that you'd have no idea if they want the old or new meaning.
+>
+> Not to mention you'd never know what you forgot to convert, etc.
+>
+How many drivers today implement the rfkill interface? I guess no more then 10.
 
-Signed-off-by: Robert P. J. Day <rpjday@crashcourse.ca>
-
----
-
-  compile-tested on x86.
-
-
- drivers/net/wireless/rndis_wlan.c |    8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 18c9931..daaf2f7 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -620,8 +620,7 @@ static void dsconfig_to_freq(unsigned int dsconfig, struct iw_freq *freq)
- static int freq_to_dsconfig(struct iw_freq *freq, unsigned int *dsconfig)
- {
- 	if (freq->m < 1000 && freq->e == 0) {
--		if (freq->m >= 1 &&
--			freq->m <= (sizeof(freq_chan) / sizeof(freq_chan[0])))
-+		if (freq->m >= 1 && freq->m <= ARRAY_SIZE(freq_chan))
- 			*dsconfig = freq_chan[freq->m - 1] * 1000;
- 		else
- 			return -1;
-@@ -1159,10 +1158,9 @@ static int rndis_iw_get_range(struct net_device *dev,
- 		range->throughput = 11 * 1000 * 1000 / 2;
- 	}
-
--	range->num_channels = (sizeof(freq_chan)/sizeof(freq_chan[0]));
-+	range->num_channels = ARRAY_SIZE(freq_chan);
-
--	for (i = 0; i < (sizeof(freq_chan)/sizeof(freq_chan[0])) &&
--			i < IW_MAX_FREQUENCIES; i++) {
-+	for (i = 0; i < ARRAY_SIZE(freq_chan) && i < IW_MAX_FREQUENCIES; i++) {
- 		range->freq[i].i = i + 1;
- 		range->freq[i].m = freq_chan[i] * 100000;
- 		range->freq[i].e = 1;
-
-========================================================================
-Robert P. J. Day
-Linux Consulting, Training and Annoying Kernel Pedantry:
-    Have classroom, will lecture.
-
-http://crashcourse.ca                          Waterloo, Ontario, CANADA
-========================================================================
+Tomas
