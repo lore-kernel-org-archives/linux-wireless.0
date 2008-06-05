@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54524 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753252AbYF2JoI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jun 2008 05:44:08 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Ester Kummer <ester.kummer@intel.com>
-Subject: [PATCH 1/1 V2] cfg80211: adding NONE regdomain
-Date: Sun, 29 Jun 2008 12:43:24 +0300
-Message-Id: <1214732604-4573-1-git-send-email-tomas.winkler@intel.com> (sfid-20080629_114411_772442_475D0D99)
-Content-Type: text/plain; charset="us-ascii"
+Received: from ug-out-1314.google.com ([66.249.92.170]:58005 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752725AbYFEPse (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jun 2008 11:48:34 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so549970ugf.16
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2008 08:48:32 -0700 (PDT)
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH] rt2x00: Rename tx_info to info to help compat-wireless revert MQ support for older kernels
+Date: Thu, 5 Jun 2008 17:57:17 +0200
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linville@tuxdriver.com,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <20080605130734.GD17936@ruslug.rutgers.edu> <1212671763.698.11.camel@johannes.berg> <43e72e890806050626o53134669u775d04b554734164@mail.gmail.com>
+In-Reply-To: <43e72e890806050626o53134669u775d04b554734164@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200806051757.17232.IvDoorn@gmail.com> (sfid-20080605_174851_707551_362C4471)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ester Kummer <ester.kummer@intel.com>
+On Thursday 05 June 2008, Luis R. Rodriguez wrote:
+> On Thu, Jun 5, 2008 at 6:16 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Thu, 2008-06-05 at 09:07 -0400, Luis R. Rodriguez wrote:
+> >> Rename tx_info to info as used by other drivers. This will help
+> >> with CONFIG_NETDEVICES_MULTIQUEUE requirement for HT support support
+> >> in compat-wireless by allowing us to map skb_get_queue_mapping(skb)
+> >> to the old info->queue.
+> >>
+> >> An alternative is to maintain a large compat.diff which replaces all
+> >> skb_get_queue_mapping(skb) calls back to info->queue but since this
+> >> is the only driver which requires name change it seems worth it
+> >> to help with maintenance.
+> >>
+> >> Compat-wireless shouldn't be a reason to accept patches in but if
+> >> the changes are just cosmetic it seems worth the benefit.
+> >>
+> >> Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
+> >
+> > That's just asking for trouble. If you really _must_ do magic in
+> > skb_get_queue_mapping, do it directly:
+> >
+> > int q = IEEE80211_SKB_CB(skb)->queue;
+> 
+> Works for me, thanks. Please ignore patch, or not if you want drivers
+> for some strange reason to be consistent. I just don't need it now.
 
-This patch adds an option to enable all the channels by adding a
-value of "NONE" to ieee80211_regdom module param. This is useful
-for NICs that rely on EEPROM regulatory enforcement and for testing
+Thanks, I'll drop the patch. ;)
 
-Signed-off-by: Ester Kummer <ester.kummer@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/wireless/reg.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 855bff4..140b931 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -97,6 +97,14 @@ static const struct ieee80211_channel_range ieee80211_EU_channels[] = {
- 				     IEEE80211_CHAN_RADAR),
- };
- 
-+static const struct ieee80211_channel_range ieee80211_NONE_channels[] = {
-+	/* IEEE 802.11b/g, channels 1..14 */
-+	RANGE_PWR(2412, 2484, 0xFF, 0xFF, 0),
-+	/* IEEE 802.11a, channels 36..165 */
-+	RANGE_PWR(5180, 6000, 0xFF, 0xFF, 0),
-+};
-+
-+
- #define REGDOM(_code)							\
- 	{								\
- 		.code = __stringify(_code),				\
-@@ -108,6 +116,7 @@ static const struct ieee80211_regdomain ieee80211_regdoms[] = {
- 	REGDOM(US),
- 	REGDOM(JP),
- 	REGDOM(EU),
-+	REGDOM(NONE),
- };
- 
- 
--- 
-1.5.4.1
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+Ivo
