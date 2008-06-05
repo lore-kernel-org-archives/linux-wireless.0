@@ -1,45 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:29553 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751981AbYFSR13 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 13:27:29 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so1008935ugf.16
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jun 2008 10:27:24 -0700 (PDT)
-Message-ID: <485A96F4.8070402@gmail.com> (sfid-20080619_192732_155730_6567A66E)
-Date: Thu, 19 Jun 2008 18:27:16 +0100
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([66.187.233.31]:36122 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754108AbYFELeu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jun 2008 07:34:50 -0400
+Subject: Re: [PATCH 1/3] libertas: fix interrupt issue
+From: Dan Williams <dcbw@redhat.com>
 To: Holger Schurig <hs4233@mail.mn-solutions.de>
-CC: linux-wireless@vger.kernel.org, Pavel Roskin <proski@gnu.org>,
-	=?ISO-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>,
-	Bernhard Reiter <bernhard@intevation.de>
-Subject: Re: 802.11 pccard, Agere 0x0156,0x0003?
-References: <200806181715.20516.bernhard@intevation.de> <4859866A.1090300@gmail.com> <1213833799.5258.13.camel@dv> <200806190855.30791.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200806190855.30791.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
-From: Dave <kilroyd@googlemail.com>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200806051306.15592.hs4233@mail.mn-solutions.de>
+References: <200806051306.15592.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Thu, 05 Jun 2008 07:34:28 -0400
+Message-Id: <1212665668.25730.0.camel@localhost.localdomain> (sfid-20080605_133454_154671_81498BA2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Holger Schurig wrote:
->>> There is a more recent version of the Agere driver
->>> available, which has been patched for 2.6 kernels. See
->>> <http://ubuntuforums.org/showthread.php?t=304217>
->> It's really a low hanging fruit.  The big thing that was
->> missing was firmware download for Agere, but Dave implemented
->> that.
+On Thu, 2008-06-05 at 13:06 +0200, Holger Schurig wrote:
+> This helps against lost interrupts and aids in debugging this.
 > 
-> You mean I can convert the sta_h2.h file from the above link to 
-> some binary file and let orinoco+Dave's patches load that 
-> firmware to the card?
-> 
-> I'm asking this because I also have a bunch of Hermes I and 
-> Hermes II cards, which don't work with the Orinoco driver, but 
-> with the "brought somewhat up to kernel 2.6" wlags_h2_718.tgz 
-> driver from the above link. That driver works, but hurts the 
-> eyes, and now has some problems with 2.6.25, e.g. at unloading 
-> time.
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-The firmware download patches were written to work with Hermes I cards (to get the WPA capable firmware). IIRC, the Hermes II firmware download process is slightly different, so there'd need to be some tweaks before you could download to Hermes II cards.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Dave.
+> Index: wireless-testing/drivers/net/wireless/libertas/if_cs.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/libertas/if_cs.c	2008-05-30 11:26:35.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/libertas/if_cs.c	2008-05-30 11:30:09.000000000 +0200
+> @@ -379,6 +379,8 @@ static irqreturn_t if_cs_interrupt(int i
+>  
+>  	/* Ask card interrupt cause register if there is something for us */
+>  	cause = if_cs_read16(card, IF_CS_CARD_INT_CAUSE);
+> +	lbs_deb_cs("cause 0x%04x\n", cause);
+> +
+>  	if (cause == 0) {
+>  		/* Not for us */
+>  		return IRQ_NONE;
+> @@ -390,10 +392,6 @@ static irqreturn_t if_cs_interrupt(int i
+>  		return IRQ_HANDLED;
+>  	}
+>  
+> -	/* Clear interrupt cause */
+> -	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, cause & IF_CS_BIT_MASK);
+> -	lbs_deb_cs("cause 0x%04x\n", cause);
+> -
+>  	if (cause & IF_CS_BIT_RX) {
+>  		struct sk_buff *skb;
+>  		lbs_deb_cs("rx packet\n");
+> @@ -434,6 +432,9 @@ static irqreturn_t if_cs_interrupt(int i
+>  		lbs_queue_event(priv, event >> 8 & 0xff);
+>  	}
+>  
+> +	/* Clear interrupt cause */
+> +	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, cause & IF_CS_BIT_MASK);
+> +
+>  	lbs_deb_leave(LBS_DEB_CS);
+>  	return IRQ_HANDLED;
+>  }
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
