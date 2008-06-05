@@ -1,180 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:19551 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755798AbYF3J1K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 05:27:10 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 12/33] iwlwifi: move rx aggregation functions to iwl-rx.c
-Date: Mon, 30 Jun 2008 17:23:12 +0800
-Message-Id: <1214817813-17639-13-git-send-email-yi.zhu@intel.com> (sfid-20080630_113814_518676_E7CFC79C)
-In-Reply-To: <1214817813-17639-12-git-send-email-yi.zhu@intel.com>
-References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-2-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-3-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-5-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-6-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-7-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-8-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-9-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-10-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-11-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-12-git-send-email-yi.zhu@intel.com>
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:13476 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753630AbYFELHN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jun 2008 07:07:13 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2/3] libertas: document register meanings
+Date: Thu, 5 Jun 2008 13:07:04 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200806051307.04908.hs4233@mail.mn-solutions.de> (sfid-20080605_130717_310828_F283B43B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-This patch moves Rx aggregation functions into iwl-rx.c
-
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |   47 +-----------------------------
- drivers/net/wireless/iwlwifi/iwl-core.h |    2 +
- drivers/net/wireless/iwlwifi/iwl-rx.c   |   43 ++++++++++++++++++++++++++++
- 3 files changed, 47 insertions(+), 45 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 57a853d..311b37c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -2074,49 +2074,6 @@ static int iwl4965_txq_agg_enable(struct iwl_priv *priv, int txq_id,
- 	return 0;
- }
+--- linux.orig/drivers/net/wireless/libertas/if_cs.c
++++ linux/drivers/net/wireless/libertas/if_cs.c
+@@ -159,7 +159,9 @@
  
--static int iwl4965_rx_agg_start(struct iwl_priv *priv,
--				const u8 *addr, int tid, u16 ssn)
--{
--	unsigned long flags;
--	int sta_id;
--
--	sta_id = iwl_find_station(priv, addr);
--	if (sta_id == IWL_INVALID_STATION)
--		return -ENXIO;
--
--	spin_lock_irqsave(&priv->sta_lock, flags);
--	priv->stations[sta_id].sta.station_flags_msk = 0;
--	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_ADDBA_TID_MSK;
--	priv->stations[sta_id].sta.add_immediate_ba_tid = (u8)tid;
--	priv->stations[sta_id].sta.add_immediate_ba_ssn = cpu_to_le16(ssn);
--	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
--	spin_unlock_irqrestore(&priv->sta_lock, flags);
--
--	return iwl_send_add_sta(priv, &priv->stations[sta_id].sta,
--					CMD_ASYNC);
--}
--
--static int iwl4965_rx_agg_stop(struct iwl_priv *priv,
--			       const u8 *addr, int tid)
--{
--	unsigned long flags;
--	int sta_id;
--
--	sta_id = iwl_find_station(priv, addr);
--	if (sta_id == IWL_INVALID_STATION)
--		return -ENXIO;
--
--	spin_lock_irqsave(&priv->sta_lock, flags);
--	priv->stations[sta_id].sta.station_flags_msk = 0;
--	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_DELBA_TID_MSK;
--	priv->stations[sta_id].sta.remove_immediate_ba_tid = (u8)tid;
--	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
--	spin_unlock_irqrestore(&priv->sta_lock, flags);
--
--	return iwl_send_add_sta(priv, &priv->stations[sta_id].sta,
--					CMD_ASYNC);
--}
--
- int iwl4965_mac_ampdu_action(struct ieee80211_hw *hw,
- 			     enum ieee80211_ampdu_mlme_action action,
- 			     const u8 *addr, u16 tid, u16 *ssn)
-@@ -2130,10 +2087,10 @@ int iwl4965_mac_ampdu_action(struct ieee80211_hw *hw,
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
- 		IWL_DEBUG_HT("start Rx\n");
--		return iwl4965_rx_agg_start(priv, addr, tid, *ssn);
-+		return iwl_rx_agg_start(priv, addr, tid, *ssn);
- 	case IEEE80211_AMPDU_RX_STOP:
- 		IWL_DEBUG_HT("stop Rx\n");
--		return iwl4965_rx_agg_stop(priv, addr, tid);
-+		return iwl_rx_agg_stop(priv, addr, tid);
- 	case IEEE80211_AMPDU_TX_START:
- 		IWL_DEBUG_HT("start Tx\n");
- 		return iwl_tx_agg_start(priv, addr, tid, ssn);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 06c272c..7814a48 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -211,6 +211,8 @@ int iwl_rx_queue_update_write_ptr(struct iwl_priv *priv,
- void iwl_rx_queue_reset(struct iwl_priv *priv, struct iwl_rx_queue *rxq);
- void iwl_rx_replenish(struct iwl_priv *priv);
- int iwl_rx_init(struct iwl_priv *priv, struct iwl_rx_queue *rxq);
-+int iwl_rx_agg_start(struct iwl_priv *priv, const u8 *addr, int tid, u16 ssn);
-+int iwl_rx_agg_stop(struct iwl_priv *priv, const u8 *addr, int tid);
- /* FIXME: remove when TX is moved to iwl core */
- int iwl_rx_queue_restock(struct iwl_priv *priv);
- int iwl_rx_queue_space(const struct iwl_rx_queue *q);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 9c346cc..bfe1ad2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -468,6 +468,49 @@ void iwl_rx_missed_beacon_notif(struct iwl_priv *priv,
- }
- EXPORT_SYMBOL(iwl_rx_missed_beacon_notif);
  
-+int iwl_rx_agg_start(struct iwl_priv *priv, const u8 *addr, int tid, u16 ssn)
-+{
-+	unsigned long flags;
-+	int sta_id;
-+
-+	sta_id = iwl_find_station(priv, addr);
-+	if (sta_id == IWL_INVALID_STATION)
-+		return -ENXIO;
-+
-+	spin_lock_irqsave(&priv->sta_lock, flags);
-+	priv->stations[sta_id].sta.station_flags_msk = 0;
-+	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_ADDBA_TID_MSK;
-+	priv->stations[sta_id].sta.add_immediate_ba_tid = (u8)tid;
-+	priv->stations[sta_id].sta.add_immediate_ba_ssn = cpu_to_le16(ssn);
-+	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
-+	spin_unlock_irqrestore(&priv->sta_lock, flags);
-+
-+	return iwl_send_add_sta(priv, &priv->stations[sta_id].sta,
-+					CMD_ASYNC);
-+}
-+EXPORT_SYMBOL(iwl_rx_agg_start);
-+
-+int iwl_rx_agg_stop(struct iwl_priv *priv, const u8 *addr, int tid)
-+{
-+	unsigned long flags;
-+	int sta_id;
-+
-+	sta_id = iwl_find_station(priv, addr);
-+	if (sta_id == IWL_INVALID_STATION)
-+		return -ENXIO;
-+
-+	spin_lock_irqsave(&priv->sta_lock, flags);
-+	priv->stations[sta_id].sta.station_flags_msk = 0;
-+	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_DELBA_TID_MSK;
-+	priv->stations[sta_id].sta.remove_immediate_ba_tid = (u8)tid;
-+	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
-+	spin_unlock_irqrestore(&priv->sta_lock, flags);
-+
-+	return iwl_send_add_sta(priv, &priv->stations[sta_id].sta,
-+					CMD_ASYNC);
-+}
-+EXPORT_SYMBOL(iwl_rx_agg_stop);
-+
  
- /* Calculate noise level, based on measurements during network silence just
-  *   before arriving beacon.  This measurement can be done only if we know
--- 
-1.5.3.6
-
+-/* First the bitmasks for the host/card interrupt/status registers: */
++/*
++ * First the bitmasks for the host/card interrupt/status registers:
++ */
+ #define IF_CS_BIT_TX			0x0001
+ #define IF_CS_BIT_RX			0x0002
+ #define IF_CS_BIT_COMMAND		0x0004
+@@ -167,35 +169,104 @@
+ #define IF_CS_BIT_EVENT			0x0010
+ #define	IF_CS_BIT_MASK			0x001f
+ 
+-/* And now the individual registers and assorted masks */
++
++
++/*
++ * It's not really clear to me what the host status register is for. It
++ * needs to be set almost in union with "host int cause". The following
++ * bits from above are used:
++ *
++ *   IF_CS_BIT_TX         driver downloaded a data packet
++ *   IF_CS_BIT_RX         driver got a data packet
++ *   IF_CS_BIT_COMMAND    driver downloaded a command
++ *   IF_CS_BIT_RESP       not used (has some meaning with powerdown)
++ *   IF_CS_BIT_EVENT      driver read a host event
++ */
+ #define IF_CS_HOST_STATUS		0x00000000
+ 
++/*
++ * With the host int cause register can the host (that is, Linux) cause
++ * an interrupt in the firmware, to tell the firmware about those events:
++ *
++ *   IF_CS_BIT_TX         a data packet has been downloaded
++ *   IF_CS_BIT_RX         a received data packet has retrieved
++ *   IF_CS_BIT_COMMAND    a firmware block or a command has been downloaded
++ *   IF_CS_BIT_RESP       not used (has some meaning with powerdown)
++ *   IF_CS_BIT_EVENT      a host event (link lost etc) has been retrieved
++ */
+ #define IF_CS_HOST_INT_CAUSE		0x00000002
+ 
++/*
++ * The host int mask register is used to enable/disable interrupt.  However,
++ * I have the suspicion that disabled interrupts are lost.
++ */
+ #define IF_CS_HOST_INT_MASK		0x00000004
+ 
++/*
++ * Used to send or receive data packets:
++ */
+ #define IF_CS_HOST_WRITE		0x00000016
+ #define IF_CS_HOST_WRITE_LEN		0x00000014
+-
+-#define IF_CS_HOST_CMD			0x0000001A
+-#define IF_CS_HOST_CMD_LEN		0x00000018
+-
+ #define IF_CS_READ			0x00000010
+ #define IF_CS_READ_LEN			0x00000024
+ 
++/*
++ * Used to send commands (and to send firmware block) and to
++ * receive command responses:
++ */
++#define IF_CS_HOST_CMD			0x0000001A
++#define IF_CS_HOST_CMD_LEN		0x00000018
+ #define IF_CS_CARD_CMD			0x00000012
+ #define IF_CS_CARD_CMD_LEN		0x00000030
+ 
++/*
++ * The card status registers shows what the card/firmware actually
++ * accepts:
++ *
++ *   IF_CS_BIT_TX        you may send a data packet
++ *   IF_CS_BIT_RX        you may retrieve a data packet
++ *   IF_CS_BIT_COMMAND   you may send a command
++ *   IF_CS_BIT_RESP      you may retrieve a command response
++ *   IF_CS_BIT_EVENT     the card has a event for use (link lost, snr low etc)
++ *
++ * When reading this register several times, you will get back the same
++ * results --- with one exception: the IF_CS_BIT_EVENT clear itself
++ * automatically.
++ *
++ * Not that we don't rely on BIT_RX,_BIT_RESP or BIT_EVENT because
++ * we handle this via the card int cause register.
++ */
+ #define IF_CS_CARD_STATUS		0x00000020
+ #define IF_CS_CARD_STATUS_MASK		0x7f00
+ 
++/*
++ * The card int cause register is used by the card/firmware to notify us
++ * about the following events:
++ *
++ *   IF_CS_BIT_TX        a data packet has successfully been sentx
++ *   IF_CS_BIT_RX        a data packet has been received and can be retrieved
++ *   IF_CS_BIT_COMMAND   not used
++ *   IF_CS_BIT_RESP      the firmware has a command response for us
++ *   IF_CS_BIT_EVENT     the card has a event for use (link lost, snr low etc)
++ */
+ #define IF_CS_CARD_INT_CAUSE		0x00000022
+ 
++/*
++ * This is used to for handshaking with the card's bootloader/helper image
++ * to synchronize downloading of firmware blocks.
++ */
+ #define IF_CS_CARD_SQ_READ_LOW		0x00000028
+ #define IF_CS_CARD_SQ_HELPER_OK		0x10
+ 
++/*
++ * The scratch register tells us ...
++ *
++ * IF_CS_SCRATCH_BOOT_OK     the bootloader runs
++ * IF_CS_SCRATCH_HELPER_OK   the helper firmware already runs
++ */
+ #define IF_CS_SCRATCH			0x0000003F
+-
++#define IF_CS_SCRATCH_BOOT_OK		0x00
++#define IF_CS_SCRATCH_HELPER_OK		0x5a
+ 
+ 
+ /********************************************************************/
+@@ -466,11 +537,11 @@
+ 	/* "If the value is 0x5a, the firmware is already
+ 	 * downloaded successfully"
+ 	 */
+-	if (scratch == 0x5a)
++	if (scratch == IF_CS_SCRATCH_HELPER_OK)
+ 		goto done;
+ 
+ 	/* "If the value is != 00, it is invalid value of register */
+-	if (scratch != 0x00) {
++	if (scratch != IF_CS_SCRATCH_BOOT_OK) {
+ 		ret = -ENODEV;
+ 		goto done;
+ 	}
