@@ -1,68 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50970 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750830AbYFSUSt (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.227]:51574 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752060AbYFEVuI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 16:18:49 -0400
-Subject: Re: [RFC PATCH 1/2] mac80211: 11d Handling - Country Information
-	Element
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, linville@tuxdriver.com,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
-	Assaf Krauss <assaf.krauss@intel.com>
-In-Reply-To: <1ba2fa240806191316h3ca2044o407d094415fa5bf2@mail.gmail.com> (sfid-20080619_221640_296871_611940EE)
-References: <1213900512-21565-1-git-send-email-tomas.winkler@intel.com>
-	 <1213902216.8967.78.camel@johannes.berg>
-	 <1ba2fa240806191316h3ca2044o407d094415fa5bf2@mail.gmail.com>
-	 (sfid-20080619_221640_296871_611940EE)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-S9CbnBRMX5w7K2nV1FE2"
-Date: Thu, 19 Jun 2008 22:18:08 +0200
-Message-Id: <1213906688.8967.112.camel@johannes.berg> (sfid-20080619_221852_371695_B5C9E119)
-Mime-Version: 1.0
+	Thu, 5 Jun 2008 17:50:08 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so1001371rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2008 14:50:08 -0700 (PDT)
+Message-ID: <b6c5339f0806051450i47b5d874y86398cec61675ce6@mail.gmail.com> (sfid-20080605_235013_870625_747D036A)
+Date: Thu, 5 Jun 2008 17:50:08 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Zack Weinberg" <zackw@panix.com>
+Subject: Re: Getting ath5k driver working with Thinkpad T61 [168c:1014]
+Cc: "Nick Kossifidis" <mickflemm@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <eb97335b0806031445l4f2061ccue65ae54ef5a540bf@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <eb97335b0805141024w6afa864j860b312b072faa8a@mail.gmail.com>
+	 <40f31dec0805151750w7d1c8654jae7bc20064cbb16e@mail.gmail.com>
+	 <eb97335b0806031445l4f2061ccue65ae54ef5a540bf@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jun 3, 2008 at 5:45 PM, Zack Weinberg <zackw@panix.com> wrote:
+> I'm sorry to have taken so long to get back to y'all.  It turns out I
+> was wrong about madwifi, it does work with this chipset.
 
---=-S9CbnBRMX5w7K2nV1FE2
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Great!
 
+> Since it works now with madwifi, I am attaching mmiotrace runs for
+> ath5k (latest compat-wireless driver, which still doesn't work) and
+> madwifi.
 
-> >> +     if (country_ie_len < 6) {
-> >> +             printk(KERN_ERR "%s: country information element shorter=
- (%d)"
-> >> +                     " than expected.\n", __func__, country_ie_len);
-> >
-> > Remotely exploitable security bug.
+Any changes in the dmesg output when you use ath5k?  I looked very briefly and
+didn't see the usual symptom of a locked up card (reads of 0xffffffff), but it
+also looks like there is only .08 seconds covered by the trace.  Could you try
+another trace for a bit longer?
 
-> Please explain,
+> Please let me know if you still want to see traces for the
+> windows driver.  (The madwifi trace also includes a successful "iwlist
+> wlan0 scan" operation; the ath5k trace obviously does not.)
 
-Sending broken frames will fill the disk.
+Probably not necessary -- the madwifi trace looks fine.
 
-johannes
-
---=-S9CbnBRMX5w7K2nV1FE2
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIWr77AAoJEKVg1VMiehFY6MsQAKgxj/uf+XCyi34OSiAQ5ihm
-0s5hYxGBDBXsTyUEAvJmLNA/h01ymERA81lwLRXRgieZ3FP2j1IKRF0XgWTVCiBM
-DvgQVQaiKn4enWvv6/JOQGZQLwvlZjKWyCPqOfAcDxrpq5+6WCXfjG+1LsukI5qn
-rgKiYkpg+a7iRys5vPFACwe5JlW5jacLS2CMqWL51PYnPr40FIoAexXDM7NZan/y
-37ZCiK9YQcBhNPNyGvotOub8G+e+/XfH1r1NWrRk9vuaXuTmLvYuChsW9Fkl07k4
-INLd/xmkDqfe355hqM7cYG0l9Ez7+TyfIrhwHIZnE9LAuwD7TYG7nf7annD5xJtj
-X9h76L0I+xc7R5vbcaemXI6yXQqUP7jceCGUzez+pHJLRfGpMnQnvyBZwDLOIPXS
-aolR0qCUpAkXcQAxJBb8jcDtokTQongezN7xAfGhHGcByNNaymt+uRtWav3ozo4c
-fE1CilTO96Mv8nuIUkNU/uSvh67IVMII6Ds24ng9LyZh8HjodwZmvfrUAzMKk1ok
-63jb5KBeQ7iqthyemqVArziwQSHPjfaZsLqL5Gs1qp/TRQch3GANFqM3l1Ttw0C5
-ahkwedRbEqOte3HbZWWFKotLIE8zt0BjPgb4Nf7v+LADu6HW4OvvInqyiRyiq+qE
-rgmvznm/ovAF+rlSx+kO
-=Kr3m
------END PGP SIGNATURE-----
-
---=-S9CbnBRMX5w7K2nV1FE2--
-
+Thanks!
+-- 
+Bob Copeland %% www.bobcopeland.com
