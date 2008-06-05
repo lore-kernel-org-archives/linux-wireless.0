@@ -1,156 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:38966 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754514AbYFLKCG (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.169]:27436 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753266AbYFECdW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 06:02:06 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Fix possible NULL pointer dereference in DMA code
-Date: Thu, 12 Jun 2008 11:58:56 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>,
-	vegard.nossum@gmail.com, miles.lane@gmail.com,
-	akpm@linux-foundation.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200806121158.57287.mb@bu3sch.de> (sfid-20080612_120210_650198_8E9F9056)
+	Wed, 4 Jun 2008 22:33:22 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so324454wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2008 19:33:22 -0700 (PDT)
+Subject: [RFC-PATCH] mac80211: add helpers for common frame_control testing
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 04 Jun 2008 19:33:19 -0700
+Message-Id: <1212633200.6340.52.camel@brick> (sfid-20080605_043326_207604_3A2A97D6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a possible NULL pointer dereference in an error path of the
-DMA allocation error checking code. This is also necessary for a future
-DMA API change that is on its way into the mainline kernel that adds
-an additional dev parameter to dma_mapping_error().
+Example users added in wpa.c.
 
-This patch moves the whole struct b43_dmaring struct initialization
-right before any DMA allocation operation.
+The byteshifting is done on the constants at compile-time making
+each one of these helpers a mask+test only.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
+ include/linux/ieee80211.h |   63 +++++++++++++++++++++++++++++++++++----------
+ net/mac80211/wpa.c        |   40 ++++++----------------------
+ 2 files changed, 58 insertions(+), 45 deletions(-)
 
-John, this is a bugfix for 2.6.26
-
-
-Index: wireless-testing/drivers/net/wireless/b43/dma.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/dma.c	2008-06-12 11:49:24.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/dma.c	2008-06-12 11:50:10.000000000 +0200
-@@ -792,30 +792,55 @@ struct b43_dmaring *b43_setup_dmaring(st
- 				      int controller_index,
- 				      int for_tx,
- 				      enum b43_dmatype type)
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 9300f37..5880b9f 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -109,6 +109,50 @@ struct ieee80211_hdr {
+ 	u8 addr4[6];
+ } __attribute__ ((packed));
+ 
++static inline int ieee80211_has_tods(struct ieee80211_hdr *hdr)
++{
++	return (hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_TODS)) != 0;
++}
++
++static inline int ieee80211_has_fromds(struct ieee80211_hdr *hdr)
++{
++	return (hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_FROMDS)) != 0;
++}
++
++static inline int ieee80211_has_a4(struct ieee80211_hdr *hdr)
++{
++	__le16 tmp = cpu_to_le16(IEEE80211_FCTL_TODS | IEEE80211_FCTL_TODS);
++	return (hdr->frame_control & tmp) == tmp;
++}
++
++static inline int ieee80211_is_mgmt(struct ieee80211_hdr *hdr)
++{
++	return (hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_FTYPE)) ==
++	       cpu_to_le16(IEEE80211_FTYPE_MGMT);
++}
++
++static inline int ieee80211_is_ctl(struct ieee80211_hdr *hdr)
++{
++	return (hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_FTYPE)) ==
++	       cpu_to_le16(IEEE80211_FTYPE_CTL);
++}
++
++static inline int ieee80211_is_data(struct ieee80211_hdr *hdr)
++{
++	return (hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_FTYPE)) ==
++	       cpu_to_le16(IEEE80211_FTYPE_DATA);
++}
++
++static inline int ieee80211_data_has_qos(struct ieee80211_hdr *hdr)
++{
++	/*
++	 * mask with QOS_DATA rather than IEEE80211_FCTL_STYPE as we just need
++	 * to check the one bit
++	 */
++	return (hdr->frame_control &
++	       cpu_to_le16(IEEE80211_FCTL_FTYPE | IEEE80211_STYPE_QOS_DATA)) ==
++	       cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_QOS_DATA);
++}
+ 
+ struct ieee80211s_hdr {
+ 	u8 flags;
+@@ -564,17 +608,11 @@ enum ieee80211_back_parties {
+  */
+ static inline u8 *ieee80211_get_SA(struct ieee80211_hdr *hdr)
  {
- 	struct b43_dmaring *ring;
- 	int err;
--	int nr_slots;
- 	dma_addr_t dma_test;
- 
- 	ring = kzalloc(sizeof(*ring), GFP_KERNEL);
- 	if (!ring)
- 		goto out;
--	ring->type = type;
- 
--	nr_slots = B43_RXRING_SLOTS;
-+	ring->nr_slots = B43_RXRING_SLOTS;
- 	if (for_tx)
--		nr_slots = B43_TXRING_SLOTS;
-+		ring->nr_slots = B43_TXRING_SLOTS;
- 
--	ring->meta = kcalloc(nr_slots, sizeof(struct b43_dmadesc_meta),
-+	ring->meta = kcalloc(ring->nr_slots, sizeof(struct b43_dmadesc_meta),
- 			     GFP_KERNEL);
- 	if (!ring->meta)
- 		goto err_kfree_ring;
-+
-+	ring->type = type;
-+	ring->dev = dev;
-+	ring->mmio_base = b43_dmacontroller_base(type, controller_index);
-+	ring->index = controller_index;
-+	if (type == B43_DMA_64BIT)
-+		ring->ops = &dma64_ops;
-+	else
-+		ring->ops = &dma32_ops;
- 	if (for_tx) {
--		ring->txhdr_cache = kcalloc(nr_slots,
-+		ring->tx = 1;
-+		ring->current_slot = -1;
-+	} else {
-+		if (ring->index == 0) {
-+			ring->rx_buffersize = B43_DMA0_RX_BUFFERSIZE;
-+			ring->frameoffset = B43_DMA0_RX_FRAMEOFFSET;
-+		} else if (ring->index == 3) {
-+			ring->rx_buffersize = B43_DMA3_RX_BUFFERSIZE;
-+			ring->frameoffset = B43_DMA3_RX_FRAMEOFFSET;
-+		} else
-+			B43_WARN_ON(1);
-+	}
-+	spin_lock_init(&ring->lock);
-+#ifdef CONFIG_B43_DEBUG
-+	ring->last_injected_overflow = jiffies;
-+#endif
-+
-+	if (for_tx) {
-+		ring->txhdr_cache = kcalloc(ring->nr_slots,
- 					    b43_txhdr_size(dev),
- 					    GFP_KERNEL);
- 		if (!ring->txhdr_cache)
- 			goto err_kfree_meta;
- 
- 		/* test for ability to dma to txhdr_cache */
-@@ -825,13 +850,13 @@ struct b43_dmaring *b43_setup_dmaring(st
- 					  DMA_TO_DEVICE);
- 
- 		if (b43_dma_mapping_error(ring, dma_test,
- 					  b43_txhdr_size(dev), 1)) {
- 			/* ugh realloc */
- 			kfree(ring->txhdr_cache);
--			ring->txhdr_cache = kcalloc(nr_slots,
-+			ring->txhdr_cache = kcalloc(ring->nr_slots,
- 						    b43_txhdr_size(dev),
- 						    GFP_KERNEL | GFP_DMA);
- 			if (!ring->txhdr_cache)
- 				goto err_kfree_meta;
- 
- 			dma_test = dma_map_single(dev->dev->dma_dev,
-@@ -850,38 +875,12 @@ struct b43_dmaring *b43_setup_dmaring(st
- 
- 		dma_unmap_single(dev->dev->dma_dev,
- 				 dma_test, b43_txhdr_size(dev),
- 				 DMA_TO_DEVICE);
- 	}
- 
--	ring->dev = dev;
--	ring->nr_slots = nr_slots;
--	ring->mmio_base = b43_dmacontroller_base(type, controller_index);
--	ring->index = controller_index;
--	if (type == B43_DMA_64BIT)
--		ring->ops = &dma64_ops;
--	else
--		ring->ops = &dma32_ops;
--	if (for_tx) {
--		ring->tx = 1;
--		ring->current_slot = -1;
--	} else {
--		if (ring->index == 0) {
--			ring->rx_buffersize = B43_DMA0_RX_BUFFERSIZE;
--			ring->frameoffset = B43_DMA0_RX_FRAMEOFFSET;
--		} else if (ring->index == 3) {
--			ring->rx_buffersize = B43_DMA3_RX_BUFFERSIZE;
--			ring->frameoffset = B43_DMA3_RX_FRAMEOFFSET;
--		} else
--			B43_WARN_ON(1);
--	}
--	spin_lock_init(&ring->lock);
--#ifdef CONFIG_B43_DEBUG
--	ring->last_injected_overflow = jiffies;
--#endif
+-	__le16 fc = hdr->frame_control;
+-	fc &= cpu_to_le16(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS);
 -
- 	err = alloc_ringmemory(ring);
- 	if (err)
- 		goto err_kfree_txhdr_cache;
- 	err = dmacontroller_setup(ring);
- 	if (err)
- 		goto err_free_ringmemory;
+-	switch (fc) {
+-	case __constant_cpu_to_le16(IEEE80211_FCTL_FROMDS):
+-		return hdr->addr3;
+-	case __constant_cpu_to_le16(IEEE80211_FCTL_TODS|IEEE80211_FCTL_FROMDS):
++	if (ieee80211_has_a4(hdr))
+ 		return hdr->addr4;
+-	default:
+-		return hdr->addr2;
+-	}
++	if (ieee80211_has_fromds(hdr))
++		return hdr->addr3;
++	return hdr->addr2;
+ }
+ 
+ /**
+@@ -590,10 +628,7 @@ static inline u8 *ieee80211_get_SA(struct ieee80211_hdr *hdr)
+  */
+ static inline u8 *ieee80211_get_DA(struct ieee80211_hdr *hdr)
+ {
+-	__le16 fc = hdr->frame_control;
+-	fc &= cpu_to_le16(IEEE80211_FCTL_TODS);
+-
+-	if (fc)
++	if (ieee80211_has_tods(hdr))
+ 		return hdr->addr3;
+ 	else
+ 		return hdr->addr1;
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 9f6fd20..0c728e0 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -24,48 +24,26 @@ static int ieee80211_get_hdr_info(const struct sk_buff *skb, u8 **sa, u8 **da,
+ {
+ 	struct ieee80211_hdr *hdr;
+ 	size_t hdrlen;
+-	u16 fc;
+-	int a4_included;
+-	u8 *pos;
+ 
+ 	hdr = (struct ieee80211_hdr *) skb->data;
+-	fc = le16_to_cpu(hdr->frame_control);
+ 
+ 	hdrlen = 24;
+-	if ((fc & (IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS)) ==
+-	    (IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS)) {
++	if (ieee80211_has_a4(hdr))
+ 		hdrlen += ETH_ALEN;
+-		*sa = hdr->addr4;
+-		*da = hdr->addr3;
+-	} else if (fc & IEEE80211_FCTL_FROMDS) {
+-		*sa = hdr->addr3;
+-		*da = hdr->addr1;
+-	} else if (fc & IEEE80211_FCTL_TODS) {
+-		*sa = hdr->addr2;
+-		*da = hdr->addr3;
+-	} else {
+-		*sa = hdr->addr2;
+-		*da = hdr->addr1;
+-	}
+ 
+-	if (fc & 0x80)
++	*sa = ieee80211_get_SA(hdr);
++	*da = ieee80211_get_DA(hdr);
++
++	if (ieee80211_data_has_qos(hdr)) {
+ 		hdrlen += 2;
++		*qos_tid = (*((u8 *)hdr + hdrlen - 2) & 0x0f) | 0x80;
++	} else {
++		*qos_tid = 0;
++	}
+ 
+ 	*data = skb->data + hdrlen;
+ 	*data_len = skb->len - hdrlen;
+ 
+-	a4_included = (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) ==
+-		(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS);
+-	if ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
+-	    fc & IEEE80211_STYPE_QOS_DATA) {
+-		pos = (u8 *) &hdr->addr4;
+-		if (a4_included)
+-			pos += 6;
+-		*qos_tid = pos[0] & 0x0f;
+-		*qos_tid |= 0x80; /* qos_included flag */
+-	} else
+-		*qos_tid = 0;
+-
+ 	return skb->len < hdrlen ? -1 : 0;
+ }
+ 
+-- 
+1.5.6.rc1.257.gba91d
+
+
+
