@@ -1,70 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41520 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751374AbYFUSL1 (ORCPT
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:36968 "EHLO
+	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752391AbYFEHnP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jun 2008 14:11:27 -0400
-Subject: Re: [mac80211] Implement EU regulatory domain
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tony Vroon <tony@linx.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1212606324.14371.43.camel@johannes.berg> (sfid-20080604_210658_453842_6356D7D8)
-References: <1212605479.4235.1.camel@localhost>
-	 <1212606324.14371.43.camel@johannes.berg>
-	 (sfid-20080604_210658_453842_6356D7D8)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-K/aIuFSwK6VzAqMiXw33"
-Date: Sat, 21 Jun 2008 20:10:35 +0200
-Message-Id: <1214071835.8967.247.camel@johannes.berg> (sfid-20080621_201131_908324_6106B319)
-Mime-Version: 1.0
+	Thu, 5 Jun 2008 03:43:15 -0400
+Date: Thu, 5 Jun 2008 09:43:08 +0200 (CEST)
+From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+To: David Miller <davem@davemloft.net>
+cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mokuno@sm.sony.co.jp,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 12/12]: wext: Emit event stream entries correctly when
+ compat.
+In-Reply-To: <20080603.135728.103448928.davem@davemloft.net>
+Message-ID: <Pine.LNX.4.64.0806050940290.14577@vixen.sonytel.be> (sfid-20080605_094356_460621_A47E8057)
+References: <20080603.132856.202640855.davem@davemloft.net>
+ <1212526129.14371.5.camel@johannes.berg> <20080603.135728.103448928.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="-584349381-1031041274-1212651788=:14577"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
---=-K/aIuFSwK6VzAqMiXw33
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+---584349381-1031041274-1212651788=:14577
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
-On Wed, 2008-06-04 at 21:05 +0200, Johannes Berg wrote:
-> > =EF=BB=BFImplement missing EU regulatory domain for mac80211. Based on =
-the=20
-> > information in IEEE 802.11-2007 (specifically pages 1142, 1143 &
-> > 1148)=20
-> > and ETSI 301 893 (V1.4.1).
-> > With thanks to Johannes Berg.
->=20
-> Technically not mac80211 but cfg80211 ;)
->=20
-> > Signed-off-by: Tony Vroon <tony@linx.net>
->=20
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+On Tue, 3 Jun 2008, David Miller wrote:
+> > Did you miss drivers/net/ps3_gelic_wireless.c?
+> 
+> Likely yes, I guess that won't get hit with an allmodconfig
+> build on sparc64 :(
+> 
+> It would be really nice if we had some more compat layers
+> so that the ps3 bus probing layer just nopped out but you
+> could at least build test drivers on other platforms.
 
-John, can we have that commit in 2.6.26? It fixes a problem that users
-in the EU are not able to properly use the spectrum they are allowed to.
+That wouldn't help, as it runs on top of an hypervisor API.
 
-johannes
+The wired part may be merged back with spider_net one day...
 
---=-K/aIuFSwK6VzAqMiXw33
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+With kind regards,
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Geert Uytterhoeven
+Software Architect
 
-iQIcBAABAgAGBQJIXUQXAAoJEKVg1VMiehFY5AwP+wfFeWdJOCtXh99z6HSaNhuo
-aDSZa4XXzANko/isiwth2p6rkn5NWSJOQSPPvGmDnjUIZU1OFvRHafwWuAheJ7CB
-UFnK1Bw7HJI5kuIiGkNkAv/u0TmjHLT3czhp4hxIGMFqMvhDFAZtmXe8plc8aJZz
-iB5m6xpRIe44g0SHtKaYCEKNM5WtUptljXiAfMOeSZfVZjWBLBxkP/KXWYiJW0FE
-OTJPuq08nqK5jKHo6A2fJ5XDQra4k10JuTAh83d5J75cJYkFZa86JXVvIqAq2AJA
-4UIbqCMWXmXE0CUJmPcvzfOS+Q5KvfBs9YxCNm5HApZAkG+EsKSlzHEyVdPF3sRT
-Ox46lXI9qAOM2/q2M5zhycrxWxx0AcWpja4ScD3ho+Q4obHCWGi3S4+bTdj78xy5
-UMRLhs60NUZiwbRPKtQsQvI9//DFzYMh5urMgj5wddbo1LeJYHl8pWAnls2LgnXl
-k+VdskUlUdOi5yeDjYE5+MT7+hEZpnuBEqsaTKp/KGyLTT6W6ti04OgD9TgMJTt5
-+UoM+1LUakX6EN1T6KPv0LT3o/A8QVNZmr5RKzctA6tkIhT7O3TCpcTU0N+c1Hqt
-pudPKEMMiOQuERIYp/Th6tDd+ON8eHrwwrFMkqVrFCVDUzbouFOSztX4eeQAesLM
-LnFiwRsfKqMXqI+cUPla
-=y7Qn
------END PGP SIGNATURE-----
+Sony Techsoft Centre
+The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
 
---=-K/aIuFSwK6VzAqMiXw33--
+Phone:    +32 (0)2 700 8453
+Fax:      +32 (0)2 700 8622
+E-mail:   Geert.Uytterhoeven@sonycom.com
+Internet: http://www.sony-europe.com/
 
+Sony Technology and Software Centre Europe
+A division of Sony Service Centre (Europe) N.V.
+Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium
+VAT BE 0413.825.160 · RPR Brussels
+Fortis 293-0376800-10 GEBA-BE-BB
+---584349381-1031041274-1212651788=:14577--
