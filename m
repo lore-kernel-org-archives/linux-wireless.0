@@ -1,44 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.248]:35593 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750712AbYFKU75 (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:50518 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753687AbYFEMit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 16:59:57 -0400
-Received: by an-out-0708.google.com with SMTP id d40so779810and.103
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 13:59:52 -0700 (PDT)
-Message-ID: <43e72e890806111359g3e75ac39s18b674e6fc01d2c1@mail.gmail.com> (sfid-20080611_230002_225548_D00CC062)
-Date: Wed, 11 Jun 2008 13:59:51 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "=?UTF-8?Q?Stefanik_G=C3=A1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: [compat-masters] Backported MQ requirement on 802.11n for older kernels
-Cc: "Tomas Winkler" <tomasw@gmail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
+	Thu, 5 Jun 2008 08:38:49 -0400
+Date: Thu, 5 Jun 2008 09:38:45 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	compat-masters@lists.madwifi.org,
-	"Tim Gardner" <tim.gardner@canonical.com>,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
-In-Reply-To: <69e28c910806111350x7e233437x57983a9b27116bc0@mail.gmail.com>
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, Dmitry Torokhov <dtor@mail.ru>
+Subject: Re: [PATCH 01/12] rfkill: clarify meaning of rfkill states
+Message-ID: <20080605123845.GA3413@khazad-dum.debian.net> (sfid-20080605_143852_387736_4A84FDB1)
+References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br> <1212549017-30144-2-git-send-email-hmh@hmh.eng.br> <1212611246.4018.12.camel@localhost.localdomain> <1ba2fa240806041607j10841ac0qb11fe0d0b27953d8@mail.gmail.com> <20080605003808.GA16599@khazad-dum.debian.net> <1ba2fa240806050133sd8ee9e2u2773a1bf1cce9bcb@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890806080855p284f85brd0ff1f1dfce96bf8@mail.gmail.com>
-	 <43e72e890806090325y5a1aebadq68204695044f4b6f@mail.gmail.com>
-	 <1ba2fa240806101657w14599f30x67f58acbc7fe9e80@mail.gmail.com>
-	 <43e72e890806102132q1aaba42ehd76bdd30b8d4080a@mail.gmail.com>
-	 <43e72e890806102136jb8e695fla98a8594dde14396@mail.gmail.com>
-	 <43e72e890806110403nddfca7cn66b91a938919e1f0@mail.gmail.com>
-	 <7ba851519c84785f96af3637e9bab65b.squirrel@secure.sipsolutions.net>
-	 <20080611125857.GG17936@ruslug.rutgers.edu>
-	 <1ba2fa240806110627g467940b1k9ca4a43cd140506f@mail.gmail.com>
-	 <69e28c910806111350x7e233437x57983a9b27116bc0@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240806050133sd8ee9e2u2773a1bf1cce9bcb@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCBKdW4gMTEsIDIwMDggYXQgMTo1MCBQTSwgU3RlZmFuaWsgR8OhYm9yIDxuZXRyb2xs
-bGVyLjNkQGdtYWlsLmNvbT4gd3JvdGU6Cj4gT24gV2VkLCBKdW4gMTEsIDIwMDggYXQgMzoyNyBQ
-TSwgVG9tYXMgV2lua2xlciA8dG9tYXN3QGdtYWlsLmNvbT4gd3JvdGU6Cj4+IFRoZSBtYWtlZmls
-ZSBpcyBmZWVkIGJ5IGNvbXBhdC5tayBhbmQgRE9UY29uZmlnIGZyb20gdGhlIHRhcmdldCBrZXJu
-ZWwKPj4gKEtMSUIpIChpbiBteSBjYXNlIDIuNi4yNSkKPj4gRnJvbSB3aGF0IEkgc2VlIHRoZSBm
-bGFncyBmcm9tIHdpcmVsZXNzLXRlc3RpbmcgIG5lZWQgdG8gYmUgYWx3YXlzCj4+IHJlZmxlY3Rl
-ZCBpbiBjb21wYXQubWsuCj4KPiBEaWQgeW91IG1lYW4gY29uZmlnLm1rPyBDb21wYXQubWsgZG9l
-c24ndCBleGlzdC4KClllYQo=
+On Thu, 05 Jun 2008, Tomas Winkler wrote:
+> >> Third I think this patch use opposite logic as used currently in
+> >> practice. RFKILL_ON means that radio is off .
+
+This is how the code works: RFKILL_STATE_ON does not block the radio.
+RFKILL_STATE_OFF blocks the radio.  I documented the *reality* of that
+code so that people would know for sure from now on.  And no, I don't
+exactly *like* it either.
+
+So, yes, "rfkill.h" and net/rfkill* uses negative logic if you pay
+attention to the "kill" in the name and also to the ON/OFF in the state
+names, and that is confusing.
+
+What we can do is change the names of those states, since those are just
+kernel API and documentation (we cannot change their numerical values,
+that is ABI exposed to userspace over sysfs).
+
+But for obvious code maintenance reasons, which I am sure you know
+about, we cannot just switch the names around.  The new names have to be
+different from the old ones (for the compiler to catch old usage), and
+different *enough* from the old ones to not cause confusion on humans
+(or the new usage will be misused).
+
+> > The correct reading of rfkill class states are:
+> >
+> > RFKILL_STATE_ON:  transmitter is UNBLOCKED and *may* operate
+> > RFKILL_STATE_OFF: transmitter is BLOCKED and will *NOT* operate.
+> > Nothing else is correct.
+
+[snip]
+
+> This is opposite logic as used in industry and you are creating mess
+> here. RFKILL_ON means that you killed the radio and it moves
+> radio to disable state.
+
+No, I am not *creating* any mess.  I am documenting whatever we already
+have, and while I don't like it, I don't think it is bad enough (after
+documentation) to qualify as a mess.
+
+> If you want to use your logic the remove the world KILL form it.
+> RF_ON, RF_OFF would match your intention.
+
+RFKILL_STATE is in there as a namespace prefix.  The new state names I
+proposed are "BLOCKED" and "UNBLOCKED", which I hope are of quite clear
+meaning.  If you feel their meaning is not clear, which names would you
+propose?
+
+As for the RFKILL_STATE_ part of the name, I consider bad practice not
+to have the namespace prefix, but I don't feel too strongly about it
+either (still, I won't be the one proposing a change removing a
+namespace prefix).  If you want something different, send a patch
+(please base it on a tree with this patch set applied, and update the
+documentation).  If Ivo ACKS it, it is in.  Certainly, lots of kernel
+defines and enums that are specific to some subsystem or to some set of
+functions lack any such prefixes in mainline.
+
+Or you could ask Ivo about renaming rfkill, and submit patches to that
+effect.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
