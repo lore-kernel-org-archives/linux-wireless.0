@@ -1,36 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:9052 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756281AbYF0UUR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2008 16:20:17 -0400
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 5/5] hostap: use radiotap headers by default
-To: Jouni Malinen <j@w1.fi>, John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Fri, 27 Jun 2008 16:20:16 -0400
-Message-ID: <20080627202016.18603.59101.stgit@dv.roinet.com> (sfid-20080627_222024_753980_F4969B57)
-In-Reply-To: <20080627201952.18603.98308.stgit@dv.roinet.com>
-References: <20080627201952.18603.98308.stgit@dv.roinet.com>
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:57811 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752638AbYFERxs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jun 2008 13:53:48 -0400
+Message-Id: <1212688428.15820.1256966109@webmail.messagingengine.com> (sfid-20080605_195352_115350_DA4CBBFF)
+From: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Cc: "Tomas Winkler" <tomasw@gmail.com>,
+	"Dan Williams" <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, "Dmitry Torokhov" <dtor@mail.ru>
+Content-Type: text/plain; charset="ISO-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
+   <1ba2fa240806041607j10841ac0qb11fe0d0b27953d8@mail.gmail.com>
+   <20080605003808.GA16599@khazad-dum.debian.net>
+   <200806051803.43193.IvDoorn@gmail.com>
+Subject: Re: [PATCH 01/12] rfkill: clarify meaning of rfkill states
+In-Reply-To: <200806051803.43193.IvDoorn@gmail.com>
+Date: Thu, 05 Jun 2008 14:53:48 -0300
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
+On Thu, 5 Jun 2008 18:03:42 +0200, "Ivo van Doorn" <ivdoorn@gmail.com> said:
+> On Thursday 05 June 2008, Henrique de Moraes Holschuh wrote:
+> > The correct reading of rfkill class states are:
+> > 
+> > RFKILL_STATE_ON:  transmitter is UNBLOCKED and *may* operate
+> > RFKILL_STATE_OFF: transmitter is BLOCKED and will *NOT* operate.
+> > 
+> > Nothing else is correct.
+> > 
+> > We could certainly rename these states to
+> > 
+> > enum rfkill_state {
+> > 	RFKILL_STATE_BLOCKED = 0,
+> > 	RFKILL_STATE_UNBLOCKED = 1,
+> > };
+> > 
+> > #define RFKILL_STATE_ON RFKILL_STATE_UNBLOCKED
+> > #define RFKILL_STATE_OFF RFKILL_STATE_BLOCKED
+> > 
+> > Ivo, do you want a patch that does the above (plus the documentation
+> > changes, of course)?
+> 
+> Patch would be good. I would however drop the #define RFKILL_STATE_ON
+> and force the RFKILL_STATE_BLOCKED/RFKILL_STATE_UNBLOCKED usage
+> to make sure everybody gets the right idea about the meaning.
 
- drivers/net/wireless/hostap/hostap_hw.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+The advantage of the former way is that we break nothing, and all drivers
+can be moved to the new names at their maintainer's leisure.  It could also
+work as a marker for "this driver has been reviewed and now uses rfkill
+correctly" or somesuch.
 
-diff --git a/drivers/net/wireless/hostap/hostap_hw.c b/drivers/net/wireless/hostap/hostap_hw.c
-index 936f52e..6c158a5 100644
---- a/drivers/net/wireless/hostap/hostap_hw.c
-+++ b/drivers/net/wireless/hostap/hostap_hw.c
-@@ -3204,6 +3204,7 @@ prism2_init_local_data(struct prism2_helper_functions *funcs, int card_idx,
- 	local->auth_algs = PRISM2_AUTH_OPEN | PRISM2_AUTH_SHARED_KEY;
- 	local->sram_type = -1;
- 	local->scan_channel_mask = 0xffff;
-+	local->monitor_type = PRISM2_MONITOR_RADIOTAP;
- 
- 	/* Initialize task queue structures */
- 	INIT_WORK(&local->reset_queue, handle_reset_queue);
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
+
