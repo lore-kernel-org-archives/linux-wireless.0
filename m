@@ -1,70 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.231]:10485 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753730AbYFFR76 (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:10009 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756002AbYFEMCs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2008 13:59:58 -0400
-Received: by rv-out-0506.google.com with SMTP id l9so1616487rvb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jun 2008 10:59:57 -0700 (PDT)
-Subject: [PATCH 4/7] mac80211: make ieee80211_get_hdrlen_from_skb return
-	unsigned
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 06 Jun 2008 10:51:12 -0700
-Message-Id: <1212774672.6340.78.camel@brick> (sfid-20080606_200004_144126_50EDB061)
-Mime-Version: 1.0
+	Thu, 5 Jun 2008 08:02:48 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/4] libertas: check for old, unsupported hardware
+Date: Thu, 5 Jun 2008 14:02:39 +0200
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <200806051308.35863.hs4233@mail.mn-solutions.de> <1212666420.25730.4.camel@localhost.localdomain>
+In-Reply-To: <1212666420.25730.4.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200806051402.39736.hs4233@mail.mn-solutions.de> (sfid-20080605_140251_465637_B762E447)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Many callers already expect it to.
+I got this piece of code from the 5.0.16 GPL driver, but 
+implemented it differently. I mainly put it in to find out if 
+YOU have such an old silicon. When people yell "my card isn't 
+supported, I get this kernel error" we can still add the 
+necessary support.
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- include/net/mac80211.h |    2 +-
- net/mac80211/util.c    |   10 +++++-----
- 2 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 53c3b5e..7ab4ff6 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1535,7 +1535,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
-  *
-  * @skb: the frame
-  */
--int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb);
-+unsigned int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb);
- 
- /**
-  * ieee80211_get_hdrlen - get header length from frame control
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index fade001..60fec1c 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -165,15 +165,15 @@ out:
- }
- EXPORT_SYMBOL(ieee80211_hdrlen);
- 
--int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
-+unsigned int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
- {
- 	const struct ieee80211_hdr *hdr = (const struct ieee80211_hdr *) skb->data;
--	int hdrlen;
-+	unsigned int hdrlen;
- 
--	if (unlikely(skb->len < 10))
-+	if (skb->len < 10)
- 		return 0;
--	hdrlen = ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_control));
--	if (unlikely(hdrlen > skb->len))
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	if (hdrlen > skb->len)
- 		return 0;
- 	return hdrlen;
- }
--- 
-1.5.6.rc1.257.gba91d
+I don't want to add the support right now because I don't have 
+this old hardware and don't know anyone with it. So no-one could 
+test this.
 
 
+The 5.0.16 source mentions two things needed for this old 
+hardware:
+
+* doing read-modify-write instead of just setting bits, this
+  applies to IF_CS_HOST_STATUS and IF_CS_HOST_INT_CAUSE
+* and an interrupt workaround
+
+The interrupt workaround isn't in the 5.0.16 source.
