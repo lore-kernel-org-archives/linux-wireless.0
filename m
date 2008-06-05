@@ -1,161 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:58277 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762178AbYFWUXW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2008 16:23:22 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Thomas Renninger <trenn@suse.de>,
-	Fabien Crespel <fabien@crespel.net>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: [PATCH 12/13] rfkill: do not allow userspace to override ALL RADIOS OFF
-Date: Mon, 23 Jun 2008 17:23:07 -0300
-Message-Id: <1214252588-30723-13-git-send-email-hmh@hmh.eng.br> (sfid-20080623_224915_175555_4F3D8B00)
-In-Reply-To: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
-References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
+Received: from mga11.intel.com ([192.55.52.93]:24242 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752987AbYFEQz1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jun 2008 12:55:27 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Assaf Krauss <assaf.krauss@intel.com>
+Subject: [PATCH 1/1] mac80211: Checking IBSS support while changing channel in ad-hoc mode
+Date: Thu,  5 Jun 2008 19:55:21 +0300
+Message-Id: <1212684921-14266-1-git-send-email-tomas.winkler@intel.com> (sfid-20080605_185531_281124_91D409B5)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SW_RFKILL_ALL is the "emergency power-off all radios" input event.  It must
-be handled, and must always do the same thing as far as the rfkill system
-is concerned: all transmitters are to go *immediately* offline.
+From: Assaf Krauss <assaf.krauss@intel.com>
 
-For safety, do NOT allow userspace to override EV_SW SW_RFKILL_ALL OFF.  As
-long as rfkill-input is loaded, that event will *always* be processed, and
-it will *always* force all rfkill switches to disable all wireless
-transmitters, regardless of user_claim attribute or anything else.
+This patch adds a check to the set_channel flow. When attempting to change
+the channel while in IBSS mode, and the new channel does not support IBSS
+mode, the flow return with an error value with no consequences on the
+mac80211 and driver state.
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Dmitry Torokhov <dtor@mail.ru>
+Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- net/rfkill/rfkill-input.c |   47 ++++++++++++++++++++++++++++++--------------
- net/rfkill/rfkill-input.h |    1 +
- net/rfkill/rfkill.c       |   18 +++++++++++++++++
- 3 files changed, 51 insertions(+), 15 deletions(-)
+ net/mac80211/ieee80211_i.h |    2 +-
+ net/mac80211/mlme.c        |   11 ++++-------
+ net/mac80211/wext.c        |   15 +++++++++++----
+ 3 files changed, 16 insertions(+), 12 deletions(-)
 
-diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
-index d285f9a..5d4c8b2 100644
---- a/net/rfkill/rfkill-input.c
-+++ b/net/rfkill/rfkill-input.c
-@@ -43,11 +43,26 @@ static void rfkill_task_handler(struct work_struct *work)
- 	mutex_unlock(&task->mutex);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 432011c..751d479 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -853,7 +853,7 @@ u32 ieee80211_handle_ht(struct ieee80211_local *local, int enable_ht,
+ 
+ /* ieee80211_ioctl.c */
+ extern const struct iw_handler_def ieee80211_iw_handler_def;
+-int ieee80211_set_freq(struct ieee80211_local *local, int freq);
++int ieee80211_set_freq(struct net_device *dev, int freq);
+ /* ieee80211_sta.c */
+ void ieee80211_sta_timer(unsigned long data);
+ void ieee80211_sta_work(struct work_struct *work);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c220bed..bbf4b59 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2370,13 +2370,10 @@ static int ieee80211_sta_join_ibss(struct net_device *dev,
+ 	sdata->drop_unencrypted = bss->capability &
+ 		WLAN_CAPABILITY_PRIVACY ? 1 : 0;
+ 
+-	res = ieee80211_set_freq(local, bss->freq);
++	res = ieee80211_set_freq(dev, bss->freq);
+ 
+-	if (local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS) {
+-		printk(KERN_DEBUG "%s: IBSS not allowed on frequency "
+-		       "%d MHz\n", dev->name, local->oper_channel->center_freq);
+-		return -1;
+-	}
++	if (res)
++		return res;
+ 
+ 	/* Set beacon template */
+ 	skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400);
+@@ -3516,7 +3513,7 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
+ 	spin_unlock_bh(&local->sta_bss_lock);
+ 
+ 	if (selected) {
+-		ieee80211_set_freq(local, selected->freq);
++		ieee80211_set_freq(dev, selected->freq);
+ 		if (!(ifsta->flags & IEEE80211_STA_SSID_SET))
+ 			ieee80211_sta_set_ssid(dev, selected->ssid,
+ 					       selected->ssid_len);
+diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+index 1a35562..4806d96 100644
+--- a/net/mac80211/wext.c
++++ b/net/mac80211/wext.c
+@@ -302,14 +302,22 @@ static int ieee80211_ioctl_giwmode(struct net_device *dev,
+ 	return 0;
  }
  
-+static void rfkill_task_epo_handler(struct work_struct *work)
-+{
-+	rfkill_epo();
-+}
-+
-+static DECLARE_WORK(epo_work, rfkill_task_epo_handler);
-+
-+static void rfkill_schedule_epo(void)
-+{
-+	schedule_work(&epo_work);
-+}
-+
- static void rfkill_schedule_set(struct rfkill_task *task,
- 				enum rfkill_state desired_state)
+-int ieee80211_set_freq(struct ieee80211_local *local, int freqMHz)
++int ieee80211_set_freq(struct net_device *dev, int freqMHz)
  {
- 	unsigned long flags;
+ 	int ret = -EINVAL;
+ 	struct ieee80211_channel *chan;
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
  
-+	if (unlikely(work_pending(&epo_work)))
-+		return;
-+
- 	spin_lock_irqsave(&task->lock, flags);
+ 	chan = ieee80211_get_channel(local->hw.wiphy, freqMHz);
  
- 	if (time_after(jiffies, task->last + msecs_to_jiffies(200))) {
-@@ -63,6 +78,9 @@ static void rfkill_schedule_toggle(struct rfkill_task *task)
+ 	if (chan && !(chan->flags & IEEE80211_CHAN_DISABLED)) {
++		if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS &&
++		    chan->flags & IEEE80211_CHAN_NO_IBSS) {
++			printk(KERN_DEBUG "%s: IBSS not allowed on frequency "
++				"%d MHz\n", dev->name, chan->center_freq);
++			return ret;
++		}
+ 		local->oper_channel = chan;
+ 
+ 		if (local->sta_sw_scanning || local->sta_hw_scanning)
+@@ -327,7 +335,6 @@ static int ieee80211_ioctl_siwfreq(struct net_device *dev,
+ 				   struct iw_request_info *info,
+ 				   struct iw_freq *freq, char *extra)
  {
- 	unsigned long flags;
+-	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
  
-+	if (unlikely(work_pending(&epo_work)))
-+		return;
-+
- 	spin_lock_irqsave(&task->lock, flags);
- 
- 	if (time_after(jiffies, task->last + msecs_to_jiffies(200))) {
-@@ -114,21 +132,20 @@ static void rfkill_event(struct input_handle *handle, unsigned int type,
- 		switch (code) {
- 		case SW_RFKILL_ALL:
- 			/* EVERY radio type. data != 0 means radios ON */
--			rfkill_schedule_set(&rfkill_wwan,
--					    (data)? RFKILL_STATE_ON:
--						    RFKILL_STATE_OFF);
--			rfkill_schedule_set(&rfkill_wimax,
--					    (data)? RFKILL_STATE_ON:
--						    RFKILL_STATE_OFF);
--			rfkill_schedule_set(&rfkill_uwb,
--					    (data)? RFKILL_STATE_ON:
--						    RFKILL_STATE_OFF);
--			rfkill_schedule_set(&rfkill_bt,
--					    (data)? RFKILL_STATE_ON:
--						    RFKILL_STATE_OFF);
--			rfkill_schedule_set(&rfkill_wlan,
--					    (data)? RFKILL_STATE_ON:
--						    RFKILL_STATE_OFF);
-+			/* handle EPO (emergency power off) through shortcut */
-+			if (data) {
-+				rfkill_schedule_set(&rfkill_wwan,
-+						    RFKILL_STATE_ON);
-+				rfkill_schedule_set(&rfkill_wimax,
-+						    RFKILL_STATE_ON);
-+				rfkill_schedule_set(&rfkill_uwb,
-+						    RFKILL_STATE_ON);
-+				rfkill_schedule_set(&rfkill_bt,
-+						    RFKILL_STATE_ON);
-+				rfkill_schedule_set(&rfkill_wlan,
-+						    RFKILL_STATE_ON);
-+			} else
-+				rfkill_schedule_epo();
- 			break;
- 		default:
- 			break;
-diff --git a/net/rfkill/rfkill-input.h b/net/rfkill/rfkill-input.h
-index 4dae500..f63d050 100644
---- a/net/rfkill/rfkill-input.h
-+++ b/net/rfkill/rfkill-input.h
-@@ -12,5 +12,6 @@
- #define __RFKILL_INPUT_H
- 
- void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state);
-+void rfkill_epo(void);
- 
- #endif /* __RFKILL_INPUT_H */
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index dd1c3f1..7d07175 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -182,6 +182,24 @@ void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
- EXPORT_SYMBOL(rfkill_switch_all);
- 
- /**
-+ * rfkill_epo - emergency power off all transmitters
-+ *
-+ * This kicks all rfkill devices to RFKILL_STATE_OFF, ignoring
-+ * everything in its path but rfkill_mutex.
-+ */
-+void rfkill_epo(void)
-+{
-+	struct rfkill *rfkill;
-+
-+	mutex_lock(&rfkill_mutex);
-+	list_for_each_entry(rfkill, &rfkill_list, node) {
-+		rfkill_toggle_radio(rfkill, RFKILL_STATE_OFF, 1);
-+	}
-+	mutex_unlock(&rfkill_mutex);
-+}
-+EXPORT_SYMBOL_GPL(rfkill_epo);
-+
-+/**
-  * rfkill_force_state - Force the internal rfkill radio state
-  * @rfkill: pointer to the rfkill class to modify.
-  * @state: the current radio state the class should be forced to.
+ 	if (sdata->vif.type == IEEE80211_IF_TYPE_STA)
+@@ -341,14 +348,14 @@ static int ieee80211_ioctl_siwfreq(struct net_device *dev,
+ 					IEEE80211_STA_AUTO_CHANNEL_SEL;
+ 			return 0;
+ 		} else
+-			return ieee80211_set_freq(local,
++			return ieee80211_set_freq(dev,
+ 				ieee80211_channel_to_frequency(freq->m));
+ 	} else {
+ 		int i, div = 1000000;
+ 		for (i = 0; i < freq->e; i++)
+ 			div /= 10;
+ 		if (div > 0)
+-			return ieee80211_set_freq(local, freq->m / div);
++			return ieee80211_set_freq(dev, freq->m / div);
+ 		else
+ 			return -EINVAL;
+ 	}
 -- 
-1.5.5.4
+1.5.4.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
