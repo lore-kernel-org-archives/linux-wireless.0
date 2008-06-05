@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:2192 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752008AbYFCS0L (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.234]:21994 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751461AbYFEIyh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 14:26:11 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so644294nfc.21
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jun 2008 11:26:09 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 05/11] rt2x00: Don't kill guardian_urb when it wasn't created
-Date: Tue, 3 Jun 2008 20:29:50 +0200
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <200806032024.52931.IvDoorn@gmail.com> <200806032026.40506.IvDoorn@gmail.com> <200806032027.06094.IvDoorn@gmail.com>
-In-Reply-To: <200806032027.06094.IvDoorn@gmail.com>
+	Thu, 5 Jun 2008 04:54:37 -0400
+Received: by rv-out-0506.google.com with SMTP id l9so603779rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2008 01:54:36 -0700 (PDT)
+Message-ID: <1ba2fa240806050154w6bee2f08n80031e09ac12e9ed@mail.gmail.com> (sfid-20080605_105441_182074_EE595416)
+Date: Thu, 5 Jun 2008 11:54:36 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Lukas Hejtmanek" <xhejtman@ics.muni.cz>
+Subject: Re: Page allocation failure in 2.6.26-rc2 (iwl4965 driver)
+Cc: "maximilian attems" <max@stro.at>, linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240806041209i5e3fbb35r5667314ea9417379@mail.gmail.com>
 MIME-Version: 1.0
-Message-Id: <200806032029.51057.IvDoorn@gmail.com> (sfid-20080603_202615_927155_56F9186A)
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080604130307.GN5012@ics.muni.cz>
+	 <20080604130452.GD9258@baikonur.stro.at>
+	 <20080604185743.GQ5012@ics.muni.cz>
+	 <1ba2fa240806041209i5e3fbb35r5667314ea9417379@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a "BUG: unable to handle kernel paging request"
-bug in rt73usb which was caused by killing the guardian_urb
-while it had never been allocated for rt73usb.
+On Wed, Jun 4, 2008 at 10:09 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+> 2008/6/4 Lukas Hejtmanek <xhejtman@ics.muni.cz>:
+>> On Wed, Jun 04, 2008 at 03:04:52PM +0200, maximilian attems wrote:
+>>> similar with 2.6.25-rc3-git7 not a regression. happens for me since
+>>> early merge of iwlwifi after several resume and suspend cycles + mem
+>>> pressure.
+>>
+>> Jiri Slaby suggested that the iwl driver should not try to alloc 64kB (order
+>> 4) using kalloc but vmalloc should be used instead. While not understanding
+>> iwl driver internals, I cannot say whether it can be replaced per se.
+>>
+>
+> We my try it but the problem is somewhere else.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00usb.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+Actually I've already posted the patch that fixes allocation. It' just
+not in rc2
+http://marc.info/?l=linux-wireless&m=121205035427353&w=2
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 52d12fd..36a087a 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -394,8 +394,11 @@ void rt2x00usb_disable_radio(struct rt2x00_dev *rt2x00dev)
- 	}
- 
- 	/*
--	 * Kill guardian urb.
-+	 * Kill guardian urb (if required by driver).
- 	 */
-+	if (!test_bit(DRIVER_REQUIRE_BEACON_GUARD, &rt2x00dev->flags))
-+		return;
-+
- 	for (i = 0; i < rt2x00dev->bcn->limit; i++) {
- 		bcn_priv = rt2x00dev->bcn->entries[i].priv_data;
- 		if (bcn_priv->guardian_urb)
--- 
-1.5.5.3
-
+Tomas
