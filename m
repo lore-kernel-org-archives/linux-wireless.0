@@ -1,179 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:61136 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759979AbYFJWJ3 (ORCPT
+Received: from mbox1.netikka.net ([213.250.81.202]:44222 "EHLO
+	mbox1.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751869AbYFEUKY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 18:09:29 -0400
-Received: by py-out-1112.google.com with SMTP id p76so1367487pyb.10
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2008 15:09:28 -0700 (PDT)
-Message-ID: <a44ae5cd0806101509x5e2d5c19y10101ea0e72f8cba@mail.gmail.com> (sfid-20080611_001030_213147_D54F6D32)
-Date: Tue, 10 Jun 2008 18:09:27 -0400
-From: "Miles Lane" <miles.lane@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: BUG: NULL pointer dereference at 00000000 -- IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
-Cc: "Vegard Nossum" <vegard.nossum@gmail.com>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"FUJITA Tomonori" <fujita.tomonori@lab.ntt.co.jp>
-In-Reply-To: <200806101650.27180.mb@bu3sch.de>
+	Thu, 5 Jun 2008 16:10:24 -0400
+Message-ID: <4848482C.2080208@mandriva.org> (sfid-20080605_221030_401206_C3C72D79)
+Date: Thu, 05 Jun 2008 23:10:20 +0300
+From: Thomas Backlund <tmb@mandriva.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <a44ae5cd0806100709rf4602f2x587631852502c0b5@mail.gmail.com>
-	 <200806101637.11473.mb@bu3sch.de>
-	 <19f34abd0806100742v176f50e8se463d2e70df44332@mail.gmail.com>
-	 <200806101650.27180.mb@bu3sch.de>
+CC: Tomas Winkler <tomasw@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwl4965 oops in 2.6.25-rc5 x86_64
+References: <4848289D.1080205@mandriva.org> <1ba2fa240806051103q652accf5t1bd1d94630ebea5b@mail.gmail.com> <48482BC3.4070402@mandriva.org>
+In-Reply-To: <48482BC3.4070402@mandriva.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I got a slightly different BUG with this patch applied:
+Thomas Backlund skrev:
+> Tomas Winkler skrev:
+>>>
+>> Can you please verify with latest wireless-testing. git
+>> Thanks
+>> Tomas
+> 
+> Yep. will do...
+> 
+> I'll report back as soon as I have tried..
+> 
 
-BUG: unable to handle kernel NULL pointer dereference at 00000000
-IP: [<f89e3d41>] :b43:b43_dma_mapping_error+0x16/0x97
-*pde = 00000000
-Oops: 0000 [#1] PREEMPT DEBUG_PAGEALLOC
-last sysfs file:
-/sys/devices/pci0000:00/0000:00:08.0/0000:01:06.0/ssb0:0/firmware/ssb0:0/loading
-Modules linked in: sbs sbshc wmi battery iptable_filter ip_tables
-x_tables ac sbp2 rtc arc4 ecb crypto_blkcipher cryptomgr crypto_algapi
-b43 mac80211 cfg80211 led_class snd_intel8x0 snd_ac97_codec ac97_bus
-snd_pcm_oss snd_mixer_oss snd_pcm snd_seq_dummy snd_seq_oss
-snd_seq_midi_event snd_seq snd_timer snd_seq_device snd soundcore
-snd_page_alloc i2c_nforce2 i2c_core button ohci1394 3c59x ieee1394
-forcedeth ehci_hcd ohci_hcd usbcore thermal processor fan thermal_sys
+No go...
 
-Pid: 4259, comm: NetworkManager Not tainted (2.6.26-rc5-mm2 #9)
-EIP: 0060:[<f89e3d41>] EFLAGS: 00010296 CPU: 0
-EIP is at b43_dma_mapping_error+0x16/0x97 [b43]
-EAX: f6f205a0 EBX: c0416790 ECX: 0000006e EDX: 00000000
-ESI: 0000006e EDI: 36060000 EBP: f6259b10 ESP: f6259afc
- DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
-Process NetworkManager (pid: 4259, ti=f6259000 task=f78e8000 task.ti=f6259000)
-Stack: 01107455 0000006e c0416790 f6f205a0 f6dfc9b0 f6259b64 f89e41d5 00000001
-       f78e8000 c013506c f6dfc9b0 f6259b38 c0135026 01ffffff 00000001 00000000
-       00000080 36060000 00000000 f6259b5c c01063c4 f7962940 00000000 3fffffff
-Call Trace:
- [<f89e41d5>] ? b43_setup_dmaring+0xf2/0x51e [b43]
- [<c013506c>] ? trace_hardirqs_on+0xb/0xd
- [<c0135026>] ? trace_hardirqs_on_caller+0xe5/0x120
- [<c01063c4>] ? dma_set_mask+0x1a/0x37
- [<f89e4cc1>] ? b43_dma_init+0x21d/0x23b [b43]
- [<f89d6d2f>] ? b43_wireless_core_init+0x4a5/0x6d9 [b43]
- [<f89d7528>] ? b43_op_start+0xab/0xea [b43]
- [<f89b2ca9>] ? ieee80211_open+0x1e5/0x448 [mac80211]
- [<c013506c>] ? trace_hardirqs_on+0xb/0xd
- [<c02ccf41>] ? dev_open+0x66/0x99
- [<c02cbcf6>] ? dev_change_flags+0x9c/0x14a
- [<c02d3361>] ? do_setlink+0x227/0x2d7
- [<c031fca4>] ? _read_unlock+0x27/0x3c
- [<c02d4318>] ? rtnl_setlink+0xa4/0xbb
- [<c0135026>] ? trace_hardirqs_on_caller+0xe5/0x120
- [<c02d4274>] ? rtnl_setlink+0x0/0xbb
- [<c02d3f4e>] ? rtnetlink_rcv_msg+0x192/0x1ac
- [<c02d3dbc>] ? rtnetlink_rcv_msg+0x0/0x1ac
- [<c02d92e7>] ? netlink_rcv_skb+0x30/0x75
- [<c02d3db4>] ? rtnetlink_rcv+0x17/0x1f
- [<c02d90ce>] ? netlink_unicast+0x1c9/0x242
- [<c02d9bf9>] ? netlink_sendmsg+0x21b/0x228
- [<c02c22e2>] ? sock_sendmsg+0xc9/0xe0
- [<c012a6f9>] ? autoremove_wake_function+0x0/0x30
- [<c012a6f9>] ? autoremove_wake_function+0x0/0x30
- [<c0135f43>] ? __lock_acquire+0xb2e/0xb4a
- [<c013506c>] ? trace_hardirqs_on+0xb/0xd
- [<c0135026>] ? trace_hardirqs_on_caller+0xe5/0x120
- [<c01efe08>] ? copy_from_user+0x3b/0x5e
- [<c02c8930>] ? verify_iovec+0x40/0x70
- [<c02c2446>] ? sys_sendmsg+0x14d/0x1a8
- [<c02c2d34>] ? sys_recvmsg+0x172/0x17f
- [<c0135f43>] ? __lock_acquire+0xb2e/0xb4a
- [<c0156352>] ? handle_mm_fault+0x220/0x600
- [<c02c32d2>] ? sys_socketcall+0x13e/0x171
- [<c01ef9f8>] ? trace_hardirqs_on_thunk+0xc/0x10
- [<c0102c95>] ? sysenter_past_esp+0x6a/0xa5
- =======================
-Code: c8 74 0d 41 75 05 42 b3 40 74 05 bb 1e 00 00 00 89 d8 5b c9 c3
-55 89 e5 57 89 d7 56 89 ce 53 83 ec 08 8a 55 08 88 55 ef 8b 50 58 <8b>
-12 8b 52 08 89 55 f0 8b 40 34 83 f8 1e 74 07 83 f8 20 75 5b
-EIP: [<f89e3d41>] b43_dma_mapping_error+0x16/0x97 [b43] SS:ESP 0068:f6259afc
----[ end trace 7a51b359a273191c ]---
+> Jun  5 22:53:42 5720g kernel: firmware: requesting iwlwifi-4965-1.ucode                                                                                      
+> Jun  5 22:53:42 5720g kernel: Registered led device: iwl-phy0:radio                                                                                          
+> Jun  5 22:53:42 5720g kernel: Registered led device: iwl-phy0:assoc                                                                                          
+> Jun  5 22:53:42 5720g kernel: Registered led device: iwl-phy0:RX                                                                                             
+> Jun  5 22:53:42 5720g kernel: Registered led device: iwl-phy0:TX                                                                                             
+> Jun  5 22:53:42 5720g kernel: ADDRCONF(NETDEV_UP): wlan0: link is not ready                                                                                  
+> Jun  5 22:53:43 5720g kernel: BUG: unable to handle kernel NULL pointer dereference at 0000000000000000                                                      
+> Jun  5 22:53:43 5720g kernel: IP: [<ffffffffa02a6dfc>] :iwlcore:iwl_enqueue_hcmd+0x142/0x227                                                                 
+> Jun  5 22:53:43 5720g kernel: PGD 0                                                                                                                          
+> Jun  5 22:53:43 5720g kernel: Oops: 0000 [1] SMP                                                                                                             
+> Jun  5 22:53:43 5720g kernel: CPU 1                                                                                                                          
+> Jun  5 22:53:43 5720g kernel: Modules linked in: af_packet kvm_intel kvm snd_seq_dummy snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss snd_mixer_oss ipv6 xt_tcpudp iptable_filter ip_tables x_tables binfmt_misc loop dm_mod cpufreq_ondemand cpufreq_conservative cpufreq_powersave acpi_cpufreq freq_table tifm_sd tifm_7xx1 tifm_core nvram pcmcia ohci1394 ieee1394 mmc_block arc4 ecb sr_mod cdrom crypto_blkcipher sg battery video ac yenta_socket output container firewire_ohci rsrc_nonstatic pcmcia_core sdhci firewire_core iwl4965 iwlcore mmc_core crc_itu_t i2c_i801 snd_hda_intel rfkill snd_pcsp intel_agp iTCO_wdt nsc_ircc thermal acer_wmi processor tg3 iTCO_vendor_support snd_pcm joydev i2c_core snd_timer rtc_cmos button firmware_class rtc_core mac80211 led_class evdev serio_raw snd irda soundcore wmi rtc_lib crc_ccitt snd_page_alloc cfg80211 ide_generic piix ide_core ata_piix ahci libata dock sd_mod scsi_mod ext3 jbd uhci_hcd ohci_hcd ehci_hcd usbcore [last unlo
+aded: nf_conntrack]                                                                                            
+> Jun  5 22:53:43 5720g kernel: Pid: 10, comm: events/1 Not tainted 2.6.26-rc4-wl #1                                                                           
+> Jun  5 22:53:43 5720g kernel: RIP: 0010:[<ffffffffa02a6dfc>]  [<ffffffffa02a6dfc>] :iwlcore:iwl_enqueue_hcmd+0x142/0x227                                     
+> Jun  5 22:53:43 5720g kernel: RSP: 0018:ffff81013fb15b90  EFLAGS: 00010086                                                                                   
+> Jun  5 22:53:43 5720g kernel: RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000064                                                              
+> Jun  5 22:53:43 5720g kernel: RDX: 0000000000000024 RSI: 0000000000000000 RDI: ffff810139a4c578                                                              
+> Jun  5 22:53:43 5720g kernel: RBP: ffff81013fb15be0 R08: ffff810139b31200 R09: 0000000000000560                                                              
+> Jun  5 22:53:43 5720g kernel: R10: ffff81013fb15a60 R11: ffff81013fb10a78 R12: ffff810139a4c560                                                              
+> Jun  5 22:53:43 5720g kernel: R13: ffff81013bd51ba0 R14: ffff81013fb15d00 R15: 0000000000000004                                                              
+> Jun  5 22:53:43 5720g kernel: FS:  0000000000000000(0000) GS:ffff81013fab8ac0(0000) knlGS:0000000000000000                                                   
+> Jun  5 22:53:43 5720g kernel: CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b                                                                              
+> Jun  5 22:53:43 5720g kernel: CR2: 0000000000000000 CR3: 0000000000201000 CR4: 00000000000026e0                                                              
+> Jun  5 22:53:43 5720g kernel: DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000                                                              
+> Jun  5 22:53:43 5720g kernel: DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400                                                              
+> Jun  5 22:53:43 5720g kernel: Process events/1 (pid: 10, threadinfo ffff81013fb14000, task ffff81013fb102c0)                                                 
+> Jun  5 22:53:43 5720g kernel: Stack:  ffffffff806f8338 ffffffff8075bca0 ffff81013bd52610 006881013fb10a10                                                    
+> Jun  5 22:53:43 5720g kernel:  0000000000000006 ffff81013dc86500 ffff81013fb15d00 ffff81013bd51ba0                                                           
+> Jun  5 22:53:43 5720g kernel:  0000000000000246 0000000000000000 ffff81013fb15c60 ffffffffa02a5431                                                           
+> Jun  5 22:53:43 5720g kernel: Call Trace:                                                                                                                    
+> Jun  5 22:53:43 5720g kernel:  [<ffffffffa02a5431>] :iwlcore:iwl_send_cmd_sync+0x8b/0x24e                                                                    
+> Jun  5 22:53:43 5720g kernel:  [<ffffffff80257f1d>] ? __lock_acquire+0xbee/0xd5a                                                                             
+> Jun  5 22:53:43 5720g kernel:  [<ffffffffa02a5645>] :iwlcore:iwl_send_cmd+0x16/0x19                                                                          
+> Jun  5 22:53:43 5720g kernel:  [<ffffffffa02a84b3>] :iwlcore:iwl_send_static_wepkey_cmd+0xcb/0xd5                                                            
+> Jun  5 22:53:43 5720g kernel:  [<ffffffffa02a855f>] :iwlcore:iwl_set_default_wep_key+0xa2/0xbc                                                               
+> Jun  5 22:53:43 5720g kernel:  [<ffffffffa02b98ae>] :iwl4965:iwl4965_mac_set_key+0xed/0x136                                                                  
+> Jun  5 22:53:43 5720g kernel:  [<ffffffffa01762da>] :mac80211:__ieee80211_key_todo+0x109/0x203                                                               
+> Jun  5 22:53:43 5720g kernel:  [<ffffffffa017647a>] :mac80211:ieee80211_key_todo+0x17/0x25                                                                   
+> Jun  5 22:53:43 5720g kernel:  [<ffffffffa0176491>] :mac80211:key_todo+0x9/0xb                                                                               
+> Jun  5 22:53:43 5720g kernel:  [<ffffffff8024717c>] run_workqueue+0xfc/0x203                                                                                 
+> Jun  5 22:53:43 5720g kernel:  [<ffffffffa0176488>] ? :mac80211:key_todo+0x0/0xb                                                                             
+> Jun  5 22:53:43 5720g kernel:  [<ffffffff80247363>] worker_thread+0xe0/0xf1                                                                                  
+> Jun  5 22:53:43 5720g kernel:  [<ffffffff8024ad24>] ? autoremove_wake_function+0x0/0x38                                                                      
+> Jun  5 22:53:43 5720g kernel:  [<ffffffff80247283>] ? worker_thread+0x0/0xf1                                                                                 
+> Jun  5 22:53:43 5720g kernel:  [<ffffffff8024a9f3>] kthread+0x49/0x76                                                                                        
+> Jun  5 22:53:43 5720g kernel:  [<ffffffff8020d238>] child_rip+0xa/0x12
+> Jun  5 22:53:43 5720g kernel:  [<ffffffff8020c7cc>] ? restore_args+0x0/0x30
+> Jun  5 22:53:43 5720g kernel:  [<ffffffff8024a9aa>] ? kthread+0x0/0x76
+> Jun  5 22:53:43 5720g kernel:  [<ffffffff8020d22e>] ? child_rip+0x0/0x12
+> Jun  5 22:53:43 5720g kernel:
+> Jun  5 22:53:43 5720g kernel:
+> Jun  5 22:53:43 5720g kernel: Code: 69 c8 58 01 00 00 41 8a 06 4d 89 cc 4d 03 a5 10 45 00 00 41 88 44 24 14 4c 89 e7 f3 a5 49 8d 7c 24 18 41 0f b7 4e 02 49 8b 76 18 <f3> a4 41 c6 44 24 15 00 41 0f b6 95 e4 44 00 00 89 d0 80 cc 04
+> Jun  5 22:53:43 5720g kernel: RIP  [<ffffffffa02a6dfc>] :iwlcore:iwl_enqueue_hcmd+0x142/0x227
+> Jun  5 22:53:43 5720g kernel:  RSP <ffff81013fb15b90>
+> Jun  5 22:53:43 5720g kernel: CR2: 0000000000000000
+> Jun  5 22:53:43 5720g kernel: ---[ end trace 58a672208ff93cb1 ]---
 
 
-On Tue, Jun 10, 2008 at 10:50 AM, Michael Buesch <mb@bu3sch.de> wrote:
-> On Tuesday 10 June 2008 16:42:41 Vegard Nossum wrote:
->> This change comes from
->>
->> commit 353c409463ecba63c3a41a992d3f5fba935eada9
->> Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
->> Date:   Fri May 23 19:02:30 2008 +0000
->
->
-> Ok, FUJITA Tomonori, please make sure a patch like the following goes
-> into the same trees that you submitted commit 353c409 to.
-> Also make sure to check b43legacy. I _guess_ you might have added
-> the same bug there.
->
-> Index: wireless-testing/drivers/net/wireless/b43/dma.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/dma.c        2008-06-10 13:58:22.000000000 +0200
-> +++ wireless-testing/drivers/net/wireless/b43/dma.c     2008-06-10 16:48:53.000000000 +0200
-> @@ -802,6 +802,7 @@ struct b43_dmaring *b43_setup_dmaring(st
->        if (!ring)
->                goto out;
->        ring->type = type;
-> +       ring->dev = dev;
->
->        nr_slots = B43_RXRING_SLOTS;
->        if (for_tx)
-> @@ -853,7 +854,6 @@ struct b43_dmaring *b43_setup_dmaring(st
->                                 DMA_TO_DEVICE);
->        }
->
-> -       ring->dev = dev;
->        ring->nr_slots = nr_slots;
->        ring->mmio_base = b43_dmacontroller_base(type, controller_index);
->        ring->index = controller_index;
->
->
->>     dma-mapping-add-the-device-argument-to-dma_mapping_error
->>
->>     Add per-device dma_mapping_ops support for CONFIG_X86_64 as POWER
->>     architecture does:
->>
->>     This enables us to cleanly fix the Calgary IOMMU issue that some devices
->>     are not behind the IOMMU (http://lkml.org/lkml/2008/5/8/423).
->>
->>     I think that per-device dma_mapping_ops support would be also helpful for
->>     KVM people to support PCI passthrough but Andi thinks that this makes it
->>     difficult to support the PCI passthrough (see the above thread).  So I
->>     CC'ed this to KVM camp.  Comments are appreciated.
->>
->>     A pointer to dma_mapping_ops to struct dev_archdata is added.  If the
->>     pointer is non NULL, DMA operations in asm/dma-mapping.h use it.  If it's
->>     NULL, the system-wide dma_ops pointer is used as before.
->>
->>     If it's useful for KVM people, I plan to implement a mechanism to register
->>     a hook called when a new pci (or dma capable) device is created (it works
->>     with hot plugging).  It enables IOMMUs to set up an appropriate
->>     dma_mapping_ops per device.
->>
->>     The major obstacle is that dma_mapping_error doesn't take a pointer to the
->>     device unlike other DMA operations.  So x86 can't have dma_mapping_ops per
->>     device.  Note all the POWER IOMMUs use the same dma_mapping_error function
->>     so this is not a problem for POWER but x86 IOMMUs use different
->>     dma_mapping_error functions.
->>
->>     The first patch adds the device argument to dma_mapping_error.  The patch
->>     is trivial but large since it touches lots of drivers and dma-mapping.h in
->>     all the architecture.
->>
->> (Added to Cc.)
->>
->>
->> Vegard
->>
->
->
->
-> --
-> Greetings Michael.
->
+And for reference I also tried 2.6.25.4 wich works as it should
+
+--
+Thomas
