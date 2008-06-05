@@ -1,157 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:56836 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752447AbYFVPi5 (ORCPT
+Received: from s131.mittwaldmedien.de ([62.216.178.31]:13408 "EHLO
+	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752998AbYFELGZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jun 2008 11:38:57 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Thomas Renninger <trenn@suse.de>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: [PATCH 07/12] rfkill: rework suspend and resume handlers
-Date: Sun, 22 Jun 2008 12:38:43 -0300
-Message-Id: <1214149128-5913-8-git-send-email-hmh@hmh.eng.br> (sfid-20080622_173904_104857_F69B1B45)
-In-Reply-To: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
-References: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
+	Thu, 5 Jun 2008 07:06:25 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/3] libertas: fix interrupt issue
+Date: Thu, 5 Jun 2008 13:06:15 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200806051306.15592.hs4233@mail.mn-solutions.de> (sfid-20080605_130629_360692_2E44C631)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The resume handler should reset the wireless transmitter rfkill
-state to exactly what it was when the system was suspended.  Do it,
-and do it using the normal routines for state change while at it.
+This helps against lost interrupts and aids in debugging this.
 
-The suspend handler should force-switch the transmitter to blocked
-state, ignoring caches.  Do it.
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Also take an opportunity shot to rfkill_remove_switch() and also
-force the transmitter to blocked state there, bypassing caches.
-
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- net/rfkill/rfkill.c |   35 ++++++++++++++++++-----------------
- 1 files changed, 18 insertions(+), 17 deletions(-)
-
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 79f3bbb..fb56690 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -75,24 +75,25 @@ static void update_rfkill_state(struct rfkill *rfkill)
- }
+Index: wireless-testing/drivers/net/wireless/libertas/if_cs.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/libertas/if_cs.c	2008-05-30 11:26:35.000000000 +0200
++++ wireless-testing/drivers/net/wireless/libertas/if_cs.c	2008-05-30 11:30:09.000000000 +0200
+@@ -379,6 +379,8 @@ static irqreturn_t if_cs_interrupt(int i
  
- static int rfkill_toggle_radio(struct rfkill *rfkill,
--				enum rfkill_state state)
-+				enum rfkill_state state,
-+				int force)
- {
- 	int retval = 0;
- 	enum rfkill_state oldstate, newstate;
- 
- 	oldstate = rfkill->state;
- 
--	if (rfkill->get_state &&
-+	if (rfkill->get_state && !force &&
- 	    !rfkill->get_state(rfkill->data, &newstate))
- 		rfkill->state = newstate;
- 
--	if (state != rfkill->state) {
-+	if (force || state != rfkill->state) {
- 		retval = rfkill->toggle_radio(rfkill->data, state);
- 		if (!retval)
- 			rfkill->state = state;
+ 	/* Ask card interrupt cause register if there is something for us */
+ 	cause = if_cs_read16(card, IF_CS_CARD_INT_CAUSE);
++	lbs_deb_cs("cause 0x%04x\n", cause);
++
+ 	if (cause == 0) {
+ 		/* Not for us */
+ 		return IRQ_NONE;
+@@ -390,10 +392,6 @@ static irqreturn_t if_cs_interrupt(int i
+ 		return IRQ_HANDLED;
  	}
  
--	if (rfkill->state != oldstate)
-+	if (force || rfkill->state != oldstate)
- 		rfkill_led_trigger(rfkill, rfkill->state);
- 
- 	return retval;
-@@ -107,7 +108,6 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
-  * a specific switch is claimed by userspace in which case it is
-  * left alone.
-  */
+-	/* Clear interrupt cause */
+-	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, cause & IF_CS_BIT_MASK);
+-	lbs_deb_cs("cause 0x%04x\n", cause);
 -
- void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
- {
- 	struct rfkill *rfkill;
-@@ -118,7 +118,7 @@ void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
- 
- 	list_for_each_entry(rfkill, &rfkill_list, node) {
- 		if ((!rfkill->user_claim) && (rfkill->type == type))
--			rfkill_toggle_radio(rfkill, state);
-+			rfkill_toggle_radio(rfkill, state, 0);
+ 	if (cause & IF_CS_BIT_RX) {
+ 		struct sk_buff *skb;
+ 		lbs_deb_cs("rx packet\n");
+@@ -434,6 +432,9 @@ static irqreturn_t if_cs_interrupt(int i
+ 		lbs_queue_event(priv, event >> 8 & 0xff);
  	}
  
- 	mutex_unlock(&rfkill_mutex);
-@@ -214,7 +214,8 @@ static ssize_t rfkill_state_store(struct device *dev,
- 	if (mutex_lock_interruptible(&rfkill->mutex))
- 		return -ERESTARTSYS;
- 	error = rfkill_toggle_radio(rfkill,
--			state ? RFKILL_STATE_ON : RFKILL_STATE_OFF);
-+			state ? RFKILL_STATE_ON : RFKILL_STATE_OFF,
-+			0);
- 	mutex_unlock(&rfkill->mutex);
- 
- 	return error ? error : count;
-@@ -255,7 +256,8 @@ static ssize_t rfkill_claim_store(struct device *dev,
- 	if (rfkill->user_claim != claim) {
- 		if (!claim)
- 			rfkill_toggle_radio(rfkill,
--					    rfkill_states[rfkill->type]);
-+					    rfkill_states[rfkill->type],
-+					    0);
- 		rfkill->user_claim = claim;
- 	}
- 
-@@ -288,12 +290,11 @@ static int rfkill_suspend(struct device *dev, pm_message_t state)
- 
- 	if (dev->power.power_state.event != state.event) {
- 		if (state.event & PM_EVENT_SLEEP) {
--			mutex_lock(&rfkill->mutex);
--
--			if (rfkill->state == RFKILL_STATE_ON)
--				rfkill->toggle_radio(rfkill->data,
--						     RFKILL_STATE_OFF);
-+			/* Stop transmitter, keep state, no notifies */
-+			update_rfkill_state(rfkill);
- 
-+			mutex_lock(&rfkill->mutex);
-+			rfkill->toggle_radio(rfkill->data, RFKILL_STATE_OFF);
- 			mutex_unlock(&rfkill->mutex);
- 		}
- 
-@@ -310,8 +311,8 @@ static int rfkill_resume(struct device *dev)
- 	if (dev->power.power_state.event != PM_EVENT_ON) {
- 		mutex_lock(&rfkill->mutex);
- 
--		if (rfkill->state == RFKILL_STATE_ON)
--			rfkill->toggle_radio(rfkill->data, RFKILL_STATE_ON);
-+		/* restore radio state AND notify everybody */
-+		rfkill_toggle_radio(rfkill, rfkill->state, 1);
- 
- 		mutex_unlock(&rfkill->mutex);
- 	}
-@@ -338,7 +339,7 @@ static int rfkill_add_switch(struct rfkill *rfkill)
- 
- 	mutex_lock(&rfkill_mutex);
- 
--	error = rfkill_toggle_radio(rfkill, rfkill_states[rfkill->type]);
-+	error = rfkill_toggle_radio(rfkill, rfkill_states[rfkill->type], 0);
- 	if (!error)
- 		list_add_tail(&rfkill->node, &rfkill_list);
- 
-@@ -351,7 +352,7 @@ static void rfkill_remove_switch(struct rfkill *rfkill)
- {
- 	mutex_lock(&rfkill_mutex);
- 	list_del_init(&rfkill->node);
--	rfkill_toggle_radio(rfkill, RFKILL_STATE_OFF);
-+	rfkill_toggle_radio(rfkill, RFKILL_STATE_OFF, 1);
- 	mutex_unlock(&rfkill_mutex);
++	/* Clear interrupt cause */
++	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, cause & IF_CS_BIT_MASK);
++
+ 	lbs_deb_leave(LBS_DEB_CS);
+ 	return IRQ_HANDLED;
  }
- 
--- 
-1.5.5.4
-
