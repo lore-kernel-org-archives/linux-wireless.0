@@ -1,72 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.234]:25327 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754028AbYFXJU3 (ORCPT
+Received: from mbox2.netikka.net ([213.250.81.203]:45047 "EHLO
+	mbox2.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752381AbYFEVsG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 05:20:29 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so7539150rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2008 02:20:29 -0700 (PDT)
-Message-ID: <a32f33a40806240220s3ef070bdr591d4775ee57cb81@mail.gmail.com> (sfid-20080624_112033_393550_9179C0E8)
-Date: Tue, 24 Jun 2008 11:20:28 +0200
-From: "Ivo Van Doorn" <ivdoorn@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: mac80211: workqueue & RTNL lock
-Cc: "Michael Buesch" <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1214298658.8967.266.camel@johannes.berg>
+	Thu, 5 Jun 2008 17:48:06 -0400
+Message-ID: <48485F12.2050908@mandriva.org> (sfid-20080605_234812_371379_ABC73D3A)
+Date: Fri, 06 Jun 2008 00:48:02 +0300
+From: Thomas Backlund <tmb@mandriva.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200806230042.41219.IvDoorn@gmail.com>
-	 <200806230030.42776.mb@bu3sch.de>
-	 <a32f33a40806230130t11022b31p3d9997ab5e449fe6@mail.gmail.com>
-	 <200806231120.41519.mb@bu3sch.de>
-	 <a32f33a40806230417i68e4d19aj76a481d7dbf2c611@mail.gmail.com>
-	 <1214297515.8967.253.camel@johannes.berg>
-	 <a32f33a40806240203w29d0caf7p6e2956d82d48e013@mail.gmail.com>
-	 <1214298658.8967.266.camel@johannes.berg>
+CC: Tomas Winkler <tomasw@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwl4965 oops in 2.6.26-rc5 x86_64
+References: <4848289D.1080205@mandriva.org> <1ba2fa240806051103q652accf5t1bd1d94630ebea5b@mail.gmail.com> <48482BC3.4070402@mandriva.org> <4848482C.2080208@mandriva.org>
+In-Reply-To: <4848482C.2080208@mandriva.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> > Or if not, can you use schedule_work and cancel_work_sync to take care
->> > of things?
+Thomas Backlund skrev:
+> Thomas Backlund skrev:
+>> Tomas Winkler skrev:
+>>>>
+>>> Can you please verify with latest wireless-testing. git
+>>> Thanks
+>>> Tomas
 >>
->> I thought about that it cancel_work_sync will cause exactly the same
->> problem,
->> stop() holds the rtnl lock, rt2x00 work waits for rtnl lock, mac80211
->> calls stop(), rt2x00 waits until tasks are completed but one of those
->> is still waiting on the rtnl lock.
+>> Yep. will do...
 >>
->> However I could use the non-synchronized version for cancelling the work
->> and add a check to see if the work should be cancelled within the
->> rtnl-protected area.
->
-> Oh, right, your work is actually taking the RTNL. We will not get the
-> ->stop callback rtnl-free no matter what we do. And we can probably not
-> even get it free of whatever lock we need for the netdev list either
-> way...
->
-> However, the interface iterator will simply not run at all if ->stop has
-> already succeeded since no interfaces would be UP, so you don't really
-> have to protect it against that, you only have to make sure it's not
-> running when you unregister your hardware struct, and _that_ doesn't
-> have the rtnl taken so you can use cancel_work_sync() there.
-
-True, but the race condition happens when ieee80211_stop() is called,
-and the rt2x00 work is triggered before before
-rt2x00->remove_interface() or rt2x00>stop() is called. when stop() is
-then called it cannot use cancel_work_sync() because
-the work structure is waiting until stop() has completed which will
-not end until cancel_work_sync() has completed.
-
->> > I would like to keep the mac80211 workqueue rtnl-free because
->> > otherwise locking is going to get ugly.
+>> I'll report back as soon as I have tried..
 >>
->> We need a big warning in mac80211.h then that tells that the non-atomic
->> iterator
->> or any other rtnl locking cannot be used in the mac80211 workqueue.
->
-> Agreed, care to prepare a patch?
+> 
+> No go...
+> 
+>> Jun  5 22:53:42 5720g kernel: firmware: requesting 
+>> iwlwifi-4965-1.ucode                                                                                      
+>> Jun  5 22:53:42 5720g kernel: Registered led device: 
+>> iwl-phy0:radio                                                                                          
+>> Jun  5 22:53:42 5720g kernel: Registered led device: 
+>> iwl-phy0:assoc                                                                                          
+>> Jun  5 22:53:42 5720g kernel: Registered led device: 
+>> iwl-phy0:RX                                                                                             
+>> Jun  5 22:53:42 5720g kernel: Registered led device: 
+>> iwl-phy0:TX                                                                                             
+>> Jun  5 22:53:42 5720g kernel: ADDRCONF(NETDEV_UP): wlan0: link is not 
+>> ready                                                                                  
+>> Jun  5 22:53:43 5720g kernel: BUG: unable to handle kernel NULL 
+>> pointer dereference at 
+>> 0000000000000000                                                      
+>> Jun  5 22:53:43 5720g kernel: IP: [<ffffffffa02a6dfc>] 
+>> :iwlcore:iwl_enqueue_hcmd+0x142/0x227                                                                 
+>> Jun  5 22:53:43 5720g kernel: PGD 
+>> 0                                                                                                                          
+>> Jun  5 22:53:43 5720g kernel: Oops: 0000 [1] 
+>> SMP                                                                                                             
+>> Jun  5 22:53:43 5720g kernel: CPU 
+>> 1                                                                                                                          
+>> Jun  5 22:53:43 5720g kernel: Modules linked in: af_packet kvm_intel 
+>> kvm snd_seq_dummy snd_seq_oss snd_seq_midi_event snd_seq 
+>> snd_seq_device snd_pcm_oss snd_mixer_oss ipv6 xt_tcpudp iptable_filter 
+>> ip_tables x_tables binfmt_misc loop dm_mod cpufreq_ondemand 
+>> cpufreq_conservative cpufreq_powersave acpi_cpufreq freq_table tifm_sd 
+>> tifm_7xx1 tifm_core nvram pcmcia ohci1394 ieee1394 mmc_block arc4 ecb 
+>> sr_mod cdrom crypto_blkcipher sg battery video ac yenta_socket output 
+>> container firewire_ohci rsrc_nonstatic pcmcia_core sdhci firewire_core 
+>> iwl4965 iwlcore mmc_core crc_itu_t i2c_i801 snd_hda_intel rfkill 
+>> snd_pcsp intel_agp iTCO_wdt nsc_ircc thermal acer_wmi processor tg3 
+>> iTCO_vendor_support snd_pcm joydev i2c_core snd_timer rtc_cmos button 
+>> firmware_class rtc_core mac80211 led_class evdev serio_raw snd irda 
+>> soundcore wmi rtc_lib crc_ccitt snd_page_alloc cfg80211 ide_generic 
+>> piix ide_core ata_piix ahci libata dock sd_mod scsi_mod ext3 jbd 
+>> uhci_hcd ohci_hcd ehci_hcd usbcore [last unlo
+> aded: 
+> nf_conntrack]                                                                                            
+> 
+>> Jun  5 22:53:43 5720g kernel: Pid: 10, comm: events/1 Not tainted 
+>> 2.6.26-rc4-wl 
+>> #1                                                                           
+>> Jun  5 22:53:43 5720g kernel: RIP: 0010:[<ffffffffa02a6dfc>]  
+>> [<ffffffffa02a6dfc>] 
+>> :iwlcore:iwl_enqueue_hcmd+0x142/0x227                                     
+>> Jun  5 22:53:43 5720g kernel: RSP: 0018:ffff81013fb15b90  EFLAGS: 
+>> 00010086                                                                                   
+>> Jun  5 22:53:43 5720g kernel: RAX: 0000000000000000 RBX: 
+>> 0000000000000000 RCX: 
+>> 0000000000000064                                                              
+>> Jun  5 22:53:43 5720g kernel: RDX: 0000000000000024 RSI: 
+>> 0000000000000000 RDI: 
+>> ffff810139a4c578                                                              
+>> Jun  5 22:53:43 5720g kernel: RBP: ffff81013fb15be0 R08: 
+>> ffff810139b31200 R09: 
+>> 0000000000000560                                                              
+>> Jun  5 22:53:43 5720g kernel: R10: ffff81013fb15a60 R11: 
+>> ffff81013fb10a78 R12: 
+>> ffff810139a4c560                                                              
+>> Jun  5 22:53:43 5720g kernel: R13: ffff81013bd51ba0 R14: 
+>> ffff81013fb15d00 R15: 
+>> 0000000000000004                                                              
+>> Jun  5 22:53:43 5720g kernel: FS:  0000000000000000(0000) 
+>> GS:ffff81013fab8ac0(0000) 
+>> knlGS:0000000000000000                                                   
+>> Jun  5 22:53:43 5720g kernel: CS:  0010 DS: 0018 ES: 0018 CR0: 
+>> 000000008005003b                                                                              
+>> Jun  5 22:53:43 5720g kernel: CR2: 0000000000000000 CR3: 
+>> 0000000000201000 CR4: 
+>> 00000000000026e0                                                              
+>> Jun  5 22:53:43 5720g kernel: DR0: 0000000000000000 DR1: 
+>> 0000000000000000 DR2: 
+>> 0000000000000000                                                              
+>> Jun  5 22:53:43 5720g kernel: DR3: 0000000000000000 DR6: 
+>> 00000000ffff0ff0 DR7: 
+>> 0000000000000400                                                              
+>> Jun  5 22:53:43 5720g kernel: Process events/1 (pid: 10, threadinfo 
+>> ffff81013fb14000, task 
+>> ffff81013fb102c0)                                                 Jun  
+>> 5 22:53:43 5720g kernel: Stack:  ffffffff806f8338 ffffffff8075bca0 
+>> ffff81013bd52610 
+>> 006881013fb10a10                                                    
+>> Jun  5 22:53:43 5720g kernel:  0000000000000006 ffff81013dc86500 
+>> ffff81013fb15d00 
+>> ffff81013bd51ba0                                                           
+>> Jun  5 22:53:43 5720g kernel:  0000000000000246 0000000000000000 
+>> ffff81013fb15c60 
+>> ffffffffa02a5431                                                           
+>> Jun  5 22:53:43 5720g kernel: Call 
+>> Trace:                                                                                                                    
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffffa02a5431>] 
+>> :iwlcore:iwl_send_cmd_sync+0x8b/0x24e                                                                    
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffff80257f1d>] ? 
+>> __lock_acquire+0xbee/0xd5a                                                                             
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffffa02a5645>] 
+>> :iwlcore:iwl_send_cmd+0x16/0x19                                                                          
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffffa02a84b3>] 
+>> :iwlcore:iwl_send_static_wepkey_cmd+0xcb/0xd5                                                            
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffffa02a855f>] 
+>> :iwlcore:iwl_set_default_wep_key+0xa2/0xbc                                                               
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffffa02b98ae>] 
+>> :iwl4965:iwl4965_mac_set_key+0xed/0x136                                                                  
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffffa01762da>] 
+>> :mac80211:__ieee80211_key_todo+0x109/0x203                                                               
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffffa017647a>] 
+>> :mac80211:ieee80211_key_todo+0x17/0x25                                                                   
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffffa0176491>] 
+>> :mac80211:key_todo+0x9/0xb                                                                               
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffff8024717c>] 
+>> run_workqueue+0xfc/0x203                                                                                 
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffffa0176488>] ? 
+>> :mac80211:key_todo+0x0/0xb                                                                             
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffff80247363>] 
+>> worker_thread+0xe0/0xf1                                                                                  
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffff8024ad24>] ? 
+>> autoremove_wake_function+0x0/0x38                                                                      
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffff80247283>] ? 
+>> worker_thread+0x0/0xf1                                                                                 
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffff8024a9f3>] 
+>> kthread+0x49/0x76                                                                                        
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffff8020d238>] child_rip+0xa/0x12
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffff8020c7cc>] ? 
+>> restore_args+0x0/0x30
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffff8024a9aa>] ? kthread+0x0/0x76
+>> Jun  5 22:53:43 5720g kernel:  [<ffffffff8020d22e>] ? child_rip+0x0/0x12
+>> Jun  5 22:53:43 5720g kernel:
+>> Jun  5 22:53:43 5720g kernel:
+>> Jun  5 22:53:43 5720g kernel: Code: 69 c8 58 01 00 00 41 8a 06 4d 89 
+>> cc 4d 03 a5 10 45 00 00 41 88 44 24 14 4c 89 e7 f3 a5 49 8d 7c 24 18 
+>> 41 0f b7 4e 02 49 8b 76 18 <f3> a4 41 c6 44 24 15 00 41 0f b6 95 e4 44 
+>> 00 00 89 d0 80 cc 04
+>> Jun  5 22:53:43 5720g kernel: RIP  [<ffffffffa02a6dfc>] 
+>> :iwlcore:iwl_enqueue_hcmd+0x142/0x227
+>> Jun  5 22:53:43 5720g kernel:  RSP <ffff81013fb15b90>
+>> Jun  5 22:53:43 5720g kernel: CR2: 0000000000000000
+>> Jun  5 22:53:43 5720g kernel: ---[ end trace 58a672208ff93cb1 ]---
+> 
+> 
+> And for reference I also tried 2.6.25.4 wich works as it should
+> 
 
-Sure, as soon as get home I'll write the patch. :)
+And I have now tested 2.6.26-rc1 wich also has the oops, so I guess it's 
+bisect time...
 
-Ivo
+> -- 
+> Thomas
+> 
+
