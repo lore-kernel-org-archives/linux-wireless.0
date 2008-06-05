@@ -1,30 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:5185 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751304AbYFSNyg convert rfc822-to-8bit (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:36123 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751733AbYFEUQx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 09:54:36 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Bernhard Reiter <bernhard@intevation.de>
-Subject: Re: 802.11 pccard, Agere 0x0156,0x0003?
-Date: Thu, 19 Jun 2008 15:54:27 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200806181715.20516.bernhard@intevation.de> <200806191119.45407.hs4233@mail.mn-solutions.de> <200806191444.23528.bernhard@intevation.de>
-In-Reply-To: <200806191444.23528.bernhard@intevation.de>
+	Thu, 5 Jun 2008 16:16:53 -0400
+Message-Id: <1212697012.14712.1256992009@webmail.messagingengine.com> (sfid-20080605_221656_278458_B0EC63B4)
+From: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Cc: "Ivo van Doorn" <ivdoorn@gmail.com>,
+	"Dan Williams" <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, "Dmitry Torokhov" <dtor@mail.ru>
+Content-Type: text/plain; charset="ISO-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Message-Id: <200806191554.27885.hs4233@mail.mn-solutions.de> (sfid-20080619_155439_837042_A68D08CB)
+References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
+   <1ba2fa240806041607j10841ac0qb11fe0d0b27953d8@mail.gmail.com>
+   <20080605003808.GA16599@khazad-dum.debian.net>
+   <200806051803.43193.IvDoorn@gmail.com>
+   <1ba2fa240806050936o383111cepcd6733d1ed205a26@mail.gmail.com>
+   <1212687773.13044.1256965165@webmail.messagingengine.com>
+   <1ba2fa240806051054t26ae5487s531962bf9ebcb2ff@mail.gmail.com>
+Subject: Re: [PATCH 01/12] rfkill: clarify meaning of rfkill states
+In-Reply-To: <1ba2fa240806051054t26ae5487s531962bf9ebcb2ff@mail.gmail.com>
+Date: Thu, 05 Jun 2008 17:16:52 -0300
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> http://questier.com/wl_lkm_722_abg.tar.gz
+On Thu, 5 Jun 2008 20:54:42 +0300, "Tomas Winkler" <tomasw@gmail.com> said:
+> On Thu, Jun 5, 2008 at 8:42 PM, Henrique de Moraes Holschuh
+> <hmh@hmh.eng.br> wrote:
+> > On Thu, 5 Jun 2008 19:36:26 +0300, "Tomas Winkler" <tomasw@gmail.com> said:
+> >> Cannot this be just fixed with ~ sed -s/ON/OFF/g'  over the kernel?
+> >
+> > Absolutely NOT!
+> >
+> > You would have patches in flight, not to mention out-of-tree
+> > stuff, that you'd have no idea if they want the old or new meaning.
+> >
+> > Not to mention you'd never know what you forgot to convert, etc.
+> >
+> How many drivers today implement the rfkill interface? I guess no more
+> then 10.
 
-Yeah, and the 7.22 version didn't work for me (it didn't even=20
-associate without a WEP key). But 7.18 worked for me "good=20
-enought", so I did not feel too much incentive to dig around in=20
-this pile of Kot, =E4h, code.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You missed the point.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
+
