@@ -1,67 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp6.pp.htv.fi ([213.243.153.40]:50725 "EHLO smtp6.pp.htv.fi"
+Received: from mx1.redhat.com ([66.187.233.31]:38154 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750887AbYFXMpN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 08:45:13 -0400
-Date: Tue, 24 Jun 2008 15:43:14 +0300
-From: Adrian Bunk <bunk@kernel.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Adrian Bunk <bunk@stusta.de>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: RFC: always enable MAC80211_RC_PID?
-Message-ID: <20080624124311.GC16021@cs181140183.pp.htv.fi> (sfid-20080624_144517_890601_C9D84D92)
-References: <20080622125553.GB22539@cs181133002.pp.htv.fi> <43e72e890806220804i347b942claae7b725231afcce@mail.gmail.com> <1214298259.8967.260.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1214298259.8967.260.camel@johannes.berg>
+	id S1755123AbYFELrW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jun 2008 07:47:22 -0400
+Subject: Re: [PATCH 3/4] libertas: check for old, unsupported hardware
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200806051308.35863.hs4233@mail.mn-solutions.de>
+References: <200806051308.35863.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Thu, 05 Jun 2008 07:46:59 -0400
+Message-Id: <1212666420.25730.4.camel@localhost.localdomain> (sfid-20080605_134738_545220_FDB0E48E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 24, 2008 at 11:04:19AM +0200, Johannes Berg wrote:
-> 
-> > You can currently only get away living without it if you are just
-> > using iwl3945 or iwl4965 as they provide their own rate control
-> > algorithms. In the future if other vendor drivers are added with their
-> > own rate control algorithm this list grows.
-> 
-> FWIW, I would like to see those algorithms be supported as part of
-> mac80211 and not be internal like iwlwifi hacked them on, and have some
-> sort of feature negotiation between the hardware and the RC algorithm
-> when choosing one.
+On Thu, 2008-06-05 at 13:08 +0200, Holger Schurig wrote:
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Do we need it as complicated as it is today?
+Looks OK to me; how old are the B1 and earlier chips?  Do we just not
+have any samples to work with?
 
-Currently the infrastructure is:
-- the default algorithm is built into mac80211
-- other algorithms get into their own modules
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-The implementation of this complicated scheme is horrible
-(just look at net/mac80211/Makefile), and anyone adding a new
-algorithm will most likely not get it right at his first attempt.
-
-Can we get one of either:
-- all selected mac80211 algorithms are built into the mac80211 module or
-- all selected mac80211 algorithms (including the default one) are in
-  their own modules
-?
-
-It wouldn't make any difference today for the CONFIG_EMBEDDED=n case, 
-but allows to make things less complicated and will make it easier to 
-add additional algorithms.
-
-I'll be glad to provide a patch if one of these is considered 
-acceptable.
-
-> johannes
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+> --- linux.orig/drivers/net/wireless/libertas/if_cs.c
+> +++ linux/drivers/net/wireless/libertas/if_cs.c
+> @@ -268,6 +268,12 @@
+>  #define IF_CS_SCRATCH_BOOT_OK		0x00
+>  #define IF_CS_SCRATCH_HELPER_OK		0x5a
+>  
+> +/*
+> + * Used to detect ancient chips:
+> + */
+> +#define IF_CS_PRODUCT_ID		0x0000001C
+> +#define IF_CS_CF8385_B1_REV		0x12
+> +
+>  
+>  /********************************************************************/
+>  /* I/O and interrupt handling                                       */
+> @@ -864,6 +871,12 @@
+>  	       p_dev->irq.AssignedIRQ, p_dev->io.BasePort1,
+>  	       p_dev->io.BasePort1 + p_dev->io.NumPorts1 - 1);
+>  
+> +	/* Check if we have a current silicon */
+> +	if (if_cs_read8(card, IF_CS_PRODUCT_ID) < IF_CS_CF8385_B1_REV) {
+> +		lbs_pr_err("old chips like 8385 rev B1 aren't supported\n");
+> +		ret = -ENODEV;
+> +		goto out2;
+> +	}
+>  
+>  	/* Load the firmware early, before calling into libertas.ko */
+>  	ret = if_cs_prog_helper(card);
 
