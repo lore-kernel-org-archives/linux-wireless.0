@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59463
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755213AbYFRWiw (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:51271 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753296AbYFENfl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 18:38:52 -0400
-Date: Wed, 18 Jun 2008 15:38:53 -0700 (PDT)
-Message-Id: <20080618.153853.245557085.davem@davemloft.net> (sfid-20080619_003856_344440_5838CB3E)
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, rjw@sisk.pl, mb@bu3sch.de,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2.6.26 (resend)] mac80211: detect driver tx bugs
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080618203714.GA20451@tuxdriver.com>
-References: <1213534540.3803.5.camel@johannes.berg>
-	<1213785045.1312.12.camel@johannes.berg>
-	<20080618203714.GA20451@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 5 Jun 2008 09:35:41 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: b43 opensource firmware for monitor mode
+Date: Thu, 5 Jun 2008 15:35:13 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <200806041716.53771.mb@bu3sch.de> <1212633988.26365.42.camel@dv>
+In-Reply-To: <1212633988.26365.42.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200806051535.14340.mb@bu3sch.de> (sfid-20080605_153543_940569_D8221F4E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 18 Jun 2008 16:37:14 -0400
-
-> On Wed, Jun 18, 2008 at 12:30:45PM +0200, Johannes Berg wrote:
-> > When a driver rejects a frame in it's ->tx() callback, it must also
-> > stop queues, otherwise mac80211 can go into a loop here. Detect this
-> > situation and abort the loop after five retries, warning about the
-> > driver bug.
+On Thursday 05 June 2008 04:46:28 Pavel Roskin wrote:
+> On Wed, 2008-06-04 at 17:16 +0200, Michael Buesch wrote:
+> > Release early, release often.
+> > Here's the first testing release of the b43 opensource firmware.
+> > http://bu3sch.de/misc/b43-openfw-20080604.tar.bz2
 > > 
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> > ---
-> > This is a port of the patch to 2.6.26 which seems to suffer from the
-> > same problem and could well be the cause of some of the mac80211 softlockup
-> > warnings on kerneloops.org.
+> > Currently only the receive path is partially implemented. So that
+> > means we can only run it in monitor mode for now. This firmware is
+> > able to receive packets and push them without special handling (like
+> > decrypting) to the driver.
+> > There are lots of bugs, of course. Sometimes the PLCP header is corrupted.
+> > That will result in a kernel driver warning in xmit.c.
 > > 
-> > Dave, with John on vacation until the 22nd, would you push this to Linus
-> > with the next net update instead of it going through John's tree first?
+> > This firmware does _only_ work on wireless core revisions 5, 6, 7, 8 or 10.
 > 
-> This is fine with me.  Otherwise I'll try to get to it in the next
-> day or so.
+> That's great news!  Having distributable firmware would simplify
+> installation, placing b43 to the same league as Intel devices.  But
+> having free firmware would be unique to Broadcom card and extremely
+> attractive for research in wireless communications and development of
+> novel devices using non-standard protocol extensions.
+> 
+> As a short term goal, maybe bcm4328 could be dumbed down to work with
+> b43?
+> 
+> I've tried it with bcm4318 first, and it hung hard on module load.  Even
+> Alt-SysRq would not work.  It turns out it was revision 9 missing in
+> your list.
+> 
+> Then I tries a bcm4306 device with rev 5 core.  The module loaded.  I
+> brought it up in managed mode first.  Scanning didn't work.  I brought
+> the device down and set monitor mode.  But the system hung when I tried
+> to bring the interface back up.
 
-I'll toss it into my tree, don't worry about it.
+There shouldn't be a reason for a freeze. It might crash, yes, but it always
+prints out useful messages first for me.
+
+-- 
+Greetings Michael.
