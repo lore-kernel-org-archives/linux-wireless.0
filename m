@@ -1,98 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:53358 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759020AbYFTQDG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2008 12:03:06 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Add debugfs firmware debugging knob
-Date: Fri, 20 Jun 2008 18:02:08 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Received: from ruslug.rutgers.edu ([165.230.139.146]:53937 "EHLO
+	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754657AbYFEN2p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jun 2008 09:28:45 -0400
+Date: Thu, 5 Jun 2008 09:07:34 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: linville@tuxdriver.com
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] rt2x00: Rename tx_info to info to help compat-wireless revert MQ support for older kernels
+Message-ID: <20080605130734.GD17936@ruslug.rutgers.edu> (sfid-20080605_152848_110692_F97414BF)
 MIME-Version: 1.0
-Message-Id: <200806201802.08440.mb@bu3sch.de> (sfid-20080620_180310_329311_A264668D)
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a firmware debugging knob to debugfs.
-With this knob it's possible to enable advanced runtime firmware
-checks.
-For now it only implements one sanity check for the mac-suspend.
-In future there'll probably be more.
-If CONFIG_B43_DEBUG is disabled, these checks will collapse to nothing.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Rename tx_info to info as used by other drivers. This will help
+with CONFIG_NETDEVICES_MULTIQUEUE requirement for HT support support
+in compat-wireless by allowing us to map skb_get_queue_mapping(skb)
+to the old info->queue.
 
+An alternative is to maintain a large compat.diff which replaces all
+skb_get_queue_mapping(skb) calls back to info->queue but since this
+is the only driver which requires name change it seems worth it
+to help with maintenance.
+
+Compat-wireless shouldn't be a reason to accept patches in but if
+the changes are just cosmetic it seems worth the benefit.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
 ---
+ drivers/net/wireless/rt2x00/rt2x00mac.c |   22 +++++++++++-----------
+ 1 files changed, 11 insertions(+), 11 deletions(-)
 
-John, please queue for 2.6.27
-
-
-
-Index: wireless-testing/drivers/net/wireless/b43/debugfs.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/debugfs.c	2008-06-20 17:38:13.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/debugfs.c	2008-06-20 17:40:09.000000000 +0200
-@@ -798,12 +798,13 @@ static void b43_add_dynamic_debug(struct
- 	add_dyn_dbg("debug_xmitpower", B43_DBG_XMITPOWER, 0);
- 	add_dyn_dbg("debug_dmaoverflow", B43_DBG_DMAOVERFLOW, 0);
- 	add_dyn_dbg("debug_dmaverbose", B43_DBG_DMAVERBOSE, 0);
- 	add_dyn_dbg("debug_pwork_fast", B43_DBG_PWORK_FAST, 0);
- 	add_dyn_dbg("debug_pwork_stop", B43_DBG_PWORK_STOP, 0);
- 	add_dyn_dbg("debug_lo", B43_DBG_LO, 0);
-+	add_dyn_dbg("debug_firmware", B43_DBG_FIRMWARE, 0);
- 
- #undef add_dyn_dbg
- }
- 
- void b43_debugfs_add_device(struct b43_wldev *dev)
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index b02dbc8..ff8b476 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -33,13 +33,13 @@ static int rt2x00mac_tx_rts_cts(struct rt2x00_dev *rt2x00dev,
+ 				struct data_queue *queue,
+ 				struct sk_buff *frag_skb)
  {
-Index: wireless-testing/drivers/net/wireless/b43/debugfs.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/debugfs.h	2008-06-20 17:38:13.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/debugfs.h	2008-06-20 17:40:09.000000000 +0200
-@@ -8,12 +8,13 @@ enum b43_dyndbg {		/* Dynamic debugging 
- 	B43_DBG_XMITPOWER,
- 	B43_DBG_DMAOVERFLOW,
- 	B43_DBG_DMAVERBOSE,
- 	B43_DBG_PWORK_FAST,
- 	B43_DBG_PWORK_STOP,
- 	B43_DBG_LO,
-+	B43_DBG_FIRMWARE,
- 	__B43_NR_DYNDBG,
- };
+-	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(frag_skb);
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(frag_skb);
+ 	struct skb_frame_desc *skbdesc;
+ 	struct ieee80211_tx_info *rts_info;
+ 	struct sk_buff *skb;
+ 	int size;
  
- #ifdef CONFIG_B43_DEBUG
+-	if (tx_info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)
++	if (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)
+ 		size = sizeof(struct ieee80211_cts);
+ 	else
+ 		size = sizeof(struct ieee80211_rts);
+@@ -68,18 +68,18 @@ static int rt2x00mac_tx_rts_cts(struct rt2x00_dev *rt2x00dev,
+ 	rts_info->flags &= ~IEEE80211_TX_CTL_USE_CTS_PROTECT;
+ 	rts_info->flags &= ~IEEE80211_TX_CTL_REQ_TX_STATUS;
  
- struct dentry;
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-06-20 17:40:06.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2008-06-20 17:57:06.000000000 +0200
-@@ -2485,12 +2485,25 @@ static void b43_gpio_cleanup(struct b43_
- 	ssb_write32(gpiodev, B43_GPIO_CONTROL, 0);
- }
+-	if (tx_info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)
++	if (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)
+ 		rts_info->flags |= IEEE80211_TX_CTL_NO_ACK;
+ 	else
+ 		rts_info->flags &= ~IEEE80211_TX_CTL_NO_ACK;
  
- /* http://bcm-specs.sipsolutions.net/EnableMac */
- void b43_mac_enable(struct b43_wldev *dev)
+-	if (tx_info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)
+-		ieee80211_ctstoself_get(rt2x00dev->hw, tx_info->control.vif,
+-					frag_skb->data, size, tx_info,
++	if (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)
++		ieee80211_ctstoself_get(rt2x00dev->hw, info->control.vif,
++					frag_skb->data, size, info,
+ 					(struct ieee80211_cts *)(skb->data));
+ 	else
+-		ieee80211_rts_get(rt2x00dev->hw, tx_info->control.vif,
+-				  frag_skb->data, size, tx_info,
++		ieee80211_rts_get(rt2x00dev->hw, info->control.vif,
++				  frag_skb->data, size, info,
+ 				  (struct ieee80211_rts *)(skb->data));
+ 
+ 	/*
+@@ -100,7 +100,7 @@ static int rt2x00mac_tx_rts_cts(struct rt2x00_dev *rt2x00dev,
+ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
  {
-+	if (b43_debug(dev, B43_DBG_FIRMWARE)) {
-+		u16 fwstate;
-+
-+		fwstate = b43_shm_read16(dev, B43_SHM_SHARED,
-+					 B43_SHM_SH_UCODESTAT);
-+		if ((fwstate != B43_SHM_SH_UCODESTAT_SUSP) &&
-+		    (fwstate != B43_SHM_SH_UCODESTAT_SLEEP)) {
-+			b43err(dev->wl, "b43_mac_enable(): The firmware "
-+			       "should be suspended, but current state is %u\n",
-+			       fwstate);
-+		}
-+	}
-+
- 	dev->mac_suspended--;
- 	B43_WARN_ON(dev->mac_suspended < 0);
- 	if (dev->mac_suspended == 0) {
- 		b43_write32(dev, B43_MMIO_MACCTL,
- 			    b43_read32(dev, B43_MMIO_MACCTL)
- 			    | B43_MACCTL_ENABLED);
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+-	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *ieee80211hdr = (struct ieee80211_hdr *)skb->data;
+ 	enum data_queue_qid qid = skb_get_queue_mapping(skb);
+ 	struct data_queue *queue;
+@@ -121,7 +121,7 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	/*
+ 	 * Determine which queue to put packet on.
+ 	 */
+-	if (tx_info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM &&
++	if (info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM &&
+ 	    test_bit(DRIVER_REQUIRE_ATIM_QUEUE, &rt2x00dev->flags))
+ 		queue = rt2x00queue_get_queue(rt2x00dev, QID_ATIM);
+ 	else
+@@ -146,7 +146,7 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	 */
+ 	frame_control = le16_to_cpu(ieee80211hdr->frame_control);
+ 	if (!is_rts_frame(frame_control) && !is_cts_frame(frame_control) &&
+-	    (tx_info->flags & (IEEE80211_TX_CTL_USE_RTS_CTS |
++	    (info->flags & (IEEE80211_TX_CTL_USE_RTS_CTS |
+ 			       IEEE80211_TX_CTL_USE_CTS_PROTECT)) &&
+ 	    !rt2x00dev->ops->hw->set_rts_threshold) {
+ 		if (rt2x00queue_available(queue) <= 1) {
+-- 
+1.5.4.3
+
