@@ -1,62 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:57811 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752638AbYFERxs (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.182]:39846 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757497AbYFFN73 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2008 13:53:48 -0400
-Message-Id: <1212688428.15820.1256966109@webmail.messagingengine.com> (sfid-20080605_195352_115350_DA4CBBFF)
-From: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Cc: "Tomas Winkler" <tomasw@gmail.com>,
-	"Dan Williams" <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, "Dmitry Torokhov" <dtor@mail.ru>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Fri, 6 Jun 2008 09:59:29 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so763641waf.23
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jun 2008 06:59:29 -0700 (PDT)
+Message-ID: <1ba2fa240806060659wf4e4088s8afdd2f7f854ea09@mail.gmail.com> (sfid-20080606_155945_033591_F33B603D)
+Date: Fri, 6 Jun 2008 16:59:29 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Thomas Backlund" <tmb@mandriva.org>
+Subject: Re: iwl4965 oops in 2.6.26-rc5 x86_64
+Cc: "Ian Schram" <ischram@telenet.be>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <48492E85.6010307@mandriva.org>
 MIME-Version: 1.0
-References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
-   <1ba2fa240806041607j10841ac0qb11fe0d0b27953d8@mail.gmail.com>
-   <20080605003808.GA16599@khazad-dum.debian.net>
-   <200806051803.43193.IvDoorn@gmail.com>
-Subject: Re: [PATCH 01/12] rfkill: clarify meaning of rfkill states
-In-Reply-To: <200806051803.43193.IvDoorn@gmail.com>
-Date: Thu, 05 Jun 2008 14:53:48 -0300
+Content-Type: text/plain; charset=ISO-8859-1
+References: <4848289D.1080205@mandriva.org>
+	 <1ba2fa240806051103q652accf5t1bd1d94630ebea5b@mail.gmail.com>
+	 <48482BC3.4070402@mandriva.org> <4848482C.2080208@mandriva.org>
+	 <48485F12.2050908@mandriva.org> <48488878.5040708@telenet.be>
+	 <1ba2fa240806060432t73ecb318x89e877241aa6ef55@mail.gmail.com>
+	 <48492734.9080901@mandriva.org> <48492E85.6010307@mandriva.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 5 Jun 2008 18:03:42 +0200, "Ivo van Doorn" <ivdoorn@gmail.com> said:
-> On Thursday 05 June 2008, Henrique de Moraes Holschuh wrote:
-> > The correct reading of rfkill class states are:
-> > 
-> > RFKILL_STATE_ON:  transmitter is UNBLOCKED and *may* operate
-> > RFKILL_STATE_OFF: transmitter is BLOCKED and will *NOT* operate.
-> > 
-> > Nothing else is correct.
-> > 
-> > We could certainly rename these states to
-> > 
-> > enum rfkill_state {
-> > 	RFKILL_STATE_BLOCKED = 0,
-> > 	RFKILL_STATE_UNBLOCKED = 1,
-> > };
-> > 
-> > #define RFKILL_STATE_ON RFKILL_STATE_UNBLOCKED
-> > #define RFKILL_STATE_OFF RFKILL_STATE_BLOCKED
-> > 
-> > Ivo, do you want a patch that does the above (plus the documentation
-> > changes, of course)?
-> 
-> Patch would be good. I would however drop the #define RFKILL_STATE_ON
-> and force the RFKILL_STATE_BLOCKED/RFKILL_STATE_UNBLOCKED usage
-> to make sure everybody gets the right idea about the meaning.
+On Fri, Jun 6, 2008 at 3:33 PM, Thomas Backlund <tmb@mandriva.org> wrote:
+> Thomas Backlund skrev:
+>>
+>> Tomas Winkler skrev:
+>>>
+>>> On Fri, Jun 6, 2008 at 3:44 AM, Ian Schram <ischram@telenet.be> wrote:
+>>>>
+>>>> Isn't this the Oops Joonwoo Park wanted to patch with
+>>>>
+>>>> "[PATCH] iwlwifi: fix oops on wep key insertion" 27/5/2008
+>>>>
+>>>> invalid length of webkey that would/should be handled in mac80211?
+>>>>
+>>>> ian
+>>>
+>>> Yes, it looks like.
+>>
+>> Ummm, what has a wep key to do with me trying to access a WPA2-Personal
+>> encrypted net ?
 
-The advantage of the former way is that we break nothing, and all drivers
-can be moved to the new names at their maintainer's leisure.  It could also
-work as a marker for "this driver has been reviewed and now uses rfkill
-correctly" or somesuch.
+Not sure yet, but mac is trying to assign default/static wep key.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+:iwlcore:iwl_send_static_wepkey_cmd+0xcb/0xd5
+:iwlcore:iwl_set_default_wep_key+0xa2/0xbc
 
+Try to set the encryption explicitly
+network={
+    psk="*************************"
+    scan_ssid=1
+    ssid="dlink"
+    pairwise=CCMP
+   group=CCMP
+ }
+
+
+>>
+>>> Thomas can you send out your wpa_supplicant config fiele
+>>>
+>>
+>> I could, but since I would have to remove any sensitive info such as the
+>> psk key, would it be of any use ?
+>
+> Anyway, here configs are:
+>
+> wpa_supplicant.conf
+> (I stripped all the comments from the file)
+> --- cut ---
+> ctrl_interface=/var/run/wpa_supplicant
+>
+> eapol_version=1
+>
+> ap_scan=1
+>
+> fast_reauth=1
+>
+> blob-base64-exampleblob={
+> SGVsbG8gV29ybGQhCg==
+> }
+>
+> network={
+>    psk="*************************"
+>    scan_ssid=1
+>    ssid="dlink"
+> }
+> --- cut ---
+>
+> ifcfg-wlan0
+> --- cut ---
+> DEVICE=wlan0
+> BOOTPROTO=dhcp
+> ONBOOT=yes
+> METRIC=35
+> MII_NOT_SUPPORTED=no
+> USERCTL=no
+> RESOLV_MODS=no
+> WIRELESS_MODE=Managed
+> WIRELESS_ESSID=dlink
+> WIRELESS_ENC_KEY='s:*************************'
+> WIRELESS_WPA_DRIVER=wext
+> IPV6INIT=no
+> IPV6TO4INIT=no
+> DHCP_CLIENT=dhclient
+> NEEDHOSTNAME=no
+> PEERDNS=yes
+> PEERYP=yes
+> PEERNTPD=no
+> --- cut ---
+>
+>>
+>>> I will provide a patch that disable hw encryption on long wep keys. It
+>>> get lost in my todo list.
+>>> Tomas
+>>>
+>>
+>
+> --
+> Thomas
+>
+>
+>
