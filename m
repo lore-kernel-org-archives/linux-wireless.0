@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:52937 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758235AbYFTQBq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2008 12:01:46 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Ingo Molnar <mingo@elte.hu>
-Subject: Re: [PATCH/RFC] remove irqs_disabled warning from local_bh_enable
-Date: Fri, 20 Jun 2008 18:01:09 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	David Ellingsworth <david@identd.dyndns.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1213739834.3803.137.camel@johannes.berg> <200806201736.23916.mb@bu3sch.de> <20080620155541.GC6656@elte.hu>
-In-Reply-To: <20080620155541.GC6656@elte.hu>
+Received: from ug-out-1314.google.com ([66.249.92.173]:20705 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752708AbYFFTer (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jun 2008 15:34:47 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so764141ugf.16
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jun 2008 12:34:44 -0700 (PDT)
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [BUG] iwlwifi 3945 works only with disable_hw_scan=1
+Date: Fri, 6 Jun 2008 22:34:40 +0300
+Cc: ipw3945-devel@lists.sourceforge.net
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200806201801.09858.mb@bu3sch.de> (sfid-20080620_180150_460193_73B87549)
+  charset="us-ascii"
+Message-Id: <200806062234.40572.maximlevitsky@gmail.com> (sfid-20080606_213451_485649_6B1609FF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 20 June 2008 17:55:41 Ingo Molnar wrote:
-> 
-> * Michael Buesch <mb@bu3sch.de> wrote:
-> 
-> > On Friday 20 June 2008 17:27:48 Ingo Molnar wrote:
-> > >  [<c012b361>] local_bh_enable_ip+0xd1/0xe0
-> > >  [<c08d9f9f>] _spin_unlock_bh+0x2f/0x40
-> > >  [<c0471b92>] vortex_timer+0xe2/0x3e0
-> > 
-> > > real bug or false positive?
-> > 
-> > Well, a timer runs with IRQs disabled, no? So this would be a bug.
-> 
-> indeed - agreed :) [no time for me to fix it, but can test any rfc patch.]
+I recently bought an acer aspire 5720G, and wireless didn't work with
+standard ubuntu 2.6.24 kernel.
 
-A quick workaround always is to convert the lock into an _irqsafe lock.
-Although it introduces higher overhead (interrupt-wise), it prevents the bug.
-A real fix would require to understand the locking in the driver, which I
-don't, as I never looked at the driver. :)
+I found that specifying the above option 'fixes' the driver
+but I also noticed that list of available access points shrinks
+to just one (the connected) point.
 
--- 
-Greetings Michael.
+Moreover there is a trouble in changing a access point, it just hangs.
+the button that toggles wireless does work, but doesn't blink.
+
+I then installed latest -git kernel (~ 2.6.26-rc4) and got this:
+
+* I still have to use disable_hw_scan=1
+* Wireless led works thanks to acer-wmi
+* If I disable wireless with the button, I _can't_ re-enable it unless
+  I reload the module.
+
+* List of access points doesn't shrink, and I can switch between those points.
+
+
+When I omit disable_hw_scan=1, I get errors about REPLY_SCAN_CMD
+I will send detailed debug info later.
+
+Best regards,
+	Maxim Levitsky
