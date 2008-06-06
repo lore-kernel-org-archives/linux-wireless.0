@@ -1,70 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:39874 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760763AbYFKSvp (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.182]:37262 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751267AbYFFX7t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 14:51:45 -0400
-Received: by yx-out-2324.google.com with SMTP id 31so372808yxl.1
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 11:51:44 -0700 (PDT)
-To: rt2400-devel@lists.sourceforge.net
-Subject: Re: [Rt2400-devel] next-20080611 rt2x00: build failure
-Date: Wed, 11 Jun 2008 21:03:58 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	linux-next@vger.kernel.org, linux-wireless@vger.kernel.org
-References: <20080611100748.d35829f4.randy.dunlap@oracle.com> <20080611181000.GA32331@tuxdriver.com>
-In-Reply-To: <20080611181000.GA32331@tuxdriver.com>
+	Fri, 6 Jun 2008 19:59:49 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so910737waf.23
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jun 2008 16:59:48 -0700 (PDT)
+Message-ID: <1ba2fa240806061659j7672f9d3w107be4509b533f68@mail.gmail.com> (sfid-20080607_020018_361726_635359E2)
+Date: Sat, 7 Jun 2008 02:59:48 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Thomas Backlund" <tmb@mandriva.org>
+Subject: Re: iwl4965 oops in 2.6.26-rc5 x86_64
+Cc: "Ian Schram" <ischram@telenet.be>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4849AF9F.9010207@mandriva.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200806112103.58517.IvDoorn@gmail.com> (sfid-20080611_205222_686999_7601DAAA)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <4848289D.1080205@mandriva.org> <48485F12.2050908@mandriva.org>
+	 <48488878.5040708@telenet.be>
+	 <1ba2fa240806060432t73ecb318x89e877241aa6ef55@mail.gmail.com>
+	 <48492734.9080901@mandriva.org> <48492E85.6010307@mandriva.org>
+	 <1ba2fa240806060659wf4e4088s8afdd2f7f854ea09@mail.gmail.com>
+	 <48494EF6.4020506@mandriva.org>
+	 <1ba2fa240806060812q28c270c4i12cc08f8665e9cc0@mail.gmail.com>
+	 <4849AF9F.9010207@mandriva.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 11 June 2008, John W. Linville wrote:
-> On Wed, Jun 11, 2008 at 10:07:48AM -0700, Randy Dunlap wrote:
-> > when CONFIG_INPUT=n and
-> > # CONFIG_NEW_LEDS is not set
-> > CONFIG_LEDS_CLASS=y
-> > 
-> > (full config attached)
-> > 
-> > vmlinux.o: In function `iwl_rfkill_unregister':
-> > (.text+0x174cdc): undefined reference to `input_unregister_device'
-> > vmlinux.o: In function `iwl_rfkill_init':
-> > (.text+0x174d9f): undefined reference to `input_allocate_device'
-> > vmlinux.o: In function `iwl_rfkill_init':
-> > (.text+0x174e2d): undefined reference to `input_register_device'
-> > vmlinux.o: In function `iwl_rfkill_init':
-> > (.text+0x174e53): undefined reference to `input_free_device'
-> > vmlinux.o: In function `rt2x00rfkill_allocate_polldev':
-> > rt2x00rfkill.c:(.text+0x176dc4): undefined reference to `input_allocate_polled_device'
-> > vmlinux.o: In function `rt2x00rfkill_poll':
-> > rt2x00rfkill.c:(.text+0x176e8b): undefined reference to `input_event'
-> > rt2x00rfkill.c:(.text+0x176e9f): undefined reference to `input_event'
-> 
-> <snip>
-> 
-> Ick, what a mess...
-> 
-> So what combination of depends and select of INPUT, INPUT_POLLDEV,
-> and RFKILL_INPUT do we need to resolve this?
+On Sat, Jun 7, 2008 at 12:43 AM, Thomas Backlund <tmb@mandriva.org> wrote:
+> Tomas Winkler skrev:
+>>
+>> On Fri, Jun 6, 2008 at 5:51 PM, Thomas Backlund <tmb@mandriva.org> wrote:
+>>>
+>>> Tomas Winkler skrev:
+>>>>
+>>>> On Fri, Jun 6, 2008 at 3:33 PM, Thomas Backlund <tmb@mandriva.org>
+>>>> wrote:
+>>>>>
+>>>>> Thomas Backlund skrev:
+>>>>>>
+>>>>>> Tomas Winkler skrev:
+>>>>>>>
+>>>>>>> On Fri, Jun 6, 2008 at 3:44 AM, Ian Schram <ischram@telenet.be>
+>>>>>>> wrote:
+>>>>>>>>
+>>>>>>>> Isn't this the Oops Joonwoo Park wanted to patch with
+>>>>>>>>
+>>>>>>>> "[PATCH] iwlwifi: fix oops on wep key insertion" 27/5/2008
+>>>>>>>>
+>>>>>>>> invalid length of webkey that would/should be handled in mac80211?
+>>>>>>>>
+>>>>>>>> ian
+>>>>>>>
+>>>>>>> Yes, it looks like.
+>>>>>>
+>>>>>> Ummm, what has a wep key to do with me trying to access a
+>>>>>> WPA2-Personal
+>>>>>> encrypted net ?
+>>>>
+>>>> Not sure yet, but mac is trying to assign default/static wep key.
+>>>>
+>>>> :iwlcore:iwl_send_static_wepkey_cmd+0xcb/0xd5
+>>>> :iwlcore:iwl_set_default_wep_key+0xa2/0xbc
+>>>>
+>>>> Try to set the encryption explicitly
+>>>> network={
+>>>>   psk="*************************"
+>>>>   scan_ssid=1
+>>>>   ssid="dlink"
+>>>>   pairwise=CCMP
+>>>>  group=CCMP
+>>>>  }
+>>>>
+>>>>
+>>> That didn't help at all.
+>>>
+>>> What's more it prevented the wifi to work on 2.6.24.7 so I had to remove
+>>> the
+>>> lines again...
+>>>
+>> So what's your AP configuration TKIP?
+>>
+>
+> I've switched to clean WPA2-AES on the AP, but it does not do any
+> difference... I still get the oops...
+>
 
-Well RFKILL_INPUT shouldn't be selected by a driver, in fact any driver that
-selects or depends on RFKILL_INPUT is wrong. But selecting it only makes
-matters worse since that will bypass the INPUT dependency.
-When INPUT_POLLDEV is required I guess it is best to depend on INPUT and
-select INPUT_POLLDEV.
+I would like to see the log of this one
 
-iwlwifi is selecting RFKILL_INPUT and preferably they should drop the select
-altogether (not replacing it with a depend), but since I am not sure about the
-reason for the select
+>> Second try also with sw decryption:
+>>
+>> in /etc/modprobe.conf
+>> options iwl4965 swcrypto=1
+>>
+>
+>
+> That works.
+> I now run a clean 2.6.26-rc5
+>
+Okay thanks for checking this one.
+>
 
-rt2x00 is selecting INPUT_POLLDEV but should depend on INPUT first (as done
-in the patch in my previous mail).
+> I also tried to bisect between 2.6.25 and 2.6.26-rc1 and ended up with:
+>
+> [root@5720g linux-2.6]# git bisect good
+> 8318d78a44d49ac1edf2bdec7299de3617c4232e is first bad commit
+> commit 8318d78a44d49ac1edf2bdec7299de3617c4232e
+> Author: Johannes Berg <johannes@sipsolutions.net>
+> Date:   Thu Jan 24 19:38:38 2008 +0100
+>
+>    cfg80211 API for channels/bitrates, mac80211 and driver conversion
+>
+>
+>
+> Any more I can provide to help finding the bug ?
 
-b43 shouldn't really depend on RFKILL_INPUT but their Kconfig is correct and
-shouldn't cause the above build failure.
+Just the log from AES try with  I will try to reproduce this as soon
+as I get to this particular AP and 64 bits kernel.
 
-Ivo
+One more thing is suspicious in the WEP key try is that I don't see
+this can ever happen. The command that should be here iis
+wlcore:iwl_send_cmd_async
+Jun  5 19:55:06 5720g kernel:  [<ffffffffa018ee37>]
+:iwlcore:iwl_send_cmd_sync+0x94/0x257
+Jun  5 19:55:06 5720g kernel:  [<ffffffff80257ed5>] ? __lock_acquire+0xbee/0xd5a
+Jun  5 19:55:06 5720g kernel:  [<ffffffffa018f04b>]
+:iwlcore:iwl_send_cmd+0x16/0x1b
+Jun  5 19:55:06 5720g kernel:  [<ffffffffa0218c41>]
+:iwl4965:iwl_send_static_wepkey_cmd+0xcb/0xd5
+Jun  5 19:55:06 5720g kernel:  [<ffffffffa0218cef>]
+:iwl4965:iwl_set_default_wep_key+0xa4/0xbe
+Jun  5 19:55:06 5720g kernel:  [<ffffffffa020ae00>]
+:iwl4965:iwl4965_mac_set_key+0xf1/0x137
+
+The code there looks like this
+
+int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
+{
+	int i, not_empty = 0;
+	u8 buff[sizeof(struct iwl_wep_cmd) +
+		sizeof(struct iwl_wep_key) * WEP_KEYS_MAX];
+	struct iwl_wep_cmd *wep_cmd = (struct iwl_wep_cmd *)buff;
+	size_t cmd_size  = sizeof(struct iwl_wep_cmd);
+	struct iwl_host_cmd cmd = {
+		.id = REPLY_WEPKEY,
+		.data = wep_cmd,
+		.meta.flags = CMD_ASYNC, -----------------------------------------
+this is async
+	};
+
+Thanks
+Tomas
