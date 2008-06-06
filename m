@@ -1,33 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:59461 "EHLO ciao.gmane.org"
+Received: from sous-sol.org ([216.99.217.87]:33564 "EHLO sous-sol.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751652AbYFDWTV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2008 18:19:21 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1K41K9-0002FL-GB
-	for linux-wireless@vger.kernel.org; Wed, 04 Jun 2008 22:19:17 +0000
-Received: from cpc1-cwma5-0-0-cust137.swan.cable.ntl.com ([80.4.12.138])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2008 22:19:17 +0000
-Received: from sitsofe by cpc1-cwma5-0-0-cust137.swan.cable.ntl.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2008 22:19:17 +0000
-To: linux-wireless@vger.kernel.org
-From: Sitsofe Wheeler <sitsofe@yahoo.com>
-Subject: hostap now defaults to monitor mode?
-Date: Wed, 04 Jun 2008 23:19:08 +0100
-Message-ID: <g274cq$2sn$1@ger.gmane.org> (sfid-20080605_001924_745391_A5E4E83C)
-Mime-Version: 1.0
+	id S1754932AbYFFRcx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jun 2008 13:32:53 -0400
+Date: Fri, 6 Jun 2008 10:32:23 -0700
+From: Chris Wright <chrisw@sous-sol.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: stable@kernel.org, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: [stable] [PATCH stable] b43: Fix controller restart crash
+Message-ID: <20080606173223.GR30402@sequoia.sous-sol.org> (sfid-20080606_193257_782382_B87CC4C5)
+References: <200806061558.42998.mb@bu3sch.de>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200806061558.42998.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On linux-next-20080604 hostap seems to default to monitor mode breaking
-scripts that expect it to be in managed mode by default. Has hostap always
-defaulted to monitor mode? I can't see a patch in the Ubuntu kernel tree to
-change this...
+* Michael Buesch (mb@bu3sch.de) wrote:
+> This fixes a kernel crash on rmmod, in the case where the controller
+> was restarted before doing the rmmod.
+> 
+> Upstream commit is 4735f5022c97f6624ced2ec5056c61c4b437d53b
 
--- 
-Sitsofe | http://sucs.org/~sits/
+This is not in Linus' tree.  Where is this upstream commit?
 
+thanks,
+-chris
