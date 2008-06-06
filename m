@@ -1,80 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47923 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751957AbYFSV0N (ORCPT
+Received: from mbox2.netikka.net ([213.250.81.203]:53710 "EHLO
+	mbox2.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760467AbYFFVoE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 17:26:13 -0400
-Subject: Re: Broken fragmentation
-From: Johannes Berg <johannes@sipsolutions.net>
+	Fri, 6 Jun 2008 17:44:04 -0400
+Message-ID: <4849AF9F.9010207@mandriva.org> (sfid-20080606_234414_180975_D5F8BE30)
+Date: Sat, 07 Jun 2008 00:43:59 +0300
+From: Thomas Backlund <tmb@mandriva.org>
+MIME-Version: 1.0
 To: Tomas Winkler <tomasw@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240806191409k7200ad53y654a7f8a117c8f14@mail.gmail.com> (sfid-20080619_230955_857500_99D66B2C)
-References: <1ba2fa240806190220l18fe5dcdsf44fe81412a5f35d@mail.gmail.com>
-	 <1ba2fa240806190446n4d931e6ara4db156900e59e0d@mail.gmail.com>
-	 <1ba2fa240806190457w20dfe2d5pf06829b26d2722a3@mail.gmail.com>
-	 <1213878207.8967.6.camel@johannes.berg>
-	 <1ba2fa240806190608h3d833dbaua412446e8a9f560d@mail.gmail.com>
-	 <1213881855.8967.19.camel@johannes.berg>
-	 <1ba2fa240806190745u2fe7e435y3ca207af4156767b@mail.gmail.com>
-	 <1213889200.8967.26.camel@johannes.berg>
-	 <1ba2fa240806191113nd6a221eiac9648edd3404a80@mail.gmail.com>
-	 <1213899419.8967.59.camel@johannes.berg>
-	 <1ba2fa240806191409k7200ad53y654a7f8a117c8f14@mail.gmail.com>
-	 (sfid-20080619_230955_857500_99D66B2C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-URKtuB5P6JkG6Xkk+um1"
-Date: Thu, 19 Jun 2008 23:25:34 +0200
-Message-Id: <1213910734.8967.117.camel@johannes.berg> (sfid-20080619_232627_627823_D9ABBCF9)
-Mime-Version: 1.0
+CC: Ian Schram <ischram@telenet.be>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwl4965 oops in 2.6.26-rc5 x86_64
+References: <4848289D.1080205@mandriva.org> <48482BC3.4070402@mandriva.org>	 <4848482C.2080208@mandriva.org> <48485F12.2050908@mandriva.org>	 <48488878.5040708@telenet.be>	 <1ba2fa240806060432t73ecb318x89e877241aa6ef55@mail.gmail.com>	 <48492734.9080901@mandriva.org> <48492E85.6010307@mandriva.org>	 <1ba2fa240806060659wf4e4088s8afdd2f7f854ea09@mail.gmail.com>	 <48494EF6.4020506@mandriva.org> <1ba2fa240806060812q28c270c4i12cc08f8665e9cc0@mail.gmail.com>
+In-Reply-To: <1ba2fa240806060812q28c270c4i12cc08f8665e9cc0@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Tomas Winkler skrev:
+> On Fri, Jun 6, 2008 at 5:51 PM, Thomas Backlund <tmb@mandriva.org> wrote:
+>> Tomas Winkler skrev:
+>>> On Fri, Jun 6, 2008 at 3:33 PM, Thomas Backlund <tmb@mandriva.org> wrote:
+>>>> Thomas Backlund skrev:
+>>>>> Tomas Winkler skrev:
+>>>>>> On Fri, Jun 6, 2008 at 3:44 AM, Ian Schram <ischram@telenet.be> wrote:
+>>>>>>> Isn't this the Oops Joonwoo Park wanted to patch with
+>>>>>>>
+>>>>>>> "[PATCH] iwlwifi: fix oops on wep key insertion" 27/5/2008
+>>>>>>>
+>>>>>>> invalid length of webkey that would/should be handled in mac80211?
+>>>>>>>
+>>>>>>> ian
+>>>>>> Yes, it looks like.
+>>>>> Ummm, what has a wep key to do with me trying to access a WPA2-Personal
+>>>>> encrypted net ?
+>>> Not sure yet, but mac is trying to assign default/static wep key.
+>>>
+>>> :iwlcore:iwl_send_static_wepkey_cmd+0xcb/0xd5
+>>> :iwlcore:iwl_set_default_wep_key+0xa2/0xbc
+>>>
+>>> Try to set the encryption explicitly
+>>> network={
+>>>    psk="*************************"
+>>>    scan_ssid=1
+>>>    ssid="dlink"
+>>>    pairwise=CCMP
+>>>   group=CCMP
+>>>  }
+>>>
+>>>
+>> That didn't help at all.
+>>
+>> What's more it prevented the wifi to work on 2.6.24.7 so I had to remove the
+>> lines again...
+>>
+> So what's your AP configuration TKIP?
+> 
 
---=-URKtuB5P6JkG6Xkk+um1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I've switched to clean WPA2-AES on the AP, but it does not do any 
+difference... I still get the oops...
+
+> Second try also with sw decryption:
+> 
+> in /etc/modprobe.conf
+> options iwl4965 swcrypto=1
+> 
 
 
-> >> Fragments are in the air but the peer is not able to reassemble them.
-> >> Something is wrong with the first fragment but I'm not sure yet.
-> >
-> > Hm, ok. got a packet capture? Maybe that was broken before, I remember
-> > having problems with fragmentation but putting it down to the
-> > known-to-be-completely-broken AP I was using.
->=20
-> It is working the latest problem was caused by the driver, Yet i still
-> don't understand the regression
-> in the driver. =20
+That works.
+I now run a clean 2.6.26-rc5
 
-Hmm, ok.
 
-> Would be nice if you can confirm it works also with another HW.
-> Sending your patch out.
+I also tried to bisect between 2.6.25 and 2.6.26-rc1 and ended up with:
 
-Thanks, I'll give it a try tomorrow with a better AP.
+[root@5720g linux-2.6]# git bisect good
+8318d78a44d49ac1edf2bdec7299de3617c4232e is first bad commit
+commit 8318d78a44d49ac1edf2bdec7299de3617c4232e
+Author: Johannes Berg <johannes@sipsolutions.net>
+Date:   Thu Jan 24 19:38:38 2008 +0100
 
-johannes
+     cfg80211 API for channels/bitrates, mac80211 and driver conversion
 
---=-URKtuB5P6JkG6Xkk+um1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIWs7KAAoJEKVg1VMiehFYdoUP/2Co4bq6Kq8dtwrFz0TKCucZ
-HY7pzTphfpe1AxApHkyRKRscNGR6T8PT/027aDpZy1ey2C0sRkGfooYSHRCDAoxE
-RoL+t/UVQ48A3GlcdMxnactLKzPKjfEYd2Fxx49qdV8kf+QSK+jpmHy84xMsfxv+
-9Gp8TPRIb/cKpvuxxo/I/uzvfgi9xzAjAjd6M+portaw3IfYJinmyAl7AIRAJNpt
-4qwqc8wMCDfnWRN+y7IbXmPQn+Dx2gsgxiYZBlb36d6/Lvdkc6AHMDtfyA57ZawR
-6gfgRj8CChw8yH3QMkXfrexhEdeCGVR1R3XYtXF89Dz3M4GBdNhSuT32G6jS1DJZ
-vxfG50urJgmLmYrJ58nSS8h2BIZaJqxBxaJhMFe1OnERg/VkTxJHNyGp8mkTmIkI
-I+W7667rM4d01rM/ll5qey6WbX6Nmx+AFxHOFvX5mEqDxxamPu0QBOedSOR51hII
-FhC2p9P9IY+NfYJ4lBPZclggkso5JWX7nq6jxjbafxanS3Clb5C38HbADRVYIFzG
-l7MtG5R1SBGGudjkvwxnOn56lTzRLS7+PVBD51hAFewXMS1mtfPdEuDiYW7Z0Vfh
-mgcDj1v8CnNArEHtfhFOUqKmZHa7wJIf3tIDyWcMb8jMW5Tyt39sd4D/poKZ2Bfz
-ZCZLOJ8lInLJfTjyjVqe
-=ANnq
------END PGP SIGNATURE-----
-
---=-URKtuB5P6JkG6Xkk+um1--
-
+Any more I can provide to help finding the bug ?
+--
+Thomas
