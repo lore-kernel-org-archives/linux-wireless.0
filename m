@@ -1,50 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:65052 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754933AbYFTOYu (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:34350 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757724AbYFFN7t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2008 10:24:50 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so935460waf.23
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Jun 2008 07:24:50 -0700 (PDT)
-Message-ID: <1ba2fa240806200724v7c20a553vaec38e2483fc2141@mail.gmail.com> (sfid-20080620_162455_983425_9EFB4BB6)
-Date: Fri, 20 Jun 2008 17:24:50 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Mike Kershaw" <dragorn@kismetwireless.net>
-Subject: Re: More 4965 woes
-Cc: "Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20080620131544.GA31113@drd1813.lan>
+	Fri, 6 Jun 2008 09:59:49 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: stable@kernel.org
+Subject: [PATCH stable] b43: Fix controller restart crash
+Date: Fri, 6 Jun 2008 15:58:42 +0200
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080617132401.GA8328@drd1813.lan>
-	 <1213781294.2625.52.camel@debian.sh.intel.com>
-	 <20080618154109.GB15170@drd1813.lan>
-	 <20080619134138.GA27021@drd1813.lan>
-	 <1ba2fa240806191253l2769dec3q2a49638eafe01e48@mail.gmail.com>
-	 <20080620131544.GA31113@drd1813.lan>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200806061558.42998.mb@bu3sch.de> (sfid-20080606_160016_238664_B88F1424)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 20, 2008 at 4:15 PM, Mike Kershaw
-<dragorn@kismetwireless.net> wrote:
-> On Thu, Jun 19, 2008 at 10:53:22PM +0300, Tomas Winkler wrote:
->> > On channel 36 things appear to work (well, as much as they do otherwise,
->> > packet hanging still makes the device unusable).  I'm still confused as
->> > to why the card can report it works on that channel, scan that channel,
->> > see beacons, but then refuse to transmit.
->>
->> There is a bug in the firmware. the fix is on the way. Unfortunately I
->> cannot currently commit to
->> to any particular day it will be published yet.
->
-> That's fair enough, good to hear.
->
->> What AP do you use I don't see such bad behviour on A band.
->
-> Which do you mean - The failure of radar channels, or the severe
-> latency/packet loss?
->
-> The severe latency/packet loss happens any time I enable HT, if I'm
-> connected to a HT AP or not, 2.4ghz or 5ghz, in a clean RF environment.
+This fixes a kernel crash on rmmod, in the case where the controller
+was restarted before doing the rmmod.
 
-I need a brand name so we can reproduce the problem
-Thanks
+Upstream commit is 4735f5022c97f6624ced2ec5056c61c4b437d53b
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
+---
+
+Index: linux-2.6.25.4/drivers/net/wireless/b43/main.c
+===================================================================
+--- linux-2.6.25.4.orig/drivers/net/wireless/b43/main.c	2008-06-06 15:36:38.000000000 +0200
++++ linux-2.6.25.4/drivers/net/wireless/b43/main.c	2008-06-06 15:36:40.000000000 +0200
+@@ -3815,13 +3815,15 @@ static void b43_chip_reset(struct work_s
+ 		err = b43_wireless_core_start(dev);
+ 		if (err) {
+ 			b43_wireless_core_exit(dev);
+ 			goto out;
+ 		}
+ 	}
+-      out:
++out:
++	if (err)
++		wl->current_dev = NULL; /* Failed to init the dev. */
+ 	mutex_unlock(&wl->mutex);
+ 	if (err)
+ 		b43err(wl, "Controller restart FAILED\n");
+ 	else
+ 		b43info(wl, "Controller restarted\n");
+ }
+@@ -3964,15 +3966,17 @@ err_powerdown:
+ 
+ static void b43_one_core_detach(struct ssb_device *dev)
+ {
+ 	struct b43_wldev *wldev;
+ 	struct b43_wl *wl;
+ 
++	/* Do not cancel ieee80211-workqueue based work here.
++	 * See comment in b43_remove(). */
++
+ 	wldev = ssb_get_drvdata(dev);
+ 	wl = wldev->wl;
+-	cancel_work_sync(&wldev->restart_work);
+ 	b43_debugfs_remove_device(wldev);
+ 	b43_wireless_core_detach(wldev);
+ 	list_del(&wldev->list);
+ 	wl->nr_devs--;
+ 	ssb_set_drvdata(dev, NULL);
+ 	kfree(wldev);
+@@ -4149,12 +4153,16 @@ static int b43_probe(struct ssb_device *
+ 
+ static void b43_remove(struct ssb_device *dev)
+ {
+ 	struct b43_wl *wl = ssb_get_devtypedata(dev);
+ 	struct b43_wldev *wldev = ssb_get_drvdata(dev);
+ 
++	/* We must cancel any work here before unregistering from ieee80211,
++	 * as the ieee80211 unreg will destroy the workqueue. */
++	cancel_work_sync(&wldev->restart_work);
++
+ 	B43_WARN_ON(!wl);
+ 	if (wl->current_dev == wldev)
+ 		ieee80211_unregister_hw(wl->hw);
+ 
+ 	b43_one_core_detach(dev);
+ 
