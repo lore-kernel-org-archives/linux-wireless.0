@@ -1,96 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:34926 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753255AbYFZSeC (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:31838 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755037AbYFFKjS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 14:34:02 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so130213wfd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2008 11:34:01 -0700 (PDT)
-Message-ID: <69e28c910806261134t4c6b324dj86460605e06a08c8@mail.gmail.com> (sfid-20080626_203408_807194_B0F94252)
-Date: Thu, 26 Jun 2008 20:34:01 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [Q] ath5k : doesn't support AP mode?
-Cc: "Pavel Roskin" <proski@gnu.org>, cs010101@gmail.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1214504454.3783.18.camel@johannes.berg>
+	Fri, 6 Jun 2008 06:39:18 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <002901c8d737$e51bb2f0$3b0aa8c0@39fb6b6b6f434b3>
-	 <1214449044.18897.15.camel@dv>
-	 <1214487200.20763.44.camel@johannes.berg>
-	 <1214492236.30044.7.camel@dv>
-	 <69e28c910806260846s3b02cdddlca3ac138acadd8bd@mail.gmail.com>
-	 <1214496086.30722.14.camel@dv> <1214501242.3783.7.camel@johannes.berg>
-	 <69e28c910806261109i28fe2c29t5218f32f5e65c378@mail.gmail.com>
-	 <1214504454.3783.18.camel@johannes.berg>
+Subject: RE: [PATCH] rt2x00: Rename tx_info to info to help compat-wirelessrevert MQ support for older kernels
+Date: Fri, 6 Jun 2008 13:39:12 +0300
+Message-ID: <1879838866982C46A9CB3D56BA49ADEB04FA9CFD@hasmsx411.ger.corp.intel.com> (sfid-20080606_123925_133293_26444706)
+In-Reply-To: <1212671763.698.11.camel@johannes.berg>
+References: <20080605130734.GD17936@ruslug.rutgers.edu> <1212671763.698.11.camel@johannes.berg>
+From: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: <linville@tuxdriver.com>, "Ivo van Doorn" <ivdoorn@gmail.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 26, 2008 at 8:20 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->> > Oh and I never answered to this. I disagree. Requiring people to patch
->> > their kernel for AP mode support is a good way to discourage
->> > "contributors" who don't even know how to compile a kernel, trust me,
->> > I've seen a fair share of private mails from those (which I ignore: do
->> > not mail me in private about AP support).
->> >
->> > Hence, I don't want to do it for exactly this reason: a bunch of dumb
->> > users will enable it either way, and actually _working_ on AP mode
->> > _will_ require kernel patches, so this isn't one that matters.
+>> Rename tx_info to info as used by other drivers. This will help
+>> with CONFIG_NETDEVICES_MULTIQUEUE requirement for HT support support
+>> in compat-wireless by allowing us to map skb_get_queue_mapping(skb)
+>> to the old info->queue.
 >>
->> The problem is that the location of the patch is extremely
->> non-obvious.
->
-> Umm. The paragraph you're quoting:
->
->> "AP support requires mac80211 and nl80211 enhancements. In addition
->> to this you need external wireless-test.git patches from johill and
->> hostapd patches" (from the TODO-list) suggests that more than just the
->> "Allow AP/VLAN modes" patch is required to get any AP support
->
-> actually links to the patch so what is your point?
+>> An alternative is to maintain a large compat.diff which replaces all
+>> skb_get_queue_mapping(skb) calls back to info->queue but since this
+>> is the only driver which requires name change it seems worth it
+>> to help with maintenance.
+>> 
+>> Compat-wireless shouldn't be a reason to accept patches in but if
+>> the changes are just cosmetic it seems worth the benefit.
+>> 
+>> Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
 
-It liks to your series file, which is mostly unusable due to the NPUB
-patches. (When I wrote the post, there was an additional problem with
-the text that suggested that more than just that patch is needed.)
-Essentially, one has to patch the patch first.
+> That's just asking for trouble. If you really _must_ do magic in
+> skb_get_queue_mapping, do it directly:
 
->
->> Also, someone who can't patch a kernel likely also won't be able to
->> compile and use a git build of hostapd. IMO this provides enough
->> foolproofing. If we need more, then maybe add a secret and
->> undocumented (but clearly deducible from the code, not obfuscated)
->> parameter to hostapd, without which it refuses to handle nl80211-based
->> interfaces. The location of the patch can in no way be deduced from
->> the code.
->>
->> And, by the way, should we also require a patch for all experimental
->> drivers? I don't think so.
->
-> You're missing the point.
->
-> We do NOT want people to use mac80211's AP support UNLESS they also work
-> on improving it.
->
-> The "improving it" part REQUIRES patching the kernel. Hence, requiring
-> patching the kernel to get AP mode support in the first place cannot be
-> considered a hindrance.
->
+> int q = IEEE80211_SKB_CB(skb)->queue;
+
+Aren't we heading into to troubles here? In kernels < 2.6.23 there is no
+skb->queue_mapping. queue was once passed in the cb, but now that queue
+was removed from info and info takes cb we are going to have a compat
+problem.
+
+Ron
+
 > johannes
->
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-Isn't it enough if we only put the patch in the wireless-testing
-kernel, and don't commit it to the mainline? Or maybe making it depend
-on BROKEN, like b43's NPHY support? What we are doing right now is
-essentially the same as if Buesch changed his experimental open-source
-b43 firmware to require editing the code and inserting a magic number
-to make it compile. I consider that to be quite different from an &&
-BROKEN in the dependency list - and && BROKEN can be removed by
-someone who really wants to develop AP mode, while the current method
-requires finding the patch (because the link leads to a broken SERIES
-file.)
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
