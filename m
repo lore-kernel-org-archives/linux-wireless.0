@@ -1,410 +1,483 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36095 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:38711 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751995AbYFBRxy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2008 13:53:54 -0400
-Subject: [PATCH v2] ipw2200: queue direct scans
+	id S1754300AbYFFNZN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jun 2008 09:25:13 -0400
+Subject: Re: [PATCH 01/12] rfkill: clarify meaning of rfkill states
 From: Dan Williams <dcbw@redhat.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	ipw2100-devel@lists.sourceforge.net,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1208829043.5327.13.camel@debian.sh.intel.com>
-References: <1208800153.30994.25.camel@localhost.localdomain>
-	 <1208829043.5327.13.camel@debian.sh.intel.com>
-Content-Type: text/plain; charset=utf8
-Date: Mon, 02 Jun 2008 13:51:23 -0400
-Message-Id: <1212429083.10093.18.camel@localhost.localdomain> (sfid-20080602_195402_566200_F321A528)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, Dmitry Torokhov <dtor@mail.ru>
+In-Reply-To: <1212722763.1026.17.camel@localhost.localdomain>
+References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
+	 <1212549017-30144-2-git-send-email-hmh@hmh.eng.br>
+	 <1212611246.4018.12.camel@localhost.localdomain>
+	 <1ba2fa240806041607j10841ac0qb11fe0d0b27953d8@mail.gmail.com>
+	 <20080605003808.GA16599@khazad-dum.debian.net>
+	 <1212667955.25730.29.camel@localhost.localdomain>
+	 <20080605130323.GB3413@khazad-dum.debian.net>
+	 <1212677207.28545.56.camel@localhost.localdomain>
+	 <1212696826.13915.1256967905@webmail.messagingengine.com>
+	 <1212722763.1026.17.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Fri, 06 Jun 2008 09:24:22 -0400
+Message-Id: <1212758662.26514.5.camel@localhost.localdomain> (sfid-20080606_152521_496421_9A5491C0)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-=EF=BB=BFWhen another scan is in progress, a direct scan gets dropped o=
-n the
-floor.  However, that direct scan is usually the scan that's really
-needed by userspace, and gets stomped on by all the broadcast scans the
-ipw2200 driver issues internally.  Make sure the direct scan happens
-eventually, and as a bonus ensure that the passive scan worker is
-cleaned up when appropriate.
+On Thu, 2008-06-05 at 23:26 -0400, Dan Williams wrote: 
+> On Thu, 2008-06-05 at 17:13 -0300, Henrique de Moraes Holschuh wrote:
+> > On Thu, 05 Jun 2008 10:46:47 -0400, "Dan Williams" <dcbw@redhat.com> said:
+> > > On Thu, 2008-06-05 at 10:03 -0300, Henrique de Moraes Holschuh wrote:
+> > > > On Thu, 05 Jun 2008, Dan Williams wrote:
+> > > > > a) hard switches that kill the radio and notify the driver
+> > > > 
+> > > > rfkill class material, yes.
+> > > > 
+> > > > > b) hard switches that notify the driver but do not directly kill the
+> > > > > radio
+> > > > 
+> > > > These are input devices, and not directly related to the rfkill class
+> > > > (but related to the rfkill subsystem).
+> > > 
+> > > So in your mind, these drivers would re-emit state changes of their
+> > > rfkill switches back into the kernel input layer, correct?
+> > 
+> > Yes.  And the funny thing is, they are supposed not to ACT by themselves
+> > at all, they are to wait for someone to tell them to through the rfkill class.
+> > 
+> > (NOTE: this applies only to scenario (b) above.  It is NOT valid for other
+> > scenarios like (a) or (c) or any other).
+> > 
+> > 
+> > To be more clear:
+> > 
+> > MODULE  FOO  (driver for the foo wireless device).
+> > * Ties to the input layer, and reports pressure of the "hard switch that notify
+> > the driver (MODULE FOO) but do not directly kill the radio (device foo)" using
+> > the proper input event.
+> > 
+> > It does NOTHING further with the information that the button/switch was pressed.
+> > Really.  It just generates the input event and sends it.
+> > 
+> > * Uses the rfkill class connected to the device foo in the device tree to receive
+> > commands to toggle the real device rfkill state.
+> > 
+> > If some input event is indeed supposed to cause the device state to change, the
+> > driver gets called back through the rfkill class toggle_radio() hook.
+> > 
+> > So, the button press would go through the input layer to SOMETHING ELSE (likely
+> > to rfkill-input), which would take the **policy** decision of what to do with
+> > that event, and then cause the appropriate rfkill class instances to change their
+> > state.
+> > 
+> > So, MODULE FOO would get a hook call (toggle_radio) through the rfkill class, in
+> > order to do something about the input event MODULE FOO itself generated.
+> > 
+> > Or it might not get that hook call, if the local admin wanted something different
+> > to happen.
+> > 
+> > > > > c) hard switches that disconnect the device from its bus entirely (most
+> > > > > BT rfkill)
+> > > > 
+> > > > These are also rfkill class material.
+> > > > 
+> > > > > d) hard switches that notify BIOS only (not the driver) and rely on
+> > > > > special laptop drivers (hp-wmi, toshiba-laptop, etc) to notify the
+> > > > > system
+> > > > 
+> > > > If they just notify the BIOS, they are input devices.  If they cause the
+> > > > BIOS to mess with the transmitters, they are rfkill class material.
+> > > 
+> > > Obviously here, the laptop specific driver would re-emit the state
+> > > change into the the kernel input layer since it is handled by a
+> > > completely separate driver than the radio itself is handled by?
+> > 
+> > Correct.  The platform driver might actually also register notifier callbacks
+> > on the rfkill subsystem, and, for example, automatically promote all b43
+> > rfkill status changes into input events if this is the correct thing to
+> > do for THAT specific platform (it is NOT the correct thing to do by
+> > default, so b43 can't do it itself).
+> > 
+> > > > > e) keyboard "soft" switches that are simply input layer buttons (like Fn
+> > > > > +F5 on thinkpads) and don't toggle
+> > > > 
+> > > > These are input devices in almost all cases.  But since you brought up
+> > > > thinkpads, I better warn you that the Fn+F5 in a ThinkPad, depending on
+> > > > thinkpad BIOS revision and ACPI HKEY mask state, *is* active and will
+> > > > mess with the transmitters directly (and thus it is not an input
+> > > > device).  thinkpad-acpi forces it to "just an input device" state by
+> > > > default to keep things sane.
+> > > > 
+> > > > > Besides that, we can rfkill radios in software through commands like
+> > > > > "iwconfig wlan0 txpower off".
+> > > > 
+> > > > Yeah.  This could be also rfkill material, if you want to have rfkill as
+> > > > another *way* to interact with the same functionality.  It could cause
+> > > > some minor issues (like which power do I set the transmitter to, if it
+> > > > is turned off by txpower off, but someone undos that through rfkill?)
+> > > > but it would work.
+> > > 
+> > > I want _one_ interface to get the radio block state (either blocked or
+> > > unblocked) for any device that has a radio, be it WiFi, WiMAX, BT, WWAN,
+> > > UWB, etc.
+> > 
+> > rfkill is supposed to be it, yes.
+> > 
+> > > I also want _one_ interface to determine how many rfkill switches the
+> > > system has, and what their state is (either blocking radios or not
+> > > blocking radios).  This is what the current rfkill system seems to
+> > > provide.
+> > 
+> > It provides that information PARTIALLY.  Currently, you can enumerate
+> > all rfkill interfaces through sysfs, and you can interact with each
+> > one separately.  However, you cannot interact with the internal type-
+> > specific global switches (which are NOT rfkill class) inside
+> > rfkill-input.
+> > 
+> > I haven't solved that problem to my satisfaction yet, so the only patch
+> > I have for it has not seen the light of the net.  It is too ugly to live
+> > IMHO.
+> > 
+> > So, I'd say the individual rfkill class sysfs interface is nearly complete
+> > (we need to add the third state or do something else to tell you when
+> > a radio is blocked and cannot be unblocked).
+> > 
+> > But the rfkill subsystem interface (deals with rfkill-input) to userspace
+> > is NOT feature-complete yet.   This really, really shouldn't bother NM,
+> > it is HAL-layer level stuff.
+> 
+> It bothers NM because NM uses HAL for rfkill information, and HAL
+> doesn't yet handle the difference between hardkill and softkill.  That's
+> exactly what I'm trying to fix here.
+> 
+> > > I don't want to have to use SIOCGIWTXPOW for wifi, something else for
+> > > BT, something else for WWAN, something else for WiMAX, just to figure
+> > > out whether a radio is blocked or unblocked.  That's just wrong but
+> > > something that we can eventually fix.
+> > 
+> > Well, the problem is that SIOCGIWTXPOW is NOT a direct equivalent to rfkill,
+> > rfkill has no concept of attenuation (or amplification, for that matter).
+> 
+> Yeah, but that's not really relevant here.  All we need is "radio
+> blocked" or "radio unblocked" as a property on the transmitter device.
+> We don't are about the signal power, we just care about whether the
+> radio is blocked or unblocked.
+> 
+> > It is up for the wireless people to decide if their SIOCGIWTXPOW controls
+> > are the same exposed by rfkill or not, and what to do when reenabling from
+> > a txpower off (probably you will have to recall the last non-off txpower 
+> > and use that).  The rfkill subsystem really doesn't care, as long as you
+> > don't do it by adding more than one rfkill class to the same device.
+> > 
+> > > So, it seems I was confused about the scope of the current rfkill
+> > > system.  While it probably should be "rfkill_switch" I'm not sure we can
+> > > change that now.  While it would be nice to have a single interface to
+> > > query radio power state, that can be a future improvement.
+> > 
+> > I think it is a better idea to fix what we have, first.  Let it settle
+> > down, and then take the full view and check if you need to enhance it,
+> > replace it, or design something else that goes along with it.  I'd bet on
+> > the third option, but it is a bit early to tell.
+> > 
+> > > > > Only (a), (b), (c), and sometimes (d) actually kill the radio and block
+> > > > > changes by the user.  Otherwise, it's up to userspace to kill the radios
+> > > > > when events come in.
+> > > > 
+> > > > If it doesn't kill the radio, it is not rfkill class material.  At most,
+> > > > it could be an input device that issues events related to rfkill.
+> > > 
+> > > Right, I misunderstood the original scope of the kernel rfkill stuff.  I
+> > > thought it covered everything except case E (pure input-layer only
+> > > buttons).
+> > 
+> > It sort of does, in the sense that rfkill (not the rfkill class!) defines
+> > how the input layer should be used for these events.
+> > 
+> > > I'd like the rfkill system to eventually cover cases A - D, and also
+> > > handle radio block state notifications and queries.  I'm willing to help
+> > > code that.  Actual power levels of the radio is probably best left up to
+> > > the device-specific subsystem, but at least the state (and events!) of
+> > > "radio now blocked" or "radio now unblocked" are useful to have.
+> > 
+> > Unless I missed something, I have provided you with that for cases
+> > A to D already.  What I didn't provide you with was "radio now blocked and
+> > you cannot unblock it", *yet*.  You have convinced me it is something 
+> > needed, and if left to my own devices, I will implement it as a third
+> > state.
+> 
+> But again, we don't need a third state!  We need to separate the radio
+> block state from the rfkill switch state.
 
-The change of request_passive_scan form a struct work to struct
-delayed_work is only to make the set_wx_scan() code a bit simpler, it's
-still only used with a delay of 0 to match previous behavior.
+Let me explain this a bit more.
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
-----
+- My original request was based on my flawed understanding of the
+current scope of the rfkill system
 
-v2: consolidate direct and normal scan helpers into
-ipw_request_scan_helper() per Zhu Yi's request
+- If the rfkill system is _only_ supposed to handle switches that turn
+the radio off automatically, then a "third state" for the rfkill class
+really serves _no_ purpose at all, because the radio's already blocked
+when the switch is thrown
 
-diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2=
-200.c
-index d74c061..fa1fa44 100644
---- a/drivers/net/wireless/ipw2200.c
-+++ b/drivers/net/wireless/ipw2200.c
-@@ -1753,6 +1753,8 @@ static int ipw_radio_kill_sw(struct ipw_priv *pri=
-v, int disable_radio)
-=20
- 		if (priv->workqueue) {
- 			cancel_delayed_work(&priv->request_scan);
-+			cancel_delayed_work(&priv->request_direct_scan);
-+			cancel_delayed_work(&priv->request_passive_scan);
- 			cancel_delayed_work(&priv->scan_event);
- 		}
- 		queue_work(priv->workqueue, &priv->down);
-@@ -2005,6 +2007,8 @@ static void ipw_irq_tasklet(struct ipw_priv *priv=
-)
- 		wake_up_interruptible(&priv->wait_command_queue);
- 		priv->status &=3D ~(STATUS_ASSOCIATED | STATUS_ASSOCIATING);
- 		cancel_delayed_work(&priv->request_scan);
-+		cancel_delayed_work(&priv->request_direct_scan);
-+		cancel_delayed_work(&priv->request_passive_scan);
- 		cancel_delayed_work(&priv->scan_event);
- 		schedule_work(&priv->link_down);
- 		queue_delayed_work(priv->workqueue, &priv->rf_kill, 2 * HZ);
-@@ -4712,6 +4716,12 @@ static void ipw_rx_notification(struct ipw_priv =
-*priv,
- 			priv->status &=3D ~STATUS_SCAN_FORCED;
- #endif				/* CONFIG_IPW2200_MONITOR */
-=20
-+			/* Do queued direct scans first */
-+			if (priv->status & STATUS_DIRECT_SCAN_PENDING) {
-+				queue_delayed_work(priv->workqueue,
-+						   &priv->request_direct_scan, 0);
-+			}
-+
- 			if (!(priv->status & (STATUS_ASSOCIATED |
- 					      STATUS_ASSOCIATING |
- 					      STATUS_ROAMING |
-@@ -6267,7 +6277,7 @@ static void ipw_add_scan_channels(struct ipw_priv=
- *priv,
- 	}
- }
-=20
--static int ipw_request_scan_helper(struct ipw_priv *priv, int type)
-+static int ipw_request_scan_helper(struct ipw_priv *priv, int type, in=
-t direct)
- {
- 	struct ipw_scan_request_ext scan;
- 	int err =3D 0, scan_type;
-@@ -6278,22 +6288,31 @@ static int ipw_request_scan_helper(struct ipw_p=
-riv *priv, int type)
-=20
- 	mutex_lock(&priv->mutex);
-=20
-+	if (direct && (priv->direct_scan_ssid_len =3D=3D 0)) {
-+		IPW_DEBUG_HC("Direct scan requested but no SSID to scan for\n");
-+		priv->status &=3D ~STATUS_DIRECT_SCAN_PENDING;
-+		goto done;
-+	}
-+
- 	if (priv->status & STATUS_SCANNING) {
--		IPW_DEBUG_HC("Concurrent scan requested.  Ignoring.\n");
--		priv->status |=3D STATUS_SCAN_PENDING;
-+		IPW_DEBUG_HC("Concurrent scan requested.  Queuing.\n");
-+		priv->status |=3D direct ? STATUS_DIRECT_SCAN_PENDING :
-+					STATUS_SCAN_PENDING;
- 		goto done;
- 	}
-=20
- 	if (!(priv->status & STATUS_SCAN_FORCED) &&
- 	    priv->status & STATUS_SCAN_ABORTING) {
- 		IPW_DEBUG_HC("Scan request while abort pending.  Queuing.\n");
--		priv->status |=3D STATUS_SCAN_PENDING;
-+		priv->status |=3D direct ? STATUS_DIRECT_SCAN_PENDING :
-+					STATUS_SCAN_PENDING;
- 		goto done;
- 	}
-=20
- 	if (priv->status & STATUS_RF_KILL_MASK) {
--		IPW_DEBUG_HC("Aborting scan due to RF Kill activation\n");
--		priv->status |=3D STATUS_SCAN_PENDING;
-+		IPW_DEBUG_HC("Queuing scan due to RF Kill activation\n");
-+		priv->status |=3D direct ? STATUS_DIRECT_SCAN_PENDING :
-+					STATUS_SCAN_PENDING;
- 		goto done;
- 	}
-=20
-@@ -6321,6 +6340,7 @@ static int ipw_request_scan_helper(struct ipw_pri=
-v *priv, int type)
- 		cpu_to_le16(20);
-=20
-   	scan.dwell_time[IPW_SCAN_PASSIVE_FULL_DWELL_SCAN] =3D cpu_to_le16(1=
-20);
-+	scan.dwell_time[IPW_SCAN_ACTIVE_DIRECT_SCAN] =3D cpu_to_le16(20);
-=20
- #ifdef CONFIG_IPW2200_MONITOR
- 	if (priv->ieee->iw_mode =3D=3D IW_MODE_MONITOR) {
-@@ -6360,13 +6380,23 @@ static int ipw_request_scan_helper(struct ipw_p=
-riv *priv, int type)
- 			cpu_to_le16(2000);
- 	} else {
- #endif				/* CONFIG_IPW2200_MONITOR */
--		/* If we are roaming, then make this a directed scan for the
--		 * current network.  Otherwise, ensure that every other scan
--		 * is a fast channel hop scan */
--		if ((priv->status & STATUS_ROAMING)
--		    || (!(priv->status & STATUS_ASSOCIATED)
--			&& (priv->config & CFG_STATIC_ESSID)
--			&& (le32_to_cpu(scan.full_scan_index) % 2))) {
-+		/* Honor direct scans first, otherwise if we are roaming make
-+		 * this a direct scan for the current network.  Finally,
-+		 * ensure that every other scan is a fast channel hop scan */
-+		if (direct) {
-+			err =3D ipw_send_ssid(priv, priv->direct_scan_ssid,
-+			                    priv->direct_scan_ssid_len);
-+			if (err) {
-+				IPW_DEBUG_HC("Attempt to send SSID command  "
-+					     "failed\n");
-+				goto done;
-+			}
-+
-+			scan_type =3D IPW_SCAN_ACTIVE_BROADCAST_AND_DIRECT_SCAN;
-+		} else if ((priv->status & STATUS_ROAMING)
-+			   || (!(priv->status & STATUS_ASSOCIATED)
-+			       && (priv->config & CFG_STATIC_ESSID)
-+			       && (le32_to_cpu(scan.full_scan_index) % 2))) {
- 			err =3D ipw_send_ssid(priv, priv->essid, priv->essid_len);
- 			if (err) {
- 				IPW_DEBUG_HC("Attempt to send SSID command "
-@@ -6391,7 +6421,12 @@ send_request:
- 	}
-=20
- 	priv->status |=3D STATUS_SCANNING;
--	priv->status &=3D ~STATUS_SCAN_PENDING;
-+	if (direct) {
-+		priv->status &=3D ~STATUS_DIRECT_SCAN_PENDING;
-+		priv->direct_scan_ssid_len =3D 0;
-+	} else
-+		priv->status &=3D ~STATUS_SCAN_PENDING;
-+
- 	queue_delayed_work(priv->workqueue, &priv->scan_check,
- 			   IPW_SCAN_CHECK_WATCHDOG);
- done:
-@@ -6402,15 +6437,22 @@ done:
- static void ipw_request_passive_scan(struct work_struct *work)
- {
- 	struct ipw_priv *priv =3D
--		container_of(work, struct ipw_priv, request_passive_scan);
--  	ipw_request_scan_helper(priv, IW_SCAN_TYPE_PASSIVE);
-+		container_of(work, struct ipw_priv, request_passive_scan.work);
-+  	ipw_request_scan_helper(priv, IW_SCAN_TYPE_PASSIVE, 0);
- }
-=20
- static void ipw_request_scan(struct work_struct *work)
- {
- 	struct ipw_priv *priv =3D
- 		container_of(work, struct ipw_priv, request_scan.work);
--	ipw_request_scan_helper(priv, IW_SCAN_TYPE_ACTIVE);
-+	ipw_request_scan_helper(priv, IW_SCAN_TYPE_ACTIVE, 0);
-+}
-+
-+static void ipw_request_direct_scan(struct work_struct *work)
-+{
-+	struct ipw_priv *priv =3D
-+		container_of(work, struct ipw_priv, request_direct_scan.work);
-+  	ipw_request_scan_helper(priv, IW_SCAN_TYPE_ACTIVE, 1);
- }
-=20
- static void ipw_bg_abort_scan(struct work_struct *work)
-@@ -9454,99 +9496,38 @@ static int ipw_wx_get_retry(struct net_device *=
-dev,
- 	return 0;
- }
-=20
--static int ipw_request_direct_scan(struct ipw_priv *priv, char *essid,
--				   int essid_len)
--{
--	struct ipw_scan_request_ext scan;
--	int err =3D 0, scan_type;
--
--	if (!(priv->status & STATUS_INIT) ||
--	    (priv->status & STATUS_EXIT_PENDING))
--		return 0;
--
--	mutex_lock(&priv->mutex);
--
--	if (priv->status & STATUS_RF_KILL_MASK) {
--		IPW_DEBUG_HC("Aborting scan due to RF kill activation\n");
--		priv->status |=3D STATUS_SCAN_PENDING;
--		goto done;
--	}
--
--	IPW_DEBUG_HC("starting request direct scan!\n");
--
--	if (priv->status & (STATUS_SCANNING | STATUS_SCAN_ABORTING)) {
--		/* We should not sleep here; otherwise we will block most
--		 * of the system (for instance, we hold rtnl_lock when we
--		 * get here).
--		 */
--		err =3D -EAGAIN;
--		goto done;
--	}
--	memset(&scan, 0, sizeof(scan));
--
--	if (priv->config & CFG_SPEED_SCAN)
--		scan.dwell_time[IPW_SCAN_ACTIVE_BROADCAST_SCAN] =3D
--		    cpu_to_le16(30);
--	else
--		scan.dwell_time[IPW_SCAN_ACTIVE_BROADCAST_SCAN] =3D
--		    cpu_to_le16(20);
--
--	scan.dwell_time[IPW_SCAN_ACTIVE_BROADCAST_AND_DIRECT_SCAN] =3D
--	    cpu_to_le16(20);
--	scan.dwell_time[IPW_SCAN_PASSIVE_FULL_DWELL_SCAN] =3D cpu_to_le16(120=
-);
--	scan.dwell_time[IPW_SCAN_ACTIVE_DIRECT_SCAN] =3D cpu_to_le16(20);
--
--	scan.full_scan_index =3D cpu_to_le32(ieee80211_get_scans(priv->ieee))=
-;
--
--	err =3D ipw_send_ssid(priv, essid, essid_len);
--	if (err) {
--		IPW_DEBUG_HC("Attempt to send SSID command failed\n");
--		goto done;
--	}
--	scan_type =3D IPW_SCAN_ACTIVE_BROADCAST_AND_DIRECT_SCAN;
--
--	ipw_add_scan_channels(priv, &scan, scan_type);
--
--	err =3D ipw_send_scan_request_ext(priv, &scan);
--	if (err) {
--		IPW_DEBUG_HC("Sending scan command failed: %08X\n", err);
--		goto done;
--	}
--
--	priv->status |=3D STATUS_SCANNING;
--
--      done:
--	mutex_unlock(&priv->mutex);
--	return err;
--}
--
- static int ipw_wx_set_scan(struct net_device *dev,
- 			   struct iw_request_info *info,
- 			   union iwreq_data *wrqu, char *extra)
- {
- 	struct ipw_priv *priv =3D ieee80211_priv(dev);
- 	struct iw_scan_req *req =3D (struct iw_scan_req *)extra;
-+	struct delayed_work *work =3D NULL;
-=20
- 	mutex_lock(&priv->mutex);
-+
- 	priv->user_requested_scan =3D 1;
--	mutex_unlock(&priv->mutex);
-=20
- 	if (wrqu->data.length =3D=3D sizeof(struct iw_scan_req)) {
- 		if (wrqu->data.flags & IW_SCAN_THIS_ESSID) {
--			ipw_request_direct_scan(priv, req->essid,
--						req->essid_len);
--			return 0;
--		}
--		if (req->scan_type =3D=3D IW_SCAN_TYPE_PASSIVE) {
--			queue_work(priv->workqueue,
--				   &priv->request_passive_scan);
--			return 0;
-+			int len =3D min((int)req->essid_len,
-+			              (int)sizeof(priv->direct_scan_ssid));
-+			memcpy(priv->direct_scan_ssid, req->essid, len);
-+			priv->direct_scan_ssid_len =3D len;
-+			work =3D &priv->request_direct_scan;
-+		} else if (req->scan_type =3D=3D IW_SCAN_TYPE_PASSIVE) {
-+			work =3D &priv->request_passive_scan;
- 		}
--	}
-+	} else {
-+		/* Normal active broadcast scan */
-+		work =3D &priv->request_scan;
-+ 	}
-+
-+	mutex_unlock(&priv->mutex);
-=20
- 	IPW_DEBUG_WX("Start scan\n");
-=20
--	queue_delayed_work(priv->workqueue, &priv->request_scan, 0);
-+	queue_delayed_work(priv->workqueue, work, 0);
-=20
- 	return 0;
- }
-@@ -10708,6 +10689,8 @@ static void ipw_link_up(struct ipw_priv *priv)
- 	}
-=20
- 	cancel_delayed_work(&priv->request_scan);
-+	cancel_delayed_work(&priv->request_direct_scan);
-+	cancel_delayed_work(&priv->request_passive_scan);
- 	cancel_delayed_work(&priv->scan_event);
- 	ipw_reset_stats(priv);
- 	/* Ensure the rate is updated immediately */
-@@ -10738,6 +10721,8 @@ static void ipw_link_down(struct ipw_priv *priv=
-)
-=20
- 	/* Cancel any queued work ... */
- 	cancel_delayed_work(&priv->request_scan);
-+	cancel_delayed_work(&priv->request_direct_scan);
-+	cancel_delayed_work(&priv->request_passive_scan);
- 	cancel_delayed_work(&priv->adhoc_check);
- 	cancel_delayed_work(&priv->gather_stats);
-=20
-@@ -10777,8 +10762,9 @@ static int __devinit ipw_setup_deferred_work(st=
-ruct ipw_priv *priv)
- 	INIT_WORK(&priv->up, ipw_bg_up);
- 	INIT_WORK(&priv->down, ipw_bg_down);
- 	INIT_DELAYED_WORK(&priv->request_scan, ipw_request_scan);
-+	INIT_DELAYED_WORK(&priv->request_direct_scan, ipw_request_direct_scan=
-);
-+	INIT_DELAYED_WORK(&priv->request_passive_scan, ipw_request_passive_sc=
-an);
- 	INIT_DELAYED_WORK(&priv->scan_event, ipw_scan_event);
--	INIT_WORK(&priv->request_passive_scan, ipw_request_passive_scan);
- 	INIT_DELAYED_WORK(&priv->gather_stats, ipw_bg_gather_stats);
- 	INIT_WORK(&priv->abort_scan, ipw_bg_abort_scan);
- 	INIT_WORK(&priv->roam, ipw_bg_roam);
-@@ -11812,6 +11798,8 @@ static void __devexit ipw_pci_remove(struct pci=
-_dev *pdev)
- 	cancel_delayed_work(&priv->adhoc_check);
- 	cancel_delayed_work(&priv->gather_stats);
- 	cancel_delayed_work(&priv->request_scan);
-+	cancel_delayed_work(&priv->request_direct_scan);
-+	cancel_delayed_work(&priv->request_passive_scan);
- 	cancel_delayed_work(&priv->scan_event);
- 	cancel_delayed_work(&priv->rf_kill);
- 	cancel_delayed_work(&priv->scan_check);
-diff --git a/drivers/net/wireless/ipw2200.h b/drivers/net/wireless/ipw2=
-200.h
-index cd3295b..d68732f 100644
---- a/drivers/net/wireless/ipw2200.h
-+++ b/drivers/net/wireless/ipw2200.h
-@@ -1037,6 +1037,7 @@ struct ipw_cmd {	 /* XXX */
- #define STATUS_DISASSOC_PENDING (1<<12)
- #define STATUS_STATE_PENDING    (1<<13)
-=20
-+#define STATUS_DIRECT_SCAN_PENDING (1<<19)
- #define STATUS_SCAN_PENDING     (1<<20)
- #define STATUS_SCANNING         (1<<21)
- #define STATUS_SCAN_ABORTING    (1<<22)
-@@ -1292,6 +1293,8 @@ struct ipw_priv {
- 	struct iw_public_data wireless_data;
-=20
- 	int user_requested_scan;
-+	u8 direct_scan_ssid[IW_ESSID_MAX_SIZE];
-+	u8 direct_scan_ssid_len;
-=20
- 	struct workqueue_struct *workqueue;
-=20
-@@ -1301,8 +1304,9 @@ struct ipw_priv {
- 	struct work_struct system_config;
- 	struct work_struct rx_replenish;
- 	struct delayed_work request_scan;
-+	struct delayed_work request_direct_scan;
-+  	struct delayed_work request_passive_scan;
- 	struct delayed_work scan_event;
--  	struct work_struct request_passive_scan;
- 	struct work_struct adapter_restart;
- 	struct delayed_work rf_kill;
- 	struct work_struct up;
+- There are drivers that implement rfkill (laptop-specific BIOS drivers)
+that have _no_ associated transmitter device; thus the current 'struct
+rfkill' can only be a representation of the _switch_; thus a "third
+state" would be useless here as well (as is the toggle_radio() callback)
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+- It just seems a lot clearer to me to have a separation between the
+rfkill switch and the radio bits since there's no need to tie them
+together
+
+Dan
+
+> Not all radios have rfkill switches attached to them, and thus having a
+> 3rd rfkill state just doesn't work.  In the case of hp-wmi, there is no
+> killswitch associated with the wireless device, it's handled by BIOS and
+> does not necessarily have interaction with the transmitter.
+> 
+> Having a 3rd state on a killswitch which can't physically _have_ 3
+> states isn't right.  The switch is often completely independent of the
+> radio, and that's something we need to represent.
+> 
+> Because of that, the toggle_radio() member of struct rfkill just isn't
+> in the right place.  That changes _radio_ block state, but since struct
+> rfkill is the _switch_, toggle_radio() is wrong here.  In the case of
+> hp-wmi, there's no radio to toggle, since it's a hardswitch, and since
+> hp-wmi isn't a wireless driver!
+> 
+> Again, we need to separate radio block state from switch state, because
+> they are two different things.  We don't need to break anything here; we
+> just need to add some bits for radio block state.
+> 
+> Dan
+> 
+> > HOWEVER, rfkill can't provide you with "radio is enabled, configured, 
+> > operational and transmitting" status.  It really can't say much of what
+> > is happening in the unblocked state.
+> > 
+> > > > Currently we can't differentiate "block changes by the user" from "the
+> > > > kernel can change the state if you ask it to".  I agree this is a
+> > > > desireable feature, and I'd rather add a third rfkill_state to propagate
+> > > > that information.
+> > > 
+> > > Well... I still think this is best as a _radio_ property, not as a
+> > > killswitch property.  Physical switches are physical, you can't change
+> > > the state and thus the third state here isn't useful.  If we separate
+> > > switch state from radio power state that makes it clear (at least to
+> > > me).
+> > 
+> > But then you have more than one "switch" per radio, which needs changes
+> > to rfkill (currently, you are NOT to do it).
+> > 
+> > Currently, one is to think of a rfkill class as the representation of
+> > the "radio property".  Which means you *lose the information* of which
+> > underlying hardware/firmware reason the device has to be blocked.
+> > 
+> > I think we are actually better off by losing that information, it is
+> > not useful for UIs (you need to know the device is force-blocked, not
+> > WHY it is blocked or force-blocked -- that is highly platform-specific).
+> > 
+> > > Since the current rfkillX device is the _switch_, and since I'm not
+> > > aware of any machines where the BIOS synthesizes a toggle state from a
+> > > non-toggle button, maybe we should punt this until such a device
+> > > actually turns up?
+> > 
+> > The current rfkillX device represents the radio state, which means it might
+> > need to synthesize it from various hardware bits.
+> > 
+> > E.g.  Let's look at a possible conversion of IPW2200 to the rfkill class.
+> > 
+> > The IPW2200 driver has TWO rfkill "registers":
+> >    R1 - Read/Write, controlled by the driver
+> >    R2 - Read-Only, reflects an input pin in the hardware and cannot be
+> >         overriden.
+> > 
+> > The IPW2000 driver would register just *one* instance of the rfkill class,
+> > and it would return the status as this.
+> > 
+> > Assume R1 active high, and R2 active high.  Active means BLOCK RADIO.
+> > 
+> >   rfkill_status = (R1 | R2) ? RFKILL_STATUS_OFF : RFKILL_STATUS_ON.
+> > 
+> > I.e. if either one (or both) of the registers are blocking the radio, it
+> > reports the status as RFKILL_STATUS_OFF.  Otherwise, it reports the status
+> > as RFKILL_STATUS_ON (unblocked).
+> > 
+> > Now, for the toggle_radio function in pseudo-code:
+> > 
+> >   switch (new_state) {
+> >    case RFKILL_STATUS_ON:
+> >        if (R2) {
+> >            R1 = 1; /* fail safe, least surprise */
+> >            return -EPERM;  /* cannot override! */
+> >        }
+> >        R1 = 0;
+> >        break;
+> >    case RFKILL_STATUS_OFF:
+> >        R1 = 1;
+> >        break;
+> >    }
+> > 
+> > There are possible variations, the most pressing one that comes to mind
+> > is whether we should force the R1 switch to 1 or 0 when R2 is 1 on the
+> > RFKILL_STATUS_ON branch.  I used the "won't EVER cause the radio to be
+> > unblocked by surprise" alternative.
+> > 
+> > However, now userspace really gets to know if the ipw2200 radio is blocked or not,
+> > it doesn't have to hunt down two different rfkill class instances for it.  And it
+> > just needs to listen to uevents (which HAL should be taught to export to DBUS) for
+> > ipw2200 to know when the status changes, no pooling or even reading of sysfs
+> > attributes would be required.
+> > 
+> > If you wanted to also handle txpower off through rfkill, you'd take the state of
+> > txpower into consideration on the code above, and still have only ONE rfkillX
+> > instance for the ipw2200 device.
+> > 
+> > > > > The only thing I personally care about is separating radio state from
+> > > > > switch state so that I can distinguish a softkill (via ex. iwconfig
+> > > > > wlan0 txpower off) from a hardkill via a real killswitch.
+> > > > 
+> > > > Ok, so what you care about is to know if you COULD CHANGE THE STATE,
+> > > > correct?
+> > > 
+> > > Could change the radio _block_ state, yes.  rfkill switch state no,
+> > 
+> > I mean the radio _block_ state.  See above.  One rfkill class per device,
+> > synthesizing the state of n, n>=1 real switches.  So, you get the radio
+> > block state from it.
+> > 
+> > > because I don't know of any examples of those and frankly I think it's
+> > > easier to just make the user flip the switch again.  Keeping it simpler
+> > > is better.
+> > 
+> > I'd agree with this view, least surprise is good, and the way the whole
+> > rfkill idea was engineered to leave the transmitter BLOCKED in cause of
+> > doubt.
+> > 
+> > > > The third state would tell you that.
+> > > > 
+> > > > > Why should a "device rfkill state" be in a separate module?  Radio state
+> > > > > _is_ rfkill state.  rfkill switches turn the radio on or off but
+> > > > 
+> > > > device-wide rfkill state is rfkill state.  radio state could be
+> > > > anything.
+> > > 
+> > > I started using "radio block state" in this mail instead.
+> > 
+> > Ok, radio block state is also good.  As long as we both know exactly
+> > what we mean by it.
+> > 
+> > > > But yes, I understand what you want.  The two states you talk about are
+> > > > the same if you have only ONE rfkill class attached to a device, and
+> > > > they are different (but related) things when you have MORE than one
+> > > > rfkill class attached to a device.
+> > > 
+> > > What situations would have more than one rfkill class attached to the
+> > > device?
+> > 
+> > If you try to model IPW2200 or other hardware with many rfkill input signals
+> > as one signal per rfkill class.  That's something that is probably NOT a good
+> > idea at all.
+> > 
+> > > > IMO, we should attach just one rfkill class per transmitter device, and
+> > > > handle the "you cannot change the state" possibility by adding a third
+> > > > state to rfkill_state.
+> > > 
+> > > Right about the one rfkill class per device than drives a killswitch.
+> > > But that's not necessarily the transmitter device.  It might be a child
+> > > of the laptop module if it's a BIOS switch that also kills the radio
+> > > automatically.  In the case of hp-wmi, it provides 3 different rfkill
+> > > class devices.
+> > 
+> > Which is why I want to do it in a way we don't have to know what is a
+> > child of what, slaved to what, master of what...
+> > 
+> > > > > devices should have _one_ method of turning themselves off through
+> > > > > either hardware or software, and the system that provides that method
+> > > > > should be the rfkill system.
+> > > > 
+> > > > We don't agree there.  If you use "devices should have _one_ method of
+> > > > *forcing themselves off* outside of the normal control path of interface
+> > > > up/down", THEN we agree.
+> > > 
+> > > Right, all devices with transmitters should have _one_ method of
+> > > blocking and unblocking their transmitters.
+> > 
+> > OK.
+> > 
+> > > > The reason is extremely simple: rfkill CANNOT TURN SOMETHING ON.  If it
+> > > > *was* ON, and you used rfkill to turn it OFF, than yes, when you "stop
+> > > > turning it OFF through rfkill", it will go back to ON.
+> > > > 
+> > > > But if it was not ON in the first place, it won't go to ON when you stop
+> > > > turning it OFF through rfkill.  It will just remain OFF, unless
+> > > > something else that is NOT rfkill hooks into the event and takes the
+> > > > oportunity to do whatever is needed (such as configure the interface and
+> > > > bring it up) to bring the device to ON state.
+> > > 
+> > > Good point.
+> > 
+> > It is a very central point to rfkill, if you lose track of it, things get
+> > very confusing, very very quickly.
+> > 
+> > > > > > Anyway, if we are to use various *related* rfkill switches per device,
+> > > > > > rfkill needs further changes, including an extra callback into the
+> > > > > > driver, so as to be able to export the device rfkill state also in all
+> > > > > > switch rfkill state events (otherwise these events become quite useless
+> > > > > > for many uses).
+> > > > > 
+> > > > > But yes, there would need to be a "device rfkill state" changed event
+> > > > > and another call to get the device rfkill state.
+> > > > 
+> > > > Indeed.  It is a possiblity.  I still feel a third addition to
+> > > > rfkill_state and the use of only ONE rfkill class per transmitter device
+> > > > is a better way to do it.
+> > > 
+> > > As I said above, I think I disagree about the third state.  I think the
+> > > best thing to do is keep the general rfkill switch operation as it is
+> > > now (only 2 states, blocked and unblocked), and eventually add a
+> > > standard "radio block state" sysfs entry on the _transmitter_ device
+> > > with 3 values: hw-blocked, sw-blocked, and unblocked.
+> > 
+> > If we mandate the one-rfkill-class-per-transmitter rule, you now have two
+> > attributes that say the very same thing, except that the old one (the one
+> > we currently have) lacks the force-blocked state.  So basically, you just
+> > avoided a minor ABI change by not adding the third state to rfkill_state.
+> > 
+> > If we mandate the one-rfkill-class-per-kill-line rule, you will add 
+> > complexity, now a driver like IPW2200 would need at least two rfkill
+> > class instances.   In THIS case, the new attribute conveys interesting
+> > information, but OTOH, NM and any user application will have to deal
+> > with more than one rfkill sysfs instance per device, and we will have
+> > weird issues to deal with, like how to deal with user_claim...
+> > 
+> > The reason I insist on the third state so much is that rfkill *really*
+> > was not designed to cope with two or more per transmitter.  You now
+> > have to mess with various rfkill switches to get something to happen
+> > (and most of the time, all but one will EPERM you, because they are
+> > read-only, and my subconsious mind is severely screaming up this is
+> > a BAD IDEA, we currently forbid read-only switches and I recall there
+> > were some subtle issues with the input layer events for read-only
+> > stuff).
+> > 
+> > > Does that sound OK?  I feel like I have a better understanding of what
+> > 
+> > It WOULD work, I think.  But for the reasons above, I am more inclined
+> > to add a third state.  It is much simpler on the code, and it has no
+> > drawbacks I can see, while the multiple rfkill per device approach does
+> > have some (and it gives me a bad feeling every time I consider it).
+> > 
+> > What whould be the technical advantages of a separate attribute
+> > from your UI (NM) point of view?  That is not yet clear to me, at
+> > all.  Assume you will only get ONE rfkillX interface per device,
+> > which means it DOES reflect the block/unblock state of the device.
+> > 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
