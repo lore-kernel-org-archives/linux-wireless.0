@@ -1,54 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.231]:44397 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753691AbYFIUAI (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.182]:6888 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754133AbYFFSAD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2008 16:00:08 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so490651rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 13:00:05 -0700 (PDT)
-Message-ID: <c85cb4470806091300p61fc5c94l48a9667e1b6ff4f@mail.gmail.com> (sfid-20080609_220013_159081_C88909FD)
-Date: Mon, 9 Jun 2008 23:00:05 +0300
-From: "Ron Rindjunsky" <rindjon@googlemail.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: CONFIG_IWL4965_HT=n in linux-next
-Cc: "Andrew Morton" <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240806090309y3fa65849l450df776b454f298@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080609015623.6bbc9d88.akpm@linux-foundation.org>
-	 <1ba2fa240806090220y4a21d3d2k84143e2a4ee0cb1a@mail.gmail.com>
-	 <20080609022341.16060b71.akpm@linux-foundation.org>
-	 <1ba2fa240806090309y3fa65849l450df776b454f298@mail.gmail.com>
+	Fri, 6 Jun 2008 14:00:03 -0400
+Received: by py-out-1112.google.com with SMTP id p76so875712pyb.10
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jun 2008 11:00:01 -0700 (PDT)
+Subject: [PATCH 7/7] mac80211: wme.c use new helpers
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 06 Jun 2008 10:51:14 -0700
+Message-Id: <1212774674.6340.81.camel@brick> (sfid-20080606_200007_978847_E0C562D5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> >> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c: In function 'rs_move_siso_to_other':
-> >> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1439: error: 'struct iwl_priv' has no member named 'current_ht_config'
-> >> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1443: error: 'struct iwl_priv' has no member named 'current_ht_config'
-> >> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c: In function 'rs_move_mimo_to_other':
-> >> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1530: error: 'struct iwl_priv' has no member named 'current_ht_config'
-> >> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1534: error: 'struct iwl_priv' has no member named 'current_ht_config'
-> >>
-> >> It's a known issue.
-> >
-> > Sob.  Well please fix it urgently!  Poeple are trying to get work done
-> > on top of linux-next.
-> >
-> I thought his is a development branch, everybody is on the edge today :)
->
-> >> we are about to remove this conditional. Will
-> >> happen till EOW.
-> >
-> >
-> > I hacked around it:
-> Why is not good just make it HT=y. Or you need it fixed for this
-> random config files regression tests
-> Anyway, if it's so urgent it will be done till EOD  (TMZ:GMT+2), hope
-> it's good enough,
-> Tomas
->
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ net/mac80211/wme.c |   10 ++--------
+ 1 files changed, 2 insertions(+), 8 deletions(-)
 
-a patch removing this config has been issued (iwlwifi: removing
-IWL4965_HT config)
-Ron
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 14a9ff1..7b27613 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -105,11 +105,8 @@ static int classify80211(struct sk_buff *skb, struct Qdisc *qd)
+ {
+ 	struct ieee80211_local *local = wdev_priv(qd->dev->ieee80211_ptr);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	unsigned short fc = le16_to_cpu(hdr->frame_control);
+-	int qos;
+ 
+-	/* see if frame is data or non data frame */
+-	if (unlikely((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)) {
++	if (!ieee80211_is_data(hdr->frame_control)) {
+ 		/* management frames go on AC_VO queue, but are sent
+ 		* without QoS control fields */
+ 		return 0;
+@@ -119,10 +116,7 @@ static int classify80211(struct sk_buff *skb, struct Qdisc *qd)
+ 		/* use AC from radiotap */
+ 	}
+ 
+-	/* is this a QoS frame? */
+-	qos = fc & IEEE80211_STYPE_QOS_DATA;
+-
+-	if (!qos) {
++	if (!ieee80211_data_has_qos(hdr->frame_control)) {
+ 		skb->priority = 0; /* required for correct WPA/11i MIC */
+ 		return ieee802_1d_to_ac[skb->priority];
+ 	}
+-- 
+1.5.6.rc1.257.gba91d
+
