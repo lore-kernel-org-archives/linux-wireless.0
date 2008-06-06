@@ -1,85 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:2054 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754706AbYF3KWp (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.185]:41532 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756925AbYFFPMz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 06:22:45 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1483996wfd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2008 03:22:45 -0700 (PDT)
-Message-ID: <69e28c910806300322i5ac6e123h23ed5c0419d087c1@mail.gmail.com> (sfid-20080630_122249_095634_8EEAD4BA)
-Date: Mon, 30 Jun 2008 12:22:45 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Zhu Yi" <yi.zhu@intel.com>
-Subject: Re: [PATCH 29/33] iwlwifi: drop skb silently for Tx request in monitor mode
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1214817813-17639-30-git-send-email-yi.zhu@intel.com>
+	Fri, 6 Jun 2008 11:12:55 -0400
+Received: by rn-out-0910.google.com with SMTP id k40so404963rnd.17
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jun 2008 08:12:54 -0700 (PDT)
+Message-ID: <1ba2fa240806060812q28c270c4i12cc08f8665e9cc0@mail.gmail.com> (sfid-20080606_171303_131061_F6D054F0)
+Date: Fri, 6 Jun 2008 18:12:54 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Thomas Backlund" <tmb@mandriva.org>
+Subject: Re: iwl4965 oops in 2.6.26-rc5 x86_64
+Cc: "Ian Schram" <ischram@telenet.be>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <48494EF6.4020506@mandriva.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
-	 <1214817813-17639-22-git-send-email-yi.zhu@intel.com>
-	 <1214817813-17639-23-git-send-email-yi.zhu@intel.com>
-	 <1214817813-17639-24-git-send-email-yi.zhu@intel.com>
-	 <1214817813-17639-25-git-send-email-yi.zhu@intel.com>
-	 <1214817813-17639-26-git-send-email-yi.zhu@intel.com>
-	 <1214817813-17639-27-git-send-email-yi.zhu@intel.com>
-	 <1214817813-17639-28-git-send-email-yi.zhu@intel.com>
-	 <1214817813-17639-29-git-send-email-yi.zhu@intel.com>
-	 <1214817813-17639-30-git-send-email-yi.zhu@intel.com>
+References: <4848289D.1080205@mandriva.org> <48482BC3.4070402@mandriva.org>
+	 <4848482C.2080208@mandriva.org> <48485F12.2050908@mandriva.org>
+	 <48488878.5040708@telenet.be>
+	 <1ba2fa240806060432t73ecb318x89e877241aa6ef55@mail.gmail.com>
+	 <48492734.9080901@mandriva.org> <48492E85.6010307@mandriva.org>
+	 <1ba2fa240806060659wf4e4088s8afdd2f7f854ea09@mail.gmail.com>
+	 <48494EF6.4020506@mandriva.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 30, 2008 at 11:23 AM, Zhu Yi <yi.zhu@intel.com> wrote:
-> This patch fixes the problem to keep mac80211 resubmitting SKBs
-> when Tx request cannot be met in monitor mode.
+On Fri, Jun 6, 2008 at 5:51 PM, Thomas Backlund <tmb@mandriva.org> wrote:
+> Tomas Winkler skrev:
+>>
+>> On Fri, Jun 6, 2008 at 3:33 PM, Thomas Backlund <tmb@mandriva.org> wrote:
+>>>
+>>> Thomas Backlund skrev:
+>>>>
+>>>> Tomas Winkler skrev:
+>>>>>
+>>>>> On Fri, Jun 6, 2008 at 3:44 AM, Ian Schram <ischram@telenet.be> wrote:
+>>>>>>
+>>>>>> Isn't this the Oops Joonwoo Park wanted to patch with
+>>>>>>
+>>>>>> "[PATCH] iwlwifi: fix oops on wep key insertion" 27/5/2008
+>>>>>>
+>>>>>> invalid length of webkey that would/should be handled in mac80211?
+>>>>>>
+>>>>>> ian
+>>>>>
+>>>>> Yes, it looks like.
+>>>>
+>>>> Ummm, what has a wep key to do with me trying to access a WPA2-Personal
+>>>> encrypted net ?
+>>
+>> Not sure yet, but mac is trying to assign default/static wep key.
+>>
+>> :iwlcore:iwl_send_static_wepkey_cmd+0xcb/0xd5
+>> :iwlcore:iwl_set_default_wep_key+0xa2/0xbc
+>>
+>> Try to set the encryption explicitly
+>> network={
+>>    psk="*************************"
+>>    scan_ssid=1
+>>    ssid="dlink"
+>>    pairwise=CCMP
+>>   group=CCMP
+>>  }
+>>
+>>
 >
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
->  drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 ++-
->  2 files changed, 4 insertions(+), 2 deletions(-)
+> That didn't help at all...
 >
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> index 4f0a18a..2744b0a 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -6695,7 +6695,8 @@ static int iwl3945_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+> What's more it prevented the wifi to work on 2.6.24.7 so I had to remove the
+> lines again...
 >
->        if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
->                IWL_DEBUG_MAC80211("leave - monitor\n");
-> -               return -1;
-> +               dev_kfree_skb_any(skb);
-> +               return 0;
->        }
->
->        IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->len,
-> diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-> index ba0f289..60b7a64 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-> @@ -2682,7 +2682,8 @@ static int iwl4965_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
->
->        if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
->                IWL_DEBUG_MAC80211("leave - monitor\n");
-> -               return -1;
-> +               dev_kfree_skb_any(skb);
-> +               return 0;
->        }
->
->        IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->len,
-> --
-> 1.5.3.6
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+So what's your AP configuration TKIP?
 
-NACK.
+Second try also with sw decryption:
 
-This blocks packet injection for not only 4965/5000, but also 3945.
-Also, I have multiple records of injection working with 4965 cards
-with your original patch.
+in /etc/modprobe.conf
+options iwl4965 swcrypto=1
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+
+Tomas
