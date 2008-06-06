@@ -1,63 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:56249 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751535AbYFIQ3b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2008 12:29:31 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so1364164ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 09:29:23 -0700 (PDT)
-Subject: Re: [PATCH 2/7] mac80211: replace ieee80211_get_morefrag with
-	ieee80211_has_morefrags
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1212997132.698.53.camel@johannes.berg>
-References: <1212774671.6340.76.camel@brick>
-	 (sfid-20080606_195947_229598_F1790495)  <1212997132.698.53.camel@johannes.berg>
-Content-Type: text/plain; charset=utf-8
-Date: Mon, 09 Jun 2008 09:29:20 -0700
-Message-Id: <1213028961.5974.18.camel@brick> (sfid-20080609_182934_564548_89246581)
+Received: from mx1.redhat.com ([66.187.233.31]:56342 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755554AbYFFO3q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jun 2008 10:29:46 -0400
+Subject: Re: iwl4965 oops in 2.6.26-rc5 x86_64
+From: Dan Williams <dcbw@redhat.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Thomas Backlund <tmb@mandriva.org>,
+	Ian Schram <ischram@telenet.be>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240806060659wf4e4088s8afdd2f7f854ea09@mail.gmail.com>
+References: <4848289D.1080205@mandriva.org>
+	 <1ba2fa240806051103q652accf5t1bd1d94630ebea5b@mail.gmail.com>
+	 <48482BC3.4070402@mandriva.org> <4848482C.2080208@mandriva.org>
+	 <48485F12.2050908@mandriva.org> <48488878.5040708@telenet.be>
+	 <1ba2fa240806060432t73ecb318x89e877241aa6ef55@mail.gmail.com>
+	 <48492734.9080901@mandriva.org> <48492E85.6010307@mandriva.org>
+	 <1ba2fa240806060659wf4e4088s8afdd2f7f854ea09@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 06 Jun 2008 10:29:29 -0400
+Message-Id: <1212762569.28631.6.camel@localhost.localdomain> (sfid-20080606_162950_612852_AB73C272)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-06-09 at 09:38 +0200, Johannes Berg wrote:
-> > -	if (ieee80211_get_morefrag(hdr))
-> > +	if (ieee80211_has_morefrags(hdr->frame_control))
->=20
-> looks fine to me, though I wonder if we should have
->=20
-> ieee80211_has_morefrags(struct 80211hdr)
-> and
-> __ieee80211_has_morefrags(__le16 fc)
->=20
-> or something with variants of the functions that do the ->frame_contr=
-ol?
+On Fri, 2008-06-06 at 16:59 +0300, Tomas Winkler wrote:
+> On Fri, Jun 6, 2008 at 3:33 PM, Thomas Backlund <tmb@mandriva.org> wrote:
+> > Thomas Backlund skrev:
+> >>
+> >> Tomas Winkler skrev:
+> >>>
+> >>> On Fri, Jun 6, 2008 at 3:44 AM, Ian Schram <ischram@telenet.be> wrote:
+> >>>>
+> >>>> Isn't this the Oops Joonwoo Park wanted to patch with
+> >>>>
+> >>>> "[PATCH] iwlwifi: fix oops on wep key insertion" 27/5/2008
+> >>>>
+> >>>> invalid length of webkey that would/should be handled in mac80211?
+> >>>>
+> >>>> ian
+> >>>
+> >>> Yes, it looks like.
+> >>
+> >> Ummm, what has a wep key to do with me trying to access a WPA2-Personal
+> >> encrypted net ?
+> 
+> Not sure yet, but mac is trying to assign default/static wep key.
 
-I considered that, but thought it was a small benefit for doubling the
-number of helpers.
+The output of wpa_supplicant with "-dddt" would be quite useful in
+figuring this out.
 
-I chose the __le16 variant as there is some driver code that checks the=
-se
-values in driver-specific structures, so I just left it up to the calle=
-r
-to dereference whatever structure the frame control is held in.
+The supplicant does always _clear_ static WEP keys when it starts the
+interface, when a connection drops, and when it quits.  Maybe that's
+where it's coming from?  But it should just be setting the "disabled"
+bit in the WEXT structure and sending a key of all zeros.
 
-But if both sets are wanted, I would suggest:
+Dan
 
-=EF=BB=BFieee80211_fc_has_morefrags(__le16 fc);
+> :iwlcore:iwl_send_static_wepkey_cmd+0xcb/0xd5
+> :iwlcore:iwl_set_default_wep_key+0xa2/0xbc
+> 
+> Try to set the encryption explicitly
+> network={
+>     psk="*************************"
+>     scan_ssid=1
+>     ssid="dlink"
+>     pairwise=CCMP
+>    group=CCMP
+>  }
+> 
+> 
+> >>
+> >>> Thomas can you send out your wpa_supplicant config fiele
+> >>>
+> >>
+> >> I could, but since I would have to remove any sensitive info such as the
+> >> psk key, would it be of any use ?
+> >
+> > Anyway, here configs are:
+> >
+> > wpa_supplicant.conf
+> > (I stripped all the comments from the file)
+> > --- cut ---
+> > ctrl_interface=/var/run/wpa_supplicant
+> >
+> > eapol_version=1
+> >
+> > ap_scan=1
+> >
+> > fast_reauth=1
+> >
+> > blob-base64-exampleblob={
+> > SGVsbG8gV29ybGQhCg==
+> > }
+> >
+> > network={
+> >    psk="*************************"
+> >    scan_ssid=1
+> >    ssid="dlink"
+> > }
+> > --- cut ---
+> >
+> > ifcfg-wlan0
+> > --- cut ---
+> > DEVICE=wlan0
+> > BOOTPROTO=dhcp
+> > ONBOOT=yes
+> > METRIC=35
+> > MII_NOT_SUPPORTED=no
+> > USERCTL=no
+> > RESOLV_MODS=no
+> > WIRELESS_MODE=Managed
+> > WIRELESS_ESSID=dlink
+> > WIRELESS_ENC_KEY='s:*************************'
+> > WIRELESS_WPA_DRIVER=wext
+> > IPV6INIT=no
+> > IPV6TO4INIT=no
+> > DHCP_CLIENT=dhclient
+> > NEEDHOSTNAME=no
+> > PEERDNS=yes
+> > PEERYP=yes
+> > PEERNTPD=no
+> > --- cut ---
+> >
+> >>
+> >>> I will provide a patch that disable hw encryption on long wep keys. It
+> >>> get lost in my todo list.
+> >>> Tomas
+> >>>
+> >>
+> >
+> > --
+> > Thomas
+> >
+> >
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-ieee80211_has_morefrags(struct ieee80211 *hdr)
-{
-	return ieee80211_fc_has_morefrags(hdr->frame_control);
-}
-
-Do you think I should add the struct helper(s)?
-
-Harvey
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
