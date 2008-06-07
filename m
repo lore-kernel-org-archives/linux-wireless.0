@@ -1,59 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.227]:6086 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756206AbYFYN4f (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.182]:52654 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751574AbYFGCYV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2008 09:56:35 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so8208629rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2008 06:56:34 -0700 (PDT)
-Message-ID: <b6c5339f0806250656r7c7437e8o5bc629f4c9c30b67@mail.gmail.com> (sfid-20080625_155638_617441_B4F3389A)
-Date: Wed, 25 Jun 2008 09:56:34 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Subject: Re: [PATCH] ath5k: convert LED code to use mac80211 triggers
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-In-Reply-To: <40f31dec0806250512x1a210cc0vef87c5ec44629cec@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080622181134.GA26571@hash.localnet>
-	 <40f31dec0806250512x1a210cc0vef87c5ec44629cec@mail.gmail.com>
+	Fri, 6 Jun 2008 22:24:21 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so948426waf.23
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jun 2008 19:24:21 -0700 (PDT)
+Subject: Re: [PATCH 4/7] mac80211: make ieee80211_get_hdrlen_from_skb
+	return unsigned
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1212783357.29134.5.camel@dv>
+References: <1212774672.6340.78.camel@brick>
+	 <200806062024.24681.mb@bu3sch.de>  <1212778061.6340.85.camel@brick>
+	 <1212783357.29134.5.camel@dv>
+Content-Type: text/plain; charset=utf-8
+Date: Fri, 06 Jun 2008 19:24:20 -0700
+Message-Id: <1212805460.6340.91.camel@brick> (sfid-20080607_042446_986456_E93458B7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I do have a micro-update to this after reading over it one last time.
-I'll post a respin tonight.
+On Fri, 2008-06-06 at 16:15 -0400, Pavel Roskin wrote:
+> On Fri, 2008-06-06 at 11:47 -0700, Harvey Harrison wrote:
+>=20
+> > unlikely() isn't some magic make-me-faster function, it just moves =
+code
+> > to the end of the function to get it out of the icache and jumps to=
+ it
+> > in the unlikely case it is taken.  When all there is is a return, I
+> > don't think it even makes any difference.  In both these cases a co=
+mment
+> > is probably more appropriate.
+>=20
+> If we don't more return to the end, we get something like:
+>=20
+> compare skb->len to 10
+> if more or equal goto 1
+> return
+> 1: <the likely case>
+>=20
+> =EF=BB=BFI don't know much about modern processor design, but I remem=
+ber reading
+> that even a very short jump would flush the instruction pipeline and
+> cause some delay.
+>=20
+> I would keep unlikely() and let the compiler think what to do with it=
+=2E
+>=20
 
->>        tristate "Atheros 5xxx wireless cards support"
->>        depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
->> +       select MAC80211_LEDS
->> +       select LEDS_CLASS
+On X86-32 at least the generated code is exactly the same with or
+without the unlikely()s.  I'll put them back in a follow-on if people
+are really attached to them.
 
-+ select NEW_LEDS
+Harvey
 
-Randy Dunlap posted a patch series a few weeks ago that said NEW_LEDS
-was required where LEDS_CLASS was used.
-
->> -ath5k_led_off(unsigned long data)
->> +ath5k_led_enable(struct ath5k_softc *sc)
-[..]
->> +       if (test_bit(ATH_STAT_LEDSOFT, sc->status)) {
->> +               ath5k_hw_set_gpio_output(sc->ah, sc->led_pin);
->> +               ath5k_hw_set_gpio(sc->ah, sc->led_pin, 0);
-
-That was carried over from the original code but I think it was supposed to be:
-
->> +               ath5k_hw_set_gpio(sc->ah, sc->led_pin, !sc->led_on);
-
-(This changes it from 'on' to 'off' but either way I'm not sure it matters.)
-
-> I don't have an IBM card either, anyway we need the cleanup more than
-> blinking leds :-)
->
->
-> Acked-by: Nick Kossifidis <mickflemm@gmail.com>
-
-Thanks!
-
--- 
-Bob Copeland %% www.bobcopeland.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
