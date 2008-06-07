@@ -1,178 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.182]:16699 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753572AbYF1Six (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.182]:13573 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751115AbYFGMJ4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 14:38:53 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so379053ika.5
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 11:38:51 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: proski@gnu.org, orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-Subject: [RFC PATCH 05/19] orinoco: Add function to execute Hermes initialisation commands synchronously
-Date: Sat, 28 Jun 2008 19:38:11 +0100
-Message-Id: <1214678305-7057-6-git-send-email-kilroyd@gmail.com> (sfid-20080628_203912_081721_A0BF5AD1)
-In-Reply-To: <1214678305-7057-5-git-send-email-kilroyd@gmail.com>
-References: <1214678305-7057-1-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-2-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-3-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-4-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-5-git-send-email-kilroyd@gmail.com>
-From: kilroyd@googlemail.com
+	Sat, 7 Jun 2008 08:09:56 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so1096987waf.23
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Jun 2008 05:09:55 -0700 (PDT)
+Message-ID: <1ba2fa240806070509p51d7b8f6lfee9b28f17ee8ea2@mail.gmail.com> (sfid-20080607_141001_855174_C9C22B4D)
+Date: Sat, 7 Jun 2008 15:09:55 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Dan Williams" <dcbw@redhat.com>,
+	"Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
+Subject: Re: [PATCH 01/12] rfkill: clarify meaning of rfkill states
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Ivo van Doorn" <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, "Dmitry Torokhov" <dtor@mail.ru>
+In-Reply-To: <1212762451.28631.3.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1212549017-30144-2-git-send-email-hmh@hmh.eng.br>
+	 <20080605003808.GA16599@khazad-dum.debian.net>
+	 <1212667955.25730.29.camel@localhost.localdomain>
+	 <20080605130323.GB3413@khazad-dum.debian.net>
+	 <1212677207.28545.56.camel@localhost.localdomain>
+	 <1212696826.13915.1256967905@webmail.messagingengine.com>
+	 <1212722763.1026.17.camel@localhost.localdomain>
+	 <1212758662.26514.5.camel@localhost.localdomain>
+	 <20080606141419.GA3444@khazad-dum.debian.net>
+	 <1212762451.28631.3.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current synchronous execution function doesn't work
-for certain Hermes commands which clear the MAGIC number from
-SWSUPPORT0. These commands seem to be related to initialisation or
-programming, for example HERMES_CMD_INIT.
+This is how I view the requirements/state of rfkill system. Not trying
+to come with any design yet or mapping it to what we currently have in
+rfkill. Just clearing the table for myself and maybe others.
 
-Replicate hermes_docmd_wait for commands which clear the MAGIC number
-from SWSUPPORT0. This version accepts two extra arguments which are
-passed straight to the firmware.
+1. radio state is inclusive disjunction or conjunction of all rfkill
+switches (depends on what 0,1 means)
+   * user space and kernel components (e.g. mac80211) must be notified
+about change in radio state
+2. rfkill switches types
+ a. sw - can be switched by software means
+ b. hw - must be manually toggled..
+ c. devices switch - switch has direct connection to device (hw switches only)
+     device provides the input to the radio state
+ c. input switch - device is requested to change radio state (hw and
+sw switches)
+3. state of each rfkill switch has to be visible to user space, also
+sw and hw attributes of switch must be known to user space.
+4. switch state must be preserved across reboot and suspend/resume,
+  hw switch of course might be changed even when computer is powered off
+5. There must be at least one sw input switch.
 
-Functionality copied out of hermes_init.
 
-Signed-off-by: David Kilroy <kilroyd@gmail.com>
----
- drivers/net/wireless/hermes.c |   94 +++++++++++++++++++++++++----------------
- drivers/net/wireless/hermes.h |    3 +
- 2 files changed, 60 insertions(+), 37 deletions(-)
-
-diff --git a/drivers/net/wireless/hermes.c b/drivers/net/wireless/hermes.c
-index aa95349..13072d0 100644
---- a/drivers/net/wireless/hermes.c
-+++ b/drivers/net/wireless/hermes.c
-@@ -116,6 +116,61 @@ static int hermes_issue_cmd(hermes_t *hw, u16 cmd, u16 param0,
-  * Function definitions
-  */
- 
-+/* For doing cmds that wipe the magic constant in SWSUPPORT0 */
-+int hermes_doicmd_wait(hermes_t *hw, u16 cmd,
-+		       u16 parm0, u16 parm1, u16 parm2,
-+		       struct hermes_response *resp)
-+{
-+	int err = 0;
-+	int k;
-+	u16 status, reg;
-+
-+	err = hermes_issue_cmd(hw, cmd, parm0, parm1, parm2);
-+	if (err)
-+		return err;
-+
-+	reg = hermes_read_regn(hw, EVSTAT);
-+	k = CMD_INIT_TIMEOUT;
-+	while ((!(reg & HERMES_EV_CMD)) && k) {
-+		k--;
-+		udelay(10);
-+		reg = hermes_read_regn(hw, EVSTAT);
-+	}
-+
-+	hermes_write_regn(hw, SWSUPPORT0, HERMES_MAGIC);
-+
-+	if (!hermes_present(hw)) {
-+		DEBUG(0, "hermes @ 0x%x: Card removed during reset.\n",
-+		       hw->iobase);
-+		err = -ENODEV;
-+		goto out;
-+	}
-+
-+	if (!(reg & HERMES_EV_CMD)) {
-+		printk(KERN_ERR "hermes @ %p: "
-+		       "Timeout waiting for card to reset (reg=0x%04x)!\n",
-+		       hw->iobase, reg);
-+		err = -ETIMEDOUT;
-+		goto out;
-+	}
-+
-+	status = hermes_read_regn(hw, STATUS);
-+	if (resp) {
-+		resp->status = status;
-+		resp->resp0 = hermes_read_regn(hw, RESP0);
-+		resp->resp1 = hermes_read_regn(hw, RESP1);
-+		resp->resp2 = hermes_read_regn(hw, RESP2);
-+	}
-+
-+	hermes_write_regn(hw, EVACK, HERMES_EV_CMD);
-+
-+	if (status & HERMES_STATUS_RESULT)
-+		err = -EIO;
-+out:
-+	return err;
-+}
-+EXPORT_SYMBOL(hermes_doicmd_wait);
-+
- void hermes_struct_init(hermes_t *hw, void __iomem *address, int reg_spacing)
- {
- 	hw->iobase = address;
-@@ -126,7 +181,7 @@ EXPORT_SYMBOL(hermes_struct_init);
- 
- int hermes_init(hermes_t *hw)
- {
--	u16 status, reg;
-+	u16 reg;
- 	int err = 0;
- 	int k;
- 
-@@ -164,43 +219,8 @@ int hermes_init(hermes_t *hw)
- 
- 	/* We don't use hermes_docmd_wait here, because the reset wipes
- 	   the magic constant in SWSUPPORT0 away, and it gets confused */
--	err = hermes_issue_cmd(hw, HERMES_CMD_INIT, 0, 0, 0);
--	if (err)
--		return err;
--
--	reg = hermes_read_regn(hw, EVSTAT);
--	k = CMD_INIT_TIMEOUT;
--	while ( (! (reg & HERMES_EV_CMD)) && k) {
--		k--;
--		udelay(10);
--		reg = hermes_read_regn(hw, EVSTAT);
--	}
--
--	hermes_write_regn(hw, SWSUPPORT0, HERMES_MAGIC);
--
--	if (! hermes_present(hw)) {
--		DEBUG(0, "hermes @ 0x%x: Card removed during reset.\n",
--		       hw->iobase);
--		err = -ENODEV;
--		goto out;
--	}
--		
--	if (! (reg & HERMES_EV_CMD)) {
--		printk(KERN_ERR "hermes @ %p: " 
--		       "Timeout waiting for card to reset (reg=0x%04x)!\n",
--		       hw->iobase, reg);
--		err = -ETIMEDOUT;
--		goto out;
--	}
--
--	status = hermes_read_regn(hw, STATUS);
--
--	hermes_write_regn(hw, EVACK, HERMES_EV_CMD);
-+	err = hermes_doicmd_wait(hw, HERMES_CMD_INIT, 0, 0, 0, NULL);
- 
--	if (status & HERMES_STATUS_RESULT)
--		err = -EIO;
--
-- out:
- 	return err;
- }
- EXPORT_SYMBOL(hermes_init);
-diff --git a/drivers/net/wireless/hermes.h b/drivers/net/wireless/hermes.h
-index 8e3f0e3..287f536 100644
---- a/drivers/net/wireless/hermes.h
-+++ b/drivers/net/wireless/hermes.h
-@@ -353,6 +353,9 @@ void hermes_struct_init(hermes_t *hw, void __iomem *address, int reg_spacing);
- int hermes_init(hermes_t *hw);
- int hermes_docmd_wait(hermes_t *hw, u16 cmd, u16 parm0,
- 		      struct hermes_response *resp);
-+int hermes_doicmd_wait(hermes_t *hw, u16 cmd,
-+		       u16 parm0, u16 parm1, u16 parm2,
-+		       struct hermes_response *resp);
- int hermes_allocate(hermes_t *hw, u16 size, u16 *fid);
- 
- int hermes_bap_pread(hermes_t *hw, int bap, void *buf, int len,
--- 
-1.5.4.5
-
+Tomas
