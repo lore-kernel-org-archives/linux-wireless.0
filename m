@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:32346 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752321AbYFXKiI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 06:38:08 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 1/4] mac80211: don't return -EINVAL upon iwconfig wlan0 rts auto
-Date: Tue, 24 Jun 2008 13:37:58 +0300
-Message-Id: <1214303881-31525-2-git-send-email-tomas.winkler@intel.com> (sfid-20080624_123813_056947_86EDC083)
-In-Reply-To: <1214303881-31525-1-git-send-email-tomas.winkler@intel.com>
-References: <1214303881-31525-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from fmmailgate03.web.de ([217.72.192.234]:42188 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752994AbYFHUDq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Jun 2008 16:03:46 -0400
+From: Chr <chunkeey@web.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: PROBLEM: p54usb doesn't work with my Philips CPWUA054 =?utf-8?q?usb=09adapter?=
+Date: Sun, 8 Jun 2008 22:03:41 +0200
+Cc: Ivo Couckuyt <iv0co@yahoo.co.uk>, linux-wireless@vger.kernel.org
+References: <47AF79DA.10204@yahoo.co.uk> <4849A6D4.2090904@yahoo.co.uk> <1212926054.698.36.camel@johannes.berg>
+In-Reply-To: <1212926054.698.36.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200806082203.42238.chunkeey@web.de> (sfid-20080608_220352_184640_F810B8F9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Sunday 08 June 2008 13:54:14 Johannes Berg wrote:
+> On Fri, 2008-06-06 at 23:06 +0200, Ivo Couckuyt wrote:
+> > Sorry for the late reply, i just thought i install kernel 2.6.25 r4 and
+> > try again.
+> >
+> > It is somewhat better and worse, when modprobing p54usb i got a small
+> > hang/hickup accompanied with the following error in dmesg
+> > ehci_hcd 0000:00:02.2: HC died; cleaning up
+> > [...]
+>
+> Sorry, no idea. Christian?
+Not yet... but card is on the way, so maybe in the future. :)
 
-This patch avoids returning -EINVAL upon iwconfig wlan0 rts auto. If
-rts->fixed is 0, then we should choose a default value instead of failing.
+I googled for "HC died; cleaning up" and yes, there "are" other people with 
+the same issue... But noone had a solutions other than use ndiswrapper.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/wext.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+So, i took a look at the driver... it ships with a really old firmware 2.4.6.0 
+So, I know that there are atleast some (mini)PCI Cards that have big problems 
+with anything newer than 2.4.x.y, maybe there are broken USB-Parts too...
 
-diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-index 5af3862..53f8767 100644
---- a/net/mac80211/wext.c
-+++ b/net/mac80211/wext.c
-@@ -721,6 +721,9 @@ static int ieee80211_ioctl_siwrts(struct net_device *dev,
- 
- 	if (rts->disabled)
- 		local->rts_threshold = IEEE80211_MAX_RTS_THRESHOLD;
-+	else if (!rts->fixed)
-+		/* if the rts value is not fixed, then take default */
-+		local->rts_threshold = IEEE80211_MAX_RTS_THRESHOLD;
- 	else if (rts->value < 0 || rts->value > IEEE80211_MAX_RTS_THRESHOLD)
- 		return -EINVAL;
- 	else
--- 
-1.5.4.1
+Ivo, can you please try the older firmware? You can find a copy @
+(http://daemonizer.de/prism54/prism54-fw/ scroll down to USB).
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+If this doesn't work? could you please about ndiswrapper?
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+Regards,
+	Christian
