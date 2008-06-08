@@ -1,43 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52943 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751970AbYFPS4I (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.250]:46811 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755412AbYFHQMz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2008 14:56:08 -0400
-Subject: [PATCH] mac80211: remove shared key todo
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 16 Jun 2008 20:55:29 +0200
-Message-Id: <1213642529.3803.47.camel@johannes.berg> (sfid-20080616_205612_010607_A5108F31)
-Mime-Version: 1.0
+	Sun, 8 Jun 2008 12:12:55 -0400
+Received: by an-out-0708.google.com with SMTP id d40so422697and.103
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2008 09:12:55 -0700 (PDT)
+Message-ID: <43e72e890806080912o7d186120r8ce70c46ca3526de@mail.gmail.com> (sfid-20080608_181258_027296_920D10CA)
+Date: Sun, 8 Jun 2008 09:12:54 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Dad <ccmcphe@verizon.net>
+Subject: Re: Compatibility Issues with compat-wireless-2008-05-22
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <483D99DC.4020909@verizon.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <483D99DC.4020909@verizon.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding shared key authentication is not going to happen anyway.
+On Wed, May 28, 2008 at 10:43 AM, Dad <ccmcphe@verizon.net> wrote:
+> I am building with kernel 2.6.22-14 and I have some build problems with any
+> compat-wireless build past 05-21. The builds show a problem with the
+> function skb_get_queue_mapping not being defined and a define
+> NETIF_F_MULTI_QUEUE not being defined. Complete list is below. I have
+> checked my linux source and includes for theses references and cannot find
+> them anywhere. Is there a way to make the builds compatable?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/mlme.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+This required backport support of MQ, please try now.
 
---- everything.orig/net/mac80211/mlme.c	2008-06-16 09:30:45.000000000 +0200
-+++ everything/net/mac80211/mlme.c	2008-06-16 09:31:01.000000000 +0200
-@@ -1753,11 +1753,12 @@ static void ieee80211_rx_mgmt_auth(struc
- 	       auth_transaction, status_code);
- 
- 	if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS) {
--		/* IEEE 802.11 standard does not require authentication in IBSS
-+		/*
-+		 * IEEE 802.11 standard does not require authentication in IBSS
- 		 * networks and most implementations do not seem to use it.
- 		 * However, try to reply to authentication attempts if someone
- 		 * has actually implemented this.
--		 * TODO: Could implement shared key authentication. */
-+		 */
- 		if (auth_alg != WLAN_AUTH_OPEN || auth_transaction != 1) {
- 			printk(KERN_DEBUG "%s: unexpected IBSS authentication "
- 			       "frame (alg=%d transaction=%d)\n",
-
-
+  Luis
