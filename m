@@ -1,135 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48518 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755727AbYFQSUM (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.176]:23642 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754206AbYFHPbd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 14:20:12 -0400
-Subject: Re: [RFC PATCH 3/7] 802.11w: Add BIP (AES-128-CMAC)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080617180610.GC4974@jm.kir.nu>
-References: <20080617154008.883383150@localhost>
-	 <20080617155904.082926456@localhost>
-	 <1213721714.3803.83.camel@johannes.berg>  <20080617180610.GC4974@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gPrlqtC51XGM+vbdAzKY"
-Date: Tue, 17 Jun 2008 20:19:13 +0200
-Message-Id: <1213726753.3803.103.camel@johannes.berg> (sfid-20080617_202015_947837_A9BD8867)
-Mime-Version: 1.0
+	Sun, 8 Jun 2008 11:31:33 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so1476284waf.23
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2008 08:31:32 -0700 (PDT)
+Message-ID: <1ba2fa240806080831k4fce156an535caec87e374e19@mail.gmail.com> (sfid-20080608_173136_906172_13C2BAAF)
+Date: Sun, 8 Jun 2008 18:31:32 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Thomas Backlund" <tmb@mandriva.org>
+Subject: Re: iwl4965 oops in 2.6.26-rc5 x86_64
+Cc: "Ian Schram" <ischram@telenet.be>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <484BCECC.4040004@mandriva.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <4848289D.1080205@mandriva.org> <48492E85.6010307@mandriva.org>
+	 <1ba2fa240806060659wf4e4088s8afdd2f7f854ea09@mail.gmail.com>
+	 <48494EF6.4020506@mandriva.org>
+	 <1ba2fa240806060812q28c270c4i12cc08f8665e9cc0@mail.gmail.com>
+	 <4849AF9F.9010207@mandriva.org>
+	 <1ba2fa240806061659j7672f9d3w107be4509b533f68@mail.gmail.com>
+	 <484A8CF5.3060801@mandriva.org>
+	 <1ba2fa240806080327gec9b38vf6bb1faa0e5014b8@mail.gmail.com>
+	 <484BCECC.4040004@mandriva.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Jun 8, 2008 at 3:21 PM, Thomas Backlund <tmb@mandriva.org> wrote:
+> Tomas Winkler skrev:
+>>
+>> I'm not sure what distro are you running I haven't seen this
+>> ifcfg-wlan0 config options
+>> on my system but can it be that ifcg-wlan0 tries to set wep key which
+>> will conflict
+>> with wpa_supplicant setting. Can you try to remove this line from that
+>> file
+>>
+>> ifcfg-wlan0 -
+>> --- cut ---
+>> WIRELESS_ENC_KEY='s:*************************'
+>>
+>>
+>
+>
+> Nice.
+>
+> The distro is Mandriva Cooker (development) but we have the same in Mandriva
+> 2008.1 Spring.
+>
+> Now this has not been any problem with kernels older than 2.6.25, so it's a
+> regression, isn't it? I mean, shouldn't the module protect itself against
+> empty variables?
+>
+This is not really regression. What happen is that we've enabled hw
+crypto acceleration by default so when
+you switched back to sw crypto it still worked.
+There is bug no question, I believe it's the same bug as Ian Schram
+and Joonwoo Park reported (PSK key is longer then 128 WEP Key)
 
---=-gPrlqtC51XGM+vbdAzKY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> And that config option also exist in Redhat initscripts ifup-wireless...
+>
+> Anyway, you found the initial problem, as the kernel now booted without an
+> oops, and seems to work, but:
+>
 
+Try to disable this one from th config file MAC80211_DEBUG_PACKET_ALIGNMENT
 
-> Aah.. That's a copy-paste from something old.. I think I removed the
-> IEEE80211_KEY_FLAG_GENERATE_IV flag from here for BIP.. I'm not
-> completely sure yet, how we should have this, i.e., whether that flag
-> should be used here or not. It is unclear what type of hwaccel, if any,
-> vendors are going to implement for BIP.
+Thanks
+Tomas
 
-Yeah, good point, I guess we should just not implement hwaccel until we
-find hardware that can handle it.
-
-> > I tried ensure pskb_expand_head is only called at most once when the
-> > frame is handed to master_start_xmit to avoid problems with skb truesiz=
-e
-> > and such. Could you add the necessary space at that point already,
-> > possibly simply reserving max(mmic-len, mmie-len) or so instead of the
-> > current mmic-len (I think)? I'd hate to add back calls to
-> > pskb_expand_head at other places, and it's only 18 bytes so not really
-> > huge.
->=20
-> I thought about that for a moment, but then decided that it would be
-> okay to just do this here since MMIE is larger than any other tailroom
-> we have and there is next to no real use for multicast/broadcast
-> management frames, so there is no need to optimize this. I don't see how
-> this would require any other place to use pskb_expand_head.
-
-Well the thing is that you can't just call pskb_expand_head without
-orphaning the SKB first and all that truesize adjusting, because of
-truesize accounting, because it might now or later belong to a userspace
-socket.
-
-> Anyway, I would assume it would be possible to do this by changing
-> IEEE80211_ENCRYPT_TAILROOM from 12 to 22 which would waste 10 bytes
-> extra for every frame (well, not waste for BIP-protected frames but
-> there are next to none of them).
-
-22? Is there something else on the frame in addition to the MMIE?
-
-> I converted some of the places to use the new helpers, but did not go
-> through all places. I would assume there is still places that can be
-> made to use them, but as long as FC is available in host byte order, it
-> is easier and faster to use it. Sure, if rx->fc were to disappear, that
-> may make it more likely that these get changed ;-).
-
-Heh, ok, that's fine, I didn't realise that it was using the CPU order
-FC.
-
-> > Is that what the draft says? Because iterating the IEs would be
-> > different, this means you could potentially have something like a vendo=
-r
-> > IE last that encapsulates the MMIE including type/len fields, which
-> > should probably not be used?
->=20
-> MMIE has to be the last "IE" in the frame. Sure, it would, in theory, be
-> possible to receive a frame that does not have MMIE, but has "MMIE like"
-> data in another IE. As long as we can make sure that this is reached
-> only for frames that are received from MFP enabled AP, the simple
-> solution of pointing to the end of the frame is enough. Otherwise, we
-> would need to parse all the IEs and know about the start of IEs in all
-> different types of Action frames.. That's not really something I would
-> like to do.
-
-Yeah, true, and we actually have that in another place too. If we then
-remove the MMIE, the IE sanity checks should catch the bad frame anyway,
-when/if it is parsed. Except we removed those because APs were sending
-bogus information. I'm fine with this, but we should be aware of the
-consequence.
-
-> > > +	/* Remove MMIE */
-> > > +	skb_trim(skb, skb->len - sizeof(*mmie));
-> >=20
-> > Is that actually necessary? Since it's an IE, it should be ignored by
-> > all other code, no? Not that it matters though.
->=20
-> I don't think it is necessary in the sense that leaving the "IE" in
-> would break anything. However, I do think this is the correct thing to
-> do here and matches with what we do with TKIP/CCMP. MMIE is not really
-> an IE, it is just a frame component that is made to look like one. The
-> current IEEE 802.11w draft is bit confused about what MMIE is at places,
-> but anyway, I would compare it to TKIP ICV and CCMP MIC in the end of
-> the frames.
-
-Works for me.
-
-johannes
-
---=-gPrlqtC51XGM+vbdAzKY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIWAAdAAoJEKVg1VMiehFY5GwP+gOAnixvT3AY/HXs2WZxrb/J
-6v/MWMOq/8KJvKVLiOs2YK7JZD0a0hCaC/0z6wIYcBhr0C4kRyXwO+MCWu0Nq7/L
-KDDmZyoBsnz7cxZQe0X9PBWZOelyjYFpjBYo3fL47t5g7smS2cKJ9F8ur6/VANTT
-FBpzWHSQmti/gSXGs295KQUc8yYb+YhuyEL2vuD3VkU7yKzFzI+swt2WW8WnEcoa
-daN1zs83ln5OYrV81gH4kdXQKTdpFF5xNtz/g6dm4sLXUZUHVl5azz48WcdSSuAE
-UAW04jXJrxbPgyErNDr8nlmBUzr0pG4lO94DgVwHkZUDJmP2Rc0QL1pnytm3zwxP
-fmSeurxu2CMv9Mlj2Mh6gJozW2hyZZG1ND7s9z+z5UFxjDjC7RQOmBGS/bLBpwOr
-epri88rId9hgU90VS8yZZv3Zd0iyGXGEqcp199AhhBTZ/7+Ak6GwejFiPZW+YYVt
-8ZPWGmZblNC7t/LoR1TtaQSG2ZWPny+WNQxhl7IqfUJLiz/qPGpLvqHRKmM9VW8r
-Egv1N3r8ntDMp2aT6fKfkmJyBH/y4Sfi774kAoAG8u4VihS7Mu/sESReoVIO8xrj
-JtLbxM2Q/OL8xGCR7bbAWCMPbxN7TM4sy0RCxcdf4SD115oyUuXOjkSm7qBqVPbv
-nrruq922ygwJqwqIxa6M
-=4BjX
------END PGP SIGNATURE-----
-
---=-gPrlqtC51XGM+vbdAzKY--
-
+0: switched to short barker preamble (BSSID=00:19:5b:51:dc:27)
+> wlan0 (WE) : Wireless Event too big (320)
+> ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+> ------------[ cut here ]------------
+> WARNING: at net/mac80211/rx.c:319 __ieee80211_rx_handle_packet+0x349/0x794
+> [mac80211]()
+> Modules linked in: af_packet kvm_intel kvm snd_seq_dummy snd_seq_oss
+> snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss snd_mixer_oss ipv6
+> xt_tcpudp iptable_filter ip_tables x_tables binfmt_misc loop dm_mod
+> cpufreq_ondemand cpufreq_conservative cpufreq_powersave acpi_cpufreq
+> freq_table tifm_sd tifm_7xx1 tifm_core nvram pcmcia ohci1394 ieee1394
+> mmc_block arc4 ecb crypto_blkcipher battery ac video container output
+> firewire_ohci firewire_core crc_itu_t sdhci iwl4965 firmware_class mmc_core
+> yenta_socket rsrc_nonstatic iwlcore pcmcia_core acer_wmi thermal
+> snd_hda_intel rfkill snd_pcsp button nsc_ircc snd_pcm mac80211 led_class
+> i2c_i801 irda snd_timer rtc_cmos snd processor rtc_core wmi rtc_lib i2c_core
+> soundcore iTCO_wdt iTCO_vendor_support snd_page_alloc tg3 cfg80211 intel_agp
+> joydev crc_ccitt sr_mod serio_raw sg evdev cdrom ide_generic piix ide_core
+> ata_piix ahci libata dock sd_mod scsi_mod ext3 jbd uhci_hcd ohci_hcd
+> ehci_hcd usbcore [last unloaded: nf_conntrack]
+> Pid: 0, comm: swapper Not tainted 2.6.26-0.rc5.1mdvsmp #1
+>
+> Call Trace:
+>  <IRQ>  [<ffffffff802371ff>] warn_on_slowpath+0x58/0x94
+>  [<ffffffff8044ad1b>] ? _spin_unlock_irqrestore+0x40/0x57
+>  [<ffffffff8023c2f1>] ? __tasklet_schedule+0xae/0xc5
+>  [<ffffffffa01eab1e>] ? :mac80211:ieee80211_rx_irqsafe+0x63/0x6a
+>  [<ffffffffa0306d32>] ? :iwl4965:iwl4965_handle_data_packet+0x3c3/0x3fd
+>  [<ffffffffa01eb1ce>] :mac80211:__ieee80211_rx_handle_packet+0x349/0x794
+>  [<ffffffff8025791c>] ? __lock_acquire+0x635/0xd5a
+>  [<ffffffffa01eba3c>] ? :mac80211:__ieee80211_rx+0x63/0x538
+>  [<ffffffffa01ebe9d>] :mac80211:__ieee80211_rx+0x4c4/0x538
+>  [<ffffffffa01dc348>] :mac80211:ieee80211_tasklet_handler+0x75/0x11b
+>  [<ffffffff8023c079>] ? tasklet_action+0x4b/0xfb
+>  [<ffffffff8023c0be>] tasklet_action+0x90/0xfb
+>  [<ffffffff8023cae6>] __do_softirq+0x77/0x101
+>  [<ffffffff8020d61c>] call_softirq+0x1c/0x28
+>  [<ffffffff8020e92d>] do_softirq+0x4d/0xb0
+>  [<ffffffff8023c5ab>] irq_exit+0x4e/0x8f
+>  [<ffffffff8020ebc5>] do_IRQ+0xba/0xd8
+>  [<ffffffff8020c6f2>] ret_from_intr+0x0/0x1e
+>  <EOI>  [<ffffffff8021fe6d>] ? native_irq_enable+0x6/0x7
+>  [<ffffffffa018d45a>] ? :processor:acpi_idle_enter_bm+0x2cf/0x35e
+>  [<ffffffff803c338a>] ? menu_select+0x6f/0x8f
+>  [<ffffffff803c2395>] ? cpuidle_idle_call+0x95/0xc9
+>  [<ffffffff803c2300>] ? cpuidle_idle_call+0x0/0xc9
+>  [<ffffffff8020b1cc>] ? default_idle+0x0/0x55
+>  [<ffffffff8020b184>] ? cpu_idle+0x9c/0xe4
+>  [<ffffffff80444e86>] ? start_secondary+0x179/0x17d
+>
+> ---[ end trace a4f2fe9605e20ed0 ]---
+>
+>
+> --
+> Thomas
+>
