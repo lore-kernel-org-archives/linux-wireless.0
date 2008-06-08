@@ -1,49 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:63101 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083AbYFUJzM (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.241]:35838 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755366AbYFHQCg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jun 2008 05:55:12 -0400
-Subject: building mac80211
-From: John George Wright <john@limongrafica.com>
-Reply-To: john@limongrafica.com
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Sat, 21 Jun 2008 10:54:57 +0100
-Message-Id: <1214042097.12100.5.camel@Johnardbell> (sfid-20080621_115542_234816_AB30CAFB)
-Mime-Version: 1.0
+	Sun, 8 Jun 2008 12:02:36 -0400
+Received: by an-out-0708.google.com with SMTP id d40so422160and.103
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2008 09:02:36 -0700 (PDT)
+Message-ID: <43e72e890806080902k80272cfk8f34f0740fbbd6d0@mail.gmail.com> (sfid-20080608_180239_805219_EE595A6E)
+Date: Sun, 8 Jun 2008 09:02:36 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Zhu, Yi" <yi.zhu@intel.com>
+Subject: Re: Problems with iwl3945 module
+Cc: "Cesar Luis Avila" <cavila@fbqf.unt.edu.ar>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <8AD95083DC3E36478732061D97524415033FE0B5@pdsmsx411.ccr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <4846E57A.9000005@fbqf.unt.edu.ar>
+	 <8AD95083DC3E36478732061D97524415033FE0B5@pdsmsx411.ccr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, Jun 4, 2008 at 7:10 PM, Zhu, Yi <yi.zhu@intel.com> wrote:
+>
+>
+> The HW RF Kill switch is enabled. You have to disable it in some way. It looks like your hotkey Fn-F2 doesn't work. Please take a look at http://rfswitch.sourceforge.net/
 
-I'm very new to the linux operating systems so please treat me as a
-child.
+Also RFKILL hasn't been ported, I haven't even tested it on compat-wireless.
 
-I have an Intel PRO/Wireless 3945ABG built into my laptop and I am
-trying to adapt the latest version of ubuntu to work with it. I followed
-some online instructions and downloaded the mac80211-10.0.4 tar,
-unpacked it and used this command:
-
-make SHELL=/bin/bash
-
-but received the following error:
-
-Building modified version in 'modified/' directory:
-Copying modified/ from origin/...done
-Applying patches and scripts from pending/.
- + Applying: pending/0001-mac80211-Add-basic-IEEE-802.11n-support.patch
-	From 26e77a5fef845edcb5c27db52f413e7558db0e20 Mon Sep 17 00:00:00 2001
-scripts/generate_modified: line 57: patch: command not found
------patch failure output-----
-
-pending/0001-mac80211-Add-basic-IEEE-802.11n-support.patch failed.
-Terminating.
-If patch or script failed, check pre/ and post/ for current stage.
-make: *** [modified] Error 1
-
-Would you have any idea where I'm going wrong?
-
-Thanks,
-John
-
+  Luis
