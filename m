@@ -1,116 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:40933 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757949AbYF0QIx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2008 12:08:53 -0400
-Subject: Re: [PATCH] iwlwifi: fix oops on wep key insertion
-From: Dan Williams <dcbw@redhat.com>
+Received: from ug-out-1314.google.com ([66.249.92.173]:45416 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756233AbYFHVho (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Jun 2008 17:37:44 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so1022998ugf.16
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2008 14:37:43 -0700 (PDT)
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Joonwoo Park <joonwpark81@gmail.com>,
-	JMF <tolas_feup@hotmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20080627152843.GA16003@tuxdriver.com>
-References: <1211865214-1640-1-git-send-email-joonwpark81@gmail.com>
-	 <1ba2fa240805262341s62f017e7ka7502cbe55c1d348@mail.gmail.com>
-	 <loom.20080527T105701-941@post.gmane.org>
-	 <1ba2fa240805270541wadf0f16t2001528f39b37ea8@mail.gmail.com>
-	 <1211896423.1746.9.camel@localhost.localdomain>
-	 <20080528004100.GG7779@tuxdriver.com> <20080615164617.GA27699@tp64>
-	 <1ba2fa240806150953t4b61b213y3488940ef05b762e@mail.gmail.com>
-	 <1213605989.3803.24.camel@johannes.berg>
-	 <20080627152843.GA16003@tuxdriver.com>
-Content-Type: text/plain
-Date: Fri, 27 Jun 2008 12:07:33 -0400
-Message-Id: <1214582853.10355.28.camel@localhost.localdomain> (sfid-20080627_180913_522953_AC831E76)
-Mime-Version: 1.0
+Subject: [PATCH 07/10] rt2x00: Use __builtin_choose_expr() instead of ?:
+Date: Sun, 8 Jun 2008 23:45:49 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200806082341.58616.IvDoorn@gmail.com> <200806082345.04002.IvDoorn@gmail.com> <200806082345.25904.IvDoorn@gmail.com>
+In-Reply-To: <200806082345.25904.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200806082345.49841.IvDoorn@gmail.com> (sfid-20080608_233749_357864_2D810E30)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-06-27 at 11:28 -0400, John W. Linville wrote:
-> On Mon, Jun 16, 2008 at 10:46:29AM +0200, Johannes Berg wrote:
-> > 
-> > > > [PATCH] wireless: Limit wep key size to 128/104-bits
-> > > >
-> > > > This patch prevents overflow which is occured by invalid long wep key
-> > > > insertion
-> > > >
-> > > > $sudo iwconfig wlan0 enc AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA
-> > > >
-> > > > BUG: unable to handle kernel NULL pointer dereference at 0000000000000000
-> > > > IP: [memcpy_c+0xb/0x20] memcpy_c+0xb/0x20
-> > > > PGD 13a590067 PUD 12e471067 PMD 0
-> > > > Oops: 0000 [1] PREEMPT SMP
-> > > > CPU 1
-> > > > ...
-> > > > Pid: 10, comm: events/1 Not tainted 2.6.26-rc2 #9
-> > > > ...
-> > > > Call Trace:
-> > > >  [iwl4965:iwl4965_rx_scan_start_notif+0xb/0x20] ? :iwl4965:iwl4965_enqueue_hcmd+0x12b/0x220
-> > > >  [hci_usb:init_module+0xe97/0x28cb0] :iwlcore:iwl_send_cmd_sync+0x67/0x290
-> > > >  [save_trace+0x3f/0xb0] ? save_trace+0x3f/0xb0
-> > > > ...
-> > > >
-> > > > Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
-> > > > ---
-> > > >  net/wireless/wext.c |   11 ++++++++++-
-> > 
-> > I'm sure Jean will cry murder because he expects there are some stupid
-> > full-mac cards that actually support other sizes.
-> > 
-> > Can't somebody just post a patch to mac80211 that only accepts the two
-> > correct sizes like cfg80211 does?
-> 
-> Strawman patch below...
+To really force the FIELD macros to determine
+the first bit of the register field we should
+use the __builtin_choose_expr() function.
 
-You need to allow 0 through, since you can just set the transmit key
-index via ENCODE without setting the key.  So the legal values are 0, 5,
-and 13.  Add 'case 0: /* just setting TX index */' or something and I'll
-definitely ack it.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00reg.h |   22 +++++++++++++---------
+ 1 files changed, 13 insertions(+), 9 deletions(-)
 
-Dan
-
-> ---
-> 
-> From: John W. Linville <linville@tuxdriver.com>
-> Subject: [PATCH] mac80211: allow only standard size WEP keys through WEXT
-> 
-> Limit ieee80211_ioctl_siwencode to only accept standard sized WEP keys.
-> 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
->  net/mac80211/wext.c |   10 ++++++++++
->  1 files changed, 10 insertions(+), 0 deletions(-)
-> 
-> diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-> index 5af3862..d16b975 100644
-> --- a/net/mac80211/wext.c
-> +++ b/net/mac80211/wext.c
-> @@ -26,6 +26,8 @@
->  #include "wpa.h"
->  #include "aes_ccm.h"
->  
-> +#define KEY_SIZE_WEP104 13      /* 104/128-bit WEP keys */
-> +#define KEY_SIZE_WEP40  5       /* 40/64-bit WEP keys */
->  
->  static int ieee80211_set_encryption(struct net_device *dev, u8 *sta_addr,
->  				    int idx, int alg, int remove,
-> @@ -879,6 +881,14 @@ static int ieee80211_ioctl_siwencode(struct net_device *dev,
->  	u8 bcaddr[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
->  	int remove = 0;
->  
-> +	switch (erq->length) {
-> +	case KEY_SIZE_WEP40:
-> +	case KEY_SIZE_WEP104:
-> +		break;
-> +	default:
-> +		return -EINVAL;
-> +	}
-> +
->  	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->  
->  	idx = erq->flags & IW_ENCODE_INDEX;
-> -- 
-> 1.5.5.1
-> 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00reg.h b/drivers/net/wireless/rt2x00/rt2x00reg.h
+index c3f1202..7e88ce5 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00reg.h
++++ b/drivers/net/wireless/rt2x00/rt2x00reg.h
+@@ -145,23 +145,27 @@ struct rt2x00_field32 {
+  * compile-time rather then run-time.
+  */
+ #define compile_ffs2(__x) \
+-	( ((__x) & 0x1) ? 0 : 1 )
++	__builtin_choose_expr(((__x) & 0x1), 0, 1)
+ 
+ #define compile_ffs4(__x) \
+-	( ((__x) & 0x3) ? \
+-	    compile_ffs2(__x) : (compile_ffs2((__x) >> 2) + 2) )
++	__builtin_choose_expr(((__x) & 0x3), \
++			      (compile_ffs2((__x))), \
++			      (compile_ffs2((__x) >> 2) + 2))
+ 
+ #define compile_ffs8(__x) \
+-	( ((__x) & 0xf) ? \
+-	    compile_ffs4(__x) : (compile_ffs4((__x) >> 4) + 4) )
++	__builtin_choose_expr(((__x) & 0xf), \
++			      (compile_ffs4((__x))), \
++			      (compile_ffs4((__x) >> 4) + 4))
+ 
+ #define compile_ffs16(__x) \
+-	( ((__x) & 0xff) ? \
+-	    compile_ffs8(__x) : (compile_ffs8((__x) >> 8) + 8) )
++	__builtin_choose_expr(((__x) & 0xff), \
++			      (compile_ffs8((__x))), \
++			      (compile_ffs8((__x) >> 8) + 8))
+ 
+ #define compile_ffs32(__x) \
+-	( ((__x) & 0xffff) ? \
+-	    compile_ffs16(__x) : (compile_ffs16((__x) >> 16) + 16) )
++	__builtin_choose_expr(((__x) & 0xffff), \
++			      (compile_ffs16((__x))), \
++			      (compile_ffs16((__x) >> 16) + 16))
+ 
+ /*
+  * This macro will check the requirements for the FIELD{8,16,32} macros
+-- 
+1.5.5.3
 
