@@ -1,35 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3916 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758374AbYFLOHD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 10:07:03 -0400
-Date: Thu, 12 Jun 2008 09:59:36 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with
-	disable_hw_scan=1
-Message-ID: <20080612135936.GA5031@tuxdriver.com> (sfid-20080612_160707_406717_273DB365)
-References: <484FEA26.1040305@gmail.com> <1213241315.7814.696.camel@debian.sh.intel.com>
+Received: from an-out-0708.google.com ([209.85.132.245]:45614 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755224AbYFHQLu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Jun 2008 12:11:50 -0400
+Received: by an-out-0708.google.com with SMTP id d40so422644and.103
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2008 09:11:49 -0700 (PDT)
+Message-ID: <43e72e890806080911v4aba1079t438b8ac2265d4194@mail.gmail.com> (sfid-20080608_181154_384888_DB13B632)
+Date: Sun, 8 Jun 2008 09:11:49 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Mark S." <throaway@yahoo.com>
+Subject: Re: Problem with 2.6.22 / Unknown symbol netif_subqueue_stopped
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200806012217.22151.throaway@yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1213241315.7814.696.camel@debian.sh.intel.com>
+Content-Type: text/plain; charset=UTF-8
+References: <200806012217.22151.throaway@yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 12, 2008 at 11:28:35AM +0800, Zhu Yi wrote:
+On Sun, Jun 1, 2008 at 10:17 PM, Mark S. <throaway@yahoo.com> wrote:
+> Hello!
+>
+> I'm running kernel 2.6.22. I've compiled and installed the wireless drivers
+> from your latest tarball, which the documentation says should work with
+> 2.6.22.  I'm using the kernel source for KLIB_BUILD. When attempting to load
+> the resulting module zd1211rw, there is a cascade of errors starting with
+>
+>  mac80211:  Unknown symbol netif_subqueue_stopped
 
-> I don't understand why "disable_hw_scan=1" works for you. Can you also
-> attach the dmesg for it?
+This required MQ backport which I just finished an attempt for, please
+give it a try and let me know how it goes.
 
-How does the hardware scan differ from what mac80211 does when
-scanning?  I still see a lot of mysterious iwlwifi (especially iwl3945)
-problems in Fedora that seem to disappear with disable_hw_scan=1.
-
-Honestly I'm tempted to change it to "enable_hw_scan" instead...
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+  Luis
