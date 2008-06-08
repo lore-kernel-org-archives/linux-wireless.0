@@ -1,41 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:37688 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752639AbYFYHTb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2008 03:19:31 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1KBPHp-0006pz-OW
-	for linux-wireless@vger.kernel.org; Wed, 25 Jun 2008 07:19:25 +0000
-Received: from lst-amand-152-33-14-15.w82-127.abo.wanadoo.fr ([82.127.45.15])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2008 07:19:25 +0000
-Received: from fabien by lst-amand-152-33-14-15.w82-127.abo.wanadoo.fr with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2008 07:19:25 +0000
-To: linux-wireless@vger.kernel.org
-From: Fabien Crespel <fabien@crespel.net>
-Subject: Re: [PATCH 04/13] rfkill: add parameter to disable radios by    default
-Date: Wed, 25 Jun 2008 09:23:01 +0200
-Message-ID: <4861F255.9030504@crespel.net> (sfid-20080625_091936_966511_E8103303)
-References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>	 <1214252588-30723-5-git-send-email-hmh@hmh.eng.br>	 <g3quvb$8sa$1@ger.gmane.org>  <g3r9hn$av5$1@ger.gmane.org>	 <1214330213.23127.9.camel@localhost.localdomain>	 <48615925.8010203@crespel.net> <1214344159.11980.21.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-In-Reply-To: <1214344159.11980.21.camel@localhost.localdomain>
+Received: from ug-out-1314.google.com ([66.249.92.173]:45416 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756273AbYFHVhs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Jun 2008 17:37:48 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so1022998ugf.16
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2008 14:37:47 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 09/10] rt2x00: Remove unused defines
+Date: Sun, 8 Jun 2008 23:46:27 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200806082341.58616.IvDoorn@gmail.com> <200806082345.49841.IvDoorn@gmail.com> <200806082346.06848.IvDoorn@gmail.com>
+In-Reply-To: <200806082346.06848.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200806082346.27372.IvDoorn@gmail.com> (sfid-20080608_233751_107541_75A3959E)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
- >
- > Yeah, but what driver -is- that?  asus-laptop or something?
- >
+MAX_RX_SSI and MAX_NOISE are no longer used,
+it is better to remove them entirely.
 
-It's asus-laptop, but only my own version of it. The current official 
-version simply turns the devices on when loading. I sent a patch for 
-this and other features (kill switch awareness, suspend/resume 
-handlers...) a few months ago but it wasn't included, and anyway 
-asus-laptop needs a major rework to use the input layer and rfkill. I've 
-started working on it, and I'll post about it soon.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2400pci.h |    2 --
+ drivers/net/wireless/rt2x00/rt2500pci.h |    2 --
+ drivers/net/wireless/rt2x00/rt2500usb.h |    2 --
+ drivers/net/wireless/rt2x00/rt61pci.h   |    2 --
+ drivers/net/wireless/rt2x00/rt73usb.h   |    2 --
+ 5 files changed, 0 insertions(+), 10 deletions(-)
 
-- Fabien.
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.h b/drivers/net/wireless/rt2x00/rt2400pci.h
+index e9aa326..bc55642 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.h
++++ b/drivers/net/wireless/rt2x00/rt2400pci.h
+@@ -37,8 +37,6 @@
+  * Signal information.
+  * Defaul offset is required for RSSI <-> dBm conversion.
+  */
+-#define MAX_SIGNAL			100
+-#define MAX_RX_SSI			-1
+ #define DEFAULT_RSSI_OFFSET		100
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.h b/drivers/net/wireless/rt2x00/rt2500pci.h
+index ea93b8f..cb648c3 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.h
++++ b/drivers/net/wireless/rt2x00/rt2500pci.h
+@@ -48,8 +48,6 @@
+  * Signal information.
+  * Defaul offset is required for RSSI <-> dBm conversion.
+  */
+-#define MAX_SIGNAL			100
+-#define MAX_RX_SSI			-1
+ #define DEFAULT_RSSI_OFFSET		121
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.h b/drivers/net/wireless/rt2x00/rt2500usb.h
+index 7d50098..3e21fdf 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.h
++++ b/drivers/net/wireless/rt2x00/rt2500usb.h
+@@ -48,8 +48,6 @@
+  * Signal information.
+  * Defaul offset is required for RSSI <-> dBm conversion.
+  */
+-#define MAX_SIGNAL			100
+-#define MAX_RX_SSI			-1
+ #define DEFAULT_RSSI_OFFSET		120
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.h b/drivers/net/wireless/rt2x00/rt61pci.h
+index c5a04b9..1004d5b 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.h
++++ b/drivers/net/wireless/rt2x00/rt61pci.h
+@@ -39,8 +39,6 @@
+  * Signal information.
+  * Defaul offset is required for RSSI <-> dBm conversion.
+  */
+-#define MAX_SIGNAL			100
+-#define MAX_RX_SSI			-1
+ #define DEFAULT_RSSI_OFFSET		120
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.h b/drivers/net/wireless/rt2x00/rt73usb.h
+index 25cdcc9..1484935 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.h
++++ b/drivers/net/wireless/rt2x00/rt73usb.h
+@@ -39,8 +39,6 @@
+  * Signal information.
+  * Defaul offset is required for RSSI <-> dBm conversion.
+  */
+-#define MAX_SIGNAL			100
+-#define MAX_RX_SSI			-1
+ #define DEFAULT_RSSI_OFFSET		120
+ 
+ /*
+-- 
+1.5.5.3
 
