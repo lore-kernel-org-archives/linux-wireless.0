@@ -1,537 +1,336 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:1892 "EHLO
+Received: from wa-out-1112.google.com ([209.85.146.181]:8846 "EHLO
 	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755132AbYFPRov (ORCPT
+	with ESMTP id S1755345AbYFHK1H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2008 13:44:51 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so4408775waf.23
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2008 10:44:51 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 6/9] rt2x00: Cleanup symbol exports
-Date: Mon, 16 Jun 2008 19:56:54 +0200
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <200806161954.04241.IvDoorn@gmail.com> <200806161956.08169.IvDoorn@gmail.com> <200806161956.31465.IvDoorn@gmail.com>
-In-Reply-To: <200806161956.31465.IvDoorn@gmail.com>
+	Sun, 8 Jun 2008 06:27:07 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so1405893waf.23
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2008 03:27:06 -0700 (PDT)
+Message-ID: <1ba2fa240806080327gec9b38vf6bb1faa0e5014b8@mail.gmail.com> (sfid-20080608_122731_611694_DF17F9E5)
+Date: Sun, 8 Jun 2008 13:27:06 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Thomas Backlund" <tmb@mandriva.org>
+Subject: Re: iwl4965 oops in 2.6.26-rc5 x86_64
+Cc: "Ian Schram" <ischram@telenet.be>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <484A8CF5.3060801@mandriva.org>
 MIME-Version: 1.0
-Message-Id: <200806161956.54342.IvDoorn@gmail.com> (sfid-20080616_194504_350940_5BFA9490)
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <4848289D.1080205@mandriva.org>
+	 <1ba2fa240806060432t73ecb318x89e877241aa6ef55@mail.gmail.com>
+	 <48492734.9080901@mandriva.org> <48492E85.6010307@mandriva.org>
+	 <1ba2fa240806060659wf4e4088s8afdd2f7f854ea09@mail.gmail.com>
+	 <48494EF6.4020506@mandriva.org>
+	 <1ba2fa240806060812q28c270c4i12cc08f8665e9cc0@mail.gmail.com>
+	 <4849AF9F.9010207@mandriva.org>
+	 <1ba2fa240806061659j7672f9d3w107be4509b533f68@mail.gmail.com>
+	 <484A8CF5.3060801@mandriva.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With a bit of code moving to rt2x00lib within the
-TX and RX paths we can now remove a lot of EXPORT_SYMBOL_GPL()
-statements. This cleans up the interface between rt2x00lib
-and the drivers and has the additional benefit that rt2x00pci
-and rt2x00usb are trimmed down in size as well since they
-have less to do.
+On Sat, Jun 7, 2008 at 4:28 PM, Thomas Backlund <tmb@mandriva.org> wrote:
+> Tomas Winkler skrev:
+>>
+>> On Sat, Jun 7, 2008 at 12:43 AM, Thomas Backlund <tmb@mandriva.org> wrote:
+>>>
+>>> Tomas Winkler skrev:
+>>>>
+>>>> On Fri, Jun 6, 2008 at 5:51 PM, Thomas Backlund <tmb@mandriva.org>
+>>>> wrote:
+>>>>>
+>>>>> Tomas Winkler skrev:
+>>>>>>
+>>>>>> On Fri, Jun 6, 2008 at 3:33 PM, Thomas Backlund <tmb@mandriva.org>
+>>>>>> wrote:
+>>>>>>>
+>>>>>>> Thomas Backlund skrev:
+>>>>>>>>
+>>>>>>>> Tomas Winkler skrev:
+>>>>>>>>>
+>>>>>>>>> On Fri, Jun 6, 2008 at 3:44 AM, Ian Schram <ischram@telenet.be>
+>>>>>>>>> wrote:
+>>>>>>>>>>
+>>>>>>>>>> Isn't this the Oops Joonwoo Park wanted to patch with
+>>>>>>>>>>
+>>>>>>>>>> "[PATCH] iwlwifi: fix oops on wep key insertion" 27/5/2008
+>>>>>>>>>>
+>>>>>>>>>> invalid length of webkey that would/should be handled in mac80211?
+>>>>>>>>>>
+>>>>>>>>>> ian
+>>>>>>>>>
+>>>>>>>>> Yes, it looks like.
+>>>>>>>>
+>>>>>>>> Ummm, what has a wep key to do with me trying to access a
+>>>>>>>> WPA2-Personal
+>>>>>>>> encrypted net ?
+>>>>>>
+>>>>>> Not sure yet, but mac is trying to assign default/static wep key.
+>>>>>>
+>>>>>> :iwlcore:iwl_send_static_wepkey_cmd+0xcb/0xd5
+>>>>>> :iwlcore:iwl_set_default_wep_key+0xa2/0xbc
+>>>>>>
+>>>>>> Try to set the encryption explicitly
+>>>>>> network={
+>>>>>>  psk="*************************"
+>>>>>>  scan_ssid=1
+>>>>>>  ssid="dlink"
+>>>>>>  pairwise=CCMP
+>>>>>>  group=CCMP
+>>>>>>  }
+>>>>>>
+>>>>>>
+>>>>> That didn't help at all.
+>>>>>
+>>>>> What's more it prevented the wifi to work on 2.6.24.7 so I had to
+>>>>> remove
+>>>>> the
+>>>>> lines again...
+>>>>>
+>>>> So what's your AP configuration TKIP?
+>>>>
+>>> I've switched to clean WPA2-AES on the AP, but it does not do any
+>>> difference... I still get the oops...
+>>>
+>>
+>> I would like to see the log of this one
+>>
+>>>> Second try also with sw decryption:
+>>>>
+>>>> in /etc/modprobe.conf
+>>>> options iwl4965 swcrypto=1
+>>>>
+>>>
+>>> That works.
+>>> I now run a clean 2.6.26-rc5
+>>>
+>> Okay thanks for checking this one.
+>>
+>>> I also tried to bisect between 2.6.25 and 2.6.26-rc1 and ended up with:
+>>>
+>>> [root@5720g linux-2.6]# git bisect good
+>>> 8318d78a44d49ac1edf2bdec7299de3617c4232e is first bad commit
+>>> commit 8318d78a44d49ac1edf2bdec7299de3617c4232e
+>>> Author: Johannes Berg <johannes@sipsolutions.net>
+>>> Date:   Thu Jan 24 19:38:38 2008 +0100
+>>>
+>>>   cfg80211 API for channels/bitrates, mac80211 and driver conversion
+>>>
+>>>
+>>>
+>>> Any more I can provide to help finding the bug ?
+>>
+>> Just the log from AES try with  I will try to reproduce this as soon
+>> as I get to this particular AP and 64 bits kernel.
+>>
+>
+> with wpa_supplicant.conf:
+> network={
+>   psk="*************************"
+>   scan_ssid=1
+>   ssid="dlink"
+>   pairwise=CCMP
+>   group=CCMP
+> }
+>
+> I also rebuilt the 2.6.26-rc5 with enabled mac* and iwl* debug options, so
+> the configs are:
+>
+> [thomas@5720g 1]$ grep MAC8 config-2.6.26-0.rc5.1mdvsmp
+> CONFIG_MAC80211=m
+> CONFIG_MAC80211_RC_DEFAULT_PID=y
+> # CONFIG_MAC80211_RC_DEFAULT_NONE is not set
+> CONFIG_MAC80211_RC_DEFAULT="pid"
+> CONFIG_MAC80211_RC_PID=y
+> CONFIG_MAC80211_MESH=y
+> CONFIG_MAC80211_LEDS=y
+> CONFIG_MAC80211_DEBUGFS=y
+> CONFIG_MAC80211_DEBUG_PACKET_ALIGNMENT=y
+> CONFIG_MAC80211_DEBUG=y
+> CONFIG_MAC80211_HT_DEBUG=y
+> CONFIG_MAC80211_VERBOSE_DEBUG=y
+> # CONFIG_MAC80211_LOWTX_FRAME_DUMP is not set
+> CONFIG_MAC80211_DEBUG_COUNTERS=y
+> CONFIG_MAC80211_IBSS_DEBUG=y
+> CONFIG_MAC80211_VERBOSE_PS_DEBUG=y
+> CONFIG_MAC80211_VERBOSE_MPL_DEBUG=y
+>
+> [thomas@5720g 1]$ grep IWL config-2.6.26-0.rc5.1mdvsmp
+> CONFIG_IWLWIFI=m
+> CONFIG_IWLCORE=m
+> CONFIG_IWLWIFI_LEDS=y
+> CONFIG_IWLWIFI_RFKILL=y
+> CONFIG_IWL4965=m
+> CONFIG_IWL4965_HT=y
+> CONFIG_IWL4965_LEDS=y
+> CONFIG_IWL4965_SPECTRUM_MEASUREMENT=y
+> CONFIG_IWL4965_SENSITIVITY=y
+> CONFIG_IWLWIFI_DEBUG=y
+> CONFIG_IWLWIFI_DEBUGFS=y
+> CONFIG_IWL3945=m
+> CONFIG_IWL3945_SPECTRUM_MEASUREMENT=y
+> CONFIG_IWL3945_LEDS=y
+> CONFIG_IWL3945_DEBUG=y
+>
+>
+> Here is the log:
+>
+> Jun  7 16:05:30 5720g kernel: firmware: requesting iwlwifi-4965-1.ucode
+> Jun  7 16:05:30 5720g kernel: Registered led device: iwl-phy0:radio
+> Jun  7 16:05:30 5720g kernel: Registered led device: iwl-phy0:assoc
+> Jun  7 16:05:30 5720g kernel: Registered led device: iwl-phy0:RX
+> Jun  7 16:05:30 5720g kernel: Registered led device: iwl-phy0:TX
+> Jun  7 16:05:31 5720g kernel: phy0: HW CONFIG: freq=2412
+> Jun  7 16:05:31 5720g kernel: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> Jun  7 16:05:31 5720g kernel: phy0: HW CONFIG: freq=2412
+> Jun  7 16:05:31 5720g kernel: BUG: unable to handle kernel NULL pointer
+> dereference at 0000000000000000
+> Jun  7 16:05:31 5720g kernel: IP: [<ffffffffa026e036>]
+> :iwl4965:iwl4965_enqueue_hcmd+0x175/0x2c2
+> Jun  7 16:05:31 5720g kernel: PGD 0
+> Jun  7 16:05:31 5720g kernel: Oops: 0000 [1] SMP
+> Jun  7 16:05:31 5720g kernel: CPU 1
+> Jun  7 16:05:31 5720g kernel: Modules linked in: af_packet kvm_intel kvm
+> snd_seq_dummy snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device
+> snd_pcm_oss snd_mixer_oss ipv6 xt_tcpudp iptable_filter ip_tables x_tables
+> binfmt_misc loop dm_mod cpufreq_ondemand cpufreq_conservative
+> cpufreq_powersave acpi_cpufreq freq_table tifm_sd tifm_7xx1 tifm_core nvram
+> pcmcia ohci1394 ieee1394 mmc_block battery ac arc4 ecb crypto_blkcipher
+> firewire_ohci firewire_core video container yenta_socket rsrc_nonstatic
+> crc_itu_t sdhci output snd_hda_intel pcmcia_core snd_pcsp iwl4965 mmc_core
+> snd_pcm firmware_class nsc_ircc thermal button joydev rtc_cmos snd_timer
+> iwlcore irda snd i2c_i801 rtc_core iTCO_wdt rfkill crc_ccitt evdev soundcore
+> rtc_lib serio_raw acer_wmi processor mac80211 wmi sr_mod iTCO_vendor_support
+> snd_page_alloc i2c_core intel_agp cdrom led_class sg cfg80211 tg3
+> ide_generic piix ide_core ata_piix ahci libata dock sd_mod scsi_mod ext3 jbd
+> uhci_hcd ohci_hcd ehci_hcd usbcore [last unloaded: nf_conntrack]
+> Jun  7 16:05:31 5720g kernel: Pid: 10, comm: events/1 Not tainted
+> 2.6.26-0.rc5.1mdvsmp #1
+> Jun  7 16:05:31 5720g kernel: RIP: 0010:[<ffffffffa026e036>]
+> [<ffffffffa026e036>] :iwl4965:iwl4965_enqueue_hcmd+0x175/0x2c2
+> Jun  7 16:05:31 5720g kernel: RSP: 0018:ffff81013fb15b60  EFLAGS: 00010086
+> Jun  7 16:05:31 5720g kernel: RAX: 0000000000000000 RBX: ffff8100bf84c300
+> RCX: 0000000000000064
+> Jun  7 16:05:31 5720g kernel: RDX: 0000000000000022 RSI: 0000000000000000
+> RDI: ffff8100bf84c318
+> Jun  7 16:05:31 5720g kernel: RBP: ffff81013fb15bd0 R08: ffff8100bf941100
+> R09: 0000000000000300
+> Jun  7 16:05:31 5720g kernel: R10: ffff81013fb15a10 R11: ffff81013fb10a78
+> R12: ffff81013fb15cf0
+> Jun  7 16:05:31 5720g kernel: R13: 00000000a0290068 R14: ffff81013e1021c0
+> R15: ffff8101364a1a20
+> Jun  7 16:05:31 5720g kernel: FS:  0000000000000000(0000)
+> GS:ffff81013fab8ac0(0000) knlGS:0000000000000000
+> Jun  7 16:05:31 5720g kernel: CS:  0010 DS: 0018 ES: 0018 CR0:
+> 000000008005003b
+> Jun  7 16:05:31 5720g kernel: CR2: 0000000000000000 CR3: 0000000000201000
+> CR4: 00000000000026e0
+> Jun  7 16:05:31 5720g kernel: DR0: 0000000000000000 DR1: 0000000000000000
+> DR2: 0000000000000000
+> Jun  7 16:05:31 5720g kernel: DR3: 0000000000000000 DR6: 00000000ffff0ff0
+> DR7: 0000000000000400
+> Jun  7 16:05:31 5720g kernel: Process events/1 (pid: 10, threadinfo
+> ffff81013fb14000, task ffff81013fb102c0)
+> Jun  7 16:05:31 5720g kernel: Stack:  ffff81013fb14000 ffffffff806f7ed8
+> 0000000000000001 ffffffff806f8660
+> Jun  7 16:05:31 5720g kernel:  ffffffff806f8648 ffffffff8075bb50
+> ffff81013e102c08 000000023fb10a10
+> Jun  7 16:05:31 5720g kernel:  0000000000000006 ffff8101364a1a00
+> ffff81013fb15cf0 ffff81013e1021c0
+> Jun  7 16:05:31 5720g kernel: Call Trace:
+> Jun  7 16:05:31 5720g kernel:  [<ffffffffa021357e>]
+> :iwlcore:iwl_send_cmd_sync+0x94/0x313
+> Jun  7 16:05:31 5720g kernel:  [<ffffffff80257ed5>] ?
+> __lock_acquire+0xbee/0xd5a
+> Jun  7 16:05:31 5720g kernel:  [<ffffffffa021384e>]
+> :iwlcore:iwl_send_cmd+0x16/0x18
+> Jun  7 16:05:31 5720g kernel:  [<ffffffffa0284784>]
+> :iwl4965:iwl_send_static_wepkey_cmd+0xcb/0xd5
+> Jun  7 16:05:31 5720g kernel:  [<ffffffffa0284832>]
+> :iwl4965:iwl_set_default_wep_key+0xa4/0xbe
+> Jun  7 16:05:31 5720g kernel:  [<ffffffffa026d14b>]
+> :iwl4965:iwl4965_mac_set_key+0x1c9/0x2d3
+> Jun  7 16:05:31 5720g kernel:  [<ffffffff803049ed>] ?
+> debugfs_remove+0xd5/0xda
+> Jun  7 16:05:31 5720g kernel:  [<ffffffffa017e3ca>]
+> :mac80211:__ieee80211_key_todo+0x124/0x226
+> Jun  7 16:05:31 5720g kernel:  [<ffffffffa017e57a>]
+> :mac80211:ieee80211_key_todo+0x17/0x25
+> Jun  7 16:05:31 5720g kernel:  [<ffffffffa017e591>]
+> :mac80211:key_todo+0x9/0xb
+> Jun  7 16:05:31 5720g kernel:  [<ffffffff80247104>] run_workqueue+0xfc/0x203
+> Jun  7 16:05:31 5720g kernel:  [<ffffffffa017e588>] ?
+> :mac80211:key_todo+0x0/0xb
+> Jun  7 16:05:31 5720g kernel:  [<ffffffff802472eb>] worker_thread+0xe0/0xf1
+> Jun  7 16:05:31 5720g kernel:  [<ffffffff8024acac>] ?
+> autoremove_wake_function+0x0/0x38
+> Jun  7 16:05:31 5720g kernel:  [<ffffffff8024720b>] ? worker_thread+0x0/0xf1
+> Jun  7 16:05:31 5720g kernel:  [<ffffffff8024a97b>] kthread+0x49/0x76
+> Jun  7 16:05:31 5720g kernel:  [<ffffffff8020d248>] child_rip+0xa/0x12
+> Jun  7 16:05:31 5720g kernel:  [<ffffffff8020c7dc>] ? restore_args+0x0/0x30
+> Jun  7 16:05:31 5720g kernel:  [<ffffffff8024a932>] ? kthread+0x0/0x76
+> Jun  7 16:05:31 5720g kernel:  [<ffffffff8020d23e>] ? child_rip+0x0/0x12
+> Jun  7 16:05:31 5720g kernel:
+> Jun  7 16:05:31 5720g kernel:
+> Jun  7 16:05:31 5720g kernel: Code: 69 c8 80 01 00 00 41 8a 04 24 4c 89 cb
+> 49 03 9e c0 44 00 00 88 43 14 48 89 df f3 a5 48 8d 7b 18 41 0f b7 4c 24 02
+> 49 8b 74 24 18 <f3> a4 c6 43 15 00 41 0f b6 96 94 44 00 00 89 d0 80 cc 04 f6
+> 43
+> Jun  7 16:05:31 5720g kernel: RIP  [<ffffffffa026e036>]
+> :iwl4965:iwl4965_enqueue_hcmd+0x175/0x2c2
+> Jun  7 16:05:31 5720g kernel:  RSP <ffff81013fb15b60>
+> Jun  7 16:05:31 5720g kernel: CR2: 0000000000000000
+> Jun  7 16:05:31 5720g kernel: ---[ end trace 61cbfb837f7cd04e ]---
+>
+>
+>
+>
+>> One more thing is suspicious in the WEP key try is that I don't see
+>> this can ever happen. The command that should be here iis
+>> wlcore:iwl_send_cmd_async
+>> Jun  5 19:55:06 5720g kernel:  [<ffffffffa018ee37>]
+>> :iwlcore:iwl_send_cmd_sync+0x94/0x257
+>> Jun  5 19:55:06 5720g kernel:  [<ffffffff80257ed5>] ?
+>> __lock_acquire+0xbee/0xd5a
+>> Jun  5 19:55:06 5720g kernel:  [<ffffffffa018f04b>]
+>> :iwlcore:iwl_send_cmd+0x16/0x1b
+>> Jun  5 19:55:06 5720g kernel:  [<ffffffffa0218c41>]
+>> :iwl4965:iwl_send_static_wepkey_cmd+0xcb/0xd5
+>> Jun  5 19:55:06 5720g kernel:  [<ffffffffa0218cef>]
+>> :iwl4965:iwl_set_default_wep_key+0xa4/0xbe
+>> Jun  5 19:55:06 5720g kernel:  [<ffffffffa020ae00>]
+>> :iwl4965:iwl4965_mac_set_key+0xf1/0x137
+>>
+>> The code there looks like this
+>>
+>> int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
+>> {
+>>        int i, not_empty = 0;
+>>        u8 buff[sizeof(struct iwl_wep_cmd) +
+>>                sizeof(struct iwl_wep_key) * WEP_KEYS_MAX];
+>>        struct iwl_wep_cmd *wep_cmd = (struct iwl_wep_cmd *)buff;
+>>        size_t cmd_size  = sizeof(struct iwl_wep_cmd);
+>>        struct iwl_host_cmd cmd = {
+>>                .id = REPLY_WEPKEY,
+>>                .data = wep_cmd,
+>>                .meta.flags = CMD_ASYNC,
+>> -----------------------------------------
+>> this is async
+>>        };
+>>
+>> Thanks
+>> Tomas
+>>
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2400pci.c   |    2 +-
- drivers/net/wireless/rt2x00/rt2500pci.c   |    2 +-
- drivers/net/wireless/rt2x00/rt2x00.h      |   34 -------------------
- drivers/net/wireless/rt2x00/rt2x00dev.c   |   29 ++++++++++++++++
- drivers/net/wireless/rt2x00/rt2x00lib.h   |   51 +++++++++++++++++++++++++++-
- drivers/net/wireless/rt2x00/rt2x00pci.c   |   49 ---------------------------
- drivers/net/wireless/rt2x00/rt2x00pci.h   |    9 -----
- drivers/net/wireless/rt2x00/rt2x00queue.c |   15 ++++++--
- drivers/net/wireless/rt2x00/rt2x00queue.h |    2 +
- drivers/net/wireless/rt2x00/rt2x00usb.c   |   42 ++++--------------------
- drivers/net/wireless/rt2x00/rt61pci.c     |    4 +-
- 11 files changed, 102 insertions(+), 137 deletions(-)
+I'm not sure what distro are you running I haven't seen this
+ifcfg-wlan0 config options
+on my system but can it be that ifcg-wlan0 tries to set wep key which
+will conflict
+with wpa_supplicant setting. Can you try to remove this line from that file
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index de2dd33..b3dffcf 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1154,7 +1154,7 @@ static void rt2400pci_txdone(struct rt2x00_dev *rt2x00dev,
- 		}
- 		txdesc.retry = rt2x00_get_field32(word, TXD_W0_RETRY_COUNT);
- 
--		rt2x00pci_txdone(rt2x00dev, entry, &txdesc);
-+		rt2x00lib_txdone(entry, &txdesc);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 5077b62..0423c25 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -1312,7 +1312,7 @@ static void rt2500pci_txdone(struct rt2x00_dev *rt2x00dev,
- 		}
- 		txdesc.retry = rt2x00_get_field32(word, TXD_W0_RETRY_COUNT);
- 
--		rt2x00pci_txdone(rt2x00dev, entry, &txdesc);
-+		rt2x00lib_txdone(entry, &txdesc);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 28c9026..94b7c9b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -900,14 +900,6 @@ static inline u16 get_duration_res(const unsigned int size, const u8 rate)
- }
- 
- /**
-- * rt2x00queue_alloc_rxskb - allocate a skb for RX purposes.
-- * @rt2x00dev: Pointer to &struct rt2x00_dev.
-- * @queue: The queue for which the skb will be applicable.
-- */
--struct sk_buff *rt2x00queue_alloc_rxskb(struct rt2x00_dev *rt2x00dev,
--					struct queue_entry *entry);
--
--/**
-  * rt2x00queue_map_txskb - Map a skb into DMA for TX purposes.
-  * @rt2x00dev: Pointer to &struct rt2x00_dev.
-  * @skb: The skb to map.
-@@ -915,20 +907,6 @@ struct sk_buff *rt2x00queue_alloc_rxskb(struct rt2x00_dev *rt2x00dev,
- void rt2x00queue_map_txskb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb);
- 
- /**
-- * rt2x00queue_unmap_skb - Unmap a skb from DMA.
-- * @rt2x00dev: Pointer to &struct rt2x00_dev.
-- * @skb: The skb to unmap.
-- */
--void rt2x00queue_unmap_skb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb);
--
--/**
-- * rt2x00queue_free_skb - free a skb
-- * @rt2x00dev: Pointer to &struct rt2x00_dev.
-- * @skb: The skb to free.
-- */
--void rt2x00queue_free_skb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb);
--
--/**
-  * rt2x00queue_create_tx_descriptor - Create TX descriptor from mac80211 input
-  * @entry: The entry which will be used to transfer the TX frame.
-  * @txdesc: rt2x00 TX descriptor which will be initialized by this function.
-@@ -977,18 +955,6 @@ struct data_queue *rt2x00queue_get_queue(struct rt2x00_dev *rt2x00dev,
- struct queue_entry *rt2x00queue_get_entry(struct data_queue *queue,
- 					  enum queue_index index);
- 
--/**
-- * rt2x00queue_index_inc - Index incrementation function
-- * @queue: Queue (&struct data_queue) to perform the action on.
-- * @index: Index type (&enum queue_index) to perform the action on.
-- *
-- * This function will increase the requested index on the queue,
-- * it will grab the appropriate locks and handle queue overflow events by
-- * resetting the index to the start of the queue.
-- */
--void rt2x00queue_index_inc(struct data_queue *queue, enum queue_index index);
--
--
- /*
-  * Interrupt context handlers.
-  */
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 99b14ba..2a63a7b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -504,6 +504,12 @@ void rt2x00lib_txdone(struct queue_entry *entry,
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(entry->skb);
-+	enum data_queue_qid qid = skb_get_queue_mapping(entry->skb);
-+
-+	/*
-+	 * Unmap the skb.
-+	 */
-+	rt2x00queue_unmap_skb(rt2x00dev, entry->skb);
- 
- 	/*
- 	 * Send frame to debugfs immediately, after this call is completed
-@@ -552,7 +558,25 @@ void rt2x00lib_txdone(struct queue_entry *entry,
- 		ieee80211_tx_status_irqsafe(rt2x00dev->hw, entry->skb);
- 	else
- 		dev_kfree_skb_irq(entry->skb);
-+
-+	/*
-+	 * Make this entry available for reuse.
-+	 */
- 	entry->skb = NULL;
-+	entry->flags = 0;
-+
-+	rt2x00dev->ops->lib->init_txentry(rt2x00dev, entry);
-+
-+	__clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags);
-+	rt2x00queue_index_inc(entry->queue, Q_INDEX_DONE);
-+
-+	/*
-+	 * If the data queue was below the threshold before the txdone
-+	 * handler we must make sure the packet queue in the mac80211 stack
-+	 * is reenabled when the txdone handler has finished.
-+	 */
-+	if (!rt2x00queue_threshold(entry->queue))
-+		ieee80211_wake_queue(rt2x00dev->hw, qid);
- }
- EXPORT_SYMBOL_GPL(rt2x00lib_txdone);
- 
-@@ -657,6 +681,11 @@ void rt2x00lib_rxdone(struct rt2x00_dev *rt2x00dev,
- 	 * Replace the skb with the freshly allocated one.
- 	 */
- 	entry->skb = skb;
-+	entry->flags = 0;
-+
-+	rt2x00dev->ops->lib->init_rxentry(rt2x00dev, entry);
-+
-+	rt2x00queue_index_inc(entry->queue, Q_INDEX);
- }
- EXPORT_SYMBOL_GPL(rt2x00lib_rxdone);
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
-index 558f45b..1d1f074 100644
---- a/drivers/net/wireless/rt2x00/rt2x00lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
-@@ -98,10 +98,57 @@ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
- void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
- 		      struct ieee80211_conf *conf, const int force_config);
- 
--/*
-- * Queue handlers.
-+/**
-+ * DOC: Queue handlers
-+ */
-+
-+/**
-+ * rt2x00queue_alloc_rxskb - allocate a skb for RX purposes.
-+ * @rt2x00dev: Pointer to &struct rt2x00_dev.
-+ * @queue: The queue for which the skb will be applicable.
-+ */
-+struct sk_buff *rt2x00queue_alloc_rxskb(struct rt2x00_dev *rt2x00dev,
-+					struct queue_entry *entry);
-+
-+/**
-+ * rt2x00queue_unmap_skb - Unmap a skb from DMA.
-+ * @rt2x00dev: Pointer to &struct rt2x00_dev.
-+ * @skb: The skb to unmap.
-+ */
-+void rt2x00queue_unmap_skb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb);
-+
-+/**
-+ * rt2x00queue_free_skb - free a skb
-+ * @rt2x00dev: Pointer to &struct rt2x00_dev.
-+ * @skb: The skb to free.
-+ */
-+void rt2x00queue_free_skb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb);
-+
-+/**
-+ * rt2x00queue_free_skb - free a skb
-+ * @rt2x00dev: Pointer to &struct rt2x00_dev.
-+ * @skb: The skb to free.
-+ */
-+void rt2x00queue_free_skb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb);
-+
-+/**
-+ * rt2x00queue_write_tx_frame - Write TX frame to hardware
-+ * @queue: Queue over which the frame should be send
-+ * @skb: The skb to send
-  */
- int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb);
-+
-+/**
-+ * rt2x00queue_index_inc - Index incrementation function
-+ * @queue: Queue (&struct data_queue) to perform the action on.
-+ * @index: Index type (&enum queue_index) to perform the action on.
-+ *
-+ * This function will increase the requested index on the queue,
-+ * it will grab the appropriate locks and handle queue overflow events by
-+ * resetting the index to the start of the queue.
-+ */
-+void rt2x00queue_index_inc(struct data_queue *queue, enum queue_index index);
-+
- void rt2x00queue_init_rx(struct rt2x00_dev *rt2x00dev);
- void rt2x00queue_init_tx(struct rt2x00_dev *rt2x00dev);
- int rt2x00queue_initialize(struct rt2x00_dev *rt2x00dev);
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
-index f9d0d76..adf2876 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-@@ -60,12 +60,8 @@ int rt2x00pci_write_tx_data(struct queue_entry *entry)
- 	 * Fill in skb descriptor
- 	 */
- 	skbdesc = get_skb_frame_desc(entry->skb);
--	memset(skbdesc, 0, sizeof(*skbdesc));
- 	skbdesc->desc = entry_priv->desc;
- 	skbdesc->desc_len = entry->queue->desc_size;
--	skbdesc->entry = entry;
--
--	rt2x00queue_map_txskb(entry->queue->rt2x00dev, entry->skb);
- 
- 	return 0;
- }
-@@ -101,55 +97,10 @@ void rt2x00pci_rxdone(struct rt2x00_dev *rt2x00dev)
- 		 * Send the frame to rt2x00lib for further processing.
- 		 */
- 		rt2x00lib_rxdone(rt2x00dev, entry);
--
--		/*
--		 * Reset the RXD for this entry.
--		 */
--		rt2x00dev->ops->lib->init_rxentry(rt2x00dev, entry);
--
--		rt2x00queue_index_inc(queue, Q_INDEX);
- 	}
- }
- EXPORT_SYMBOL_GPL(rt2x00pci_rxdone);
- 
--void rt2x00pci_txdone(struct rt2x00_dev *rt2x00dev, struct queue_entry *entry,
--		      struct txdone_entry_desc *txdesc)
--{
--	struct queue_entry_priv_pci *entry_priv = entry->priv_data;
--	enum data_queue_qid qid = skb_get_queue_mapping(entry->skb);
--	u32 word;
--
--	/*
--	 * Unmap the skb.
--	 */
--	rt2x00queue_unmap_skb(rt2x00dev, entry->skb);
--
--	rt2x00lib_txdone(entry, txdesc);
--
--	/*
--	 * Make this entry available for reuse.
--	 */
--	entry->flags = 0;
--
--	rt2x00_desc_read(entry_priv->desc, 0, &word);
--	rt2x00_set_field32(&word, TXD_ENTRY_OWNER_NIC, 0);
--	rt2x00_set_field32(&word, TXD_ENTRY_VALID, 0);
--	rt2x00_desc_write(entry_priv->desc, 0, word);
--
--	__clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags);
--	rt2x00queue_index_inc(entry->queue, Q_INDEX_DONE);
--
--	/*
--	 * If the data queue was below the threshold before the txdone
--	 * handler we must make sure the packet queue in the mac80211 stack
--	 * is reenabled when the txdone handler has finished.
--	 */
--	if (!rt2x00queue_threshold(entry->queue))
--		ieee80211_wake_queue(rt2x00dev->hw, qid);
--
--}
--EXPORT_SYMBOL_GPL(rt2x00pci_txdone);
--
- /*
-  * Device initialization handlers.
-  */
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.h b/drivers/net/wireless/rt2x00/rt2x00pci.h
-index 7e5708d..50c6df4 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.h
-@@ -115,15 +115,6 @@ struct queue_entry_priv_pci {
-  */
- void rt2x00pci_rxdone(struct rt2x00_dev *rt2x00dev);
- 
--/**
-- * rt2x00pci_txdone - Handle TX done events
-- * @rt2x00dev: Device pointer, see &struct rt2x00_dev.
-- * @entry: Entry which has completed the transmission of a frame.
-- * @desc: TX done descriptor
-- */
--void rt2x00pci_txdone(struct rt2x00_dev *rt2x00dev, struct queue_entry *entry,
--		      struct txdone_entry_desc *desc);
--
- /*
-  * Device initialization handlers.
-  */
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 29d2b91..49d3bb8 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -77,7 +77,6 @@ struct sk_buff *rt2x00queue_alloc_rxskb(struct rt2x00_dev *rt2x00dev,
- 
- 	return skb;
- }
--EXPORT_SYMBOL_GPL(rt2x00queue_alloc_rxskb);
- 
- void rt2x00queue_map_txskb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb)
- {
-@@ -105,7 +104,6 @@ void rt2x00queue_unmap_skb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb)
- 		skbdesc->flags &= ~SKBDESC_DMA_MAPPED_TX;
- 	}
- }
--EXPORT_SYMBOL_GPL(rt2x00queue_unmap_skb);
- 
- void rt2x00queue_free_skb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb)
- {
-@@ -123,7 +121,6 @@ void rt2x00queue_free_skb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb)
- 
- 	dev_kfree_skb_any(skb);
- }
--EXPORT_SYMBOL_GPL(rt2x00queue_free_skb);
- 
- void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 				      struct txentry_desc *txdesc)
-@@ -289,6 +286,7 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
- {
- 	struct queue_entry *entry = rt2x00queue_get_entry(queue, Q_INDEX);
- 	struct txentry_desc txdesc;
-+	struct skb_frame_desc *skbdesc;
- 
- 	if (unlikely(rt2x00queue_full(queue)))
- 		return -EINVAL;
-@@ -309,11 +307,21 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
- 	entry->skb = skb;
- 	rt2x00queue_create_tx_descriptor(entry, &txdesc);
- 
-+	/*
-+	 * skb->cb array is now ours and we are free to use it.
-+	 */
-+	skbdesc = get_skb_frame_desc(entry->skb);
-+	memset(skbdesc, 0, sizeof(*skbdesc));
-+	skbdesc->entry = entry;
-+
- 	if (unlikely(queue->rt2x00dev->ops->lib->write_tx_data(entry))) {
- 		__clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags);
- 		return -EIO;
- 	}
- 
-+	if (test_bit(DRIVER_REQUIRE_DMA, &queue->rt2x00dev->flags))
-+		rt2x00queue_map_txskb(queue->rt2x00dev, skb);
-+
- 	__set_bit(ENTRY_DATA_PENDING, &entry->flags);
- 
- 	rt2x00queue_index_inc(queue, Q_INDEX);
-@@ -389,7 +397,6 @@ void rt2x00queue_index_inc(struct data_queue *queue, enum queue_index index)
- 
- 	spin_unlock_irqrestore(&queue->lock, irqflags);
- }
--EXPORT_SYMBOL_GPL(rt2x00queue_index_inc);
- 
- static void rt2x00queue_reset(struct data_queue *queue)
- {
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-index 192b6e7..14ce8d4 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-@@ -82,6 +82,8 @@ enum data_queue_qid {
- /**
-  * enum skb_frame_desc_flags: Flags for &struct skb_frame_desc
-  *
-+ * @SKBDESC_DMA_MAPPED_RX: &skb_dma field has been mapped for RX
-+ * @SKBDESC_DMA_MAPPED_TX: &skb_dma field has been mapped for TX
-  */
- enum skb_frame_desc_flags {
- 	SKBDESC_DMA_MAPPED_RX = (1 << 0),
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 552f0e9..b94c461 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -131,10 +131,9 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
- 	struct queue_entry *entry = (struct queue_entry *)urb->context;
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
- 	struct txdone_entry_desc txdesc;
--	enum data_queue_qid qid = skb_get_queue_mapping(entry->skb);
- 
- 	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags) ||
--	    !__test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
-+	    !test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
- 		return;
- 
- 	/*
-@@ -158,20 +157,6 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
- 	txdesc.retry = 0;
- 
- 	rt2x00lib_txdone(entry, &txdesc);
--
--	/*
--	 * Make this entry available for reuse.
--	 */
--	entry->flags = 0;
--	rt2x00queue_index_inc(entry->queue, Q_INDEX_DONE);
--
--	/*
--	 * If the data queue was below the threshold before the txdone
--	 * handler we must make sure the packet queue in the mac80211 stack
--	 * is reenabled when the txdone handler has finished.
--	 */
--	if (!rt2x00queue_threshold(entry->queue))
--		ieee80211_wake_queue(rt2x00dev->hw, qid);
- }
- 
- int rt2x00usb_write_tx_data(struct queue_entry *entry)
-@@ -193,10 +178,8 @@ int rt2x00usb_write_tx_data(struct queue_entry *entry)
- 	 * Fill in skb descriptor
- 	 */
- 	skbdesc = get_skb_frame_desc(entry->skb);
--	memset(skbdesc, 0, sizeof(*skbdesc));
- 	skbdesc->desc = entry->skb->data;
- 	skbdesc->desc_len = entry->queue->desc_size;
--	skbdesc->entry = entry;
- 
- 	/*
- 	 * USB devices cannot blindly pass the skb->len as the
-@@ -270,7 +253,7 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
- 	u8 rxd[32];
- 
- 	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags) ||
--	    !test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
-+	    !test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
- 		return;
- 
- 	/*
-@@ -278,8 +261,11 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
- 	 * to be actually valid, or if the urb is signaling
- 	 * a problem.
- 	 */
--	if (urb->actual_length < entry->queue->desc_size || urb->status)
--		goto skip_entry;
-+	if (urb->actual_length < entry->queue->desc_size || urb->status) {
-+		__set_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags);
-+		usb_submit_urb(urb, GFP_ATOMIC);
-+		return;
-+	}
- 
- 	/*
- 	 * Fill in desc fields of the skb descriptor
-@@ -291,20 +277,6 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
- 	 * Send the frame to rt2x00lib for further processing.
- 	 */
- 	rt2x00lib_rxdone(rt2x00dev, entry);
--
--	/*
--	 * Reinitialize the urb.
--	 */
--	urb->transfer_buffer = entry->skb->data;
--	urb->transfer_buffer_length = entry->skb->len;
--
--skip_entry:
--	if (test_bit(DEVICE_ENABLED_RADIO, &entry->queue->rt2x00dev->flags)) {
--		__set_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags);
--		usb_submit_urb(urb, GFP_ATOMIC);
--	}
--
--	rt2x00queue_index_inc(entry->queue, Q_INDEX);
- }
- 
- /*
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index c9f6d48..bbf1048 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1767,7 +1767,7 @@ static void rt61pci_txdone(struct rt2x00_dev *rt2x00dev)
- 			__set_bit(TXDONE_UNKNOWN, &txdesc.flags);
- 			txdesc.retry = 0;
- 
--			rt2x00pci_txdone(rt2x00dev, entry_done, &txdesc);
-+			rt2x00lib_txdone(entry_done, &txdesc);
- 			entry_done = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
- 		}
- 
-@@ -1787,7 +1787,7 @@ static void rt61pci_txdone(struct rt2x00_dev *rt2x00dev)
- 		}
- 		txdesc.retry = rt2x00_get_field32(reg, STA_CSR4_RETRY_COUNT);
- 
--		rt2x00pci_txdone(rt2x00dev, entry, &txdesc);
-+		rt2x00lib_txdone(entry, &txdesc);
- 	}
- }
- 
--- 
-1.5.5.4
+ifcfg-wlan0 -
+--- cut ---
+WIRELESS_ENC_KEY='s:*************************'
 
+
+Thanks
+Tomas
