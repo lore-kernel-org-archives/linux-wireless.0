@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:28240 "EHLO mga02.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2217 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754775AbYFLC00 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 22:26:26 -0400
-Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with
-	disable_hw_scan=1
-From: Zhu Yi <yi.zhu@intel.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <484FF375.8010002@gmail.com>
-References: <484FF375.8010002@gmail.com>
-Content-Type: text/plain
-Date: Thu, 12 Jun 2008 10:26:01 +0800
-Message-Id: <1213237561.7814.688.camel@debian.sh.intel.com> (sfid-20080612_042706_555889_193B3C2B)
-Mime-Version: 1.0
+	id S1751502AbYFIQII (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jun 2008 12:08:08 -0400
+Date: Mon, 9 Jun 2008 11:23:23 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Chris Wright <chrisw@sous-sol.org>, stable@kernel.org,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: [stable] [PATCH stable] b43: Fix controller restart crash
+Message-ID: <20080609152323.GA12654@tuxdriver.com> (sfid-20080609_180814_716659_9AAFB310)
+References: <200806061558.42998.mb@bu3sch.de> <20080606173223.GR30402@sequoia.sous-sol.org> <200806061955.27951.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200806061955.27951.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-06-11 at 18:47 +0300, Maxim Levitsky wrote:
+On Fri, Jun 06, 2008 at 07:55:27PM +0200, Michael Buesch wrote:
+> On Friday 06 June 2008 19:32:23 Chris Wright wrote:
+> > * Michael Buesch (mb@bu3sch.de) wrote:
+> > > This fixes a kernel crash on rmmod, in the case where the controller
+> > > was restarted before doing the rmmod.
+> > > 
+> > > Upstream commit is 4735f5022c97f6624ced2ec5056c61c4b437d53b
+> > 
+> > This is not in Linus' tree.  Where is this upstream commit?
 > 
-> I found why I can't reenable wireless with wireless button.
-> 
-> It turns out that iwlwifi doesn't enable the wireless function after a
-> R/F kill switch was enabled ether by the button or explicitly.
-> 
-> I bisected this to commit 5a66926aa9230810704fd5a127966215fd58881e
-> in linus tree.
+> John Linville's wireless tree. That's upstream from my point of view. :P
 
-The card will receive an interrupt when you disable the rf kill switch
-anyway whatever the wireless function is enabled or not. So the driver
-will enable the wireless function again. Please check if the interface
-(wlan0) is up when you disable the rf kill switch later. If it is not,
-you have to bring it up manually (i.e. ifconfig wlan0 up) to enable the
-wireless function. Otherwise please provide the dmesg with
-debug=0x20000.
+:-)
 
-Thanks,
--yi
+The commit ID may have gotten shuffled when Dave M. rebased net-2.6.
+It is in 2.6.26-rc5 as commit 3bf0a32e22fedc0b46443699db2d61ac2a883ac4.
 
+Hth!
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
