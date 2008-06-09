@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.242]:28744 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754671AbYFHPzD (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.171]:25092 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750723AbYFIUXt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jun 2008 11:55:03 -0400
-Received: by an-out-0708.google.com with SMTP id d40so421728and.103
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2008 08:55:02 -0700 (PDT)
-Message-ID: <43e72e890806080855p284f85brd0ff1f1dfce96bf8@mail.gmail.com> (sfid-20080608_175618_790913_8944EACA)
-Date: Sun, 8 Jun 2008 08:55:00 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Backported MQ requirement on 802.11n for older kernels
-Cc: compat-masters@lists.madwifi.org,
-	"Rindjunsky, Ron" <ron.rindjunsky@intel.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	tomas.winkler@intel.com, "Tim Gardner" <tim.gardner@canonical.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 9 Jun 2008 16:23:49 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2250786wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 13:23:48 -0700 (PDT)
+Subject: Re: [PATCHv2 7/8] mac80211: wme.c use new helpers
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1213039703.5974.72.camel@brick>
+References: <1213039703.5974.72.camel@brick>
+Content-Type: text/plain
+Date: Mon, 09 Jun 2008 13:23:46 -0700
+Message-Id: <1213043026.5974.78.camel@brick> (sfid-20080609_222356_812541_CDA5DD4D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I just finished trying to backport CONFIG_NETDEVICES_MULTIQUEUE
-requirement for 802.11n to older kernels by relying on the old
-internal mac80211 hacked up MQ support. I've tested the build on
-2.6.22, 2.6.23, and 2.6.24. Let me know if you get to test this,
-particularly iwl4965 using 11n on 2.6.22.
+On Mon, 2008-06-09 at 12:28 -0700, Harvey Harrison wrote:
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> ---
+>  net/mac80211/wme.c |   18 +++++-------------
+>  1 files changed, 5 insertions(+), 13 deletions(-)
+> 
+> diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+> index 14a9ff1..d8c2f96 100644
+> --- a/net/mac80211/wme.c
+> +++ b/net/mac80211/wme.c
+> @@ -105,11 +105,8 @@ static int classify80211(struct sk_buff *skb, struct Qdisc *qd)
+>  {
+>  	struct ieee80211_local *local = wdev_priv(qd->dev->ieee80211_ptr);
+>  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+> -	unsigned short fc = le16_to_cpu(hdr->frame_control);
+> -	int qos;
+>  
+> -	/* see if frame is data or non data frame */
+> -	if (unlikely((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)) {
+> +	if (!ieee80211_is_data(hdr->frame_control)) {
 
-Oh and if you're interested in helping with the compat-wireless work
-please subscribe to this new list:
+Sorry, I didn't refresh this patch to preserve the unlikely().
 
-https://lists.madwifi.org/mailman/listinfo/compat-masters
+Let me know if you want a replacement.
 
-I called it compat-masters as compat-maintainers sounded too boring.
-You can also send compat-wireless patches there to not clutter
-linux-wireless mailing list. I'll soon enable automatic compile tests
-across each kernel we support in compat-wireless and only if it fails
-will you get a nagging e-mail on that list. This means no new
-compat-wireless package will be put on wireless.kernel.org unless we
-know it compiles fine on all kernels supported. This should prevent
-using from getting tarballs they can't compile.
+Harvey
 
-  Luis
