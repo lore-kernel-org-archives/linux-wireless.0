@@ -1,82 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:38671 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751682AbYFDDKV (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39638 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752999AbYFIRWg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 23:10:21 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Dmitry Torokhov <dtor@mail.ru>
-Subject: [PATCH 01/12] rfkill: clarify meaning of rfkill states
-Date: Wed,  4 Jun 2008 00:10:06 -0300
-Message-Id: <1212549017-30144-2-git-send-email-hmh@hmh.eng.br> (sfid-20080604_051031_143352_40508FA6)
-In-Reply-To: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
-References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
+	Mon, 9 Jun 2008 13:22:36 -0400
+Subject: Re: [PATCH 1/7] mac80211: add helpers for frame control testing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1213029086.5974.21.camel@brick> (sfid-20080609_183129_796413_B211C17A)
+References: <1212774671.6340.75.camel@brick>
+	 (sfid-20080606_195944_782545_6A2B1449)  <1212997265.698.55.camel@johannes.berg>
+	 <1213029086.5974.21.camel@brick> (sfid-20080609_183129_796413_B211C17A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BrOlBBzEk3TcMvwn/San"
+Date: Mon, 09 Jun 2008 19:21:25 +0200
+Message-Id: <1213032085.22220.1.camel@johannes.berg> (sfid-20080609_192239_543392_B1D3DB3C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rfkill really should have been named rfswitch.  As it is, one can get
-confused whether RFKILL_STATE_ON means the KILL switch is on (and
-therefore, the radio is being *blocked* from operating), or whether it
-means the RADIO rf output is on.
 
-Clearly state that RFKILL_STATE_ON means the radio is *unblocked* from
-operating (i.e. there is no rf killing going on).
+--=-BrOlBBzEk3TcMvwn/San
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: Dmitry Torokhov <dtor@mail.ru>
----
- Documentation/rfkill.txt |    7 +++++++
- include/linux/rfkill.h   |    6 +++---
- 2 files changed, 10 insertions(+), 3 deletions(-)
+On Mon, 2008-06-09 at 09:31 -0700, Harvey Harrison wrote:
+> On Mon, 2008-06-09 at 09:41 +0200, Johannes Berg wrote:
+> > > +static inline int ieee80211_data_has_qos(__le16 fc)
+> > > +{
+> > > +	/*
+> > > +	 * mask with QOS_DATA rather than IEEE80211_FCTL_STYPE as we just n=
+eed
+> > > +	 * to check the one bit
+> > > +	 */
+> > > +	return (fc &
+> > > +	       cpu_to_le16(IEEE80211_FCTL_FTYPE | IEEE80211_STYPE_QOS_DATA)=
+) =3D=3D
+> > > +	       cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_QOS_DATA)=
+;
+> > > +}
+> >=20
+> > Shouldn't that rather be _is_qos_data?
+> >=20
+>=20
+> I don't think so....I was trying to keep it so _is_ meant an exact compar=
+ison and
+> _has_ was checking the presence of particular bits.
+>=20
+> As this helper only checks for the one bit being set, I chose _has_.
 
-diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
-index a83ff23..ec75d6d 100644
---- a/Documentation/rfkill.txt
-+++ b/Documentation/rfkill.txt
-@@ -8,6 +8,13 @@ rfkill - RF switch subsystem support
- ===============================================================================
- 1: Implementation details
- 
-+The rfkill switch subsystem exists to add a generic interface to circuitry that
-+can enable or disable the RF output of a radio *transmitter* of any type.
-+
-+When a rfkill switch is in the RFKILL_STATE_ON, the radio transmitter is
-+*enabled*.  When the rfkill switch is in the RFKILL_STATE_OFF, the radio
-+transmitter is *disabled*.
-+
- The rfkill switch subsystem offers support for keys often found on laptops
- to enable wireless devices like WiFi and Bluetooth.
- 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index e3ab21d..ca89ae1 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -44,8 +44,8 @@ enum rfkill_type {
- };
- 
- enum rfkill_state {
--	RFKILL_STATE_OFF	= 0,
--	RFKILL_STATE_ON		= 1,
-+	RFKILL_STATE_OFF	= 0,	/* Radio output blocked */
-+	RFKILL_STATE_ON		= 1,	/* Radio output active */
- };
- 
- /**
-@@ -53,7 +53,7 @@ enum rfkill_state {
-  * @name: Name of the switch.
-  * @type: Radio type which the button controls, the value stored
-  *	here should be a value from enum rfkill_type.
-- * @state: State of the switch (on/off).
-+ * @state: State of the switch, "ON" means radio can operate.
-  * @user_claim_unsupported: Whether the hardware supports exclusive
-  *	RF-kill control by userspace. Set this before registering.
-  * @user_claim: Set when the switch is controlled exlusively by userspace.
--- 
-1.5.5.3
+Hmm. As far as I can tell, it checks that the frame is a QoS controlled
+data frame. Hence, it explicitly checks that it _is_ a data frame and
+_has_ the QoS bit, but in 802.11 lingo I think that means it _is_ a
+"data+qos" frame.
+
+johannes
+
+--=-BrOlBBzEk3TcMvwn/San
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJITWaQAAoJEKVg1VMiehFYenUP+gIesvaZO/z5VqmLQH54zWdz
+cgjqdUrrUerWstca25xQ7kiLRbVnCxGN3nAhNibXgHFkzLONIex3iS8QW/JM8V5s
+1tjl/LyzOcxGfZAbnXsMbxFc++N0vt7YFTGsRHAlmH+TcMVlFg/OCLqvlfUTO9mS
+04e3H6fD8lMKmFXMHkHPDzp7QfFehjqwqkSU6D3P+EATkYGOEKrPnC/D5F5sNCXJ
+9xYurebPuwnfS4WvTskvylqD6ee1fw/TvlBC4p5yEQ9av5aGc8E/ugOxG9UjR2FH
+XM8MF88HGmONHzY+dvhM6QdvxTRnE2WmhN6wqgpznfHqKHFSYzc1kK8aSbU98EDB
++Dbx7AmvflzoDOZAvGVogU2ChBqsMDSG8p3sNAT0qW376xW3nmhxgFVVpITXIRTA
+JQPUXUrZCO7b7iaPSiLOUUs1xfwz/dy99PILEFaPbKZBXComljaaoMyAFe0dHyH+
++LWvQcQsgC338bKtYzwOICkB/1KHU79rSLOI1JwJQryevAjfZQj93HRJBvAqRVw+
+tCRlYiPH319GpdhXVtIozW79YGbAgCKhyIWlhfZStxy6TeUsa2Ie7M+2++D1on+T
+sqaDwmI9fslOBqrNbb3SlnuQqehDuRQX0nX86aDQnAvn5I7GgJGXiy/gEBcUCaBF
+cdyNMfznSm0YOucH/F8j
+=ppKF
+-----END PGP SIGNATURE-----
+
+--=-BrOlBBzEk3TcMvwn/San--
 
