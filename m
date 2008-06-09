@@ -1,40 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from serv04.lahn.de ([213.239.197.57]:45600 "EHLO serv04.lahn.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751142AbYFRIPV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 04:15:21 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by elektra.leun.net (8.13.8/8.13.8/SuSE Linux 0.8) with ESMTP id m5I7gDk6022369
-	for <linux-wireless@vger.kernel.org>; Wed, 18 Jun 2008 09:42:13 +0200
-Date: Wed, 18 Jun 2008 09:42:13 +0200
-From: Michael Leun <linux-wireless@newton.leun.net>
-To: linux-wireless@vger.kernel.org
-Subject: compat wireless, i3945, tcpdump: Machine freezes
-Message-ID: <20080618094213.5abd2fbd@localhost> (sfid-20080618_101555_136851_7E33BCBE)
+Received: from yw-out-2324.google.com ([74.125.46.31]:56249 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751535AbYFIQ3b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jun 2008 12:29:31 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so1364164ywe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 09:29:23 -0700 (PDT)
+Subject: Re: [PATCH 2/7] mac80211: replace ieee80211_get_morefrag with
+	ieee80211_has_morefrags
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1212997132.698.53.camel@johannes.berg>
+References: <1212774671.6340.76.camel@brick>
+	 (sfid-20080606_195947_229598_F1790495)  <1212997132.698.53.camel@johannes.berg>
+Content-Type: text/plain; charset=utf-8
+Date: Mon, 09 Jun 2008 09:29:20 -0700
+Message-Id: <1213028961.5974.18.camel@brick> (sfid-20080609_182934_564548_89246581)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Mon, 2008-06-09 at 09:38 +0200, Johannes Berg wrote:
+> > -	if (ieee80211_get_morefrag(hdr))
+> > +	if (ieee80211_has_morefrags(hdr->frame_control))
+>=20
+> looks fine to me, though I wonder if we should have
+>=20
+> ieee80211_has_morefrags(struct 80211hdr)
+> and
+> __ieee80211_has_morefrags(__le16 fc)
+>=20
+> or something with variants of the functions that do the ->frame_contr=
+ol?
 
-I downloaded compat-wireless-2008-06-18, built it, loaded cfg80211.ko,
-mac80211.ko, iwl3945.ko, associated to an ap, started "tcpdump -i wlan0
--n" and the machine mostly freezed.
+I considered that, but thought it was a small benefit for doubling the
+number of helpers.
 
-Mostly means keyboard does not work, no disk-access, no network but
-mouse still works.
+I chose the __le16 variant as there is some driver code that checks the=
+se
+values in driver-specific structures, so I just left it up to the calle=
+r
+to dereference whatever structure the frame control is held in.
 
-This is reproducable, freeze happens instantly after starting tcpdump
-(if a ping runs while I start tcpdump I see one Packet in the output of
-tcpdump, then machine is frozen).
+But if both sets are wanted, I would suggest:
 
-I've had that with some older versions of compat-wireless also.
+=EF=BB=BFieee80211_fc_has_morefrags(__le16 fc);
 
-I've a Thinkpad Z61m.
+ieee80211_has_morefrags(struct ieee80211 *hdr)
+{
+	return ieee80211_fc_has_morefrags(hdr->frame_control);
+}
 
--- 
-MfG,
+Do you think I should add the struct helper(s)?
 
-Michael Leun
+Harvey
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
