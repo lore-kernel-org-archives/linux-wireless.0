@@ -1,41 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43045 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757918AbYFNA31 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58097 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756582AbYFIJQk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 20:29:27 -0400
-Date: Fri, 13 Jun 2008 17:27:22 -0700
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	linux-next@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ANNOUNCE] linux-staging tree created
-Message-ID: <20080614002722.GC25585@kroah.com> (sfid-20080614_022934_219005_BA521C51)
-References: <20080610190540.GA25066@kroah.com> <43e72e890806130714k535b041evaf750209ea492c47@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890806130714k535b041evaf750209ea492c47@mail.gmail.com>
+	Mon, 9 Jun 2008 05:16:40 -0400
+Subject: Re: [PATCH 3/7] mac80211: add utility function to get header length
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1212774672.6340.77.camel@brick> (sfid-20080606_195947_688739_5CB4541A)
+References: <1212774672.6340.77.camel@brick>
+	 (sfid-20080606_195947_688739_5CB4541A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-b5TqhNY+4XwPZmlEm8H2"
+Date: Mon, 09 Jun 2008 11:16:04 +0200
+Message-Id: <1213002964.698.67.camel@johannes.berg> (sfid-20080609_111642_741145_B7BE5266)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 13, 2008 at 07:14:32AM -0700, Luis R. Rodriguez wrote:
-> This is great. To let this be useful for wireless we'll need
-> wireless-testing.git merged as we rely on it for the latest and
-> greatest. Is this a possibility?
 
-Hm, why?  Is it really needed for you to have this pulled in?  What is
-keeping these drivers from being added to the -next tree today?
+--=-b5TqhNY+4XwPZmlEm8H2
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> We have a few drivers which are not yet ready for
-> wireless-testing.git. Airgo is one.
 
-If you have individual drivers, I'd be glad to take them into the tree
-if you think it will help out.  Just send me a patch that can build
-properly.
+>  /**
+> + * ieee80211_hdrlen - get header length in bytes from frame control
+> + * @fc: frame control field in little-endian format
+> + */
+> +unsigned int ieee80211_hdrlen(__le16 fc);
+> +
 
-thanks,
+> +EXPORT_SYMBOL(ieee80211_hdrlen);
 
-greg k-h
+Do we really need to export that?
+
+johannes
+
+--=-b5TqhNY+4XwPZmlEm8H2
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJITPTQAAoJEKVg1VMiehFYwnwP/A98cxkVF2U0fshrEXbvkMss
+crnjYkLg7/P19wXDsWwr3d2PqbIuCGu9C73QHbdOdZV/Dp1dfhb+3pBk71d2pOK0
+T5U/18yE/kptJi/foanX/b0ewV5nNY96xOXRkzhZdksBuo6IOnM6itwAcxSWqdV6
+xvdmkwJJOw144xrC6zn9mRX2wc8cJWX5BAna/8UYBwIBrTkYiYYDEt9BK0NhKamG
+9+mSHJqVOC7Dz+9i+7LGWtFmGIUsd1tcih4clJ6nMxmlRNt2S5cYSq+uV94NwdFE
+7QpTcEh/6hApshv+2sd0uH4LhHSWIDHh6cPrjWxPfxGUcBpfGTrdLXHvLnql41bN
+xCAIGA2ogLXHLfaq+vIJnryTypCttMoS+En94HZ8IXSsvDbE/ZPHqYcMJl8Koazn
+ESp6rJofCdlaGStw+Ffb58lMDz/dj3UWI21sz/eJubno7sOD/sGMLKqp0YMPUxgl
+o20uaBvL0Z974PklQIQ0jCkYODw714LGGks89eIeaJE7GXcgQdNcxjJcfUQ1GJp4
+aSIebZ5wi8JJixhhqP8pXBCJT8EGqrVXOABFVIl5bOYulbmwruSUqCqiedFdyfJ8
+z02YyP2ljTpJkchTyEjQIykGlEPsAVnuZ5rBtNdVCxCR5A6i+CymfVCioag5qgS1
+MmvnpwCLB755vvsFk887
+=BMSl
+-----END PGP SIGNATURE-----
+
+--=-b5TqhNY+4XwPZmlEm8H2--
+
