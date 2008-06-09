@@ -1,84 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.245]:24899 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751111AbYFKEg4 (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.231]:44397 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753691AbYFIUAI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 00:36:56 -0400
-Received: by an-out-0708.google.com with SMTP id d40so687185and.103
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2008 21:36:55 -0700 (PDT)
-Message-ID: <43e72e890806102136jb8e695fla98a8594dde14396@mail.gmail.com> (sfid-20080611_063659_393969_39F06217)
-Date: Tue, 10 Jun 2008 21:36:55 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+	Mon, 9 Jun 2008 16:00:08 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so490651rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 13:00:05 -0700 (PDT)
+Message-ID: <c85cb4470806091300p61fc5c94l48a9667e1b6ff4f@mail.gmail.com> (sfid-20080609_220013_159081_C88909FD)
+Date: Mon, 9 Jun 2008 23:00:05 +0300
+From: "Ron Rindjunsky" <rindjon@googlemail.com>
 To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [compat-masters] Backported MQ requirement on 802.11n for older kernels
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	compat-masters@lists.madwifi.org,
-	"Tim Gardner" <tim.gardner@canonical.com>,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
-In-Reply-To: <43e72e890806102132q1aaba42ehd76bdd30b8d4080a@mail.gmail.com>
+Subject: Re: CONFIG_IWL4965_HT=n in linux-next
+Cc: "Andrew Morton" <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240806090309y3fa65849l450df776b454f298@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890806080855p284f85brd0ff1f1dfce96bf8@mail.gmail.com>
-	 <c85cb4470806090053l5b763a23j43bbf0c87f594b0d@mail.gmail.com>
-	 <1213001797.698.57.camel@johannes.berg>
-	 <43e72e890806090201q55bff8e3m694121ebd4befee6@mail.gmail.com>
-	 <43e72e890806090325y5a1aebadq68204695044f4b6f@mail.gmail.com>
-	 <1ba2fa240806101657w14599f30x67f58acbc7fe9e80@mail.gmail.com>
-	 <43e72e890806102132q1aaba42ehd76bdd30b8d4080a@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080609015623.6bbc9d88.akpm@linux-foundation.org>
+	 <1ba2fa240806090220y4a21d3d2k84143e2a4ee0cb1a@mail.gmail.com>
+	 <20080609022341.16060b71.akpm@linux-foundation.org>
+	 <1ba2fa240806090309y3fa65849l450df776b454f298@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 10, 2008 at 9:32 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Tue, Jun 10, 2008 at 4:57 PM, Tomas Winkler <tomasw@gmail.com> wrote:
->> On Mon, Jun 9, 2008 at 1:25 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>> On Mon, Jun 9, 2008 at 2:01 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>>> On Mon, Jun 9, 2008 at 1:56 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->>>>> On Mon, 2008-06-09 at 10:53 +0300, Ron Rindjunsky wrote:
->>>>>> >
->>>>>> > I just finished trying to backport CONFIG_NETDEVICES_MULTIQUEUE
->>>>>> > requirement for 802.11n to older kernels by relying on the old
->>>>>> > internal mac80211 hacked up MQ support. I've tested the build on
->>>>>> > 2.6.22, 2.6.23, and 2.6.24. Let me know if you get to test this,
->>>>>> > particularly iwl4965 using 11n on 2.6.22.
->>>>>> >
->>>>>>
->>>>>> in config.mk you put MAC80211_QOS=m, and i guess that the intention was to put
->>>>>> CONFIG_MAC80211_QOS=m
->>>>>> if this is the case then the compilation fails
->>>>>
->>>>> It should be "y"
->>>>>
->>>>> johannes
->>>>>
->>>>
->>>> Danke
->>>
->>> OK found some more issues. v4.2 pushed out and new tarball
->>> regenerated. This has been tested by Intel on 802.11n on iwl4965.
->>
->> I couldn't  make wme.c compiled for kernels > 22 unless I've added the
->> else statement  bellow into confg.mk
->> You've reported that it worked for you so what did I wrong?
->>
->> ifeq ($(CONFIG_NETDEVICES_MULTIQUEUE),)
->> $(warning "WARNING: You are running a kernel >= 2.6.23, you should
->> enable CONFIG_NETDEVICES_MULTIQUEUE for 802.11n support")
->> else
->> CONFIG_MAC80211_QOS=y
+> >> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c: In function 'rs_move_siso_to_other':
+> >> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1439: error: 'struct iwl_priv' has no member named 'current_ht_config'
+> >> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1443: error: 'struct iwl_priv' has no member named 'current_ht_config'
+> >> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c: In function 'rs_move_mimo_to_other':
+> >> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1530: error: 'struct iwl_priv' has no member named 'current_ht_config'
+> >> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1534: error: 'struct iwl_priv' has no member named 'current_ht_config'
+> >>
+> >> It's a known issue.
+> >
+> > Sob.  Well please fix it urgently!  Poeple are trying to get work done
+> > on top of linux-next.
+> >
+> I thought his is a development branch, everybody is on the edge today :)
 >
-> Well this is forcing this option on kernels where it probably was
-> available. I don't recall where we added this but I was relying on
-> your .config. We forced this for older kernels as we are providing the
-> infrastructure within the code but for newer kernels you need MQ
-> support and NET_SCHED. If we force enable it and if those options are
-> not enabled it'll fail. This is why we have this big fat warning if MQ
-> is detected as disabled for >= 2.6.23.
+> >> we are about to remove this conditional. Will
+> >> happen till EOW.
+> >
+> >
+> > I hacked around it:
+> Why is not good just make it HT=y. Or you need it fixed for this
+> random config files regression tests
+> Anyway, if it's so urgent it will be done till EOD  (TMZ:GMT+2), hope
+> it's good enough,
+> Tomas
 >
-> Let me know what you think.
 
-OK I guess we should just enable it if MQ is enabled, point taken.
-Committed and pushed, thanks.
-
-  Luis
+a patch removing this config has been issued (iwlwifi: removing
+IWL4965_HT config)
+Ron
