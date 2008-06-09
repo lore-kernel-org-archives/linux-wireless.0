@@ -1,35 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:45681 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754581AbYFNJwQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jun 2008 05:52:16 -0400
-Date: Sat, 14 Jun 2008 12:51:30 +0300
-From: Jouni Malinen <j@w1.fi>
+Received: from wf-out-1314.google.com ([209.85.200.172]:13312 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753340AbYFIT2f (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jun 2008 15:28:35 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2230439wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 12:28:35 -0700 (PDT)
+Subject: [PATCHv2 7/8] mac80211: wme.c use new helpers
+From: Harvey Harrison <harvey.harrison@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Maciek Kaliszewski <mkalkal@interia.pl>,
-	linux-wireless@vger.kernel.org
-Subject: Re: iwl3945 and WPA
-Message-ID: <20080614095130.GG5062@jm.kir.nu> (sfid-20080614_115221_356900_0F9DA730)
-References: <4852658A.4040402@interia.pl> <20080613132317.GB5333@tuxdriver.com> <1ba2fa240806130637u1f4b485dked28ce04ff52a9b5@mail.gmail.com> <48527D72.4070509@interia.pl> <1213375014.29669.36.camel@dv> <4852D6EB.3020304@interia.pl> <1213391287.22425.31.camel@dv> <4852F389.1070506@interia.pl> <20080614093851.GF5062@jm.kir.nu> <1213436523.3860.44.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1213436523.3860.44.camel@johannes.berg>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 09 Jun 2008 12:28:23 -0700
+Message-Id: <1213039703.5974.72.camel@brick> (sfid-20080609_212839_602294_89533935)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 14, 2008 at 11:42:03AM +0200, Johannes Berg wrote:
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ net/mac80211/wme.c |   18 +++++-------------
+ 1 files changed, 5 insertions(+), 13 deletions(-)
 
-> Yeah, it should be in there. Building a 64-bit wpa supplicant is quite
-> hard unless you have all 64-bit libs already, so maybe it's easier to
-> apply Dave's patches.
-
-Yes, I know.. I did it once on PS3 and it took some time figuring out
-which packages I need to install to get proper 64-bit libraries and
-compiler available. It didn't help that that was the first time I used
-the particular distro, but anyway, it is doable if one does not want to
-update the kernel. I hope that the patches go in soon, though, since
-neither patching a kernel or building 64-bit user space from scratch is
-something I would consider a good end user requirement.. ;-)
-
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 14a9ff1..d8c2f96 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -105,11 +105,8 @@ static int classify80211(struct sk_buff *skb, struct Qdisc *qd)
+ {
+ 	struct ieee80211_local *local = wdev_priv(qd->dev->ieee80211_ptr);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	unsigned short fc = le16_to_cpu(hdr->frame_control);
+-	int qos;
+ 
+-	/* see if frame is data or non data frame */
+-	if (unlikely((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)) {
++	if (!ieee80211_is_data(hdr->frame_control)) {
+ 		/* management frames go on AC_VO queue, but are sent
+ 		* without QoS control fields */
+ 		return 0;
+@@ -119,10 +116,7 @@ static int classify80211(struct sk_buff *skb, struct Qdisc *qd)
+ 		/* use AC from radiotap */
+ 	}
+ 
+-	/* is this a QoS frame? */
+-	qos = fc & IEEE80211_STYPE_QOS_DATA;
+-
+-	if (!qos) {
++	if (!ieee80211_is_data_qos(hdr->frame_control)) {
+ 		skb->priority = 0; /* required for correct WPA/11i MIC */
+ 		return ieee802_1d_to_ac[skb->priority];
+ 	}
+@@ -151,7 +145,6 @@ static int wme_qdiscop_enqueue(struct sk_buff *skb, struct Qdisc* qd)
+ 	struct ieee80211_sched_data *q = qdisc_priv(qd);
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	unsigned short fc = le16_to_cpu(hdr->frame_control);
+ 	struct Qdisc *qdisc;
+ 	struct sta_info *sta;
+ 	int err, queue;
+@@ -185,16 +178,15 @@ static int wme_qdiscop_enqueue(struct sk_buff *skb, struct Qdisc* qd)
+ 
+ 	/* now we know the 1d priority, fill in the QoS header if there is one
+ 	 */
+-	if (WLAN_FC_IS_QOS_DATA(fc)) {
+-		u8 *p = skb->data + ieee80211_get_hdrlen(fc) - 2;
++	if (ieee80211_is_data_qos(hdr->frame_control)) {
++		u8 *p = ieee80211_get_qos_ctl(hdr);
+ 		u8 ack_policy = 0;
+ 		tid = skb->priority & QOS_CONTROL_TAG1D_MASK;
+ 		if (local->wifi_wme_noack_test)
+ 			ack_policy |= QOS_CONTROL_ACK_POLICY_NOACK <<
+ 					QOS_CONTROL_ACK_POLICY_SHIFT;
+ 		/* qos header is 2 bytes, second reserved */
+-		*p = ack_policy | tid;
+-		p++;
++		*p++ = ack_policy | tid;
+ 		*p = 0;
+ 
+ 		rcu_read_lock();
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.5.6.rc2.261.ga8fbe
+
+
