@@ -1,77 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57161 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753704AbYFLTC3 (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.31]:34824 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751323AbYFIRnl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 15:02:29 -0400
-Subject: Re: [RFC] Do not activate promiscuous mode on wlan interfaces for
-	bridging.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, shemminger@linux-foundation.org,
-	j@w1.fi, bridge@linux-foundation.org,
-	Linux Netdev List <netdev@vger.kernel.org>
-In-Reply-To: <1213297144.3730.35.camel@johannes.berg> (sfid-20080612_210012_582330_752DF319)
-References: <1213232760.6645.24.camel@localhost>
-	 (sfid-20080612_030607_332834_1EFDE126)  <1213255570.3871.8.camel@johannes.berg>
-	 <1213294793.6615.16.camel@localhost>
-	 (sfid-20080612_202000_504292_98E93460)  <1213294852.3730.31.camel@johannes.berg>
-	 <1213295643.6615.20.camel@localhost>
-	 (sfid-20080612_203408_119945_EA437275)  <1213296250.3730.33.camel@johannes.berg>
-	 <1213296815.6615.24.camel@localhost>
-	 (sfid-20080612_205338_785787_5D25D535)  <1213297144.3730.35.camel@johannes.berg>
-	 (sfid-20080612_210012_582330_752DF319)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PZ5tEEvCAOr5Or1J9bNu"
-Date: Thu, 12 Jun 2008 21:01:24 +0200
-Message-Id: <1213297284.3730.37.camel@johannes.berg> (sfid-20080612_210233_778350_78534856)
+	Mon, 9 Jun 2008 13:43:41 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so1383832ywe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 10:43:35 -0700 (PDT)
+Subject: Re: [PATCH 1/7] mac80211: add helpers for frame control testing
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1213032085.22220.1.camel@johannes.berg>
+References: <1212774671.6340.75.camel@brick>
+	 (sfid-20080606_195944_782545_6A2B1449)  <1212997265.698.55.camel@johannes.berg>
+	 <1213029086.5974.21.camel@brick>
+	 (sfid-20080609_183129_796413_B211C17A)  <1213032085.22220.1.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 09 Jun 2008 10:43:32 -0700
+Message-Id: <1213033412.5974.28.camel@brick> (sfid-20080609_194346_304557_A531E565)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2008-06-09 at 19:21 +0200, Johannes Berg wrote:
+> On Mon, 2008-06-09 at 09:31 -0700, Harvey Harrison wrote:
+> > 
+> > As this helper only checks for the one bit being set, I chose _has_.
+> 
+> Hmm. As far as I can tell, it checks that the frame is a QoS controlled
+> data frame. Hence, it explicitly checks that it _is_ a data frame and
+> _has_ the QoS bit, but in 802.11 lingo I think that means it _is_ a
+> "data+qos" frame.
+> 
 
---=-PZ5tEEvCAOr5Or1J9bNu
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Well, it's not a big deal...what name do you want and I'll change it.
 
-On Thu, 2008-06-12 at 20:59 +0200, Johannes Berg wrote:
-> On Thu, 2008-06-12 at 11:53 -0700, Luis Carlos Cobo wrote:
-> > On Thu, 2008-06-12 at 20:44 +0200, Johannes Berg wrote:
-> > > But in response to what mac80211 command are you sending the promisc
-> > > mode to the hw?
-> >=20
-> > In the function associated to .configure_filter (struct ieee80211_ops)
-> > in the driver, when (*new_flags & (FIF_PROMISC_IN_BSS))
->=20
-> But it is a "real promisc" mode not restricted to the BSS? Maybe the
-> solution is to just not promote promisc-in-bss to real-promisc when AP
-> mode is active.
-
-In fact, if it stops the firmware from ACKing packets you want to never
-enable it if you have any interfaces at all.
-
-johannes
-
---=-PZ5tEEvCAOr5Or1J9bNu
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIUXKAAAoJEKVg1VMiehFYUsMP/0EWezsJofDRGIOM8D5KyAci
-Nca1KZv/tCe7rSU5U5u/rjPSyjYLikJYPmuD3Y00fM2UqVB5MgK9tROkZi//tsAI
-fbebp6eT2zHDu1FLGslvs7oFUPfl7gqkvEelcd+9k1neqI7FEW33yIPHrLSSipGI
-GSHGaldEDlAAsBCRiHzhjp6+bRnMy16IyaPZA849s3Ky8wOc5U5V/VaN+y2gI5NT
-75AZJ02NvMtDcyYX4swRw4Zu/freklNxC1h+Kmy0Tgi0hVDtiTX0kjYvoqI+B4cB
-oD2zEtkL5uO5StENQRwvFIXm4OmjhmDveY/FPqOjZB8mwcjOC2FEsrDmwgRpPILe
-gBwi7KSBr17X1vf84SQvfOobhVcM5lBUA5PomCYzCH+efmWCKBMhXX9WbADWKufB
-8ugHaisOG+SIkuFLFfVXuzuC4XSisHkdn8qx7ky4JgEhbJv6v65q14gQhCD3REcg
-Rhly2lbOyzpfWou1QKDFIOAEV+1L4sThvg6Jpwmy7UlIOAtx8+sxwrp8fUZYchmx
-1ziwdY9Vr9PYtpDNGq18w/aFbGZ7kk1F7mtMLbbbx217uceRe6CCIP10KQljCLXp
-hH5SDjtio62FfXJ9/tZeDAtGcHKDsiM2G+AflhOoi0PEQvVIh9hS4yjPn0gOib5w
-cmtpIarZQNX23o4UcwSK
-=0Wym
------END PGP SIGNATURE-----
-
---=-PZ5tEEvCAOr5Or1J9bNu--
+Harvey
 
