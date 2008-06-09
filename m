@@ -1,64 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:50254 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751461AbYF1Ur3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 16:47:29 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1KChKR-00076E-J5
-	for linux-wireless@vger.kernel.org; Sat, 28 Jun 2008 20:47:27 +0000
-Received: from cpc1-cwma5-0-0-cust137.swan.cable.ntl.com ([80.4.12.138])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 20:47:27 +0000
-Received: from sitsofe by cpc1-cwma5-0-0-cust137.swan.cable.ntl.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 20:47:27 +0000
-To: linux-wireless@vger.kernel.org
-From: Sitsofe Wheeler <sitsofe@yahoo.com>
-Subject: WARNING: at net/mac80211/rx.c:319 __ieee80211_rx_handle_packet+0x325/0x775()
-Date: Sat, 28 Jun 2008 21:47:11 +0100
-Message-ID: <4866A34F.2060708@yahoo.com> (sfid-20080628_224734_441284_D2019454)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Cc: kernel-testers@vger.kernel.org
+Received: from rv-out-0506.google.com ([209.85.198.236]:8665 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758858AbYFIKJb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jun 2008 06:09:31 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so228172rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 03:09:31 -0700 (PDT)
+Message-ID: <1ba2fa240806090309y3fa65849l450df776b454f298@mail.gmail.com> (sfid-20080609_120935_579838_21E6B28D)
+Date: Mon, 9 Jun 2008 13:09:31 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Andrew Morton" <akpm@linux-foundation.org>
+Subject: Re: CONFIG_IWL4965_HT=n in linux-next
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080609022341.16060b71.akpm@linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080609015623.6bbc9d88.akpm@linux-foundation.org>
+	 <1ba2fa240806090220y4a21d3d2k84143e2a4ee0cb1a@mail.gmail.com>
+	 <20080609022341.16060b71.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When I boot 2.6.26-rc8 on an x86_64 system I receive the following trace
-in the logs:
+On Mon, Jun 9, 2008 at 12:23 PM, Andrew Morton
+<akpm@linux-foundation.org> wrote:
+> On Mon, 9 Jun 2008 12:20:14 +0300 "Tomas Winkler" <tomasw@gmail.com> wrote:
+>
+>> On Mon, Jun 9, 2008 at 11:56 AM, Andrew Morton
+>> <akpm@linux-foundation.org> wrote:
+>> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c: In function 'rs_move_siso_to_other':
+>> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1439: error: 'struct iwl_priv' has no member named 'current_ht_config'
+>> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1443: error: 'struct iwl_priv' has no member named 'current_ht_config'
+>> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c: In function 'rs_move_mimo_to_other':
+>> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1530: error: 'struct iwl_priv' has no member named 'current_ht_config'
+>> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1534: error: 'struct iwl_priv' has no member named 'current_ht_config'
+>>
+>> It's a known issue.
+>
+> Sob.  Well please fix it urgently!  Poeple are trying to get work done
+> on top of linux-next.
+>
+I thought his is a development branch, everybody is on the edge today :)
 
-> [   72.384009] ------------[ cut here ]------------
-> [   72.384021] WARNING: at net/mac80211/rx.c:319 __ieee80211_rx_handle_packet+0x325/0x775()
-> [   72.384026] Modules linked in:
-> [   72.384033] Pid: 3780, comm: glxinfo Not tainted 2.6.26-rc8skw #3
-> [   72.384037]
-> [   72.384039] Call Trace:
-> [   72.384042]  <IRQ>  [<ffffffff8023234f>] warn_on_slowpath+0x58/0x94
-> [   72.384061]  [<ffffffff804da926>] ? _spin_unlock_irqrestore+0x38/0x47
-> [   72.384071]  [<ffffffff80237145>] ? __tasklet_schedule+0x97/0xa6
-> [   72.384080]  [<ffffffff804bfd04>] ? ieee80211_rx_irqsafe+0x63/0x6a
-> [   72.384090]  [<ffffffff80248bcd>] ? ktime_get+0x11/0x42
-> [   72.384100]  [<ffffffff80211b37>] ? native_sched_clock+0x50/0x6d
-> [   72.384109]  [<ffffffff804c0283>] __ieee80211_rx_handle_packet+0x325/0x775
-> [   72.384119]  [<ffffffff802533b3>] ? __lock_acquire+0xdb4/0xdc3
-> [   72.384128]  [<ffffffff802533b3>] ? __lock_acquire+0xdb4/0xdc3
-> [   72.384136]  [<ffffffff804c0af6>] ? __ieee80211_rx+0x63/0x538
-> [   72.384143]  [<ffffffff804c0af6>] ? __ieee80211_rx+0x63/0x538
-> [   72.384151]  [<ffffffff804c0f57>] __ieee80211_rx+0x4c4/0x538
-> [   72.384161]  [<ffffffff804b2fc6>] ieee80211_tasklet_handler+0x75/0x11b
-> [   72.384169]  [<ffffffff80236f18>] ? tasklet_action+0x44/0xdf
-> [   72.384176]  [<ffffffff80236f56>] tasklet_action+0x82/0xdf
-> [   72.384183]  [<ffffffff8023789f>] __do_softirq+0x70/0xf1
-> [   72.384191]  [<ffffffff8020c5bc>] call_softirq+0x1c/0x28
-> [   72.384200]  [<ffffffff8020e181>] do_softirq+0x39/0x8a
-> [   72.384207]  [<ffffffff802373d8>] irq_exit+0x4e/0x8f
-> [   72.384214]  [<ffffffff8020e48e>] do_IRQ+0x148/0x16a
-> [   72.384222]  [<ffffffff8020b8b6>] ret_from_intr+0x0/0xf
-> [   72.384229]  <EOI>
-> [   72.384236] ---[ end trace 4e9264cea4c3b5b9 ]---
+>> we are about to remove this conditional. Will
+>> happen till EOW.
+>
+>
+> I hacked around it:
+Why is not good just make it HT=y. Or you need it fixed for this
+random config files regression tests
+Anyway, if it's so urgent it will be done till EOD  (TMZ:GMT+2), hope
+it's good enough,
+Tomas
 
-The config I am using can be found on
-http://sucs.org/~sits/test/config-20080628.txt . I don't remember seeing
-this error in old 32 bit kernels but this the first 64 bit kernel I've
-started testing with.
-
+>
+> From: Andrew Morton <akpm@linux-foundation.org>
+>
+> Cc: "John W. Linville" <linville@tuxdriver.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+>
+>  drivers/net/wireless/iwlwifi/iwl-4965-rs.c |    5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+>
+> diff -puN drivers/net/wireless/iwlwifi/iwl-4965-rs.c~drivers-net-wireless-iwlwifi-iwl-4965-rsc-config_iwl4965_ht=n-hack drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+> --- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c~drivers-net-wireless-iwlwifi-iwl-4965-rsc-config_iwl4965_ht=n-hack
+> +++ a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+> @@ -1435,6 +1435,7 @@ static int rs_move_siso_to_other(struct
+>                        }
+>                        break;
+>                case IWL_SISO_SWITCH_GI:
+> +#ifdef CONFIG_IWL4965_HT
+>                        if (!tbl->is_fat &&
+>                                !(priv->current_ht_config.sgf &
+>                                                HT_SHORT_GI_20MHZ))
+> @@ -1443,7 +1444,7 @@ static int rs_move_siso_to_other(struct
+>                                !(priv->current_ht_config.sgf &
+>                                                HT_SHORT_GI_40MHZ))
+>                                break;
+> -
+> +#endif
+>                        IWL_DEBUG_RATE("LQ: SISO toggle SGI/NGI\n");
+>
+>                        memcpy(search_tbl, tbl, sz);
+> @@ -1526,6 +1527,7 @@ static int rs_move_mimo_to_other(struct
+>                        break;
+>
+>                case IWL_MIMO_SWITCH_GI:
+> +#ifdef CONFIG_IWL4965_HT
+>                        if (!tbl->is_fat &&
+>                                !(priv->current_ht_config.sgf &
+>                                                HT_SHORT_GI_20MHZ))
+> @@ -1533,6 +1535,7 @@ static int rs_move_mimo_to_other(struct
+>                        if (tbl->is_fat &&
+>                                !(priv->current_ht_config.sgf &
+>                                                HT_SHORT_GI_40MHZ))
+> +#endif
+>                                break;
+>
+>                        IWL_DEBUG_RATE("LQ: MIMO toggle SGI/NGI\n");
+> _
+>
+>
