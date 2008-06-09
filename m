@@ -1,47 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:57069 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751468AbYFXQ74 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 12:59:56 -0400
-Received: by yx-out-2324.google.com with SMTP id 31so548357yxl.1
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2008 09:59:55 -0700 (PDT)
-Message-ID: <1ba2fa240806240959q398c324al9d9c009c218c0489@mail.gmail.com> (sfid-20080624_190001_306215_52E9AD26)
-Date: Tue, 24 Jun 2008 19:59:54 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Kalle Valo" <kalle.valo@iki.fi>
-Subject: Re: [PATCH 4/4] mac80211: add phy information to giwname
-Cc: "Michael Buesch" <mb@bu3sch.de>, linville@tuxdriver.com,
-	johannes@sipsolutions.net, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <87vdzzdj5m.fsf@nokia.com>
+Received: from sous-sol.org ([216.99.217.87]:59004 "EHLO sous-sol.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751442AbYFIUYd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jun 2008 16:24:33 -0400
+Date: Mon, 9 Jun 2008 13:24:04 -0700
+From: Chris Wright <chrisw@sous-sol.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, stable@kernel.org
+Subject: Re: [stable] [PATCH] mac80211: send association event on IBSS
+	create
+Message-ID: <20080609202404.GN30402@sequoia.sous-sol.org> (sfid-20080609_222435_612544_3B401E85)
+References: <1212543981.4237.19.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1214303881-31525-1-git-send-email-tomas.winkler@intel.com>
-	 <1214303881-31525-4-git-send-email-tomas.winkler@intel.com>
-	 <1214303881-31525-5-git-send-email-tomas.winkler@intel.com>
-	 <200806241242.11727.mb@bu3sch.de>
-	 <1ba2fa240806240354n45c144a3n5ac8b08c7da7b7a2@mail.gmail.com>
-	 <87vdzzdj5m.fsf@nokia.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1212543981.4237.19.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 24, 2008 at 5:03 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
-> Tomas Winkler <tomasw@gmail.com> writes:
->
->>> What about b-only devices?
->>
->> See the log message...(known issue). Currently you have to loop over
->> rates to get this info. I wasn't sure if they are any b-only NICs
->> under mac80211 so I didn't run to implement it.
->
-> at76_usb will be 11b only mac80211 driver whenever we manage to
-> complete the port.
->
-> --
-> Kalle Valo
->
+* Dan Williams (dcbw@redhat.com) wrote:
+> Otherwise userspace has no idea the IBSS creation succeeded.
 
-Then pls, look at the V2 of this patch if this work for you.
-Thanks
-Tomas
+Please resend when this hits upstream, and include the upstream commit
+ID.  The easiest way to achieve this is to add "Cc: <stable@kernel.org>"
+to the commit log so it gets routed to us upon commit upstream.
+
+> Signed-off-by: Dan Williams <dcbw@redhat.com>
+> -------------
+> 
+> John, please apply to 2.6.26 and later.
+> 
+> Stable: applicable to 2.6.24 and 2.6.25 as well.  File used to be called
+> net/mac80211/ieee80211_sta.c and diff should still apply with minor
+> fuzz.
