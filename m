@@ -1,111 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n1.bullet.mail.re3.yahoo.com ([68.142.237.108]:37275 "HELO
-	n1.bullet.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751811AbYF1Kng (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:52577 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752832AbYFITj7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 06:43:36 -0400
-Message-ID: <486615D4.1020506@yahoo.it> (sfid-20080628_124340_563989_349071E7)
-Date: Sat, 28 Jun 2008 12:43:32 +0200
-From: Filippo Zangheri <filippo.zangheri@yahoo.it>
-MIME-Version: 1.0
-To: George Fong <george@lateralplains.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Problem making compat-wireless-2.6
-References: <200806281953.16371.george@lateralplains.com>
-In-Reply-To: <200806281953.16371.george@lateralplains.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 9 Jun 2008 15:39:59 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so1416913ywe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 12:39:58 -0700 (PDT)
+Subject: Re: [PATCHv2 1/8] iwlwifi: minimal compile fix in presence of new
+	mac80211 helpers
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1213039700.5974.66.camel@brick>
+References: <1213039700.5974.66.camel@brick>
+Content-Type: text/plain
+Date: Mon, 09 Jun 2008 12:39:56 -0700
+Message-Id: <1213040396.5974.74.camel@brick> (sfid-20080609_214004_181486_FFF76BBD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+This needs to be folded into the patch that adds the new mac80211
+frame control helpers.  This is the minimal fix until I finish converting
+all the user of the iwl-helpers.h
 
-On 28/06/2008 11:53, George Fong wrote:
-> Hi guys
->=20
-> Not sure if this is a bug but I have not been able to make the compat=
- wireless=20
-> drivers.
->=20
-> I am running off Fedora 9 (x86_64) with kernel 2.6.25.6-55.fc9.x86_64=
-=2E I am=20
-> interested in the iwl4965 driver.
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c    |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c |   14 ++++++--------
+ drivers/net/wireless/iwlwifi/iwl-4965.c    |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-helpers.h |   11 -----------
+ 4 files changed, 8 insertions(+), 21 deletions(-)
 
-One simple solution would be to disable the building of unneeded
-drivers by tuning your config.mk.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 0ba6889..834bf32 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -464,7 +464,7 @@ static void iwl3945_dbg_report_frame(struct iwl3945_priv *priv,
+ 		else if (ieee80211_is_probe_response(fc)) {
+ 			title = "PrbRsp";
+ 			print_dump = 1;	/* dump frame contents */
+-		} else if (ieee80211_is_beacon(fc)) {
++		} else if (ieee80211_is_beacon(header->frame_control)) {
+ 			title = "Beacon";
+ 			print_dump = 1;	/* dump frame contents */
+ 		} else if (ieee80211_is_atim(fc))
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+index d8f2b4d..fa0c8e8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+@@ -804,12 +804,12 @@ static void rs_tx_status(void *priv_rate, struct net_device *dev,
+ 	struct iwl4965_scale_tbl_info tbl_type;
+ 	struct iwl4965_scale_tbl_info *curr_tbl, *search_tbl;
+ 	u8 active_index = 0;
+-	u16 fc = le16_to_cpu(hdr->frame_control);
+ 	s32 tpt = 0;
+ 
+ 	IWL_DEBUG_RATE_LIMIT("get frame ack response, update rate scale window\n");
+ 
+-	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1))
++	if (!ieee80211_is_data(hdr->frame_control) ||
++	    is_multicast_ether_addr(hdr->addr1))
+ 		return;
+ 
+ 	/* This packet was aggregated but doesn't carry rate scale info */
+@@ -1678,7 +1678,7 @@ static void rs_rate_scale_perform(struct iwl_priv *priv,
+ 	int high_tpt = IWL_INVALID_VALUE;
+ 	u32 fail_count;
+ 	s8 scale_action = 0;
+-	u16 fc, rate_mask;
++	u16 rate_mask;
+ 	u8 update_lq = 0;
+ 	struct iwl4965_lq_sta *lq_sta;
+ 	struct iwl4965_scale_tbl_info *tbl, *tbl1;
+@@ -1695,8 +1695,7 @@ static void rs_rate_scale_perform(struct iwl_priv *priv,
+ 
+ 	IWL_DEBUG_RATE("rate scale calculate new rate for skb\n");
+ 
+-	fc = le16_to_cpu(hdr->frame_control);
+-	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1)) {
++	if (!ieee80211_is_data(hdr->frame_control) || is_multicast_ether_addr(hdr->addr1)) {
+ 		/* Send management frames and broadcast/multicast data using
+ 		 * lowest rate. */
+ 		/* TODO: this could probably be improved.. */
+@@ -2136,7 +2135,6 @@ static void rs_get_rate(void *priv_rate, struct net_device *dev,
+ 	struct ieee80211_conf *conf = &local->hw.conf;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct sta_info *sta;
+-	u16 fc;
+ 	struct iwl_priv *priv = (struct iwl_priv *)priv_rate;
+ 	struct iwl4965_lq_sta *lq_sta;
+ 
+@@ -2148,8 +2146,8 @@ static void rs_get_rate(void *priv_rate, struct net_device *dev,
+ 
+ 	/* Send management frames and broadcast/multicast data using lowest
+ 	 * rate. */
+-	fc = le16_to_cpu(hdr->frame_control);
+-	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1) ||
++	if (!ieee80211_is_data(hdr->frame_control) ||
++	    is_multicast_ether_addr(hdr->addr1) ||
+ 	    !sta || !sta->rate_ctrl_priv) {
+ 		sel->rate_idx = rate_lowest_index(local, sband, sta);
+ 		goto out;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index aee7014..3902df8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2634,7 +2634,7 @@ static void iwl4965_dbg_report_frame(struct iwl_priv *priv,
+ 		else if (ieee80211_is_probe_response(fc)) {
+ 			title = "PrbRsp";
+ 			print_dump = 1;	/* dump frame contents */
+-		} else if (ieee80211_is_beacon(fc)) {
++		} else if (ieee80211_is_beacon(header->frame_control)) {
+ 			title = "Beacon";
+ 			print_dump = 1;	/* dump frame contents */
+ 		} else if (ieee80211_is_atim(fc))
+diff --git a/drivers/net/wireless/iwlwifi/iwl-helpers.h b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+index dedefa0..0f261c6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-helpers.h
++++ b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+@@ -160,11 +160,6 @@ static inline int ieee80211_is_control(u16 fc)
+ 	return (fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_CTL;
+ }
+ 
+-static inline int ieee80211_is_data(u16 fc)
+-{
+-	return (fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA;
+-}
+-
+ static inline int ieee80211_is_back_request(u16 fc)
+ {
+ 	return ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_CTL) &&
+@@ -183,12 +178,6 @@ static inline int ieee80211_is_probe_request(u16 fc)
+ 	       ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PROBE_REQ);
+ }
+ 
+-static inline int ieee80211_is_beacon(u16 fc)
+-{
+-	return ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT) &&
+-	       ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_BEACON);
+-}
+-
+ static inline int ieee80211_is_atim(u16 fc)
+ {
+ 	return ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT) &&
+-- 
+1.5.6.rc2.261.ga8fbe
 
-I suggest you to enable only the driver that you need.
-
-Long answer, I don't know. Maybe some fix is needed to regain
-compatibility. But, again, in your situation you can (and should for
-efficienty's sake) forget about all the drivers that you don't care of.
 
 
-> Everything goes OK until we hit the compilation of part of the b43 dr=
-iver.=20
-> This is what I get:
->=20
-> /home/george/Download/compat-wireless-2008-06-28/drivers/net/wireless=
-/b43/rfkill.c:=20
-> In function =E2=80=98b43_rfkill_soft_toggle=E2=80=99:
-> /home/george/Download/compat-wireless-2008-06-28/drivers/net/wireless=
-/b43/rfkill.c:91:=20
-> error: =E2=80=98RFKILL_STATE_UNBLOCKED=E2=80=99 undeclared (first use=
- in this function)
-> /home/george/Download/compat-wireless-2008-06-28/drivers/net/wireless=
-/b43/rfkill.c:91:=20
-> error: (Each undeclared identifier is reported only once
-> /home/george/Download/compat-wireless-2008-06-28/drivers/net/wireless=
-/b43/rfkill.c:91:=20
-> error: for each function it appears in.)
-> /home/george/Download/compat-wireless-2008-06-28/drivers/net/wireless=
-/b43/rfkill.c:101:=20
-> error: =E2=80=98RFKILL_STATE_SOFT_BLOCKED=E2=80=99 undeclared (first =
-use in this function)
-> make[4]: ***=20
-> [/home/george/Download/compat-wireless-2008-06-28/drivers/net/wireles=
-s/b43/rfkill.o]=20
-> Error 1
-> make[3]: ***=20
-> [/home/george/Download/compat-wireless-2008-06-28/drivers/net/wireles=
-s/b43]=20
-> Error 2
-> make[2]: ***=20
-> [/home/george/Download/compat-wireless-2008-06-28/drivers/net/wireles=
-s] Error=20
-> 2
-> make[1]: *** [_module_/home/george/Download/compat-wireless-2008-06-2=
-8] Error=20
-> 2
-> make[1]: Leaving directory `/usr/src/kernels/2.6.25.6-55.fc9.x86_64'
-> make: *** [modules] Error 2
->=20
-> It is entirely likely that I am doing something wrong but I don't kno=
-w what.
->=20
-> Hope this is all OK to report.
->=20
-> Cheers
-> G,
->=20
->=20
-
-Best regards.
-
-- --
-=46ilippo Zangheri
-
-GPG key ID: 0x6C1F2F2F
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFIZhXUjzxMG2wfLy8RArPXAKCE4whKT29GICQKZh92oXPGv3CVcACfZNPi
-tdbmbFS9HLOuyYzo5jdvg2M=3D
-=3De3gp
------END PGP SIGNATURE-----
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
