@@ -1,85 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:36172 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756351AbYFWUXQ (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:13312 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753893AbYFIT2b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2008 16:23:16 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Thomas Renninger <trenn@suse.de>,
-	Fabien Crespel <fabien@crespel.net>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: [PATCH 01/13] rfkill: clarify meaning of rfkill states
-Date: Mon, 23 Jun 2008 17:22:56 -0300
-Message-Id: <1214252588-30723-2-git-send-email-hmh@hmh.eng.br> (sfid-20080623_222326_499574_8544BCA0)
-In-Reply-To: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
-References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
+	Mon, 9 Jun 2008 15:28:31 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2230439wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 12:28:31 -0700 (PDT)
+Subject: [PATCHv2 4/8] mac80211: make ieee80211_get_hdrlen_from_skb return
+	unsigned
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 09 Jun 2008 12:28:21 -0700
+Message-Id: <1213039701.5974.69.camel@brick> (sfid-20080609_212835_549153_C2DC6C69)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rfkill really should have been named rfswitch.  As it is, one can get
-confused whether RFKILL_STATE_ON means the KILL switch is on (and
-therefore, the radio is being *blocked* from operating), or whether it
-means the RADIO rf output is on.
+Many callers already expect it to.
 
-Clearly state that RFKILL_STATE_ON means the radio is *unblocked* from
-operating (i.e. there is no rf killing going on).
-
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: Dmitry Torokhov <dtor@mail.ru>
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
- Documentation/rfkill.txt |    7 +++++++
- include/linux/rfkill.h   |    6 +++---
- 2 files changed, 10 insertions(+), 3 deletions(-)
+ include/net/mac80211.h |    2 +-
+ net/mac80211/util.c    |    8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
-index a83ff23..ec75d6d 100644
---- a/Documentation/rfkill.txt
-+++ b/Documentation/rfkill.txt
-@@ -8,6 +8,13 @@ rfkill - RF switch subsystem support
- ===============================================================================
- 1: Implementation details
- 
-+The rfkill switch subsystem exists to add a generic interface to circuitry that
-+can enable or disable the RF output of a radio *transmitter* of any type.
-+
-+When a rfkill switch is in the RFKILL_STATE_ON, the radio transmitter is
-+*enabled*.  When the rfkill switch is in the RFKILL_STATE_OFF, the radio
-+transmitter is *disabled*.
-+
- The rfkill switch subsystem offers support for keys often found on laptops
- to enable wireless devices like WiFi and Bluetooth.
- 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index e3ab21d..ca89ae1 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -44,8 +44,8 @@ enum rfkill_type {
- };
- 
- enum rfkill_state {
--	RFKILL_STATE_OFF	= 0,
--	RFKILL_STATE_ON		= 1,
-+	RFKILL_STATE_OFF	= 0,	/* Radio output blocked */
-+	RFKILL_STATE_ON		= 1,	/* Radio output active */
- };
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 53c3b5e..7ab4ff6 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1535,7 +1535,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+  *
+  * @skb: the frame
+  */
+-int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb);
++unsigned int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb);
  
  /**
-@@ -53,7 +53,7 @@ enum rfkill_state {
-  * @name: Name of the switch.
-  * @type: Radio type which the button controls, the value stored
-  *	here should be a value from enum rfkill_type.
-- * @state: State of the switch (on/off).
-+ * @state: State of the switch, "ON" means radio can operate.
-  * @user_claim_unsupported: Whether the hardware supports exclusive
-  *	RF-kill control by userspace. Set this before registering.
-  * @user_claim: Set when the switch is controlled exlusively by userspace.
+  * ieee80211_get_hdrlen - get header length from frame control
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 722a4eb..9f365a3 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -165,14 +165,14 @@ out:
+ }
+ EXPORT_SYMBOL(ieee80211_hdrlen);
+ 
+-int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
++unsigned int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
+ {
+-	const struct ieee80211_hdr *hdr = (const struct ieee80211_hdr *) skb->data;
+-	int hdrlen;
++	const struct ieee80211_hdr *hdr = (const struct ieee80211_hdr *)skb->data;
++	unsigned int hdrlen;
+ 
+ 	if (unlikely(skb->len < 10))
+ 		return 0;
+-	hdrlen = ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_control));
++	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	if (unlikely(hdrlen > skb->len))
+ 		return 0;
+ 	return hdrlen;
 -- 
-1.5.5.4
+1.5.6.rc2.261.ga8fbe
+
 
