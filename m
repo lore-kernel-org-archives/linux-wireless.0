@@ -1,128 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:25254 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752485AbYFZW1E (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:49831 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751069AbYFIJXo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 18:27:04 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so57596nfc.21
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2008 15:27:01 -0700 (PDT)
-Message-ID: <f6ca9fed0806261527q75df34d4scbe36e2f63cec275@mail.gmail.com> (sfid-20080627_002713_746154_81977B55)
-Date: Fri, 27 Jun 2008 00:27:00 +0200
-From: drago01 <drago01@gmail.com>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Subject: [PATCH v2] iwl3945: fix up rfkill kconfig and input
-Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>, randy.dunlap@oracle.com,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Abhijeet Kolekar" <abhijeet.kolekar@intel.com>
-In-Reply-To: <200806270015.00301.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0806261455j17848d17pa011ae47246a32@mail.gmail.com>
-	 <200806270015.00301.IvDoorn@gmail.com>
+	Mon, 9 Jun 2008 05:23:44 -0400
+Date: Mon, 9 Jun 2008 02:23:41 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: CONFIG_IWL4965_HT=n in linux-next
+Message-Id: <20080609022341.16060b71.akpm@linux-foundation.org> (sfid-20080609_112347_083546_09B48E0D)
+In-Reply-To: <1ba2fa240806090220y4a21d3d2k84143e2a4ee0cb1a@mail.gmail.com>
+References: <20080609015623.6bbc9d88.akpm@linux-foundation.org>
+	<1ba2fa240806090220y4a21d3d2k84143e2a4ee0cb1a@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 27, 2008 at 12:15 AM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
->> diff --git a/drivers/net/wireless/iwlwifi/Kconfig
->> b/drivers/net/wireless/iwlwifi/Kconfig
->> index a382c00..3148a28 100644
->> --- a/drivers/net/wireless/iwlwifi/Kconfig
->> +++ b/drivers/net/wireless/iwlwifi/Kconfig
->> @@ -105,6 +105,7 @@ config IWL3945
->>       select IWLWIFI
->>       select MAC80211_LEDS if IWL3945_LEDS
->>       select LEDS_CLASS if IWL3945_LEDS
->> +     select RFKILL_INPUT if (IWL3945_RFKILL && INPUT)
->
-> That is a big no. Drivers should only use CONFIG_RFKILL and in no way
-> depend or select RFKILL_INPUT. RFKILL_INPUT is a decision for the user
-> and doesn't change anything for drivers.
+On Mon, 9 Jun 2008 12:20:14 +0300 "Tomas Winkler" <tomasw@gmail.com> wrote:
 
-v2 is attached it removed the CONFIG_RFKILL_INPUT stuff and made it
-depend on CONFIG_RFKILL.
-That means that the 4965 patch needs to be updated/fixed too.
+> On Mon, Jun 9, 2008 at 11:56 AM, Andrew Morton
+> <akpm@linux-foundation.org> wrote:
+> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c: In function 'rs_move_siso_to_other':
+> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1439: error: 'struct iwl_priv' has no member named 'current_ht_config'
+> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1443: error: 'struct iwl_priv' has no member named 'current_ht_config'
+> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c: In function 'rs_move_mimo_to_other':
+> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1530: error: 'struct iwl_priv' has no member named 'current_ht_config'
+> > drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1534: error: 'struct iwl_priv' has no member named 'current_ht_config'
+> 
+> It's a known issue.
 
-------
-This patch fixes the iwl3945 driver to depend on CONFIG_RFKILL and
-CONFIG_INPUT when RFKILL is used.
-It removes the dependency on CONFIG_IWLCORE and frees the input
-device on exit.
+Sob.  Well please fix it urgently!  Poeple are trying to get work done
+on top of linux-next.
 
-Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+> we are about to remove this conditional. Will
+> happen till EOW.
 
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig
-b/drivers/net/wireless/iwlwifi/Kconfig
-index a382c00..c7fd8aa 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -105,6 +105,8 @@ config IWL3945
- 	select IWLWIFI
- 	select MAC80211_LEDS if IWL3945_LEDS
- 	select LEDS_CLASS if IWL3945_LEDS
-+	select RFKILL if IWL3945_RFKILL
-+	select INPUT if IWL3945_RFKILL
- 	---help---
- 	  Select to build the driver supporting the:
 
-@@ -127,6 +129,10 @@ config IWL3945
- 	  say M here and read <file:Documentation/kbuild/modules.txt>.  The
- 	  module will be called iwl3945.ko.
+I hacked around it:
 
-+config IWL3945_RFKILL
-+	boolean "Enable RF kill support in iwl3945 drivers"
-+	depends on IWL3945
-+
- config IWL3945_SPECTRUM_MEASUREMENT
- 	bool "Enable Spectrum Measurement in iwl3945 drivers"
- 	depends on IWL3945
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h
-b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index a774978..4df42ad 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -690,7 +690,7 @@ enum {
 
- #endif
+From: Andrew Morton <akpm@linux-foundation.org>
 
--#ifdef CONFIG_IWLWIFI_RFKILL
-+#ifdef CONFIG_IWL3945_RFKILL
- struct iwl3945_priv;
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
- struct iwl3945_rfkill_mngr {
-@@ -800,7 +800,7 @@ struct iwl3945_priv {
- 	struct iwl3945_init_alive_resp card_alive_init;
- 	struct iwl3945_alive_resp card_alive;
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
--#ifdef CONFIG_IWLWIFI_RFKILL
-+#ifdef CONFIG_IWL3945_RFKILL
- 	struct iwl3945_rfkill_mngr rfkill_mngr;
- #endif
+diff -puN drivers/net/wireless/iwlwifi/iwl-4965-rs.c~drivers-net-wireless-iwlwifi-iwl-4965-rsc-config_iwl4965_ht=n-hack drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c~drivers-net-wireless-iwlwifi-iwl-4965-rsc-config_iwl4965_ht=n-hack
++++ a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+@@ -1435,6 +1435,7 @@ static int rs_move_siso_to_other(struct 
+ 			}
+ 			break;
+ 		case IWL_SISO_SWITCH_GI:
++#ifdef CONFIG_IWL4965_HT
+ 			if (!tbl->is_fat &&
+ 				!(priv->current_ht_config.sgf &
+ 						HT_SHORT_GI_20MHZ))
+@@ -1443,7 +1444,7 @@ static int rs_move_siso_to_other(struct 
+ 				!(priv->current_ht_config.sgf &
+ 						HT_SHORT_GI_40MHZ))
+ 				break;
+-
++#endif
+ 			IWL_DEBUG_RATE("LQ: SISO toggle SGI/NGI\n");
+ 
+ 			memcpy(search_tbl, tbl, sz);
+@@ -1526,6 +1527,7 @@ static int rs_move_mimo_to_other(struct 
+ 			break;
+ 
+ 		case IWL_MIMO_SWITCH_GI:
++#ifdef CONFIG_IWL4965_HT
+ 			if (!tbl->is_fat &&
+ 				!(priv->current_ht_config.sgf &
+ 						HT_SHORT_GI_20MHZ))
+@@ -1533,6 +1535,7 @@ static int rs_move_mimo_to_other(struct 
+ 			if (tbl->is_fat &&
+ 				!(priv->current_ht_config.sgf &
+ 						HT_SHORT_GI_40MHZ))
++#endif
+ 				break;
+ 
+ 			IWL_DEBUG_RATE("LQ: MIMO toggle SGI/NGI\n");
+_
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 43cb8ff..e12baaa 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -8282,7 +8282,7 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
- #endif /* CONFIG_PM */
-
- /*************** RFKILL FUNCTIONS **********/
--#ifdef CONFIG_IWLWIFI_RFKILL
-+#ifdef CONFIG_IWL3945_RFKILL
- /* software rf-kill from user */
- static int iwl3945_rfkill_soft_rf_kill(void *data, enum rfkill_state state)
- {
-@@ -8391,8 +8391,11 @@ error:
- void iwl3945_rfkill_unregister(struct iwl3945_priv *priv)
- {
-
--	if (priv->rfkill_mngr.input_dev)
-+	if (priv->rfkill_mngr.input_dev) {
- 		input_unregister_device(priv->rfkill_mngr.input_dev);
-+		input_free_device(priv->rfkill_mngr.input_dev);
-+	}
-+
-
- 	if (priv->rfkill_mngr.rfkill)
- 		rfkill_unregister(priv->rfkill_mngr.rfkill);
