@@ -1,129 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:23615 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758476AbYFOQxd (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.175]:11453 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752797AbYFIRyX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jun 2008 12:53:33 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so4022168waf.23
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Jun 2008 09:53:33 -0700 (PDT)
-Message-ID: <1ba2fa240806150953t4b61b213y3488940ef05b762e@mail.gmail.com> (sfid-20080615_185357_450305_0D547871)
-Date: Sun, 15 Jun 2008 19:53:33 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Joonwoo Park" <joonwpark81@gmail.com>
-Subject: Re: [PATCH] iwlwifi: fix oops on wep key insertion
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Dan Williams" <dcbw@redhat.com>, JMF <tolas_feup@hotmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080615164617.GA27699@tp64>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1211865214-1640-1-git-send-email-joonwpark81@gmail.com>
-	 <1ba2fa240805262341s62f017e7ka7502cbe55c1d348@mail.gmail.com>
-	 <loom.20080527T105701-941@post.gmane.org>
-	 <1ba2fa240805270541wadf0f16t2001528f39b37ea8@mail.gmail.com>
-	 <1211896423.1746.9.camel@localhost.localdomain>
-	 <20080528004100.GG7779@tuxdriver.com> <20080615164617.GA27699@tp64>
+	Mon, 9 Jun 2008 13:54:23 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2196761wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 10:54:21 -0700 (PDT)
+Subject: Re: [PATCH 1/7] mac80211: add helpers for frame control testing
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1213033579.22220.8.camel@johannes.berg>
+References: <1212774671.6340.75.camel@brick>
+	 (sfid-20080606_195944_782545_6A2B1449)  <1212997265.698.55.camel@johannes.berg>
+	 <1213029086.5974.21.camel@brick>
+	 (sfid-20080609_183129_796413_B211C17A)  <1213032085.22220.1.camel@johannes.berg>
+	 <1213033412.5974.28.camel@brick>
+	 (sfid-20080609_194341_412413_70F0E00E)  <1213033579.22220.8.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 09 Jun 2008 10:54:19 -0700
+Message-Id: <1213034059.5974.33.camel@brick> (sfid-20080609_195426_396927_1EA7AAE1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 15, 2008 at 7:46 PM, Joonwoo Park <joonwpark81@gmail.com> wrote:
-> On Tue, May 27, 2008 at 08:41:00PM -0400, John W. Linville wrote:
->> On Tue, May 27, 2008 at 09:53:43AM -0400, Dan Williams wrote:
->>
->> > I've gotten maybe 1 or 2 requests for > 104/128-bit WEP key support for
->> > NM in 3 years.  Nice to have, but I'm not sure it's worth the extra code
->> > and maintenance burden?  Would be good to have somebody tell us what
->> > hardware (APs and cards) support this though.
->>
->> I'm inclined to think that it is _not_ worth the trouble for this
->> particular feature.
->>
->> John
->
-> This patch limits wep key size to 128/104-bits.
-> I hope you guys like this.
->
-> Thanks,
->
-> Joonwoo
->
-> ---
-> [PATCH] wireless: Limit wep key size to 128/104-bits
->
-> This patch prevents overflow which is occured by invalid long wep key
-> insertion
->
-> $sudo iwconfig wlan0 enc AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA
->
-> BUG: unable to handle kernel NULL pointer dereference at 0000000000000000
-> IP: [memcpy_c+0xb/0x20] memcpy_c+0xb/0x20
-> PGD 13a590067 PUD 12e471067 PMD 0
-> Oops: 0000 [1] PREEMPT SMP
-> CPU 1
-> ...
-> Pid: 10, comm: events/1 Not tainted 2.6.26-rc2 #9
-> ...
-> Call Trace:
->  [iwl4965:iwl4965_rx_scan_start_notif+0xb/0x20] ? :iwl4965:iwl4965_enqueue_hcmd+0x12b/0x220
->  [hci_usb:init_module+0xe97/0x28cb0] :iwlcore:iwl_send_cmd_sync+0x67/0x290
->  [save_trace+0x3f/0xb0] ? save_trace+0x3f/0xb0
-> ...
->
-> Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
-> ---
->  net/wireless/wext.c |   11 ++++++++++-
->  1 files changed, 10 insertions(+), 1 deletions(-)
->
-> diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-> index 947188a..c8ef55b 100644
-> --- a/net/wireless/wext.c
-> +++ b/net/wireless/wext.c
-> @@ -102,6 +102,8 @@
->
->  #include <asm/uaccess.h>               /* copy_to_user() */
->
-> +#define KEY_SIZE_WEP104                13
-> +
->  /************************* GLOBAL VARIABLES *************************/
->  /*
->  * You should not use global variables, because of re-entrancy.
-> @@ -740,8 +742,8 @@ static int ioctl_standard_call(struct net_device *  dev,
->                 * for max space. Easier, and won't last long... */
->                extra_size = descr->max_tokens * descr->token_size;
->
-> -               /* Check need for ESSID compatibility for WE < 21 */
->                switch (cmd) {
-> +               /* Check need for ESSID compatibility for WE < 21 */
->                case SIOCSIWESSID:
->                case SIOCGIWESSID:
->                case SIOCSIWNICKN:
-> @@ -761,6 +763,13 @@ static int ioctl_standard_call(struct net_device * dev,
->                                        essid_compat = 1;
->                        }
->                        break;
-> +
-> +               /* Limit wep key size to 128/104-bits */
-> +               case SIOCSIWENCODE:
-> +                       if (iwr->u.data.length > KEY_SIZE_WEP104)
-> +                               return -EINVAL;
-> +                       break;
-> +
->                default:
->                        break;
->                }
-> --
-> 1.5.4.3
+On Mon, 2008-06-09 at 19:46 +0200, Johannes Berg wrote:
+> On Mon, 2008-06-09 at 10:43 -0700, Harvey Harrison wrote:
+> > On Mon, 2008-06-09 at 19:21 +0200, Johannes Berg wrote:
+> > > On Mon, 2008-06-09 at 09:31 -0700, Harvey Harrison wrote:
+> > > > 
+> > > > As this helper only checks for the one bit being set, I chose _has_.
+> > > 
+> > > Hmm. As far as I can tell, it checks that the frame is a QoS controlled
+> > > data frame. Hence, it explicitly checks that it _is_ a data frame and
+> > > _has_ the QoS bit, but in 802.11 lingo I think that means it _is_ a
+> > > "data+qos" frame.
+> > > 
+> > 
+> > Well, it's not a big deal...what name do you want and I'll change it.
+> 
+> I'd prefer _is_qos_data because _data_has_qos makes me think I have to
+> ensure that the frame is a data frame before passing it in, i.e. it will
+> return undefined results for a management/control frame.
 
+Well, the way the other functions of the same type:
 
-We've already posted a patch 'iwlwifi: add bad length check for WEP
-keys'  that fixes this for iwlwifi.
+ieee80211_ctl_is_ack
+ieee80211_mgmt_is_beacon
 
-I believe that long keys still can be handled by software crypto.  If
-the key length is not supported driver returns error values
-and we fail down to software crypto
+check not only that the ftype is exactly ctl/mgmt and that it is of
+stype ack/beacon.  I chose ieee80211_data_has_qos because it checks
+the ftype _is_ data _and_ that it _has_ qos included.  I think my
+naming is more consistent with this.
 
-John, our patch is probably 2.6.26 material. I didn't check it though
-if if applies on wireless-2.6.git yet
+Do you still think it should be changed?
 
-Thanks
-Tomas
+Cheers,
+
+Harvey
+
