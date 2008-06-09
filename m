@@ -1,39 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:7314 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757598AbYFZTTt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 15:19:49 -0400
-Subject: Re: [Q] ath5k : doesn't support AP mode?
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
-	cs010101@gmail.com, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <1214503739.3783.14.camel@johannes.berg>
-References: <002901c8d737$e51bb2f0$3b0aa8c0@39fb6b6b6f434b3>
-	 <200806261821.31643.mb@bu3sch.de> <1214498071.30722.22.camel@dv>
-	 <200806261846.17962.mb@bu3sch.de>  <1214501000.3783.0.camel@johannes.berg>
-	 <1214503403.18039.6.camel@dv>  <1214503739.3783.14.camel@johannes.berg>
-Content-Type: text/plain
-Date: Thu, 26 Jun 2008 14:18:08 -0400
-Message-Id: <1214504288.18039.12.camel@dv> (sfid-20080626_212021_036308_D26E4735)
+Received: from xc.sipsolutions.net ([83.246.72.84]:40718 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752709AbYFIRZT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jun 2008 13:25:19 -0400
+Subject: Re: [PATCH 2/7] mac80211: replace ieee80211_get_morefrag with
+	ieee80211_has_morefrags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1213028961.5974.18.camel@brick> (sfid-20080609_182929_823786_13F038F5)
+References: <1212774671.6340.76.camel@brick>
+	 (sfid-20080606_195947_229598_F1790495)  <1212997132.698.53.camel@johannes.berg>
+	 <1213028961.5974.18.camel@brick> (sfid-20080609_182929_823786_13F038F5)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RLnwHjI8LiIVpAW1GeMe"
+Date: Mon, 09 Jun 2008 19:22:13 +0200
+Message-Id: <1213032133.22220.3.camel@johannes.berg> (sfid-20080609_192523_146009_1233ADAB)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-06-26 at 20:08 +0200, Johannes Berg wrote:
 
-> > I also suspect that certain fixed are needed only for 802.11g or 802.11b
-> > compliance, but not for the original 802.11 compliance.
-> > 
-> > Say, if we limit the rate to 1 Mbps, are there any issues that really
-> > make us non-compliant?
-> 
-> The fact that we cannot limit the rate like that that?
+--=-RLnwHjI8LiIVpAW1GeMe
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-That shouldn't be hard to implement.
+On Mon, 2008-06-09 at 09:29 -0700, Harvey Harrison wrote:
+> On Mon, 2008-06-09 at 09:38 +0200, Johannes Berg wrote:
+> > > -	if (ieee80211_get_morefrag(hdr))
+> > > +	if (ieee80211_has_morefrags(hdr->frame_control))
+> >=20
+> > looks fine to me, though I wonder if we should have
+> >=20
+> > ieee80211_has_morefrags(struct 80211hdr)
+> > and
+> > __ieee80211_has_morefrags(__le16 fc)
+> >=20
+> > or something with variants of the functions that do the ->frame_control=
+?
+>=20
+> I considered that, but thought it was a small benefit for doubling the
+> number of helpers.
+>=20
+> I chose the __le16 variant as there is some driver code that checks these
+> values in driver-specific structures, so I just left it up to the caller
+> to dereference whatever structure the frame control is held in.
+>=20
+> But if both sets are wanted, I would suggest:
+>=20
+> =EF=BB=BFieee80211_fc_has_morefrags(__le16 fc);
+>=20
+> ieee80211_has_morefrags(struct ieee80211 *hdr)
+> {
+> 	return ieee80211_fc_has_morefrags(hdr->frame_control);
+> }
+>=20
+> Do you think I should add the struct helper(s)?
 
--- 
-Regards,
-Pavel Roskin
+It looks like you'd be using them in many places, so don't you think it
+would be helpful? I don't really care too much.
+
+johannes
+
+--=-RLnwHjI8LiIVpAW1GeMe
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJITWbCAAoJEKVg1VMiehFYIXkP/jq+cjg95VeNTOLVwSKgJuED
+gTEuTzL8VRhgWxeHiwUUKEEwEwRjZwGqM2rML3NFaF8PdihFKRPG502jZWCWgYT3
+/Hdjen8TETt9DC0QHONIvxeaT4iNKjsu9FnrOah7eIIbrKG34ih+l8OzuPpoqdBu
+3BgtNXOMt3ZgmhlgqP1rQ3DztmTFQE1bYTiAXRk0VsQHKZe3aKZrGAGYoervPrNL
+1ZkIUNRunFPbk2iP//OdiVlZlAGMmYy8NM/41n5CGyIswC3oP9q5M3h13ArNgXAP
+0KB8H40gsMDoOXRqW3Dphh5RWg8mAUGmiqZYsdGQaipCXyV4qeup5nZ5m3verm1S
+jD5zAYaMXHEsoRH4pA0quMA9iD5mJ1V2+T0oYIigW6FeTwYPL8+N0C9BnKoY6G9K
+NSX14wP0BP0LUcnrQK/NQlPYlhdnCpzw44vp+9COmhKMReAryU8UdYsG/rYrULfQ
+4e3zgqE/VtQ2zMu4PlkPNl4f5ebsDD9A5BVEaPWZ/vIikHuwqiRs2mDFJ24neK1N
+uQXdnOd8ETleAnUQoVTnb4zlo8/JiguEKthZoc17UhV6RetmX8wKj5O5sXHb52JG
+4Vq4H8h1ycQ8m4n/KiAL8KKehhaxTrfdAUxj7Zl2MmDLt62WwS5rma1ampKl6ROn
+mMQfRIQN4yTHAmKH5W45
+=ZF+Y
+-----END PGP SIGNATURE-----
+
+--=-RLnwHjI8LiIVpAW1GeMe--
+
