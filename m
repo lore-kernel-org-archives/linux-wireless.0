@@ -1,44 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:35500
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750948AbYFRIF2 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:13312 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753670AbYFIT2c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 04:05:28 -0400
-Date: Wed, 18 Jun 2008 01:05:28 -0700 (PDT)
-Message-Id: <20080618.010528.05757230.davem@davemloft.net> (sfid-20080618_100534_149937_F7AF8DAD)
-To: johannes@sipsolutions.net
-Cc: ilpo.jarvinen@helsinki.fi, didier@raboud.com,
-	akpm@linux-foundation.org, netdev@vger.kernel.org,
-	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [Bugme-new] [Bug 10903] New: ssh connections hang with
- 2.6.26-rc5
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1213773887.3803.158.camel@johannes.berg>
-References: <200806172359.33768.didier@raboud.com>
-	<Pine.LNX.4.64.0806180152410.32420@wrl-59.cs.helsinki.fi>
-	<1213773887.3803.158.camel@johannes.berg>
+	Mon, 9 Jun 2008 15:28:32 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2230439wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 12:28:32 -0700 (PDT)
+Subject: [PATCHv2 5/8] mac80211: use new helpers in util.c -
+	ieee80211_get_bssid()
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 09 Jun 2008 12:28:22 -0700
+Message-Id: <1213039702.5974.70.camel@brick> (sfid-20080609_212837_455860_7EE5E852)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbTogSm9oYW5uZXMgQmVyZyA8am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldD4NCkRhdGU6IFdl
-ZCwgMTggSnVuIDIwMDggMDk6MjQ6NDcgKzAyMDANCg0KPiANCj4gPiA+ID4gPiA+ID4gPiBodHRw
-Oi8vYnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9MTA5MDMNCj4gPiA+ID4gPiA+
-ID4gPg0KPiA+ID4gPiA+ID4gPiA+ICAgICAgICAgICAgU3VtbWFyeTogc3NoIGNvbm5lY3Rpb25z
-IGhhbmcgd2l0aCAyLjYuMjYtcmM1DQo+IA0KPiBBbmRyZXcgUHJpbmNlIHJlcG9ydGVkIGEgc2lt
-aWxhciBwcm9ibGVtIGFuZCBzYWlkIGhlIGJpc2VjdGVkIGl0ICB0bw0KPiBkYXZlbSdzIO+7vzYw
-ODk2MWE1ZWNhOGQzYzZiZDA3MTcyZmViYzI3YjU1NTk0MDhjNWQgKCJtYWM4MDIxMTogVXNlDQo+
-IHNrYl9oZWFkZXJfY2xvbmVkKCkgb24gVFggcGF0aC4iKSB3aGljaCBtYWRlIG5vIHNlbnNlIHRv
-IG1lIHNvIEkgbWFya2VkDQo+IHRoZSByZXBvcnQgYXMgJ3RvIGludmVzdGlnYXRlIHdoZW4gSSBo
-YXZlIG1vcmUgdGltZScuDQoNClRoYXQncyB1c2VmdWwgaW5mb3JtYXRpb24uICBUaGUga2VybmVs
-IGJ1Z3ppbGxhIGVudHJ5IGlzIGZvcg0KdGhlIGl3bDM5NDUgZHJpdmVyLCBzbyB0aGF0IG1hdGNo
-ZXMgdXAgYWNjdXJhdGVseSB3aXRoIHRoaXMNCnRvby4NCg0KSWYgd2UgY2FuJ3QgZmlndXJlIG91
-dCB3aGF0J3MgZ29pbmcgb24gaGVyZSBzb29uIChsaWtlLCBpbiBsZXNzIHRoYW4gYQ0KZGF5KSB3
-ZSBzaG91bGQgcmV2ZXJ0IHRoYXQgY2hhbmdlc2V0Lg0KDQpBY3R1YWxseSwgSSB0aGluayBJIHNl
-ZSBob3cgdGhlIGNoYW5nZXNldCBtaWdodCBiZSB3cm9uZy4gIEkgdGhpbmsNCnRoZSBlbmNyeXB0
-aW9uIGxheWVyIG9mIG1hYzgwMjExIGFzc3VtZXMgaXQgY2FuIHdyaXRlIG92ZXIgdGhlDQpkYXRh
-IGFyZWEgb2YgdGhlIFNLQiBpdCdzIHdvcmtpbmcgb24sIG5vdCBqdXN0IHRoZSBoZWFkZXJzLg0K
-DQpPbmNlIHRoaXMgaGFwcGVucywgYW55IHJldHJhbnNtaXRzIGRvbmUgYnkgU0tCIHdpbGwgZmFp
-bCBiZWNhdXNlIHRoZQ0KbWFzdGVyIHBhY2tldCBkYXRhIG9uIFRDUCdzIHJldHJhbnNtaXQgcXVl
-dWUgaXMgbm93IHRoaXMgZW5jcnlwdGVkDQpnYXJiYWdlLg0K
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ net/mac80211/util.c |   41 +++++++++++++++++++----------------------
+ 1 files changed, 19 insertions(+), 22 deletions(-)
+
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 9f365a3..ce62b16 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -45,38 +45,37 @@ const unsigned char bridge_tunnel_header[] __aligned(2) =
+ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
+ 			enum ieee80211_if_types type)
+ {
+-	u16 fc;
++	__le16 fc = hdr->frame_control;
+ 
+ 	 /* drop ACK/CTS frames and incorrect hdr len (ctrl) */
+ 	if (len < 16)
+ 		return NULL;
+ 
+-	fc = le16_to_cpu(hdr->frame_control);
+-
+-	switch (fc & IEEE80211_FCTL_FTYPE) {
+-	case IEEE80211_FTYPE_DATA:
++	if (ieee80211_is_data(fc)) {
+ 		if (len < 24) /* drop incorrect hdr len (data) */
+ 			return NULL;
+-		switch (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
+-		case IEEE80211_FCTL_TODS:
+-			return hdr->addr1;
+-		case (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS):
++
++		if (ieee80211_has_a4(fc))
+ 			return NULL;
+-		case IEEE80211_FCTL_FROMDS:
++		if (ieee80211_has_tods(fc))
++			return hdr->addr1;
++		if (ieee80211_has_fromds(fc))
+ 			return hdr->addr2;
+-		case 0:
+-			return hdr->addr3;
+-		}
+-		break;
+-	case IEEE80211_FTYPE_MGMT:
++
++		return hdr->addr3;
++	}
++
++	if (ieee80211_is_mgmt(fc)) {
+ 		if (len < 24) /* drop incorrect hdr len (mgmt) */
+ 			return NULL;
+ 		return hdr->addr3;
+-	case IEEE80211_FTYPE_CTL:
+-		if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PSPOLL)
++	}
++
++	if (ieee80211_is_ctl(fc)) {
++		if(ieee80211_is_pspoll(fc))
+ 			return hdr->addr1;
+-		else if ((fc & IEEE80211_FCTL_STYPE) ==
+-						IEEE80211_STYPE_BACK_REQ) {
++
++		if (ieee80211_is_back_req(fc)) {
+ 			switch (type) {
+ 			case IEEE80211_IF_TYPE_STA:
+ 				return hdr->addr2;
+@@ -84,11 +83,9 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
+ 			case IEEE80211_IF_TYPE_VLAN:
+ 				return hdr->addr1;
+ 			default:
+-				return NULL;
++				break; /* fall through to the return */
+ 			}
+ 		}
+-		else
+-			return NULL;
+ 	}
+ 
+ 	return NULL;
+-- 
+1.5.6.rc2.261.ga8fbe
+
+
