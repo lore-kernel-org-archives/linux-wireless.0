@@ -1,94 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ruslug.rutgers.edu ([165.230.139.146]:37234 "EHLO
-	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750933AbYFULvf (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.169]:20908 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752749AbYFIQZD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jun 2008 07:51:35 -0400
-Date: Sat, 21 Jun 2008 07:51:33 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+	Mon, 9 Jun 2008 12:25:03 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2168184wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 09:25:02 -0700 (PDT)
+Subject: Re: [PATCH 4/7] mac80211: make ieee80211_get_hdrlen_from_skb
+	return unsigned
+From: Harvey Harrison <harvey.harrison@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
+Cc: Pavel Roskin <proski@gnu.org>, Michael Buesch <mb@bu3sch.de>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: Let drivers have access to TKIP key offets for TX and RX MIC
-Message-ID: <20080621115133.GI17936@ruslug.rutgers.edu> (sfid-20080621_135139_220433_07376217)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1213002931.698.65.camel@johannes.berg>
+References: <1212774672.6340.78.camel@brick>
+	 <200806062024.24681.mb@bu3sch.de>  <1212778061.6340.85.camel@brick>
+	 <1212783357.29134.5.camel@dv>  <1212805460.6340.91.camel@brick>
+	 (sfid-20080607_042423_652950_5D44593F)  <1213002931.698.65.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 09 Jun 2008 09:25:01 -0700
+Message-Id: <1213028701.5974.11.camel@brick> (sfid-20080609_182507_122888_7027AA69)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some drivers may want to to use the TKIP key offsets for TX and RX
-MIC so lets move this out.
+On Mon, 2008-06-09 at 11:15 +0200, Johannes Berg wrote:
+> > unlikely() isn't some magic make-me-faster function, it just moves
+> > code
+> > to the end of the function to get it out of the icache and jumps to it
+> > in the unlikely case it is taken.  When all there is is a return, I
+> > don't think it even makes any difference.  In both these cases a
+> > comment
+> > is probably more appropriate.
+> 
+> That's not true on ppc where you can actually tell the processor about
+> the jump likelyhood for its branch prediction.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- include/net/cfg80211.h |    5 +++++
- net/mac80211/key.h     |   37 ++++++++++++-------------------------
- 2 files changed, 17 insertions(+), 25 deletions(-)
+I was unaware of that.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e007508..6cb8b02 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -12,6 +12,11 @@
-  * Copyright 2006, 2007	Johannes Berg <johannes@sipsolutions.net>
-  */
- 
-+/* Starting offsets for each key for TKIP */
-+#define ALG_TKIP_TEMP_ENCR_KEY		0
-+#define ALG_TKIP_TEMP_AUTH_TX_MIC_KEY	16
-+#define ALG_TKIP_TEMP_AUTH_RX_MIC_KEY	24
-+
- /**
-  * struct vif_params - describes virtual interface parameters
-  * @mesh_id: mesh ID to use
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index a0f774a..425816e 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -16,31 +16,18 @@
- #include <linux/rcupdate.h>
- #include <net/mac80211.h>
- 
--/* ALG_TKIP
-- * struct ieee80211_key::key is encoded as a 256-bit (32 byte) data block:
-- * Temporal Encryption Key (128 bits)
-- * Temporal Authenticator Tx MIC Key (64 bits)
-- * Temporal Authenticator Rx MIC Key (64 bits)
-- */
--
--#define WEP_IV_LEN 4
--#define WEP_ICV_LEN 4
--
--#define ALG_TKIP_KEY_LEN 32
--/* Starting offsets for each key */
--#define ALG_TKIP_TEMP_ENCR_KEY 0
--#define ALG_TKIP_TEMP_AUTH_TX_MIC_KEY 16
--#define ALG_TKIP_TEMP_AUTH_RX_MIC_KEY 24
--#define TKIP_IV_LEN 8
--#define TKIP_ICV_LEN 4
--
--#define ALG_CCMP_KEY_LEN 16
--#define CCMP_HDR_LEN 8
--#define CCMP_MIC_LEN 8
--#define CCMP_TK_LEN 16
--#define CCMP_PN_LEN 6
--
--#define NUM_RX_DATA_QUEUES 17
-+#define WEP_IV_LEN		4
-+#define WEP_ICV_LEN		4
-+#define ALG_TKIP_KEY_LEN	32
-+#define ALG_CCMP_KEY_LEN	16
-+#define CCMP_HDR_LEN		8
-+#define CCMP_MIC_LEN		8
-+#define CCMP_TK_LEN		16
-+#define CCMP_PN_LEN		6
-+#define TKIP_IV_LEN		8
-+#define TKIP_ICV_LEN		4
-+
-+#define NUM_RX_DATA_QUEUES	17
- 
- struct ieee80211_local;
- struct ieee80211_sub_if_data;
--- 
-1.5.5.3
+> 
+> > On X86-32 at least the generated code is exactly the same with or
+> > without the unlikely()s.  I'll put them back in a follow-on if people
+> > are really attached to them.
+> 
+> Please keep them there, I think they make sense for normal operation.
+
+Kept, will be in a v2.
+
+Harvey
 
