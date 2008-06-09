@@ -1,77 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:58397 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752355AbYFJOhf (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45091 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756832AbYFII5r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 10:37:35 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Vegard Nossum" <vegard.nossum@gmail.com>
-Subject: Re: BUG: NULL pointer dereference at 00000000 -- IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
-Date: Tue, 10 Jun 2008 16:37:11 +0200
-Cc: "Miles Lane" <miles.lane@gmail.com>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <a44ae5cd0806100709rf4602f2x587631852502c0b5@mail.gmail.com> <19f34abd0806100729h7a060012h91e81248c9c7cdca@mail.gmail.com> <200806101634.21576.mb@bu3sch.de>
-In-Reply-To: <200806101634.21576.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200806101637.11473.mb@bu3sch.de> (sfid-20080610_163742_659331_B8203861)
+	Mon, 9 Jun 2008 04:57:47 -0400
+Subject: Re: [PATCH 1/7] mac80211: add helpers for frame control testing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1212774671.6340.75.camel@brick> (sfid-20080606_195944_782545_6A2B1449)
+References: <1212774671.6340.75.camel@brick>
+	 (sfid-20080606_195944_782545_6A2B1449)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-siAWduYOfliX7LmhEXnY"
+Date: Mon, 09 Jun 2008 09:37:04 +0200
+Message-Id: <1212997025.698.51.camel@johannes.berg> (sfid-20080609_105749_591546_826C3851)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 10 June 2008 16:34:21 Michael Buesch wrote:
-> On Tuesday 10 June 2008 16:29:17 Vegard Nossum wrote:
-> > On Tue, Jun 10, 2008 at 4:23 PM, Michael Buesch <mb@bu3sch.de> wrote:
-> > > On Tuesday 10 June 2008 16:09:37 Miles Lane wrote:
-> > >> BUG: unable to handle kernel NULL pointer dereference at 00000000
-> > >> IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
-> > >
-> > >
-> > > It seems to crash at
-> > >  60 extern const struct dma_mapping_ops *dma_ops;
-> > >  61
-> > >  62 static inline int dma_mapping_error(dma_addr_t dma_addr)
-> > >  63 {
-> > >  64         if (dma_ops->mapping_error)
-> > >  65                 return dma_ops->mapping_error(dma_addr);
-> > >  66
-> > >  67         return (dma_addr == bad_dma_address);
-> > >  68 }
-> > 
-> > No, this is wrong.
-> > 
-> > /* Check if a DMA mapping address is invalid. */
-> > static bool b43_dma_mapping_error(struct b43_dmaring *ring,
-> >                                   dma_addr_t addr,
-> >                                   size_t buffersize, bool dma_to_device)
-> > {
-> >         if (unlikely(dma_mapping_error(ring->dev->dev->dma_dev, addr)))
-> > 
-> > It crashes on this line ---^
-> 
-> Which calls dma_mapping_error(), correct?
-> 
-> But you are right. I see the bug now.
-> ring->dev is assigned after the call.
-> I wonder why it works reliably on all of my machines.
-> 
 
-Ehm no wait a second...
-What strange tree are you looking at?
-This is a copy of the code from my local tree.
+--=-siAWduYOfliX7LmhEXnY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- 516 /* Check if a DMA mapping address is invalid. */
- 517 static bool b43_dma_mapping_error(struct b43_dmaring *ring,
- 518                                   dma_addr_t addr,
- 519                                   size_t buffersize, bool dma_to_device)
- 520 {
- 521         if (unlikely(dma_mapping_error(addr)))
- 522                 return 1;
 
-This code is perfectly fine.
-This must be some merge error in some upstream tree.
+> +static inline u8 *ieee80211_get_qos_ctl(struct ieee80211_hdr *hdr,
 
--- 
-Greetings Michael.
+I think this is wrong, the header len will probably at some point
+include more things like HT headers where present or similar, so
+subtracting 2 from the header len is going to be wrong as soon as that
+happens because the QoS control will stay first. I think this should do
+the relevant calculation itself, ie. check for A4.
+
+> +static inline int ieee80211_has_protected(__le16 fc)
+
+> +static inline int ieee80211_has_morefrags(__le16 fc)
+
+> +static inline int ieee80211_has_tods(__le16 fc)
+
+> +static inline int ieee80211_has_fromds(__le16 fc)
+
+> +static inline int ieee80211_has_a4(__le16 fc)
+
+> +static inline int ieee80211_is_mgmt(__le16 fc)
+
+> +static inline int ieee80211_is_ctl(__le16 fc)
+
+> +static inline int ieee80211_is_data(__le16 fc)
+
+> +static inline int ieee80211_data_has_qos(__le16 fc)
+
+Can you add kernel-doc comments for these?
+
+johannes
+
+--=-siAWduYOfliX7LmhEXnY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJITN2cAAoJEKVg1VMiehFYuDAQAJsX2cLZZedq+IqduGps/0Gd
+tq6eZxcuT/cUCA/leO3WnQU6Dk1ISbRkVCUL9rgcytkQlsQNw+sCpyBZ7IqIYHvn
+oTqm/VETlK0EarHbmstcvn7r6FX4DUxZVNbxjcQGfJErB+vPpBW0U49HPSPRyabl
+Q7FVgNWBd3uFoDxfsm7cPFIJ+DBFZHhZVCIWSEbhTTHsWVwtfJ/ZMqVjvfzWmVZZ
+fyUpnX0HfdTf0z6PxPqrErem5eqZcKIVFweryU3qf3S46BiaeRV+Y3HqHvnDABYK
++Mc6rKYwxS0AT2s27JsQ/ZHBYw1u1Ex5q2R6GX1Rx6qhxSgjOuGbM8xY/+tPE8Cy
+nylOD0f/PgGrIGZ7rMBvdFEtH989t/wpdbY3N9+hziGx7/+oz2LxMK6LBOVJPhoi
+/PcTqz2ugDntWq/TdJzZND4ChsrCYnZh6rhICpjpdNz0uPTh0Vn5tEv0NDrdc/bS
+Pcn7FNRPfmta4BzK6ooamFyajIjwkOV6jA+x21vL9+Khy4gTEyaTipCbDdHuafXZ
+c8bRYm+2stDW1YlH9TZkbFeR99x4hptePGMSNnPAN5BDNp3mehFK+k+8qLzXEB4b
+/DSY51R/us1I8R1etA6MvhULH8p93xudvmWRHC6HMeTZhPaumdGj6G/mTe48hXpU
+r/vOK0EOVUazaCfXGxlv
+=fvWC
+-----END PGP SIGNATURE-----
+
+--=-siAWduYOfliX7LmhEXnY--
+
