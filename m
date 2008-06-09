@@ -1,57 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:44970 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751192AbYFTG5O (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.236]:41072 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752940AbYFIJUP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2008 02:57:14 -0400
-Date: Thu, 19 Jun 2008 23:52:53 -0700
-From: Joel Becker <Joel.Becker@oracle.com>
-To: Ben Nizette <bn@niasdigital.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux kernel <linux-kernel@vger.kernel.org>,
-	Greg KH <greg@kroah.com>,
-	Satyam Sharma <ssatyam@cse.iitk.ac.in>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Al Viro <viro@ftp.linux.org.uk>,
-	"H. Peter Anvin" <hpa@kernel.org>
-Subject: Re: [RFC PATCHES] Re: Is configfs the right solution for
-	configuration based fs?
-Message-ID: <20080620065253.GA14238@ca-server1.us.oracle.com> (sfid-20080620_085721_954428_9E7F1737)
-References: <43e72e890806081425h4e785800nc618fc1985f9809f@mail.gmail.com> <1213002187.698.62.camel@johannes.berg> <1213056772.4089.42.camel@moss.renham> <20080619024804.GA29765@mail.oracle.com> <1213942750.2336.43.camel@moss.renham>
+	Mon, 9 Jun 2008 05:20:15 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so211838rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 02:20:14 -0700 (PDT)
+Message-ID: <1ba2fa240806090220y4a21d3d2k84143e2a4ee0cb1a@mail.gmail.com> (sfid-20080609_112019_123738_040C3F27)
+Date: Mon, 9 Jun 2008 12:20:14 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Andrew Morton" <akpm@linux-foundation.org>
+Subject: Re: CONFIG_IWL4965_HT=n in linux-next
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080609015623.6bbc9d88.akpm@linux-foundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1213942750.2336.43.camel@moss.renham>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080609015623.6bbc9d88.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 20, 2008 at 04:19:10PM +1000, Ben Nizette wrote:
-> Looks great, thx :-).  I'll convert some of my stuff over to this
-> interface and see how it flies in the real world.
+On Mon, Jun 9, 2008 at 11:56 AM, Andrew Morton
+<akpm@linux-foundation.org> wrote:
+> drivers/net/wireless/iwlwifi/iwl-4965-rs.c: In function 'rs_move_siso_to_other':
+> drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1439: error: 'struct iwl_priv' has no member named 'current_ht_config'
+> drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1443: error: 'struct iwl_priv' has no member named 'current_ht_config'
+> drivers/net/wireless/iwlwifi/iwl-4965-rs.c: In function 'rs_move_mimo_to_other':
+> drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1530: error: 'struct iwl_priv' has no member named 'current_ht_config'
+> drivers/net/wireless/iwlwifi/iwl-4965-rs.c:1534: error: 'struct iwl_priv' has no member named 'current_ht_config'
 
-	Excellent.  What is your stuff, btw?  Got code?  Love to see it.
-
-> ISTR when I did this I kept the old semantics and used ERR_PTR and
-> friends if things went pear-shaped.  Given the small number of in-tree
-> users needing to be moved over, a more intrusive change for the sake of
-> a cleaner API like you've done is probably a good thing anyway :-)
-
-	Yeah, I like this better than ERR_PTR.
-	If you like the macros, I'll try to make the next merge window
-as well.  So let me know.
-
-joel
-
--- 
-
-"I almost ran over an angel
- He had a nice big fat cigar.
- 'In a sense,' he said, 'You're alone here
- So if you jump, you'd best jump far.'"
-
-Joel Becker
-Principal Software Developer
-Oracle
-E-mail: joel.becker@oracle.com
-Phone: (650) 506-8127
+It's a known issue. we are about to remove this conditional. Will
+happen till EOW.
+Tomas
