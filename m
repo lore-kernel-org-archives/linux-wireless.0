@@ -1,218 +1,627 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from minas.ics.muni.cz ([147.251.4.40]:42586 "EHLO minas.ics.muni.cz"
+Received: from hostap.isc.org ([149.20.54.63]:52006 "EHLO hostap.isc.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750990AbYFDNDK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2008 09:03:10 -0400
-Date: Wed, 4 Jun 2008 15:03:07 +0200
-From: Lukas Hejtmanek <xhejtman@ics.muni.cz>
-To: linux-mm@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Subject: Page allocation failure in 2.6.26-rc2 (iwl4965 driver)
-Message-ID: <20080604130307.GN5012@ics.muni.cz> (sfid-20080604_150315_446212_8EA3C5BA)
+	id S1752756AbYFJSjl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jun 2008 14:39:41 -0400
+Date: Tue, 10 Jun 2008 21:37:23 +0300
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH RFC] mac80211_hwsim
+Message-ID: <20080610183722.GA7377@jm.kir.nu> (sfid-20080610_203947_613289_0A4ECC3E)
+References: <20080610105058.GA6961@jm.kir.nu> <1213096575.3668.6.camel@johannes.berg> <20080610123007.GB1571@tuxdriver.com> <1213103469.3668.13.camel@johannes.berg> <20080610152418.GD13267@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="LZvS9be/3tNcYl/X"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080610152418.GD13267@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jun 10, 2008 at 11:24:18AM -0400, John W. Linville wrote:
+> drivers/net/wireless seems appropriate to me.
 
---LZvS9be/3tNcYl/X
-Content-Type: text/plain; charset=iso-8859-2
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+Here's a completely untested (well, it compiles) patch against
+wireless-test. I'll try to do some testing tomorrow, but if someone is
+interested in taking a closer look at a version that is converted to use
+the new data structures for channel/rate configuration, here's a
+preliminary version. All comments are welcome.
 
-Hello,
+As far as functionality is concerned, this is supposed to match with the
+2.6.25-based version I have in hostap.git, i.e., the only changes are to
+convert the newer version of mac80211 API. Since I'm frequently using
+the latest 2.6.x release kernel instead of wireless-test (and would
+assume I'm not the only one doing that), I'm thinking of maintaining two
+versions of the module. One would be in wireless-test and maintained
+just like any other in-tree driver. The other one is in my hostap.git
+repository and is maintained as an out-of-tree version that is based on
+the latest (or well, relatively close to the latest, i.e., whatever I
+happen to be using ;-) released kernel. Of course, once the in-tree
+version hits a released kernel, out-of-tree version can die.
 
-in the recent kernels I sometimes got the following allocation failure. It is
-provoked by ifconfig wlan0 up. I have machine with 2GB RAM and 1.5GB of swap
-(99% free). It happens if I start netbeans (which takes fair amount of memory)
-and keep running netbeans whole night (so that updatedb and slocate are woken
-up). 
 
-My question is why this happens? According to Jiri Slaby, this should not
-happen. I'm also attaching vmstat and slabinfo.
+PS.
 
-[14478990.059888] ifconfig: page allocation failure. order:4, mode:0x40d0
-[14478990.059904] Pid: 27071, comm: ifconfig Not tainted 2.6.26-rc2-git5 #9
-[14478990.059909] 
-[14478990.059910] Call Trace:
-[14478990.059932]  [<ffffffff80275a3d>] __alloc_pages_internal+0x3dd/0x4f0
-[14478990.059945]  [<ffffffff80275bec>] __get_free_pages+0x1c/0x60
-[14478990.059968]  [<ffffffffa00f51fa>]
-:iwl4965:iwl4965_tx_queue_init+0x9a/0x1d0
-[14478990.059992]  [<ffffffffa00fd873>]
-:iwl4965:iwl4965_hw_nic_init+0x3f3/0x1cb0
-[14478990.059999]  [<ffffffff8026a32e>] setup_irq+0x14e/0x290
-[14478990.060018]  [<ffffffffa00e6ac4>] :iwl4965:__iwl4965_up+0xb4/0x590
-[14478990.060035]  [<ffffffffa00e75c8>] :iwl4965:iwl4965_mac_start+0x5c8/0xfc0
-[14478990.060043]  [<ffffffff802a451f>] __link_path_walk+0x53f/0x1040
-[14478990.060069]  [<ffffffffa00b8dbc>] :mac80211:ieee80211_open+0x13c/0x5c0
-[14478990.060075]  [<ffffffff802a50dc>] path_walk+0xbc/0xd0
-[14478990.060086]  [<ffffffff804739f9>] dev_open+0x89/0xf0
-[14478990.060093]  [<ffffffff80473292>] dev_change_flags+0x92/0x1b0
-[14478990.060102]  [<ffffffff804b9bb4>] devinet_ioctl+0x7a4/0x7b0
-[14478990.060108]  [<ffffffff802a6816>] do_filp_open+0xb6/0x990
-[14478990.060121]  [<ffffffff80464496>] sock_ioctl+0x66/0x280
-[14478990.060127]  [<ffffffff802a7f7f>] vfs_ioctl+0x2f/0xb0
-[14478990.060133]  [<ffffffff802a8283>] do_vfs_ioctl+0x283/0x2f0
-[14478990.060140]  [<ffffffff802a8339>] sys_ioctl+0x49/0x80
-[14478990.060146]  [<ffffffff80297e99>] do_sys_open+0xe9/0x110
-[14478990.060155]  [<ffffffff8020c32b>] system_call_after_swapgs+0x7b/0x80
-[14478990.060163] 
-[14478990.060166] Mem-info:
-[14478990.060169] DMA per-cpu:
-[14478990.060174] CPU    0: hi:    0, btch:   1 usd:   0
-[14478990.060178] CPU    1: hi:    0, btch:   1 usd:   0
-[14478990.060182] DMA32 per-cpu:
-[14478990.060186] CPU    0: hi:  186, btch:  31 usd:   0
-[14478990.060190] CPU    1: hi:  186, btch:  31 usd:   0
-[14478990.060197] Active:353461 inactive:90156 dirty:3 writeback:0 unstable:0
-[14478990.060199]  free:10504 slab:16638 mapped:24858 pagetables:3705 bounce:0
-[14478990.060207] DMA free:7916kB min:28kB low:32kB high:40kB active:2536kB
-inactive:0kB present:10032kB pages_scanned:0 all_unreclaimable? no
-[14478990.060212] lowmem_reserve[]: 0 1963 1963 1963
-[14478990.060223] DMA32 free:34100kB min:5652kB low:7064kB high:8476kB
-active:1411308kB inactive:360624kB present:2010596kB pages_scanned:0
-all_unreclaimable? no
-[14478990.060229] lowmem_reserve[]: 0 0 0 0
-[14478990.060237] DMA: 35*4kB 16*8kB 24*16kB 19*32kB 16*64kB 12*128kB 0*256kB
-0*512kB 0*1024kB 0*2048kB 1*4096kB = 7916kB
-[14478990.060256] DMA32: 4660*4kB 1361*8kB 231*16kB 15*32kB 1*64kB 1*128kB
-1*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 34152kB
-[14478990.060274] 174269 total pagecache pages
-[14478990.060279] Swap cache: add 135, delete 86, find 31/36
-[14478990.060283] Free swap  = 1534328kB
-[14478990.060286] Total swap = 1534672kB
-[14478990.076000] 513712 pages of RAM
-[14478990.076008] 9367 reserved pages
-[14478990.076012] 161337 pages shared
-[14478990.076015] 49 pages swap cached
-[14478990.076019] iwl4965: kmalloc for auxiliary BD structures failed
-[14478990.076030] iwl4965: Tx 6 queue init failed
-[14478990.076061] iwl4965: Unable to init nic
+The URL in Kconfig is just a placeholder and I'll add the information in
+README and hostapd/wpa_supplicant example configuration files there
+before this gets submitted properly.
 
+
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 86323c8..91e197d 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -681,6 +681,19 @@ config ADM8211
+ 
+ 	  Thanks to Infineon-ADMtek for their support of this driver.
+ 
++config MAC80211_HWSIM
++	tristate "Simulated radio testing tool for mac80211"
++	depends on MAC80211 && WLAN_80211
++	---help---
++	  This driver is a developer testing tool that can be used to test
++	  IEEE 802.11 networking stack (mac80211) functionality. This is not
++	  needed for normal wireless LAN usage and is only for testing. See
++	  http://w1.fi/mac80211_hwsim/ for more information on how to use
++	  this tool.
++
++	  To compile this driver as a module, choose M here: the module will be
++	  called mac80211_hwsim.  If unsure, say N.
++
+ source "drivers/net/wireless/p54/Kconfig"
+ source "drivers/net/wireless/ath5k/Kconfig"
+ source "drivers/net/wireless/iwlwifi/Kconfig"
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 5026268..72c314e 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -64,3 +64,5 @@ obj-$(CONFIG_RT2X00)	+= rt2x00/
+ obj-$(CONFIG_P54_COMMON)	+= p54/
+ 
+ obj-$(CONFIG_ATH5K)	+= ath5k/
++
++obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+new file mode 100644
+index 0000000..03bbc7a
+--- /dev/null
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -0,0 +1,536 @@
++/*
++ * mac80211_hwsim - software simulator of 802.11 radio(s) for mac80211
++ * Copyright (c) 2008, Jouni Malinen <j@w1.fi>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++/*
++ * TODO:
++ * - IBSS mode simulation (Beacon transmission with competition for "air time")
++ * - IEEE 802.11a and 802.11n modes
++ */
++
++#include <net/mac80211.h>
++#include <net/ieee80211_radiotap.h>
++#include <linux/if_arp.h>
++#include <linux/rtnetlink.h>
++#include <linux/etherdevice.h>
++
++MODULE_AUTHOR("Jouni Malinen");
++MODULE_DESCRIPTION("Software simulator of 802.11 radio(s) for mac80211");
++MODULE_LICENSE("GPL");
++
++static int radios = 2;
++module_param(radios, int, 0444);
++MODULE_PARM_DESC(radios, "Number of simulated radios");
++
++
++static struct class *hwsim_class;
++
++static struct ieee80211_hw **hwsim_radios;
++static int hwsim_radio_count;
++static struct net_device *hwsim_mon; /* global monitor netdev */
++
++
++static const struct ieee80211_channel hwsim_channels[] = {
++	{ .center_freq = 2412 },
++	{ .center_freq = 2417 },
++	{ .center_freq = 2422 },
++	{ .center_freq = 2427 },
++	{ .center_freq = 2432 },
++	{ .center_freq = 2437 },
++	{ .center_freq = 2442 },
++	{ .center_freq = 2447 },
++	{ .center_freq = 2452 },
++	{ .center_freq = 2457 },
++	{ .center_freq = 2462 },
++	{ .center_freq = 2467 },
++	{ .center_freq = 2472 },
++	{ .center_freq = 2484 },
++};
++
++static const struct ieee80211_rate hwsim_rates[] = {
++	{ .bitrate = 10 },
++	{ .bitrate = 20, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 55, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 110, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 60, .flags = IEEE80211_RATE_ERP_G },
++	{ .bitrate = 90, .flags = IEEE80211_RATE_ERP_G },
++	{ .bitrate = 120, .flags = IEEE80211_RATE_ERP_G },
++	{ .bitrate = 180, .flags = IEEE80211_RATE_ERP_G },
++	{ .bitrate = 240, .flags = IEEE80211_RATE_ERP_G },
++	{ .bitrate = 360, .flags = IEEE80211_RATE_ERP_G },
++	{ .bitrate = 480, .flags = IEEE80211_RATE_ERP_G },
++	{ .bitrate = 540, .flags = IEEE80211_RATE_ERP_G }
++};
++
++struct mac80211_hwsim_data {
++	struct device *dev;
++	struct ieee80211_supported_band band;
++	struct ieee80211_channel channels[ARRAY_SIZE(hwsim_channels)];
++	struct ieee80211_rate rates[ARRAY_SIZE(hwsim_rates)];
++
++	struct ieee80211_channel *channel;
++	int radio_enabled;
++	unsigned long beacon_int; /* in jiffies unit */
++	unsigned int rx_filter;
++	int started;
++	struct timer_list beacon_timer;
++};
++
++
++struct hwsim_radiotap_hdr {
++	struct ieee80211_radiotap_header hdr;
++	u8 rt_flags;
++	u8 rt_rate;
++	__le16 rt_channel;
++	__le16 rt_chbitmask;
++} __attribute__ ((packed));
++
++
++static int hwsim_mon_xmit(struct sk_buff *skb, struct net_device *dev)
++{
++	/* TODO: allow packet injection */
++	dev_kfree_skb(skb);
++	return 0;
++}
++
++
++static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
++				      struct sk_buff *tx_skb)
++{
++	struct mac80211_hwsim_data *data = hw->priv;
++	struct sk_buff *skb;
++	struct hwsim_radiotap_hdr *hdr;
++	u16 flags;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx_skb);
++	struct ieee80211_rate *txrate = ieee80211_get_tx_rate(hw, info);
++
++	if (!netif_running(hwsim_mon))
++		return;
++
++	skb = skb_copy_expand(tx_skb, sizeof(*hdr), 0, GFP_ATOMIC);
++	if (skb == NULL)
++		return;
++
++	hdr = (struct hwsim_radiotap_hdr *) skb_push(skb, sizeof(*hdr));
++	hdr->hdr.it_version = PKTHDR_RADIOTAP_VERSION;
++	hdr->hdr.it_pad = 0;
++	hdr->hdr.it_len = cpu_to_le16(sizeof(*hdr));
++	hdr->hdr.it_present = __constant_cpu_to_le32(
++	     (1 << IEEE80211_RADIOTAP_FLAGS) |
++	     (1 << IEEE80211_RADIOTAP_RATE) |
++	     (1 << IEEE80211_RADIOTAP_CHANNEL));
++	hdr->rt_flags = 0;
++	hdr->rt_rate = txrate->bitrate / 5;
++	hdr->rt_channel = data->channel->center_freq;
++	flags = IEEE80211_CHAN_2GHZ;
++	if (txrate->flags & IEEE80211_RATE_ERP_G)
++		flags |= IEEE80211_CHAN_OFDM;
++	else
++		flags |= IEEE80211_CHAN_CCK;
++	hdr->rt_chbitmask = cpu_to_le16(flags);
++
++	skb->dev = hwsim_mon;
++	skb_set_mac_header(skb, 0);
++	skb->ip_summed = CHECKSUM_UNNECESSARY;
++	skb->pkt_type = PACKET_OTHERHOST;
++	skb->protocol = __constant_htons(ETH_P_802_2);
++	memset(skb->cb, 0, sizeof(skb->cb));
++	netif_rx(skb);
++}
++
++
++static int mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
++{
++	struct mac80211_hwsim_data *data = hw->priv;
++	struct ieee80211_rx_status rx_status;
++	int i, ack = 0;
++	struct ieee80211_hdr *hdr;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_tx_info *txi;
++
++	mac80211_hwsim_monitor_rx(hw, skb);
++
++	if (skb->len < 10) {
++		/* Should not happen; just a sanity check for addr1 use */
++		dev_kfree_skb(skb);
++		return NETDEV_TX_OK;
++	}
++
++	if (!data->radio_enabled) {
++		printk(KERN_DEBUG "%s: dropped TX frame since radio "
++		       "disabled\n", wiphy_name(hw->wiphy));
++		dev_kfree_skb(skb);
++		return NETDEV_TX_OK;
++	}
++
++	hdr = (struct ieee80211_hdr *) skb->data;
++	if (is_multicast_ether_addr(hdr->addr1))
++		ack = 1;
++
++	memset(&rx_status, 0, sizeof(rx_status));
++	/* TODO: set mactime */
++	rx_status.freq = data->channel->center_freq;
++	rx_status.band = data->channel->band;
++	rx_status.rate_idx = info->tx_rate_idx;
++	/* TODO: simulate signal strength (and optional packet drop) */
++
++	/* Copy skb to all enabled radios that are on the current frequency */
++	for (i = 0; i < hwsim_radio_count; i++) {
++		struct mac80211_hwsim_data *data2;
++		struct sk_buff *nskb;
++
++		if (hwsim_radios[i] == NULL || hwsim_radios[i] == hw)
++			continue;
++		data2 = hwsim_radios[i]->priv;
++		if (!data2->started || !data2->radio_enabled ||
++		    data->channel->band != data2->channel->band ||
++		    data->channel->center_freq != data2->channel->center_freq)
++			continue;
++
++		nskb = skb_copy(skb, GFP_ATOMIC);
++		if (nskb == NULL)
++			continue;
++
++		if (memcmp(hdr->addr1, hwsim_radios[i]->wiphy->perm_addr,
++			   ETH_ALEN) == 0)
++			ack = 1;
++		ieee80211_rx_irqsafe(hwsim_radios[i], nskb, &rx_status);
++	}
++
++	txi = IEEE80211_SKB_CB(skb);
++	memset(&txi->status, 0, sizeof(txi->status));
++	if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK)) {
++		if (ack)
++			txi->flags |= IEEE80211_TX_STAT_ACK;
++		else
++			txi->status.excessive_retries = 1;
++	}
++	ieee80211_tx_status_irqsafe(hw, skb);
++	return NETDEV_TX_OK;
++}
++
++
++static int mac80211_hwsim_start(struct ieee80211_hw *hw)
++{
++	struct mac80211_hwsim_data *data = hw->priv;
++	printk(KERN_DEBUG "%s:%s\n", wiphy_name(hw->wiphy), __func__);
++	data->started = 1;
++	return 0;
++}
++
++
++static void mac80211_hwsim_stop(struct ieee80211_hw *hw)
++{
++	struct mac80211_hwsim_data *data = hw->priv;
++	data->started = 0;
++	printk(KERN_DEBUG "%s:%s\n", wiphy_name(hw->wiphy), __func__);
++}
++
++
++static int mac80211_hwsim_add_interface(struct ieee80211_hw *hw,
++					struct ieee80211_if_init_conf *conf)
++{
++	DECLARE_MAC_BUF(mac);
++	printk(KERN_DEBUG "%s:%s (type=%d mac_addr=%s)\n",
++	       wiphy_name(hw->wiphy), __func__, conf->type,
++	       print_mac(mac, conf->mac_addr));
++	return 0;
++}
++
++
++static void mac80211_hwsim_remove_interface(
++	struct ieee80211_hw *hw, struct ieee80211_if_init_conf *conf)
++{
++	DECLARE_MAC_BUF(mac);
++	printk(KERN_DEBUG "%s:%s (type=%d mac_addr=%s)\n",
++	       wiphy_name(hw->wiphy), __func__, conf->type,
++	       print_mac(mac, conf->mac_addr));
++}
++
++
++static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
++				     struct ieee80211_vif *vif)
++{
++	struct ieee80211_hw *hw = arg;
++	struct mac80211_hwsim_data *data = hw->priv;
++	struct sk_buff *skb;
++	struct ieee80211_rx_status rx_status;
++	int i;
++	struct ieee80211_tx_info *info;
++
++	if (vif->type != IEEE80211_IF_TYPE_AP)
++		return;
++
++	skb = ieee80211_beacon_get(hw, vif);
++	if (skb == NULL)
++		return;
++	info = IEEE80211_SKB_CB(skb);
++
++	mac80211_hwsim_monitor_rx(hw, skb);
++
++	memset(&rx_status, 0, sizeof(rx_status));
++	/* TODO: set mactime */
++	rx_status.freq = data->channel->center_freq;
++	rx_status.band = data->channel->band;
++	rx_status.rate_idx = info->tx_rate_idx;
++	/* TODO: simulate signal strength (and optional packet drop) */
++
++	/* Copy skb to all enabled radios that are on the current frequency */
++	for (i = 0; i < hwsim_radio_count; i++) {
++		struct mac80211_hwsim_data *data2;
++		struct sk_buff *nskb;
++
++		if (hwsim_radios[i] == NULL || hwsim_radios[i] == hw)
++			continue;
++		data2 = hwsim_radios[i]->priv;
++		if (!data2->started || !data2->radio_enabled ||
++		    data->channel->band != data2->channel->band ||
++		    data->channel->center_freq != data2->channel->center_freq)
++			continue;
++
++		nskb = skb_copy(skb, GFP_ATOMIC);
++		if (nskb == NULL)
++			continue;
++
++		ieee80211_rx_irqsafe(hwsim_radios[i], nskb, &rx_status);
++	}
++
++	dev_kfree_skb(skb);
++}
++
++
++static void mac80211_hwsim_beacon(unsigned long arg)
++{
++	struct ieee80211_hw *hw = (struct ieee80211_hw *) arg;
++	struct mac80211_hwsim_data *data = hw->priv;
++
++	if (!data->started || !data->radio_enabled)
++		return;
++
++	ieee80211_iterate_active_interfaces(hw, mac80211_hwsim_beacon_tx, hw);
++
++	data->beacon_timer.expires = jiffies + data->beacon_int;
++	add_timer(&data->beacon_timer);
++}
++
++
++static int mac80211_hwsim_config(struct ieee80211_hw *hw,
++				 struct ieee80211_conf *conf)
++{
++	struct mac80211_hwsim_data *data = hw->priv;
++
++	printk(KERN_DEBUG "%s:%s (freq=%d radio_enabled=%d beacon_int=%d)\n",
++	       wiphy_name(hw->wiphy), __func__,
++	       conf->channel->center_freq, conf->radio_enabled,
++	       conf->beacon_int);
++
++	data->channel = conf->channel;
++	data->radio_enabled = conf->radio_enabled;
++	data->beacon_int = 1024 * conf->beacon_int / 1000 * HZ / 1000;
++	if (data->beacon_int < 1)
++		data->beacon_int = 1;
++
++	if (!data->started || !data->radio_enabled)
++		del_timer(&data->beacon_timer);
++	else
++		mod_timer(&data->beacon_timer, jiffies + data->beacon_int);
++
++	return 0;
++}
++
++
++static void mac80211_hwsim_configure_filter(struct ieee80211_hw *hw,
++					    unsigned int changed_flags,
++					    unsigned int *total_flags,
++					    int mc_count,
++					    struct dev_addr_list *mc_list)
++{
++	struct mac80211_hwsim_data *data = hw->priv;
++
++	printk(KERN_DEBUG "%s:%s\n", wiphy_name(hw->wiphy), __func__);
++
++	data->rx_filter = 0;
++	if (*total_flags & FIF_PROMISC_IN_BSS)
++		data->rx_filter |= FIF_PROMISC_IN_BSS;
++	if (*total_flags & FIF_ALLMULTI)
++		data->rx_filter |= FIF_ALLMULTI;
++
++	*total_flags = data->rx_filter;
++}
++
++
++
++static const struct ieee80211_ops mac80211_hwsim_ops =
++{
++	.tx = mac80211_hwsim_tx,
++	.start = mac80211_hwsim_start,
++	.stop = mac80211_hwsim_stop,
++	.add_interface = mac80211_hwsim_add_interface,
++	.remove_interface = mac80211_hwsim_remove_interface,
++	.config = mac80211_hwsim_config,
++	.configure_filter = mac80211_hwsim_configure_filter,
++};
++
++
++static void mac80211_hwsim_free(void)
++{
++	int i;
++
++	for (i = 0; i < hwsim_radio_count; i++) {
++		if (hwsim_radios[i]) {
++			struct mac80211_hwsim_data *data;
++			data = hwsim_radios[i]->priv;
++			ieee80211_unregister_hw(hwsim_radios[i]);
++			if (!IS_ERR(data->dev))
++				device_unregister(data->dev);
++			ieee80211_free_hw(hwsim_radios[i]);
++		}
++	}
++	kfree(hwsim_radios);
++	class_destroy(hwsim_class);
++}
++
++
++static struct device_driver mac80211_hwsim_driver = {
++	.name = "mac80211_hwsim"
++};
++
++
++static void hwsim_mon_setup(struct net_device *dev)
++{
++	dev->hard_start_xmit = hwsim_mon_xmit;
++	dev->destructor = free_netdev;
++	ether_setup(dev);
++	dev->tx_queue_len = 0;
++	dev->type = ARPHRD_IEEE80211_RADIOTAP;
++	memset(dev->dev_addr, 0, ETH_ALEN);
++	dev->dev_addr[0] = 0x12;
++}
++
++
++static int __init init_mac80211_hwsim(void)
++{
++	int i, err = 0;
++	u8 addr[ETH_ALEN];
++	struct mac80211_hwsim_data *data;
++	struct ieee80211_hw *hw;
++	DECLARE_MAC_BUF(mac);
++
++	if (radios < 1 || radios > 65535)
++		return -EINVAL;
++
++	hwsim_radio_count = radios;
++	hwsim_radios = kcalloc(hwsim_radio_count,
++			       sizeof(struct ieee80211_hw *), GFP_KERNEL);
++	if (hwsim_radios == NULL)
++		return -ENOMEM;
++
++	hwsim_class = class_create(THIS_MODULE, "mac80211_hwsim");
++	if (IS_ERR(hwsim_class)) {
++		kfree(hwsim_radios);
++		return PTR_ERR(hwsim_class);
++	}
++
++	memset(addr, 0, ETH_ALEN);
++	addr[0] = 0x02;
++
++	for (i = 0; i < hwsim_radio_count; i++) {
++		printk(KERN_DEBUG "mac80211_hwsim: Initializing radio %d\n",
++		       i);
++		hw = ieee80211_alloc_hw(sizeof(*data), &mac80211_hwsim_ops);
++		if (hw == NULL) {
++			printk(KERN_DEBUG "mac80211_hwsim: ieee80211_alloc_hw "
++			       "failed\n");
++			err = -ENOMEM;
++			goto failed;
++		}
++		hwsim_radios[i] = hw;
++
++		data = hw->priv;
++		data->dev = device_create(hwsim_class, NULL, 0, "hwsim%d", i);
++		if (IS_ERR(data->dev)) {
++			printk(KERN_DEBUG "mac80211_hwsim: device_create "
++			       "failed (%ld)\n", PTR_ERR(data->dev));
++			err = -ENOMEM;
++			goto failed;
++		}
++		data->dev->driver = &mac80211_hwsim_driver;
++		dev_set_drvdata(data->dev, hw);
++
++		SET_IEEE80211_DEV(hw, data->dev);
++		addr[3] = i >> 8;
++		addr[4] = i;
++		SET_IEEE80211_PERM_ADDR(hw, addr);
++
++		hw->channel_change_time = 1;
++		hw->queues = 1;
++
++		memcpy(data->channels, hwsim_channels, sizeof(hwsim_channels));
++		memcpy(data->rates, hwsim_rates, sizeof(hwsim_rates));
++		data->band.channels = data->channels;
++		data->band.n_channels = ARRAY_SIZE(hwsim_channels);
++		data->band.bitrates = data->rates;
++		data->band.n_bitrates = ARRAY_SIZE(hwsim_rates);
++		hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &data->band;
++
++		err = ieee80211_register_hw(hw);
++		if (err < 0) {
++			printk(KERN_DEBUG "mac80211_hwsim: "
++			       "ieee80211_register_hw failed (%d)\n", err);
++			goto failed;
++		}
++
++		printk(KERN_DEBUG "%s: hwaddr %s registered\n",
++		       wiphy_name(hw->wiphy),
++		       print_mac(mac, hw->wiphy->perm_addr));
++
++		setup_timer(&data->beacon_timer, mac80211_hwsim_beacon,
++			    (unsigned long) hw);
++	}
++
++	hwsim_mon = alloc_netdev(0, "hwsim%d", hwsim_mon_setup);
++	if (hwsim_mon == NULL)
++		goto failed;
++
++	rtnl_lock();
++
++	err = dev_alloc_name(hwsim_mon, hwsim_mon->name);
++	if (err < 0) {
++		goto failed_mon;
++	}
++
++	err = register_netdevice(hwsim_mon);
++	if (err < 0)
++		goto failed_mon;
++
++	rtnl_unlock();
++
++	return 0;
++
++failed_mon:
++	rtnl_unlock();
++	free_netdev(hwsim_mon);
++
++failed:
++	mac80211_hwsim_free();
++	return err;
++}
++
++
++static void __exit exit_mac80211_hwsim(void)
++{
++	printk(KERN_DEBUG "mac80211_hwsim: unregister %d radios\n",
++	       hwsim_radio_count);
++
++	unregister_netdev(hwsim_mon);
++	mac80211_hwsim_free();
++}
++
++
++module_init(init_mac80211_hwsim);
++module_exit(exit_mac80211_hwsim);
+ 
 -- 
-Luká¹ Hejtmánek
-
---LZvS9be/3tNcYl/X
-Content-Type: text/plain; charset=iso-8859-2
-Content-Disposition: attachment; filename="vmstat.nomem"
-
-nr_free_pages 10562
-nr_inactive 90191
-nr_active 353444
-nr_anon_pages 269349
-nr_mapped 24853
-nr_file_pages 174310
-nr_dirty 34
-nr_writeback 0
-nr_slab_reclaimable 13345
-nr_slab_unreclaimable 3293
-nr_page_table_pages 3709
-nr_unstable 0
-nr_bounce 0
-nr_vmscan_write 145
-nr_writeback_temp 0
-pgpgin 4465231
-pgpgout 1690084
-pswpin 19
-pswpout 43
-pgalloc_dma 336993
-pgalloc_dma32 56207889
-pgalloc_normal 0
-pgalloc_movable 0
-pgfree 56555683
-pgactivate 1767842
-pgdeactivate 232049
-pgfault 51147492
-pgmajfault 4074
-pgrefill_dma 13774
-pgrefill_dma32 1230295
-pgrefill_normal 0
-pgrefill_movable 0
-pgsteal_dma 11129
-pgsteal_dma32 922798
-pgsteal_normal 0
-pgsteal_movable 0
-pgscan_kswapd_dma 0
-pgscan_kswapd_dma32 0
-pgscan_kswapd_normal 0
-pgscan_kswapd_movable 0
-pgscan_direct_dma 11605
-pgscan_direct_dma32 956420
-pgscan_direct_normal 0
-pgscan_direct_movable 0
-pginodesteal 112417
-slabs_scanned 165120
-kswapd_steal 0
-kswapd_inodesteal 0
-pageoutrun 4235909
-allocstall 14350
-pgrotated 76
-
---LZvS9be/3tNcYl/X
-Content-Type: text/plain; charset=iso-8859-2
-Content-Disposition: attachment; filename="slabinfo.nomem"
-
-slabinfo - version: 2.1
-# name            <active_objs> <num_objs> <objsize> <objperslab> <pagesperslab> : tunables <limit> <batchcount> <sharedfactor> : slabdata <active_slabs> <num_slabs> <sharedavail>
-fat_inode_cache       13     13    624   13    2 : tunables    0    0    0 : slabdata      1      1      0
-fat_cache            204    204     40  102    1 : tunables    0    0    0 : slabdata      2      2      0
-fuse_request           0      0    608   13    2 : tunables    0    0    0 : slabdata      0      0      0
-fuse_inode             0      0    704   23    4 : tunables    0    0    0 : slabdata      0      0      0
-kmalloc_dma-512        0     16    512   16    2 : tunables    0    0    0 : slabdata      1      1      0
-cfq_queue            105    120    136   30    1 : tunables    0    0    0 : slabdata      4      4      0
-bsg_cmd                0      0    312   13    1 : tunables    0    0    0 : slabdata      0      0      0
-mqueue_inode_cache      1     19    832   19    4 : tunables    0    0    0 : slabdata      1      1      0
-ext2_inode_cache       0      0    736   22    4 : tunables    0    0    0 : slabdata      0      0      0
-journal_handle       340    340     24  170    1 : tunables    0    0    0 : slabdata      2      2      0
-journal_head         126    126     96   42    1 : tunables    0    0    0 : slabdata      3      3      0
-revoke_table         258    512     16  256    1 : tunables    0    0    0 : slabdata      2      2      0
-revoke_record        256    256     32  128    1 : tunables    0    0    0 : slabdata      2      2      0
-ext3_inode_cache   45184  45298    744   22    4 : tunables    0    0    0 : slabdata   2059   2059      0
-ext3_xattr             0      0     88   46    1 : tunables    0    0    0 : slabdata      0      0      0
-inotify_event_cache    204    204     40  102    1 : tunables    0    0    0 : slabdata      2      2      0
-shmem_inode_cache   3021   3058    736   22    4 : tunables    0    0    0 : slabdata    139    139      0
-pid_namespace          0      0   2104   15    8 : tunables    0    0    0 : slabdata      0      0      0
-nsproxy               73    146     56   73    1 : tunables    0    0    0 : slabdata      2      2      0
-xfrm_dst_cache         0      0    384   21    2 : tunables    0    0    0 : slabdata      0      0      0
-ip_dst_cache          26     36    320   12    1 : tunables    0    0    0 : slabdata      3      3      0
-UDP                   42     42    768   21    4 : tunables    0    0    0 : slabdata      2      2      0
-TCP                   67     76   1664   19    8 : tunables    0    0    0 : slabdata      4      4      0
-scsi_bidi_sdb        171    340     24  170    1 : tunables    0    0    0 : slabdata      2      2      0
-scsi_io_context        0      0    112   36    1 : tunables    0    0    0 : slabdata      0      0      0
-blkdev_queue          19     36   1792   18    8 : tunables    0    0    0 : slabdata      2      2      0
-blkdev_requests       30     39    304   13    1 : tunables    0    0    0 : slabdata      3      3      0
-sock_inode_cache     323    336    640   12    2 : tunables    0    0    0 : slabdata     28     28      0
-skbuff_fclone_cache     36     36    448   18    2 : tunables    0    0    0 : slabdata      2      2      0
-file_lock_cache       42     42    192   21    1 : tunables    0    0    0 : slabdata      2      2      0
-Acpi-ParseExt       3413   3472     72   56    1 : tunables    0    0    0 : slabdata     62     62      0
-Acpi-Parse           170    170     48   85    1 : tunables    0    0    0 : slabdata      2      2      0
-proc_inode_cache     556    574    576   14    2 : tunables    0    0    0 : slabdata     41     41      0
-sigqueue              50     50    160   25    1 : tunables    0    0    0 : slabdata      2      2      0
-radix_tree_node    18235  18347    560   14    2 : tunables    0    0    0 : slabdata   1311   1311      0
-bdev_cache            42     42    768   21    4 : tunables    0    0    0 : slabdata      2      2      0
-sysfs_dir_cache    11779  11781     80   51    1 : tunables    0    0    0 : slabdata    231    231      0
-inode_cache          261    435    544   15    2 : tunables    0    0    0 : slabdata     29     29      0
-dentry              5784  11153    208   19    1 : tunables    0    0    0 : slabdata    587    587      0
-buffer_head        59755  60624    112   36    1 : tunables    0    0    0 : slabdata   1684   1684      0
-vm_area_struct     10323  10776    168   24    1 : tunables    0    0    0 : slabdata    449    449      0
-files_cache          387    414    704   23    4 : tunables    0    0    0 : slabdata     18     18      0
-signal_cache         236    266    832   19    4 : tunables    0    0    0 : slabdata     14     14      0
-sighand_cache        153    180   2112   15    8 : tunables    0    0    0 : slabdata     12     12      0
-task_struct          257    299   1424   23    8 : tunables    0    0    0 : slabdata     13     13      0
-anon_vma            3302   3584     32  128    1 : tunables    0    0    0 : slabdata     28     28      0
-idr_layer_cache      401    405    536   15    2 : tunables    0    0    0 : slabdata     27     27      0
-kmalloc-4096          54     64   4096    8    8 : tunables    0    0    0 : slabdata      8      8      0
-kmalloc-2048         373    432   2048   16    8 : tunables    0    0    0 : slabdata     27     27      0
-kmalloc-1024        1019   1040   1024   16    4 : tunables    0    0    0 : slabdata     65     65      0
-kmalloc-512          418    448    512   16    2 : tunables    0    0    0 : slabdata     28     28      0
-kmalloc-256          599    608    256   16    1 : tunables    0    0    0 : slabdata     38     38      0
-kmalloc-128          606    960    128   32    1 : tunables    0    0    0 : slabdata     30     30      0
-kmalloc-64         28435  32320     64   64    1 : tunables    0    0    0 : slabdata    505    505      0
-kmalloc-32          2619   2688     32  128    1 : tunables    0    0    0 : slabdata     21     21      0
-kmalloc-16          2889   3584     16  256    1 : tunables    0    0    0 : slabdata     14     14      0
-kmalloc-8           5020   5120      8  512    1 : tunables    0    0    0 : slabdata     10     10      0
-kmalloc-192         5108   5292    192   21    1 : tunables    0    0    0 : slabdata    252    252      0
-kmalloc-96          1188   1302     96   42    1 : tunables    0    0    0 : slabdata     31     31      0
-
---LZvS9be/3tNcYl/X--
+Jouni Malinen                                            PGP id EFC895FA
