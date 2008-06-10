@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47095
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753049AbYFCUgy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 16:36:54 -0400
-Date: Tue, 03 Jun 2008 13:27:55 -0700 (PDT)
-Message-Id: <20080603.132755.262737024.davem@davemloft.net> (sfid-20080603_223932_930489_1A9D5BFC)
+Received: from mail.gmx.net ([213.165.64.20]:56976 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752871AbYFJPcd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jun 2008 11:32:33 -0400
+Message-ID: <484E9F12.9010502@gmx.de> (sfid-20080610_173237_004587_B2C15A3F)
+Date: Tue, 10 Jun 2008 17:34:42 +0200
+From: Joe <wirelesss@gmx.de>
+MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 0/12]: Proper compat WEXT support.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Subject: Re: [english 95%] QUESTIONS to ieee80211_beacon_get AND ieee80211_get_buffered_bc
+References: <4848289D.1080205@mandriva.org> <1ba2fa240806051103q652accf5t1bd1d94630ebea5b@mail.gmail.com> <48482BC3.4070402@mandriva.org> <4848482C.2080208@mandriva.org> <48485F12.2050908@mandriva.org> <484E9436.605@gmx.de>
+In-Reply-To: <484E9436.605@gmx.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello Johannes,
 
-This is a refresh of my previous WEXT compat patch set.
-
-I've actually tested these exact patches on sparc64 with a RNDIS based
-USB wireless device from Linksys.  I was able to perform iwconfig
-commands, check iwlist, bring up the interface and use it properly.
-All with 32-bit tools.  I've also done an allmodconfig sanity
-build check on sparc64.
-
-The one thing I was not able to test yet is wpa_supplicant use, and
-that likely doesn't work properly yet, but we can fix that on top and
-these patches do not break native non-compat binaries.  They do make a
-lot of compat stuff work which wasn't the case before.  So applying
-this stuff makes sense, and we can get wpa_supplicant working if it
-isn't working using follow-on patches.
-
-The patch set starts by cleaning up the code so that we can avoid
-having multiple copies of the WEXT main dispatch routines, one for
-compat and one for the non-compat case.
-
-Next, basic compat level handling of the WEXT ioctl is added, and the
-equivalent code in the compat_ioctl.c file is removed.
-
-Finally, compat IWE stream munging is added for the wireless layer.
-When we get a compat WEXT ioctl request, we set a bit in the request
-info blob, and the stream building helpers tip off this to format the
-stream entries properly.
-
-These patches are against net-next-2.6 and are also available as
-a GIT tree at:
-
-	master.kernel.org:/pub/scm/linux/kernel/git/davem/wireless-2.6.git
-
-John, please pull or apply as you deem appropriate.
-
-Thanks!
+thanks to your helpfull support, which enabled me to precise my request, 
+which I edited in the follows:
+> Hy all,
+>
+> I have a question to he two methods:
+>
+> ieee80211_beacon_get
+> ieee80211_get_buffered_bc
+> in tx.c
+>
+> Both are called by the hardware driver to get a current beacon from 
+> the ieee80211 stack. Thereby the ieee80211_beacon_get is called 
+> normally. The other method is just called, if a buffered /multicast 
+> channel(DTIM) is needed or used - but necessaryly the 
+> ieee80211_beacon_get must be called before. Is this right?
+> So if I want to manipulate the beacons send out I would start at 
+> ieee80211_beacon_get right?
+>
+> How often refresh the hardwaredriver usually the requested beacon? 
+> Does "Returned skb is used only once and low-level driver is 
+> responsible of freeing it." means, that the method is called always 
+> when new Beacon frame will be transmitted? Or does this depend on the 
+> hardware?
+> Which kind of hardwaredrivers does allready utilize this methods, isit 
+> allready the standard way to transfer the generation of the beacons to 
+> the stack?
+>
+> An total independent question: Following the suggestion of Holger 
+> Schurig I started to extend the Glossary in the wiki (with the 
+> abbreviations in the source code) a few hours ago, but My extension 
+> was removed again. Why?
+>
+> All the Best
+> Sebastian
