@@ -1,54 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:31623 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751041AbYFUK6Q (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:60219 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750737AbYFJELm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jun 2008 06:58:16 -0400
-Date: Sat, 21 Jun 2008 01:44:40 -0700
-From: Joel Becker <Joel.Becker@oracle.com>
-To: Ben Nizette <bn@niasdigital.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux kernel <linux-kernel@vger.kernel.org>,
-	Greg KH <greg@kroah.com>,
-	Satyam Sharma <ssatyam@cse.iitk.ac.in>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Al Viro <viro@ftp.linux.org.uk>,
-	"H. Peter Anvin" <hpa@kernel.org>
-Subject: Re: [RFC PATCHES] Re: Is configfs the right solution for
-	configuration based fs?
-Message-ID: <20080621084440.GA25489@ca-server1.us.oracle.com> (sfid-20080621_125824_929770_F95FB62F)
-References: <1213002187.698.62.camel@johannes.berg> <1213056772.4089.42.camel@moss.renham> <20080619024804.GA29765@mail.oracle.com> <1213942750.2336.43.camel@moss.renham> <20080620065253.GA14238@ca-server1.us.oracle.com> <1213953776.2336.75.camel@moss.renham> <20080620213708.GC21416@mail.oracle.com> <1214010229.2336.88.camel@moss.renham> <20080621020201.GH21416@mail.oracle.com> <1214035422.2336.121.camel@moss.renham>
+	Tue, 10 Jun 2008 00:11:42 -0400
+Date: Tue, 10 Jun 2008 01:11:37 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Matthew Garrett <mjg@redhat.com>
+Cc: Dan Williams <dcbw@redhat.com>, Tomas Winkler <tomasw@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, Dmitry Torokhov <dtor@mail.ru>
+Subject: Re: [PATCH 01/12] rfkill: clarify meaning of rfkill states
+Message-ID: <20080610041136.GA20310@khazad-dum.debian.net> (sfid-20080610_061146_752506_2599AE46)
+References: <1ba2fa240806041607j10841ac0qb11fe0d0b27953d8@mail.gmail.com> <20080605003808.GA16599@khazad-dum.debian.net> <1212667955.25730.29.camel@localhost.localdomain> <20080605130323.GB3413@khazad-dum.debian.net> <1212677207.28545.56.camel@localhost.localdomain> <1212696826.13915.1256967905@webmail.messagingengine.com> <1212722763.1026.17.camel@localhost.localdomain> <1212758662.26514.5.camel@localhost.localdomain> <20080606141419.GA3444@khazad-dum.debian.net> <20080608201603.GA25453@srcf.ucam.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1214035422.2336.121.camel@moss.renham>
+In-Reply-To: <20080608201603.GA25453@srcf.ucam.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 21, 2008 at 06:03:42PM +1000, Ben Nizette wrote:
-> In the kobject/kset case the separation makes sense as kobjects are
-> embedded in things all over the kernel controlling things like ref
-> counting, device model glue, hotplug info as well as the sysfs
-> representation.  The config_item doesn't have any responsibilities
-> outside of the configfs representation (does it?) so the analogy isn't
-> 100%.  Though of course the item/group split makes sense if there are
-> grander plans for the config_item in the future.
+On Sun, 08 Jun 2008, Matthew Garrett wrote:
+> On Fri, Jun 06, 2008 at 11:14:19AM -0300, Henrique de Moraes Holschuh wrote:
+> > 1. Every transmitter shall have ONE, and just ONE (not zero, not two,
+> > not more) rfkill class attached.  For those transmitters lacking support
+> > in hardware to make it block, the drivers shall quiesce them and avoid
+> > doing anything to cause transmissions, or even use bus tricks to power
+> > the device down (i.e. the driver will emulate a switch capable of doing
+> > the blocking).
+> 
+> How do we enforce this? iwl4965 provides an rfkill device, but hp-wmi 
+> will also provide one for the wifi. If I swap out the wireless card for 
+> something else, I may lose the card-specific rfkill device.
 
-	The config_item is indeed embedded in whatever struct it maps
-too.  eg, the ocfs2 nodemanager can have a couple hundred nodes, and
-that's one config_item per.  The fs/dlm stuff can have even more nodes.
+Let's define some very STRICT terminology to avoid confusion.
 
-Joel
+rfkill class:  the sysfs rfkill class, related to struct rfkill.
+
+rfkill class attached [to a Linux struct device]: a device whose
+  struct device was given to rfkill_allocate() as the parent.
+
+transmitter:  part of a wireless device.  So far, every wireless device
+I have seen has only one transmitter from the kernel PoV.  A device
+with two transmitters would be able to transmit two different information
+streams at the same time, with different parameters (such as frequency,
+power).
+
+transmitter != switch, so hp-wmi, thinkpad-acpi, and anything else that is
+not an actual wireless hardware device IS NOT INCLUDED in that "one and just
+one" constraint.  In fact, thinkpad-acpi has two rfkill classes attached to
+its main platform device, one for the bluetooth softswitch, and another for
+the wwan softswitch.
+
+So, "Every transmitter shall have ONE and just ONE rfkill class attached."
+just means that you call rfkill_allocate with that device as the parent just
+ONCE per transmitter (and everything I have seen so far has just one
+transmitter).
+
+Which also means that, for wireless drivers (which have transmitters), you
+need to synthesize the "device rfkill state" to give to that rfkill class.
+THE TRANSMITTER MIGHT BE UNDER THE EFFECT OF MORE THAN ONE RFKILL LINE.
+
+And if the device [transmitter] has NO rfkill capabilities by itself, we
+emulate the minimum of one in software [per transmitter].   If the device
+has one input pin for rfkill, that one is also taken into account when
+generating the state for the ONLY ONE rfkill class attached to that device
+[per transmitter], etc.
+
+Now, firmware switches are different, and something for another email that
+I haven't typed in yet (busy in real life right now).
+
+An example:
+
+ipw4965 probably has two rfkill controls in itself (an input pin for a
+hardkill line, and an R/W IO register to help its driver (ilw4965) implement
+a rfkill softswitch).  Those TWO rfkill inputs are to be combined into just
+ONE rfkill class which will be attached to the Linux device provided by
+ilw4965.  This is the end of the story from the PoC of the ilw4965 module.
+
+hp-wmi probably has one softswitch it controls, that ends up connected to
+that input pin in the ipw4965 card so you end up being able to use a hp-wmi
+softswitch to hardkill the ipw4965 card.  This IS expected, and it will not
+matter or break anything.  In the current rfkill incarnation, rfkill doesn't
+understand or know or want to know about rfkill switch topology as it
+stands.
+
+Did I manage to get the idea across, this time?  Remember, I am not
+describing the rfkill class interactions for switches in that email, JUST
+for wireless drivers, which hp-wmi, thinkpad-acpi, etc are not...
+
+What happens on the hp-wmi side when the ipw4965 card is removed, is to be
+explained in the other email about switches, but it is not much.  Basically,
+hp-wmi has to be written in such a way that it won't matter for the user,
+and THERE is the real reason why one must never confuse the softswitch
+control with input devices.  Remember that as long as rfkill-input is
+loaded, if anything sends a "change all WLAN rfkill switches" input event,
+all WLAN rfkill switches WILL be changed, regardless of whether they are
+wired among themselves, or completely independent.
 
 -- 
-
-Life's Little Instruction Book #222
-
-	"Think twice before burdening a friend with a secret."
-
-Joel Becker
-Principal Software Developer
-Oracle
-E-mail: joel.becker@oracle.com
-Phone: (650) 506-8127
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
