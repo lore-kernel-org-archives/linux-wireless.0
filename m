@@ -1,77 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:55685 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751480AbYFVCdX (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.228]:31042 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754311AbYFJPJo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jun 2008 22:33:23 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1505512wfd.4
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Jun 2008 19:33:22 -0700 (PDT)
-Subject: [PATCH] adm8211: remove unnecessary protected bit mask/check
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Michael Wu <flamingice@sourmilk.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <200806212221.54814.flamingice@sourmilk.net>
-References: <1213932851.6591.8.camel@brick>
-	 <200806212221.54814.flamingice@sourmilk.net>
-Content-Type: text/plain
-Date: Sat, 21 Jun 2008 19:33:20 -0700
-Message-Id: <1214102000.21092.1.camel@brick> (sfid-20080622_043351_078817_038C3AA8)
-Mime-Version: 1.0
+	Tue, 10 Jun 2008 11:09:44 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so937788rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2008 08:09:43 -0700 (PDT)
+Message-ID: <19f34abd0806100809j6d26f62bte961a34b2c448f3c@mail.gmail.com> (sfid-20080610_170948_611508_6CD4CFDC)
+Date: Tue, 10 Jun 2008 17:09:43 +0200
+From: "Vegard Nossum" <vegard.nossum@gmail.com>
+To: "Miles Lane" <miles.lane@gmail.com>,
+	"Michael Buesch" <mb@bu3sch.de>,
+	"FUJITA Tomonori" <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: BUG: NULL pointer dereference at 00000000 -- IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
+Cc: "Andrew Morton" <akpm@linux-foundation.org>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <a44ae5cd0806100742t1bd275dib43c5d72b3dd9659@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <a44ae5cd0806100709rf4602f2x587631852502c0b5@mail.gmail.com>
+	 <19f34abd0806100729h7a060012h91e81248c9c7cdca@mail.gmail.com>
+	 <200806101634.21576.mb@bu3sch.de> <200806101637.11473.mb@bu3sch.de>
+	 <a44ae5cd0806100742t1bd275dib43c5d72b3dd9659@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removes now unused fc local var and uses the new ieee80211_hdrlen
-which directly uses the le16 frame control value.
+On 6/10/08, Miles Lane <miles.lane@gmail.com> wrote:
+> Sorry, I forgot to label the kernel tree.  It is 2.6.26-rc5-mm2.
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- drivers/net/wireless/adm8211.c |    9 +--------
- 1 files changed, 1 insertions(+), 8 deletions(-)
+No worries, it was in your config file :-)
 
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-index 0ba55ba..3333d45 100644
---- a/drivers/net/wireless/adm8211.c
-+++ b/drivers/net/wireless/adm8211.c
-@@ -1685,7 +1685,6 @@ static void adm8211_tx_raw(struct ieee80211_hw *dev, struct sk_buff *skb,
- static int adm8211_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
- {
- 	struct adm8211_tx_hdr *txhdr;
--	u16 fc;
- 	size_t payload_len, hdrlen;
- 	int plcp, dur, len, plcp_signal, short_preamble;
- 	struct ieee80211_hdr *hdr;
-@@ -1696,8 +1695,7 @@ static int adm8211_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
- 	plcp_signal = txrate->bitrate;
- 
- 	hdr = (struct ieee80211_hdr *)skb->data;
--	fc = le16_to_cpu(hdr->frame_control) & ~IEEE80211_FCTL_PROTECTED;
--	hdrlen = ieee80211_get_hdrlen(fc);
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	memcpy(skb->cb, skb->data, hdrlen);
- 	hdr = (struct ieee80211_hdr *)skb->cb;
- 	skb_pull(skb, hdrlen);
-@@ -1711,8 +1709,6 @@ static int adm8211_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
- 	txhdr->frame_control = hdr->frame_control;
- 
- 	len = hdrlen + payload_len + FCS_LEN;
--	if (fc & IEEE80211_FCTL_PROTECTED)
--		len += 8;
- 
- 	txhdr->frag = cpu_to_le16(0x0FFF);
- 	adm8211_calc_durations(&dur, &plcp, payload_len,
-@@ -1730,9 +1726,6 @@ static int adm8211_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
- 	if (info->flags & IEEE80211_TX_CTL_USE_RTS_CTS)
- 		txhdr->header_control |= cpu_to_le16(ADM8211_TXHDRCTL_ENABLE_RTS);
- 
--	if (fc & IEEE80211_FCTL_PROTECTED)
--		txhdr->header_control |= cpu_to_le16(ADM8211_TXHDRCTL_ENABLE_WEP_ENGINE);
--
- 	txhdr->retry_limit = info->control.retry_limit;
- 
- 	adm8211_tx_raw(dev, skb, plcp_signal, hdrlen);
+Thanks for reporting.
+
+
+On 6/10/08, Michael Buesch <mb@bu3sch.de> wrote:
+> Ok, FUJITA Tomonori, please make sure a patch like the following goes
+>  into the same trees that you submitted commit 353c409 to.
+>  Also make sure to check b43legacy. I _guess_ you might have added
+>  the same bug there.
+
+Can you please also make sure that Miles Lane appears with a
+Reported-by line in your patch? Thanks :-) Also: Nice fix!
+
+
+Vegard
+
 -- 
-1.5.6.290.gc4e15
-
-
-
+"The animistic metaphor of the bug that maliciously sneaked in while
+the programmer was not looking is intellectually dishonest as it
+disguises that the error is the programmer's own creation."
+	-- E. W. Dijkstra, EWD1036
