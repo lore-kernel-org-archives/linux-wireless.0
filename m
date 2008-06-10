@@ -1,449 +1,1676 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:37456 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758626AbYF0SZt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2008 14:25:49 -0400
-Subject: Re: [PATCH 1/2] rfkill: rename the rfkill_state states and add
-	block-locked state
-From: Dan Williams <dcbw@redhat.com>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Thomas Renninger <trenn@suse.de>,
-	Fabien Crespel <fabien@crespel.net>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>
-In-Reply-To: <1214254004-32652-2-git-send-email-hmh@hmh.eng.br>
-References: <1214254004-32652-1-git-send-email-hmh@hmh.eng.br>
-	 <1214254004-32652-2-git-send-email-hmh@hmh.eng.br>
-Content-Type: text/plain
-Date: Fri, 27 Jun 2008 14:23:48 -0400
-Message-Id: <1214591028.24579.18.camel@localhost.localdomain> (sfid-20080627_202601_369798_08B98030)
-Mime-Version: 1.0
+Received: from rv-out-0506.google.com ([209.85.198.239]:16742 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760135AbYFJW3d (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jun 2008 18:29:33 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1128554rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2008 15:29:31 -0700 (PDT)
+Message-ID: <a44ae5cd0806101529g1d15ebd3o7b2ac2ee3c846542@mail.gmail.com> (sfid-20080611_002946_894598_78D9B15E)
+Date: Tue, 10 Jun 2008 18:29:30 -0400
+From: "Miles Lane" <miles.lane@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: BUG: NULL pointer dereference at 00000000 -- IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
+Cc: "Vegard Nossum" <vegard.nossum@gmail.com>,
+	"Andrew Morton" <akpm@linux-foundation.org>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"FUJITA Tomonori" <fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <200806110015.59285.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <a44ae5cd0806100709rf4602f2x587631852502c0b5@mail.gmail.com>
+	 <200806101650.27180.mb@bu3sch.de>
+	 <a44ae5cd0806101509x5e2d5c19y10101ea0e72f8cba@mail.gmail.com>
+	 <200806110015.59285.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-06-23 at 17:46 -0300, Henrique de Moraes Holschuh wrote:
-> The current naming of rfkill_state causes a lot of confusion: not only the
-> "kill" in rfkill suggests negative logic, but also the fact that rfkill cannot
-> turn anything on (it can just force something off or stop forcing something
-> off) is often forgotten.
-> 
-> Rename RFKILL_STATE_OFF to RFKILL_STATE_SOFT_BLOCKED (transmitter is blocked
-> and will not operate; state can be changed by a toggle_radio request), and
-> RFKILL_STATE_ON to RFKILL_STATE_UNBLOCKED (transmitter is not blocked, and may
-> operate).
-> 
-> Also, add a new third state, RFKILL_STATE_HARD_BLOCKED (transmitter is blocked
-> and will not operate; state cannot be changed through a toggle_radio request),
-> which is used by drivers to indicate a wireless transmiter was blocked by a
-> hardware rfkill line that accepts no overrides.
-> 
-> Keep the old names as #defines, but document them as deprecated.  This way,
-> drivers can be converted to the new names *and* verified to actually use rfkill
-> correctly one by one.
-> 
-> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+I am not a programmer.
 
-Thanks for doing this!
-
-So with this patch, in the case where ex. hp-wmi advertises a killswitch
-and the wlan driver itself doesn't have one, when NM wants to softkill
-the radio, should NM do a SIOCSIWTXPOW or softblock the hp-wmi
-killswitch?  Or would the wlan driver implement an rfkill handler and
-thus have /sys/class/rfkill/rfkillX as well?  My understanding of what
-would happen here got buried in all the mails last time around.  If the
-transmitter is not tied to a physical killswitch, but the killswitch is
-provided by another module (laptop specific driver for example), do we
-assume the rfkill state is authoritative or do we check each radio via
-it's own specific method?
+Here is the content of the file.  Would you please send back a version
+of the file with the necessary changes added?
+BTW, I leave tomorrow for a three week vacation, so I hope we can sort
+this before I go.
 
 Thanks,
-Dan
 
-> ---
->  Documentation/rfkill.txt  |   56 ++++++++++++++++++++++++++++-----
->  include/linux/rfkill.h    |   32 +++++++++++++++++--
->  net/rfkill/rfkill-input.c |   29 +++++++++--------
->  net/rfkill/rfkill.c       |   75 ++++++++++++++++++++++++++++++++++++--------
->  4 files changed, 152 insertions(+), 40 deletions(-)
-> 
-> diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
-> index cf230c1..5316cea 100644
-> --- a/Documentation/rfkill.txt
-> +++ b/Documentation/rfkill.txt
-> @@ -60,9 +60,20 @@ The second option provides an rfkill input handler. This handler will listen to
->  all rfkill key events and will toggle the radio accordingly.  With this option
->  enabled userspace could either do nothing or simply perform monitoring tasks.
->  
-> -When a rfkill switch is in the RFKILL_STATE_ON, the wireless transmitter (radio
-> -TX circuit for example) is *enabled*.  When the rfkill switch is in the
-> -RFKILL_STATE_OFF, the wireless transmitter is to be *blocked* from operating.
-> +When a rfkill switch is in the RFKILL_STATE_UNBLOCKED, the wireless transmitter
-> +(radio TX circuit for example) is *enabled*.  When the rfkill switch is in the
-> +RFKILL_STATE_SOFT_BLOCKED or RFKILL_STATE_HARD_BLOCKED, the wireless
-> +transmitter is to be *blocked* from operating.
-> +
-> +RFKILL_STATE_SOFT_BLOCKED indicates that a call to toggle_radio() can change
-> +that state.  RFKILL_STATE_HARD_BLOCKED indicates that a call to toggle_radio()
-> +will not be able to change the state and will return with a suitable error if
-> +attempts are made to set the state to RFKILL_STATE_UNBLOCKED.
-> +
-> +RFKILL_STATE_HARD_BLOCKED is used by drivers to signal that the device is
-> +locked in the BLOCKED state by a hardwire rfkill line (typically an input pin
-> +that, when active, forces the transmitter to be disabled) which the driver
-> +CANNOT override.
->  
->  Full rfkill functionality requires two different subsystems to cooperate: the
->  input layer and the rfkill class.  The input layer issues *commands* to the
-> @@ -122,10 +133,10 @@ Userspace input handlers (uevents) or kernel input handlers (rfkill-input):
->  	  action).
->  	* rfkill-input implements EPO by handling EV_SW SW_RFKILL_ALL 0
->  	  (power off all transmitters) in a special way: it ignores any
-> -	  overrides and local state cache and forces all transmitters to
-> -	  the OFF state (including those which are already supposed to be
-> -	  OFF).  Note that the opposite event (power on all transmitters)
-> -	  is handled normally.
-> +	  overrides and local state cache and forces all transmitters to the
-> +	  RFKILL_STATE_SOFT_BLOCKED state (including those which are already
-> +	  supposed to be BLOCKED).  Note that the opposite event (power on all
-> +	  transmitters) is handled normally.
->  
->  Userspace uevent handler or kernel platform-specific drivers hooked to the
->  rfkill notifier chain:
-> @@ -284,6 +295,19 @@ You should:
->  	  YOU CAN ACCESS state DIRECTLY)
->  	- rfkill_register()
->  
-> +The only way to set a device to the RFKILL_STATE_HARD_BLOCKED state is through
-> +a suitable return of get_state() or through rfkill_force_state().
-> +
-> +When a device is in the RFKILL_STATE_HARD_BLOCKED state, the only way to switch
-> +it to a different state is through a suitable return of get_state() or through
-> +rfkill_force_state().
-> +
-> +If toggle_radio() is called to set a device to state RFKILL_STATE_SOFT_BLOCKED
-> +when that device is already at the RFKILL_STATE_HARD_BLOCKED state, it should
-> +not return an error.  Instead, it should try to double-block the transmitter,
-> +so that its state will change from RFKILL_STATE_HARD_BLOCKED to
-> +RFKILL_STATE_SOFT_BLOCKED should the hardware blocking cease.
-> +
->  Please refer to the source for more documentation.
->  
->  ===============================================================================
-> @@ -322,13 +346,27 @@ change by writing to the "state" attribute in order for anything to happen.
->  
->  Take particular care to implement EV_SW SW_RFKILL_ALL properly.  When that
->  switch is set to OFF, *every* rfkill device *MUST* be immediately put into the
-> -OFF state, no questions asked.
-> +RFKILL_STATE_SOFT_BLOCKED state, no questions asked.
->  
->  The following sysfs entries will be created:
->  
->  	name: Name assigned by driver to this key (interface or driver name).
->  	type: Name of the key type ("wlan", "bluetooth", etc).
-> -	state: Current state of the key. 1: On, 0: Off.
-> +	state: Current state of the transmitter
-> +		0: RFKILL_STATE_SOFT_BLOCKED
-> +			transmitter is forced off, but you can override it
-> +			by a write to the state attribute, or through input
-> +			events (if rfkill-input is loaded).
-> +		1: RFKILL_STATE_UNBLOCKED
-> +			transmiter is NOT forced off, and may operate if
-> +			all other conditions for such operation are met
-> +			(such as interface is up and configured, etc).
-> +		2: RFKILL_STATE_HARD_BLOCKED
-> +			transmitter is forced off by something outside of
-> +			the driver's control.
-> +
-> +			You cannot set a device to this state through
-> +			writes to the state attribute.
->  	claim: 1: Userspace handles events, 0: Kernel handles events
->  
->  Both the "state" and "claim" entries are also writable. For the "state" entry
-> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-> index 98667be..c5f6e54 100644
-> --- a/include/linux/rfkill.h
-> +++ b/include/linux/rfkill.h
-> @@ -46,16 +46,25 @@ enum rfkill_type {
->  };
->  
->  enum rfkill_state {
-> -	RFKILL_STATE_OFF	= 0,	/* Radio output blocked */
-> -	RFKILL_STATE_ON		= 1,	/* Radio output active */
-> +	RFKILL_STATE_SOFT_BLOCKED = 0,	/* Radio output blocked */
-> +	RFKILL_STATE_UNBLOCKED    = 1,	/* Radio output allowed */
-> +	RFKILL_STATE_HARD_BLOCKED = 2,	/* Output blocked, non-overrideable */
->  };
->  
-> +/*
-> + * These are DEPRECATED, drivers using them should be verified to
-> + * comply with the rfkill usage guidelines in Documentation/rfkill.txt
-> + * and then converted to use the new names for rfkill_state
-> + */
-> +#define RFKILL_STATE_OFF RFKILL_STATE_SOFT_BLOCKED
-> +#define RFKILL_STATE_ON  RFKILL_STATE_UNBLOCKED
-> +
->  /**
->   * struct rfkill - rfkill control structure.
->   * @name: Name of the switch.
->   * @type: Radio type which the button controls, the value stored
->   *	here should be a value from enum rfkill_type.
-> - * @state: State of the switch, "ON" means radio can operate.
-> + * @state: State of the switch, "UNBLOCKED" means radio can operate.
->   * @user_claim_unsupported: Whether the hardware supports exclusive
->   *	RF-kill control by userspace. Set this before registering.
->   * @user_claim: Set when the switch is controlled exlusively by userspace.
-> @@ -63,8 +72,12 @@ enum rfkill_state {
->   * @data: Pointer to the RF button drivers private data which will be
->   *	passed along when toggling radio state.
->   * @toggle_radio(): Mandatory handler to control state of the radio.
-> + *	only RFKILL_STATE_SOFT_BLOCKED and RFKILL_STATE_UNBLOCKED are
-> + *	valid parameters.
->   * @get_state(): handler to read current radio state from hardware,
->   *      may be called from atomic context, should return 0 on success.
-> + *      Either this handler OR judicious use of rfkill_force_state() is
-> + *      MANDATORY for any driver capable of RFKILL_STATE_HARD_BLOCKED.
->   * @led_trigger: A LED trigger for this button's LED.
->   * @dev: Device structure integrating the switch into device tree.
->   * @node: Used to place switch into list of all switches known to the
-> @@ -103,6 +116,19 @@ void rfkill_unregister(struct rfkill *rfkill);
->  int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state);
->  
->  /**
-> + * rfkill_state_complement - return complementar state
-> + * @state: state to return the complement of
-> + *
-> + * Returns RFKILL_STATE_SOFT_BLOCKED if @state is RFKILL_STATE_UNBLOCKED,
-> + * returns RFKILL_STATE_UNBLOCKED otherwise.
-> + */
-> +static inline enum rfkill_state rfkill_state_complement(enum rfkill_state state)
-> +{
-> +	return (state == RFKILL_STATE_UNBLOCKED) ?
-> +		RFKILL_STATE_SOFT_BLOCKED : RFKILL_STATE_UNBLOCKED;
-> +}
-> +
-> +/**
->   * rfkill_get_led_name - Get the LED trigger name for the button's LED.
->   * This function might return a NULL pointer if registering of the
->   * LED trigger failed.
-> diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
-> index 5d4c8b2..8aa8227 100644
-> --- a/net/rfkill/rfkill-input.c
-> +++ b/net/rfkill/rfkill-input.c
-> @@ -84,7 +84,8 @@ static void rfkill_schedule_toggle(struct rfkill_task *task)
->  	spin_lock_irqsave(&task->lock, flags);
->  
->  	if (time_after(jiffies, task->last + msecs_to_jiffies(200))) {
-> -		task->desired_state = !task->desired_state;
-> +		task->desired_state =
-> +				rfkill_state_complement(task->desired_state);
->  		task->last = jiffies;
->  		schedule_work(&task->work);
->  	}
-> @@ -92,14 +93,14 @@ static void rfkill_schedule_toggle(struct rfkill_task *task)
->  	spin_unlock_irqrestore(&task->lock, flags);
->  }
->  
-> -#define DEFINE_RFKILL_TASK(n, t)			\
-> -	struct rfkill_task n = {			\
-> -		.work = __WORK_INITIALIZER(n.work,	\
-> -				rfkill_task_handler),	\
-> -		.type = t,				\
-> -		.mutex = __MUTEX_INITIALIZER(n.mutex),	\
-> -		.lock = __SPIN_LOCK_UNLOCKED(n.lock),	\
-> -		.desired_state = RFKILL_STATE_ON,	\
-> +#define DEFINE_RFKILL_TASK(n, t)				\
-> +	struct rfkill_task n = {				\
-> +		.work = __WORK_INITIALIZER(n.work,		\
-> +				rfkill_task_handler),		\
-> +		.type = t,					\
-> +		.mutex = __MUTEX_INITIALIZER(n.mutex),		\
-> +		.lock = __SPIN_LOCK_UNLOCKED(n.lock),		\
-> +		.desired_state = RFKILL_STATE_UNBLOCKED,	\
->  	}
->  
->  static DEFINE_RFKILL_TASK(rfkill_wlan, RFKILL_TYPE_WLAN);
-> @@ -135,15 +136,15 @@ static void rfkill_event(struct input_handle *handle, unsigned int type,
->  			/* handle EPO (emergency power off) through shortcut */
->  			if (data) {
->  				rfkill_schedule_set(&rfkill_wwan,
-> -						    RFKILL_STATE_ON);
-> +						    RFKILL_STATE_UNBLOCKED);
->  				rfkill_schedule_set(&rfkill_wimax,
-> -						    RFKILL_STATE_ON);
-> +						    RFKILL_STATE_UNBLOCKED);
->  				rfkill_schedule_set(&rfkill_uwb,
-> -						    RFKILL_STATE_ON);
-> +						    RFKILL_STATE_UNBLOCKED);
->  				rfkill_schedule_set(&rfkill_bt,
-> -						    RFKILL_STATE_ON);
-> +						    RFKILL_STATE_UNBLOCKED);
->  				rfkill_schedule_set(&rfkill_wlan,
-> -						    RFKILL_STATE_ON);
-> +						    RFKILL_STATE_UNBLOCKED);
->  			} else
->  				rfkill_schedule_epo();
->  			break;
-> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-> index 7d07175..ce0e231 100644
-> --- a/net/rfkill/rfkill.c
-> +++ b/net/rfkill/rfkill.c
-> @@ -39,7 +39,7 @@ MODULE_LICENSE("GPL");
->  static LIST_HEAD(rfkill_list);	/* list of registered rf switches */
->  static DEFINE_MUTEX(rfkill_mutex);
->  
-> -static unsigned int rfkill_default_state = RFKILL_STATE_ON;
-> +static unsigned int rfkill_default_state = RFKILL_STATE_UNBLOCKED;
->  module_param_named(default_state, rfkill_default_state, uint, 0444);
->  MODULE_PARM_DESC(default_state,
->  		 "Default initial state for all radio types, 0 = radio off");
-> @@ -98,7 +98,7 @@ static void rfkill_led_trigger(struct rfkill *rfkill,
->  
->  	if (!led->name)
->  		return;
-> -	if (state == RFKILL_STATE_OFF)
-> +	if (state != RFKILL_STATE_UNBLOCKED)
->  		led_trigger_event(led, LED_OFF);
->  	else
->  		led_trigger_event(led, LED_FULL);
-> @@ -128,6 +128,28 @@ static void update_rfkill_state(struct rfkill *rfkill)
->  	}
->  }
->  
-> +/**
-> + * rfkill_toggle_radio - wrapper for toggle_radio hook
-> + * calls toggle_radio taking into account a lot of "small"
-> + * details.
-> + * @rfkill: the rfkill struct to use
-> + * @force: calls toggle_radio even if cache says it is not needed,
-> + *	and also makes sure notifications of the state will be
-> + *	sent even if it didn't change
-> + * @state: the new state to call toggle_radio() with
-> + *
-> + * This wrappen protects and enforces the API for toggle_radio
-> + * calls.  Note that @force cannot override a (possibly cached)
-> + * state of RFKILL_STATE_HARD_BLOCKED.  Any device making use of
-> + * RFKILL_STATE_HARD_BLOCKED implements either get_state() or
-> + * rfkill_force_state(), so the cache either is bypassed or valid.
-> + *
-> + * Note that we do call toggle_radio for RFKILL_STATE_SOFT_BLOCKED
-> + * even if the radio is in RFKILL_STATE_HARD_BLOCKED state, so as to
-> + * give the driver a hint that it should double-BLOCK the transmitter.
-> + *
-> + * Caller must have aquired rfkill_mutex.
-> + */
->  static int rfkill_toggle_radio(struct rfkill *rfkill,
->  				enum rfkill_state state,
->  				int force)
-> @@ -141,9 +163,28 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
->  	    !rfkill->get_state(rfkill->data, &newstate))
->  		rfkill->state = newstate;
->  
-> +	switch (state) {
-> +	case RFKILL_STATE_HARD_BLOCKED:
-> +		/* typically happens when refreshing hardware state,
-> +		 * such as on resume */
-> +		state = RFKILL_STATE_SOFT_BLOCKED;
-> +		break;
-> +	case RFKILL_STATE_UNBLOCKED:
-> +		/* force can't override this, only rfkill_force_state() can */
-> +		if (rfkill->state == RFKILL_STATE_HARD_BLOCKED)
-> +			return -EPERM;
-> +		break;
-> +	case RFKILL_STATE_SOFT_BLOCKED:
-> +		/* nothing to do, we want to give drivers the hint to double
-> +		 * BLOCK even a transmitter that is already in state
-> +		 * RFKILL_STATE_HARD_BLOCKED */
-> +		break;
-> +	}
-> +
->  	if (force || state != rfkill->state) {
->  		retval = rfkill->toggle_radio(rfkill->data, state);
-> -		if (!retval)
-> +		/* never allow a HARD->SOFT downgrade! */
-> +		if (!retval && rfkill->state != RFKILL_STATE_HARD_BLOCKED)
->  			rfkill->state = state;
->  	}
->  
-> @@ -184,7 +225,7 @@ EXPORT_SYMBOL(rfkill_switch_all);
->  /**
->   * rfkill_epo - emergency power off all transmitters
->   *
-> - * This kicks all rfkill devices to RFKILL_STATE_OFF, ignoring
-> + * This kicks all rfkill devices to RFKILL_STATE_SOFT_BLOCKED, ignoring
->   * everything in its path but rfkill_mutex.
->   */
->  void rfkill_epo(void)
-> @@ -193,7 +234,7 @@ void rfkill_epo(void)
->  
->  	mutex_lock(&rfkill_mutex);
->  	list_for_each_entry(rfkill, &rfkill_list, node) {
-> -		rfkill_toggle_radio(rfkill, RFKILL_STATE_OFF, 1);
-> +		rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
->  	}
->  	mutex_unlock(&rfkill_mutex);
->  }
-> @@ -215,8 +256,9 @@ int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state)
->  {
->  	enum rfkill_state oldstate;
->  
-> -	if (state != RFKILL_STATE_OFF &&
-> -	    state != RFKILL_STATE_ON)
-> +	if (state != RFKILL_STATE_SOFT_BLOCKED &&
-> +	    state != RFKILL_STATE_UNBLOCKED &&
-> +	    state != RFKILL_STATE_HARD_BLOCKED)
->  		return -EINVAL;
->  
->  	mutex_lock(&rfkill->mutex);
-> @@ -290,11 +332,14 @@ static ssize_t rfkill_state_store(struct device *dev,
->  	if (!capable(CAP_NET_ADMIN))
->  		return -EPERM;
->  
-> +	/* RFKILL_STATE_HARD_BLOCKED is illegal here... */
-> +	if (state != RFKILL_STATE_UNBLOCKED &&
-> +	    state != RFKILL_STATE_SOFT_BLOCKED)
-> +		return -EINVAL;
-> +
->  	if (mutex_lock_interruptible(&rfkill->mutex))
->  		return -ERESTARTSYS;
-> -	error = rfkill_toggle_radio(rfkill,
-> -			state ? RFKILL_STATE_ON : RFKILL_STATE_OFF,
-> -			0);
-> +	error = rfkill_toggle_radio(rfkill, state, 0);
->  	mutex_unlock(&rfkill->mutex);
->  
->  	return error ? error : count;
-> @@ -373,7 +418,8 @@ static int rfkill_suspend(struct device *dev, pm_message_t state)
->  			update_rfkill_state(rfkill);
->  
->  			mutex_lock(&rfkill->mutex);
-> -			rfkill->toggle_radio(rfkill->data, RFKILL_STATE_OFF);
-> +			rfkill->toggle_radio(rfkill->data,
-> +						RFKILL_STATE_SOFT_BLOCKED);
->  			mutex_unlock(&rfkill->mutex);
->  		}
->  
-> @@ -470,7 +516,7 @@ static void rfkill_remove_switch(struct rfkill *rfkill)
->  {
->  	mutex_lock(&rfkill_mutex);
->  	list_del_init(&rfkill->node);
-> -	rfkill_toggle_radio(rfkill, RFKILL_STATE_OFF, 1);
-> +	rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
->  	mutex_unlock(&rfkill_mutex);
->  }
->  
-> @@ -610,8 +656,9 @@ static int __init rfkill_init(void)
->  	int error;
->  	int i;
->  
-> -	if (rfkill_default_state != RFKILL_STATE_OFF &&
-> -	    rfkill_default_state != RFKILL_STATE_ON)
-> +	/* RFKILL_STATE_HARD_BLOCKED is illegal here... */
-> +	if (rfkill_default_state != RFKILL_STATE_SOFT_BLOCKED &&
-> +	    rfkill_default_state != RFKILL_STATE_UNBLOCKED)
->  		return -EINVAL;
->  
->  	for (i = 0; i < ARRAY_SIZE(rfkill_states); i++)
+            Miles
 
+-----------------------------
+/*
+
+  Broadcom B43 wireless driver
+
+  DMA ringbuffer and descriptor allocation/management
+
+  Copyright (c) 2005, 2006 Michael Buesch <mb@bu3sch.de>
+
+  Some code in this file is derived from the b44.c driver
+  Copyright (C) 2002 David S. Miller
+  Copyright (C) Pekka Pietikainen
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; see the file COPYING.  If not, write to
+  the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
+  Boston, MA 02110-1301, USA.
+
+*/
+
+#include "b43.h"
+#include "dma.h"
+#include "main.h"
+#include "debugfs.h"
+#include "xmit.h"
+
+#include <linux/dma-mapping.h>
+#include <linux/pci.h>
+#include <linux/delay.h>
+#include <linux/skbuff.h>
+#include <linux/etherdevice.h>
+#include <asm/div64.h>
+
+
+/* 32bit DMA ops. */
+static
+struct b43_dmadesc_generic *op32_idx2desc(struct b43_dmaring *ring,
+					  int slot,
+					  struct b43_dmadesc_meta **meta)
+{
+	struct b43_dmadesc32 *desc;
+
+	*meta = &(ring->meta[slot]);
+	desc = ring->descbase;
+	desc = &(desc[slot]);
+
+	return (struct b43_dmadesc_generic *)desc;
+}
+
+static void op32_fill_descriptor(struct b43_dmaring *ring,
+				 struct b43_dmadesc_generic *desc,
+				 dma_addr_t dmaaddr, u16 bufsize,
+				 int start, int end, int irq)
+{
+	struct b43_dmadesc32 *descbase = ring->descbase;
+	int slot;
+	u32 ctl;
+	u32 addr;
+	u32 addrext;
+
+	slot = (int)(&(desc->dma32) - descbase);
+	B43_WARN_ON(!(slot >= 0 && slot < ring->nr_slots));
+
+	addr = (u32) (dmaaddr & ~SSB_DMA_TRANSLATION_MASK);
+	addrext = (u32) (dmaaddr & SSB_DMA_TRANSLATION_MASK)
+	    >> SSB_DMA_TRANSLATION_SHIFT;
+	addr |= ssb_dma_translation(ring->dev->dev);
+	ctl = (bufsize - ring->frameoffset)
+	    & B43_DMA32_DCTL_BYTECNT;
+	if (slot == ring->nr_slots - 1)
+		ctl |= B43_DMA32_DCTL_DTABLEEND;
+	if (start)
+		ctl |= B43_DMA32_DCTL_FRAMESTART;
+	if (end)
+		ctl |= B43_DMA32_DCTL_FRAMEEND;
+	if (irq)
+		ctl |= B43_DMA32_DCTL_IRQ;
+	ctl |= (addrext << B43_DMA32_DCTL_ADDREXT_SHIFT)
+	    & B43_DMA32_DCTL_ADDREXT_MASK;
+
+	desc->dma32.control = cpu_to_le32(ctl);
+	desc->dma32.address = cpu_to_le32(addr);
+}
+
+static void op32_poke_tx(struct b43_dmaring *ring, int slot)
+{
+	b43_dma_write(ring, B43_DMA32_TXINDEX,
+		      (u32) (slot * sizeof(struct b43_dmadesc32)));
+}
+
+static void op32_tx_suspend(struct b43_dmaring *ring)
+{
+	b43_dma_write(ring, B43_DMA32_TXCTL, b43_dma_read(ring, B43_DMA32_TXCTL)
+		      | B43_DMA32_TXSUSPEND);
+}
+
+static void op32_tx_resume(struct b43_dmaring *ring)
+{
+	b43_dma_write(ring, B43_DMA32_TXCTL, b43_dma_read(ring, B43_DMA32_TXCTL)
+		      & ~B43_DMA32_TXSUSPEND);
+}
+
+static int op32_get_current_rxslot(struct b43_dmaring *ring)
+{
+	u32 val;
+
+	val = b43_dma_read(ring, B43_DMA32_RXSTATUS);
+	val &= B43_DMA32_RXDPTR;
+
+	return (val / sizeof(struct b43_dmadesc32));
+}
+
+static void op32_set_current_rxslot(struct b43_dmaring *ring, int slot)
+{
+	b43_dma_write(ring, B43_DMA32_RXINDEX,
+		      (u32) (slot * sizeof(struct b43_dmadesc32)));
+}
+
+static const struct b43_dma_ops dma32_ops = {
+	.idx2desc = op32_idx2desc,
+	.fill_descriptor = op32_fill_descriptor,
+	.poke_tx = op32_poke_tx,
+	.tx_suspend = op32_tx_suspend,
+	.tx_resume = op32_tx_resume,
+	.get_current_rxslot = op32_get_current_rxslot,
+	.set_current_rxslot = op32_set_current_rxslot,
+};
+
+/* 64bit DMA ops. */
+static
+struct b43_dmadesc_generic *op64_idx2desc(struct b43_dmaring *ring,
+					  int slot,
+					  struct b43_dmadesc_meta **meta)
+{
+	struct b43_dmadesc64 *desc;
+
+	*meta = &(ring->meta[slot]);
+	desc = ring->descbase;
+	desc = &(desc[slot]);
+
+	return (struct b43_dmadesc_generic *)desc;
+}
+
+static void op64_fill_descriptor(struct b43_dmaring *ring,
+				 struct b43_dmadesc_generic *desc,
+				 dma_addr_t dmaaddr, u16 bufsize,
+				 int start, int end, int irq)
+{
+	struct b43_dmadesc64 *descbase = ring->descbase;
+	int slot;
+	u32 ctl0 = 0, ctl1 = 0;
+	u32 addrlo, addrhi;
+	u32 addrext;
+
+	slot = (int)(&(desc->dma64) - descbase);
+	B43_WARN_ON(!(slot >= 0 && slot < ring->nr_slots));
+
+	addrlo = (u32) (dmaaddr & 0xFFFFFFFF);
+	addrhi = (((u64) dmaaddr >> 32) & ~SSB_DMA_TRANSLATION_MASK);
+	addrext = (((u64) dmaaddr >> 32) & SSB_DMA_TRANSLATION_MASK)
+	    >> SSB_DMA_TRANSLATION_SHIFT;
+	addrhi |= (ssb_dma_translation(ring->dev->dev) << 1);
+	if (slot == ring->nr_slots - 1)
+		ctl0 |= B43_DMA64_DCTL0_DTABLEEND;
+	if (start)
+		ctl0 |= B43_DMA64_DCTL0_FRAMESTART;
+	if (end)
+		ctl0 |= B43_DMA64_DCTL0_FRAMEEND;
+	if (irq)
+		ctl0 |= B43_DMA64_DCTL0_IRQ;
+	ctl1 |= (bufsize - ring->frameoffset)
+	    & B43_DMA64_DCTL1_BYTECNT;
+	ctl1 |= (addrext << B43_DMA64_DCTL1_ADDREXT_SHIFT)
+	    & B43_DMA64_DCTL1_ADDREXT_MASK;
+
+	desc->dma64.control0 = cpu_to_le32(ctl0);
+	desc->dma64.control1 = cpu_to_le32(ctl1);
+	desc->dma64.address_low = cpu_to_le32(addrlo);
+	desc->dma64.address_high = cpu_to_le32(addrhi);
+}
+
+static void op64_poke_tx(struct b43_dmaring *ring, int slot)
+{
+	b43_dma_write(ring, B43_DMA64_TXINDEX,
+		      (u32) (slot * sizeof(struct b43_dmadesc64)));
+}
+
+static void op64_tx_suspend(struct b43_dmaring *ring)
+{
+	b43_dma_write(ring, B43_DMA64_TXCTL, b43_dma_read(ring, B43_DMA64_TXCTL)
+		      | B43_DMA64_TXSUSPEND);
+}
+
+static void op64_tx_resume(struct b43_dmaring *ring)
+{
+	b43_dma_write(ring, B43_DMA64_TXCTL, b43_dma_read(ring, B43_DMA64_TXCTL)
+		      & ~B43_DMA64_TXSUSPEND);
+}
+
+static int op64_get_current_rxslot(struct b43_dmaring *ring)
+{
+	u32 val;
+
+	val = b43_dma_read(ring, B43_DMA64_RXSTATUS);
+	val &= B43_DMA64_RXSTATDPTR;
+
+	return (val / sizeof(struct b43_dmadesc64));
+}
+
+static void op64_set_current_rxslot(struct b43_dmaring *ring, int slot)
+{
+	b43_dma_write(ring, B43_DMA64_RXINDEX,
+		      (u32) (slot * sizeof(struct b43_dmadesc64)));
+}
+
+static const struct b43_dma_ops dma64_ops = {
+	.idx2desc = op64_idx2desc,
+	.fill_descriptor = op64_fill_descriptor,
+	.poke_tx = op64_poke_tx,
+	.tx_suspend = op64_tx_suspend,
+	.tx_resume = op64_tx_resume,
+	.get_current_rxslot = op64_get_current_rxslot,
+	.set_current_rxslot = op64_set_current_rxslot,
+};
+
+static inline int free_slots(struct b43_dmaring *ring)
+{
+	return (ring->nr_slots - ring->used_slots);
+}
+
+static inline int next_slot(struct b43_dmaring *ring, int slot)
+{
+	B43_WARN_ON(!(slot >= -1 && slot <= ring->nr_slots - 1));
+	if (slot == ring->nr_slots - 1)
+		return 0;
+	return slot + 1;
+}
+
+static inline int prev_slot(struct b43_dmaring *ring, int slot)
+{
+	B43_WARN_ON(!(slot >= 0 && slot <= ring->nr_slots - 1));
+	if (slot == 0)
+		return ring->nr_slots - 1;
+	return slot - 1;
+}
+
+#ifdef CONFIG_B43_DEBUG
+static void update_max_used_slots(struct b43_dmaring *ring,
+				  int current_used_slots)
+{
+	if (current_used_slots <= ring->max_used_slots)
+		return;
+	ring->max_used_slots = current_used_slots;
+	if (b43_debug(ring->dev, B43_DBG_DMAVERBOSE)) {
+		b43dbg(ring->dev->wl,
+		       "max_used_slots increased to %d on %s ring %d\n",
+		       ring->max_used_slots,
+		       ring->tx ? "TX" : "RX", ring->index);
+	}
+}
+#else
+static inline
+    void update_max_used_slots(struct b43_dmaring *ring, int current_used_slots)
+{
+}
+#endif /* DEBUG */
+
+/* Request a slot for usage. */
+static inline int request_slot(struct b43_dmaring *ring)
+{
+	int slot;
+
+	B43_WARN_ON(!ring->tx);
+	B43_WARN_ON(ring->stopped);
+	B43_WARN_ON(free_slots(ring) == 0);
+
+	slot = next_slot(ring, ring->current_slot);
+	ring->current_slot = slot;
+	ring->used_slots++;
+
+	update_max_used_slots(ring, ring->used_slots);
+
+	return slot;
+}
+
+static u16 b43_dmacontroller_base(enum b43_dmatype type, int controller_idx)
+{
+	static const u16 map64[] = {
+		B43_MMIO_DMA64_BASE0,
+		B43_MMIO_DMA64_BASE1,
+		B43_MMIO_DMA64_BASE2,
+		B43_MMIO_DMA64_BASE3,
+		B43_MMIO_DMA64_BASE4,
+		B43_MMIO_DMA64_BASE5,
+	};
+	static const u16 map32[] = {
+		B43_MMIO_DMA32_BASE0,
+		B43_MMIO_DMA32_BASE1,
+		B43_MMIO_DMA32_BASE2,
+		B43_MMIO_DMA32_BASE3,
+		B43_MMIO_DMA32_BASE4,
+		B43_MMIO_DMA32_BASE5,
+	};
+
+	if (type == B43_DMA_64BIT) {
+		B43_WARN_ON(!(controller_idx >= 0 &&
+			      controller_idx < ARRAY_SIZE(map64)));
+		return map64[controller_idx];
+	}
+	B43_WARN_ON(!(controller_idx >= 0 &&
+		      controller_idx < ARRAY_SIZE(map32)));
+	return map32[controller_idx];
+}
+
+static inline
+    dma_addr_t map_descbuffer(struct b43_dmaring *ring,
+			      unsigned char *buf, size_t len, int tx)
+{
+	dma_addr_t dmaaddr;
+
+	if (tx) {
+		dmaaddr = dma_map_single(ring->dev->dev->dma_dev,
+					 buf, len, DMA_TO_DEVICE);
+	} else {
+		dmaaddr = dma_map_single(ring->dev->dev->dma_dev,
+					 buf, len, DMA_FROM_DEVICE);
+	}
+
+	return dmaaddr;
+}
+
+static inline
+    void unmap_descbuffer(struct b43_dmaring *ring,
+			  dma_addr_t addr, size_t len, int tx)
+{
+	if (tx) {
+		dma_unmap_single(ring->dev->dev->dma_dev,
+				 addr, len, DMA_TO_DEVICE);
+	} else {
+		dma_unmap_single(ring->dev->dev->dma_dev,
+				 addr, len, DMA_FROM_DEVICE);
+	}
+}
+
+static inline
+    void sync_descbuffer_for_cpu(struct b43_dmaring *ring,
+				 dma_addr_t addr, size_t len)
+{
+	B43_WARN_ON(ring->tx);
+	dma_sync_single_for_cpu(ring->dev->dev->dma_dev,
+				addr, len, DMA_FROM_DEVICE);
+}
+
+static inline
+    void sync_descbuffer_for_device(struct b43_dmaring *ring,
+				    dma_addr_t addr, size_t len)
+{
+	B43_WARN_ON(ring->tx);
+	dma_sync_single_for_device(ring->dev->dev->dma_dev,
+				   addr, len, DMA_FROM_DEVICE);
+}
+
+static inline
+    void free_descriptor_buffer(struct b43_dmaring *ring,
+				struct b43_dmadesc_meta *meta)
+{
+	if (meta->skb) {
+		dev_kfree_skb_any(meta->skb);
+		meta->skb = NULL;
+	}
+}
+
+static int alloc_ringmemory(struct b43_dmaring *ring)
+{
+	struct device *dma_dev = ring->dev->dev->dma_dev;
+	gfp_t flags = GFP_KERNEL;
+
+	/* The specs call for 4K buffers for 30- and 32-bit DMA with 4K
+	 * alignment and 8K buffers for 64-bit DMA with 8K alignment. Testing
+	 * has shown that 4K is sufficient for the latter as long as the buffer
+	 * does not cross an 8K boundary.
+	 *
+	 * For unknown reasons - possibly a hardware error - the BCM4311 rev
+	 * 02, which uses 64-bit DMA, needs the ring buffer in very low memory,
+	 * which accounts for the GFP_DMA flag below.
+	 */
+	if (ring->type == B43_DMA_64BIT)
+		flags |= GFP_DMA;
+	ring->descbase = dma_alloc_coherent(dma_dev, B43_DMA_RINGMEMSIZE,
+					    &(ring->dmabase), flags);
+	if (!ring->descbase) {
+		b43err(ring->dev->wl, "DMA ringmemory allocation failed\n");
+		return -ENOMEM;
+	}
+	memset(ring->descbase, 0, B43_DMA_RINGMEMSIZE);
+
+	return 0;
+}
+
+static void free_ringmemory(struct b43_dmaring *ring)
+{
+	struct device *dma_dev = ring->dev->dev->dma_dev;
+
+	dma_free_coherent(dma_dev, B43_DMA_RINGMEMSIZE,
+			  ring->descbase, ring->dmabase);
+}
+
+/* Reset the RX DMA channel */
+static int b43_dmacontroller_rx_reset(struct b43_wldev *dev, u16 mmio_base,
+				      enum b43_dmatype type)
+{
+	int i;
+	u32 value;
+	u16 offset;
+
+	might_sleep();
+
+	offset = (type == B43_DMA_64BIT) ? B43_DMA64_RXCTL : B43_DMA32_RXCTL;
+	b43_write32(dev, mmio_base + offset, 0);
+	for (i = 0; i < 10; i++) {
+		offset = (type == B43_DMA_64BIT) ? B43_DMA64_RXSTATUS :
+						   B43_DMA32_RXSTATUS;
+		value = b43_read32(dev, mmio_base + offset);
+		if (type == B43_DMA_64BIT) {
+			value &= B43_DMA64_RXSTAT;
+			if (value == B43_DMA64_RXSTAT_DISABLED) {
+				i = -1;
+				break;
+			}
+		} else {
+			value &= B43_DMA32_RXSTATE;
+			if (value == B43_DMA32_RXSTAT_DISABLED) {
+				i = -1;
+				break;
+			}
+		}
+		msleep(1);
+	}
+	if (i != -1) {
+		b43err(dev->wl, "DMA RX reset timed out\n");
+		return -ENODEV;
+	}
+
+	return 0;
+}
+
+/* Reset the TX DMA channel */
+static int b43_dmacontroller_tx_reset(struct b43_wldev *dev, u16 mmio_base,
+				      enum b43_dmatype type)
+{
+	int i;
+	u32 value;
+	u16 offset;
+
+	might_sleep();
+
+	for (i = 0; i < 10; i++) {
+		offset = (type == B43_DMA_64BIT) ? B43_DMA64_TXSTATUS :
+						   B43_DMA32_TXSTATUS;
+		value = b43_read32(dev, mmio_base + offset);
+		if (type == B43_DMA_64BIT) {
+			value &= B43_DMA64_TXSTAT;
+			if (value == B43_DMA64_TXSTAT_DISABLED ||
+			    value == B43_DMA64_TXSTAT_IDLEWAIT ||
+			    value == B43_DMA64_TXSTAT_STOPPED)
+				break;
+		} else {
+			value &= B43_DMA32_TXSTATE;
+			if (value == B43_DMA32_TXSTAT_DISABLED ||
+			    value == B43_DMA32_TXSTAT_IDLEWAIT ||
+			    value == B43_DMA32_TXSTAT_STOPPED)
+				break;
+		}
+		msleep(1);
+	}
+	offset = (type == B43_DMA_64BIT) ? B43_DMA64_TXCTL : B43_DMA32_TXCTL;
+	b43_write32(dev, mmio_base + offset, 0);
+	for (i = 0; i < 10; i++) {
+		offset = (type == B43_DMA_64BIT) ? B43_DMA64_TXSTATUS :
+						   B43_DMA32_TXSTATUS;
+		value = b43_read32(dev, mmio_base + offset);
+		if (type == B43_DMA_64BIT) {
+			value &= B43_DMA64_TXSTAT;
+			if (value == B43_DMA64_TXSTAT_DISABLED) {
+				i = -1;
+				break;
+			}
+		} else {
+			value &= B43_DMA32_TXSTATE;
+			if (value == B43_DMA32_TXSTAT_DISABLED) {
+				i = -1;
+				break;
+			}
+		}
+		msleep(1);
+	}
+	if (i != -1) {
+		b43err(dev->wl, "DMA TX reset timed out\n");
+		return -ENODEV;
+	}
+	/* ensure the reset is completed. */
+	msleep(1);
+
+	return 0;
+}
+
+/* Check if a DMA mapping address is invalid. */
+static bool b43_dma_mapping_error(struct b43_dmaring *ring,
+				  dma_addr_t addr,
+				  size_t buffersize, bool dma_to_device)
+{
+	if (unlikely(dma_mapping_error(ring->dev->dev->dma_dev, addr)))
+		return 1;
+
+	switch (ring->type) {
+	case B43_DMA_30BIT:
+		if ((u64)addr + buffersize > (1ULL << 30))
+			goto address_error;
+		break;
+	case B43_DMA_32BIT:
+		if ((u64)addr + buffersize > (1ULL << 32))
+			goto address_error;
+		break;
+	case B43_DMA_64BIT:
+		/* Currently we can't have addresses beyond
+		 * 64bit in the kernel. */
+		break;
+	}
+
+	/* The address is OK. */
+	return 0;
+
+address_error:
+	/* We can't support this address. Unmap it again. */
+	unmap_descbuffer(ring, addr, buffersize, dma_to_device);
+
+	return 1;
+}
+
+static int setup_rx_descbuffer(struct b43_dmaring *ring,
+			       struct b43_dmadesc_generic *desc,
+			       struct b43_dmadesc_meta *meta, gfp_t gfp_flags)
+{
+	struct b43_rxhdr_fw4 *rxhdr;
+	dma_addr_t dmaaddr;
+	struct sk_buff *skb;
+
+	B43_WARN_ON(ring->tx);
+
+	skb = __dev_alloc_skb(ring->rx_buffersize, gfp_flags);
+	if (unlikely(!skb))
+		return -ENOMEM;
+	dmaaddr = map_descbuffer(ring, skb->data, ring->rx_buffersize, 0);
+	if (b43_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize, 0)) {
+		/* ugh. try to realloc in zone_dma */
+		gfp_flags |= GFP_DMA;
+
+		dev_kfree_skb_any(skb);
+
+		skb = __dev_alloc_skb(ring->rx_buffersize, gfp_flags);
+		if (unlikely(!skb))
+			return -ENOMEM;
+		dmaaddr = map_descbuffer(ring, skb->data,
+					 ring->rx_buffersize, 0);
+	}
+
+	if (b43_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize, 0)) {
+		b43err(ring->dev->wl, "RX DMA buffer allocation failed\n");
+		dev_kfree_skb_any(skb);
+		return -EIO;
+	}
+
+	meta->skb = skb;
+	meta->dmaaddr = dmaaddr;
+	ring->ops->fill_descriptor(ring, desc, dmaaddr,
+				   ring->rx_buffersize, 0, 0, 0);
+
+	rxhdr = (struct b43_rxhdr_fw4 *)(skb->data);
+	rxhdr->frame_len = 0;
+
+	return 0;
+}
+
+/* Allocate the initial descbuffers.
+ * This is used for an RX ring only.
+ */
+static int alloc_initial_descbuffers(struct b43_dmaring *ring)
+{
+	int i, err = -ENOMEM;
+	struct b43_dmadesc_generic *desc;
+	struct b43_dmadesc_meta *meta;
+
+	for (i = 0; i < ring->nr_slots; i++) {
+		desc = ring->ops->idx2desc(ring, i, &meta);
+
+		err = setup_rx_descbuffer(ring, desc, meta, GFP_KERNEL);
+		if (err) {
+			b43err(ring->dev->wl,
+			       "Failed to allocate initial descbuffers\n");
+			goto err_unwind;
+		}
+	}
+	mb();
+	ring->used_slots = ring->nr_slots;
+	err = 0;
+      out:
+	return err;
+
+      err_unwind:
+	for (i--; i >= 0; i--) {
+		desc = ring->ops->idx2desc(ring, i, &meta);
+
+		unmap_descbuffer(ring, meta->dmaaddr, ring->rx_buffersize, 0);
+		dev_kfree_skb(meta->skb);
+	}
+	goto out;
+}
+
+/* Do initial setup of the DMA controller.
+ * Reset the controller, write the ring busaddress
+ * and switch the "enable" bit on.
+ */
+static int dmacontroller_setup(struct b43_dmaring *ring)
+{
+	int err = 0;
+	u32 value;
+	u32 addrext;
+	u32 trans = ssb_dma_translation(ring->dev->dev);
+
+	if (ring->tx) {
+		if (ring->type == B43_DMA_64BIT) {
+			u64 ringbase = (u64) (ring->dmabase);
+
+			addrext = ((ringbase >> 32) & SSB_DMA_TRANSLATION_MASK)
+			    >> SSB_DMA_TRANSLATION_SHIFT;
+			value = B43_DMA64_TXENABLE;
+			value |= (addrext << B43_DMA64_TXADDREXT_SHIFT)
+			    & B43_DMA64_TXADDREXT_MASK;
+			b43_dma_write(ring, B43_DMA64_TXCTL, value);
+			b43_dma_write(ring, B43_DMA64_TXRINGLO,
+				      (ringbase & 0xFFFFFFFF));
+			b43_dma_write(ring, B43_DMA64_TXRINGHI,
+				      ((ringbase >> 32) &
+				       ~SSB_DMA_TRANSLATION_MASK)
+				      | (trans << 1));
+		} else {
+			u32 ringbase = (u32) (ring->dmabase);
+
+			addrext = (ringbase & SSB_DMA_TRANSLATION_MASK)
+			    >> SSB_DMA_TRANSLATION_SHIFT;
+			value = B43_DMA32_TXENABLE;
+			value |= (addrext << B43_DMA32_TXADDREXT_SHIFT)
+			    & B43_DMA32_TXADDREXT_MASK;
+			b43_dma_write(ring, B43_DMA32_TXCTL, value);
+			b43_dma_write(ring, B43_DMA32_TXRING,
+				      (ringbase & ~SSB_DMA_TRANSLATION_MASK)
+				      | trans);
+		}
+	} else {
+		err = alloc_initial_descbuffers(ring);
+		if (err)
+			goto out;
+		if (ring->type == B43_DMA_64BIT) {
+			u64 ringbase = (u64) (ring->dmabase);
+
+			addrext = ((ringbase >> 32) & SSB_DMA_TRANSLATION_MASK)
+			    >> SSB_DMA_TRANSLATION_SHIFT;
+			value = (ring->frameoffset << B43_DMA64_RXFROFF_SHIFT);
+			value |= B43_DMA64_RXENABLE;
+			value |= (addrext << B43_DMA64_RXADDREXT_SHIFT)
+			    & B43_DMA64_RXADDREXT_MASK;
+			b43_dma_write(ring, B43_DMA64_RXCTL, value);
+			b43_dma_write(ring, B43_DMA64_RXRINGLO,
+				      (ringbase & 0xFFFFFFFF));
+			b43_dma_write(ring, B43_DMA64_RXRINGHI,
+				      ((ringbase >> 32) &
+				       ~SSB_DMA_TRANSLATION_MASK)
+				      | (trans << 1));
+			b43_dma_write(ring, B43_DMA64_RXINDEX, ring->nr_slots *
+				      sizeof(struct b43_dmadesc64));
+		} else {
+			u32 ringbase = (u32) (ring->dmabase);
+
+			addrext = (ringbase & SSB_DMA_TRANSLATION_MASK)
+			    >> SSB_DMA_TRANSLATION_SHIFT;
+			value = (ring->frameoffset << B43_DMA32_RXFROFF_SHIFT);
+			value |= B43_DMA32_RXENABLE;
+			value |= (addrext << B43_DMA32_RXADDREXT_SHIFT)
+			    & B43_DMA32_RXADDREXT_MASK;
+			b43_dma_write(ring, B43_DMA32_RXCTL, value);
+			b43_dma_write(ring, B43_DMA32_RXRING,
+				      (ringbase & ~SSB_DMA_TRANSLATION_MASK)
+				      | trans);
+			b43_dma_write(ring, B43_DMA32_RXINDEX, ring->nr_slots *
+				      sizeof(struct b43_dmadesc32));
+		}
+	}
+
+out:
+	return err;
+}
+
+/* Shutdown the DMA controller. */
+static void dmacontroller_cleanup(struct b43_dmaring *ring)
+{
+	if (ring->tx) {
+		b43_dmacontroller_tx_reset(ring->dev, ring->mmio_base,
+					   ring->type);
+		if (ring->type == B43_DMA_64BIT) {
+			b43_dma_write(ring, B43_DMA64_TXRINGLO, 0);
+			b43_dma_write(ring, B43_DMA64_TXRINGHI, 0);
+		} else
+			b43_dma_write(ring, B43_DMA32_TXRING, 0);
+	} else {
+		b43_dmacontroller_rx_reset(ring->dev, ring->mmio_base,
+					   ring->type);
+		if (ring->type == B43_DMA_64BIT) {
+			b43_dma_write(ring, B43_DMA64_RXRINGLO, 0);
+			b43_dma_write(ring, B43_DMA64_RXRINGHI, 0);
+		} else
+			b43_dma_write(ring, B43_DMA32_RXRING, 0);
+	}
+}
+
+static void free_all_descbuffers(struct b43_dmaring *ring)
+{
+	struct b43_dmadesc_generic *desc;
+	struct b43_dmadesc_meta *meta;
+	int i;
+
+	if (!ring->used_slots)
+		return;
+	for (i = 0; i < ring->nr_slots; i++) {
+		desc = ring->ops->idx2desc(ring, i, &meta);
+
+		if (!meta->skb) {
+			B43_WARN_ON(!ring->tx);
+			continue;
+		}
+		if (ring->tx) {
+			unmap_descbuffer(ring, meta->dmaaddr,
+					 meta->skb->len, 1);
+		} else {
+			unmap_descbuffer(ring, meta->dmaaddr,
+					 ring->rx_buffersize, 0);
+		}
+		free_descriptor_buffer(ring, meta);
+	}
+}
+
+static u64 supported_dma_mask(struct b43_wldev *dev)
+{
+	u32 tmp;
+	u16 mmio_base;
+
+	tmp = b43_read32(dev, SSB_TMSHIGH);
+	if (tmp & SSB_TMSHIGH_DMA64)
+		return DMA_64BIT_MASK;
+	mmio_base = b43_dmacontroller_base(0, 0);
+	b43_write32(dev, mmio_base + B43_DMA32_TXCTL, B43_DMA32_TXADDREXT_MASK);
+	tmp = b43_read32(dev, mmio_base + B43_DMA32_TXCTL);
+	if (tmp & B43_DMA32_TXADDREXT_MASK)
+		return DMA_32BIT_MASK;
+
+	return DMA_30BIT_MASK;
+}
+
+static enum b43_dmatype dma_mask_to_engine_type(u64 dmamask)
+{
+	if (dmamask == DMA_30BIT_MASK)
+		return B43_DMA_30BIT;
+	if (dmamask == DMA_32BIT_MASK)
+		return B43_DMA_32BIT;
+	if (dmamask == DMA_64BIT_MASK)
+		return B43_DMA_64BIT;
+	B43_WARN_ON(1);
+	return B43_DMA_30BIT;
+}
+
+/* Main initialization function. */
+static
+struct b43_dmaring *b43_setup_dmaring(struct b43_wldev *dev,
+				      int controller_index,
+				      int for_tx,
+				      enum b43_dmatype type)
+{
+	struct b43_dmaring *ring;
+	int err;
+	int nr_slots;
+	dma_addr_t dma_test;
+
+	ring = kzalloc(sizeof(*ring), GFP_KERNEL);
+	if (!ring)
+		goto out;
+	ring->type = type;
+
+	nr_slots = B43_RXRING_SLOTS;
+	if (for_tx)
+		nr_slots = B43_TXRING_SLOTS;
+
+	ring->meta = kcalloc(nr_slots, sizeof(struct b43_dmadesc_meta),
+			     GFP_KERNEL);
+	if (!ring->meta)
+		goto err_kfree_ring;
+	if (for_tx) {
+		ring->txhdr_cache = kcalloc(nr_slots,
+					    b43_txhdr_size(dev),
+					    GFP_KERNEL);
+		if (!ring->txhdr_cache)
+			goto err_kfree_meta;
+
+		/* test for ability to dma to txhdr_cache */
+		dma_test = dma_map_single(dev->dev->dma_dev,
+					  ring->txhdr_cache,
+					  b43_txhdr_size(dev),
+					  DMA_TO_DEVICE);
+
+		if (b43_dma_mapping_error(ring, dma_test,
+					  b43_txhdr_size(dev), 1)) {
+			/* ugh realloc */
+			kfree(ring->txhdr_cache);
+			ring->txhdr_cache = kcalloc(nr_slots,
+						    b43_txhdr_size(dev),
+						    GFP_KERNEL | GFP_DMA);
+			if (!ring->txhdr_cache)
+				goto err_kfree_meta;
+
+			dma_test = dma_map_single(dev->dev->dma_dev,
+						  ring->txhdr_cache,
+						  b43_txhdr_size(dev),
+						  DMA_TO_DEVICE);
+
+			if (b43_dma_mapping_error(ring, dma_test,
+						  b43_txhdr_size(dev), 1)) {
+
+				b43err(dev->wl,
+				       "TXHDR DMA allocation failed\n");
+				goto err_kfree_txhdr_cache;
+			}
+		}
+
+		dma_unmap_single(dev->dev->dma_dev,
+				 dma_test, b43_txhdr_size(dev),
+				 DMA_TO_DEVICE);
+	}
+
+	ring->dev = dev;
+	ring->nr_slots = nr_slots;
+	ring->mmio_base = b43_dmacontroller_base(type, controller_index);
+	ring->index = controller_index;
+	if (type == B43_DMA_64BIT)
+		ring->ops = &dma64_ops;
+	else
+		ring->ops = &dma32_ops;
+	if (for_tx) {
+		ring->tx = 1;
+		ring->current_slot = -1;
+	} else {
+		if (ring->index == 0) {
+			ring->rx_buffersize = B43_DMA0_RX_BUFFERSIZE;
+			ring->frameoffset = B43_DMA0_RX_FRAMEOFFSET;
+		} else if (ring->index == 3) {
+			ring->rx_buffersize = B43_DMA3_RX_BUFFERSIZE;
+			ring->frameoffset = B43_DMA3_RX_FRAMEOFFSET;
+		} else
+			B43_WARN_ON(1);
+	}
+	spin_lock_init(&ring->lock);
+#ifdef CONFIG_B43_DEBUG
+	ring->last_injected_overflow = jiffies;
+#endif
+
+	err = alloc_ringmemory(ring);
+	if (err)
+		goto err_kfree_txhdr_cache;
+	err = dmacontroller_setup(ring);
+	if (err)
+		goto err_free_ringmemory;
+
+      out:
+	return ring;
+
+      err_free_ringmemory:
+	free_ringmemory(ring);
+      err_kfree_txhdr_cache:
+	kfree(ring->txhdr_cache);
+      err_kfree_meta:
+	kfree(ring->meta);
+      err_kfree_ring:
+	kfree(ring);
+	ring = NULL;
+	goto out;
+}
+
+#define divide(a, b)	({	\
+	typeof(a) __a = a;	\
+	do_div(__a, b);		\
+	__a;			\
+  })
+
+#define modulo(a, b)	({	\
+	typeof(a) __a = a;	\
+	do_div(__a, b);		\
+  })
+
+/* Main cleanup function. */
+static void b43_destroy_dmaring(struct b43_dmaring *ring,
+				const char *ringname)
+{
+	if (!ring)
+		return;
+
+#ifdef CONFIG_B43_DEBUG
+	{
+		/* Print some statistics. */
+		u64 failed_packets = ring->nr_failed_tx_packets;
+		u64 succeed_packets = ring->nr_succeed_tx_packets;
+		u64 nr_packets = failed_packets + succeed_packets;
+		u64 permille_failed = 0, average_tries = 0;
+
+		if (nr_packets)
+			permille_failed = divide(failed_packets * 1000, nr_packets);
+		if (nr_packets)
+			average_tries = divide(ring->nr_total_packet_tries * 100, nr_packets);
+
+		b43dbg(ring->dev->wl, "DMA-%u %s: "
+		       "Used slots %d/%d, Failed frames %llu/%llu = %llu.%01llu%%, "
+		       "Average tries %llu.%02llu\n",
+		       (unsigned int)(ring->type), ringname,
+		       ring->max_used_slots,
+		       ring->nr_slots,
+		       (unsigned long long)failed_packets,
+		       (unsigned long long)nr_packets,
+		       (unsigned long long)divide(permille_failed, 10),
+		       (unsigned long long)modulo(permille_failed, 10),
+		       (unsigned long long)divide(average_tries, 100),
+		       (unsigned long long)modulo(average_tries, 100));
+	}
+#endif /* DEBUG */
+
+	/* Device IRQs are disabled prior entering this function,
+	 * so no need to take care of concurrency with rx handler stuff.
+	 */
+	dmacontroller_cleanup(ring);
+	free_all_descbuffers(ring);
+	free_ringmemory(ring);
+
+	kfree(ring->txhdr_cache);
+	kfree(ring->meta);
+	kfree(ring);
+}
+
+#define destroy_ring(dma, ring) do {				\
+	b43_destroy_dmaring((dma)->ring, __stringify(ring));	\
+	(dma)->ring = NULL;					\
+    } while (0)
+
+void b43_dma_free(struct b43_wldev *dev)
+{
+	struct b43_dma *dma;
+
+	if (b43_using_pio_transfers(dev))
+		return;
+	dma = &dev->dma;
+
+	destroy_ring(dma, rx_ring);
+	destroy_ring(dma, tx_ring_AC_BK);
+	destroy_ring(dma, tx_ring_AC_BE);
+	destroy_ring(dma, tx_ring_AC_VI);
+	destroy_ring(dma, tx_ring_AC_VO);
+	destroy_ring(dma, tx_ring_mcast);
+}
+
+static int b43_dma_set_mask(struct b43_wldev *dev, u64 mask)
+{
+	u64 orig_mask = mask;
+	bool fallback = 0;
+	int err;
+
+	/* Try to set the DMA mask. If it fails, try falling back to a
+	 * lower mask, as we can always also support a lower one. */
+	while (1) {
+		err = ssb_dma_set_mask(dev->dev, mask);
+		if (!err)
+			break;
+		if (mask == DMA_64BIT_MASK) {
+			mask = DMA_32BIT_MASK;
+			fallback = 1;
+			continue;
+		}
+		if (mask == DMA_32BIT_MASK) {
+			mask = DMA_30BIT_MASK;
+			fallback = 1;
+			continue;
+		}
+		b43err(dev->wl, "The machine/kernel does not support "
+		       "the required %u-bit DMA mask\n",
+		       (unsigned int)dma_mask_to_engine_type(orig_mask));
+		return -EOPNOTSUPP;
+	}
+	if (fallback) {
+		b43info(dev->wl, "DMA mask fallback from %u-bit to %u-bit\n",
+			(unsigned int)dma_mask_to_engine_type(orig_mask),
+			(unsigned int)dma_mask_to_engine_type(mask));
+	}
+
+	return 0;
+}
+
+int b43_dma_init(struct b43_wldev *dev)
+{
+	struct b43_dma *dma = &dev->dma;
+	int err;
+	u64 dmamask;
+	enum b43_dmatype type;
+
+	dmamask = supported_dma_mask(dev);
+	type = dma_mask_to_engine_type(dmamask);
+	err = b43_dma_set_mask(dev, dmamask);
+	if (err)
+		return err;
+
+	err = -ENOMEM;
+	/* setup TX DMA channels. */
+	dma->tx_ring_AC_BK = b43_setup_dmaring(dev, 0, 1, type);
+	if (!dma->tx_ring_AC_BK)
+		goto out;
+
+	dma->tx_ring_AC_BE = b43_setup_dmaring(dev, 1, 1, type);
+	if (!dma->tx_ring_AC_BE)
+		goto err_destroy_bk;
+
+	dma->tx_ring_AC_VI = b43_setup_dmaring(dev, 2, 1, type);
+	if (!dma->tx_ring_AC_VI)
+		goto err_destroy_be;
+
+	dma->tx_ring_AC_VO = b43_setup_dmaring(dev, 3, 1, type);
+	if (!dma->tx_ring_AC_VO)
+		goto err_destroy_vi;
+
+	dma->tx_ring_mcast = b43_setup_dmaring(dev, 4, 1, type);
+	if (!dma->tx_ring_mcast)
+		goto err_destroy_vo;
+
+	/* setup RX DMA channel. */
+	dma->rx_ring = b43_setup_dmaring(dev, 0, 0, type);
+	if (!dma->rx_ring)
+		goto err_destroy_mcast;
+
+	/* No support for the TX status DMA ring. */
+	B43_WARN_ON(dev->dev->id.revision < 5);
+
+	b43dbg(dev->wl, "%u-bit DMA initialized\n",
+	       (unsigned int)type);
+	err = 0;
+out:
+	return err;
+
+err_destroy_mcast:
+	destroy_ring(dma, tx_ring_mcast);
+err_destroy_vo:
+	destroy_ring(dma, tx_ring_AC_VO);
+err_destroy_vi:
+	destroy_ring(dma, tx_ring_AC_VI);
+err_destroy_be:
+	destroy_ring(dma, tx_ring_AC_BE);
+err_destroy_bk:
+	destroy_ring(dma, tx_ring_AC_BK);
+	return err;
+}
+
+/* Generate a cookie for the TX header. */
+static u16 generate_cookie(struct b43_dmaring *ring, int slot)
+{
+	u16 cookie;
+
+	/* Use the upper 4 bits of the cookie as
+	 * DMA controller ID and store the slot number
+	 * in the lower 12 bits.
+	 * Note that the cookie must never be 0, as this
+	 * is a special value used in RX path.
+	 * It can also not be 0xFFFF because that is special
+	 * for multicast frames.
+	 */
+	cookie = (((u16)ring->index + 1) << 12);
+	B43_WARN_ON(slot & ~0x0FFF);
+	cookie |= (u16)slot;
+
+	return cookie;
+}
+
+/* Inspect a cookie and find out to which controller/slot it belongs. */
+static
+struct b43_dmaring *parse_cookie(struct b43_wldev *dev, u16 cookie, int *slot)
+{
+	struct b43_dma *dma = &dev->dma;
+	struct b43_dmaring *ring = NULL;
+
+	switch (cookie & 0xF000) {
+	case 0x1000:
+		ring = dma->tx_ring_AC_BK;
+		break;
+	case 0x2000:
+		ring = dma->tx_ring_AC_BE;
+		break;
+	case 0x3000:
+		ring = dma->tx_ring_AC_VI;
+		break;
+	case 0x4000:
+		ring = dma->tx_ring_AC_VO;
+		break;
+	case 0x5000:
+		ring = dma->tx_ring_mcast;
+		break;
+	default:
+		B43_WARN_ON(1);
+	}
+	*slot = (cookie & 0x0FFF);
+	B43_WARN_ON(!(ring && *slot >= 0 && *slot < ring->nr_slots));
+
+	return ring;
+}
+
+static int dma_tx_fragment(struct b43_dmaring *ring,
+			   struct sk_buff *skb)
+{
+	const struct b43_dma_ops *ops = ring->ops;
+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+	u8 *header;
+	int slot, old_top_slot, old_used_slots;
+	int err;
+	struct b43_dmadesc_generic *desc;
+	struct b43_dmadesc_meta *meta;
+	struct b43_dmadesc_meta *meta_hdr;
+	struct sk_buff *bounce_skb;
+	u16 cookie;
+	size_t hdrsize = b43_txhdr_size(ring->dev);
+
+#define SLOTS_PER_PACKET  2
+
+	old_top_slot = ring->current_slot;
+	old_used_slots = ring->used_slots;
+
+	/* Get a slot for the header. */
+	slot = request_slot(ring);
+	desc = ops->idx2desc(ring, slot, &meta_hdr);
+	memset(meta_hdr, 0, sizeof(*meta_hdr));
+
+	header = &(ring->txhdr_cache[slot * hdrsize]);
+	cookie = generate_cookie(ring, slot);
+	err = b43_generate_txhdr(ring->dev, header,
+				 skb->data, skb->len, info, cookie);
+	if (unlikely(err)) {
+		ring->current_slot = old_top_slot;
+		ring->used_slots = old_used_slots;
+		return err;
+	}
+
+	meta_hdr->dmaaddr = map_descbuffer(ring, (unsigned char *)header,
+					   hdrsize, 1);
+	if (b43_dma_mapping_error(ring, meta_hdr->dmaaddr, hdrsize, 1)) {
+		ring->current_slot = old_top_slot;
+		ring->used_slots = old_used_slots;
+		return -EIO;
+	}
+	ops->fill_descriptor(ring, desc, meta_hdr->dmaaddr,
+			     hdrsize, 1, 0, 0);
+
+	/* Get a slot for the payload. */
+	slot = request_slot(ring);
+	desc = ops->idx2desc(ring, slot, &meta);
+	memset(meta, 0, sizeof(*meta));
+
+	meta->skb = skb;
+	meta->is_last_fragment = 1;
+
+	meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
+	/* create a bounce buffer in zone_dma on mapping failure. */
+	if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
+		bounce_skb = __dev_alloc_skb(skb->len, GFP_ATOMIC | GFP_DMA);
+		if (!bounce_skb) {
+			ring->current_slot = old_top_slot;
+			ring->used_slots = old_used_slots;
+			err = -ENOMEM;
+			goto out_unmap_hdr;
+		}
+
+		memcpy(skb_put(bounce_skb, skb->len), skb->data, skb->len);
+		dev_kfree_skb_any(skb);
+		skb = bounce_skb;
+		meta->skb = skb;
+		meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
+		if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
+			ring->current_slot = old_top_slot;
+			ring->used_slots = old_used_slots;
+			err = -EIO;
+			goto out_free_bounce;
+		}
+	}
+
+	ops->fill_descriptor(ring, desc, meta->dmaaddr, skb->len, 0, 1, 1);
+
+	if (info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) {
+		/* Tell the firmware about the cookie of the last
+		 * mcast frame, so it can clear the more-data bit in it. */
+		b43_shm_write16(ring->dev, B43_SHM_SHARED,
+				B43_SHM_SH_MCASTCOOKIE, cookie);
+	}
+	/* Now transfer the whole frame. */
+	wmb();
+	ops->poke_tx(ring, next_slot(ring, slot));
+	return 0;
+
+out_free_bounce:
+	dev_kfree_skb_any(skb);
+out_unmap_hdr:
+	unmap_descbuffer(ring, meta_hdr->dmaaddr,
+			 hdrsize, 1);
+	return err;
+}
+
+static inline int should_inject_overflow(struct b43_dmaring *ring)
+{
+#ifdef CONFIG_B43_DEBUG
+	if (unlikely(b43_debug(ring->dev, B43_DBG_DMAOVERFLOW))) {
+		/* Check if we should inject another ringbuffer overflow
+		 * to test handling of this situation in the stack. */
+		unsigned long next_overflow;
+
+		next_overflow = ring->last_injected_overflow + HZ;
+		if (time_after(jiffies, next_overflow)) {
+			ring->last_injected_overflow = jiffies;
+			b43dbg(ring->dev->wl,
+			       "Injecting TX ring overflow on "
+			       "DMA controller %d\n", ring->index);
+			return 1;
+		}
+	}
+#endif /* CONFIG_B43_DEBUG */
+	return 0;
+}
+
+/* Static mapping of mac80211's queues (priorities) to b43 DMA rings. */
+static struct b43_dmaring * select_ring_by_priority(struct b43_wldev *dev,
+						    u8 queue_prio)
+{
+	struct b43_dmaring *ring;
+
+	if (b43_modparam_qos) {
+		/* 0 = highest priority */
+		switch (queue_prio) {
+		default:
+			B43_WARN_ON(1);
+			/* fallthrough */
+		case 0:
+			ring = dev->dma.tx_ring_AC_VO;
+			break;
+		case 1:
+			ring = dev->dma.tx_ring_AC_VI;
+			break;
+		case 2:
+			ring = dev->dma.tx_ring_AC_BE;
+			break;
+		case 3:
+			ring = dev->dma.tx_ring_AC_BK;
+			break;
+		}
+	} else
+		ring = dev->dma.tx_ring_AC_BE;
+
+	return ring;
+}
+
+int b43_dma_tx(struct b43_wldev *dev, struct sk_buff *skb)
+{
+	struct b43_dmaring *ring;
+	struct ieee80211_hdr *hdr;
+	int err = 0;
+	unsigned long flags;
+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+
+	hdr = (struct ieee80211_hdr *)skb->data;
+	if (info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) {
+		/* The multicast ring will be sent after the DTIM */
+		ring = dev->dma.tx_ring_mcast;
+		/* Set the more-data bit. Ucode will clear it on
+		 * the last frame for us. */
+		hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_MOREDATA);
+	} else {
+		/* Decide by priority where to put this frame. */
+		ring = select_ring_by_priority(
+			dev, skb_get_queue_mapping(skb));
+	}
+
+	spin_lock_irqsave(&ring->lock, flags);
+	B43_WARN_ON(!ring->tx);
+	if (unlikely(free_slots(ring) < SLOTS_PER_PACKET)) {
+		b43warn(dev->wl, "DMA queue overflow\n");
+		err = -ENOSPC;
+		goto out_unlock;
+	}
+	/* Check if the queue was stopped in mac80211,
+	 * but we got called nevertheless.
+	 * That would be a mac80211 bug. */
+	B43_WARN_ON(ring->stopped);
+
+	/* Assign the queue number to the ring (if not already done before)
+	 * so TX status handling can use it. The queue to ring mapping is
+	 * static, so we don't need to store it per frame. */
+	ring->queue_prio = skb_get_queue_mapping(skb);
+
+	err = dma_tx_fragment(ring, skb);
+	if (unlikely(err == -ENOKEY)) {
+		/* Drop this packet, as we don't have the encryption key
+		 * anymore and must not transmit it unencrypted. */
+		dev_kfree_skb_any(skb);
+		err = 0;
+		goto out_unlock;
+	}
+	if (unlikely(err)) {
+		b43err(dev->wl, "DMA tx mapping failure\n");
+		goto out_unlock;
+	}
+	ring->nr_tx_packets++;
+	if ((free_slots(ring) < SLOTS_PER_PACKET) ||
+	    should_inject_overflow(ring)) {
+		/* This TX ring is full. */
+		ieee80211_stop_queue(dev->wl->hw, skb_get_queue_mapping(skb));
+		ring->stopped = 1;
+		if (b43_debug(dev, B43_DBG_DMAVERBOSE)) {
+			b43dbg(dev->wl, "Stopped TX ring %d\n", ring->index);
+		}
+	}
+out_unlock:
+	spin_unlock_irqrestore(&ring->lock, flags);
+
+	return err;
+}
+
+/* Called with IRQs disabled. */
+void b43_dma_handle_txstatus(struct b43_wldev *dev,
+			     const struct b43_txstatus *status)
+{
+	const struct b43_dma_ops *ops;
+	struct b43_dmaring *ring;
+	struct b43_dmadesc_generic *desc;
+	struct b43_dmadesc_meta *meta;
+	int slot;
+	bool frame_succeed;
+
+	ring = parse_cookie(dev, status->cookie, &slot);
+	if (unlikely(!ring))
+		return;
+
+	spin_lock(&ring->lock); /* IRQs are already disabled. */
+
+	B43_WARN_ON(!ring->tx);
+	ops = ring->ops;
+	while (1) {
+		B43_WARN_ON(!(slot >= 0 && slot < ring->nr_slots));
+		desc = ops->idx2desc(ring, slot, &meta);
+
+		if (meta->skb)
+			unmap_descbuffer(ring, meta->dmaaddr, meta->skb->len,
+					 1);
+		else
+			unmap_descbuffer(ring, meta->dmaaddr,
+					 b43_txhdr_size(dev), 1);
+
+		if (meta->is_last_fragment) {
+			struct ieee80211_tx_info *info;
+
+			BUG_ON(!meta->skb);
+
+			info = IEEE80211_SKB_CB(meta->skb);
+
+			memset(&info->status, 0, sizeof(info->status));
+
+			/*
+			 * Call back to inform the ieee80211 subsystem about
+			 * the status of the transmission.
+			 */
+			frame_succeed = b43_fill_txstatus_report(info, status);
+#ifdef CONFIG_B43_DEBUG
+			if (frame_succeed)
+				ring->nr_succeed_tx_packets++;
+			else
+				ring->nr_failed_tx_packets++;
+			ring->nr_total_packet_tries += status->frame_count;
+#endif /* DEBUG */
+			ieee80211_tx_status_irqsafe(dev->wl->hw, meta->skb);
+
+			/* skb is freed by ieee80211_tx_status_irqsafe() */
+			meta->skb = NULL;
+		} else {
+			/* No need to call free_descriptor_buffer here, as
+			 * this is only the txhdr, which is not allocated.
+			 */
+			B43_WARN_ON(meta->skb);
+		}
+
+		/* Everything unmapped and free'd. So it's not used anymore. */
+		ring->used_slots--;
+
+		if (meta->is_last_fragment)
+			break;
+		slot = next_slot(ring, slot);
+	}
+	dev->stats.last_tx = jiffies;
+	if (ring->stopped) {
+		B43_WARN_ON(free_slots(ring) < SLOTS_PER_PACKET);
+		ieee80211_wake_queue(dev->wl->hw, ring->queue_prio);
+		ring->stopped = 0;
+		if (b43_debug(dev, B43_DBG_DMAVERBOSE)) {
+			b43dbg(dev->wl, "Woke up TX ring %d\n", ring->index);
+		}
+	}
+
+	spin_unlock(&ring->lock);
+}
+
+void b43_dma_get_tx_stats(struct b43_wldev *dev,
+			  struct ieee80211_tx_queue_stats *stats)
+{
+	const int nr_queues = dev->wl->hw->queues;
+	struct b43_dmaring *ring;
+	unsigned long flags;
+	int i;
+
+	for (i = 0; i < nr_queues; i++) {
+		ring = select_ring_by_priority(dev, i);
+
+		spin_lock_irqsave(&ring->lock, flags);
+		stats[i].len = ring->used_slots / SLOTS_PER_PACKET;
+		stats[i].limit = ring->nr_slots / SLOTS_PER_PACKET;
+		stats[i].count = ring->nr_tx_packets;
+		spin_unlock_irqrestore(&ring->lock, flags);
+	}
+}
+
+static void dma_rx(struct b43_dmaring *ring, int *slot)
+{
+	const struct b43_dma_ops *ops = ring->ops;
+	struct b43_dmadesc_generic *desc;
+	struct b43_dmadesc_meta *meta;
+	struct b43_rxhdr_fw4 *rxhdr;
+	struct sk_buff *skb;
+	u16 len;
+	int err;
+	dma_addr_t dmaaddr;
+
+	desc = ops->idx2desc(ring, *slot, &meta);
+
+	sync_descbuffer_for_cpu(ring, meta->dmaaddr, ring->rx_buffersize);
+	skb = meta->skb;
+
+	rxhdr = (struct b43_rxhdr_fw4 *)skb->data;
+	len = le16_to_cpu(rxhdr->frame_len);
+	if (len == 0) {
+		int i = 0;
+
+		do {
+			udelay(2);
+			barrier();
+			len = le16_to_cpu(rxhdr->frame_len);
+		} while (len == 0 && i++ < 5);
+		if (unlikely(len == 0)) {
+			/* recycle the descriptor buffer. */
+			sync_descbuffer_for_device(ring, meta->dmaaddr,
+						   ring->rx_buffersize);
+			goto drop;
+		}
+	}
+	if (unlikely(len > ring->rx_buffersize)) {
+		/* The data did not fit into one descriptor buffer
+		 * and is split over multiple buffers.
+		 * This should never happen, as we try to allocate buffers
+		 * big enough. So simply ignore this packet.
+		 */
+		int cnt = 0;
+		s32 tmp = len;
+
+		while (1) {
+			desc = ops->idx2desc(ring, *slot, &meta);
+			/* recycle the descriptor buffer. */
+			sync_descbuffer_for_device(ring, meta->dmaaddr,
+						   ring->rx_buffersize);
+			*slot = next_slot(ring, *slot);
+			cnt++;
+			tmp -= ring->rx_buffersize;
+			if (tmp <= 0)
+				break;
+		}
+		b43err(ring->dev->wl, "DMA RX buffer too small "
+		       "(len: %u, buffer: %u, nr-dropped: %d)\n",
+		       len, ring->rx_buffersize, cnt);
+		goto drop;
+	}
+
+	dmaaddr = meta->dmaaddr;
+	err = setup_rx_descbuffer(ring, desc, meta, GFP_ATOMIC);
+	if (unlikely(err)) {
+		b43dbg(ring->dev->wl, "DMA RX: setup_rx_descbuffer() failed\n");
+		sync_descbuffer_for_device(ring, dmaaddr, ring->rx_buffersize);
+		goto drop;
+	}
+
+	unmap_descbuffer(ring, dmaaddr, ring->rx_buffersize, 0);
+	skb_put(skb, len + ring->frameoffset);
+	skb_pull(skb, ring->frameoffset);
+
+	b43_rx(ring->dev, skb, rxhdr);
+drop:
+	return;
+}
+
+void b43_dma_rx(struct b43_dmaring *ring)
+{
+	const struct b43_dma_ops *ops = ring->ops;
+	int slot, current_slot;
+	int used_slots = 0;
+
+	B43_WARN_ON(ring->tx);
+	current_slot = ops->get_current_rxslot(ring);
+	B43_WARN_ON(!(current_slot >= 0 && current_slot < ring->nr_slots));
+
+	slot = ring->current_slot;
+	for (; slot != current_slot; slot = next_slot(ring, slot)) {
+		dma_rx(ring, &slot);
+		update_max_used_slots(ring, ++used_slots);
+	}
+	ops->set_current_rxslot(ring, slot);
+	ring->current_slot = slot;
+}
+
+static void b43_dma_tx_suspend_ring(struct b43_dmaring *ring)
+{
+	unsigned long flags;
+
+	spin_lock_irqsave(&ring->lock, flags);
+	B43_WARN_ON(!ring->tx);
+	ring->ops->tx_suspend(ring);
+	spin_unlock_irqrestore(&ring->lock, flags);
+}
+
+static void b43_dma_tx_resume_ring(struct b43_dmaring *ring)
+{
+	unsigned long flags;
+
+	spin_lock_irqsave(&ring->lock, flags);
+	B43_WARN_ON(!ring->tx);
+	ring->ops->tx_resume(ring);
+	spin_unlock_irqrestore(&ring->lock, flags);
+}
+
+void b43_dma_tx_suspend(struct b43_wldev *dev)
+{
+	b43_power_saving_ctl_bits(dev, B43_PS_AWAKE);
+	b43_dma_tx_suspend_ring(dev->dma.tx_ring_AC_BK);
+	b43_dma_tx_suspend_ring(dev->dma.tx_ring_AC_BE);
+	b43_dma_tx_suspend_ring(dev->dma.tx_ring_AC_VI);
+	b43_dma_tx_suspend_ring(dev->dma.tx_ring_AC_VO);
+	b43_dma_tx_suspend_ring(dev->dma.tx_ring_mcast);
+}
+
+void b43_dma_tx_resume(struct b43_wldev *dev)
+{
+	b43_dma_tx_resume_ring(dev->dma.tx_ring_mcast);
+	b43_dma_tx_resume_ring(dev->dma.tx_ring_AC_VO);
+	b43_dma_tx_resume_ring(dev->dma.tx_ring_AC_VI);
+	b43_dma_tx_resume_ring(dev->dma.tx_ring_AC_BE);
+	b43_dma_tx_resume_ring(dev->dma.tx_ring_AC_BK);
+	b43_power_saving_ctl_bits(dev, 0);
+}
+
+#ifdef CONFIG_B43_PIO
+static void direct_fifo_rx(struct b43_wldev *dev, enum b43_dmatype type,
+			   u16 mmio_base, bool enable)
+{
+	u32 ctl;
+
+	if (type == B43_DMA_64BIT) {
+		ctl = b43_read32(dev, mmio_base + B43_DMA64_RXCTL);
+		ctl &= ~B43_DMA64_RXDIRECTFIFO;
+		if (enable)
+			ctl |= B43_DMA64_RXDIRECTFIFO;
+		b43_write32(dev, mmio_base + B43_DMA64_RXCTL, ctl);
+	} else {
+		ctl = b43_read32(dev, mmio_base + B43_DMA32_RXCTL);
+		ctl &= ~B43_DMA32_RXDIRECTFIFO;
+		if (enable)
+			ctl |= B43_DMA32_RXDIRECTFIFO;
+		b43_write32(dev, mmio_base + B43_DMA32_RXCTL, ctl);
+	}
+}
+
+/* Enable/Disable Direct FIFO Receive Mode (PIO) on a RX engine.
+ * This is called from PIO code, so DMA structures are not available. */
+void b43_dma_direct_fifo_rx(struct b43_wldev *dev,
+			    unsigned int engine_index, bool enable)
+{
+	enum b43_dmatype type;
+	u16 mmio_base;
+
+	type = dma_mask_to_engine_type(supported_dma_mask(dev));
+
+	mmio_base = b43_dmacontroller_base(type, engine_index);
+	direct_fifo_rx(dev, type, mmio_base, enable);
+}
+#endif /* CONFIG_B43_PIO */
+
+
+On Tue, Jun 10, 2008 at 6:15 PM, Michael Buesch <mb@bu3sch.de> wrote:
+> On Wednesday 11 June 2008 00:09:27 Miles Lane wrote:
+>> I got a slightly different BUG with this patch applied:
+>>
+>> BUG: unable to handle kernel NULL pointer dereference at 00000000
+>> IP: [<f89e3d41>] :b43:b43_dma_mapping_error+0x16/0x97
+>
+> So can you please debug this? This is trivial. Just add a few printks
+> to see which pointer is NULL.
+> As I said I don't have this tree and really like to avoid fetching
+> and building yet another tree.
+>
+> --
+> Greetings Michael.
+>
