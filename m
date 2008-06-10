@@ -1,76 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46921 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751153AbYFXLEA (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:56726 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754258AbYFJOX7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 07:04:00 -0400
-Subject: Re: [PATCH 4/4] mac80211: add phy information to giwname
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>, linville@tuxdriver.com,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240806240354n45c144a3n5ac8b08c7da7b7a2@mail.gmail.com> (sfid-20080624_125428_921964_DD4C29AD)
-References: <1214303881-31525-1-git-send-email-tomas.winkler@intel.com>
-	 <1214303881-31525-4-git-send-email-tomas.winkler@intel.com>
-	 <1214303881-31525-5-git-send-email-tomas.winkler@intel.com>
-	 <200806241242.11727.mb@bu3sch.de>
-	 <1ba2fa240806240354n45c144a3n5ac8b08c7da7b7a2@mail.gmail.com>
-	 (sfid-20080624_125428_921964_DD4C29AD)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wSAk6AqYz3WmvSNslF+2"
-Date: Tue, 24 Jun 2008 13:03:16 +0200
-Message-Id: <1214305396.8967.283.camel@johannes.berg> (sfid-20080624_130404_152077_39C6C7F6)
-Mime-Version: 1.0
+	Tue, 10 Jun 2008 10:23:59 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "Miles Lane" <miles.lane@gmail.com>
+Subject: Re: BUG: NULL pointer dereference at 00000000 -- IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
+Date: Tue, 10 Jun 2008 16:23:33 +0200
+Cc: "Andrew Morton" <akpm@linux-foundation.org>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <a44ae5cd0806100709rf4602f2x587631852502c0b5@mail.gmail.com>
+In-Reply-To: <a44ae5cd0806100709rf4602f2x587631852502c0b5@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200806101623.34082.mb@bu3sch.de> (sfid-20080610_162402_421715_E8EDB95F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday 10 June 2008 16:09:37 Miles Lane wrote:
+> BUG: unable to handle kernel NULL pointer dereference at 00000000
+> IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
 
---=-wSAk6AqYz3WmvSNslF+2
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
+It seems to crash at
+ 60 extern const struct dma_mapping_ops *dma_ops;
+ 61 
+ 62 static inline int dma_mapping_error(dma_addr_t dma_addr)
+ 63 {
+ 64         if (dma_ops->mapping_error)
+ 65                 return dma_ops->mapping_error(dma_addr);
+ 66 
+ 67         return (dma_addr == bad_dma_address);
+ 68 }
 
-> Still many people are using wireless extension and this is probably
-> most convenient way to get this info.
-> For example 4956 comes with 3 combinations g, ag, and agn.
-> It's displayed upon iwconfig
+because dma_ops is a NULL pointer here.
+Can you add a WARN_ON(!dma_ops); at the beginning of the function
+inside of include/asm/x86/dma-mapping.h to confirm this?
 
-Heh ok. I would just say "print out the rates" but I guess that doesn't
-work with HT yet.
-
-> >> +             strcat(name, "g");
-> >> +             is_ht |=3D sband->ht_info.ht_supported;
-> >
-> > What about b-only devices?
->=20
-> See the log message...(known issue). Currently you have to loop over
-> rates to get this info. I wasn't sure if they are any b-only NICs
-> under mac80211 so I didn't run to implement it.
-
-There is, adm8211.
-
-johannes
-
---=-wSAk6AqYz3WmvSNslF+2
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIYNRwAAoJEKVg1VMiehFYzj8QAKPRQqi+WNDUldUlLknic0/8
-jh1fGZwpNjbTrqM6QpmJfBAZvwi3Ap+lv1qXvZPGp/cM5Hxc76V7F1Z/L92p7e91
-9bh6Fzzmu9nGR0tmy+jxBB9an4X23kYFJHaPBr/MFddiCsV8CPIkMuhid9bq/28a
-77zgLlfQK5oLmWmW3432mKgeCb0tepbBqKycoV4LLpYy4GgFNR1edtcq8UMy51wo
-RX+EeDruYjOJUzrcTOZz8YzPWdycDAGLBgvZYikfxDaDi5BpA9hNutAAE6qS2p/9
-B4RTR/h4AYELsp8KqPlBCuVyzunRHOje2YhuARhJ/v8Mm4K9BrOfSPxp3lGw1PWn
-lpowXE8V61llBhesh5l9arAVqKbqcfKFR3PLj0571RsSfA2+NJVMZIDAEm4z+zEg
-68r4oKhZ02ezLH0wK0lHhQyo3roui2kKvUpT7dafLSJ4WlKk35WDo8lVDvjKnzZl
-8K7NwzkO3aQcjnyMJzMGfam9Mg2sgIHF6lTh1HInwujumP21hOZEgpyTXta8WZze
-MD1o1Au4PMaqC27lU38Ab1p7g/x/hjW65WtR69Fm29dLGSlH3MgoWG8udjpE+ZK5
-Yji+c/URDgLQEd9yUJCNzgrkZXumXDSJFa2Biy3SgLnW1iC9wuR05AtAyjYBwXxe
-HDmpx8b1g+kaSaoCkdXu
-=OndC
------END PGP SIGNATURE-----
-
---=-wSAk6AqYz3WmvSNslF+2--
-
+-- 
+Greetings Michael.
