@@ -1,81 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:34532 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754302AbYF3J0V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 05:26:21 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 04/33] iwlwifi: use iwl_is_associated when possible
-Date: Mon, 30 Jun 2008 17:23:04 +0800
-Message-Id: <1214817813-17639-5-git-send-email-yi.zhu@intel.com> (sfid-20080630_112625_541798_9783E112)
-In-Reply-To: <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
-References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-2-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-3-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:48296 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752998AbYFJNk5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jun 2008 09:40:57 -0400
+Subject: Re: [english 97%] *** GMX Spamverdacht *** Re: [english 93%] Re:
+	Glossary for all words
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sebastian Fudickar <Sebastian.Fudickar@gmx.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4848E879.7050104@gmx.de> (sfid-20080606_093154_653555_2A53BBB5)
+References: <4848577F.50802@gmx.de>
+	 <69e28c910806051421m17efed1andf82b62246ca9f02@mail.gmail.com>
+	 <48485DE5.2050306@gmx.de> <200806060850.37216.hs4233@mail.mn-solutions.de>
+	 <4848E879.7050104@gmx.de> (sfid-20080606_093154_653555_2A53BBB5)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-G+zysKRF5hWeGHmht0Fy"
+Date: Tue, 10 Jun 2008 15:40:14 +0200
+Message-Id: <1213105214.3668.18.camel@johannes.berg> (sfid-20080610_154122_836249_621B6FE4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-This patch add uses of iwl_is_associated in places it is suitable in.
+--=-G+zysKRF5hWeGHmht0Fy
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+On Fri, 2008-06-06 at 09:34 +0200, Sebastian Fudickar wrote:
+> Good idea Holger,
+>=20
+> Is it fine for you, if I extend the given Glossary in there?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 92d1b2e..fe60319 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -970,7 +970,7 @@ static int iwl3945_full_rxon_required(struct iwl3945_priv *priv)
- {
- 
- 	/* These items are only settable from the full RXON command */
--	if (!(priv->active_rxon.filter_flags & RXON_FILTER_ASSOC_MSK) ||
-+	if (!(iwl3945_is_associated(priv)) ||
- 	    compare_ether_addr(priv->staging_rxon.bssid_addr,
- 			       priv->active_rxon.bssid_addr) ||
- 	    compare_ether_addr(priv->staging_rxon.node_addr,
-@@ -6836,7 +6836,7 @@ static void iwl3945_config_ap(struct iwl3945_priv *priv)
- 		return;
- 
- 	/* The following should be done only at AP bring up */
--	if ((priv->active_rxon.filter_flags & RXON_FILTER_ASSOC_MSK) == 0) {
-+	if (!(iwl3945_is_associated(priv))) {
- 
- 		/* RXON - unassoc (to set timing command) */
- 		priv->staging_rxon.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 1558b9a..a2dffe4 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -192,7 +192,7 @@ static int iwl4965_full_rxon_required(struct iwl_priv *priv)
- {
- 
- 	/* These items are only settable from the full RXON command */
--	if (!(priv->active_rxon.filter_flags & RXON_FILTER_ASSOC_MSK) ||
-+	if (!(iwl_is_associated(priv)) ||
- 	    compare_ether_addr(priv->staging_rxon.bssid_addr,
- 			       priv->active_rxon.bssid_addr) ||
- 	    compare_ether_addr(priv->staging_rxon.node_addr,
-@@ -3008,7 +3008,7 @@ static void iwl4965_config_ap(struct iwl_priv *priv)
- 		return;
- 
- 	/* The following should be done only at AP bring up */
--	if ((priv->active_rxon.filter_flags & RXON_FILTER_ASSOC_MSK) == 0) {
-+	if (!(iwl_is_associated(priv))) {
- 
- 		/* RXON - unassoc (to set timing command) */
- 		priv->staging_rxon.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
--- 
-1.5.3.6
+Let's actually not do that at all. All of the terms you have tried to
+collect
+ * can be decoded by looking at the code
+ * or by trying to understand the code
+ * or by looking at other code like the normal networking stack
+ * or by looking at the 802.11 specs
+ * are normal abbreviations used everywhere in the kernel
+
+johannes
+
+--=-G+zysKRF5hWeGHmht0Fy
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIToQ6AAoJEKVg1VMiehFYFMAP/2lEAGm1YPVaQVwNNFhEB1I3
+OVZz3g9V7hp5+Oa825vxMuT6tQUMmxZVSSCUrGA1n5dEW91sVjBFuFsZPfPJ49/y
+OcBf/pD3WZFvQgC4gokujM0+vO+TQUMKawi5dsjFUalDZT8k5pZceNFddQMozn6v
+M5HyN85pKv6ibl5MGjWOrAHC4THEyvN9L3DeFBt7KEcL/WeQT42q9guJbVu4bEcR
+XdG8VR6BZUxOjWWH56n3XTtBynzr/DJJBUIKcp2bvl7tWcXrvnJl8hXonIT/KYR1
+84KanKJjZWRo/5j9WEJ5V8PrUCyfPbOC43fo2GqFX9adH5T23FhDtVvOFnLhNY/e
+6fWM4mOTCO/mJ9Yx+nTVDqccxX+fs3jK0y32872Vsek9kLoKU9MetHjtRjj0JE+i
+qD6tQIjxpHW8QS3pvDKtU8VBYB2qBn3N64H4Xjl+KTdsoogk1PWmOnjrR3q27lQE
+RX6dhYeUgGf25rIoy+9OCfOV7lWt3wLC4PIFepPur3wCCu+FkUU6CyP04oNjmHmc
+zNqNXEOZUVghpzoX0spXQHJQdjVTlQqEDVQCtZH4kbEpC+QwjC4ZAWVGtnveu2zj
+1vor8/yJUnyftZ6bOhpOhb2jMIDQ4tX1vnhxmvczA0WWAAo2qA1+qiVaBzURpwwK
+YxT9LRdN7050Shp2bIaN
+=9Wj7
+-----END PGP SIGNATURE-----
+
+--=-G+zysKRF5hWeGHmht0Fy--
 
