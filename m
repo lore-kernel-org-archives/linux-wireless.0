@@ -1,99 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:34836 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751163AbYFAQaF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jun 2008 12:30:05 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1K2qRW-0004lU-VP
-	for linux-wireless@vger.kernel.org; Sun, 01 Jun 2008 16:30:02 +0000
-Received: from cpc1-cwma5-0-0-cust137.swan.cable.ntl.com ([80.4.12.138])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jun 2008 16:30:02 +0000
-Received: from sitsofe by cpc1-cwma5-0-0-cust137.swan.cable.ntl.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jun 2008 16:30:02 +0000
-To: linux-wireless@vger.kernel.org
-From: Sitsofe Wheeler <sitsofe@yahoo.com>
-Subject: [BISECTED][NEXT] Wifi downloads capped at 105Kbytes/s
-Date: Sun, 01 Jun 2008 17:22:04 +0100
-Message-ID: <g1uicv$se6$1@ger.gmane.org> (sfid-20080601_183010_521602_3D14D7C5)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Cc: linux-kernel@vger.kernel.org, kernel-testers@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Received: from wa-out-1112.google.com ([209.85.146.180]:52708 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756144AbYFJX5F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jun 2008 19:57:05 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so2317230waf.23
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2008 16:57:05 -0700 (PDT)
+Message-ID: <1ba2fa240806101657w14599f30x67f58acbc7fe9e80@mail.gmail.com> (sfid-20080611_015710_913770_D1DD5F84)
+Date: Wed, 11 Jun 2008 02:57:04 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [compat-masters] Backported MQ requirement on 802.11n for older kernels
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	compat-masters@lists.madwifi.org,
+	"Tim Gardner" <tim.gardner@canonical.com>,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
+In-Reply-To: <43e72e890806090325y5a1aebadq68204695044f4b6f@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <43e72e890806080855p284f85brd0ff1f1dfce96bf8@mail.gmail.com>
+	 <c85cb4470806090053l5b763a23j43bbf0c87f594b0d@mail.gmail.com>
+	 <1213001797.698.57.camel@johannes.berg>
+	 <43e72e890806090201q55bff8e3m694121ebd4befee6@mail.gmail.com>
+	 <43e72e890806090325y5a1aebadq68204695044f4b6f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Download speeds are never more than 105Kbytes/s even though the bit rate is
-54Mb/s in at least linux-net kernels from next-20080523 onwards. I have
-bisected it down to commit [2e92e6f2c50b4baf85cca968f0e6f1b5c0df7d39]:
+On Mon, Jun 9, 2008 at 1:25 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Mon, Jun 9, 2008 at 2:01 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Mon, Jun 9, 2008 at 1:56 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>>> On Mon, 2008-06-09 at 10:53 +0300, Ron Rindjunsky wrote:
+>>>> >
+>>>> > I just finished trying to backport CONFIG_NETDEVICES_MULTIQUEUE
+>>>> > requirement for 802.11n to older kernels by relying on the old
+>>>> > internal mac80211 hacked up MQ support. I've tested the build on
+>>>> > 2.6.22, 2.6.23, and 2.6.24. Let me know if you get to test this,
+>>>> > particularly iwl4965 using 11n on 2.6.22.
+>>>> >
+>>>>
+>>>> in config.mk you put MAC80211_QOS=m, and i guess that the intention was to put
+>>>> CONFIG_MAC80211_QOS=m
+>>>> if this is the case then the compilation fails
+>>>
+>>> It should be "y"
+>>>
+>>> johannes
+>>>
+>>
+>> Danke
+>
+> OK found some more issues. v4.2 pushed out and new tarball
+> regenerated. This has been tested by Intel on 802.11n on iwl4965.
 
-commit 2e92e6f2c50b4baf85cca968f0e6f1b5c0df7d39
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Thu May 15 12:55:27 2008 +0200
+I couldn't  make wme.c compiled for kernels > 22 unless I've added the
+else statement  bellow into confg.mk
+You've reported that it worked for you so what did I wrong?
 
-    mac80211: use rate index in TX control
+ifeq ($(CONFIG_NETDEVICES_MULTIQUEUE),)
+$(warning "WARNING: You are running a kernel >= 2.6.23, you should
+enable CONFIG_NETDEVICES_MULTIQUEUE for 802.11n support")
+else
+CONFIG_MAC80211_QOS=y
+endif
 
-    This patch modifies struct ieee80211_tx_control to give band
-    info and the rate index (instead of rate pointers) to drivers.
-    This mostly serves to reduce the TX control structure size to
-    make it fit into skb->cb so that the fragmentation code can
-    put it there and we can think about passing it to drivers that
-    way in the future.
-
-    The rt2x00 driver update was done by Ivo, thanks.
-
-    Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-Reverting this seemed to allow speeds up to 1.3Mbytes/s (which is expected
-on this network). I believe I see this behaviour with both iwl3945 and
-rt2x00 drivers. Here is the bisection log:
-
-# bad: [7b6c98f0853b86c101948f1bf4e0a21d3065944f] Add linux-next specific
-files
-# good: [703d73f83f3329ebf5108553017b4a1b66b8fe19] Add linux-next specific
-files
-git-bisect start 'next-20080523' 'next-20080515'
-# good: [3ebc2a4ec3a093e76e402c40ce8e2e5e5f04d86d] Merge
-commit 'x86/auto-x86-next'
-git-bisect good 3ebc2a4ec3a093e76e402c40ce8e2e5e5f04d86d
-# bad: [e290a752da9c074a1a0cf32f404ccf6c7193abcd] Merge
-commit 'wireless/master'
-git-bisect bad e290a752da9c074a1a0cf32f404ccf6c7193abcd
-# good: [8183b598a8acd441c7d7dca5fdc33fbb292ebdf2] Merge commit 'acpi/test'
-git-bisect good 8183b598a8acd441c7d7dca5fdc33fbb292ebdf2
-# good: [b679aeb304e3070626750c15e043a40da0e942fc] libertas: sysfs interface
-for accessing default mesh channel
-git-bisect good b679aeb304e3070626750c15e043a40da0e942fc
-# good: [4ce50b6156635f2cffbf8961975c2e0b437dbcd9] Merge commit '4xx/next'
-git-bisect good 4ce50b6156635f2cffbf8961975c2e0b437dbcd9
-# good: [189a2b5942d62bd18e1e01772c4c784253f5dd16] iwlwifi: trigger event
-log from debugfs
-git-bisect good 189a2b5942d62bd18e1e01772c4c784253f5dd16
-# good: [6d4a6672c8263f98544d2b91690dc7074b144090] tipc: Update "previous
-node" indicators when node address changes
-git-bisect good 6d4a6672c8263f98544d2b91690dc7074b144090
-# bad: [e48b0eeb0ab508021b654a45f332b30cac2163b9] b43: Add hooks for
-firmware debugging
-git-bisect bad e48b0eeb0ab508021b654a45f332b30cac2163b9
-# bad: [e039fa4a4195ac4ee895e6f3d1334beed63256fe] mac80211: move TX info
-into skb->cb
-git-bisect bad e039fa4a4195ac4ee895e6f3d1334beed63256fe
-# good: [36d6825b91bc492b65b6333c369cd96a2fc8c903] mac80211: let drivers
-wake but not start queues
-git-bisect good 36d6825b91bc492b65b6333c369cd96a2fc8c903
-# bad: [e24549485f859be6518929bb1c9c0257d79f033d] mac80211: reorder some
-transmit handlers
-git-bisect bad e24549485f859be6518929bb1c9c0257d79f033d
-# bad: [2e92e6f2c50b4baf85cca968f0e6f1b5c0df7d39] mac80211: use rate index
-in TX control
-git-bisect bad 2e92e6f2c50b4baf85cca968f0e6f1b5c0df7d39
-
-Perhaps a change was made but drivers have yet to be updated?
-
--- 
-Sitsofe | http://sucs.org/~sits/
-
+Thanks
+Tomas
