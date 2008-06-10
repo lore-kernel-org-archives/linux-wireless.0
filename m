@@ -1,65 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:1508 "EHLO mga11.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4845 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751402AbYF1APT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2008 20:15:19 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] mac80211: fix warning: unused variable invoke_tx_handlers
-Date: Sat, 28 Jun 2008 03:15:03 +0300
-Message-Id: <1214612103-8389-1-git-send-email-tomas.winkler@intel.com> (sfid-20080628_021523_509782_B59B12F5)
-Content-Type: text/plain; charset="us-ascii"
+	id S1754130AbYFJM7K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jun 2008 08:59:10 -0400
+Date: Tue, 10 Jun 2008 08:30:07 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+Subject: Re: mac80211_hwsim - simulator of 802.11 radios for mac80211
+Message-ID: <20080610123007.GB1571@tuxdriver.com> (sfid-20080610_145914_933327_454CB0D7)
+References: <20080610105058.GA6961@jm.kir.nu> <1213096575.3668.6.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1213096575.3668.6.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes warning: unused variable in invoke_tx_handlers
-when compiling without MAC80211_DEBUG option
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/tx.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 345d6ff..a8c1809 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1110,7 +1110,6 @@ static int __ieee80211_tx(struct ieee80211_local *local, struct sk_buff *skb,
-  */
- static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
- {
--	struct ieee80211_local *local = tx->local;
- 	struct sk_buff *skb = tx->skb;
- 	ieee80211_tx_handler *handler;
- 	ieee80211_tx_result res = TX_DROP;
-@@ -1123,7 +1122,7 @@ static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
- 	}
+On Tue, Jun 10, 2008 at 01:16:15PM +0200, Johannes Berg wrote:
+> On Tue, 2008-06-10 at 13:50 +0300, Jouni Malinen wrote:
+> > hostapd and wpa_supplicant include a test driver interface that allows
+> > them to be tested on a single host without any wireless hardware for
+> > development purposes. I have found this very valuable both for
+> > developing new functionality and for testing existing code.
+> > 
+> > In order to provide similar mechanism for mac80211 developers and to
+> > extend the scope of suitable test cases for hostapd/wpa_supplicant, I've
+> > written a Linux kernel module that provides a similar test interface at
+> > a lower layer. mac80211_hwsim simulates WLAN hardware and the air
+> > interface between the radios by acting as a low-level radio driver for
+> > mac80211. Neither mac80211 nor user space programs need any changes to
+> > work with the simulated radios.
+> 
+> Way cool!
  
- 	if (unlikely(res == TX_DROP)) {
--		I802_DEBUG_INC(local->tx_handlers_drop);
-+		I802_DEBUG_INC(tx->local->tx_handlers_drop);
- 		dev_kfree_skb(skb);
- 		for (i = 0; i < tx->num_extra_frag; i++)
- 			if (tx->extra_frag[i])
-@@ -1131,7 +1130,7 @@ static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
- 		kfree(tx->extra_frag);
- 		return -1;
- 	} else if (unlikely(res == TX_QUEUED)) {
--		I802_DEBUG_INC(local->tx_handlers_queued);
-+		I802_DEBUG_INC(tx->local->tx_handlers_queued);
- 		return -1;
- 	}
- 
+Yes, awesome!
+
+> > The initial version of mac80211_hwsim is available from the
+> > mac80211_hwsim subdirectory of my hostap Git tree:
+> > git://w1.fi/srv/git/hostap.git
+> > http://w1.fi/gitweb/gitweb.cgi?p=hostap.git;a=tree;f=mac80211_hwsim
+> > 
+> > If there is interest in moving mac80211_hwsim module into the Linux
+> > kernel tree, I'm open to doing that, too.
+> 
+> I think that would make sense, yes, especially since one look at the
+> code already tells me that it needs to follow large API changes to work
+> with the current mac80211.
+
+ACK
+
+> One thing that I'd like to add is a having a "global" monitor interface
+> that is registered by the hwsim module and not mac80211 and shows all
+> frames, regardless of channel etc.
+
+That sounds like a great idea.  A mechanism for injecting frames from
+an external source might be useful as well...?
+
+Jouni this looks great.  Let's get this into the kernel.
+
+John
 -- 
-1.5.4.1
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+John W. Linville
+linville@tuxdriver.com
