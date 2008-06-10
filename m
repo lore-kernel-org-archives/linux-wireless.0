@@ -1,168 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:39881 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750817AbYFRMaz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 08:30:55 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so125475fgg.17
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jun 2008 05:30:53 -0700 (PDT)
-Message-ID: <30353c3d0806180530j745e9a19p60e2a929e52eddec@mail.gmail.com> (sfid-20080618_143100_179429_B2FA0C43)
-Date: Wed, 18 Jun 2008 08:30:53 -0400
-From: "David Ellingsworth" <david@identd.dyndns.org>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: mac80211 local_bh_enable called with IRQs disabled (was: b43legacy kernel warning)
-Cc: "Michael Buesch" <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-In-Reply-To: <1213783367.1312.2.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <30353c3d0806171359k6d7be389g23dfc809f288d2f1@mail.gmail.com>
-	 <200806172320.18778.mb@bu3sch.de>
-	 <1213783367.1312.2.camel@johannes.berg>
+Received: from c60.cesmail.net ([216.154.195.49]:50385 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753256AbYFJUDP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jun 2008 16:03:15 -0400
+Subject: Re: http://www.orbit-lab.org/kernel/compat-wireless-2.6/2008/04/
+From: Pavel Roskin <proski@gnu.org>
+To: Grant Williamson <traxtopel@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <484ECE93.1090501@gmail.com>
+References: <484ECE93.1090501@gmail.com>
+Content-Type: text/plain
+Date: Tue, 10 Jun 2008 16:03:12 -0400
+Message-Id: <1213128193.26837.15.camel@dv> (sfid-20080610_220321_050594_BD844A1B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 18, 2008 at 6:02 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2008-06-17 at 23:20 +0200, Michael Buesch wrote:
->> On Tuesday 17 June 2008 22:59:52 David Ellingsworth wrote:
->> > I ran into this error today from a kernel I built last night based on
->> > the latest wireless-testing branch. Correct me if I'm wrong, but it
->> > looks to be b43legacy related. I'm a bit new to kernel debugging but
->> > can try to provide additional information if instructions on how to do
->> > so are provided.
->>
->> No, this is a mac80211 bug
->
-> Can you try the patch below?
->
-> johannes
->
-> --- everything.orig/net/mac80211/sta_info.h     2008-06-18 10:07:24.000000000 +0200
-> +++ everything/net/mac80211/sta_info.h  2008-06-18 11:58:32.000000000 +0200
-> @@ -164,6 +164,7 @@ struct sta_ampdu_mlme {
->  * @aid: STA's unique AID (1..2007, 0 = not assigned yet),
->  *     only used in AP (and IBSS?) mode
->  * @flags: STA flags, see &enum ieee80211_sta_info_flags
-> + * @flaglock: spinlock for flags accesses
->  * @ps_tx_buf: buffer of frames to transmit to this station
->  *     when it leaves power saving state
->  * @tx_filtered: buffer of frames we already tried to transmit
-> @@ -186,6 +187,7 @@ struct sta_info {
->        struct rate_control_ref *rate_ctrl;
->        void *rate_ctrl_priv;
->        spinlock_t lock;
-> +       spinlock_t flaglock;
->        struct ieee80211_ht_info ht_info;
->        u64 supp_rates[IEEE80211_NUM_BANDS];
->        u8 addr[ETH_ALEN];
-> @@ -198,7 +200,10 @@ struct sta_info {
->         */
->        u8 pin_status;
->
-> -       /* frequently updated information, locked with lock spinlock */
-> +       /*
-> +        * frequently updated, locked with own spinlock (flaglock),
-> +        * use the accessors defined below
-> +        */
->        u32 flags;
->
->        /*
-> @@ -293,34 +298,41 @@ static inline enum plink_state sta_plink
->
->  static inline void set_sta_flags(struct sta_info *sta, const u32 flags)
->  {
-> -       spin_lock_bh(&sta->lock);
-> +       unsigned long irqfl;
-> +
-> +       spin_lock_irqsave(&sta->flaglock, irqfl);
->        sta->flags |= flags;
-> -       spin_unlock_bh(&sta->lock);
-> +       spin_unlock_irqrestore(&sta->flaglock, irqfl);
->  }
->
->  static inline void clear_sta_flags(struct sta_info *sta, const u32 flags)
->  {
-> -       spin_lock_bh(&sta->lock);
-> +       unsigned long irqfl;
-> +
-> +       spin_lock_irqsave(&sta->flaglock, irqfl);
->        sta->flags &= ~flags;
-> -       spin_unlock_bh(&sta->lock);
-> +       spin_unlock_irqrestore(&sta->flaglock, irqfl);
->  }
->
->  static inline void set_and_clear_sta_flags(struct sta_info *sta,
->                                           const u32 set, const u32 clear)
->  {
-> -       spin_lock_bh(&sta->lock);
-> +       unsigned long irqfl;
-> +
-> +       spin_lock_irqsave(&sta->flaglock, irqfl);
->        sta->flags |= set;
->        sta->flags &= ~clear;
-> -       spin_unlock_bh(&sta->lock);
-> +       spin_unlock_irqrestore(&sta->flaglock, irqfl);
->  }
->
->  static inline u32 test_sta_flags(struct sta_info *sta, const u32 flags)
->  {
->        u32 ret;
-> +       unsigned long irqfl;
->
-> -       spin_lock_bh(&sta->lock);
-> +       spin_lock_irqsave(&sta->flaglock, irqfl);
->        ret = sta->flags & flags;
-> -       spin_unlock_bh(&sta->lock);
-> +       spin_unlock_irqrestore(&sta->flaglock, irqfl);
->
->        return ret;
->  }
-> @@ -329,11 +341,12 @@ static inline u32 test_and_clear_sta_fla
->                                           const u32 flags)
->  {
->        u32 ret;
-> +       unsigned long irqfl;
->
-> -       spin_lock_bh(&sta->lock);
-> +       spin_lock_irqsave(&sta->flaglock, irqfl);
->        ret = sta->flags & flags;
->        sta->flags &= ~flags;
-> -       spin_unlock_bh(&sta->lock);
-> +       spin_unlock_irqrestore(&sta->flaglock, irqfl);
->
->        return ret;
->  }
-> @@ -341,10 +354,11 @@ static inline u32 test_and_clear_sta_fla
->  static inline u32 get_sta_flags(struct sta_info *sta)
->  {
->        u32 ret;
-> +       unsigned long irqfl;
->
-> -       spin_lock_bh(&sta->lock);
-> +       spin_lock_irqsave(&sta->flaglock, irqfl);
->        ret = sta->flags;
-> -       spin_unlock_bh(&sta->lock);
-> +       spin_unlock_irqrestore(&sta->flaglock, irqfl);
->
->        return ret;
->  }
-> --- everything.orig/net/mac80211/sta_info.c     2008-06-18 11:56:44.000000000 +0200
-> +++ everything/net/mac80211/sta_info.c  2008-06-18 11:56:58.000000000 +0200
-> @@ -235,6 +235,7 @@ struct sta_info *sta_info_alloc(struct i
->                return NULL;
->
->        spin_lock_init(&sta->lock);
-> +       spin_lock_init(&sta->flaglock);
->
->        memcpy(sta->addr, addr, ETH_ALEN);
->        sta->local = local;
->
->
->
+On Tue, 2008-06-10 at 14:57 -0400, Grant Williamson wrote:
+> Hi,
+> 
+> I am trying to narrow down a wireless issue I am having with leap on 
+> Fedora 9. Seems that in April the issue was fixed in the 
+> compat-wireless-2.6 tarball.
+> 
+> On http://www.orbit-lab.org/kernel/compat-wireless-2.6/2008/04/ most of 
+> the archives for April are missing. Is there any
+> other mirror where I can find or checkout the archives between 20080407 
+> & 20080420?
+> 
+> I need to track it down so the issue can get fixed on el5.
 
-Yes, this patch seems to correct the issue. I no longer receive the
-kernel warning.
+The snapshots are not suitable for bisecting bugs.  Even a single day
+can bring dozens of updates.
 
+This right tool for bisection is git.  Please check out the wireless
+tree:
+
+git-clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+
+Then compile the kernel.  See if the problem exists.  You need to use
+reverse logic, since you are looking for a patch that fixed something,
+not a patch that broke it.
+
+Thus, if the problem is fixed, mark the revision as "bad" with
+"git-bisect bad".  Then find a revision that is likely to have the
+problem.  Use "git-tag -l" or an interactive tool, such as qgit or tig.
+Check it out with "git-checkout".  Test the kernel.  Mark is with
+"git-bisect bad" or "git-bisect good" using the same reversed logic.
+
+Once you find one "good" and one "bad" revision, git-bisect will be
+telling you what to test next, and a few tests later, you'll have the
+exact change you are looking for.
+
+You can also check logs for the problem or describe it here in case
+somebody knows which patch fixed it.
+
+-- 
 Regards,
-
-David Ellingsworth
+Pavel Roskin
