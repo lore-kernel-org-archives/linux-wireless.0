@@ -1,75 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:57241 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754013AbYFONSR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jun 2008 09:18:17 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Do not return TX_BUSY from op_tx
-Date: Sun, 15 Jun 2008 15:17:29 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Received: from hostap.isc.org ([149.20.54.63]:38666 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755230AbYFJQbr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jun 2008 12:31:47 -0400
+Date: Tue, 10 Jun 2008 19:31:07 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: mac80211_hwsim - simulator of 802.11 radios for mac80211
+Message-ID: <20080610163106.GA5675@jm.kir.nu> (sfid-20080610_183151_684251_02D6E2D2)
+References: <20080610105058.GA6961@jm.kir.nu> <1213096575.3668.6.camel@johannes.berg> <20080610124724.GB6961@jm.kir.nu> <1213103378.3668.10.camel@johannes.berg> <20080610150227.GA4913@jm.kir.nu> <1213110681.3668.30.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200806151517.30230.mb@bu3sch.de> (sfid-20080615_151820_909843_C97FF530)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1213110681.3668.30.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Never return TX_BUSY from op_tx. It doesn't make sense to return
-TX_BUSY, if we can not transmit the packet.
-Drop the packet and return TX_OK.
-This will fix the resume hang.
+On Tue, Jun 10, 2008 at 05:11:21PM +0200, Johannes Berg wrote:
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> Hmm. I suspect you called rx_irqsafe _after_ the radio was stopped (via
+> mac80211's stop callback), and at stop time we also disable the tasklet,
+> so something probably goes haywire if you tasklet_schedule a disabled
+> tasklet.
 
----
+Yes, that caused it. I added a new flag based on start/stop for
+determining which interface are ready to accept new frames. I was
+already doing this based on radio_enabled flag, but apparently that is
+left set when setting the interface down.
 
-John, this is a bugfix for 2.6.26.
-
-
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-06-15 14:33:49.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2008-06-15 14:36:31.000000000 +0200
-@@ -2973,18 +2973,17 @@ static int b43_op_tx(struct ieee80211_hw
- 	struct b43_wldev *dev = wl->current_dev;
- 	unsigned long flags;
- 	int err;
- 
- 	if (unlikely(skb->len < 2 + 2 + 6)) {
- 		/* Too short, this can't be a valid frame. */
--		dev_kfree_skb_any(skb);
--		return NETDEV_TX_OK;
-+		goto drop_packet;
- 	}
- 	B43_WARN_ON(skb_shinfo(skb)->nr_frags);
- 	if (unlikely(!dev))
--		return NETDEV_TX_BUSY;
-+		goto drop_packet;
- 
- 	/* Transmissions on seperate queues can run concurrently. */
- 	read_lock_irqsave(&wl->tx_lock, flags);
- 
- 	err = -ENODEV;
- 	if (likely(b43_status(dev) >= B43_STAT_STARTED)) {
-@@ -2994,13 +2993,18 @@ static int b43_op_tx(struct ieee80211_hw
- 			err = b43_dma_tx(dev, skb);
- 	}
- 
- 	read_unlock_irqrestore(&wl->tx_lock, flags);
- 
- 	if (unlikely(err))
--		return NETDEV_TX_BUSY;
-+		goto drop_packet;
-+	return NETDEV_TX_OK;
-+
-+drop_packet:
-+	/* We can not transmit this packet. Drop it. */
-+	dev_kfree_skb_any(skb);
- 	return NETDEV_TX_OK;
- }
- 
- /* Locking: wl->irq_lock */
- static void b43_qos_params_upload(struct b43_wldev *dev,
- 				  const struct ieee80211_tx_queue_params *p,
+-- 
+Jouni Malinen                                            PGP id EFC895FA
