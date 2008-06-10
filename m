@@ -1,51 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43049 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757931AbYFNA32 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 20:29:28 -0400
-Date: Fri, 13 Jun 2008 17:28:02 -0700
-From: Greg KH <greg@kroah.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	linux-next@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ANNOUNCE] linux-staging tree created
-Message-ID: <20080614002802.GD25585@kroah.com> (sfid-20080614_022934_930467_AC9FDEAE)
-References: <20080610190540.GA25066@kroah.com> <43e72e890806130714k535b041evaf750209ea492c47@mail.gmail.com> <20080613143328.GA16506@tuxdriver.com>
-MIME-Version: 1.0
+Received: from main.gmane.org ([80.91.229.2]:46469 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756864AbYFJWUE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jun 2008 18:20:04 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1K6CCA-0003xQ-H8
+	for linux-wireless@vger.kernel.org; Tue, 10 Jun 2008 22:20:02 +0000
+Received: from cpc1-cwma5-0-0-cust137.swan.cable.ntl.com ([80.4.12.138])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2008 22:20:02 +0000
+Received: from sitsofe by cpc1-cwma5-0-0-cust137.swan.cable.ntl.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2008 22:20:02 +0000
+To: linux-wireless@vger.kernel.org
+From: Sitsofe Wheeler <sitsofe@yahoo.com>
+Subject: DEBUG_LOCK_ALLOC causes hostap kernel lockup
+Date: Tue, 10 Jun 2008 23:16:13 +0100
+Message-ID: <g2mufc$c16$1@ger.gmane.org> (sfid-20080611_002021_064537_04BA25D0)
+References: <g2760n$7f0$1@ger.gmane.org> <g2la7s$g8r$1@ger.gmane.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080613143328.GA16506@tuxdriver.com>
+Cc: kernel-testers@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: kernel-testers@vger.kernel.org, linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 13, 2008 at 10:33:29AM -0400, John W. Linville wrote:
-> On Fri, Jun 13, 2008 at 07:14:32AM -0700, Luis R. Rodriguez wrote:
+Sitsofe Wheeler wrote:
+
+> Sitsofe Wheeler wrote:
 > 
-> > This is great. To let this be useful for wireless we'll need
-> > wireless-testing.git merged as we rely on it for the latest and
-> > greatest. Is this a possibility?
+>> hostap_pci on a 32bit x86 machine seems to be unstable under load in
+>> next-20080604. Using iperf between a wired machine on the other side of
+>> the AP and the hostap box makes hostap output the message
+>> wifi0: SW TICK stuck? bits=0x0 EvStat=8000 IntEn=e09f
+>> before things slowly grind to a halt in a lockup that seemingly needs a
 > 
-> > We have a few drivers which are not yet ready for
-> > wireless-testing.git. Airgo is one.
-> > 
-> > Anyway, good stuff. Let me know what you think about letting this work
-> > for wireless too.
-> 
-> I don't think directly pulling wireless-testing is a good idea of
-> -staging for process-related reasons.  However I think we can arrange
-> to send something for the new tree.  at76, airgo, and mrv8k are all
-> decent candidates.
+> things always seem to be recoverable. Sometimes the system will recover
+> after the lockup with a message like:
+> Clocksource tsc unstable (delta = 9377016871 ns)
+> Time acpi_pm clocksource has been installed.
 
-Sounds good to me.
+The lockups seem to be down to DEBUG_LOCK_ALLOC (Lock debugging: detect
+incorrect freeing of live locks). If that is enabled then after enough
+iperf runs the kernel will lock solid. This problems seems to happen in
+kernels from at least 2.6.22 onwards.
 
-> Greg, how does the -staging tree get managed?  Is it periodically
-> rebuilt (like -next)?  Or would I need to send you pull requests?
+I had no idea that enabling lock checking could itself result in a lockup...
 
-Just send me patches, it's a quilt tree.
+-- 
+Sitsofe | http://sucs.org/~sits/
 
-thanks,
-
-greg k-h
