@@ -1,31 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:36148 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753552AbYFJS5b (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:50538 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754923AbYFJWQb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 14:57:31 -0400
-Received: by yx-out-2324.google.com with SMTP id 31so285578yxl.1
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2008 11:57:30 -0700 (PDT)
-Message-ID: <484ECE93.1090501@gmail.com> (sfid-20080610_205743_399348_032628FF)
-Date: Tue, 10 Jun 2008 14:57:23 -0400
-From: Grant Williamson <traxtopel@gmail.com>
+	Tue, 10 Jun 2008 18:16:31 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "Miles Lane" <miles.lane@gmail.com>
+Subject: Re: BUG: NULL pointer dereference at 00000000 -- IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
+Date: Wed, 11 Jun 2008 00:15:58 +0200
+Cc: "Vegard Nossum" <vegard.nossum@gmail.com>,
+	"Andrew Morton" <akpm@linux-foundation.org>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"FUJITA Tomonori" <fujita.tomonori@lab.ntt.co.jp>
+References: <a44ae5cd0806100709rf4602f2x587631852502c0b5@mail.gmail.com> <200806101650.27180.mb@bu3sch.de> <a44ae5cd0806101509x5e2d5c19y10101ea0e72f8cba@mail.gmail.com>
+In-Reply-To: <a44ae5cd0806101509x5e2d5c19y10101ea0e72f8cba@mail.gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: http://www.orbit-lab.org/kernel/compat-wireless-2.6/2008/04/
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200806110015.59285.mb@bu3sch.de> (sfid-20080611_001634_913742_2BD869E6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wednesday 11 June 2008 00:09:27 Miles Lane wrote:
+> I got a slightly different BUG with this patch applied:
+> 
+> BUG: unable to handle kernel NULL pointer dereference at 00000000
+> IP: [<f89e3d41>] :b43:b43_dma_mapping_error+0x16/0x97
 
-I am trying to narrow down a wireless issue I am having with leap on 
-Fedora 9. Seems that in April the issue was fixed in the 
-compat-wireless-2.6 tarball.
+So can you please debug this? This is trivial. Just add a few printks
+to see which pointer is NULL.
+As I said I don't have this tree and really like to avoid fetching
+and building yet another tree.
 
-On http://www.orbit-lab.org/kernel/compat-wireless-2.6/2008/04/ most of 
-the archives for April are missing. Is there any
-other mirror where I can find or checkout the archives between 20080407 
-& 20080420?
-
-I need to track it down so the issue can get fixed on el5.
-
+-- 
+Greetings Michael.
