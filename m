@@ -1,67 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:27440 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754066AbYFHIti (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:43760 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751309AbYFJXOs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jun 2008 04:49:38 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1151554fgg.17
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2008 01:49:37 -0700 (PDT)
-Date: Sun, 8 Jun 2008 10:48:58 +0200
-From: Marcin Slusarz <marcin.slusarz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	ipw3945-devel@lists.sourceforge.net
-Subject: [PATCH] iwlwifi: fix oops in iwl3945_led_brightness_set
-Message-ID: <20080608084855.GA8167@joi> (sfid-20080608_104946_297656_3BC1EAC2)
+	Tue, 10 Jun 2008 19:14:48 -0400
+Message-ID: <484F0AF7.6060008@lwfinger.net> (sfid-20080611_011451_764123_9E268902)
+Date: Tue, 10 Jun 2008 18:15:03 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Miles Lane <miles.lane@gmail.com>
+CC: Michael Buesch <mb@bu3sch.de>,
+	Vegard Nossum <vegard.nossum@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: BUG: NULL pointer dereference at 00000000 -- IP: [<f8e783d5>]
+ :b43:b43_dma_mapping_error+0x16/0x155
+References: <a44ae5cd0806100709rf4602f2x587631852502c0b5@mail.gmail.com>	 <200806101637.11473.mb@bu3sch.de>	 <19f34abd0806100742v176f50e8se463d2e70df44332@mail.gmail.com>	 <200806101650.27180.mb@bu3sch.de> <a44ae5cd0806101509x5e2d5c19y10101ea0e72f8cba@mail.gmail.com>
+In-Reply-To: <a44ae5cd0806101509x5e2d5c19y10101ea0e72f8cba@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-fix race between:
-ieee80211_open->ieee80211_led_radio->led_trigger_event->led_set_brightness->iwl3945_led_brightness_set
-(which assumes that "led->priv" is not NULL)
-and
-iwl3945_pci_probe->iwl3945_setup_deferred_work->(...)->iwl3945_bg_alive_start->iwl3945_alive_start->iwl3945_led_register->iwl3945_led_register_led
-which sets priv field in struct iwl3945_led
-after
-led->led_dev.brightness_set = iwl3945_led_brightness_set;
-(...)
-led_classdev_register(device, &led->led_dev);
+Miles Lane wrote:
+> I got a slightly different BUG with this patch applied:
+> 
+> BUG: unable to handle kernel NULL pointer dereference at 00000000
+> IP: [<f89e3d41>] :b43:b43_dma_mapping_error+0x16/0x97
+> *pde = 00000000
+> Oops: 0000 [#1] PREEMPT DEBUG_PAGEALLOC
+> last sysfs file:
+> /sys/devices/pci0000:00/0000:00:08.0/0000:01:06.0/ssb0:0/firmware/ssb0:0/loading
+> Modules linked in: sbs sbshc wmi battery iptable_filter ip_tables
+> x_tables ac sbp2 rtc arc4 ecb crypto_blkcipher cryptomgr crypto_algapi
+> b43 mac80211 cfg80211 led_class snd_intel8x0 snd_ac97_codec ac97_bus
+> snd_pcm_oss snd_mixer_oss snd_pcm snd_seq_dummy snd_seq_oss
+> snd_seq_midi_event snd_seq snd_timer snd_seq_device snd soundcore
+> snd_page_alloc i2c_nforce2 i2c_core button ohci1394 3c59x ieee1394
+> forcedeth ehci_hcd ohci_hcd usbcore thermal processor fan thermal_sys
 
-http://kerneloops.org/guilty.php?guilty=iwl3945_led_brightness_set&version=2.6.25-release&start=1671168&end=1703935&class=oops
+Miles,
 
-Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
-Cc: Zhu Yi <yi.zhu@intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>
-Cc: Tomas Winkler <tomas.winkler@intel.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: ipw3945-devel@lists.sourceforge.net
----
+If you have time, please cd to the kernel root directory and run the 
+command 'objdump -d -l drivers/net/wireless/b43/dma.o > dmadump'. You 
+may have to install the objdump package. In the file dmadump, find the 
+line that contains b43_dma_mapping_error. On my system it is 
+0000000000000085 <b43_dma_mapping_error>: Note, I use x86_64 and yours 
+will likely be different.
 
-Compile tested only. Please review and test on real hardware.
+Note the address (0x85 in my case), add the offset (0x16) and find the 
+line with the error. You can use KCalc in hexadecimal mode if you are 
+not comfortable with doing addition in base 16. Please report the 
+source line and instruction that failed.
 
----
- drivers/net/wireless/iwlwifi/iwl-3945-led.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-led.c b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-index d200d08..9f08568 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-@@ -185,6 +185,8 @@ static void iwl3945_led_brightness_set(struct led_classdev *led_cdev,
- 					       struct iwl3945_led, led_dev);
- 	struct iwl3945_priv *priv = led->priv;
- 
-+	if (!led->registered)
-+		return;
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
- 		return;
- 
--- 
-1.5.4.5
+Larry
 
