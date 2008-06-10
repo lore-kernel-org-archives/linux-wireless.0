@@ -1,45 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36184 "EHLO mx1.redhat.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4814 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752837AbYFDOSj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2008 10:18:39 -0400
-Subject: Re: mac80211 ad-hoc mode problems
-From: Dan Williams <dcbw@redhat.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080604091656.GE580@jm.kir.nu>
-References: <1212543664.4237.14.camel@localhost.localdomain>
-	 <1212570001.14371.16.camel@johannes.berg>  <20080604091656.GE580@jm.kir.nu>
-Content-Type: text/plain
-Date: Wed, 04 Jun 2008 10:18:24 -0400
-Message-Id: <1212589104.13676.17.camel@localhost.localdomain> (sfid-20080604_161842_788188_93C2B212)
-Mime-Version: 1.0
+	id S1752218AbYFJP6s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jun 2008 11:58:48 -0400
+Date: Tue, 10 Jun 2008 11:24:18 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+Subject: Re: mac80211_hwsim - simulator of 802.11 radios for mac80211
+Message-ID: <20080610152418.GD13267@tuxdriver.com> (sfid-20080610_175855_193162_040104BC)
+References: <20080610105058.GA6961@jm.kir.nu> <1213096575.3668.6.camel@johannes.berg> <20080610123007.GB1571@tuxdriver.com> <1213103469.3668.13.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1213103469.3668.13.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-06-04 at 12:16 +0300, Jouni Malinen wrote:
-> On Wed, Jun 04, 2008 at 11:00:00AM +0200, Johannes Berg wrote:
-> > On Tue, 2008-06-03 at 21:41 -0400, Dan Williams wrote:
-> > > 2) takes a _really_ long time to create an adhoc network.  This is
-> > > controlled by IEEE80211_IBSS_JOIN_TIMEOUT.  Why is that 20 seconds?
+On Tue, Jun 10, 2008 at 03:11:09PM +0200, Johannes Berg wrote:
+
+> > Jouni this looks great.  Let's get this into the kernel.
 > 
-> > Yeah, I don't know why it is that long. Jouni, do you remember maybe?
-> > I'm ok with reducing it.
-> 
-> Can't remember.. The only thing I can come up with is that 20 was the
-> next round number that is larger than IEEE80211_SCAN_INTERVAL_SLOW
-> defined on the previous line.. ;-) Anyway, I don't see why we would need
-> to wait that long. It should be enough to wait for a full scan of all
-> channels to be completed. It is of course nicer to avoid creating a new
-> IBSS if there is an existing one, but as long as merging works, it
-> should be fine to reduce this timeout.
+> I wonder where to stick it. net/mac80211/virtual-hw.c? Or
+> drivers/net/wireless/mac80211-virt.c? Heh. Not that it matters :)
 
-Ok, I'll drop it down to 5 seconds if that's OK with you.  That's still
-the same amount of time as the wpa_supplicant assoc_failed auth timeout
-in wpa_supplicant_associate() though, so they could still step on each
-other.  Not quite sure what to do about that except bump up the
-wpa_supplicant assoc_failed timeout by a few more seconds?
+drivers/net/wireless seems appropriate to me.
 
-dan
-
+-- 
+John W. Linville
+linville@tuxdriver.com
