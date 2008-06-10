@@ -1,113 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from courier.cs.helsinki.fi ([128.214.9.1]:53584 "EHLO
-	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761925AbYFQXEp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 19:04:45 -0400
-Date: Wed, 18 Jun 2008 02:04:43 +0300 (EEST)
-From: "=?ISO-8859-1?Q?Ilpo_J=E4rvinen?=" <ilpo.jarvinen@helsinki.fi>
-To: Didier Raboud <didier@raboud.com>
-cc: Andrew Morton <akpm@linux-foundation.org>,
-	Netdev <netdev@vger.kernel.org>,
-	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [Bugme-new] [Bug 10903] New: ssh connections hang with 2.6.26-rc5
-In-Reply-To: <200806172359.33768.didier@raboud.com>
-Message-ID: <Pine.LNX.4.64.0806180152410.32420@wrl-59.cs.helsinki.fi> (sfid-20080618_010511_957319_521A8B46)
-References: <bug-10903-10286@http.bugzilla.kernel.org/> <200806151537.11986.didier@raboud.com>
- <Pine.LNX.4.64.0806161542290.16829@wrl-59.cs.helsinki.fi>
- <200806172359.33768.didier@raboud.com>
+Received: from hostap.isc.org ([149.20.54.63]:45799 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754033AbYFJPDJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jun 2008 11:03:09 -0400
+Date: Tue, 10 Jun 2008 18:02:27 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: mac80211_hwsim - simulator of 802.11 radios for mac80211
+Message-ID: <20080610150227.GA4913@jm.kir.nu> (sfid-20080610_170313_446773_6DC27805)
+References: <20080610105058.GA6961@jm.kir.nu> <1213096575.3668.6.camel@johannes.berg> <20080610124724.GB6961@jm.kir.nu> <1213103378.3668.10.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: MULTIPART/Mixed; boundary="Boundary-01=_FPDWIJZ2GQsiFPn"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1213103378.3668.10.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Tue, Jun 10, 2008 at 03:09:38PM +0200, Johannes Berg wrote:
 
---Boundary-01=_FPDWIJZ2GQsiFPn
-Content-Type: TEXT/PLAIN; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Content-ID: <Pine.LNX.4.64.0806180152412.32420@wrl-59.cs.helsinki.fi>
-Content-Disposition: inline
+> I don't think there are large pending changes, but there were large
+> changes in the way channels are registered, tx control works etc.
 
-On Tue, 17 Jun 2008, Didier Raboud wrote:
+OK.
 
-> Le lundi 16 juin 2008 15:21:25 Ilpo Järvinen, vous avez écrit :
-> > > > > > http://bugzilla.kernel.org/show_bug.cgi?id=10903
-> > > > > >
-> > > > > >            Summary: ssh connections hang with 2.6.26-rc5
-> > > > > >            Product: Networking
-> > > > > >            Version: 2.5
-> > > > > >      KernelVersion: 2.6.26-rc5
-> > > > > >           Platform: All
-> > > > > >         OS/Version: Linux
-> > > > > >               Tree: Mainline
-> > > > > >             Status: NEW
-> > > > > >           Severity: normal
-> > > > > >           Priority: P1
-> > > > > >          Component: Other
-> > > > > >         AssignedTo: acme@ghostprotocols.net
-> > > > > >         ReportedBy: didier@raboud.com
-> > > > > >
-> > > > > >
-> > > > > > Latest working kernel version: 2.6.25-2
-> > > > > > Earliest failing kernel version: 2.6.26-rc5
-> > > > > > Distribution: Debian (Lenny + Sid)
-> > > > > > Hardware Environment: amd64 (Dell Latitude D630)
-> > > > > > Software Environment: KDE
-> > > > > > Problem Description:
-> > > > > >
-> > > > > > With kernel version 2.6.26-rc5, the ssh connections to remote
-> > > > > > servers randomly
-> > > > > > hang (no error message). No amelioration despite the activation of
-> > > > > > "ServerAliveInterval" on both sides.
-> > > > (...)
-> > > 
-> > > The common point is my use of "iwl3945" : I have always tried the ssh
-> > > connections through WiFi.
-> > > 
-> > > > So please gather this information (at least for the relevant
-> > > > connections):
-> > > >
-> > > > $ netstat -pn
-> > > > $ cat /proc/net/tcp
+> You should probably use the _irqsafe versions of rx and txstatus too.
+
+Hmm.. That was interesting.. Changing txstatus to use _irqsafe is was
+fine, but changing ieee80211_rx to ieee80211_rx_irqsafe triggers
+something bad.. Loadavg jumps sky high the moment I kill hostapd and
+ksoftirqd/0 and rmmod (which I ran after killing hostapd) are taking all
+CPU.. I can hardly type a command at that point. Looks like something
+goes horribly wrong with the extra queuing with ieee80211_rx_irqsafe.
+Maybe sending something to a netdev that is down ends up in a busy loop
+with a frame or something. In other words, I did not change to use
+_irqsafe yet, but will do once I have more time to figure out what on
+earth is going on here.
+
+> > Yes, I've been thinking of something similar, too. I'll add a netdev
+> > that gets all frames with radiotap header.
 > 
-> I used a script which logged both every 15 seconds on both sides (in "screen" 
-> on server side). I then triggered a hang with several "seq 1 100" in the ssh 
-> session. The logs are in the attached debug_ssh_hang.tar.gz . The hang 
-> appeared between 234327 and 234342 on the client side (so somewhere between 
-> 234324, 234339 and 234354 on the server side).
-> 
-> I hope it'll help.
+> Maybe it could support injection on that too, so you can test against a
+> userspace agent.
 
-Thanks, a quick look didn't indicate anything similar to one other report 
-from Håkon... I'd probably need a tcpdump.
+Yes, I added the global radiotap monitor to hwsim (ifname=hwsim#) and
+left the hard_xmit function empty with a TODO comment.. The netdev from
+outside mac80211 is quite useful since it can be set up before any of
+the mac80211 netdevs and it is possible to capture all frames from the
+beginning.. If needed, we could add some more flags to the radiotap
+header for indicating what was done with the frame, but that is
+something that can easily be added later.
 
-> > You probably run it under X, no? Please switch beforehand to some other vt
-> > (a textual one) then (Ctrl-Alt-Fn, where n < 6) and then log in and
-> > running that command there and see if you get some output into screen
-> > there. If you see something (e.g., a sudden OOPS message or some other
-> > warning printed) when it locks up, the easiest things is to take a shot
-> > with a digicam (or write it down somewhere else) and send that shot (or
-> > those details) to us please.
-> 
-> I tried the following in vt1 (under the new 2.6.26-rc6 with kdm stopped):
-> 
-> # tcpdump -i wlan0 -w /tmp/tcpdump.wlan0
-> 
-> and I got the attached "soft lockup".
+> The design I had come up with a long time ago allowed userspace to
+> control each radio by having each _radio_ have a raw netdev like this
+> and not doing forwarding in the kernel but relying on some userspace
+> tool, but I guess that much more complicated.
 
-Thanks, I guess the folks at linux-wireless can continue in resolving this 
-one with you (I'm out of time anyway now).
-
-> > ...Once you have a tcpdump, I can probably figure at least something out
-> > (though it might still just point to the right direction rather than
-> > exposing the actual cause).
-> 
-> I can't get one... :)
-
-...Ok.
+That might be useful for some of the tests. I was interested in adding
+some kind of interface to make it easy to design test cases from user
+space, but the current code was so simple that I did not want to make it
+any more complex in the first version. Anyway, it might make sense to
+provide option mechanism to allow more user space control since I'm also
+interested in things like testing rate control with a programmable
+signal strength/channel quality and I do not really want to see the
+controller for that simulation in the kernel..
 
 -- 
- i.
---Boundary-01=_FPDWIJZ2GQsiFPn--
+Jouni Malinen                                            PGP id EFC895FA
