@@ -1,117 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:45416 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756206AbYFHVhm (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54002 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752761AbYFJICK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jun 2008 17:37:42 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so1022998ugf.16
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2008 14:37:41 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 06/10] rt2x00: Fix double usage of skb->cb in USB RX path.
-Date: Sun, 8 Jun 2008 23:45:25 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200806082341.58616.IvDoorn@gmail.com> <200806082344.28110.IvDoorn@gmail.com> <200806082345.04002.IvDoorn@gmail.com>
-In-Reply-To: <200806082345.04002.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200806082345.25904.IvDoorn@gmail.com> (sfid-20080608_233748_764868_EC170FE9)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Tue, 10 Jun 2008 04:02:10 -0400
+Subject: Re: Is configfs the right solution for configuration based fs?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Nizette <bn@niasdigital.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux kernel <linux-kernel@vger.kernel.org>,
+	Greg KH <greg@kroah.com>, Joel Becker <joel.becker@oracle.com>,
+	Satyam Sharma <ssatyam@cse.iitk.ac.in>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Al Viro <viro@ftp.linux.org.uk>,
+	"H. Peter Anvin" <hpa@kernel.org>
+In-Reply-To: <1213056772.4089.42.camel@moss.renham>
+References: <43e72e890806081425h4e785800nc618fc1985f9809f@mail.gmail.com>
+	 (sfid-20080608_232543_873639_74C0A387)  <1213002187.698.62.camel@johannes.berg>
+	 <1213056772.4089.42.camel@moss.renham>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ke1UpQp2EOGtYEjtUp6b"
+Date: Tue, 10 Jun 2008 10:01:20 +0200
+Message-Id: <1213084880.22220.29.camel@johannes.berg> (sfid-20080610_100227_893632_C1A630E1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
 
-It is not safe to use the skb->cb area for both the rxd and skb_frame_desc data at the
-same time, while they occupy an overlapping piece of memory. This can lead to hard to
-trace crashes as pointers within skb_frame_desc are pointing into nowhere, or the rxd
-data is overwritten with non-sense.
+--=-Ke1UpQp2EOGtYEjtUp6b
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Fix it by copying the rxd to a small buffer on the stack.
+On Tue, 2008-06-10 at 10:12 +1000, Ben Nizette wrote:
+> On Mon, 2008-06-09 at 11:03 +0200, Johannes Berg wrote:
+>=20
+> > Personally, I have a few issues with this:
+> >  1) why bother with a second configuration interface that we have to
+> >     maintain, adjust, ...? if we need scriptable access, then make a
+> >     good userspace tool that is scriptable.
+>=20
+> What's the first one, sysfs..?  ioctl (eww..)? =20
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2500usb.c |   10 +++-------
- drivers/net/wireless/rt2x00/rt2x00usb.c |    8 +++-----
- drivers/net/wireless/rt2x00/rt73usb.c   |   10 +++-------
- 3 files changed, 9 insertions(+), 19 deletions(-)
+netlink.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 1bfb68a..9851cef 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1156,14 +1156,10 @@ static void rt2500usb_fill_rxdone(struct queue_entry *entry,
- 	u32 word1;
- 
- 	/*
--	 * Copy descriptor to the skb->cb array, this has 2 benefits:
--	 * 1) Each descriptor word is 4 byte aligned.
--	 * 2) Descriptor is safe  from moving of frame data in rt2x00usb.
-+	 * Copy descriptor to the skbdesc->desc buffer, making it safe from moving of
-+	 * frame data in rt2x00usb.
- 	 */
--	skbdesc->desc_len =
--	    min_t(u16, entry->queue->desc_size, sizeof(entry->skb->cb));
--	memcpy(entry->skb->cb, rxd, skbdesc->desc_len);
--	skbdesc->desc = entry->skb->cb;
-+	memcpy(skbdesc->desc, rxd, skbdesc->desc_len);
- 	rxd = (__le32 *)skbdesc->desc;
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 6e22036..3080969 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -267,6 +267,7 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
- 	struct sk_buff *skb;
- 	struct skb_frame_desc *skbdesc;
- 	struct rxdone_entry_desc rxdesc;
-+	u8 rxd[32];
- 
- 	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags) ||
- 	    !test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
-@@ -286,16 +287,13 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
- 	skbdesc = get_skb_frame_desc(entry->skb);
- 	memset(skbdesc, 0, sizeof(*skbdesc));
- 	skbdesc->entry = entry;
-+	skbdesc->desc = rxd;
-+	skbdesc->desc_len = entry->queue->desc_size;
- 
- 	memset(&rxdesc, 0, sizeof(rxdesc));
- 	rt2x00dev->ops->lib->fill_rxdone(entry, &rxdesc);
- 
- 	/*
--	 * Trim the skb to the correct size.
--	 */
--	skb_trim(entry->skb, rxdesc.size);
--
--	/*
- 	 * Allocate a new sk buffer to replace the current one.
- 	 * If allocation fails, we should drop the current frame
- 	 * so we can recycle the existing sk buffer for the new frame.
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 800a1e2..505a9f5 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1428,14 +1428,10 @@ static void rt73usb_fill_rxdone(struct queue_entry *entry,
- 	u32 word1;
- 
- 	/*
--	 * Copy descriptor to the skb->cb array, this has 2 benefits:
--	 * 1) Each descriptor word is 4 byte aligned.
--	 * 2) Descriptor is safe  from moving of frame data in rt2x00usb.
-+	 * Copy descriptor to the skbdesc->desc buffer, making it safe from moving of
-+	 * frame data in rt2x00usb.
- 	 */
--	skbdesc->desc_len =
--	    min_t(u16, entry->queue->desc_size, sizeof(entry->skb->cb));
--	memcpy(entry->skb->cb, rxd, skbdesc->desc_len);
--	skbdesc->desc = entry->skb->cb;
-+	memcpy(skbdesc->desc, rxd, skbdesc->desc_len);
- 	rxd = (__le32 *)skbdesc->desc;
- 
- 	/*
--- 
-1.5.5.3
+> >  2) string-based stuff is often messy, especially the varying attribute=
+s
+> >     like MAC addresses etc. Unless we just use binary files again, whic=
+h
+> >     is not very useful again. Take, for example, the monitor flags. If
+> >     we use the same flags then nobody really knows what's up=20
+> >     (echo 0x3 > mntr_flags?) and if we use strings then we cannot easil=
+y
+> >     ever rename the flag while keeping ABI/API compatibility.
+>=20
+> Not sure I see the argument here, why would you want to change the flag
+> name?  If you decide the old name is stupid then can't you just alias
+> the old name to the new one?
+
+Sure can do, but it just adds a lot of complexity to the kernel. I don't
+see the point, it's not like you need a lot of code to build netlink
+messages. Heck, I've done it by _hand_ and used just netlink sockets.
+It's not a lot of code.
+
+> String handling is always a bit iffy, though it has to be done
+> somewhere, either in kernel or in your "good userspace tool which is
+> scriptable".  I'd prefer to have it done once, well, in the kernel and
+> not have to ship more software than necessary.
+
+I personally prefer to put it into userspace.
+
+> >  3) afaik configfs doesn't actually support the mkdir, ... stuff yet
+> >     that you want for virtual interfaces.
+>=20
+> It has all the  mkdir stuff I can think of, can you elaborate?  It
+> doesn't have the commitable object support but I just have an 'enabled'
+> attribute in there to switch the thing on and off.
+
+I don't remember the specifics, it's been a while, I guess I could be
+thinking of the commitable object support; mostly we'd want to configure
+many things in one go, even on a live object. Without disabling that
+object first, obviously.
+
+johannes
+
+--=-Ke1UpQp2EOGtYEjtUp6b
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJITjTMAAoJEKVg1VMiehFYvZoQAKcH5KQWV0TrvGmqQc1IXBcs
+iAhp87sIECgk7/hj34dt5SrlpTl7TcxiKXrJerhGQT3pw6O0JDuFDsX1OvmyI5/j
+dlAuKgA/4YQ7UcM9sS5L2MrC/EkxUZMBMIDBICZ6E9z9/Ee1F/SerAA/BsapU/T1
+oek9gndO4d8fAtP+FoGXEMwn+9ZAomcD+JpL1azSKAhq2D++kjgpep1aEYQjgZqw
+MR4ytNmUgT6dkhj1ohrSQRxUD8dj+qiZvXvdD+kSjbRJpyblZx/nDV623Eqs9iFV
+SRy6xUw3RI9K6s3bygveBbQX+Wd+ym6cpFJsz0pZGSdpt2Q/z4BggsdBECG0ZVUG
+eoxEXXjk+ryVO49ZrCt2pweQUXzI12L0QTp9yOqIM1elPHyjIR/sEO2kx91jVOXb
+bHDhTnU2yAKR2pqWTXbBR/SaWbQvf2a1Oq6SORh8NfiiCfXCRSC4x6VepWZTw/xV
+WyG2s4bw1SEamdzVdTtoupCeeCeCkFoC+QLqq9miYmQtTy/Gy/1EhE8A7XQWLlCJ
+95Ppzx/ZePMmfH2UeK/mMw093vdAZqD1bVJGKrsNbB+7f5FkpkvEQAXFZ9HORGuk
+unpGhqhVh+NWz/BOOIaSytZXu+Aya6TJoYRi6Ol83b5cR12NC8s7yIy+df5aMYax
+6HBeUuzNeEZXVhkg4Fss
+=iKtc
+-----END PGP SIGNATURE-----
+
+--=-Ke1UpQp2EOGtYEjtUp6b--
 
