@@ -1,92 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:29064 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750954AbYFXCmF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2008 22:42:05 -0400
-Subject: Re: [2.6.26-rc5] iwlwifi 4965 not working - last on 2.6.23
-From: Zhu Yi <yi.zhu@intel.com>
-To: =?UTF-8?Q?Micha=C5=82_Kud=C5=82a?= <michal.kudla@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <200806232103.31283.Michal.Kudla@gmail.com>
-References: <200806060039.48488.m1k0@wp.pl>
-	 <200806230732.44159.Michal.Kudla@gmail.com>
-	 <1214200366.14590.150.camel@debian.sh.intel.com>
-	 <200806232103.31283.Michal.Kudla@gmail.com>
-Content-Type: multipart/mixed; boundary="=-xwfgHcmkLMjmJXxuIx1J"
-Date: Tue, 24 Jun 2008 10:41:15 +0800
-Message-Id: <1214275275.14590.194.camel@debian.sh.intel.com> (sfid-20080624_044214_180665_763E7145)
+Received: from xc.sipsolutions.net ([83.246.72.84]:47706 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753209AbYFJPqx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jun 2008 11:46:53 -0400
+Subject: Re: [english 87%] Re: QUESTIONS to ieee80211_beacon_get AND
+	ieee80211_get_buffered_bc
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sebastian Fudickar <Sebastian.Fudickar@gmx.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <484E9B84.1070902@gmx.de> (sfid-20080610_171751_994715_82C4C39E)
+References: <4848289D.1080205@mandriva.org>
+	 <1ba2fa240806051103q652accf5t1bd1d94630ebea5b@mail.gmail.com>
+	 <48482BC3.4070402@mandriva.org> <4848482C.2080208@mandriva.org>
+	 <48485F12.2050908@mandriva.org>  <484E9436.605@gmx.de>
+	 (sfid-20080610_165400_911481_E6BDBEC3) <1213109930.3668.22.camel@johannes.berg>
+	 <484E9B84.1070902@gmx.de> (sfid-20080610_171751_994715_82C4C39E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-y09o8ue94TkFa9N+tQVA"
+Date: Tue, 10 Jun 2008 17:46:16 +0200
+Message-Id: <1213112776.3668.35.camel@johannes.berg> (sfid-20080610_174659_368078_C35B351D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-xwfgHcmkLMjmJXxuIx1J
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+--=-y09o8ue94TkFa9N+tQVA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2008-06-23 at 21:03 +0200, Michał Kudła wrote:
-> 
-> I attached files form console log and dmesg
-> console-rfkill-0.txt
-> dmesg-2.6.26-rc7_2008-06-23-rfkill-0.txt
-> console-rfkill-1.txt
-> dmesg-2.6.26-rc7_2008-06-23-rfkill-1.txt
+On Tue, 2008-06-10 at 17:19 +0200, Sebastian Fudickar wrote:
+> Ah ok I read it just now - my mailbox is sometimes little relaxed....
+> by the way what does "tim" stands for?
 
-Please try attached patch.
+Go read 802.11-2007.
 
-Thanks,
--yi
+johannes
 
---=-xwfgHcmkLMjmJXxuIx1J
-Content-Disposition: attachment; filename=linux-2.6.26-rc7-sw-rfkill.patch
-Content-Type: text/x-patch; name=linux-2.6.26-rc7-sw-rfkill.patch; charset=GB2312
-Content-Transfer-Encoding: 7bit
+--=-y09o8ue94TkFa9N+tQVA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 883b42f..39cab88 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -2444,7 +2444,8 @@ void iwl4965_radio_kill_sw(struct iwl_priv *priv, int disable_radio)
- 	spin_lock_irqsave(&priv->lock, flags);
- 	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
- 
--	clear_bit(STATUS_RF_KILL_SW, &priv->status);
-+	if (!priv->is_open)
-+		clear_bit(STATUS_RF_KILL_SW, &priv->status);
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
- 	/* wake up ucode */
-@@ -2462,7 +2463,6 @@ void iwl4965_radio_kill_sw(struct iwl_priv *priv, int disable_radio)
- 		return;
- 	}
- 
--	queue_work(priv->workqueue, &priv->restart);
- 	return;
- }
- 
-@@ -5534,13 +5534,15 @@ static int __iwl4965_up(struct iwl_priv *priv)
- 	if (iwl_read32(priv, CSR_GP_CNTRL) &
- 				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
- 		clear_bit(STATUS_RF_KILL_HW, &priv->status);
--	else {
-+	else
- 		set_bit(STATUS_RF_KILL_HW, &priv->status);
--		if (!test_bit(STATUS_IN_SUSPEND, &priv->status)) {
--			iwl_rfkill_set_hw_state(priv);
--			IWL_WARNING("Radio disabled by HW RF Kill switch\n");
--			return -ENODEV;
--		}
-+
-+	if (!test_bit(STATUS_IN_SUSPEND, &priv->status) &&
-+	    iwl_is_rfkill(priv)) {
-+		iwl_rfkill_set_hw_state(priv);
-+		IWL_WARNING("Radio disabled by %s RF Kill switch\n",
-+		    test_bit(STATUS_RF_KILL_HW, &priv->status) ? "HW" : "SW");
-+		return -ENODEV;
- 	}
- 
- 	iwl_rfkill_set_hw_state(priv);
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
---=-xwfgHcmkLMjmJXxuIx1J--
+iQIcBAABAgAGBQJITqHFAAoJEKVg1VMiehFYyeIP/RBfaAz5SE/rvMekWClNqtLu
+mYD7B6maIKkubaQjAB4h8nI/x+byAmHLoVehvE7UmD/BUBZAORqHywFAf0n8KYzq
+5t1I2oArBdX1pD6F0Z3Xp63ApU8995uD/jPcj4ZF1zH+Na1YviIWMkiio3TYHT3E
+buHbofzuODoBdlcWhfACqLbmJ+LKmO6QwHNT4yBfw4uV+uUUgZN4qtvFkG38+yj/
+fRyfjU9Ycswh2pmp9LEOfqimAThPFT1UGwzyqicHu/IPU5GMMfiCeE1TwPCN4FxF
++ubE+AmqU0LCdHeKVkAQi0dYKGEH9P7zP8vdsZ4XiTaqM4XenfnCamv+XPkpRCgW
+Rgfot9oikyBe8RfGz8tIvev64JU1QLPPNIMR6aQEPJk33c3qDDCtGfuPxnGHoUmU
+uJVtDxTWvlS4WHKn6KLy1StjGU/IPSL+1DafGOIlDZsP5Fxwr4HZzZJghqxzyDRF
+CWqi0vw++3NsaCVaSk2+BAjaNlHaWZmsg2eePeOhsZs9HFxAMdh1aZNaBO2ZemDV
+el1uWE10Nb0Mjk1Oxo34uEtn2DcgA/WpYPrIiMTnUNjxxzBXy0mnr8oS9DsZ3lQS
+Xmc7JRwxoq4W5JABjEJmvjkZymS/zBS4HYu3HDLLgCMBtOh9x4k4F7LnryMlDvQC
+Qs4SOs7n0/tHC3mlNjSV
+=oPaH
+-----END PGP SIGNATURE-----
+
+--=-y09o8ue94TkFa9N+tQVA--
 
