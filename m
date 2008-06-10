@@ -1,75 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.176]:32037 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752492AbYF3PsM (ORCPT
+Received: from outbound.icp-qv1-irony-out1.iinet.net.au ([203.59.1.108]:12780
+	"EHLO outbound.icp-qv1-irony-out1.iinet.net.au" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753904AbYFJAXH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 11:48:12 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so1215302waf.23
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2008 08:48:12 -0700 (PDT)
-Message-ID: <1ba2fa240806300848v4fd92b72n565fc113e1c122b8@mail.gmail.com> (sfid-20080630_174816_156133_1564AED3)
-Date: Mon, 30 Jun 2008 18:48:12 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Linux Wireless" <linux-wireless@vger.kernel.org>
-Subject: IBSS lockdep failure
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 9 Jun 2008 20:23:07 -0400
+Subject: Re: Is configfs the right solution for configuration based fs?
+From: Ben Nizette <bn@niasdigital.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux kernel <linux-kernel@vger.kernel.org>,
+	Greg KH <greg@kroah.com>, Joel Becker <joel.becker@oracle.com>,
+	Satyam Sharma <ssatyam@cse.iitk.ac.in>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Al Viro <viro@ftp.linux.org.uk>,
+	"H. Peter Anvin" <hpa@kernel.org>
+In-Reply-To: <1213002187.698.62.camel@johannes.berg>
+References: <43e72e890806081425h4e785800nc618fc1985f9809f@mail.gmail.com>
+	 (sfid-20080608_232543_873639_74C0A387)  <1213002187.698.62.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 10 Jun 2008 10:12:52 +1000
+Message-Id: <1213056772.4089.42.camel@moss.renham> (sfid-20080610_022312_320845_6AD50B94)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Anyone have seen this one?
-Thanks
-Tomas
 
-wlan0: beacon TSF higher than local TSF - IBSS merge with BSSID
-XX:XX:XX:XX:XX:XX
-phy0: Adding new IBSS station XX:XX:XX:XX:XX:XX (dev=wlan0)
-phy0: Allocated STA XX:XX:XX:XX:XX:XX
-phy0: Inserted STA XX:XX:XX:XX:XX:XX
-wlan0: RX ProbeReq SA=XX:XX:XX:XX:XX:XX DA=ff:ff:ff:ff:ff:ff
-BSSID=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
-wlan0: Sending ProbeResp to XX:XX:XX:XX:XX:XX
-RX beacon SA=XX:XX:XX:XX:XX:XX BSSID=XX:XX:XX:XX:XX:XX TSF=0x14dc0bd5c
-BCN=0x14dc0be19 diff=-189 @1071562
-wlan0: beacon TSF higher than local TSF - IBSS merge with BSSID
-XX:XX:XX:XX:XX:XX
-phy0: Removed STA XX:XX:XX:XX:XX:XX
-phy0: Removed STA XX:XX:XX:XX:XX:XX
-phy0: Removed STA XX:XX:XX:XX:XX:XX
-phy0: Removed STA XX:XX:XX:XX:XX:XX
-phy0: Removed STA XX:XX:XX:XX:XX:XX
-phy0: Removed STA XX:XX:XX:XX:XX:XX
-phy0: Removed STA XX:XX:XX:XX:XX:XX
-phy0: Removed STA XX:XX:XX:XX:XX:XX
-phy0: Removed STA XX:XX:XX:XX:XX:XX
-phy0: Removed STA XX:XX:XX:XX:XX:XX
-phy0: Removed STA XX:XX:XX:XX:XX:XX
-phy0: Removed STA XX:XX:XX:XX:XX:XX
-phy0: Destroyed STA XX:XX:XX:XX:XX:XX
-phy0: Destroyed STA XX:XX:XX:XX:XX:XX
-phy0: Destroyed STA XX:XX:XX:XX:XX:XX
-phy0: Destroyed STA XX:XX:XX:XX:XX:XX
-phy0: Destroyed STA XX:XX:XX:XX:XX:XX
-phy0: Destroyed STA XX:XX:XX:XX:XX:XX
-phy0: Destroyed STA XX:XX:XX:XX:XX:XX
-phy0: Destroyed STA XX:XX:XX:XX:XX:XX
-phy0: Destroyed STA XX:XX:XX:XX:XX:XX
-phy0: Destroyed STA XX:XX:XX:XX:XX:XX
-phy0: Destroyed STA XX:XX:XX:XX:XX:XX
-phy0: Destroyed STA XX:XX:XX:XX:XX:XX
-BUG: unable to handle kernel NULL pointer dereference at 00000004
-IP: [<c043d4eb>] zap_class+0x22/0x64
-*pde = 00000000
-Oops: 0002 [#1] SMP
-Modules linked in: mac80211 cfg80211 netconsole i915 drm autofs4 hidp
-rfcomm l2cap sunrpc cpufreq_ondemand acpi_cpufreq dm_multipath sbs
-sbshc ipv6 snd_hda_intel snd_seq_dummy arc4 snd_seq_oss ecb
-snd_seq_midi_event snd_seq crypto_blkcipher snd_seq_device hci_usb
-snd_pcm_oss snd_mixer_oss snd_pcm video snd_timer snd_page_alloc
-bluetooth ac battery button iTCO_wdt snd_hwdep output sr_mod serio_raw
-iTCO_vendor_support snd soundcore tg3 joydev pcspkr cdrom sg
-dm_snapshot dm_zero ata_piix ohci_hcdESI: 0003c120 EDI: 00001e09 EBP:
-0001f024 ESP: ed1bbf2c
-c04403d8 ed1bb000 ed1bbfb8 do_syscall_trace+0x121/0x165
-c3 39 8b 42 00 81 console [netcon0] enabled
-netconsole: network logging started
+On Mon, 2008-06-09 at 11:03 +0200, Johannes Berg wrote:
+
+> Personally, I have a few issues with this:
+>  1) why bother with a second configuration interface that we have to
+>     maintain, adjust, ...? if we need scriptable access, then make a
+>     good userspace tool that is scriptable.
+
+What's the first one, sysfs..?  ioctl (eww..)?  I do think they solve
+different problems, both have their place.  IMHO sysfs is forced to do
+configuration in some situations where it just doesn't fit.  Prolly 'coz
+sysfs have the easy __DEVICE_ATTR kinda macros where as configfs takes
+more effort to get flying.
+
+>  2) string-based stuff is often messy, especially the varying attributes
+>     like MAC addresses etc. Unless we just use binary files again, which
+>     is not very useful again. Take, for example, the monitor flags. If
+>     we use the same flags then nobody really knows what's up 
+>     (echo 0x3 > mntr_flags?) and if we use strings then we cannot easily
+>     ever rename the flag while keeping ABI/API compatibility.
+
+Not sure I see the argument here, why would you want to change the flag
+name?  If you decide the old name is stupid then can't you just alias
+the old name to the new one?
+
+String handling is always a bit iffy, though it has to be done
+somewhere, either in kernel or in your "good userspace tool which is
+scriptable".  I'd prefer to have it done once, well, in the kernel and
+not have to ship more software than necessary.
+
+>  3) afaik configfs doesn't actually support the mkdir, ... stuff yet
+>     that you want for virtual interfaces.
+
+It has all the  mkdir stuff I can think of, can you elaborate?  It
+doesn't have the commitable object support but I just have an 'enabled'
+attribute in there to switch the thing on and off.
+
+My main problem with configfs (and I've done a few things with it) is
+the complexity of the thing, particularly config_group vs config_item vs
+config_attribute.  I'd quite like to see just config_group representing
+"directory" type objects and attributes representing, well, attributes
+in the dir.
+
+That and a bit of wider use would probably see configfs growing helper
+macros like those which make sysfs attributes a piece of cake to
+implement.
+
+And the trival problem that, ISTR, failing the make_group method always
+reports -ENOMEM to userspace, no matter what the actual problem was.  I
+think I had a patch around to pass the error code from make_group back
+up through to userspace, I wonder what happened to that...
+
+	--Ben.
