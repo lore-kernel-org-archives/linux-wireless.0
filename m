@@ -1,84 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:34350 "EHLO
+Received: from vs166246.vserver.de ([62.75.166.246]:58425 "EHLO
 	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757724AbYFFN7t (ORCPT
+	with ESMTP id S1751199AbYFKKFp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2008 09:59:49 -0400
+	Wed, 11 Jun 2008 06:05:45 -0400
 From: Michael Buesch <mb@bu3sch.de>
-To: stable@kernel.org
-Subject: [PATCH stable] b43: Fix controller restart crash
-Date: Fri, 6 Jun 2008 15:58:42 +0200
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: BUG: NULL pointer dereference at 00000000 -- IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
+Date: Wed, 11 Jun 2008 12:05:10 +0200
+Cc: vegard.nossum@gmail.com, miles.lane@gmail.com,
+	akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+References: <200806101637.11473.mb@bu3sch.de> <200806101650.27180.mb@bu3sch.de> <20080611095844J.fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <20080611095844J.fujita.tomonori@lab.ntt.co.jp>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200806061558.42998.mb@bu3sch.de> (sfid-20080606_160016_238664_B88F1424)
+  charset="iso-8859-1"
+Message-Id: <200806111205.10433.mb@bu3sch.de> (sfid-20080611_120559_810796_CBB08E9A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a kernel crash on rmmod, in the case where the controller
-was restarted before doing the rmmod.
+On Wednesday 11 June 2008 02:58:44 FUJITA Tomonori wrote:
+> On Tue, 10 Jun 2008 16:50:26 +0200
+> Michael Buesch <mb@bu3sch.de> wrote:
+> 
+> > On Tuesday 10 June 2008 16:42:41 Vegard Nossum wrote:
+> > > This change comes from
+> > > 
+> > > commit 353c409463ecba63c3a41a992d3f5fba935eada9
+> > > Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > > Date:   Fri May 23 19:02:30 2008 +0000
+> > 
+> > 
+> > Ok, FUJITA Tomonori, please make sure a patch like the following goes
+> > into the same trees that you submitted commit 353c409 to.
+> > Also make sure to check b43legacy. I _guess_ you might have added
+> > the same bug there.
+> 
+> Ah, sorry about the bug.
+> 
+> From a quick look, mainline needs the same fix too?
+> 
+> b43_dma_mapping_error calls unmap_descbuffer() on the failure, which
+> assumes that ring->dev is set up properly.
 
-Upstream commit is 4735f5022c97f6624ced2ec5056c61c4b437d53b
+Yeah ok. That's an unlikely error path.
+The new bug is in the main path which will always trigger.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Next time please send _any_ patch for review to me and to the wireless list.
+Please tell me which trees this bug has been merged to. Is it already in
+Linus' tree?
 
----
-
-Index: linux-2.6.25.4/drivers/net/wireless/b43/main.c
-===================================================================
---- linux-2.6.25.4.orig/drivers/net/wireless/b43/main.c	2008-06-06 15:36:38.000000000 +0200
-+++ linux-2.6.25.4/drivers/net/wireless/b43/main.c	2008-06-06 15:36:40.000000000 +0200
-@@ -3815,13 +3815,15 @@ static void b43_chip_reset(struct work_s
- 		err = b43_wireless_core_start(dev);
- 		if (err) {
- 			b43_wireless_core_exit(dev);
- 			goto out;
- 		}
- 	}
--      out:
-+out:
-+	if (err)
-+		wl->current_dev = NULL; /* Failed to init the dev. */
- 	mutex_unlock(&wl->mutex);
- 	if (err)
- 		b43err(wl, "Controller restart FAILED\n");
- 	else
- 		b43info(wl, "Controller restarted\n");
- }
-@@ -3964,15 +3966,17 @@ err_powerdown:
- 
- static void b43_one_core_detach(struct ssb_device *dev)
- {
- 	struct b43_wldev *wldev;
- 	struct b43_wl *wl;
- 
-+	/* Do not cancel ieee80211-workqueue based work here.
-+	 * See comment in b43_remove(). */
-+
- 	wldev = ssb_get_drvdata(dev);
- 	wl = wldev->wl;
--	cancel_work_sync(&wldev->restart_work);
- 	b43_debugfs_remove_device(wldev);
- 	b43_wireless_core_detach(wldev);
- 	list_del(&wldev->list);
- 	wl->nr_devs--;
- 	ssb_set_drvdata(dev, NULL);
- 	kfree(wldev);
-@@ -4149,12 +4153,16 @@ static int b43_probe(struct ssb_device *
- 
- static void b43_remove(struct ssb_device *dev)
- {
- 	struct b43_wl *wl = ssb_get_devtypedata(dev);
- 	struct b43_wldev *wldev = ssb_get_drvdata(dev);
- 
-+	/* We must cancel any work here before unregistering from ieee80211,
-+	 * as the ieee80211 unreg will destroy the workqueue. */
-+	cancel_work_sync(&wldev->restart_work);
-+
- 	B43_WARN_ON(!wl);
- 	if (wl->current_dev == wldev)
- 		ieee80211_unregister_hw(wl->hw);
- 
- 	b43_one_core_detach(dev);
- 
+-- 
+Greetings Michael.
