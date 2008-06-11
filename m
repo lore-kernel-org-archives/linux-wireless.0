@@ -1,45 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:31480 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751700AbYF1AqR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2008 20:46:17 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so471534waf.23
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jun 2008 17:46:17 -0700 (PDT)
-Message-ID: <1ba2fa240806271746m15f967edj5693e2a6eecf15e2@mail.gmail.com> (sfid-20080628_024624_745878_80AE3442)
-Date: Sat, 28 Jun 2008 03:46:16 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: compat-wireless high packet loss.
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"David Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Linux Wireless" <linux-wireless@vger.kernel.org>,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
-	"Cohen, Guy" <guy.cohen@intel.com>
-In-Reply-To: <43e72e890806271300m626f67ayabf43fa02fe239b8@mail.gmail.com>
+Received: from web51403.mail.re2.yahoo.com ([206.190.38.182]:26236 "HELO
+	web51403.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752082AbYFKIer convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2008 04:34:47 -0400
+Date: Wed, 11 Jun 2008 01:28:05 -0700 (PDT)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Reply-To: pommnitz@yahoo.com
+Subject: RE: [RFC] First CRDA integration work
+To: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1ba2fa240806261603g30c3e757y9166c2f9e05f7666@mail.gmail.com>
-	 <43e72e890806271300m626f67ayabf43fa02fe239b8@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Message-ID: <951547.47167.qm@web51403.mail.re2.yahoo.com> (sfid-20080611_103452_860407_797665AC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 27, 2008 at 11:00 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Thu, Jun 26, 2008 at 4:03 PM, Tomas Winkler <tomasw@gmail.com> wrote:
->> We've experienced very high packet loss when using latest
->> compat-wireless witth iwlwifi driver over 2.6.24 and 2.6.25 stable
->> kernels. This is not happening with 2.6.26-rc3 as a target kernel (not
->> sure about rc1 and rc2)
->> The traffic is UDP TX with large tx buffers ~26000.
->> We are still investigating yet if someone has any idea please share with us.
->
-> I can't think of anything off the top of my head, really...
+Hello Luis,
+I did not read the complete patch but closely looked at the CRDA design picture. I have a comment:
+The company I work for has special regulatory approval to use amplified WLAN on certain channels (up to 4W). The nodes additionally have non-amplified WLAN adapters that fall under the normal regulatory requirements. It would be nice if your work allowed to specify such cases, e.g. have different regulatory restrictions for differen cards in the same machine. In our case we would like to restrict the amplified interface to the channels it is allowed to run on.
 
-This is something in the network stack. This is also happening with
-ethernet USB devices. Something between 2.6.25 and 2.6.26-rc3 has
-fixed it.
-Have to find what otherwise all the compat-wireless will be unusable for us
-Thanks for the answer anyway.
+-- 
+Regards
+       Joerg
 
-Tomas.
+
+      __________________________________________________________
+Gesendet von Yahoo! Mail.
+Dem pfiffigeren Posteingang.
+http://de.overview.mail.yahoo.com
