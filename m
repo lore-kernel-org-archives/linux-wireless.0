@@ -1,53 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47081
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753030AbYFCUgy (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.170]:2940 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751765AbYFKVWK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 16:36:54 -0400
-Date: Tue, 03 Jun 2008 13:28:03 -0700 (PDT)
-Message-Id: <20080603.132803.99403702.davem@davemloft.net> (sfid-20080603_223933_910304_8E2049D9)
-To: linux-wireless@vger.kernel.org
-CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/12]: wext: Remove inline from get_priv_size() and
- adjust_priv_size().
-From: David Miller <davem@davemloft.net>
+	Wed, 11 Jun 2008 17:22:10 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so3278785wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 14:22:10 -0700 (PDT)
+Subject: [PATCHv2 06/11] mac80211: wpa.c use new access helpers
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 11 Jun 2008 14:21:58 -0700
+Message-Id: <1213219318.5974.179.camel@brick> (sfid-20080611_232215_284508_6028BFF0)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-The compiler inlines when appropriate.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
- net/wireless/wext.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+ net/mac80211/wpa.c |   63 +++++++++++++--------------------------------------
+ 1 files changed, 16 insertions(+), 47 deletions(-)
 
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index 947188a..e83d74a 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -500,7 +500,7 @@ static int call_commit_handler(struct net_device *dev)
- /*
-  * Calculate size of private arguments
-  */
--static inline int get_priv_size(__u16	args)
-+static int get_priv_size(__u16 args)
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 9f6fd20..9834cec 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -24,46 +24,22 @@ static int ieee80211_get_hdr_info(const struct sk_buff *skb, u8 **sa, u8 **da,
  {
- 	int	num = args & IW_PRIV_SIZE_MASK;
- 	int	type = (args & IW_PRIV_TYPE_MASK) >> 12;
-@@ -512,8 +512,7 @@ static inline int get_priv_size(__u16	args)
- /*
-  * Re-calculate the size of private arguments
-  */
--static inline int adjust_priv_size(__u16		args,
--				   union iwreq_data *	wrqu)
-+static int adjust_priv_size(__u16 args, union iwreq_data *wrqu)
+ 	struct ieee80211_hdr *hdr;
+ 	size_t hdrlen;
+-	u16 fc;
+-	int a4_included;
+-	u8 *pos;
++	__le16 fc;
+ 
+-	hdr = (struct ieee80211_hdr *) skb->data;
+-	fc = le16_to_cpu(hdr->frame_control);
+-
+-	hdrlen = 24;
+-	if ((fc & (IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS)) ==
+-	    (IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS)) {
+-		hdrlen += ETH_ALEN;
+-		*sa = hdr->addr4;
+-		*da = hdr->addr3;
+-	} else if (fc & IEEE80211_FCTL_FROMDS) {
+-		*sa = hdr->addr3;
+-		*da = hdr->addr1;
+-	} else if (fc & IEEE80211_FCTL_TODS) {
+-		*sa = hdr->addr2;
+-		*da = hdr->addr3;
+-	} else {
+-		*sa = hdr->addr2;
+-		*da = hdr->addr1;
+-	}
++	hdr = (struct ieee80211_hdr *)skb->data;
++	fc = hdr->frame_control;
+ 
+-	if (fc & 0x80)
+-		hdrlen += 2;
++	hdrlen = ieee80211_hdrlen(fc);
++
++	*sa = ieee80211_get_SA(hdr);
++	*da = ieee80211_get_DA(hdr);
+ 
+ 	*data = skb->data + hdrlen;
+ 	*data_len = skb->len - hdrlen;
+ 
+-	a4_included = (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) ==
+-		(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS);
+-	if ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
+-	    fc & IEEE80211_STYPE_QOS_DATA) {
+-		pos = (u8 *) &hdr->addr4;
+-		if (a4_included)
+-			pos += 6;
+-		*qos_tid = pos[0] & 0x0f;
+-		*qos_tid |= 0x80; /* qos_included flag */
+-	} else
++	if (ieee80211_is_data_qos(fc))
++		*qos_tid = (*ieee80211_get_qos_ctl(hdr) & 0x0f) | 0x80;
++	else
+ 		*qos_tid = 0;
+ 
+ 	return skb->len < hdrlen ? -1 : 0;
+@@ -186,8 +162,8 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_key *key = tx->key;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	int hdrlen, len, tail;
+-	u16 fc;
++	unsigned int hdrlen;
++	int len, tail;
+ 	u8 *pos;
+ 
+ 	info->control.icv_len = TKIP_ICV_LEN;
+@@ -200,8 +176,7 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 		return 0;
+ 	}
+ 
+-	fc = le16_to_cpu(hdr->frame_control);
+-	hdrlen = ieee80211_get_hdrlen(fc);
++	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	len = skb->len - hdrlen;
+ 
+ 	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
+@@ -272,14 +247,12 @@ ieee80211_rx_result
+ ieee80211_crypto_tkip_decrypt(struct ieee80211_rx_data *rx)
  {
- 	int	num = wrqu->data.length;
- 	int	max = args & IW_PRIV_SIZE_MASK;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
+-	u16 fc;
+ 	int hdrlen, res, hwaccel = 0, wpa_test = 0;
+ 	struct ieee80211_key *key = rx->key;
+ 	struct sk_buff *skb = rx->skb;
+ 	DECLARE_MAC_BUF(mac);
+ 
+-	fc = le16_to_cpu(hdr->frame_control);
+-	hdrlen = ieee80211_get_hdrlen(fc);
++	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 
+ 	if ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
+ 		return RX_CONTINUE;
+@@ -427,7 +400,6 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 	struct ieee80211_key *key = tx->key;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	int hdrlen, len, tail;
+-	u16 fc;
+ 	u8 *pos, *pn, *b_0, *aad, *scratch;
+ 	int i;
+ 
+@@ -446,8 +418,7 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 	b_0 = scratch + 3 * AES_BLOCK_LEN;
+ 	aad = scratch + 4 * AES_BLOCK_LEN;
+ 
+-	fc = le16_to_cpu(hdr->frame_control);
+-	hdrlen = ieee80211_get_hdrlen(fc);
++	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	len = skb->len - hdrlen;
+ 
+ 	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
+@@ -516,7 +487,6 @@ ieee80211_rx_result
+ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
+-	u16 fc;
+ 	int hdrlen;
+ 	struct ieee80211_key *key = rx->key;
+ 	struct sk_buff *skb = rx->skb;
+@@ -524,8 +494,7 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
+ 	int data_len;
+ 	DECLARE_MAC_BUF(mac);
+ 
+-	fc = le16_to_cpu(hdr->frame_control);
+-	hdrlen = ieee80211_get_hdrlen(fc);
++	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 
+ 	if ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
+ 		return RX_CONTINUE;
 -- 
-1.5.5.1.308.g1fbb5
+1.5.6.rc2.261.ga8fbe
+
 
