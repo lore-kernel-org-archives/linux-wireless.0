@@ -1,55 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:58425 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751199AbYFKKFp (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.178]:48896 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752692AbYFKVWR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 06:05:45 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: BUG: NULL pointer dereference at 00000000 -- IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
-Date: Wed, 11 Jun 2008 12:05:10 +0200
-Cc: vegard.nossum@gmail.com, miles.lane@gmail.com,
-	akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-References: <200806101637.11473.mb@bu3sch.de> <200806101650.27180.mb@bu3sch.de> <20080611095844J.fujita.tomonori@lab.ntt.co.jp>
-In-Reply-To: <20080611095844J.fujita.tomonori@lab.ntt.co.jp>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200806111205.10433.mb@bu3sch.de> (sfid-20080611_120559_810796_CBB08E9A)
+	Wed, 11 Jun 2008 17:22:17 -0400
+Received: by py-out-1112.google.com with SMTP id p76so1566346pyb.10
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 14:22:17 -0700 (PDT)
+Subject: [PATCHv2 11/11] mac80211: tkip.c use a local struct tkip_ctx in
+	ieee80211_get_tkip_key
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 11 Jun 2008 14:22:02 -0700
+Message-Id: <1213219322.5974.184.camel@brick> (sfid-20080611_234912_700546_612FD6D2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 11 June 2008 02:58:44 FUJITA Tomonori wrote:
-> On Tue, 10 Jun 2008 16:50:26 +0200
-> Michael Buesch <mb@bu3sch.de> wrote:
-> 
-> > On Tuesday 10 June 2008 16:42:41 Vegard Nossum wrote:
-> > > This change comes from
-> > > 
-> > > commit 353c409463ecba63c3a41a992d3f5fba935eada9
-> > > Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > > Date:   Fri May 23 19:02:30 2008 +0000
-> > 
-> > 
-> > Ok, FUJITA Tomonori, please make sure a patch like the following goes
-> > into the same trees that you submitted commit 353c409 to.
-> > Also make sure to check b43legacy. I _guess_ you might have added
-> > the same bug there.
-> 
-> Ah, sorry about the bug.
-> 
-> From a quick look, mainline needs the same fix too?
-> 
-> b43_dma_mapping_error calls unmap_descbuffer() on the failure, which
-> assumes that ring->dev is set up properly.
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ net/mac80211/tkip.c |   30 ++++++++++++++++--------------
+ 1 files changed, 16 insertions(+), 14 deletions(-)
 
-Yeah ok. That's an unlikely error path.
-The new bug is in the main path which will always trigger.
-
-Next time please send _any_ patch for review to me and to the wireless list.
-Please tell me which trees this bug has been merged to. Is it already in
-Linus' tree?
-
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index 1fc744c..c738f0c 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -153,25 +153,27 @@ void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
+ {
+ 	struct ieee80211_key *key = (struct ieee80211_key *)
+ 			container_of(keyconf, struct ieee80211_key, conf);
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	u8 *data = (u8 *) hdr;
+-	u16 fc = le16_to_cpu(hdr->frame_control);
+-	int hdr_len = ieee80211_get_hdrlen(fc);
+-	u8 *tk = &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY];
+-	u8 *ta = hdr->addr2;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	u8 *data;
++	const u8 *tk;
++	struct tkip_ctx *ctx;
+ 	u16 iv16;
+ 	u32 iv32;
+ 
+-	iv16 = data[hdr_len + 2] | (data[hdr_len] << 8);
+-	iv32 = get_unaligned_le32(data + hdr_len + 4);
++	data = (u8 *)hdr + ieee80211_hdrlen(hdr->frame_control);
++	iv16 = data[2] | (data[0] << 8);
++	iv32 = get_unaligned_le32(&data[4]);
++
++	tk = &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY];
++	ctx = &key->u.tkip.tx;
+ 
+ #ifdef CONFIG_TKIP_DEBUG
+ 	printk(KERN_DEBUG "TKIP encrypt: iv16 = 0x%04x, iv32 = 0x%08x\n",
+ 			iv16, iv32);
+ 
+-	if (iv32 != key->u.tkip.tx.iv32) {
++	if (iv32 != ctx->iv32) {
+ 		printk(KERN_DEBUG "skb: iv32 = 0x%08x key: iv32 = 0x%08x\n",
+-			iv32, key->u.tkip.tx.iv32);
++			iv32, ctx->iv32);
+ 		printk(KERN_DEBUG "Wrap around of iv16 in the middle of a "
+ 			"fragmented packet\n");
+ 	}
+@@ -180,15 +182,15 @@ void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
+ 	/* Update the p1k only when the iv16 in the packet wraps around, this
+ 	 * might occur after the wrap around of iv16 in the key in case of
+ 	 * fragmented packets. */
+-	if (iv16 == 0 || !key->u.tkip.tx.initialized)
+-		tkip_mixing_phase1(tk, &key->u.tkip.tx, ta, iv32);
++	if (iv16 == 0 || !ctx->initialized)
++		tkip_mixing_phase1(tk, ctx, hdr->addr2, iv32);
+ 
+ 	if (type == IEEE80211_TKIP_P1_KEY) {
+-		memcpy(outkey, key->u.tkip.tx.p1k, sizeof(u16) * 5);
++		memcpy(outkey, ctx->p1k, sizeof(u16) * 5);
+ 		return;
+ 	}
+ 
+-	tkip_mixing_phase2(tk, &key->u.tkip.tx, iv16, outkey);
++	tkip_mixing_phase2(tk, ctx, iv16, outkey);
+ }
+ EXPORT_SYMBOL(ieee80211_get_tkip_key);
+ 
 -- 
-Greetings Michael.
+1.5.6.rc2.261.ga8fbe
+
