@@ -1,34 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42620
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751682AbYFCU53 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.170]:2940 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752296AbYFKVWL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 16:57:29 -0400
-Date: Tue, 03 Jun 2008 13:57:28 -0700 (PDT)
-Message-Id: <20080603.135728.103448928.davem@davemloft.net> (sfid-20080603_225737_464032_E59AA49D)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mokuno@sm.sony.co.jp, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 12/12]: wext: Emit event stream entries correctly when
- compat.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1212526129.14371.5.camel@johannes.berg>
-References: <20080603.132856.202640855.davem@davemloft.net>
-	<1212526129.14371.5.camel@johannes.berg>
+	Wed, 11 Jun 2008 17:22:11 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so3278785wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 14:22:11 -0700 (PDT)
+Subject: [PATCHv2 07/11] mac80211: wme.c use new helpers
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 11 Jun 2008 14:21:59 -0700
+Message-Id: <1213219319.5974.180.camel@brick> (sfid-20080611_232216_224092_507CC7A6)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 03 Jun 2008 22:48:49 +0200
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ net/mac80211/wme.c |   18 +++++-------------
+ 1 files changed, 5 insertions(+), 13 deletions(-)
 
-> Did you miss drivers/net/ps3_gelic_wireless.c?
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 14a9ff1..d8c2f96 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -105,11 +105,8 @@ static int classify80211(struct sk_buff *skb, struct Qdisc *qd)
+ {
+ 	struct ieee80211_local *local = wdev_priv(qd->dev->ieee80211_ptr);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	unsigned short fc = le16_to_cpu(hdr->frame_control);
+-	int qos;
+ 
+-	/* see if frame is data or non data frame */
+-	if (unlikely((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)) {
++	if (!ieee80211_is_data(hdr->frame_control)) {
+ 		/* management frames go on AC_VO queue, but are sent
+ 		* without QoS control fields */
+ 		return 0;
+@@ -119,10 +116,7 @@ static int classify80211(struct sk_buff *skb, struct Qdisc *qd)
+ 		/* use AC from radiotap */
+ 	}
+ 
+-	/* is this a QoS frame? */
+-	qos = fc & IEEE80211_STYPE_QOS_DATA;
+-
+-	if (!qos) {
++	if (!ieee80211_is_data_qos(hdr->frame_control)) {
+ 		skb->priority = 0; /* required for correct WPA/11i MIC */
+ 		return ieee802_1d_to_ac[skb->priority];
+ 	}
+@@ -151,7 +145,6 @@ static int wme_qdiscop_enqueue(struct sk_buff *skb, struct Qdisc* qd)
+ 	struct ieee80211_sched_data *q = qdisc_priv(qd);
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	unsigned short fc = le16_to_cpu(hdr->frame_control);
+ 	struct Qdisc *qdisc;
+ 	struct sta_info *sta;
+ 	int err, queue;
+@@ -185,16 +178,15 @@ static int wme_qdiscop_enqueue(struct sk_buff *skb, struct Qdisc* qd)
+ 
+ 	/* now we know the 1d priority, fill in the QoS header if there is one
+ 	 */
+-	if (WLAN_FC_IS_QOS_DATA(fc)) {
+-		u8 *p = skb->data + ieee80211_get_hdrlen(fc) - 2;
++	if (ieee80211_is_data_qos(hdr->frame_control)) {
++		u8 *p = ieee80211_get_qos_ctl(hdr);
+ 		u8 ack_policy = 0;
+ 		tid = skb->priority & QOS_CONTROL_TAG1D_MASK;
+ 		if (local->wifi_wme_noack_test)
+ 			ack_policy |= QOS_CONTROL_ACK_POLICY_NOACK <<
+ 					QOS_CONTROL_ACK_POLICY_SHIFT;
+ 		/* qos header is 2 bytes, second reserved */
+-		*p = ack_policy | tid;
+-		p++;
++		*p++ = ack_policy | tid;
+ 		*p = 0;
+ 
+ 		rcu_read_lock();
+-- 
+1.5.6.rc2.261.ga8fbe
 
-Likely yes, I guess that won't get hit with an allmodconfig
-build on sparc64 :(
 
-It would be really nice if we had some more compat layers
-so that the ps3 bus probing layer just nopped out but you
-could at least build test drivers on other platforms.
