@@ -1,71 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from durandal.kismetwireless.net ([199.201.145.179]:56115 "EHLO
-	durandal.nerv-un.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753401AbYFTNP0 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.170]:2940 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751945AbYFKVWD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2008 09:15:26 -0400
-Date: Fri, 20 Jun 2008 09:15:44 -0400
-From: Mike Kershaw <dragorn@kismetwireless.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
-Subject: Re: More 4965 woes
-Message-ID: <20080620131544.GA31113@drd1813.lan> (sfid-20080620_151529_673364_45659809)
-Reply-To: Mike Kershaw <dragorn@kismetwireless.net>
-References: <20080617132401.GA8328@drd1813.lan> <1213781294.2625.52.camel@debian.sh.intel.com> <20080618154109.GB15170@drd1813.lan> <20080619134138.GA27021@drd1813.lan> <1ba2fa240806191253l2769dec3q2a49638eafe01e48@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Dxnq1zWXvFF0Q93v"
-In-Reply-To: <1ba2fa240806191253l2769dec3q2a49638eafe01e48@mail.gmail.com>
+	Wed, 11 Jun 2008 17:22:03 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so3278785wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 14:22:00 -0700 (PDT)
+Subject: [PATCHv2 02/11] mac80211: remove ieee80211_get_morefrag
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 11 Jun 2008 14:21:56 -0700
+Message-Id: <1213219316.5974.175.camel@brick> (sfid-20080611_232210_536260_F606DD18)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Replaced by the new helper ieee80211_has_morefrags which is
+more consistent with the intent of the function.
 
---Dxnq1zWXvFF0Q93v
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-tx.c       |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 ++--
+ drivers/net/wireless/rt2x00/rt2x00queue.c   |    2 +-
+ drivers/net/wireless/rtl8187_dev.c          |    2 +-
+ include/linux/ieee80211.h                   |   14 --------------
+ 5 files changed, 6 insertions(+), 20 deletions(-)
 
-On Thu, Jun 19, 2008 at 10:53:22PM +0300, Tomas Winkler wrote:
-> > On channel 36 things appear to work (well, as much as they do otherwise,
-> > packet hanging still makes the device unusable).  I'm still confused as
-> > to why the card can report it works on that channel, scan that channel,
-> > see beacons, but then refuse to transmit.
->=20
-> There is a bug in the firmware. the fix is on the way. Unfortunately I
-> cannot currently commit to
-> to any particular day it will be published yet.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 3850cb2..78b331a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -595,7 +595,7 @@ static void iwl_tx_cmd_build_basic(struct iwl_priv *priv,
+ 
 
-That's fair enough, good to hear.
+ 	tx_cmd->sta_id = std_id;
+-	if (ieee80211_get_morefrag(hdr))
++	if (ieee80211_has_morefrags(fc))
+ 		tx_flags |= TX_CMD_FLG_MORE_FRAG_MSK;
+ 
+ 	if (ieee80211_is_data_qos(fc)) {
+@@ -951,7 +951,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	tx_cmd->dram_lsb_ptr = cpu_to_le32(scratch_phys);
+ 	tx_cmd->dram_msb_ptr = iwl_get_dma_hi_address(scratch_phys);
+ 
+-	if (!ieee80211_get_morefrag(hdr)) {
++	if (!ieee80211_has_morefrags(hdr->frame_control)) {
+ 		txq->need_update = 1;
+ 		if (qc)
+ 			priv->stations[sta_id].tid[tid].seq_number = seq_number;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 265d65a..cbb69df 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2448,7 +2448,7 @@ static void iwl3945_build_tx_cmd_basic(struct iwl3945_priv *priv,
+ 	}
+ 
+ 	cmd->cmd.tx.sta_id = std_id;
+-	if (ieee80211_get_morefrag(hdr))
++	if (ieee80211_has_morefrags(fc))
+ 		tx_flags |= TX_CMD_FLG_MORE_FRAG_MSK;
+ 
+ 	if (ieee80211_is_data_qos(fc)) {
+@@ -2731,7 +2731,7 @@ static int iwl3945_tx_skb(struct iwl3945_priv *priv, struct sk_buff *skb)
+ 	out_cmd->cmd.tx.tx_flags &= ~TX_CMD_FLG_ANT_A_MSK;
+ 	out_cmd->cmd.tx.tx_flags &= ~TX_CMD_FLG_ANT_B_MSK;
+ 
+-	if (!ieee80211_get_morefrag(hdr)) {
++	if (!ieee80211_has_morefrags(hdr->frame_control)) {
+ 		txq->need_update = 1;
+ 		if (qc) {
+ 			priv->stations[sta_id].tid[tid].seq_number = seq_number;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index e69ef4b..95ed617 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -91,7 +91,7 @@ void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
+ 	/*
+ 	 * Check if more fragments are pending
+ 	 */
+-	if (ieee80211_get_morefrag(hdr)) {
++	if (ieee80211_has_morefrags(hdr->frame_control)) {
+ 		__set_bit(ENTRY_TXD_BURST, &txdesc->flags);
+ 		__set_bit(ENTRY_TXD_MORE_FRAG, &txdesc->flags);
+ 	}
+diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
+index 0078c7e..bec96d7 100644
+--- a/drivers/net/wireless/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl8187_dev.c
+@@ -181,7 +181,7 @@ static int rtl8187_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 	flags |= RTL8187_TX_FLAG_NO_ENCRYPT;
+ 
+ 	flags |= ieee80211_get_tx_rate(dev, info)->hw_value << 24;
+-	if (ieee80211_get_morefrag((struct ieee80211_hdr *)skb->data))
++	if (ieee80211_has_morefrags(((struct ieee80211_hdr *)skb->data)->frame_control))
+ 		flags |= RTL8187_TX_FLAG_MORE_FRAG;
+ 	if (info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) {
+ 		flags |= RTL8187_TX_FLAG_RTS;
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 1711a00..c346cdd 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -955,18 +955,4 @@ static inline u8 *ieee80211_get_DA(struct ieee80211_hdr *hdr)
+ 		return hdr->addr1;
+ }
+ 
+-/**
+- * ieee80211_get_morefrag - determine whether the MOREFRAGS bit is set
+- *
+- * This function determines whether the "more fragments" bit is set
+- * in the frame.
+- *
+- * @hdr: the frame
+- */
+-static inline int ieee80211_get_morefrag(struct ieee80211_hdr *hdr)
+-{
+-	__le16 fc = hdr->frame_control;
+-	return !!(fc & cpu_to_le16(IEEE80211_FCTL_MOREFRAGS));
+-}
+-
+ #endif /* IEEE80211_H */
+-- 
+1.5.6.rc2.261.ga8fbe
 
-> What AP do you use I don't see such bad behviour on A band.
 
-Which do you mean - The failure of radar channels, or the severe
-latency/packet loss?
-
-The severe latency/packet loss happens any time I enable HT, if I'm
-connected to a HT AP or not, 2.4ghz or 5ghz, in a clean RF environment.
-
--m
-
---=20
-Mike Kershaw/Dragorn <dragorn@kismetwireless.net>
-GPG Fingerprint: 3546 89DF 3C9D ED80 3381  A661 D7B2 8822 738B BDB1
-
-"Remember the book store down the road?  That then became a book and coffee
-shop?  Now it's a 24-hour just-coffee shop.  It's like evolution, only, wit=
-hout
-the getting better."
-
---Dxnq1zWXvFF0Q93v
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEARECAAYFAkhbrYAACgkQ17KIInOLvbGcqgCbBSbuYhCAqCDpzhrG75gSY1eT
-5ZEAnAomFN1qUkDtFU4Iao041VJK3Uxu
-=yZ2e
------END PGP SIGNATURE-----
-
---Dxnq1zWXvFF0Q93v--
