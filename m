@@ -1,32 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blaine.gmane.org ([80.91.229.8]:60591 "EHLO hugh.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753988AbYF2Rc6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jun 2008 13:32:58 -0400
-Received: from public by hugh.gmane.org with local (Exim 4.63)
-	(envelope-from <public@hugh.gmane.org>)
-	id 1KD0i5-0008PO-SL
-	for linux-wireless@vger.kernel.org; Sun, 29 Jun 2008 19:29:09 +0200
-Message-ID: <4867C471.6010106@yahoo.com> (sfid-20080629_193301_900705_55554691)
-Date: Sun, 29 Jun 2008 18:20:49 +0100
-From: Sitsofe Wheeler <sitsofe@yahoo.com>
+Received: from an-out-0708.google.com ([209.85.132.243]:60632 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751295AbYFKKJv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2008 06:09:51 -0400
+Received: by an-out-0708.google.com with SMTP id d40so717612and.103
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 03:09:50 -0700 (PDT)
+Message-ID: <43e72e890806110309l2600637p82866531cf2f7e6c@mail.gmail.com> (sfid-20080611_120954_607986_34A389EF)
+Date: Wed, 11 Jun 2008 03:09:50 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: pommnitz@yahoo.com
+Subject: Re: [RFC] First CRDA integration work
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <951547.47167.qm@web51403.mail.re2.yahoo.com>
 MIME-Version: 1.0
-To: Michael Buesch <public-mb-fseUSCV1ubazQB+pC5nmwQ@hugh.gmane.org>
-CC: public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org,
-	public-kernel-testers-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org
-Subject: Re: WARNING: at net/mac80211/rx.c:319 __ieee80211_rx_handle_packet+0x325/0x775()
-References: <4866A3A5.3060208@yahoo.com> <200806282357.30255.mb@bu3sch.de> <4866B5BF.3000404@yahoo.com> <200806290053.17284.mb@bu3sch.de>
-In-Reply-To: <200806290053.17284.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
+References: <951547.47167.qm@web51403.mail.re2.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Jun 11, 2008 at 1:28 AM, Joerg Pommnitz <pommnitz@yahoo.com> wrote:
+> Hello Luis,
+> I did not read the complete patch but closely looked at the CRDA design picture. I have a comment:
+> The company I work for has special regulatory approval to use amplified WLAN on certain channels (up to 4W). The nodes additionally have non-amplified WLAN adapters that fall under the normal regulatory requirements. It would be nice if your work allowed to specify such cases, e.g. have different regulatory restrictions for differen cards in the same machine. In our case we would like to restrict the amplified interface to the channels it is allowed to run on.
 
+Hm, interesting. Well you can simply use a custom db.txt with a custom
+PGP private key to sign it and also provide your customers with a
+custom CRDA which uses this. All you'd have to do is modify the keys
+and db.txt. This of course doesn't work to help comply if you have
+extra regulatory efforts on the drivers using the EEPROM of firmware
+so the next best thing would be to add a struct ieee80211_regdomain to
+each struct wiphy. I considered this too but this starts to move away
+from the centralized scheme. Its good you mention this case though.
+Can you elaborate a bit more on it. Why do you need two separate WLAN
+devices on one node where each one of them is using very different
+regulatory rules? Do they both use the same frequency ranges?
 
-Michael Buesch wrote:
-> That's known to be broken and is worked on.
-> Please simply disable the warning. It is harmless
-> on your machine.
-
-Thanks for the swift heads up and sorry for reporting a known issue.
-
+  Luis
