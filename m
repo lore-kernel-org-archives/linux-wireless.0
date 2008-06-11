@@ -1,114 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:49268 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752861AbYFDDKY (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.181]:10798 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753054AbYFKMyv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 23:10:24 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	=?utf-8?q?I=C3=B1aky=20P=C3=A9rez-Gonz=C3=A1lez?=
-	<inaky.perez-gonzalez@intel.com>,
+	Wed, 11 Jun 2008 08:54:51 -0400
+Received: by py-out-1112.google.com with SMTP id p76so1391975pyb.10
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 05:54:50 -0700 (PDT)
+Message-ID: <1ba2fa240806110554s7b1d2bfybd692ac61a89a758@mail.gmail.com> (sfid-20080611_145457_359605_3A9CCF22)
+Date: Wed, 11 Jun 2008 15:54:49 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH RFC] mac80211_hwsim
+Cc: "Jouni Malinen" <j@w1.fi>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: [PATCH 06/12] rfkill: add the WWAN radio type
-Date: Wed,  4 Jun 2008 00:10:11 -0300
-Message-Id: <1212549017-30144-7-git-send-email-hmh@hmh.eng.br> (sfid-20080604_051035_086560_A2B0FA51)
-In-Reply-To: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
-References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
+	linux-wireless@vger.kernel.org
+In-Reply-To: <90792e191e13c5c2955689833ca3118a.squirrel@secure.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080610105058.GA6961@jm.kir.nu>
+	 <1213096575.3668.6.camel@johannes.berg>
+	 <20080610123007.GB1571@tuxdriver.com>
+	 <1213103469.3668.13.camel@johannes.berg>
+	 <20080610152418.GD13267@tuxdriver.com>
+	 <20080610183722.GA7377@jm.kir.nu>
+	 <1213124444.3668.48.camel@johannes.berg>
+	 <20080611065719.GB7377@jm.kir.nu>
+	 <90792e191e13c5c2955689833ca3118a.squirrel@secure.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Unfortunately, instead of adding a generic Wireless WAN type, a technol=
-ogy-
-specific type (WiMAX) was added.  That's useless for other WWAN devices=
-,
-such as EDGE, UMTS, X-RTT and other such radios.
-
-Add a WWAN rfkill type for generic wireless WAN devices.  No keys are a=
-dded
-as most devices really want to use KEY_WLAN for WWAN control (in a cycl=
-e of
-none, WLAN, WWAN, WLAN+WWAN) and need no specific keycode added.
-
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: I=C3=B1aky P=C3=A9rez-Gonz=C3=A1lez <inaky.perez-gonzalez@intel.com=
+On Wed, Jun 11, 2008 at 3:07 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Jouni Malinen wrote:
+>> That sounds better. net/wireless.h was bit confusing on this part since
+>> it has the "filled by the core" notice only for
+>> IEEE80211_RATE_MANDATORY_* flags, not for IEEE80211_RATE_ERP_G. Looks
+>> like this should be added to the ERP flag, too.
 >
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: David S. Miller <davem@davemloft.net>
----
- include/linux/rfkill.h    |    2 ++
- net/rfkill/rfkill-input.c |    4 ++++
- net/rfkill/rfkill.c       |    3 +++
- 3 files changed, 9 insertions(+), 0 deletions(-)
+> good point.
+>
+>> OK, I'll remove it. With the current bands this seems to be fine, but
+>> how would that work with 10 MHz and 5 MHz channels? I haven't verified,
+>> but I would assume they could use same center frequency with 20 MHz
+>> channels..
+>
+> Yeah... that isn't really supported yet.
+>
 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index 844e961..c0cab7d 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -34,12 +34,14 @@
-  * RFKILL_TYPE_BLUETOOTH: switch is on a bluetooth device.
-  * RFKILL_TYPE_UWB: switch is on a ultra wideband device.
-  * RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
-+ * RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
-  */
- enum rfkill_type {
- 	RFKILL_TYPE_WLAN ,
- 	RFKILL_TYPE_BLUETOOTH,
- 	RFKILL_TYPE_UWB,
- 	RFKILL_TYPE_WIMAX,
-+	RFKILL_TYPE_WWAN,
- 	RFKILL_TYPE_MAX,
- };
-=20
-diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
-index 9d6c925..29c13d3 100644
---- a/net/rfkill/rfkill-input.c
-+++ b/net/rfkill/rfkill-input.c
-@@ -101,6 +101,7 @@ static DEFINE_RFKILL_TASK(rfkill_wlan, RFKILL_TYPE_=
-WLAN);
- static DEFINE_RFKILL_TASK(rfkill_bt, RFKILL_TYPE_BLUETOOTH);
- static DEFINE_RFKILL_TASK(rfkill_uwb, RFKILL_TYPE_UWB);
- static DEFINE_RFKILL_TASK(rfkill_wimax, RFKILL_TYPE_WIMAX);
-+static DEFINE_RFKILL_TASK(rfkill_wwan, RFKILL_TYPE_WWAN);
-=20
- static void rfkill_event(struct input_handle *handle, unsigned int typ=
-e,
- 			unsigned int code, int data)
-@@ -126,6 +127,9 @@ static void rfkill_event(struct input_handle *handl=
-e, unsigned int type,
- 		switch (code) {
- 		case SW_RFKILL_ALL:
- 			/* EVERY radio type. data !=3D 0 means radios ON */
-+			rfkill_schedule_set(&rfkill_wwan,
-+					    (data)? RFKILL_STATE_ON:
-+						    RFKILL_STATE_OFF);
- 			rfkill_schedule_set(&rfkill_wimax,
- 					    (data)? RFKILL_STATE_ON:
- 						    RFKILL_STATE_OFF);
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 2e19b68..c5a79ab 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -176,6 +176,9 @@ static ssize_t rfkill_type_show(struct device *dev,
- 	case RFKILL_TYPE_WIMAX:
- 		type =3D "wimax";
- 		break;
-+	case RFKILL_TYPE_WWAN:
-+		type =3D "wwan";
-+		break;
- 	default:
- 		BUG();
- 	}
---=20
-1.5.5.3
+We've added support for FAT channels 40Mhz, but that uses negative
+logic i.e. whether it's not supported. This is due to fact that FAT
+channel may expand to above or bellow channel.
+Isn't usage of  10Mhz and 5Mz being slowly deprecated anyway?
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Tomas.
