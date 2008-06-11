@@ -1,79 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:48428 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753687AbYFTPtC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2008 11:49:02 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Add simple firmware watchdog
-Date: Fri, 20 Jun 2008 17:44:02 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Received: from yx-out-2324.google.com ([74.125.44.29]:25507 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755175AbYFKSJb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2008 14:09:31 -0400
+Received: by yx-out-2324.google.com with SMTP id 31so364357yxl.1
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 11:09:30 -0700 (PDT)
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [Rt2400-devel] next-20080611 rt2x00: build failure
+Date: Wed, 11 Jun 2008 20:21:42 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org,
+	linux-next@vger.kernel.org
+References: <20080611100748.d35829f4.randy.dunlap@oracle.com> <200806111948.49976.IvDoorn@gmail.com> <32664704.1213206386295.JavaMail.oracle@acsmt301.oracle.com>
+In-Reply-To: <32664704.1213206386295.JavaMail.oracle@acsmt301.oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200806201744.03128.mb@bu3sch.de> (sfid-20080620_174909_141012_2380E798)
+Content-Type: text/plain; charset=US-ASCII
+Message-Id: <200806112021.43707.IvDoorn@gmail.com> (sfid-20080611_201020_310343_8D755A8A)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a simple firmware watchdog for the opensource firmware.
-This will check every 15 seconds, if the firmware zeroed out the watchdog
-register. The firmware will do this in its eventloop.
+On Wednesday 11 June 2008, Randy Dunlap wrote:
+> --- Original Message ---
+> > > when CONFIG_INPUT=n and
+> > > # CONFIG_NEW_LEDS is not set
+> > > CONFIG_LEDS_CLASS=y
+> > 
+> > Does below patch help?
+> 
+> Nope, sorry, same build errors.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Ok this is odd, there is something very strange happening,
+the relevant options in your config are:
 
----
+CONFIG_RFKILL=y
+CONFIG_RFKILL_INPUT=y
+# CONFIG_INPUT is not set
+CONFIG_INPUT_POLLDEV=y
+CONFIG_RT2X00_LIB_RFKILL=y
 
-John, please queue for 2.6.27
+>From net/rfkill/Kconfig:
 
+config RFKILL_INPUT
+	tristate "Input layer to RF switch connector"
+	depends on RFKILL && INPUT
 
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-06-20 17:39:21.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2008-06-20 17:40:06.000000000 +0200
-@@ -2805,12 +2805,27 @@ static void b43_periodic_every30sec(stru
- 	b43_calculate_link_quality(dev);
- }
- 
- static void b43_periodic_every15sec(struct b43_wldev *dev)
- {
- 	struct b43_phy *phy = &dev->phy;
-+	u16 wdr;
-+
-+	if (dev->fw.opensource) {
-+		/* Check if the firmware is still alive.
-+		 * It will reset the watchdog counter to 0 in its idle loop. */
-+		wdr = b43_shm_read16(dev, B43_SHM_SCRATCH, B43_WATCHDOG_REG);
-+		if (unlikely(wdr)) {
-+			b43err(dev->wl, "Firmware watchdog: The firmware died!\n");
-+			b43_controller_restart(dev, "Firmware watchdog");
-+			return;
-+		} else {
-+			b43_shm_write16(dev, B43_SHM_SCRATCH,
-+					B43_WATCHDOG_REG, 1);
-+		}
-+	}
- 
- 	if (phy->type == B43_PHYTYPE_G) {
- 		//TODO: update_aci_moving_average
- 		if (phy->aci_enable && phy->aci_wlan_automatic) {
- 			b43_mac_suspend(dev);
- 			if (!phy->aci_enable && 1 /*TODO: not scanning? */ ) {
-Index: wireless-testing/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2008-06-20 17:39:21.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/b43.h	2008-06-20 17:40:06.000000000 +0200
-@@ -438,12 +438,14 @@ enum {
- /* The firmware register to fetch the panic reason from. */
- #define B43_FWPANIC_REASON_REG		3
- /* Firmware panic reason codes */
- #define B43_FWPANIC_DIE			0 /* Firmware died. Don't auto-restart it. */
- #define B43_FWPANIC_RESTART		1 /* Firmware died. Schedule a controller reset. */
- 
-+/* The firmware register that contains the watchdog counter. */
-+#define B43_WATCHDOG_REG		1
- 
- /* Device specific rate values.
-  * The actual values defined here are (rate_in_mbps * 2).
-  * Some code depends on this. Don't change it. */
- #define B43_CCK_RATE_1MB		0x02
- #define B43_CCK_RATE_2MB		0x04
+So RFKILL_INPUT shouldn't not be enabled because it has
+a clear dependency on the CONFIG_INPUT option.
+
+>From drivers/net/wireless/rt2x00/Kconfig
+config RT2X00_LIB_RFKILL
+	boolean
+	depends on RT2X00_LIB
+	select RFKILL
+	select INPUT_POLLDEV
+
+This doesn't mean that the rt2x00 behavior of selecting
+CONFIG_INPUT_POLLDEV without dependencies on
+CONFIG_INPUT was correct. But more that there is
+a secondary bug elsewhere as well, and that is the one
+which is causing the build failure now.. :S
+
+Anybody with additional ideas? :)
+
+Ivo
