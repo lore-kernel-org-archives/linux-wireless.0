@@ -1,56 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:39521 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751000AbYFQQRh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 12:17:37 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1K8dsB-0001mA-NU
-	for linux-wireless@vger.kernel.org; Tue, 17 Jun 2008 16:17:31 +0000
-Received: from cpc3-cwma2-0-0-cust15.swan.cable.ntl.com ([81.96.204.16])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jun 2008 16:17:31 +0000
-Received: from andy by cpc3-cwma2-0-0-cust15.swan.cable.ntl.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jun 2008 16:17:31 +0000
-To: linux-wireless@vger.kernel.org
-From: Andrew Price <andy@andrewprice.me.uk>
-Subject: BUG: mac80211: Some connections hanging in 2.6.26-rc6...
-Date: Tue, 17 Jun 2008 17:17:23 +0100
-Message-ID: <g38o2j$1uh$1@ger.gmane.org> (sfid-20080617_181742_447297_198DA5E5)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from an-out-0708.google.com ([209.85.132.251]:34039 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753876AbYFKOtR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2008 10:49:17 -0400
+Received: by an-out-0708.google.com with SMTP id d40so745666and.103
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 07:49:16 -0700 (PDT)
+Message-ID: <43e72e890806110749q25a2490dm325f21554409925e@mail.gmail.com> (sfid-20080611_164921_549164_2462A795)
+Date: Wed, 11 Jun 2008 07:49:15 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [compat-masters] Backported MQ requirement on 802.11n for older kernels
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	compat-masters@lists.madwifi.org,
+	"Tim Gardner" <tim.gardner@canonical.com>,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
+In-Reply-To: <43e72e890806110646o439c1620t204e68034434968d@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890806080855p284f85brd0ff1f1dfce96bf8@mail.gmail.com>
+	 <43e72e890806090325y5a1aebadq68204695044f4b6f@mail.gmail.com>
+	 <1ba2fa240806101657w14599f30x67f58acbc7fe9e80@mail.gmail.com>
+	 <43e72e890806102132q1aaba42ehd76bdd30b8d4080a@mail.gmail.com>
+	 <43e72e890806102136jb8e695fla98a8594dde14396@mail.gmail.com>
+	 <43e72e890806110403nddfca7cn66b91a938919e1f0@mail.gmail.com>
+	 <7ba851519c84785f96af3637e9bab65b.squirrel@secure.sipsolutions.net>
+	 <20080611125857.GG17936@ruslug.rutgers.edu>
+	 <1ba2fa240806110627g467940b1k9ca4a43cd140506f@mail.gmail.com>
+	 <43e72e890806110646o439c1620t204e68034434968d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the latest Linus kernel some kinds of connections over my wireless
-link have been hanging. By this I mean, for example:
+On Wed, Jun 11, 2008 at 6:46 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Wed, Jun 11, 2008 at 6:27 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+>> On Wed, Jun 11, 2008 at 3:58 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>> On Wed, Jun 11, 2008 at 02:12:41PM +0200, Johannes Berg wrote:
+>>>>
+>>>> > Johannes -- why do we have the requirement for NETDEVICES_MULTIQUEUE
+>>>> > on CONFIG_MAC80211_QOS? My current config doesn't have it it and
+>>>> > CONFIG_MAC80211_QOS still works right now enabled. Of course the
+>>>> > driver I'm testing doesn't have 11n though.
+>>>>
+>>>> because otherwise skb_get_queu_mapping always returns 0 and you use only
+>>>> one queue.
+>>>>
+>>>> > Shouldn't we just make MAC80211_QOS depend on NET_SCHED and figure out
+>>>> > we can't support 11n based on NETDEVICES_MULTIQUEUE?
+>>>>
+>>>> no, 11e also needs multiple queues.
+>>>
+>>> Thanks, since MAC80211_QOS was there before the issue is some
+>>> kernels may have this enabled but they never got to MQ. This is why
+>>> certain compiles will complain about missing symbols.
+>>>
+>>> So how about we disable it if we determine MQ and NET_SCHED are off?
+>>> Like this:
+>>>
+>>> diff --git a/config.mk b/config.mk
+>>> index e8dc469..b72e37e 100644
+>>> --- a/config.mk
+>>> +++ b/config.mk
+>>> @@ -27,7 +27,16 @@ ifeq ($(shell test $(KERNEL_SUBLEVEL) -lt 23 && echo yes),yes)
+>>>  CONFIG_MAC80211_QOS=y
+>>>  else
+>>>  ifeq ($(CONFIG_NETDEVICES_MULTIQUEUE),)
+>>> -$(warning "WARNING: You are running a kernel >= 2.6.23, you should enable CONFIG_NETDEVICES_MULTIQUEUE for 802.11n support")
+>>> +ifeq ($(CONFIG_NET_SCHED),)
+>>> +$(warning "WARNING: You are running a kernel >= 2.6.23, you should enable CONFIG_NETDEVICES_MULTIQUEUE and CONFIG_NET_SCHED for 802.11[ne] support")
+>>> +else
+>>> +# Disable CONFIG_MAC80211_QOS if you had it enabled befofre in your old .config
+>>> +$(warning "WARNING: You are running a kernel >= 2.6.23, you should enable CONFIG_NETDEVICES_MULTIQUEUE for 802.11[ne] support")
+>>> +CONFIG_MAC80211_QOS=n
+>>> +endif
+>>> +else
+>>> +# Disable CONFIG_MAC80211_QOS if you had it enabled befofre in your old .config
+>>> +CONFIG_MAC80211_QOS=n
+>>>  endif
+>>>  endif
+>>>  endif
+>>>
+>> One thing it's not clear for me. What do you mean by old .config
+>> CONFIG_MAC80211_QOS flags is available only in wireless-testing?
+>> The makefile is feed by compat.mk and DOTconfig from the target kernel
+>> (KLIB) (in my case 2.6.25)
+>> From what I see the flags from wireless-testing  need to be always
+>> reflected in compat.mk.
+>
+> Bleh, you're right, it should be in only as of 2.6.27... something
+> else is causing some unresolved symbols if CONFIG_MAC80211_QOS is left
+> disabled on 2.6.24.
 
-$ ssh <somewhere>
-[Wait a while]
-Connection reset by <somewhere>
+OK the issue is very likely that the compat_autoconf.h is leaving
+CONFIG_MAC80211_QOS enabled as the script used to generate it detects
+all ^CONFIG_FOO options. I'm working on this, should have a patch soon
+for you to review.
 
-This also affects some http requests such as loading slashdot but not
-others (perhaps small ones?) such as twitter API http requests. It does
-not seem to affect connections to other machines on my LAN, only ones
-over the internet.
-
-I've tried tcpdumping to get more info but when I run tcpdump the
-connections work again (if a tiny bit slower).
-
-I've bisected this bug down to 608961a5eca8d3c6bd07172febc27b5559408c5d
-"mac80211: Use skb_header_cloned() on TX path." and naively reverting
-this change seems to make the bug go away.
-
-I'm using the rt2500pci module and wpa supplicant. My setup is:
-
-  Laptop -- Wireless AP -- Router -- Cable Modem -- The Internet
-
-and my card is a "RaLink RT2500 802.11g Cardbus/mini-PCI (rev 01)".
-
-Please let me know if you need any more info or if there's a more
-focussed test case I could try.
-
---
-Andy Price
-
+  Luis
