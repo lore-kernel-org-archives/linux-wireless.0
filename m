@@ -1,270 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:19551 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754937AbYF3J1R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 05:27:17 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Fabien Crespel <fcrespel@gmail.com>, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 33/33] iwlwifi: remove the input device from rfkill_mngr
-Date: Mon, 30 Jun 2008 17:23:33 +0800
-Message-Id: <1214817813-17639-34-git-send-email-yi.zhu@intel.com> (sfid-20080630_113815_444322_D97ED332)
-In-Reply-To: <1214817813-17639-33-git-send-email-yi.zhu@intel.com>
-References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-2-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-3-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-5-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-6-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-7-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-8-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-9-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-10-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-11-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-12-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-13-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-14-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-15-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-16-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-17-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-18-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-19-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-20-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-21-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-22-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-23-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-24-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-25-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-26-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-27-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-28-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-29-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-30-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-31-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-32-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-33-git-send-email-yi.zhu@intel.com>
+Received: from yx-out-2324.google.com ([74.125.44.30]:56480 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752252AbYFKTqu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2008 15:46:50 -0400
+Received: by yx-out-2324.google.com with SMTP id 31so380050yxl.1
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 12:46:46 -0700 (PDT)
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [Rt2400-devel] next-20080611 rt2x00: build failure
+Date: Wed, 11 Jun 2008 21:59:00 +0200
+Cc: rt2400-devel@lists.sourceforge.net,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-next@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <20080611100748.d35829f4.randy.dunlap@oracle.com> <200806112103.58517.IvDoorn@gmail.com> <20080611123245.4089f47b.randy.dunlap@oracle.com>
+In-Reply-To: <20080611123245.4089f47b.randy.dunlap@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200806112159.00779.IvDoorn@gmail.com> (sfid-20080611_214655_846156_2153411C)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Adel Gadllah <adel.gadllah@gmail.com>
+On Wednesday 11 June 2008, Randy Dunlap wrote:
+> On Wed, 11 Jun 2008 21:03:58 +0200 Ivo van Doorn wrote:
+> 
+> > On Wednesday 11 June 2008, John W. Linville wrote:
+> > > On Wed, Jun 11, 2008 at 10:07:48AM -0700, Randy Dunlap wrote:
+> > > > when CONFIG_INPUT=n and
+> > > > # CONFIG_NEW_LEDS is not set
+> > > > CONFIG_LEDS_CLASS=y
+> > > > 
+> > > > (full config attached)
+> > > > 
+> > > > vmlinux.o: In function `iwl_rfkill_unregister':
+> > > > (.text+0x174cdc): undefined reference to `input_unregister_device'
+> > > > vmlinux.o: In function `iwl_rfkill_init':
+> > > > (.text+0x174d9f): undefined reference to `input_allocate_device'
+> > > > vmlinux.o: In function `iwl_rfkill_init':
+> > > > (.text+0x174e2d): undefined reference to `input_register_device'
+> > > > vmlinux.o: In function `iwl_rfkill_init':
+> > > > (.text+0x174e53): undefined reference to `input_free_device'
+> > > > vmlinux.o: In function `rt2x00rfkill_allocate_polldev':
+> > > > rt2x00rfkill.c:(.text+0x176dc4): undefined reference to `input_allocate_polled_device'
+> > > > vmlinux.o: In function `rt2x00rfkill_poll':
+> > > > rt2x00rfkill.c:(.text+0x176e8b): undefined reference to `input_event'
+> > > > rt2x00rfkill.c:(.text+0x176e9f): undefined reference to `input_event'
+> > > 
+> > > <snip>
+> > > 
+> > > Ick, what a mess...
+> > > 
+> > > So what combination of depends and select of INPUT, INPUT_POLLDEV,
+> > > and RFKILL_INPUT do we need to resolve this?
+> > 
+> > Well RFKILL_INPUT shouldn't be selected by a driver, in fact any driver that
+> > selects or depends on RFKILL_INPUT is wrong. But selecting it only makes
+> > matters worse since that will bypass the INPUT dependency.
+> > When INPUT_POLLDEV is required I guess it is best to depend on INPUT and
+> > select INPUT_POLLDEV.
+> > 
+> > iwlwifi is selecting RFKILL_INPUT and preferably they should drop the select
+> > altogether (not replacing it with a depend), but since I am not sure about the
+> > reason for the select
+> 
+> Yes, that easily causes a build failure.
+> 
+> > rt2x00 is selecting INPUT_POLLDEV but should depend on INPUT first (as done
+> > in the patch in my previous mail).
+> > 
+> > b43 shouldn't really depend on RFKILL_INPUT but their Kconfig is correct and
+> > shouldn't cause the above build failure.
+> 
+> Patch below fixes the RFKILL/INPUT build problems for me.  I haven't addresses
+> the leds_* build problems yet.
+> 
+> 
+> From: Randy Dunlap <randy.dunlap@oracle.com>
+> 
+> Config symbols that select RFKILL need to depend on INPUT so that
+> undefined symbols are not used in the build.
+> 
+> This patch fixes the input_* symbols build errors.
+> 
+> (.text+0x174cdc): undefined reference to `input_unregister_device'
+> (.text+0x174d9f): undefined reference to `input_allocate_device'
+> (.text+0x174e2d): undefined reference to `input_register_device'
+> (.text+0x174e53): undefined reference to `input_free_device'
+> rt2x00rfkill.c:(.text+0x176dc4): undefined reference to `input_allocate_polled_device'
+> rt2x00rfkill.c:(.text+0x176e8b): undefined reference to `input_event'
+> rt2x00rfkill.c:(.text+0x176e9f): undefined reference to `input_event'
+> (.text+0x176eca): undefined reference to `input_unregister_polled_device'
+> (.text+0x176efc): undefined reference to `input_free_polled_device'
+> (.text+0x176f37): undefined reference to `input_free_polled_device'
+> (.text+0x176fd8): undefined reference to `input_register_polled_device'
+> (.text+0x1772c0): undefined reference to `led_classdev_resume'
+> (.text+0x1772d4): undefined reference to `led_classdev_resume'
+> (.text+0x1772e8): undefined reference to `led_classdev_resume'
+> (.text+0x17730a): undefined reference to `led_classdev_suspend'
+> (.text+0x17731e): undefined reference to `led_classdev_suspend'
+> (.text+0x17732f): undefined reference to `led_classdev_suspend'
+> rt2x00leds.c:(.text+0x177348): undefined reference to `led_classdev_unregister'
+> rt2x00leds.c:(.text+0x1773c0): undefined reference to `led_classdev_register'
+> rfkill-input.c:(.text+0x209e4c): undefined reference to `input_close_device'
+> rfkill-input.c:(.text+0x209e53): undefined reference to `input_unregister_handle'
+> rfkill-input.c:(.text+0x209ea1): undefined reference to `input_register_handle'
+> rfkill-input.c:(.text+0x209eae): undefined reference to `input_open_device'
+> rfkill-input.c:(.text+0x209ebb): undefined reference to `input_unregister_handle'
+> rfkill-input.c:(.init.text+0x17405): undefined reference to `input_register_handler'
+> rfkill-input.c:(.exit.text+0x194f): undefined reference to `input_unregister_handler'
+> make[1]: *** [vmlinux] Error 1
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+> ---
+>  drivers/net/wireless/rt2x00/Kconfig |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> --- linux-next-20080611.orig/drivers/net/wireless/rt2x00/Kconfig
+> +++ linux-next-20080611/drivers/net/wireless/rt2x00/Kconfig
+> @@ -36,6 +36,7 @@ config RT2X00_LIB_FIRMWARE
+>  config RT2X00_LIB_RFKILL
+>  	boolean
+>  	depends on RT2X00_LIB
+> +	depends on INPUT
+>  	select RFKILL
+>  	select INPUT_POLLDEV
+>  
+> @@ -56,7 +57,7 @@ config RT2400PCI
+>  
+>  config RT2400PCI_RFKILL
+>  	bool "Ralink rt2400 rfkill support"
+> -	depends on RT2400PCI
+> +	depends on RT2400PCI && INPUT
+>  	select RT2X00_LIB_RFKILL
+>  	---help---
+>  	  This adds support for integrated rt2400 hardware that features a
+> @@ -84,7 +85,7 @@ config RT2500PCI
+>  
+>  config RT2500PCI_RFKILL
+>  	bool "Ralink rt2500 rfkill support"
+> -	depends on RT2500PCI
+> +	depends on RT2500PCI && INPUT
+>  	select RT2X00_LIB_RFKILL
+>  	---help---
+>  	  This adds support for integrated rt2500 hardware that features a
 
-The patch removes the dependency from the input device.
-A final cleanup for iwl_rfkill_mngr will be done later.
+Could you include the RT61PCI_RFKILL change as well?
+After that you can add:
 
-Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-CC: Ivo van Doorn <ivdoorn@gmail.com>
-CC: Fabien Crespel <fcrespel@gmail.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/Kconfig        |    6 +++-
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    4 +-
- drivers/net/wireless/iwlwifi/iwl-rfkill.c   |   45 +--------------------------
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   38 +---------------------
- 4 files changed, 10 insertions(+), 83 deletions(-)
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
-index d7ea32f..82b66a3 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -8,7 +8,6 @@ config IWLCORE
- 	select MAC80211_LEDS if IWLWIFI_LEDS
- 	select LEDS_CLASS if IWLWIFI_LEDS
- 	select RFKILL if IWLWIFI_RFKILL
--	select RFKILL_INPUT if (IWLWIFI_RFKILL && INPUT)
- 
- config IWLWIFI_LEDS
- 	bool
-@@ -105,6 +104,7 @@ config IWL3945
- 	select IWLWIFI
- 	select MAC80211_LEDS if IWL3945_LEDS
- 	select LEDS_CLASS if IWL3945_LEDS
-+	select RFKILL if IWL3945_RFKILL
- 	---help---
- 	  Select to build the driver supporting the:
- 
-@@ -127,6 +127,10 @@ config IWL3945
- 	  say M here and read <file:Documentation/kbuild/modules.txt>.  The
- 	  module will be called iwl3945.ko.
- 
-+config IWL3945_RFKILL
-+	bool "Enable RF kill support in iwl3945 drivers"
-+	depends on IWL3945
-+
- config IWL3945_SPECTRUM_MEASUREMENT
- 	bool "Enable Spectrum Measurement in iwl3945 drivers"
- 	depends on IWL3945
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index a774978..4df42ad 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -690,7 +690,7 @@ enum {
- 
- #endif
- 
--#ifdef CONFIG_IWLWIFI_RFKILL
-+#ifdef CONFIG_IWL3945_RFKILL
- struct iwl3945_priv;
- 
- struct iwl3945_rfkill_mngr {
-@@ -800,7 +800,7 @@ struct iwl3945_priv {
- 	struct iwl3945_init_alive_resp card_alive_init;
- 	struct iwl3945_alive_resp card_alive;
- 
--#ifdef CONFIG_IWLWIFI_RFKILL
-+#ifdef CONFIG_IWL3945_RFKILL
- 	struct iwl3945_rfkill_mngr rfkill_mngr;
- #endif
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.c b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-index ffefbb4..a65de47 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-@@ -98,50 +98,15 @@ int iwl_rfkill_init(struct iwl_priv *priv)
- 	priv->rfkill_mngr.rfkill->dev.class->suspend = NULL;
- 	priv->rfkill_mngr.rfkill->dev.class->resume = NULL;
- 
--#if defined(CONFIG_RFKILL_INPUT) || defined(CONFIG_RFKILL_INPUT_MODULE)
--	priv->rfkill_mngr.input_dev = input_allocate_device();
--	if (!priv->rfkill_mngr.input_dev) {
--		IWL_ERROR("Unable to allocate rfkill input device.\n");
--		ret = -ENOMEM;
--		goto freed_rfkill;
--	}
--
--	priv->rfkill_mngr.input_dev->name = priv->cfg->name;
--	priv->rfkill_mngr.input_dev->phys = wiphy_name(priv->hw->wiphy);
--	priv->rfkill_mngr.input_dev->id.bustype = BUS_HOST;
--	priv->rfkill_mngr.input_dev->id.vendor = priv->pci_dev->vendor;
--	priv->rfkill_mngr.input_dev->dev.parent = device;
--	priv->rfkill_mngr.input_dev->evbit[0] = BIT(EV_KEY);
--	set_bit(KEY_WLAN, priv->rfkill_mngr.input_dev->keybit);
--#endif
--
- 	ret = rfkill_register(priv->rfkill_mngr.rfkill);
- 	if (ret) {
- 		IWL_ERROR("Unable to register rfkill: %d\n", ret);
--		goto free_input_dev;
--	}
--
--#if defined(CONFIG_RFKILL_INPUT) || defined(CONFIG_RFKILL_INPUT_MODULE)
--	ret = input_register_device(priv->rfkill_mngr.input_dev);
--	if (ret) {
--		IWL_ERROR("Unable to register rfkill input device: %d\n", ret);
--		goto unregister_rfkill;
-+		goto freed_rfkill;
- 	}
--#endif
- 
- 	IWL_DEBUG_RF_KILL("RFKILL initialization complete.\n");
- 	return ret;
- 
--unregister_rfkill:
--	rfkill_unregister(priv->rfkill_mngr.rfkill);
--	priv->rfkill_mngr.rfkill = NULL;
--
--free_input_dev:
--#if defined(CONFIG_RFKILL_INPUT) || defined(CONFIG_RFKILL_INPUT_MODULE)
--	input_free_device(priv->rfkill_mngr.input_dev);
--	priv->rfkill_mngr.input_dev = NULL;
--#endif
--
- freed_rfkill:
- 	if (priv->rfkill_mngr.rfkill != NULL)
- 		rfkill_free(priv->rfkill_mngr.rfkill);
-@@ -155,14 +120,6 @@ EXPORT_SYMBOL(iwl_rfkill_init);
- 
- void iwl_rfkill_unregister(struct iwl_priv *priv)
- {
--
--#if defined(CONFIG_RFKILL_INPUT) || defined(CONFIG_RFKILL_INPUT_MODULE)
--	if (priv->rfkill_mngr.input_dev)
--		input_unregister_device(priv->rfkill_mngr.input_dev);
--	input_free_device(priv->rfkill_mngr.input_dev);
--	priv->rfkill_mngr.input_dev = NULL;
--#endif
--
- 	if (priv->rfkill_mngr.rfkill)
- 		rfkill_unregister(priv->rfkill_mngr.rfkill);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 3bc2644..a604a29 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -8270,7 +8270,7 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
- #endif /* CONFIG_PM */
- 
- /*************** RFKILL FUNCTIONS **********/
--#ifdef CONFIG_IWLWIFI_RFKILL
-+#ifdef CONFIG_IWL3945_RFKILL
- /* software rf-kill from user */
- static int iwl3945_rfkill_soft_rf_kill(void *data, enum rfkill_state state)
- {
-@@ -8331,44 +8331,15 @@ int iwl3945_rfkill_init(struct iwl3945_priv *priv)
- 	priv->rfkill_mngr.rfkill->dev.class->suspend = NULL;
- 	priv->rfkill_mngr.rfkill->dev.class->resume = NULL;
- 
--	priv->rfkill_mngr.input_dev = input_allocate_device();
--	if (!priv->rfkill_mngr.input_dev) {
--		IWL_ERROR("Unable to allocate rfkill input device.\n");
--		ret = -ENOMEM;
--		goto freed_rfkill;
--	}
--
--	priv->rfkill_mngr.input_dev->name = priv->cfg->name;
--	priv->rfkill_mngr.input_dev->phys = wiphy_name(priv->hw->wiphy);
--	priv->rfkill_mngr.input_dev->id.bustype = BUS_HOST;
--	priv->rfkill_mngr.input_dev->id.vendor = priv->pci_dev->vendor;
--	priv->rfkill_mngr.input_dev->dev.parent = device;
--	priv->rfkill_mngr.input_dev->evbit[0] = BIT(EV_KEY);
--	set_bit(KEY_WLAN, priv->rfkill_mngr.input_dev->keybit);
--
- 	ret = rfkill_register(priv->rfkill_mngr.rfkill);
- 	if (ret) {
- 		IWL_ERROR("Unable to register rfkill: %d\n", ret);
--		goto free_input_dev;
--	}
--
--	ret = input_register_device(priv->rfkill_mngr.input_dev);
--	if (ret) {
--		IWL_ERROR("Unable to register rfkill input device: %d\n", ret);
--		goto unregister_rfkill;
-+		goto freed_rfkill;
- 	}
- 
- 	IWL_DEBUG_RF_KILL("RFKILL initialization complete.\n");
- 	return ret;
- 
--unregister_rfkill:
--	rfkill_unregister(priv->rfkill_mngr.rfkill);
--	priv->rfkill_mngr.rfkill = NULL;
--
--free_input_dev:
--	input_free_device(priv->rfkill_mngr.input_dev);
--	priv->rfkill_mngr.input_dev = NULL;
--
- freed_rfkill:
- 	if (priv->rfkill_mngr.rfkill != NULL)
- 		rfkill_free(priv->rfkill_mngr.rfkill);
-@@ -8381,14 +8352,9 @@ error:
- 
- void iwl3945_rfkill_unregister(struct iwl3945_priv *priv)
- {
--
--	if (priv->rfkill_mngr.input_dev)
--		input_unregister_device(priv->rfkill_mngr.input_dev);
--
- 	if (priv->rfkill_mngr.rfkill)
- 		rfkill_unregister(priv->rfkill_mngr.rfkill);
- 
--	priv->rfkill_mngr.input_dev = NULL;
- 	priv->rfkill_mngr.rfkill = NULL;
- }
- 
--- 
-1.5.3.6
+Ivo
+
 
