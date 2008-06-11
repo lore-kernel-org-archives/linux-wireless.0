@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:10080 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757436AbYFLUFi (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50395 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753021AbYFKMHL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 16:05:38 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so3016214waf.23
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 13:05:37 -0700 (PDT)
-Message-ID: <1ba2fa240806121305h721c6bd2x8073660d41653b92@mail.gmail.com> (sfid-20080612_220559_589283_8B1809D7)
-Date: Thu, 12 Jun 2008 23:05:37 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/1] mac80211: fix beacon interval value
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	Wed, 11 Jun 2008 08:07:11 -0400
+Message-ID: <90792e191e13c5c2955689833ca3118a.squirrel@secure.sipsolutions.net>
+In-Reply-To: <20080611065719.GB7377@jm.kir.nu>
+References: <20080610105058.GA6961@jm.kir.nu>
+    <1213096575.3668.6.camel@johannes.berg>
+    <20080610123007.GB1571@tuxdriver.com>
+    <1213103469.3668.13.camel@johannes.berg>
+    <20080610152418.GD13267@tuxdriver.com>
+    <20080610183722.GA7377@jm.kir.nu>
+    <1213124444.3668.48.camel@johannes.berg>
+    <20080611065719.GB7377@jm.kir.nu>
+Date: Wed, 11 Jun 2008 14:07:01 +0200 (CEST)
+Subject: Re: [PATCH RFC] mac80211_hwsim
+From: "Johannes Berg" <johannes@sipsolutions.net>
+To: "Jouni Malinen" <j@w1.fi>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <1213299706.3730.39.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1213299517-24042-1-git-send-email-tomas.winkler@intel.com>
-	 <1213299706.3730.39.camel@johannes.berg>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 12, 2008 at 10:41 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->> 1. in register_hw it honors value requested by the driver
->
-> I don't think the driver should be able to "request" a value.
+Jouni Malinen wrote:
+> That sounds better. net/wireless.h was bit confusing on this part since
+> it has the "filled by the core" notice only for
+> IEEE80211_RATE_MANDATORY_* flags, not for IEEE80211_RATE_ERP_G. Looks
+> like this should be added to the ERP flag, too.
 
-Yes and no.
-The problem is that we don't have user space interface to tune this
-for IBSS so in this circumstances
-driver can choose what value is best for it.
+good point.
 
-Tomas
+> OK, I'll remove it. With the current bands this seems to be fine, but
+> how would that work with 10 MHz and 5 MHz channels? I haven't verified,
+> but I would assume they could use same center frequency with 20 MHz
+> channels..
 
->
->> 2. It uses default 100 instead of 1000 or 10000. Scanning for beacon
->> interval ~1sec and above is not sane
->
-> Yeah, 10000 seems a bit excessive.
+Yeah... that isn't really supported yet.
 
-Actually this never took affect as there is no way that 0 is assigned
-to hw->conf.beacon_int but even 1000 is edgy and not suitable for a
-default value.
+> Hmm.. Aren't the channel and rate structures being modified by
+> mac80211/wireless code? Sharing the same global data area for all radios
+> might not be desired if there will be different "hw" capabilities as far
+> as supported channels/rates/bands are concerned. In addition, the static
+> data structures were marked 'const' which would at least be somewhat
+> confusing if the data ends up changing.
 
-Tomas
+They're only modified all the same, so it's fine to share unless you have
+different capabilities. Yeah, you should removed the const then.
+
+johannes
+
