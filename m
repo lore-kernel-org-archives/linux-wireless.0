@@ -1,63 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:58760 "EHLO smtps.tip.net.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753870AbYFZDPs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2008 23:15:48 -0400
-Date: Thu, 26 Jun 2008 13:15:36 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: David Miller <davem@davemloft.net>, linux-next@vger.kernel.org,
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:47621 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751357AbYFKU75 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2008 16:59:57 -0400
+Message-ID: <48503CE4.1050100@lwfinger.net> (sfid-20080611_230000_503168_F3F67CCA)
+Date: Wed, 11 Jun 2008 16:00:20 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
+CC: Pavel Roskin <proski@gnu.org>, Michael Buesch <mb@bu3sch.de>,
+	Tim Gardner <tim.gardner@canonical.com>,
+	John Linville <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: linux-next: pending wireless/wireless-current merge conflict
-Message-Id: <20080626131536.9b26269a.sfr@canb.auug.org.au> (sfid-20080626_051552_280835_D3743D28)
-In-Reply-To: <20080625180430.GA13730@tuxdriver.com>
-References: <20080613215601.GA8345@tuxdriver.com>
-	<20080625180430.GA13730@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Thu__26_Jun_2008_13_15_36_+1000_fL_f_JmstJN0XN68"
+Subject: Re: Open source driver with binary HAL for BCM4313 from Broadcom
+References: <48500F14.8070300@canonical.com> <200806112047.00854.mb@bu3sch.de>	 <1213213666.19106.12.camel@dv> <69e28c910806111326j6922905fq1f67201ab4ce298f@mail.gmail.com>
+In-Reply-To: <69e28c910806111326j6922905fq1f67201ab4ce298f@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Signature=_Thu__26_Jun_2008_13_15_36_+1000_fL_f_JmstJN0XN68
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hi John,
-
-On Wed, 25 Jun 2008 14:04:30 -0400 "John W. Linville" <linville@tuxdriver.c=
-om> wrote:
->
-> I just sent a pull request for Dave that will result in nasty-looking
-> conflict in iwl4965-base.c.  I have a sample merge available here:
+Stefanik G=E1bor wrote:
+> On Wed, Jun 11, 2008 at 9:47 PM, Pavel Roskin <proski@gnu.org> wrote:
+>> Instead, Broadcom tries to control the code its users are running.  =
+I
+>> don't think it's going to work well.  But to be fair to them, at lea=
+st
+>> they don't pretend that Linux doesn't exit.
 >=20
-> 	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6=
- merge-test
->=20
-> The overview of the resolution is to ignore any changes in
-> iwl4965-base.c and take drivers/net/wireless/iwlwifi/iwl-scan.c from
-> the URL above.
->=20
-> Just a heads-up... :-)
+> And that's quite an achievement...
+> Anyway, what are the actual, working download links? The ones on the
+> site just 404 out for me.
 
-Thanks, I will check it out.
+http://www.broadcom.com/docs/linux_sta/hybrid-portsrc-x86_64_5_10_18.ta=
+r.gz
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+for the 64-bit version, and
 
---Signature=_Thu__26_Jun_2008_13_15_36_+1000_fL_f_JmstJN0XN68
-Content-Type: application/pgp-signature
+http://www.broadcom.com/docs/linux_sta/hybrid-portsrc_5_10_18.tar.gz
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+for the 32-bit version. The binary blob is for x86 architecture only.=20
+Other platforms are out of luck. They also have a README at
 
-iEYEARECAAYFAkhjCdgACgkQTgG2atn1QN/XXQCfZEY93sdHTKdyF6xerc+cfNqz
-f/wAnRLHi3M8G4t/YmAQaJUebt9Itc5Z
-=Eq3k
------END PGP SIGNATURE-----
+http://www.broadcom.com/docs/linux_sta/README.txt
 
---Signature=_Thu__26_Jun_2008_13_15_36_+1000_fL_f_JmstJN0XN68--
+As noted earlier, the BCM4310 has a PCI ID of 0x4315. I have one of=20
+those cards and could test their blob pile. ATM, I'm using b43 on a=20
+BCM4312 (a/b/g) card, but it has an ID of 0x4312.
+
+I've only had a quick look at their code, but I don't think it will be=20
+much help for the RE project. Most of the interesting stuff seems to=20
+be in the binary blob.
+
+Larry
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
