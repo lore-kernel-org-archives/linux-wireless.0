@@ -1,71 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40169 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751422AbYFZSgv (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.233]:19143 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754256AbYFKB5q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 14:36:51 -0400
-Subject: Re: [Q] ath5k : doesn't support AP mode?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
-Cc: Pavel Roskin <proski@gnu.org>, cs010101@gmail.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <69e28c910806261134t4c6b324dj86460605e06a08c8@mail.gmail.com> (sfid-20080626_203404_285775_DC289879)
-References: <002901c8d737$e51bb2f0$3b0aa8c0@39fb6b6b6f434b3>
-	 <1214449044.18897.15.camel@dv> <1214487200.20763.44.camel@johannes.berg>
-	 <1214492236.30044.7.camel@dv>
-	 <69e28c910806260846s3b02cdddlca3ac138acadd8bd@mail.gmail.com>
-	 <1214496086.30722.14.camel@dv> <1214501242.3783.7.camel@johannes.berg>
-	 <69e28c910806261109i28fe2c29t5218f32f5e65c378@mail.gmail.com>
-	 <1214504454.3783.18.camel@johannes.berg>
-	 <69e28c910806261134t4c6b324dj86460605e06a08c8@mail.gmail.com>
-	 (sfid-20080626_203404_285775_DC289879)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yDXnZBewVa/BBYIN9Tgm"
-Date: Thu, 26 Jun 2008 20:36:07 +0200
-Message-Id: <1214505367.3783.28.camel@johannes.berg> (sfid-20080626_203656_645096_2BDA425A)
-Mime-Version: 1.0
+	Tue, 10 Jun 2008 21:57:46 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1206271rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2008 18:57:46 -0700 (PDT)
+Message-ID: <a44ae5cd0806101857q54074c83w2eb470682b58a6cc@mail.gmail.com> (sfid-20080611_035751_179819_60BF171B)
+Date: Tue, 10 Jun 2008 21:57:46 -0400
+From: "Miles Lane" <miles.lane@gmail.com>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: BUG: NULL pointer dereference at 00000000 -- IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
+Cc: "Michael Buesch" <mb@bu3sch.de>,
+	"Vegard Nossum" <vegard.nossum@gmail.com>,
+	"Andrew Morton" <akpm@linux-foundation.org>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"FUJITA Tomonori" <fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <484F0AF7.6060008@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <a44ae5cd0806100709rf4602f2x587631852502c0b5@mail.gmail.com>
+	 <200806101637.11473.mb@bu3sch.de>
+	 <19f34abd0806100742v176f50e8se463d2e70df44332@mail.gmail.com>
+	 <200806101650.27180.mb@bu3sch.de>
+	 <a44ae5cd0806101509x5e2d5c19y10101ea0e72f8cba@mail.gmail.com>
+	 <484F0AF7.6060008@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jun 10, 2008 at 7:15 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Miles Lane wrote:
+>>
+>> I got a slightly different BUG with this patch applied:
+>>
+>> BUG: unable to handle kernel NULL pointer dereference at 00000000
+>> IP: [<f89e3d41>] :b43:b43_dma_mapping_error+0x16/0x97
+>> *pde = 00000000
+>> Oops: 0000 [#1] PREEMPT DEBUG_PAGEALLOC
+>> last sysfs file:
+>>
+>> /sys/devices/pci0000:00/0000:00:08.0/0000:01:06.0/ssb0:0/firmware/ssb0:0/loading
+>> Modules linked in: sbs sbshc wmi battery iptable_filter ip_tables
+>> x_tables ac sbp2 rtc arc4 ecb crypto_blkcipher cryptomgr crypto_algapi
+>> b43 mac80211 cfg80211 led_class snd_intel8x0 snd_ac97_codec ac97_bus
+>> snd_pcm_oss snd_mixer_oss snd_pcm snd_seq_dummy snd_seq_oss
+>> snd_seq_midi_event snd_seq snd_timer snd_seq_device snd soundcore
+>> snd_page_alloc i2c_nforce2 i2c_core button ohci1394 3c59x ieee1394
+>> forcedeth ehci_hcd ohci_hcd usbcore thermal processor fan thermal_sys
+>
+> Miles,
+>
+> If you have time, please cd to the kernel root directory and run the command
+> 'objdump -d -l drivers/net/wireless/b43/dma.o > dmadump'. You may have to
+> install the objdump package. In the file dmadump, find the line that
+> contains b43_dma_mapping_error. On my system it is 0000000000000085
+> <b43_dma_mapping_error>: Note, I use x86_64 and yours will likely be
+> different.
+>
+> Note the address (0x85 in my case), add the offset (0x16) and find the line
+> with the error. You can use KCalc in hexadecimal mode if you are not
+> comfortable with doing addition in base 16. Please report the source line
+> and instruction that failed.
 
---=-yDXnZBewVa/BBYIN9Tgm
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+For me, the line is:
+"000000ab <b43_dma_mapping_error>:"
+so, 0xab + 0x16 = 0xc1
+and here's the dump giving some context around that line:
+b43_dma_mapping_error():
+      ab:	55                   	push   %ebp
+      ac:	89 e5                	mov    %esp,%ebp
+      ae:	57                   	push   %edi
+      af:	89 d7                	mov    %edx,%edi
+      b1:	56                   	push   %esi
+      b2:	89 ce                	mov    %ecx,%esi
+      b4:	53                   	push   %ebx
+      b5:	83 ec 08             	sub    $0x8,%esp
+      b8:	8a 55 08             	mov    0x8(%ebp),%dl
+      bb:	88 55 ef             	mov    %dl,-0x11(%ebp)
+      be:	8b 50 58             	mov    0x58(%eax),%edx
+      c1:	8b 12                	mov    (%edx),%edx
+      c3:	8b 52 08             	mov    0x8(%edx),%edx
+      c6:	89 55 f0             	mov    %edx,-0x10(%ebp)
+      c9:	8b 40 34             	mov    0x34(%eax),%eax
+      cc:	83 f8 1e             	cmp    $0x1e,%eax
+      cf:	74 07                	je     d8 <b43_dma_mapping_error+0x2d>
+      d1:	83 f8 20             	cmp    $0x20,%eax
+      d4:	75 5b                	jne    131 <b43_dma_mapping_error+0x86>
+      d6:	eb 15                	jmp    ed <b43_dma_mapping_error+0x42>
 
-Can you please remove some of the text you're quoting? Thanks.
-=EF=BB=BF
-> > actually links to the patch so what is your point?
->=20
-> It liks to your series file, which is mostly unusable due to the NPUB
-> patches. (When I wrote the post, there was an additional problem with
-> the text that suggested that more than just that patch is needed.)
-> Essentially, one has to patch the patch first.
+I hope this helps.
 
-Is it really too much to ask to read the first four paragraphs of my
-series file? I can put in some arrow ascii art if you prefer...
-
-johannes
-
---=-yDXnZBewVa/BBYIN9Tgm
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIY+GTAAoJEKVg1VMiehFYacIQAJNoyvILmqAurV0dGVIItwk8
-61jsoi1X5Za9/H2Ra0FAceW2DS76OfgjfV+uYS18cQftFzTVkbBbOJ0M65SmiEzf
-SYuaiKkK+Z3R80fsem6o4jJpZM5sBoz7ITLeJmVSL81nKY7Rg+Eo3uwf75c/dPs/
-CWNTtU2QuXWbSmZMhnmKzzeCKb5RNUjXMhth/GdPtoJeEVO6ceHXcgCWt1nRZ4PW
-NytsSJFz7EK9Aeg7yOhCRi4CIXpHlhVxC/fgjC/1OHwUwJ/Fy6zZ7YMcKbZIOo2+
-/Tw1tyUF5d3H2A7GLa3WBD554c0httfG1H78W3i8QCzwxpyqBrs41Vd9i/2NhIoJ
-HclhxxxrwzkH0w/yVEdB6a6M2kloX1F77s02lfMGDpKHJdOr+nxCiQJuBIp+tYB3
-DnxV/r3xAdEFj6mw9qk3kB51bPtkR/HOoroPCR9Kkc23XLJCDEB9TOjWo3tK/Nhz
-gw2Dg7gl78ydXvHZC992x/UmKyr5H6DY1rkgvY+N/ranN21ewX4VBi7+ty4WQd1W
-Xta8BPaZH6PRomuOPU7yUPhb/7szYKGyRrYVHan0FWGemrOK8mv00BbbfMDPuZX6
-XIG8QaXs0VkOwar+JRKldv+/8gVbGSLbt0knoNsFgqBzmZKoc6qB6BZBukGto+H1
-COAL5EMGNMIxxNPEq9WU
-=N6iJ
------END PGP SIGNATURE-----
-
---=-yDXnZBewVa/BBYIN9Tgm--
-
+      Miles
