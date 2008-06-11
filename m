@@ -1,86 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:2940 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752296AbYFKVWL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 17:22:11 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so3278785wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 14:22:11 -0700 (PDT)
-Subject: [PATCHv2 07/11] mac80211: wme.c use new helpers
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 11 Jun 2008 14:21:59 -0700
-Message-Id: <1213219319.5974.180.camel@brick> (sfid-20080611_232216_224092_507CC7A6)
+Received: from c60.cesmail.net ([216.154.195.49]:45197 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751882AbYFKVDd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2008 17:03:33 -0400
+Subject: Re: Open source driver with binary HAL for BCM4313 from Broadcom
+From: Pavel Roskin <proski@gnu.org>
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Tim Gardner <tim.gardner@canonical.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <69e28c910806111326j6922905fq1f67201ab4ce298f@mail.gmail.com>
+References: <48500F14.8070300@canonical.com>
+	 <200806112047.00854.mb@bu3sch.de> <1213213666.19106.12.camel@dv>
+	 <69e28c910806111326j6922905fq1f67201ab4ce298f@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Date: Wed, 11 Jun 2008 17:02:56 -0400
+Message-Id: <1213218176.3086.2.camel@dv> (sfid-20080611_230336_853727_3C0019F6)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/wme.c |   18 +++++-------------
- 1 files changed, 5 insertions(+), 13 deletions(-)
+On Wed, 2008-06-11 at 22:26 +0200, Stefanik G=E1bor wrote:
+> >> > http://www.broadcom.com/support/802.11/linux_sta.php
 
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 14a9ff1..d8c2f96 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -105,11 +105,8 @@ static int classify80211(struct sk_buff *skb, struct Qdisc *qd)
- {
- 	struct ieee80211_local *local = wdev_priv(qd->dev->ieee80211_ptr);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
--	unsigned short fc = le16_to_cpu(hdr->frame_control);
--	int qos;
- 
--	/* see if frame is data or non data frame */
--	if (unlikely((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)) {
-+	if (!ieee80211_is_data(hdr->frame_control)) {
- 		/* management frames go on AC_VO queue, but are sent
- 		* without QoS control fields */
- 		return 0;
-@@ -119,10 +116,7 @@ static int classify80211(struct sk_buff *skb, struct Qdisc *qd)
- 		/* use AC from radiotap */
- 	}
- 
--	/* is this a QoS frame? */
--	qos = fc & IEEE80211_STYPE_QOS_DATA;
--
--	if (!qos) {
-+	if (!ieee80211_is_data_qos(hdr->frame_control)) {
- 		skb->priority = 0; /* required for correct WPA/11i MIC */
- 		return ieee802_1d_to_ac[skb->priority];
- 	}
-@@ -151,7 +145,6 @@ static int wme_qdiscop_enqueue(struct sk_buff *skb, struct Qdisc* qd)
- 	struct ieee80211_sched_data *q = qdisc_priv(qd);
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
--	unsigned short fc = le16_to_cpu(hdr->frame_control);
- 	struct Qdisc *qdisc;
- 	struct sta_info *sta;
- 	int err, queue;
-@@ -185,16 +178,15 @@ static int wme_qdiscop_enqueue(struct sk_buff *skb, struct Qdisc* qd)
- 
- 	/* now we know the 1d priority, fill in the QoS header if there is one
- 	 */
--	if (WLAN_FC_IS_QOS_DATA(fc)) {
--		u8 *p = skb->data + ieee80211_get_hdrlen(fc) - 2;
-+	if (ieee80211_is_data_qos(hdr->frame_control)) {
-+		u8 *p = ieee80211_get_qos_ctl(hdr);
- 		u8 ack_policy = 0;
- 		tid = skb->priority & QOS_CONTROL_TAG1D_MASK;
- 		if (local->wifi_wme_noack_test)
- 			ack_policy |= QOS_CONTROL_ACK_POLICY_NOACK <<
- 					QOS_CONTROL_ACK_POLICY_SHIFT;
- 		/* qos header is 2 bytes, second reserved */
--		*p = ack_policy | tid;
--		p++;
-+		*p++ = ack_policy | tid;
- 		*p = 0;
- 
- 		rcu_read_lock();
--- 
-1.5.6.rc2.261.ga8fbe
+> And that's quite an achievement...
+> Anyway, what are the actual, working download links? The ones on the
+> site just 404 out for me.
 
+Click on text ("32-bit driver", "64-bit driver"), not on the icons.
+Links with underscores in the version are correct:
 
+http://www.broadcom.com/docs/linux_sta/hybrid-portsrc_5_10_18.tar.gz
+http://www.broadcom.com/docs/linux_sta/hybrid-portsrc-x86_64_5_10_18.ta=
+r.gz
+
+--=20
+Regards,
+Pavel Roskin
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
