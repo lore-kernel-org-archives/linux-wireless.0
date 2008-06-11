@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:28354 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752064AbYFPGe1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2008 02:34:27 -0400
-Message-ID: <20080616023427.gm71g7actwc8scsg-cebfxv@webmail.spamcop.net> (sfid-20080616_093322_804968_D2F63F3C)
-Date: Mon, 16 Jun 2008 02:34:27 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: Mark Roberts <mroberts1839@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Problem with master mode on BCM4318
-References: <eaf2efa20806152024i510ea7auc9aba61b68598ec0@mail.gmail.com>
-	<1213587639.2469.10.camel@dv>
-	<eaf2efa20806152309o342d0a0cs31e73dff3ba3d947@mail.gmail.com>
-In-Reply-To: <eaf2efa20806152309o342d0a0cs31e73dff3ba3d947@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+Received: from tama500.ecl.ntt.co.jp ([129.60.39.148]:36680 "EHLO
+	tama500.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752245AbYFKB2p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jun 2008 21:28:45 -0400
+To: mb@bu3sch.de
+Cc: vegard.nossum@gmail.com, miles.lane@gmail.com,
+	akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+Subject: Re: BUG: NULL pointer dereference at 00000000 -- IP: [<f8e783d5>]
+ :b43:b43_dma_mapping_error+0x16/0x155
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <200806101650.27180.mb@bu3sch.de>
+References: <200806101637.11473.mb@bu3sch.de>
+	<19f34abd0806100742v176f50e8se463d2e70df44332@mail.gmail.com>
+	<200806101650.27180.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Message-Id: <20080611095844J.fujita.tomonori@lab.ntt.co.jp> (sfid-20080611_032910_377732_72148995)
+Date: Wed, 11 Jun 2008 09:58:44 +0900
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Mark Roberts <mroberts1839@gmail.com>:
+On Tue, 10 Jun 2008 16:50:26 +0200
+Michael Buesch <mb@bu3sch.de> wrote:
 
-> I am running 2.6.24-18-generic, so I have followed this procedure, as
-> described at http://www.linuxwireless.org/en/users/Drivers/b43 :
+> On Tuesday 10 June 2008 16:42:41 Vegard Nossum wrote:
+> > This change comes from
+> > 
+> > commit 353c409463ecba63c3a41a992d3f5fba935eada9
+> > Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > Date:   Fri May 23 19:02:30 2008 +0000
+> 
+> 
+> Ok, FUJITA Tomonori, please make sure a patch like the following goes
+> into the same trees that you submitted commit 353c409 to.
+> Also make sure to check b43legacy. I _guess_ you might have added
+> the same bug there.
 
-compat-wireless is a backport of the current drivers, so you should be  
-using the firmware for Linux 2.6.25 and newer.
+Ah, sorry about the bug.
 
-I cannot get to www.linuxwireless.org at all at the moment, so I  
-cannot check if the instruction is indeed unclear about it.
+>From a quick look, mainline needs the same fix too?
 
-As fast as I know, the master mode support in mac80211 has not been  
-merged yet into the wireless-testing branch, so I don't think it's  
-present in compat-wireless.  There are some unofficial patches for  
-that, but you never mentioned them.  Did any document promised you  
-master mode support if you use compat-wireless?
-
--- 
-Regards,
-Pavel Roskin
+b43_dma_mapping_error calls unmap_descbuffer() on the failure, which
+assumes that ring->dev is set up properly.
