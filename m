@@ -1,105 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42950 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751258AbYFROxw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 10:53:52 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 2/2] mac80211: add spectrum capabilities
-Date: Wed, 18 Jun 2008 17:53:44 +0300
-Message-Id: <1213800824-32107-2-git-send-email-tomas.winkler@intel.com> (sfid-20080618_165358_237047_C8B0B23F)
-In-Reply-To: <1213800824-32107-1-git-send-email-tomas.winkler@intel.com>
-References: <1213800824-32107-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from py-out-1112.google.com ([64.233.166.178]:48896 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752646AbYFKVWO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2008 17:22:14 -0400
+Received: by py-out-1112.google.com with SMTP id p76so1566346pyb.10
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 14:22:14 -0700 (PDT)
+Subject: [PATCHv2 09/11] mac80211: tkip.c consolidate tkip IV writing in
+	helper
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 11 Jun 2008 14:22:00 -0700
+Message-Id: <1213219320.5974.182.camel@brick> (sfid-20080611_232219_555891_D13A3FC6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch add spectrum capability and required information
-elements to association request providing AP has requested it and
-it is supported by the driver
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
- include/net/mac80211.h |    5 +++++
- net/mac80211/mlme.c    |   24 ++++++++++++++++++++++++
- 2 files changed, 29 insertions(+), 0 deletions(-)
+ net/mac80211/tkip.c |   25 ++++++++++++++-----------
+ net/mac80211/tkip.h |    4 ++--
+ net/mac80211/wpa.c  |    8 +-------
+ 3 files changed, 17 insertions(+), 20 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 7ab4ff6..6178c32 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -705,6 +705,10 @@ enum ieee80211_tkip_key_type {
-  * @IEEE80211_HW_NOISE_DBM:
-  *	Hardware can provide noise (radio interference) values in units dBm,
-  *      decibel difference from one milliwatt.
-+ *
-+ * @IEEE80211_HW_SPECTRUM_MGMT:
-+ * 	Hardware supports spectrum management defined in 802.11h
-+ * 	Measurement, Channel Switch, Quieting, TPC
-  */
- enum ieee80211_hw_flags {
- 	IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE		= 1<<0,
-@@ -716,6 +720,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_SIGNAL_DB				= 1<<6,
- 	IEEE80211_HW_SIGNAL_DBM				= 1<<7,
- 	IEEE80211_HW_NOISE_DBM				= 1<<8,
-+	IEEE80211_HW_SPECTRUM_MGMT			= 1<<9,
- };
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index a00cf1e..a8900e3 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -64,6 +64,15 @@ static u16 tkipS(u16 val)
+ 	return tkip_sbox[val & 0xff] ^ swab16(tkip_sbox[val >> 8]);
+ }
  
- /**
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 0b79d92..bfd0919 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -747,6 +747,10 @@ static void ieee80211_send_assoc(struct net_device *dev,
- 		 * b-only mode) */
- 		rates_len = ieee80211_compatible_rates(bss, sband, &rates);
++static u8 *write_tkip_iv(u8 *pos, u16 iv16)
++{
++	*pos++ = iv16 >> 8;
++	*pos++ = ((iv16 >> 8) | 0x20) & 0x7f;
++	*pos++ = iv16 & 0xFF;
++	return pos;
++}
++
++
+ /*
+  * P1K := Phase1(TA, TK, TSC)
+  * TA = transmitter address (48 bits)
+@@ -123,12 +132,9 @@ static void tkip_mixing_phase2(struct ieee80211_key *key, struct tkip_ctx *ctx,
+ 	ppk[4] += ror16(ppk[3], 1);
+ 	ppk[5] += ror16(ppk[4], 1);
  
-+		if ((bss->capability & WLAN_CAPABILITY_SPECTRUM_MGMT) &&
-+		    (local->hw.flags & IEEE80211_HW_SPECTRUM_MGMT))
-+			capab |= WLAN_CAPABILITY_SPECTRUM_MGMT;
-+
- 		ieee80211_rx_bss_put(dev, bss);
- 	} else {
- 		rates = ~0;
-@@ -814,6 +818,26 @@ static void ieee80211_send_assoc(struct net_device *dev,
- 		}
- 	}
+-	rc4key[0] = tsc_IV16 >> 8;
+-	rc4key[1] = ((tsc_IV16 >> 8) | 0x20) & 0x7f;
+-	rc4key[2] = tsc_IV16 & 0xFF;
+-	rc4key[3] = ((ppk[5] ^ get_unaligned_le16(tk)) >> 1) & 0xFF;
++	rc4key = write_tkip_iv(rc4key, tsc_IV16);
++	*rc4key++ = ((ppk[5] ^ get_unaligned_le16(tk)) >> 1) & 0xFF;
  
-+	if (capab & WLAN_CAPABILITY_SPECTRUM_MGMT) {
-+		/* 1. power capabilities */
-+		pos = skb_put(skb, 4);
-+		*pos++ = WLAN_EID_PWR_CAPABILITY;
-+		*pos++ = 2;
-+		*pos++ = 0; /* min tx power */
-+		*pos++ = local->hw.conf.channel->max_power; /* max tx power */
+-	rc4key += 4;
+ 	for (i = 0; i < 6; i++)
+ 		put_unaligned_le16(ppk[i], rc4key + 2 * i);
+ }
+@@ -136,12 +142,9 @@ static void tkip_mixing_phase2(struct ieee80211_key *key, struct tkip_ctx *ctx,
+ /* Add TKIP IV and Ext. IV at @pos. @iv0, @iv1, and @iv2 are the first octets
+  * of the IV. Returns pointer to the octet following IVs (i.e., beginning of
+  * the packet payload). */
+-u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
+-			   u8 iv0, u8 iv1, u8 iv2)
++u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key, u16 iv16)
+ {
+-	*pos++ = iv0;
+-	*pos++ = iv1;
+-	*pos++ = iv2;
++	pos = write_tkip_iv(pos, iv16); 
+ 	*pos++ = (key->conf.keyidx << 6) | (1 << 5) /* Ext IV */;
+ 	put_unaligned_le32(key->u.tkip.tx.iv32, pos);
+ 	return pos + 4;
+@@ -213,7 +216,7 @@ void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
+ 	u8 rc4key[16];
+ 
+ 	ieee80211_tkip_gen_rc4key(key, ta, rc4key);
+-	pos = ieee80211_tkip_add_iv(pos, key, rc4key[0], rc4key[1], rc4key[2]);
++	pos = ieee80211_tkip_add_iv(pos, key, key->u.tkip.tx.iv16);
+ 	ieee80211_wep_encrypt_data(tfm, rc4key, 16, pos, payload_len);
+ }
+ 
+diff --git a/net/mac80211/tkip.h b/net/mac80211/tkip.h
+index b890427..d471438 100644
+--- a/net/mac80211/tkip.h
++++ b/net/mac80211/tkip.h
+@@ -13,8 +13,8 @@
+ #include <linux/crypto.h>
+ #include "key.h"
+ 
+-u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
+-			  u8 iv0, u8 iv1, u8 iv2);
++u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key, u16 iv16);
 +
-+		/* 2. supported channels */
-+		/* TODO: get this in reg domain format */
-+		pos = skb_put(skb, 2 * sband->n_channels + 2);
-+		*pos++ = WLAN_EID_SUPPORTED_CHANNELS;
-+		*pos++ = 2 * sband->n_channels;
-+		for (i = 0; i < sband->n_channels; i++) {
-+			*pos++ = ieee80211_frequency_to_channel(
-+					sband->channels[i].center_freq);
-+			*pos++ = 1; /* one channel in the subband*/
-+		}
-+	}
-+
- 	if (ifsta->extra_ie) {
- 		pos = skb_put(skb, ifsta->extra_ie_len);
- 		memcpy(pos, ifsta->extra_ie, ifsta->extra_ie_len);
+ void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
+ 				 struct ieee80211_key *key,
+ 				 u8 *pos, size_t payload_len, u8 *ta);
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 9834cec..345e10e 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -198,14 +198,8 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 		key->u.tkip.tx.iv32++;
+ 
+ 	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
+-		hdr = (struct ieee80211_hdr *)skb->data;
+-
+ 		/* hwaccel - with preallocated room for IV */
+-		ieee80211_tkip_add_iv(pos, key,
+-				      (u8) (key->u.tkip.tx.iv16 >> 8),
+-				      (u8) (((key->u.tkip.tx.iv16 >> 8) | 0x20) &
+-					    0x7f),
+-				      (u8) key->u.tkip.tx.iv16);
++		ieee80211_tkip_add_iv(pos, key, key->u.tkip.tx.iv16);
+ 
+ 		info->control.hw_key = &tx->key->conf;
+ 		return 0;
 -- 
-1.5.4.1
+1.5.6.rc2.261.ga8fbe
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
 
