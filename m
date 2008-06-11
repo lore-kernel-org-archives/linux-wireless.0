@@ -1,41 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.236]:43430 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752225AbYFBREg (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.250]:59326 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751963AbYFKK5l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2008 13:04:36 -0400
-Received: by wx-out-0506.google.com with SMTP id h29so718537wxd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Jun 2008 10:04:35 -0700 (PDT)
-Message-ID: <1ba2fa240806021004j5dd5cd80o9bbd58b9f50272a0@mail.gmail.com> (sfid-20080602_190439_660590_8C581C88)
-Date: Mon, 2 Jun 2008 20:04:34 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/2] mac80211: removing shadowed sband
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1212425690.20021.2.camel@johannes.berg>
+	Wed, 11 Jun 2008 06:57:41 -0400
+Received: by an-out-0708.google.com with SMTP id d40so722137and.103
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 03:57:40 -0700 (PDT)
+Message-ID: <43e72e890806110357v64beb0c6h92db67aae0b4e99b@mail.gmail.com> (sfid-20080611_125748_917879_DA17EF50)
+Date: Wed, 11 Jun 2008 03:57:40 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [RFC] First CRDA integration work
+In-Reply-To: <43e72e890806110329o28ad24e5g8331917fcfbebc78@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1212421452-5635-1-git-send-email-tomas.winkler@intel.com>
-	 <1212421452-5635-2-git-send-email-tomas.winkler@intel.com>
-	 <1212425690.20021.2.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <20080611040402.GE17936@ruslug.rutgers.edu>
+	 <43e72e890806110329o28ad24e5g8331917fcfbebc78@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 2, 2008 at 7:54 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2008-06-02 at 18:44 +0300, Tomas Winkler wrote:
->> This patch removes doubly defined sband variable
+On Wed, Jun 11, 2008 at 3:29 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Tue, Jun 10, 2008 at 9:04 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>>
+>> Release, review early. First work patch for integration of
+>> CRDA work. Nukes old regulatory work, adds CRDA-like data structures
+>> to cfg80211, adds a world regdom and uses it by default,
+>> and start nl80211 definitions. The fun part, nl80211_get_reg()
+>> and nl80211_set_reg() are pending. Hoping the second
+>> shift <cough Johannes> can take over as I'm going to bed now.
+>>
+>> At least it compiles, and should give an idea of where this is
+>> going. This wasn't tested either :)
+>>
+>> CRDA stuff can be checked out from:
+>>
+>> git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/crda.git
+>>
+>> For those who like diagrams:
+>>
+>> http://wireless.kernel.org/crda.png
 >
->>       if ((info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) ||
->>           (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)) {
->> -             struct ieee80211_supported_band *sband;
->>               struct ieee80211_rate *rate;
->>               s8 baserate = -1;
->>               int idx;
+> OK well it doesn't crash, lucky me. I'm on it now.
 >
-> I guess we can remove the double assignment too since it's the same as
-> already done. I must have added that when doing the mechanical tx rate
-> idx changes. :/
->
-Good point. I also did only mechanical fix for the compiler warning ;)
-Tomas
+> Also credit where its due: Thanks to Johannes for whipping up the
+> userspace API really quickly and so well :) Not to mention already
+> having set up mac80211 to make this patch easy :)
+
+OK some issues: we don't handle yet the case where
+power_rule->max_antenna_gain is 0 which is designed to mean "Not
+available" in those cases the original antenna gain of the channel
+(set by the EEPROM mapping for example) should be left alone.
+
+Now for the netlink hooks and CRDA to query back.
+
+  Luis
