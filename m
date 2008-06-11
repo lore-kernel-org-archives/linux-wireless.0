@@ -1,90 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46399 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753208AbYFYKmt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2008 06:42:49 -0400
-Subject: Re: Broken fragmentation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240806250335g7251fe9ax5a470990357f0b71@mail.gmail.com> (sfid-20080625_123529_945498_B438D1F6)
-References: <1ba2fa240806190220l18fe5dcdsf44fe81412a5f35d@mail.gmail.com>
-	 <1213889200.8967.26.camel@johannes.berg>
-	 <1ba2fa240806191113nd6a221eiac9648edd3404a80@mail.gmail.com>
-	 <1213899419.8967.59.camel@johannes.berg>
-	 <1ba2fa240806191409k7200ad53y654a7f8a117c8f14@mail.gmail.com>
-	 <1213910734.8967.117.camel@johannes.berg>
-	 <1ba2fa240806250250k2ae66eddre00172f6bc871fcb@mail.gmail.com>
-	 <1214388133.21847.8.camel@johannes.berg>
-	 <1ba2fa240806250330s15168d22i50e61498fbba6af7@mail.gmail.com>
-	 <1214389930.21847.12.camel@johannes.berg>
-	 <1ba2fa240806250335g7251fe9ax5a470990357f0b71@mail.gmail.com>
-	 (sfid-20080625_123529_945498_B438D1F6)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/mDuM40urnSpH9GEVRnL"
-Date: Wed, 25 Jun 2008 12:42:08 +0200
-Message-Id: <1214390528.21847.15.camel@johannes.berg> (sfid-20080625_124252_650441_94B28411)
+Received: from c60.cesmail.net ([216.154.195.49]:7555 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753902AbYFKTrs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2008 15:47:48 -0400
+Subject: Re: Open source driver with binary HAL for BCM4313 from Broadcom
+From: Pavel Roskin <proski@gnu.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Tim Gardner <tim.gardner@canonical.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200806112047.00854.mb@bu3sch.de>
+References: <48500F14.8070300@canonical.com>
+	 <200806112047.00854.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Wed, 11 Jun 2008 15:47:46 -0400
+Message-Id: <1213213666.19106.12.camel@dv> (sfid-20080611_214751_070343_53451118)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2008-06-11 at 20:47 +0200, Michael Buesch wrote:
+> On Wednesday 11 June 2008 19:44:52 Tim Gardner wrote:
+> > John,
+> > 
+> > Here is the URL to Broadcom's web site advertising their open source
+> > driver with support for the BCM4313.
+> > 
+> > http://www.broadcom.com/support/802.11/linux_sta.php
+> > 
+> > rtg
+> 
+> <quote>
+> Make sure that you download the appropriate tar because the hybrid binary
+> file must be of the appropriate architecture type. The hybrid binary file
+> is agnostic to the specific version of the Linux kernel because it is
+> designed to perform all interactions with the operating system through
+> operating-system-specific files...
+> </quote>
 
---=-/mDuM40urnSpH9GEVRnL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Sure, they are trying to do the MadWifi thing, but it's too late since a
+good free driver exists already, even if it doesn't support that
+particular chip.
 
-On Wed, 2008-06-25 at 13:35 +0300, Tomas Winkler wrote:
-> On Wed, Jun 25, 2008 at 1:32 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Wed, 2008-06-25 at 13:30 +0300, Tomas Winkler wrote:
-> >
-> >> >> So the bug is still in mac80211. Fragments are scheduled to differe=
-nt
-> >> >> TIDs and hence to different queues.
-> >> >> Investigating further. If you have something in mind let me know
-> >> >
-> >> > Hmm, yes, I do indeed, try
-> >> >
-> >> > skb_copy_queue_mapping(frag, first);
-> >> >
-> >> > where you previously added the cb copy.
-> >
-> >> Yeah just found that too 2 min ago :)
-> >
-> > :)
-> >
-> > Before it happens again, can you think of anything else we need to copy=
-?
->=20
-> Not sure, now it works.
-> Shell I send a patch or blend it into the original one.
+Still, the glue code and the headers are under GPL.  It may be useful
+for reverse engineering efforts.
 
-I don't care, ask John? Or just merge them, he doesn't seem to have
-merged it yet.
+Perhaps the non-free object files could be used to extract firmware from
+them.  But the license won't allow distribution of that firmware, if I
+understand correctly.
 
-johannes
+What Broadcom could easily do is to release the firmware under a license
+that would allow free distribution.  This way, the firmware would be on
+installation CDs of the popular distributions, and there would be no
+need to install b43-fwcutter, get the firmware (that's a challenge in
+absence of a wired network), extract the firmware and install it into
+the right directory.  That would make Broadcom cards make out-of-box,
+and ultimately make them more popular.
 
---=-/mDuM40urnSpH9GEVRnL
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Instead, Broadcom tries to control the code its users are running.  I
+don't think it's going to work well.  But to be fair to them, at least
+they don't pretend that Linux doesn't exit.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIYiD9AAoJEKVg1VMiehFYqp0P/i1Vfzp2YqXLVQ+xUHWRDdyB
-DziPZg9FBu3kduJT8BqINKjWNvQWovHqZGMs968abChmci0Wmkv/XjZir5zKT4+v
-2jsZ7Tgo6Z+eX+44FBOCesfz6RTOPcytRtYQFnwjcAkCPO8uFh10ddl1svE8dNp/
-2zTM4sWite34uRL4cDK/YEUlduhtuKI4p0GqtnRvhpAOLaPsFt1mRfzRuOr2N30N
-FQ6679JkB3GvuKt14t8Ch6dbA7sO0wquqCCRf7nRMkdOLUS3rFoop0pm1dh7+YV2
-Kxar1wWNVS6Y/OMsTN78jPMqa7SeFcMBKlh3eeEN5d6U3dg9L7w8c9Ok1YeVdFc4
-CbXdsWskpYMSl5ZIUbGKq0aR4a3pSF/VUXuncaP7beUnbOs4x5e2fKYsgUuqTW8m
-rARJLuI86eDp6MNNSoOFd5JRQsdnMgJHA13FqD/u08+OInps032CbZj8+h8jCk7t
-q7+OERU4aP75xSfsU5N2jDVS0sQeEyFz58+tXr5wAFfn/NmvWhXGJqD+n35XWiu9
-P+Wvt4uy/DLZ6zV2dQ/Up62tkFEzG7RpBjSSjAOzNnZnBQlj+ncry96osrPtt1ZK
-bmlYMLw+bvg9F1drac5TJFxeGkHFWSlUHmn2lrqy1ImDxSTRznwd2H2QT0e6e5Tf
-sDV+G+eZa8driXnR6UqI
-=8VOy
------END PGP SIGNATURE-----
-
---=-/mDuM40urnSpH9GEVRnL--
-
+-- 
+Regards,
+Pavel Roskin
