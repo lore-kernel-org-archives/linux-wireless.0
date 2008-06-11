@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:52860 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751802AbYFERmy (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.173]:21406 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752164AbYFKUuF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2008 13:42:54 -0400
-Message-Id: <1212687773.13044.1256965165@webmail.messagingengine.com> (sfid-20080605_194301_551658_D884CE6E)
-From: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
-To: "Tomas Winkler" <tomasw@gmail.com>,
-	"Ivo van Doorn" <ivdoorn@gmail.com>
-Cc: "Dan Williams" <dcbw@redhat.com>,
+	Wed, 11 Jun 2008 16:50:05 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so3267266wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 13:50:05 -0700 (PDT)
+Message-ID: <69e28c910806111350x7e233437x57983a9b27116bc0@mail.gmail.com> (sfid-20080611_225025_059062_52380F8C)
+Date: Wed, 11 Jun 2008 22:50:05 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [compat-masters] Backported MQ requirement on 802.11n for older kernels
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, "Dmitry Torokhov" <dtor@mail.ru>
-Content-Type: text/plain; charset="ISO-8859-1"
+	compat-masters@lists.madwifi.org,
+	"Tim Gardner" <tim.gardner@canonical.com>,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
+In-Reply-To: <1ba2fa240806110627g467940b1k9ca4a43cd140506f@mail.gmail.com>
 MIME-Version: 1.0
-References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
-   <1ba2fa240806041607j10841ac0qb11fe0d0b27953d8@mail.gmail.com>
-   <20080605003808.GA16599@khazad-dum.debian.net>
-   <200806051803.43193.IvDoorn@gmail.com>
-   <1ba2fa240806050936o383111cepcd6733d1ed205a26@mail.gmail.com>
-Subject: Re: [PATCH 01/12] rfkill: clarify meaning of rfkill states
-In-Reply-To: <1ba2fa240806050936o383111cepcd6733d1ed205a26@mail.gmail.com>
-Date: Thu, 05 Jun 2008 14:42:53 -0300
+Content-Type: text/plain; charset=ISO-8859-1
+References: <43e72e890806080855p284f85brd0ff1f1dfce96bf8@mail.gmail.com>
+	 <43e72e890806090201q55bff8e3m694121ebd4befee6@mail.gmail.com>
+	 <43e72e890806090325y5a1aebadq68204695044f4b6f@mail.gmail.com>
+	 <1ba2fa240806101657w14599f30x67f58acbc7fe9e80@mail.gmail.com>
+	 <43e72e890806102132q1aaba42ehd76bdd30b8d4080a@mail.gmail.com>
+	 <43e72e890806102136jb8e695fla98a8594dde14396@mail.gmail.com>
+	 <43e72e890806110403nddfca7cn66b91a938919e1f0@mail.gmail.com>
+	 <7ba851519c84785f96af3637e9bab65b.squirrel@secure.sipsolutions.net>
+	 <20080611125857.GG17936@ruslug.rutgers.edu>
+	 <1ba2fa240806110627g467940b1k9ca4a43cd140506f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 5 Jun 2008 19:36:26 +0300, "Tomas Winkler" <tomasw@gmail.com> said:
-> Cannot this be just fixed with ~ sed -s/ON/OFF/g'  over the kernel?
+On Wed, Jun 11, 2008 at 3:27 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+> The makefile is feed by compat.mk and DOTconfig from the target kernel
+> (KLIB) (in my case 2.6.25)
+> From what I see the flags from wireless-testing  need to be always
+> reflected in compat.mk.
 
-Absolutely NOT!
-
-You would have patches in flight, not to mention out-of-tree
-stuff, that you'd have no idea if they want the old or new meaning.
-
-Not to mention you'd never know what you forgot to convert, etc.
+Did you mean config.mk? Compat.mk doesn't exist.
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
