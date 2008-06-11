@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:53504 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758515AbYFDXKD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2008 19:10:03 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1K427G-0004jf-C4
-	for linux-wireless@vger.kernel.org; Wed, 04 Jun 2008 23:10:02 +0000
-Received: from cpc1-cwma5-0-0-cust137.swan.cable.ntl.com ([80.4.12.138])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2008 23:10:02 +0000
-Received: from sitsofe by cpc1-cwma5-0-0-cust137.swan.cable.ntl.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2008 23:10:02 +0000
-To: linux-wireless@vger.kernel.org
-From: Sitsofe Wheeler <sitsofe@yahoo.com>
-Subject: Re: hostap now defaults to monitor mode? (SOLVED)
-Date: Thu, 05 Jun 2008 00:05:34 +0100
-Message-ID: <g2773s$a50$1@ger.gmane.org> (sfid-20080605_011007_599151_06017A9B)
-References: <g274cq$2sn$1@ger.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from ug-out-1314.google.com ([66.249.92.170]:26964 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756045AbYFKTsq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2008 15:48:46 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so182287ugf.16
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 12:48:44 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] rt2x00: RT2X00_LIB_RFKILL should depend on INPUT
+Date: Wed, 11 Jun 2008 22:01:00 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	Randy Dunlap <randy.dunlap@oracle.com>
+References: <200806112119.27586.IvDoorn@gmail.com>
+In-Reply-To: <200806112119.27586.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200806112201.00496.IvDoorn@gmail.com> (sfid-20080611_214915_868441_2CE9B818)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sitsofe Wheeler wrote:
+On Wednesday 11 June 2008, Ivo van Doorn wrote:
+> rt2x00 requires the input-polldev driver for reporting rfkill events,
+> selecting INPUT_POLLDEV is not correct since that option depends
+> on the INPUT config option.
+> Since RT2X00_LIB_RFKILL requires the input layer as well, we should
+> make it depend on INPUT directly.
+> 
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-> On linux-next-20080604 hostap seems to default to monitor mode breaking
-> scripts that expect it to be in managed mode by default. Has hostap always
-> defaulted to monitor mode? I can't see a patch in the Ubuntu kernel tree
-> to change this...
+John, you can drop this patch in exchange for the patch just send by Randy,
+since that patch would be more correct.
 
-My bad. Ubuntu changes the default in the module options and on the kernels
-I compile hostap is built in. Apologies for the spam.
+Thanks,
 
--- 
-Sitsofe | http://sucs.org/~sits/
+Ivo
+
+> ---
+> John, this is for 2.6.26
+> 
+> diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+> index 0ace761..c4d1f67 100644
+> --- a/drivers/net/wireless/rt2x00/Kconfig
+> +++ b/drivers/net/wireless/rt2x00/Kconfig
+> @@ -36,6 +36,7 @@ config RT2X00_LIB_FIRMWARE
+>  config RT2X00_LIB_RFKILL
+>  	boolean
+>  	depends on RT2X00_LIB
+> +	depends on INPUT
+>  	select RFKILL
+>  	select INPUT_POLLDEV
+>  
+> 
+
 
