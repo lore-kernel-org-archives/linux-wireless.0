@@ -1,53 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:47711 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751166AbYFWFFU (ORCPT
+Received: from agminet01.oracle.com ([141.146.126.228]:36208 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753228AbYFKJPw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2008 01:05:20 -0400
-Date: Mon, 23 Jun 2008 02:05:14 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>,
-	"Abbas, Mohamed" <mohamed.abbas@intel.com>
-Subject: Re: Rfkill on ifconfig up.
-Message-ID: <20080623050514.GA9926@khazad-dum.debian.net> (sfid-20080623_070524_093468_A5A90AE0)
-References: <1ba2fa240806221609p1b0cd641g2304d0812b61ecb3@mail.gmail.com>
+	Wed, 11 Jun 2008 05:15:52 -0400
+Date: Wed, 11 Jun 2008 02:04:08 -0700
+From: Joel Becker <Joel.Becker@oracle.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux kernel <linux-kernel@vger.kernel.org>,
+	Greg KH <greg@kroah.com>,
+	Satyam Sharma <ssatyam@cse.iitk.ac.in>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Al Viro <viro@ftp.linux.org.uk>,
+	"H. Peter Anvin" <hpa@kernel.org>
+Subject: Re: Is configfs the right solution for configuration based fs?
+Message-ID: <20080611090407.GA17466@mail.oracle.com> (sfid-20080611_111557_919925_436E09E2)
+References: <43e72e890806081425h4e785800nc618fc1985f9809f@mail.gmail.com> <20080609022821.GL29740@mail.oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240806221609p1b0cd641g2304d0812b61ecb3@mail.gmail.com>
+In-Reply-To: <20080609022821.GL29740@mail.oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 23 Jun 2008, Tomas Winkler wrote:
-> Little RF KILL design question from user space perspective.
-> What should be desired return value of ifconfig up when HW rfkill is
-> on (radio is off).
-
-This isn't really about rfkill, its design doesn't call for any particular
-behaviour.  IMHO we should go with the principle of least suprise, and also
-more convenience for the user.
-
-In the end, it will depend on the capabilities of the hardware, I suppose.
-Assuming the hardware CAN bring its interface up without going bonkers
-because the transmitter is not transmitting anything, that's exactly what it
-should do IMO.
-
-What it must never do is to unblock the transmiter because of a ifconfig up
-:-)
-
-> rfkill on (radio off)
-> ifconfig wlan0 up
-> rfkill off (radio on)
+On Sun, Jun 08, 2008 at 07:28:21PM -0700, Joel Becker wrote:
+> On Sun, Jun 08, 2008 at 02:25:36PM -0700, Luis R. Rodriguez wrote:
+> > I was really interested in looking to start a filesystem based
+> > approach for configuration of wireless a while back, an alternative to
+> > nl80211 if you will, but I stopped after I was told about some major
+> > issues with configfs. I forget the issues raised clearly so I'd like
 > 
-> Will it be ok for these sequence to require additional ifconfig up to
-> make driver to work, providing the first ifconfig up failed?
+> 	I'd love to hear about the issues as well. 
 
-It would be nice if it didn't fail the first ifconfig, and therefore needed
-nothing special to work other than a rfkill unblock.
+	Here's a list of "known" issues I hear about with configfs.
+These are requests/complaints/etc I have gotten since it was merged.
+
+1) configfs should be sysfs
+
+	The argument is that sysfs should somehow support the
+user-directed mkdir(2)/rmdir(2) lifecycle of configfs in addition to its
+usual functions.  This, unfortunately, doesn't work.  I sent a pretty
+detailed discussion of this to lkml the last time it came up, but here's
+a short summary.  Number one, I tried this first.  It got ugly fast.
+Number two, a goal of configfs is a simpler lifecycle than sysfs
+(understanding the lifetimes of config items).  Adding an additional
+mode to the already complicated lifecycle of kobjects directly opposes
+this
+
+2) There needs to be a way to pin a config item
+
+	configfs's ->drop_item() operation returns void - if it is
+called, your item must deactivate.  This is in line with configfs'
+user-directed paradigm.  However, sometimes another kernel subsystem is
+depending on that item - it will crash if the item goes away.
+	After getting this beaten over my head a few times by good
+friends, I realized they were right.  configfs now has
+configfs_depend_item() to allow subsystems to pin config items when
+necessary.
+
+3) configfs should support large attributes
+
+	A configfs attribute can be a maximum of 4k in size.  This fits
+the simple show/store methods cribbed from sysfs.  However, more than
+one person has given a good reason for larger attributes, often lists of
+things.
+	This isn't implemented yet, because I haven't come up with a
+good way to do it.  seq_file works pretty well for the show side, but
+there is no seq_write() to match on the store side.  I'd love to come up
+with a sane semantic and make it work.  Consider it a TODO.
+
+Finally, this thread has presented 
+4) easier definition of items, perhaps with macros like DEFINE_ATTR
+
+	I think I have a __CONFIGFS_ATTR() macro, but it's nowhere near
+as nice as what sysfs has.  This definitely could use some work, making
+configfs easier to use.
+
+	That's what I have.  I don't know if any of these issues were
+what you were worried about, Luis.
+
+Joel
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+
+"In the long run...we'll all be dead."
+                                        -Unknown
+
+Joel Becker
+Principal Software Developer
+Oracle
+E-mail: joel.becker@oracle.com
+Phone: (650) 506-8127
