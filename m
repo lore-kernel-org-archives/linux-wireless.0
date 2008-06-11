@@ -1,46 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:9997 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755008AbYFVWYL (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.247]:4344 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752572AbYFKV1O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jun 2008 18:24:11 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so384707ugf.16
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Jun 2008 15:24:10 -0700 (PDT)
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: mac80211: workqueue & RTNL lock
-Date: Mon, 23 Jun 2008 00:42:41 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 11 Jun 2008 17:27:14 -0400
+Received: by an-out-0708.google.com with SMTP id d40so782555and.103
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 14:27:12 -0700 (PDT)
+Message-ID: <43e72e890806111426n19059d84v598f7629f57b3b04@mail.gmail.com> (sfid-20080611_232717_677521_00CFF830)
+Date: Wed, 11 Jun 2008 14:26:39 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: pommnitz@yahoo.com
+Subject: Re: [RFC] First CRDA integration work
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <684075.48049.qm@web51410.mail.re2.yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200806230042.41219.IvDoorn@gmail.com> (sfid-20080623_002416_378490_D9252AF0)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890806110309l2600637p82866531cf2f7e6c@mail.gmail.com>
+	 <684075.48049.qm@web51410.mail.re2.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, Jun 11, 2008 at 1:38 PM, Joerg Pommnitz <pommnitz@yahoo.com> wrote:
+> --- Luis R. Rodriguez <lrodriguez@atheros.com> wrote am Mi, 11.6.2008:
+>
+>> Can you elaborate a bit more on it. Why do you need two
+>> separate WLAN
+>> devices on one node where each one of them is using very
+>> different
+>> regulatory rules?
+>
+> The interface connected to the amplifier provides long range communication (up to 5km) on reserved channels. The nodes work as routers/APs that provide access to "normal" WLAN devices (this is where the second wireless device comes into play). So:
+> * two WLAN devices: 1x long range with amplifier, 1x short range as AP
+> * different regulatory settings: the regulatory rules for the device with amplifier differ from those without amplifier.
 
-I am currently looking at a rt2x00 regression in 2.6.26-rcX
-	http://bugzilla.kernel.org/process_bug.cgi
+OK then yes the current CRDA design covers this. You have a PtP link
+(long range 4W) and a PtMP setup (the AP). You can define PtP rules
+which are different from PtMP rules. We however still need to then
+make mac80211 aware of these differences of type of links. But yes,
+the design covers it.
 
-This regression is  caused by a circular locking problem
-(see http://bugzilla.kernel.org/attachment.cgi?id=16581)
+Check out
 
-The problem seems be caused by rt2x00 using ieee80211_iterate_active_interfaces()
-within the workqueue as provided by mac80211. But this will trigger the
-circular dependency when 'ifdown' is called. If I am not mistaken,
-'ifdown' will grab the rtnl lock and ieee80211_stop() is called.
-That function calls flush_workqueue() which cannot succeed because it will wait
-on a thread that is also trying to grab the rtnl lock.
+regdb.h from CRDA, we have RRF_PTP_ONLY and RRF_PTMP_ONLY flags.
 
-Possible solution would be making rt2x00 use its own workqueue, but
-that will cause similar problems since it can't use flush either it could however
-use flags to prevent ieee80211_iterate_active_interfaces() being called.
+So you can just define your own rules with your own db.txt. You know
+what you're getting into. Not everyone is allowed to output at 4W so
+you can define your own db.txt and sign it yourself.
 
-However it does mean that a solution for the mac80211 workqueue also has to
-be found, since rt2x00 isn't the only use of the mac80211 workqueue,
-but currently is the only one who uses it in combination with
-ieee80211_iterate_active_interfaces().
-And apparently those 2 cannot be combined. :S
+>> Do they both use the same frequency
+>> ranges?
+>
+> This is not required. Currently both use channels in the 2.4GHz range, but there is a very good chance that we will move into the 5GHz range for the amplified backbone (yes, we know that this will come at a cost).
+>
+>>   Luis
+>
+> Thanks for taking an interest
 
-Ivo
+Thanks for reviewing.
+
+  Luis
