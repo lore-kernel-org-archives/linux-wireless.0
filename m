@@ -1,100 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37729 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752238AbYFRPvk (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:13139 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751360AbYFKN1r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 11:51:40 -0400
-Subject: Re: BUG: mac80211: Some connections hanging in 2.6.26-rc6...
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrew Price <andy@andrewprice.me.uk>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1213803761.1312.29.camel@johannes.berg> (sfid-20080618_174323_804226_F901A061)
-References: <g38o2j$1uh$1@ger.gmane.org>
-	 (sfid-20080617_181742_447297_198DA5E5) <1213773749.3803.155.camel@johannes.berg>
-	 <g3b7l1$t1o$1@ger.gmane.org>
-	 (sfid-20080618_165548_538551_7C9BA1D8)  <1213803761.1312.29.camel@johannes.berg>
-	 (sfid-20080618_174323_804226_F901A061)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HAZlpTu5bLYGPmYh3KuQ"
-Date: Wed, 18 Jun 2008 17:51:03 +0200
-Message-Id: <1213804263.1312.31.camel@johannes.berg> (sfid-20080618_175143_631245_5DEBE4CB)
-Mime-Version: 1.0
+	Wed, 11 Jun 2008 09:27:47 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so1913053ywe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 06:27:42 -0700 (PDT)
+Message-ID: <1ba2fa240806110627g467940b1k9ca4a43cd140506f@mail.gmail.com> (sfid-20080611_152806_679420_3FF8CA40)
+Date: Wed, 11 Jun 2008 16:27:41 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [compat-masters] Backported MQ requirement on 802.11n for older kernels
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	compat-masters@lists.madwifi.org,
+	"Tim Gardner" <tim.gardner@canonical.com>,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
+In-Reply-To: <20080611125857.GG17936@ruslug.rutgers.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <43e72e890806080855p284f85brd0ff1f1dfce96bf8@mail.gmail.com>
+	 <1213001797.698.57.camel@johannes.berg>
+	 <43e72e890806090201q55bff8e3m694121ebd4befee6@mail.gmail.com>
+	 <43e72e890806090325y5a1aebadq68204695044f4b6f@mail.gmail.com>
+	 <1ba2fa240806101657w14599f30x67f58acbc7fe9e80@mail.gmail.com>
+	 <43e72e890806102132q1aaba42ehd76bdd30b8d4080a@mail.gmail.com>
+	 <43e72e890806102136jb8e695fla98a8594dde14396@mail.gmail.com>
+	 <43e72e890806110403nddfca7cn66b91a938919e1f0@mail.gmail.com>
+	 <7ba851519c84785f96af3637e9bab65b.squirrel@secure.sipsolutions.net>
+	 <20080611125857.GG17936@ruslug.rutgers.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Jun 11, 2008 at 3:58 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Wed, Jun 11, 2008 at 02:12:41PM +0200, Johannes Berg wrote:
+>>
+>> > Johannes -- why do we have the requirement for NETDEVICES_MULTIQUEUE
+>> > on CONFIG_MAC80211_QOS? My current config doesn't have it it and
+>> > CONFIG_MAC80211_QOS still works right now enabled. Of course the
+>> > driver I'm testing doesn't have 11n though.
+>>
+>> because otherwise skb_get_queu_mapping always returns 0 and you use only
+>> one queue.
+>>
+>> > Shouldn't we just make MAC80211_QOS depend on NET_SCHED and figure out
+>> > we can't support 11n based on NETDEVICES_MULTIQUEUE?
+>>
+>> no, 11e also needs multiple queues.
+>
+> Thanks, since MAC80211_QOS was there before the issue is some
+> kernels may have this enabled but they never got to MQ. This is why
+> certain compiles will complain about missing symbols.
+>
+> So how about we disable it if we determine MQ and NET_SCHED are off?
+> Like this:
+>
+> diff --git a/config.mk b/config.mk
+> index e8dc469..b72e37e 100644
+> --- a/config.mk
+> +++ b/config.mk
+> @@ -27,7 +27,16 @@ ifeq ($(shell test $(KERNEL_SUBLEVEL) -lt 23 && echo yes),yes)
+>  CONFIG_MAC80211_QOS=y
+>  else
+>  ifeq ($(CONFIG_NETDEVICES_MULTIQUEUE),)
+> -$(warning "WARNING: You are running a kernel >= 2.6.23, you should enable CONFIG_NETDEVICES_MULTIQUEUE for 802.11n support")
+> +ifeq ($(CONFIG_NET_SCHED),)
+> +$(warning "WARNING: You are running a kernel >= 2.6.23, you should enable CONFIG_NETDEVICES_MULTIQUEUE and CONFIG_NET_SCHED for 802.11[ne] support")
+> +else
+> +# Disable CONFIG_MAC80211_QOS if you had it enabled befofre in your old .config
+> +$(warning "WARNING: You are running a kernel >= 2.6.23, you should enable CONFIG_NETDEVICES_MULTIQUEUE for 802.11[ne] support")
+> +CONFIG_MAC80211_QOS=n
+> +endif
+> +else
+> +# Disable CONFIG_MAC80211_QOS if you had it enabled befofre in your old .config
+> +CONFIG_MAC80211_QOS=n
+>  endif
+>  endif
+>  endif
+>
+One thing it's not clear for me. What do you mean by old .config
+CONFIG_MAC80211_QOS flags is available only in wireless-testing?
+The makefile is feed by compat.mk and DOTconfig from the target kernel
+(KLIB) (in my case 2.6.25)
+>From what I see the flags from wireless-testing  need to be always
+reflected in compat.mk.
 
---=-HAZlpTu5bLYGPmYh3KuQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2008-06-18 at 17:42 +0200, Johannes Berg wrote:
-> On Wed, 2008-06-18 at 15:55 +0100, Andrew Price wrote:
-> > On 18/06/08 08:22, Johannes Berg wrote:
-> > >> This also affects some http requests such as loading slashdot but no=
-t
-> > >> others (perhaps small ones?) such as twitter API http requests. It d=
-oes
-> > >> not seem to affect connections to other machines on my LAN, only one=
-s
-> > >> over the internet.
-> > >>
-> > >> I've tried tcpdumping to get more info but when I run tcpdump the
-> > >> connections work again (if a tiny bit slower).
-> > >=20
-> > > Can you try tcpdump with the -p flag? promisc mode might affect thing=
-s.
-> >=20
-> > I tried using -p and it made the bug go away again. However, I have som=
-e
-> > packet captures from running tcpdump on the router while the bug was
-> > occuring and from loading them into wireshark it seems there are some
-> > (suspected) retransmissions with bad checksums. I've posted my packet
-> > captures here:
-> >=20
-> > http://sucs.org/~welshbyte/lw/tcpdump_bad0.pcap
-> > http://sucs.org/~welshbyte/lw/tcpdump_bad1.pcap
-> > http://sucs.org/~welshbyte/lw/tcpdump_good0.pcap
-> >=20
-> > The two 'bad' ones were captured on the router while the bug was
-> > occuring. The 'good' one is for comparison and was captured on the
-> > router like the others but while running tcpdump on my laptop made the
-> > bug go away (I hope that makes sense).
-> >=20
-> > In all cases, the test was to ssh to a remote server. The two bad cases
-> > were closed before the password prompt was reached and the good case wa=
-s
-> > ^C'd at the password prompt.
-> >=20
-> > I hope this helps,
->=20
-> Thanks. Unfortunately, it's very hard to tell what is causing the bug,
-
-No, that was worded wrong, I mean, we know what is causing the bug and
-we know what the bug is, but due to encryption being used it's hard to
-confirm from the tcpdump you posted.
-
-johannes
-
---=-HAZlpTu5bLYGPmYh3KuQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIWS7jAAoJEKVg1VMiehFY6RwQAKRGKeLeI69gxCWLReRUar4a
-F9cnPmh4UsovuOEXizJBOX01xYVMtLNLgOJQHoAstiD8ouAh2Z9lmsrzr4rvyyFK
-OUNjbW5XpRZFEJUvMb9XLwZ/lgHrVALujZ0oP/krnfM4tobo927FWnaR2mWMkj0X
-CE3G7VYIio3MBfN8K9/mH8VT39pbnFOPjLUKYMUPPuU6ReAOrFKrYF66O1lf9RUo
-U4o0t7dGSmKiP+9bodXrGW0YtUZd/TqnigTJdAVVQr+ettfOoZvV0u4KFKhhJ6lh
-u15g56dz50qqCtDVh9YnjSDhBNsi3ohSoVX8hE2Qhx+uVo9ndfc5m2ZngFJD9Hlo
-sS+JBVbmmlzQpwzHk2H0Zx3uyrX8MowgMOphh9UVQI8iNdSZZwPzeurO1EppQL1+
-/jsSdoQw2z2RcUih1A8o8Y+332rZklwCljt2xSnywzDd7gAEBD8AvVRRJ7Yf2otm
-zXHXptRgjeBEt1MmItjH4rg4uvhKW96+qoV8XbDzhja8AtMaaBqpRdu0k7pJXbLo
-Kl8SGSxd+GS0pmWM1IAUqWO2Kimy9AkXHnL/+/N7WdKuw2/foYtwcFypylcxu2xC
-TpNbZSB9levSzWcOsJfv1vTmOZVlXcBwpZoLqoPK+9lmOF05wHXSJw0Hhv+9jevG
-WMEIyuj44rWU6iH0RsGz
-=zWyy
------END PGP SIGNATURE-----
-
---=-HAZlpTu5bLYGPmYh3KuQ--
-
+Thanks
+Tomas
