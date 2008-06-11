@@ -1,100 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.251]:34039 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753876AbYFKOtR (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:55107 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752862AbYFKVag (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 10:49:17 -0400
-Received: by an-out-0708.google.com with SMTP id d40so745666and.103
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 07:49:16 -0700 (PDT)
-Message-ID: <43e72e890806110749q25a2490dm325f21554409925e@mail.gmail.com> (sfid-20080611_164921_549164_2462A795)
-Date: Wed, 11 Jun 2008 07:49:15 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [compat-masters] Backported MQ requirement on 802.11n for older kernels
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	compat-masters@lists.madwifi.org,
-	"Tim Gardner" <tim.gardner@canonical.com>,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
-In-Reply-To: <43e72e890806110646o439c1620t204e68034434968d@mail.gmail.com>
+	Wed, 11 Jun 2008 17:30:36 -0400
+Message-ID: <48504417.7020803@lwfinger.net> (sfid-20080611_233039_452301_0F65E596)
+Date: Wed, 11 Jun 2008 16:31:03 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890806080855p284f85brd0ff1f1dfce96bf8@mail.gmail.com>
-	 <43e72e890806090325y5a1aebadq68204695044f4b6f@mail.gmail.com>
-	 <1ba2fa240806101657w14599f30x67f58acbc7fe9e80@mail.gmail.com>
-	 <43e72e890806102132q1aaba42ehd76bdd30b8d4080a@mail.gmail.com>
-	 <43e72e890806102136jb8e695fla98a8594dde14396@mail.gmail.com>
-	 <43e72e890806110403nddfca7cn66b91a938919e1f0@mail.gmail.com>
-	 <7ba851519c84785f96af3637e9bab65b.squirrel@secure.sipsolutions.net>
-	 <20080611125857.GG17936@ruslug.rutgers.edu>
-	 <1ba2fa240806110627g467940b1k9ca4a43cd140506f@mail.gmail.com>
-	 <43e72e890806110646o439c1620t204e68034434968d@mail.gmail.com>
+To: =?ISO-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
+CC: Pavel Roskin <proski@gnu.org>, Michael Buesch <mb@bu3sch.de>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Broadcom's Hybrid Driver
+References: <48500F14.8070300@canonical.com> <200806112047.00854.mb@bu3sch.de>	 <1213213666.19106.12.camel@dv> <69e28c910806111326j6922905fq1f67201ab4ce298f@mail.gmail.com>
+In-Reply-To: <69e28c910806111326j6922905fq1f67201ab4ce298f@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 11, 2008 at 6:46 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Wed, Jun 11, 2008 at 6:27 AM, Tomas Winkler <tomasw@gmail.com> wrote:
->> On Wed, Jun 11, 2008 at 3:58 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>> On Wed, Jun 11, 2008 at 02:12:41PM +0200, Johannes Berg wrote:
->>>>
->>>> > Johannes -- why do we have the requirement for NETDEVICES_MULTIQUEUE
->>>> > on CONFIG_MAC80211_QOS? My current config doesn't have it it and
->>>> > CONFIG_MAC80211_QOS still works right now enabled. Of course the
->>>> > driver I'm testing doesn't have 11n though.
->>>>
->>>> because otherwise skb_get_queu_mapping always returns 0 and you use only
->>>> one queue.
->>>>
->>>> > Shouldn't we just make MAC80211_QOS depend on NET_SCHED and figure out
->>>> > we can't support 11n based on NETDEVICES_MULTIQUEUE?
->>>>
->>>> no, 11e also needs multiple queues.
->>>
->>> Thanks, since MAC80211_QOS was there before the issue is some
->>> kernels may have this enabled but they never got to MQ. This is why
->>> certain compiles will complain about missing symbols.
->>>
->>> So how about we disable it if we determine MQ and NET_SCHED are off?
->>> Like this:
->>>
->>> diff --git a/config.mk b/config.mk
->>> index e8dc469..b72e37e 100644
->>> --- a/config.mk
->>> +++ b/config.mk
->>> @@ -27,7 +27,16 @@ ifeq ($(shell test $(KERNEL_SUBLEVEL) -lt 23 && echo yes),yes)
->>>  CONFIG_MAC80211_QOS=y
->>>  else
->>>  ifeq ($(CONFIG_NETDEVICES_MULTIQUEUE),)
->>> -$(warning "WARNING: You are running a kernel >= 2.6.23, you should enable CONFIG_NETDEVICES_MULTIQUEUE for 802.11n support")
->>> +ifeq ($(CONFIG_NET_SCHED),)
->>> +$(warning "WARNING: You are running a kernel >= 2.6.23, you should enable CONFIG_NETDEVICES_MULTIQUEUE and CONFIG_NET_SCHED for 802.11[ne] support")
->>> +else
->>> +# Disable CONFIG_MAC80211_QOS if you had it enabled befofre in your old .config
->>> +$(warning "WARNING: You are running a kernel >= 2.6.23, you should enable CONFIG_NETDEVICES_MULTIQUEUE for 802.11[ne] support")
->>> +CONFIG_MAC80211_QOS=n
->>> +endif
->>> +else
->>> +# Disable CONFIG_MAC80211_QOS if you had it enabled befofre in your old .config
->>> +CONFIG_MAC80211_QOS=n
->>>  endif
->>>  endif
->>>  endif
->>>
->> One thing it's not clear for me. What do you mean by old .config
->> CONFIG_MAC80211_QOS flags is available only in wireless-testing?
->> The makefile is feed by compat.mk and DOTconfig from the target kernel
->> (KLIB) (in my case 2.6.25)
->> From what I see the flags from wireless-testing  need to be always
->> reflected in compat.mk.
->
-> Bleh, you're right, it should be in only as of 2.6.27... something
-> else is causing some unresolved symbols if CONFIG_MAC80211_QOS is left
-> disabled on 2.6.24.
+I have two ideas about what Broadcom is doing.
 
-OK the issue is very likely that the compat_autoconf.h is leaving
-CONFIG_MAC80211_QOS enabled as the script used to generate it detects
-all ^CONFIG_FOO options. I'm working on this, should have a patch soon
-for you to review.
+The b/g device with an ID of 0x4315 and an LP-PHY is the one that HP 
+has been shipping in many laptops for the past few months. Perhaps HP 
+wants to offer Linux on those computers, but doesn't want to use 
+ndiswrapper for wireless access. HP might have enough clout to get 
+Broadcom to budge a little on the subject of Linux.
 
-  Luis
+It is also possible that they want to stifle our RE efforts. The 
+license accompanying the binary blob states:
+
+"2.6.    No Other Rights Granted; Restrictions.  Apart from the 
+license rights expressly set forth in this Agreement, Broadcom does 
+not grant and Licensee does not receive any ownership right, title or 
+interest nor any security interest or other interest in any 
+intellectual property rights relating to the Software, nor in any copy 
+of any part of the foregoing.
+
+Licensee shall not (i) use, license, sell or otherwise distribute the 
+Software except as provided in this Agreement, (ii) attempt to reverse 
+engineer, decompile or disassemble any portion of the Software; or 
+(iii) use the Software or other material in violation of any 
+applicable law or regulation, including but not limited to any 
+regulatory agency, such as FCC, rules."
+
+Given some of the other parts of the license relating to penalties, 
+etc., anyone trying to RE this code could be in a heap of trouble.
+
+Larry
