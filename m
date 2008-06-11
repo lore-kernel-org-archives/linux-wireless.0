@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:14152 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752546AbYFLJ4M convert rfc822-to-8bit (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:62818 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753909AbYFKTub (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 05:56:12 -0400
+	Wed, 11 Jun 2008 15:50:31 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so2015908ywe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 12:50:20 -0700 (PDT)
+Message-ID: <69e28c910806111250k4bfe0190h9cfd5937d47b1bbc@mail.gmail.com> (sfid-20080611_215035_179214_DA0478B0)
+Date: Wed, 11 Jun 2008 21:50:19 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: Open source driver with binary HAL for BCM4313 from Broadcom
+Cc: "Tim Gardner" <tim.gardner@canonical.com>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+In-Reply-To: <200806112047.00854.mb@bu3sch.de>
 MIME-Version: 1.0
-Subject: RE: [PATCH 1/1] mac80211: [RFC] do not fragment while aggregationis in use
-Date: Thu, 12 Jun 2008 12:56:07 +0300
-Message-ID: <1879838866982C46A9CB3D56BA49ADEB050224AF@hasmsx411.ger.corp.intel.com> (sfid-20080612_115617_186091_4C9DEAAA)
-In-Reply-To: <1213219526.3827.0.camel@johannes.berg>
-References: <1213207296-14548-1-git-send-email-ron.rindjunsky@intel.com> <1213219526.3827.0.camel@johannes.berg>
-From: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
+References: <48500F14.8070300@canonical.com> <200806112047.00854.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> -	/*
->> -	 * Warn when submitting a fragmented A-MPDU frame and drop it.
->> -	 * This is an error and needs to be fixed elsewhere, but when
->> -	 * done needs to take care of monitor interfaces (injection)
->> -	 * etc.
->> -	 */
->> -	if (WARN_ON(tx->flags & IEEE80211_TX_CTL_AMPDU ||
->> -		    skb_get_queue_mapping(tx->skb) >=
->> -			ieee80211_num_regular_queues(&tx->local->hw)))
->> -		return TX_DROP;
->> -
+On Wed, Jun 11, 2008 at 8:47 PM, Michael Buesch <mb@bu3sch.de> wrote:
+>
+> On Wednesday 11 June 2008 19:44:52 Tim Gardner wrote:
+> > John,
+> >
+> > Here is the URL to Broadcom's web site advertising their open source
+> > driver with support for the BCM4313.
+> >
+> > http://www.broadcom.com/support/802.11/linux_sta.php
+> >
+> > rtg
+>
+> <quote>
+> Make sure that you download the appropriate tar because the hybrid binary
+> file must be of the appropriate architecture type. The hybrid binary file
+> is agnostic to the specific version of the Linux kernel because it is
+> designed to perform all interactions with the operating system through
+> operating-system-specific files...
+> </quote>
+>
+> --
+> Greetings Michael.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-> Should we keep that, just in case? If it ever happens and the hw
-rejects
-> a fragment for some reason, we'll otherwise clobber some state and
-> probably crash.
+Also, the download links are broken. And AFAIK we do support BCM4312,
+although not PCI ID 0x4315 (that would be BCM4310).
+(CCing the bcm43xx mailing list.)
 
-Agree. Should I resend the patch or would you just remove it from the
-original patch?
-
-> johannes
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+--
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
