@@ -1,83 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.185]:41532 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756925AbYFFPMz (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.182]:44904 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752170AbYFKF5a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2008 11:12:55 -0400
-Received: by rn-out-0910.google.com with SMTP id k40so404963rnd.17
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jun 2008 08:12:54 -0700 (PDT)
-Message-ID: <1ba2fa240806060812q28c270c4i12cc08f8665e9cc0@mail.gmail.com> (sfid-20080606_171303_131061_F6D054F0)
-Date: Fri, 6 Jun 2008 18:12:54 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Thomas Backlund" <tmb@mandriva.org>
-Subject: Re: iwl4965 oops in 2.6.26-rc5 x86_64
-Cc: "Ian Schram" <ischram@telenet.be>,
+	Wed, 11 Jun 2008 01:57:30 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so2405163waf.23
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2008 22:57:30 -0700 (PDT)
+Message-ID: <a44ae5cd0806102257x61596782tc523de8c866cb58b@mail.gmail.com> (sfid-20080611_075734_995470_E5C94A95)
+Date: Wed, 11 Jun 2008 01:57:30 -0400
+From: "Miles Lane" <miles.lane@gmail.com>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: BUG: NULL pointer dereference at 00000000 -- IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
+Cc: "Michael Buesch" <mb@bu3sch.de>,
+	"Vegard Nossum" <vegard.nossum@gmail.com>,
+	"Andrew Morton" <akpm@linux-foundation.org>,
 	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <48494EF6.4020506@mandriva.org>
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"FUJITA Tomonori" <fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <484F5DB2.4050705@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <4848289D.1080205@mandriva.org> <48482BC3.4070402@mandriva.org>
-	 <4848482C.2080208@mandriva.org> <48485F12.2050908@mandriva.org>
-	 <48488878.5040708@telenet.be>
-	 <1ba2fa240806060432t73ecb318x89e877241aa6ef55@mail.gmail.com>
-	 <48492734.9080901@mandriva.org> <48492E85.6010307@mandriva.org>
-	 <1ba2fa240806060659wf4e4088s8afdd2f7f854ea09@mail.gmail.com>
-	 <48494EF6.4020506@mandriva.org>
+References: <a44ae5cd0806100709rf4602f2x587631852502c0b5@mail.gmail.com>
+	 <200806101637.11473.mb@bu3sch.de>
+	 <19f34abd0806100742v176f50e8se463d2e70df44332@mail.gmail.com>
+	 <200806101650.27180.mb@bu3sch.de>
+	 <a44ae5cd0806101509x5e2d5c19y10101ea0e72f8cba@mail.gmail.com>
+	 <484F0AF7.6060008@lwfinger.net>
+	 <a44ae5cd0806101857q54074c83w2eb470682b58a6cc@mail.gmail.com>
+	 <484F5DB2.4050705@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 6, 2008 at 5:51 PM, Thomas Backlund <tmb@mandriva.org> wrote:
-> Tomas Winkler skrev:
->>
->> On Fri, Jun 6, 2008 at 3:33 PM, Thomas Backlund <tmb@mandriva.org> wrote:
->>>
->>> Thomas Backlund skrev:
->>>>
->>>> Tomas Winkler skrev:
->>>>>
->>>>> On Fri, Jun 6, 2008 at 3:44 AM, Ian Schram <ischram@telenet.be> wrote:
->>>>>>
->>>>>> Isn't this the Oops Joonwoo Park wanted to patch with
->>>>>>
->>>>>> "[PATCH] iwlwifi: fix oops on wep key insertion" 27/5/2008
->>>>>>
->>>>>> invalid length of webkey that would/should be handled in mac80211?
->>>>>>
->>>>>> ian
->>>>>
->>>>> Yes, it looks like.
->>>>
->>>> Ummm, what has a wep key to do with me trying to access a WPA2-Personal
->>>> encrypted net ?
->>
->> Not sure yet, but mac is trying to assign default/static wep key.
->>
->> :iwlcore:iwl_send_static_wepkey_cmd+0xcb/0xd5
->> :iwlcore:iwl_set_default_wep_key+0xa2/0xbc
->>
->> Try to set the encryption explicitly
->> network={
->>    psk="*************************"
->>    scan_ssid=1
->>    ssid="dlink"
->>    pairwise=CCMP
->>   group=CCMP
->>  }
->>
->>
+> The line that fails is
 >
-> That didn't help at all...
+> if (unlikely(dma_mapping_error(ring->dev->dev->dma_dev, addr)))
 >
-> What's more it prevented the wifi to work on 2.6.24.7 so I had to remove the
-> lines again...
->
-So what's your AP configuration TKIP?
+> The value at 0x58(%eax) is zero, which corresponds to the "struct b43_wldev
+> *dev" line in struct b43_dmaring. In other words, ring->dev is NULL, which
+> causes the error. I'll leave it to FUJITA Tomonori to figure out why.
 
-Second try also with sw decryption:
+Thanks all,
 
-in /etc/modprobe.conf
-options iwl4965 swcrypto=1
+I might have time in the morning to test one more patch, otherwise I
+will be back in about three weeks.
 
+Best wishes,
 
-Tomas
+        Miles
