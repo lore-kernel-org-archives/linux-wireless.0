@@ -1,250 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47070
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752595AbYFCUgw (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.168]:26201 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764302AbYFKRBj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 16:36:52 -0400
-Date: Tue, 03 Jun 2008 13:28:42 -0700 (PDT)
-Message-Id: <20080603.132842.123235332.davem@davemloft.net> (sfid-20080603_223717_919075_2687C70A)
-To: linux-wireless@vger.kernel.org
-CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 9/12]: wext: Dispatch and handle compat ioctls entirely in
- net/wireless/wext.c
-From: David Miller <davem@davemloft.net>
+	Wed, 11 Jun 2008 13:01:39 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so3186201wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 10:01:36 -0700 (PDT)
+Subject: [PATCH 1/3] mac80211: tkip.c consolidate tkip IV writing in helper
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 11 Jun 2008 10:01:35 -0700
+Message-Id: <1213203695.5974.133.camel@brick> (sfid-20080611_190144_382710_0807795C)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-Next we can kill the hacks in fs/compat_ioctl.c and also
-dispatch compat ioctls down into the driver and 80211 protocol
-helper layers in order to handle iw_point objects embedded in
-stream replies which need to be translated.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
- fs/compat_ioctl.c        |    6 ---
- include/linux/wireless.h |   13 ++++++
- include/net/wext.h       |    7 +++
- net/socket.c             |   10 ++++
- net/wireless/wext.c      |  104 ++++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 134 insertions(+), 6 deletions(-)
+ net/mac80211/tkip.c |   25 ++++++++++++++-----------
+ net/mac80211/tkip.h |    4 ++--
+ net/mac80211/wpa.c  |    8 +-------
+ 3 files changed, 17 insertions(+), 20 deletions(-)
 
-diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
-index 97dba0d..8ab850b 100644
---- a/fs/compat_ioctl.c
-+++ b/fs/compat_ioctl.c
-@@ -1757,12 +1757,6 @@ static int do_i2c_smbus_ioctl(unsigned int fd, unsigned int cmd, unsigned long a
- 	return sys_ioctl(fd, cmd, (unsigned long)tdata);
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index a00cf1e..a8900e3 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -64,6 +64,15 @@ static u16 tkipS(u16 val)
+ 	return tkip_sbox[val & 0xff] ^ swab16(tkip_sbox[val >> 8]);
  }
  
--struct compat_iw_point {
--	compat_caddr_t pointer;
--	__u16 length;
--	__u16 flags;
--};
++static u8 *write_tkip_iv(u8 *pos, u16 iv16)
++{
++	*pos++ = iv16 >> 8;
++	*pos++ = ((iv16 >> 8) | 0x20) & 0x7f;
++	*pos++ = iv16 & 0xFF;
++	return pos;
++}
++
++
+ /*
+  * P1K := Phase1(TA, TK, TSC)
+  * TA = transmitter address (48 bits)
+@@ -123,12 +132,9 @@ static void tkip_mixing_phase2(struct ieee80211_key *key, struct tkip_ctx *ctx,
+ 	ppk[4] += ror16(ppk[3], 1);
+ 	ppk[5] += ror16(ppk[4], 1);
+ 
+-	rc4key[0] = tsc_IV16 >> 8;
+-	rc4key[1] = ((tsc_IV16 >> 8) | 0x20) & 0x7f;
+-	rc4key[2] = tsc_IV16 & 0xFF;
+-	rc4key[3] = ((ppk[5] ^ get_unaligned_le16(tk)) >> 1) & 0xFF;
++	rc4key = write_tkip_iv(rc4key, tsc_IV16);
++	*rc4key++ = ((ppk[5] ^ get_unaligned_le16(tk)) >> 1) & 0xFF;
+ 
+-	rc4key += 4;
+ 	for (i = 0; i < 6; i++)
+ 		put_unaligned_le16(ppk[i], rc4key + 2 * i);
+ }
+@@ -136,12 +142,9 @@ static void tkip_mixing_phase2(struct ieee80211_key *key, struct tkip_ctx *ctx,
+ /* Add TKIP IV and Ext. IV at @pos. @iv0, @iv1, and @iv2 are the first octets
+  * of the IV. Returns pointer to the octet following IVs (i.e., beginning of
+  * the packet payload). */
+-u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
+-			   u8 iv0, u8 iv1, u8 iv2)
++u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key, u16 iv16)
+ {
+-	*pos++ = iv0;
+-	*pos++ = iv1;
+-	*pos++ = iv2;
++	pos = write_tkip_iv(pos, iv16); 
+ 	*pos++ = (key->conf.keyidx << 6) | (1 << 5) /* Ext IV */;
+ 	put_unaligned_le32(key->u.tkip.tx.iv32, pos);
+ 	return pos + 4;
+@@ -213,7 +216,7 @@ void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
+ 	u8 rc4key[16];
+ 
+ 	ieee80211_tkip_gen_rc4key(key, ta, rc4key);
+-	pos = ieee80211_tkip_add_iv(pos, key, rc4key[0], rc4key[1], rc4key[2]);
++	pos = ieee80211_tkip_add_iv(pos, key, key->u.tkip.tx.iv16);
+ 	ieee80211_wep_encrypt_data(tfm, rc4key, 16, pos, payload_len);
+ }
+ 
+diff --git a/net/mac80211/tkip.h b/net/mac80211/tkip.h
+index b890427..d471438 100644
+--- a/net/mac80211/tkip.h
++++ b/net/mac80211/tkip.h
+@@ -13,8 +13,8 @@
+ #include <linux/crypto.h>
+ #include "key.h"
+ 
+-u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
+-			  u8 iv0, u8 iv1, u8 iv2);
++u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key, u16 iv16);
++
+ void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
+ 				 struct ieee80211_key *key,
+ 				 u8 *pos, size_t payload_len, u8 *ta);
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 9834cec..345e10e 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -198,14 +198,8 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 		key->u.tkip.tx.iv32++;
+ 
+ 	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
+-		hdr = (struct ieee80211_hdr *)skb->data;
 -
- static int do_wireless_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg)
- {
- 	struct iwreq __user *iwr;
-diff --git a/include/linux/wireless.h b/include/linux/wireless.h
-index 0a9b5b4..c5606a1 100644
---- a/include/linux/wireless.h
-+++ b/include/linux/wireless.h
-@@ -675,6 +675,19 @@ struct	iw_point
-   __u16		flags;		/* Optional params */
- };
+ 		/* hwaccel - with preallocated room for IV */
+-		ieee80211_tkip_add_iv(pos, key,
+-				      (u8) (key->u.tkip.tx.iv16 >> 8),
+-				      (u8) (((key->u.tkip.tx.iv16 >> 8) | 0x20) &
+-					    0x7f),
+-				      (u8) key->u.tkip.tx.iv16);
++		ieee80211_tkip_add_iv(pos, key, key->u.tkip.tx.iv16);
  
-+#ifdef __KERNEL__
-+#ifdef CONFIG_COMPAT
-+
-+#include <linux/compat.h>
-+
-+struct compat_iw_point {
-+	compat_caddr_t pointer;
-+	__u16 length;
-+	__u16 flags;
-+};
-+#endif
-+#endif
-+
- /*
-  *	A frequency
-  *	For numbers lower than 10^9, we encode the number in 'm' and
-diff --git a/include/net/wext.h b/include/net/wext.h
-index 80b31d8..6d76a39 100644
---- a/include/net/wext.h
-+++ b/include/net/wext.h
-@@ -12,6 +12,8 @@ extern int wext_proc_init(struct net *net);
- extern void wext_proc_exit(struct net *net);
- extern int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
- 			     void __user *arg);
-+extern int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
-+				    unsigned long arg);
- #else
- static inline int wext_proc_init(struct net *net)
- {
-@@ -26,6 +28,11 @@ static inline int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned
- {
- 	return -EINVAL;
- }
-+static inline int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
-+					   unsigned long arg)
-+{
-+	return -EINVAL;
-+}
- #endif
- 
- #endif /* __NET_WEXT_H */
-diff --git a/net/socket.c b/net/socket.c
-index 66c4a8c..81fe825 100644
---- a/net/socket.c
-+++ b/net/socket.c
-@@ -90,6 +90,7 @@
- #include <asm/unistd.h>
- 
- #include <net/compat.h>
-+#include <net/wext.h>
- 
- #include <net/sock.h>
- #include <linux/netfilter.h>
-@@ -2210,10 +2211,19 @@ static long compat_sock_ioctl(struct file *file, unsigned cmd,
- {
- 	struct socket *sock = file->private_data;
- 	int ret = -ENOIOCTLCMD;
-+	struct sock *sk;
-+	struct net *net;
-+
-+	sk = sock->sk;
-+	net = sock_net(sk);
- 
- 	if (sock->ops->compat_ioctl)
- 		ret = sock->ops->compat_ioctl(sock, cmd, arg);
- 
-+	if (ret == -ENOIOCTLCMD &&
-+	    (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST))
-+		ret = compat_wext_handle_ioctl(net, cmd, arg);
-+
- 	return ret;
- }
- #endif
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index 91cf548..071cee4 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -1112,6 +1112,110 @@ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
- 	return ret;
- }
- 
-+#ifdef CONFIG_COMPAT
-+static int compat_standard_call(struct net_device *	dev,
-+				struct iwreq *		iwr,
-+				unsigned int		cmd,
-+				iw_handler		handler)
-+{
-+	const struct iw_ioctl_description *descr;
-+	struct compat_iw_point *iwp_compat;
-+	struct iw_request_info info;
-+	struct iw_point iwp;
-+	int err;
-+
-+	descr = standard_ioctl + (cmd - SIOCIWFIRST);
-+
-+	if (descr->header_type != IW_HEADER_TYPE_POINT)
-+		return ioctl_standard_call(dev, iwr, cmd, handler);
-+
-+	iwp_compat = (struct compat_iw_point *) &iwr->u.data;
-+	iwp.pointer = compat_ptr(iwp_compat->pointer);
-+	iwp.length = iwp_compat->length;
-+	iwp.flags = iwp_compat->flags;
-+
-+	info.cmd = cmd;
-+	info.flags = 0;
-+
-+	err = ioctl_standard_iw_point(&iwp, cmd, descr, handler, dev, &info);
-+
-+	iwp_compat->pointer = ptr_to_compat(iwp.pointer);
-+	iwp_compat->length = iwp.length;
-+	iwp_compat->flags = iwp.flags;
-+
-+	return err;
-+}
-+
-+static int compat_private_call(struct net_device *dev, struct iwreq *iwr,
-+			       unsigned int cmd, iw_handler handler)
-+{
-+	const struct iw_priv_args *descr;
-+	struct iw_request_info info;
-+	int ret, extra_size;
-+
-+	extra_size = get_priv_descr_and_size(dev, cmd, &descr);
-+
-+	/* Prepare the call */
-+	info.cmd = cmd;
-+	info.flags = 0;
-+
-+	/* Check if we have a pointer to user space data or not. */
-+	if (extra_size == 0) {
-+		/* No extra arguments. Trivial to handle */
-+		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
-+	} else {
-+		struct compat_iw_point *iwp_compat;
-+		struct iw_point iwp;
-+
-+		iwp_compat = (struct compat_iw_point *) &iwr->u.data;
-+		iwp.pointer = compat_ptr(iwp_compat->pointer);
-+		iwp.length = iwp_compat->length;
-+		iwp.flags = iwp_compat->flags;
-+
-+		ret = ioctl_private_iw_point(&iwp, cmd, descr,
-+					     handler, dev, &info, extra_size);
-+
-+		iwp_compat->pointer = ptr_to_compat(iwp.pointer);
-+		iwp_compat->length = iwp.length;
-+		iwp_compat->flags = iwp.flags;
-+	}
-+
-+	/* Call commit handler if needed and defined */
-+	if (ret == -EIWCOMMIT)
-+		ret = call_commit_handler(dev);
-+
-+	return ret;
-+}
-+
-+int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
-+			     unsigned long arg)
-+{
-+	void __user *argp = (void __user *)arg;
-+	struct iwreq iwr;
-+	char *colon;
-+	int ret;
-+
-+	if (copy_from_user(&iwr, argp, sizeof(struct iwreq)))
-+		return -EFAULT;
-+
-+	iwr.ifr_name[IFNAMSIZ-1] = 0;
-+	colon = strchr(iwr.ifr_name, ':');
-+	if (colon)
-+		*colon = 0;
-+
-+	ret = wext_ioctl_dispatch(net, (struct ifreq *) &iwr, cmd,
-+				  compat_standard_call,
-+				  compat_private_call);
-+
-+	if (ret >= 0 &&
-+	    IW_IS_GET(cmd) &&
-+	    copy_to_user(argp, &iwr, sizeof(struct iwreq)))
-+		return -EFAULT;
-+
-+	return ret;
-+}
-+#endif
-+
- /************************* EVENT PROCESSING *************************/
- /*
-  * Process events generated by the wireless layer or the driver.
+ 		info->control.hw_key = &tx->key->conf;
+ 		return 0;
 -- 
-1.5.5.1.308.g1fbb5
+1.5.6.rc2.261.ga8fbe
+
 
