@@ -1,52 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:36123 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751733AbYFEUQx (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.251]:1757 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752237AbYFKLDL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2008 16:16:53 -0400
-Message-Id: <1212697012.14712.1256992009@webmail.messagingengine.com> (sfid-20080605_221656_278458_B0EC63B4)
-From: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
+	Wed, 11 Jun 2008 07:03:11 -0400
+Received: by an-out-0708.google.com with SMTP id d40so722642and.103
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 04:03:10 -0700 (PDT)
+Message-ID: <43e72e890806110403nddfca7cn66b91a938919e1f0@mail.gmail.com> (sfid-20080611_130335_439286_2A0BC0E4)
+Date: Wed, 11 Jun 2008 04:03:10 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
 To: "Tomas Winkler" <tomasw@gmail.com>
-Cc: "Ivo van Doorn" <ivdoorn@gmail.com>,
-	"Dan Williams" <dcbw@redhat.com>,
+Subject: Re: [compat-masters] Backported MQ requirement on 802.11n for older kernels
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, "Dmitry Torokhov" <dtor@mail.ru>
-Content-Type: text/plain; charset="ISO-8859-1"
+	compat-masters@lists.madwifi.org,
+	"Tim Gardner" <tim.gardner@canonical.com>,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
+In-Reply-To: <43e72e890806102136jb8e695fla98a8594dde14396@mail.gmail.com>
 MIME-Version: 1.0
-References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
-   <1ba2fa240806041607j10841ac0qb11fe0d0b27953d8@mail.gmail.com>
-   <20080605003808.GA16599@khazad-dum.debian.net>
-   <200806051803.43193.IvDoorn@gmail.com>
-   <1ba2fa240806050936o383111cepcd6733d1ed205a26@mail.gmail.com>
-   <1212687773.13044.1256965165@webmail.messagingengine.com>
-   <1ba2fa240806051054t26ae5487s531962bf9ebcb2ff@mail.gmail.com>
-Subject: Re: [PATCH 01/12] rfkill: clarify meaning of rfkill states
-In-Reply-To: <1ba2fa240806051054t26ae5487s531962bf9ebcb2ff@mail.gmail.com>
-Date: Thu, 05 Jun 2008 17:16:52 -0300
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890806080855p284f85brd0ff1f1dfce96bf8@mail.gmail.com>
+	 <c85cb4470806090053l5b763a23j43bbf0c87f594b0d@mail.gmail.com>
+	 <1213001797.698.57.camel@johannes.berg>
+	 <43e72e890806090201q55bff8e3m694121ebd4befee6@mail.gmail.com>
+	 <43e72e890806090325y5a1aebadq68204695044f4b6f@mail.gmail.com>
+	 <1ba2fa240806101657w14599f30x67f58acbc7fe9e80@mail.gmail.com>
+	 <43e72e890806102132q1aaba42ehd76bdd30b8d4080a@mail.gmail.com>
+	 <43e72e890806102136jb8e695fla98a8594dde14396@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 5 Jun 2008 20:54:42 +0300, "Tomas Winkler" <tomasw@gmail.com> said:
-> On Thu, Jun 5, 2008 at 8:42 PM, Henrique de Moraes Holschuh
-> <hmh@hmh.eng.br> wrote:
-> > On Thu, 5 Jun 2008 19:36:26 +0300, "Tomas Winkler" <tomasw@gmail.com> said:
-> >> Cannot this be just fixed with ~ sed -s/ON/OFF/g'  over the kernel?
-> >
-> > Absolutely NOT!
-> >
-> > You would have patches in flight, not to mention out-of-tree
-> > stuff, that you'd have no idea if they want the old or new meaning.
-> >
-> > Not to mention you'd never know what you forgot to convert, etc.
-> >
-> How many drivers today implement the rfkill interface? I guess no more
-> then 10.
+On Tue, Jun 10, 2008 at 9:36 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Tue, Jun 10, 2008 at 9:32 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Tue, Jun 10, 2008 at 4:57 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+>>> On Mon, Jun 9, 2008 at 1:25 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>>> On Mon, Jun 9, 2008 at 2:01 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>>>> On Mon, Jun 9, 2008 at 1:56 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>>>>>> On Mon, 2008-06-09 at 10:53 +0300, Ron Rindjunsky wrote:
+>>>>>>> >
+>>>>>>> > I just finished trying to backport CONFIG_NETDEVICES_MULTIQUEUE
+>>>>>>> > requirement for 802.11n to older kernels by relying on the old
+>>>>>>> > internal mac80211 hacked up MQ support. I've tested the build on
+>>>>>>> > 2.6.22, 2.6.23, and 2.6.24. Let me know if you get to test this,
+>>>>>>> > particularly iwl4965 using 11n on 2.6.22.
+>>>>>>> >
+>>>>>>>
+>>>>>>> in config.mk you put MAC80211_QOS=m, and i guess that the intention was to put
+>>>>>>> CONFIG_MAC80211_QOS=m
+>>>>>>> if this is the case then the compilation fails
+>>>>>>
+>>>>>> It should be "y"
+>>>>>>
+>>>>>> johannes
+>>>>>>
+>>>>>
+>>>>> Danke
+>>>>
+>>>> OK found some more issues. v4.2 pushed out and new tarball
+>>>> regenerated. This has been tested by Intel on 802.11n on iwl4965.
+>>>
+>>> I couldn't  make wme.c compiled for kernels > 22 unless I've added the
+>>> else statement  bellow into confg.mk
+>>> You've reported that it worked for you so what did I wrong?
+>>>
+>>> ifeq ($(CONFIG_NETDEVICES_MULTIQUEUE),)
+>>> $(warning "WARNING: You are running a kernel >= 2.6.23, you should
+>>> enable CONFIG_NETDEVICES_MULTIQUEUE for 802.11n support")
+>>> else
+>>> CONFIG_MAC80211_QOS=y
+>>
+>> Well this is forcing this option on kernels where it probably was
+>> available. I don't recall where we added this but I was relying on
+>> your .config. We forced this for older kernels as we are providing the
+>> infrastructure within the code but for newer kernels you need MQ
+>> support and NET_SCHED. If we force enable it and if those options are
+>> not enabled it'll fail. This is why we have this big fat warning if MQ
+>> is detected as disabled for >= 2.6.23.
+>>
+>> Let me know what you think.
+>
+> OK I guess we should just enable it if MQ is enabled, point taken.
+> Committed and pushed, thanks.
 
-You missed the point.
+Actually no, take that back. CONFIG_MAC80211_QOS should probably just
+be enabled if NET_SCHED is present.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Johannes -- why do we have the requirement for NETDEVICES_MULTIQUEUE
+on CONFIG_MAC80211_QOS? My current config doesn't have it it and
+CONFIG_MAC80211_QOS still works right now enabled. Of course the
+driver I'm testing doesn't have 11n though.
 
+Shouldn't we just make MAC80211_QOS depend on NET_SCHED and figure out
+we can't support 11n based on NETDEVICES_MULTIQUEUE?
+
+  Luis
