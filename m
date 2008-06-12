@@ -1,60 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:45011 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753072AbYFXJDZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 05:03:25 -0400
-Received: by py-out-1112.google.com with SMTP id p76so1294497pyb.10
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2008 02:03:24 -0700 (PDT)
-Message-ID: <a32f33a40806240203w29d0caf7p6e2956d82d48e013@mail.gmail.com> (sfid-20080624_110354_390878_8C1820A5)
-Date: Tue, 24 Jun 2008 11:03:24 +0200
-From: "Ivo Van Doorn" <ivdoorn@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: mac80211: workqueue & RTNL lock
-Cc: "Michael Buesch" <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1214297515.8967.253.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200806230042.41219.IvDoorn@gmail.com>
-	 <200806230030.42776.mb@bu3sch.de>
-	 <a32f33a40806230130t11022b31p3d9997ab5e449fe6@mail.gmail.com>
-	 <200806231120.41519.mb@bu3sch.de>
-	 <a32f33a40806230417i68e4d19aj76a481d7dbf2c611@mail.gmail.com>
-	 <1214297515.8967.253.camel@johannes.berg>
+Received: from sh.osrg.net ([192.16.179.4]:54095 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752231AbYFLFe7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2008 01:34:59 -0400
+Date: Thu, 12 Jun 2008 14:18:32 +0900
+To: mb@bu3sch.de
+Cc: fujita.tomonori@lab.ntt.co.jp, vegard.nossum@gmail.com,
+	miles.lane@gmail.com, akpm@linux-foundation.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: BUG: NULL pointer dereference at 00000000 -- IP: [<f8e783d5>]
+ :b43:b43_dma_mapping_error+0x16/0x155
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <200806111205.10433.mb@bu3sch.de>
+References: <200806101650.27180.mb@bu3sch.de>
+	<20080611095844J.fujita.tomonori@lab.ntt.co.jp>
+	<200806111205.10433.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Message-Id: <20080612142235A.fujita.tomonori@lab.ntt.co.jp> (sfid-20080612_073503_598130_8A61A074)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6/24/08, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2008-06-23 at 13:17 +0200, Ivo Van Doorn wrote:
->
->> Well it was caused by the recent introduction of the interface iterator.
->> Question now is if we need to restrict the usage, remove the
->> flush_workqueue,
->> or change the locking in the interface iterator. :S
->
-> Ouch. Any way you can use the atomic iterator there?
+On Wed, 11 Jun 2008 12:05:10 +0200
+Michael Buesch <mb@bu3sch.de> wrote:
 
-No because of rt2500usb and rt73usb who need scheduling,
-and this bug is in exactly the same function as before where we had
-the scheduling while atomic problem when you introduced the atomic iterator. ;)
+> On Wednesday 11 June 2008 02:58:44 FUJITA Tomonori wrote:
+> > On Tue, 10 Jun 2008 16:50:26 +0200
+> > Michael Buesch <mb@bu3sch.de> wrote:
+> > 
+> > > On Tuesday 10 June 2008 16:42:41 Vegard Nossum wrote:
+> > > > This change comes from
+> > > > 
+> > > > commit 353c409463ecba63c3a41a992d3f5fba935eada9
+> > > > Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > > > Date:   Fri May 23 19:02:30 2008 +0000
+> > > 
+> > > 
+> > > Ok, FUJITA Tomonori, please make sure a patch like the following goes
+> > > into the same trees that you submitted commit 353c409 to.
+> > > Also make sure to check b43legacy. I _guess_ you might have added
+> > > the same bug there.
+> > 
+> > Ah, sorry about the bug.
+> > 
+> > From a quick look, mainline needs the same fix too?
+> > 
+> > b43_dma_mapping_error calls unmap_descbuffer() on the failure, which
+> > assumes that ring->dev is set up properly.
+> 
+> Yeah ok. That's an unlikely error path.
 
-> Or if not, can you use schedule_work and cancel_work_sync to take care
-> of things?
+Yeah, it doesn't always happen, but it possible that it happens?
 
-I thought about that it cancel_work_sync will cause exactly the same problem,
-stop() holds the rtnl lock, rt2x00 work waits for rtnl lock, mac80211
-calls stop(), rt2x00 waits until tasks are completed but one of those
-is still waiting on the rtnl lock.
 
-However I could use the non-synchronized version for cancelling the work
-and add a check to see if the work should be cancelled within the
-rtnl-protected area.
+> The new bug is in the main path which will always trigger.
 
-> I would like to keep the mac80211 workqueue rtnl-free because
-> otherwise locking is going to get ugly.
+Right.
 
-We need a big warning in mac80211.h then that tells that the non-atomic iterator
-or any other rtnl locking cannot be used in the mac80211 workqueue.
 
-Ivo
+> Next time please send _any_ patch for review to me and to the wireless list.
+> Please tell me which trees this bug has been merged to. Is it already in
+> Linus' tree?
+
+No, seems that there are some confusion. This is just in -mm to find
+problems:
+
+http://userweb.kernel.org/~akpm/mmotm/broken-out/dma-mapping-add-the-device-argument-to-dma_mapping_error.patch
+
+This patch is a trivial but changes lots of places. So it's difficult
+to get an ACK on all the places.
+
+This patch need several fixes but all the patches are trivial except
+for b34. I guess that it is because b34 handles devices for
+dma-mapping in an uncommon way.
+
+http://userweb.kernel.org/~akpm/mmotm/broken-out/dma-mapping-add-the-device-argument-to-dma_mapping_error-b34-fix.patch
+http://userweb.kernel.org/~akpm/mmotm/broken-out/dma-mapping-add-the-device-argument-to-dma_mapping_error-bnx2x.patch
+http://userweb.kernel.org/~akpm/mmotm/broken-out/dma-mapping-add-the-device-argument-to-dma_mapping_error-sge-fix.patch
+http://userweb.kernel.org/~akpm/mmotm/broken-out/dma-mapping-add-the-device-argument-to-dma_mapping_error-sparc32.patch
+http://userweb.kernel.org/~akpm/mmotm/broken-out/dma-mapping-add-the-device-argument-to-dma_mapping_error-svc_rdma-fix.patch
