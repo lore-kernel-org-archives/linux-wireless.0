@@ -1,80 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45091 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756832AbYFII5r (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:33165 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750894AbYFLRTI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2008 04:57:47 -0400
-Subject: Re: [PATCH 1/7] mac80211: add helpers for frame control testing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1212774671.6340.75.camel@brick> (sfid-20080606_195944_782545_6A2B1449)
-References: <1212774671.6340.75.camel@brick>
-	 (sfid-20080606_195944_782545_6A2B1449)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-siAWduYOfliX7LmhEXnY"
-Date: Mon, 09 Jun 2008 09:37:04 +0200
-Message-Id: <1212997025.698.51.camel@johannes.berg> (sfid-20080609_105749_591546_826C3851)
-Mime-Version: 1.0
+	Thu, 12 Jun 2008 13:19:08 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH] rndis_wlan: use kzalloc to allocate private data
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Date: Thu, 12 Jun 2008 20:19:01 +0300
+Message-ID: <20080612171901.15225.25655.stgit@nanoha.lan> (sfid-20080612_191912_613771_7F270C59)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+rndis_wlan used kmalloc to allocate private data structure and leaving data
+uninitialized, but later assumed to be set zero.
 
---=-siAWduYOfliX7LmhEXnY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
+ drivers/net/wireless/rndis_wlan.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-> +static inline u8 *ieee80211_get_qos_ctl(struct ieee80211_hdr *hdr,
-
-I think this is wrong, the header len will probably at some point
-include more things like HT headers where present or similar, so
-subtracting 2 from the header len is going to be wrong as soon as that
-happens because the QoS control will stay first. I think this should do
-the relevant calculation itself, ie. check for A4.
-
-> +static inline int ieee80211_has_protected(__le16 fc)
-
-> +static inline int ieee80211_has_morefrags(__le16 fc)
-
-> +static inline int ieee80211_has_tods(__le16 fc)
-
-> +static inline int ieee80211_has_fromds(__le16 fc)
-
-> +static inline int ieee80211_has_a4(__le16 fc)
-
-> +static inline int ieee80211_is_mgmt(__le16 fc)
-
-> +static inline int ieee80211_is_ctl(__le16 fc)
-
-> +static inline int ieee80211_is_data(__le16 fc)
-
-> +static inline int ieee80211_data_has_qos(__le16 fc)
-
-Can you add kernel-doc comments for these?
-
-johannes
-
---=-siAWduYOfliX7LmhEXnY
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJITN2cAAoJEKVg1VMiehFYuDAQAJsX2cLZZedq+IqduGps/0Gd
-tq6eZxcuT/cUCA/leO3WnQU6Dk1ISbRkVCUL9rgcytkQlsQNw+sCpyBZ7IqIYHvn
-oTqm/VETlK0EarHbmstcvn7r6FX4DUxZVNbxjcQGfJErB+vPpBW0U49HPSPRyabl
-Q7FVgNWBd3uFoDxfsm7cPFIJ+DBFZHhZVCIWSEbhTTHsWVwtfJ/ZMqVjvfzWmVZZ
-fyUpnX0HfdTf0z6PxPqrErem5eqZcKIVFweryU3qf3S46BiaeRV+Y3HqHvnDABYK
-+Mc6rKYwxS0AT2s27JsQ/ZHBYw1u1Ex5q2R6GX1Rx6qhxSgjOuGbM8xY/+tPE8Cy
-nylOD0f/PgGrIGZ7rMBvdFEtH989t/wpdbY3N9+hziGx7/+oz2LxMK6LBOVJPhoi
-/PcTqz2ugDntWq/TdJzZND4ChsrCYnZh6rhICpjpdNz0uPTh0Vn5tEv0NDrdc/bS
-Pcn7FNRPfmta4BzK6ooamFyajIjwkOV6jA+x21vL9+Khy4gTEyaTipCbDdHuafXZ
-c8bRYm+2stDW1YlH9TZkbFeR99x4hptePGMSNnPAN5BDNp3mehFK+k+8qLzXEB4b
-/DSY51R/us1I8R1etA6MvhULH8p93xudvmWRHC6HMeTZhPaumdGj6G/mTe48hXpU
-r/vOK0EOVUazaCfXGxlv
-=fvWC
------END PGP SIGNATURE-----
-
---=-siAWduYOfliX7LmhEXnY--
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 8505d8b..6eb487d 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -2522,7 +2522,7 @@ static int rndis_wext_bind(struct usbnet *usbdev, struct usb_interface *intf)
+ 	__le32 tmp;
+ 
+ 	/* allocate rndis private data */
+-	priv = kmalloc(sizeof(struct rndis_wext_private), GFP_KERNEL);
++	priv = kzalloc(sizeof(struct rndis_wext_private), GFP_KERNEL);
+ 	if (!priv)
+ 		return -ENOMEM;
+ 
+@@ -2530,8 +2530,6 @@ static int rndis_wext_bind(struct usbnet *usbdev, struct usb_interface *intf)
+ 	 * Otherwise we'll be in big trouble in rndis_wext_early_init().
+ 	 */
+ 	usbdev->driver_priv = priv;
+-	memset(priv, 0, sizeof(*priv));
+-	memset(priv->name, 0, sizeof(priv->name));
+ 	strcpy(priv->name, "IEEE802.11");
+ 	usbdev->net->wireless_handlers = &rndis_iw_handlers;
+ 	priv->usbdev = usbdev;
 
