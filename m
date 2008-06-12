@@ -1,73 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:39685 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762173AbYFWUXV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2008 16:23:21 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Thomas Renninger <trenn@suse.de>,
-	Fabien Crespel <fabien@crespel.net>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: [PATCH 04/13] rfkill: add parameter to disable radios by default
-Date: Mon, 23 Jun 2008 17:22:59 -0300
-Message-Id: <1214252588-30723-5-git-send-email-hmh@hmh.eng.br> (sfid-20080623_222330_568438_844AFDE9)
-In-Reply-To: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
-References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4939 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754315AbYFLTD1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2008 15:03:27 -0400
+Date: Thu, 12 Jun 2008 14:41:02 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Tomas Winkler <tomasw@gmail.com>, Rik van Riel <riel@redhat.com>,
+	Zdenek Kabelac <zdenek.kabelac@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	yi.zhu@intel.com, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: Problem: Out of memory after 2days with 2GB RAM
+Message-ID: <20080612184102.GA9546@tuxdriver.com> (sfid-20080612_210330_901501_3B597BFB)
+References: <c4e36d110806120307n20cce692s9c136f11596f5ab0@mail.gmail.com> <20080612093833.0fb9cdd6@bree.surriel.com> <1213278884.3936.15.camel@johannes.berg> <1ba2fa240806120843s268b2ff4mb45a11adf11afc7f@mail.gmail.com> <1ba2fa240806120935r54a080eci7fa6fafc718eed17@mail.gmail.com> <1213290335.3730.4.camel@johannes.berg> <1ba2fa240806121039o376b0a8sdfaacf3a1f4a9e57@mail.gmail.com> <1213292812.3730.21.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1213292812.3730.21.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, radios are always enabled when their rfkill interface is
-registered.  This is not optimal, the safest state for a radio is to be
-offline unless the user turns it on.
+On Thu, Jun 12, 2008 at 07:46:52PM +0200, Johannes Berg wrote:
+> 
+> > > Well, I disagree, and I'll push my patch as soon as somebody confirms
+> > > that it doesn't break anything.
+> > 
+> > Remember you are not a maintainer of this driver and second we are
+> > open to all suggestions you don't have to use this kind of
+> > statements...
+> 
+> Yeah, you're right, I can't really do that. But I can submit the patch
+> to akpm, and I'm sure he'll take it after you provide your counter
+> argument about hope never dying again ;)
 
-Add a module parameter that causes all radios to be disabled when their
-rfkill interface is registered.  The module default is not changed so
-unless the parameter is used, radios will still be forced to their enabled
-state when they are registered.
+Is there some reason you think I would need to be cut out of the loop??
+akpm isn't the only one who likes solutions...
 
-The new rfkill module parameter is called "default_state".
-
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- net/rfkill/rfkill.c |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
-
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index f95081a..3edc585 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -39,6 +39,11 @@ MODULE_LICENSE("GPL");
- static LIST_HEAD(rfkill_list);	/* list of registered rf switches */
- static DEFINE_MUTEX(rfkill_mutex);
- 
-+static unsigned int rfkill_default_state = RFKILL_STATE_ON;
-+module_param_named(default_state, rfkill_default_state, uint, 0444);
-+MODULE_PARM_DESC(default_state,
-+		 "Default initial state for all radio types, 0 = radio off");
-+
- static enum rfkill_state rfkill_states[RFKILL_TYPE_MAX];
- 
- 
-@@ -436,8 +441,12 @@ static int __init rfkill_init(void)
- 	int error;
- 	int i;
- 
-+	if (rfkill_default_state != RFKILL_STATE_OFF &&
-+	    rfkill_default_state != RFKILL_STATE_ON)
-+		return -EINVAL;
-+
- 	for (i = 0; i < ARRAY_SIZE(rfkill_states); i++)
--		rfkill_states[i] = RFKILL_STATE_ON;
-+		rfkill_states[i] = rfkill_default_state;
- 
- 	error = class_register(&rfkill_class);
- 	if (error) {
+John
 -- 
-1.5.5.4
-
+John W. Linville
+linville@tuxdriver.com
