@@ -1,87 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36752 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:57078 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753149AbYFDUQK (ORCPT
+	with ESMTP id S1754082AbYFLTAG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2008 16:16:10 -0400
-Subject: Re: Regression (?) with wireless-testing and mainline 2.6.26-rcX
-	kernels
+	Thu, 12 Jun 2008 15:00:06 -0400
+Subject: Re: [RFC] Do not activate promiscuous mode on wlan interfaces for
+	bridging.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4846F6DE.4080009@lwfinger.net>
-References: <4846EB9D.1080303@lwfinger.net>
-	 <1212607636.14371.46.camel@johannes.berg>  <4846F6DE.4080009@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fY+d0W9wuzogJ6rP5ESQ"
-Date: Wed, 04 Jun 2008 22:15:26 +0200
-Message-Id: <1212610526.14371.48.camel@johannes.berg> (sfid-20080604_221615_127174_FBA2B445)
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, shemminger@linux-foundation.org,
+	j@w1.fi, bridge@linux-foundation.org,
+	Linux Netdev List <netdev@vger.kernel.org>
+In-Reply-To: <1213296815.6615.24.camel@localhost> (sfid-20080612_205338_785787_5D25D535)
+References: <1213232760.6645.24.camel@localhost>
+	 (sfid-20080612_030607_332834_1EFDE126)  <1213255570.3871.8.camel@johannes.berg>
+	 <1213294793.6615.16.camel@localhost>
+	 (sfid-20080612_202000_504292_98E93460)  <1213294852.3730.31.camel@johannes.berg>
+	 <1213295643.6615.20.camel@localhost>
+	 (sfid-20080612_203408_119945_EA437275)  <1213296250.3730.33.camel@johannes.berg>
+	 <1213296815.6615.24.camel@localhost> (sfid-20080612_205338_785787_5D25D535)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-j0naZQyRNEZmr0GOtJqA"
+Date: Thu, 12 Jun 2008 20:59:04 +0200
+Message-Id: <1213297144.3730.35.camel@johannes.berg> (sfid-20080612_210012_582330_752DF319)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-fY+d0W9wuzogJ6rP5ESQ
+--=-j0naZQyRNEZmr0GOtJqA
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-
-> > Interesting. Doesn't your AP support short preambles? That'd be the onl=
-y
-> > reason for anything going wrong here to actually break your connection.
-> > hmm.
+On Thu, 2008-06-12 at 11:53 -0700, Luis Carlos Cobo wrote:
+> On Thu, 2008-06-12 at 20:44 +0200, Johannes Berg wrote:
+> > But in response to what mac80211 command are you sending the promisc
+> > mode to the hw?
 >=20
-> My AP works with short preambles. When this situation occurs, whatever=20
-> happens causes a switch from short to long. The change in the preamble is=
-=20
-> likely a symptom of whatever is causing the breakage.
+> In the function associated to .configure_filter (struct ieee80211_ops)
+> in the driver, when (*new_flags & (FIF_PROMISC_IN_BSS))
 
-Hmm, ok. Not sure, maybe a driver problem?
-
-> >> Do you have any suggestions on what should be logged in=20
-> >> ieee80211_handle_protect_preamb or any other mac80211 routine so that =
-I can=20
-> >> isolate the problem? I use NM to control the connection and authentica=
-tion to=20
-> >> a WPA-PSK TKIP network.
-> >=20
-> > Well I guess you should log what state it changes to (maybe even in b43=
-)
-> > and at the same time monitor with say wireshark on a monitor interface
-> > to see what the AP is announcing. Not sure really, I have a hard time
-> > imagining this being the problem.
->=20
-> I'll try for a stack dump when the short =3D> long transition occurs. Per=
-haps=20
-> that will suggest something to dump. I'll also set up a monitor interface=
-.=20
-> Unfortunately, it is an unlikely event, but I have a lot of disk space.
-
-You can filter and save only probe responses and beacons from that
-particular AP.
+But it is a "real promisc" mode not restricted to the BSS? Maybe the
+solution is to just not promote promisc-in-bss to real-promisc when AP
+mode is active.
 
 johannes
 
---=-fY+d0W9wuzogJ6rP5ESQ
+--=-j0naZQyRNEZmr0GOtJqA
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIVAwUASEb33KVg1VMiehFYAQL76w/7BZD+swiaPWwD7qLchdQdayetA7qQSFdZ
-gp2oRHH7y6xLHPgLuTUtGpNw1X4pQBW02/s1THcha9vvKVeuw/iwXCxH8j20gjEu
-ofataUtOx5VKXv5ELriJ8lBKa1rHp8+WbcZq0B1W80MlvG5hKRZq5xa216NpqqCm
-ZBSG4t8wEMpK66gCABc7a18dGwg1tepsUc/1M3ZETvNYzBliUw2QEf3GyxT7h4Co
-ueBQ5+RiqzxxQFkM2zjSZZ1vstCPL9nU6vJacIO+CpR+StQXoyezd5J+pGdl3hIh
-9btwIFho+WrnMnGlha8HM+4ONjbrVtFIXi6DHp38AC2pnyugM4mWc9tVMxRzx46p
-7viYxjebTdD2fV0FTHIf3y45kmC25jt/m6LjKk1kEpWQcb2otW45uYoT+6s+tFAA
-j2aSVoNKRrnvgPAusP3o60vqGfpN+q4TQ3YsRx23fcpYOriLFhdc4uNsrt3geIkN
-oFuutEXZnE1d4iezPKhRNPPk987w2A3Y+cptpeTYi1AnTyPgV0eVOB1ihVk6JOy4
-7duKFNbpi1wwLMiw2AWYuU/DT6nflFfY765rtpzqkFpcgJzRCXzjuuKkEU1ggQqb
-c8tPOGXaQVBknM1gMTMb/FWnMiVxIBf+BMSb147BJ0vsSIm0R8DlVDMxHyp9Ibkk
-07IHziHubMM=
-=SbbD
+iQIcBAABAgAGBQJIUXH0AAoJEKVg1VMiehFY7CUQALoOvnpurdlVDrszBWzzQasd
+ftp4ubEMXcIz5L+N+tA2HMXzPiTx3P1eYrxESB0mF91sQcb3OGUex82Uj8nUZAuU
+tcxHZ8tQ6lU2/U69wcoFSezjGamiqQRJbEUYUXA3cpccWsNrGLsCz7t2CobzOGWz
+Z7Qc7CeRhsPKpkNenQcC+i1qGUe3HJtsrNXsysWU6v/+rYcHaKKC3CgUZ6DNb4Fq
+3Rp4X3hur1kG4ui7o0wMsIPSjAsr7gf7fYaLJYrkO72RjD5b7dzAJuiAawaZI+9R
+t2/bGxePVwuNjIRsIQDf3QHEfap7NioWKXgpS/xITqcIFNaVoDxgHachZnQT+0BH
+H2Q3sOy2CZzlXWSa+e2FsBs+/WoCNyYBeOEo9f/RdO02XdYWI3uGKMfUBk7fhm10
+e6KwFmkH0+Yr7JJlfoZPmBEIRIBCZHlBc18MIifQKuK2HIpy1Pu+3HpAtmWf0iHk
+4F6+sA1pZr/jr9XhMd4KB4rMjVUeoMNgHuPE+XQspv6VA8+1SIz4FvVHm0XDnOT7
+J1jqlXEOP8FsOw7rG7FUw4Wx63gj6hKb2l8LRupKVhD0JKIhoaTlkEQlK4ZT3Vj2
+xxhrYJPN55w2jHe6YMT+pG+tO/GZNZ2CRa5e/PZHlEZd4yD3L3cpf2GA7H26MGM5
+J1E/gm5TT3gQcb+WCMLz
+=4mCi
 -----END PGP SIGNATURE-----
 
---=-fY+d0W9wuzogJ6rP5ESQ--
+--=-j0naZQyRNEZmr0GOtJqA--
 
