@@ -1,154 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:43796 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752948AbYFDDKY (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.173]:57539 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753690AbYFLGmh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 23:10:24 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: [PATCH 07/12] rfkill: rework suspend and resume handlers
-Date: Wed,  4 Jun 2008 00:10:12 -0300
-Message-Id: <1212549017-30144-8-git-send-email-hmh@hmh.eng.br> (sfid-20080604_051035_832921_F5DB7DFC)
-In-Reply-To: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
-References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
+	Thu, 12 Jun 2008 02:42:37 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so269817ugf.16
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 23:42:35 -0700 (PDT)
+Message-ID: <f6ca9fed0806112342u1695182brfb99d53de67a77a2@mail.gmail.com> (sfid-20080612_084312_539857_36CD5A25)
+Date: Thu, 12 Jun 2008 08:42:35 +0200
+From: drago01 <drago01@gmail.com>
+To: "Zhu Yi" <yi.zhu@intel.com>
+Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with disable_hw_scan=1
+Cc: "Maxim Levitsky" <maximlevitsky@gmail.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1213237561.7814.688.camel@debian.sh.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <484FF375.8010002@gmail.com>
+	 <1213237561.7814.688.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The resume handler should reset the wireless transmitter rfkill
-state to exactly what it was when the system was suspended.  Do it,
-and do it using the normal routines for state change while at it.
-
-The suspend handler should force-switch the transmitter to blocked
-state, ignoring caches.  Do it.
-
-Also take an opportunity shot to rfkill_remove_switch() and also
-force the transmitter to blocked state there, bypassing caches.
-
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- net/rfkill/rfkill.c |   35 ++++++++++++++++++-----------------
- 1 files changed, 18 insertions(+), 17 deletions(-)
-
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index c5a79ab..f11220b 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -75,24 +75,25 @@ static void update_rfkill_state(struct rfkill *rfkill)
- }
- 
- static int rfkill_toggle_radio(struct rfkill *rfkill,
--				enum rfkill_state state)
-+				enum rfkill_state state,
-+				int force)
- {
- 	int retval = 0;
- 	enum rfkill_state oldstate, newstate;
- 
- 	oldstate = rfkill->state;
- 
--	if (rfkill->get_state &&
-+	if (rfkill->get_state && !force &&
- 	    !rfkill->get_state(rfkill->data, &newstate))
- 		rfkill->state = newstate;
- 
--	if (state != rfkill->state) {
-+	if (force || state != rfkill->state) {
- 		retval = rfkill->toggle_radio(rfkill->data, state);
- 		if (!retval)
- 			rfkill->state = state;
- 	}
- 
--	if (rfkill->state != oldstate)
-+	if (force || rfkill->state != oldstate)
- 		rfkill_led_trigger(rfkill, rfkill->state);
- 
- 	return retval;
-@@ -107,7 +108,6 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
-  * a specific switch is claimed by userspace in which case it is
-  * left alone.
-  */
--
- void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
- {
- 	struct rfkill *rfkill;
-@@ -118,7 +118,7 @@ void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
- 
- 	list_for_each_entry(rfkill, &rfkill_list, node) {
- 		if ((!rfkill->user_claim) && (rfkill->type == type))
--			rfkill_toggle_radio(rfkill, state);
-+			rfkill_toggle_radio(rfkill, state, 0);
- 	}
- 
- 	mutex_unlock(&rfkill_mutex);
-@@ -210,7 +210,8 @@ static ssize_t rfkill_state_store(struct device *dev,
- 	if (mutex_lock_interruptible(&rfkill->mutex))
- 		return -ERESTARTSYS;
- 	error = rfkill_toggle_radio(rfkill,
--			state ? RFKILL_STATE_ON : RFKILL_STATE_OFF);
-+			state ? RFKILL_STATE_ON : RFKILL_STATE_OFF,
-+			0);
- 	mutex_unlock(&rfkill->mutex);
- 
- 	return error ? error : count;
-@@ -251,7 +252,8 @@ static ssize_t rfkill_claim_store(struct device *dev,
- 	if (rfkill->user_claim != claim) {
- 		if (!claim)
- 			rfkill_toggle_radio(rfkill,
--					    rfkill_states[rfkill->type]);
-+					    rfkill_states[rfkill->type],
-+					    0);
- 		rfkill->user_claim = claim;
- 	}
- 
-@@ -284,12 +286,11 @@ static int rfkill_suspend(struct device *dev, pm_message_t state)
- 
- 	if (dev->power.power_state.event != state.event) {
- 		if (state.event & PM_EVENT_SLEEP) {
--			mutex_lock(&rfkill->mutex);
--
--			if (rfkill->state == RFKILL_STATE_ON)
--				rfkill->toggle_radio(rfkill->data,
--						     RFKILL_STATE_OFF);
-+			/* Stop transmitter, keep state, no notifies */
-+			update_rfkill_state(rfkill);
- 
-+			mutex_lock(&rfkill->mutex);
-+			rfkill->toggle_radio(rfkill->data, RFKILL_STATE_OFF);
- 			mutex_unlock(&rfkill->mutex);
- 		}
- 
-@@ -306,8 +307,8 @@ static int rfkill_resume(struct device *dev)
- 	if (dev->power.power_state.event != PM_EVENT_ON) {
- 		mutex_lock(&rfkill->mutex);
- 
--		if (rfkill->state == RFKILL_STATE_ON)
--			rfkill->toggle_radio(rfkill->data, RFKILL_STATE_ON);
-+		/* restore radio state AND notify everybody */
-+		rfkill_toggle_radio(rfkill, rfkill->state, 1);
- 
- 		mutex_unlock(&rfkill->mutex);
- 	}
-@@ -334,7 +335,7 @@ static int rfkill_add_switch(struct rfkill *rfkill)
- 
- 	mutex_lock(&rfkill_mutex);
- 
--	error = rfkill_toggle_radio(rfkill, rfkill_states[rfkill->type]);
-+	error = rfkill_toggle_radio(rfkill, rfkill_states[rfkill->type], 0);
- 	if (!error)
- 		list_add_tail(&rfkill->node, &rfkill_list);
- 
-@@ -347,7 +348,7 @@ static void rfkill_remove_switch(struct rfkill *rfkill)
- {
- 	mutex_lock(&rfkill_mutex);
- 	list_del_init(&rfkill->node);
--	rfkill_toggle_radio(rfkill, RFKILL_STATE_OFF);
-+	rfkill_toggle_radio(rfkill, RFKILL_STATE_OFF, 1);
- 	mutex_unlock(&rfkill_mutex);
- }
- 
--- 
-1.5.5.3
-
+On Thu, Jun 12, 2008 at 4:26 AM, Zhu Yi <yi.zhu@intel.com> wrote:
+> On Wed, 2008-06-11 at 18:47 +0300, Maxim Levitsky wrote:
+>>
+>> I found why I can't reenable wireless with wireless button.
+>>
+>> It turns out that iwlwifi doesn't enable the wireless function after a
+>> R/F kill switch was enabled ether by the button or explicitly.
+>>
+>> I bisected this to commit 5a66926aa9230810704fd5a127966215fd58881e
+>> in linus tree.
+>
+> The card will receive an interrupt when you disable the rf kill switch
+> anyway [...]
+It does? I thought thats only true for 4965 ... 3945 uses an ucode
+event for that thats why it does not detect the rfkill state when the
+interface is down.
