@@ -1,53 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:48056 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754336AbYFWJVI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2008 05:21:08 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Ivo Van Doorn" <ivdoorn@gmail.com>
-Subject: Re: mac80211: workqueue & RTNL lock
-Date: Mon, 23 Jun 2008 11:20:41 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-References: <200806230042.41219.IvDoorn@gmail.com> <200806230030.42776.mb@bu3sch.de> <a32f33a40806230130t11022b31p3d9997ab5e449fe6@mail.gmail.com>
-In-Reply-To: <a32f33a40806230130t11022b31p3d9997ab5e449fe6@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200806231120.41519.mb@bu3sch.de> (sfid-20080623_112112_379070_8F41F9E3)
+Received: from xc.sipsolutions.net ([83.246.72.84]:48278 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754577AbYFLUJN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2008 16:09:13 -0400
+Subject: Re: [PATCH 1/1] mac80211: fix beacon interval value
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240806121305h721c6bd2x8073660d41653b92@mail.gmail.com> (sfid-20080612_220541_540944_8C5D557C)
+References: <1213299517-24042-1-git-send-email-tomas.winkler@intel.com>
+	 <1213299706.3730.39.camel@johannes.berg>
+	 <1ba2fa240806121305h721c6bd2x8073660d41653b92@mail.gmail.com>
+	 (sfid-20080612_220541_540944_8C5D557C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZjBnH1LONgHxNSzJX+qu"
+Date: Thu, 12 Jun 2008 22:08:33 +0200
+Message-Id: <1213301313.3730.47.camel@johannes.berg> (sfid-20080612_220916_833920_CA111E5C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 23 June 2008 10:30:47 Ivo Van Doorn wrote:
-> On 6/23/08, Michael Buesch <mb@bu3sch.de> wrote:
-> > On Monday 23 June 2008 00:42:41 Ivo van Doorn wrote:
-> >> That function calls flush_workqueue()
+
+--=-ZjBnH1LONgHxNSzJX+qu
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, 2008-06-12 at 23:05 +0300, Tomas Winkler wrote:
+> On Thu, Jun 12, 2008 at 10:41 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
 > >
-> > Uh wait. It shouldn't call that. Where exactly is this function called?
-> 
-> It is called right before local->ops->remove_interface() which means the
-> workqueue is flushed when it isn't even guaranteed that all interfaces are gone.
-> 
-> net/mac80211/main.c:553
-> 
-> static int ieee80211_stop(struct net_device *dev)
-> {
-> <snip>
->   switch (sdata->vif.type) {
-> 	case IEEE80211_IF_TYPE_MESH_POINT:
-> 	case IEEE80211_IF_TYPE_STA:
-> 	case IEEE80211_IF_TYPE_IBSS:
->         <snip>
->         flush_workqueue(local->hw.workqueue);
->        <snip>
->   }
-> <snip>
-> }
+> >> 1. in register_hw it honors value requested by the driver
+> >
+> > I don't think the driver should be able to "request" a value.
+>=20
+> Yes and no.
+> The problem is that we don't have user space interface to tune this
+> for IBSS so in this circumstances
+> driver can choose what value is best for it.
 
-Oh right. I see. This is actually OK. I thought it would flush the global wq.
-The local mac80211 wq was introduced to workaround this rtnl deadlock,
-so I'm surprised it happens again.
+I don't see how the beacon interval has any relation to "what is best
+for the hardware/driver". And doing this just creates hard to debug
+differences between drivers. All differences between different drivers
+are causing problems at some point.
 
+Wrt. configurability, yes, we should maybe allow this. Although it's
+only used for IBSS (in BSS it is configurable already) so I'm not
+entirely sure... users are probably not able to make an informed
+decision anyway.
 
--- 
-Greetings Michael.
+> >> 2. It uses default 100 instead of 1000 or 10000. Scanning for beacon
+> >> interval ~1sec and above is not sane
+> >
+> > Yeah, 10000 seems a bit excessive.
+>=20
+> Actually this never took affect as there is no way that 0 is assigned
+> to hw->conf.beacon_int but even 1000 is edgy and not suitable for a
+> default value.
+
+Sure, I'm fine with changing both values to 100.
+
+johannes
+
+--=-ZjBnH1LONgHxNSzJX+qu
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIUYI9AAoJEKVg1VMiehFYGMMP/2TdAhBDIh55E//1/49y1pON
+7GwwGiJC360LHowAwhXtKAQcM72ZiojbdNUFdAuPCmr5Qj/4oJ5jcfd9z68KB74J
+esWNgLw1rLOml4FPiyU58wq99IYoCDLEdLy2ZKAleL0mkgQZjJgUnfuAtiAwqSgV
+L/i/P1n7354yZ+DlgljKvneSEzX7VR1zSFUVo3UrgkJ88HTeiwv7r8lg6Z5bA8Tl
+J+03bd8I1cXMd0bVgRFy4RadNyVr++gB9X1TkmR4MSG2OnXGBOkd5yuNmgotQhTH
+4OG4HqgTiXCtSuJFNWKVLdMRyyxMKO6mcuxOISLBY454qoZYIwhhJh5x1Lvx0PbR
+hzrz9TUpdlurj2bobjtenQsJ6Jp/fUpx3LVOOFQLt0zr9pVDqssxt+t/q6oqIoeo
+sXeNHmOXbSjBorBg5w+g7gBgPJO6IPHxEZZAJQ8bwzlLTvHyx0kj5ZW2WY4STh13
+LMxXzYgf5ILybl2SrEJjUCjrDD30j1c25B4VnTlE08enxMn80PbzTPAj3joM2fp3
+NvIPgB0v7Z1+IBE4tmxrvgMyG+kLVVrWoVgk87emwO9H9qp9Ep5xNE2arD80iT1y
+Xi/Y0VD4L3WaYRJMsegHy/jS3tAIV9hr63Q4fu/HX1C1jmIdf3UNsguY1uUTHGg8
+WZaNfycHks3hafi1VNQU
+=iiee
+-----END PGP SIGNATURE-----
+
+--=-ZjBnH1LONgHxNSzJX+qu--
+
