@@ -1,99 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blaine.gmane.org ([80.91.229.8]:36205 "EHLO hugh.gmane.org"
+Received: from mga09.intel.com ([134.134.136.24]:20549 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764203AbYFZN2Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 09:28:25 -0400
-Received: from public by hugh.gmane.org with local (Exim 4.63)
-	(envelope-from <public@hugh.gmane.org>)
-	id 1KBrQC-0005Wm-Oh
-	for linux-wireless@vger.kernel.org; Thu, 26 Jun 2008 15:21:56 +0200
-Date: Thu, 26 Jun 2008 17:13:42 +0400
-From: Dmitry Baryshkov <dbaryshkov@gmail.com>
-To: Henrique de Moraes Holschuh
-	<public-hmh-N3TV7GIv+o9fyO9Q7EP/yw@hugh.gmane.org>
-Cc: John Linville
-	<public-linville-2XuSBdqkA4R54TAoqtyWWQ@hugh.gmane.org>,
-	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org,
-	Ivo van Doorn
-	<public-ivdoorn-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>,
-	Matthew Garrett
-	<public-mjg-H+wXaHxf7aLQT0dZR+AlfA@hugh.gmane.org>,
-	Dan Williams <public-dcbw-H+wXaHxf7aLQT0dZR+AlfA@hugh.gmane.org>,
-	Thomas Renninger <public-trenn-l3A5Bk7waGM@hugh.gmane.org>,
-	Fabien Crespel
-	<public-fabien-czgx1wgAc3rR7s880joybQ@hugh.gmane.org>,
-	Dmitry Torokhov
-	<public-dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>
-Subject: Re: [GIT PATCH] rfkill rework for 2.6.27 (v3)
-Message-ID: <20080626131342.GA12528@doriath.ww600.siemens.net> (sfid-20080626_152830_929072_FD5BFD54)
-References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
+	id S1752114AbYFLBth (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2008 21:49:37 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 07/29] iwlwifi: use ieee80211_conf to examine rate capabilities
+Date: Thu, 12 Jun 2008 09:46:57 +0800
+Message-Id: <1213235239-2954-8-git-send-email-yi.zhu@intel.com> (sfid-20080612_034943_134587_9BF7F09F)
+In-Reply-To: <1213235239-2954-7-git-send-email-yi.zhu@intel.com>
+References: <1213235239-2954-1-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-2-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-3-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-4-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-5-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-6-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-7-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
+This patch switches the use of internal iwlwifi structure with
+ieee80211_conf in order to examine ht rate capabilities.
 
-Hi,
-
-Here is a patch for rfkill sitting in my queue. It depends on the
-leds-make-sure-led-trigger-is-valid-before-calling-trigger-activate.patch
-lately merged into -mm, which hopefully will be merged into mainline soon
-after 2.6.27 window opens.
-
->From b69b08959d1b1bb989b156492346441dd4a04423 Mon Sep 17 00:00:00 2001
-From: Dmitry Baryshkov <dbaryshkov@gmail.com>
-Date: Fri, 20 Jun 2008 01:48:17 +0400
-Subject: [PATCH] RFKILL: small improvements for leds handling
-
-allow one to override the name of the led trigger
-provide default activate function to set the state of the led.
-
-Signed-off-by: Dmitry Baryshkov <dbaryshkov@gmail.com>
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- net/rfkill/rfkill.c |   15 ++++++++++++++-
- 1 files changed, 14 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c |   18 ++++++------------
+ 1 files changed, 6 insertions(+), 12 deletions(-)
 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 4e10a95..e9010ff 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -57,6 +57,16 @@ static void rfkill_led_trigger(struct rfkill *rfkill,
- #endif /* CONFIG_RFKILL_LEDS */
- }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+index 7f9178b..a928741 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+@@ -2245,25 +2245,19 @@ static void rs_rate_init(void *priv_rate, void *priv_sta,
+ 	 * active_siso_rate mask includes 9 MBits (bit 5), and CCK (bits 0-3),
+ 	 * supp_rates[] does not; shift to convert format, force 9 MBits off.
+ 	 */
+-	lq_sta->active_siso_rate =
+-		priv->current_ht_config.supp_mcs_set[0] << 1;
+-	lq_sta->active_siso_rate |=
+-		priv->current_ht_config.supp_mcs_set[0] & 0x1;
++	lq_sta->active_siso_rate = conf->ht_conf.supp_mcs_set[0] << 1;
++	lq_sta->active_siso_rate |= conf->ht_conf.supp_mcs_set[0] & 0x1;
+ 	lq_sta->active_siso_rate &= ~((u16)0x2);
+ 	lq_sta->active_siso_rate <<= IWL_FIRST_OFDM_RATE;
  
-+#ifdef CONFIG_RFKILL_LEDS
-+static void rfkill_led_trigger_activate(struct led_classdev *led)
-+{
-+	struct rfkill *rfkill = container_of(led->trigger,
-+			struct rfkill, led_trigger);
-+
-+	rfkill_led_trigger(rfkill, rfkill->state);
-+}
-+#endif /* CONFIG_RFKILL_LEDS */
-+
- static int rfkill_toggle_radio(struct rfkill *rfkill,
- 				enum rfkill_state state)
- {
-@@ -355,7 +365,10 @@ static void rfkill_led_trigger_register(struct rfkill *rfkill)
- #ifdef CONFIG_RFKILL_LEDS
- 	int error;
+ 	/* Same here */
+-	lq_sta->active_mimo2_rate =
+-		priv->current_ht_config.supp_mcs_set[1] << 1;
+-	lq_sta->active_mimo2_rate |=
+-		priv->current_ht_config.supp_mcs_set[1] & 0x1;
++	lq_sta->active_mimo2_rate = conf->ht_conf.supp_mcs_set[1] << 1;
++	lq_sta->active_mimo2_rate |= conf->ht_conf.supp_mcs_set[1] & 0x1;
+ 	lq_sta->active_mimo2_rate &= ~((u16)0x2);
+ 	lq_sta->active_mimo2_rate <<= IWL_FIRST_OFDM_RATE;
  
--	rfkill->led_trigger.name = rfkill->dev.bus_id;
-+	if (!rfkill->led_trigger.name)
-+		rfkill->led_trigger.name = rfkill->dev.bus_id;
-+	if (!rfkill->led_trigger.activate)
-+		rfkill->led_trigger.activate = rfkill_led_trigger_activate;
- 	error = led_trigger_register(&rfkill->led_trigger);
- 	if (error)
- 		rfkill->led_trigger.name = NULL;
+-	lq_sta->active_mimo3_rate =
+-		priv->current_ht_config.supp_mcs_set[2] << 1;
+-	lq_sta->active_mimo3_rate |=
+-		priv->current_ht_config.supp_mcs_set[2] & 0x1;
++	lq_sta->active_mimo3_rate = conf->ht_conf.supp_mcs_set[2] << 1;
++	lq_sta->active_mimo3_rate |= conf->ht_conf.supp_mcs_set[2] & 0x1;
+ 	lq_sta->active_mimo3_rate &= ~((u16)0x2);
+ 	lq_sta->active_mimo3_rate <<= IWL_FIRST_OFDM_RATE;
+ 
 -- 
-1.5.5.4
-
-
--- 
-With best wishes
-Dmitry
-
+1.5.3.6
 
