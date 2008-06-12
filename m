@@ -1,167 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40589 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:36208 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751443AbYFRM6r convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1756206AbYFLNVJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 08:58:47 -0400
-Subject: [PATCH] mac80211: use separate spinlock for sta flags
+	Thu, 12 Jun 2008 09:21:09 -0400
+Subject: Re: [RFC] First CRDA integration work
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	David Ellingsworth <david@identd.dyndns.org>,
-	Michael Buesch <mb@bu3sch.de>
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 18 Jun 2008 14:58:09 +0200
-Message-Id: <1213793889.1312.17.camel@johannes.berg> (sfid-20080618_145851_108332_3D01A431)
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20080612131154.GA28315@tesla>
+References: <20080611040402.GE17936@ruslug.rutgers.edu>
+	 <1213260106.19369.15.camel@johannes.berg>  <20080612131154.GA28315@tesla>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zs6UQ+ndKShJKnPj+hVG"
+Date: Thu, 12 Jun 2008 15:19:38 +0200
+Message-Id: <1213276778.3936.10.camel@johannes.berg> (sfid-20080612_152114_598007_1BB7592D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Ellingsworth posted a bug that was only noticable on UP/NO-PREEMP=
-T
-and Michael correctly analysed it to be a spin_lock_bh() section within
-a spin_lock_irqsave() section. This adds a separate spinlock for the
-sta_info flags to fix that issue and avoid having to take much care
-about where the sta flag manipulation functions are called.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Reported-By: =EF=BB=BFDavid Ellingsworth <david@identd.dyndns.org>
----
- net/mac80211/sta_info.c |    1 +
- net/mac80211/sta_info.h |   40 +++++++++++++++++++++++++++------------=
--
- 2 files changed, 28 insertions(+), 13 deletions(-)
-
---- everything.orig/net/mac80211/sta_info.h	2008-06-18 10:07:24.0000000=
-00 +0200
-+++ everything/net/mac80211/sta_info.h	2008-06-18 11:58:32.000000000 +0=
-200
-@@ -164,6 +164,7 @@ struct sta_ampdu_mlme {
-  * @aid: STA's unique AID (1..2007, 0 =3D not assigned yet),
-  *	only used in AP (and IBSS?) mode
-  * @flags: STA flags, see &enum ieee80211_sta_info_flags
-+ * @flaglock: spinlock for flags accesses
-  * @ps_tx_buf: buffer of frames to transmit to this station
-  *	when it leaves power saving state
-  * @tx_filtered: buffer of frames we already tried to transmit
-@@ -186,6 +187,7 @@ struct sta_info {
- 	struct rate_control_ref *rate_ctrl;
- 	void *rate_ctrl_priv;
- 	spinlock_t lock;
-+	spinlock_t flaglock;
- 	struct ieee80211_ht_info ht_info;
- 	u64 supp_rates[IEEE80211_NUM_BANDS];
- 	u8 addr[ETH_ALEN];
-@@ -198,7 +200,10 @@ struct sta_info {
- 	 */
- 	u8 pin_status;
-=20
--	/* frequently updated information, locked with lock spinlock */
-+	/*
-+	 * frequently updated, locked with own spinlock (flaglock),
-+	 * use the accessors defined below
-+	 */
- 	u32 flags;
-=20
- 	/*
-@@ -293,34 +298,41 @@ static inline enum plink_state sta_plink
-=20
- static inline void set_sta_flags(struct sta_info *sta, const u32 flags=
-)
- {
--	spin_lock_bh(&sta->lock);
-+	unsigned long irqfl;
-+
-+	spin_lock_irqsave(&sta->flaglock, irqfl);
- 	sta->flags |=3D flags;
--	spin_unlock_bh(&sta->lock);
-+	spin_unlock_irqrestore(&sta->flaglock, irqfl);
- }
-=20
- static inline void clear_sta_flags(struct sta_info *sta, const u32 fla=
-gs)
- {
--	spin_lock_bh(&sta->lock);
-+	unsigned long irqfl;
-+
-+	spin_lock_irqsave(&sta->flaglock, irqfl);
- 	sta->flags &=3D ~flags;
--	spin_unlock_bh(&sta->lock);
-+	spin_unlock_irqrestore(&sta->flaglock, irqfl);
- }
-=20
- static inline void set_and_clear_sta_flags(struct sta_info *sta,
- 					   const u32 set, const u32 clear)
- {
--	spin_lock_bh(&sta->lock);
-+	unsigned long irqfl;
-+
-+	spin_lock_irqsave(&sta->flaglock, irqfl);
- 	sta->flags |=3D set;
- 	sta->flags &=3D ~clear;
--	spin_unlock_bh(&sta->lock);
-+	spin_unlock_irqrestore(&sta->flaglock, irqfl);
- }
-=20
- static inline u32 test_sta_flags(struct sta_info *sta, const u32 flags=
-)
- {
- 	u32 ret;
-+	unsigned long irqfl;
-=20
--	spin_lock_bh(&sta->lock);
-+	spin_lock_irqsave(&sta->flaglock, irqfl);
- 	ret =3D sta->flags & flags;
--	spin_unlock_bh(&sta->lock);
-+	spin_unlock_irqrestore(&sta->flaglock, irqfl);
-=20
- 	return ret;
- }
-@@ -329,11 +341,12 @@ static inline u32 test_and_clear_sta_fla
- 					   const u32 flags)
- {
- 	u32 ret;
-+	unsigned long irqfl;
-=20
--	spin_lock_bh(&sta->lock);
-+	spin_lock_irqsave(&sta->flaglock, irqfl);
- 	ret =3D sta->flags & flags;
- 	sta->flags &=3D ~flags;
--	spin_unlock_bh(&sta->lock);
-+	spin_unlock_irqrestore(&sta->flaglock, irqfl);
-=20
- 	return ret;
- }
-@@ -341,10 +354,11 @@ static inline u32 test_and_clear_sta_fla
- static inline u32 get_sta_flags(struct sta_info *sta)
- {
- 	u32 ret;
-+	unsigned long irqfl;
-=20
--	spin_lock_bh(&sta->lock);
-+	spin_lock_irqsave(&sta->flaglock, irqfl);
- 	ret =3D sta->flags;
--	spin_unlock_bh(&sta->lock);
-+	spin_unlock_irqrestore(&sta->flaglock, irqfl);
-=20
- 	return ret;
- }
---- everything.orig/net/mac80211/sta_info.c	2008-06-18 11:56:44.0000000=
-00 +0200
-+++ everything/net/mac80211/sta_info.c	2008-06-18 11:56:58.000000000 +0=
-200
-@@ -235,6 +235,7 @@ struct sta_info *sta_info_alloc(struct i
- 		return NULL;
-=20
- 	spin_lock_init(&sta->lock);
-+	spin_lock_init(&sta->flaglock);
-=20
- 	memcpy(sta->addr, addr, ETH_ALEN);
- 	sta->local =3D local;
+--=-zs6UQ+ndKShJKnPj+hVG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > + * @NL80211_CMD_GET_REG: Get current regulatory domain, this is a qu=
+ery=20
+> > > + * 	to the kernel wireless core, the wireless core returns currently
+> > > + * 	set alpha2 by %NL80211_ATTR_REG_ALPHA2,.
+> >=20
+> > Please specify what command it comes in, probably _NEW_REG that you
+> > haven't added.
+>=20
+> We can probably not even add this, what do you think?
+
+Well I think that some userspace programs like network manager want to
+get a notification when for whatever reason the regdomain changes, and
+they want to be able to query which one is currently set, and things
+should be changeable. So you need at least three messages, NEW, GET,
+SET, no?
+
+> > >  CRDA replies by sending a regulatory domain
+> > > + * 	structure which consists of %NL80211_ATTR_REG_ALPHA set to our c=
+urrent alpha2
+> > > + * 	if it found a match.
+> >=20
+> > Why set the alpha2 again? I thought the kernel queried for that?
+>=20
+> This is in case we wanted to support letting userspace query the kernel
+> what alpha2 it has set. I'm OK with not supporting this though but it
+> seemed it may have come in handy, hopefully not for abuse for other
+> things.
+
+Yeah true, we may want to be able to force a certain regdomain.
+
+> > >  and a regulatory rule. The regulatory
+> > > + * 	rule consists of set of frequency ranges given by
+> > > + * 	%NL80211_ATTR_REG_RULE_FREQ_[START|END] with an attached power r=
+ule given
+> > > + * 	by %NL80211_ATTR_REG_RULE_POWER_MAX_ANT_GAIN and
+> > > + * 	%NL80211_ATTR_REG_RULE_POWER_MAX_EIRP. Each regulatory rule also=
+ has=20
+> > > + * 	an attached %NL80211_ATTR_REG_RULE_FLAGS.
+> >=20
+> > How are these attributes used? Nested in some array?
+>=20
+> I wasn't sure yet, I wanted your feedback, but you are giving me this
+> through IRC :)
+
+Well, as I said, look at how wiphy band info with frequencies works.
+That's how you need to do it with netlink attributes.
+
+> > > + * @NL80211_ATTR_REG_RULE_FREQ_START: starting frequencry for the re=
+gulatory
+> > > + * 	rule in KHz. This is not a center of frequency but an actual reg=
+ulatory
+> >                                             ^^ remove
+> > > + * 	band edge.
+> > > + * @NL80211_ATTR_REG_RULE_FREQ_END: ending frequency for the regulat=
+ory rule
+> > > + * 	in KHz. This is not a center a frequency but an actual regulator=
+y
+> >                                        ^^ remove
+> > > + * 	band edge.
+> > > + * @NL80211_ATTR_REG_RULE_FREQ_MAX_BW: maximum allowed bandwidth for=
+ this
+> > > + * 	frequency range, in KHz.
+> > > + * @NL80211_ATTR_REG_RULE_POWER_MAX_ANT_GAIN: the maximum allowed an=
+tenna gain
+> > > + * 	for a given frequency range. The value is in mBi (100 * dBi).
+> >=20
+> > Can be left out.
+>=20
+> OK.
+
+I mean, you have to add a note that it can be left out if it's not
+specified in the db.
+
+> > > @@ -9,137 +10,93 @@
+> > >   */
+> > > =20
+> > >  /*
+> > > - * This regulatory domain control implementation is highly incomplet=
+e, it
+> > > - * only exists for the purpose of not regressing mac80211.
+> > > - *
+> > > - * For now, drivers can restrict the set of allowed channels by eith=
+er
+> > > - * not registering those channels or setting the IEEE80211_CHAN_DISA=
+BLED
+> > > - * flag; that flag will only be *set* by this code, never *cleared.
+> > > - *
+> > >   * The usual implementation is for a driver to read a device EEPROM =
+to
+> > >   * determine which regulatory domain it should be operating under, t=
+hen
+> > >   * looking up the allowable channels in a driver-local table and fin=
+ally
+> > >   * registering those channels in the wiphy structure.
+> > >   *
+> > > - * Alternatively, drivers that trust the regulatory domain control h=
+ere
+> > > - * will register a complete set of capabilities and the control code
+> > > - * will restrict the set by setting the IEEE80211_CHAN_* flags.
+> >=20
+> > I think you shouldn't remove that but just rewrite it to make the drive=
+r
+> > trust crda instead of this code.
+>=20
+> The EEPROM lets us get a list of supported channels for a product a
+> customer (a vendor's customer, not a regular customer) decided to support=
+.
+> If we trust CRDA we then could potentially trust a different set of chann=
+els
+> which the customer may not have tested his products on. They probably
+> will work, but the safer approach is to support only the intended
+> channels.
+>=20
+> We can then trust CRDA only to disable channels, not to *enable*.
+
+That's already covered by the paragraph above it though, "[t]he usual
+implementation is for a driver [...]". Hence, you want to rewrite the
+second paragraph as I mentioned :)
+
+johannes
+
+--=-zs6UQ+ndKShJKnPj+hVG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIUSJmAAoJEKVg1VMiehFY19oQAKq+sjKQAjoFOyOe8WfaZ5t2
+7I2jxUasMDKRNp8KIvJ6utcqGQ8FiFbxc8moiqNWxTVLiLStcldZ3Yf0L+INl5o8
+92ux1KsQ0j71QWe7E2N81+XeiyoLOIxdE17Jc1Eht/aPcYJvZ+1tBueSoFbPg3JG
+5Isp8FUyOZ4yDeCHJaesTXGx8ydzVTJq8d7bgZU0eIUfG3k+KwxnrFJeLMneMBa7
+bycOkXhBqx/g1yNZ40aClS5obUp4n+VeyTwN094Fw1lSzNIYRwrZSA+uE5CX684X
+F/bm07uL3y5/dQu3iVu9ENP0068+vrUnGeUFiQIA6HmcULNs/zob9Rw11BRjrCDl
+fSNK6vuntyiC921s0SiH6ilKYPhBb+aPxzkhESF/+bF9ovhJ1FwZvn0/l7uuz7NE
+E1amUqtVJjRbQh5aXWCTcmqrB7Pq3GxG/SAA7e/JTmLSu+FCypX1HHgwNelTBtze
+QAMA15U+TZjzwlYA5TAPg1nZZOKmyk44X6QXpUjFSparILxDJo2smkAMxB/RCFfu
+jYRi4J82+oU/Lw7gfAW3tIx1LAwFoTZS38mxjpm3Utv9b7RVjto3xsliIogztmar
+I3kKEXnQtyNHMZLFCKy6eTmIHp3XDUtsTsfao7pcXsRWb0QJbLiNQmyaa41fghxd
+jFaUasl8Xtl0TvK2kO/h
+=wwKu
+-----END PGP SIGNATURE-----
+
+--=-zs6UQ+ndKShJKnPj+hVG--
+
