@@ -1,64 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60472 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753363AbYFJPlD (ORCPT
+Received: from astoria.ccjclearline.com ([64.235.106.9]:46250 "EHLO
+	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755992AbYFLTep (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 11:41:03 -0400
-Subject: Re: [english 95%] QUESTIONS to ieee80211_beacon_get AND
-	ieee80211_get_buffered_bc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe <wirelesss@gmx.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <484E9F12.9010502@gmx.de> (sfid-20080610_173237_004587_B2C15A3F)
-References: <4848289D.1080205@mandriva.org>
-	 <1ba2fa240806051103q652accf5t1bd1d94630ebea5b@mail.gmail.com>
-	 <48482BC3.4070402@mandriva.org> <4848482C.2080208@mandriva.org>
-	 <48485F12.2050908@mandriva.org> <484E9436.605@gmx.de>
-	 <484E9F12.9010502@gmx.de> (sfid-20080610_173237_004587_B2C15A3F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mIcat4n3MlhKhTdPMVk6"
-Date: Tue, 10 Jun 2008 17:40:28 +0200
-Message-Id: <1213112428.3668.33.camel@johannes.berg> (sfid-20080610_174112_640508_B004E18A)
-Mime-Version: 1.0
+	Thu, 12 Jun 2008 15:34:45 -0400
+Date: Thu, 12 Jun 2008 15:34:42 -0400 (EDT)
+From: "Robert P. J. Day" <rpjday@crashcourse.ca>
+To: linux-wireless@vger.kernel.org
+cc: linville@tuxdriver.com
+Subject: [PATCH] WIRELESS: Use kernel-supplied ARRAY_SIZE() macro.
+Message-ID: <alpine.LFD.1.10.0806121529270.30641@localhost.localdomain> (sfid-20080612_213449_781793_1EDD4C23)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-mIcat4n3MlhKhTdPMVk6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Robert P. J. Day <rpjday@crashcourse.ca>
+
+---
+
+  compile-tested on x86.
 
 
-> thanks to your helpfull support, which enabled me to precise my request,=20
-> which I edited in the follows:
+ drivers/net/wireless/rndis_wlan.c |    8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-You're this -> <- close to getting into my killfile.
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 18c9931..daaf2f7 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -620,8 +620,7 @@ static void dsconfig_to_freq(unsigned int dsconfig, struct iw_freq *freq)
+ static int freq_to_dsconfig(struct iw_freq *freq, unsigned int *dsconfig)
+ {
+ 	if (freq->m < 1000 && freq->e == 0) {
+-		if (freq->m >= 1 &&
+-			freq->m <= (sizeof(freq_chan) / sizeof(freq_chan[0])))
++		if (freq->m >= 1 && freq->m <= ARRAY_SIZE(freq_chan))
+ 			*dsconfig = freq_chan[freq->m - 1] * 1000;
+ 		else
+ 			return -1;
+@@ -1159,10 +1158,9 @@ static int rndis_iw_get_range(struct net_device *dev,
+ 		range->throughput = 11 * 1000 * 1000 / 2;
+ 	}
 
-Go read include/net/mac80211.h. At least the parts you can find with
-"grep beacon"
+-	range->num_channels = (sizeof(freq_chan)/sizeof(freq_chan[0]));
++	range->num_channels = ARRAY_SIZE(freq_chan);
 
-johannes
+-	for (i = 0; i < (sizeof(freq_chan)/sizeof(freq_chan[0])) &&
+-			i < IW_MAX_FREQUENCIES; i++) {
++	for (i = 0; i < ARRAY_SIZE(freq_chan) && i < IW_MAX_FREQUENCIES; i++) {
+ 		range->freq[i].i = i + 1;
+ 		range->freq[i].m = freq_chan[i] * 100000;
+ 		range->freq[i].e = 1;
 
---=-mIcat4n3MlhKhTdPMVk6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+========================================================================
+Robert P. J. Day
+Linux Consulting, Training and Annoying Kernel Pedantry:
+    Have classroom, will lecture.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJITqBoAAoJEKVg1VMiehFYuqEP/3VarxUrn/SHJVBcqDXHhMrv
-vTD1iWAaF2nhNeMSoaPDEI446wq+1AMS13eAUEZStpLfQ+G0h3L7KRCwkdxLI9d2
-QhxhyV9OS0iKasISkUDrBFm80qxIRJTUpOfXX7I/8h3BPI1TCWqWDOXN8C+vhmk3
-GpgyKUd8kPGPavYOKHaopKgXDTXod1c8fy2gxdBdYdRfnSIpvOPjI7Y+xOtwk52c
-dFG5SpMsCkyoXuvvTlsVST03JJ012iCPHckhQ7yrtTnhnfIy6X0dLw4m0XfabSIo
-CWvAbQ3t0noOElTi5bJijo5M708MGLNFEhA9DDCn+DUlDXV3afwjR8eA0gAVnDOB
-FCpn2KmYmkAum+M9HrQnmr9zW+vRkzWVsn0T/pr/YVaz5jptuLGOFxSOc7KLcU+d
-9IS/Paw16HHDK+3yh6aQNBZbrfKSnxZ2vc31xPZNlsRZSuXh0KlFWR316i7j22yo
-mM0nUWMGXB25EGdrPZ1vFg4P3GzpBTc49QJKR68QyWcWGRUevXqypQZFZjjWu5xx
-FvO2WxK9l/wTW2UVoM7CamC8rureSYWhg+sCdVU4Gh/1qq6i5MVYE7UdQevE2FPd
-jxxSTtuopQ37wnJG0JFxOYOPzEr/4Nh3QVODWIfQzl8JacrYw/nRgz/JKsb20w2T
-2BxR4rwC6FPzNn2Pp1Ez
-=a/KR
------END PGP SIGNATURE-----
-
---=-mIcat4n3MlhKhTdPMVk6--
-
+http://crashcourse.ca                          Waterloo, Ontario, CANADA
+========================================================================
