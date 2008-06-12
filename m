@@ -1,61 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41560 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751860AbYF1IAl (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.227]:23311 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753031AbYFLRrM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 04:00:41 -0400
-Subject: Re: Missing channels on iwl3945  shipped with 2.6.26-rc8
-From: Johannes Berg <johannes@sipsolutions.net>
-To: janconrads@gmx.de
+	Thu, 12 Jun 2008 13:47:12 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so2170242wri.5
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 10:47:11 -0700 (PDT)
+Message-ID: <5ff0631c0806121047m30d15f0cucc21dcc71ded1c8a@mail.gmail.com> (sfid-20080612_194715_904721_EB4BABAB)
+Date: Thu, 12 Jun 2008 19:47:11 +0200
+From: "Nicolas Deschildre" <ndeschildre@gmail.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: [OOPS] rt2x00: unplugging an rt73 device oops at usb_kill_urb+0x14/0xd0
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4865B3C6.1030007@gmx.de> (sfid-20080628_054520_514865_A52F30EE)
-References: <4865B3C6.1030007@gmx.de> (sfid-20080628_054520_514865_A52F30EE)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UGfimbFB1px8UkT+4WK2"
-Date: Sat, 28 Jun 2008 10:00:29 +0200
-Message-Id: <1214640029.5507.10.camel@johannes.berg> (sfid-20080628_100044_117182_12E3505E)
-Mime-Version: 1.0
+In-Reply-To: <1213290786.2408.2.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <5ff0631c0806120925m1e00482du5175c9b9a2f7f4dd@mail.gmail.com>
+	 <1213290786.2408.2.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jun 12, 2008 at 7:13 PM, Pavel Roskin <proski@gnu.org> wrote:
+> On Thu, 2008-06-12 at 18:25 +0200, Nicolas Deschildre wrote:
+>> I tried the wireless compatibilty stack from the 5 June.
+>> When unplugging a RT73 device from its USB slot, I get the following
+>> oops :
+> ...
+>> [  703.841832] EIP: [<e089fee4>] usb_kill_urb+0x14/0xd0 [usbcore]
+>> SS:ESP 0068:ddf61e10
+>
+> This is fixed in today's wireless-testing.
+> compat-wireless-2008-06-12.tar.bz2 appears to contain the fix already.
 
---=-UGfimbFB1px8UkT+4WK2
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks for the quick answer!
 
+Nicolas
 
-> vermagic:       2.6.26-rc8-jan SMP mod_unload modversions CORE2
-> parm:           ieee80211_regdom:IEEE 802.11 regulatory domain code (char=
-p)
->=20
-> I read, that 64 should be ok, but if I set any option only the 2.4GHz
-> Band is listed. For germany 276 is a common valve on atheros cards, but
-> this doesn not work, too.
-
-As you can see, it's a charp, i.e. a string. Try setting "EU".
-
-johannes
-
---=-UGfimbFB1px8UkT+4WK2
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIZe+ZAAoJEKVg1VMiehFYJJgQAMCDSSgGSJtQ7EVom2LHZjYe
-pbLx9FhhrRaNHx5C9qKDmD94d4h69iyEp3ldXkQiALFIGaNndzn++Q2qDBpmFanG
-YClxYKn7gvDVE5laILLcrXTRK1rhoXn/GpsvlOAU0y5A1alF+CyJOl+3bSgvmKSF
-oc6Tozkl/URGtczTTuKQupMm2mLSUcKPXU6OmaQPwk8J4jmoBKKYKir1xXBP7mhN
-tlX7SFkaoRaC2LWd5l4gsJPv52vE3+Kgcp9nkbJoiMpxG77uGz7/1jl+WYNfkdH5
-Gsq4oToTb34lVYXijjhLSSYYD9tseAhVyxZlmmvrDTtAw4WXY/K/ndLc/P+U6bzY
-M0MKpApBrQyXQktT7NkJe2IBSNh4703Uw3JN7zeD8RI5Xx3M/0hW4svm07Ap37fn
-8JRcsDzjNk+q3iB5R63nr2KmWCuq8qcUOqLyLxm5MfzISFnV50D1pT1zCSzX2qqK
-XYmShoJuDpta1Jhhfc7iaxDP/YYdrCnS6T/n7Q47e0nRHx5Yy4eVC6hz9C2nDx11
-OdHFomBx/AzDTphzGjqsCNKYTDDgMNhit735bBxSxQ8957FLi+l2h5nI5y0i79hW
-4jsDw1Pk5j6W8xxCk9ddh9vmg035SSBamSGph1acbQiFTkLTaLmnUGM3JPfL+b9v
-WTQJNlW3gOJIDc2+PyW3
-=A9Fz
------END PGP SIGNATURE-----
-
---=-UGfimbFB1px8UkT+4WK2--
-
+>
+> --
+> Regards,
+> Pavel Roskin
+>
