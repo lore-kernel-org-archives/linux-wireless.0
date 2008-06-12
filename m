@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.225]:10518 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755374AbYFLMSH (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.242]:51106 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754130AbYFLSe0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 08:18:07 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1968498rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 05:18:06 -0700 (PDT)
-Message-ID: <485113FA.2020909@gmail.com> (sfid-20080612_141812_508193_DA1C2038)
-Date: Thu, 12 Jun 2008 15:18:02 +0300
-From: Maxim Levitsky <maximlevitsky@gmail.com>
+	Thu, 12 Jun 2008 14:34:26 -0400
+Received: by an-out-0708.google.com with SMTP id d40so892994and.103
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 11:34:26 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: Add D-link DWA111 support
+Date: Thu, 12 Jun 2008 20:47:17 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
-To: Zhu Yi <yi.zhu@intel.com>
-CC: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: [ipw3945-devel] [IWLWIFI] Few questions about its advanced features
-References: <200806062259.02955.maximlevitsky@gmail.com>	 <484FF44A.6070004@gmail.com> <1213241653.7814.701.camel@debian.sh.intel.com>
-In-Reply-To: <1213241653.7814.701.camel@debian.sh.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200806122047.17285.IvDoorn@gmail.com> (sfid-20080612_203429_905854_58456FF9)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zhu Yi wrote:
-> On Wed, 2008-06-11 at 18:50 +0300, Maxim Levitsky wrote:
->> My question is, are there plans to add AP mode to iwlwifi?
-> 
-> You can find a working AP based on an old version of mac80211 at this
-> point. We will port the code to latest mac80211 after 5000 is merged.
-> http://kernel.org/pub/linux/kernel/people/chuyee/wireless/iwl4965_ap/
-> 
-> Thanks,
-> -yi
-> 
+Add new rt73usb USB ID for D-Link DWA111
 
-Thanks a lot,
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt73usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-The above means that intel wireless  will soon be the ultimate
-wireless device in Linux.
-Thanks intel!
-
-Best regards,
-	Maxim Levitsky
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 505a9f5..fceefd7 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2114,6 +2114,7 @@ static struct usb_device_id rt73usb_device_table[] = {
+ 	/* D-Link */
+ 	{ USB_DEVICE(0x07d1, 0x3c03), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x07d1, 0x3c04), USB_DEVICE_DATA(&rt73usb_ops) },
++	{ USB_DEVICE(0x07d1, 0x3c06), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x07d1, 0x3c07), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* Gemtek */
+ 	{ USB_DEVICE(0x15a9, 0x0004), USB_DEVICE_DATA(&rt73usb_ops) },
+-- 
+1.5.5.3
