@@ -1,84 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:35750 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752504AbYFQQBV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 12:01:21 -0400
-Message-Id: <20080617160027.897662688@localhost> (sfid-20080617_180143_912941_3FB21552)
-References: <20080617154008.883383150@localhost>
-Date: Tue, 17 Jun 2008 18:40:15 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC PATCH 7/7] 802.11w: Configuration of MFP disabled/optional/required
+Received: from gv-out-0910.google.com ([216.239.58.190]:6860 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755374AbYFLMsf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2008 08:48:35 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so844714gvc.37
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 05:48:34 -0700 (PDT)
+Message-ID: <48511B1D.4010901@gmail.com> (sfid-20080612_144845_240444_45B900AB)
+Date: Thu, 12 Jun 2008 15:48:29 +0300
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+MIME-Version: 1.0
+To: Zhu Yi <yi.zhu@intel.com>
+CC: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with disable_hw_scan=1
+References: <484FF375.8010002@gmail.com> <1213237561.7814.688.camel@debian.sh.intel.com>
+In-Reply-To: <1213237561.7814.688.camel@debian.sh.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add new WEXT IW_AUTH_* parameter for setting MFP
-disabled/optional/required.
+Zhu Yi wrote:
+> On Wed, 2008-06-11 at 18:47 +0300, Maxim Levitsky wrote:
+>> I found why I can't reenable wireless with wireless button.
+>>
+>> It turns out that iwlwifi doesn't enable the wireless function after a
+>> R/F kill switch was enabled ether by the button or explicitly.
+>>
+>> I bisected this to commit 5a66926aa9230810704fd5a127966215fd58881e
+>> in linus tree.
+> 
+> The card will receive an interrupt when you disable the rf kill switch
+> anyway whatever the wireless function is enabled or not. So the driver
+> will enable the wireless function again. Please check if the interface
+> (wlan0) is up when you disable the rf kill switch later. If it is not,
+> you have to bring it up manually (i.e. ifconfig wlan0 up) to enable the
+> wireless function. Otherwise please provide the dmesg with
+> debug=0x20000.
+> 
+> Thanks,
+> -yi
+> 
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
+Why didn't I thought about this before...
+This is exactly what happens, so this isn't a bug.
 
+What happens is the Network manager brings wlan0 down is it detects that
+there is no link, but this now removes the firmware.
 
-Index: wireless-testing/include/linux/wireless.h
-===================================================================
---- wireless-testing.orig/include/linux/wireless.h
-+++ wireless-testing/include/linux/wireless.h
-@@ -578,6 +578,7 @@
- #define IW_AUTH_ROAMING_CONTROL		9
- #define IW_AUTH_PRIVACY_INVOKED		10
- #define IW_AUTH_CIPHER_GROUP_MGMT	11
-+#define IW_AUTH_MFP			12
- 
- /* IW_AUTH_WPA_VERSION values (bit field) */
- #define IW_AUTH_WPA_VERSION_DISABLED	0x00000001
-@@ -607,6 +608,11 @@
- #define IW_AUTH_ROAMING_DISABLE	1	/* user space program used for roaming
- 					 * control */
- 
-+/* IW_AUTH_MFP (management frame protection) values */
-+#define IW_AUTH_MFP_DISABLED	0	/* MFP disabled */
-+#define IW_AUTH_MFP_OPTIONAL	1	/* MFP optional */
-+#define IW_AUTH_MFP_REQUIRED	2	/* MFP required */
-+
- /* SIOCSIWENCODEEXT definitions */
- #define IW_ENCODE_SEQ_MAX_SIZE	8
- /* struct iw_encode_ext ->alg */
-Index: wireless-testing/net/mac80211/ieee80211_i.h
-===================================================================
---- wireless-testing.orig/net/mac80211/ieee80211_i.h
-+++ wireless-testing/net/mac80211/ieee80211_i.h
-@@ -372,6 +372,11 @@ struct ieee80211_if_sta {
- 	int auth_alg; /* currently used IEEE 802.11 authentication algorithm */
- 	int auth_transaction;
- 
-+#define IEEE80211_MFP_DISABLED 0
-+#define IEEE80211_MFP_OPTIONAL 1
-+#define IEEE80211_MFP_REQUIRED 2
-+	int mfp; /* management frame protection */
-+
- 	unsigned long ibss_join_req;
- 	struct sk_buff *probe_resp; /* ProbeResp template for IBSS */
- 	u32 supp_rates_bits[IEEE80211_NUM_BANDS];
-Index: wireless-testing/net/mac80211/wext.c
-===================================================================
---- wireless-testing.orig/net/mac80211/wext.c
-+++ wireless-testing/net/mac80211/wext.c
-@@ -1003,6 +1003,13 @@ static int ieee80211_ioctl_siwauth(struc
- 		else
- 			ret = -EOPNOTSUPP;
- 		break;
-+	case IW_AUTH_MFP:
-+		if (sdata->vif.type == IEEE80211_IF_TYPE_STA ||
-+		    sdata->vif.type == IEEE80211_IF_TYPE_IBSS)
-+			sdata->u.sta.mfp = data->value;
-+		else
-+			ret = -EOPNOTSUPP;
-+		break;
- 	default:
- 		ret = -EOPNOTSUPP;
- 		break;
+I guess that the right solution is to listen to the wireless button (via 
+input layer), and turn card on manually.
 
---
+If I remember correctly there is something like that in kernel, I try to 
+enable this.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Otherwise this can be implemented in userspace.
+
+Best regards,
+	Maxim Levitsky
