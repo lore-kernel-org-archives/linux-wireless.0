@@ -1,69 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44541 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751948AbYFZS2i (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 14:28:38 -0400
-Subject: Re: [Q] ath5k : doesn't support AP mode?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
-	cs010101@gmail.com, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <1214504482.3783.20.camel@johannes.berg> (sfid-20080626_202226_010344_A79E9A49)
-References: <002901c8d737$e51bb2f0$3b0aa8c0@39fb6b6b6f434b3>
-	 <200806261821.31643.mb@bu3sch.de> <1214498071.30722.22.camel@dv>
-	 <200806261846.17962.mb@bu3sch.de>  <1214501000.3783.0.camel@johannes.berg>
-	 <1214503403.18039.6.camel@dv>  <1214503739.3783.14.camel@johannes.berg>
-	 <1214504288.18039.12.camel@dv>  <1214504482.3783.20.camel@johannes.berg>
-	 (sfid-20080626_202226_010344_A79E9A49)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OEobATuQECW30eChIxh1"
-Date: Thu, 26 Jun 2008 20:27:54 +0200
-Message-Id: <1214504874.3783.25.camel@johannes.berg> (sfid-20080626_202842_550670_4D34CAEB)
+Received: from mga02.intel.com ([134.134.136.20]:8977 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751045AbYFLD27 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2008 23:28:59 -0400
+Subject: Re: [BUG] iwlwifi 3945 works only with disable_hw_scan=1
+From: Zhu Yi <yi.zhu@intel.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <484FEA26.1040305@gmail.com>
+References: <484FEA26.1040305@gmail.com>
+Content-Type: text/plain
+Date: Thu, 12 Jun 2008 11:28:35 +0800
+Message-Id: <1213241315.7814.696.camel@debian.sh.intel.com> (sfid-20080612_052907_224385_2C0F46FC)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2008-06-11 at 18:07 +0300, Maxim Levitsky wrote:
+> [   87.270433] wlan0: Initial auth_alg=0
+> [   87.270433] wlan0: authenticate with AP 00:1b:9e:d8:77:02
+> [   87.273477] wlan0: RX authentication from 00:1b:9e:d8:77:02 (alg=0
+> transaction=2 status=0)
+> [   87.273477] wlan0: authenticated
+> [   87.273477] wlan0: associate with AP 00:1b:9e:d8:77:02
+> [   87.275823] wlan0: RX AssocResp from 00:1b:9e:d8:77:02 (capab=0x411
+> status=0 aid=1)
+> [   87.275823] wlan0: associated
+> [   87.275823] wlan0: switched to short barker preamble
+> (BSSID=00:1b:9e:d8:77:02)
+> [   87.276185] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+> [   92.713277] APIC error on CPU0: 40(40)
+> [   97.885625] wlan0: no IPv6 routers present
+> [  111.766658] wlan0: no IPv6 routers present
+> [  112.121332] APIC error on CPU0: 40(40)
+> [  144.876825] APIC error on CPU0: 40(40)
+> [  158.676958] APIC error on CPU0: 40(40)
+> [  212.915533] APIC error on CPU0: 40(40)
+> [  290.079923] APIC error on CPU0: 40(40)
+> [  290.632507] APIC error on CPU0: 40(40)
+> [  296.557068] APIC error on CPU0: 40(40)
+> [  303.989147] APIC error on CPU0: 40(40)
+> [  305.782793] APIC error on CPU0: 40(40)
+> [  307.150566] APIC error on CPU0: 40(40)
+> [  310.248346] APIC error on CPU0: 40(40)
+> [  310.657006] APIC error on CPU0: 40(40)
+> [  311.453595] APIC error on CPU0: 40(40)
+> [  317.468024] APIC error on CPU0: 40(40)
+> [  321.284080] APIC error on CPU0: 40(40)
+> [  328.179853] APIC error on CPU0: 40(40)
+> [  330.127038] APIC error on CPU0: 40(40)
+> [  332.437435] APIC error on CPU0: 40(40)
+> [  335.326931] APIC error on CPU0: 40(40)
+> [  335.881538] APIC error on CPU0: 40(40)
+> [  337.790227] APIC error on CPU0: 40(40)
+> [  368.373446] APIC error on CPU0: 40(40)
+> [  369.809138] APIC error on CPU0: 40(40)
+> [  374.289855] APIC error on CPU0: 40(40)
+> [  375.768238] APIC error on CPU0: 40(40)
+> [  382.440748] APIC error on CPU0: 40(40)
+> [  383.159443] APIC error on CPU0: 40(40)
+> [  383.529522] APIC error on CPU0: 40(40)
+> [  383.906913] APIC error on CPU0: 40(40)
+> [  384.356990] APIC error on CPU0: 40(40)
+> [  384.610941] APIC error on CPU0: 40(40)
+> [  386.305185] APIC error on CPU0: 40(40)
+> [  386.935949] APIC error on CPU0: 40(40)
+> [  390.071741] APIC error on CPU0: 40(40)
+> [  390.403979] APIC error on CPU0: 40(40)
+> [  391.114519] APIC error on CPU0: 40(40)
+> [  391.528138] APIC error on CPU0: 40(40)
+> [  403.677688] APIC error on CPU0: 40(40)
+> [  404.140181] APIC error on CPU0: 40(40)
+> [  406.270920] APIC error on CPU0: 40(40)
+> [  406.927867] APIC error on CPU0: 40(40)
+> [  418.880757] APIC error on CPU0: 40(40)
+> [  419.235211] APIC error on CPU0: 40(40)
+> [  437.974455] APIC error on CPU0: 40(40)
+> [  438.193878] APIC error on CPU0: 40(40)
+> [  443.974790] APIC error on CPU0: 40(40)
+> [  444.177027] APIC error on CPU0: 40(40)
+> [  479.469645] APIC error on CPU0: 40(40)
+> [  479.720979] APIC error on CPU0: 40(40)
+> [  497.925734] APIC error on CPU0: 40(40)
+> [  498.202985] APIC error on CPU0: 40(40)
+> [  526.922424] APIC error on CPU0: 40(40)
+> [  527.607409] APIC error on CPU0: 40(40)
+> [  715.960235] APIC error on CPU0: 40(40)
+> [  716.232556] APIC error on CPU0: 40(40)
+> [  753.480442] APIC error on CPU0: 40(40)
+> [  753.820830] APIC error on CPU0: 40(40)
+> [  774.693756] APIC error on CPU0: 40(40)
+> [  774.867494] APIC error on CPU0: 40(40)
+> [  815.787137] APIC error on CPU0: 40(40)
+> [  816.308363] APIC error on CPU0: 40(40)
+> [  841.546917] APIC error on CPU0: 40(40)
+> [  842.082173] APIC error on CPU0: 40(40)
+> [  847.758887] ACPI: PCI interrupt for device 0000:06:00.0 disabled
 
---=-OEobATuQECW30eChIxh1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+It looks the association is succeeded. But 5 minutes later it got an
+APIC error. Then I found this error is with lot of devices in your
+system. Not sure about what caused this. Can you please try disable MSI
+with boot param pci=nomsi?
 
+I don't understand why "disable_hw_scan=1" works for you. Can you also
+attach the dmesg for it?
 
-> > > The fact that we cannot limit the rate like that that?
-> >=20
-> > That shouldn't be hard to implement.
->=20
-> Go ahead and post patches then.
-
-Mind you, I'm thinking of patches that actually address hostapd's
-incapability of setting rates to use/basic rates etc. in the kernel, not
-a two-line workaround that only enables 1mbit for AP mode interfaces.
-
-johannes
-
---=-OEobATuQECW30eChIxh1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIY9+nAAoJEKVg1VMiehFYMR8QAI0u1ibFlMyZ8vn8BdGQlU/9
-1LvxAtF8H35xUtnrIJYPM0cshHH6u+CpTSrNoWsLFYKR1b6MHLwYTTKFHybjsMF1
-etTHEmSrYb1u0W6qNkg/XWmNX9HRKXjQ4g69y5DDPKHoyL1wXuWsyt/J1ioD7km/
-wDvj0FV7fI/6ew6Dq+67PQzCoIy8YdIOhmICZRP3PJGcArQ9i15RbOfQr5iP4T3S
-0hgYod9uS4AGQ3Ix9S75M7fE8AwYcnBTspfPkbWhQZBDYFKINGxVcpD5znGiu9Xq
-eq5MmBCZVSTP8UEerEyzN7WDaqfjHl+7CtDdAFgzbIjK1XXUyY+O8B9Le/7zMUdJ
-9x8O3R5EGqAgNFshGGKf74Lpd5RZAAIABbkxin0riUp//lKyx8do2mmFeoDb5Aoo
-P/4folpNuRkfAD0MRE8D90S4IGAGbb9LJJzUwCQGb6sRCi9JDD+PFqRkR5pN6i/f
-d0hcpN6QPR/3i+F1d0M13AYBAzIbUvcq/okaoWJMkjypvGtRA/t3GTAYrkXBFT7c
-tMfWnuQ6AVqknIOczB2DSKE0WlxS7u+U2CnSfUsiUr2jmpzovAxRuqYRKrdxos1o
-uO7bA4qMvts/JdIE+tZuj1qeKM/Fjy7mE5Og7RWGHCk20EAqrmoCuxJiK0+s1mg1
-pYWUAHGuSou4INo7F1GM
-=u6SD
------END PGP SIGNATURE-----
-
---=-OEobATuQECW30eChIxh1--
+Thanks,
+-yi
 
