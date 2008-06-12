@@ -1,172 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43898 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755956AbYFMOyP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 10:54:15 -0400
-Subject: Re: [PATCH] mac80211: eliminate IBSS warning in rate_lowest_index()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vladimir Koutny <vlado@work.ksp.sk>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	bruno randolf <bruno@thinktube.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <48528944.2040907@work.ksp.sk>
-References: <48528944.2040907@work.ksp.sk>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qPRmeNXEuKfrUAbpP00m"
-Date: Fri, 13 Jun 2008 16:54:06 +0200
-Message-Id: <1213368846.3860.40.camel@johannes.berg> (sfid-20080613_165418_786431_368C3F2D)
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:42591 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752692AbYFLBuC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2008 21:50:02 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 25/29] iwlwifi: remove dead code iwl4965_calc_db_from_ratio
+Date: Thu, 12 Jun 2008 09:47:15 +0800
+Message-Id: <1213235239-2954-26-git-send-email-yi.zhu@intel.com> (sfid-20080612_041915_697127_90397BA1)
+In-Reply-To: <1213235239-2954-25-git-send-email-yi.zhu@intel.com>
+References: <1213235239-2954-1-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-2-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-3-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-4-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-5-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-6-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-7-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-8-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-9-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-10-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-11-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-12-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-13-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-14-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-15-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-16-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-17-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-18-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-19-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-20-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-21-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-22-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-23-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-24-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-25-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
---=-qPRmeNXEuKfrUAbpP00m
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch removes iwl4965_calc_db_from_ratio which is dead code.
 
-On Fri, 2008-06-13 at 16:50 +0200, Vladimir Koutny wrote:
-> In IBSS mode prior to join/creation of new IBSS it is possible that
-> a frame from unknown station is received and an ibss_add_sta() is
-> called. This will cause a warning in rate_lowest_index() since the
-> list of supported rates of our station is not initialized yet.
->=20
-> The fix is to add ibss stations with a rate we received that frame
-> at; this single-element set will be extended later based on beacon
-> data. Also there is no need to store stations from a foreign IBSS.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   36 ---------------------------
+ 1 files changed, 0 insertions(+), 36 deletions(-)
 
-Looks sane to me, but I don't really test/understand the IBSS code.
-
->=20
-> Signed-off-by: Vladimir Koutny <vlado@ksp.sk>
->=20
-> ---
->=20
-> diff -Naur compat-wireless-2008-06-12-base/net/mac80211/ieee80211_i.h com=
-pat-wireless-2008-06-12/net/mac80211/ieee80211_i.h
-> --- compat-wireless-2008-06-12-base/net/mac80211/ieee80211_i.h	2008-06-13=
- 15:53:03.000000000 +0200
-> +++ compat-wireless-2008-06-12/net/mac80211/ieee80211_i.h	2008-06-13 16:1=
-7:11.000000000 +0200
-> @@ -886,7 +886,7 @@
->  int ieee80211_sta_set_extra_ie(struct net_device *dev, char *ie, size_t =
-len);
->  struct sta_info *ieee80211_ibss_add_sta(struct net_device *dev,
->  					struct sk_buff *skb, u8 *bssid,
-> -					u8 *addr);
-> +					u8 *addr, u64 supp_rates);
->  int ieee80211_sta_deauthenticate(struct net_device *dev, u16 reason);
->  int ieee80211_sta_disassociate(struct net_device *dev, u16 reason);
->  void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sdat=
-a,
-> diff -Naur compat-wireless-2008-06-12-base/net/mac80211/mlme.c compat-wir=
-eless-2008-06-12/net/mac80211/mlme.c
-> --- compat-wireless-2008-06-12-base/net/mac80211/mlme.c	2008-06-13 15:52:=
-54.000000000 +0200
-> +++ compat-wireless-2008-06-12/net/mac80211/mlme.c	2008-06-13 16:18:24.00=
-0000000 +0200
-> @@ -2863,7 +2863,8 @@
->  				       dev->name, print_mac(mac, mgmt->bssid));
->  			ieee80211_sta_join_ibss(dev, &sdata->u.sta, bss);
->  			ieee80211_ibss_add_sta(dev, NULL,
-> -					       mgmt->bssid, mgmt->sa);
-> +					       mgmt->bssid, mgmt->sa,
-> +					       BIT(rx_status->rate_idx));
->  		}
->  	}
->=20
-> @@ -4307,12 +4308,13 @@
->=20
->  struct sta_info *ieee80211_ibss_add_sta(struct net_device *dev,
->  					struct sk_buff *skb, u8 *bssid,
-> -					u8 *addr)
-> +					u8 *addr, u64 supp_rates)
->  {
->  	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
->  	struct sta_info *sta;
->  	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
->  	DECLARE_MAC_BUF(mac);
-> +	int band =3D local->hw.conf.channel->band;
->=20
->  	/* TODO: Could consider removing the least recently used entry and
->  	 * allow new one to be added. */
-> @@ -4324,6 +4326,9 @@
->  		return NULL;
->  	}
->=20
-> +	if (!ieee80211_bssid_match(bssid, sdata->u.sta.bssid))
-> +		return NULL;
-> +
->  	printk(KERN_DEBUG "%s: Adding new IBSS station %s (dev=3D%s)\n",
->  	       wiphy_name(local->hw.wiphy), print_mac(mac, addr), dev->name);
->=20
-> @@ -4333,8 +4338,10 @@
->=20
->  	set_sta_flags(sta, WLAN_STA_AUTHORIZED);
->=20
-> -	sta->supp_rates[local->hw.conf.channel->band] =3D
-> -		sdata->u.sta.supp_rates_bits[local->hw.conf.channel->band];
-> +	if (supp_rates)
-> +		sta->supp_rates[band] =3D supp_rates;
-> +	else
-> +		sta->supp_rates[band] =3D sdata->u.sta.supp_rates_bits[band];
->=20
->  	rate_control_rate_init(sta, local);
->=20
-> diff -Naur compat-wireless-2008-06-12-base/net/mac80211/rx.c compat-wirel=
-ess-2008-06-12/net/mac80211/rx.c
-> --- compat-wireless-2008-06-12-base/net/mac80211/rx.c	2008-06-13 15:50:11=
-.000000000 +0200
-> +++ compat-wireless-2008-06-12/net/mac80211/rx.c	2008-06-13 16:17:11.0000=
-00000 +0200
-> @@ -1846,8 +1846,13 @@
->  		if (!bssid)
->  			return 0;
->  		if ((rx->fc & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_MGMT &&
-> -		    (rx->fc & IEEE80211_FCTL_STYPE) =3D=3D IEEE80211_STYPE_BEACON)
-> +		    (rx->fc & IEEE80211_FCTL_STYPE) =3D=3D IEEE80211_STYPE_BEACON) {
-> +			if (!rx->sta)
-> +				rx->sta =3D ieee80211_ibss_add_sta(sdata->dev,
-> +						rx->skb, bssid, hdr->addr2,
-> +						BIT(rx->status->rate_idx));
->  			return 1;
-> +		}
->  		else if (!ieee80211_bssid_match(bssid, sdata->u.sta.bssid)) {
->  			if (!(rx->flags & IEEE80211_RX_IN_SCAN))
->  				return 0;
-> @@ -1860,7 +1865,8 @@
->  			rx->flags &=3D ~IEEE80211_RX_RA_MATCH;
->  		} else if (!rx->sta)
->  			rx->sta =3D ieee80211_ibss_add_sta(sdata->dev, rx->skb,
-> -							 bssid, hdr->addr2);
-> +						bssid, hdr->addr2,
-> +						BIT(rx->status->rate_idx));
->  		break;
->  	case IEEE80211_IF_TYPE_MESH_POINT:
->  		if (!multicast &&
->=20
->=20
-
---=-qPRmeNXEuKfrUAbpP00m
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIUooKAAoJEKVg1VMiehFYZiQP/3mDjJn8h51FQ86OAQn4mMNb
-Ik18mwK40oySOfyw0TJSkKvIEtvpKAfCJPbLhbQHL0Ih2/5LPFVaAukzKiCvcuMq
-KbYbsp4505/fSkpegzFXyMHCFR7Oxhr9VWDepTED7mS2Q/SsBq9TQKJnZuEp/DbP
-lv/45Uz9OFn5BeLf2EdfZuu1qWaQBlyJbNRGPT4judtLSHzVe9FZdLF7+GsD2Ng4
-w1CpvhEu4AP+gMTiELgPo+q4hUnRkX7CtwrF1lfLbOWkycOAFDra9f3+1DJvDZcX
-3ZLrvz2YgxuyM2tPhvlg5xAOp5a2juIXkm4QVZpbxzS/APxMN9xUBmMnad4lrovR
-tWIchJl27mbOsZTeQNAWfVihekpqxQrSTTBJp2ezOl6e1l1d82g6yzd0zCQCYksi
-+btrzbHYQqLSJSw67DGKpI3UD+T1ZtmrgYXgCNGSpKbRWz9Blx5WdqfuzvdyedUW
-gHAapkjPVQaLbYPf288DeG/v8Z5skPcproRWP0ndln/8KqHhK/ZYD36ScCX4wt4p
-11iCp4d+DInd9T6kO8QffiaCchvv9koCZtCp/2X78kM3CwHwjELbtIEgMLmJEuSU
-1Rcq8B4Hr6aA3QWaeOFktprh2w6B2fF4gDAJVSgW7jbDMZ3xm6wPc8ysT3WGvQK9
-09RsL1LRCkgASjyQj0vQ
-=5Fra
------END PGP SIGNATURE-----
-
---=-qPRmeNXEuKfrUAbpP00m--
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 14d4432..8f1ab23 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -1597,42 +1597,6 @@ void iwl_rx_handle(struct iwl_priv *priv)
+ 	priv->rxq.read = i;
+ 	iwl_rx_queue_restock(priv);
+ }
+-/* Convert linear signal-to-noise ratio into dB */
+-static u8 ratio2dB[100] = {
+-/*	 0   1   2   3   4   5   6   7   8   9 */
+-	 0,  0,  6, 10, 12, 14, 16, 17, 18, 19, /* 00 - 09 */
+-	20, 21, 22, 22, 23, 23, 24, 25, 26, 26, /* 10 - 19 */
+-	26, 26, 26, 27, 27, 28, 28, 28, 29, 29, /* 20 - 29 */
+-	29, 30, 30, 30, 31, 31, 31, 31, 32, 32, /* 30 - 39 */
+-	32, 32, 32, 33, 33, 33, 33, 33, 34, 34, /* 40 - 49 */
+-	34, 34, 34, 34, 35, 35, 35, 35, 35, 35, /* 50 - 59 */
+-	36, 36, 36, 36, 36, 36, 36, 37, 37, 37, /* 60 - 69 */
+-	37, 37, 37, 37, 37, 38, 38, 38, 38, 38, /* 70 - 79 */
+-	38, 38, 38, 38, 38, 39, 39, 39, 39, 39, /* 80 - 89 */
+-	39, 39, 39, 39, 39, 40, 40, 40, 40, 40  /* 90 - 99 */
+-};
+-
+-/* Calculates a relative dB value from a ratio of linear
+- *   (i.e. not dB) signal levels.
+- * Conversion assumes that levels are voltages (20*log), not powers (10*log). */
+-int iwl4965_calc_db_from_ratio(int sig_ratio)
+-{
+-	/* 1000:1 or higher just report as 60 dB */
+-	if (sig_ratio >= 1000)
+-		return 60;
+-
+-	/* 100:1 or higher, divide by 10 and use table,
+-	 *   add 20 dB to make up for divide by 10 */
+-	if (sig_ratio >= 100)
+-		return (20 + (int)ratio2dB[sig_ratio/10]);
+-
+-	/* We shouldn't see this */
+-	if (sig_ratio < 1)
+-		return 0;
+-
+-	/* Use table for ratios 1:1 - 99:1 */
+-	return (int)ratio2dB[sig_ratio];
+-}
+ 
+ #define PERFECT_RSSI (-20) /* dBm */
+ #define WORST_RSSI (-95)   /* dBm */
+-- 
+1.5.3.6
 
