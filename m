@@ -1,117 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40124 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754383AbYFPQpY (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.228]:54352 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752784AbYFLWRO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2008 12:45:24 -0400
-Subject: Re: Management frame protection and packet injection from hostapd
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080616153421.GC18479@jm.kir.nu>
-References: <20080616143308.GB18479@jm.kir.nu>
-	 <1213627991.3803.38.camel@johannes.berg> <20080616153421.GC18479@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LOvZR/iWRCdoy9XecMUQ"
-Date: Mon, 16 Jun 2008 18:44:44 +0200
-Message-Id: <1213634684.3803.43.camel@johannes.berg> (sfid-20080616_184528_507886_E873544D)
-Mime-Version: 1.0
+	Thu, 12 Jun 2008 18:17:14 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2241127rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 15:17:14 -0700 (PDT)
+Message-ID: <1ba2fa240806121517p6ef1e117ofd940ad763195a0d@mail.gmail.com> (sfid-20080613_001721_145592_F7573A2B)
+Date: Fri, 13 Jun 2008 01:17:14 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Zdenek Kabelac" <zdenek.kabelac@gmail.com>
+Subject: Re: Problem: Out of memory after 2days with 2GB RAM
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Rik van Riel" <riel@redhat.com>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+	yi.zhu@intel.com, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <c4e36d110806121311n64890e17h67f49c32481fbb28@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <c4e36d110806120307n20cce692s9c136f11596f5ab0@mail.gmail.com>
+	 <1213278884.3936.15.camel@johannes.berg>
+	 <1ba2fa240806120843s268b2ff4mb45a11adf11afc7f@mail.gmail.com>
+	 <1ba2fa240806120935r54a080eci7fa6fafc718eed17@mail.gmail.com>
+	 <1213290335.3730.4.camel@johannes.berg>
+	 <1ba2fa240806121039o376b0a8sdfaacf3a1f4a9e57@mail.gmail.com>
+	 <1213292812.3730.21.camel@johannes.berg>
+	 <1ba2fa240806121103m60a8ffa4ie11850fedc69d13c@mail.gmail.com>
+	 <1213294547.3730.29.camel@johannes.berg>
+	 <c4e36d110806121311n64890e17h67f49c32481fbb28@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jun 12, 2008 at 11:11 PM, Zdenek Kabelac
+<zdenek.kabelac@gmail.com> wrote:
+> 2008/6/12 Johannes Berg <johannes@sipsolutions.net>:
+>>
+>>> I'm not against it. You;v decided that I'm fighting you because I gave
+>>> another solution.
+>>
+>> Ok, no, I'm not saying you shouldn't rewrite all the code to get rid of
+>> it, but I think you can use a patch like mine interim as such a rewrite
+>> is unlikely to go into 2.6.26, is it?
+>>
+>>> Frankly we probably don't need this allocation at all. maybe one skb
+>>> is just enough
+>>
+>> That would be nice, indeed.
+>>
+>>> even with my never dying hope all fragments are in skb fragment list.
+>>
+>> :)
+>>
+>>> This still probably won't save pci memory allocation problem
+>>
+>> Yeah, true, that one needs to be done, but it could probably be done
+>> only once when hw is probed rather than every time it is brought up.
+>> Most likely not something you'll get to fix in 2.6.26 either though.
+>
+>
+> Well - it's great that there will be saved few kB in allocation of
+> never used pointers in iwl driver - but does this really solve the
+> problem that kernel gets relatively quickly out of memory for
+> allocations of this size - I guess iwl isn't the only driver
+> requesting 32 sequential pages.
+>
+> Is it possible to track how this memory gets fragment/lost - who owns
+> the block and why they are not back in the pool?
+>
+> btw with 8hour uptime at this moment I can see this:
+>
+> DMA: 26*4kB 37*8kB 72*16kB 65*32kB 3*64kB 0*128kB 0*256kB 0*512kB
+> 0*1024kB 0*2048kB 1*4096kB = 7920kB
+> DMA32: 203*4kB 79*8kB 26*16kB 11*32kB 6*64kB 9*128kB 3*256kB 2*512kB
+> 2*1024kB 0*2048kB 0*4096kB = 7588kB
+>
+> so at this moment I can see quiet a lot of free DMA memory - but in my
+> trace at the thread beginig after several suspend/resumes this memory
+> was gone....
 
---=-LOvZR/iWRCdoy9XecMUQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Currently the driver frees the memory on down and allocates it back on
+up. This is done even in initial
+reset for sake of flow simplicity.
+I'm not sure yet why the memory is actually accumulating, whether the
+bug is in the driver or memory system is not clear to me yet.  I
+haven't seen this on older kernels or driver.
+As I wrote I'm also polishing a patch that doesn't do this free-alloc
+loop hope this will remedy somehow this problem. It has a drawback as
+it will hold on memory even if devices is down.
 
-
-> Yes, as long as the STA entry is found (and it should, in this case),
-> the pairwise CCMP key is used both for data and management frames. I
-> haven't done full testing yet, but I would expect this to work even when
-> the unicast management frames comes from hostapd.
-
-Yeah, it should.
-
-> Broadcast/multicast management frames are protected with BIP using IGTK.
-> This is similar to how GTK is used with TKIP/CCMK for broadcast data
-> frames, i.e., there is a default TX key index that the AP uses for the
-> frames. Indexes 1..3 are used for data frames and 802.11w is using 4..5
-> for BIP (even though the key index space is actually completely separate
-> from the one used with data frames).
-
-Ok, thanks for the explanation.
-
-> > Yeah that sounds like a hack. I guess it should work just like when we
-> > submit a unicast frame via monitor with the radiotap flag to indicate
-> > that we want encryption, only we should add logic to look up the defaul=
-t
-> > key to use if there is no peer/unicast key by the outgoing MAC address?
->=20
-> Yes, we already look for STA entry for unicast and that should work as
-> long as the STA table is not per netdev, i.e., both data and monitor
-> interface end using the same STA table. If no STA entry is found
-> (multicast/broadcast), we look for a default TX key, but this is only
-> done for the netdev that was used to send the frame (which is different
-> between normal data interface and packet injection via monitor
-> interface).
-
-Good point about the STA tables there. I guess we really do need to bind
-the frame to a certain outgoing device to use that sdata state struct.
-
-> If the monitor interface were to look for the default key (or well,
-> keys, since there are now two; one for data, one for mgmt) from the data
-> interface (somehow bound to the monitor iface?), that should work here.
->=20
-> > OTOH, that would break for multi-SSID/single-BSSID scenarios I guess, s=
-o
-> > we probably need a way to indicate "this frame belongs to interface
-> > index N"?
->=20
-> Yes, either the frame or maybe more easily the monitor interface would
-> need to be bound to the interface that is used for key configuration.
-
-Yeah, either would work, for per-frame we'd have to extend radiotap but
-it would probably be better as it would allow hostapd to use the same
-mon.wlan0 interface for all BSSes.
-
-> > I don't see any such problems, but if I were to venture a guess it's
-> > because of configuring keys on a monitor interface. It sounds like
-> > something sticks around within the netdev:mon.wlan0 subdirectory, then
-> > the code tries to delete the directory and only afterwards is the entry
-> > removed, leaving the directory (and the parent, of course) hanging
-> > there.
->=20
-> Yes, that sounds likely since the changes I did for debugfs were very
-> trivial copies from CCMP/data-default-key processing. I'll debug this
-> more and try to figure if there is need to re-order something or make
-> the debugfs entry removal able to handle such a case.
-
-Ok. I don't know right now, and it does seem to work correctly here, but
-maybe it doesn't when the application doesn't explicitly remove the key
-or something, I'll take a look.
-
-johannes
-
---=-LOvZR/iWRCdoy9XecMUQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIVph4AAoJEKVg1VMiehFYZTQQAKCutL6fJbaRIk81oM1byqCH
-7Dw1jQhSezp6aMdki1LqRrNDz5zu6o9O7S/th3Y+zO8XFPiTlGPEb9IVZKWMJjhM
-kjXk+UEEQ0Ykxu8APmi7d/C7j3O0Wzy/lq+dsntEi32TfL/U5EkmX3s+taZWgsP0
-3m80boo1WKdF8QokmYLAxk5uzdEvc7F1UJcGjAcGOxj1prl6K/9xlAiJgt1u6Hsd
-GO4mfcmmh43P7DzuGGp8pAWR9VfaIO+Bh9Dr/gkLn3MwPKCdObT5EW2hLqSGWo8U
-30TQXCJBB8sLmZxKKxtQhW1emcB6u/ku1OT0A1kQDCB0N0aFwffLF0xGlOClRMZY
-PV1ClcnLuunVrBOQeT/Pj2FEt84RJNxISMwfvDORJTC4kj86n+DU6uc/xLVEHSBc
-MlITRojAokMWxK74avIlnojvBhFNP1EKkwhVKy1Ihj0BFXtk4olvAw0yZzIOga1o
-q7R6QWp9PBAHao39QrjETXLnKhGTveTrzyta99RhNuC/so1jH4szE+sF8jtBPLM0
-LJoQnVEU1k4IfJ7D+5OIvNmuqqzKDv/Gzi1r9Y9mND9VrUrcAn7G/LQPcq4e/yTb
-Txqqi5taugaS5IeOXZ0X8NoMcFvSI3XbUjn2FZxmbLi4DmOrk0wQdX5xnJ1K2/3m
-9wR7Y9hwkTL1ZRQfhY+j
-=rkev
------END PGP SIGNATURE-----
-
---=-LOvZR/iWRCdoy9XecMUQ--
-
+Tomas
