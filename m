@@ -1,106 +1,405 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:60300 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:29947 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752398AbYFFO17 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2008 10:27:59 -0400
-Subject: Re: [PATCH 01/12] rfkill: clarify meaning of rfkill states
-From: Dan Williams <dcbw@redhat.com>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, Dmitry Torokhov <dtor@mail.ru>
-In-Reply-To: <20080606141419.GA3444@khazad-dum.debian.net>
-References: <1212549017-30144-2-git-send-email-hmh@hmh.eng.br>
-	 <1212611246.4018.12.camel@localhost.localdomain>
-	 <1ba2fa240806041607j10841ac0qb11fe0d0b27953d8@mail.gmail.com>
-	 <20080605003808.GA16599@khazad-dum.debian.net>
-	 <1212667955.25730.29.camel@localhost.localdomain>
-	 <20080605130323.GB3413@khazad-dum.debian.net>
-	 <1212677207.28545.56.camel@localhost.localdomain>
-	 <1212696826.13915.1256967905@webmail.messagingengine.com>
-	 <1212722763.1026.17.camel@localhost.localdomain>
-	 <1212758662.26514.5.camel@localhost.localdomain>
-	 <20080606141419.GA3444@khazad-dum.debian.net>
-Content-Type: text/plain
-Date: Fri, 06 Jun 2008 10:27:31 -0400
-Message-Id: <1212762451.28631.3.camel@localhost.localdomain> (sfid-20080606_162819_632451_E9F2D1DD)
-Mime-Version: 1.0
+	id S1760087AbYFLNMD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2008 09:12:03 -0400
+Received: from mail.atheros.com ([192.168.11.2])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 06:12:03 -0700
+Date: Thu, 12 Jun 2008 06:11:54 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [RFC] First CRDA integration work
+Message-ID: <20080612131154.GA28315@tesla> (sfid-20080612_151210_221063_7614BA21)
+References: <20080611040402.GE17936@ruslug.rutgers.edu> <1213260106.19369.15.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1213260106.19369.15.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-06-06 at 11:14 -0300, Henrique de Moraes Holschuh wrote:
-> On Fri, 06 Jun 2008, Dan Williams wrote:
-> > Let me explain this a bit more.
-> > 
-> > - My original request was based on my flawed understanding of the
-> > current scope of the rfkill system
+On Thu, Jun 12, 2008 at 01:41:46AM -0700, Johannes Berg wrote:
 > 
-> Ok.  I am keeping that in mind.
+> > + * @NL80211_CMD_GET_REG: Get current regulatory domain, this is a query 
+> > + * 	to the kernel wireless core, the wireless core returns currently
+> > + * 	set alpha2 by %NL80211_ATTR_REG_ALPHA2,.
 > 
-> > - If the rfkill system is _only_ supposed to handle switches that turn
-> > the radio off automatically, then a "third state" for the rfkill class
-> > really serves _no_ purpose at all, because the radio's already blocked
-> > when the switch is thrown
-> 
-> Given these rules (not documented fully yet, I shall fix it when this
-> thread quiesces):
-> 
-> 1. Every transmitter shall have ONE, and just ONE (not zero, not two,
-> not more) rfkill class attached.  For those transmitters lacking support
-> in hardware to make it block, the drivers shall quiesce them and avoid
-> doing anything to cause transmissions, or even use bus tricks to power
-> the device down (i.e. the driver will emulate a switch capable of doing
-> the blocking).
-> 
-> Thus, rfkill class will give you the DEVICE (radio) rfkill block/unblock
-> state on wireless devices (ignore switches for now, I will explain them
-> in another email).
-> 
-> The information of whether a transmitter is currently blocked in a way
-> you can request it to be unblocked (soft-kill) or currently blocked in a
-> way you cannot request it to be unblocked (hard-kill) DOES belong in
-> rfkill class.   Do you want/need that information, yes or no?
+> Please specify what command it comes in, probably _NEW_REG that you
+> haven't added.
 
-Yes, I want/need that information.
+We can probably not even add this, what do you think?
 
-> > - There are drivers that implement rfkill (laptop-specific BIOS drivers)
-> > that have _no_ associated transmitter device; thus the current 'struct
-> > rfkill' can only be a representation of the _switch_; thus a "third
-> > state" would be useless here as well (as is the toggle_radio() callback)
+> > + * @NL80211_CMD_SET_REG: Set current regulatory domain. CRDA sets this after
+>                                                                 sends
 > 
-> I haven't finished replying to your other email yet, because it is not a
-> fast reply (and I am in a hurry in the next two days) and I need to look
-> at hp-wmi itself to understand what the issue that is causing confusion
-> is.  THAT reply will explain to you how it works with "pure read/write
-> switches that are not in a wireless device".  THEN we shall be able to
-> unravel the confusion, and I will finally understand what you are trying
-> to tell me (or you will understand what I am trying to tell you).
-
-Well, it's not just hp-wmi.
-
-On a laptop with _no_ rfkill keys and only pure input keys that get
-handled by userspace or whatever, there should still be "transmitter
-sw-blocked/hw-blocked/unblocked" functionality available, even though
-there is no hardware rfkill key present on the system.  That's another
-thing I'm confused about.  It seems that the rfkill class is not
-appropriate for that if it's trying to also handle actual rfkill keys
-too.
-
-They are two separate things, because there are examples of hardware
-that are both ways.  And separating the switch bits from the transmitter
-bits is the best way to accommodate both types of hardware.
-
-Dan
-
-> > - It just seems a lot clearer to me to have a separation between the
-> > rfkill switch and the radio bits since there's no need to tie them
-> > together
+> > + * 	being queried by the kernel.
 > 
-> And this is part of the confusion.  So, for now, please just look at the
-> question four paragraphs above, and tell me whether you want that
-> information or not.  I'd think you would, since you want to gray out the
-> "enable radio" button when the radio is blocked by some hardware signal
-> you cannot override, but I could be confused about it...
-> 
+> How?
 
+This should be the CMD_NEW_REG then, I called it "SET" as we can only
+set one regulatory domain. Let me know your preference.
+
+> >  CRDA replies by sending a regulatory domain
+> > + * 	structure which consists of %NL80211_ATTR_REG_ALPHA set to our current alpha2
+> > + * 	if it found a match.
+> 
+> Why set the alpha2 again? I thought the kernel queried for that?
+
+This is in case we wanted to support letting userspace query the kernel
+what alpha2 it has set. I'm OK with not supporting this though but it
+seemed it may have come in handy, hopefully not for abuse for other
+things.
+
+> >  It also provides %NL80211_ATTR_REG_NUM,
+> 
+> What is that for?
+
+The number of reg rules for the current regdomain. We'd convert the
+array or reg rules structs to an number of attributes we are sure to
+receive. The alternative I think is to pass all the data into a _DATA
+type and let us parse it ourselves. I'm not sure, what do you think?
+
+I was thinking something like this:
+
+If NL80211_ATTR_REG_NUM == 3
+
+Then the nested attributes will be packed like this:
+
+reg-rule	Attribute
+-----------------------------------------------------------
+1		NL80211_ATTR_REG_RULE_FLAGS
+1		NL80211_ATTR_REG_RULE_FREQ_START
+1		NL80211_ATTR_REG_RULE_FREQ_END
+1		NL80211_ATTR_REG_RULE_FREQ_MAX_BW
+1		NL80211_ATTR_REG_RULE_POWER_MAX_ANT_GAIN
+1		NL80211_ATTR_REG_RULE_POWER_MAX_EIRP
+
+2		NL80211_ATTR_REG_RULE_FLAGS
+2		NL80211_ATTR_REG_RULE_FREQ_START
+2		NL80211_ATTR_REG_RULE_FREQ_END
+2		NL80211_ATTR_REG_RULE_FREQ_MAX_BW
+2		NL80211_ATTR_REG_RULE_POWER_MAX_ANT_GAIN
+2		NL80211_ATTR_REG_RULE_POWER_MAX_EIRP
+
+3		NL80211_ATTR_REG_RULE_FLAGS
+3		NL80211_ATTR_REG_RULE_FREQ_START
+3		NL80211_ATTR_REG_RULE_FREQ_END
+3		NL80211_ATTR_REG_RULE_FREQ_MAX_BW
+3		NL80211_ATTR_REG_RULE_POWER_MAX_ANT_GAIN
+3		NL80211_ATTR_REG_RULE_POWER_MAX_EIRP
+-----------------------------------------------------------
+
+I wanted your input on this. Not sure what is best. Pleas recommend a
+format.
+
+> > + * 	%NL80211_ATTR_REG_PGP_SIGNATURE_CHECK,
+> 
+> It's not PGP either way, 
+
+Excuse my crypto-fu :)
+
+> and why is that required in the kernel?
+
+I don't have strong reasons for this anymore. We can ignore it.
+
+> >  and a regulatory rule. The regulatory
+> > + * 	rule consists of set of frequency ranges given by
+> > + * 	%NL80211_ATTR_REG_RULE_FREQ_[START|END] with an attached power rule given
+> > + * 	by %NL80211_ATTR_REG_RULE_POWER_MAX_ANT_GAIN and
+> > + * 	%NL80211_ATTR_REG_RULE_POWER_MAX_EIRP. Each regulatory rule also has 
+> > + * 	an attached %NL80211_ATTR_REG_RULE_FLAGS.
+> 
+> How are these attributes used? Nested in some array?
+
+I wasn't sure yet, I wanted your feedback, but you are giving me this
+through IRC :)
+
+> > + * @NL80211_ATTR_REG_ALPHA2: an ISO-3166-alpha2 country code for which the
+> > + * 	current regulatory domain should be set to or is already set to.
+> > + * 	For example, 'CR', for Costa Rica.
+> 
+> Heh :)
+> 
+> >  This attribute is used by the kernel
+> > + * 	to query the CRDA userspace agent to retrieve one regulatory domain.
+> > + * 	This attribute can also be used by userspace to query the kernel for
+> > + * 	the currently set regulatory domain.
+> 
+> ???
+
+OK well I haven't figured out how the kernel->CRDA communication would
+work yet. CRDA->kernel is nl80211. You can ignore this for now.
+
+> > + * @NL80211_ATTR_REG_NUM_RULES: number of regulatory rules passed
+> 
+> Not necessary.
+
+OK.
+
+> > + * @NL80211_ATTR_REG_PGP_SIGNATURE_CHECK: whether or not CRDA has blessed
+> > + * 	this information through a PGP signature check. If its not blessed
+> > + * 	we go ahead and regulatory-taint the kernel. This is obviously
+> > + * 	hackable but the purpose is to allow distributions to be able to use
+> > + * 	a CRDA with a regulatory database signed off by the community
+> > + * 	and get the communities' blessing on this. Vendors can also
+> > + * 	support their own custom databases for custom solutions (AP, military).
+> > + * 	Start to shift liablity to the user, where it should be.
+> 
+> Not PGP. It's just an RSA signature. If liability is at the user, why do
+> we need to know this in the kernel?
+
+The original idea was to let vendors decide to be able to ignore or not
+bug reports (oops) if the kernel was reguluatory tainted. But since we
+are using EEPROM data we're OK without this data. It may be desirable
+but I can't think of a strong reason behind this anymore.
+
+> > + * @NL80211_ATTR_REG_RULE_FLAGS: a set of flags which specify additional
+> > + * 	considerations for a given frequency range. These are the
+> > + * 	&enum nl80211_reg_rule_flags.
+> 
+> Should we use flag attributes here nested into something? That would be
+> more netlink-like and allow easier expansion above 32 should it become
+> necessary.
+
+OK.
+
+> > + * @NL80211_ATTR_REG_RULE_FREQ_START: starting frequencry for the regulatory
+> > + * 	rule in KHz. This is not a center of frequency but an actual regulatory
+>                                             ^^ remove
+> > + * 	band edge.
+> > + * @NL80211_ATTR_REG_RULE_FREQ_END: ending frequency for the regulatory rule
+> > + * 	in KHz. This is not a center a frequency but an actual regulatory
+>                                        ^^ remove
+> > + * 	band edge.
+> > + * @NL80211_ATTR_REG_RULE_FREQ_MAX_BW: maximum allowed bandwidth for this
+> > + * 	frequency range, in KHz.
+> > + * @NL80211_ATTR_REG_RULE_POWER_MAX_ANT_GAIN: the maximum allowed antenna gain
+> > + * 	for a given frequency range. The value is in mBi (100 * dBi).
+> 
+> Can be left out.
+
+OK.
+
+> > +/* Central wireless core regulatory domains, we only need two,
+> > + * the current one and a world regulatory domain in case we have no
+> > + * information to give us an alpha2 */
+> > +const struct ieee80211_regdomain *cfg80211_regdomain;
+> 
+> const?
+
+Ignore that.
+
+> > +const struct ieee80211_regdomain *cfg80211_world_regdom;
+> > +DEFINE_MUTEX(cfg80211_reg_mutex);
+> > +
+> >  /* RCU might be appropriate here since we usually
+> >   * only read the list, and that can happen quite
+> >   * often because we need to do it for each command */
+> > @@ -402,9 +410,30 @@ static struct notifier_block cfg80211_netdev_notifier = {
+> >  	.notifier_call = cfg80211_netdev_notifier_call,
+> >  };
+> >  
+> > +
+> >  static int cfg80211_init(void)
+> >  {
+> > -	int err = wiphy_sysfs_init();
+> > +#define	PASSIVE_AND_NO_IBSS	RRF_PASSIVE_SCAN | RRF_NO_IBSS
+> > +	int err;
+> > +	static const struct ieee80211_regdomain world_regdom = {
+> > +		.n_reg_rules = 7, /* I hope we can count */
+> 
+> ARRAY_SIZE() helps you count.
+
+the # of rules isn't defined yet in this implementation.
+
+> > +		.pgp_signature_check = 1, /* Duh, we're already here */
+> > +		.alpha2 =  { '0', '0' }, /* Got any better ideas? */
+> 
+> "\0\0" so we can't actually ever use this manually?
+
+OK.
+
+> > +		.reg_rules = {
+> > +			REG_RULE(2402, 2472, 40, 0, 20,	RRF_PASSIVE_SCAN),
+> > +			REG_RULE(2474, 2494, 40, 0, 20,	PASSIVE_AND_NO_IBSS),
+> > +			REG_RULE(5160, 5240, 40, 0, 30,	PASSIVE_AND_NO_IBSS),
+> > +			REG_RULE(5250, 5330, 40, 0, 30, PASSIVE_AND_NO_IBSS),
+> > +			REG_RULE(5735, 5835, 40, 0, 30, PASSIVE_AND_NO_IBSS),
+> > +			REG_RULE(5490, 5710, 40, 0, 30, PASSIVE_AND_NO_IBSS),
+> > +			REG_RULE(5490, 5710, 40, 0, 30, PASSIVE_AND_NO_IBSS)
+> > +		}
+> > +	};
+> 
+> #undef PASSIVE_AND_NOIBSS
+> 
+> why not declare this statically in the file rather than statically in
+> the init function?
+
+OK.
+
+> > +	cfg80211_regdomain = NULL;
+> > +	cfg80211_world_regdom = (struct ieee80211_regdomain *) &world_regdom;
+> 
+> What's with the cast?
+
+Compiler was bitching. But it may have been previous to some changes I
+made.
+
+> > --- a/net/wireless/core.h
+> > +++ b/net/wireless/core.h
+> > @@ -11,6 +11,7 @@
+> >  #include <net/genetlink.h>
+> >  #include <net/wireless.h>
+> >  #include <net/cfg80211.h>
+> > +#include "reg.h"
+> 
+> Hmm?
+
+Not needed, right.
+
+> > --- a/net/wireless/nl80211.c
+> > +++ b/net/wireless/nl80211.c
+> > @@ -18,6 +18,7 @@
+> >  #include <net/cfg80211.h>
+> >  #include "core.h"
+> >  #include "nl80211.h"
+> > +#include "reg.h"
+> >  
+> >  /* the netlink family */
+> >  static struct genl_family nl80211_fam = {
+> > @@ -87,6 +88,16 @@ static struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] __read_mostly = {
+> >  	[NL80211_ATTR_MESH_ID] = { .type = NLA_BINARY,
+> >  				.len = IEEE80211_MAX_MESH_ID_LEN },
+> >  	[NL80211_ATTR_MPATH_NEXT_HOP] = { .type = NLA_U32 },
+> > +
+> > +	[NL80211_ATTR_REG_RULE_ALPHA2] = { .type = NLA_NUL_STRING, .len = 3 },
+> 
+> Why does it have to be a NUL-string? It is always only two bytes, so
+> please just do that. No need to null-terminate.
+
+Sure.
+
+> > +static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
+> > +{
+> > +	return -EOPNOTSUPP;
+> > +}
+> > +
+> > +static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
+> > +{
+> > +	return -EOPNOTSUPP;
+> > +}
+> 
+> -ECODEMISSING :P
+
+Yeah yeah. Hence "early" relase.
+
+> > @@ -9,137 +10,93 @@
+> >   */
+> >  
+> >  /*
+> > - * This regulatory domain control implementation is highly incomplete, it
+> > - * only exists for the purpose of not regressing mac80211.
+> > - *
+> > - * For now, drivers can restrict the set of allowed channels by either
+> > - * not registering those channels or setting the IEEE80211_CHAN_DISABLED
+> > - * flag; that flag will only be *set* by this code, never *cleared.
+> > - *
+> >   * The usual implementation is for a driver to read a device EEPROM to
+> >   * determine which regulatory domain it should be operating under, then
+> >   * looking up the allowable channels in a driver-local table and finally
+> >   * registering those channels in the wiphy structure.
+> >   *
+> > - * Alternatively, drivers that trust the regulatory domain control here
+> > - * will register a complete set of capabilities and the control code
+> > - * will restrict the set by setting the IEEE80211_CHAN_* flags.
+> 
+> I think you shouldn't remove that but just rewrite it to make the driver
+> trust crda instead of this code.
+
+The EEPROM lets us get a list of supported channels for a product a
+customer (a vendor's customer, not a regular customer) decided to support.
+If we trust CRDA we then could potentially trust a different set of channels
+which the customer may not have tested his products on. They probably
+will work, but the safer approach is to support only the intended
+channels.
+
+We can then trust CRDA only to disable channels, not to *enable*.
+
+> > + * Another set of compliance enforcement is for drivers to use their
+> > + * own compliance limits which can be stored on the EEPROM. The host
+> > + * driver or firmware may ensure these are used.
+> > + *
+> > + * In addition to all this we provide an extra layer of regulatory
+> > + * compliance, however, that of what is provided by CRDA. This tries
+> > + * to ensure we remain complaint by not letting the user up front try
+>                           ^^^^^^^^^ heh
+
+Thanks.
+
+> > + * to set their wireless device to settings we know we shouldn't be
+> > + * setting to. We also disable channels on the driver which we know we
+> > + * shouldn't be using in current regulatory domain. This is because
+> > + * some drivers may have outdated EEPROMs or no regulatory control at all.
+> 
+> 
+> > +static int freq_in_range(const struct ieee80211_freq_range *freq_range, u32 freq)
+> > +{
+> > +	if (freq >= freq_range->start_freq &&
+> > +		freq <= freq_range->end_freq)
+> > +		return 1;
+> > +	return 0;
+> >  }
+> 
+> That needs a bandwidth check I think.
+
+Thanks.
+
+> > +++ b/net/wireless/reg.h
+> > @@ -0,0 +1,56 @@
+> > +#ifndef __NET_WIRELESS_REG_H
+> > +#define __NET_WIRELESS_REG_H
+> > +
+> > +extern const struct ieee80211_regdomain *cfg80211_regdomain;
+> > +extern const struct ieee80211_regdomain *cfg80211_world_regdom;
+> > +
+> > +struct ieee80211_freq_range {
+> > +	u32 start_freq;
+> > +	u32 end_freq;
+> > +	u32 max_bandwidth;
+> > +};
+> > +
+> > +struct ieee80211_power_rule {
+> > +	u32 max_antenna_gain;
+> > +	u32 max_eirp;
+> > +};
+> > +
+> > +/* These must match CRDA regdb.h reg_rule_flags. nl80211
+> > + * must also be synced. */
+> 
+> I think we should use the internal flags directly in nl80211 and have
+> nl80211 use flag-attributes in a nested flags attribute (see how monitor
+> flags work) and not rely on any shared bit meanings with userspace.
+
+Sounds good to me.
+
+> > +struct ieee80211_reg_rule {
+> > +	struct ieee80211_freq_range freq_range;
+> > +	struct ieee80211_power_rule power_rule;
+> > +	u32 flags;
+> > +};
+> > +
+> > +struct ieee80211_regdomain {
+> > +	u32 n_reg_rules;
+> > +	int pgp_signature_check;
+> > +	char alpha2[2];
+> > +	struct ieee80211_reg_rule reg_rules[];
+> 
+> Make that a pointer instead so we can declare the array and point to it
+> and use ARRAY_SIZE().
+
+Alright.
+
+  Luis
