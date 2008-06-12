@@ -1,124 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:21779 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753912AbYF1Sjp (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52744 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760549AbYFLN6i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 14:39:45 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so259538nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 11:39:44 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: proski@gnu.org, orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-Subject: [RFC PATCH 17/19] orinoco: Send association events to userspace
-Date: Sat, 28 Jun 2008 19:38:23 +0100
-Message-Id: <1214678305-7057-18-git-send-email-kilroyd@gmail.com> (sfid-20080628_210814_539649_E7F44DF2)
-In-Reply-To: <1214678305-7057-17-git-send-email-kilroyd@gmail.com>
-References: <1214678305-7057-1-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-2-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-3-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-4-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-5-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-6-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-7-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-8-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-9-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-10-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-11-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-12-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-13-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-14-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-15-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-16-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-17-git-send-email-kilroyd@gmail.com>
-From: kilroyd@googlemail.com
+	Thu, 12 Jun 2008 09:58:38 -0400
+Subject: Re: [RFC] First CRDA integration work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20080612134615.GB28315@tesla>
+References: <20080611040402.GE17936@ruslug.rutgers.edu>
+	 <1213260106.19369.15.camel@johannes.berg> <20080612131154.GA28315@tesla>
+	 <1213276778.3936.10.camel@johannes.berg>  <20080612134615.GB28315@tesla>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-skpmLxnCaDoh2FXBXmlT"
+Date: Thu, 12 Jun 2008 15:57:49 +0200
+Message-Id: <1213279069.3936.19.camel@johannes.berg> (sfid-20080612_155843_868863_C0206650)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: David Kilroy <kilroyd@gmail.com>
----
- drivers/net/wireless/orinoco.c |   62 ++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 62 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
-index 3e3d40e..562da8e 100644
---- a/drivers/net/wireless/orinoco.c
-+++ b/drivers/net/wireless/orinoco.c
-@@ -1443,6 +1443,66 @@ static void orinoco_send_bssid_wevent(struct orinoco_private *priv)
- 	wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
- }
- 
-+static void orinoco_send_assocreqie_wevent(struct orinoco_private *priv)
-+{
-+	struct net_device *dev = priv->ndev;
-+	struct hermes *hw = &priv->hw;
-+	union iwreq_data wrqu;
-+	int err;
-+	u8 buf[88];
-+	u8 *ie;
-+
-+	if (!priv->has_wpa)
-+		return;
-+
-+	err = hermes_read_ltv(hw, IRQ_BAP, HERMES_RID_CURRENT_ASSOC_REQ_INFO,
-+			      sizeof(buf), NULL, &buf);
-+	if (err != 0)
-+		return;
-+
-+	ie = orinoco_get_wpa_ie(buf, sizeof(buf));
-+	if (ie) {
-+		int rem = sizeof(buf) - (ie - &buf[0]);
-+		wrqu.data.length = ie[1] + 2;
-+		if (wrqu.data.length > rem)
-+			wrqu.data.length = rem;
-+
-+		if (wrqu.data.length)
-+			/* Send event to user space */
-+			wireless_send_event(dev, IWEVASSOCREQIE, &wrqu, ie);
-+	}
-+}
-+
-+static void orinoco_send_assocrespie_wevent(struct orinoco_private *priv)
-+{
-+	struct net_device *dev = priv->ndev;
-+	struct hermes *hw = &priv->hw;
-+	union iwreq_data wrqu;
-+	int err;
-+	u8 buf[88]; /* TODO: verify max size or IW_GENERIC_IE_MAX */
-+	u8 *ie;
-+
-+	if (!priv->has_wpa)
-+		return;
-+
-+	err = hermes_read_ltv(hw, IRQ_BAP, HERMES_RID_CURRENT_ASSOC_RESP_INFO,
-+			      sizeof(buf), NULL, &buf);
-+	if (err != 0)
-+		return;
-+
-+	ie = orinoco_get_wpa_ie(buf, sizeof(buf));
-+	if (ie) {
-+		int rem = sizeof(buf) - (ie - &buf[0]);
-+		wrqu.data.length = ie[1] + 2;
-+		if (wrqu.data.length > rem)
-+			wrqu.data.length = rem;
-+
-+		if (wrqu.data.length)
-+			/* Send event to user space */
-+			wireless_send_event(dev, IWEVASSOCRESPIE, &wrqu, ie);
-+	}
-+}
-+
- static void orinoco_send_wevents(struct work_struct *work)
- {
- 	struct orinoco_private *priv =
-@@ -1452,6 +1512,8 @@ static void orinoco_send_wevents(struct work_struct *work)
- 	if (orinoco_lock(priv, &flags) != 0)
- 		return;
- 
-+	orinoco_send_assocreqie_wevent(priv);
-+	orinoco_send_assocrespie_wevent(priv);
- 	orinoco_send_bssid_wevent(priv);
- 
- 	orinoco_unlock(priv, &flags);
--- 
-1.5.4.5
+--=-skpmLxnCaDoh2FXBXmlT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+
+> > Well I think that some userspace programs like network manager want to
+> > get a notification when for whatever reason the regdomain changes, and
+> > they want to be able to query which one is currently set, and things
+> > should be changeable. So you need at least three messages, NEW, GET,
+> > SET, no?
+>=20
+> Then I see us requiring:
+>=20
+> SET and GET, but not NEW. If only need to "set" "one" regulatory domain,
+> not create one and then set one. What do you think?
+
+Which message are you going to use to notify userspace that it changed?
+I'd say "NEW".
+
+> > > This is in case we wanted to support letting userspace query the kern=
+el
+> > > what alpha2 it has set. I'm OK with not supporting this though but it
+> > > seemed it may have come in handy, hopefully not for abuse for other
+> > > things.
+> >=20
+> > Yeah true, we may want to be able to force a certain regdomain.
+>=20
+> Huh? I was talking about querying from userspace to the kernel for the
+> currently set alpha2, in case userspace may want to know what the kernel
+> last used to ask CRDA for a regdomain.
+>=20
+> How did this change to being able to fore a certain regdomain?
+
+Never mind.
+
+> Anyway, the only valid case where I see us needing to set a regdomain
+> manaullay is if an access point doesn't have an 802.11d country
+> information element. Which BTW -- soon we'll have to decide how we want
+> to implement, as we could either respect the IE with the channels passed
+> or just ask CRDA for the alpha2 given.
+
+Yeah, I dunno, either option seems possible. Maybe both? That is, ask
+the crda and then restrict to what the AP said (since that'll only be
+useful anyway) but then.. Hmm could get into trouble that way if AP is
+then on an unsupported channel ;)
+
+johannes
+
+--=-skpmLxnCaDoh2FXBXmlT
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIUStZAAoJEKVg1VMiehFYoqkP/0f1Y85GAl4oKpDPQVPd9aN7
+gcSFvwxfWa9flcmux5S1awjaSfHXnVqqXNRHZNe5FKA2dIKwyaq+LxPScb/m+YRw
+9jhsxcrY5yLBysEfn66Bu0jsLoq9vKNGnLPwhReGeYES21n/XHPSVKeQ0sPav8qk
+Jb6NVcUWpCNm8zUkDB5OZyAIpgehsrNiT4lekMxrW6py7NNTT1uwhdm3wbrCUtRi
+gM22bhpRSddMSIFdSn3b91CnmXN4FFCqFIBA1hhN1Olpmifg41PJd+lXUY7QtzVe
+elO8CFDLCKMGQKwKwaM6va0NpdGvvx8YuwX9PxPqIqRpHDsduWhe4TUGOjsVEIHi
+bApsXGJSuviAi+KH8WXBojRi6sULxr65GMFmDT4b3u7yUn3spWdnc4Nwwn7K0pyQ
+XKZZr7oVal6R6koR5Zihi9FVjSafUVj4S1TRwlxadAXxpwSJUVWcxp/LsWmAP9nb
+vDwB07hRvW3+tmUVbbq7JFp5iyGCZLI09ppOzwr69VUT5E86Cgp6ERnGTO8i//GG
+WI80J362BWX8iDvpEomLRaHO1eGjD8cv2pX7GOCd0l38cC9d8P0MkRU+QjAbjIpp
+cQd0j7gUzuYVYkmU9nVAHuazDomKT77Dya4RYJYFqjeicGxHtN4bdqhf1KSnPE9f
+iGRCn4xlSBBeAikUyiF8
+=Y4uz
+-----END PGP SIGNATURE-----
+
+--=-skpmLxnCaDoh2FXBXmlT--
 
