@@ -1,55 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:52206 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750845AbYFECqf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2008 22:46:35 -0400
-Subject: Re: b43 opensource firmware for monitor mode
-From: Pavel Roskin <proski@gnu.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <200806041716.53771.mb@bu3sch.de>
-References: <200806041716.53771.mb@bu3sch.de>
+Received: from wa-out-1112.google.com ([209.85.146.179]:31816 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753513AbYFLST4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2008 14:19:56 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so2988615waf.23
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 11:19:55 -0700 (PDT)
+Subject: Re: [RFC] Do not activate promiscuous mode on wlan interfaces for
+	bridging.
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, shemminger@linux-foundation.org,
+	j@w1.fi, bridge@linux-foundation.org,
+	Linux Netdev List <netdev@vger.kernel.org>
+In-Reply-To: <1213255570.3871.8.camel@johannes.berg>
+References: <1213232760.6645.24.camel@localhost>
+	 (sfid-20080612_030607_332834_1EFDE126)  <1213255570.3871.8.camel@johannes.berg>
 Content-Type: text/plain
-Date: Wed, 04 Jun 2008 22:46:28 -0400
-Message-Id: <1212633988.26365.42.camel@dv> (sfid-20080605_044639_632025_A19EA443)
+Date: Thu, 12 Jun 2008 11:19:53 -0700
+Message-Id: <1213294793.6615.16.camel@localhost> (sfid-20080612_201959_937931_A7FBF119)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-06-04 at 17:16 +0200, Michael Buesch wrote:
-> Release early, release often.
-> Here's the first testing release of the b43 opensource firmware.
-> http://bu3sch.de/misc/b43-openfw-20080604.tar.bz2
-> 
-> Currently only the receive path is partially implemented. So that
-> means we can only run it in monitor mode for now. This firmware is
-> able to receive packets and push them without special handling (like
-> decrypting) to the driver.
-> There are lots of bugs, of course. Sometimes the PLCP header is corrupted.
-> That will result in a kernel driver warning in xmit.c.
-> 
-> This firmware does _only_ work on wireless core revisions 5, 6, 7, 8 or 10.
+On Thu, 2008-06-12 at 09:26 +0200, Johannes Berg wrote:
+> All your description makes a lot of sense, but I don't see why altering
+> the bridge code is necessary. In mac80211, we decided that the "promisc"
+> bit only means to capture all frames in the current BSS (remember that
+> in ethernet there is no way to capture frames from different LAN
+> segments) and hence an AP would not behave differently in promisc mode
+> at all since, by definition, it sees all BSS traffic.
 
-That's great news!  Having distributable firmware would simplify
-installation, placing b43 to the same league as Intel devices.  But
-having free firmware would be unique to Broadcom card and extremely
-attractive for research in wireless communications and development of
-novel devices using non-standard protocol extensions.
+You are right, within the BSS every frame is going to be addressed to
+the AP anyway, so we should not receive more or less frames when
+activating promiscuous mode.
 
-As a short term goal, maybe bcm4328 could be dumbed down to work with
-b43?
-
-I've tried it with bcm4318 first, and it hung hard on module load.  Even
-Alt-SysRq would not work.  It turns out it was revision 9 missing in
-your list.
-
-Then I tries a bcm4306 device with rev 5 core.  The module loaded.  I
-brought it up in managed mode first.  Scanning didn't work.  I brought
-the device down and set monitor mode.  But the system hung when I tried
-to bring the interface back up.
-
-Anyway, I'm glad to see progress in that direction.
+When activating promiscuous mode in this device, it stops acknowledging
+frames, and this impairs the association process. The other solution
+would be to ignore the promiscuous mode commands (i.e. never send the
+command to the device) for interfaces in AP mode. If this is the only
+device showing this behavior, maybe that would be the best solution.
 
 -- 
-Regards,
-Pavel Roskin
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
+
+
