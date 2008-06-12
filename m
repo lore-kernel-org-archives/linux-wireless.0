@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.240]:40754 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752536AbYFWCYS (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.180]:2221 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757509AbYFLRup (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jun 2008 22:24:18 -0400
-Received: by an-out-0708.google.com with SMTP id d40so539607and.103
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Jun 2008 19:24:17 -0700 (PDT)
-Date: Sun, 22 Jun 2008 22:24:12 -0400
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Thomas Renninger <trenn@suse.de>
-Subject: Re: [PATCH 12/12] rfkill: document rw rfkill switches and clarify
-	input subsystem interactions
-Message-ID: <20080623022412.GC24992@anvil.corenet.prv> (sfid-20080623_042422_635854_B606332B)
-References: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br> <1214149128-5913-13-git-send-email-hmh@hmh.eng.br>
+	Thu, 12 Jun 2008 13:50:45 -0400
+Received: by py-out-1112.google.com with SMTP id p76so1710017pyb.10
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 10:50:44 -0700 (PDT)
+Message-ID: <1ba2fa240806121050m1b83a6c2idce5e3a0c0a04fe3@mail.gmail.com> (sfid-20080612_195114_073211_AD9C0E50)
+Date: Thu, 12 Jun 2008 20:50:44 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Problem: Out of memory after 2days with 2GB RAM
+Cc: "Rik van Riel" <riel@redhat.com>,
+	"Zdenek Kabelac" <zdenek.kabelac@gmail.com>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+	yi.zhu@intel.com, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1213292340.3730.13.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1214149128-5913-13-git-send-email-hmh@hmh.eng.br>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <c4e36d110806120307n20cce692s9c136f11596f5ab0@mail.gmail.com>
+	 <20080612093833.0fb9cdd6@bree.surriel.com>
+	 <1213278884.3936.15.camel@johannes.berg>
+	 <1ba2fa240806120843s268b2ff4mb45a11adf11afc7f@mail.gmail.com>
+	 <1213290205.3730.2.camel@johannes.berg>
+	 <1ba2fa240806121035t40d3e8c4laccc768ae337075d@mail.gmail.com>
+	 <1213292340.3730.13.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Henrique,
+On Thu, Jun 12, 2008 at 8:39 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>> > Yeah, but why bother if we can just allocate 10% of the size, waste a
+>> > lot less memory etc. mac80211 isn't going to pass in a scatter/gather
+>> > frame anyway.
+>>
+>> Hope never dies. I actually have seen this speed up the throughput so
+>> I will dig into it anyway.
+>
+> Well, you can always add it back later if you make the networking stack
+> and mac80211 support it. It's a two-line patch after all.
 
-On Sun, Jun 22, 2008 at 12:38:48PM -0300, Henrique de Moraes Holschuh wrote:
-> +2: Implementation details
-> +
-> +The rfkill class provides kernel drivers with an interface that allows them to
-> +know when they should enable or disable a wireless network device transmitter.
-> +
-> +The rfkill-input module provides the kernel with the ability to implement
-> +a basic response when the user presses a key or button (or toggles a switch)
-> +related to rfkill functionality.  This is optional, and can also be done in
-> +userspace.
-> +
-> +The rfkill-input module also provides EPO (emergency power-off) functionality
-> +for all wireless transmitters.  This function cannot be overriden, and it is
-> +always active.  rfkill EPO is related to *_RFKILL_ALL input events.
-> +
+I will handle this.
 
-I think I would like to see the statement that rfkill-input is an
-in-kernel implementation of default policy of reacting to Wifi-related
-(in wide sense) button presses and neither mandatory nor required for
-wireless drivers to operate.
+>> > The more interesting thing is the pci_alloc_consistent allocation right
+>> > below that is also _huge_, but that's because of the stupid hardware
+>> > design, or can the hardware cope with having the descriptors non-linear
+>> > in memory?
+>>
+>> We talk after your next HW design. How will configure 265 * 16
+>> descriptors separately.
+>
+> Well, considering that other hardware does manage to do things
+> differently (say Broadcom because I know their DMA engine), I don't know
+> why your hw designers went wild with this. All you need is an
+> "end-of-frame" flag. But that's not really interesting to discuss,
+> unless this is actually controlled by the microcode and you can change
+> it.
+>
+This is have to do something with HW packet scheduling
 
--- 
-Dmitry
+> johannes
+>
