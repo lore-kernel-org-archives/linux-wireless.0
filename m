@@ -1,64 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58681 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750732AbYFXJE7 (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:44068 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755601AbYFLKin (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 05:04:59 -0400
-Subject: Re: RFC: always enable MAC80211_RC_PID?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Adrian Bunk <bunk@stusta.de>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <43e72e890806220804i347b942claae7b725231afcce@mail.gmail.com> (sfid-20080622_170420_352659_95C30F7B)
-References: <20080622125553.GB22539@cs181133002.pp.htv.fi>
-	 <43e72e890806220804i347b942claae7b725231afcce@mail.gmail.com>
-	 (sfid-20080622_170420_352659_95C30F7B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NSEEW9xpo9IHsiRwAP4R"
-Date: Tue, 24 Jun 2008 11:04:19 +0200
-Message-Id: <1214298259.8967.260.camel@johannes.berg> (sfid-20080624_110503_316397_272DD73D)
-Mime-Version: 1.0
+	Thu, 12 Jun 2008 06:38:43 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Fix noise calculation WARN_ON
+Date: Thu, 12 Jun 2008 12:36:29 +0200
+Cc: Arjan van de Ven <arjan@infradead.org>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200806121236.30255.mb@bu3sch.de> (sfid-20080612_123847_625656_DA433C0E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This removes a WARN_ON that is responsible for the following koops:
+http://www.kerneloops.org/searchweek.php?search=b43_generate_noise_sample
 
---=-NSEEW9xpo9IHsiRwAP4R
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The comment in the patch describes why it's safe to simply remove
+the check.
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
+---
+
+John, this is a bugfix for 2.6.26
 
 
-> You can currently only get away living without it if you are just
-> using iwl3945 or iwl4965 as they provide their own rate control
-> algorithms. In the future if other vendor drivers are added with their
-> own rate control algorithm this list grows.
-
-FWIW, I would like to see those algorithms be supported as part of
-mac80211 and not be internal like iwlwifi hacked them on, and have some
-sort of feature negotiation between the hardware and the RC algorithm
-when choosing one.
-
-johannes
-
---=-NSEEW9xpo9IHsiRwAP4R
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIYLiQAAoJEKVg1VMiehFYkvMP/0llLpuSHDGrlVszqa/25ocY
-VlpXU8A0osHfGwhgdyYhM5VId6HHFKdeDyJK/aKrd6co1An7YACY4inT9bUv+Ml4
-1QmYDDqjussn38UllqpGnt/0HjAYyNurmtZdww4055SVGEaXHF+Tx4DpjuYDAyD1
-xpPC2nqDg7e9lMIhMQbPeRwQYYsfgQt5b4XEOu1521x22iKP8BPzG2NAQ7SmkADu
-/j0Nwmm748SfyBpR2797jJttRKGFgkH5O+hKxiQYm3hqdmZKlBEWvqGZnxmnic0u
-1v9mE/30uvzqgVAlj7vRKy3RslGN7UccWPyA55WzLmBk8PO3AJbOagLtPvTDRjGf
-2ZjjAbBQFRW97FvDhM0yxrmPyLao1MsxTRl49wmHedl4H+LIdRlNVzLWeb6aRfL3
-P8TAeCgnF32R+/pA/YCjsMt2rZaZ7lEAuUcfQdctQjkb+J8tLH7FvH8ukoBM5WFF
-kpMIx2pjVixV/iDRWKRxlC72muWF16lU4U0HZJV1JHciNmG95xDXIABqWKm/xp6b
-KWI7aebdpcvi1YHA+7gafNoLdrw0u8aFZ7MZMPWuN81yEER8PQZaZ8U6UXy3izig
-2Cy6u5YjB+e5j1i5aRP/X/ukI0Atikq4lcELgaLLGgZ2x5/zShPwNKhOAoASZ1Vt
-pXRzeG6933Hgr2Vj9A5C
-=ocr8
------END PGP SIGNATURE-----
-
---=-NSEEW9xpo9IHsiRwAP4R--
-
+Index: wireless-testing/drivers/net/wireless/b43/b43.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2008-06-12 11:42:49.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/b43.h	2008-06-12 12:03:29.000000000 +0200
+@@ -646,13 +646,12 @@ struct b43_pio {
+ 
+ 	struct b43_pio_rxqueue *rx_queue;
+ };
+ 
+ /* Context information for a noise calculation (Link Quality). */
+ struct b43_noise_calculation {
+-	u8 channel_at_start;
+ 	bool calculation_running;
+ 	u8 nr_samples;
+ 	s8 samples[8][4];
+ };
+ 
+ struct b43_stats {
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-06-12 11:42:49.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2008-06-12 12:10:11.000000000 +0200
+@@ -1142,22 +1142,20 @@ static void b43_jssi_write(struct b43_wl
+ 
+ static void b43_generate_noise_sample(struct b43_wldev *dev)
+ {
+ 	b43_jssi_write(dev, 0x7F7F7F7F);
+ 	b43_write32(dev, B43_MMIO_MACCMD,
+ 		    b43_read32(dev, B43_MMIO_MACCMD) | B43_MACCMD_BGNOISE);
+-	B43_WARN_ON(dev->noisecalc.channel_at_start != dev->phy.channel);
+ }
+ 
+ static void b43_calculate_link_quality(struct b43_wldev *dev)
+ {
+ 	/* Top half of Link Quality calculation. */
+ 
+ 	if (dev->noisecalc.calculation_running)
+ 		return;
+-	dev->noisecalc.channel_at_start = dev->phy.channel;
+ 	dev->noisecalc.calculation_running = 1;
+ 	dev->noisecalc.nr_samples = 0;
+ 
+ 	b43_generate_noise_sample(dev);
+ }
+ 
+@@ -1168,15 +1166,22 @@ static void handle_irq_noise(struct b43_
+ 	u8 noise[4];
+ 	u8 i, j;
+ 	s32 average;
+ 
+ 	/* Bottom half of Link Quality calculation. */
+ 
++	/* Possible race condition: It might be possible that the user
++	 * changed to a different channel in the meantime since we
++	 * started the calculation. We ignore that fact, since it's
++	 * not really that much of a problem. The background noise is
++	 * an estimation only anyway. Slightly wrong results will get damped
++	 * by the averaging of the 8 sample rounds. Additionally the
++	 * value is shortlived. So it will be replaced by the next noise
++	 * calculation round soon. */
++
+ 	B43_WARN_ON(!dev->noisecalc.calculation_running);
+-	if (dev->noisecalc.channel_at_start != phy->channel)
+-		goto drop_calculation;
+ 	*((__le32 *)noise) = cpu_to_le32(b43_jssi_read(dev));
+ 	if (noise[0] == 0x7F || noise[1] == 0x7F ||
+ 	    noise[2] == 0x7F || noise[3] == 0x7F)
+ 		goto generate_new;
+ 
+ 	/* Get the noise samples. */
+@@ -1211,17 +1216,16 @@ static void handle_irq_noise(struct b43_
+ 		if (tmp == 8)
+ 			average -= 72;
+ 		else
+ 			average -= 48;
+ 
+ 		dev->stats.link_noise = average;
+-	      drop_calculation:
+ 		dev->noisecalc.calculation_running = 0;
+ 		return;
+ 	}
+-      generate_new:
++generate_new:
+ 	b43_generate_noise_sample(dev);
+ }
+ 
+ static void handle_irq_tbtt_indication(struct b43_wldev *dev)
+ {
+ 	if (b43_is_mode(dev->wl, IEEE80211_IF_TYPE_AP)) {
