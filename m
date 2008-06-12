@@ -1,102 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:45416 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756043AbYFHVh2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jun 2008 17:37:28 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so1022998ugf.16
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2008 14:37:26 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Please pull 'upstream' branch of rt2x00
-Date: Sun, 8 Jun 2008 23:41:58 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200806082341.58616.IvDoorn@gmail.com> (sfid-20080608_233731_726480_1BEE8240)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:12449 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752482AbYFLBtu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2008 21:49:50 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Assaf Krauss <assaf.krauss@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 16/29] iwlwifi: Fix mode changes (ad-hoc <--> managed)
+Date: Thu, 12 Jun 2008 09:47:06 +0800
+Message-Id: <1213235239-2954-17-git-send-email-yi.zhu@intel.com> (sfid-20080612_041915_578085_C14EFECD)
+In-Reply-To: <1213235239-2954-16-git-send-email-yi.zhu@intel.com>
+References: <1213235239-2954-1-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-2-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-3-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-4-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-5-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-6-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-7-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-8-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-9-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-10-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-11-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-12-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-13-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-14-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-15-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-16-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: Assaf Krauss <assaf.krauss@intel.com>
 
-Here is the official pull request for the latest rt2x00.git.
-This contains all patches which I had send last tuesday
-plus some additional patches intended for 2.6.27.
+This fix allows to move between modes (ad-hoc to managed, and vice versa).
+Since mode changes can only be done while driver is down, check for ibss
+support can only be made when the channel is set (afte the driver goes up).
 
-This series is mostly intended to get the fragmentation
-done right. Up until now the drivers never behaved that
-nicely with fragmentation or RTS/CTS-to-sellf which was
-mostly due because each individual frame forced the
-queue to be kicked immediately without waiting for the
-other fragments.
-
-It also contains some front work by Gertjan for reducing
-DMA requirements in rt2x00 by making use of pci_map_single
-on skbuffers instead of preallocating a chunk of DMA.
-
-Ivo
-
-P.S. I won't resend the patches I had send last tuesday
-since nothing has changed with them. So only the 10
-new patches will be send seperately. I am not sure
-if that feature will be ready/stable for 2.6.27 but this
-preperational work is harmless for normal operations
-to it is better if that is already in.
-
+Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
-The following changes since commit ef28eab0c928fe8277d7c3dca234c29f734d7f2e:
-  Dan Williams (1):
-        ipw2200: queue direct scans
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   25 +++++++++++--------------
+ 1 files changed, 11 insertions(+), 14 deletions(-)
 
-are available in the git repository at:
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 4570fd1..8e7860d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -1176,22 +1176,11 @@ static void iwl4965_connection_init_rx_config(struct iwl_priv *priv)
+ 
+ static int iwl4965_set_mode(struct iwl_priv *priv, int mode)
+ {
+-	if (mode == IEEE80211_IF_TYPE_IBSS) {
+-		const struct iwl_channel_info *ch_info;
+-
+-		ch_info = iwl_get_channel_info(priv,
+-			priv->band,
+-			le16_to_cpu(priv->staging_rxon.channel));
+-
+-		if (!ch_info || !is_channel_ibss(ch_info)) {
+-			IWL_ERROR("channel %d not IBSS channel\n",
+-				  le16_to_cpu(priv->staging_rxon.channel));
+-			return -EINVAL;
+-		}
+-	}
+-
+ 	priv->iw_mode = mode;
+ 
++	/* init channel/phymode to values given at driver init */
++	iwl_set_rxon_channel(priv, IEEE80211_BAND_2GHZ, 6);
++
+ 	iwl4965_connection_init_rx_config(priv);
+ 	memcpy(priv->staging_rxon.node_addr, priv->mac_addr, ETH_ALEN);
+ 
+@@ -3892,6 +3881,14 @@ static int iwl4965_mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *co
+ 		goto out;
+ 	}
+ 
++	if (priv->iw_mode == IEEE80211_IF_TYPE_IBSS &&
++	    !is_channel_ibss(ch_info)) {
++		IWL_ERROR("channel %d in band %d not IBSS channel\n",
++			conf->channel->hw_value, conf->channel->band);
++		ret = -EINVAL;
++		goto out;
++	}
++
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 
+ 	/* if we are switching from ht to 2.4 clear flags
+-- 
+1.5.3.6
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git/ upstream
-
-Gertjan van Wingerde (5):
-      rt2x00: Restrict DMA to 32-bit addresses.
-      rt2x00: Cleanup struct skb_frame_desc.
-      rt2x00: Centralize RX packet alignment handling in rt2x00lib.
-      rt2x00: Fix double usage of skb->cb in USB RX path.
-      rt2x00: Rework alignment check.
-
-Ivo van Doorn (15):
-      rt2x00: Calculate register offset during compile time
-      rt2x00: Cleanup/optimize set_state() function callback function
-      rt2x00: Move led initialization into function
-      rt2x00: Remove CTS/RTS check in tx()
-      rt2x00: Removed unused descriptor read in txdone
-      rt2x00: Don't kill guardian_urb when it wasn't created
-      rt2x00: Make rt2x00_set/get_field macros
-      rt2x00: Release rt2x00 2.1.7
-      rt2x00: Fix queue initialization
-      rt2x00: Implement rt2x00usb_kick_tx_queue()
-      rt2x00: Move generic TX frame writing code into rt2x00queue
-      rt2x00: Don't kick TX queue after each frame
-      rt2x00: Use __builtin_choose_expr() instead of ?:
-      rt2x00: Clear IEEE80211_TX_CTL_USE_RTS_CTS flag for RTS frame
-      rt2x00: Remove unused defines
-
- drivers/net/wireless/rt2x00/rt2400pci.c   |   95 ++++++++---------
- drivers/net/wireless/rt2x00/rt2400pci.h   |    2 -
- drivers/net/wireless/rt2x00/rt2500pci.c   |   91 +++++++--------
- drivers/net/wireless/rt2x00/rt2500pci.h   |    2 -
- drivers/net/wireless/rt2x00/rt2500usb.c   |   98 ++++++++--------
- drivers/net/wireless/rt2x00/rt2500usb.h   |    2 -
- drivers/net/wireless/rt2x00/rt2x00.h      |   13 ++-
- drivers/net/wireless/rt2x00/rt2x00debug.c |    6 +-
- drivers/net/wireless/rt2x00/rt2x00dev.c   |   21 ++++
- drivers/net/wireless/rt2x00/rt2x00lib.h   |    1 +
- drivers/net/wireless/rt2x00/rt2x00mac.c   |   30 ++----
- drivers/net/wireless/rt2x00/rt2x00pci.c   |   75 ++++---------
- drivers/net/wireless/rt2x00/rt2x00pci.h   |   11 +-
- drivers/net/wireless/rt2x00/rt2x00queue.c |  111 ++++++++++++++++---
- drivers/net/wireless/rt2x00/rt2x00queue.h |   27 +++--
- drivers/net/wireless/rt2x00/rt2x00reg.h   |  134 +++++++++++++---------
- drivers/net/wireless/rt2x00/rt2x00usb.c   |  170 +++++++++++------------------
- drivers/net/wireless/rt2x00/rt2x00usb.h   |   22 +++-
- drivers/net/wireless/rt2x00/rt61pci.c     |  111 ++++++++-----------
- drivers/net/wireless/rt2x00/rt61pci.h     |    2 -
- drivers/net/wireless/rt2x00/rt73usb.c     |  112 +++++++++----------
- drivers/net/wireless/rt2x00/rt73usb.h     |    2 -
- 22 files changed, 581 insertions(+), 557 deletions(-)
