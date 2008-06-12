@@ -1,69 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:32822 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755535AbYFICgi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jun 2008 22:36:38 -0400
-Date: Sun, 8 Jun 2008 19:28:21 -0700
-From: Joel Becker <Joel.Becker@oracle.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux kernel <linux-kernel@vger.kernel.org>,
-	Greg KH <greg@kroah.com>,
-	Satyam Sharma <ssatyam@cse.iitk.ac.in>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Al Viro <viro@ftp.linux.org.uk>,
-	"H. Peter Anvin" <hpa@kernel.org>
-Subject: Re: Is configfs the right solution for configuration based fs?
-Message-ID: <20080609022821.GL29740@mail.oracle.com> (sfid-20080609_043652_708172_500A8F2E)
-References: <43e72e890806081425h4e785800nc618fc1985f9809f@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890806081425h4e785800nc618fc1985f9809f@mail.gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:20549 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752227AbYFLBtj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2008 21:49:39 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 09/29] iwlwifi: remove unused flag
+Date: Thu, 12 Jun 2008 09:46:59 +0800
+Message-Id: <1213235239-2954-10-git-send-email-yi.zhu@intel.com> (sfid-20080612_034945_251422_D3EB5C7F)
+In-Reply-To: <1213235239-2954-9-git-send-email-yi.zhu@intel.com>
+References: <1213235239-2954-1-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-2-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-3-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-4-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-5-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-6-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-7-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-8-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-9-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 08, 2008 at 02:25:36PM -0700, Luis R. Rodriguez wrote:
-> I was really interested in looking to start a filesystem based
-> approach for configuration of wireless a while back, an alternative to
-> nl80211 if you will, but I stopped after I was told about some major
-> issues with configfs. I forget the issues raised clearly so I'd like
-> to bring this up for debate to see what really are the issues, what
-> needs to be fixed so we can *properly* use a fs for configuration of
-> subsystems. I thought configfs was the solution. We currently use and
-> abuse debugfs, but it doesn't matter -- we don't expect users to
-> depend on those files for ABI. It, however, it would be nice to
-> finally export some of these values into a concise place so userspace
-> *can* rely on them.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-	I'd love to hear about the issues as well.  I'd also love to see
-what you require, so as to either be able to explain how configfs can do
-it for you, or to say that configfs isn't the right fit.  configfs is
-designed with a particular goal, and some things don't fit that - and
-that's fine.
+This patch removes IEEE80211_CHAN_W_RADAR_DETECT flag.
 
-> Perhaps a fs is not even the most optimized approach for size anyway
-> so the benefits may just be helping with the easy design of userspace
-> applications. Feedback on experiences are welcomed.
-> 
-> PS. I'm hoping those who *really* hate configs can comment
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-helpers.h |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-	You probably expect me to be all "configfs solves world peace,
-how can you hate it?"  Nah.  I'd really like to understand your need and
-how configfs doesn't fit.  configfs may not fit.  configfs may fit and
-I need to explain it better.  Or configfs may not fit but should, and we
-then can see how to make it right.
-
-Joel
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-helpers.h b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+index dedefa0..eec423a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-helpers.h
++++ b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+@@ -139,8 +139,6 @@ static inline void iwl_set_bits16(__le16 *dst, u8 pos, u8 len, int val)
+ #define IWL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
+ 
+ 
+-#define IEEE80211_CHAN_W_RADAR_DETECT 0x00000010
+-
+ static inline struct ieee80211_conf *ieee80211_get_hw_conf(
+ 	struct ieee80211_hw *hw)
+ {
 -- 
+1.5.3.6
 
-"Nothing is wrong with California that a rise in the ocean level
- wouldn't cure."
-        - Ross MacDonald
-
-Joel Becker
-Principal Software Developer
-Oracle
-E-mail: joel.becker@oracle.com
-Phone: (650) 506-8127
