@@ -1,32 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:37014 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755057AbYFQSI6 (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:14152 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752546AbYFLJ4M convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 14:08:58 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Jouni Malinen <j@w1.fi>
-Subject: Re: [RFC PATCH 3/7] 802.11w: Add BIP (AES-128-CMAC)
-Date: Tue, 17 Jun 2008 20:08:34 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <20080617154008.883383150@localhost> <1213721714.3803.83.camel@johannes.berg> <20080617180610.GC4974@jm.kir.nu>
-In-Reply-To: <20080617180610.GC4974@jm.kir.nu>
+	Thu, 12 Jun 2008 05:56:12 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200806172008.35163.mb@bu3sch.de> (sfid-20080617_200900_721778_3D414A7F)
+Subject: RE: [PATCH 1/1] mac80211: [RFC] do not fragment while aggregationis in use
+Date: Thu, 12 Jun 2008 12:56:07 +0300
+Message-ID: <1879838866982C46A9CB3D56BA49ADEB050224AF@hasmsx411.ger.corp.intel.com> (sfid-20080612_115617_186091_4C9DEAAA)
+In-Reply-To: <1213219526.3827.0.camel@johannes.berg>
+References: <1213207296-14548-1-git-send-email-ron.rindjunsky@intel.com> <1213219526.3827.0.camel@johannes.berg>
+From: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 17 June 2008 20:06:10 Jouni Malinen wrote:
-> > Since you say the struct is packed you should be able to use __le16 just
-> > fine.
-> 
-> Is that guaranteed to force all accesses of the field to not use 16-bit
-> read/write?
+>> -	/*
+>> -	 * Warn when submitting a fragmented A-MPDU frame and drop it.
+>> -	 * This is an error and needs to be fixed elsewhere, but when
+>> -	 * done needs to take care of monitor interfaces (injection)
+>> -	 * etc.
+>> -	 */
+>> -	if (WARN_ON(tx->flags & IEEE80211_TX_CTL_AMPDU ||
+>> -		    skb_get_queue_mapping(tx->skb) >=
+>> -			ieee80211_num_regular_queues(&tx->local->hw)))
+>> -		return TX_DROP;
+>> -
 
-Yes.
+> Should we keep that, just in case? If it ever happens and the hw
+rejects
+> a fragment for some reason, we'll otherwise clobber some state and
+> probably crash.
 
--- 
-Greetings Michael.
+Agree. Should I resend the patch or would you just remove it from the
+original patch?
+
+> johannes
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
