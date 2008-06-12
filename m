@@ -1,73 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:34089 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752420AbYFXJdH (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36625 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753376AbYFLREU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 05:33:07 -0400
-Received: by py-out-1112.google.com with SMTP id p76so1301986pyb.10
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2008 02:33:07 -0700 (PDT)
-Message-ID: <a32f33a40806240233i7bb61a3tc88732a837f7666c@mail.gmail.com> (sfid-20080624_113312_415599_3D0C0CA2)
-Date: Tue, 24 Jun 2008 11:33:06 +0200
-From: "Ivo Van Doorn" <ivdoorn@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: mac80211: workqueue & RTNL lock
-Cc: "Michael Buesch" <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1214299693.8967.273.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200806230042.41219.IvDoorn@gmail.com>
-	 <200806230030.42776.mb@bu3sch.de>
-	 <a32f33a40806230130t11022b31p3d9997ab5e449fe6@mail.gmail.com>
-	 <200806231120.41519.mb@bu3sch.de>
-	 <a32f33a40806230417i68e4d19aj76a481d7dbf2c611@mail.gmail.com>
-	 <1214297515.8967.253.camel@johannes.berg>
-	 <a32f33a40806240203w29d0caf7p6e2956d82d48e013@mail.gmail.com>
-	 <1214298658.8967.266.camel@johannes.berg>
-	 <a32f33a40806240220s3ef070bdr591d4775ee57cb81@mail.gmail.com>
-	 <1214299693.8967.273.camel@johannes.berg>
+	Thu, 12 Jun 2008 13:04:20 -0400
+Subject: Re: Problem: Out of memory after 2days with 2GB RAM
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Rik van Riel <riel@redhat.com>,
+	Zdenek Kabelac <zdenek.kabelac@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	yi.zhu@intel.com, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240806120843s268b2ff4mb45a11adf11afc7f@mail.gmail.com> (sfid-20080612_174340_901526_B7377B4B)
+References: <c4e36d110806120307n20cce692s9c136f11596f5ab0@mail.gmail.com>
+	 <20080612093833.0fb9cdd6@bree.surriel.com>
+	 <1213278884.3936.15.camel@johannes.berg>
+	 <1ba2fa240806120843s268b2ff4mb45a11adf11afc7f@mail.gmail.com>
+	 (sfid-20080612_174340_901526_B7377B4B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Q78vsZtOst7XjhJeiVvL"
+Date: Thu, 12 Jun 2008 19:03:25 +0200
+Message-Id: <1213290205.3730.2.camel@johannes.berg> (sfid-20080612_190423_911153_463015C1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> > However, the interface iterator will simply not run at all if ->stop has
->> > already succeeded since no interfaces would be UP, so you don't really
->> > have to protect it against that, you only have to make sure it's not
->> > running when you unregister your hardware struct, and _that_ doesn't
->> > have the rtnl taken so you can use cancel_work_sync() there.
->>
->> True, but the race condition happens when ieee80211_stop() is called,
->> and the rt2x00 work is triggered before before
->> rt2x00->remove_interface() or rt2x00>stop() is called. when stop() is
->> then called it cannot use cancel_work_sync() because
->> the work structure is waiting until stop() has completed which will
->> not end until cancel_work_sync() has completed.
->
-> No, but I'm saying that ->stop doesn't need to cancel_work_sync(). You
-> should have a work struct that you exclusively use for whatever you need
-> to do with interfaces, so the code looks something like this:
->
-> void work(...)
-> {
-> 	iterate_interfaces();
-> }
->
-> maybe with some additional locking. You also use schedule_work() and not
-> the mac80211-provided workqueue.
->
-> This work will do exactly nothing if triggered before ->stop and running
-> after ->stop because all interfaces will be gone. Hence, you don't need
-> to cancel it in ->stop, you don't care whether it'll run or not.
->
-> Hence, the only thing you need to take care of is that it's canceled
-> before unregister_hw(), and for that you can use cancel_work_sync().
 
-Ah yes, I understand what you mean now. That would indeed work, I'll get
-a patch ready that does exactly that.
+--=-Q78vsZtOst7XjhJeiVvL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Am I missing something?
 
-Nope, I was missing something. ;)
+> > Try the patch below. It should improve code generation too.
+> >
+> > I discussed this with Tomas previously and he says the hw is capable of
+> > doing 20 fragments per frame (wonder why, Broadcom can do an unlimited
+> > number...) but he complained about the networking stack not being able
+> > to.
+>=20
+> This is scatter gather buffers that can be kicked in one DMA transaction.
+>=20
+> Well, the hardware needs to support IP checksumming for that, hence,
+> > afaik, only two fragments can ever be used (one for hw header, one for
+> > frame)
+> This I still don't understand why but everybody is already tired to
+> explaining me why.. :) Just need to find time to dig into it.
 
-Thanks.
+And you can safely decrease the allocation to 10% as I do in my patch
+because once you understand you'll see that you cannot possibly use
+more. Hence, you can ack this patch ;)
 
-Ivo
+> > This cuts the allocation to 10%, or (under) a page in all cases.
+>=20
+> Probably. it would be safe to use vmalloc for allocating txb anyway.
+> I'll give it a try.
+
+Yeah, but why bother if we can just allocate 10% of the size, waste a
+lot less memory etc. mac80211 isn't going to pass in a scatter/gather
+frame anyway.
+
+> There was already discussion on LKML about memory allocation problems
+> on X86_64, which might explain this regression. This didn't happen
+> before.
+
+Doesn't really matter, iwlwifi is _wasting_ this allocation, it cannot
+possibly use all those buffers anyway.
+
+The more interesting thing is the pci_alloc_consistent allocation right
+below that is also _huge_, but that's because of the stupid hardware
+design, or can the hardware cope with having the descriptors non-linear
+in memory?
+
+johannes
+
+--=-Q78vsZtOst7XjhJeiVvL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIUVbZAAoJEKVg1VMiehFYKYcQAISQgagssDGO5w7/PnxbpkCU
++w/YsElVWjj0HiATPAAkP3D+V3y8NT2a4ZARWflhC5NNFIOI2vqEVJZog1rCvozb
+PYxIgD86TQ4aeEBAo7XLi0hSG85CD6GbvMPyaRgzl4wqsqUe6GDYl0Z7mH43VB5Z
+lH16ITXFEZnGWQ1F6YS1o+AuULTJw8XL3a1OLWGc++xJbmWXwJCq7r/O3eengA0v
+UK0cPIaADIJoD9c0sjIZ/eVoy5+hLoSH5wSy5cFheMJhPRpR8dRnJs4JI1cDt8O7
+WbQXpBw/kdzSqbFQJW615YQIBP2yx78lcF3T2k71rPn5NKz/he9a32aMtNn3hdul
+3hy0cQJetQwrqByLSIhgT/90VMpbKp5Ub8WHsDhP62tCzNJ3WyOt9vWy6DRNekVi
+gWSER55XHPc0wwJZ9as8yFIpMLtqkKJjrBl8rGNm0f2Bb1zldI0nEAQ3Gb/0PvEF
+M1WYfUZelu9yjqAokrJDcoQrC8KmTlKHvqhi1FGLedTzniKPo4X5WeFxrFV7VX60
+n3RzeE1ZRQZJQfHc3XDTKrkYw2EdEc40Z8gdcBoi7NBD8fI7sdLbqAKQEL98NjqG
+R0e40AqrUT5ZW98sYAcSVQwtam4SkC+G7DM0Z2oQjAb2U/GtzBZVGWx73qeMw8Qx
+Aenmf4J/fHjr4LHqYWgT
+=dwse
+-----END PGP SIGNATURE-----
+
+--=-Q78vsZtOst7XjhJeiVvL--
+
