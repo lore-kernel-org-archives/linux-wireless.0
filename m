@@ -1,191 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55174 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:43856 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752233AbYFRHaT (ORCPT
+	with ESMTP id S1750894AbYFLSQc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 03:30:19 -0400
-Subject: Re: [PATCH/RFC] remove irqs_disabled warning from local_bh_enable
+	Thu, 12 Jun 2008 14:16:32 -0400
+Subject: Re: Problem: Out of memory after 2days with 2GB RAM
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux Kernel list <linux-kernel@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	David Ellingsworth <david@identd.dyndns.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Ingo Molnar <mingo@elte.hu>
-In-Reply-To: <alpine.LFD.1.10.0806171648330.2907@woody.linux-foundation.org>
-References: <1213739834.3803.137.camel@johannes.berg>
-	 <alpine.LFD.1.10.0806171648330.2907@woody.linux-foundation.org>
-Content-Type: text/plain
-Date: Wed, 18 Jun 2008 09:29:37 +0200
-Message-Id: <1213774177.3803.164.camel@johannes.berg> (sfid-20080618_093024_114274_9ACCF00A)
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Rik van Riel <riel@redhat.com>,
+	Zdenek Kabelac <zdenek.kabelac@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	yi.zhu@intel.com, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240806121103m60a8ffa4ie11850fedc69d13c@mail.gmail.com> (sfid-20080612_200350_070282_410620E9)
+References: <c4e36d110806120307n20cce692s9c136f11596f5ab0@mail.gmail.com>
+	 <20080612093833.0fb9cdd6@bree.surriel.com>
+	 <1213278884.3936.15.camel@johannes.berg>
+	 <1ba2fa240806120843s268b2ff4mb45a11adf11afc7f@mail.gmail.com>
+	 <1ba2fa240806120935r54a080eci7fa6fafc718eed17@mail.gmail.com>
+	 <1213290335.3730.4.camel@johannes.berg>
+	 <1ba2fa240806121039o376b0a8sdfaacf3a1f4a9e57@mail.gmail.com>
+	 <1213292812.3730.21.camel@johannes.berg>
+	 <1ba2fa240806121103m60a8ffa4ie11850fedc69d13c@mail.gmail.com>
+	 (sfid-20080612_200350_070282_410620E9)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-U4OPz3yRT6k4a6D7n97P"
+Date: Thu, 12 Jun 2008 20:15:47 +0200
+Message-Id: <1213294547.3730.29.camel@johannes.berg> (sfid-20080612_201635_536657_6BC043DC)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-06-17 at 16:55 -0700, Linus Torvalds wrote:
 
-> > This warning has started to trigger with mac80211 because it can, under
-> > some circumstances, use spin_lock_bh() protected sections within
-> > irq-disabled sections. Is that a bug?
-> 
-> Yes, it's a bug.
+--=-U4OPz3yRT6k4a6D7n97P
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-You know, that actually makes sense to me.
 
-> Why? Not because of the "spin_lock_bh()" itself, but because of the 
-> _unlock_, which does a "local_bh_enable_ip()", which in turn will check 
-> the whole "do_softirq()" if it was the last softirq_count.
+> I'm not against it. You;v decided that I'm fighting you because I gave
+> another solution.
 
-Yeah, that makes sense to me as well. In fact, I pondered a bit over the
-code until posting this.
+Ok, no, I'm not saying you shouldn't rewrite all the code to get rid of
+it, but I think you can use a patch like mine interim as such a rewrite
+is unlikely to go into 2.6.26, is it?
 
-> And you must not do softirq's when hard-irq's were disabled!
-> 
-> So it should in theory be ok (but perhaps a bit odd) to do something like
-> 
-> 	spin_lock_irq(&irq_lock);
-> 	..do something..
-> 	spin_lock_bh(&bh_lock);
-> 	spin_unlock_irq(&irq_lock);
-> 	.. do something else ..
-> 	spin_unlock_bh(&bh_lock);
-> 
-> where the "spin_lock_bh()" itself is in an irq-locked context - as long as 
-> the "spin_unlock_bh()" is *not*.
-> 
-> See?
+> Frankly we probably don't need this allocation at all. maybe one skb
+> is just enough
 
-Well, yes, from an API POV I do see that. And it's actually what I
-thought up front. The thing that started to confuse me is that
-local_bh_enable_ip reads like this:
+That would be nice, indeed.
 
-void local_bh_enable_ip(unsigned long ip)
-{
-#ifdef CONFIG_TRACE_IRQFLAGS
-        unsigned long flags;
+> even with my never dying hope all fragments are in skb fragment list.
 
-        WARN_ON_ONCE(in_irq());
+:)
 
-        local_irq_save(flags);
-#endif
+> This still probably won't save pci memory allocation problem
 
-[...]
-        if (unlikely(!in_interrupt() && local_softirq_pending()))
-                do_softirq();
-
-        dec_preempt_count();
-#ifdef CONFIG_TRACE_IRQFLAGS
-        local_irq_restore(flags);
-#endif
-
-So doesn't it actually run do_softirq() when interrupts are still
-disabled? If I look deeper into the code that appears to be a rather odd
-trick to avoid locking and __do_softirq will unconditionally enable
-IRQs, so I guess here's my answer...
-
-How about the patch below?
+Yeah, true, that one needs to be done, but it could probably be done
+only once when hw is probed rather than every time it is brought up.
+Most likely not something you'll get to fix in 2.6.26 either though.
 
 johannes
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Subject: clean up and comment local_bh_enable code
+--=-U4OPz3yRT6k4a6D7n97P
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-There's no need to use local_irq_save() over local_irq_disable() in the
-local_bh_enable code since it is a bug to call it with irqs disabled and
-do_softirq will enable irqs if there is any pending work. Consolidate
-the code from local_bh_enable and ..._ip to avoid having a disconnect
-between them in the warnings they trigger that is currently there. Also
-always trigger the warning on in_irq(), not just in the trace-irqflags
-case.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-I made it a static inline so that runtime behaviour isn't affected by
-another function call, but that can be argued.
+iQIcBAABAgAGBQJIUWfPAAoJEKVg1VMiehFYVdMQAIcF/vz8gbbAgfHRsBcxICfz
+gP7ZeVxUXI3ZSMw5Kat9obrOjnd/l8HqNODD74k54IWz6RY4eiv+NWf4cbtEaPbG
+x62fk5YVM+jviSC+WygdrMGjX6j1P2/qmzfUVV11vhImGqrky3Fj4TXsNMqvzlsC
+oXQKmqrd2aq+T2AJRHjeiaN4y0eB5WFs/SuWjI6kuzaLtd0LJ0tKaOAIWXe+RWuy
+GUD8GBZgH+pf1BtePP/wjQGFc40k/nD1PfAD8gKd/TqNebwvP6siJnylL4aSEX9v
+MHLT5hJtIyqiDZAAjbp1sp4LOcmZZKPXMnO/0m9a3J5IwPe7Ks35CRBcWyqvH21x
+W7mr6dBh7Spyy/2EBSBO+Fwy5UsYH5gi5qFAEu3wN/AV5K10K8PD/VUCfY3apfoJ
+rDl7u6lFKD7hbfSXMXj8+kSdlE1JufawHl2GPX8HVvu9U0DtYoubk9q8tNdhr32/
+Kbmw3OaZbKBCNXQ89nv6ZlCVMxZ7cFepq++wKr6zAlZxPleSZvfRhBVf4cxFWoZx
+bNq2MuYBNlL+mDDxaf1Mv362ZcwILlUZsQTnncOQAHzf7wCLX4aqh50xamtqDx3x
+/Jxgsf9Z2baBcwAtTwZegZImzW7ZahZxR1gZQwSWfKLSWnIgPcfj0UuSoU17niF/
+M0aIidKP4TucC8+X62la
+=2YL/
+-----END PGP SIGNATURE-----
 
-Maybe local_bh_enable() should just be a static inline somewhere in a
-header file, that would get rid of one export_symbol as well.
-
- kernel/softirq.c |   48 +++++++++++-------------------------------------
- 1 file changed, 11 insertions(+), 37 deletions(-)
-
---- everything.orig/kernel/softirq.c	2008-06-17 23:48:25.000000000 +0200
-+++ everything/kernel/softirq.c	2008-06-18 09:13:21.000000000 +0200
-@@ -131,23 +131,17 @@ void _local_bh_enable(void)
- 
- EXPORT_SYMBOL(_local_bh_enable);
- 
--void local_bh_enable(void)
-+static inline void _local_bh_enable_ip(unsigned long ip)
- {
-+	WARN_ON_ONCE(in_irq() || irqs_disabled());
- #ifdef CONFIG_TRACE_IRQFLAGS
--	unsigned long flags;
--
--	WARN_ON_ONCE(in_irq());
--#endif
--	WARN_ON_ONCE(irqs_disabled());
--
--#ifdef CONFIG_TRACE_IRQFLAGS
--	local_irq_save(flags);
-+	local_irq_disable();
- #endif
- 	/*
- 	 * Are softirqs going to be turned on now:
- 	 */
- 	if (softirq_count() == SOFTIRQ_OFFSET)
--		trace_softirqs_on((unsigned long)__builtin_return_address(0));
-+		trace_softirqs_on(ip);
- 	/*
- 	 * Keep preemption disabled until we are done with
- 	 * softirq processing:
-@@ -159,40 +153,20 @@ void local_bh_enable(void)
- 
- 	dec_preempt_count();
- #ifdef CONFIG_TRACE_IRQFLAGS
--	local_irq_restore(flags);
-+	local_irq_enable();
- #endif
- 	preempt_check_resched();
- }
-+
-+void local_bh_enable(void)
-+{
-+	_local_bh_enable_ip((unsigned long)__builtin_return_address(0));
-+}
- EXPORT_SYMBOL(local_bh_enable);
- 
- void local_bh_enable_ip(unsigned long ip)
- {
--#ifdef CONFIG_TRACE_IRQFLAGS
--	unsigned long flags;
--
--	WARN_ON_ONCE(in_irq());
--
--	local_irq_save(flags);
--#endif
--	/*
--	 * Are softirqs going to be turned on now:
--	 */
--	if (softirq_count() == SOFTIRQ_OFFSET)
--		trace_softirqs_on(ip);
--	/*
--	 * Keep preemption disabled until we are done with
--	 * softirq processing:
-- 	 */
-- 	sub_preempt_count(SOFTIRQ_OFFSET - 1);
--
--	if (unlikely(!in_interrupt() && local_softirq_pending()))
--		do_softirq();
--
--	dec_preempt_count();
--#ifdef CONFIG_TRACE_IRQFLAGS
--	local_irq_restore(flags);
--#endif
--	preempt_check_resched();
-+	_local_bh_enable_ip(ip);
- }
- EXPORT_SYMBOL(local_bh_enable_ip);
- 
-
+--=-U4OPz3yRT6k4a6D7n97P--
 
