@@ -1,153 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:37262 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751267AbYFFX7t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2008 19:59:49 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so910737waf.23
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jun 2008 16:59:48 -0700 (PDT)
-Message-ID: <1ba2fa240806061659j7672f9d3w107be4509b533f68@mail.gmail.com> (sfid-20080607_020018_361726_635359E2)
-Date: Sat, 7 Jun 2008 02:59:48 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Thomas Backlund" <tmb@mandriva.org>
-Subject: Re: iwl4965 oops in 2.6.26-rc5 x86_64
-Cc: "Ian Schram" <ischram@telenet.be>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4849AF9F.9010207@mandriva.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <4848289D.1080205@mandriva.org> <48485F12.2050908@mandriva.org>
-	 <48488878.5040708@telenet.be>
-	 <1ba2fa240806060432t73ecb318x89e877241aa6ef55@mail.gmail.com>
-	 <48492734.9080901@mandriva.org> <48492E85.6010307@mandriva.org>
-	 <1ba2fa240806060659wf4e4088s8afdd2f7f854ea09@mail.gmail.com>
-	 <48494EF6.4020506@mandriva.org>
-	 <1ba2fa240806060812q28c270c4i12cc08f8665e9cc0@mail.gmail.com>
-	 <4849AF9F.9010207@mandriva.org>
+Received: from mga09.intel.com ([134.134.136.24]:12449 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752572AbYFLBty (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2008 21:49:54 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 19/29] iwlwifi: add bad length check for WEP keys
+Date: Thu, 12 Jun 2008 09:47:09 +0800
+Message-Id: <1213235239-2954-20-git-send-email-yi.zhu@intel.com> (sfid-20080612_041915_934747_E9A0814B)
+In-Reply-To: <1213235239-2954-19-git-send-email-yi.zhu@intel.com>
+References: <1213235239-2954-1-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-2-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-3-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-4-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-5-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-6-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-7-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-8-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-9-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-10-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-11-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-12-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-13-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-14-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-15-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-16-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-17-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-18-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-19-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 7, 2008 at 12:43 AM, Thomas Backlund <tmb@mandriva.org> wrote:
-> Tomas Winkler skrev:
->>
->> On Fri, Jun 6, 2008 at 5:51 PM, Thomas Backlund <tmb@mandriva.org> wrote:
->>>
->>> Tomas Winkler skrev:
->>>>
->>>> On Fri, Jun 6, 2008 at 3:33 PM, Thomas Backlund <tmb@mandriva.org>
->>>> wrote:
->>>>>
->>>>> Thomas Backlund skrev:
->>>>>>
->>>>>> Tomas Winkler skrev:
->>>>>>>
->>>>>>> On Fri, Jun 6, 2008 at 3:44 AM, Ian Schram <ischram@telenet.be>
->>>>>>> wrote:
->>>>>>>>
->>>>>>>> Isn't this the Oops Joonwoo Park wanted to patch with
->>>>>>>>
->>>>>>>> "[PATCH] iwlwifi: fix oops on wep key insertion" 27/5/2008
->>>>>>>>
->>>>>>>> invalid length of webkey that would/should be handled in mac80211?
->>>>>>>>
->>>>>>>> ian
->>>>>>>
->>>>>>> Yes, it looks like.
->>>>>>
->>>>>> Ummm, what has a wep key to do with me trying to access a
->>>>>> WPA2-Personal
->>>>>> encrypted net ?
->>>>
->>>> Not sure yet, but mac is trying to assign default/static wep key.
->>>>
->>>> :iwlcore:iwl_send_static_wepkey_cmd+0xcb/0xd5
->>>> :iwlcore:iwl_set_default_wep_key+0xa2/0xbc
->>>>
->>>> Try to set the encryption explicitly
->>>> network={
->>>>   psk="*************************"
->>>>   scan_ssid=1
->>>>   ssid="dlink"
->>>>   pairwise=CCMP
->>>>  group=CCMP
->>>>  }
->>>>
->>>>
->>> That didn't help at all.
->>>
->>> What's more it prevented the wifi to work on 2.6.24.7 so I had to remove
->>> the
->>> lines again...
->>>
->> So what's your AP configuration TKIP?
->>
->
-> I've switched to clean WPA2-AES on the AP, but it does not do any
-> difference... I still get the oops...
->
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-I would like to see the log of this one
+This patch adds a check for bad length in set key flow. This solves the
+Oops reported by Thomas Backlund, Joonwoo Park and Ian Schram.
+It also adds some debug printing that can be useful.
 
->> Second try also with sw decryption:
->>
->> in /etc/modprobe.conf
->> options iwl4965 swcrypto=1
->>
->
->
-> That works.
-> I now run a clean 2.6.26-rc5
->
-Okay thanks for checking this one.
->
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    1 +
+ drivers/net/wireless/iwlwifi/iwl-sta.c      |   18 +++++++++++++++++-
+ 2 files changed, 18 insertions(+), 1 deletions(-)
 
-> I also tried to bisect between 2.6.25 and 2.6.26-rc1 and ended up with:
->
-> [root@5720g linux-2.6]# git bisect good
-> 8318d78a44d49ac1edf2bdec7299de3617c4232e is first bad commit
-> commit 8318d78a44d49ac1edf2bdec7299de3617c4232e
-> Author: Johannes Berg <johannes@sipsolutions.net>
-> Date:   Thu Jan 24 19:38:38 2008 +0100
->
->    cfg80211 API for channels/bitrates, mac80211 and driver conversion
->
->
->
-> Any more I can provide to help finding the bug ?
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index a093f5b..b58f796 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -1002,6 +1002,7 @@ struct iwl_wep_cmd {
+ #define WEP_KEY_WEP_TYPE 1
+ #define WEP_KEYS_MAX 4
+ #define WEP_INVALID_OFFSET 0xff
++#define WEP_KEY_LEN_64 5
+ #define WEP_KEY_LEN_128 13
+ 
+ /******************************************************************************
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index b3caed4..3e257cf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -488,6 +488,8 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
+ 	priv->default_wep_key--;
+ 	memset(&priv->wep_keys[keyconf->keyidx], 0, sizeof(priv->wep_keys[0]));
+ 	ret = iwl_send_static_wepkey_cmd(priv, 1);
++	IWL_DEBUG_WEP("Remove default WEP key: idx=%d ret=%d\n",
++		      keyconf->keyidx, ret);
+ 	spin_unlock_irqrestore(&priv->sta_lock, flags);
+ 
+ 	return ret;
+@@ -500,6 +502,12 @@ int iwl_set_default_wep_key(struct iwl_priv *priv,
+ 	int ret;
+ 	unsigned long flags;
+ 
++	if (keyconf->keylen != WEP_KEY_LEN_128 &&
++	    keyconf->keylen != WEP_KEY_LEN_64) {
++		IWL_DEBUG_WEP("Bad WEP key length %d\n", keyconf->keylen);
++		return -EINVAL;
++	}
++
+ 	keyconf->flags &= ~IEEE80211_KEY_FLAG_GENERATE_IV;
+ 	keyconf->hw_key_idx = HW_KEY_DEFAULT;
+ 	priv->stations[IWL_AP_ID].keyinfo.alg = ALG_WEP;
+@@ -516,6 +524,8 @@ int iwl_set_default_wep_key(struct iwl_priv *priv,
+ 							keyconf->keylen);
+ 
+ 	ret = iwl_send_static_wepkey_cmd(priv, 0);
++	IWL_DEBUG_WEP("Set default WEP key: len=%d idx=%d ret=%d\n",
++		keyconf->keylen, keyconf->keyidx, ret);
+ 	spin_unlock_irqrestore(&priv->sta_lock, flags);
+ 
+ 	return ret;
+@@ -662,6 +672,9 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
+ 	key_flags = le16_to_cpu(priv->stations[sta_id].sta.key.key_flags);
+ 	keyidx = (key_flags >> STA_KEY_FLG_KEYID_POS) & 0x3;
+ 
++	IWL_DEBUG_WEP("Remove dynamic key: idx=%d sta=%d\n",
++		      keyconf->keyidx, sta_id);
++
+ 	if (keyconf->keyidx != keyidx) {
+ 		/* We need to remove a key with index different that the one
+ 		 * in the uCode. This means that the key we need to remove has
+@@ -686,7 +699,6 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
+ 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+ 	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+ 
+-	IWL_DEBUG_INFO("hwcrypto: clear ucode station key info\n");
+ 	ret =  iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
+ 	spin_unlock_irqrestore(&priv->sta_lock, flags);
+ 	return ret;
+@@ -716,6 +728,10 @@ int iwl_set_dynamic_key(struct iwl_priv *priv,
+ 		ret = -EINVAL;
+ 	}
+ 
++	IWL_DEBUG_WEP("Set dynamic key: alg= %d len=%d idx=%d sta=%d ret=%d\n",
++		      keyconf->alg, keyconf->keylen, keyconf->keyidx,
++		      sta_id, ret);
++
+ 	return ret;
+ }
+ EXPORT_SYMBOL(iwl_set_dynamic_key);
+-- 
+1.5.3.6
 
-Just the log from AES try with  I will try to reproduce this as soon
-as I get to this particular AP and 64 bits kernel.
-
-One more thing is suspicious in the WEP key try is that I don't see
-this can ever happen. The command that should be here iis
-wlcore:iwl_send_cmd_async
-Jun  5 19:55:06 5720g kernel:  [<ffffffffa018ee37>]
-:iwlcore:iwl_send_cmd_sync+0x94/0x257
-Jun  5 19:55:06 5720g kernel:  [<ffffffff80257ed5>] ? __lock_acquire+0xbee/0xd5a
-Jun  5 19:55:06 5720g kernel:  [<ffffffffa018f04b>]
-:iwlcore:iwl_send_cmd+0x16/0x1b
-Jun  5 19:55:06 5720g kernel:  [<ffffffffa0218c41>]
-:iwl4965:iwl_send_static_wepkey_cmd+0xcb/0xd5
-Jun  5 19:55:06 5720g kernel:  [<ffffffffa0218cef>]
-:iwl4965:iwl_set_default_wep_key+0xa4/0xbe
-Jun  5 19:55:06 5720g kernel:  [<ffffffffa020ae00>]
-:iwl4965:iwl4965_mac_set_key+0xf1/0x137
-
-The code there looks like this
-
-int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
-{
-	int i, not_empty = 0;
-	u8 buff[sizeof(struct iwl_wep_cmd) +
-		sizeof(struct iwl_wep_key) * WEP_KEYS_MAX];
-	struct iwl_wep_cmd *wep_cmd = (struct iwl_wep_cmd *)buff;
-	size_t cmd_size  = sizeof(struct iwl_wep_cmd);
-	struct iwl_host_cmd cmd = {
-		.id = REPLY_WEPKEY,
-		.data = wep_cmd,
-		.meta.flags = CMD_ASYNC, -----------------------------------------
-this is async
-	};
-
-Thanks
-Tomas
