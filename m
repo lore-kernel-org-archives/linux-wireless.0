@@ -1,89 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:44255 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751583AbYFPRol (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49435 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756900AbYFLLFD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2008 13:44:41 -0400
-Received: by py-out-1112.google.com with SMTP id p76so2084603pyb.10
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2008 10:44:40 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/9] rt2x00: Properly clean up beacon skbs.
-Date: Mon, 16 Jun 2008 19:55:18 +0200
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <200806161954.04241.IvDoorn@gmail.com> <200806161954.34838.IvDoorn@gmail.com>
-In-Reply-To: <200806161954.34838.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200806161955.18775.IvDoorn@gmail.com> (sfid-20080616_194502_147498_EC3DF508)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 12 Jun 2008 07:05:03 -0400
+Subject: RE: [PATCH 1/1] mac80211: [RFC] do not fragment while
+	aggregationis in use
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1879838866982C46A9CB3D56BA49ADEB050224AF@hasmsx411.ger.corp.intel.com>
+References: <1213207296-14548-1-git-send-email-ron.rindjunsky@intel.com>
+	 <1213219526.3827.0.camel@johannes.berg>
+	 <1879838866982C46A9CB3D56BA49ADEB050224AF@hasmsx411.ger.corp.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CcvCGeCCARB0CYRt1/F5"
+Date: Thu, 12 Jun 2008 13:04:12 +0200
+Message-Id: <1213268652.3936.0.camel@johannes.berg> (sfid-20080612_130508_179573_A6EE4AF0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
 
-The skbs containing the beacons weren't properly cleaned up for rt2400pci, rt2500pci,
-rt61pci, and rt73usb. Clean up those skbs in the manner appropriate for each driver.
+--=-CcvCGeCCARB0CYRt1/F5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c |    6 ++++++
- drivers/net/wireless/rt2x00/rt61pci.c   |    6 ++++++
- drivers/net/wireless/rt2x00/rt73usb.c   |    6 ++++++
- 3 files changed, 18 insertions(+), 0 deletions(-)
+On Thu, 2008-06-12 at 12:56 +0300, Rindjunsky, Ron wrote:
+> >> -	/*
+> >> -	 * Warn when submitting a fragmented A-MPDU frame and drop it.
+> >> -	 * This is an error and needs to be fixed elsewhere, but when
+> >> -	 * done needs to take care of monitor interfaces (injection)
+> >> -	 * etc.
+> >> -	 */
+> >> -	if (WARN_ON(tx->flags & IEEE80211_TX_CTL_AMPDU ||
+> >> -		    skb_get_queue_mapping(tx->skb) >=3D
+> >> -			ieee80211_num_regular_queues(&tx->local->hw)))
+> >> -		return TX_DROP;
+> >> -
+>=20
+> > Should we keep that, just in case? If it ever happens and the hw
+> rejects
+> > a fragment for some reason, we'll otherwise clobber some state and
+> > probably crash.
+>=20
+> Agree. Should I resend the patch or would you just remove it from the
+> original patch?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index f9e7531..b8e0c4c 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -474,6 +474,12 @@ static void rt2x00lib_beacondone_iter(void *data, u8 *mac,
- 	    vif->type != IEEE80211_IF_TYPE_IBSS)
- 		return;
- 
-+	/*
-+	 * Clean up the beacon skb.
-+	 */
-+	dev_kfree_skb_irq(intf->beacon->skb);
-+	intf->beacon->skb = NULL;
-+
- 	spin_lock(&intf->lock);
- 	intf->delayed_flags |= DELAYED_UPDATE_BEACON;
- 	spin_unlock(&intf->lock);
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 5b7267e..27f30ae 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2402,6 +2402,12 @@ static int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
- 				      skb->data, skb->len);
- 	rt61pci_kick_tx_queue(rt2x00dev, QID_BEACON);
- 
-+	/*
-+	 * Clean up beacon skb.
-+	 */
-+	dev_kfree_skb_any(skb);
-+	intf->beacon->skb = NULL;
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index fceefd7..42b7e98 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2001,6 +2001,12 @@ static int rt73usb_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
- 				 REGISTER_TIMEOUT32(skb->len));
- 	rt73usb_kick_tx_queue(rt2x00dev, QID_BEACON);
- 
-+	/*
-+	 * Clean up the beacon skb.
-+	 */
-+	dev_kfree_skb(skb);
-+	intf->beacon->skb = NULL;
-+
- 	return 0;
- }
- 
--- 
-1.5.5.4
+Well, you probably want to adjust the comment, since you did fix it
+elsewhere :)
+
+johannes
+
+--=-CcvCGeCCARB0CYRt1/F5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIUQKoAAoJEKVg1VMiehFYDQ4P/1fvLW7eNpOjHc2efjivJkHq
+qikbrNpNQ95qGHNV/VgPhqjqG6G8veLgcSZnr2f7+NT1Sg0MIf0ORrkXpTmz243/
+G1genJA20c09/Mjv84BzvQZl+PlV3eI22VmeBA8IPj0B0vkx6tyCD8T8R40jP6Ex
+m+d+qqGN0mx3K6cnoxpDDIIrZvaU4DO/pKXNd0IZzOGFmkU8DNTZYVdvBmvkY3mC
+KcsgBFddnnIz2UgcD+KYaJH4FcTt/keM6QhAdHxt7pSBcgMeuQGDnlwC5KZvKdHv
+8D2Bk8vVRr61wnVCoQk8gWXi56NCnlkqrDkgydJBri6RIzLfz+jEQXEwbCxQtpIL
+7nB+U7ILaMeM0AWw2c+GotCCOX+xG8t3ZiwIqGSD/tnhbEGj/gdVcYm6vH1lHB7k
+eObd2sgzuT/2S1idHT/gui/Pyv43JxgGzl8RtUrrSrxTHUk8yw1tsnbnOT7Pu0UJ
+iSVftEdMzpnJOj+IW9c4MeslL71J1G96ygZfq4UrCyV3hs3CGzmNdUXnwzzgc4ht
+zoBSudP6E7M/6Z6v7UJGPchPO7Oiop92qd8LUDzdZh/A1TiyctZg0aqQVY4m57GO
+mKah89GdNAZv8QSTFbAWIs8UD9Wykugx8CMYoBtOLd40ABpxvdcAYIIdi+1SQ4lL
+nwO33ybHw5yC2FTQbpBs
+=o/eY
+-----END PGP SIGNATURE-----
+
+--=-CcvCGeCCARB0CYRt1/F5--
 
