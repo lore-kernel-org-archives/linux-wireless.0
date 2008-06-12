@@ -1,55 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:33919 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750968AbYFYO6F (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.234]:31871 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754533AbYFLULc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2008 10:58:05 -0400
-Message-ID: <48625D39.30700@lwfinger.net> (sfid-20080625_165809_743280_3E622520)
-Date: Wed, 25 Jun 2008 09:59:05 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 12 Jun 2008 16:11:32 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2181975rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 13:11:32 -0700 (PDT)
+Message-ID: <c4e36d110806121311n64890e17h67f49c32481fbb28@mail.gmail.com> (sfid-20080612_221136_225616_707436F7)
+Date: Thu, 12 Jun 2008 22:11:32 +0200
+From: "Zdenek Kabelac" <zdenek.kabelac@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Problem: Out of memory after 2days with 2GB RAM
+Cc: "Tomas Winkler" <tomasw@gmail.com>,
+	"Rik van Riel" <riel@redhat.com>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+	yi.zhu@intel.com, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1213294547.3730.29.camel@johannes.berg>
 MIME-Version: 1.0
-To: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	herton@mandriva.com.br, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, andreamrl@tiscali.it, linville@redhat.com
-Subject: Re: [RFC][PATCH] Realtek 8187B wireless support with product id	0x8197/0x8189
-References: <922158.32180.qm@web23114.mail.ird.yahoo.com> <20080625140809.GA9111@tuxdriver.com>
-In-Reply-To: <20080625140809.GA9111@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <c4e36d110806120307n20cce692s9c136f11596f5ab0@mail.gmail.com>
+	 <20080612093833.0fb9cdd6@bree.surriel.com>
+	 <1213278884.3936.15.camel@johannes.berg>
+	 <1ba2fa240806120843s268b2ff4mb45a11adf11afc7f@mail.gmail.com>
+	 <1ba2fa240806120935r54a080eci7fa6fafc718eed17@mail.gmail.com>
+	 <1213290335.3730.4.camel@johannes.berg>
+	 <1ba2fa240806121039o376b0a8sdfaacf3a1f4a9e57@mail.gmail.com>
+	 <1213292812.3730.21.camel@johannes.berg>
+	 <1ba2fa240806121103m60a8ffa4ie11850fedc69d13c@mail.gmail.com>
+	 <1213294547.3730.29.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> 
-> Thanks for your effort on this issue.  I am very proud of the way you
-> and others have participated in improving this patch as documented
-> in the bugzilla link above.
-> 
-> I apologize for having been slow to respond but I seem to constantly
-> be buried in patches...  That is even more true today since I have
-> recently been on vacation.  Still, this patch has been languishing
-> in my mailbox too long!
-> 
-> Please review the guidelines here:
-> 
->    http://linux.yyz.us/patch-format.html
-> 
-> If possible, please wrap your changelog comment lines at 80 columns
-> or less.  Also you should probably include Signed-off-by lines from
-> Herton and Pavel.  And please include the patch inline if possible
-> for easier review -- use a mailer that preserves whitespace correctly.
-> 
-> I may have more specific comments about the patch itself later, but now
-> I really need to get caught-up on some other merging.  I just wanted to
-> ensure that you knew I was not (completely) ignoring your efforts! :-)
+2008/6/12 Johannes Berg <johannes@sipsolutions.net>:
+>
+>> I'm not against it. You;v decided that I'm fighting you because I gave
+>> another solution.
+>
+> Ok, no, I'm not saying you shouldn't rewrite all the code to get rid of
+> it, but I think you can use a patch like mine interim as such a rewrite
+> is unlikely to go into 2.6.26, is it?
+>
+>> Frankly we probably don't need this allocation at all. maybe one skb
+>> is just enough
+>
+> That would be nice, indeed.
+>
+>> even with my never dying hope all fragments are in skb fragment list.
+>
+> :)
+>
+>> This still probably won't save pci memory allocation problem
+>
+> Yeah, true, that one needs to be done, but it could probably be done
+> only once when hw is probed rather than every time it is brought up.
+> Most likely not something you'll get to fix in 2.6.26 either though.
 
-I have been using this patch on my Level 1 WNC-0301USB device. There 
-are still problems with the TX code as it can associate only about 1 
-try in 10, but RX seems to be fine. I have been too busy to sort out 
-the problems, but I have fixed the patch to get rid of checkpatch 
-warnings and errors, which includes the "Signed-off-by" lines.
 
-Would you like me to send the updated version to you, or should I send 
-it to linux-wireless and John?
+Well - it's great that there will be saved few kB in allocation of
+never used pointers in iwl driver - but does this really solve the
+problem that kernel gets relatively quickly out of memory for
+allocations of this size - I guess iwl isn't the only driver
+requesting 32 sequential pages.
 
-Larry
+Is it possible to track how this memory gets fragment/lost - who owns
+the block and why they are not back in the pool?
+
+btw with 8hour uptime at this moment I can see this:
+
+DMA: 26*4kB 37*8kB 72*16kB 65*32kB 3*64kB 0*128kB 0*256kB 0*512kB
+0*1024kB 0*2048kB 1*4096kB = 7920kB
+DMA32: 203*4kB 79*8kB 26*16kB 11*32kB 6*64kB 9*128kB 3*256kB 2*512kB
+2*1024kB 0*2048kB 0*4096kB = 7588kB
+
+so at this moment I can see quiet a lot of free DMA memory - but in my
+trace at the thread beginig after several suspend/resumes this memory
+was gone....
+
+Zdenek
