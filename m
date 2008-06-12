@@ -1,230 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58254 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752254AbYFSX0i (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 19:26:38 -0400
-Message-Id: <20080619232435.151288000@sipsolutions.net> (sfid-20080620_012641_402056_82B68758)
-References: <20080619232229.202159000@sipsolutions.net>
-Date: Fri, 20 Jun 2008 01:22:32 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3] mac80211: get rid of function pointers in RX path
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:63786 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752085AbYFLBtb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2008 21:49:31 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 03/29] iwlwifi: clean up in setup/cancel deferred work
+Date: Thu, 12 Jun 2008 09:46:53 +0800
+Message-Id: <1213235239-2954-4-git-send-email-yi.zhu@intel.com> (sfid-20080612_034937_963702_8FFDC2F8)
+In-Reply-To: <1213235239-2954-3-git-send-email-yi.zhu@intel.com>
+References: <1213235239-2954-1-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-2-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-3-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This changes the RX path to no longer use function pointers for  
-RX handlers but rather invoke them directly. If debugging is  
-enabled, mark the RX handlers noinline because otherwise they
-all get inlined into ieee80211_invoke_rx_handlers() which makes
-it harder to see where a bug is.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+This patch makes some clean up in setup/cancel_deferred_work.
+iwl_setup_deferred_work does the work that is common to 4965
+and 5000, then it calls to HW specific handlers.
+
+This patch also removes uneeded work_struct from iwl_priv.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- net/mac80211/rx.c |   93 ++++++++++++++++++++++++------------------------------
- 1 file changed, 42 insertions(+), 51 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |   33 +++------------------
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    4 ++
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    3 --
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   41 ++++++++++++++++++++++----
+ 4 files changed, 43 insertions(+), 38 deletions(-)
 
---- everything.orig/net/mac80211/rx.c	2008-06-20 01:20:18.000000000 +0200
-+++ everything/net/mac80211/rx.c	2008-06-20 01:22:12.000000000 +0200
-@@ -386,7 +386,7 @@ static void ieee80211_verify_ip_alignmen
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index e2c2d9f..be6b6eb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -608,26 +608,6 @@ out:
  
- /* rx handlers */
+ #define REG_RECALIB_PERIOD (60)
  
--static ieee80211_rx_result
-+static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_passive_scan(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_local *local = rx->local;
-@@ -463,7 +463,7 @@ ieee80211_rx_mesh_check(struct ieee80211
- }
- 
- 
--static ieee80211_rx_result
-+static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_hdr *hdr;
-@@ -522,7 +522,7 @@ ieee80211_rx_h_check(struct ieee80211_rx
- }
- 
- 
--static ieee80211_rx_result
-+static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
-@@ -710,7 +710,7 @@ static int ap_sta_ps_end(struct net_devi
- 	return sent;
- }
- 
--static ieee80211_rx_result
-+static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- {
- 	struct sta_info *sta = rx->sta;
-@@ -858,7 +858,7 @@ ieee80211_reassemble_find(struct ieee802
- 	return NULL;
- }
- 
--static ieee80211_rx_result
-+static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_hdr *hdr;
-@@ -974,7 +974,7 @@ ieee80211_rx_h_defragment(struct ieee802
- 	return RX_CONTINUE;
- }
- 
--static ieee80211_rx_result
-+static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_ps_poll(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
-@@ -1049,7 +1049,7 @@ ieee80211_rx_h_ps_poll(struct ieee80211_
- 	return RX_QUEUED;
- }
- 
--static ieee80211_rx_result
-+static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_remove_qos_control(struct ieee80211_rx_data *rx)
- {
- 	u16 fc = rx->fc;
-@@ -1367,7 +1367,7 @@ ieee80211_deliver_skb(struct ieee80211_r
- 	}
- }
- 
--static ieee80211_rx_result
-+static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
- {
- 	struct net_device *dev = rx->dev;
-@@ -1484,7 +1484,7 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx
- 	return RX_QUEUED;
- }
- 
--static ieee80211_rx_result
-+static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
- {
- 	struct net_device *dev = rx->dev;
-@@ -1515,7 +1515,7 @@ ieee80211_rx_h_data(struct ieee80211_rx_
- 	return RX_QUEUED;
- }
- 
--static ieee80211_rx_result
-+static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_local *local = rx->local;
-@@ -1559,7 +1559,7 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_
- 	return RX_CONTINUE;
- }
- 
--static ieee80211_rx_result
-+static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_sub_if_data *sdata;
-@@ -1732,66 +1732,57 @@ static void ieee80211_rx_cooked_monitor(
- 	dev_kfree_skb(skb);
- }
- 
--typedef ieee80211_rx_result (*ieee80211_rx_handler)(struct ieee80211_rx_data *);
--static ieee80211_rx_handler ieee80211_rx_handlers[] =
+-/**
+- * iwl4965_bg_statistics_periodic - Timer callback to queue statistics
+- *
+- * This callback is provided in order to send a statistics request.
+- *
+- * This timer function is continually reset to execute within
+- * REG_RECALIB_PERIOD seconds since the last STATISTICS_NOTIFICATION
+- * was received.  We need to ensure we receive the statistics in order
+- * to update the temperature used for calibrating the TXPOWER.
+- */
+-static void iwl4965_bg_statistics_periodic(unsigned long data)
 -{
--	ieee80211_rx_h_passive_scan,
--	ieee80211_rx_h_check,
--	ieee80211_rx_h_decrypt,
--	ieee80211_rx_h_sta_process,
--	ieee80211_rx_h_defragment,
--	ieee80211_rx_h_ps_poll,
--	ieee80211_rx_h_michael_mic_verify,
--	/* this must be after decryption - so header is counted in MPDU mic
--	 * must be before pae and data, so QOS_DATA format frames
--	 * are not passed to user space by these functions
--	 */
--	ieee80211_rx_h_remove_qos_control,
--	ieee80211_rx_h_amsdu,
--	ieee80211_rx_h_data,
--	ieee80211_rx_h_ctrl,
--	ieee80211_rx_h_mgmt,
--	NULL
--};
- 
- static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
- 					 struct ieee80211_rx_data *rx,
- 					 struct sk_buff *skb)
+-	struct iwl_priv *priv = (struct iwl_priv *)data;
+-
+-	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+-		return;
+-
+-	iwl_send_statistics_request(priv, CMD_ASYNC);
+-}
+-
+ void iwl4965_rf_kill_ct_config(struct iwl_priv *priv)
  {
--	ieee80211_rx_handler *handler;
- 	ieee80211_rx_result res = RX_DROP_MONITOR;
- 
- 	rx->skb = skb;
- 	rx->sdata = sdata;
- 	rx->dev = sdata->dev;
- 
--	for (handler = ieee80211_rx_handlers; *handler != NULL; handler++) {
--		res = (*handler)(rx);
-+#define CALL_RXH(rxh)		\
-+	res = rxh(rx);		\
-+	if (res != RX_CONTINUE)	\
-+		goto rxh_done;
-+
-+	CALL_RXH(ieee80211_rx_h_passive_scan);
-+	CALL_RXH(ieee80211_rx_h_check);
-+	CALL_RXH(ieee80211_rx_h_decrypt);
-+	CALL_RXH(ieee80211_rx_h_sta_process);
-+	CALL_RXH(ieee80211_rx_h_defragment);
-+	CALL_RXH(ieee80211_rx_h_ps_poll);
-+	CALL_RXH(ieee80211_rx_h_michael_mic_verify);
-+	/* must be after MMIC verify so header is counted in MPDU mic */
-+	CALL_RXH(ieee80211_rx_h_remove_qos_control);
-+	CALL_RXH(ieee80211_rx_h_amsdu);
-+	CALL_RXH(ieee80211_rx_h_data);
-+	CALL_RXH(ieee80211_rx_h_ctrl);
-+	CALL_RXH(ieee80211_rx_h_mgmt);
- 
--		switch (res) {
--		case RX_CONTINUE:
--			continue;
--		case RX_DROP_UNUSABLE:
--		case RX_DROP_MONITOR:
--			I802_DEBUG_INC(sdata->local->rx_handlers_drop);
--			if (rx->sta)
--				rx->sta->rx_dropped++;
--			break;
--		case RX_QUEUED:
--			I802_DEBUG_INC(sdata->local->rx_handlers_queued);
--			break;
--		}
--		break;
--	}
-+#undef CALL_RXH
- 
-+ rxh_done:
- 	switch (res) {
--	case RX_CONTINUE:
- 	case RX_DROP_MONITOR:
-+		I802_DEBUG_INC(sdata->local->rx_handlers_drop);
-+		if (rx->sta)
-+			rx->sta->rx_dropped++;
-+		/* fall through */
-+	case RX_CONTINUE:
- 		ieee80211_rx_cooked_monitor(rx);
- 		break;
- 	case RX_DROP_UNUSABLE:
-+		I802_DEBUG_INC(sdata->local->rx_handlers_drop);
-+		if (rx->sta)
-+			rx->sta->rx_dropped++;
- 		dev_kfree_skb(rx->skb);
- 		break;
-+	case RX_QUEUED:
-+		I802_DEBUG_INC(sdata->local->rx_handlers_queued);
-+		break;
- 	}
+ 	struct iwl4965_ct_kill_config cmd;
+@@ -3469,19 +3449,14 @@ static void iwl4965_rx_handler_setup(struct iwl_priv *priv)
+ 	priv->rx_handlers[REPLY_COMPRESSED_BA] = iwl4965_rx_reply_compressed_ba;
  }
  
-
+-void iwl4965_hw_setup_deferred_work(struct iwl_priv *priv)
++static void iwl4965_setup_deferred_work(struct iwl_priv *priv)
+ {
+ 	INIT_WORK(&priv->txpower_work, iwl4965_bg_txpower_work);
+-	init_timer(&priv->statistics_periodic);
+-	priv->statistics_periodic.data = (unsigned long)priv;
+-	priv->statistics_periodic.function = iwl4965_bg_statistics_periodic;
+ }
+ 
+-void iwl4965_hw_cancel_deferred_work(struct iwl_priv *priv)
++static void iwl4965_cancel_deferred_work(struct iwl_priv *priv)
+ {
+-	del_timer_sync(&priv->statistics_periodic);
+-
+-	cancel_delayed_work(&priv->init_alive_start);
++	cancel_work_sync(&priv->txpower_work);
+ }
+ 
+ 
+@@ -3506,6 +3481,8 @@ static struct iwl_lib_ops iwl4965_lib = {
+ 	.txq_agg_enable = iwl4965_txq_agg_enable,
+ 	.txq_agg_disable = iwl4965_txq_agg_disable,
+ 	.rx_handler_setup = iwl4965_rx_handler_setup,
++	.setup_deferred_work = iwl4965_setup_deferred_work,
++	.cancel_deferred_work = iwl4965_cancel_deferred_work,
+ 	.is_valid_rtc_data_addr = iwl4965_hw_valid_rtc_data_addr,
+ 	.alive_notify = iwl4965_alive_notify,
+ 	.init_alive_start = iwl4965_init_alive_start,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 192cda2..a86e08b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -116,6 +116,10 @@ struct iwl_lib_ops {
+ 			       u8 tx_fifo);
+ 	/* setup Rx handler */
+ 	void (*rx_handler_setup)(struct iwl_priv *priv);
++	/* setup deferred work */
++	void (*setup_deferred_work)(struct iwl_priv *priv);
++	/* cancel deferred work */
++	void (*cancel_deferred_work)(struct iwl_priv *priv);
+ 	/* alive notification after init uCode load */
+ 	void (*init_alive_start)(struct iwl_priv *priv);
+ 	/* alive notification */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 631931c..9e5a7cd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1179,9 +1179,6 @@ struct iwl_priv {
+ 
+ 	struct delayed_work init_alive_start;
+ 	struct delayed_work alive_start;
+-	struct delayed_work activity_timer;
+-	struct delayed_work thermal_periodic;
+-	struct delayed_work gather_stats;
+ 	struct delayed_work scan_check;
+ 	struct delayed_work post_associate;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index a8dfdcb..0acd42b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -1647,6 +1647,26 @@ static void iwl4965_bg_beacon_update(struct work_struct *work)
+ 	iwl4965_send_beacon_cmd(priv);
+ }
+ 
++/**
++ * iwl4965_bg_statistics_periodic - Timer callback to queue statistics
++ *
++ * This callback is provided in order to send a statistics request.
++ *
++ * This timer function is continually reset to execute within
++ * REG_RECALIB_PERIOD seconds since the last STATISTICS_NOTIFICATION
++ * was received.  We need to ensure we receive the statistics in order
++ * to update the temperature used for calibrating the TXPOWER.
++ */
++static void iwl4965_bg_statistics_periodic(unsigned long data)
++{
++	struct iwl_priv *priv = (struct iwl_priv *)data;
++
++	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
++		return;
++
++	iwl_send_statistics_request(priv, CMD_ASYNC);
++}
++
+ static void iwl4965_rx_beacon_notif(struct iwl_priv *priv,
+ 				struct iwl_rx_mem_buffer *rxb)
+ {
+@@ -2887,7 +2907,7 @@ static void iwl_alive_start(struct iwl_priv *priv)
+ 	queue_work(priv->workqueue, &priv->restart);
+ }
+ 
+-static void iwl4965_cancel_deferred_work(struct iwl_priv *priv);
++static void iwl_cancel_deferred_work(struct iwl_priv *priv);
+ 
+ static void __iwl4965_down(struct iwl_priv *priv)
+ {
+@@ -2991,7 +3011,7 @@ static void iwl4965_down(struct iwl_priv *priv)
+ 	__iwl4965_down(priv);
+ 	mutex_unlock(&priv->mutex);
+ 
+-	iwl4965_cancel_deferred_work(priv);
++	iwl_cancel_deferred_work(priv);
+ }
+ 
+ #define MAX_HW_RESTARTS 5
+@@ -5022,7 +5042,7 @@ static DEVICE_ATTR(status, S_IRUGO, show_status, NULL);
+  *
+  *****************************************************************************/
+ 
+-static void iwl4965_setup_deferred_work(struct iwl_priv *priv)
++static void iwl_setup_deferred_work(struct iwl_priv *priv)
+ {
+ 	priv->workqueue = create_workqueue(DRV_NAME);
+ 
+@@ -5043,21 +5063,28 @@ static void iwl4965_setup_deferred_work(struct iwl_priv *priv)
+ 	INIT_DELAYED_WORK(&priv->alive_start, iwl_bg_alive_start);
+ 	INIT_DELAYED_WORK(&priv->scan_check, iwl4965_bg_scan_check);
+ 
+-	iwl4965_hw_setup_deferred_work(priv);
++	if (priv->cfg->ops->lib->setup_deferred_work)
++		priv->cfg->ops->lib->setup_deferred_work(priv);
++
++	init_timer(&priv->statistics_periodic);
++	priv->statistics_periodic.data = (unsigned long)priv;
++	priv->statistics_periodic.function = iwl4965_bg_statistics_periodic;
+ 
+ 	tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
+ 		     iwl4965_irq_tasklet, (unsigned long)priv);
+ }
+ 
+-static void iwl4965_cancel_deferred_work(struct iwl_priv *priv)
++static void iwl_cancel_deferred_work(struct iwl_priv *priv)
+ {
+-	iwl4965_hw_cancel_deferred_work(priv);
++	if (priv->cfg->ops->lib->cancel_deferred_work)
++		priv->cfg->ops->lib->cancel_deferred_work(priv);
+ 
+ 	cancel_delayed_work_sync(&priv->init_alive_start);
+ 	cancel_delayed_work(&priv->scan_check);
+ 	cancel_delayed_work(&priv->alive_start);
+ 	cancel_delayed_work(&priv->post_associate);
+ 	cancel_work_sync(&priv->beacon_update);
++	del_timer_sync(&priv->statistics_periodic);
+ }
+ 
+ static struct attribute *iwl4965_sysfs_entries[] = {
+@@ -5269,7 +5296,7 @@ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	}
+ 
+ 
+-	iwl4965_setup_deferred_work(priv);
++	iwl_setup_deferred_work(priv);
+ 	iwl4965_setup_rx_handlers(priv);
+ 
+ 	/********************
 -- 
+1.5.3.6
 
