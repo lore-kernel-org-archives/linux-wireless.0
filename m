@@ -1,44 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:7314 "EHLO c60.cesmail.net"
+Received: from mga09.intel.com ([134.134.136.24]:12449 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757560AbYFZTTs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 15:19:48 -0400
-Subject: Re: [Q] ath5k : doesn't support AP mode?
-From: Pavel Roskin <proski@gnu.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>, cs010101@gmail.com,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <200806261821.31643.mb@bu3sch.de>
-References: <002901c8d737$e51bb2f0$3b0aa8c0@39fb6b6b6f434b3>
-	 <69e28c910806260846s3b02cdddlca3ac138acadd8bd@mail.gmail.com>
-	 <1214496086.30722.14.camel@dv>  <200806261821.31643.mb@bu3sch.de>
-Content-Type: text/plain
-Date: Thu, 26 Jun 2008 12:34:31 -0400
-Message-Id: <1214498071.30722.22.camel@dv> (sfid-20080626_212018_263098_DED4301E)
-Mime-Version: 1.0
+	id S1752482AbYFLBtr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jun 2008 21:49:47 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 14/29] iwlwifi: fix resart flow after fw error
+Date: Thu, 12 Jun 2008 09:47:04 +0800
+Message-Id: <1213235239-2954-15-git-send-email-yi.zhu@intel.com> (sfid-20080612_041914_298053_5BBCE2B8)
+In-Reply-To: <1213235239-2954-14-git-send-email-yi.zhu@intel.com>
+References: <1213235239-2954-1-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-2-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-3-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-4-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-5-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-6-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-7-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-8-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-9-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-10-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-11-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-12-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-13-git-send-email-yi.zhu@intel.com>
+ <1213235239-2954-14-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-06-26 at 18:21 +0200, Michael Buesch wrote:
-> +	  ===> BIG FAT WARNING <===
-> +	  This is not IEEE 802.11 compliant, yet!
-> +	  You might disturb operation of other accesspoints and
-> +	  stations in your neighbourhood. Do only enable this, if
-> +	  you want to help out fixing this to make this warning disappear.
-> +	  If you enable this, expect that your neighbour will ring your
-> +	  door and yell at you for disturbing his network.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Gladly there will be no black helicopters :-)
+Clear STATUS_FW_ERROR in the _up_ flow before reseting NIC.
+UP flow will otherwise call restart again causing endless restart loop.
 
-But is it really so bad?  What's the current TODO list for the AP mode?
-Is it an issue with 802.11h?  Maybe we could limit Tx power and channels
-until the remaining issues are fixed?
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Also, I think that the 802.11 simulator should be exempt from any
-limitations for obvious reasons.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 7a9567c..3f54dec 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -2857,9 +2857,6 @@ static void iwl_alive_start(struct iwl_priv *priv)
+ 	/* After the ALIVE response, we can send host commands to 4965 uCode */
+ 	set_bit(STATUS_ALIVE, &priv->status);
+ 
+-	/* Clear out the uCode error bit if it is set */
+-	clear_bit(STATUS_FW_ERROR, &priv->status);
+-
+ 	if (iwl_is_rfkill(priv))
+ 		return;
+ 
+@@ -3099,6 +3096,9 @@ static int __iwl4965_up(struct iwl_priv *priv)
+ 			continue;
+ 		}
+ 
++		/* Clear out the uCode error bit if it is set */
++		clear_bit(STATUS_FW_ERROR, &priv->status);
++
+ 		/* start card; "initialize" will load runtime ucode */
+ 		iwl4965_nic_start(priv);
+ 
 -- 
-Regards,
-Pavel Roskin
+1.5.3.6
+
