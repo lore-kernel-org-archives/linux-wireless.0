@@ -1,134 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hu-out-0506.google.com ([72.14.214.236]:30632 "EHLO
-	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753357AbYF1NvY (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.180]:64642 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753979AbYFLBGE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 09:51:24 -0400
-Received: by hu-out-0506.google.com with SMTP id 28so1926656hub.21
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 06:51:21 -0700 (PDT)
-Message-ID: <f6ca9fed0806280651w48cac49ew8fd29b4d8dddaa0c@mail.gmail.com> (sfid-20080628_155127_924135_DEFE02B7)
-Date: Sat, 28 Jun 2008 15:51:21 +0200
-From: drago01 <drago01@gmail.com>
-To: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
-Subject: [PATCHv2] iwl3945: add support for RFKILL_STATE_HARD_BLOCKED
-Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>,
-	"Ivo van Doorn" <ivdoorn@gmail.com>, "Zhu, Yi" <yi.zhu@intel.com>,
-	"Tomas Winkler" <tomas.winkler@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Dan Williams" <dcbw@redhat.com>
-In-Reply-To: <20080628131701.GB871@khazad-dum.debian.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0806280115o409136a0x20b2109c25330b63@mail.gmail.com>
-	 <20080628131701.GB871@khazad-dum.debian.net>
+	Wed, 11 Jun 2008 21:06:04 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so2703281waf.23
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 18:06:03 -0700 (PDT)
+Subject: [RFC] Do not activate promiscuous mode on wlan interfaces for
+	bridging.
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: shemminger@linux-foundation.org, j@w1.fi,
+	johannes@sipsolutions.net, bridge@linux-foundation.org
+Content-Type: text/plain
+Date: Wed, 11 Jun 2008 18:06:00 -0700
+Message-Id: <1213232760.6645.24.camel@localhost> (sfid-20080612_030609_577959_AA2302DF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 28, 2008 at 3:17 PM, Henrique de Moraes Holschuh
-<hmh@hmh.eng.br> wrote:
-> On Sat, 28 Jun 2008, drago01 wrote:
->> This patch fixes the rfkill states to set RFKILL_STATE_HARD_BLOCKED when the
->> radio is disabled by a hardware killswitch.
->> It does not allow setting the sw state while the device is blocked by
->> a hardware rfkill switch.
->
-> See my comment on your other patch, the device should be able to
-> double-block.
+(Sorry if you received this mail multiple times, my email client had problems with the Cc's)
 
-OK, see attached patch.
+I have come across a 802.11 device that stops acknowledging frames addressed to
+it when in promiscuous mode. The device can act as an AP with hostapd. However,
+when the interface is attached to a bridge the lack of acknowledgments makes the
+device non-functional as an AP.
 
---------------
-This patch fixes the rfkill states to set RFKILL_STATE_HARD_BLOCKED when the
-radio is disabled by a hardware killswitch.
-It does not allow unblocking the radio state while the device is blocked by
-a hardware rfkill switch.
+It seems that it is not really necessary to activate promiscuous mode when
+attaching a wlan interface to a bridge, and it causes unnecessary processing
+overhead to any wlan device.
 
-Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+Case 1: Ethernet to ethernet
+----------------------------
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 43cb8ff..4e5309e 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -537,10 +537,20 @@ static inline int iwl3945_is_init(struct
-iwl3945_priv *priv)
- 	return test_bit(STATUS_INIT, &priv->status);
- }
+A <----> BRIDGE <----> B
 
-+static inline int iwl3945_is_rfkill_sw(struct iwl3945_priv *priv)
-+{
-+	return test_bit(STATUS_RF_KILL_SW, &priv->status);
-+}
-+
-+static inline int iwl3945_is_rfkill_hw(struct iwl3945_priv *priv)
-+{
-+	return test_bit(STATUS_RF_KILL_HW, &priv->status);
-+}
-+
- static inline int iwl3945_is_rfkill(struct iwl3945_priv *priv)
- {
--	return test_bit(STATUS_RF_KILL_HW, &priv->status) ||
--	       test_bit(STATUS_RF_KILL_SW, &priv->status);
-+	return iwl3945_is_rfkill_hw(priv) ||
-+		iwl3945_is_rfkill_sw(priv);
- }
+The bridge needs to set promiscuous mode on both interfaces.
 
- static inline int iwl3945_is_ready_rf(struct iwl3945_priv *priv)
-@@ -8299,18 +8309,21 @@ static int iwl3945_rfkill_soft_rf_kill(void
-*data, enum rfkill_state state)
- 	mutex_lock(&priv->mutex);
+Case 2: Ethernet to 802.11 through AP
+-------------------------------------
 
- 	switch (state) {
--	case RFKILL_STATE_ON:
--		iwl3945_radio_kill_sw(priv, 0);
--		/* if HW rf-kill is set dont allow ON state */
--		if (iwl3945_is_rfkill(priv))
-+	case RFKILL_STATE_UNBLOCKED:
-+		if (iwl3945_is_rfkill_hw(priv)) {
- 			err = -EBUSY;
-+			goto out_unlock;
-+		}
-+		iwl3945_radio_kill_sw(priv, 0);
- 		break;
--	case RFKILL_STATE_OFF:
-+	case RFKILL_STATE_SOFT_BLOCKED:
- 		iwl3945_radio_kill_sw(priv, 1);
--		if (!iwl3945_is_rfkill(priv))
--			err = -EBUSY;
-+		break;
-+	default:
-+		IWL_WARNING("we recieved unexpected RFKILL state %d\n", state);
- 		break;
- 	}
-+out_unlock:
- 	mutex_unlock(&priv->mutex);
+A <----> BRIDGE/AP -))  ((- B
 
- 	return err;
-@@ -8333,7 +8346,7 @@ int iwl3945_rfkill_init(struct iwl3945_priv *priv)
+The ethernet interface needs to be in promiscuous mode so that frames from A to
+B are received by the bridge and then forwarded.
 
- 	priv->rfkill_mngr.rfkill->name = priv->cfg->name;
- 	priv->rfkill_mngr.rfkill->data = priv;
--	priv->rfkill_mngr.rfkill->state = RFKILL_STATE_ON;
-+	priv->rfkill_mngr.rfkill->state = RFKILL_STATE_UNBLOCKED;
- 	priv->rfkill_mngr.rfkill->toggle_radio = iwl3945_rfkill_soft_rf_kill;
- 	priv->rfkill_mngr.rfkill->user_claim_unsupported = 1;
+However, the wlan interface does _not_ need to be a promiscuous mode. A 802.11
+frame from B to A will have:
 
-@@ -8408,10 +8421,15 @@ void iwl3945_rfkill_set_hw_state(struct
-iwl3945_priv *priv)
- 	if (!priv->rfkill_mngr.rfkill)
- 		return;
+ToDS
+RA = BSSID = MAC_AP
+TA = SA = MAC_B
+DA = MAC_A
 
--	if (!iwl3945_is_rfkill(priv))
--		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_ON;
-+	if (iwl3945_is_rfkill_hw(priv)) {
-+		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_HARD_BLOCKED;
-+		return;
-+	}
-+
-+	if (!iwl3945_is_rfkill_sw(priv))
-+		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_UNBLOCKED;
- 	else
--		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_OFF;
-+		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
- }
- #endif
+Frames are naturally addressed to the AP, so the wlan interface does not need to
+be in promiscuous mode. Activating promiscuous mode would actually force the
+device to deal with many frames it does not really have to deal with.
+
+Case 3: Ethernet to 802.11 through IBSS / Managed STAs
+------------------------------------------------------
+
+A <----> BRIDGE/IBSS_STA_B -))  ((- IBSS_STA_C
+
+or
+
+A <----> BRIDGE/STA -))  ((- AP
+
+In this case the frames on the wireless segment will not be naturally addressed
+to the bridge, so activating promiscuous mode on the wireless interface would be
+necessary for the bridge to work. However there are three problems here:
+
+First as Jouni Malinen states [1], this would not comply with 802.11 standard,
+which does not allow to use as SA a MAC address other than our own. If we do it
+anyway, we will have to look for 802.11 ACKs to the MAC address we bridge to
+control frame retransmissions. I do not think any device does this.
+
+Second, such a bridge would be responsible for sending 802.11 ACKs for any
+802.11 frame addressed to a MAC in the ethernet segment it bridges to. As acking
+is usually implemented at MAC level I do not think any device supports this.
+
+Third, on the managed STA case, the STA would have to fake an association with
+the AP for A (and every other node in the ethernet segment it bridges to).  While
+doable, it adds unnecessary ugly complexity.
+
+Even with these problems the bridging might "work", but every frame on the wlan
+segment from/to the bridged ethernet will have to be retransmitted the maximum
+number of times since acks would not work properly.
+
+Given this three cases, the best would be to consider case 3 to be not
+supported (it is indeed not supported, AFAIK), and apply the patch below.
+
+Please let me know what you think of this patch and whether it could interfere
+with any functionality.
+
+Nomenclature
+RA = receiver address
+TA = transmitter address
+SA = source address
+BSSID = basic service set identifier
+<----> = Ethernet link
+-)) ((- = 802.11 link
+
+[1]: http://marc.info/?l=linux-wireless&m=117881727809631&w=2
+
+Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+---
+ net/bridge/br_if.c |   13 +++++++++++--
+ 1 files changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/net/bridge/br_if.c b/net/bridge/br_if.c
+index c2397f5..155bd90 100644
+--- a/net/bridge/br_if.c
++++ b/net/bridge/br_if.c
+@@ -135,7 +135,8 @@ static void del_nbp(struct net_bridge_port *p)
+ 
+ 	sysfs_remove_link(br->ifobj, dev->name);
+ 
+-	dev_set_promiscuity(dev, -1);
++	if (!dev->ieee80211_ptr)
++		dev_set_promiscuity(dev, -1);
+ 
+ 	spin_lock_bh(&br->lock);
+ 	br_stp_disable_port(p);
+@@ -389,7 +390,15 @@ int br_add_if(struct net_bridge *br, struct net_device *dev)
+ 		goto err2;
+ 
+ 	rcu_assign_pointer(dev->br_port, p);
+-	dev_set_promiscuity(dev, 1);
++	/*
++	 * 802.11 interfaces working as Access Points do not need to be set to
++	 * promiscuous mode for bridging, as every frame is addressed to them.
++	 *
++	 * Bridging of 802.11 interfaces which are not in AP mode is not
++	 * supported.
++	 */
++	if (!dev->ieee80211_ptr)
++		dev_set_promiscuity(dev, 1);
+ 
+ 	list_add_rcu(&p->list, &br->port_list);
+ 
+-- 
+1.5.4.3
+
+
+
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
+
+
