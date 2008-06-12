@@ -1,41 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43924
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755714AbYFDPr6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2008 11:47:58 -0400
-Date: Wed, 04 Jun 2008 08:47:57 -0700 (PDT)
-Message-Id: <20080604.084757.236655460.davem@davemloft.net> (sfid-20080604_174801_830334_128C2AA3)
-To: dwmw2@infradead.org
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	kirill@shutemov.name
-Subject: Re: [PATCH] wireless.h: improve userland include-ability
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1212593172.32207.114.camel@pmac.infradead.org>
-References: <1212587529.32207.82.camel@pmac.infradead.org>
-	<20080604.080237.66646394.davem@davemloft.net>
-	<1212593172.32207.114.camel@pmac.infradead.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mx.i-worx.ca ([64.34.99.52]:53404 "EHLO mx.i-worx.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753167AbYFLHpS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2008 03:45:18 -0400
+From: Administrator <TrendMicro.SRV15@i-worx.ca>
+To: <luisca@cozybit.com>
+CC: <j@w1.fi>, <bridge@linux-foundation.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [MailServer Notification]Attachment Blocking Notification
+Date: Thu, 12 Jun 2008 00:40:02 -0700
+Message-ID: <F9B913D16C014EC0B512B8D3BDCBFFEF@iworx.ca> (sfid-20080612_094522_974420_B45C3772)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Woodhouse <dwmw2@infradead.org>
-Date: Wed, 04 Jun 2008 16:26:12 +0100
-
-> -#ifndef __KERNEL_STRICT_NAMES
-> +#if defined(__KERNEL__) || defined(_LOOSE_KERNEL_NAMES)
-
-This reminds me that I noticed recently that unifdef doesn't
-handle multiple conditions in an #if test involving
-__KERNEL__ properly.  So, for example, for something else
-in wireless.h I was working on I had to use:
-
-#ifdef __KERNEL__
-#ifdef CONFIG_COMPAT
-
-instead of the more usual:
-
-#if defined(__KERNEL__) && defined(CONFIG_COMPAT)
-
-otherwise I'd get check headers errors during the build.
+The attachment "signature.asc" has been blocked,
+and action "Quarantine message part" has been taken on 6/12/2008 12:39:53 
+AM.
+Message details:
+Server: I-WORX-SRV-14
+Sender: johannes@sipsolutions.net;
+Recipient: 
+luisca@cozybit.com;j@w1.fi;bridge@linux-foundation.org;linux-wireless@vger.kernel.org;
+Subject: Re: [Bridge] [RFC] Do not activate promiscuous mode on 
+wlaninterfaces for	bridging.
+Attachment name: signature.asc
