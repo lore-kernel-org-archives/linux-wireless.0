@@ -1,162 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:43598 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751040AbYF0Pex (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.251]:21187 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750894AbYFLQZi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2008 11:34:53 -0400
-Date: Fri, 27 Jun 2008 12:34:47 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: Re: [PATCH] wireless: remove RFKILL_STATE_HARD_BLOCKED warnings
-Message-ID: <20080627153447.GA24702@khazad-dum.debian.net> (sfid-20080627_173525_937228_7A678715)
-References: <1214579554-14581-1-git-send-email-linville@tuxdriver.com>
+	Thu, 12 Jun 2008 12:25:38 -0400
+Received: by an-out-0708.google.com with SMTP id d40so880498and.103
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 09:25:37 -0700 (PDT)
+Message-ID: <5ff0631c0806120925m1e00482du5175c9b9a2f7f4dd@mail.gmail.com> (sfid-20080612_182544_336088_BE80596E)
+Date: Thu, 12 Jun 2008 18:25:35 +0200
+From: "Nicolas Deschildre" <ndeschildre@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [OOPS] rt2x00: unplugging an rt73 device oops at usb_kill_urb+0x14/0xd0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1214579554-14581-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 27 Jun 2008, John W. Linville wrote:
->   CC [M]  drivers/net/wireless/b43/rfkill.o
-> drivers/net/wireless/b43/rfkill.c: In function ???b43_rfkill_soft_toggle???:
-> drivers/net/wireless/b43/rfkill.c:90: warning: enumeration value ???RFKILL_STATE_HARD_BLOCKED??? not handled in switch
-> 
->   CC [M]  drivers/net/wireless/b43legacy/rfkill.o
-> drivers/net/wireless/b43legacy/rfkill.c: In function ???b43legacy_rfkill_soft_toggle???:
-> drivers/net/wireless/b43legacy/rfkill.c:92: warning: enumeration value ???RFKILL_STATE_HARD_BLOCKED??? not handled in switch
-> 
->   CC [M]  drivers/net/wireless/iwlwifi/iwl-rfkill.o
-> drivers/net/wireless/iwlwifi/iwl-rfkill.c: In function ???iwl_rfkill_soft_rf_kill???:
-> drivers/net/wireless/iwlwifi/iwl-rfkill.c:56: warning: enumeration value ???RFKILL_STATE_HARD_BLOCKED??? not handled in switch
-> 
-> Also handle RFKILL_STATE_{ON,OFF} -> RFKILL_STATE_{UNBLOCKED,SOFT_BLOCKED}
-> conversion since I'm already here...
-> 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+I tried the wireless compatibilty stack from the 5 June.
+When unplugging a RT73 device from its USB slot, I get the following oops :
 
-Acked-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+[  703.840132] usb 3-3: USB disconnect, address 2
+[  703.840623] phy1 -> rt2x00usb_vendor_request: Error - Vendor
+Request 0x07 failed for offset 0x3040 with error -19.
+[  703.840636] phy1 -> rt2x00usb_vendor_request: Error - Vendor
+Request 0x06 failed for offset 0x3040 with error -19.
+[  703.840646] phy1 -> rt2x00usb_vendor_request: Error - Vendor
+Request 0x06 failed for offset 0x3028 with error -19.
+[  703.840655] phy1 -> rt2x00usb_vendor_request: Error - Vendor
+Request 0x06 failed for offset 0x3064 with error -19.
+[  703.840663] phy1 -> rt2x00usb_vendor_request: Error - Vendor
+Request 0x0c failed for offset 0x0000 with error -19.
+[  703.840699] BUG: unable to handle kernel paging request at virtual
+address f0000182
+[  703.840706] printing eip: e089fee4 *pde = 00000000
+[  703.840714] Oops: 0000 [#1] SMP
+[  703.840720] Modules linked in: rt2500usb rt73usb crc_itu_t
+rt2x00usb af_packet arc4 ecb blkcipher rt2500pci rt2x00pci rt2x00lib
+rfkill input_polldev mac80211 cfg80211 eeprom_93cx6 ipv6 rfcomm l2cap
+bluetooth ppdev powernow_k8 cpufreq_userspace cpufreq_powersave
+cpufreq_conservative cpufreq_ondemand cpufreq_stats freq_table sbs
+dock sbshc iptable_filter ip_tables x_tables lp joydev pcmcia evdev
+parport_pc parport snd_intel8x0 snd_ac97_codec ac97_bus snd_pcm_oss
+snd_mixer_oss psmouse serio_raw snd_pcm video output battery container
+ac snd_seq_dummy yenta_socket rsrc_nonstatic pcmcia_core snd_seq_oss
+snd_seq_midi snd_rawmidi pcspkr wmi_acer snd_seq_midi_event snd_seq
+k8temp button snd_timer snd_seq_device snd soundcore snd_page_alloc
+shpchp pci_hotplug amd64_agp agpgart i2c_nforce2 i2c_core ext3 jbd
+mbcache sg sr_mod cdrom sd_mod pata_amd ata_generic pata_acpi 8139too
+8139cp mii libata scsi_mod ehci_hcd ohci_hcd usbcore thermal processor
+fan fbcon tileblit font bitblit softcursor fuse
+[  703.840836]
+[  703.840841] Pid: 1439, comm: khubd Not tainted (2.6.24-19-generic #1)
+[  703.840847] EIP: 0060:[<e089fee4>] EFLAGS: 00010286 CPU: 0
+[  703.840896] EIP is at usb_kill_urb+0x14/0xd0 [usbcore]
+[  703.840901] EAX: 00000000 EBX: f000015a ECX: 00000282 EDX: ddf60000
+[  703.840907] ESI: 00000002 EDI: deb98e40 EBP: deb98e40 ESP: ddf61e10
+[  703.840913]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
+[  703.840918] Process khubd (pid: 1439, ti=ddf60000 task=dde5f140
+task.ti=ddf60000)
+[  703.840923] Stack: 00000000 00000040 0000000c ddf61e8c ded74e00
+00000028 00000002 e0c30796
+[  703.840936]        00000000 00000000 00000000 00000000 000001f4
+ddf61e8c ded74e00 deb98180
+[  703.840947]        e0c22dd8 00003064 ddf61e8c 00000004 000001f4
+00000287 c01a5201 00000003
+[  703.840959] Call Trace:
+[  703.840991]  [<e0c30796>] rt2x00usb_disable_radio+0x96/0xc0 [rt2x00usb]
+[  703.841038]  [<e0c22dd8>] rt73usb_set_device_state+0xe18/0x1050 [rt73usb]
+[  703.841071]  [<c01a5201>] find_inode+0x31/0x60
+[  703.841133]  [<e0c12482>] rt2x00lib_disable_radio+0x52/0x80 [rt2x00lib]
+[  703.841154]  [<e0c124bd>] rt2x00lib_remove_dev+0xd/0x40 [rt2x00lib]
+[  703.841173]  [<e0c309b0>] rt2x00usb_disconnect+0x20/0x60 [rt2x00usb]
+[  703.841202]  [<e08a36b0>] usb_unbind_interface+0x50/0xb0 [usbcore]
+[  703.841267]  [<c0282644>] __device_release_driver+0x64/0xa0
+[  703.841287]  [<c0282ab3>] device_release_driver+0x23/0x40
+[  703.841300]  [<c0281f1b>] bus_remove_device+0x4b/0x70
+[  703.841313]  [<c02804f5>] device_del+0x135/0x250
+[  703.841342]  [<e08a07f0>] usb_disable_device+0x80/0xf0 [usbcore]
+[  703.841402]  [<e089c3d8>] usb_disconnect+0x98/0x130 [usbcore]
+[  703.841485]  [<e089d857>] hub_thread+0x447/0xcb0 [usbcore]
+[  703.841633]  [<c0140c20>] autoremove_wake_function+0x0/0x40
+[  703.841676]  [<e089d410>] hub_thread+0x0/0xcb0 [usbcore]
+[  703.841721]  [<c0140962>] kthread+0x42/0x70
+[  703.841728]  [<c0140920>] kthread+0x0/0x70
+[  703.841743]  [<c0105677>] kernel_thread_helper+0x7/0x10
+[  703.841776]  =======================
+[  703.841780] Code: 8b 48 2c b2 d5 85 c9 74 e7 b2 98 e9 67 fe ff ff
+8d b4 26 00 00 00 00 56 53 89 c3 83 ec 14 e8 54 af a7 df 85 db 0f 84
+ad 00 00 00 <8b> 43 28 85 c0 0f 84 a2 00 00 00 8b 43 2c 85 c0 0f 84 97
+00 00
+[  703.841832] EIP: [<e089fee4>] usb_kill_urb+0x14/0xd0 [usbcore]
+SS:ESP 0068:ddf61e10
 
-> ---
->  drivers/net/wireless/b43/rfkill.c          |    7 +++++--
->  drivers/net/wireless/b43legacy/rfkill.c    |    8 ++++++--
->  drivers/net/wireless/iwlwifi/iwl-rfkill.c  |    7 +++++--
->  drivers/net/wireless/rt2x00/rt2x00rfkill.c |    7 +++++--
->  4 files changed, 21 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
-> index 11f53cb..4cca203 100644
-> --- a/drivers/net/wireless/b43/rfkill.c
-> +++ b/drivers/net/wireless/b43/rfkill.c
-> @@ -88,7 +88,7 @@ static int b43_rfkill_soft_toggle(void *data, enum rfkill_state state)
->  		goto out_unlock;
->  	err = 0;
->  	switch (state) {
-> -	case RFKILL_STATE_ON:
-> +	case RFKILL_STATE_UNBLOCKED:
->  		if (!dev->radio_hw_enable) {
->  			/* No luck. We can't toggle the hardware RF-kill
->  			 * button from software. */
-> @@ -98,10 +98,13 @@ static int b43_rfkill_soft_toggle(void *data, enum rfkill_state state)
->  		if (!dev->phy.radio_on)
->  			b43_radio_turn_on(dev);
->  		break;
-> -	case RFKILL_STATE_OFF:
-> +	case RFKILL_STATE_SOFT_BLOCKED:
->  		if (dev->phy.radio_on)
->  			b43_radio_turn_off(dev, 0);
->  		break;
-> +	default:
-> +		b43warn(wl, "Received unexpected rfkill state %d.\n", state);
-> +		break;
->  	}
->  out_unlock:
->  	mutex_unlock(&wl->mutex);
-> diff --git a/drivers/net/wireless/b43legacy/rfkill.c b/drivers/net/wireless/b43legacy/rfkill.c
-> index d178dfb..8935a30 100644
-> --- a/drivers/net/wireless/b43legacy/rfkill.c
-> +++ b/drivers/net/wireless/b43legacy/rfkill.c
-> @@ -90,7 +90,7 @@ static int b43legacy_rfkill_soft_toggle(void *data, enum rfkill_state state)
->  		goto out_unlock;
->  	err = 0;
->  	switch (state) {
-> -	case RFKILL_STATE_ON:
-> +	case RFKILL_STATE_UNBLOCKED:
->  		if (!dev->radio_hw_enable) {
->  			/* No luck. We can't toggle the hardware RF-kill
->  			 * button from software. */
-> @@ -100,10 +100,14 @@ static int b43legacy_rfkill_soft_toggle(void *data, enum rfkill_state state)
->  		if (!dev->phy.radio_on)
->  			b43legacy_radio_turn_on(dev);
->  		break;
-> -	case RFKILL_STATE_OFF:
-> +	case RFKILL_STATE_SOFT_BLOCKED:
->  		if (dev->phy.radio_on)
->  			b43legacy_radio_turn_off(dev, 0);
->  		break;
-> +	default:
-> +		b43legacywarn(wl, "Received unexpected rfkill state %d.\n",
-> +			      state);
-> +		break;
->  	}
->  
->  out_unlock:
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.c b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-> index 4624ac7..ffefbb4 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-> @@ -54,17 +54,20 @@ static int iwl_rfkill_soft_rf_kill(void *data, enum rfkill_state state)
->  	mutex_lock(&priv->mutex);
->  
->  	switch (state) {
-> -	case RFKILL_STATE_ON:
-> +	case RFKILL_STATE_UNBLOCKED:
->  		iwl_radio_kill_sw_enable_radio(priv);
->  		/* if HW rf-kill is set dont allow ON state */
->  		if (iwl_is_rfkill(priv))
->  			err = -EBUSY;
->  		break;
-> -	case RFKILL_STATE_OFF:
-> +	case RFKILL_STATE_SOFT_BLOCKED:
->  		iwl_radio_kill_sw_disable_radio(priv);
->  		if (!iwl_is_rfkill(priv))
->  			err = -EBUSY;
->  		break;
-> +	default:
-> +		IWL_WARNING("we recieved unexpected RFKILL state %d\n", state);
-> +		break;
->  	}
->  	mutex_unlock(&priv->mutex);
->  
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00rfkill.c b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-> index fcef988..207281c 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-> @@ -45,14 +45,17 @@ static int rt2x00rfkill_toggle_radio(void *data, enum rfkill_state state)
->  	if (!test_bit(DEVICE_STARTED, &rt2x00dev->flags))
->  		return 0;
->  
-> -	if (state == RFKILL_STATE_ON) {
-> +	if (state == RFKILL_STATE_UNBLOCKED) {
->  		INFO(rt2x00dev, "Hardware button pressed, enabling radio.\n");
->  		__clear_bit(DEVICE_DISABLED_RADIO_HW, &rt2x00dev->flags);
->  		retval = rt2x00lib_enable_radio(rt2x00dev);
-> -	} else if (state == RFKILL_STATE_OFF) {
-> +	} else if (state == RFKILL_STATE_SOFT_BLOCKED) {
->  		INFO(rt2x00dev, "Hardware button pressed, disabling radio.\n");
->  		__set_bit(DEVICE_DISABLED_RADIO_HW, &rt2x00dev->flags);
->  		rt2x00lib_disable_radio(rt2x00dev);
-> +	} else {
-> +		WARNING(rt2x00dev, "Received unexpected rfkill state %d.\n",
-> +			state);
->  	}
->  
->  	return retval;
+Thanks,
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Nicolas
