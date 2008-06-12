@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47577 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753304AbYFPUWi (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.235]:60607 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755721AbYFLW06 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2008 16:22:38 -0400
-Subject: Re: [PATCH] mac80211: remove shared key todo
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1213647566.18384.6.camel@localhost.localdomain>
-References: <1213642529.3803.47.camel@johannes.berg>
-	 <1213647566.18384.6.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ae5fUZFtWlPf9p9EWJnc"
-Date: Mon, 16 Jun 2008 22:21:49 +0200
-Message-Id: <1213647709.3803.50.camel@johannes.berg> (sfid-20080616_222253_276747_9564BA71)
-Mime-Version: 1.0
+	Thu, 12 Jun 2008 18:26:58 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2245591rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 15:26:58 -0700 (PDT)
+Message-ID: <1ba2fa240806121526g2ed0c7u733d5620cb790eb6@mail.gmail.com> (sfid-20080613_002702_532019_30A61E96)
+Date: Fri, 13 Jun 2008 01:26:58 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Jiri Slaby" <jirislaby@gmail.com>
+Subject: Re: Problem: Out of memory after 2days with 2GB RAM
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Rik van Riel" <riel@redhat.com>,
+	"Zdenek Kabelac" <zdenek.kabelac@gmail.com>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+	yi.zhu@intel.com, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <48519577.8000402@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <c4e36d110806120307n20cce692s9c136f11596f5ab0@mail.gmail.com>
+	 <20080612093833.0fb9cdd6@bree.surriel.com>
+	 <1213278884.3936.15.camel@johannes.berg>
+	 <1ba2fa240806120843s268b2ff4mb45a11adf11afc7f@mail.gmail.com>
+	 <48519577.8000402@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-Ae5fUZFtWlPf9p9EWJnc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2008-06-16 at 16:19 -0400, Dan Williams wrote:
-> On Mon, 2008-06-16 at 20:55 +0200, Johannes Berg wrote:
-> > Adding shared key authentication is not going to happen anyway.
->=20
-> +1; I've _never_ heard or seen anyone using Shared Key auth with adhoc.
-> How would that work anyway, given that there's no AP to send you the
-> challenge text?  Just auth against some random peer?
-
-I have no idea. Usually, you don't even do open auth for IBSS, there's
-just no point. Unless you get into IBSS with encryption, but we don't
-really support that yet, and we probably never will actually support
-that without the userspace MLME in wpa supplicant.
-
-johannes
-
---=-Ae5fUZFtWlPf9p9EWJnc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIVstZAAoJEKVg1VMiehFYDLEP/R8XsQbhyqzCtVxeTL9JBOlD
-cHtjAGPoKpDDXHgS27OlBXP9i1KXu/Nzo+JqKa6+GOkciAA1VMjQZvnnpB2TEosd
-6y/V4BYXJe/zZ/lSXWcoWBMb4rXHJUxyJ7UejMuKqKon/2lkNVWBi2skOZdPkbQZ
-woko1inFBfCbbjVFtHvTv4LcGp0dZrzlLu0GXfBDcf2fvESU3JSGUl2ku4/Alx+r
-q+NaZ4pHGww3Trl2JBRGBIZ8xg7bjnezWa/daTvbmtZrV3pKdumH89qujQc+SufN
-L9w4HEuneQHbWLGL7s9ag8OfUUWLQ77VSkI5fe4MpOY9nJhfvDj59Wd5XPltwpTm
-CrRMS7M0qQZJERmmHOTUhepphDZG+qZt4sEJx3nxc6mfOksdIKQUFkX9abPXsSAR
-Z49JfB8LzF7Ocwz7mqQuT039SpKb2fpZlQzKgBhKpsg66XNaXfDQlPCERN8gUVbP
-uCl/5OoSbzvnGGgwaxksFoZEkLWx0i527CQBZE2UaBVjoGlBzPvEz5SzLNpBCXaC
-PCqfwvEn4KFsOEk2FN+ow64txoKfRqSE8jMlMkjzcQaylD57hlecJpYLYuLglmiu
-+3/uhDHkJTH9dRdCY30SmJMCGz/tyGssplpDcmL25jHjp1vXevzCDT4NcDnXPDQ8
-pZW3gd+j92J68smc9zW/
-=6W9H
------END PGP SIGNATURE-----
-
---=-Ae5fUZFtWlPf9p9EWJnc--
-
+On Fri, Jun 13, 2008 at 12:30 AM, Jiri Slaby <jirislaby@gmail.com> wrote:
+> On 06/12/2008 05:43 PM, Tomas Winkler wrote:
+>>
+>> On Thu, Jun 12, 2008 at 4:54 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>>>
+>>> This cuts the allocation to 10%, or (under) a page in all cases.
+>>
+>> Probably. it would be safe to use vmalloc for allocating txb anyway.
+>> I'll give it a try.
+>
+> Why it wouldn't be "safe". I suggested it to you already, since allocating
+> 64k by kmalloc for descriptors accessed only in kernel is crud. Moreover
+> you're mixing the buffer with its descriptors here? Or what you're
+> considering to vmalloc?
+>
+Not that. I just wasn't sure when I dropped the line  I'm not doing it
+under some spinlock or something like that.
+Tomas
