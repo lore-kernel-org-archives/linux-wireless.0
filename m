@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:44821 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752536AbYFRJnx (ORCPT
+Received: from elasmtp-dupuy.atl.sa.earthlink.net ([209.86.89.62]:35840 "EHLO
+	elasmtp-dupuy.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753662AbYFLU0G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 05:43:53 -0400
-From: bruno randolf <br1@einfach.org>
-To: Vladimir Koutny <vlado@work.ksp.sk>
-Subject: Re: [PATCH] mac80211: eliminate IBSS warning in rate_lowest_index()
-Date: Sat, 14 Jun 2008 20:41:04 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <48528944.2040907@work.ksp.sk>
-In-Reply-To: <48528944.2040907@work.ksp.sk>
+	Thu, 12 Jun 2008 16:26:06 -0400
+Message-ID: <4851864B.4040103@earthlink.net> (sfid-20080612_222610_567193_3B5C071E)
+Date: Thu, 12 Jun 2008 16:25:47 -0400
+From: Stephen Clark <sclark46@earthlink.net>
+Reply-To: sclark46@earthlink.net
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200806142041.04146.br1@einfach.org> (sfid-20080618_114358_179019_E8868D60)
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only	with	disable_hw_scan=1
+References: <484FEA26.1040305@gmail.com>	<1213241315.7814.696.camel@debian.sh.intel.com> <20080612135936.GA5031@tuxdriver.com>
+In-Reply-To: <20080612135936.GA5031@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 13 June 2008 16:50:44 Vladimir Koutny wrote:
-> In IBSS mode prior to join/creation of new IBSS it is possible that
-> a frame from unknown station is received and an ibss_add_sta() is
-> called. This will cause a warning in rate_lowest_index() since the
-> list of supported rates of our station is not initialized yet.
->
-> The fix is to add ibss stations with a rate we received that frame
-> at; this single-element set will be extended later based on beacon
-> data. Also there is no need to store stations from a foreign IBSS.
+John W. Linville wrote:
+> On Thu, Jun 12, 2008 at 11:28:35AM +0800, Zhu Yi wrote:
+> 
+>> I don't understand why "disable_hw_scan=1" works for you. Can you also
+>> attach the dmesg for it?
+> 
+> How does the hardware scan differ from what mac80211 does when
+> scanning?  I still see a lot of mysterious iwlwifi (especially iwl3945)
+> problems in Fedora that seem to disappear with disable_hw_scan=1.
+> 
+> Honestly I'm tempted to change it to "enable_hw_scan" instead...
+> 
+> John
+It has been a while since I tested without "disable_hw_scan=1" - my 3945 works
+every time with it - last time I tested without it was very hit or miss. 
+Sometimes taking over 10 minutes to get associated, sometimes never and this
+was with me right next to the WAP.
 
-makes sense.
+I think the latest in the fedora kernel I am using is 1.26kds as I recall.
 
-Acked-by: Bruno Randolf <br1@einfach.org>
+Steve
 
-> -	sta->supp_rates[local->hw.conf.channel->band] =
-> -		sdata->u.sta.supp_rates_bits[local->hw.conf.channel->band];
-> +	if (supp_rates)
-> +		sta->supp_rates[band] = supp_rates;
-> +	else
-> +		sta->supp_rates[band] = sdata->u.sta.supp_rates_bits[band];
+-- 
 
-i'm not sure about that last line. i know, it was like that before - but i 
-think we shouldn't assume another station supports the same rates as we do in 
-any case. we normally get the supported rates of another station thru the 
-beacons we receive. or from received data packets (thanks to this patch).
+"They that give up essential liberty to obtain temporary safety,
+deserve neither liberty nor safety."  (Ben Franklin)
 
-bruno
+"The course of history shows that as a government grows, liberty
+decreases."  (Thomas Jefferson)
+
+
