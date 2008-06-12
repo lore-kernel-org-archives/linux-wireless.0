@@ -1,31 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:6373 "EHLO mga02.intel.com"
+Received: from c60.cesmail.net ([216.154.195.49]:45080 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753740AbYF3B2R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jun 2008 21:28:17 -0400
-Subject: Re: pull request: wireless-next-2.6 2008-06-27
-From: Zhu Yi <yi.zhu@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: drago01 <drago01@gmail.com>, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <20080627170751.GB20277@tuxdriver.com>
-References: <20080627153541.GA16597@tuxdriver.com>
-	 <f6ca9fed0806270854u674a9d5aled463865e07829c8@mail.gmail.com>
-	 <20080627170751.GB20277@tuxdriver.com>
+	id S1753347AbYFLRNJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2008 13:13:09 -0400
+Subject: Re: [OOPS] rt2x00: unplugging an rt73 device oops at
+	usb_kill_urb+0x14/0xd0
+From: Pavel Roskin <proski@gnu.org>
+To: Nicolas Deschildre <ndeschildre@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <5ff0631c0806120925m1e00482du5175c9b9a2f7f4dd@mail.gmail.com>
+References: <5ff0631c0806120925m1e00482du5175c9b9a2f7f4dd@mail.gmail.com>
 Content-Type: text/plain
-Date: Mon, 30 Jun 2008 09:26:54 +0800
-Message-Id: <1214789214.14590.385.camel@debian.sh.intel.com> (sfid-20080630_032821_549966_F4B2B028)
+Date: Thu, 12 Jun 2008 13:13:06 -0400
+Message-Id: <1213290786.2408.2.camel@dv> (sfid-20080612_191312_604644_006D8298)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-06-27 at 13:07 -0400, John W. Linville wrote:
-> 
-> I have no record of that.  Could someone send me a correct patch on
-> top of this one?
+On Thu, 2008-06-12 at 18:25 +0200, Nicolas Deschildre wrote:
+> I tried the wireless compatibilty stack from the 5 June.
+> When unplugging a RT73 device from its USB slot, I get the following
+> oops :
+...
+> [  703.841832] EIP: [<e089fee4>] usb_kill_urb+0x14/0xd0 [usbcore]
+> SS:ESP 0068:ddf61e10
 
-Will submit a patch on top your merged one.
+This is fixed in today's wireless-testing.
+compat-wireless-2008-06-12.tar.bz2 appears to contain the fix already.
 
-Thanks,
--yi
-
+-- 
+Regards,
+Pavel Roskin
