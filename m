@@ -1,69 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:12449 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752482AbYFLBtr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 21:49:47 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 14/29] iwlwifi: fix resart flow after fw error
-Date: Thu, 12 Jun 2008 09:47:04 +0800
-Message-Id: <1213235239-2954-15-git-send-email-yi.zhu@intel.com> (sfid-20080612_041914_298053_5BBCE2B8)
-In-Reply-To: <1213235239-2954-14-git-send-email-yi.zhu@intel.com>
-References: <1213235239-2954-1-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-2-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-3-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-4-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-5-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-6-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-7-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-8-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-9-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-10-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-11-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-12-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-13-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-14-git-send-email-yi.zhu@intel.com>
+Received: from yw-out-2324.google.com ([74.125.46.28]:12521 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753550AbYFLQiN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2008 12:38:13 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so2257941ywe.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 09:38:06 -0700 (PDT)
+Message-ID: <1ba2fa240806120938i248d38bek2a9155defff9428f@mail.gmail.com> (sfid-20080612_183817_848348_749E3178)
+Date: Thu, 12 Jun 2008 19:38:05 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Zdenek Kabelac" <zdenek.kabelac@gmail.com>
+Subject: Re: Problem: Out of memory after 2days with 2GB RAM
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Rik van Riel" <riel@redhat.com>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+	yi.zhu@intel.com, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <c4e36d110806120712h1237d084v2eaeb494cc48b43c@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <c4e36d110806120307n20cce692s9c136f11596f5ab0@mail.gmail.com>
+	 <20080612093833.0fb9cdd6@bree.surriel.com>
+	 <1213278884.3936.15.camel@johannes.berg>
+	 <c4e36d110806120712h1237d084v2eaeb494cc48b43c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Thu, Jun 12, 2008 at 5:12 PM, Zdenek Kabelac
+<zdenek.kabelac@gmail.com> wrote:
+> 2008/6/12 Johannes Berg <johannes@sipsolutions.net>:
+>> On Thu, 2008-06-12 at 09:38 -0400, Rik van Riel wrote:
+>>> On Thu, 12 Jun 2008 12:07:34 +0200
+>>> "Zdenek Kabelac" <zdenek.kabelac@gmail.com> wrote:
+>>>
+>>> > It looks like while there was a huge amount of buffers and caches -
+>>> > system was unable to allocate few pages for kmalloc in iwl3945 driver
+>>> > after resume.
+>>>
+>>> It looks like this is because it wants to allocate 2**5 contiguous
+>>> pages, which is 128kB of contiguous kernel memory.
+>>
+>> 64-bit system I assume?
+>> The allocation should be 256 * 20 * sizeof(struct sk_buff *).
+>>
+>> Try the patch below. It should improve code generation too.
+>
+> I'll surely try you patch - but is the iwl the only driver which needs
+> 128kB continuous memory chunk?
 
-Clear STATUS_FW_ERROR in the _up_ flow before reseting NIC.
-UP flow will otherwise call restart again causing endless restart loop.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 7a9567c..3f54dec 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -2857,9 +2857,6 @@ static void iwl_alive_start(struct iwl_priv *priv)
- 	/* After the ALIVE response, we can send host commands to 4965 uCode */
- 	set_bit(STATUS_ALIVE, &priv->status);
- 
--	/* Clear out the uCode error bit if it is set */
--	clear_bit(STATUS_FW_ERROR, &priv->status);
--
- 	if (iwl_is_rfkill(priv))
- 		return;
- 
-@@ -3099,6 +3096,9 @@ static int __iwl4965_up(struct iwl_priv *priv)
- 			continue;
- 		}
- 
-+		/* Clear out the uCode error bit if it is set */
-+		clear_bit(STATUS_FW_ERROR, &priv->status);
-+
- 		/* start card; "initialize" will load runtime ucode */
- 		iwl4965_nic_start(priv);
- 
--- 
-1.5.3.6
-
+We do some stupid free-alloc sequence on restart this is where it
+fails. I'm still polishing a patch that eliminates it.
+Tomas
