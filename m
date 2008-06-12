@@ -1,53 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:46469 "EHLO ciao.gmane.org"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3916 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756864AbYFJWUE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 18:20:04 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1K6CCA-0003xQ-H8
-	for linux-wireless@vger.kernel.org; Tue, 10 Jun 2008 22:20:02 +0000
-Received: from cpc1-cwma5-0-0-cust137.swan.cable.ntl.com ([80.4.12.138])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2008 22:20:02 +0000
-Received: from sitsofe by cpc1-cwma5-0-0-cust137.swan.cable.ntl.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2008 22:20:02 +0000
-To: linux-wireless@vger.kernel.org
-From: Sitsofe Wheeler <sitsofe@yahoo.com>
-Subject: DEBUG_LOCK_ALLOC causes hostap kernel lockup
-Date: Tue, 10 Jun 2008 23:16:13 +0100
-Message-ID: <g2mufc$c16$1@ger.gmane.org> (sfid-20080611_002021_064537_04BA25D0)
-References: <g2760n$7f0$1@ger.gmane.org> <g2la7s$g8r$1@ger.gmane.org>
-Mime-Version: 1.0
+	id S1758374AbYFLOHD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jun 2008 10:07:03 -0400
+Date: Thu, 12 Jun 2008 09:59:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with
+	disable_hw_scan=1
+Message-ID: <20080612135936.GA5031@tuxdriver.com> (sfid-20080612_160707_406717_273DB365)
+References: <484FEA26.1040305@gmail.com> <1213241315.7814.696.camel@debian.sh.intel.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Cc: kernel-testers@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: kernel-testers@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1213241315.7814.696.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sitsofe Wheeler wrote:
+On Thu, Jun 12, 2008 at 11:28:35AM +0800, Zhu Yi wrote:
 
-> Sitsofe Wheeler wrote:
-> 
->> hostap_pci on a 32bit x86 machine seems to be unstable under load in
->> next-20080604. Using iperf between a wired machine on the other side of
->> the AP and the hostap box makes hostap output the message
->> wifi0: SW TICK stuck? bits=0x0 EvStat=8000 IntEn=e09f
->> before things slowly grind to a halt in a lockup that seemingly needs a
-> 
-> things always seem to be recoverable. Sometimes the system will recover
-> after the lockup with a message like:
-> Clocksource tsc unstable (delta = 9377016871 ns)
-> Time acpi_pm clocksource has been installed.
+> I don't understand why "disable_hw_scan=1" works for you. Can you also
+> attach the dmesg for it?
 
-The lockups seem to be down to DEBUG_LOCK_ALLOC (Lock debugging: detect
-incorrect freeing of live locks). If that is enabled then after enough
-iperf runs the kernel will lock solid. This problems seems to happen in
-kernels from at least 2.6.22 onwards.
+How does the hardware scan differ from what mac80211 does when
+scanning?  I still see a lot of mysterious iwlwifi (especially iwl3945)
+problems in Fedora that seem to disappear with disable_hw_scan=1.
 
-I had no idea that enabling lock checking could itself result in a lockup...
+Honestly I'm tempted to change it to "enable_hw_scan" instead...
 
+John
 -- 
-Sitsofe | http://sucs.org/~sits/
-
+John W. Linville
+linville@tuxdriver.com
