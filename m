@@ -1,41 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4179 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752410AbYF3ORK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 10:17:10 -0400
-Date: Mon, 30 Jun 2008 10:03:30 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johan Adolfsson <Johan.Adolfsson@axis.com>
-Cc: linux-wireless@vger.kernel.org, "'Dan Williams'" <dcbw@redhat.com>
-Subject: Re: [PATCH] Add module parameter to override regioncode on libertas
-Message-ID: <20080630140330.GB6864@tuxdriver.com> (sfid-20080630_161715_229192_68B9D8BB)
-References: <1214580776.10355.16.camel@localhost.localdomain> <054201c8da7b$b12677e0$0137550a@se.axis.com>
+Received: from wa-out-1112.google.com ([209.85.146.179]:48223 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752518AbYFMUEK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jun 2008 16:04:10 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so3402254waf.23
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2008 13:04:10 -0700 (PDT)
+Message-ID: <1ba2fa240806131304n442972eatfd2f35034476c380@mail.gmail.com> (sfid-20080613_220416_488619_EFD04104)
+Date: Fri, 13 Jun 2008 23:04:09 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Maxim Levitsky" <maximlevitsky@gmail.com>
+Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with disable_hw_scan=1
+Cc: "=?ISO-8859-1?Q?Tor_H=E5kon_Haugen?=" <tor.hakon.haugen@gmail.com>,
+	"Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <48528CF0.8050204@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <054201c8da7b$b12677e0$0137550a@se.axis.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <484FEA26.1040305@gmail.com>
+	 <1213241315.7814.696.camel@debian.sh.intel.com>
+	 <20080612135936.GA5031@tuxdriver.com>
+	 <1213342523.7814.865.camel@debian.sh.intel.com>
+	 <20080613130310.GA5333@tuxdriver.com> <48528B63.5030403@gmail.com>
+	 <48528CF0.8050204@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 30, 2008 at 08:36:56AM +0200, Johan Adolfsson wrote:
-> 
-> Resending to linux-wireless after positive feedback on libertas-dev.
-> 
-> Attached is a patch against the 2.6.25 driver that adds a 
-> module parameter called "regioncode" to set the region code
-> in the libertas driver.
-> 
-> Hope the format is ok.
-> Signed-off-by: Johan.Adolfsson@axis.com
+On Fri, Jun 13, 2008 at 6:06 PM, Maxim Levitsky <maximlevitsky@gmail.co=
+m> wrote:
+> Tor H=E5kon Haugen wrote:
+>>
+>> John W. Linville wrote:
+>>> On Fri, Jun 13, 2008 at 03:35:23PM +0800, Zhu Yi wrote:
+>>>> On Thu, 2008-06-12 at 09:59 -0400, John W. Linville wrote:
+>>>>> Honestly I'm tempted to change it to "enable_hw_scan" instead...
+>>>> Give the advantages, I'd like to use it if we can fix the bug (I h=
+aven't
+>>>> seen what the bug is myself). But you are free to change the defau=
+lt
+>>>> value until it is fixed. There is no such problem for 4965, right?
+>>> AFAICT only the 3945 seems to need it.
+>>>
+>>
+>> I can confirm that this also applies to 4965 as a friend of mine has
+>> this card. According to him the card works a lot better with the
+>> parameters "swcrypto=3D1" and "disable_hw_scan=3D1".
+>
+> Just to make it clear,
+> iwl3945 doesn't work at all without disable_hw_scan=3D1 here.
+> The driver just shuts down thee card since it detects microcode error=
+=2E
+>
 
-Anyone want to offer an opinion on how this (overriding the region
-code from the hardware) differs in effect from the patch that disabled
-all regulatory controls on mac80211 devices?
+It looks like this is all caused by the big rate, band patch. Looks
+like A band scan channels are not configured correctly for the
+scanning. This crashes the firmware.
 
->From what I understand about regulatory practices, it seems
-irresponsible to allow a regulatory setting embedded in a device's
-ROM to be so easily overridden?
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Tomas
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
