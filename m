@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:52295 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752548AbYFDDjE (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53070 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755739AbYFMApA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 23:39:04 -0400
-Date: Wed, 4 Jun 2008 00:39:00 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Pavel Roskin <proski@gnu.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, Dmitry Torokhov <dtor@mail.ru>
-Subject: Re: [PATCH 01/12] rfkill: clarify meaning of rfkill states
-Message-ID: <20080604033900.GA30978@khazad-dum.debian.net> (sfid-20080604_053909_464280_15812001)
-References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br> <1212549017-30144-2-git-send-email-hmh@hmh.eng.br> <20080603233202.2ysgs5s9n4cww4s4-cebfxv@webmail.spamcop.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080603233202.2ysgs5s9n4cww4s4-cebfxv@webmail.spamcop.net>
+	Thu, 12 Jun 2008 20:45:00 -0400
+Date: Thu, 12 Jun 2008 17:43:57 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: "Zdenek Kabelac" <zdenek.kabelac@gmail.com>
+Cc: johannes@sipsolutions.net, tomasw@gmail.com, riel@redhat.com,
+	linux-kernel@vger.kernel.org, yi.zhu@intel.com,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: Problem: Out of memory after 2days with 2GB RAM
+Message-Id: <20080612174357.ed9dc10a.akpm@linux-foundation.org> (sfid-20080613_024514_980133_AFC1F805)
+In-Reply-To: <c4e36d110806121311n64890e17h67f49c32481fbb28@mail.gmail.com>
+References: <c4e36d110806120307n20cce692s9c136f11596f5ab0@mail.gmail.com>
+	<20080612093833.0fb9cdd6@bree.surriel.com>
+	<1213278884.3936.15.camel@johannes.berg>
+	<1ba2fa240806120843s268b2ff4mb45a11adf11afc7f@mail.gmail.com>
+	<1ba2fa240806120935r54a080eci7fa6fafc718eed17@mail.gmail.com>
+	<1213290335.3730.4.camel@johannes.berg>
+	<1ba2fa240806121039o376b0a8sdfaacf3a1f4a9e57@mail.gmail.com>
+	<1213292812.3730.21.camel@johannes.berg>
+	<1ba2fa240806121103m60a8ffa4ie11850fedc69d13c@mail.gmail.com>
+	<1213294547.3730.29.camel@johannes.berg>
+	<c4e36d110806121311n64890e17h67f49c32481fbb28@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 03 Jun 2008, Pavel Roskin wrote:
-> Quoting Henrique de Moraes Holschuh <hmh@hmh.eng.br>:
->
->> rfkill really should have been named rfswitch.
->
-> I hope it's not too late to rename.  If it's planned in advance and the 
-> related userspace utilities are given an advance notice, it should go 
-> smoothly.  Linux went through bigger changes.
+On Thu, 12 Jun 2008 22:11:32 +0200
+"Zdenek Kabelac" <zdenek.kabelac@gmail.com> wrote:
 
-Well, after this patch set, it is properly documented enough that people
-won't get confused by the inverted logic.  And rfswitch would still
-cause the same confusion re. input devices, so it wouldn't help much
-there.
+> Well - it's great that there will be saved few kB in allocation of
+> never used pointers in iwl driver - but does this really solve the
+> problem that kernel gets relatively quickly out of memory for
+> allocations of this size - I guess iwl isn't the only driver
+> requesting 32 sequential pages.
 
-> To me, "rfkill" sounds intimidating and evokes thoughts of electronic  
-> warfare, "microwave gun", "disrupting enemy's communications" and such  
-> stuff :-)
+I hope it is the only one.  Doing a 128kb GFP_ATOMIC allocation is
+hopelessly unreliable.  Even a 128k GFP_KERNEL allocation will fail all
+over the place.
 
-Heh :-)
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Please convert the driver to allocate no more than 4k at a time.
