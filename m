@@ -1,52 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:10717 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754619AbYF3QNs (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37303 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752922AbYFMH5f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 12:13:48 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so782006ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2008 09:13:41 -0700 (PDT)
-Message-ID: <69e28c910806300913m6ce12448m1326c3801d727273@mail.gmail.com> (sfid-20080630_181406_795085_0260823C)
-Date: Mon, 30 Jun 2008 18:13:40 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] p54: Add quality output to iwlist and iwconfig
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linville@tuxdriver.com, flamingice@sourmilk.net,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <486904D4.4010705@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <4868fe45.swzEykllJP3Ow73U%Larry.Finger@lwfinger.net>
-	 <1214840530.5507.52.camel@johannes.berg>
-	 <486904D4.4010705@lwfinger.net>
+	Fri, 13 Jun 2008 03:57:35 -0400
+Subject: Re: [PATCH 1/3] iwlwifi: adding channels to sysfs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Ester Kummer <ester.kummer@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+In-Reply-To: <1213343095-8133-2-git-send-email-yi.zhu@intel.com> (sfid-20080613_094711_143440_9808BC8B)
+References: <1213343095-8133-1-git-send-email-yi.zhu@intel.com>
+	 <1213343095-8133-2-git-send-email-yi.zhu@intel.com>
+	 (sfid-20080613_094711_143440_9808BC8B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-87WSRr4SI9IhU7X8xiLK"
+Date: Fri, 13 Jun 2008 09:56:53 +0200
+Message-Id: <1213343813.3860.0.camel@johannes.berg> (sfid-20080613_095738_723149_6EA31056)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 30, 2008 at 6:07 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Johannes Berg wrote:
->>
->> On Mon, 2008-06-30 at 10:39 -0500, Larry.Finger@lwfinger.net wrote:
->>>
->>> The p54 driver family reports a quality of 0 in iwconfig and iwlist
->>> output. This patch calculates a quality number as a percentage of the
->>> rssi to the maximum signal of 127 reported as the maximum signal.
->>
->> Unrelated, do you have a p54 card? Does it work? I wasn't sure whether
->> the tx-info sbk->cb change broke it or not after I fixed up some things
->> there.
->
-> It is DW1450, which is a p54usb. It works with the latest wireless testing,
-> at least in b/g/mode. I don't have an 802.11a AP to try the 5 GHz mode.
->
-> Larry
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 
-What "special" modes work with it? (IBSS, monitor, AP, mesh, etc.)
+--=-87WSRr4SI9IhU7X8xiLK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+On Fri, 2008-06-13 at 15:44 +0800, Zhu Yi wrote:
+> From: Ester Kummer <ester.kummer@intel.com>
+>=20
+> This patch returns channel list to sysfs.
+>=20
+> Signed-off-by: Ester Kummer <ester.kummer@intel.com>
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl4965-base.c |   58 +++++++++++++++++++++=
++++++-
+>  1 files changed, 56 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wi=
+reless/iwlwifi/iwl4965-base.c
+> index 81a1c22..c179b21 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+> @@ -4122,8 +4122,62 @@ static DEVICE_ATTR(power_level, S_IWUSR | S_IRUSR,=
+ show_power_level,
+>  static ssize_t show_channels(struct device *d,
+>  			     struct device_attribute *attr, char *buf)
+>  {
+> -	/* all this shit doesn't belong into sysfs anyway */
+> -	return 0;
+
+Hehe. Do you really have to? You can query this information with
+nl80211. I don't know why you need all that sysfs stuff anyway.
+
+johannes
+
+--=-87WSRr4SI9IhU7X8xiLK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIUihAAAoJEKVg1VMiehFYqmAP/RmnmFJQLZ4qYreUWyVqbFyK
+M8A8QA4ByToSZVaxad1MAZaDps5aQZs3aqN5XZFIZt/Yl0HmeYCDeqhqctukPeKQ
+7W3vYLoO6uL/l3diJZigvDMiuPpzRDmkdsRLayzvow30nkS6qRIkzqGhh/tQBBW6
+x6C5IHmBOu+650yZU7lqS9pPcbybs3k1EbrdTEKg8V56yXsCC70kKLdKz8fOH5np
+HykWsvc0nM2Z73M+efd1bdf25kR/1DZ49O2W67yvpE3OMFI9LW7zfAWlZeJdVROI
+yxKogz3kClFST1qrqn+FWApVK/lux5M6mUagDZIxC+YQx5pIBdIXyld1oIDwYCtS
+vQg6JGq4my883YTZ/l9EBabFhqcRT+nvKK1pUFbuUYZIwH/OKO4CJaYWBS2l1Jfa
+bjmzFTM01zBlk7VxABeD1/JQRzAYTXMwrST1bj9bEwYxeNQbLQMsDRyeKrtBGRM4
+paI6i5kyeQP8PwLqlEsWIjoLXokYvc9NBgL1LrUwCatnpi8xqJlD7yuPMrq3xaBZ
+LrLTAtjCzX44j4Om26M2FumJegiBcWua2lkAjL8S+YlFklFGGAWwvE9Kv3G6koe0
+WW88hDdk8if/9WTp8bI2flrJ+k81uFyxFHKjtXoRaNFS762oSLFp6ecnHjxoK7Y5
+0WrzKcEggTU5kGUAeE+z
+=cTGb
+-----END PGP SIGNATURE-----
+
+--=-87WSRr4SI9IhU7X8xiLK--
+
