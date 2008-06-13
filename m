@@ -1,62 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:52279 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.158]:23963 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753914AbYFLOWV (ORCPT
+	with ESMTP id S1750997AbYFMRhW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 10:22:21 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2500911fgg.17
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 07:22:19 -0700 (PDT)
-Message-ID: <48513117.1060407@gmail.com> (sfid-20080612_162224_549499_857AB218)
-Date: Thu, 12 Jun 2008 17:22:15 +0300
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-MIME-Version: 1.0
+	Fri, 13 Jun 2008 13:37:22 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so2826230fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2008 10:37:20 -0700 (PDT)
 To: Zhu Yi <yi.zhu@intel.com>
-CC: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with disable_hw_scan=1
-References: <484FF375.8010002@gmail.com> <1213237561.7814.688.camel@debian.sh.intel.com> <48511B1D.4010901@gmail.com>
-In-Reply-To: <48511B1D.4010901@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: Re: [2.6.26-rc5] iwlwifi 4965 not working - last on 2.6.23
+Date: Fri, 13 Jun 2008 19:37:03 +0200
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <200806060039.48488.m1k0@wp.pl> <20080606034738.9835782d.akpm@linux-foundation.org> <1213151464.7814.630.camel@debian.sh.intel.com>
+In-Reply-To: <1213151464.7814.630.camel@debian.sh.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200806131937.03680.Michal.Kudla@gmail.com> (sfid-20080613_193727_640255_4CD2F243)
+From: =?utf-8?q?Micha=C5=82_Kud=C5=82a?= <michal.kudla@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maxim Levitsky wrote:
-> Zhu Yi wrote:
->> On Wed, 2008-06-11 at 18:47 +0300, Maxim Levitsky wrote:
->>> I found why I can't reenable wireless with wireless button.
->>>
->>> It turns out that iwlwifi doesn't enable the wireless function after a
->>> R/F kill switch was enabled ether by the button or explicitly.
->>>
->>> I bisected this to commit 5a66926aa9230810704fd5a127966215fd58881e
->>> in linus tree.
->>
->> The card will receive an interrupt when you disable the rf kill switch
->> anyway whatever the wireless function is enabled or not. So the driver
->> will enable the wireless function again. Please check if the interface
->> (wlan0) is up when you disable the rf kill switch later. If it is not,
->> you have to bring it up manually (i.e. ifconfig wlan0 up) to enable the
->> wireless function. Otherwise please provide the dmesg with
->> debug=0x20000.
->>
->> Thanks,
->> -yi
->>
-> 
-> Why didn't I thought about this before...
-> This is exactly what happens, so this isn't a bug.
-> 
-> What happens is the Network manager brings wlan0 down is it detects that
-> there is no link, but this now removes the firmware.
-> 
-> I guess that the right solution is to listen to the wireless button (via 
-> input layer), and turn card on manually.
-> 
-> If I remember correctly there is something like that in kernel, I try to 
-> enable this.
-> 
-> Otherwise this can be implemented in userspace.
-> 
-> Best regards,
->     Maxim Levitsky
+Hi,
 
-Nope 3945 doesn't support rfkill via new rfkill subsystem.
+laptok ~ # modprobe -rv iwl4965
+laptok ~ # modprobe -v iwl4965 debug=3D0x20002
+laptok ~ # dmesg >dmesg-`uname -r`_`date +%F`.txt
+laptok iwlwifi # ls -1
+dmesg-2.6.23-gentoo-r2_2008-06-13.txt
+dmesg-2.6.24.7_2008-06-13.txt
+dmesg-2.6.25-gentoo-r4_2008-06-13.txt
+dmesg-2.6.26-rc5_2008-06-13.txt
+
+results:
+http://michal.kudla.googlepages.com/dmesg-debug0x20002.tar.gz
+
+W li=C5=9Bcie datowanym na =C5=9Broda, 11 czerwca 2008, Zhu Yi pisze:
+>ZY On Fri, 2008-06-06 at 03:47 -0700, Andrew Morton wrote:
+>ZY > > ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>ZY > > iwl4965: Error sending REPLY_WEPKEY: enqueue_hcmd failed: -5
+>ZY > > mac80211-phy0: failed to remove key (0, ff:ff:ff:ff:ff:ff) from
+>ZY > hardware (-5)
+>ZY > > iwl4965: Error sending REPLY_TX_PWR_TABLE_CMD: enqueue_hcmd fai=
+led:
+>ZY > -5
+>ZY > > iwl4965: WARNING: Requesting MAC access during RFKILL wakes up =
+NIC
+>ZY > > iwl4965: WARNING: Requesting MAC access during RFKILL wakes up =
+NIC
+>ZY
+>ZY Looks like a rfkill related problem. Can you please try this patch?
+>ZY http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=3D1673
+>ZY
+>ZY Thanks,
+>ZY -yi
+>ZY
+>ZY
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
