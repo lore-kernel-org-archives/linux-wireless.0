@@ -1,63 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4451 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758312AbYFZRrT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 13:47:19 -0400
-Date: Thu, 26 Jun 2008 13:36:45 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Pavel Roskin <proski@gnu.org>,
-	Stefanik =?iso-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>, cs010101@gmail.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [Q] ath5k : doesn't support AP mode?
-Message-ID: <20080626173645.GB22075@tuxdriver.com> (sfid-20080626_194730_970695_0BE1096A)
-References: <002901c8d737$e51bb2f0$3b0aa8c0@39fb6b6b6f434b3> <69e28c910806260846s3b02cdddlca3ac138acadd8bd@mail.gmail.com> <1214496086.30722.14.camel@dv> <200806261821.31643.mb@bu3sch.de>
+Received: from smtp239.poczta.interia.pl ([217.74.64.239]:7547 "EHLO
+	smtp239.poczta.interia.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754546AbYFMMSF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jun 2008 08:18:05 -0400
+Received: from poczta.interia.pl (mi02.poczta.interia.pl [10.217.12.2])
+	by smtp239.poczta.interia.pl (INTERIA.PL) with ESMTP id 3FA52AE4E5
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2008 14:18:02 +0200 (CEST)
+Received: from [192.168.1.7] (d90-129-241-239.cust.tele2.pl [90.129.241.239])
+	by poczta.interia.pl (INTERIA.PL) with ESMTP id 1F5BF2BC10F
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2008 14:18:00 +0200 (CEST)
+Message-ID: <4852658A.4040402@interia.pl> (sfid-20080613_141810_087212_AF7B3DC5)
+Date: Fri, 13 Jun 2008 14:18:18 +0200
+From: Maciek Kaliszewski <mkalkal@interia.pl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <200806261821.31643.mb@bu3sch.de>
+To: linux-wireless@vger.kernel.org
+Subject: iwl3945 and WPA
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 26, 2008 at 06:21:31PM +0200, Michael Buesch wrote:
-> On Thursday 26 June 2008 18:01:26 Pavel Roskin wrote:
-> > On Thu, 2008-06-26 at 17:46 +0200, Stefanik G=E1bor wrote:
-> >=20
-> > > Maybe we had more people working on/debugging AP mode if we didn'=
-t
-> > > intentionally disable the existing limited support for it... Poss=
-ibly
-> > > print a big warning that "THIS IS NOT STANDARDS_COMPLIANT YET!", =
-but
-> > > outright disabling it and requiring an external patch is IMHO stu=
-pid.
-> > > Perhaps a Kconfig option with EXPERIMENTAL and default=3Dn would =
-be
-> > > better.
-> >=20
-> > I agree.  More people would be looking into AP support for individu=
-al
-> > drivers if mac80211 didn't need a patch.
->=20
-> I'd also like to get something like the following merged:
+I cannot connect to my WIFI/WPA network using iwl3945 driver.
 
-> Subject: mac80211: allow AP and VLAN modes
->=20
-> This patch is based on a patch by Johannes Berg.
-> It allows switching interfaces into AP/VLAN modes using
-> cfg80211 (nl80211). Don't allow doing it with wext because then
-> people will just attempt to do it manually (without hostapd) and
-> complain that it doesn't work.
+debian:/home/u# iwlist wlan0_rename scanning
+wlan0_rename  Scan completed :
+          Cell 01 - Address: 00:1D:7E:43:B3:3F
+                    ESSID:"APTEKA"
+                    Mode:Master
+                    Channel:11
+                    Frequency:2.462 GHz (Channel 11)
+                    Quality=73/100  Signal level:-61 dBm  Noise 
+level=-127 dBm
+                    Encryption key:on
+                    IE: WPA Version 1
+                        Group Cipher : TKIP
+                        Pairwise Ciphers (1) : TKIP
+                        Authentication Suites (1) : PSK
+                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 18 Mb/s
+                              24 Mb/s; 36 Mb/s; 54 Mb/s; 6 Mb/s; 9 Mb/s
+                              12 Mb/s; 48 Mb/s
+                    Extra:tsf=0000003b5a033363
 
-I dunno...that last thing I want is to let this go in and then be
-locked-in to the current API no-matter-what like we now are with WEXT.
+debian:/home/u# cat /etc/wpa_supplicant.conf
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=root
+network={
+     ssid="APTEKA"
+     scan_ssid=1
+     key_mgmt=WPA-PSK
+     psk="xxx"
+}
 
-John
---=20
-John W. Linville
-linville@tuxdriver.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+debian:/home/u# wpa_supplicant -Dwext -iwlan0_rename 
+-c/etc/wpa_supplicant.conf -dd
+Initializing interface 'wlan0_rename' conf '/etc/wpa_supplicant.conf' 
+driver 'wext' ctrl_interface 'N/A' bridge 'N/A'
+Configuration file '/etc/wpa_supplicant.conf' -> '/etc/wpa_supplicant.conf'
+Reading configuration file '/etc/wpa_supplicant.conf'
+ctrl_interface='DIR=/var/run/wpa_supplicant GROUP=root'
+Line: 2 - start of a new network block
+ssid - hexdump_ascii(len=6):
+     41 50 54 45 4b 41                                 APTEKA         
+scan_ssid=1 (0x1)
+key_mgmt: 0x2
+PSK (ASCII passphrase) - hexdump_ascii(len=16): [REMOVED]
+PSK (from passphrase) - hexdump(len=32): [REMOVED]
+Priority group 0
+   id=0 ssid='APTEKA'
+Initializing interface (2) 'wlan0_rename'
+Interface wlan0_rename set UP - waiting a second for the driver to 
+complete initialization
+SIOCGIWRANGE: WE(compiled)=22 WE(source)=21 enc_capa=0xf
+  capabilities: key_mgmt 0xf enc 0xf
+WEXT: Operstate: linkmode=1, operstate=5
+Own MAC address: 00:1b:77:bc:bb:ec
+wpa_driver_wext_set_wpa
+wpa_driver_wext_set_key: alg=0 key_idx=0 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=1 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=2 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=3 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_countermeasures
+wpa_driver_wext_set_drop_unencrypted
+RSN: flushing PMKID list in the driver
+Setting scan request: 0 sec 100000 usec
+EAPOL: SUPP_PAE entering state DISCONNECTED
+EAPOL: KEY_RX entering state NO_KEY_RECEIVE
+EAPOL: SUPP_BE entering state INITIALIZE
+EAP: EAP entering state DISABLED
+ctrl_interface_group=0 (from group name 'root')
+Added interface wlan0_rename
+Ignore event for foreign ifindex 7
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0_rename' added
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b06 len=12
+State: DISCONNECTED -> SCANNING
+Starting AP scan (specific SSID)
+Scan SSID - hexdump_ascii(len=6):
+     41 50 54 45 4b 41                                 APTEKA         
+Trying to get current scan results first without requesting a new scan 
+to speed up initial association
+Received 0 bytes of scan results (0 BSSes)
+CTRL-EVENT-SCAN-RESULTS
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+Try to find non-WPA AP
+No suitable AP found.
+Setting scan request: 0 sec 0 usec
+Starting AP scan (broadcast SSID)
+Scan requested (ret=0) - scan timeout 5 seconds
+EAPOL: disable timer tick
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b19 len=16
+Invalid freq in scan results (BSSID=00:00:01:00:00:1d m=0 e=11)
+Invalid freq in scan results (BSSID=00:00:01:00:00:1d m=0 e=2462)
+Received 300 bytes of scan results (1 BSSes)
+CTRL-EVENT-SCAN-RESULTS
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 00:00:01:00:00:1d ssid='' wpa_ie_len=0 rsn_ie_len=0 caps=0x10
+   skip - no WPA/RSN IE
+Try to find non-WPA AP
+0: 00:00:01:00:00:1d ssid='' wpa_ie_len=0 rsn_ie_len=0 caps=0x10
+   skip - SSID mismatch
+No suitable AP found.
+Setting scan request: 5 sec 0 usec
+Starting AP scan (specific SSID)
+Scan SSID - hexdump_ascii(len=6):
+     41 50 54 45 4b 41                                 APTEKA         
+Scan requested (ret=0) - scan timeout 30 seconds
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b19 len=16
+
+Invalid freq in scan results (BSSID=00:00:01:00:00:1d m=0 e=11)
+Invalid freq in scan results (BSSID=00:00:01:00:00:1d m=0 e=2462)
+Received 300 bytes of scan results (1 BSSes)
+CTRL-EVENT-SCAN-RESULTS
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 00:00:01:00:00:1d ssid='' wpa_ie_len=0 rsn_ie_len=0 caps=0x10
+   skip - no WPA/RSN IE
+Try to find non-WPA AP
+0: 00:00:01:00:00:1d ssid='' wpa_ie_len=0 rsn_ie_len=0 caps=0x10
+   skip - SSID mismatch
+No suitable AP found.
+Setting scan request: 5 sec 0 usec
+Starting AP scan (broadcast SSID)
+Scan requested (ret=0) - scan timeout 30 seconds
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b19 len=16
+Invalid freq in scan results (BSSID=00:00:01:00:00:1d m=0 e=11)
+Invalid freq in scan results (BSSID=00:00:01:00:00:1d m=0 e=2462)
+Received 300 bytes of scan results (1 BSSes)
+CTRL-EVENT-SCAN-RESULTS
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 00:00:01:00:00:1d ssid='' wpa_ie_len=0 rsn_ie_len=0 caps=0x10
+   skip - no WPA/RSN IE
+Try to find non-WPA AP
+0: 00:00:01:00:00:1d ssid='' wpa_ie_len=0 rsn_ie_len=0 caps=0x10
+   skip - SSID mismatch
+No suitable AP found.
+Setting scan request: 5 sec 0 usec
+Starting AP scan (specific SSID)
+Scan SSID - hexdump_ascii(len=6):
+     41 50 54 45 4b 41                                 APTEKA         
+Scan requested (ret=0) - scan timeout 30 seconds
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+Wireless event: cmd=0x8b19 len=16
+Invalid freq in scan results (BSSID=00:00:01:00:00:1d m=0 e=11)
+Invalid freq in scan results (BSSID=00:00:01:00:00:1d m=0 e=2462)
+Received 300 bytes of scan results (1 BSSes)
+CTRL-EVENT-SCAN-RESULTS
+Selecting BSS from priority group 0
+Try to find WPA-enabled AP
+0: 00:00:01:00:00:1d ssid='' wpa_ie_len=0 rsn_ie_len=0 caps=0x10
+   skip - no WPA/RSN IE
+Try to find non-WPA AP
+0: 00:00:01:00:00:1d ssid='' wpa_ie_len=0 rsn_ie_len=0 caps=0x10
+   skip - SSID mismatch
+No suitable AP found.
+Setting scan request: 5 sec 0 usec
+CTRL-EVENT-TERMINATING - signal 2 received
+Removing interface wlan0_rename
+State: SCANNING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+WEXT: Operstate: linkmode=-1, operstate=5
+No keys have been configured - skip key clearing
+EAPOL: External notification - portEnabled=0
+EAPOL: External notification - portValid=0
+wpa_driver_wext_set_wpa
+wpa_driver_wext_set_drop_unencrypted
+wpa_driver_wext_set_countermeasures
+No keys have been configured - skip key clearing
+Cancelling scan request
+Cancelling authentication timeout
+WEXT: Operstate: linkmode=0, operstate=6
+
+
+
+I've used driver included in kernel 2.6.24.2 and 
+compat-wireless-2008-06-13 . The same results
+
+Regards
+Maciek Kaliszewski
+
+
+----------------------------------------------------------------------
+Z Map24 Twoja droga jest prosta! Sprawdz!
+kliknij >>> http://link.interia.pl/f1e3b
+
