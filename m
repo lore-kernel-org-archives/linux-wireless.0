@@ -1,68 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:18956 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752761AbYFOVhz (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:45600 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755996AbYFMO5J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jun 2008 17:37:55 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so4095990waf.23
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Jun 2008 14:37:55 -0700 (PDT)
-Message-ID: <1ba2fa240806151437t2d14f47fg8190bc51fdd680ab@mail.gmail.com> (sfid-20080615_233759_635878_89363FCE)
-Date: Mon, 16 Jun 2008 00:37:55 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: drago01 <drago01@gmail.com>
-Subject: Re: [PATCH] iwl4965: remove useless code
-Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>,
-	"Zhu Yi" <yi.zhu@intel.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"John Linville" <linville@tuxdriver.com>
-In-Reply-To: <f6ca9fed0806151338l5d6968a9w5c3823577551ef93@mail.gmail.com>
+	Fri, 13 Jun 2008 10:57:09 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] ssb: Fix for incorrect Subsystem and PCI Product IDs on rev 4 SPROMs
+Date: Fri, 13 Jun 2008 16:56:31 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <200806131047.33710.mb@bu3sch.de>
+In-Reply-To: <200806131047.33710.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0806151338l5d6968a9w5c3823577551ef93@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200806131656.32463.mb@bu3sch.de> (sfid-20080613_165713_080910_901FA1D9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 15, 2008 at 11:38 PM, drago01 <drago01@gmail.com> wrote:
-> Hi,
-> while reading throught the iwlwifi code I spotted this code which does nothing.
->
-> The attached patch removes it, when the function is turned into an non
-> nop it can be re added.
->
-> -----------
-> Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
->
-> diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-> b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-> index f591168..2184a0b 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-> @@ -3547,9 +3547,6 @@ static int iwl4965_mac_get_tx_stats(struct
-> ieee80211_hw *hw,
->  static int iwl4965_mac_get_stats(struct ieee80211_hw *hw,
->                             struct ieee80211_low_level_stats *stats)
->  {
-> -       struct iwl_priv *priv = hw->priv;
-> -
-> -       priv = hw->priv;
->        IWL_DEBUG_MAC80211("enter\n");
->        IWL_DEBUG_MAC80211("leave\n");
->
-> @@ -3558,9 +3555,6 @@ static int iwl4965_mac_get_stats(struct ieee80211_hw *hw,
->
->  static u64 iwl4965_mac_get_tsf(struct ieee80211_hw *hw)
->  {
-> -       struct iwl_priv *priv;
-> -
-> -       priv = hw->priv;
->        IWL_DEBUG_MAC80211("enter\n");
->        IWL_DEBUG_MAC80211("leave\n");
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+On Friday 13 June 2008 10:47:33 Michael Buesch wrote:
+> From: Larry.Finger@lwfinger.net
+> 
+> In current ssb-sprom code, the Subsystem and Product ID's are wrong for rev 4
+> SPROM's.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> ---
+> 
+> John, this is a bugfix for 2.6.26.
+> 
+> 
+> Index: ssb_sprom/ssb_sprom.h
+> ===================================================================
+> --- ssb_sprom.orig/ssb_sprom.h
+> +++ ssb_sprom/ssb_sprom.h
 
-sorry have already some conflict patch in the pipe
-Thank
-Tomas
+Oh, this changes the ssb userland tool. So I better apply it instead
+of sending it to random unrelated people :P
+
+> @@ -33,10 +33,10 @@
+>  
+>  /* byte offsets */
+>  #define SPROM_SUBP		(0x02 * 2)
+> -#define SPROM4_SUBP		(0x00 * 2)
+> +#define SPROM4_SUBP		(0x02 * 2)
+>  #define SPROM_SUBV		(0x03 * 2)
+>  #define SPROM_PPID		(0x04 * 2)
+> -#define SPROM4_PPID		(0x02 * 2)
+> +#define SPROM4_PPID		(0x04 * 2)
+>  #define SPROM_BFLHI		(0x1C * 2)
+>  #define SPROM_IL0MACADDR	(0x24 * 2)
+>  #define SPROM_ET0MACADDR	(0x27 * 2)
+> 
+
+
+
+-- 
+Greetings Michael.
