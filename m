@@ -1,304 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47081
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752822AbYFCUgx (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60347 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753673AbYFMIfz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 16:36:53 -0400
-Date: Tue, 03 Jun 2008 12:20:00 -0700 (PDT)
-Message-Id: <20080603.122000.112807963.davem@davemloft.net> (sfid-20080603_223733_242116_2442BE78)
-To: linux-wireless@vger.kernel.org
-CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 3/12]: wext: Extract standard call iw_point handling into
- seperate function.
-From: David Miller <davem@davemloft.net>
+	Fri, 13 Jun 2008 04:35:55 -0400
+Subject: Re: [PATCH 1/3] iwlwifi: adding channels to sysfs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	Ester Kummer <ester.kummer@intel.com>
+In-Reply-To: <1ba2fa240806130128l433c5b3fxfc7ff13c886a2fa1@mail.gmail.com> (sfid-20080613_102859_691762_2A965AC9)
+References: <1213343095-8133-1-git-send-email-yi.zhu@intel.com>
+	 <1213343095-8133-2-git-send-email-yi.zhu@intel.com>
+	 <1213343813.3860.0.camel@johannes.berg>
+	 <1ba2fa240806130128l433c5b3fxfc7ff13c886a2fa1@mail.gmail.com>
+	 (sfid-20080613_102859_691762_2A965AC9)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EW4Lvq65NCa3wCXYOoKK"
+Date: Fri, 13 Jun 2008 10:35:13 +0200
+Message-Id: <1213346113.3860.3.camel@johannes.berg> (sfid-20080613_103601_013789_814C45C7)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/wireless/wext.c |  258 ++++++++++++++++++++++++++------------------------
- 1 files changed, 134 insertions(+), 124 deletions(-)
+--=-EW4Lvq65NCa3wCXYOoKK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index cd2cf9f..d17c0f4 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -694,6 +694,138 @@ void wext_proc_exit(struct net *net)
-  */
- 
- /* ---------------------------------------------------------------- */
-+static int ioctl_standard_iw_point(struct iw_point *iwp, unsigned int cmd,
-+				   const struct iw_ioctl_description *descr,
-+				   iw_handler handler, struct net_device *dev,
-+				   struct iw_request_info *info)
-+{
-+	int err, extra_size, user_length = 0, essid_compat = 0;
-+	char *extra;
-+
-+	/* Calculate space needed by arguments. Always allocate
-+	 * for max space.
-+	 */
-+	extra_size = descr->max_tokens * descr->token_size;
-+
-+	/* Check need for ESSID compatibility for WE < 21 */
-+	switch (cmd) {
-+	case SIOCSIWESSID:
-+	case SIOCGIWESSID:
-+	case SIOCSIWNICKN:
-+	case SIOCGIWNICKN:
-+		if (iwp->length == descr->max_tokens + 1)
-+			essid_compat = 1;
-+		else if (IW_IS_SET(cmd) && (iwp->length != 0)) {
-+			char essid[IW_ESSID_MAX_SIZE + 1];
-+
-+			err = copy_from_user(essid, iwp->pointer,
-+					     iwp->length *
-+					     descr->token_size);
-+			if (err)
-+				return -EFAULT;
-+
-+			if (essid[iwp->length - 1] == '\0')
-+				essid_compat = 1;
-+		}
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	iwp->length -= essid_compat;
-+
-+	/* Check what user space is giving us */
-+	if (IW_IS_SET(cmd)) {
-+		/* Check NULL pointer */
-+		if (!iwp->pointer && iwp->length != 0)
-+			return -EFAULT;
-+		/* Check if number of token fits within bounds */
-+		if (iwp->length > descr->max_tokens)
-+			return -E2BIG;
-+		if (iwp->length < descr->min_tokens)
-+			return -EINVAL;
-+	} else {
-+		/* Check NULL pointer */
-+		if (!iwp->pointer)
-+			return -EFAULT;
-+		/* Save user space buffer size for checking */
-+		user_length = iwp->length;
-+
-+		/* Don't check if user_length > max to allow forward
-+		 * compatibility. The test user_length < min is
-+		 * implied by the test at the end.
-+		 */
-+
-+		/* Support for very large requests */
-+		if ((descr->flags & IW_DESCR_FLAG_NOMAX) &&
-+		    (user_length > descr->max_tokens)) {
-+			/* Allow userspace to GET more than max so
-+			 * we can support any size GET requests.
-+			 * There is still a limit : -ENOMEM.
-+			 */
-+			extra_size = user_length * descr->token_size;
-+
-+			/* Note : user_length is originally a __u16,
-+			 * and token_size is controlled by us,
-+			 * so extra_size won't get negative and
-+			 * won't overflow...
-+			 */
-+		}
-+	}
-+
-+	/* kzalloc() ensures NULL-termination for essid_compat. */
-+	extra = kzalloc(extra_size, GFP_KERNEL);
-+	if (!extra)
-+		return -ENOMEM;
-+
-+	/* If it is a SET, get all the extra data in here */
-+	if (IW_IS_SET(cmd) && (iwp->length != 0)) {
-+		if (copy_from_user(extra, iwp->pointer,
-+				   iwp->length *
-+				   descr->token_size)) {
-+			err = -EFAULT;
-+			goto out;
-+		}
-+	}
-+
-+	err = handler(dev, info, (union iwreq_data *) iwp, extra);
-+
-+	iwp->length += essid_compat;
-+
-+	/* If we have something to return to the user */
-+	if (!err && IW_IS_GET(cmd)) {
-+		/* Check if there is enough buffer up there */
-+		if (user_length < iwp->length) {
-+			err = -E2BIG;
-+			goto out;
-+		}
-+
-+		if (copy_to_user(iwp->pointer, extra,
-+				 iwp->length *
-+				 descr->token_size)) {
-+			err = -EFAULT;
-+			goto out;
-+		}
-+	}
-+
-+	/* Generate an event to notify listeners of the change */
-+	if ((descr->flags & IW_DESCR_FLAG_EVENT) && err == -EIWCOMMIT) {
-+		union iwreq_data *data = (union iwreq_data *) iwp;
-+
-+		if (descr->flags & IW_DESCR_FLAG_RESTRICT)
-+			/* If the event is restricted, don't
-+			 * export the payload.
-+			 */
-+			wireless_send_event(dev, cmd, data, NULL);
-+		else
-+			wireless_send_event(dev, cmd, data, extra);
-+	}
-+
-+out:
-+	kfree(extra);
-+	return err;
-+}
-+
- /*
-  * Wrapper to call a standard Wireless Extension handler.
-  * We do various checks and also take care of moving data between
-@@ -729,130 +861,8 @@ static int ioctl_standard_call(struct net_device *	dev,
- 		   ((ret == 0) || (ret == -EIWCOMMIT)))
- 			wireless_send_event(dev, cmd, &(iwr->u), NULL);
- 	} else {
--		char *	extra;
--		int	extra_size;
--		int	user_length = 0;
--		int	err;
--		int	essid_compat = 0;
--
--		/* Calculate space needed by arguments. Always allocate
--		 * for max space. Easier, and won't last long... */
--		extra_size = descr->max_tokens * descr->token_size;
--
--		/* Check need for ESSID compatibility for WE < 21 */
--		switch (cmd) {
--		case SIOCSIWESSID:
--		case SIOCGIWESSID:
--		case SIOCSIWNICKN:
--		case SIOCGIWNICKN:
--			if (iwr->u.data.length == descr->max_tokens + 1)
--				essid_compat = 1;
--			else if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
--				char essid[IW_ESSID_MAX_SIZE + 1];
--
--				err = copy_from_user(essid, iwr->u.data.pointer,
--						     iwr->u.data.length *
--						     descr->token_size);
--				if (err)
--					return -EFAULT;
--
--				if (essid[iwr->u.data.length - 1] == '\0')
--					essid_compat = 1;
--			}
--			break;
--		default:
--			break;
--		}
--
--		iwr->u.data.length -= essid_compat;
--
--		/* Check what user space is giving us */
--		if (IW_IS_SET(cmd)) {
--			/* Check NULL pointer */
--			if ((iwr->u.data.pointer == NULL) &&
--			   (iwr->u.data.length != 0))
--				return -EFAULT;
--			/* Check if number of token fits within bounds */
--			if (iwr->u.data.length > descr->max_tokens)
--				return -E2BIG;
--			if (iwr->u.data.length < descr->min_tokens)
--				return -EINVAL;
--		} else {
--			/* Check NULL pointer */
--			if (iwr->u.data.pointer == NULL)
--				return -EFAULT;
--			/* Save user space buffer size for checking */
--			user_length = iwr->u.data.length;
--
--			/* Don't check if user_length > max to allow forward
--			 * compatibility. The test user_length < min is
--			 * implied by the test at the end. */
--
--			/* Support for very large requests */
--			if ((descr->flags & IW_DESCR_FLAG_NOMAX) &&
--			   (user_length > descr->max_tokens)) {
--				/* Allow userspace to GET more than max so
--				 * we can support any size GET requests.
--				 * There is still a limit : -ENOMEM. */
--				extra_size = user_length * descr->token_size;
--				/* Note : user_length is originally a __u16,
--				 * and token_size is controlled by us,
--				 * so extra_size won't get negative and
--				 * won't overflow... */
--			}
--		}
--
--		/* Create the kernel buffer */
--		/*    kzalloc ensures NULL-termination for essid_compat */
--		extra = kzalloc(extra_size, GFP_KERNEL);
--		if (extra == NULL)
--			return -ENOMEM;
--
--		/* If it is a SET, get all the extra data in here */
--		if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
--			err = copy_from_user(extra, iwr->u.data.pointer,
--					     iwr->u.data.length *
--					     descr->token_size);
--			if (err) {
--				kfree(extra);
--				return -EFAULT;
--			}
--		}
--
--		/* Call the handler */
--		ret = handler(dev, &info, &(iwr->u), extra);
--
--		iwr->u.data.length += essid_compat;
--
--		/* If we have something to return to the user */
--		if (!ret && IW_IS_GET(cmd)) {
--			/* Check if there is enough buffer up there */
--			if (user_length < iwr->u.data.length) {
--				kfree(extra);
--				return -E2BIG;
--			}
--
--			err = copy_to_user(iwr->u.data.pointer, extra,
--					   iwr->u.data.length *
--					   descr->token_size);
--			if (err)
--				ret =  -EFAULT;
--		}
--
--		/* Generate an event to notify listeners of the change */
--		if ((descr->flags & IW_DESCR_FLAG_EVENT) &&
--		   ((ret == 0) || (ret == -EIWCOMMIT))) {
--			if (descr->flags & IW_DESCR_FLAG_RESTRICT)
--				/* If the event is restricted, don't
--				 * export the payload */
--				wireless_send_event(dev, cmd, &(iwr->u), NULL);
--			else
--				wireless_send_event(dev, cmd, &(iwr->u),
--						    extra);
--		}
--
--		/* Cleanup - I told you it wasn't that long ;-) */
--		kfree(extra);
-+		ret = ioctl_standard_iw_point(&iwr->u.data, cmd, descr,
-+					      handler, dev, &info);
- 	}
- 
- 	/* Call commit handler if needed and defined */
--- 
-1.5.5.1.308.g1fbb5
+
+> >>  drivers/net/wireless/iwlwifi/iwl4965-base.c |   58 ++++++++++++++++++=
+++++++++-
+> >>  1 files changed, 56 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net=
+/wireless/iwlwifi/iwl4965-base.c
+> >> index 81a1c22..c179b21 100644
+> >> --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
+> >> +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+> >> @@ -4122,8 +4122,62 @@ static DEVICE_ATTR(power_level, S_IWUSR | S_IRU=
+SR, show_power_level,
+> >>  static ssize_t show_channels(struct device *d,
+> >>                            struct device_attribute *attr, char *buf)
+> >>  {
+> >> -     /* all this shit doesn't belong into sysfs anyway */
+> >> -     return 0;
+> >
+> > Hehe. Do you really have to? You can query this information with
+> > nl80211. I don't know why you need all that sysfs stuff anyway.
+>=20
+> I'm not sure why Yi has cut off the log message but original was
+>=20
+> 'This patch returns channel list to sysfs. This is requirement
+> for validation purposes'
+>=20
+> Our automation is build around sysfs and wext and I'm not going to
+> rewrite it now.
+
+If you managed to get along without this for so long, why is it needed
+in upstream now?
+
+Remember, sysfs is API. You don't get to change it gratuitously, so
+neither should you add to it gratuitously. And we already _have_ API for
+this particular thing which is not dependent on a particular
+hardware/driver to boot!
+
+johannes
+
+--=-EW4Lvq65NCa3wCXYOoKK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIUjE9AAoJEKVg1VMiehFYx54P/1FX7DenCZBcntSR3uf7da9s
+d1gAxQktWtPwyIg9HuAJC4G5cT0maCQ5wLV30HcKHOBDlhcNUSQpdgSIA3QRGwVe
+X+XlwCG7Yv2H2rAxXkiY5ZwfoE6f1yhrvo3dh3n5Rdo3AMvpkZb1LfBMZHIDCuva
+wMyHhn0OIQ8I5Pg68RiRqmOSuXkOOvE2S4PcaI0Tt6idBsBAXU5B6Z5ib08HWLj5
+aPWubvTdp4yDJSAQcIwfRqp7SS2GeCweX3HSjYuYNampgVea/WTffd3l1qTSuRp2
+41lw+7eY2yrBRBJmNMCeGyKpvoj2qZ3bddlcAkF5+7Ee/Iz9DxpV9nG1JEl9GCrL
+5y837WeolCO+SwtO0HmTh4AAbBN64VvNccoKi5MDzw2wMKtabY8iUa6K5C6YRssl
+q9NPBbZKymmQZHsyzIKxjr4/jbCC/awsknUtqBfCubeRt8phgJ6eCLuVI1QBYMHO
+N11ceQy7PZnhEfOrHMVPTx3GymGoxa0WNBoQW2lkJNVEu+oZ/vXBS9Y9j4tP8+HQ
+RM6dE7xccMwq3M47G/xt32bqy7xvWCpgBTwEP7GHrCftIMA8MIcud7aa29hna2e5
+SZU+2tHVEZnAN4e9gfBMxFC6k5QRnIDXCTmi5PMin3Xfps2w6fFN4HmQODgyC7uI
+llYuIEn1Qfs/35WPAlC2
+=DCzy
+-----END PGP SIGNATURE-----
+
+--=-EW4Lvq65NCa3wCXYOoKK--
 
