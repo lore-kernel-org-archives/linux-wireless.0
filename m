@@ -1,144 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from miranda.se.axis.com ([193.13.178.8]:58082 "EHLO
-	miranda.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752408AbYF3Ghi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 02:37:38 -0400
-From: "Johan Adolfsson" <Johan.Adolfsson@axis.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: "'Dan Williams'" <dcbw@redhat.com>,
-	"'Johan Adolfsson'" <johan.adolfsson@axis.com>
-Subject: [PATCH] Add module parameter to override regioncode on libertas
-Date: Mon, 30 Jun 2008 08:36:56 +0200
-Message-ID: <054201c8da7b$b12677e0$0137550a@se.axis.com> (sfid-20080630_083743_406500_6D839396)
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0543_01C8DA8C.74AF47E0"
-In-Reply-To: <1214580776.10355.16.camel@localhost.localdomain>
+Received: from mga09.intel.com ([134.134.136.24]:56163 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753598AbYFMHfq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jun 2008 03:35:46 -0400
+Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with
+	disable_hw_scan=1
+From: Zhu Yi <yi.zhu@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <20080612135936.GA5031@tuxdriver.com>
+References: <484FEA26.1040305@gmail.com>
+	 <1213241315.7814.696.camel@debian.sh.intel.com>
+	 <20080612135936.GA5031@tuxdriver.com>
+Content-Type: text/plain
+Date: Fri, 13 Jun 2008 15:35:23 +0800
+Message-Id: <1213342523.7814.865.camel@debian.sh.intel.com> (sfid-20080613_093557_086262_4624B7EF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
+On Thu, 2008-06-12 at 09:59 -0400, John W. Linville wrote:
+> How does the hardware scan differ from what mac80211 does when
+> scanning?
 
-------=_NextPart_000_0543_01C8DA8C.74AF47E0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Software scan disables Tx during the scan process while hardware scan
+doesn't. So you are expected to see continous ping responds instead of a
+freeze during the scan period. Hardware scan is also more efficient
+since it is handled by the firmware.
 
+> I still see a lot of mysterious iwlwifi (especially iwl3945)
+> problems in Fedora that seem to disappear with disable_hw_scan=1.
 
-Resending to linux-wireless after positive feedback on libertas-dev.
+I don't see this problem from my side. I'll do more testing for 3945.
 
-Attached is a patch against the 2.6.25 driver that adds a 
-module parameter called "regioncode" to set the region code
-in the libertas driver.
+> Honestly I'm tempted to change it to "enable_hw_scan" instead...
 
-Hope the format is ok.
-Signed-off-by: Johan.Adolfsson@axis.com
+Give the advantages, I'd like to use it if we can fix the bug (I haven't
+seen what the bug is myself). But you are free to change the default
+value until it is fixed. There is no such problem for 4965, right?
 
-Best regards
-/Johan
-
-------=_NextPart_000_0543_01C8DA8C.74AF47E0
-Content-Type: text/plain;
-	name="regioncode_patch.txt"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="regioncode_patch.txt"
-
-Index: drivers/net/wireless/libertas/main.c=0A=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
-RCS file: =
-/usr/local/cvs/linux/os/linux-2.6/drivers/net/wireless/libertas/main.c,v=0A=
-retrieving revision 1.1.1.4=0A=
-diff -u -r1.1.1.4 main.c=0A=
---- drivers/net/wireless/libertas/main.c	2 Jun 2008 15:08:37 -0000	=
-1.1.1.4=0A=
-+++ drivers/net/wireless/libertas/main.c	27 Jun 2008 13:08:19 -0000=0A=
-@@ -36,6 +36,9 @@=0A=
- EXPORT_SYMBOL_GPL(lbs_debug);=0A=
- module_param_named(libertas_debug, lbs_debug, int, 0644);=0A=
- =0A=
-+static int lbs_regioncode;=0A=
-+module_param_named(regioncode, lbs_regioncode, int, 0644);=0A=
-+=0A=
- =0A=
- #define LBS_TX_PWR_DEFAULT		20	/*100mW */=0A=
- #define LBS_TX_PWR_US_DEFAULT		20	/*100mW */=0A=
-@@ -936,9 +939,11 @@=0A=
- 	lbs_deb_enter(LBS_DEB_FW);=0A=
- =0A=
- 	/*=0A=
--	 * Read MAC address from HW=0A=
-+	 * Read MAC address and regioncode etc. from HW=0A=
- 	 */=0A=
- 	memset(priv->current_addr, 0xff, ETH_ALEN);=0A=
-+	if (lbs_regioncode > 0)=0A=
-+		priv->regioncode =3D lbs_regioncode;=0A=
- 	ret =3D lbs_update_hw_spec(priv);=0A=
- 	if (ret) {=0A=
- 		ret =3D -1;=0A=
-Index: drivers/net/wireless/libertas/cmd.c=0A=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
-RCS file: =
-/usr/local/cvs/linux/os/linux-2.6/drivers/net/wireless/libertas/cmd.c,v=0A=
-retrieving revision 1.1.1.4=0A=
-diff -u -r1.1.1.4 cmd.c=0A=
---- drivers/net/wireless/libertas/cmd.c	2 Jun 2008 15:08:37 -0000	1.1.1.4=0A=
-+++ drivers/net/wireless/libertas/cmd.c	27 Jun 2008 13:08:19 -0000=0A=
-@@ -81,22 +81,34 @@=0A=
- 	lbs_deb_cmd("GET_HW_SPEC: hardware interface 0x%x, hardware spec =
-0x%04x\n",=0A=
- 		    cmd.hwifversion, cmd.version);=0A=
- =0A=
--	/* Clamp region code to 8-bit since FW spec indicates that it should=0A=
--	 * only ever be 8-bit, even though the field size is 16-bit.  Some =
-firmware=0A=
--	 * returns non-zero high 8 bits here.=0A=
--	 */=0A=
--	priv->regioncode =3D le16_to_cpu(cmd.regioncode) & 0xFF;=0A=
--=0A=
--	for (i =3D 0; i < MRVDRV_MAX_REGION_CODE; i++) {=0A=
--		/* use the region code to search for the index */=0A=
--		if (priv->regioncode =3D=3D lbs_region_code_to_index[i])=0A=
--			break;=0A=
-+	/* First check if a regioncode already provided */=0A=
-+	if (priv->regioncode) {=0A=
-+		for (i =3D 0; i < MRVDRV_MAX_REGION_CODE; i++) {=0A=
-+			/* use the region code to search for the index */=0A=
-+			if (priv->regioncode =3D=3D lbs_region_code_to_index[i])=0A=
-+				break;=0A=
-+		}=0A=
-+	} else {=0A=
-+		i =3D MRVDRV_MAX_REGION_CODE; /* Check the from from cmd */=0A=
- 	}=0A=
-+	if (i >=3D MRVDRV_MAX_REGION_CODE) {=0A=
-+		/* Clamp region code to 8-bit since FW spec indicates that it should=0A=
-+		 * only ever be 8-bit, even though the field size is 16-bit.  Some =
-firmware=0A=
-+		 * returns non-zero high 8 bits here.=0A=
-+		 */=0A=
-+=0A=
-+		priv->regioncode =3D le16_to_cpu(cmd.regioncode) & 0xFF;=0A=
- =0A=
-+		for (i =3D 0; i < MRVDRV_MAX_REGION_CODE; i++) {=0A=
-+			/* use the region code to search for the index */=0A=
-+			if (priv->regioncode =3D=3D lbs_region_code_to_index[i])=0A=
-+				break;=0A=
-+		}=0A=
-+	}=0A=
- 	/* if it's unidentified region code, use the default (USA) */=0A=
- 	if (i >=3D MRVDRV_MAX_REGION_CODE) {=0A=
-+		lbs_pr_info("unidentified region code 0x%02x; using the default =
-(USA)\n", priv->regioncode);=0A=
- 		priv->regioncode =3D 0x10;=0A=
--		lbs_pr_info("unidentified region code; using the default (USA)\n");=0A=
- 	}=0A=
- =0A=
- 	if (priv->current_addr[0] =3D=3D 0xff)=0A=
-
-------=_NextPart_000_0543_01C8DA8C.74AF47E0--
+Thanks,
+-yi
 
