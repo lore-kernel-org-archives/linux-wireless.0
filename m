@@ -1,68 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44405 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752166AbYFCSxe (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.178]:47208 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751535AbYFMPJ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 14:53:34 -0400
-Subject: Re: [PATCH 02/11] rt2x00: Fix compile-time ffs calculation macros.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-In-Reply-To: <200806032029.40085.IvDoorn@gmail.com> (sfid-20080603_202609_676907_F946F45C)
-References: <200806032024.52931.IvDoorn@gmail.com>
-	 <200806032025.45029.IvDoorn@gmail.com>
-	 <200806032029.40085.IvDoorn@gmail.com>
-	 (sfid-20080603_202609_676907_F946F45C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-e7pfKyNRubD1hXkmFAVm"
-Date: Tue, 03 Jun 2008 20:52:40 +0200
-Message-Id: <1212519160.27643.33.camel@johannes.berg> (sfid-20080603_205337_838881_6E0D569D)
-Mime-Version: 1.0
+	Fri, 13 Jun 2008 11:09:59 -0400
+Received: by py-out-1112.google.com with SMTP id p76so1843761pyb.10
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2008 08:09:58 -0700 (PDT)
+Message-ID: <48528DC1.9050806@gmail.com> (sfid-20080613_171003_192838_C9ABF83F)
+Date: Fri, 13 Jun 2008 17:09:53 +0200
+From: =?ISO-8859-1?Q?Tor_H=E5kon_Haugen?= <tor.hakon.haugen@gmail.com>
+MIME-Version: 1.0
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with	disable_hw_scan=1
+References: <484FEA26.1040305@gmail.com>	<1213241315.7814.696.camel@debian.sh.intel.com>	<20080612135936.GA5031@tuxdriver.com>	<1213342523.7814.865.camel@debian.sh.intel.com>	<20080613130310.GA5333@tuxdriver.com> <48528B63.5030403@gmail.com> <48528CF0.8050204@gmail.com>
+In-Reply-To: <48528CF0.8050204@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-e7pfKyNRubD1hXkmFAVm
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2008-06-03 at 20:29 +0200, Ivo van Doorn wrote:
-> The compile_ffsx macros were missing a set of parentheses, which resulted=
- in
-> wrong bit offset calculations.
+Maxim Levitsky wrote:
+> Tor H=E5kon Haugen wrote:
+>>
+>> John W. Linville wrote:
+>>> On Fri, Jun 13, 2008 at 03:35:23PM +0800, Zhu Yi wrote:
+>>>> On Thu, 2008-06-12 at 09:59 -0400, John W. Linville wrote:
+>>>>> Honestly I'm tempted to change it to "enable_hw_scan" instead...
+>>>> Give the advantages, I'd like to use it if we can fix the bug (I=20
+>>>> haven't
+>>>> seen what the bug is myself). But you are free to change the defau=
+lt
+>>>> value until it is fixed. There is no such problem for 4965, right?
+>>> AFAICT only the 3945 seems to need it.
+>>>
+>>
+>> I can confirm that this also applies to 4965 as a friend of mine has=
+=20
+>> this card. According to him the card works a lot better with the=20
+>> parameters "swcrypto=3D1" and "disable_hw_scan=3D1".
 >=20
-> This fixes rt61pci detection failures, whereby the rf chipset wasn't dete=
-cted
-> properly due to improper bit shifting.
+> Just to make it clear,
+> iwl3945 doesn't work at all without disable_hw_scan=3D1 here.
+> The driver just shuts down thee card since it detects microcode error=
+=2E
 >=20
-> This patch is based on GertJan's report + patch to fix the parentheses pr=
-oblem
+Ah, Sorry. Disregard my last post then.
 
-Sounds like you want to merge that with 1/11?
+  Tor H. Haugen
 
-johannes
-
---=-e7pfKyNRubD1hXkmFAVm
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASEWS9qVg1VMiehFYAQJtqxAAmKZ3Nm5fxxTVXj7JCOQUQ+pH4rJUDnrv
-ErS4RRbipQ0LGDF+OX2vhIDBYG3HOacDC+z2GssUpk0+70eSV3PNC4sng8FNZevw
-+/sc9WbEKAFA7QMxesbGDPG28Ch25bL1FLSZ/3dUAMUb4HDqOgomEXtnKURUQD38
-bOd/G75iSfYDU87NDtqoHH0P0dvdK2rE9altwx2/pzf/kKoPNKFpjBAZQqfAQDdi
-2UExphMiXRdQ3O2/bBNSGrZETf8FNg+E+uKQRrsk6elokq5Mgrjw/6+ivw4QGDmv
-s/JipDVSLnIkCX6tkShtUmiF+yH/aWr3WFsSq0lQY9PycfWgEZUEJryGw8TM2khH
-aDQFJw+WoKXA/Kanh9X/lnhCI76a5BLBLfDgAyOcKzcGlyxg7w7ocNyz2On0y7uR
-06cjRdPQ8EA6ocJk85FKdxLzT1zuTPAYjwA+KZFhlMjhbcL0FCb0E+8wca2n7SKc
-m4UgIYtMn9UJ8oiy5ecm+29P2neE4yns6w2QQU3+pe9YE+hqlzQ3TsX6Oa4bt2E0
-R5XlvUoCvJnBCKfa9bb+HkVp8qO2/OS0ydGzFxv1rcie7QdCo3vNLQl/OMelVEnr
-PpViYZT9R/3Jh6exgOfpX8kkuP9tZmu2lZFJ0+bRkz7zyY1kxN+mxfirbEHojhyT
-MJyrHBGoQUQ=
-=G6O6
------END PGP SIGNATURE-----
-
---=-e7pfKyNRubD1hXkmFAVm--
-
+> Best regards,
+>     Maxim Levitsky
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
