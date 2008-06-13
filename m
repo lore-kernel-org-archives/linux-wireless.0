@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:27345 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753363AbYFDR2O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2008 13:28:14 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Assaf Krauss <assaf.krauss@intel.com>
-Subject: [PATCH 1/1] mac80211: Fixing slow IBSS rejoin
-Date: Wed,  4 Jun 2008 20:27:59 +0300
-Message-Id: <1212600479-7787-1-git-send-email-tomas.winkler@intel.com> (sfid-20080604_192817_537247_602A49C6)
-Content-Type: text/plain; charset="us-ascii"
+Received: from vs166246.vserver.de ([62.75.166.246]:59903 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754348AbYFMIsN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jun 2008 04:48:13 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] ssb: Fix for incorrect Subsystem and PCI Product IDs on rev 4 SPROMs
+Date: Fri, 13 Jun 2008 10:47:33 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Message-Id: <200806131047.33710.mb@bu3sch.de> (sfid-20080613_104817_502644_61970F6F)
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Assaf Krauss <assaf.krauss@intel.com>
+From: Larry.Finger@lwfinger.net
 
-This patch fixes the issue of slow reconnection to an IBSS cell after
-disconnection from it. Now the interface's bssid is reset upon ifdown.
+In current ssb-sprom code, the Subsystem and Product ID's are wrong for rev 4
+SPROM's.
 
-ieee80211_sta_find_ibss:
-if (found && memcmp(ifsta->bssid, bssid, ETH_ALEN) != 0 &&
-	    (bss = ieee80211_rx_bss_get(dev, bssid,
-					local->hw.conf.channel->center_freq,
-					ifsta->ssid, ifsta->ssid_len)))
-
-Note:
-In general disconnection is still not handled properly in mac80211
-
-Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 ---
- net/mac80211/main.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 4b57de4..b182f01 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -516,6 +516,7 @@ static int ieee80211_stop(struct net_device *dev)
- 	case IEEE80211_IF_TYPE_STA:
- 	case IEEE80211_IF_TYPE_IBSS:
- 		sdata->u.sta.state = IEEE80211_DISABLED;
-+		memset(sdata->u.sta.bssid, 0, ETH_ALEN);
- 		del_timer_sync(&sdata->u.sta.timer);
- 		/*
- 		 * When we get here, the interface is marked down.
+John, this is a bugfix for 2.6.26.
+
+
+Index: ssb_sprom/ssb_sprom.h
+===================================================================
+--- ssb_sprom.orig/ssb_sprom.h
++++ ssb_sprom/ssb_sprom.h
+@@ -33,10 +33,10 @@
+ 
+ /* byte offsets */
+ #define SPROM_SUBP		(0x02 * 2)
+-#define SPROM4_SUBP		(0x00 * 2)
++#define SPROM4_SUBP		(0x02 * 2)
+ #define SPROM_SUBV		(0x03 * 2)
+ #define SPROM_PPID		(0x04 * 2)
+-#define SPROM4_PPID		(0x02 * 2)
++#define SPROM4_PPID		(0x04 * 2)
+ #define SPROM_BFLHI		(0x1C * 2)
+ #define SPROM_IL0MACADDR	(0x24 * 2)
+ #define SPROM_ET0MACADDR	(0x27 * 2)
+
 -- 
-1.5.4.1
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+Greetings Michael.
