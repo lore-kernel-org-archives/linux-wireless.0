@@ -1,60 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43982 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757088AbYFOMzu (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:62827 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754978AbYFMOto (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jun 2008 08:55:50 -0400
-Subject: [PATCH v2] mac80211: detect driver tx bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1213534025.3803.2.camel@johannes.berg> (sfid-20080615_144745_622030_910244B5)
-References: <1213534025.3803.2.camel@johannes.berg>
-	 (sfid-20080615_144745_622030_910244B5)
-Content-Type: text/plain
-Date: Sun, 15 Jun 2008 14:55:40 +0200
-Message-Id: <1213534540.3803.5.camel@johannes.berg> (sfid-20080615_145613_932431_D2E4E6A8)
-Mime-Version: 1.0
+	Fri, 13 Jun 2008 10:49:44 -0400
+Message-ID: <4852891D.10600@lwfinger.net> (sfid-20080613_164948_378428_76EC51CB)
+Date: Fri, 13 Jun 2008 09:50:05 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: John Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ssb: Fix for incorrect Subsystem and PCI Product IDs
+ on rev 4 SPROMs
+References: <200806131047.33710.mb@bu3sch.de>
+In-Reply-To: <200806131047.33710.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a driver rejects a frame in it's ->tx() callback, it must also
-stop queues, otherwise mac80211 can go into a loop here. Detect this
-situation and abort the loop after five retries, warning about the
-driver bug.
+Michael Buesch wrote:
+> From: Larry.Finger@lwfinger.net
+> 
+> In current ssb-sprom code, the Subsystem and Product ID's are wrong for rev 4
+> SPROM's.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> ---
+> 
+> John, this is a bugfix for 2.6.26.
+> 
+> 
+> Index: ssb_sprom/ssb_sprom.h
+> ===================================================================
+> --- ssb_sprom.orig/ssb_sprom.h
+> +++ ssb_sprom/ssb_sprom.h
+> @@ -33,10 +33,10 @@
+>  
+>  /* byte offsets */
+>  #define SPROM_SUBP		(0x02 * 2)
+> -#define SPROM4_SUBP		(0x00 * 2)
+> +#define SPROM4_SUBP		(0x02 * 2)
+>  #define SPROM_SUBV		(0x03 * 2)
+>  #define SPROM_PPID		(0x04 * 2)
+> -#define SPROM4_PPID		(0x02 * 2)
+> +#define SPROM4_PPID		(0x04 * 2)
+>  #define SPROM_BFLHI		(0x1C * 2)
+>  #define SPROM_IL0MACADDR	(0x24 * 2)
+>  #define SPROM_ET0MACADDR	(0x27 * 2)
+> 
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-v2: Michael suggested to use WARN_ON_ONCE instead
+The patch is for ssb-sprom, not ssb. If I still have any of my feeble 
+mind left, ssb-sprom has not become part of the kernel. John, you can 
+ignore this patch.
 
- net/mac80211/tx.c |    9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+Larry
 
---- everything.orig/net/mac80211/tx.c	2008-06-15 14:19:10.000000000 +0200
-+++ everything/net/mac80211/tx.c	2008-06-15 14:53:52.000000000 +0200
-@@ -1091,7 +1091,7 @@ static int ieee80211_tx(struct net_devic
- 	struct ieee80211_tx_data tx;
- 	ieee80211_tx_result res = TX_DROP, res_prepare;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	int ret, i;
-+	int ret, i, retries = 0;
- 	u16 queue;
- 
- 	queue = skb_get_queue_mapping(skb);
-@@ -1189,6 +1189,13 @@ retry:
- 		 */
- 		if (!__netif_subqueue_stopped(local->mdev, queue)) {
- 			clear_bit(queue, local->queues_pending);
-+			retries++;
-+			/*
-+			 * Driver bug, it's rejecting packets but
-+			 * not stopping queues.
-+			 */
-+			if (WARN_ON_ONCE(retries > 5))
-+				goto drop;
- 			goto retry;
- 		}
- 		store->skb = skb;
 
 
