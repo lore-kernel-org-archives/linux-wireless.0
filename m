@@ -1,109 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54002 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752761AbYFJICK (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.225]:12107 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755538AbYFMO7v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 04:02:10 -0400
-Subject: Re: Is configfs the right solution for configuration based fs?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Nizette <bn@niasdigital.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux kernel <linux-kernel@vger.kernel.org>,
-	Greg KH <greg@kroah.com>, Joel Becker <joel.becker@oracle.com>,
-	Satyam Sharma <ssatyam@cse.iitk.ac.in>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Al Viro <viro@ftp.linux.org.uk>,
-	"H. Peter Anvin" <hpa@kernel.org>
-In-Reply-To: <1213056772.4089.42.camel@moss.renham>
-References: <43e72e890806081425h4e785800nc618fc1985f9809f@mail.gmail.com>
-	 (sfid-20080608_232543_873639_74C0A387)  <1213002187.698.62.camel@johannes.berg>
-	 <1213056772.4089.42.camel@moss.renham>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ke1UpQp2EOGtYEjtUp6b"
-Date: Tue, 10 Jun 2008 10:01:20 +0200
-Message-Id: <1213084880.22220.29.camel@johannes.berg> (sfid-20080610_100227_893632_C1A630E1)
-Mime-Version: 1.0
+	Fri, 13 Jun 2008 10:59:51 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2564971rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2008 07:59:50 -0700 (PDT)
+Message-ID: <48528B63.5030403@gmail.com> (sfid-20080613_165953_323086_83C841B0)
+Date: Fri, 13 Jun 2008 16:59:47 +0200
+From: =?ISO-8859-1?Q?Tor_H=E5kon_Haugen?= <tor.hakon.haugen@gmail.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with	disable_hw_scan=1
+References: <484FEA26.1040305@gmail.com>	<1213241315.7814.696.camel@debian.sh.intel.com>	<20080612135936.GA5031@tuxdriver.com>	<1213342523.7814.865.camel@debian.sh.intel.com> <20080613130310.GA5333@tuxdriver.com>
+In-Reply-To: <20080613130310.GA5333@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-Ke1UpQp2EOGtYEjtUp6b
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2008-06-10 at 10:12 +1000, Ben Nizette wrote:
-> On Mon, 2008-06-09 at 11:03 +0200, Johannes Berg wrote:
->=20
-> > Personally, I have a few issues with this:
-> >  1) why bother with a second configuration interface that we have to
-> >     maintain, adjust, ...? if we need scriptable access, then make a
-> >     good userspace tool that is scriptable.
->=20
-> What's the first one, sysfs..?  ioctl (eww..)? =20
+John W. Linville wrote:
+> On Fri, Jun 13, 2008 at 03:35:23PM +0800, Zhu Yi wrote:
+>> On Thu, 2008-06-12 at 09:59 -0400, John W. Linville wrote:
+>>> Honestly I'm tempted to change it to "enable_hw_scan" instead...
+>> Give the advantages, I'd like to use it if we can fix the bug (I haven't
+>> seen what the bug is myself). But you are free to change the default
+>> value until it is fixed. There is no such problem for 4965, right?
+> 
+> AFAICT only the 3945 seems to need it.
+> 
 
-netlink.
+I can confirm that this also applies to 4965 as a friend of mine has 
+this card. According to him the card works a lot better with the 
+parameters "swcrypto=1" and "disable_hw_scan=1".
 
-> >  2) string-based stuff is often messy, especially the varying attribute=
-s
-> >     like MAC addresses etc. Unless we just use binary files again, whic=
-h
-> >     is not very useful again. Take, for example, the monitor flags. If
-> >     we use the same flags then nobody really knows what's up=20
-> >     (echo 0x3 > mntr_flags?) and if we use strings then we cannot easil=
-y
-> >     ever rename the flag while keeping ABI/API compatibility.
->=20
-> Not sure I see the argument here, why would you want to change the flag
-> name?  If you decide the old name is stupid then can't you just alias
-> the old name to the new one?
 
-Sure can do, but it just adds a lot of complexity to the kernel. I don't
-see the point, it's not like you need a lot of code to build netlink
-messages. Heck, I've done it by _hand_ and used just netlink sockets.
-It's not a lot of code.
-
-> String handling is always a bit iffy, though it has to be done
-> somewhere, either in kernel or in your "good userspace tool which is
-> scriptable".  I'd prefer to have it done once, well, in the kernel and
-> not have to ship more software than necessary.
-
-I personally prefer to put it into userspace.
-
-> >  3) afaik configfs doesn't actually support the mkdir, ... stuff yet
-> >     that you want for virtual interfaces.
->=20
-> It has all the  mkdir stuff I can think of, can you elaborate?  It
-> doesn't have the commitable object support but I just have an 'enabled'
-> attribute in there to switch the thing on and off.
-
-I don't remember the specifics, it's been a while, I guess I could be
-thinking of the commitable object support; mostly we'd want to configure
-many things in one go, even on a live object. Without disabling that
-object first, obviously.
-
-johannes
-
---=-Ke1UpQp2EOGtYEjtUp6b
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJITjTMAAoJEKVg1VMiehFYvZoQAKcH5KQWV0TrvGmqQc1IXBcs
-iAhp87sIECgk7/hj34dt5SrlpTl7TcxiKXrJerhGQT3pw6O0JDuFDsX1OvmyI5/j
-dlAuKgA/4YQ7UcM9sS5L2MrC/EkxUZMBMIDBICZ6E9z9/Ee1F/SerAA/BsapU/T1
-oek9gndO4d8fAtP+FoGXEMwn+9ZAomcD+JpL1azSKAhq2D++kjgpep1aEYQjgZqw
-MR4ytNmUgT6dkhj1ohrSQRxUD8dj+qiZvXvdD+kSjbRJpyblZx/nDV623Eqs9iFV
-SRy6xUw3RI9K6s3bygveBbQX+Wd+ym6cpFJsz0pZGSdpt2Q/z4BggsdBECG0ZVUG
-eoxEXXjk+ryVO49ZrCt2pweQUXzI12L0QTp9yOqIM1elPHyjIR/sEO2kx91jVOXb
-bHDhTnU2yAKR2pqWTXbBR/SaWbQvf2a1Oq6SORh8NfiiCfXCRSC4x6VepWZTw/xV
-WyG2s4bw1SEamdzVdTtoupCeeCeCkFoC+QLqq9miYmQtTy/Gy/1EhE8A7XQWLlCJ
-95Ppzx/ZePMmfH2UeK/mMw093vdAZqD1bVJGKrsNbB+7f5FkpkvEQAXFZ9HORGuk
-unpGhqhVh+NWz/BOOIaSytZXu+Aya6TJoYRi6Ol83b5cR12NC8s7yIy+df5aMYax
-6HBeUuzNeEZXVhkg4Fss
-=iKtc
------END PGP SIGNATURE-----
-
---=-Ke1UpQp2EOGtYEjtUp6b--
-
+  Tor H. Haugen
