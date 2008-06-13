@@ -1,103 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:13312 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753670AbYFIT2c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2008 15:28:32 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2230439wfd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 12:28:32 -0700 (PDT)
-Subject: [PATCHv2 5/8] mac80211: use new helpers in util.c -
-	ieee80211_get_bssid()
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 09 Jun 2008 12:28:22 -0700
-Message-Id: <1213039702.5974.70.camel@brick> (sfid-20080609_212837_455860_7EE5E852)
-Mime-Version: 1.0
+Received: from hostap.isc.org ([149.20.54.63]:57075 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750737AbYFMQs7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jun 2008 12:48:59 -0400
+Message-Id: <20080613164809.909165412@localhost> (sfid-20080613_184901_726349_B3A77BE6)
+References: <20080613164445.542630279@localhost>
+Date: Fri, 13 Jun 2008 19:44:48 +0300
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] mac80211_hwsim: Shared TX code for received frames and Beacons
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/util.c |   41 +++++++++++++++++++----------------------
- 1 files changed, 19 insertions(+), 22 deletions(-)
+Use a shared function for transmitting the frames instead of
+duplicated code in two places.
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 9f365a3..ce62b16 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -45,38 +45,37 @@ const unsigned char bridge_tunnel_header[] __aligned(2) =
- u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
- 			enum ieee80211_if_types type)
+Signed-off-by: Jouni Malinen <j@w1.fi>
+
+
+Index: wireless-testing/drivers/net/wireless/mac80211_hwsim.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c
++++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c
+@@ -144,31 +144,14 @@ static void mac80211_hwsim_monitor_rx(st
+ }
+ 
+ 
+-static int mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
++static int mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
++				   struct sk_buff *skb)
  {
--	u16 fc;
-+	__le16 fc = hdr->frame_control;
- 
- 	 /* drop ACK/CTS frames and incorrect hdr len (ctrl) */
- 	if (len < 16)
- 		return NULL;
- 
--	fc = le16_to_cpu(hdr->frame_control);
+ 	struct mac80211_hwsim_data *data = hw->priv;
+-	struct ieee80211_rx_status rx_status;
+ 	int i, ack = 0;
+-	struct ieee80211_hdr *hdr;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_tx_info *txi;
 -
--	switch (fc & IEEE80211_FCTL_FTYPE) {
--	case IEEE80211_FTYPE_DATA:
-+	if (ieee80211_is_data(fc)) {
- 		if (len < 24) /* drop incorrect hdr len (data) */
- 			return NULL;
--		switch (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
--		case IEEE80211_FCTL_TODS:
--			return hdr->addr1;
--		case (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS):
-+
-+		if (ieee80211_has_a4(fc))
- 			return NULL;
--		case IEEE80211_FCTL_FROMDS:
-+		if (ieee80211_has_tods(fc))
-+			return hdr->addr1;
-+		if (ieee80211_has_fromds(fc))
- 			return hdr->addr2;
--		case 0:
--			return hdr->addr3;
--		}
--		break;
--	case IEEE80211_FTYPE_MGMT:
-+
-+		return hdr->addr3;
-+	}
-+
-+	if (ieee80211_is_mgmt(fc)) {
- 		if (len < 24) /* drop incorrect hdr len (mgmt) */
- 			return NULL;
- 		return hdr->addr3;
--	case IEEE80211_FTYPE_CTL:
--		if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PSPOLL)
-+	}
-+
-+	if (ieee80211_is_ctl(fc)) {
-+		if(ieee80211_is_pspoll(fc))
- 			return hdr->addr1;
--		else if ((fc & IEEE80211_FCTL_STYPE) ==
--						IEEE80211_STYPE_BACK_REQ) {
-+
-+		if (ieee80211_is_back_req(fc)) {
- 			switch (type) {
- 			case IEEE80211_IF_TYPE_STA:
- 				return hdr->addr2;
-@@ -84,11 +83,9 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
- 			case IEEE80211_IF_TYPE_VLAN:
- 				return hdr->addr1;
- 			default:
--				return NULL;
-+				break; /* fall through to the return */
- 			}
- 		}
--		else
--			return NULL;
+-	mac80211_hwsim_monitor_rx(hw, skb);
+-
+-	if (skb->len < 10) {
+-		/* Should not happen; just a sanity check for addr1 use */
+-		dev_kfree_skb(skb);
+-		return NETDEV_TX_OK;
+-	}
+-
+-	if (!data->radio_enabled) {
+-		printk(KERN_DEBUG "%s: dropped TX frame since radio "
+-		       "disabled\n", wiphy_name(hw->wiphy));
+-		dev_kfree_skb(skb);
+-		return NETDEV_TX_OK;
+-	}
+-
+-	hdr = (struct ieee80211_hdr *) skb->data;
++	struct ieee80211_rx_status rx_status;
+ 
+ 	memset(&rx_status, 0, sizeof(rx_status));
+ 	/* TODO: set mactime */
+@@ -199,6 +182,33 @@ static int mac80211_hwsim_tx(struct ieee
+ 		ieee80211_rx_irqsafe(hwsim_radios[i], nskb, &rx_status);
  	}
  
- 	return NULL;
++	return ack;
++}
++
++
++static int mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
++{
++	struct mac80211_hwsim_data *data = hw->priv;
++	int ack;
++	struct ieee80211_tx_info *txi;
++
++	mac80211_hwsim_monitor_rx(hw, skb);
++
++	if (skb->len < 10) {
++		/* Should not happen; just a sanity check for addr1 use */
++		dev_kfree_skb(skb);
++		return NETDEV_TX_OK;
++	}
++
++	if (!data->radio_enabled) {
++		printk(KERN_DEBUG "%s: dropped TX frame since radio "
++		       "disabled\n", wiphy_name(hw->wiphy));
++		dev_kfree_skb(skb);
++		return NETDEV_TX_OK;
++	}
++
++	ack = mac80211_hwsim_tx_frame(hw, skb);
++
+ 	txi = IEEE80211_SKB_CB(skb);
+ 	memset(&txi->status, 0, sizeof(txi->status));
+ 	if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK)) {
+@@ -254,10 +264,7 @@ static void mac80211_hwsim_beacon_tx(voi
+ 				     struct ieee80211_vif *vif)
+ {
+ 	struct ieee80211_hw *hw = arg;
+-	struct mac80211_hwsim_data *data = hw->priv;
+ 	struct sk_buff *skb;
+-	struct ieee80211_rx_status rx_status;
+-	int i;
+ 	struct ieee80211_tx_info *info;
+ 
+ 	if (vif->type != IEEE80211_IF_TYPE_AP)
+@@ -269,33 +276,7 @@ static void mac80211_hwsim_beacon_tx(voi
+ 	info = IEEE80211_SKB_CB(skb);
+ 
+ 	mac80211_hwsim_monitor_rx(hw, skb);
+-
+-	memset(&rx_status, 0, sizeof(rx_status));
+-	/* TODO: set mactime */
+-	rx_status.freq = data->channel->center_freq;
+-	rx_status.band = data->channel->band;
+-	rx_status.rate_idx = info->tx_rate_idx;
+-	/* TODO: simulate signal strength (and optional packet drop) */
+-
+-	/* Copy skb to all enabled radios that are on the current frequency */
+-	for (i = 0; i < hwsim_radio_count; i++) {
+-		struct mac80211_hwsim_data *data2;
+-		struct sk_buff *nskb;
+-
+-		if (hwsim_radios[i] == NULL || hwsim_radios[i] == hw)
+-			continue;
+-		data2 = hwsim_radios[i]->priv;
+-		if (!data2->started || !data2->radio_enabled ||
+-		    data->channel->center_freq != data2->channel->center_freq)
+-			continue;
+-
+-		nskb = skb_copy(skb, GFP_ATOMIC);
+-		if (nskb == NULL)
+-			continue;
+-
+-		ieee80211_rx_irqsafe(hwsim_radios[i], nskb, &rx_status);
+-	}
+-
++	mac80211_hwsim_tx_frame(hw, skb);
+ 	dev_kfree_skb(skb);
+ }
+ 
+
+--
+
 -- 
-1.5.6.rc2.261.ga8fbe
-
-
+Jouni Malinen                                            PGP id EFC895FA
