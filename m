@@ -1,77 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37669 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755146AbYFQSfs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 14:35:48 -0400
-Subject: Re: [RFC PATCH 7/7] 802.11w: Configuration of MFP
-	disabled/optional/required
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080617181805.GE4974@jm.kir.nu>
-References: <20080617154008.883383150@localhost>
-	 <20080617160027.897662688@localhost>
-	 <1213722570.3803.92.camel@johannes.berg>  <20080617181805.GE4974@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NHAuRztPSDeywGAF2wr3"
-Date: Tue, 17 Jun 2008 20:34:58 +0200
-Message-Id: <1213727698.3803.110.camel@johannes.berg> (sfid-20080617_203552_246732_720D895A)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:2857 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754533AbYFMWCj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jun 2008 18:02:39 -0400
+Date: Fri, 13 Jun 2008 17:41:14 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull request: wireless-next-2.6 2008-06-13
+Message-ID: <20080613214114.GA1077@tuxdriver.com> (sfid-20080614_000254_393302_9144510A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Dave,
 
---=-NHAuRztPSDeywGAF2wr3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Another slew of updates intended for 2.6.27...please let me know if
+there are problems!
 
+Thanks,
 
-> > > --- wireless-testing.orig/net/mac80211/wext.c
-> > > +++ wireless-testing/net/mac80211/wext.c
-> > > +	case IW_AUTH_MFP:
-> > > +		if (sdata->vif.type =3D=3D IEEE80211_IF_TYPE_STA ||
-> > > +		    sdata->vif.type =3D=3D IEEE80211_IF_TYPE_IBSS)
-> > > +			sdata->u.sta.mfp =3D data->value;
-> >=20
-> > and shouldn't that be used somewhere?
->=20
-> Well, yes. This is still somewhat unclear area to me and in particular,
-> I'm not sure whether the IW_AUTH_MFP parameter will end up being used in
-> mac80211. It would be used if the kernel code (or firmware in fullmac
-> designs) would select the AP. mac80211 may need another configuration
-> item to set whether MFP was actually negotiated during association. This
-> has changed a bit in the latest 802.11w draft and I haven't yet updated
-> my implementation to use the new mechanism. For the time being,
-> sdata->u.sta.mfp is more or less a placeholder for something that may
-> disappear or change to something else..
+John
 
-Ok, yeah, that explains why I wasn't really able to see how it
-determined whether MFP was optional/required for a certain association
-etc.
+---
 
-johannes
+Individual patches are available here:
 
---=-NHAuRztPSDeywGAF2wr3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+---
 
-iQIcBAABAgAGBQJIWAPPAAoJEKVg1VMiehFYSnkP/160hGTFp1fcx4/hApw8Re27
-019aSEXw6UUONMcJzhuhbJWqET3omkKHhE8KwJtmoPrDUcUEWxJYGebEfGgxo0y+
-u5vpHnYANiUHc5csgzp/znNnFviQ7uyNk3lfUJNr7jL2bNUcJqKbZ3XVfm48D3tH
-pZJcWsEajPixN+YhnfNt3H/TyrSR2MB9WU3gRo0ph/RzfLx/ISLIKYkgS2quzOSO
-G/nsNhqN9sEjrE9ja4ItOwdlSAebnJngXI+qeht2OEjDhz4LEq8ieI7UJ0IYl/dJ
-adL66t7Ry+i2ISwwNqKNsFxkpHUulrD4stwgipZfAmRkctowG3q+UdNO0ztwzdWF
-a8EDx06gwTwAcLJXmGqTKofwGVy0aiLvczJRzpr+SUU720pYtfHj6+5lEEmY/ME9
-sMo6mFD27TVtRog2271YuCARYHSy6M1nIsWUrBELfyH+gVlBSVqMveF8JCjDBT1F
-f7uoHU6Xg4lW+9oUyx3Qr5NjBem9hN6k7AGJE4AWBCcwSOKt55MRi3AA66OeC6bU
-vOpVUZTpXhMQdwxVV/s6VjEOuuetmdc3Jpn7dvHIpO1ysVkO9F23lrbXZwNv6v4F
-OePkh0mOs8AQq30Fsj6GlrxD4CoiuGjKZ9Tp/Srpf59HiNmxJjTM/1pXyNZTKv4Z
-/v1lSTJwlwMYGCF1K4WO
-=m2Dw
------END PGP SIGNATURE-----
+The following changes since commit 030352a9c7715780b2c01033ae9afe56249bb7cc:
+  David S. Miller (1):
+        Merge branch 'davem-next' of master.kernel.org:/.../jgarzik/netdev-2.6
 
---=-NHAuRztPSDeywGAF2wr3--
+are available in the git repository at:
 
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
+
+Akinobu Mita (1):
+      airo: use simple_read_from_buffer()
+
+Assaf Krauss (2):
+      iwlwifi enabling IBSS (Ad-Hoc) mode
+      iwlwifi: Fix mode changes (ad-hoc <--> managed)
+
+Emmanuel Grumbach (13):
+      iwlwifi: removes the RUN_TIME_CALIB ifdef
+      iwlwifi: clean up in setup/cancel deferred work
+      iwlwifi: add possibility to disable tx_power calibration
+      iwlwifi: remove redundant flags regarding to FAT channel
+      iwlwifi: fix bug when moving from 11gn to 11a or 11an to 11g
+      iwlwifi: fix resart flow after fw error
+      iwlwifi: add bad length check for WEP keys
+      iwlwifi: move iwl4965_rf_kill_ct_config to iwl-core.c
+      iwlwifi: retfactor get_temperature functions
+      iwlwifi: remove dead code iwl4965_calc_db_from_ratio
+      iwlwifi: general code clean up
+      iwlwifi: remove iwlcore_low_level_notify
+      iwlwifi: unify SW rf-kill flow
+
+Ester Kummer (1):
+      iwlwifi: adding channels to sysfs
+
+Gertjan van Wingerde (4):
+      rt2x00: Cleanup struct skb_frame_desc.
+      rt2x00: Centralize RX packet alignment handling in rt2x00lib.
+      rt2x00: Fix double usage of skb->cb in USB RX path.
+      rt2x00: Rework alignment check.
+
+Harvey Harrison (11):
+      mac80211: add helpers for frame control testing
+      mac80211: remove ieee80211_get_morefrag
+      mac80211: make ieee80211_get_hdrlen_from_skb return unsigned
+      mac80211: add utility function to get header length
+      mac80211: wpa.c use new access helpers
+      mac80211: use new helpers in util.c - ieee80211_get_bssid()
+      mac80211: wme.c use new helpers
+      mac80211: rx.c use new helpers
+      mac80211: tkip.c consolidate tkip IV writing in helper
+      mac80211: tkip.c fold ieee80211_gen_rc4key into its one caller
+      mac80211: tkip.c use a local struct tkip_ctx in ieee80211_get_tkip_key
+
+Holger Schurig (4):
+      libertas: fix interrupt issue
+      libertas: document register meanings
+      libertas: check for old, unsupported hardware
+      libertas: rename some registers to clarify their meaning
+
+Ivo van Doorn (14):
+      rt2x00: Calculate register offset during compile time
+      rt2x00: Cleanup/optimize set_state() function callback function
+      rt2x00: Move led initialization into function
+      rt2x00: Remove CTS/RTS check in tx()
+      rt2x00: Removed unused descriptor read in txdone
+      rt2x00: Make rt2x00_set/get_field macros
+      rt2x00: Release rt2x00 2.1.7
+      rt2x00: Fix queue initialization
+      rt2x00: Implement rt2x00usb_kick_tx_queue()
+      rt2x00: Move generic TX frame writing code into rt2x00queue
+      rt2x00: Don't kick TX queue after each frame
+      rt2x00: Use __builtin_choose_expr() instead of ?:
+      rt2x00: Clear IEEE80211_TX_CTL_USE_RTS_CTS flag for RTS frame
+      rt2x00: Remove unused defines
+
+Jouni Malinen (4):
+      mac80211_hwsim: 802.11 radio simulator for mac80211
+      mac80211_hwsim: Clean up documentation
+      mac80211_hwsim: Minor cleanup
+      mac80211_hwsim: Shared TX code for received frames and Beacons
+
+Jussi Kivilinna (6):
+      rndis_wlan: do link-down state change in worker thread
+      rndis_wlan: update carrier flag when link state changes
+      rndis_wlan: check if set_multicast_list work is already scheduled
+      rndis_wlan: cleanup: rename and remove local pointers
+      rndis_wlan: use kzalloc to allocate private data
+      rndis_wlan: preallocate command buffer for set/get_oid
+
+Michael Buesch (1):
+      nl80211: Fix comment merge error
+
+Mohamed Abbas (1):
+      iwlwifi: fix resume SW RF-kill
+
+Robert P. J. Day (1):
+      rndis_wlan: Use kernel-supplied ARRAY_SIZE() macro.
+
+Ron Rindjunsky (6):
+      iwlwifi: removing IWL4965_HT config
+      iwlwifi: map sw and hw ampdu queues
+      iwlwifi: use ieee80211_conf to examine rate capabilities
+      iwlwifi: fix allow iwlwifi to aggregate according to tid load
+      mac80211: do not fragment while aggregation is in use
+      iwlwifi: remove 4965 prefix from iwl4965_ucode
+
+Tomas Winkler (9):
+      iwlwifi: add TX aggregation code for 5000 HW
+      iwlwifi: remove unused flag
+      iwlwifi: format log prints for easier parsing
+      iwlwifi: refactor tx aggregation response flow
+      iwlwifi: refactor setting tx power
+      iwlwifi: move scan to iwl-scan.c iwlcore
+      iwlwifi: move rate helpers to iwlcore
+      iwlwifi: cleans up scanning code
+      mac80211: fix beacon interval value
+
+Tony Vroon (1):
+      mac80211: implement EU regulatory domain
+
+Vladimir Koutny (1):
+      mac80211: eliminate IBSS warning in rate_lowest_index()
+
+Zhu Yi (1):
+      iwlwifi: fix software rf_kill problem when interface is down
+
+ Documentation/networking/mac80211_hwsim/README     |   67 ++
+ .../networking/mac80211_hwsim/hostapd.conf         |   11 +
+ .../networking/mac80211_hwsim/wpa_supplicant.conf  |   10 +
+ drivers/net/wireless/Kconfig                       |   13 +
+ drivers/net/wireless/Makefile                      |    2 +
+ drivers/net/wireless/airo.c                        |   15 +-
+ drivers/net/wireless/iwlwifi/Kconfig               |   36 -
+ drivers/net/wireless/iwlwifi/Makefile              |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.c            |   36 +-
+ drivers/net/wireless/iwlwifi/iwl-4965-hw.h         |   15 +-
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c         |  103 +--
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.h         |    2 -
+ drivers/net/wireless/iwlwifi/iwl-4965.c            |  388 ++-----
+ drivers/net/wireless/iwlwifi/iwl-5000-hw.h         |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c            |  244 +++-
+ drivers/net/wireless/iwlwifi/iwl-calib.c           |    4 -
+ drivers/net/wireless/iwlwifi/iwl-calib.h           |   29 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h        |   72 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c            |  303 ++++--
+ drivers/net/wireless/iwlwifi/iwl-core.h            |   71 +-
+ drivers/net/wireless/iwlwifi/iwl-debug.h           |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c         |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h             |  163 +---
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c          |   31 +-
+ drivers/net/wireless/iwlwifi/iwl-helpers.h         |  111 --
+ drivers/net/wireless/iwlwifi/iwl-rfkill.c          |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-rfkill.h          |    1 -
+ drivers/net/wireless/iwlwifi/iwl-rx.c              |    2 -
+ drivers/net/wireless/iwlwifi/iwl-scan.c            |  921 +++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-sta.c             |   53 +-
+ drivers/net/wireless/iwlwifi/iwl-sta.h             |   16 +-
+ drivers/net/wireless/iwlwifi/iwl-tx.c              |   65 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c        |   40 +-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c        | 1243 +++-----------------
+ drivers/net/wireless/libertas/if_cs.c              |  162 ++-
+ drivers/net/wireless/mac80211_hwsim.c              |  514 ++++++++
+ drivers/net/wireless/rndis_wlan.c                  |  167 ++--
+ drivers/net/wireless/rt2x00/rt2400pci.c            |   95 +-
+ drivers/net/wireless/rt2x00/rt2400pci.h            |    2 -
+ drivers/net/wireless/rt2x00/rt2500pci.c            |   91 +-
+ drivers/net/wireless/rt2x00/rt2500pci.h            |    2 -
+ drivers/net/wireless/rt2x00/rt2500usb.c            |   98 +-
+ drivers/net/wireless/rt2x00/rt2500usb.h            |    2 -
+ drivers/net/wireless/rt2x00/rt2x00.h               |   13 +-
+ drivers/net/wireless/rt2x00/rt2x00debug.c          |    6 +-
+ drivers/net/wireless/rt2x00/rt2x00dev.c            |   21 +
+ drivers/net/wireless/rt2x00/rt2x00lib.h            |    1 +
+ drivers/net/wireless/rt2x00/rt2x00mac.c            |   30 +-
+ drivers/net/wireless/rt2x00/rt2x00pci.c            |   72 +-
+ drivers/net/wireless/rt2x00/rt2x00pci.h            |   11 +-
+ drivers/net/wireless/rt2x00/rt2x00queue.c          |  113 ++-
+ drivers/net/wireless/rt2x00/rt2x00queue.h          |   27 +-
+ drivers/net/wireless/rt2x00/rt2x00reg.h            |  134 ++-
+ drivers/net/wireless/rt2x00/rt2x00usb.c            |  165 +--
+ drivers/net/wireless/rt2x00/rt2x00usb.h            |   22 +-
+ drivers/net/wireless/rt2x00/rt61pci.c              |  111 +-
+ drivers/net/wireless/rt2x00/rt61pci.h              |    2 -
+ drivers/net/wireless/rt2x00/rt73usb.c              |  112 +-
+ drivers/net/wireless/rt2x00/rt73usb.h              |    2 -
+ drivers/net/wireless/rtl8187_dev.c                 |    2 +-
+ include/linux/ieee80211.h                          |  407 ++++++-
+ include/linux/nl80211.h                            |    8 +-
+ include/net/mac80211.h                             |    8 +-
+ net/mac80211/ieee80211_i.h                         |    2 +-
+ net/mac80211/main.c                                |    3 +-
+ net/mac80211/mlme.c                                |   17 +-
+ net/mac80211/rx.c                                  |   29 +-
+ net/mac80211/tkip.c                                |   85 +-
+ net/mac80211/tkip.h                                |    4 +-
+ net/mac80211/tx.c                                  |    8 +-
+ net/mac80211/util.c                                |   81 +-
+ net/mac80211/wme.c                                 |   18 +-
+ net/mac80211/wpa.c                                 |   71 +-
+ net/wireless/reg.c                                 |   18 +
+ 74 files changed, 3854 insertions(+), 2972 deletions(-)
+ create mode 100644 Documentation/networking/mac80211_hwsim/README
+ create mode 100644 Documentation/networking/mac80211_hwsim/hostapd.conf
+ create mode 100644 Documentation/networking/mac80211_hwsim/wpa_supplicant.conf
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-scan.c
+ create mode 100644 drivers/net/wireless/mac80211_hwsim.c
+
+Omnibus patch available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2008-06-13.patch.bz2
+-- 
+John W. Linville
+linville@tuxdriver.com
