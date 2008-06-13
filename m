@@ -1,49 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:59026 "EHLO mga11.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:4079 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751478AbYF3Io3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 04:44:29 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: mcgrof@gmail.com, compat-masters@lists.madwifi.org
+	id S1754090AbYFMHrH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jun 2008 03:47:07 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] compat-wireless: fix compilation of mac80211
-Date: Mon, 30 Jun 2008 11:44:25 +0300
-Message-Id: <1214815465-529-1-git-send-email-tomas.winkler@intel.com> (sfid-20080630_104435_921266_8FE7D6FF)
-Content-Type: text/plain; charset="us-ascii"
+	Ester Kummer <ester.kummer@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 1/3] iwlwifi: adding channels to sysfs
+Date: Fri, 13 Jun 2008 15:44:53 +0800
+Message-Id: <1213343095-8133-2-git-send-email-yi.zhu@intel.com> (sfid-20080613_094711_143440_9808BC8B)
+In-Reply-To: <1213343095-8133-1-git-send-email-yi.zhu@intel.com>
+References: <1213343095-8133-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fix the compilation of mac80211 if it's not enabled
-in the target kernel.
-compat-wireless everything is compiled as module
+From: Ester Kummer <ester.kummer@intel.com>
 
+This patch returns channel list to sysfs.
+
+Signed-off-by: Ester Kummer <ester.kummer@intel.com>
 Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- config.mk |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   58 ++++++++++++++++++++++++++-
+ 1 files changed, 56 insertions(+), 2 deletions(-)
 
-diff --git a/config.mk b/config.mk
-index 15d2100..f7dc697 100644
---- a/config.mk
-+++ b/config.mk
-@@ -14,7 +14,7 @@ include $(KLIB_BUILD)/.config
- endif
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 81a1c22..c179b21 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -4122,8 +4122,62 @@ static DEVICE_ATTR(power_level, S_IWUSR | S_IRUSR, show_power_level,
+ static ssize_t show_channels(struct device *d,
+ 			     struct device_attribute *attr, char *buf)
+ {
+-	/* all this shit doesn't belong into sysfs anyway */
+-	return 0;
++
++	struct iwl_priv *priv = dev_get_drvdata(d);
++	struct ieee80211_channel *channels = NULL;
++	const struct ieee80211_supported_band *supp_band = NULL;
++	int len = 0, i;
++	int count = 0;
++
++	if (!test_bit(STATUS_GEO_CONFIGURED, &priv->status))
++		return -EAGAIN;
++
++	supp_band = iwl_get_hw_mode(priv, IEEE80211_BAND_2GHZ);
++	channels = supp_band->channels;
++	count = supp_band->n_channels;
++
++	len += sprintf(&buf[len],
++			"Displaying %d channels in 2.4GHz band "
++			"(802.11bg):\n", count);
++
++	for (i = 0; i < count; i++)
++		len += sprintf(&buf[len], "%d: %ddBm: BSS%s%s, %s.\n",
++				ieee80211_frequency_to_channel(
++				channels[i].center_freq),
++				channels[i].max_power,
++				channels[i].flags & IEEE80211_CHAN_RADAR ?
++				" (IEEE 802.11h required)" : "",
++				(!(channels[i].flags & IEEE80211_CHAN_NO_IBSS)
++				|| (channels[i].flags &
++				IEEE80211_CHAN_RADAR)) ? "" :
++				", IBSS",
++				channels[i].flags &
++				IEEE80211_CHAN_PASSIVE_SCAN ?
++				"passive only" : "active/passive");
++
++	supp_band = iwl_get_hw_mode(priv, IEEE80211_BAND_5GHZ);
++	channels = supp_band->channels;
++	count = supp_band->n_channels;
++
++	len += sprintf(&buf[len], "Displaying %d channels in 5.2GHz band "
++			"(802.11a):\n", count);
++
++	for (i = 0; i < count; i++)
++		len += sprintf(&buf[len], "%d: %ddBm: BSS%s%s, %s.\n",
++				ieee80211_frequency_to_channel(
++				channels[i].center_freq),
++				channels[i].max_power,
++				channels[i].flags & IEEE80211_CHAN_RADAR ?
++				" (IEEE 802.11h required)" : "",
++				((channels[i].flags & IEEE80211_CHAN_NO_IBSS)
++				|| (channels[i].flags &
++				IEEE80211_CHAN_RADAR)) ? "" :
++				", IBSS",
++				channels[i].flags &
++				IEEE80211_CHAN_PASSIVE_SCAN ?
++				"passive only" : "active/passive");
++
++	return len;
+ }
  
- # Wireless subsystem stuff
--CONFIG_MAC80211=y
-+CONFIG_MAC80211=m
- 
- # Enable QOS for 2.6.22, we'll do some hacks here to enable it.
- # You will need this for HT support (802.11n) and WME (802.11e).
+ static DEVICE_ATTR(channels, S_IRUSR, show_channels, NULL);
 -- 
-1.5.4.1
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+1.5.3.6
 
