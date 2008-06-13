@@ -1,92 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aktaia.intevation.org ([212.95.126.10]:46296 "EHLO
-	kolab.intevation.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752206AbYFRPVn (ORCPT
+Received: from hu-out-0506.google.com ([72.14.214.238]:45190 "EHLO
+	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752835AbYFMPGc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 11:21:43 -0400
-From: Bernhard Reiter <bernhard@intevation.de>
-To: linux-wireless@vger.kernel.org
-Subject: 802.11 pccard, Agere 0x0156,0x0003?
-Date: Wed, 18 Jun 2008 17:15:12 +0200
-Cc: Greg KH <greg@kroah.com>
+	Fri, 13 Jun 2008 11:06:32 -0400
+Received: by hu-out-0506.google.com with SMTP id 28so5370342hub.21
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2008 08:06:29 -0700 (PDT)
+Message-ID: <48528CF0.8050204@gmail.com> (sfid-20080613_170635_795394_E9001BEF)
+Date: Fri, 13 Jun 2008 18:06:24 +0300
+From: Maxim Levitsky <maximlevitsky@gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2438132.Dji62gI3s3";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200806181715.20516.bernhard@intevation.de> (sfid-20080618_172151_205409_ECF04355)
+To: =?ISO-8859-1?Q?Tor_H=E5kon_Haugen?= <tor.hakon.haugen@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with	disable_hw_scan=1
+References: <484FEA26.1040305@gmail.com>	<1213241315.7814.696.camel@debian.sh.intel.com>	<20080612135936.GA5031@tuxdriver.com>	<1213342523.7814.865.camel@debian.sh.intel.com>	<20080613130310.GA5333@tuxdriver.com> <48528B63.5030403@gmail.com>
+In-Reply-To: <48528B63.5030403@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2438132.Dji62gI3s3
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Tor H=E5kon Haugen wrote:
+>=20
+> John W. Linville wrote:
+>> On Fri, Jun 13, 2008 at 03:35:23PM +0800, Zhu Yi wrote:
+>>> On Thu, 2008-06-12 at 09:59 -0400, John W. Linville wrote:
+>>>> Honestly I'm tempted to change it to "enable_hw_scan" instead...
+>>> Give the advantages, I'd like to use it if we can fix the bug (I ha=
+ven't
+>>> seen what the bug is myself). But you are free to change the defaul=
+t
+>>> value until it is fixed. There is no such problem for 4965, right?
+>> AFAICT only the 3945 seems to need it.
+>>
+>=20
+> I can confirm that this also applies to 4965 as a friend of mine has=20
+> this card. According to him the card works a lot better with the=20
+> parameters "swcrypto=3D1" and "disable_hw_scan=3D1".
 
-[Greg gave me the hint to ask here. Please CC me on relevant replies. No ne=
-ed=20
-to further include him, unless this should go up on the "DriverNeeded" page=
-=20
-later I presume.]
+Just to make it clear,
+iwl3945 doesn't work at all without disable_hw_scan=3D1 here.
+The driver just shuts down thee card since it detects microcode error.
 
-Sitting here a  pc card wireless land adapter.=20
-id 0x0156, 0x0003, which probably makes it an Agere card.
-cardctl info says:
-"Wireless PC Card Model 0110"
-
-We bought it quite a while ago under the tradename Lancom Airlancer MC-11
-from Lancom Systems.=20
-http://www.lancom-systems.de/AirLancer-MC-11b.117.0.html
-
-Background: We bought it because we thought it has a supported chipset based
-on the old orinocco driver. The vendor announces "linux" supported, but thi=
-s=20
-turned out to be only a driver for Linux 2.4.x.
-Some old stuff (with picture) can be found at:=20
-ftp://ftp.lancom.de/AirLancer/AirLancer-11/AirLancer-MC-11
-this seems to be Free Software under GNU GPLv2 even.
-
-We could not get it to work with 2.6 and searching the web gave us only=20
-reports that it does not work with kernel 2.6.x.
-See http://questier.com/howto.html#Proxim
-(the "local copy" links might haver newer source code)
-
-I've grepped the kernel sources (2.6.24) to try to find the id in a driver
-or the source code comment "Agere" to see if source code was taken in from=
-=20
-the 2.4. driver. To no prevail.
-Even pages like=20
-http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Linux.Wireless.drivers=
-=2E802.11b.html
-do not help me.
-
-So I cannot really say: is there a driver which should work with this card =
-in=20
-Linux 2.6.x and just missed the manufacturer id to recognise it?
-Where did the old Free Software code go? Was it never ported to 2.6?
-
-Thanks,
-Bernhard
-[Please CC me on relevant replies.]
-
-=2D-=20
-Managing Director - Owner: www.intevation.net       (Free Software Company)
-Germany Coordinator: fsfeurope.org. Coordinator: www.Kolab-Konsortium.com.
-Intevation GmbH, Osnabr=C3=BCck, DE; Amtsgericht Osnabr=C3=BCck, HRB 18998
-Gesch=C3=A4ftsf=C3=BChrer Frank Koormann, Bernhard Reiter, Dr. Jan-Oliver W=
-agner
-
---nextPart2438132.Dji62gI3s3
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEABECAAYFAkhZJogACgkQh9ag3dpKERbI8wCeKGpBLFw3zi+shwjbNMv3tqNh
-wv8AnRQE28VVE1bfyboXJcyTyWlwXM9R
-=l09r
------END PGP SIGNATURE-----
-
---nextPart2438132.Dji62gI3s3--
+Best regards,
+	Maxim Levitsky
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
