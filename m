@@ -1,123 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:10251 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757908AbYF0QWl (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:57156 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755414AbYFMMfU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2008 12:22:41 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so215623ywe.1
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jun 2008 09:22:25 -0700 (PDT)
-Message-ID: <1ba2fa240806270922u3975220ehb122f33497a69607@mail.gmail.com> (sfid-20080627_182352_406077_678D2BA5)
-Date: Fri, 27 Jun 2008 19:22:24 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: [PATCH] iwlwifi: fix oops on wep key insertion
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Joonwoo Park" <joonwpark81@gmail.com>,
-	JMF <tolas_feup@hotmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1214582853.10355.28.camel@localhost.localdomain>
+	Fri, 13 Jun 2008 08:35:20 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [PATCH 1/3] iwlwifi: adding channels to sysfs
+Date: Fri, 13 Jun 2008 14:34:45 +0200
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Zhu Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	"Ester Kummer" <ester.kummer@intel.com>
+References: <1213343095-8133-1-git-send-email-yi.zhu@intel.com> <1213346113.3860.3.camel@johannes.berg> <1ba2fa240806130511i1686bee6m8701614a11a46aa6@mail.gmail.com>
+In-Reply-To: <1ba2fa240806130511i1686bee6m8701614a11a46aa6@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1211865214-1640-1-git-send-email-joonwpark81@gmail.com>
-	 <loom.20080527T105701-941@post.gmane.org>
-	 <1ba2fa240805270541wadf0f16t2001528f39b37ea8@mail.gmail.com>
-	 <1211896423.1746.9.camel@localhost.localdomain>
-	 <20080528004100.GG7779@tuxdriver.com> <20080615164617.GA27699@tp64>
-	 <1ba2fa240806150953t4b61b213y3488940ef05b762e@mail.gmail.com>
-	 <1213605989.3803.24.camel@johannes.berg>
-	 <20080627152843.GA16003@tuxdriver.com>
-	 <1214582853.10355.28.camel@localhost.localdomain>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200806131434.46148.mb@bu3sch.de> (sfid-20080613_143524_296898_73D9B62B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 27, 2008 at 7:07 PM, Dan Williams <dcbw@redhat.com> wrote:
-> On Fri, 2008-06-27 at 11:28 -0400, John W. Linville wrote:
->> On Mon, Jun 16, 2008 at 10:46:29AM +0200, Johannes Berg wrote:
->> >
->> > > > [PATCH] wireless: Limit wep key size to 128/104-bits
->> > > >
->> > > > This patch prevents overflow which is occured by invalid long wep key
->> > > > insertion
->> > > >
->> > > > $sudo iwconfig wlan0 enc AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA
->> > > >
->> > > > BUG: unable to handle kernel NULL pointer dereference at 0000000000000000
->> > > > IP: [memcpy_c+0xb/0x20] memcpy_c+0xb/0x20
->> > > > PGD 13a590067 PUD 12e471067 PMD 0
->> > > > Oops: 0000 [1] PREEMPT SMP
->> > > > CPU 1
->> > > > ...
->> > > > Pid: 10, comm: events/1 Not tainted 2.6.26-rc2 #9
->> > > > ...
->> > > > Call Trace:
->> > > >  [iwl4965:iwl4965_rx_scan_start_notif+0xb/0x20] ? :iwl4965:iwl4965_enqueue_hcmd+0x12b/0x220
->> > > >  [hci_usb:init_module+0xe97/0x28cb0] :iwlcore:iwl_send_cmd_sync+0x67/0x290
->> > > >  [save_trace+0x3f/0xb0] ? save_trace+0x3f/0xb0
->> > > > ...
->> > > >
->> > > > Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
->> > > > ---
->> > > >  net/wireless/wext.c |   11 ++++++++++-
->> >
->> > I'm sure Jean will cry murder because he expects there are some stupid
->> > full-mac cards that actually support other sizes.
->> >
->> > Can't somebody just post a patch to mac80211 that only accepts the two
->> > correct sizes like cfg80211 does?
->>
->> Strawman patch below...
->
-> You need to allow 0 through, since you can just set the transmit key
-> index via ENCODE without setting the key.  So the legal values are 0, 5,
-> and 13.  Add 'case 0: /* just setting TX index */' or something and I'll
-> definitely ack it.
->
-> Dan
->
->> ---
->>
->> From: John W. Linville <linville@tuxdriver.com>
->> Subject: [PATCH] mac80211: allow only standard size WEP keys through WEXT
->>
->> Limit ieee80211_ioctl_siwencode to only accept standard sized WEP keys.
->>
->> Signed-off-by: John W. Linville <linville@tuxdriver.com>
->> ---
->>  net/mac80211/wext.c |   10 ++++++++++
->>  1 files changed, 10 insertions(+), 0 deletions(-)
->>
->> diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
->> index 5af3862..d16b975 100644
->> --- a/net/mac80211/wext.c
->> +++ b/net/mac80211/wext.c
->> @@ -26,6 +26,8 @@
->>  #include "wpa.h"
->>  #include "aes_ccm.h"
->>
->> +#define KEY_SIZE_WEP104 13      /* 104/128-bit WEP keys */
->> +#define KEY_SIZE_WEP40  5       /* 40/64-bit WEP keys */
->>
->>  static int ieee80211_set_encryption(struct net_device *dev, u8 *sta_addr,
->>                                   int idx, int alg, int remove,
->> @@ -879,6 +881,14 @@ static int ieee80211_ioctl_siwencode(struct net_device *dev,
->>       u8 bcaddr[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
->>       int remove = 0;
->>
->> +     switch (erq->length) {
->> +     case KEY_SIZE_WEP40:
->> +     case KEY_SIZE_WEP104:
->> +             break;
->> +     default:
->> +             return -EINVAL;
->> +     }
->> +
->>       sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->>
->>       idx = erq->flags & IW_ENCODE_INDEX;
->> --
->> 1.5.5.1
+On Friday 13 June 2008 14:11:36 Tomas Winkler wrote:
+> On Fri, Jun 13, 2008 at 11:35 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> >
+> >> >>  drivers/net/wireless/iwlwifi/iwl4965-base.c |   58 ++++++++++++++++++++++++++-
+> >> >>  1 files changed, 56 insertions(+), 2 deletions(-)
+> >> >>
+> >> >> diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+> >> >> index 81a1c22..c179b21 100644
+> >> >> --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
+> >> >> +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+> >> >> @@ -4122,8 +4122,62 @@ static DEVICE_ATTR(power_level, S_IWUSR | S_IRUSR, show_power_level,
+> >> >>  static ssize_t show_channels(struct device *d,
+> >> >>                            struct device_attribute *attr, char *buf)
+> >> >>  {
+> >> >> -     /* all this shit doesn't belong into sysfs anyway */
+> >> >> -     return 0;
+> >> >
+> >> > Hehe. Do you really have to? You can query this information with
+> >> > nl80211. I don't know why you need all that sysfs stuff anyway.
+> >>
+> >> I'm not sure why Yi has cut off the log message but original was
+> >>
+> >> 'This patch returns channel list to sysfs. This is requirement
+> >> for validation purposes'
+> >>
+> >> Our automation is build around sysfs and wext and I'm not going to
+> >> rewrite it now.
+> >
+> > If you managed to get along without this for so long, why is it needed
+> > in upstream now?
+> 
+> We didn't run without it, We  were developing HW 5000 on older kernel
+> now I just merging it upstream. See my announcement  Try to imagine
+> that there is world on totally different planet with different
+> gravitation constant,
+> 
+> > Remember, sysfs is API. You don't get to change it gratuitously, so
+> > neither should you add to it gratuitously. And we already _have_ API for
+> > this particular thing which is not dependent on a particular
+> > hardware/driver to boot!
+> Agree. We've just returned what was there before
+> I think you understand what legacy means after your try to replace
+> wext. It will take time
+> till we switch to new API. Unfortunately cannot fix everything in one day.
 
-I'm not against this patch just I thought we agreed to support the
-weird WEP keys in the  software. We fixed this in the driver with
-similar check so now it falls back to software encryption in mac80211.
-Tomas
+
+IMO a compromise could be to put this API under a default-off kconfig option
+with a big fat warning that the API is supposed to be deleted and replaced
+by cfg80211 soon. So this would only be temporary API for special purposes
+that nobody should actually use. But if somebody needs to, he can do so and
+has no loss of functionality for the time until the correct API is established.
+
+-- 
+Greetings Michael.
