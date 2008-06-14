@@ -1,119 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:53806 "EHLO
+Received: from vs166246.vserver.de ([62.75.166.246]:60115 "EHLO
 	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754798AbYFNVlx (ORCPT
+	with ESMTP id S1753947AbYFNNyG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jun 2008 17:41:53 -0400
+	Sat, 14 Jun 2008 09:54:06 -0400
 From: Michael Buesch <mb@bu3sch.de>
-To: stable@kernel.org
-Subject: [PATCH stable] b43: Fix noise calculation WARN_ON
-Date: Sat, 14 Jun 2008 23:00:14 +0200
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+To: bcm43xx-dev@lists.berlios.de
+Subject: b43 open-firmware new snapshot
+Date: Sat, 14 Jun 2008 15:53:42 +0200
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Message-Id: <200806142300.15391.mb@bu3sch.de> (sfid-20080614_234159_358122_AE222D05)
+Message-Id: <200806141553.42420.mb@bu3sch.de> (sfid-20080614_155433_815163_88621D31)
 Content-Type: text/plain;
   charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This removes a WARN_ON that is responsible for the following koops:
-http://www.kerneloops.org/searchweek.php?search=b43_generate_noise_sample
+Hi,
 
-The comment in the patch describes why it's safe to simply remove
-the check.
+Here comes another snapshot of the Opensource firmware for
+the b43 wireless core.
+http://bu3sch.de/b43/openfw/b43-openfw-20080614.tar.bz2
 
-This patch is upstream in John Linville's wireless-testing.git tree
-as commit 86ef1ae07289c9f0aa1aa310d43653e513e6f124
+The firmware does _ONLY_ work in monitor mode. The TX path is not implemented,
+so it can not associate or whatever. It can only receive packets.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+This firmware does _only_ work on wireless core revisions 5, 6, 7, 8 or 10.
+You can see the core revision by turning on SSB debugging.
+It will print something like:
+ssb: Core X found: IEEE 802.11 (cc 0x812, rev 0x05, vendor 0x4243)
+As you can see there's the revision number in hex.
 
+If you want to test this, first get latest wireless-testing.git kernel driver.
+Then get the firmware tarball and extract it.
+The tarball contains the full sourcecode and a set of prebuilt binaries.
+(If you want to rebuild the stuff, you need to get the assembler toolchain
+from http://git.bu3sch.de/git/b43-tools.git).
+There are binaries with debugging code (in bin-debug subdir) and without
+debugging code (in bin subdir). You want to start with the non-debugging
+version for testing. You might want to check the debugging version, if
+you see any problems. It might print some useful hints in the kernel
+driver for what is going wrong.
 
-Index: linux-2.6.25.6/drivers/net/wireless/b43/b43.h
-===================================================================
---- linux-2.6.25.6.orig/drivers/net/wireless/b43/b43.h	2008-06-14 22:43:28.000000000 +0200
-+++ linux-2.6.25.6/drivers/net/wireless/b43/b43.h	2008-06-14 22:47:02.000000000 +0200
-@@ -593,13 +593,12 @@ struct b43_dma {
- 	struct b43_dmaring *rx_ring0;
- 	struct b43_dmaring *rx_ring3;	/* only available on core.rev < 5 */
- };
- 
- /* Context information for a noise calculation (Link Quality). */
- struct b43_noise_calculation {
--	u8 channel_at_start;
- 	bool calculation_running;
- 	u8 nr_samples;
- 	s8 samples[8][4];
- };
- 
- struct b43_stats {
-Index: linux-2.6.25.6/drivers/net/wireless/b43/main.c
-===================================================================
---- linux-2.6.25.6.orig/drivers/net/wireless/b43/main.c	2008-06-14 22:44:16.000000000 +0200
-+++ linux-2.6.25.6/drivers/net/wireless/b43/main.c	2008-06-14 22:47:02.000000000 +0200
-@@ -1024,22 +1024,20 @@ static void b43_jssi_write(struct b43_wl
- 
- static void b43_generate_noise_sample(struct b43_wldev *dev)
- {
- 	b43_jssi_write(dev, 0x7F7F7F7F);
- 	b43_write32(dev, B43_MMIO_MACCMD,
- 		    b43_read32(dev, B43_MMIO_MACCMD) | B43_MACCMD_BGNOISE);
--	B43_WARN_ON(dev->noisecalc.channel_at_start != dev->phy.channel);
- }
- 
- static void b43_calculate_link_quality(struct b43_wldev *dev)
- {
- 	/* Top half of Link Quality calculation. */
- 
- 	if (dev->noisecalc.calculation_running)
- 		return;
--	dev->noisecalc.channel_at_start = dev->phy.channel;
- 	dev->noisecalc.calculation_running = 1;
- 	dev->noisecalc.nr_samples = 0;
- 
- 	b43_generate_noise_sample(dev);
- }
- 
-@@ -1050,15 +1048,22 @@ static void handle_irq_noise(struct b43_
- 	u8 noise[4];
- 	u8 i, j;
- 	s32 average;
- 
- 	/* Bottom half of Link Quality calculation. */
- 
-+	/* Possible race condition: It might be possible that the user
-+	 * changed to a different channel in the meantime since we
-+	 * started the calculation. We ignore that fact, since it's
-+	 * not really that much of a problem. The background noise is
-+	 * an estimation only anyway. Slightly wrong results will get damped
-+	 * by the averaging of the 8 sample rounds. Additionally the
-+	 * value is shortlived. So it will be replaced by the next noise
-+	 * calculation round soon. */
-+
- 	B43_WARN_ON(!dev->noisecalc.calculation_running);
--	if (dev->noisecalc.channel_at_start != phy->channel)
--		goto drop_calculation;
- 	*((__le32 *)noise) = cpu_to_le32(b43_jssi_read(dev));
- 	if (noise[0] == 0x7F || noise[1] == 0x7F ||
- 	    noise[2] == 0x7F || noise[3] == 0x7F)
- 		goto generate_new;
- 
- 	/* Get the noise samples. */
-@@ -1093,17 +1098,16 @@ static void handle_irq_noise(struct b43_
- 		if (tmp == 8)
- 			average -= 72;
- 		else
- 			average -= 48;
- 
- 		dev->stats.link_noise = average;
--	      drop_calculation:
- 		dev->noisecalc.calculation_running = 0;
- 		return;
- 	}
--      generate_new:
-+generate_new:
- 	b43_generate_noise_sample(dev);
- }
- 
- static void handle_irq_tbtt_indication(struct b43_wldev *dev)
- {
- 	if (b43_is_mode(dev->wl, IEEE80211_IF_TYPE_AP)) {
+Simply get the *.fw files from bin/rev5/ in the tarball and copy them
+into /lib/firmware/b43-open.
+Then load b43 from latest wireless-testing.git with the module
+parameter fwpostfix=-open
+
+-- 
+Greetings Michael.
