@@ -1,42 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:12407 "EHLO c60.cesmail.net"
+Received: from hostap.isc.org ([149.20.54.63]:45681 "EHLO hostap.isc.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751358AbYFAFjs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jun 2008 01:39:48 -0400
-Subject: Re: Moving to kernel .25-r4
-From: Pavel Roskin <proski@gnu.org>
-To: iElectric <ielectric@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <loom.20080531T203112-538@post.gmane.org>
-References: <loom.20080531T203112-538@post.gmane.org>
-Content-Type: text/plain
-Date: Sun, 01 Jun 2008 01:39:45 -0400
-Message-Id: <1212298785.6853.5.camel@rd> (sfid-20080601_073953_366872_08DEF435)
-Mime-Version: 1.0
+	id S1754581AbYFNJwQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Jun 2008 05:52:16 -0400
+Date: Sat, 14 Jun 2008 12:51:30 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Maciek Kaliszewski <mkalkal@interia.pl>,
+	linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 and WPA
+Message-ID: <20080614095130.GG5062@jm.kir.nu> (sfid-20080614_115221_356900_0F9DA730)
+References: <4852658A.4040402@interia.pl> <20080613132317.GB5333@tuxdriver.com> <1ba2fa240806130637u1f4b485dked28ce04ff52a9b5@mail.gmail.com> <48527D72.4070509@interia.pl> <1213375014.29669.36.camel@dv> <4852D6EB.3020304@interia.pl> <1213391287.22425.31.camel@dv> <4852F389.1070506@interia.pl> <20080614093851.GF5062@jm.kir.nu> <1213436523.3860.44.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1213436523.3860.44.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-05-31 at 20:33 +0000, iElectric wrote:
-> Recently I moved to kernel .25-r4. I want to use newest firmware version with
-> b43 for my 4311 rev 1 wireless card. I cut the firmware to /lib/firmware/b43/,
-> do rmmod b43, modprobe b43 and it still uses old firmware:
-> 
-> b43-phy0: Broadcom 4311 WLAN found
-> b43-phy0 debug: Found PHY: Analog 4, Type 2, Revision 8
-> b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2
-> b43-phy0 debug: DebugFS (CONFIG_DEBUG_FS) not enabled in kernel config
-> b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
+On Sat, Jun 14, 2008 at 11:42:03AM +0200, Johannes Berg wrote:
 
-That's the new firmware.
+> Yeah, it should be in there. Building a 64-bit wpa supplicant is quite
+> hard unless you have all 64-bit libs already, so maybe it's easier to
+> apply Dave's patches.
 
-> Ideas? 
-
-A good bug report describes:
-
-1) What you do (you missed some details, such as the firmware name)
-2) What you get (that was mostly OK)
-3) What you expect to get (that was missing completely)
+Yes, I know.. I did it once on PS3 and it took some time figuring out
+which packages I need to install to get proper 64-bit libraries and
+compiler available. It didn't help that that was the first time I used
+the particular distro, but anyway, it is doable if one does not want to
+update the kernel. I hope that the patches go in soon, though, since
+neither patching a kernel or building 64-bit user space from scratch is
+something I would consider a good end user requirement.. ;-)
 
 -- 
-Regards,
-Pavel Roskin
+Jouni Malinen                                            PGP id EFC895FA
