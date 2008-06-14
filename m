@@ -1,35 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.245]:45614 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755224AbYFHQLu (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43045 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757918AbYFNA31 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jun 2008 12:11:50 -0400
-Received: by an-out-0708.google.com with SMTP id d40so422644and.103
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2008 09:11:49 -0700 (PDT)
-Message-ID: <43e72e890806080911v4aba1079t438b8ac2265d4194@mail.gmail.com> (sfid-20080608_181154_384888_DB13B632)
-Date: Sun, 8 Jun 2008 09:11:49 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Mark S." <throaway@yahoo.com>
-Subject: Re: Problem with 2.6.22 / Unknown symbol netif_subqueue_stopped
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200806012217.22151.throaway@yahoo.com>
+	Fri, 13 Jun 2008 20:29:27 -0400
+Date: Fri, 13 Jun 2008 17:27:22 -0700
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	linux-next@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ANNOUNCE] linux-staging tree created
+Message-ID: <20080614002722.GC25585@kroah.com> (sfid-20080614_022934_219005_BA521C51)
+References: <20080610190540.GA25066@kroah.com> <43e72e890806130714k535b041evaf750209ea492c47@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <200806012217.22151.throaway@yahoo.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890806130714k535b041evaf750209ea492c47@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 1, 2008 at 10:17 PM, Mark S. <throaway@yahoo.com> wrote:
-> Hello!
->
-> I'm running kernel 2.6.22. I've compiled and installed the wireless drivers
-> from your latest tarball, which the documentation says should work with
-> 2.6.22.  I'm using the kernel source for KLIB_BUILD. When attempting to load
-> the resulting module zd1211rw, there is a cascade of errors starting with
->
->  mac80211:  Unknown symbol netif_subqueue_stopped
+On Fri, Jun 13, 2008 at 07:14:32AM -0700, Luis R. Rodriguez wrote:
+> This is great. To let this be useful for wireless we'll need
+> wireless-testing.git merged as we rely on it for the latest and
+> greatest. Is this a possibility?
 
-This required MQ backport which I just finished an attempt for, please
-give it a try and let me know how it goes.
+Hm, why?  Is it really needed for you to have this pulled in?  What is
+keeping these drivers from being added to the -next tree today?
 
-  Luis
+> We have a few drivers which are not yet ready for
+> wireless-testing.git. Airgo is one.
+
+If you have individual drivers, I'd be glad to take them into the tree
+if you think it will help out.  Just send me a patch that can build
+properly.
+
+thanks,
+
+greg k-h
