@@ -1,77 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60059 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753095AbYFBMcZ (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43049 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757931AbYFNA32 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2008 08:32:25 -0400
-Subject: Re: [BISECTED][NEXT] Wifi downloads capped at 105Kbytes/s
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sitsofe Wheeler <sitsofe@yahoo.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
+	Fri, 13 Jun 2008 20:29:28 -0400
+Date: Fri, 13 Jun 2008 17:28:02 -0700
+From: Greg KH <greg@kroah.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	linux-next@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <g1uicv$se6$1@ger.gmane.org>
-References: <g1uicv$se6$1@ger.gmane.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-K1z6o2OExWFZf7/vNkTK"
-Date: Mon, 02 Jun 2008 09:34:44 +0200
-Message-Id: <1212392084.4148.2.camel@johannes.berg> (sfid-20080602_143255_828267_A130FB1A)
-Mime-Version: 1.0
+Subject: Re: [ANNOUNCE] linux-staging tree created
+Message-ID: <20080614002802.GD25585@kroah.com> (sfid-20080614_022934_930467_AC9FDEAE)
+References: <20080610190540.GA25066@kroah.com> <43e72e890806130714k535b041evaf750209ea492c47@mail.gmail.com> <20080613143328.GA16506@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080613143328.GA16506@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Jun 13, 2008 at 10:33:29AM -0400, John W. Linville wrote:
+> On Fri, Jun 13, 2008 at 07:14:32AM -0700, Luis R. Rodriguez wrote:
+> 
+> > This is great. To let this be useful for wireless we'll need
+> > wireless-testing.git merged as we rely on it for the latest and
+> > greatest. Is this a possibility?
+> 
+> > We have a few drivers which are not yet ready for
+> > wireless-testing.git. Airgo is one.
+> > 
+> > Anyway, good stuff. Let me know what you think about letting this work
+> > for wireless too.
+> 
+> I don't think directly pulling wireless-testing is a good idea of
+> -staging for process-related reasons.  However I think we can arrange
+> to send something for the new tree.  at76, airgo, and mrv8k are all
+> decent candidates.
 
---=-K1z6o2OExWFZf7/vNkTK
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Sounds good to me.
 
-Hi,
+> Greg, how does the -staging tree get managed?  Is it periodically
+> rebuilt (like -next)?  Or would I need to send you pull requests?
 
-On Sun, 2008-06-01 at 17:22 +0100, Sitsofe Wheeler wrote:
-> Download speeds are never more than 105Kbytes/s even though the bit rate =
-is
-> 54Mb/s in at least linux-net kernels from next-20080523 onwards. I have
-> bisected it down to commit [2e92e6f2c50b4baf85cca968f0e6f1b5c0df7d39]:
+Just send me patches, it's a quilt tree.
 
-[...]
+thanks,
 
-> Reverting this seemed to allow speeds up to 1.3Mbytes/s (which is expecte=
-d
-> on this network). I believe I see this behaviour with both iwl3945 and
-> rt2x00 drivers. Here is the bisection log:
-
-[...]
-
-> Perhaps a change was made but drivers have yet to be updated?
-
-Thanks for your report. It looks like I forgot to initialise some
-variables that now had a special 'unassigned' meaning with the value -1
-while previously that was the value NULL (hence implicitly initialised
-with a memset()). Patch in a minute, please test.
-
-johannes
-
-
---=-K1z6o2OExWFZf7/vNkTK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASEOik6Vg1VMiehFYAQLlsxAAtGUHuFWemR/0LNfi6hstPUAWk6UQqXt9
-9wKq3HaWWSXEAqkWwS/JeeWj2Kbi/553CAQQ+xNTxdE7zHyXSzl3qw+UCvUu1G1P
-jaX0aKw2ClhSeCffFpn0fi29GdBS2GAxUUUJMMekiOzB1r/04Y47rLh+IOXwLMm2
-1RdhXHEfHdKSWDsBWZiiFAPUxpwiWVe2viQCMaXxmTlBKj0EwiFm0P1Wt/zLKntG
-dmE+vAZ7jSXCH/pn1keZHs5IGRlrJSijA9fSAx4jHd/jKswjqlXjm66p3aYLuUnt
-5ri6H12mM7VDyYa2JkSs2QAC3uu8SxXY2s7URpd2zgXVlrQE1Y5dUPpEE3qIjHMv
-7o79CRJ0oR0oAEmfGKCEkQin1+wlnbhDzj2CsUR3qc4vsf12qIGEf1rBJuJpup9y
-G70Fp7qvi/vtuwnWXw1tKL9Rx/NIXv/grumv4sNliDG5cOxV7kCCH1h8pOnWFvRI
-Vmr+6C0qTQZeVd41J5Vz/ouB05JdEUzo+ccODU2fZ28ImJ2zQaaJXxNW+RO8YReV
-PL7KgmzTELIZRw1SgQMIt0njrF4uDAfvFbyD450dICY7+wyjYjs0adbzvnSiNzpO
-KXJlNAYJlRflR3wnDYCSS9YNSHnB0CeUtYmWGZcLlftQRaYsbacWrT3gjQt0CXyR
-5UmyVabLmv0=
-=Sdun
------END PGP SIGNATURE-----
-
---=-K1z6o2OExWFZf7/vNkTK--
-
+greg k-h
