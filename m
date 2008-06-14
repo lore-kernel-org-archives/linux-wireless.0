@@ -1,58 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51347 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752062AbYFBQyK (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:53806 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754798AbYFNVlx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2008 12:54:10 -0400
-Subject: Re: [PATCH 1/2] mac80211: fix unbalanced locking in
-	ieee80211_get_buffered_bc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1212421452-5635-1-git-send-email-tomas.winkler@intel.com>
-References: <1212421452-5635-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JcMge9hCXH3AyYyohb+k"
-Date: Mon, 02 Jun 2008 18:53:15 +0200
-Message-Id: <1212425595.20021.0.camel@johannes.berg> (sfid-20080602_185414_487319_B84B80B5)
-Mime-Version: 1.0
+	Sat, 14 Jun 2008 17:41:53 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: stable@kernel.org
+Subject: [PATCH stable] b43: Fix noise calculation WARN_ON
+Date: Sat, 14 Jun 2008 23:00:14 +0200
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+MIME-Version: 1.0
+Message-Id: <200806142300.15391.mb@bu3sch.de> (sfid-20080614_234159_358122_AE222D05)
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This removes a WARN_ON that is responsible for the following koops:
+http://www.kerneloops.org/searchweek.php?search=b43_generate_noise_sample
 
---=-JcMge9hCXH3AyYyohb+k
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The comment in the patch describes why it's safe to simply remove
+the check.
 
-Good catch. However, we'll leak skb in that case, so how about:
-=20
-	if (WARN_ON(tx.skb !=3D skb))
--		return NULL;
-+		res =3D TX_DROP;
+This patch is upstream in John Linville's wireless-testing.git tree
+as commit 86ef1ae07289c9f0aa1aa310d43653e513e6f124
 
-johannes
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
---=-JcMge9hCXH3AyYyohb+k
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASEQleqVg1VMiehFYAQJyAA//VN8+hH93U76bsHMWxAoTTRFR2eDVc50S
-4KnpL9YLN/90Ca8Yx6kD2ShStv6+E+mp2kLugUsKqj0d7V7VxncElQ656k1cCQHG
-QAXo6NgpGXYVkg5q/J7YMiCel+ld9FV4Uy4VOoUPc1BowvtN4MDLnb5gNMXaOnOF
-VeJivDh4luBGAJmaLMW9ZKy8z7DC5qFKnwZx1ISWuBEyEpFL5EbHH3ch3MztiSNN
-5zlW9m3A4YqFXGy0kQyfD+ateIq+dcmiJ2w69ArRiuw9cMLKVagJy1WnS51vVY9r
-npe9Dyc0TSacBNnHuI0IrCuuxfxB8SXwa+cJ2ZedNacvsxFDsLmKgdAByZNML35k
-lDEz5lE5XRYfEoUibPXKnwGhiRKobRfQtt9D04vGY7orzXkglwXsuer8NjsfBBqc
-ggKcoE8wj9iaQwqLocm06umxKS2WeP2vH37iXePR74Crj+Mgu1TqJ546UU2c87XK
-4CEl6S3zshXzmMW7OWiRec2xVaxYCU/jO6Vv1W0IDuLvgOvDdEwseD7Oe4VSJ/aN
-6Rd+7W3sdQQYHz4JpjVHOm42NP8eZAR8Z0CovcuxjC1cCgvW4E/8sMnxr8xZ3vtO
-EBvDFkii0sImFaqUy8f1e+7HRTnBpEhhhBgXeU3BS9uvoaTLsotgGNvbPV8uiqQP
-bnPiULnR6hA=
-=vmr/
------END PGP SIGNATURE-----
-
---=-JcMge9hCXH3AyYyohb+k--
-
+Index: linux-2.6.25.6/drivers/net/wireless/b43/b43.h
+===================================================================
+--- linux-2.6.25.6.orig/drivers/net/wireless/b43/b43.h	2008-06-14 22:43:28.000000000 +0200
++++ linux-2.6.25.6/drivers/net/wireless/b43/b43.h	2008-06-14 22:47:02.000000000 +0200
+@@ -593,13 +593,12 @@ struct b43_dma {
+ 	struct b43_dmaring *rx_ring0;
+ 	struct b43_dmaring *rx_ring3;	/* only available on core.rev < 5 */
+ };
+ 
+ /* Context information for a noise calculation (Link Quality). */
+ struct b43_noise_calculation {
+-	u8 channel_at_start;
+ 	bool calculation_running;
+ 	u8 nr_samples;
+ 	s8 samples[8][4];
+ };
+ 
+ struct b43_stats {
+Index: linux-2.6.25.6/drivers/net/wireless/b43/main.c
+===================================================================
+--- linux-2.6.25.6.orig/drivers/net/wireless/b43/main.c	2008-06-14 22:44:16.000000000 +0200
++++ linux-2.6.25.6/drivers/net/wireless/b43/main.c	2008-06-14 22:47:02.000000000 +0200
+@@ -1024,22 +1024,20 @@ static void b43_jssi_write(struct b43_wl
+ 
+ static void b43_generate_noise_sample(struct b43_wldev *dev)
+ {
+ 	b43_jssi_write(dev, 0x7F7F7F7F);
+ 	b43_write32(dev, B43_MMIO_MACCMD,
+ 		    b43_read32(dev, B43_MMIO_MACCMD) | B43_MACCMD_BGNOISE);
+-	B43_WARN_ON(dev->noisecalc.channel_at_start != dev->phy.channel);
+ }
+ 
+ static void b43_calculate_link_quality(struct b43_wldev *dev)
+ {
+ 	/* Top half of Link Quality calculation. */
+ 
+ 	if (dev->noisecalc.calculation_running)
+ 		return;
+-	dev->noisecalc.channel_at_start = dev->phy.channel;
+ 	dev->noisecalc.calculation_running = 1;
+ 	dev->noisecalc.nr_samples = 0;
+ 
+ 	b43_generate_noise_sample(dev);
+ }
+ 
+@@ -1050,15 +1048,22 @@ static void handle_irq_noise(struct b43_
+ 	u8 noise[4];
+ 	u8 i, j;
+ 	s32 average;
+ 
+ 	/* Bottom half of Link Quality calculation. */
+ 
++	/* Possible race condition: It might be possible that the user
++	 * changed to a different channel in the meantime since we
++	 * started the calculation. We ignore that fact, since it's
++	 * not really that much of a problem. The background noise is
++	 * an estimation only anyway. Slightly wrong results will get damped
++	 * by the averaging of the 8 sample rounds. Additionally the
++	 * value is shortlived. So it will be replaced by the next noise
++	 * calculation round soon. */
++
+ 	B43_WARN_ON(!dev->noisecalc.calculation_running);
+-	if (dev->noisecalc.channel_at_start != phy->channel)
+-		goto drop_calculation;
+ 	*((__le32 *)noise) = cpu_to_le32(b43_jssi_read(dev));
+ 	if (noise[0] == 0x7F || noise[1] == 0x7F ||
+ 	    noise[2] == 0x7F || noise[3] == 0x7F)
+ 		goto generate_new;
+ 
+ 	/* Get the noise samples. */
+@@ -1093,17 +1098,16 @@ static void handle_irq_noise(struct b43_
+ 		if (tmp == 8)
+ 			average -= 72;
+ 		else
+ 			average -= 48;
+ 
+ 		dev->stats.link_noise = average;
+-	      drop_calculation:
+ 		dev->noisecalc.calculation_running = 0;
+ 		return;
+ 	}
+-      generate_new:
++generate_new:
+ 	b43_generate_noise_sample(dev);
+ }
+ 
+ static void handle_irq_tbtt_indication(struct b43_wldev *dev)
+ {
+ 	if (b43_is_mode(dev->wl, IEEE80211_IF_TYPE_AP)) {
