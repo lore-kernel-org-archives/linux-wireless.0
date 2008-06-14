@@ -1,71 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outbound.icp-qv1-irony-out3.iinet.net.au ([203.59.1.148]:5359
-	"EHLO outbound.icp-qv1-irony-out3.iinet.net.au" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750757AbYFULo0 (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:53803 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754731AbYFNVlw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jun 2008 07:44:26 -0400
-Subject: Re: [RFC PATCHES] Re: Is configfs the right solution for
-	configuration based fs?
-From: Ben Nizette <bn@niasdigital.com>
-To: Joel Becker <Joel.Becker@oracle.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux kernel <linux-kernel@vger.kernel.org>,
-	Greg KH <greg@kroah.com>,
-	Satyam Sharma <ssatyam@cse.iitk.ac.in>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Al Viro <viro@ftp.linux.org.uk>,
-	"H. Peter Anvin" <hpa@kernel.org>
-In-Reply-To: <20080621084440.GA25489@ca-server1.us.oracle.com>
-References: <1213002187.698.62.camel@johannes.berg>
-	 <1213056772.4089.42.camel@moss.renham>
-	 <20080619024804.GA29765@mail.oracle.com>
-	 <1213942750.2336.43.camel@moss.renham>
-	 <20080620065253.GA14238@ca-server1.us.oracle.com>
-	 <1213953776.2336.75.camel@moss.renham>
-	 <20080620213708.GC21416@mail.oracle.com>
-	 <1214010229.2336.88.camel@moss.renham>
-	 <20080621020201.GH21416@mail.oracle.com>
-	 <1214035422.2336.121.camel@moss.renham>
-	 <20080621084440.GA25489@ca-server1.us.oracle.com>
-Content-Type: text/plain
-Date: Sat, 21 Jun 2008 21:44:44 +1000
-Message-Id: <1214048684.2336.128.camel@moss.renham> (sfid-20080621_134522_042019_93FC477D)
-Mime-Version: 1.0
+	Sat, 14 Jun 2008 17:41:52 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: stable@kernel.org
+Subject: [PATCH stable] b43: Fix possible NULL pointer dereference in DMA code
+Date: Sat, 14 Jun 2008 22:57:55 +0200
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+MIME-Version: 1.0
+Message-Id: <200806142257.55946.mb@bu3sch.de> (sfid-20080614_234158_243127_D0C46798)
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This fixes a possible NULL pointer dereference in an error path of the
+DMA allocation error checking code. In case the DMA allocation address is invalid,
+the dev pointer is dereferenced for unmapping of the buffer.
 
-On Sat, 2008-06-21 at 01:44 -0700, Joel Becker wrote:
-> On Sat, Jun 21, 2008 at 06:03:42PM +1000, Ben Nizette wrote:
-> > In the kobject/kset case the separation makes sense as kobjects are
-> > embedded in things all over the kernel controlling things like ref
-> > counting, device model glue, hotplug info as well as the sysfs
-> > representation.  The config_item doesn't have any responsibilities
-> > outside of the configfs representation (does it?) so the analogy isn't
-> > 100%.  Though of course the item/group split makes sense if there are
-> > grander plans for the config_item in the future.
-> 
-> 	The config_item is indeed embedded in whatever struct it maps
-> too.  eg, the ocfs2 nodemanager can have a couple hundred nodes, and
-> that's one config_item per.  The fs/dlm stuff can have even more nodes.
+This is a cut-down version of 3ab4b64c46784ed83f213bf4e1b51d9c55858600
+which is upstream in John Linville's wireless-testing.git tree.
 
-Righteo, I guess the few 10s of bytes per struct saved by not tracking
-children if we know that none can ever exist is the aim here?  Coming
-from an embedded background that makes sense to me.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
->From a conceptual point of view I still think they would work better
-amalgamated in the configfs case but really this whole discussion is
-pretty moot. I'm certainly not advocating a re-write of anything in
-there!
 
-Thanks for the clarifications (and patience ^_^), I'll do some work
-using the new macros and get back to you asap.
-
-Cheers,
-	--Ben.
-
-> 
-> Joel
-> 
+Index: linux-2.6.25.6/drivers/net/wireless/b43/dma.c
+===================================================================
+--- linux-2.6.25.6.orig/drivers/net/wireless/b43/dma.c	2008-06-14 22:43:28.000000000 +0200
++++ linux-2.6.25.6/drivers/net/wireless/b43/dma.c	2008-06-14 22:45:30.000000000 +0200
+@@ -847,12 +847,13 @@ struct b43_dmaring *b43_setup_dmaring(st
+ 	dma_addr_t dma_test;
+ 
+ 	ring = kzalloc(sizeof(*ring), GFP_KERNEL);
+ 	if (!ring)
+ 		goto out;
+ 	ring->type = type;
++	ring->dev = dev;
+ 
+ 	nr_slots = B43_RXRING_SLOTS;
+ 	if (for_tx)
+ 		nr_slots = B43_TXRING_SLOTS;
+ 
+ 	ring->meta = kcalloc(nr_slots, sizeof(struct b43_dmadesc_meta),
+@@ -898,13 +899,12 @@ struct b43_dmaring *b43_setup_dmaring(st
+ 
+ 		dma_unmap_single(dev->dev->dma_dev,
+ 				 dma_test, b43_txhdr_size(dev),
+ 				 DMA_TO_DEVICE);
+ 	}
+ 
+-	ring->dev = dev;
+ 	ring->nr_slots = nr_slots;
+ 	ring->mmio_base = b43_dmacontroller_base(type, controller_index);
+ 	ring->index = controller_index;
+ 	if (type == B43_DMA_64BIT)
+ 		ring->ops = &dma64_ops;
+ 	else
