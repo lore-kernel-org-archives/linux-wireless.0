@@ -1,84 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32491 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753588AbYFXMug (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 08:50:36 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 4/4 V2] mac80211: add phy information to giwname
-Date: Tue, 24 Jun 2008 15:50:17 +0300
-Message-Id: <1214311817-952-1-git-send-email-tomas.winkler@intel.com> (sfid-20080624_145112_551320_B29A93D9)
-Content-Type: text/plain; charset="us-ascii"
+Received: from wa-out-1112.google.com ([209.85.146.183]:13381 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757270AbYFONrf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Jun 2008 09:47:35 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so3973077waf.23
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Jun 2008 06:47:32 -0700 (PDT)
+Message-ID: <1ba2fa240806150647mdc97d98oad0b1b02de1fcf87@mail.gmail.com> (sfid-20080615_154738_279895_6BFA7D2B)
+Date: Sun, 15 Jun 2008 16:47:32 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Maxim Levitsky" <maximlevitsky@gmail.com>
+Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with disable_hw_scan=1
+Cc: "=?ISO-8859-1?Q?Tor_H=E5kon_Haugen?=" <tor.hakon.haugen@gmail.com>,
+	"Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <48551C62.80904@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <484FEA26.1040305@gmail.com>
+	 <1213241315.7814.696.camel@debian.sh.intel.com>
+	 <20080612135936.GA5031@tuxdriver.com>
+	 <1213342523.7814.865.camel@debian.sh.intel.com>
+	 <20080613130310.GA5333@tuxdriver.com> <48528B63.5030403@gmail.com>
+	 <48528CF0.8050204@gmail.com>
+	 <1ba2fa240806131304n442972eatfd2f35034476c380@mail.gmail.com>
+	 <48551C62.80904@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch add phy information to giwname.
+On Sun, Jun 15, 2008 at 4:42 PM, Maxim Levitsky <maximlevitsky@gmail.co=
+m> wrote:
+> Tomas Winkler wrote:
+>>
+>> On Fri, Jun 13, 2008 at 6:06 PM, Maxim Levitsky <maximlevitsky@gmail=
+=2Ecom>
+>> wrote:
+>>>
+>>> Tor H=E5kon Haugen wrote:
+>>>>
+>>>> John W. Linville wrote:
+>>>>>
+>>>>> On Fri, Jun 13, 2008 at 03:35:23PM +0800, Zhu Yi wrote:
+>>>>>>
+>>>>>> On Thu, 2008-06-12 at 09:59 -0400, John W. Linville wrote:
+>>>>>>>
+>>>>>>> Honestly I'm tempted to change it to "enable_hw_scan" instead..=
+=2E
+>>>>>>
+>>>>>> Give the advantages, I'd like to use it if we can fix the bug (I
+>>>>>> haven't
+>>>>>> seen what the bug is myself). But you are free to change the def=
+ault
+>>>>>> value until it is fixed. There is no such problem for 4965, righ=
+t?
+>>>>>
+>>>>> AFAICT only the 3945 seems to need it.
+>>>>>
+>>>> I can confirm that this also applies to 4965 as a friend of mine h=
+as
+>>>> this card. According to him the card works a lot better with the
+>>>> parameters "swcrypto=3D1" and "disable_hw_scan=3D1".
+>>>
+>>> Just to make it clear,
+>>> iwl3945 doesn't work at all without disable_hw_scan=3D1 here.
+>>> The driver just shuts down thee card since it detects microcode err=
+or.
+>>>
+>>
+>> It looks like this is all caused by the big rate, band patch. Looks
+>> like A band scan channels are not configured correctly for the
+>> scanning. This crashes the firmware.
+>>
+>> Tomas
+>
+> Probably, I see that eeprom according to dmesg contains no info about=
+ A
+> channels, so maybe this crashes the firmware.
+>
 
-Quoting:
-It's not useless, it's supposed to tell you about the protocol
-capability of the device, like "IEEE 802.11b" or "IEEE 802.11abg"
+Can you please send your dmesg.
 
-Jean
+> I have few questions:
+>
+> * Is there a software workaround without the need to update the firmw=
+are?
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/wext.c |   32 ++++++++++++++++++++++++++++++++
- 1 files changed, 32 insertions(+), 0 deletions(-)
+Yes
 
-diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-index 308b953..a44f479 100644
---- a/net/mac80211/wext.c
-+++ b/net/mac80211/wext.c
-@@ -135,7 +135,39 @@ static int ieee80211_ioctl_giwname(struct net_device *dev,
- 				   struct iw_request_info *info,
- 				   char *name, char *extra)
- {
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_supported_band *sband;
-+	u8 is_ht = 0, is_a = 0, is_b = 0, is_g = 0;
-+
-+
-+	sband = local->hw.wiphy->bands[IEEE80211_BAND_5GHZ];
-+	if (sband) {
-+		is_a = 1;
-+		is_ht |= sband->ht_info.ht_supported;
-+	}
-+
-+	sband = local->hw.wiphy->bands[IEEE80211_BAND_2GHZ];
-+	if (sband) {
-+		int i;
-+		/* Check for mandatory rates */
-+		for (i = 0; i < sband->n_bitrates; i++) {
-+			if (sband->bitrates[i].bitrate == 10)
-+				is_b = 1;
-+			if (sband->bitrates[i].bitrate == 60)
-+				is_g = 1;
-+		}
-+		is_ht |= sband->ht_info.ht_supported;
-+	}
-+
- 	strcpy(name, "IEEE 802.11");
-+	if (is_a)
-+		strcat(name, "a");
-+	if (is_b)
-+		strcat(name, "b");
-+	if (is_g)
-+		strcat(name, "g");
-+	if (is_ht)
-+		strcat(name, "n");
- 
- 	return 0;
- }
--- 
-1.5.4.1
+> * Is the firmware error so harmful, so driver can't continue?
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+This is firmware misconfiguration.  Driver should be friendly to
+firmware and use correctly API.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+> * Can I expect updated version of the firmware with  fix?
 
+No need so far.
+
+> Sadly this confirms that firmware is worse that I thought, it is clos=
+er to
+> closed drivers.
+
+The firmware API is open, it just wasn't used correctly.
+
+> (Although intel isn't guilty in this case due to regulations.)
+
+Thanks
+Tomas
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
