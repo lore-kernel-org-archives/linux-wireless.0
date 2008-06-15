@@ -1,120 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:56528 "EHLO mx3.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756034AbYFTP2J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2008 11:28:09 -0400
-Date: Fri, 20 Jun 2008 17:27:48 +0200
-From: Ingo Molnar <mingo@elte.hu>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	David Ellingsworth <david@identd.dyndns.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH/RFC] remove irqs_disabled warning from local_bh_enable
-Message-ID: <20080620152748.GA21245@elte.hu> (sfid-20080620_172814_061835_D57E2BA8)
-References: <1213739834.3803.137.camel@johannes.berg> <alpine.LFD.1.10.0806171648330.2907@woody.linux-foundation.org> <1213774177.3803.164.camel@johannes.berg> <20080620134637.GA8135@elte.hu>
+Received: from vs166246.vserver.de ([62.75.166.246]:57241 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754013AbYFONSR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Jun 2008 09:18:17 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Do not return TX_BUSY from op_tx
+Date: Sun, 15 Jun 2008 15:17:29 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080620134637.GA8135@elte.hu>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200806151517.30230.mb@bu3sch.de> (sfid-20080615_151820_909843_C97FF530)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Never return TX_BUSY from op_tx. It doesn't make sense to return
+TX_BUSY, if we can not transmit the packet.
+Drop the packet and return TX_OK.
+This will fix the resume hang.
 
-* Ingo Molnar <mingo@elte.hu> wrote:
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-> > Subject: clean up and comment local_bh_enable code
-> > 
-> > There's no need to use local_irq_save() over local_irq_disable() in 
-> > the local_bh_enable code since it is a bug to call it with irqs 
-> > disabled and do_softirq will enable irqs if there is any pending 
-> > work. Consolidate the code from local_bh_enable and ..._ip to avoid 
-> > having a disconnect between them in the warnings they trigger that 
-> > is currently there. Also always trigger the warning on in_irq(), not 
-> > just in the trace-irqflags case.
-> 
-> applied to tip/core/softirq for testing, thanks Johannes.
+---
 
-ok, -tip testing found that your patch triggers a new warning on an old 
-testbox that uses 3c59x vortex and netlogging:
+John, this is a bugfix for 2.6.26.
 
------>
-calling  vortex_init+0x0/0xb0
-PCI: Found IRQ 10 for device 0000:00:0b.0
-PCI: Sharing IRQ 10 with 0000:00:0a.0
-PCI: Sharing IRQ 10 with 0000:00:0b.1
-3c59x: Donald Becker and others.
-0000:00:0b.0: 3Com PCI 3c556 Laptop Tornado at e0800400.
-PCI: Enabling bus mastering for device 0000:00:0b.0
-initcall vortex_init+0x0/0xb0 returned 0 after 47 msecs
-...
-calling  init_netconsole+0x0/0x1b0
-netconsole: local port 4444
-netconsole: local IP 10.0.1.9
-netconsole: interface eth0
-netconsole: remote port 4444
-netconsole: remote IP 10.0.1.16
-netconsole: remote ethernet address 00:19:xx:xx:xx:xx
-netconsole: device eth0 not up yet, forcing it
-eth0:  setting half-duplex.
-eth0:  setting full-duplex.
-------------[ cut here ]------------
-WARNING: at kernel/softirq.c:137 local_bh_enable_ip+0xd1/0xe0()
-Pid: 1, comm: swapper Not tainted 2.6.26-rc6-tip #2091
- [<c0125ecf>] warn_on_slowpath+0x4f/0x70
- [<c0126834>] ? release_console_sem+0x1b4/0x1d0
- [<c0126d00>] ? vprintk+0x2a0/0x450
- [<c012fde5>] ? __mod_timer+0xa5/0xc0
- [<c046f7fd>] ? mdio_sync+0x3d/0x50
- [<c0160ef6>] ? marker_probe_cb+0x46/0xa0
- [<c0126ed7>] ? printk+0x27/0x50
- [<c046f4c3>] ? vortex_set_duplex+0x43/0xc0
- [<c046f521>] ? vortex_set_duplex+0xa1/0xc0
- [<c0471b92>] ? vortex_timer+0xe2/0x3e0
- [<c012b361>] local_bh_enable_ip+0xd1/0xe0
- [<c08d9f9f>] _spin_unlock_bh+0x2f/0x40
- [<c0471b92>] vortex_timer+0xe2/0x3e0
- [<c014743b>] ? trace_hardirqs_on+0xb/0x10
- [<c0147358>] ? trace_hardirqs_on_caller+0x88/0x160
- [<c012f8b2>] run_timer_softirq+0x162/0x1c0
- [<c0471ab0>] ? vortex_timer+0x0/0x3e0
- [<c012b361>] local_bh_enable_ip+0xd1/0xe0
- [<c08d9f9f>] _spin_unlock_bh+0x2f/0x40
- [<c0471b92>] vortex_timer+0xe2/0x3e0
- [<c014743b>] ? trace_hardirqs_on+0xb/0x10
- [<c0147358>] ? trace_hardirqs_on_caller+0x88/0x160
- [<c012f8b2>] run_timer_softirq+0x162/0x1c0
- [<c0471ab0>] ? vortex_timer+0x0/0x3e0
- [<c0471ab0>] ? vortex_timer+0x0/0x3e0
- [<c012b60a>] __do_softirq+0x9a/0x160
- [<c012b570>] ? __do_softirq+0x0/0x160
- [<c0106775>] call_on_stack+0x15/0x30
- [<c012b4f5>] ? irq_exit+0x55/0x60
- [<c0106e85>] ? do_IRQ+0x85/0xd0
- [<c0147391>] ? trace_hardirqs_on_caller+0xc1/0x160
- [<c0104888>] ? common_interrupt+0x28/0x30
- [<c08d8ac8>] ? mutex_unlock+0x8/0x10
- [<c08d8180>] ? _cond_resched+0x10/0x30
- [<c07a3be7>] ? netpoll_setup+0x117/0x390
- [<c0cbfcfe>] ? init_netconsole+0x14e/0x1b0
- [<c013d539>] ? ktime_get+0x19/0x40
- [<c0c9bab2>] ? kernel_init+0x1b2/0x2c0
- [<c0cbfbb0>] ? init_netconsole+0x0/0x1b0
- [<c0396aa4>] ? trace_hardirqs_on_thunk+0xc/0x10
- [<c0103f12>] ? restore_nocheck_notrace+0x0/0xe
- [<c0c9b900>] ? kernel_init+0x0/0x2c0
- [<c0c9b900>] ? kernel_init+0x0/0x2c0
- [<c0104aa7>] ? kernel_thread_helper+0x7/0x10
- =======================
----[ end trace 37f9c502aff112e0 ]---
-console [netcon0] enabled
-netconsole: network logging started
-initcall init_netconsole+0x0/0x1b0 returned 0 after 2914 msecs
 
-real bug or false positive?
-
-config is at:
-
-  http://redhat.com/~mingo/misc/config-Fri_Jun_20_16_51_07_CEST_2008.bad
-
-	Ingo
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-06-15 14:33:49.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2008-06-15 14:36:31.000000000 +0200
+@@ -2973,18 +2973,17 @@ static int b43_op_tx(struct ieee80211_hw
+ 	struct b43_wldev *dev = wl->current_dev;
+ 	unsigned long flags;
+ 	int err;
+ 
+ 	if (unlikely(skb->len < 2 + 2 + 6)) {
+ 		/* Too short, this can't be a valid frame. */
+-		dev_kfree_skb_any(skb);
+-		return NETDEV_TX_OK;
++		goto drop_packet;
+ 	}
+ 	B43_WARN_ON(skb_shinfo(skb)->nr_frags);
+ 	if (unlikely(!dev))
+-		return NETDEV_TX_BUSY;
++		goto drop_packet;
+ 
+ 	/* Transmissions on seperate queues can run concurrently. */
+ 	read_lock_irqsave(&wl->tx_lock, flags);
+ 
+ 	err = -ENODEV;
+ 	if (likely(b43_status(dev) >= B43_STAT_STARTED)) {
+@@ -2994,13 +2993,18 @@ static int b43_op_tx(struct ieee80211_hw
+ 			err = b43_dma_tx(dev, skb);
+ 	}
+ 
+ 	read_unlock_irqrestore(&wl->tx_lock, flags);
+ 
+ 	if (unlikely(err))
+-		return NETDEV_TX_BUSY;
++		goto drop_packet;
++	return NETDEV_TX_OK;
++
++drop_packet:
++	/* We can not transmit this packet. Drop it. */
++	dev_kfree_skb_any(skb);
+ 	return NETDEV_TX_OK;
+ }
+ 
+ /* Locking: wl->irq_lock */
+ static void b43_qos_params_upload(struct b43_wldev *dev,
+ 				  const struct ieee80211_tx_queue_params *p,
