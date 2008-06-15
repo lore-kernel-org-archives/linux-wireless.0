@@ -1,74 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:42714 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754986AbYFSVcF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 17:32:05 -0400
-Date: Thu, 19 Jun 2008 14:29:56 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>, Willy Tarreau <w@1wt.eu>,
-	Rodrigo Rubira Branco <rbranco@la.checkpoint.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [patch 07/15] b43: Fix possible NULL pointer dereference in DMA
-	code
-Message-ID: <20080619212956.GH20267@suse.de> (sfid-20080619_233211_906477_5C30B344)
-References: <20080619211313.834170620@mini.kroah.org>
+Received: from vs166246.vserver.de ([62.75.166.246]:59497 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752208AbYFON23 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Jun 2008 09:28:29 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43legacy: Do not return TX_BUSY from op_tx
+Date: Sun, 15 Jun 2008 15:27:49 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080619212621.GA20267@suse.de>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200806151527.49961.mb@bu3sch.de> (sfid-20080615_152854_813590_C8593ACC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.25-stable review patch.  If anyone has any objections, please let us
-know.
+Never return TX_BUSY from op_tx. It doesn't make sense to return
+TX_BUSY, if we can not transmit the packet.
+Drop the packet and return TX_OK.
 
-------------------
-From: Michael Buesch <mb@bu3sch.de>
-
-a cut-down version of commit 028118a5f09a9c807e6b43e2231efdff9f224c74 upstream
-
-This fixes a possible NULL pointer dereference in an error path of the
-DMA allocation error checking code. In case the DMA allocation address is invalid,
-the dev pointer is dereferenced for unmapping of the buffer.
-
-Reported-by: Miles Lane <miles.lane@gmail.com>
 Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
 ---
- drivers/net/wireless/b43/dma.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- a/drivers/net/wireless/b43/dma.c
-+++ b/drivers/net/wireless/b43/dma.c
-@@ -850,6 +850,7 @@ struct b43_dmaring *b43_setup_dmaring(st
- 	if (!ring)
- 		goto out;
- 	ring->type = type;
-+	ring->dev = dev;
- 
- 	nr_slots = B43_RXRING_SLOTS;
- 	if (for_tx)
-@@ -901,7 +902,6 @@ struct b43_dmaring *b43_setup_dmaring(st
- 				 DMA_TO_DEVICE);
- 	}
- 
--	ring->dev = dev;
- 	ring->nr_slots = nr_slots;
- 	ring->mmio_base = b43_dmacontroller_base(type, controller_index);
- 	ring->index = controller_index;
+John, this is a bugfix for 2.6.26.
 
--- 
+
+Index: wireless-testing/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43legacy/main.c	2008-06-06 15:54:17.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43legacy/main.c	2008-06-15 15:22:37.000000000 +0200
+@@ -2374,14 +2374,16 @@ static int b43legacy_op_tx(struct ieee80
+ 		spin_lock_irqsave(&wl->irq_lock, flags);
+ 		err = b43legacy_pio_tx(dev, skb);
+ 		spin_unlock_irqrestore(&wl->irq_lock, flags);
+ 	} else
+ 		err = b43legacy_dma_tx(dev, skb);
+ out:
+-	if (unlikely(err))
+-		return NETDEV_TX_BUSY;
++	if (unlikely(err)) {
++		/* Drop the packet. */
++		dev_kfree_skb_any(skb);
++	}
+ 	return NETDEV_TX_OK;
+ }
+ 
+ static int b43legacy_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 				const struct ieee80211_tx_queue_params *params)
+ {
