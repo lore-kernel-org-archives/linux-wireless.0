@@ -1,60 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:32346 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753200AbYFXKiI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 06:38:08 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 3/4] mac80211: add last beacon time in scan list
-Date: Tue, 24 Jun 2008 13:38:00 +0300
-Message-Id: <1214303881-31525-4-git-send-email-tomas.winkler@intel.com> (sfid-20080624_123815_768155_77850B66)
-In-Reply-To: <1214303881-31525-3-git-send-email-tomas.winkler@intel.com>
-References: <1214303881-31525-1-git-send-email-tomas.winkler@intel.com>
- <1214303881-31525-2-git-send-email-tomas.winkler@intel.com>
- <1214303881-31525-3-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from an-out-0708.google.com ([209.85.132.243]:6637 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757515AbYFONnE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Jun 2008 09:43:04 -0400
+Received: by an-out-0708.google.com with SMTP id d40so1113175and.103
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Jun 2008 06:43:03 -0700 (PDT)
+Message-ID: <48551C62.80904@gmail.com> (sfid-20080615_154308_603929_3A10181B)
+Date: Sun, 15 Jun 2008 16:42:58 +0300
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+MIME-Version: 1.0
+To: Tomas Winkler <tomasw@gmail.com>
+CC: =?ISO-8859-1?Q?Tor_H=E5kon_Haugen?= <tor.hakon.haugen@gmail.com>,
+	Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with disable_hw_scan=1
+References: <484FEA26.1040305@gmail.com>	 <1213241315.7814.696.camel@debian.sh.intel.com>	 <20080612135936.GA5031@tuxdriver.com>	 <1213342523.7814.865.camel@debian.sh.intel.com>	 <20080613130310.GA5333@tuxdriver.com> <48528B63.5030403@gmail.com>	 <48528CF0.8050204@gmail.com> <1ba2fa240806131304n442972eatfd2f35034476c380@mail.gmail.com>
+In-Reply-To: <1ba2fa240806131304n442972eatfd2f35034476c380@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Tomas Winkler wrote:
+> On Fri, Jun 13, 2008 at 6:06 PM, Maxim Levitsky <maximlevitsky@gmail.=
+com> wrote:
+>> Tor H=E5kon Haugen wrote:
+>>> John W. Linville wrote:
+>>>> On Fri, Jun 13, 2008 at 03:35:23PM +0800, Zhu Yi wrote:
+>>>>> On Thu, 2008-06-12 at 09:59 -0400, John W. Linville wrote:
+>>>>>> Honestly I'm tempted to change it to "enable_hw_scan" instead...
+>>>>> Give the advantages, I'd like to use it if we can fix the bug (I =
+haven't
+>>>>> seen what the bug is myself). But you are free to change the defa=
+ult
+>>>>> value until it is fixed. There is no such problem for 4965, right=
+?
+>>>> AFAICT only the 3945 seems to need it.
+>>>>
+>>> I can confirm that this also applies to 4965 as a friend of mine ha=
+s
+>>> this card. According to him the card works a lot better with the
+>>> parameters "swcrypto=3D1" and "disable_hw_scan=3D1".
+>> Just to make it clear,
+>> iwl3945 doesn't work at all without disable_hw_scan=3D1 here.
+>> The driver just shuts down thee card since it detects microcode erro=
+r.
+>>
+>=20
+> It looks like this is all caused by the big rate, band patch. Looks
+> like A band scan channels are not configured correctly for the
+> scanning. This crashes the firmware.
+>=20
+> Tomas
 
-This patch adds the interval between the scan results and the last time a
-beacon was received in the result of the scan.
+Probably, I see that eeprom according to dmesg contains no info about A
+channels, so maybe this crashes the firmware.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/mlme.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+I have few questions:
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 55659a7..8bfdac7 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -4255,6 +4255,13 @@ ieee80211_sta_scan_result(struct net_device *dev,
- 			iwe.u.data.length = strlen(buf);
- 			current_ev = iwe_stream_add_point(current_ev, end_buf,
- 							  &iwe, buf);
-+			memset(&iwe, 0, sizeof(iwe));
-+			iwe.cmd = IWEVCUSTOM;
-+			sprintf(buf, " Last beacon: %dms ago",
-+				jiffies_to_msecs(jiffies - bss->last_update));
-+			iwe.u.data.length = strlen(buf);
-+			current_ev = iwe_stream_add_point(current_ev, end_buf,
-+							  &iwe, buf);
- 			kfree(buf);
- 		}
- 	}
--- 
-1.5.4.1
+* Is there a software workaround without the need to update the firmwar=
+e?
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+* Is the firmware error so harmful, so driver can't continue?
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+* Can I expect updated version of the firmware with  fix?
 
+Sadly this confirms that firmware is worse that I thought, it is closer=
+=20
+to closed drivers.
+
+(Although intel isn't guilty in this case due to regulations.)
+
+Best regards,
+	Maxim Levitsky
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
