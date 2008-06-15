@@ -1,58 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.rutgers.edu ([128.6.72.243]:32331 "EHLO
-	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750877AbYF3DAv (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.176]:23615 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758476AbYFOQxd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jun 2008 23:00:51 -0400
-From: Michael Wu <flamingice@sourmilk.net>
-To: Adrian Bunk <bunk@kernel.org>
-Subject: Re: [PATCH] Comment out duplicate device entry
-Date: Sun, 29 Jun 2008 23:04:52 -0400
-Cc: Ben Collins <ben.collins@canonical.com>,
-	Linus Torvalds <torvalds@osdl.org>,
-	kernel list <linux-kernel@vger.kernel.org>,
+	Sun, 15 Jun 2008 12:53:33 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so4022168waf.23
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Jun 2008 09:53:33 -0700 (PDT)
+Message-ID: <1ba2fa240806150953t4b61b213y3488940ef05b762e@mail.gmail.com> (sfid-20080615_185357_450305_0D547871)
+Date: Sun, 15 Jun 2008 19:53:33 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Joonwoo Park" <joonwpark81@gmail.com>
+Subject: Re: [PATCH] iwlwifi: fix oops on wep key insertion
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Dan Williams" <dcbw@redhat.com>, JMF <tolas_feup@hotmail.com>,
 	linux-wireless@vger.kernel.org
-References: <1214495838.7150.10.camel@cunning> <20080626161152.GE22025@cs181140183.pp.htv.fi>
-In-Reply-To: <20080626161152.GE22025@cs181140183.pp.htv.fi>
+In-Reply-To: <20080615164617.GA27699@tp64>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart41893139.k7kBxD6hNI";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200806292304.58429.flamingice@sourmilk.net> (sfid-20080630_050119_621708_1DBB385E)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1211865214-1640-1-git-send-email-joonwpark81@gmail.com>
+	 <1ba2fa240805262341s62f017e7ka7502cbe55c1d348@mail.gmail.com>
+	 <loom.20080527T105701-941@post.gmane.org>
+	 <1ba2fa240805270541wadf0f16t2001528f39b37ea8@mail.gmail.com>
+	 <1211896423.1746.9.camel@localhost.localdomain>
+	 <20080528004100.GG7779@tuxdriver.com> <20080615164617.GA27699@tp64>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart41893139.k7kBxD6hNI
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
-
-On Thursday 26 June 2008 12:11:52 Adrian Bunk wrote:
-> But it shouldn't be listed as both version 1 and version 2 device.
+On Sun, Jun 15, 2008 at 7:46 PM, Joonwoo Park <joonwpark81@gmail.com> wrote:
+> On Tue, May 27, 2008 at 08:41:00PM -0400, John W. Linville wrote:
+>> On Tue, May 27, 2008 at 09:53:43AM -0400, Dan Williams wrote:
+>>
+>> > I've gotten maybe 1 or 2 requests for > 104/128-bit WEP key support for
+>> > NM in 3 years.  Nice to have, but I'm not sure it's worth the extra code
+>> > and maintenance burden?  Would be good to have somebody tell us what
+>> > hardware (APs and cards) support this though.
+>>
+>> I'm inclined to think that it is _not_ worth the trouble for this
+>> particular feature.
+>>
+>> John
 >
-It could be both! They're a bit lazy about changing usb/pci ids with differ=
-ent=20
-cards anyway so I wouldn't be surprised. The driver differentiates the devi=
-ce=20
-version using a more reliable method anyway so it doesn't matter. This devi=
-ce=20
-id list was just copied from the islsm driver so I can't say for sure if=20
-there's both version 1 and version 2 devices sharing the same usb id.
+> This patch limits wep key size to 128/104-bits.
+> I hope you guys like this.
+>
+> Thanks,
+>
+> Joonwoo
+>
+> ---
+> [PATCH] wireless: Limit wep key size to 128/104-bits
+>
+> This patch prevents overflow which is occured by invalid long wep key
+> insertion
+>
+> $sudo iwconfig wlan0 enc AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA
+>
+> BUG: unable to handle kernel NULL pointer dereference at 0000000000000000
+> IP: [memcpy_c+0xb/0x20] memcpy_c+0xb/0x20
+> PGD 13a590067 PUD 12e471067 PMD 0
+> Oops: 0000 [1] PREEMPT SMP
+> CPU 1
+> ...
+> Pid: 10, comm: events/1 Not tainted 2.6.26-rc2 #9
+> ...
+> Call Trace:
+>  [iwl4965:iwl4965_rx_scan_start_notif+0xb/0x20] ? :iwl4965:iwl4965_enqueue_hcmd+0x12b/0x220
+>  [hci_usb:init_module+0xe97/0x28cb0] :iwlcore:iwl_send_cmd_sync+0x67/0x290
+>  [save_trace+0x3f/0xb0] ? save_trace+0x3f/0xb0
+> ...
+>
+> Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
+> ---
+>  net/wireless/wext.c |   11 ++++++++++-
+>  1 files changed, 10 insertions(+), 1 deletions(-)
+>
+> diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+> index 947188a..c8ef55b 100644
+> --- a/net/wireless/wext.c
+> +++ b/net/wireless/wext.c
+> @@ -102,6 +102,8 @@
+>
+>  #include <asm/uaccess.h>               /* copy_to_user() */
+>
+> +#define KEY_SIZE_WEP104                13
+> +
+>  /************************* GLOBAL VARIABLES *************************/
+>  /*
+>  * You should not use global variables, because of re-entrancy.
+> @@ -740,8 +742,8 @@ static int ioctl_standard_call(struct net_device *  dev,
+>                 * for max space. Easier, and won't last long... */
+>                extra_size = descr->max_tokens * descr->token_size;
+>
+> -               /* Check need for ESSID compatibility for WE < 21 */
+>                switch (cmd) {
+> +               /* Check need for ESSID compatibility for WE < 21 */
+>                case SIOCSIWESSID:
+>                case SIOCGIWESSID:
+>                case SIOCSIWNICKN:
+> @@ -761,6 +763,13 @@ static int ioctl_standard_call(struct net_device * dev,
+>                                        essid_compat = 1;
+>                        }
+>                        break;
+> +
+> +               /* Limit wep key size to 128/104-bits */
+> +               case SIOCSIWENCODE:
+> +                       if (iwr->u.data.length > KEY_SIZE_WEP104)
+> +                               return -EINVAL;
+> +                       break;
+> +
+>                default:
+>                        break;
+>                }
+> --
+> 1.5.4.3
 
-=2DMichael Wu
 
---nextPart41893139.k7kBxD6hNI
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+We've already posted a patch 'iwlwifi: add bad length check for WEP
+keys'  that fixes this for iwlwifi.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+I believe that long keys still can be handled by software crypto.  If
+the key length is not supported driver returns error values
+and we fail down to software crypto
 
-iD8DBQBIaE1aT3Oqt9AH4aERAvNaAJ95oDEvidMJdzz0s/7wL0UmI7Z02gCeKFD9
-8AZsrQeSviJM72Y+K9umHvg=
-=xL9Z
------END PGP SIGNATURE-----
+John, our patch is probably 2.6.26 material. I didn't check it though
+if if applies on wireless-2.6.git yet
 
---nextPart41893139.k7kBxD6hNI--
+Thanks
+Tomas
