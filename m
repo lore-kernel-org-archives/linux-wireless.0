@@ -1,63 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:59285 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752043AbYFXRIA (ORCPT
+Received: from vs166246.vserver.de ([62.75.166.246]:44519 "EHLO
+	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751083AbYFOUEb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 13:08:00 -0400
-Date: Tue, 24 Jun 2008 14:07:55 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Dmitry Baryshkov <dbaryshkov@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 04/13] rfkill: add parameter to disable radios by
-	default
-Message-ID: <20080624170755.GA17576@khazad-dum.debian.net> (sfid-20080624_190805_765018_C9F78049)
-References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br> <1214252588-30723-5-git-send-email-hmh@hmh.eng.br> <g3quvb$8sa$1@ger.gmane.org>
+	Sun, 15 Jun 2008 16:04:31 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
+Subject: Re: b43 open-firmware new snapshot
+Date: Sun, 15 Jun 2008 22:03:57 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <200806141553.42420.mb@bu3sch.de> <69e28c910806151120p116cb57dgf29b68c205e44668@mail.gmail.com>
+In-Reply-To: <69e28c910806151120p116cb57dgf29b68c205e44668@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <g3quvb$8sa$1@ger.gmane.org>
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200806152203.57903.mb@bu3sch.de> (sfid-20080615_220457_330122_5B467C0E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 24 Jun 2008, Dmitry Baryshkov wrote:
-> Henrique de Moraes Holschuh wrote:
-> > Currently, radios are always enabled when their rfkill interface is
-> > registered.  This is not optimal, the safest state for a radio is to be
-> > offline unless the user turns it on.
-> > 
-> > Add a module parameter that causes all radios to be disabled when their
-> > rfkill interface is registered.  The module default is not changed so
-> > unless the parameter is used, radios will still be forced to their
-> > enabled state when they are registered.
-> > 
-> > The new rfkill module parameter is called "default_state".
-> 
-> Why not add the possibility for each rfkill-enabled radio to supply it's 
-> default state?
+On Sunday 15 June 2008 20:20:27 Stefanik G=E1bor wrote:
+> On Sat, Jun 14, 2008 at 3:53 PM, Michael Buesch <mb@bu3sch.de> wrote:
+> > This firmware does _only_ work on wireless core revisions 5, 6, 7, =
+8 or 10.
+>=20
+> There are reports of it working on rev.9 cores. Is that possible?
+> (Resend of previous mail to the list.)
 
-The radios already can, and should, inform rfkill of their power-up state
-(set rfkill->state before calling rfkill_register), but if it is different
-from the global state, rfkill will try to adjust it to match the rest of the
-system.
+Yes it is possible. But there _are_ differences in rev9.
+So I won't guarantee it will work.
 
-When you implement rfkill support on your wireless driver, you transfer all
-policy decisions about rfkill state to the rfkill system.
 
-That's how it is supposed to work.  If you have all radios blocked,
-hotplugging a new one will cause it to be blocked by rfkill soon after it
-registers itsef.  If you have bluetooth unblocked, when you hotplug a new
-bluetooth radio, rfkill will unblock it when it registers itself.
-
-If you mean you'd like to be able to use kernel parameters to set the
-default state for each radio type separately, the first version of the patch
-did just that, but it was vetoed and I was asked to use a single parameter.
-
-This doesn't mean the system doesn't control the radios on a per-type basis,
-it does.  It is just that you can only tell it to start with every radio
-BLOCKED by default, or to start with every radio UNBLOCKED by default,
-regardless of type.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+--=20
+Greetings Michael.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
