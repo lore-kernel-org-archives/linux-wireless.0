@@ -1,56 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:52237 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751130AbYFDMVt (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:1077 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751428AbYFOXVt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2008 08:21:49 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 9/12]: wext: Dispatch and handle compat ioctls entirely in net/wireless/wext.c
-Date: Wed, 4 Jun 2008 14:20:48 +0200
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mokuno@sm.sony.co.jp, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-References: <20080603.132842.123235332.davem@davemloft.net>
-In-Reply-To: <20080603.132842.123235332.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200806041420.49316.arnd@arndb.de> (sfid-20080604_142155_754525_CBB9EF19)
+	Sun, 15 Jun 2008 19:21:49 -0400
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1212428729.10093.13.camel@localhost.localdomain>
+References: <1212354884.4722.26.camel@deadeye.i.decadent.org.uk>
+	 <1212428729.10093.13.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BbuN2SJ6jkaW8LJv2Xr7"
+Date: Mon, 16 Jun 2008 00:20:33 +0100
+Message-Id: <1213572033.27679.6.camel@deadeye.i.decadent.org.uk> (sfid-20080616_012155_016474_615BF9C8)
+Mime-Version: 1.0
+Subject: Re: IW_SCAN_CAPA_ESSID vs hidden ESSID
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 03 June 2008, David Miller wrote:
-> Next we can kill the hacks in fs/compat_ioctl.c and also
-> dispatch compat ioctls down into the driver and 80211 protocol
-> helper layers in order to handle iw_point objects embedded in
-> stream replies which need to be translated.
 
-Great work! Thanks for getting one large chunk of fs/compat_ioctl.c
-removed on the way.
+--=-BbuN2SJ6jkaW8LJv2Xr7
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> diff --git a/include/net/wext.h b/include/net/wext.h
-> index 80b31d8..6d76a39 100644
-> --- a/include/net/wext.h
-> +++ b/include/net/wext.h
-> @@ -12,6 +12,8 @@ extern int wext_proc_init(struct net *net);
->  extern void wext_proc_exit(struct net *net);
->  extern int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
->  			     void __user *arg);
-> +extern int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
-> +				    unsigned long arg);
+On Mon, 2008-06-02 at 13:45 -0400, Dan Williams wrote:
+[...]
+> You might also want:
+>=20
+> http://lists.shmoo.com/pipermail/hostap/2008-June/017873.html
+>=20
+> that patch.  It fixes an issue that caused wpa_supplicant to never
+> probe-scan the AP in with a hidden SSID test configuration with ipw2200.
 
-Is it intentional that the prototypes are so different? Why not
-pass a void __user *arg instead of unsigned long arg?
+Thanks.  I'm running Debian unstable and the latest package of
+wpasupplicant has that patch, but unfortunately it doesn't fix the
+problem for me.
 
-> +int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
-> +			     unsigned long arg)
-> +{
-> +	void __user *argp = (void __user *)arg;
+Ben.
 
-For the conversion, you should also use compat_ptr() instead of the
-cast. This currently only makes a difference on s390, which does
-not have wireless, but it's better not to give wrong examples in the
-code.
+--=20
+Ben Hutchings
+If more than one person is responsible for a bug, no one is at fault.
 
-	Arnd <><
+--=-BbuN2SJ6jkaW8LJv2Xr7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iD8DBQBIVaO679ZNCRIGYgcRAk+hAKDWBfpXIQg8fBwJeaHhtLBYNPOxygCfRpXu
+AhqXogT2RZhmjnEbjNcF6TU=
+=bSgI
+-----END PGP SIGNATURE-----
+
+--=-BbuN2SJ6jkaW8LJv2Xr7--
