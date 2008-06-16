@@ -1,46 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:7314 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757584AbYFZTTs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 15:19:48 -0400
-Subject: Re: [Q] ath5k : doesn't support AP mode?
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
-	cs010101@gmail.com, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <1214501000.3783.0.camel@johannes.berg>
-References: <002901c8d737$e51bb2f0$3b0aa8c0@39fb6b6b6f434b3>
-	 <200806261821.31643.mb@bu3sch.de> <1214498071.30722.22.camel@dv>
-	 <200806261846.17962.mb@bu3sch.de>  <1214501000.3783.0.camel@johannes.berg>
-Content-Type: text/plain
-Date: Thu, 26 Jun 2008 14:03:23 -0400
-Message-Id: <1214503403.18039.6.camel@dv> (sfid-20080626_212020_442318_2297D0D5)
-Mime-Version: 1.0
+Received: from py-out-1112.google.com ([64.233.166.180]:44255 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751913AbYFPRpC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jun 2008 13:45:02 -0400
+Received: by py-out-1112.google.com with SMTP id p76so2084603pyb.10
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2008 10:45:02 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Please pull 'upstream' branch of rt2x00
+Date: Mon, 16 Jun 2008 19:58:17 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Message-Id: <200806161958.17285.IvDoorn@gmail.com> (sfid-20080616_194507_551298_4B7D6636)
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-06-26 at 19:23 +0200, Johannes Berg wrote:
-> > > What's the current TODO list for the AP mode?
-> > 
-> > I think there are some issues with the rates.
-> > Maybe more. I don't really know.
-> 
-> It's on the todo list on wireless.kernel.org
+Hi John,
 
-I see it now:
-http://wireless.kernel.org/en/developers/todo-list#APsupport
+Here is the latest version bump of rt2x00: 2.1.8
 
-It would be great to split the list into categories.  I don't think
-"data frames on cooked monitor" make the AP mode non-compliant.
+Most important patches are from Gertjan, which reduce
+the amount of pre-allocated DMA for all TX queues.
+All PCI drivers now TX/RX all frame data directly
+from/to the skb buffer saving kilobytes of allocated DMA
+and several memcpy() statements.
 
-I also suspect that certain fixed are needed only for 802.11g or 802.11b
-compliance, but not for the original 802.11 compliance.
+This also allows a lot of code to be moved out of rt2x00pci/rt2x00usb
+and into rt2x00lib which in turn makes management of everything
+much easier.
 
-Say, if we limit the rate to 1 Mbps, are there any issues that really
-make us non-compliant?
+Ivo
 
--- 
-Regards,
-Pavel Roskin
+---
+The following changes since commit 7b57047e2d34c243c4cf2d778df0b34bfdd82c8e:
+  John W. Linville (1):
+        iwlwifi: fix build breakage
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git/ upstream
+
+Gertjan van Wingerde (4):
+      rt2x00: Properly clean up beacon skbs.
+      rt2x00: Convert rt2x00 to use generic DMA-mapping API
+      rt2x00: Centralize allocation of RX skbs.
+      rt2x00: Replace statically allocated DMA buffers with mapped skb's.
+
+Ivo van Doorn (5):
+      rt2x00: Use ieee80211 fc handlers
+      rt2x00: Cleanup symbol exports
+      rt2x00: Fix sparse warning on nested container_of()
+      rt2x00: Increase queue size
+      rt2x00: Release rt2x00 2.1.8
+
+ drivers/net/wireless/rt2x00/rt2400pci.c   |   17 ++--
+ drivers/net/wireless/rt2x00/rt2500pci.c   |   14 ++-
+ drivers/net/wireless/rt2x00/rt2500usb.c   |    4 +-
+ drivers/net/wireless/rt2x00/rt2x00.h      |   59 ++---------
+ drivers/net/wireless/rt2x00/rt2x00dev.c   |  100 +++++++++++++++----
+ drivers/net/wireless/rt2x00/rt2x00lib.h   |   51 +++++++++-
+ drivers/net/wireless/rt2x00/rt2x00pci.c   |  126 ++++--------------------
+ drivers/net/wireless/rt2x00/rt2x00pci.h   |   12 --
+ drivers/net/wireless/rt2x00/rt2x00queue.c |  157 +++++++++++++++++++++++------
+ drivers/net/wireless/rt2x00/rt2x00queue.h |   35 ++++---
+ drivers/net/wireless/rt2x00/rt2x00usb.c   |   94 +++---------------
+ drivers/net/wireless/rt2x00/rt2x00usb.h   |    6 +
+ drivers/net/wireless/rt2x00/rt61pci.c     |   23 +++--
+ drivers/net/wireless/rt2x00/rt73usb.c     |    8 ++-
+ 14 files changed, 368 insertions(+), 338 deletions(-)
