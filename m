@@ -1,48 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59802 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751994AbYFKMMq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 08:12:46 -0400
-Message-ID: <7ba851519c84785f96af3637e9bab65b.squirrel@secure.sipsolutions.net>
-In-Reply-To: <43e72e890806110403nddfca7cn66b91a938919e1f0@mail.gmail.com> 
-References: <43e72e890806080855p284f85brd0ff1f1dfce96bf8@mail.gmail.com>
-    <c85cb4470806090053l5b763a23j43bbf0c87f594b0d@mail.gmail.com>
-    <1213001797.698.57.camel@johannes.berg>
-    <43e72e890806090201q55bff8e3m694121ebd4befee6@mail.gmail.com>
-    <43e72e890806090325y5a1aebadq68204695044f4b6f@mail.gmail.com>
-    <1ba2fa240806101657w14599f30x67f58acbc7fe9e80@mail.gmail.com>
-    <43e72e890806102132q1aaba42ehd76bdd30b8d4080a@mail.gmail.com>
-    <43e72e890806102136jb8e695fla98a8594dde14396@mail.gmail.com>
-    <43e72e890806110403nddfca7cn66b91a938919e1f0@mail.gmail.com>
-Date: Wed, 11 Jun 2008 14:12:41 +0200 (CEST)
-Subject: Re: [compat-masters] Backported MQ requirement on 802.11n for
-     older kernels
-From: "Johannes Berg" <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "Tomas Winkler" <tomasw@gmail.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	compat-masters@lists.madwifi.org,
-	"Tim Gardner" <tim.gardner@canonical.com>,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:60472 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751929AbYFPXWO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jun 2008 19:22:14 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2] mac80211: detect driver tx bugs
+Date: Tue, 17 Jun 2008 01:23:37 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1213534025.3803.2.camel@johannes.berg> <1213534540.3803.5.camel@johannes.berg>
+In-Reply-To: <1213534540.3803.5.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200806170123.38264.rjw@sisk.pl> (sfid-20080617_012218_978887_5DAE6F5B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sunday, 15 of June 2008, Johannes Berg wrote:
+> When a driver rejects a frame in it's ->tx() callback, it must also
+> stop queues, otherwise mac80211 can go into a loop here. Detect this
+> situation and abort the loop after five retries, warning about the
+> driver bug.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-> Johannes -- why do we have the requirement for NETDEVICES_MULTIQUEUE
-> on CONFIG_MAC80211_QOS? My current config doesn't have it it and
-> CONFIG_MAC80211_QOS still works right now enabled. Of course the
-> driver I'm testing doesn't have 11n though.
+The patch forks for me nicely. :-)
 
-because otherwise skb_get_queu_mapping always returns 0 and you use only
-one queue.
+I'm now able to hibernate the box without turning off the b43 wireless.
 
-> Shouldn't we just make MAC80211_QOS depend on NET_SCHED and figure out
-> we can't support 11n based on NETDEVICES_MULTIQUEUE?
+Thanks a lot,
+Rafael
 
-no, 11e also needs multiple queues.
 
-johannes
+> ---
+> v2: Michael suggested to use WARN_ON_ONCE instead
+> 
+>  net/mac80211/tx.c |    9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+> 
+> --- everything.orig/net/mac80211/tx.c	2008-06-15 14:19:10.000000000 +0200
+> +++ everything/net/mac80211/tx.c	2008-06-15 14:53:52.000000000 +0200
+> @@ -1091,7 +1091,7 @@ static int ieee80211_tx(struct net_devic
+>  	struct ieee80211_tx_data tx;
+>  	ieee80211_tx_result res = TX_DROP, res_prepare;
+>  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+> -	int ret, i;
+> +	int ret, i, retries = 0;
+>  	u16 queue;
+>  
+>  	queue = skb_get_queue_mapping(skb);
+> @@ -1189,6 +1189,13 @@ retry:
+>  		 */
+>  		if (!__netif_subqueue_stopped(local->mdev, queue)) {
+>  			clear_bit(queue, local->queues_pending);
+> +			retries++;
+> +			/*
+> +			 * Driver bug, it's rejecting packets but
+> +			 * not stopping queues.
+> +			 */
+> +			if (WARN_ON_ONCE(retries > 5))
+> +				goto drop;
+>  			goto retry;
+>  		}
+>  		store->skb = skb;
+> 
