@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:20908 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752749AbYFIQZD (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.239]:49238 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754493AbYFPIpn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2008 12:25:03 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2168184wfd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 09:25:02 -0700 (PDT)
-Subject: Re: [PATCH 4/7] mac80211: make ieee80211_get_hdrlen_from_skb
-	return unsigned
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Pavel Roskin <proski@gnu.org>, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1213002931.698.65.camel@johannes.berg>
-References: <1212774672.6340.78.camel@brick>
-	 <200806062024.24681.mb@bu3sch.de>  <1212778061.6340.85.camel@brick>
-	 <1212783357.29134.5.camel@dv>  <1212805460.6340.91.camel@brick>
-	 (sfid-20080607_042423_652950_5D44593F)  <1213002931.698.65.camel@johannes.berg>
-Content-Type: text/plain
-Date: Mon, 09 Jun 2008 09:25:01 -0700
-Message-Id: <1213028701.5974.11.camel@brick> (sfid-20080609_182507_122888_7027AA69)
-Mime-Version: 1.0
+	Mon, 16 Jun 2008 04:45:43 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so3459019rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2008 01:45:42 -0700 (PDT)
+Message-ID: <eaf2efa20806160145s3501c07wb50f7d31efb755c0@mail.gmail.com> (sfid-20080616_104545_437627_546D7078)
+Date: Mon, 16 Jun 2008 17:45:41 +0900
+From: "Mark Roberts" <mroberts1839@gmail.com>
+To: Chr <chunkeey@web.de>
+Subject: Re: Problem with master mode on BCM4318
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200806161026.28445.chunkeey@web.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <eaf2efa20806152024i510ea7auc9aba61b68598ec0@mail.gmail.com>
+	 <20080616023427.gm71g7actwc8scsg-cebfxv@webmail.spamcop.net>
+	 <eaf2efa20806160010u4bc87ea9tb42c663dcf8444c1@mail.gmail.com>
+	 <200806161026.28445.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-06-09 at 11:15 +0200, Johannes Berg wrote:
-> > unlikely() isn't some magic make-me-faster function, it just moves
-> > code
-> > to the end of the function to get it out of the icache and jumps to it
-> > in the unlikely case it is taken.  When all there is is a return, I
-> > don't think it even makes any difference.  In both these cases a
-> > comment
-> > is probably more appropriate.
-> 
-> That's not true on ppc where you can actually tell the processor about
-> the jump likelyhood for its branch prediction.
+>> What steps should I take to apply the patches?
+>
+> well, I don't know much about compat-wireless, but
+> for the current wireless-dev, you have to get atleast one patch form:
+>
+> http://johannes.sipsolutions.com/patches/kernel/all/LATEST/
+>
+> and there: 006-allow-ap-vlan-modes.patch
 
-I was unaware of that.
+OK. I've never done this before. What should I do to apply the patch?
 
-> 
-> > On X86-32 at least the generated code is exactly the same with or
-> > without the unlikely()s.  I'll put them back in a follow-on if people
-> > are really attached to them.
-> 
-> Please keep them there, I think they make sense for normal operation.
+> For the userspace: you have to compile the _cutting-edge_ hostapd (afaik
+> 0.6.4 git), you'll need it even for a unencrypted network!
 
-Kept, will be in a v2.
+Looking here:
 
-Harvey
+  http://hostap.epitest.fi/hostapd/
 
+The latest I see is 0.6.3 -- will that do?
+
+Thanks,
+
+M
