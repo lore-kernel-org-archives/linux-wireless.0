@@ -1,79 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.235]:38742 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755460AbYFMMiT (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.178]:32390 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752827AbYFPNGv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 08:38:19 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2497732rvb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2008 05:38:18 -0700 (PDT)
-Message-ID: <1ba2fa240806130538x75308725t3018ef330b90132a@mail.gmail.com> (sfid-20080613_143821_339719_AD4F0C36)
-Date: Fri, 13 Jun 2008 15:38:18 +0300
+	Mon, 16 Jun 2008 09:06:51 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so4333872waf.23
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2008 06:06:50 -0700 (PDT)
+Message-ID: <1ba2fa240806160606g379747aam473bd4a3620ce72@mail.gmail.com> (sfid-20080616_150700_972370_9D4C2F1A)
+Date: Mon, 16 Jun 2008 16:06:50 +0300
 From: "Tomas Winkler" <tomasw@gmail.com>
 To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/3] iwlwifi: adding channels to sysfs
-Cc: "Zhu Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
+Subject: Re: [PATCH 2/2 V2] mac80211: 11h - Handling measurement request
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
 	linux-wireless@vger.kernel.org,
-	"Ester Kummer" <ester.kummer@intel.com>
-In-Reply-To: <1213359419.3860.33.camel@johannes.berg>
+	"Assaf Krauss" <assaf.krauss@intel.com>
+In-Reply-To: <1213620760.3803.30.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <1213343095-8133-1-git-send-email-yi.zhu@intel.com>
-	 <1213343095-8133-2-git-send-email-yi.zhu@intel.com>
-	 <1213343813.3860.0.camel@johannes.berg>
-	 <1ba2fa240806130128l433c5b3fxfc7ff13c886a2fa1@mail.gmail.com>
-	 <1213346113.3860.3.camel@johannes.berg>
-	 <1ba2fa240806130511i1686bee6m8701614a11a46aa6@mail.gmail.com>
-	 <1213359419.3860.33.camel@johannes.berg>
+References: <1213615217-10777-1-git-send-email-tomas.winkler@intel.com>
+	 <1213620760.3803.30.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 13, 2008 at 3:16 PM, Johannes Berg
+On Mon, Jun 16, 2008 at 3:52 PM, Johannes Berg
 <johannes@sipsolutions.net> wrote:
->
->> > If you managed to get along without this for so long, why is it needed
->> > in upstream now?
+> On Mon, 2008-06-16 at 14:20 +0300, Tomas Winkler wrote:
+>> From: Assaf Krauss <assaf.krauss@intel.com>
 >>
->> We didn't run without it, We  were developing HW 5000 on older kernel
->> now I just merging it upstream. See my announcement  Try to imagine
->> that there is world on totally different planet with different
->> gravitation constant,
->
-> Heh. But that still doesn't explain why you're pushing this API into the
-> upstream kernel.
-
-Because the testing automation didn't change a.k.a user space.
-
+>> This patch handles the 11h measurement request information element.
+>> This is minimal requested implementation - refuse measurement.
 >>
->> > Remember, sysfs is API. You don't get to change it gratuitously, so
->> > neither should you add to it gratuitously. And we already _have_ API for
->> > this particular thing which is not dependent on a particular
->> > hardware/driver to boot!
->> Agree. We've just returned what was there before
->> I think you understand what legacy means after your try to replace
->> wext. It will take time
->> till we switch to new API. Unfortunately cannot fix everything in one day.
+>> Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
+>> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 >
-> I know, and that's why wext will stay around for a long time to come.
-> I'm well aware of that, and I think you're aware of that as well. I just
-> don't see the point of _adding_ to the problem with gratuitous API
-It's not __adding__ it's __restoring__  even the entry it self was
-never removed.
+> Looks fine to me.
+>
+> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+>
+>
+>> +/* measurement */
+>> +#define IEEE80211_SPCT_MSR_RPRT_MODE_LATE    (1<<0)
+>> +#define IEEE80211_SPCT_MSR_RPRT_MODE_INCAPABLE       (1<<1)
+>> +#define IEEE80211_SPCT_MSR_RPRT_MODE_RFEUSED (1<<2)
+>                                        ^^^^^^^ typo
+>
+>> +     msr_report->u.action.u.measurement.msr_elem.mode |=
+>> +                     IEEE80211_SPCT_MSR_RPRT_MODE_RFEUSED;
+>
+> search & replace? :)
+>
+Oh, okay will send V3 :(
 
-> proliferation when apparently you can very well manage to live without
-> this piece.
-
-I 've just tried to  explain to you that I cannot live without
-it...probably without much success
-
-> Couldn't you move it all to debugfs, which is understood to not really
-> be API, and change your verification scripts to use /sys/debug instead
-> of /sys?
-
-There is so much junk in current iwlwifi sysfs that remains there form
-the time 0 where debugfs was not around so I'm not sure what's your
-point here. Cleaning it is currently not my highest priority, let
-first make driver works properly then we can clean it up.  Will it
-make you happy if we schedule to remove it before 2.6.27 merging
-window.
-
-Tomas
+> johannes
+>
