@@ -1,71 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n62.bullet.mail.sp1.yahoo.com ([98.136.44.35]:38230 "HELO
-	n62.bullet.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754426AbYFMIsS (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35962 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753316AbYFPMxT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 04:48:18 -0400
-Message-ID: <4852344E.7020505@yahoo.it> (sfid-20080613_104821_611522_8E6EF4FB)
-Date: Fri, 13 Jun 2008 10:48:14 +0200
-From: Filippo Zangheri <filippo.zangheri@yahoo.it>
-MIME-Version: 1.0
-To: Zhu Yi <yi.zhu@intel.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only	with	disable_hw_scan=1
-References: <484FEA26.1040305@gmail.com>	<1213241315.7814.696.camel@debian.sh.intel.com>	<20080612135936.GA5031@tuxdriver.com> <1213342523.7814.865.camel@debian.sh.intel.com>
-In-Reply-To: <1213342523.7814.865.camel@debian.sh.intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 16 Jun 2008 08:53:19 -0400
+Subject: Re: [PATCH 2/2 V2] mac80211: 11h - Handling measurement request
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	Assaf Krauss <assaf.krauss@intel.com>
+In-Reply-To: <1213615217-10777-1-git-send-email-tomas.winkler@intel.com>
+References: <1213615217-10777-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PviqQf0cb6UJtw8Q4IvW"
+Date: Mon, 16 Jun 2008 14:52:40 +0200
+Message-Id: <1213620760.3803.30.camel@johannes.berg> (sfid-20080616_145322_683722_73E07D56)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
 
-Hello everybody.
+--=-PviqQf0cb6UJtw8Q4IvW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Zhu Yi ha scritto:
-> On Thu, 2008-06-12 at 09:59 -0400, John W. Linville wrote:
->> How does the hardware scan differ from what mac80211 does when
->> scanning?
-> 
-> Software scan disables Tx during the scan process while hardware scan
-> doesn't. So you are expected to see continous ping responds instead of a
-> freeze during the scan period. Hardware scan is also more efficient
-> since it is handled by the firmware.
-> 
->> I still see a lot of mysterious iwlwifi (especially iwl3945)
->> problems in Fedora that seem to disappear with disable_hw_scan=1.
-> 
-> I don't see this problem from my side. I'll do more testing for 3945.
+On Mon, 2008-06-16 at 14:20 +0300, Tomas Winkler wrote:
+> From: Assaf Krauss <assaf.krauss@intel.com>
+>=20
+> This patch handles the 11h measurement request information element.
+> This is minimal requested implementation - refuse measurement.
+>=20
+> Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 
-Me neither. iwl3945's HW scan has always worked properly on my
-system. It's a 32bit Core2Duo with latest stable vanilla kernel and
-latest compat-wireless driver and mac80211 subsystem.
+Looks fine to me.
 
-Never had a single problem with it.
-
-Just a proper-work report.
-
-Thank you for a driver that - at least on my system - is working
-great (even from the speed point of view, but that's another topic).
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
 
->> Honestly I'm tempted to change it to "enable_hw_scan" instead...
-> 
-> Give the advantages, I'd like to use it if we can fix the bug (I haven't
-> seen what the bug is myself). But you are free to change the default
-> value until it is fixed. There is no such problem for 4965, right?
+> +/* measurement */
+> +#define IEEE80211_SPCT_MSR_RPRT_MODE_LATE	(1<<0)
+> +#define IEEE80211_SPCT_MSR_RPRT_MODE_INCAPABLE	(1<<1)
+> +#define IEEE80211_SPCT_MSR_RPRT_MODE_RFEUSED	(1<<2)
+                                        ^^^^^^^ typo
 
+> +	msr_report->u.action.u.measurement.msr_elem.mode |=3D
+> +			IEEE80211_SPCT_MSR_RPRT_MODE_RFEUSED;
 
-- --
-Filippo Zangheri
+search & replace? :)
 
-GPG key ID: 0x6C1F2F2F
+johannes
+
+--=-PviqQf0cb6UJtw8Q4IvW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQFIUjROjzxMG2wfLy8RApPjAJ4sUw0x9TcLYOh/YdIxV/hFWeUbCwCfWaLK
-Wk97c4XkgpxvN8RNvzNefJA=
-=Gn9F
+iQIcBAABAgAGBQJIVmIUAAoJEKVg1VMiehFYaMcP/itEnxbCIVn+uSZGvMi3ba+5
+IaroFFOMSDZwS0kABweR8rUh6nIM6ejHL6yyHNdLIRfsZKI8GpiFAvMcSGqi2XwV
+XNS3NcP9N7gTPgmbXienWyyUBLP3SGSzcvIh7P6M7kPfUFaIxUf6GWGbkhRlIHAs
+K2ufBM2krYuteTV9MXJAbIbr+UbUzQw63IXNO36bsW/1IOrDsGUqUQz8BqZ4a8BV
+y9CIeWpAAJIcgS7W3SIMzkz3Sz1+aBeXs1DejgzkvueOHh2hCU82W4CCfAuw6eXX
+nswUBImogLbLxGA8omq4mGSlueEDFx8Oze7o2vT/Sj4QBZxFz1qRXeF/SR40vp0C
+sNJei5pjI9APe/phVyPTNcGPJejd/TM7Fwm0Qs9/GhFo/D0neV+LjdaiLa1FTyqq
+zdYVGJKeYzQxGpGBWqTliWInWqbI2zfd6+fri1uUlLZYVUHdI+uv8tfPPPRt/sXz
+vNyJUKx8f43+ewqunChOExuxEyHbzLhzwRsLt6wsGOBpsYLZy03PF2tK/27vaYrD
+XRKG8hrg8SFUDvamTxTsPeU3G6ZFYewYwz2wYl6SJZ9EWCJdnZFx2E0TWx94xt9q
+pGMqofCFEGKIYrCbOmxq63PfeKO/40O1KLFhCZYnymszkqXNVawo6lCDEnV7r34v
+n3YPg6BnF3xpTSmgMyvU
+=1O6l
 -----END PGP SIGNATURE-----
+
+--=-PviqQf0cb6UJtw8Q4IvW--
 
