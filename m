@@ -1,105 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:43582 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753327AbYFFLj6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2008 07:39:58 -0400
-Message-ID: <4849220D.70301@gmx.de> (sfid-20080606_134002_702411_EDCBA353)
-Date: Fri, 06 Jun 2008 13:39:57 +0200
-From: Florian Manschwetus <florianmanschwetus@gmx.de>
+Received: from wa-out-1112.google.com ([209.85.146.177]:38605 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751281AbYFPFwz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jun 2008 01:52:55 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so4214665waf.23
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Jun 2008 22:52:53 -0700 (PDT)
+Message-ID: <1ba2fa240806152252v5fdb4f7dn1028a2a02e8d9cd1@mail.gmail.com> (sfid-20080616_093320_862067_7FBBDF66)
+Date: Mon, 16 Jun 2008 08:52:52 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Maxim Levitsky" <maximlevitsky@gmail.com>
+Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with disable_hw_scan=1
+Cc: "=?ISO-8859-1?Q?Tor_H=E5kon_Haugen?=" <tor.hakon.haugen@gmail.com>,
+	"Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <4855FF14.9080506@gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: iwl4965 and 2.6.25 iwlwifi  merge patch
-Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms010601090707020108020305"
+Content-Type: text/plain; charset=ISO-8859-1
+References: <484FEA26.1040305@gmail.com> <48528B63.5030403@gmail.com>
+	 <48528CF0.8050204@gmail.com>
+	 <1ba2fa240806131304n442972eatfd2f35034476c380@mail.gmail.com>
+	 <48551C62.80904@gmail.com>
+	 <1ba2fa240806150647mdc97d98oad0b1b02de1fcf87@mail.gmail.com>
+	 <48552344.5090801@gmail.com>
+	 <1ba2fa240806150809h13c28937nd064230baca8a15d@mail.gmail.com>
+	 <1ba2fa240806150947s1ed9391ao4b1d1a91c871ef8f@mail.gmail.com>
+	 <4855FF14.9080506@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a cryptographically signed message in MIME format.
-
---------------ms010601090707020108020305
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Some people reported me that this patch makes there T61 with iwl4965 
-useless. But I'm not an owner of such a wireless device so, I'm unable 
-to test or verify this. So it would be nice if someone could tell me if 
-there are patches and how well they work. So that I could include the 
-iwlwifi merge patch in my next patchlist.
-
-Florian
-
---------------ms010601090707020108020305
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIKlDCC
-BUYwggMuoAMCAQICAwQsXDANBgkqhkiG9w0BAQUFADB5MRAwDgYDVQQKEwdSb290IENBMR4w
-HAYDVQQLExVodHRwOi8vd3d3LmNhY2VydC5vcmcxIjAgBgNVBAMTGUNBIENlcnQgU2lnbmlu
-ZyBBdXRob3JpdHkxITAfBgkqhkiG9w0BCQEWEnN1cHBvcnRAY2FjZXJ0Lm9yZzAeFw0wNzEw
-MTgxODMzMjRaFw0wOTEwMTcxODMzMjRaMEgxHDAaBgNVBAMTE0Zsb3JpYW4gTWFuc2Nod2V0
-dXMxKDAmBgkqhkiG9w0BCQEWGUZsb3JpYW5NYW5zY2h3ZXR1c0BnbXguZGUwggEiMA0GCSqG
-SIb3DQEBAQUAA4IBDwAwggEKAoIBAQC2GnTI54ujEGPHu7/5L3UePHT6bydUQAWsck9f44wc
-hURmyPxNMb228wpkIEaWOpsnxCYbKfxW7nIi0zP7eSAhGhXiI9jyLPgJ4NpG1OFT2Eyzjkkf
-25CtC1NO9ZbMacVieXjDw4ezPkuJvSyhsDcFAUERCWG9DT74tMdP9ADdMzI8h/eXjv6j4flz
-TD2WAsDe1hfdSTkzB7G3SMBtBu6J46CY6p93epais/x1CzFkzDJsh0r7dh0tHGhVCGkR1bN1
-5SB2QhIdCR3+Ji1F1W8/7ugak6utREUz4LxYPw/wfiIRaVHTVPjo5YwfD0gjcWSXx25gWf2J
-SEVBx+VDr3o1AgMBAAGjggEGMIIBAjAMBgNVHRMBAf8EAjAAMFYGCWCGSAGG+EIBDQRJFkdU
-byBnZXQgeW91ciBvd24gY2VydGlmaWNhdGUgZm9yIEZSRUUgaGVhZCBvdmVyIHRvIGh0dHA6
-Ly93d3cuQ0FjZXJ0Lm9yZzBABgNVHSUEOTA3BggrBgEFBQcDBAYIKwYBBQUHAwIGCisGAQQB
-gjcKAwQGCisGAQQBgjcKAwMGCWCGSAGG+EIEATAyBggrBgEFBQcBAQQmMCQwIgYIKwYBBQUH
-MAGGFmh0dHA6Ly9vY3NwLmNhY2VydC5vcmcwJAYDVR0RBB0wG4EZRmxvcmlhbk1hbnNjaHdl
-dHVzQGdteC5kZTANBgkqhkiG9w0BAQUFAAOCAgEAM6hh9b2HehQ1/BN9CVHh/TuF4EektTuE
-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
-Uk4UE2xEMYIDhzCCA4MCAQEwgYAweTEQMA4GA1UEChMHUm9vdCBDQTEeMBwGA1UECxMVaHR0
-cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0IFNpZ25pbmcgQXV0aG9yaXR5
-MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2VydC5vcmcCAwQsXDAJBgUrDgMCGgUAoIIB
-2zAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0wODA2MDYxMTM5
-NTdaMCMGCSqGSIb3DQEJBDEWBBT1uXrrVnYIHCLVfx85rtscCMDN1jBSBgkqhkiG9w0BCQ8x
-RTBDMAoGCCqGSIb3DQMHMA4GCCqGSIb3DQMCAgIAgDANBggqhkiG9w0DAgIBQDAHBgUrDgMC
-BzANBggqhkiG9w0DAgIBKDCBkQYJKwYBBAGCNxAEMYGDMIGAMHkxEDAOBgNVBAoTB1Jvb3Qg
-Q0ExHjAcBgNVBAsTFWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBT
-aWduaW5nIEF1dGhvcml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgME
-LFwwgZMGCyqGSIb3DQEJEAILMYGDoIGAMHkxEDAOBgNVBAoTB1Jvb3QgQ0ExHjAcBgNVBAsT
-FWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEiMCAGA1UEAxMZQ0EgQ2VydCBTaWduaW5nIEF1dGhv
-cml0eTEhMB8GCSqGSIb3DQEJARYSc3VwcG9ydEBjYWNlcnQub3JnAgMELFwwDQYJKoZIhvcN
-AQEBBQAEggEAikjj8hEGgEBjSeZs3t/5gusRCCaf/TgmUtrB+Tj8UCIpGTP63RVgVWRD3Vrz
-2p9zZUOzc4T9AH7AZ44s/ACqGayEpTO95GjJis7FEsA/uFPSFmkHF3je9SGWUEQ1QXGXVPYW
-bLqgV6RNPzTuZNB3Luzh+Cg4Sqd/80A4LRX8hxzecK04WG2gSp9uD2YOFnPc/aiEufaFEDwU
-2i9xp8m3BC7CMs6BJ5yedVVvlJavof91MuGTJLbw6au4HC+EL47q49o8V32swyzEX9z6S5a3
-o+x2LouOcEgmXyt0Ej0jDaV0Q2H69OTw0NVXwAcmFRLgbQqSVaLf56Z1voZLHpZ0tAAAAAAA
-AA==
---------------ms010601090707020108020305--
+On Mon, Jun 16, 2008 at 8:50 AM, Maxim Levitsky <maximlevitsky@gmail.co=
+m> wrote:
+> Tomas Winkler wrote:
+>>
+>> On Sun, Jun 15, 2008 at 6:09 PM, Tomas Winkler <tomasw@gmail.com> wr=
+ote:
+>>>
+>>> On Sun, Jun 15, 2008 at 5:12 PM, Maxim Levitsky <maximlevitsky@gmai=
+l.com>
+>>> wrote:
+>>>>
+>>>> Tomas Winkler wrote:
+>>>>>
+>>>>> On Sun, Jun 15, 2008 at 4:42 PM, Maxim Levitsky
+>>>>> <maximlevitsky@gmail.com>
+>>>>> wrote:
+>>>>>>
+>>>>>> Tomas Winkler wrote:
+>>>>>>>
+>>>>>>> On Fri, Jun 13, 2008 at 6:06 PM, Maxim Levitsky
+>>>>>>> <maximlevitsky@gmail.com>
+>>>>>>> wrote:
+>>>>>>>>
+>>>>>>>> Tor H=E5kon Haugen wrote:
+>>>>>>>>>
+>>>>>>>>> John W. Linville wrote:
+>>>>>>>>>>
+>>>>>>>>>> On Fri, Jun 13, 2008 at 03:35:23PM +0800, Zhu Yi wrote:
+>>>>>>>>>>>
+>>>>>>>>>>> On Thu, 2008-06-12 at 09:59 -0400, John W. Linville wrote:
+>>>>>>>>>>>>
+>>>>>>>>>>>> Honestly I'm tempted to change it to "enable_hw_scan" inst=
+ead...
+>>>>>>>>>>>
+>>>>>>>>>>> Give the advantages, I'd like to use it if we can fix the b=
+ug (I
+>>>>>>>>>>> haven't
+>>>>>>>>>>> seen what the bug is myself). But you are free to change th=
+e
+>>>>>>>>>>> default
+>>>>>>>>>>> value until it is fixed. There is no such problem for 4965,
+>>>>>>>>>>> right?
+>>>>>>>>>>
+>>>>>>>>>> AFAICT only the 3945 seems to need it.
+>>>>>>>>>>
+>>>>>>>>> I can confirm that this also applies to 4965 as a friend of m=
+ine
+>>>>>>>>> has
+>>>>>>>>> this card. According to him the card works a lot better with =
+the
+>>>>>>>>> parameters "swcrypto=3D1" and "disable_hw_scan=3D1".
+>>>>>>>>
+>>>>>>>> Just to make it clear,
+>>>>>>>> iwl3945 doesn't work at all without disable_hw_scan=3D1 here.
+>>>>>>>> The driver just shuts down thee card since it detects microcod=
+e
+>>>>>>>> error.
+>>>>>>>>
+>>>>>>> It looks like this is all caused by the big rate, band patch. L=
+ooks
+>>>>>>> like A band scan channels are not configured correctly for the
+>>>>>>> scanning. This crashes the firmware.
+>>>>>>>
+>>>>>>> Tomas
+>>>>>>
+>>>>>> Probably, I see that eeprom according to dmesg contains no info =
+about
+>>>>>> A
+>>>>>> channels, so maybe this crashes the firmware.
+>>>>>>
+>>>>> Can you please send your dmesg.
+>>>>
+>>>> I did that
+>>>> (You mean dmesg without disable_hw_scan=3D1?)
+>>>>
+>>>> If not what debug options I should include
+>>>> (I tried same firmware debug options, but the log wrapped around.)
+>>>>
+>>>> dmesg without disable_hw_scan=3D1 attached.
+>>>>
+>>>>
+>>>>>> I have few questions:
+>>>>>>
+>>>>>> * Is there a software workaround without the need to update the
+>>>>>> firmware?
+>>>>>
+>>>>> Yes
+>>>>>
+>>>>>> * Is the firmware error so harmful, so driver can't continue?
+>>>>>
+>>>>> This is firmware misconfiguration.  Driver should be friendly to
+>>>>> firmware and use correctly API.
+>>>>>
+>>>>>> * Can I expect updated version of the firmware with  fix?
+>>>>>
+>>>>> No need so far.
+>>>>>
+>>>>>> Sadly this confirms that firmware is worse that I thought, it is
+>>>>>> closer
+>>>>>> to
+>>>>>> closed drivers.
+>>>>>
+>>>>> The firmware API is open, it just wasn't used correctly.
+>>>>
+>>>> I mean if there is a bug in firmware, nobody expect intel can fix =
+it.
+>>>
+>>> Intel is fixing bugs in the firmware. Still this doesn't look like =
+a
+>>> firmware error.
+>>>
+>>>> BTW you say that firmware api is open,
+>>>> is there a programming manual for this wireless chip?
+>>>
+>>> it's well documented in -commands.h file
+>>
+>>
+>>
+>> Please try this one
+>>
+>> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+>> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+>> @@ -3348,7 +3348,10 @@ static void
+>> iwl3945_rx_scan_complete_notif(struct iwl3945_priv *priv,
+>>
+>>        /* Remove this scanned band from the list
+>>         * of pending bands to scan */
+>> -       priv->scan_bands--;
+>> +       if (priv->cfg->sku & IWL_SKU_A)
+>> +               priv->scan_bands--;
+>> +       else
+>> +               priv->scan_bands =3D 0;
+>>
+>>
+>
+>
+> I tested this patch, and it fixes this issue, Thanks a lot.
+>
+Thanks a lot for helping resolve this. I will post an official patch.
+Tomas
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
