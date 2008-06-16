@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23283 "EHLO mga01.intel.com"
+Received: from c60.cesmail.net ([216.154.195.49]:28354 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753333AbYFZVNJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 17:13:09 -0400
+	id S1752064AbYFPGe1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jun 2008 02:34:27 -0400
+Message-ID: <20080616023427.gm71g7actwc8scsg-cebfxv@webmail.spamcop.net> (sfid-20080616_093322_804968_D2F63F3C)
+Date: Mon, 16 Jun 2008 02:34:27 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Mark Roberts <mroberts1839@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Problem with master mode on BCM4318
+References: <eaf2efa20806152024i510ea7auc9aba61b68598ec0@mail.gmail.com>
+	<1213587639.2469.10.camel@dv>
+	<eaf2efa20806152309o342d0a0cs31e73dff3ba3d947@mail.gmail.com>
+In-Reply-To: <eaf2efa20806152309o342d0a0cs31e73dff3ba3d947@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: commit 5dc4dfd6165883b6629a48256dc4eadf76d6b65d
-Date: Thu, 26 Jun 2008 14:13:06 -0700
-Message-ID: <BD524EA7912ED5469DFD0BAEF6BC752F03DC568A@orsmsx411.amr.corp.intel.com> (sfid-20080626_231314_644711_4A189EC9)
-In-Reply-To: <f6ca9fed0806261411y1b8bca21k66da3a5090524bc6@mail.gmail.com>
-References: <12145132373377-git-send-email-abhijeet.kolekar@intel.com> <200806262259.21764.IvDoorn@gmail.com> <f6ca9fed0806261411y1b8bca21k66da3a5090524bc6@mail.gmail.com>
-From: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>
-To: "drago01" <drago01@gmail.com>, "Ivo van Doorn" <ivdoorn@gmail.com>
-Cc: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<adel.gadllah@gmail.com>, "Zhu, Yi" <yi.zhu@intel.com>
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Quoting Mark Roberts <mroberts1839@gmail.com>:
 
+> I am running 2.6.24-18-generic, so I have followed this procedure, as
+> described at http://www.linuxwireless.org/en/users/Drivers/b43 :
 
------Original Message-----
-From: drago01 [mailto:drago01@gmail.com] 
-Sent: Thursday, June 26, 2008 2:12 PM
-To: Ivo van Doorn
-Cc: Kolekar, Abhijeet; linux-wireless@vger.kernel.org;
-linville@tuxdriver.com; adel.gadllah@gmail.com; Zhu, Yi
-Subject: Re: commit 5dc4dfd6165883b6629a48256dc4eadf76d6b65d
+compat-wireless is a backport of the current drivers, so you should be  
+using the firmware for Linux 2.6.25 and newer.
 
-On Thu, Jun 26, 2008 at 10:59 PM, Ivo van Doorn <ivdoorn@gmail.com>
-wrote:
-> On Thursday 26 June 2008, Abhijeet Kolekar wrote:
->>     iwlwifi : Patch adds rfkill subsystem for 3945
->>
->>     The patch removes the sysfs interface from iwl3945 and uses
->>     the rfkill subsystem instead.
->
-> Shouldn't the driver depend on CONFIG_RFKILL?
-> Otherwise compilation will fail when CONFIG_RFKILL isn't selected...
+I cannot get to www.linuxwireless.org at all at the moment, so I  
+cannot check if the instruction is indeed unclear about it.
 
-"[PATCH -next] iwlwifi: fix build for CONFIG_INPUT=n" adresses part of
-this.
+As fast as I know, the master mode support in mac80211 has not been  
+merged yet into the wireless-testing branch, so I don't think it's  
+present in compat-wireless.  There are some unofficial patches for  
+that, but you never mentioned them.  Did any document promised you  
+master mode support if you use compat-wireless?
 
-IWLWIFI_RFKILL depends on IWLCORE but iwl3945 does not use iwlcore
-module.
-Should we just add a IWL3945_RFKILL and add he changes from the
-mentioned patch to 3945 too?
-
-If its ok I can send a patch.
-
-That will be great!!
+-- 
+Regards,
+Pavel Roskin
