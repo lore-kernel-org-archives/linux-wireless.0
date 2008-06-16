@@ -1,102 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47076
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752774AbYFCUgx (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43277 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751219AbYFPJLm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 16:36:53 -0400
-Date: Tue, 03 Jun 2008 13:28:34 -0700 (PDT)
-Message-Id: <20080603.132834.181129742.davem@davemloft.net> (sfid-20080603_223728_917155_429C0391)
-To: linux-wireless@vger.kernel.org
-CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 7/12]: wext: Pass iwreq pointer down into standard/private
- handlers.
-From: David Miller <davem@davemloft.net>
+	Mon, 16 Jun 2008 05:11:42 -0400
+Subject: Re: [PATCH 2/2] mac80211: 11h - Handling measurement request
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	Assaf Krauss <assaf.krauss@intel.com>
+In-Reply-To: <1ba2fa240806160208l2926eeefh7f9eaf4f54d6c25c@mail.gmail.com> (sfid-20080616_110838_161665_FD438195)
+References: <1213543410-30890-1-git-send-email-tomas.winkler@intel.com>
+	 <1213543410-30890-2-git-send-email-tomas.winkler@intel.com>
+	 <1213605673.3803.22.camel@johannes.berg>
+	 <1ba2fa240806160208l2926eeefh7f9eaf4f54d6c25c@mail.gmail.com>
+	 (sfid-20080616_110838_161665_FD438195)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4X64mo+yxt9zCLG8Lf2Q"
+Date: Mon, 16 Jun 2008 11:11:03 +0200
+Message-Id: <1213607463.3803.27.camel@johannes.berg> (sfid-20080616_111145_839419_B2928D33)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-They have no need to see the object as an ifreq.
+--=-4X64mo+yxt9zCLG8Lf2Q
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/wireless/wext.c |   17 ++++++++---------
- 1 files changed, 8 insertions(+), 9 deletions(-)
 
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index 929d241..b72cdd2 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -832,11 +832,10 @@ out:
-  * user space and kernel space.
-  */
- static int ioctl_standard_call(struct net_device *	dev,
--			       struct ifreq *		ifr,
-+			       struct iwreq *		iwr,
- 			       unsigned int		cmd,
- 			       iw_handler		handler)
- {
--	struct iwreq *				iwr = (struct iwreq *) ifr;
- 	const struct iw_ioctl_description *	descr;
- 	struct iw_request_info			info;
- 	int					ret = -EINVAL;
-@@ -984,10 +983,9 @@ out:
- 	return err;
- }
- 
--static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
-+static int ioctl_private_call(struct net_device *dev, struct iwreq *iwr,
- 			      unsigned int cmd, iw_handler handler)
- {
--	struct iwreq *iwr = (struct iwreq *) ifr;
- 	int extra_size = 0, ret = -EINVAL;
- 	const struct iw_priv_args *descr;
- 	struct iw_request_info info;
-@@ -1015,7 +1013,7 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
- }
- 
- /* ---------------------------------------------------------------- */
--typedef int (*wext_ioctl_func)(struct net_device *, struct ifreq *,
-+typedef int (*wext_ioctl_func)(struct net_device *, struct iwreq *,
- 			       unsigned int, iw_handler);
- 
- /*
-@@ -1027,6 +1025,7 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
- 				  wext_ioctl_func standard,
- 				  wext_ioctl_func private)
- {
-+	struct iwreq *iwr = (struct iwreq *) ifr;
- 	struct net_device *dev;
- 	iw_handler	handler;
- 
-@@ -1041,11 +1040,11 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
- 	 * Note that 'cmd' is already filtered in dev_ioctl() with
- 	 * (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST) */
- 	if (cmd == SIOCGIWSTATS)
--		return standard(dev, ifr, cmd,
-+		return standard(dev, iwr, cmd,
- 				&iw_handler_get_iwstats);
- 
- 	if (cmd == SIOCGIWPRIV && dev->wireless_handlers)
--		return standard(dev, ifr, cmd,
-+		return standard(dev, iwr, cmd,
- 				&iw_handler_get_private);
- 
- 	/* Basic check */
-@@ -1057,9 +1056,9 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
- 	if (handler) {
- 		/* Standard and private are not the same */
- 		if (cmd < SIOCIWFIRSTPRIV)
--			return standard(dev, ifr, cmd, handler);
-+			return standard(dev, iwr, cmd, handler);
- 		else
--			return private(dev, ifr, cmd, handler);
-+			return private(dev, iwr, cmd, handler);
- 	}
- 	/* Old driver API : call driver ioctl handler */
- 	if (dev->do_ioctl)
--- 
-1.5.5.1.308.g1fbb5
+> >> +     msr_report->u.action.u.measurement.msr_elem.token =3D request_ie=
+->token;
+> >> +     msr_report->u.action.u.measurement.msr_elem.mode |=3D MSR_REPORT=
+_REFUSED;
+> >
+> > Also, it seems to me that should be part of the arguments or you won't
+> > be able to use this function for anything else but sending a 'refused'
+> > report?
+>=20
+> Don't mind to put it into arguments, just the argument list have to be al=
+ter
+> anyway if real measurement is performed and results need to be sent out.
+
+Yeah, true. Or you can just call the function
+_refuse_measurement_request() instead.
+
+> >> +/* measurement report mode field - refuse to generate a report */
+> >> +#define MSR_REPORT_REFUSED       BIT(2)
+> >
+> > That seems completely misplaced in sta_info.h to me?
+>=20
+> Yep will move it to
+> include/linux/ieee80211.h ?
+
+Sounds appropriate, though it should probably be renamed then to have a
+proper IEEE80211 prefix. Are there other items in that field you might
+want to collect into an enum? Doesn't matter much to me though, one can
+always look it up in the spec.
+
+johannes
+
+--=-4X64mo+yxt9zCLG8Lf2Q
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIVi4jAAoJEKVg1VMiehFYlKAQAI/vQLB/rS2heOjbp/lB4gT7
+Pv/KI3XGjIspXLnnbJD8PeyITzs6u+WrS3NR3bi8Z9Og9iSFnWtETteoZNU5NJhD
+Z3BgzJR7ncuRljZ03oU5lergM+TP19sKcqsO8oast3ZzoRJ/UmlddvQNDdTOsWbI
+usLg2+CI7Va0HhfNVy42N+qjyvzqmWvQuFqirsncXLdLTm/6tDPOWZMMaklN4sWZ
+IjBSudrlQ+dv4JLsvt1YK2rHhG4CBpH7dYa1Rlt2n5OxPWkT73k2wm9BVnb9Lskc
+qRbpEpd67NhiVilVdCJe6/IJK1GaCtQAIMBTf2F1/DsPhyfOZQVXhsbuWnMP0/wJ
+kXnyV1xPVXD5998zR0YtF9+GMiyG9RinXdrNGvV/Fi/mxQoBD0sZSbSNyD+WCsvx
+H9NE58n1vdc90xhjnPnnXRsB9Ll+S8s9cQvmLIvvIn7+R/EkkGuZgshB2WcwcWAD
+EaH4UVhdNt8Ma2Y3EDu+Nz9qZpBZA2opNDLBwCz7K9zdQK+hUpXp1xWBDxhUwr6A
+eI9BY824VMdGeWqqlOFFkcujodFosFzgW1x0HXKDuOy06xk0NMCg6Yeh6EnYEs0p
+9xUobWYjwDF6dSWW0oaUcpjPWujiVghCgVQ8csX92meh3eH8UDwiM15qyRXhY7Vd
+A1gO5waHGQOYhxMdqbbr
+=yxuD
+-----END PGP SIGNATURE-----
+
+--=-4X64mo+yxt9zCLG8Lf2Q--
 
