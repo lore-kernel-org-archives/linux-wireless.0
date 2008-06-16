@@ -1,713 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:37109 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753337AbYFKHnV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 03:43:21 -0400
-Date: Wed, 11 Jun 2008 10:42:31 +0300
-From: Jouni Malinen <j@w1.fi>
+Received: from py-out-1112.google.com ([64.233.166.180]:44255 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755419AbYFPRox (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jun 2008 13:44:53 -0400
+Received: by py-out-1112.google.com with SMTP id p76so2084603pyb.10
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2008 10:44:53 -0700 (PDT)
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211_hwsim: 802.11 radio simulator for mac80211
-Message-ID: <20080611074230.GA4919@jm.kir.nu> (sfid-20080611_094326_103933_65795077)
+Subject: [PATCH 7/9] rt2x00: Fix sparse warning on nested container_of()
+Date: Mon, 16 Jun 2008 19:57:11 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <200806161954.04241.IvDoorn@gmail.com> <200806161956.31465.IvDoorn@gmail.com> <200806161956.54342.IvDoorn@gmail.com>
+In-Reply-To: <200806161956.54342.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200806161957.11757.IvDoorn@gmail.com> (sfid-20080616_194504_946205_7571BF3B)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211_hwsim is a Linux kernel module that can be used to simulate
-arbitrary number of IEEE 802.11 radios for mac80211 on a single
-device. It can be used to test most of the mac80211 functionality and
-user space tools (e.g., hostapd and wpa_supplicant) in a way that
-matches very closely with the normal case of using real WLAN
-hardware. From the mac80211 view point, mac80211_hwsim is yet another
-hardware driver, i.e., no changes to mac80211 are needed to use this
-testing tool.
+Sparse produces warnings about nested contain_of() statements,
+this means that lines like:
+	interface_to_usbdev(to_usb_interface(rt2x00dev->dev));
+will upset sparse.
+Add a new macro to rt2x00usb.h which will convert to device
+structure to the usb_device pointer in 2 steps to prevent this
+sparse warning.
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2500usb.c |    3 +--
+ drivers/net/wireless/rt2x00/rt2x00usb.c |    9 +++------
+ drivers/net/wireless/rt2x00/rt2x00usb.h |    6 ++++++
+ 3 files changed, 10 insertions(+), 8 deletions(-)
 
-
-diff --git a/Documentation/networking/mac80211_hwsim/README b/Documentation/networking/mac80211_hwsim/README
-new file mode 100644
-index 0000000..2f6e90f
---- /dev/null
-+++ b/Documentation/networking/mac80211_hwsim/README
-@@ -0,0 +1,68 @@
-+mac80211_hwsim - software simulator of 802.11 radio(s) for mac80211
-+Copyright (c) 2008, Jouni Malinen <j@w1.fi>
-+
-+This program is free software; you can redistribute it and/or modify
-+it under the terms of the GNU General Public License version 2 as
-+published by the Free Software Foundation.
-+
-+
-+Introduction
-+
-+mac80211_hwsim is a Linux kernel module that can be used to simulate
-+arbitrary number of IEEE 802.11 radios for mac80211 on a single
-+device. It can be used to test most of the mac80211 functionality and
-+user space tools (e.g., hostapd and wpa_supplicant) in a way that
-+matches very closely with the normal case of using real WLAN
-+hardware. From the mac80211 view point, mac80211_hwsim is yet another
-+hardware driver, i.e., no changes to mac80211 are needed to use this
-+testing tool.
-+
-+The main goal for mac80211_hwsim is to make it easier for developers
-+to test their code and work with new features to mac80211, hostapd,
-+and wpa_supplicant. The simulated radios do not have the limitations
-+of real hardware, so it is easy to generate an arbitrary test setup
-+and always reproduce the same setup for future tests. In addition,
-+since all radio operation is simulated, any channel can be used in
-+tests regardless of regulatory rules.
-+
-+mac80211_hwsim kernel module has a parameter 'radios' that can be used
-+to select how many radios are simulates (default 2). This allows
-+configuration of both very simply setups (e.g., just a single access
-+point and a station) or large scale tests (multiple access points with
-+hundreds of stations).
-+
-+mac80211_hwsim works by tracking the current channel of each virtual
-+radio and copying all transmitted frames to all other radios that are
-+currently enabled and on the same channel as the transmitting
-+radio. Software encryption in mac80211 is used so that the frames are
-+actually encrypted over the virtual air interface to allow more
-+complete testing of encryption.
-+
-+A global monitoring netdev, hwsim#, is created independent of
-+mac80211. This interface can be used to monitor all transmitted frames
-+regardless of channel.
-+
-+
-+Simple example
-+
-+This example shows how to use mac80211_hwsim to simulate two radios:
-+one to act as an access point and the other as a station that
-+associates with the AP. hostapd and wpa_supplicant are used to take
-+care of WPA2-PSK authentication. In addition, hostapd is also
-+processing access point side of association.
-+
-+Please note that the current Linux kernel does not enable AP mode, so a
-+simple patch is needed to enable AP mode selection:
-+http://johannes.sipsolutions.net/patches/kernel/all/LATEST/006-allow-ap-vlan-modes.patch
-+
-+
-+# Build mac80211_hwsim as part of kernel configuration
-+
-+# Load the module
-+modprobe mac80211_hwsim
-+
-+# Run hostapd (AP) for wlan0
-+hostapd hostapd.conf
-+
-+# Run wpa_supplicant (station) for wlan1
-+wpa_supplicant -Dwext -iwlan1 -c wpa_supplicant.conf
-diff --git a/Documentation/networking/mac80211_hwsim/hostapd.conf b/Documentation/networking/mac80211_hwsim/hostapd.conf
-new file mode 100644
-index 0000000..08cde7e
---- /dev/null
-+++ b/Documentation/networking/mac80211_hwsim/hostapd.conf
-@@ -0,0 +1,11 @@
-+interface=wlan0
-+driver=nl80211
-+
-+hw_mode=g
-+channel=1
-+ssid=mac80211 test
-+
-+wpa=2
-+wpa_key_mgmt=WPA-PSK
-+wpa_pairwise=CCMP
-+wpa_passphrase=12345678
-diff --git a/Documentation/networking/mac80211_hwsim/wpa_supplicant.conf b/Documentation/networking/mac80211_hwsim/wpa_supplicant.conf
-new file mode 100644
-index 0000000..299128c
---- /dev/null
-+++ b/Documentation/networking/mac80211_hwsim/wpa_supplicant.conf
-@@ -0,0 +1,10 @@
-+ctrl_interface=/var/run/wpa_supplicant
-+
-+network={
-+	ssid="mac80211 test"
-+	psk="12345678"
-+	key_mgmt=WPA-PSK
-+	proto=WPA2
-+	pairwise=CCMP
-+	group=CCMP
-+}
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 86323c8..e3789d5 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -681,6 +681,19 @@ config ADM8211
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 6b6e7b9..d095800 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1672,8 +1672,7 @@ static int rt2500usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ static int rt2500usb_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+-	struct usb_device *usb_dev =
+-		interface_to_usbdev(to_usb_interface(rt2x00dev->dev));
++	struct usb_device *usb_dev = to_usb_device_intf(rt2x00dev->dev);
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	struct rt2x00_intf *intf = vif_to_intf(tx_info->control.vif);
+ 	struct queue_entry_priv_usb_bcn *bcn_priv;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index b94c461..5593b9a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -40,8 +40,7 @@ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
+ 			     void *buffer, const u16 buffer_length,
+ 			     const int timeout)
+ {
+-	struct usb_device *usb_dev =
+-		interface_to_usbdev(to_usb_interface(rt2x00dev->dev));
++	struct usb_device *usb_dev = to_usb_device_intf(rt2x00dev->dev);
+ 	int status;
+ 	unsigned int i;
+ 	unsigned int pipe =
+@@ -162,8 +161,7 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
+ int rt2x00usb_write_tx_data(struct queue_entry *entry)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+-	struct usb_device *usb_dev =
+-		interface_to_usbdev(to_usb_interface(rt2x00dev->dev));
++	struct usb_device *usb_dev = to_usb_device_intf(rt2x00dev->dev);
+ 	struct queue_entry_priv_usb *entry_priv = entry->priv_data;
+ 	struct skb_frame_desc *skbdesc;
+ 	u32 length;
+@@ -319,8 +317,7 @@ EXPORT_SYMBOL_GPL(rt2x00usb_disable_radio);
+ void rt2x00usb_init_rxentry(struct rt2x00_dev *rt2x00dev,
+ 			    struct queue_entry *entry)
+ {
+-	struct usb_device *usb_dev =
+-		interface_to_usbdev(to_usb_interface(rt2x00dev->dev));
++	struct usb_device *usb_dev = to_usb_device_intf(rt2x00dev->dev);
+ 	struct queue_entry_priv_usb *entry_priv = entry->priv_data;
  
- 	  Thanks to Infineon-ADMtek for their support of this driver.
+ 	usb_fill_bulk_urb(entry_priv->urb, usb_dev,
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.h b/drivers/net/wireless/rt2x00/rt2x00usb.h
+index b1187c8..aad794a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.h
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
+@@ -26,6 +26,12 @@
+ #ifndef RT2X00USB_H
+ #define RT2X00USB_H
  
-+config MAC80211_HWSIM
-+	tristate "Simulated radio testing tool for mac80211"
-+	depends on MAC80211 && WLAN_80211
-+	---help---
-+	  This driver is a developer testing tool that can be used to test
-+	  IEEE 802.11 networking stack (mac80211) functionality. This is not
-+	  needed for normal wireless LAN usage and is only for testing. See
-+	  Documentation/networking/mac80211_hwsim for more information on how
-+	  to use this tool.
-+
-+	  To compile this driver as a module, choose M here: the module will be
-+	  called mac80211_hwsim.  If unsure, say N.
-+
- source "drivers/net/wireless/p54/Kconfig"
- source "drivers/net/wireless/ath5k/Kconfig"
- source "drivers/net/wireless/iwlwifi/Kconfig"
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 5026268..72c314e 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -64,3 +64,5 @@ obj-$(CONFIG_RT2X00)	+= rt2x00/
- obj-$(CONFIG_P54_COMMON)	+= p54/
- 
- obj-$(CONFIG_ATH5K)	+= ath5k/
-+
-+obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-new file mode 100644
-index 0000000..3e33b29
---- /dev/null
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -0,0 +1,533 @@
-+/*
-+ * mac80211_hwsim - software simulator of 802.11 radio(s) for mac80211
-+ * Copyright (c) 2008, Jouni Malinen <j@w1.fi>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+/*
-+ * TODO:
-+ * - IBSS mode simulation (Beacon transmission with competition for "air time")
-+ * - IEEE 802.11a and 802.11n modes
-+ * - RX filtering based on filter configuration (data->rx_filter)
-+ */
-+
-+#include <net/mac80211.h>
-+#include <net/ieee80211_radiotap.h>
-+#include <linux/if_arp.h>
-+#include <linux/rtnetlink.h>
-+#include <linux/etherdevice.h>
-+
-+MODULE_AUTHOR("Jouni Malinen");
-+MODULE_DESCRIPTION("Software simulator of 802.11 radio(s) for mac80211");
-+MODULE_LICENSE("GPL");
-+
-+static int radios = 2;
-+module_param(radios, int, 0444);
-+MODULE_PARM_DESC(radios, "Number of simulated radios");
-+
-+
-+static struct class *hwsim_class;
-+
-+static struct ieee80211_hw **hwsim_radios;
-+static int hwsim_radio_count;
-+static struct net_device *hwsim_mon; /* global monitor netdev */
-+
-+
-+static const struct ieee80211_channel hwsim_channels[] = {
-+	{ .center_freq = 2412 },
-+	{ .center_freq = 2417 },
-+	{ .center_freq = 2422 },
-+	{ .center_freq = 2427 },
-+	{ .center_freq = 2432 },
-+	{ .center_freq = 2437 },
-+	{ .center_freq = 2442 },
-+	{ .center_freq = 2447 },
-+	{ .center_freq = 2452 },
-+	{ .center_freq = 2457 },
-+	{ .center_freq = 2462 },
-+	{ .center_freq = 2467 },
-+	{ .center_freq = 2472 },
-+	{ .center_freq = 2484 },
-+};
-+
-+static const struct ieee80211_rate hwsim_rates[] = {
-+	{ .bitrate = 10 },
-+	{ .bitrate = 20, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 55, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 110, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 60 },
-+	{ .bitrate = 90 },
-+	{ .bitrate = 120 },
-+	{ .bitrate = 180 },
-+	{ .bitrate = 240 },
-+	{ .bitrate = 360 },
-+	{ .bitrate = 480 },
-+	{ .bitrate = 540 }
-+};
-+
-+struct mac80211_hwsim_data {
-+	struct device *dev;
-+	struct ieee80211_supported_band band;
-+	struct ieee80211_channel channels[ARRAY_SIZE(hwsim_channels)];
-+	struct ieee80211_rate rates[ARRAY_SIZE(hwsim_rates)];
-+
-+	struct ieee80211_channel *channel;
-+	int radio_enabled;
-+	unsigned long beacon_int; /* in jiffies unit */
-+	unsigned int rx_filter;
-+	int started;
-+	struct timer_list beacon_timer;
-+};
-+
-+
-+struct hwsim_radiotap_hdr {
-+	struct ieee80211_radiotap_header hdr;
-+	u8 rt_flags;
-+	u8 rt_rate;
-+	__le16 rt_channel;
-+	__le16 rt_chbitmask;
-+} __attribute__ ((packed));
-+
-+
-+static int hwsim_mon_xmit(struct sk_buff *skb, struct net_device *dev)
-+{
-+	/* TODO: allow packet injection */
-+	dev_kfree_skb(skb);
-+	return 0;
-+}
-+
-+
-+static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
-+				      struct sk_buff *tx_skb)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	struct sk_buff *skb;
-+	struct hwsim_radiotap_hdr *hdr;
-+	u16 flags;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx_skb);
-+	struct ieee80211_rate *txrate = ieee80211_get_tx_rate(hw, info);
-+
-+	if (!netif_running(hwsim_mon))
-+		return;
-+
-+	skb = skb_copy_expand(tx_skb, sizeof(*hdr), 0, GFP_ATOMIC);
-+	if (skb == NULL)
-+		return;
-+
-+	hdr = (struct hwsim_radiotap_hdr *) skb_push(skb, sizeof(*hdr));
-+	hdr->hdr.it_version = PKTHDR_RADIOTAP_VERSION;
-+	hdr->hdr.it_pad = 0;
-+	hdr->hdr.it_len = cpu_to_le16(sizeof(*hdr));
-+	hdr->hdr.it_present = __constant_cpu_to_le32(
-+	     (1 << IEEE80211_RADIOTAP_FLAGS) |
-+	     (1 << IEEE80211_RADIOTAP_RATE) |
-+	     (1 << IEEE80211_RADIOTAP_CHANNEL));
-+	hdr->rt_flags = 0;
-+	hdr->rt_rate = txrate->bitrate / 5;
-+	hdr->rt_channel = data->channel->center_freq;
-+	flags = IEEE80211_CHAN_2GHZ;
-+	if (txrate->flags & IEEE80211_RATE_ERP_G)
-+		flags |= IEEE80211_CHAN_OFDM;
-+	else
-+		flags |= IEEE80211_CHAN_CCK;
-+	hdr->rt_chbitmask = cpu_to_le16(flags);
-+
-+	skb->dev = hwsim_mon;
-+	skb_set_mac_header(skb, 0);
-+	skb->ip_summed = CHECKSUM_UNNECESSARY;
-+	skb->pkt_type = PACKET_OTHERHOST;
-+	skb->protocol = __constant_htons(ETH_P_802_2);
-+	memset(skb->cb, 0, sizeof(skb->cb));
-+	netif_rx(skb);
-+}
-+
-+
-+static int mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	struct ieee80211_rx_status rx_status;
-+	int i, ack = 0;
-+	struct ieee80211_hdr *hdr;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_tx_info *txi;
-+
-+	mac80211_hwsim_monitor_rx(hw, skb);
-+
-+	if (skb->len < 10) {
-+		/* Should not happen; just a sanity check for addr1 use */
-+		dev_kfree_skb(skb);
-+		return NETDEV_TX_OK;
-+	}
-+
-+	if (!data->radio_enabled) {
-+		printk(KERN_DEBUG "%s: dropped TX frame since radio "
-+		       "disabled\n", wiphy_name(hw->wiphy));
-+		dev_kfree_skb(skb);
-+		return NETDEV_TX_OK;
-+	}
-+
-+	hdr = (struct ieee80211_hdr *) skb->data;
-+
-+	memset(&rx_status, 0, sizeof(rx_status));
-+	/* TODO: set mactime */
-+	rx_status.freq = data->channel->center_freq;
-+	rx_status.band = data->channel->band;
-+	rx_status.rate_idx = info->tx_rate_idx;
-+	/* TODO: simulate signal strength (and optional packet drop) */
-+
-+	/* Copy skb to all enabled radios that are on the current frequency */
-+	for (i = 0; i < hwsim_radio_count; i++) {
-+		struct mac80211_hwsim_data *data2;
-+		struct sk_buff *nskb;
-+
-+		if (hwsim_radios[i] == NULL || hwsim_radios[i] == hw)
-+			continue;
-+		data2 = hwsim_radios[i]->priv;
-+		if (!data2->started || !data2->radio_enabled ||
-+		    data->channel->center_freq != data2->channel->center_freq)
-+			continue;
-+
-+		nskb = skb_copy(skb, GFP_ATOMIC);
-+		if (nskb == NULL)
-+			continue;
-+
-+		if (memcmp(hdr->addr1, hwsim_radios[i]->wiphy->perm_addr,
-+			   ETH_ALEN) == 0)
-+			ack = 1;
-+		ieee80211_rx_irqsafe(hwsim_radios[i], nskb, &rx_status);
-+	}
-+
-+	txi = IEEE80211_SKB_CB(skb);
-+	memset(&txi->status, 0, sizeof(txi->status));
-+	if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK)) {
-+		if (ack)
-+			txi->flags |= IEEE80211_TX_STAT_ACK;
-+		else
-+			txi->status.excessive_retries = 1;
-+	}
-+	ieee80211_tx_status_irqsafe(hw, skb);
-+	return NETDEV_TX_OK;
-+}
-+
-+
-+static int mac80211_hwsim_start(struct ieee80211_hw *hw)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	printk(KERN_DEBUG "%s:%s\n", wiphy_name(hw->wiphy), __func__);
-+	data->started = 1;
-+	return 0;
-+}
-+
-+
-+static void mac80211_hwsim_stop(struct ieee80211_hw *hw)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	data->started = 0;
-+	printk(KERN_DEBUG "%s:%s\n", wiphy_name(hw->wiphy), __func__);
-+}
-+
-+
-+static int mac80211_hwsim_add_interface(struct ieee80211_hw *hw,
-+					struct ieee80211_if_init_conf *conf)
-+{
-+	DECLARE_MAC_BUF(mac);
-+	printk(KERN_DEBUG "%s:%s (type=%d mac_addr=%s)\n",
-+	       wiphy_name(hw->wiphy), __func__, conf->type,
-+	       print_mac(mac, conf->mac_addr));
-+	return 0;
-+}
-+
-+
-+static void mac80211_hwsim_remove_interface(
-+	struct ieee80211_hw *hw, struct ieee80211_if_init_conf *conf)
-+{
-+	DECLARE_MAC_BUF(mac);
-+	printk(KERN_DEBUG "%s:%s (type=%d mac_addr=%s)\n",
-+	       wiphy_name(hw->wiphy), __func__, conf->type,
-+	       print_mac(mac, conf->mac_addr));
-+}
-+
-+
-+static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
-+				     struct ieee80211_vif *vif)
-+{
-+	struct ieee80211_hw *hw = arg;
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	struct sk_buff *skb;
-+	struct ieee80211_rx_status rx_status;
-+	int i;
-+	struct ieee80211_tx_info *info;
-+
-+	if (vif->type != IEEE80211_IF_TYPE_AP)
-+		return;
-+
-+	skb = ieee80211_beacon_get(hw, vif);
-+	if (skb == NULL)
-+		return;
-+	info = IEEE80211_SKB_CB(skb);
-+
-+	mac80211_hwsim_monitor_rx(hw, skb);
-+
-+	memset(&rx_status, 0, sizeof(rx_status));
-+	/* TODO: set mactime */
-+	rx_status.freq = data->channel->center_freq;
-+	rx_status.band = data->channel->band;
-+	rx_status.rate_idx = info->tx_rate_idx;
-+	/* TODO: simulate signal strength (and optional packet drop) */
-+
-+	/* Copy skb to all enabled radios that are on the current frequency */
-+	for (i = 0; i < hwsim_radio_count; i++) {
-+		struct mac80211_hwsim_data *data2;
-+		struct sk_buff *nskb;
-+
-+		if (hwsim_radios[i] == NULL || hwsim_radios[i] == hw)
-+			continue;
-+		data2 = hwsim_radios[i]->priv;
-+		if (!data2->started || !data2->radio_enabled ||
-+		    data->channel->center_freq != data2->channel->center_freq)
-+			continue;
-+
-+		nskb = skb_copy(skb, GFP_ATOMIC);
-+		if (nskb == NULL)
-+			continue;
-+
-+		ieee80211_rx_irqsafe(hwsim_radios[i], nskb, &rx_status);
-+	}
-+
-+	dev_kfree_skb(skb);
-+}
-+
-+
-+static void mac80211_hwsim_beacon(unsigned long arg)
-+{
-+	struct ieee80211_hw *hw = (struct ieee80211_hw *) arg;
-+	struct mac80211_hwsim_data *data = hw->priv;
-+
-+	if (!data->started || !data->radio_enabled)
-+		return;
-+
-+	ieee80211_iterate_active_interfaces(hw, mac80211_hwsim_beacon_tx, hw);
-+
-+	data->beacon_timer.expires = jiffies + data->beacon_int;
-+	add_timer(&data->beacon_timer);
-+}
-+
-+
-+static int mac80211_hwsim_config(struct ieee80211_hw *hw,
-+				 struct ieee80211_conf *conf)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+
-+	printk(KERN_DEBUG "%s:%s (freq=%d radio_enabled=%d beacon_int=%d)\n",
-+	       wiphy_name(hw->wiphy), __func__,
-+	       conf->channel->center_freq, conf->radio_enabled,
-+	       conf->beacon_int);
-+
-+	data->channel = conf->channel;
-+	data->radio_enabled = conf->radio_enabled;
-+	data->beacon_int = 1024 * conf->beacon_int / 1000 * HZ / 1000;
-+	if (data->beacon_int < 1)
-+		data->beacon_int = 1;
-+
-+	if (!data->started || !data->radio_enabled)
-+		del_timer(&data->beacon_timer);
-+	else
-+		mod_timer(&data->beacon_timer, jiffies + data->beacon_int);
-+
-+	return 0;
-+}
-+
-+
-+static void mac80211_hwsim_configure_filter(struct ieee80211_hw *hw,
-+					    unsigned int changed_flags,
-+					    unsigned int *total_flags,
-+					    int mc_count,
-+					    struct dev_addr_list *mc_list)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+
-+	printk(KERN_DEBUG "%s:%s\n", wiphy_name(hw->wiphy), __func__);
-+
-+	data->rx_filter = 0;
-+	if (*total_flags & FIF_PROMISC_IN_BSS)
-+		data->rx_filter |= FIF_PROMISC_IN_BSS;
-+	if (*total_flags & FIF_ALLMULTI)
-+		data->rx_filter |= FIF_ALLMULTI;
-+
-+	*total_flags = data->rx_filter;
-+}
-+
-+
-+
-+static const struct ieee80211_ops mac80211_hwsim_ops =
-+{
-+	.tx = mac80211_hwsim_tx,
-+	.start = mac80211_hwsim_start,
-+	.stop = mac80211_hwsim_stop,
-+	.add_interface = mac80211_hwsim_add_interface,
-+	.remove_interface = mac80211_hwsim_remove_interface,
-+	.config = mac80211_hwsim_config,
-+	.configure_filter = mac80211_hwsim_configure_filter,
-+};
-+
-+
-+static void mac80211_hwsim_free(void)
-+{
-+	int i;
-+
-+	for (i = 0; i < hwsim_radio_count; i++) {
-+		if (hwsim_radios[i]) {
-+			struct mac80211_hwsim_data *data;
-+			data = hwsim_radios[i]->priv;
-+			ieee80211_unregister_hw(hwsim_radios[i]);
-+			if (!IS_ERR(data->dev))
-+				device_unregister(data->dev);
-+			ieee80211_free_hw(hwsim_radios[i]);
-+		}
-+	}
-+	kfree(hwsim_radios);
-+	class_destroy(hwsim_class);
-+}
-+
-+
-+static struct device_driver mac80211_hwsim_driver = {
-+	.name = "mac80211_hwsim"
-+};
-+
-+
-+static void hwsim_mon_setup(struct net_device *dev)
-+{
-+	dev->hard_start_xmit = hwsim_mon_xmit;
-+	dev->destructor = free_netdev;
-+	ether_setup(dev);
-+	dev->tx_queue_len = 0;
-+	dev->type = ARPHRD_IEEE80211_RADIOTAP;
-+	memset(dev->dev_addr, 0, ETH_ALEN);
-+	dev->dev_addr[0] = 0x12;
-+}
-+
-+
-+static int __init init_mac80211_hwsim(void)
-+{
-+	int i, err = 0;
-+	u8 addr[ETH_ALEN];
-+	struct mac80211_hwsim_data *data;
-+	struct ieee80211_hw *hw;
-+	DECLARE_MAC_BUF(mac);
-+
-+	if (radios < 1 || radios > 65535)
-+		return -EINVAL;
-+
-+	hwsim_radio_count = radios;
-+	hwsim_radios = kcalloc(hwsim_radio_count,
-+			       sizeof(struct ieee80211_hw *), GFP_KERNEL);
-+	if (hwsim_radios == NULL)
-+		return -ENOMEM;
-+
-+	hwsim_class = class_create(THIS_MODULE, "mac80211_hwsim");
-+	if (IS_ERR(hwsim_class)) {
-+		kfree(hwsim_radios);
-+		return PTR_ERR(hwsim_class);
-+	}
-+
-+	memset(addr, 0, ETH_ALEN);
-+	addr[0] = 0x02;
-+
-+	for (i = 0; i < hwsim_radio_count; i++) {
-+		printk(KERN_DEBUG "mac80211_hwsim: Initializing radio %d\n",
-+		       i);
-+		hw = ieee80211_alloc_hw(sizeof(*data), &mac80211_hwsim_ops);
-+		if (hw == NULL) {
-+			printk(KERN_DEBUG "mac80211_hwsim: ieee80211_alloc_hw "
-+			       "failed\n");
-+			err = -ENOMEM;
-+			goto failed;
-+		}
-+		hwsim_radios[i] = hw;
-+
-+		data = hw->priv;
-+		data->dev = device_create(hwsim_class, NULL, 0, "hwsim%d", i);
-+		if (IS_ERR(data->dev)) {
-+			printk(KERN_DEBUG "mac80211_hwsim: device_create "
-+			       "failed (%ld)\n", PTR_ERR(data->dev));
-+			err = -ENOMEM;
-+			goto failed;
-+		}
-+		data->dev->driver = &mac80211_hwsim_driver;
-+		dev_set_drvdata(data->dev, hw);
-+
-+		SET_IEEE80211_DEV(hw, data->dev);
-+		addr[3] = i >> 8;
-+		addr[4] = i;
-+		SET_IEEE80211_PERM_ADDR(hw, addr);
-+
-+		hw->channel_change_time = 1;
-+		hw->queues = 1;
-+
-+		memcpy(data->channels, hwsim_channels, sizeof(hwsim_channels));
-+		memcpy(data->rates, hwsim_rates, sizeof(hwsim_rates));
-+		data->band.channels = data->channels;
-+		data->band.n_channels = ARRAY_SIZE(hwsim_channels);
-+		data->band.bitrates = data->rates;
-+		data->band.n_bitrates = ARRAY_SIZE(hwsim_rates);
-+		hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &data->band;
-+
-+		err = ieee80211_register_hw(hw);
-+		if (err < 0) {
-+			printk(KERN_DEBUG "mac80211_hwsim: "
-+			       "ieee80211_register_hw failed (%d)\n", err);
-+			goto failed;
-+		}
-+
-+		printk(KERN_DEBUG "%s: hwaddr %s registered\n",
-+		       wiphy_name(hw->wiphy),
-+		       print_mac(mac, hw->wiphy->perm_addr));
-+
-+		setup_timer(&data->beacon_timer, mac80211_hwsim_beacon,
-+			    (unsigned long) hw);
-+	}
-+
-+	hwsim_mon = alloc_netdev(0, "hwsim%d", hwsim_mon_setup);
-+	if (hwsim_mon == NULL)
-+		goto failed;
-+
-+	rtnl_lock();
-+
-+	err = dev_alloc_name(hwsim_mon, hwsim_mon->name);
-+	if (err < 0) {
-+		goto failed_mon;
-+	}
-+
-+	err = register_netdevice(hwsim_mon);
-+	if (err < 0)
-+		goto failed_mon;
-+
-+	rtnl_unlock();
-+
-+	return 0;
-+
-+failed_mon:
-+	rtnl_unlock();
-+	free_netdev(hwsim_mon);
-+
-+failed:
-+	mac80211_hwsim_free();
-+	return err;
-+}
-+
-+
-+static void __exit exit_mac80211_hwsim(void)
-+{
-+	printk(KERN_DEBUG "mac80211_hwsim: unregister %d radios\n",
-+	       hwsim_radio_count);
-+
-+	unregister_netdev(hwsim_mon);
-+	mac80211_hwsim_free();
-+}
-+
-+
-+module_init(init_mac80211_hwsim);
-+module_exit(exit_mac80211_hwsim);
-
-
++#define to_usb_device_intf(d) \
++({ \
++	struct usb_interface *intf = to_usb_interface(d); \
++	interface_to_usbdev(intf); \
++})
++
+ /*
+  * This variable should be used with the
+  * usb_driver structure initialization.
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.5.5.4
+
