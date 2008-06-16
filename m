@@ -1,78 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.232]:54721 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752043AbYFZVv6 convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40124 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754383AbYFPQpY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 17:51:58 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so232542rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2008 14:51:58 -0700 (PDT)
-Message-ID: <1ba2fa240806261451n53e5cb8an70aad7b072121c2e@mail.gmail.com> (sfid-20080626_235207_205592_0C5E272B)
-Date: Fri, 27 Jun 2008 00:51:57 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/2] mac80211: add power management support
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Samuel Ortiz" <samuel@sortiz.org>,
-	"=?ISO-8859-1?Q?Miguel_Bot=F3n?=" <mboton.lkml@gmail.com>,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com
-In-Reply-To: <1214504623.3783.22.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200711161929.36283.mboton.lkml@gmail.com>
-	 <200711161953.26801.mboton.lkml@gmail.com>
-	 <20080626174058.GA3063@sortiz.org>
-	 <20080626175507.GA23142@tuxdriver.com>
-	 <1214504623.3783.22.camel@johannes.berg>
+	Mon, 16 Jun 2008 12:45:24 -0400
+Subject: Re: Management frame protection and packet injection from hostapd
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080616153421.GC18479@jm.kir.nu>
+References: <20080616143308.GB18479@jm.kir.nu>
+	 <1213627991.3803.38.camel@johannes.berg> <20080616153421.GC18479@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LOvZR/iWRCdoy9XecMUQ"
+Date: Mon, 16 Jun 2008 18:44:44 +0200
+Message-Id: <1213634684.3803.43.camel@johannes.berg> (sfid-20080616_184528_507886_E873544D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 26, 2008 at 9:23 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2008-06-26 at 13:55 -0400, John W. Linville wrote:
->> On Thu, Jun 26, 2008 at 07:40:58PM +0200, Samuel Ortiz wrote:
->> > Hi John,
->> >
->> > On Fri, Nov 16, 2007 at 07:53:26PM +0100, Miguel Bot=F3n wrote:
->> > > Ok, the previous patch had a little error.
->> > >
->> > > --
->> > >
->> > > This patch adds power management support in mac80211.
->> > Sorry for being late to the game, but would a similar patch agains=
-t your
->> > -next-2.6 tree be considered for inclusion ?
->>
->> It seems like a reasonable start to me.  Anyone else have comments?
->
-> I had one about it returning -EINVAL for all errors that was never
-> addressed afaict.
 
-Didn't Yi submitted this one like year ago and rejected?
+--=-LOvZR/iWRCdoy9XecMUQ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-This is why we have currently implemented in iwlwif sysfs.
 
-/sys/class/net/wlanX/devices/power_level
-there are defined 6 power levels
-0 - CAM mode (Continuous Aware Mode)
-6 - AUTO
-1 to 5 levels that specifies power save aggressiveness  empirically dev=
-eloped.
-AUTO - depends on system power source/level
-system power level is AC or BATTERY  - currently we do not have
-anything that tells us whether we run on battery or ac.
-Other factor is association state.
+> Yes, as long as the STA entry is found (and it should, in this case),
+> the pairwise CCMP key is used both for data and management frames. I
+> haven't done full testing yet, but I would expect this to work even when
+> the unicast management frames comes from hostapd.
 
-This can be expressed as
-iwconfig power saving 1..5
-iwconfig power off - > CAM mode
-iwconfig power auto - this is unfortunately not defined by iwconfig
+Yeah, it should.
 
-If this acceptable we can submit the patch
+> Broadcast/multicast management frames are protected with BIP using IGTK.
+> This is similar to how GTK is used with TKIP/CCMK for broadcast data
+> frames, i.e., there is a default TX key index that the AP uses for the
+> frames. Indexes 1..3 are used for data frames and 802.11w is using 4..5
+> for BIP (even though the key index space is actually completely separate
+> from the one used with data frames).
 
-Thanks
-Tomas
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ok, thanks for the explanation.
+
+> > Yeah that sounds like a hack. I guess it should work just like when we
+> > submit a unicast frame via monitor with the radiotap flag to indicate
+> > that we want encryption, only we should add logic to look up the defaul=
+t
+> > key to use if there is no peer/unicast key by the outgoing MAC address?
+>=20
+> Yes, we already look for STA entry for unicast and that should work as
+> long as the STA table is not per netdev, i.e., both data and monitor
+> interface end using the same STA table. If no STA entry is found
+> (multicast/broadcast), we look for a default TX key, but this is only
+> done for the netdev that was used to send the frame (which is different
+> between normal data interface and packet injection via monitor
+> interface).
+
+Good point about the STA tables there. I guess we really do need to bind
+the frame to a certain outgoing device to use that sdata state struct.
+
+> If the monitor interface were to look for the default key (or well,
+> keys, since there are now two; one for data, one for mgmt) from the data
+> interface (somehow bound to the monitor iface?), that should work here.
+>=20
+> > OTOH, that would break for multi-SSID/single-BSSID scenarios I guess, s=
+o
+> > we probably need a way to indicate "this frame belongs to interface
+> > index N"?
+>=20
+> Yes, either the frame or maybe more easily the monitor interface would
+> need to be bound to the interface that is used for key configuration.
+
+Yeah, either would work, for per-frame we'd have to extend radiotap but
+it would probably be better as it would allow hostapd to use the same
+mon.wlan0 interface for all BSSes.
+
+> > I don't see any such problems, but if I were to venture a guess it's
+> > because of configuring keys on a monitor interface. It sounds like
+> > something sticks around within the netdev:mon.wlan0 subdirectory, then
+> > the code tries to delete the directory and only afterwards is the entry
+> > removed, leaving the directory (and the parent, of course) hanging
+> > there.
+>=20
+> Yes, that sounds likely since the changes I did for debugfs were very
+> trivial copies from CCMP/data-default-key processing. I'll debug this
+> more and try to figure if there is need to re-order something or make
+> the debugfs entry removal able to handle such a case.
+
+Ok. I don't know right now, and it does seem to work correctly here, but
+maybe it doesn't when the application doesn't explicitly remove the key
+or something, I'll take a look.
+
+johannes
+
+--=-LOvZR/iWRCdoy9XecMUQ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIVph4AAoJEKVg1VMiehFYZTQQAKCutL6fJbaRIk81oM1byqCH
+7Dw1jQhSezp6aMdki1LqRrNDz5zu6o9O7S/th3Y+zO8XFPiTlGPEb9IVZKWMJjhM
+kjXk+UEEQ0Ykxu8APmi7d/C7j3O0Wzy/lq+dsntEi32TfL/U5EkmX3s+taZWgsP0
+3m80boo1WKdF8QokmYLAxk5uzdEvc7F1UJcGjAcGOxj1prl6K/9xlAiJgt1u6Hsd
+GO4mfcmmh43P7DzuGGp8pAWR9VfaIO+Bh9Dr/gkLn3MwPKCdObT5EW2hLqSGWo8U
+30TQXCJBB8sLmZxKKxtQhW1emcB6u/ku1OT0A1kQDCB0N0aFwffLF0xGlOClRMZY
+PV1ClcnLuunVrBOQeT/Pj2FEt84RJNxISMwfvDORJTC4kj86n+DU6uc/xLVEHSBc
+MlITRojAokMWxK74avIlnojvBhFNP1EKkwhVKy1Ihj0BFXtk4olvAw0yZzIOga1o
+q7R6QWp9PBAHao39QrjETXLnKhGTveTrzyta99RhNuC/so1jH4szE+sF8jtBPLM0
+LJoQnVEU1k4IfJ7D+5OIvNmuqqzKDv/Gzi1r9Y9mND9VrUrcAn7G/LQPcq4e/yTb
+Txqqi5taugaS5IeOXZ0X8NoMcFvSI3XbUjn2FZxmbLi4DmOrk0wQdX5xnJ1K2/3m
+9wR7Y9hwkTL1ZRQfhY+j
+=rkev
+-----END PGP SIGNATURE-----
+
+--=-LOvZR/iWRCdoy9XecMUQ--
+
