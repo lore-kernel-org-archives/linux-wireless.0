@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:58938 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753737AbYFVPjA (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52943 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751970AbYFPS4I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jun 2008 11:39:00 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+	Mon, 16 Jun 2008 14:56:08 -0400
+Subject: [PATCH] mac80211: remove shared key todo
+From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Thomas Renninger <trenn@suse.de>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Dmitry Torokhov <dtor@mail.ru>
-Subject: [PATCH 02/12] rfkill: fix minor typo in kernel doc
-Date: Sun, 22 Jun 2008 12:38:38 -0300
-Message-Id: <1214149128-5913-3-git-send-email-hmh@hmh.eng.br> (sfid-20080622_174914_202035_AE4B29F6)
-In-Reply-To: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
-References: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 16 Jun 2008 20:55:29 +0200
+Message-Id: <1213642529.3803.47.camel@johannes.berg> (sfid-20080616_205612_010607_A5108F31)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix a minor typo in an exported function documentation
+Adding shared key authentication is not going to happen anyway.
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: Dmitry Torokhov <dtor@mail.ru>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- net/rfkill/rfkill.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ net/mac80211/mlme.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 4e10a95..f95081a 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -412,7 +412,7 @@ int rfkill_register(struct rfkill *rfkill)
- EXPORT_SYMBOL(rfkill_register);
+--- everything.orig/net/mac80211/mlme.c	2008-06-16 09:30:45.000000000 +0200
++++ everything/net/mac80211/mlme.c	2008-06-16 09:31:01.000000000 +0200
+@@ -1753,11 +1753,12 @@ static void ieee80211_rx_mgmt_auth(struc
+ 	       auth_transaction, status_code);
  
- /**
-- * rfkill_unregister - Uegister a rfkill structure.
-+ * rfkill_unregister - Unregister a rfkill structure.
-  * @rfkill: rfkill structure to be unregistered
-  *
-  * This function should be called by the network driver during device
--- 
-1.5.5.4
+ 	if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS) {
+-		/* IEEE 802.11 standard does not require authentication in IBSS
++		/*
++		 * IEEE 802.11 standard does not require authentication in IBSS
+ 		 * networks and most implementations do not seem to use it.
+ 		 * However, try to reply to authentication attempts if someone
+ 		 * has actually implemented this.
+-		 * TODO: Could implement shared key authentication. */
++		 */
+ 		if (auth_alg != WLAN_AUTH_OPEN || auth_transaction != 1) {
+ 			printk(KERN_DEBUG "%s: unexpected IBSS authentication "
+ 			       "frame (alg=%d transaction=%d)\n",
+
 
