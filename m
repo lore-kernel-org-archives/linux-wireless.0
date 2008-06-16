@@ -1,59 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:32132 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753294AbYFUCEj (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.180]:44255 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751583AbYFPRol (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2008 22:04:39 -0400
-Date: Fri, 20 Jun 2008 19:02:01 -0700
-From: Joel Becker <Joel.Becker@oracle.com>
-To: Ben Nizette <bn@niasdigital.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux kernel <linux-kernel@vger.kernel.org>,
-	Greg KH <greg@kroah.com>,
-	Satyam Sharma <ssatyam@cse.iitk.ac.in>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Al Viro <viro@ftp.linux.org.uk>,
-	"H. Peter Anvin" <hpa@kernel.org>
-Subject: Re: [RFC PATCHES] Re: Is configfs the right solution for
-	configuration based fs?
-Message-ID: <20080621020201.GH21416@mail.oracle.com> (sfid-20080621_040443_725146_5343E5B8)
-References: <43e72e890806081425h4e785800nc618fc1985f9809f@mail.gmail.com> <1213002187.698.62.camel@johannes.berg> <1213056772.4089.42.camel@moss.renham> <20080619024804.GA29765@mail.oracle.com> <1213942750.2336.43.camel@moss.renham> <20080620065253.GA14238@ca-server1.us.oracle.com> <1213953776.2336.75.camel@moss.renham> <20080620213708.GC21416@mail.oracle.com> <1214010229.2336.88.camel@moss.renham>
+	Mon, 16 Jun 2008 13:44:41 -0400
+Received: by py-out-1112.google.com with SMTP id p76so2084603pyb.10
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2008 10:44:40 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2/9] rt2x00: Properly clean up beacon skbs.
+Date: Mon, 16 Jun 2008 19:55:18 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <200806161954.04241.IvDoorn@gmail.com> <200806161954.34838.IvDoorn@gmail.com>
+In-Reply-To: <200806161954.34838.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1214010229.2336.88.camel@moss.renham>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200806161955.18775.IvDoorn@gmail.com> (sfid-20080616_194502_147498_EC3DF508)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 21, 2008 at 11:03:49AM +1000, Ben Nizette wrote:
-> You know, I think you've about covered the boilerplate work.  Apart from
-> that, well it took me a millisecond to work out what the point of
-> config_{group,item}s was; I went in kinda expecting to see one struct
-> for directories and one for attributes.  In fact I still not sure I can
-> explain the need for config_items separate from config_groups.  Little
-> help?  :-)
+From: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
 
-	Groups can create children, items cannot.  Think of kset vs
-kobject, which is where it came from.
-	Don't worry about directories vs files.  The view from the
-client subsystem isn't about filesystem objects.  It's about a hierarchy
-of items.  An item is a sigle entity.  It can have attributes.  A group
-is an item that can have children.
-	The fact that you access it via a filesystem is separate.  We
-could have created a system call instead - the callbacks to your client
-subsystem would have been the same.  Does that help?
+The skbs containing the beacons weren't properly cleaned up for rt2400pci, rt2500pci,
+rt61pci, and rt73usb. Clean up those skbs in the manner appropriate for each driver.
 
-Joel
+Signed-off-by: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    6 ++++++
+ drivers/net/wireless/rt2x00/rt61pci.c   |    6 ++++++
+ drivers/net/wireless/rt2x00/rt73usb.c   |    6 ++++++
+ 3 files changed, 18 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index f9e7531..b8e0c4c 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -474,6 +474,12 @@ static void rt2x00lib_beacondone_iter(void *data, u8 *mac,
+ 	    vif->type != IEEE80211_IF_TYPE_IBSS)
+ 		return;
+ 
++	/*
++	 * Clean up the beacon skb.
++	 */
++	dev_kfree_skb_irq(intf->beacon->skb);
++	intf->beacon->skb = NULL;
++
+ 	spin_lock(&intf->lock);
+ 	intf->delayed_flags |= DELAYED_UPDATE_BEACON;
+ 	spin_unlock(&intf->lock);
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 5b7267e..27f30ae 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -2402,6 +2402,12 @@ static int rt61pci_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 				      skb->data, skb->len);
+ 	rt61pci_kick_tx_queue(rt2x00dev, QID_BEACON);
+ 
++	/*
++	 * Clean up beacon skb.
++	 */
++	dev_kfree_skb_any(skb);
++	intf->beacon->skb = NULL;
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index fceefd7..42b7e98 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2001,6 +2001,12 @@ static int rt73usb_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 				 REGISTER_TIMEOUT32(skb->len));
+ 	rt73usb_kick_tx_queue(rt2x00dev, QID_BEACON);
+ 
++	/*
++	 * Clean up the beacon skb.
++	 */
++	dev_kfree_skb(skb);
++	intf->beacon->skb = NULL;
++
+ 	return 0;
+ }
+ 
 -- 
+1.5.5.4
 
-Life's Little Instruction Book #511
-
-	"Call your mother."
-
-Joel Becker
-Principal Software Developer
-Oracle
-E-mail: joel.becker@oracle.com
-Phone: (650) 506-8127
