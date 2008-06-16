@@ -1,56 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:37360 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754332AbYEaWab (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:47366 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754635AbYFPIrZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 May 2008 18:30:31 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Evil: Run b43 firmware inside of the kernel
-Date: Sun, 1 Jun 2008 00:30:03 +0200
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Message-Id: <200806010030.03473.mb@bu3sch.de> (sfid-20080601_003036_424218_6700DC31)
-Content-Type: text/plain;
-  charset="us-ascii"
+	Mon, 16 Jun 2008 04:47:25 -0400
+Subject: Re: [PATCH] iwlwifi: fix oops on wep key insertion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Joonwoo Park <joonwpark81@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>, JMF <tolas_feup@hotmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240806150953t4b61b213y3488940ef05b762e@mail.gmail.com> (sfid-20080615_185357_450305_0D547871)
+References: <1211865214-1640-1-git-send-email-joonwpark81@gmail.com>
+	 <1ba2fa240805262341s62f017e7ka7502cbe55c1d348@mail.gmail.com>
+	 <loom.20080527T105701-941@post.gmane.org>
+	 <1ba2fa240805270541wadf0f16t2001528f39b37ea8@mail.gmail.com>
+	 <1211896423.1746.9.camel@localhost.localdomain>
+	 <20080528004100.GG7779@tuxdriver.com> <20080615164617.GA27699@tp64>
+	 <1ba2fa240806150953t4b61b213y3488940ef05b762e@mail.gmail.com>
+	 (sfid-20080615_185357_450305_0D547871)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZW+EENb7dK0cWFvM1rPW"
+Date: Mon, 16 Jun 2008 10:46:29 +0200
+Message-Id: <1213605989.3803.24.camel@johannes.berg> (sfid-20080616_104729_393768_560CAD8A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-I hacked up some patches that add a virtual machine to the
-b43 driver to run the firmware inside of the kernel.
-http://bu3sch.de/patches/misc/b43-vm/
+--=-ZW+EENb7dK0cWFvM1rPW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-This doesn't sound very useful, but it might help when debugging
-firmware code, as firmware code is extremely hard to debug when
-run on the device.
-Actually, I found out with this VM that the RXE (at least) seems to be
-highly timing sensitive. That means it completely breaks when some
-magic timings dont fit. So I have the same issue with the VM (using
-the proprietary FW) as I do have with my opensource FW (on the device).
-I can receive one packet and then it locks up in the RXE busy loop.
-I'm not sure why that happens, yet.
 
-However, I thought I should send these patches to the public.
-I thought maybe somebody was interested in flaming me for putting a code
-interpreter and a disassembler into the kernel. So here you go.
+> > [PATCH] wireless: Limit wep key size to 128/104-bits
+> >
+> > This patch prevents overflow which is occured by invalid long wep key
+> > insertion
+> >
+> > $sudo iwconfig wlan0 enc AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-A=
+AAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA
+> >
+> > BUG: unable to handle kernel NULL pointer dereference at 00000000000000=
+00
+> > IP: [memcpy_c+0xb/0x20] memcpy_c+0xb/0x20
+> > PGD 13a590067 PUD 12e471067 PMD 0
+> > Oops: 0000 [1] PREEMPT SMP
+> > CPU 1
+> > ...
+> > Pid: 10, comm: events/1 Not tainted 2.6.26-rc2 #9
+> > ...
+> > Call Trace:
+> >  [iwl4965:iwl4965_rx_scan_start_notif+0xb/0x20] ? :iwl4965:iwl4965_enqu=
+eue_hcmd+0x12b/0x220
+> >  [hci_usb:init_module+0xe97/0x28cb0] :iwlcore:iwl_send_cmd_sync+0x67/0x=
+290
+> >  [save_trace+0x3f/0xb0] ? save_trace+0x3f/0xb0
+> > ...
+> >
+> > Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
+> > ---
+> >  net/wireless/wext.c |   11 ++++++++++-
 
-http://bu3sch.de/patches/misc/b43-vm/
-Get the two patches and apply them in the correct order to the driver.
-Then run the python script to generate the dummy firmware that's run on
-the device while the real fw runs in the VM.
-Assemble that dummy firmware using b43-asm and put it into
-/lib/firmware/b43-vm/ucode5.fw
-Compile with debugging enabled (important!).
-Then fire up b43 with the module parameter vm_enable=1
-If the VM successfully loaded it should print the following line in dmesg:
-"b43-phyX: Running firmware inside of a virtual machine!"
-And of course it would break after the first received packet and loop
-forever in a tight loop. :) You can see that by getting a VM coredump
-by reading /debug/b43/phyX/vm_dump
+I'm sure Jean will cry murder because he expects there are some stupid
+full-mac cards that actually support other sizes.
 
-Have fun and don't try this at home, kids.
+Can't somebody just post a patch to mac80211 that only accepts the two
+correct sizes like cfg80211 does?
 
--- 
-Greetings Michael.
+johannes
+
+--=-ZW+EENb7dK0cWFvM1rPW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIVihiAAoJEKVg1VMiehFYvykQAKCrECkMaa4XsoXklpRodsVv
+Mc3+hrmhxvutV2l9WgH7G0lFf+0jJ2ZQY6JRRShvTAwIEIAmhv01ItR2P1GONECh
+FeEDFwsaL/1GZ4c1beO+Cr+mkDOnOf1gviaDxh+RGFuZcWchniLwxC0JNrsVvnIO
+QXeU4TmU9C8+kXgCAl9kAc8JlB5aYp30SpXX9e8ZfXsQZQm6w5j0yc9xV1yPNAXw
+AQC4sNgjRgr9hIN98alb6lmtwdyeW+aXGzizJGv3uMkXlpx4tTYLIL5AFKPrSfd5
+wFwQFbt3uHH673IAk0BUeIPtBY5v345HUHNRh67vOhPb/TOCiOpqRV8arnqKXuDe
+zEWTnjZdgofbnufgXtt3E2fWRwtQaICO/iUcDHYMgUB4ucv83Nt1wLN0EQUTFtLF
+gWPreBJvHKCluUWPOIpAYVRKZROP7tKVv2HmfeN8NaFbE+6UbPM1iKZzdzCtRdYp
+TsqIbWgYBOfo+z6AhGK24MuNe1k66MEQneiChKpQG+TT3rd6NlEv3d391SR9Oeps
+C4AyOQ36OV3B3zYqut6HeEjdoLi6xgwgbBjmlw/yNV98/3GFStx6vfrMDruxBLIY
+dKmSSIh3lMd6tlSxESvpMgwOPSfpUFkGtvSCNmOY/t1xymhZQPkes+QUDA1GPyZe
+Ul4lp1FSvXDrECCCpklz
+=rJgu
+-----END PGP SIGNATURE-----
+
+--=-ZW+EENb7dK0cWFvM1rPW--
+
