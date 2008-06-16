@@ -1,129 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58917 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751491AbYFTJzD (ORCPT
+Received: from hu-out-0506.google.com ([72.14.214.235]:55101 "EHLO
+	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751145AbYFPFuV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2008 05:55:03 -0400
-Subject: [PATCH] mac80211: rename TKIP debugging Kconfig symbol
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 20 Jun 2008 11:54:24 +0200
-Message-Id: <1213955664.8967.149.camel@johannes.berg> (sfid-20080620_115507_931717_053A5282)
-Mime-Version: 1.0
+	Mon, 16 Jun 2008 01:50:21 -0400
+Received: by hu-out-0506.google.com with SMTP id 28so6097096hub.21
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Jun 2008 22:50:17 -0700 (PDT)
+Message-ID: <4855FF14.9080506@gmail.com> (sfid-20080616_093322_149901_760E6AE9)
+Date: Mon, 16 Jun 2008 08:50:12 +0300
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+MIME-Version: 1.0
+To: Tomas Winkler <tomasw@gmail.com>
+CC: =?ISO-8859-1?Q?Tor_H=E5kon_Haugen?= <tor.hakon.haugen@gmail.com>,
+	Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with disable_hw_scan=1
+References: <484FEA26.1040305@gmail.com>	 <1213342523.7814.865.camel@debian.sh.intel.com>	 <20080613130310.GA5333@tuxdriver.com> <48528B63.5030403@gmail.com>	 <48528CF0.8050204@gmail.com>	 <1ba2fa240806131304n442972eatfd2f35034476c380@mail.gmail.com>	 <48551C62.80904@gmail.com>	 <1ba2fa240806150647mdc97d98oad0b1b02de1fcf87@mail.gmail.com>	 <48552344.5090801@gmail.com>	 <1ba2fa240806150809h13c28937nd064230baca8a15d@mail.gmail.com> <1ba2fa240806150947s1ed9391ao4b1d1a91c871ef8f@mail.gmail.com>
+In-Reply-To: <1ba2fa240806150947s1ed9391ao4b1d1a91c871ef8f@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-... to MAC80211_TKIP_DEBUG rather than TKIP_DEBUG.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/Kconfig |    2 +-
- net/mac80211/tkip.c  |   20 ++++++++++----------
- 2 files changed, 11 insertions(+), 11 deletions(-)
-
---- everything.orig/net/mac80211/Kconfig	2008-06-20 11:52:50.000000000 +0200
-+++ everything/net/mac80211/Kconfig	2008-06-20 11:52:57.000000000 +0200
-@@ -158,7 +158,7 @@ config MAC80211_HT_DEBUG
- 
- 	  Do not select this option.
- 
--config TKIP_DEBUG
-+config MAC80211_TKIP_DEBUG
- 	bool "Verbose TKIP debugging"
- 	depends on MAC80211_DEBUG_MENU
- 	help
---- everything.orig/net/mac80211/tkip.c	2008-06-20 11:53:05.000000000 +0200
-+++ everything/net/mac80211/tkip.c	2008-06-20 11:53:26.000000000 +0200
-@@ -167,7 +167,7 @@ void ieee80211_get_tkip_key(struct ieee8
- 	tk = &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY];
- 	ctx = &key->u.tkip.tx;
- 
--#ifdef CONFIG_TKIP_DEBUG
-+#ifdef CONFIG_MAC80211_TKIP_DEBUG
- 	printk(KERN_DEBUG "TKIP encrypt: iv16 = 0x%04x, iv32 = 0x%08x\n",
- 			iv16, iv32);
- 
-@@ -177,7 +177,7 @@ void ieee80211_get_tkip_key(struct ieee8
- 		printk(KERN_DEBUG "Wrap around of iv16 in the middle of a "
- 			"fragmented packet\n");
- 	}
--#endif /* CONFIG_TKIP_DEBUG */
-+#endif
- 
- 	/* Update the p1k only when the iv16 in the packet wraps around, this
- 	 * might occur after the wrap around of iv16 in the key in case of
-@@ -240,7 +240,7 @@ int ieee80211_tkip_decrypt_data(struct c
- 	keyid = pos[3];
- 	iv32 = get_unaligned_le32(pos + 4);
- 	pos += 8;
--#ifdef CONFIG_TKIP_DEBUG
-+#ifdef CONFIG_MAC80211_TKIP_DEBUG
- 	{
- 		int i;
- 		printk(KERN_DEBUG "TKIP decrypt: data(len=%zd)", payload_len);
-@@ -250,7 +250,7 @@ int ieee80211_tkip_decrypt_data(struct c
- 		printk(KERN_DEBUG "TKIP decrypt: iv16=%04x iv32=%08x\n",
- 		       iv16, iv32);
- 	}
--#endif /* CONFIG_TKIP_DEBUG */
-+#endif
- 
- 	if (!(keyid & (1 << 5)))
- 		return TKIP_DECRYPT_NO_EXT_IV;
-@@ -262,14 +262,14 @@ int ieee80211_tkip_decrypt_data(struct c
- 	    (iv32 < key->u.tkip.rx[queue].iv32 ||
- 	     (iv32 == key->u.tkip.rx[queue].iv32 &&
- 	      iv16 <= key->u.tkip.rx[queue].iv16))) {
--#ifdef CONFIG_TKIP_DEBUG
-+#ifdef CONFIG_MAC80211_TKIP_DEBUG
- 		DECLARE_MAC_BUF(mac);
- 		printk(KERN_DEBUG "TKIP replay detected for RX frame from "
- 		       "%s (RX IV (%04x,%02x) <= prev. IV (%04x,%02x)\n",
- 		       print_mac(mac, ta),
- 		       iv32, iv16, key->u.tkip.rx[queue].iv32,
- 		       key->u.tkip.rx[queue].iv16);
--#endif /* CONFIG_TKIP_DEBUG */
-+#endif
- 		return TKIP_DECRYPT_REPLAY;
- 	}
- 
-@@ -283,7 +283,7 @@ int ieee80211_tkip_decrypt_data(struct c
- 	    key->u.tkip.rx[queue].iv32 != iv32) {
- 		/* IV16 wrapped around - perform TKIP phase 1 */
- 		tkip_mixing_phase1(tk, &key->u.tkip.rx[queue], ta, iv32);
--#ifdef CONFIG_TKIP_DEBUG
-+#ifdef CONFIG_MAC80211_TKIP_DEBUG
- 		{
- 			int i;
- 			DECLARE_MAC_BUF(mac);
-@@ -299,7 +299,7 @@ int ieee80211_tkip_decrypt_data(struct c
- 				printk("%04x ", key->u.tkip.rx[queue].p1k[i]);
- 			printk("\n");
- 		}
--#endif /* CONFIG_TKIP_DEBUG */
-+#endif
- 		if (key->local->ops->update_tkip_key &&
- 			key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
- 			u8 bcast[ETH_ALEN] =
-@@ -316,7 +316,7 @@ int ieee80211_tkip_decrypt_data(struct c
- 	}
- 
- 	tkip_mixing_phase2(tk, &key->u.tkip.rx[queue], iv16, rc4key);
--#ifdef CONFIG_TKIP_DEBUG
-+#ifdef CONFIG_MAC80211_TKIP_DEBUG
- 	{
- 		int i;
- 		printk(KERN_DEBUG "TKIP decrypt: Phase2 rc4key=");
-@@ -324,7 +324,7 @@ int ieee80211_tkip_decrypt_data(struct c
- 			printk("%02x ", rc4key[i]);
- 		printk("\n");
- 	}
--#endif /* CONFIG_TKIP_DEBUG */
-+#endif
- 
- 	res = ieee80211_wep_decrypt_data(tfm, rc4key, 16, pos, payload_len - 12);
-  done:
+Tomas Winkler wrote:
+> On Sun, Jun 15, 2008 at 6:09 PM, Tomas Winkler <tomasw@gmail.com> wro=
+te:
+>> On Sun, Jun 15, 2008 at 5:12 PM, Maxim Levitsky <maximlevitsky@gmail=
+=2Ecom> wrote:
+>>> Tomas Winkler wrote:
+>>>> On Sun, Jun 15, 2008 at 4:42 PM, Maxim Levitsky <maximlevitsky@gma=
+il.com>
+>>>> wrote:
+>>>>> Tomas Winkler wrote:
+>>>>>> On Fri, Jun 13, 2008 at 6:06 PM, Maxim Levitsky
+>>>>>> <maximlevitsky@gmail.com>
+>>>>>> wrote:
+>>>>>>> Tor H=E5kon Haugen wrote:
+>>>>>>>> John W. Linville wrote:
+>>>>>>>>> On Fri, Jun 13, 2008 at 03:35:23PM +0800, Zhu Yi wrote:
+>>>>>>>>>> On Thu, 2008-06-12 at 09:59 -0400, John W. Linville wrote:
+>>>>>>>>>>> Honestly I'm tempted to change it to "enable_hw_scan" inste=
+ad...
+>>>>>>>>>> Give the advantages, I'd like to use it if we can fix the bu=
+g (I
+>>>>>>>>>> haven't
+>>>>>>>>>> seen what the bug is myself). But you are free to change the=
+ default
+>>>>>>>>>> value until it is fixed. There is no such problem for 4965, =
+right?
+>>>>>>>>> AFAICT only the 3945 seems to need it.
+>>>>>>>>>
+>>>>>>>> I can confirm that this also applies to 4965 as a friend of mi=
+ne has
+>>>>>>>> this card. According to him the card works a lot better with t=
+he
+>>>>>>>> parameters "swcrypto=3D1" and "disable_hw_scan=3D1".
+>>>>>>> Just to make it clear,
+>>>>>>> iwl3945 doesn't work at all without disable_hw_scan=3D1 here.
+>>>>>>> The driver just shuts down thee card since it detects microcode=
+ error.
+>>>>>>>
+>>>>>> It looks like this is all caused by the big rate, band patch. Lo=
+oks
+>>>>>> like A band scan channels are not configured correctly for the
+>>>>>> scanning. This crashes the firmware.
+>>>>>>
+>>>>>> Tomas
+>>>>> Probably, I see that eeprom according to dmesg contains no info a=
+bout A
+>>>>> channels, so maybe this crashes the firmware.
+>>>>>
+>>>> Can you please send your dmesg.
+>>> I did that
+>>> (You mean dmesg without disable_hw_scan=3D1?)
+>>>
+>>> If not what debug options I should include
+>>> (I tried same firmware debug options, but the log wrapped around.)
+>>>
+>>> dmesg without disable_hw_scan=3D1 attached.
+>>>
+>>>
+>>>>> I have few questions:
+>>>>>
+>>>>> * Is there a software workaround without the need to update the f=
+irmware?
+>>>> Yes
+>>>>
+>>>>> * Is the firmware error so harmful, so driver can't continue?
+>>>> This is firmware misconfiguration.  Driver should be friendly to
+>>>> firmware and use correctly API.
+>>>>
+>>>>> * Can I expect updated version of the firmware with  fix?
+>>>> No need so far.
+>>>>
+>>>>> Sadly this confirms that firmware is worse that I thought, it is =
+closer
+>>>>> to
+>>>>> closed drivers.
+>>>> The firmware API is open, it just wasn't used correctly.
+>>> I mean if there is a bug in firmware, nobody expect intel can fix i=
+t.
+>> Intel is fixing bugs in the firmware. Still this doesn't look like a
+>> firmware error.
+>>
+>>> BTW you say that firmware api is open,
+>>> is there a programming manual for this wireless chip?
+>> it's well documented in -commands.h file
+>=20
+>=20
+>=20
+> Please try this one
+>=20
+> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> @@ -3348,7 +3348,10 @@ static void
+> iwl3945_rx_scan_complete_notif(struct iwl3945_priv *priv,
+>=20
+>         /* Remove this scanned band from the list
+>          * of pending bands to scan */
+> -       priv->scan_bands--;
+> +       if (priv->cfg->sku & IWL_SKU_A)
+> +               priv->scan_bands--;
+> +       else
+> +               priv->scan_bands =3D 0;
+>=20
+>=20
 
 
+I tested this patch, and it fixes this issue, Thanks a lot.
+
+
+Best regards,
+	Maxim Levitsky
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
