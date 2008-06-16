@@ -1,250 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4621 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753285AbYFNSDQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jun 2008 14:03:16 -0400
-Date: Sat, 14 Jun 2008 13:45:18 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull request: wireless-next-2.6 2008-06-14
-Message-ID: <20080614174518.GA30426@tuxdriver.com> (sfid-20080614_200328_675303_D4B9B507)
-References: <20080613214114.GA1077@tuxdriver.com> <20080614032116.GA9171@tuxdriver.com> <20080613.204717.121643605.davem@davemloft.net>
+Received: from wa-out-1112.google.com ([209.85.146.177]:3524 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755461AbYFPVlv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jun 2008 17:41:51 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so4470980waf.23
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2008 14:41:51 -0700 (PDT)
+Message-ID: <1ba2fa240806161441v59f9647alc14baaf6b1315df@mail.gmail.com> (sfid-20080616_234158_861405_FAD88511)
+Date: Tue, 17 Jun 2008 00:41:50 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with disable_hw_scan=1
+Cc: "Maxim Levitsky" <maximlevitsky@gmail.com>,
+	"=?ISO-8859-1?Q?Tor_H=E5kon_Haugen?=" <tor.hakon.haugen@gmail.com>,
+	"Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1213626920.14862.13.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080613.204717.121643605.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <484FEA26.1040305@gmail.com> <48551C62.80904@gmail.com>
+	 <1ba2fa240806150647mdc97d98oad0b1b02de1fcf87@mail.gmail.com>
+	 <48552344.5090801@gmail.com>
+	 <1ba2fa240806150809h13c28937nd064230baca8a15d@mail.gmail.com>
+	 <1ba2fa240806150947s1ed9391ao4b1d1a91c871ef8f@mail.gmail.com>
+	 <4855FF14.9080506@gmail.com>
+	 <1ba2fa240806152252v5fdb4f7dn1028a2a02e8d9cd1@mail.gmail.com>
+	 <48560359.4090909@gmail.com>
+	 <1213626920.14862.13.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
-
-NOTE: This is the updated version of the pull request from 13 June.  It
-is identical to that one except for a small endian fix in iwl-5000.c.
-
-Another slew of updates intended for 2.6.27...please let me know if
-there are problems!
-
-Thanks,
-
-John
-
----
-
-Individual patches are available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
-
----
-
-The following changes since commit 030352a9c7715780b2c01033ae9afe56249bb7cc:
-  David S. Miller (1):
-        Merge branch 'davem-next' of master.kernel.org:/.../jgarzik/netdev-2.6
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
-
-Akinobu Mita (1):
-      airo: use simple_read_from_buffer()
-
-Assaf Krauss (2):
-      iwlwifi enabling IBSS (Ad-Hoc) mode
-      iwlwifi: Fix mode changes (ad-hoc <--> managed)
-
-Emmanuel Grumbach (13):
-      iwlwifi: removes the RUN_TIME_CALIB ifdef
-      iwlwifi: clean up in setup/cancel deferred work
-      iwlwifi: add possibility to disable tx_power calibration
-      iwlwifi: remove redundant flags regarding to FAT channel
-      iwlwifi: fix bug when moving from 11gn to 11a or 11an to 11g
-      iwlwifi: fix resart flow after fw error
-      iwlwifi: add bad length check for WEP keys
-      iwlwifi: move iwl4965_rf_kill_ct_config to iwl-core.c
-      iwlwifi: retfactor get_temperature functions
-      iwlwifi: remove dead code iwl4965_calc_db_from_ratio
-      iwlwifi: general code clean up
-      iwlwifi: remove iwlcore_low_level_notify
-      iwlwifi: unify SW rf-kill flow
-
-Ester Kummer (1):
-      iwlwifi: adding channels to sysfs
-
-Gertjan van Wingerde (4):
-      rt2x00: Cleanup struct skb_frame_desc.
-      rt2x00: Centralize RX packet alignment handling in rt2x00lib.
-      rt2x00: Fix double usage of skb->cb in USB RX path.
-      rt2x00: Rework alignment check.
-
-Harvey Harrison (11):
-      mac80211: add helpers for frame control testing
-      mac80211: remove ieee80211_get_morefrag
-      mac80211: make ieee80211_get_hdrlen_from_skb return unsigned
-      mac80211: add utility function to get header length
-      mac80211: wpa.c use new access helpers
-      mac80211: use new helpers in util.c - ieee80211_get_bssid()
-      mac80211: wme.c use new helpers
-      mac80211: rx.c use new helpers
-      mac80211: tkip.c consolidate tkip IV writing in helper
-      mac80211: tkip.c fold ieee80211_gen_rc4key into its one caller
-      mac80211: tkip.c use a local struct tkip_ctx in ieee80211_get_tkip_key
-
-Holger Schurig (4):
-      libertas: fix interrupt issue
-      libertas: document register meanings
-      libertas: check for old, unsupported hardware
-      libertas: rename some registers to clarify their meaning
-
-Ivo van Doorn (14):
-      rt2x00: Calculate register offset during compile time
-      rt2x00: Cleanup/optimize set_state() function callback function
-      rt2x00: Move led initialization into function
-      rt2x00: Remove CTS/RTS check in tx()
-      rt2x00: Removed unused descriptor read in txdone
-      rt2x00: Make rt2x00_set/get_field macros
-      rt2x00: Release rt2x00 2.1.7
-      rt2x00: Fix queue initialization
-      rt2x00: Implement rt2x00usb_kick_tx_queue()
-      rt2x00: Move generic TX frame writing code into rt2x00queue
-      rt2x00: Don't kick TX queue after each frame
-      rt2x00: Use __builtin_choose_expr() instead of ?:
-      rt2x00: Clear IEEE80211_TX_CTL_USE_RTS_CTS flag for RTS frame
-      rt2x00: Remove unused defines
-
-Jouni Malinen (4):
-      mac80211_hwsim: 802.11 radio simulator for mac80211
-      mac80211_hwsim: Clean up documentation
-      mac80211_hwsim: Minor cleanup
-      mac80211_hwsim: Shared TX code for received frames and Beacons
-
-Jussi Kivilinna (6):
-      rndis_wlan: do link-down state change in worker thread
-      rndis_wlan: update carrier flag when link state changes
-      rndis_wlan: check if set_multicast_list work is already scheduled
-      rndis_wlan: cleanup: rename and remove local pointers
-      rndis_wlan: use kzalloc to allocate private data
-      rndis_wlan: preallocate command buffer for set/get_oid
-
-Michael Buesch (1):
-      nl80211: Fix comment merge error
-
-Mohamed Abbas (1):
-      iwlwifi: fix resume SW RF-kill
-
-Robert P. J. Day (1):
-      rndis_wlan: Use kernel-supplied ARRAY_SIZE() macro.
-
-Ron Rindjunsky (6):
-      iwlwifi: removing IWL4965_HT config
-      iwlwifi: map sw and hw ampdu queues
-      iwlwifi: use ieee80211_conf to examine rate capabilities
-      iwlwifi: fix allow iwlwifi to aggregate according to tid load
-      mac80211: do not fragment while aggregation is in use
-      iwlwifi: remove 4965 prefix from iwl4965_ucode
-
-Tomas Winkler (9):
-      iwlwifi: add TX aggregation code for 5000 HW
-      iwlwifi: remove unused flag
-      iwlwifi: format log prints for easier parsing
-      iwlwifi: refactor tx aggregation response flow
-      iwlwifi: refactor setting tx power
-      iwlwifi: move scan to iwl-scan.c iwlcore
-      iwlwifi: move rate helpers to iwlcore
-      iwlwifi: cleans up scanning code
-      mac80211: fix beacon interval value
-
-Tony Vroon (1):
-      mac80211: implement EU regulatory domain
-
-Vladimir Koutny (1):
-      mac80211: eliminate IBSS warning in rate_lowest_index()
-
-Zhu Yi (1):
-      iwlwifi: fix software rf_kill problem when interface is down
-
- Documentation/networking/mac80211_hwsim/README     |   67 ++
- .../networking/mac80211_hwsim/hostapd.conf         |   11 +
- .../networking/mac80211_hwsim/wpa_supplicant.conf  |   10 +
- drivers/net/wireless/Kconfig                       |   13 +
- drivers/net/wireless/Makefile                      |    2 +
- drivers/net/wireless/airo.c                        |   15 +-
- drivers/net/wireless/iwlwifi/Kconfig               |   36 -
- drivers/net/wireless/iwlwifi/Makefile              |    4 +-
- drivers/net/wireless/iwlwifi/iwl-3945.c            |   36 +-
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h         |   15 +-
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c         |  103 +--
- drivers/net/wireless/iwlwifi/iwl-4965-rs.h         |    2 -
- drivers/net/wireless/iwlwifi/iwl-4965.c            |  388 ++-----
- drivers/net/wireless/iwlwifi/iwl-5000-hw.h         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c            |  246 +++-
- drivers/net/wireless/iwlwifi/iwl-calib.c           |    4 -
- drivers/net/wireless/iwlwifi/iwl-calib.h           |   29 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h        |   72 +-
- drivers/net/wireless/iwlwifi/iwl-core.c            |  303 ++++--
- drivers/net/wireless/iwlwifi/iwl-core.h            |   71 +-
- drivers/net/wireless/iwlwifi/iwl-debug.h           |    3 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c         |   10 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h             |  163 +---
- drivers/net/wireless/iwlwifi/iwl-eeprom.c          |   31 +-
- drivers/net/wireless/iwlwifi/iwl-helpers.h         |  111 --
- drivers/net/wireless/iwlwifi/iwl-rfkill.c          |    4 +-
- drivers/net/wireless/iwlwifi/iwl-rfkill.h          |    1 -
- drivers/net/wireless/iwlwifi/iwl-rx.c              |    2 -
- drivers/net/wireless/iwlwifi/iwl-scan.c            |  921 +++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-sta.c             |   53 +-
- drivers/net/wireless/iwlwifi/iwl-sta.h             |   16 +-
- drivers/net/wireless/iwlwifi/iwl-tx.c              |   65 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c        |   40 +-
- drivers/net/wireless/iwlwifi/iwl4965-base.c        | 1243 +++-----------------
- drivers/net/wireless/libertas/if_cs.c              |  162 ++-
- drivers/net/wireless/mac80211_hwsim.c              |  514 ++++++++
- drivers/net/wireless/rndis_wlan.c                  |  167 ++--
- drivers/net/wireless/rt2x00/rt2400pci.c            |   95 +-
- drivers/net/wireless/rt2x00/rt2400pci.h            |    2 -
- drivers/net/wireless/rt2x00/rt2500pci.c            |   91 +-
- drivers/net/wireless/rt2x00/rt2500pci.h            |    2 -
- drivers/net/wireless/rt2x00/rt2500usb.c            |   98 +-
- drivers/net/wireless/rt2x00/rt2500usb.h            |    2 -
- drivers/net/wireless/rt2x00/rt2x00.h               |   13 +-
- drivers/net/wireless/rt2x00/rt2x00debug.c          |    6 +-
- drivers/net/wireless/rt2x00/rt2x00dev.c            |   21 +
- drivers/net/wireless/rt2x00/rt2x00lib.h            |    1 +
- drivers/net/wireless/rt2x00/rt2x00mac.c            |   30 +-
- drivers/net/wireless/rt2x00/rt2x00pci.c            |   72 +-
- drivers/net/wireless/rt2x00/rt2x00pci.h            |   11 +-
- drivers/net/wireless/rt2x00/rt2x00queue.c          |  113 ++-
- drivers/net/wireless/rt2x00/rt2x00queue.h          |   27 +-
- drivers/net/wireless/rt2x00/rt2x00reg.h            |  134 ++-
- drivers/net/wireless/rt2x00/rt2x00usb.c            |  165 +--
- drivers/net/wireless/rt2x00/rt2x00usb.h            |   22 +-
- drivers/net/wireless/rt2x00/rt61pci.c              |  111 +-
- drivers/net/wireless/rt2x00/rt61pci.h              |    2 -
- drivers/net/wireless/rt2x00/rt73usb.c              |  112 +-
- drivers/net/wireless/rt2x00/rt73usb.h              |    2 -
- drivers/net/wireless/rtl8187_dev.c                 |    2 +-
- include/linux/ieee80211.h                          |  407 ++++++-
- include/linux/nl80211.h                            |    8 +-
- include/net/mac80211.h                             |    8 +-
- net/mac80211/ieee80211_i.h                         |    2 +-
- net/mac80211/main.c                                |    3 +-
- net/mac80211/mlme.c                                |   17 +-
- net/mac80211/rx.c                                  |   29 +-
- net/mac80211/tkip.c                                |   85 +-
- net/mac80211/tkip.h                                |    4 +-
- net/mac80211/tx.c                                  |    8 +-
- net/mac80211/util.c                                |   81 +-
- net/mac80211/wme.c                                 |   18 +-
- net/mac80211/wpa.c                                 |   71 +-
- net/wireless/reg.c                                 |   18 +
- 74 files changed, 3854 insertions(+), 2974 deletions(-)
- create mode 100644 Documentation/networking/mac80211_hwsim/README
- create mode 100644 Documentation/networking/mac80211_hwsim/hostapd.conf
- create mode 100644 Documentation/networking/mac80211_hwsim/wpa_supplicant.conf
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-scan.c
- create mode 100644 drivers/net/wireless/mac80211_hwsim.c
-
-Omnibus patch available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2008-06-14.patch.bz2
--- 
-John W. Linville
-linville@tuxdriver.com
+On Mon, Jun 16, 2008 at 5:35 PM, Dan Williams <dcbw@redhat.com> wrote:
+> On Mon, 2008-06-16 at 09:08 +0300, Maxim Levitsky wrote:
+>> Tomas Winkler wrote:
+>> > On Mon, Jun 16, 2008 at 8:50 AM, Maxim Levitsky <maximlevitsky@gma=
+il.com> wrote:
+>> >> Tomas Winkler wrote:
+>> >>> On Sun, Jun 15, 2008 at 6:09 PM, Tomas Winkler <tomasw@gmail.com=
+> wrote:
+>> >>>> On Sun, Jun 15, 2008 at 5:12 PM, Maxim Levitsky <maximlevitsky@=
+gmail.com>
+>> >>>> wrote:
+>> >>>>> Tomas Winkler wrote:
+>> >>>>>> On Sun, Jun 15, 2008 at 4:42 PM, Maxim Levitsky
+>> >>>>>> <maximlevitsky@gmail.com>
+>> >>>>>> wrote:
+>> >>>>>>> Tomas Winkler wrote:
+>> >>>>>>>> On Fri, Jun 13, 2008 at 6:06 PM, Maxim Levitsky
+>> >>>>>>>> <maximlevitsky@gmail.com>
+>> >>>>>>>> wrote:
+>> >>>>>>>>> Tor H=E5kon Haugen wrote:
+>> >>>>>>>>>> John W. Linville wrote:
+>> >>>>>>>>>>> On Fri, Jun 13, 2008 at 03:35:23PM +0800, Zhu Yi wrote:
+>> >>>>>>>>>>>> On Thu, 2008-06-12 at 09:59 -0400, John W. Linville wro=
+te:
+>> >>>>>>>>>>>>> Honestly I'm tempted to change it to "enable_hw_scan" =
+instead...
+>> >>>>>>>>>>>> Give the advantages, I'd like to use it if we can fix t=
+he bug (I
+>> >>>>>>>>>>>> haven't
+>> >>>>>>>>>>>> seen what the bug is myself). But you are free to chang=
+e the
+>> >>>>>>>>>>>> default
+>> >>>>>>>>>>>> value until it is fixed. There is no such problem for 4=
+965,
+>> >>>>>>>>>>>> right?
+>> >>>>>>>>>>> AFAICT only the 3945 seems to need it.
+>> >>>>>>>>>>>
+>> >>>>>>>>>> I can confirm that this also applies to 4965 as a friend =
+of mine
+>> >>>>>>>>>> has
+>> >>>>>>>>>> this card. According to him the card works a lot better w=
+ith the
+>> >>>>>>>>>> parameters "swcrypto=3D1" and "disable_hw_scan=3D1".
+>> >>>>>>>>> Just to make it clear,
+>> >>>>>>>>> iwl3945 doesn't work at all without disable_hw_scan=3D1 he=
+re.
+>> >>>>>>>>> The driver just shuts down thee card since it detects micr=
+ocode
+>> >>>>>>>>> error.
+>> >>>>>>>>>
+>> >>>>>>>> It looks like this is all caused by the big rate, band patc=
+h. Looks
+>> >>>>>>>> like A band scan channels are not configured correctly for =
+the
+>> >>>>>>>> scanning. This crashes the firmware.
+>> >>>>>>>>
+>> >>>>>>>> Tomas
+>> >>>>>>> Probably, I see that eeprom according to dmesg contains no i=
+nfo about
+>> >>>>>>> A
+>> >>>>>>> channels, so maybe this crashes the firmware.
+>> >>>>>>>
+>> >>>>>> Can you please send your dmesg.
+>> >>>>> I did that
+>> >>>>> (You mean dmesg without disable_hw_scan=3D1?)
+>> >>>>>
+>> >>>>> If not what debug options I should include
+>> >>>>> (I tried same firmware debug options, but the log wrapped arou=
+nd.)
+>> >>>>>
+>> >>>>> dmesg without disable_hw_scan=3D1 attached.
+>> >>>>>
+>> >>>>>
+>> >>>>>>> I have few questions:
+>> >>>>>>>
+>> >>>>>>> * Is there a software workaround without the need to update =
+the
+>> >>>>>>> firmware?
+>> >>>>>> Yes
+>> >>>>>>
+>> >>>>>>> * Is the firmware error so harmful, so driver can't continue=
+?
+>> >>>>>> This is firmware misconfiguration.  Driver should be friendly=
+ to
+>> >>>>>> firmware and use correctly API.
+>> >>>>>>
+>> >>>>>>> * Can I expect updated version of the firmware with  fix?
+>> >>>>>> No need so far.
+>> >>>>>>
+>> >>>>>>> Sadly this confirms that firmware is worse that I thought, i=
+t is
+>> >>>>>>> closer
+>> >>>>>>> to
+>> >>>>>>> closed drivers.
+>> >>>>>> The firmware API is open, it just wasn't used correctly.
+>> >>>>> I mean if there is a bug in firmware, nobody expect intel can =
+fix it.
+>> >>>> Intel is fixing bugs in the firmware. Still this doesn't look l=
+ike a
+>> >>>> firmware error.
+>> >>>>
+>> >>>>> BTW you say that firmware api is open,
+>> >>>>> is there a programming manual for this wireless chip?
+>> >>>> it's well documented in -commands.h file
+>> >>>
+>> >>>
+>> >>> Please try this one
+>> >>>
+>> >>> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+>> >>> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+>> >>> @@ -3348,7 +3348,10 @@ static void
+>> >>> iwl3945_rx_scan_complete_notif(struct iwl3945_priv *priv,
+>> >>>
+>> >>>        /* Remove this scanned band from the list
+>> >>>         * of pending bands to scan */
+>> >>> -       priv->scan_bands--;
+>> >>> +       if (priv->cfg->sku & IWL_SKU_A)
+>> >>> +               priv->scan_bands--;
+>> >>> +       else
+>> >>> +               priv->scan_bands =3D 0;
+>> >>>
+>> >>>
+>> >>
+>> >> I tested this patch, and it fixes this issue, Thanks a lot.
+>> >>
+>> > Thanks a lot for helping resolve this. I will post an official pat=
+ch.
+>> > Tomas
+>>
+>> Thanks to you too.
+>>
+>> I just want to note that hardware scanning doesn't work well here
+>> (something unrelated)
+>>
+>> First of all I noticed large delays in communications occurring
+>> sometimes, I for example tried pinging Google, and every 20 replies
+>> I get about 10 lost packets. (this is exactly what hardware scanning
+>> should prevent, but it seems that the opposite happens)
+>>
+>> I tried that again now, and see no delays, but I reproduced this twi=
+ce.
+>>
+>> Then power levels go crazy, the nm-applet shows that my access point
+>> have 23% quality, then 100%, then something low again, and looking l=
+ist
+>> of networks withing same applet, it shows for example now that all 3
+>> networks (mine, and two neighbors) have 100% quality, which is just =
+wrong.
+>
+> Note that NM will periodically request scans (~ every 2 minutes or so=
+)
+> which can cause latency in pings.  But AFAIK it shouldn't really caus=
+e
+> _lost_ pings, since the driver and the AP need to work together to av=
+oid
+> dropping packets when the card isn't on the same channel as the AP is=
+=2E
+> I'm pretty sure mac80211 handles this in software (by doing the
+> powersave poll trick to get the AP to buffer frames for the STA while
+> not on the associated channel).  Not sure how the hardware handles it=
+,
+> but frames for the AP should _NOT_ be leaking out when the card isn't=
+ on
+> the same channel as the AP.
+>
+The same mechanism is used in HW scanning but with luxury of real time =
+system.
+Tomas
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
