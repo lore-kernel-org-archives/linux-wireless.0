@@ -1,78 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:42807 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752360AbYFMMLj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 08:11:39 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so3278834waf.23
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2008 05:11:37 -0700 (PDT)
-Message-ID: <1ba2fa240806130511i1686bee6m8701614a11a46aa6@mail.gmail.com> (sfid-20080613_141143_362937_A9FF8A14)
-Date: Fri, 13 Jun 2008 15:11:36 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/3] iwlwifi: adding channels to sysfs
-Cc: "Zhu Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org,
-	"Ester Kummer" <ester.kummer@intel.com>
-In-Reply-To: <1213346113.3860.3.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1213343095-8133-1-git-send-email-yi.zhu@intel.com>
-	 <1213343095-8133-2-git-send-email-yi.zhu@intel.com>
-	 <1213343813.3860.0.camel@johannes.berg>
-	 <1ba2fa240806130128l433c5b3fxfc7ff13c886a2fa1@mail.gmail.com>
-	 <1213346113.3860.3.camel@johannes.berg>
+Received: from mx1.redhat.com ([66.187.233.31]:47129 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757206AbYFPUji (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jun 2008 16:39:38 -0400
+Subject: Re: [PATCH] mac80211: remove shared key todo
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1213647709.3803.50.camel@johannes.berg>
+References: <1213642529.3803.47.camel@johannes.berg>
+	 <1213647566.18384.6.camel@localhost.localdomain>
+	 <1213647709.3803.50.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 16 Jun 2008 16:38:49 -0400
+Message-Id: <1213648729.18384.11.camel@localhost.localdomain> (sfid-20080616_223955_597870_67264533)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 13, 2008 at 11:35 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->> >>  drivers/net/wireless/iwlwifi/iwl4965-base.c |   58 ++++++++++++++++++++++++++-
->> >>  1 files changed, 56 insertions(+), 2 deletions(-)
->> >>
->> >> diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
->> >> index 81a1c22..c179b21 100644
->> >> --- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
->> >> +++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
->> >> @@ -4122,8 +4122,62 @@ static DEVICE_ATTR(power_level, S_IWUSR | S_IRUSR, show_power_level,
->> >>  static ssize_t show_channels(struct device *d,
->> >>                            struct device_attribute *attr, char *buf)
->> >>  {
->> >> -     /* all this shit doesn't belong into sysfs anyway */
->> >> -     return 0;
->> >
->> > Hehe. Do you really have to? You can query this information with
->> > nl80211. I don't know why you need all that sysfs stuff anyway.
->>
->> I'm not sure why Yi has cut off the log message but original was
->>
->> 'This patch returns channel list to sysfs. This is requirement
->> for validation purposes'
->>
->> Our automation is build around sysfs and wext and I'm not going to
->> rewrite it now.
->
-> If you managed to get along without this for so long, why is it needed
-> in upstream now?
+On Mon, 2008-06-16 at 22:21 +0200, Johannes Berg wrote:
+> On Mon, 2008-06-16 at 16:19 -0400, Dan Williams wrote:
+> > On Mon, 2008-06-16 at 20:55 +0200, Johannes Berg wrote:
+> > > Adding shared key authentication is not going to happen anyway.
+> > 
+> > +1; I've _never_ heard or seen anyone using Shared Key auth with adhoc.
+> > How would that work anyway, given that there's no AP to send you the
+> > challenge text?  Just auth against some random peer?
+> 
+> I have no idea. Usually, you don't even do open auth for IBSS, there's
+> just no point. Unless you get into IBSS with encryption, but we don't
+> really support that yet, and we probably never will actually support
+> that without the userspace MLME in wpa supplicant.
 
-We didn't run without it, We  were developing HW 5000 on older kernel
-now I just merging it upstream. See my announcement  Try to imagine
-that there is world on totally different planet with different
-gravitation constant,
+IBSS + WEP works at least for ipw2200 and other non-mac80211 cards; I
+can check it out with mac80211 if you like.
 
-> Remember, sysfs is API. You don't get to change it gratuitously, so
-> neither should you add to it gratuitously. And we already _have_ API for
-> this particular thing which is not dependent on a particular
-> hardware/driver to boot!
-Agree. We've just returned what was there before
-I think you understand what legacy means after your try to replace
-wext. It will take time
-till we switch to new API. Unfortunately cannot fix everything in one day.
+One thing though, if mac80211 isn't going to support IBSS + WEP for a
+while, we should find some way to push capability bits to userspace that
+say that.  Otherwise there's no way for NM to tell that the driver
+doesn't support it, and thus to not even show the options in the UI.
 
-Tomas
+Any particular reason IBSS would require a userspace MLME?  There
+shouldn't be any rekeying of any kind with adhoc, since there's no
+central station to coordinate the rekying.  AFAIK with IBSS you just use
+the given PSK at creation time, and never change it.  That shouldn't be
+too hard to handle, right?
+
+Dan
 
 
->
-> johannes
->
