@@ -1,55 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56461
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1756186AbYFQHxO (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.225]:27769 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760614AbYFPIJZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 03:53:14 -0400
-Date: Tue, 17 Jun 2008 00:53:15 -0700 (PDT)
-Message-Id: <20080617.005315.215862748.davem@davemloft.net> (sfid-20080617_095347_361323_46D65894)
-To: linville@tuxdriver.com
-CC: mokuno@sm.sony.co.jp, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/12]: wext: Make adjust_priv_size() take a "struct
- iw_point *".
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 16 Jun 2008 04:09:25 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so3446929rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2008 01:09:24 -0700 (PDT)
+Message-ID: <1ba2fa240806160109q751e6990vf9c12e65800fb16a@mail.gmail.com> (sfid-20080616_100939_170843_D430BBA3)
+Date: Mon, 16 Jun 2008 11:09:24 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: drago01 <drago01@gmail.com>
+Subject: Re: [PATCH] iwl3965: remove useless network and duplicate checking
+Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Zhu Yi" <yi.zhu@intel.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John Linville" <linville@tuxdriver.com>
+In-Reply-To: <f6ca9fed0806151105l3ddd72b9r5a4ad5f112cc8599@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f6ca9fed0806151105l3ddd72b9r5a4ad5f112cc8599@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Jun 15, 2008 at 9:05 PM, drago01 <drago01@gmail.com> wrote:
+> Johannes has posted a similar patch fro iwl4965, I have ported (the
+> relevant parts) to iwl3945.
+> I tested it and its working fine so far.
+> -------------
+> mac802 can handle duplicate packages on its own, so let it do it.
+> Based on patch from Johannes Berg for iwl4965.
 
-wext: Make adjust_priv_size() take a "struct iw_point *".
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/wireless/wext.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index e83d74a..cd2cf9f 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -512,9 +512,9 @@ static int get_priv_size(__u16 args)
- /*
-  * Re-calculate the size of private arguments
-  */
--static int adjust_priv_size(__u16 args, union iwreq_data *wrqu)
-+static int adjust_priv_size(__u16 args, struct iw_point *iwp)
- {
--	int	num = wrqu->data.length;
-+	int	num = iwp->length;
- 	int	max = args & IW_PRIV_SIZE_MASK;
- 	int	type = (args & IW_PRIV_TYPE_MASK) >> 12;
- 
-@@ -976,7 +976,7 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
- 			 * avoid leaking kernel bits outside. */
- 			if (!(descr->get_args & IW_PRIV_SIZE_FIXED)) {
- 				extra_size = adjust_priv_size(descr->get_args,
--							      &(iwr->u));
-+							      &(iwr->u.data));
- 			}
- 
- 			err = copy_to_user(iwr->u.data.pointer, extra,
--- 
-1.5.5.1.308.g1fbb5
-
+I'm not 100% sure but currently there is missing checking for fragment
+duplication in mac80211.
+Can someone confirm?
+Thanks
+Tomas
