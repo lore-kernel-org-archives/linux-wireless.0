@@ -1,42 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:32896 "EHLO vs166246.vserver.de"
+Received: from hostap.isc.org ([149.20.54.63]:56226 "EHLO hostap.isc.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756870AbYFTNpa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2008 09:45:30 -0400
-From: Michael Buesch <mb@bu3sch.de>
+	id S1757676AbYFQQAn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jun 2008 12:00:43 -0400
+Message-Id: <20080617155949.830340514@localhost> (sfid-20080617_180055_709783_4502BD3B)
+References: <20080617154008.883383150@localhost>
+Date: Tue, 17 Jun 2008 18:40:13 +0300
+From: Jouni Malinen <j@w1.fi>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: mac80211 suspend gotchas
-Date: Fri, 20 Jun 2008 15:45:08 +0200
 Cc: linux-wireless@vger.kernel.org
-References: <1213966018.8967.176.camel@johannes.berg> <200806201507.29030.mb@bu3sch.de> <1213968673.8967.178.camel@johannes.berg>
-In-Reply-To: <1213968673.8967.178.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200806201545.08267.mb@bu3sch.de> (sfid-20080620_154605_656664_D8596F11)
+Subject: [RFC PATCH 5/7] 802.11w: WEXT parameter for setting mgmt cipher
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 20 June 2008 15:31:13 Johannes Berg wrote:
-> 
-> > > This is not a hard problem to solve.
-> > 
-> > >  - suspend does, in this order (callback used):
-> > >     * stop aggregation (ampdu_action)
-> > >     * remove all keys (set_key)
-> > >     * remove all STAs (sta_notify)
-> > >     * remove all interfaces (remove_interface)
-> > >     * stop the hardware (stop)
-> > 
-> > I think the hardware-stop should probably be done in the driver
-> > suspend routine after the mac80211 notification and not by a mac80211 callback.
-> > Otherwise this is going to get complicated wrt locking.
-> 
-> All of those callbacks potentially require locks, you really want to
-> call them outside of any locked section in your ->resume and ->suspend
-> handlers.
+Add a new IW_AUTH parameter for setting cipher suite for
+multicast/broadcast management frames. This is for full-mac drivers
+that take care of RSN IE generation for (re)association request frames.
 
-ops->stop is special wrt suspend.
+Signed-off-by: Jouni Malinen <j@w1.fi>
+
+
+Index: wireless-testing/include/linux/wireless.h
+===================================================================
+--- wireless-testing.orig/include/linux/wireless.h
++++ wireless-testing/include/linux/wireless.h
+@@ -577,18 +577,21 @@
+ #define IW_AUTH_RX_UNENCRYPTED_EAPOL	8
+ #define IW_AUTH_ROAMING_CONTROL		9
+ #define IW_AUTH_PRIVACY_INVOKED		10
++#define IW_AUTH_CIPHER_GROUP_MGMT	11
+ 
+ /* IW_AUTH_WPA_VERSION values (bit field) */
+ #define IW_AUTH_WPA_VERSION_DISABLED	0x00000001
+ #define IW_AUTH_WPA_VERSION_WPA		0x00000002
+ #define IW_AUTH_WPA_VERSION_WPA2	0x00000004
+ 
+-/* IW_AUTH_PAIRWISE_CIPHER and IW_AUTH_GROUP_CIPHER values (bit field) */
++/* IW_AUTH_PAIRWISE_CIPHER, IW_AUTH_GROUP_CIPHER, and IW_AUTH_CIPHER_GROUP_MGMT
++ * values (bit field) */
+ #define IW_AUTH_CIPHER_NONE	0x00000001
+ #define IW_AUTH_CIPHER_WEP40	0x00000002
+ #define IW_AUTH_CIPHER_TKIP	0x00000004
+ #define IW_AUTH_CIPHER_CCMP	0x00000008
+ #define IW_AUTH_CIPHER_WEP104	0x00000010
++#define IW_AUTH_CIPHER_AES_CMAC	0x00000020
+ 
+ /* IW_AUTH_KEY_MGMT values (bit field) */
+ #define IW_AUTH_KEY_MGMT_802_1X	1
+Index: wireless-testing/net/mac80211/wext.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/wext.c
++++ wireless-testing/net/mac80211/wext.c
+@@ -966,6 +966,7 @@ static int ieee80211_ioctl_siwauth(struc
+ 	case IW_AUTH_WPA_ENABLED:
+ 	case IW_AUTH_RX_UNENCRYPTED_EAPOL:
+ 	case IW_AUTH_KEY_MGMT:
++	case IW_AUTH_CIPHER_GROUP_MGMT:
+ 		break;
+ 	case IW_AUTH_DROP_UNENCRYPTED:
+ 		sdata->drop_unencrypted = !!data->value;
+
+--
 
 -- 
-Greetings Michael.
+Jouni Malinen                                            PGP id EFC895FA
