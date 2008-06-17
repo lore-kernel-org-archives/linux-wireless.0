@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:56163 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753598AbYFMHfq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 03:35:46 -0400
-Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with
-	disable_hw_scan=1
-From: Zhu Yi <yi.zhu@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <20080612135936.GA5031@tuxdriver.com>
-References: <484FEA26.1040305@gmail.com>
-	 <1213241315.7814.696.camel@debian.sh.intel.com>
-	 <20080612135936.GA5031@tuxdriver.com>
-Content-Type: text/plain
-Date: Fri, 13 Jun 2008 15:35:23 +0800
-Message-Id: <1213342523.7814.865.camel@debian.sh.intel.com> (sfid-20080613_093557_086262_4624B7EF)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56461
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1756186AbYFQHxO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jun 2008 03:53:14 -0400
+Date: Tue, 17 Jun 2008 00:53:15 -0700 (PDT)
+Message-Id: <20080617.005315.215862748.davem@davemloft.net> (sfid-20080617_095347_361323_46D65894)
+To: linville@tuxdriver.com
+CC: mokuno@sm.sony.co.jp, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/12]: wext: Make adjust_priv_size() take a "struct
+ iw_point *".
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-06-12 at 09:59 -0400, John W. Linville wrote:
-> How does the hardware scan differ from what mac80211 does when
-> scanning?
 
-Software scan disables Tx during the scan process while hardware scan
-doesn't. So you are expected to see continous ping responds instead of a
-freeze during the scan period. Hardware scan is also more efficient
-since it is handled by the firmware.
+wext: Make adjust_priv_size() take a "struct iw_point *".
 
-> I still see a lot of mysterious iwlwifi (especially iwl3945)
-> problems in Fedora that seem to disappear with disable_hw_scan=1.
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/wireless/wext.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-I don't see this problem from my side. I'll do more testing for 3945.
-
-> Honestly I'm tempted to change it to "enable_hw_scan" instead...
-
-Give the advantages, I'd like to use it if we can fix the bug (I haven't
-seen what the bug is myself). But you are free to change the default
-value until it is fixed. There is no such problem for 4965, right?
-
-Thanks,
--yi
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index e83d74a..cd2cf9f 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -512,9 +512,9 @@ static int get_priv_size(__u16 args)
+ /*
+  * Re-calculate the size of private arguments
+  */
+-static int adjust_priv_size(__u16 args, union iwreq_data *wrqu)
++static int adjust_priv_size(__u16 args, struct iw_point *iwp)
+ {
+-	int	num = wrqu->data.length;
++	int	num = iwp->length;
+ 	int	max = args & IW_PRIV_SIZE_MASK;
+ 	int	type = (args & IW_PRIV_TYPE_MASK) >> 12;
+ 
+@@ -976,7 +976,7 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
+ 			 * avoid leaking kernel bits outside. */
+ 			if (!(descr->get_args & IW_PRIV_SIZE_FIXED)) {
+ 				extra_size = adjust_priv_size(descr->get_args,
+-							      &(iwr->u));
++							      &(iwr->u.data));
+ 			}
+ 
+ 			err = copy_to_user(iwr->u.data.pointer, extra,
+-- 
+1.5.5.1.308.g1fbb5
 
