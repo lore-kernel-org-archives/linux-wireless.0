@@ -1,156 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:18215 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:35258 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759605AbYF3J1R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 05:27:17 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 31/33] iwlwifi: fix iwl4965 temperature callback calibration issue
-Date: Mon, 30 Jun 2008 17:23:31 +0800
-Message-Id: <1214817813-17639-32-git-send-email-yi.zhu@intel.com> (sfid-20080630_113814_166586_215CAFED)
-In-Reply-To: <1214817813-17639-31-git-send-email-yi.zhu@intel.com>
-References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-2-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-3-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-5-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-6-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-7-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-8-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-9-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-10-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-11-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-12-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-13-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-14-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-15-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-16-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-17-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-18-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-19-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-20-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-21-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-22-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-23-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-24-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-25-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-26-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-27-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-28-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-29-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-30-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-31-git-send-email-yi.zhu@intel.com>
+	id S1755834AbYFQSSt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jun 2008 14:18:49 -0400
+Subject: Re: [PATCH] mac80211: remove shared key todo
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1213649176.3803.55.camel@johannes.berg>
+References: <1213642529.3803.47.camel@johannes.berg>
+	 <1213647566.18384.6.camel@localhost.localdomain>
+	 <1213647709.3803.50.camel@johannes.berg>
+	 <1213648729.18384.11.camel@localhost.localdomain>
+	 <1213649176.3803.55.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 17 Jun 2008 14:12:58 -0400
+Message-Id: <1213726378.30192.8.camel@localhost.localdomain> (sfid-20080617_201852_267783_98FFCBD6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch fixes the temperature calibration issue introduced by the
-patch "iwlwifi: move RX stats to core, and move temperature to handler".
-It also remove the second parameter "stats" since it is already copied
-to priv->statistics.
+On Mon, 2008-06-16 at 22:46 +0200, Johannes Berg wrote:
+> > > I have no idea. Usually, you don't even do open auth for IBSS, there's
+> > > just no point. Unless you get into IBSS with encryption, but we don't
+> > > really support that yet, and we probably never will actually support
+> > > that without the userspace MLME in wpa supplicant.
+> > 
+> > IBSS + WEP works at least for ipw2200 and other non-mac80211 cards; I
+> > can check it out with mac80211 if you like.
+> 
+> Yeah, no, +WEP should work. I haven't specifically tested it but I see
+> no reason for it not to work.
+> 
+> > Any particular reason IBSS would require a userspace MLME?  There
+> > shouldn't be any rekeying of any kind with adhoc, since there's no
+> > central station to coordinate the rekying.  AFAIK with IBSS you just use
+> > the given PSK at creation time, and never change it.  That shouldn't be
+> > too hard to handle, right?
+> 
+> Well, I was really thinking of RSN/WPA, and last I checked
+> wpa_supplicant didn't even support that with IBSS, and I think it
+> requires userspace MLME because you have to do the auth/assoc sequence
+> with each peer etc.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |   14 +-------------
- drivers/net/wireless/iwlwifi/iwl-5000.c |    5 ++---
- drivers/net/wireless/iwlwifi/iwl-core.h |    3 +--
- drivers/net/wireless/iwlwifi/iwl-rx.c   |   13 ++++++++++---
- 4 files changed, 14 insertions(+), 21 deletions(-)
+wpa_supplicant _should_ support WPA-PSK with IBSS, you set
+proto=WPA-NONE to do this and I assume it just sends the PSK to the
+driver and never changes it.  I haven't tested it a long time though.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index e4eab51..8c93f8d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -1879,21 +1879,9 @@ static int iwl4965_is_temp_calib_needed(struct iwl_priv *priv)
- 	return 1;
- }
- 
--static void iwl4965_temperature_calib(struct iwl_priv *priv,
--				      struct iwl_notif_statistics *stats)
-+static void iwl4965_temperature_calib(struct iwl_priv *priv)
- {
- 	s32 temp;
--	int change = ((priv->statistics.general.temperature !=
--		   stats->general.temperature) ||
--		  ((priv->statistics.flag &
--		    STATISTICS_REPLY_FLG_FAT_MODE_MSK) !=
--		   (stats->flag & STATISTICS_REPLY_FLG_FAT_MODE_MSK)));
--
--	/* If the hardware hasn't reported a change in
--	 * temperature then don't bother computing a
--	 * calibrated temperature value */
--	if (!change)
--		return;
- 
- 	temp = iwl4965_hw_get_temperature(priv);
- 	if (temp < 0)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 1be6ca4..7cc73e9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -1422,11 +1422,10 @@ static int  iwl5000_send_tx_power(struct iwl_priv *priv)
- 				       NULL);
- }
- 
--static void iwl5000_temperature(struct iwl_priv *priv,
--				struct iwl_notif_statistics *stats)
-+static void iwl5000_temperature(struct iwl_priv *priv)
- {
- 	/* store temperature from statistics (in Celsius) */
--	priv->temperature = le32_to_cpu(stats->general.temperature);
-+	priv->temperature = le32_to_cpu(priv->statistics.general.temperature);
- }
- 
- static struct iwl_hcmd_ops iwl5000_hcmd = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index d7562c3..eb4abe1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -140,8 +140,7 @@ struct iwl_lib_ops {
- 	int (*set_power)(struct iwl_priv *priv, void *cmd);
- 	int (*send_tx_power) (struct iwl_priv *priv);
- 	void (*update_chain_flags)(struct iwl_priv *priv);
--	void (*temperature) (struct iwl_priv *priv,
--		struct iwl_notif_statistics *stats);
-+	void (*temperature) (struct iwl_priv *priv);
- 	/* eeprom operations (as defined in iwl-eeprom.h) */
- 	struct iwl_eeprom_ops eeprom_ops;
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 1adb1aa..d379529 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -557,11 +557,18 @@ static void iwl_rx_calc_noise(struct iwl_priv *priv)
- void iwl_rx_statistics(struct iwl_priv *priv,
- 			      struct iwl_rx_mem_buffer *rxb)
- {
-+	int change;
- 	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
--
-+       
- 	IWL_DEBUG_RX("Statistics notification received (%d vs %d).\n",
- 		     (int)sizeof(priv->statistics), pkt->len);
- 
-+	change = ((priv->statistics.general.temperature !=
-+		   pkt->u.stats.general.temperature) ||
-+		  ((priv->statistics.flag &
-+		    STATISTICS_REPLY_FLG_FAT_MODE_MSK) !=
-+		   (pkt->u.stats.flag & STATISTICS_REPLY_FLG_FAT_MODE_MSK)));
-+
- 	memcpy(&priv->statistics, &pkt->u.stats, sizeof(priv->statistics));
- 
- 	set_bit(STATUS_STATISTICS, &priv->status);
-@@ -581,8 +588,8 @@ void iwl_rx_statistics(struct iwl_priv *priv,
- 
- 	iwl_leds_background(priv);
- 
--	if (priv->cfg->ops->lib->temperature)
--		priv->cfg->ops->lib->temperature(priv, &pkt->u.stats);
-+	if (priv->cfg->ops->lib->temperature && change)
-+		priv->cfg->ops->lib->temperature(priv);
- }
- EXPORT_SYMBOL(iwl_rx_statistics);
- 
--- 
-1.5.3.6
+Dan
+
 
