@@ -1,128 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:39846 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757497AbYFFN73 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56455
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1755273AbYFQHxE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2008 09:59:29 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so763641waf.23
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jun 2008 06:59:29 -0700 (PDT)
-Message-ID: <1ba2fa240806060659wf4e4088s8afdd2f7f854ea09@mail.gmail.com> (sfid-20080606_155945_033591_F33B603D)
-Date: Fri, 6 Jun 2008 16:59:29 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Thomas Backlund" <tmb@mandriva.org>
-Subject: Re: iwl4965 oops in 2.6.26-rc5 x86_64
-Cc: "Ian Schram" <ischram@telenet.be>,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <48492E85.6010307@mandriva.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <4848289D.1080205@mandriva.org>
-	 <1ba2fa240806051103q652accf5t1bd1d94630ebea5b@mail.gmail.com>
-	 <48482BC3.4070402@mandriva.org> <4848482C.2080208@mandriva.org>
-	 <48485F12.2050908@mandriva.org> <48488878.5040708@telenet.be>
-	 <1ba2fa240806060432t73ecb318x89e877241aa6ef55@mail.gmail.com>
-	 <48492734.9080901@mandriva.org> <48492E85.6010307@mandriva.org>
+	Tue, 17 Jun 2008 03:53:04 -0400
+Date: Tue, 17 Jun 2008 00:53:04 -0700 (PDT)
+Message-Id: <20080617.005304.207929650.davem@davemloft.net> (sfid-20080617_095314_833196_F10A714F)
+To: linville@tuxdriver.com
+CC: mokuno@sm.sony.co.jp, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/12]: wext: Remove inline from get_priv_size() and
+ adjust_priv_size().
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 6, 2008 at 3:33 PM, Thomas Backlund <tmb@mandriva.org> wrote:
-> Thomas Backlund skrev:
->>
->> Tomas Winkler skrev:
->>>
->>> On Fri, Jun 6, 2008 at 3:44 AM, Ian Schram <ischram@telenet.be> wrote:
->>>>
->>>> Isn't this the Oops Joonwoo Park wanted to patch with
->>>>
->>>> "[PATCH] iwlwifi: fix oops on wep key insertion" 27/5/2008
->>>>
->>>> invalid length of webkey that would/should be handled in mac80211?
->>>>
->>>> ian
->>>
->>> Yes, it looks like.
->>
->> Ummm, what has a wep key to do with me trying to access a WPA2-Personal
->> encrypted net ?
 
-Not sure yet, but mac is trying to assign default/static wep key.
+wext: Remove inline from get_priv_size() and adjust_priv_size().
 
-:iwlcore:iwl_send_static_wepkey_cmd+0xcb/0xd5
-:iwlcore:iwl_set_default_wep_key+0xa2/0xbc
+The compiler inlines when appropriate.
 
-Try to set the encryption explicitly
-network={
-    psk="*************************"
-    scan_ssid=1
-    ssid="dlink"
-    pairwise=CCMP
-   group=CCMP
- }
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/wireless/wext.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index 947188a..e83d74a 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -500,7 +500,7 @@ static int call_commit_handler(struct net_device *dev)
+ /*
+  * Calculate size of private arguments
+  */
+-static inline int get_priv_size(__u16	args)
++static int get_priv_size(__u16 args)
+ {
+ 	int	num = args & IW_PRIV_SIZE_MASK;
+ 	int	type = (args & IW_PRIV_TYPE_MASK) >> 12;
+@@ -512,8 +512,7 @@ static inline int get_priv_size(__u16	args)
+ /*
+  * Re-calculate the size of private arguments
+  */
+-static inline int adjust_priv_size(__u16		args,
+-				   union iwreq_data *	wrqu)
++static int adjust_priv_size(__u16 args, union iwreq_data *wrqu)
+ {
+ 	int	num = wrqu->data.length;
+ 	int	max = args & IW_PRIV_SIZE_MASK;
+-- 
+1.5.5.1.308.g1fbb5
 
->>
->>> Thomas can you send out your wpa_supplicant config fiele
->>>
->>
->> I could, but since I would have to remove any sensitive info such as the
->> psk key, would it be of any use ?
->
-> Anyway, here configs are:
->
-> wpa_supplicant.conf
-> (I stripped all the comments from the file)
-> --- cut ---
-> ctrl_interface=/var/run/wpa_supplicant
->
-> eapol_version=1
->
-> ap_scan=1
->
-> fast_reauth=1
->
-> blob-base64-exampleblob={
-> SGVsbG8gV29ybGQhCg==
-> }
->
-> network={
->    psk="*************************"
->    scan_ssid=1
->    ssid="dlink"
-> }
-> --- cut ---
->
-> ifcfg-wlan0
-> --- cut ---
-> DEVICE=wlan0
-> BOOTPROTO=dhcp
-> ONBOOT=yes
-> METRIC=35
-> MII_NOT_SUPPORTED=no
-> USERCTL=no
-> RESOLV_MODS=no
-> WIRELESS_MODE=Managed
-> WIRELESS_ESSID=dlink
-> WIRELESS_ENC_KEY='s:*************************'
-> WIRELESS_WPA_DRIVER=wext
-> IPV6INIT=no
-> IPV6TO4INIT=no
-> DHCP_CLIENT=dhclient
-> NEEDHOSTNAME=no
-> PEERDNS=yes
-> PEERYP=yes
-> PEERNTPD=no
-> --- cut ---
->
->>
->>> I will provide a patch that disable hw encryption on long wep keys. It
->>> get lost in my todo list.
->>> Tomas
->>>
->>
->
-> --
-> Thomas
->
->
->
