@@ -1,76 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:9680 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753363AbYFIRca (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58517 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751527AbYFQG53 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2008 13:32:30 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so1380928ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 10:32:17 -0700 (PDT)
-Subject: Re: [PATCH 2/7] mac80211: replace ieee80211_get_morefrag with
-	ieee80211_has_morefrags
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1213032133.22220.3.camel@johannes.berg>
-References: <1212774671.6340.76.camel@brick>
-	 (sfid-20080606_195947_229598_F1790495)  <1212997132.698.53.camel@johannes.berg>
-	 <1213028961.5974.18.camel@brick>
-	 (sfid-20080609_182929_823786_13F038F5)  <1213032133.22220.3.camel@johannes.berg>
-Content-Type: text/plain; charset=utf-8
-Date: Mon, 09 Jun 2008 10:32:14 -0700
-Message-Id: <1213032734.5974.24.camel@brick> (sfid-20080609_193233_966035_FFE00857)
+	Tue, 17 Jun 2008 02:57:29 -0400
+Subject: [PATCH 2.6.26] mac80211: detect driver tx bugs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>
+In-Reply-To: <1213534540.3803.5.camel@johannes.berg> (sfid-20080615_145613_932431_D2E4E6A8)
+References: <1213534025.3803.2.camel@johannes.berg>
+	 (sfid-20080615_144745_622030_910244B5)  <1213534540.3803.5.camel@johannes.berg>
+	 (sfid-20080615_145613_932431_D2E4E6A8)
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 17 Jun 2008 08:56:37 +0200
+Message-Id: <1213685797.3803.65.camel@johannes.berg> (sfid-20080617_085743_609581_1AC580C7)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-06-09 at 19:22 +0200, Johannes Berg wrote:
-> On Mon, 2008-06-09 at 09:29 -0700, Harvey Harrison wrote:
-> > On Mon, 2008-06-09 at 09:38 +0200, Johannes Berg wrote:
-> > > > -	if (ieee80211_get_morefrag(hdr))
-> > > > +	if (ieee80211_has_morefrags(hdr->frame_control))
-> > >=20
-> > > looks fine to me, though I wonder if we should have
-> > >=20
-> > > ieee80211_has_morefrags(struct 80211hdr)
-> > > and
-> > > __ieee80211_has_morefrags(__le16 fc)
-> > >=20
-> > > or something with variants of the functions that do the ->frame_c=
-ontrol?
-> >=20
-> > I considered that, but thought it was a small benefit for doubling =
-the
-> > number of helpers.
-> >=20
-> > I chose the __le16 variant as there is some driver code that checks=
- these
-> > values in driver-specific structures, so I just left it up to the c=
-aller
-> > to dereference whatever structure the frame control is held in.
-> >=20
-> > But if both sets are wanted, I would suggest:
-> >=20
-> > =EF=BB=BFieee80211_fc_has_morefrags(__le16 fc);
-> >=20
-> > ieee80211_has_morefrags(struct ieee80211 *hdr)
-> > {
-> > 	return ieee80211_fc_has_morefrags(hdr->frame_control);
-> > }
-> >=20
-> > Do you think I should add the struct helper(s)?
->=20
-> It looks like you'd be using them in many places, so don't you think =
-it
-> would be helpful? I don't really care too much.
->=20
+When a driver rejects a frame in it's ->tx() callback, it must also
+stop queues, otherwise mac80211 can go into a loop here. Detect this
+situation and abort the loop after five retries, warning about the
+driver bug.
 
-OK, I've added kernel-doc and incorporated the other comments, I'm not
-going to add additional helpers for the struct ieee80211 case at this
-time.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+This is a port of the patch to 2.6.26 which seems to suffer from the
+same problem and could well be the cause of all the mac80211 softlockup
+warnings on kerneloops.org.
 
-I'll check it over and send a revised version in a bit.
+Dave, with John on vacation until the 22nd, would you push this to Linu=
+s
+with the next net update instead of it going through John's tree first?
 
-Harvey
+Ideally we'd fix the driver bugs, but that'd need an audit and this at
+least lets the system continue and work, a b43 bugfix was posted too to
+just drop frames if they come in at inopportune times.
+
+ net/mac80211/tx.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+--- a=EF=BB=BF/net/mac80211/tx.c	2008-06-17 08:45:25.096294488 +0200
++++ b/=EF=BB=BFnet/mac80211/tx.c	2008-06-17 08:47:02.106291721 +0200
+@@ -1132,7 +1132,7 @@ static int ieee80211_tx(struct net_devic
+ 	ieee80211_tx_handler *handler;
+ 	struct ieee80211_tx_data tx;
+ 	ieee80211_tx_result res =3D TX_DROP, res_prepare;
+-	int ret, i;
++	int ret, i, retries =3D 0;
+=20
+ 	WARN_ON(__ieee80211_queue_pending(local, control->queue));
+=20
+@@ -1216,6 +1216,13 @@ retry:
+ 		if (!__ieee80211_queue_stopped(local, control->queue)) {
+ 			clear_bit(IEEE80211_LINK_STATE_PENDING,
+ 				  &local->state[control->queue]);
++			retries++;
++			/*
++			 * Driver bug, it's rejecting packets but
++			 * not stopping queues.
++			 */
++			if (WARN_ON_ONCE(retries > 5))
++				goto drop;
+ 			goto retry;
+ 		}
+ 		memcpy(&store->control, control,
+
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
