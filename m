@@ -1,82 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from durandal.kismetwireless.net ([199.201.145.179]:44216 "EHLO
-	durandal.nerv-un.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752212AbYFRPkx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 11:40:53 -0400
-Date: Wed, 18 Jun 2008 11:41:10 -0400
-From: Mike Kershaw <dragorn@kismetwireless.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: More 4965 woes
-Message-ID: <20080618154109.GB15170@drd1813.lan> (sfid-20080618_174056_427540_F792B1E4)
-Reply-To: Mike Kershaw <dragorn@kismetwireless.net>
-References: <20080617132401.GA8328@drd1813.lan> <1213781294.2625.52.camel@debian.sh.intel.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="xgyAXRrhYN0wYx8y"
-In-Reply-To: <1213781294.2625.52.camel@debian.sh.intel.com>
+Received: from main.gmane.org ([80.91.229.2]:39521 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751000AbYFQQRh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jun 2008 12:17:37 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1K8dsB-0001mA-NU
+	for linux-wireless@vger.kernel.org; Tue, 17 Jun 2008 16:17:31 +0000
+Received: from cpc3-cwma2-0-0-cust15.swan.cable.ntl.com ([81.96.204.16])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jun 2008 16:17:31 +0000
+Received: from andy by cpc3-cwma2-0-0-cust15.swan.cable.ntl.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jun 2008 16:17:31 +0000
+To: linux-wireless@vger.kernel.org
+From: Andrew Price <andy@andrewprice.me.uk>
+Subject: BUG: mac80211: Some connections hanging in 2.6.26-rc6...
+Date: Tue, 17 Jun 2008 17:17:23 +0100
+Message-ID: <g38o2j$1uh$1@ger.gmane.org> (sfid-20080617_181742_447297_198DA5E5)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In the latest Linus kernel some kinds of connections over my wireless
+link have been hanging. By this I mean, for example:
 
---xgyAXRrhYN0wYx8y
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+$ ssh <somewhere>
+[Wait a while]
+Connection reset by <somewhere>
 
-On Wed, Jun 18, 2008 at 05:28:14PM +0800, Zhu Yi wrote:
-> On Tue, 2008-06-17 at 09:24 -0400, Mike Kershaw wrote:
-> > 1 - Inability to associate to a network on 5ghz.  Same AP on 2.4ghz
-> >   works fine, scanning shows the AP fine.  Sniffing with an additional
-> >   card shows no frames at all being sent by the 4965. AP is on a
-> > channel
-> >   the 4965 should be able to talk to according to iwlist channel (logs
-> > attached)
->=20
-> >From the log, you are trying to use channel 56 which is under radar
-> detection. The card must hear from the AP first in order to send. Can
-> you try 36?=20
+This also affects some http requests such as loading slashdot but not
+others (perhaps small ones?) such as twitter API http requests. It does
+not seem to affect connections to other machines on my LAN, only ones
+over the internet.
 
-Must hear from the AP?  Like, beacons?  If beacons aren't enough, how is
-something ever supposed to associate?
+I've tried tcpdumping to get more info but when I run tcpdump the
+connections work again (if a tiny bit slower).
 
-The AP is detected normally via scanning (wpa_supplicant 'scan' and
-iwlist scan) so the card is seeing beacons fine.
+I've bisected this bug down to 608961a5eca8d3c6bd07172febc27b5559408c5d
+"mac80211: Use skb_header_cloned() on TX path." and naively reverting
+this change seems to make the bug go away.
 
-I'll reboot into the git kernel later today and redo the test on another
-channel.
+I'm using the rt2500pci module and wpa supplicant. My setup is:
 
-> > 3 - Making a monitor mode vap causes a deadlock.  No logs, because the
-> >   system locks hard, no caps lock LED, no sysreq.  Monitoring with
-> >   tcpdump works for about 3 seconds, then boom.
->=20
-> Did you create the monitor interface via 'iw' or 'iwconfig mode
-> monitor'?
+  Laptop -- Wireless AP -- Router -- Cable Modem -- The Internet
 
-In this test, 'iw'.  I got about 3 seconds of packets from different
-channels while trying to associate on 56 (I assume because the card was
-doing a scan) and then the system locked.
+and my card is a "RaLink RT2500 802.11g Cardbus/mini-PCI (rev 01)".
 
--m
+Please let me know if you need any more info or if there's a more
+focussed test case I could try.
 
---=20
-Mike Kershaw/Dragorn <dragorn@kismetwireless.net>
-GPG Fingerprint: 3546 89DF 3C9D ED80 3381  A661 D7B2 8822 738B BDB1
+--
+Andy Price
 
-Bus Error at 008BE426 while reading byte from DEADBEEF in User data space
-
-
---xgyAXRrhYN0wYx8y
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEARECAAYFAkhZLJUACgkQ17KIInOLvbEyAgCfcGyf06dWpbSR0poUCboWj2Di
-O+gAniys2He3bwMYOnV7FA09+9PHiVO1
-=PAMK
------END PGP SIGNATURE-----
-
---xgyAXRrhYN0wYx8y--
