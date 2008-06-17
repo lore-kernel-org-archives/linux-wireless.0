@@ -1,44 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:60128 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753436AbYFEO4H (ORCPT
+Received: from courier.cs.helsinki.fi ([128.214.9.1]:53584 "EHLO
+	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761925AbYFQXEp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2008 10:56:07 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] zd1211rw: Fix data padding for QoS
-Date: Thu, 5 Jun 2008 16:55:10 +0200
-Cc: Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org
+	Tue, 17 Jun 2008 19:04:45 -0400
+Date: Wed, 18 Jun 2008 02:04:43 +0300 (EEST)
+From: "=?ISO-8859-1?Q?Ilpo_J=E4rvinen?=" <ilpo.jarvinen@helsinki.fi>
+To: Didier Raboud <didier@raboud.com>
+cc: Andrew Morton <akpm@linux-foundation.org>,
+	Netdev <netdev@vger.kernel.org>,
+	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [Bugme-new] [Bug 10903] New: ssh connections hang with 2.6.26-rc5
+In-Reply-To: <200806172359.33768.didier@raboud.com>
+Message-ID: <Pine.LNX.4.64.0806180152410.32420@wrl-59.cs.helsinki.fi> (sfid-20080618_010511_957319_521A8B46)
+References: <bug-10903-10286@http.bugzilla.kernel.org/> <200806151537.11986.didier@raboud.com>
+ <Pine.LNX.4.64.0806161542290.16829@wrl-59.cs.helsinki.fi>
+ <200806172359.33768.didier@raboud.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200806051655.10637.mb@bu3sch.de> (sfid-20080605_165614_874358_809E7403)
+Content-Type: MULTIPART/Mixed; boundary="Boundary-01=_FPDWIJZ2GQsiFPn"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a data alignment issue in the zd1211rw driver.
-The IEEE80211_STYPE_QOS_DATA bit should be used as a bitwise test
-to test for the presence of the 2 byte QoS control field.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+--Boundary-01=_FPDWIJZ2GQsiFPn
+Content-Type: TEXT/PLAIN; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Content-ID: <Pine.LNX.4.64.0806180152412.32420@wrl-59.cs.helsinki.fi>
+Content-Disposition: inline
 
----
+On Tue, 17 Jun 2008, Didier Raboud wrote:
 
-John, this is a bugfix for 2.6.26
+> Le lundi 16 juin 2008 15:21:25 Ilpo Järvinen, vous avez écrit :
+> > > > > > http://bugzilla.kernel.org/show_bug.cgi?id=10903
+> > > > > >
+> > > > > >            Summary: ssh connections hang with 2.6.26-rc5
+> > > > > >            Product: Networking
+> > > > > >            Version: 2.5
+> > > > > >      KernelVersion: 2.6.26-rc5
+> > > > > >           Platform: All
+> > > > > >         OS/Version: Linux
+> > > > > >               Tree: Mainline
+> > > > > >             Status: NEW
+> > > > > >           Severity: normal
+> > > > > >           Priority: P1
+> > > > > >          Component: Other
+> > > > > >         AssignedTo: acme@ghostprotocols.net
+> > > > > >         ReportedBy: didier@raboud.com
+> > > > > >
+> > > > > >
+> > > > > > Latest working kernel version: 2.6.25-2
+> > > > > > Earliest failing kernel version: 2.6.26-rc5
+> > > > > > Distribution: Debian (Lenny + Sid)
+> > > > > > Hardware Environment: amd64 (Dell Latitude D630)
+> > > > > > Software Environment: KDE
+> > > > > > Problem Description:
+> > > > > >
+> > > > > > With kernel version 2.6.26-rc5, the ssh connections to remote
+> > > > > > servers randomly
+> > > > > > hang (no error message). No amelioration despite the activation of
+> > > > > > "ServerAliveInterval" on both sides.
+> > > > (...)
+> > > 
+> > > The common point is my use of "iwl3945" : I have always tried the ssh
+> > > connections through WiFi.
+> > > 
+> > > > So please gather this information (at least for the relevant
+> > > > connections):
+> > > >
+> > > > $ netstat -pn
+> > > > $ cat /proc/net/tcp
+> 
+> I used a script which logged both every 15 seconds on both sides (in "screen" 
+> on server side). I then triggered a hang with several "seq 1 100" in the ssh 
+> session. The logs are in the attached debug_ssh_hang.tar.gz . The hang 
+> appeared between 234327 and 234342 on the client side (so somewhere between 
+> 234324, 234339 and 234354 on the server side).
+> 
+> I hope it'll help.
 
-Index: wireless-testing/drivers/net/wireless/zd1211rw/zd_mac.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/zd1211rw/zd_mac.c	2008-05-16 00:26:29.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/zd1211rw/zd_mac.c	2008-06-04 21:19:06.000000000 +0200
-@@ -719,7 +719,7 @@ int zd_mac_rx(struct ieee80211_hw *hw, c
- 	fc = le16_to_cpu(*((__le16 *) buffer));
- 
- 	is_qos = ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA) &&
--		 ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_QOS_DATA);
-+		 (fc & IEEE80211_STYPE_QOS_DATA);
- 	is_4addr = (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) ==
- 		   (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS);
- 	need_padding = is_qos ^ is_4addr;
+Thanks, a quick look didn't indicate anything similar to one other report 
+from Håkon... I'd probably need a tcpdump.
+
+> > You probably run it under X, no? Please switch beforehand to some other vt
+> > (a textual one) then (Ctrl-Alt-Fn, where n < 6) and then log in and
+> > running that command there and see if you get some output into screen
+> > there. If you see something (e.g., a sudden OOPS message or some other
+> > warning printed) when it locks up, the easiest things is to take a shot
+> > with a digicam (or write it down somewhere else) and send that shot (or
+> > those details) to us please.
+> 
+> I tried the following in vt1 (under the new 2.6.26-rc6 with kdm stopped):
+> 
+> # tcpdump -i wlan0 -w /tmp/tcpdump.wlan0
+> 
+> and I got the attached "soft lockup".
+
+Thanks, I guess the folks at linux-wireless can continue in resolving this 
+one with you (I'm out of time anyway now).
+
+> > ...Once you have a tcpdump, I can probably figure at least something out
+> > (though it might still just point to the right direction rather than
+> > exposing the actual cause).
+> 
+> I can't get one... :)
+
+...Ok.
 
 -- 
-Greetings Michael.
+ i.
+--Boundary-01=_FPDWIJZ2GQsiFPn--
