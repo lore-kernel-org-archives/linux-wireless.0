@@ -1,70 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53876 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751372AbYFSPiy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 11:38:54 -0400
-Subject: Re: [PATCH] libertas: make mesh code configurable
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <200806191704.10297.hs4233@mail.mn-solutions.de> (sfid-20080619_170429_512985_CDD100EA)
-References: <200806191704.10297.hs4233@mail.mn-solutions.de>
-	 (sfid-20080619_170429_512985_CDD100EA)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rXFJ53k/axhWap4pExBx"
-Date: Thu, 19 Jun 2008 17:38:05 +0200
-Message-Id: <1213889885.8967.31.camel@johannes.berg> (sfid-20080619_173857_297349_19C78273)
-Mime-Version: 1.0
+Received: from hostap.isc.org ([149.20.54.63]:54565 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756055AbYFQSLm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jun 2008 14:11:42 -0400
+Date: Tue, 17 Jun 2008 21:10:50 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH 4/7] 802.11w: Use BIP (AES-128-CMAC)
+Message-ID: <20080617181050.GD4974@jm.kir.nu> (sfid-20080617_201146_239530_112A50A1)
+References: <20080617154008.883383150@localhost> <20080617155920.329586297@localhost> <1213722347.3803.89.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1213722347.3803.89.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jun 17, 2008 at 07:05:47PM +0200, Johannes Berg wrote:
 
---=-rXFJ53k/axhWap4pExBx
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > @@ -603,30 +605,38 @@ static int nl80211_set_key(struct sk_buf
+> > -	if (key_idx > 3)
+> > +	if (key_idx > 5)
+> >  		return -EINVAL;
 
-On Thu, 2008-06-19 at 17:04 +0200, Holger Schurig wrote:
->=20
-> --- wireless-testing.orig/drivers/net/wireless/libertas/persistcfg.c
-> +++ wireless-testing/drivers/net/wireless/libertas/persistcfg.c
-> @@ -1,3 +1,4 @@
-> +#ifdef CONFIG_LIBERTAS_MESH
->  #include <linux/moduleparam.h>
->  #include <linux/delay.h>
->  #include <linux/etherdevice.h>
-> @@ -451,3 +452,4 @@
->         sysfs_remove_group(&(dev->dev.kobj), &boot_opts_group);
->         sysfs_remove_group(&(dev->dev.kobj), &mesh_ie_group);
->  }
-> +#endif
+> > -	if (!info->attrs[NL80211_ATTR_KEY_DEFAULT])
+> > +	if (!info->attrs[NL80211_ATTR_KEY_DEFAULT] &&
+> > +	    !info->attrs[NL80211_ATTR_KEY_DEFAULT_MGMT])
 
-you know you can build files depending on Kconfig symbols, right? :)
+> I think this should probably check the key index depending on the type,
+> i.e. only permit 4 and 5 for mgmt and 0-3 for data keys.
 
-johannes
+Yes, I started doing that, but did not cover all places yet. It's
+somewhat unclear to me where this type of validation should live, i.e.,
+what piece of code should know that key indexes 4 and 5 are used for
+IGTK at this point taken into account that the index could actually be
+0..65535.. Anyway, it may be safer to do it here than to trust on other
+places being able to handle odd indexes for data frame TX key index.
 
---=-rXFJ53k/axhWap4pExBx
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIWn1YAAoJEKVg1VMiehFYQXQP/jyPffwXLjrEGDFXJEtii43/
-TQhM1i/lyuYpSi9aQmKzCp5bS8h5mtw5KxQysxkQfiOTRyAq0jWAliXxFiwFoMx+
-F12YSB7iydl2qs8JX9m6XFzj4C2FwunUzExZSIz/b6NA4Fcvy+HLis8ybqnKIgzG
-5UgljHmisFknAonF+MRLxq9vDBVWabz5wgYOkUF7nqL+Qx9wUMKNtQ0dAWMMTUh7
-XvH8jeB2hn5RmvJY33Ls1VabDxNphgQ+jG9NFbTPFIt6DjUI7xQW+dc38HreeE4q
-G2QhY68LDEkIBd8PUf7xlHV2fxcEO0S4bnFAL6C6y1Dgk3lfdMLXOQS+wXJos8qL
-BOB5v3F+Q0jFn1J0SrFD6YYx42Z1qBH/fbJsBo0NiyXgOpzqZyCcNKst1TBonXxs
-zh0g2JGtSuYPhfutev/+PRJt+K9B4dICwyIarHMiEEMKml0K9h/HQlZ5VPcyxciX
-hI72Bp/594Zm4/UI3d4mZCf8dsyih88esd+kWy+gd/HeHt2jtJTWGUpz+VD01Yco
-E3DisvDQHXg2JEJ/URIuA8BNZT5Ssr+2iBgi7LRy6wsyiN9X0qq3O0R3ucDGeFaC
-GpNIrsQUSVwMYzvcZUhNHDeWswl33o1A6R7D1bIprZ5LD76fcRfGoMIW4YaN+IvK
-U0FHa0QFlHhM1S+SHE8B
-=7OWX
------END PGP SIGNATURE-----
-
---=-rXFJ53k/axhWap4pExBx--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
