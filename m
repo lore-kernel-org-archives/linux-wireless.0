@@ -1,108 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43196 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753278AbYFPOxu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2008 10:53:50 -0400
-Subject: Re: Management frame protection and packet injection from hostapd
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080616143308.GB18479@jm.kir.nu> (sfid-20080616_163421_476762_10655DB9)
-References: <20080616143308.GB18479@jm.kir.nu>
-	 (sfid-20080616_163421_476762_10655DB9)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-X2W5Bmx04Q18Nze3M4/n"
-Date: Mon, 16 Jun 2008 16:53:11 +0200
-Message-Id: <1213627991.3803.38.camel@johannes.berg> (sfid-20080616_165354_180555_C051DCEC)
+Received: from mx1.redhat.com ([66.187.233.31]:36187 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755323AbYFQTDo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jun 2008 15:03:44 -0400
+Subject: Re: [PATCH] mac80211: remove shared key todo
+From: Dan Williams <dcbw@redhat.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240806171141sda9c0eak747adbba3a6fe4db@mail.gmail.com>
+References: <1213642529.3803.47.camel@johannes.berg>
+	 <1213647566.18384.6.camel@localhost.localdomain>
+	 <1213647709.3803.50.camel@johannes.berg>
+	 <1213648729.18384.11.camel@localhost.localdomain>
+	 <1213649176.3803.55.camel@johannes.berg>
+	 <1213726378.30192.8.camel@localhost.localdomain>
+	 <1ba2fa240806171141sda9c0eak747adbba3a6fe4db@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 17 Jun 2008 15:02:51 -0400
+Message-Id: <1213729371.30192.26.camel@localhost.localdomain> (sfid-20080617_210349_682280_6A260158)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2008-06-17 at 21:41 +0300, Tomas Winkler wrote:
+> On Tue, Jun 17, 2008 at 9:12 PM, Dan Williams <dcbw@redhat.com> wrote:
+> > On Mon, 2008-06-16 at 22:46 +0200, Johannes Berg wrote:
+> >> > > I have no idea. Usually, you don't even do open auth for IBSS, there's
+> >> > > just no point. Unless you get into IBSS with encryption, but we don't
+> >> > > really support that yet, and we probably never will actually support
+> >> > > that without the userspace MLME in wpa supplicant.
+> >> >
+> >> > IBSS + WEP works at least for ipw2200 and other non-mac80211 cards; I
+> >> > can check it out with mac80211 if you like.
+> >>
+> >> Yeah, no, +WEP should work. I haven't specifically tested it but I see
+> >> no reason for it not to work.
+> >>
+> >> > Any particular reason IBSS would require a userspace MLME?  There
+> >> > shouldn't be any rekeying of any kind with adhoc, since there's no
+> >> > central station to coordinate the rekying.  AFAIK with IBSS you just use
+> >> > the given PSK at creation time, and never change it.  That shouldn't be
+> >> > too hard to handle, right?
+> >>
+> >> Well, I was really thinking of RSN/WPA, and last I checked
+> >> wpa_supplicant didn't even support that with IBSS, and I think it
+> >> requires userspace MLME because you have to do the auth/assoc sequence
+> >> with each peer etc.
+> >
+> > wpa_supplicant _should_ support WPA-PSK with IBSS, you set
+> > proto=WPA-NONE to do this and I assume it just sends the PSK to the
+> > driver and never changes it.  I haven't tested it a long time though.
+> >
+> > Dan
+> >
+> #~ cat wpa_supplicant.conf
+> # mode: IEEE 802.11 operation mode
+> # 0 = infrastructure (Managed) mode, i.e., associate with an AP (default)
+> # 1 = IBSS (ad-hoc, peer-to-peer)
+> # Note: IBSS can only be used with key_mgmt NONE (plaintext and static WEP)
+> # and key_mgmt=WPA-NONE (fixed group key TKIP/CCMP). In addition, ap_scan has
+> # to be set to 2 for IBSS. WPA-None requires following network block options:
+> # proto=WPA, key_mgmt=WPA-NONE, pairwise=NONE, group=TKIP (or CCMP, but not
+> # both), and psk must also be set.
 
---=-X2W5Bmx04Q18Nze3M4/n
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yeah, key_mgmt=WPA-NONE, thanks for the correction.  Any idea if this
+works already on iwlwifi?
 
-On Mon, 2008-06-16 at 17:33 +0300, Jouni Malinen wrote:
-> I'm working on IEEE 802.11w support for mac80211 and my current code is
-> in a state that allows both unicast and multicast/broadcast management
-> frames to be protected (with CCMP and BIP/AES-CMAC, respectively). I'll
-> clean up the patches a bit and send the first version for commenting in
-> the near future. However, even before the patches are available, there
-> is one area that could benefit from comments.
-
-Neat.
-
-> hostapd is currently using a monitor interface to inject management
-> frames. This seems to work fine for unencrypted frames, but at least BIP
-> protection of broadcast/multicast management frames does not work
-> without some hacks.. The problem here is that the default TX key is
-> configured for the main data interface (wlan0) while the injected frame
-> is coming from the monitor interface (mon.wlan0).
-> ieee80211_tx_h_select_key() does not find the default key for management
-> frames and consequently, the frame ends up going out without BIP
-> processing.
-
-So just for me, BIP processing is done with the same IGTK? Unicast
-frames are handled by the per-station key, and as such work correctly,
-I'd guess?
-
-> My current workaround is to configure IGTK for both wlan0 and mon.wlan0
-> in hostapd. This works, but is somewhat undesirable.. Would there be a
-> better way for configuring the default keys (this could apply also for
-> data frames, but at least for IGTK and management frames for the time
-> being), so that they would apply both to frames generated by MLME code
-> in mac80211 (if any; currently there is no broadcast/multicast
-> management frames used and actually, no management frames generated in
-> mac80211 MLME code in AP mode) and monitor interfaces (or something that
-> would replace them for packet injection)?
-
-Yeah that sounds like a hack. I guess it should work just like when we
-submit a unicast frame via monitor with the radiotap flag to indicate
-that we want encryption, only we should add logic to look up the default
-key to use if there is no peer/unicast key by the outgoing MAC address?
-
-OTOH, that would break for multi-SSID/single-BSSID scenarios I guess, so
-we probably need a way to indicate "this frame belongs to interface
-index N"?
-
-> I'm not sure whether this is a bug somewhere in my changes or whether
-> the configuration of default keys for monitor interfaces triggered this,
-> but mac80211 is now leaving behind almost empty debugfs ieee80211/phy#
-> directories. The only thing remaining in that directory is an empty
-> netdev:mon.wlan0 subdirectory, so it looks like something fails to
-> remove said subdirectory and then the phy# directory.
-
-I don't see any such problems, but if I were to venture a guess it's
-because of configuring keys on a monitor interface. It sounds like
-something sticks around within the netdev:mon.wlan0 subdirectory, then
-the code tries to delete the directory and only afterwards is the entry
-removed, leaving the directory (and the parent, of course) hanging
-there.
-
-johannes
-
---=-X2W5Bmx04Q18Nze3M4/n
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIVn5UAAoJEKVg1VMiehFY1bMP/iks1pyHXiQUBgEtqk4K8j6f
-rYVcPrLlcKn7zUZILYnVNNDd2veEWKzjPvtYR4VZoR/lopCDZjv+4C6R9EvJ9Rh1
-wi+VxwWw4RnJriwcxgpoQVtfidoqQ/rTDYQ7wH8gL/2Quj5E+lwjftq5cUWs7NmU
-v6YBQlsBLThxLaaDwiJTdVbm1eKrVMIvl9l7yHcbMtrObSDKdQvOmwrx6XZt/p/8
-rVDHpleeVtWF/Hi1yvCjTV8efgrSwpTzBtvcNGzyHxVsjEdql4i9tVqziT1V/TI0
-DIHgNmp3xmk/XTCGpqKZUDs1uKtJOu7L7fvKXUGS2zyn6mdBr6tPpp1j+Z7Bl6QY
-JEU02QqqDq3Q6sQDwWmq+V4092VsCx9xUn1huqGbJHvKUhPx7wcY/9Sx+QXiOj9K
-N5zbYTRBWwfabHGKoZPnZcCdsbkWkZIZAPywvBqOTdWTzUVXJ1WG7MS8ZrVRdd5f
-D+n6maJqUdWa6SJNhImFzrymLLxu9o/JFivzHEFxMI/dSsdJi+0hk3l+YH2tv7lN
-nXnwfYgzII3SfL2cEQmh2YhivxerCOWS/16F+eyJP0XHVtnZUPngCH7sYwwplw7M
-FcNllNOJ1GupzhhKwGtJvl80r063Mf8McoEM3t0XOlJVH0Ml3VnvlsZPLu6+XWu/
-ObWtaC/L1z1OdO3iXyRT
-=HIsj
------END PGP SIGNATURE-----
-
---=-X2W5Bmx04Q18Nze3M4/n--
+Dan
 
