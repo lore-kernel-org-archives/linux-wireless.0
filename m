@@ -1,129 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:9052 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756035AbYF0UUL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2008 16:20:11 -0400
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 4/5] hostap: add radiotap support in monitor mode
-To: Jouni Malinen <j@w1.fi>, John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Fri, 27 Jun 2008 16:20:10 -0400
-Message-ID: <20080627202010.18603.9323.stgit@dv.roinet.com> (sfid-20080627_222015_846133_FBBCB9BA)
-In-Reply-To: <20080627201952.18603.98308.stgit@dv.roinet.com>
-References: <20080627201952.18603.98308.stgit@dv.roinet.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from xc.sipsolutions.net ([83.246.72.84]:37669 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755146AbYFQSfs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jun 2008 14:35:48 -0400
+Subject: Re: [RFC PATCH 7/7] 802.11w: Configuration of MFP
+	disabled/optional/required
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080617181805.GE4974@jm.kir.nu>
+References: <20080617154008.883383150@localhost>
+	 <20080617160027.897662688@localhost>
+	 <1213722570.3803.92.camel@johannes.berg>  <20080617181805.GE4974@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NHAuRztPSDeywGAF2wr3"
+Date: Tue, 17 Jun 2008 20:34:58 +0200
+Message-Id: <1213727698.3803.110.camel@johannes.berg> (sfid-20080617_203552_246732_720D895A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Provide MAC time, rate, channel, signal and noise.
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
+--=-NHAuRztPSDeywGAF2wr3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- drivers/net/wireless/hostap/hostap_80211_rx.c |   21 +++++++++++++++++++++
- drivers/net/wireless/hostap/hostap_ioctl.c    |    5 ++++-
- drivers/net/wireless/hostap/hostap_wlan.h     |   14 +++++++++++++-
- 3 files changed, 38 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/hostap/hostap_80211_rx.c b/drivers/net/wireless/hostap/hostap_80211_rx.c
-index 020f450..f106bc1 100644
---- a/drivers/net/wireless/hostap/hostap_80211_rx.c
-+++ b/drivers/net/wireless/hostap/hostap_80211_rx.c
-@@ -78,6 +78,9 @@ int prism2_rx_80211(struct net_device *dev, struct sk_buff *skb,
- 			prism_header = 2;
- 			phdrlen = sizeof(struct linux_wlan_ng_cap_hdr);
- 		}
-+	} else if (dev->type == ARPHRD_IEEE80211_RADIOTAP) {
-+		prism_header = 3;
-+		phdrlen = sizeof(struct hostap_radiotap_rx);
- 	} else {
- 		prism_header = 0;
- 		phdrlen = 0;
-@@ -165,6 +168,24 @@ hdr->f.status = s; hdr->f.len = l; hdr->f.data = d
- 		hdr->ssi_noise  = htonl(rx_stats->noise);
- 		hdr->preamble   = htonl(0); /* unknown */
- 		hdr->encoding   = htonl(1); /* cck */
-+	} else if (prism_header == 3) {
-+		struct hostap_radiotap_rx *hdr;
-+		hdr = (struct hostap_radiotap_rx *)skb_push(skb, phdrlen);
-+		memset(hdr, 0, phdrlen);
-+		hdr->hdr.it_len = cpu_to_le16(phdrlen);
-+		hdr->hdr.it_present =
-+			cpu_to_le32((1 << IEEE80211_RADIOTAP_TSFT) |
-+				    (1 << IEEE80211_RADIOTAP_CHANNEL) |
-+				    (1 << IEEE80211_RADIOTAP_RATE) |
-+				    (1 << IEEE80211_RADIOTAP_DBM_ANTSIGNAL) |
-+				    (1 << IEEE80211_RADIOTAP_DBM_ANTNOISE));
-+		hdr->tsft = cpu_to_le64(rx_stats->mac_time);
-+		hdr->chan_freq = cpu_to_le16(freq_list[local->channel - 1]);
-+		hdr->chan_flags = cpu_to_le16(IEEE80211_CHAN_CCK |
-+						 IEEE80211_CHAN_2GHZ);
-+		hdr->rate = rx_stats->rate / 5;
-+		hdr->dbm_antsignal = rx_stats->signal;
-+		hdr->dbm_antnoise = rx_stats->noise;
- 	}
- 
- 	ret = skb->len - phdrlen;
-diff --git a/drivers/net/wireless/hostap/hostap_ioctl.c b/drivers/net/wireless/hostap/hostap_ioctl.c
-index ed52d98..3f8b1d7 100644
---- a/drivers/net/wireless/hostap/hostap_ioctl.c
-+++ b/drivers/net/wireless/hostap/hostap_ioctl.c
-@@ -897,6 +897,8 @@ static void hostap_monitor_set_type(local_info_t *local)
- 	if (local->monitor_type == PRISM2_MONITOR_PRISM ||
- 	    local->monitor_type == PRISM2_MONITOR_CAPHDR) {
- 		dev->type = ARPHRD_IEEE80211_PRISM;
-+	} else if (local->monitor_type == PRISM2_MONITOR_RADIOTAP) {
-+		dev->type = ARPHRD_IEEE80211_RADIOTAP;
- 	} else {
- 		dev->type = ARPHRD_IEEE80211;
- 	}
-@@ -2520,7 +2522,8 @@ static int prism2_ioctl_priv_prism2_param(struct net_device *dev,
- 	case PRISM2_PARAM_MONITOR_TYPE:
- 		if (value != PRISM2_MONITOR_80211 &&
- 		    value != PRISM2_MONITOR_CAPHDR &&
--		    value != PRISM2_MONITOR_PRISM) {
-+		    value != PRISM2_MONITOR_PRISM &&
-+		    value != PRISM2_MONITOR_RADIOTAP) {
- 			ret = -EINVAL;
- 			break;
- 		}
-diff --git a/drivers/net/wireless/hostap/hostap_wlan.h b/drivers/net/wireless/hostap/hostap_wlan.h
-index 15445bc..ffdf487 100644
---- a/drivers/net/wireless/hostap/hostap_wlan.h
-+++ b/drivers/net/wireless/hostap/hostap_wlan.h
-@@ -5,6 +5,7 @@
- #include <linux/netdevice.h>
- #include <linux/mutex.h>
- #include <net/iw_handler.h>
-+#include <net/ieee80211_radiotap.h>
- 
- #include "hostap_config.h"
- #include "hostap_common.h"
-@@ -55,6 +56,17 @@ struct linux_wlan_ng_cap_hdr {
- 	__be32 encoding;
- } __attribute__ ((packed));
- 
-+struct hostap_radiotap_rx {
-+	struct ieee80211_radiotap_header hdr;
-+	__le64 tsft;
-+	u8 rate;
-+	u8 padding;
-+	__le16 chan_freq;
-+	__le16 chan_flags;
-+	s8 dbm_antsignal;
-+	s8 dbm_antnoise;
-+} __attribute__ ((packed));
-+
- #define LWNG_CAP_DID_BASE   (4 | (1 << 6)) /* section 4, group 1 */
- #define LWNG_CAPHDR_VERSION 0x80211001
- 
-@@ -734,7 +746,7 @@ struct local_info {
- 	unsigned long scan_timestamp; /* Time started to scan */
- 	enum {
- 		PRISM2_MONITOR_80211 = 0, PRISM2_MONITOR_PRISM = 1,
--		PRISM2_MONITOR_CAPHDR = 2
-+		PRISM2_MONITOR_CAPHDR = 2, PRISM2_MONITOR_RADIOTAP = 3
- 	} monitor_type;
- 	int monitor_allow_fcserr;
- 
+> > > --- wireless-testing.orig/net/mac80211/wext.c
+> > > +++ wireless-testing/net/mac80211/wext.c
+> > > +	case IW_AUTH_MFP:
+> > > +		if (sdata->vif.type =3D=3D IEEE80211_IF_TYPE_STA ||
+> > > +		    sdata->vif.type =3D=3D IEEE80211_IF_TYPE_IBSS)
+> > > +			sdata->u.sta.mfp =3D data->value;
+> >=20
+> > and shouldn't that be used somewhere?
+>=20
+> Well, yes. This is still somewhat unclear area to me and in particular,
+> I'm not sure whether the IW_AUTH_MFP parameter will end up being used in
+> mac80211. It would be used if the kernel code (or firmware in fullmac
+> designs) would select the AP. mac80211 may need another configuration
+> item to set whether MFP was actually negotiated during association. This
+> has changed a bit in the latest 802.11w draft and I haven't yet updated
+> my implementation to use the new mechanism. For the time being,
+> sdata->u.sta.mfp is more or less a placeholder for something that may
+> disappear or change to something else..
+
+Ok, yeah, that explains why I wasn't really able to see how it
+determined whether MFP was optional/required for a certain association
+etc.
+
+johannes
+
+--=-NHAuRztPSDeywGAF2wr3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIWAPPAAoJEKVg1VMiehFYSnkP/160hGTFp1fcx4/hApw8Re27
+019aSEXw6UUONMcJzhuhbJWqET3omkKHhE8KwJtmoPrDUcUEWxJYGebEfGgxo0y+
+u5vpHnYANiUHc5csgzp/znNnFviQ7uyNk3lfUJNr7jL2bNUcJqKbZ3XVfm48D3tH
+pZJcWsEajPixN+YhnfNt3H/TyrSR2MB9WU3gRo0ph/RzfLx/ISLIKYkgS2quzOSO
+G/nsNhqN9sEjrE9ja4ItOwdlSAebnJngXI+qeht2OEjDhz4LEq8ieI7UJ0IYl/dJ
+adL66t7Ry+i2ISwwNqKNsFxkpHUulrD4stwgipZfAmRkctowG3q+UdNO0ztwzdWF
+a8EDx06gwTwAcLJXmGqTKofwGVy0aiLvczJRzpr+SUU720pYtfHj6+5lEEmY/ME9
+sMo6mFD27TVtRog2271YuCARYHSy6M1nIsWUrBELfyH+gVlBSVqMveF8JCjDBT1F
+f7uoHU6Xg4lW+9oUyx3Qr5NjBem9hN6k7AGJE4AWBCcwSOKt55MRi3AA66OeC6bU
+vOpVUZTpXhMQdwxVV/s6VjEOuuetmdc3Jpn7dvHIpO1ysVkO9F23lrbXZwNv6v4F
+OePkh0mOs8AQq30Fsj6GlrxD4CoiuGjKZ9Tp/Srpf59HiNmxJjTM/1pXyNZTKv4Z
+/v1lSTJwlwMYGCF1K4WO
+=m2Dw
+-----END PGP SIGNATURE-----
+
+--=-NHAuRztPSDeywGAF2wr3--
+
