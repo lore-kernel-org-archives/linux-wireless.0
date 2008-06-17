@@ -1,92 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:48896 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752150AbYFKVWD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 17:22:03 -0400
-Received: by py-out-1112.google.com with SMTP id p76so1566346pyb.10
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 14:22:02 -0700 (PDT)
-Subject: [PATCHv2 03/11] mac80211: add utility function to get header length
-From: Harvey Harrison <harvey.harrison@gmail.com>
+Received: from hostap.isc.org ([149.20.54.63]:35750 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752504AbYFQQBV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jun 2008 12:01:21 -0400
+Message-Id: <20080617160027.897662688@localhost> (sfid-20080617_180143_912941_3FB21552)
+References: <20080617154008.883383150@localhost>
+Date: Tue, 17 Jun 2008 18:40:15 +0300
+From: Jouni Malinen <j@w1.fi>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 11 Jun 2008 14:21:57 -0700
-Message-Id: <1213219317.5974.176.camel@brick> (sfid-20080611_232211_198617_3FD7581C)
-Mime-Version: 1.0
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC PATCH 7/7] 802.11w: Configuration of MFP disabled/optional/required
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Take a __le16 directly rather than a host-endian value.
+Add new WEXT IW_AUTH_* parameter for setting MFP
+disabled/optional/required.
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- include/net/mac80211.h |    6 ++++++
- net/mac80211/util.c    |   32 ++++++++++++++++++++++++++++++++
- 2 files changed, 38 insertions(+), 0 deletions(-)
+Signed-off-by: Jouni Malinen <j@w1.fi>
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 1196de8..53c3b5e 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1548,6 +1548,12 @@ int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb);
- int ieee80211_get_hdrlen(u16 fc);
+
+Index: wireless-testing/include/linux/wireless.h
+===================================================================
+--- wireless-testing.orig/include/linux/wireless.h
++++ wireless-testing/include/linux/wireless.h
+@@ -578,6 +578,7 @@
+ #define IW_AUTH_ROAMING_CONTROL		9
+ #define IW_AUTH_PRIVACY_INVOKED		10
+ #define IW_AUTH_CIPHER_GROUP_MGMT	11
++#define IW_AUTH_MFP			12
  
- /**
-+ * ieee80211_hdrlen - get header length in bytes from frame control
-+ * @fc: frame control field in little-endian format
-+ */
-+unsigned int ieee80211_hdrlen(__le16 fc);
-+
-+/**
-  * ieee80211_get_tkip_key - get a TKIP rc4 for skb
-  *
-  * This function computes a TKIP rc4 key for an skb. It computes
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 6513bc2..722a4eb 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -133,6 +133,38 @@ int ieee80211_get_hdrlen(u16 fc)
- }
- EXPORT_SYMBOL(ieee80211_get_hdrlen);
+ /* IW_AUTH_WPA_VERSION values (bit field) */
+ #define IW_AUTH_WPA_VERSION_DISABLED	0x00000001
+@@ -607,6 +608,11 @@
+ #define IW_AUTH_ROAMING_DISABLE	1	/* user space program used for roaming
+ 					 * control */
  
-+unsigned int ieee80211_hdrlen(__le16 fc)
-+{
-+	unsigned int hdrlen = 24;
++/* IW_AUTH_MFP (management frame protection) values */
++#define IW_AUTH_MFP_DISABLED	0	/* MFP disabled */
++#define IW_AUTH_MFP_OPTIONAL	1	/* MFP optional */
++#define IW_AUTH_MFP_REQUIRED	2	/* MFP required */
 +
-+	if (ieee80211_is_data(fc)) {
-+		if (ieee80211_has_a4(fc))
-+			hdrlen = 30;
-+		if (ieee80211_is_data_qos(fc))
-+			hdrlen += IEEE80211_QOS_CTL_LEN;
-+		goto out;
-+	}
+ /* SIOCSIWENCODEEXT definitions */
+ #define IW_ENCODE_SEQ_MAX_SIZE	8
+ /* struct iw_encode_ext ->alg */
+Index: wireless-testing/net/mac80211/ieee80211_i.h
+===================================================================
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h
++++ wireless-testing/net/mac80211/ieee80211_i.h
+@@ -372,6 +372,11 @@ struct ieee80211_if_sta {
+ 	int auth_alg; /* currently used IEEE 802.11 authentication algorithm */
+ 	int auth_transaction;
+ 
++#define IEEE80211_MFP_DISABLED 0
++#define IEEE80211_MFP_OPTIONAL 1
++#define IEEE80211_MFP_REQUIRED 2
++	int mfp; /* management frame protection */
 +
-+	if (ieee80211_is_ctl(fc)) {
-+		/*
-+		 * ACK and CTS are 10 bytes, all others 16. To see how
-+		 * to get this condition consider
-+		 *   subtype mask:   0b0000000011110000 (0x00F0)
-+		 *   ACK subtype:    0b0000000011010000 (0x00D0)
-+		 *   CTS subtype:    0b0000000011000000 (0x00C0)
-+		 *   bits that matter:         ^^^      (0x00E0)
-+		 *   value of those: 0b0000000011000000 (0x00C0)
-+		 */
-+		if ((fc & cpu_to_le16(0x00E0)) == cpu_to_le16(0x00C0))
-+			hdrlen = 10;
+ 	unsigned long ibss_join_req;
+ 	struct sk_buff *probe_resp; /* ProbeResp template for IBSS */
+ 	u32 supp_rates_bits[IEEE80211_NUM_BANDS];
+Index: wireless-testing/net/mac80211/wext.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/wext.c
++++ wireless-testing/net/mac80211/wext.c
+@@ -1003,6 +1003,13 @@ static int ieee80211_ioctl_siwauth(struc
+ 		else
+ 			ret = -EOPNOTSUPP;
+ 		break;
++	case IW_AUTH_MFP:
++		if (sdata->vif.type == IEEE80211_IF_TYPE_STA ||
++		    sdata->vif.type == IEEE80211_IF_TYPE_IBSS)
++			sdata->u.sta.mfp = data->value;
 +		else
-+			hdrlen = 16;
-+	}
-+out:
-+	return hdrlen;
-+}
-+EXPORT_SYMBOL(ieee80211_hdrlen);
-+
- int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
- {
- 	const struct ieee80211_hdr *hdr = (const struct ieee80211_hdr *) skb->data;
++			ret = -EOPNOTSUPP;
++		break;
+ 	default:
+ 		ret = -EOPNOTSUPP;
+ 		break;
+
+--
+
 -- 
-1.5.6.rc2.261.ga8fbe
-
-
+Jouni Malinen                                            PGP id EFC895FA
