@@ -1,115 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:40737 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762176AbYFWUXW (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56003 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753763AbYFQQpP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2008 16:23:22 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Thomas Renninger <trenn@suse.de>,
-	Fabien Crespel <fabien@crespel.net>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: [PATCH 10/13] rfkill: add uevent notifications
-Date: Mon, 23 Jun 2008 17:23:05 -0300
-Message-Id: <1214252588-30723-11-git-send-email-hmh@hmh.eng.br> (sfid-20080623_224915_038231_7F78D873)
-In-Reply-To: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
-References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
+	Tue, 17 Jun 2008 12:45:15 -0400
+Subject: Re: [RFC PATCH 0/7] IEEE 802.11w / management frame protection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080617154008.883383150@localhost>
+References: <20080617154008.883383150@localhost>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9Esx+7bN3dr2iNRy2qmU"
+Date: Tue, 17 Jun 2008 18:44:27 +0200
+Message-Id: <1213721067.3803.73.camel@johannes.berg> (sfid-20080617_184519_778489_1E55763E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the notification chains to also send uevents, so that userspace can be
-notified of state changes of every rfkill switch.
 
-Userspace should use these events for OSD/status report applications and
-rfkill GUI frontends.  HAL might want to broadcast them over DBUS, for
-example.  It might be also useful for userspace implementations of
-rfkill-input, or to use HAL as the platform driver which promotes rfkill
-switch change events into input events (to synchronize all other switches)
-when necessary for platforms that lack a convenient platform-specific
-kernel module to do it.
+--=-9Esx+7bN3dr2iNRy2qmU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Dmitry Torokhov <dtor@mail.ru>
----
- net/rfkill/rfkill.c |   42 ++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 42 insertions(+), 0 deletions(-)
 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 3c77734..dd1c3f1 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -386,12 +386,51 @@ static int rfkill_resume(struct device *dev)
- #define rfkill_resume NULL
- #endif
- 
-+static int rfkill_blocking_uevent_notifier(struct notifier_block *nb,
-+					unsigned long eventid,
-+					void *data)
-+{
-+	struct rfkill *rfkill = (struct rfkill *)data;
-+
-+	switch (eventid) {
-+	case RFKILL_STATE_CHANGED:
-+		kobject_uevent(&rfkill->dev.kobj, KOBJ_CHANGE);
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return NOTIFY_DONE;
-+}
-+
-+static struct notifier_block rfkill_blocking_uevent_nb = {
-+	.notifier_call	= rfkill_blocking_uevent_notifier,
-+	.priority	= 0,
-+};
-+
-+static int rfkill_dev_uevent(struct device *dev, struct kobj_uevent_env *env)
-+{
-+	struct rfkill *rfkill = to_rfkill(dev);
-+	int error;
-+
-+	error = add_uevent_var(env, "RFKILL_NAME=%s", rfkill->name);
-+	if (error)
-+		return error;
-+	error = add_uevent_var(env, "RFKILL_TYPE=%s",
-+				rfkill_get_type_str(rfkill->type));
-+	if (error)
-+		return error;
-+	error = add_uevent_var(env, "RFKILL_STATE=%d", rfkill->state);
-+	return error;
-+}
-+
- static struct class rfkill_class = {
- 	.name		= "rfkill",
- 	.dev_release	= rfkill_release,
- 	.dev_attrs	= rfkill_dev_attrs,
- 	.suspend	= rfkill_suspend,
- 	.resume		= rfkill_resume,
-+	.dev_uevent	= rfkill_dev_uevent,
- };
- 
- static int rfkill_add_switch(struct rfkill *rfkill)
-@@ -566,11 +605,14 @@ static int __init rfkill_init(void)
- 		return error;
- 	}
- 
-+	register_rfkill_notifier(&rfkill_blocking_uevent_nb);
-+
- 	return 0;
- }
- 
- static void __exit rfkill_exit(void)
- {
-+	unregister_rfkill_notifier(&rfkill_blocking_uevent_nb);
- 	class_unregister(&rfkill_class);
- }
- 
--- 
-1.5.5.4
+> The current version is relatively complete for mac80211, but there are
+> still couple of known missing functions and I've done only very
+> limited testing so far. I was able to send and receive both CCMP and
+> BIP protected deauthentication frames and based on a sniffer log, the
+> frames looked correct. All this is with mac80211_hwsim and software
+> crypto. It is unclear whether this can be used as-is with devices that
+> use hwaccel for crypto at least before the low-level drivers and/or
+> firmware have been modified to cope with the possibility of CCMP being
+> used with management frames.
+
+b43 will be able to do this for sure, it doesn't care what sort of frame
+is encrypted. The question is how drivers can indicate
+support/non-support I guess.
+
+johannes
+
+--=-9Esx+7bN3dr2iNRy2qmU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIV+nnAAoJEKVg1VMiehFYLjsQAIUcRbw+7aEqcS1JDem1dh6v
+GWQo1oxUWNYBbGtsZm1iPGPl9vqhgGjGjDBf5tdq4IwgpSdtxPZOyIVCjjBakP8Z
+0YVpc4QwwKCjyxMnaU5GhZmYa+Wg8ceeYHvUVzSKz7Pt/aMO9tLudn0lapvM518v
+AMWxcvQLD15K4350z3916ZE+N1jihXdMMg9dHV6mS7zNE4qkc4Pams1idUG1ioKW
+SB9Tl3OD3Jms4mZR/0tgjL90fmNrFoDfadl1IXW0PfI1IrfTXQVdCAyjRix82Jo8
+iK2HqGMd3vAsvBCiENKFmZI9bxhHYRzHq1Sh1uAKX7zpudGN3/wKN7vXKJCfsa0b
+ytsyWhQpbmjyenjLCzZ15LS1KN8SiEa+Bc6/e18mSywB4leBY831as1P5CgJQJWp
+6l8fsY3UG3kAW10RVX9+rt/OwwzL3nLFLRSJUithE4pKmDSClqvGeGqt85NqhFiY
+qXxzMgvDmjwua0T27urKdl2rw8atuG/Jinfz/UD9tJoUI2bFiKq0BZH1a/h0kyf0
+LrAai+xpY1pZqnsW9z29y0GJT+olz5RRg9C8+8i6vEW6GytXWVQHpdPsz3N0aHub
+iUS0fg2HfHcH1+mzLloa4jEWFj+Hclc4PssvQMkNCDh5LP/mBHC4D9MU/PlSX2OC
+NTZYSa9JR1LFGqmhw/Oc
+=Eb0m
+-----END PGP SIGNATURE-----
+
+--=-9Esx+7bN3dr2iNRy2qmU--
 
