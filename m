@@ -1,61 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4097 "EHLO mga02.intel.com"
+Received: from hostap.isc.org ([149.20.54.63]:47383 "EHLO hostap.isc.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754090AbYFMHrI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 03:47:08 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 2/3] iwlwifi: remove 4965 prefix from iwl4965_ucode
-Date: Fri, 13 Jun 2008 15:44:54 +0800
-Message-Id: <1213343095-8133-3-git-send-email-yi.zhu@intel.com> (sfid-20080613_094713_848313_F9B83434)
-In-Reply-To: <1213343095-8133-2-git-send-email-yi.zhu@intel.com>
-References: <1213343095-8133-1-git-send-email-yi.zhu@intel.com>
- <1213343095-8133-2-git-send-email-yi.zhu@intel.com>
+	id S1752999AbYFQRsr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jun 2008 13:48:47 -0400
+Date: Tue, 17 Jun 2008 20:47:49 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH 0/7] IEEE 802.11w / management frame protection
+Message-ID: <20080617174749.GB4974@jm.kir.nu> (sfid-20080617_194850_990319_709D3ACA)
+References: <20080617154008.883383150@localhost> <1213721067.3803.73.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1213721067.3803.73.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+On Tue, Jun 17, 2008 at 06:44:27PM +0200, Johannes Berg wrote:
 
-The patch removes 4965 prefix from iwl4965_ucode.
+> > crypto. It is unclear whether this can be used as-is with devices that
+> > use hwaccel for crypto at least before the low-level drivers and/or
+> > firmware have been modified to cope with the possibility of CCMP being
+> > used with management frames.
+> 
+> b43 will be able to do this for sure, it doesn't care what sort of frame
+> is encrypted. The question is how drivers can indicate
+> support/non-support I guess.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+One of the problems is that CCMP as defined in IEEE 802.11i for data
+frames is not compatible with CCMP as defined in IEEE 802.11w for
+management frames (there are small differences in AAD and nonce
+generation). As such, if the hardware/firmware is trying to decrypt
+received CCMP protected frames based on the IEEE 802.11i rules even if
+the frame is a management frame, the end result is not going to be very
+good.. It would be necessary to either disable hwaccel for CCMP
+decryption for management frames (if possible) or add software
+workaround to re-encrypt the management frame incorrectly (to undo
+hardware/firmware operations) and then decrypt it in software..
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index e6188f0..c508b11 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -480,7 +480,7 @@ struct fw_desc {
- };
- 
- /* uCode file layout */
--struct iwl4965_ucode {
-+struct iwl_ucode {
- 	__le32 ver;		/* major/minor/subminor */
- 	__le32 inst_size;	/* bytes of runtime instructions */
- 	__le32 data_size;	/* bytes of runtime data */
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index c179b21..a9da17c 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -2002,7 +2002,7 @@ static void iwl4965_nic_start(struct iwl_priv *priv)
-  */
- static int iwl4965_read_ucode(struct iwl_priv *priv)
- {
--	struct iwl4965_ucode *ucode;
-+	struct iwl_ucode *ucode;
- 	int ret;
- 	const struct firmware *ucode_raw;
- 	const char *name = priv->cfg->fw_name;
 -- 
-1.5.3.6
-
+Jouni Malinen                                            PGP id EFC895FA
