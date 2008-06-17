@@ -1,282 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47080
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753028AbYFCUgy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 16:36:54 -0400
-Date: Tue, 03 Jun 2008 13:28:52 -0700 (PDT)
-Message-Id: <20080603.132852.25499038.davem@davemloft.net> (sfid-20080603_223932_182375_15F86343)
-To: linux-wireless@vger.kernel.org
-CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 11/12]: wext: Create IW_REQUEST_FLAG_COMPAT and set it as
- needed.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from hostap.isc.org ([149.20.54.63]:38192 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755583AbYFQSHF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jun 2008 14:07:05 -0400
+Date: Tue, 17 Jun 2008 21:06:10 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH 3/7] 802.11w: Add BIP (AES-128-CMAC)
+Message-ID: <20080617180610.GC4974@jm.kir.nu> (sfid-20080617_200710_017391_6DDDA530)
+References: <20080617154008.883383150@localhost> <20080617155904.082926456@localhost> <1213721714.3803.83.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1213721714.3803.83.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jun 17, 2008 at 06:55:14PM +0200, Johannes Berg wrote:
 
-Now low-level WEXT ioctl handlers can do compat handling
-when necessary.
+> > +/* Management MIC information element (IEEE 802.11w) */
+> > +struct ieee80211_mmie {
+> > +	u8 element_id;
+> > +	u8 length;
+> > +	u8 key_id[2]; /* little endian, but may be unaligned */
+> 
+> Since you say the struct is packed you should be able to use __le16 just
+> fine.
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- include/net/iw_handler.h |    2 +-
- net/wireless/wext.c      |   73 +++++++++++++++++++++-------------------------
- 2 files changed, 34 insertions(+), 41 deletions(-)
+Is that guaranteed to force all accesses of the field to not use 16-bit
+read/write?
 
-diff --git a/include/net/iw_handler.h b/include/net/iw_handler.h
-index 369d50e..c99a8ee 100644
---- a/include/net/iw_handler.h
-+++ b/include/net/iw_handler.h
-@@ -256,7 +256,7 @@
- #define EIWCOMMIT	EINPROGRESS
- 
- /* Flags available in struct iw_request_info */
--#define IW_REQUEST_FLAG_NONE	0x0000	/* No flag so far */
-+#define IW_REQUEST_FLAG_COMPAT	0x0001	/* Compat ioctl call */
- 
- /* Type of headers we know about (basically union iwreq_data) */
- #define IW_HEADER_TYPE_NULL	0	/* Not available */
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index 071cee4..96a2ed9 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -834,10 +834,10 @@ out:
- static int ioctl_standard_call(struct net_device *	dev,
- 			       struct iwreq *		iwr,
- 			       unsigned int		cmd,
-+			       struct iw_request_info	*info,
- 			       iw_handler		handler)
- {
- 	const struct iw_ioctl_description *	descr;
--	struct iw_request_info			info;
- 	int					ret = -EINVAL;
- 
- 	/* Get the description of the IOCTL */
-@@ -845,15 +845,11 @@ static int ioctl_standard_call(struct net_device *	dev,
- 		return -EOPNOTSUPP;
- 	descr = &(standard_ioctl[cmd - SIOCIWFIRST]);
- 
--	/* Prepare the call */
--	info.cmd = cmd;
--	info.flags = 0;
--
- 	/* Check if we have a pointer to user space data or not */
- 	if (descr->header_type != IW_HEADER_TYPE_POINT) {
- 
- 		/* No extra arguments. Trivial to handle */
--		ret = handler(dev, &info, &(iwr->u), NULL);
-+		ret = handler(dev, info, &(iwr->u), NULL);
- 
- 		/* Generate an event to notify listeners of the change */
- 		if ((descr->flags & IW_DESCR_FLAG_EVENT) &&
-@@ -861,7 +857,7 @@ static int ioctl_standard_call(struct net_device *	dev,
- 			wireless_send_event(dev, cmd, &(iwr->u), NULL);
- 	} else {
- 		ret = ioctl_standard_iw_point(&iwr->u.data, cmd, descr,
--					      handler, dev, &info);
-+					      handler, dev, info);
- 	}
- 
- 	/* Call commit handler if needed and defined */
-@@ -984,25 +980,21 @@ out:
- }
- 
- static int ioctl_private_call(struct net_device *dev, struct iwreq *iwr,
--			      unsigned int cmd, iw_handler handler)
-+			      unsigned int cmd, struct iw_request_info *info,
-+			      iw_handler handler)
- {
- 	int extra_size = 0, ret = -EINVAL;
- 	const struct iw_priv_args *descr;
--	struct iw_request_info info;
- 
- 	extra_size = get_priv_descr_and_size(dev, cmd, &descr);
- 
--	/* Prepare the call */
--	info.cmd = cmd;
--	info.flags = 0;
--
- 	/* Check if we have a pointer to user space data or not. */
- 	if (extra_size == 0) {
- 		/* No extra arguments. Trivial to handle */
--		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
-+		ret = handler(dev, info, &(iwr->u), (char *) &(iwr->u));
- 	} else {
- 		ret = ioctl_private_iw_point(&iwr->u.data, cmd, descr,
--					     handler, dev, &info, extra_size);
-+					     handler, dev, info, extra_size);
- 	}
- 
- 	/* Call commit handler if needed and defined */
-@@ -1014,7 +1006,8 @@ static int ioctl_private_call(struct net_device *dev, struct iwreq *iwr,
- 
- /* ---------------------------------------------------------------- */
- typedef int (*wext_ioctl_func)(struct net_device *, struct iwreq *,
--			       unsigned int, iw_handler);
-+			       unsigned int, struct iw_request_info *,
-+			       iw_handler);
- 
- /*
-  * Main IOCTl dispatcher.
-@@ -1022,6 +1015,7 @@ typedef int (*wext_ioctl_func)(struct net_device *, struct iwreq *,
-  */
- static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
- 				  unsigned int cmd,
-+				  struct iw_request_info *info,
- 				  wext_ioctl_func standard,
- 				  wext_ioctl_func private)
- {
-@@ -1040,11 +1034,11 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
- 	 * Note that 'cmd' is already filtered in dev_ioctl() with
- 	 * (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST) */
- 	if (cmd == SIOCGIWSTATS)
--		return standard(dev, iwr, cmd,
-+		return standard(dev, iwr, cmd, info,
- 				&iw_handler_get_iwstats);
- 
- 	if (cmd == SIOCGIWPRIV && dev->wireless_handlers)
--		return standard(dev, iwr, cmd,
-+		return standard(dev, iwr, cmd, info,
- 				&iw_handler_get_private);
- 
- 	/* Basic check */
-@@ -1056,9 +1050,9 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
- 	if (handler) {
- 		/* Standard and private are not the same */
- 		if (cmd < SIOCIWFIRSTPRIV)
--			return standard(dev, iwr, cmd, handler);
-+			return standard(dev, iwr, cmd, info, handler);
- 		else
--			return private(dev, iwr, cmd, handler);
-+			return private(dev, iwr, cmd, info, handler);
- 	}
- 	/* Old driver API : call driver ioctl handler */
- 	if (dev->do_ioctl)
-@@ -1080,7 +1074,7 @@ static int wext_permission_check(unsigned int cmd)
- 
- /* entry point from dev ioctl */
- static int wext_ioctl_dispatch(struct net *net, struct ifreq *ifr,
--			       unsigned int cmd,
-+			       unsigned int cmd, struct iw_request_info *info,
- 			       wext_ioctl_func standard,
- 			       wext_ioctl_func private)
- {
-@@ -1091,7 +1085,7 @@ static int wext_ioctl_dispatch(struct net *net, struct ifreq *ifr,
- 
- 	dev_load(net, ifr->ifr_name);
- 	rtnl_lock();
--	ret = wireless_process_ioctl(net, ifr, cmd, standard, private);
-+	ret = wireless_process_ioctl(net, ifr, cmd, info, standard, private);
- 	rtnl_unlock();
- 
- 	return ret;
-@@ -1100,10 +1094,12 @@ static int wext_ioctl_dispatch(struct net *net, struct ifreq *ifr,
- int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
- 		      void __user *arg)
- {
--	int ret = wext_ioctl_dispatch(net, ifr, cmd,
--				      ioctl_standard_call,
--				      ioctl_private_call);
-+	struct iw_request_info info = { .cmd = cmd, .flags = 0 };
-+	int ret;
- 
-+	ret = wext_ioctl_dispatch(net, ifr, cmd, &info,
-+				  ioctl_standard_call,
-+				  ioctl_private_call);
- 	if (ret >= 0 &&
- 	    IW_IS_GET(cmd) &&
- 	    copy_to_user(arg, ifr, sizeof(struct iwreq)))
-@@ -1116,28 +1112,25 @@ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
- static int compat_standard_call(struct net_device *	dev,
- 				struct iwreq *		iwr,
- 				unsigned int		cmd,
-+				struct iw_request_info	*info,
- 				iw_handler		handler)
- {
- 	const struct iw_ioctl_description *descr;
- 	struct compat_iw_point *iwp_compat;
--	struct iw_request_info info;
- 	struct iw_point iwp;
- 	int err;
- 
- 	descr = standard_ioctl + (cmd - SIOCIWFIRST);
- 
- 	if (descr->header_type != IW_HEADER_TYPE_POINT)
--		return ioctl_standard_call(dev, iwr, cmd, handler);
-+		return ioctl_standard_call(dev, iwr, cmd, info, handler);
- 
- 	iwp_compat = (struct compat_iw_point *) &iwr->u.data;
- 	iwp.pointer = compat_ptr(iwp_compat->pointer);
- 	iwp.length = iwp_compat->length;
- 	iwp.flags = iwp_compat->flags;
- 
--	info.cmd = cmd;
--	info.flags = 0;
--
--	err = ioctl_standard_iw_point(&iwp, cmd, descr, handler, dev, &info);
-+	err = ioctl_standard_iw_point(&iwp, cmd, descr, handler, dev, info);
- 
- 	iwp_compat->pointer = ptr_to_compat(iwp.pointer);
- 	iwp_compat->length = iwp.length;
-@@ -1147,22 +1140,18 @@ static int compat_standard_call(struct net_device *	dev,
- }
- 
- static int compat_private_call(struct net_device *dev, struct iwreq *iwr,
--			       unsigned int cmd, iw_handler handler)
-+			       unsigned int cmd, struct iw_request_info *info,
-+			       iw_handler handler)
- {
- 	const struct iw_priv_args *descr;
--	struct iw_request_info info;
- 	int ret, extra_size;
- 
- 	extra_size = get_priv_descr_and_size(dev, cmd, &descr);
- 
--	/* Prepare the call */
--	info.cmd = cmd;
--	info.flags = 0;
--
- 	/* Check if we have a pointer to user space data or not. */
- 	if (extra_size == 0) {
- 		/* No extra arguments. Trivial to handle */
--		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
-+		ret = handler(dev, info, &(iwr->u), (char *) &(iwr->u));
- 	} else {
- 		struct compat_iw_point *iwp_compat;
- 		struct iw_point iwp;
-@@ -1173,7 +1162,7 @@ static int compat_private_call(struct net_device *dev, struct iwreq *iwr,
- 		iwp.flags = iwp_compat->flags;
- 
- 		ret = ioctl_private_iw_point(&iwp, cmd, descr,
--					     handler, dev, &info, extra_size);
-+					     handler, dev, info, extra_size);
- 
- 		iwp_compat->pointer = ptr_to_compat(iwp.pointer);
- 		iwp_compat->length = iwp.length;
-@@ -1191,6 +1180,7 @@ int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
- 			     unsigned long arg)
- {
- 	void __user *argp = (void __user *)arg;
-+	struct iw_request_info info;
- 	struct iwreq iwr;
- 	char *colon;
- 	int ret;
-@@ -1203,7 +1193,10 @@ int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
- 	if (colon)
- 		*colon = 0;
- 
--	ret = wext_ioctl_dispatch(net, (struct ifreq *) &iwr, cmd,
-+	info.cmd = cmd;
-+	info.flags = IW_REQUEST_FLAG_COMPAT;
-+
-+	ret = wext_ioctl_dispatch(net, (struct ifreq *) &iwr, cmd, &info,
- 				  compat_standard_call,
- 				  compat_private_call);
- 
+> > +	if ((tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
+> 
+> I think one set of parentheses suffices ;)
+
+Aah.. That's a copy-paste from something old.. I think I removed the
+IEEE80211_KEY_FLAG_GENERATE_IV flag from here for BIP.. I'm not
+completely sure yet, how we should have this, i.e., whether that flag
+should be used here or not. It is unclear what type of hwaccel, if any,
+vendors are going to implement for BIP.
+
+
+> > +	if (skb_tailroom(skb) < sizeof(*mmie)) {
+> > +		if (pskb_expand_head(skb, skb_headroom(skb),
+> > +				     skb_tailroom(skb) + sizeof((*mmie)),
+> > +				     GFP_ATOMIC) < 0)
+> > +			return TX_DROP;
+> > +	}
+> 
+> I tried ensure pskb_expand_head is only called at most once when the
+> frame is handed to master_start_xmit to avoid problems with skb truesize
+> and such. Could you add the necessary space at that point already,
+> possibly simply reserving max(mmic-len, mmie-len) or so instead of the
+> current mmic-len (I think)? I'd hate to add back calls to
+> pskb_expand_head at other places, and it's only 18 bytes so not really
+> huge.
+
+I thought about that for a moment, but then decided that it would be
+okay to just do this here since MMIE is larger than any other tailroom
+we have and there is next to no real use for multicast/broadcast
+management frames, so there is no need to optimize this. I don't see how
+this would require any other place to use pskb_expand_head.
+
+Anyway, I would assume it would be possible to do this by changing
+IEEE80211_ENCRYPT_TAILROOM from 12 to 22 which would waste 10 bytes
+extra for every frame (well, not waste for BIP-protected frames but
+there are next to none of them).
+
+> > +	if ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT)
+> > +		return RX_CONTINUE;
+> 
+> Harvey just added a bunch of helper inlines to include/linux/ieee80211.h
+> for stuff like that, I think you could use one of them here.
+
+I converted some of the places to use the new helpers, but did not go
+through all places. I would assume there is still places that can be
+made to use them, but as long as FC is available in host byte order, it
+is easier and faster to use it. Sure, if rx->fc were to disappear, that
+may make it more likely that these get changed ;-).
+
+> > +       mmie = (struct ieee80211_mmie *)
+> > +               (skb->data + skb->len - sizeof(*mmie));
+> > +       if (mmie->element_id != WLAN_EID_MMIE ||
+> > +           mmie->length != sizeof(*mmie) - 2)
+> > +               return RX_DROP_UNUSABLE; /* Invalid MMIE */
+> 
+> Is that what the draft says? Because iterating the IEs would be
+> different, this means you could potentially have something like a vendor
+> IE last that encapsulates the MMIE including type/len fields, which
+> should probably not be used?
+
+MMIE has to be the last "IE" in the frame. Sure, it would, in theory, be
+possible to receive a frame that does not have MMIE, but has "MMIE like"
+data in another IE. As long as we can make sure that this is reached
+only for frames that are received from MFP enabled AP, the simple
+solution of pointing to the end of the frame is enough. Otherwise, we
+would need to parse all the IEs and know about the start of IEs in all
+different types of Action frames.. That's not really something I would
+like to do.
+
+> > +	/* Remove MMIE */
+> > +	skb_trim(skb, skb->len - sizeof(*mmie));
+> 
+> Is that actually necessary? Since it's an IE, it should be ignored by
+> all other code, no? Not that it matters though.
+
+I don't think it is necessary in the sense that leaving the "IE" in
+would break anything. However, I do think this is the correct thing to
+do here and matches with what we do with TKIP/CCMP. MMIE is not really
+an IE, it is just a frame component that is made to look like one. The
+current IEEE 802.11w draft is bit confused about what MMIE is at places,
+but anyway, I would compare it to TKIP ICV and CCMP MIC in the end of
+the frames.
+
 -- 
-1.5.5.1.308.g1fbb5
-
+Jouni Malinen                                            PGP id EFC895FA
