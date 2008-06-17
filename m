@@ -1,52 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:44465 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753336AbYFXRXL (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43478
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1756512AbYFQHx4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 13:23:11 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so38252nfc.21
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2008 10:23:09 -0700 (PDT)
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: Add RTNL warning for workqueue
-Date: Tue, 24 Jun 2008 19:23:36 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200806241923.36230.IvDoorn@gmail.com> (sfid-20080624_192315_497562_3F98CE21)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Tue, 17 Jun 2008 03:53:56 -0400
+Date: Tue, 17 Jun 2008 00:53:56 -0700 (PDT)
+Message-Id: <20080617.005356.50875125.davem@davemloft.net> (sfid-20080617_095412_136227_B8C127CD)
+To: linville@tuxdriver.com
+CC: mokuno@sm.sony.co.jp, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 6/12]: wext: Parameterize the standard/private handlers.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The workqueue provided by mac80211 should not be used for
-scheduled tasks that acquire the RTNL lock. This could be done
-when the driver uses the function ieee80211_iterate_active_interfaces()
-within the scheduled work. Such behavior will end in locking
-dependencies problems when an interface is being removed.
 
-This patch will add a notification about the RTNL locking and
-the mac80211 workqueue to prevent driver developers from
-blindly using it.
+wext: Parameterize the standard/private handlers.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
+The WEXT standard and private handlers to use are now
+arguments to wireless_process_ioctl().
+
+Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 19f1e41..02c79e6 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -738,8 +738,11 @@ enum ieee80211_hw_flags {
-  * @conf: &struct ieee80211_conf, device configuration, don't use.
-  *
-  * @workqueue: single threaded workqueue available for driver use,
-- *	allocated by mac80211 on registration and flushed on
-- *	unregistration.
-+ *	allocated by mac80211 on registration and flushed when an
-+ *	interface is removed.
-+ *	NOTICE: All work performed on this workqueue should NEVER
-+ *	acquire the RTNL lock (i.e. Don't use the function
-+ *	ieee80211_iterate_active_interfaces())
-  *
-  * @priv: pointer to private area that was allocated for driver use
-  *	along with this structure.
+ net/wireless/wext.c |   24 ++++++++++++++++--------
+ 1 files changed, 16 insertions(+), 8 deletions(-)
+
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index e96559e..929d241 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -1015,11 +1015,17 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
+ }
+ 
+ /* ---------------------------------------------------------------- */
++typedef int (*wext_ioctl_func)(struct net_device *, struct ifreq *,
++			       unsigned int, iw_handler);
++
+ /*
+  * Main IOCTl dispatcher.
+  * Check the type of IOCTL and call the appropriate wrapper...
+  */
+-static int wireless_process_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd)
++static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
++				  unsigned int cmd,
++				  wext_ioctl_func standard,
++				  wext_ioctl_func private)
+ {
+ 	struct net_device *dev;
+ 	iw_handler	handler;
+@@ -1035,12 +1041,12 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr, unsigned i
+ 	 * Note that 'cmd' is already filtered in dev_ioctl() with
+ 	 * (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST) */
+ 	if (cmd == SIOCGIWSTATS)
+-		return ioctl_standard_call(dev, ifr, cmd,
+-					   &iw_handler_get_iwstats);
++		return standard(dev, ifr, cmd,
++				&iw_handler_get_iwstats);
+ 
+ 	if (cmd == SIOCGIWPRIV && dev->wireless_handlers)
+-		return ioctl_standard_call(dev, ifr, cmd,
+-					   &iw_handler_get_private);
++		return standard(dev, ifr, cmd,
++				&iw_handler_get_private);
+ 
+ 	/* Basic check */
+ 	if (!netif_device_present(dev))
+@@ -1051,9 +1057,9 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr, unsigned i
+ 	if (handler) {
+ 		/* Standard and private are not the same */
+ 		if (cmd < SIOCIWFIRSTPRIV)
+-			return ioctl_standard_call(dev, ifr, cmd, handler);
++			return standard(dev, ifr, cmd, handler);
+ 		else
+-			return ioctl_private_call(dev, ifr, cmd, handler);
++			return private(dev, ifr, cmd, handler);
+ 	}
+ 	/* Old driver API : call driver ioctl handler */
+ 	if (dev->do_ioctl)
+@@ -1084,7 +1090,9 @@ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
+ 
+ 	dev_load(net, ifr->ifr_name);
+ 	rtnl_lock();
+-	ret = wireless_process_ioctl(net, ifr, cmd);
++	ret = wireless_process_ioctl(net, ifr, cmd,
++				     ioctl_standard_call,
++				     ioctl_private_call);
+ 	rtnl_unlock();
+ 	if (IW_IS_GET(cmd) && copy_to_user(arg, ifr, sizeof(struct iwreq)))
+ 		return -EFAULT;
+-- 
+1.5.5.1.308.g1fbb5
+
