@@ -1,51 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:13643 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754874AbYF1Pcb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 11:32:31 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so883066wfd.4
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 08:32:31 -0700 (PDT)
-Message-ID: <69e28c910806280832j453317cdma2be11f343c32712@mail.gmail.com> (sfid-20080628_173306_551913_ADDC3AD1)
-Date: Sat, 28 Jun 2008 17:32:31 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: Problem making compat-wireless-2.6
-Cc: "George Fong" <george@lateralplains.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20080628151056.GA6110@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200806281953.16371.george@lateralplains.com>
-	 <69e28c910806280421t5e0de8edm8d6aab9cd582ccb7@mail.gmail.com>
-	 <20080628151056.GA6110@tuxdriver.com>
+Received: from mga02.intel.com ([134.134.136.20]:33750 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752384AbYFQBLm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jun 2008 21:11:42 -0400
+Subject: Re: [2.6.26-rc5] iwlwifi 4965 not working - last on 2.6.23
+From: Zhu Yi <yi.zhu@intel.com>
+To: =?UTF-8?Q?Micha=C5=82_Kud=C5=82a?= <michal.kudla@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <200806162021.37105.Michal.Kudla@gmail.com>
+References: <200806060039.48488.m1k0@wp.pl>
+	 <200806131937.03680.Michal.Kudla@gmail.com>
+	 <1213581088.7814.882.camel@debian.sh.intel.com>
+	 <200806162021.37105.Michal.Kudla@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 17 Jun 2008 09:11:28 +0800
+Message-Id: <1213665088.2533.24.camel@debian.sh.intel.com> (sfid-20080617_031153_095662_65553BC6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 28, 2008 at 5:10 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Sat, Jun 28, 2008 at 01:21:54PM +0200, Stefanik G=E1bor wrote:
->
->> Try editing drivers/net/wireless/b43/rfkill.c, and replacing
->> RFKILL_STATE_UNBLOCKED with RFKILL_STATE_ON and
->> RFKILL_STATE_SOFT_BLOCKED with RFKILL_STATE_OFF. Looks like rfkill i=
-s
->> not part of the compat package, and no work has been done to match
->> compat-wireless to older RFKILLs.
->
-> FWIW, rfkill probably _should_ be in compat-wireless.  Luis?
->
-> John
-> --
-> John W. Linville
-> linville@tuxdriver.com
->
+On Mon, 2008-06-16 at 20:21 +0200, Micha=C5=82 Kud=C5=82a wrote:
+> And my wifi working!
+>=20
+> Bt, I don't know why my wifi working under 2.6.23 and 2.6.24?
 
-John's proposal Acked-by: G=E1bor Stefanik <netrolller.3d@gmail.com>
+mac80211 in those (old) kernels doesn't indicate to switch the SW
+rf_kill on with user sets txpower off.
 
---=20
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Thanks,
+-yi
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
