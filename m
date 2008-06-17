@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:59326 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751963AbYFKK5l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 06:57:41 -0400
-Received: by an-out-0708.google.com with SMTP id d40so722137and.103
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 03:57:40 -0700 (PDT)
-Message-ID: <43e72e890806110357v64beb0c6h92db67aae0b4e99b@mail.gmail.com> (sfid-20080611_125748_917879_DA17EF50)
-Date: Wed, 11 Jun 2008 03:57:40 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [RFC] First CRDA integration work
-In-Reply-To: <43e72e890806110329o28ad24e5g8331917fcfbebc78@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080611040402.GE17936@ruslug.rutgers.edu>
-	 <43e72e890806110329o28ad24e5g8331917fcfbebc78@mail.gmail.com>
+Received: from hostap.isc.org ([149.20.54.63]:56131 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751035AbYFQP7E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jun 2008 11:59:04 -0400
+Message-Id: <20080617154008.883383150@localhost> (sfid-20080617_175912_673335_B33F2037)
+Date: Tue, 17 Jun 2008 18:40:08 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC PATCH 0/7] IEEE 802.11w / management frame protection
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 11, 2008 at 3:29 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Tue, Jun 10, 2008 at 9:04 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->>
->> Release, review early. First work patch for integration of
->> CRDA work. Nukes old regulatory work, adds CRDA-like data structures
->> to cfg80211, adds a world regdom and uses it by default,
->> and start nl80211 definitions. The fun part, nl80211_get_reg()
->> and nl80211_set_reg() are pending. Hoping the second
->> shift <cough Johannes> can take over as I'm going to bed now.
->>
->> At least it compiles, and should give an idea of where this is
->> going. This wasn't tested either :)
->>
->> CRDA stuff can be checked out from:
->>
->> git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/crda.git
->>
->> For those who like diagrams:
->>
->> http://wireless.kernel.org/crda.png
->
-> OK well it doesn't crash, lucky me. I'm on it now.
->
-> Also credit where its due: Thanks to Johannes for whipping up the
-> userspace API really quickly and so well :) Not to mention already
-> having set up mac80211 to make this patch easy :)
+This is the first and still quite preliminary version of changes to
+introduce IEEE 802.11w (management frame protection) support into
+mac80211. As such, I'm mainly looking for comments on the current
+design to help me in finalizing and cleaning up the patches.
 
-OK some issues: we don't handle yet the case where
-power_rule->max_antenna_gain is 0 which is designed to mean "Not
-available" in those cases the original antenna gain of the channel
-(set by the EEPROM mapping for example) should be left alone.
+Please note that couple of small additions to hostapd and wpa_supplicant
+are required to actually configure MFP and those are not yet included in
+the hostap git repository. Consequently, this is not yet available for
+real testing. Or well, if you really want to test this now, I can send
+an experimental patch to hostapd/wpa_supplicant to enable MFP support.
 
-Now for the netlink hooks and CRDA to query back.
+The current version is relatively complete for mac80211, but there are
+still couple of known missing functions and I've done only very
+limited testing so far. I was able to send and receive both CCMP and
+BIP protected deauthentication frames and based on a sniffer log, the
+frames looked correct. All this is with mac80211_hwsim and software
+crypto. It is unclear whether this can be used as-is with devices that
+use hwaccel for crypto at least before the low-level drivers and/or
+firmware have been modified to cope with the possibility of CCMP being
+used with management frames.
 
-  Luis
+This patch set does not address the issues found in configuring default
+keys for monitor interfaces, i.e., this still needs a workaround in
+hostapd to set IGTK for both wlan# and mon.wlan#. In addition, the
+debugfs directory is left behind when the monitor interface is removed.
+
+Since IEEE 802.11w draft is still in progress and open to changes, it is
+also unclear whether we would actually like to introduce IEEE 802.11w
+support as-is into mac80211 in main line kernels at this point. Then
+again, IEEE 802.11w draft is quite a bit further in the standardization
+process than IEEE 802.11s draft and we already have some pre-standard
+mesh support in mac80211 at least in wireless-testing.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
