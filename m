@@ -1,86 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 25.mail-out.ovh.net ([91.121.27.228]:37273 "HELO
-	25.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752380AbYFZWQx (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36374 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754775AbYFQRKY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 18:16:53 -0400
-To: Tomas Winkler <tomasw@gmail.com>
-Subject: Re: [PATCH 1/2] mac80211: add power management support
-MIME-Version: 1.0
-Date: Fri, 27 Jun 2008 00:10:06 +0200
-From: <samuel@sortiz.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?Q?Miguel_Bot=C3=B3n?= <mboton.lkml@gmail.com>,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com
-In-Reply-To: <1ba2fa240806261451n53e5cb8an70aad7b072121c2e@mail.gmail.com>
-References: <200711161929.36283.mboton.lkml@gmail.com> <200711161953.26801.mboton.lkml@gmail.com> <20080626174058.GA3063@sortiz.org> <20080626175507.GA23142@tuxdriver.com> <1214504623.3783.22.camel@johannes.berg> <1ba2fa240806261451n53e5cb8an70aad7b072121c2e@mail.gmail.com>
-Message-ID: <416e094b76d79fa1dd23afabd74ff78c@localhost> (sfid-20080627_001657_092665_AA4DB2A8)
-Content-Type: text/plain; charset=UTF-8
+	Tue, 17 Jun 2008 13:10:24 -0400
+Subject: Re: [RFC PATCH 7/7] 802.11w: Configuration of MFP
+	disabled/optional/required
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080617160027.897662688@localhost>
+References: <20080617154008.883383150@localhost>
+	 <20080617160027.897662688@localhost>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xOFNyaSzN7OiMRgBB129"
+Date: Tue, 17 Jun 2008 19:09:30 +0200
+Message-Id: <1213722570.3803.92.camel@johannes.berg> (sfid-20080617_191027_230594_C1F02CCC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Hi Thomas=0D
-=0D
-On Fri, 27 Jun 2008 00:51:57 +0300, "Tomas Winkler" <tomasw@gmail.com>=0D
-wrote:=0D
-> On Thu, Jun 26, 2008 at 9:23 PM, Johannes Berg=0D
-> <johannes@sipsolutions.net> wrote:=0D
->> On Thu, 2008-06-26 at 13:55 -0400, John W. Linville wrote:=0D
->>> On Thu, Jun 26, 2008 at 07:40:58PM +0200, Samuel Ortiz wrote:=0D
->>> > Hi John,=0D
->>> >=0D
->>> > On Fri, Nov 16, 2007 at 07:53:26PM +0100, Miguel Bot=C3=B3n wrote=
-:=0D
->>> > > Ok, the previous patch had a little error.=0D
->>> > >=0D
->>> > > --=0D
->>> > >=0D
->>> > > This patch adds power management support in mac80211.=0D
->>> > Sorry for being late to the game, but would a similar patch again=
-st=0D
-> your=0D
->>> > -next-2.6 tree be considered for inclusion ?=0D
->>>=0D
->>> It seems like a reasonable start to me.  Anyone else have comments?=
-=0D
->>=0D
->> I had one about it returning -EINVAL for all errors that was never=0D
->> addressed afaict.=0D
-> =0D
-> Didn't Yi submitted this one like year ago and rejected?=0D
-I searched through the mailing list, but couldnt find anything else=0D
-than this patch.=0D
-=0D
-=0D
-> This is why we have currently implemented in iwlwif sysfs.=0D
-> =0D
-> /sys/class/net/wlanX/devices/power_level=0D
-> there are defined 6 power levels=0D
-> 0 - CAM mode (Continuous Aware Mode)=0D
-> 6 - AUTO=0D
-> 1 to 5 levels that specifies power save aggressiveness  empirically=0D
-> developed.=0D
-> AUTO - depends on system power source/level=0D
-> system power level is AC or BATTERY  - currently we do not have=0D
-> anything that tells us whether we run on battery or ac.=0D
-> Other factor is association state.=0D
-> =0D
-> This can be expressed as=0D
-> iwconfig power saving 1..5=0D
-> iwconfig power off - > CAM mode=0D
-> iwconfig power auto - this is unfortunately not defined by iwconfig=0D
-> =0D
-> If this acceptable we can submit the patch=0D
-Are you talking about the wext patch, or the sysfs one ?=0D
-I'd definitely be happy to have a look at the wext one.=0D
-=0D
-Cheers,=0D
-Samuel.
+--=-xOFNyaSzN7OiMRgBB129
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+> +#define IEEE80211_MFP_DISABLED 0
+> +#define IEEE80211_MFP_OPTIONAL 1
+> +#define IEEE80211_MFP_REQUIRED 2
+> +	int mfp; /* management frame protection */
+
+Maybe an enum would be good?
+
+> --- wireless-testing.orig/net/mac80211/wext.c
+> +++ wireless-testing/net/mac80211/wext.c
+> @@ -1003,6 +1003,13 @@ static int ieee80211_ioctl_siwauth(struc
+>  		else
+>  			ret =3D -EOPNOTSUPP;
+>  		break;
+> +	case IW_AUTH_MFP:
+> +		if (sdata->vif.type =3D=3D IEEE80211_IF_TYPE_STA ||
+> +		    sdata->vif.type =3D=3D IEEE80211_IF_TYPE_IBSS)
+> +			sdata->u.sta.mfp =3D data->value;
+
+and shouldn't that be used somewhere?
+
+johannes
+
+--=-xOFNyaSzN7OiMRgBB129
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIV+/GAAoJEKVg1VMiehFYsY8QAKDpf5yOpVwpKHGF/b5jlYWb
+uk4fN2iu6hGfeEfQQ9VjtoCyXXv+F0G1+wklKrsAa3NtE7RGowjqthOwQRzHpeQq
+Tqif36PlJuE30ll2srv/imamxlGcZs1X9aW4Zy1aAs6Jxk/VtEkXlBy84FzbSymV
+bGFtca33jiwplhu0j7TaWH41wXxtYabmUL4mEU+GnxAIM25ba0GDbQyxFGCk9BAS
+lVGpepo5uTIreLHyZYkA183X7CkkEQRhIcBt0CKG3bGuGKWtWZmVPu1ge1FJiGaH
+8PV4R3kIwa6CfsKZH0lmrCdZM1wBKSFNGokW2Gp6RwSyUQNE+RdQ5kADjmxGpQeB
+UGlOM4YvGFBV1Caqe92LjecBeRf4UIxbGb/TNoVxtBD2BRPL/mzdXL98Cvm03v/B
+cUmwySeGwJZCQGqjgT2VxpKmYE8FlZ4GX85pmkyWA7qoTeQ1NDhKzypHEv/9cmNv
+0a4AUYbLStQoCGQM/tLPfgKwxxmtLizTMe37jSoq94Hguj3Z/1FMIt+7cwL8grZW
+HWBGoT9nFxcM4OL4f9uhneHjk92yVQQykN35bu8xJI7VjdTiUJ/CJMSIs0LnXtr1
+VLjPQkqAprEAj7NThvCOGyL2OT2G/HTFeMZmJsKUR0Jm5o0i33mX7QadrIk4raUf
+4AH/JtmRQneozFkAaAux
+=UHuR
+-----END PGP SIGNATURE-----
+
+--=-xOFNyaSzN7OiMRgBB129--
+
