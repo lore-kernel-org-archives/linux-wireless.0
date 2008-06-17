@@ -1,117 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:60738 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753620AbYFVPi7 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43482
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754349AbYFQHyI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jun 2008 11:38:59 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Thomas Renninger <trenn@suse.de>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	=?utf-8?q?I=C3=B1aky=20P=C3=A9rez-Gonz=C3=A1lez?=
-	<inaky.perez-gonzalez@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: [PATCH 06/12] rfkill: add the WWAN radio type
-Date: Sun, 22 Jun 2008 12:38:42 -0300
-Message-Id: <1214149128-5913-7-git-send-email-hmh@hmh.eng.br> (sfid-20080622_174914_073872_5593E1DD)
-In-Reply-To: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
-References: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Tue, 17 Jun 2008 03:54:08 -0400
+Date: Tue, 17 Jun 2008 00:54:09 -0700 (PDT)
+Message-Id: <20080617.005409.37355710.davem@davemloft.net> (sfid-20080617_095436_558344_77B24062)
+To: linville@tuxdriver.com
+CC: mokuno@sm.sony.co.jp, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 7/12]: wext: Pass iwreq pointer down into standard/private
+ handlers.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Unfortunately, instead of adding a generic Wireless WAN type, a technol=
-ogy-
-specific type (WiMAX) was added.  That's useless for other WWAN devices=
-,
-such as EDGE, UMTS, X-RTT and other such radios.
 
-Add a WWAN rfkill type for generic wireless WAN devices.  No keys are a=
-dded
-as most devices really want to use KEY_WLAN for WWAN control (in a cycl=
-e of
-none, WLAN, WWAN, WLAN+WWAN) and need no specific keycode added.
+wext: Pass iwreq pointer down into standard/private handlers.
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: I=C3=B1aky P=C3=A9rez-Gonz=C3=A1lez <inaky.perez-gonzalez@intel.com=
->
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: David S. Miller <davem@davemloft.net>
+They have no need to see the object as an ifreq.
+
+Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
- include/linux/rfkill.h    |    2 ++
- net/rfkill/rfkill-input.c |    4 ++++
- net/rfkill/rfkill.c       |    3 +++
- 3 files changed, 9 insertions(+), 0 deletions(-)
+ net/wireless/wext.c |   17 ++++++++---------
+ 1 files changed, 8 insertions(+), 9 deletions(-)
 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index 844e961..c0cab7d 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -34,12 +34,14 @@
-  * RFKILL_TYPE_BLUETOOTH: switch is on a bluetooth device.
-  * RFKILL_TYPE_UWB: switch is on a ultra wideband device.
-  * RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
-+ * RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index 929d241..e9c8817 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -832,11 +832,10 @@ out:
+  * user space and kernel space.
   */
- enum rfkill_type {
- 	RFKILL_TYPE_WLAN ,
- 	RFKILL_TYPE_BLUETOOTH,
- 	RFKILL_TYPE_UWB,
- 	RFKILL_TYPE_WIMAX,
-+	RFKILL_TYPE_WWAN,
- 	RFKILL_TYPE_MAX,
- };
-=20
-diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
-index 9d6c925..29c13d3 100644
---- a/net/rfkill/rfkill-input.c
-+++ b/net/rfkill/rfkill-input.c
-@@ -101,6 +101,7 @@ static DEFINE_RFKILL_TASK(rfkill_wlan, RFKILL_TYPE_=
-WLAN);
- static DEFINE_RFKILL_TASK(rfkill_bt, RFKILL_TYPE_BLUETOOTH);
- static DEFINE_RFKILL_TASK(rfkill_uwb, RFKILL_TYPE_UWB);
- static DEFINE_RFKILL_TASK(rfkill_wimax, RFKILL_TYPE_WIMAX);
-+static DEFINE_RFKILL_TASK(rfkill_wwan, RFKILL_TYPE_WWAN);
-=20
- static void rfkill_event(struct input_handle *handle, unsigned int typ=
-e,
- 			unsigned int code, int data)
-@@ -126,6 +127,9 @@ static void rfkill_event(struct input_handle *handl=
-e, unsigned int type,
- 		switch (code) {
- 		case SW_RFKILL_ALL:
- 			/* EVERY radio type. data !=3D 0 means radios ON */
-+			rfkill_schedule_set(&rfkill_wwan,
-+					    (data)? RFKILL_STATE_ON:
-+						    RFKILL_STATE_OFF);
- 			rfkill_schedule_set(&rfkill_wimax,
- 					    (data)? RFKILL_STATE_ON:
- 						    RFKILL_STATE_OFF);
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 4ae4486..79f3bbb 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -180,6 +180,9 @@ static ssize_t rfkill_type_show(struct device *dev,
- 	case RFKILL_TYPE_WIMAX:
- 		type =3D "wimax";
- 		break;
-+	case RFKILL_TYPE_WWAN:
-+		type =3D "wwan";
-+		break;
- 	default:
- 		BUG();
+ static int ioctl_standard_call(struct net_device *	dev,
+-			       struct ifreq *		ifr,
++			       struct iwreq		*iwr,
+ 			       unsigned int		cmd,
+ 			       iw_handler		handler)
+ {
+-	struct iwreq *				iwr = (struct iwreq *) ifr;
+ 	const struct iw_ioctl_description *	descr;
+ 	struct iw_request_info			info;
+ 	int					ret = -EINVAL;
+@@ -984,10 +983,9 @@ out:
+ 	return err;
+ }
+ 
+-static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
++static int ioctl_private_call(struct net_device *dev, struct iwreq *iwr,
+ 			      unsigned int cmd, iw_handler handler)
+ {
+-	struct iwreq *iwr = (struct iwreq *) ifr;
+ 	int extra_size = 0, ret = -EINVAL;
+ 	const struct iw_priv_args *descr;
+ 	struct iw_request_info info;
+@@ -1015,7 +1013,7 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
+ }
+ 
+ /* ---------------------------------------------------------------- */
+-typedef int (*wext_ioctl_func)(struct net_device *, struct ifreq *,
++typedef int (*wext_ioctl_func)(struct net_device *, struct iwreq *,
+ 			       unsigned int, iw_handler);
+ 
+ /*
+@@ -1027,6 +1025,7 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
+ 				  wext_ioctl_func standard,
+ 				  wext_ioctl_func private)
+ {
++	struct iwreq *iwr = (struct iwreq *) ifr;
+ 	struct net_device *dev;
+ 	iw_handler	handler;
+ 
+@@ -1041,11 +1040,11 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
+ 	 * Note that 'cmd' is already filtered in dev_ioctl() with
+ 	 * (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST) */
+ 	if (cmd == SIOCGIWSTATS)
+-		return standard(dev, ifr, cmd,
++		return standard(dev, iwr, cmd,
+ 				&iw_handler_get_iwstats);
+ 
+ 	if (cmd == SIOCGIWPRIV && dev->wireless_handlers)
+-		return standard(dev, ifr, cmd,
++		return standard(dev, iwr, cmd,
+ 				&iw_handler_get_private);
+ 
+ 	/* Basic check */
+@@ -1057,9 +1056,9 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
+ 	if (handler) {
+ 		/* Standard and private are not the same */
+ 		if (cmd < SIOCIWFIRSTPRIV)
+-			return standard(dev, ifr, cmd, handler);
++			return standard(dev, iwr, cmd, handler);
+ 		else
+-			return private(dev, ifr, cmd, handler);
++			return private(dev, iwr, cmd, handler);
  	}
---=20
-1.5.5.4
+ 	/* Old driver API : call driver ioctl handler */
+ 	if (dev->do_ioctl)
+-- 
+1.5.5.1.308.g1fbb5
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
