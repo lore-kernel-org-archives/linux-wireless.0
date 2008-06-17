@@ -1,207 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56469
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1756634AbYFQHxe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 03:53:34 -0400
-Date: Tue, 17 Jun 2008 00:53:35 -0700 (PDT)
-Message-Id: <20080617.005335.215313571.davem@davemloft.net> (sfid-20080617_095348_550491_9B2BE80D)
-To: linville@tuxdriver.com
-CC: mokuno@sm.sony.co.jp, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 4/12]: wext: Extract private call iw_point handling into
- seperate functions.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from hostap.isc.org ([149.20.54.63]:43198 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753739AbYFQHdK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jun 2008 03:33:10 -0400
+Date: Tue, 17 Jun 2008 10:32:27 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Management frame protection and packet injection from hostapd
+Message-ID: <20080617073227.GA4974@jm.kir.nu> (sfid-20080617_093314_431761_3E599CEB)
+References: <20080616143308.GB18479@jm.kir.nu> <1213627991.3803.38.camel@johannes.berg> <20080616153421.GC18479@jm.kir.nu> <1213634684.3803.43.camel@johannes.berg> <1213634868.3803.45.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1213634868.3803.45.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Jun 16, 2008 at 06:47:48PM +0200, Johannes Berg wrote:
 
-wext: Extract private call iw_point handling into seperate functions.
+> > > Yes, that sounds likely since the changes I did for debugfs were very
+> > > trivial copies from CCMP/data-default-key processing. I'll debug this
+> > > more and try to figure if there is need to re-order something or make
+> > > the debugfs entry removal able to handle such a case.
+> > 
+> > Ok. I don't know right now, and it does seem to work correctly here, but
+> > maybe it doesn't when the application doesn't explicitly remove the key
+> > or something, I'll take a look.
+> 
+> It's definitely done, from ieee80211_free_keys() calling
+> ieee80211_debugfs_key_remove_default(), maybe you missed something
+> there?
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/wireless/wext.c |  141 +++++++++++++++++++++++++++------------------------
- 1 files changed, 74 insertions(+), 67 deletions(-)
+I did.. I added another set of functions for default management key and
+did not remember to call the removal function from
+ieee80211_free_keys(). However, adding that call did not change
+anything.
 
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index d17c0f4..a1cd19a 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -890,25 +890,22 @@ static int ioctl_standard_call(struct net_device *	dev,
-  * a iw_handler but process it in your ioctl handler (i.e. use the
-  * old driver API).
-  */
--static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
--			      unsigned int cmd, iw_handler handler)
-+static int get_priv_descr_and_size(struct net_device *dev, unsigned int cmd,
-+				   const struct iw_priv_args **descrp)
- {
--	struct iwreq *			iwr = (struct iwreq *) ifr;
--	const struct iw_priv_args *	descr = NULL;
--	struct iw_request_info		info;
--	int				extra_size = 0;
--	int				i;
--	int				ret = -EINVAL;
-+	const struct iw_priv_args *descr;
-+	int i, extra_size;
- 
--	/* Get the description of the IOCTL */
--	for (i = 0; i < dev->wireless_handlers->num_private_args; i++)
-+	descr = NULL;
-+	for (i = 0; i < dev->wireless_handlers->num_private_args; i++) {
- 		if (cmd == dev->wireless_handlers->private_args[i].cmd) {
--			descr = &(dev->wireless_handlers->private_args[i]);
-+			descr = &dev->wireless_handlers->private_args[i];
- 			break;
- 		}
-+	}
- 
--	/* Compute the size of the set/get arguments */
--	if (descr != NULL) {
-+	extra_size = 0;
-+	if (descr) {
- 		if (IW_IS_SET(cmd)) {
- 			int	offset = 0;	/* For sub-ioctls */
- 			/* Check for sub-ioctl handler */
-@@ -933,72 +930,82 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
- 				extra_size = 0;
- 		}
- 	}
-+	*descrp = descr;
-+	return extra_size;
-+}
- 
--	/* Prepare the call */
--	info.cmd = cmd;
--	info.flags = 0;
-+static int ioctl_private_iw_point(struct iw_point *iwp, unsigned int cmd,
-+				  const struct iw_priv_args *descr,
-+				  iw_handler handler, struct net_device *dev,
-+				  struct iw_request_info *info, int extra_size)
-+{
-+	char *extra;
-+	int err;
- 
--	/* Check if we have a pointer to user space data or not. */
--	if (extra_size == 0) {
--		/* No extra arguments. Trivial to handle */
--		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
--	} else {
--		char *	extra;
--		int	err;
-+	/* Check what user space is giving us */
-+	if (IW_IS_SET(cmd)) {
-+		if (!iwp->pointer && iwp->length != 0)
-+			return -EFAULT;
- 
--		/* Check what user space is giving us */
--		if (IW_IS_SET(cmd)) {
--			/* Check NULL pointer */
--			if ((iwr->u.data.pointer == NULL) &&
--			   (iwr->u.data.length != 0))
--				return -EFAULT;
-+		if (iwp->length > (descr->set_args & IW_PRIV_SIZE_MASK))
-+			return -E2BIG;
-+	} else if (!iwp->pointer)
-+		return -EFAULT;
- 
--			/* Does it fits within bounds ? */
--			if (iwr->u.data.length > (descr->set_args &
--						 IW_PRIV_SIZE_MASK))
--				return -E2BIG;
--		} else if (iwr->u.data.pointer == NULL)
--			return -EFAULT;
-+	extra = kmalloc(extra_size, GFP_KERNEL);
-+	if (!extra)
-+		return -ENOMEM;
- 
--		/* Always allocate for max space. Easier, and won't last
--		 * long... */
--		extra = kmalloc(extra_size, GFP_KERNEL);
--		if (extra == NULL)
--			return -ENOMEM;
--
--		/* If it is a SET, get all the extra data in here */
--		if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
--			err = copy_from_user(extra, iwr->u.data.pointer,
--					     extra_size);
--			if (err) {
--				kfree(extra);
--				return -EFAULT;
--			}
-+	/* If it is a SET, get all the extra data in here */
-+	if (IW_IS_SET(cmd) && (iwp->length != 0)) {
-+		if (copy_from_user(extra, iwp->pointer, extra_size)) {
-+			err = -EFAULT;
-+			goto out;
- 		}
-+	}
- 
--		/* Call the handler */
--		ret = handler(dev, &info, &(iwr->u), extra);
-+	/* Call the handler */
-+	err = handler(dev, info, (union iwreq_data *) iwp, extra);
- 
--		/* If we have something to return to the user */
--		if (!ret && IW_IS_GET(cmd)) {
-+	/* If we have something to return to the user */
-+	if (!err && IW_IS_GET(cmd)) {
-+		/* Adjust for the actual length if it's variable,
-+		 * avoid leaking kernel bits outside.
-+		 */
-+		if (!(descr->get_args & IW_PRIV_SIZE_FIXED))
-+			extra_size = adjust_priv_size(descr->get_args, iwp);
- 
--			/* Adjust for the actual length if it's variable,
--			 * avoid leaking kernel bits outside. */
--			if (!(descr->get_args & IW_PRIV_SIZE_FIXED)) {
--				extra_size = adjust_priv_size(descr->get_args,
--							      &(iwr->u.data));
--			}
-+		if (copy_to_user(iwp->pointer, extra, extra_size))
-+			err =  -EFAULT;
-+	}
- 
--			err = copy_to_user(iwr->u.data.pointer, extra,
--					   extra_size);
--			if (err)
--				ret =  -EFAULT;
--		}
-+out:
-+	kfree(extra);
-+	return err;
-+}
- 
--		/* Cleanup - I told you it wasn't that long ;-) */
--		kfree(extra);
--	}
-+static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
-+			      unsigned int cmd, iw_handler handler)
-+{
-+	struct iwreq *iwr = (struct iwreq *) ifr;
-+	int extra_size = 0, ret = -EINVAL;
-+	const struct iw_priv_args *descr;
-+	struct iw_request_info info;
- 
-+	extra_size = get_priv_descr_and_size(dev, cmd, &descr);
-+
-+	/* Prepare the call */
-+	info.cmd = cmd;
-+	info.flags = 0;
-+
-+	/* Check if we have a pointer to user space data or not. */
-+	if (extra_size == 0) {
-+		/* No extra arguments. Trivial to handle */
-+		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
-+	} else {
-+		ret = ioctl_private_iw_point(&iwr->u.data, cmd, descr,
-+					     handler, dev, &info, extra_size);
-+	}
- 
- 	/* Call commit handler if needed and defined */
- 	if (ret == -EIWCOMMIT)
+It looks like we end up trying to remove the netdev directory in debugfs
+before removing the default key symlinks. Consequently, debugfs_remove()
+fails since there is still a file in the directory. This is what happens
+when removing the monitor interface:
+
+cfg.c: ieee80211_del_iface() ->
+iface.c: ieee80211_if_remove() ->
+iface.c: __ieee80211_if_del() ->
+debugfs_netdev.c: ieee80211_debugfs_remove_netdev()
+    [too early; symlink still there]
+unregister_netdevice(dev) -> [dev->uninit]
+iface.c: ieee80211_if_reinit() ->
+key.c: ieee80211_free_keys() ->
+debugfs_key.c: ieee80211_debugfs_key_remove_default()
+
+
+Any idea how to fix this? Why is ieee80211_debugfs_remove_netdev() call
+in __ieee80211_if_del()? Could it be moved into ieee80211_if_reinit(),
+so that it would happen only after the ieee80211_free_keys() call? Since
+ieee80211_if_reinit() is called from other places, too, it might be
+cleaner to define a new dev->uninit function that is a wrapper for call
+to ieee80211_if_reinit() followed by call to
+ieee80211_debugfs_remove_netdev().. However, since ieee80211_if_reinit()
+calls ieee80211_if_sdata_deinit(), it might be necessary to call
+ieee80211_debugfs_remove_netdev() before this call (or from it?); I did
+not yet look into details of what would be the required order for these.
+
 -- 
-1.5.5.1.308.g1fbb5
-
+Jouni Malinen                                            PGP id EFC895FA
