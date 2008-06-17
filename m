@@ -1,16 +1,16 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56455
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43474
 	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755273AbYFQHxE (ORCPT
+	by vger.kernel.org with ESMTP id S1756782AbYFQHxp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 03:53:04 -0400
-Date: Tue, 17 Jun 2008 00:53:04 -0700 (PDT)
-Message-Id: <20080617.005304.207929650.davem@davemloft.net> (sfid-20080617_095314_833196_F10A714F)
+	Tue, 17 Jun 2008 03:53:45 -0400
+Date: Tue, 17 Jun 2008 00:53:45 -0700 (PDT)
+Message-Id: <20080617.005345.175709521.davem@davemloft.net> (sfid-20080617_095411_443858_3114040C)
 To: linville@tuxdriver.com
 CC: mokuno@sm.sony.co.jp, linux-wireless@vger.kernel.org,
 	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/12]: wext: Remove inline from get_priv_size() and
- adjust_priv_size().
+Subject: [PATCH 5/12]: wext: Pull ioctl permission checking out into helper
+ function.
 From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -18,38 +18,51 @@ Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-wext: Remove inline from get_priv_size() and adjust_priv_size().
-
-The compiler inlines when appropriate.
+wext: Pull ioctl permission checking out into helper function.
 
 Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
- net/wireless/wext.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+ net/wireless/wext.c |   22 +++++++++++++++-------
+ 1 files changed, 15 insertions(+), 7 deletions(-)
 
 diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index 947188a..e83d74a 100644
+index a1cd19a..e96559e 100644
 --- a/net/wireless/wext.c
 +++ b/net/wireless/wext.c
-@@ -500,7 +500,7 @@ static int call_commit_handler(struct net_device *dev)
- /*
-  * Calculate size of private arguments
-  */
--static inline int get_priv_size(__u16	args)
-+static int get_priv_size(__u16 args)
+@@ -1061,18 +1061,26 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr, unsigned i
+ 	return -EOPNOTSUPP;
+ }
+ 
++/* If command is `set a parameter', or `get the encoding parameters',
++ * check if the user has the right to do it.
++ */
++static int wext_permission_check(unsigned int cmd)
++{
++	if ((IW_IS_SET(cmd) || cmd == SIOCGIWENCODE || cmd == SIOCGIWENCODEEXT)
++	    && !capable(CAP_NET_ADMIN))
++		return -EPERM;
++
++	return 0;
++}
++
+ /* entry point from dev ioctl */
+ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
+ 		      void __user *arg)
  {
- 	int	num = args & IW_PRIV_SIZE_MASK;
- 	int	type = (args & IW_PRIV_TYPE_MASK) >> 12;
-@@ -512,8 +512,7 @@ static inline int get_priv_size(__u16	args)
- /*
-  * Re-calculate the size of private arguments
-  */
--static inline int adjust_priv_size(__u16		args,
--				   union iwreq_data *	wrqu)
-+static int adjust_priv_size(__u16 args, union iwreq_data *wrqu)
- {
- 	int	num = wrqu->data.length;
- 	int	max = args & IW_PRIV_SIZE_MASK;
+-	int ret;
++	int ret = wext_permission_check(cmd);
+ 
+-	/* If command is `set a parameter', or
+-	 * `get the encoding parameters', check if
+-	 * the user has the right to do it */
+-	if ((IW_IS_SET(cmd) || cmd == SIOCGIWENCODE || cmd == SIOCGIWENCODEEXT)
+-	    && !capable(CAP_NET_ADMIN))
+-		return -EPERM;
++	if (ret)
++		return ret;
+ 
+ 	dev_load(net, ifr->ifr_name);
+ 	rtnl_lock();
 -- 
 1.5.5.1.308.g1fbb5
 
