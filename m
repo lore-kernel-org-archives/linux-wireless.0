@@ -1,33 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:6172 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754726AbYFSIIB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 04:08:01 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so930035ugf.16
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jun 2008 01:07:59 -0700 (PDT)
-Message-ID: <f6ca9fed0806190107oe1abe56w821c0e6e6cc70141@mail.gmail.com> (sfid-20080619_100808_154686_FCA05E96)
-Date: Thu, 19 Jun 2008 10:07:59 +0200
-From: drago01 <drago01@gmail.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [PATCH] iwl3965: remove useless network and duplicate checking
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Linux Wireless" <linux-wireless@vger.kernel.org>,
-	"Zhu Yi" <yi.zhu@intel.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"John Linville" <linville@tuxdriver.com>
-In-Reply-To: <1ba2fa240806190103oe4c8419l132ee9a62bd030b9@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0806151105l3ddd72b9r5a4ad5f112cc8599@mail.gmail.com>
-	 <1ba2fa240806160109q751e6990vf9c12e65800fb16a@mail.gmail.com>
-	 <f6ca9fed0806182313p7f8d5d65u2ef6b5f93e21c394@mail.gmail.com>
-	 <1213858054.1312.41.camel@johannes.berg>
-	 <1ba2fa240806190103oe4c8419l132ee9a62bd030b9@mail.gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:42950 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751084AbYFROxw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jun 2008 10:53:52 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2] mac80211: add MAC80211_VERBOSE_SPECT_MGMT_DEBUG Kconfig option
+Date: Wed, 18 Jun 2008 17:53:43 +0300
+Message-Id: <1213800824-32107-1-git-send-email-tomas.winkler@intel.com> (sfid-20080618_165356_927508_5E54ADF8)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 19, 2008 at 10:03 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+From: Yi Zhu <yi.zhu@intel.com>
 
-> Your patch merge is not the way for 4965.
-?
+The patch introduces MAC80211_VERBOSE_SPECT_MGMT_DEBUG Kconfig option to
+suppress Spectrum Management 802.11h related debug logs.
+
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ net/mac80211/Kconfig |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index 590e00b..979fcec 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -177,3 +177,10 @@ config MAC80211_VERBOSE_MPL_DEBUG
+ 	---help---
+ 	  Say Y here to print out verbose mesh peer link
+ 	  debug messages.
++
++config MAC80211_VERBOSE_SPECT_MGMT_DEBUG
++	bool "Verbose Spectrum Management (IEEE 802.11h)debugging"
++	depends on MAC80211_DEBUG
++	---help---
++	  Say Y here to print out verbose Spectrum Management (IEEE 802.11h)
++	  debug messages.
+-- 
+1.5.4.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
