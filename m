@@ -1,86 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:27388 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753528AbYFLSDr (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.30]:55002 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752714AbYFRPbm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 14:03:47 -0400
-Received: by py-out-1112.google.com with SMTP id p76so1714610pyb.10
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 11:03:46 -0700 (PDT)
-Message-ID: <1ba2fa240806121103m60a8ffa4ie11850fedc69d13c@mail.gmail.com> (sfid-20080612_200349_502341_0E44E138)
-Date: Thu, 12 Jun 2008 21:03:46 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Problem: Out of memory after 2days with 2GB RAM
-Cc: "Rik van Riel" <riel@redhat.com>,
-	"Zdenek Kabelac" <zdenek.kabelac@gmail.com>,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-	yi.zhu@intel.com, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1213292812.3730.21.camel@johannes.berg>
+	Wed, 18 Jun 2008 11:31:42 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so164655ywe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jun 2008 08:31:16 -0700 (PDT)
+Message-ID: <69e28c910806180831j3625db4h6b93836146349fb@mail.gmail.com> (sfid-20080618_173207_111086_3BA72804)
+Date: Wed, 18 Jun 2008 17:31:15 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Bernhard Reiter" <bernhard@intevation.de>
+Subject: Re: 802.11 pccard, Agere 0x0156,0x0003?
+Cc: linux-wireless@vger.kernel.org, "Greg KH" <greg@kroah.com>
+In-Reply-To: <200806181715.20516.bernhard@intevation.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <c4e36d110806120307n20cce692s9c136f11596f5ab0@mail.gmail.com>
-	 <20080612093833.0fb9cdd6@bree.surriel.com>
-	 <1213278884.3936.15.camel@johannes.berg>
-	 <1ba2fa240806120843s268b2ff4mb45a11adf11afc7f@mail.gmail.com>
-	 <1ba2fa240806120935r54a080eci7fa6fafc718eed17@mail.gmail.com>
-	 <1213290335.3730.4.camel@johannes.berg>
-	 <1ba2fa240806121039o376b0a8sdfaacf3a1f4a9e57@mail.gmail.com>
-	 <1213292812.3730.21.camel@johannes.berg>
+References: <200806181715.20516.bernhard@intevation.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 12, 2008 at 8:46 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
+On Wed, Jun 18, 2008 at 5:15 PM, Bernhard Reiter <bernhard@intevation.d=
+e> wrote:
+> [Greg gave me the hint to ask here. Please CC me on relevant replies.=
+ No need
+> to further include him, unless this should go up on the "DriverNeeded=
+" page
+> later I presume.]
 >
->> > Well, I disagree, and I'll push my patch as soon as somebody confirms
->> > that it doesn't break anything.
->>
->> Remember you are not a maintainer of this driver and second we are
->> open to all suggestions you don't have to use this kind of
->> statements...
+> Sitting here a  pc card wireless land adapter.
+> id 0x0156, 0x0003, which probably makes it an Agere card.
+> cardctl info says:
+> "Wireless PC Card Model 0110"
 >
-> Yeah, you're right, I can't really do that. But I can submit the patch
-> to akpm, and I'm sure he'll take it after you provide your counter
-> argument about hope never dying again ;)
-
-Here you go again
-
-> Frankly, I don't see why you're so opposed to this patch even if it
-> doesn't solve anything it probably leads to better code generation and
-> using a lot less memory.
-
-I'm not against it. You;v decided that I'm fighting you because I gave
-another solution.
-Frankly we probably don't need this allocation at all. maybe one skb
-is just enough
-even with my never dying hope all fragments are in skb fragment list.
-This still probably won't save pci memory allocation problem
-
-Tomas
-
-
-> Also, I know you cannot actually need those descriptors since mac80211
-> will never ever pass such frames, and _that_ is an area I do have at
-> least some influence over, so I'll surely notice when that changes.
+> We bought it quite a while ago under the tradename Lancom Airlancer M=
+C-11
+> from Lancom Systems.
+> http://www.lancom-systems.de/AirLancer-MC-11b.117.0.html
 >
->> >> > There was already discussion on LKML about memory allocation problems
->> >> > on X86_64, which might explain this regression. This didn't happen
->> >> > before.
->> >>
->> >> This is  the thread title if you are interested.
->> >> 'x86/kernel/pci_dma.c: gfp |= __GFP_NORETRY'
->> >
->> > Like I said, it doesn't matter, there's no need to _waste_
->> > 18*256*sizeof(void *) bytes memory.
->>
->> It does matter this is not pci allocation we are saving in your patch.
+> Background: We bought it because we thought it has a supported chipse=
+t based
+> on the old orinocco driver. The vendor announces "linux" supported, b=
+ut this
+> turned out to be only a driver for Linux 2.4.x.
+> Some old stuff (with picture) can be found at:
+> ftp://ftp.lancom.de/AirLancer/AirLancer-11/AirLancer-MC-11
+> this seems to be Free Software under GNU GPLv2 even.
 >
-> Well, thing is, my patch saves 18 KiB memory on 32-bit and 36 on 64-bit,
-> so I think we should merge it regardless. Yes, the pci allocation is
-> icky, and yes, it would be good to just do it once instead of over and
-> over again, but even if you change it to do _all_ those allocations just
-> once we should not be wasting those 18/36 KiB memory for nothing.
+> We could not get it to work with 2.6 and searching the web gave us on=
+ly
+> reports that it does not work with kernel 2.6.x.
+> See http://questier.com/howto.html#Proxim
+> (the "local copy" links might haver newer source code)
 >
-> johannes
+> I've grepped the kernel sources (2.6.24) to try to find the id in a d=
+river
+> or the source code comment "Agere" to see if source code was taken in=
+ from
+> the 2.4. driver. To no prevail.
+> Even pages like
+> http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Linux.Wireless.d=
+rivers.802.11b.html
+> do not help me.
 >
+> So I cannot really say: is there a driver which should work with this=
+ card in
+> Linux 2.6.x and just missed the manufacturer id to recognise it?
+> Where did the old Free Software code go? Was it never ported to 2.6?
+>
+> Thanks,
+> Bernhard
+> [Please CC me on relevant replies.]
+>
+> --
+> Managing Director - Owner: www.intevation.net       (Free Software Co=
+mpany)
+> Germany Coordinator: fsfeurope.org. Coordinator: www.Kolab-Konsortium=
+=2Ecom.
+> Intevation GmbH, Osnabr=FCck, DE; Amtsgericht Osnabr=FCck, HRB 18998
+> Gesch=E4ftsf=FChrer Frank Koormann, Bernhard Reiter, Dr. Jan-Oliver W=
+agner
+>
+
+This appears to be a Wavelan 2 / Orinoco card. Maybe try adding your
+device IDs to the Orinoco driver.
+
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
