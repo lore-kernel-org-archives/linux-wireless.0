@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2-g19.free.fr ([212.27.42.28]:55797 "EHLO smtp2-g19.free.fr"
+Received: from bu3sch.de ([62.75.166.246]:41473 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756789AbYFVV6a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jun 2008 17:58:30 -0400
-Message-ID: <485ECB04.6010108@free.fr> (sfid-20080622_235946_378682_90D09112)
-Date: Sun, 22 Jun 2008 23:58:28 +0200
-From: matthieu castet <castet.matthieu@free.fr>
+	id S1752419AbYFRSa1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jun 2008 14:30:27 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "=?utf-8?q?Rafa=C5=82?= =?utf-8?q?_Mi=C5=82ecki?="
+	<zajec5polish@gmail.com>
+Subject: Re: b43 open-firmware new snapshot
+Date: Wed, 18 Jun 2008 20:30:04 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <200806141553.42420.mb@bu3sch.de> <14b026160806181106p48268584x4b124f59b5819f7@mail.gmail.com> <200806182026.11056.mb@bu3sch.de>
+In-Reply-To: <200806182026.11056.mb@bu3sch.de>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
-CC: linux-wireless@vger.kernel.org, linux-net@vger.kernel.org
-Subject: Re: zd1211 stability issue on 2.6.25
-References: <485EAC63.1070709@free.fr> <69e28c910806221252u5a0fc574ucadc9df3d4147f30@mail.gmail.com>
-In-Reply-To: <69e28c910806221252u5a0fc574ucadc9df3d4147f30@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200806182030.04173.mb@bu3sch.de> (sfid-20080618_203030_394783_604C940E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stefanik G=E1bor wrote:
-> On Sun, Jun 22, 2008 at 9:47 PM, matthieu castet
-> <castet.matthieu@free.fr> wrote:
->> Hi,
->>
->> I am using a zd1211 dongle [1] on 2.6.25 in wpa mode. Sometimes I go=
-t
->> disconnection [2]. But after that scanning seems to doesn't work any=
-more
->> [3].
->> This cause wpa_supplicant to do an endless lop try to find the AP in=
- the
->> scan result and there no reconnection.
->> Only a ifconfig wlan0 down, ifconfig wlan0 up make work again scanni=
-ng.
->>
->> This make the dongle not usable.
->>
->> Matthieu
->>
->>
->>
->> [1]
->> phy0: Selected rate control algorithm 'pid'
->> firmware version 4725
->> zd1211rw 1-5:1.0: zd1211b chip 079b:0062 v4810 high 00-60-b3 AL2230_=
-RF
->> pa0 g----
->>
->> [2]
->>  wlan0: No ProbeResp from current AP 00:07:cb:50:0d:e6 - assume out =
-of
->> range
->>
->> [3]
->> $sudo iwlist wlan0 scan
->> wlan0     Interface doesn't support scanning : Network is down
-Opps I copy here the wrong data.
-I don't remember the result exactly, but that was something telling it=20
-didn't find anything.
+On Wednesday 18 June 2008 20:26:10 Michael Buesch wrote:
+> On Wednesday 18 June 2008 20:06:02 Rafa=C5=82 Mi=C5=82ecki wrote:
+> > 2008/6/14, Michael Buesch <mb@bu3sch.de>:
+> > >  Here comes another snapshot of the Opensource firmware for
+> > >  the b43 wireless core.
+> > >  http://bu3sch.de/b43/openfw/b43-openfw-20080614.tar.bz2
+> > >
+> > >  The firmware does _ONLY_ work in monitor mode. The TX path is no=
+t implemented,
+> > >  so it can not associate or whatever. It can only receive packets=
+=2E
+> >=20
+> > News about Broadcom' new distater-driver and your opensource firmwa=
+re
+> > was posted on our Polish news portal
+> > (http://osnews.pl/b43-z-wlasnym-mikrokodem/). Let me make little
+> > off-topic here and post a few translated comments, please:
+> >=20
+> > jellonek:
+> > > for such a people "hacker" term was introduced.
+> > > they would help more documenting chip...
+> >=20
+> > mario:
+> > > RESPECT for this man!
+> >=20
+> > Azrael Nightwalker:
+> > > Fucgreat!
+> >=20
+> > Great work Michael, thanks for your work! I'm extremly happy having
+> > notebook with so well supported wifi :)
+>=20
+> Thanks. ;)
+>=20
+> But IMO "well supported wifi" is something else. Broadcom would appea=
+r
+> in this story, if this was well supported. :)
+>=20
 
-I got this trace after doing a ifconfig down
+Oh and let's not forget Johannes and his brother. They play a _major_
+role in firmware reverse engineering. Most credit should go to them.
+They did / are doing the hardest work.
 
 
+--=20
+Greetings Michael.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
