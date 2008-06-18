@@ -1,31 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.241]:35838 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755366AbYFHQCg (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37573
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1756882AbYFRWk3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jun 2008 12:02:36 -0400
-Received: by an-out-0708.google.com with SMTP id d40so422160and.103
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2008 09:02:36 -0700 (PDT)
-Message-ID: <43e72e890806080902k80272cfk8f34f0740fbbd6d0@mail.gmail.com> (sfid-20080608_180239_805219_EE595A6E)
-Date: Sun, 8 Jun 2008 09:02:36 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Zhu, Yi" <yi.zhu@intel.com>
-Subject: Re: Problems with iwl3945 module
-Cc: "Cesar Luis Avila" <cavila@fbqf.unt.edu.ar>,
+	Wed, 18 Jun 2008 18:40:29 -0400
+Date: Wed, 18 Jun 2008 15:40:30 -0700 (PDT)
+Message-Id: <20080618.154030.226350063.davem@davemloft.net> (sfid-20080619_004054_393761_CA3BE83A)
+To: johannes@sipsolutions.net
+Cc: linville@tuxdriver.com, rjw@sisk.pl, mb@bu3sch.de,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <8AD95083DC3E36478732061D97524415033FE0B5@pdsmsx411.ccr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <4846E57A.9000005@fbqf.unt.edu.ar>
-	 <8AD95083DC3E36478732061D97524415033FE0B5@pdsmsx411.ccr.corp.intel.com>
+Subject: Re: [PATCH 2.6.26 (resend)] mac80211: detect driver tx bugs
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1213785045.1312.12.camel@johannes.berg>
+References: <1213534025.3803.2.camel@johannes.berg>
+	<1213534540.3803.5.camel@johannes.berg>
+	<1213785045.1312.12.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 4, 2008 at 7:10 PM, Zhu, Yi <yi.zhu@intel.com> wrote:
->
->
-> The HW RF Kill switch is enabled. You have to disable it in some way. It looks like your hotkey Fn-F2 doesn't work. Please take a look at http://rfswitch.sourceforge.net/
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Wed, 18 Jun 2008 12:30:45 +0200
 
-Also RFKILL hasn't been ported, I haven't even tested it on compat-wireless.
+> When a driver rejects a frame in it's ->tx() callback, it must also
+> stop queues, otherwise mac80211 can go into a loop here. Detect this
+> situation and abort the loop after five retries, warning about the
+> driver bug.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> This is a port of the patch to 2.6.26 which seems to suffer from the
+> same problem and could well be the cause of some of the mac80211 softlockup
+> warnings on kerneloops.org.
+> 
+> Dave, with John on vacation until the 22nd, would you push this to Linus
+> with the next net update instead of it going through John's tree first?
 
-  Luis
+I've applied this to net-2.6, thanks.
+
+I'm going to give Linus a little bit more time to take in the
+pull request I sent last night before I push this to kernel.org,
+so don't panic if it doesn't show up for a bit :)
