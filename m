@@ -1,30 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4814 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752218AbYFJP6s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 11:58:48 -0400
-Date: Tue, 10 Jun 2008 11:24:18 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-Subject: Re: mac80211_hwsim - simulator of 802.11 radios for mac80211
-Message-ID: <20080610152418.GD13267@tuxdriver.com> (sfid-20080610_175855_193162_040104BC)
-References: <20080610105058.GA6961@jm.kir.nu> <1213096575.3668.6.camel@johannes.berg> <20080610123007.GB1571@tuxdriver.com> <1213103469.3668.13.camel@johannes.berg>
+Received: from aktaia.intevation.org ([212.95.126.10]:46296 "EHLO
+	kolab.intevation.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752206AbYFRPVn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jun 2008 11:21:43 -0400
+From: Bernhard Reiter <bernhard@intevation.de>
+To: linux-wireless@vger.kernel.org
+Subject: 802.11 pccard, Agere 0x0156,0x0003?
+Date: Wed, 18 Jun 2008 17:15:12 +0200
+Cc: Greg KH <greg@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1213103469.3668.13.camel@johannes.berg>
+Content-Type: multipart/signed;
+  boundary="nextPart2438132.Dji62gI3s3";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200806181715.20516.bernhard@intevation.de> (sfid-20080618_172151_205409_ECF04355)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 10, 2008 at 03:11:09PM +0200, Johannes Berg wrote:
+--nextPart2438132.Dji62gI3s3
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> > Jouni this looks great.  Let's get this into the kernel.
-> 
-> I wonder where to stick it. net/mac80211/virtual-hw.c? Or
-> drivers/net/wireless/mac80211-virt.c? Heh. Not that it matters :)
+[Greg gave me the hint to ask here. Please CC me on relevant replies. No ne=
+ed=20
+to further include him, unless this should go up on the "DriverNeeded" page=
+=20
+later I presume.]
 
-drivers/net/wireless seems appropriate to me.
+Sitting here a  pc card wireless land adapter.=20
+id 0x0156, 0x0003, which probably makes it an Agere card.
+cardctl info says:
+"Wireless PC Card Model 0110"
 
--- 
-John W. Linville
-linville@tuxdriver.com
+We bought it quite a while ago under the tradename Lancom Airlancer MC-11
+from Lancom Systems.=20
+http://www.lancom-systems.de/AirLancer-MC-11b.117.0.html
+
+Background: We bought it because we thought it has a supported chipset based
+on the old orinocco driver. The vendor announces "linux" supported, but thi=
+s=20
+turned out to be only a driver for Linux 2.4.x.
+Some old stuff (with picture) can be found at:=20
+ftp://ftp.lancom.de/AirLancer/AirLancer-11/AirLancer-MC-11
+this seems to be Free Software under GNU GPLv2 even.
+
+We could not get it to work with 2.6 and searching the web gave us only=20
+reports that it does not work with kernel 2.6.x.
+See http://questier.com/howto.html#Proxim
+(the "local copy" links might haver newer source code)
+
+I've grepped the kernel sources (2.6.24) to try to find the id in a driver
+or the source code comment "Agere" to see if source code was taken in from=
+=20
+the 2.4. driver. To no prevail.
+Even pages like=20
+http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Linux.Wireless.drivers=
+=2E802.11b.html
+do not help me.
+
+So I cannot really say: is there a driver which should work with this card =
+in=20
+Linux 2.6.x and just missed the manufacturer id to recognise it?
+Where did the old Free Software code go? Was it never ported to 2.6?
+
+Thanks,
+Bernhard
+[Please CC me on relevant replies.]
+
+=2D-=20
+Managing Director - Owner: www.intevation.net       (Free Software Company)
+Germany Coordinator: fsfeurope.org. Coordinator: www.Kolab-Konsortium.com.
+Intevation GmbH, Osnabr=C3=BCck, DE; Amtsgericht Osnabr=C3=BCck, HRB 18998
+Gesch=C3=A4ftsf=C3=BChrer Frank Koormann, Bernhard Reiter, Dr. Jan-Oliver W=
+agner
+
+--nextPart2438132.Dji62gI3s3
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEABECAAYFAkhZJogACgkQh9ag3dpKERbI8wCeKGpBLFw3zi+shwjbNMv3tqNh
+wv8AnRQE28VVE1bfyboXJcyTyWlwXM9R
+=l09r
+-----END PGP SIGNATURE-----
+
+--nextPart2438132.Dji62gI3s3--
