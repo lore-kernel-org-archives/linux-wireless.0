@@ -1,50 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.245]:22043 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751713AbYFKK3e (ORCPT
+Received: from n28.bullet.mail.mud.yahoo.com ([68.142.206.223]:36417 "HELO
+	n28.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751785AbYFRJqU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 06:29:34 -0400
-Received: by an-out-0708.google.com with SMTP id d40so719589and.103
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 03:29:33 -0700 (PDT)
-Message-ID: <43e72e890806110329o28ad24e5g8331917fcfbebc78@mail.gmail.com> (sfid-20080611_122948_177044_7150FA01)
-Date: Wed, 11 Jun 2008 03:29:29 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [RFC] First CRDA integration work
-In-Reply-To: <20080611040402.GE17936@ruslug.rutgers.edu>
+	Wed, 18 Jun 2008 05:46:20 -0400
+Message-ID: <4858D7CB.1080603@yahoo.it> (sfid-20080618_114624_047350_0DC7F652)
+Date: Wed, 18 Jun 2008 11:39:23 +0200
+From: Filippo Zangheri <filippo.zangheri@yahoo.it>
 MIME-Version: 1.0
+To: Michael Leun <linux-wireless@newton.leun.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: compat wireless, i3945, tcpdump: Machine freezes
+References: <20080618094213.5abd2fbd@localhost>
+In-Reply-To: <20080618094213.5abd2fbd@localhost>
 Content-Type: text/plain; charset=UTF-8
-References: <20080611040402.GE17936@ruslug.rutgers.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 10, 2008 at 9:04 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
->
-> Release, review early. First work patch for integration of
-> CRDA work. Nukes old regulatory work, adds CRDA-like data structures
-> to cfg80211, adds a world regdom and uses it by default,
-> and start nl80211 definitions. The fun part, nl80211_get_reg()
-> and nl80211_set_reg() are pending. Hoping the second
-> shift <cough Johannes> can take over as I'm going to bed now.
->
-> At least it compiles, and should give an idea of where this is
-> going. This wasn't tested either :)
->
-> CRDA stuff can be checked out from:
->
-> git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/crda.git
->
-> For those who like diagrams:
->
-> http://wireless.kernel.org/crda.png
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-OK well it doesn't crash, lucky me. I'm on it now.
+Michael Leun ha scritto:
+> Hello,
+> 
+> I downloaded compat-wireless-2008-06-18, built it, loaded cfg80211.ko,
+> mac80211.ko, iwl3945.ko, associated to an ap, started "tcpdump -i wlan0
+> -n" and the machine mostly freezed.
+> 
+> Mostly means keyboard does not work, no disk-access, no network but
+> mouse still works.
+> 
+> This is reproducable, freeze happens instantly after starting tcpdump
+> (if a ping runs while I start tcpdump I see one Packet in the output of
+> tcpdump, then machine is frozen).
+> 
+> I've had that with some older versions of compat-wireless also.
 
-Also credit where its due: Thanks to Johannes for whipping up the
-userspace API really quickly and so well :) Not to mention already
-having set up mac80211 to make this patch easy :)
+Same behaviour here.
 
-  Luis
+I add that the freezes happen when the card is associated to the AP.
+They happen with tcpdump and with wireshark, both selecting wmaster0
+and wlan0 interfaces; but don't happen with kismet.
+
+Furthermore, I have a PPPoE Internet connection and the computer
+freezes even when I try to monitor ppp0 interface (when the PPPoE
+connection uses the radio link).
+
+Thanks.
+
+- --
+Filippo Zangheri
+
+GPG key ID: 0x6C1F2F2F
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFIWNfLjzxMG2wfLy8RAl1IAJ0cOPq2dYMrSkbI4FYeIUGj1RMrLQCeOxaV
+CHibU4ueXOnQpOv737f12oI=
+=mk9X
+-----END PGP SIGNATURE-----
+
