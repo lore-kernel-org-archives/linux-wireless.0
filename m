@@ -1,69 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:60978 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752296AbYFLBtm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 21:49:42 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Guy Cohen <guy.cohen@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 11/29] iwlwifi: fix bug when moving from 11gn to 11a or 11an to 11g
-Date: Thu, 12 Jun 2008 09:47:01 +0800
-Message-Id: <1213235239-2954-12-git-send-email-yi.zhu@intel.com> (sfid-20080612_041916_675711_3C7EACD8)
-In-Reply-To: <1213235239-2954-11-git-send-email-yi.zhu@intel.com>
-References: <1213235239-2954-1-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-2-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-3-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-4-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-5-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-6-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-7-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-8-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-9-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-10-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-11-git-send-email-yi.zhu@intel.com>
+Received: from wa-out-1112.google.com ([209.85.146.179]:29087 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751194AbYFRQR5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jun 2008 12:17:57 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so246175waf.23
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jun 2008 09:17:56 -0700 (PDT)
+Message-ID: <1ba2fa240806180917i320fac4bxcfd7416349850bff@mail.gmail.com> (sfid-20080618_181803_690513_0CBD46C0)
+Date: Wed, 18 Jun 2008 19:17:53 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/2] mac80211: add spectrum capabilities
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1213803431.1312.24.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1213800824-32107-1-git-send-email-tomas.winkler@intel.com>
+	 <1213800824-32107-2-git-send-email-tomas.winkler@intel.com>
+	 <1213803431.1312.24.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Wed, Jun 18, 2008 at 6:37 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2008-06-18 at 17:53 +0300, Tomas Winkler wrote:
+>> This patch add spectrum capability and required information
+>> elements to association request providing AP has requested it and
+>> it is supported by the driver
+>
+> Why bother splitting this up into two patches, the Kconfig option isn't
+> even being used?
 
-It is wrong to set the rxon channel according to the ht-channel
-in case there is a mismatch (e.g. when there is no ht).
+It will be.
 
-Signed-off-by: Guy Cohen <guy.cohen@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |    1 -
- drivers/net/wireless/iwlwifi/iwl-dev.h  |    2 --
- 2 files changed, 0 insertions(+), 3 deletions(-)
+>> +             if ((bss->capability & WLAN_CAPABILITY_SPECTRUM_MGMT) &&
+>> +                 (local->hw.flags & IEEE80211_HW_SPECTRUM_MGMT))
+>> +                     capab |= WLAN_CAPABILITY_SPECTRUM_MGMT;
+>
+> Why do we need a hardware capability flag for this? The only thing you
+> seem to be doing with it is determine whether to send the power
+> capability IE?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index fad26f7..7d0a257 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -597,7 +597,6 @@ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_info *ht_info)
- 		IWL_DEBUG_ASSOC("control diff than current %d %d\n",
- 				le16_to_cpu(rxon->channel),
- 				ht_info->control_channel);
--		rxon->channel = cpu_to_le16(ht_info->control_channel);
- 		return;
- 	}
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index daa14d9..ac68cce 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -742,8 +742,6 @@ extern void iwl4965_hwrate_to_tx_control(struct iwl_priv *priv,
- extern void iwl4965_init_ht_hw_capab(const struct iwl_priv *priv,
- 				struct ieee80211_ht_info *ht_info,
- 				enum ieee80211_band band);
--void iwl4965_set_rxon_ht(struct iwl_priv *priv,
--			 struct iwl_ht_info *ht_info);
- int iwl4965_mac_ampdu_action(struct ieee80211_hw *hw,
- 				    enum ieee80211_ampdu_mlme_action action,
- 				    const u8 *addr, u16 tid, u16 *ssn);
--- 
-1.5.3.6
 
+> Will you follow up with more patches to enable radar detection and
+> things like that, and shouldn't we merge that as one series? This looks
+> sane enough, but it seems hard to judge whether or not it's actually the
+> best way to do things.
+>
+> What else will depend on the hw capability flag?
+>
+
+We need driver support mainly for quiet period and channel
+switch.(patches will follow)
+Not sure how the precise timing  will be handled in mac80211. So we
+don't advertise spectrum capability to AP if we cannot handle 11h
+actions.
+
+Don't mind that this will be applied as series. Just sending this out
+to get some feedback on the way maybe I should mark them as RFCs
+
+Thanks for review
+Tomas
