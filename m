@@ -1,627 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:52006 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752756AbYFJSjl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 14:39:41 -0400
-Date: Tue, 10 Jun 2008 21:37:23 +0300
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH RFC] mac80211_hwsim
-Message-ID: <20080610183722.GA7377@jm.kir.nu> (sfid-20080610_203947_613289_0A4ECC3E)
-References: <20080610105058.GA6961@jm.kir.nu> <1213096575.3668.6.camel@johannes.berg> <20080610123007.GB1571@tuxdriver.com> <1213103469.3668.13.camel@johannes.berg> <20080610152418.GD13267@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080610152418.GD13267@tuxdriver.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:55174 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752233AbYFRHaT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jun 2008 03:30:19 -0400
+Subject: Re: [PATCH/RFC] remove irqs_disabled warning from local_bh_enable
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Linux Kernel list <linux-kernel@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>,
+	David Ellingsworth <david@identd.dyndns.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ingo Molnar <mingo@elte.hu>
+In-Reply-To: <alpine.LFD.1.10.0806171648330.2907@woody.linux-foundation.org>
+References: <1213739834.3803.137.camel@johannes.berg>
+	 <alpine.LFD.1.10.0806171648330.2907@woody.linux-foundation.org>
+Content-Type: text/plain
+Date: Wed, 18 Jun 2008 09:29:37 +0200
+Message-Id: <1213774177.3803.164.camel@johannes.berg> (sfid-20080618_093024_114274_9ACCF00A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 10, 2008 at 11:24:18AM -0400, John W. Linville wrote:
-> drivers/net/wireless seems appropriate to me.
+On Tue, 2008-06-17 at 16:55 -0700, Linus Torvalds wrote:
 
-Here's a completely untested (well, it compiles) patch against
-wireless-test. I'll try to do some testing tomorrow, but if someone is
-interested in taking a closer look at a version that is converted to use
-the new data structures for channel/rate configuration, here's a
-preliminary version. All comments are welcome.
+> > This warning has started to trigger with mac80211 because it can, under
+> > some circumstances, use spin_lock_bh() protected sections within
+> > irq-disabled sections. Is that a bug?
+> 
+> Yes, it's a bug.
 
-As far as functionality is concerned, this is supposed to match with the
-2.6.25-based version I have in hostap.git, i.e., the only changes are to
-convert the newer version of mac80211 API. Since I'm frequently using
-the latest 2.6.x release kernel instead of wireless-test (and would
-assume I'm not the only one doing that), I'm thinking of maintaining two
-versions of the module. One would be in wireless-test and maintained
-just like any other in-tree driver. The other one is in my hostap.git
-repository and is maintained as an out-of-tree version that is based on
-the latest (or well, relatively close to the latest, i.e., whatever I
-happen to be using ;-) released kernel. Of course, once the in-tree
-version hits a released kernel, out-of-tree version can die.
+You know, that actually makes sense to me.
 
+> Why? Not because of the "spin_lock_bh()" itself, but because of the 
+> _unlock_, which does a "local_bh_enable_ip()", which in turn will check 
+> the whole "do_softirq()" if it was the last softirq_count.
 
-PS.
+Yeah, that makes sense to me as well. In fact, I pondered a bit over the
+code until posting this.
 
-The URL in Kconfig is just a placeholder and I'll add the information in
-README and hostapd/wpa_supplicant example configuration files there
-before this gets submitted properly.
+> And you must not do softirq's when hard-irq's were disabled!
+> 
+> So it should in theory be ok (but perhaps a bit odd) to do something like
+> 
+> 	spin_lock_irq(&irq_lock);
+> 	..do something..
+> 	spin_lock_bh(&bh_lock);
+> 	spin_unlock_irq(&irq_lock);
+> 	.. do something else ..
+> 	spin_unlock_bh(&bh_lock);
+> 
+> where the "spin_lock_bh()" itself is in an irq-locked context - as long as 
+> the "spin_unlock_bh()" is *not*.
+> 
+> See?
 
+Well, yes, from an API POV I do see that. And it's actually what I
+thought up front. The thing that started to confuse me is that
+local_bh_enable_ip reads like this:
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 86323c8..91e197d 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -681,6 +681,19 @@ config ADM8211
+void local_bh_enable_ip(unsigned long ip)
+{
+#ifdef CONFIG_TRACE_IRQFLAGS
+        unsigned long flags;
+
+        WARN_ON_ONCE(in_irq());
+
+        local_irq_save(flags);
+#endif
+
+[...]
+        if (unlikely(!in_interrupt() && local_softirq_pending()))
+                do_softirq();
+
+        dec_preempt_count();
+#ifdef CONFIG_TRACE_IRQFLAGS
+        local_irq_restore(flags);
+#endif
+
+So doesn't it actually run do_softirq() when interrupts are still
+disabled? If I look deeper into the code that appears to be a rather odd
+trick to avoid locking and __do_softirq will unconditionally enable
+IRQs, so I guess here's my answer...
+
+How about the patch below?
+
+johannes
+
+From: Johannes Berg <johannes@sipsolutions.net>
+Subject: clean up and comment local_bh_enable code
+
+There's no need to use local_irq_save() over local_irq_disable() in the
+local_bh_enable code since it is a bug to call it with irqs disabled and
+do_softirq will enable irqs if there is any pending work. Consolidate
+the code from local_bh_enable and ..._ip to avoid having a disconnect
+between them in the warnings they trigger that is currently there. Also
+always trigger the warning on in_irq(), not just in the trace-irqflags
+case.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+I made it a static inline so that runtime behaviour isn't affected by
+another function call, but that can be argued.
+
+Maybe local_bh_enable() should just be a static inline somewhere in a
+header file, that would get rid of one export_symbol as well.
+
+ kernel/softirq.c |   48 +++++++++++-------------------------------------
+ 1 file changed, 11 insertions(+), 37 deletions(-)
+
+--- everything.orig/kernel/softirq.c	2008-06-17 23:48:25.000000000 +0200
++++ everything/kernel/softirq.c	2008-06-18 09:13:21.000000000 +0200
+@@ -131,23 +131,17 @@ void _local_bh_enable(void)
  
- 	  Thanks to Infineon-ADMtek for their support of this driver.
+ EXPORT_SYMBOL(_local_bh_enable);
  
-+config MAC80211_HWSIM
-+	tristate "Simulated radio testing tool for mac80211"
-+	depends on MAC80211 && WLAN_80211
-+	---help---
-+	  This driver is a developer testing tool that can be used to test
-+	  IEEE 802.11 networking stack (mac80211) functionality. This is not
-+	  needed for normal wireless LAN usage and is only for testing. See
-+	  http://w1.fi/mac80211_hwsim/ for more information on how to use
-+	  this tool.
-+
-+	  To compile this driver as a module, choose M here: the module will be
-+	  called mac80211_hwsim.  If unsure, say N.
-+
- source "drivers/net/wireless/p54/Kconfig"
- source "drivers/net/wireless/ath5k/Kconfig"
- source "drivers/net/wireless/iwlwifi/Kconfig"
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 5026268..72c314e 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -64,3 +64,5 @@ obj-$(CONFIG_RT2X00)	+= rt2x00/
- obj-$(CONFIG_P54_COMMON)	+= p54/
+-void local_bh_enable(void)
++static inline void _local_bh_enable_ip(unsigned long ip)
+ {
++	WARN_ON_ONCE(in_irq() || irqs_disabled());
+ #ifdef CONFIG_TRACE_IRQFLAGS
+-	unsigned long flags;
+-
+-	WARN_ON_ONCE(in_irq());
+-#endif
+-	WARN_ON_ONCE(irqs_disabled());
+-
+-#ifdef CONFIG_TRACE_IRQFLAGS
+-	local_irq_save(flags);
++	local_irq_disable();
+ #endif
+ 	/*
+ 	 * Are softirqs going to be turned on now:
+ 	 */
+ 	if (softirq_count() == SOFTIRQ_OFFSET)
+-		trace_softirqs_on((unsigned long)__builtin_return_address(0));
++		trace_softirqs_on(ip);
+ 	/*
+ 	 * Keep preemption disabled until we are done with
+ 	 * softirq processing:
+@@ -159,40 +153,20 @@ void local_bh_enable(void)
  
- obj-$(CONFIG_ATH5K)	+= ath5k/
+ 	dec_preempt_count();
+ #ifdef CONFIG_TRACE_IRQFLAGS
+-	local_irq_restore(flags);
++	local_irq_enable();
+ #endif
+ 	preempt_check_resched();
+ }
 +
-+obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-new file mode 100644
-index 0000000..03bbc7a
---- /dev/null
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -0,0 +1,536 @@
-+/*
-+ * mac80211_hwsim - software simulator of 802.11 radio(s) for mac80211
-+ * Copyright (c) 2008, Jouni Malinen <j@w1.fi>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+/*
-+ * TODO:
-+ * - IBSS mode simulation (Beacon transmission with competition for "air time")
-+ * - IEEE 802.11a and 802.11n modes
-+ */
-+
-+#include <net/mac80211.h>
-+#include <net/ieee80211_radiotap.h>
-+#include <linux/if_arp.h>
-+#include <linux/rtnetlink.h>
-+#include <linux/etherdevice.h>
-+
-+MODULE_AUTHOR("Jouni Malinen");
-+MODULE_DESCRIPTION("Software simulator of 802.11 radio(s) for mac80211");
-+MODULE_LICENSE("GPL");
-+
-+static int radios = 2;
-+module_param(radios, int, 0444);
-+MODULE_PARM_DESC(radios, "Number of simulated radios");
-+
-+
-+static struct class *hwsim_class;
-+
-+static struct ieee80211_hw **hwsim_radios;
-+static int hwsim_radio_count;
-+static struct net_device *hwsim_mon; /* global monitor netdev */
-+
-+
-+static const struct ieee80211_channel hwsim_channels[] = {
-+	{ .center_freq = 2412 },
-+	{ .center_freq = 2417 },
-+	{ .center_freq = 2422 },
-+	{ .center_freq = 2427 },
-+	{ .center_freq = 2432 },
-+	{ .center_freq = 2437 },
-+	{ .center_freq = 2442 },
-+	{ .center_freq = 2447 },
-+	{ .center_freq = 2452 },
-+	{ .center_freq = 2457 },
-+	{ .center_freq = 2462 },
-+	{ .center_freq = 2467 },
-+	{ .center_freq = 2472 },
-+	{ .center_freq = 2484 },
-+};
-+
-+static const struct ieee80211_rate hwsim_rates[] = {
-+	{ .bitrate = 10 },
-+	{ .bitrate = 20, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 55, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 110, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 60, .flags = IEEE80211_RATE_ERP_G },
-+	{ .bitrate = 90, .flags = IEEE80211_RATE_ERP_G },
-+	{ .bitrate = 120, .flags = IEEE80211_RATE_ERP_G },
-+	{ .bitrate = 180, .flags = IEEE80211_RATE_ERP_G },
-+	{ .bitrate = 240, .flags = IEEE80211_RATE_ERP_G },
-+	{ .bitrate = 360, .flags = IEEE80211_RATE_ERP_G },
-+	{ .bitrate = 480, .flags = IEEE80211_RATE_ERP_G },
-+	{ .bitrate = 540, .flags = IEEE80211_RATE_ERP_G }
-+};
-+
-+struct mac80211_hwsim_data {
-+	struct device *dev;
-+	struct ieee80211_supported_band band;
-+	struct ieee80211_channel channels[ARRAY_SIZE(hwsim_channels)];
-+	struct ieee80211_rate rates[ARRAY_SIZE(hwsim_rates)];
-+
-+	struct ieee80211_channel *channel;
-+	int radio_enabled;
-+	unsigned long beacon_int; /* in jiffies unit */
-+	unsigned int rx_filter;
-+	int started;
-+	struct timer_list beacon_timer;
-+};
-+
-+
-+struct hwsim_radiotap_hdr {
-+	struct ieee80211_radiotap_header hdr;
-+	u8 rt_flags;
-+	u8 rt_rate;
-+	__le16 rt_channel;
-+	__le16 rt_chbitmask;
-+} __attribute__ ((packed));
-+
-+
-+static int hwsim_mon_xmit(struct sk_buff *skb, struct net_device *dev)
++void local_bh_enable(void)
 +{
-+	/* TODO: allow packet injection */
-+	dev_kfree_skb(skb);
-+	return 0;
++	_local_bh_enable_ip((unsigned long)__builtin_return_address(0));
 +}
-+
-+
-+static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
-+				      struct sk_buff *tx_skb)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	struct sk_buff *skb;
-+	struct hwsim_radiotap_hdr *hdr;
-+	u16 flags;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx_skb);
-+	struct ieee80211_rate *txrate = ieee80211_get_tx_rate(hw, info);
-+
-+	if (!netif_running(hwsim_mon))
-+		return;
-+
-+	skb = skb_copy_expand(tx_skb, sizeof(*hdr), 0, GFP_ATOMIC);
-+	if (skb == NULL)
-+		return;
-+
-+	hdr = (struct hwsim_radiotap_hdr *) skb_push(skb, sizeof(*hdr));
-+	hdr->hdr.it_version = PKTHDR_RADIOTAP_VERSION;
-+	hdr->hdr.it_pad = 0;
-+	hdr->hdr.it_len = cpu_to_le16(sizeof(*hdr));
-+	hdr->hdr.it_present = __constant_cpu_to_le32(
-+	     (1 << IEEE80211_RADIOTAP_FLAGS) |
-+	     (1 << IEEE80211_RADIOTAP_RATE) |
-+	     (1 << IEEE80211_RADIOTAP_CHANNEL));
-+	hdr->rt_flags = 0;
-+	hdr->rt_rate = txrate->bitrate / 5;
-+	hdr->rt_channel = data->channel->center_freq;
-+	flags = IEEE80211_CHAN_2GHZ;
-+	if (txrate->flags & IEEE80211_RATE_ERP_G)
-+		flags |= IEEE80211_CHAN_OFDM;
-+	else
-+		flags |= IEEE80211_CHAN_CCK;
-+	hdr->rt_chbitmask = cpu_to_le16(flags);
-+
-+	skb->dev = hwsim_mon;
-+	skb_set_mac_header(skb, 0);
-+	skb->ip_summed = CHECKSUM_UNNECESSARY;
-+	skb->pkt_type = PACKET_OTHERHOST;
-+	skb->protocol = __constant_htons(ETH_P_802_2);
-+	memset(skb->cb, 0, sizeof(skb->cb));
-+	netif_rx(skb);
-+}
-+
-+
-+static int mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	struct ieee80211_rx_status rx_status;
-+	int i, ack = 0;
-+	struct ieee80211_hdr *hdr;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_tx_info *txi;
-+
-+	mac80211_hwsim_monitor_rx(hw, skb);
-+
-+	if (skb->len < 10) {
-+		/* Should not happen; just a sanity check for addr1 use */
-+		dev_kfree_skb(skb);
-+		return NETDEV_TX_OK;
-+	}
-+
-+	if (!data->radio_enabled) {
-+		printk(KERN_DEBUG "%s: dropped TX frame since radio "
-+		       "disabled\n", wiphy_name(hw->wiphy));
-+		dev_kfree_skb(skb);
-+		return NETDEV_TX_OK;
-+	}
-+
-+	hdr = (struct ieee80211_hdr *) skb->data;
-+	if (is_multicast_ether_addr(hdr->addr1))
-+		ack = 1;
-+
-+	memset(&rx_status, 0, sizeof(rx_status));
-+	/* TODO: set mactime */
-+	rx_status.freq = data->channel->center_freq;
-+	rx_status.band = data->channel->band;
-+	rx_status.rate_idx = info->tx_rate_idx;
-+	/* TODO: simulate signal strength (and optional packet drop) */
-+
-+	/* Copy skb to all enabled radios that are on the current frequency */
-+	for (i = 0; i < hwsim_radio_count; i++) {
-+		struct mac80211_hwsim_data *data2;
-+		struct sk_buff *nskb;
-+
-+		if (hwsim_radios[i] == NULL || hwsim_radios[i] == hw)
-+			continue;
-+		data2 = hwsim_radios[i]->priv;
-+		if (!data2->started || !data2->radio_enabled ||
-+		    data->channel->band != data2->channel->band ||
-+		    data->channel->center_freq != data2->channel->center_freq)
-+			continue;
-+
-+		nskb = skb_copy(skb, GFP_ATOMIC);
-+		if (nskb == NULL)
-+			continue;
-+
-+		if (memcmp(hdr->addr1, hwsim_radios[i]->wiphy->perm_addr,
-+			   ETH_ALEN) == 0)
-+			ack = 1;
-+		ieee80211_rx_irqsafe(hwsim_radios[i], nskb, &rx_status);
-+	}
-+
-+	txi = IEEE80211_SKB_CB(skb);
-+	memset(&txi->status, 0, sizeof(txi->status));
-+	if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK)) {
-+		if (ack)
-+			txi->flags |= IEEE80211_TX_STAT_ACK;
-+		else
-+			txi->status.excessive_retries = 1;
-+	}
-+	ieee80211_tx_status_irqsafe(hw, skb);
-+	return NETDEV_TX_OK;
-+}
-+
-+
-+static int mac80211_hwsim_start(struct ieee80211_hw *hw)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	printk(KERN_DEBUG "%s:%s\n", wiphy_name(hw->wiphy), __func__);
-+	data->started = 1;
-+	return 0;
-+}
-+
-+
-+static void mac80211_hwsim_stop(struct ieee80211_hw *hw)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	data->started = 0;
-+	printk(KERN_DEBUG "%s:%s\n", wiphy_name(hw->wiphy), __func__);
-+}
-+
-+
-+static int mac80211_hwsim_add_interface(struct ieee80211_hw *hw,
-+					struct ieee80211_if_init_conf *conf)
-+{
-+	DECLARE_MAC_BUF(mac);
-+	printk(KERN_DEBUG "%s:%s (type=%d mac_addr=%s)\n",
-+	       wiphy_name(hw->wiphy), __func__, conf->type,
-+	       print_mac(mac, conf->mac_addr));
-+	return 0;
-+}
-+
-+
-+static void mac80211_hwsim_remove_interface(
-+	struct ieee80211_hw *hw, struct ieee80211_if_init_conf *conf)
-+{
-+	DECLARE_MAC_BUF(mac);
-+	printk(KERN_DEBUG "%s:%s (type=%d mac_addr=%s)\n",
-+	       wiphy_name(hw->wiphy), __func__, conf->type,
-+	       print_mac(mac, conf->mac_addr));
-+}
-+
-+
-+static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
-+				     struct ieee80211_vif *vif)
-+{
-+	struct ieee80211_hw *hw = arg;
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	struct sk_buff *skb;
-+	struct ieee80211_rx_status rx_status;
-+	int i;
-+	struct ieee80211_tx_info *info;
-+
-+	if (vif->type != IEEE80211_IF_TYPE_AP)
-+		return;
-+
-+	skb = ieee80211_beacon_get(hw, vif);
-+	if (skb == NULL)
-+		return;
-+	info = IEEE80211_SKB_CB(skb);
-+
-+	mac80211_hwsim_monitor_rx(hw, skb);
-+
-+	memset(&rx_status, 0, sizeof(rx_status));
-+	/* TODO: set mactime */
-+	rx_status.freq = data->channel->center_freq;
-+	rx_status.band = data->channel->band;
-+	rx_status.rate_idx = info->tx_rate_idx;
-+	/* TODO: simulate signal strength (and optional packet drop) */
-+
-+	/* Copy skb to all enabled radios that are on the current frequency */
-+	for (i = 0; i < hwsim_radio_count; i++) {
-+		struct mac80211_hwsim_data *data2;
-+		struct sk_buff *nskb;
-+
-+		if (hwsim_radios[i] == NULL || hwsim_radios[i] == hw)
-+			continue;
-+		data2 = hwsim_radios[i]->priv;
-+		if (!data2->started || !data2->radio_enabled ||
-+		    data->channel->band != data2->channel->band ||
-+		    data->channel->center_freq != data2->channel->center_freq)
-+			continue;
-+
-+		nskb = skb_copy(skb, GFP_ATOMIC);
-+		if (nskb == NULL)
-+			continue;
-+
-+		ieee80211_rx_irqsafe(hwsim_radios[i], nskb, &rx_status);
-+	}
-+
-+	dev_kfree_skb(skb);
-+}
-+
-+
-+static void mac80211_hwsim_beacon(unsigned long arg)
-+{
-+	struct ieee80211_hw *hw = (struct ieee80211_hw *) arg;
-+	struct mac80211_hwsim_data *data = hw->priv;
-+
-+	if (!data->started || !data->radio_enabled)
-+		return;
-+
-+	ieee80211_iterate_active_interfaces(hw, mac80211_hwsim_beacon_tx, hw);
-+
-+	data->beacon_timer.expires = jiffies + data->beacon_int;
-+	add_timer(&data->beacon_timer);
-+}
-+
-+
-+static int mac80211_hwsim_config(struct ieee80211_hw *hw,
-+				 struct ieee80211_conf *conf)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+
-+	printk(KERN_DEBUG "%s:%s (freq=%d radio_enabled=%d beacon_int=%d)\n",
-+	       wiphy_name(hw->wiphy), __func__,
-+	       conf->channel->center_freq, conf->radio_enabled,
-+	       conf->beacon_int);
-+
-+	data->channel = conf->channel;
-+	data->radio_enabled = conf->radio_enabled;
-+	data->beacon_int = 1024 * conf->beacon_int / 1000 * HZ / 1000;
-+	if (data->beacon_int < 1)
-+		data->beacon_int = 1;
-+
-+	if (!data->started || !data->radio_enabled)
-+		del_timer(&data->beacon_timer);
-+	else
-+		mod_timer(&data->beacon_timer, jiffies + data->beacon_int);
-+
-+	return 0;
-+}
-+
-+
-+static void mac80211_hwsim_configure_filter(struct ieee80211_hw *hw,
-+					    unsigned int changed_flags,
-+					    unsigned int *total_flags,
-+					    int mc_count,
-+					    struct dev_addr_list *mc_list)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+
-+	printk(KERN_DEBUG "%s:%s\n", wiphy_name(hw->wiphy), __func__);
-+
-+	data->rx_filter = 0;
-+	if (*total_flags & FIF_PROMISC_IN_BSS)
-+		data->rx_filter |= FIF_PROMISC_IN_BSS;
-+	if (*total_flags & FIF_ALLMULTI)
-+		data->rx_filter |= FIF_ALLMULTI;
-+
-+	*total_flags = data->rx_filter;
-+}
-+
-+
-+
-+static const struct ieee80211_ops mac80211_hwsim_ops =
-+{
-+	.tx = mac80211_hwsim_tx,
-+	.start = mac80211_hwsim_start,
-+	.stop = mac80211_hwsim_stop,
-+	.add_interface = mac80211_hwsim_add_interface,
-+	.remove_interface = mac80211_hwsim_remove_interface,
-+	.config = mac80211_hwsim_config,
-+	.configure_filter = mac80211_hwsim_configure_filter,
-+};
-+
-+
-+static void mac80211_hwsim_free(void)
-+{
-+	int i;
-+
-+	for (i = 0; i < hwsim_radio_count; i++) {
-+		if (hwsim_radios[i]) {
-+			struct mac80211_hwsim_data *data;
-+			data = hwsim_radios[i]->priv;
-+			ieee80211_unregister_hw(hwsim_radios[i]);
-+			if (!IS_ERR(data->dev))
-+				device_unregister(data->dev);
-+			ieee80211_free_hw(hwsim_radios[i]);
-+		}
-+	}
-+	kfree(hwsim_radios);
-+	class_destroy(hwsim_class);
-+}
-+
-+
-+static struct device_driver mac80211_hwsim_driver = {
-+	.name = "mac80211_hwsim"
-+};
-+
-+
-+static void hwsim_mon_setup(struct net_device *dev)
-+{
-+	dev->hard_start_xmit = hwsim_mon_xmit;
-+	dev->destructor = free_netdev;
-+	ether_setup(dev);
-+	dev->tx_queue_len = 0;
-+	dev->type = ARPHRD_IEEE80211_RADIOTAP;
-+	memset(dev->dev_addr, 0, ETH_ALEN);
-+	dev->dev_addr[0] = 0x12;
-+}
-+
-+
-+static int __init init_mac80211_hwsim(void)
-+{
-+	int i, err = 0;
-+	u8 addr[ETH_ALEN];
-+	struct mac80211_hwsim_data *data;
-+	struct ieee80211_hw *hw;
-+	DECLARE_MAC_BUF(mac);
-+
-+	if (radios < 1 || radios > 65535)
-+		return -EINVAL;
-+
-+	hwsim_radio_count = radios;
-+	hwsim_radios = kcalloc(hwsim_radio_count,
-+			       sizeof(struct ieee80211_hw *), GFP_KERNEL);
-+	if (hwsim_radios == NULL)
-+		return -ENOMEM;
-+
-+	hwsim_class = class_create(THIS_MODULE, "mac80211_hwsim");
-+	if (IS_ERR(hwsim_class)) {
-+		kfree(hwsim_radios);
-+		return PTR_ERR(hwsim_class);
-+	}
-+
-+	memset(addr, 0, ETH_ALEN);
-+	addr[0] = 0x02;
-+
-+	for (i = 0; i < hwsim_radio_count; i++) {
-+		printk(KERN_DEBUG "mac80211_hwsim: Initializing radio %d\n",
-+		       i);
-+		hw = ieee80211_alloc_hw(sizeof(*data), &mac80211_hwsim_ops);
-+		if (hw == NULL) {
-+			printk(KERN_DEBUG "mac80211_hwsim: ieee80211_alloc_hw "
-+			       "failed\n");
-+			err = -ENOMEM;
-+			goto failed;
-+		}
-+		hwsim_radios[i] = hw;
-+
-+		data = hw->priv;
-+		data->dev = device_create(hwsim_class, NULL, 0, "hwsim%d", i);
-+		if (IS_ERR(data->dev)) {
-+			printk(KERN_DEBUG "mac80211_hwsim: device_create "
-+			       "failed (%ld)\n", PTR_ERR(data->dev));
-+			err = -ENOMEM;
-+			goto failed;
-+		}
-+		data->dev->driver = &mac80211_hwsim_driver;
-+		dev_set_drvdata(data->dev, hw);
-+
-+		SET_IEEE80211_DEV(hw, data->dev);
-+		addr[3] = i >> 8;
-+		addr[4] = i;
-+		SET_IEEE80211_PERM_ADDR(hw, addr);
-+
-+		hw->channel_change_time = 1;
-+		hw->queues = 1;
-+
-+		memcpy(data->channels, hwsim_channels, sizeof(hwsim_channels));
-+		memcpy(data->rates, hwsim_rates, sizeof(hwsim_rates));
-+		data->band.channels = data->channels;
-+		data->band.n_channels = ARRAY_SIZE(hwsim_channels);
-+		data->band.bitrates = data->rates;
-+		data->band.n_bitrates = ARRAY_SIZE(hwsim_rates);
-+		hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &data->band;
-+
-+		err = ieee80211_register_hw(hw);
-+		if (err < 0) {
-+			printk(KERN_DEBUG "mac80211_hwsim: "
-+			       "ieee80211_register_hw failed (%d)\n", err);
-+			goto failed;
-+		}
-+
-+		printk(KERN_DEBUG "%s: hwaddr %s registered\n",
-+		       wiphy_name(hw->wiphy),
-+		       print_mac(mac, hw->wiphy->perm_addr));
-+
-+		setup_timer(&data->beacon_timer, mac80211_hwsim_beacon,
-+			    (unsigned long) hw);
-+	}
-+
-+	hwsim_mon = alloc_netdev(0, "hwsim%d", hwsim_mon_setup);
-+	if (hwsim_mon == NULL)
-+		goto failed;
-+
-+	rtnl_lock();
-+
-+	err = dev_alloc_name(hwsim_mon, hwsim_mon->name);
-+	if (err < 0) {
-+		goto failed_mon;
-+	}
-+
-+	err = register_netdevice(hwsim_mon);
-+	if (err < 0)
-+		goto failed_mon;
-+
-+	rtnl_unlock();
-+
-+	return 0;
-+
-+failed_mon:
-+	rtnl_unlock();
-+	free_netdev(hwsim_mon);
-+
-+failed:
-+	mac80211_hwsim_free();
-+	return err;
-+}
-+
-+
-+static void __exit exit_mac80211_hwsim(void)
-+{
-+	printk(KERN_DEBUG "mac80211_hwsim: unregister %d radios\n",
-+	       hwsim_radio_count);
-+
-+	unregister_netdev(hwsim_mon);
-+	mac80211_hwsim_free();
-+}
-+
-+
-+module_init(init_mac80211_hwsim);
-+module_exit(exit_mac80211_hwsim);
+ EXPORT_SYMBOL(local_bh_enable);
  
--- 
-Jouni Malinen                                            PGP id EFC895FA
+ void local_bh_enable_ip(unsigned long ip)
+ {
+-#ifdef CONFIG_TRACE_IRQFLAGS
+-	unsigned long flags;
+-
+-	WARN_ON_ONCE(in_irq());
+-
+-	local_irq_save(flags);
+-#endif
+-	/*
+-	 * Are softirqs going to be turned on now:
+-	 */
+-	if (softirq_count() == SOFTIRQ_OFFSET)
+-		trace_softirqs_on(ip);
+-	/*
+-	 * Keep preemption disabled until we are done with
+-	 * softirq processing:
+- 	 */
+- 	sub_preempt_count(SOFTIRQ_OFFSET - 1);
+-
+-	if (unlikely(!in_interrupt() && local_softirq_pending()))
+-		do_softirq();
+-
+-	dec_preempt_count();
+-#ifdef CONFIG_TRACE_IRQFLAGS
+-	local_irq_restore(flags);
+-#endif
+-	preempt_check_resched();
++	_local_bh_enable_ip(ip);
+ }
+ EXPORT_SYMBOL(local_bh_enable_ip);
+ 
+
+
