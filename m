@@ -1,188 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:9774 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751162AbYFESDG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2008 14:03:06 -0400
-Received: by py-out-1112.google.com with SMTP id p76so580866pyb.10
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2008 11:03:05 -0700 (PDT)
-Message-ID: <1ba2fa240806051103q652accf5t1bd1d94630ebea5b@mail.gmail.com> (sfid-20080605_200311_741807_002C5BD4)
-Date: Thu, 5 Jun 2008 21:03:03 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Thomas Backlund" <tmb@mandriva.org>
-Subject: Re: iwl4965 oops in 2.6.25-rc5 x86_64
-Cc: "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4848289D.1080205@mandriva.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <4848289D.1080205@mandriva.org>
+Received: from mga09.intel.com ([134.134.136.24]:42950 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751258AbYFROxw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jun 2008 10:53:52 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 2/2] mac80211: add spectrum capabilities
+Date: Wed, 18 Jun 2008 17:53:44 +0300
+Message-Id: <1213800824-32107-2-git-send-email-tomas.winkler@intel.com> (sfid-20080618_165358_237047_C8B0B23F)
+In-Reply-To: <1213800824-32107-1-git-send-email-tomas.winkler@intel.com>
+References: <1213800824-32107-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 5, 2008 at 8:55 PM, Thomas Backlund <tmb@mandriva.org> wrote:
-> Hi,
-> (please cc me on replies as I'm not subscribed)
->
-> booting a 2.6.26-rc5 x86_64 kernel on a Acer TravelMate 6720G laptop with a
-> Intel a/b/g/n wireless gets me this oops in syslog...
->
->> Jun  5 19:55:05 5720g kernel: firmware: requesting iwlwifi-4965-1.ucode
->> Jun  5 19:55:05 5720g kernel: Registered led device: iwl-phy0:radio
->> Jun  5 19:55:05 5720g kernel: Registered led device: iwl-phy0:assoc
->> Jun  5 19:55:05 5720g kernel: Registered led device: iwl-phy0:RX
->> Jun  5 19:55:05 5720g kernel: Registered led device: iwl-phy0:TX
->> Jun  5 19:55:05 5720g kernel: ADDRCONF(NETDEV_UP): wlan0: link is not
->> ready
->> Jun  5 19:55:06 5720g kernel: BUG: unable to handle kernel NULL pointer
->> dereference at 0000000000000000
->> Jun  5 19:55:06 5720g kernel: IP: [<ffffffffa020b64d>]
->> :iwl4965:iwl4965_enqueue_hcmd+0x12a/0x20f
->> Jun  5 19:55:06 5720g kernel: PGD 0 Jun  5 19:55:06 5720g kernel: Oops:
->> 0000 [1] SMP Jun  5 19:55:06 5720g kernel: CPU 1 Jun  5 19:55:06 5720g
->> kernel: Modules linked in: af_packet kvm_intel kvm kqemu snd_seq_dummy
->> snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss
->> snd_mixer_oss ipv6 xt_tcpudp iptable_filter ip_tables x_tables binfmt_misc
->> loop dm_mod cpufreq_ondemand cpufreq_conservative cpufreq_powersave
->> acpi_cpufreq freq_table tifm_sd tifm_7xx1 tifm_core nvram pcmcia
->> snd_hda_intel ohci1394 mmc_block ieee1394 i2c_i801 arc4 ecb sdhci
->> crypto_blkcipher firewire_ohci snd_pcsp battery firewire_core acer_wmi ac
->> snd_pcm container mmc_core video output crc_itu_t i2c_core iTCO_wdt thermal
->> snd_timer iTCO_vendor_support snd joydev iwl4965 wmi processor button
->> yenta_socket rsrc_nonstatic pcmcia_core firmware_class soundcore
->> snd_page_alloc sr_mod sg serio_raw evdev rtc_cmos nsc_ircc rtc_core rtc_lib
->> intel_agp iwlcore tg3 rfkill mac80211 led_class cdrom irda crc_ccitt
->> cfg80211 ide_generic piix ide_core ata_piix ahci libata dock sd_mod scsi_mod
->> ext3 jbd uhci_hcd ohci_hcd ehci_hcd usbcore [las
->
-> t unloaded: nf_conntrack]
->>
->> Jun  5 19:55:06 5720g kernel: Pid: 10, comm: events/1 Not tainted
->> 2.6.26-0.rc5.1mdvsmp #1
->> Jun  5 19:55:06 5720g kernel: RIP: 0010:[<ffffffffa020b64d>]
->>  [<ffffffffa020b64d>] :iwl4965:iwl4965_enqueue_hcmd+0x12a/0x20f
->> Jun  5 19:55:06 5720g kernel: RSP: 0018:ffff81013fb15b90  EFLAGS: 00010086
->> Jun  5 19:55:06 5720g kernel: RAX: 0000000000000000 RBX: 0000000000000000
->> RCX: 0000000000000064
->> Jun  5 19:55:06 5720g kernel: RDX: 0000000000000022 RSI: 0000000000000000
->> RDI: ffff8100bf84c318
->> Jun  5 19:55:06 5720g kernel: RBP: ffff81013fb15be0 R08: ffff8100bf941100
->> R09: 0000000000000300
->> Jun  5 19:55:06 5720g kernel: R10: ffff81013fb15a60 R11: ffff81013fb10a78
->> R12: ffff8100bf84c300
->> Jun  5 19:55:06 5720g kernel: R13: ffff81013bc81f20 R14: ffff81013fb15d00
->> R15: 0000000000000002
->> Jun  5 19:55:06 5720g kernel: FS:  0000000000000000(0000)
->> GS:ffff81013fab8ac0(0000) knlGS:0000000000000000
->> Jun  5 19:55:06 5720g kernel: CS:  0010 DS: 0018 ES: 0018 CR0:
->> 000000008005003b
->> Jun  5 19:55:06 5720g kernel: CR2: 0000000000000000 CR3: 0000000000201000
->> CR4: 00000000000026e0
->> Jun  5 19:55:06 5720g kernel: DR0: 0000000000000000 DR1: 0000000000000000
->> DR2: 0000000000000000
->> Jun  5 19:55:06 5720g kernel: DR3: 0000000000000000 DR6: 00000000ffff0ff0
->> DR7: 0000000000000400
->> Jun  5 19:55:06 5720g kernel: Process events/1 (pid: 10, threadinfo
->> ffff81013fb14000, task ffff81013fb102c0)
->> Jun  5 19:55:06 5720g kernel: Stack:  ffffffff806f9de8 ffffffff8075c1e0
->> ffff81013bc82968 006881013fb10a10
->> Jun  5 19:55:06 5720g kernel:  0000000000000006 ffff81013d1a5d00
->> ffff81013fb15d00 ffff81013bc81f20
->> Jun  5 19:55:06 5720g kernel:  0000000000000246 ffff81013d1a5dac
->> ffff81013fb15c60 ffffffffa018ee37
->> Jun  5 19:55:06 5720g kernel: Call Trace:
->> Jun  5 19:55:06 5720g kernel:  [<ffffffffa018ee37>]
->> :iwlcore:iwl_send_cmd_sync+0x94/0x257
->> Jun  5 19:55:06 5720g kernel:  [<ffffffff80257ed5>] ?
->> __lock_acquire+0xbee/0xd5a
->> Jun  5 19:55:06 5720g kernel:  [<ffffffffa018f04b>]
->> :iwlcore:iwl_send_cmd+0x16/0x1b
->> Jun  5 19:55:06 5720g kernel:  [<ffffffffa0218c41>]
->> :iwl4965:iwl_send_static_wepkey_cmd+0xcb/0xd5
->> Jun  5 19:55:06 5720g kernel:  [<ffffffffa0218cef>]
->> :iwl4965:iwl_set_default_wep_key+0xa4/0xbe
->> Jun  5 19:55:06 5720g kernel:  [<ffffffffa020ae00>]
->> :iwl4965:iwl4965_mac_set_key+0xf1/0x137
->> Jun  5 19:55:06 5720g kernel:  [<ffffffffa01543f4>]
->> :mac80211:__ieee80211_key_todo+0x106/0x200
->> Jun  5 19:55:06 5720g kernel:  [<ffffffffa0154594>]
->> :mac80211:ieee80211_key_todo+0x17/0x25
->> Jun  5 19:55:06 5720g kernel:  [<ffffffffa01545ab>]
->> :mac80211:key_todo+0x9/0xb
->> Jun  5 19:55:06 5720g kernel:  [<ffffffff80247104>]
->> run_workqueue+0xfc/0x203
->> Jun  5 19:55:06 5720g kernel:  [<ffffffffa01545a2>] ?
->> :mac80211:key_todo+0x0/0xb
->> Jun  5 19:55:06 5720g kernel:  [<ffffffff802472eb>]
->> worker_thread+0xe0/0xf1
->> Jun  5 19:55:06 5720g kernel:  [<ffffffff8024acac>] ?
->> autoremove_wake_function+0x0/0x38
->> Jun  5 19:55:06 5720g kernel:  [<ffffffff8024720b>] ?
->> worker_thread+0x0/0xf1
->> Jun  5 19:55:06 5720g kernel:  [<ffffffff8024a97b>] kthread+0x49/0x76
->> Jun  5 19:55:06 5720g kernel:  [<ffffffff8020d248>] child_rip+0xa/0x12
->> Jun  5 19:55:06 5720g kernel:  [<ffffffff8020c7dc>] ?
->> restore_args+0x0/0x30
->> Jun  5 19:55:06 5720g kernel:  [<ffffffff8024a932>] ? kthread+0x0/0x76
->> Jun  5 19:55:06 5720g kernel:  [<ffffffff8020d23e>] ? child_rip+0x0/0x12
->> Jun  5 19:55:06 5720g kernel: Jun  5 19:55:06 5720g kernel: Jun  5
->> 19:55:06 5720g kernel: Code: 69 c8 80 01 00 00 41 8a 06 4d 89 cc 4d 03 a5 c0
->> 44 00 00 41 88 44 24 14 4c 89 e7 f3 a5 49 8d 7c 24 18 41 0f b7 4e 02 49 8b
->> 76 18 <f3> a4 41 c6 44 24 15 00 41 0f b6 95 94 44 00 00 89 d0 80 cc 04 Jun
->>  5 19:55:06 5720g kernel: RIP  [<ffffffffa020b64d>]
->> :iwl4965:iwl4965_enqueue_hcmd+0x12a/0x20f
->> Jun  5 19:55:06 5720g kernel:  RSP <ffff81013fb15b90>
->> Jun  5 19:55:06 5720g kernel: CR2: 0000000000000000
->> Jun  5 19:55:06 5720g kernel: ---[ end trace c03f2ff7573a0188 ]---
->
->
-> and shortly after the system locks up hard...
->
-> Config is here:
-> http://svn.mandriva.com/cgi-bin/viewvc.cgi/packages/cooker/kernel-linus/current/SOURCES/x86_64-smp.config?revision=215259&view=markup
->
-> lspci -vvv about the card:
->>
->> 04:00.0 Network controller: Intel Corporation PRO/Wireless 4965 AG or AGN
->> Network Connection (rev 61)
->>        Subsystem: Intel Corporation Device 1101
->>                                  Control: I/O- Mem+ BusMaster+ SpecCycle-
->> MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
->>        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
->> <TAbort- <MAbort- >SERR+ <PERR- INTx-        Latency: 0, Cache Line Size: 64
->> bytes
->>  Interrupt: pin A routed to IRQ 11
->>                                  Region 0: Memory at f8000000 (64-bit,
->> non-prefetchable) [size=8K]
->>  Capabilities: <access denied>
->>                                  Kernel modules: iwl4965
->>
->
-> So far I have tested 2.6.26-rc3,rc4,rc5 and all ends up with this oops
->
-> If I remove the wlan0 config the kernel will boot, but as soon as I try to
-> configure it, I get a lockup...
->
-> If it makes any difference, I'm trying to connect to a WPA2-personal
-> encrypted wifi on a Dlink DIR-655 Draft-N router...
->
-> The last kernel that I used that works was a 2.6.24.7 series kernel
-> (I haven't yet tried to see if the 2.6.25.x kernel works)
->
-> I thought of posting it here before trying to dig into it any deeper...
->
-> Any thoughts?
->
-> --
-> Thomas
->
-Can you please verify with latest wireless-testing. git
-Thanks
-Tomas
+This patch add spectrum capability and required information
+elements to association request providing AP has requested it and
+it is supported by the driver
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
+---
+ include/net/mac80211.h |    5 +++++
+ net/mac80211/mlme.c    |   24 ++++++++++++++++++++++++
+ 2 files changed, 29 insertions(+), 0 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 7ab4ff6..6178c32 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -705,6 +705,10 @@ enum ieee80211_tkip_key_type {
+  * @IEEE80211_HW_NOISE_DBM:
+  *	Hardware can provide noise (radio interference) values in units dBm,
+  *      decibel difference from one milliwatt.
++ *
++ * @IEEE80211_HW_SPECTRUM_MGMT:
++ * 	Hardware supports spectrum management defined in 802.11h
++ * 	Measurement, Channel Switch, Quieting, TPC
+  */
+ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE		= 1<<0,
+@@ -716,6 +720,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SIGNAL_DB				= 1<<6,
+ 	IEEE80211_HW_SIGNAL_DBM				= 1<<7,
+ 	IEEE80211_HW_NOISE_DBM				= 1<<8,
++	IEEE80211_HW_SPECTRUM_MGMT			= 1<<9,
+ };
+ 
+ /**
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 0b79d92..bfd0919 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -747,6 +747,10 @@ static void ieee80211_send_assoc(struct net_device *dev,
+ 		 * b-only mode) */
+ 		rates_len = ieee80211_compatible_rates(bss, sband, &rates);
+ 
++		if ((bss->capability & WLAN_CAPABILITY_SPECTRUM_MGMT) &&
++		    (local->hw.flags & IEEE80211_HW_SPECTRUM_MGMT))
++			capab |= WLAN_CAPABILITY_SPECTRUM_MGMT;
++
+ 		ieee80211_rx_bss_put(dev, bss);
+ 	} else {
+ 		rates = ~0;
+@@ -814,6 +818,26 @@ static void ieee80211_send_assoc(struct net_device *dev,
+ 		}
+ 	}
+ 
++	if (capab & WLAN_CAPABILITY_SPECTRUM_MGMT) {
++		/* 1. power capabilities */
++		pos = skb_put(skb, 4);
++		*pos++ = WLAN_EID_PWR_CAPABILITY;
++		*pos++ = 2;
++		*pos++ = 0; /* min tx power */
++		*pos++ = local->hw.conf.channel->max_power; /* max tx power */
++
++		/* 2. supported channels */
++		/* TODO: get this in reg domain format */
++		pos = skb_put(skb, 2 * sband->n_channels + 2);
++		*pos++ = WLAN_EID_SUPPORTED_CHANNELS;
++		*pos++ = 2 * sband->n_channels;
++		for (i = 0; i < sband->n_channels; i++) {
++			*pos++ = ieee80211_frequency_to_channel(
++					sband->channels[i].center_freq);
++			*pos++ = 1; /* one channel in the subband*/
++		}
++	}
++
+ 	if (ifsta->extra_ie) {
+ 		pos = skb_put(skb, ifsta->extra_ie_len);
+ 		memcpy(pos, ifsta->extra_ie, ifsta->extra_ie_len);
+-- 
+1.5.4.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
