@@ -1,78 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:21779 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753295AbYF1Sii (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44917 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752254AbYFRKIo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 14:38:38 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so259538nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 11:38:34 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: proski@gnu.org, orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-Subject: [RFC PATCH 01/19] orinoco: Add ESSID specific scanning for Agere fw
-Date: Sat, 28 Jun 2008 19:38:07 +0100
-Message-Id: <1214678305-7057-2-git-send-email-kilroyd@gmail.com> (sfid-20080628_203907_032689_EDD690E4)
-In-Reply-To: <1214678305-7057-1-git-send-email-kilroyd@gmail.com>
-References: <1214678305-7057-1-git-send-email-kilroyd@gmail.com>
-From: kilroyd@googlemail.com
+	Wed, 18 Jun 2008 06:08:44 -0400
+Subject: RE: [PATCH] iwl3945: use rfkill subsystem
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>
+Cc: drago01 <drago01@gmail.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	Dan Williams <dcbw@redhat.com>
+In-Reply-To: <BD524EA7912ED5469DFD0BAEF6BC752F03D2C277@orsmsx411.amr.corp.intel.com> (sfid-20080618_043443_860797_0713FE4A)
+References: <f6ca9fed0806160059l58286050wfeb6eda938f3a171@mail.gmail.com>
+	 <BD524EA7912ED5469DFD0BAEF6BC752F03D2C277@orsmsx411.amr.corp.intel.com>
+	 (sfid-20080618_043443_860797_0713FE4A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9RmZwegzYkOievkj6PkK"
+Date: Wed, 18 Jun 2008 12:07:54 +0200
+Message-Id: <1213783675.1312.6.camel@johannes.berg> (sfid-20080618_120847_883237_785CB4A3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pass the ESSID to the card.
 
-This allows 'iwlist eth1 scan essid <essid>' to work, and will help
-with routers setup not to broadcast the ESSID.
+--=-9RmZwegzYkOievkj6PkK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: David Kilroy <kilroyd@gmail.com>
----
- drivers/net/wireless/orinoco.c |   20 +++++++++++++++++++-
- 1 files changed, 19 insertions(+), 1 deletions(-)
+On Tue, 2008-06-17 at 19:34 -0700, Kolekar, Abhijeet wrote:
+> Added clearing the STATUS_EXIT_PENDING bit while ifup.
+> ACK.
+>=20
+> The attached patch removes the sysfs interface from iwl3945 and uses
+> the rfkill subsystem instead.
 
-diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
-index b047306..e9dca96 100644
---- a/drivers/net/wireless/orinoco.c
-+++ b/drivers/net/wireless/orinoco.c
-@@ -2989,6 +2989,11 @@ static int orinoco_ioctl_getiwrange(struct net_device *dev,
- 	range->min_r_time = 0;
- 	range->max_r_time = 65535 * 1000;	/* ??? */
- 
-+	if (priv->firmware_type == FIRMWARE_TYPE_AGERE)
-+		range->scan_capa = IW_SCAN_CAPA_ESSID;
-+	else
-+		range->scan_capa = IW_SCAN_CAPA_NONE;
-+
- 	/* Event capability (kernel) */
- 	IW_EVENT_CAPA_SET_KERNEL(range->event_capa);
- 	/* Event capability (driver) */
-@@ -3958,6 +3963,7 @@ static int orinoco_ioctl_setscan(struct net_device *dev,
- {
- 	struct orinoco_private *priv = netdev_priv(dev);
- 	hermes_t *hw = &priv->hw;
-+	struct iw_scan_req *si = (struct iw_scan_req *) extra;
- 	int err = 0;
- 	unsigned long flags;
- 
-@@ -4019,7 +4025,19 @@ static int orinoco_ioctl_setscan(struct net_device *dev,
- 		}
- 		break;
- 		case FIRMWARE_TYPE_AGERE:
--			err = hermes_write_wordrec(hw, USER_BAP,
-+			if (priv->scan_mode & IW_SCAN_THIS_ESSID) {
-+				struct hermes_idstring idbuf;
-+				size_t len = min(sizeof(idbuf.val),
-+						 (size_t) si->essid_len);
-+				idbuf.len = cpu_to_le16(len);
-+				memcpy(idbuf.val, si->essid, len);
-+
-+				err = hermes_write_ltv(hw, USER_BAP,
-+					       HERMES_RID_CNFSCANSSID_AGERE,
-+					       HERMES_BYTES_TO_RECLEN(len + 2),
-+					       &idbuf);
-+			} else
-+				err = hermes_write_wordrec(hw, USER_BAP,
- 						   HERMES_RID_CNFSCANSSID_AGERE,
- 						   0);	/* Any ESSID */
- 			if (err)
--- 
-1.5.4.5
+> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> @@ -5913,7 +5913,9 @@ static void __iwl3945_down(struct iwl3945_priv
+> *priv)
+>  			       test_bit(STATUS_GEO_CONFIGURED,
+> &priv->status) <<
+>  					STATUS_GEO_CONFIGURED |
+>  			       test_bit(STATUS_IN_SUSPEND,
+
+That patch is badly mangled by line-wrapping.
+
+johannes
+
+--=-9RmZwegzYkOievkj6PkK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIWN53AAoJEKVg1VMiehFYMiwP/j51xcSjXqjRKsUwuA5fofSz
+ZkR7n+AlxHI/KqrYDOYJSrCjMOCanfDDAyDaJ0ILYls+GmYwLUv93pdqgMjqygBS
+w5P49AbtvMDQql+oOfhQnzmpZjMlFULqTFXAlUKuBKRas+KV/bignHS+ExQ/aSSh
+rglmE7oi5DFbkz9Dv71kwer0hDVRwcydXu73fpjZQ0uoCF4iqEAdVhojcWmHFuJi
+WIDTm3nOjEN0Oot7qbhRqZAW86SZ6kMTEDyRZa2D0PYjY7m2UuFIGaMbx1rUw47X
+a5KbkYdtuO7DdB8KuSbnIeGgQ07iTZm+Wtrh/gOZPeS/2JkR19zNsvkRVmUaiOFx
+YhNZ47KE3r7ypy1x5wH6M+cKW7sLIUBcgnQtGaEFDyRdTJnSO1yJEOxx2UeSiVpZ
+kI23zAgP6EpT3zIBqUqkibI9EQB7G/Pk66v+ADr/2gXaZr8C4wSXBrnBNQ/PtyGE
+MHAGlQDWjg7PvTYz2XEfXie2ku3XmdFMyK0f8tzPWT2I00hK0MPitWj+Z/Np52OB
+CzAFFt268JiZtJ9olTg/iBrPpR9jFchSyKzHHYxe38ZXqQ/WllNrapI9+JP380o0
+yL0Ocv6o4XIQpYNxu0LnCLYSPKhIFHq5D2MMEyf9lZkdv+Xz44S2nl55n5K7Wpkf
+U4MjIRehoDAegXXEvWow
+=6NWI
+-----END PGP SIGNATURE-----
+
+--=-9RmZwegzYkOievkj6PkK--
 
