@@ -1,61 +1,255 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs162167.vserver.de ([62.75.162.167]:42218 "EHLO
-	unmaintained-free-software.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751803AbYFRWj2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 18:39:28 -0400
-Date: Thu, 19 Jun 2008 00:31:53 +0200
-From: Uwe Hermann <uwe@hermann-uwe.de>
-To: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
-Cc: herton@mandriva.com.br, linux-wireless@vger.kernel.org,
-	flamingice@sourmilk.net, andreamrl@tiscali.it, linville@redhat.com
-Subject: Re: [RFC][PATCH] Realtek 8187B wireless support with product id
-	0x8197/0x8189
-Message-ID: <20080618223153.GA18079@greenwood> (sfid-20080619_003932_167219_065DBD2F)
-References: <922158.32180.qm@web23114.mail.ird.yahoo.com>
+Received: from bu3sch.de ([62.75.166.246]:39529 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752420AbYFRWjl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jun 2008 18:39:41 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Add debugfs files for MMIO register access
+Date: Thu, 19 Jun 2008 00:35:49 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <922158.32180.qm@web23114.mail.ird.yahoo.com>
+Message-Id: <200806190035.49644.mb@bu3sch.de> (sfid-20080619_003944_077820_420D853A)
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 15, 2008 at 12:59:54AM +0000, Hin-Tak Leung wrote:
-> (I am not on linux-wireless so please CC: me if replying)
-> 
-> This is a patch against compat-wireless-2008-06-14 to work with 2.6.25.6-55.fc9.x86_64 kernel headers. I am using it right now so it works for me, YMMV.
-> 
-> It is mostly a patch from Herton a few months ago to add support for
-> Realtek 8187B. Herton's patch was missing a little quirk change for usb endpoint 12 for management frame; and I ported it forward to current fedora 9 kernel headers. 
-> 
-> The rest of the story is at:
-> https://bugzilla.redhat.com/show_bug.cgi?id=432280
-> 
-> I have a few questions during the porting:
-> 
-> - control->queue, which the herton's change used, for switching between 4 tramission queue at end point 6,7,5,4, has disappeared. I hard-coded 6 in this version, (see commemt #37 for background), but what's the correct
-> way to do this in current wireless-2.6 code?
-> 
-> - compat-wireless seems to use a small inlined routine 
-> from http://article.gmane.org/gmane.linux.kernel.wireless.general/15830,
-> which isn't in the redhat header yet. so I have added an ifndef at
-> the top of rtl8187_dev.c . so the patch needs to have that part removed
-> if commited to compat-wireless.
-> 
-> - obviously it is getting a bit painful to forward-port the patch every time something else changes or something else changes in the header... 
-> what can I do to make this go into wireless-2.6 ?
+This adds debugfs files for reading and writing arbitrary
+wireless core registers. This is useful for debugging.
 
-ACK, same here. I'm an owner of a 'One A110' mini-laptop (see
-http://a110wiki.de/wiki/Wireless) and the situation is really getting
-uncontrollable with a gazillion of tarballs and patches for the R8187B
-driver floating around, all of them with small differences...
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-(the ID on this laptop is 0bda:8189 btw)
+---
 
-I'm very interested to see something get merged upstream, and I'm also
-willing to test whatever needs testing on my hardware.
+John, please have a nice vacation and queue this for 2.6.27, if you are bored. :P
 
 
-Thanks, Uwe.
--- 
-http://www.hermann-uwe.de  | http://www.holsham-traders.de
-http://www.crazy-hacks.org | http://www.unmaintained-free-software.org
+Index: wireless-testing/drivers/net/wireless/b43/debugfs.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/debugfs.c	2008-06-15 15:48:05.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/debugfs.c	2008-06-18 23:57:39.000000000 +0200
+@@ -71,12 +71,121 @@ struct b43_dfs_file * fops_to_dfs_file(s
+ 					  fmt , ##x);		\
+ 		else						\
+ 			printk(KERN_ERR "b43: fappend overflow\n"); \
+ 	} while (0)
+ 
+ 
++/* The biggest MMIO address that we allow access to from the debugfs files. */
++#define B43_MAX_MMIO_ACCESS	(0xF00 - 1)
++
++static ssize_t mmio16read__read_file(struct b43_wldev *dev,
++				     char *buf, size_t bufsize)
++{
++	ssize_t count = 0;
++	unsigned int addr;
++	u16 val;
++
++	addr = dev->dfsentry->mmio16read_next;
++	if (addr > B43_MAX_MMIO_ACCESS)
++		return -EDESTADDRREQ;
++
++	val = b43_read16(dev, addr);
++	fappend("0x%04X\n", val);
++
++	return count;
++}
++
++static int mmio16read__write_file(struct b43_wldev *dev,
++				  const char *buf, size_t count)
++{
++	unsigned int addr;
++	int res;
++
++	res = sscanf(buf, "0x%X", &addr);
++	if (res != 1)
++		return -EINVAL;
++	if (addr > B43_MAX_MMIO_ACCESS)
++		return -EADDRNOTAVAIL;
++
++	dev->dfsentry->mmio16read_next = addr;
++
++	return 0;
++}
++
++static int mmio16write__write_file(struct b43_wldev *dev,
++				   const char *buf, size_t count)
++{
++	unsigned int addr, val;
++	int res;
++
++	res = sscanf(buf, "0x%X = 0x%X", &addr, &val);
++	if (res != 2)
++		return -EINVAL;
++	if (addr > B43_MAX_MMIO_ACCESS)
++		return -EADDRNOTAVAIL;
++	if (val > 0xFFFF)
++		return -E2BIG;
++
++	b43_write16(dev, addr, val);
++
++	return 0;
++}
++
++static ssize_t mmio32read__read_file(struct b43_wldev *dev,
++				     char *buf, size_t bufsize)
++{
++	ssize_t count = 0;
++	unsigned int addr;
++	u32 val;
++
++	addr = dev->dfsentry->mmio32read_next;
++	if (addr > B43_MAX_MMIO_ACCESS)
++		return -EDESTADDRREQ;
++
++	val = b43_read32(dev, addr);
++	fappend("0x%08X\n", val);
++
++	return count;
++}
++
++static int mmio32read__write_file(struct b43_wldev *dev,
++				  const char *buf, size_t count)
++{
++	unsigned int addr;
++	int res;
++
++	res = sscanf(buf, "0x%X", &addr);
++	if (res != 1)
++		return -EINVAL;
++	if (addr > B43_MAX_MMIO_ACCESS)
++		return -EADDRNOTAVAIL;
++
++	dev->dfsentry->mmio32read_next = addr;
++
++	return 0;
++}
++
++static int mmio32write__write_file(struct b43_wldev *dev,
++				   const char *buf, size_t count)
++{
++	unsigned int addr, val;
++	int res;
++
++	res = sscanf(buf, "0x%X = 0x%X", &addr, &val);
++	if (res != 2)
++		return -EINVAL;
++	if (addr > B43_MAX_MMIO_ACCESS)
++		return -EADDRNOTAVAIL;
++	if (val > 0xFFFFFFFF)
++		return -E2BIG;
++
++	b43_write32(dev, addr, val);
++
++	return 0;
++}
++
+ /* wl->irq_lock is locked */
+ static ssize_t tsf_read_file(struct b43_wldev *dev,
+ 			     char *buf, size_t bufsize)
+ {
+ 	ssize_t count = 0;
+ 	u64 tsf;
+@@ -493,12 +602,16 @@ out_unlock:
+ 		},						\
+ 		.file_struct_offset = offsetof(struct b43_dfsentry, \
+ 					       file_##name),	\
+ 		.take_irqlock	= _take_irqlock,		\
+ 	}
+ 
++B43_DEBUGFS_FOPS(mmio16read, mmio16read__read_file, mmio16read__write_file, 1);
++B43_DEBUGFS_FOPS(mmio16write, NULL, mmio16write__write_file, 1);
++B43_DEBUGFS_FOPS(mmio32read, mmio32read__read_file, mmio32read__write_file, 1);
++B43_DEBUGFS_FOPS(mmio32write, NULL, mmio32write__write_file, 1);
+ B43_DEBUGFS_FOPS(tsf, tsf_read_file, tsf_write_file, 1);
+ B43_DEBUGFS_FOPS(ucode_regs, ucode_regs_read_file, NULL, 1);
+ B43_DEBUGFS_FOPS(shm, shm_read_file, NULL, 1);
+ B43_DEBUGFS_FOPS(txstat, txstat_read_file, NULL, 0);
+ B43_DEBUGFS_FOPS(txpower_g, txpower_g_read_file, txpower_g_write_file, 0);
+ B43_DEBUGFS_FOPS(restart, NULL, restart_write_file, 1);
+@@ -581,24 +694,31 @@ void b43_debugfs_add_device(struct b43_w
+ 		dev->dfsentry = NULL;
+ 		kfree(log->log);
+ 		kfree(e);
+ 		return;
+ 	}
+ 
++	e->mmio16read_next = 0xFFFF; /* invalid address */
++	e->mmio32read_next = 0xFFFF; /* invalid address */
++
+ #define ADD_FILE(name, mode)	\
+ 	do {							\
+ 		struct dentry *d;				\
+ 		d = debugfs_create_file(__stringify(name),	\
+ 					mode, e->subdir, dev,	\
+ 					&fops_##name.fops);	\
+ 		e->file_##name.dentry = NULL;			\
+ 		if (!IS_ERR(d))					\
+ 			e->file_##name.dentry = d;		\
+ 	} while (0)
+ 
+ 
++	ADD_FILE(mmio16read, 0600);
++	ADD_FILE(mmio16write, 0200);
++	ADD_FILE(mmio32read, 0600);
++	ADD_FILE(mmio32write, 0200);
+ 	ADD_FILE(tsf, 0600);
+ 	ADD_FILE(ucode_regs, 0400);
+ 	ADD_FILE(shm, 0400);
+ 	ADD_FILE(txstat, 0400);
+ 	ADD_FILE(txpower_g, 0600);
+ 	ADD_FILE(restart, 0200);
+@@ -617,12 +737,16 @@ void b43_debugfs_remove_device(struct b4
+ 		return;
+ 	e = dev->dfsentry;
+ 	if (!e)
+ 		return;
+ 	b43_remove_dynamic_debug(dev);
+ 
++	debugfs_remove(e->file_mmio16read.dentry);
++	debugfs_remove(e->file_mmio16write.dentry);
++	debugfs_remove(e->file_mmio32read.dentry);
++	debugfs_remove(e->file_mmio32write.dentry);
+ 	debugfs_remove(e->file_tsf.dentry);
+ 	debugfs_remove(e->file_ucode_regs.dentry);
+ 	debugfs_remove(e->file_shm.dentry);
+ 	debugfs_remove(e->file_txstat.dentry);
+ 	debugfs_remove(e->file_txpower_g.dentry);
+ 	debugfs_remove(e->file_restart.dentry);
+Index: wireless-testing/drivers/net/wireless/b43/debugfs.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/debugfs.h	2008-06-15 15:48:05.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/debugfs.h	2008-06-18 23:20:41.000000000 +0200
+@@ -33,22 +33,31 @@ struct b43_dfs_file {
+ };
+ 
+ struct b43_dfsentry {
+ 	struct b43_wldev *dev;
+ 	struct dentry *subdir;
+ 
++	struct b43_dfs_file file_mmio16read;
++	struct b43_dfs_file file_mmio16write;
++	struct b43_dfs_file file_mmio32read;
++	struct b43_dfs_file file_mmio32write;
+ 	struct b43_dfs_file file_tsf;
+ 	struct b43_dfs_file file_ucode_regs;
+ 	struct b43_dfs_file file_shm;
+ 	struct b43_dfs_file file_txstat;
+ 	struct b43_dfs_file file_txpower_g;
+ 	struct b43_dfs_file file_restart;
+ 	struct b43_dfs_file file_loctls;
+ 
+ 	struct b43_txstatus_log txstatlog;
+ 
++	/* The cached address for the next mmio16read file read */
++	u16 mmio16read_next;
++	/* The cached address for the next mmio32read file read */
++	u16 mmio32read_next;
++
+ 	/* Enabled/Disabled list for the dynamic debugging features. */
+ 	u32 dyn_debug[__B43_NR_DYNDBG];
+ 	/* Dentries for the dynamic debugging entries. */
+ 	struct dentry *dyn_debug_dentries[__B43_NR_DYNDBG];
+ };
+ 
