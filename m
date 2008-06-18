@@ -1,43 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.234]:21994 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751461AbYFEIyh (ORCPT
+Received: from durandal.kismetwireless.net ([199.201.145.179]:44216 "EHLO
+	durandal.nerv-un.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752212AbYFRPkx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2008 04:54:37 -0400
-Received: by rv-out-0506.google.com with SMTP id l9so603779rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2008 01:54:36 -0700 (PDT)
-Message-ID: <1ba2fa240806050154w6bee2f08n80031e09ac12e9ed@mail.gmail.com> (sfid-20080605_105441_182074_EE595416)
-Date: Thu, 5 Jun 2008 11:54:36 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Lukas Hejtmanek" <xhejtman@ics.muni.cz>
-Subject: Re: Page allocation failure in 2.6.26-rc2 (iwl4965 driver)
-Cc: "maximilian attems" <max@stro.at>, linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240806041209i5e3fbb35r5667314ea9417379@mail.gmail.com>
+	Wed, 18 Jun 2008 11:40:53 -0400
+Date: Wed, 18 Jun 2008 11:41:10 -0400
+From: Mike Kershaw <dragorn@kismetwireless.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: More 4965 woes
+Message-ID: <20080618154109.GB15170@drd1813.lan> (sfid-20080618_174056_427540_F792B1E4)
+Reply-To: Mike Kershaw <dragorn@kismetwireless.net>
+References: <20080617132401.GA8328@drd1813.lan> <1213781294.2625.52.camel@debian.sh.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080604130307.GN5012@ics.muni.cz>
-	 <20080604130452.GD9258@baikonur.stro.at>
-	 <20080604185743.GQ5012@ics.muni.cz>
-	 <1ba2fa240806041209i5e3fbb35r5667314ea9417379@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="xgyAXRrhYN0wYx8y"
+In-Reply-To: <1213781294.2625.52.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 4, 2008 at 10:09 PM, Tomas Winkler <tomasw@gmail.com> wrote:
-> 2008/6/4 Lukas Hejtmanek <xhejtman@ics.muni.cz>:
->> On Wed, Jun 04, 2008 at 03:04:52PM +0200, maximilian attems wrote:
->>> similar with 2.6.25-rc3-git7 not a regression. happens for me since
->>> early merge of iwlwifi after several resume and suspend cycles + mem
->>> pressure.
->>
->> Jiri Slaby suggested that the iwl driver should not try to alloc 64kB (order
->> 4) using kalloc but vmalloc should be used instead. While not understanding
->> iwl driver internals, I cannot say whether it can be replaced per se.
->>
->
-> We my try it but the problem is somewhere else.
 
-Actually I've already posted the patch that fixes allocation. It' just
-not in rc2
-http://marc.info/?l=linux-wireless&m=121205035427353&w=2
+--xgyAXRrhYN0wYx8y
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Tomas
+On Wed, Jun 18, 2008 at 05:28:14PM +0800, Zhu Yi wrote:
+> On Tue, 2008-06-17 at 09:24 -0400, Mike Kershaw wrote:
+> > 1 - Inability to associate to a network on 5ghz.  Same AP on 2.4ghz
+> >   works fine, scanning shows the AP fine.  Sniffing with an additional
+> >   card shows no frames at all being sent by the 4965. AP is on a
+> > channel
+> >   the 4965 should be able to talk to according to iwlist channel (logs
+> > attached)
+>=20
+> >From the log, you are trying to use channel 56 which is under radar
+> detection. The card must hear from the AP first in order to send. Can
+> you try 36?=20
+
+Must hear from the AP?  Like, beacons?  If beacons aren't enough, how is
+something ever supposed to associate?
+
+The AP is detected normally via scanning (wpa_supplicant 'scan' and
+iwlist scan) so the card is seeing beacons fine.
+
+I'll reboot into the git kernel later today and redo the test on another
+channel.
+
+> > 3 - Making a monitor mode vap causes a deadlock.  No logs, because the
+> >   system locks hard, no caps lock LED, no sysreq.  Monitoring with
+> >   tcpdump works for about 3 seconds, then boom.
+>=20
+> Did you create the monitor interface via 'iw' or 'iwconfig mode
+> monitor'?
+
+In this test, 'iw'.  I got about 3 seconds of packets from different
+channels while trying to associate on 56 (I assume because the card was
+doing a scan) and then the system locked.
+
+-m
+
+--=20
+Mike Kershaw/Dragorn <dragorn@kismetwireless.net>
+GPG Fingerprint: 3546 89DF 3C9D ED80 3381  A661 D7B2 8822 738B BDB1
+
+Bus Error at 008BE426 while reading byte from DEADBEEF in User data space
+
+
+--xgyAXRrhYN0wYx8y
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEARECAAYFAkhZLJUACgkQ17KIInOLvbEyAgCfcGyf06dWpbSR0poUCboWj2Di
+O+gAniys2He3bwMYOnV7FA09+9PHiVO1
+=PAMK
+-----END PGP SIGNATURE-----
+
+--xgyAXRrhYN0wYx8y--
