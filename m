@@ -1,127 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:21779 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753857AbYF1Sjg (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34927 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751671AbYFRPhw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 14:39:36 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so259538nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 11:39:35 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: proski@gnu.org, orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-Subject: [RFC PATCH 15/19] orinoco: Use a macro to define wireless handlers
-Date: Sat, 28 Jun 2008 19:38:21 +0100
-Message-Id: <1214678305-7057-16-git-send-email-kilroyd@gmail.com> (sfid-20080628_210814_411022_569F5072)
-In-Reply-To: <1214678305-7057-15-git-send-email-kilroyd@gmail.com>
-References: <1214678305-7057-1-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-2-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-3-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-4-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-5-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-6-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-7-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-8-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-9-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-10-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-11-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-12-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-13-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-14-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-15-git-send-email-kilroyd@gmail.com>
-From: kilroyd@googlemail.com
+	Wed, 18 Jun 2008 11:37:52 -0400
+Subject: Re: [PATCH 2/2] mac80211: add spectrum capabilities
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1213800824-32107-2-git-send-email-tomas.winkler@intel.com>
+References: <1213800824-32107-1-git-send-email-tomas.winkler@intel.com>
+	 <1213800824-32107-2-git-send-email-tomas.winkler@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fs161osdBjvI0XFu2i+v"
+Date: Wed, 18 Jun 2008 17:37:11 +0200
+Message-Id: <1213803431.1312.24.camel@johannes.berg> (sfid-20080618_173755_197115_54C6AEA5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The macro identifiers for the various ioctls required for WPA support
-are longer than those currently used by the driver. This makes it messy
-to keep line length below 80 character.
 
-By defining a macro to initialise the handler table, we recover the
-common text.
+--=-fs161osdBjvI0XFu2i+v
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: David Kilroy <kilroyd@gmail>
----
- drivers/net/wireless/orinoco.c |   66 ++++++++++++++++++++-------------------
- 1 files changed, 34 insertions(+), 32 deletions(-)
+On Wed, 2008-06-18 at 17:53 +0300, Tomas Winkler wrote:
+> This patch add spectrum capability and required information
+> elements to association request providing AP has requested it and
+> it is supported by the driver
 
-diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
-index 1ae78b0..951d0f7 100644
---- a/drivers/net/wireless/orinoco.c
-+++ b/drivers/net/wireless/orinoco.c
-@@ -5036,39 +5036,41 @@ static const struct iw_priv_args orinoco_privtab[] = {
-  * Structures to export the Wireless Handlers
-  */
- 
-+#define STD_IW_HANDLER(id, func) \
-+	[IW_IOCTL_IDX(id)] = (iw_handler) func
- static const iw_handler	orinoco_handler[] = {
--	[SIOCSIWCOMMIT-SIOCIWFIRST] = (iw_handler) orinoco_ioctl_commit,
--	[SIOCGIWNAME  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getname,
--	[SIOCSIWFREQ  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setfreq,
--	[SIOCGIWFREQ  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getfreq,
--	[SIOCSIWMODE  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setmode,
--	[SIOCGIWMODE  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getmode,
--	[SIOCSIWSENS  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setsens,
--	[SIOCGIWSENS  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getsens,
--	[SIOCGIWRANGE -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getiwrange,
--	[SIOCSIWSPY   -SIOCIWFIRST] = (iw_handler) iw_handler_set_spy,
--	[SIOCGIWSPY   -SIOCIWFIRST] = (iw_handler) iw_handler_get_spy,
--	[SIOCSIWTHRSPY-SIOCIWFIRST] = (iw_handler) iw_handler_set_thrspy,
--	[SIOCGIWTHRSPY-SIOCIWFIRST] = (iw_handler) iw_handler_get_thrspy,
--	[SIOCSIWAP    -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setwap,
--	[SIOCGIWAP    -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getwap,
--	[SIOCSIWSCAN  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setscan,
--	[SIOCGIWSCAN  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getscan,
--	[SIOCSIWESSID -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setessid,
--	[SIOCGIWESSID -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getessid,
--	[SIOCSIWNICKN -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setnick,
--	[SIOCGIWNICKN -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getnick,
--	[SIOCSIWRATE  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setrate,
--	[SIOCGIWRATE  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getrate,
--	[SIOCSIWRTS   -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setrts,
--	[SIOCGIWRTS   -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getrts,
--	[SIOCSIWFRAG  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setfrag,
--	[SIOCGIWFRAG  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getfrag,
--	[SIOCGIWRETRY -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getretry,
--	[SIOCSIWENCODE-SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setiwencode,
--	[SIOCGIWENCODE-SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getiwencode,
--	[SIOCSIWPOWER -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setpower,
--	[SIOCGIWPOWER -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getpower,
-+	STD_IW_HANDLER(SIOCSIWCOMMIT,	orinoco_ioctl_commit),
-+	STD_IW_HANDLER(SIOCGIWNAME,	orinoco_ioctl_getname),
-+	STD_IW_HANDLER(SIOCSIWFREQ,	orinoco_ioctl_setfreq),
-+	STD_IW_HANDLER(SIOCGIWFREQ,	orinoco_ioctl_getfreq),
-+	STD_IW_HANDLER(SIOCSIWMODE,	orinoco_ioctl_setmode),
-+	STD_IW_HANDLER(SIOCGIWMODE,	orinoco_ioctl_getmode),
-+	STD_IW_HANDLER(SIOCSIWSENS,	orinoco_ioctl_setsens),
-+	STD_IW_HANDLER(SIOCGIWSENS,	orinoco_ioctl_getsens),
-+	STD_IW_HANDLER(SIOCGIWRANGE,	orinoco_ioctl_getiwrange),
-+	STD_IW_HANDLER(SIOCSIWSPY,	iw_handler_set_spy),
-+	STD_IW_HANDLER(SIOCGIWSPY,	iw_handler_get_spy),
-+	STD_IW_HANDLER(SIOCSIWTHRSPY,	iw_handler_set_thrspy),
-+	STD_IW_HANDLER(SIOCGIWTHRSPY,	iw_handler_get_thrspy),
-+	STD_IW_HANDLER(SIOCSIWAP,	orinoco_ioctl_setwap),
-+	STD_IW_HANDLER(SIOCGIWAP,	orinoco_ioctl_getwap),
-+	STD_IW_HANDLER(SIOCSIWSCAN,	orinoco_ioctl_setscan),
-+	STD_IW_HANDLER(SIOCGIWSCAN,	orinoco_ioctl_getscan),
-+	STD_IW_HANDLER(SIOCSIWESSID,	orinoco_ioctl_setessid),
-+	STD_IW_HANDLER(SIOCGIWESSID,	orinoco_ioctl_getessid),
-+	STD_IW_HANDLER(SIOCSIWNICKN,	orinoco_ioctl_setnick),
-+	STD_IW_HANDLER(SIOCGIWNICKN,	orinoco_ioctl_getnick),
-+	STD_IW_HANDLER(SIOCSIWRATE,	orinoco_ioctl_setrate),
-+	STD_IW_HANDLER(SIOCGIWRATE,	orinoco_ioctl_getrate),
-+	STD_IW_HANDLER(SIOCSIWRTS,	orinoco_ioctl_setrts),
-+	STD_IW_HANDLER(SIOCGIWRTS,	orinoco_ioctl_getrts),
-+	STD_IW_HANDLER(SIOCSIWFRAG,	orinoco_ioctl_setfrag),
-+	STD_IW_HANDLER(SIOCGIWFRAG,	orinoco_ioctl_getfrag),
-+	STD_IW_HANDLER(SIOCGIWRETRY,	orinoco_ioctl_getretry),
-+	STD_IW_HANDLER(SIOCSIWENCODE,	orinoco_ioctl_setiwencode),
-+	STD_IW_HANDLER(SIOCGIWENCODE,	orinoco_ioctl_getiwencode),
-+	STD_IW_HANDLER(SIOCSIWPOWER,	orinoco_ioctl_setpower),
-+	STD_IW_HANDLER(SIOCGIWPOWER,	orinoco_ioctl_getpower),
- };
- 
- 
--- 
-1.5.4.5
+Why bother splitting this up into two patches, the Kconfig option isn't
+even being used?
+
+> +		if ((bss->capability & WLAN_CAPABILITY_SPECTRUM_MGMT) &&
+> +		    (local->hw.flags & IEEE80211_HW_SPECTRUM_MGMT))
+> +			capab |=3D WLAN_CAPABILITY_SPECTRUM_MGMT;
+
+Why do we need a hardware capability flag for this? The only thing you
+seem to be doing with it is determine whether to send the power
+capability IE?
+
+Will you follow up with more patches to enable radar detection and
+things like that, and shouldn't we merge that as one series? This looks
+sane enough, but it seems hard to judge whether or not it's actually the
+best way to do things.
+
+What else will depend on the hw capability flag?
+
+[and yes, I should read 11h/-2007 again]
+
+johannes
+
+--=-fs161osdBjvI0XFu2i+v
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIWSukAAoJEKVg1VMiehFYzbkP/i8W3c8Vfn/YpCHkGiREikU5
+KkA5gnNYtceWXKV6rldMUODp3+Oi093xkim/WNbOUQqGj6Os8dE0KBPmy9IrQKRk
+VXTQMe8iwz4JWCl1QRJ1AtzKja0aPiFNNRCqs0y/kWc88dN1hxVQT5SZA/vbWKZw
+7JePXw3ngfKF6tanfsNLZsO3UaSEVZL6jHTCex+jeVHbeP0a2EC/9nTJdYiQ7lla
+Mw1Zmf6z7d2kZeA0+Lv0BIRkxgwiazE8rXPIBKrh2vnX6ft5vuQM0/M3AL0oCgXS
+qphcSJ3CRAkX1j7g2TezmNWmhYSvzBFpSmgcBbxyfyQ48VJczct1xC8d4Ew4U967
+iJzAUPXk7a+B45L1+trDMW/FM1/HccLM8BMpXd5LLTjPldNYldU1RCRNVKkIOhB1
+49PvigZMUM7x9yB0QsGlLlvxHXS/me1qm3jUifH5n5NS8ouBSMR69ja0knx6bOPu
+ERLnw+dUAdfQAt04NjT12dbOVQv5WwHi5Vvypop2B8si9GUEfjDMUfQ4nkw9XvVz
+SznYixRf46EkpXtNL4DQmkhx5NKbUmMfhpw5Sik38RnMgK5cZ85ZPThgaWZLcsEl
+WX9Im9kcimOIUagixGh773E5TW/PmZZ9n1Z8VdSxUp0DQpSalRWU4104oz7Hsd+x
+tAbWCpFJuz1adlE0kFvo
+=hW3y
+-----END PGP SIGNATURE-----
+
+--=-fs161osdBjvI0XFu2i+v--
 
