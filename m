@@ -1,116 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:61663 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755249AbYF1Hm7 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46623 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753346AbYFRVSP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 03:42:59 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so215843nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 00:42:57 -0700 (PDT)
-Message-ID: <f6ca9fed0806280042o21101cb1v56f6ea5f7adbe331@mail.gmail.com> (sfid-20080628_094349_914705_804CE6DC)
-Date: Sat, 28 Jun 2008 09:42:57 +0200
-From: drago01 <drago01@gmail.com>
-To: "Linux Wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] iwlwifi: add support for RFKILL_STATE_HARD_BLOCKED
-Cc: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
-	"Zhu, Yi" <yi.zhu@intel.com>, "Dan Williams" <dcbw@redhat.com>,
-	"Tomas Winkler" <tomas.winkler@intel.com>,
-	"Ivo van Doorn" <ivdoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 18 Jun 2008 17:18:15 -0400
+Subject: Re: [PATCH 2/2] mac80211: add spectrum capabilities
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240806181411j15544134ga55607c394ff5db7@mail.gmail.com> (sfid-20080618_231111_448703_F8563F8D)
+References: <1213800824-32107-1-git-send-email-tomas.winkler@intel.com>
+	 <1213800824-32107-2-git-send-email-tomas.winkler@intel.com>
+	 <1213803431.1312.24.camel@johannes.berg>
+	 <1ba2fa240806180917i320fac4bxcfd7416349850bff@mail.gmail.com>
+	 <1213809824.1312.34.camel@johannes.berg>
+	 <1ba2fa240806181411j15544134ga55607c394ff5db7@mail.gmail.com>
+	 (sfid-20080618_231111_448703_F8563F8D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-baJMchI7YcLNqBNdpIIW"
+Date: Wed, 18 Jun 2008 23:17:32 +0200
+Message-Id: <1213823853.1312.37.camel@johannes.berg> (sfid-20080618_231819_228676_BD7B34FD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The attached patch fixes iwlwifi to set the rfkill state to
-RFKILL_STATE_HARD_BLOCKED when the device is disabled by the hardware
-rfkill.
 
----------------
+--=-baJMchI7YcLNqBNdpIIW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-This patch fixes the rfkill states to set RFKILL_STATE_HARD_BLOCKED when the
-radio is disabled by a hardware killswitch.
-It does not allow setting the sw state while the device is blocked by
-a hardware rfkill switch.
 
-Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+> Yes, this is handled by firmware, What is important is to make switch
+> on beacon edge.
+> Still our implementation uses also timer in mac rather then some mac
+> to driver over complicated synchronization.
+> Other thing is that the firmware enforce the switching, traffic on the
+> old channel is not allowed after the switch.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h
-b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 2838093..ad479f3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -349,10 +349,19 @@ static inline int iwl_is_init(struct iwl_priv *priv)
- 	return test_bit(STATUS_INIT, &priv->status);
- }
+Yeah, ok. As for enforcing the traffic, true as well. However, I'd like
+mac80211 to help out with this for those drivers that don't do it all in
+firmware (all others, I'd assume); it's not overly important that you
+switch instantly after receiving the switch beacon, if you take a bit
+longer to do that you'll just potentially miss a few packets. No big
+deal.
 
-+static inline int iwl_is_rfkill_sw(struct iwl_priv *priv)
-+{
-+	return test_bit(STATUS_RF_KILL_SW, &priv->status);
-+}
-+
-+static inline int iwl_is_rfkill_hw(struct iwl_priv *priv)
-+{
-+	return test_bit(STATUS_RF_KILL_HW, &priv->status);
-+}
-+
- static inline int iwl_is_rfkill(struct iwl_priv *priv)
- {
--	return test_bit(STATUS_RF_KILL_HW, &priv->status) ||
--	       test_bit(STATUS_RF_KILL_SW, &priv->status);
-+	return iwl_is_rfkill_sw(priv) || iwl_is_rfkill_hw(priv);
- }
+> > Also, does your firmware implement full radar detection? Broadcom and
+> > Atheros hardware seem to only pass information about pulse edges up to
+> > the driver (in different ways, obviously) and pulse/radar detection
+> > needs to be done in software, I'd like that to be somehow shareable.
+> >
+> iwl drivers were designed for laptop marked mostly unlike like other
+> vendors that plays in AP market so the radar awareness is in slave
+> mode. I think the hw actually support radar detection but I'm not sure
+> it was ever employed in a product.
 
- static inline int iwl_is_ready_rf(struct iwl_priv *priv)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-index ffefbb4..b75813e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-@@ -53,22 +53,23 @@ static int iwl_rfkill_soft_rf_kill(void *data,
-enum rfkill_state state)
- 	IWL_DEBUG_RF_KILL("we recieved soft RFKILL set to state %d\n", state);
- 	mutex_lock(&priv->mutex);
+Oh, right, ok.
 
-+	if (iwl_is_rfkill_hw(priv)) {
-+		err = -EBUSY;
-+		goto out;
-+	}
-+
- 	switch (state) {
- 	case RFKILL_STATE_UNBLOCKED:
- 		iwl_radio_kill_sw_enable_radio(priv);
--		/* if HW rf-kill is set dont allow ON state */
--		if (iwl_is_rfkill(priv))
--			err = -EBUSY;
- 		break;
- 	case RFKILL_STATE_SOFT_BLOCKED:
- 		iwl_radio_kill_sw_disable_radio(priv);
--		if (!iwl_is_rfkill(priv))
--			err = -EBUSY;
- 		break;
- 	default:
- 		IWL_WARNING("we recieved unexpected RFKILL state %d\n", state);
- 		break;
- 	}
-+out:
- 	mutex_unlock(&priv->mutex);
+johannes
 
- 	return err;
-@@ -177,9 +178,14 @@ void iwl_rfkill_set_hw_state(struct iwl_priv *priv)
- 	if (!priv->rfkill_mngr.rfkill)
- 		return;
+--=-baJMchI7YcLNqBNdpIIW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--	if (!iwl_is_rfkill(priv))
--		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_ON;
-+	if (iwl_is_rfkill_hw(priv)) {
-+		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_HARD_BLOCKED;
-+		return;
-+	}
-+
-+	if (!iwl_is_rfkill_sw(priv))
-+		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_UNBLOCKED;
- 	else
--		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_OFF;
-+		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_BLOCKED;
- }
- EXPORT_SYMBOL(iwl_rfkill_set_hw_state);
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIWXtpAAoJEKVg1VMiehFY1c0QAJBc4ylhsfuRVfZfAbafMwvk
+4A1WRut1/SgTLCbFJZS8FOVOVWgDGN488caqTj+grcCuTFbpa8TjVnJZBzepTNaV
+H9wY3UDuGZsiDIeIiwASRTFA3pTfpYuSc3/zwhC3jaOcp+ynHdxC9hGcDMfPL+lb
+xkivtOg5tsx35hrYCJXbEjWYekYxxiMZ0le9ZiOy77phy+XcQfmPSvw2s3r3uvZt
+Ol+GKRgknm+OOkeFMuCwmm/hgEPtKj0LmRDuB9f1fI5DhD4hICmZqNlM8uGVLfY2
+lk+eptXWlJl2O+wXf0zxIwy5aoN+NcQsg3Vko/oV7WmUirT3Rd3N+e2rlBAZaLqo
+Lda+jZWWFpVuE5P2gaK7vznJm2qSNK2qIpi1r0C00vetufWVbZD5P1IOAL8Zjb5J
+JD+yj9LGV59tHZq2YmZusbcC6PP/GRmngBMkfMSQwnkxvm3ny1wuisUjCHD36w0n
+5+UWzBzWhnZRvi+aNH1OV/T6abOjS2n6EJyiaUcWKRCUQMnnhvYSXVJhSs3k72DY
+iFest2Ecig/E7bVxKIdYf+fOdAy3gQlLRAkmN9AwucXWg+vcT3HY3nJGafyrjiFT
+yBj8H1Mi1S3oYgFCaSQp1KS2BSd9m79K+Pcj8K6VL/ZqQXFHLxz0ZlZqyunZ+fgy
+evUx0x2WJH93WaAyD+1q
+=gHxW
+-----END PGP SIGNATURE-----
+
+--=-baJMchI7YcLNqBNdpIIW--
+
