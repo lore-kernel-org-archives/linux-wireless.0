@@ -1,124 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:63671 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752028AbYF1IPH (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44881 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752259AbYFRKHg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 04:15:07 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so217731nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 01:15:05 -0700 (PDT)
-Message-ID: <f6ca9fed0806280115o409136a0x20b2109c25330b63@mail.gmail.com> (sfid-20080628_101513_005681_F91C2B11)
-Date: Sat, 28 Jun 2008 10:15:05 +0200
-From: drago01 <drago01@gmail.com>
-To: "Linux Wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] iwl3945: add support for RFKILL_STATE_HARD_BLOCKED
-Cc: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
-	"Ivo van Doorn" <ivdoorn@gmail.com>, "Zhu, Yi" <yi.zhu@intel.com>,
-	"Tomas Winkler" <tomas.winkler@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Dan Williams" <dcbw@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 18 Jun 2008 06:07:36 -0400
+Subject: Re: [Bug 451804] New: kernel: KERNEL: assertion (flags & MSG_PEEK)
+	failed at net/ipv4/tcp.c (1354)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: davej@codemonkey.org.uk, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080617.223555.226018311.davem@davemloft.net> (sfid-20080618_073601_309997_A9751720)
+References: <20080617144056.GA19275@codemonkey.org.uk>
+	 <20080617.223555.226018311.davem@davemloft.net>
+	 (sfid-20080618_073601_309997_A9751720)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OGqx8/vz4iEkoenMpYwD"
+Date: Wed, 18 Jun 2008 12:06:44 +0200
+Message-Id: <1213783604.1312.4.camel@johannes.berg> (sfid-20080618_120752_178753_987CDB44)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes iwl3945 to use the new rfkill states and set the
-state to RFKILL_STATE_HARD_BLOCKED when the device is blocked by the
-hardware killswitch.
-This patch depends on the rfkill subsystem patch for iwl3945.
--------
-This patch fixes the rfkill states to set RFKILL_STATE_HARD_BLOCKED when the
-radio is disabled by a hardware killswitch.
-It does not allow setting the sw state while the device is blocked by
-a hardware rfkill switch.
 
-Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+--=-OGqx8/vz4iEkoenMpYwD
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 43cb8ff..f390b96 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -537,10 +537,20 @@ static inline int iwl3945_is_init(struct
-iwl3945_priv *priv)
- 	return test_bit(STATUS_INIT, &priv->status);
- }
+On Tue, 2008-06-17 at 22:35 -0700, David Miller wrote:
+> From: Dave Jones <davej@codemonkey.org.uk>
+> Date: Tue, 17 Jun 2008 10:40:56 -0400
+>=20
+> > This one been reported yet ?
+>=20
+> Looks to be an ath5k specific problem based upon other
+> reports I was able to find.
+>=20
+> For example, have a look at the "Transfers stall with ath5k
+> on compat-wireless drivers" thread on the ath5k-devel list:
+>=20
+> http://kerneltrap.org/mailarchive/linux-ath5k-devel/2008/6/4/2028874
 
-+static inline int iwl3945_is_rfkill_sw(struct iwl3945_priv *priv)
-+{
-+	return test_bit(STATUS_RF_KILL_SW, &priv->status);
-+}
-+
-+static inline int iwl3945_is_rfkill_hw(struct iwl3945_priv *priv)
-+{
-+	return test_bit(STATUS_RF_KILL_HW, &priv->status);
-+}
-+
- static inline int iwl3945_is_rfkill(struct iwl3945_priv *priv)
- {
--	return test_bit(STATUS_RF_KILL_HW, &priv->status) ||
--	       test_bit(STATUS_RF_KILL_SW, &priv->status);
-+	return iwl3945_is_rfkill_hw(priv) ||
-+		iwl3945_is_rfkill_sw(priv);
- }
+Maybe that's also just a variation of the header clone bug? ath5k also
+needs sw crypto.
 
- static inline int iwl3945_is_ready_rf(struct iwl3945_priv *priv)
-@@ -8298,19 +8308,23 @@ static int iwl3945_rfkill_soft_rf_kill(void
-*data, enum rfkill_state state)
- 	IWL_DEBUG_RF_KILL("we recieved soft RFKILL set to state %d\n", state);
- 	mutex_lock(&priv->mutex);
+johannes
 
-+	if (iwl3945_is_rfkill_hw(priv)) {
-+		err = -EBUSY;
-+		goto out;
-+	}
-+
- 	switch (state) {
--	case RFKILL_STATE_ON:
-+	case RFKILL_STATE_UNBLOCKED:
- 		iwl3945_radio_kill_sw(priv, 0);
--		/* if HW rf-kill is set dont allow ON state */
--		if (iwl3945_is_rfkill(priv))
--			err = -EBUSY;
- 		break;
--	case RFKILL_STATE_OFF:
-+	case RFKILL_STATE_SOFT_BLOCKED:
- 		iwl3945_radio_kill_sw(priv, 1);
--		if (!iwl3945_is_rfkill(priv))
--			err = -EBUSY;
-+		break;
-+	default:
-+		IWL_WARNING("we recieved unexpected RFKILL state %d\n", state);
- 		break;
- 	}
-+out:
- 	mutex_unlock(&priv->mutex);
+--=-OGqx8/vz4iEkoenMpYwD
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
- 	return err;
-@@ -8333,7 +8347,7 @@ int iwl3945_rfkill_init(struct iwl3945_priv *priv)
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
- 	priv->rfkill_mngr.rfkill->name = priv->cfg->name;
- 	priv->rfkill_mngr.rfkill->data = priv;
--	priv->rfkill_mngr.rfkill->state = RFKILL_STATE_ON;
-+	priv->rfkill_mngr.rfkill->state = RFKILL_STATE_UNBLOCKED;
- 	priv->rfkill_mngr.rfkill->toggle_radio = iwl3945_rfkill_soft_rf_kill;
- 	priv->rfkill_mngr.rfkill->user_claim_unsupported = 1;
+iQIcBAABAgAGBQJIWN4wAAoJEKVg1VMiehFYzmcP/1lOUGkI0j8uzfCNaUijhkZG
+3KUfpK8wa7VNYyihG+p9n8pF0nfc1vKk2zDmr9AwwPJap9ewUytW/Fh2VzX9rAL2
+mi78fguGD9tcXZcTYg7rn9pr66kJyF6uxpYDZqgRzTK4ATfy5HcWR6cszG+2BzV3
+hD2ffq5irsrOgNV9RVm81jDM9ydGYwx1o8FM6iGCA+JwES2UzsrurH4oP04yffpP
+ozX+Nd0SZxOttagApYzX/Y91uTMd+fkP10ggMxbBQr/4mUo4UjOsrhZkYN0sQVtG
+gWLs7GVQS6sF9gddWHS9/lhJ6JaM6qzN5euDxS4HlmzkFms+55N/hLGQASLb9gHb
+1eHNnd8vV1Hli2d8FiZUS17BSTIv71HSGEjZfaU+xvQ3Gp6iG0d/IHeQH7zZxoVA
+IKHcxGFQRjxN1bwtQhoI0STuWszueQbDcKwE/qLcqhS95pS9RaFfCt6w9JcwRJlV
+SI2mDUAtVgc8ELpaQSFBDuXjdmF99+EfJgnzUTSZTygd8GrjdRYmiJqUqLRLFjZB
+wcjWAfXC4LO6Rm2MyrnSP1Fiph52sQd7xvg9JHncDbrqp5bnkR3sxigae7/M9NZq
+LOE2C3a6M4EbGLZvnKXPDhbX9aausWiB8JRci6gU3f2Rxy4oQn1XjQLLuWi3biyS
+35N9zos3+XsrcYu2s0P8
+=7TBL
+-----END PGP SIGNATURE-----
 
-@@ -8408,10 +8422,15 @@ void iwl3945_rfkill_set_hw_state(struct
-iwl3945_priv *priv)
- 	if (!priv->rfkill_mngr.rfkill)
- 		return;
+--=-OGqx8/vz4iEkoenMpYwD--
 
--	if (!iwl3945_is_rfkill(priv))
--		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_ON;
-+	if (iwl3945_is_rfkill_hw(priv)) {
-+		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_HARD_BLOCKED;
-+		return;
-+	}
-+
-+	if (!iwl3945_is_rfkill_sw(priv))
-+		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_UNBLOCKED;
- 	else
--		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_OFF;
-+		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
- }
- #endif
