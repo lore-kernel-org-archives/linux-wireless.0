@@ -1,100 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mbox1.netikka.net ([213.250.81.202]:36801 "EHLO
-	mbox1.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753907AbYFFMdP (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33007
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751267AbYFRI06 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2008 08:33:15 -0400
-Message-ID: <48492E85.6010307@mandriva.org> (sfid-20080606_143319_516039_68120394)
-Date: Fri, 06 Jun 2008 15:33:09 +0300
-From: Thomas Backlund <tmb@mandriva.org>
-MIME-Version: 1.0
-To: Tomas Winkler <tomasw@gmail.com>
-CC: Ian Schram <ischram@telenet.be>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwl4965 oops in 2.6.26-rc5 x86_64
-References: <4848289D.1080205@mandriva.org>	 <1ba2fa240806051103q652accf5t1bd1d94630ebea5b@mail.gmail.com>	 <48482BC3.4070402@mandriva.org> <4848482C.2080208@mandriva.org>	 <48485F12.2050908@mandriva.org> <48488878.5040708@telenet.be> <1ba2fa240806060432t73ecb318x89e877241aa6ef55@mail.gmail.com> <48492734.9080901@mandriva.org>
-In-Reply-To: <48492734.9080901@mandriva.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 18 Jun 2008 04:26:58 -0400
+Date: Wed, 18 Jun 2008 01:26:58 -0700 (PDT)
+Message-Id: <20080618.012658.264455870.davem@davemloft.net> (sfid-20080618_102703_529085_07F8B2A2)
+To: johannes@sipsolutions.net
+Cc: ilpo.jarvinen@helsinki.fi, didier@raboud.com,
+	akpm@linux-foundation.org, netdev@vger.kernel.org,
+	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [Bugme-new] [Bug 10903] New: ssh connections hang with
+ 2.6.26-rc5
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080618.010528.05757230.davem@davemloft.net>
+References: <Pine.LNX.4.64.0806180152410.32420@wrl-59.cs.helsinki.fi>
+	<1213773887.3803.158.camel@johannes.berg>
+	<20080618.010528.05757230.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thomas Backlund skrev:
-> Tomas Winkler skrev:
->> On Fri, Jun 6, 2008 at 3:44 AM, Ian Schram <ischram@telenet.be> wrote:
->>> Isn't this the Oops Joonwoo Park wanted to patch with
->>>
->>> "[PATCH] iwlwifi: fix oops on wep key insertion" 27/5/2008
->>>
->>> invalid length of webkey that would/should be handled in mac80211?
->>>
->>> ian
->>
->> Yes, it looks like.
+From: David Miller <davem@davemloft.net>
+Date: Wed, 18 Jun 2008 01:05:28 -0700 (PDT)
+
+> If we can't figure out what's going on here soon (like, in less than a
+> day) we should revert that changeset.
 > 
-> Ummm, what has a wep key to do with me trying to access a WPA2-Personal 
-> encrypted net ?
+> Actually, I think I see how the changeset might be wrong.  I think
+> the encryption layer of mac80211 assumes it can write over the
+> data area of the SKB it's working on, not just the headers.
 > 
->> Thomas can you send out your wpa_supplicant config fiele
->>
-> 
-> I could, but since I would have to remove any sensitive info such as the 
-> psk key, would it be of any use ?
+> Once this happens, any retransmits done by SKB will fail because the
+> master packet data on TCP's retransmit queue is now this encrypted
+> garbage.
 
-Anyway, here configs are:
+After some discussion about this with Johannes on IRC, we are
+absolutely convinced this is exactly the problem.
 
-wpa_supplicant.conf
-(I stripped all the comments from the file)
---- cut ---
-ctrl_interface=/var/run/wpa_supplicant
+I intend to send the following revert to Linus tonight so we
+can close this:
 
-eapol_version=1
+--------------------
+Revert "mac80211: Use skb_header_cloned() on TX path."
 
-ap_scan=1
+This reverts commit 608961a5eca8d3c6bd07172febc27b5559408c5d.
 
-fast_reauth=1
+The problem is that the mac80211 stack not only needs to be able to
+muck with the link-level headers, it also might need to mangle all of
+the packet data if doing sw wireless encryption.
 
-blob-base64-exampleblob={
-SGVsbG8gV29ybGQhCg==
-}
+This fixes kernel bugzilla #10903.  Thanks to Didier Raboud (for the
+bugzilla report), Andrew Prince (for bisecting), Johannes Berg (for
+bringing this bisection analysis to my attention), and Ilpo (for
+trying to analyze this purely from the TCP side).
 
-network={
-     psk="*************************"
-     scan_ssid=1
-     ssid="dlink"
-}
---- cut ---
+In 2.6.27 we can take another stab at this, by using something like
+skb_cow_data() when the TX path of mac80211 ends up with a non-NULL
+tx->key.  The ESP protocol code in the IPSEC stack can be used as a
+model for implementation.
 
-ifcfg-wlan0
---- cut ---
-DEVICE=wlan0
-BOOTPROTO=dhcp
-ONBOOT=yes
-METRIC=35
-MII_NOT_SUPPORTED=no
-USERCTL=no
-RESOLV_MODS=no
-WIRELESS_MODE=Managed
-WIRELESS_ESSID=dlink
-WIRELESS_ENC_KEY='s:*************************'
-WIRELESS_WPA_DRIVER=wext
-IPV6INIT=no
-IPV6TO4INIT=no
-DHCP_CLIENT=dhclient
-NEEDHOSTNAME=no
-PEERDNS=yes
-PEERYP=yes
-PEERNTPD=no
---- cut ---
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/mac80211/tx.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-> 
->> I will provide a patch that disable hw encryption on long wep keys. It
->> get lost in my todo list.
->> Tomas
->>
-> 
-
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1d7dd54..28d8bd5 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1562,13 +1562,13 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	 * be cloned. This could happen, e.g., with Linux bridge code passing
+ 	 * us broadcast frames. */
+ 
+-	if (head_need > 0 || skb_header_cloned(skb)) {
++	if (head_need > 0 || skb_cloned(skb)) {
+ #if 0
+ 		printk(KERN_DEBUG "%s: need to reallocate buffer for %d bytes "
+ 		       "of headroom\n", dev->name, head_need);
+ #endif
+ 
+-		if (skb_header_cloned(skb))
++		if (skb_cloned(skb))
+ 			I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
+ 		else
+ 			I802_DEBUG_INC(local->tx_expand_skb_head);
 -- 
-Thomas
-
+1.5.5.1.308.g1fbb5
 
