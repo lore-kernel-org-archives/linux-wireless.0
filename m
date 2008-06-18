@@ -1,118 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42690 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754939AbYFSVcB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 17:32:01 -0400
-Date: Thu, 19 Jun 2008 14:29:52 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>, Willy Tarreau <w@1wt.eu>,
-	Rodrigo Rubira Branco <rbranco@la.checkpoint.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [patch 06/15] b43: Fix noise calculation WARN_ON
-Message-ID: <20080619212952.GG20267@suse.de> (sfid-20080619_233209_306957_4656F8D3)
-References: <20080619211313.834170620@mini.kroah.org>
+Received: from fg-out-1718.google.com ([72.14.220.152]:39881 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750817AbYFRMaz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jun 2008 08:30:55 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so125475fgg.17
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jun 2008 05:30:53 -0700 (PDT)
+Message-ID: <30353c3d0806180530j745e9a19p60e2a929e52eddec@mail.gmail.com> (sfid-20080618_143100_179429_B2FA0C43)
+Date: Wed, 18 Jun 2008 08:30:53 -0400
+From: "David Ellingsworth" <david@identd.dyndns.org>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: mac80211 local_bh_enable called with IRQs disabled (was: b43legacy kernel warning)
+Cc: "Michael Buesch" <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+In-Reply-To: <1213783367.1312.2.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080619212621.GA20267@suse.de>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <30353c3d0806171359k6d7be389g23dfc809f288d2f1@mail.gmail.com>
+	 <200806172320.18778.mb@bu3sch.de>
+	 <1213783367.1312.2.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.25-stable review patch.  If anyone has any objections, please let us
-know.
+On Wed, Jun 18, 2008 at 6:02 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2008-06-17 at 23:20 +0200, Michael Buesch wrote:
+>> On Tuesday 17 June 2008 22:59:52 David Ellingsworth wrote:
+>> > I ran into this error today from a kernel I built last night based on
+>> > the latest wireless-testing branch. Correct me if I'm wrong, but it
+>> > looks to be b43legacy related. I'm a bit new to kernel debugging but
+>> > can try to provide additional information if instructions on how to do
+>> > so are provided.
+>>
+>> No, this is a mac80211 bug
+>
+> Can you try the patch below?
+>
+> johannes
+>
+> --- everything.orig/net/mac80211/sta_info.h     2008-06-18 10:07:24.000000000 +0200
+> +++ everything/net/mac80211/sta_info.h  2008-06-18 11:58:32.000000000 +0200
+> @@ -164,6 +164,7 @@ struct sta_ampdu_mlme {
+>  * @aid: STA's unique AID (1..2007, 0 = not assigned yet),
+>  *     only used in AP (and IBSS?) mode
+>  * @flags: STA flags, see &enum ieee80211_sta_info_flags
+> + * @flaglock: spinlock for flags accesses
+>  * @ps_tx_buf: buffer of frames to transmit to this station
+>  *     when it leaves power saving state
+>  * @tx_filtered: buffer of frames we already tried to transmit
+> @@ -186,6 +187,7 @@ struct sta_info {
+>        struct rate_control_ref *rate_ctrl;
+>        void *rate_ctrl_priv;
+>        spinlock_t lock;
+> +       spinlock_t flaglock;
+>        struct ieee80211_ht_info ht_info;
+>        u64 supp_rates[IEEE80211_NUM_BANDS];
+>        u8 addr[ETH_ALEN];
+> @@ -198,7 +200,10 @@ struct sta_info {
+>         */
+>        u8 pin_status;
+>
+> -       /* frequently updated information, locked with lock spinlock */
+> +       /*
+> +        * frequently updated, locked with own spinlock (flaglock),
+> +        * use the accessors defined below
+> +        */
+>        u32 flags;
+>
+>        /*
+> @@ -293,34 +298,41 @@ static inline enum plink_state sta_plink
+>
+>  static inline void set_sta_flags(struct sta_info *sta, const u32 flags)
+>  {
+> -       spin_lock_bh(&sta->lock);
+> +       unsigned long irqfl;
+> +
+> +       spin_lock_irqsave(&sta->flaglock, irqfl);
+>        sta->flags |= flags;
+> -       spin_unlock_bh(&sta->lock);
+> +       spin_unlock_irqrestore(&sta->flaglock, irqfl);
+>  }
+>
+>  static inline void clear_sta_flags(struct sta_info *sta, const u32 flags)
+>  {
+> -       spin_lock_bh(&sta->lock);
+> +       unsigned long irqfl;
+> +
+> +       spin_lock_irqsave(&sta->flaglock, irqfl);
+>        sta->flags &= ~flags;
+> -       spin_unlock_bh(&sta->lock);
+> +       spin_unlock_irqrestore(&sta->flaglock, irqfl);
+>  }
+>
+>  static inline void set_and_clear_sta_flags(struct sta_info *sta,
+>                                           const u32 set, const u32 clear)
+>  {
+> -       spin_lock_bh(&sta->lock);
+> +       unsigned long irqfl;
+> +
+> +       spin_lock_irqsave(&sta->flaglock, irqfl);
+>        sta->flags |= set;
+>        sta->flags &= ~clear;
+> -       spin_unlock_bh(&sta->lock);
+> +       spin_unlock_irqrestore(&sta->flaglock, irqfl);
+>  }
+>
+>  static inline u32 test_sta_flags(struct sta_info *sta, const u32 flags)
+>  {
+>        u32 ret;
+> +       unsigned long irqfl;
+>
+> -       spin_lock_bh(&sta->lock);
+> +       spin_lock_irqsave(&sta->flaglock, irqfl);
+>        ret = sta->flags & flags;
+> -       spin_unlock_bh(&sta->lock);
+> +       spin_unlock_irqrestore(&sta->flaglock, irqfl);
+>
+>        return ret;
+>  }
+> @@ -329,11 +341,12 @@ static inline u32 test_and_clear_sta_fla
+>                                           const u32 flags)
+>  {
+>        u32 ret;
+> +       unsigned long irqfl;
+>
+> -       spin_lock_bh(&sta->lock);
+> +       spin_lock_irqsave(&sta->flaglock, irqfl);
+>        ret = sta->flags & flags;
+>        sta->flags &= ~flags;
+> -       spin_unlock_bh(&sta->lock);
+> +       spin_unlock_irqrestore(&sta->flaglock, irqfl);
+>
+>        return ret;
+>  }
+> @@ -341,10 +354,11 @@ static inline u32 test_and_clear_sta_fla
+>  static inline u32 get_sta_flags(struct sta_info *sta)
+>  {
+>        u32 ret;
+> +       unsigned long irqfl;
+>
+> -       spin_lock_bh(&sta->lock);
+> +       spin_lock_irqsave(&sta->flaglock, irqfl);
+>        ret = sta->flags;
+> -       spin_unlock_bh(&sta->lock);
+> +       spin_unlock_irqrestore(&sta->flaglock, irqfl);
+>
+>        return ret;
+>  }
+> --- everything.orig/net/mac80211/sta_info.c     2008-06-18 11:56:44.000000000 +0200
+> +++ everything/net/mac80211/sta_info.c  2008-06-18 11:56:58.000000000 +0200
+> @@ -235,6 +235,7 @@ struct sta_info *sta_info_alloc(struct i
+>                return NULL;
+>
+>        spin_lock_init(&sta->lock);
+> +       spin_lock_init(&sta->flaglock);
+>
+>        memcpy(sta->addr, addr, ETH_ALEN);
+>        sta->local = local;
+>
+>
+>
 
-------------------
-From: Michael Buesch <mb@bu3sch.de>
+Yes, this patch seems to correct the issue. I no longer receive the
+kernel warning.
 
-commit 98a3b2fe435ae76170936c14f5c9e6a87548e3ef upstream.
+Regards,
 
-This removes a WARN_ON that is responsible for the following koops:
-http://www.kerneloops.org/searchweek.php?search=b43_generate_noise_sample
-
-The comment in the patch describes why it's safe to simply remove
-the check.
-
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
-
----
- drivers/net/wireless/b43/b43.h  |    1 -
- drivers/net/wireless/b43/main.c |   16 ++++++++++------
- 2 files changed, 10 insertions(+), 7 deletions(-)
-
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -596,7 +596,6 @@ struct b43_dma {
- 
- /* Context information for a noise calculation (Link Quality). */
- struct b43_noise_calculation {
--	u8 channel_at_start;
- 	bool calculation_running;
- 	u8 nr_samples;
- 	s8 samples[8][4];
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -1027,7 +1027,6 @@ static void b43_generate_noise_sample(st
- 	b43_jssi_write(dev, 0x7F7F7F7F);
- 	b43_write32(dev, B43_MMIO_MACCMD,
- 		    b43_read32(dev, B43_MMIO_MACCMD) | B43_MACCMD_BGNOISE);
--	B43_WARN_ON(dev->noisecalc.channel_at_start != dev->phy.channel);
- }
- 
- static void b43_calculate_link_quality(struct b43_wldev *dev)
-@@ -1036,7 +1035,6 @@ static void b43_calculate_link_quality(s
- 
- 	if (dev->noisecalc.calculation_running)
- 		return;
--	dev->noisecalc.channel_at_start = dev->phy.channel;
- 	dev->noisecalc.calculation_running = 1;
- 	dev->noisecalc.nr_samples = 0;
- 
-@@ -1053,9 +1051,16 @@ static void handle_irq_noise(struct b43_
- 
- 	/* Bottom half of Link Quality calculation. */
- 
-+	/* Possible race condition: It might be possible that the user
-+	 * changed to a different channel in the meantime since we
-+	 * started the calculation. We ignore that fact, since it's
-+	 * not really that much of a problem. The background noise is
-+	 * an estimation only anyway. Slightly wrong results will get damped
-+	 * by the averaging of the 8 sample rounds. Additionally the
-+	 * value is shortlived. So it will be replaced by the next noise
-+	 * calculation round soon. */
-+
- 	B43_WARN_ON(!dev->noisecalc.calculation_running);
--	if (dev->noisecalc.channel_at_start != phy->channel)
--		goto drop_calculation;
- 	*((__le32 *)noise) = cpu_to_le32(b43_jssi_read(dev));
- 	if (noise[0] == 0x7F || noise[1] == 0x7F ||
- 	    noise[2] == 0x7F || noise[3] == 0x7F)
-@@ -1096,11 +1101,10 @@ static void handle_irq_noise(struct b43_
- 			average -= 48;
- 
- 		dev->stats.link_noise = average;
--	      drop_calculation:
- 		dev->noisecalc.calculation_running = 0;
- 		return;
- 	}
--      generate_new:
-+generate_new:
- 	b43_generate_noise_sample(dev);
- }
- 
-
--- 
+David Ellingsworth
