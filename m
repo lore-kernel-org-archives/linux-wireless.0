@@ -1,91 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35504 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751003AbYFSTFU (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:48448 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753082AbYFSL5n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 15:05:20 -0400
-Subject: Re: [RFC PATCH 2/2] mac80211: workaround for resetting the tx power
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	Assaf Krauss <assaf.krauss@intel.com>
-In-Reply-To: <1213900512-21565-2-git-send-email-tomas.winkler@intel.com>
-References: <1213900512-21565-1-git-send-email-tomas.winkler@intel.com>
-	 <1213900512-21565-2-git-send-email-tomas.winkler@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EMz+iMkiWslSbFXi3hzc"
-Date: Thu, 19 Jun 2008 21:04:08 +0200
-Message-Id: <1213902248.8967.79.camel@johannes.berg> (sfid-20080619_210523_528858_8DA49DDE)
-Mime-Version: 1.0
+	Thu, 19 Jun 2008 07:57:43 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so559755waf.23
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jun 2008 04:57:43 -0700 (PDT)
+Message-ID: <1ba2fa240806190457w20dfe2d5pf06829b26d2722a3@mail.gmail.com> (sfid-20080619_135806_239644_FB0779F5)
+Date: Thu, 19 Jun 2008 14:57:42 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Broken fragmentation
+Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240806190446n4d931e6ara4db156900e59e0d@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1ba2fa240806190220l18fe5dcdsf44fe81412a5f35d@mail.gmail.com>
+	 <1213869365.1312.48.camel@johannes.berg>
+	 <1ba2fa240806190446n4d931e6ara4db156900e59e0d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jun 19, 2008 at 2:46 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+> On Thu, Jun 19, 2008 at 12:56 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Thu, 2008-06-19 at 12:20 +0300, Tomas Winkler wrote:
+>>> Johannes
+>>> Your patch bellow has broken the fragmentation. Can you please have a
+>>> look at this.
+>>
+>>>           /* Setup duration field for the first fragment of the frame. Duration
+>>>        * for remaining fragments will be updated when they are being sent
+>>>        * to low-level driver in ieee80211_tx(). */
+>>>       dur = ieee80211_duration(tx, is_multicast_ether_addr(hdr->addr1),
+>>>                                (tx->flags & IEEE80211_TX_FRAGMENTED) ?
+>>>                                tx->extra_frag[0]->len : 0);                                 --
+>>> NULL pointer
+>>
+>> Oops, you're right, I missed the part where it accesses the fragments,
+>> the bulk of the function does txinfo updates which I didn't want to
+>> apply to all fragments.
+>>
+>> There is another bug too, this must come after encryption since
+>> encryption can add to the length of the frame. What do you think about
+>> the patch below? Untested so far because I have to go and wanted to get
+>> it out to you.
+>>
+>
+> Now it crashes in the driver...maybe the txinfo to cb changes. Looking into it.
+> Tomas
+Looks like this is the second part keyconf is null
+Tomas
 
---=-EMz+iMkiWslSbFXi3hzc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2008-06-19 at 21:35 +0300, Tomas Winkler wrote:
-> From: Assaf Krauss <assaf.krauss@intel.com>
->=20
-> This patch is a workaround for the unreliable disassociation
-> flow. The resetting of the tx power is now performed upon
-> association/reassociation.
->=20
-> Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> ---
->  net/mac80211/mlme.c |   13 +++++++++++++
->  1 files changed, 13 insertions(+), 0 deletions(-)
->=20
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 313b02a..378ccd5 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -2148,6 +2148,19 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ie=
-ee80211_sub_if_data *sdata,
->  	/* AssocResp and ReassocResp have identical structure, so process both
->  	 * of them in this function. */
-> =20
-> +	/***********************************************************
-> +	 * Workaround - Until disassociation flow is trustworthy...
-> +	 ***********************************************************/
-> +	/* Reset power level. Get the tx power from the current channel/user.*/
-> +	if (ifsta->country_max_pwr || local->hw.conf.tpc_pwr_limit) {
-> +		ifsta->country_max_pwr =3D 0;
-> +		local->hw.conf.tpc_pwr_limit =3D 0;
-> +		ieee80211_hw_config(local);
-> +	}
-> +	/***********************************************************
-> +	 * End of Workaround
-> +	 ***********************************************************/
-
-Umm, can you explain/fix the problem instead of adding ugly comments
-like that?
-
-johannes
-
---=-EMz+iMkiWslSbFXi3hzc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIWq2lAAoJEKVg1VMiehFYF/0P/A+8Gb1z5rAZZPxC/XZk0m1d
-QNKnWbX/iAJcFaF6IgEafY5YiRLxrajIe1S9sx8jEXGUOKHXcengfitPQWiD51Ri
-hI5xnkvsJr/usGacgk2wm2oTpSEPHvriiRBKGYUtGBaKJVytbK2oZ0Kai8LWFwwE
-E2lezPp7QTmabUS1WxnrMljzy4rh4SW952peoNt23tMDClgE8RDZlW++1yZV8InG
-6yO0FqsXaXC0FLDAXZHwAA5iqWsCqN6havnhgQqe+UCDf1G/MlfyEyPQjdMOa0XP
-56oOCv+pHUWEbiuCwDnzWaR41RqT9eZzRxP6vc6XC54WAg5pcyt88TlJJNJi2LGD
-UJDuODgiLAuYVZ0vi7cMqJCJgz3XCz1D23I5cqVj5ESYBteRUIY0PShXZsk/xx1o
-xJTXWgw7hpUxUO7ViAU4vr/fp7lEXWJN0YCZtAaERTWNYcE//ZWIEJAO80hWmAhY
-rT1UPVH7qXJ3isSILy+egX+8zB1Dg/3Gp8CNsmVrcyzzSoMzYyPiuQ97IAGBDGLa
-gtE51LMXzU0QHqlb35UyKfKIzpfSMT8jsx4NBci33Ho3NGJsGntUlnCxVZXABo/D
-KgXkNGj8DDbeC716X9kA5HNsvo+ouWGeC39gwEzNA0DVumLTC1CSnC/4iAZf8oYK
-gEgKZF0R6FpC7ydtyjVA
-=bu+5
------END PGP SIGNATURE-----
-
---=-EMz+iMkiWslSbFXi3hzc--
-
+>>
+>> ---
+>>  net/mac80211/tx.c |   66 ++++++++++++++++++++++++++++--------------------------
+>>  1 file changed, 35 insertions(+), 31 deletions(-)
+>>
+>> --- everything.orig/net/mac80211/tx.c   2008-06-19 11:25:12.000000000 +0200
+>> +++ everything/net/mac80211/tx.c        2008-06-19 11:53:08.000000000 +0200
+>> @@ -87,8 +87,8 @@ static inline void ieee80211_dump_frame(
+>>  }
+>>  #endif /* CONFIG_MAC80211_LOWTX_FRAME_DUMP */
+>>
+>> -static u16 ieee80211_duration(struct ieee80211_tx_data *tx, int group_addr,
+>> -                             int next_frag_len)
+>> +static __le16 ieee80211_duration(struct ieee80211_tx_data *tx, int group_addr,
+>> +                                int next_frag_len)
+>>  {
+>>        int rate, mrate, erp, dur, i;
+>>        struct ieee80211_rate *txrate;
+>> @@ -140,7 +140,7 @@ static u16 ieee80211_duration(struct iee
+>>
+>>        /* data/mgmt */
+>>        if (0 /* FIX: data/mgmt during CFP */)
+>> -               return 32768;
+>> +               return cpu_to_le16(32768);
+>>
+>>        if (group_addr) /* Group address as the destination - no ACK */
+>>                return 0;
+>> @@ -210,7 +210,7 @@ static u16 ieee80211_duration(struct iee
+>>                                tx->sdata->bss_conf.use_short_preamble);
+>>        }
+>>
+>> -       return dur;
+>> +       return cpu_to_le16(dur);
+>>  }
+>>
+>>  static int inline is_ieee80211_device(struct net_device *dev,
+>> @@ -544,7 +544,6 @@ ieee80211_tx_h_misc(struct ieee80211_tx_
+>>  {
+>>        struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
+>>        u16 fc = le16_to_cpu(hdr->frame_control);
+>> -       u16 dur;
+>>        struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+>>        struct ieee80211_supported_band *sband;
+>>
+>> @@ -602,14 +601,6 @@ ieee80211_tx_h_misc(struct ieee80211_tx_
+>>                info->flags |= IEEE80211_TX_CTL_SHORT_PREAMBLE;
+>>        }
+>>
+>> -       /* Setup duration field for the first fragment of the frame. Duration
+>> -        * for remaining fragments will be updated when they are being sent
+>> -        * to low-level driver in ieee80211_tx(). */
+>> -       dur = ieee80211_duration(tx, is_multicast_ether_addr(hdr->addr1),
+>> -                                (tx->flags & IEEE80211_TX_FRAGMENTED) ?
+>> -                                tx->extra_frag[0]->len : 0);
+>> -       hdr->duration_id = cpu_to_le16(dur);
+>> -
+>>        if ((info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) ||
+>>            (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)) {
+>>                struct ieee80211_rate *rate;
+>> @@ -755,6 +746,36 @@ ieee80211_tx_h_encrypt(struct ieee80211_
+>>  }
+>>
+>>  static ieee80211_tx_result
+>> +ieee80211_tx_h_calculate_duration(struct ieee80211_tx_data *tx)
+>> +{
+>> +       struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
+>> +       int next_len, i;
+>> +       int group_addr = is_multicast_ether_addr(hdr->addr1);
+>> +
+>> +       if (!(tx->flags & IEEE80211_TX_FRAGMENTED)) {
+>> +               hdr->duration_id = ieee80211_duration(tx, group_addr, 0);
+>> +               return TX_CONTINUE;
+>> +       }
+>> +
+>> +       hdr->duration_id = ieee80211_duration(tx, group_addr,
+>> +                                             tx->extra_frag[0]->len);
+>> +
+>> +       for (i = 0; i < tx->num_extra_frag; i++) {
+>> +               if (i + 1 < tx->num_extra_frag) {
+>> +                       next_len = tx->extra_frag[i + 1]->len;
+>> +               } else {
+>> +                       next_len = 0;
+>> +                       tx->rate_idx = tx->last_frag_rate_idx;
+>> +               }
+>> +
+>> +               hdr = (struct ieee80211_hdr *)tx->extra_frag[i]->data;
+>> +               hdr->duration_id = ieee80211_duration(tx, 0, next_len);
+>> +       }
+>> +
+>> +       return TX_CONTINUE;
+>> +}
+>> +
+>> +static ieee80211_tx_result
+>>  ieee80211_tx_h_stats(struct ieee80211_tx_data *tx)
+>>  {
+>>        int i;
+>> @@ -788,6 +809,7 @@ static ieee80211_tx_handler ieee80211_tx
+>>        ieee80211_tx_h_fragment,
+>>        /* handlers after fragment must be aware of tx info fragmentation! */
+>>        ieee80211_tx_h_encrypt,
+>> +       ieee80211_tx_h_calculate_duration,
+>>        ieee80211_tx_h_stats,
+>>        NULL
+>>  };
+>> @@ -1139,24 +1161,6 @@ static int ieee80211_tx(struct net_devic
+>>                return 0;
+>>        }
+>>
+>> -       if (tx.extra_frag) {
+>> -               for (i = 0; i < tx.num_extra_frag; i++) {
+>> -                       int next_len, dur;
+>> -                       struct ieee80211_hdr *hdr =
+>> -                               (struct ieee80211_hdr *)
+>> -                               tx.extra_frag[i]->data;
+>> -
+>> -                       if (i + 1 < tx.num_extra_frag) {
+>> -                               next_len = tx.extra_frag[i + 1]->len;
+>> -                       } else {
+>> -                               next_len = 0;
+>> -                               tx.rate_idx = tx.last_frag_rate_idx;
+>> -                       }
+>> -                       dur = ieee80211_duration(&tx, 0, next_len);
+>> -                       hdr->duration_id = cpu_to_le16(dur);
+>> -               }
+>> -       }
+>> -
+>>  retry:
+>>        ret = __ieee80211_tx(local, skb, &tx);
+>>        if (ret) {
+>>
+>>
+>>
+>
