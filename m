@@ -1,61 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:62923 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753367AbYFYKaV (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58254 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752254AbYFSX0i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2008 06:30:21 -0400
-Received: by py-out-1112.google.com with SMTP id p76so1647078pyb.10
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2008 03:30:20 -0700 (PDT)
-Message-ID: <1ba2fa240806250330s15168d22i50e61498fbba6af7@mail.gmail.com> (sfid-20080625_123024_703387_8D5DB42F)
-Date: Wed, 25 Jun 2008 13:30:19 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Broken fragmentation
-Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1214388133.21847.8.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1ba2fa240806190220l18fe5dcdsf44fe81412a5f35d@mail.gmail.com>
-	 <1213881855.8967.19.camel@johannes.berg>
-	 <1ba2fa240806190745u2fe7e435y3ca207af4156767b@mail.gmail.com>
-	 <1213889200.8967.26.camel@johannes.berg>
-	 <1ba2fa240806191113nd6a221eiac9648edd3404a80@mail.gmail.com>
-	 <1213899419.8967.59.camel@johannes.berg>
-	 <1ba2fa240806191409k7200ad53y654a7f8a117c8f14@mail.gmail.com>
-	 <1213910734.8967.117.camel@johannes.berg>
-	 <1ba2fa240806250250k2ae66eddre00172f6bc871fcb@mail.gmail.com>
-	 <1214388133.21847.8.camel@johannes.berg>
+	Thu, 19 Jun 2008 19:26:38 -0400
+Message-Id: <20080619232435.151288000@sipsolutions.net> (sfid-20080620_012641_402056_82B68758)
+References: <20080619232229.202159000@sipsolutions.net>
+Date: Fri, 20 Jun 2008 01:22:32 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] mac80211: get rid of function pointers in RX path
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 25, 2008 at 1:02 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2008-06-25 at 12:50 +0300, Tomas Winkler wrote:
->> On Fri, Jun 20, 2008 at 12:25 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> >
->> >> >> Fragments are in the air but the peer is not able to reassemble them.
->> >> >> Something is wrong with the first fragment but I'm not sure yet.
->> >> >
->> >> > Hm, ok. got a packet capture? Maybe that was broken before, I remember
->> >> > having problems with fragmentation but putting it down to the
->> >> > known-to-be-completely-broken AP I was using.
->> >>
->> >> It is working the latest problem was caused by the driver, Yet i still
->> >> don't understand the regression
->> >> in the driver.
->> >
->> > Hmm, ok.
->> >
->> So the bug is still in mac80211. Fragments are scheduled to different
->> TIDs and hence to different queues.
->> Investigating further. If you have something in mind let me know
->
-> Hmm, yes, I do indeed, try
->
-> skb_copy_queue_mapping(frag, first);
->
-> where you previously added the cb copy.
-Yeah just found that too 2 min ago :)
-Thanks
-Tomas
+This changes the RX path to no longer use function pointers for  
+RX handlers but rather invoke them directly. If debugging is  
+enabled, mark the RX handlers noinline because otherwise they
+all get inlined into ieee80211_invoke_rx_handlers() which makes
+it harder to see where a bug is.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/rx.c |   93 ++++++++++++++++++++++++------------------------------
+ 1 file changed, 42 insertions(+), 51 deletions(-)
+
+--- everything.orig/net/mac80211/rx.c	2008-06-20 01:20:18.000000000 +0200
++++ everything/net/mac80211/rx.c	2008-06-20 01:22:12.000000000 +0200
+@@ -386,7 +386,7 @@ static void ieee80211_verify_ip_alignmen
+ 
+ /* rx handlers */
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_passive_scan(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_local *local = rx->local;
+@@ -463,7 +463,7 @@ ieee80211_rx_mesh_check(struct ieee80211
+ }
+ 
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_hdr *hdr;
+@@ -522,7 +522,7 @@ ieee80211_rx_h_check(struct ieee80211_rx
+ }
+ 
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
+@@ -710,7 +710,7 @@ static int ap_sta_ps_end(struct net_devi
+ 	return sent;
+ }
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ {
+ 	struct sta_info *sta = rx->sta;
+@@ -858,7 +858,7 @@ ieee80211_reassemble_find(struct ieee802
+ 	return NULL;
+ }
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_hdr *hdr;
+@@ -974,7 +974,7 @@ ieee80211_rx_h_defragment(struct ieee802
+ 	return RX_CONTINUE;
+ }
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_ps_poll(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
+@@ -1049,7 +1049,7 @@ ieee80211_rx_h_ps_poll(struct ieee80211_
+ 	return RX_QUEUED;
+ }
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_remove_qos_control(struct ieee80211_rx_data *rx)
+ {
+ 	u16 fc = rx->fc;
+@@ -1367,7 +1367,7 @@ ieee80211_deliver_skb(struct ieee80211_r
+ 	}
+ }
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
+ {
+ 	struct net_device *dev = rx->dev;
+@@ -1484,7 +1484,7 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx
+ 	return RX_QUEUED;
+ }
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
+ {
+ 	struct net_device *dev = rx->dev;
+@@ -1515,7 +1515,7 @@ ieee80211_rx_h_data(struct ieee80211_rx_
+ 	return RX_QUEUED;
+ }
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_local *local = rx->local;
+@@ -1559,7 +1559,7 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_
+ 	return RX_CONTINUE;
+ }
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+@@ -1732,66 +1732,57 @@ static void ieee80211_rx_cooked_monitor(
+ 	dev_kfree_skb(skb);
+ }
+ 
+-typedef ieee80211_rx_result (*ieee80211_rx_handler)(struct ieee80211_rx_data *);
+-static ieee80211_rx_handler ieee80211_rx_handlers[] =
+-{
+-	ieee80211_rx_h_passive_scan,
+-	ieee80211_rx_h_check,
+-	ieee80211_rx_h_decrypt,
+-	ieee80211_rx_h_sta_process,
+-	ieee80211_rx_h_defragment,
+-	ieee80211_rx_h_ps_poll,
+-	ieee80211_rx_h_michael_mic_verify,
+-	/* this must be after decryption - so header is counted in MPDU mic
+-	 * must be before pae and data, so QOS_DATA format frames
+-	 * are not passed to user space by these functions
+-	 */
+-	ieee80211_rx_h_remove_qos_control,
+-	ieee80211_rx_h_amsdu,
+-	ieee80211_rx_h_data,
+-	ieee80211_rx_h_ctrl,
+-	ieee80211_rx_h_mgmt,
+-	NULL
+-};
+ 
+ static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
+ 					 struct ieee80211_rx_data *rx,
+ 					 struct sk_buff *skb)
+ {
+-	ieee80211_rx_handler *handler;
+ 	ieee80211_rx_result res = RX_DROP_MONITOR;
+ 
+ 	rx->skb = skb;
+ 	rx->sdata = sdata;
+ 	rx->dev = sdata->dev;
+ 
+-	for (handler = ieee80211_rx_handlers; *handler != NULL; handler++) {
+-		res = (*handler)(rx);
++#define CALL_RXH(rxh)		\
++	res = rxh(rx);		\
++	if (res != RX_CONTINUE)	\
++		goto rxh_done;
++
++	CALL_RXH(ieee80211_rx_h_passive_scan);
++	CALL_RXH(ieee80211_rx_h_check);
++	CALL_RXH(ieee80211_rx_h_decrypt);
++	CALL_RXH(ieee80211_rx_h_sta_process);
++	CALL_RXH(ieee80211_rx_h_defragment);
++	CALL_RXH(ieee80211_rx_h_ps_poll);
++	CALL_RXH(ieee80211_rx_h_michael_mic_verify);
++	/* must be after MMIC verify so header is counted in MPDU mic */
++	CALL_RXH(ieee80211_rx_h_remove_qos_control);
++	CALL_RXH(ieee80211_rx_h_amsdu);
++	CALL_RXH(ieee80211_rx_h_data);
++	CALL_RXH(ieee80211_rx_h_ctrl);
++	CALL_RXH(ieee80211_rx_h_mgmt);
+ 
+-		switch (res) {
+-		case RX_CONTINUE:
+-			continue;
+-		case RX_DROP_UNUSABLE:
+-		case RX_DROP_MONITOR:
+-			I802_DEBUG_INC(sdata->local->rx_handlers_drop);
+-			if (rx->sta)
+-				rx->sta->rx_dropped++;
+-			break;
+-		case RX_QUEUED:
+-			I802_DEBUG_INC(sdata->local->rx_handlers_queued);
+-			break;
+-		}
+-		break;
+-	}
++#undef CALL_RXH
+ 
++ rxh_done:
+ 	switch (res) {
+-	case RX_CONTINUE:
+ 	case RX_DROP_MONITOR:
++		I802_DEBUG_INC(sdata->local->rx_handlers_drop);
++		if (rx->sta)
++			rx->sta->rx_dropped++;
++		/* fall through */
++	case RX_CONTINUE:
+ 		ieee80211_rx_cooked_monitor(rx);
+ 		break;
+ 	case RX_DROP_UNUSABLE:
++		I802_DEBUG_INC(sdata->local->rx_handlers_drop);
++		if (rx->sta)
++			rx->sta->rx_dropped++;
+ 		dev_kfree_skb(rx->skb);
+ 		break;
++	case RX_QUEUED:
++		I802_DEBUG_INC(sdata->local->rx_handlers_queued);
++		break;
+ 	}
+ }
+ 
+
+-- 
+
