@@ -1,33 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:14906 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757399AbYF3QOF (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.174]:51174 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753881AbYFSGNQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 12:14:05 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so1220881waf.23
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2008 09:14:02 -0700 (PDT)
-Message-ID: <1ba2fa240806300914n7d28f874i4ee43cb999903135@mail.gmail.com> (sfid-20080630_181427_465308_AA40B442)
-Date: Mon, 30 Jun 2008 19:14:02 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: IBSS lockdep failure
-Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1214841181.5507.54.camel@johannes.berg>
+	Thu, 19 Jun 2008 02:13:16 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so915569ugf.16
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jun 2008 23:13:15 -0700 (PDT)
+Message-ID: <f6ca9fed0806182313p7f8d5d65u2ef6b5f93e21c394@mail.gmail.com> (sfid-20080619_081322_345121_04FA698F)
+Date: Thu, 19 Jun 2008 08:13:15 +0200
+From: drago01 <drago01@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [PATCH] iwl3965: remove useless network and duplicate checking
+Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Zhu Yi" <yi.zhu@intel.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John Linville" <linville@tuxdriver.com>
+In-Reply-To: <1ba2fa240806160109q751e6990vf9c12e65800fb16a@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <1ba2fa240806300848v4fd92b72n565fc113e1c122b8@mail.gmail.com>
-	 <1214841181.5507.54.camel@johannes.berg>
+References: <f6ca9fed0806151105l3ddd72b9r5a4ad5f112cc8599@mail.gmail.com>
+	 <1ba2fa240806160109q751e6990vf9c12e65800fb16a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 30, 2008 at 6:53 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
+On Mon, Jun 16, 2008 at 10:09 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+> On Sun, Jun 15, 2008 at 9:05 PM, drago01 <drago01@gmail.com> wrote:
+>> Johannes has posted a similar patch fro iwl4965, I have ported (the
+>> relevant parts) to iwl3945.
+>> I tested it and its working fine so far.
+>> -------------
+>> mac802 can handle duplicate packages on its own, so let it do it.
+>> Based on patch from Johannes Berg for iwl4965.
 >
->> phy0: Adding new IBSS station XX:XX:XX:XX:XX:XX (dev=wlan0)
->
-> are all of those XX entries the same?
+> I'm not 100% sure but currently there is missing checking for fragment
+> duplication in mac80211.
+> Can someone confirm?
 
-Not they are not. Sorry for the paranoia :)
-
-> johannes
->
+Johannes?
