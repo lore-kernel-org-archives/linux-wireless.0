@@ -1,62 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36365 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:46408 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758033AbYFJNMs (ORCPT
+	with ESMTP id S1755075AbYFSMYF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 09:12:48 -0400
-Subject: Re: mac80211_hwsim - simulator of 802.11 radios for mac80211
+	Thu, 19 Jun 2008 08:24:05 -0400
+Subject: Re: Broken fragmentation
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1213103378.3668.10.camel@johannes.berg> (sfid-20080610_151025_565793_E08CD049)
-References: <20080610105058.GA6961@jm.kir.nu>
-	 <1213096575.3668.6.camel@johannes.berg>  <20080610124724.GB6961@jm.kir.nu>
-	 <1213103378.3668.10.camel@johannes.berg>
-	 (sfid-20080610_151025_565793_E08CD049)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mqebivIOmOudQk8jz22R"
-Date: Tue, 10 Jun 2008 15:12:10 +0200
-Message-Id: <1213103530.3668.15.camel@johannes.berg> (sfid-20080610_151326_469232_2EA79F6F)
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240806190457w20dfe2d5pf06829b26d2722a3@mail.gmail.com> (sfid-20080619_135746_464579_6D5A208F)
+References: <1ba2fa240806190220l18fe5dcdsf44fe81412a5f35d@mail.gmail.com>
+	 <1213869365.1312.48.camel@johannes.berg>
+	 <1ba2fa240806190446n4d931e6ara4db156900e59e0d@mail.gmail.com>
+	 <1ba2fa240806190457w20dfe2d5pf06829b26d2722a3@mail.gmail.com>
+	 (sfid-20080619_135746_464579_6D5A208F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-v+5ayl8eGHo45H6yUw+/"
+Date: Thu, 19 Jun 2008 14:23:27 +0200
+Message-Id: <1213878207.8967.6.camel@johannes.berg> (sfid-20080619_142410_842546_D3B208CA)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-mqebivIOmOudQk8jz22R
+--=-v+5ayl8eGHo45H6yUw+/
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-> The design I had come up with a long time ago allowed userspace to
-> control each radio by having each _radio_ have a raw netdev like this
-> and not doing forwarding in the kernel but relying on some userspace
-> tool, but I guess that much more complicated.
+> > Now it crashes in the driver...maybe the txinfo to cb changes. Looking =
+into it.
+> > Tomas
+> Looks like this is the second part keyconf is null
 
-I should mention that I have notes on that:
-http://kernelnewbies.org/KernelProjects/Mac80211TestDriver
+Part? You mean fragment? What encryption algorithm? I've quickly looked
+and all of them seem to do the control.hw_key assignment in their
+respective _skb handler so it should be done for all fragments.
 
 johannes
 
---=-mqebivIOmOudQk8jz22R
+--=-v+5ayl8eGHo45H6yUw+/
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJITn2mAAoJEKVg1VMiehFYTTUP/jZoeSNP/v2YKCh9eKkrlSlY
-EMD3ZcHUW1kK5u3Vp/ei0GnkBp5OezoDPtA1gSwyzXFgKrtvwDoWAUKhqq7EyCZ2
-lKjaCkdhfh4WiBHpfclpzLezdWJcBkVon3kDTKAxRlHcaWNl69kfwZAPMUzGK2SL
-AomcC52pG1YESEULOXei6tfB5nw57cyh9Vbg4cuNzNLnQOdT5GhYtLmjljoGPP28
-t9QOEk/Cz9wzSVkOcEEfkavy6T8nW2O/gbSpkvibEXglsZtBK3xtnZDwGqUhr1aA
-sLOny9ZCK5z16TAetDOoFzV6zHr5EwpQ+dIqGHXjXxd6LT79gKz5gtOrct11/GdJ
-DKUi8LVs7ZnK20ZaAMOOgCIa5c6EARjKausrrJqMVZkCa9ZVhiz2G0wrwXvtplni
-aFuGPh3irI2mhpPXdGwg944PP2Q85rqMWZtAoDiv13VcqoL2J9wNtceWnWQYr8v9
-qKIYt2xXikDr6aFc8eRwsvoyKY92xeN6fr7V3xK0nEGIxqZ2yF3nnp9J+qMrCoZe
-FuDF0jaNMw7la9w453E6Aap3AqwtWC++0lpQwhusRv7YjyNd2+WjD7I13ybnMlqe
-NUTwhsK+VETlFu1qk1pF2W+8bL9vuD9AExo1J9bcS0QLD/rfIQdbP7LIByS9UQTg
-uwlJ+cPb4OCHFP+ir5G5
-=OL4e
+iQIcBAABAgAGBQJIWk+8AAoJEKVg1VMiehFYkHAP/2B0xyGKBEnWLIBc5cvkC6w2
+NCEki/Sk53ttroFlSr7GwIdV/XCnNiFXwmV1FWgu37at9eSesE8Y5UGagPHZB2WY
+2Y8yvwU8DzQaiqqtCAPNBJXhRAOS70nzBQpyGeU97VFz1Rqj24rxXo7EqqwbiHXr
+VW6pHwFt59ZPutN+IVykraDWXVr6RnJt7PdFhUhJjwHabZwyjk2ZlaBZPKVGeFrQ
+MS7QwYpTYgFAexpX3hka4gvgVoG4vWlfi/86SaqlsL6xXsLhPKsray/MrpjTudck
+YUF+z5vtoVQV6kBdclEREjc1vREti6vOc2TFygaNWWZwc4AmROcLl+DrC2ZDCrKg
+W9zzeEE8zU9RSltdTEFAyApdCotNo9zW5X6l9EIhVGViRo5XRXeh5RlsgdLLuKwV
+9ybbep/oQ77bcLGq8BtRU5nZ/DWlLoasgVq63Na+L+pLWwW9Be/15fJwdKUHqEDw
+4PaQzhghOslV4We7hpIMbFJqeTPfl9zDe227urKpUpfpMxMRE05Q4heBbZsJj8Zu
+durVecUy+xVC4zGDmlR9GW6MAnFmxGAuaxHjF1T10HXcP2Egyn01F2QeMMn1ZL4q
+t42UEA7mGKmSCnKDIz4cQl5CddWdUzFGTA4/YOQa1aGdyCmWkUNqUV4/gDm76tmU
+zotTwP0r5jIBg8jRvSe1
+=P9dS
 -----END PGP SIGNATURE-----
 
---=-mqebivIOmOudQk8jz22R--
+--=-v+5ayl8eGHo45H6yUw+/--
 
