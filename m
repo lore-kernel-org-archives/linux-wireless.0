@@ -1,78 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50813 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753167AbYFLH0q (ORCPT
+Received: from n28.bullet.mail.ukl.yahoo.com ([87.248.110.145]:26611 "HELO
+	n28.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754891AbYFSAKA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 03:26:46 -0400
-Subject: Re: [RFC] Do not activate promiscuous mode on wlan interfaces for
-	bridging.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, shemminger@linux-foundation.org,
-	j@w1.fi, bridge@linux-foundation.org
-In-Reply-To: <1213232760.6645.24.camel@localhost> (sfid-20080612_030607_332834_1EFDE126)
-References: <1213232760.6645.24.camel@localhost>
-	 (sfid-20080612_030607_332834_1EFDE126)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FLv19E992uvl+MJRqMXj"
-Date: Thu, 12 Jun 2008 09:26:10 +0200
-Message-Id: <1213255570.3871.8.camel@johannes.berg> (sfid-20080612_092649_533808_7FE64D86)
-Mime-Version: 1.0
+	Wed, 18 Jun 2008 20:10:00 -0400
+Message-ID: <4859A589.8090301@yahoo.co.uk> (sfid-20080619_021003_400986_122DD9FC)
+Date: Thu, 19 Jun 2008 01:17:13 +0100
+From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+MIME-Version: 1.0
+To: Uwe Hermann <uwe@hermann-uwe.de>
+CC: herton@mandriva.com.br, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, andreamrl@tiscali.it, linville@redhat.com
+Subject: Re: [RFC][PATCH] Realtek 8187B wireless support with product id	0x8197/0x8189
+References: <922158.32180.qm@web23114.mail.ird.yahoo.com> <20080618223153.GA18079@greenwood>
+In-Reply-To: <20080618223153.GA18079@greenwood>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+(I am not on linux-wireless so please CC: me if replying)
+Uwe Hermann wrote:
+> On Sun, Jun 15, 2008 at 12:59:54AM +0000, Hin-Tak Leung wrote:
+<snipped>
+>> The rest of the story is at:
+>> https://bugzilla.redhat.com/show_bug.cgi?id=432280
+<snipped>
+> ACK, same here. I'm an owner of a 'One A110' mini-laptop (see
+> http://a110wiki.de/wiki/Wireless) and the situation is really getting
+> uncontrollable with a gazillion of tarballs and patches for the R8187B
+> driver floating around, all of them with small differences...
+> 
+> (the ID on this laptop is 0bda:8189 btw)
+> 
+> I'm very interested to see something get merged upstream, and I'm also
+> willing to test whatever needs testing on my hardware.
 
---=-FLv19E992uvl+MJRqMXj
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yes, this is getting out of hand! Your page actually contains a few forked
+code I don't know about... I think I can summarize the situation as this:
+
+1) there are two main branches of drivers which work to various extent with 
+various kernel versions, excluding ndiswrapper usage. One is a vendor driver
+(I had 1024.0822.2007, but the 1031.0125.2008 on one's web site seems to be 
+newer) based on the old pre-2.6.22 stack, and Herton's rewrite based on the new 
+mac80211 stack.
+
+2) the vendor driver (and the old stack) is considered dead-end by the 
+linux-wireless people; also it suffers from "bit-rot" as it is largely
+unmaintained (there is no identifiable person to contact, and this is the first 
+time I heard of the one's web site newer version) and can't keep up with
+progress in the rest of the kernel.
+
+3) Herton's driver (I think he didn't have the actual hardware) was missing
+a couple of lines about the management frames (details in the redhat bugzilla) 
+so in its original form can scan but can't associate; it was considered at one
+point to be included in the kernel a few months ago. It also suffers from some
+extent of bit-rot in the last couple of months. I think I am the one currently
+maintaining it, and various CC: in the redhat bugzilla has reported success with
+current kernel.
+
+So I propose these steps:
+1) I think Herton wrote the new code based on 1024.0822 . We need to find out
+    a) any useful difference between 1024.0822 and 1031.0125
+    b) did herton have any doubts, etc while looking at 1024.0822?
+2) anybody wants to review the difference of my update on herton's?
+    The most important and necessary part is the management frames change, the
+    rest is just to cope with bit-rot; I explained that I needed to add an inline
+    (which should be taken out when added to wireless-testing),  and
+    I don't know where the multi-queue data structure has gone, so I have
+    hardcoded 6. I am willing to answer any questions or go over why I changed
+    what I have changed to stop the bit rotting going any further.
+
+Any patch would bit-rot if it doesn't go into the rest of the wireless stack,
+so we should get this done.
+
+Hin-Tak
 
 
-> It seems that it is not really necessary to activate promiscuous mode
-> when
-> attaching a wlan interface to a bridge, and it causes unnecessary
-> processing
-> overhead to any wlan device.
 
-[...]
 
-> Given this three cases, the best would be to consider case 3 to be not
-> supported (it is indeed not supported, AFAIK), and apply the patch below.
->=20
-> Please let me know what you think of this patch and whether it could inte=
-rfere
-> with any functionality.
 
-All your description makes a lot of sense, but I don't see why altering
-the bridge code is necessary. In mac80211, we decided that the "promisc"
-bit only means to capture all frames in the current BSS (remember that
-in ethernet there is no way to capture frames from different LAN
-segments) and hence an AP would not behave differently in promisc mode
-at all since, by definition, it sees all BSS traffic.
 
-What exactly is happening when you run into this problem?
 
-johannes
 
---=-FLv19E992uvl+MJRqMXj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIUM+OAAoJEKVg1VMiehFYMOMQAKk3cwZMBEPy0FV3wWOBQ3O/
-jS4+gPSmmQIQbUgEVZDAnxa/uX6xAbrhT5MMHb9Wd85LScbjLy83u5fFz8XRMNDH
-k4zn3dkzvebyHkQ1sr53Yi6pymTUkmMBhjZb7JyBUo1d+jTlqGoUFi5GNl6SrEOb
-aVyYayFBZaoMrprKSfaLuxiAFHy/qxskZS60t8iWxkNy0JyBQQkOiN9qzX3eDIbE
-CY4Pq/Fd813p8NOekTeDbRe3kgjL/fj+Q3vn8KrlS2SAulbxIDVVRhVOXKt7xmnm
-IBf//O9IlCqEezee0Y564PFHOE01PfRUapaRwapFXuYXCguzKaFYtUppLYb2kuNZ
-13TkTVVL0yKaKz26XKiTA+iumn+p/L6jyQQJ/8fkbrQLeyRNqk4ceyrRzR2lc6re
-9gi1+G87eS6eC5paetM3dRf5EyXP6GwizPx3B7Bm2oDCNQHXXkluUjuBMsiCP2ay
-C5wv3NXueLQxelo7+mZ48T2eO+LFNluz/tNP6k0PpdQCCMrQE7/14E9kPE0fCeyZ
-m77XvsMEUyLcrfRl9E25WZbClusCdxXwww6lRca2HTjkIV/gpwp2ZD2AeH08HiJz
-P4rLPdaEwEplLF2R12ncsfUcjyiZpXJUpH/+zqTMaVTvV+Jy71nKJ2+OrlZJ+pnO
-nQtZxHa2KNeP5OD+X+Co
-=v2aN
------END PGP SIGNATURE-----
-
---=-FLv19E992uvl+MJRqMXj--
 
