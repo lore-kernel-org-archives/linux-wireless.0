@@ -1,187 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.237]:34321 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753358AbYFTTxa (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53876 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751372AbYFSPiy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2008 15:53:30 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so5796976rvb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Jun 2008 12:53:29 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Fix unbalanced mutex locking
-Date: Fri, 20 Jun 2008 22:11:00 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200806202211.01632.IvDoorn@gmail.com> (sfid-20080620_215334_768793_D56BE2E9)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 19 Jun 2008 11:38:54 -0400
+Subject: Re: [PATCH] libertas: make mesh code configurable
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <200806191704.10297.hs4233@mail.mn-solutions.de> (sfid-20080619_170429_512985_CDD100EA)
+References: <200806191704.10297.hs4233@mail.mn-solutions.de>
+	 (sfid-20080619_170429_512985_CDD100EA)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rXFJ53k/axhWap4pExBx"
+Date: Thu, 19 Jun 2008 17:38:05 +0200
+Message-Id: <1213889885.8967.31.camel@johannes.berg> (sfid-20080619_173857_297349_19C78273)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The usb_cache_mutex was not correctly released
-under all circumstances. Both rt73usb as rt2500usb
-didn't release the mutex under certain conditions
-when the register access failed. Obviously such
-failure would lead to deadlocks.
 
-In addition under similar circumstances when the
-bbp register couldn't be read the value must be
-set to 0xff to indicate that the value is wrong.
-This too didn't happen under all circumstances.
+--=-rXFJ53k/axhWap4pExBx
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
+On Thu, 2008-06-19 at 17:04 +0200, Holger Schurig wrote:
+>=20
+> --- wireless-testing.orig/drivers/net/wireless/libertas/persistcfg.c
+> +++ wireless-testing/drivers/net/wireless/libertas/persistcfg.c
+> @@ -1,3 +1,4 @@
+> +#ifdef CONFIG_LIBERTAS_MESH
+>  #include <linux/moduleparam.h>
+>  #include <linux/delay.h>
+>  #include <linux/etherdevice.h>
+> @@ -451,3 +452,4 @@
+>         sysfs_remove_group(&(dev->dev.kobj), &boot_opts_group);
+>         sysfs_remove_group(&(dev->dev.kobj), &mesh_ie_group);
+>  }
+> +#endif
 
-John, please queue this patch for 2.6.26 and 2.6.27
+you know you can build files depending on Kconfig symbols, right? :)
 
- drivers/net/wireless/rt2x00/rt2500usb.c |   36 ++++++++++++++++++-------------
- drivers/net/wireless/rt2x00/rt73usb.c   |   36 ++++++++++++++++++-------------
- 2 files changed, 42 insertions(+), 30 deletions(-)
+johannes
 
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index d095800..0dd1cb5 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -138,11 +138,8 @@ static void rt2500usb_bbp_write(struct rt2x00_dev *rt2x00dev,
- 	 * Wait until the BBP becomes ready.
- 	 */
- 	reg = rt2500usb_bbp_check(rt2x00dev);
--	if (rt2x00_get_field16(reg, PHY_CSR8_BUSY)) {
--		ERROR(rt2x00dev, "PHY_CSR8 register busy. Write failed.\n");
--		mutex_unlock(&rt2x00dev->usb_cache_mutex);
--		return;
--	}
-+	if (rt2x00_get_field16(reg, PHY_CSR8_BUSY))
-+		goto exit_fail;
- 
- 	/*
- 	 * Write the data into the BBP.
-@@ -155,6 +152,13 @@ static void rt2500usb_bbp_write(struct rt2x00_dev *rt2x00dev,
- 	rt2500usb_register_write_lock(rt2x00dev, PHY_CSR7, reg);
- 
- 	mutex_unlock(&rt2x00dev->usb_cache_mutex);
-+
-+	return;
-+
-+exit_fail:
-+	mutex_unlock(&rt2x00dev->usb_cache_mutex);
-+
-+	ERROR(rt2x00dev, "PHY_CSR8 register busy. Write failed.\n");
- }
- 
- static void rt2500usb_bbp_read(struct rt2x00_dev *rt2x00dev,
-@@ -168,10 +172,8 @@ static void rt2500usb_bbp_read(struct rt2x00_dev *rt2x00dev,
- 	 * Wait until the BBP becomes ready.
- 	 */
- 	reg = rt2500usb_bbp_check(rt2x00dev);
--	if (rt2x00_get_field16(reg, PHY_CSR8_BUSY)) {
--		ERROR(rt2x00dev, "PHY_CSR8 register busy. Read failed.\n");
--		return;
--	}
-+	if (rt2x00_get_field16(reg, PHY_CSR8_BUSY))
-+		goto exit_fail;
- 
- 	/*
- 	 * Write the request into the BBP.
-@@ -186,17 +188,21 @@ static void rt2500usb_bbp_read(struct rt2x00_dev *rt2x00dev,
- 	 * Wait until the BBP becomes ready.
- 	 */
- 	reg = rt2500usb_bbp_check(rt2x00dev);
--	if (rt2x00_get_field16(reg, PHY_CSR8_BUSY)) {
--		ERROR(rt2x00dev, "PHY_CSR8 register busy. Read failed.\n");
--		*value = 0xff;
--		mutex_unlock(&rt2x00dev->usb_cache_mutex);
--		return;
--	}
-+	if (rt2x00_get_field16(reg, PHY_CSR8_BUSY))
-+		goto exit_fail;
- 
- 	rt2500usb_register_read_lock(rt2x00dev, PHY_CSR7, &reg);
- 	*value = rt2x00_get_field16(reg, PHY_CSR7_DATA);
- 
- 	mutex_unlock(&rt2x00dev->usb_cache_mutex);
-+
-+	return;
-+
-+exit_fail:
-+	mutex_unlock(&rt2x00dev->usb_cache_mutex);
-+
-+	ERROR(rt2x00dev, "PHY_CSR8 register busy. Read failed.\n");
-+	*value = 0xff;
- }
- 
- static void rt2500usb_rf_write(struct rt2x00_dev *rt2x00dev,
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index ead6db0..3ef318e 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -134,11 +134,8 @@ static void rt73usb_bbp_write(struct rt2x00_dev *rt2x00dev,
- 	 * Wait until the BBP becomes ready.
- 	 */
- 	reg = rt73usb_bbp_check(rt2x00dev);
--	if (rt2x00_get_field32(reg, PHY_CSR3_BUSY)) {
--		ERROR(rt2x00dev, "PHY_CSR3 register busy. Write failed.\n");
--		mutex_unlock(&rt2x00dev->usb_cache_mutex);
--		return;
--	}
-+	if (rt2x00_get_field32(reg, PHY_CSR3_BUSY))
-+		goto exit_fail;
- 
- 	/*
- 	 * Write the data into the BBP.
-@@ -151,6 +148,13 @@ static void rt73usb_bbp_write(struct rt2x00_dev *rt2x00dev,
- 
- 	rt73usb_register_write_lock(rt2x00dev, PHY_CSR3, reg);
- 	mutex_unlock(&rt2x00dev->usb_cache_mutex);
-+
-+	return;
-+
-+exit_fail:
-+	mutex_unlock(&rt2x00dev->usb_cache_mutex);
-+
-+	ERROR(rt2x00dev, "PHY_CSR3 register busy. Write failed.\n");
- }
- 
- static void rt73usb_bbp_read(struct rt2x00_dev *rt2x00dev,
-@@ -164,11 +168,8 @@ static void rt73usb_bbp_read(struct rt2x00_dev *rt2x00dev,
- 	 * Wait until the BBP becomes ready.
- 	 */
- 	reg = rt73usb_bbp_check(rt2x00dev);
--	if (rt2x00_get_field32(reg, PHY_CSR3_BUSY)) {
--		ERROR(rt2x00dev, "PHY_CSR3 register busy. Read failed.\n");
--		mutex_unlock(&rt2x00dev->usb_cache_mutex);
--		return;
--	}
-+	if (rt2x00_get_field32(reg, PHY_CSR3_BUSY))
-+		goto exit_fail;
- 
- 	/*
- 	 * Write the request into the BBP.
-@@ -184,14 +185,19 @@ static void rt73usb_bbp_read(struct rt2x00_dev *rt2x00dev,
- 	 * Wait until the BBP becomes ready.
- 	 */
- 	reg = rt73usb_bbp_check(rt2x00dev);
--	if (rt2x00_get_field32(reg, PHY_CSR3_BUSY)) {
--		ERROR(rt2x00dev, "PHY_CSR3 register busy. Read failed.\n");
--		*value = 0xff;
--		return;
--	}
-+	if (rt2x00_get_field32(reg, PHY_CSR3_BUSY))
-+		goto exit_fail;
- 
- 	*value = rt2x00_get_field32(reg, PHY_CSR3_VALUE);
- 	mutex_unlock(&rt2x00dev->usb_cache_mutex);
-+
-+	return;
-+
-+exit_fail:
-+	mutex_unlock(&rt2x00dev->usb_cache_mutex);
-+
-+	ERROR(rt2x00dev, "PHY_CSR3 register busy. Read failed.\n");
-+	*value = 0xff;
- }
- 
- static void rt73usb_rf_write(struct rt2x00_dev *rt2x00dev,
--- 
-1.5.5.4
+--=-rXFJ53k/axhWap4pExBx
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIWn1YAAoJEKVg1VMiehFYQXQP/jyPffwXLjrEGDFXJEtii43/
+TQhM1i/lyuYpSi9aQmKzCp5bS8h5mtw5KxQysxkQfiOTRyAq0jWAliXxFiwFoMx+
+F12YSB7iydl2qs8JX9m6XFzj4C2FwunUzExZSIz/b6NA4Fcvy+HLis8ybqnKIgzG
+5UgljHmisFknAonF+MRLxq9vDBVWabz5wgYOkUF7nqL+Qx9wUMKNtQ0dAWMMTUh7
+XvH8jeB2hn5RmvJY33Ls1VabDxNphgQ+jG9NFbTPFIt6DjUI7xQW+dc38HreeE4q
+G2QhY68LDEkIBd8PUf7xlHV2fxcEO0S4bnFAL6C6y1Dgk3lfdMLXOQS+wXJos8qL
+BOB5v3F+Q0jFn1J0SrFD6YYx42Z1qBH/fbJsBo0NiyXgOpzqZyCcNKst1TBonXxs
+zh0g2JGtSuYPhfutev/+PRJt+K9B4dICwyIarHMiEEMKml0K9h/HQlZ5VPcyxciX
+hI72Bp/594Zm4/UI3d4mZCf8dsyih88esd+kWy+gd/HeHt2jtJTWGUpz+VD01Yco
+E3DisvDQHXg2JEJ/URIuA8BNZT5Ssr+2iBgi7LRy6wsyiN9X0qq3O0R3ucDGeFaC
+GpNIrsQUSVwMYzvcZUhNHDeWswl33o1A6R7D1bIprZ5LD76fcRfGoMIW4YaN+IvK
+U0FHa0QFlHhM1S+SHE8B
+=7OWX
+-----END PGP SIGNATURE-----
+
+--=-rXFJ53k/axhWap4pExBx--
 
