@@ -1,104 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.186]:58926 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753496AbYFEPzB (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35504 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751003AbYFSTFU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2008 11:55:01 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so235135gvc.37
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2008 08:54:59 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH 01/12] rfkill: clarify meaning of rfkill states
-Date: Thu, 5 Jun 2008 18:03:42 +0200
-Cc: Tomas Winkler <tomasw@gmail.com>, Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dmitry Torokhov <dtor@mail.ru>
-References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br> <1ba2fa240806041607j10841ac0qb11fe0d0b27953d8@mail.gmail.com> <20080605003808.GA16599@khazad-dum.debian.net>
-In-Reply-To: <20080605003808.GA16599@khazad-dum.debian.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200806051803.43193.IvDoorn@gmail.com> (sfid-20080605_175506_235310_406976AE)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 19 Jun 2008 15:05:20 -0400
+Subject: Re: [RFC PATCH 2/2] mac80211: workaround for resetting the tx power
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	Assaf Krauss <assaf.krauss@intel.com>
+In-Reply-To: <1213900512-21565-2-git-send-email-tomas.winkler@intel.com>
+References: <1213900512-21565-1-git-send-email-tomas.winkler@intel.com>
+	 <1213900512-21565-2-git-send-email-tomas.winkler@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EMz+iMkiWslSbFXi3hzc"
+Date: Thu, 19 Jun 2008 21:04:08 +0200
+Message-Id: <1213902248.8967.79.camel@johannes.berg> (sfid-20080619_210523_528858_8DA49DDE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 05 June 2008, Henrique de Moraes Holschuh wrote:
-> On Thu, 05 Jun 2008, Tomas Winkler wrote:
-> > SW should be able to more sw radio switch regardless of hw switch so
-> 
-> Be extremely careful with "should" and any ideas you might have of the
-> capabilities of rf switch hardware, because chances are firmware-based
-> switches will frustate you.   In fact, you're wrong.  Some firmware
-> softswitches don't let you change their status when there is also a
-> hardware switch present, and that hardware switch is in the "block
-> transmissions" state.
-> 
-> > I believe it's better to have separate sysfs entry for sw and hw switch states.
-> > hw sysfs file should be read only.
-> 
-> When you do this (have more than one rfkill class for the same device),
-> the kernel events and uevents are not able to propagate the real state
-> of the device anymore:  upon the recepit of any event, you need to
-> *locate* all rfkill switches attached to that device, query them all,
-> and only if all of them are in state RFKILL_STATE_ON, will the device be
-> in RFKILL_STATE_ON.
-> 
-> So, we'd need to change the rfkill class to avoid all that hassle (see
-> more on this below).
-> 
-> Sincerely, I heavly prefer to add a third state (RFKILL_STATE_HARDOFF or
-> something like that).  That is a safe path that will have no subtle
-> interactions with the way rfkill is meant to be used.  I am not so sure
-> the other possibilities have this advantage, even if I cannot pinpoint
-> what interactions they could cause right now.
-> 
-> > I agree it good to keep radio state separately as well.
-> 
-> I don't like this either, unless by "separate" you mean outside of
-> rfkill entirely.
-> 
-> What you seem to be calling "radio state" is the effective state of a
-> device with more than one kill line (be it software or hardware).  We
-> could call that "device rfkill state" instead of "switch rfkill state"
-> to avoid confusion, I suppose.
-> 
-> Anyway, if we are to use various *related* rfkill switches per device,
-> rfkill needs further changes, including an extra callback into the
-> driver, so as to be able to export the device rfkill state also in all
-> switch rfkill state events (otherwise these events become quite useless
-> for many uses).
-> 
-> It is more complicated and heavyweight a solution for very little gain
-> when compared to the addition of a third RFKILL_STATE state, IMO.
-> Remeber that multiple related switches per device adds complexity to the
-> INTERFACE, and therefore to all applications that use that interface.
-> 
-> > Third I think this patch use opposite logic as used currently in
-> > practice. RFKILL_ON means that radio is off .
-> 
-> The correct reading of rfkill class states are:
-> 
-> RFKILL_STATE_ON:  transmitter is UNBLOCKED and *may* operate
-> RFKILL_STATE_OFF: transmitter is BLOCKED and will *NOT* operate.
-> 
-> Nothing else is correct.
-> 
-> We could certainly rename these states to
-> 
-> enum rfkill_state {
-> 	RFKILL_STATE_BLOCKED = 0,
-> 	RFKILL_STATE_UNBLOCKED = 1,
-> };
-> 
-> #define RFKILL_STATE_ON RFKILL_STATE_UNBLOCKED
-> #define RFKILL_STATE_OFF RFKILL_STATE_BLOCKED
-> 
-> Ivo, do you want a patch that does the above (plus the documentation
-> changes, of course)?
 
-Patch would be good. I would however drop the #define RFKILL_STATE_ON
-and force the RFKILL_STATE_BLOCKED/RFKILL_STATE_UNBLOCKED usage
-to make sure everybody gets the right idea about the meaning.
+--=-EMz+iMkiWslSbFXi3hzc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Ivo
+On Thu, 2008-06-19 at 21:35 +0300, Tomas Winkler wrote:
+> From: Assaf Krauss <assaf.krauss@intel.com>
+>=20
+> This patch is a workaround for the unreliable disassociation
+> flow. The resetting of the tx power is now performed upon
+> association/reassociation.
+>=20
+> Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> ---
+>  net/mac80211/mlme.c |   13 +++++++++++++
+>  1 files changed, 13 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 313b02a..378ccd5 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -2148,6 +2148,19 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ie=
+ee80211_sub_if_data *sdata,
+>  	/* AssocResp and ReassocResp have identical structure, so process both
+>  	 * of them in this function. */
+> =20
+> +	/***********************************************************
+> +	 * Workaround - Until disassociation flow is trustworthy...
+> +	 ***********************************************************/
+> +	/* Reset power level. Get the tx power from the current channel/user.*/
+> +	if (ifsta->country_max_pwr || local->hw.conf.tpc_pwr_limit) {
+> +		ifsta->country_max_pwr =3D 0;
+> +		local->hw.conf.tpc_pwr_limit =3D 0;
+> +		ieee80211_hw_config(local);
+> +	}
+> +	/***********************************************************
+> +	 * End of Workaround
+> +	 ***********************************************************/
+
+Umm, can you explain/fix the problem instead of adding ugly comments
+like that?
+
+johannes
+
+--=-EMz+iMkiWslSbFXi3hzc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIWq2lAAoJEKVg1VMiehFYF/0P/A+8Gb1z5rAZZPxC/XZk0m1d
+QNKnWbX/iAJcFaF6IgEafY5YiRLxrajIe1S9sx8jEXGUOKHXcengfitPQWiD51Ri
+hI5xnkvsJr/usGacgk2wm2oTpSEPHvriiRBKGYUtGBaKJVytbK2oZ0Kai8LWFwwE
+E2lezPp7QTmabUS1WxnrMljzy4rh4SW952peoNt23tMDClgE8RDZlW++1yZV8InG
+6yO0FqsXaXC0FLDAXZHwAA5iqWsCqN6havnhgQqe+UCDf1G/MlfyEyPQjdMOa0XP
+56oOCv+pHUWEbiuCwDnzWaR41RqT9eZzRxP6vc6XC54WAg5pcyt88TlJJNJi2LGD
+UJDuODgiLAuYVZ0vi7cMqJCJgz3XCz1D23I5cqVj5ESYBteRUIY0PShXZsk/xx1o
+xJTXWgw7hpUxUO7ViAU4vr/fp7lEXWJN0YCZtAaERTWNYcE//ZWIEJAO80hWmAhY
+rT1UPVH7qXJ3isSILy+egX+8zB1Dg/3Gp8CNsmVrcyzzSoMzYyPiuQ97IAGBDGLa
+gtE51LMXzU0QHqlb35UyKfKIzpfSMT8jsx4NBci33Ho3NGJsGntUlnCxVZXABo/D
+KgXkNGj8DDbeC716X9kA5HNsvo+ouWGeC39gwEzNA0DVumLTC1CSnC/4iAZf8oYK
+gEgKZF0R6FpC7ydtyjVA
+=bu+5
+-----END PGP SIGNATURE-----
+
+--=-EMz+iMkiWslSbFXi3hzc--
 
