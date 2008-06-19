@@ -1,75 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52648 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:46329 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760554AbYFLNzu (ORCPT
+	with ESMTP id S1756205AbYFSMVi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 09:55:50 -0400
-Subject: Re: Problem: Out of memory after 2days with 2GB RAM
+	Thu, 19 Jun 2008 08:21:38 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1K9J8y-0004jf-A5
+	for linux-wireless@vger.kernel.org; Thu, 19 Jun 2008 14:21:37 +0200
+Subject: [RFC 2/2] get rid of tx handler function pointers
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Rik van Riel <riel@redhat.com>
-Cc: Zdenek Kabelac <zdenek.kabelac@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	yi.zhu@intel.com, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080612093833.0fb9cdd6@bree.surriel.com> (sfid-20080612_154046_320899_AF22CEFB)
-References: <c4e36d110806120307n20cce692s9c136f11596f5ab0@mail.gmail.com>
-	 <20080612093833.0fb9cdd6@bree.surriel.com>
-	 (sfid-20080612_154046_320899_AF22CEFB)
+To: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Thu, 12 Jun 2008 15:54:44 +0200
-Message-Id: <1213278884.3936.15.camel@johannes.berg> (sfid-20080612_155553_339647_E1A096B2)
+Date: Thu, 19 Jun 2008 14:21:00 +0200
+Message-Id: <1213878060.8967.4.camel@johannes.berg> (sfid-20080619_142147_173177_F13033D2)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-06-12 at 09:38 -0400, Rik van Riel wrote:
-> On Thu, 12 Jun 2008 12:07:34 +0200
-> "Zdenek Kabelac" <zdenek.kabelac@gmail.com> wrote:
-> 
-> > It looks like while there was a huge amount of buffers and caches -
-> > system was unable to allocate few pages for kmalloc in iwl3945 driver
-> > after resume.
-> 
-> It looks like this is because it wants to allocate 2**5 contiguous
-> pages, which is 128kB of contiguous kernel memory.
+Just call the functions directly.
 
-64-bit system I assume?
-The allocation should be 256 * 20 * sizeof(struct sk_buff *).
+Together with the previous patch yields this:
 
-Try the patch below. It should improve code generation too.
+add/remove: 1/11 grow/shrink: 0/2 up/down: 3392/-4108 (-716)
+function                                     old     new   delta
+invoke_tx_handlers                             -    3392   +3392
+ieee80211_tx_handlers                         48       -     -48
+ieee80211_tx_h_sequence                      116       -    -116
+ieee80211_get_buffered_bc                    620     484    -136
+ieee80211_master_start_xmit                 1152    1008    -144
+ieee80211_tx_h_stats                         168       -    -168
+ieee80211_tx_h_encrypt                       168       -    -168
+ieee80211_tx_h_select_key                    256       -    -256
+ieee80211_tx_h_calculate_duration            276       -    -276
+ieee80211_tx_h_rate_ctrl                     344       -    -344
+ieee80211_tx_h_check_assoc                   344       -    -344
+ieee80211_tx_h_fragment                      640       -    -640
+ieee80211_tx_h_misc                          724       -    -724
+ieee80211_tx_h_ps_buf                        744       -    -744
 
-I discussed this with Tomas previously and he says the hw is capable of
-doing 20 fragments per frame (wonder why, Broadcom can do an unlimited
-number...) but he complained about the networking stack not being able
-to. Well, the hardware needs to support IP checksumming for that, hence,
-afaik, only two fragments can ever be used (one for hw header, one for
-frame)
+Yeah, I need to clean up things, but hey, I think this is a pretty neat
+optimisation. Makes compiling noticably slower though!
+---
+ net/mac80211/tx.c |   47 +++++++++++++++++------------------------------
+ 1 file changed, 17 insertions(+), 30 deletions(-)
 
-This cuts the allocation to 10%, or (under) a page in all cases.
-
-johannes
-
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-3945.h	2008-06-12 15:50:29.000000000 +0200
-+++ everything/drivers/net/wireless/iwlwifi/iwl-3945.h	2008-06-12 15:50:31.000000000 +0200
-@@ -120,7 +120,7 @@ struct iwl3945_queue {
- int iwl3945_queue_space(const struct iwl3945_queue *q);
- int iwl3945_x2_queue_used(const struct iwl3945_queue *q, int i);
+--- everything.orig/net/mac80211/tx.c	2008-06-19 14:14:48.000000000 +0200
++++ everything/net/mac80211/tx.c	2008-06-19 14:15:06.000000000 +0200
+@@ -796,24 +796,6 @@ ieee80211_tx_h_stats(struct ieee80211_tx
+ }
  
--#define MAX_NUM_OF_TBS          (20)
-+#define MAX_NUM_OF_TBS          (2)
  
- /* One for each TFD */
- struct iwl3945_tx_info {
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-dev.h	2008-06-12 15:50:18.000000000 +0200
-+++ everything/drivers/net/wireless/iwlwifi/iwl-dev.h	2008-06-12 15:50:24.000000000 +0200
-@@ -115,7 +115,7 @@ struct iwl_queue {
- 				* space less than this */
- } __attribute__ ((packed));
+-typedef ieee80211_tx_result (*ieee80211_tx_handler)(struct ieee80211_tx_data *);
+-static ieee80211_tx_handler ieee80211_tx_handlers[] =
+-{
+-	ieee80211_tx_h_check_assoc,
+-	ieee80211_tx_h_sequence,
+-	ieee80211_tx_h_ps_buf,
+-	ieee80211_tx_h_select_key,
+-	ieee80211_tx_h_michael_mic_add,
+-	ieee80211_tx_h_rate_ctrl,
+-	ieee80211_tx_h_misc,
+-	ieee80211_tx_h_fragment,
+-	/* handlers after fragment must be aware of tx info fragmentation! */
+-	ieee80211_tx_h_encrypt,
+-	ieee80211_tx_h_calculate_duration,
+-	ieee80211_tx_h_stats,
+-	NULL
+-};
+-
+ /* actual transmit path */
  
--#define MAX_NUM_OF_TBS          (20)
-+#define MAX_NUM_OF_TBS          (2)
+ /*
+@@ -1113,29 +1095,34 @@ static int invoke_tx_handlers(struct iee
+ {
+ 	struct ieee80211_local *local = tx->local;
+ 	struct sk_buff *skb = tx->skb;
+-	ieee80211_tx_handler *handler;
+ 	ieee80211_tx_result res = TX_DROP;
+ 	int i;
  
- /* One for each TFD */
- struct iwl_tx_info {
+-	for (handler = ieee80211_tx_handlers; *handler != NULL; handler++) {
+-		res = (*handler)(tx);
+-		if (res != TX_CONTINUE)
+-			break;
+-	}
+-
+-	if (WARN_ON(tx->skb != skb))
+-		res = TX_DROP;
++#define CALL_TXH(txh) if ((res = txh(tx)) != TX_CONTINUE) goto txh_done;
++	CALL_TXH(ieee80211_tx_h_check_assoc)
++	CALL_TXH(ieee80211_tx_h_sequence);
++	CALL_TXH(ieee80211_tx_h_ps_buf);
++	CALL_TXH(ieee80211_tx_h_select_key);
++	CALL_TXH(ieee80211_tx_h_michael_mic_add);
++	CALL_TXH(ieee80211_tx_h_rate_ctrl);
++	CALL_TXH(ieee80211_tx_h_misc);
++	CALL_TXH(ieee80211_tx_h_fragment);
++	/* handlers after fragment must be aware of tx info fragmentation! */
++	CALL_TXH(ieee80211_tx_h_encrypt);
++	CALL_TXH(ieee80211_tx_h_calculate_duration);
++	CALL_TXH(ieee80211_tx_h_stats);
++#undef CALL_TXH
+ 
++ txh_done:
+ 	if (unlikely(res == TX_DROP)) {
+ 		I802_DEBUG_INC(local->tx_handlers_drop);
+-		if (skb)
+-			dev_kfree_skb(skb);
++		dev_kfree_skb(skb);
+ 		for (i = 0; i < tx->num_extra_frag; i++)
+ 			if (tx->extra_frag[i])
+ 				dev_kfree_skb(tx->extra_frag[i]);
+ 		kfree(tx->extra_frag);
+ 		return -1;
+-	} else if (unlikely(res == TX_QUEUED)) {
++	} else if (res == TX_QUEUED) {
+ 		I802_DEBUG_INC(local->tx_handlers_queued);
+ 		return -1;
+ 	}
 
 
