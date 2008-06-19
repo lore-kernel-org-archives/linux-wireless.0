@@ -1,72 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45133 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751424AbYFYU1M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2008 16:27:12 -0400
-Subject: Re: BUG(?): dev->wl->if_type is 0 for monitor interfaces (should
-	be 5); b43_is_mode(dev->wl; IEEE80211_IF_TYPE_MNTR) is always false
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
-Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <69e28c910806251323j3a80b31etde8683d573dcf2fa@mail.gmail.com> (sfid-20080625_222356_890423_579F588A)
-References: <69e28c910806251322i31a8cb4flc7b6c85e8884a5ca@mail.gmail.com>
-	 <69e28c910806251323j3a80b31etde8683d573dcf2fa@mail.gmail.com>
-	 (sfid-20080625_222356_890423_579F588A)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-lY+3zF6ikuegqqUAlcbw"
-Date: Wed, 25 Jun 2008 22:26:30 +0200
-Message-Id: <1214425590.21847.61.camel@johannes.berg> (sfid-20080625_222715_875958_74FDF878)
+Received: from main.gmane.org ([80.91.229.2]:37512 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753289AbYFSBT0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jun 2008 21:19:26 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1K98o6-0005Ex-Uf
+	for linux-wireless@vger.kernel.org; Thu, 19 Jun 2008 01:19:22 +0000
+Received: from cpc3-cwma2-0-0-cust15.swan.cable.ntl.com ([81.96.204.16])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jun 2008 01:19:22 +0000
+Received: from andy by cpc3-cwma2-0-0-cust15.swan.cable.ntl.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jun 2008 01:19:22 +0000
+To: linux-wireless@vger.kernel.org
+From: Andrew Price <andy@andrewprice.me.uk>
+Subject: Re: BUG: mac80211: Some connections hanging in 2.6.26-rc6...
+Date: Thu, 19 Jun 2008 02:19:12 +0100
+Message-ID: <g3cc6h$q5d$1@ger.gmane.org> (sfid-20080619_031958_028400_7BC16156)
+References: <g38o2j$1uh$1@ger.gmane.org>	 (sfid-20080617_181742_447297_198DA5E5) <1213773749.3803.155.camel@johannes.berg>	 <g3b7l1$t1o$1@ger.gmane.org> (sfid-20080618_165548_538551_7C9BA1D8) <1213803761.1312.29.camel@johannes.berg>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1213803761.1312.29.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 18/06/08 16:42, Johannes Berg wrote:
+> Hence, that commit is now reverted, see
+> http://git.kernel.org/?p=linux/kernel/git/davem/net-2.6.git;a=commit;h=3a5be7d4b079f3a9ce1e8ce4a93ba15ae6d00111
 
---=-lY+3zF6ikuegqqUAlcbw
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+I've updated my kernel to Linus' latest since he merged Dave's revert
+and I'm pleased to say the bug is now gone. Thanks for your help (and
+thanks to Dave too).
 
-On Wed, 2008-06-25 at 22:23 +0200, Stefanik G=C3=A1bor wrote:
-> On Wed, Jun 25, 2008 at 10:22 PM, Stefanik G=C3=A1bor
-> <netrolller.3d@gmail.com> wrote:
-> > In both b43 and b43legacy, dev->wl->if_type is 0
-> > (IEEE80211_IF_TYPE_INVALID) when injecting/transmitting packets on a
-> > monitor interface (not sure about receiving), while the logical result
-> > would be  5 (IEEE80211_IF_TYPE_MNTR).
-
-I should answer on the list too then:
-
-No, 5 wouldn't be the logical result. Try to understand how monitor mode
-and virtual interfaces in mac80211 work.
-
-b43 only sees what mode it is operating in, but pure monitor mode isn't
-"operating" at all.
-
-johannes
-
---=-lY+3zF6ikuegqqUAlcbw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIYqnyAAoJEKVg1VMiehFYCgkP/15JVNmhEyVtqWYEq9ykzdRA
-l1QHGEfu3bd99J4yLkqTxXSEircfbiqebL0hwiUnB8goDowk/IDqrV2efWXT4tBM
-E2rseZbDuve6bVlGhvY97qbeiZZzw8xSrWC4WOsqaZAvrDl40zTO7uWZ5ywXxHO8
-lj2hXN/i7Q7KJgTLnb8CywXvqHpnjZ0c34lOJRtJpottOmtbUzAyj91qZ66ZbaxL
-P5uY0D0W7QspKYUx92MorzdL+myCRp8vFaH+ZXWQnsRPEKXtLq+YCkhJawIgYWPv
-RdB9TUQy1NsPTm4B8Qk6NBpXJiPv+ghDOtbkbTDhtC+BwEhAS8l9ToHUsiTcWLqL
-iirKJJOfzy1ks7MedrV94T3GcUOAUmPwOnYtDEBIqG0sSM06QfUaWB9qs5y7dDns
-FdHQv/LBzbnsxdH/3ZU0KImoCFeVSURTzHxOMPbzD8W7vq8UTkzKbjcJThKkWoCJ
-K80aEeKI+wPlPjNZFufP5FFbgu9i21NV1wtvhC/hEL4dHfWOOwCgX0O6lEjg+SGc
-X0Nz60saXBarIImkbdtQQdom3Tcgcy6N2iAS568k4W+9VNuDurxxLzBu28pqIHXn
-JJb8cFJh5PUK2cbGVjQsdmvd2GCwamTBM3q2uOzkWgZlmPAf0Klr1olW/XPFtFHo
-Qld7AvhV3+VNJWmonNhJ
-=ba2d
------END PGP SIGNATURE-----
-
---=-lY+3zF6ikuegqqUAlcbw--
+--
+Andy Price
 
