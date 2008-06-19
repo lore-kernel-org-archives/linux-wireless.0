@@ -1,102 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42591 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752692AbYFLBuC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 21:50:02 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 25/29] iwlwifi: remove dead code iwl4965_calc_db_from_ratio
-Date: Thu, 12 Jun 2008 09:47:15 +0800
-Message-Id: <1213235239-2954-26-git-send-email-yi.zhu@intel.com> (sfid-20080612_041915_697127_90397BA1)
-In-Reply-To: <1213235239-2954-25-git-send-email-yi.zhu@intel.com>
-References: <1213235239-2954-1-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-2-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-3-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-4-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-5-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-6-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-7-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-8-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-9-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-10-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-11-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-12-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-13-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-14-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-15-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-16-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-17-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-18-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-19-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-20-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-21-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-22-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-23-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-24-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-25-git-send-email-yi.zhu@intel.com>
+Received: from py-out-1112.google.com ([64.233.166.181]:10151 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753650AbYFSXcU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jun 2008 19:32:20 -0400
+Received: by py-out-1112.google.com with SMTP id p76so454286pyb.10
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jun 2008 16:32:20 -0700 (PDT)
+Subject: Re: [PATCH 2/3] mac80211: get rid of function pointers in TX path
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080619232434.586735000@sipsolutions.net>
+References: <20080619232229.202159000@sipsolutions.net>
+	 <20080619232434.586735000@sipsolutions.net>
+Content-Type: text/plain
+Date: Thu, 19 Jun 2008 16:32:01 -0700
+Message-Id: <1213918321.6591.4.camel@brick> (sfid-20080620_013226_097297_B90C8F2A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Fri, 2008-06-20 at 01:22 +0200, Johannes Berg wrote:
+> +#define CALL_TXH(txh)		\
+> +	res = txh(tx);		\
+> +	if (res != TX_CONTINUE)	\
+> +		goto txh_done;
+> +
+> +	CALL_TXH(ieee80211_tx_h_check_assoc)
+> +	CALL_TXH(ieee80211_tx_h_sequence);
+> +	CALL_TXH(ieee80211_tx_h_ps_buf);
+> +	CALL_TXH(ieee80211_tx_h_select_key);
+> +	CALL_TXH(ieee80211_tx_h_michael_mic_add);
+> +	CALL_TXH(ieee80211_tx_h_rate_ctrl);
+> +	CALL_TXH(ieee80211_tx_h_misc);
+> +	CALL_TXH(ieee80211_tx_h_fragment);
+> +	/* handlers after fragment must be aware of tx info fragmentation! */
+> +	CALL_TXH(ieee80211_tx_h_encrypt);
+> +	CALL_TXH(ieee80211_tx_h_calculate_duration);
+> +	CALL_TXH(ieee80211_tx_h_stats);
+> +#undef CALL_TXH
 
-This patch removes iwl4965_calc_db_from_ratio which is dead code.
+Unnecessary ; after each CALL_TXH()...except the first.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   36 ---------------------------
- 1 files changed, 0 insertions(+), 36 deletions(-)
+Same thing for 3/3 on the receive side.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 14d4432..8f1ab23 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -1597,42 +1597,6 @@ void iwl_rx_handle(struct iwl_priv *priv)
- 	priv->rxq.read = i;
- 	iwl_rx_queue_restock(priv);
- }
--/* Convert linear signal-to-noise ratio into dB */
--static u8 ratio2dB[100] = {
--/*	 0   1   2   3   4   5   6   7   8   9 */
--	 0,  0,  6, 10, 12, 14, 16, 17, 18, 19, /* 00 - 09 */
--	20, 21, 22, 22, 23, 23, 24, 25, 26, 26, /* 10 - 19 */
--	26, 26, 26, 27, 27, 28, 28, 28, 29, 29, /* 20 - 29 */
--	29, 30, 30, 30, 31, 31, 31, 31, 32, 32, /* 30 - 39 */
--	32, 32, 32, 33, 33, 33, 33, 33, 34, 34, /* 40 - 49 */
--	34, 34, 34, 34, 35, 35, 35, 35, 35, 35, /* 50 - 59 */
--	36, 36, 36, 36, 36, 36, 36, 37, 37, 37, /* 60 - 69 */
--	37, 37, 37, 37, 37, 38, 38, 38, 38, 38, /* 70 - 79 */
--	38, 38, 38, 38, 38, 39, 39, 39, 39, 39, /* 80 - 89 */
--	39, 39, 39, 39, 39, 40, 40, 40, 40, 40  /* 90 - 99 */
--};
--
--/* Calculates a relative dB value from a ratio of linear
-- *   (i.e. not dB) signal levels.
-- * Conversion assumes that levels are voltages (20*log), not powers (10*log). */
--int iwl4965_calc_db_from_ratio(int sig_ratio)
--{
--	/* 1000:1 or higher just report as 60 dB */
--	if (sig_ratio >= 1000)
--		return 60;
--
--	/* 100:1 or higher, divide by 10 and use table,
--	 *   add 20 dB to make up for divide by 10 */
--	if (sig_ratio >= 100)
--		return (20 + (int)ratio2dB[sig_ratio/10]);
--
--	/* We shouldn't see this */
--	if (sig_ratio < 1)
--		return 0;
--
--	/* Use table for ratios 1:1 - 99:1 */
--	return (int)ratio2dB[sig_ratio];
--}
- 
- #define PERFECT_RSSI (-20) /* dBm */
- #define WORST_RSSI (-95)   /* dBm */
--- 
-1.5.3.6
+Other than that (small) bit, looks ok at first glance.
+
+Harvey
 
