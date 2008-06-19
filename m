@@ -1,55 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:35192 "EHLO mga02.intel.com"
+Received: from bu3sch.de ([62.75.166.246]:35779 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752610AbYFBRcF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2008 13:32:05 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 2/2 V2] mac80211: removing shadowed sband
-Date: Mon,  2 Jun 2008 20:31:57 +0300
-Message-Id: <1212427917-7007-2-git-send-email-tomas.winkler@intel.com> (sfid-20080602_193212_304090_71A262F5)
-In-Reply-To: <1212427917-7007-1-git-send-email-tomas.winkler@intel.com>
-References: <1212427917-7007-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1755603AbYFSRpR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jun 2008 13:45:17 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: Re: [RFC 3/2] get rid of rx handler function pointers
+Date: Thu, 19 Jun 2008 19:44:52 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1213879121.8967.9.camel@johannes.berg> <1213896016.2125.51.camel@brick>
+In-Reply-To: <1213896016.2125.51.camel@brick>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200806191944.52164.mb@bu3sch.de> (sfid-20080619_194521_350366_0BFD8B49)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes doubly defined sband variable
+On Thursday 19 June 2008 19:20:16 Harvey Harrison wrote:
+> > =EF=BB=BF#define CALL_RXH(rxh) if ((res =3D rxh(rx)) !=3D RX_CONTIN=
+UE) goto rxh_done;
+>=20
+> Would it really be so bad to just open-code them rather than the macr=
+o approach?
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/tx.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+I think the macro makes it readable. And as it is defined locally it
+does not obfuscate it.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 2f63739..6388b76 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -612,13 +612,10 @@ ieee80211_tx_h_misc(struct ieee80211_tx_data *tx)
- 
- 	if ((info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) ||
- 	    (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)) {
--		struct ieee80211_supported_band *sband;
- 		struct ieee80211_rate *rate;
- 		s8 baserate = -1;
- 		int idx;
- 
--		sband = tx->local->hw.wiphy->bands[tx->channel->band];
--
- 		/* Do not use multiple retry rates when using RTS/CTS */
- 		info->control.alt_retry_rate_idx = -1;
- 
--- 
-1.5.4.1
+> 	res =3D =EF=BB=BFieee80211_rx_h_passive_scan(rx);
+> 	if (res !=3D RX_CONTINUE) goto rxh_done;
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+This would most likely need to look like this, if opencoded:
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+	res =3D =EF=BB=BFieee80211_rx_h_passive_scan(rx);
+	if (res !=3D RX_CONTINUE)
+		goto rxh_done;
 
+>=20
+> 	res =3D =EF=BB=BFieee80211_rx_h_check(rx);
+> 	if (res !=3D RX_CONTINUE) goto rxh_done;
+>=20
+> 	...
+>
+--=20
+Greetings Michael.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
