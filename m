@@ -1,79 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.243]:20781 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750964AbYFKEck (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.183]:61023 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751049AbYFSU00 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 00:32:40 -0400
-Received: by an-out-0708.google.com with SMTP id d40so686918and.103
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2008 21:32:39 -0700 (PDT)
-Message-ID: <43e72e890806102132q1aaba42ehd76bdd30b8d4080a@mail.gmail.com> (sfid-20080611_063305_149932_805557A2)
-Date: Tue, 10 Jun 2008 21:32:38 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [compat-masters] Backported MQ requirement on 802.11n for older kernels
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	compat-masters@lists.madwifi.org,
-	"Tim Gardner" <tim.gardner@canonical.com>,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
-In-Reply-To: <1ba2fa240806101657w14599f30x67f58acbc7fe9e80@mail.gmail.com>
+	Thu, 19 Jun 2008 16:26:26 -0400
+Received: by py-out-1112.google.com with SMTP id p76so415290pyb.10
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jun 2008 13:26:26 -0700 (PDT)
+Message-ID: <1ba2fa240806191326q1b0fb6f4w7e164a0acd12157d@mail.gmail.com> (sfid-20080619_222629_999312_FC21286D)
+Date: Thu, 19 Jun 2008 23:26:25 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC PATCH 2/2] mac80211: workaround for resetting the tx power
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	"Assaf Krauss" <assaf.krauss@intel.com>
+In-Reply-To: <1213902248.8967.79.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890806080855p284f85brd0ff1f1dfce96bf8@mail.gmail.com>
-	 <c85cb4470806090053l5b763a23j43bbf0c87f594b0d@mail.gmail.com>
-	 <1213001797.698.57.camel@johannes.berg>
-	 <43e72e890806090201q55bff8e3m694121ebd4befee6@mail.gmail.com>
-	 <43e72e890806090325y5a1aebadq68204695044f4b6f@mail.gmail.com>
-	 <1ba2fa240806101657w14599f30x67f58acbc7fe9e80@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1213900512-21565-1-git-send-email-tomas.winkler@intel.com>
+	 <1213900512-21565-2-git-send-email-tomas.winkler@intel.com>
+	 <1213902248.8967.79.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 10, 2008 at 4:57 PM, Tomas Winkler <tomasw@gmail.com> wrote:
-> On Mon, Jun 9, 2008 at 1:25 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Mon, Jun 9, 2008 at 2:01 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->>> On Mon, Jun 9, 2008 at 1:56 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->>>> On Mon, 2008-06-09 at 10:53 +0300, Ron Rindjunsky wrote:
->>>>> >
->>>>> > I just finished trying to backport CONFIG_NETDEVICES_MULTIQUEUE
->>>>> > requirement for 802.11n to older kernels by relying on the old
->>>>> > internal mac80211 hacked up MQ support. I've tested the build on
->>>>> > 2.6.22, 2.6.23, and 2.6.24. Let me know if you get to test this,
->>>>> > particularly iwl4965 using 11n on 2.6.22.
->>>>> >
->>>>>
->>>>> in config.mk you put MAC80211_QOS=m, and i guess that the intention was to put
->>>>> CONFIG_MAC80211_QOS=m
->>>>> if this is the case then the compilation fails
->>>>
->>>> It should be "y"
->>>>
->>>> johannes
->>>>
->>>
->>> Danke
+On Thu, Jun 19, 2008 at 10:04 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2008-06-19 at 21:35 +0300, Tomas Winkler wrote:
+>> From: Assaf Krauss <assaf.krauss@intel.com>
 >>
->> OK found some more issues. v4.2 pushed out and new tarball
->> regenerated. This has been tested by Intel on 802.11n on iwl4965.
+>> This patch is a workaround for the unreliable disassociation
+>> flow. The resetting of the tx power is now performed upon
+>> association/reassociation.
+>>
+>> Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
+>> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+>> ---
+>>  net/mac80211/mlme.c |   13 +++++++++++++
+>>  1 files changed, 13 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+>> index 313b02a..378ccd5 100644
+>> --- a/net/mac80211/mlme.c
+>> +++ b/net/mac80211/mlme.c
+>> @@ -2148,6 +2148,19 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+>>       /* AssocResp and ReassocResp have identical structure, so process both
+>>        * of them in this function. */
+>>
+>> +     /***********************************************************
+>> +      * Workaround - Until disassociation flow is trustworthy...
+>> +      ***********************************************************/
+>> +     /* Reset power level. Get the tx power from the current channel/user.*/
+>> +     if (ifsta->country_max_pwr || local->hw.conf.tpc_pwr_limit) {
+>> +             ifsta->country_max_pwr = 0;
+>> +             local->hw.conf.tpc_pwr_limit = 0;
+>> +             ieee80211_hw_config(local);
+>> +     }
+>> +     /***********************************************************
+>> +      * End of Workaround
+>> +      ***********************************************************/
 >
-> I couldn't  make wme.c compiled for kernels > 22 unless I've added the
-> else statement  bellow into confg.mk
-> You've reported that it worked for you so what did I wrong?
->
-> ifeq ($(CONFIG_NETDEVICES_MULTIQUEUE),)
-> $(warning "WARNING: You are running a kernel >= 2.6.23, you should
-> enable CONFIG_NETDEVICES_MULTIQUEUE for 802.11n support")
-> else
-> CONFIG_MAC80211_QOS=y
+> Umm, can you explain/fix the problem instead of adding ugly comments
+> like that?
 
-Well this is forcing this option on kernels where it probably was
-available. I don't recall where we added this but I was relying on
-your .config. We forced this for older kernels as we are providing the
-infrastructure within the code but for newer kernels you need MQ
-support and NET_SCHED. If we force enable it and if those options are
-not enabled it'll fail. This is why we have this big fat warning if MQ
-is detected as disabled for >= 2.6.23.
-
-Let me know what you think.
-
-  Luis
+This patch goes separately with hope it will be not used.
+Disconnection is not really captured correctly by mac and old  data
+are not cleaned.
+Tomas
