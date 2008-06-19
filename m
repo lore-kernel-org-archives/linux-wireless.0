@@ -1,90 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.lateralplains.com ([203.208.66.137]:54416 "EHLO
-	mx.lateralplains.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752248AbYF2BhJ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33521 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753615AbYFSNY4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 21:37:09 -0400
-From: George Fong <george@lateralplains.com>
-To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: Problem making compat-wireless-2.6
-Date: Sun, 29 Jun 2008 11:33:42 +1000
-Cc: linux-wireless@vger.kernel.org
-References: <200806281953.16371.george@lateralplains.com> <69e28c910806280421t5e0de8edm8d6aab9cd582ccb7@mail.gmail.com>
-In-Reply-To: <69e28c910806280421t5e0de8edm8d6aab9cd582ccb7@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart5986745.ovzdhR0tSU";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200806291133.45866.george@lateralplains.com> (sfid-20080629_033744_225918_390A7A27)
+	Thu, 19 Jun 2008 09:24:56 -0400
+Subject: Re: Broken fragmentation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240806190608h3d833dbaua412446e8a9f560d@mail.gmail.com> (sfid-20080619_150803_298582_5210094B)
+References: <1ba2fa240806190220l18fe5dcdsf44fe81412a5f35d@mail.gmail.com>
+	 <1213869365.1312.48.camel@johannes.berg>
+	 <1ba2fa240806190446n4d931e6ara4db156900e59e0d@mail.gmail.com>
+	 <1ba2fa240806190457w20dfe2d5pf06829b26d2722a3@mail.gmail.com>
+	 <1213878207.8967.6.camel@johannes.berg>
+	 <1ba2fa240806190608h3d833dbaua412446e8a9f560d@mail.gmail.com>
+	 (sfid-20080619_150803_298582_5210094B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tOyVlUzFH0Ef86K1sU1f"
+Date: Thu, 19 Jun 2008 15:24:15 +0200
+Message-Id: <1213881855.8967.19.camel@johannes.berg> (sfid-20080619_152529_164824_B17C9821)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart5986745.ovzdhR0tSU
-Content-Type: text/plain;
-  charset="iso-8859-1"
+
+--=-tOyVlUzFH0Ef86K1sU1f
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-<snip>
+On Thu, 2008-06-19 at 16:08 +0300, Tomas Winkler wrote:
+> On Thu, Jun 19, 2008 at 3:23 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> >
+> >> > Now it crashes in the driver...maybe the txinfo to cb changes. Looki=
+ng into it.
+> >> > Tomas
+> >> Looks like this is the second part keyconf is null
+> >
+> > Part? You mean fragment? What encryption algorithm? I've quickly looked
+> > and all of them seem to do the control.hw_key assignment in their
+> > respective _skb handler so it should be done for all fragments.
+>=20
+> The problem is w/o crypto
+> I think this is not set on each fragment
+> info->flags |=3D IEEE80211_TX_CTL_DO_NOT_ENCRYPT;
 
-Dang :-) This was the fix.
+Ouch, you're right, the whole tx info isn't properly initialised for
+fragments.
 
-> Try editing drivers/net/wireless/b43/rfkill.c, and replacing
-> RFKILL_STATE_UNBLOCKED with RFKILL_STATE_ON and
-> RFKILL_STATE_SOFT_BLOCKED with RFKILL_STATE_OFF. Looks like rfkill is
-> not part of the compat package, and no work has been done to match
-> compat-wireless to older RFKILLs.
+Can you try putting
 
-Thank you for such prompt responses. Although I did this for the b43 driver=
-, I=20
-ended up progressively having to do the same fix for the drivers for a coup=
-le=20
-more, ie iwlwifi and rxt200=20
+memcpy(frag->cb, first->cb, sizeof(first->cb));
 
-I am not concerned about the rxt200 but the driver I was interested in was =
-the=20
-iwl4965, so I am not sure that by changing the settings on iwl-rfkill.c I=20
-have affected the driver I am using ....
+at around line 690 of tx.c where this code is?
+
+                frag->priority =3D first->priority;
+                skb_reserve(frag, tx->local->tx_headroom +
+                                  IEEE80211_ENCRYPT_HEADROOM);
 
 
-Having said that... the email is brought to you courtesy of the iwl9645 wif=
-i=20
-device .. which has got to be a Good Thing ;-)
+[now I know what the cause is. I had another patch that used skb_segment
+to do the fragmentation, but that was dropped and skb_segment does copy
+skb->cb while our code doesn't]
 
-Agree about the proper way of doing things - should really install a newer=
-=20
-kernel, but I am strapped into an nVidia graphics card on my laptop and the=
-=20
-livna drivers keep pace well but I think I risk breaking these at the momen=
-t=20
-with the newer kernel.
+johannes
 
-Thank you all for your prompt responses and asistance... on a weekend no=20
-less :-) I'll monitor progress and contribute whatever little I can as I ge=
-t=20
-this new laptop settled.
-
-Cheers
-G.
-
-=2D-=20
-George Fong
-Lateral Plains Pty Ltd
-Tel: +61 3 53 302 880
-=46ax: +61 3 53 302 881
-Just remember, wherever you go .... there you are.
-
---nextPart5986745.ovzdhR0tSU
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+--=-tOyVlUzFH0Ef86K1sU1f
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iEYEABECAAYFAkhm5nkACgkQyT6GKA4fvlBJ+gCfUhoMZ5KJw3M9lqlDOLadxZmB
-S2wAoJ6QVXOmXjA6PqSMZa7B1bjx1rSU
-=tIC+
+iQIcBAABAgAGBQJIWl37AAoJEKVg1VMiehFYH9gP/jBuTpEztyBY3gxtgOCtZa4u
+VuSRrKj7FM0b6Tupnc4t+2JzE1ZKcf9OicztMWA/Ly9xwGO33AqeMsWgeiUhQljR
+Dh/q6yoknFsZuWdqALEBm4+qFTrHSfb2ou24kQhIo7ezotQfpyco06cy2TtUYyBg
+IZo3H/o79yuxFNzz5ME1orhUrRTQ2x8QjZjlYd6PFVPv2FK4MWsuC3BNk5OyL06H
+qjVCR+YnVVzVRVU7h5rWqrEh8XbFJtDV7m6lCYoL5R8uQC6fe7fwG4oSr4A1bKcw
+5LPGlFaQwu99ZLnnqy6/v2EXY325bL3UgqcI8Q1s8SPTfDZv16BGapthi8Ompcx4
+3c+atrvt3Tg1pSodvE91NvtJuTFANm1477B7vzaN7wQxn5VT2GSLN5TboUneLegq
+ogDlPkm9pO4hLhK8ChvEBONtDR2gu8FQ6mKFUxgW1mnq70sNe6p7pV3Lm+bpuJN6
+AwB4755Sanj2+I3RK8z+6JqRV28KVSZNj5PtGD9IDop/5/uXRuSCFgEGsk4wGkej
+5rbueROpvl+RMgyyfvjc9QX0awJf73kGTZSGGZWkwIBMx2/WUKzPdGQRs4R4ncSI
+Id1EFcaWegdnM648m1EO2Wfle34hW03JuSwTXqe94YZK+yl7UuBIMgyftaZOK5lO
+D6TNbCQ6GnNM0aSy7ORB
+=7mhI
 -----END PGP SIGNATURE-----
 
---nextPart5986745.ovzdhR0tSU--
+--=-tOyVlUzFH0Ef86K1sU1f--
+
