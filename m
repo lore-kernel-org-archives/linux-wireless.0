@@ -1,92 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.228]:3566 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753468AbYFZSTf convert rfc822-to-8bit (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.228]:27348 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753568AbYFSLrA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 14:19:35 -0400
-Received: by wr-out-0506.google.com with SMTP id 69so126288wri.5
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2008 11:19:34 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: make workqueue freezable
-Date: Thu, 26 Jun 2008 20:21:05 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1214503196.3783.13.camel@johannes.berg> <200806262014.27907.IvDoorn@gmail.com>
-In-Reply-To: <200806262014.27907.IvDoorn@gmail.com>
+	Thu, 19 Jun 2008 07:47:00 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so5116996rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jun 2008 04:46:57 -0700 (PDT)
+Message-ID: <1ba2fa240806190446n4d931e6ara4db156900e59e0d@mail.gmail.com> (sfid-20080619_134706_598263_0938689F)
+Date: Thu, 19 Jun 2008 14:46:57 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Broken fragmentation
+Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1213869365.1312.48.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200806262021.05324.IvDoorn@gmail.com> (sfid-20080626_201939_651438_E69619B7)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1ba2fa240806190220l18fe5dcdsf44fe81412a5f35d@mail.gmail.com>
+	 <1213869365.1312.48.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 26 June 2008, Ivo van Doorn wrote:
-> On Thursday 26 June 2008, Johannes Berg wrote:
-> > This patch makes the mac80211 workqueue freezable making it
-> > interact a bit better with system suspend and not try to ping
-> > the AP while the hardware is down.
-> >=20
-> > This doesn't really help with implementing proper suspend in
-> > any way but makes some bad things trigger less.
-> >=20
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> > ---
-> > I'm not sure whether we should put this into 2.6.26 or not, while i=
-t
-> > might help a bit it doesn't really do much over what the tx bugs fi=
-nder
-> > already does except avoid sending out the packets that froze b43 in=
- the
-> > first place...
-> >=20
-> > Ivo, you might consider using =EF=BB=BFcreate_freezeable_workqueue =
-for your
-> > rt2x00 patch though.
->=20
-> Will do. Thanks for the tip.
+On Thu, Jun 19, 2008 at 12:56 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2008-06-19 at 12:20 +0300, Tomas Winkler wrote:
+>> Johannes
+>> Your patch bellow has broken the fragmentation. Can you please have a
+>> look at this.
+>
+>>           /* Setup duration field for the first fragment of the frame. Duration
+>>        * for remaining fragments will be updated when they are being sent
+>>        * to low-level driver in ieee80211_tx(). */
+>>       dur = ieee80211_duration(tx, is_multicast_ether_addr(hdr->addr1),
+>>                                (tx->flags & IEEE80211_TX_FRAGMENTED) ?
+>>                                tx->extra_frag[0]->len : 0);                                 --
+>> NULL pointer
+>
+> Oops, you're right, I missed the part where it accesses the fragments,
+> the bulk of the function does txinfo updates which I didn't want to
+> apply to all fragments.
+>
+> There is another bug too, this must come after encryption since
+> encryption can add to the length of the frame. What do you think about
+> the patch below? Untested so far because I have to go and wanted to get
+> it out to you.
+>
 
-Ehm, on second thought I keep it as it is. Currently the rt2x00 will al=
-ready shut
-down all work tasks during suspend and resumes them when the device is =
-restored.
+Now it crashes in the driver...maybe the txinfo to cb changes. Looking into it.
+Tomas
 
-The only task that needs to survive the suspend and resume task is the =
-link tuner,
-and that one is automatically started when the radio is reenabled. And =
-not stopping
-it manually during suspend, will cause problems (aka race conditions, w=
-hich have
-appeared in the past when the link tuner continues running while the ra=
-dio is down)
-
-Ivo
-
-> >  net/mac80211/main.c |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >=20
-> > --- everything.orig/net/mac80211/main.c	2008-06-26 18:21:14.0000000=
-00 +0200
-> > +++ everything/net/mac80211/main.c	2008-06-26 18:21:16.000000000 +0=
-200
-> > @@ -1774,7 +1774,7 @@ int ieee80211_register_hw(struct ieee802
-> >  	list_add_tail(&sdata->list, &local->interfaces);
-> > =20
-> >  	name =3D wiphy_dev(local->hw.wiphy)->driver->name;
-> > -	local->hw.workqueue =3D create_singlethread_workqueue(name);
-> > +	local->hw.workqueue =3D create_freezeable_workqueue(name);
-> >  	if (!local->hw.workqueue) {
-> >  		result =3D -ENOMEM;
-> >  		goto fail_workqueue;
-> >=20
-> >=20
-> >=20
->=20
->=20
->=20
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> johannes
+>
+> ---
+>  net/mac80211/tx.c |   66 ++++++++++++++++++++++++++++--------------------------
+>  1 file changed, 35 insertions(+), 31 deletions(-)
+>
+> --- everything.orig/net/mac80211/tx.c   2008-06-19 11:25:12.000000000 +0200
+> +++ everything/net/mac80211/tx.c        2008-06-19 11:53:08.000000000 +0200
+> @@ -87,8 +87,8 @@ static inline void ieee80211_dump_frame(
+>  }
+>  #endif /* CONFIG_MAC80211_LOWTX_FRAME_DUMP */
+>
+> -static u16 ieee80211_duration(struct ieee80211_tx_data *tx, int group_addr,
+> -                             int next_frag_len)
+> +static __le16 ieee80211_duration(struct ieee80211_tx_data *tx, int group_addr,
+> +                                int next_frag_len)
+>  {
+>        int rate, mrate, erp, dur, i;
+>        struct ieee80211_rate *txrate;
+> @@ -140,7 +140,7 @@ static u16 ieee80211_duration(struct iee
+>
+>        /* data/mgmt */
+>        if (0 /* FIX: data/mgmt during CFP */)
+> -               return 32768;
+> +               return cpu_to_le16(32768);
+>
+>        if (group_addr) /* Group address as the destination - no ACK */
+>                return 0;
+> @@ -210,7 +210,7 @@ static u16 ieee80211_duration(struct iee
+>                                tx->sdata->bss_conf.use_short_preamble);
+>        }
+>
+> -       return dur;
+> +       return cpu_to_le16(dur);
+>  }
+>
+>  static int inline is_ieee80211_device(struct net_device *dev,
+> @@ -544,7 +544,6 @@ ieee80211_tx_h_misc(struct ieee80211_tx_
+>  {
+>        struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
+>        u16 fc = le16_to_cpu(hdr->frame_control);
+> -       u16 dur;
+>        struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+>        struct ieee80211_supported_band *sband;
+>
+> @@ -602,14 +601,6 @@ ieee80211_tx_h_misc(struct ieee80211_tx_
+>                info->flags |= IEEE80211_TX_CTL_SHORT_PREAMBLE;
+>        }
+>
+> -       /* Setup duration field for the first fragment of the frame. Duration
+> -        * for remaining fragments will be updated when they are being sent
+> -        * to low-level driver in ieee80211_tx(). */
+> -       dur = ieee80211_duration(tx, is_multicast_ether_addr(hdr->addr1),
+> -                                (tx->flags & IEEE80211_TX_FRAGMENTED) ?
+> -                                tx->extra_frag[0]->len : 0);
+> -       hdr->duration_id = cpu_to_le16(dur);
+> -
+>        if ((info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) ||
+>            (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)) {
+>                struct ieee80211_rate *rate;
+> @@ -755,6 +746,36 @@ ieee80211_tx_h_encrypt(struct ieee80211_
+>  }
+>
+>  static ieee80211_tx_result
+> +ieee80211_tx_h_calculate_duration(struct ieee80211_tx_data *tx)
+> +{
+> +       struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
+> +       int next_len, i;
+> +       int group_addr = is_multicast_ether_addr(hdr->addr1);
+> +
+> +       if (!(tx->flags & IEEE80211_TX_FRAGMENTED)) {
+> +               hdr->duration_id = ieee80211_duration(tx, group_addr, 0);
+> +               return TX_CONTINUE;
+> +       }
+> +
+> +       hdr->duration_id = ieee80211_duration(tx, group_addr,
+> +                                             tx->extra_frag[0]->len);
+> +
+> +       for (i = 0; i < tx->num_extra_frag; i++) {
+> +               if (i + 1 < tx->num_extra_frag) {
+> +                       next_len = tx->extra_frag[i + 1]->len;
+> +               } else {
+> +                       next_len = 0;
+> +                       tx->rate_idx = tx->last_frag_rate_idx;
+> +               }
+> +
+> +               hdr = (struct ieee80211_hdr *)tx->extra_frag[i]->data;
+> +               hdr->duration_id = ieee80211_duration(tx, 0, next_len);
+> +       }
+> +
+> +       return TX_CONTINUE;
+> +}
+> +
+> +static ieee80211_tx_result
+>  ieee80211_tx_h_stats(struct ieee80211_tx_data *tx)
+>  {
+>        int i;
+> @@ -788,6 +809,7 @@ static ieee80211_tx_handler ieee80211_tx
+>        ieee80211_tx_h_fragment,
+>        /* handlers after fragment must be aware of tx info fragmentation! */
+>        ieee80211_tx_h_encrypt,
+> +       ieee80211_tx_h_calculate_duration,
+>        ieee80211_tx_h_stats,
+>        NULL
+>  };
+> @@ -1139,24 +1161,6 @@ static int ieee80211_tx(struct net_devic
+>                return 0;
+>        }
+>
+> -       if (tx.extra_frag) {
+> -               for (i = 0; i < tx.num_extra_frag; i++) {
+> -                       int next_len, dur;
+> -                       struct ieee80211_hdr *hdr =
+> -                               (struct ieee80211_hdr *)
+> -                               tx.extra_frag[i]->data;
+> -
+> -                       if (i + 1 < tx.num_extra_frag) {
+> -                               next_len = tx.extra_frag[i + 1]->len;
+> -                       } else {
+> -                               next_len = 0;
+> -                               tx.rate_idx = tx.last_frag_rate_idx;
+> -                       }
+> -                       dur = ieee80211_duration(&tx, 0, next_len);
+> -                       hdr->duration_id = cpu_to_le16(dur);
+> -               }
+> -       }
+> -
+>  retry:
+>        ret = __ieee80211_tx(local, skb, &tx);
+>        if (ret) {
+>
+>
+>
