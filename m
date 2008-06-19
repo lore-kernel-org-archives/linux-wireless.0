@@ -1,90 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mbox2.netikka.net ([213.250.81.203]:53710 "EHLO
-	mbox2.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760467AbYFFVoE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2008 17:44:04 -0400
-Message-ID: <4849AF9F.9010207@mandriva.org> (sfid-20080606_234414_180975_D5F8BE30)
-Date: Sat, 07 Jun 2008 00:43:59 +0300
-From: Thomas Backlund <tmb@mandriva.org>
+Received: from mx2.suse.de ([195.135.220.15]:42690 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754939AbYFSVcB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jun 2008 17:32:01 -0400
+Date: Thu, 19 Jun 2008 14:29:52 -0700
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>, Willy Tarreau <w@1wt.eu>,
+	Rodrigo Rubira Branco <rbranco@la.checkpoint.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [patch 06/15] b43: Fix noise calculation WARN_ON
+Message-ID: <20080619212952.GG20267@suse.de> (sfid-20080619_233209_306957_4656F8D3)
+References: <20080619211313.834170620@mini.kroah.org>
 MIME-Version: 1.0
-To: Tomas Winkler <tomasw@gmail.com>
-CC: Ian Schram <ischram@telenet.be>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwl4965 oops in 2.6.26-rc5 x86_64
-References: <4848289D.1080205@mandriva.org> <48482BC3.4070402@mandriva.org>	 <4848482C.2080208@mandriva.org> <48485F12.2050908@mandriva.org>	 <48488878.5040708@telenet.be>	 <1ba2fa240806060432t73ecb318x89e877241aa6ef55@mail.gmail.com>	 <48492734.9080901@mandriva.org> <48492E85.6010307@mandriva.org>	 <1ba2fa240806060659wf4e4088s8afdd2f7f854ea09@mail.gmail.com>	 <48494EF6.4020506@mandriva.org> <1ba2fa240806060812q28c270c4i12cc08f8665e9cc0@mail.gmail.com>
-In-Reply-To: <1ba2fa240806060812q28c270c4i12cc08f8665e9cc0@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080619212621.GA20267@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler skrev:
-> On Fri, Jun 6, 2008 at 5:51 PM, Thomas Backlund <tmb@mandriva.org> wrote:
->> Tomas Winkler skrev:
->>> On Fri, Jun 6, 2008 at 3:33 PM, Thomas Backlund <tmb@mandriva.org> wrote:
->>>> Thomas Backlund skrev:
->>>>> Tomas Winkler skrev:
->>>>>> On Fri, Jun 6, 2008 at 3:44 AM, Ian Schram <ischram@telenet.be> wrote:
->>>>>>> Isn't this the Oops Joonwoo Park wanted to patch with
->>>>>>>
->>>>>>> "[PATCH] iwlwifi: fix oops on wep key insertion" 27/5/2008
->>>>>>>
->>>>>>> invalid length of webkey that would/should be handled in mac80211?
->>>>>>>
->>>>>>> ian
->>>>>> Yes, it looks like.
->>>>> Ummm, what has a wep key to do with me trying to access a WPA2-Personal
->>>>> encrypted net ?
->>> Not sure yet, but mac is trying to assign default/static wep key.
->>>
->>> :iwlcore:iwl_send_static_wepkey_cmd+0xcb/0xd5
->>> :iwlcore:iwl_set_default_wep_key+0xa2/0xbc
->>>
->>> Try to set the encryption explicitly
->>> network={
->>>    psk="*************************"
->>>    scan_ssid=1
->>>    ssid="dlink"
->>>    pairwise=CCMP
->>>   group=CCMP
->>>  }
->>>
->>>
->> That didn't help at all.
->>
->> What's more it prevented the wifi to work on 2.6.24.7 so I had to remove the
->> lines again...
->>
-> So what's your AP configuration TKIP?
-> 
+2.6.25-stable review patch.  If anyone has any objections, please let us
+know.
 
-I've switched to clean WPA2-AES on the AP, but it does not do any 
-difference... I still get the oops...
+------------------
+From: Michael Buesch <mb@bu3sch.de>
 
-> Second try also with sw decryption:
-> 
-> in /etc/modprobe.conf
-> options iwl4965 swcrypto=1
-> 
+commit 98a3b2fe435ae76170936c14f5c9e6a87548e3ef upstream.
+
+This removes a WARN_ON that is responsible for the following koops:
+http://www.kerneloops.org/searchweek.php?search=b43_generate_noise_sample
+
+The comment in the patch describes why it's safe to simply remove
+the check.
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
 
-That works.
-I now run a clean 2.6.26-rc5
+---
+ drivers/net/wireless/b43/b43.h  |    1 -
+ drivers/net/wireless/b43/main.c |   16 ++++++++++------
+ 2 files changed, 10 insertions(+), 7 deletions(-)
 
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -596,7 +596,6 @@ struct b43_dma {
+ 
+ /* Context information for a noise calculation (Link Quality). */
+ struct b43_noise_calculation {
+-	u8 channel_at_start;
+ 	bool calculation_running;
+ 	u8 nr_samples;
+ 	s8 samples[8][4];
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -1027,7 +1027,6 @@ static void b43_generate_noise_sample(st
+ 	b43_jssi_write(dev, 0x7F7F7F7F);
+ 	b43_write32(dev, B43_MMIO_MACCMD,
+ 		    b43_read32(dev, B43_MMIO_MACCMD) | B43_MACCMD_BGNOISE);
+-	B43_WARN_ON(dev->noisecalc.channel_at_start != dev->phy.channel);
+ }
+ 
+ static void b43_calculate_link_quality(struct b43_wldev *dev)
+@@ -1036,7 +1035,6 @@ static void b43_calculate_link_quality(s
+ 
+ 	if (dev->noisecalc.calculation_running)
+ 		return;
+-	dev->noisecalc.channel_at_start = dev->phy.channel;
+ 	dev->noisecalc.calculation_running = 1;
+ 	dev->noisecalc.nr_samples = 0;
+ 
+@@ -1053,9 +1051,16 @@ static void handle_irq_noise(struct b43_
+ 
+ 	/* Bottom half of Link Quality calculation. */
+ 
++	/* Possible race condition: It might be possible that the user
++	 * changed to a different channel in the meantime since we
++	 * started the calculation. We ignore that fact, since it's
++	 * not really that much of a problem. The background noise is
++	 * an estimation only anyway. Slightly wrong results will get damped
++	 * by the averaging of the 8 sample rounds. Additionally the
++	 * value is shortlived. So it will be replaced by the next noise
++	 * calculation round soon. */
++
+ 	B43_WARN_ON(!dev->noisecalc.calculation_running);
+-	if (dev->noisecalc.channel_at_start != phy->channel)
+-		goto drop_calculation;
+ 	*((__le32 *)noise) = cpu_to_le32(b43_jssi_read(dev));
+ 	if (noise[0] == 0x7F || noise[1] == 0x7F ||
+ 	    noise[2] == 0x7F || noise[3] == 0x7F)
+@@ -1096,11 +1101,10 @@ static void handle_irq_noise(struct b43_
+ 			average -= 48;
+ 
+ 		dev->stats.link_noise = average;
+-	      drop_calculation:
+ 		dev->noisecalc.calculation_running = 0;
+ 		return;
+ 	}
+-      generate_new:
++generate_new:
+ 	b43_generate_noise_sample(dev);
+ }
+ 
 
-I also tried to bisect between 2.6.25 and 2.6.26-rc1 and ended up with:
-
-[root@5720g linux-2.6]# git bisect good
-8318d78a44d49ac1edf2bdec7299de3617c4232e is first bad commit
-commit 8318d78a44d49ac1edf2bdec7299de3617c4232e
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Thu Jan 24 19:38:38 2008 +0100
-
-     cfg80211 API for channels/bitrates, mac80211 and driver conversion
-
-
-
-Any more I can provide to help finding the bug ?
---
-Thomas
+-- 
