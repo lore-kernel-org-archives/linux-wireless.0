@@ -1,151 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47306 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756083AbYFEMNR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2008 08:13:17 -0400
-Subject: Re: [PATCH 01/12] rfkill: clarify meaning of rfkill states
-From: Dan Williams <dcbw@redhat.com>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, Dmitry Torokhov <dtor@mail.ru>
-In-Reply-To: <20080605003808.GA16599@khazad-dum.debian.net>
-References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
-	 <1212549017-30144-2-git-send-email-hmh@hmh.eng.br>
-	 <1212611246.4018.12.camel@localhost.localdomain>
-	 <1ba2fa240806041607j10841ac0qb11fe0d0b27953d8@mail.gmail.com>
-	 <20080605003808.GA16599@khazad-dum.debian.net>
-Content-Type: text/plain
-Date: Thu, 05 Jun 2008 08:12:35 -0400
-Message-Id: <1212667955.25730.29.camel@localhost.localdomain> (sfid-20080605_141320_721594_2987E190)
-Mime-Version: 1.0
+Received: from durandal.kismetwireless.net ([199.201.145.179]:32873 "EHLO
+	durandal.nerv-un.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755634AbYFSNlR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jun 2008 09:41:17 -0400
+Date: Thu, 19 Jun 2008 09:41:38 -0400
+From: Mike Kershaw <dragorn@kismetwireless.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: More 4965 woes
+Message-ID: <20080619134138.GA27021@drd1813.lan> (sfid-20080619_154120_863927_76BAE742)
+Reply-To: Mike Kershaw <dragorn@kismetwireless.net>
+References: <20080617132401.GA8328@drd1813.lan> <1213781294.2625.52.camel@debian.sh.intel.com> <20080618154109.GB15170@drd1813.lan>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="YiEDa0DAkWCtVeE4"
+In-Reply-To: <20080618154109.GB15170@drd1813.lan>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-06-04 at 21:38 -0300, Henrique de Moraes Holschuh wrote:
-> On Thu, 05 Jun 2008, Tomas Winkler wrote:
-> > SW should be able to more sw radio switch regardless of hw switch so
-> 
-> Be extremely careful with "should" and any ideas you might have of the
-> capabilities of rf switch hardware, because chances are firmware-based
-> switches will frustate you.   In fact, you're wrong.  Some firmware
-> softswitches don't let you change their status when there is also a
-> hardware switch present, and that hardware switch is in the "block
-> transmissions" state.
 
-What are we talking about with "sw switch"?  AFAIK there are a few types
-of rfkill switches:
+--YiEDa0DAkWCtVeE4
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-a) hard switches that kill the radio and notify the driver
-b) hard switches that notify the driver but do not directly kill the
-radio
-c) hard switches that disconnect the device from its bus entirely (most
-BT rfkill)
-d) hard switches that notify BIOS only (not the driver) and rely on
-special laptop drivers (hp-wmi, toshiba-laptop, etc) to notify the
-system
-e) keyboard "soft" switches that are simply input layer buttons (like Fn
-+F5 on thinkpads) and don't toggle
+On Wed, Jun 18, 2008 at 11:41:10AM -0400, Mike Kershaw wrote:
+> On Wed, Jun 18, 2008 at 05:28:14PM +0800, Zhu Yi wrote:
+> > On Tue, 2008-06-17 at 09:24 -0400, Mike Kershaw wrote:
+> > > 1 - Inability to associate to a network on 5ghz.  Same AP on 2.4ghz
+> > >   works fine, scanning shows the AP fine.  Sniffing with an additional
+> > >   card shows no frames at all being sent by the 4965. AP is on a
+> > > channel
+> > >   the 4965 should be able to talk to according to iwlist channel (logs
+> > > attached)
+> >=20
+> > >From the log, you are trying to use channel 56 which is under radar
+> > detection. The card must hear from the AP first in order to send. Can
+> > you try 36?=20
+>=20
+> Must hear from the AP?  Like, beacons?  If beacons aren't enough, how is
+> something ever supposed to associate?
+>=20
+> The AP is detected normally via scanning (wpa_supplicant 'scan' and
+> iwlist scan) so the card is seeing beacons fine.
+>=20
+> I'll reboot into the git kernel later today and redo the test on another
+> channel.
 
-Besides that, we can rfkill radios in software through commands like
-"iwconfig wlan0 txpower off".
+On channel 36 things appear to work (well, as much as they do otherwise,
+packet hanging still makes the device unusable).  I'm still confused as
+to why the card can report it works on that channel, scan that channel,
+see beacons, but then refuse to transmit.
 
-Only (a), (b), (c), and sometimes (d) actually kill the radio and block
-changes by the user.  Otherwise, it's up to userspace to kill the radios
-when events come in.
+-m
 
-> > I believe it's better to have separate sysfs entry for sw and hw switch states.
-> > hw sysfs file should be read only.
-> 
-> When you do this (have more than one rfkill class for the same device),
-> the kernel events and uevents are not able to propagate the real state
-> of the device anymore:  upon the recepit of any event, you need to
-> *locate* all rfkill switches attached to that device, query them all,
-> and only if all of them are in state RFKILL_STATE_ON, will the device be
-> in RFKILL_STATE_ON.
+--=20
+Mike Kershaw/Dragorn <dragorn@kismetwireless.net>
+GPG Fingerprint: 3546 89DF 3C9D ED80 3381  A661 D7B2 8822 738B BDB1
 
-The only thing I personally care about is separating radio state from
-switch state so that I can distinguish a softkill (via ex. iwconfig
-wlan0 txpower off) from a hardkill via a real killswitch.
+Catapultam habeo. Nisi pecuniam omnem mihi dabis, ad caput tuum saxum=20
+immane mittam.=20
 
-I still don't quite know what "sw switch" means here...
+I have a catapult. Give me all your money, or I will fling an enormous=20
+rock at your head
 
-> So, we'd need to change the rfkill class to avoid all that hassle (see
-> more on this below).
-> 
-> Sincerely, I heavly prefer to add a third state (RFKILL_STATE_HARDOFF or
-> something like that).  That is a safe path that will have no subtle
-> interactions with the way rfkill is meant to be used.  I am not so sure
-> the other possibilities have this advantage, even if I cannot pinpoint
-> what interactions they could cause right now.
-> 
-> > I agree it good to keep radio state separately as well.
-> 
-> I don't like this either, unless by "separate" you mean outside of
-> rfkill entirely.
+--YiEDa0DAkWCtVeE4
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-Why should a "device rfkill state" be in a separate module?  Radio state
-_is_ rfkill state.  rfkill switches turn the radio on or off but
-ultimately it's the radio itself that determines whether anything is
-actually killed or not.  Whether software (iwconfig wlan0 txpower off)
-or hardware (flip a switch somewhere) turns the radio off, the result is
-the same.  The radio is killed and no longer transmitting.  Thats what
-rfkill is.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
 
-Every driver that does anything wireless should be handling rfkill
-events and providing rfkill state through the same mechanism.  I don't
-want to treat BT, WWAN, WiMAX, WiFi, UWB, BT differently.  All those
-devices should have _one_ method of turning themselves off through
-either hardware or software, and the system that provides that method
-should be the rfkill system.
+iEYEARECAAYFAkhaYhIACgkQ17KIInOLvbFl+QCfV7q/hNLfS1IiovkiqCcWSdOq
+cGAAnjp30w79y0ufS7sRKnjk8S9gEMfm
+=oZLu
+-----END PGP SIGNATURE-----
 
-> What you seem to be calling "radio state" is the effective state of a
-> device with more than one kill line (be it software or hardware).  We
-> could call that "device rfkill state" instead of "switch rfkill state"
-> to avoid confusion, I suppose.
-
-That seems fine, I guess.
-
-> Anyway, if we are to use various *related* rfkill switches per device,
-> rfkill needs further changes, including an extra callback into the
-> driver, so as to be able to export the device rfkill state also in all
-> switch rfkill state events (otherwise these events become quite useless
-> for many uses).
-
-But yes, there would need to be a "device rfkill state" changed event
-and another call to get the device rfkill state.
-
-> It is more complicated and heavyweight a solution for very little gain
-> when compared to the addition of a third RFKILL_STATE state, IMO.
-> Remeber that multiple related switches per device adds complexity to the
-> INTERFACE, and therefore to all applications that use that interface.
-> 
-> > Third I think this patch use opposite logic as used currently in
-> > practice. RFKILL_ON means that radio is off .
-> 
-> The correct reading of rfkill class states are:
-> 
-> RFKILL_STATE_ON:  transmitter is UNBLOCKED and *may* operate
-> RFKILL_STATE_OFF: transmitter is BLOCKED and will *NOT* operate.
-> 
-> Nothing else is correct.
-> 
-> We could certainly rename these states to
-> 
-> enum rfkill_state {
-> 	RFKILL_STATE_BLOCKED = 0,
-> 	RFKILL_STATE_UNBLOCKED = 1,
-> };
-> 
-> #define RFKILL_STATE_ON RFKILL_STATE_UNBLOCKED
-> #define RFKILL_STATE_OFF RFKILL_STATE_BLOCKED
-> 
-> Ivo, do you want a patch that does the above (plus the documentation
-> changes, of course)?
-
-Yeah, that would probably be better.  I kept having to go back to
-rfkill.txt because I kept mixing up what "on" meant.
-
-Dan
-
+--YiEDa0DAkWCtVeE4--
