@@ -1,53 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59052
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752125AbYFCRhU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 13:37:20 -0400
-Date: Tue, 03 Jun 2008 10:37:16 -0700 (PDT)
-Message-Id: <20080603.103716.193719039.davem@davemloft.net> (sfid-20080603_193737_523598_04EB099E)
-To: mokuno@sm.sony.co.jp
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: : Emit event stream compat iw_point objects correctly.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080603.095750.120470495.davem@davemloft.net>
-References: <20080110.011602.74511551.davem@davemloft.net>
-	<20080111112248.610C.40F06B3A@sm.sony.co.jp>
-	<20080603.095750.120470495.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from bu3sch.de ([62.75.166.246]:34514 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752841AbYFSRlD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jun 2008 13:41:03 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Add mask/set capability to debugfs MMIO interface
+Date: Thu, 19 Jun 2008 19:38:32 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200806191938.33048.mb@bu3sch.de> (sfid-20080619_194107_922352_7816675B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Miller <davem@davemloft.net>
-Date: Tue, 03 Jun 2008 09:57:50 -0700 (PDT)
+This adds an atomic mask/set capability to the debugfs MMIO interface.
+This is needed to support mask and/or set operations from the userspace
+debugging tools.
 
-> From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-> Date: Fri, 11 Jan 2008 13:16:29 +0900
-> 
-> > The source address does not have to be adjusted.  I think it should be
-> > 		       ((char *) iwe) + IW_EV_LCP_LEN,
-> > or just
-> > 		       &iwe->u
-> > I think it is more readable what we want to do here.
-> > 
-> > 
-> > > +		       event_len - lcp_len);
-> > 
-> > The length of the real payload does not need to take account of the
-> > destination offset change.  So we can keep the original code like:
-> > 
-> > 		       org_event_len - IW_EV_LCP_LEN);
-> 
-> As long as IW_EV_LCP_LEN and IW_EV_COMPAT_LCP_LEN are different, I am
-> pretty sure we need to make these adjustments.
-> 
-> There are so many differences in how struct vs. sub-struct alignment will
-> occur in these cases, that we need to be very careful.
-> 
-> I'll try to look more closely at this and do some testing of my own on
-> a compat platform.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-I know understand what you were trying to say, indeed the source
-address does not and should not need to be adjusted, it is in
-non-compat format afterall.
+---
+
+John, please queue this for 2.6.27
+
+
+Index: wireless-testing/drivers/net/wireless/b43/debugfs.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/debugfs.c	2008-06-19 12:49:10.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/debugfs.c	2008-06-19 16:02:54.000000000 +0200
+@@ -264,32 +264,43 @@ static int mmio16read__write_file(struct
+ 
+ 	res = sscanf(buf, "0x%X", &addr);
+ 	if (res != 1)
+ 		return -EINVAL;
+ 	if (addr > B43_MAX_MMIO_ACCESS)
+ 		return -EADDRNOTAVAIL;
++	if ((addr % 2) != 0)
++		return -EINVAL;
+ 
+ 	dev->dfsentry->mmio16read_next = addr;
+ 
+ 	return 0;
+ }
+ 
+ static int mmio16write__write_file(struct b43_wldev *dev,
+ 				   const char *buf, size_t count)
+ {
+-	unsigned int addr, val;
++	unsigned int addr, mask, set;
+ 	int res;
++	u16 val;
+ 
+-	res = sscanf(buf, "0x%X = 0x%X", &addr, &val);
+-	if (res != 2)
++	res = sscanf(buf, "0x%X 0x%X 0x%X", &addr, &mask, &set);
++	if (res != 3)
+ 		return -EINVAL;
+ 	if (addr > B43_MAX_MMIO_ACCESS)
+ 		return -EADDRNOTAVAIL;
+-	if (val > 0xFFFF)
++	if ((mask > 0xFFFF) || (set > 0xFFFF))
+ 		return -E2BIG;
++	if ((addr % 2) != 0)
++		return -EINVAL;
+ 
++	if (mask == 0)
++		val = 0;
++	else
++		val = b43_read16(dev, addr);
++	val &= mask;
++	val |= set;
+ 	b43_write16(dev, addr, val);
+ 
+ 	return 0;
+ }
+ 
+ static ssize_t mmio32read__read_file(struct b43_wldev *dev,
+@@ -317,32 +328,43 @@ static int mmio32read__write_file(struct
+ 
+ 	res = sscanf(buf, "0x%X", &addr);
+ 	if (res != 1)
+ 		return -EINVAL;
+ 	if (addr > B43_MAX_MMIO_ACCESS)
+ 		return -EADDRNOTAVAIL;
++	if ((addr % 4) != 0)
++		return -EINVAL;
+ 
+ 	dev->dfsentry->mmio32read_next = addr;
+ 
+ 	return 0;
+ }
+ 
+ static int mmio32write__write_file(struct b43_wldev *dev,
+ 				   const char *buf, size_t count)
+ {
+-	unsigned int addr, val;
++	unsigned int addr, mask, set;
+ 	int res;
++	u32 val;
+ 
+-	res = sscanf(buf, "0x%X = 0x%X", &addr, &val);
+-	if (res != 2)
++	res = sscanf(buf, "0x%X 0x%X 0x%X", &addr, &mask, &set);
++	if (res != 3)
+ 		return -EINVAL;
+ 	if (addr > B43_MAX_MMIO_ACCESS)
+ 		return -EADDRNOTAVAIL;
+-	if (val > 0xFFFFFFFF)
++	if ((mask > 0xFFFFFFFF) || (set > 0xFFFFFFFF))
+ 		return -E2BIG;
++	if ((addr % 4) != 0)
++		return -EINVAL;
+ 
++	if (mask == 0)
++		val = 0;
++	else
++		val = b43_read32(dev, addr);
++	val &= mask;
++	val |= set;
+ 	b43_write32(dev, addr, val);
+ 
+ 	return 0;
+ }
+ 
+ /* wl->irq_lock is locked */
