@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:58894 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755395AbYFVPvo (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56058
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751702AbYFSWEs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jun 2008 11:51:44 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Thomas Renninger <trenn@suse.de>
-Subject: [RFC] rfkill rfkill_state enhancements and new docs
-Date: Sun, 22 Jun 2008 12:51:37 -0300
-Message-Id: <1214149899-8323-1-git-send-email-hmh@hmh.eng.br> (sfid-20080622_175208_509004_B7DC3168)
+	Thu, 19 Jun 2008 18:04:48 -0400
+Date: Thu, 19 Jun 2008 15:04:48 -0700 (PDT)
+Message-Id: <20080619.150448.24028711.davem@davemloft.net> (sfid-20080620_000457_026836_519B1B24)
+To: tomasw@gmail.com
+Cc: johannes@sipsolutions.net, mcgrof@gmail.com,
+	linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org, assaf.krauss@intel.com
+Subject: Re: [RFC PATCH 1/2] mac80211: 11d Handling - Country Information
+ Element
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1ba2fa240806191329w7aef4ccaq587915d41d999edd@mail.gmail.com>
+References: <1ba2fa240806191316h3ca2044o407d094415fa5bf2@mail.gmail.com>
+	<1213906688.8967.112.camel@johannes.berg>
+	<1ba2fa240806191329w7aef4ccaq587915d41d999edd@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "Tomas Winkler" <tomasw@gmail.com>
+Date: Thu, 19 Jun 2008 23:29:55 +0300
 
-These two patches apply on top of the new patchset I just sent to
-linux-wireless.
+> On Thu, Jun 19, 2008 at 11:18 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> >
+> >> >> +     if (country_ie_len < 6) {
+> >> >> +             printk(KERN_ERR "%s: country information element shorter (%d)"
+> >> >> +                     " than expected.\n", __func__, country_ie_len);
+> >> >
+> >> > Remotely exploitable security bug.
+> >
+> >> Please explain,
+> >
+> > Sending broken frames will fill the disk.
+> 
+> I see thanks (yeah, distors doesn't make separate log partitions as default)
 
-They are NOT finished yet.  In particular, patch 1 was just
-compile-tested so far, but I thought I should get early comments on it
-to get it ready ASAP.
+How distros do their partitioning is neither here not there.  And even
+if they make a seperate log partition, that means it's still exploitable
+in that you will no longer get the other non-spam log messages that might
+be important to know about.
 
-Patch 2 *really* improves the documentation of rfkill, please look at it
-and tell me if it answered any lingering doubts about what rfkill can do
-and how to use it.
-
-So, please send me your comments about them.  I want to get them ready,
-improved and tested to the point of sending a request for merge during
-this week, so that they could conceivably also make it for 2.6.27.
-
-Note: I have checked, and there is nothing technical that precludes a
-wireless driver like ipw2200 to register many rfkill classes, one per
-rfkill input line.  However, doing so is bad from an usability PoV, so
-it is forbidden by "policy" (i.e. the docs tell you not to).  Platform
-drivers, that often deal with various rfkill controllers, ARE expected
-to register many rfkill classes.
-
-I am still updating thinkpad-acpi to use the new functionality on these
-two patches, but I think I have converted its bluetooth switch already
-to the new functionality (warning: untested).  If you want to look at
-the new code, it is at:
-git://repo.or.cz/linux-2.6/linux-acpi-2.6/ibm-acpi-2.6.git devel
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Any kernel log message triggerable remotely without any kind of rate
+limiting is a bug.
