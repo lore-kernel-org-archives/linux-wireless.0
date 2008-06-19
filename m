@@ -1,159 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:13476 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753630AbYFELHN (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58289 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754075AbYFSX1k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2008 07:07:13 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/3] libertas: document register meanings
-Date: Thu, 5 Jun 2008 13:07:04 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200806051307.04908.hs4233@mail.mn-solutions.de> (sfid-20080605_130717_310828_F283B43B)
+	Thu, 19 Jun 2008 19:27:40 -0400
+Message-Id: <20080619232434.586735000@sipsolutions.net> (sfid-20080620_012743_628397_C9C3CEA2)
+References: <20080619232229.202159000@sipsolutions.net>
+Date: Fri, 20 Jun 2008 01:22:31 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/3] mac80211: get rid of function pointers in TX path
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+This changes the TX path to no longer use function pointers for
+TX handlers but rather invoke them directly. If debugging is
+enabled, mark the TX handlers noinline because otherwise they
+all get inlined into invoke_tx_handlers() which makes it harder
+to see where a bug is.
 
---- linux.orig/drivers/net/wireless/libertas/if_cs.c
-+++ linux/drivers/net/wireless/libertas/if_cs.c
-@@ -159,7 +159,9 @@
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/ieee80211_i.h |    6 ++++
+ net/mac80211/tx.c          |   63 ++++++++++++++++++++-------------------------
+ 2 files changed, 35 insertions(+), 34 deletions(-)
+
+--- everything.orig/net/mac80211/tx.c	2008-06-20 01:05:02.000000000 +0200
++++ everything/net/mac80211/tx.c	2008-06-20 01:05:05.000000000 +0200
+@@ -222,7 +222,7 @@ static int inline is_ieee80211_device(st
+ 
+ /* tx handlers */
+ 
+-static ieee80211_tx_result
++static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
+ {
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+@@ -276,7 +276,7 @@ ieee80211_tx_h_check_assoc(struct ieee80
+ 	return TX_CONTINUE;
+ }
+ 
+-static ieee80211_tx_result
++static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_sequence(struct ieee80211_tx_data *tx)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
+@@ -434,7 +434,7 @@ ieee80211_tx_h_unicast_ps_buf(struct iee
+ 	return TX_CONTINUE;
+ }
+ 
+-static ieee80211_tx_result
++static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_ps_buf(struct ieee80211_tx_data *tx)
+ {
+ 	if (unlikely(tx->flags & IEEE80211_TX_PS_BUFFERED))
+@@ -446,7 +446,7 @@ ieee80211_tx_h_ps_buf(struct ieee80211_t
+ 		return ieee80211_tx_h_multicast_ps_buf(tx);
+ }
+ 
+-static ieee80211_tx_result
++static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
+ {
+ 	struct ieee80211_key *key;
+@@ -495,7 +495,7 @@ ieee80211_tx_h_select_key(struct ieee802
+ 	return TX_CONTINUE;
+ }
+ 
+-static ieee80211_tx_result
++static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ {
+ 	struct rate_selection rsel;
+@@ -539,7 +539,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee8021
+ 	return TX_CONTINUE;
+ }
+ 
+-static ieee80211_tx_result
++static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_misc(struct ieee80211_tx_data *tx)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
+@@ -635,7 +635,7 @@ ieee80211_tx_h_misc(struct ieee80211_tx_
+ 	return TX_CONTINUE;
+ }
+ 
+-static ieee80211_tx_result
++static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_fragment(struct ieee80211_tx_data *tx)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
+@@ -726,7 +726,7 @@ ieee80211_tx_h_fragment(struct ieee80211
+ 	return TX_DROP;
+ }
+ 
+-static ieee80211_tx_result
++static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_encrypt(struct ieee80211_tx_data *tx)
+ {
+ 	if (!tx->key)
+@@ -746,7 +746,7 @@ ieee80211_tx_h_encrypt(struct ieee80211_
+ 	return TX_DROP;
+ }
+ 
+-static ieee80211_tx_result
++static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_calculate_duration(struct ieee80211_tx_data *tx)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
+@@ -776,7 +776,7 @@ ieee80211_tx_h_calculate_duration(struct
+ 	return TX_CONTINUE;
+ }
+ 
+-static ieee80211_tx_result
++static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_stats(struct ieee80211_tx_data *tx)
+ {
+ 	int i;
+@@ -797,24 +797,6 @@ ieee80211_tx_h_stats(struct ieee80211_tx
+ }
  
  
+-typedef ieee80211_tx_result (*ieee80211_tx_handler)(struct ieee80211_tx_data *);
+-static ieee80211_tx_handler ieee80211_tx_handlers[] =
+-{
+-	ieee80211_tx_h_check_assoc,
+-	ieee80211_tx_h_sequence,
+-	ieee80211_tx_h_ps_buf,
+-	ieee80211_tx_h_select_key,
+-	ieee80211_tx_h_michael_mic_add,
+-	ieee80211_tx_h_rate_ctrl,
+-	ieee80211_tx_h_misc,
+-	ieee80211_tx_h_fragment,
+-	/* handlers after fragment must be aware of tx info fragmentation! */
+-	ieee80211_tx_h_encrypt,
+-	ieee80211_tx_h_calculate_duration,
+-	ieee80211_tx_h_stats,
+-	NULL
+-};
+-
+ /* actual transmit path */
  
--/* First the bitmasks for the host/card interrupt/status registers: */
-+/*
-+ * First the bitmasks for the host/card interrupt/status registers:
-+ */
- #define IF_CS_BIT_TX			0x0001
- #define IF_CS_BIT_RX			0x0002
- #define IF_CS_BIT_COMMAND		0x0004
-@@ -167,35 +169,104 @@
- #define IF_CS_BIT_EVENT			0x0010
- #define	IF_CS_BIT_MASK			0x001f
+ /*
+@@ -1114,16 +1096,29 @@ static int invoke_tx_handlers(struct iee
+ {
+ 	struct ieee80211_local *local = tx->local;
+ 	struct sk_buff *skb = tx->skb;
+-	ieee80211_tx_handler *handler;
+ 	ieee80211_tx_result res = TX_DROP;
+ 	int i;
  
--/* And now the individual registers and assorted masks */
+-	for (handler = ieee80211_tx_handlers; *handler != NULL; handler++) {
+-		res = (*handler)(tx);
+-		if (res != TX_CONTINUE)
+-			break;
+-	}
++#define CALL_TXH(txh)		\
++	res = txh(tx);		\
++	if (res != TX_CONTINUE)	\
++		goto txh_done;
 +
++	CALL_TXH(ieee80211_tx_h_check_assoc)
++	CALL_TXH(ieee80211_tx_h_sequence);
++	CALL_TXH(ieee80211_tx_h_ps_buf);
++	CALL_TXH(ieee80211_tx_h_select_key);
++	CALL_TXH(ieee80211_tx_h_michael_mic_add);
++	CALL_TXH(ieee80211_tx_h_rate_ctrl);
++	CALL_TXH(ieee80211_tx_h_misc);
++	CALL_TXH(ieee80211_tx_h_fragment);
++	/* handlers after fragment must be aware of tx info fragmentation! */
++	CALL_TXH(ieee80211_tx_h_encrypt);
++	CALL_TXH(ieee80211_tx_h_calculate_duration);
++	CALL_TXH(ieee80211_tx_h_stats);
++#undef CALL_TXH
+ 
++ txh_done:
+ 	if (unlikely(res == TX_DROP)) {
+ 		I802_DEBUG_INC(local->tx_handlers_drop);
+ 		dev_kfree_skb(skb);
+--- everything.orig/net/mac80211/ieee80211_i.h	2008-06-20 01:05:00.000000000 +0200
++++ everything/net/mac80211/ieee80211_i.h	2008-06-20 01:05:05.000000000 +0200
+@@ -942,4 +942,10 @@ int ieee80211_frame_duration(struct ieee
+ void mac80211_ev_michael_mic_failure(struct net_device *dev, int keyidx,
+ 				     struct ieee80211_hdr *hdr);
+ 
++#ifdef CONFIG_MAC80211_DEBUG
++#define debug_noinline noinline
++#else
++#define debug_noinline
++#endif
 +
-+/*
-+ * It's not really clear to me what the host status register is for. It
-+ * needs to be set almost in union with "host int cause". The following
-+ * bits from above are used:
-+ *
-+ *   IF_CS_BIT_TX         driver downloaded a data packet
-+ *   IF_CS_BIT_RX         driver got a data packet
-+ *   IF_CS_BIT_COMMAND    driver downloaded a command
-+ *   IF_CS_BIT_RESP       not used (has some meaning with powerdown)
-+ *   IF_CS_BIT_EVENT      driver read a host event
-+ */
- #define IF_CS_HOST_STATUS		0x00000000
- 
-+/*
-+ * With the host int cause register can the host (that is, Linux) cause
-+ * an interrupt in the firmware, to tell the firmware about those events:
-+ *
-+ *   IF_CS_BIT_TX         a data packet has been downloaded
-+ *   IF_CS_BIT_RX         a received data packet has retrieved
-+ *   IF_CS_BIT_COMMAND    a firmware block or a command has been downloaded
-+ *   IF_CS_BIT_RESP       not used (has some meaning with powerdown)
-+ *   IF_CS_BIT_EVENT      a host event (link lost etc) has been retrieved
-+ */
- #define IF_CS_HOST_INT_CAUSE		0x00000002
- 
-+/*
-+ * The host int mask register is used to enable/disable interrupt.  However,
-+ * I have the suspicion that disabled interrupts are lost.
-+ */
- #define IF_CS_HOST_INT_MASK		0x00000004
- 
-+/*
-+ * Used to send or receive data packets:
-+ */
- #define IF_CS_HOST_WRITE		0x00000016
- #define IF_CS_HOST_WRITE_LEN		0x00000014
--
--#define IF_CS_HOST_CMD			0x0000001A
--#define IF_CS_HOST_CMD_LEN		0x00000018
--
- #define IF_CS_READ			0x00000010
- #define IF_CS_READ_LEN			0x00000024
- 
-+/*
-+ * Used to send commands (and to send firmware block) and to
-+ * receive command responses:
-+ */
-+#define IF_CS_HOST_CMD			0x0000001A
-+#define IF_CS_HOST_CMD_LEN		0x00000018
- #define IF_CS_CARD_CMD			0x00000012
- #define IF_CS_CARD_CMD_LEN		0x00000030
- 
-+/*
-+ * The card status registers shows what the card/firmware actually
-+ * accepts:
-+ *
-+ *   IF_CS_BIT_TX        you may send a data packet
-+ *   IF_CS_BIT_RX        you may retrieve a data packet
-+ *   IF_CS_BIT_COMMAND   you may send a command
-+ *   IF_CS_BIT_RESP      you may retrieve a command response
-+ *   IF_CS_BIT_EVENT     the card has a event for use (link lost, snr low etc)
-+ *
-+ * When reading this register several times, you will get back the same
-+ * results --- with one exception: the IF_CS_BIT_EVENT clear itself
-+ * automatically.
-+ *
-+ * Not that we don't rely on BIT_RX,_BIT_RESP or BIT_EVENT because
-+ * we handle this via the card int cause register.
-+ */
- #define IF_CS_CARD_STATUS		0x00000020
- #define IF_CS_CARD_STATUS_MASK		0x7f00
- 
-+/*
-+ * The card int cause register is used by the card/firmware to notify us
-+ * about the following events:
-+ *
-+ *   IF_CS_BIT_TX        a data packet has successfully been sentx
-+ *   IF_CS_BIT_RX        a data packet has been received and can be retrieved
-+ *   IF_CS_BIT_COMMAND   not used
-+ *   IF_CS_BIT_RESP      the firmware has a command response for us
-+ *   IF_CS_BIT_EVENT     the card has a event for use (link lost, snr low etc)
-+ */
- #define IF_CS_CARD_INT_CAUSE		0x00000022
- 
-+/*
-+ * This is used to for handshaking with the card's bootloader/helper image
-+ * to synchronize downloading of firmware blocks.
-+ */
- #define IF_CS_CARD_SQ_READ_LOW		0x00000028
- #define IF_CS_CARD_SQ_HELPER_OK		0x10
- 
-+/*
-+ * The scratch register tells us ...
-+ *
-+ * IF_CS_SCRATCH_BOOT_OK     the bootloader runs
-+ * IF_CS_SCRATCH_HELPER_OK   the helper firmware already runs
-+ */
- #define IF_CS_SCRATCH			0x0000003F
--
-+#define IF_CS_SCRATCH_BOOT_OK		0x00
-+#define IF_CS_SCRATCH_HELPER_OK		0x5a
- 
- 
- /********************************************************************/
-@@ -466,11 +537,11 @@
- 	/* "If the value is 0x5a, the firmware is already
- 	 * downloaded successfully"
- 	 */
--	if (scratch == 0x5a)
-+	if (scratch == IF_CS_SCRATCH_HELPER_OK)
- 		goto done;
- 
- 	/* "If the value is != 00, it is invalid value of register */
--	if (scratch != 0x00) {
-+	if (scratch != IF_CS_SCRATCH_BOOT_OK) {
- 		ret = -ENODEV;
- 		goto done;
- 	}
+ #endif /* IEEE80211_I_H */
+
+-- 
+
