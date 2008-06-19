@@ -1,98 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:53482 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756183AbYF0Vf3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2008 17:35:29 -0400
-Date: Fri, 27 Jun 2008 18:35:24 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Dan Williams <dcbw@redhat.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Thomas Renninger <trenn@suse.de>,
-	Fabien Crespel <fabien@crespel.net>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Subject: Re: [PATCH 1/2] rfkill: rename the rfkill_state states and add
-	block-locked state
-Message-ID: <20080627213524.GA8266@khazad-dum.debian.net> (sfid-20080627_233535_755711_28B3C417)
-References: <1214254004-32652-1-git-send-email-hmh@hmh.eng.br> <1214254004-32652-2-git-send-email-hmh@hmh.eng.br> <1214591028.24579.18.camel@localhost.localdomain>
+Received: from bu3sch.de ([62.75.166.246]:50259 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753650AbYFSXDo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jun 2008 19:03:44 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Remove "shm" and "ucode_regs" debugfs files
+Date: Fri, 20 Jun 2008 01:01:50 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1214591028.24579.18.camel@localhost.localdomain>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200806200101.50420.mb@bu3sch.de> (sfid-20080620_010347_607570_93CD1E17)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 27 Jun 2008, Dan Williams wrote:
-> On Mon, 2008-06-23 at 17:46 -0300, Henrique de Moraes Holschuh wrote:
-> > The current naming of rfkill_state causes a lot of confusion: not only the
-> > "kill" in rfkill suggests negative logic, but also the fact that rfkill cannot
-> > turn anything on (it can just force something off or stop forcing something
-> > off) is often forgotten.
-> > 
-> > Rename RFKILL_STATE_OFF to RFKILL_STATE_SOFT_BLOCKED (transmitter is blocked
-> > and will not operate; state can be changed by a toggle_radio request), and
-> > RFKILL_STATE_ON to RFKILL_STATE_UNBLOCKED (transmitter is not blocked, and may
-> > operate).
-> > 
-> > Also, add a new third state, RFKILL_STATE_HARD_BLOCKED (transmitter is blocked
-> > and will not operate; state cannot be changed through a toggle_radio request),
-> > which is used by drivers to indicate a wireless transmiter was blocked by a
-> > hardware rfkill line that accepts no overrides.
-> > 
-> > Keep the old names as #defines, but document them as deprecated.  This way,
-> > drivers can be converted to the new names *and* verified to actually use rfkill
-> > correctly one by one.
-> > 
-> > Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> > Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> 
-> Thanks for doing this!
-> 
-> So with this patch, in the case where ex. hp-wmi advertises a killswitch
-> and the wlan driver itself doesn't have one, when NM wants to softkill
-> the radio, should NM do a SIOCSIWTXPOW or softblock the hp-wmi
-> killswitch?  Or would the wlan driver implement an rfkill handler and
+We don't need these two dump-files anymore, as we can easily do this
+in userspace now.
+Use b43-fwdump from the b43-tools repository to dump microcode registers.
+Use "b43-fwdump -s" to dump SHM (or use -S to do a binary dump)
 
-I thought a lot about it, and I personally feel it is better to keep
-SIOCSIWTXPOW separate from rfkill.  This is a driver layer thing, and rfkill
-doesn't care either way, but IMHO it is less confusing for the user if
-iwconfig txpower doesn't change the rfkill status of a device.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-This means NM would be trying to set the class/rfkill*/state to
-RFKILL_STATE_SOFT_BLOCKED for the devices it wants to block.
+---
 
-And the way to be able to do it without going insane really is to start
-adding rfkill subsystem support to all wireless network drivers, so your
-WLAN devices will all have a rfkill class related to them.
+John, please apply this to 2.6.27
 
-> thus have /sys/class/rfkill/rfkillX as well?  My understanding of what
-> would happen here got buried in all the mails last time around.  If the
-> transmitter is not tied to a physical killswitch, but the killswitch is
-> provided by another module (laptop specific driver for example), do we
-> assume the rfkill state is authoritative or do we check each radio via
-> it's own specific method?
 
-Unless HAL can tell you about it, and you teach HAL the topology for every
-laptop model (something I consider Not Doable), you really are supposed to
-try to ignore as much as possible the topology of kill switches.
-
-So, you add topology agnostic UIs to NM that let the user:
-  1. Easily try to set the state of all devices of a given type
-  2. Try to set the state of a particular device.
-  3. Try to set the state of all devices (shortcut to "for all types, do (1)
-     above).
-
-hp-wmi's and thinkpad-acpi's softswitches would show up just like any
-another device.  The user would quickly learn that changing the state of
-these devices has an effect of hardblocking others.
-
-When I get to improving the interface to the global state (i.e. add the
-attributes needed to implement rfkill-input in userspace), you will be
-able to do more, or to do the above in an easier way.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Index: wireless-testing/drivers/net/wireless/b43/debugfs.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/debugfs.c	2008-06-20 00:50:09.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/debugfs.c	2008-06-20 00:53:33.000000000 +0200
+@@ -392,48 +392,12 @@ static int tsf_write_file(struct b43_wld
+ 		return -EINVAL;
+ 	b43_tsf_write(dev, tsf);
+ 
+ 	return 0;
+ }
+ 
+-/* wl->irq_lock is locked */
+-static ssize_t ucode_regs_read_file(struct b43_wldev *dev,
+-				    char *buf, size_t bufsize)
+-{
+-	ssize_t count = 0;
+-	int i;
+-
+-	for (i = 0; i < 64; i++) {
+-		fappend("r%d = 0x%04x\n", i,
+-			b43_shm_read16(dev, B43_SHM_SCRATCH, i));
+-	}
+-
+-	return count;
+-}
+-
+-/* wl->irq_lock is locked */
+-static ssize_t shm_read_file(struct b43_wldev *dev,
+-			     char *buf, size_t bufsize)
+-{
+-	ssize_t count = 0;
+-	int i;
+-	u16 tmp;
+-	__le16 *le16buf = (__le16 *)buf;
+-
+-	for (i = 0; i < 0x1000; i++) {
+-		if (bufsize < sizeof(tmp))
+-			break;
+-		tmp = b43_shm_read16(dev, B43_SHM_SHARED, 2 * i);
+-		le16buf[i] = cpu_to_le16(tmp);
+-		count += sizeof(tmp);
+-		bufsize -= sizeof(tmp);
+-	}
+-
+-	return count;
+-}
+-
+ static ssize_t txstat_read_file(struct b43_wldev *dev,
+ 				char *buf, size_t bufsize)
+ {
+ 	struct b43_txstatus_log *log = &dev->dfsentry->txstatlog;
+ 	ssize_t count = 0;
+ 	unsigned long flags;
+@@ -795,14 +759,12 @@ B43_DEBUGFS_FOPS(shm32read, shm32read__r
+ B43_DEBUGFS_FOPS(shm32write, NULL, shm32write__write_file, 1);
+ B43_DEBUGFS_FOPS(mmio16read, mmio16read__read_file, mmio16read__write_file, 1);
+ B43_DEBUGFS_FOPS(mmio16write, NULL, mmio16write__write_file, 1);
+ B43_DEBUGFS_FOPS(mmio32read, mmio32read__read_file, mmio32read__write_file, 1);
+ B43_DEBUGFS_FOPS(mmio32write, NULL, mmio32write__write_file, 1);
+ B43_DEBUGFS_FOPS(tsf, tsf_read_file, tsf_write_file, 1);
+-B43_DEBUGFS_FOPS(ucode_regs, ucode_regs_read_file, NULL, 1);
+-B43_DEBUGFS_FOPS(shm, shm_read_file, NULL, 1);
+ B43_DEBUGFS_FOPS(txstat, txstat_read_file, NULL, 0);
+ B43_DEBUGFS_FOPS(txpower_g, txpower_g_read_file, txpower_g_write_file, 0);
+ B43_DEBUGFS_FOPS(restart, NULL, restart_write_file, 1);
+ B43_DEBUGFS_FOPS(loctls, loctls_read_file, NULL, 0);
+ 
+ 
+@@ -910,14 +872,12 @@ void b43_debugfs_add_device(struct b43_w
+ 	ADD_FILE(shm32write, 0200);
+ 	ADD_FILE(mmio16read, 0600);
+ 	ADD_FILE(mmio16write, 0200);
+ 	ADD_FILE(mmio32read, 0600);
+ 	ADD_FILE(mmio32write, 0200);
+ 	ADD_FILE(tsf, 0600);
+-	ADD_FILE(ucode_regs, 0400);
+-	ADD_FILE(shm, 0400);
+ 	ADD_FILE(txstat, 0400);
+ 	ADD_FILE(txpower_g, 0600);
+ 	ADD_FILE(restart, 0200);
+ 	ADD_FILE(loctls, 0400);
+ 
+ #undef ADD_FILE
+@@ -942,14 +902,12 @@ void b43_debugfs_remove_device(struct b4
+ 	debugfs_remove(e->file_shm32write.dentry);
+ 	debugfs_remove(e->file_mmio16read.dentry);
+ 	debugfs_remove(e->file_mmio16write.dentry);
+ 	debugfs_remove(e->file_mmio32read.dentry);
+ 	debugfs_remove(e->file_mmio32write.dentry);
+ 	debugfs_remove(e->file_tsf.dentry);
+-	debugfs_remove(e->file_ucode_regs.dentry);
+-	debugfs_remove(e->file_shm.dentry);
+ 	debugfs_remove(e->file_txstat.dentry);
+ 	debugfs_remove(e->file_txpower_g.dentry);
+ 	debugfs_remove(e->file_restart.dentry);
+ 	debugfs_remove(e->file_loctls.dentry);
+ 
+ 	debugfs_remove(e->subdir);
+Index: wireless-testing/drivers/net/wireless/b43/debugfs.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/debugfs.h	2008-06-20 00:50:08.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/debugfs.h	2008-06-20 00:51:53.000000000 +0200
+@@ -42,14 +42,12 @@ struct b43_dfsentry {
+ 	struct b43_dfs_file file_shm32write;
+ 	struct b43_dfs_file file_mmio16read;
+ 	struct b43_dfs_file file_mmio16write;
+ 	struct b43_dfs_file file_mmio32read;
+ 	struct b43_dfs_file file_mmio32write;
+ 	struct b43_dfs_file file_tsf;
+-	struct b43_dfs_file file_ucode_regs;
+-	struct b43_dfs_file file_shm;
+ 	struct b43_dfs_file file_txstat;
+ 	struct b43_dfs_file file_txpower_g;
+ 	struct b43_dfs_file file_restart;
+ 	struct b43_dfs_file file_loctls;
+ 
+ 	struct b43_txstatus_log txstatlog;
