@@ -1,109 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.226]:36412 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758467AbYFOQrL (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46451 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753788AbYFSRrg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jun 2008 12:47:11 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so3230734rvb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Jun 2008 09:47:10 -0700 (PDT)
-Date: Sun, 15 Jun 2008 09:46:17 -0700
-From: Joonwoo Park <joonwpark81@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, Tomas Winkler <tomasw@gmail.com>,
-	JMF <tolas_feup@hotmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iwlwifi: fix oops on wep key insertion
-Message-ID: <20080615164617.GA27699@tp64> (sfid-20080615_184714_995522_39373628)
-References: <1211865214-1640-1-git-send-email-joonwpark81@gmail.com> <1ba2fa240805262341s62f017e7ka7502cbe55c1d348@mail.gmail.com> <loom.20080527T105701-941@post.gmane.org> <1ba2fa240805270541wadf0f16t2001528f39b37ea8@mail.gmail.com> <1211896423.1746.9.camel@localhost.localdomain> <20080528004100.GG7779@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080528004100.GG7779@tuxdriver.com>
+	Thu, 19 Jun 2008 13:47:36 -0400
+Subject: Re: [RFC 3/2] get rid of rx handler function pointers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Harvey Harrison <harvey.harrison@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200806191944.52164.mb@bu3sch.de>
+References: <1213879121.8967.9.camel@johannes.berg>
+	 <1213896016.2125.51.camel@brick>  <200806191944.52164.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wBgDQqmLCZJluLPeV8KV"
+Date: Thu, 19 Jun 2008 19:46:53 +0200
+Message-Id: <1213897613.8967.48.camel@johannes.berg> (sfid-20080619_194739_140830_464B46FF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 27, 2008 at 08:41:00PM -0400, John W. Linville wrote:
-> On Tue, May 27, 2008 at 09:53:43AM -0400, Dan Williams wrote:
-> 
-> > I've gotten maybe 1 or 2 requests for > 104/128-bit WEP key support for
-> > NM in 3 years.  Nice to have, but I'm not sure it's worth the extra code
-> > and maintenance burden?  Would be good to have somebody tell us what
-> > hardware (APs and cards) support this though.
-> 
-> I'm inclined to think that it is _not_ worth the trouble for this
-> particular feature.
-> 
-> John
 
-This patch limits wep key size to 128/104-bits.
-I hope you guys like this.
+--=-wBgDQqmLCZJluLPeV8KV
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
+On Thu, 2008-06-19 at 19:44 +0200, Michael Buesch wrote:
+> On Thursday 19 June 2008 19:20:16 Harvey Harrison wrote:
+> > > =EF=BB=BF#define CALL_RXH(rxh) if ((res =3D rxh(rx)) !=3D RX_CONTINUE=
+) goto rxh_done;
+> >=20
+> > Would it really be so bad to just open-code them rather than the macro =
+approach?
+>=20
+> I think the macro makes it readable. And as it is defined locally it
+> does not obfuscate it.
 
-Joonwoo
+We can always make the macro more readable:
 
----
-[PATCH] wireless: Limit wep key size to 128/104-bits
+#define CALL_RXH(rxh)		\
+	res =3D rxh(rx);		\
+	if (res !=3D RX_CONTINUE)	\
+		goto rxh_done;
 
-This patch prevents overflow which is occured by invalid long wep key
-insertion
+johannes
 
-$sudo iwconfig wlan0 enc AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA
+--=-wBgDQqmLCZJluLPeV8KV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-BUG: unable to handle kernel NULL pointer dereference at 0000000000000000
-IP: [memcpy_c+0xb/0x20] memcpy_c+0xb/0x20
-PGD 13a590067 PUD 12e471067 PMD 0
-Oops: 0000 [1] PREEMPT SMP
-CPU 1
-...
-Pid: 10, comm: events/1 Not tainted 2.6.26-rc2 #9
-...
-Call Trace:
- [iwl4965:iwl4965_rx_scan_start_notif+0xb/0x20] ? :iwl4965:iwl4965_enqueue_hcmd+0x12b/0x220
- [hci_usb:init_module+0xe97/0x28cb0] :iwlcore:iwl_send_cmd_sync+0x67/0x290
- [save_trace+0x3f/0xb0] ? save_trace+0x3f/0xb0
-...
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
----
- net/wireless/wext.c |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
+iQIcBAABAgAGBQJIWpuDAAoJEKVg1VMiehFY21IP/35QrR5ffTEOVmneQFcNHI3s
+wuaomgCiFA8ed5Rgn8vJPFKEyUiTC4ZS8erEzCE+K0gyrpB5lgM+da+l9wjICqej
+yDqqrGDL+dMwk1Rw3ramKTzqC2fvmstAVEL31rZXYZTemDYtJFDiThSvrHE6ZNTc
+DyjWdHPBkxOnMBzhe+9g68FclO8H+nLce8y5obAkX8ttD2tEM+Qfa6Me3/Nl4hdx
+M4S5bOOkAByDr7HnRl9ebGl2KZp0BGa7VWjuOLQnvNErkrvo0L6o/w/Oe1FRDK/p
+n/Jc8dn4WUO0ByEQMOsp/UvNIe6p+98Oylx8G3EMUHw9qqSKWGY9HmKHKinHckZf
+Xkdt/8B5yFbZdMC18Lay9ep4ssH8wQ9irafDz1LjUrdWaKx2IKzVr8P4OGlkFb4Z
+ziOE5c7H/iqzH9y+VIbIMkqY782tuwNsMA5xI2YhQCw/19txX+cVY9TKzcNEeIyR
+NjEcRAClj+NiHy7iv2UNF2Rh1T2GkLqvAbpf5NoHkCgCVZHdQxCKDcDDmGgwAEju
+evd9PQrWiD4hWGXWQQWRfRQTxc3k/Vcn9aUhgimtd1S5N9pWKxjMX3cIvRaj1j6R
+4tIfj6+01XFv96nrR6vtzACZB1YwjDvxOe63EQ/UCXJjOlsrMEFGEgQ2IeM1zV4B
+QCmbd1f/ZmdanmhX7ba3
+=a1/m
+-----END PGP SIGNATURE-----
 
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index 947188a..c8ef55b 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -102,6 +102,8 @@
- 
- #include <asm/uaccess.h>		/* copy_to_user() */
- 
-+#define KEY_SIZE_WEP104		13
-+
- /************************* GLOBAL VARIABLES *************************/
- /*
-  * You should not use global variables, because of re-entrancy.
-@@ -740,8 +742,8 @@ static int ioctl_standard_call(struct net_device *	dev,
- 		 * for max space. Easier, and won't last long... */
- 		extra_size = descr->max_tokens * descr->token_size;
- 
--		/* Check need for ESSID compatibility for WE < 21 */
- 		switch (cmd) {
-+		/* Check need for ESSID compatibility for WE < 21 */
- 		case SIOCSIWESSID:
- 		case SIOCGIWESSID:
- 		case SIOCSIWNICKN:
-@@ -761,6 +763,13 @@ static int ioctl_standard_call(struct net_device *	dev,
- 					essid_compat = 1;
- 			}
- 			break;
-+
-+		/* Limit wep key size to 128/104-bits */
-+		case SIOCSIWENCODE:
-+			if (iwr->u.data.length > KEY_SIZE_WEP104)
-+				return -EINVAL;
-+			break;
-+
- 		default:
- 			break;
- 		}
--- 
-1.5.4.3
----
+--=-wBgDQqmLCZJluLPeV8KV--
+
