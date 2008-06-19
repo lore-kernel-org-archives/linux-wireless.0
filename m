@@ -1,61 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39626 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753918AbYFLTm7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 15:42:59 -0400
-Subject: Re: [PATCH 1/1] mac80211: fix beacon interval value
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1213299517-24042-1-git-send-email-tomas.winkler@intel.com>
-References: <1213299517-24042-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tbDFzvT431okODX3080+"
-Date: Thu, 12 Jun 2008 21:41:46 +0200
-Message-Id: <1213299706.3730.39.camel@johannes.berg> (sfid-20080612_214302_210265_9AEC646D)
+Received: from c60.cesmail.net ([216.154.195.49]:62536 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755401AbYFSADV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jun 2008 20:03:21 -0400
+Subject: Re: 802.11 pccard, Agere 0x0156,0x0003?
+From: Pavel Roskin <proski@gnu.org>
+To: Dave <kilroyd@googlemail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Greg KH <greg@kroah.com>,
+	Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
+	Bernhard Reiter <bernhard@intevation.de>
+In-Reply-To: <4859866A.1090300@gmail.com>
+References: <200806181715.20516.bernhard@intevation.de>
+	 <69e28c910806180831j3625db4h6b93836146349fb@mail.gmail.com>
+	 <4859866A.1090300@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Date: Wed, 18 Jun 2008 20:03:19 -0400
+Message-Id: <1213833799.5258.13.camel@dv> (sfid-20080619_020325_696788_AD28045E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2008-06-18 at 23:04 +0100, Dave wrote:
+>=20
+> Stefanik G=E1bor wrote:
+> > On Wed, Jun 18, 2008 at 5:15 PM, Bernhard Reiter <bernhard@intevati=
+on.de> wrote:
+> >> Sitting here a  pc card wireless land adapter.
+> >> id 0x0156, 0x0003, which probably makes it an Agere card.
+> >> cardctl info says:
+> >> "Wireless PC Card Model 0110"
+>=20
+> > This appears to be a Wavelan 2 / Orinoco card. Maybe try adding you=
+r
+> > device IDs to the Orinoco driver.
+>=20
+> According to <http://dotpups.de/dotpups/Wifi/drivers-for-Puppy-1/luce=
+nt-agere_README>, this is a Hermes II based card, which is not supporte=
+d by the orinoco driver.
+>=20
+> There is a more recent version of the Agere driver available, which h=
+as been patched for 2.6 kernels. See <http://ubuntuforums.org/showthrea=
+d.php?t=3D304217>
 
---=-tbDFzvT431okODX3080+
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+It's really a low hanging fruit.  The big thing that was missing was
+firmware download for Agere, but Dave implemented that.  The remaining
+work is mostly integration of the pieces together, adding the ID,
+allowing initialization without firmware loaded, loading the right
+firmware for the card.
 
+I feel bad that I'm too busy with other things to pay enough attention
+to older drivers, but we have linux-wireless list now, so I don't need
+to be a bottleneck.  Volunteers are welcome.
 
-> 1. in register_hw it honors value requested by the driver
-
-I don't think the driver should be able to "request" a value.
-
-> 2. It uses default 100 instead of 1000 or 10000. Scanning for beacon
-> interval ~1sec and above is not sane
-
-Yeah, 10000 seems a bit excessive.
-
-johannes
-
---=-tbDFzvT431okODX3080+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIUXv1AAoJEKVg1VMiehFY6l4P/RgGruAeOQL7SSdkZtwVHGfz
-ILu8X1Loq3PiUfRYZhdR1Zsj3mKTtbOz15frAkV90Vs8+bS+1PIiJ6r4GJWkoHkl
-iYRHGZrkjiUwBi71j8y49rygTVnwSF719WIiO61/tzCIlGuT6VRZDHS3E+w5eIra
-UNKmxa9GehdDYPpGkAbKxldGm5lbm14GDwIlAKdqNhDmVuJv4j5NwvTz4zN48J7b
-4BApgQPZBfo84Vw5rIKhBye+OhZuSnDnDtWs28xwouKx2kIOUNLJmC2GlaQPZZFw
-9juZ68tQP3DYJyfxUqnh5b8547YhLj1XSQ/pRM5+gnkE9fD78FPuDQn6C9BVz6Au
-cT4szr6EuKttlHvv3viUBReT5xfXiqsrldAGDHxzzrE1A18wuMZxm95vmvLL5opV
-LaBkjs9C+bARSq7E4SavnnK/ZdVrLc3x8lxo7a7FSsTSrbkDqO3uvikNIkJXzGnd
-yhfdaFxYhhoiTyDlmbSt9VMNTlcghHe7GLuQgv5U9cqgjcuM+BySfVNqMYqGtV0f
-3vH6zREWY2bbOQt9HOrlehgp+Stes1O0ZUgQEhaUr8hg+Y5BvSiXnf/hekG7ELLT
-IYNGmvZoI1pXjzqPIAZTNpQ7xuV+fZlMzVD7qXD/12S8cMXg8XB/sl7QIRDKJOkk
-tvrQGvONA4TQ98nMWmqh
-=lqJn
------END PGP SIGNATURE-----
-
---=-tbDFzvT431okODX3080+--
-
+--=20
+Regards,
+Pavel Roskin
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
