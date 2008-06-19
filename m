@@ -1,305 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:2074 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753275AbYFCS0Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 14:26:16 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so644244nfc.21
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jun 2008 11:26:15 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 08/11] rt2x00: Move led initialization into function
-Date: Tue, 3 Jun 2008 20:30:01 +0200
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <200806032024.52931.IvDoorn@gmail.com> <200806032027.47342.IvDoorn@gmail.com> <200806032028.03154.IvDoorn@gmail.com>
-In-Reply-To: <200806032028.03154.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Message-Id: <200806032030.01699.IvDoorn@gmail.com> (sfid-20080603_202624_137683_35D10ADA)
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:29123 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751638AbYFSVKQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jun 2008 17:10:16 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/1] mac80211: fix tx fragmenation
+Date: Fri, 20 Jun 2008 00:10:10 +0300
+Message-Id: <1213909810-23170-1-git-send-email-tomas.winkler@intel.com> (sfid-20080619_231020_552013_C4B59A55)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reduce code duplication by moving led structure initialization
-into a per-driver function.
+From: Johannes Berg <johannes@sipsolutions.net>
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+This patch fixes TX fragmenation caused by
+tx handlers reordering and 'tx info to cb' patchs
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/rt2x00/rt2400pci.c |   32 +++++++++++-------------
- drivers/net/wireless/rt2x00/rt2500pci.c |   32 +++++++++++-------------
- drivers/net/wireless/rt2x00/rt2500usb.c |   32 +++++++++++-------------
- drivers/net/wireless/rt2x00/rt61pci.c   |   41 ++++++++++++-------------------
- drivers/net/wireless/rt2x00/rt73usb.c   |   41 ++++++++++++-------------------
- 5 files changed, 77 insertions(+), 101 deletions(-)
+ net/mac80211/tx.c |   67 ++++++++++++++++++++++++++++------------------------
+ 1 files changed, 36 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 900140d..1101610 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -277,6 +277,17 @@ static int rt2400pci_blink_set(struct led_classdev *led_cdev,
- 
- 	return 0;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 195cb6d..c2dcc45 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -87,8 +87,8 @@ static inline void ieee80211_dump_frame(const char *ifname, const char *title,
  }
-+
-+static void rt2400pci_init_led(struct rt2x00_dev *rt2x00dev,
-+			       struct rt2x00_led *led,
-+			       enum led_type type)
-+{
-+	led->rt2x00dev = rt2x00dev;
-+	led->type = type;
-+	led->led_dev.brightness_set = rt2400pci_brightness_set;
-+	led->led_dev.blink_set = rt2400pci_blink_set;
-+	led->flags = LED_INITIALIZED;
-+}
- #endif /* CONFIG_RT2400PCI_LEDS */
+ #endif /* CONFIG_MAC80211_LOWTX_FRAME_DUMP */
  
- /*
-@@ -1300,23 +1311,10 @@ static int rt2400pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- #ifdef CONFIG_RT2400PCI_LEDS
- 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_LED_MODE);
+-static u16 ieee80211_duration(struct ieee80211_tx_data *tx, int group_addr,
+-			      int next_frag_len)
++static __le16 ieee80211_duration(struct ieee80211_tx_data *tx, int group_addr,
++				 int next_frag_len)
+ {
+ 	int rate, mrate, erp, dur, i;
+ 	struct ieee80211_rate *txrate;
+@@ -140,7 +140,7 @@ static u16 ieee80211_duration(struct ieee80211_tx_data *tx, int group_addr,
  
--	rt2x00dev->led_radio.rt2x00dev = rt2x00dev;
--	rt2x00dev->led_radio.type = LED_TYPE_RADIO;
--	rt2x00dev->led_radio.led_dev.brightness_set =
--	    rt2400pci_brightness_set;
--	rt2x00dev->led_radio.led_dev.blink_set =
--	    rt2400pci_blink_set;
--	rt2x00dev->led_radio.flags = LED_INITIALIZED;
--
--	if (value == LED_MODE_TXRX_ACTIVITY) {
--		rt2x00dev->led_qual.rt2x00dev = rt2x00dev;
--		rt2x00dev->led_qual.type = LED_TYPE_ACTIVITY;
--		rt2x00dev->led_qual.led_dev.brightness_set =
--		    rt2400pci_brightness_set;
--		rt2x00dev->led_qual.led_dev.blink_set =
--		    rt2400pci_blink_set;
--		rt2x00dev->led_qual.flags = LED_INITIALIZED;
--	}
-+	rt2400pci_init_led(rt2x00dev, &rt2x00dev->led_radio, LED_TYPE_RADIO);
-+	if (value == LED_MODE_TXRX_ACTIVITY)
-+		rt2400pci_init_led(rt2x00dev, &rt2x00dev->led_qual,
-+				   LED_TYPE_ACTIVITY);
- #endif /* CONFIG_RT2400PCI_LEDS */
+ 	/* data/mgmt */
+ 	if (0 /* FIX: data/mgmt during CFP */)
+-		return 32768;
++		return cpu_to_le16(32768);
  
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 6733509..0ac934a 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -277,6 +277,17 @@ static int rt2500pci_blink_set(struct led_classdev *led_cdev,
+ 	if (group_addr) /* Group address as the destination - no ACK */
+ 		return 0;
+@@ -210,7 +210,7 @@ static u16 ieee80211_duration(struct ieee80211_tx_data *tx, int group_addr,
+ 				tx->sdata->bss_conf.use_short_preamble);
+ 	}
  
- 	return 0;
+-	return dur;
++	return cpu_to_le16(dur);
  }
-+
-+static void rt2500pci_init_led(struct rt2x00_dev *rt2x00dev,
-+			       struct rt2x00_led *led,
-+			       enum led_type type)
-+{
-+	led->rt2x00dev = rt2x00dev;
-+	led->type = type;
-+	led->led_dev.brightness_set = rt2500pci_brightness_set;
-+	led->led_dev.blink_set = rt2500pci_blink_set;
-+	led->flags = LED_INITIALIZED;
-+}
- #endif /* CONFIG_RT2500PCI_LEDS */
  
- /*
-@@ -1478,23 +1489,10 @@ static int rt2500pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- #ifdef CONFIG_RT2500PCI_LEDS
- 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_LED_MODE);
+ static int inline is_ieee80211_device(struct net_device *dev,
+@@ -544,7 +544,6 @@ ieee80211_tx_h_misc(struct ieee80211_tx_data *tx)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) tx->skb->data;
+ 	u16 fc = le16_to_cpu(hdr->frame_control);
+-	u16 dur;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+ 	struct ieee80211_supported_band *sband;
  
--	rt2x00dev->led_radio.rt2x00dev = rt2x00dev;
--	rt2x00dev->led_radio.type = LED_TYPE_RADIO;
--	rt2x00dev->led_radio.led_dev.brightness_set =
--	    rt2500pci_brightness_set;
--	rt2x00dev->led_radio.led_dev.blink_set =
--	    rt2500pci_blink_set;
--	rt2x00dev->led_radio.flags = LED_INITIALIZED;
+@@ -602,14 +601,6 @@ ieee80211_tx_h_misc(struct ieee80211_tx_data *tx)
+ 		info->flags |= IEEE80211_TX_CTL_SHORT_PREAMBLE;
+ 	}
+ 
+-	/* Setup duration field for the first fragment of the frame. Duration
+-	 * for remaining fragments will be updated when they are being sent
+-	 * to low-level driver in ieee80211_tx(). */
+-	dur = ieee80211_duration(tx, is_multicast_ether_addr(hdr->addr1),
+-				 (tx->flags & IEEE80211_TX_FRAGMENTED) ?
+-				 tx->extra_frag[0]->len : 0);
+-	hdr->duration_id = cpu_to_le16(dur);
 -
--	if (value == LED_MODE_TXRX_ACTIVITY) {
--		rt2x00dev->led_qual.rt2x00dev = rt2x00dev;
--		rt2x00dev->led_qual.type = LED_TYPE_ACTIVITY;
--		rt2x00dev->led_qual.led_dev.brightness_set =
--		    rt2500pci_brightness_set;
--		rt2x00dev->led_qual.led_dev.blink_set =
--		    rt2500pci_blink_set;
--		rt2x00dev->led_qual.flags = LED_INITIALIZED;
--	}
-+	rt2500pci_init_led(rt2x00dev, &rt2x00dev->led_radio, LED_TYPE_RADIO);
-+	if (value == LED_MODE_TXRX_ACTIVITY)
-+		rt2500pci_init_led(rt2x00dev, &rt2x00dev->led_qual,
-+				   LED_TYPE_ACTIVITY);
- #endif /* CONFIG_RT2500PCI_LEDS */
+ 	if ((info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) ||
+ 	    (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)) {
+ 		struct ieee80211_rate *rate;
+@@ -711,6 +702,7 @@ ieee80211_tx_h_fragment(struct ieee80211_tx_data *tx)
+ 		fhdr->seq_ctrl = cpu_to_le16(seq | ((i + 1) & IEEE80211_SCTL_FRAG));
+ 		copylen = left > per_fragm ? per_fragm : left;
+ 		memcpy(skb_put(frag, copylen), pos, copylen);
++		memcpy(frag->cb, first->cb, sizef(frag->cb));
  
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index cca1504..0027f4b 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -316,6 +316,17 @@ static int rt2500usb_blink_set(struct led_classdev *led_cdev,
- 
- 	return 0;
+ 		pos += copylen;
+ 		left -= copylen;
+@@ -755,6 +747,36 @@ ieee80211_tx_h_encrypt(struct ieee80211_tx_data *tx)
  }
-+
-+static void rt2500usb_init_led(struct rt2x00_dev *rt2x00dev,
-+			       struct rt2x00_led *led,
-+			       enum led_type type)
+ 
+ static ieee80211_tx_result
++ieee80211_tx_h_calculate_duration(struct ieee80211_tx_data *tx)
 +{
-+	led->rt2x00dev = rt2x00dev;
-+	led->type = type;
-+	led->led_dev.brightness_set = rt2500usb_brightness_set;
-+	led->led_dev.blink_set = rt2500usb_blink_set;
-+	led->flags = LED_INITIALIZED;
-+}
- #endif /* CONFIG_RT2500USB_LEDS */
- 
- /*
-@@ -1377,23 +1388,10 @@ static int rt2500usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
- #ifdef CONFIG_RT2500USB_LEDS
- 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_LED_MODE);
- 
--	rt2x00dev->led_radio.rt2x00dev = rt2x00dev;
--	rt2x00dev->led_radio.type = LED_TYPE_RADIO;
--	rt2x00dev->led_radio.led_dev.brightness_set =
--	    rt2500usb_brightness_set;
--	rt2x00dev->led_radio.led_dev.blink_set =
--	    rt2500usb_blink_set;
--	rt2x00dev->led_radio.flags = LED_INITIALIZED;
--
--	if (value == LED_MODE_TXRX_ACTIVITY) {
--		rt2x00dev->led_qual.rt2x00dev = rt2x00dev;
--		rt2x00dev->led_qual.type = LED_TYPE_ACTIVITY;
--		rt2x00dev->led_qual.led_dev.brightness_set =
--		    rt2500usb_brightness_set;
--		rt2x00dev->led_qual.led_dev.blink_set =
--		    rt2500usb_blink_set;
--		rt2x00dev->led_qual.flags = LED_INITIALIZED;
--	}
-+	rt2500usb_init_led(rt2x00dev, &rt2x00dev->led_radio, LED_TYPE_RADIO);
-+	if (value == LED_MODE_TXRX_ACTIVITY)
-+		rt2500usb_init_led(rt2x00dev, &rt2x00dev->led_qual,
-+				   LED_TYPE_ACTIVITY);
- #endif /* CONFIG_RT2500USB_LEDS */
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index e13ed5c..f03d21d 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -330,6 +330,17 @@ static int rt61pci_blink_set(struct led_classdev *led_cdev,
- 
- 	return 0;
- }
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
++	int next_len, i;
++	int group_addr = is_multicast_ether_addr(hdr->addr1);
 +
-+static void rt61pci_init_led(struct rt2x00_dev *rt2x00dev,
-+			     struct rt2x00_led *led,
-+			     enum led_type type)
-+{
-+	led->rt2x00dev = rt2x00dev;
-+	led->type = type;
-+	led->led_dev.brightness_set = rt61pci_brightness_set;
-+	led->led_dev.blink_set = rt61pci_blink_set;
-+	led->flags = LED_INITIALIZED;
-+}
- #endif /* CONFIG_RT61PCI_LEDS */
- 
- /*
-@@ -2067,31 +2078,11 @@ static int rt61pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_LED, &eeprom);
- 	value = rt2x00_get_field16(eeprom, EEPROM_LED_LED_MODE);
- 
--	rt2x00dev->led_radio.rt2x00dev = rt2x00dev;
--	rt2x00dev->led_radio.type = LED_TYPE_RADIO;
--	rt2x00dev->led_radio.led_dev.brightness_set =
--	    rt61pci_brightness_set;
--	rt2x00dev->led_radio.led_dev.blink_set =
--	    rt61pci_blink_set;
--	rt2x00dev->led_radio.flags = LED_INITIALIZED;
--
--	rt2x00dev->led_assoc.rt2x00dev = rt2x00dev;
--	rt2x00dev->led_assoc.type = LED_TYPE_ASSOC;
--	rt2x00dev->led_assoc.led_dev.brightness_set =
--	    rt61pci_brightness_set;
--	rt2x00dev->led_assoc.led_dev.blink_set =
--	    rt61pci_blink_set;
--	rt2x00dev->led_assoc.flags = LED_INITIALIZED;
--
--	if (value == LED_MODE_SIGNAL_STRENGTH) {
--		rt2x00dev->led_qual.rt2x00dev = rt2x00dev;
--		rt2x00dev->led_qual.type = LED_TYPE_QUALITY;
--		rt2x00dev->led_qual.led_dev.brightness_set =
--		    rt61pci_brightness_set;
--		rt2x00dev->led_qual.led_dev.blink_set =
--		    rt61pci_blink_set;
--		rt2x00dev->led_qual.flags = LED_INITIALIZED;
--	}
-+	rt61pci_init_led(rt2x00dev, &rt2x00dev->led_radio, LED_TYPE_RADIO);
-+	rt61pci_init_led(rt2x00dev, &rt2x00dev->led_assoc, LED_TYPE_ASSOC);
-+	if (value == LED_MODE_SIGNAL_STRENGTH)
-+		rt61pci_init_led(rt2x00dev, &rt2x00dev->led_qual,
-+				 LED_TYPE_QUALITY);
- 
- 	rt2x00_set_field16(&rt2x00dev->led_mcu_reg, MCU_LEDCS_LED_MODE, value);
- 	rt2x00_set_field16(&rt2x00dev->led_mcu_reg, MCU_LEDCS_POLARITY_GPIO_0,
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 26c2e0a..779fa5b 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -335,6 +335,17 @@ static int rt73usb_blink_set(struct led_classdev *led_cdev,
- 
- 	return 0;
- }
++	if (!(tx->flags & IEEE80211_TX_FRAGMENTED)) {
++		hdr->duration_id = ieee80211_duration(tx, group_addr, 0);
++		return TX_CONTINUE;
++	}
 +
-+static void rt73usb_init_led(struct rt2x00_dev *rt2x00dev,
-+			     struct rt2x00_led *led,
-+			     enum led_type type)
-+{
-+	led->rt2x00dev = rt2x00dev;
-+	led->type = type;
-+	led->led_dev.brightness_set = rt73usb_brightness_set;
-+	led->led_dev.blink_set = rt73usb_blink_set;
-+	led->flags = LED_INITIALIZED;
++	hdr->duration_id = ieee80211_duration(tx, group_addr,
++					      tx->extra_frag[0]->len);
++
++	for (i = 0; i < tx->num_extra_frag; i++) {
++		if (i + 1 < tx->num_extra_frag) {
++			next_len = tx->extra_frag[i + 1]->len;
++		} else {
++			next_len = 0;
++			tx->rate_idx = tx->last_frag_rate_idx;
++		}
++
++		hdr = (struct ieee80211_hdr *)tx->extra_frag[i]->data;
++		hdr->duration_id = ieee80211_duration(tx, 0, next_len);
++	}
++
++	return TX_CONTINUE;
 +}
- #endif /* CONFIG_RT73USB_LEDS */
++
++static ieee80211_tx_result
+ ieee80211_tx_h_stats(struct ieee80211_tx_data *tx)
+ {
+ 	int i;
+@@ -788,6 +810,7 @@ static ieee80211_tx_handler ieee80211_tx_handlers[] =
+ 	ieee80211_tx_h_fragment,
+ 	/* handlers after fragment must be aware of tx info fragmentation! */
+ 	ieee80211_tx_h_encrypt,
++	ieee80211_tx_h_calculate_duration,
+ 	ieee80211_tx_h_stats,
+ 	NULL
+ };
+@@ -1139,24 +1162,6 @@ static int ieee80211_tx(struct net_device *dev, struct sk_buff *skb)
+ 		return 0;
+ 	}
  
- /*
-@@ -1620,31 +1631,11 @@ static int rt73usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
- #ifdef CONFIG_RT73USB_LEDS
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_LED, &eeprom);
- 
--	rt2x00dev->led_radio.rt2x00dev = rt2x00dev;
--	rt2x00dev->led_radio.type = LED_TYPE_RADIO;
--	rt2x00dev->led_radio.led_dev.brightness_set =
--	    rt73usb_brightness_set;
--	rt2x00dev->led_radio.led_dev.blink_set =
--	    rt73usb_blink_set;
--	rt2x00dev->led_radio.flags = LED_INITIALIZED;
+-	if (tx.extra_frag) {
+-		for (i = 0; i < tx.num_extra_frag; i++) {
+-			int next_len, dur;
+-			struct ieee80211_hdr *hdr =
+-				(struct ieee80211_hdr *)
+-				tx.extra_frag[i]->data;
 -
--	rt2x00dev->led_assoc.rt2x00dev = rt2x00dev;
--	rt2x00dev->led_assoc.type = LED_TYPE_ASSOC;
--	rt2x00dev->led_assoc.led_dev.brightness_set =
--	    rt73usb_brightness_set;
--	rt2x00dev->led_assoc.led_dev.blink_set =
--	    rt73usb_blink_set;
--	rt2x00dev->led_assoc.flags = LED_INITIALIZED;
--
--	if (value == LED_MODE_SIGNAL_STRENGTH) {
--		rt2x00dev->led_qual.rt2x00dev = rt2x00dev;
--		rt2x00dev->led_qual.type = LED_TYPE_QUALITY;
--		rt2x00dev->led_qual.led_dev.brightness_set =
--		    rt73usb_brightness_set;
--		rt2x00dev->led_qual.led_dev.blink_set =
--		    rt73usb_blink_set;
--		rt2x00dev->led_qual.flags = LED_INITIALIZED;
+-			if (i + 1 < tx.num_extra_frag) {
+-				next_len = tx.extra_frag[i + 1]->len;
+-			} else {
+-				next_len = 0;
+-				tx.rate_idx = tx.last_frag_rate_idx;
+-			}
+-			dur = ieee80211_duration(&tx, 0, next_len);
+-			hdr->duration_id = cpu_to_le16(dur);
+-		}
 -	}
-+	rt73usb_init_led(rt2x00dev, &rt2x00dev->led_radio, LED_TYPE_RADIO);
-+	rt73usb_init_led(rt2x00dev, &rt2x00dev->led_assoc, LED_TYPE_ASSOC);
-+	if (value == LED_MODE_SIGNAL_STRENGTH)
-+		rt73usb_init_led(rt2x00dev, &rt2x00dev->led_qual,
-+				 LED_TYPE_QUALITY);
- 
- 	rt2x00_set_field16(&rt2x00dev->led_mcu_reg, MCU_LEDCS_LED_MODE, value);
- 	rt2x00_set_field16(&rt2x00dev->led_mcu_reg, MCU_LEDCS_POLARITY_GPIO_0,
+-
+ retry:
+ 	ret = __ieee80211_tx(local, skb, &tx);
+ 	if (ret) {
 -- 
-1.5.5.3
+1.5.4.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
