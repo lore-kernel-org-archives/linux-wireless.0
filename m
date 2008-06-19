@@ -1,64 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:29087 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751194AbYFRQR5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 12:17:57 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so246175waf.23
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jun 2008 09:17:56 -0700 (PDT)
-Message-ID: <1ba2fa240806180917i320fac4bxcfd7416349850bff@mail.gmail.com> (sfid-20080618_181803_690513_0CBD46C0)
-Date: Wed, 18 Jun 2008 19:17:53 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/2] mac80211: add spectrum capabilities
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1213803431.1312.24.camel@johannes.berg>
+Received: from ns2.suse.de ([195.135.220.15]:42714 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754986AbYFSVcF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jun 2008 17:32:05 -0400
+Date: Thu, 19 Jun 2008 14:29:56 -0700
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>, Willy Tarreau <w@1wt.eu>,
+	Rodrigo Rubira Branco <rbranco@la.checkpoint.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [patch 07/15] b43: Fix possible NULL pointer dereference in DMA
+	code
+Message-ID: <20080619212956.GH20267@suse.de> (sfid-20080619_233211_906477_5C30B344)
+References: <20080619211313.834170620@mini.kroah.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1213800824-32107-1-git-send-email-tomas.winkler@intel.com>
-	 <1213800824-32107-2-git-send-email-tomas.winkler@intel.com>
-	 <1213803431.1312.24.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080619212621.GA20267@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 18, 2008 at 6:37 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2008-06-18 at 17:53 +0300, Tomas Winkler wrote:
->> This patch add spectrum capability and required information
->> elements to association request providing AP has requested it and
->> it is supported by the driver
->
-> Why bother splitting this up into two patches, the Kconfig option isn't
-> even being used?
+2.6.25-stable review patch.  If anyone has any objections, please let us
+know.
 
-It will be.
+------------------
+From: Michael Buesch <mb@bu3sch.de>
 
->> +             if ((bss->capability & WLAN_CAPABILITY_SPECTRUM_MGMT) &&
->> +                 (local->hw.flags & IEEE80211_HW_SPECTRUM_MGMT))
->> +                     capab |= WLAN_CAPABILITY_SPECTRUM_MGMT;
->
-> Why do we need a hardware capability flag for this? The only thing you
-> seem to be doing with it is determine whether to send the power
-> capability IE?
+a cut-down version of commit 028118a5f09a9c807e6b43e2231efdff9f224c74 upstream
 
+This fixes a possible NULL pointer dereference in an error path of the
+DMA allocation error checking code. In case the DMA allocation address is invalid,
+the dev pointer is dereferenced for unmapping of the buffer.
 
-> Will you follow up with more patches to enable radar detection and
-> things like that, and shouldn't we merge that as one series? This looks
-> sane enough, but it seems hard to judge whether or not it's actually the
-> best way to do things.
->
-> What else will depend on the hw capability flag?
->
+Reported-by: Miles Lane <miles.lane@gmail.com>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
-We need driver support mainly for quiet period and channel
-switch.(patches will follow)
-Not sure how the precise timing  will be handled in mac80211. So we
-don't advertise spectrum capability to AP if we cannot handle 11h
-actions.
+---
+ drivers/net/wireless/b43/dma.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Don't mind that this will be applied as series. Just sending this out
-to get some feedback on the way maybe I should mark them as RFCs
+--- a/drivers/net/wireless/b43/dma.c
++++ b/drivers/net/wireless/b43/dma.c
+@@ -850,6 +850,7 @@ struct b43_dmaring *b43_setup_dmaring(st
+ 	if (!ring)
+ 		goto out;
+ 	ring->type = type;
++	ring->dev = dev;
+ 
+ 	nr_slots = B43_RXRING_SLOTS;
+ 	if (for_tx)
+@@ -901,7 +902,6 @@ struct b43_dmaring *b43_setup_dmaring(st
+ 				 DMA_TO_DEVICE);
+ 	}
+ 
+-	ring->dev = dev;
+ 	ring->nr_slots = nr_slots;
+ 	ring->mmio_base = b43_dmacontroller_base(type, controller_index);
+ 	ring->index = controller_index;
 
-Thanks for review
-Tomas
+-- 
