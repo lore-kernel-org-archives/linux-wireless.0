@@ -1,153 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:57073 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756960AbYF0RpJ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35335 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759415AbYFSSRn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2008 13:45:09 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so1852ugf.16
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jun 2008 10:45:07 -0700 (PDT)
-Message-ID: <f6ca9fed0806271045p1704b3c2l591dd887f5befdc0@mail.gmail.com> (sfid-20080627_194515_310494_E3416993)
-Date: Fri, 27 Jun 2008 19:45:07 +0200
-From: drago01 <drago01@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] iwlwifi: fix rfkill deps and remove input device usage
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, "Zhu, Yi" <yi.zhu@intel.com>,
-	randy.dunlap@oracle.com, "Ivo van Doorn" <ivdoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 19 Jun 2008 14:17:43 -0400
+Subject: Re: Broken fragmentation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240806191113nd6a221eiac9648edd3404a80@mail.gmail.com> (sfid-20080619_201352_223234_D04C033E)
+References: <1ba2fa240806190220l18fe5dcdsf44fe81412a5f35d@mail.gmail.com>
+	 <1213869365.1312.48.camel@johannes.berg>
+	 <1ba2fa240806190446n4d931e6ara4db156900e59e0d@mail.gmail.com>
+	 <1ba2fa240806190457w20dfe2d5pf06829b26d2722a3@mail.gmail.com>
+	 <1213878207.8967.6.camel@johannes.berg>
+	 <1ba2fa240806190608h3d833dbaua412446e8a9f560d@mail.gmail.com>
+	 <1213881855.8967.19.camel@johannes.berg>
+	 <1ba2fa240806190745u2fe7e435y3ca207af4156767b@mail.gmail.com>
+	 <1213889200.8967.26.camel@johannes.berg>
+	 <1ba2fa240806191113nd6a221eiac9648edd3404a80@mail.gmail.com>
+	 (sfid-20080619_201352_223234_D04C033E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-82nonJUmvMGchHTRG5gk"
+Date: Thu, 19 Jun 2008 20:16:59 +0200
+Message-Id: <1213899419.8967.59.camel@johannes.berg> (sfid-20080619_201813_107016_8007C908)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 27, 2008 at 7:07 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Fri, Jun 27, 2008 at 05:54:06PM +0200, drago01 wrote:
->> On Fri, Jun 27, 2008 at 5:35 PM, John W. Linville
->> <linville@tuxdriver.com> wrote:
->>
->> > Randy Dunlap (1):
->> >      iwlwifi: fix build for CONFIG_INPUT=n
->>
->> this one was NACKED by Ivo (well not exactly this but the 3945
->> version, and Yi posted an updated patch)
->
-> I have no record of that.  Could someone send me a correct patch on
-> top of this one?
 
-Patch attached for iwl4965/5000 on top of Randy's patch.
-Untested due to lack of hardware but it should work fine.
+--=-82nonJUmvMGchHTRG5gk
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--------------------
-This patch fixes the rfkill deps for iwl4965/5000
-and removes the input device usage.
+On Thu, 2008-06-19 at 21:13 +0300, Tomas Winkler wrote:
+> On Thu, Jun 19, 2008 at 6:26 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Thu, 2008-06-19 at 17:45 +0300, Tomas Winkler wrote:
+> >> On Thu, Jun 19, 2008 at 4:24 PM, Johannes Berg
+> >> <johannes@sipsolutions.net> wrote:
+> >> > On Thu, 2008-06-19 at 16:08 +0300, Tomas Winkler wrote:
+> >> >> On Thu, Jun 19, 2008 at 3:23 PM, Johannes Berg
+> >> >> <johannes@sipsolutions.net> wrote:
+> >> >> >
+> >> >> >> > Now it crashes in the driver...maybe the txinfo to cb changes.=
+ Looking into it.
+> >> >> >> > Tomas
+> >> >> >> Looks like this is the second part keyconf is null
+> >> >> >
+> >> >> > Part? You mean fragment? What encryption algorithm? I've quickly =
+looked
+> >> >> > and all of them seem to do the control.hw_key assignment in their
+> >> >> > respective _skb handler so it should be done for all fragments.
+> >> >>
+> >> >> The problem is w/o crypto
+> >> >> I think this is not set on each fragment
+> >> >> info->flags |=3D IEEE80211_TX_CTL_DO_NOT_ENCRYPT;
+> >> >
+> >> > Ouch, you're right, the whole tx info isn't properly initialised for
+> >> > fragments.
+> >> >
+> >> > Can you try putting
+> >> >
+> >> > memcpy(frag->cb, first->cb, sizeof(first->cb));
+> >> >
+> >> > at around line 690 of tx.c where this code is?
+> >> >
+> >> >                frag->priority =3D first->priority;
+> >> >                skb_reserve(frag, tx->local->tx_headroom +
+> >> >                                  IEEE80211_ENCRYPT_HEADROOM);
+> >> >
+> >> >
+> >> > [now I know what the cause is. I had another patch that used skb_seg=
+ment
+> >> > to do the fragmentation, but that was dropped and skb_segment does c=
+opy
+> >> > skb->cb while our code doesn't]
+> >>
+> >> No crash but still not at home. No fragmented traffic on the air...grr=
+r.
+> >
+> > Hmm, ok. I'll give it a try later.
+>=20
+> Fragments are in the air but the peer is not able to reassemble them.
+> Something is wrong with the first fragment but I'm not sure yet.
 
-Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+Hm, ok. got a packet capture? Maybe that was broken before, I remember
+having problems with fragmentation but putting it down to the
+known-to-be-completely-broken AP I was using.
 
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig
-b/drivers/net/wireless/iwlwifi/Kconfig
-index d7ea32f..b628a44 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -8,7 +8,6 @@ config IWLCORE
- 	select MAC80211_LEDS if IWLWIFI_LEDS
- 	select LEDS_CLASS if IWLWIFI_LEDS
- 	select RFKILL if IWLWIFI_RFKILL
--	select RFKILL_INPUT if (IWLWIFI_RFKILL && INPUT)
+johannes
 
- config IWLWIFI_LEDS
- 	bool
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-index ffefbb4..f5211eb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-@@ -98,36 +98,11 @@ int iwl_rfkill_init(struct iwl_priv *priv)
- 	priv->rfkill_mngr.rfkill->dev.class->suspend = NULL;
- 	priv->rfkill_mngr.rfkill->dev.class->resume = NULL;
+--=-82nonJUmvMGchHTRG5gk
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--#if defined(CONFIG_RFKILL_INPUT) || defined(CONFIG_RFKILL_INPUT_MODULE)
--	priv->rfkill_mngr.input_dev = input_allocate_device();
--	if (!priv->rfkill_mngr.input_dev) {
--		IWL_ERROR("Unable to allocate rfkill input device.\n");
--		ret = -ENOMEM;
--		goto freed_rfkill;
--	}
--
--	priv->rfkill_mngr.input_dev->name = priv->cfg->name;
--	priv->rfkill_mngr.input_dev->phys = wiphy_name(priv->hw->wiphy);
--	priv->rfkill_mngr.input_dev->id.bustype = BUS_HOST;
--	priv->rfkill_mngr.input_dev->id.vendor = priv->pci_dev->vendor;
--	priv->rfkill_mngr.input_dev->dev.parent = device;
--	priv->rfkill_mngr.input_dev->evbit[0] = BIT(EV_KEY);
--	set_bit(KEY_WLAN, priv->rfkill_mngr.input_dev->keybit);
--#endif
--
- 	ret = rfkill_register(priv->rfkill_mngr.rfkill);
- 	if (ret) {
- 		IWL_ERROR("Unable to register rfkill: %d\n", ret);
--		goto free_input_dev;
--	}
--
--#if defined(CONFIG_RFKILL_INPUT) || defined(CONFIG_RFKILL_INPUT_MODULE)
--	ret = input_register_device(priv->rfkill_mngr.input_dev);
--	if (ret) {
--		IWL_ERROR("Unable to register rfkill input device: %d\n", ret);
- 		goto unregister_rfkill;
- 	}
--#endif
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
- 	IWL_DEBUG_RF_KILL("RFKILL initialization complete.\n");
- 	return ret;
-@@ -136,12 +111,6 @@ unregister_rfkill:
- 	rfkill_unregister(priv->rfkill_mngr.rfkill);
- 	priv->rfkill_mngr.rfkill = NULL;
+iQIcBAABAgAGBQJIWqKXAAoJEKVg1VMiehFYHZsP/2aji1bMSLcPIsM4ge+UvW0W
+qdzyfMFzYstlu2jDAxj7zrB4GIfxL+XgudMTztJdCNfjGgxnfNa1BmgKoEDvEpzV
+lscCFa29gtnTZlnwcm4oAUV416nP023I3Hf8ox8IgG3R2sIAh9G+56UF6aV3CHJa
+OE0a1iq3TFN65mqDjgeUbNQBrVEKxSZsI7eMZTuIs/biJmfEF1g7UmSWT+X4ronR
+vvZwDUN3ZzJADcZ48MaON7s6S4fBCob88La77WnKx5gZaavN4zpyn2tQ86DHrtLx
+Vpd1N5C4BMdkVV0DvzA4r96knISNo2pgGiNss58tRRODo9rwH3KuBb+53p5j6Xj2
+amExK4Q3CcO4nvUZOTqjVeodawc51Egy44Sib9Nrv8hm2/J1Ls2uu1doS1KfKunb
+OuM1TJl1Kmiy85atYup67dwMnsvEMjGgZHiyED+yq4sazACbV55MhuasXfSK6lW8
+TZnkRyfPp5KywP2nAmdACSJwkdGkh8IaHdKhvpzobDLR80kZbLL+1Y8C87EmTHOt
+wRwDxb+d7p+ZXu9bL8D2eE6idcggp6v9n/xTUk/ByqVR8DqXBVUprp+jAlWiX0zn
+1WNJuoEObgpg9WORNjb1/iiahYbSGEdC0qOTGirWVl38Wug702FMvx3/J4OYyccq
+qyj0L8ix9b8ZACD1fzWm
+=rhUz
+-----END PGP SIGNATURE-----
 
--free_input_dev:
--#if defined(CONFIG_RFKILL_INPUT) || defined(CONFIG_RFKILL_INPUT_MODULE)
--	input_free_device(priv->rfkill_mngr.input_dev);
--	priv->rfkill_mngr.input_dev = NULL;
--#endif
--
- freed_rfkill:
- 	if (priv->rfkill_mngr.rfkill != NULL)
- 		rfkill_free(priv->rfkill_mngr.rfkill);
-@@ -156,13 +125,6 @@ EXPORT_SYMBOL(iwl_rfkill_init);
- void iwl_rfkill_unregister(struct iwl_priv *priv)
- {
+--=-82nonJUmvMGchHTRG5gk--
 
--#if defined(CONFIG_RFKILL_INPUT) || defined(CONFIG_RFKILL_INPUT_MODULE)
--	if (priv->rfkill_mngr.input_dev)
--		input_unregister_device(priv->rfkill_mngr.input_dev);
--	input_free_device(priv->rfkill_mngr.input_dev);
--	priv->rfkill_mngr.input_dev = NULL;
--#endif
--
- 	if (priv->rfkill_mngr.rfkill)
- 		rfkill_unregister(priv->rfkill_mngr.rfkill);
-
-@@ -173,7 +135,6 @@ EXPORT_SYMBOL(iwl_rfkill_unregister);
- /* set rf-kill to the right state. */
- void iwl_rfkill_set_hw_state(struct iwl_priv *priv)
- {
--
- 	if (!priv->rfkill_mngr.rfkill)
- 		return;
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.h
-b/drivers/net/wireless/iwlwifi/iwl-rfkill.h
-index b3c04db..00692d2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rfkill.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.h
-@@ -31,12 +31,10 @@
- struct iwl_priv;
-
- #include <linux/rfkill.h>
--#include <linux/input.h>
-
- #ifdef CONFIG_IWLWIFI_RFKILL
- struct iwl_rfkill_mngr {
- 	struct rfkill *rfkill;
--	struct input_dev *input_dev;
- };
-
- void iwl_rfkill_set_hw_state(struct iwl_priv *priv);
