@@ -1,71 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:51424 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756622AbYFPJI0 (ORCPT
+Received: from rgminet01.oracle.com ([148.87.113.118]:36920 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751000AbYFSC72 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2008 05:08:26 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so4269325waf.23
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2008 02:08:26 -0700 (PDT)
-Message-ID: <1ba2fa240806160208l2926eeefh7f9eaf4f54d6c25c@mail.gmail.com> (sfid-20080616_110830_519368_71476C17)
-Date: Mon, 16 Jun 2008 12:08:26 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/2] mac80211: 11h - Handling measurement request
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	"Assaf Krauss" <assaf.krauss@intel.com>
-In-Reply-To: <1213605673.3803.22.camel@johannes.berg>
+	Wed, 18 Jun 2008 22:59:28 -0400
+Date: Wed, 18 Jun 2008 19:48:05 -0700
+From: Joel Becker <Joel.Becker@oracle.com>
+To: Ben Nizette <bn@niasdigital.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux kernel <linux-kernel@vger.kernel.org>,
+	Greg KH <greg@kroah.com>,
+	Satyam Sharma <ssatyam@cse.iitk.ac.in>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Al Viro <viro@ftp.linux.org.uk>,
+	"H. Peter Anvin" <hpa@kernel.org>
+Subject: [RFC PATCHES] Re: Is configfs the right solution for configuration
+	based fs?
+Message-ID: <20080619024804.GA29765@mail.oracle.com> (sfid-20080619_050031_758883_A86D56E6)
+References: <43e72e890806081425h4e785800nc618fc1985f9809f@mail.gmail.com> <1213002187.698.62.camel@johannes.berg> <1213056772.4089.42.camel@moss.renham>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1213543410-30890-1-git-send-email-tomas.winkler@intel.com>
-	 <1213543410-30890-2-git-send-email-tomas.winkler@intel.com>
-	 <1213605673.3803.22.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1213056772.4089.42.camel@moss.renham>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 16, 2008 at 11:41 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
+On Tue, Jun 10, 2008 at 10:12:52AM +1000, Ben Nizette wrote:
 >
->> This patch handles the 11h measurement request information element.
->> This is minimal requested implementation - refuse measurement.
->
-> I haven't really read 11h or the -2007 wrt. the added material, but this
-> seems a bit odd to me:
->
->> +static void ieee80211_send_measurement_req(struct net_device *dev,
->> +                             struct ieee80211_msrment_ie *request_ie,
->> +                             const u8 *da, const u8 *bssid,
->> +                             u8 dialog_token)
->
->> +     msr_report->u.action.u.measurement.element_id = WLAN_EID_MEASURE_REPORT;
->
-> It's sending a report after all, not a request. Maybe it should just be
-> named "send_measurement_action"?
 
-Will do.
+	Thanks, Ben, for providing constructive comments.  I know I
+replied later with some of the known issues.  Here are some tentative
+solutions! (Why now, you ask?  I just finished up something and had a
+free moment)
 
->
->> +     msr_report->u.action.u.measurement.msr_elem.token = request_ie->token;
->> +     msr_report->u.action.u.measurement.msr_elem.mode |= MSR_REPORT_REFUSED;
->
-> Also, it seems to me that should be part of the arguments or you won't
-> be able to use this function for anything else but sending a 'refused'
-> report?
+> What's the first one, sysfs..?  ioctl (eww..)?  I do think they solve
+> different problems, both have their place.  IMHO sysfs is forced to do
+> configuration in some situations where it just doesn't fit.  Prolly 'coz
+> sysfs have the easy __DEVICE_ATTR kinda macros where as configfs takes
+> more effort to get flying.
+<snip>
+> That and a bit of wider use would probably see configfs growing helper
+> macros like those which make sysfs attributes a piece of cake to
+> implement.
 
-Don't mind to put it into arguments, just the argument list have to be alter
-anyway if real measurement is performed and results need to be sent out.
- Currently no plans to implement  more then necessary minimum to
-comply with the spec.
+	Ask, and ye shall receive.  I've actually been meaning to look
+at this for a while.  Please check out the branch configfs-attr-macros
+at my git tree.  Actually, here is the configfs.h with macros, and
+configfs_example_macros.c using them.  Let me know if this fits the
+bill.
 
+[config-attr-macros:include/linux/configfs.h]
+http://oss.oracle.com/git/jlbec/linux-2.6.git/?p=jlbec/linux-2.6.git;a=blob;f=include/linux/configfs.h;h=8be4507ab98f49f43c5212cbafe62178df9a517b;hb=c085c60b185d7431935397e43a868325d8f1da6c
 
->
->> +/* measurement report mode field - refuse to generate a report */
->> +#define MSR_REPORT_REFUSED       BIT(2)
->
-> That seems completely misplaced in sta_info.h to me?
+[config-attr-macros:Documentation/filesystems/configfs/configfs_example_macros.c]
+http://oss.oracle.com/git/jlbec/linux-2.6.git/?p=jlbec/linux-2.6.git;a=blob;f=Documentation/filesystems/configfs/configfs_example_macros.c;h=c2ece748abdf30a7d67dd9ea25c5e6ac93fbc005;hb=c085c60b185d7431935397e43a868325d8f1da6c
 
-Yep will move it to
-include/linux/ieee80211.h ?
+	Compare and contrast with the original configfs_example.c (now
+configfs_example_explicit.c on that branch).  The diff is available
+here:
+http://oss.oracle.com/git/jlbec/linux-2.6.git/?p=jlbec/linux-2.6.git;a=commitdiff;h=c085c60b185d7431935397e43a868325d8f1da6c
 
-Thanks
-Tomas
+> And the trival problem that, ISTR, failing the make_group method always
+> reports -ENOMEM to userspace, no matter what the actual problem was.  I
+> think I had a patch around to pass the error code from make_group back
+> up through to userspace, I wonder what happened to that...
+
+	I've also attacked this one.  The change is in the
+make-item-errors branch.  It's already scheduled for linux-next.  Diff
+available here:
+http://oss.oracle.com/git/jlbec/linux-2.6.git/?p=jlbec/linux-2.6.git;a=commitdiff;h=34fbb494fecfd82bcbf9ed698ef305500228a84c
+
+Joel
+
+-- 
+
+Life's Little Instruction Book #226
+
+	"When someone hugs you, let them be the first to let go."
+
+Joel Becker
+Principal Software Developer
+Oracle
+E-mail: joel.becker@oracle.com
+Phone: (650) 506-8127
