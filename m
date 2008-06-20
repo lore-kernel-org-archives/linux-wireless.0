@@ -1,143 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:56342 "EHLO mx1.redhat.com"
+Received: from mail.hevs.ch ([153.109.23.10]:50051 "EHLO mail.hevs.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755554AbYFFO3q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2008 10:29:46 -0400
-Subject: Re: iwl4965 oops in 2.6.26-rc5 x86_64
-From: Dan Williams <dcbw@redhat.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Thomas Backlund <tmb@mandriva.org>,
-	Ian Schram <ischram@telenet.be>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240806060659wf4e4088s8afdd2f7f854ea09@mail.gmail.com>
-References: <4848289D.1080205@mandriva.org>
-	 <1ba2fa240806051103q652accf5t1bd1d94630ebea5b@mail.gmail.com>
-	 <48482BC3.4070402@mandriva.org> <4848482C.2080208@mandriva.org>
-	 <48485F12.2050908@mandriva.org> <48488878.5040708@telenet.be>
-	 <1ba2fa240806060432t73ecb318x89e877241aa6ef55@mail.gmail.com>
-	 <48492734.9080901@mandriva.org> <48492E85.6010307@mandriva.org>
-	 <1ba2fa240806060659wf4e4088s8afdd2f7f854ea09@mail.gmail.com>
-Content-Type: text/plain
-Date: Fri, 06 Jun 2008 10:29:29 -0400
-Message-Id: <1212762569.28631.6.camel@localhost.localdomain> (sfid-20080606_162950_612852_AB73C272)
-Mime-Version: 1.0
+	id S1750986AbYFTHJh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Jun 2008 03:09:37 -0400
+From: Marc Pignat <marc.pignat@hevs.ch>
+To: libertas-dev@lists.infradead.org
+Subject: Re: [PATCH] libertas: make mesh code configurable
+Date: Fri, 20 Jun 2008 08:48:27 +0200
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+References: <200806191704.10297.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200806191704.10297.hs4233@mail.mn-solutions.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200806200848.28077.marc.pignat@hevs.ch> (sfid-20080620_090939_949864_AEF2A656)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-06-06 at 16:59 +0300, Tomas Winkler wrote:
-> On Fri, Jun 6, 2008 at 3:33 PM, Thomas Backlund <tmb@mandriva.org> wrote:
-> > Thomas Backlund skrev:
-> >>
-> >> Tomas Winkler skrev:
-> >>>
-> >>> On Fri, Jun 6, 2008 at 3:44 AM, Ian Schram <ischram@telenet.be> wrote:
-> >>>>
-> >>>> Isn't this the Oops Joonwoo Park wanted to patch with
-> >>>>
-> >>>> "[PATCH] iwlwifi: fix oops on wep key insertion" 27/5/2008
-> >>>>
-> >>>> invalid length of webkey that would/should be handled in mac80211?
-> >>>>
-> >>>> ian
-> >>>
-> >>> Yes, it looks like.
-> >>
-> >> Ummm, what has a wep key to do with me trying to access a WPA2-Personal
-> >> encrypted net ?
+Hi!
+
+On Thursday 19 June 2008, Holger Schurig wrote:
+> There are no known firmwares for CF and SDIO based devices that
+> support MESH. For those devices, mesh-support in the driver is just
+> a bit of bloat. Moreover, they're mostly used in embedded devices,
+> where space counts.
 > 
-> Not sure yet, but mac is trying to assign default/static wep key.
-
-The output of wpa_supplicant with "-dddt" would be quite useful in
-figuring this out.
-
-The supplicant does always _clear_ static WEP keys when it starts the
-interface, when a connection drops, and when it quits.  Maybe that's
-where it's coming from?  But it should just be setting the "disabled"
-bit in the WEXT structure and sending a key of all zeros.
-
-Dan
-
-> :iwlcore:iwl_send_static_wepkey_cmd+0xcb/0xd5
-> :iwlcore:iwl_set_default_wep_key+0xa2/0xbc
+> This patch saves about 10 kB in .text and 288 bytes in .data:
 > 
-> Try to set the encryption explicitly
-> network={
->     psk="*************************"
->     scan_ssid=1
->     ssid="dlink"
->     pairwise=CCMP
->    group=CCMP
->  }
+>  129542    4012      28  133582   209ce libertas.ko
+>  119279    3724      28  123031   1e097 nomesh/libertas.ko
 > 
+>    8142     840       0    8982    2316 libertas_cs.ko
+>    8134     840       0    8974    230e nomesh/libertas_cs.ko
 > 
-> >>
-> >>> Thomas can you send out your wpa_supplicant config fiele
-> >>>
-> >>
-> >> I could, but since I would have to remove any sensitive info such as the
-> >> psk key, would it be of any use ?
-> >
-> > Anyway, here configs are:
-> >
-> > wpa_supplicant.conf
-> > (I stripped all the comments from the file)
-> > --- cut ---
-> > ctrl_interface=/var/run/wpa_supplicant
-> >
-> > eapol_version=1
-> >
-> > ap_scan=1
-> >
-> > fast_reauth=1
-> >
-> > blob-base64-exampleblob={
-> > SGVsbG8gV29ybGQhCg==
-> > }
-> >
-> > network={
-> >    psk="*************************"
-> >    scan_ssid=1
-> >    ssid="dlink"
-> > }
-> > --- cut ---
-> >
-> > ifcfg-wlan0
-> > --- cut ---
-> > DEVICE=wlan0
-> > BOOTPROTO=dhcp
-> > ONBOOT=yes
-> > METRIC=35
-> > MII_NOT_SUPPORTED=no
-> > USERCTL=no
-> > RESOLV_MODS=no
-> > WIRELESS_MODE=Managed
-> > WIRELESS_ESSID=dlink
-> > WIRELESS_ENC_KEY='s:*************************'
-> > WIRELESS_WPA_DRIVER=wext
-> > IPV6INIT=no
-> > IPV6TO4INIT=no
-> > DHCP_CLIENT=dhclient
-> > NEEDHOSTNAME=no
-> > PEERDNS=yes
-> > PEERYP=yes
-> > PEERNTPD=no
-> > --- cut ---
-> >
-> >>
-> >>> I will provide a patch that disable hw encryption on long wep keys. It
-> >>> get lost in my todo list.
-> >>> Tomas
-> >>>
-> >>
-> >
-> > --
-> > Thomas
-> >
-> >
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>    9516     700       8   10224    27f0 libertas_sdio.ko
+>    9516     700       8   10224    27f0 nomesh/libertas_sdio.ko
+> 
+>   10333     860       0   11193    2bb9 usb8xxx.ko
+>   10333     860       0   11193    2bb9 nomesh/usb8xxx.ko
+> 
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
+Looking at the numbers, this seems a good idea.
+
+But, looking at the code, there are so many #ifdefs!
+
+These #ifdefs have a cost:
+  * #ifdefs decrease code readability
+  * every future patch should be (compile AND runtime) tested with the mesh
+    code enable and disable.
+
+IHMO, the cost versus benefits is far to high.
+
+
+
+Best regards
+
+Marc
