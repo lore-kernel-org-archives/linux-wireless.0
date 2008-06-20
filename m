@@ -1,91 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33521 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:58917 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753615AbYFSNY4 (ORCPT
+	with ESMTP id S1751491AbYFTJzD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 09:24:56 -0400
-Subject: Re: Broken fragmentation
+	Fri, 20 Jun 2008 05:55:03 -0400
+Subject: [PATCH] mac80211: rename TKIP debugging Kconfig symbol
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240806190608h3d833dbaua412446e8a9f560d@mail.gmail.com> (sfid-20080619_150803_298582_5210094B)
-References: <1ba2fa240806190220l18fe5dcdsf44fe81412a5f35d@mail.gmail.com>
-	 <1213869365.1312.48.camel@johannes.berg>
-	 <1ba2fa240806190446n4d931e6ara4db156900e59e0d@mail.gmail.com>
-	 <1ba2fa240806190457w20dfe2d5pf06829b26d2722a3@mail.gmail.com>
-	 <1213878207.8967.6.camel@johannes.berg>
-	 <1ba2fa240806190608h3d833dbaua412446e8a9f560d@mail.gmail.com>
-	 (sfid-20080619_150803_298582_5210094B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tOyVlUzFH0Ef86K1sU1f"
-Date: Thu, 19 Jun 2008 15:24:15 +0200
-Message-Id: <1213881855.8967.19.camel@johannes.berg> (sfid-20080619_152529_164824_B17C9821)
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 20 Jun 2008 11:54:24 +0200
+Message-Id: <1213955664.8967.149.camel@johannes.berg> (sfid-20080620_115507_931717_053A5282)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+... to MAC80211_TKIP_DEBUG rather than TKIP_DEBUG.
 
---=-tOyVlUzFH0Ef86K1sU1f
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/Kconfig |    2 +-
+ net/mac80211/tkip.c  |   20 ++++++++++----------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-On Thu, 2008-06-19 at 16:08 +0300, Tomas Winkler wrote:
-> On Thu, Jun 19, 2008 at 3:23 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> >
-> >> > Now it crashes in the driver...maybe the txinfo to cb changes. Looki=
-ng into it.
-> >> > Tomas
-> >> Looks like this is the second part keyconf is null
-> >
-> > Part? You mean fragment? What encryption algorithm? I've quickly looked
-> > and all of them seem to do the control.hw_key assignment in their
-> > respective _skb handler so it should be done for all fragments.
->=20
-> The problem is w/o crypto
-> I think this is not set on each fragment
-> info->flags |=3D IEEE80211_TX_CTL_DO_NOT_ENCRYPT;
+--- everything.orig/net/mac80211/Kconfig	2008-06-20 11:52:50.000000000 +0200
++++ everything/net/mac80211/Kconfig	2008-06-20 11:52:57.000000000 +0200
+@@ -158,7 +158,7 @@ config MAC80211_HT_DEBUG
+ 
+ 	  Do not select this option.
+ 
+-config TKIP_DEBUG
++config MAC80211_TKIP_DEBUG
+ 	bool "Verbose TKIP debugging"
+ 	depends on MAC80211_DEBUG_MENU
+ 	help
+--- everything.orig/net/mac80211/tkip.c	2008-06-20 11:53:05.000000000 +0200
++++ everything/net/mac80211/tkip.c	2008-06-20 11:53:26.000000000 +0200
+@@ -167,7 +167,7 @@ void ieee80211_get_tkip_key(struct ieee8
+ 	tk = &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY];
+ 	ctx = &key->u.tkip.tx;
+ 
+-#ifdef CONFIG_TKIP_DEBUG
++#ifdef CONFIG_MAC80211_TKIP_DEBUG
+ 	printk(KERN_DEBUG "TKIP encrypt: iv16 = 0x%04x, iv32 = 0x%08x\n",
+ 			iv16, iv32);
+ 
+@@ -177,7 +177,7 @@ void ieee80211_get_tkip_key(struct ieee8
+ 		printk(KERN_DEBUG "Wrap around of iv16 in the middle of a "
+ 			"fragmented packet\n");
+ 	}
+-#endif /* CONFIG_TKIP_DEBUG */
++#endif
+ 
+ 	/* Update the p1k only when the iv16 in the packet wraps around, this
+ 	 * might occur after the wrap around of iv16 in the key in case of
+@@ -240,7 +240,7 @@ int ieee80211_tkip_decrypt_data(struct c
+ 	keyid = pos[3];
+ 	iv32 = get_unaligned_le32(pos + 4);
+ 	pos += 8;
+-#ifdef CONFIG_TKIP_DEBUG
++#ifdef CONFIG_MAC80211_TKIP_DEBUG
+ 	{
+ 		int i;
+ 		printk(KERN_DEBUG "TKIP decrypt: data(len=%zd)", payload_len);
+@@ -250,7 +250,7 @@ int ieee80211_tkip_decrypt_data(struct c
+ 		printk(KERN_DEBUG "TKIP decrypt: iv16=%04x iv32=%08x\n",
+ 		       iv16, iv32);
+ 	}
+-#endif /* CONFIG_TKIP_DEBUG */
++#endif
+ 
+ 	if (!(keyid & (1 << 5)))
+ 		return TKIP_DECRYPT_NO_EXT_IV;
+@@ -262,14 +262,14 @@ int ieee80211_tkip_decrypt_data(struct c
+ 	    (iv32 < key->u.tkip.rx[queue].iv32 ||
+ 	     (iv32 == key->u.tkip.rx[queue].iv32 &&
+ 	      iv16 <= key->u.tkip.rx[queue].iv16))) {
+-#ifdef CONFIG_TKIP_DEBUG
++#ifdef CONFIG_MAC80211_TKIP_DEBUG
+ 		DECLARE_MAC_BUF(mac);
+ 		printk(KERN_DEBUG "TKIP replay detected for RX frame from "
+ 		       "%s (RX IV (%04x,%02x) <= prev. IV (%04x,%02x)\n",
+ 		       print_mac(mac, ta),
+ 		       iv32, iv16, key->u.tkip.rx[queue].iv32,
+ 		       key->u.tkip.rx[queue].iv16);
+-#endif /* CONFIG_TKIP_DEBUG */
++#endif
+ 		return TKIP_DECRYPT_REPLAY;
+ 	}
+ 
+@@ -283,7 +283,7 @@ int ieee80211_tkip_decrypt_data(struct c
+ 	    key->u.tkip.rx[queue].iv32 != iv32) {
+ 		/* IV16 wrapped around - perform TKIP phase 1 */
+ 		tkip_mixing_phase1(tk, &key->u.tkip.rx[queue], ta, iv32);
+-#ifdef CONFIG_TKIP_DEBUG
++#ifdef CONFIG_MAC80211_TKIP_DEBUG
+ 		{
+ 			int i;
+ 			DECLARE_MAC_BUF(mac);
+@@ -299,7 +299,7 @@ int ieee80211_tkip_decrypt_data(struct c
+ 				printk("%04x ", key->u.tkip.rx[queue].p1k[i]);
+ 			printk("\n");
+ 		}
+-#endif /* CONFIG_TKIP_DEBUG */
++#endif
+ 		if (key->local->ops->update_tkip_key &&
+ 			key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
+ 			u8 bcast[ETH_ALEN] =
+@@ -316,7 +316,7 @@ int ieee80211_tkip_decrypt_data(struct c
+ 	}
+ 
+ 	tkip_mixing_phase2(tk, &key->u.tkip.rx[queue], iv16, rc4key);
+-#ifdef CONFIG_TKIP_DEBUG
++#ifdef CONFIG_MAC80211_TKIP_DEBUG
+ 	{
+ 		int i;
+ 		printk(KERN_DEBUG "TKIP decrypt: Phase2 rc4key=");
+@@ -324,7 +324,7 @@ int ieee80211_tkip_decrypt_data(struct c
+ 			printk("%02x ", rc4key[i]);
+ 		printk("\n");
+ 	}
+-#endif /* CONFIG_TKIP_DEBUG */
++#endif
+ 
+ 	res = ieee80211_wep_decrypt_data(tfm, rc4key, 16, pos, payload_len - 12);
+  done:
 
-Ouch, you're right, the whole tx info isn't properly initialised for
-fragments.
-
-Can you try putting
-
-memcpy(frag->cb, first->cb, sizeof(first->cb));
-
-at around line 690 of tx.c where this code is?
-
-                frag->priority =3D first->priority;
-                skb_reserve(frag, tx->local->tx_headroom +
-                                  IEEE80211_ENCRYPT_HEADROOM);
-
-
-[now I know what the cause is. I had another patch that used skb_segment
-to do the fragmentation, but that was dropped and skb_segment does copy
-skb->cb while our code doesn't]
-
-johannes
-
---=-tOyVlUzFH0Ef86K1sU1f
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIWl37AAoJEKVg1VMiehFYH9gP/jBuTpEztyBY3gxtgOCtZa4u
-VuSRrKj7FM0b6Tupnc4t+2JzE1ZKcf9OicztMWA/Ly9xwGO33AqeMsWgeiUhQljR
-Dh/q6yoknFsZuWdqALEBm4+qFTrHSfb2ou24kQhIo7ezotQfpyco06cy2TtUYyBg
-IZo3H/o79yuxFNzz5ME1orhUrRTQ2x8QjZjlYd6PFVPv2FK4MWsuC3BNk5OyL06H
-qjVCR+YnVVzVRVU7h5rWqrEh8XbFJtDV7m6lCYoL5R8uQC6fe7fwG4oSr4A1bKcw
-5LPGlFaQwu99ZLnnqy6/v2EXY325bL3UgqcI8Q1s8SPTfDZv16BGapthi8Ompcx4
-3c+atrvt3Tg1pSodvE91NvtJuTFANm1477B7vzaN7wQxn5VT2GSLN5TboUneLegq
-ogDlPkm9pO4hLhK8ChvEBONtDR2gu8FQ6mKFUxgW1mnq70sNe6p7pV3Lm+bpuJN6
-AwB4755Sanj2+I3RK8z+6JqRV28KVSZNj5PtGD9IDop/5/uXRuSCFgEGsk4wGkej
-5rbueROpvl+RMgyyfvjc9QX0awJf73kGTZSGGZWkwIBMx2/WUKzPdGQRs4R4ncSI
-Id1EFcaWegdnM648m1EO2Wfle34hW03JuSwTXqe94YZK+yl7UuBIMgyftaZOK5lO
-D6TNbCQ6GnNM0aSy7ORB
-=7mhI
------END PGP SIGNATURE-----
-
---=-tOyVlUzFH0Ef86K1sU1f--
 
