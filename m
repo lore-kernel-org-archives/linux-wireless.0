@@ -1,43 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:25468 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756307AbYF0Rtv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2008 13:49:51 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so156081nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jun 2008 10:49:48 -0700 (PDT)
-Message-ID: <f6ca9fed0806271049v37b4f7cetc9d918b877024a76@mail.gmail.com> (sfid-20080627_195003_494504_38B3984B)
-Date: Fri, 27 Jun 2008 19:49:47 +0200
-From: drago01 <drago01@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: pull request: wireless-next-2.6 2008-06-27
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <20080627171524.GC20277@tuxdriver.com>
+Received: from bu3sch.de ([62.75.166.246]:48428 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753687AbYFTPtC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Jun 2008 11:49:02 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Add simple firmware watchdog
+Date: Fri, 20 Jun 2008 17:44:02 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080627153541.GA16597@tuxdriver.com>
-	 <f6ca9fed0806270854u674a9d5aled463865e07829c8@mail.gmail.com>
-	 <20080627171524.GC20277@tuxdriver.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200806201744.03128.mb@bu3sch.de> (sfid-20080620_174909_141012_2380E798)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 27, 2008 at 7:15 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Fri, Jun 27, 2008 at 05:54:06PM +0200, drago01 wrote:
->> On Fri, Jun 27, 2008 at 5:35 PM, John W. Linville
->> <linville@tuxdriver.com> wrote:
->>
->> > Randy Dunlap (1):
->> >      iwlwifi: fix build for CONFIG_INPUT=n
->>
->> this one was NACKED by Ivo (well not exactly this but the 3945
->> version, and Yi posted an updated patch)
->
-> That merged patch appears to be identical to the one in this thread:
->
->        http://marc.info/?l=linux-next&m=121436670630784&w=2
->
-> That includes an ACK for Zhu Yi.  Am I missing something?
+This adds a simple firmware watchdog for the opensource firmware.
+This will check every 15 seconds, if the firmware zeroed out the watchdog
+register. The firmware will do this in its eventloop.
 
-yeah this one: http://marc.info/?l=linux-wireless&m=121455866524106&w=2
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
+---
+
+John, please queue for 2.6.27
+
+
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-06-20 17:39:21.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2008-06-20 17:40:06.000000000 +0200
+@@ -2805,12 +2805,27 @@ static void b43_periodic_every30sec(stru
+ 	b43_calculate_link_quality(dev);
+ }
+ 
+ static void b43_periodic_every15sec(struct b43_wldev *dev)
+ {
+ 	struct b43_phy *phy = &dev->phy;
++	u16 wdr;
++
++	if (dev->fw.opensource) {
++		/* Check if the firmware is still alive.
++		 * It will reset the watchdog counter to 0 in its idle loop. */
++		wdr = b43_shm_read16(dev, B43_SHM_SCRATCH, B43_WATCHDOG_REG);
++		if (unlikely(wdr)) {
++			b43err(dev->wl, "Firmware watchdog: The firmware died!\n");
++			b43_controller_restart(dev, "Firmware watchdog");
++			return;
++		} else {
++			b43_shm_write16(dev, B43_SHM_SCRATCH,
++					B43_WATCHDOG_REG, 1);
++		}
++	}
+ 
+ 	if (phy->type == B43_PHYTYPE_G) {
+ 		//TODO: update_aci_moving_average
+ 		if (phy->aci_enable && phy->aci_wlan_automatic) {
+ 			b43_mac_suspend(dev);
+ 			if (!phy->aci_enable && 1 /*TODO: not scanning? */ ) {
+Index: wireless-testing/drivers/net/wireless/b43/b43.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2008-06-20 17:39:21.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/b43.h	2008-06-20 17:40:06.000000000 +0200
+@@ -438,12 +438,14 @@ enum {
+ /* The firmware register to fetch the panic reason from. */
+ #define B43_FWPANIC_REASON_REG		3
+ /* Firmware panic reason codes */
+ #define B43_FWPANIC_DIE			0 /* Firmware died. Don't auto-restart it. */
+ #define B43_FWPANIC_RESTART		1 /* Firmware died. Schedule a controller reset. */
+ 
++/* The firmware register that contains the watchdog counter. */
++#define B43_WATCHDOG_REG		1
+ 
+ /* Device specific rate values.
+  * The actual values defined here are (rate_in_mbps * 2).
+  * Some code depends on this. Don't change it. */
+ #define B43_CCK_RATE_1MB		0x02
+ #define B43_CCK_RATE_2MB		0x04
