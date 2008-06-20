@@ -1,50 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:45453 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759164AbYFZQB2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 12:01:28 -0400
-Subject: Re: [Q] ath5k : doesn't support AP mode?
-From: Pavel Roskin <proski@gnu.org>
-To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, cs010101@gmail.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <69e28c910806260846s3b02cdddlca3ac138acadd8bd@mail.gmail.com>
-References: <002901c8d737$e51bb2f0$3b0aa8c0@39fb6b6b6f434b3>
-	 <1214449044.18897.15.camel@dv> <1214487200.20763.44.camel@johannes.berg>
-	 <1214492236.30044.7.camel@dv>
-	 <69e28c910806260846s3b02cdddlca3ac138acadd8bd@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Date: Thu, 26 Jun 2008 12:01:26 -0400
-Message-Id: <1214496086.30722.14.camel@dv> (sfid-20080626_180135_611425_FD10BB4B)
+Received: from xc.sipsolutions.net ([83.246.72.84]:54800 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750986AbYFTGne (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Jun 2008 02:43:34 -0400
+Subject: Re: [RFC-PATCH] mac80211: add helpers for skb manipulation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1213939944.6591.13.camel@brick> (sfid-20080620_073239_646166_FB02DC7B)
+References: <1213939944.6591.13.camel@brick>
+	 (sfid-20080620_073239_646166_FB02DC7B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Yn+uIw/kXYoQLHyeQrUJ"
+Date: Fri, 20 Jun 2008 08:42:54 +0200
+Message-Id: <1213944174.8967.124.camel@johannes.berg> (sfid-20080620_084337_814933_7EB099A5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-06-26 at 17:46 +0200, Stefanik G=E1bor wrote:
 
-> Maybe we had more people working on/debugging AP mode if we didn't
-> intentionally disable the existing limited support for it... Possibly
-> print a big warning that "THIS IS NOT STANDARDS_COMPLIANT YET!", but
-> outright disabling it and requiring an external patch is IMHO stupid.
-> Perhaps a Kconfig option with EXPERIMENTAL and default=3Dn would be
-> better.
+--=-Yn+uIw/kXYoQLHyeQrUJ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I agree.  More people would be looking into AP support for individual
-drivers if mac80211 didn't need a patch.
 
-Alone the requirement for hostapd would indicate that the AP mode is no=
-t
-ready for general consumption.  Going further can actually discourage
-some potential contributors.
+> +	/* Remove QOS if present */
+> +	hdr =3D (struct ieee80211_hdr *)skb->data;
+> +	if (ieee80211_is_data_qos(hdr->frame_control)) {
+> +		hdr->frame_control &=3D ~cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
+> +		ieee80211_skb_trim_iv_icv(skb, IEEE80211_QOS_CTL_LEN, 0);
 
-I suspect somebody in the ath5k camp would look at the AP mode if
-mac80211 wasn't forbidding it unconditionally.
+Maybe you should rename that if you're going to use it for something
+other than IV/ICV :)
 
---=20
-Regards,
-Pavel Roskin
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And wouldn't it actually be more efficient in this case to just
+calculate hdrlen once?
+
+johannes
+
+--=-Yn+uIw/kXYoQLHyeQrUJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIW1FpAAoJEKVg1VMiehFYqNYP/jeM6EosEIliBQZOl2fl4MtZ
+ECEn4SjACX78Y4FTP2GOkgxuJPY3qSlSzDH6Y3rkD8HXtHojx7Fci+6+L3b5JRsn
+U0DO5+BeQwbBvlO/sPMYbvijVc7FA5LQoIdnQSz1+OkMDsTW6hxe8M90smUsVWBg
+fB/b+IDtlGCgijwP8zGlGkYnVP2OyVnz01huYks9hIbAfwLknJaD893Sako48mFN
+DWyqFPWqWs/4rTP1T0YMhBp9F/JE3i8lM0oeonEg8tbuM8ovDesq/UKjhqg5vJM4
+1oLof1Qih1vn/s2nWitbvAHzQGTH3iOQzMz/YkJ/L5ur1c3dDz0XyBpAOFT5+ZNk
+75P2cj7+Ye4OvrzUMG4XGsKErT22pc8qhC1xjRnLt+8G5/vtx/Tza/RLxUKY89Iv
+MFzN4bsHmAwvKJ8C/HRwj8ZN/mF2oqkNRtu8uc8r3VFWbXF+ZVBU3hxSwyMfn3n3
+bvY1573BZ4U7M+tzgoHZ+swFwc46xDIuqdq/gVScZowkqEjs2aYp/S0CycVfXAiB
+Yl5r+4gMsgSI+fTPMMMwd4q5+BE4FM+HXka7iXIzygovilL5dj72a28Ct0OrTVZX
+1rqtSL0pmD7RBM2x6mbW+aCYqqM+Opg5DGeDhIqOEE0broEUOhOt0Q/b3pHXsFDO
+tcTj53Jnp9EuxkFR637V
+=IT8z
+-----END PGP SIGNATURE-----
+
+--=-Yn+uIw/kXYoQLHyeQrUJ--
+
