@@ -1,67 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:28636 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753150AbYF2J5R (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59490 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753401AbYFTPqz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jun 2008 05:57:17 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so843803waf.23
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Jun 2008 02:57:16 -0700 (PDT)
-Message-ID: <1ba2fa240806290257r1db0e021n152945d41ffe2f42@mail.gmail.com> (sfid-20080629_115720_469895_CAE1E7E6)
-Date: Sun, 29 Jun 2008 12:57:16 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/1] mac80211: don't accept WEP keys other than WEP40 and WEP104
-Cc: drago01 <drago01@gmail.com>, linville@tuxdriver.com,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
-In-Reply-To: <1214639847.5507.6.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1214610613-6990-1-git-send-email-tomas.winkler@intel.com>
-	 <f6ca9fed0806272346y2e8fde2cwa27a79ee83d0c0af@mail.gmail.com>
-	 <1214639847.5507.6.camel@johannes.berg>
+	Fri, 20 Jun 2008 11:46:55 -0400
+Subject: Re: [PATCH/RFC] remove irqs_disabled warning from local_bh_enable
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>,
+	David Ellingsworth <david@identd.dyndns.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1213976619.8967.204.camel@johannes.berg> (sfid-20080620_174407_488559_A2CC96B4)
+References: <1213739834.3803.137.camel@johannes.berg>
+	 <alpine.LFD.1.10.0806171648330.2907@woody.linux-foundation.org>
+	 <1213774177.3803.164.camel@johannes.berg> <20080620134637.GA8135@elte.hu>
+	 <20080620152748.GA21245@elte.hu>  <1213976619.8967.204.camel@johannes.berg>
+	 (sfid-20080620_174407_488559_A2CC96B4)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-46YljxFwJRfMfekuC836"
+Date: Fri, 20 Jun 2008 17:46:12 +0200
+Message-Id: <1213976772.8967.206.camel@johannes.berg> (sfid-20080620_174659_607537_1BF0795D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 28, 2008 at 10:57 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sat, 2008-06-28 at 08:46 +0200, drago01 wrote:
->
->> > +/**
->> > + * enum ieee80211_key_len - key length
->> > + * @WEP40: WEP 5 byte long key
->> > + * @WEP104: WEP 13 byte long key
->> > + */
->> > +enum ieee80211_key_len {
->> > +       LEN_WEP40 = 5,
->> > +       LEN_WEP104 = 13,
->> > +};
->
->
->> > +               if (alg == ALG_WEP &&
->
->> What about 0 ?
->> See http://marc.info/?l=linux-wireless&m=121458316301507&w=2
->
->
-> I don't think zero-keylen will have WEP there, will it? I don't really
-> know though.
 
-This patch  pushes the length check to ieee80211_set_encryption.
-Unlike John's patch
-where check was done in ieee80211_ioctl_siwencode.
-The benefit of this is that both ENCODE end ENCODEEXT are treated.
-The zero length key i.e. changing index is already taken care of in
-ieee80211_ioctl_siwencode
+--=-46YljxFwJRfMfekuC836
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-<snip>
-if (erq->flags & IW_ENCODE_DISABLED)
-		remove = 1;
-else if (erq->length == 0) {
-		/* No key data - just set the default TX key index */
-		ieee80211_set_default_key(sdata, idx);
-		return 0;
-}
-</snip>
+On Fri, 2008-06-20 at 17:43 +0200, Johannes Berg wrote:
+> On Fri, 2008-06-20 at 17:27 +0200, Ingo Molnar wrote:
+> > * Ingo Molnar <mingo@elte.hu> wrote:
+> >=20
+> > > > Subject: clean up and comment local_bh_enable code
+> > > >=20
+> > > > There's no need to use local_irq_save() over local_irq_disable() in=
+=20
+> > > > the local_bh_enable code since it is a bug to call it with irqs=20
+> > > > disabled and do_softirq will enable irqs if there is any pending=20
+> > > > work. Consolidate the code from local_bh_enable and ..._ip to avoid=
+=20
+> > > > having a disconnect between them in the warnings they trigger that=20
+> > > > is currently there. Also always trigger the warning on in_irq(), no=
+t=20
+> > > > just in the trace-irqflags case.
+> > >=20
+> > > applied to tip/core/softirq for testing, thanks Johannes.
+> >=20
+> > ok, -tip testing found that your patch triggers a new warning on an old=
+=20
+> > testbox that uses 3c59x vortex and netlogging:
+> >=20
+> > ----->
+> > calling  vortex_init+0x0/0xb0
+> > PCI: Found IRQ 10 for device 0000:00:0b.0
+> > PCI: Sharing IRQ 10 with 0000:00:0a.0
+> > PCI: Sharing IRQ 10 with 0000:00:0b.1
+> > 3c59x: Donald Becker and others.
+> > 0000:00:0b.0: 3Com PCI 3c556 Laptop Tornado at e0800400.
+> > PCI: Enabling bus mastering for device 0000:00:0b.0
+> > initcall vortex_init+0x0/0xb0 returned 0 after 47 msecs
+> > ...
+> > calling  init_netconsole+0x0/0x1b0
+> > netconsole: local port 4444
+> > netconsole: local IP 10.0.1.9
+> > netconsole: interface eth0
+> > netconsole: remote port 4444
+> > netconsole: remote IP 10.0.1.16
+> > netconsole: remote ethernet address 00:19:xx:xx:xx:xx
+> > netconsole: device eth0 not up yet, forcing it
+> > eth0:  setting half-duplex.
+> > eth0:  setting full-duplex.
+> > ------------[ cut here ]------------
+> > WARNING: at kernel/softirq.c:137 local_bh_enable_ip+0xd1/0xe0()
+> > Pid: 1, comm: swapper Not tainted 2.6.26-rc6-tip #2091
+> >  [<c0125ecf>] warn_on_slowpath+0x4f/0x70
+> >  [<c0126834>] ? release_console_sem+0x1b4/0x1d0
+> >  [<c0126d00>] ? vprintk+0x2a0/0x450
+>=20
+> Now you can't printk in irq context any more?
 
-Tomas
+Or I'm just confused by x86 stack dumps.
+
+johannes
+
+--=-46YljxFwJRfMfekuC836
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIW9DBAAoJEKVg1VMiehFYq4IP/15+UtzVn2coBJH9Kv/jlWEe
+oUf0lVNJXoMYF4C685Pn7FWPgAgPvvQZq3/SzpO/lN/OAiNfcXSXUYSI+407m69E
+9drvPJeFw4LEt81cI10lqmJRNR7X4CG7J2XymGJd2KFhhibR5WWzfKabcq4xNi6G
+jVEOmO5oN5Ev6HUohWaS2dX5vKACPGfdjb/+ROqIzP9TdtbJtIMOR5oUvBj8ku5N
+5R1VyFQNuP7SeTBmnt+XVlD+xYsAiBlTERxyz8DwWFzdI+1Zadpvw5d8ELYMTsjN
+iDmhjeF0DObBjyAMww7SQBOP/EVd6a89vljAGMDyax+v9FCpcpYmDKpqeUETNCaE
+7X9Vw0f2632FHTFTmYnUE4VJ6ZXKNQXEJKF/Dn1042mG1F5K6TgKUqQYeVTipsoz
+ibLa3g5/R5vPDP4jYKxobJyVaCy+yR7GbX0I3oKC/BL7X5pRhJ95KoeOgyUXVQjS
+qcVjPqCJWQzAC6j1RuVmmN+SYLgQzHY/hdKke880rKOBnQf4TdAmZ4ekW2vWg2MI
+v47hO52xcflBqrgAXqzjhNAPOVn1RC/6PArPKFXIYVXdS4wIFCH5RvqVZ7pYu+Cr
+OjKUMmejPGn3HOLq4mNrDl2/XhRvtxBL7n7/aMPQcP89epuLHdEfmE92iPAHaH/T
+/6nEPobpozrn2fSGnmL5
+=2JQB
+-----END PGP SIGNATURE-----
+
+--=-46YljxFwJRfMfekuC836--
+
