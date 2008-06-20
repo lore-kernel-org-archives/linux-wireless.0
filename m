@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.191]:53331 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753821AbYFYLMj (ORCPT
+Received: from rgminet01.oracle.com ([148.87.113.118]:44970 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751192AbYFTG5O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2008 07:12:39 -0400
-Received: by mu-out-0910.google.com with SMTP id w8so1111413mue.1
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2008 04:12:37 -0700 (PDT)
-Message-ID: <48622822.3000300@gmail.com> (sfid-20080625_131241_953594_A3A67D42)
-Date: Wed, 25 Jun 2008 13:12:34 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+	Fri, 20 Jun 2008 02:57:14 -0400
+Date: Thu, 19 Jun 2008 23:52:53 -0700
+From: Joel Becker <Joel.Becker@oracle.com>
+To: Ben Nizette <bn@niasdigital.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux kernel <linux-kernel@vger.kernel.org>,
+	Greg KH <greg@kroah.com>,
+	Satyam Sharma <ssatyam@cse.iitk.ac.in>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Al Viro <viro@ftp.linux.org.uk>,
+	"H. Peter Anvin" <hpa@kernel.org>
+Subject: Re: [RFC PATCHES] Re: Is configfs the right solution for
+	configuration based fs?
+Message-ID: <20080620065253.GA14238@ca-server1.us.oracle.com> (sfid-20080620_085721_954428_9E7F1737)
+References: <43e72e890806081425h4e785800nc618fc1985f9809f@mail.gmail.com> <1213002187.698.62.camel@johannes.berg> <1213056772.4089.42.camel@moss.renham> <20080619024804.GA29765@mail.oracle.com> <1213942750.2336.43.camel@moss.renham>
 MIME-Version: 1.0
-To: Pavel Machek <pavel@suse.cz>
-CC: kernel list <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	linville@tuxdriver.com
-Subject: Re: Small cleanups
-References: <20080625102553.GA2648@elf.ucw.cz> <486227D2.6030801@gmail.com>
-In-Reply-To: <486227D2.6030801@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1213942750.2336.43.camel@moss.renham>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> -    if ((ai->APList == NULL) &&
->> -        (ai->APList = kmalloc(sizeof(APListRid), GFP_KERNEL)) == NULL)
->> +    if (!ai->APList)
->> +        ai->APList = kmalloc(sizeof(APListRid), GFP_KERNEL);
->> +    if (!ai->APList)
->>          return -ENOMEM;
->> -    if ((ai->SSID == NULL) &&
->> -        (ai->SSID = kmalloc(sizeof(SsidRid), GFP_KERNEL)) == NULL)
->> +    if (!ai->SSID)
->> +        ai->SSID = kmalloc(sizeof(SsidRid), GFP_KERNEL);
->> +    if (!ai->SSID)
->>          return -ENOMEM;
-> 
-> Would you mind sending another patch which would fix the potential leak?
+On Fri, Jun 20, 2008 at 04:19:10PM +1000, Ben Nizette wrote:
+> Looks great, thx :-).  I'll convert some of my stuff over to this
+> interface and see how it flies in the real world.
 
-Sorry, ignore this.
+	Excellent.  What is your stuff, btw?  Got code?  Love to see it.
+
+> ISTR when I did this I kept the old semantics and used ERR_PTR and
+> friends if things went pear-shaped.  Given the small number of in-tree
+> users needing to be moved over, a more intrusive change for the sake of
+> a cleaner API like you've done is probably a good thing anyway :-)
+
+	Yeah, I like this better than ERR_PTR.
+	If you like the macros, I'll try to make the next merge window
+as well.  So let me know.
+
+joel
+
+-- 
+
+"I almost ran over an angel
+ He had a nice big fat cigar.
+ 'In a sense,' he said, 'You're alone here
+ So if you jump, you'd best jump far.'"
+
+Joel Becker
+Principal Software Developer
+Oracle
+E-mail: joel.becker@oracle.com
+Phone: (650) 506-8127
