@@ -1,89 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:33478 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752861AbYFDOTB (ORCPT
+Received: from outbound.icp-qv1-irony-out3.iinet.net.au ([203.59.1.148]:52679
+	"EHLO outbound.icp-qv1-irony-out3.iinet.net.au" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751046AbYFTGS6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2008 10:19:01 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so42046nfc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2008 07:19:00 -0700 (PDT)
-Date: Wed, 4 Jun 2008 17:23:14 +0300
-From: "Kirill A. Shutemov" <kirill@shutemov.name>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless.h: improve userland include-ability
-Message-ID: <20080604142307.GA22903@localhost.localdomain> (sfid-20080604_161905_828184_D61304F5)
-References: <1212515497-21578-1-git-send-email-linville@tuxdriver.com> <20080603.120515.193703574.davem@davemloft.net> <1212587529.32207.82.camel@pmac.infradead.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="oC1+HKm2/end4ao3"
-In-Reply-To: <1212587529.32207.82.camel@pmac.infradead.org>
+	Fri, 20 Jun 2008 02:18:58 -0400
+Subject: Re: [RFC PATCHES] Re: Is configfs the right solution for
+	configuration based fs?
+From: Ben Nizette <bn@niasdigital.com>
+To: Joel Becker <Joel.Becker@oracle.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux kernel <linux-kernel@vger.kernel.org>,
+	Greg KH <greg@kroah.com>,
+	Satyam Sharma <ssatyam@cse.iitk.ac.in>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Al Viro <viro@ftp.linux.org.uk>,
+	"H. Peter Anvin" <hpa@kernel.org>
+In-Reply-To: <20080619024804.GA29765@mail.oracle.com>
+References: <43e72e890806081425h4e785800nc618fc1985f9809f@mail.gmail.com>
+	 <1213002187.698.62.camel@johannes.berg>
+	 <1213056772.4089.42.camel@moss.renham>
+	 <20080619024804.GA29765@mail.oracle.com>
+Content-Type: text/plain
+Date: Fri, 20 Jun 2008 16:19:10 +1000
+Message-Id: <1213942750.2336.43.camel@moss.renham> (sfid-20080620_081902_649335_1FC6D5F9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---oC1+HKm2/end4ao3
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Wed, 2008-06-18 at 19:48 -0700, Joel Becker wrote:
 
-On Wed, Jun 04, 2008 at 02:52:09PM +0100, David Woodhouse wrote:
-> On Tue, 2008-06-03 at 12:05 -0700, David Miller wrote:
-> > Yeah, go check so me magic userspace tool header to see what magic is
-> > needed just to include a core networking header file correctly.
-> >=20
-> > No, thanks.
->=20
-> Just to clarify: this is only a problem for userspace, and you're
-> objecting to that? Just including <linux/wireless.h> within the kernel
-> will continue to work.
->=20
-> We've traditionally got away with saying 'caveat emptor' when userspace
-> includes kernel headers -- you _have_ to include the right
-> prerequisites, because the kernel doesn't do it for you.
->=20
-> I'm happy enough to change that, but it means seeing stuff like...
-> 	#ifndef __KERNEL__
-> 	#include <sys/foo.h>
-> 	#endif=20
-> ... in kernel headers. Is that what you're intending, or am I
-> misunderstanding your objection?
->=20
-> I believe that the main reason for this patch was that <linux/socket.h>
-> and <linux/if.h> both have problems when you include them in the same C
-> file as the 'proper' glibc equivalent? Is that something we can address,
-> instead of just dropping those includes?
+> 	Ask, and ye shall receive.  I've actually been meaning to look
+> at this for a while.  Please check out the branch configfs-attr-macros
+> at my git tree.  Actually, here is the configfs.h with macros, and
+> configfs_example_macros.c using them.  Let me know if this fits the
+> bill.
+> 
+> [config-attr-macros:include/linux/configfs.h]
+> http://oss.oracle.com/git/jlbec/linux-2.6.git/?p=jlbec/linux-2.6.git;a=blob;f=include/linux/configfs.h;h=8be4507ab98f49f43c5212cbafe62178df9a517b;hb=c085c60b185d7431935397e43a868325d8f1da6c
+> 
+> [config-attr-macros:Documentation/filesystems/configfs/configfs_example_macros.c]
+> http://oss.oracle.com/git/jlbec/linux-2.6.git/?p=jlbec/linux-2.6.git;a=blob;f=Documentation/filesystems/configfs/configfs_example_macros.c;h=c2ece748abdf30a7d67dd9ea25c5e6ac93fbc005;hb=c085c60b185d7431935397e43a868325d8f1da6c
+> 
+> 	Compare and contrast with the original configfs_example.c (now
+> configfs_example_explicit.c on that branch).  The diff is available
+> here:
+> http://oss.oracle.com/git/jlbec/linux-2.6.git/?p=jlbec/linux-2.6.git;a=commitdiff;h=c085c60b185d7431935397e43a868325d8f1da6c
+> 
 
-What do you think about hack linke this:
+Looks great, thx :-).  I'll convert some of my stuff over to this
+interface and see how it flies in the real world.
 
-#include <linux/types.h>                /* for __u* and __s* typedefs */
-#if defined(__KERNEL__) || !defined(_SYS_SOCKET_H)
-#include <linux/socket.h>               /* for "struct sockaddr" et al  */
-#endif
-#if defined(__KERNEL__) || !defined(_NET_IF_H)
-#include <linux/if.h>                   /* for IFNAMSIZ and co... */
-#endif
+> > And the trival problem that, ISTR, failing the make_group method always
+> > reports -ENOMEM to userspace, no matter what the actual problem was.  I
+> > think I had a patch around to pass the error code from make_group back
+> > up through to userspace, I wonder what happened to that...
+> 
+> 	I've also attacked this one.  The change is in the
+> make-item-errors branch.  It's already scheduled for linux-next.  Diff
+> available here:
+> http://oss.oracle.com/git/jlbec/linux-2.6.git/?p=jlbec/linux-2.6.git;a=commitdiff;h=34fbb494fecfd82bcbf9ed698ef305500228a84c
+> 
 
-It avoids conflict between glibc's and kernel's headers if glibc's headers=
-=20
-include first.
+ISTR when I did this I kept the old semantics and used ERR_PTR and
+friends if things went pear-shaped.  Given the small number of in-tree
+users needing to be moved over, a more intrusive change for the sake of
+a cleaner API like you've done is probably a good thing anyway :-)
 
---=20
-Regards,  Kirill A. Shutemov
- + Belarus, Minsk
- + ALT Linux Team, http://www.altlinux.com/
+Thanks again,
+	--Ben.
 
---oC1+HKm2/end4ao3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkhGpU8ACgkQbWYnhzC5v6qRogCfaFWr06+YOq/P/gXaw+qenbDT
-/rIAnjp5od1qyjYDlE1C/2uKbOMFM7VL
-=ZdEc
------END PGP SIGNATURE-----
-
---oC1+HKm2/end4ao3--
