@@ -1,48 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:47014 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752295AbYFYSGk (ORCPT
+Received: from outbound.icp-qv1-irony-out3.iinet.net.au ([203.59.1.148]:5359
+	"EHLO outbound.icp-qv1-irony-out3.iinet.net.au" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750757AbYFULo0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2008 14:06:40 -0400
-To: "Tomas Winkler" <tomasw@gmail.com>
-Cc: "Michael Buesch" <mb@bu3sch.de>, linville@tuxdriver.com,
-	johannes@sipsolutions.net, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/4] mac80211: add phy information to giwname
-References: <1214303881-31525-1-git-send-email-tomas.winkler@intel.com>
-	<1214303881-31525-4-git-send-email-tomas.winkler@intel.com>
-	<1214303881-31525-5-git-send-email-tomas.winkler@intel.com>
-	<200806241242.11727.mb@bu3sch.de>
-	<1ba2fa240806240354n45c144a3n5ac8b08c7da7b7a2@mail.gmail.com>
-	<87vdzzdj5m.fsf@nokia.com>
-	<1ba2fa240806240959q398c324al9d9c009c218c0489@mail.gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 25 Jun 2008 20:55:48 +0300
-In-Reply-To: <1ba2fa240806240959q398c324al9d9c009c218c0489@mail.gmail.com> (Tomas Winkler's message of "Tue\, 24 Jun 2008 19\:59\:54 +0300")
-Message-ID: <87vdzxmmaj.fsf@litku.valot.fi> (sfid-20080625_200643_312514_BA27AB8E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 21 Jun 2008 07:44:26 -0400
+Subject: Re: [RFC PATCHES] Re: Is configfs the right solution for
+	configuration based fs?
+From: Ben Nizette <bn@niasdigital.com>
+To: Joel Becker <Joel.Becker@oracle.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux kernel <linux-kernel@vger.kernel.org>,
+	Greg KH <greg@kroah.com>,
+	Satyam Sharma <ssatyam@cse.iitk.ac.in>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Al Viro <viro@ftp.linux.org.uk>,
+	"H. Peter Anvin" <hpa@kernel.org>
+In-Reply-To: <20080621084440.GA25489@ca-server1.us.oracle.com>
+References: <1213002187.698.62.camel@johannes.berg>
+	 <1213056772.4089.42.camel@moss.renham>
+	 <20080619024804.GA29765@mail.oracle.com>
+	 <1213942750.2336.43.camel@moss.renham>
+	 <20080620065253.GA14238@ca-server1.us.oracle.com>
+	 <1213953776.2336.75.camel@moss.renham>
+	 <20080620213708.GC21416@mail.oracle.com>
+	 <1214010229.2336.88.camel@moss.renham>
+	 <20080621020201.GH21416@mail.oracle.com>
+	 <1214035422.2336.121.camel@moss.renham>
+	 <20080621084440.GA25489@ca-server1.us.oracle.com>
+Content-Type: text/plain
+Date: Sat, 21 Jun 2008 21:44:44 +1000
+Message-Id: <1214048684.2336.128.camel@moss.renham> (sfid-20080621_134522_042019_93FC477D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Tomas Winkler" <tomasw@gmail.com> writes:
 
-> On Tue, Jun 24, 2008 at 5:03 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
->> Tomas Winkler <tomasw@gmail.com> writes:
->>
->>>> What about b-only devices?
->>>
->>> See the log message...(known issue). Currently you have to loop over
->>> rates to get this info. I wasn't sure if they are any b-only NICs
->>> under mac80211 so I didn't run to implement it.
->>
->> at76_usb will be 11b only mac80211 driver whenever we manage to
->> complete the port.
->
-> Then pls, look at the V2 of this patch if this work for you.
+On Sat, 2008-06-21 at 01:44 -0700, Joel Becker wrote:
+> On Sat, Jun 21, 2008 at 06:03:42PM +1000, Ben Nizette wrote:
+> > In the kobject/kset case the separation makes sense as kobjects are
+> > embedded in things all over the kernel controlling things like ref
+> > counting, device model glue, hotplug info as well as the sysfs
+> > representation.  The config_item doesn't have any responsibilities
+> > outside of the configfs representation (does it?) so the analogy isn't
+> > 100%.  Though of course the item/group split makes sense if there are
+> > grander plans for the config_item in the future.
+> 
+> 	The config_item is indeed embedded in whatever struct it maps
+> too.  eg, the ocfs2 nodemanager can have a couple hundred nodes, and
+> that's one config_item per.  The fs/dlm stuff can have even more nodes.
 
-I haven't worked with at76_usb in a long time. But if I find time, I
-can test this. But it might take a while :(
+Righteo, I guess the few 10s of bytes per struct saved by not tracking
+children if we know that none can ever exist is the aim here?  Coming
+from an embedded background that makes sense to me.
 
--- 
-Kalle Valo
+>From a conceptual point of view I still think they would work better
+amalgamated in the configfs case but really this whole discussion is
+pretty moot. I'm certainly not advocating a re-write of anything in
+there!
+
+Thanks for the clarifications (and patience ^_^), I'll do some work
+using the new macros and get back to you asap.
+
+Cheers,
+	--Ben.
+
+> 
+> Joel
+> 
