@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:1134 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751128AbYFPBvu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jun 2008 21:51:50 -0400
-Subject: Re: [2.6.26-rc5] iwlwifi 4965 not working - last on 2.6.23
-From: Zhu Yi <yi.zhu@intel.com>
-To: =?UTF-8?Q?Micha=C5=82_Kud=C5=82a?= <michal.kudla@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <200806131937.03680.Michal.Kudla@gmail.com>
-References: <200806060039.48488.m1k0@wp.pl>
-	 <20080606034738.9835782d.akpm@linux-foundation.org>
-	 <1213151464.7814.630.camel@debian.sh.intel.com>
-	 <200806131937.03680.Michal.Kudla@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 16 Jun 2008 09:51:28 +0800
-Message-Id: <1213581088.7814.882.camel@debian.sh.intel.com> (sfid-20080616_093321_310834_6D908BE3)
-Mime-Version: 1.0
+Received: from rgminet01.oracle.com ([148.87.113.118]:32132 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753294AbYFUCEj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Jun 2008 22:04:39 -0400
+Date: Fri, 20 Jun 2008 19:02:01 -0700
+From: Joel Becker <Joel.Becker@oracle.com>
+To: Ben Nizette <bn@niasdigital.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux kernel <linux-kernel@vger.kernel.org>,
+	Greg KH <greg@kroah.com>,
+	Satyam Sharma <ssatyam@cse.iitk.ac.in>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Al Viro <viro@ftp.linux.org.uk>,
+	"H. Peter Anvin" <hpa@kernel.org>
+Subject: Re: [RFC PATCHES] Re: Is configfs the right solution for
+	configuration based fs?
+Message-ID: <20080621020201.GH21416@mail.oracle.com> (sfid-20080621_040443_725146_5343E5B8)
+References: <43e72e890806081425h4e785800nc618fc1985f9809f@mail.gmail.com> <1213002187.698.62.camel@johannes.berg> <1213056772.4089.42.camel@moss.renham> <20080619024804.GA29765@mail.oracle.com> <1213942750.2336.43.camel@moss.renham> <20080620065253.GA14238@ca-server1.us.oracle.com> <1213953776.2336.75.camel@moss.renham> <20080620213708.GC21416@mail.oracle.com> <1214010229.2336.88.camel@moss.renham>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1214010229.2336.88.camel@moss.renham>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-06-13 at 19:37 +0200, Micha=C5=82 Kud=C5=82a wrote:
-> dmesg-2.6.26-rc5_2008-06-13.txt
+On Sat, Jun 21, 2008 at 11:03:49AM +1000, Ben Nizette wrote:
+> You know, I think you've about covered the boilerplate work.  Apart from
+> that, well it took me a millisecond to work out what the point of
+> config_{group,item}s was; I went in kinda expecting to see one struct
+> for directories and one for attributes.  In fact I still not sure I can
+> explain the need for config_items separate from config_groups.  Little
+> help?  :-)
 
->From this log:
+	Groups can create children, items cannot.  Think of kset vs
+kobject, which is where it came from.
+	Don't worry about directories vs files.  The view from the
+client subsystem isn't about filesystem objects.  It's about a hierarchy
+of items.  An item is a sigle entity.  It can have attributes.  A group
+is an item that can have children.
+	The fact that you access it via a filesystem is separate.  We
+could have created a system call instead - the callbacks to your client
+subsystem would have been the same.  Does that help?
 
-iwl4965: U iwl4965_radio_kill_sw Manual SW RF KILL set to: RADIO OFF
-iwl4965: I iwl4965_rx_card_state_notif Card state received: HW:On
-SW:Kill
-iwl4965: U iwl4965_mac_config leave - radio disabled
-iwl4965: Error sending REPLY_TX_PWR_TABLE_CMD: enqueue_hcmd failed: -5
-iwl4965: U iwl4965_bg_rf_kill Can not turn radio back on - disabled by
-SW switch
-iwl4965: Error sending REPLY_WEPKEY: enqueue_hcmd failed: -5
+Joel
 
-Your radio is disabled by the software rf_kill switch. Please do a
+-- 
 
-$ echo 0 > /sys/bus/pci/drivers/iwl4965/<dev id>/rfkill\:rfkill0/state
+Life's Little Instruction Book #511
 
-I wonder if you (or some application) did something like a `iwconfig
-wlan0 txpower off` so that the radio is disabled. Maybe you can try
-`iwconfig wlan0 txpower on`?
+	"Call your mother."
 
-Thanks,
--yi
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Joel Becker
+Principal Software Developer
+Oracle
+E-mail: joel.becker@oracle.com
+Phone: (650) 506-8127
