@@ -1,54 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:61581 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752032AbYFBPBb (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41520 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751374AbYFUSL1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2008 11:01:31 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so918296fkq.5
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Jun 2008 08:01:29 -0700 (PDT)
-Message-ID: <8704f27d0806020801g1785d067j9c28832a7e5c39e3@mail.gmail.com> (sfid-20080602_170135_023020_DD375EAE)
-Date: Mon, 2 Jun 2008 18:01:29 +0300
-From: "Emmanuel Grumbach" <egrumbach@gmail.com>
-To: Barteq <barteqpl@gmail.com>
-Subject: Re: iwlwifi: Bug - can't connect to WPA PSK access point any more
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <op.ub3jirfui79708@thinkpad>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <op.ub3jirfui79708@thinkpad>
+	Sat, 21 Jun 2008 14:11:27 -0400
+Subject: Re: [mac80211] Implement EU regulatory domain
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tony Vroon <tony@linx.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1212606324.14371.43.camel@johannes.berg> (sfid-20080604_210658_453842_6356D7D8)
+References: <1212605479.4235.1.camel@localhost>
+	 <1212606324.14371.43.camel@johannes.berg>
+	 (sfid-20080604_210658_453842_6356D7D8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-K/aIuFSwK6VzAqMiXw33"
+Date: Sat, 21 Jun 2008 20:10:35 +0200
+Message-Id: <1214071835.8967.247.camel@johannes.berg> (sfid-20080621_201131_908324_6106B319)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Some facts:
-> kernel: Linux thinkpad 2.6.26-rc4-zen0 #1 SMP PREEMPT Wed May 28 03:00:38
-> CEST 2008 i686 GNU/Linux
-> iwl module: 1.2.26ks from 01.06.2008 compat-wireless pack
-> ucode: iwlwifi-4965-ucode-4.44.1.20
->
 
-can you please check that you have this one ?
+--=-K/aIuFSwK6VzAqMiXw33
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-1b7a0e7709ba92423894c612c4dca88bec315a75
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=1b7a0e7709ba92423894c612c4dca88bec315a75
+On Wed, 2008-06-04 at 21:05 +0200, Johannes Berg wrote:
+> > =EF=BB=BFImplement missing EU regulatory domain for mac80211. Based on =
+the=20
+> > information in IEEE 802.11-2007 (specifically pages 1142, 1143 &
+> > 1148)=20
+> > and ETSI 301 893 (V1.4.1).
+> > With thanks to Johannes Berg.
+>=20
+> Technically not mac80211 but cfg80211 ;)
+>=20
+> > Signed-off-by: Tony Vroon <tony@linx.net>
+>=20
+> Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-> Maybe I'm donig something wrong, maybe it's not a bug, but.. it is extremly
-> irritating.. I'cant use wifi at home, but it works in every other location!
+John, can we have that commit in 2.6.26? It fixes a problem that users
+in the EU are not able to properly use the spectrum they are allowed to.
 
-Well, in the meantime, you can load the module with swcrypto=1, this
-will make things work
+johannes
 
-> Even today was using wpa-psk network.. based on some newer wrt54gl linksys
-> AP - without any serious issues.
+--=-K/aIuFSwK6VzAqMiXw33
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-This might be because your AP does group key rekeying. I just checked
-with a 1250 Cisco AP, group key rekeying works (I configured the AP to
-do rekeying every 15 seconds...) This might also be because the AP
-implements the rekeying in a funny way (in terms of key indeces), that
-iwlwifi doesn't know how to deal with (just thinking aloud).
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Please send your wpa_supp conf file over.
-Please try to disable the group key rekeying just to see what happens....
+iQIcBAABAgAGBQJIXUQXAAoJEKVg1VMiehFY5AwP+wfFeWdJOCtXh99z6HSaNhuo
+aDSZa4XXzANko/isiwth2p6rkn5NWSJOQSPPvGmDnjUIZU1OFvRHafwWuAheJ7CB
+UFnK1Bw7HJI5kuIiGkNkAv/u0TmjHLT3czhp4hxIGMFqMvhDFAZtmXe8plc8aJZz
+iB5m6xpRIe44g0SHtKaYCEKNM5WtUptljXiAfMOeSZfVZjWBLBxkP/KXWYiJW0FE
+OTJPuq08nqK5jKHo6A2fJ5XDQra4k10JuTAh83d5J75cJYkFZa86JXVvIqAq2AJA
+4UIbqCMWXmXE0CUJmPcvzfOS+Q5KvfBs9YxCNm5HApZAkG+EsKSlzHEyVdPF3sRT
+Ox46lXI9qAOM2/q2M5zhycrxWxx0AcWpja4ScD3ho+Q4obHCWGi3S4+bTdj78xy5
+UMRLhs60NUZiwbRPKtQsQvI9//DFzYMh5urMgj5wddbo1LeJYHl8pWAnls2LgnXl
+k+VdskUlUdOi5yeDjYE5+MT7+hEZpnuBEqsaTKp/KGyLTT6W6ti04OgD9TgMJTt5
++UoM+1LUakX6EN1T6KPv0LT3o/A8QVNZmr5RKzctA6tkIhT7O3TCpcTU0N+c1Hqt
+pudPKEMMiOQuERIYp/Th6tDd+ON8eHrwwrFMkqVrFCVDUzbouFOSztX4eeQAesLM
+LnFiwRsfKqMXqI+cUPla
+=y7Qn
+-----END PGP SIGNATURE-----
 
--- 
-Emmanuel Grumbach
-egrumbach@gmail.com
+--=-K/aIuFSwK6VzAqMiXw33--
+
