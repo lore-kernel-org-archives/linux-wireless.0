@@ -1,76 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51042 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750718AbYF1Lmg (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:37883 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754112AbYFUAEw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 07:42:36 -0400
-Subject: Re: Missing channels on iwl3945 shipped with 2.6.26-rc8
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
-Cc: janconrads@gmx.de, linux-wireless@vger.kernel.org
-In-Reply-To: <69e28c910806280419r40eb037cv858f89b8f2638ef2@mail.gmail.com> (sfid-20080628_131925_704712_0A661CD6)
-References: <4865B3C6.1030007@gmx.de>
-	 <1214640029.5507.10.camel@johannes.berg>
-	 <69e28c910806280419r40eb037cv858f89b8f2638ef2@mail.gmail.com>
-	 (sfid-20080628_131925_704712_0A661CD6)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bKz08QXlRYRakt81dsOJ"
-Date: Sat, 28 Jun 2008 13:42:21 +0200
-Message-Id: <1214653341.5507.16.camel@johannes.berg> (sfid-20080628_134303_073899_D53F40F9)
-Mime-Version: 1.0
+	Fri, 20 Jun 2008 20:04:52 -0400
+Message-ID: <485C45D2.1050106@lwfinger.net> (sfid-20080621_020456_580171_2574711B)
+Date: Fri, 20 Jun 2008 19:05:38 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: John Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ssb, b43, b43legacy, b44: Rewrite SSB DMA API
+References: <200806201150.29497.mb@bu3sch.de>
+In-Reply-To: <200806201150.29497.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michael Buesch wrote:
+> This is a rewrite of the DMA API for SSB devices.
+> This is needed, because the old (non-existing) "API" made too many bad
+> assumptions on the API of the host-bus (PCI).
+> This introduces an almost complete SSB-DMA-API that maps to the lowlevel
+> bus-API based on the bustype.
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> 
 
---=-bKz08QXlRYRakt81dsOJ
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Is there a pre-requisite for this patch? I tried to apply it to 
+wireless-testing with version v2.6.26-rc6-10526-ga0d3022. Hunk 4 of 
+the patch for drivers/net/wireless/b43legacy/dma.c failed due to a 
+line missing from the original source:
 
-On Sat, 2008-06-28 at 13:19 +0200, Stefanik G=C3=A1bor wrote:
-> On Sat, Jun 28, 2008 at 10:00 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> >
-> >> vermagic:       2.6.26-rc8-jan SMP mod_unload modversions CORE2
-> >> parm:           ieee80211_regdom:IEEE 802.11 regulatory domain code (c=
-harp)
-> >>
-> >> I read, that 64 should be ok, but if I set any option only the 2.4GHz
-> >> Band is listed. For germany 276 is a common valve on atheros cards, bu=
-t
-> >> this doesn not work, too.
-> >
-> > As you can see, it's a charp, i.e. a string. Try setting "EU".
-> >
-> > johannes
-> >
->=20
-> Does 2.6.26-rc8 (not 2.6.26-rc8-wl) have "EU", or only "US" and "JP"?
-> AFAIK it only has "JP" besides "US", though I may be wrong.
+> @@ -891,39 +890,39 @@ struct b43legacy_dmaring *b43legacy_setu
 
-We pushed that, if it's not in -rc8 it should be in -rc9.
+--snip--
 
-johannes
+> +		ssb_dma_unmap_single(dev->dev, dma_test,
+> +				     sizeof(struct b43legacy_txhdr_fw3),
+> +				     DMA_TO_DEVICE);
+>  	}
+>  
+	ring->dev = dev;     <-------------- This line missing.
+>  	ring->nr_slots = nr_slots;
+>  	ring->mmio_base = b43legacy_dmacontroller_base(type, controller_index);
+>  	ring->index = controller_index;
+>  	if (type == B43legacy_DMA_64BIT)
 
---=-bKz08QXlRYRakt81dsOJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIZiOaAAoJEKVg1VMiehFYesoQALxg3tj5yUG/mWo0gSroO6dL
-jvEPac/nbQGOh6vklB6KHgcwxKAVme5BBE7OYsh993Zw1w3ReuK2HY4itA55bHMa
-wULZXvz+1Ezr7jR0Rf9lSCNL72qdSxUvrHiY+uZwcUn5CzoJX0VLhX4Vnb/taDTl
-I2qPfw0pOzOcEU+BSKdqttoVgkdCKBDFGT0BY0her4bgyKePf7musRMetjPb/Kab
-1WyxvRxXMsrDRJjpUoOuUco6TTRQnvWn8zhWFAC6JpYT4aO2GGINjHDON1yVtxzI
-8ZHaZiS+7oVLvbPItvjtgXasGtVtAZy5lTdKWMk1mw+ettLrx/dy4rkV3N+0649O
-rVih64QDYcfrhnyjhZn74KpJefdEwJoF0iEWCS7Omc8pN5RXo9ecETFKzOSWt94x
-TqxYbjS4/QWE2Evv2losxVCEjNMWr243S1uo/bliG7MVkeXC+PhRKZUDVWpQLgzL
-Yh+D5YJ/YYxZdUjfvD0vJuUFYntXdMyvccXRXMA/QDf1Mg97jO5O1/zn6XbGgz82
-JdQyrEjIXzzjS8fDkyHSth3/RCtD0HF1UAG0Q9eCruR1DkOS4TIkriBE3WEbpnYt
-IK4Obr4bDUp/A2ArigrDS3GzF6frA4QGfjPaujN1GV7tPMf7aTiTTWN6igWLJqK3
-5vm+p3JTQBAh0zztLneg
-=36DN
------END PGP SIGNATURE-----
-
---=-bKz08QXlRYRakt81dsOJ--
-
+Larry
