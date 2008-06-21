@@ -1,94 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32658 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757101AbYF3J1R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 05:27:17 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 32/33] iwl3945: remove RFKILL_STATE_HARD_BLOCKED warnings
-Date: Mon, 30 Jun 2008 17:23:32 +0800
-Message-Id: <1214817813-17639-33-git-send-email-yi.zhu@intel.com> (sfid-20080630_113812_969050_E8E225AE)
-In-Reply-To: <1214817813-17639-32-git-send-email-yi.zhu@intel.com>
-References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-2-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-3-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-5-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-6-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-7-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-8-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-9-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-10-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-11-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-12-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-13-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-14-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-15-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-16-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-17-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-18-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-19-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-20-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-21-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-22-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-23-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-24-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-25-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-26-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-27-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-28-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-29-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-30-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-31-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-32-git-send-email-yi.zhu@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from outbound.icp-qv1-irony-out1.iinet.net.au ([203.59.1.108]:45373
+	"EHLO outbound.icp-qv1-irony-out1.iinet.net.au" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751094AbYFUID1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Jun 2008 04:03:27 -0400
+Subject: Re: [RFC PATCHES] Re: Is configfs the right solution for
+	configuration based fs?
+From: Ben Nizette <bn@niasdigital.com>
+To: Joel Becker <Joel.Becker@oracle.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux kernel <linux-kernel@vger.kernel.org>,
+	Greg KH <greg@kroah.com>,
+	Satyam Sharma <ssatyam@cse.iitk.ac.in>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Al Viro <viro@ftp.linux.org.uk>,
+	"H. Peter Anvin" <hpa@kernel.org>
+In-Reply-To: <20080621020201.GH21416@mail.oracle.com>
+References: <43e72e890806081425h4e785800nc618fc1985f9809f@mail.gmail.com>
+	 <1213002187.698.62.camel@johannes.berg>
+	 <1213056772.4089.42.camel@moss.renham>
+	 <20080619024804.GA29765@mail.oracle.com>
+	 <1213942750.2336.43.camel@moss.renham>
+	 <20080620065253.GA14238@ca-server1.us.oracle.com>
+	 <1213953776.2336.75.camel@moss.renham>
+	 <20080620213708.GC21416@mail.oracle.com>
+	 <1214010229.2336.88.camel@moss.renham>
+	 <20080621020201.GH21416@mail.oracle.com>
+Content-Type: text/plain
+Date: Sat, 21 Jun 2008 18:03:42 +1000
+Message-Id: <1214035422.2336.121.camel@moss.renham> (sfid-20080621_100428_711887_C31D45E7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch fixes the compile warning of "enumeration value
-=E2=80=98RFKILL_STATE_HARD_BLOCKED=E2=80=99 not handled in switch".
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+On Fri, 2008-06-20 at 19:02 -0700, Joel Becker wrote:
+> On Sat, Jun 21, 2008 at 11:03:49AM +1000, Ben Nizette wrote:
+> > You know, I think you've about covered the boilerplate work.  Apart from
+> > that, well it took me a millisecond to work out what the point of
+> > config_{group,item}s was; I went in kinda expecting to see one struct
+> > for directories and one for attributes.  In fact I still not sure I can
+> > explain the need for config_items separate from config_groups.  Little
+> > help?  :-)
+> 
+> 	Groups can create children, items cannot.  Think of kset vs
+> kobject, which is where it came from.
+> 	Don't worry about directories vs files.  The view from the
+> client subsystem isn't about filesystem objects.  It's about a hierarchy
+> of items.  An item is a sigle entity.  It can have attributes.  A group
+> is an item that can have children.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/=
-wireless/iwlwifi/iwl3945-base.c
-index 73942a4..3bc2644 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -8287,17 +8287,20 @@ static int iwl3945_rfkill_soft_rf_kill(void *da=
-ta, enum rfkill_state state)
- 	mutex_lock(&priv->mutex);
-=20
- 	switch (state) {
--	case RFKILL_STATE_ON:
-+	case RFKILL_STATE_UNBLOCKED:
- 		iwl3945_radio_kill_sw(priv, 0);
- 		/* if HW rf-kill is set dont allow ON state */
- 		if (iwl3945_is_rfkill(priv))
- 			err =3D -EBUSY;
- 		break;
--	case RFKILL_STATE_OFF:
-+	case RFKILL_STATE_SOFT_BLOCKED:
- 		iwl3945_radio_kill_sw(priv, 1);
- 		if (!iwl3945_is_rfkill(priv))
- 			err =3D -EBUSY;
- 		break;
-+	default:
-+		IWL_WARNING("we recieved unexpected RFKILL state %d\n", state);
-+		break;
- 	}
- 	mutex_unlock(&priv->mutex);
-=20
---=20
-1.5.3.6
+I guess I don't quite see why all items don't have the ability to have
+children.  I mean, a config_item has a config_item_type which contains
+the group_ops anyway; I don't quite see why the children, default_groups
+and subsys members from config_group don't live inside config_item and
+be done with it.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In the kobject/kset case the separation makes sense as kobjects are
+embedded in things all over the kernel controlling things like ref
+counting, device model glue, hotplug info as well as the sysfs
+representation.  The config_item doesn't have any responsibilities
+outside of the configfs representation (does it?) so the analogy isn't
+100%.  Though of course the item/group split makes sense if there are
+grander plans for the config_item in the future.
+
+> 	The fact that you access it via a filesystem is separate.  We
+> could have created a system call instead - the callbacks to your client
+> subsystem would have been the same.
+
+Right
+
+>   Does that help?
+
+Indeed, thx.
+
+	--Ben.
+
+> 
+> Joel
+> 
