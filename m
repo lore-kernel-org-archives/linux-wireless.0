@@ -1,91 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36782 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750977AbYFKVM2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 17:12:28 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by hauke-m.de (Postfix) with ESMTP id AD45F71808C
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 23:12:23 +0200 (CEST)
-Received: from hauke-m.de ([127.0.0.1])
-	by localhost (hauke-m.de [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id FLHDaqLIP-nQ for <linux-wireless@vger.kernel.org>;
-	Wed, 11 Jun 2008 23:12:16 +0200 (CEST)
-Received: from [192.168.0.10] (host-091-096-208-016.ewe-ip-backbone.de [91.96.208.16])
-	by hauke-m.de (Postfix) with ESMTP id CA61C718083
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 23:12:15 +0200 (CEST)
-Message-ID: <48503FAF.8000108@hauke-m.de> (sfid-20080611_231232_399201_2B6C8B81)
-Date: Wed, 11 Jun 2008 23:12:15 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: Open source driver with binary HAL for BCM4313 from Broadcom
-References: <48500F14.8070300@canonical.com>
-In-Reply-To: <48500F14.8070300@canonical.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig57F575483C6D33EF537835FD"
+Received: from xc.sipsolutions.net ([83.246.72.84]:46895 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750800AbYFUMA1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Jun 2008 08:00:27 -0400
+Subject: Re: [PATCH] mac80211: Let drivers have access to TKIP key offets
+	for TX and RX MIC
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20080621115133.GI17936@ruslug.rutgers.edu>
+References: <20080621115133.GI17936@ruslug.rutgers.edu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Cf9HXchGqS3lL4coq+la"
+Date: Sat, 21 Jun 2008 14:00:13 +0200
+Message-Id: <1214049613.8967.243.camel@johannes.berg> (sfid-20080621_140054_754883_4873B020)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig57F575483C6D33EF537835FD
-Content-Type: text/plain; charset=ISO-8859-1
+
+--=-Cf9HXchGqS3lL4coq+la
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Some time ago I found some source code for the wireless device in my
-Broadcom brcm63xx router in the source code package for it.
-It contains ~3 MB of source code for the wireless device (Broadcom
-BCM43XX 802.11abg), but there are no make files and the build process
-takes an pre-compiled version. It looks like someone forgot to delete
-some files.
-
-There is a text like this in all files:
-This is UNPUBLISHED PROPRIETARY SOURCE CODE of Broadcom Corporation;
-
-The package can be downloaded at:
-http://broadband.eip.siemens.ch/public/GPL_source/GPL_source_CL_SL_SLI_se=
-ries_consumer_release.tar
-
-The code is in the directory broadcom/net/wl/impl1
-
-If you know Broadcom had published it, forget about this e-mail.
-
---
-Hauke
-
-Tim Gardner schrieb:
-> John,
+On Sat, 2008-06-21 at 07:51 -0400, Luis R. Rodriguez wrote:
+> Some drivers may want to to use the TKIP key offsets for TX and RX
+> MIC so lets move this out.
 >=20
-> Here is the URL to Broadcom's web site advertising their open source
-> driver with support for the BCM4313.
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  include/net/cfg80211.h |    5 +++++
+>  net/mac80211/key.h     |   37 ++++++++++++-------------------------
+>  2 files changed, 17 insertions(+), 25 deletions(-)
 >=20
-> http://www.broadcom.com/support/802.11/linux_sta.php
->=20
-> rtg
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index e007508..6cb8b02 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -12,6 +12,11 @@
+>   * Copyright 2006, 2007	Johannes Berg <johannes@sipsolutions.net>
+>   */
+> =20
+> +/* Starting offsets for each key for TKIP */
+> +#define ALG_TKIP_TEMP_ENCR_KEY		0
+> +#define ALG_TKIP_TEMP_AUTH_TX_MIC_KEY	16
+> +#define ALG_TKIP_TEMP_AUTH_RX_MIC_KEY	24
 
+put it into nl80211 and give it proper namespace prefixes, please.
 
---------------enig57F575483C6D33EF537835FD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+> -/* ALG_TKIP
+> - * struct ieee80211_key::key is encoded as a 256-bit (32 byte) data bloc=
+k:
+> - * Temporal Encryption Key (128 bits)
+> - * Temporal Authenticator Tx MIC Key (64 bits)
+> - * Temporal Authenticator Rx MIC Key (64 bits)
+> - */
+
+and why remove the comment? There's a small comment in nl80211.h but it
+could be described in more detail.
+
+johannes
+
+--=-Cf9HXchGqS3lL4coq+la
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+Comment: Johannes Berg (powerbook)
 
-iQIVAwUBSFA/toZ0px9YPRMyAQI4jg//dMQ9DQfNqULKubQWlaPIOUyJ0SRm+Rku
-UGGi6rAc9xOLKJubvPO3n4Go1A1u0Muuy1fyVNSW8tIqOiCFtszNw8hcKkKpNFsW
-tZCPErKTj/NeZQFinwIM1PGgC1qEr1BmZPD6ZA0+w6uDH1ypoJ5C8sSYEq6TN8WL
-+z+ZJ2lNSNWbHi5Dq6gzHtm/eFCo/yf6X97s69yZkyobrkkfWT0SdHsaj+5i6gyz
-6t0IOTlK1J8++CRt/oBaQBaOu18xwHCecxd7Uly+aEasAte6Fo//Vsrx+m2Jgxcb
-xBx0H3ewL6hDTeuEWTWUE3ENH1wmLtjILLazDehI3SYyFUX/KwRFRWfofhnpDmyl
-bUcpFLPvpsFfddHDpzyuCwby2BQ96aYuptnkGFFON155kczuq+ZoJCIbsOBHBmfH
-eoAceH8VNSydnV9OzM97h27SEHf6E0ub6k694pN/Muyh4BZ6yvWZmshuPCz/S5Oz
-O4p+dGjaZV5+jOPqUjMf7wU3G356WAqT05EOYKrfaw8Nr2SgVrFoW5unRtDYFqwd
-1EKoiZHrfo50s+4SXgG98nCR+QT/88HFR4NBWpecIYFxP64s5PW57v1CNL/OhyMH
-wpl40rNSbgy/FqoPE2/0l9UGTOZ4nx4rdmzquMox4tFNiRZxsxC4p6InE4FHObyK
-3lFT+73H0nE=
-=itck
+iQIcBAABAgAGBQJIXO1JAAoJEKVg1VMiehFYAyMQAMVDRB9tRzg3x6T2K5N+3BON
+dlArqqDs/vs5fwyrh34GLbuDSSsbZRo17pr2H0vy7gq9gNdAiKYapEGXuCM7WBg4
+bTL0Sghsnd50J7Mf0YDXjPbtPPl22V91UMldjnCkrpoH37NTYwgLqFZIlaDhxREV
+gt6EggCWJyw7tSWtSSURXEFsbFExXN6XiXk4vI2Lk8FDBoQ/k9wVnnIXG7XamYYs
+Pk6JI3qz7Va8IyewVJGOr4bbb/OvEhZZ5foTkioT750yLrChfegjFxtNpindEVC9
+fzbAnZNAs3sZdQIzE9RmfFDKmbQyGrvX2ucVUtHz5AVXCZGTaviHh5HYP73z9CA/
+Jf7Qv730iWaWWvEaNArOIA53bjeJpzbhSP/jfwKHF8/fe3fv/O3EQyGeQkOIbCvS
+f3p668FiIpA5Cw16yqhfJHJ6NB8QhSNYY98rz9D4Ovc5NBM+mmaxPUFYHw1h7+c4
+Nk57j1XyPuYQPvZuTkQ3nEkOuMCi/GLBrYwTGyagwkUZD1/M/sNRshKZQFozesGX
+AY4oAb6z2t8YPpVSoBtM0uuL4BOWY1Vk47dfKa8p0AGBM5ENTBvG36wUDmk2kury
+covylhwbinGQJOEUeeFuNA0wX12js1UVu9eMfWUgKApXqPTBY+lzDo7J/q1e/nI+
+M9wEujMyHSX8JbwKBa0+
+=Isn2
 -----END PGP SIGNATURE-----
 
---------------enig57F575483C6D33EF537835FD--
+--=-Cf9HXchGqS3lL4coq+la--
+
