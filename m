@@ -1,106 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54579 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753980AbYFDJAr (ORCPT
+Received: from ruslug.rutgers.edu ([165.230.139.146]:36764 "EHLO
+	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750892AbYFUOCt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2008 05:00:47 -0400
-Subject: Re: mac80211 ad-hoc mode problems
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-In-Reply-To: <1212543664.4237.14.camel@localhost.localdomain> (sfid-20080604_034126_005983_906C2124)
-References: <1212543664.4237.14.camel@localhost.localdomain>
-	 (sfid-20080604_034126_005983_906C2124)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fVWnNXMUz0gFn9OvhiaW"
-Date: Wed, 04 Jun 2008 11:00:00 +0200
-Message-Id: <1212570001.14371.16.camel@johannes.berg> (sfid-20080604_110109_008283_3EE9C20E)
-Mime-Version: 1.0
+	Sat, 21 Jun 2008 10:02:49 -0400
+Date: Sat, 21 Jun 2008 10:02:46 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] mac80211: Let drivers have access to TKIP key offets for TX and RX MIC
+Message-ID: <20080621140246.GJ17936@ruslug.rutgers.edu> (sfid-20080621_160253_325228_ED2F254E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Some drivers may want to to use the TKIP key offsets for TX and RX
+MIC so lets move this out. Lets also clear up a bit how this is used
+internally in mac80211.
 
---=-fVWnNXMUz0gFn9OvhiaW
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ include/linux/nl80211.h |    5 ++++-
+ include/net/mac80211.h  |    7 ++++++-
+ net/mac80211/key.h      |   37 ++++++++++++-------------------------
+ net/mac80211/tkip.c     |   10 +++++-----
+ net/mac80211/wpa.c      |   20 ++++++++++++++------
+ 5 files changed, 41 insertions(+), 38 deletions(-)
 
-On Tue, 2008-06-03 at 21:41 -0400, Dan Williams wrote:
-> Hi,
->=20
-> While adding adhoc shared network support to NM, I ran into a few
-> mac80211 problems.
->=20
-> 1) doesn't send SIOCGIWAP event on successful adhoc activation (patch
-> forthcoming)
-
-Thanks.
-
-> 2) takes a _really_ long time to create an adhoc network.  This is
-> controlled by IEEE80211_IBSS_JOIN_TIMEOUT.  Why is that 20 seconds?  The
-> problem here is that wpa_supplicant has an association timer shorter
-> than =EF=BB=BFIEEE80211_IBSS_JOIN_TIMEOUT and will re-try the connection,
-> causing mac80211 to reset ifsta->ibss_join_req.  FullMAC drivers will
-> simply look in their scan list (and optionally perform one scan) and if
-> the IBSS isn't found, create it.  I'd really like to
-> take =EF=BB=BFIEEE80211_IBSS_JOIN_TIMEOUT down to 5 or 7 seconds.  This i=
-s only
-> the initial IBSS creation, IBSS merging will still be in effect.  I
-> simply thing 20 seconds is really too long here.
-
-Yeah, I don't know why it is that long. Jouni, do you remember maybe?
-I'm ok with reducing it.
-
-> 3) doesn't send NULL SIOCGIWAP disassoc events when the device goes down
-> or the module is removed.  Where's the best place to put the event on
-> module remove?
-
-Huh? Why does that matter, the network interface is going away so...?
-
-> 4) Is the association expected to survive a up->down->up sequence?  If
-> not, then we should be sending NULL SIOCGIWAP event whenever dev_close()
-> gets called.
-
-No, it's not, yes, we probably should send that event somewhere. Is it
-ok to send the event while not associated?
-
-> 5) mac80211 requires the device to be down when changing modes.  That's
-> fine; but requires a patch to wpa_supplicant to handle this.  This would
-> cause failures when switching AP that were different modes from NM.
-> See:
->=20
-> http://lists.shmoo.com/pipermail/hostap/2008-June/017894.html
-
-Don't understand. How can you switch to an IBSS AP? :)
-
-It's probably fairly easy to remove this restriction because they all
-use ieee80211_if_sta internally (sta, ibss, mesh) but since I don't care
-too much about IBSS and see mesh as being quite different, I have no
-motivation to try (and test) this.
-
-johannes
-
-johannes
-
---=-fVWnNXMUz0gFn9OvhiaW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASEZZj6Vg1VMiehFYAQJ07g/6A5XQV45Ds3k6SoFR8RpAVewQjl7n9O4b
-6zBRwx6CjcoFGZQiJ4D5lNO/BngJyRgVLFU6O21hTK4QBIzw1CEbRfTseG4nDa9q
-rQCqRnUreziNWh8VRPM93J+G1JSEam+l3ELlwvVGd+mrG6jPKOoKq+wyXkFVD+xJ
-xVNgxn/svw0ul4FkaQGNlVGsdZzOG/hySlepDRbNN1YGQoxxJsmcfEpxncV9ZTIg
-rYOYUI8zzPLil6/SNaQuWnXqxUQWP8idgz+UPNtErQiSGUyu/dKeZlT3M8e4/Q2e
-QD0mAb4LnSI0Tky3c31Oq4pWGzV6nZjMi5mOcda4a97GrduBbkqRGl7C56EIuUUY
-e1uPK4S8k00jvaJxAlHP7RgrUvC7yOVnMley6NOEeIAKHXTD5U0Qf5t3cY0hsLiy
-lOfWznrLri7BhjqfDbJzqowJduwkFIxd2n9BGarNDbDPkFD2wZS43ovx7UwQDGXa
-OQl18Du3mzz4ve7JZoBFYkS/kaTkjwSMrL8Ouzfxv4bQ34dq/QAE8R6xWjK70IZ0
-ayyKkI8bH4gWvF44BA0Y0yd+qqaONQ6ZGcEIbEJhAOx/f1gm+MjZQZJBCkldrhUI
-bY1QCjZJsttXg1fVeS/bb2D5hkOwa2SyiiMJdoINVDTSryQgr9z2BYYMFJDE0VbH
-e+sZfizz8iw=
-=Fit5
------END PGP SIGNATURE-----
-
---=-fVWnNXMUz0gFn9OvhiaW--
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index aa8411e..2be7c63 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -241,7 +241,10 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_MAX = __NL80211_ATTR_AFTER_LAST - 1
+ };
+ 
+-#define NL80211_MAX_SUPP_RATES	32
++#define NL80211_MAX_SUPP_RATES			32
++#define NL80211_TKIP_DATA_OFFSET_ENCR_KEY	0
++#define NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY	16
++#define NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY	24
+ 
+ /**
+  * enum nl80211_iftype - (virtual) interface types
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 7ab4ff6..19f1e41 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -595,7 +595,12 @@ enum ieee80211_key_flags {
+  * @flags: key flags, see &enum ieee80211_key_flags.
+  * @keyidx: the key index (0-3)
+  * @keylen: key material length
+- * @key: key material
++ * @key: key material. For ALG_TKIP the key is encoded as a 256-bit (32 byte)
++ * 	data block:
++ * 	- Temporal Encryption Key (128 bits)
++ * 	- Temporal Authenticator Tx MIC Key (64 bits)
++ * 	- Temporal Authenticator Rx MIC Key (64 bits)
++ *
+  */
+ struct ieee80211_key_conf {
+ 	enum ieee80211_key_alg alg;
+diff --git a/net/mac80211/key.h b/net/mac80211/key.h
+index a0f774a..425816e 100644
+--- a/net/mac80211/key.h
++++ b/net/mac80211/key.h
+@@ -16,31 +16,18 @@
+ #include <linux/rcupdate.h>
+ #include <net/mac80211.h>
+ 
+-/* ALG_TKIP
+- * struct ieee80211_key::key is encoded as a 256-bit (32 byte) data block:
+- * Temporal Encryption Key (128 bits)
+- * Temporal Authenticator Tx MIC Key (64 bits)
+- * Temporal Authenticator Rx MIC Key (64 bits)
+- */
+-
+-#define WEP_IV_LEN 4
+-#define WEP_ICV_LEN 4
+-
+-#define ALG_TKIP_KEY_LEN 32
+-/* Starting offsets for each key */
+-#define ALG_TKIP_TEMP_ENCR_KEY 0
+-#define ALG_TKIP_TEMP_AUTH_TX_MIC_KEY 16
+-#define ALG_TKIP_TEMP_AUTH_RX_MIC_KEY 24
+-#define TKIP_IV_LEN 8
+-#define TKIP_ICV_LEN 4
+-
+-#define ALG_CCMP_KEY_LEN 16
+-#define CCMP_HDR_LEN 8
+-#define CCMP_MIC_LEN 8
+-#define CCMP_TK_LEN 16
+-#define CCMP_PN_LEN 6
+-
+-#define NUM_RX_DATA_QUEUES 17
++#define WEP_IV_LEN		4
++#define WEP_ICV_LEN		4
++#define ALG_TKIP_KEY_LEN	32
++#define ALG_CCMP_KEY_LEN	16
++#define CCMP_HDR_LEN		8
++#define CCMP_MIC_LEN		8
++#define CCMP_TK_LEN		16
++#define CCMP_PN_LEN		6
++#define TKIP_IV_LEN		8
++#define TKIP_ICV_LEN		4
++
++#define NUM_RX_DATA_QUEUES	17
+ 
+ struct ieee80211_local;
+ struct ieee80211_sub_if_data;
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index e710243..40922b9 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -164,7 +164,7 @@ void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
+ 	iv16 = data[2] | (data[0] << 8);
+ 	iv32 = get_unaligned_le32(&data[4]);
+ 
+-	tk = &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY];
++	tk = &key->conf.key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
+ 	ctx = &key->u.tkip.tx;
+ 
+ #ifdef CONFIG_TKIP_DEBUG
+@@ -205,7 +205,7 @@ void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
+ {
+ 	u8 rc4key[16];
+ 	struct tkip_ctx *ctx = &key->u.tkip.tx;
+-	const u8 *tk = &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY];
++	const u8 *tk = &key->conf.key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
+ 
+ 	/* Calculate per-packet key */
+ 	if (ctx->iv16 == 0 || !ctx->initialized)
+@@ -231,7 +231,7 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+ 	u32 iv16;
+ 	u8 rc4key[16], keyid, *pos = payload;
+ 	int res;
+-	const u8 *tk = &key->conf.key[ALG_TKIP_TEMP_ENCR_KEY];
++	const u8 *tk = &key->conf.key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
+ 
+ 	if (payload_len < 12)
+ 		return -1;
+@@ -286,13 +286,13 @@ int ieee80211_tkip_decrypt_data(struct crypto_blkcipher *tfm,
+ #ifdef CONFIG_TKIP_DEBUG
+ 		{
+ 			int i;
++			u8 key_offset = NL80211_TKIP_DATA_OFFSET_ENCR_KEY;
+ 			DECLARE_MAC_BUF(mac);
+ 			printk(KERN_DEBUG "TKIP decrypt: Phase1 TA=%s"
+ 			       " TK=", print_mac(mac, ta));
+ 			for (i = 0; i < 16; i++)
+ 				printk("%02x ",
+-				       key->conf.key[
+-						ALG_TKIP_TEMP_ENCR_KEY + i]);
++				       key->conf.key[key_offset + i]);
+ 			printk("\n");
+ 			printk(KERN_DEBUG "TKIP decrypt: P1K=");
+ 			for (i = 0; i < 5; i++)
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 345e10e..f809761 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -49,7 +49,7 @@ static int ieee80211_get_hdr_info(const struct sk_buff *skb, u8 **sa, u8 **da,
+ ieee80211_tx_result
+ ieee80211_tx_h_michael_mic_add(struct ieee80211_tx_data *tx)
+ {
+-	u8 *data, *sa, *da, *key, *mic, qos_tid;
++	u8 *data, *sa, *da, *key, *mic, qos_tid, key_offset;
+ 	size_t data_len;
+ 	u16 fc;
+ 	struct sk_buff *skb = tx->skb;
+@@ -88,8 +88,12 @@ ieee80211_tx_h_michael_mic_add(struct ieee80211_tx_data *tx)
+ #else
+ 	authenticator = 1;
+ #endif
+-	key = &tx->key->conf.key[authenticator ? ALG_TKIP_TEMP_AUTH_TX_MIC_KEY :
+-				 ALG_TKIP_TEMP_AUTH_RX_MIC_KEY];
++	/* At this point we know we're using ALG_TKIP. To get the MIC key
++	 * we now will rely on the offset from the ieee80211_key_conf::key */
++	key_offset = authenticator ?
++		NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY :
++		NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY;
++	key = &tx->key->conf.key[key_offset];
+ 	mic = skb_put(skb, MICHAEL_MIC_LEN);
+ 	michael_mic(key, da, sa, qos_tid & 0x0f, data, data_len, mic);
+ 
+@@ -100,7 +104,7 @@ ieee80211_tx_h_michael_mic_add(struct ieee80211_tx_data *tx)
+ ieee80211_rx_result
+ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
+ {
+-	u8 *data, *sa, *da, *key = NULL, qos_tid;
++	u8 *data, *sa, *da, *key = NULL, qos_tid, key_offset;
+ 	size_t data_len;
+ 	u16 fc;
+ 	u8 mic[MICHAEL_MIC_LEN];
+@@ -131,8 +135,12 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
+ #else
+ 	authenticator = 1;
+ #endif
+-	key = &rx->key->conf.key[authenticator ? ALG_TKIP_TEMP_AUTH_RX_MIC_KEY :
+-				 ALG_TKIP_TEMP_AUTH_TX_MIC_KEY];
++	/* At this point we know we're using ALG_TKIP. To get the MIC key
++	 * we now will rely on the offset from the ieee80211_key_conf::key */
++	key_offset = authenticator ?
++		NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY :
++		NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY;
++	key = &rx->key->conf.key[key_offset];
+ 	michael_mic(key, da, sa, qos_tid & 0x0f, data, data_len, mic);
+ 	if (memcmp(mic, data + data_len, MICHAEL_MIC_LEN) != 0 || wpa_test) {
+ 		if (!(rx->flags & IEEE80211_RX_RA_MATCH))
+-- 
+1.5.5.3
 
