@@ -1,29 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:42514 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751574AbYFLF0o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 01:26:44 -0400
-Subject: Re: [PATCH 00/29] iwlwifi driver 06/12 updates
-From: Zhu Yi <yi.zhu@intel.com>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1213247724.5974.188.camel@brick>
-References: <1213235239-2954-1-git-send-email-yi.zhu@intel.com>
-	 <1213247724.5974.188.camel@brick>
-Content-Type: text/plain
-Date: Thu, 12 Jun 2008 13:26:20 +0800
-Message-Id: <1213248380.7814.709.camel@debian.sh.intel.com> (sfid-20080612_072647_449926_6218F5DA)
-Mime-Version: 1.0
+Received: from an-out-0708.google.com ([209.85.132.250]:44406 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750985AbYFUMU4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Jun 2008 08:20:56 -0400
+Received: by an-out-0708.google.com with SMTP id d40so383406and.103
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Jun 2008 05:20:55 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: Let drivers have access to TKIP key offets for TX and RX MIC
+Date: Sat, 21 Jun 2008 14:38:48 +0200
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <20080621115133.GI17936@ruslug.rutgers.edu> <200806211423.59465.IvDoorn@gmail.com> <1214050052.8967.245.camel@johannes.berg>
+In-Reply-To: <1214050052.8967.245.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200806211438.49029.IvDoorn@gmail.com> (sfid-20080621_142114_958437_10F33E04)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-06-11 at 22:15 -0700, Harvey Harrison wrote:
+On Saturday 21 June 2008, Johannes Berg wrote:
+> On Sat, 2008-06-21 at 14:23 +0200, Ivo van Doorn wrote:
+> > On Saturday 21 June 2008, Johannes Berg wrote:
+> > > On Sat, 2008-06-21 at 07:51 -0400, Luis R. Rodriguez wrote:
+> > > > Some drivers may want to to use the TKIP key offsets for TX and RX
+> > > > MIC so lets move this out.
+> > > > 
+> > > > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > > > ---
+> > > >  include/net/cfg80211.h |    5 +++++
+> > > >  net/mac80211/key.h     |   37 ++++++++++++-------------------------
+> > > >  2 files changed, 17 insertions(+), 25 deletions(-)
+> > > > 
+> > > > diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> > > > index e007508..6cb8b02 100644
+> > > > --- a/include/net/cfg80211.h
+> > > > +++ b/include/net/cfg80211.h
+> > > > @@ -12,6 +12,11 @@
+> > > >   * Copyright 2006, 2007	Johannes Berg <johannes@sipsolutions.net>
+> > > >   */
+> > > >  
+> > > > +/* Starting offsets for each key for TKIP */
+> > > > +#define ALG_TKIP_TEMP_ENCR_KEY		0
+> > > > +#define ALG_TKIP_TEMP_AUTH_TX_MIC_KEY	16
+> > > > +#define ALG_TKIP_TEMP_AUTH_RX_MIC_KEY	24
+> > > 
+> > > put it into nl80211 and give it proper namespace prefixes, please.
+> > 
+> > Don't we need something similar for AES keys as well?
 > 
-> Since you're the one submitting the patches, shouldn't they have your
-> Signed-off-by as well?
+> I don't think there is a separate MIC key for AES, is there?
 
-You're right. Will do it next time.
+Hmm, I'm off reading some specs about TKIP and AES encryption. ;)
 
-Thanks,
--yi
+PS, above defines are very useful for rt2x00 since apparently I swapped the
+2 fields in the rt2x00crypto implementation.
+
+This was caused the legacy driver code which did:
+
+WPANONE:
+txmic = 16
+rxmic = 16
+
+authenticator:
+txmic = 16
+rxmic = 24
+
+normal:
+txmic = 24
+rxmic = 16
+
+Ivo
 
