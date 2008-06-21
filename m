@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:53927 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756249AbYFYOCd (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.186]:63101 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751083AbYFUJzM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2008 10:02:33 -0400
-Date: Wed, 25 Jun 2008 11:02:28 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Fabien Crespel <fabien@crespel.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 04/13] rfkill: add parameter to disable radios by
-	default
-Message-ID: <20080625140228.GA20618@khazad-dum.debian.net> (sfid-20080625_160237_419064_EBC62CF2)
-References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br> <1214252588-30723-5-git-send-email-hmh@hmh.eng.br> <g3quvb$8sa$1@ger.gmane.org> <g3r9hn$av5$1@ger.gmane.org> <20080624231751.GA28975@khazad-dum.debian.net> <4861FDCA.1040505@crespel.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4861FDCA.1040505@crespel.net>
+	Sat, 21 Jun 2008 05:55:12 -0400
+Subject: building mac80211
+From: John George Wright <john@limongrafica.com>
+Reply-To: john@limongrafica.com
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Sat, 21 Jun 2008 10:54:57 +0100
+Message-Id: <1214042097.12100.5.camel@Johnardbell> (sfid-20080621_115542_234816_AB30CAFB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Fabien!
+Hi,
 
-On Wed, 25 Jun 2008, Fabien Crespel wrote:
+I'm very new to the linux operating systems so please treat me as a
+child.
 
-> Henrique de Moraes Holschuh wrote:
->> Sounds interesting.  But is this functionality worth the hassle of
->> implementing it?
->
-> For the end user, I think it's better to have the device state restored  
-> at boot time if it's possible. Even though it can be tricky to  
-> implement, as you outlined.
+I have an Intel PRO/Wireless 3945ABG built into my laptop and I am
+trying to adapt the latest version of ubuntu to work with it. I followed
+some online instructions and downloaded the mac80211-10.0.4 tar,
+unpacked it and used this command:
 
-It is tricky alright.  Talking to an user that likes "everything on" at boot
-(something I wouldn't be caught dead doing, but hey, to each his own and all
-that...), I found another one...
+make SHELL=/bin/bash
 
-* In order to not lose the possibility of giving rfkill a default of
-UNBLOCK, we could accept the kernel parameter as an override of sorts.  if
-it is there, we block the "first state" API calls and use the value of the
-parameter.   It wouldn't be that much of an extra mile to go, IMHO, if one
-is already doing the rest of the work.
+but received the following error:
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Building modified version in 'modified/' directory:
+Copying modified/ from origin/...done
+Applying patches and scripts from pending/.
+ + Applying: pending/0001-mac80211-Add-basic-IEEE-802.11n-support.patch
+	From 26e77a5fef845edcb5c27db52f413e7558db0e20 Mon Sep 17 00:00:00 2001
+scripts/generate_modified: line 57: patch: command not found
+-----patch failure output-----
+
+pending/0001-mac80211-Add-basic-IEEE-802.11n-support.patch failed.
+Terminating.
+If patch or script failed, check pre/ and post/ for current stage.
+make: *** [modified] Error 1
+
+Would you have any idea where I'm going wrong?
+
+Thanks,
+John
+
