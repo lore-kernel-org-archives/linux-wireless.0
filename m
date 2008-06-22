@@ -1,48 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.224]:6858 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756640AbYF3LZ5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 07:25:57 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1623714rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2008 04:25:57 -0700 (PDT)
-Message-ID: <1ba2fa240806300425i609ababfj22a76718d3857f85@mail.gmail.com> (sfid-20080630_132601_255713_4777D759)
-Date: Mon, 30 Jun 2008 14:25:57 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/1 V2] cfg80211: adding NONE regdomain
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, linville@tuxdriver.com,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
-	"Ester Kummer" <ester.kummer@intel.com>
-In-Reply-To: <1214817730.5507.27.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1214732604-4573-1-git-send-email-tomas.winkler@intel.com>
-	 <43e72e890806300118me4b20bv2b91f30f91eaa7f3@mail.gmail.com>
-	 <1ba2fa240806300152o6d5f7deby6d00a4421138177c@mail.gmail.com>
-	 <43e72e890806300159j6c98ef9dpeac61d5aeca19f0e@mail.gmail.com>
-	 <1214817730.5507.27.camel@johannes.berg>
+Received: from mx1.redhat.com ([66.187.233.31]:45800 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752447AbYFVPqV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Jun 2008 11:46:21 -0400
+Subject: [PATCH] mac80211: add pre- and post-scan hooks
+From: Dan Williams <dcbw@redhat.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain
+Date: Sun, 22 Jun 2008 11:43:21 -0400
+Message-Id: <1214149401.8585.2.camel@localhost.localdomain> (sfid-20080622_174624_286344_54D543FD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 30, 2008 at 12:22 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-06-30 at 01:59 -0700, Luis R. Rodriguez wrote:
->
->> >>> This patch adds an option to enable all the channels by adding a
->> >>> value of "NONE" to ieee80211_regdom module param. This is useful
->> >>> for NICs that rely on EEPROM regulatory enforcement and for testing
->
->> > Still can be useful for testing,
->>
->> Testing can be done separately but not merged. The idea is to keep
->> mac80211 and mac80211 drivers as compliant as possible. This steers in
->> the other direction.
->
-> I agree, testing is no reason to merge a patch if it's intrusive and not
-> useful outside testing.
+mrv8k has commands that get called before and after the scan has been
+done to save and restore hardware state.  Add optional callbacks to
+mac80211 to enable low-level drivers to know when the stack is about to
+start scanning, and when it's done.
 
-The idea was ask troubled user to make change in modprobe.conf and not
-changing the code.
-Thanks
-Tomas
+Signed-off-by: Dan Williams <dcbw@redhat.com>
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 7ab4ff6..b84e8ac 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1139,6 +1139,10 @@ enum ieee80211_ampdu_mlme_action {
+  * 	ieee80211_ampdu_mlme_action. Starting sequence number (@ssn)
+  * 	is the first frame we expect to perform the action on. notice
+  * 	that TX/RX_STOP can pass NULL for this parameter.
++ *
++ * @prescan: Notifies low level driver that a software scan is about to happen.
++ *
++ * @postscan: Notifies low level driver that software scanning is done.
+  */
+ struct ieee80211_ops {
+ 	int (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+@@ -1190,6 +1194,8 @@ struct ieee80211_ops {
+ 	int (*ampdu_action)(struct ieee80211_hw *hw,
+ 			    enum ieee80211_ampdu_mlme_action action,
+ 			    const u8 *addr, u16 tid, u16 *ssn);
++	int (*prescan)(struct ieee80211_hw *hw);
++	int (*postscan)(struct ieee80211_hw *hw);
+ };
+ 
+ /**
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 55659a7..4bee2a7 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3850,6 +3850,10 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
+ 
+ 	netif_tx_unlock_bh(local->mdev);
+ 
++	/* call postscan outside locks because drivers may need to sleep */
++	if (local->ops->postscan)
++		local->ops->postscan(local_to_hw(local));
++
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 
+@@ -4045,6 +4048,10 @@ static int ieee80211_sta_start_scan(struct net_device *dev,
+ 	local->scan_band = IEEE80211_BAND_2GHZ;
+ 	local->scan_dev = dev;
+ 
++	/* call prescan outside locks because drivers may need to sleep */
++	if (local->ops->prescan)
++		local->ops->prescan(local_to_hw(local));
++
+ 	netif_tx_lock_bh(local->mdev);
+ 	local->filter_flags |= FIF_BCN_PRBRESP_PROMISC;
+ 	local->ops->configure_filter(local_to_hw(local),
+
