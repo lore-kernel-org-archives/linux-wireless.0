@@ -1,100 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43595 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753255AbYFLRsP (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:8848 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753733AbYFVXpY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 13:48:15 -0400
-Subject: Re: Problem: Out of memory after 2days with 2GB RAM
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Rik van Riel <riel@redhat.com>,
-	Zdenek Kabelac <zdenek.kabelac@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	yi.zhu@intel.com, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240806121039o376b0a8sdfaacf3a1f4a9e57@mail.gmail.com> (sfid-20080612_193929_380411_933B0BEB)
-References: <c4e36d110806120307n20cce692s9c136f11596f5ab0@mail.gmail.com>
-	 <20080612093833.0fb9cdd6@bree.surriel.com>
-	 <1213278884.3936.15.camel@johannes.berg>
-	 <1ba2fa240806120843s268b2ff4mb45a11adf11afc7f@mail.gmail.com>
-	 <1ba2fa240806120935r54a080eci7fa6fafc718eed17@mail.gmail.com>
-	 <1213290335.3730.4.camel@johannes.berg>
-	 <1ba2fa240806121039o376b0a8sdfaacf3a1f4a9e57@mail.gmail.com>
-	 (sfid-20080612_193929_380411_933B0BEB)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BF+fs1FX/oiExN6JrGZJ"
-Date: Thu, 12 Jun 2008 19:46:52 +0200
-Message-Id: <1213292812.3730.21.camel@johannes.berg> (sfid-20080612_194818_680375_57071544)
+	Sun, 22 Jun 2008 19:45:24 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1780017wfd.4
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Jun 2008 16:45:24 -0700 (PDT)
+Subject: [PATCH 1/4] mac80211: wep.c use new frame control helpers
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain
+Date: Sun, 22 Jun 2008 16:45:23 -0700
+Message-Id: <1214178324.21092.14.camel@brick> (sfid-20080623_014552_635284_D3744E88)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ net/mac80211/wep.c |   39 +++++++++++++++------------------------
+ 1 files changed, 15 insertions(+), 24 deletions(-)
 
---=-BF+fs1FX/oiExN6JrGZJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
+index e7b6344..35b664d 100644
+--- a/net/mac80211/wep.c
++++ b/net/mac80211/wep.c
+@@ -84,20 +84,17 @@ static u8 *ieee80211_wep_add_iv(struct ieee80211_local *local,
+ 				struct sk_buff *skb,
+ 				struct ieee80211_key *key)
+ {
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	u16 fc;
+-	int hdrlen;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	unsigned int hdrlen;
+ 	u8 *newhdr;
+ 
+-	fc = le16_to_cpu(hdr->frame_control);
+-	fc |= IEEE80211_FCTL_PROTECTED;
+-	hdr->frame_control = cpu_to_le16(fc);
++	hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
+ 
+ 	if (WARN_ON(skb_tailroom(skb) < WEP_ICV_LEN ||
+ 		    skb_headroom(skb) < WEP_IV_LEN))
+ 		return NULL;
+ 
+-	hdrlen = ieee80211_get_hdrlen(fc);
++	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	newhdr = skb_push(skb, WEP_IV_LEN);
+ 	memmove(newhdr, newhdr + WEP_IV_LEN, hdrlen);
+ 	ieee80211_wep_get_iv(local, key, newhdr + hdrlen);
+@@ -109,12 +106,10 @@ static void ieee80211_wep_remove_iv(struct ieee80211_local *local,
+ 				    struct sk_buff *skb,
+ 				    struct ieee80211_key *key)
+ {
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	u16 fc;
+-	int hdrlen;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	unsigned int hdrlen;
+ 
+-	fc = le16_to_cpu(hdr->frame_control);
+-	hdrlen = ieee80211_get_hdrlen(fc);
++	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	memmove(skb->data + WEP_IV_LEN, skb->data, hdrlen);
+ 	skb_pull(skb, WEP_IV_LEN);
+ }
+@@ -224,17 +219,15 @@ int ieee80211_wep_decrypt(struct ieee80211_local *local, struct sk_buff *skb,
+ 	u32 klen;
+ 	u8 *rc4key;
+ 	u8 keyidx;
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	u16 fc;
+-	int hdrlen;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	unsigned int hdrlen;
+ 	size_t len;
+ 	int ret = 0;
+ 
+-	fc = le16_to_cpu(hdr->frame_control);
+-	if (!(fc & IEEE80211_FCTL_PROTECTED))
++	if (!ieee80211_has_protected(hdr->frame_control))
+ 		return -1;
+ 
+-	hdrlen = ieee80211_get_hdrlen(fc);
++	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 
+ 	if (skb->len < 8 + hdrlen)
+ 		return -1;
+@@ -281,17 +274,15 @@ int ieee80211_wep_decrypt(struct ieee80211_local *local, struct sk_buff *skb,
+ 
+ u8 * ieee80211_wep_is_weak_iv(struct sk_buff *skb, struct ieee80211_key *key)
+ {
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	u16 fc;
+-	int hdrlen;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	unsigned int hdrlen;
+ 	u8 *ivpos;
+ 	u32 iv;
+ 
+-	fc = le16_to_cpu(hdr->frame_control);
+-	if (!(fc & IEEE80211_FCTL_PROTECTED))
++	if (!ieee80211_has_protected(hdr->frame_control))
+ 		return NULL;
+ 
+-	hdrlen = ieee80211_get_hdrlen(fc);
++	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	ivpos = skb->data + hdrlen;
+ 	iv = (ivpos[0] << 16) | (ivpos[1] << 8) | ivpos[2];
+ 
+-- 
+1.5.6.290.gc4e15
 
-
-> > Well, I disagree, and I'll push my patch as soon as somebody confirms
-> > that it doesn't break anything.
->=20
-> Remember you are not a maintainer of this driver and second we are
-> open to all suggestions you don't have to use this kind of
-> statements...
-
-Yeah, you're right, I can't really do that. But I can submit the patch
-to akpm, and I'm sure he'll take it after you provide your counter
-argument about hope never dying again ;)
-
-Frankly, I don't see why you're so opposed to this patch even if it
-doesn't solve anything it probably leads to better code generation and
-using a lot less memory.
-
-Also, I know you cannot actually need those descriptors since mac80211
-will never ever pass such frames, and _that_ is an area I do have at
-least some influence over, so I'll surely notice when that changes.
-
-> >> > There was already discussion on LKML about memory allocation problem=
-s
-> >> > on X86_64, which might explain this regression. This didn't happen
-> >> > before.
-> >>
-> >> This is  the thread title if you are interested.
-> >> 'x86/kernel/pci_dma.c: gfp |=3D __GFP_NORETRY'
-> >
-> > Like I said, it doesn't matter, there's no need to _waste_
-> > 18*256*sizeof(void *) bytes memory.
->=20
-> It does matter this is not pci allocation we are saving in your patch.
-
-Well, thing is, my patch saves 18 KiB memory on 32-bit and 36 on 64-bit,
-so I think we should merge it regardless. Yes, the pci allocation is
-icky, and yes, it would be good to just do it once instead of over and
-over again, but even if you change it to do _all_ those allocations just
-once we should not be wasting those 18/36 KiB memory for nothing.
-
-johannes
-
---=-BF+fs1FX/oiExN6JrGZJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIUWEIAAoJEKVg1VMiehFYt5wP/3ihVajpphGmwYsZI5oDSZz5
-vNQvadTdhlx7wIN+0JK4ji28BrpP6iaggRshEJ+c1ltnVk4rijQ+k/DBxFqiOCj9
-jgycCoWARWUa2IG8QjlYcgVzr7JKnifY9O+MQZsHtwKaFcA+ywaaMvpLh4Cxsouh
-cIWoRFKtOrx8cUGfbzyfZ/Ja1ucweQxjJq4nCkdX0on+FNJsperkVYf32cSU0FRN
-h2xU++YuUZpLGtIyUcmcO+bp5Nv7+HEm1620fPLbXc6O2dHTnWsHcwPEQqNL9Ijn
-MgnKnD662NPQTY/HFX3xr4OAk+OYIf6sMSvicby0GAXVUadW6/vQUF+sgx7YCJFg
-TyuP+WX0lUz+c9WMSKIU993Md9+Ws36ILzsRAzhWA52nfbUKRLa/bKjOtMk0+927
-w471gxKVUzhjZUFr7V1gtuWj2zhb/I5SpweHrqV08crCzDuV37xvzHDwchAVZ5Lo
-OmRi6EkjanWO1W6v3QXVDvlVHJvGCHz0QNWbnpUvBbjkGEl44gaEKmb64700Qesp
-JHV94LZ8u/8Gey4wb6izj5XQlIJg1wO+2AmQYKapN6TjAr4rCHbBrycZTIgj/hX4
-PXtyD4V1o+b1nxu6SwZmvuhHURsqM3JHPjiPk/DgNx7COVw7oqUgYKX+U9V8RUp/
-cEV6OqvYT3GSDjluFQlC
-=ISpm
------END PGP SIGNATURE-----
-
---=-BF+fs1FX/oiExN6JrGZJ--
 
