@@ -1,50 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2802 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752966AbYFZTrL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 15:47:11 -0400
-Date: Thu, 26 Jun 2008 15:35:40 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	drago01 <drago01@gmail.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] iwl3945: use rfkill subsystem
-Message-ID: <20080626193540.GA28598@tuxdriver.com> (sfid-20080626_214715_586929_351BDAFB)
-References: <f6ca9fed0806160059l58286050wfeb6eda938f3a171@mail.gmail.com> <BD524EA7912ED5469DFD0BAEF6BC752F03D2C277@orsmsx411.amr.corp.intel.com> <1213783675.1312.6.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1213783675.1312.6.camel@johannes.berg>
+Received: from wf-out-1314.google.com ([209.85.200.169]:55685 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751480AbYFVCdX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Jun 2008 22:33:23 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1505512wfd.4
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Jun 2008 19:33:22 -0700 (PDT)
+Subject: [PATCH] adm8211: remove unnecessary protected bit mask/check
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Michael Wu <flamingice@sourmilk.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <200806212221.54814.flamingice@sourmilk.net>
+References: <1213932851.6591.8.camel@brick>
+	 <200806212221.54814.flamingice@sourmilk.net>
+Content-Type: text/plain
+Date: Sat, 21 Jun 2008 19:33:20 -0700
+Message-Id: <1214102000.21092.1.camel@brick> (sfid-20080622_043351_078817_038C3AA8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 18, 2008 at 12:07:54PM +0200, Johannes Berg wrote:
-> On Tue, 2008-06-17 at 19:34 -0700, Kolekar, Abhijeet wrote:
-> > Added clearing the STATUS_EXIT_PENDING bit while ifup.
-> > ACK.
-> > 
-> > The attached patch removes the sysfs interface from iwl3945 and uses
-> > the rfkill subsystem instead.
-> 
-> > +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> > @@ -5913,7 +5913,9 @@ static void __iwl3945_down(struct iwl3945_priv
-> > *priv)
-> >  			       test_bit(STATUS_GEO_CONFIGURED,
-> > &priv->status) <<
-> >  					STATUS_GEO_CONFIGURED |
-> >  			       test_bit(STATUS_IN_SUSPEND,
-> 
-> That patch is badly mangled by line-wrapping.
+Removes now unused fc local var and uses the new ieee80211_hdrlen
+which directly uses the le16 frame control value.
 
-Can we have a non-damaged version of this patch?
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ drivers/net/wireless/adm8211.c |    9 +--------
+ 1 files changed, 1 insertions(+), 8 deletions(-)
 
-Thanks,
-
-John
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index 0ba55ba..3333d45 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -1685,7 +1685,6 @@ static void adm8211_tx_raw(struct ieee80211_hw *dev, struct sk_buff *skb,
+ static int adm8211_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ {
+ 	struct adm8211_tx_hdr *txhdr;
+-	u16 fc;
+ 	size_t payload_len, hdrlen;
+ 	int plcp, dur, len, plcp_signal, short_preamble;
+ 	struct ieee80211_hdr *hdr;
+@@ -1696,8 +1695,7 @@ static int adm8211_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 	plcp_signal = txrate->bitrate;
+ 
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+-	fc = le16_to_cpu(hdr->frame_control) & ~IEEE80211_FCTL_PROTECTED;
+-	hdrlen = ieee80211_get_hdrlen(fc);
++	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	memcpy(skb->cb, skb->data, hdrlen);
+ 	hdr = (struct ieee80211_hdr *)skb->cb;
+ 	skb_pull(skb, hdrlen);
+@@ -1711,8 +1709,6 @@ static int adm8211_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 	txhdr->frame_control = hdr->frame_control;
+ 
+ 	len = hdrlen + payload_len + FCS_LEN;
+-	if (fc & IEEE80211_FCTL_PROTECTED)
+-		len += 8;
+ 
+ 	txhdr->frag = cpu_to_le16(0x0FFF);
+ 	adm8211_calc_durations(&dur, &plcp, payload_len,
+@@ -1730,9 +1726,6 @@ static int adm8211_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 	if (info->flags & IEEE80211_TX_CTL_USE_RTS_CTS)
+ 		txhdr->header_control |= cpu_to_le16(ADM8211_TXHDRCTL_ENABLE_RTS);
+ 
+-	if (fc & IEEE80211_FCTL_PROTECTED)
+-		txhdr->header_control |= cpu_to_le16(ADM8211_TXHDRCTL_ENABLE_WEP_ENGINE);
+-
+ 	txhdr->retry_limit = info->control.retry_limit;
+ 
+ 	adm8211_tx_raw(dev, skb, plcp_signal, hdrlen);
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.6.290.gc4e15
+
+
+
