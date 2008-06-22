@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:55107 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752862AbYFKVag (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 17:30:36 -0400
-Message-ID: <48504417.7020803@lwfinger.net> (sfid-20080611_233039_452301_0F65E596)
-Date: Wed, 11 Jun 2008 16:31:03 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from smtp4.pp.htv.fi ([213.243.153.38]:42416 "EHLO smtp4.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751628AbYFVM5n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Jun 2008 08:57:43 -0400
+Date: Sun, 22 Jun 2008 15:55:53 +0300
+From: Adrian Bunk <bunk@stusta.de>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Subject: RFC: always enable MAC80211_RC_PID?
+Message-ID: <20080622125553.GB22539@cs181133002.pp.htv.fi> (sfid-20080622_145752_345130_B7134146)
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
-CC: Pavel Roskin <proski@gnu.org>, Michael Buesch <mb@bu3sch.de>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Broadcom's Hybrid Driver
-References: <48500F14.8070300@canonical.com> <200806112047.00854.mb@bu3sch.de>	 <1213213666.19106.12.camel@dv> <69e28c910806111326j6922905fq1f67201ab4ce298f@mail.gmail.com>
-In-Reply-To: <69e28c910806111326j6922905fq1f67201ab4ce298f@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have two ideas about what Broadcom is doing.
+After the scheduled removal of MAC80211_RC_SIMPLE only 
+MAC80211_RC_DEFAULT_PID and MAC80211_RC_DEFAULT_NONE are
+left as choices.
 
-The b/g device with an ID of 0x4315 and an LP-PHY is the one that HP 
-has been shipping in many laptops for the past few months. Perhaps HP 
-wants to offer Linux on those computers, but doesn't want to use 
-ndiswrapper for wireless access. HP might have enough clout to get 
-Broadcom to budge a little on the subject of Linux.
+Does MAC80211_RC_DEFAULT_NONE have any userbase serious enough to 
+justify all the constructs made for this case or could we simply
+always enable MAC80211_RC_PID?
 
-It is also possible that they want to stifle our RE efforts. The 
-license accompanying the binary blob states:
+cu
+Adrian
 
-"2.6.    No Other Rights Granted; Restrictions.  Apart from the 
-license rights expressly set forth in this Agreement, Broadcom does 
-not grant and Licensee does not receive any ownership right, title or 
-interest nor any security interest or other interest in any 
-intellectual property rights relating to the Software, nor in any copy 
-of any part of the foregoing.
+-- 
 
-Licensee shall not (i) use, license, sell or otherwise distribute the 
-Software except as provided in this Agreement, (ii) attempt to reverse 
-engineer, decompile or disassemble any portion of the Software; or 
-(iii) use the Software or other material in violation of any 
-applicable law or regulation, including but not limited to any 
-regulatory agency, such as FCC, rules."
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
-Given some of the other parts of the license relating to penalties, 
-etc., anyone trying to RE this code could be in a heap of trouble.
-
-Larry
