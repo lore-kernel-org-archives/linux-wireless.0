@@ -1,75 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outbound.icp-qv1-irony-out3.iinet.net.au ([203.59.1.148]:52679
-	"EHLO outbound.icp-qv1-irony-out3.iinet.net.au" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751046AbYFTGS6 (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:37493 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752835AbYFVPi5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2008 02:18:58 -0400
-Subject: Re: [RFC PATCHES] Re: Is configfs the right solution for
-	configuration based fs?
-From: Ben Nizette <bn@niasdigital.com>
-To: Joel Becker <Joel.Becker@oracle.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux kernel <linux-kernel@vger.kernel.org>,
-	Greg KH <greg@kroah.com>,
-	Satyam Sharma <ssatyam@cse.iitk.ac.in>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Al Viro <viro@ftp.linux.org.uk>,
-	"H. Peter Anvin" <hpa@kernel.org>
-In-Reply-To: <20080619024804.GA29765@mail.oracle.com>
-References: <43e72e890806081425h4e785800nc618fc1985f9809f@mail.gmail.com>
-	 <1213002187.698.62.camel@johannes.berg>
-	 <1213056772.4089.42.camel@moss.renham>
-	 <20080619024804.GA29765@mail.oracle.com>
-Content-Type: text/plain
-Date: Fri, 20 Jun 2008 16:19:10 +1000
-Message-Id: <1213942750.2336.43.camel@moss.renham> (sfid-20080620_081902_649335_1FC6D5F9)
-Mime-Version: 1.0
+	Sun, 22 Jun 2008 11:38:57 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Thomas Renninger <trenn@suse.de>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Dmitry Torokhov <dtor@mail.ru>
+Subject: [PATCH 05/12] rfkill: add read-write rfkill switch support
+Date: Sun, 22 Jun 2008 12:38:41 -0300
+Message-Id: <1214149128-5913-6-git-send-email-hmh@hmh.eng.br> (sfid-20080622_173906_290410_85A7B124)
+In-Reply-To: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
+References: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Currently, rfkill support for read/write rfkill switches is hacked through
+a round-trip over the input layer and rfkill-input to let a driver sync
+rfkill->state to hardware changes.
 
-On Wed, 2008-06-18 at 19:48 -0700, Joel Becker wrote:
+This is buggy and sub-optimal.  It causes real problems.  It is best to
+think of the rfkill class as supporting only write-only switches at the
+moment.
 
-> 	Ask, and ye shall receive.  I've actually been meaning to look
-> at this for a while.  Please check out the branch configfs-attr-macros
-> at my git tree.  Actually, here is the configfs.h with macros, and
-> configfs_example_macros.c using them.  Let me know if this fits the
-> bill.
-> 
-> [config-attr-macros:include/linux/configfs.h]
-> http://oss.oracle.com/git/jlbec/linux-2.6.git/?p=jlbec/linux-2.6.git;a=blob;f=include/linux/configfs.h;h=8be4507ab98f49f43c5212cbafe62178df9a517b;hb=c085c60b185d7431935397e43a868325d8f1da6c
-> 
-> [config-attr-macros:Documentation/filesystems/configfs/configfs_example_macros.c]
-> http://oss.oracle.com/git/jlbec/linux-2.6.git/?p=jlbec/linux-2.6.git;a=blob;f=Documentation/filesystems/configfs/configfs_example_macros.c;h=c2ece748abdf30a7d67dd9ea25c5e6ac93fbc005;hb=c085c60b185d7431935397e43a868325d8f1da6c
-> 
-> 	Compare and contrast with the original configfs_example.c (now
-> configfs_example_explicit.c on that branch).  The diff is available
-> here:
-> http://oss.oracle.com/git/jlbec/linux-2.6.git/?p=jlbec/linux-2.6.git;a=commitdiff;h=c085c60b185d7431935397e43a868325d8f1da6c
-> 
+In order to implement the read/write functionality properly:
 
-Looks great, thx :-).  I'll convert some of my stuff over to this
-interface and see how it flies in the real world.
+Add a get_state() hook that is called by the class every time it needs to
+fetch the current state of the switch.  Add a call to this hook every time
+the *current* state of the radio plays a role in a decision.
 
-> > And the trival problem that, ISTR, failing the make_group method always
-> > reports -ENOMEM to userspace, no matter what the actual problem was.  I
-> > think I had a patch around to pass the error code from make_group back
-> > up through to userspace, I wonder what happened to that...
-> 
-> 	I've also attacked this one.  The change is in the
-> make-item-errors branch.  It's already scheduled for linux-next.  Diff
-> available here:
-> http://oss.oracle.com/git/jlbec/linux-2.6.git/?p=jlbec/linux-2.6.git;a=commitdiff;h=34fbb494fecfd82bcbf9ed698ef305500228a84c
-> 
+Also add a force_state() method that can be used to forcefully syncronize
+the class' idea of the current state of the switch.  This allows for a
+faster implementation of the read/write functionality, as a driver which
+get events on switch changes can avoid the need for a get_state() hook.
 
-ISTR when I did this I kept the old semantics and used ERR_PTR and
-friends if things went pear-shaped.  Given the small number of in-tree
-users needing to be moved over, a more intrusive change for the sake of
-a cleaner API like you've done is probably a good thing anyway :-)
+If the get_state() hook is left as NULL, current behaviour is maintained,
+so this change is fully backwards compatible with the current rfkill
+drivers.
 
-Thanks again,
-	--Ben.
+For hardware that issues events when the rfkill state changes, leave
+get_state() NULL in the rfkill struct, set the initial state properly
+before registering with the rfkill class, and use the force_state() method
+in the driver to keep the rfkill interface up-to-date.
 
+get_state() can be called by the class from atomic context. It must not
+sleep.
+
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Dmitry Torokhov <dtor@mail.ru>
+---
+ include/linux/rfkill.h |    5 ++++
+ net/rfkill/rfkill.c    |   53 +++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 55 insertions(+), 3 deletions(-)
+
+diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+index ca89ae1..844e961 100644
+--- a/include/linux/rfkill.h
++++ b/include/linux/rfkill.h
+@@ -61,6 +61,8 @@ enum rfkill_state {
+  * @data: Pointer to the RF button drivers private data which will be
+  *	passed along when toggling radio state.
+  * @toggle_radio(): Mandatory handler to control state of the radio.
++ * @get_state(): handler to read current radio state from hardware,
++ *      may be called from atomic context, should return 0 on success.
+  * @led_trigger: A LED trigger for this button's LED.
+  * @dev: Device structure integrating the switch into device tree.
+  * @node: Used to place switch into list of all switches known to the
+@@ -80,6 +82,7 @@ struct rfkill {
+ 
+ 	void *data;
+ 	int (*toggle_radio)(void *data, enum rfkill_state state);
++	int (*get_state)(void *data, enum rfkill_state *state);
+ 
+ #ifdef CONFIG_RFKILL_LEDS
+ 	struct led_trigger led_trigger;
+@@ -95,6 +98,8 @@ void rfkill_free(struct rfkill *rfkill);
+ int rfkill_register(struct rfkill *rfkill);
+ void rfkill_unregister(struct rfkill *rfkill);
+ 
++int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state);
++
+ /**
+  * rfkill_get_led_name - Get the LED trigger name for the button's LED.
+  * This function might return a NULL pointer if registering of the
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index 3edc585..4ae4486 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -62,19 +62,39 @@ static void rfkill_led_trigger(struct rfkill *rfkill,
+ #endif /* CONFIG_RFKILL_LEDS */
+ }
+ 
++static void update_rfkill_state(struct rfkill *rfkill)
++{
++	enum rfkill_state newstate;
++
++	if (rfkill->get_state) {
++		mutex_lock(&rfkill->mutex);
++		if (!rfkill->get_state(rfkill->data, &newstate))
++			rfkill->state = newstate;
++		mutex_unlock(&rfkill->mutex);
++	}
++}
++
+ static int rfkill_toggle_radio(struct rfkill *rfkill,
+ 				enum rfkill_state state)
+ {
+ 	int retval = 0;
++	enum rfkill_state oldstate, newstate;
++
++	oldstate = rfkill->state;
++
++	if (rfkill->get_state &&
++	    !rfkill->get_state(rfkill->data, &newstate))
++		rfkill->state = newstate;
+ 
+ 	if (state != rfkill->state) {
+ 		retval = rfkill->toggle_radio(rfkill->data, state);
+-		if (!retval) {
++		if (!retval)
+ 			rfkill->state = state;
+-			rfkill_led_trigger(rfkill, state);
+-		}
+ 	}
+ 
++	if (rfkill->state != oldstate)
++		rfkill_led_trigger(rfkill, rfkill->state);
++
+ 	return retval;
+ }
+ 
+@@ -105,6 +125,32 @@ void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
+ }
+ EXPORT_SYMBOL(rfkill_switch_all);
+ 
++/**
++ * rfkill_force_state - Force the internal rfkill radio state
++ * @rfkill: pointer to the rfkill class to modify.
++ * @state: the current radio state the class should be forced to.
++ *
++ * This function updates the internal state of the radio cached
++ * by the rfkill class.  It should be used when the driver gets
++ * a notification by the firmware/hardware of the current *real*
++ * state of the radio rfkill switch.
++ *
++ * It may not be called from an atomic context.
++ */
++int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state)
++{
++	if (state != RFKILL_STATE_OFF &&
++	    state != RFKILL_STATE_ON)
++		return -EINVAL;
++
++	mutex_lock(&rfkill->mutex);
++	rfkill->state = state;
++	mutex_unlock(&rfkill->mutex);
++
++	return 0;
++}
++EXPORT_SYMBOL(rfkill_force_state);
++
+ static ssize_t rfkill_name_show(struct device *dev,
+ 				struct device_attribute *attr,
+ 				char *buf)
+@@ -147,6 +193,7 @@ static ssize_t rfkill_state_show(struct device *dev,
+ {
+ 	struct rfkill *rfkill = to_rfkill(dev);
+ 
++	update_rfkill_state(rfkill);
+ 	return sprintf(buf, "%d\n", rfkill->state);
+ }
+ 
+-- 
+1.5.5.4
 
