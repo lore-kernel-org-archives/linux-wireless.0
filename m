@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43480
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753980AbYFCVbw (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.170]:9997 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755008AbYFVWYL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 17:31:52 -0400
-Date: Tue, 03 Jun 2008 12:05:15 -0700 (PDT)
-Message-Id: <20080603.120515.193703574.davem@davemloft.net> (sfid-20080603_233158_309565_E994CC6D)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, kirill@shutemov.name
-Subject: Re: [PATCH] wireless.h: improve userland include-ability
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1212515497-21578-1-git-send-email-linville@tuxdriver.com>
-References: <1212515497-21578-1-git-send-email-linville@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sun, 22 Jun 2008 18:24:11 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so384707ugf.16
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Jun 2008 15:24:10 -0700 (PDT)
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: mac80211: workqueue & RTNL lock
+Date: Mon, 23 Jun 2008 00:42:41 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200806230042.41219.IvDoorn@gmail.com> (sfid-20080623_002416_378490_D9252AF0)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue,  3 Jun 2008 13:51:37 -0400
+Hi,
 
-> From: Kirill A. Shutemov <kirill@shutemov.name>
-> 
-> This patch partially reverts commit 2218228392080f0ca2fc2974604e79f57b12c436
-> ("Make linux/wireless.h be able to compile") while still making it
-> easier to include wireless.h in userland apps.
-> 
-> Signed-off-by: Kirill A. Shutemov <kirill@shutemov.name>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+I am currently looking at a rt2x00 regression in 2.6.26-rcX
+	http://bugzilla.kernel.org/process_bug.cgi
 
-I not thrilled about this patch.
+This regression is  caused by a circular locking problem
+(see http://bugzilla.kernel.org/attachment.cgi?id=16581)
 
-This means the user has to figure out what include file to add
-to get IFNAMSIZ and things like that which wireless.h needs.
+The problem seems be caused by rt2x00 using ieee80211_iterate_active_interfaces()
+within the workqueue as provided by mac80211. But this will trigger the
+circular dependency when 'ifdown' is called. If I am not mistaken,
+'ifdown' will grab the rtnl lock and ieee80211_stop() is called.
+That function calls flush_workqueue() which cannot succeed because it will wait
+on a thread that is also trying to grab the rtnl lock.
 
-That is non-intuitive and magic.  These headers should be entirely
-self-contained so that if you include linux/wireless.h it should
-just work and there should be no dependencies not handlind by
-wireless.h doing the necessary includes.
+Possible solution would be making rt2x00 use its own workqueue, but
+that will cause similar problems since it can't use flush either it could however
+use flags to prevent ieee80211_iterate_active_interfaces() being called.
 
-+/* This header is used in user-space, therefore need to be sanitised
-+ * for that purpose. Those includes are usually not compatible with glibc.
-+ * To know which includes to use in user-space, check iwlib.h. */
+However it does mean that a solution for the mac80211 workqueue also has to
+be found, since rt2x00 isn't the only use of the mac80211 workqueue,
+but currently is the only one who uses it in combination with
+ieee80211_iterate_active_interfaces().
+And apparently those 2 cannot be combined. :S
 
-Yeah, go check so me magic userspace tool header to see what magic is
-needed just to include a core networking header file correctly.
-
-No, thanks.
+Ivo
