@@ -1,91 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms5.Sony.CO.JP ([211.125.136.201]:51863 "EHLO ms5.sony.co.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752132AbYFPJPn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2008 05:15:43 -0400
-Date: Mon, 16 Jun 2008 18:15:12 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-To: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 0/12]: Proper compat WEXT support.
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20080612.225332.193703791.davem@davemloft.net>
-References: <20080604184955.B033.40F06B3A@sm.sony.co.jp> <20080612.225332.193703791.davem@davemloft.net>
-Message-Id: <20080616174509.B048.40F06B3A@sm.sony.co.jp> (sfid-20080616_111546_428063_5F43CDFA)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:42828 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752710AbYFVPi5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Jun 2008 11:38:57 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Thomas Renninger <trenn@suse.de>
+Subject: [GIT PATCH] rfkill rework for 2.6.27 (v2)
+Date: Sun, 22 Jun 2008 12:38:36 -0300
+Message-Id: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br> (sfid-20080622_173904_587907_708CA413)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-On Thu, 12 Jun 2008 22:53:32 -0700 (PDT)
-David Miller <davem@davemloft.net> wrote:
+Hello John,
 
-> Here is a new version of patch 12, which should fix the problems
-> you reported here.  The idea is simple, all references to
-> IW_EV_LCP_LEN are replaced with calls to a new inline function
-> named iwe_stream_lcp_len() which returns the compat value if
-> necessary.
-> 
-> wext: Emit event stream entries correctly when compat.
-> 
-> Three major portions to this change:
-> 
-> 1) Add IW_EV_COMPAT_LCP_LEN, IW_EV_COMPAT_POINT_OFF,
->    and IW_EV_COMPAT_POINT_LEN helper defines.
-> 
-> 2) Delete iw_stream_check_add_*(), they are unused.
-> 
-> 3) Add iw_request_info argument to iwe_stream_add_*(), and use it to
->    size the event and pointer lengths correctly depending upon whether
->    IW_REQUEST_FLAG_COMPAT is set or not.
-> 
-> 4) The mechanical transformations to the drivers and wireless stack
->    bits to get the iw_request_info passed down into the routines
->    modified in #3.  Also, explicit references to IW_EV_LCP_LEN are
->    replaced with iwe_stream_lcp_len(info).
-> 
-> With a lot of help and bug fixes from Masakazu Mokuno.
-> 
-> Signed-off-by: David S. Miller <davem@davemloft.net>
-> ---
->  drivers/net/ps3_gelic_wireless.c           |   30 +++---
->  drivers/net/wireless/airo.c                |   43 +++++---
->  drivers/net/wireless/atmel.c               |   24 ++++-
->  drivers/net/wireless/hostap/hostap.h       |    3 +-
->  drivers/net/wireless/hostap/hostap_ap.c    |   32 +++---
->  drivers/net/wireless/hostap/hostap_ioctl.c |   58 ++++++-----
->  drivers/net/wireless/libertas/scan.c       |   36 ++++---
->  drivers/net/wireless/orinoco.c             |   23 +++--
->  drivers/net/wireless/prism54/isl_ioctl.c   |   49 +++++----
->  drivers/net/wireless/rndis_wlan.c          |   31 +++---
->  drivers/net/wireless/wl3501_cs.c           |   10 +-
->  drivers/net/wireless/zd1201.c              |   21 +++--
->  include/linux/wireless.h                   |   15 +++
->  include/net/iw_handler.h                   |  149 +++++++++-------------------
->  net/ieee80211/ieee80211_wx.c               |   48 +++++----
->  net/mac80211/ieee80211_i.h                 |    5 +-
->  net/mac80211/mlme.c                        |   45 +++++----
->  net/mac80211/wext.c                        |    2 +-
->  18 files changed, 323 insertions(+), 301 deletions(-)
+Here is the revised patchset to bring rfkill up to shape enough that it
+becomes useable for platform drivers like thinkpad-acpi.
 
-Thank you again for updating the patch set!
+There are some very minor changes:
+ * Added a check for illegal states on rfkill_force_state() since
+   it is an exported function and someone might call it with wrong
+   parameters;
+ * Fix use of %u instead of %d on uevent generation for RFKILL_STATE
+   to match the type for enum rfkill_state;
+ * Minor documentation wording changes;
 
-With this new patch #12, it worked OK for me.   I tested on my PS3 with:
+All the patches in this patchset have been ACKed by Ivo, the rfkill
+maintainer.  They're based on wireless-testing master branch, but they
+apply cleanly on top of 2.6.26-rc7 as well.
 
-  - wireless_tools version 28 and 29.  Both 64 and 32-bit compiled
-    iwlist and iwconfig
-  - wpa_supplicant 0.6.x, 64 and 32-bit compiled
-  - gelic and zd1211 driver
-  
+No real problem was found on any of the patches in the thread they
+generated last time I posted, AFAIK all doubts regarding these patches
+have been explained to the satisfaction of everyone involved, and they
+dealt far more with the rfkill subsystem itself than with anything any
+of the patches was doing.
 
-checkpatch.pl complained some error/warnings on the patches #7, #9 and
-#12.  It seemed that most of them were inherited from the original code,
-some seemed like newly created ones, like 80-characters over warnings in
-net/mac80211/mlme.c.  We might want to fix them?
+True, there are still shortcomings in the rfkill subsystem even after
+this patchset, but that's not a problem with the patches but rather
+missing features and changes that should be done on further patches.
+Some of these patches are ready (e.g. extra documentation) and others (a
+new hardlocked rfkill state for rfkill-state) are being tested, and will
+be send to linux-wireless soon.
 
-Anyway the code works fine.  Again, thank you!
+Please merge this patchset on wireless-testing to get it on its way to
+linux-next, so that it can go to 2.6.27 when the merge window opens.
+This patchset is extremely important for my thinkpad-acpi work, and for
+other drivers like hp-wmi.
+
+Note that these patches are backwards-compatible in API and ABI.  No
+in-tree drivers are broken by it, but it doesn't magically fixes their
+rfkill support either.  It just makes it possible to write drivers using
+rfkill that actually work properly.
+
+These patches went through a lot of discursion already, available at
+http://thread.gmane.org/gmane.linux.kernel/664500 and a more recent
+thread at http://thread.gmane.org/gmane.linux.kernel/682233 and
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/15677.
+
+
+This series is available as a git branch at:
+git://repo.or.cz/linux-2.6/linux-acpi-2.6/ibm-acpi-2.6.git for-upstream/rfkill
+
+Shortlog:
+
+Henrique de Moraes Holschuh (12):
+      rfkill: clarify meaning of rfkill states
+      rfkill: fix minor typo in kernel doc
+      rfkill: handle SW_RFKILL_ALL events
+      rfkill: add parameter to disable radios by default
+      rfkill: add read-write rfkill switch support
+      rfkill: add the WWAN radio type
+      rfkill: rework suspend and resume handlers
+      rfkill: add notifier chains support
+      rfkill: add type string helper
+      rfkill: add uevent notifications
+      rfkill: do not allow userspace to override ALL RADIOS OFF
+      rfkill: document rw rfkill switches and clarify input subsystem interactions
+
+Thank you.
 
 -- 
-Masakazu Mokuno
-
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
