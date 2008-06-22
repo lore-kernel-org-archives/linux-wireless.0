@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tama500.ecl.ntt.co.jp ([129.60.39.148]:36680 "EHLO
-	tama500.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752245AbYFKB2p (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:58938 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753737AbYFVPjA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 21:28:45 -0400
-To: mb@bu3sch.de
-Cc: vegard.nossum@gmail.com, miles.lane@gmail.com,
-	akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
-Subject: Re: BUG: NULL pointer dereference at 00000000 -- IP: [<f8e783d5>]
- :b43:b43_dma_mapping_error+0x16/0x155
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-In-Reply-To: <200806101650.27180.mb@bu3sch.de>
-References: <200806101637.11473.mb@bu3sch.de>
-	<19f34abd0806100742v176f50e8se463d2e70df44332@mail.gmail.com>
-	<200806101650.27180.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Message-Id: <20080611095844J.fujita.tomonori@lab.ntt.co.jp> (sfid-20080611_032910_377732_72148995)
-Date: Wed, 11 Jun 2008 09:58:44 +0900
+	Sun, 22 Jun 2008 11:39:00 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Thomas Renninger <trenn@suse.de>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Dmitry Torokhov <dtor@mail.ru>
+Subject: [PATCH 02/12] rfkill: fix minor typo in kernel doc
+Date: Sun, 22 Jun 2008 12:38:38 -0300
+Message-Id: <1214149128-5913-3-git-send-email-hmh@hmh.eng.br> (sfid-20080622_174914_202035_AE4B29F6)
+In-Reply-To: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
+References: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 10 Jun 2008 16:50:26 +0200
-Michael Buesch <mb@bu3sch.de> wrote:
+Fix a minor typo in an exported function documentation
 
-> On Tuesday 10 June 2008 16:42:41 Vegard Nossum wrote:
-> > This change comes from
-> > 
-> > commit 353c409463ecba63c3a41a992d3f5fba935eada9
-> > Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Date:   Fri May 23 19:02:30 2008 +0000
-> 
-> 
-> Ok, FUJITA Tomonori, please make sure a patch like the following goes
-> into the same trees that you submitted commit 353c409 to.
-> Also make sure to check b43legacy. I _guess_ you might have added
-> the same bug there.
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Dmitry Torokhov <dtor@mail.ru>
+---
+ net/rfkill/rfkill.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Ah, sorry about the bug.
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index 4e10a95..f95081a 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -412,7 +412,7 @@ int rfkill_register(struct rfkill *rfkill)
+ EXPORT_SYMBOL(rfkill_register);
+ 
+ /**
+- * rfkill_unregister - Uegister a rfkill structure.
++ * rfkill_unregister - Unregister a rfkill structure.
+  * @rfkill: rfkill structure to be unregistered
+  *
+  * This function should be called by the network driver during device
+-- 
+1.5.5.4
 
->From a quick look, mainline needs the same fix too?
-
-b43_dma_mapping_error calls unmap_descbuffer() on the failure, which
-assumes that ring->dev is set up properly.
