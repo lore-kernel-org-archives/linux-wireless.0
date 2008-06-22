@@ -1,35 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.227]:3071 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754909AbYFENze (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:45565 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752242AbYFVPi4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2008 09:55:34 -0400
-Received: by rv-out-0506.google.com with SMTP id l9so728107rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jun 2008 06:55:32 -0700 (PDT)
-Message-ID: <b6c5339f0806050655m92bd361sbc048230c4bb9286@mail.gmail.com> (sfid-20080605_155538_212595_C7E294B2)
-Date: Thu, 5 Jun 2008 09:55:32 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Harvey Harrison" <harvey.harrison@gmail.com>
-Subject: Re: [RFC-PATCH] mac80211: add helpers for common frame_control testing
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1212633200.6340.52.camel@brick>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1212633200.6340.52.camel@brick>
+	Sun, 22 Jun 2008 11:38:56 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Thomas Renninger <trenn@suse.de>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: [PATCH 04/12] rfkill: add parameter to disable radios by default
+Date: Sun, 22 Jun 2008 12:38:40 -0300
+Message-Id: <1214149128-5913-5-git-send-email-hmh@hmh.eng.br> (sfid-20080622_173901_805533_4DED39F8)
+In-Reply-To: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
+References: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 4, 2008 at 10:33 PM, Harvey Harrison
-<harvey.harrison@gmail.com> wrote:
-> +static inline int ieee80211_has_a4(struct ieee80211_hdr *hdr)
-> +{
-> +       __le16 tmp = cpu_to_le16(IEEE80211_FCTL_TODS | IEEE80211_FCTL_TODS);
-> +       return (hdr->frame_control & tmp) == tmp;
-> +}
+Currently, radios are always enabled when their rfkill interface is
+registered.  This is not optimal, the safest state for a radio is to be
+offline unless the user turns it on.
 
-One should be FROMDS?
+Add a module parameter that causes all radios to be disabled when their
+rfkill interface is registered.  The module default is not changed so
+unless the parameter is used, radios will still be forced to their enabled
+state when they are registered.
 
+The new rfkill module parameter is called "default_state".
+
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ net/rfkill/rfkill.c |   11 ++++++++++-
+ 1 files changed, 10 insertions(+), 1 deletions(-)
+
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index f95081a..3edc585 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -39,6 +39,11 @@ MODULE_LICENSE("GPL");
+ static LIST_HEAD(rfkill_list);	/* list of registered rf switches */
+ static DEFINE_MUTEX(rfkill_mutex);
+ 
++static unsigned int rfkill_default_state = RFKILL_STATE_ON;
++module_param_named(default_state, rfkill_default_state, uint, 0444);
++MODULE_PARM_DESC(default_state,
++		 "Default initial state for all radio types, 0 = radio off");
++
+ static enum rfkill_state rfkill_states[RFKILL_TYPE_MAX];
+ 
+ 
+@@ -436,8 +441,12 @@ static int __init rfkill_init(void)
+ 	int error;
+ 	int i;
+ 
++	if (rfkill_default_state != RFKILL_STATE_OFF &&
++	    rfkill_default_state != RFKILL_STATE_ON)
++		return -EINVAL;
++
+ 	for (i = 0; i < ARRAY_SIZE(rfkill_states); i++)
+-		rfkill_states[i] = RFKILL_STATE_ON;
++		rfkill_states[i] = rfkill_default_state;
+ 
+ 	error = class_register(&rfkill_class);
+ 	if (error) {
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.5.5.4
+
