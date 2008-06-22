@@ -1,116 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mbox2.netikka.net ([213.250.81.203]:45244 "EHLO
-	mbox2.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753970AbYFESYf (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:35431 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752722AbYFVPi5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2008 14:24:35 -0400
-Message-ID: <4848289D.1080205@mandriva.org> (sfid-20080605_202443_956643_531FC349)
-Date: Thu, 05 Jun 2008 20:55:41 +0300
-From: Thomas Backlund <tmb@mandriva.org>
-MIME-Version: 1.0
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-CC: linux-wireless@vger.kernel.org
-Subject: iwl4965 oops in 2.6.25-rc5 x86_64
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sun, 22 Jun 2008 11:38:57 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Thomas Renninger <trenn@suse.de>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Dmitry Torokhov <dtor@mail.ru>
+Subject: [PATCH 01/12] rfkill: clarify meaning of rfkill states
+Date: Sun, 22 Jun 2008 12:38:37 -0300
+Message-Id: <1214149128-5913-2-git-send-email-hmh@hmh.eng.br> (sfid-20080622_173905_055204_8280E936)
+In-Reply-To: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
+References: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-(please cc me on replies as I'm not subscribed)
+rfkill really should have been named rfswitch.  As it is, one can get
+confused whether RFKILL_STATE_ON means the KILL switch is on (and
+therefore, the radio is being *blocked* from operating), or whether it
+means the RADIO rf output is on.
 
-booting a 2.6.26-rc5 x86_64 kernel on a Acer TravelMate 6720G laptop 
-with a Intel a/b/g/n wireless gets me this oops in syslog...
+Clearly state that RFKILL_STATE_ON means the radio is *unblocked* from
+operating (i.e. there is no rf killing going on).
 
-> Jun  5 19:55:05 5720g kernel: firmware: requesting iwlwifi-4965-1.ucode
-> Jun  5 19:55:05 5720g kernel: Registered led device: iwl-phy0:radio
-> Jun  5 19:55:05 5720g kernel: Registered led device: iwl-phy0:assoc
-> Jun  5 19:55:05 5720g kernel: Registered led device: iwl-phy0:RX
-> Jun  5 19:55:05 5720g kernel: Registered led device: iwl-phy0:TX
-> Jun  5 19:55:05 5720g kernel: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> Jun  5 19:55:06 5720g kernel: BUG: unable to handle kernel NULL pointer dereference at 0000000000000000
-> Jun  5 19:55:06 5720g kernel: IP: [<ffffffffa020b64d>] :iwl4965:iwl4965_enqueue_hcmd+0x12a/0x20f
-> Jun  5 19:55:06 5720g kernel: PGD 0 
-> Jun  5 19:55:06 5720g kernel: Oops: 0000 [1] SMP 
-> Jun  5 19:55:06 5720g kernel: CPU 1 
-> Jun  5 19:55:06 5720g kernel: Modules linked in: af_packet kvm_intel kvm kqemu snd_seq_dummy snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss snd_mixer_oss ipv6 xt_tcpudp iptable_filter ip_tables x_tables binfmt_misc loop dm_mod cpufreq_ondemand cpufreq_conservative cpufreq_powersave acpi_cpufreq freq_table tifm_sd tifm_7xx1 tifm_core nvram pcmcia snd_hda_intel ohci1394 mmc_block ieee1394 i2c_i801 arc4 ecb sdhci crypto_blkcipher firewire_ohci snd_pcsp battery firewire_core acer_wmi ac snd_pcm container mmc_core video output crc_itu_t i2c_core iTCO_wdt thermal snd_timer iTCO_vendor_support snd joydev iwl4965 wmi processor button yenta_socket rsrc_nonstatic pcmcia_core firmware_class soundcore snd_page_alloc sr_mod sg serio_raw evdev rtc_cmos nsc_ircc rtc_core rtc_lib intel_agp iwlcore tg3 rfkill mac80211 led_class cdrom irda crc_ccitt cfg80211 ide_generic piix ide_core ata_piix ahci libata dock sd_mod scsi_mod ext3 jbd uhci_hcd ohci_hcd ehci_hcd usbcore [las
-t unloaded: nf_conntrack]
-> Jun  5 19:55:06 5720g kernel: Pid: 10, comm: events/1 Not tainted 2.6.26-0.rc5.1mdvsmp #1
-> Jun  5 19:55:06 5720g kernel: RIP: 0010:[<ffffffffa020b64d>]  [<ffffffffa020b64d>] :iwl4965:iwl4965_enqueue_hcmd+0x12a/0x20f
-> Jun  5 19:55:06 5720g kernel: RSP: 0018:ffff81013fb15b90  EFLAGS: 00010086
-> Jun  5 19:55:06 5720g kernel: RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000064
-> Jun  5 19:55:06 5720g kernel: RDX: 0000000000000022 RSI: 0000000000000000 RDI: ffff8100bf84c318
-> Jun  5 19:55:06 5720g kernel: RBP: ffff81013fb15be0 R08: ffff8100bf941100 R09: 0000000000000300
-> Jun  5 19:55:06 5720g kernel: R10: ffff81013fb15a60 R11: ffff81013fb10a78 R12: ffff8100bf84c300
-> Jun  5 19:55:06 5720g kernel: R13: ffff81013bc81f20 R14: ffff81013fb15d00 R15: 0000000000000002
-> Jun  5 19:55:06 5720g kernel: FS:  0000000000000000(0000) GS:ffff81013fab8ac0(0000) knlGS:0000000000000000
-> Jun  5 19:55:06 5720g kernel: CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-> Jun  5 19:55:06 5720g kernel: CR2: 0000000000000000 CR3: 0000000000201000 CR4: 00000000000026e0
-> Jun  5 19:55:06 5720g kernel: DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> Jun  5 19:55:06 5720g kernel: DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> Jun  5 19:55:06 5720g kernel: Process events/1 (pid: 10, threadinfo ffff81013fb14000, task ffff81013fb102c0)
-> Jun  5 19:55:06 5720g kernel: Stack:  ffffffff806f9de8 ffffffff8075c1e0 ffff81013bc82968 006881013fb10a10
-> Jun  5 19:55:06 5720g kernel:  0000000000000006 ffff81013d1a5d00 ffff81013fb15d00 ffff81013bc81f20
-> Jun  5 19:55:06 5720g kernel:  0000000000000246 ffff81013d1a5dac ffff81013fb15c60 ffffffffa018ee37
-> Jun  5 19:55:06 5720g kernel: Call Trace:
-> Jun  5 19:55:06 5720g kernel:  [<ffffffffa018ee37>] :iwlcore:iwl_send_cmd_sync+0x94/0x257
-> Jun  5 19:55:06 5720g kernel:  [<ffffffff80257ed5>] ? __lock_acquire+0xbee/0xd5a
-> Jun  5 19:55:06 5720g kernel:  [<ffffffffa018f04b>] :iwlcore:iwl_send_cmd+0x16/0x1b
-> Jun  5 19:55:06 5720g kernel:  [<ffffffffa0218c41>] :iwl4965:iwl_send_static_wepkey_cmd+0xcb/0xd5
-> Jun  5 19:55:06 5720g kernel:  [<ffffffffa0218cef>] :iwl4965:iwl_set_default_wep_key+0xa4/0xbe
-> Jun  5 19:55:06 5720g kernel:  [<ffffffffa020ae00>] :iwl4965:iwl4965_mac_set_key+0xf1/0x137
-> Jun  5 19:55:06 5720g kernel:  [<ffffffffa01543f4>] :mac80211:__ieee80211_key_todo+0x106/0x200
-> Jun  5 19:55:06 5720g kernel:  [<ffffffffa0154594>] :mac80211:ieee80211_key_todo+0x17/0x25
-> Jun  5 19:55:06 5720g kernel:  [<ffffffffa01545ab>] :mac80211:key_todo+0x9/0xb
-> Jun  5 19:55:06 5720g kernel:  [<ffffffff80247104>] run_workqueue+0xfc/0x203
-> Jun  5 19:55:06 5720g kernel:  [<ffffffffa01545a2>] ? :mac80211:key_todo+0x0/0xb
-> Jun  5 19:55:06 5720g kernel:  [<ffffffff802472eb>] worker_thread+0xe0/0xf1
-> Jun  5 19:55:06 5720g kernel:  [<ffffffff8024acac>] ? autoremove_wake_function+0x0/0x38
-> Jun  5 19:55:06 5720g kernel:  [<ffffffff8024720b>] ? worker_thread+0x0/0xf1
-> Jun  5 19:55:06 5720g kernel:  [<ffffffff8024a97b>] kthread+0x49/0x76
-> Jun  5 19:55:06 5720g kernel:  [<ffffffff8020d248>] child_rip+0xa/0x12
-> Jun  5 19:55:06 5720g kernel:  [<ffffffff8020c7dc>] ? restore_args+0x0/0x30
-> Jun  5 19:55:06 5720g kernel:  [<ffffffff8024a932>] ? kthread+0x0/0x76
-> Jun  5 19:55:06 5720g kernel:  [<ffffffff8020d23e>] ? child_rip+0x0/0x12
-> Jun  5 19:55:06 5720g kernel: 
-> Jun  5 19:55:06 5720g kernel: 
-> Jun  5 19:55:06 5720g kernel: Code: 69 c8 80 01 00 00 41 8a 06 4d 89 cc 4d 03 a5 c0 44 00 00 41 88 44 24 14 4c 89 e7 f3 a5 49 8d 7c 24 18 41 0f b7 4e 02 49 8b 76 18 <f3> a4 41 c6 44 24 15 00 41 0f b6 95 94 44 00 00 89 d0 80 cc 04 
-> Jun  5 19:55:06 5720g kernel: RIP  [<ffffffffa020b64d>] :iwl4965:iwl4965_enqueue_hcmd+0x12a/0x20f
-> Jun  5 19:55:06 5720g kernel:  RSP <ffff81013fb15b90>
-> Jun  5 19:55:06 5720g kernel: CR2: 0000000000000000
-> Jun  5 19:55:06 5720g kernel: ---[ end trace c03f2ff7573a0188 ]---
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Dmitry Torokhov <dtor@mail.ru>
+---
+ Documentation/rfkill.txt |    7 +++++++
+ include/linux/rfkill.h   |    6 +++---
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-
-and shortly after the system locks up hard...
-
-Config is here:
-http://svn.mandriva.com/cgi-bin/viewvc.cgi/packages/cooker/kernel-linus/current/SOURCES/x86_64-smp.config?revision=215259&view=markup
-
-lspci -vvv about the card:
-> 04:00.0 Network controller: Intel Corporation PRO/Wireless 4965 AG or AGN Network Connection (rev 61)
->         Subsystem: Intel Corporation Device 1101                                                     
->         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
->         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR+ <PERR- INTx- 
->         Latency: 0, Cache Line Size: 64 bytes                                                                
->         Interrupt: pin A routed to IRQ 11                                                                    
->         Region 0: Memory at f8000000 (64-bit, non-prefetchable) [size=8K]                                    
->         Capabilities: <access denied>                                                                        
->         Kernel modules: iwl4965                                                                              
-
-So far I have tested 2.6.26-rc3,rc4,rc5 and all ends up with this oops
-
-If I remove the wlan0 config the kernel will boot, but as soon as I try 
-to configure it, I get a lockup...
-
-If it makes any difference, I'm trying to connect to a WPA2-personal 
-encrypted wifi on a Dlink DIR-655 Draft-N router...
-
-The last kernel that I used that works was a 2.6.24.7 series kernel
-(I haven't yet tried to see if the 2.6.25.x kernel works)
-
-I thought of posting it here before trying to dig into it any deeper...
-
-Any thoughts?
-
---
-Thomas
+diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
+index a83ff23..ec75d6d 100644
+--- a/Documentation/rfkill.txt
++++ b/Documentation/rfkill.txt
+@@ -8,6 +8,13 @@ rfkill - RF switch subsystem support
+ ===============================================================================
+ 1: Implementation details
+ 
++The rfkill switch subsystem exists to add a generic interface to circuitry that
++can enable or disable the RF output of a radio *transmitter* of any type.
++
++When a rfkill switch is in the RFKILL_STATE_ON, the radio transmitter is
++*enabled*.  When the rfkill switch is in the RFKILL_STATE_OFF, the radio
++transmitter is *disabled*.
++
+ The rfkill switch subsystem offers support for keys often found on laptops
+ to enable wireless devices like WiFi and Bluetooth.
+ 
+diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+index e3ab21d..ca89ae1 100644
+--- a/include/linux/rfkill.h
++++ b/include/linux/rfkill.h
+@@ -44,8 +44,8 @@ enum rfkill_type {
+ };
+ 
+ enum rfkill_state {
+-	RFKILL_STATE_OFF	= 0,
+-	RFKILL_STATE_ON		= 1,
++	RFKILL_STATE_OFF	= 0,	/* Radio output blocked */
++	RFKILL_STATE_ON		= 1,	/* Radio output active */
+ };
+ 
+ /**
+@@ -53,7 +53,7 @@ enum rfkill_state {
+  * @name: Name of the switch.
+  * @type: Radio type which the button controls, the value stored
+  *	here should be a value from enum rfkill_type.
+- * @state: State of the switch (on/off).
++ * @state: State of the switch, "ON" means radio can operate.
+  * @user_claim_unsupported: Whether the hardware supports exclusive
+  *	RF-kill control by userspace. Set this before registering.
+  * @user_claim: Set when the switch is controlled exlusively by userspace.
+-- 
+1.5.5.4
 
