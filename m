@@ -1,82 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:8439 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752841AbYFLBuE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 21:50:04 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 27/29] iwlwifi: fix software rf_kill problem when interface is down
-Date: Thu, 12 Jun 2008 09:47:17 +0800
-Message-Id: <1213235239-2954-28-git-send-email-yi.zhu@intel.com> (sfid-20080612_041914_035911_DAC1F742)
-In-Reply-To: <1213235239-2954-27-git-send-email-yi.zhu@intel.com>
-References: <1213235239-2954-1-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-2-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-3-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-4-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-5-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-6-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-7-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-8-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-9-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-10-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-11-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-12-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-13-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-14-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-15-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-16-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-17-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-18-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-19-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-20-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-21-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-22-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-23-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-24-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-25-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-26-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-27-git-send-email-yi.zhu@intel.com>
+Received: from smtp.nokia.com ([192.100.122.233]:58925 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755902AbYFWQN7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jun 2008 12:13:59 -0400
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: Bernhard Reiter <bernhard@intevation.de>,
+	linux-wireless@vger.kernel.org, Dave <kilroyd@googlemail.com>
+Subject: Re: 802.11 pccard, Agere 0x0156,0x0003?
+References: <200806181715.20516.bernhard@intevation.de>
+	<200806191023.39851.bernhard@intevation.de> <485A9A00.70700@gmail.com>
+	<200806200935.55882.bernhard@intevation.de>
+	<1213947479.8967.134.camel@johannes.berg>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Mon, 23 Jun 2008 19:12:40 +0300
+In-Reply-To: <1213947479.8967.134.camel@johannes.berg> (ext Johannes Berg's message of "Fri\, 20 Jun 2008 09\:37\:58 +0200")
+Message-ID: <878wwwi0zr.fsf@nokia.com> (sfid-20080623_181408_490602_0097F16E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch fixes the problem that software rf_kill messes up the
-card status when it is disabled if the interface is down.
+"Johannes Berg" <johannes@sipsolutions.net> writes:
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+>> > Both versions can be found at <http://www.xs4all.nl/~pptp/agere>, which
+>> > also has patched versions for 2.6
+>> 
+>> Cool!
+>> Just to make sure: This is a driver that - despite being unmaintained - should 
+>> work? So could try it with 2.6.17, 2.6.24 and even newer?
+>
+> Just FYI, there are patches in the queue that will most likely make all
+> (out-of-tree) drivers using wireless extensions break, so even if it
+> works now it will probably not with 2.6.27.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 72279e0..d0084bc 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2875,7 +2875,8 @@ static void iwl3945_radio_kill_sw(struct iwl3945_priv *priv, int disable_radio)
- 		return;
- 	}
- 
--	queue_work(priv->workqueue, &priv->restart);
-+	if (priv->is_open)
-+		queue_work(priv->workqueue, &priv->restart);
- 	return;
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 8f1ab23..5aec7d5 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -970,7 +970,8 @@ int iwl4965_radio_kill_sw(struct iwl_priv *priv, int disable_radio)
- 		return 0;
- 	}
- 
--	queue_work(priv->workqueue, &priv->restart);
-+	if (priv->is_open)
-+		queue_work(priv->workqueue, &priv->restart);
- 	return 1;
- }
- 
+What is breaking out-of-tree drivers in 2.6.27? David Miller's compat
+WEXT stuff, or what?
+
+Sorry, but it seems that I completely missed this. I should read
+mailing lists more carefully.
+
 -- 
-1.5.3.6
-
+Kalle Valo
