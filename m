@@ -1,85 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:35431 "EHLO
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:33204 "EHLO
 	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752722AbYFVPi5 (ORCPT
+	by vger.kernel.org with ESMTP id S1754887AbYFWUXS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jun 2008 11:38:57 -0400
+	Mon, 23 Jun 2008 16:23:18 -0400
 From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
 To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
 	Matthew Garrett <mjg@redhat.com>,
 	Dan Williams <dcbw@redhat.com>,
 	Thomas Renninger <trenn@suse.de>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Dmitry Torokhov <dtor@mail.ru>
-Subject: [PATCH 01/12] rfkill: clarify meaning of rfkill states
-Date: Sun, 22 Jun 2008 12:38:37 -0300
-Message-Id: <1214149128-5913-2-git-send-email-hmh@hmh.eng.br> (sfid-20080622_173905_055204_8280E936)
-In-Reply-To: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
-References: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
+	Fabien Crespel <fabien@crespel.net>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: [PATCH 03/13] rfkill: handle SW_RFKILL_ALL events
+Date: Mon, 23 Jun 2008 17:22:58 -0300
+Message-Id: <1214252588-30723-4-git-send-email-hmh@hmh.eng.br> (sfid-20080623_222327_094960_60FA017B)
+In-Reply-To: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
+References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rfkill really should have been named rfswitch.  As it is, one can get
-confused whether RFKILL_STATE_ON means the KILL switch is on (and
-therefore, the radio is being *blocked* from operating), or whether it
-means the RADIO rf output is on.
+Teach rfkill-input how to handle SW_RFKILL_ALL events (new name for the
+SW_RADIO event).
 
-Clearly state that RFKILL_STATE_ON means the radio is *unblocked* from
-operating (i.e. there is no rf killing going on).
+SW_RFKILL_ALL is an absolute enable-or-disable command that is tied to all
+radios in a system.
 
 Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
 Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: John W. Linville <linville@tuxdriver.com>
 Cc: Dmitry Torokhov <dtor@mail.ru>
 ---
- Documentation/rfkill.txt |    7 +++++++
- include/linux/rfkill.h   |    6 +++---
- 2 files changed, 10 insertions(+), 3 deletions(-)
+ net/rfkill/rfkill-input.c |   45 +++++++++++++++++++++++++++++++++++++++++++--
+ 1 files changed, 43 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
-index a83ff23..ec75d6d 100644
---- a/Documentation/rfkill.txt
-+++ b/Documentation/rfkill.txt
-@@ -8,6 +8,13 @@ rfkill - RF switch subsystem support
- ===============================================================================
- 1: Implementation details
+diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
+index e4b051d..9d6c925 100644
+--- a/net/rfkill/rfkill-input.c
++++ b/net/rfkill/rfkill-input.c
+@@ -55,6 +55,22 @@ static void rfkill_task_handler(struct work_struct *work)
+ 	mutex_unlock(&task->mutex);
+ }
  
-+The rfkill switch subsystem exists to add a generic interface to circuitry that
-+can enable or disable the RF output of a radio *transmitter* of any type.
++static void rfkill_schedule_set(struct rfkill_task *task,
++				enum rfkill_state desired_state)
++{
++	unsigned long flags;
 +
-+When a rfkill switch is in the RFKILL_STATE_ON, the radio transmitter is
-+*enabled*.  When the rfkill switch is in the RFKILL_STATE_OFF, the radio
-+transmitter is *disabled*.
++	spin_lock_irqsave(&task->lock, flags);
 +
- The rfkill switch subsystem offers support for keys often found on laptops
- to enable wireless devices like WiFi and Bluetooth.
++	if (time_after(jiffies, task->last + msecs_to_jiffies(200))) {
++		task->desired_state = desired_state;
++		task->last = jiffies;
++		schedule_work(&task->work);
++	}
++
++	spin_unlock_irqrestore(&task->lock, flags);
++}
++
+ static void rfkill_schedule_toggle(struct rfkill_task *task)
+ {
+ 	unsigned long flags;
+@@ -87,9 +103,9 @@ static DEFINE_RFKILL_TASK(rfkill_uwb, RFKILL_TYPE_UWB);
+ static DEFINE_RFKILL_TASK(rfkill_wimax, RFKILL_TYPE_WIMAX);
  
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index e3ab21d..ca89ae1 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -44,8 +44,8 @@ enum rfkill_type {
+ static void rfkill_event(struct input_handle *handle, unsigned int type,
+-			unsigned int code, int down)
++			unsigned int code, int data)
+ {
+-	if (type == EV_KEY && down == 1) {
++	if (type == EV_KEY && data == 1) {
+ 		switch (code) {
+ 		case KEY_WLAN:
+ 			rfkill_schedule_toggle(&rfkill_wlan);
+@@ -106,6 +122,26 @@ static void rfkill_event(struct input_handle *handle, unsigned int type,
+ 		default:
+ 			break;
+ 		}
++	} else if (type == EV_SW) {
++		switch (code) {
++		case SW_RFKILL_ALL:
++			/* EVERY radio type. data != 0 means radios ON */
++			rfkill_schedule_set(&rfkill_wimax,
++					    (data)? RFKILL_STATE_ON:
++						    RFKILL_STATE_OFF);
++			rfkill_schedule_set(&rfkill_uwb,
++					    (data)? RFKILL_STATE_ON:
++						    RFKILL_STATE_OFF);
++			rfkill_schedule_set(&rfkill_bt,
++					    (data)? RFKILL_STATE_ON:
++						    RFKILL_STATE_OFF);
++			rfkill_schedule_set(&rfkill_wlan,
++					    (data)? RFKILL_STATE_ON:
++						    RFKILL_STATE_OFF);
++			break;
++		default:
++			break;
++		}
+ 	}
+ }
+ 
+@@ -168,6 +204,11 @@ static const struct input_device_id rfkill_ids[] = {
+ 		.evbit = { BIT_MASK(EV_KEY) },
+ 		.keybit = { [BIT_WORD(KEY_WIMAX)] = BIT_MASK(KEY_WIMAX) },
+ 	},
++	{
++		.flags = INPUT_DEVICE_ID_MATCH_EVBIT | INPUT_DEVICE_ID_MATCH_SWBIT,
++		.evbit = { BIT(EV_SW) },
++		.swbit = { [BIT_WORD(SW_RFKILL_ALL)] = BIT_MASK(SW_RFKILL_ALL) },
++	},
+ 	{ }
  };
  
- enum rfkill_state {
--	RFKILL_STATE_OFF	= 0,
--	RFKILL_STATE_ON		= 1,
-+	RFKILL_STATE_OFF	= 0,	/* Radio output blocked */
-+	RFKILL_STATE_ON		= 1,	/* Radio output active */
- };
- 
- /**
-@@ -53,7 +53,7 @@ enum rfkill_state {
-  * @name: Name of the switch.
-  * @type: Radio type which the button controls, the value stored
-  *	here should be a value from enum rfkill_type.
-- * @state: State of the switch (on/off).
-+ * @state: State of the switch, "ON" means radio can operate.
-  * @user_claim_unsupported: Whether the hardware supports exclusive
-  *	RF-kill control by userspace. Set this before registering.
-  * @user_claim: Set when the switch is controlled exlusively by userspace.
 -- 
 1.5.5.4
 
