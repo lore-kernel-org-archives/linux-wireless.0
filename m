@@ -1,89 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:53780 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762169AbYFWUXT (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.180]:37226 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752217AbYFWKCg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2008 16:23:19 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Thomas Renninger <trenn@suse.de>,
-	Fabien Crespel <fabien@crespel.net>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: [PATCH 09/13] rfkill: add type string helper
-Date: Mon, 23 Jun 2008 17:23:04 -0300
-Message-Id: <1214252588-30723-10-git-send-email-hmh@hmh.eng.br> (sfid-20080623_222328_559893_5488C6C6)
-In-Reply-To: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
-References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
+	Mon, 23 Jun 2008 06:02:36 -0400
+Received: by py-out-1112.google.com with SMTP id p76so915168pyb.10
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2008 03:02:33 -0700 (PDT)
+Message-ID: <1ba2fa240806230302x11c0ed0dn6210c8fe745fdf6d@mail.gmail.com> (sfid-20080623_120240_113509_E834D52D)
+Date: Mon, 23 Jun 2008 13:02:27 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
+Subject: Re: Rfkill on ifconfig up.
+Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>,
+	"Dan Williams" <dcbw@redhat.com>,
+	"Abbas, Mohamed" <mohamed.abbas@intel.com>
+In-Reply-To: <20080623050514.GA9926@khazad-dum.debian.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1ba2fa240806221609p1b0cd641g2304d0812b61ecb3@mail.gmail.com>
+	 <20080623050514.GA9926@khazad-dum.debian.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We will need access to the rfkill switch type in string format for more
-than just sysfs.  Therefore, move it to a generic helper.
+On Mon, Jun 23, 2008 at 8:05 AM, Henrique de Moraes Holschuh
+<hmh@hmh.eng.br> wrote:
+> On Mon, 23 Jun 2008, Tomas Winkler wrote:
+>> Little RF KILL design question from user space perspective.
+>> What should be desired return value of ifconfig up when HW rfkill is
+>> on (radio is off).
+>
+> This isn't really about rfkill, its design doesn't call for any particular
+> behaviour.  IMHO we should go with the principle of least suprise, and also
+> more convenience for the user.
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- net/rfkill/rfkill.c |   33 +++++++++++++++------------------
- 1 files changed, 15 insertions(+), 18 deletions(-)
+No, this is about ifconfig up
 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index a561e35..3c77734 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -224,34 +224,31 @@ static ssize_t rfkill_name_show(struct device *dev,
- 	return sprintf(buf, "%s\n", rfkill->name);
- }
- 
--static ssize_t rfkill_type_show(struct device *dev,
--				struct device_attribute *attr,
--				char *buf)
-+static const char *rfkill_get_type_str(enum rfkill_type type)
- {
--	struct rfkill *rfkill = to_rfkill(dev);
--	const char *type;
--
--	switch (rfkill->type) {
-+	switch (type) {
- 	case RFKILL_TYPE_WLAN:
--		type = "wlan";
--		break;
-+		return "wlan";
- 	case RFKILL_TYPE_BLUETOOTH:
--		type = "bluetooth";
--		break;
-+		return "bluetooth";
- 	case RFKILL_TYPE_UWB:
--		type = "ultrawideband";
--		break;
-+		return "ultrawideband";
- 	case RFKILL_TYPE_WIMAX:
--		type = "wimax";
--		break;
-+		return "wimax";
- 	case RFKILL_TYPE_WWAN:
--		type = "wwan";
--		break;
-+		return "wwan";
- 	default:
- 		BUG();
- 	}
-+}
-+
-+static ssize_t rfkill_type_show(struct device *dev,
-+				struct device_attribute *attr,
-+				char *buf)
-+{
-+	struct rfkill *rfkill = to_rfkill(dev);
- 
--	return sprintf(buf, "%s\n", type);
-+	return sprintf(buf, "%s\n", rfkill_get_type_str(rfkill->type));
- }
- 
- static ssize_t rfkill_state_show(struct device *dev,
--- 
-1.5.5.4
+> In the end, it will depend on the capabilities of the hardware, I suppose.
+> Assuming the hardware CAN bring its interface up without going bonkers
+> because the transmitter is not transmitting anything, that's exactly what it
+> should do IMO.
+>
+> What it must never do is to unblock the transmiter because of a ifconfig up
+> :-)
+>
+>> rfkill on (radio off)
+>> ifconfig wlan0 up
+>> rfkill off (radio on)
+>>
+>> Will it be ok for these sequence to require additional ifconfig up to
+>> make driver to work, providing the first ifconfig up failed?
+>
+> It would be nice if it didn't fail the first ifconfig, and therefore needed
+> nothing special to work other than a rfkill unblock.
 
+Everything is doable just 'would be nice'  is not good reason enough :)
+Thanks anyway
+Tomas
