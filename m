@@ -1,49 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:47293 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983AbYFLOTW (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:38882 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753990AbYFWNEI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 10:19:22 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2500089fgg.17
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 07:19:18 -0700 (PDT)
-Message-ID: <48513063.5020703@gmail.com> (sfid-20080612_161929_042244_CF945B52)
-Date: Thu, 12 Jun 2008 17:19:15 +0300
-From: Maxim Levitsky <maximlevitsky@gmail.com>
+	Mon, 23 Jun 2008 09:04:08 -0400
+Date: Mon, 23 Jun 2008 10:04:01 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>,
+	"Abbas, Mohamed" <mohamed.abbas@intel.com>
+Subject: Re: Rfkill on ifconfig up.
+Message-ID: <20080623130401.GA3416@khazad-dum.debian.net> (sfid-20080623_150414_580797_2BA6507E)
+References: <1ba2fa240806221609p1b0cd641g2304d0812b61ecb3@mail.gmail.com> <20080623050514.GA9926@khazad-dum.debian.net> <1ba2fa240806230302x11c0ed0dn6210c8fe745fdf6d@mail.gmail.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with disable_hw_scan=1
-References: <484FEA26.1040305@gmail.com> <1213241315.7814.696.camel@debian.sh.intel.com> <20080612135936.GA5031@tuxdriver.com>
-In-Reply-To: <20080612135936.GA5031@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240806230302x11c0ed0dn6210c8fe745fdf6d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Thu, Jun 12, 2008 at 11:28:35AM +0800, Zhu Yi wrote:
+On Mon, 23 Jun 2008, Tomas Winkler wrote:
+> On Mon, Jun 23, 2008 at 8:05 AM, Henrique de Moraes Holschuh
+> <hmh@hmh.eng.br> wrote:
+> > On Mon, 23 Jun 2008, Tomas Winkler wrote:
+> >> Little RF KILL design question from user space perspective.
+> >> What should be desired return value of ifconfig up when HW rfkill is
+> >> on (radio is off).
+> >
+> > This isn't really about rfkill, its design doesn't call for any particular
+> > behaviour.  IMHO we should go with the principle of least suprise, and also
+> > more convenience for the user.
 > 
->> I don't understand why "disable_hw_scan=1" works for you. Can you also
->> attach the dmesg for it?
+> No, this is about ifconfig up
 > 
-> How does the hardware scan differ from what mac80211 does when
-> scanning?  I still see a lot of mysterious iwlwifi (especially iwl3945)
-> problems in Fedora that seem to disappear with disable_hw_scan=1.
+> > In the end, it will depend on the capabilities of the hardware, I suppose.
+> > Assuming the hardware CAN bring its interface up without going bonkers
+> > because the transmitter is not transmitting anything, that's exactly what it
+> > should do IMO.
+> >
+> > What it must never do is to unblock the transmiter because of a ifconfig up
+> > :-)
+> >
+> >> rfkill on (radio off)
+> >> ifconfig wlan0 up
+> >> rfkill off (radio on)
+> >>
+> >> Will it be ok for these sequence to require additional ifconfig up to
+> >> make driver to work, providing the first ifconfig up failed?
+> >
+> > It would be nice if it didn't fail the first ifconfig, and therefore needed
+> > nothing special to work other than a rfkill unblock.
 > 
-> Honestly I'm tempted to change it to "enable_hw_scan" instead...
-> 
-> John
+> Everything is doable just 'would be nice'  is not good reason enough :)
 
-Exactly.
+Here's another one, then.  Most current WiFi cards do the "would be
+nice" above, so we can just mandate it as the preferred way to go about
+it.
 
-Although hardware scanning is better, until it is fixed it
-is better to disable it, so at least users will get working wireless out
-of box.
+Really, this IS about the hardware and driver capabilities.  rfkill is
+not supposed to bring interfaces down, if that's another way to look at
+your question.  But if it has to, it *is* entitled to do it.  In fact,
+if it has to in order to shutdown a transmitter, it is entitled to
+hotunplug and cut the power feed to the wireless device.
 
-Best regards,
-	Maxim levitsky
+WiFi usually doesn't down interfaces.  At least on ThinkPads, Bluetooth
+and WWAN do hotunplugging (which not only downs the interface, it
+deletes the interface altogether), and I hear that is a common approach
+for Bluetooth.
 
-PS: intel devs, please look at that, it looks like your firmware has a 
-bug, so please try to fix it.
-
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
