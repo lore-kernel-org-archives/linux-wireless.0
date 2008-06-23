@@ -1,61 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.225]:2085 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755303AbYFJO3S (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:42970 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1762175AbYFWUXV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 10:29:18 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so919730rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2008 07:29:18 -0700 (PDT)
-Message-ID: <19f34abd0806100729h7a060012h91e81248c9c7cdca@mail.gmail.com> (sfid-20080610_162928_123152_B57CA136)
-Date: Tue, 10 Jun 2008 16:29:17 +0200
-From: "Vegard Nossum" <vegard.nossum@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: BUG: NULL pointer dereference at 00000000 -- IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
-Cc: "Miles Lane" <miles.lane@gmail.com>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200806101623.34082.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <a44ae5cd0806100709rf4602f2x587631852502c0b5@mail.gmail.com>
-	 <200806101623.34082.mb@bu3sch.de>
+	Mon, 23 Jun 2008 16:23:21 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Thomas Renninger <trenn@suse.de>,
+	Fabien Crespel <fabien@crespel.net>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: [PATCH 05/13] rfkill: add read-write rfkill switch support
+Date: Mon, 23 Jun 2008 17:23:00 -0300
+Message-Id: <1214252588-30723-6-git-send-email-hmh@hmh.eng.br> (sfid-20080623_222331_171713_BF23C6AB)
+In-Reply-To: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
+References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 10, 2008 at 4:23 PM, Michael Buesch <mb@bu3sch.de> wrote:
-> On Tuesday 10 June 2008 16:09:37 Miles Lane wrote:
->> BUG: unable to handle kernel NULL pointer dereference at 00000000
->> IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
->
->
-> It seems to crash at
->  60 extern const struct dma_mapping_ops *dma_ops;
->  61
->  62 static inline int dma_mapping_error(dma_addr_t dma_addr)
->  63 {
->  64         if (dma_ops->mapping_error)
->  65                 return dma_ops->mapping_error(dma_addr);
->  66
->  67         return (dma_addr == bad_dma_address);
->  68 }
+Currently, rfkill support for read/write rfkill switches is hacked through
+a round-trip over the input layer and rfkill-input to let a driver sync
+rfkill->state to hardware changes.
 
-No, this is wrong.
+This is buggy and sub-optimal.  It causes real problems.  It is best to
+think of the rfkill class as supporting only write-only switches at the
+moment.
 
-/* Check if a DMA mapping address is invalid. */
-static bool b43_dma_mapping_error(struct b43_dmaring *ring,
-                                  dma_addr_t addr,
-                                  size_t buffersize, bool dma_to_device)
-{
-        if (unlikely(dma_mapping_error(ring->dev->dev->dma_dev, addr)))
+In order to implement the read/write functionality properly:
 
-It crashes on this line ---^
+Add a get_state() hook that is called by the class every time it needs to
+fetch the current state of the switch.  Add a call to this hook every time
+the *current* state of the radio plays a role in a decision.
 
+Also add a force_state() method that can be used to forcefully syncronize
+the class' idea of the current state of the switch.  This allows for a
+faster implementation of the read/write functionality, as a driver which
+get events on switch changes can avoid the need for a get_state() hook.
 
-Vegard
+If the get_state() hook is left as NULL, current behaviour is maintained,
+so this change is fully backwards compatible with the current rfkill
+drivers.
 
+For hardware that issues events when the rfkill state changes, leave
+get_state() NULL in the rfkill struct, set the initial state properly
+before registering with the rfkill class, and use the force_state() method
+in the driver to keep the rfkill interface up-to-date.
+
+get_state() can be called by the class from atomic context. It must not
+sleep.
+
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Dmitry Torokhov <dtor@mail.ru>
+---
+ include/linux/rfkill.h |    5 ++++
+ net/rfkill/rfkill.c    |   53 +++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 55 insertions(+), 3 deletions(-)
+
+diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+index ca89ae1..844e961 100644
+--- a/include/linux/rfkill.h
++++ b/include/linux/rfkill.h
+@@ -61,6 +61,8 @@ enum rfkill_state {
+  * @data: Pointer to the RF button drivers private data which will be
+  *	passed along when toggling radio state.
+  * @toggle_radio(): Mandatory handler to control state of the radio.
++ * @get_state(): handler to read current radio state from hardware,
++ *      may be called from atomic context, should return 0 on success.
+  * @led_trigger: A LED trigger for this button's LED.
+  * @dev: Device structure integrating the switch into device tree.
+  * @node: Used to place switch into list of all switches known to the
+@@ -80,6 +82,7 @@ struct rfkill {
+ 
+ 	void *data;
+ 	int (*toggle_radio)(void *data, enum rfkill_state state);
++	int (*get_state)(void *data, enum rfkill_state *state);
+ 
+ #ifdef CONFIG_RFKILL_LEDS
+ 	struct led_trigger led_trigger;
+@@ -95,6 +98,8 @@ void rfkill_free(struct rfkill *rfkill);
+ int rfkill_register(struct rfkill *rfkill);
+ void rfkill_unregister(struct rfkill *rfkill);
+ 
++int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state);
++
+ /**
+  * rfkill_get_led_name - Get the LED trigger name for the button's LED.
+  * This function might return a NULL pointer if registering of the
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index 3edc585..4ae4486 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -62,19 +62,39 @@ static void rfkill_led_trigger(struct rfkill *rfkill,
+ #endif /* CONFIG_RFKILL_LEDS */
+ }
+ 
++static void update_rfkill_state(struct rfkill *rfkill)
++{
++	enum rfkill_state newstate;
++
++	if (rfkill->get_state) {
++		mutex_lock(&rfkill->mutex);
++		if (!rfkill->get_state(rfkill->data, &newstate))
++			rfkill->state = newstate;
++		mutex_unlock(&rfkill->mutex);
++	}
++}
++
+ static int rfkill_toggle_radio(struct rfkill *rfkill,
+ 				enum rfkill_state state)
+ {
+ 	int retval = 0;
++	enum rfkill_state oldstate, newstate;
++
++	oldstate = rfkill->state;
++
++	if (rfkill->get_state &&
++	    !rfkill->get_state(rfkill->data, &newstate))
++		rfkill->state = newstate;
+ 
+ 	if (state != rfkill->state) {
+ 		retval = rfkill->toggle_radio(rfkill->data, state);
+-		if (!retval) {
++		if (!retval)
+ 			rfkill->state = state;
+-			rfkill_led_trigger(rfkill, state);
+-		}
+ 	}
+ 
++	if (rfkill->state != oldstate)
++		rfkill_led_trigger(rfkill, rfkill->state);
++
+ 	return retval;
+ }
+ 
+@@ -105,6 +125,32 @@ void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
+ }
+ EXPORT_SYMBOL(rfkill_switch_all);
+ 
++/**
++ * rfkill_force_state - Force the internal rfkill radio state
++ * @rfkill: pointer to the rfkill class to modify.
++ * @state: the current radio state the class should be forced to.
++ *
++ * This function updates the internal state of the radio cached
++ * by the rfkill class.  It should be used when the driver gets
++ * a notification by the firmware/hardware of the current *real*
++ * state of the radio rfkill switch.
++ *
++ * It may not be called from an atomic context.
++ */
++int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state)
++{
++	if (state != RFKILL_STATE_OFF &&
++	    state != RFKILL_STATE_ON)
++		return -EINVAL;
++
++	mutex_lock(&rfkill->mutex);
++	rfkill->state = state;
++	mutex_unlock(&rfkill->mutex);
++
++	return 0;
++}
++EXPORT_SYMBOL(rfkill_force_state);
++
+ static ssize_t rfkill_name_show(struct device *dev,
+ 				struct device_attribute *attr,
+ 				char *buf)
+@@ -147,6 +193,7 @@ static ssize_t rfkill_state_show(struct device *dev,
+ {
+ 	struct rfkill *rfkill = to_rfkill(dev);
+ 
++	update_rfkill_state(rfkill);
+ 	return sprintf(buf, "%d\n", rfkill->state);
+ }
+ 
 -- 
-"The animistic metaphor of the bug that maliciously sneaked in while
-the programmer was not looking is intellectually dishonest as it
-disguises that the error is the programmer's own creation."
-	-- E. W. Dijkstra, EWD1036
+1.5.5.4
+
