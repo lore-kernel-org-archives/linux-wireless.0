@@ -1,39 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.240]:9912 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752726AbYFVPEP (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.168]:2520 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759975AbYFWRhk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jun 2008 11:04:15 -0400
-Received: by an-out-0708.google.com with SMTP id d40so493952and.103
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Jun 2008 08:04:14 -0700 (PDT)
-Message-ID: <43e72e890806220804i347b942claae7b725231afcce@mail.gmail.com> (sfid-20080622_170420_352659_95C30F7B)
-Date: Sun, 22 Jun 2008 20:34:10 +0530
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Adrian Bunk" <bunk@stusta.de>
-Subject: Re: RFC: always enable MAC80211_RC_PID?
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <20080622125553.GB22539@cs181133002.pp.htv.fi>
+	Mon, 23 Jun 2008 13:37:40 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so569684ugf.16
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2008 10:37:38 -0700 (PDT)
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: kill URB for all TX queues during disable_radio()
+Date: Mon, 23 Jun 2008 19:56:50 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080622125553.GB22539@cs181133002.pp.htv.fi>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200806231956.50365.IvDoorn@gmail.com> (sfid-20080623_193759_555466_4184DA8E)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 22, 2008 at 6:25 PM, Adrian Bunk <bunk@stusta.de> wrote:
-> After the scheduled removal of MAC80211_RC_SIMPLE only
-> MAC80211_RC_DEFAULT_PID and MAC80211_RC_DEFAULT_NONE are
-> left as choices.
->
-> Does MAC80211_RC_DEFAULT_NONE have any userbase serious enough to
-> justify all the constructs made for this case or could we simply
-> always enable MAC80211_RC_PID?
+During rt2x00usb_disable_radio() all pending urb's should
+be killed and not only those from the RX queue.
 
-You can currently only get away living without it if you are just
-using iwl3945 or iwl4965 as they provide their own rate control
-algorithms. In the future if other vendor drivers are added with their
-own rate control algorithm this list grows. Disabling PID will save
-you some space only on some embedded platforms. Although currently its
-not evident people would do this I do see this being a reasonable
-option to keep around for later.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00usb.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 5593b9a..83862e7 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -284,6 +284,7 @@ void rt2x00usb_disable_radio(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct queue_entry_priv_usb *entry_priv;
+ 	struct queue_entry_priv_usb_bcn *bcn_priv;
++	struct data_queue *queue;
+ 	unsigned int i;
+ 
+ 	rt2x00usb_vendor_request_sw(rt2x00dev, USB_RX_CONTROL, 0, 0,
+@@ -292,9 +293,11 @@ void rt2x00usb_disable_radio(struct rt2x00_dev *rt2x00dev)
+ 	/*
+ 	 * Cancel all queues.
+ 	 */
+-	for (i = 0; i < rt2x00dev->rx->limit; i++) {
+-		entry_priv = rt2x00dev->rx->entries[i].priv_data;
+-		usb_kill_urb(entry_priv->urb);
++	queue_for_each(rt2x00dev, queue) {
++		for (i = 0; i < queue->limit; i++) {
++			entry_priv = queue->entries[i].priv_data;
++			usb_kill_urb(entry_priv->urb);
++		}
+ 	}
+ 
+ 	/*
+-- 
+1.5.5.4
+
