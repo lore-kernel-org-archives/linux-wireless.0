@@ -1,104 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43482
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754349AbYFQHyI (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:39685 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1762173AbYFWUXV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 03:54:08 -0400
-Date: Tue, 17 Jun 2008 00:54:09 -0700 (PDT)
-Message-Id: <20080617.005409.37355710.davem@davemloft.net> (sfid-20080617_095436_558344_77B24062)
-To: linville@tuxdriver.com
-CC: mokuno@sm.sony.co.jp, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 7/12]: wext: Pass iwreq pointer down into standard/private
- handlers.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 23 Jun 2008 16:23:21 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Thomas Renninger <trenn@suse.de>,
+	Fabien Crespel <fabien@crespel.net>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: [PATCH 04/13] rfkill: add parameter to disable radios by default
+Date: Mon, 23 Jun 2008 17:22:59 -0300
+Message-Id: <1214252588-30723-5-git-send-email-hmh@hmh.eng.br> (sfid-20080623_222330_568438_844AFDE9)
+In-Reply-To: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
+References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Currently, radios are always enabled when their rfkill interface is
+registered.  This is not optimal, the safest state for a radio is to be
+offline unless the user turns it on.
 
-wext: Pass iwreq pointer down into standard/private handlers.
+Add a module parameter that causes all radios to be disabled when their
+rfkill interface is registered.  The module default is not changed so
+unless the parameter is used, radios will still be forced to their enabled
+state when they are registered.
 
-They have no need to see the object as an ifreq.
+The new rfkill module parameter is called "default_state".
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- net/wireless/wext.c |   17 ++++++++---------
- 1 files changed, 8 insertions(+), 9 deletions(-)
+ net/rfkill/rfkill.c |   11 ++++++++++-
+ 1 files changed, 10 insertions(+), 1 deletions(-)
 
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index 929d241..e9c8817 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -832,11 +832,10 @@ out:
-  * user space and kernel space.
-  */
- static int ioctl_standard_call(struct net_device *	dev,
--			       struct ifreq *		ifr,
-+			       struct iwreq		*iwr,
- 			       unsigned int		cmd,
- 			       iw_handler		handler)
- {
--	struct iwreq *				iwr = (struct iwreq *) ifr;
- 	const struct iw_ioctl_description *	descr;
- 	struct iw_request_info			info;
- 	int					ret = -EINVAL;
-@@ -984,10 +983,9 @@ out:
- 	return err;
- }
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index f95081a..3edc585 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -39,6 +39,11 @@ MODULE_LICENSE("GPL");
+ static LIST_HEAD(rfkill_list);	/* list of registered rf switches */
+ static DEFINE_MUTEX(rfkill_mutex);
  
--static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
-+static int ioctl_private_call(struct net_device *dev, struct iwreq *iwr,
- 			      unsigned int cmd, iw_handler handler)
- {
--	struct iwreq *iwr = (struct iwreq *) ifr;
- 	int extra_size = 0, ret = -EINVAL;
- 	const struct iw_priv_args *descr;
- 	struct iw_request_info info;
-@@ -1015,7 +1013,7 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
- }
++static unsigned int rfkill_default_state = RFKILL_STATE_ON;
++module_param_named(default_state, rfkill_default_state, uint, 0444);
++MODULE_PARM_DESC(default_state,
++		 "Default initial state for all radio types, 0 = radio off");
++
+ static enum rfkill_state rfkill_states[RFKILL_TYPE_MAX];
  
- /* ---------------------------------------------------------------- */
--typedef int (*wext_ioctl_func)(struct net_device *, struct ifreq *,
-+typedef int (*wext_ioctl_func)(struct net_device *, struct iwreq *,
- 			       unsigned int, iw_handler);
  
- /*
-@@ -1027,6 +1025,7 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
- 				  wext_ioctl_func standard,
- 				  wext_ioctl_func private)
- {
-+	struct iwreq *iwr = (struct iwreq *) ifr;
- 	struct net_device *dev;
- 	iw_handler	handler;
+@@ -436,8 +441,12 @@ static int __init rfkill_init(void)
+ 	int error;
+ 	int i;
  
-@@ -1041,11 +1040,11 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
- 	 * Note that 'cmd' is already filtered in dev_ioctl() with
- 	 * (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST) */
- 	if (cmd == SIOCGIWSTATS)
--		return standard(dev, ifr, cmd,
-+		return standard(dev, iwr, cmd,
- 				&iw_handler_get_iwstats);
++	if (rfkill_default_state != RFKILL_STATE_OFF &&
++	    rfkill_default_state != RFKILL_STATE_ON)
++		return -EINVAL;
++
+ 	for (i = 0; i < ARRAY_SIZE(rfkill_states); i++)
+-		rfkill_states[i] = RFKILL_STATE_ON;
++		rfkill_states[i] = rfkill_default_state;
  
- 	if (cmd == SIOCGIWPRIV && dev->wireless_handlers)
--		return standard(dev, ifr, cmd,
-+		return standard(dev, iwr, cmd,
- 				&iw_handler_get_private);
- 
- 	/* Basic check */
-@@ -1057,9 +1056,9 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
- 	if (handler) {
- 		/* Standard and private are not the same */
- 		if (cmd < SIOCIWFIRSTPRIV)
--			return standard(dev, ifr, cmd, handler);
-+			return standard(dev, iwr, cmd, handler);
- 		else
--			return private(dev, ifr, cmd, handler);
-+			return private(dev, iwr, cmd, handler);
- 	}
- 	/* Old driver API : call driver ioctl handler */
- 	if (dev->do_ioctl)
+ 	error = class_register(&rfkill_class);
+ 	if (error) {
 -- 
-1.5.5.1.308.g1fbb5
+1.5.5.4
 
