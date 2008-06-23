@@ -1,84 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:1454 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755011AbYFAV7j (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.183]:11355 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752838AbYFWMxe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jun 2008 17:59:39 -0400
-Received: from deadeye.i.decadent.org.uk ([192.168.4.177])
-	by shadbolt.decadent.org.uk with esmtp (Exim 4.63)
-	(envelope-from <ben@decadent.org.uk>)
-	id 1K2utm-0003xr-Nl
-	for linux-wireless@vger.kernel.org; Sun, 01 Jun 2008 22:15:39 +0100
-Received: from womble by deadeye.i.decadent.org.uk with local (Exim 4.69)
-	(envelope-from <ben@decadent.org.uk>)
-	id 1K2ut2-0001yb-9E
-	for linux-wireless@vger.kernel.org; Sun, 01 Jun 2008 22:14:44 +0100
-From: Ben Hutchings <ben@decadent.org.uk>
-To: linux-wireless@vger.kernel.org
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NHB6gLZtW3p7s2qoU2+w"
-Date: Sun, 01 Jun 2008 22:14:44 +0100
-Message-Id: <1212354884.4722.26.camel@deadeye.i.decadent.org.uk> (sfid-20080601_235957_766328_0713F24F)
-Mime-Version: 1.0
-Subject: IW_SCAN_CAPA_ESSID vs hidden ESSID
+	Mon, 23 Jun 2008 08:53:34 -0400
+Received: by py-out-1112.google.com with SMTP id p76so963467pyb.10
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2008 05:53:33 -0700 (PDT)
+Message-ID: <69e28c910806230553k6c878126s1f8ee15770bada57@mail.gmail.com> (sfid-20080623_145339_050579_A0A9F9E6)
+Date: Mon, 23 Jun 2008 14:53:32 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Maxim Levitsky" <maximlevitsky@gmail.com>
+Subject: Re: [BUG] Two bugs in monitor mode, iwl3945
+Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <485F687C.1050407@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <485F687C.1050407@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Jun 23, 2008 at 11:10 AM, Maxim Levitsky
+<maximlevitsky@gmail.com> wrote:
+> I noticed two bugs:
+>
+> 1) Monitor mode hangs the system randomly, and what is interesting th=
+at this
+> bug disappears if I patch the driver with packet injection patch from=
+ G=E1bor
+> Stefanik.
+> I noticed this bug, after I removed his patch to see if it caused som=
+e
+> problems.
+> Always reproducible, usually hangs just after airodump launch.
 
---=-NHB6gLZtW3p7s2qoU2+w
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Something tries to transmit on the monitor interface, which is
+impossible without the injection patch. However, the method used for
+preventing TX in monitor mode is incorrect (it just drops the packet
+silently, without notifying mac80211, which, in the absence of an ACK,
+tries to retransmit the packet - an obvious infinite loop). This is
+what causes the freeze. (Do you have networkmanager running? That
+often tends to interfere with monitor interfaces.)
 
-Since upgrading from Linux 2.6.24 to .25, I have found that
-NetworkManager cannot associate my Intel wireless card, handled by the
-ipw2200 driver, with my AP, which has a hidden SSID.
+>
+> 2) If I enable monitor mode regardless of injection patch, the scanni=
+ng
+> results got garbaged,
+> iwlist scan reports > 100 quality on most APs, or 0% quality on my ro=
+uter,
+> shows extremely low and hi power levels, like
+> -127dBm or 160 dBm, and those levels change rapidly.
+> This why I removed the injection patch, I suspected it, but this bug =
+appears
+> to be not related to it.
 
-NetworkManager thinks that wpa_supplicant should be able to scan for
-specific hidden SSIDs if the underlying driver advertises
-IW_SCAN_CAPA_ESSID, which ipw2200 does since 2.6.25:
+Does this also happen if you create an extra managed or AP (AP
+requires a patch to mac80211) interface, or is it specific to monitor
+interfaces?
 
-	/* Use "AP_SCAN 2" if:
-	 * - The wireless network is non-broadcast and the driver doesn't support
-	 *     scanning specific SSIDs
-	 * - The wireless network is Ad-Hoc
-	 * - The wireless driver does not support WPA (stupid drivers...)
-	 */
-	is_adhoc =3D (nm_ap_get_mode(ap) =3D=3D IW_MODE_ADHOC);
-	if (is_adhoc || !supports_wpa)
-		ap_scan =3D "AP_SCAN 2";
-	else if (!nm_ap_get_broadcast (ap))
-		ap_scan =3D self->priv->has_scan_capa_ssid ? "AP_SCAN 1" : "AP_SCAN 2";
+>
+>
+> Injection patch from G=E1bor Stefanik <netrolller.3d@gmail.com> attac=
+hed
+> (I modified the patch to apply on latest wireless -git, but patch is =
+the
+> same)
+>
+> I use iw to create new monitor interface and use it.
+>
+> Best regards,
+>        Maxim Levitsky
+>
 
-However, this doesn't work because the scan results just have an empty
-string or "<hidden>" (not consistently, which is weird).
 
-So one of these components is doing the wrong thing.  Is it that:
-
-1. ipw2200 or ieee80211 should copy the selected ESSID into scan results
-2. wpa_supplicant should not check the ESSID of scan results if it has
-already selected an ESSId
-3. NetworkManager should not expect IW_SCAN_CAPA_ESSID to mean that this
-will work
-
-?
-
-Ben.
 
 --=20
-Ben Hutchings
-We get into the habit of living before acquiring the habit of thinking.
-                                                              - Albert Camu=
-s
-
---=-NHB6gLZtW3p7s2qoU2+w
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQBIQxFE79ZNCRIGYgcRAmGuAKCLUiu3SoEJ7CbNHHeKUaAHy3zInwCfWijt
-opYvIOXV+Xb+y0FAydMZ79I=
-=bFUo
------END PGP SIGNATURE-----
-
---=-NHB6gLZtW3p7s2qoU2+w--
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
