@@ -1,33 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.233]:63447 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758053AbYF0SaT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2008 14:30:19 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so683273rvb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jun 2008 11:30:19 -0700 (PDT)
-Message-ID: <b6c5339f0806271130r608ff144o44a34ff43c984a62@mail.gmail.com> (sfid-20080627_203024_852331_C616C2BB)
-Date: Fri, 27 Jun 2008 14:30:19 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] ath5k: remove now unused variable declared in ath5k_tx
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1214579450-14470-1-git-send-email-linville@tuxdriver.com>
+Received: from blaine.gmane.org ([80.91.229.8]:51962 "EHLO hugh.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758295AbYFWNKe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jun 2008 09:10:34 -0400
+Received: from public by hugh.gmane.org with local (Exim 4.63)
+	(envelope-from <public@hugh.gmane.org>)
+	id 1KAloR-0001yr-3f
+	for linux-wireless@vger.kernel.org; Mon, 23 Jun 2008 15:10:27 +0200
+Date: Mon, 23 Jun 2008 02:22:07 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Fabien Crespel <fabien@crespel.net>
+Cc: John Linville
+	<public-linville-2XuSBdqkA4R54TAoqtyWWQ@hugh.gmane.org>,
+	public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org,
+	Ivo van Doorn
+	<public-ivdoorn-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>,
+	Matthew Garrett
+	<public-mjg-H+wXaHxf7aLQT0dZR+AlfA@hugh.gmane.org>,
+	Dan Williams <public-dcbw-H+wXaHxf7aLQT0dZR+AlfA@hugh.gmane.org>,
+	Thomas Renninger <public-trenn-l3A5Bk7waGM@hugh.gmane.org>,
+	Dmitry Torokhov <public-dtor-JGs/UdohzUI@hugh.gmane.org>
+Subject: Re: [PATCH 11/12] rfkill: do not allow userspace to override ALL
+	RADIOS OFF
+Message-ID: <20080623052206.GE9926@khazad-dum.debian.net> (sfid-20080623_151125_298614_4BFD20F7)
+References: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br> <1214149128-5913-12-git-send-email-hmh@hmh.eng.br> <485EAA82.30808@crespel.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1214579450-14470-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <485EAA82.30808@crespel.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 27, 2008 at 11:10 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
->  CC [M]  drivers/net/wireless/ath5k/base.o
-> drivers/net/wireless/ath5k/base.c: In function 'ath5k_tx':
-> drivers/net/wireless/ath5k/base.c:2598: warning: unused variable 'info'
->
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Oops, thanks for the pickup.  Not sure why I didn't get that one.
+
+
+On Sun, 22 Jun 2008, Fabien Crespel wrote:
+> I've been testing this series of patch today for a new version of 
+> asus-laptop, and this patch ("rfkill: do not allow userspace to override 
+> ALL RADIOS OFF") introduces a bug in rfkill-input.
+
+More than one, apparently.  Dmitry pointed out that _epo needs to be called
+in task context, which rfkill-input was failing to do.
+
+> rfkill_epo() doesn't change the current_state of the tasks, and the 
+> various calls to rfkill_schedule_set(..., RFKILL_STATE_ON) don't work if 
+> the last current_state stored was already RFKILL_STATE_ON.
+>
+> Anyway, the whole current_state thing seems completely useless and a 
+> source of problems in rfkill-input, since state comparison is already 
+> done in rfkill, and rfkill-input is more than likely to become out of 
+> sync with the real state.
+>
+> Therefore I propose this additional patch to remove current_state 
+> completely from rfkill-input.
+
+I would like to get rid of it, but I need some sleep before I can think
+clearly about this issue.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
+
+
