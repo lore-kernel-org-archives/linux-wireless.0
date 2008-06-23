@@ -1,378 +1,448 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3734 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751355AbYFIVav (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2008 17:30:51 -0400
-Date: Mon, 9 Jun 2008 17:07:37 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull request: wireless-next-2.6 2008-06-09
-Message-ID: <20080609210737.GA15375@tuxdriver.com> (sfid-20080609_233056_868384_E6029CFC)
-References: <20080522124017.GA3996@tuxdriver.com> <20080603185301.GA28966@tuxdriver.com> <20080603194927.GA9590@tuxdriver.com> <20080609204241.GA11343@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080609204241.GA11343@tuxdriver.com>
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:46993 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1762181AbYFWUXW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jun 2008 16:23:22 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Thomas Renninger <trenn@suse.de>,
+	Fabien Crespel <fabien@crespel.net>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: [PATCH 13/13] rfkill: document rw rfkill switches and clarify input subsystem interactions
+Date: Mon, 23 Jun 2008 17:23:08 -0300
+Message-Id: <1214252588-30723-14-git-send-email-hmh@hmh.eng.br> (sfid-20080623_224914_672362_989AA55A)
+In-Reply-To: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
+References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David,
+Rework the documentation so as to make sure driver writers understand
+exactly where the boundaries are for input drivers related to rfkill
+switches, buttons and keys, and rfkill class drivers.
 
-Tons of new stuff intended for 2.6.27.  Please let me know if there are
-problems!
+Also fix a small error in the documentation: setting the state of a normal
+instance of the rfkill class does not affect the state of any other devices
+(unless they are tied by firmware/hardware somehow).
 
-Thanks,
-
-John
-
-P.S.  This dropps "ipw2200: queue direct scans" but is otherwise the
-same as the pull request from 2008-06-03.
-
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Dmitry Torokhov <dtor@mail.ru>
 ---
+ Documentation/rfkill.txt |  363 +++++++++++++++++++++++++++++++++++++++-------
+ 1 files changed, 308 insertions(+), 55 deletions(-)
 
-Individual patches are available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
-
----
-
-The following changes since commit 5b06c85c3b96fa8db632f1ee94f99a2bd0215f3a:
-  Allan Stephens (1):
-        tipc: Cosmetic cleanup of topology service code
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git
-
-Atsushi Nemoto (1):
-      zd1211rw: Use DMA-aware buffer for usb transfer
-
-Daniel Walker (3):
-      ps3: gelic: scan_lock semaphore to mutex
-      ps3: gelic: assoc_stat_lock semaphore to mutex
-      ps3: gelic: updown_lock semaphore to mutex
-
-David Woodhouse (4):
-      libertas: Increase priority of 'unknown command' warnings
-      libertas: fix multicast filtering on eth and msh interfaces
-      libertas: Add reset_card() callback to hardware driver
-      libertas: provide reset_card() callback on OLPC
-
-Emmanuel Grumbach (8):
-      iwlwifi: don't switch to SGI if not supported by AP
-      iwlwifi: clean up and bug fix for security
-      mac80211: sends HT IE to user level through wext
-      mac80211: allow disable FAT in specific configurations
-      iwlwifi: disable FAT channel when not permitted
-      iwlwifi: fix a memory leak in scan
-      iwlwifi: remove debugfs entries before cfg80211
-      iwlwifi: send calibration results as HUGE commands
-
-Ester Kummer (2):
-      iwlwifi: trigger event log from debugfs
-      iwlwifi: move iwl_dump_nic_error_log to iwlcore module
-
-Gertjan van Wingerde (2):
-      rt2x00: Fix queue related oops in case of deselected mac80211 multi-queue feature.
-      rt2x00: Only initialize the minimum needed fields of PCI TX descriptors.
-
-Gregory Greenman (2):
-      iwlwifi: get_hw_cmd_size
-      iwlwifi: use uCode error and event tables pointer w.r.t loaded image
-
-Guy Cohen (1):
-      iwlwifi: fix in-column rate scaling
-
-Harvey Harrison (6):
-      mac80211: michael.c use kernel-provided infrastructure
-      mac80211: introduce struct michael_mic_ctx and static helpers
-      mac80211: add const, remove unused function, make one function static
-      mac80211: add a struct to hold tkip context
-      mac80211: tkip.c use struct tkip_ctx in phase 1 key mixing
-      mac80211: tkip.c use struct tkip_ctx in phase 2 key mixing
-
-Holger Schurig (7):
-      libertas: reduce command retry time
-      libertas: don't spin_unlock_irq() twice
-      libertas: speeds up downloading of CF firmware
-      libertas: use lbs_pr_XX instead of printk
-      libertas: before sleeping, check for a command result
-      libertas: fix compact flash interrupt handling
-      libertas: unify various CF-related defines
-
-Ivo van Doorn (9):
-      rt2x00: trim skb_frame_desc to 32 bytes
-      rt2x00: Fix TX status reporting
-      rt2x00: Remove ieee80211_tx_control argument from write_tx_desc()
-      rt2x00: Preserve descriptor information after memmove()
-      rt2x00: Split rt2x00lib_write_tx_desc()
-      rt2x00: Remove redundant flags/dev_flags initializations
-      rt2x00: Merge RX and TX entry private data
-      rt2x00: Remove extra +
-      rt2x00: Release rt2x00 2.1.6
-
-Javier Cardona (4):
-      libertas: Extend MESH_CONFIG command to access non-volatile configuration
-      libertas: sysfs interface for accessing non-volatile configuration
-      libertas: sysfs interface for accessing default mesh channel
-      libertas: rate adaptation configuration via iwconfig.
-
-Johannes Berg (14):
-      mac80211: fix bugs in queue handling functions
-      mac80211: let drivers wake but not start queues
-      mac80211: use rate index in TX control
-      mac80211: reorder some transmit handlers
-      mac80211: move TX info into skb->cb
-      mac80211: dont allow fragmentation and requeuing on A-MPDU queues
-      mac80211: use multi-queue master netdevice
-      mac80211: remove channel use statistics
-      b43: enable mesh
-      mac80211: clean up skb reallocation code
-      ath5k: use IEEE80211_SKB_CB
-      b43legacy: fix build errors when DMA or PIO are not selected
-      p54: fix skb->cb tx info conversion
-      mac80211: fix rate control initialisation
-
-Larry.Finger@lwfinger.net (1):
-      b43: Fix typo in firmware file name for 802.11 cores with rev 13
-
-Masakazu Mokuno (6):
-      PS3: gelic: Allocate the bounce buffer dynamically
-      PS3: gelic: Kill the static bounce buffer
-      WEXT: Add support for passing PMK and capability flags to WEXT
-      PS3: gelic: Use the new PMK interface in the gelic driver
-      PS3: gelic: Deprecate the private ioctls in the gelic driver
-      PS3: gelic: Add support for ESSID scan
-
-Michael Buesch (4):
-      b43: Add hooks for firmware debugging
-      b43: Allow running without PCM firmware
-      b43: Add panic reason code that doesn't trigger restart
-      b43: Add firmware markers support
-
-Pavel Emelyanov (8):
-      mac80211: Brush up error paths in mesh_path_add.
-      mac80211: Fix one more call to synchronize_rcu in atomic context.
-      mac80211: Prepare mesh_table_grow to failing copy_node callback.
-      mac80211: Report allocation failure from mesh_path_node_copy.
-      mac80211: Fix sleeping allocation under lock in mesh_path_node_copy.
-      mac80211: Do not report false error from mesh_path_add.
-      mac80211: Merge error paths in mesh_table_grow().
-      mac80211: Consolidate hash kfree-ing in mesh.c.
-
-Pavel Roskin (1):
-      mac80211: fix panic when using hardware WEP
-
-Ron Rindjunsky (17):
-      iwlwifi: changing irrelevant comment
-      iwlwifi: remove iwl4965_nic_start function
-      mac80211: separate Tx and Rx MCS when configuring HT
-      iwlwifi: filling Tx MCS set
-      iwlwifi: rename and move Tx queue activation/deactivation
-      iwlwifi: add rx_handlers stub for iwl5000
-      iwlwifi: add ucode loaders for iwl5000
-      iwlwifi: add ucode init flow handling for iwl5000
-      iwlwifi: iwl5000 WiFi/WiMax coexistence
-      iwlwifi: add RTC data address for iwl5000
-      iwlwifi: increase max payload of iwl_cmd
-      iwlwifi: activate status ready timeout only for run time ucode
-      iwlwifi: add iwl5000_tx_response structure
-      iwlwlifi: impelemnt 5000 tx response path
-      iwlwifi: iwl-5000 add rxon_assoc
-      iwlwifi: Rx handlers common use for 4965 and 5000
-      iwlwifi: move iwl_get_hw_mode to iwl-core.h
-
-Scott Ashcroft (1):
-      rndis_wlan: use ARRAY_SIZE instead of sizeof when adding 11g rates
-
-Tomas Winkler (40):
-      iwlwifi: rename iwl4965_queue to iwl_queue
-      iwlwifi: rename iwl4965_tx_info to iwl_tx_info
-      iwlwifi: remove 4965 from iwl4965_tx_queue_update_write_ptr
-      iwlwifi: remove 4965 prefix from iwl4965_frame
-      iwlwifi: remove 4965 from iwl4965_rate_info
-      iwlwifi: move iwl_bcast_addr to iwlcore
-      iwlwifi: move more station managment into iwl-sta.c
-      iwlwifi: remove 4956 form iwl4965_tx_cmd
-      iwlwifi: refactor ieee80211_get_qos_ctrl
-      iwlwifi: move TX code into iwl-tx.c
-      iwlwifi: remove 4965 remainings in iwl-eeprom.c file
-      iwlwifi: add debugfs to disable/enable run time calibration
-      iwlwifi: refactor pci prob flow
-      mac80211: fix ieee80211_get_buffered_bc
-      mac80211: fix deadlock in sta->lock
-      iwlwifi: mark 4965 ucode types
-      iwlwifi: remove unused variable form __iwl4965_down
-      iwlwifi: remove notif_missed_beacons variable
-      iwlwifi: clean up alive_start routine
-      iwlwifi: remove 4965 from alive_resp structures
-      iwlwifi: setup correctly L1 L0S pi link values
-      iwlwifi: implement apm reset flow
-      iwlwifi: implement apm stop function
-      iwlwifi: refactor stop master function
-      iwlwifi: move txq_ctx_stop into iwl-tx.c
-      iwlwifi: move iwl_rxq_stop into iwl-rx.c
-      iwlwifi: add remove station functionality
-      iwlwifi: move add sta handler to iwl-sta.c
-      iwlwifi: move iwl_rx_missed_beacon_notif to iwl-rx.c
-      iwlwifi-5000: implement initial calibration for 5000
-      iwlwifi: move tx response common handlers to iwlcore
-      iwlwifi: move 4965 tx response into iwl-4965.c
-      iwlwifi: move tx reclaim flow into iwl-tx
-      iwlwifi: implement txq invalidate byte count table
-      iwlwifi: move iwl_sta_modify_enable_tid_tx to iwl-sta.c
-      iwlwifi: move aggregation code to iwl-tx.c
-      iwlwifi: add frame count limit to link quality command
-      iwlwifi: clean iwl4965_mac_config
-      mac80211: fix unbalanced locking in ieee80211_get_buffered_bc
-      mac80211: removing shadowed sband
-
-Zhu Yi (1):
-      iwlwifi: create drivers debugfs dir under wiphy->debugfsdir
-
- drivers/net/Kconfig                         |   13 +
- drivers/net/ps3_gelic_net.c                 |   10 +-
- drivers/net/ps3_gelic_net.h                 |    2 +-
- drivers/net/ps3_gelic_wireless.c            |  206 ++--
- drivers/net/ps3_gelic_wireless.h            |    7 +-
- drivers/net/wireless/adm8211.c              |   35 +-
- drivers/net/wireless/adm8211.h              |    1 -
- drivers/net/wireless/ath5k/base.c           |   74 +-
- drivers/net/wireless/ath5k/base.h           |    1 -
- drivers/net/wireless/b43/b43.h              |   28 +-
- drivers/net/wireless/b43/dma.c              |   46 +-
- drivers/net/wireless/b43/dma.h              |    3 +-
- drivers/net/wireless/b43/main.c             |  225 +++-
- drivers/net/wireless/b43/pio.c              |   36 +-
- drivers/net/wireless/b43/pio.h              |    8 +-
- drivers/net/wireless/b43/xmit.c             |   65 +-
- drivers/net/wireless/b43/xmit.h             |    4 +-
- drivers/net/wireless/b43legacy/dma.c        |   35 +-
- drivers/net/wireless/b43legacy/dma.h        |    7 +-
- drivers/net/wireless/b43legacy/main.c       |   13 +-
- drivers/net/wireless/b43legacy/pio.c        |   19 +-
- drivers/net/wireless/b43legacy/pio.h        |    7 +-
- drivers/net/wireless/b43legacy/xmit.c       |   47 +-
- drivers/net/wireless/b43legacy/xmit.h       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c  |   16 +-
- drivers/net/wireless/iwlwifi/iwl-3945.c     |   25 +-
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    5 +-
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h  |    7 +-
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c  |  169 ++--
- drivers/net/wireless/iwlwifi/iwl-4965-rs.h  |    8 +-
- drivers/net/wireless/iwlwifi/iwl-4965.c     | 1019 ++++++----------
- drivers/net/wireless/iwlwifi/iwl-5000.c     |  897 ++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-calib.c    |   27 +
- drivers/net/wireless/iwlwifi/iwl-calib.h    |    9 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h |  243 ++++-
- drivers/net/wireless/iwlwifi/iwl-core.c     |  327 +++++-
- drivers/net/wireless/iwlwifi/iwl-core.h     |   56 +-
- drivers/net/wireless/iwlwifi/iwl-csr.h      |    6 +-
- drivers/net/wireless/iwlwifi/iwl-debug.h    |   10 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c  |   55 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h      |  152 ++-
- drivers/net/wireless/iwlwifi/iwl-eeprom.c   |   28 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.h   |    1 +
- drivers/net/wireless/iwlwifi/iwl-hcmd.c     |    8 +-
- drivers/net/wireless/iwlwifi/iwl-helpers.h  |   21 +
- drivers/net/wireless/iwlwifi/iwl-prph.h     |   39 +-
- drivers/net/wireless/iwlwifi/iwl-rx.c       |   48 +
- drivers/net/wireless/iwlwifi/iwl-sta.c      |  501 ++++++++-
- drivers/net/wireless/iwlwifi/iwl-sta.h      |    7 +
- drivers/net/wireless/iwlwifi/iwl-tx.c       | 1058 +++++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   90 +-
- drivers/net/wireless/iwlwifi/iwl4965-base.c | 1670 +++------------------------
- drivers/net/wireless/libertas/Makefile      |    8 +-
- drivers/net/wireless/libertas/assoc.c       |    8 +-
- drivers/net/wireless/libertas/cmd.c         |  174 ++-
- drivers/net/wireless/libertas/cmd.h         |    5 +
- drivers/net/wireless/libertas/cmdresp.c     |   25 +-
- drivers/net/wireless/libertas/decl.h        |    4 +
- drivers/net/wireless/libertas/defs.h        |   14 +-
- drivers/net/wireless/libertas/dev.h         |    8 +-
- drivers/net/wireless/libertas/host.h        |   17 +
- drivers/net/wireless/libertas/hostcmd.h     |    4 +-
- drivers/net/wireless/libertas/if_cs.c       |  227 ++--
- drivers/net/wireless/libertas/if_usb.c      |   22 +
- drivers/net/wireless/libertas/main.c        |  216 +++--
- drivers/net/wireless/libertas/persistcfg.c  |  453 ++++++++
- drivers/net/wireless/libertas/rx.c          |    4 +-
- drivers/net/wireless/libertas/types.h       |   30 +
- drivers/net/wireless/libertas/wext.c        |   32 +-
- drivers/net/wireless/p54/p54common.c        |  106 +-
- drivers/net/wireless/p54/p54common.h        |    1 -
- drivers/net/wireless/p54/p54pci.c           |    2 +-
- drivers/net/wireless/rndis_wlan.c           |    2 +-
- drivers/net/wireless/rt2x00/rt2400pci.c     |  132 ++-
- drivers/net/wireless/rt2x00/rt2400pci.h     |    5 +
- drivers/net/wireless/rt2x00/rt2500pci.c     |  120 ++-
- drivers/net/wireless/rt2x00/rt2500pci.h     |    5 +
- drivers/net/wireless/rt2x00/rt2500usb.c     |   85 +-
- drivers/net/wireless/rt2x00/rt2500usb.h     |    5 +
- drivers/net/wireless/rt2x00/rt2x00.h        |   52 +-
- drivers/net/wireless/rt2x00/rt2x00debug.c   |    4 +-
- drivers/net/wireless/rt2x00/rt2x00dev.c     |  226 +---
- drivers/net/wireless/rt2x00/rt2x00lib.h     |    6 +-
- drivers/net/wireless/rt2x00/rt2x00mac.c     |   76 +-
- drivers/net/wireless/rt2x00/rt2x00pci.c     |  103 +-
- drivers/net/wireless/rt2x00/rt2x00pci.h     |   28 +-
- drivers/net/wireless/rt2x00/rt2x00queue.c   |  167 +++-
- drivers/net/wireless/rt2x00/rt2x00queue.h   |   73 +-
- drivers/net/wireless/rt2x00/rt2x00reg.h     |   11 -
- drivers/net/wireless/rt2x00/rt2x00usb.c     |  228 ++--
- drivers/net/wireless/rt2x00/rt2x00usb.h     |   26 +-
- drivers/net/wireless/rt2x00/rt61pci.c       |  133 ++-
- drivers/net/wireless/rt2x00/rt61pci.h       |    5 +
- drivers/net/wireless/rt2x00/rt73usb.c       |   59 +-
- drivers/net/wireless/rt2x00/rt73usb.h       |    5 +
- drivers/net/wireless/rtl8180_dev.c          |   62 +-
- drivers/net/wireless/rtl8187.h              |    6 -
- drivers/net/wireless/rtl8187_dev.c          |   45 +-
- drivers/net/wireless/zd1211rw/zd_mac.c      |  161 +--
- drivers/net/wireless/zd1211rw/zd_mac.h      |   16 -
- drivers/net/wireless/zd1211rw/zd_usb.c      |   29 +-
- include/linux/ieee80211.h                   |   20 +-
- include/linux/wireless.h                    |    2 +
- include/net/mac80211.h                      |  348 +++---
- include/net/wireless.h                      |    6 +
- net/mac80211/Kconfig                        |   14 +-
- net/mac80211/Makefile                       |    2 +-
- net/mac80211/cfg.c                          |    4 +-
- net/mac80211/debugfs_key.c                  |    8 +-
- net/mac80211/debugfs_netdev.c               |    9 -
- net/mac80211/debugfs_sta.c                  |    1 -
- net/mac80211/ieee80211_i.h                  |   78 +-
- net/mac80211/iface.c                        |    2 +-
- net/mac80211/key.h                          |   17 +-
- net/mac80211/main.c                         |  291 +++---
- net/mac80211/mesh.c                         |   38 +-
- net/mac80211/mesh.h                         |    2 +-
- net/mac80211/mesh_pathtbl.c                 |   53 +-
- net/mac80211/michael.c                      |  106 +--
- net/mac80211/michael.h                      |    8 +-
- net/mac80211/mlme.c                         |   88 ++-
- net/mac80211/rate.c                         |   12 +-
- net/mac80211/rate.h                         |   33 +-
- net/mac80211/rc80211_pid.h                  |    4 +-
- net/mac80211/rc80211_pid_algo.c             |   22 +-
- net/mac80211/rc80211_pid_debugfs.c          |    8 +-
- net/mac80211/rx.c                           |   72 +-
- net/mac80211/sta_info.c                     |    8 +-
- net/mac80211/sta_info.h                     |    6 +-
- net/mac80211/tkip.c                         |   86 +-
- net/mac80211/tkip.h                         |    4 -
- net/mac80211/tx.c                           |  841 +++++++-------
- net/mac80211/util.c                         |   59 +-
- net/mac80211/wep.c                          |   19 +-
- net/mac80211/wme.c                          |   28 +-
- net/mac80211/wme.h                          |    2 +-
- net/mac80211/wpa.c                          |  135 +--
- 137 files changed, 7615 insertions(+), 5452 deletions(-)
- create mode 100644 drivers/net/wireless/libertas/persistcfg.c
-
-Omnibus patch available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2008-06-09.patch.bz2
+diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
+index ec75d6d..cf230c1 100644
+--- a/Documentation/rfkill.txt
++++ b/Documentation/rfkill.txt
+@@ -1,83 +1,328 @@
+ rfkill - RF switch subsystem support
+ ====================================
+ 
+-1 Implementation details
+-2 Driver support
+-3 Userspace support
++1 Introduction
++2 Implementation details
++3 Kernel driver guidelines
++4 Kernel API
++5 Userspace support
+ 
+-===============================================================================
+-1: Implementation details
++
++1. Introduction:
+ 
+ The rfkill switch subsystem exists to add a generic interface to circuitry that
+-can enable or disable the RF output of a radio *transmitter* of any type.
++can enable or disable the signal output of a wireless *transmitter* of any
++type.  By far, the most common use is to disable radio-frequency transmitters.
+ 
+-When a rfkill switch is in the RFKILL_STATE_ON, the radio transmitter is
+-*enabled*.  When the rfkill switch is in the RFKILL_STATE_OFF, the radio
+-transmitter is *disabled*.
++The rfkill switch subsystem offers support for keys and switches often found on
++laptops to enable wireless devices like WiFi and Bluetooth to actually perform
++an action.
+ 
+-The rfkill switch subsystem offers support for keys often found on laptops
+-to enable wireless devices like WiFi and Bluetooth.
++The buttons to enable and disable the wireless transmitters are important in
++situations where the user is for example using his laptop on a location where
++radio-frequency transmitters _must_ be disabled (e.g. airplanes).
+ 
+-This is done by providing the user 3 possibilities:
+- 1 - The rfkill system handles all events; userspace is not aware of events.
+- 2 - The rfkill system handles all events; userspace is informed about the events.
+- 3 - The rfkill system does not handle events; userspace handles all events.
++Because of this requirement, userspace support for the keys should not be made
++mandatory.  Because userspace might want to perform some additional smarter
++tasks when the key is pressed, rfkill provides userspace the possibility to
++take over the task to handle the key events.
+ 
+-The buttons to enable and disable the wireless radios are important in
+-situations where the user is for example using his laptop on a location where
+-wireless radios _must_ be disabled (e.g. airplanes).
+-Because of this requirement, userspace support for the keys should not be
+-made mandatory. Because userspace might want to perform some additional smarter
+-tasks when the key is pressed, rfkill still provides userspace the possibility
+-to take over the task to handle the key events.
++===============================================================================
++2: Implementation details
++
++The rfkill class provides kernel drivers with an interface that allows them to
++know when they should enable or disable a wireless network device transmitter.
++
++The rfkill-input module provides the kernel with the ability to implement a
++basic response when the user presses a key or button (or toggles a switch)
++related to rfkill functionality.  It is an in-kernel implementation of default
++policy of reacting to rfkill-related input events and neither mandatory nor
++required for wireless drivers to operate.
++
++The rfkill-input module also provides EPO (emergency power-off) functionality
++for all wireless transmitters.  This function cannot be overriden, and it is
++always active.  rfkill EPO is related to *_RFKILL_ALL input events.
++
++All state changes on rfkill devices are propagated by the rfkill class to a
++notification chain and also to userspace through uevents.
+ 
+ The system inside the kernel has been split into 2 separate sections:
+ 	1 - RFKILL
+ 	2 - RFKILL_INPUT
+ 
+-The first option enables rfkill support and will make sure userspace will
+-be notified of any events through the input device. It also creates several
+-sysfs entries which can be used by userspace. See section "Userspace support".
++The first option enables rfkill support and will make sure userspace will be
++notified of any events through uevents.  It provides a notification chain for
++interested parties in the kernel to also get notified of rfkill state changes
++in other drivers.  It creates several sysfs entries which can be used by
++userspace.  See section "Userspace support".
++
++The second option provides an rfkill input handler. This handler will listen to
++all rfkill key events and will toggle the radio accordingly.  With this option
++enabled userspace could either do nothing or simply perform monitoring tasks.
++
++When a rfkill switch is in the RFKILL_STATE_ON, the wireless transmitter (radio
++TX circuit for example) is *enabled*.  When the rfkill switch is in the
++RFKILL_STATE_OFF, the wireless transmitter is to be *blocked* from operating.
++
++Full rfkill functionality requires two different subsystems to cooperate: the
++input layer and the rfkill class.  The input layer issues *commands* to the
++entire system requesting that devices registered to the rfkill class change
++state.  The way this interaction happens is not complex, but it is not obvious
++either:
++
++Kernel Input layer:
++
++	* Generates KEY_WWAN, KEY_WLAN, KEY_BLUETOOTH, SW_RFKILL_ALL, and
++	  other such events when the user presses certain keys, buttons, or
++	  toggles certain physical switches.
++
++	THE INPUT LAYER IS NEVER USED TO PROPAGATE STATUS, NOTIFICATIONS OR THE
++	KIND OF STUFF AN ON-SCREEN-DISPLAY APPLICATION WOULD REPORT.  It is
++	used to issue *commands* for the system to change behaviour, and these
++	commands may or may not be carried out by some kernel driver or
++	userspace application.  It follows that doing user feedback based only
++	on input events is broken, there is no guarantee that an input event
++	will be acted upon.
++
++	Most wireless communication device drivers implementing rfkill
++	functionality MUST NOT generate these events, and have no reason to
++	register themselves with the input layer.  This is a common
++	misconception.  There is an API to propagate rfkill status change
++	information, and it is NOT the input layer.
++
++rfkill class:
++
++	* Calls a hook in a driver to effectively change the wireless
++	  transmitter state;
++	* Keeps track of the wireless transmitter state (with help from
++	  the driver);
++	* Generates userspace notifications (uevents) and a call to a
++	  notification chain (kernel) when there is a wireless transmitter
++	  state change;
++	* Connects a wireless communications driver with the common rfkill
++	  control system, which, for example, allows actions such as
++	  "switch all bluetooth devices offline" to be carried out by
++	  userspace or by rfkill-input.
++
++	THE RFKILL CLASS NEVER ISSUES INPUT EVENTS.  THE RFKILL CLASS DOES
++	NOT LISTEN TO INPUT EVENTS.  NO DRIVER USING THE RFKILL CLASS SHALL
++	EVER LISTEN TO, OR ACT ON RFKILL INPUT EVENTS.
++
++	Most wireless data communication drivers in the kernel have just to
++	implement the rfkill class API to work properly.  Interfacing to the
++	input layer is not often required (and is very often a *bug*).
++
++Userspace input handlers (uevents) or kernel input handlers (rfkill-input):
++
++	* Implements the policy of what should happen when one of the input
++	  layer events related to rfkill operation is received.
++	* Uses the sysfs interface (userspace) or private rfkill API calls
++	  to tell the devices registered with the rfkill class to change
++	  their state (i.e. translates the input layer event into real
++	  action).
++	* rfkill-input implements EPO by handling EV_SW SW_RFKILL_ALL 0
++	  (power off all transmitters) in a special way: it ignores any
++	  overrides and local state cache and forces all transmitters to
++	  the OFF state (including those which are already supposed to be
++	  OFF).  Note that the opposite event (power on all transmitters)
++	  is handled normally.
++
++Userspace uevent handler or kernel platform-specific drivers hooked to the
++rfkill notifier chain:
++
++	* Taps into the rfkill notifier chain or to KOBJ_CHANGE uevents,
++	  in order to know when a device that is registered with the rfkill
++	  class changes state;
++	* Issues feedback notifications to the user;
++	* In the rare platforms where this is required, synthesizes an input
++	  event to command all *OTHER* rfkill devices to also change their
++	  statues when a specific rfkill device changes state.
++
++
++===============================================================================
++3: Kernel driver guidelines
++
++The first thing one needs to know is whether his driver should be talking to
++the rfkill class or to the input layer.
++
++Do not mistake input devices for rfkill devices.  The only type of "rfkill
++switch" device that is to be registered with the rfkill class are those
++directly controlling the circuits that cause a wireless transmitter to stop
++working (or the software equivalent of them).  Every other kind of "rfkill
++switch" is just an input device and MUST NOT be registered with the rfkill
++class.
++
++A driver should register a device with the rfkill class when ALL of the
++following conditions are met:
++
++1. The device is/controls a data communications wireless transmitter;
++
++2. The kernel can interact with the hardware/firmware to CHANGE the wireless
++   transmitter state (block/unblock TX operation);
++
++A driver should register a device with the input subsystem to issue
++rfkill-related events (KEY_WLAN, KEY_BLUETOOTH, KEY_WWAN, KEY_WIMAX,
++SW_RFKILL_ALL, etc) when ALL of the folowing conditions are met:
++
++1. It is directly related to some physical device the user interacts with, to
++   command the O.S./firmware/hardware to enable/disable a data communications
++   wireless transmitter.
++
++   Examples of the physical device are: buttons, keys and switches the user
++   will press/touch/slide/switch to enable or disable the wireless
++   communication device.
++
++2. It is NOT slaved to another device, i.e. there is no other device that
++   issues rfkill-related input events in preference to this one.
++
++   Typically, the ACPI "radio kill" switch of a laptop is the master input
++   device to issue rfkill events, and, e.g., the WLAN card is just a slave
++   device that gets disabled by its hardware radio-kill input pin.
+ 
+-The second option provides an rfkill input handler. This handler will
+-listen to all rfkill key events and will toggle the radio accordingly.
+-With this option enabled userspace could either do nothing or simply
+-perform monitoring tasks.
++When in doubt, do not issue input events.  For drivers that should generate
++input events in some platforms, but not in others (e.g. b43), the best solution
++is to NEVER generate input events in the first place.  That work should be
++deferred to a platform-specific kernel module (which will know when to generate
++events through the rfkill notifier chain) or to userspace.  This avoids the
++usual maintenance problems with DMI whitelisting.
+ 
++
++Corner cases and examples:
+ ====================================
+-2: Driver support
+ 
+-To build a driver with rfkill subsystem support, the driver should
+-depend on the Kconfig symbol RFKILL; it should _not_ depend on
+-RKFILL_INPUT.
++1. If the device is an input device that, because of hardware or firmware,
++causes wireless transmitters to be blocked regardless of the kernel's will, it
++is still just an input device, and NOT to be registered with the rfkill class.
+ 
+-Unless key events trigger an interrupt to which the driver listens, polling
+-will be required to determine the key state changes. For this the input
+-layer providers the input-polldev handler.
++2. If the wireless transmitter switch control is read-only, it is an input
++device and not to be registered with the rfkill class (and maybe not to be made
++an input layer event source either, see below).
+ 
+-A driver should implement a few steps to correctly make use of the
+-rfkill subsystem. First for non-polling drivers:
++3. If there is some other device driver *closer* to the actual hardware the
++user interacted with (the button/switch/key) to issue an input event, THAT is
++the device driver that should be issuing input events.
+ 
+-	- rfkill_allocate()
+-	- input_allocate_device()
+-	- rfkill_register()
+-	- input_register_device()
++E.g:
++  [RFKILL slider switch] -- [GPIO hardware] -- [WLAN card rf-kill input]
++                           (platform driver)    (wireless card driver)
++
++The user is closer to the RFKILL slide switch plaform driver, so the driver
++which must issue input events is the platform driver looking at the GPIO
++hardware, and NEVER the wireless card driver (which is just a slave).  It is
++very likely that there are other leaves than just the WLAN card rf-kill input
++(e.g. a bluetooth card, etc)...
++
++On the other hand, some embedded devices do this:
++
++  [RFKILL slider switch] -- [WLAN card rf-kill input]
++                             (wireless card driver)
++
++In this situation, the wireless card driver *could* register itself as an input
++device and issue rf-kill related input events... but in order to AVOID the need
++for DMI whitelisting, the wireless card driver does NOT do it.  Userspace (HAL)
++or a platform driver (that exists only on these embedded devices) will do the
++dirty job of issuing the input events.
++
++
++COMMON MISTAKES in kernel drivers, related to rfkill:
++====================================
++
++1. NEVER confuse input device keys and buttons with input device switches.
++
++  1a. Switches are always set or reset.  They report the current state
++      (on position or off position).
++
++  1b. Keys and buttons are either in the pressed or not-pressed state, and
++      that's it.  A "button" that latches down when you press it, and
++      unlatches when you press it again is in fact a switch as far as input
++      devices go.
++
++Add the SW_* events you need for switches, do NOT try to emulate a button using
++KEY_* events just because there is no such SW_* event yet.  Do NOT try to use,
++for example, KEY_BLUETOOTH when you should be using SW_BLUETOOTH instead.
++
++2. Input device switches (sources of EV_SW events) DO store their current
++state, and that state CAN be queried from userspace through IOCTLs.  There is
++no sysfs interface for this, but that doesn't mean you should break things
++trying to hook it to the rfkill class to get a sysfs interface :-)
++
++3. Do not issue *_RFKILL_ALL events, unless you are sure it is the correct
++event for your switch/button.  These events are emergency power-off events when
++they are trying to turn the transmitters off.  An example of an input device
++which SHOULD generate *_RFKILL_ALL events is the wireless-kill switch in a
++laptop which is NOT a hotkey, but a real switch that kills radios in hardware,
++even if the O.S. has gone to lunch.  An example of an input device which SHOULD
++NOT generate *_RFKILL_ALL events is any sort of hot key that does nothing by
++itself, as well as any hot key that is type-specific (e.g. the one for WLAN).
++
++
++===============================================================================
++4: Kernel API
++
++To build a driver with rfkill subsystem support, the driver should depend on
++the Kconfig symbol RFKILL; it should _not_ depend on RKFILL_INPUT.
++
++The hardware the driver talks to may be write-only (where the current state
++of the hardware is unknown), or read-write (where the hardware can be queried
++about its current state).
++
++The rfkill class will call the get_state hook of a device every time it needs
++to know the *real* current state of the hardware.  This can happen often.
++
++Some hardware provides events when its status changes.  In these cases, it is
++best for the driver to not provide a get_state hook, and instead register the
++rfkill class *already* with the correct status, and keep it updated using
++rfkill_force_state() when it gets an event from the hardware.
+ 
+-For polling drivers:
++There is no provision for a statically-allocated rfkill struct.  You must
++use rfkill_allocate() to allocate one.
+ 
++You should:
+ 	- rfkill_allocate()
+-	- input_allocate_polled_device()
++	- modify rfkill fields (flags, name)
++	- modify state to the current hardware state (THIS IS THE ONLY TIME
++	  YOU CAN ACCESS state DIRECTLY)
+ 	- rfkill_register()
+-	- input_register_polled_device()
+ 
+-When a key event has been detected, the correct event should be
+-sent over the input device which has been registered by the driver.
++Please refer to the source for more documentation.
+ 
+-====================================
+-3: Userspace support
++===============================================================================
++5: Userspace support
++
++rfkill devices issue uevents (with an action of "change"), with the following
++environment variables set:
++
++RFKILL_NAME
++RFKILL_STATE
++RFKILL_TYPE
+ 
+-For each key an input device will be created which will send out the correct
+-key event when the rfkill key has been pressed.
++The ABI for these variables is defined by the sysfs attributes.  It is best
++to take a quick look at the source to make sure of the possible values.
++
++It is expected that HAL will trap those, and bridge them to DBUS, etc.  These
++events CAN and SHOULD be used to give feedback to the user about the rfkill
++status of the system.
++
++Input devices may issue events that are related to rfkill.  These are the
++various KEY_* events and SW_* events supported by rfkill-input.c.
++
++******IMPORTANT******
++When rfkill-input is ACTIVE, userspace is NOT TO CHANGE THE STATE OF AN RFKILL
++SWITCH IN RESPONSE TO AN INPUT EVENT also handled by rfkill-input, unless it
++has set to true the user_claim attribute for that particular switch.  This rule
++is *absolute*; do NOT violate it.
++******IMPORTANT******
++
++Userspace must not assume it is the only source of control for rfkill switches.
++Their state CAN and WILL change on its own, due to firmware actions, direct
++user actions, and the rfkill-input EPO override for *_RFKILL_ALL.
++
++When rfkill-input is not active, userspace must initiate an rfkill status
++change by writing to the "state" attribute in order for anything to happen.
++
++Take particular care to implement EV_SW SW_RFKILL_ALL properly.  When that
++switch is set to OFF, *every* rfkill device *MUST* be immediately put into the
++OFF state, no questions asked.
+ 
+ The following sysfs entries will be created:
+ 
+@@ -87,10 +332,18 @@ The following sysfs entries will be created:
+ 	claim: 1: Userspace handles events, 0: Kernel handles events
+ 
+ Both the "state" and "claim" entries are also writable. For the "state" entry
+-this means that when 1 or 0 is written all radios, not yet in the requested
+-state, will be will be toggled accordingly.
++this means that when 1 or 0 is written, the device rfkill state (if not yet in
++the requested state), will be will be toggled accordingly.
++
+ For the "claim" entry writing 1 to it means that the kernel no longer handles
+ key events even though RFKILL_INPUT input was enabled. When "claim" has been
+ set to 0, userspace should make sure that it listens for the input events or
+-check the sysfs "state" entry regularly to correctly perform the required
+-tasks when the rkfill key is pressed.
++check the sysfs "state" entry regularly to correctly perform the required tasks
++when the rkfill key is pressed.
++
++A note about input devices and EV_SW events:
++
++In order to know the current state of an input device switch (like
++SW_RFKILL_ALL), you will need to use an IOCTL.  That information is not
++available through sysfs in a generic way at this time, and it is not available
++through the rfkill class AT ALL.
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.5.4
+
