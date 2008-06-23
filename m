@@ -1,57 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:8978 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750930AbYF1MUl (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:52591 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754887AbYFWUXO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 08:20:41 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so234289nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 05:20:40 -0700 (PDT)
-Message-ID: <f6ca9fed0806280520u10272c66see3e1d4a24cb2974@mail.gmail.com> (sfid-20080628_142106_210577_AF8CE558)
-Date: Sat, 28 Jun 2008 14:20:40 +0200
-From: drago01 <drago01@gmail.com>
-To: "Linux Wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] b43/b43legacy: use RFKILL_STATE_UNBLOCKED instead of RFKILL_STATE_ON
-Cc: "Michael Buesch" <mb@bu3sch.de>,
-	"Larry Finger" <larry.finger@lwfinger.net>,
-	stefano.brivio@polimi.it,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
-	"Ivo van Doorn" <ivdoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 23 Jun 2008 16:23:14 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Thomas Renninger <trenn@suse.de>,
+	Fabien Crespel <fabien@crespel.net>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: [PATCH 02/13] rfkill: fix minor typo in kernel doc
+Date: Mon, 23 Jun 2008 17:22:57 -0300
+Message-Id: <1214252588-30723-3-git-send-email-hmh@hmh.eng.br> (sfid-20080623_222325_012084_6A33BEC3)
+In-Reply-To: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
+References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes the usage RFKILL_STATE_ON and uses
-RFKILL_STATE_UNBLOCKED instead.
+Fix a minor typo in an exported function documentation
 
-Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Dmitry Torokhov <dtor@mail.ru>
+---
+ net/rfkill/rfkill.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/rfkill.c
-b/drivers/net/wireless/b43/rfkill.c
-index 4cca203..34ae125 100644
---- a/drivers/net/wireless/b43/rfkill.c
-+++ b/drivers/net/wireless/b43/rfkill.c
-@@ -135,7 +135,7 @@ void b43_rfkill_init(struct b43_wldev *dev)
- 	snprintf(rfk->name, sizeof(rfk->name),
- 		 "b43-%s", wiphy_name(wl->hw->wiphy));
- 	rfk->rfkill->name = rfk->name;
--	rfk->rfkill->state = RFKILL_STATE_ON;
-+	rfk->rfkill->state = RFKILL_STATE_UNBLOCKED;
- 	rfk->rfkill->data = dev;
- 	rfk->rfkill->toggle_radio = b43_rfkill_soft_toggle;
- 	rfk->rfkill->user_claim_unsupported = 1;
-diff --git a/drivers/net/wireless/b43legacy/rfkill.c
-b/drivers/net/wireless/b43legacy/rfkill.c
-index 8935a30..b32bf6a 100644
---- a/drivers/net/wireless/b43legacy/rfkill.c
-+++ b/drivers/net/wireless/b43legacy/rfkill.c
-@@ -139,7 +139,7 @@ void b43legacy_rfkill_init(struct b43legacy_wldev *dev)
- 	snprintf(rfk->name, sizeof(rfk->name),
- 		 "b43legacy-%s", wiphy_name(wl->hw->wiphy));
- 	rfk->rfkill->name = rfk->name;
--	rfk->rfkill->state = RFKILL_STATE_ON;
-+	rfk->rfkill->state = RFKILL_STATE_UNBLOCKED;
- 	rfk->rfkill->data = dev;
- 	rfk->rfkill->toggle_radio = b43legacy_rfkill_soft_toggle;
- 	rfk->rfkill->user_claim_unsupported = 1;
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index 4e10a95..f95081a 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -412,7 +412,7 @@ int rfkill_register(struct rfkill *rfkill)
+ EXPORT_SYMBOL(rfkill_register);
+ 
+ /**
+- * rfkill_unregister - Uegister a rfkill structure.
++ * rfkill_unregister - Unregister a rfkill structure.
+  * @rfkill: rfkill structure to be unregistered
+  *
+  * This function should be called by the network driver during device
+-- 
+1.5.5.4
+
