@@ -1,84 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.178]:37454 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752025AbYFVOAZ (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:36172 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756351AbYFWUXQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jun 2008 10:00:25 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so1079918ika.5
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Jun 2008 07:00:23 -0700 (PDT)
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: Re: [RFC-PATCH] mac80211: add helpers for skb manipulation
-Date: Sun, 22 Jun 2008 16:18:47 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1213939944.6591.13.camel@brick>
-In-Reply-To: <1213939944.6591.13.camel@brick>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200806221618.47366.IvDoorn@gmail.com> (sfid-20080622_160030_563054_6966D817)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Mon, 23 Jun 2008 16:23:16 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Thomas Renninger <trenn@suse.de>,
+	Fabien Crespel <fabien@crespel.net>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: [PATCH 01/13] rfkill: clarify meaning of rfkill states
+Date: Mon, 23 Jun 2008 17:22:56 -0300
+Message-Id: <1214252588-30723-2-git-send-email-hmh@hmh.eng.br> (sfid-20080623_222326_499574_8544BCA0)
+In-Reply-To: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
+References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-> index ce62b16..493ce19 100644
-> --- a/net/mac80211/util.c
-> +++ b/net/mac80211/util.c
-> @@ -176,6 +176,40 @@ unsigned int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
->  }
->  EXPORT_SYMBOL(ieee80211_get_hdrlen_from_skb);
->  
-> +unsigned int
-> +ieee80211_hdrlen_check_skb(const struct sk_buff *skb, unsigned int slack)
-> +{
-> +	const struct ieee80211_hdr *hdr;
-> +	unsigned int hdrlen;
-> +
-> +	hdr = (const struct ieee80211_hdr *)skb->data;
-> +	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+rfkill really should have been named rfswitch.  As it is, one can get
+confused whether RFKILL_STATE_ON means the KILL switch is on (and
+therefore, the radio is being *blocked* from operating), or whether it
+means the RADIO rf output is on.
 
-	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+Clearly state that RFKILL_STATE_ON means the radio is *unblocked* from
+operating (i.e. there is no rf killing going on).
 
-That way you don't need the  const struct ieee80211_hdr *hdr variable.
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Dmitry Torokhov <dtor@mail.ru>
+---
+ Documentation/rfkill.txt |    7 +++++++
+ include/linux/rfkill.h   |    6 +++---
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-> +	if (skb->len < hdrlen + slack)
-> +		return 0;
-> +	else
-> +		return hdrlen;
-> +}
-> +EXPORT_SYMBOL(ieee80211_hdrlen_check_skb);
-> +
-> +void ieee80211_skb_trim_iv_icv(struct sk_buff *skb,
-> +			       unsigned int iv, unsigned int icv)
-> +{
-> +	struct ieee80211_hdr *hdr;
-> +	unsigned int hdrlen;
-> +
-> +	if (icv)
-> +		skb_trim(skb, skb->len - icv);
-> +
-> +	if (iv) {
-> +		hdr = (struct ieee80211_hdr *)skb->data;
-> +		hdrlen = ieee80211_hdrlen(hdr->frame_control);
-
-		hdrlen = ieee80211_get_hdrlen_from_skb(skb);
-
-> +		memmove(skb->data + iv, skb->data, hdrlen);
-> +		skb_pull(skb, iv);
-> +	}
-> +}
-> +
->  int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
->  {
->  	int ae = meshhdr->flags & IEEE80211S_FLAGS_AE;
-> diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
-> index e7b6344..39bd9c9 100644
-> --- a/net/mac80211/wep.c
-> +++ b/net/mac80211/wep.c
-> @@ -104,22 +104,6 @@ static u8 *ieee80211_wep_add_iv(struct ieee80211_local *local,
->  	return newhdr + hdrlen;
->  }
->  
+diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
+index a83ff23..ec75d6d 100644
+--- a/Documentation/rfkill.txt
++++ b/Documentation/rfkill.txt
+@@ -8,6 +8,13 @@ rfkill - RF switch subsystem support
+ ===============================================================================
+ 1: Implementation details
+ 
++The rfkill switch subsystem exists to add a generic interface to circuitry that
++can enable or disable the RF output of a radio *transmitter* of any type.
++
++When a rfkill switch is in the RFKILL_STATE_ON, the radio transmitter is
++*enabled*.  When the rfkill switch is in the RFKILL_STATE_OFF, the radio
++transmitter is *disabled*.
++
+ The rfkill switch subsystem offers support for keys often found on laptops
+ to enable wireless devices like WiFi and Bluetooth.
+ 
+diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+index e3ab21d..ca89ae1 100644
+--- a/include/linux/rfkill.h
++++ b/include/linux/rfkill.h
+@@ -44,8 +44,8 @@ enum rfkill_type {
+ };
+ 
+ enum rfkill_state {
+-	RFKILL_STATE_OFF	= 0,
+-	RFKILL_STATE_ON		= 1,
++	RFKILL_STATE_OFF	= 0,	/* Radio output blocked */
++	RFKILL_STATE_ON		= 1,	/* Radio output active */
+ };
+ 
+ /**
+@@ -53,7 +53,7 @@ enum rfkill_state {
+  * @name: Name of the switch.
+  * @type: Radio type which the button controls, the value stored
+  *	here should be a value from enum rfkill_type.
+- * @state: State of the switch (on/off).
++ * @state: State of the switch, "ON" means radio can operate.
+  * @user_claim_unsupported: Whether the hardware supports exclusive
+  *	RF-kill control by userspace. Set this before registering.
+  * @user_claim: Set when the switch is controlled exlusively by userspace.
+-- 
+1.5.5.4
 
