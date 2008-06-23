@@ -1,60 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.247]:6284 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751995AbYF3IVO (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.239]:62181 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753115AbYFWLRY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 04:21:14 -0400
-Received: by an-out-0708.google.com with SMTP id d40so274110and.103
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2008 01:21:12 -0700 (PDT)
-Message-ID: <43e72e890806300121q34a71b39o6f9868cc0f788a87@mail.gmail.com> (sfid-20080630_102118_142836_FC23180B)
-Date: Mon, 30 Jun 2008 01:21:12 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "George Fong" <george@lateralplains.com>
-Subject: Re: Problem making compat-wireless-2.6
-Cc: "=?UTF-8?Q?Stefanik_G=C3=A1bor?=" <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200806291133.45866.george@lateralplains.com>
+	Mon, 23 Jun 2008 07:17:24 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so7013690rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jun 2008 04:17:23 -0700 (PDT)
+Message-ID: <a32f33a40806230417i68e4d19aj76a481d7dbf2c611@mail.gmail.com> (sfid-20080623_131732_516748_417041EC)
+Date: Mon, 23 Jun 2008 13:17:23 +0200
+From: "Ivo Van Doorn" <ivdoorn@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: mac80211: workqueue & RTNL lock
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+In-Reply-To: <200806231120.41519.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <200806281953.16371.george@lateralplains.com>
-	 <69e28c910806280421t5e0de8edm8d6aab9cd582ccb7@mail.gmail.com>
-	 <200806291133.45866.george@lateralplains.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200806230042.41219.IvDoorn@gmail.com>
+	 <200806230030.42776.mb@bu3sch.de>
+	 <a32f33a40806230130t11022b31p3d9997ab5e449fe6@mail.gmail.com>
+	 <200806231120.41519.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 28, 2008 at 6:33 PM, George Fong <george@lateralplains.com> wrote:
-> <snip>
+On 6/23/08, Michael Buesch <mb@bu3sch.de> wrote:
+> On Monday 23 June 2008 10:30:47 Ivo Van Doorn wrote:
+>> On 6/23/08, Michael Buesch <mb@bu3sch.de> wrote:
+>> > On Monday 23 June 2008 00:42:41 Ivo van Doorn wrote:
+>> >> That function calls flush_workqueue()
+>> >
+>> > Uh wait. It shouldn't call that. Where exactly is this function called?
+>>
+>> It is called right before local->ops->remove_interface() which means the
+>> workqueue is flushed when it isn't even guaranteed that all interfaces are
+>> gone.
+>>
+>> net/mac80211/main.c:553
+>>
+>> static int ieee80211_stop(struct net_device *dev)
+>> {
+>> <snip>
+>>   switch (sdata->vif.type) {
+>> 	case IEEE80211_IF_TYPE_MESH_POINT:
+>> 	case IEEE80211_IF_TYPE_STA:
+>> 	case IEEE80211_IF_TYPE_IBSS:
+>>         <snip>
+>>         flush_workqueue(local->hw.workqueue);
+>>        <snip>
+>>   }
+>> <snip>
+>> }
 >
-> Dang :-) This was the fix.
->
->> Try editing drivers/net/wireless/b43/rfkill.c, and replacing
->> RFKILL_STATE_UNBLOCKED with RFKILL_STATE_ON and
->> RFKILL_STATE_SOFT_BLOCKED with RFKILL_STATE_OFF. Looks like rfkill is
->> not part of the compat package, and no work has been done to match
->> compat-wireless to older RFKILLs.
->
-> Thank you for such prompt responses. Although I did this for the b43 driver, I
-> ended up progressively having to do the same fix for the drivers for a couple
-> more, ie iwlwifi and rxt200
->
-> I am not concerned about the rxt200 but the driver I was interested in was the
-> iwl4965, so I am not sure that by changing the settings on iwl-rfkill.c I
-> have affected the driver I am using ....
->
->
-> Having said that... the email is brought to you courtesy of the iwl9645 wifi
-> device .. which has got to be a Good Thing ;-)
->
-> Agree about the proper way of doing things - should really install a newer
-> kernel, but I am strapped into an nVidia graphics card on my laptop and the
-> livna drivers keep pace well but I think I risk breaking these at the moment
-> with the newer kernel.
->
-> Thank you all for your prompt responses and asistance... on a weekend no
-> less :-) I'll monitor progress and contribute whatever little I can as I get
-> this new laptop settled.
+> Oh right. I see. This is actually OK. I thought it would flush the global
+> wq.
+> The local mac80211 wq was introduced to workaround this rtnl deadlock,
+> so I'm surprised it happens again.
 
-I've fixed this in compat-wireless, it should now compile fine for
-kernels <= 2.6.26.
+Well it was caused by the recent introduction of the interface iterator.
+Question now is if we need to restrict the usage, remove the flush_workqueue,
+or change the locking in the interface iterator. :S
 
-  Luis
+Ivo
