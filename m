@@ -1,133 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:35733 "EHLO hostap.isc.org"
+Received: from mx2.mail.elte.hu ([157.181.151.9]:33019 "EHLO mx2.mail.elte.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755297AbYFQQBD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 12:01:03 -0400
-Message-Id: <20080617160008.473796805@localhost> (sfid-20080617_180143_352695_72482E12)
-References: <20080617154008.883383150@localhost>
-Date: Tue, 17 Jun 2008 18:40:14 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC PATCH 6/7] 802.11w: WEXT configuration for IGTK
+	id S1753117AbYFWImL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jun 2008 04:42:11 -0400
+Date: Mon, 23 Jun 2008 10:41:23 +0200
+From: Ingo Molnar <mingo@elte.hu>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>,
+	David Ellingsworth <david@identd.dyndns.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jeff Garzik <jgarzik@pobox.com>, netdev@vger.kernel.org
+Subject: Re: [PATCH/RFC] remove irqs_disabled warning from local_bh_enable
+Message-ID: <20080623084123.GA32688@elte.hu> (sfid-20080623_104218_239798_D4EE286C)
+References: <1213739834.3803.137.camel@johannes.berg> <20080620155541.GC6656@elte.hu> <200806201801.09858.mb@bu3sch.de> <200806201818.34904.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200806201818.34904.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added new SIOCSIWENCODEEXT algorithm for configuring BIP (AES-CMAC)
-keys (IGTK).
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
+* Michael Buesch <mb@bu3sch.de> wrote:
 
+> On Friday 20 June 2008 18:01:09 Michael Buesch wrote:
+> > On Friday 20 June 2008 17:55:41 Ingo Molnar wrote:
+> > > 
+> > > * Michael Buesch <mb@bu3sch.de> wrote:
+> > > 
+> > > > On Friday 20 June 2008 17:27:48 Ingo Molnar wrote:
+> > > > >  [<c012b361>] local_bh_enable_ip+0xd1/0xe0
+> > > > >  [<c08d9f9f>] _spin_unlock_bh+0x2f/0x40
+> > > > >  [<c0471b92>] vortex_timer+0xe2/0x3e0
+> > > > 
+> > > > > real bug or false positive?
+> > > > 
+> > > > Well, a timer runs with IRQs disabled, no? So this would be a bug.
+> > > 
+> > > indeed - agreed :) [no time for me to fix it, but can test any rfc patch.]
+> > 
+> > A quick workaround always is to convert the lock into an _irqsafe lock.
+> > Although it introduces higher overhead (interrupt-wise), it prevents the bug.
+> > A real fix would require to understand the locking in the driver, which I
+> > don't, as I never looked at the driver. :)
+> 
+> 
+> However, looking at the driver I think the fix actually is trivial:
+> 
+> Index: wireless-testing/drivers/net/3c59x.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/3c59x.c	2008-05-16 00:26:29.000000000 +0200
+> +++ wireless-testing/drivers/net/3c59x.c	2008-06-20 18:16:55.000000000 +0200
+> @@ -1768,9 +1768,10 @@ vortex_timer(unsigned long data)
+>  	case XCVR_MII: case XCVR_NWAY:
+>  		{
+>  			ok = 1;
+> -			spin_lock_bh(&vp->lock);
+> +			/* Interrupts are already disabled */
+> +			spin_lock(&vp->lock);
+>  			vortex_check_media(dev, 0);
+> -			spin_unlock_bh(&vp->lock);
+> +			spin_unlock(&vp->lock);
+>  		}
+>  		break;
+>  	  default:					/* Other media types handled by Tx timeouts. */
+> 
+> 
+> vp->lock is also taken in hardware IRQ context, so we _have_ to always 
+> use irqsafe locking. As we run in a timer with IRQs disabled, we can 
+> simply use spin_lock.
 
-Index: wireless-testing/include/linux/wireless.h
-===================================================================
---- wireless-testing.orig/include/linux/wireless.h
-+++ wireless-testing/include/linux/wireless.h
-@@ -615,6 +615,7 @@
- #define IW_ENCODE_ALG_TKIP	2
- #define IW_ENCODE_ALG_CCMP	3
- #define IW_ENCODE_ALG_PMK	4
-+#define IW_ENCODE_ALG_AES_CMAC	5
- /* struct iw_encode_ext ->ext_flags */
- #define IW_ENCODE_EXT_TX_SEQ_VALID	0x00000001
- #define IW_ENCODE_EXT_RX_SEQ_VALID	0x00000002
-Index: wireless-testing/net/mac80211/wext.c
-===================================================================
---- wireless-testing.orig/net/mac80211/wext.c
-+++ wireless-testing/net/mac80211/wext.c
-@@ -40,7 +40,14 @@ static int ieee80211_set_encryption(stru
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	if (idx < 0 || idx >= NUM_DEFAULT_KEYS) {
-+	if (alg == ALG_AES_CMAC) {
-+		if (idx < NUM_DEFAULT_KEYS ||
-+		    idx >= NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS) {
-+			printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d "
-+			       "(BIP)\n", dev->name, idx);
-+			return -EINVAL;
-+		}
-+	} else if (idx < 0 || idx >= NUM_DEFAULT_KEYS) {
- 		printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d\n",
- 		       dev->name, idx);
- 		return -EINVAL;
-@@ -99,6 +106,9 @@ static int ieee80211_set_encryption(stru
- 
- 		if (set_tx_key || (!sta && !sdata->default_key && key))
- 			ieee80211_set_default_key(sdata, idx);
-+		if (alg == ALG_AES_CMAC &&
-+		    (set_tx_key || (!sta && !sdata->default_mgmt_key && key)))
-+			ieee80211_set_default_mgmt_key(sdata, idx);
- 	}
- 
-  out_unlock:
-@@ -1076,6 +1086,9 @@ static int ieee80211_ioctl_siwencodeext(
- 	case IW_ENCODE_ALG_CCMP:
- 		alg = ALG_CCMP;
+thanks Michael! I have applied your fix to the tip/out-of-tree 
+local/non-propagated fixlets branch for more testing. It takes up to 4 
+hours to trigger this warning on that testbox, so i should know it 
+whether it fixes the bug later today.
+
+Cc:-ed Jeff, he might want to pick up this fix, find the tidied up 
+commit below. (3c59x is still present in various older laptops, so 
+-stable candidate too i guess.)
+
+	Ingo
+
+---------------------->
+commit 24a5454d9f7863b00143760197f0ec29c8234289
+Author: Michael Buesch <mb@bu3sch.de>
+Date:   Fri Jun 20 18:18:34 2008 +0200
+
+    net, vortex: fix lockup
+    
+    Ingo Molnar reported:
+    
+    -tip testing found that Johannes Berg's "softirq: remove irqs_disabled
+    warning from local_bh_enable" enhancement to lockdep triggers a new
+    warning on an old testbox that uses 3c59x vortex and netlogging:
+    
+    ----->
+    calling  vortex_init+0x0/0xb0
+    PCI: Found IRQ 10 for device 0000:00:0b.0
+    PCI: Sharing IRQ 10 with 0000:00:0a.0
+    PCI: Sharing IRQ 10 with 0000:00:0b.1
+    3c59x: Donald Becker and others.
+    0000:00:0b.0: 3Com PCI 3c556 Laptop Tornado at e0800400.
+    PCI: Enabling bus mastering for device 0000:00:0b.0
+    initcall vortex_init+0x0/0xb0 returned 0 after 47 msecs
+    ...
+    calling  init_netconsole+0x0/0x1b0
+    netconsole: local port 4444
+    netconsole: local IP 10.0.1.9
+    netconsole: interface eth0
+    netconsole: remote port 4444
+    netconsole: remote IP 10.0.1.16
+    netconsole: remote ethernet address 00:19:xx:xx:xx:xx
+    netconsole: device eth0 not up yet, forcing it
+    eth0:  setting half-duplex.
+    eth0:  setting full-duplex.
+    ------------[ cut here ]------------
+    WARNING: at kernel/softirq.c:137 local_bh_enable_ip+0xd1/0xe0()
+    Pid: 1, comm: swapper Not tainted 2.6.26-rc6-tip #2091
+     [<c0125ecf>] warn_on_slowpath+0x4f/0x70
+     [<c0126834>] ? release_console_sem+0x1b4/0x1d0
+     [<c0126d00>] ? vprintk+0x2a0/0x450
+     [<c012fde5>] ? __mod_timer+0xa5/0xc0
+     [<c046f7fd>] ? mdio_sync+0x3d/0x50
+     [<c0160ef6>] ? marker_probe_cb+0x46/0xa0
+     [<c0126ed7>] ? printk+0x27/0x50
+     [<c046f4c3>] ? vortex_set_duplex+0x43/0xc0
+     [<c046f521>] ? vortex_set_duplex+0xa1/0xc0
+     [<c0471b92>] ? vortex_timer+0xe2/0x3e0
+     [<c012b361>] local_bh_enable_ip+0xd1/0xe0
+     [<c08d9f9f>] _spin_unlock_bh+0x2f/0x40
+     [<c0471b92>] vortex_timer+0xe2/0x3e0
+     [<c014743b>] ? trace_hardirqs_on+0xb/0x10
+     [<c0147358>] ? trace_hardirqs_on_caller+0x88/0x160
+     [<c012f8b2>] run_timer_softirq+0x162/0x1c0
+     [<c0471ab0>] ? vortex_timer+0x0/0x3e0
+     [<c012b361>] local_bh_enable_ip+0xd1/0xe0
+     [<c08d9f9f>] _spin_unlock_bh+0x2f/0x40
+     [<c0471b92>] vortex_timer+0xe2/0x3e0
+     [<c014743b>] ? trace_hardirqs_on+0xb/0x10
+     [<c0147358>] ? trace_hardirqs_on_caller+0x88/0x160
+     [<c012f8b2>] run_timer_softirq+0x162/0x1c0
+     [<c0471ab0>] ? vortex_timer+0x0/0x3e0
+     [<c0471ab0>] ? vortex_timer+0x0/0x3e0
+     [<c012b60a>] __do_softirq+0x9a/0x160
+     [<c012b570>] ? __do_softirq+0x0/0x160
+     [<c0106775>] call_on_stack+0x15/0x30
+     [<c012b4f5>] ? irq_exit+0x55/0x60
+     [<c0106e85>] ? do_IRQ+0x85/0xd0
+     [<c0147391>] ? trace_hardirqs_on_caller+0xc1/0x160
+     [<c0104888>] ? common_interrupt+0x28/0x30
+     [<c08d8ac8>] ? mutex_unlock+0x8/0x10
+     [<c08d8180>] ? _cond_resched+0x10/0x30
+     [<c07a3be7>] ? netpoll_setup+0x117/0x390
+     [<c0cbfcfe>] ? init_netconsole+0x14e/0x1b0
+     [<c013d539>] ? ktime_get+0x19/0x40
+     [<c0c9bab2>] ? kernel_init+0x1b2/0x2c0
+     [<c0cbfbb0>] ? init_netconsole+0x0/0x1b0
+     [<c0396aa4>] ? trace_hardirqs_on_thunk+0xc/0x10
+     [<c0103f12>] ? restore_nocheck_notrace+0x0/0xe
+     [<c0c9b900>] ? kernel_init+0x0/0x2c0
+     [<c0c9b900>] ? kernel_init+0x0/0x2c0
+     [<c0104aa7>] ? kernel_thread_helper+0x7/0x10
+     =======================
+    ---[ end trace 37f9c502aff112e0 ]---
+    console [netcon0] enabled
+    netconsole: network logging started
+    initcall init_netconsole+0x0/0x1b0 returned 0 after 2914 msecs
+    
+    looking at the driver I think the bug is real and the fix actually
+    is trivial.
+    
+    vp->lock is also taken in hardware IRQ context, so we _have_ to always
+    use irqsafe locking. As we run in a timer with IRQs disabled,
+    we can simply use spin_lock.
+    
+    Cc: <stable@kernel.org>
+    Signed-off-by: Ingo Molnar <mingo@elte.hu>
+
+diff --git a/drivers/net/3c59x.c b/drivers/net/3c59x.c
+index 2edda8c..aabad8c 100644
+--- a/drivers/net/3c59x.c
++++ b/drivers/net/3c59x.c
+@@ -1768,9 +1768,10 @@ vortex_timer(unsigned long data)
+ 	case XCVR_MII: case XCVR_NWAY:
+ 		{
+ 			ok = 1;
+-			spin_lock_bh(&vp->lock);
++			/* Interrupts are already disabled */
++			spin_lock(&vp->lock);
+ 			vortex_check_media(dev, 0);
+-			spin_unlock_bh(&vp->lock);
++			spin_unlock(&vp->lock);
+ 		}
  		break;
-+	case IW_ENCODE_ALG_AES_CMAC:
-+		alg = ALG_AES_CMAC;
-+		break;
- 	default:
- 		return -EOPNOTSUPP;
- 	}
-@@ -1084,20 +1097,41 @@ static int ieee80211_ioctl_siwencodeext(
- 		remove = 1;
- 
- 	idx = erq->flags & IW_ENCODE_INDEX;
--	if (idx < 1 || idx > 4) {
--		idx = -1;
--		if (!sdata->default_key)
--			idx = 0;
--		else for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
--			if (sdata->default_key == sdata->keys[i]) {
--				idx = i;
--				break;
-+	if (alg == ALG_AES_CMAC) {
-+		if (idx < NUM_DEFAULT_KEYS + 1 ||
-+		    idx > NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS) {
-+			idx = -1;
-+			if (!sdata->default_mgmt_key)
-+				idx = 0;
-+			else for (i = NUM_DEFAULT_KEYS;
-+				  i < NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS;
-+				  i++) {
-+				if (sdata->default_mgmt_key == sdata->keys[i])
-+				{
-+					idx = i;
-+					break;
-+				}
- 			}
--		}
--		if (idx < 0)
--			return -EINVAL;
--	} else
--		idx--;
-+			if (idx < 0)
-+				return -EINVAL;
-+		} else
-+			idx--;
-+	} else {
-+		if (idx < 1 || idx > 4) {
-+			idx = -1;
-+			if (!sdata->default_key)
-+				idx = 0;
-+			else for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
-+				if (sdata->default_key == sdata->keys[i]) {
-+					idx = i;
-+					break;
-+				}
-+			}
-+			if (idx < 0)
-+				return -EINVAL;
-+		} else
-+			idx--;
-+	}
- 
- 	return ieee80211_set_encryption(dev, ext->addr.sa_data, idx, alg,
- 					remove,
-
---
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+ 	  default:					/* Other media types handled by Tx timeouts. */
