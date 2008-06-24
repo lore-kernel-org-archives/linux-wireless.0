@@ -1,65 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60954 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755601AbYF3QWf (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:57069 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751468AbYFXQ74 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 12:22:35 -0400
-Subject: Re: IBSS lockdep failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240806300914n7d28f874i4ee43cb999903135@mail.gmail.com> (sfid-20080630_181404_786330_671A1257)
-References: <1ba2fa240806300848v4fd92b72n565fc113e1c122b8@mail.gmail.com>
-	 <1214841181.5507.54.camel@johannes.berg>
-	 <1ba2fa240806300914n7d28f874i4ee43cb999903135@mail.gmail.com>
-	 (sfid-20080630_181404_786330_671A1257)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-g/MoHCWduZFGM0TA4i1l"
-Date: Mon, 30 Jun 2008 18:21:53 +0200
-Message-Id: <1214842913.5507.58.camel@johannes.berg> (sfid-20080630_182238_461461_3B2FB191)
-Mime-Version: 1.0
+	Tue, 24 Jun 2008 12:59:56 -0400
+Received: by yx-out-2324.google.com with SMTP id 31so548357yxl.1
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2008 09:59:55 -0700 (PDT)
+Message-ID: <1ba2fa240806240959q398c324al9d9c009c218c0489@mail.gmail.com> (sfid-20080624_190001_306215_52E9AD26)
+Date: Tue, 24 Jun 2008 19:59:54 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Kalle Valo" <kalle.valo@iki.fi>
+Subject: Re: [PATCH 4/4] mac80211: add phy information to giwname
+Cc: "Michael Buesch" <mb@bu3sch.de>, linville@tuxdriver.com,
+	johannes@sipsolutions.net, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <87vdzzdj5m.fsf@nokia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1214303881-31525-1-git-send-email-tomas.winkler@intel.com>
+	 <1214303881-31525-4-git-send-email-tomas.winkler@intel.com>
+	 <1214303881-31525-5-git-send-email-tomas.winkler@intel.com>
+	 <200806241242.11727.mb@bu3sch.de>
+	 <1ba2fa240806240354n45c144a3n5ac8b08c7da7b7a2@mail.gmail.com>
+	 <87vdzzdj5m.fsf@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jun 24, 2008 at 5:03 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> Tomas Winkler <tomasw@gmail.com> writes:
+>
+>>> What about b-only devices?
+>>
+>> See the log message...(known issue). Currently you have to loop over
+>> rates to get this info. I wasn't sure if they are any b-only NICs
+>> under mac80211 so I didn't run to implement it.
+>
+> at76_usb will be 11b only mac80211 driver whenever we manage to
+> complete the port.
+>
+> --
+> Kalle Valo
+>
 
---=-g/MoHCWduZFGM0TA4i1l
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2008-06-30 at 19:14 +0300, Tomas Winkler wrote:
-> On Mon, Jun 30, 2008 at 6:53 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> >
-> >> phy0: Adding new IBSS station XX:XX:XX:XX:XX:XX (dev=3Dwlan0)
-> >
-> > are all of those XX entries the same?
->=20
-> Not they are not. Sorry for the paranoia :)
-
-Being able to distinguish them at least would help.
-
-johannes
-
---=-g/MoHCWduZFGM0TA4i1l
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIaQgeAAoJEKVg1VMiehFYta0P/14X3udHw7P/KMi9WQvdObig
-XhkQpGXdrDIlZbo0Rf08Lch2Nu0TGsmQZfOCaXkytJebPXoAdarjitIzPY+NYJjy
-QYMzB/ysijQzl4V18oONp6i2XlvZ5suG9llVJZz2VEogWmroNwtbaSqhhrJD8kW/
-vjgfys7rs1KEOc2tbTi0iMxnTDcHMW2hvr8ocHOO/0v4Cf1sS6Qs+zasvaa5LFn1
-RnO/9xEr9Y17HkuttbVZJRDoUBM0RGU/2j4A1+Ns1zuJbgakBZby+Ng+0l1XLYZE
-soPX2O+OEKzI3T0D6QWiIpUB4PZRgikxmMPBJWGvpYczb/kp2R5mK6rDf7fJP09o
-0CtKrcqbAIvmONyAgQhtU4dsnhgRfCa6u2a/MLZfZAe2hIjR7IvvM+6RmET3Ba6F
-/uzZ/rdbGsx/YsXhXT/+5NjTV2JOPCRYTEle1/vrMG/JNq/gtGedwT5bToPAXYkq
-vfHeZxlRrjImpGvHG0+/RJ4twbH33lTUKR53n2iZGkE1y3/eAaPdRgnR7zLGyWox
-eN7sQ9mPRsp5MKwf6blqtNI74XvDrlXXV9UXZWInuvPMtqg7RvcfRxEKM3+1tpK8
-qJpqtxtj9+docYMi4ahcTTTcZ4qs9+dRCi9SQ/0i3gILyyDc4ECJg8tU4lJrFxOO
-OkutCeRUUXnSQD3bmVIp
-=paJT
------END PGP SIGNATURE-----
-
---=-g/MoHCWduZFGM0TA4i1l--
-
+Then pls, look at the V2 of this patch if this work for you.
+Thanks
+Tomas
