@@ -1,86 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:36920 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751000AbYFSC72 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 22:59:28 -0400
-Date: Wed, 18 Jun 2008 19:48:05 -0700
-From: Joel Becker <Joel.Becker@oracle.com>
-To: Ben Nizette <bn@niasdigital.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux kernel <linux-kernel@vger.kernel.org>,
-	Greg KH <greg@kroah.com>,
-	Satyam Sharma <ssatyam@cse.iitk.ac.in>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Al Viro <viro@ftp.linux.org.uk>,
-	"H. Peter Anvin" <hpa@kernel.org>
-Subject: [RFC PATCHES] Re: Is configfs the right solution for configuration
-	based fs?
-Message-ID: <20080619024804.GA29765@mail.oracle.com> (sfid-20080619_050031_758883_A86D56E6)
-References: <43e72e890806081425h4e785800nc618fc1985f9809f@mail.gmail.com> <1213002187.698.62.camel@johannes.berg> <1213056772.4089.42.camel@moss.renham>
+Received: from smtp28.orange.fr ([80.12.242.99]:61960 "EHLO smtp28.orange.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751673AbYFXU32 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2008 16:29:28 -0400
+Message-ID: <48615925.8010203@crespel.net> (sfid-20080624_222931_372892_5499811B)
+Date: Tue, 24 Jun 2008 22:29:25 +0200
+From: Fabien Crespel <fabien@crespel.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1213056772.4089.42.camel@moss.renham>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 04/13] rfkill: add parameter to disable radios by  	default
+References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>	 <1214252588-30723-5-git-send-email-hmh@hmh.eng.br>	 <g3quvb$8sa$1@ger.gmane.org>  <g3r9hn$av5$1@ger.gmane.org> <1214330213.23127.9.camel@localhost.localdomain>
+In-Reply-To: <1214330213.23127.9.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 10, 2008 at 10:12:52AM +1000, Ben Nizette wrote:
+Dan Williams wrote :
+> On Tue, 2008-06-24 at 19:06 +0200, Fabien Crespel wrote:
+>   
+>> Indeed, I think it would be better to let the driver choose the default state 
+>> (initialization) instead of forcing it when registering. This would allow drivers 
+>> to restore the device state after a reboot or shutdown (provided the firmware 
+>> stores it, which is the case at least on my ASUS F3JC laptop).
+>>     
 >
+> Do you mean your laptop BIOS stores the value in nvram somewhere?  What
+> specific driver reads that value back out?
+>
+> Dan
+>   
+Yes, the laptop BIOS stores the value. Reading it back is done the same 
+way as reading the WLAN/BT status later (through an ACPI method), so the 
+driver only has to read and write the status at initialization to 
+restore the device status & LEDs (because the reported status doesn't 
+reflect the hardware status at boot time).
 
-	Thanks, Ben, for providing constructive comments.  I know I
-replied later with some of the known issues.  Here are some tentative
-solutions! (Why now, you ask?  I just finished up something and had a
-free moment)
+- Fabien.
 
-> What's the first one, sysfs..?  ioctl (eww..)?  I do think they solve
-> different problems, both have their place.  IMHO sysfs is forced to do
-> configuration in some situations where it just doesn't fit.  Prolly 'coz
-> sysfs have the easy __DEVICE_ATTR kinda macros where as configfs takes
-> more effort to get flying.
-<snip>
-> That and a bit of wider use would probably see configfs growing helper
-> macros like those which make sysfs attributes a piece of cake to
-> implement.
-
-	Ask, and ye shall receive.  I've actually been meaning to look
-at this for a while.  Please check out the branch configfs-attr-macros
-at my git tree.  Actually, here is the configfs.h with macros, and
-configfs_example_macros.c using them.  Let me know if this fits the
-bill.
-
-[config-attr-macros:include/linux/configfs.h]
-http://oss.oracle.com/git/jlbec/linux-2.6.git/?p=jlbec/linux-2.6.git;a=blob;f=include/linux/configfs.h;h=8be4507ab98f49f43c5212cbafe62178df9a517b;hb=c085c60b185d7431935397e43a868325d8f1da6c
-
-[config-attr-macros:Documentation/filesystems/configfs/configfs_example_macros.c]
-http://oss.oracle.com/git/jlbec/linux-2.6.git/?p=jlbec/linux-2.6.git;a=blob;f=Documentation/filesystems/configfs/configfs_example_macros.c;h=c2ece748abdf30a7d67dd9ea25c5e6ac93fbc005;hb=c085c60b185d7431935397e43a868325d8f1da6c
-
-	Compare and contrast with the original configfs_example.c (now
-configfs_example_explicit.c on that branch).  The diff is available
-here:
-http://oss.oracle.com/git/jlbec/linux-2.6.git/?p=jlbec/linux-2.6.git;a=commitdiff;h=c085c60b185d7431935397e43a868325d8f1da6c
-
-> And the trival problem that, ISTR, failing the make_group method always
-> reports -ENOMEM to userspace, no matter what the actual problem was.  I
-> think I had a patch around to pass the error code from make_group back
-> up through to userspace, I wonder what happened to that...
-
-	I've also attacked this one.  The change is in the
-make-item-errors branch.  It's already scheduled for linux-next.  Diff
-available here:
-http://oss.oracle.com/git/jlbec/linux-2.6.git/?p=jlbec/linux-2.6.git;a=commitdiff;h=34fbb494fecfd82bcbf9ed698ef305500228a84c
-
-Joel
-
--- 
-
-Life's Little Instruction Book #226
-
-	"When someone hugs you, let them be the first to let go."
-
-Joel Becker
-Principal Software Developer
-Oracle
-E-mail: joel.becker@oracle.com
-Phone: (650) 506-8127
