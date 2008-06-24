@@ -1,29 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sous-sol.org ([216.99.217.87]:33564 "EHLO sous-sol.org"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4430 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754932AbYFFRcx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2008 13:32:53 -0400
-Date: Fri, 6 Jun 2008 10:32:23 -0700
-From: Chris Wright <chrisw@sous-sol.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: stable@kernel.org, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: [stable] [PATCH stable] b43: Fix controller restart crash
-Message-ID: <20080606173223.GR30402@sequoia.sous-sol.org> (sfid-20080606_193257_782382_B87CC4C5)
-References: <200806061558.42998.mb@bu3sch.de>
+	id S1751250AbYFXVR4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2008 17:17:56 -0400
+Date: Tue, 24 Jun 2008 17:12:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Adrian Bunk <bunk@kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Adrian Bunk <bunk@stusta.de>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: RFC: always enable MAC80211_RC_PID?
+Message-ID: <20080624211222.GB25892@tuxdriver.com> (sfid-20080624_231800_644201_943A8C69)
+References: <20080622125553.GB22539@cs181133002.pp.htv.fi> <43e72e890806220804i347b942claae7b725231afcce@mail.gmail.com> <1214298259.8967.260.camel@johannes.berg> <20080624124311.GC16021@cs181140183.pp.htv.fi>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200806061558.42998.mb@bu3sch.de>
+In-Reply-To: <20080624124311.GC16021@cs181140183.pp.htv.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Michael Buesch (mb@bu3sch.de) wrote:
-> This fixes a kernel crash on rmmod, in the case where the controller
-> was restarted before doing the rmmod.
-> 
-> Upstream commit is 4735f5022c97f6624ced2ec5056c61c4b437d53b
+On Tue, Jun 24, 2008 at 03:43:14PM +0300, Adrian Bunk wrote:
 
-This is not in Linus' tree.  Where is this upstream commit?
+> Can we get one of either:
+> - all selected mac80211 algorithms are built into the mac80211 module or
 
-thanks,
--chris
+This seems fine to me.
+
+> - all selected mac80211 algorithms (including the default one) are in
+>   their own modules
+
+We got here trying to avoid this one in the first place.
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
