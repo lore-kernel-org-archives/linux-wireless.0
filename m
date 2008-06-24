@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:49942 "EHLO vs166246.vserver.de"
+Received: from main.gmane.org ([80.91.229.2]:39032 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753201AbYFUJ5J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jun 2008 05:57:09 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: john@limongrafica.com
-Subject: Re: building mac80211
-Date: Sat, 21 Jun 2008 11:56:47 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <1214042097.12100.5.camel@Johnardbell>
-In-Reply-To: <1214042097.12100.5.camel@Johnardbell>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200806211156.47246.mb@bu3sch.de> (sfid-20080621_115714_062228_04216DCD)
+	id S1759099AbYFXPKF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2008 11:10:05 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1KBA9j-000543-2W
+	for linux-wireless@vger.kernel.org; Tue, 24 Jun 2008 15:10:03 +0000
+Received: from avu243.neoplus.adsl.tpnet.pl ([83.27.54.243])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2008 15:10:03 +0000
+Received: from jarkao2 by avu243.neoplus.adsl.tpnet.pl with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2008 15:10:03 +0000
+To: linux-wireless@vger.kernel.org
+From: Jarek Poplawski <jarkao2@gmail.com>
+Subject: Re: iw lockdep warning on wireless-testing
+Date: Tue, 24 Jun 2008 17:03:19 +0200
+Message-ID: <48610CB7.5030705@gmail.com> (sfid-20080624_171009_951140_9C9FD773)
+References: <1214293174.14590.229.camel@debian.sh.intel.com>	 (sfid-20080624_094030_856715_6751BF69)  <1214297955.8967.258.camel@johannes.berg> <1214298350.14590.238.camel@debian.sh.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1214298350.14590.238.camel@debian.sh.intel.com>
+Cc: netdev@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 21 June 2008 11:54:57 John George Wright wrote:
-> Hi,
-> 
-> I'm very new to the linux operating systems so please treat me as a
-> child.
-> 
-> I have an Intel PRO/Wireless 3945ABG built into my laptop and I am
-> trying to adapt the latest version of ubuntu to work with it. I followed
-> some online instructions and downloaded the mac80211-10.0.4 tar,
-> unpacked it and used this command:
-> 
-> make SHELL=/bin/bash
-> 
-> but received the following error:
-> 
-> Building modified version in 'modified/' directory:
-> Copying modified/ from origin/...done
-> Applying patches and scripts from pending/.
->  + Applying: pending/0001-mac80211-Add-basic-IEEE-802.11n-support.patch
-> 	From 26e77a5fef845edcb5c27db52f413e7558db0e20 Mon Sep 17 00:00:00 2001
-> scripts/generate_modified: line 57: patch: command not found
-> -----patch failure output-----
-> 
-> pending/0001-mac80211-Add-basic-IEEE-802.11n-support.patch failed.
-> Terminating.
-> If patch or script failed, check pre/ and post/ for current stage.
-> make: *** [modified] Error 1
-> 
-> Would you have any idea where I'm going wrong?
+Zhu Yi wrote, On 06/24/2008 11:05 AM:
 
-apt-get install patch
+> On Tue, 2008-06-24 at 10:59 +0200, Johannes Berg wrote:
+>>> [ INFO: possible circular locking dependency detected ]
+>>> 2.6.26-rc6-wl #57
+>>> -------------------------------------------------------
+>>> iw/2763 is trying to acquire lock:
+>>>  (genl_mutex){--..}, at: [<ffffffff81216e4c>] ctrl_dumpfamily
+>> +0x31/0xf7
+>>> but task is already holding lock:
+>>>  (nlk->cb_mutex){--..}, at: [<ffffffff812137c8>] netlink_dump
+>> +0x40/0x19d
+>>> which lock already depends on the new lock.
+>> None of those is anything nl80211 has influence over, afaict.
+> 
+> Agreed. I can follow the two scenarios below. Apparently it's a ABBA
+> locking issue. Just don't know which should be the correct sequence for
+> using with the two locks.
+> 
 
--- 
-Greetings Michael.
+It should be fixed by this patch:
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=6d1a3fb567a728d31474636e167c324702a0c38b
+
+Regards,
+Jarek P.
+
