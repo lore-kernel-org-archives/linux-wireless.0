@@ -1,44 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:53845 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:39522 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751996AbYFWQyb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2008 12:54:31 -0400
-Subject: Re: 802.11 pccard, Agere 0x0156,0x0003?
-From: Dan Williams <dcbw@redhat.com>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Bernhard Reiter <bernhard@intevation.de>,
-	linux-wireless@vger.kernel.org, Dave <kilroyd@googlemail.com>
-In-Reply-To: <878wwwi0zr.fsf@nokia.com>
-References: <200806181715.20516.bernhard@intevation.de>
-	 <200806191023.39851.bernhard@intevation.de> <485A9A00.70700@gmail.com>
-	 <200806200935.55882.bernhard@intevation.de>
-	 <1213947479.8967.134.camel@johannes.berg>  <878wwwi0zr.fsf@nokia.com>
+	id S1751726AbYFXHkZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2008 03:40:25 -0400
+Subject: iw lockdep warning on wireless-testing
+From: Zhu Yi <yi.zhu@intel.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain
-Date: Mon, 23 Jun 2008 12:53:25 -0400
-Message-Id: <1214240005.16075.42.camel@localhost.localdomain> (sfid-20080623_185435_228408_7C1C2B1A)
+Date: Tue, 24 Jun 2008 15:39:34 +0800
+Message-Id: <1214293174.14590.229.camel@debian.sh.intel.com> (sfid-20080624_094030_856715_6751BF69)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-06-23 at 19:12 +0300, Kalle Valo wrote:
-> "Johannes Berg" <johannes@sipsolutions.net> writes:
-> 
-> >> > Both versions can be found at <http://www.xs4all.nl/~pptp/agere>, which
-> >> > also has patched versions for 2.6
-> >> 
-> >> Cool!
-> >> Just to make sure: This is a driver that - despite being unmaintained - should 
-> >> work? So could try it with 2.6.17, 2.6.24 and even newer?
-> >
-> > Just FYI, there are patches in the queue that will most likely make all
-> > (out-of-tree) drivers using wireless extensions break, so even if it
-> > works now it will probably not with 2.6.27.
-> 
-> What is breaking out-of-tree drivers in 2.6.27? David Miller's compat
-> WEXT stuff, or what?
+Hi,
 
-Yes.
+I begin to see below lockdep warning on wireless-testing when I use iw
+to create a monitor interface with iwl4965. Any clues?
 
-Dan
+Thanks,
+-yi
+
+=======================================================
+[ INFO: possible circular locking dependency detected ]
+2.6.26-rc6-wl #57
+-------------------------------------------------------
+iw/2763 is trying to acquire lock:
+ (genl_mutex){--..}, at: [<ffffffff81216e4c>] ctrl_dumpfamily+0x31/0xf7
+
+but task is already holding lock:
+ (nlk->cb_mutex){--..}, at: [<ffffffff812137c8>] netlink_dump+0x40/0x19d
+
+which lock already depends on the new lock.
+
+
+the existing dependency chain (in reverse order) is:
+
+-> #1 (nlk->cb_mutex){--..}:
+       [<ffffffff810518cb>] __lock_acquire+0xa4c/0xc28
+       [<ffffffff81215774>] netlink_dump_start+0xd9/0x169
+       [<ffffffff81051e5d>] lock_acquire+0x51/0x6c
+       [<ffffffff81215774>] netlink_dump_start+0xd9/0x169
+       [<ffffffff8104eab1>] debug_mutex_lock_common+0x16/0x23
+       [<ffffffff8127c622>] mutex_lock_nested+0xde/0x23f
+       [<ffffffff81215774>] netlink_dump_start+0xd9/0x169
+       [<ffffffff81216d7e>] genl_rcv_msg+0xae/0x14b
+       [<ffffffff8127c774>] mutex_lock_nested+0x230/0x23f
+       [<ffffffff81216cd0>] genl_rcv_msg+0x0/0x14b
+       [<ffffffff8121483a>] netlink_rcv_skb+0x34/0x7c
+       [<ffffffff81216fe1>] genl_rcv+0x21/0x30
+       [<ffffffff812145ec>] netlink_unicast+0x1f7/0x287
+       [<ffffffff811f7eb7>] __alloc_skb+0x84/0x132
+       [<ffffffff81214d60>] netlink_sendmsg+0x274/0x287
+       [<ffffffff811f1b49>] sock_sendmsg+0xe2/0xff
+       [<ffffffff8104582f>] autoremove_wake_function+0x0/0x2e
+       [<ffffffff81050878>] mark_held_locks+0x49/0x67
+       [<ffffffff811f1d7d>] sys_sendmsg+0x217/0x28a
+       [<ffffffff8107de49>] __do_fault+0x35d/0x3a5
+       [<ffffffff8100bf10>] tracesys+0xd5/0xda
+       [<ffffffffffffffff>] 0xffffffffffffffff
+
+-> #0 (genl_mutex){--..}:
+       [<ffffffff81050226>] print_circular_bug_header+0xc8/0xcf
+       [<ffffffff810517d0>] __lock_acquire+0x951/0xc28
+       [<ffffffff81216e4c>] ctrl_dumpfamily+0x31/0xf7
+       [<ffffffff81051e5d>] lock_acquire+0x51/0x6c
+       [<ffffffff81216e4c>] ctrl_dumpfamily+0x31/0xf7
+       [<ffffffff8104eab1>] debug_mutex_lock_common+0x16/0x23
+       [<ffffffff8127c622>] mutex_lock_nested+0xde/0x23f
+       [<ffffffff81050a10>] trace_hardirqs_on+0xf3/0x117
+       [<ffffffff81216e4c>] ctrl_dumpfamily+0x31/0xf7
+       [<ffffffff812137e3>] netlink_dump+0x5b/0x19d
+       [<ffffffff81214ef3>] netlink_recvmsg+0x180/0x2a8
+       [<ffffffff811f1a48>] sock_recvmsg+0xf0/0x10f
+       [<ffffffff8104582f>] autoremove_wake_function+0x0/0x2e
+       [<ffffffff81050878>] mark_held_locks+0x49/0x67
+       [<ffffffff811f295c>] sys_recvmsg+0x15c/0x254
+       [<ffffffff81067ac3>] audit_syscall_entry+0x12d/0x160
+       [<ffffffff8127d6da>] trace_hardirqs_on_thunk+0x35/0x3a
+       [<ffffffff8100bf10>] tracesys+0xd5/0xda
+       [<ffffffffffffffff>] 0xffffffffffffffff
+
+other info that might help us debug this:
+
+1 lock held by iw/2763:
+ #0:  (nlk->cb_mutex){--..}, at: [<ffffffff812137c8>] netlink_dump
++0x40/0x19d
+
+stack backtrace:
+Pid: 2763, comm: iw Not tainted 2.6.26-rc6-wl #57
+
+Call Trace:
+ [<ffffffff8104fe63>] print_circular_bug_tail+0x69/0x72
+ [<ffffffff81050226>] print_circular_bug_header+0xc8/0xcf
+ [<ffffffff810517d0>] __lock_acquire+0x951/0xc28
+ [<ffffffff81216e4c>] ctrl_dumpfamily+0x31/0xf7
+ [<ffffffff81051e5d>] lock_acquire+0x51/0x6c
+ [<ffffffff81216e4c>] ctrl_dumpfamily+0x31/0xf7
+ [<ffffffff8104eab1>] debug_mutex_lock_common+0x16/0x23
+ [<ffffffff8127c622>] mutex_lock_nested+0xde/0x23f
+ [<ffffffff81050a10>] trace_hardirqs_on+0xf3/0x117
+ [<ffffffff81216e4c>] ctrl_dumpfamily+0x31/0xf7
+ [<ffffffff812137e3>] netlink_dump+0x5b/0x19d
+ [<ffffffff81214ef3>] netlink_recvmsg+0x180/0x2a8
+ [<ffffffff811f1a48>] sock_recvmsg+0xf0/0x10f
+ [<ffffffff8104582f>] autoremove_wake_function+0x0/0x2e
+ [<ffffffff81050878>] mark_held_locks+0x49/0x67
+ [<ffffffff811f295c>] sys_recvmsg+0x15c/0x254
+ [<ffffffff81067ac3>] audit_syscall_entry+0x12d/0x160
+ [<ffffffff8127d6da>] trace_hardirqs_on_thunk+0x35/0x3a
+ [<ffffffff8100bf10>] tracesys+0xd5/0xda
+
+
 
