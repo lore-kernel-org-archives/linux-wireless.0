@@ -1,88 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40718 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752709AbYFIRZT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2008 13:25:19 -0400
-Subject: Re: [PATCH 2/7] mac80211: replace ieee80211_get_morefrag with
-	ieee80211_has_morefrags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1213028961.5974.18.camel@brick> (sfid-20080609_182929_823786_13F038F5)
-References: <1212774671.6340.76.camel@brick>
-	 (sfid-20080606_195947_229598_F1790495)  <1212997132.698.53.camel@johannes.berg>
-	 <1213028961.5974.18.camel@brick> (sfid-20080609_182929_823786_13F038F5)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RLnwHjI8LiIVpAW1GeMe"
-Date: Mon, 09 Jun 2008 19:22:13 +0200
-Message-Id: <1213032133.22220.3.camel@johannes.berg> (sfid-20080609_192523_146009_1233ADAB)
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:21729 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759075AbYFXMWb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2008 08:22:31 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 4/4 V2] mac80211: add phy information to giwname
+Date: Tue, 24 Jun 2008 15:22:26 +0300
+Message-Id: <1214310146-730-1-git-send-email-tomas.winkler@intel.com> (sfid-20080624_142238_358386_418F2FE0)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch add phy information to giwname. Currently
+802.11b is not treated.
 
---=-RLnwHjI8LiIVpAW1GeMe
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Quoting:
+It's not useless, it's supposed to tell you about the protocol
+capability of the device, like "IEEE 802.11b" or "IEEE 802.11abg"
 
-On Mon, 2008-06-09 at 09:29 -0700, Harvey Harrison wrote:
-> On Mon, 2008-06-09 at 09:38 +0200, Johannes Berg wrote:
-> > > -	if (ieee80211_get_morefrag(hdr))
-> > > +	if (ieee80211_has_morefrags(hdr->frame_control))
-> >=20
-> > looks fine to me, though I wonder if we should have
-> >=20
-> > ieee80211_has_morefrags(struct 80211hdr)
-> > and
-> > __ieee80211_has_morefrags(__le16 fc)
-> >=20
-> > or something with variants of the functions that do the ->frame_control=
-?
->=20
-> I considered that, but thought it was a small benefit for doubling the
-> number of helpers.
->=20
-> I chose the __le16 variant as there is some driver code that checks these
-> values in driver-specific structures, so I just left it up to the caller
-> to dereference whatever structure the frame control is held in.
->=20
-> But if both sets are wanted, I would suggest:
->=20
-> =EF=BB=BFieee80211_fc_has_morefrags(__le16 fc);
->=20
-> ieee80211_has_morefrags(struct ieee80211 *hdr)
-> {
-> 	return ieee80211_fc_has_morefrags(hdr->frame_control);
-> }
->=20
-> Do you think I should add the struct helper(s)?
+Jean
 
-It looks like you'd be using them in many places, so don't you think it
-would be helpful? I don't really care too much.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ net/mac80211/wext.c |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+index 308b953..8778c7d 100644
+--- a/net/mac80211/wext.c
++++ b/net/mac80211/wext.c
+@@ -135,7 +135,24 @@ static int ieee80211_ioctl_giwname(struct net_device *dev,
+ 				   struct iw_request_info *info,
+ 				   char *name, char *extra)
+ {
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_supported_band *sband;
++	u8 is_ht = 0;
++
+ 	strcpy(name, "IEEE 802.11");
++	sband = local->hw.wiphy->bands[IEEE80211_BAND_5GHZ];
++
++	if (sband) {
++		strcat(name, "a");
++		is_ht |= sband->ht_info.ht_supported;
++	}
++	sband = local->hw.wiphy->bands[IEEE80211_BAND_2GHZ];
++	if (sband) {
++		strcat(name, "g");
++		is_ht |= sband->ht_info.ht_supported;
++	}
++	if (is_ht)
++		strcat(name, "n");
+ 
+ 	return 0;
+ }
+-- 
+1.5.4.1
 
---=-RLnwHjI8LiIVpAW1GeMe
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJITWbCAAoJEKVg1VMiehFYIXkP/jq+cjg95VeNTOLVwSKgJuED
-gTEuTzL8VRhgWxeHiwUUKEEwEwRjZwGqM2rML3NFaF8PdihFKRPG502jZWCWgYT3
-/Hdjen8TETt9DC0QHONIvxeaT4iNKjsu9FnrOah7eIIbrKG34ih+l8OzuPpoqdBu
-3BgtNXOMt3ZgmhlgqP1rQ3DztmTFQE1bYTiAXRk0VsQHKZe3aKZrGAGYoervPrNL
-1ZkIUNRunFPbk2iP//OdiVlZlAGMmYy8NM/41n5CGyIswC3oP9q5M3h13ArNgXAP
-0KB8H40gsMDoOXRqW3Dphh5RWg8mAUGmiqZYsdGQaipCXyV4qeup5nZ5m3verm1S
-jD5zAYaMXHEsoRH4pA0quMA9iD5mJ1V2+T0oYIigW6FeTwYPL8+N0C9BnKoY6G9K
-NSX14wP0BP0LUcnrQK/NQlPYlhdnCpzw44vp+9COmhKMReAryU8UdYsG/rYrULfQ
-4e3zgqE/VtQ2zMu4PlkPNl4f5ebsDD9A5BVEaPWZ/vIikHuwqiRs2mDFJ24neK1N
-uQXdnOd8ETleAnUQoVTnb4zlo8/JiguEKthZoc17UhV6RetmX8wKj5O5sXHb52JG
-4Vq4H8h1ycQ8m4n/KiAL8KKehhaxTrfdAUxj7Zl2MmDLt62WwS5rma1ampKl6ROn
-mMQfRIQN4yTHAmKH5W45
-=ZF+Y
------END PGP SIGNATURE-----
-
---=-RLnwHjI8LiIVpAW1GeMe--
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
