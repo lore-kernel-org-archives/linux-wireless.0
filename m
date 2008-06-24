@@ -1,57 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:65412 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751529AbYFOGdf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jun 2008 02:33:35 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so3882106waf.23
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2008 23:33:35 -0700 (PDT)
-Subject: [PATCH 1/4] ath5k: use frame control helpers
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:58987 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752271AbYFXR5v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2008 13:57:51 -0400
+Subject: Re: [PATCH 04/13] rfkill: add parameter to disable radios by  
+	default
+From: Dan Williams <dcbw@redhat.com>
+To: Fabien Crespel <fabien@crespel.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <g3r9hn$av5$1@ger.gmane.org>
+References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
+	 <1214252588-30723-5-git-send-email-hmh@hmh.eng.br>
+	 <g3quvb$8sa$1@ger.gmane.org>  <g3r9hn$av5$1@ger.gmane.org>
 Content-Type: text/plain
-Date: Sat, 14 Jun 2008 23:33:38 -0700
-Message-Id: <1213511618.11544.30.camel@brick> (sfid-20080615_083341_141479_805D182F)
+Date: Tue, 24 Jun 2008 13:56:53 -0400
+Message-Id: <1214330213.23127.9.camel@localhost.localdomain> (sfid-20080624_195755_344557_A036629A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- drivers/net/wireless/ath5k/base.c |   11 ++++-------
- 1 files changed, 4 insertions(+), 7 deletions(-)
+On Tue, 2008-06-24 at 19:06 +0200, Fabien Crespel wrote:
+> Dmitry Baryshkov wrote:
+> > 
+> > Why not add the possibility for each rfkill-enabled radio to supply it's 
+> > default state?
+> > 
+> 
+> Indeed, I think it would be better to let the driver choose the default state 
+> (initialization) instead of forcing it when registering. This would allow drivers 
+> to restore the device state after a reboot or shutdown (provided the firmware 
+> stores it, which is the case at least on my ASUS F3JC laptop).
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 85045af..010c665 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1691,9 +1691,9 @@ ath5k_rx_decrypted(struct ath5k_softc *sc, struct ath5k_desc *ds,
- 	/* Apparently when a default key is used to decrypt the packet
- 	   the hw does not set the index used to decrypt.  In such cases
- 	   get the index from the packet. */
--	if ((le16_to_cpu(hdr->frame_control) & IEEE80211_FCTL_PROTECTED) &&
--			!(rs->rs_status & AR5K_RXERR_DECRYPT) &&
--			skb->len >= hlen + 4) {
-+	if (ieee80211_has_protected(hdr->frame_control) &&
-+	    !(rs->rs_status & AR5K_RXERR_DECRYPT) &&
-+	    skb->len >= hlen + 4) {
- 		keyix = skb->data[hlen + 3] >> 6;
- 
- 		if (test_bit(keyix, sc->keymap))
-@@ -1712,10 +1712,7 @@ ath5k_check_ibss_tsf(struct ath5k_softc *sc, struct sk_buff *skb,
- 	u32 hw_tu;
- 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
- 
--	if ((le16_to_cpu(mgmt->frame_control) & IEEE80211_FCTL_FTYPE) ==
--		IEEE80211_FTYPE_MGMT &&
--	    (le16_to_cpu(mgmt->frame_control) & IEEE80211_FCTL_STYPE) ==
--		IEEE80211_STYPE_BEACON &&
-+	if (ieee80211_is_beacon(mgmt->frame_control) &&
- 	    le16_to_cpu(mgmt->u.beacon.capab_info) & WLAN_CAPABILITY_IBSS &&
- 	    memcmp(mgmt->bssid, sc->ah->ah_bssid, ETH_ALEN) == 0) {
- 		/*
--- 
-1.5.6.rc3.283.g198e
+Do you mean your laptop BIOS stores the value in nvram somewhere?  What
+specific driver reads that value back out?
 
+Dan
 
