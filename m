@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:48268 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751635AbYFZVPb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 17:15:31 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC][PATCH] Realtek 8187B wireless support with product =?iso-8859-1?q?id=090x8197/0x8189?=
-Date: Thu, 26 Jun 2008 18:15:33 -0300
-Cc: "Hin-Tak Leung" <hintak_leung@yahoo.co.uk>,
-	Pavel Roskin <proski@gnu.org>,
-	Matthew Garrett <mjg@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
-	andreamrl@tiscali.it, linville@redhat.com
-References: <779389.39286.qm@web23108.mail.ird.yahoo.com> <4863F1DE.3080503@yahoo.co.uk> <4863FFBB.9020504@lwfinger.net>
-In-Reply-To: <4863FFBB.9020504@lwfinger.net>
+Received: from bu3sch.de ([62.75.166.246]:35409 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759507AbYFXKmi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2008 06:42:38 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Subject: Re: [PATCH 4/4] mac80211: add phy information to giwname
+Date: Tue, 24 Jun 2008 12:42:11 +0200
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org
+References: <1214303881-31525-1-git-send-email-tomas.winkler@intel.com> <1214303881-31525-4-git-send-email-tomas.winkler@intel.com> <1214303881-31525-5-git-send-email-tomas.winkler@intel.com>
+In-Reply-To: <1214303881-31525-5-git-send-email-tomas.winkler@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
-Message-Id: <200806261815.34342.herton@mandriva.com.br> (sfid-20080626_231534_950482_7EAD4CF4)
+Message-Id: <200806241242.11727.mb@bu3sch.de> (sfid-20080624_124243_975089_C706DB4E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Thursday 26 June 2008 17:44:43 Larry Finger escreveu:
-> Hin-Tak Leung wrote:
-<snip>
+On Tuesday 24 June 2008 12:38:01 Tomas Winkler wrote:
+> This patch add phy information to giwname. Currently
+> 802.11b is not treated.
 > 
-> > Herton's code also seem to distinguish revC/revD/revE of different 
-> > 8187B's -
-> > I don't seem to have seen those distinctions in the original vendor 
-> > code, but
-> > maybe I haven't look hard enough :-).
-> 
-> I have not found them either. FWIW, my device is reported as 
-> RTL8187BvE V0 + rtl8225z2. The decision comes from 
-> rtl818x_ioread8(priv, (u8 *)0xFFE1), but I don't know what is at that 
-> address.
+> Quoting:
+> It's not useless, it's supposed to tell you about the protocol
+> capability of the device, like "IEEE 802.11b" or "IEEE 802.11abg"
 
-In the vendor driver this is commented as being the 8187B hardware version
-register (it's a raw value address used in the code with a comment). I should
-have commented the line as something like "read 8187b hardware version
-register", or may be add a field to struct rtl818x_csr. One more thing to add
-to the patch. In fact I would like to have a datasheet or ask to someone that
-has to confirm this.
+Well, I think it _is_ pretty useless.
+However...
 
-> 
-> Larry
-> 
+> @@ -135,7 +135,24 @@ static int ieee80211_ioctl_giwname(struct net_device *dev,
+>  				   struct iw_request_info *info,
+>  				   char *name, char *extra)
+>  {
+> +	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+> +	struct ieee80211_supported_band *sband;
+> +	u8 is_ht = 0;
+> +
+>  	strcpy(name, "IEEE 802.11");
+> +	sband = local->hw.wiphy->bands[IEEE80211_BAND_5GHZ];
+> +
+> +	if (sband) {
+> +		strcat(name, "a");
+> +		is_ht |= sband->ht_info.ht_supported;
+> +	}
+> +	sband = local->hw.wiphy->bands[IEEE80211_BAND_2GHZ];
+> +	if (sband) {
+> +		strcat(name, "g");
+> +		is_ht |= sband->ht_info.ht_supported;
 
---
-[]'s
-Herton
+What about b-only devices?
+
+> +	}
+> +	if (is_ht)
+> +		strcat(name, "n");
+>  
+>  	return 0;
+>  }
+
+
+
+-- 
+Greetings Michael.
