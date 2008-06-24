@@ -1,39 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.243]:60632 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751295AbYFKKJv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 06:09:51 -0400
-Received: by an-out-0708.google.com with SMTP id d40so717612and.103
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 03:09:50 -0700 (PDT)
-Message-ID: <43e72e890806110309l2600637p82866531cf2f7e6c@mail.gmail.com> (sfid-20080611_120954_607986_34A389EF)
-Date: Wed, 11 Jun 2008 03:09:50 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: pommnitz@yahoo.com
-Subject: Re: [RFC] First CRDA integration work
+Received: from mx1.redhat.com ([66.187.233.31]:46092 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754118AbYFXVuU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2008 17:50:20 -0400
+Subject: Re: [PATCH 04/13] rfkill: add parameter to disable radios by
+	default
+From: Dan Williams <dcbw@redhat.com>
+To: Fabien Crespel <fabien@crespel.net>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <951547.47167.qm@web51403.mail.re2.yahoo.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <951547.47167.qm@web51403.mail.re2.yahoo.com>
+In-Reply-To: <48615925.8010203@crespel.net>
+References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
+	 <1214252588-30723-5-git-send-email-hmh@hmh.eng.br>
+	 <g3quvb$8sa$1@ger.gmane.org>  <g3r9hn$av5$1@ger.gmane.org>
+	 <1214330213.23127.9.camel@localhost.localdomain>
+	 <48615925.8010203@crespel.net>
+Content-Type: text/plain
+Date: Tue, 24 Jun 2008 17:49:19 -0400
+Message-Id: <1214344159.11980.21.camel@localhost.localdomain> (sfid-20080624_235024_018764_C26027A8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 11, 2008 at 1:28 AM, Joerg Pommnitz <pommnitz@yahoo.com> wrote:
-> Hello Luis,
-> I did not read the complete patch but closely looked at the CRDA design picture. I have a comment:
-> The company I work for has special regulatory approval to use amplified WLAN on certain channels (up to 4W). The nodes additionally have non-amplified WLAN adapters that fall under the normal regulatory requirements. It would be nice if your work allowed to specify such cases, e.g. have different regulatory restrictions for differen cards in the same machine. In our case we would like to restrict the amplified interface to the channels it is allowed to run on.
+On Tue, 2008-06-24 at 22:29 +0200, Fabien Crespel wrote:
+> Dan Williams wrote :
+> > On Tue, 2008-06-24 at 19:06 +0200, Fabien Crespel wrote:
+> >   
+> >> Indeed, I think it would be better to let the driver choose the default state 
+> >> (initialization) instead of forcing it when registering. This would allow drivers 
+> >> to restore the device state after a reboot or shutdown (provided the firmware 
+> >> stores it, which is the case at least on my ASUS F3JC laptop).
+> >>     
+> >
+> > Do you mean your laptop BIOS stores the value in nvram somewhere?  What
+> > specific driver reads that value back out?
+> >
+> > Dan
+> >   
+> Yes, the laptop BIOS stores the value. Reading it back is done the same 
+> way as reading the WLAN/BT status later (through an ACPI method), so the 
+> driver only has to read and write the status at initialization to 
+> restore the device status & LEDs (because the reported status doesn't 
+> reflect the hardware status at boot time).
 
-Hm, interesting. Well you can simply use a custom db.txt with a custom
-PGP private key to sign it and also provide your customers with a
-custom CRDA which uses this. All you'd have to do is modify the keys
-and db.txt. This of course doesn't work to help comply if you have
-extra regulatory efforts on the drivers using the EEPROM of firmware
-so the next best thing would be to add a struct ieee80211_regdomain to
-each struct wiphy. I considered this too but this starts to move away
-from the centralized scheme. Its good you mention this case though.
-Can you elaborate a bit more on it. Why do you need two separate WLAN
-devices on one node where each one of them is using very different
-regulatory rules? Do they both use the same frequency ranges?
+Yeah, but what driver -is- that?  asus-laptop or something?
 
-  Luis
+Dan
+
