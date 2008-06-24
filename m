@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:38154 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755123AbYFELrW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2008 07:47:22 -0400
-Subject: Re: [PATCH 3/4] libertas: check for old, unsupported hardware
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200806051308.35863.hs4233@mail.mn-solutions.de>
-References: <200806051308.35863.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Thu, 05 Jun 2008 07:46:59 -0400
-Message-Id: <1212666420.25730.4.camel@localhost.localdomain> (sfid-20080605_134738_545220_FDB0E48E)
-Mime-Version: 1.0
+Received: from rv-out-0506.google.com ([209.85.198.225]:30655 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759566AbYFXLIk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2008 07:08:40 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so7603342rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2008 04:08:37 -0700 (PDT)
+Message-ID: <1ba2fa240806240408r8df7f06te548f55dc0e6eaad@mail.gmail.com> (sfid-20080624_130846_455704_D4579492)
+Date: Tue, 24 Jun 2008 14:08:37 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 4/4] mac80211: add phy information to giwname
+Cc: "Michael Buesch" <mb@bu3sch.de>, linville@tuxdriver.com,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1214305396.8967.283.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1214303881-31525-1-git-send-email-tomas.winkler@intel.com>
+	 <1214303881-31525-4-git-send-email-tomas.winkler@intel.com>
+	 <1214303881-31525-5-git-send-email-tomas.winkler@intel.com>
+	 <200806241242.11727.mb@bu3sch.de>
+	 <1ba2fa240806240354n45c144a3n5ac8b08c7da7b7a2@mail.gmail.com>
+	 <1214305396.8967.283.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-06-05 at 13:08 +0200, Holger Schurig wrote:
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+On Tue, Jun 24, 2008 at 2:03 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>> Still many people are using wireless extension and this is probably
+>> most convenient way to get this info.
+>> For example 4956 comes with 3 combinations g, ag, and agn.
+>> It's displayed upon iwconfig
+>
+> Heh ok. I would just say "print out the rates" but I guess that doesn't
+> work with HT yet.
+>
+>> >> +             strcat(name, "g");
+>> >> +             is_ht |= sband->ht_info.ht_supported;
+>> >
+>> > What about b-only devices?
+>>
+>> See the log message...(known issue). Currently you have to loop over
+>> rates to get this info. I wasn't sure if they are any b-only NICs
+>> under mac80211 so I didn't run to implement it.
+>
+> There is, adm8211.
 
-Looks OK to me; how old are the B1 and earlier chips?  Do we just not
-have any samples to work with?
-
-Acked-by: Dan Williams <dcbw@redhat.com>
-
-> --- linux.orig/drivers/net/wireless/libertas/if_cs.c
-> +++ linux/drivers/net/wireless/libertas/if_cs.c
-> @@ -268,6 +268,12 @@
->  #define IF_CS_SCRATCH_BOOT_OK		0x00
->  #define IF_CS_SCRATCH_HELPER_OK		0x5a
->  
-> +/*
-> + * Used to detect ancient chips:
-> + */
-> +#define IF_CS_PRODUCT_ID		0x0000001C
-> +#define IF_CS_CF8385_B1_REV		0x12
-> +
->  
->  /********************************************************************/
->  /* I/O and interrupt handling                                       */
-> @@ -864,6 +871,12 @@
->  	       p_dev->irq.AssignedIRQ, p_dev->io.BasePort1,
->  	       p_dev->io.BasePort1 + p_dev->io.NumPorts1 - 1);
->  
-> +	/* Check if we have a current silicon */
-> +	if (if_cs_read8(card, IF_CS_PRODUCT_ID) < IF_CS_CF8385_B1_REV) {
-> +		lbs_pr_err("old chips like 8385 rev B1 aren't supported\n");
-> +		ret = -ENODEV;
-> +		goto out2;
-> +	}
->  
->  	/* Load the firmware early, before calling into libertas.ko */
->  	ret = if_cs_prog_helper(card);
-
+Okay I will send a patch on top of this one.
+Thanks
+Tomas
