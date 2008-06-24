@@ -1,63 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:33998 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751292AbYFTJlr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jun 2008 05:41:47 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43legacy: Fix possible NULL pointer dereference in DMA code
-Date: Fri, 20 Jun 2008 11:40:46 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:59285 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752043AbYFXRIA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2008 13:08:00 -0400
+Date: Tue, 24 Jun 2008 14:07:55 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Dmitry Baryshkov <dbaryshkov@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 04/13] rfkill: add parameter to disable radios by
+	default
+Message-ID: <20080624170755.GA17576@khazad-dum.debian.net> (sfid-20080624_190805_765018_C9F78049)
+References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br> <1214252588-30723-5-git-send-email-hmh@hmh.eng.br> <g3quvb$8sa$1@ger.gmane.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200806201140.46568.mb@bu3sch.de> (sfid-20080620_114151_000795_3AAA5BB9)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <g3quvb$8sa$1@ger.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a possible NULL pointer dereference in an error path of the
-DMA allocation error checking code. This is also necessary for a future
-DMA API change that is on its way into the mainline kernel that adds
-an additional dev parameter to dma_mapping_error().
+On Tue, 24 Jun 2008, Dmitry Baryshkov wrote:
+> Henrique de Moraes Holschuh wrote:
+> > Currently, radios are always enabled when their rfkill interface is
+> > registered.  This is not optimal, the safest state for a radio is to be
+> > offline unless the user turns it on.
+> > 
+> > Add a module parameter that causes all radios to be disabled when their
+> > rfkill interface is registered.  The module default is not changed so
+> > unless the parameter is used, radios will still be forced to their
+> > enabled state when they are registered.
+> > 
+> > The new rfkill module parameter is called "default_state".
+> 
+> Why not add the possibility for each rfkill-enabled radio to supply it's 
+> default state?
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+The radios already can, and should, inform rfkill of their power-up state
+(set rfkill->state before calling rfkill_register), but if it is different
+from the global state, rfkill will try to adjust it to match the rest of the
+system.
 
----
+When you implement rfkill support on your wireless driver, you transfer all
+policy decisions about rfkill state to the rfkill system.
 
-John, please apply to 2.6.26
+That's how it is supposed to work.  If you have all radios blocked,
+hotplugging a new one will cause it to be blocked by rfkill soon after it
+registers itsef.  If you have bluetooth unblocked, when you hotplug a new
+bluetooth radio, rfkill will unblock it when it registers itself.
 
+If you mean you'd like to be able to use kernel parameters to set the
+default state for each radio type separately, the first version of the patch
+did just that, but it was vetoed and I was asked to use a single parameter.
 
+This doesn't mean the system doesn't control the radios on a per-type basis,
+it does.  It is just that you can only tell it to start with every radio
+BLOCKED by default, or to start with every radio UNBLOCKED by default,
+regardless of type.
 
-Index: wireless-testing/drivers/net/wireless/b43legacy/dma.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43legacy/dma.c	2008-06-20 02:04:56.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43legacy/dma.c	2008-06-20 02:06:45.000000000 +0200
-@@ -873,12 +873,13 @@ struct b43legacy_dmaring *b43legacy_setu
- 	dma_addr_t dma_test;
- 
- 	ring = kzalloc(sizeof(*ring), GFP_KERNEL);
- 	if (!ring)
- 		goto out;
- 	ring->type = type;
-+	ring->dev = dev;
- 
- 	nr_slots = B43legacy_RXRING_SLOTS;
- 	if (for_tx)
- 		nr_slots = B43legacy_TXRING_SLOTS;
- 
- 	ring->meta = kcalloc(nr_slots, sizeof(struct b43legacy_dmadesc_meta),
-@@ -919,13 +920,12 @@ struct b43legacy_dmaring *b43legacy_setu
- 
- 		dma_unmap_single(dev->dev->dma_dev,
- 				 dma_test, sizeof(struct b43legacy_txhdr_fw3),
- 				 DMA_TO_DEVICE);
- 	}
- 
--	ring->dev = dev;
- 	ring->nr_slots = nr_slots;
- 	ring->mmio_base = b43legacy_dmacontroller_base(type, controller_index);
- 	ring->index = controller_index;
- 	if (type == B43legacy_DMA_64BIT)
- 		ring->ops = &dma64_ops;
- 	else
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
