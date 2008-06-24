@@ -1,86 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:19551 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759496AbYF3J1O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 05:27:14 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 23/33] iwlwifi: eliminate iwl4965_mac_get_tsf
-Date: Mon, 30 Jun 2008 17:23:23 +0800
-Message-Id: <1214817813-17639-24-git-send-email-yi.zhu@intel.com> (sfid-20080630_113813_215708_94A57311)
-In-Reply-To: <1214817813-17639-23-git-send-email-yi.zhu@intel.com>
-References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-2-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-3-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-5-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-6-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-7-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-8-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-9-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-10-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-11-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-12-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-13-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-14-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-15-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-16-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-17-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-18-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-19-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-20-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-21-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-22-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-23-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:35047 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759446AbYFXJ2w (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2008 05:28:52 -0400
+Subject: Re: mac80211: workqueue & RTNL lock
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <a32f33a40806240220s3ef070bdr591d4775ee57cb81@mail.gmail.com> (sfid-20080624_112031_465193_4527E183)
+References: <200806230042.41219.IvDoorn@gmail.com>
+	 <200806230030.42776.mb@bu3sch.de>
+	 <a32f33a40806230130t11022b31p3d9997ab5e449fe6@mail.gmail.com>
+	 <200806231120.41519.mb@bu3sch.de>
+	 <a32f33a40806230417i68e4d19aj76a481d7dbf2c611@mail.gmail.com>
+	 <1214297515.8967.253.camel@johannes.berg>
+	 <a32f33a40806240203w29d0caf7p6e2956d82d48e013@mail.gmail.com>
+	 <1214298658.8967.266.camel@johannes.berg>
+	 <a32f33a40806240220s3ef070bdr591d4775ee57cb81@mail.gmail.com>
+	 (sfid-20080624_112031_465193_4527E183)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wEC/nbl2X1U0RXdwYugH"
+Date: Tue, 24 Jun 2008 11:28:13 +0200
+Message-Id: <1214299693.8967.273.camel@johannes.berg> (sfid-20080624_112922_468405_06FAD69F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-This patch removes iwl4965_mac_get_tsf, as this function does not
-currently reports any actual value.
+--=-wEC/nbl2X1U0RXdwYugH
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   12 ------------
- 1 files changed, 0 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 7c7b103..f1cf4b1 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -3413,17 +3413,6 @@ static int iwl4965_mac_get_stats(struct ieee80211_hw *hw,
- 	return 0;
- }
- 
--static u64 iwl4965_mac_get_tsf(struct ieee80211_hw *hw)
--{
--	struct iwl_priv *priv;
--
--	priv = hw->priv;
--	IWL_DEBUG_MAC80211("enter\n");
--	IWL_DEBUG_MAC80211("leave\n");
--
--	return 0;
--}
--
- static void iwl4965_mac_reset_tsf(struct ieee80211_hw *hw)
- {
- 	struct iwl_priv *priv = hw->priv;
-@@ -4114,7 +4103,6 @@ static struct ieee80211_ops iwl4965_hw_ops = {
- 	.get_stats = iwl4965_mac_get_stats,
- 	.get_tx_stats = iwl4965_mac_get_tx_stats,
- 	.conf_tx = iwl4965_mac_conf_tx,
--	.get_tsf = iwl4965_mac_get_tsf,
- 	.reset_tsf = iwl4965_mac_reset_tsf,
- 	.beacon_update = iwl4965_mac_beacon_update,
- 	.bss_info_changed = iwl4965_bss_info_changed,
--- 
-1.5.3.6
+> > However, the interface iterator will simply not run at all if ->stop ha=
+s
+> > already succeeded since no interfaces would be UP, so you don't really
+> > have to protect it against that, you only have to make sure it's not
+> > running when you unregister your hardware struct, and _that_ doesn't
+> > have the rtnl taken so you can use cancel_work_sync() there.
+>=20
+> True, but the race condition happens when ieee80211_stop() is called,
+> and the rt2x00 work is triggered before before
+> rt2x00->remove_interface() or rt2x00>stop() is called. when stop() is
+> then called it cannot use cancel_work_sync() because
+> the work structure is waiting until stop() has completed which will
+> not end until cancel_work_sync() has completed.
+
+No, but I'm saying that ->stop doesn't need to cancel_work_sync(). You
+should have a work struct that you exclusively use for whatever you need
+to do with interfaces, so the code looks something like this:
+
+void work(...)
+{
+	iterate_interfaces();
+}
+
+maybe with some additional locking. You also use schedule_work() and not
+the mac80211-provided workqueue.
+
+This work will do exactly nothing if triggered before ->stop and running
+after ->stop because all interfaces will be gone. Hence, you don't need
+to cancel it in ->stop, you don't care whether it'll run or not.
+
+Hence, the only thing you need to take care of is that it's canceled
+before unregister_hw(), and for that you can use cancel_work_sync().
+
+Am I missing something?
+
+johannes
+
+--=-wEC/nbl2X1U0RXdwYugH
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIYL4qAAoJEKVg1VMiehFYjW8QAIqdA9bfQqlbdGLeZVTDaiuj
+od6QFXFfZBnIAXa93YjX+GGzms8UgG5XG1uTLr+Bt2NgtgI4CWuUSlkYj7qJsIN/
+P4oBmi6JEwsdFXZ1IO1iNdOObDfEQ+usz/3zkR0b5zeTN91f0pAzrNZCVbjMCIUm
+ZB/HP3brGFurLROE9noQ4Hb0ta/gYCMcmRia9/jFv8jNoGWA/p17RbiOUfuVfD2a
+f3Gl9ZRu/8wCtY9A5wxFscmFl0RBV2Kuny9UiwaoNr0l5Na9eZwojZOAe7PlRtLG
+Tg1r6NaAeMY+z1vDP/hrMrTf/WzaILjClXg1rIdrkrL8EmBhfjW8JuPz0znG6XgY
+1Iyn3bnn3WWUUGJovPO4kZ0v5iDR/BTyujqKa8Y4/Cj2U65pgGEn+4uHbo/Lcj7i
+g5xJ0GeiqN7JxuiUQLk2BLIvClebtbS+UPlljbRdYT0nM8vRV/p+fFwAlS2CtxBs
+mklYykXsw61NUEmrgyFwDd1AUXoH6lMamNr0yAftYy8QZirX7xHtoKNHj4yrjZfG
+7e4S2X0yv7uMatazsIed5AHRZHPSM1aQIz542GLkvUrQxkWvsnaltfm6TOxHUmJi
+erGDR8upp7WirYpHTG5kd4BLVkPsF7aH+rzwQbN0A4t2zm+IfhbW2LlEBLjxpTQU
+TI23B/vEmIxTLbC4uswt
+=9jv7
+-----END PGP SIGNATURE-----
+
+--=-wEC/nbl2X1U0RXdwYugH--
 
