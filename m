@@ -1,163 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:2940 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751765AbYFKVWK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 17:22:10 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so3278785wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 14:22:10 -0700 (PDT)
-Subject: [PATCHv2 06/11] mac80211: wpa.c use new access helpers
-From: Harvey Harrison <harvey.harrison@gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:19386 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750836AbYFXJGm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2008 05:06:42 -0400
+Subject: Re: iw lockdep warning on wireless-testing
+From: Zhu Yi <yi.zhu@intel.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+Cc: linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
+	netdev <netdev@vger.kernel.org>
+In-Reply-To: <1214297955.8967.258.camel@johannes.berg>
+References: <1214293174.14590.229.camel@debian.sh.intel.com>
+	 (sfid-20080624_094030_856715_6751BF69)  <1214297955.8967.258.camel@johannes.berg>
 Content-Type: text/plain
-Date: Wed, 11 Jun 2008 14:21:58 -0700
-Message-Id: <1213219318.5974.179.camel@brick> (sfid-20080611_232215_284508_6028BFF0)
+Date: Tue, 24 Jun 2008 17:05:50 +0800
+Message-Id: <1214298350.14590.238.camel@debian.sh.intel.com> (sfid-20080624_110645_985574_059A2DAD)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/wpa.c |   63 +++++++++++++--------------------------------------
- 1 files changed, 16 insertions(+), 47 deletions(-)
+On Tue, 2008-06-24 at 10:59 +0200, Johannes Berg wrote:
+> > [ INFO: possible circular locking dependency detected ]
+> > 2.6.26-rc6-wl #57
+> > -------------------------------------------------------
+> > iw/2763 is trying to acquire lock:
+> >  (genl_mutex){--..}, at: [<ffffffff81216e4c>] ctrl_dumpfamily
+> +0x31/0xf7
+> > 
+> > but task is already holding lock:
+> >  (nlk->cb_mutex){--..}, at: [<ffffffff812137c8>] netlink_dump
+> +0x40/0x19d
+> > 
+> > which lock already depends on the new lock.
+> 
+> None of those is anything nl80211 has influence over, afaict.
 
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 9f6fd20..9834cec 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -24,46 +24,22 @@ static int ieee80211_get_hdr_info(const struct sk_buff *skb, u8 **sa, u8 **da,
- {
- 	struct ieee80211_hdr *hdr;
- 	size_t hdrlen;
--	u16 fc;
--	int a4_included;
--	u8 *pos;
-+	__le16 fc;
- 
--	hdr = (struct ieee80211_hdr *) skb->data;
--	fc = le16_to_cpu(hdr->frame_control);
--
--	hdrlen = 24;
--	if ((fc & (IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS)) ==
--	    (IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS)) {
--		hdrlen += ETH_ALEN;
--		*sa = hdr->addr4;
--		*da = hdr->addr3;
--	} else if (fc & IEEE80211_FCTL_FROMDS) {
--		*sa = hdr->addr3;
--		*da = hdr->addr1;
--	} else if (fc & IEEE80211_FCTL_TODS) {
--		*sa = hdr->addr2;
--		*da = hdr->addr3;
--	} else {
--		*sa = hdr->addr2;
--		*da = hdr->addr1;
--	}
-+	hdr = (struct ieee80211_hdr *)skb->data;
-+	fc = hdr->frame_control;
- 
--	if (fc & 0x80)
--		hdrlen += 2;
-+	hdrlen = ieee80211_hdrlen(fc);
-+
-+	*sa = ieee80211_get_SA(hdr);
-+	*da = ieee80211_get_DA(hdr);
- 
- 	*data = skb->data + hdrlen;
- 	*data_len = skb->len - hdrlen;
- 
--	a4_included = (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) ==
--		(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS);
--	if ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA &&
--	    fc & IEEE80211_STYPE_QOS_DATA) {
--		pos = (u8 *) &hdr->addr4;
--		if (a4_included)
--			pos += 6;
--		*qos_tid = pos[0] & 0x0f;
--		*qos_tid |= 0x80; /* qos_included flag */
--	} else
-+	if (ieee80211_is_data_qos(fc))
-+		*qos_tid = (*ieee80211_get_qos_ctl(hdr) & 0x0f) | 0x80;
-+	else
- 		*qos_tid = 0;
- 
- 	return skb->len < hdrlen ? -1 : 0;
-@@ -186,8 +162,8 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	struct ieee80211_key *key = tx->key;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	int hdrlen, len, tail;
--	u16 fc;
-+	unsigned int hdrlen;
-+	int len, tail;
- 	u8 *pos;
- 
- 	info->control.icv_len = TKIP_ICV_LEN;
-@@ -200,8 +176,7 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 		return 0;
- 	}
- 
--	fc = le16_to_cpu(hdr->frame_control);
--	hdrlen = ieee80211_get_hdrlen(fc);
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	len = skb->len - hdrlen;
- 
- 	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
-@@ -272,14 +247,12 @@ ieee80211_rx_result
- ieee80211_crypto_tkip_decrypt(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
--	u16 fc;
- 	int hdrlen, res, hwaccel = 0, wpa_test = 0;
- 	struct ieee80211_key *key = rx->key;
- 	struct sk_buff *skb = rx->skb;
- 	DECLARE_MAC_BUF(mac);
- 
--	fc = le16_to_cpu(hdr->frame_control);
--	hdrlen = ieee80211_get_hdrlen(fc);
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 
- 	if ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
- 		return RX_CONTINUE;
-@@ -427,7 +400,6 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 	struct ieee80211_key *key = tx->key;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	int hdrlen, len, tail;
--	u16 fc;
- 	u8 *pos, *pn, *b_0, *aad, *scratch;
- 	int i;
- 
-@@ -446,8 +418,7 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 	b_0 = scratch + 3 * AES_BLOCK_LEN;
- 	aad = scratch + 4 * AES_BLOCK_LEN;
- 
--	fc = le16_to_cpu(hdr->frame_control);
--	hdrlen = ieee80211_get_hdrlen(fc);
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	len = skb->len - hdrlen;
- 
- 	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
-@@ -516,7 +487,6 @@ ieee80211_rx_result
- ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
--	u16 fc;
- 	int hdrlen;
- 	struct ieee80211_key *key = rx->key;
- 	struct sk_buff *skb = rx->skb;
-@@ -524,8 +494,7 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
- 	int data_len;
- 	DECLARE_MAC_BUF(mac);
- 
--	fc = le16_to_cpu(hdr->frame_control);
--	hdrlen = ieee80211_get_hdrlen(fc);
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 
- 	if ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
- 		return RX_CONTINUE;
--- 
-1.5.6.rc2.261.ga8fbe
+Agreed. I can follow the two scenarios below. Apparently it's a ABBA
+locking issue. Just don't know which should be the correct sequence for
+using with the two locks.
 
+Thanks,
+-yi
+
+> > the existing dependency chain (in reverse order) is:
+> > 
+> > -> #1 (nlk->cb_mutex){--..}:
+> >        [<ffffffff810518cb>] __lock_acquire+0xa4c/0xc28
+> >        [<ffffffff81215774>] netlink_dump_start+0xd9/0x169
+> >        [<ffffffff81051e5d>] lock_acquire+0x51/0x6c
+> >        [<ffffffff81215774>] netlink_dump_start+0xd9/0x169
+> >        [<ffffffff8104eab1>] debug_mutex_lock_common+0x16/0x23
+> >        [<ffffffff8127c622>] mutex_lock_nested+0xde/0x23f
+> >        [<ffffffff81215774>] netlink_dump_start+0xd9/0x169
+> >        [<ffffffff81216d7e>] genl_rcv_msg+0xae/0x14b
+> >        [<ffffffff8127c774>] mutex_lock_nested+0x230/0x23f
+> >        [<ffffffff81216cd0>] genl_rcv_msg+0x0/0x14b
+> >        [<ffffffff8121483a>] netlink_rcv_skb+0x34/0x7c
+> >        [<ffffffff81216fe1>] genl_rcv+0x21/0x30
+> >        [<ffffffff812145ec>] netlink_unicast+0x1f7/0x287
+> >        [<ffffffff811f7eb7>] __alloc_skb+0x84/0x132
+> >        [<ffffffff81214d60>] netlink_sendmsg+0x274/0x287
+> >        [<ffffffff811f1b49>] sock_sendmsg+0xe2/0xff
+> >        [<ffffffff8104582f>] autoremove_wake_function+0x0/0x2e
+> >        [<ffffffff81050878>] mark_held_locks+0x49/0x67
+> >        [<ffffffff811f1d7d>] sys_sendmsg+0x217/0x28a
+> >        [<ffffffff8107de49>] __do_fault+0x35d/0x3a5
+> >        [<ffffffff8100bf10>] tracesys+0xd5/0xda
+> >        [<ffffffffffffffff>] 0xffffffffffffffff
+> > 
+> > -> #0 (genl_mutex){--..}:
+> >        [<ffffffff81050226>] print_circular_bug_header+0xc8/0xcf
+> >        [<ffffffff810517d0>] __lock_acquire+0x951/0xc28
+> >        [<ffffffff81216e4c>] ctrl_dumpfamily+0x31/0xf7
+> >        [<ffffffff81051e5d>] lock_acquire+0x51/0x6c
+> >        [<ffffffff81216e4c>] ctrl_dumpfamily+0x31/0xf7
+> >        [<ffffffff8104eab1>] debug_mutex_lock_common+0x16/0x23
+> >        [<ffffffff8127c622>] mutex_lock_nested+0xde/0x23f
+> >        [<ffffffff81050a10>] trace_hardirqs_on+0xf3/0x117
+> >        [<ffffffff81216e4c>] ctrl_dumpfamily+0x31/0xf7
+> >        [<ffffffff812137e3>] netlink_dump+0x5b/0x19d
+> >        [<ffffffff81214ef3>] netlink_recvmsg+0x180/0x2a8
+> >        [<ffffffff811f1a48>] sock_recvmsg+0xf0/0x10f
+> >        [<ffffffff8104582f>] autoremove_wake_function+0x0/0x2e
+> >        [<ffffffff81050878>] mark_held_locks+0x49/0x67
+> >        [<ffffffff811f295c>] sys_recvmsg+0x15c/0x254
+> >        [<ffffffff81067ac3>] audit_syscall_entry+0x12d/0x160
+> >        [<ffffffff8127d6da>] trace_hardirqs_on_thunk+0x35/0x3a
+> >        [<ffffffff8100bf10>] tracesys+0xd5/0xda
+> >        [<ffffffffffffffff>] 0xffffffffffffffff
 
