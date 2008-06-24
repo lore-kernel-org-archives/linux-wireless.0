@@ -1,69 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:60472 "EHLO ogre.sisk.pl"
+Received: from mx1.redhat.com ([66.187.233.31]:53558 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751929AbYFPXWO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2008 19:22:14 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
+	id S1761801AbYFXOq1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2008 10:46:27 -0400
+Subject: Re: [PATCH] mac80211: add pre- and post-scan hooks
+From: Dan Williams <dcbw@redhat.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] mac80211: detect driver tx bugs
-Date: Tue, 17 Jun 2008 01:23:37 +0200
 Cc: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1213534025.3803.2.camel@johannes.berg> <1213534540.3803.5.camel@johannes.berg>
-In-Reply-To: <1213534540.3803.5.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200806170123.38264.rjw@sisk.pl> (sfid-20080617_012218_978887_5DAE6F5B)
+In-Reply-To: <1214306511.8967.288.camel@johannes.berg>
+References: <1214149401.8585.2.camel@localhost.localdomain>
+	 <1214297745.8967.255.camel@johannes.berg>
+	 <1214306147.12270.9.camel@localhost.localdomain>
+	 <1214306511.8967.288.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 24 Jun 2008 10:45:09 -0400
+Message-Id: <1214318709.18521.6.camel@localhost.localdomain> (sfid-20080624_164631_709260_A6FC2379)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, 15 of June 2008, Johannes Berg wrote:
-> When a driver rejects a frame in it's ->tx() callback, it must also
-> stop queues, otherwise mac80211 can go into a loop here. Detect this
-> situation and abort the loop after five retries, warning about the
-> driver bug.
+On Tue, 2008-06-24 at 13:21 +0200, Johannes Berg wrote:
+> On Tue, 2008-06-24 at 07:15 -0400, Dan Williams wrote:
+> > On Tue, 2008-06-24 at 10:55 +0200, Johannes Berg wrote:
+> > > On Sun, 2008-06-22 at 11:43 -0400, Dan Williams wrote:
+> > > > mrv8k has commands that get called before and after the scan has been
+> > > > done to save and restore hardware state.  Add optional callbacks to
+> > > > mac80211 to enable low-level drivers to know when the stack is about to
+> > > > start scanning, and when it's done.
+> > > 
+> > > I'm not entirely against this, but does it mean the driver will not work
+> > > with the userspace MLME that does scanning itself in userspace too?
+> > 
+> > Probably not?  Both TopDog (linville's marvell.git and your
+> > marvell.tar.bz2) both do this.  It's too early to tell whether we can
+> > get along without it since the driver isn't functional enough yet.
 > 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Hm. Could we leave it out of mac80211 for now then until you know?
 
-The patch forks for me nicely. :-)
+Fair enough.
 
-I'm now able to hibernate the box without turning off the b43 wireless.
-
-Thanks a lot,
-Rafael
-
-
-> ---
-> v2: Michael suggested to use WARN_ON_ONCE instead
+> > BTW, where'd you get marvell.tar.bz2 from?
 > 
->  net/mac80211/tx.c |    9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
-> 
-> --- everything.orig/net/mac80211/tx.c	2008-06-15 14:19:10.000000000 +0200
-> +++ everything/net/mac80211/tx.c	2008-06-15 14:53:52.000000000 +0200
-> @@ -1091,7 +1091,7 @@ static int ieee80211_tx(struct net_devic
->  	struct ieee80211_tx_data tx;
->  	ieee80211_tx_result res = TX_DROP, res_prepare;
->  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-> -	int ret, i;
-> +	int ret, i, retries = 0;
->  	u16 queue;
->  
->  	queue = skb_get_queue_mapping(skb);
-> @@ -1189,6 +1189,13 @@ retry:
->  		 */
->  		if (!__netif_subqueue_stopped(local->mdev, queue)) {
->  			clear_bit(queue, local->queues_pending);
-> +			retries++;
-> +			/*
-> +			 * Driver bug, it's rejecting packets but
-> +			 * not stopping queues.
-> +			 */
-> +			if (WARN_ON_ONCE(retries > 5))
-> +				goto drop;
->  			goto retry;
->  		}
->  		store->skb = skb;
-> 
+> No idea, I don't remember, I could probably dig it up in my email but
+> didn't find it quickly right now.
+
+If it's not too much trouble, would be nice to know.
+
+Thanks!
+Dan
+
