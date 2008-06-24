@@ -1,38 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:44519 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083AbYFOUEb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jun 2008 16:04:31 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: b43 open-firmware new snapshot
-Date: Sun, 15 Jun 2008 22:03:57 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <200806141553.42420.mb@bu3sch.de> <69e28c910806151120p116cb57dgf29b68c205e44668@mail.gmail.com>
-In-Reply-To: <69e28c910806151120p116cb57dgf29b68c205e44668@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200806152203.57903.mb@bu3sch.de> (sfid-20080615_220457_330122_5B467C0E)
+Received: from mga02.intel.com ([134.134.136.20]:32491 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753588AbYFXMug (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jun 2008 08:50:36 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 4/4 V2] mac80211: add phy information to giwname
+Date: Tue, 24 Jun 2008 15:50:17 +0300
+Message-Id: <1214311817-952-1-git-send-email-tomas.winkler@intel.com> (sfid-20080624_145112_551320_B29A93D9)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 15 June 2008 20:20:27 Stefanik G=E1bor wrote:
-> On Sat, Jun 14, 2008 at 3:53 PM, Michael Buesch <mb@bu3sch.de> wrote:
-> > This firmware does _only_ work on wireless core revisions 5, 6, 7, =
-8 or 10.
->=20
-> There are reports of it working on rev.9 cores. Is that possible?
-> (Resend of previous mail to the list.)
+This patch add phy information to giwname.
 
-Yes it is possible. But there _are_ differences in rev9.
-So I won't guarantee it will work.
+Quoting:
+It's not useless, it's supposed to tell you about the protocol
+capability of the device, like "IEEE 802.11b" or "IEEE 802.11abg"
 
+Jean
 
---=20
-Greetings Michael.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ net/mac80211/wext.c |   32 ++++++++++++++++++++++++++++++++
+ 1 files changed, 32 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+index 308b953..a44f479 100644
+--- a/net/mac80211/wext.c
++++ b/net/mac80211/wext.c
+@@ -135,7 +135,39 @@ static int ieee80211_ioctl_giwname(struct net_device *dev,
+ 				   struct iw_request_info *info,
+ 				   char *name, char *extra)
+ {
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_supported_band *sband;
++	u8 is_ht = 0, is_a = 0, is_b = 0, is_g = 0;
++
++
++	sband = local->hw.wiphy->bands[IEEE80211_BAND_5GHZ];
++	if (sband) {
++		is_a = 1;
++		is_ht |= sband->ht_info.ht_supported;
++	}
++
++	sband = local->hw.wiphy->bands[IEEE80211_BAND_2GHZ];
++	if (sband) {
++		int i;
++		/* Check for mandatory rates */
++		for (i = 0; i < sband->n_bitrates; i++) {
++			if (sband->bitrates[i].bitrate == 10)
++				is_b = 1;
++			if (sband->bitrates[i].bitrate == 60)
++				is_g = 1;
++		}
++		is_ht |= sband->ht_info.ht_supported;
++	}
++
+ 	strcpy(name, "IEEE 802.11");
++	if (is_a)
++		strcat(name, "a");
++	if (is_b)
++		strcat(name, "b");
++	if (is_g)
++		strcat(name, "g");
++	if (is_ht)
++		strcat(name, "n");
+ 
+ 	return 0;
+ }
+-- 
+1.5.4.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
