@@ -1,81 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.243]:6637 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757515AbYFONnE (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46921 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751153AbYFXLEA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jun 2008 09:43:04 -0400
-Received: by an-out-0708.google.com with SMTP id d40so1113175and.103
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Jun 2008 06:43:03 -0700 (PDT)
-Message-ID: <48551C62.80904@gmail.com> (sfid-20080615_154308_603929_3A10181B)
-Date: Sun, 15 Jun 2008 16:42:58 +0300
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-MIME-Version: 1.0
+	Tue, 24 Jun 2008 07:04:00 -0400
+Subject: Re: [PATCH 4/4] mac80211: add phy information to giwname
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Tomas Winkler <tomasw@gmail.com>
-CC: =?ISO-8859-1?Q?Tor_H=E5kon_Haugen?= <tor.hakon.haugen@gmail.com>,
-	Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with disable_hw_scan=1
-References: <484FEA26.1040305@gmail.com>	 <1213241315.7814.696.camel@debian.sh.intel.com>	 <20080612135936.GA5031@tuxdriver.com>	 <1213342523.7814.865.camel@debian.sh.intel.com>	 <20080613130310.GA5333@tuxdriver.com> <48528B63.5030403@gmail.com>	 <48528CF0.8050204@gmail.com> <1ba2fa240806131304n442972eatfd2f35034476c380@mail.gmail.com>
-In-Reply-To: <1ba2fa240806131304n442972eatfd2f35034476c380@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Cc: Michael Buesch <mb@bu3sch.de>, linville@tuxdriver.com,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240806240354n45c144a3n5ac8b08c7da7b7a2@mail.gmail.com> (sfid-20080624_125428_921964_DD4C29AD)
+References: <1214303881-31525-1-git-send-email-tomas.winkler@intel.com>
+	 <1214303881-31525-4-git-send-email-tomas.winkler@intel.com>
+	 <1214303881-31525-5-git-send-email-tomas.winkler@intel.com>
+	 <200806241242.11727.mb@bu3sch.de>
+	 <1ba2fa240806240354n45c144a3n5ac8b08c7da7b7a2@mail.gmail.com>
+	 (sfid-20080624_125428_921964_DD4C29AD)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wSAk6AqYz3WmvSNslF+2"
+Date: Tue, 24 Jun 2008 13:03:16 +0200
+Message-Id: <1214305396.8967.283.camel@johannes.berg> (sfid-20080624_130404_152077_39C6C7F6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler wrote:
-> On Fri, Jun 13, 2008 at 6:06 PM, Maxim Levitsky <maximlevitsky@gmail.=
-com> wrote:
->> Tor H=E5kon Haugen wrote:
->>> John W. Linville wrote:
->>>> On Fri, Jun 13, 2008 at 03:35:23PM +0800, Zhu Yi wrote:
->>>>> On Thu, 2008-06-12 at 09:59 -0400, John W. Linville wrote:
->>>>>> Honestly I'm tempted to change it to "enable_hw_scan" instead...
->>>>> Give the advantages, I'd like to use it if we can fix the bug (I =
-haven't
->>>>> seen what the bug is myself). But you are free to change the defa=
-ult
->>>>> value until it is fixed. There is no such problem for 4965, right=
-?
->>>> AFAICT only the 3945 seems to need it.
->>>>
->>> I can confirm that this also applies to 4965 as a friend of mine ha=
-s
->>> this card. According to him the card works a lot better with the
->>> parameters "swcrypto=3D1" and "disable_hw_scan=3D1".
->> Just to make it clear,
->> iwl3945 doesn't work at all without disable_hw_scan=3D1 here.
->> The driver just shuts down thee card since it detects microcode erro=
-r.
->>
+
+--=-wSAk6AqYz3WmvSNslF+2
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+
+> Still many people are using wireless extension and this is probably
+> most convenient way to get this info.
+> For example 4956 comes with 3 combinations g, ag, and agn.
+> It's displayed upon iwconfig
+
+Heh ok. I would just say "print out the rates" but I guess that doesn't
+work with HT yet.
+
+> >> +             strcat(name, "g");
+> >> +             is_ht |=3D sband->ht_info.ht_supported;
+> >
+> > What about b-only devices?
 >=20
-> It looks like this is all caused by the big rate, band patch. Looks
-> like A band scan channels are not configured correctly for the
-> scanning. This crashes the firmware.
->=20
-> Tomas
+> See the log message...(known issue). Currently you have to loop over
+> rates to get this info. I wasn't sure if they are any b-only NICs
+> under mac80211 so I didn't run to implement it.
 
-Probably, I see that eeprom according to dmesg contains no info about A
-channels, so maybe this crashes the firmware.
+There is, adm8211.
 
-I have few questions:
+johannes
 
-* Is there a software workaround without the need to update the firmwar=
-e?
+--=-wSAk6AqYz3WmvSNslF+2
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-* Is the firmware error so harmful, so driver can't continue?
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-* Can I expect updated version of the firmware with  fix?
+iQIcBAABAgAGBQJIYNRwAAoJEKVg1VMiehFYzj8QAKPRQqi+WNDUldUlLknic0/8
+jh1fGZwpNjbTrqM6QpmJfBAZvwi3Ap+lv1qXvZPGp/cM5Hxc76V7F1Z/L92p7e91
+9bh6Fzzmu9nGR0tmy+jxBB9an4X23kYFJHaPBr/MFddiCsV8CPIkMuhid9bq/28a
+77zgLlfQK5oLmWmW3432mKgeCb0tepbBqKycoV4LLpYy4GgFNR1edtcq8UMy51wo
+RX+EeDruYjOJUzrcTOZz8YzPWdycDAGLBgvZYikfxDaDi5BpA9hNutAAE6qS2p/9
+B4RTR/h4AYELsp8KqPlBCuVyzunRHOje2YhuARhJ/v8Mm4K9BrOfSPxp3lGw1PWn
+lpowXE8V61llBhesh5l9arAVqKbqcfKFR3PLj0571RsSfA2+NJVMZIDAEm4z+zEg
+68r4oKhZ02ezLH0wK0lHhQyo3roui2kKvUpT7dafLSJ4WlKk35WDo8lVDvjKnzZl
+8K7NwzkO3aQcjnyMJzMGfam9Mg2sgIHF6lTh1HInwujumP21hOZEgpyTXta8WZze
+MD1o1Au4PMaqC27lU38Ab1p7g/x/hjW65WtR69Fm29dLGSlH3MgoWG8udjpE+ZK5
+Yji+c/URDgLQEd9yUJCNzgrkZXumXDSJFa2Biy3SgLnW1iC9wuR05AtAyjYBwXxe
+HDmpx8b1g+kaSaoCkdXu
+=OndC
+-----END PGP SIGNATURE-----
 
-Sadly this confirms that firmware is worse that I thought, it is closer=
-=20
-to closed drivers.
+--=-wSAk6AqYz3WmvSNslF+2--
 
-(Although intel isn't guilty in this case due to regulations.)
-
-Best regards,
-	Maxim Levitsky
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
