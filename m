@@ -1,76 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43486
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1756593AbYFQHyT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 03:54:19 -0400
-Date: Tue, 17 Jun 2008 00:54:19 -0700 (PDT)
-Message-Id: <20080617.005419.179481054.davem@davemloft.net> (sfid-20080617_095437_503609_72186F1E)
-To: linville@tuxdriver.com
-CC: mokuno@sm.sony.co.jp, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 8/12]: wext: Pull top-level ioctl dispatch logic into
- helper function.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from ra.tuxdriver.com ([70.61.120.52]:3146 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751250AbYFYSQ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jun 2008 14:16:58 -0400
+Date: Wed, 25 Jun 2008 14:04:30 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: David Miller <davem@davemloft.net>, linux-next@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: linux-next: pending wireless/wireless-current merge conflict
+Message-ID: <20080625180430.GA13730@tuxdriver.com> (sfid-20080625_201710_623694_277EBFE4)
+References: <20080613215601.GA8345@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080613215601.GA8345@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I just sent a pull request for Dave that will result in nasty-looking
+conflict in iwl4965-base.c.  I have a sample merge available here:
 
-wext: Pull top-level ioctl dispatch logic into helper function.
+	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6 merge-test
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/wireless/wext.c |   26 ++++++++++++++++++++------
- 1 files changed, 20 insertions(+), 6 deletions(-)
+The overview of the resolution is to ignore any changes in
+iwl4965-base.c and take drivers/net/wireless/iwlwifi/iwl-scan.c from
+the URL above.
 
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index e9c8817..09022cb 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -1079,8 +1079,10 @@ static int wext_permission_check(unsigned int cmd)
- }
- 
- /* entry point from dev ioctl */
--int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
--		      void __user *arg)
-+static int wext_ioctl_dispatch(struct net *net, struct ifreq *ifr,
-+			       unsigned int cmd,
-+			       wext_ioctl_func standard,
-+			       wext_ioctl_func private)
- {
- 	int ret = wext_permission_check(cmd);
- 
-@@ -1089,12 +1091,24 @@ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
- 
- 	dev_load(net, ifr->ifr_name);
- 	rtnl_lock();
--	ret = wireless_process_ioctl(net, ifr, cmd,
--				     ioctl_standard_call,
--				     ioctl_private_call);
-+	ret = wireless_process_ioctl(net, ifr, cmd, standard, private);
- 	rtnl_unlock();
--	if (IW_IS_GET(cmd) && copy_to_user(arg, ifr, sizeof(struct iwreq)))
-+
-+	return ret;
-+}
-+
-+int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
-+		      void __user *arg)
-+{
-+	int ret = wext_ioctl_dispatch(net, ifr, cmd,
-+				      ioctl_standard_call,
-+				      ioctl_private_call);
-+
-+	if (ret >= 0 &&
-+	    IW_IS_GET(cmd) &&
-+	    copy_to_user(arg, ifr, sizeof(struct iwreq)))
- 		return -EFAULT;
-+
- 	return ret;
- }
- 
+Just a heads-up... :-)
+
+John
+
+P.S.  Hopefully the iwlwifi guys will double check the accuracy of
+my fix-up...
 -- 
-1.5.5.1.308.g1fbb5
-
+John W. Linville
+linville@tuxdriver.com
