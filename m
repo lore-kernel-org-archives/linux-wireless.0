@@ -1,48 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56451
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752440AbYFQHwz (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45133 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751424AbYFYU1M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 03:52:55 -0400
-Date: Tue, 17 Jun 2008 00:52:55 -0700 (PDT)
-Message-Id: <20080617.005255.135158143.davem@davemloft.net> (sfid-20080617_095300_809077_9240D7D2)
-To: linville@tuxdriver.com
-CC: mokuno@sm.sony.co.jp, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 0/12]: Proper compat WEXT support.
-From: David Miller <davem@davemloft.net>
+	Wed, 25 Jun 2008 16:27:12 -0400
+Subject: Re: BUG(?): dev->wl->if_type is 0 for monitor interfaces (should
+	be 5); b43_is_mode(dev->wl; IEEE80211_IF_TYPE_MNTR) is always false
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <69e28c910806251323j3a80b31etde8683d573dcf2fa@mail.gmail.com> (sfid-20080625_222356_890423_579F588A)
+References: <69e28c910806251322i31a8cb4flc7b6c85e8884a5ca@mail.gmail.com>
+	 <69e28c910806251323j3a80b31etde8683d573dcf2fa@mail.gmail.com>
+	 (sfid-20080625_222356_890423_579F588A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-lY+3zF6ikuegqqUAlcbw"
+Date: Wed, 25 Jun 2008 22:26:30 +0200
+Message-Id: <1214425590.21847.61.camel@johannes.berg> (sfid-20080625_222715_875958_74FDF878)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-This is what I consider the final submission of this patch set, it's
-ready to go.  I also made sure all the patches are checkpatch clean.
+--=-lY+3zF6ikuegqqUAlcbw
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-I've actually tested these exact patches on sparc64 with a RNDIS based
-USB wireless device from Linksys.  I was able to perform iwconfig
-commands, check iwlist, bring up the interface and use it properly.
-All with 32-bit tools.  I've also done an allmodconfig sanity build
-check on sparc64.  Masakazu-san has tested these patches extensively
-on PS3 systems, using the gelic and zd1211 drivers.  In particular he
-tested wpa_supplicant use.
+On Wed, 2008-06-25 at 22:23 +0200, Stefanik G=C3=A1bor wrote:
+> On Wed, Jun 25, 2008 at 10:22 PM, Stefanik G=C3=A1bor
+> <netrolller.3d@gmail.com> wrote:
+> > In both b43 and b43legacy, dev->wl->if_type is 0
+> > (IEEE80211_IF_TYPE_INVALID) when injecting/transmitting packets on a
+> > monitor interface (not sure about receiving), while the logical result
+> > would be  5 (IEEE80211_IF_TYPE_MNTR).
 
-The patch set starts by cleaning up the code so that we can avoid
-having multiple copies of the WEXT main dispatch routines, one for
-compat and one for the non-compat case.
+I should answer on the list too then:
 
-Next, basic compat level handling of the WEXT ioctl is added, and the
-equivalent code in the compat_ioctl.c file is removed.
+No, 5 wouldn't be the logical result. Try to understand how monitor mode
+and virtual interfaces in mac80211 work.
 
-Finally, compat IWE stream munging is added for the wireless layer.
-When we get a compat WEXT ioctl request, we set a bit in the request
-info blob, and the stream building helpers tip off this to format the
-stream entries properly.
+b43 only sees what mode it is operating in, but pure monitor mode isn't
+"operating" at all.
 
-These patches are against net-next-2.6 and are also available as
-a GIT tree at:
+johannes
 
-	master.kernel.org:/pub/scm/linux/kernel/git/davem/wireless-2.6.git
+--=-lY+3zF6ikuegqqUAlcbw
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-John, please pull or apply as you deem appropriate.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIYqnyAAoJEKVg1VMiehFYCgkP/15JVNmhEyVtqWYEq9ykzdRA
+l1QHGEfu3bd99J4yLkqTxXSEircfbiqebL0hwiUnB8goDowk/IDqrV2efWXT4tBM
+E2rseZbDuve6bVlGhvY97qbeiZZzw8xSrWC4WOsqaZAvrDl40zTO7uWZ5ywXxHO8
+lj2hXN/i7Q7KJgTLnb8CywXvqHpnjZ0c34lOJRtJpottOmtbUzAyj91qZ66ZbaxL
+P5uY0D0W7QspKYUx92MorzdL+myCRp8vFaH+ZXWQnsRPEKXtLq+YCkhJawIgYWPv
+RdB9TUQy1NsPTm4B8Qk6NBpXJiPv+ghDOtbkbTDhtC+BwEhAS8l9ToHUsiTcWLqL
+iirKJJOfzy1ks7MedrV94T3GcUOAUmPwOnYtDEBIqG0sSM06QfUaWB9qs5y7dDns
+FdHQv/LBzbnsxdH/3ZU0KImoCFeVSURTzHxOMPbzD8W7vq8UTkzKbjcJThKkWoCJ
+K80aEeKI+wPlPjNZFufP5FFbgu9i21NV1wtvhC/hEL4dHfWOOwCgX0O6lEjg+SGc
+X0Nz60saXBarIImkbdtQQdom3Tcgcy6N2iAS568k4W+9VNuDurxxLzBu28pqIHXn
+JJb8cFJh5PUK2cbGVjQsdmvd2GCwamTBM3q2uOzkWgZlmPAf0Klr1olW/XPFtFHo
+Qld7AvhV3+VNJWmonNhJ
+=ba2d
+-----END PGP SIGNATURE-----
+
+--=-lY+3zF6ikuegqqUAlcbw--
+
