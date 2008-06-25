@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:4583 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754652AbYFSJT5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 05:19:57 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
+Received: from serv04.lahn.de ([213.239.197.57]:43982 "EHLO serv04.lahn.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755790AbYFYNoI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jun 2008 09:44:08 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by elektra.leun.net (8.13.8/8.13.8/SuSE Linux 0.8) with ESMTP id m5PDhteL007701
+	for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2008 15:43:55 +0200
+Date: Wed, 25 Jun 2008 15:43:54 +0200
+From: linux-wireless@newton.leun.net
 To: linux-wireless@vger.kernel.org
-Subject: Re: 802.11 pccard, Agere 0x0156,0x0003?
-Date: Thu, 19 Jun 2008 11:19:45 +0200
-Cc: Bernhard Reiter <bernhard@intevation.de>
-References: <200806181715.20516.bernhard@intevation.de> <1213833799.5258.13.camel@dv> <200806191023.39851.bernhard@intevation.de>
-In-Reply-To: <200806191023.39851.bernhard@intevation.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200806191119.45407.hs4233@mail.mn-solutions.de> (sfid-20080619_112005_124627_1C1D984B)
+Subject: Re: compat wireless, i3945, tcpdump: Machine freezes
+Message-ID: <20080625154354.719cc9b3@localhost> (sfid-20080625_154429_278125_056ED822)
+In-Reply-To: <20080618094213.5abd2fbd@localhost>
+References: <20080618094213.5abd2fbd@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> So this is the first indication that the wlags_h2_718 might
-> work for the Hermes II card. Where can I download it without
-> registration? Why wasn't the 7.22 version used as base for the
-> patch?
+Hello,
 
-You can no longer download it, the website has vanished. I 
-actually got the filename wrong, the file used to be at
+On Wed, 18 Jun 2008 09:42:13 +0200
+Michael Leun <linux-wireless@newton.leun.net> wrote:
 
-   http://www.agere.com/support/drivers/wl_lkm_718_release.tar.gz
+> I downloaded compat-wireless-2008-06-18, built it, loaded cfg80211.ko,
+> mac80211.ko, iwl3945.ko, associated to an ap, started "tcpdump -i
+> wlan0 -n" and the machine mostly freezed.
+> 
+> Mostly means keyboard does not work, no disk-access, no network but
+> mouse still works.
+[...]
 
-I got the 7.18 driver working with both Hermes I and Hermes II 
-cards on 2.4 and 2.6.15 an a PXA255 based embedded device. There 
-both H1- and H2-drivers supported WEP+WPA (not WPA2).
+This still happens with compat-wireless-2008-06-25.
 
-I never had success with 7.22 on my embedded device.
+-- 
+Bye,
 
+Michael Leun
 
-For 2.6.25, I only have Hermes II running somewhat, the source 
-for this was the Ubuntu-Forum. This one is based on the 
-wl_lkm_718_release.tar.gz code, not on 7.22. You can download it 
-there only with registration, AFAIK. Did I mention that I don't 
-really like forums?
-
-
-
-Some of my ancient patches are here:
-
-http://git.openembedded.net/?p=org.openembedded.dev.git;a=tree;f=packages/wlags-modules
-
-(the .bb include the .inc file, which contains the sequence of 
-the patches to be applied as well as the #define's to use. In 
-the files/ directory are the patches).
