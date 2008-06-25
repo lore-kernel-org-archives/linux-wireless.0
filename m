@@ -1,77 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34927 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:32962 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751671AbYFRPhw (ORCPT
+	with ESMTP id S1753357AbYFYQNB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 11:37:52 -0400
-Subject: Re: [PATCH 2/2] mac80211: add spectrum capabilities
+	Wed, 25 Jun 2008 12:13:01 -0400
+Subject: Re: [PATCH 3/4 V2] mac80211: add last beacon time in scan list
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1213800824-32107-2-git-send-email-tomas.winkler@intel.com>
-References: <1213800824-32107-1-git-send-email-tomas.winkler@intel.com>
-	 <1213800824-32107-2-git-send-email-tomas.winkler@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fs161osdBjvI0XFu2i+v"
-Date: Wed, 18 Jun 2008 17:37:11 +0200
-Message-Id: <1213803431.1312.24.camel@johannes.berg> (sfid-20080618_173755_197115_54C6AEA5)
+To: Pavel Roskin <proski@gnu.org>
+Cc: Tomas Winkler <tomas.winkler@intel.com>, linville@tuxdriver.com,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+In-Reply-To: <1214409527.5881.21.camel@dv>
+References: <1214396229-18782-1-git-send-email-tomas.winkler@intel.com>
+	 <1214409527.5881.21.camel@dv>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-I181tmP9zExVqN7DQL1V"
+Date: Wed, 25 Jun 2008 18:12:16 +0200
+Message-Id: <1214410337.21847.33.camel@johannes.berg> (sfid-20080625_181305_974128_14ED243E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-fs161osdBjvI0XFu2i+v
+--=-I181tmP9zExVqN7DQL1V
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2008-06-18 at 17:53 +0300, Tomas Winkler wrote:
-> This patch add spectrum capability and required information
-> elements to association request providing AP has requested it and
-> it is supported by the driver
+On Wed, 2008-06-25 at 11:58 -0400, Pavel Roskin wrote:
 
-Why bother splitting this up into two patches, the Kconfig option isn't
-even being used?
+> > +			unsigned long mid_range =3D (-1) / 2 + 1;
+>=20
+> What is that?  I guess that's where Riemann's zeta function has its
+> non-trivial roots :-)
 
-> +		if ((bss->capability & WLAN_CAPABILITY_SPECTRUM_MGMT) &&
-> +		    (local->hw.flags & IEEE80211_HW_SPECTRUM_MGMT))
-> +			capab |=3D WLAN_CAPABILITY_SPECTRUM_MGMT;
+The Pavel hypothesis: "The Riemann hypothesis is correct when calculated
+in 32-bit integers" is obviously wrong ;)
 
-Why do we need a hardware capability flag for this? The only thing you
-seem to be doing with it is determine whether to send the power
-capability IE?
+> > +			time_diff =3D jiffies - bss->last_update > mid_range ?
+> > +				jiffies - bss->last_update :
+> > +				bss->last_update - jiffies;
+>=20
+> That's pretty hairy.  Do we really lack a function to calculate time
+> difference?
 
-Will you follow up with more patches to enable radar detection and
-things like that, and shouldn't we merge that as one series? This looks
-sane enough, but it seems hard to judge whether or not it's actually the
-best way to do things.
-
-What else will depend on the hw capability flag?
-
-[and yes, I should read 11h/-2007 again]
+Actually, come to think of it, isn't just doing the difference as in teh
+original patch correct in 32-bit unsigned integers? It'll wrap around a
+bit but that's ok, no?
 
 johannes
 
---=-fs161osdBjvI0XFu2i+v
+--=-I181tmP9zExVqN7DQL1V
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIWSukAAoJEKVg1VMiehFYzbkP/i8W3c8Vfn/YpCHkGiREikU5
-KkA5gnNYtceWXKV6rldMUODp3+Oi093xkim/WNbOUQqGj6Os8dE0KBPmy9IrQKRk
-VXTQMe8iwz4JWCl1QRJ1AtzKja0aPiFNNRCqs0y/kWc88dN1hxVQT5SZA/vbWKZw
-7JePXw3ngfKF6tanfsNLZsO3UaSEVZL6jHTCex+jeVHbeP0a2EC/9nTJdYiQ7lla
-Mw1Zmf6z7d2kZeA0+Lv0BIRkxgwiazE8rXPIBKrh2vnX6ft5vuQM0/M3AL0oCgXS
-qphcSJ3CRAkX1j7g2TezmNWmhYSvzBFpSmgcBbxyfyQ48VJczct1xC8d4Ew4U967
-iJzAUPXk7a+B45L1+trDMW/FM1/HccLM8BMpXd5LLTjPldNYldU1RCRNVKkIOhB1
-49PvigZMUM7x9yB0QsGlLlvxHXS/me1qm3jUifH5n5NS8ouBSMR69ja0knx6bOPu
-ERLnw+dUAdfQAt04NjT12dbOVQv5WwHi5Vvypop2B8si9GUEfjDMUfQ4nkw9XvVz
-SznYixRf46EkpXtNL4DQmkhx5NKbUmMfhpw5Sik38RnMgK5cZ85ZPThgaWZLcsEl
-WX9Im9kcimOIUagixGh773E5TW/PmZZ9n1Z8VdSxUp0DQpSalRWU4104oz7Hsd+x
-tAbWCpFJuz1adlE0kFvo
-=hW3y
+iQIcBAABAgAGBQJIYm5cAAoJEKVg1VMiehFYd1MQAKJJnFvf9RBh8kKYb99N3Va+
+yxKsWvAacn/lTVEcweZTBjGuCAhB5HcQl6FJFauBK8rEYijDzvke0XSvz9H+ONMq
+u/NWOWY2SOKT50e6gELodg5a9sOrJflgxzZovxjGybv7zxmddofnvU/ry2u5/4Oj
+y9lNmpUdhA5sXIDTtB/nItBgGyjwnftn9v1H8lDxcI5Bkcf5scx0nvqkwzH0vo7Y
+/hufDGFNiH1UxoyttqoSyJNqJY/b8dKMqGuJJr09avlUsoXjG9m06OzvhWC5OYQl
+p8xqlAXMi/BRUDFEB5xG7Z7s0m1iaBq9skm5f4L7pshKtNOaOw9dF4QNaN+4zXq9
+27CNHku845j2FGujWGCmE3zyr7/fjTzbqk518MLNNcH8c8AzwtMFFx8Zs5DwrV/a
+EhhEI3VCmWOrV4/+HIJoxI2mEihenKbyaKcLR9on7e6A6VbYPIIMzNv/RNOsH574
+sLhO9DIuZZuFn0z/NJa6o2fDw/b+QICAwzMEhbJEyrZm/bZbxihtof+b5zOCVYy8
+e8nhX+H09a+yhUqG1RM+kcUVigyrJ6KUYrrcipqhvOuwHh729KwAJgz+4DugWbPO
+zEGvhJhBeN1CufUDOqX+2WX7sZWmQSZh+ceSmaBpjUS4r/5XWDvdjlXlhV0CTJb/
+tWFtFI31lzZyQYsHdzt5
+=gi2d
 -----END PGP SIGNATURE-----
 
---=-fs161osdBjvI0XFu2i+v--
+--=-I181tmP9zExVqN7DQL1V--
 
