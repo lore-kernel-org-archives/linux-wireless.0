@@ -1,62 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53298 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753921AbYFRHB4 (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.28]:26583 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753890AbYFYLLW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 03:01:56 -0400
-Subject: Re: [PATCH/RFC] remove irqs_disabled warning from local_bh_enable
-From: Peter Zijlstra <peterz@infradead.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	David Ellingsworth <david@identd.dyndns.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Ingo Molnar <mingo@elte.hu>
-In-Reply-To: <alpine.LFD.1.10.0806171648330.2907@woody.linux-foundation.org>
-References: <1213739834.3803.137.camel@johannes.berg>
-	 <alpine.LFD.1.10.0806171648330.2907@woody.linux-foundation.org>
-Content-Type: text/plain
-Date: Wed, 18 Jun 2008 09:01:54 +0200
-Message-Id: <1213772514.16944.197.camel@twins> (sfid-20080618_090238_725344_FBBF3982)
-Mime-Version: 1.0
+	Wed, 25 Jun 2008 07:11:22 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so1128709ywe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2008 04:11:17 -0700 (PDT)
+Message-ID: <486227D2.6030801@gmail.com> (sfid-20080625_131126_522454_338E98B3)
+Date: Wed, 25 Jun 2008 13:11:14 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: Pavel Machek <pavel@suse.cz>
+CC: kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	linville@tuxdriver.com
+Subject: Re: Small cleanups
+References: <20080625102553.GA2648@elf.ucw.cz>
+In-Reply-To: <20080625102553.GA2648@elf.ucw.cz>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-06-17 at 16:55 -0700, Linus Torvalds wrote:
+Pavel Machek napsal(a):
+> Small whitespace cleanups for wireless drivers
 > 
-> On Tue, 17 Jun 2008, Johannes Berg wrote:
-> >
-> > This warning has started to trigger with mac80211 because it can, under
-> > some circumstances, use spin_lock_bh() protected sections within
-> > irq-disabled sections. Is that a bug?
-> 
-> Yes, it's a bug.
-> 
-> Why? Not because of the "spin_lock_bh()" itself, but because of the 
-> _unlock_, which does a "local_bh_enable_ip()", which in turn will check 
-> the whole "do_softirq()" if it was the last softirq_count.
-> 
-> And you must not do softirq's when hard-irq's were disabled!
-> 
-> So it should in theory be ok (but perhaps a bit odd) to do something like
-> 
-> 	spin_lock_irq(&irq_lock);
-> 	..do something..
-> 	spin_lock_bh(&bh_lock);
-> 	spin_unlock_irq(&irq_lock);
-> 	.. do something else ..
-> 	spin_unlock_bh(&bh_lock);
-> 
-> where the "spin_lock_bh()" itself is in an irq-locked context - as long as 
-> the "spin_unlock_bh()" is *not*.
+> Signed-off-by: Pavel Machek <pavel@suse.cz>
 
-I would suggest discouraging such madne^Wcreativity, its gains are
-dubious at best and it doesn't make the locking any more obvious and
-could be an indication of messy locking to begin with.
+The ath5k part
+Acked-by: Jiri Slaby <jirislaby@gmail.com>
 
-So I would like to see Johannes' other patch that allows all of us to
-enjoy the warning he ran into ;-)
+Thanks!
 
-Peter
+> diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+> index 32019fb..329be62 100644
+> --- a/drivers/net/wireless/airo.c
+> +++ b/drivers/net/wireless/airo.c
+[...]
+> @@ -5530,11 +5530,13 @@ static int airo_pci_suspend(struct pci_d
+>  	Cmd cmd;
+>  	Resp rsp;
+>  
+> -	if ((ai->APList == NULL) &&
+> -		(ai->APList = kmalloc(sizeof(APListRid), GFP_KERNEL)) == NULL)
+> +	if (!ai->APList)
+> +		ai->APList = kmalloc(sizeof(APListRid), GFP_KERNEL);
+> +	if (!ai->APList)
+>  		return -ENOMEM;
+> -	if ((ai->SSID == NULL) &&
+> -		(ai->SSID = kmalloc(sizeof(SsidRid), GFP_KERNEL)) == NULL)
+> +	if (!ai->SSID)
+> +		ai->SSID = kmalloc(sizeof(SsidRid), GFP_KERNEL);
+> +	if (!ai->SSID)
+>  		return -ENOMEM;
+
+Would you mind sending another patch which would fix the potential leak?
+
+> @@ -5615,15 +5614,11 @@ #endif
+>  		airo_entry->gid = proc_gid;
+>  	}
+>  
+> -	for( i = 0; i < 4 && io[i] && irq[i]; i++ ) {
+> +	for (i = 0; i < 4 && io[i] && irq[i]; i++) {
+>  		airo_print_info("", "Trying to configure ISA adapter at irq=%d "
+>  			"io=0x%x", irq[i], io[i] );
+>  		if (init_airo_card( irq[i], io[i], 0, NULL ))
+> -#if 0
+> -			have_isa_dev = 1;
+> -#else
+>  			/* do nothing */ ;
+> -#endif
+
+Why not just remove the if?
+
+>  	}
+>  
+>  #ifdef CONFIG_PCI
 
