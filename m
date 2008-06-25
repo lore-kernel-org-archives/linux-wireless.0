@@ -1,91 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33007
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751267AbYFRI06 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.173]:18750 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751185AbYFYUXx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 04:26:58 -0400
-Date: Wed, 18 Jun 2008 01:26:58 -0700 (PDT)
-Message-Id: <20080618.012658.264455870.davem@davemloft.net> (sfid-20080618_102703_529085_07F8B2A2)
-To: johannes@sipsolutions.net
-Cc: ilpo.jarvinen@helsinki.fi, didier@raboud.com,
-	akpm@linux-foundation.org, netdev@vger.kernel.org,
-	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [Bugme-new] [Bug 10903] New: ssh connections hang with
- 2.6.26-rc5
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080618.010528.05757230.davem@davemloft.net>
-References: <Pine.LNX.4.64.0806180152410.32420@wrl-59.cs.helsinki.fi>
-	<1213773887.3803.158.camel@johannes.berg>
-	<20080618.010528.05757230.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 25 Jun 2008 16:23:53 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so3027648wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2008 13:23:52 -0700 (PDT)
+Message-ID: <69e28c910806251323j3a80b31etde8683d573dcf2fa@mail.gmail.com> (sfid-20080625_222356_890423_579F588A)
+Date: Wed, 25 Jun 2008 22:23:52 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
+	"Michael Buesch" <mb@bu3sch.de>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: BUG(?): dev->wl->if_type is 0 for monitor interfaces (should be 5); b43_is_mode(dev->wl; IEEE80211_IF_TYPE_MNTR) is always false
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <69e28c910806251322i31a8cb4flc7b6c85e8884a5ca@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <69e28c910806251322i31a8cb4flc7b6c85e8884a5ca@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Miller <davem@davemloft.net>
-Date: Wed, 18 Jun 2008 01:05:28 -0700 (PDT)
+On Wed, Jun 25, 2008 at 10:22 PM, Stefanik G=E1bor
+<netrolller.3d@gmail.com> wrote:
+> In both b43 and b43legacy, dev->wl->if_type is 0
+> (IEEE80211_IF_TYPE_INVALID) when injecting/transmitting packets on a
+> monitor interface (not sure about receiving), while the logical resul=
+t
+> would be  5 (IEEE80211_IF_TYPE_MNTR). Due to this, the check
+> b43(legacy)_is_mode(dev->wl; IEEE80211_IF_TYPE_MNTR) always returns 0=
+=2E
+>
+> I discovered this when updating the b43/b43legacy injection patches.
+> This is the latest patch I made, working around this bug by checking
+> for both 0 and 5 (I added a quick printk("B43 DEBUG: dev->wl->if_type
+> =3D %d", dev->wl->if_type) after the /* MAC control */ comment, which
+> helped me find this bug):
+>
+> diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b=
+43/xmit.c
+> index f9e1cff..b7553ab 100644
+> --- a/drivers/net/wireless/b43/xmit.c
+> +++ b/drivers/net/wireless/b43/xmit.c
+> @@ -315,9 +315,11 @@ int b43_generate_txhdr(struct b43_wldev *dev,
+>        }
+>
+>        /* MAC control */
+> -       if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
+> +       if (dev->wl->if_type !=3D 5 && dev->wl->if_type !=3D 0 &&
+> +             !(info->flags & IEEE80211_TX_CTL_NO_ACK))
+>                mac_ctl |=3D B43_TXH_MAC_ACK;
+> -       if (!(((fctl & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE_C=
+TL) &&
+> +       if (dev->wl->if_type !=3D 5 && dev->wl->if_type !=3D 0 &&
+> +             !(((fctl & IEEE80211_FCTL_FTYPE) =3D=3D IEEE80211_FTYPE=
+_CTL) &&
+>              ((fctl & IEEE80211_FCTL_STYPE) =3D=3D IEEE80211_STYPE_PS=
+POLL)))
+>                mac_ctl |=3D B43_TXH_MAC_HWSEQ;
+>        if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
+>
+> Is this intentional? I don't know, but it does looks strange for sure=
+=2E
+>
+> --G=E1bor
+>
+> --
+> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+>
 
-> If we can't figure out what's going on here soon (like, in less than a
-> day) we should revert that changeset.
-> 
-> Actually, I think I see how the changeset might be wrong.  I think
-> the encryption layer of mac80211 assumes it can write over the
-> data area of the SKB it's working on, not just the headers.
-> 
-> Once this happens, any retransmits done by SKB will fail because the
-> master packet data on TCP's retransmit queue is now this encrypted
-> garbage.
+Oops... also CCing linux.wireless.
 
-After some discussion about this with Johannes on IRC, we are
-absolutely convinced this is exactly the problem.
-
-I intend to send the following revert to Linus tonight so we
-can close this:
-
---------------------
-Revert "mac80211: Use skb_header_cloned() on TX path."
-
-This reverts commit 608961a5eca8d3c6bd07172febc27b5559408c5d.
-
-The problem is that the mac80211 stack not only needs to be able to
-muck with the link-level headers, it also might need to mangle all of
-the packet data if doing sw wireless encryption.
-
-This fixes kernel bugzilla #10903.  Thanks to Didier Raboud (for the
-bugzilla report), Andrew Prince (for bisecting), Johannes Berg (for
-bringing this bisection analysis to my attention), and Ilpo (for
-trying to analyze this purely from the TCP side).
-
-In 2.6.27 we can take another stab at this, by using something like
-skb_cow_data() when the TX path of mac80211 ends up with a non-NULL
-tx->key.  The ESP protocol code in the IPSEC stack can be used as a
-model for implementation.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/mac80211/tx.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 1d7dd54..28d8bd5 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1562,13 +1562,13 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	 * be cloned. This could happen, e.g., with Linux bridge code passing
- 	 * us broadcast frames. */
- 
--	if (head_need > 0 || skb_header_cloned(skb)) {
-+	if (head_need > 0 || skb_cloned(skb)) {
- #if 0
- 		printk(KERN_DEBUG "%s: need to reallocate buffer for %d bytes "
- 		       "of headroom\n", dev->name, head_need);
- #endif
- 
--		if (skb_header_cloned(skb))
-+		if (skb_cloned(skb))
- 			I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
- 		else
- 			I802_DEBUG_INC(local->tx_expand_skb_head);
--- 
-1.5.5.1.308.g1fbb5
-
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
