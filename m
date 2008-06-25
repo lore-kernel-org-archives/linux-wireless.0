@@ -1,74 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32658 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757299AbYF3J1L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 05:27:11 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 15/33] iwlwifi: keep the STATUS_EXIT_PENDING flag till the end of down flow
-Date: Mon, 30 Jun 2008 17:23:15 +0800
-Message-Id: <1214817813-17639-16-git-send-email-yi.zhu@intel.com> (sfid-20080630_113812_009567_CA0498E2)
-In-Reply-To: <1214817813-17639-15-git-send-email-yi.zhu@intel.com>
-References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-2-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-3-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-5-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-6-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-7-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-8-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-9-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-10-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-11-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-12-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-13-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-14-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-15-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:55133 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753904AbYFYTeE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jun 2008 15:34:04 -0400
+Subject: Re: [PATCH] rt2x00: Fix lock dependency errror
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+In-Reply-To: <200806252127.00971.IvDoorn@gmail.com> (sfid-20080625_212601_184149_3694A8DA)
+References: <200806252127.00971.IvDoorn@gmail.com>
+	 (sfid-20080625_212601_184149_3694A8DA)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WdE4ZwMeYXbEMor46czP"
+Date: Wed, 25 Jun 2008 21:33:20 +0200
+Message-Id: <1214422400.21847.54.camel@johannes.berg> (sfid-20080625_213410_986375_BE44EC73)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohamed Abbas <mohamed.abbas@intel.com>
 
-This patch avoids unsetting STATUS_EXIT_PENDING in the middle of the
-down flow.
+--=-WdE4ZwMeYXbEMor46czP
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 144b1da..1b2d9f1 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -2103,7 +2103,9 @@ static void __iwl4965_down(struct iwl_priv *priv)
- 			       test_bit(STATUS_GEO_CONFIGURED, &priv->status) <<
- 					STATUS_GEO_CONFIGURED |
- 			       test_bit(STATUS_IN_SUSPEND, &priv->status) <<
--					STATUS_IN_SUSPEND;
-+					STATUS_IN_SUSPEND |
-+			       test_bit(STATUS_EXIT_PENDING, &priv->status) <<
-+					STATUS_EXIT_PENDING;
- 		goto exit;
- 	}
- 
-@@ -2118,7 +2120,9 @@ static void __iwl4965_down(struct iwl_priv *priv)
- 			test_bit(STATUS_IN_SUSPEND, &priv->status) <<
- 				STATUS_IN_SUSPEND |
- 			test_bit(STATUS_FW_ERROR, &priv->status) <<
--				STATUS_FW_ERROR;
-+				STATUS_FW_ERROR |
-+		       test_bit(STATUS_EXIT_PENDING, &priv->status) <<
-+				STATUS_EXIT_PENDING;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 	iwl_clear_bit(priv, CSR_GP_CNTRL,
--- 
-1.5.3.6
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/=
+rt2x00/rt2x00.h
+> index 611d983..73dacbb 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+> @@ -821,6 +822,7 @@ struct rt2x00_dev {
+>  	/*
+>  	 * Scheduled work.
+>  	 */
+> +	struct workqueue_struct *workqueue;
+
+Do you really need a whole workqueue (kernel thread) per device? I would
+think that using schedule_work / cancel_work_sync for this task and keep
+using the mac80211 wq would be sufficient?
+
+johannes
+
+--=-WdE4ZwMeYXbEMor46czP
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIYp19AAoJEKVg1VMiehFYZdEQAKyP06IderN/i9vv+OtJ3QX2
+r1ks0W1eM0pJyyDyJbmvjgIfqpqQ//yVZZfgsvkR4C433A9VaMlxzC51hVvhMEe+
+qtvF5Vdzr0MLQd8iP16hNLlvRMOHZa9i+EbCvFMp/94Cp09lZXr9uTyxOdcdXAz7
+hgkl72/JCoFNGNztmw+fS5YBwCWb3F/LuNEI0XqdBEuhvjYs+Z3l48s57YnPfMrK
+UIjFRwwTsdumvpMUVNb0sDybRcMip3uld+2R3f+nJjKubD65Fe6sCzEPt2ntdy3J
+sUgo4G7KWgVASF3lXciM3dkPl5gU/UGUlQZO1OX5ZBRZ+Rcu1QXDileAwjRBNFiN
+IUrgWd50t8ldlNG7AEjmqGmE8XqdY7dVpAP83xtWf2kJvszkHj7WrP53qp/8R2nV
+XXmXEWvjMl8GgeLA66Qhkzo+LWfeppyXdUAk6xQiC17T7x9SyLcqkCTPk00DnbRe
+T2zFeceGfnaSVOZwx8aGiJTCILIXctrZ1YdCJ3gRbzcQtxnDtyO7wMfWQwns/bof
+usO6U+svGs0Ky471i7Iu/xoDlqFhcgbT5el4DDPmKftRU5Iz++aE5bTObOuPeRYJ
+iCAs4TAjsxNrneh89NJc/7t3zRv8Y/IkDDAoSoLpqIdbIUPSRcAYSggwrsrSIaRo
+KIRUubV4gv6XQ5Z1NxTO
+=HF5K
+-----END PGP SIGNATURE-----
+
+--=-WdE4ZwMeYXbEMor46czP--
 
