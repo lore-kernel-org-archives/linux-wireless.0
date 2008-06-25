@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:50473 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752633AbYFPPY4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2008 11:24:56 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Zack Weinberg" <zackw@panix.com>,
-	"Nick Kossifidis" <mickflemm@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Getting ath5k driver working with Thinkpad T61 [168c:1014]
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <E1K8GZW-0007vs-I1@hash.localnet> (sfid-20080616_172501_824569_2F00F038)
-Date: Mon, 16 Jun 2008 11:24:42 -0400
+Received: from c60.cesmail.net ([216.154.195.49]:59833 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751476AbYFYRVq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jun 2008 13:21:46 -0400
+Subject: Re: [RFC] rtl8187: Realtek 8187B wireless support with product
+	id0x8197/0x8189
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Larry.Finger@lwfinger.net, linville@tuxdriver.com,
+	hintak_leung@yahoo.co.uk, linux-wireless@vger.kernel.org
+In-Reply-To: <1214413636.21847.41.camel@johannes.berg>
+References: <4862796a.pmrQX9GXIZ1wDm2k%Larry.Finger@lwfinger.net>
+	 (sfid-20080625_185832_411910_F133FFF7)  <1214413636.21847.41.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 25 Jun 2008 13:21:44 -0400
+Message-Id: <1214414504.7901.17.camel@dv> (sfid-20080625_192150_598254_0DF91880)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Attached.  This has two attempts at 'iwlist wlan0 scan' in there
-> before I shut it back down again.  I see an awful lot of repetitive
-> writes of the same value at the same address, but I don't know what
-> this stuff means...
+On Wed, 2008-06-25 at 19:07 +0200, Johannes Berg wrote:
+> > - control->queue, which the herton's change used, for switching bet=
+ween 4
+> > tramission queue at end point 6,7,5,4, has disappeared. I hard-code=
+d 6 in
+> > this version, (see commemt #37 for background), but what's the corr=
+ect
+> > way to do this in current wireless-2.6 code?
+>=20
+> We switched to using multiqueue netdevs so you have to use
+> skb_get_queue_mapping() now.
 
-Thanks for the update.  I haven't had a chance to look at this until 
-now, as I've been traveling the last couple of weeks.  I'll go through 
-it this evening to see if anything jumps out.
+The last patch I posted to the list was using skb_get_queue_mapping().
+Look for "=EF=BB=BF[PATCH WIP] rtl8187b support" from May 22, 2008.
 
-FWIW, here's how to read the dump.  Given a line like:
+Unfortunately, the patch was still too big and complex for my taste to
+be submitted officially, and I didn't have time for further cleanups.
 
-    R 4 48.700287 1 0xdf3f9860 0x9d1a 0x0 0
-
->From left to right that would be:
-
-Read 4 bytes at time 48.700287 (map id=1) the address 0xdf3f9860, and
-receive the value 0x9d1a (the other two 0s are meaningless for now).  
-Writes look the same except start with W.
-
->From the address, you can figure out the register: in this case it is 
-0x9860 since the MMIO base address is 0xdf3f0000.  Now you can look in 
-reg.h to find the name of that register if we know it (here it is
-AR5K_PHY_AGCCTL).
-
-Then you can look at the source for where that register is being used to
-get an idea of what is going on.  In the above case, we're reading the
-register until the hardware completes AGC calibration and sets 
-AR5K_PHY_AGCCTL_CAL (bit 0) low - that eventually happens .02 seconds 
-later when the value 0x9d18 is read.
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
-
+--=20
+Regards,
+Pavel Roskin
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
