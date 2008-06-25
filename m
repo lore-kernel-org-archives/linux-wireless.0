@@ -1,41 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.225]:12107 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755538AbYFMO7v (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53613 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750971AbYFYUVY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 10:59:51 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2564971rvb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2008 07:59:50 -0700 (PDT)
-Message-ID: <48528B63.5030403@gmail.com> (sfid-20080613_165953_323086_83C841B0)
-Date: Fri, 13 Jun 2008 16:59:47 +0200
-From: =?ISO-8859-1?Q?Tor_H=E5kon_Haugen?= <tor.hakon.haugen@gmail.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with	disable_hw_scan=1
-References: <484FEA26.1040305@gmail.com>	<1213241315.7814.696.camel@debian.sh.intel.com>	<20080612135936.GA5031@tuxdriver.com>	<1213342523.7814.865.camel@debian.sh.intel.com> <20080613130310.GA5333@tuxdriver.com>
-In-Reply-To: <20080613130310.GA5333@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 25 Jun 2008 16:21:24 -0400
+Subject: Re: [PATCH] rt2x00: Fix lock dependency errror
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+In-Reply-To: <a32f33a40806251318n4f0bac2cs7ada6e23afe0cb6e@mail.gmail.com> (sfid-20080625_221835_923416_D8569C55)
+References: <200806252127.00971.IvDoorn@gmail.com>
+	 <1214422400.21847.54.camel@johannes.berg>
+	 <a32f33a40806251318n4f0bac2cs7ada6e23afe0cb6e@mail.gmail.com>
+	 (sfid-20080625_221835_923416_D8569C55)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UYFlgON+1bzD+z4bDKk+"
+Date: Wed, 25 Jun 2008 22:20:39 +0200
+Message-Id: <1214425240.21847.57.camel@johannes.berg> (sfid-20080625_222127_722551_39B9B2D0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
+--=-UYFlgON+1bzD+z4bDKk+
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-John W. Linville wrote:
-> On Fri, Jun 13, 2008 at 03:35:23PM +0800, Zhu Yi wrote:
->> On Thu, 2008-06-12 at 09:59 -0400, John W. Linville wrote:
->>> Honestly I'm tempted to change it to "enable_hw_scan" instead...
->> Give the advantages, I'd like to use it if we can fix the bug (I haven't
->> seen what the bug is myself). But you are free to change the default
->> value until it is fixed. There is no such problem for 4965, right?
-> 
-> AFAICT only the 3945 seems to need it.
-> 
+On Wed, 2008-06-25 at 22:18 +0200, Ivo Van Doorn wrote:
+> >> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wirele=
+ss/rt2x00/rt2x00.h
+> >> index 611d983..73dacbb 100644
+> >> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+> >> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+> >> @@ -821,6 +822,7 @@ struct rt2x00_dev {
+> >>       /*
+> >>        * Scheduled work.
+> >>        */
+> >> +     struct workqueue_struct *workqueue;
+> >
+> > Do you really need a whole workqueue (kernel thread) per device? I woul=
+d
+> > think that using schedule_work / cancel_work_sync for this task and kee=
+p
+> > using the mac80211 wq would be sufficient?
+>=20
+> True, but this is a quick patch to resolve the bug for sure.
 
-I can confirm that this also applies to 4965 as a friend of mine has 
-this card. According to him the card works a lot better with the 
-parameters "swcrypto=1" and "disable_hw_scan=1".
+Fair enough, this is a fix for 2.6.26 after all.
 
+johannes
 
-  Tor H. Haugen
+--=-UYFlgON+1bzD+z4bDKk+
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIYqiUAAoJEKVg1VMiehFYDqAP/31GEO1npY7bV4g3snY57Ypb
+R7hdakySuAz6s7xWVdChGNxvRl0TiY2tyTf/YYQ8jj/+/hMuKolHfpO/ke99INIH
+0o8xfnfroLNDxY5JxMKItzGKNdNWs5r9/Gg5Q5/PKVMLbldYJ9lgpSTc+FikXQ9W
+HPnH+bBdX3KHlfl14ERAmnK7LvcrrZTJ2tcpwKbwE/H/Z1SLQdPJw9dTjylfBG9T
+GiNdkOXQEWJtnDb/LHHPA+SZyeDJ9MGbccy3NjsSvdUCQsx7F5miDnqyOIzc69wV
+u9GiIulFemrLWl34FIY4MpaR+7/Y5GDMtAvqGyGtqOupEEfjkolnMxpeb3Cc+q+m
+EhqAc/X5oqZNBW2Ojt76Fr+1x0RvOb24xthzZGLH3+nJvrmkm6SvVHfYXCnJPMdn
+SLjJ9fo8R5JElud6UwW306uUNiDAaLqLjtpvzmmQtWDnZfgxgddA1b1UP7QVqd+A
+kB5/eZeHyFaILacM+HfMnLSWlYDy959pqGgJZssBw6vGaFRAdDE0yn+5vkqxJ2Ay
+duhMADDHE31O39YhqROttYMeXHxMDiRaE4tSgwjMEWNdz7VtYh1gdfWyetPxKfXU
+i1D+C/cWscyNozfTtAUcx4S3totaK2Qz0SElltuwQPOxkIpZyNeBIiLrwnE6XDS1
+yO4Hx0sYolYmOylNQIO8
+=5aYB
+-----END PGP SIGNATURE-----
+
+--=-UYFlgON+1bzD+z4bDKk+--
+
