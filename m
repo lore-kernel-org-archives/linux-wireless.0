@@ -1,69 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:35518 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752079AbYFKUBo (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.228]:40610 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753673AbYFYJuL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 16:01:44 -0400
-Message-ID: <48502F43.6040000@lwfinger.net> (sfid-20080611_220146_993295_3AD651A0)
-Date: Wed, 11 Jun 2008 15:02:11 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 25 Jun 2008 05:50:11 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so8117672rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2008 02:50:10 -0700 (PDT)
+Message-ID: <1ba2fa240806250250k2ae66eddre00172f6bc871fcb@mail.gmail.com> (sfid-20080625_115018_541422_2E5B0243)
+Date: Wed, 25 Jun 2008 12:50:10 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Broken fragmentation
+Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1213910734.8967.117.camel@johannes.berg>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
-CC: Michael Buesch <mb@bu3sch.de>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Subject: Re: Open source driver with binary HAL for BCM4313 from Broadcom
-References: <48500F14.8070300@canonical.com> <200806112047.00854.mb@bu3sch.de> <69e28c910806111250k4bfe0190h9cfd5937d47b1bbc@mail.gmail.com>
-In-Reply-To: <69e28c910806111250k4bfe0190h9cfd5937d47b1bbc@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1ba2fa240806190220l18fe5dcdsf44fe81412a5f35d@mail.gmail.com>
+	 <1213878207.8967.6.camel@johannes.berg>
+	 <1ba2fa240806190608h3d833dbaua412446e8a9f560d@mail.gmail.com>
+	 <1213881855.8967.19.camel@johannes.berg>
+	 <1ba2fa240806190745u2fe7e435y3ca207af4156767b@mail.gmail.com>
+	 <1213889200.8967.26.camel@johannes.berg>
+	 <1ba2fa240806191113nd6a221eiac9648edd3404a80@mail.gmail.com>
+	 <1213899419.8967.59.camel@johannes.berg>
+	 <1ba2fa240806191409k7200ad53y654a7f8a117c8f14@mail.gmail.com>
+	 <1213910734.8967.117.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stefanik G=E1bor wrote:
-> On Wed, Jun 11, 2008 at 8:47 PM, Michael Buesch <mb@bu3sch.de> wrote:
->> On Wednesday 11 June 2008 19:44:52 Tim Gardner wrote:
->>> John,
->>>
->>> Here is the URL to Broadcom's web site advertising their open sourc=
-e
->>> driver with support for the BCM4313.
->>>
->>> http://www.broadcom.com/support/802.11/linux_sta.php
->>>
->>> rtg
->> <quote>
->> Make sure that you download the appropriate tar because the hybrid b=
-inary
->> file must be of the appropriate architecture type. The hybrid binary=
- file
->> is agnostic to the specific version of the Linux kernel because it i=
-s
->> designed to perform all interactions with the operating system throu=
-gh
->> operating-system-specific files...
->> </quote>
+On Fri, Jun 20, 2008 at 12:25 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>> >> Fragments are in the air but the peer is not able to reassemble them.
+>> >> Something is wrong with the first fragment but I'm not sure yet.
+>> >
+>> > Hm, ok. got a packet capture? Maybe that was broken before, I remember
+>> > having problems with fragmentation but putting it down to the
+>> > known-to-be-completely-broken AP I was using.
 >>
->> --
->> Greetings Michael.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wire=
-less" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-> Also, the download links are broken. And AFAIK we do support BCM4312,
-> although not PCI ID 0x4315 (that would be BCM4310).
-> (CCing the bcm43xx mailing list.)
+>> It is working the latest problem was caused by the driver, Yet i still
+>> don't understand the regression
+>> in the driver.
+>
+> Hmm, ok.
+>
+So the bug is still in mac80211. Fragments are scheduled to different
+TIDs and hence to different queues.
+Investigating further. If you have something in mind let me know
 
-Watch out for their tarballs as they will dump all over the directory=20
-that you are in when you invoke tar.
-
-Larry
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks
+Tomas
