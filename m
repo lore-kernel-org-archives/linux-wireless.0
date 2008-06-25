@@ -1,57 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:35686 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761884AbYFKPrJ (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.168]:58013 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750987AbYFYQHM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 11:47:09 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2159974fgg.17
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 08:47:05 -0700 (PDT)
-Message-ID: <484FF375.8010002@gmail.com> (sfid-20080611_174737_264918_C2EA7207)
-Date: Wed, 11 Jun 2008 18:47:01 +0300
-From: Maxim Levitsky <maximlevitsky@gmail.com>
+	Wed, 25 Jun 2008 12:07:12 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so126456ugf.16
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2008 09:07:08 -0700 (PDT)
+Message-ID: <f6ca9fed0806250907od5f5ff1m7469075e2a68e627@mail.gmail.com> (sfid-20080625_180717_043629_B5387F84)
+Date: Wed, 25 Jun 2008 18:07:08 +0200
+From: drago01 <drago01@gmail.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: [PATCH 3/4 V2] mac80211: add last beacon time in scan list
+Cc: "Tomas Winkler" <tomas.winkler@intel.com>, linville@tuxdriver.com,
+	johannes@sipsolutions.net, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
+In-Reply-To: <1214409527.5881.21.camel@dv>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: ipw3945-devel@lists.sourceforge.net
-Subject: Re: [BUG] iwlwifi 3945 works only with disable_hw_scan=1
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1214396229-18782-1-git-send-email-tomas.winkler@intel.com>
+	 <1214409527.5881.21.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maxim Levitsky wrote:
-> I recently bought an acer aspire 5720G, and wireless didn't work with
-> standard ubuntu 2.6.24 kernel.
-> 
-> I found that specifying the above option 'fixes' the driver
-> but I also noticed that list of available access points shrinks
-> to just one (the connected) point.
-> 
-> Moreover there is a trouble in changing a access point, it just hangs.
-> the button that toggles wireless does work, but doesn't blink.
-> 
-> I then installed latest -git kernel (~ 2.6.26-rc4) and got this:
-> 
-> * I still have to use disable_hw_scan=1
-> * Wireless led works thanks to acer-wmi
-> * If I disable wireless with the button, I _can't_ re-enable it unless
->   I reload the module.
-> 
-> * List of access points doesn't shrink, and I can switch between those points.
-> 
-> 
-> When I omit disable_hw_scan=1, I get errors about REPLY_SCAN_CMD
-> I will send detailed debug info later.
-> 
-> Best regards,
-> 	Maxim Levitsky
+On Wed, Jun 25, 2008 at 5:58 PM, Pavel Roskin <proski@gnu.org> wrote:
+>
+>> +                     time_diff = jiffies - bss->last_update > mid_range ?
+>> +                             jiffies - bss->last_update :
+>> +                             bss->last_update - jiffies;
+>
+> That's pretty hairy.  Do we really lack a function to calculate time
+> difference?
 
-
-I found why I can't reenable wireless with wireless button.
-
-It turns out that iwlwifi doesn't enable the wireless function after a 
-R/F kill switch was enabled ether by the button or explicitly.
-
-I bisected this to commit 5a66926aa9230810704fd5a127966215fd58881e
-in linus tree.
-
-Best regards,
-	Maxim Levitsky
+what about elapsed_jiffies() in iwl-helpers.h ?...
+should be moved to a generic place (include/linux/jiffies.h) so that
+other users can access it.
