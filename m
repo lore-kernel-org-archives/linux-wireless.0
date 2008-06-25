@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mbox1.netikka.net ([213.250.81.202]:48742 "EHLO
-	mbox1.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753698AbYFFMCD (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.242]:52683 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752379AbYFYA4W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2008 08:02:03 -0400
-Message-ID: <48492734.9080901@mandriva.org> (sfid-20080606_140206_558530_9EA358A4)
-Date: Fri, 06 Jun 2008 15:01:56 +0300
-From: Thomas Backlund <tmb@mandriva.org>
+	Tue, 24 Jun 2008 20:56:22 -0400
+Received: by an-out-0708.google.com with SMTP id d40so761384and.103
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jun 2008 17:56:21 -0700 (PDT)
+Message-ID: <40f31dec0806241756j2916da61n42e6a7b5ea556ea7@mail.gmail.com> (sfid-20080625_025628_764398_4D93AE44)
+Date: Wed, 25 Jun 2008 03:56:21 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: RFC: always enable MAC80211_RC_PID?
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Adrian Bunk" <bunk@stusta.de>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <1214298259.8967.260.camel@johannes.berg>
 MIME-Version: 1.0
-To: Tomas Winkler <tomasw@gmail.com>
-CC: Ian Schram <ischram@telenet.be>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwl4965 oops in 2.6.26-rc5 x86_64
-References: <4848289D.1080205@mandriva.org>	 <1ba2fa240806051103q652accf5t1bd1d94630ebea5b@mail.gmail.com>	 <48482BC3.4070402@mandriva.org> <4848482C.2080208@mandriva.org>	 <48485F12.2050908@mandriva.org> <48488878.5040708@telenet.be> <1ba2fa240806060432t73ecb318x89e877241aa6ef55@mail.gmail.com>
-In-Reply-To: <1ba2fa240806060432t73ecb318x89e877241aa6ef55@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
+References: <20080622125553.GB22539@cs181133002.pp.htv.fi>
+	 <43e72e890806220804i347b942claae7b725231afcce@mail.gmail.com>
+	 <1214298259.8967.260.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler skrev:
-> On Fri, Jun 6, 2008 at 3:44 AM, Ian Schram <ischram@telenet.be> wrote:
->> Isn't this the Oops Joonwoo Park wanted to patch with
->>
->> "[PATCH] iwlwifi: fix oops on wep key insertion" 27/5/2008
->>
->> invalid length of webkey that would/should be handled in mac80211?
->>
->> ian
-> 
-> Yes, it looks like.
+2008/6/24 Johannes Berg <johannes@sipsolutions.net>:
+>
+>> You can currently only get away living without it if you are just
+>> using iwl3945 or iwl4965 as they provide their own rate control
+>> algorithms. In the future if other vendor drivers are added with their
+>> own rate control algorithm this list grows.
+>
+> FWIW, I would like to see those algorithms be supported as part of
+> mac80211 and not be internal like iwlwifi hacked them on, and have some
+> sort of feature negotiation between the hardware and the RC algorithm
+> when choosing one.
+>
+> johannes
+>
 
-Ummm, what has a wep key to do with me trying to access a WPA2-Personal 
-encrypted net ?
+I also agree on that, this way we can eg. port samplerate or minstrel
+from MadWiFi to mac80211 for any card that can do multirate
+transmitions for example, not only Atheros cards.
 
-> Thomas can you send out your wpa_supplicant config fiele
-> 
+We need however a fallback algorithm compiled in by default if we go
+that way because the user might not know what algorithms are
+compatible with his card during kernel configuration. I guess PID is
+generic enough for this.
 
-I could, but since I would have to remove any sensitive info such as the 
-psk key, would it be of any use ?
+Also ideally the user should be able to change rate control algorithm
+during runtime (without the need to reload the driver), i think having
+rate control inside mac80211 makes it easier.
 
-> I will provide a patch that disable hw encryption on long wep keys. It
-> get lost in my todo list.
-> Tomas
-> 
 
---
-Thomas
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
