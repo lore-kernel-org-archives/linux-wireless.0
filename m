@@ -1,68 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44894 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753264AbYFLSVy (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:44001 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751476AbYFYSYc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 14:21:54 -0400
-Subject: Re: [RFC] Do not activate promiscuous mode on wlan interfaces for
-	bridging.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, shemminger@linux-foundation.org,
-	j@w1.fi, bridge@linux-foundation.org,
-	Linux Netdev List <netdev@vger.kernel.org>
-In-Reply-To: <1213294793.6615.16.camel@localhost> (sfid-20080612_202000_504292_98E93460)
-References: <1213232760.6645.24.camel@localhost>
-	 (sfid-20080612_030607_332834_1EFDE126)  <1213255570.3871.8.camel@johannes.berg>
-	 <1213294793.6615.16.camel@localhost> (sfid-20080612_202000_504292_98E93460)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-vBkVlkfFN20sIiKrvAks"
-Date: Thu, 12 Jun 2008 20:20:52 +0200
-Message-Id: <1213294852.3730.31.camel@johannes.berg> (sfid-20080612_202157_687281_ED2E575E)
-Mime-Version: 1.0
+	Wed, 25 Jun 2008 14:24:32 -0400
+Message-ID: <48628D9A.5090502@lwfinger.net> (sfid-20080625_202434_996532_36ED50E8)
+Date: Wed, 25 Jun 2008 13:25:30 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Pavel Roskin <proski@gnu.org>
+CC: linville@tuxdriver.com, hintak_leung@yahoo.co.uk,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC] rtl8187: Realtek 8187B wireless support with	product	id0x8197/0x8189
+References: <4862796a.pmrQX9GXIZ1wDm2k%Larry.Finger@lwfinger.net>	 <1214415411.7901.25.camel@dv>  <4862840F.4030409@lwfinger.net> <1214416662.9237.6.camel@dv>
+In-Reply-To: <1214416662.9237.6.camel@dv>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Pavel Roskin wrote:
+> On Wed, 2008-06-25 at 12:44 -0500, Larry Finger wrote:
 
---=-vBkVlkfFN20sIiKrvAks
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> I'm not sure I can stand behind that patch quality-wise.   It's 40k of
+> intrusive changes that I could not even test on an old rtl8187.  If I
+> had more time and a original rtl8187 device, I would try to split more
+> parts or restructure the code first.
+> 
+> Also, the startup time (ifconfig up) is over 20 seconds, which is
+> absolutely unacceptable.  Either some delays are over-conservative, or
+> we are doing something wrong.
+> 
 
+For the review process, I have split the patch into 5 parts. Each step 
+compiles, thus bisection will be preserved. With this change, the 
+largest of the pieces is a little under 15KiB. Is this small enough? 
+Further splitting would be a lot more difficult.
 
-> You are right, within the BSS every frame is going to be addressed to
-> the AP anyway, so we should not receive more or less frames when
-> activating promiscuous mode.
->=20
-> When activating promiscuous mode in this device, it stops acknowledging
-> frames, and this impairs the association process. The other solution
-> would be to ignore the promiscuous mode commands (i.e. never send the
-> command to the device) for interfaces in AP mode. If this is the only
-> device showing this behavior, maybe that would be the best solution.
+As to the quality of the patch, it barely works on my device. RX seems 
+to be OK except for the wireless statistics, but I can associate only 
+about 1 try in 10. Once I get that problem squared away, then I can 
+work on the timing. I really would like to get this into 
+wireless-testing ASAP.
 
-Is this a mac80211 driver? When are you activating promisc?
+I don't have an 8187 device either, and will have to rely on someone 
+else for that part of the testing.
 
-johannes
-
---=-vBkVlkfFN20sIiKrvAks
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIUWkAAAoJEKVg1VMiehFYikoP/1oEGzotLqVaEpSmVYb63NR9
-DnO73/BgXyvRi4nHYmYZIUcsOJcFPxcNA3l851/1D/B01mhCXeuCMRITiMhfQN4v
-KFSBRcO92iFLAjq0ZNabVOZXIAhLbC25qBHIP9Ra8blbKYiYsQc1DDc3LONsL+1A
-DlvISHbQjLDQf6G3MZAU21MH8FX6VbC9wJQyfbRVwXeRqGllnYt3zQL1BtxmP4s8
-mecJFHTfV4peIN3plf3ZOME2SqcgXunFXvZdxUjKckKEDimouz7TyEMxFZKkUgAg
-KPBuOncIECYDTIuV4R7soTKxbt3qDHtpaRucFBtBKCHZBIMM+GFdh2jdWfh8oi96
-Ke+9f5B+rhlbAVvMVTCtzNAjMwmA1EnqXxYmLvVJB+eqRkqlafz8/02cPFAOx/Zu
-8dVfUg8qbZPBaGLsCLxBFU1Sjr+2OW6u+JnkVED4xNV21uyQGB0crh2WadRLqkgw
-1V/fMd3Pg/IweSZcdkNLb25LQCQRzIXI2iTwc8BVmaGb6yTusuFPx3eaF/mZ/L4/
-5iiq6x7A6mXdnzxYYfoc+d8BhUznoBAb19JIDgRkiTNcYwWnpIzQK9VdEELakjOA
-il6jxnRFmVZr8wGD8QUtVYqN+705yAg3z3yq+bLU576v0ZlIB+YSEe6Tg8hJ6aWi
-QaCTLpzJZaZmLg43EJrg
-=4oMj
------END PGP SIGNATURE-----
-
---=-vBkVlkfFN20sIiKrvAks--
-
+Larry
