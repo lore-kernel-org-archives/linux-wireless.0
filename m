@@ -1,52 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.249]:1385 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753559AbYFNQuE (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34707 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751130AbYFYKCy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jun 2008 12:50:04 -0400
-Received: by an-out-0708.google.com with SMTP id d40so1071647and.103
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Jun 2008 09:50:03 -0700 (PDT)
-Message-ID: <43e72e890806140950x1540fa81l9e7045ed63f4b912@mail.gmail.com> (sfid-20080614_185010_412535_D6EF02DF)
-Date: Sat, 14 Jun 2008 09:50:03 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with disable_hw_scan=1
-Cc: "Maxim Levitsky" <maximlevitsky@gmail.com>,
-	"Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1ba2fa240806131304n442972eatfd2f35034476c380@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <484FEA26.1040305@gmail.com>
-	 <1213241315.7814.696.camel@debian.sh.intel.com>
-	 <20080612135936.GA5031@tuxdriver.com>
-	 <1213342523.7814.865.camel@debian.sh.intel.com>
-	 <20080613130310.GA5333@tuxdriver.com> <48528B63.5030403@gmail.com>
-	 <48528CF0.8050204@gmail.com>
-	 <1ba2fa240806131304n442972eatfd2f35034476c380@mail.gmail.com>
+	Wed, 25 Jun 2008 06:02:54 -0400
+Subject: Re: Broken fragmentation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240806250250k2ae66eddre00172f6bc871fcb@mail.gmail.com> (sfid-20080625_115014_290743_215B6A5E)
+References: <1ba2fa240806190220l18fe5dcdsf44fe81412a5f35d@mail.gmail.com>
+	 <1213878207.8967.6.camel@johannes.berg>
+	 <1ba2fa240806190608h3d833dbaua412446e8a9f560d@mail.gmail.com>
+	 <1213881855.8967.19.camel@johannes.berg>
+	 <1ba2fa240806190745u2fe7e435y3ca207af4156767b@mail.gmail.com>
+	 <1213889200.8967.26.camel@johannes.berg>
+	 <1ba2fa240806191113nd6a221eiac9648edd3404a80@mail.gmail.com>
+	 <1213899419.8967.59.camel@johannes.berg>
+	 <1ba2fa240806191409k7200ad53y654a7f8a117c8f14@mail.gmail.com>
+	 <1213910734.8967.117.camel@johannes.berg>
+	 <1ba2fa240806250250k2ae66eddre00172f6bc871fcb@mail.gmail.com>
+	 (sfid-20080625_115014_290743_215B6A5E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Wrl5xxlGGzF6m1nZ/rRz"
+Date: Wed, 25 Jun 2008 12:02:13 +0200
+Message-Id: <1214388133.21847.8.camel@johannes.berg> (sfid-20080625_120258_171286_55DA19F4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gRnJpLCBKdW4gMTMsIDIwMDggYXQgMTowNCBQTSwgVG9tYXMgV2lua2xlciA8dG9tYXN3QGdt
-YWlsLmNvbT4gd3JvdGU6Cj4gT24gRnJpLCBKdW4gMTMsIDIwMDggYXQgNjowNiBQTSwgTWF4aW0g
-TGV2aXRza3kgPG1heGltbGV2aXRza3lAZ21haWwuY29tPiB3cm90ZToKPj4gVG9yIEjDpWtvbiBI
-YXVnZW4gd3JvdGU6Cj4+Pgo+Pj4gSm9obiBXLiBMaW52aWxsZSB3cm90ZToKPj4+PiBPbiBGcmks
-IEp1biAxMywgMjAwOCBhdCAwMzozNToyM1BNICswODAwLCBaaHUgWWkgd3JvdGU6Cj4+Pj4+IE9u
-IFRodSwgMjAwOC0wNi0xMiBhdCAwOTo1OSAtMDQwMCwgSm9obiBXLiBMaW52aWxsZSB3cm90ZToK
-Pj4+Pj4+IEhvbmVzdGx5IEknbSB0ZW1wdGVkIHRvIGNoYW5nZSBpdCB0byAiZW5hYmxlX2h3X3Nj
-YW4iIGluc3RlYWQuLi4KPj4+Pj4gR2l2ZSB0aGUgYWR2YW50YWdlcywgSSdkIGxpa2UgdG8gdXNl
-IGl0IGlmIHdlIGNhbiBmaXggdGhlIGJ1ZyAoSSBoYXZlbid0Cj4+Pj4+IHNlZW4gd2hhdCB0aGUg
-YnVnIGlzIG15c2VsZikuIEJ1dCB5b3UgYXJlIGZyZWUgdG8gY2hhbmdlIHRoZSBkZWZhdWx0Cj4+
-Pj4+IHZhbHVlIHVudGlsIGl0IGlzIGZpeGVkLiBUaGVyZSBpcyBubyBzdWNoIHByb2JsZW0gZm9y
-IDQ5NjUsIHJpZ2h0Pwo+Pj4+IEFGQUlDVCBvbmx5IHRoZSAzOTQ1IHNlZW1zIHRvIG5lZWQgaXQu
-Cj4+Pj4KPj4+Cj4+PiBJIGNhbiBjb25maXJtIHRoYXQgdGhpcyBhbHNvIGFwcGxpZXMgdG8gNDk2
-NSBhcyBhIGZyaWVuZCBvZiBtaW5lIGhhcwo+Pj4gdGhpcyBjYXJkLiBBY2NvcmRpbmcgdG8gaGlt
-IHRoZSBjYXJkIHdvcmtzIGEgbG90IGJldHRlciB3aXRoIHRoZQo+Pj4gcGFyYW1ldGVycyAic3dj
-cnlwdG89MSIgYW5kICJkaXNhYmxlX2h3X3NjYW49MSIuCj4+Cj4+IEp1c3QgdG8gbWFrZSBpdCBj
-bGVhciwKPj4gaXdsMzk0NSBkb2Vzbid0IHdvcmsgYXQgYWxsIHdpdGhvdXQgZGlzYWJsZV9od19z
-Y2FuPTEgaGVyZS4KPj4gVGhlIGRyaXZlciBqdXN0IHNodXRzIGRvd24gdGhlZSBjYXJkIHNpbmNl
-IGl0IGRldGVjdHMgbWljcm9jb2RlIGVycm9yLgo+Pgo+Cj4gSXQgbG9va3MgbGlrZSB0aGlzIGlz
-IGFsbCBjYXVzZWQgYnkgdGhlIGJpZyByYXRlLCBiYW5kIHBhdGNoLiBMb29rcwo+IGxpa2UgQSBi
-YW5kIHNjYW4gY2hhbm5lbHMgYXJlIG5vdCBjb25maWd1cmVkIGNvcnJlY3RseSBmb3IgdGhlCj4g
-c2Nhbm5pbmcuIFRoaXMgY3Jhc2hlcyB0aGUgZmlybXdhcmUuCgpXaHkgd291bGQgdGhpcyBjcmFz
-aCBmaXJtd2FyZT8KCiAgTHVpcwo=
+
+--=-Wrl5xxlGGzF6m1nZ/rRz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, 2008-06-25 at 12:50 +0300, Tomas Winkler wrote:
+> On Fri, Jun 20, 2008 at 12:25 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> >
+> >> >> Fragments are in the air but the peer is not able to reassemble the=
+m.
+> >> >> Something is wrong with the first fragment but I'm not sure yet.
+> >> >
+> >> > Hm, ok. got a packet capture? Maybe that was broken before, I rememb=
+er
+> >> > having problems with fragmentation but putting it down to the
+> >> > known-to-be-completely-broken AP I was using.
+> >>
+> >> It is working the latest problem was caused by the driver, Yet i still
+> >> don't understand the regression
+> >> in the driver.
+> >
+> > Hmm, ok.
+> >
+> So the bug is still in mac80211. Fragments are scheduled to different
+> TIDs and hence to different queues.
+> Investigating further. If you have something in mind let me know
+
+Hmm, yes, I do indeed, try
+
+skb_copy_queue_mapping(frag, first);
+
+where you previously added the cb copy.
+
+johannes
+
+--=-Wrl5xxlGGzF6m1nZ/rRz
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIYheiAAoJEKVg1VMiehFYq9MQAIKTVj4ofFil7LKnAjDDrkJi
+vAfJdp9eb7QqVMb2LsExcYz/g09AjWo/ogxHXoaaz5ruM+E/DAinO+1yja7pFSrT
+f2kWmociO9ABWnDFzMi1abYj95oTonUshVpBgYDSmeb2j5fRz7Bu45ErZewoMqz0
+ZXlTx6n4d2E/fAo0T0C1gS9VShFKeFRU4KBDr2Bu+R9Ok6fXsCexjtqfC4ShtrDT
+zoekr0EH6+VGoZPYNHkC5HIhuUp+1cqTTIEbanwarXE5syYtQbCyKDjxvEAYzsE1
+8Vd4pi8lPHuAb09hWoT3uRjEttEkEwiVZID+fmhYNc/K0zwGmTS43NwhmVvDE8BC
+7HiAq/vwk+onyJ8Z5uEPPPEchNpwte8bqW9Q1xiU2UJPtI009NQ+05+sbXkjyT3A
++gHg/BxKPKl6R4lYPQ/eSUphUakPx/ABZzppfYe+3Ez8wNkD5B75p0MzvpAG1CST
++vC8X2KBKHJewjNursnRV+G1JZ7V9O0nJGIMUgwZ3rE9n0kx53p+D1kWimTcz4LE
+9u+lWxrI8goUsIpYXiT1KxQ6kY6ruddz7CN/uHeDfdtTqyktXCczZOuTeobqqtI5
+01nxBFE6dl3aWJ82wHhbb05oobmg16X9okdbJzkA8IMCunDH6NPw6z94MrzMCka3
+RYtIDazdeDkQ+eQY0Vlj
+=VVNl
+-----END PGP SIGNATURE-----
+
+--=-Wrl5xxlGGzF6m1nZ/rRz--
+
