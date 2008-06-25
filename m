@@ -1,104 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:2940 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752511AbYFKVWI (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.176]:47568 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752726AbYFYKf2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 17:22:08 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so3278785wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 14:22:08 -0700 (PDT)
-Subject: [PATCHv2 05/11] mac80211: use new helpers in util.c -
-	ieee80211_get_bssid()
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 11 Jun 2008 14:21:58 -0700
-Message-Id: <1213219318.5974.178.camel@brick> (sfid-20080611_232212_949312_5AA48250)
-Mime-Version: 1.0
+	Wed, 25 Jun 2008 06:35:28 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so1059480waf.23
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jun 2008 03:35:27 -0700 (PDT)
+Message-ID: <1ba2fa240806250335g7251fe9ax5a470990357f0b71@mail.gmail.com> (sfid-20080625_123531_248735_2CBCA9B0)
+Date: Wed, 25 Jun 2008 13:35:27 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Broken fragmentation
+Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1214389930.21847.12.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1ba2fa240806190220l18fe5dcdsf44fe81412a5f35d@mail.gmail.com>
+	 <1213889200.8967.26.camel@johannes.berg>
+	 <1ba2fa240806191113nd6a221eiac9648edd3404a80@mail.gmail.com>
+	 <1213899419.8967.59.camel@johannes.berg>
+	 <1ba2fa240806191409k7200ad53y654a7f8a117c8f14@mail.gmail.com>
+	 <1213910734.8967.117.camel@johannes.berg>
+	 <1ba2fa240806250250k2ae66eddre00172f6bc871fcb@mail.gmail.com>
+	 <1214388133.21847.8.camel@johannes.berg>
+	 <1ba2fa240806250330s15168d22i50e61498fbba6af7@mail.gmail.com>
+	 <1214389930.21847.12.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/util.c |   41 +++++++++++++++++++----------------------
- 1 files changed, 19 insertions(+), 22 deletions(-)
+On Wed, Jun 25, 2008 at 1:32 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2008-06-25 at 13:30 +0300, Tomas Winkler wrote:
+>
+>> >> So the bug is still in mac80211. Fragments are scheduled to different
+>> >> TIDs and hence to different queues.
+>> >> Investigating further. If you have something in mind let me know
+>> >
+>> > Hmm, yes, I do indeed, try
+>> >
+>> > skb_copy_queue_mapping(frag, first);
+>> >
+>> > where you previously added the cb copy.
+>
+>> Yeah just found that too 2 min ago :)
+>
+> :)
+>
+> Before it happens again, can you think of anything else we need to copy?
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 9f365a3..ce62b16 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -45,38 +45,37 @@ const unsigned char bridge_tunnel_header[] __aligned(2) =
- u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
- 			enum ieee80211_if_types type)
- {
--	u16 fc;
-+	__le16 fc = hdr->frame_control;
- 
- 	 /* drop ACK/CTS frames and incorrect hdr len (ctrl) */
- 	if (len < 16)
- 		return NULL;
- 
--	fc = le16_to_cpu(hdr->frame_control);
--
--	switch (fc & IEEE80211_FCTL_FTYPE) {
--	case IEEE80211_FTYPE_DATA:
-+	if (ieee80211_is_data(fc)) {
- 		if (len < 24) /* drop incorrect hdr len (data) */
- 			return NULL;
--		switch (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
--		case IEEE80211_FCTL_TODS:
--			return hdr->addr1;
--		case (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS):
-+
-+		if (ieee80211_has_a4(fc))
- 			return NULL;
--		case IEEE80211_FCTL_FROMDS:
-+		if (ieee80211_has_tods(fc))
-+			return hdr->addr1;
-+		if (ieee80211_has_fromds(fc))
- 			return hdr->addr2;
--		case 0:
--			return hdr->addr3;
--		}
--		break;
--	case IEEE80211_FTYPE_MGMT:
-+
-+		return hdr->addr3;
-+	}
-+
-+	if (ieee80211_is_mgmt(fc)) {
- 		if (len < 24) /* drop incorrect hdr len (mgmt) */
- 			return NULL;
- 		return hdr->addr3;
--	case IEEE80211_FTYPE_CTL:
--		if ((fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PSPOLL)
-+	}
-+
-+	if (ieee80211_is_ctl(fc)) {
-+		if(ieee80211_is_pspoll(fc))
- 			return hdr->addr1;
--		else if ((fc & IEEE80211_FCTL_STYPE) ==
--						IEEE80211_STYPE_BACK_REQ) {
-+
-+		if (ieee80211_is_back_req(fc)) {
- 			switch (type) {
- 			case IEEE80211_IF_TYPE_STA:
- 				return hdr->addr2;
-@@ -84,11 +83,9 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
- 			case IEEE80211_IF_TYPE_VLAN:
- 				return hdr->addr1;
- 			default:
--				return NULL;
-+				break; /* fall through to the return */
- 			}
- 		}
--		else
--			return NULL;
- 	}
- 
- 	return NULL;
--- 
-1.5.6.rc2.261.ga8fbe
+Not sure, now it works.
+Shell I send a patch or blend it into the original one.
+Thanks
 
-
+> johannes
+>
