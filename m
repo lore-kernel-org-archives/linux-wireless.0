@@ -1,84 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32658 "EHLO mga02.intel.com"
+Received: from smtp6.pp.htv.fi ([213.243.153.40]:56850 "EHLO smtp6.pp.htv.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756640AbYF3J1Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 05:27:16 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 29/33] iwlwifi: drop skb silently for Tx request in monitor mode
-Date: Mon, 30 Jun 2008 17:23:29 +0800
-Message-Id: <1214817813-17639-30-git-send-email-yi.zhu@intel.com> (sfid-20080630_113813_454594_52EC7F26)
-In-Reply-To: <1214817813-17639-29-git-send-email-yi.zhu@intel.com>
-References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-2-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-3-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-5-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-6-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-7-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-8-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-9-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-10-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-11-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-12-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-13-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-14-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-15-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-16-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-17-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-18-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-19-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-20-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-21-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-22-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-23-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-24-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-25-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-26-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-27-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-28-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-29-git-send-email-yi.zhu@intel.com>
+	id S1753418AbYFZSMR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jun 2008 14:12:17 -0400
+Date: Thu, 26 Jun 2008 21:10:06 +0300
+From: Adrian Bunk <bunk@kernel.org>
+To: Mattias Nissler <mattias.nissler@gmx.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: RFC: always enable MAC80211_RC_PID?
+Message-ID: <20080626181006.GB22827@cs181140183.pp.htv.fi> (sfid-20080626_201221_600264_11143D4D)
+References: <20080622125553.GB22539@cs181133002.pp.htv.fi> <43e72e890806220804i347b942claae7b725231afcce@mail.gmail.com> <1214298259.8967.260.camel@johannes.berg> <20080624124311.GC16021@cs181140183.pp.htv.fi> <1214502942.4432.6.camel@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1214502942.4432.6.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the problem to keep mac80211 resubmitting SKBs
-when Tx request cannot be met in monitor mode.
+On Thu, Jun 26, 2008 at 07:55:42PM +0200, Mattias Nissler wrote:
+> Just what I remember about the discussion that led to the ugly Makefile.
+> 
+> On Tue, 2008-06-24 at 15:43 +0300, Adrian Bunk wrote:
+> > 
+> > Can we get one of either:
+> > - all selected mac80211 algorithms are built into the mac80211 module or
+> 
+> IIRC, this was originally voted against because this approach would
+> increase kernel image size or module size unnecessarily.
+>...
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+I don't see this point here.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 4f0a18a..2744b0a 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -6695,7 +6695,8 @@ static int iwl3945_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 
- 	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
- 		IWL_DEBUG_MAC80211("leave - monitor\n");
--		return -1;
-+		dev_kfree_skb_any(skb);
-+		return 0;
- 	}
- 
- 	IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->len,
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index ba0f289..60b7a64 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -2682,7 +2682,8 @@ static int iwl4965_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 
- 	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
- 		IWL_DEBUG_MAC80211("leave - monitor\n");
--		return -1;
-+		dev_kfree_skb_any(skb);
-+		return 0;
- 	}
- 
- 	IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->len,
+People who _really_ need small kernels can still disable unneeded 
+algorithms, and distribution kernels are anyway not usable for cases 
+where a few kB more or less would matter.
+
+> Mattias
+
+cu
+Adrian
+
 -- 
-1.5.3.6
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
