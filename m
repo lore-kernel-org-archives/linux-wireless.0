@@ -1,69 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:2940 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752296AbYFKVWE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 17:22:04 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so3278785wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 14:22:04 -0700 (PDT)
-Subject: [PATCHv2 04/11] mac80211: make ieee80211_get_hdrlen_from_skb
-	return unsigned
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
+Received: from ra.tuxdriver.com ([70.61.120.52]:3385 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751615AbYFZURB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jun 2008 16:17:01 -0400
+Date: Thu, 26 Jun 2008 15:55:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 11 Jun 2008 14:21:57 -0700
-Message-Id: <1213219317.5974.177.camel@brick> (sfid-20080611_232211_799784_C1240458)
-Mime-Version: 1.0
+Subject: Re: [PATCH] mac80211: remove ieee80211_get_hdr_info
+Message-ID: <20080626195513.GB28598@tuxdriver.com> (sfid-20080626_221707_404910_D4AA6685)
+References: <1214200251.21092.23.camel@brick> <1214256225.21092.26.camel@brick>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1214256225.21092.26.camel@brick>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Many callers already expect it to.
+On Mon, Jun 23, 2008 at 02:23:45PM -0700, Harvey Harrison wrote:
+> >From 43070f098527c6f9022a83eb41e95b166e6d8605 Mon Sep 17 00:00:00 2001
+> From: Harvey Harrison <harvey.harrison@gmail.com>
+> Date: Mon, 23 Jun 2008 14:21:13 -0700
+> Subject: [PATCH] mac80211: fix incorrect bit masking from previous patch
+> 
+> Checked ieee802.11-2007 and saw I changed this to mask one too many bits,
+> the original comment is correct.
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- include/net/mac80211.h |    2 +-
- net/mac80211/util.c    |    8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+Would you mind posting a combined patch?
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 53c3b5e..7ab4ff6 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1535,7 +1535,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
-  *
-  * @skb: the frame
-  */
--int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb);
-+unsigned int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb);
- 
- /**
-  * ieee80211_get_hdrlen - get header length from frame control
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 722a4eb..9f365a3 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -165,14 +165,14 @@ out:
- }
- EXPORT_SYMBOL(ieee80211_hdrlen);
- 
--int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
-+unsigned int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
- {
--	const struct ieee80211_hdr *hdr = (const struct ieee80211_hdr *) skb->data;
--	int hdrlen;
-+	const struct ieee80211_hdr *hdr = (const struct ieee80211_hdr *)skb->data;
-+	unsigned int hdrlen;
- 
- 	if (unlikely(skb->len < 10))
- 		return 0;
--	hdrlen = ieee80211_get_hdrlen(le16_to_cpu(hdr->frame_control));
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	if (unlikely(hdrlen > skb->len))
- 		return 0;
- 	return hdrlen;
+John
 -- 
-1.5.6.rc2.261.ga8fbe
-
-
+John W. Linville
+linville@tuxdriver.com
