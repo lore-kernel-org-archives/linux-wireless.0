@@ -1,41 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.242]:51106 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754130AbYFLSe0 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57421 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754676AbYFZSAq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 14:34:26 -0400
-Received: by an-out-0708.google.com with SMTP id d40so892994and.103
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 11:34:26 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Add D-link DWA111 support
-Date: Thu, 12 Jun 2008 20:47:17 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200806122047.17285.IvDoorn@gmail.com> (sfid-20080612_203429_905854_58456FF9)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 26 Jun 2008 14:00:46 -0400
+Subject: Re: [Q] ath5k : doesn't support AP mode?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Pavel Roskin <proski@gnu.org>,
+	Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
+	cs010101@gmail.com, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <200806261846.17962.mb@bu3sch.de>
+References: <002901c8d737$e51bb2f0$3b0aa8c0@39fb6b6b6f434b3>
+	 <200806261821.31643.mb@bu3sch.de> <1214498071.30722.22.camel@dv>
+	 <200806261846.17962.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-y8bq1speG2yRC0My27js"
+Date: Thu, 26 Jun 2008 19:23:20 +0200
+Message-Id: <1214501000.3783.0.camel@johannes.berg> (sfid-20080626_200101_433132_D3EE2DEB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add new rt73usb USB ID for D-Link DWA111
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt73usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+--=-y8bq1speG2yRC0My27js
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 505a9f5..fceefd7 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2114,6 +2114,7 @@ static struct usb_device_id rt73usb_device_table[] = {
- 	/* D-Link */
- 	{ USB_DEVICE(0x07d1, 0x3c03), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x07d1, 0x3c04), USB_DEVICE_DATA(&rt73usb_ops) },
-+	{ USB_DEVICE(0x07d1, 0x3c06), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x07d1, 0x3c07), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Gemtek */
- 	{ USB_DEVICE(0x15a9, 0x0004), USB_DEVICE_DATA(&rt73usb_ops) },
--- 
-1.5.5.3
+
+> > What's the current TODO list for the AP mode?
+>=20
+> I think there are some issues with the rates.
+> Maybe more. I don't really know.
+
+It's on the todo list on wireless.kernel.org
+
+johannes
+
+--=-y8bq1speG2yRC0My27js
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIY9CEAAoJEKVg1VMiehFY1pAQAMVRivLz39CL9dtaIW+ESvgK
+E1Ag8VeuN878/xLuNyycWywjlV5Q+ltIxbWUqCr2/KbZYHbqIIZW5DRNMdXU1ilK
+m8o8iZDnWjWixNZmPm+dwqjwkzNREjL/9dvi0mLWLUQCqSMY3AhM+b8l8QbDEzBg
+RyxrXIZTYG/UspviKIEjbbsgfMbEjak6MaP+D3axKI2fC2jM3meTUyYYFTM3JBz8
+LgOCRoquVVg8QYGFqw+NvjATAzHWeKyp+qrE16U59kBsYdgv0gzbO3hEP4NWaY1S
+Y8BAZdKAT0ohDuAB5NwWnhwrQgFFdUZJxMIRiXP0m5lS1CfJOm7XDrTw1v6lhceG
+e0s+gQMUx3Zw/+5H5cZCsvAPHo5la4ZJrDaUB5oQdztQzY5+fjC7QHCAma/Pc/C/
+p7f8GJ1mSBjP2Gl0PDW08pSM0zVCpbhWAHolmEGC+0EZ/adyvxAhxFCyxWuFxE48
+ybK8DPK4dBt61swWPXqYeWt2y5KobajQx5uh9m0DZ3z69+wHUt7NeA80U44qTS8A
+tZREqBd25//j7ig8rFmEeb3w1su9yQ+0MmnSNuEcpiEE7/9GV8FCaa+EPHB+nKAf
+GIxn1AAKh7S5dv+6QTBTy7BOXJz7TLtaiwmd1nKGemZ6Hie4CNb6zdHrB1T83tdY
+RzCeSnV/Z0TgXZRuZIu9
+=+HVf
+-----END PGP SIGNATURE-----
+
+--=-y8bq1speG2yRC0My27js--
+
