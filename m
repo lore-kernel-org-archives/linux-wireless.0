@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.248]:16512 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752623AbYFFLsg (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57421 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751778AbYFZSAo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2008 07:48:36 -0400
-Received: by an-out-0708.google.com with SMTP id d40so256781and.103
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jun 2008 04:48:35 -0700 (PDT)
-Message-ID: <43e72e890806060448g57b23392t7bcaab305eadffd@mail.gmail.com> (sfid-20080606_134840_788351_71BDCE3F)
-Date: Fri, 6 Jun 2008 04:48:35 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
-Subject: Re: [PATCH] rt2x00: Rename tx_info to info to help compat-wirelessrevert MQ support for older kernels
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linville@tuxdriver.com, "Ivo van Doorn" <ivdoorn@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1879838866982C46A9CB3D56BA49ADEB04FA9CFD@hasmsx411.ger.corp.intel.com>
-MIME-Version: 1.0
+	Thu, 26 Jun 2008 14:00:44 -0400
+Subject: [PATCH] mac80211: make workqueue freezable
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>
 Content-Type: text/plain; charset=UTF-8
-References: <20080605130734.GD17936@ruslug.rutgers.edu>
-	 <1212671763.698.11.camel@johannes.berg>
-	 <1879838866982C46A9CB3D56BA49ADEB04FA9CFD@hasmsx411.ger.corp.intel.com>
+Date: Thu, 26 Jun 2008 19:59:56 +0200
+Message-Id: <1214503196.3783.13.camel@johannes.berg> (sfid-20080626_200059_514561_B92AB8D1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 6, 2008 at 3:39 AM, Rindjunsky, Ron
-<ron.rindjunsky@intel.com> wrote:
->>> Rename tx_info to info as used by other drivers. This will help
->>> with CONFIG_NETDEVICES_MULTIQUEUE requirement for HT support support
->>> in compat-wireless by allowing us to map skb_get_queue_mapping(skb)
->>> to the old info->queue.
->>>
->>> An alternative is to maintain a large compat.diff which replaces all
->>> skb_get_queue_mapping(skb) calls back to info->queue but since this
->>> is the only driver which requires name change it seems worth it
->>> to help with maintenance.
->>>
->>> Compat-wireless shouldn't be a reason to accept patches in but if
->>> the changes are just cosmetic it seems worth the benefit.
->>>
->>> Signed-off-by: Luis R. Rodriguez <mcgrof@gmail.com>
->
->> That's just asking for trouble. If you really _must_ do magic in
->> skb_get_queue_mapping, do it directly:
->
->> int q = IEEE80211_SKB_CB(skb)->queue;
->
-> Aren't we heading into to troubles here? In kernels < 2.6.23 there is no
-> skb->queue_mapping. queue was once passed in the cb, but now that queue
-> was removed from info and info takes cb we are going to have a compat
-> problem.
+This patch makes the mac80211 workqueue freezable making it
+interact a bit better with system suspend and not try to ping
+the AP while the hardware is down.
 
-This is only going to be done for <= 2.6.22.
+This doesn't really help with implementing proper suspend in
+any way but makes some bad things trigger less.
 
-  Luis
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+I'm not sure whether we should put this into 2.6.26 or not, while it
+might help a bit it doesn't really do much over what the tx bugs finder
+already does except avoid sending out the packets that froze b43 in the
+first place...
+
+Ivo, you might consider using =EF=BB=BFcreate_freezeable_workqueue for =
+your
+rt2x00 patch though.
+
+ net/mac80211/main.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- everything.orig/net/mac80211/main.c	2008-06-26 18:21:14.000000000 +=
+0200
++++ everything/net/mac80211/main.c	2008-06-26 18:21:16.000000000 +0200
+@@ -1774,7 +1774,7 @@ int ieee80211_register_hw(struct ieee802
+ 	list_add_tail(&sdata->list, &local->interfaces);
+=20
+ 	name =3D wiphy_dev(local->hw.wiphy)->driver->name;
+-	local->hw.workqueue =3D create_singlethread_workqueue(name);
++	local->hw.workqueue =3D create_freezeable_workqueue(name);
+ 	if (!local->hw.workqueue) {
+ 		result =3D -ENOMEM;
+ 		goto fail_workqueue;
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
