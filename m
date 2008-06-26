@@ -1,80 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.234]:31871 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754533AbYFLULc (ORCPT
+Received: from rgminet01.oracle.com ([148.87.113.118]:42154 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750874AbYFZW4Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 16:11:32 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2181975rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 13:11:32 -0700 (PDT)
-Message-ID: <c4e36d110806121311n64890e17h67f49c32481fbb28@mail.gmail.com> (sfid-20080612_221136_225616_707436F7)
-Date: Thu, 12 Jun 2008 22:11:32 +0200
-From: "Zdenek Kabelac" <zdenek.kabelac@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Problem: Out of memory after 2days with 2GB RAM
-Cc: "Tomas Winkler" <tomasw@gmail.com>,
-	"Rik van Riel" <riel@redhat.com>,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-	yi.zhu@intel.com, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1213294547.3730.29.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <c4e36d110806120307n20cce692s9c136f11596f5ab0@mail.gmail.com>
-	 <20080612093833.0fb9cdd6@bree.surriel.com>
-	 <1213278884.3936.15.camel@johannes.berg>
-	 <1ba2fa240806120843s268b2ff4mb45a11adf11afc7f@mail.gmail.com>
-	 <1ba2fa240806120935r54a080eci7fa6fafc718eed17@mail.gmail.com>
-	 <1213290335.3730.4.camel@johannes.berg>
-	 <1ba2fa240806121039o376b0a8sdfaacf3a1f4a9e57@mail.gmail.com>
-	 <1213292812.3730.21.camel@johannes.berg>
-	 <1ba2fa240806121103m60a8ffa4ie11850fedc69d13c@mail.gmail.com>
-	 <1213294547.3730.29.camel@johannes.berg>
+	Thu, 26 Jun 2008 18:56:25 -0400
+Message-ID: <4666621.1214520962096.JavaMail.oracle@acsmt301.oracle.com> (sfid-20080627_005652_370202_A2DFEBE1)
+Date: Thu, 26 Jun 2008 17:56:02 -0500 (CDT)
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: drago01 <drago01@gmail.com>, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH v2] iwl3945: fix up rfkill kconfig and input
+Cc: Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200806270045.50169.IvDoorn@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
+References: <f6ca9fed0806261455j17848d17pa011ae47246a32@mail.gmail.com> <200806270015.00301.IvDoorn@gmail.com> <f6ca9fed0806261527q75df34d4scbe36e2f63cec275@mail.gmail.com> <200806270045.50169.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/6/12 Johannes Berg <johannes@sipsolutions.net>:
->
->> I'm not against it. You;v decided that I'm fighting you because I gave
->> another solution.
->
-> Ok, no, I'm not saying you shouldn't rewrite all the code to get rid of
-> it, but I think you can use a patch like mine interim as such a rewrite
-> is unlikely to go into 2.6.26, is it?
->
->> Frankly we probably don't need this allocation at all. maybe one skb
->> is just enough
->
-> That would be nice, indeed.
->
->> even with my never dying hope all fragments are in skb fragment list.
->
-> :)
->
->> This still probably won't save pci memory allocation problem
->
-> Yeah, true, that one needs to be done, but it could probably be done
-> only once when hw is probed rather than every time it is brought up.
-> Most likely not something you'll get to fix in 2.6.26 either though.
+
+--- Original Message ---
+> On Friday 27 June 2008, drago01 wrote:
+> > On Fri, Jun 27, 2008 at 12:15 AM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> > >> diff --git a/drivers/net/wireless/iwlwifi/Kconfig
+> > >> b/drivers/net/wireless/iwlwifi/Kconfig
+> > >> index a382c00..3148a28 100644
+> > >> --- a/drivers/net/wireless/iwlwifi/Kconfig
+> > >> +++ b/drivers/net/wireless/iwlwifi/Kconfig
+> > >> @@ -105,6 +105,7 @@ config IWL3945
+> > >>       select IWLWIFI
+> > >>       select MAC80211_LEDS if IWL3945_LEDS
+> > >>       select LEDS_CLASS if IWL3945_LEDS
+> > >> +     select RFKILL_INPUT if (IWL3945_RFKILL && INPUT)
+> > >
+> > > That is a big no. Drivers should only use CONFIG_RFKILL and in no way
+> > > depend or select RFKILL_INPUT. RFKILL_INPUT is a decision for the user
+> > > and doesn't change anything for drivers.
+> > 
+> > v2 is attached it removed the CONFIG_RFKILL_INPUT stuff and made it
+> > depend on CONFIG_RFKILL.
+> > That means that the 4965 patch needs to be updated/fixed too.
+> 
+> Not sure if it should depend or select CONFIG_INPUT,
+> but the RFKILL dependencies are now correct.
+
+I'd say depend on, but it's up to you guys + maintainer.
+
+Here's what Documentation/kbuild/kconfig-language.txt says:
+
+  Note:
+	select should be used with care. select will force
+	a symbol to a value without visiting the dependencies.
+	By abusing select you are able to select a symbol FOO even
+	if FOO depends on BAR that is not set.
+	In general use select only for non-visible symbols
+	(no prompts anywhere) and for symbols with no dependencies.
+	That will limit the usefulness but on the other hand avoid
+	the illegal configurations all over.
+	kconfig should one day warn about such things.
 
 
-Well - it's great that there will be saved few kB in allocation of
-never used pointers in iwl driver - but does this really solve the
-problem that kernel gets relatively quickly out of memory for
-allocations of this size - I guess iwl isn't the only driver
-requesting 32 sequential pages.
+and in general select is OK on smallish library-like functions and should
+not be used on entire subsystems.  To me that means that it should not
+be used in CONFIG_INPUT....
 
-Is it possible to track how this memory gets fragment/lost - who owns
-the block and why they are not back in the pool?
 
-btw with 8hour uptime at this moment I can see this:
+> Thanks,
+> 
+> Ivo
+> 
+> > ------
+> > This patch fixes the iwl3945 driver to depend on CONFIG_RFKILL and
+> > CONFIG_INPUT when RFKILL is used.
+> > It removes the dependency on CONFIG_IWLCORE and frees the input
+> > device on exit.
+> > 
+> > Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+> > 
+> > diff --git a/drivers/net/wireless/iwlwifi/Kconfig
+> > b/drivers/net/wireless/iwlwifi/Kconfig
+> > index a382c00..c7fd8aa 100644
+> > --- a/drivers/net/wireless/iwlwifi/Kconfig
+> > +++ b/drivers/net/wireless/iwlwifi/Kconfig
+> > @@ -105,6 +105,8 @@ config IWL3945
+> >  	select IWLWIFI
+> >  	select MAC80211_LEDS if IWL3945_LEDS
+> >  	select LEDS_CLASS if IWL3945_LEDS
+> > +	select RFKILL if IWL3945_RFKILL
+> > +	select INPUT if IWL3945_RFKILL
+> >  	---help---
+> >  	  Select to build the driver supporting the:
+> > 
+> > @@ -127,6 +129,10 @@ config IWL3945
+> >  	  say M here and read <file:Documentation/kbuild/modules.txt>.  The
+> >  	  module will be called iwl3945.ko.
+> > 
+> > +config IWL3945_RFKILL
+> > +	boolean "Enable RF kill support in iwl3945 drivers"
+> > +	depends on IWL3945
+> > +
+> >  config IWL3945_SPECTRUM_MEASUREMENT
+> >  	bool "Enable Spectrum Measurement in iwl3945 drivers"
+> >  	depends on IWL3945
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h
+> > b/drivers/net/wireless/iwlwifi/iwl-3945.h
+> > index a774978..4df42ad 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl-3945.h
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+> > @@ -690,7 +690,7 @@ enum {
+> > 
+> >  #endif
+> > 
+> > -#ifdef CONFIG_IWLWIFI_RFKILL
+> > +#ifdef CONFIG_IWL3945_RFKILL
+> >  struct iwl3945_priv;
+> > 
+> >  struct iwl3945_rfkill_mngr {
+> > @@ -800,7 +800,7 @@ struct iwl3945_priv {
+> >  	struct iwl3945_init_alive_resp card_alive_init;
+> >  	struct iwl3945_alive_resp card_alive;
+> > 
+> > -#ifdef CONFIG_IWLWIFI_RFKILL
+> > +#ifdef CONFIG_IWL3945_RFKILL
+> >  	struct iwl3945_rfkill_mngr rfkill_mngr;
+> >  #endif
+> > 
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> > b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> > index 43cb8ff..e12baaa 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> > @@ -8282,7 +8282,7 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
+> >  #endif /* CONFIG_PM */
+> > 
+> >  /*************** RFKILL FUNCTIONS **********/
+> > -#ifdef CONFIG_IWLWIFI_RFKILL
+> > +#ifdef CONFIG_IWL3945_RFKILL
+> >  /* software rf-kill from user */
+> >  static int iwl3945_rfkill_soft_rf_kill(void *data, enum rfkill_state state)
+> >  {
+> > @@ -8391,8 +8391,11 @@ error:
+> >  void iwl3945_rfkill_unregister(struct iwl3945_priv *priv)
+> >  {
+> > 
+> > -	if (priv->rfkill_mngr.input_dev)
+> > +	if (priv->rfkill_mngr.input_dev) {
+> >  		input_unregister_device(priv->rfkill_mngr.input_dev);
+> > +		input_free_device(priv->rfkill_mngr.input_dev);
+> > +	}
+> > +
+> > 
+> >  	if (priv->rfkill_mngr.rfkill)
+> >  		rfkill_unregister(priv->rfkill_mngr.rfkill);
+> > 
+> 
+> 
 
-DMA: 26*4kB 37*8kB 72*16kB 65*32kB 3*64kB 0*128kB 0*256kB 0*512kB
-0*1024kB 0*2048kB 1*4096kB = 7920kB
-DMA32: 203*4kB 79*8kB 26*16kB 11*32kB 6*64kB 9*128kB 3*256kB 2*512kB
-2*1024kB 0*2048kB 0*4096kB = 7588kB
-
-so at this moment I can see quiet a lot of free DMA memory - but in my
-trace at the thread beginig after several suspend/resumes this memory
-was gone....
-
-Zdenek
