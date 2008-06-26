@@ -1,96 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35047 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759446AbYFXJ2w (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 05:28:52 -0400
-Subject: Re: mac80211: workqueue & RTNL lock
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <a32f33a40806240220s3ef070bdr591d4775ee57cb81@mail.gmail.com> (sfid-20080624_112031_465193_4527E183)
-References: <200806230042.41219.IvDoorn@gmail.com>
-	 <200806230030.42776.mb@bu3sch.de>
-	 <a32f33a40806230130t11022b31p3d9997ab5e449fe6@mail.gmail.com>
-	 <200806231120.41519.mb@bu3sch.de>
-	 <a32f33a40806230417i68e4d19aj76a481d7dbf2c611@mail.gmail.com>
-	 <1214297515.8967.253.camel@johannes.berg>
-	 <a32f33a40806240203w29d0caf7p6e2956d82d48e013@mail.gmail.com>
-	 <1214298658.8967.266.camel@johannes.berg>
-	 <a32f33a40806240220s3ef070bdr591d4775ee57cb81@mail.gmail.com>
-	 (sfid-20080624_112031_465193_4527E183)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wEC/nbl2X1U0RXdwYugH"
-Date: Tue, 24 Jun 2008 11:28:13 +0200
-Message-Id: <1214299693.8967.273.camel@johannes.berg> (sfid-20080624_112922_468405_06FAD69F)
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:12186 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750866AbYFZJNw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jun 2008 05:13:52 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/1] mac80211: fix an oops in several failure paths in key allocation
+Date: Thu, 26 Jun 2008 12:13:46 +0300
+Message-Id: <1214471626-4231-1-git-send-email-tomas.winkler@intel.com> (sfid-20080626_111357_102949_0F17E4DA)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
---=-wEC/nbl2X1U0RXdwYugH
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch fixes an oops in several failure paths in key allocation. This
+Oops occurs when freeing a key that has not been linked yet, so the
+key->sdata is not set.
 
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ net/mac80211/key.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-> > However, the interface iterator will simply not run at all if ->stop ha=
-s
-> > already succeeded since no interfaces would be UP, so you don't really
-> > have to protect it against that, you only have to make sure it's not
-> > running when you unregister your hardware struct, and _that_ doesn't
-> > have the rtnl taken so you can use cancel_work_sync() there.
->=20
-> True, but the race condition happens when ieee80211_stop() is called,
-> and the rt2x00 work is triggered before before
-> rt2x00->remove_interface() or rt2x00>stop() is called. when stop() is
-> then called it cannot use cancel_work_sync() because
-> the work structure is waiting until stop() has completed which will
-> not end until cancel_work_sync() has completed.
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index d4893bd..6597c77 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -387,6 +387,15 @@ void ieee80211_key_free(struct ieee80211_key *key)
+ 	if (!key)
+ 		return;
+ 
++	if (!key->sdata) {
++		/* The key has not been linked yet, simply free it
++		 * and don't Oops */
++		if (key->conf.alg == ALG_CCMP)
++			ieee80211_aes_key_free(key->u.ccmp.tfm);
++		kfree(key);
++		return;
++	}
++
+ 	spin_lock_irqsave(&key->sdata->local->key_lock, flags);
+ 	__ieee80211_key_free(key);
+ 	spin_unlock_irqrestore(&key->sdata->local->key_lock, flags);
+-- 
+1.5.4.1
 
-No, but I'm saying that ->stop doesn't need to cancel_work_sync(). You
-should have a work struct that you exclusively use for whatever you need
-to do with interfaces, so the code looks something like this:
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-void work(...)
-{
-	iterate_interfaces();
-}
-
-maybe with some additional locking. You also use schedule_work() and not
-the mac80211-provided workqueue.
-
-This work will do exactly nothing if triggered before ->stop and running
-after ->stop because all interfaces will be gone. Hence, you don't need
-to cancel it in ->stop, you don't care whether it'll run or not.
-
-Hence, the only thing you need to take care of is that it's canceled
-before unregister_hw(), and for that you can use cancel_work_sync().
-
-Am I missing something?
-
-johannes
-
---=-wEC/nbl2X1U0RXdwYugH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIYL4qAAoJEKVg1VMiehFYjW8QAIqdA9bfQqlbdGLeZVTDaiuj
-od6QFXFfZBnIAXa93YjX+GGzms8UgG5XG1uTLr+Bt2NgtgI4CWuUSlkYj7qJsIN/
-P4oBmi6JEwsdFXZ1IO1iNdOObDfEQ+usz/3zkR0b5zeTN91f0pAzrNZCVbjMCIUm
-ZB/HP3brGFurLROE9noQ4Hb0ta/gYCMcmRia9/jFv8jNoGWA/p17RbiOUfuVfD2a
-f3Gl9ZRu/8wCtY9A5wxFscmFl0RBV2Kuny9UiwaoNr0l5Na9eZwojZOAe7PlRtLG
-Tg1r6NaAeMY+z1vDP/hrMrTf/WzaILjClXg1rIdrkrL8EmBhfjW8JuPz0znG6XgY
-1Iyn3bnn3WWUUGJovPO4kZ0v5iDR/BTyujqKa8Y4/Cj2U65pgGEn+4uHbo/Lcj7i
-g5xJ0GeiqN7JxuiUQLk2BLIvClebtbS+UPlljbRdYT0nM8vRV/p+fFwAlS2CtxBs
-mklYykXsw61NUEmrgyFwDd1AUXoH6lMamNr0yAftYy8QZirX7xHtoKNHj4yrjZfG
-7e4S2X0yv7uMatazsIed5AHRZHPSM1aQIz542GLkvUrQxkWvsnaltfm6TOxHUmJi
-erGDR8upp7WirYpHTG5kd4BLVkPsF7aH+rzwQbN0A4t2zm+IfhbW2LlEBLjxpTQU
-TI23B/vEmIxTLbC4uswt
-=9jv7
------END PGP SIGNATURE-----
-
---=-wEC/nbl2X1U0RXdwYugH--
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
