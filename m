@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4327 "EHLO ra.tuxdriver.com"
+Received: from c60.cesmail.net ([216.154.195.49]:16819 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754172AbYFDV3I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2008 17:29:08 -0400
-Date: Wed, 4 Jun 2008 16:54:20 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-06-03
-Message-ID: <20080604205420.GA32186@tuxdriver.com> (sfid-20080604_232917_305054_D4A528AC)
-References: <20080603190943.GB28966@tuxdriver.com> <20080603.141652.245225529.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080603.141652.245225529.davem@davemloft.net>
+	id S1757611AbYFZTTt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jun 2008 15:19:49 -0400
+Subject: Re: [Q] ath5k : doesn't support AP mode?
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
+	cs010101@gmail.com, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1214504874.3783.25.camel@johannes.berg>
+References: <002901c8d737$e51bb2f0$3b0aa8c0@39fb6b6b6f434b3>
+	 <200806261821.31643.mb@bu3sch.de> <1214498071.30722.22.camel@dv>
+	 <200806261846.17962.mb@bu3sch.de>  <1214501000.3783.0.camel@johannes.berg>
+	 <1214503403.18039.6.camel@dv>  <1214503739.3783.14.camel@johannes.berg>
+	 <1214504288.18039.12.camel@dv>  <1214504482.3783.20.camel@johannes.berg>
+	 (sfid-20080626_202226_010344_A79E9A49)  <1214504874.3783.25.camel@johannes.berg>
+Content-Type: text/plain
+Date: Thu, 26 Jun 2008 14:36:06 -0400
+Message-Id: <1214505366.18729.4.camel@dv> (sfid-20080626_212020_774258_52799F39)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 03, 2008 at 02:16:52PM -0700, David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Tue, 3 Jun 2008 15:09:43 -0400
+On Thu, 2008-06-26 at 20:27 +0200, Johannes Berg wrote:
+> > > > The fact that we cannot limit the rate like that that?
+> > > 
+> > > That shouldn't be hard to implement.
+> > 
+> > Go ahead and post patches then.
 > 
-> > Kirill A. Shutemov (1):
-> >       wireless.h: improve userland include-ability
-> 
-> I'm not pulling this into my tree.  I've already replied
-> to that patch posting saying why I don't like this.
+> Mind you, I'm thinking of patches that actually address hostapd's
+> incapability of setting rates to use/basic rates etc. in the kernel, not
+> a two-line workaround that only enables 1mbit for AP mode interfaces.
 
-For the record, I didn't get that posting until just _after_ I got this
-reply from you -- a mail server somewhere must have had indigestion!
+OK, I won't interfere with your efforts.  I'm sitting on a pile of
+unfinished patches myself, so once I'm done with them, I may have a look
+at the AP mode in mac80211.  Just please don't make it too hard to help
+you, as I have other things waiting for my attention.
 
-> Even if I found this change as the only way to go and therefore
-> had to take it in, the commit log is way too terse about what
-> the problem is.  And it must describe the horrifics that are
-> now necessary to include this file in userspace after the change.
-
-FWIW, I'll take the blame for the overly terse commit log...
-
-> There is zero point in us sanitizing kernel headers for userspace
-> usage if this kind of crap is still necessary.  I mean tell me, why
-> should we even bother in that case?  And this is why I'm not taking in
-> this changeset.
-
-Please see the discussion on the other thread, in case you have
-something to add or something there persuades you.  In the meantime,
-I retract this pull request and will soon follow with a rebased pull
-request that expunges the wireless.h commit.
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Regards,
+Pavel Roskin
