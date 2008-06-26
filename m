@@ -1,58 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:2074 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753145AbYFCS0M convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59722 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762096AbYFZNY5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 14:26:12 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so644244nfc.21
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jun 2008 11:26:12 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 06/11] rt2x00: Removed unused descriptor read in txdone
-Date: Tue, 3 Jun 2008 20:29:54 +0200
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <200806032024.52931.IvDoorn@gmail.com> <200806032027.06094.IvDoorn@gmail.com> <200806032027.27540.IvDoorn@gmail.com>
-In-Reply-To: <200806032027.27540.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Message-Id: <200806032029.54261.IvDoorn@gmail.com> (sfid-20080603_202622_752353_88A28482)
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 26 Jun 2008 09:24:57 -0400
+Subject: Re: [PATCH 1/1] mac80211: fix an oops in several failure paths in
+	key allocation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+In-Reply-To: <1214471626-4231-1-git-send-email-tomas.winkler@intel.com>
+References: <1214471626-4231-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KGTaTvq1kCTbFoFbCKs3"
+Date: Thu, 26 Jun 2008 15:24:26 +0200
+Message-Id: <1214486666.20763.40.camel@johannes.berg> (sfid-20080626_152520_399547_6E95F342)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 5410c980823b6fd68d38f0230da51cdd70e0e7eb Mon Sep 17 00:00:00 2001
-From: Ivo van Doorn <IvDoorn@gmail.com>
-Date: Tue, 3 Jun 2008 18:49:49 +0200
-Subject: [PATCH] rt2x00: Removed unused descriptor read in txdone
 
-rt2x00usb doesn't need the TX descriptor in the TX done path.
+--=-KGTaTvq1kCTbFoFbCKs3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00usb.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
+On Thu, 2008-06-26 at 12:13 +0300, Tomas Winkler wrote:
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>=20
+> This patch fixes an oops in several failure paths in key allocation. This
+> Oops occurs when freeing a key that has not been linked yet, so the
+> key->sdata is not set.
+>=20
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 36a087a..86f1ab7 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -130,16 +130,12 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
- 	struct queue_entry *entry = (struct queue_entry *)urb->context;
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
- 	struct txdone_entry_desc txdesc;
--	__le32 *txd = (__le32 *)entry->skb->data;
- 	enum data_queue_qid qid = skb_get_queue_mapping(entry->skb);
--	u32 word;
- 
- 	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags) ||
- 	    !__test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
- 		return;
- 
--	rt2x00_desc_read(txd, 0, &word);
--
- 	/*
- 	 * Remove the descriptor data from the buffer.
- 	 */
--- 
-1.5.5.3
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> ---
+>  net/mac80211/key.c |    9 +++++++++
+>  1 files changed, 9 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+> index d4893bd..6597c77 100644
+> --- a/net/mac80211/key.c
+> +++ b/net/mac80211/key.c
+> @@ -387,6 +387,15 @@ void ieee80211_key_free(struct ieee80211_key *key)
+>  	if (!key)
+>  		return;
+> =20
+> +	if (!key->sdata) {
+> +		/* The key has not been linked yet, simply free it
+> +		 * and don't Oops */
+> +		if (key->conf.alg =3D=3D ALG_CCMP)
+> +			ieee80211_aes_key_free(key->u.ccmp.tfm);
+> +		kfree(key);
+> +		return;
+> +	}
+> +
+>  	spin_lock_irqsave(&key->sdata->local->key_lock, flags);
+>  	__ieee80211_key_free(key);
+>  	spin_unlock_irqrestore(&key->sdata->local->key_lock, flags);
+
+--=-KGTaTvq1kCTbFoFbCKs3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIY5iGAAoJEKVg1VMiehFYfG8P/2+soLcBtRgXViICmacUN89G
+9KqnVP3HoHRmuwDBIoNSAD873MWKga4ByUEvi+f3W0/go16kkF2LOfO6/SGBAEHn
+40KtU8fIWMiY1yarcr30aBaLgxK1O6YVgaNRC5sKgi0kunYeKdqGesjH27TuJVxH
+VTggsn0IClqpVWvADdnaGyqx2oj7cgJ8+H9uJgaw24nMTGsWVlQ3oMedM2Zt69l1
++kjYomPrtvQoKzkzSUWXrhBHU9v5pi1SgG+T7BuvQfg7goil7Twzl2xX4FLGHFCn
+nh3SaDl+2jpZzJ/Ouw2ZcbCXaX9xrCHEcdbziDbV47S6NnM3vELYN92ZgCkrPSmk
+CnE1sQZaF/Gt/aowAWVKqJVUMebpq8z/elfDKcv1zgBWEcGIzKODBZwIVqU7GxYS
+Tj4vMqrLgwZIH3ePe5WtZuOByXcB4SYL1T4dwbjTZ0mJ4elMDIpZfQ9cHhous2C0
+XPB1/AQJhMghrq5yhouzL4SPANcKs/b8WmX6Er9zV9qujt/mx14VGHhqB3bfdHE3
+Z+bN9aP/wPBitvthSd6VCjGLFBtfRRef0IWjriHiPsGvJs1zfhtwi+kLKgIB5umz
+L3Dpz8EhSJtqDCRhFuokpZnzmG6T1fpXiW1R+ZRwnrtd3XdJOxumJID0E68smhk6
+ape9qbmu/NauTqJDik+C
+=mhkR
+-----END PGP SIGNATURE-----
+
+--=-KGTaTvq1kCTbFoFbCKs3--
 
