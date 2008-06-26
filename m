@@ -1,70 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60917 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751862AbYF3QV3 (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:34790 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752808AbYFZScm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 12:21:29 -0400
-Subject: Re: [PATCH] p54: Add quality output to iwlist and iwconfig
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, flamingice@sourmilk.net,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <486904D4.4010705@lwfinger.net>
-References: <4868fe45.swzEykllJP3Ow73U%Larry.Finger@lwfinger.net>
-	 (sfid-20080630_173834_531803_0FC8E191) <1214840530.5507.52.camel@johannes.berg>
-	 <486904D4.4010705@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7O+dTKuMvhI0HHHG6TBm"
-Date: Mon, 30 Jun 2008 18:20:41 +0200
-Message-Id: <1214842841.5507.56.camel@johannes.berg> (sfid-20080630_182133_005533_3E3237A1)
-Mime-Version: 1.0
+	Thu, 26 Jun 2008 14:32:42 -0400
+Message-ID: <4863E113.1040609@lwfinger.net> (sfid-20080626_203248_959661_17F3C972)
+Date: Thu, 26 Jun 2008 13:33:55 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+CC: Matthew Garrett <mjg@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	herton@mandriva.com.br, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, andreamrl@tiscali.it, linville@redhat.com
+Subject: Re: [RFC][PATCH] Realtek 8187B wireless support with product id 0x8197/0x8189
+References: <779389.39286.qm@web23108.mail.ird.yahoo.com> <48630FE7.7060800@lwfinger.net> <4863D05A.7070801@yahoo.co.uk>
+In-Reply-To: <4863D05A.7070801@yahoo.co.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hin-Tak Leung wrote:
+> 
+> 
+> Larry Finger wrote:
+>> Hin-Tak Leung wrote:
+>>> --- On Thu, 26/6/08, Matthew Garrett <mjg@redhat.com> wrote:
+> <snipped>
+>>> E:  Ad=83(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+>>> E:  Ad=04(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+>>> E:  Ad=05(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+>>> E:  Ad=06(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+>>> E:  Ad=07(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+>>> E:  Ad=89(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+>>> E:  Ad=0a(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+>>> E:  Ad=0b(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+>>> E:  Ad=0c(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+>>
+>> My device doesn't show up in /proc, but 
+>> /sys/bus/usb/devices/1-5/product shows it to have the same Product 
+>> string as yours, with a ProdID of 8187.
+> <snipped>
+> 
+> Is your usbfs mounted? you should have an entry similiar to this in your
+> fstab:
+> ----------
+> none            /proc/bus/usb    usbfs  auto         0 0
+> ----------
+> and that gives you the /proc/bus/usb/devices entries. Most userland
+> usb device drivers (libusb - scanners, ptp digital cameras) need the
+> /proc/bus/usb hierachy to work.
+> The usb endpoint list is a functional difference between the 8187 and 
+> 8187b.
+> (it runs to 0c for the 8187b, and does not have a 02 entry which the 
+> 8187 uses).
 
---=-7O+dTKuMvhI0HHHG6TBm
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+My fstab entry was set "noauto". Once it was mounted, then it shows
 
-On Mon, 2008-06-30 at 11:07 -0500, Larry Finger wrote:
-> Johannes Berg wrote:
-> > On Mon, 2008-06-30 at 10:39 -0500, Larry.Finger@lwfinger.net wrote:
-> >> The p54 driver family reports a quality of 0 in iwconfig and iwlist
-> >> output. This patch calculates a quality number as a percentage of the
-> >> rssi to the maximum signal of 127 reported as the maximum signal.
-> >=20
-> > Unrelated, do you have a p54 card? Does it work? I wasn't sure whether
-> > the tx-info sbk->cb change broke it or not after I fixed up some things
-> > there.
->=20
-> It is DW1450, which is a p54usb. It works with the latest wireless=20
-> testing, at least in b/g/mode. I don't have an 802.11a AP to try the 5=20
-> GHz mode.
+T:  Bus=01 Lev=01 Prnt=01 Port=04 Cnt=02 Dev#=  3 Spd=480 MxCh= 0
+D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
+P:  Vendor=0bda ProdID=8187 Rev= 2.00
+S:  Manufacturer=Manufacturer_Realtek
+S:  Product=RTL8187B_WLAN_Adapter
+S:  SerialNumber=00e04c000001
+C:* #Ifs= 1 Cfg#= 1 Atr=80 MxPwr=500mA
+I:* If#= 0 Alt= 0 #EPs= 9 Cls=ff(vend.) Sub=ff Prot=ff Driver=rtl8187
+E:  Ad=83(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=04(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=05(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=06(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=07(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=89(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=0a(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=0b(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=0c(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
 
-Great, thanks, I guess I did find all the problems then.
+Do I understand correctly that it might be better to check for the 
+existence of endpoint 02 for an 8187 device? Or would it be better to 
+look for endpoint 12 to set it as an 8187B?
 
-johannes
-
---=-7O+dTKuMvhI0HHHG6TBm
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIaQfWAAoJEKVg1VMiehFYBFQQAIm62tjDOl6H992I8o2UyVX9
-hDAs8S4e+RAG5oJOXqQ0sNwktSDHvfBTs0t+888e+5rVfpTpt9uFHjI2Pep/KRV7
-NcaaBuQn+Dn0Rmzm1KeDjBeO41++u15BlDNrgIm1dF/z8kDgMyZQvPSszSScxq4y
-MqQlubFRAsdnuZV/bF/vjHbSgYR/zmx4+kS8KlxvpxJaf7Atq7pbNv4jMUuT/8x+
-gchHIJFQuVpimHRMqu/tPxMhmquOGTplsx5kgcnVDcQp0skjI1sn1hhZHJyJZvor
-vaBwRZieHTGkaG+opR8EF51udiZLTHiK/yzsMRDk+IpQSj2RY/jt2BMYvAj3cVUW
-lCkNxG2VJRMAhnVusINh5g2CBkZzL7yZZ3Tjk8fmaRzSynULAbHr3JHvkwXdFnr8
-JQqKLJhl0YEoOmKXi2w1E0cJJbCSTBD0VQr/kAeBh81D0CnY56InZnyxyfHVUH6E
-k2GO7kr5eHotifaiGk8pmn3ZcmrHaEV//o3SHnhg6Tgr48GgRgSqBwybvDfeKVfc
-0MXboLdtaJuQsqk0JCyD/dFHwdfUqltzTQuCMKjh7lyFO+1D1bqX7kuZATP+h+I4
-9B/reRbzQ983JgQ7GkeThm3DhTLB/jslk55TZgry7uIcEK4FTZuIhu7CvQNdO1aF
-0SmsJp74S+ujXbQEWBUS
-=XHm2
------END PGP SIGNATURE-----
-
---=-7O+dTKuMvhI0HHHG6TBm--
+Larry
 
