@@ -1,35 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:38372 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754940AbYFQRWx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 13:22:53 -0400
-Received: by py-out-1112.google.com with SMTP id p76so2282323pyb.10
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jun 2008 10:22:52 -0700 (PDT)
-Subject: Re: [RFC PATCH 3/7] 802.11w: Add BIP (AES-128-CMAC)
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <1213721714.3803.83.camel@johannes.berg>
-References: <20080617154008.883383150@localhost>
-	 <20080617155904.082926456@localhost>
-	 <1213721714.3803.83.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 17 Jun 2008 10:22:49 -0700
-Message-Id: <1213723369.2125.4.camel@brick> (sfid-20080617_192256_626458_2167AB96)
+Received: from c60.cesmail.net ([216.154.195.49]:3360 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754202AbYFZC50 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jun 2008 22:57:26 -0400
+Subject: Re: [Q] ath5k : doesn't support AP mode?
+From: Pavel Roskin <proski@gnu.org>
+To: cs010101@gmail.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <002901c8d737$e51bb2f0$3b0aa8c0@39fb6b6b6f434b3>
+References: <002901c8d737$e51bb2f0$3b0aa8c0@39fb6b6b6f434b3>
+Content-Type: text/plain; charset=euc-kr
+Date: Wed, 25 Jun 2008 22:57:24 -0400
+Message-Id: <1214449044.18897.15.camel@dv> (sfid-20080626_045727_909115_82C1268F)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-06-17 at 18:55 +0200, Johannes Berg wrote:
+On Thu, 2008-06-26 at 11:54 +0900, =B1=E8=BF=B5=C8=AF wrote:
+> Hello~
+>=20
+> Lately, I've researched for AP mode in linux. I'm testing 802.11a abo=
+ut
+> atheros 5414, rt61, zyDAS USB(a/b/g).
+> I know AP mode are supportted on Prism chipset, Atheros(madwifi).
+> then how the nic using atheros 5414 chipset?
 
-> > +	if ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT)
-> > +		return RX_CONTINUE;
-> 
-> Harvey just added a bunch of helper inlines to include/linux/ieee80211.h
-> for stuff like that, I think you could use one of them here.
+mac80211 based drivers including ath5k don't support AP mode yet.
+Please use MadWifi with it for now.
 
-Afraid not, rx->fc is a u16.  The helpers are all for __le16.
-
-Harvey
-
+--=20
+Regards,
+Pavel Roskin
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
