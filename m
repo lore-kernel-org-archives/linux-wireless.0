@@ -1,101 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38519 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755073AbYFDPpB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2008 11:45:01 -0400
-Subject: Re: mac80211 ad-hoc mode problems
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-In-Reply-To: <1212588799.13676.11.camel@localhost.localdomain>
-References: <1212543664.4237.14.camel@localhost.localdomain>
-	 (sfid-20080604_034126_005983_906C2124)  <1212570001.14371.16.camel@johannes.berg>
-	 <1212588799.13676.11.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QhY5tOnwV3A1rc031Jtz"
-Date: Wed, 04 Jun 2008 17:44:12 +0200
-Message-Id: <1212594252.14371.36.camel@johannes.berg> (sfid-20080604_174507_071271_02BCFB7B)
+Received: from mga14.intel.com ([143.182.124.37]:35711 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753962AbYFZCOc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jun 2008 22:14:32 -0400
+Subject: Re: [PATCH -next] iwlwifi: fix build for CONFIG_INPUT=n
+From: Zhu Yi <yi.zhu@intel.com>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
+	akpm <akpm@linux-foundation.org>, linville@tuxdriver.com
+In-Reply-To: <20080624210246.0fe18e2c.randy.dunlap@oracle.com>
+References: <20080624210246.0fe18e2c.randy.dunlap@oracle.com>
+Content-Type: text/plain
+Date: Thu, 26 Jun 2008 10:13:30 +0800
+Message-Id: <1214446410.14590.287.camel@debian.sh.intel.com> (sfid-20080626_041437_407078_35186D4E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2008-06-24 at 21:02 -0700, Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
+> 
+> Fix iwlwifi so that it builds cleanly with CONFIG_INPUT=n.
+> Also free the input device on exit.
+> 
+> drivers/built-in.o: In function `iwl_rfkill_unregister':
+> (.text+0xbf430): undefined reference to `input_unregister_device'
+> drivers/built-in.o: In function `iwl_rfkill_init':
+> (.text+0xbf51c): undefined reference to `input_allocate_device'
+> drivers/built-in.o: In function `iwl_rfkill_init':
+> (.text+0xbf5bf): undefined reference to `input_register_device'
+> drivers/built-in.o: In function `iwl_rfkill_init':
+> (.text+0xbf5e9): undefined reference to `input_free_device'
+> net/built-in.o: In function `rfkill_disconnect':
+> rfkill-input.c:(.text+0xe71e1): undefined reference to
+> `input_close_device'
+> rfkill-input.c:(.text+0xe71e9): undefined reference to
+> `input_unregister_handle'
+> net/built-in.o: In function `rfkill_connect':
+> rfkill-input.c:(.text+0xe723e): undefined reference to
+> `input_register_handle'
+> rfkill-input.c:(.text+0xe724d): undefined reference to
+> `input_open_device'
+> rfkill-input.c:(.text+0xe725c): undefined reference to
+> `input_unregister_handle'
+> net/built-in.o: In function `rfkill_handler_init':
+> rfkill-input.c:(.init.text+0x36ec): undefined reference to
+> `input_register_handler'
+> net/built-in.o: In function `rfkill_handler_exit':
+> rfkill-input.c:(.exit.text+0x112c): undefined reference to
+> `input_unregister_handler'
+> make[1]: *** [.tmp_vmlinux1] Error 1
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 
---=-QhY5tOnwV3A1rc031Jtz
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+ACK.
 
-
-> > > 4) Is the association expected to survive a up->down->up sequence?  I=
-f
-> > > not, then we should be sending NULL SIOCGIWAP event whenever dev_clos=
-e()
-> > > gets called.
-> >=20
-> > No, it's not, yes, we probably should send that event somewhere. Is it
-> > ok to send the event while not associated?
->=20
-> Yeah, there's no ordering or pairing guarantee for SIOCGIWAP events
-> since there isn't an association transaction model with WEXT.
-
-Yeah, true. You can either stick it right into ieee80211_stop, make a
-new mlme-stop function that is called from there, or maybe do it when
-the AP's sta_info struct is removed?
-
-> > > 5) mac80211 requires the device to be down when changing modes.  That=
-'s
-> > > fine; but requires a patch to wpa_supplicant to handle this.  This wo=
-uld
-> > > cause failures when switching AP that were different modes from NM.
-> > > See:
-> > >=20
-> > > http://lists.shmoo.com/pipermail/hostap/2008-June/017894.html
-> >=20
-> > Don't understand. How can you switch to an IBSS AP? :)
->=20
-> Sorry, when switching from BSS -> IBSS, like picking an IBSS from the
-> NetworkManager menu while you're connected to an AP.  Or, creating a new
-> IBSS while connected.
-
-Ok, but that means you disconnect so you lose all configuration anyway.
-
-> > It's probably fairly easy to remove this restriction because they all
-> > use ieee80211_if_sta internally (sta, ibss, mesh) but since I don't car=
-e
-> > too much about IBSS and see mesh as being quite different, I have no
-> > motivation to try (and test) this.
->=20
-> I think it's fine to leave it as-is.  At least prism54 required the
-> interface to be !IFF_UP while changing modes, and I think madwifi has
-> required this too at some point.  This can be handled in the supplicant,
-> Jouni and I have already worked out what should be done and I'm going to
-> update the linked patch.
-
-Sure. As far as I understand, even if mac80211 would change in the
-future the patch Jouni asked for would then not down the interface.
-
-johannes
-
---=-QhY5tOnwV3A1rc031Jtz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASEa4S6Vg1VMiehFYAQKUoQ/9Eg9wtNmMBZk/TdbIl/TZny7AaUema66F
-6Jttay1x5rw2gDRnJzntV74Sm2HISdt/f2q4eIAcRGsJDTRNbInha4kbZf0NCC3p
-KsDBiwUfzbP3fngRrhptpMmaV1RJ00BIG8+5V+2jliJSAUNRsi9pY5mVMOHqmjam
-blROojtlXDUbTnUG6XuIPuaUMpjVuZRvtath5YCRkoDRlrihzXoNGb9CjwHTMxDI
-IqWv5ogHz/Wg/di0xdORoCMuWd316tV+lvwCmNOJjcd/nAami6LMChGpEoDzhBlH
-qkWwm1Tz2TVdZuXiTYGinl9BldtK3k19eKkc9UqmShn+lhFulw1brsYU0KdcdUBn
-erDDcABDV5LqwgxwjeCPrZnbPo32oAZ9tanFNJg0aGhPXp56mxMjbbFzU2KWK7Mf
-stKghNO3bnNFlOD+p93nhHOWtxBeZYAUwgmMyGiQb24SWhM15GXdsbROL8za8HyQ
-pWuK501Iw7skUIh1dFYSNkIPeWaRqgkEp9h16ivyX0l7UMVnsKtNDH6NLu2OMfvZ
-aCODbrJA0bUrYOzdqZbsjHl8TH5Vov+iXthECCFGZ22/c98zPWOAoBLxI95KNo8K
-i62+T2shyAV6NEWg++e3CbNZcyitIWhwYHH8ZqNsy8oRRa1BdWOntzlTeJ972hPc
-7OHAMqcKUYo=
-=a6eU
------END PGP SIGNATURE-----
-
---=-QhY5tOnwV3A1rc031Jtz--
+Thanks,
+-yi
 
