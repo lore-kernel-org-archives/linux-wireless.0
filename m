@@ -1,73 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46940 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753096AbYF0GgH (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:42010 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751254AbYFZDk2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jun 2008 02:36:07 -0400
-Subject: Re: mac80211: Question about beacons
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Iwo Mergler <iwo@call-direct.com.au>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <48648130.40402@call-direct.com.au> (sfid-20080627_080216_985183_62D87AE6)
-References: <48648130.40402@call-direct.com.au>
-	 (sfid-20080627_080216_985183_62D87AE6)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-u8JEhJZNfwqgX7Ez6x+A"
-Date: Fri, 27 Jun 2008 08:35:23 +0200
-Message-Id: <1214548523.3783.46.camel@johannes.berg> (sfid-20080627_083612_105724_1853440D)
-Mime-Version: 1.0
+	Wed, 25 Jun 2008 23:40:28 -0400
+Message-ID: <48630FE7.7060800@lwfinger.net> (sfid-20080626_054033_995067_2811979E)
+Date: Wed, 25 Jun 2008 22:41:27 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+CC: Matthew Garrett <mjg@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	herton@mandriva.com.br, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, andreamrl@tiscali.it, linville@redhat.com
+Subject: Re: [RFC][PATCH] Realtek 8187B wireless support with product id 0x8197/0x8189
+References: <779389.39286.qm@web23108.mail.ird.yahoo.com>
+In-Reply-To: <779389.39286.qm@web23108.mail.ird.yahoo.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hin-Tak Leung wrote:
+> --- On Thu, 26/6/08, Matthew Garrett <mjg@redhat.com> wrote:
+> <snipped>
+>> One thing I noticed is that the 0x8187 USB ID seems to be
+>> used for both 
+>> plain and b devices, so I suspect we're going to need
+>> some more 
+>> intelligent probing than just basing it off USB ID. IIRC,
+>> the endpoint 
+>> descriptions are different?
+> 
+> This is my /proc/bus/usb/devices entry- anybody who has a 0x8187 which 
+> behaves like a 8187b posting theirs? You remember correctly - 8187 
+> sends through endpoint 2, 8187b uses 4,5,6,7 and 12 (0x0c). 
+> ----------
+> T:  Bus=01 Lev=01 Prnt=01 Port=05 Cnt=01 Dev#=  2 Spd=480 MxCh= 0
+> D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
+> P:  Vendor=0bda ProdID=8197 Rev= 2.00
+> S:  Manufacturer=Manufacturer_Realtek
+> S:  Product=RTL8187B_WLAN_Adapter 
+> S:  SerialNumber=<masked>
+> C:* #Ifs= 1 Cfg#= 1 Atr=80 MxPwr=500mA
+> I:* If#= 0 Alt= 0 #EPs= 9 Cls=ff(vend.) Sub=ff Prot=ff Driver=rtl8187
+> E:  Ad=83(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+> E:  Ad=04(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+> E:  Ad=05(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+> E:  Ad=06(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+> E:  Ad=07(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+> E:  Ad=89(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+> E:  Ad=0a(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+> E:  Ad=0b(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+> E:  Ad=0c(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
 
---=-u8JEhJZNfwqgX7Ez6x+A
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+My device doesn't show up in /proc, but 
+/sys/bus/usb/devices/1-5/product shows it to have the same Product 
+string as yours, with a ProdID of 8187.
 
-On Fri, 2008-06-27 at 15:57 +1000, Iwo Mergler wrote:
-> Hi,
->=20
-> I'm trying to debug the AP mode of the rt73usb driver. It works OK,
-> as far as I can tell, but there are no beacons in the air. Not even garbl=
-ed
-> packets. The AP is happy to respond to SSID broadcast requests though.
->=20
-> Now, when starting hostapd, the driver gets three rt73usb_beacon_update()
-> calls (struct ieee80211_ops ->beacon_update()). The SKBs passed in are
-> identical IEEE802.11 beacon packets, with the sequence numbers 0, 1 and 2=
-.
->=20
-> I believe the hardware is supposed to be auto-beaconing.
->=20
-> Here is the question: why three calls? I would have expected a single=20
-> call for
-> such a device.
+Does anyone have an 8187b with an ProdID of 0x8187 and a Product 
+string that does not say 8187B?
 
-That's because hostapd sets various parameters and the beacon changes
-every time. Don't worry about it.
-
-johannes
-
---=-u8JEhJZNfwqgX7Ez6x+A
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIZIonAAoJEKVg1VMiehFYIvgP/AnkDvSNg5sYGLgOg8ZduEg2
-CZ21iZp17dWcrEvLsk40BeW9eFBZOcopvGRtXIgHIj/QiPgU/Yr+W+drDz8L9e80
-7Q88Rl8MAgUW5G3COOoOHhIikAuyiNzCqo550vIhA2b86i1h3UTHo4jI+n1Gi7CW
-uEFY4Hijae0uuMF0pxJK7Th3xFrlEqdJ76IIpluFgL3wtt+JNtkHOte025s40p0O
-p9gHz/Csx+5RY15RZ8IZyJMU24Fa0nZIOdtxxM+mLd9f1zW90MjDneV2ie6hWpeB
-dhaA81Nvv59uElyVDJuC5B6e1DSKGfJD9YIP0+zkEeRoAol3vCvbQGPuSVwzCwXk
-38t+fX0BjJiThlRY7aHSpOzxHLtE1n8fXxI1zEkTo4v+Lg0sW8xrpy+JmRN64A77
-YlrcwnG3Yrmy1J49QHsUBrLfF5MQw7ip6KKiVP5FJWgpVMH4hupsU58bX8vQcH/c
-ly5CHFZdS+jpMZ9ylkml5z9WeCsuOGupwkuIDgvG8IlVVrjQTdun5P1ItHROAiom
-pHrkAfdv3ejrUQYdJKVCLGZVl4NFppqIFd+M38vZjaXsF+Jh9ntpY71RFzIrEl3S
-fZRuDdnVdoAFB+oJuWL98P3Ds9NPHkCCXQ22VNMOeOClTi1AK7C0Jq7pP5qJoX4n
-l+ex8IR/eWdjjtIp1fVC
-=6ioi
------END PGP SIGNATURE-----
-
---=-u8JEhJZNfwqgX7Ez6x+A--
-
+Larry
