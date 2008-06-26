@@ -1,71 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:45565 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752242AbYFVPi4 (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:41152 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751776AbYFZVwS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jun 2008 11:38:56 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Thu, 26 Jun 2008 17:52:18 -0400
+Message-ID: <48640FDB.70602@lwfinger.net> (sfid-20080626_235220_754736_77A9C74E)
+Date: Thu, 26 Jun 2008 16:53:31 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+CC: Hin-Tak Leung <hintak_leung@yahoo.co.uk>,
+	Pavel Roskin <proski@gnu.org>,
 	Matthew Garrett <mjg@redhat.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Thomas Renninger <trenn@suse.de>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: [PATCH 04/12] rfkill: add parameter to disable radios by default
-Date: Sun, 22 Jun 2008 12:38:40 -0300
-Message-Id: <1214149128-5913-5-git-send-email-hmh@hmh.eng.br> (sfid-20080622_173901_805533_4DED39F8)
-In-Reply-To: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
-References: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
+	andreamrl@tiscali.it, linville@redhat.com
+Subject: Re: [RFC][PATCH] Realtek 8187B wireless support with product id 0x8197/0x8189
+References: <779389.39286.qm@web23108.mail.ird.yahoo.com> <4863F1DE.3080503@yahoo.co.uk> <200806261740.17878.herton@mandriva.com.br> <200806261824.40610.herton@mandriva.com.br>
+In-Reply-To: <200806261824.40610.herton@mandriva.com.br>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, radios are always enabled when their rfkill interface is
-registered.  This is not optimal, the safest state for a radio is to be
-offline unless the user turns it on.
+Herton Ronaldo Krzesinski wrote:
+> Small corrections to last message:
+> 
+> Em Thursday 26 June 2008 17:40:09 Herton Ronaldo Krzesinski escreveu:
+>> There are main 6 changes on the diff above:
+>>
+>> - len is probably plcp_len field like on r818{0,5}, on vendor driver it was
+>> specified as 'length'
+>> - To turn ANAPARAM off we need especial value like when turning on, for
+>> ANAPARAM*_OFF values I used the stock values from the hardware after
+>> a cold boot
+>> - The write to the address 0xFFF0 seems to need always a write to ACM_CONTROL
+> 
+> I mean 0xFFF0 to 0xFFFC
+> 
+>> after this with value '0', the vendor driver both on win/linux does this, was
+>> another mistake that I didn't see:
+>>  	rtl818x_iowrite32(priv, (__le32 *)0xFFF0, (7 << 12) | (3 << 8) | 28);
+>> +	rtl818x_iowrite8(priv, &priv->map->ACM_CONTROL, 0);
+>>
+>> - Win driver writes to 0xFF4E and , so I added the same thing:
+> 
+> "- Win driver writes to 0xFF4E, so I added the same thing:"
+> 
+>> +	rtl818x_iowrite8_idx(priv, (u8 *)0xFF4E, 1, 2);
+>> and does things in another order, so I moved code:
+>> +	rtl8225_write_phy_cck(dev, 0xc1, 0x88); msleep(1);
+>> +	rtl8225_write_phy_ofdm(dev, 0x97, 0x46); msleep(1);
+>> +	rtl8225_write_phy_ofdm(dev, 0xa4, 0x86); msleep(1);
+>> +	rtl8225_write_phy_ofdm(dev, 0x85, 0xfb); msleep(1);
+>>
+>> - I changed "static const u8 rtl8225z2_ofdm[]" because of when looking the usb
+>> traffic with usbmon and ndiswrapper it was different in that values, the win
+>> driver has the values.
+> 
+> "- I changed "static const u8 rtl8225z2_ofdm[]" because of when looking the usb
+>  traffic with usbmon and ndiswrapper it was different in that values" (drop last sentence)
+> 
+>> - I placed msleep(1) after write TX_ANTENNA, as all already in kernel realtek
+>> code need this why rtl8187b does not? Better to play safe.
+>>
+>> As I don't have docs I have to appeal to this kind of things... sorry for the
+>> everything in one patch, I wasn't available to look more into this, but better
+>> post what I have found until now.
 
-Add a module parameter that causes all radios to be disabled when their
-rfkill interface is registered.  The module default is not changed so
-unless the parameter is used, radios will still be forced to their enabled
-state when they are registered.
+I have put your patch into the wireless-testing code. So far, I have 
+not seen any particular improvement in the performance, etc. of the 
+device, but I'll continue to play with it.
 
-The new rfkill module parameter is called "default_state".
-
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- net/rfkill/rfkill.c |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
-
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index f95081a..3edc585 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -39,6 +39,11 @@ MODULE_LICENSE("GPL");
- static LIST_HEAD(rfkill_list);	/* list of registered rf switches */
- static DEFINE_MUTEX(rfkill_mutex);
- 
-+static unsigned int rfkill_default_state = RFKILL_STATE_ON;
-+module_param_named(default_state, rfkill_default_state, uint, 0444);
-+MODULE_PARM_DESC(default_state,
-+		 "Default initial state for all radio types, 0 = radio off");
-+
- static enum rfkill_state rfkill_states[RFKILL_TYPE_MAX];
- 
- 
-@@ -436,8 +441,12 @@ static int __init rfkill_init(void)
- 	int error;
- 	int i;
- 
-+	if (rfkill_default_state != RFKILL_STATE_OFF &&
-+	    rfkill_default_state != RFKILL_STATE_ON)
-+		return -EINVAL;
-+
- 	for (i = 0; i < ARRAY_SIZE(rfkill_states); i++)
--		rfkill_states[i] = RFKILL_STATE_ON;
-+		rfkill_states[i] = rfkill_default_state;
- 
- 	error = class_register(&rfkill_class);
- 	if (error) {
--- 
-1.5.5.4
-
+Larry
