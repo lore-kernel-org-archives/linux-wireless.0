@@ -1,405 +1,373 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:29947 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760087AbYFLNMD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 09:12:03 -0400
-Received: from mail.atheros.com ([192.168.11.2])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Jun 2008 06:12:03 -0700
-Date: Thu, 12 Jun 2008 06:11:54 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [RFC] First CRDA integration work
-Message-ID: <20080612131154.GA28315@tesla> (sfid-20080612_151210_221063_7614BA21)
-References: <20080611040402.GE17936@ruslug.rutgers.edu> <1213260106.19369.15.camel@johannes.berg>
+Received: from xenotime.net ([66.160.160.81]:35193 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752704AbYFZVJl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jun 2008 17:09:41 -0400
+Received: from shark.he.net ([66.160.160.2]) by xenotime.net for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2008 14:09:36 -0700
+Date: Thu, 26 Jun 2008 14:09:36 -0700 (PDT)
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+cc: Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	adel.gadllah@gmail.com
+Subject: Re: commit 5dc4dfd6165883b6629a48256dc4eadf76d6b65d
+In-Reply-To: <200806262259.21764.IvDoorn@gmail.com>
+Message-ID: <Pine.LNX.4.64.0806261405390.27356@shark.he.net> (sfid-20080626_230945_440937_5330C827)
+References: <12145132373377-git-send-email-abhijeet.kolekar@intel.com>
+ <200806262259.21764.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1213260106.19369.15.camel@johannes.berg>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 12, 2008 at 01:41:46AM -0700, Johannes Berg wrote:
+On Thu, 26 Jun 2008, Ivo van Doorn wrote:
+
+> On Thursday 26 June 2008, Abhijeet Kolekar wrote:
+> >     iwlwifi : Patch adds rfkill subsystem for 3945
+> >     
+> >     The patch removes the sysfs interface from iwl3945 and uses
+> >     the rfkill subsystem instead.
 > 
-> > + * @NL80211_CMD_GET_REG: Get current regulatory domain, this is a query 
-> > + * 	to the kernel wireless core, the wireless core returns currently
-> > + * 	set alpha2 by %NL80211_ATTR_REG_ALPHA2,.
+> Shouldn't the driver depend on CONFIG_RFKILL?
+> Otherwise compilation will fail when CONFIG_RFKILL isn't selected...
+> Since you are using an input device as well, the same would go for
+> CONFIG_INPUT
+
+Yes, RFKILL and RFKILL_INPUT must be honored so that the driver
+will build clean when either of them is disabled.
+
+I sent a patch just a couple of days ago for this, so that
+it builds cleanly in linux-next.  It was acked by Zhu Yi.
+See http://marc.info/?l=linux-next&m=121436670630784&w=2
+
+Please incorporate it or something like it.
+Oh, maybe my patch was for iwlwifi and this one is for
+3945?  Still, a similar patch is needed for 3945.
+
+
+> Ivo
 > 
-> Please specify what command it comes in, probably _NEW_REG that you
-> haven't added.
-
-We can probably not even add this, what do you think?
-
-> > + * @NL80211_CMD_SET_REG: Set current regulatory domain. CRDA sets this after
->                                                                 sends
-> 
-> > + * 	being queried by the kernel.
-> 
-> How?
-
-This should be the CMD_NEW_REG then, I called it "SET" as we can only
-set one regulatory domain. Let me know your preference.
-
-> >  CRDA replies by sending a regulatory domain
-> > + * 	structure which consists of %NL80211_ATTR_REG_ALPHA set to our current alpha2
-> > + * 	if it found a match.
-> 
-> Why set the alpha2 again? I thought the kernel queried for that?
-
-This is in case we wanted to support letting userspace query the kernel
-what alpha2 it has set. I'm OK with not supporting this though but it
-seemed it may have come in handy, hopefully not for abuse for other
-things.
-
-> >  It also provides %NL80211_ATTR_REG_NUM,
-> 
-> What is that for?
-
-The number of reg rules for the current regdomain. We'd convert the
-array or reg rules structs to an number of attributes we are sure to
-receive. The alternative I think is to pass all the data into a _DATA
-type and let us parse it ourselves. I'm not sure, what do you think?
-
-I was thinking something like this:
-
-If NL80211_ATTR_REG_NUM == 3
-
-Then the nested attributes will be packed like this:
-
-reg-rule	Attribute
------------------------------------------------------------
-1		NL80211_ATTR_REG_RULE_FLAGS
-1		NL80211_ATTR_REG_RULE_FREQ_START
-1		NL80211_ATTR_REG_RULE_FREQ_END
-1		NL80211_ATTR_REG_RULE_FREQ_MAX_BW
-1		NL80211_ATTR_REG_RULE_POWER_MAX_ANT_GAIN
-1		NL80211_ATTR_REG_RULE_POWER_MAX_EIRP
-
-2		NL80211_ATTR_REG_RULE_FLAGS
-2		NL80211_ATTR_REG_RULE_FREQ_START
-2		NL80211_ATTR_REG_RULE_FREQ_END
-2		NL80211_ATTR_REG_RULE_FREQ_MAX_BW
-2		NL80211_ATTR_REG_RULE_POWER_MAX_ANT_GAIN
-2		NL80211_ATTR_REG_RULE_POWER_MAX_EIRP
-
-3		NL80211_ATTR_REG_RULE_FLAGS
-3		NL80211_ATTR_REG_RULE_FREQ_START
-3		NL80211_ATTR_REG_RULE_FREQ_END
-3		NL80211_ATTR_REG_RULE_FREQ_MAX_BW
-3		NL80211_ATTR_REG_RULE_POWER_MAX_ANT_GAIN
-3		NL80211_ATTR_REG_RULE_POWER_MAX_EIRP
------------------------------------------------------------
-
-I wanted your input on this. Not sure what is best. Pleas recommend a
-format.
-
-> > + * 	%NL80211_ATTR_REG_PGP_SIGNATURE_CHECK,
-> 
-> It's not PGP either way, 
-
-Excuse my crypto-fu :)
-
-> and why is that required in the kernel?
-
-I don't have strong reasons for this anymore. We can ignore it.
-
-> >  and a regulatory rule. The regulatory
-> > + * 	rule consists of set of frequency ranges given by
-> > + * 	%NL80211_ATTR_REG_RULE_FREQ_[START|END] with an attached power rule given
-> > + * 	by %NL80211_ATTR_REG_RULE_POWER_MAX_ANT_GAIN and
-> > + * 	%NL80211_ATTR_REG_RULE_POWER_MAX_EIRP. Each regulatory rule also has 
-> > + * 	an attached %NL80211_ATTR_REG_RULE_FLAGS.
-> 
-> How are these attributes used? Nested in some array?
-
-I wasn't sure yet, I wanted your feedback, but you are giving me this
-through IRC :)
-
-> > + * @NL80211_ATTR_REG_ALPHA2: an ISO-3166-alpha2 country code for which the
-> > + * 	current regulatory domain should be set to or is already set to.
-> > + * 	For example, 'CR', for Costa Rica.
-> 
-> Heh :)
-> 
-> >  This attribute is used by the kernel
-> > + * 	to query the CRDA userspace agent to retrieve one regulatory domain.
-> > + * 	This attribute can also be used by userspace to query the kernel for
-> > + * 	the currently set regulatory domain.
-> 
-> ???
-
-OK well I haven't figured out how the kernel->CRDA communication would
-work yet. CRDA->kernel is nl80211. You can ignore this for now.
-
-> > + * @NL80211_ATTR_REG_NUM_RULES: number of regulatory rules passed
-> 
-> Not necessary.
-
-OK.
-
-> > + * @NL80211_ATTR_REG_PGP_SIGNATURE_CHECK: whether or not CRDA has blessed
-> > + * 	this information through a PGP signature check. If its not blessed
-> > + * 	we go ahead and regulatory-taint the kernel. This is obviously
-> > + * 	hackable but the purpose is to allow distributions to be able to use
-> > + * 	a CRDA with a regulatory database signed off by the community
-> > + * 	and get the communities' blessing on this. Vendors can also
-> > + * 	support their own custom databases for custom solutions (AP, military).
-> > + * 	Start to shift liablity to the user, where it should be.
-> 
-> Not PGP. It's just an RSA signature. If liability is at the user, why do
-> we need to know this in the kernel?
-
-The original idea was to let vendors decide to be able to ignore or not
-bug reports (oops) if the kernel was reguluatory tainted. But since we
-are using EEPROM data we're OK without this data. It may be desirable
-but I can't think of a strong reason behind this anymore.
-
-> > + * @NL80211_ATTR_REG_RULE_FLAGS: a set of flags which specify additional
-> > + * 	considerations for a given frequency range. These are the
-> > + * 	&enum nl80211_reg_rule_flags.
-> 
-> Should we use flag attributes here nested into something? That would be
-> more netlink-like and allow easier expansion above 32 should it become
-> necessary.
-
-OK.
-
-> > + * @NL80211_ATTR_REG_RULE_FREQ_START: starting frequencry for the regulatory
-> > + * 	rule in KHz. This is not a center of frequency but an actual regulatory
->                                             ^^ remove
-> > + * 	band edge.
-> > + * @NL80211_ATTR_REG_RULE_FREQ_END: ending frequency for the regulatory rule
-> > + * 	in KHz. This is not a center a frequency but an actual regulatory
->                                        ^^ remove
-> > + * 	band edge.
-> > + * @NL80211_ATTR_REG_RULE_FREQ_MAX_BW: maximum allowed bandwidth for this
-> > + * 	frequency range, in KHz.
-> > + * @NL80211_ATTR_REG_RULE_POWER_MAX_ANT_GAIN: the maximum allowed antenna gain
-> > + * 	for a given frequency range. The value is in mBi (100 * dBi).
-> 
-> Can be left out.
-
-OK.
-
-> > +/* Central wireless core regulatory domains, we only need two,
-> > + * the current one and a world regulatory domain in case we have no
-> > + * information to give us an alpha2 */
-> > +const struct ieee80211_regdomain *cfg80211_regdomain;
-> 
-> const?
-
-Ignore that.
-
-> > +const struct ieee80211_regdomain *cfg80211_world_regdom;
-> > +DEFINE_MUTEX(cfg80211_reg_mutex);
-> > +
-> >  /* RCU might be appropriate here since we usually
-> >   * only read the list, and that can happen quite
-> >   * often because we need to do it for each command */
-> > @@ -402,9 +410,30 @@ static struct notifier_block cfg80211_netdev_notifier = {
-> >  	.notifier_call = cfg80211_netdev_notifier_call,
-> >  };
+> >     Original patch by Adel, I fixed the patch to work it properly.
+> >     
+> >     Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+> >     Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+> >     Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+> > 
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+> > index a9b3eda..a774978 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl-3945.h
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+> > @@ -36,6 +36,10 @@
+> >  #include <linux/kernel.h>
+> >  #include <net/ieee80211_radiotap.h>
 > >  
+> > +/*used for rfkill*/
+> > +#include <linux/rfkill.h>
+> > +#include <linux/input.h>
 > > +
-> >  static int cfg80211_init(void)
-> >  {
-> > -	int err = wiphy_sysfs_init();
-> > +#define	PASSIVE_AND_NO_IBSS	RRF_PASSIVE_SCAN | RRF_NO_IBSS
-> > +	int err;
-> > +	static const struct ieee80211_regdomain world_regdom = {
-> > +		.n_reg_rules = 7, /* I hope we can count */
-> 
-> ARRAY_SIZE() helps you count.
-
-the # of rules isn't defined yet in this implementation.
-
-> > +		.pgp_signature_check = 1, /* Duh, we're already here */
-> > +		.alpha2 =  { '0', '0' }, /* Got any better ideas? */
-> 
-> "\0\0" so we can't actually ever use this manually?
-
-OK.
-
-> > +		.reg_rules = {
-> > +			REG_RULE(2402, 2472, 40, 0, 20,	RRF_PASSIVE_SCAN),
-> > +			REG_RULE(2474, 2494, 40, 0, 20,	PASSIVE_AND_NO_IBSS),
-> > +			REG_RULE(5160, 5240, 40, 0, 30,	PASSIVE_AND_NO_IBSS),
-> > +			REG_RULE(5250, 5330, 40, 0, 30, PASSIVE_AND_NO_IBSS),
-> > +			REG_RULE(5735, 5835, 40, 0, 30, PASSIVE_AND_NO_IBSS),
-> > +			REG_RULE(5490, 5710, 40, 0, 30, PASSIVE_AND_NO_IBSS),
-> > +			REG_RULE(5490, 5710, 40, 0, 30, PASSIVE_AND_NO_IBSS)
-> > +		}
-> > +	};
-> 
-> #undef PASSIVE_AND_NOIBSS
-> 
-> why not declare this statically in the file rather than statically in
-> the init function?
-
-OK.
-
-> > +	cfg80211_regdomain = NULL;
-> > +	cfg80211_world_regdom = (struct ieee80211_regdomain *) &world_regdom;
-> 
-> What's with the cast?
-
-Compiler was bitching. But it may have been previous to some changes I
-made.
-
-> > --- a/net/wireless/core.h
-> > +++ b/net/wireless/core.h
-> > @@ -11,6 +11,7 @@
-> >  #include <net/genetlink.h>
-> >  #include <net/wireless.h>
-> >  #include <net/cfg80211.h>
-> > +#include "reg.h"
-> 
-> Hmm?
-
-Not needed, right.
-
-> > --- a/net/wireless/nl80211.c
-> > +++ b/net/wireless/nl80211.c
-> > @@ -18,6 +18,7 @@
-> >  #include <net/cfg80211.h>
-> >  #include "core.h"
-> >  #include "nl80211.h"
-> > +#include "reg.h"
+> >  /* Hardware specific file defines the PCI IDs table for that hardware module */
+> >  extern struct pci_device_id iwl3945_hw_card_ids[];
 > >  
-> >  /* the netlink family */
-> >  static struct genl_family nl80211_fam = {
-> > @@ -87,6 +88,16 @@ static struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] __read_mostly = {
-> >  	[NL80211_ATTR_MESH_ID] = { .type = NLA_BINARY,
-> >  				.len = IEEE80211_MAX_MESH_ID_LEN },
-> >  	[NL80211_ATTR_MPATH_NEXT_HOP] = { .type = NLA_U32 },
-> > +
-> > +	[NL80211_ATTR_REG_RULE_ALPHA2] = { .type = NLA_NUL_STRING, .len = 3 },
-> 
-> Why does it have to be a NUL-string? It is always only two bytes, so
-> please just do that. No need to null-terminate.
-
-Sure.
-
-> > +static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
-> > +{
-> > +	return -EOPNOTSUPP;
-> > +}
-> > +
-> > +static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
-> > +{
-> > +	return -EOPNOTSUPP;
-> > +}
-> 
-> -ECODEMISSING :P
-
-Yeah yeah. Hence "early" relase.
-
-> > @@ -9,137 +10,93 @@
-> >   */
+> > @@ -686,6 +690,23 @@ enum {
 > >  
-> >  /*
-> > - * This regulatory domain control implementation is highly incomplete, it
-> > - * only exists for the purpose of not regressing mac80211.
-> > - *
-> > - * For now, drivers can restrict the set of allowed channels by either
-> > - * not registering those channels or setting the IEEE80211_CHAN_DISABLED
-> > - * flag; that flag will only be *set* by this code, never *cleared.
-> > - *
-> >   * The usual implementation is for a driver to read a device EEPROM to
-> >   * determine which regulatory domain it should be operating under, then
-> >   * looking up the allowable channels in a driver-local table and finally
-> >   * registering those channels in the wiphy structure.
-> >   *
-> > - * Alternatively, drivers that trust the regulatory domain control here
-> > - * will register a complete set of capabilities and the control code
-> > - * will restrict the set by setting the IEEE80211_CHAN_* flags.
-> 
-> I think you shouldn't remove that but just rewrite it to make the driver
-> trust crda instead of this code.
-
-The EEPROM lets us get a list of supported channels for a product a
-customer (a vendor's customer, not a regular customer) decided to support.
-If we trust CRDA we then could potentially trust a different set of channels
-which the customer may not have tested his products on. They probably
-will work, but the safer approach is to support only the intended
-channels.
-
-We can then trust CRDA only to disable channels, not to *enable*.
-
-> > + * Another set of compliance enforcement is for drivers to use their
-> > + * own compliance limits which can be stored on the EEPROM. The host
-> > + * driver or firmware may ensure these are used.
-> > + *
-> > + * In addition to all this we provide an extra layer of regulatory
-> > + * compliance, however, that of what is provided by CRDA. This tries
-> > + * to ensure we remain complaint by not letting the user up front try
->                           ^^^^^^^^^ heh
-
-Thanks.
-
-> > + * to set their wireless device to settings we know we shouldn't be
-> > + * setting to. We also disable channels on the driver which we know we
-> > + * shouldn't be using in current regulatory domain. This is because
-> > + * some drivers may have outdated EEPROMs or no regulatory control at all.
-> 
-> 
-> > +static int freq_in_range(const struct ieee80211_freq_range *freq_range, u32 freq)
-> > +{
-> > +	if (freq >= freq_range->start_freq &&
-> > +		freq <= freq_range->end_freq)
-> > +		return 1;
-> > +	return 0;
+> >  #endif
+> >  
+> > +#ifdef CONFIG_IWLWIFI_RFKILL
+> > +struct iwl3945_priv;
+> > +
+> > +struct iwl3945_rfkill_mngr {
+> > +	struct rfkill *rfkill;
+> > +	struct input_dev *input_dev;
+> > +};
+> > +
+> > +void iwl3945_rfkill_set_hw_state(struct iwl3945_priv *priv);
+> > +void iwl3945_rfkill_unregister(struct iwl3945_priv *priv);
+> > +int iwl3945_rfkill_init(struct iwl3945_priv *priv);
+> > +#else
+> > +static inline void iwl3945_rfkill_set_hw_state(struct iwl3945_priv *priv) {}
+> > +static inline void iwl3945_rfkill_unregister(struct iwl3945_priv *priv) {}
+> > +static inline int iwl3945_rfkill_init(struct iwl3945_priv *priv) { return 0; }
+> > +#endif
+> > +
+> >  #define IWL_MAX_NUM_QUEUES IWL39_MAX_NUM_QUEUES
+> >  
+> >  struct iwl3945_priv {
+> > @@ -779,6 +800,10 @@ struct iwl3945_priv {
+> >  	struct iwl3945_init_alive_resp card_alive_init;
+> >  	struct iwl3945_alive_resp card_alive;
+> >  
+> > +#ifdef CONFIG_IWLWIFI_RFKILL
+> > +	struct iwl3945_rfkill_mngr rfkill_mngr;
+> > +#endif
+> > +
+> >  #ifdef CONFIG_IWL3945_LEDS
+> >  	struct iwl3945_led led[IWL_LED_TRG_MAX];
+> >  	unsigned long last_blink_time;
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> > index cca2119..eabbb85 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> > @@ -5913,7 +5913,9 @@ static void __iwl3945_down(struct iwl3945_priv *priv)
+> >  			       test_bit(STATUS_GEO_CONFIGURED, &priv->status) <<
+> >  					STATUS_GEO_CONFIGURED |
+> >  			       test_bit(STATUS_IN_SUSPEND, &priv->status) <<
+> > -					STATUS_IN_SUSPEND;
+> > +					STATUS_IN_SUSPEND |
+> > +				test_bit(STATUS_EXIT_PENDING, &priv->status) <<
+> > +					STATUS_EXIT_PENDING;
+> >  		goto exit;
+> >  	}
+> >  
+> > @@ -5928,7 +5930,9 @@ static void __iwl3945_down(struct iwl3945_priv *priv)
+> >  			test_bit(STATUS_IN_SUSPEND, &priv->status) <<
+> >  				STATUS_IN_SUSPEND |
+> >  			test_bit(STATUS_FW_ERROR, &priv->status) <<
+> > -				STATUS_FW_ERROR;
+> > +				STATUS_FW_ERROR |
+> > +			test_bit(STATUS_EXIT_PENDING, &priv->status) <<
+> > +				STATUS_EXIT_PENDING;
+> >  
+> >  	spin_lock_irqsave(&priv->lock, flags);
+> >  	iwl3945_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+> > @@ -6000,11 +6004,12 @@ static int __iwl3945_up(struct iwl3945_priv *priv)
+> >  	else {
+> >  		set_bit(STATUS_RF_KILL_HW, &priv->status);
+> >  		if (!test_bit(STATUS_IN_SUSPEND, &priv->status)) {
+> > +			iwl3945_rfkill_set_hw_state(priv);
+> >  			IWL_WARNING("Radio disabled by HW RF Kill switch\n");
+> >  			return -ENODEV;
+> >  		}
+> >  	}
+> > -
+> > +	iwl3945_rfkill_set_hw_state(priv);
+> >  	iwl3945_write32(priv, CSR_INT, 0xFFFFFFFF);
+> >  
+> >  	rc = iwl3945_hw_nic_init(priv);
+> > @@ -6060,6 +6065,7 @@ static int __iwl3945_up(struct iwl3945_priv *priv)
+> >  
+> >  	set_bit(STATUS_EXIT_PENDING, &priv->status);
+> >  	__iwl3945_down(priv);
+> > +	clear_bit(STATUS_EXIT_PENDING, &priv->status);
+> >  
+> >  	/* tried to restart and config the device for as long as our
+> >  	 * patience could withstand */
+> > @@ -6127,6 +6133,8 @@ static void iwl3945_bg_rf_kill(struct work_struct *work)
+> >  				    "Kill switch must be turned off for "
+> >  				    "wireless networking to work.\n");
+> >  	}
+> > +
+> > +	iwl3945_rfkill_set_hw_state(priv);
+> >  	mutex_unlock(&priv->mutex);
 > >  }
-> 
-> That needs a bandwidth check I think.
-
-Thanks.
-
-> > +++ b/net/wireless/reg.h
-> > @@ -0,0 +1,56 @@
-> > +#ifndef __NET_WIRELESS_REG_H
-> > +#define __NET_WIRELESS_REG_H
+> >  
+> > @@ -7409,37 +7417,6 @@ static DRIVER_ATTR(debug_level, S_IWUSR | S_IRUGO,
+> >  
+> >  #endif /* CONFIG_IWL3945_DEBUG */
+> >  
+> > -static ssize_t show_rf_kill(struct device *d,
+> > -			    struct device_attribute *attr, char *buf)
+> > -{
+> > -	/*
+> > -	 * 0 - RF kill not enabled
+> > -	 * 1 - SW based RF kill active (sysfs)
+> > -	 * 2 - HW based RF kill active
+> > -	 * 3 - Both HW and SW based RF kill active
+> > -	 */
+> > -	struct iwl3945_priv *priv = (struct iwl3945_priv *)d->driver_data;
+> > -	int val = (test_bit(STATUS_RF_KILL_SW, &priv->status) ? 0x1 : 0x0) |
+> > -		  (test_bit(STATUS_RF_KILL_HW, &priv->status) ? 0x2 : 0x0);
+> > -
+> > -	return sprintf(buf, "%i\n", val);
+> > -}
+> > -
+> > -static ssize_t store_rf_kill(struct device *d,
+> > -			     struct device_attribute *attr,
+> > -			     const char *buf, size_t count)
+> > -{
+> > -	struct iwl3945_priv *priv = (struct iwl3945_priv *)d->driver_data;
+> > -
+> > -	mutex_lock(&priv->mutex);
+> > -	iwl3945_radio_kill_sw(priv, buf[0] == '1');
+> > -	mutex_unlock(&priv->mutex);
+> > -
+> > -	return count;
+> > -}
+> > -
+> > -static DEVICE_ATTR(rf_kill, S_IWUSR | S_IRUGO, show_rf_kill, store_rf_kill);
+> > -
+> >  static ssize_t show_temperature(struct device *d,
+> >  				struct device_attribute *attr, char *buf)
+> >  {
+> > @@ -7925,7 +7902,6 @@ static struct attribute *iwl3945_sysfs_entries[] = {
+> >  #endif
+> >  	&dev_attr_power_level.attr,
+> >  	&dev_attr_retry_rate.attr,
+> > -	&dev_attr_rf_kill.attr,
+> >  	&dev_attr_rs_window.attr,
+> >  	&dev_attr_statistics.attr,
+> >  	&dev_attr_status.attr,
+> > @@ -8166,6 +8142,11 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+> >  	pci_save_state(pdev);
+> >  	pci_disable_device(pdev);
+> >  
+> > +	err = iwl3945_rfkill_init(priv);
+> > +	if (err)
+> > +		IWL_ERROR("Unable to initialize RFKILL system. "
+> > +				  "Ignoring error: %d\n", err);
 > > +
-> > +extern const struct ieee80211_regdomain *cfg80211_regdomain;
-> > +extern const struct ieee80211_regdomain *cfg80211_world_regdom;
+> >  	return 0;
+> >  
+> >   out_free_geos:
+> > @@ -8228,6 +8209,7 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
+> >  
+> >  	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
+> >  
+> > +	iwl3945_rfkill_unregister(priv);
+> >  	iwl3945_dealloc_ucode_pci(priv);
+> >  
+> >  	if (priv->rxq.bd)
+> > @@ -8296,6 +8278,140 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
+> >  
+> >  #endif /* CONFIG_PM */
+> >  
+> > +/*************** RFKILL FUNCTIONS **********/
+> > +#ifdef CONFIG_IWLWIFI_RFKILL
+> > +/* software rf-kill from user */
+> > +static int iwl3945_rfkill_soft_rf_kill(void *data, enum rfkill_state state)
+> > +{
+> > +	struct iwl3945_priv *priv = data;
+> > +	int err = 0;
 > > +
-> > +struct ieee80211_freq_range {
-> > +	u32 start_freq;
-> > +	u32 end_freq;
-> > +	u32 max_bandwidth;
-> > +};
+> > +	if (!priv->rfkill_mngr.rfkill)
+> > +	return 0;
 > > +
-> > +struct ieee80211_power_rule {
-> > +	u32 max_antenna_gain;
-> > +	u32 max_eirp;
-> > +};
+> > +	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+> > +		return 0;
 > > +
-> > +/* These must match CRDA regdb.h reg_rule_flags. nl80211
-> > + * must also be synced. */
-> 
-> I think we should use the internal flags directly in nl80211 and have
-> nl80211 use flag-attributes in a nested flags attribute (see how monitor
-> flags work) and not rely on any shared bit meanings with userspace.
-
-Sounds good to me.
-
-> > +struct ieee80211_reg_rule {
-> > +	struct ieee80211_freq_range freq_range;
-> > +	struct ieee80211_power_rule power_rule;
-> > +	u32 flags;
-> > +};
+> > +	IWL_DEBUG_RF_KILL("we recieved soft RFKILL set to state %d\n", state);
+> > +	mutex_lock(&priv->mutex);
 > > +
-> > +struct ieee80211_regdomain {
-> > +	u32 n_reg_rules;
-> > +	int pgp_signature_check;
-> > +	char alpha2[2];
-> > +	struct ieee80211_reg_rule reg_rules[];
-> 
-> Make that a pointer instead so we can declare the array and point to it
-> and use ARRAY_SIZE().
+> > +	switch (state) {
+> > +	case RFKILL_STATE_ON:
+> > +		iwl3945_radio_kill_sw(priv, 0);
+> > +		/* if HW rf-kill is set dont allow ON state */
+> > +		if (iwl3945_is_rfkill(priv))
+> > +			err = -EBUSY;
+> > +		break;
+> > +	case RFKILL_STATE_OFF:
+> > +		iwl3945_radio_kill_sw(priv, 1);
+> > +		if (!iwl3945_is_rfkill(priv))
+> > +			err = -EBUSY;
+> > +		break;
+> > +	}
+> > +	mutex_unlock(&priv->mutex);
+> > +
+> > +	return err;
+> > +}
+> > +
+> > +int iwl3945_rfkill_init(struct iwl3945_priv *priv)
+> > +{
+> > +	struct device *device = wiphy_dev(priv->hw->wiphy);
+> > +	int ret = 0;
+> > +
+> > +	BUG_ON(device == NULL);
+> > +
+> > +	IWL_DEBUG_RF_KILL("Initializing RFKILL.\n");
+> > +	priv->rfkill_mngr.rfkill = rfkill_allocate(device, RFKILL_TYPE_WLAN);
+> > +	if (!priv->rfkill_mngr.rfkill) {
+> > +		IWL_ERROR("Unable to allocate rfkill device.\n");
+> > +		ret = -ENOMEM;
+> > +		goto error;
+> > +	}
+> > +
+> > +	priv->rfkill_mngr.rfkill->name = priv->cfg->name;
+> > +	priv->rfkill_mngr.rfkill->data = priv;
+> > +	priv->rfkill_mngr.rfkill->state = RFKILL_STATE_ON;
+> > +	priv->rfkill_mngr.rfkill->toggle_radio = iwl3945_rfkill_soft_rf_kill;
+> > +	priv->rfkill_mngr.rfkill->user_claim_unsupported = 1;
+> > +
+> > +	priv->rfkill_mngr.rfkill->dev.class->suspend = NULL;
+> > +	priv->rfkill_mngr.rfkill->dev.class->resume = NULL;
+> > +
+> > +	priv->rfkill_mngr.input_dev = input_allocate_device();
+> > +	if (!priv->rfkill_mngr.input_dev) {
+> > +		IWL_ERROR("Unable to allocate rfkill input device.\n");
+> > +		ret = -ENOMEM;
+> > +		goto freed_rfkill;
+> > +	}
+> > +
+> > +	priv->rfkill_mngr.input_dev->name = priv->cfg->name;
+> > +	priv->rfkill_mngr.input_dev->phys = wiphy_name(priv->hw->wiphy);
+> > +	priv->rfkill_mngr.input_dev->id.bustype = BUS_HOST;
+> > +	priv->rfkill_mngr.input_dev->id.vendor = priv->pci_dev->vendor;
+> > +	priv->rfkill_mngr.input_dev->dev.parent = device;
+> > +	priv->rfkill_mngr.input_dev->evbit[0] = BIT(EV_KEY);
+> > +	set_bit(KEY_WLAN, priv->rfkill_mngr.input_dev->keybit);
+> > +
+> > +	ret = rfkill_register(priv->rfkill_mngr.rfkill);
+> > +	if (ret) {
+> > +		IWL_ERROR("Unable to register rfkill: %d\n", ret);
+> > +		goto free_input_dev;
+> > +	}
+> > +
+> > +	ret = input_register_device(priv->rfkill_mngr.input_dev);
+> > +	if (ret) {
+> > +		IWL_ERROR("Unable to register rfkill input device: %d\n", ret);
+> > +		goto unregister_rfkill;
+> > +	}
+> > +
+> > +	IWL_DEBUG_RF_KILL("RFKILL initialization complete.\n");
+> > +	return ret;
+> > +
+> > +unregister_rfkill:
+> > +	rfkill_unregister(priv->rfkill_mngr.rfkill);
+> > +	priv->rfkill_mngr.rfkill = NULL;
+> > +
+> > +free_input_dev:
+> > +	input_free_device(priv->rfkill_mngr.input_dev);
+> > +	priv->rfkill_mngr.input_dev = NULL;
+> > +
+> > +freed_rfkill:
+> > +	if (priv->rfkill_mngr.rfkill != NULL)
+> > +		rfkill_free(priv->rfkill_mngr.rfkill);
+> > +	priv->rfkill_mngr.rfkill = NULL;
+> > +
+> > +error:
+> > +	IWL_DEBUG_RF_KILL("RFKILL initialization complete.\n");
+> > +	return ret;
+> > +}
+> > +
+> > +void iwl3945_rfkill_unregister(struct iwl3945_priv *priv)
+> > +{
+> > +
+> > +	if (priv->rfkill_mngr.input_dev)
+> > +		input_unregister_device(priv->rfkill_mngr.input_dev);
+> > +
+> > +	if (priv->rfkill_mngr.rfkill)
+> > +		rfkill_unregister(priv->rfkill_mngr.rfkill);
+> > +
+> > +	priv->rfkill_mngr.input_dev = NULL;
+> > +	priv->rfkill_mngr.rfkill = NULL;
+> > +}
+> > +
+> > +/* set rf-kill to the right state. */
+> > +void iwl3945_rfkill_set_hw_state(struct iwl3945_priv *priv)
+> > +{
+> > +
+> > +	if (!priv->rfkill_mngr.rfkill)
+> > +		return;
+> > +
+> > +	if (!iwl3945_is_rfkill(priv))
+> > +		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_ON;
+> > +	else
+> > +		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_OFF;
+> > +}
+> > +#endif
+> > +
+> >  /*****************************************************************************
+> >   *
+> >   * driver and module entry point
+> > --
 
-Alright.
-
-  Luis
+-- 
+~Randy
