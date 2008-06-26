@@ -1,133 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:27236 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754386AbYFHPdh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jun 2008 11:33:37 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so1476782waf.23
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jun 2008 08:33:36 -0700 (PDT)
-Message-ID: <1ba2fa240806080833p415a9254u129768412117a661@mail.gmail.com> (sfid-20080608_173354_075828_B6613374)
-Date: Sun, 8 Jun 2008 18:33:36 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Marcin Slusarz" <marcin.slusarz@gmail.com>
-Subject: Re: [PATCH v2] iwlwifi: fix oops in iwl3945_led_brightness_set
-Cc: linux-wireless@vger.kernel.org, "Zhu Yi" <yi.zhu@intel.com>,
-	"Reinette Chatre" <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <20080608111302.GB5856@joi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080608084855.GA8167@joi>
-	 <1ba2fa240806080318g45a8042csb4eec293a3d1ee5b@mail.gmail.com>
-	 <20080608111302.GB5856@joi>
+Received: from chilli.pcug.org.au ([203.10.76.44]:58760 "EHLO smtps.tip.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753870AbYFZDPs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jun 2008 23:15:48 -0400
+Date: Thu, 26 Jun 2008 13:15:36 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: David Miller <davem@davemloft.net>, linux-next@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: linux-next: pending wireless/wireless-current merge conflict
+Message-Id: <20080626131536.9b26269a.sfr@canb.auug.org.au> (sfid-20080626_051552_280835_D3743D28)
+In-Reply-To: <20080625180430.GA13730@tuxdriver.com>
+References: <20080613215601.GA8345@tuxdriver.com>
+	<20080625180430.GA13730@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Thu__26_Jun_2008_13_15_36_+1000_fL_f_JmstJN0XN68"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 8, 2008 at 2:13 PM, Marcin Slusarz <marcin.slusarz@gmail.com> wrote:
-> On Sun, Jun 08, 2008 at 01:18:36PM +0300, Tomas Winkler wrote:
->> On Sun, Jun 8, 2008 at 11:48 AM, Marcin Slusarz
->> <marcin.slusarz@gmail.com> wrote:
->> > fix race between:
->> > ieee80211_open->ieee80211_led_radio->led_trigger_event->led_set_brightness->iwl3945_led_brightness_set
->> > (which assumes that "led->priv" is not NULL)
->> > and
->> > iwl3945_pci_probe->iwl3945_setup_deferred_work->(...)->iwl3945_bg_alive_start->iwl3945_alive_start->iwl3945_led_register->iwl3945_led_register_led
->> > which sets priv field in struct iwl3945_led
->> > after
->> > led->led_dev.brightness_set = iwl3945_led_brightness_set;
->> > (...)
->> > led_classdev_register(device, &led->led_dev);
->> >
->> > http://kerneloops.org/guilty.php?guilty=iwl3945_led_brightness_set&version=2.6.25-release&start=1671168&end=1703935&class=oops
->> >
->> > Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
->> > Cc: Zhu Yi <yi.zhu@intel.com>
->> > Cc: Reinette Chatre <reinette.chatre@intel.com>
->> > Cc: Tomas Winkler <tomas.winkler@intel.com>
->> > Cc: John W. Linville <linville@tuxdriver.com>
->> > Cc: linux-wireless@vger.kernel.org
->> > Cc: ipw3945-devel@lists.sourceforge.net
->> > ---
->> >
->> > Compile tested only. Please review and test on real hardware.
->> >
->> > ---
->> >  drivers/net/wireless/iwlwifi/iwl-3945-led.c |    2 ++
->> >  1 files changed, 2 insertions(+), 0 deletions(-)
->> >
->> > diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-led.c b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
->> > index d200d08..9f08568 100644
->> > --- a/drivers/net/wireless/iwlwifi/iwl-3945-led.c
->> > +++ b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
->> > @@ -185,6 +185,8 @@ static void iwl3945_led_brightness_set(struct led_classdev *led_cdev,
->> >                                               struct iwl3945_led, led_dev);
->> >        struct iwl3945_priv *priv = led->priv;
->> >
->> > +       if (!led->registered)
->> > +               return;
->> >        if (test_bit(STATUS_EXIT_PENDING, &priv->status))
->> >                return;
->> >
->> > --
->> > 1.5.4.5
->> >
->> NACK
->> Just need to revert the order in registration command as done in
->> iwl_leds_register_led.
->
-> Thanks for a review!
-> Updated patch below.
->
-> ---
-> fix race between:
-> ieee80211_open->ieee80211_led_radio->led_trigger_event->led_set_brightness->iwl3945_led_brightness_set
-> (which assumes that "led->priv" is not NULL)
-> and
-> iwl3945_pci_probe->iwl3945_setup_deferred_work->(...)->iwl3945_bg_alive_start->iwl3945_alive_start->iwl3945_led_register->iwl3945_led_register_led
-> which sets priv field in struct iwl3945_led
-> after
-> led->led_dev.brightness_set = iwl3945_led_brightness_set;
-> (...)
-> led_classdev_register(device, &led->led_dev);
->
-> http://kerneloops.org/guilty.php?guilty=iwl3945_led_brightness_set&version=2.6.25-release&start=1671168&end=1703935&class=oops
->
-> Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
-> Cc: Zhu Yi <yi.zhu@intel.com>
-> Cc: Reinette Chatre <reinette.chatre@intel.com>
-> Cc: Tomas Winkler <tomas.winkler@intel.com>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: ipw3945-devel@lists.sourceforge.net
-> ---
->  drivers/net/wireless/iwlwifi/iwl-3945-led.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-led.c b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-> index d200d08..8b1528e 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-> @@ -229,14 +229,15 @@ static int iwl3945_led_register_led(struct iwl3945_priv *priv,
->        led->led_dev.brightness_set = iwl3945_led_brightness_set;
->        led->led_dev.default_trigger = trigger;
->
-> +       led->priv = priv;
-> +       led->type = type;
-> +
->        ret = led_classdev_register(device, &led->led_dev);
->        if (ret) {
->                IWL_ERROR("Error: failed to register led handler.\n");
->                return ret;
->        }
->
-> -       led->priv = priv;
-> -       led->type = type;
->        led->registered = 1;
->
->        if (set_led && led->led_on)
-> --
-> 1.5.4.5
-ACK
+--Signature=_Thu__26_Jun_2008_13_15_36_+1000_fL_f_JmstJN0XN68
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Tomas
+Hi John,
+
+On Wed, 25 Jun 2008 14:04:30 -0400 "John W. Linville" <linville@tuxdriver.c=
+om> wrote:
+>
+> I just sent a pull request for Dave that will result in nasty-looking
+> conflict in iwl4965-base.c.  I have a sample merge available here:
+>=20
+> 	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6=
+ merge-test
+>=20
+> The overview of the resolution is to ignore any changes in
+> iwl4965-base.c and take drivers/net/wireless/iwlwifi/iwl-scan.c from
+> the URL above.
+>=20
+> Just a heads-up... :-)
+
+Thanks, I will check it out.
+
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
+
+--Signature=_Thu__26_Jun_2008_13_15_36_+1000_fL_f_JmstJN0XN68
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkhjCdgACgkQTgG2atn1QN/XXQCfZEY93sdHTKdyF6xerc+cfNqz
+f/wAnRLHi3M8G4t/YmAQaJUebt9Itc5Z
+=Eq3k
+-----END PGP SIGNATURE-----
+
+--Signature=_Thu__26_Jun_2008_13_15_36_+1000_fL_f_JmstJN0XN68--
