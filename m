@@ -1,49 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.234]:11699 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755317AbYFSIDf (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.171]:6600 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753707AbYFZSM6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 04:03:35 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so5037013rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jun 2008 01:03:34 -0700 (PDT)
-Message-ID: <1ba2fa240806190103oe4c8419l132ee9a62bd030b9@mail.gmail.com> (sfid-20080619_100341_331025_2E013D6D)
-Date: Thu, 19 Jun 2008 11:03:34 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] iwl3965: remove useless network and duplicate checking
-Cc: drago01 <drago01@gmail.com>,
-	"Linux Wireless" <linux-wireless@vger.kernel.org>,
-	"Zhu Yi" <yi.zhu@intel.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"John Linville" <linville@tuxdriver.com>
-In-Reply-To: <1213858054.1312.41.camel@johannes.berg>
+	Thu, 26 Jun 2008 14:12:58 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so272227ugf.16
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2008 11:12:57 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: make workqueue freezable
+Date: Thu, 26 Jun 2008 20:14:27 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1214503196.3783.13.camel@johannes.berg>
+In-Reply-To: <1214503196.3783.13.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0806151105l3ddd72b9r5a4ad5f112cc8599@mail.gmail.com>
-	 <1ba2fa240806160109q751e6990vf9c12e65800fb16a@mail.gmail.com>
-	 <f6ca9fed0806182313p7f8d5d65u2ef6b5f93e21c394@mail.gmail.com>
-	 <1213858054.1312.41.camel@johannes.berg>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200806262014.27907.IvDoorn@gmail.com> (sfid-20080626_201310_944507_43A06821)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6/19/08, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2008-06-19 at 08:13 +0200, drago01 wrote:
-> > On Mon, Jun 16, 2008 at 10:09 AM, Tomas Winkler <tomasw@gmail.com> wrote:
-> > > On Sun, Jun 15, 2008 at 9:05 PM, drago01 <drago01@gmail.com> wrote:
-> > >> Johannes has posted a similar patch fro iwl4965, I have ported (the
-> > >> relevant parts) to iwl3945.
-> > >> I tested it and its working fine so far.
-> > >> -------------
-> > >> mac802 can handle duplicate packages on its own, so let it do it.
-> > >> Based on patch from Johannes Berg for iwl4965.
-> > >
-> > > I'm not 100% sure but currently there is missing checking for fragment
-> > > duplication in mac80211.
-> > > Can someone confirm?
-> >
-> > Johannes?
->
-> I don't think it is missing since the code checks the full seq_ctrl
-> field.
-Correct also walidated here, Your patch merge is not the way for 4965.
-Tomas
+On Thursday 26 June 2008, Johannes Berg wrote:
+> This patch makes the mac80211 workqueue freezable making it
+> interact a bit better with system suspend and not try to ping
+> the AP while the hardware is down.
+>=20
+> This doesn't really help with implementing proper suspend in
+> any way but makes some bad things trigger less.
+>=20
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> I'm not sure whether we should put this into 2.6.26 or not, while it
+> might help a bit it doesn't really do much over what the tx bugs find=
+er
+> already does except avoid sending out the packets that froze b43 in t=
+he
+> first place...
+>=20
+> Ivo, you might consider using =EF=BB=BFcreate_freezeable_workqueue fo=
+r your
+> rt2x00 patch though.
+
+Will do. Thanks for the tip.
+
+Ivo
+
+>  net/mac80211/main.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> --- everything.orig/net/mac80211/main.c	2008-06-26 18:21:14.000000000=
+ +0200
+> +++ everything/net/mac80211/main.c	2008-06-26 18:21:16.000000000 +020=
+0
+> @@ -1774,7 +1774,7 @@ int ieee80211_register_hw(struct ieee802
+>  	list_add_tail(&sdata->list, &local->interfaces);
+> =20
+>  	name =3D wiphy_dev(local->hw.wiphy)->driver->name;
+> -	local->hw.workqueue =3D create_singlethread_workqueue(name);
+> +	local->hw.workqueue =3D create_freezeable_workqueue(name);
+>  	if (!local->hw.workqueue) {
+>  		result =3D -ENOMEM;
+>  		goto fail_workqueue;
+>=20
+>=20
+>=20
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
