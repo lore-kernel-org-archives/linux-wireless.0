@@ -1,120 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:21779 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753389AbYF1SjT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 14:39:19 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so259538nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 11:39:18 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: proski@gnu.org, orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-Subject: [RFC PATCH 11/19] orinoco: address checkpatch typedef warning
-Date: Sat, 28 Jun 2008 19:38:17 +0100
-Message-Id: <1214678305-7057-12-git-send-email-kilroyd@gmail.com> (sfid-20080628_210814_697414_760C7CA3)
-In-Reply-To: <1214678305-7057-11-git-send-email-kilroyd@gmail.com>
-References: <1214678305-7057-1-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-2-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-3-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-4-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-5-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-6-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-7-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-8-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-9-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-10-git-send-email-kilroyd@gmail.com>
- <1214678305-7057-11-git-send-email-kilroyd@gmail.com>
-From: kilroyd@googlemail.com
+Received: from c60.cesmail.net ([216.154.195.49]:28661 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751832AbYFZC2z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jun 2008 22:28:55 -0400
+Subject: Re: [PATCH 3/4 V2] mac80211: add last beacon time in scan list
+From: Pavel Roskin <proski@gnu.org>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+In-Reply-To: <1ba2fa240806251526k773e8e2bj2c198defd0d8ef@mail.gmail.com>
+References: <1214396229-18782-1-git-send-email-tomas.winkler@intel.com>
+	 <1214409527.5881.21.camel@dv> <1214410337.21847.33.camel@johannes.berg>
+	 <1ba2fa240806251526k773e8e2bj2c198defd0d8ef@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 25 Jun 2008 22:28:53 -0400
+Message-Id: <1214447333.18897.13.camel@dv> (sfid-20080626_042900_287696_900BD47B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just sprinkle the necessary structs around...
+On Thu, 2008-06-26 at 01:26 +0300, Tomas Winkler wrote:
+> On Wed, Jun 25, 2008 at 7:12 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2008-06-25 at 11:58 -0400, Pavel Roskin wrote:
+> >
+> >> > +                   unsigned long mid_range = (-1) / 2 + 1;
+> >>
+> >> What is that?  I guess that's where Riemann's zeta function has its
+> >> non-trivial roots :-)
+> 
+> >
+> > The Pavel hypothesis: "The Riemann hypothesis is correct when calculated
+> > in 32-bit integers" is obviously wrong ;)
+> >
+> Welcome to the Desert of the Real
 
-Signed-off-by: David Kilroy <kilroyd@gmail.com>
----
- drivers/net/wireless/orinoco.c |   13 +++++++------
- drivers/net/wireless/orinoco.h |    6 +++---
- 2 files changed, 10 insertions(+), 9 deletions(-)
+Welcome to C.  mid_range is 1, as you can easily check.
 
-diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
-index 69fb83d..8f523e5 100644
---- a/drivers/net/wireless/orinoco.c
-+++ b/drivers/net/wireless/orinoco.c
-@@ -279,7 +279,8 @@ static int orinoco_bss_data_allocate(struct orinoco_private *priv)
- 		return 0;
- 
- 	priv->bss_data =
--	    kzalloc(ORINOCO_MAX_BSS_COUNT * sizeof(bss_element), GFP_KERNEL);
-+	    kzalloc(ORINOCO_MAX_BSS_COUNT * sizeof(struct bss_element),
-+		    GFP_KERNEL);
- 	if (!priv->bss_data) {
- 		printk(KERN_WARNING "Out of memory allocating beacons");
- 		return -ENOMEM;
-@@ -1413,8 +1414,8 @@ static void orinoco_send_wevents(struct work_struct *work)
- static inline void orinoco_clear_scan_results(struct orinoco_private *priv,
- 					      unsigned long scan_age)
- {
--	bss_element *bss;
--	bss_element *tmp_bss;
-+	struct bss_element *bss;
-+	struct bss_element *tmp_bss;
- 
- 	/* Blow away current list of scan results */
- 	list_for_each_entry_safe(bss, tmp_bss, &priv->bss_list, list) {
-@@ -1489,7 +1490,7 @@ static int orinoco_process_scan_results(struct net_device *dev,
- 	/* Read the entries one by one */
- 	for (; offset + atom_len <= len; offset += atom_len) {
- 		int found = 0;
--		bss_element *bss = NULL;
-+		struct bss_element *bss = NULL;
- 
- 		/* Get next atom */
- 		atom = (union hermes_scan_info *) (buf + offset);
-@@ -1511,7 +1512,7 @@ static int orinoco_process_scan_results(struct net_device *dev,
- 		/* Grab a bss off the free list */
- 		if (!found && !list_empty(&priv->bss_free_list)) {
- 			bss = list_entry(priv->bss_free_list.next,
--					 bss_element, list);
-+					 struct bss_element, list);
- 			list_del(priv->bss_free_list.next);
- 
- 			list_add_tail(&bss->list, &priv->bss_list);
-@@ -4540,7 +4541,7 @@ static int orinoco_ioctl_getscan(struct net_device *dev,
- 				 char *extra)
- {
- 	struct orinoco_private *priv = netdev_priv(dev);
--	bss_element *bss;
-+	struct bss_element *bss;
- 	int err = 0;
- 	unsigned long flags;
- 	char *current_ev = extra;
-diff --git a/drivers/net/wireless/orinoco.h b/drivers/net/wireless/orinoco.h
-index f93752f..584d8c9 100644
---- a/drivers/net/wireless/orinoco.h
-+++ b/drivers/net/wireless/orinoco.h
-@@ -36,11 +36,11 @@ typedef enum {
- 	FIRMWARE_TYPE_SYMBOL
- } fwtype_t;
- 
--typedef struct {
-+struct bss_element {
- 	union hermes_scan_info bss;
- 	unsigned long last_scanned;
- 	struct list_head list;
--} bss_element;
-+};
- 
- struct orinoco_private {
- 	void *card;	/* Pointer to card dependent structure */
-@@ -117,7 +117,7 @@ struct orinoco_private {
- 	/* Scanning support */
- 	struct list_head bss_list;
- 	struct list_head bss_free_list;
--	bss_element *bss_data;
-+	struct bss_element *bss_data;
- 
- 	int	scan_inprogress;	/* Scan pending... */
- 	u32	scan_mode;		/* Type of scan done */
+> >> > +                   time_diff = jiffies - bss->last_update > mid_range ?
+> >> > +                           jiffies - bss->last_update :
+> >> > +                           bss->last_update - jiffies;
+> >>
+> >> That's pretty hairy.  Do we really lack a function to calculate time
+> >> difference?
+> 
+> This is simplest as you can get under assumption that times are not
+> apart more then 1/2 of UL.
+>  It would be overkill to translate it to timeval or anything we have
+> diff function for.
+
+Why would jiffies ever lag behind bss->last_update?  When would
+(bss->last_update - jiffies) make sense?  If it makes sense, how about
+indicating it somehow?  It would be a value that decreases over time.  
+
+> > Actually, come to think of it, isn't just doing the difference as in teh
+> > original patch correct in 32-bit unsigned integers? It'll wrap around a
+> > bit but that's ok, no?
+> 
+> It would make a very recent beacon to be like half an hour old on
+> wraps, wouldn't it?
+
+No.  Why would it?  Can you give an example?  If you are not increasing
+precision, wraparounds should make no difference.
+
 -- 
-1.5.4.5
-
+Regards,
+Pavel Roskin
