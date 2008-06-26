@@ -1,306 +1,232 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56464
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752440AbYFQHx1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 03:53:27 -0400
-Date: Tue, 17 Jun 2008 00:53:27 -0700 (PDT)
-Message-Id: <20080617.005327.160757413.davem@davemloft.net> (sfid-20080617_095347_867290_61401A32)
-To: linville@tuxdriver.com
-CC: mokuno@sm.sony.co.jp, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 3/12]: wext: Extract standard call iw_point handling into
- seperate function.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from smtp4.pp.htv.fi ([213.243.153.38]:36737 "EHLO smtp4.pp.htv.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753445AbYFZKkW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jun 2008 06:40:22 -0400
+Date: Thu, 26 Jun 2008 13:38:13 +0300
+From: Adrian Bunk <bunk@kernel.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [2.6 patch] build algorithms into the mac80211 module
+Message-ID: <20080626103813.GB30359@cs181140183.pp.htv.fi> (sfid-20080626_124039_390756_E6F48A15)
+References: <20080622125553.GB22539@cs181133002.pp.htv.fi> <43e72e890806220804i347b942claae7b725231afcce@mail.gmail.com> <1214298259.8967.260.camel@johannes.berg> <20080624124311.GC16021@cs181140183.pp.htv.fi> <20080624211222.GB25892@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20080624211222.GB25892@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jun 24, 2008 at 05:12:22PM -0400, John W. Linville wrote:
+> On Tue, Jun 24, 2008 at 03:43:14PM +0300, Adrian Bunk wrote:
+> 
+> > Can we get one of either:
+> > - all selected mac80211 algorithms are built into the mac80211 module or
+> 
+> This seems fine to me.
+> 
+> > - all selected mac80211 algorithms (including the default one) are in
+> >   their own modules
+> 
+> We got here trying to avoid this one in the first place.
 
-wext: Extract standard call iw_point handling into seperate function.
+What about the patch below?
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
+> John
+
+cu
+Adrian
+
+
+<--  snip  -->
+
+
+The old infrastructure was:
+- the default algorithm is built into mac80211
+- other algorithms get into their own modules
+
+The implementation of this complicated scheme was horrible
+(just look at net/mac80211/Makefile), and anyone adding a new
+algorithm would most likely not get it right at his first attempt.
+
+This patch therefore builds all enabled algorithms into the mac80211 
+module.
+
+The user interface for the rate control algorithms changes as follows:
+- first the user can choose which algorithms to enable (currently only
+  MAC80211_RC_PID is available)
+- if more than one algorithm is enabled (currently not possible since 
+  only one algorithm is present) the user then chooses the default one
+
+Note:
+- MAC80211_RC_PID is always enables for CONFIG_EMBEDDED=n
+
+Technical changes:
+- all selected algorithms get into the mac80211 module
+- net/mac80211/Makefile can now become much less complicated
+- support for rc80211_pid_algo.c being modular is no longer required
+- this includes unexporting mesh_plink_broken
+
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
+
 ---
- net/wireless/wext.c |  258 ++++++++++++++++++++++++++------------------------
- 1 files changed, 134 insertions(+), 124 deletions(-)
 
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index cd2cf9f..d17c0f4 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -694,6 +694,138 @@ void wext_proc_exit(struct net *net)
-  */
+ net/mac80211/Kconfig            |   31 +++++++++----------------------
+ net/mac80211/Makefile           |   18 ++++--------------
+ net/mac80211/mesh_pathtbl.c     |    1 -
+ net/mac80211/rate.h             |    4 +---
+ net/mac80211/rc80211_pid_algo.c |   10 ----------
+ 5 files changed, 14 insertions(+), 50 deletions(-)
+
+commit 2d61eb39a63d9a4de6f4ecab85432d39d8116961
+Author: Adrian Bunk <bunk@kernel.org>
+Date:   Wed Jun 25 02:31:03 2008 +0300
+
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index a24b459..2d5bb42 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -15,6 +15,14 @@ config MAC80211
+ menu "Rate control algorithm selection"
+ 	depends on MAC80211 != n
  
- /* ---------------------------------------------------------------- */
-+static int ioctl_standard_iw_point(struct iw_point *iwp, unsigned int cmd,
-+				   const struct iw_ioctl_description *descr,
-+				   iw_handler handler, struct net_device *dev,
-+				   struct iw_request_info *info)
-+{
-+	int err, extra_size, user_length = 0, essid_compat = 0;
-+	char *extra;
++config MAC80211_RC_PID
++	bool "PID controller based rate control algorithm" if EMBEDDED
++	default y
++	---help---
++	  This option enables a TX rate control algorithm for
++	  mac80211 that uses a PID controller to select the TX
++	  rate.
 +
-+	/* Calculate space needed by arguments. Always allocate
-+	 * for max space.
-+	 */
-+	extra_size = descr->max_tokens * descr->token_size;
-+
-+	/* Check need for ESSID compatibility for WE < 21 */
-+	switch (cmd) {
-+	case SIOCSIWESSID:
-+	case SIOCGIWESSID:
-+	case SIOCSIWNICKN:
-+	case SIOCGIWNICKN:
-+		if (iwp->length == descr->max_tokens + 1)
-+			essid_compat = 1;
-+		else if (IW_IS_SET(cmd) && (iwp->length != 0)) {
-+			char essid[IW_ESSID_MAX_SIZE + 1];
-+
-+			err = copy_from_user(essid, iwp->pointer,
-+					     iwp->length *
-+					     descr->token_size);
-+			if (err)
-+				return -EFAULT;
-+
-+			if (essid[iwp->length - 1] == '\0')
-+				essid_compat = 1;
-+		}
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	iwp->length -= essid_compat;
-+
-+	/* Check what user space is giving us */
-+	if (IW_IS_SET(cmd)) {
-+		/* Check NULL pointer */
-+		if (!iwp->pointer && iwp->length != 0)
-+			return -EFAULT;
-+		/* Check if number of token fits within bounds */
-+		if (iwp->length > descr->max_tokens)
-+			return -E2BIG;
-+		if (iwp->length < descr->min_tokens)
-+			return -EINVAL;
-+	} else {
-+		/* Check NULL pointer */
-+		if (!iwp->pointer)
-+			return -EFAULT;
-+		/* Save user space buffer size for checking */
-+		user_length = iwp->length;
-+
-+		/* Don't check if user_length > max to allow forward
-+		 * compatibility. The test user_length < min is
-+		 * implied by the test at the end.
-+		 */
-+
-+		/* Support for very large requests */
-+		if ((descr->flags & IW_DESCR_FLAG_NOMAX) &&
-+		    (user_length > descr->max_tokens)) {
-+			/* Allow userspace to GET more than max so
-+			 * we can support any size GET requests.
-+			 * There is still a limit : -ENOMEM.
-+			 */
-+			extra_size = user_length * descr->token_size;
-+
-+			/* Note : user_length is originally a __u16,
-+			 * and token_size is controlled by us,
-+			 * so extra_size won't get negative and
-+			 * won't overflow...
-+			 */
-+		}
-+	}
-+
-+	/* kzalloc() ensures NULL-termination for essid_compat. */
-+	extra = kzalloc(extra_size, GFP_KERNEL);
-+	if (!extra)
-+		return -ENOMEM;
-+
-+	/* If it is a SET, get all the extra data in here */
-+	if (IW_IS_SET(cmd) && (iwp->length != 0)) {
-+		if (copy_from_user(extra, iwp->pointer,
-+				   iwp->length *
-+				   descr->token_size)) {
-+			err = -EFAULT;
-+			goto out;
-+		}
-+	}
-+
-+	err = handler(dev, info, (union iwreq_data *) iwp, extra);
-+
-+	iwp->length += essid_compat;
-+
-+	/* If we have something to return to the user */
-+	if (!err && IW_IS_GET(cmd)) {
-+		/* Check if there is enough buffer up there */
-+		if (user_length < iwp->length) {
-+			err = -E2BIG;
-+			goto out;
-+		}
-+
-+		if (copy_to_user(iwp->pointer, extra,
-+				 iwp->length *
-+				 descr->token_size)) {
-+			err = -EFAULT;
-+			goto out;
-+		}
-+	}
-+
-+	/* Generate an event to notify listeners of the change */
-+	if ((descr->flags & IW_DESCR_FLAG_EVENT) && err == -EIWCOMMIT) {
-+		union iwreq_data *data = (union iwreq_data *) iwp;
-+
-+		if (descr->flags & IW_DESCR_FLAG_RESTRICT)
-+			/* If the event is restricted, don't
-+			 * export the payload.
-+			 */
-+			wireless_send_event(dev, cmd, data, NULL);
-+		else
-+			wireless_send_event(dev, cmd, data, extra);
-+	}
-+
-+out:
-+	kfree(extra);
-+	return err;
-+}
-+
- /*
-  * Wrapper to call a standard Wireless Extension handler.
-  * We do various checks and also take care of moving data between
-@@ -729,130 +861,8 @@ static int ioctl_standard_call(struct net_device *	dev,
- 		   ((ret == 0) || (ret == -EIWCOMMIT)))
- 			wireless_send_event(dev, cmd, &(iwr->u), NULL);
- 	} else {
--		char *	extra;
--		int	extra_size;
--		int	user_length = 0;
--		int	err;
--		int	essid_compat = 0;
+ choice
+ 	prompt "Default rate control algorithm"
+ 	default MAC80211_RC_DEFAULT_PID
+@@ -26,40 +34,19 @@ choice
+ 
+ config MAC80211_RC_DEFAULT_PID
+ 	bool "PID controller based rate control algorithm"
+-	select MAC80211_RC_PID
++	depends on MAC80211_RC_PID
+ 	---help---
+ 	  Select the PID controller based rate control as the
+ 	  default rate control algorithm. You should choose
+ 	  this unless you know what you are doing.
+ 
+-config MAC80211_RC_DEFAULT_NONE
+-	bool "No default algorithm"
+-	depends on EMBEDDED
+-	help
+-	  Selecting this option will select no default algorithm
+-	  and allow you to not build any. Do not choose this
+-	  option unless you know your driver comes with another
+-	  suitable algorithm.
+ endchoice
+ 
+-comment "Selecting 'y' for an algorithm will"
+-comment "build the algorithm into mac80211."
 -
--		/* Calculate space needed by arguments. Always allocate
--		 * for max space. Easier, and won't last long... */
--		extra_size = descr->max_tokens * descr->token_size;
+ config MAC80211_RC_DEFAULT
+ 	string
+ 	default "pid" if MAC80211_RC_DEFAULT_PID
+ 	default ""
+ 
+-config MAC80211_RC_PID
+-	tristate "PID controller based rate control algorithm"
+-	---help---
+-	  This option enables a TX rate control algorithm for
+-	  mac80211 that uses a PID controller to select the TX
+-	  rate.
 -
--		/* Check need for ESSID compatibility for WE < 21 */
--		switch (cmd) {
--		case SIOCSIWESSID:
--		case SIOCGIWESSID:
--		case SIOCSIWNICKN:
--		case SIOCGIWNICKN:
--			if (iwr->u.data.length == descr->max_tokens + 1)
--				essid_compat = 1;
--			else if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
--				char essid[IW_ESSID_MAX_SIZE + 1];
+-	  Say Y or M unless you're sure you want to use a
+-	  different rate control algorithm.
 -
--				err = copy_from_user(essid, iwr->u.data.pointer,
--						     iwr->u.data.length *
--						     descr->token_size);
--				if (err)
--					return -EFAULT;
+ endmenu
+ 
+ config MAC80211_MESH
+diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
+index 4e5847f..268b0a7 100644
+--- a/net/mac80211/Makefile
++++ b/net/mac80211/Makefile
+@@ -1,13 +1,5 @@
+ obj-$(CONFIG_MAC80211) += mac80211.o
+ 
+-# objects for PID algorithm
+-rc80211_pid-y := rc80211_pid_algo.o
+-rc80211_pid-$(CONFIG_MAC80211_DEBUGFS) += rc80211_pid_debugfs.o
 -
--				if (essid[iwr->u.data.length - 1] == '\0')
--					essid_compat = 1;
--			}
--			break;
--		default:
--			break;
--		}
+-# build helper for PID algorithm
+-rc-pid-y := $(rc80211_pid-y)
+-rc-pid-m := rc80211_pid.o
 -
--		iwr->u.data.length -= essid_compat;
+ # mac80211 objects
+ mac80211-y := \
+ 	main.o \
+@@ -42,10 +34,8 @@ mac80211-$(CONFIG_MAC80211_MESH) += \
+ 	mesh_plink.o \
+ 	mesh_hwmp.o
+ 
++# objects for PID algorithm
++rc80211_pid-y := rc80211_pid_algo.o
++rc80211_pid-$(CONFIG_MAC80211_DEBUGFS) += rc80211_pid_debugfs.o
+ 
+-# Build rate control algorithm(s)
+-CFLAGS_rc80211_pid_algo.o += -DRC80211_PID_COMPILE
+-mac80211-$(CONFIG_MAC80211_RC_PID) += $(rc-pid-$(CONFIG_MAC80211_RC_PID))
 -
--		/* Check what user space is giving us */
--		if (IW_IS_SET(cmd)) {
--			/* Check NULL pointer */
--			if ((iwr->u.data.pointer == NULL) &&
--			   (iwr->u.data.length != 0))
--				return -EFAULT;
--			/* Check if number of token fits within bounds */
--			if (iwr->u.data.length > descr->max_tokens)
--				return -E2BIG;
--			if (iwr->u.data.length < descr->min_tokens)
--				return -EINVAL;
--		} else {
--			/* Check NULL pointer */
--			if (iwr->u.data.pointer == NULL)
--				return -EFAULT;
--			/* Save user space buffer size for checking */
--			user_length = iwr->u.data.length;
--
--			/* Don't check if user_length > max to allow forward
--			 * compatibility. The test user_length < min is
--			 * implied by the test at the end. */
--
--			/* Support for very large requests */
--			if ((descr->flags & IW_DESCR_FLAG_NOMAX) &&
--			   (user_length > descr->max_tokens)) {
--				/* Allow userspace to GET more than max so
--				 * we can support any size GET requests.
--				 * There is still a limit : -ENOMEM. */
--				extra_size = user_length * descr->token_size;
--				/* Note : user_length is originally a __u16,
--				 * and token_size is controlled by us,
--				 * so extra_size won't get negative and
--				 * won't overflow... */
--			}
--		}
--
--		/* Create the kernel buffer */
--		/*    kzalloc ensures NULL-termination for essid_compat */
--		extra = kzalloc(extra_size, GFP_KERNEL);
--		if (extra == NULL)
--			return -ENOMEM;
--
--		/* If it is a SET, get all the extra data in here */
--		if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
--			err = copy_from_user(extra, iwr->u.data.pointer,
--					     iwr->u.data.length *
--					     descr->token_size);
--			if (err) {
--				kfree(extra);
--				return -EFAULT;
--			}
--		}
--
--		/* Call the handler */
--		ret = handler(dev, &info, &(iwr->u), extra);
--
--		iwr->u.data.length += essid_compat;
--
--		/* If we have something to return to the user */
--		if (!ret && IW_IS_GET(cmd)) {
--			/* Check if there is enough buffer up there */
--			if (user_length < iwr->u.data.length) {
--				kfree(extra);
--				return -E2BIG;
--			}
--
--			err = copy_to_user(iwr->u.data.pointer, extra,
--					   iwr->u.data.length *
--					   descr->token_size);
--			if (err)
--				ret =  -EFAULT;
--		}
--
--		/* Generate an event to notify listeners of the change */
--		if ((descr->flags & IW_DESCR_FLAG_EVENT) &&
--		   ((ret == 0) || (ret == -EIWCOMMIT))) {
--			if (descr->flags & IW_DESCR_FLAG_RESTRICT)
--				/* If the event is restricted, don't
--				 * export the payload */
--				wireless_send_event(dev, cmd, &(iwr->u), NULL);
--			else
--				wireless_send_event(dev, cmd, &(iwr->u),
--						    extra);
--		}
--
--		/* Cleanup - I told you it wasn't that long ;-) */
--		kfree(extra);
-+		ret = ioctl_standard_iw_point(&iwr->u.data, cmd, descr,
-+					      handler, dev, &info);
+-# Modular rate algorithms are assigned to mac80211-m - make separate modules
+-obj-m += $(mac80211-m)
++mac80211-$(CONFIG_MAC80211_RC_PID) += $(rc80211_pid-y)
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 99c2d36..086d47f 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -264,7 +264,6 @@ void mesh_plink_broken(struct sta_info *sta)
  	}
+ 	rcu_read_unlock();
+ }
+-EXPORT_SYMBOL(mesh_plink_broken);
  
- 	/* Call commit handler if needed and defined */
--- 
-1.5.5.1.308.g1fbb5
+ /**
+  * mesh_path_flush_by_nexthop - Deletes mesh paths if their next hop matches
+diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
+index 5b45f33..54aa78b 100644
+--- a/net/mac80211/rate.h
++++ b/net/mac80211/rate.h
+@@ -171,9 +171,7 @@ void rate_control_deinitialize(struct ieee80211_local *local);
+ 
+ 
+ /* Rate control algorithms */
+-#if defined(RC80211_PID_COMPILE) || \
+-	(defined(CONFIG_MAC80211_RC_PID) && \
+-	 !defined(CONFIG_MAC80211_RC_PID_MODULE))
++#ifdef CONFIG_MAC80211_RC_PID
+ extern int rc80211_pid_init(void);
+ extern void rc80211_pid_exit(void);
+ #else
+diff --git a/net/mac80211/rc80211_pid_algo.c b/net/mac80211/rc80211_pid_algo.c
+index a849b74..68c6641 100644
+--- a/net/mac80211/rc80211_pid_algo.c
++++ b/net/mac80211/rc80211_pid_algo.c
+@@ -540,11 +540,6 @@ static struct rate_control_ops mac80211_rcpid = {
+ #endif
+ };
+ 
+-MODULE_DESCRIPTION("PID controller based rate control algorithm");
+-MODULE_AUTHOR("Stefano Brivio");
+-MODULE_AUTHOR("Mattias Nissler");
+-MODULE_LICENSE("GPL");
+-
+ int __init rc80211_pid_init(void)
+ {
+ 	return ieee80211_rate_control_register(&mac80211_rcpid);
+@@ -554,8 +549,3 @@ void rc80211_pid_exit(void)
+ {
+ 	ieee80211_rate_control_unregister(&mac80211_rcpid);
+ }
+-
+-#ifdef CONFIG_MAC80211_RC_PID_MODULE
+-module_init(rc80211_pid_init);
+-module_exit(rc80211_pid_exit);
+-#endif
 
