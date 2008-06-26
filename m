@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47075
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752951AbYFCUgx (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.240]:56630 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751446AbYFZVfq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 16:36:53 -0400
-Date: Tue, 03 Jun 2008 12:19:58 -0700 (PDT)
-Message-Id: <20080603.121958.75907598.davem@davemloft.net> (sfid-20080603_223935_468329_DB4D51F9)
-To: linux-wireless@vger.kernel.org
-CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/12]: wext: Make adjust_priv_size() take a "struct
- iw_point *".
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 26 Jun 2008 17:35:46 -0400
+Received: by an-out-0708.google.com with SMTP id d40so48681and.103
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2008 14:35:44 -0700 (PDT)
+Message-ID: <43e72e890806261435t3d06e955x590a6fafb223bbca@mail.gmail.com> (sfid-20080626_233552_200571_E0FA6500)
+Date: Thu, 26 Jun 2008 14:35:42 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: RFC: always enable MAC80211_RC_PID?
+Cc: "Adrian Bunk" <bunk@kernel.org>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Adrian Bunk" <bunk@stusta.de>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	"Rindjunsky, Ron" <ron.rindjunsky@intel.com>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>
+In-Reply-To: <20080624211222.GB25892@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080622125553.GB22539@cs181133002.pp.htv.fi>
+	 <43e72e890806220804i347b942claae7b725231afcce@mail.gmail.com>
+	 <1214298259.8967.260.camel@johannes.berg>
+	 <20080624124311.GC16021@cs181140183.pp.htv.fi>
+	 <20080624211222.GB25892@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jun 24, 2008 at 2:12 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Tue, Jun 24, 2008 at 03:43:14PM +0300, Adrian Bunk wrote:
+>
+>> Can we get one of either:
+>> - all selected mac80211 algorithms are built into the mac80211 module or
+>
+> This seems fine to me.
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/wireless/wext.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+OK so just to be clear -- moving forward we strive to not allow driver
+specific rate control algorithms and push out current ones into
+mac80211? This would mean we don't have to *cleanup* support for
+driver specific RCs but instead just have them stashed in as part of
+the build. The difficulty here lies in ensuring they do work for well
+for other drivers but I do agree it strives to cleanup RC code. I
+think vendors also tend to use a few driver specific tweaks to boost
+their own throughput in their own RCs though. Can't say for sure right
+now of specific details but I'll try to get back to you with them.
+Perhaps Tomas can say more about that for iwl's RCs.
 
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index e83d74a..cd2cf9f 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -512,9 +512,9 @@ static int get_priv_size(__u16 args)
- /*
-  * Re-calculate the size of private arguments
-  */
--static int adjust_priv_size(__u16 args, union iwreq_data *wrqu)
-+static int adjust_priv_size(__u16 args, struct iw_point *iwp)
- {
--	int	num = wrqu->data.length;
-+	int	num = iwp->length;
- 	int	max = args & IW_PRIV_SIZE_MASK;
- 	int	type = (args & IW_PRIV_TYPE_MASK) >> 12;
- 
-@@ -976,7 +976,7 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
- 			 * avoid leaking kernel bits outside. */
- 			if (!(descr->get_args & IW_PRIV_SIZE_FIXED)) {
- 				extra_size = adjust_priv_size(descr->get_args,
--							      &(iwr->u));
-+							      &(iwr->u.data));
- 			}
- 
- 			err = copy_to_user(iwr->u.data.pointer, extra,
--- 
-1.5.5.1.308.g1fbb5
-
+  Luis
