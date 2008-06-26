@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp239.poczta.interia.pl ([217.74.64.239]:39540 "EHLO
-	smtp239.poczta.interia.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754142AbYFMNVR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 09:21:17 -0400
-Received: from poczta.interia.pl (mi01.poczta.interia.pl [10.217.12.1])
-	by smtp239.poczta.interia.pl (INTERIA.PL) with ESMTP id 9BC0231AA55
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2008 15:21:14 +0200 (CEST)
-Received: from [192.168.1.7] (d90-129-241-239.cust.tele2.pl [90.129.241.239])
-	by poczta.interia.pl (INTERIA.PL) with ESMTP id 151F17698A2
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2008 15:21:14 +0200 (CEST)
-Message-ID: <4852745B.9030007@interia.pl> (sfid-20080613_152121_303876_6DBDBB4F)
-Date: Fri, 13 Jun 2008 15:21:31 +0200
-From: Maciek Kaliszewski <mkalkal@interia.pl>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: iwl3945 and WPA
-References: <4852658A.4040402@interia.pl> <1ba2fa240806130557s16f8ef99y639e4a1287c4f718@mail.gmail.com>
-In-Reply-To: <1ba2fa240806130557s16f8ef99y639e4a1287c4f718@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from c60.cesmail.net ([216.154.195.49]:17042 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751726AbYFZO5S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jun 2008 10:57:18 -0400
+Subject: Re: [Q] ath5k : doesn't support AP mode?
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: cs010101@gmail.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1214487200.20763.44.camel@johannes.berg>
+References: <002901c8d737$e51bb2f0$3b0aa8c0@39fb6b6b6f434b3>
+	 <1214449044.18897.15.camel@dv>
+	 (sfid-20080626_045727_909115_82C1268F)  <1214487200.20763.44.camel@johannes.berg>
+Content-Type: text/plain; charset=euc-kr
+Date: Thu, 26 Jun 2008 10:57:16 -0400
+Message-Id: <1214492236.30044.7.camel@dv> (sfid-20080626_165721_860821_C0229E79)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler wrote:
->
->> Invalid freq in scan results (BSSID=00:00:01:00:00:1d m=0 e=11)
->> Invalid freq in scan results (BSSID=00:00:01:00:00:1d m=0 e=2462)
->>     
->
-> What system kernel are you using. This looks something we've already solved...
-> Tomas
-> --
->   
-Kernel is
-uname -a
-Linux debian 2.6.24.2 #1 SMP Mon Feb 11 10:22:07 UTC 2008 x86_64 GNU/Linux
+On Thu, 2008-06-26 at 15:33 +0200, Johannes Berg wrote:
+> On Wed, 2008-06-25 at 22:57 -0400, Pavel Roskin wrote:
+> > On Thu, 2008-06-26 at 11:54 +0900, =B1=E8=BF=B5=C8=AF wrote:
+> > > Hello~
+> > >=20
+> > > Lately, I've researched for AP mode in linux. I'm testing 802.11a=
+ about
+> > > atheros 5414, rt61, zyDAS USB(a/b/g).
+> > > I know AP mode are supportted on Prism chipset, Atheros(madwifi).
+> > > then how the nic using atheros 5414 chipset?
+> >=20
+> > mac80211 based drivers including ath5k don't support AP mode yet.
+> > Please use MadWifi with it for now.
+>=20
+> s/use Madwifi.*\./help fix mac80211 AP mode./
 
-I've used iwl3945 driver included in this kernel , but also I've tried 
-compat-wireless-2008-06-13 . No change.
+That's probably not an answer expected by somebody researching what it
+supported now.  But I agree, it would be very nice to have more people
+working on the AP mode in mac80211.
 
-Regards
-Maciek Kaliszewski
-
-
-
-----------------------------------------------------------------------
-Podbij Dziki Zachod!Gra strategiczna online
-Sprawdz >>> http://link.interia.pl/f1dff
-
+--=20
+Regards,
+Pavel Roskin
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
