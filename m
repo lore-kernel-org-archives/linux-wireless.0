@@ -1,175 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:50499 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753230AbYFVPi7 (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.236]:19596 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756675AbYFZWhO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jun 2008 11:38:59 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Thomas Renninger <trenn@suse.de>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: [PATCH 08/12] rfkill: add notifier chains support
-Date: Sun, 22 Jun 2008 12:38:44 -0300
-Message-Id: <1214149128-5913-9-git-send-email-hmh@hmh.eng.br> (sfid-20080622_173912_393055_8ADEA97B)
-In-Reply-To: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
-References: <1214149128-5913-1-git-send-email-hmh@hmh.eng.br>
+	Thu, 26 Jun 2008 18:37:14 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so250147rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2008 15:37:13 -0700 (PDT)
+Message-ID: <1ba2fa240806261537h2dddf468h67243f84772d9da3@mail.gmail.com> (sfid-20080627_003756_956286_6612DD3B)
+Date: Fri, 27 Jun 2008 01:37:10 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: RFC: always enable MAC80211_RC_PID?
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Adrian Bunk" <bunk@kernel.org>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Adrian Bunk" <bunk@stusta.de>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	"Rindjunsky, Ron" <ron.rindjunsky@intel.com>
+In-Reply-To: <43e72e890806261435t3d06e955x590a6fafb223bbca@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080622125553.GB22539@cs181133002.pp.htv.fi>
+	 <43e72e890806220804i347b942claae7b725231afcce@mail.gmail.com>
+	 <1214298259.8967.260.camel@johannes.berg>
+	 <20080624124311.GC16021@cs181140183.pp.htv.fi>
+	 <20080624211222.GB25892@tuxdriver.com>
+	 <43e72e890806261435t3d06e955x590a6fafb223bbca@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a notifier chain for use by the rfkill class.  This notifier chain
-signals the following events (more to be added when needed):
+On Fri, Jun 27, 2008 at 12:35 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Tue, Jun 24, 2008 at 2:12 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+>> On Tue, Jun 24, 2008 at 03:43:14PM +0300, Adrian Bunk wrote:
+>>
+>>> Can we get one of either:
+>>> - all selected mac80211 algorithms are built into the mac80211 module or
+>>
+>> This seems fine to me.
+>
+> OK so just to be clear -- moving forward we strive to not allow driver
+> specific rate control algorithms and push out current ones into
+> mac80211? This would mean we don't have to *cleanup* support for
+> driver specific RCs but instead just have them stashed in as part of
+> the build. The difficulty here lies in ensuring they do work for well
+> for other drivers but I do agree it strives to cleanup RC code. I
+> think vendors also tend to use a few driver specific tweaks to boost
+> their own throughput in their own RCs though. Can't say for sure right
+> now of specific details but I'll try to get back to you with them.
+> Perhaps Tomas can say more about that for iwl's RCs.
+>
+Annual talk about rate scaling algorithm :)
+I understand of need of clean framework however:
+Our rate scaling algorithm has intimate knowledge of iwlwifi firmware
+and hardware and I'm currently not seeing any benefit for it for other
+HW.
+I'm also pretty much sure that no other algorithm can do same job for
+iwlwifi driver.
+For example the rate is not attached to each frame but supplied out of
+band in a form of 16 steps rate sale table. I've explained already
+benefits of this.
 
-  1. rfkill: rfkill device state has changed
-
-A pointer to the rfkill struct will be passed as a parameter.
-
-The notifier message types have been added to include/linux/rfkill.h
-instead of to include/linux/notifier.h in order to avoid the madness of
-modifying a header used globally (and that triggers an almost full tree
-rebuild every time it is touched) with information that is of interest only
-to code that includes the rfkill.h header.
-
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- include/linux/rfkill.h |    7 +++++
- net/rfkill/rfkill.c    |   70 +++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 74 insertions(+), 3 deletions(-)
-
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index c0cab7d..98667be 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -117,4 +117,11 @@ static inline char *rfkill_get_led_name(struct rfkill *rfkill)
- #endif
- }
- 
-+/* rfkill notification chain */
-+#define RFKILL_STATE_CHANGED		0x0001	/* state of a normal rfkill
-+						   switch has changed */
-+
-+int register_rfkill_notifier(struct notifier_block *nb);
-+int unregister_rfkill_notifier(struct notifier_block *nb);
-+
- #endif /* RFKILL_H */
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index fb56690..a561e35 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -46,6 +46,49 @@ MODULE_PARM_DESC(default_state,
- 
- static enum rfkill_state rfkill_states[RFKILL_TYPE_MAX];
- 
-+static BLOCKING_NOTIFIER_HEAD(rfkill_notifier_list);
-+
-+
-+/**
-+ * register_rfkill_notifier - Add notifier to rfkill notifier chain
-+ * @nb: pointer to the new entry to add to the chain
-+ *
-+ * See blocking_notifier_chain_register() for return value and further
-+ * observations.
-+ *
-+ * Adds a notifier to the rfkill notifier chain.  The chain will be
-+ * called with a pointer to the relevant rfkill structure as a parameter,
-+ * refer to include/linux/rfkill.h for the possible events.
-+ *
-+ * Notifiers added to this chain are to always return NOTIFY_DONE.  This
-+ * chain is a blocking notifier chain: notifiers can sleep.
-+ *
-+ * Calls to this chain may have been done through a workqueue.  One must
-+ * assume unordered asynchronous behaviour, there is no way to know if
-+ * actions related to the event that generated the notification have been
-+ * carried out already.
-+ */
-+int register_rfkill_notifier(struct notifier_block *nb)
-+{
-+	return blocking_notifier_chain_register(&rfkill_notifier_list, nb);
-+}
-+EXPORT_SYMBOL_GPL(register_rfkill_notifier);
-+
-+/**
-+ * unregister_rfkill_notifier - remove notifier from rfkill notifier chain
-+ * @nb: pointer to the entry to remove from the chain
-+ *
-+ * See blocking_notifier_chain_unregister() for return value and further
-+ * observations.
-+ *
-+ * Removes a notifier from the rfkill notifier chain.
-+ */
-+int unregister_rfkill_notifier(struct notifier_block *nb)
-+{
-+	return blocking_notifier_chain_unregister(&rfkill_notifier_list, nb);
-+}
-+EXPORT_SYMBOL_GPL(unregister_rfkill_notifier);
-+
- 
- static void rfkill_led_trigger(struct rfkill *rfkill,
- 			       enum rfkill_state state)
-@@ -62,14 +105,25 @@ static void rfkill_led_trigger(struct rfkill *rfkill,
- #endif /* CONFIG_RFKILL_LEDS */
- }
- 
-+static void notify_rfkill_state_change(struct rfkill *rfkill)
-+{
-+	blocking_notifier_call_chain(&rfkill_notifier_list,
-+			RFKILL_STATE_CHANGED,
-+			rfkill);
-+}
-+
- static void update_rfkill_state(struct rfkill *rfkill)
- {
--	enum rfkill_state newstate;
-+	enum rfkill_state newstate, oldstate;
- 
- 	if (rfkill->get_state) {
- 		mutex_lock(&rfkill->mutex);
--		if (!rfkill->get_state(rfkill->data, &newstate))
-+		if (!rfkill->get_state(rfkill->data, &newstate)) {
-+			oldstate = rfkill->state;
- 			rfkill->state = newstate;
-+			if (oldstate != newstate)
-+				notify_rfkill_state_change(rfkill);
-+		}
- 		mutex_unlock(&rfkill->mutex);
- 	}
- }
-@@ -93,8 +147,10 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
- 			rfkill->state = state;
- 	}
- 
--	if (force || rfkill->state != oldstate)
-+	if (force || rfkill->state != oldstate) {
- 		rfkill_led_trigger(rfkill, rfkill->state);
-+		notify_rfkill_state_change(rfkill);
-+	}
- 
- 	return retval;
- }
-@@ -139,12 +195,20 @@ EXPORT_SYMBOL(rfkill_switch_all);
-  */
- int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state)
- {
-+	enum rfkill_state oldstate;
-+
- 	if (state != RFKILL_STATE_OFF &&
- 	    state != RFKILL_STATE_ON)
- 		return -EINVAL;
- 
- 	mutex_lock(&rfkill->mutex);
-+
-+	oldstate = rfkill->state;
- 	rfkill->state = state;
-+
-+	if (state != oldstate)
-+		notify_rfkill_state_change(rfkill);
-+
- 	mutex_unlock(&rfkill->mutex);
- 
- 	return 0;
--- 
-1.5.5.4
-
+Detaching algorithm form the driver would at minimum require opening
+another API for rate scaling not usable by others. And this is not the
+end. This just doesn't worth the sweat if no other algorithm can be
+used for iwlwifi and this algorithm cannot be used by others.
+This would be cleaning code for sake of cleaning code without any
+benefits. If there be finally some other 11n card in Linux we can see
+the new picture and reevaluate.
+I'm not the Kconfig expert but  desalinizing the current iwlwifi
+driver for prize of removing MAC80211_RC_DEFAULT_NONE just doesn't
+feel OK.
+Thanks
+Tomas
