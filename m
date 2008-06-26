@@ -1,116 +1,339 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35335 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759415AbYFSSRn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 14:17:43 -0400
-Subject: Re: Broken fragmentation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240806191113nd6a221eiac9648edd3404a80@mail.gmail.com> (sfid-20080619_201352_223234_D04C033E)
-References: <1ba2fa240806190220l18fe5dcdsf44fe81412a5f35d@mail.gmail.com>
-	 <1213869365.1312.48.camel@johannes.berg>
-	 <1ba2fa240806190446n4d931e6ara4db156900e59e0d@mail.gmail.com>
-	 <1ba2fa240806190457w20dfe2d5pf06829b26d2722a3@mail.gmail.com>
-	 <1213878207.8967.6.camel@johannes.berg>
-	 <1ba2fa240806190608h3d833dbaua412446e8a9f560d@mail.gmail.com>
-	 <1213881855.8967.19.camel@johannes.berg>
-	 <1ba2fa240806190745u2fe7e435y3ca207af4156767b@mail.gmail.com>
-	 <1213889200.8967.26.camel@johannes.berg>
-	 <1ba2fa240806191113nd6a221eiac9648edd3404a80@mail.gmail.com>
-	 (sfid-20080619_201352_223234_D04C033E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-82nonJUmvMGchHTRG5gk"
-Date: Thu, 19 Jun 2008 20:16:59 +0200
-Message-Id: <1213899419.8967.59.camel@johannes.berg> (sfid-20080619_201813_107016_8007C908)
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:7542 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751256AbYFZUrS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jun 2008 16:47:18 -0400
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, adel.gadllah@gmail.com
+Subject: commit 5dc4dfd6165883b6629a48256dc4eadf76d6b65d
+Date: Thu, 26 Jun 2008 13:47:17 -0700
+Message-Id: <12145132373377-git-send-email-abhijeet.kolekar@intel.com> (sfid-20080626_224722_505891_21459960)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+    iwlwifi : Patch adds rfkill subsystem for 3945
+    
+    The patch removes the sysfs interface from iwl3945 and uses
+    the rfkill subsystem instead.
+    
+    Original patch by Adel, I fixed the patch to work it properly.
+    
+    Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+    Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+    Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 
---=-82nonJUmvMGchHTRG5gk
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2008-06-19 at 21:13 +0300, Tomas Winkler wrote:
-> On Thu, Jun 19, 2008 at 6:26 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Thu, 2008-06-19 at 17:45 +0300, Tomas Winkler wrote:
-> >> On Thu, Jun 19, 2008 at 4:24 PM, Johannes Berg
-> >> <johannes@sipsolutions.net> wrote:
-> >> > On Thu, 2008-06-19 at 16:08 +0300, Tomas Winkler wrote:
-> >> >> On Thu, Jun 19, 2008 at 3:23 PM, Johannes Berg
-> >> >> <johannes@sipsolutions.net> wrote:
-> >> >> >
-> >> >> >> > Now it crashes in the driver...maybe the txinfo to cb changes.=
- Looking into it.
-> >> >> >> > Tomas
-> >> >> >> Looks like this is the second part keyconf is null
-> >> >> >
-> >> >> > Part? You mean fragment? What encryption algorithm? I've quickly =
-looked
-> >> >> > and all of them seem to do the control.hw_key assignment in their
-> >> >> > respective _skb handler so it should be done for all fragments.
-> >> >>
-> >> >> The problem is w/o crypto
-> >> >> I think this is not set on each fragment
-> >> >> info->flags |=3D IEEE80211_TX_CTL_DO_NOT_ENCRYPT;
-> >> >
-> >> > Ouch, you're right, the whole tx info isn't properly initialised for
-> >> > fragments.
-> >> >
-> >> > Can you try putting
-> >> >
-> >> > memcpy(frag->cb, first->cb, sizeof(first->cb));
-> >> >
-> >> > at around line 690 of tx.c where this code is?
-> >> >
-> >> >                frag->priority =3D first->priority;
-> >> >                skb_reserve(frag, tx->local->tx_headroom +
-> >> >                                  IEEE80211_ENCRYPT_HEADROOM);
-> >> >
-> >> >
-> >> > [now I know what the cause is. I had another patch that used skb_seg=
-ment
-> >> > to do the fragmentation, but that was dropped and skb_segment does c=
-opy
-> >> > skb->cb while our code doesn't]
-> >>
-> >> No crash but still not at home. No fragmented traffic on the air...grr=
-r.
-> >
-> > Hmm, ok. I'll give it a try later.
->=20
-> Fragments are in the air but the peer is not able to reassemble them.
-> Something is wrong with the first fragment but I'm not sure yet.
-
-Hm, ok. got a packet capture? Maybe that was broken before, I remember
-having problems with fragmentation but putting it down to the
-known-to-be-completely-broken AP I was using.
-
-johannes
-
---=-82nonJUmvMGchHTRG5gk
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIWqKXAAoJEKVg1VMiehFYHZsP/2aji1bMSLcPIsM4ge+UvW0W
-qdzyfMFzYstlu2jDAxj7zrB4GIfxL+XgudMTztJdCNfjGgxnfNa1BmgKoEDvEpzV
-lscCFa29gtnTZlnwcm4oAUV416nP023I3Hf8ox8IgG3R2sIAh9G+56UF6aV3CHJa
-OE0a1iq3TFN65mqDjgeUbNQBrVEKxSZsI7eMZTuIs/biJmfEF1g7UmSWT+X4ronR
-vvZwDUN3ZzJADcZ48MaON7s6S4fBCob88La77WnKx5gZaavN4zpyn2tQ86DHrtLx
-Vpd1N5C4BMdkVV0DvzA4r96knISNo2pgGiNss58tRRODo9rwH3KuBb+53p5j6Xj2
-amExK4Q3CcO4nvUZOTqjVeodawc51Egy44Sib9Nrv8hm2/J1Ls2uu1doS1KfKunb
-OuM1TJl1Kmiy85atYup67dwMnsvEMjGgZHiyED+yq4sazACbV55MhuasXfSK6lW8
-TZnkRyfPp5KywP2nAmdACSJwkdGkh8IaHdKhvpzobDLR80kZbLL+1Y8C87EmTHOt
-wRwDxb+d7p+ZXu9bL8D2eE6idcggp6v9n/xTUk/ByqVR8DqXBVUprp+jAlWiX0zn
-1WNJuoEObgpg9WORNjb1/iiahYbSGEdC0qOTGirWVl38Wug702FMvx3/J4OYyccq
-qyj0L8ix9b8ZACD1fzWm
-=rhUz
------END PGP SIGNATURE-----
-
---=-82nonJUmvMGchHTRG5gk--
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index a9b3eda..a774978 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -36,6 +36,10 @@
+ #include <linux/kernel.h>
+ #include <net/ieee80211_radiotap.h>
+ 
++/*used for rfkill*/
++#include <linux/rfkill.h>
++#include <linux/input.h>
++
+ /* Hardware specific file defines the PCI IDs table for that hardware module */
+ extern struct pci_device_id iwl3945_hw_card_ids[];
+ 
+@@ -686,6 +690,23 @@ enum {
+ 
+ #endif
+ 
++#ifdef CONFIG_IWLWIFI_RFKILL
++struct iwl3945_priv;
++
++struct iwl3945_rfkill_mngr {
++	struct rfkill *rfkill;
++	struct input_dev *input_dev;
++};
++
++void iwl3945_rfkill_set_hw_state(struct iwl3945_priv *priv);
++void iwl3945_rfkill_unregister(struct iwl3945_priv *priv);
++int iwl3945_rfkill_init(struct iwl3945_priv *priv);
++#else
++static inline void iwl3945_rfkill_set_hw_state(struct iwl3945_priv *priv) {}
++static inline void iwl3945_rfkill_unregister(struct iwl3945_priv *priv) {}
++static inline int iwl3945_rfkill_init(struct iwl3945_priv *priv) { return 0; }
++#endif
++
+ #define IWL_MAX_NUM_QUEUES IWL39_MAX_NUM_QUEUES
+ 
+ struct iwl3945_priv {
+@@ -779,6 +800,10 @@ struct iwl3945_priv {
+ 	struct iwl3945_init_alive_resp card_alive_init;
+ 	struct iwl3945_alive_resp card_alive;
+ 
++#ifdef CONFIG_IWLWIFI_RFKILL
++	struct iwl3945_rfkill_mngr rfkill_mngr;
++#endif
++
+ #ifdef CONFIG_IWL3945_LEDS
+ 	struct iwl3945_led led[IWL_LED_TRG_MAX];
+ 	unsigned long last_blink_time;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index cca2119..eabbb85 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -5913,7 +5913,9 @@ static void __iwl3945_down(struct iwl3945_priv *priv)
+ 			       test_bit(STATUS_GEO_CONFIGURED, &priv->status) <<
+ 					STATUS_GEO_CONFIGURED |
+ 			       test_bit(STATUS_IN_SUSPEND, &priv->status) <<
+-					STATUS_IN_SUSPEND;
++					STATUS_IN_SUSPEND |
++				test_bit(STATUS_EXIT_PENDING, &priv->status) <<
++					STATUS_EXIT_PENDING;
+ 		goto exit;
+ 	}
+ 
+@@ -5928,7 +5930,9 @@ static void __iwl3945_down(struct iwl3945_priv *priv)
+ 			test_bit(STATUS_IN_SUSPEND, &priv->status) <<
+ 				STATUS_IN_SUSPEND |
+ 			test_bit(STATUS_FW_ERROR, &priv->status) <<
+-				STATUS_FW_ERROR;
++				STATUS_FW_ERROR |
++			test_bit(STATUS_EXIT_PENDING, &priv->status) <<
++				STATUS_EXIT_PENDING;
+ 
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 	iwl3945_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+@@ -6000,11 +6004,12 @@ static int __iwl3945_up(struct iwl3945_priv *priv)
+ 	else {
+ 		set_bit(STATUS_RF_KILL_HW, &priv->status);
+ 		if (!test_bit(STATUS_IN_SUSPEND, &priv->status)) {
++			iwl3945_rfkill_set_hw_state(priv);
+ 			IWL_WARNING("Radio disabled by HW RF Kill switch\n");
+ 			return -ENODEV;
+ 		}
+ 	}
+-
++	iwl3945_rfkill_set_hw_state(priv);
+ 	iwl3945_write32(priv, CSR_INT, 0xFFFFFFFF);
+ 
+ 	rc = iwl3945_hw_nic_init(priv);
+@@ -6060,6 +6065,7 @@ static int __iwl3945_up(struct iwl3945_priv *priv)
+ 
+ 	set_bit(STATUS_EXIT_PENDING, &priv->status);
+ 	__iwl3945_down(priv);
++	clear_bit(STATUS_EXIT_PENDING, &priv->status);
+ 
+ 	/* tried to restart and config the device for as long as our
+ 	 * patience could withstand */
+@@ -6127,6 +6133,8 @@ static void iwl3945_bg_rf_kill(struct work_struct *work)
+ 				    "Kill switch must be turned off for "
+ 				    "wireless networking to work.\n");
+ 	}
++
++	iwl3945_rfkill_set_hw_state(priv);
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
+@@ -7409,37 +7417,6 @@ static DRIVER_ATTR(debug_level, S_IWUSR | S_IRUGO,
+ 
+ #endif /* CONFIG_IWL3945_DEBUG */
+ 
+-static ssize_t show_rf_kill(struct device *d,
+-			    struct device_attribute *attr, char *buf)
+-{
+-	/*
+-	 * 0 - RF kill not enabled
+-	 * 1 - SW based RF kill active (sysfs)
+-	 * 2 - HW based RF kill active
+-	 * 3 - Both HW and SW based RF kill active
+-	 */
+-	struct iwl3945_priv *priv = (struct iwl3945_priv *)d->driver_data;
+-	int val = (test_bit(STATUS_RF_KILL_SW, &priv->status) ? 0x1 : 0x0) |
+-		  (test_bit(STATUS_RF_KILL_HW, &priv->status) ? 0x2 : 0x0);
+-
+-	return sprintf(buf, "%i\n", val);
+-}
+-
+-static ssize_t store_rf_kill(struct device *d,
+-			     struct device_attribute *attr,
+-			     const char *buf, size_t count)
+-{
+-	struct iwl3945_priv *priv = (struct iwl3945_priv *)d->driver_data;
+-
+-	mutex_lock(&priv->mutex);
+-	iwl3945_radio_kill_sw(priv, buf[0] == '1');
+-	mutex_unlock(&priv->mutex);
+-
+-	return count;
+-}
+-
+-static DEVICE_ATTR(rf_kill, S_IWUSR | S_IRUGO, show_rf_kill, store_rf_kill);
+-
+ static ssize_t show_temperature(struct device *d,
+ 				struct device_attribute *attr, char *buf)
+ {
+@@ -7925,7 +7902,6 @@ static struct attribute *iwl3945_sysfs_entries[] = {
+ #endif
+ 	&dev_attr_power_level.attr,
+ 	&dev_attr_retry_rate.attr,
+-	&dev_attr_rf_kill.attr,
+ 	&dev_attr_rs_window.attr,
+ 	&dev_attr_statistics.attr,
+ 	&dev_attr_status.attr,
+@@ -8166,6 +8142,11 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	pci_save_state(pdev);
+ 	pci_disable_device(pdev);
+ 
++	err = iwl3945_rfkill_init(priv);
++	if (err)
++		IWL_ERROR("Unable to initialize RFKILL system. "
++				  "Ignoring error: %d\n", err);
++
+ 	return 0;
+ 
+  out_free_geos:
+@@ -8228,6 +8209,7 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
+ 
+ 	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
+ 
++	iwl3945_rfkill_unregister(priv);
+ 	iwl3945_dealloc_ucode_pci(priv);
+ 
+ 	if (priv->rxq.bd)
+@@ -8296,6 +8278,140 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
+ 
+ #endif /* CONFIG_PM */
+ 
++/*************** RFKILL FUNCTIONS **********/
++#ifdef CONFIG_IWLWIFI_RFKILL
++/* software rf-kill from user */
++static int iwl3945_rfkill_soft_rf_kill(void *data, enum rfkill_state state)
++{
++	struct iwl3945_priv *priv = data;
++	int err = 0;
++
++	if (!priv->rfkill_mngr.rfkill)
++	return 0;
++
++	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
++		return 0;
++
++	IWL_DEBUG_RF_KILL("we recieved soft RFKILL set to state %d\n", state);
++	mutex_lock(&priv->mutex);
++
++	switch (state) {
++	case RFKILL_STATE_ON:
++		iwl3945_radio_kill_sw(priv, 0);
++		/* if HW rf-kill is set dont allow ON state */
++		if (iwl3945_is_rfkill(priv))
++			err = -EBUSY;
++		break;
++	case RFKILL_STATE_OFF:
++		iwl3945_radio_kill_sw(priv, 1);
++		if (!iwl3945_is_rfkill(priv))
++			err = -EBUSY;
++		break;
++	}
++	mutex_unlock(&priv->mutex);
++
++	return err;
++}
++
++int iwl3945_rfkill_init(struct iwl3945_priv *priv)
++{
++	struct device *device = wiphy_dev(priv->hw->wiphy);
++	int ret = 0;
++
++	BUG_ON(device == NULL);
++
++	IWL_DEBUG_RF_KILL("Initializing RFKILL.\n");
++	priv->rfkill_mngr.rfkill = rfkill_allocate(device, RFKILL_TYPE_WLAN);
++	if (!priv->rfkill_mngr.rfkill) {
++		IWL_ERROR("Unable to allocate rfkill device.\n");
++		ret = -ENOMEM;
++		goto error;
++	}
++
++	priv->rfkill_mngr.rfkill->name = priv->cfg->name;
++	priv->rfkill_mngr.rfkill->data = priv;
++	priv->rfkill_mngr.rfkill->state = RFKILL_STATE_ON;
++	priv->rfkill_mngr.rfkill->toggle_radio = iwl3945_rfkill_soft_rf_kill;
++	priv->rfkill_mngr.rfkill->user_claim_unsupported = 1;
++
++	priv->rfkill_mngr.rfkill->dev.class->suspend = NULL;
++	priv->rfkill_mngr.rfkill->dev.class->resume = NULL;
++
++	priv->rfkill_mngr.input_dev = input_allocate_device();
++	if (!priv->rfkill_mngr.input_dev) {
++		IWL_ERROR("Unable to allocate rfkill input device.\n");
++		ret = -ENOMEM;
++		goto freed_rfkill;
++	}
++
++	priv->rfkill_mngr.input_dev->name = priv->cfg->name;
++	priv->rfkill_mngr.input_dev->phys = wiphy_name(priv->hw->wiphy);
++	priv->rfkill_mngr.input_dev->id.bustype = BUS_HOST;
++	priv->rfkill_mngr.input_dev->id.vendor = priv->pci_dev->vendor;
++	priv->rfkill_mngr.input_dev->dev.parent = device;
++	priv->rfkill_mngr.input_dev->evbit[0] = BIT(EV_KEY);
++	set_bit(KEY_WLAN, priv->rfkill_mngr.input_dev->keybit);
++
++	ret = rfkill_register(priv->rfkill_mngr.rfkill);
++	if (ret) {
++		IWL_ERROR("Unable to register rfkill: %d\n", ret);
++		goto free_input_dev;
++	}
++
++	ret = input_register_device(priv->rfkill_mngr.input_dev);
++	if (ret) {
++		IWL_ERROR("Unable to register rfkill input device: %d\n", ret);
++		goto unregister_rfkill;
++	}
++
++	IWL_DEBUG_RF_KILL("RFKILL initialization complete.\n");
++	return ret;
++
++unregister_rfkill:
++	rfkill_unregister(priv->rfkill_mngr.rfkill);
++	priv->rfkill_mngr.rfkill = NULL;
++
++free_input_dev:
++	input_free_device(priv->rfkill_mngr.input_dev);
++	priv->rfkill_mngr.input_dev = NULL;
++
++freed_rfkill:
++	if (priv->rfkill_mngr.rfkill != NULL)
++		rfkill_free(priv->rfkill_mngr.rfkill);
++	priv->rfkill_mngr.rfkill = NULL;
++
++error:
++	IWL_DEBUG_RF_KILL("RFKILL initialization complete.\n");
++	return ret;
++}
++
++void iwl3945_rfkill_unregister(struct iwl3945_priv *priv)
++{
++
++	if (priv->rfkill_mngr.input_dev)
++		input_unregister_device(priv->rfkill_mngr.input_dev);
++
++	if (priv->rfkill_mngr.rfkill)
++		rfkill_unregister(priv->rfkill_mngr.rfkill);
++
++	priv->rfkill_mngr.input_dev = NULL;
++	priv->rfkill_mngr.rfkill = NULL;
++}
++
++/* set rf-kill to the right state. */
++void iwl3945_rfkill_set_hw_state(struct iwl3945_priv *priv)
++{
++
++	if (!priv->rfkill_mngr.rfkill)
++		return;
++
++	if (!iwl3945_is_rfkill(priv))
++		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_ON;
++	else
++		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_OFF;
++}
++#endif
++
+ /*****************************************************************************
+  *
+  * driver and module entry point
