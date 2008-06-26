@@ -1,125 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:15159 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751869AbYFJUfN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 16:35:13 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so1746498ywe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2008 13:35:12 -0700 (PDT)
-Subject: [PATCH] mac80211: tkip.c consolidate tkip IV writing in helper
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 10 Jun 2008 13:35:09 -0700
-Message-Id: <1213130110.5974.123.camel@brick> (sfid-20080610_223520_517155_65179732)
-Mime-Version: 1.0
+Received: from web23108.mail.ird.yahoo.com ([217.146.189.48]:32712 "HELO
+	web23108.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750741AbYFZAo5 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jun 2008 20:44:57 -0400
+Date: Thu, 26 Jun 2008 00:44:55 +0000 (GMT)
+From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+Subject: Re: [RFC][PATCH] Realtek 8187B wireless support with product id 0x8197/0x8189
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Matthew Garrett <mjg@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	herton@mandriva.com.br, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, andreamrl@tiscali.it, linville@redhat.com
+In-Reply-To: <20080626002645.GB2618@srcf.ucam.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-ID: <779389.39286.qm@web23108.mail.ird.yahoo.com> (sfid-20080626_024500_805078_FE73AE9C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/tkip.c |   25 ++++++++++++++-----------
- net/mac80211/tkip.h |    4 ++--
- net/mac80211/wpa.c  |    8 +-------
- 3 files changed, 17 insertions(+), 20 deletions(-)
+--- On Thu, 26/6/08, Matthew Garrett <mjg@redhat.com> wrote:
+<snipped>
+> One thing I noticed is that the 0x8187 USB ID seems to be
+> used for both 
+> plain and b devices, so I suspect we're going to need
+> some more 
+> intelligent probing than just basing it off USB ID. IIRC,
+> the endpoint 
+> descriptions are different?
 
-diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-index a00cf1e..a8900e3 100644
---- a/net/mac80211/tkip.c
-+++ b/net/mac80211/tkip.c
-@@ -64,6 +64,15 @@ static u16 tkipS(u16 val)
- 	return tkip_sbox[val & 0xff] ^ swab16(tkip_sbox[val >> 8]);
- }
- 
-+static u8 *write_tkip_iv(u8 *pos, u16 iv16)
-+{
-+	*pos++ = iv16 >> 8;
-+	*pos++ = ((iv16 >> 8) | 0x20) & 0x7f;
-+	*pos++ = iv16 & 0xFF;
-+	return pos;
-+}
-+
-+
- /*
-  * P1K := Phase1(TA, TK, TSC)
-  * TA = transmitter address (48 bits)
-@@ -123,12 +132,9 @@ static void tkip_mixing_phase2(struct ieee80211_key *key, struct tkip_ctx *ctx,
- 	ppk[4] += ror16(ppk[3], 1);
- 	ppk[5] += ror16(ppk[4], 1);
- 
--	rc4key[0] = tsc_IV16 >> 8;
--	rc4key[1] = ((tsc_IV16 >> 8) | 0x20) & 0x7f;
--	rc4key[2] = tsc_IV16 & 0xFF;
--	rc4key[3] = ((ppk[5] ^ get_unaligned_le16(tk)) >> 1) & 0xFF;
-+	rc4key = write_tkip_iv(rc4key, tsc_IV16);
-+	*rc4key++ = ((ppk[5] ^ get_unaligned_le16(tk)) >> 1) & 0xFF;
- 
--	rc4key += 4;
- 	for (i = 0; i < 6; i++)
- 		put_unaligned_le16(ppk[i], rc4key + 2 * i);
- }
-@@ -136,12 +142,9 @@ static void tkip_mixing_phase2(struct ieee80211_key *key, struct tkip_ctx *ctx,
- /* Add TKIP IV and Ext. IV at @pos. @iv0, @iv1, and @iv2 are the first octets
-  * of the IV. Returns pointer to the octet following IVs (i.e., beginning of
-  * the packet payload). */
--u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
--			   u8 iv0, u8 iv1, u8 iv2)
-+u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key, u16 iv16)
- {
--	*pos++ = iv0;
--	*pos++ = iv1;
--	*pos++ = iv2;
-+	pos = write_tkip_iv(pos, iv16); 
- 	*pos++ = (key->conf.keyidx << 6) | (1 << 5) /* Ext IV */;
- 	put_unaligned_le32(key->u.tkip.tx.iv32, pos);
- 	return pos + 4;
-@@ -213,7 +216,7 @@ void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
- 	u8 rc4key[16];
- 
- 	ieee80211_tkip_gen_rc4key(key, ta, rc4key);
--	pos = ieee80211_tkip_add_iv(pos, key, rc4key[0], rc4key[1], rc4key[2]);
-+	pos = ieee80211_tkip_add_iv(pos, key, key->u.tkip.tx.iv16);
- 	ieee80211_wep_encrypt_data(tfm, rc4key, 16, pos, payload_len);
- }
- 
-diff --git a/net/mac80211/tkip.h b/net/mac80211/tkip.h
-index b890427..d471438 100644
---- a/net/mac80211/tkip.h
-+++ b/net/mac80211/tkip.h
-@@ -13,8 +13,8 @@
- #include <linux/crypto.h>
- #include "key.h"
- 
--u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key,
--			  u8 iv0, u8 iv1, u8 iv2);
-+u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key, u16 iv16);
-+
- void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
- 				 struct ieee80211_key *key,
- 				 u8 *pos, size_t payload_len, u8 *ta);
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 9834cec..345e10e 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -198,14 +198,8 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 		key->u.tkip.tx.iv32++;
- 
- 	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
--		hdr = (struct ieee80211_hdr *)skb->data;
--
- 		/* hwaccel - with preallocated room for IV */
--		ieee80211_tkip_add_iv(pos, key,
--				      (u8) (key->u.tkip.tx.iv16 >> 8),
--				      (u8) (((key->u.tkip.tx.iv16 >> 8) | 0x20) &
--					    0x7f),
--				      (u8) key->u.tkip.tx.iv16);
-+		ieee80211_tkip_add_iv(pos, key, key->u.tkip.tx.iv16);
- 
- 		info->control.hw_key = &tx->key->conf;
- 		return 0;
--- 
-1.5.6.rc2.261.ga8fbe
+This is my /proc/bus/usb/devices entry- anybody who has a 0x8187 which 
+behaves like a 8187b posting theirs? You remember correctly - 8187 
+sends through endpoint 2, 8187b uses 4,5,6,7 and 12 (0x0c). 
+----------
+T:  Bus=01 Lev=01 Prnt=01 Port=05 Cnt=01 Dev#=  2 Spd=480 MxCh= 0
+D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
+P:  Vendor=0bda ProdID=8197 Rev= 2.00
+S:  Manufacturer=Manufacturer_Realtek
+S:  Product=RTL8187B_WLAN_Adapter 
+S:  SerialNumber=<masked>
+C:* #Ifs= 1 Cfg#= 1 Atr=80 MxPwr=500mA
+I:* If#= 0 Alt= 0 #EPs= 9 Cls=ff(vend.) Sub=ff Prot=ff Driver=rtl8187
+E:  Ad=83(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=04(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=05(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=06(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=07(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=89(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=0a(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=0b(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+E:  Ad=0c(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms
+------------
 
 
-
+      __________________________________________________________
+Sent from Yahoo! Mail.
+A Smarter Email http://uk.docs.yahoo.com/nowyoucan.html
