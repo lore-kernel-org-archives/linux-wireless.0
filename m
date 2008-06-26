@@ -1,137 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:22500 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751295AbYFKRKy (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40169 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751422AbYFZSgv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 13:10:54 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so2579730waf.23
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jun 2008 10:10:53 -0700 (PDT)
-Message-ID: <1ba2fa240806111010r54772177r9b274590f8fa89d8@mail.gmail.com> (sfid-20080611_191057_375259_11808A85)
-Date: Wed, 11 Jun 2008 20:10:53 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
-Subject: Re: [PATCH 01/12] rfkill: clarify meaning of rfkill states
-Cc: "Matthew Garrett" <mjg@redhat.com>,
-	"Dan Williams" <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Ivo van Doorn" <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, "Dmitry Torokhov" <dtor@mail.ru>
-In-Reply-To: <20080610041136.GA20310@khazad-dum.debian.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1ba2fa240806041607j10841ac0qb11fe0d0b27953d8@mail.gmail.com>
-	 <1212667955.25730.29.camel@localhost.localdomain>
-	 <20080605130323.GB3413@khazad-dum.debian.net>
-	 <1212677207.28545.56.camel@localhost.localdomain>
-	 <1212696826.13915.1256967905@webmail.messagingengine.com>
-	 <1212722763.1026.17.camel@localhost.localdomain>
-	 <1212758662.26514.5.camel@localhost.localdomain>
-	 <20080606141419.GA3444@khazad-dum.debian.net>
-	 <20080608201603.GA25453@srcf.ucam.org>
-	 <20080610041136.GA20310@khazad-dum.debian.net>
+	Thu, 26 Jun 2008 14:36:51 -0400
+Subject: Re: [Q] ath5k : doesn't support AP mode?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: Pavel Roskin <proski@gnu.org>, cs010101@gmail.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <69e28c910806261134t4c6b324dj86460605e06a08c8@mail.gmail.com> (sfid-20080626_203404_285775_DC289879)
+References: <002901c8d737$e51bb2f0$3b0aa8c0@39fb6b6b6f434b3>
+	 <1214449044.18897.15.camel@dv> <1214487200.20763.44.camel@johannes.berg>
+	 <1214492236.30044.7.camel@dv>
+	 <69e28c910806260846s3b02cdddlca3ac138acadd8bd@mail.gmail.com>
+	 <1214496086.30722.14.camel@dv> <1214501242.3783.7.camel@johannes.berg>
+	 <69e28c910806261109i28fe2c29t5218f32f5e65c378@mail.gmail.com>
+	 <1214504454.3783.18.camel@johannes.berg>
+	 <69e28c910806261134t4c6b324dj86460605e06a08c8@mail.gmail.com>
+	 (sfid-20080626_203404_285775_DC289879)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yDXnZBewVa/BBYIN9Tgm"
+Date: Thu, 26 Jun 2008 20:36:07 +0200
+Message-Id: <1214505367.3783.28.camel@johannes.berg> (sfid-20080626_203656_645096_2BDA425A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 10, 2008 at 7:11 AM, Henrique de Moraes Holschuh
-<hmh@hmh.eng.br> wrote:
-> On Sun, 08 Jun 2008, Matthew Garrett wrote:
->> On Fri, Jun 06, 2008 at 11:14:19AM -0300, Henrique de Moraes Holschuh wrote:
->> > 1. Every transmitter shall have ONE, and just ONE (not zero, not two,
->> > not more) rfkill class attached.  For those transmitters lacking support
->> > in hardware to make it block, the drivers shall quiesce them and avoid
->> > doing anything to cause transmissions, or even use bus tricks to power
->> > the device down (i.e. the driver will emulate a switch capable of doing
->> > the blocking).
->>
->> How do we enforce this? iwl4965 provides an rfkill device, but hp-wmi
->> will also provide one for the wifi. If I swap out the wireless card for
->> something else, I may lose the card-specific rfkill device.
->
-> Let's define some very STRICT terminology to avoid confusion.
->
-> rfkill class:  the sysfs rfkill class, related to struct rfkill.
->
-> rfkill class attached [to a Linux struct device]: a device whose
->  struct device was given to rfkill_allocate() as the parent.
->
-> transmitter:  part of a wireless device.  So far, every wireless device
-> I have seen has only one transmitter from the kernel PoV.  A device
-> with two transmitters would be able to transmit two different information
-> streams at the same time, with different parameters (such as frequency,
-> power).
->
-> transmitter != switch, so hp-wmi, thinkpad-acpi, and anything else that is
-> not an actual wireless hardware device IS NOT INCLUDED in that "one and just
-> one" constraint.  In fact, thinkpad-acpi has two rfkill classes attached to
-> its main platform device, one for the bluetooth softswitch, and another for
-> the wwan softswitch.
->
-> So, "Every transmitter shall have ONE and just ONE rfkill class attached."
-> just means that you call rfkill_allocate with that device as the parent just
-> ONCE per transmitter (and everything I have seen so far has just one
-> transmitter).
 
+--=-yDXnZBewVa/BBYIN9Tgm
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Not that I cannot read the code, but what this rkill class actually
-should do according your vision?
-Does it implement radio-state state machine....notification hub for
-rfkill switches ...
+Can you please remove some of the text you're quoting? Thanks.
+=EF=BB=BF
+> > actually links to the patch so what is your point?
+>=20
+> It liks to your series file, which is mostly unusable due to the NPUB
+> patches. (When I wrote the post, there was an additional problem with
+> the text that suggested that more than just that patch is needed.)
+> Essentially, one has to patch the patch first.
 
+Is it really too much to ask to read the first four paragraphs of my
+series file? I can put in some arrow ascii art if you prefer...
 
+johannes
 
->
-> Which also means that, for wireless drivers (which have transmitters), you
-> need to synthesize the "device rfkill state" to give to that rfkill class.
-> THE TRANSMITTER MIGHT BE UNDER THE EFFECT OF MORE THAN ONE RFKILL LINE.
->
-> And if the device [transmitter] has NO rfkill capabilities by itself, we
-> emulate the minimum of one in software [per transmitter].   If the device
-> has one input pin for rfkill, that one is also taken into account when
-> generating the state for the ONLY ONE rfkill class attached to that device
-> [per transmitter], etc.
->
-> Now, firmware switches are different, and something for another email that
-> I haven't typed in yet (busy in real life right now).
->
-> An example:
->
-> ipw4965 probably has two rfkill controls in itself (an input pin for a
-> hardkill line, and an R/W IO register to help its driver (ilw4965) implement
-> a rfkill softswitch).  Those TWO rfkill inputs are to be combined into just
-> ONE rfkill class which will be attached to the Linux device provided by
-> ilw4965.  This is the end of the story from the PoC of the ilw4965 module.
->
+--=-yDXnZBewVa/BBYIN9Tgm
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-iwl4965 has actually one more rf kill switch. It switches itself off
-if it goes over critical temperature.
-For NIC it looks like temporal rfkill.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Tomas
+iQIcBAABAgAGBQJIY+GTAAoJEKVg1VMiehFYacIQAJNoyvILmqAurV0dGVIItwk8
+61jsoi1X5Za9/H2Ra0FAceW2DS76OfgjfV+uYS18cQftFzTVkbBbOJ0M65SmiEzf
+SYuaiKkK+Z3R80fsem6o4jJpZM5sBoz7ITLeJmVSL81nKY7Rg+Eo3uwf75c/dPs/
+CWNTtU2QuXWbSmZMhnmKzzeCKb5RNUjXMhth/GdPtoJeEVO6ceHXcgCWt1nRZ4PW
+NytsSJFz7EK9Aeg7yOhCRi4CIXpHlhVxC/fgjC/1OHwUwJ/Fy6zZ7YMcKbZIOo2+
+/Tw1tyUF5d3H2A7GLa3WBD554c0httfG1H78W3i8QCzwxpyqBrs41Vd9i/2NhIoJ
+HclhxxxrwzkH0w/yVEdB6a6M2kloX1F77s02lfMGDpKHJdOr+nxCiQJuBIp+tYB3
+DnxV/r3xAdEFj6mw9qk3kB51bPtkR/HOoroPCR9Kkc23XLJCDEB9TOjWo3tK/Nhz
+gw2Dg7gl78ydXvHZC992x/UmKyr5H6DY1rkgvY+N/ranN21ewX4VBi7+ty4WQd1W
+Xta8BPaZH6PRomuOPU7yUPhb/7szYKGyRrYVHan0FWGemrOK8mv00BbbfMDPuZX6
+XIG8QaXs0VkOwar+JRKldv+/8gVbGSLbt0knoNsFgqBzmZKoc6qB6BZBukGto+H1
+COAL5EMGNMIxxNPEq9WU
+=N6iJ
+-----END PGP SIGNATURE-----
 
+--=-yDXnZBewVa/BBYIN9Tgm--
 
-> hp-wmi probably has one softswitch it controls, that ends up connected to
-> that input pin in the ipw4965 card so you end up being able to use a hp-wmi
-> softswitch to hardkill the ipw4965 card.  This IS expected, and it will not
-> matter or break anything.  In the current rfkill incarnation, rfkill doesn't
-> understand or know or want to know about rfkill switch topology as it
-> stands.
->
-> Did I manage to get the idea across, this time?  Remember, I am not
-> describing the rfkill class interactions for switches in that email, JUST
-> for wireless drivers, which hp-wmi, thinkpad-acpi, etc are not...
->
-> What happens on the hp-wmi side when the ipw4965 card is removed, is to be
-> explained in the other email about switches, but it is not much.  Basically,
-> hp-wmi has to be written in such a way that it won't matter for the user,
-> and THERE is the real reason why one must never confuse the softswitch
-> control with input devices.  Remember that as long as rfkill-input is
-> loaded, if anything sends a "change all WLAN rfkill switches" input event,
-> all WLAN rfkill switches WILL be changed, regardless of whether they are
-> wired among themselves, or completely independent.
->
-> --
->  "One disk to rule them all, One disk to find them. One disk to bring
->  them all and in the darkness grind them. In the Land of Redmond
->  where the shadows lie." -- The Silicon Valley Tarot
->  Henrique Holschuh
->
