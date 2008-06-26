@@ -1,31 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.240]:43074 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753035AbYF3I4e (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.179]:29352 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752619AbYFZXD6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 04:56:34 -0400
-Received: by an-out-0708.google.com with SMTP id d40so276164and.103
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2008 01:56:33 -0700 (PDT)
-Message-ID: <43e72e890806300156g6b3e4f81ld371feec99efe022@mail.gmail.com> (sfid-20080630_105642_015203_750C4255)
-Date: Mon, 30 Jun 2008 01:56:33 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Tomas Winkler" <tomas.winkler@intel.com>
-Subject: Re: [PATCH 1/1] compat-wireless: fix compilation of mac80211
-Cc: compat-masters@lists.madwifi.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1214815465-529-1-git-send-email-tomas.winkler@intel.com>
+	Thu, 26 Jun 2008 19:03:58 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so147589waf.23
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2008 16:03:56 -0700 (PDT)
+Message-ID: <1ba2fa240806261603g30c3e757y9166c2f9e05f7666@mail.gmail.com> (sfid-20080627_010402_149025_79CCD304)
+Date: Fri, 27 Jun 2008 02:03:56 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>,
+	"David Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: compat-wireless high packet loss.
+Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
+	"Cohen, Guy" <guy.cohen@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1214815465-529-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 30, 2008 at 1:44 AM, Tomas Winkler <tomas.winkler@intel.com> wrote:
-> This fix the compilation of mac80211 if it's not enabled
-> in the target kernel.
-> compat-wireless everything is compiled as module
->
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-
-Applied, thanks.
-
-  Luis
+We've experienced very high packet loss when using latest
+compat-wireless witth iwlwifi driver over 2.6.24 and 2.6.25 stable
+kernels. This is not happening with 2.6.26-rc3 as a target kernel (not
+sure about rc1 and rc2)
+The traffic is UDP TX with large tx buffers ~26000.
+We are still investigating yet if someone has any idea please share with us.
+Thanks
+Tomas
