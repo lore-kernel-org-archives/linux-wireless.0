@@ -1,120 +1,363 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.235]:52700 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754697AbYFMM5l (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:22088 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756073AbYFZU5y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 08:57:41 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2506600rvb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2008 05:57:39 -0700 (PDT)
-Message-ID: <1ba2fa240806130557s16f8ef99y639e4a1287c4f718@mail.gmail.com> (sfid-20080613_145745_260058_E8206A60)
-Date: Fri, 13 Jun 2008 15:57:29 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Maciek Kaliszewski" <mkalkal@interia.pl>
-Subject: Re: iwl3945 and WPA
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4852658A.4040402@interia.pl>
+	Thu, 26 Jun 2008 16:57:54 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so45901nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2008 13:57:51 -0700 (PDT)
+To: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Subject: Re: commit 5dc4dfd6165883b6629a48256dc4eadf76d6b65d
+Date: Thu, 26 Jun 2008 22:59:21 +0200
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	adel.gadllah@gmail.com
+References: <12145132373377-git-send-email-abhijeet.kolekar@intel.com>
+In-Reply-To: <12145132373377-git-send-email-abhijeet.kolekar@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <4852658A.4040402@interia.pl>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200806262259.21764.IvDoorn@gmail.com> (sfid-20080626_225800_218406_0E65E7AE)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 13, 2008 at 3:18 PM, Maciek Kaliszewski <mkalkal@interia.pl> wrote:
-> I cannot connect to my WIFI/WPA network using iwl3945 driver.
->
-> debian:/home/u# iwlist wlan0_rename scanning
-> wlan0_rename  Scan completed :
->         Cell 01 - Address: 00:1D:7E:43:B3:3F
->                   ESSID:"APTEKA"
->                   Mode:Master
->                   Channel:11
->                   Frequency:2.462 GHz (Channel 11)
->                   Quality=73/100  Signal level:-61 dBm  Noise level=-127 dBm
->                   Encryption key:on
->                   IE: WPA Version 1
->                       Group Cipher : TKIP
->                       Pairwise Ciphers (1) : TKIP
->                       Authentication Suites (1) : PSK
->                   Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 18 Mb/s
->                             24 Mb/s; 36 Mb/s; 54 Mb/s; 6 Mb/s; 9 Mb/s
->                             12 Mb/s; 48 Mb/s
->                   Extra:tsf=0000003b5a033363
->
-> debian:/home/u# cat /etc/wpa_supplicant.conf
-> ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=root
-> network={
->    ssid="APTEKA"
->    scan_ssid=1
->    key_mgmt=WPA-PSK
->    psk="xxx"
-> }
->
->
-> debian:/home/u# wpa_supplicant -Dwext -iwlan0_rename
-> -c/etc/wpa_supplicant.conf -dd
-> Initializing interface 'wlan0_rename' conf '/etc/wpa_supplicant.conf' driver
-> 'wext' ctrl_interface 'N/A' bridge 'N/A'
-> Configuration file '/etc/wpa_supplicant.conf' -> '/etc/wpa_supplicant.conf'
-> Reading configuration file '/etc/wpa_supplicant.conf'
-> ctrl_interface='DIR=/var/run/wpa_supplicant GROUP=root'
-> Line: 2 - start of a new network block
-> ssid - hexdump_ascii(len=6):
->    41 50 54 45 4b 41                                 APTEKA
-> scan_ssid=1 (0x1)
-> key_mgmt: 0x2
-> PSK (ASCII passphrase) - hexdump_ascii(len=16): [REMOVED]
-> PSK (from passphrase) - hexdump(len=32): [REMOVED]
-> Priority group 0
->  id=0 ssid='APTEKA'
-> Initializing interface (2) 'wlan0_rename'
-> Interface wlan0_rename set UP - waiting a second for the driver to complete
-> initialization
-> SIOCGIWRANGE: WE(compiled)=22 WE(source)=21 enc_capa=0xf
->  capabilities: key_mgmt 0xf enc 0xf
-> WEXT: Operstate: linkmode=1, operstate=5
-> Own MAC address: 00:1b:77:bc:bb:ec
-> wpa_driver_wext_set_wpa
-> wpa_driver_wext_set_key: alg=0 key_idx=0 set_tx=0 seq_len=0 key_len=0
-> wpa_driver_wext_set_key: alg=0 key_idx=1 set_tx=0 seq_len=0 key_len=0
-> wpa_driver_wext_set_key: alg=0 key_idx=2 set_tx=0 seq_len=0 key_len=0
-> wpa_driver_wext_set_key: alg=0 key_idx=3 set_tx=0 seq_len=0 key_len=0
-> wpa_driver_wext_set_countermeasures
-> wpa_driver_wext_set_drop_unencrypted
-> RSN: flushing PMKID list in the driver
-> Setting scan request: 0 sec 100000 usec
-> EAPOL: SUPP_PAE entering state DISCONNECTED
-> EAPOL: KEY_RX entering state NO_KEY_RECEIVE
-> EAPOL: SUPP_BE entering state INITIALIZE
-> EAP: EAP entering state DISABLED
-> ctrl_interface_group=0 (from group name 'root')
-> Added interface wlan0_rename
-> Ignore event for foreign ifindex 7
-> RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
-> RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0_rename' added
-> RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
-> Wireless event: cmd=0x8b06 len=12
-> State: DISCONNECTED -> SCANNING
-> Starting AP scan (specific SSID)
-> Scan SSID - hexdump_ascii(len=6):
->    41 50 54 45 4b 41                                 APTEKA         Trying
-> to get current scan results first without requesting a new scan to speed up
-> initial association
-> Received 0 bytes of scan results (0 BSSes)
-> CTRL-EVENT-SCAN-RESULTS
-> Selecting BSS from priority group 0
-> Try to find WPA-enabled AP
-> Try to find non-WPA AP
-> No suitable AP found.
-> Setting scan request: 0 sec 0 usec
-> Starting AP scan (broadcast SSID)
-> Scan requested (ret=0) - scan timeout 5 seconds
-> EAPOL: disable timer tick
-> RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
-> Wireless event: cmd=0x8b19 len=16
+On Thursday 26 June 2008, Abhijeet Kolekar wrote:
+>     iwlwifi : Patch adds rfkill subsystem for 3945
+>     
+>     The patch removes the sysfs interface from iwl3945 and uses
+>     the rfkill subsystem instead.
+
+Shouldn't the driver depend on CONFIG_RFKILL?
+Otherwise compilation will fail when CONFIG_RFKILL isn't selected...
+Since you are using an input device as well, the same would go for
+CONFIG_INPUT
+
+Ivo
+
+>     Original patch by Adel, I fixed the patch to work it properly.
+>     
+>     Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+>     Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+>     Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+> index a9b3eda..a774978 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-3945.h
+> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+> @@ -36,6 +36,10 @@
+>  #include <linux/kernel.h>
+>  #include <net/ieee80211_radiotap.h>
+>  
+> +/*used for rfkill*/
+> +#include <linux/rfkill.h>
+> +#include <linux/input.h>
+> +
+>  /* Hardware specific file defines the PCI IDs table for that hardware module */
+>  extern struct pci_device_id iwl3945_hw_card_ids[];
+>  
+> @@ -686,6 +690,23 @@ enum {
+>  
+>  #endif
+>  
+> +#ifdef CONFIG_IWLWIFI_RFKILL
+> +struct iwl3945_priv;
+> +
+> +struct iwl3945_rfkill_mngr {
+> +	struct rfkill *rfkill;
+> +	struct input_dev *input_dev;
+> +};
+> +
+> +void iwl3945_rfkill_set_hw_state(struct iwl3945_priv *priv);
+> +void iwl3945_rfkill_unregister(struct iwl3945_priv *priv);
+> +int iwl3945_rfkill_init(struct iwl3945_priv *priv);
+> +#else
+> +static inline void iwl3945_rfkill_set_hw_state(struct iwl3945_priv *priv) {}
+> +static inline void iwl3945_rfkill_unregister(struct iwl3945_priv *priv) {}
+> +static inline int iwl3945_rfkill_init(struct iwl3945_priv *priv) { return 0; }
+> +#endif
+> +
+>  #define IWL_MAX_NUM_QUEUES IWL39_MAX_NUM_QUEUES
+>  
+>  struct iwl3945_priv {
+> @@ -779,6 +800,10 @@ struct iwl3945_priv {
+>  	struct iwl3945_init_alive_resp card_alive_init;
+>  	struct iwl3945_alive_resp card_alive;
+>  
+> +#ifdef CONFIG_IWLWIFI_RFKILL
+> +	struct iwl3945_rfkill_mngr rfkill_mngr;
+> +#endif
+> +
+>  #ifdef CONFIG_IWL3945_LEDS
+>  	struct iwl3945_led led[IWL_LED_TRG_MAX];
+>  	unsigned long last_blink_time;
+> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> index cca2119..eabbb85 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> @@ -5913,7 +5913,9 @@ static void __iwl3945_down(struct iwl3945_priv *priv)
+>  			       test_bit(STATUS_GEO_CONFIGURED, &priv->status) <<
+>  					STATUS_GEO_CONFIGURED |
+>  			       test_bit(STATUS_IN_SUSPEND, &priv->status) <<
+> -					STATUS_IN_SUSPEND;
+> +					STATUS_IN_SUSPEND |
+> +				test_bit(STATUS_EXIT_PENDING, &priv->status) <<
+> +					STATUS_EXIT_PENDING;
+>  		goto exit;
+>  	}
+>  
+> @@ -5928,7 +5930,9 @@ static void __iwl3945_down(struct iwl3945_priv *priv)
+>  			test_bit(STATUS_IN_SUSPEND, &priv->status) <<
+>  				STATUS_IN_SUSPEND |
+>  			test_bit(STATUS_FW_ERROR, &priv->status) <<
+> -				STATUS_FW_ERROR;
+> +				STATUS_FW_ERROR |
+> +			test_bit(STATUS_EXIT_PENDING, &priv->status) <<
+> +				STATUS_EXIT_PENDING;
+>  
+>  	spin_lock_irqsave(&priv->lock, flags);
+>  	iwl3945_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+> @@ -6000,11 +6004,12 @@ static int __iwl3945_up(struct iwl3945_priv *priv)
+>  	else {
+>  		set_bit(STATUS_RF_KILL_HW, &priv->status);
+>  		if (!test_bit(STATUS_IN_SUSPEND, &priv->status)) {
+> +			iwl3945_rfkill_set_hw_state(priv);
+>  			IWL_WARNING("Radio disabled by HW RF Kill switch\n");
+>  			return -ENODEV;
+>  		}
+>  	}
+> -
+> +	iwl3945_rfkill_set_hw_state(priv);
+>  	iwl3945_write32(priv, CSR_INT, 0xFFFFFFFF);
+>  
+>  	rc = iwl3945_hw_nic_init(priv);
+> @@ -6060,6 +6065,7 @@ static int __iwl3945_up(struct iwl3945_priv *priv)
+>  
+>  	set_bit(STATUS_EXIT_PENDING, &priv->status);
+>  	__iwl3945_down(priv);
+> +	clear_bit(STATUS_EXIT_PENDING, &priv->status);
+>  
+>  	/* tried to restart and config the device for as long as our
+>  	 * patience could withstand */
+> @@ -6127,6 +6133,8 @@ static void iwl3945_bg_rf_kill(struct work_struct *work)
+>  				    "Kill switch must be turned off for "
+>  				    "wireless networking to work.\n");
+>  	}
+> +
+> +	iwl3945_rfkill_set_hw_state(priv);
+>  	mutex_unlock(&priv->mutex);
+>  }
+>  
+> @@ -7409,37 +7417,6 @@ static DRIVER_ATTR(debug_level, S_IWUSR | S_IRUGO,
+>  
+>  #endif /* CONFIG_IWL3945_DEBUG */
+>  
+> -static ssize_t show_rf_kill(struct device *d,
+> -			    struct device_attribute *attr, char *buf)
+> -{
+> -	/*
+> -	 * 0 - RF kill not enabled
+> -	 * 1 - SW based RF kill active (sysfs)
+> -	 * 2 - HW based RF kill active
+> -	 * 3 - Both HW and SW based RF kill active
+> -	 */
+> -	struct iwl3945_priv *priv = (struct iwl3945_priv *)d->driver_data;
+> -	int val = (test_bit(STATUS_RF_KILL_SW, &priv->status) ? 0x1 : 0x0) |
+> -		  (test_bit(STATUS_RF_KILL_HW, &priv->status) ? 0x2 : 0x0);
+> -
+> -	return sprintf(buf, "%i\n", val);
+> -}
+> -
+> -static ssize_t store_rf_kill(struct device *d,
+> -			     struct device_attribute *attr,
+> -			     const char *buf, size_t count)
+> -{
+> -	struct iwl3945_priv *priv = (struct iwl3945_priv *)d->driver_data;
+> -
+> -	mutex_lock(&priv->mutex);
+> -	iwl3945_radio_kill_sw(priv, buf[0] == '1');
+> -	mutex_unlock(&priv->mutex);
+> -
+> -	return count;
+> -}
+> -
+> -static DEVICE_ATTR(rf_kill, S_IWUSR | S_IRUGO, show_rf_kill, store_rf_kill);
+> -
+>  static ssize_t show_temperature(struct device *d,
+>  				struct device_attribute *attr, char *buf)
+>  {
+> @@ -7925,7 +7902,6 @@ static struct attribute *iwl3945_sysfs_entries[] = {
+>  #endif
+>  	&dev_attr_power_level.attr,
+>  	&dev_attr_retry_rate.attr,
+> -	&dev_attr_rf_kill.attr,
+>  	&dev_attr_rs_window.attr,
+>  	&dev_attr_statistics.attr,
+>  	&dev_attr_status.attr,
+> @@ -8166,6 +8142,11 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+>  	pci_save_state(pdev);
+>  	pci_disable_device(pdev);
+>  
+> +	err = iwl3945_rfkill_init(priv);
+> +	if (err)
+> +		IWL_ERROR("Unable to initialize RFKILL system. "
+> +				  "Ignoring error: %d\n", err);
+> +
+>  	return 0;
+>  
+>   out_free_geos:
+> @@ -8228,6 +8209,7 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
+>  
+>  	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
+>  
+> +	iwl3945_rfkill_unregister(priv);
+>  	iwl3945_dealloc_ucode_pci(priv);
+>  
+>  	if (priv->rxq.bd)
+> @@ -8296,6 +8278,140 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
+>  
+>  #endif /* CONFIG_PM */
+>  
+> +/*************** RFKILL FUNCTIONS **********/
+> +#ifdef CONFIG_IWLWIFI_RFKILL
+> +/* software rf-kill from user */
+> +static int iwl3945_rfkill_soft_rf_kill(void *data, enum rfkill_state state)
+> +{
+> +	struct iwl3945_priv *priv = data;
+> +	int err = 0;
+> +
+> +	if (!priv->rfkill_mngr.rfkill)
+> +	return 0;
+> +
+> +	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+> +		return 0;
+> +
+> +	IWL_DEBUG_RF_KILL("we recieved soft RFKILL set to state %d\n", state);
+> +	mutex_lock(&priv->mutex);
+> +
+> +	switch (state) {
+> +	case RFKILL_STATE_ON:
+> +		iwl3945_radio_kill_sw(priv, 0);
+> +		/* if HW rf-kill is set dont allow ON state */
+> +		if (iwl3945_is_rfkill(priv))
+> +			err = -EBUSY;
+> +		break;
+> +	case RFKILL_STATE_OFF:
+> +		iwl3945_radio_kill_sw(priv, 1);
+> +		if (!iwl3945_is_rfkill(priv))
+> +			err = -EBUSY;
+> +		break;
+> +	}
+> +	mutex_unlock(&priv->mutex);
+> +
+> +	return err;
+> +}
+> +
+> +int iwl3945_rfkill_init(struct iwl3945_priv *priv)
+> +{
+> +	struct device *device = wiphy_dev(priv->hw->wiphy);
+> +	int ret = 0;
+> +
+> +	BUG_ON(device == NULL);
+> +
+> +	IWL_DEBUG_RF_KILL("Initializing RFKILL.\n");
+> +	priv->rfkill_mngr.rfkill = rfkill_allocate(device, RFKILL_TYPE_WLAN);
+> +	if (!priv->rfkill_mngr.rfkill) {
+> +		IWL_ERROR("Unable to allocate rfkill device.\n");
+> +		ret = -ENOMEM;
+> +		goto error;
+> +	}
+> +
+> +	priv->rfkill_mngr.rfkill->name = priv->cfg->name;
+> +	priv->rfkill_mngr.rfkill->data = priv;
+> +	priv->rfkill_mngr.rfkill->state = RFKILL_STATE_ON;
+> +	priv->rfkill_mngr.rfkill->toggle_radio = iwl3945_rfkill_soft_rf_kill;
+> +	priv->rfkill_mngr.rfkill->user_claim_unsupported = 1;
+> +
+> +	priv->rfkill_mngr.rfkill->dev.class->suspend = NULL;
+> +	priv->rfkill_mngr.rfkill->dev.class->resume = NULL;
+> +
+> +	priv->rfkill_mngr.input_dev = input_allocate_device();
+> +	if (!priv->rfkill_mngr.input_dev) {
+> +		IWL_ERROR("Unable to allocate rfkill input device.\n");
+> +		ret = -ENOMEM;
+> +		goto freed_rfkill;
+> +	}
+> +
+> +	priv->rfkill_mngr.input_dev->name = priv->cfg->name;
+> +	priv->rfkill_mngr.input_dev->phys = wiphy_name(priv->hw->wiphy);
+> +	priv->rfkill_mngr.input_dev->id.bustype = BUS_HOST;
+> +	priv->rfkill_mngr.input_dev->id.vendor = priv->pci_dev->vendor;
+> +	priv->rfkill_mngr.input_dev->dev.parent = device;
+> +	priv->rfkill_mngr.input_dev->evbit[0] = BIT(EV_KEY);
+> +	set_bit(KEY_WLAN, priv->rfkill_mngr.input_dev->keybit);
+> +
+> +	ret = rfkill_register(priv->rfkill_mngr.rfkill);
+> +	if (ret) {
+> +		IWL_ERROR("Unable to register rfkill: %d\n", ret);
+> +		goto free_input_dev;
+> +	}
+> +
+> +	ret = input_register_device(priv->rfkill_mngr.input_dev);
+> +	if (ret) {
+> +		IWL_ERROR("Unable to register rfkill input device: %d\n", ret);
+> +		goto unregister_rfkill;
+> +	}
+> +
+> +	IWL_DEBUG_RF_KILL("RFKILL initialization complete.\n");
+> +	return ret;
+> +
+> +unregister_rfkill:
+> +	rfkill_unregister(priv->rfkill_mngr.rfkill);
+> +	priv->rfkill_mngr.rfkill = NULL;
+> +
+> +free_input_dev:
+> +	input_free_device(priv->rfkill_mngr.input_dev);
+> +	priv->rfkill_mngr.input_dev = NULL;
+> +
+> +freed_rfkill:
+> +	if (priv->rfkill_mngr.rfkill != NULL)
+> +		rfkill_free(priv->rfkill_mngr.rfkill);
+> +	priv->rfkill_mngr.rfkill = NULL;
+> +
+> +error:
+> +	IWL_DEBUG_RF_KILL("RFKILL initialization complete.\n");
+> +	return ret;
+> +}
+> +
+> +void iwl3945_rfkill_unregister(struct iwl3945_priv *priv)
+> +{
+> +
+> +	if (priv->rfkill_mngr.input_dev)
+> +		input_unregister_device(priv->rfkill_mngr.input_dev);
+> +
+> +	if (priv->rfkill_mngr.rfkill)
+> +		rfkill_unregister(priv->rfkill_mngr.rfkill);
+> +
+> +	priv->rfkill_mngr.input_dev = NULL;
+> +	priv->rfkill_mngr.rfkill = NULL;
+> +}
+> +
+> +/* set rf-kill to the right state. */
+> +void iwl3945_rfkill_set_hw_state(struct iwl3945_priv *priv)
+> +{
+> +
+> +	if (!priv->rfkill_mngr.rfkill)
+> +		return;
+> +
+> +	if (!iwl3945_is_rfkill(priv))
+> +		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_ON;
+> +	else
+> +		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_OFF;
+> +}
+> +#endif
+> +
+>  /*****************************************************************************
+>   *
+>   * driver and module entry point
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 
-> Invalid freq in scan results (BSSID=00:00:01:00:00:1d m=0 e=11)
-> Invalid freq in scan results (BSSID=00:00:01:00:00:1d m=0 e=2462)
-
-What system kernel are you using. This looks something we've already solved...
-Tomas
