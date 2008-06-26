@@ -1,47 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:37557 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752335AbYFVRXd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jun 2008 13:23:33 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Greg KH <greg@kroah.com>
-Subject: Re: [stable] [PATCH stable] b43legacy: Fix possible NULL pointer dereference in DMA code
-Date: Sun, 22 Jun 2008 19:23:24 +0200
-Cc: stable@kernel.org, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de
-References: <200806201146.12984.mb@bu3sch.de> <20080622165959.GA18163@kroah.com>
-In-Reply-To: <20080622165959.GA18163@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200806221923.24856.mb@bu3sch.de> (sfid-20080622_192337_302923_0606710D)
+Received: from xc.sipsolutions.net ([83.246.72.84]:36383 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763476AbYFZNqe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jun 2008 09:46:34 -0400
+Subject: Re: [2.6 patch] build algorithms into the mac80211 module
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Adrian Bunk <bunk@kernel.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <20080626103813.GB30359@cs181140183.pp.htv.fi>
+References: <20080622125553.GB22539@cs181133002.pp.htv.fi>
+	 <43e72e890806220804i347b942claae7b725231afcce@mail.gmail.com>
+	 <1214298259.8967.260.camel@johannes.berg>
+	 <20080624124311.GC16021@cs181140183.pp.htv.fi>
+	 <20080624211222.GB25892@tuxdriver.com>
+	 <20080626103813.GB30359@cs181140183.pp.htv.fi>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kWi03TUrJsXCx1PGffWH"
+Date: Thu, 26 Jun 2008 15:46:15 +0200
+Message-Id: <1214487975.20763.46.camel@johannes.berg> (sfid-20080626_154715_145247_DE342C1B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 22 June 2008 18:59:59 Greg KH wrote:
-> On Fri, Jun 20, 2008 at 11:46:12AM +0200, Michael Buesch wrote:
-> > This fixes a possible NULL pointer dereference in an error path of the
-> > DMA allocation error checking code.
-> > 
-> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> > 
-> > ---
-> > 
-> > This patch is not merged to an upstream tree, yet, but is sent to John.
-> 
-> In the future, if you want patches to get automatically added to stable
-> when they go into Linus's tree, just add:
-> 	Cc: stable <stable@kernel.org>
-> 
-> to the "Signed-off-by:" area and we will get notified of it at merge
-> time, so you don't have to resend it after it gets applied.
 
-Ok, however often enough it is not trivial to port patches from head to stable.
-A bug introduced by a stable port isn't something we really want to risk, I
-think. So I'd like to test all stable patches in their final state before they
-get submitted to stable.
-So for this trivial patch I could probably have used the CC magic, however.
+--=-kWi03TUrJsXCx1PGffWH
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Greetings Michael.
+On Thu, 2008-06-26 at 13:38 +0300, Adrian Bunk wrote:
+> On Tue, Jun 24, 2008 at 05:12:22PM -0400, John W. Linville wrote:
+> > On Tue, Jun 24, 2008 at 03:43:14PM +0300, Adrian Bunk wrote:
+> >=20
+> > > Can we get one of either:
+> > > - all selected mac80211 algorithms are built into the mac80211 module=
+ or
+> >=20
+> > This seems fine to me.
+> >=20
+> > > - all selected mac80211 algorithms (including the default one) are in
+> > >   their own modules
+> >=20
+> > We got here trying to avoid this one in the first place.
+>=20
+> What about the patch below?
+
+Seems ok to me, especially since we don't have a tunable for the rate
+control algorithm nor any other than the iwlwifi ones and this one...
+
+johannes
+
+--=-kWi03TUrJsXCx1PGffWH
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIY52kAAoJEKVg1VMiehFYLbsP/3opCtQ2M5NAvPlUxMJWm/6z
+rPU7jVxPICD2yPcavke0UueZEyitMqVIWsXzUjRG1M1TrOMzXa8qYnQrvfGre4rM
+0AjmSgdCCxVfmIyNuDMrK/HqEIPdcTNeYceP3VyeUz/NT8axVXPw7I1OyGuSmvmP
+H4X+BHtqFN8bmUsSDd1ADUAQ1Dv02MvkhADHceWurnQkdCWosOyeaeEKG0rdW8NG
+FrQ8Ip0U8Cow0m5NzVAatcmWtWwJxjl58Ic1Cnsb9gvtYuvGlX1ltK7vBRGsdzUo
+BGfjP2HI7/NarAXYJGaWTmGDm8+cOPZlCEldP/+vW/YWm/IBJGnkU37sXZbUTyFI
+ur8t8HWamgpkb7kTbKnMh09XBJLyzunzNpFc/6EvxfhRoYR3rqb64f3spwhsxdG0
+1zZkpNgwcg3uZxqP+ZKW7QYOirH28D60qD6EnJVxDx6oWv/Hi/lc9XSvjnf+breU
+pR7OSy4sNSTx8IDxTRy98OZ+lwrm4oJ+tnneEOOZY2ZYMUw9V3rN5WVa3G+OqLi5
+b/hgsMQa+4x52RhjiBXPPvf28sCBJ7iiiYqaAhOva3ep9+khdV2eTQ9CiD1KJ9Jx
+lP52pxPX690N4tfIqelVSDh6npr0SwbgDjatWNntUYZYy6Egy4vjtpDQxv1OmR1d
+uhxDlfeDCPHeISM5GSRm
+=473j
+-----END PGP SIGNATURE-----
+
+--=-kWi03TUrJsXCx1PGffWH--
+
