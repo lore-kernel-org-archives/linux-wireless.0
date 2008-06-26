@@ -1,140 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hu-out-0506.google.com ([72.14.214.235]:55101 "EHLO
-	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751145AbYFPFuV (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44541 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751948AbYFZS2i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2008 01:50:21 -0400
-Received: by hu-out-0506.google.com with SMTP id 28so6097096hub.21
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Jun 2008 22:50:17 -0700 (PDT)
-Message-ID: <4855FF14.9080506@gmail.com> (sfid-20080616_093322_149901_760E6AE9)
-Date: Mon, 16 Jun 2008 08:50:12 +0300
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-MIME-Version: 1.0
-To: Tomas Winkler <tomasw@gmail.com>
-CC: =?ISO-8859-1?Q?Tor_H=E5kon_Haugen?= <tor.hakon.haugen@gmail.com>,
-	Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with disable_hw_scan=1
-References: <484FEA26.1040305@gmail.com>	 <1213342523.7814.865.camel@debian.sh.intel.com>	 <20080613130310.GA5333@tuxdriver.com> <48528B63.5030403@gmail.com>	 <48528CF0.8050204@gmail.com>	 <1ba2fa240806131304n442972eatfd2f35034476c380@mail.gmail.com>	 <48551C62.80904@gmail.com>	 <1ba2fa240806150647mdc97d98oad0b1b02de1fcf87@mail.gmail.com>	 <48552344.5090801@gmail.com>	 <1ba2fa240806150809h13c28937nd064230baca8a15d@mail.gmail.com> <1ba2fa240806150947s1ed9391ao4b1d1a91c871ef8f@mail.gmail.com>
-In-Reply-To: <1ba2fa240806150947s1ed9391ao4b1d1a91c871ef8f@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+	Thu, 26 Jun 2008 14:28:38 -0400
+Subject: Re: [Q] ath5k : doesn't support AP mode?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
+	cs010101@gmail.com, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1214504482.3783.20.camel@johannes.berg> (sfid-20080626_202226_010344_A79E9A49)
+References: <002901c8d737$e51bb2f0$3b0aa8c0@39fb6b6b6f434b3>
+	 <200806261821.31643.mb@bu3sch.de> <1214498071.30722.22.camel@dv>
+	 <200806261846.17962.mb@bu3sch.de>  <1214501000.3783.0.camel@johannes.berg>
+	 <1214503403.18039.6.camel@dv>  <1214503739.3783.14.camel@johannes.berg>
+	 <1214504288.18039.12.camel@dv>  <1214504482.3783.20.camel@johannes.berg>
+	 (sfid-20080626_202226_010344_A79E9A49)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OEobATuQECW30eChIxh1"
+Date: Thu, 26 Jun 2008 20:27:54 +0200
+Message-Id: <1214504874.3783.25.camel@johannes.berg> (sfid-20080626_202842_550670_4D34CAEB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler wrote:
-> On Sun, Jun 15, 2008 at 6:09 PM, Tomas Winkler <tomasw@gmail.com> wro=
-te:
->> On Sun, Jun 15, 2008 at 5:12 PM, Maxim Levitsky <maximlevitsky@gmail=
-=2Ecom> wrote:
->>> Tomas Winkler wrote:
->>>> On Sun, Jun 15, 2008 at 4:42 PM, Maxim Levitsky <maximlevitsky@gma=
-il.com>
->>>> wrote:
->>>>> Tomas Winkler wrote:
->>>>>> On Fri, Jun 13, 2008 at 6:06 PM, Maxim Levitsky
->>>>>> <maximlevitsky@gmail.com>
->>>>>> wrote:
->>>>>>> Tor H=E5kon Haugen wrote:
->>>>>>>> John W. Linville wrote:
->>>>>>>>> On Fri, Jun 13, 2008 at 03:35:23PM +0800, Zhu Yi wrote:
->>>>>>>>>> On Thu, 2008-06-12 at 09:59 -0400, John W. Linville wrote:
->>>>>>>>>>> Honestly I'm tempted to change it to "enable_hw_scan" inste=
-ad...
->>>>>>>>>> Give the advantages, I'd like to use it if we can fix the bu=
-g (I
->>>>>>>>>> haven't
->>>>>>>>>> seen what the bug is myself). But you are free to change the=
- default
->>>>>>>>>> value until it is fixed. There is no such problem for 4965, =
-right?
->>>>>>>>> AFAICT only the 3945 seems to need it.
->>>>>>>>>
->>>>>>>> I can confirm that this also applies to 4965 as a friend of mi=
-ne has
->>>>>>>> this card. According to him the card works a lot better with t=
-he
->>>>>>>> parameters "swcrypto=3D1" and "disable_hw_scan=3D1".
->>>>>>> Just to make it clear,
->>>>>>> iwl3945 doesn't work at all without disable_hw_scan=3D1 here.
->>>>>>> The driver just shuts down thee card since it detects microcode=
- error.
->>>>>>>
->>>>>> It looks like this is all caused by the big rate, band patch. Lo=
-oks
->>>>>> like A band scan channels are not configured correctly for the
->>>>>> scanning. This crashes the firmware.
->>>>>>
->>>>>> Tomas
->>>>> Probably, I see that eeprom according to dmesg contains no info a=
-bout A
->>>>> channels, so maybe this crashes the firmware.
->>>>>
->>>> Can you please send your dmesg.
->>> I did that
->>> (You mean dmesg without disable_hw_scan=3D1?)
->>>
->>> If not what debug options I should include
->>> (I tried same firmware debug options, but the log wrapped around.)
->>>
->>> dmesg without disable_hw_scan=3D1 attached.
->>>
->>>
->>>>> I have few questions:
->>>>>
->>>>> * Is there a software workaround without the need to update the f=
-irmware?
->>>> Yes
->>>>
->>>>> * Is the firmware error so harmful, so driver can't continue?
->>>> This is firmware misconfiguration.  Driver should be friendly to
->>>> firmware and use correctly API.
->>>>
->>>>> * Can I expect updated version of the firmware with  fix?
->>>> No need so far.
->>>>
->>>>> Sadly this confirms that firmware is worse that I thought, it is =
-closer
->>>>> to
->>>>> closed drivers.
->>>> The firmware API is open, it just wasn't used correctly.
->>> I mean if there is a bug in firmware, nobody expect intel can fix i=
-t.
->> Intel is fixing bugs in the firmware. Still this doesn't look like a
->> firmware error.
->>
->>> BTW you say that firmware api is open,
->>> is there a programming manual for this wireless chip?
->> it's well documented in -commands.h file
->=20
->=20
->=20
-> Please try this one
->=20
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -3348,7 +3348,10 @@ static void
-> iwl3945_rx_scan_complete_notif(struct iwl3945_priv *priv,
->=20
->         /* Remove this scanned band from the list
->          * of pending bands to scan */
-> -       priv->scan_bands--;
-> +       if (priv->cfg->sku & IWL_SKU_A)
-> +               priv->scan_bands--;
-> +       else
-> +               priv->scan_bands =3D 0;
->=20
->=20
+
+--=-OEobATuQECW30eChIxh1
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-I tested this patch, and it fixes this issue, Thanks a lot.
+> > > The fact that we cannot limit the rate like that that?
+> >=20
+> > That shouldn't be hard to implement.
+>=20
+> Go ahead and post patches then.
 
+Mind you, I'm thinking of patches that actually address hostapd's
+incapability of setting rates to use/basic rates etc. in the kernel, not
+a two-line workaround that only enables 1mbit for AP mode interfaces.
 
-Best regards,
-	Maxim Levitsky
+johannes
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-OEobATuQECW30eChIxh1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIY9+nAAoJEKVg1VMiehFYMR8QAI0u1ibFlMyZ8vn8BdGQlU/9
+1LvxAtF8H35xUtnrIJYPM0cshHH6u+CpTSrNoWsLFYKR1b6MHLwYTTKFHybjsMF1
+etTHEmSrYb1u0W6qNkg/XWmNX9HRKXjQ4g69y5DDPKHoyL1wXuWsyt/J1ioD7km/
+wDvj0FV7fI/6ew6Dq+67PQzCoIy8YdIOhmICZRP3PJGcArQ9i15RbOfQr5iP4T3S
+0hgYod9uS4AGQ3Ix9S75M7fE8AwYcnBTspfPkbWhQZBDYFKINGxVcpD5znGiu9Xq
+eq5MmBCZVSTP8UEerEyzN7WDaqfjHl+7CtDdAFgzbIjK1XXUyY+O8B9Le/7zMUdJ
+9x8O3R5EGqAgNFshGGKf74Lpd5RZAAIABbkxin0riUp//lKyx8do2mmFeoDb5Aoo
+P/4folpNuRkfAD0MRE8D90S4IGAGbb9LJJzUwCQGb6sRCi9JDD+PFqRkR5pN6i/f
+d0hcpN6QPR/3i+F1d0M13AYBAzIbUvcq/okaoWJMkjypvGtRA/t3GTAYrkXBFT7c
+tMfWnuQ6AVqknIOczB2DSKE0WlxS7u+U2CnSfUsiUr2jmpzovAxRuqYRKrdxos1o
+uO7bA4qMvts/JdIE+tZuj1qeKM/Fjy7mE5Og7RWGHCk20EAqrmoCuxJiK0+s1mg1
+pYWUAHGuSou4INo7F1GM
+=u6SD
+-----END PGP SIGNATURE-----
+
+--=-OEobATuQECW30eChIxh1--
+
