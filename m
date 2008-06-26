@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:58925 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755902AbYFWQN7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jun 2008 12:13:59 -0400
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: Bernhard Reiter <bernhard@intevation.de>,
-	linux-wireless@vger.kernel.org, Dave <kilroyd@googlemail.com>
-Subject: Re: 802.11 pccard, Agere 0x0156,0x0003?
-References: <200806181715.20516.bernhard@intevation.de>
-	<200806191023.39851.bernhard@intevation.de> <485A9A00.70700@gmail.com>
-	<200806200935.55882.bernhard@intevation.de>
-	<1213947479.8967.134.camel@johannes.berg>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Mon, 23 Jun 2008 19:12:40 +0300
-In-Reply-To: <1213947479.8967.134.camel@johannes.berg> (ext Johannes Berg's message of "Fri\, 20 Jun 2008 09\:37\:58 +0200")
-Message-ID: <878wwwi0zr.fsf@nokia.com> (sfid-20080623_181408_490602_0097F16E)
+Received: from bu3sch.de ([62.75.166.246]:38375 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761522AbYFZSXE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jun 2008 14:23:04 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: [Q] ath5k : doesn't support AP mode?
+Date: Thu, 26 Jun 2008 20:22:38 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Stefanik =?iso-8859-15?q?G=E1bor?= <netrolller.3d@gmail.com>,
+	cs010101@gmail.com, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <002901c8d737$e51bb2f0$3b0aa8c0@39fb6b6b6f434b3> <1214503739.3783.14.camel@johannes.berg> <1214504288.18039.12.camel@dv>
+In-Reply-To: <1214504288.18039.12.camel@dv>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200806262022.38890.mb@bu3sch.de> (sfid-20080626_202318_868785_EA8A3242)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Johannes Berg" <johannes@sipsolutions.net> writes:
+On Thursday 26 June 2008 20:18:08 Pavel Roskin wrote:
+> On Thu, 2008-06-26 at 20:08 +0200, Johannes Berg wrote:
+> 
+> > > I also suspect that certain fixed are needed only for 802.11g or 802.11b
+> > > compliance, but not for the original 802.11 compliance.
+> > > 
+> > > Say, if we limit the rate to 1 Mbps, are there any issues that really
+> > > make us non-compliant?
+> > 
+> > The fact that we cannot limit the rate like that that?
+> 
+> That shouldn't be hard to implement.
 
->> > Both versions can be found at <http://www.xs4all.nl/~pptp/agere>, which
->> > also has patched versions for 2.6
->> 
->> Cool!
->> Just to make sure: This is a driver that - despite being unmaintained - should 
->> work? So could try it with 2.6.17, 2.6.24 and even newer?
->
-> Just FYI, there are patches in the queue that will most likely make all
-> (out-of-tree) drivers using wireless extensions break, so even if it
-> works now it will probably not with 2.6.27.
-
-What is breaking out-of-tree drivers in 2.6.27? David Miller's compat
-WEXT stuff, or what?
-
-Sorry, but it seems that I completely missed this. I should read
-mailing lists more carefully.
+We are not going to work around the bugs, I guess.
+I'd suggest to put the patch into wireless-testing only.
 
 -- 
-Kalle Valo
+Greetings Michael.
