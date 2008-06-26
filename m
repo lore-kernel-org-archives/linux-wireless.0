@@ -1,39 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2513 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762888AbYFFQ2R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2008 12:28:17 -0400
-Date: Fri, 6 Jun 2008 12:03:16 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Florian Manschwetus <florianmanschwetus@gmx.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: iwl4965 and 2.6.25 iwlwifi merge patch
-Message-ID: <20080606160316.GA635@tuxdriver.com> (sfid-20080606_182840_732729_C0793576)
-References: <4849220D.70301@gmx.de> <f6ca9fed0806060501w342a368cic005a6c5231ad65b@mail.gmail.com> <4849386B.6010308@gmx.de>
+Received: from ug-out-1314.google.com ([66.249.92.170]:27894 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751635AbYFZVLm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jun 2008 17:11:42 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so295122ugf.16
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2008 14:11:40 -0700 (PDT)
+Message-ID: <f6ca9fed0806261411y1b8bca21k66da3a5090524bc6@mail.gmail.com> (sfid-20080626_231145_197518_50EFD72F)
+Date: Thu, 26 Jun 2008 23:11:40 +0200
+From: drago01 <drago01@gmail.com>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Subject: Re: commit 5dc4dfd6165883b6629a48256dc4eadf76d6b65d
+Cc: "Abhijeet Kolekar" <abhijeet.kolekar@intel.com>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	adel.gadllah@gmail.com, "Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <200806262259.21764.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4849386B.6010308@gmx.de>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <12145132373377-git-send-email-abhijeet.kolekar@intel.com>
+	 <200806262259.21764.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 06, 2008 at 03:15:23PM +0200, Florian Manschwetus wrote:
-> drago01 schrieb:
->> On Fri, Jun 6, 2008 at 1:39 PM, Florian Manschwetus
->> <florianmanschwetus@gmx.de> wrote:
->>> Some people reported me that this patch makes there T61 with iwl4965
->>> useless. But I'm not an owner of such a wireless device so, I'm unable to
->>> test or verify this. So it would be nice if someone could tell me if there
->>> are patches and how well they work. So that I could include the iwlwifi
->>> merge patch in my next patchlist.
+On Thu, Jun 26, 2008 at 10:59 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> On Thursday 26 June 2008, Abhijeet Kolekar wrote:
+>>     iwlwifi : Patch adds rfkill subsystem for 3945
 >>
->> which patch are you talking about?
+>>     The patch removes the sysfs interface from iwl3945 and uses
+>>     the rfkill subsystem instead.
+>
+> Shouldn't the driver depend on CONFIG_RFKILL?
+> Otherwise compilation will fail when CONFIG_RFKILL isn't selected...
 
-> the one i attached.
+"[PATCH -next] iwlwifi: fix build for CONFIG_INPUT=n" adresses part of this.
 
-Where did you get that patch?  Who told you to use it?  Where are
-you trying to apply it?  And why is this our problem?
+IWLWIFI_RFKILL depends on IWLCORE but iwl3945 does not use iwlcore module.
+Should we just add a IWL3945_RFKILL and add he changes from the
+mentioned patch to 3945 too?
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+If its ok I can send a patch.
