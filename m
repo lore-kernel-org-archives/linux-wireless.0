@@ -1,64 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23304 "EHLO mga01.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:23283 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752443AbYFXKiI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 06:38:08 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/4] mac80211: update the authentication method
-Date: Tue, 24 Jun 2008 13:37:59 +0300
-Message-Id: <1214303881-31525-3-git-send-email-tomas.winkler@intel.com> (sfid-20080624_123814_966877_416C2351)
-In-Reply-To: <1214303881-31525-2-git-send-email-tomas.winkler@intel.com>
-References: <1214303881-31525-1-git-send-email-tomas.winkler@intel.com>
- <1214303881-31525-2-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1753333AbYFZVNJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jun 2008 17:13:09 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: commit 5dc4dfd6165883b6629a48256dc4eadf76d6b65d
+Date: Thu, 26 Jun 2008 14:13:06 -0700
+Message-ID: <BD524EA7912ED5469DFD0BAEF6BC752F03DC568A@orsmsx411.amr.corp.intel.com> (sfid-20080626_231314_644711_4A189EC9)
+In-Reply-To: <f6ca9fed0806261411y1b8bca21k66da3a5090524bc6@mail.gmail.com>
+References: <12145132373377-git-send-email-abhijeet.kolekar@intel.com> <200806262259.21764.IvDoorn@gmail.com> <f6ca9fed0806261411y1b8bca21k66da3a5090524bc6@mail.gmail.com>
+From: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>
+To: "drago01" <drago01@gmail.com>, "Ivo van Doorn" <ivdoorn@gmail.com>
+Cc: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
+	<adel.gadllah@gmail.com>, "Zhu, Yi" <yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This patch updates the authentication method upon giwencode ioctl.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/wext.c |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
+-----Original Message-----
+From: drago01 [mailto:drago01@gmail.com] 
+Sent: Thursday, June 26, 2008 2:12 PM
+To: Ivo van Doorn
+Cc: Kolekar, Abhijeet; linux-wireless@vger.kernel.org;
+linville@tuxdriver.com; adel.gadllah@gmail.com; Zhu, Yi
+Subject: Re: commit 5dc4dfd6165883b6629a48256dc4eadf76d6b65d
 
-diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-index 53f8767..308b953 100644
---- a/net/mac80211/wext.c
-+++ b/net/mac80211/wext.c
-@@ -952,6 +952,19 @@ static int ieee80211_ioctl_giwencode(struct net_device *dev,
- 	erq->length = sdata->keys[idx]->conf.keylen;
- 	erq->flags |= IW_ENCODE_ENABLED;
- 
-+	if (sdata->vif.type == IEEE80211_IF_TYPE_STA) {
-+		struct ieee80211_if_sta *ifsta = &sdata->u.sta;
-+		switch (ifsta->auth_alg) {
-+		case WLAN_AUTH_OPEN:
-+		case WLAN_AUTH_LEAP:
-+			erq->flags |= IW_ENCODE_OPEN;
-+			break;
-+		case WLAN_AUTH_SHARED_KEY:
-+			erq->flags |= IW_ENCODE_RESTRICTED;
-+			break;
-+		}
-+	}
-+
- 	return 0;
- }
- 
--- 
-1.5.4.1
+On Thu, Jun 26, 2008 at 10:59 PM, Ivo van Doorn <ivdoorn@gmail.com>
+wrote:
+> On Thursday 26 June 2008, Abhijeet Kolekar wrote:
+>>     iwlwifi : Patch adds rfkill subsystem for 3945
+>>
+>>     The patch removes the sysfs interface from iwl3945 and uses
+>>     the rfkill subsystem instead.
+>
+> Shouldn't the driver depend on CONFIG_RFKILL?
+> Otherwise compilation will fail when CONFIG_RFKILL isn't selected...
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+"[PATCH -next] iwlwifi: fix build for CONFIG_INPUT=n" adresses part of
+this.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+IWLWIFI_RFKILL depends on IWLCORE but iwl3945 does not use iwlcore
+module.
+Should we just add a IWL3945_RFKILL and add he changes from the
+mentioned patch to 3945 too?
 
+If its ok I can send a patch.
+
+That will be great!!
