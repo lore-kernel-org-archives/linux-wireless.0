@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2217 "EHLO ra.tuxdriver.com"
+Received: from mga09.intel.com ([134.134.136.24]:1644 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751502AbYFIQII (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2008 12:08:08 -0400
-Date: Mon, 9 Jun 2008 11:23:23 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Chris Wright <chrisw@sous-sol.org>, stable@kernel.org,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: Re: [stable] [PATCH stable] b43: Fix controller restart crash
-Message-ID: <20080609152323.GA12654@tuxdriver.com> (sfid-20080609_180814_716659_9AAFB310)
-References: <200806061558.42998.mb@bu3sch.de> <20080606173223.GR30402@sequoia.sous-sol.org> <200806061955.27951.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200806061955.27951.mb@bu3sch.de>
+	id S1758145AbYFZBDM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jun 2008 21:03:12 -0400
+Subject: Re: compat wireless, i3945, tcpdump: Machine freezes
+From: Zhu Yi <yi.zhu@intel.com>
+To: linux-wireless@newton.leun.net
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080625154354.719cc9b3@localhost>
+References: <20080618094213.5abd2fbd@localhost>
+	 <20080625154354.719cc9b3@localhost>
+Content-Type: text/plain
+Date: Thu, 26 Jun 2008 09:02:12 +0800
+Message-Id: <1214442132.14590.282.camel@debian.sh.intel.com> (sfid-20080626_030321_065370_43106517)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 06, 2008 at 07:55:27PM +0200, Michael Buesch wrote:
-> On Friday 06 June 2008 19:32:23 Chris Wright wrote:
-> > * Michael Buesch (mb@bu3sch.de) wrote:
-> > > This fixes a kernel crash on rmmod, in the case where the controller
-> > > was restarted before doing the rmmod.
-> > > 
-> > > Upstream commit is 4735f5022c97f6624ced2ec5056c61c4b437d53b
-> > 
-> > This is not in Linus' tree.  Where is this upstream commit?
+On Wed, 2008-06-25 at 15:43 +0200, linux-wireless@newton.leun.net wrote:
+> Hello,
 > 
-> John Linville's wireless tree. That's upstream from my point of view. :P
+> On Wed, 18 Jun 2008 09:42:13 +0200
+> Michael Leun <linux-wireless@newton.leun.net> wrote:
+> 
+> > I downloaded compat-wireless-2008-06-18, built it, loaded cfg80211.ko,
+> > mac80211.ko, iwl3945.ko, associated to an ap, started "tcpdump -i
+> > wlan0 -n" and the machine mostly freezed.
+> > 
+> > Mostly means keyboard does not work, no disk-access, no network but
+> > mouse still works.
+> [...]
+> 
+> This still happens with compat-wireless-2008-06-25.
 
-:-)
+We have a fix patch here. Will submit to linux-wireless after some
+tweak.
+http://article.gmane.org/gmane.linux.drivers.ipw3945.devel/3166
 
-The commit ID may have gotten shuffled when Dave M. rebased net-2.6.
-It is in 2.6.26-rc5 as commit 3bf0a32e22fedc0b46443699db2d61ac2a883ac4.
+Thanks,
+-yi
 
-Hth!
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
