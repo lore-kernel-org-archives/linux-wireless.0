@@ -1,53 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47084
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752941AbYFCUgx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 16:36:53 -0400
-Date: Tue, 03 Jun 2008 13:28:10 -0700 (PDT)
-Message-Id: <20080603.132810.05908596.davem@davemloft.net> (sfid-20080603_223733_834930_4BF2D6EB)
-To: linux-wireless@vger.kernel.org
-CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/12]: wext: Make adjust_priv_size() take a "struct
- iw_point *".
-From: David Miller <davem@davemloft.net>
+Received: from mx1.redhat.com ([66.187.233.31]:40933 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757949AbYF0QIx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jun 2008 12:08:53 -0400
+Subject: Re: [PATCH] iwlwifi: fix oops on wep key insertion
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Joonwoo Park <joonwpark81@gmail.com>,
+	JMF <tolas_feup@hotmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <20080627152843.GA16003@tuxdriver.com>
+References: <1211865214-1640-1-git-send-email-joonwpark81@gmail.com>
+	 <1ba2fa240805262341s62f017e7ka7502cbe55c1d348@mail.gmail.com>
+	 <loom.20080527T105701-941@post.gmane.org>
+	 <1ba2fa240805270541wadf0f16t2001528f39b37ea8@mail.gmail.com>
+	 <1211896423.1746.9.camel@localhost.localdomain>
+	 <20080528004100.GG7779@tuxdriver.com> <20080615164617.GA27699@tp64>
+	 <1ba2fa240806150953t4b61b213y3488940ef05b762e@mail.gmail.com>
+	 <1213605989.3803.24.camel@johannes.berg>
+	 <20080627152843.GA16003@tuxdriver.com>
+Content-Type: text/plain
+Date: Fri, 27 Jun 2008 12:07:33 -0400
+Message-Id: <1214582853.10355.28.camel@localhost.localdomain> (sfid-20080627_180913_522953_AC831E76)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2008-06-27 at 11:28 -0400, John W. Linville wrote:
+> On Mon, Jun 16, 2008 at 10:46:29AM +0200, Johannes Berg wrote:
+> > 
+> > > > [PATCH] wireless: Limit wep key size to 128/104-bits
+> > > >
+> > > > This patch prevents overflow which is occured by invalid long wep key
+> > > > insertion
+> > > >
+> > > > $sudo iwconfig wlan0 enc AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA
+> > > >
+> > > > BUG: unable to handle kernel NULL pointer dereference at 0000000000000000
+> > > > IP: [memcpy_c+0xb/0x20] memcpy_c+0xb/0x20
+> > > > PGD 13a590067 PUD 12e471067 PMD 0
+> > > > Oops: 0000 [1] PREEMPT SMP
+> > > > CPU 1
+> > > > ...
+> > > > Pid: 10, comm: events/1 Not tainted 2.6.26-rc2 #9
+> > > > ...
+> > > > Call Trace:
+> > > >  [iwl4965:iwl4965_rx_scan_start_notif+0xb/0x20] ? :iwl4965:iwl4965_enqueue_hcmd+0x12b/0x220
+> > > >  [hci_usb:init_module+0xe97/0x28cb0] :iwlcore:iwl_send_cmd_sync+0x67/0x290
+> > > >  [save_trace+0x3f/0xb0] ? save_trace+0x3f/0xb0
+> > > > ...
+> > > >
+> > > > Signed-off-by: Joonwoo Park <joonwpark81@gmail.com>
+> > > > ---
+> > > >  net/wireless/wext.c |   11 ++++++++++-
+> > 
+> > I'm sure Jean will cry murder because he expects there are some stupid
+> > full-mac cards that actually support other sizes.
+> > 
+> > Can't somebody just post a patch to mac80211 that only accepts the two
+> > correct sizes like cfg80211 does?
+> 
+> Strawman patch below...
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/wireless/wext.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+You need to allow 0 through, since you can just set the transmit key
+index via ENCODE without setting the key.  So the legal values are 0, 5,
+and 13.  Add 'case 0: /* just setting TX index */' or something and I'll
+definitely ack it.
 
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index e83d74a..cd2cf9f 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -512,9 +512,9 @@ static int get_priv_size(__u16 args)
- /*
-  * Re-calculate the size of private arguments
-  */
--static int adjust_priv_size(__u16 args, union iwreq_data *wrqu)
-+static int adjust_priv_size(__u16 args, struct iw_point *iwp)
- {
--	int	num = wrqu->data.length;
-+	int	num = iwp->length;
- 	int	max = args & IW_PRIV_SIZE_MASK;
- 	int	type = (args & IW_PRIV_TYPE_MASK) >> 12;
- 
-@@ -976,7 +976,7 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
- 			 * avoid leaking kernel bits outside. */
- 			if (!(descr->get_args & IW_PRIV_SIZE_FIXED)) {
- 				extra_size = adjust_priv_size(descr->get_args,
--							      &(iwr->u));
-+							      &(iwr->u.data));
- 			}
- 
- 			err = copy_to_user(iwr->u.data.pointer, extra,
--- 
-1.5.5.1.308.g1fbb5
+Dan
+
+> ---
+> 
+> From: John W. Linville <linville@tuxdriver.com>
+> Subject: [PATCH] mac80211: allow only standard size WEP keys through WEXT
+> 
+> Limit ieee80211_ioctl_siwencode to only accept standard sized WEP keys.
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  net/mac80211/wext.c |   10 ++++++++++
+>  1 files changed, 10 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+> index 5af3862..d16b975 100644
+> --- a/net/mac80211/wext.c
+> +++ b/net/mac80211/wext.c
+> @@ -26,6 +26,8 @@
+>  #include "wpa.h"
+>  #include "aes_ccm.h"
+>  
+> +#define KEY_SIZE_WEP104 13      /* 104/128-bit WEP keys */
+> +#define KEY_SIZE_WEP40  5       /* 40/64-bit WEP keys */
+>  
+>  static int ieee80211_set_encryption(struct net_device *dev, u8 *sta_addr,
+>  				    int idx, int alg, int remove,
+> @@ -879,6 +881,14 @@ static int ieee80211_ioctl_siwencode(struct net_device *dev,
+>  	u8 bcaddr[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+>  	int remove = 0;
+>  
+> +	switch (erq->length) {
+> +	case KEY_SIZE_WEP40:
+> +	case KEY_SIZE_WEP104:
+> +		break;
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +
+>  	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+>  
+>  	idx = erq->flags & IW_ENCODE_INDEX;
+> -- 
+> 1.5.5.1
+> 
 
