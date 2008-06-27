@@ -1,78 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57774 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752198AbYFFIPk (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:53482 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756183AbYF0Vf3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2008 04:15:40 -0400
-Subject: Re: mac80211 organization
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1212705015.6340.58.camel@brick> (sfid-20080606_003018_948305_421B849D)
-References: <1212705015.6340.58.camel@brick>
-	 (sfid-20080606_003018_948305_421B849D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2HPtdeG/G8YDI6jHRNSu"
-Date: Fri, 06 Jun 2008 10:13:48 +0200
-Message-Id: <1212740028.698.16.camel@johannes.berg> (sfid-20080606_101547_277685_9E5F6E7E)
-Mime-Version: 1.0
+	Fri, 27 Jun 2008 17:35:29 -0400
+Date: Fri, 27 Jun 2008 18:35:24 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Dan Williams <dcbw@redhat.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Thomas Renninger <trenn@suse.de>,
+	Fabien Crespel <fabien@crespel.net>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: Re: [PATCH 1/2] rfkill: rename the rfkill_state states and add
+	block-locked state
+Message-ID: <20080627213524.GA8266@khazad-dum.debian.net> (sfid-20080627_233535_755711_28B3C417)
+References: <1214254004-32652-1-git-send-email-hmh@hmh.eng.br> <1214254004-32652-2-git-send-email-hmh@hmh.eng.br> <1214591028.24579.18.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1214591028.24579.18.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 27 Jun 2008, Dan Williams wrote:
+> On Mon, 2008-06-23 at 17:46 -0300, Henrique de Moraes Holschuh wrote:
+> > The current naming of rfkill_state causes a lot of confusion: not only the
+> > "kill" in rfkill suggests negative logic, but also the fact that rfkill cannot
+> > turn anything on (it can just force something off or stop forcing something
+> > off) is often forgotten.
+> > 
+> > Rename RFKILL_STATE_OFF to RFKILL_STATE_SOFT_BLOCKED (transmitter is blocked
+> > and will not operate; state can be changed by a toggle_radio request), and
+> > RFKILL_STATE_ON to RFKILL_STATE_UNBLOCKED (transmitter is not blocked, and may
+> > operate).
+> > 
+> > Also, add a new third state, RFKILL_STATE_HARD_BLOCKED (transmitter is blocked
+> > and will not operate; state cannot be changed through a toggle_radio request),
+> > which is used by drivers to indicate a wireless transmiter was blocked by a
+> > hardware rfkill line that accepts no overrides.
+> > 
+> > Keep the old names as #defines, but document them as deprecated.  This way,
+> > drivers can be converted to the new names *and* verified to actually use rfkill
+> > correctly one by one.
+> > 
+> > Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> > Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> 
+> Thanks for doing this!
+> 
+> So with this patch, in the case where ex. hp-wmi advertises a killswitch
+> and the wlan driver itself doesn't have one, when NM wants to softkill
+> the radio, should NM do a SIOCSIWTXPOW or softblock the hp-wmi
+> killswitch?  Or would the wlan driver implement an rfkill handler and
 
---=-2HPtdeG/G8YDI6jHRNSu
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I thought a lot about it, and I personally feel it is better to keep
+SIOCSIWTXPOW separate from rfkill.  This is a driver layer thing, and rfkill
+doesn't care either way, but IMHO it is less confusing for the user if
+iwconfig txpower doesn't change the rfkill status of a device.
 
-On Thu, 2008-06-05 at 15:30 -0700, Harvey Harrison wrote:
-> Could you give me a quick rundown of the differences/thoughts behind
+This means NM would be trying to set the class/rfkill*/state to
+RFKILL_STATE_SOFT_BLOCKED for the devices it wants to block.
 
-Sure.
+And the way to be able to do it without going insane really is to start
+adding rfkill subsystem support to all wireless network drivers, so your
+WLAN devices will all have a rfkill class related to them.
 
-> include/linux/ieee80211.h
+> thus have /sys/class/rfkill/rfkillX as well?  My understanding of what
+> would happen here got buried in all the mails last time around.  If the
+> transmitter is not tied to a physical killswitch, but the killswitch is
+> provided by another module (laptop specific driver for example), do we
+> assume the rfkill state is authoritative or do we check each radio via
+> it's own specific method?
 
-That's intended for IEEE 802.11 specific stuff that full-mac drivers
-could use too, mostly protocol-related defines and helper macros/inlines
-(it has no corresponding .c file so you can't have actual functions.)
+Unless HAL can tell you about it, and you teach HAL the topology for every
+laptop model (something I consider Not Doable), you really are supposed to
+try to ignore as much as possible the topology of kill switches.
 
-> include/linux/net/mac80211.h
+So, you add topology agnostic UIs to NM that let the user:
+  1. Easily try to set the state of all devices of a given type
+  2. Try to set the state of a particular device.
+  3. Try to set the state of all devices (shortcut to "for all types, do (1)
+     above).
 
-That declares the mac80211 specific stuff.
+hp-wmi's and thinkpad-acpi's softswitches would show up just like any
+another device.  The user would quickly learn that changing the state of
+these devices has an effect of hardblocking others.
 
-> and net/mac80211/ieee80211_i.h
+When I get to improving the interface to the global state (i.e. add the
+attributes needed to implement rfkill-input in userspace), you will be
+able to do more, or to do the above in an easier way.
 
-That's internal to mac80211.
-
-> I'm trying to figure out where some of these helpers should go, but it
-> would be easier with a bit more context.
-
-Many should probably go into the first category as they could be useful
-for others. Note though that there's net/ieee80211.h too with stuff for
-the ieee80211 stack, and linux/ieee80211.h needs to be compatible with
-both net/mac80211.h and net/ieee80211.h
-
-johannes
-
---=-2HPtdeG/G8YDI6jHRNSu
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIVAwUASEjxu6Vg1VMiehFYAQKZJg//f9xkRsxpfUjP24Qnh2uLqJWF4tbMQuHm
-YIE+KAf1GrJuPNKoBURxC23MhWD6JheHjLax8IzA9N/y+bo7YT8UNijiAvKsyqZv
-GUl/QJYrCYuDmGjnfbTOh5eyWpYUBkdhYij2Amfjx0/Yj7CKWTvoZfTrnrwC9F69
-cggJ5uhL1u1i+f9mM6hSfKAOJUc3fSpIm0LuqCuMrQbMq8Cldw8JxyDmtmeITbjo
-pOTTOUblovRolY50Wqd7P3I9LLgzuw77QmvbPIGzbLwxROYyII8qyPCAXYwkbt6T
-Mkcl0OLdKoTsaSqFraMeb3MH0eESfstgjelxPNR8mJHK3k0NUVirRdWpH72E/DOZ
-XxLBnYCkr5Gm0YEGzSyEsznwoz75NIIMukIdfqWP4vDNv3uFLi4g++Anr3D5nsBL
-vcLo3DmXyjQXW/aa3iuxPnsyqs6pyl507RMMCkz5W48j94Euek1A8k8qd5QYcAC+
-DPxAnnuRpo26XvxO89r9NxUqgIAm9FeBXZHdMf+Xg/FGmbV+HN5EDmfrE4EMO0gy
-kupKe3M+DJdDFcG0CRuJanDB9aIqxmQwhREUOzJ4vJ7VkIXFBItZxnAwf2Q4n9XV
-NRxvGfEul/t/G8ZdmtHraJgjAH2Nnn3k7DOBzOUCZWtnnCCQ+l2xQ0pDB2PLazsz
-HTSRrdUbTWs=
-=WvQm
------END PGP SIGNATURE-----
-
---=-2HPtdeG/G8YDI6jHRNSu--
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
