@@ -1,138 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.235]:11475 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754760AbYFJOmo (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:49248 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758329AbYF0WMe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 10:42:44 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so925677rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jun 2008 07:42:42 -0700 (PDT)
-Message-ID: <19f34abd0806100742v176f50e8se463d2e70df44332@mail.gmail.com> (sfid-20080610_164252_787920_C9E36898)
-Date: Tue, 10 Jun 2008 16:42:41 +0200
-From: "Vegard Nossum" <vegard.nossum@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: BUG: NULL pointer dereference at 00000000 -- IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
-Cc: "Miles Lane" <miles.lane@gmail.com>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"FUJITA Tomonori" <fujita.tomonori@lab.ntt.co.jp>
-In-Reply-To: <200806101637.11473.mb@bu3sch.de>
+	Fri, 27 Jun 2008 18:12:34 -0400
+Date: Fri, 27 Jun 2008 19:12:28 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Dan Williams <dcbw@redhat.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Thomas Renninger <trenn@suse.de>,
+	Fabien Crespel <fabien@crespel.net>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: Re: [PATCH 1/2] rfkill: rename the rfkill_state states and add
+	block-locked state
+Message-ID: <20080627221228.GB8266@khazad-dum.debian.net> (sfid-20080628_001239_563648_E5032E5B)
+References: <1214254004-32652-1-git-send-email-hmh@hmh.eng.br> <1214254004-32652-2-git-send-email-hmh@hmh.eng.br> <1214591028.24579.18.camel@localhost.localdomain> <20080627213524.GA8266@khazad-dum.debian.net> <1214602787.9373.11.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <a44ae5cd0806100709rf4602f2x587631852502c0b5@mail.gmail.com>
-	 <19f34abd0806100729h7a060012h91e81248c9c7cdca@mail.gmail.com>
-	 <200806101634.21576.mb@bu3sch.de> <200806101637.11473.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1214602787.9373.11.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 10, 2008 at 4:37 PM, Michael Buesch <mb@bu3sch.de> wrote:
-> On Tuesday 10 June 2008 16:34:21 Michael Buesch wrote:
->> On Tuesday 10 June 2008 16:29:17 Vegard Nossum wrote:
->> > On Tue, Jun 10, 2008 at 4:23 PM, Michael Buesch <mb@bu3sch.de> wrote:
->> > > On Tuesday 10 June 2008 16:09:37 Miles Lane wrote:
->> > >> BUG: unable to handle kernel NULL pointer dereference at 00000000
->> > >> IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
->> > >
->> > >
->> > > It seems to crash at
->> > >  60 extern const struct dma_mapping_ops *dma_ops;
->> > >  61
->> > >  62 static inline int dma_mapping_error(dma_addr_t dma_addr)
->> > >  63 {
->> > >  64         if (dma_ops->mapping_error)
->> > >  65                 return dma_ops->mapping_error(dma_addr);
->> > >  66
->> > >  67         return (dma_addr == bad_dma_address);
->> > >  68 }
->> >
->> > No, this is wrong.
->> >
->> > /* Check if a DMA mapping address is invalid. */
->> > static bool b43_dma_mapping_error(struct b43_dmaring *ring,
->> >                                   dma_addr_t addr,
->> >                                   size_t buffersize, bool dma_to_device)
->> > {
->> >         if (unlikely(dma_mapping_error(ring->dev->dev->dma_dev, addr)))
->> >
->> > It crashes on this line ---^
->>
->> Which calls dma_mapping_error(), correct?
->>
+On Fri, 27 Jun 2008, Dan Williams wrote:
+> On Fri, 2008-06-27 at 18:35 -0300, Henrique de Moraes Holschuh wrote:
+> > On Fri, 27 Jun 2008, Dan Williams wrote:
+> > > So with this patch, in the case where ex. hp-wmi advertises a killswitch
+> > > and the wlan driver itself doesn't have one, when NM wants to softkill
+> > > the radio, should NM do a SIOCSIWTXPOW or softblock the hp-wmi
+> > > killswitch?  Or would the wlan driver implement an rfkill handler and
+> > 
+> > I thought a lot about it, and I personally feel it is better to keep
+> > SIOCSIWTXPOW separate from rfkill.  This is a driver layer thing, and rfkill
+> > doesn't care either way, but IMHO it is less confusing for the user if
+> > iwconfig txpower doesn't change the rfkill status of a device.
+> > 
+> > This means NM would be trying to set the class/rfkill*/state to
+> > RFKILL_STATE_SOFT_BLOCKED for the devices it wants to block.
+> > 
+> > And the way to be able to do it without going insane really is to start
+> > adding rfkill subsystem support to all wireless network drivers, so your
+> > WLAN devices will all have a rfkill class related to them.
+> 
+> Right, but that's the part we don't yet have, correct?  Can I just start
 
-Yes. Sorry, I should have explained. It happened before the call to
-dma_mapping_error(), so it has to be during the argument processing.
-addr2line -i ftw ;-) (shows inlines)
+Correct, not all wireless device drivers support the rfkill class, and those
+which do need to be revised to make sure they're doing it right.
 
-$ addr2line -e drivers/net/wireless/b43/b43.o -i 24cf9
-drivers/net/wireless/b43/dma.c:521
+> adding rfkill capability with the patchset you just posted to drivers
+> like airo and atmel even though they don't have killswitches themselves?
 
->> But you are right. I see the bug now.
->> ring->dev is assigned after the call.
->> I wonder why it works reliably on all of my machines.
->>
->
-> Ehm no wait a second...
-> What strange tree are you looking at?
-> This is a copy of the code from my local tree.
->
->  516 /* Check if a DMA mapping address is invalid. */
->  517 static bool b43_dma_mapping_error(struct b43_dmaring *ring,
->  518                                   dma_addr_t addr,
->  519                                   size_t buffersize, bool dma_to_device)
->  520 {
->  521         if (unlikely(dma_mapping_error(addr)))
->  522                 return 1;
->
-> This code is perfectly fine.
-> This must be some merge error in some upstream tree.
+Yes, *provided* that you do so by *adding* a rfkill controller (software
+based) to them.  And that, of course, requires you to be able to get the
+devices to stop emitting energy in software somehow.
 
-I am looking at v2.6.26-rc5-mm2.
+By *definition*, you did not rfkill something if it still keeps emmiting
+radio waves, or light, or whatever (even if data transfer itself is not
+happening).  For some devices this is easy.  For others, you might find out
+you need to put them in D3, or power down their USB port... and for others
+it will be just plain impossible.
 
-This change comes from
-
-commit 353c409463ecba63c3a41a992d3f5fba935eada9
-Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Date:   Fri May 23 19:02:30 2008 +0000
-
-    dma-mapping-add-the-device-argument-to-dma_mapping_error
-
-    Add per-device dma_mapping_ops support for CONFIG_X86_64 as POWER
-    architecture does:
-
-    This enables us to cleanly fix the Calgary IOMMU issue that some devices
-    are not behind the IOMMU (http://lkml.org/lkml/2008/5/8/423).
-
-    I think that per-device dma_mapping_ops support would be also helpful for
-    KVM people to support PCI passthrough but Andi thinks that this makes it
-    difficult to support the PCI passthrough (see the above thread).  So I
-    CC'ed this to KVM camp.  Comments are appreciated.
-
-    A pointer to dma_mapping_ops to struct dev_archdata is added.  If the
-    pointer is non NULL, DMA operations in asm/dma-mapping.h use it.  If it's
-    NULL, the system-wide dma_ops pointer is used as before.
-
-    If it's useful for KVM people, I plan to implement a mechanism to register
-    a hook called when a new pci (or dma capable) device is created (it works
-    with hot plugging).  It enables IOMMUs to set up an appropriate
-    dma_mapping_ops per device.
-
-    The major obstacle is that dma_mapping_error doesn't take a pointer to the
-    device unlike other DMA operations.  So x86 can't have dma_mapping_ops per
-    device.  Note all the POWER IOMMUs use the same dma_mapping_error function
-    so this is not a problem for POWER but x86 IOMMUs use different
-    dma_mapping_error functions.
-
-    The first patch adds the device argument to dma_mapping_error.  The patch
-    is trivial but large since it touches lots of drivers and dma-mapping.h in
-    all the architecture.
-
-(Added to Cc.)
+I don't know the airo and atmel devices you mention, so I have no idea how
+easy (or difficult) it is to make them stop emitting energy.
 
 
-Vegard
+Here is a weird example (with a happy ending) to make it clear:
+
+[PS: I don't know if bluetooth keeps emitting energy when there is no data
+to transmit. I will assume it does, since the laptop vendor added expensive
+circuitry to make damn sure it could be powered off].
+
+The thinkpad builtin bluetooth device is *impossible* to rfkill as far as
+the bluetooth driver is concerned.  So, whatever bluetooth driver takes care
+of the builtin thinkpad USB dongle here can't do anything.  It CANNOT
+support rfkill.
+
+  * Therefore, the bluetooth driver does not connect that device with a
+    rfkill class, because it is impossible for that dongle hardware.  Even
+    if the driver were to ignore data received by the device and halt data
+    transmissions to it, it would still be emmiting radio signals so it
+    would be a LIE to say it was rfkilled.
+
+=> if the user depended only on the bluetooth device driver, he would NOT
+have rfkill capabilities for bluetooth at all on the thinkpad.  In fact, he
+will not get a "RF kill this radio" control in NM on this device.
+
+Lenovo, however, added a hard rfkill hardware to make up for the lack of
+native rfkill support on the bluetooth dongle: it has firmware and hardware
+that powers off the dongle(!).  thinkpad-acpi knows about this hard rfkill
+controller, and exports it through the rfkill class.
+
+=> the user gets a rfkill class that says it is of type bluetooth, but it is
+not connected to a bluetooth device (it is connected to the platform, i.e.
+the computer itself).  Now, it is not the bluetooth device, but NM lets him
+set it to RFKILL_STATE_SOFT_BLOCKED.  And when he tries it... the other
+bluetooth device that had no "RF kill this radio" control goes away! (it has
+been hot-unplugged, as power was cut off and that makes it disappear from
+the USB bus).  How quaint!
+
+It is not perfect beauty, but it works.  Maybe NM can use some assumptions
+to make it better (example: if there is a single bluetooth platform rfkill
+controller, and a single bluetooth device with no rfkill controller, assume
+the platform device one will control the device), but it might be a wrong
+assumption in some platform out there.
+
+Maybe we can even teach HAL about these assumptions for some machines, if it
+is deemed important enough (rfkill certainly works without it and won't want
+to know about it, but GUIs might present a better interface for the user
+with that information).
+
+And I sure hope it is just bluetooth and WWAN that will be annoying like
+this.
+
+> That's the conceptual problem here; cards like airo and atmel don't have
+> killswitches, and since /sys/class/rfkill/rfkillX are _switches_ right
+> now, it gets confusing when a device that isn't a killswitch would start
+> providing rfkillX.
+
+Let's avoid the term "switches", please.  Look at the new documentation, and
+use rfkill controller, hard rfkill line, soft rfkill line and input device,
+please :-)
+
+I hope I got what you meant with "switches" correctly, I know nothing of the
+atmel and airo.
 
 -- 
-"The animistic metaphor of the bug that maliciously sneaked in while
-the programmer was not looking is intellectually dishonest as it
-disguises that the error is the programmer's own creation."
-	-- E. W. Dijkstra, EWD1036
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
