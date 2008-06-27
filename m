@@ -1,101 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:59944 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753115AbYFJOvw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 10:51:52 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Vegard Nossum" <vegard.nossum@gmail.com>
-Subject: Re: BUG: NULL pointer dereference at 00000000 -- IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
-Date: Tue, 10 Jun 2008 16:50:26 +0200
-Cc: "Miles Lane" <miles.lane@gmail.com>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"FUJITA Tomonori" <fujita.tomonori@lab.ntt.co.jp>
-References: <a44ae5cd0806100709rf4602f2x587631852502c0b5@mail.gmail.com> <200806101637.11473.mb@bu3sch.de> <19f34abd0806100742v176f50e8se463d2e70df44332@mail.gmail.com>
-In-Reply-To: <19f34abd0806100742v176f50e8se463d2e70df44332@mail.gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:9052 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756035AbYF0UUL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jun 2008 16:20:11 -0400
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 4/5] hostap: add radiotap support in monitor mode
+To: Jouni Malinen <j@w1.fi>, John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Fri, 27 Jun 2008 16:20:10 -0400
+Message-ID: <20080627202010.18603.9323.stgit@dv.roinet.com> (sfid-20080627_222015_846133_FBBCB9BA)
+In-Reply-To: <20080627201952.18603.98308.stgit@dv.roinet.com>
+References: <20080627201952.18603.98308.stgit@dv.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200806101650.27180.mb@bu3sch.de> (sfid-20080610_165413_468350_CBE4BE30)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 10 June 2008 16:42:41 Vegard Nossum wrote:
-> This change comes from
-> 
-> commit 353c409463ecba63c3a41a992d3f5fba935eada9
-> Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Date:   Fri May 23 19:02:30 2008 +0000
+Provide MAC time, rate, channel, signal and noise.
 
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-Ok, FUJITA Tomonori, please make sure a patch like the following goes
-into the same trees that you submitted commit 353c409 to.
-Also make sure to check b43legacy. I _guess_ you might have added
-the same bug there.
+ drivers/net/wireless/hostap/hostap_80211_rx.c |   21 +++++++++++++++++++++
+ drivers/net/wireless/hostap/hostap_ioctl.c    |    5 ++++-
+ drivers/net/wireless/hostap/hostap_wlan.h     |   14 +++++++++++++-
+ 3 files changed, 38 insertions(+), 2 deletions(-)
 
-Index: wireless-testing/drivers/net/wireless/b43/dma.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/dma.c	2008-06-10 13:58:22.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/dma.c	2008-06-10 16:48:53.000000000 +0200
-@@ -802,6 +802,7 @@ struct b43_dmaring *b43_setup_dmaring(st
- 	if (!ring)
- 		goto out;
- 	ring->type = type;
-+	ring->dev = dev;
- 
- 	nr_slots = B43_RXRING_SLOTS;
- 	if (for_tx)
-@@ -853,7 +854,6 @@ struct b43_dmaring *b43_setup_dmaring(st
- 				 DMA_TO_DEVICE);
+diff --git a/drivers/net/wireless/hostap/hostap_80211_rx.c b/drivers/net/wireless/hostap/hostap_80211_rx.c
+index 020f450..f106bc1 100644
+--- a/drivers/net/wireless/hostap/hostap_80211_rx.c
++++ b/drivers/net/wireless/hostap/hostap_80211_rx.c
+@@ -78,6 +78,9 @@ int prism2_rx_80211(struct net_device *dev, struct sk_buff *skb,
+ 			prism_header = 2;
+ 			phdrlen = sizeof(struct linux_wlan_ng_cap_hdr);
+ 		}
++	} else if (dev->type == ARPHRD_IEEE80211_RADIOTAP) {
++		prism_header = 3;
++		phdrlen = sizeof(struct hostap_radiotap_rx);
+ 	} else {
+ 		prism_header = 0;
+ 		phdrlen = 0;
+@@ -165,6 +168,24 @@ hdr->f.status = s; hdr->f.len = l; hdr->f.data = d
+ 		hdr->ssi_noise  = htonl(rx_stats->noise);
+ 		hdr->preamble   = htonl(0); /* unknown */
+ 		hdr->encoding   = htonl(1); /* cck */
++	} else if (prism_header == 3) {
++		struct hostap_radiotap_rx *hdr;
++		hdr = (struct hostap_radiotap_rx *)skb_push(skb, phdrlen);
++		memset(hdr, 0, phdrlen);
++		hdr->hdr.it_len = cpu_to_le16(phdrlen);
++		hdr->hdr.it_present =
++			cpu_to_le32((1 << IEEE80211_RADIOTAP_TSFT) |
++				    (1 << IEEE80211_RADIOTAP_CHANNEL) |
++				    (1 << IEEE80211_RADIOTAP_RATE) |
++				    (1 << IEEE80211_RADIOTAP_DBM_ANTSIGNAL) |
++				    (1 << IEEE80211_RADIOTAP_DBM_ANTNOISE));
++		hdr->tsft = cpu_to_le64(rx_stats->mac_time);
++		hdr->chan_freq = cpu_to_le16(freq_list[local->channel - 1]);
++		hdr->chan_flags = cpu_to_le16(IEEE80211_CHAN_CCK |
++						 IEEE80211_CHAN_2GHZ);
++		hdr->rate = rx_stats->rate / 5;
++		hdr->dbm_antsignal = rx_stats->signal;
++		hdr->dbm_antnoise = rx_stats->noise;
  	}
  
--	ring->dev = dev;
- 	ring->nr_slots = nr_slots;
- 	ring->mmio_base = b43_dmacontroller_base(type, controller_index);
- 	ring->index = controller_index;
-
-
->     dma-mapping-add-the-device-argument-to-dma_mapping_error
-> 
->     Add per-device dma_mapping_ops support for CONFIG_X86_64 as POWER
->     architecture does:
-> 
->     This enables us to cleanly fix the Calgary IOMMU issue that some devices
->     are not behind the IOMMU (http://lkml.org/lkml/2008/5/8/423).
-> 
->     I think that per-device dma_mapping_ops support would be also helpful for
->     KVM people to support PCI passthrough but Andi thinks that this makes it
->     difficult to support the PCI passthrough (see the above thread).  So I
->     CC'ed this to KVM camp.  Comments are appreciated.
-> 
->     A pointer to dma_mapping_ops to struct dev_archdata is added.  If the
->     pointer is non NULL, DMA operations in asm/dma-mapping.h use it.  If it's
->     NULL, the system-wide dma_ops pointer is used as before.
-> 
->     If it's useful for KVM people, I plan to implement a mechanism to register
->     a hook called when a new pci (or dma capable) device is created (it works
->     with hot plugging).  It enables IOMMUs to set up an appropriate
->     dma_mapping_ops per device.
-> 
->     The major obstacle is that dma_mapping_error doesn't take a pointer to the
->     device unlike other DMA operations.  So x86 can't have dma_mapping_ops per
->     device.  Note all the POWER IOMMUs use the same dma_mapping_error function
->     so this is not a problem for POWER but x86 IOMMUs use different
->     dma_mapping_error functions.
-> 
->     The first patch adds the device argument to dma_mapping_error.  The patch
->     is trivial but large since it touches lots of drivers and dma-mapping.h in
->     all the architecture.
-> 
-> (Added to Cc.)
-> 
-> 
-> Vegard
-> 
-
-
-
--- 
-Greetings Michael.
+ 	ret = skb->len - phdrlen;
+diff --git a/drivers/net/wireless/hostap/hostap_ioctl.c b/drivers/net/wireless/hostap/hostap_ioctl.c
+index ed52d98..3f8b1d7 100644
+--- a/drivers/net/wireless/hostap/hostap_ioctl.c
++++ b/drivers/net/wireless/hostap/hostap_ioctl.c
+@@ -897,6 +897,8 @@ static void hostap_monitor_set_type(local_info_t *local)
+ 	if (local->monitor_type == PRISM2_MONITOR_PRISM ||
+ 	    local->monitor_type == PRISM2_MONITOR_CAPHDR) {
+ 		dev->type = ARPHRD_IEEE80211_PRISM;
++	} else if (local->monitor_type == PRISM2_MONITOR_RADIOTAP) {
++		dev->type = ARPHRD_IEEE80211_RADIOTAP;
+ 	} else {
+ 		dev->type = ARPHRD_IEEE80211;
+ 	}
+@@ -2520,7 +2522,8 @@ static int prism2_ioctl_priv_prism2_param(struct net_device *dev,
+ 	case PRISM2_PARAM_MONITOR_TYPE:
+ 		if (value != PRISM2_MONITOR_80211 &&
+ 		    value != PRISM2_MONITOR_CAPHDR &&
+-		    value != PRISM2_MONITOR_PRISM) {
++		    value != PRISM2_MONITOR_PRISM &&
++		    value != PRISM2_MONITOR_RADIOTAP) {
+ 			ret = -EINVAL;
+ 			break;
+ 		}
+diff --git a/drivers/net/wireless/hostap/hostap_wlan.h b/drivers/net/wireless/hostap/hostap_wlan.h
+index 15445bc..ffdf487 100644
+--- a/drivers/net/wireless/hostap/hostap_wlan.h
++++ b/drivers/net/wireless/hostap/hostap_wlan.h
+@@ -5,6 +5,7 @@
+ #include <linux/netdevice.h>
+ #include <linux/mutex.h>
+ #include <net/iw_handler.h>
++#include <net/ieee80211_radiotap.h>
+ 
+ #include "hostap_config.h"
+ #include "hostap_common.h"
+@@ -55,6 +56,17 @@ struct linux_wlan_ng_cap_hdr {
+ 	__be32 encoding;
+ } __attribute__ ((packed));
+ 
++struct hostap_radiotap_rx {
++	struct ieee80211_radiotap_header hdr;
++	__le64 tsft;
++	u8 rate;
++	u8 padding;
++	__le16 chan_freq;
++	__le16 chan_flags;
++	s8 dbm_antsignal;
++	s8 dbm_antnoise;
++} __attribute__ ((packed));
++
+ #define LWNG_CAP_DID_BASE   (4 | (1 << 6)) /* section 4, group 1 */
+ #define LWNG_CAPHDR_VERSION 0x80211001
+ 
+@@ -734,7 +746,7 @@ struct local_info {
+ 	unsigned long scan_timestamp; /* Time started to scan */
+ 	enum {
+ 		PRISM2_MONITOR_80211 = 0, PRISM2_MONITOR_PRISM = 1,
+-		PRISM2_MONITOR_CAPHDR = 2
++		PRISM2_MONITOR_CAPHDR = 2, PRISM2_MONITOR_RADIOTAP = 3
+ 	} monitor_type;
+ 	int monitor_allow_fcserr;
+ 
