@@ -1,49 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:56131 "EHLO hostap.isc.org"
+Received: from c60.cesmail.net ([216.154.195.49]:9052 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751035AbYFQP7E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 11:59:04 -0400
-Message-Id: <20080617154008.883383150@localhost> (sfid-20080617_175912_673335_B33F2037)
-Date: Tue, 17 Jun 2008 18:40:08 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC PATCH 0/7] IEEE 802.11w / management frame protection
+	id S1754676AbYF0UTy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jun 2008 16:19:54 -0400
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 1/5] hostap: don't report useless WDS frames by default
+To: Jouni Malinen <j@w1.fi>, John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Fri, 27 Jun 2008 16:19:52 -0400
+Message-ID: <20080627201952.18603.98308.stgit@dv.roinet.com> (sfid-20080627_222008_046718_54DD8B68)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the first and still quite preliminary version of changes to
-introduce IEEE 802.11w (management frame protection) support into
-mac80211. As such, I'm mainly looking for comments on the current
-design to help me in finalizing and cleaning up the patches.
+DEBUG_EXTRA is reported to the kernel log by default, but DEBUG_EXTRA2
+is not.  Unrelated WDS frames pollute the log unnecessarily.
 
-Please note that couple of small additions to hostapd and wpa_supplicant
-are required to actually configure MFP and those are not yet included in
-the hostap git repository. Consequently, this is not yet available for
-real testing. Or well, if you really want to test this now, I can send
-an experimental patch to hostapd/wpa_supplicant to enable MFP support.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-The current version is relatively complete for mac80211, but there are
-still couple of known missing functions and I've done only very
-limited testing so far. I was able to send and receive both CCMP and
-BIP protected deauthentication frames and based on a sniffer log, the
-frames looked correct. All this is with mac80211_hwsim and software
-crypto. It is unclear whether this can be used as-is with devices that
-use hwaccel for crypto at least before the low-level drivers and/or
-firmware have been modified to cope with the possibility of CCMP being
-used with management frames.
+ drivers/net/wireless/hostap/hostap_80211_rx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-This patch set does not address the issues found in configuring default
-keys for monitor interfaces, i.e., this still needs a workaround in
-hostapd to set IGTK for both wlan# and mon.wlan#. In addition, the
-debugfs directory is left behind when the monitor interface is removed.
-
-Since IEEE 802.11w draft is still in progress and open to changes, it is
-also unclear whether we would actually like to introduce IEEE 802.11w
-support as-is into mac80211 in main line kernels at this point. Then
-again, IEEE 802.11w draft is quite a bit further in the standardization
-process than IEEE 802.11s draft and we already have some pre-standard
-mesh support in mac80211 at least in wireless-testing.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+diff --git a/drivers/net/wireless/hostap/hostap_80211_rx.c b/drivers/net/wireless/hostap/hostap_80211_rx.c
+index 4fd7380..47884c3 100644
+--- a/drivers/net/wireless/hostap/hostap_80211_rx.c
++++ b/drivers/net/wireless/hostap/hostap_80211_rx.c
+@@ -551,7 +551,7 @@ hostap_rx_frame_wds(local_info_t *local, struct ieee80211_hdr_4addr *hdr,
+ 	     hdr->addr1[2] != 0xff || hdr->addr1[3] != 0xff ||
+ 	     hdr->addr1[4] != 0xff || hdr->addr1[5] != 0xff)) {
+ 		/* RA (or BSSID) is not ours - drop */
+-		PDEBUG(DEBUG_EXTRA, "%s: received WDS frame with "
++		PDEBUG(DEBUG_EXTRA2, "%s: received WDS frame with "
+ 		       "not own or broadcast %s=%s\n",
+ 		       local->dev->name,
+ 		       fc & IEEE80211_FCTL_FROMDS ? "RA" : "BSSID",
