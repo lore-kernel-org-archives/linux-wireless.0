@@ -1,61 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.240]:5880 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752734AbYFUJqi (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:55025 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751583AbYF0Pnf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jun 2008 05:46:38 -0400
-Received: by an-out-0708.google.com with SMTP id d40so374572and.103
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Jun 2008 02:46:37 -0700 (PDT)
-To: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
-Subject: Re: [PATCH] rt2x00: Remove duplicate deinitialization
-Date: Sat, 21 Jun 2008 12:04:19 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200806202210.54248.IvDoorn@gmail.com> <485C25CA.6000607@kpnplanet.nl>
-In-Reply-To: <485C25CA.6000607@kpnplanet.nl>
+	Fri, 27 Jun 2008 11:43:35 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] wireless: remove RFKILL_STATE_HARD_BLOCKED warnings
+Date: Fri, 27 Jun 2008 17:42:58 +0200
+Cc: linux-wireless@vger.kernel.org,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+References: <1214579554-14581-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1214579554-14581-1-git-send-email-linville@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200806211204.21129.IvDoorn@gmail.com> (sfid-20080621_114642_096146_6BF2CE81)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200806271742.58833.mb@bu3sch.de> (sfid-20080627_174338_211904_824849C8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+On Friday 27 June 2008 17:12:34 John W. Linville wrote:
+>   CC [M]  drivers/net/wireless/b43/rfkill.o
+> drivers/net/wireless/b43/rfkill.c: In function =E2=80=98b43_rfkill_so=
+ft_toggle=E2=80=99:
+> drivers/net/wireless/b43/rfkill.c:90: warning: enumeration value =E2=80=
+=98RFKILL_STATE_HARD_BLOCKED=E2=80=99 not handled in switch
+>=20
+>   CC [M]  drivers/net/wireless/b43legacy/rfkill.o
+> drivers/net/wireless/b43legacy/rfkill.c: In function =E2=80=98b43lega=
+cy_rfkill_soft_toggle=E2=80=99:
+> drivers/net/wireless/b43legacy/rfkill.c:92: warning: enumeration valu=
+e =E2=80=98RFKILL_STATE_HARD_BLOCKED=E2=80=99 not handled in switch
+>=20
+>   CC [M]  drivers/net/wireless/iwlwifi/iwl-rfkill.o
+> drivers/net/wireless/iwlwifi/iwl-rfkill.c: In function =E2=80=98iwl_r=
+fkill_soft_rf_kill=E2=80=99:
+> drivers/net/wireless/iwlwifi/iwl-rfkill.c:56: warning: enumeration va=
+lue =E2=80=98RFKILL_STATE_HARD_BLOCKED=E2=80=99 not handled in switch
+>=20
+> Also handle RFKILL_STATE_{ON,OFF} -> RFKILL_STATE_{UNBLOCKED,SOFT_BLO=
+CKED}
+> conversion since I'm already here...
+>=20
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-> > @@ -509,16 +498,11 @@ static int rt2x00queue_alloc_rxskbs(struct rt2x00_dev *rt2x00dev,
-> >  	for (i = 0; i < queue->limit; i++) {
-> >  		skb = rt2x00queue_alloc_rxskb(rt2x00dev, &queue->entries[i]);
-> >  		if (!skb)
-> > -			goto exit;
-> > +			return -ENOMEM;
-> >  		queue->entries[i].skb = skb;
-> >  	}
-> >  
-> >  	return 0;
-> > -
-> > -exit:
-> > -	rt2x00queue_free_skbs(rt2x00dev, queue);
-> > -
-> > -	return -ENOMEM;
-> >  }
-> >  
-> >  int rt2x00queue_initialize(struct rt2x00_dev *rt2x00dev)
-> >   
-> 
-> 
-> I find this last hunk of the patch a bit dubious. IMHO a function should 
-> never rely on letting his caller do the right thing and clean up for it, 
-> in case of failures; it should always clean up after itself. It is true 
-> that in this case the caller will also attempt to clean up these 
-> structures, but that doesn't mean that any potential future users of 
-> such a function should be bothered with doing the same thing.
+ACK for b43 and b43legacy changes.
 
-True but rt2x00queue_alloc_rxskbs and rt2x00queue_free_rxskbs are only
-called once. And there isn't any reason why they should be called anywhere
-else other then initialize() and uninitialize().
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.c b/drivers/net/=
+wireless/iwlwifi/iwl-rfkill.c
+> index 4624ac7..ffefbb4 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+> @@ -54,17 +54,20 @@ static int iwl_rfkill_soft_rf_kill(void *data, en=
+um rfkill_state state)
+>  	mutex_lock(&priv->mutex);
+> =20
+>  	switch (state) {
+> -	case RFKILL_STATE_ON:
+> +	case RFKILL_STATE_UNBLOCKED:
+>  		iwl_radio_kill_sw_enable_radio(priv);
+>  		/* if HW rf-kill is set dont allow ON state */
+>  		if (iwl_is_rfkill(priv))
+>  			err =3D -EBUSY;
+>  		break;
+> -	case RFKILL_STATE_OFF:
+> +	case RFKILL_STATE_SOFT_BLOCKED:
+>  		iwl_radio_kill_sw_disable_radio(priv);
+>  		if (!iwl_is_rfkill(priv))
+>  			err =3D -EBUSY;
+>  		break;
+> +	default:
+> +		IWL_WARNING("we recieved unexpected RFKILL state %d\n", state);
 
-And this approach is the same as other allocation/free paths like in rt2x00pci/usb
-and rt2x00lib.
+"recieved" typo.
 
-Ivo
+--=20
+Greetings Michael.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
