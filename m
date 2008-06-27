@@ -1,66 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47080
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752780AbYFCUgw (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:47231 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757106AbYF0TvM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 16:36:52 -0400
-Date: Tue, 03 Jun 2008 13:28:26 -0700 (PDT)
-Message-Id: <20080603.132826.197798175.davem@davemloft.net> (sfid-20080603_223735_609814_3B863701)
-To: linux-wireless@vger.kernel.org
-CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 5/12]: wext: Pull ioctl permission checking out into helper
- function.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 27 Jun 2008 15:51:12 -0400
+Message-ID: <486544FA.20605@lwfinger.net> (sfid-20080627_215116_284759_5F8E7625)
+Date: Fri, 27 Jun 2008 14:52:26 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: wireless <linux-wireless@vger.kernel.org>, Jouni Malinen <j@w1.fi>
+Subject: Sparse warnings
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+While checking the rtl8187 driver for sparse warnings, I discovered these:
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/wireless/wext.c |   22 +++++++++++++++-------
- 1 files changed, 15 insertions(+), 7 deletions(-)
+   CHECK   drivers/net/wireless/hostap/hostap_80211_rx.c
+drivers/net/wireless/hostap/hostap_80211_rx.c:128:34: warning: symbol 
+'hdr' shadows an earlier one
+drivers/net/wireless/hostap/hostap_80211_rx.c:67:29: originally 
+declared here
+drivers/net/wireless/hostap/hostap_80211_rx.c:150:32: warning: symbol 
+'hdr' shadows an earlier one
+drivers/net/wireless/hostap/hostap_80211_rx.c:67:29: originally 
+declared here
+   CHECK   drivers/net/wireless/hostap/hostap_ap.c
+drivers/net/wireless/hostap/hostap_ap.c:1933:18: warning: cast 
+truncates bits from constant value (ffffffffffff3fff becomes 3fff)
+   CHECK   drivers/net/wireless/hostap/hostap_main.c
+drivers/net/wireless/hostap/hostap_main.c:597:5: warning: symbol 
+'hostap_80211_header_parse' was not declared. Should it be static?
 
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index a1cd19a..e96559e 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -1061,18 +1061,26 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr, unsigned i
- 	return -EOPNOTSUPP;
- }
- 
-+/* If command is `set a parameter', or `get the encoding parameters',
-+ * check if the user has the right to do it.
-+ */
-+static int wext_permission_check(unsigned int cmd)
-+{
-+	if ((IW_IS_SET(cmd) || cmd == SIOCGIWENCODE || cmd == SIOCGIWENCODEEXT)
-+	    && !capable(CAP_NET_ADMIN))
-+		return -EPERM;
-+
-+	return 0;
-+}
-+
- /* entry point from dev ioctl */
- int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
- 		      void __user *arg)
- {
--	int ret;
-+	int ret = wext_permission_check(cmd);
- 
--	/* If command is `set a parameter', or
--	 * `get the encoding parameters', check if
--	 * the user has the right to do it */
--	if ((IW_IS_SET(cmd) || cmd == SIOCGIWENCODE || cmd == SIOCGIWENCODEEXT)
--	    && !capable(CAP_NET_ADMIN))
--		return -EPERM;
-+	if (ret)
-+		return ret;
- 
- 	dev_load(net, ifr->ifr_name);
- 	rtnl_lock();
--- 
-1.5.5.1.308.g1fbb5
+Obviously, none of these cause any problems, but I'm reporting them 
+just in case.
 
+Larry
