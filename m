@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:50431 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750938AbYFQS2N (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52366
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752295AbYF0L2S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 14:28:13 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Jouni Malinen <j@w1.fi>
-Subject: Re: [RFC PATCH 0/7] IEEE 802.11w / management frame protection
-Date: Tue, 17 Jun 2008 20:27:50 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <20080617154008.883383150@localhost> <200806171952.53183.mb@bu3sch.de> <20080617182322.GF4974@jm.kir.nu>
-In-Reply-To: <20080617182322.GF4974@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200806172027.50312.mb@bu3sch.de> (sfid-20080617_202816_766412_A001EFD7)
+	Fri, 27 Jun 2008 07:28:18 -0400
+Date: Fri, 27 Jun 2008 04:28:18 -0700 (PDT)
+Message-Id: <20080627.042818.76860067.davem@davemloft.net> (sfid-20080627_132848_164927_F0B3C9D9)
+To: linville@tuxdriver.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-06-25
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080625153624.GB9111@tuxdriver.com>
+References: <20080625153624.GB9111@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 17 June 2008 20:23:22 Jouni Malinen wrote:
-> On Tue, Jun 17, 2008 at 07:52:52PM +0200, Michael Buesch wrote:
-> 
-> > Well, as long as the checksum will fail in that case we're OK for b43,
-> > as the driver will notify the need for software crypto for those packets.
-> 
-> Yes, MIC won't match (or well, in theory it could, but in practice..)
-> and if the original frame is available after failed hw-decryption
-> attempt, this is indeed all that's needed here. Some hardware designs
-> are not able to deliver the unmodified frame due to the way AES hwaccel
-> is implemented in them and that gets bit tricky to handle in software
-> for IEEE 802.11w.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 25 Jun 2008 11:36:24 -0400
 
-Yeah I see. Probably need to disable HW crypto for them.
-(If firmware modification to pass MGMT frames untouched is impossible)
+> Here is the latest round of wireless fixes for 2.6.26.
+> 
+> The EU regulatory domain patch is straight-forward and should not
+> affect anyone who doesn't choose to use it.  It is already queued in
+> net-next-2.6, but upon reflection I think it makes sense to include
+> it as a fix.  I don't think git will choke on it at all.
+> 
+> The iwlwifi patch is physically bigger than I would like to see at this
+> point of the release, but it is isolated to the iwlwifi drivers and
+> it should avoid problems with some cards trying to scan on channels
+> they don't actually support.
+> 
+> The rt2x00 patch seems a bit bigger than it really is, as it moves
+> and consolidates some existing code.
+> 
+> The b43 and b43legacy are all basically straight-forward bugfixes.
 
--- 
-Greetings Michael.
+Pulled and pushed back out to net-2.6, thanks!
+
+I'll deal with the net-next-2.6 merge stuff after some sleep.
