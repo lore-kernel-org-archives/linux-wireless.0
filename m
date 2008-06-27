@@ -1,64 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:48223 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752518AbYFMUEK convert rfc822-to-8bit (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.173]:57073 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756960AbYF0RpJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 16:04:10 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so3402254waf.23
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2008 13:04:10 -0700 (PDT)
-Message-ID: <1ba2fa240806131304n442972eatfd2f35034476c380@mail.gmail.com> (sfid-20080613_220416_488619_EFD04104)
-Date: Fri, 13 Jun 2008 23:04:09 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Maxim Levitsky" <maximlevitsky@gmail.com>
-Subject: Re: [ipw3945-devel] [BUG] iwlwifi 3945 works only with disable_hw_scan=1
-Cc: "=?ISO-8859-1?Q?Tor_H=E5kon_Haugen?=" <tor.hakon.haugen@gmail.com>,
-	"Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <48528CF0.8050204@gmail.com>
+	Fri, 27 Jun 2008 13:45:09 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so1852ugf.16
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jun 2008 10:45:07 -0700 (PDT)
+Message-ID: <f6ca9fed0806271045p1704b3c2l591dd887f5befdc0@mail.gmail.com> (sfid-20080627_194515_310494_E3416993)
+Date: Fri, 27 Jun 2008 19:45:07 +0200
+From: drago01 <drago01@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] iwlwifi: fix rfkill deps and remove input device usage
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, "Zhu, Yi" <yi.zhu@intel.com>,
+	randy.dunlap@oracle.com, "Ivo van Doorn" <ivdoorn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <484FEA26.1040305@gmail.com>
-	 <1213241315.7814.696.camel@debian.sh.intel.com>
-	 <20080612135936.GA5031@tuxdriver.com>
-	 <1213342523.7814.865.camel@debian.sh.intel.com>
-	 <20080613130310.GA5333@tuxdriver.com> <48528B63.5030403@gmail.com>
-	 <48528CF0.8050204@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 13, 2008 at 6:06 PM, Maxim Levitsky <maximlevitsky@gmail.co=
-m> wrote:
-> Tor H=E5kon Haugen wrote:
+On Fri, Jun 27, 2008 at 7:07 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Fri, Jun 27, 2008 at 05:54:06PM +0200, drago01 wrote:
+>> On Fri, Jun 27, 2008 at 5:35 PM, John W. Linville
+>> <linville@tuxdriver.com> wrote:
 >>
->> John W. Linville wrote:
->>> On Fri, Jun 13, 2008 at 03:35:23PM +0800, Zhu Yi wrote:
->>>> On Thu, 2008-06-12 at 09:59 -0400, John W. Linville wrote:
->>>>> Honestly I'm tempted to change it to "enable_hw_scan" instead...
->>>> Give the advantages, I'd like to use it if we can fix the bug (I h=
-aven't
->>>> seen what the bug is myself). But you are free to change the defau=
-lt
->>>> value until it is fixed. There is no such problem for 4965, right?
->>> AFAICT only the 3945 seems to need it.
->>>
+>> > Randy Dunlap (1):
+>> >      iwlwifi: fix build for CONFIG_INPUT=n
 >>
->> I can confirm that this also applies to 4965 as a friend of mine has
->> this card. According to him the card works a lot better with the
->> parameters "swcrypto=3D1" and "disable_hw_scan=3D1".
+>> this one was NACKED by Ivo (well not exactly this but the 3945
+>> version, and Yi posted an updated patch)
 >
-> Just to make it clear,
-> iwl3945 doesn't work at all without disable_hw_scan=3D1 here.
-> The driver just shuts down thee card since it detects microcode error=
-=2E
->
+> I have no record of that.  Could someone send me a correct patch on
+> top of this one?
 
-It looks like this is all caused by the big rate, band patch. Looks
-like A band scan channels are not configured correctly for the
-scanning. This crashes the firmware.
+Patch attached for iwl4965/5000 on top of Randy's patch.
+Untested due to lack of hardware but it should work fine.
 
-Tomas
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-------------------
+This patch fixes the rfkill deps for iwl4965/5000
+and removes the input device usage.
+
+Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig
+b/drivers/net/wireless/iwlwifi/Kconfig
+index d7ea32f..b628a44 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -8,7 +8,6 @@ config IWLCORE
+ 	select MAC80211_LEDS if IWLWIFI_LEDS
+ 	select LEDS_CLASS if IWLWIFI_LEDS
+ 	select RFKILL if IWLWIFI_RFKILL
+-	select RFKILL_INPUT if (IWLWIFI_RFKILL && INPUT)
+
+ config IWLWIFI_LEDS
+ 	bool
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+index ffefbb4..f5211eb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+@@ -98,36 +98,11 @@ int iwl_rfkill_init(struct iwl_priv *priv)
+ 	priv->rfkill_mngr.rfkill->dev.class->suspend = NULL;
+ 	priv->rfkill_mngr.rfkill->dev.class->resume = NULL;
+
+-#if defined(CONFIG_RFKILL_INPUT) || defined(CONFIG_RFKILL_INPUT_MODULE)
+-	priv->rfkill_mngr.input_dev = input_allocate_device();
+-	if (!priv->rfkill_mngr.input_dev) {
+-		IWL_ERROR("Unable to allocate rfkill input device.\n");
+-		ret = -ENOMEM;
+-		goto freed_rfkill;
+-	}
+-
+-	priv->rfkill_mngr.input_dev->name = priv->cfg->name;
+-	priv->rfkill_mngr.input_dev->phys = wiphy_name(priv->hw->wiphy);
+-	priv->rfkill_mngr.input_dev->id.bustype = BUS_HOST;
+-	priv->rfkill_mngr.input_dev->id.vendor = priv->pci_dev->vendor;
+-	priv->rfkill_mngr.input_dev->dev.parent = device;
+-	priv->rfkill_mngr.input_dev->evbit[0] = BIT(EV_KEY);
+-	set_bit(KEY_WLAN, priv->rfkill_mngr.input_dev->keybit);
+-#endif
+-
+ 	ret = rfkill_register(priv->rfkill_mngr.rfkill);
+ 	if (ret) {
+ 		IWL_ERROR("Unable to register rfkill: %d\n", ret);
+-		goto free_input_dev;
+-	}
+-
+-#if defined(CONFIG_RFKILL_INPUT) || defined(CONFIG_RFKILL_INPUT_MODULE)
+-	ret = input_register_device(priv->rfkill_mngr.input_dev);
+-	if (ret) {
+-		IWL_ERROR("Unable to register rfkill input device: %d\n", ret);
+ 		goto unregister_rfkill;
+ 	}
+-#endif
+
+ 	IWL_DEBUG_RF_KILL("RFKILL initialization complete.\n");
+ 	return ret;
+@@ -136,12 +111,6 @@ unregister_rfkill:
+ 	rfkill_unregister(priv->rfkill_mngr.rfkill);
+ 	priv->rfkill_mngr.rfkill = NULL;
+
+-free_input_dev:
+-#if defined(CONFIG_RFKILL_INPUT) || defined(CONFIG_RFKILL_INPUT_MODULE)
+-	input_free_device(priv->rfkill_mngr.input_dev);
+-	priv->rfkill_mngr.input_dev = NULL;
+-#endif
+-
+ freed_rfkill:
+ 	if (priv->rfkill_mngr.rfkill != NULL)
+ 		rfkill_free(priv->rfkill_mngr.rfkill);
+@@ -156,13 +125,6 @@ EXPORT_SYMBOL(iwl_rfkill_init);
+ void iwl_rfkill_unregister(struct iwl_priv *priv)
+ {
+
+-#if defined(CONFIG_RFKILL_INPUT) || defined(CONFIG_RFKILL_INPUT_MODULE)
+-	if (priv->rfkill_mngr.input_dev)
+-		input_unregister_device(priv->rfkill_mngr.input_dev);
+-	input_free_device(priv->rfkill_mngr.input_dev);
+-	priv->rfkill_mngr.input_dev = NULL;
+-#endif
+-
+ 	if (priv->rfkill_mngr.rfkill)
+ 		rfkill_unregister(priv->rfkill_mngr.rfkill);
+
+@@ -173,7 +135,6 @@ EXPORT_SYMBOL(iwl_rfkill_unregister);
+ /* set rf-kill to the right state. */
+ void iwl_rfkill_set_hw_state(struct iwl_priv *priv)
+ {
+-
+ 	if (!priv->rfkill_mngr.rfkill)
+ 		return;
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.h
+b/drivers/net/wireless/iwlwifi/iwl-rfkill.h
+index b3c04db..00692d2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rfkill.h
++++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.h
+@@ -31,12 +31,10 @@
+ struct iwl_priv;
+
+ #include <linux/rfkill.h>
+-#include <linux/input.h>
+
+ #ifdef CONFIG_IWLWIFI_RFKILL
+ struct iwl_rfkill_mngr {
+ 	struct rfkill *rfkill;
+-	struct input_dev *input_dev;
+ };
+
+ void iwl_rfkill_set_hw_state(struct iwl_priv *priv);
