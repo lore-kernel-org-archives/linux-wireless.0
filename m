@@ -1,77 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36383 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763476AbYFZNqe (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.234]:58469 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760539AbYF0Xdu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 09:46:34 -0400
-Subject: Re: [2.6 patch] build algorithms into the mac80211 module
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Adrian Bunk <bunk@kernel.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <20080626103813.GB30359@cs181140183.pp.htv.fi>
-References: <20080622125553.GB22539@cs181133002.pp.htv.fi>
-	 <43e72e890806220804i347b942claae7b725231afcce@mail.gmail.com>
-	 <1214298259.8967.260.camel@johannes.berg>
-	 <20080624124311.GC16021@cs181140183.pp.htv.fi>
-	 <20080624211222.GB25892@tuxdriver.com>
-	 <20080626103813.GB30359@cs181140183.pp.htv.fi>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kWi03TUrJsXCx1PGffWH"
-Date: Thu, 26 Jun 2008 15:46:15 +0200
-Message-Id: <1214487975.20763.46.camel@johannes.berg> (sfid-20080626_154715_145247_DE342C1B)
-Mime-Version: 1.0
+	Fri, 27 Jun 2008 19:33:50 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so791701rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jun 2008 16:33:49 -0700 (PDT)
+Message-ID: <1ba2fa240806271633o20ef74f4k72807f85a072df83@mail.gmail.com> (sfid-20080628_013353_591828_A7FFE348)
+Date: Sat, 28 Jun 2008 02:33:49 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] iwlwifi: fix oops on wep key insertion
+Cc: "Dan Williams" <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Joonwoo Park" <joonwpark81@gmail.com>,
+	JMF <tolas_feup@hotmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1214593935.5507.0.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1211865214-1640-1-git-send-email-joonwpark81@gmail.com>
+	 <20080528004100.GG7779@tuxdriver.com> <20080615164617.GA27699@tp64>
+	 <1ba2fa240806150953t4b61b213y3488940ef05b762e@mail.gmail.com>
+	 <1213605989.3803.24.camel@johannes.berg>
+	 <20080627152843.GA16003@tuxdriver.com>
+	 <1214582853.10355.28.camel@localhost.localdomain>
+	 <1ba2fa240806270922u3975220ehb122f33497a69607@mail.gmail.com>
+	 <1214590219.24579.7.camel@localhost.localdomain>
+	 <1214593935.5507.0.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-kWi03TUrJsXCx1PGffWH
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2008-06-26 at 13:38 +0300, Adrian Bunk wrote:
-> On Tue, Jun 24, 2008 at 05:12:22PM -0400, John W. Linville wrote:
-> > On Tue, Jun 24, 2008 at 03:43:14PM +0300, Adrian Bunk wrote:
-> >=20
-> > > Can we get one of either:
-> > > - all selected mac80211 algorithms are built into the mac80211 module=
- or
-> >=20
-> > This seems fine to me.
-> >=20
-> > > - all selected mac80211 algorithms (including the default one) are in
-> > >   their own modules
-> >=20
-> > We got here trying to avoid this one in the first place.
->=20
-> What about the patch below?
-
-Seems ok to me, especially since we don't have a tunable for the rate
-control algorithm nor any other than the iwlwifi ones and this one...
-
-johannes
-
---=-kWi03TUrJsXCx1PGffWH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIY52kAAoJEKVg1VMiehFYLbsP/3opCtQ2M5NAvPlUxMJWm/6z
-rPU7jVxPICD2yPcavke0UueZEyitMqVIWsXzUjRG1M1TrOMzXa8qYnQrvfGre4rM
-0AjmSgdCCxVfmIyNuDMrK/HqEIPdcTNeYceP3VyeUz/NT8axVXPw7I1OyGuSmvmP
-H4X+BHtqFN8bmUsSDd1ADUAQ1Dv02MvkhADHceWurnQkdCWosOyeaeEKG0rdW8NG
-FrQ8Ip0U8Cow0m5NzVAatcmWtWwJxjl58Ic1Cnsb9gvtYuvGlX1ltK7vBRGsdzUo
-BGfjP2HI7/NarAXYJGaWTmGDm8+cOPZlCEldP/+vW/YWm/IBJGnkU37sXZbUTyFI
-ur8t8HWamgpkb7kTbKnMh09XBJLyzunzNpFc/6EvxfhRoYR3rqb64f3spwhsxdG0
-1zZkpNgwcg3uZxqP+ZKW7QYOirH28D60qD6EnJVxDx6oWv/Hi/lc9XSvjnf+breU
-pR7OSy4sNSTx8IDxTRy98OZ+lwrm4oJ+tnneEOOZY2ZYMUw9V3rN5WVa3G+OqLi5
-b/hgsMQa+4x52RhjiBXPPvf28sCBJ7iiiYqaAhOva3ep9+khdV2eTQ9CiD1KJ9Jx
-lP52pxPX690N4tfIqelVSDh6npr0SwbgDjatWNntUYZYy6Egy4vjtpDQxv1OmR1d
-uhxDlfeDCPHeISM5GSRm
-=473j
------END PGP SIGNATURE-----
-
---=-kWi03TUrJsXCx1PGffWH--
-
+On Fri, Jun 27, 2008 at 10:12 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>> > >> Strawman patch below...
+>> > >
+>> > > You need to allow 0 through, since you can just set the transmit key
+>> > > index via ENCODE without setting the key.  So the legal values are 0, 5,
+>> > > and 13.  Add 'case 0: /* just setting TX index */' or something and I'll
+>> > > definitely ack it.
+>
+>> > >> +     switch (erq->length) {
+>> > >> +     case KEY_SIZE_WEP40:
+>> > >> +     case KEY_SIZE_WEP104:
+>> > >> +             break;
+>> > >> +     default:
+>> > >> +             return -EINVAL;
+>> > >> +     }
+>> > >> +
+>> > >>       sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+>> > >>
+>> > >>       idx = erq->flags & IW_ENCODE_INDEX;
+>> > >> --
+>> > >> 1.5.5.1
+>> >
+>> > I'm not against this patch just I thought we agreed to support the
+>> > weird WEP keys in the  software. We fixed this in the driver with
+>> > similar check so now it falls back to software encryption in mac80211.
+>>
+>> I thought we agreed to ignore > 104/128-bit WEP keys [1][2] until enough
+>> people yelled about it (I've heard from 1 or 2 people in the past three
+>> years about this for NetworkManager).
+>
+> I agree, who wants to write the support for that in mac80211. I said
+> that we don't want to catch it in wext itself like an early patch did
+> because some fullmac drivers might support it.
+>
+Fair enough. Actually have a similar patch in my stock. I will send it out.
+Tomas
