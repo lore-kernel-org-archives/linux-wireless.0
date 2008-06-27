@@ -1,168 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47082
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752813AbYFCUgx (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:17954 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751490AbYF0EO4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 16:36:53 -0400
-Date: Tue, 03 Jun 2008 13:28:48 -0700 (PDT)
-Message-Id: <20080603.132848.82710246.davem@davemloft.net> (sfid-20080603_224046_518295_ED3D3007)
-To: linux-wireless@vger.kernel.org
-CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 10/12]: wext: Remove compat handling from fs/compat_ioctl.c
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 27 Jun 2008 00:14:56 -0400
+To: "Tomas Winkler" <tomasw@gmail.com>
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Samuel Ortiz" <samuel@sortiz.org>,
+	=?iso-8859-15?Q?Miguel_Bot=F3n?= <mboton.lkml@gmail.com>,
+	linux-wireless@vger.kernel.org, yi.zhu@intel.com
+Subject: Re: [PATCH 1/2] mac80211: add power management support
+References: <200711161929.36283.mboton.lkml@gmail.com>
+	<200711161953.26801.mboton.lkml@gmail.com>
+	<20080626174058.GA3063@sortiz.org>
+	<20080626175507.GA23142@tuxdriver.com>
+	<1214504623.3783.22.camel@johannes.berg>
+	<1ba2fa240806261451n53e5cb8an70aad7b072121c2e@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Fri, 27 Jun 2008 07:14:14 +0300
+In-Reply-To: <1ba2fa240806261451n53e5cb8an70aad7b072121c2e@mail.gmail.com> (ext Tomas Winkler's message of "Fri\, 27 Jun 2008 00\:51\:57 +0300")
+Message-ID: <87wskb7bvt.fsf@nokia.com> (sfid-20080627_061500_858076_063FCB1F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Tomas Winkler <tomasw@gmail.com> writes:
 
-No longer used.
+> This is why we have currently implemented in iwlwif sysfs.
+>
+> /sys/class/net/wlanX/devices/power_level
+> there are defined 6 power levels
+> 0 - CAM mode (Continuous Aware Mode)
+> 6 - AUTO
+> 1 to 5 levels that specifies power save aggressiveness  empirically developed.
+> AUTO - depends on system power source/level
+> system power level is AC or BATTERY  - currently we do not have
+> anything that tells us whether we run on battery or ac.
+> Other factor is association state.
+>
+> This can be expressed as
+> iwconfig power saving 1..5
+> iwconfig power off - > CAM mode
+> iwconfig power auto - this is unfortunately not defined by iwconfig
+>
+> If this acceptable we can submit the patch
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- fs/compat_ioctl.c |  107 +----------------------------------------------------
- 1 files changed, 1 insertions(+), 106 deletions(-)
+Sounds good to me, at least. It would be nice to have PSM support to
+mac80211.
 
-diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
-index 8ab850b..05ec7ee 100644
---- a/fs/compat_ioctl.c
-+++ b/fs/compat_ioctl.c
-@@ -58,7 +58,6 @@
- #include <linux/syscalls.h>
- #include <linux/i2c.h>
- #include <linux/i2c-dev.h>
--#include <linux/wireless.h>
- #include <linux/atalk.h>
- #include <linux/loop.h>
- 
-@@ -1757,58 +1756,6 @@ static int do_i2c_smbus_ioctl(unsigned int fd, unsigned int cmd, unsigned long a
- 	return sys_ioctl(fd, cmd, (unsigned long)tdata);
- }
- 
--static int do_wireless_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg)
--{
--	struct iwreq __user *iwr;
--	struct iwreq __user *iwr_u;
--	struct iw_point __user *iwp;
--	struct compat_iw_point __user *iwp_u;
--	compat_caddr_t pointer_u;
--	void __user *pointer;
--	__u16 length, flags;
--	int ret;
--
--	iwr_u = compat_ptr(arg);
--	iwp_u = (struct compat_iw_point __user *) &iwr_u->u.data;
--	iwr = compat_alloc_user_space(sizeof(*iwr));
--	if (iwr == NULL)
--		return -ENOMEM;
--
--	iwp = &iwr->u.data;
--
--	if (!access_ok(VERIFY_WRITE, iwr, sizeof(*iwr)))
--		return -EFAULT;
--
--	if (__copy_in_user(&iwr->ifr_ifrn.ifrn_name[0],
--			   &iwr_u->ifr_ifrn.ifrn_name[0],
--			   sizeof(iwr->ifr_ifrn.ifrn_name)))
--		return -EFAULT;
--
--	if (__get_user(pointer_u, &iwp_u->pointer) ||
--	    __get_user(length, &iwp_u->length) ||
--	    __get_user(flags, &iwp_u->flags))
--		return -EFAULT;
--
--	if (__put_user(compat_ptr(pointer_u), &iwp->pointer) ||
--	    __put_user(length, &iwp->length) ||
--	    __put_user(flags, &iwp->flags))
--		return -EFAULT;
--
--	ret = sys_ioctl(fd, cmd, (unsigned long) iwr);
--
--	if (__get_user(pointer, &iwp->pointer) ||
--	    __get_user(length, &iwp->length) ||
--	    __get_user(flags, &iwp->flags))
--		return -EFAULT;
--
--	if (__put_user(ptr_to_compat(pointer), &iwp_u->pointer) ||
--	    __put_user(length, &iwp_u->length) ||
--	    __put_user(flags, &iwp_u->flags))
--		return -EFAULT;
--
--	return ret;
--}
--
- /* Since old style bridge ioctl's endup using SIOCDEVPRIVATE
-  * for some operations; this forces use of the newer bridge-utils that
-  * use compatiable ioctls
-@@ -2489,36 +2436,6 @@ COMPATIBLE_IOCTL(I2C_TENBIT)
- COMPATIBLE_IOCTL(I2C_PEC)
- COMPATIBLE_IOCTL(I2C_RETRIES)
- COMPATIBLE_IOCTL(I2C_TIMEOUT)
--/* wireless */
--COMPATIBLE_IOCTL(SIOCSIWCOMMIT)
--COMPATIBLE_IOCTL(SIOCGIWNAME)
--COMPATIBLE_IOCTL(SIOCSIWNWID)
--COMPATIBLE_IOCTL(SIOCGIWNWID)
--COMPATIBLE_IOCTL(SIOCSIWFREQ)
--COMPATIBLE_IOCTL(SIOCGIWFREQ)
--COMPATIBLE_IOCTL(SIOCSIWMODE)
--COMPATIBLE_IOCTL(SIOCGIWMODE)
--COMPATIBLE_IOCTL(SIOCSIWSENS)
--COMPATIBLE_IOCTL(SIOCGIWSENS)
--COMPATIBLE_IOCTL(SIOCSIWRANGE)
--COMPATIBLE_IOCTL(SIOCSIWPRIV)
--COMPATIBLE_IOCTL(SIOCSIWSTATS)
--COMPATIBLE_IOCTL(SIOCSIWAP)
--COMPATIBLE_IOCTL(SIOCGIWAP)
--COMPATIBLE_IOCTL(SIOCSIWRATE)
--COMPATIBLE_IOCTL(SIOCGIWRATE)
--COMPATIBLE_IOCTL(SIOCSIWRTS)
--COMPATIBLE_IOCTL(SIOCGIWRTS)
--COMPATIBLE_IOCTL(SIOCSIWFRAG)
--COMPATIBLE_IOCTL(SIOCGIWFRAG)
--COMPATIBLE_IOCTL(SIOCSIWTXPOW)
--COMPATIBLE_IOCTL(SIOCGIWTXPOW)
--COMPATIBLE_IOCTL(SIOCSIWRETRY)
--COMPATIBLE_IOCTL(SIOCGIWRETRY)
--COMPATIBLE_IOCTL(SIOCSIWPOWER)
--COMPATIBLE_IOCTL(SIOCGIWPOWER)
--COMPATIBLE_IOCTL(SIOCSIWAUTH)
--COMPATIBLE_IOCTL(SIOCGIWAUTH)
- /* hiddev */
- COMPATIBLE_IOCTL(HIDIOCGVERSION)
- COMPATIBLE_IOCTL(HIDIOCAPPLICATION)
-@@ -2749,29 +2666,7 @@ COMPATIBLE_IOCTL(USBDEVFS_IOCTL32)
- HANDLE_IOCTL(I2C_FUNCS, w_long)
- HANDLE_IOCTL(I2C_RDWR, do_i2c_rdwr_ioctl)
- HANDLE_IOCTL(I2C_SMBUS, do_i2c_smbus_ioctl)
--/* wireless */
--HANDLE_IOCTL(SIOCGIWRANGE, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWPRIV, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWSTATS, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWSPY, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWSPY, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWTHRSPY, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWTHRSPY, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWMLME, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWAPLIST, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWSCAN, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWSCAN, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWESSID, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWESSID, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWNICKN, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWNICKN, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWENCODE, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWENCODE, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWGENIE, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWGENIE, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWENCODEEXT, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCGIWENCODEEXT, do_wireless_ioctl)
--HANDLE_IOCTL(SIOCSIWPMKSA, do_wireless_ioctl)
-+/* bridge */
- HANDLE_IOCTL(SIOCSIFBR, old_bridge_ioctl)
- HANDLE_IOCTL(SIOCGIFBR, old_bridge_ioctl)
- /* Not implemented in the native kernel */
 -- 
-1.5.5.1.308.g1fbb5
-
+Kalle Valo
