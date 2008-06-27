@@ -1,52 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42950 "EHLO mga09.intel.com"
+Received: from c60.cesmail.net ([216.154.195.49]:41000 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751084AbYFROxw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 10:53:52 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] mac80211: add MAC80211_VERBOSE_SPECT_MGMT_DEBUG Kconfig option
-Date: Wed, 18 Jun 2008 17:53:43 +0300
-Message-Id: <1213800824-32107-1-git-send-email-tomas.winkler@intel.com> (sfid-20080618_165356_927508_5E54ADF8)
-Content-Type: text/plain; charset="us-ascii"
+	id S1751197AbYF0U32 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jun 2008 16:29:28 -0400
+Subject: Re: pull request: wireless-2.6 2008-06-27
+From: Pavel Roskin <proski@gnu.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: "John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <20080627210723.5ace1840@lxorguk.ukuu.org.uk>
+References: <20080627191412.GA24606@tuxdriver.com>
+	 <1214596203.9513.13.camel@dv> <20080627210723.5ace1840@lxorguk.ukuu.org.uk>
+Content-Type: text/plain
+Date: Fri, 27 Jun 2008 16:29:26 -0400
+Message-Id: <1214598566.9513.22.camel@dv> (sfid-20080627_222933_616020_2680B40D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yi Zhu <yi.zhu@intel.com>
+On Fri, 2008-06-27 at 21:07 +0100, Alan Cox wrote:
 
-The patch introduces MAC80211_VERBOSE_SPECT_MGMT_DEBUG Kconfig option to
-suppress Spectrum Management 802.11h related debug logs.
+> I don't think a changelog typo (or two) is exactly important - do you ?
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/Kconfig |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+OK, never mind.
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 590e00b..979fcec 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -177,3 +177,10 @@ config MAC80211_VERBOSE_MPL_DEBUG
- 	---help---
- 	  Say Y here to print out verbose mesh peer link
- 	  debug messages.
-+
-+config MAC80211_VERBOSE_SPECT_MGMT_DEBUG
-+	bool "Verbose Spectrum Management (IEEE 802.11h)debugging"
-+	depends on MAC80211_DEBUG
-+	---help---
-+	  Say Y here to print out verbose Spectrum Management (IEEE 802.11h)
-+	  debug messages.
 -- 
-1.5.4.1
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+Regards,
+Pavel Roskin
