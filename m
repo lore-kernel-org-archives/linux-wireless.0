@@ -1,79 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.infomaniak.ch ([84.16.68.90]:51277 "EHLO
-	smtp2.infomaniak.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753777AbYFRLeh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jun 2008 07:34:37 -0400
-From: Didier Raboud <didier@raboud.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [Bugme-new] [Bug 10903] New: ssh connections hang with 2.6.26-rc5
-Date: Wed, 18 Jun 2008 13:34:06 +0200
-Cc: Ilpo =?iso-8859-1?q?J=E4rvinen?= <ilpo.jarvinen@helsinki.fi>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Netdev <netdev@vger.kernel.org>,
-	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>
-References: <bug-10903-10286@http.bugzilla.kernel.org/> <Pine.LNX.4.64.0806180152410.32420@wrl-59.cs.helsinki.fi> <1213773887.3803.158.camel@johannes.berg>
-In-Reply-To: <1213773887.3803.158.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3175 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753755AbYF0Sq4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jun 2008 14:46:56 -0400
+Date: Fri, 27 Jun 2008 14:18:53 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: drago01 <drago01@gmail.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2008-06-27
+Message-ID: <20080627181853.GA14005@tuxdriver.com> (sfid-20080627_204711_309057_DE1A1AAF)
+References: <20080627153541.GA16597@tuxdriver.com> <f6ca9fed0806270854u674a9d5aled463865e07829c8@mail.gmail.com> <20080627171524.GC20277@tuxdriver.com> <f6ca9fed0806271049v37b4f7cetc9d918b877024a76@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1314852.cUizIlx1dO";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200806181334.10654.didier@raboud.com> (sfid-20080618_133459_483286_00AC1DF4)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f6ca9fed0806271049v37b4f7cetc9d918b877024a76@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1314852.cUizIlx1dO
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Fri, Jun 27, 2008 at 07:49:47PM +0200, drago01 wrote:
+> On Fri, Jun 27, 2008 at 7:15 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > On Fri, Jun 27, 2008 at 05:54:06PM +0200, drago01 wrote:
+> >> On Fri, Jun 27, 2008 at 5:35 PM, John W. Linville
+> >> <linville@tuxdriver.com> wrote:
+> >>
+> >> > Randy Dunlap (1):
+> >> >      iwlwifi: fix build for CONFIG_INPUT=n
+> >>
+> >> this one was NACKED by Ivo (well not exactly this but the 3945
+> >> version, and Yi posted an updated patch)
+> >
+> > That merged patch appears to be identical to the one in this thread:
+> >
+> >        http://marc.info/?l=linux-next&m=121436670630784&w=2
+> >
+> > That includes an ACK for Zhu Yi.  Am I missing something?
+> 
+> yeah this one: http://marc.info/?l=linux-wireless&m=121455866524106&w=2
 
-Le mercredi 18 juin 2008 09:24:47 Johannes Berg, vous avez =C3=A9crit=C2=A0:
-> > > > > > > > http://bugzilla.kernel.org/show_bug.cgi?id=3D10903
-> > > > > > > >
-> > > > > > > >            Summary: ssh connections hang with 2.6.26-rc5
->
-> Andrew Prince reported a similar problem and said he bisected it  to
-> davem's =EF=BB=BF608961a5eca8d3c6bd07172febc27b5559408c5d ("mac80211: Use
-> skb_header_cloned() on TX path.") which made no sense to me so I marked
-> the report as 'to investigate when I have more time'.
->
-> > > and I got the attached "soft lockup".
->
-> Attached where? I can't find it in the bug either.
->
-> johannes
+Well, the patch is merged.  I don't see where it is any worse than what
+was there before.  Please submit new patches as appropriate on top.
 
-Hi,=20
+Thanks,
 
-for unknown reasons, my mail doesn't appear in the mailing list archives an=
-d=20
-the big attachment has visibly been stripped.
-
-You'll find the "soft lockup" there:
-
-http://raboud.homelinux.org/~didier/kernel/tcpdump_oops.jpg
-
-Regards,=20
-
-Didier
-=2D-=20
-Didier Raboud, proud Debian user.
-CH-1802 Corseaux
-didier@raboud.com
-
---nextPart1314852.cUizIlx1dO
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkhY8q8ACgkQwW1nnOmiePC7LACgh4PI3zxmk0J2HY8CbFShx8PP
-mokAnAmpInN/FS9ZwIULX2CRP7mvJs4t
-=eXTe
------END PGP SIGNATURE-----
-
---nextPart1314852.cUizIlx1dO--
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
