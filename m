@@ -1,95 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:12449 "EHLO mga09.intel.com"
+Received: from c60.cesmail.net ([216.154.195.49]:9052 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752482AbYFLBtu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 21:49:50 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Assaf Krauss <assaf.krauss@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 16/29] iwlwifi: Fix mode changes (ad-hoc <--> managed)
-Date: Thu, 12 Jun 2008 09:47:06 +0800
-Message-Id: <1213235239-2954-17-git-send-email-yi.zhu@intel.com> (sfid-20080612_041915_578085_C14EFECD)
-In-Reply-To: <1213235239-2954-16-git-send-email-yi.zhu@intel.com>
-References: <1213235239-2954-1-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-2-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-3-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-4-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-5-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-6-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-7-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-8-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-9-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-10-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-11-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-12-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-13-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-14-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-15-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-16-git-send-email-yi.zhu@intel.com>
+	id S1755670AbYF0UUF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jun 2008 16:20:05 -0400
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 3/5] hostap: don't skip any headers in
+	hostap_80211_header_parse()
+To: Jouni Malinen <j@w1.fi>, John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Fri, 27 Jun 2008 16:20:04 -0400
+Message-ID: <20080627202004.18603.41908.stgit@dv.roinet.com> (sfid-20080627_222010_712867_EA5F2166)
+In-Reply-To: <20080627201952.18603.98308.stgit@dv.roinet.com>
+References: <20080627201952.18603.98308.stgit@dv.roinet.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Assaf Krauss <assaf.krauss@intel.com>
+Don't try to skip any headers in hostap_80211_header_parse().  We never
+use that function for interfaces affected by local->monitor_type.  Both
+the master and the AP interface receive 802.11 frames without any
+additional headers.
 
-This fix allows to move between modes (ad-hoc to managed, and vice versa).
-Since mode changes can only be done while driver is down, check for ibss
-support can only be made when the channel is set (afte the driver goes up).
-
-Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   25 +++++++++++--------------
- 1 files changed, 11 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 4570fd1..8e7860d 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -1176,22 +1176,11 @@ static void iwl4965_connection_init_rx_config(struct iwl_priv *priv)
- 
- static int iwl4965_set_mode(struct iwl_priv *priv, int mode)
+ drivers/net/wireless/hostap/hostap_main.c |   20 +-------------------
+ 1 files changed, 1 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/net/wireless/hostap/hostap_main.c b/drivers/net/wireless/hostap/hostap_main.c
+index a38e85f..756ab56 100644
+--- a/drivers/net/wireless/hostap/hostap_main.c
++++ b/drivers/net/wireless/hostap/hostap_main.c
+@@ -597,25 +597,7 @@ void hostap_dump_tx_header(const char *name, const struct hfa384x_tx_frame *tx)
+ static int hostap_80211_header_parse(const struct sk_buff *skb,
+ 				     unsigned char *haddr)
  {
--	if (mode == IEEE80211_IF_TYPE_IBSS) {
--		const struct iwl_channel_info *ch_info;
+-	struct hostap_interface *iface = netdev_priv(skb->dev);
+-	local_info_t *local = iface->local;
 -
--		ch_info = iwl_get_channel_info(priv,
--			priv->band,
--			le16_to_cpu(priv->staging_rxon.channel));
+-	if (local->monitor_type == PRISM2_MONITOR_PRISM ||
+-	    local->monitor_type == PRISM2_MONITOR_CAPHDR) {
+-		const unsigned char *mac = skb_mac_header(skb);
 -
--		if (!ch_info || !is_channel_ibss(ch_info)) {
--			IWL_ERROR("channel %d not IBSS channel\n",
--				  le16_to_cpu(priv->staging_rxon.channel));
--			return -EINVAL;
+-		if (*(u32 *)mac == LWNG_CAP_DID_BASE) {
+-			memcpy(haddr,
+-			       mac + sizeof(struct linux_wlan_ng_prism_hdr) + 10,
+-			       ETH_ALEN); /* addr2 */
+-		} else { /* (*(u32 *)mac == htonl(LWNG_CAPHDR_VERSION)) */
+-			memcpy(haddr,
+-			       mac + sizeof(struct linux_wlan_ng_cap_hdr) + 10,
+-			       ETH_ALEN); /* addr2 */
 -		}
--	}
+-	} else
+-		memcpy(haddr, skb_mac_header(skb) + 10, ETH_ALEN); /* addr2 */
 -
- 	priv->iw_mode = mode;
++	memcpy(haddr, skb_mac_header(skb) + 10, ETH_ALEN); /* addr2 */
+ 	return ETH_ALEN;
+ }
  
-+	/* init channel/phymode to values given at driver init */
-+	iwl_set_rxon_channel(priv, IEEE80211_BAND_2GHZ, 6);
-+
- 	iwl4965_connection_init_rx_config(priv);
- 	memcpy(priv->staging_rxon.node_addr, priv->mac_addr, ETH_ALEN);
- 
-@@ -3892,6 +3881,14 @@ static int iwl4965_mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *co
- 		goto out;
- 	}
- 
-+	if (priv->iw_mode == IEEE80211_IF_TYPE_IBSS &&
-+	    !is_channel_ibss(ch_info)) {
-+		IWL_ERROR("channel %d in band %d not IBSS channel\n",
-+			conf->channel->hw_value, conf->channel->band);
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
- 	spin_lock_irqsave(&priv->lock, flags);
- 
- 	/* if we are switching from ht to 2.4 clear flags
--- 
-1.5.3.6
-
