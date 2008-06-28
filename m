@@ -1,54 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:35791 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758575AbYFIKZC (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48675
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752432AbYF1I3M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2008 06:25:02 -0400
-Received: by an-out-0708.google.com with SMTP id d40so477080and.103
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 03:25:01 -0700 (PDT)
-Message-ID: <43e72e890806090325y5a1aebadq68204695044f4b6f@mail.gmail.com> (sfid-20080609_122523_973230_41642444)
-Date: Mon, 9 Jun 2008 03:25:01 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Backported MQ requirement on 802.11n for older kernels
-Cc: "Ron Rindjunsky" <ron.rindjunsky@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	compat-masters@lists.madwifi.org, tomas.winkler@intel.com,
-	"Tim Gardner" <tim.gardner@canonical.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <43e72e890806090201q55bff8e3m694121ebd4befee6@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890806080855p284f85brd0ff1f1dfce96bf8@mail.gmail.com>
-	 <c85cb4470806090053l5b763a23j43bbf0c87f594b0d@mail.gmail.com>
-	 <1213001797.698.57.camel@johannes.berg>
-	 <43e72e890806090201q55bff8e3m694121ebd4befee6@mail.gmail.com>
+	Sat, 28 Jun 2008 04:29:12 -0400
+Date: Sat, 28 Jun 2008 01:29:12 -0700 (PDT)
+Message-Id: <20080628.012912.03104549.davem@davemloft.net> (sfid-20080628_102944_853155_7864D88E)
+To: linville@tuxdriver.com
+Cc: sfr@canb.auug.org.au, linux-next@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: linux-next: pending wireless/wireless-current merge conflict
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080625180430.GA13730@tuxdriver.com>
+References: <20080613215601.GA8345@tuxdriver.com>
+	<20080625180430.GA13730@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 9, 2008 at 2:01 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Mon, Jun 9, 2008 at 1:56 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> On Mon, 2008-06-09 at 10:53 +0300, Ron Rindjunsky wrote:
->>> >
->>> > I just finished trying to backport CONFIG_NETDEVICES_MULTIQUEUE
->>> > requirement for 802.11n to older kernels by relying on the old
->>> > internal mac80211 hacked up MQ support. I've tested the build on
->>> > 2.6.22, 2.6.23, and 2.6.24. Let me know if you get to test this,
->>> > particularly iwl4965 using 11n on 2.6.22.
->>> >
->>>
->>> in config.mk you put MAC80211_QOS=m, and i guess that the intention was to put
->>> CONFIG_MAC80211_QOS=m
->>> if this is the case then the compilation fails
->>
->> It should be "y"
->>
->> johannes
->>
->
-> Danke
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 25 Jun 2008 14:04:30 -0400
 
-OK found some more issues. v4.2 pushed out and new tarball
-regenerated. This has been tested by Intel on 802.11n on iwl4965.
+> I just sent a pull request for Dave that will result in nasty-looking
+> conflict in iwl4965-base.c.  I have a sample merge available here:
+> 
+> 	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6 merge-test
+> 
+> The overview of the resolution is to ignore any changes in
+> iwl4965-base.c and take drivers/net/wireless/iwlwifi/iwl-scan.c from
+> the URL above.
 
-  Luis
+I've just merged net-2.6 into net-next-2.6 and done my best to
+resolve that merge.
+
+Thanks for the heads up!
+
