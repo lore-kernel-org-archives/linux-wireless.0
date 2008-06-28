@@ -1,69 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42129 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:52479 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752192AbYFKV0b (ORCPT
+	with ESMTP id S1751604AbYF1H6f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 17:26:31 -0400
-Subject: Re: [PATCH 1/1] mac80211: [RFC] do not fragment while aggregation
-	is in use
+	Sat, 28 Jun 2008 03:58:35 -0400
+Subject: Re: [PATCH 1/1] mac80211: fix warning: unused variable
+	invoke_tx_handlers
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1213207296-14548-1-git-send-email-ron.rindjunsky@intel.com>
-References: <1213207296-14548-1-git-send-email-ron.rindjunsky@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-50LFepEaROBcy1PZCni0"
-Date: Wed, 11 Jun 2008 23:25:26 +0200
-Message-Id: <1213219526.3827.0.camel@johannes.berg> (sfid-20080611_232635_755755_3D1AE7D2)
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1214612103-8389-1-git-send-email-tomas.winkler@intel.com>
+References: <1214612103-8389-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jq5ydCVgfi+VTAqqNkru"
+Date: Sat, 28 Jun 2008 09:58:20 +0200
+Message-Id: <1214639900.5507.8.camel@johannes.berg> (sfid-20080628_095837_514442_086857D9)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-50LFepEaROBcy1PZCni0
+--=-jq5ydCVgfi+VTAqqNkru
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Thanks.
+On Sat, 2008-06-28 at 03:15 +0300, Tomas Winkler wrote:
+> This patch fixes warning: unused variable in invoke_tx_handlers
+> when compiling without MAC80211_DEBUG option
 
-> -	/*
-> -	 * Warn when submitting a fragmented A-MPDU frame and drop it.
-> -	 * This is an error and needs to be fixed elsewhere, but when
-> -	 * done needs to take care of monitor interfaces (injection)
-> -	 * etc.
-> -	 */
-> -	if (WARN_ON(tx->flags & IEEE80211_TX_CTL_AMPDU ||
-> -		    skb_get_queue_mapping(tx->skb) >=3D
-> -			ieee80211_num_regular_queues(&tx->local->hw)))
-> -		return TX_DROP;
-> -
+Guess I haven't compiled like that in a long time.
 
-Should we keep that, just in case? If it ever happens and the hw rejects
-a fragment for some reason, we'll otherwise clobber some state and
-probably crash.
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 
-johannes
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
---=-50LFepEaROBcy1PZCni0
+> ---
+>  net/mac80211/tx.c |    5 ++---
+>  1 files changed, 2 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 345d6ff..a8c1809 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -1110,7 +1110,6 @@ static int __ieee80211_tx(struct ieee80211_local *l=
+ocal, struct sk_buff *skb,
+>   */
+>  static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
+>  {
+> -	struct ieee80211_local *local =3D tx->local;
+>  	struct sk_buff *skb =3D tx->skb;
+>  	ieee80211_tx_handler *handler;
+>  	ieee80211_tx_result res =3D TX_DROP;
+> @@ -1123,7 +1122,7 @@ static int invoke_tx_handlers(struct ieee80211_tx_d=
+ata *tx)
+>  	}
+> =20
+>  	if (unlikely(res =3D=3D TX_DROP)) {
+> -		I802_DEBUG_INC(local->tx_handlers_drop);
+> +		I802_DEBUG_INC(tx->local->tx_handlers_drop);
+>  		dev_kfree_skb(skb);
+>  		for (i =3D 0; i < tx->num_extra_frag; i++)
+>  			if (tx->extra_frag[i])
+> @@ -1131,7 +1130,7 @@ static int invoke_tx_handlers(struct ieee80211_tx_d=
+ata *tx)
+>  		kfree(tx->extra_frag);
+>  		return -1;
+>  	} else if (unlikely(res =3D=3D TX_QUEUED)) {
+> -		I802_DEBUG_INC(local->tx_handlers_queued);
+> +		I802_DEBUG_INC(tx->local->tx_handlers_queued);
+>  		return -1;
+>  	}
+> =20
+
+--=-jq5ydCVgfi+VTAqqNkru
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIUELCAAoJEKVg1VMiehFYi1oP/j3AvE12HqeR1m1c9mIR9LI6
-/LiFxGsVdVA8yMpme53RHBR7A7xza61Zm7FYUty/nvc4T4QoCgkF5S6lA6uwq1Hb
-SWhZvtoVu4BaUpnU4hqFhj7AEdy0mM+Q2yLORC/zMmXQMyfSRwpZDCV9/fRYwEkk
-Earsvw5PYdIOJ5GT6cO4vYSS3n5T3cmxZWzA/3u6gczXpEk/1U0ytJ2P2TN93n9N
-xxHkkun7+2XKpxVXy4993x5m/qygbPdIXwTpDRp874nPuyDKn2LH2WmyJWsbW/OI
-7UiYhGon2SxMZBAX31QPE+qndidf0ZUZo9CM34YpFXaa8uKdIrEIkTsbCMkLGJpz
-sYmcVnQ1dM3Qp6ujAb8SJkMIq/tDdVzOi4WWVH18Ar7SuuR1yPcMrLUbwOTZi8Hf
-GE255+48wsElSDZVjMxwPMXP066UO8vLGFQCjdChG/JR1RNI2lX94MCc8YUAjnLv
-nm/AcluIw+IAqajmR262lF+I07GfngGQ5byK9o0U53WuDe19sgtmJCzKYS4EeSnx
-rYDlM5CFC5b7FlMlb4ri/CgVEceOK7Z7AHUnvsRJSpEw/ubpHlvi7WbGZVCEnNCl
-WElExAi6SBwooLBctyCBvI6DDd73BdLVH0AtQ+wOUcgDLIcjJtTJCxbxiIznX5r3
-l/xtCmRCxv4OfawaNpSn
-=rM6P
+iQIcBAABAgAGBQJIZe8WAAoJEKVg1VMiehFYkDoP/jg0RiPWSwstv4HTMDT/Oorl
+lovcvKwZjYpQ3kbXCziJnpDwlXyDrQ5qaxsjmDyhaGnBbLqqsglk53Ind8MQrAx2
+4gvq3SXrXGiowJ8o+NG2ZXBeN1LSWEKCvy/uXbnPYanDm5OLjvshpzFViLJ2exNf
+dT6WWqtj2lHLZ9j/4ex5Ez/LG9C0l+MpAp/u4jkE+eYc7l26USm9923Gtm3ndvz6
+aB5MwnuNS9h6WsBRh9SCIe8c8f9cG+m8UU2T7Jdk7VAgGDCTLQ4T/1zps60Y8vGc
+MmDFYEwjp9KUSVnNj3xtYcRQUzhhYh4veyzNn2L9hkaxYTCGYDsjFTzBqM79ZEEG
+aIpYzqp622gf+6rxAJIGkVTS0YW9qbOXXVTfoKsALvmgBXxzWsPMaEtIRFudWtdR
+VaHEvacz6BF13Dy5a0/eN28ubRA0sS5ypQ0tQGNuP50ZJvrmJ/6K6p1OhM/vNIck
+ozpiUJITKwjlqBk/ZyDuBgno46hEWwM46+272xULor8E3FvLSQX0wIQOb/v2DoK9
+QiDpcKZF9WMgl1LPGzmAHlSMYgLa+c70fh43qLxCHpOcTm33+l3j6Q8CeAWeKXXC
+txc43FFb9Rokmx/cuL0eoNV2y6507bc8WiBB7Qh42kdcgvDS83h2cj4Yg0io3SGU
+yAl9Y+oiZRdJUr2Lp0xZ
+=KXzE
 -----END PGP SIGNATURE-----
 
---=-50LFepEaROBcy1PZCni0--
+--=-jq5ydCVgfi+VTAqqNkru--
 
