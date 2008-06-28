@@ -1,81 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:19551 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756968AbYF3J1K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 05:27:10 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Assaf Krauss <assaf.krauss@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 14/33] iwlwifi: fix IBSS association flow
-Date: Mon, 30 Jun 2008 17:23:14 +0800
-Message-Id: <1214817813-17639-15-git-send-email-yi.zhu@intel.com> (sfid-20080630_113815_014788_76D949F4)
-In-Reply-To: <1214817813-17639-14-git-send-email-yi.zhu@intel.com>
-References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-2-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-3-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-5-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-6-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-7-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-8-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-9-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-10-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-11-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-12-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-13-git-send-email-yi.zhu@intel.com>
- <1214817813-17639-14-git-send-email-yi.zhu@intel.com>
+Received: from ug-out-1314.google.com ([66.249.92.173]:35128 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753211AbYF1Sid (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Jun 2008 14:38:33 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so100787ugf.16
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 11:38:31 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: proski@gnu.org, orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>
+Subject: [RFC PATCH 00/19] orinoco: WPA for Agere based cards
+Date: Sat, 28 Jun 2008 19:38:06 +0100
+Message-Id: <1214678305-7057-1-git-send-email-kilroyd@gmail.com> (sfid-20080628_203904_468748_CC615C3A)
+From: kilroyd@googlemail.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+This patch series enables WPA on Agere based orinoco devices. An
+earlier version has been available on the orinoco-devel list for a
+while. I'm looking to get more feedback and testing of these patches,
+so hopefully they can go into the kernel.
 
-This patch fixes regression caused by
-'iwlwifi: send ADD_STA before RXON with assoc bit' patch.
-RXON associated wasn't IBSS flow.
+Patchset overview
+1-2: General scanning updates
+3-9: Agere firmware download to RAM
+10-12: Update orinoco to work with new firmware
+13-19: WPA functionality
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+This patchset is against wireless-testing (master-2008-06-27), is
+sparse clean (UP), and should be bisectable. It is almost checkpatch
+clean - the single warning looks like a false positive to me.
+
+To test the Agere firmware download, you will need an Agere firmware
+image. You can get the necessary file at
+<http://marc.info/?l=orinoco-devel&m=121078835610877>, just extract
+and rename orinoco.fw to agere_sta_fw.bin and place it in
+/lib/firmware (or distro equivalent). Alternatively you can try
+extract firmware from a Windows driver using the program in
+<http://marc.info/?l=orinoco-devel&m=120846933719051>.
+
+A brief summary of testing results is appended below.
+
+
+Regards,
+
+Dave.
 ---
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   21 ++++++++++++---------
- 1 files changed, 12 insertions(+), 9 deletions(-)
+Good results (wpa-supplicant 0.5.7, Agere fw 9.48, kernel 2.6.24):
+ - WPA-PSK managed mode now works.
+ - WEP managed mode still working.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index bb3e61c..144b1da 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -344,16 +344,19 @@ static int iwl4965_commit_rxon(struct iwl_priv *priv)
- 
- 	/* If we have set the ASSOC_MSK and we are in BSS mode then
- 	 * add the IWL_AP_ID to the station rate table */
--	if (new_assoc && (priv->iw_mode == IEEE80211_IF_TYPE_STA)) {
--		if (iwl_rxon_add_station(priv, priv->active_rxon.bssid_addr, 1)
--		    == IWL_INVALID_STATION) {
--			IWL_ERROR("Error adding AP address for transmit.\n");
--			return -EIO;
-+	if (new_assoc) {
-+		if (priv->iw_mode == IEEE80211_IF_TYPE_STA) {
-+			ret = iwl_rxon_add_station(priv,
-+					   priv->active_rxon.bssid_addr, 1);
-+			if (ret == IWL_INVALID_STATION) {
-+				IWL_ERROR("Error adding AP address for TX.\n");
-+				return -EIO;
-+			}
-+			priv->assoc_station_added = 1;
-+			if (priv->default_wep_key &&
-+			    iwl_send_static_wepkey_cmd(priv, 0))
-+				IWL_ERROR("Could not send WEP static key.\n");
- 		}
--		priv->assoc_station_added = 1;
--		if (priv->default_wep_key &&
--		    iwl_send_static_wepkey_cmd(priv, 0))
--			IWL_ERROR("Could not send WEP static key.\n");
- 
- 		/* Apply the new configuration
- 		 * RXON assoc doesn't clear the station table in uCode,
--- 
-1.5.3.6
+Issues that have been identified with earlier versions of the
+patchset (and haven't been explicitly addressed):
 
+ - Scan results don't appear correct on a 64-bit machine (no further
+   debug info). Might David Millers compat changes affect this? I'm
+   not too sure what they're about...
+ - Driver only reads the first 200 bytes of IEs in probe results.
+ - Driver resets in monitor mode with 9.48 fw (after which monitor
+   mode appears stable). Note that with the existing driver monitor
+   mode with Agere fw is non-functional for fw above 6.16.
+
+Areas of concern:
+
+Firmware download for Symbol firmwares and non pcmcia cards. The image
+that gets downloaded is selected based on the detected firmware on the
+card, and the version of that firmware.
+
+ - Firmware will not be downloaded to cards with Intersil firmware.
+
+ - The latest Agere firmware will be downloaded to cards with Agere
+   firmware.
+
+ - Before these patches Symbol firmware was unconditionally downloaded
+   to cards that use the spectrum_cs driver - after this patch the
+   latest (v3.x.x) Symbol firmware is downloaded to cards with Symbol
+   firmware greater than v3.0.0. This is an attempt to avoid
+   downloading the v3.x.x Symbol firmware to Symbol cards that use
+   orinoco_cs. I don't know if there are spectrum_cs cards with
+   earlier firmware which are supposed to run the v3.x.x firmware.
