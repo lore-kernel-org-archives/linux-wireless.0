@@ -1,47 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.239]:49238 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754493AbYFPIpn (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:8978 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750930AbYF1MUl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jun 2008 04:45:43 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so3459019rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2008 01:45:42 -0700 (PDT)
-Message-ID: <eaf2efa20806160145s3501c07wb50f7d31efb755c0@mail.gmail.com> (sfid-20080616_104545_437627_546D7078)
-Date: Mon, 16 Jun 2008 17:45:41 +0900
-From: "Mark Roberts" <mroberts1839@gmail.com>
-To: Chr <chunkeey@web.de>
-Subject: Re: Problem with master mode on BCM4318
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200806161026.28445.chunkeey@web.de>
+	Sat, 28 Jun 2008 08:20:41 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so234289nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 05:20:40 -0700 (PDT)
+Message-ID: <f6ca9fed0806280520u10272c66see3e1d4a24cb2974@mail.gmail.com> (sfid-20080628_142106_210577_AF8CE558)
+Date: Sat, 28 Jun 2008 14:20:40 +0200
+From: drago01 <drago01@gmail.com>
+To: "Linux Wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] b43/b43legacy: use RFKILL_STATE_UNBLOCKED instead of RFKILL_STATE_ON
+Cc: "Michael Buesch" <mb@bu3sch.de>,
+	"Larry Finger" <larry.finger@lwfinger.net>,
+	stefano.brivio@polimi.it,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
+	"Ivo van Doorn" <ivdoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <eaf2efa20806152024i510ea7auc9aba61b68598ec0@mail.gmail.com>
-	 <20080616023427.gm71g7actwc8scsg-cebfxv@webmail.spamcop.net>
-	 <eaf2efa20806160010u4bc87ea9tb42c663dcf8444c1@mail.gmail.com>
-	 <200806161026.28445.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> What steps should I take to apply the patches?
->
-> well, I don't know much about compat-wireless, but
-> for the current wireless-dev, you have to get atleast one patch form:
->
-> http://johannes.sipsolutions.com/patches/kernel/all/LATEST/
->
-> and there: 006-allow-ap-vlan-modes.patch
+This patch removes the usage RFKILL_STATE_ON and uses
+RFKILL_STATE_UNBLOCKED instead.
 
-OK. I've never done this before. What should I do to apply the patch?
+Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
 
-> For the userspace: you have to compile the _cutting-edge_ hostapd (afaik
-> 0.6.4 git), you'll need it even for a unencrypted network!
-
-Looking here:
-
-  http://hostap.epitest.fi/hostapd/
-
-The latest I see is 0.6.3 -- will that do?
-
-Thanks,
-
-M
+diff --git a/drivers/net/wireless/b43/rfkill.c
+b/drivers/net/wireless/b43/rfkill.c
+index 4cca203..34ae125 100644
+--- a/drivers/net/wireless/b43/rfkill.c
++++ b/drivers/net/wireless/b43/rfkill.c
+@@ -135,7 +135,7 @@ void b43_rfkill_init(struct b43_wldev *dev)
+ 	snprintf(rfk->name, sizeof(rfk->name),
+ 		 "b43-%s", wiphy_name(wl->hw->wiphy));
+ 	rfk->rfkill->name = rfk->name;
+-	rfk->rfkill->state = RFKILL_STATE_ON;
++	rfk->rfkill->state = RFKILL_STATE_UNBLOCKED;
+ 	rfk->rfkill->data = dev;
+ 	rfk->rfkill->toggle_radio = b43_rfkill_soft_toggle;
+ 	rfk->rfkill->user_claim_unsupported = 1;
+diff --git a/drivers/net/wireless/b43legacy/rfkill.c
+b/drivers/net/wireless/b43legacy/rfkill.c
+index 8935a30..b32bf6a 100644
+--- a/drivers/net/wireless/b43legacy/rfkill.c
++++ b/drivers/net/wireless/b43legacy/rfkill.c
+@@ -139,7 +139,7 @@ void b43legacy_rfkill_init(struct b43legacy_wldev *dev)
+ 	snprintf(rfk->name, sizeof(rfk->name),
+ 		 "b43legacy-%s", wiphy_name(wl->hw->wiphy));
+ 	rfk->rfkill->name = rfk->name;
+-	rfk->rfkill->state = RFKILL_STATE_ON;
++	rfk->rfkill->state = RFKILL_STATE_UNBLOCKED;
+ 	rfk->rfkill->data = dev;
+ 	rfk->rfkill->toggle_radio = b43legacy_rfkill_soft_toggle;
+ 	rfk->rfkill->user_claim_unsupported = 1;
