@@ -1,34 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:26713 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755069AbYFMOdt (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:60633 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753294AbYF1OMm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 10:33:49 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2777883fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jun 2008 07:33:47 -0700 (PDT)
-Message-ID: <48528542.5080605@gmail.com> (sfid-20080613_163352_323778_99DC94C5)
-Date: Fri, 13 Jun 2008 16:33:38 +0200
+	Sat, 28 Jun 2008 10:12:42 -0400
+Date: Sat, 28 Jun 2008 11:12:37 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: drago01 <drago01@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCHv2] iwl3945: add support for RFKILL_STATE_HARD_BLOCKED
+Message-ID: <20080628141237.GD871@khazad-dum.debian.net> (sfid-20080628_161245_500162_36877F60)
+References: <f6ca9fed0806280115o409136a0x20b2109c25330b63@mail.gmail.com> <20080628131701.GB871@khazad-dum.debian.net> <f6ca9fed0806280651w48cac49ew8fd29b4d8dddaa0c@mail.gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Problem with rt73usb and previously booted windows
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-From: =?ISO-8859-1?Q?Christian_Sch=E4fer?= <schaefec@googlemail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f6ca9fed0806280651w48cac49ew8fd29b4d8dddaa0c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sat, 28 Jun 2008, drago01 wrote:
+> On Sat, Jun 28, 2008 at 3:17 PM, Henrique de Moraes Holschuh
+> <hmh@hmh.eng.br> wrote:
+> > On Sat, 28 Jun 2008, drago01 wrote:
+> >> This patch fixes the rfkill states to set RFKILL_STATE_HARD_BLOCKED when the
+> >> radio is disabled by a hardware killswitch.
+> >> It does not allow setting the sw state while the device is blocked by
+> >> a hardware rfkill switch.
+> >
+> > See my comment on your other patch, the device should be able to
+> > double-block.
+> 
+> OK, see attached patch.
 
-there seems to be a problem with rt73usb when Linux is booted right 
-after Windows. Association with my ap (WPA) is working fine and the 
-interface is getting an IP via dhcp, however the network seems dead 
-since pinging my ap (and further) doesn't work. I have to rmmod rt73usb, 
-replug the network card and modprobe rt73usb again for fully working 
-network. This situation is present in kernel 2.6.26-rc5 and -rc6.
+Looks good, same caveat as the other one: I don't know the driver.
 
-lsusb gives
-148f:2573 Ralink Technology, Corp. RT2501USB Wireless Adapter
-
-Let me know if you need further info and please CC to me since I'm not 
-on the list. Thanks.
-
-Chris
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
