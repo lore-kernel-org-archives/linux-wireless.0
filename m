@@ -1,48 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:46092 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754118AbYFXVuU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jun 2008 17:50:20 -0400
-Subject: Re: [PATCH 04/13] rfkill: add parameter to disable radios by
-	default
-From: Dan Williams <dcbw@redhat.com>
-To: Fabien Crespel <fabien@crespel.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <48615925.8010203@crespel.net>
-References: <1214252588-30723-1-git-send-email-hmh@hmh.eng.br>
-	 <1214252588-30723-5-git-send-email-hmh@hmh.eng.br>
-	 <g3quvb$8sa$1@ger.gmane.org>  <g3r9hn$av5$1@ger.gmane.org>
-	 <1214330213.23127.9.camel@localhost.localdomain>
-	 <48615925.8010203@crespel.net>
-Content-Type: text/plain
-Date: Tue, 24 Jun 2008 17:49:19 -0400
-Message-Id: <1214344159.11980.21.camel@localhost.localdomain> (sfid-20080624_235024_018764_C26027A8)
-Mime-Version: 1.0
+Received: from nf-out-0910.google.com ([64.233.182.185]:21779 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753617AbYF1Sjc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Jun 2008 14:39:32 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so259538nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 11:39:31 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: proski@gnu.org, orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>
+Subject: [RFC PATCH 14/19] orinoco: Split wevent work thread from wevent sending
+Date: Sat, 28 Jun 2008 19:38:20 +0100
+Message-Id: <1214678305-7057-15-git-send-email-kilroyd@gmail.com> (sfid-20080628_210813_761139_32EAAFCE)
+In-Reply-To: <1214678305-7057-14-git-send-email-kilroyd@gmail.com>
+References: <1214678305-7057-1-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-2-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-3-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-4-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-5-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-6-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-7-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-8-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-9-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-10-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-11-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-12-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-13-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-14-git-send-email-kilroyd@gmail.com>
+From: kilroyd@googlemail.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-06-24 at 22:29 +0200, Fabien Crespel wrote:
-> Dan Williams wrote :
-> > On Tue, 2008-06-24 at 19:06 +0200, Fabien Crespel wrote:
-> >   
-> >> Indeed, I think it would be better to let the driver choose the default state 
-> >> (initialization) instead of forcing it when registering. This would allow drivers 
-> >> to restore the device state after a reboot or shutdown (provided the firmware 
-> >> stores it, which is the case at least on my ASUS F3JC laptop).
-> >>     
-> >
-> > Do you mean your laptop BIOS stores the value in nvram somewhere?  What
-> > specific driver reads that value back out?
-> >
-> > Dan
-> >   
-> Yes, the laptop BIOS stores the value. Reading it back is done the same 
-> way as reading the WLAN/BT status later (through an ACPI method), so the 
-> driver only has to read and write the status at initialization to 
-> restore the device status & LEDs (because the reported status doesn't 
-> reflect the hardware status at boot time).
+This allows us to send more wevents from the work thread. We will need
+to do this to support WPA.
 
-Yeah, but what driver -is- that?  asus-laptop or something?
+Signed-off-by: David Kilroy <kilroyd@gmail.com>
+---
+ drivers/net/wireless/orinoco.c |   24 ++++++++++++++----------
+ 1 files changed, 14 insertions(+), 10 deletions(-)
 
-Dan
+diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
+index 2cd144e..1ae78b0 100644
+--- a/drivers/net/wireless/orinoco.c
++++ b/drivers/net/wireless/orinoco.c
+@@ -1424,34 +1424,38 @@ static void orinoco_join_ap(struct work_struct *work)
+ }
+ 
+ /* Send new BSSID to userspace */
+-static void orinoco_send_wevents(struct work_struct *work)
++static void orinoco_send_bssid_wevent(struct orinoco_private *priv)
+ {
+-	struct orinoco_private *priv =
+-		container_of(work, struct orinoco_private, wevent_work);
+ 	struct net_device *dev = priv->ndev;
+ 	struct hermes *hw = &priv->hw;
+ 	union iwreq_data wrqu;
+ 	int err;
+-	unsigned long flags;
+-
+-	if (orinoco_lock(priv, &flags) != 0)
+-		return;
+ 
+ 	err = hermes_read_ltv(hw, IRQ_BAP, HERMES_RID_CURRENTBSSID,
+ 			      ETH_ALEN, NULL, wrqu.ap_addr.sa_data);
+ 	if (err != 0)
+-		goto out;
++		return;
+ 
+ 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+ 
+ 	/* Send event to user space */
+ 	wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
++}
++
++static void orinoco_send_wevents(struct work_struct *work)
++{
++	struct orinoco_private *priv =
++		container_of(work, struct orinoco_private, wevent_work);
++	unsigned long flags;
++
++	if (orinoco_lock(priv, &flags) != 0)
++		return;
++
++	orinoco_send_bssid_wevent(priv);
+ 
+- out:
+ 	orinoco_unlock(priv, &flags);
+ }
+ 
+-
+ static inline void orinoco_clear_scan_results(struct orinoco_private *priv,
+ 					      unsigned long scan_age)
+ {
+-- 
+1.5.4.5
 
