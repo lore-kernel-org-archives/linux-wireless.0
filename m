@@ -1,66 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:2192 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753247AbYFCS0N convert rfc822-to-8bit (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.182]:16699 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753572AbYF1Six (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 14:26:13 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so644294nfc.21
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jun 2008 11:26:13 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 07/11] rt2x00: Remove CTS/RTS check in tx()
-Date: Tue, 3 Jun 2008 20:29:57 +0200
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <200806032024.52931.IvDoorn@gmail.com> <200806032027.27540.IvDoorn@gmail.com> <200806032027.47342.IvDoorn@gmail.com>
-In-Reply-To: <200806032027.47342.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Message-Id: <200806032029.57962.IvDoorn@gmail.com> (sfid-20080603_202623_326574_BD532BB4)
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Sat, 28 Jun 2008 14:38:53 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so379053ika.5
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 11:38:51 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: proski@gnu.org, orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>
+Subject: [RFC PATCH 05/19] orinoco: Add function to execute Hermes initialisation commands synchronously
+Date: Sat, 28 Jun 2008 19:38:11 +0100
+Message-Id: <1214678305-7057-6-git-send-email-kilroyd@gmail.com> (sfid-20080628_203912_081721_A0BF5AD1)
+In-Reply-To: <1214678305-7057-5-git-send-email-kilroyd@gmail.com>
+References: <1214678305-7057-1-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-2-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-3-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-4-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-5-git-send-email-kilroyd@gmail.com>
+From: kilroyd@googlemail.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 38a62373d637d6e4915136033c628143061049f4 Mon Sep 17 00:00:00 2001
-From: Ivo van Doorn <IvDoorn@gmail.com>
-Date: Tue, 3 Jun 2008 18:52:52 +0200
-Subject: [PATCH] rt2x00: Remove CTS/RTS check in tx()
+The current synchronous execution function doesn't work
+for certain Hermes commands which clear the MAGIC number from
+SWSUPPORT0. These commands seem to be related to initialisation or
+programming, for example HERMES_CMD_INIT.
 
-mac80211 doesn't send RTS or CTS-to-self frames through
-the tx() callback functions so we don't need to check it.
+Replicate hermes_docmd_wait for commands which clear the MAGIC number
+from SWSUPPORT0. This version accepts two extra arguments which are
+passed straight to the firmware.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Functionality copied out of hermes_init.
+
+Signed-off-by: David Kilroy <kilroyd@gmail.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00mac.c |   12 +++++-------
- 1 files changed, 5 insertions(+), 7 deletions(-)
+ drivers/net/wireless/hermes.c |   94 +++++++++++++++++++++++++----------------
+ drivers/net/wireless/hermes.h |    3 +
+ 2 files changed, 60 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index b02dbc8..97d9095 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -135,18 +135,16 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	}
+diff --git a/drivers/net/wireless/hermes.c b/drivers/net/wireless/hermes.c
+index aa95349..13072d0 100644
+--- a/drivers/net/wireless/hermes.c
++++ b/drivers/net/wireless/hermes.c
+@@ -116,6 +116,61 @@ static int hermes_issue_cmd(hermes_t *hw, u16 cmd, u16 param0,
+  * Function definitions
+  */
  
- 	/*
--	 * If CTS/RTS is required. and this frame is not CTS or RTS,
--	 * create and queue that frame first. But make sure we have
--	 * at least enough entries available to send this CTS/RTS
--	 * frame as well as the data frame.
-+	 * If CTS/RTS is required. create and queue that frame first.
-+	 * Make sure we have at least enough entries available to send
-+	 * this CTS/RTS frame as well as the data frame.
- 	 * Note that when the driver has set the set_rts_threshold()
- 	 * callback function it doesn't need software generation of
--	 * neither RTS or CTS-to-self frames and handles everything
-+	 * either RTS or CTS-to-self frame and handles everything
- 	 * inside the hardware.
- 	 */
- 	frame_control = le16_to_cpu(ieee80211hdr->frame_control);
--	if (!is_rts_frame(frame_control) && !is_cts_frame(frame_control) &&
--	    (tx_info->flags & (IEEE80211_TX_CTL_USE_RTS_CTS |
-+	if ((tx_info->flags & (IEEE80211_TX_CTL_USE_RTS_CTS |
- 			       IEEE80211_TX_CTL_USE_CTS_PROTECT)) &&
- 	    !rt2x00dev->ops->hw->set_rts_threshold) {
- 		if (rt2x00queue_available(queue) <= 1) {
++/* For doing cmds that wipe the magic constant in SWSUPPORT0 */
++int hermes_doicmd_wait(hermes_t *hw, u16 cmd,
++		       u16 parm0, u16 parm1, u16 parm2,
++		       struct hermes_response *resp)
++{
++	int err = 0;
++	int k;
++	u16 status, reg;
++
++	err = hermes_issue_cmd(hw, cmd, parm0, parm1, parm2);
++	if (err)
++		return err;
++
++	reg = hermes_read_regn(hw, EVSTAT);
++	k = CMD_INIT_TIMEOUT;
++	while ((!(reg & HERMES_EV_CMD)) && k) {
++		k--;
++		udelay(10);
++		reg = hermes_read_regn(hw, EVSTAT);
++	}
++
++	hermes_write_regn(hw, SWSUPPORT0, HERMES_MAGIC);
++
++	if (!hermes_present(hw)) {
++		DEBUG(0, "hermes @ 0x%x: Card removed during reset.\n",
++		       hw->iobase);
++		err = -ENODEV;
++		goto out;
++	}
++
++	if (!(reg & HERMES_EV_CMD)) {
++		printk(KERN_ERR "hermes @ %p: "
++		       "Timeout waiting for card to reset (reg=0x%04x)!\n",
++		       hw->iobase, reg);
++		err = -ETIMEDOUT;
++		goto out;
++	}
++
++	status = hermes_read_regn(hw, STATUS);
++	if (resp) {
++		resp->status = status;
++		resp->resp0 = hermes_read_regn(hw, RESP0);
++		resp->resp1 = hermes_read_regn(hw, RESP1);
++		resp->resp2 = hermes_read_regn(hw, RESP2);
++	}
++
++	hermes_write_regn(hw, EVACK, HERMES_EV_CMD);
++
++	if (status & HERMES_STATUS_RESULT)
++		err = -EIO;
++out:
++	return err;
++}
++EXPORT_SYMBOL(hermes_doicmd_wait);
++
+ void hermes_struct_init(hermes_t *hw, void __iomem *address, int reg_spacing)
+ {
+ 	hw->iobase = address;
+@@ -126,7 +181,7 @@ EXPORT_SYMBOL(hermes_struct_init);
+ 
+ int hermes_init(hermes_t *hw)
+ {
+-	u16 status, reg;
++	u16 reg;
+ 	int err = 0;
+ 	int k;
+ 
+@@ -164,43 +219,8 @@ int hermes_init(hermes_t *hw)
+ 
+ 	/* We don't use hermes_docmd_wait here, because the reset wipes
+ 	   the magic constant in SWSUPPORT0 away, and it gets confused */
+-	err = hermes_issue_cmd(hw, HERMES_CMD_INIT, 0, 0, 0);
+-	if (err)
+-		return err;
+-
+-	reg = hermes_read_regn(hw, EVSTAT);
+-	k = CMD_INIT_TIMEOUT;
+-	while ( (! (reg & HERMES_EV_CMD)) && k) {
+-		k--;
+-		udelay(10);
+-		reg = hermes_read_regn(hw, EVSTAT);
+-	}
+-
+-	hermes_write_regn(hw, SWSUPPORT0, HERMES_MAGIC);
+-
+-	if (! hermes_present(hw)) {
+-		DEBUG(0, "hermes @ 0x%x: Card removed during reset.\n",
+-		       hw->iobase);
+-		err = -ENODEV;
+-		goto out;
+-	}
+-		
+-	if (! (reg & HERMES_EV_CMD)) {
+-		printk(KERN_ERR "hermes @ %p: " 
+-		       "Timeout waiting for card to reset (reg=0x%04x)!\n",
+-		       hw->iobase, reg);
+-		err = -ETIMEDOUT;
+-		goto out;
+-	}
+-
+-	status = hermes_read_regn(hw, STATUS);
+-
+-	hermes_write_regn(hw, EVACK, HERMES_EV_CMD);
++	err = hermes_doicmd_wait(hw, HERMES_CMD_INIT, 0, 0, 0, NULL);
+ 
+-	if (status & HERMES_STATUS_RESULT)
+-		err = -EIO;
+-
+- out:
+ 	return err;
+ }
+ EXPORT_SYMBOL(hermes_init);
+diff --git a/drivers/net/wireless/hermes.h b/drivers/net/wireless/hermes.h
+index 8e3f0e3..287f536 100644
+--- a/drivers/net/wireless/hermes.h
++++ b/drivers/net/wireless/hermes.h
+@@ -353,6 +353,9 @@ void hermes_struct_init(hermes_t *hw, void __iomem *address, int reg_spacing);
+ int hermes_init(hermes_t *hw);
+ int hermes_docmd_wait(hermes_t *hw, u16 cmd, u16 parm0,
+ 		      struct hermes_response *resp);
++int hermes_doicmd_wait(hermes_t *hw, u16 cmd,
++		       u16 parm0, u16 parm1, u16 parm2,
++		       struct hermes_response *resp);
+ int hermes_allocate(hermes_t *hw, u16 size, u16 *fid);
+ 
+ int hermes_bap_pread(hermes_t *hw, int bap, void *buf, int len,
 -- 
-1.5.5.3
+1.5.4.5
 
