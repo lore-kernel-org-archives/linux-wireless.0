@@ -1,63 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:6855 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755180AbYF3NbY (ORCPT
+Received: from hu-out-0506.google.com ([72.14.214.236]:17688 "EHLO
+	hu-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752982AbYF1NkD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 09:31:24 -0400
-Received: by py-out-1112.google.com with SMTP id p76so279842pyb.10
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2008 06:31:22 -0700 (PDT)
-Message-ID: <1ba2fa240806300631s71ce6b25l4799baa0fa5958ba@mail.gmail.com> (sfid-20080630_153133_131579_C7F509A6)
-Date: Mon, 30 Jun 2008 16:31:21 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/1 V2] cfg80211: adding NONE regdomain
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, linville@tuxdriver.com,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
-	"Ester Kummer" <ester.kummer@intel.com>
-In-Reply-To: <1214825747.5507.47.camel@johannes.berg>
+	Sat, 28 Jun 2008 09:40:03 -0400
+Received: by hu-out-0506.google.com with SMTP id 28so1919311hub.21
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 06:40:01 -0700 (PDT)
+Message-ID: <f6ca9fed0806280640y2a5faed3ne885382afd610a62@mail.gmail.com> (sfid-20080628_154008_769967_909F5752)
+Date: Sat, 28 Jun 2008 15:40:01 +0200
+From: drago01 <drago01@gmail.com>
+To: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
+Subject: [PATCHv2] iwlwifi: add support for RFKILL_STATE_HARD_BLOCKED
+Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>, "Dan Williams" <dcbw@redhat.com>,
+	"Tomas Winkler" <tomas.winkler@intel.com>,
+	"Ivo van Doorn" <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20080628131439.GA871@khazad-dum.debian.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <1214732604-4573-1-git-send-email-tomas.winkler@intel.com>
-	 <43e72e890806300118me4b20bv2b91f30f91eaa7f3@mail.gmail.com>
-	 <1ba2fa240806300152o6d5f7deby6d00a4421138177c@mail.gmail.com>
-	 <43e72e890806300159j6c98ef9dpeac61d5aeca19f0e@mail.gmail.com>
-	 <1214817730.5507.27.camel@johannes.berg>
-	 <1ba2fa240806300425i609ababfj22a76718d3857f85@mail.gmail.com>
-	 <1214825747.5507.47.camel@johannes.berg>
+References: <f6ca9fed0806280042o21101cb1v56f6ea5f7adbe331@mail.gmail.com>
+	 <20080628131439.GA871@khazad-dum.debian.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 30, 2008 at 2:35 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-06-30 at 14:25 +0300, Tomas Winkler wrote:
+On Sat, Jun 28, 2008 at 3:14 PM, Henrique de Moraes Holschuh
+<hmh@hmh.eng.br> wrote:
+> On Sat, 28 Jun 2008, drago01 wrote:
+>> This patch fixes the rfkill states to set RFKILL_STATE_HARD_BLOCKED when the
+>> radio is disabled by a hardware killswitch.
+>> It does not allow setting the sw state while the device is blocked by
+>> a hardware rfkill switch.
 >
->> The idea was ask troubled user to make change in modprobe.conf and not
->> changing the code.
+> It should.  In fact, you should do it in a way that it is possible to
+> double-block the radio (i.e. in SW while it is blocked in HW), so that if
+> the HW block goes away, the radio remains blocked.
 >
-> Yeah but IMHO you're solving the wrong problem. If we want any
-> credibility we shouldn't allow users to ignore any regdom that easily,
-> and this is system-wide. Also, iwlwifi partly caused this problem in the
-> first place by printing out eeprom channels rather than having users use
-> "iwlist wlan0 channel" to see which channels are usable. Or even iw,
-> which shows you which are disabled.
+> Read the docs and examples again, please.  There even is special code in the
+> rfkill_toggle_radio private function to allow for it, we want drivers to be
+> able to double-block.
 
-Unfortunately iwlist channel gives very little information about
-channels and iw is not distributed by any distro as far as I know.
+OK, v2 attached it allows double-block.
 
-Here is little patch to help iw be more useful.
+-----
+This patch fixes the rfkill states to set RFKILL_STATE_HARD_BLOCKED when the
+radio is disabled by a hardware killswitch.
+It does not allow unblocking the sw state while the device is blocked by
+a hardware rfkill switch.
 
---- a/iw.c
-+++ b/iw.c
-@@ -95,7 +95,7 @@ static void usage(char *argv0)
-        fprintf(stderr, "Usage: %1$s dev <phydev> <OBJECT> <COMMAND> [OPTIONS]"
-                        "\n     %1$s dev <phydev> info\n"
-                        "\n"
--                       "where OBJECT := { interface | station | mpath }\n"
-+                       "where OBJECT := { interface | station | mpath
-| info }\n"
-                        "and COMMAND := { add | del | set | get | dump }\n",
-                        argv0);
+Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h
+b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 2838093..7f4f598 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -349,10 +349,19 @@ static inline int iwl_is_init(struct iwl_priv *priv)
+ 	return test_bit(STATUS_INIT, &priv->status);
  }
 
++static inline int iwl_is_rfkill_sw(struct iwl_priv *priv)
++{
++	return test_bit(STATUS_RF_KILL_SW, &priv->status);
++}
++
++static inline int iwl_is_rfkill_hw(struct iwl_priv *priv)
++{
++	return test_bit(STATUS_RF_KILL_HW, &priv->status);
++}
++
+ static inline int iwl_is_rfkill(struct iwl_priv *priv)
+ {
+-	return test_bit(STATUS_RF_KILL_HW, &priv->status) ||
+-	       test_bit(STATUS_RF_KILL_SW, &priv->status);
++	return iwl_is_rfkill_hw(priv) || iwl_is_rfkill_sw(priv);
+ }
 
-Tomas
+ static inline int iwl_is_ready_rf(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+index ffefbb4..8a47bdc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+@@ -55,20 +55,20 @@ static int iwl_rfkill_soft_rf_kill(void *data,
+enum rfkill_state state)
+
+ 	switch (state) {
+ 	case RFKILL_STATE_UNBLOCKED:
+-		iwl_radio_kill_sw_enable_radio(priv);
+-		/* if HW rf-kill is set dont allow ON state */
+-		if (iwl_is_rfkill(priv))
++		if (iwl_is_rfkill_hw(priv)) {
+ 			err = -EBUSY;
++			goto out_unlock;
++		}
++		iwl_radio_kill_sw_enable_radio(priv);
+ 		break;
+ 	case RFKILL_STATE_SOFT_BLOCKED:
+ 		iwl_radio_kill_sw_disable_radio(priv);
+-		if (!iwl_is_rfkill(priv))
+-			err = -EBUSY;
+ 		break;
+ 	default:
+ 		IWL_WARNING("we recieved unexpected RFKILL state %d\n", state);
+ 		break;
+ 	}
++out_unlock:
+ 	mutex_unlock(&priv->mutex);
+
+ 	return err;
+@@ -91,7 +91,7 @@ int iwl_rfkill_init(struct iwl_priv *priv)
+
+ 	priv->rfkill_mngr.rfkill->name = priv->cfg->name;
+ 	priv->rfkill_mngr.rfkill->data = priv;
+-	priv->rfkill_mngr.rfkill->state = RFKILL_STATE_ON;
++	priv->rfkill_mngr.rfkill->state = RFKILL_STATE_UNBLOCKED;
+ 	priv->rfkill_mngr.rfkill->toggle_radio = iwl_rfkill_soft_rf_kill;
+ 	priv->rfkill_mngr.rfkill->user_claim_unsupported = 1;
+
+@@ -177,9 +177,14 @@ void iwl_rfkill_set_hw_state(struct iwl_priv *priv)
+ 	if (!priv->rfkill_mngr.rfkill)
+ 		return;
+
+-	if (!iwl_is_rfkill(priv))
+-		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_ON;
++	if (iwl_is_rfkill_hw(priv)) {
++		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_HARD_BLOCKED;
++		return;
++	}
++
++	if (!iwl_is_rfkill_sw(priv))
++		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_UNBLOCKED;
+ 	else
+-		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_OFF;
++		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
+ }
+ EXPORT_SYMBOL(iwl_rfkill_set_hw_state);
