@@ -1,60 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:44034 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751994AbYFEVN3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jun 2008 17:13:29 -0400
-Message-ID: <4848577F.50802@gmx.de> (sfid-20080605_231335_947294_2F09F2B9)
-Date: Thu, 05 Jun 2008 23:15:43 +0200
-From: Joe <wirelesss@gmx.de>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4412 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752849AbYF1PWH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Jun 2008 11:22:07 -0400
+Date: Sat, 28 Jun 2008 11:10:56 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stefanik =?iso-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: George Fong <george@lateralplains.com>,
+	linux-wireless@vger.kernel.org, mcgrof@gmail.com
+Subject: Re: Problem making compat-wireless-2.6
+Message-ID: <20080628151056.GA6110@tuxdriver.com> (sfid-20080628_172212_992687_AED3FBD6)
+References: <200806281953.16371.george@lateralplains.com> <69e28c910806280421t5e0de8edm8d6aab9cd582ccb7@mail.gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Glossary for all words
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <69e28c910806280421t5e0de8edm8d6aab9cd582ccb7@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey guys,
+On Sat, Jun 28, 2008 at 01:21:54PM +0200, Stefanik G=E1bor wrote:
 
-first of all I want to tell you all my commendation for your fine work.=
-=20
-Right now I'm reading your source code to understand your code. In the=20
-future I'm interested in extending (may be I would have to hack somehow=
-)=20
-your code. Currently I'm most familiar with upper level usage of WLAN -=
-=20
-especially Ad Hoc mode. Now I got a possibility to dig into the linux=20
-kernel and into the maclayer of WLAN for the next years / month during=20
-my phd thesis. During reading I got some problems understanding some of=
-=20
-the abbreviations in your code.
-Thereby I was thinking a glossary for your framework could be helpful=20
-for future newbies.
+> Try editing drivers/net/wireless/b43/rfkill.c, and replacing
+> RFKILL_STATE_UNBLOCKED with RFKILL_STATE_ON and
+> RFKILL_STATE_SOFT_BLOCKED with RFKILL_STATE_OFF. Looks like rfkill is
+> not part of the compat package, and no work has been done to match
+> compat-wireless to older RFKILLs.
 
-Would you like to help me withit?
+=46WIW, rfkill probably _should_ be in compat-wireless.  Luis?
 
-Abbrev: English / German
-If: Interface / Schnittstelle
-Tx: Transmitter / Sender
-Rx: Receiver / Empf=E4nger
-STA: State / Status
-skb: ?
-wiphy: Wireless physical
-ops:
-vif: ? virtual interface
-hw: Hardware?
-rtnl:
-pid: Process id
-
-
-When I will have understood the code, I'm interested in sending Beacon=20
-frames 'manually' and during this step reconfigure the Beacon data=20
-regularly...
-
-=46or now all the Best
-Sebastian
-
-
+John
+--=20
+John W. Linville
+linville@tuxdriver.com
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
