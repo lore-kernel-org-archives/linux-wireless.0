@@ -1,162 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42591 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752659AbYFLBt7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 21:49:59 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 23/29] iwlwifi: move iwl4965_rf_kill_ct_config to iwl-core.c
-Date: Thu, 12 Jun 2008 09:47:13 +0800
-Message-Id: <1213235239-2954-24-git-send-email-yi.zhu@intel.com> (sfid-20080612_041917_046860_19C6034A)
-In-Reply-To: <1213235239-2954-23-git-send-email-yi.zhu@intel.com>
-References: <1213235239-2954-1-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-2-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-3-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-4-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-5-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-6-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-7-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-8-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-9-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-10-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-11-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-12-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-13-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-14-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-15-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-16-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-17-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-18-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-19-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-20-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-21-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-22-git-send-email-yi.zhu@intel.com>
- <1213235239-2954-23-git-send-email-yi.zhu@intel.com>
+Received: from nf-out-0910.google.com ([64.233.182.185]:21779 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753437AbYF1Sin (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Jun 2008 14:38:43 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so259538nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 11:38:43 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: proski@gnu.org, orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>
+Subject: [RFC PATCH 03/19] orinoco: Specify all three parameters to every Hermes command.
+Date: Sat, 28 Jun 2008 19:38:09 +0100
+Message-Id: <1214678305-7057-4-git-send-email-kilroyd@gmail.com> (sfid-20080628_203908_665441_5A45B1C3)
+In-Reply-To: <1214678305-7057-3-git-send-email-kilroyd@gmail.com>
+References: <1214678305-7057-1-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-2-git-send-email-kilroyd@gmail.com>
+ <1214678305-7057-3-git-send-email-kilroyd@gmail.com>
+From: kilroyd@googlemail.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+hermes_issue_cmd now takes two more parameters.
 
-This patch moves iwl4965_rf_kill_ct_config to iwl-core.c.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: David Kilroy <kilroyd@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965.c     |   24 ------------------------
- drivers/net/wireless/iwlwifi/iwl-commands.h |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.c     |   23 +++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.h     |    1 +
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    2 +-
- 5 files changed, 26 insertions(+), 26 deletions(-)
+ drivers/net/wireless/hermes.c |   13 +++++++------
+ 1 files changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 87648d0..aeb29b9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -556,30 +556,6 @@ out:
+diff --git a/drivers/net/wireless/hermes.c b/drivers/net/wireless/hermes.c
+index 29d3910..5504155 100644
+--- a/drivers/net/wireless/hermes.c
++++ b/drivers/net/wireless/hermes.c
+@@ -87,7 +87,8 @@ MODULE_LICENSE("Dual MPL/GPL");
  
- #define REG_RECALIB_PERIOD (60)
+    Callable from any context.
+ */
+-static int hermes_issue_cmd(hermes_t *hw, u16 cmd, u16 param0)
++static int hermes_issue_cmd(hermes_t *hw, u16 cmd, u16 param0,
++			    u16 param1, u16 param2)
+ {
+ 	int k = CMD_BUSY_TIMEOUT;
+ 	u16 reg;
+@@ -103,8 +104,8 @@ static int hermes_issue_cmd(hermes_t *hw, u16 cmd, u16 param0)
+ 		return -EBUSY;
+ 	}
  
--void iwl4965_rf_kill_ct_config(struct iwl_priv *priv)
--{
--	struct iwl4965_ct_kill_config cmd;
--	unsigned long flags;
--	int ret = 0;
--
--	spin_lock_irqsave(&priv->lock, flags);
--	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR,
--		    CSR_UCODE_DRV_GP1_REG_BIT_CT_KILL_EXIT);
--	spin_unlock_irqrestore(&priv->lock, flags);
--
--	cmd.critical_temperature_R =
--		cpu_to_le32(priv->hw_params.ct_kill_threshold);
--
--	ret = iwl_send_cmd_pdu(priv, REPLY_CT_KILL_CONFIG_CMD,
--			       sizeof(cmd), &cmd);
--	if (ret)
--		IWL_ERROR("REPLY_CT_KILL_CONFIG_CMD failed\n");
--	else
--		IWL_DEBUG_INFO("REPLY_CT_KILL_CONFIG_CMD succeeded, "
--			"critical temperature is %d\n",
--			cmd.critical_temperature_R);
--}
--
- /* Reset differential Rx gains in NIC to prepare for chain noise calibration.
-  * Called after every association, but this runs only once!
-  *  ... once chain noise is calibrated the first time, it's good forever.  */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 6613d32..920dfc1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -2078,7 +2078,7 @@ struct iwl4965_card_state_notif {
- #define RF_CARD_DISABLED   0x04
- #define RXON_CARD_DISABLED 0x10
+-	hermes_write_regn(hw, PARAM2, 0);
+-	hermes_write_regn(hw, PARAM1, 0);
++	hermes_write_regn(hw, PARAM2, param2);
++	hermes_write_regn(hw, PARAM1, param1);
+ 	hermes_write_regn(hw, PARAM0, param0);
+ 	hermes_write_regn(hw, CMD, cmd);
+ 	
+@@ -162,7 +163,7 @@ int hermes_init(hermes_t *hw)
  
--struct iwl4965_ct_kill_config {
-+struct iwl_ct_kill_config {
- 	__le32   reserved;
- 	__le32   critical_temperature_M;
- 	__le32   critical_temperature_R;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 9794904..8096463 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1326,4 +1326,27 @@ void iwl_dump_nic_event_log(struct iwl_priv *priv)
- }
- EXPORT_SYMBOL(iwl_dump_nic_event_log);
+ 	/* We don't use hermes_docmd_wait here, because the reset wipes
+ 	   the magic constant in SWSUPPORT0 away, and it gets confused */
+-	err = hermes_issue_cmd(hw, HERMES_CMD_INIT, 0);
++	err = hermes_issue_cmd(hw, HERMES_CMD_INIT, 0, 0, 0);
+ 	if (err)
+ 		return err;
  
-+void iwl_rf_kill_ct_config(struct iwl_priv *priv)
-+{
-+	struct iwl_ct_kill_config cmd;
-+	unsigned long flags;
-+	int ret = 0;
-+
-+	spin_lock_irqsave(&priv->lock, flags);
-+	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR,
-+		    CSR_UCODE_DRV_GP1_REG_BIT_CT_KILL_EXIT);
-+	spin_unlock_irqrestore(&priv->lock, flags);
-+
-+	cmd.critical_temperature_R =
-+		cpu_to_le32(priv->hw_params.ct_kill_threshold);
+@@ -216,7 +217,7 @@ int hermes_docmd_wait(hermes_t *hw, u16 cmd, u16 parm0,
+ 	u16 reg;
+ 	u16 status;
  
-+	ret = iwl_send_cmd_pdu(priv, REPLY_CT_KILL_CONFIG_CMD,
-+			       sizeof(cmd), &cmd);
-+	if (ret)
-+		IWL_ERROR("REPLY_CT_KILL_CONFIG_CMD failed\n");
-+	else
-+		IWL_DEBUG_INFO("REPLY_CT_KILL_CONFIG_CMD succeeded, "
-+			"critical temperature is %d\n",
-+			cmd.critical_temperature_R);
-+}
-+EXPORT_SYMBOL(iwl_rf_kill_ct_config);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 8d9fde6..59dd342 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -371,6 +371,7 @@ int iwlcore_low_level_notify(struct iwl_priv *priv,
- 			     enum iwlcore_card_notify notify);
- extern int iwl_send_statistics_request(struct iwl_priv *priv, u8 flags);
- extern int iwl_verify_ucode(struct iwl_priv *priv);
-+extern void iwl_rf_kill_ct_config(struct iwl_priv *priv);
- int iwl_send_lq_cmd(struct iwl_priv *priv,
- 		    struct iwl_link_quality_cmd *lq, u8 flags);
+-	err = hermes_issue_cmd(hw, cmd, parm0);
++	err = hermes_issue_cmd(hw, cmd, parm0, 0, 0);
+ 	if (err) {
+ 		if (! hermes_present(hw)) {
+ 			if (net_ratelimit())
+@@ -497,7 +498,7 @@ int hermes_write_ltv(hermes_t *hw, int bap, u16 rid,
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 2073ba6..3717f99 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -2295,7 +2295,7 @@ static void iwl_alive_start(struct iwl_priv *priv)
- 	iwl4965_commit_rxon(priv);
+ 	hermes_write_bytes(hw, dreg, value, count << 1);
  
- 	/* At this point, the NIC is initialized and operational */
--	iwl4965_rf_kill_ct_config(priv);
-+	iwl_rf_kill_ct_config(priv);
+-	err = hermes_docmd_wait(hw, HERMES_CMD_ACCESS | HERMES_CMD_WRITE, 
++	err = hermes_docmd_wait(hw, HERMES_CMD_ACCESS | HERMES_CMD_WRITE,
+ 				rid, NULL);
  
- 	iwl_leds_register(priv);
- 
+ 	return err;
 -- 
-1.5.3.6
+1.5.4.5
 
