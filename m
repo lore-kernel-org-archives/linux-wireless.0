@@ -1,84 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:59138 "EHLO
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:43254 "EHLO
 	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752143AbYFDDKZ (ORCPT
+	by vger.kernel.org with ESMTP id S1756105AbYF1NOq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 23:10:25 -0400
+	Sat, 28 Jun 2008 09:14:46 -0400
+Date: Sat, 28 Jun 2008 10:14:39 -0300
 From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: [PATCH 09/12] rfkill: add type string helper
-Date: Wed,  4 Jun 2008 00:10:14 -0300
-Message-Id: <1212549017-30144-10-git-send-email-hmh@hmh.eng.br> (sfid-20080604_051912_428541_09062786)
-In-Reply-To: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
-References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
+To: drago01 <drago01@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>, Dan Williams <dcbw@redhat.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] iwlwifi: add support for RFKILL_STATE_HARD_BLOCKED
+Message-ID: <20080628131439.GA871@khazad-dum.debian.net> (sfid-20080628_151506_039530_74E13376)
+References: <f6ca9fed0806280042o21101cb1v56f6ea5f7adbe331@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f6ca9fed0806280042o21101cb1v56f6ea5f7adbe331@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We will need access to the rfkill switch type in string format for more
-than just sysfs.  Therefore, move it to a generic helper.
+On Sat, 28 Jun 2008, drago01 wrote:
+> This patch fixes the rfkill states to set RFKILL_STATE_HARD_BLOCKED when the
+> radio is disabled by a hardware killswitch.
+> It does not allow setting the sw state while the device is blocked by
+> a hardware rfkill switch.
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- net/rfkill/rfkill.c |   33 +++++++++++++++------------------
- 1 files changed, 15 insertions(+), 18 deletions(-)
+It should.  In fact, you should do it in a way that it is possible to
+double-block the radio (i.e. in SW while it is blocked in HW), so that if
+the HW block goes away, the radio remains blocked.
 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 54bed0e..1130637 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -220,34 +220,31 @@ static ssize_t rfkill_name_show(struct device *dev,
- 	return sprintf(buf, "%s\n", rfkill->name);
- }
- 
--static ssize_t rfkill_type_show(struct device *dev,
--				struct device_attribute *attr,
--				char *buf)
-+static const char *rfkill_get_type_str(enum rfkill_type type)
- {
--	struct rfkill *rfkill = to_rfkill(dev);
--	const char *type;
--
--	switch (rfkill->type) {
-+	switch (type) {
- 	case RFKILL_TYPE_WLAN:
--		type = "wlan";
--		break;
-+		return "wlan";
- 	case RFKILL_TYPE_BLUETOOTH:
--		type = "bluetooth";
--		break;
-+		return "bluetooth";
- 	case RFKILL_TYPE_UWB:
--		type = "ultrawideband";
--		break;
-+		return "ultrawideband";
- 	case RFKILL_TYPE_WIMAX:
--		type = "wimax";
--		break;
-+		return "wimax";
- 	case RFKILL_TYPE_WWAN:
--		type = "wwan";
--		break;
-+		return "wwan";
- 	default:
- 		BUG();
- 	}
-+}
-+
-+static ssize_t rfkill_type_show(struct device *dev,
-+				struct device_attribute *attr,
-+				char *buf)
-+{
-+	struct rfkill *rfkill = to_rfkill(dev);
- 
--	return sprintf(buf, "%s\n", type);
-+	return sprintf(buf, "%s\n", rfkill_get_type_str(rfkill->type));
- }
- 
- static ssize_t rfkill_state_show(struct device *dev,
+Read the docs and examples again, please.  There even is special code in the
+rfkill_toggle_radio private function to allow for it, we want drivers to be
+able to double-block.
+
 -- 
-1.5.5.3
-
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
