@@ -1,95 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43478
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1756512AbYFQHx4 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52449 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751128AbYF1H5m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 03:53:56 -0400
-Date: Tue, 17 Jun 2008 00:53:56 -0700 (PDT)
-Message-Id: <20080617.005356.50875125.davem@davemloft.net> (sfid-20080617_095412_136227_B8C127CD)
-To: linville@tuxdriver.com
-CC: mokuno@sm.sony.co.jp, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 6/12]: wext: Parameterize the standard/private handlers.
-From: David Miller <davem@davemloft.net>
+	Sat, 28 Jun 2008 03:57:42 -0400
+Subject: Re: [PATCH 1/1] mac80211: don't accept WEP keys other than WEP40
+	and WEP104
+From: Johannes Berg <johannes@sipsolutions.net>
+To: drago01 <drago01@gmail.com>
+Cc: Tomas Winkler <tomas.winkler@intel.com>, linville@tuxdriver.com,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+In-Reply-To: <f6ca9fed0806272346y2e8fde2cwa27a79ee83d0c0af@mail.gmail.com> (sfid-20080628_084635_094025_0ACD0C13)
+References: <1214610613-6990-1-git-send-email-tomas.winkler@intel.com>
+	 <f6ca9fed0806272346y2e8fde2cwa27a79ee83d0c0af@mail.gmail.com>
+	 (sfid-20080628_084635_094025_0ACD0C13)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-j8SE1liJZcA1Yqhb3r/3"
+Date: Sat, 28 Jun 2008 09:57:27 +0200
+Message-Id: <1214639847.5507.6.camel@johannes.berg> (sfid-20080628_095746_350702_95F5F2CD)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-wext: Parameterize the standard/private handlers.
+--=-j8SE1liJZcA1Yqhb3r/3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The WEXT standard and private handlers to use are now
-arguments to wireless_process_ioctl().
+On Sat, 2008-06-28 at 08:46 +0200, drago01 wrote:
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/wireless/wext.c |   24 ++++++++++++++++--------
- 1 files changed, 16 insertions(+), 8 deletions(-)
+> > +/**
+> > + * enum ieee80211_key_len - key length
+> > + * @WEP40: WEP 5 byte long key
+> > + * @WEP104: WEP 13 byte long key
+> > + */
+> > +enum ieee80211_key_len {
+> > +       LEN_WEP40 =3D 5,
+> > +       LEN_WEP104 =3D 13,
+> > +};
 
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index e96559e..929d241 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -1015,11 +1015,17 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
- }
- 
- /* ---------------------------------------------------------------- */
-+typedef int (*wext_ioctl_func)(struct net_device *, struct ifreq *,
-+			       unsigned int, iw_handler);
-+
- /*
-  * Main IOCTl dispatcher.
-  * Check the type of IOCTL and call the appropriate wrapper...
-  */
--static int wireless_process_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd)
-+static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
-+				  unsigned int cmd,
-+				  wext_ioctl_func standard,
-+				  wext_ioctl_func private)
- {
- 	struct net_device *dev;
- 	iw_handler	handler;
-@@ -1035,12 +1041,12 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr, unsigned i
- 	 * Note that 'cmd' is already filtered in dev_ioctl() with
- 	 * (cmd >= SIOCIWFIRST && cmd <= SIOCIWLAST) */
- 	if (cmd == SIOCGIWSTATS)
--		return ioctl_standard_call(dev, ifr, cmd,
--					   &iw_handler_get_iwstats);
-+		return standard(dev, ifr, cmd,
-+				&iw_handler_get_iwstats);
- 
- 	if (cmd == SIOCGIWPRIV && dev->wireless_handlers)
--		return ioctl_standard_call(dev, ifr, cmd,
--					   &iw_handler_get_private);
-+		return standard(dev, ifr, cmd,
-+				&iw_handler_get_private);
- 
- 	/* Basic check */
- 	if (!netif_device_present(dev))
-@@ -1051,9 +1057,9 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr, unsigned i
- 	if (handler) {
- 		/* Standard and private are not the same */
- 		if (cmd < SIOCIWFIRSTPRIV)
--			return ioctl_standard_call(dev, ifr, cmd, handler);
-+			return standard(dev, ifr, cmd, handler);
- 		else
--			return ioctl_private_call(dev, ifr, cmd, handler);
-+			return private(dev, ifr, cmd, handler);
- 	}
- 	/* Old driver API : call driver ioctl handler */
- 	if (dev->do_ioctl)
-@@ -1084,7 +1090,9 @@ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
- 
- 	dev_load(net, ifr->ifr_name);
- 	rtnl_lock();
--	ret = wireless_process_ioctl(net, ifr, cmd);
-+	ret = wireless_process_ioctl(net, ifr, cmd,
-+				     ioctl_standard_call,
-+				     ioctl_private_call);
- 	rtnl_unlock();
- 	if (IW_IS_GET(cmd) && copy_to_user(arg, ifr, sizeof(struct iwreq)))
- 		return -EFAULT;
--- 
-1.5.5.1.308.g1fbb5
+
+> > +               if (alg =3D=3D ALG_WEP &&
+
+> What about 0 ?
+> See http://marc.info/?l=3Dlinux-wireless&m=3D121458316301507&w=3D2
+
+
+I don't think zero-keylen will have WEP there, will it? I don't really
+know though.
+
+johannes
+
+--=-j8SE1liJZcA1Yqhb3r/3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIZe7jAAoJEKVg1VMiehFYTjcP/RatPkvcG4p9cMm8V8rkQ5v0
+ymeotc56z2W0GiZk4eDqthp+/NP0ry05VcLPtQ2Fws6thyUphdvtcx1gQ+k1J1nN
+vRIvkCDfKzN9PSzrUyytkR6XyEJ2AJahzShtX3K4XpE6RW+RudBbQBt/6A73x2R9
+LrVK1hOV/xU9TZ+J5PrQZQ1VFjNOXLISvg1UR531XNxpYMkw7mKYVG/sRsfP3Uzt
+CG6fUagpUL3LtqiBbmQoSm9+sPuW+1nnmQJzwu0urQqAkeFw796jUwPcR5jgcipT
+xIATXNhI/oT17BWhs/5HlFy0mbmnIGbYV9jJZKNQhMO/rB7/Mp59XI30UnMSXm1a
+qFEv1enEzSj+88CNygwuJjI3Yws3YFAB+klSLGRAeoF6MzUj3YdEMV/UmUEpeFiD
+NGL9u/oYREcVo0gliTHdTkne89lSdw2C/0wEeR402Z4+ifS3PuJXbIrnWz+FxD71
+HLlzp8C0qb3OAD3hR+2yi2v/x4cWoqvTa7OIZq4w9SIVNATyNdSCyvwxhFqyP3kP
+M+TniplZyEUfbJgFD99oawxYQTYXZmown5CWIjvlU8gELduzMe05uZ91viKnEFKr
+w9ktOXzozSXRnSiA4Oa8GmsrvCDIrRgLTfKjUwJN+tnMrMUgn7dvNEFMZNIBmxtG
+txv2cMZh9qCWnCUi1ywr
+=EmwI
+-----END PGP SIGNATURE-----
+
+--=-j8SE1liJZcA1Yqhb3r/3--
 
