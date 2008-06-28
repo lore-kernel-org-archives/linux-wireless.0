@@ -1,126 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47891 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754044AbYFJOXY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 10:23:24 -0400
-Subject: Re: mac80211_hwsim - simulator of 802.11 radios for mac80211
-From: Dan Williams <dcbw@redhat.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080610105058.GA6961@jm.kir.nu>
-References: <20080610105058.GA6961@jm.kir.nu>
-Content-Type: text/plain
-Date: Tue, 10 Jun 2008 10:22:57 -0400
-Message-Id: <1213107777.27260.16.camel@localhost.localdomain> (sfid-20080610_162329_911830_1CF1BC5F)
-Mime-Version: 1.0
+Received: from nf-out-0910.google.com ([64.233.182.189]:61536 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753121AbYF1IJl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Jun 2008 04:09:41 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so217486nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 01:09:39 -0700 (PDT)
+Message-ID: <f6ca9fed0806280109q312c89c9g2561ac255b704ac9@mail.gmail.com> (sfid-20080628_100946_016688_946C086D)
+Date: Sat, 28 Jun 2008 10:09:39 +0200
+From: drago01 <drago01@gmail.com>
+To: "Linux Wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] iwlwifi: add support for RFKILL_STATE_HARD_BLOCKED
+Cc: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
+	"Zhu, Yi" <yi.zhu@intel.com>, "Dan Williams" <dcbw@redhat.com>,
+	"Tomas Winkler" <tomas.winkler@intel.com>,
+	"Ivo van Doorn" <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <f6ca9fed0806280042o21101cb1v56f6ea5f7adbe331@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f6ca9fed0806280042o21101cb1v56f6ea5f7adbe331@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-06-10 at 13:50 +0300, Jouni Malinen wrote:
-> hostapd and wpa_supplicant include a test driver interface that allows
-> them to be tested on a single host without any wireless hardware for
-> development purposes. I have found this very valuable both for
-> developing new functionality and for testing existing code.
-> 
-> In order to provide similar mechanism for mac80211 developers and to
-> extend the scope of suitable test cases for hostapd/wpa_supplicant, I've
-> written a Linux kernel module that provides a similar test interface at
-> a lower layer. mac80211_hwsim simulates WLAN hardware and the air
-> interface between the radios by acting as a low-level radio driver for
-> mac80211. Neither mac80211 nor user space programs need any changes to
-> work with the simulated radios.
+The attached patch fixes iwlwifi to set the rfkill state to
+RFKILL_STATE_HARD_BLOCKED when the device is disabled by the hardware
+rfkill. It also converts all _OFF/_ON states to the new states.
 
-Awesome.  I was going to write a basic WEXT driver so I could get some
-better tests going for NetworkManager, but you've beaten me to it :)
+-------
+This patch fixes the rfkill states to set RFKILL_STATE_HARD_BLOCKED when the
+radio is disabled by a hardware killswitch.
+It does not allow setting the sw state while the device is blocked by
+a hardware rfkill switch.
 
-Thanks!
-Dan
+Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
 
-> The initial version of mac80211_hwsim is available from the
-> mac80211_hwsim subdirectory of my hostap Git tree:
-> git://w1.fi/srv/git/hostap.git
-> http://w1.fi/gitweb/gitweb.cgi?p=hostap.git;a=tree;f=mac80211_hwsim
-> 
-> If there is interest in moving mac80211_hwsim module into the Linux
-> kernel tree, I'm open to doing that, too.
-> 
-> I've included some more information about the code in the README file
-> (see below) and there are also example configuration files for hostapd
-> and wpa_supplicant to show how a WPA2-Personal connection can be opened
-> with mac80211_hwsim.
-> 
-> mac80211_hwsim is still very minimal, but I have added couple of TODO
-> comments to the source code to indicate areas that I'm hoping to add for
-> more complete support of mac80211 features. I would also be interested
-> in feedback from other mac80211 developers on what kind of functionality
-> would be useful to have in this kind of simulated test setup. I'm first
-> looking into using this to develop IEEE 802.11w (management frame
-> protection) support into mac80211 and I would expect that the current
-> minimal design is enough for that, but there is certainly room for much
-> more, e.g., in the area of simulating signal strength and packet loss
-> for testing TX rate control, retransmission, and power save
-> functionality.
-> 
-> 
-> 
-> README:
-> 
-> Introduction
-> 
-> mac80211_hwsim is a Linux kernel module that can be used to simulate
-> arbitrary number of IEEE 802.11 radios for mac80211 on a single
-> device. It can be used to test most of the mac80211 functionality and
-> user space tools (e.g., hostapd and wpa_supplicant) in a way that
-> matches very closely with the normal case of using real WLAN
-> hardware. From the mac80211 view point, mac80211_hwsim is yet another
-> hardware driver, i.e., no changes to mac80211 are needed to use this
-> testing tool.
-> 
-> The main goal for mac80211_hwsim is to make it easier for developers
-> to test their code and work with new features to mac80211, hostapd,
-> and wpa_supplicant. The simulated radios do not have the limitations
-> of real hardware, so it is easy to generate an arbitrary test setup
-> and always reproduce the same setup for future tests. In addition,
-> since all radio operation is simulated, any channel can be used in
-> tests regardless of regulatory rules.
-> 
-> mac80211_hwsim kernel module has a parameter 'radios' that can be used
-> to select how many radios are simulates (default 2). This allows
-> configuration of both very simply setups (e.g., just a single access
-> point and a station) or large scale tests (multiple access points with
-> hundreds of stations).
-> 
-> mac80211_hwsim works by tracking the current channel of each virtual
-> radio and copying all transmitted frames to all other radios that are
-> currently enabled and on the same channel as the transmitting
-> radio. Software encryption in mac80211 is used so that the frames are
-> actually encrypted over the virtual air interface to allow more
-> complete testing of encryption.
-> 
-> 
-> Simple example
-> 
-> This example shows how to use mac80211_hwsim to simulate two radios:
-> one to act as an access point and the other as a station that
-> associates with the AP. hostapd and wpa_supplicant are used to take
-> care of WPA2-PSK authentication. In addition, hostapd is also
-> processing access point side of association.
-> 
-> Please note that the currently released Linux kernel (2.6.25) does not
-> enable AP mode, so a simple patch is needed to enable AP mode selection:
-> http://johannes.sipsolutions.net/patches/kernel/all/LATEST/006-allow-ap-vlan-modes.patch
-> 
-> 
-> # Build mac80211_hwsim:
-> make
-> 
-> # Load the module
-> insmod ./mac80211_hwsim.ko
-> 
-> # Run hostapd (AP) for wlan0
-> hostapd hostapd.conf
-> 
-> # Run wpa_supplicant (station) for wlan1
-> wpa_supplicant -Dwext -iwlan1 -c wpa_supplicant.conf
-> 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h
+b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 2838093..7f4f598 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -349,10 +349,19 @@ static inline int iwl_is_init(struct iwl_priv *priv)
+ 	return test_bit(STATUS_INIT, &priv->status);
+ }
 
++static inline int iwl_is_rfkill_sw(struct iwl_priv *priv)
++{
++	return test_bit(STATUS_RF_KILL_SW, &priv->status);
++}
++
++static inline int iwl_is_rfkill_hw(struct iwl_priv *priv)
++{
++	return test_bit(STATUS_RF_KILL_HW, &priv->status);
++}
++
+ static inline int iwl_is_rfkill(struct iwl_priv *priv)
+ {
+-	return test_bit(STATUS_RF_KILL_HW, &priv->status) ||
+-	       test_bit(STATUS_RF_KILL_SW, &priv->status);
++	return iwl_is_rfkill_hw(priv) || iwl_is_rfkill_sw(priv);
+ }
+
+ static inline int iwl_is_ready_rf(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+index ffefbb4..96d515c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+@@ -53,22 +53,23 @@ static int iwl_rfkill_soft_rf_kill(void *data,
+enum rfkill_state state)
+ 	IWL_DEBUG_RF_KILL("we recieved soft RFKILL set to state %d\n", state);
+ 	mutex_lock(&priv->mutex);
+
++	if (iwl_is_rfkill_hw(priv)) {
++		err = -EBUSY;
++		goto out;
++	}
++
+ 	switch (state) {
+ 	case RFKILL_STATE_UNBLOCKED:
+ 		iwl_radio_kill_sw_enable_radio(priv);
+-		/* if HW rf-kill is set dont allow ON state */
+-		if (iwl_is_rfkill(priv))
+-			err = -EBUSY;
+ 		break;
+ 	case RFKILL_STATE_SOFT_BLOCKED:
+ 		iwl_radio_kill_sw_disable_radio(priv);
+-		if (!iwl_is_rfkill(priv))
+-			err = -EBUSY;
+ 		break;
+ 	default:
+ 		IWL_WARNING("we recieved unexpected RFKILL state %d\n", state);
+ 		break;
+ 	}
++out:
+ 	mutex_unlock(&priv->mutex);
+
+ 	return err;
+@@ -91,7 +92,7 @@ int iwl_rfkill_init(struct iwl_priv *priv)
+
+ 	priv->rfkill_mngr.rfkill->name = priv->cfg->name;
+ 	priv->rfkill_mngr.rfkill->data = priv;
+-	priv->rfkill_mngr.rfkill->state = RFKILL_STATE_ON;
++	priv->rfkill_mngr.rfkill->state = RFKILL_STATE_UNBLOCKED;
+ 	priv->rfkill_mngr.rfkill->toggle_radio = iwl_rfkill_soft_rf_kill;
+ 	priv->rfkill_mngr.rfkill->user_claim_unsupported = 1;
+
+@@ -177,9 +178,14 @@ void iwl_rfkill_set_hw_state(struct iwl_priv *priv)
+ 	if (!priv->rfkill_mngr.rfkill)
+ 		return;
+
+-	if (!iwl_is_rfkill(priv))
+-		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_ON;
++	if (iwl_is_rfkill_hw(priv)) {
++		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_HARD_BLOCKED;
++		return;
++	}
++
++	if (!iwl_is_rfkill_sw(priv))
++		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_UNBLOCKED;
+ 	else
+-		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_OFF;
++		priv->rfkill_mngr.rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
+ }
+ EXPORT_SYMBOL(iwl_rfkill_set_hw_state);
