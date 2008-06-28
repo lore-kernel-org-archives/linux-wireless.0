@@ -1,53 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60919
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751575AbYFDPC6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2008 11:02:58 -0400
-Date: Wed, 04 Jun 2008 08:02:37 -0700 (PDT)
-Message-Id: <20080604.080237.66646394.davem@davemloft.net> (sfid-20080604_170300_777047_D47F0333)
-To: dwmw2@infradead.org
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	kirill@shutemov.name
-Subject: Re: [PATCH] wireless.h: improve userland include-ability
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1212587529.32207.82.camel@pmac.infradead.org>
-References: <1212515497-21578-1-git-send-email-linville@tuxdriver.com>
-	<20080603.120515.193703574.davem@davemloft.net>
-	<1212587529.32207.82.camel@pmac.infradead.org>
+Received: from main.gmane.org ([80.91.229.2]:50277 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751092AbYF1UuL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Jun 2008 16:50:11 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1KChMw-0007CL-Ei
+	for linux-wireless@vger.kernel.org; Sat, 28 Jun 2008 20:50:02 +0000
+Received: from cpc1-cwma5-0-0-cust137.swan.cable.ntl.com ([80.4.12.138])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 20:50:02 +0000
+Received: from sitsofe by cpc1-cwma5-0-0-cust137.swan.cable.ntl.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 20:50:02 +0000
+To: linux-wireless@vger.kernel.org
+From: Sitsofe Wheeler <sitsofe@yahoo.com>
+Subject: WARNING: at net/mac80211/rx.c:319 __ieee80211_rx_handle_packet+0x325/0x775()
+Date: Sat, 28 Jun 2008 21:48:37 +0100
+Message-ID: <4866A3A5.3060208@yahoo.com> (sfid-20080628_225015_077564_EFD5D22F)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Cc: kernel-testers@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Woodhouse <dwmw2@infradead.org>
-Date: Wed, 04 Jun 2008 14:52:09 +0100
+When I boot 2.6.26-rc8 on an x86_64 system I receive the following trace
+in the logs:
 
-> On Tue, 2008-06-03 at 12:05 -0700, David Miller wrote:
-> > Yeah, go check so me magic userspace tool header to see what magic is
-> > needed just to include a core networking header file correctly.
-> > 
-> > No, thanks.
-> 
-> Just to clarify: this is only a problem for userspace, and you're
-> objecting to that?
+> [   72.384009] ------------[ cut here ]------------
+> [   72.384021] WARNING: at net/mac80211/rx.c:319 __ieee80211_rx_handle_packet+0x325/0x775()
+> [   72.384026] Modules linked in:
+> [   72.384033] Pid: 3780, comm: glxinfo Not tainted 2.6.26-rc8skw #3
+> [   72.384037]
+> [   72.384039] Call Trace:
+> [   72.384042]  <IRQ>  [<ffffffff8023234f>] warn_on_slowpath+0x58/0x94
+> [   72.384061]  [<ffffffff804da926>] ? _spin_unlock_irqrestore+0x38/0x47
+> [   72.384071]  [<ffffffff80237145>] ? __tasklet_schedule+0x97/0xa6
+> [   72.384080]  [<ffffffff804bfd04>] ? ieee80211_rx_irqsafe+0x63/0x6a
+> [   72.384090]  [<ffffffff80248bcd>] ? ktime_get+0x11/0x42
+> [   72.384100]  [<ffffffff80211b37>] ? native_sched_clock+0x50/0x6d
+> [   72.384109]  [<ffffffff804c0283>] __ieee80211_rx_handle_packet+0x325/0x775
+> [   72.384119]  [<ffffffff802533b3>] ? __lock_acquire+0xdb4/0xdc3
+> [   72.384128]  [<ffffffff802533b3>] ? __lock_acquire+0xdb4/0xdc3
+> [   72.384136]  [<ffffffff804c0af6>] ? __ieee80211_rx+0x63/0x538
+> [   72.384143]  [<ffffffff804c0af6>] ? __ieee80211_rx+0x63/0x538
+> [   72.384151]  [<ffffffff804c0f57>] __ieee80211_rx+0x4c4/0x538
+> [   72.384161]  [<ffffffff804b2fc6>] ieee80211_tasklet_handler+0x75/0x11b
+> [   72.384169]  [<ffffffff80236f18>] ? tasklet_action+0x44/0xdf
+> [   72.384176]  [<ffffffff80236f56>] tasklet_action+0x82/0xdf
+> [   72.384183]  [<ffffffff8023789f>] __do_softirq+0x70/0xf1
+> [   72.384191]  [<ffffffff8020c5bc>] call_softirq+0x1c/0x28
+> [   72.384200]  [<ffffffff8020e181>] do_softirq+0x39/0x8a
+> [   72.384207]  [<ffffffff802373d8>] irq_exit+0x4e/0x8f
+> [   72.384214]  [<ffffffff8020e48e>] do_IRQ+0x148/0x16a
+> [   72.384222]  [<ffffffff8020b8b6>] ret_from_intr+0x0/0xf
+> [   72.384229]  <EOI>
+> [   72.384236] ---[ end trace 4e9264cea4c3b5b9 ]---
 
-Yes.
+The config I am using can be found on
+http://sucs.org/~sits/test/config-20080628.txt . I don't remember seeing
+this error in old 32 bit kernels but this the first 64 bit kernel I've
+started testing with.
 
-> I'm happy enough to change that, but it means seeing stuff like...
-> 	#ifndef __KERNEL__
-> 	#include <sys/foo.h>
-> 	#endif 
-> ... in kernel headers. Is that what you're intending, or am I
-> misunderstanding your objection?
 
-I think this kind of construct shouldn't be necessary in the first
-place.
-
-> I believe that the main reason for this patch was that <linux/socket.h>
-> and <linux/if.h> both have problems when you include them in the same C
-> file as the 'proper' glibc equivalent? Is that something we can address,
-> instead of just dropping those includes?
-
-You will need to find a way to make it work cleanly if you want
-me to take the change in :-)
