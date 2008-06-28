@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.237]:3855 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758949AbYFIKBY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2008 06:01:24 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so225450rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jun 2008 03:01:24 -0700 (PDT)
-Message-ID: <1ba2fa240806090301h2a1a3350x606cfe1d83be066a@mail.gmail.com> (sfid-20080609_120132_835879_2F0B2A83)
-Date: Mon, 9 Jun 2008 13:01:24 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Harvey Harrison" <harvey.harrison@gmail.com>
-Subject: Re: [PATCH 3/7] mac80211: add utility function to get header length
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1213002964.698.67.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2455 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751040AbYF1Pq7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Jun 2008 11:46:59 -0400
+Date: Sat, 28 Jun 2008 11:22:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: George Fong <george@lateralplains.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Problem making compat-wireless-2.6
+Message-ID: <20080628152213.GB6110@tuxdriver.com> (sfid-20080628_174702_356571_956897DA)
+References: <200806281953.16371.george@lateralplains.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1212774672.6340.77.camel@brick>
-	 <1213002964.698.67.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200806281953.16371.george@lateralplains.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 9, 2008 at 12:16 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->>  /**
->> + * ieee80211_hdrlen - get header length in bytes from frame control
->> + * @fc: frame control field in little-endian format
->> + */
->> +unsigned int ieee80211_hdrlen(__le16 fc);
->> +
->
->> +EXPORT_SYMBOL(ieee80211_hdrlen);
->
-> Do we really need to export that?
+On Sat, Jun 28, 2008 at 07:53:13PM +1000, George Fong wrote:
+> Hi guys
+> 
+> Not sure if this is a bug but I have not been able to make the compat wireless 
+> drivers.
+> 
+> I am running off Fedora 9 (x86_64) with kernel 2.6.25.6-55.fc9.x86_64. I am 
+> interested in the iwl4965 driver.
 
-so now we have hdrlen(u16) and hdrlen(__le16)  it will be fun.
+Do you absolutely need the stuff I merged to wireless-next-2.6
+yesterday?  If not, I think you will find these kernels from Koji to
+otherwise be quite up-to-date:
 
-So I guess will we converting idioms
-u16 fc = le16_to_cpu(hdr->frame_control);
-int hdr_len = ieee80211_get_hdrlen(fc);
-to
-int hdr_len = ieee80211_hdrlen(hdr->frame_control)
+	http://koji.fedoraproject.org/koji/buildinfo?buildID=54043
 
-This is how it used in driver code so it make sense to export this
-function and remove ieee80211_get_hdrlen(fc)
+Of course, the latest rawhide kernel (still building ATM) has the
+latest wireless bits:
 
-Since all fc operations are bitwise 'and' and 'or'
-u16 rx->fc can be dropped in future as well
+	http://koji.fedoraproject.org/koji/buildinfo?buildID=54098
 
-Tomas
+And if you don't want rawhide but still want the latest wireless bits,
+there should be a new F9 kernel with those bits "soon" -- watch here:
+
+	http://koji.fedoraproject.org/koji/packageinfo?packageID=8
+
+Hth!
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
