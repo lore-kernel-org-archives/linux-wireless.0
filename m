@@ -1,49 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4972 "EHLO ra.tuxdriver.com"
+Received: from blaine.gmane.org ([80.91.229.8]:60591 "EHLO hugh.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752475AbYFCS23 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 14:28:29 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Kirill A. Shutemov" <kirill@shutemov.name>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wireless.h: improve userland include-ability
-Date: Tue,  3 Jun 2008 13:51:37 -0400
-Message-Id: <1212515497-21578-1-git-send-email-linville@tuxdriver.com> (sfid-20080603_202832_385331_F7C61BC0)
+	id S1753988AbYF2Rc6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Jun 2008 13:32:58 -0400
+Received: from public by hugh.gmane.org with local (Exim 4.63)
+	(envelope-from <public@hugh.gmane.org>)
+	id 1KD0i5-0008PO-SL
+	for linux-wireless@vger.kernel.org; Sun, 29 Jun 2008 19:29:09 +0200
+Message-ID: <4867C471.6010106@yahoo.com> (sfid-20080629_193301_900705_55554691)
+Date: Sun, 29 Jun 2008 18:20:49 +0100
+From: Sitsofe Wheeler <sitsofe@yahoo.com>
+MIME-Version: 1.0
+To: Michael Buesch <public-mb-fseUSCV1ubazQB+pC5nmwQ@hugh.gmane.org>
+CC: public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org,
+	public-kernel-testers-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org
+Subject: Re: WARNING: at net/mac80211/rx.c:319 __ieee80211_rx_handle_packet+0x325/0x775()
+References: <4866A3A5.3060208@yahoo.com> <200806282357.30255.mb@bu3sch.de> <4866B5BF.3000404@yahoo.com> <200806290053.17284.mb@bu3sch.de>
+In-Reply-To: <200806290053.17284.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kirill A. Shutemov <kirill@shutemov.name>
 
-This patch partially reverts commit 2218228392080f0ca2fc2974604e79f57b12c436
-("Make linux/wireless.h be able to compile") while still making it
-easier to include wireless.h in userland apps.
 
-Signed-off-by: Kirill A. Shutemov <kirill@shutemov.name>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- include/linux/wireless.h |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Michael Buesch wrote:
+> That's known to be broken and is worked on.
+> Please simply disable the warning. It is harmless
+> on your machine.
 
-diff --git a/include/linux/wireless.h b/include/linux/wireless.h
-index 0a9b5b4..9c0b89c 100644
---- a/include/linux/wireless.h
-+++ b/include/linux/wireless.h
-@@ -70,8 +70,14 @@
- /***************************** INCLUDES *****************************/
- 
- #include <linux/types.h>		/* for __u* and __s* typedefs */
-+
-+/* This header is used in user-space, therefore need to be sanitised
-+ * for that purpose. Those includes are usually not compatible with glibc.
-+ * To know which includes to use in user-space, check iwlib.h. */
-+#ifdef __KERNEL__
- #include <linux/socket.h>		/* for "struct sockaddr" et al	*/
- #include <linux/if.h>			/* for IFNAMSIZ and co... */
-+#endif	/* __KERNEL__ */
- 
- /***************************** VERSION *****************************/
- /*
--- 
-1.5.5.1
+Thanks for the swift heads up and sorry for reporting a known issue.
 
