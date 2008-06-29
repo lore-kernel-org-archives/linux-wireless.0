@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:45197 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751882AbYFKVDd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jun 2008 17:03:33 -0400
-Subject: Re: Open source driver with binary HAL for BCM4313 from Broadcom
-From: Pavel Roskin <proski@gnu.org>
-To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <69e28c910806111326j6922905fq1f67201ab4ce298f@mail.gmail.com>
-References: <48500F14.8070300@canonical.com>
-	 <200806112047.00854.mb@bu3sch.de> <1213213666.19106.12.camel@dv>
-	 <69e28c910806111326j6922905fq1f67201ab4ce298f@mail.gmail.com>
+Received: from fg-out-1718.google.com ([72.14.220.154]:45440 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751193AbYF2GXt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Jun 2008 02:23:49 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so538731fgg.17
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 23:23:36 -0700 (PDT)
+Message-ID: <247d6d340806282323v3192ead8v149359e482375991@mail.gmail.com> (sfid-20080629_082355_009658_4E662435)
+Date: Sun, 29 Jun 2008 09:23:32 +0300
+From: "Guy Cohen" <guy.cohen@intel.com>
+To: "Tomas Winkler" <tomasw@gmail.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"David Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Linux Wireless" <linux-wireless@vger.kernel.org>,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
+	"Patrick McHardy" <kaber@trash.net>
+Subject: Re: compat-wireless high packet loss.
+In-Reply-To: <1ba2fa240806261603g30c3e757y9166c2f9e05f7666@mail.gmail.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Date: Wed, 11 Jun 2008 17:02:56 -0400
-Message-Id: <1213218176.3086.2.camel@dv> (sfid-20080611_230336_853727_3C0019F6)
-Mime-Version: 1.0
+References: <1ba2fa240806261603g30c3e757y9166c2f9e05f7666@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-06-11 at 22:26 +0200, Stefanik G=E1bor wrote:
-> >> > http://www.broadcom.com/support/802.11/linux_sta.php
+More info on the issue.. The problem is with TX of unrestrained UDP
+stream, when the traffic generated at the application layer is larger
+than the link can pass. With kernel 2.6.26-* the traffic is restrained
+when the TX FIFOs gets full while in 2.6.25.* frames are dropped at
+some layer. It seems that the drop happens after the IP fragmentation
+step at the stack.
 
-> And that's quite an achievement...
-> Anyway, what are the actual, working download links? The ones on the
-> site just 404 out for me.
+Thanks,
+Guy.
 
-Click on text ("32-bit driver", "64-bit driver"), not on the icons.
-Links with underscores in the version are correct:
-
-http://www.broadcom.com/docs/linux_sta/hybrid-portsrc_5_10_18.tar.gz
-http://www.broadcom.com/docs/linux_sta/hybrid-portsrc-x86_64_5_10_18.ta=
-r.gz
-
---=20
-Regards,
-Pavel Roskin
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On 6/27/08, Tomas Winkler <tomasw@gmail.com> wrote:
+> We've experienced very high packet loss when using latest
+> compat-wireless witth iwlwifi driver over 2.6.24 and 2.6.25 stable
+> kernels. This is not happening with 2.6.26-rc3 as a target kernel (not
+> sure about rc1 and rc2)
+> The traffic is UDP TX with large tx buffers ~26000.
+> We are still investigating yet if someone has any idea please share with us.
+> Thanks
+> Tomas
