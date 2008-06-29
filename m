@@ -1,100 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:39978 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758811AbYFEAiN (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.182]:28636 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753150AbYF2J5R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2008 20:38:13 -0400
-Date: Wed, 4 Jun 2008 21:38:08 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, Dmitry Torokhov <dtor@mail.ru>
-Subject: Re: [PATCH 01/12] rfkill: clarify meaning of rfkill states
-Message-ID: <20080605003808.GA16599@khazad-dum.debian.net> (sfid-20080605_023817_582914_1BC4D1F7)
-References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br> <1212549017-30144-2-git-send-email-hmh@hmh.eng.br> <1212611246.4018.12.camel@localhost.localdomain> <1ba2fa240806041607j10841ac0qb11fe0d0b27953d8@mail.gmail.com>
+	Sun, 29 Jun 2008 05:57:17 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so843803waf.23
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Jun 2008 02:57:16 -0700 (PDT)
+Message-ID: <1ba2fa240806290257r1db0e021n152945d41ffe2f42@mail.gmail.com> (sfid-20080629_115720_469895_CAE1E7E6)
+Date: Sun, 29 Jun 2008 12:57:16 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/1] mac80211: don't accept WEP keys other than WEP40 and WEP104
+Cc: drago01 <drago01@gmail.com>, linville@tuxdriver.com,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
+In-Reply-To: <1214639847.5507.6.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240806041607j10841ac0qb11fe0d0b27953d8@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1214610613-6990-1-git-send-email-tomas.winkler@intel.com>
+	 <f6ca9fed0806272346y2e8fde2cwa27a79ee83d0c0af@mail.gmail.com>
+	 <1214639847.5507.6.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 05 Jun 2008, Tomas Winkler wrote:
-> SW should be able to more sw radio switch regardless of hw switch so
+On Sat, Jun 28, 2008 at 10:57 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sat, 2008-06-28 at 08:46 +0200, drago01 wrote:
+>
+>> > +/**
+>> > + * enum ieee80211_key_len - key length
+>> > + * @WEP40: WEP 5 byte long key
+>> > + * @WEP104: WEP 13 byte long key
+>> > + */
+>> > +enum ieee80211_key_len {
+>> > +       LEN_WEP40 = 5,
+>> > +       LEN_WEP104 = 13,
+>> > +};
+>
+>
+>> > +               if (alg == ALG_WEP &&
+>
+>> What about 0 ?
+>> See http://marc.info/?l=linux-wireless&m=121458316301507&w=2
+>
+>
+> I don't think zero-keylen will have WEP there, will it? I don't really
+> know though.
 
-Be extremely careful with "should" and any ideas you might have of the
-capabilities of rf switch hardware, because chances are firmware-based
-switches will frustate you.   In fact, you're wrong.  Some firmware
-softswitches don't let you change their status when there is also a
-hardware switch present, and that hardware switch is in the "block
-transmissions" state.
+This patch  pushes the length check to ieee80211_set_encryption.
+Unlike John's patch
+where check was done in ieee80211_ioctl_siwencode.
+The benefit of this is that both ENCODE end ENCODEEXT are treated.
+The zero length key i.e. changing index is already taken care of in
+ieee80211_ioctl_siwencode
 
-> I believe it's better to have separate sysfs entry for sw and hw switch states.
-> hw sysfs file should be read only.
+<snip>
+if (erq->flags & IW_ENCODE_DISABLED)
+		remove = 1;
+else if (erq->length == 0) {
+		/* No key data - just set the default TX key index */
+		ieee80211_set_default_key(sdata, idx);
+		return 0;
+}
+</snip>
 
-When you do this (have more than one rfkill class for the same device),
-the kernel events and uevents are not able to propagate the real state
-of the device anymore:  upon the recepit of any event, you need to
-*locate* all rfkill switches attached to that device, query them all,
-and only if all of them are in state RFKILL_STATE_ON, will the device be
-in RFKILL_STATE_ON.
-
-So, we'd need to change the rfkill class to avoid all that hassle (see
-more on this below).
-
-Sincerely, I heavly prefer to add a third state (RFKILL_STATE_HARDOFF or
-something like that).  That is a safe path that will have no subtle
-interactions with the way rfkill is meant to be used.  I am not so sure
-the other possibilities have this advantage, even if I cannot pinpoint
-what interactions they could cause right now.
-
-> I agree it good to keep radio state separately as well.
-
-I don't like this either, unless by "separate" you mean outside of
-rfkill entirely.
-
-What you seem to be calling "radio state" is the effective state of a
-device with more than one kill line (be it software or hardware).  We
-could call that "device rfkill state" instead of "switch rfkill state"
-to avoid confusion, I suppose.
-
-Anyway, if we are to use various *related* rfkill switches per device,
-rfkill needs further changes, including an extra callback into the
-driver, so as to be able to export the device rfkill state also in all
-switch rfkill state events (otherwise these events become quite useless
-for many uses).
-
-It is more complicated and heavyweight a solution for very little gain
-when compared to the addition of a third RFKILL_STATE state, IMO.
-Remeber that multiple related switches per device adds complexity to the
-INTERFACE, and therefore to all applications that use that interface.
-
-> Third I think this patch use opposite logic as used currently in
-> practice. RFKILL_ON means that radio is off .
-
-The correct reading of rfkill class states are:
-
-RFKILL_STATE_ON:  transmitter is UNBLOCKED and *may* operate
-RFKILL_STATE_OFF: transmitter is BLOCKED and will *NOT* operate.
-
-Nothing else is correct.
-
-We could certainly rename these states to
-
-enum rfkill_state {
-	RFKILL_STATE_BLOCKED = 0,
-	RFKILL_STATE_UNBLOCKED = 1,
-};
-
-#define RFKILL_STATE_ON RFKILL_STATE_UNBLOCKED
-#define RFKILL_STATE_OFF RFKILL_STATE_BLOCKED
-
-Ivo, do you want a patch that does the above (plus the documentation
-changes, of course)?
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Tomas
