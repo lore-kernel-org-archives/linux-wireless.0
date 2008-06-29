@@ -1,44 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:35448 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752611AbYFBPnk (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.177]:25047 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753737AbYF2RUY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jun 2008 11:43:40 -0400
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 3/4] rndis_wlan: check if set_multicast_list work is already
-	scheduled
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Date: Mon, 02 Jun 2008 18:35:36 +0300
-Message-ID: <20080602153536.22793.40109.stgit@nanoha.lan> (sfid-20080602_174343_373941_E1109352)
-In-Reply-To: <20080602153521.22793.4271.stgit@nanoha.lan>
-References: <20080602153521.22793.4271.stgit@nanoha.lan>
+	Sun, 29 Jun 2008 13:20:24 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so521710ika.5
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Jun 2008 10:20:22 -0700 (PDT)
+Message-ID: <f6ca9fed0806291020j151c64fbx7705fe568b42adff@mail.gmail.com> (sfid-20080629_192057_242707_8F5F2156)
+Date: Sun, 29 Jun 2008 19:20:21 +0200
+From: drago01 <drago01@gmail.com>
+To: "Linux Wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] b43/b43legacy: add RFKILL_STATE_HARD_BLOCKED support
+Cc: "Michael Buesch" <mb@bu3sch.de>, stefano.brivio@polimi.it,
+	"Larry Finger" <larry.finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
+	"Ivo van Doorn" <ivdoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't queue set_multicast_list work if WORK_SET_MULTICAST_LIST 
-flag already set.
+Hi,
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
+The attached  patch adds RFKILL_STATE_HARD_BLOCKED to the b43/b43legacy drivers.
+Note: I don't have any hardware to test on, so if you have the
+hardware please test.
 
- drivers/net/wireless/rndis_wlan.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+-----------
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index c281c0b..ad46a0b 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -2272,6 +2272,9 @@ static void rndis_wext_set_multicast_list(struct net_device *dev)
- 	struct usbnet *usbdev = dev->priv;
- 	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
- 
-+	if (test_bit(WORK_SET_MULTICAST_LIST, &priv->work_pending))
-+		return;
-+
- 	set_bit(WORK_SET_MULTICAST_LIST, &priv->work_pending);
- 	queue_work(priv->workqueue, &priv->work);
+This patch sets the rfkill state to RFKILL_STATE_HARD_BLOCKED when the
+radio is killed
+by the hardware switch.
+
+Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+
+diff --git a/drivers/net/wireless/b43/rfkill.c
+b/drivers/net/wireless/b43/rfkill.c
+index 4cca203..4c0dd99 100644
+--- a/drivers/net/wireless/b43/rfkill.c
++++ b/drivers/net/wireless/b43/rfkill.c
+@@ -43,6 +43,23 @@ static bool b43_is_hw_radio_enabled(struct b43_wldev *dev)
+ 	return 0;
  }
 
++/* Update the rfkill state */
++static void b43_rfkill_update_state(struct b43_wldev *dev)
++{
++	struct b43_rfkill *rfk = &(dev->wl->rfkill);
++
++	if (!dev->radio_hw_enable) {
++		rfk->rfkill->state = RFKILL_STATE_HARD_BLOCKED;
++		return;
++	}
++
++	if (!dev->phy.radio_on)
++		rfk->rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
++	else
++		rfk->rfkill->state = RFKILL_STATE_UNBLOCKED;
++
++}
++
+ /* The poll callback for the hardware button. */
+ static void b43_rfkill_poll(struct input_polled_dev *poll_dev)
+ {
+@@ -60,6 +77,7 @@ static void b43_rfkill_poll(struct input_polled_dev *poll_dev)
+ 	if (unlikely(enabled != dev->radio_hw_enable)) {
+ 		dev->radio_hw_enable = enabled;
+ 		report_change = 1;
++		b43_rfkill_update_state(dev);
+ 		b43info(wl, "Radio hardware status changed to %s\n",
+ 			enabled ? "ENABLED" : "DISABLED");
+ 	}
+diff --git a/drivers/net/wireless/b43legacy/rfkill.c
+b/drivers/net/wireless/b43legacy/rfkill.c
+index 8935a30..19dabb7 100644
+--- a/drivers/net/wireless/b43legacy/rfkill.c
++++ b/drivers/net/wireless/b43legacy/rfkill.c
+@@ -44,6 +44,23 @@ static bool b43legacy_is_hw_radio_enabled(struct
+b43legacy_wldev *dev)
+ 	return 0;
+ }
+
++/* Update the rfkill state */
++static void b43legacy_rfkill_update_state(struct b43legacy_wldev *dev)
++{
++	struct b43_rfkill *rfk = &(dev->wl->rfkill);
++
++	if (!dev->radio_hw_enable) {
++		rfk->rfkill->state = RFKILL_STATE_HARD_BLOCKED;
++		return;
++	}
++
++	if (!dev->phy.radio_on)
++		rfk->rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
++	else
++		rfk->rfkill->state = RFKILL_STATE_UNBLOCKED;
++
++}
++
+ /* The poll callback for the hardware button. */
+ static void b43legacy_rfkill_poll(struct input_polled_dev *poll_dev)
+ {
+@@ -61,6 +78,7 @@ static void b43legacy_rfkill_poll(struct
+input_polled_dev *poll_dev)
+ 	if (unlikely(enabled != dev->radio_hw_enable)) {
+ 		dev->radio_hw_enable = enabled;
+ 		report_change = 1;
++		b43legacy_rfkill_update_state(dev);
+ 		b43legacyinfo(wl, "Radio hardware status changed to %s\n",
+ 			enabled ? "ENABLED" : "DISABLED");
+ 	}
