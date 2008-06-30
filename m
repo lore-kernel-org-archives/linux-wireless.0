@@ -1,56 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53289 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751860AbYF3Pxm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 11:53:42 -0400
-Subject: Re: IBSS lockdep failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240806300848v4fd92b72n565fc113e1c122b8@mail.gmail.com> (sfid-20080630_174814_501720_63E14E28)
-References: <1ba2fa240806300848v4fd92b72n565fc113e1c122b8@mail.gmail.com>
-	 (sfid-20080630_174814_501720_63E14E28)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-r5MMhhmefVapUtHZk4Ew"
-Date: Mon, 30 Jun 2008 17:53:01 +0200
-Message-Id: <1214841181.5507.54.camel@johannes.berg> (sfid-20080630_175346_689682_57ED193B)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:18215 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757642AbYF3J1L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jun 2008 05:27:11 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Assaf Krauss <assaf.krauss@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 16/33] mac80211: add beacon timestamp to beacon template in IBSS
+Date: Mon, 30 Jun 2008 17:23:16 +0800
+Message-Id: <1214817813-17639-17-git-send-email-yi.zhu@intel.com> (sfid-20080630_113812_822523_02465390)
+In-Reply-To: <1214817813-17639-16-git-send-email-yi.zhu@intel.com>
+References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-2-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-3-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-5-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-6-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-7-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-8-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-9-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-10-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-11-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-12-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-13-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-14-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-15-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-16-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Assaf Krauss <assaf.krauss@intel.com>
 
---=-r5MMhhmefVapUtHZk4Ew
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch adds a beacon timestamp to the beacon template used in IBSS
+mode. This way the underlying driver can update its TSF accordingly.
+According the spec station should adopt the highest TSF from an incoming
+beacons in the cell.
 
+Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ net/mac80211/mlme.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> phy0: Adding new IBSS station XX:XX:XX:XX:XX:XX (dev=3Dwlan0)
-
-are all of those XX entries the same?
-
-johannes
-
---=-r5MMhhmefVapUtHZk4Ew
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIaQFZAAoJEKVg1VMiehFYTJQP/RYrObP/NUAxIyaGIuS1x83r
-tMDJfJ4e4BHFmloDoiwE9fTAR0AxN6BPp9KGLQODlGUxDiR/dpLaWzD63cyIYK6O
-YijPhsuK0d6qc611EM1nG4SV6xRj176Vwrt5bowNfA7gRb9ZekCtdrX4vfQkc+GP
-EXDFIkN5hdcO3oRtsSF7xtfsvGjusDXzL0d+mxl9aAQFTaQgDvxiLl10H4dCKJEA
-C95+RywO8JVPHy5iXaFA47OrASElFlR7omt3cSQzAAxqnE2aNbuzPthQAH6F3oYd
-DmYFj0rbdZXZI/hwH/kv4nE5wyb/n7n8Bw8s2Jai6v6FQDx3y7GLCCYjTGCa4tpZ
-cGFum+by8xWXM6Kv/uqRwu3G6Q+uh1aKAkfNI7Q+AHiYx5Nim1IZr7UolcmC0Ea2
-LF5fME/vvckzzrSn95SvhQkIWU+0Am9cJUPtZqIrJTScOmXYmj4itMK0HRnmLVeK
-SnhfV5YN55ZCkQExsZFUc5sKRvQrvmAqSGgWcreGeQYSAvXSE3fiVpPWl0xqdXOV
-mu8UFXxf4hxzyQOeto+dxUNHlSevqIm8IgsqGhxzX1ongvWNg76stIZ97Ichnz+8
-Ke7CNwN65vgFvr7oCMiVvTzeNuRcED3znH3A4nuNkmL1DcV6mao9xxXlWd9G7RFS
-gqcOm4+oOuymNZmLhPk9
-=vnF5
------END PGP SIGNATURE-----
-
---=-r5MMhhmefVapUtHZk4Ew--
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 7b4d4d4..54228d9 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2479,6 +2479,7 @@ static int ieee80211_sta_join_ibss(struct net_device *dev,
+ 		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
+ 		mgmt->u.beacon.beacon_int =
+ 			cpu_to_le16(local->hw.conf.beacon_int);
++		mgmt->u.beacon.timestamp = cpu_to_le64(bss->timestamp);
+ 		mgmt->u.beacon.capab_info = cpu_to_le16(bss->capability);
+ 
+ 		pos = skb_put(skb, 2 + ifsta->ssid_len);
+-- 
+1.5.3.6
 
