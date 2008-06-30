@@ -1,58 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.248]:47150 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753167AbYF1OyI (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.224]:6858 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756640AbYF3LZ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 10:54:08 -0400
-Received: by an-out-0708.google.com with SMTP id d40so184730and.103
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 07:54:05 -0700 (PDT)
-Message-ID: <8db104800806280754n2d679198qfb77e5d9d29ae071@mail.gmail.com> (sfid-20080628_165412_838482_50258115)
-Date: Sat, 28 Jun 2008 16:54:05 +0200
-From: "=?UTF-8?Q?Pin-Sho/=E9=A6=AE=E5=93=81=E7=A2=A9?="
-	<chessmani@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Ad-hoc not working (ICS Kubuntu Hardy to XP host) with iwl4965
+	Mon, 30 Jun 2008 07:25:57 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1623714rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2008 04:25:57 -0700 (PDT)
+Message-ID: <1ba2fa240806300425i609ababfj22a76718d3857f85@mail.gmail.com> (sfid-20080630_132601_255713_4777D759)
+Date: Mon, 30 Jun 2008 14:25:57 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/1 V2] cfg80211: adding NONE regdomain
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, linville@tuxdriver.com,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
+	"Ester Kummer" <ester.kummer@intel.com>
+In-Reply-To: <1214817730.5507.27.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1214732604-4573-1-git-send-email-tomas.winkler@intel.com>
+	 <43e72e890806300118me4b20bv2b91f30f91eaa7f3@mail.gmail.com>
+	 <1ba2fa240806300152o6d5f7deby6d00a4421138177c@mail.gmail.com>
+	 <43e72e890806300159j6c98ef9dpeac61d5aeca19f0e@mail.gmail.com>
+	 <1214817730.5507.27.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
+On Mon, Jun 30, 2008 at 12:22 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2008-06-30 at 01:59 -0700, Luis R. Rodriguez wrote:
+>
+>> >>> This patch adds an option to enable all the channels by adding a
+>> >>> value of "NONE" to ieee80211_regdom module param. This is useful
+>> >>> for NICs that rely on EEPROM regulatory enforcement and for testing
+>
+>> > Still can be useful for testing,
+>>
+>> Testing can be done separately but not merged. The idea is to keep
+>> mac80211 and mac80211 drivers as compliant as possible. This steers in
+>> the other direction.
+>
+> I agree, testing is no reason to merge a patch if it's intrusive and not
+> useful outside testing.
 
-I have a T61 with Kubuntu Hardy freshly installed and fully upgraded
-and I want to connect it to an XP host with Internet Connection
-Sharing enabled. I have been able to do so successfully with an XP and
-a Vista with intel 4965, but with Hardy it is not working.
-
-Driver version: 1.2.25
-
-The commands I use are:
-
-sudo ifconfig wlan0 down
-sudo iwconfig wlan0 mode ad-hoc
-sudo iwconfig wlan0 essid blabla
-sudo ifconfig wlan0 up
-sudo dhclient wlan0
-
-(no key is set)
-
-After this, the dhclient does never discover an IP through the dhcp
-server on the XP host. It gives wlan0:avahi an ip, but it's not
-192.168.0.x. Configuring the IP manually does not work either. It
-looks as if there is not even communication between the devices.
-
-Ifconfig gives wlan0 with an associated cell, essid and ad-hoc mode,
-but signal level is 0.
-
-I have tried disabling ipv6 with no result.
-
-I have downloaded and tried compat-wireless from 2 days ago and it did
-not work either. However, it connected intermitently with an average
-of 91% of lost packets.
-
-Is this a bug? I opened a thread in ubuntuforums
-(http://ubuntuforums.org/showthread.php?t=838775) and nobody replied.
-I searched in the mail list archives and the posts I found suggest
-that ad-hoc should be working fine.
-
-Any thoughts?
+The idea was ask troubled user to make change in modprobe.conf and not
+changing the code.
+Thanks
+Tomas
