@@ -1,87 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45967 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755837AbYFNJma (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jun 2008 05:42:30 -0400
-Subject: Re: iwl3945 and WPA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Maciek Kaliszewski <mkalkal@interia.pl>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080614093851.GF5062@jm.kir.nu> (sfid-20080614_113939_524119_3155082E)
-References: <4852658A.4040402@interia.pl>
-	 <20080613132317.GB5333@tuxdriver.com>
-	 <1ba2fa240806130637u1f4b485dked28ce04ff52a9b5@mail.gmail.com>
-	 <48527D72.4070509@interia.pl> <1213375014.29669.36.camel@dv>
-	 <4852D6EB.3020304@interia.pl> <1213391287.22425.31.camel@dv>
-	 <4852F389.1070506@interia.pl>  <20080614093851.GF5062@jm.kir.nu>
-	 (sfid-20080614_113939_524119_3155082E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-O7a1uSK+fOCCnLqc6C7m"
-Date: Sat, 14 Jun 2008 11:42:03 +0200
-Message-Id: <1213436523.3860.44.camel@johannes.berg> (sfid-20080614_114234_847393_9F83F100)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:18215 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759605AbYF3J1R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jun 2008 05:27:17 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 31/33] iwlwifi: fix iwl4965 temperature callback calibration issue
+Date: Mon, 30 Jun 2008 17:23:31 +0800
+Message-Id: <1214817813-17639-32-git-send-email-yi.zhu@intel.com> (sfid-20080630_113814_166586_215CAFED)
+In-Reply-To: <1214817813-17639-31-git-send-email-yi.zhu@intel.com>
+References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-2-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-3-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-5-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-6-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-7-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-8-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-9-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-10-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-11-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-12-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-13-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-14-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-15-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-16-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-17-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-18-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-19-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-20-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-21-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-22-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-23-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-24-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-25-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-26-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-27-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-28-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-29-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-30-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-31-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The patch fixes the temperature calibration issue introduced by the
+patch "iwlwifi: move RX stats to core, and move temperature to handler".
+It also remove the second parameter "stats" since it is already copied
+to priv->statistics.
 
---=-O7a1uSK+fOCCnLqc6C7m
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |   14 +-------------
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    5 ++---
+ drivers/net/wireless/iwlwifi/iwl-core.h |    3 +--
+ drivers/net/wireless/iwlwifi/iwl-rx.c   |   13 ++++++++++---
+ 4 files changed, 14 insertions(+), 21 deletions(-)
 
-
-> > You are right . It may be wpa_supplicant issue . (I'm moving to hostap =
-list=20
-> > as soon as I get subscribed )
-> > Kernel is amd64 and wpa_supplicant is i386 binary.
->=20
-> Isn't this the known issue with ioctl compat code when using 64-bit
-> kernel with 32-bit user space?=20
-
-Yes.
-
-> wireless-tools has some workaround code
-> for figuring out what kernel is trying to say in WEXT data, but
-> wpa_supplicant does not have such workaround since I do not believe it
-> belongs to every user space program that is using WEXT.
-
-I think only Jean disagrees.
-
-> If I've understood correctly, Dave Miller is working on cleaning up the
-> compat WEXT code (see "Proper compat WEXT support" thread from June 3rd
-> for the patch series). I would hope that that fixes issues with
-> 64/32-bit systems without require all user space programs to be modified
-> to be aware of the bogus data from the kernel. As a temporary
-> workaround, it might help to build 64-bit wpa_supplicant for that
-> kernel.
-
-Yeah, it should be in there. Building a 64-bit wpa supplicant is quite
-hard unless you have all 64-bit libs already, so maybe it's easier to
-apply Dave's patches.
-
-johannes
-
---=-O7a1uSK+fOCCnLqc6C7m
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIU5JnAAoJEKVg1VMiehFYkZcP/3/w4/066SfmuSYgXtSAhFQq
-K+YNDa9bJtfrUA/3ORH7MrHZCeP5SKwzcH3h2zvOo8sCRmlBeA3sP9MCw3yZMJpj
-xT7N/4oyRoPHxU4efe2MsTUZEo9llQyKd7ysn9PoUwUux0gY5cJ/a1hfHWNX6gYZ
-SRN0elVDsGIwiuMMruHTBxDz7TmvrfbRWoz/te9q542il0RRkdPjXfiYepUJEeTa
-wa0QeIt86EC6BQifFR9W5bzkbbJpkISlyNgvE+ewFrZNhb+EE092R0j0SRhkpCvt
-0s+TioYEnWzhOR3iCBlvPKcCDI48z2TGdcylvjr9kygnx/Z74AncOO/xm56um5ws
-G05lR82EpCuwkLcgknFOE/6TQF4wyuRdW/PRatGJHPHeexyC5GjnxkNgKvNf3Zbu
-OiFcIj4yG1/bIRn1nWaFflAvKwU/eS7ooxjLEPU8oB25R79W3/p2j+AofKV/tKCM
-eyT6HH8yJgT4QeVga+36wcP9YzvhDAR1X3eMuU3dMIf79pR9Mv+it5OfIB69fZ73
-j4eBwBD7byWNqKHykXEdtdthausnk35jHxWkvXe5EWhMl8doIPijJeX6DBAWgSNv
-BSh9U+ckvOT3VWrhl9QtR1r/pKSLW6rXJ7Xc1EW2F5fu9ctN1bpGYtGOEZPxnW+y
-IMXCPrSWGqh0ntm/LYe7
-=G99K
------END PGP SIGNATURE-----
-
---=-O7a1uSK+fOCCnLqc6C7m--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index e4eab51..8c93f8d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -1879,21 +1879,9 @@ static int iwl4965_is_temp_calib_needed(struct iwl_priv *priv)
+ 	return 1;
+ }
+ 
+-static void iwl4965_temperature_calib(struct iwl_priv *priv,
+-				      struct iwl_notif_statistics *stats)
++static void iwl4965_temperature_calib(struct iwl_priv *priv)
+ {
+ 	s32 temp;
+-	int change = ((priv->statistics.general.temperature !=
+-		   stats->general.temperature) ||
+-		  ((priv->statistics.flag &
+-		    STATISTICS_REPLY_FLG_FAT_MODE_MSK) !=
+-		   (stats->flag & STATISTICS_REPLY_FLG_FAT_MODE_MSK)));
+-
+-	/* If the hardware hasn't reported a change in
+-	 * temperature then don't bother computing a
+-	 * calibrated temperature value */
+-	if (!change)
+-		return;
+ 
+ 	temp = iwl4965_hw_get_temperature(priv);
+ 	if (temp < 0)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 1be6ca4..7cc73e9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -1422,11 +1422,10 @@ static int  iwl5000_send_tx_power(struct iwl_priv *priv)
+ 				       NULL);
+ }
+ 
+-static void iwl5000_temperature(struct iwl_priv *priv,
+-				struct iwl_notif_statistics *stats)
++static void iwl5000_temperature(struct iwl_priv *priv)
+ {
+ 	/* store temperature from statistics (in Celsius) */
+-	priv->temperature = le32_to_cpu(stats->general.temperature);
++	priv->temperature = le32_to_cpu(priv->statistics.general.temperature);
+ }
+ 
+ static struct iwl_hcmd_ops iwl5000_hcmd = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index d7562c3..eb4abe1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -140,8 +140,7 @@ struct iwl_lib_ops {
+ 	int (*set_power)(struct iwl_priv *priv, void *cmd);
+ 	int (*send_tx_power) (struct iwl_priv *priv);
+ 	void (*update_chain_flags)(struct iwl_priv *priv);
+-	void (*temperature) (struct iwl_priv *priv,
+-		struct iwl_notif_statistics *stats);
++	void (*temperature) (struct iwl_priv *priv);
+ 	/* eeprom operations (as defined in iwl-eeprom.h) */
+ 	struct iwl_eeprom_ops eeprom_ops;
+ };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 1adb1aa..d379529 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -557,11 +557,18 @@ static void iwl_rx_calc_noise(struct iwl_priv *priv)
+ void iwl_rx_statistics(struct iwl_priv *priv,
+ 			      struct iwl_rx_mem_buffer *rxb)
+ {
++	int change;
+ 	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
+-
++       
+ 	IWL_DEBUG_RX("Statistics notification received (%d vs %d).\n",
+ 		     (int)sizeof(priv->statistics), pkt->len);
+ 
++	change = ((priv->statistics.general.temperature !=
++		   pkt->u.stats.general.temperature) ||
++		  ((priv->statistics.flag &
++		    STATISTICS_REPLY_FLG_FAT_MODE_MSK) !=
++		   (pkt->u.stats.flag & STATISTICS_REPLY_FLG_FAT_MODE_MSK)));
++
+ 	memcpy(&priv->statistics, &pkt->u.stats, sizeof(priv->statistics));
+ 
+ 	set_bit(STATUS_STATISTICS, &priv->status);
+@@ -581,8 +588,8 @@ void iwl_rx_statistics(struct iwl_priv *priv,
+ 
+ 	iwl_leds_background(priv);
+ 
+-	if (priv->cfg->ops->lib->temperature)
+-		priv->cfg->ops->lib->temperature(priv, &pkt->u.stats);
++	if (priv->cfg->ops->lib->temperature && change)
++		priv->cfg->ops->lib->temperature(priv);
+ }
+ EXPORT_SYMBOL(iwl_rx_statistics);
+ 
+-- 
+1.5.3.6
 
