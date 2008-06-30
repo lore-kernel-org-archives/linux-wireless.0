@@ -1,82 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47357 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754135AbYFSXgR (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:56748 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751771AbYF3Qq5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 19:36:17 -0400
-Subject: Re: [PATCH 2/3] mac80211: get rid of function pointers in TX path
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1213918321.6591.4.camel@brick> (sfid-20080620_013221_708262_A91CCF6B)
-References: <20080619232229.202159000@sipsolutions.net>
-	 <20080619232434.586735000@sipsolutions.net> <1213918321.6591.4.camel@brick>
-	 (sfid-20080620_013221_708262_A91CCF6B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MMNgcnOHXgJAtVKPFlH5"
-Date: Fri, 20 Jun 2008 01:35:37 +0200
-Message-Id: <1213918537.8967.121.camel@johannes.berg> (sfid-20080620_013620_243873_762058AF)
-Mime-Version: 1.0
+	Mon, 30 Jun 2008 12:46:57 -0400
+Message-ID: <48690E52.8040603@lwfinger.net> (sfid-20080630_184701_126280_7930630E)
+Date: Mon, 30 Jun 2008 11:48:18 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
+	flamingice@sourmilk.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] p54: Add quality output to iwlist and iwconfig
+References: <4868fe45.swzEykllJP3Ow73U%Larry.Finger@lwfinger.net>	 <1214840530.5507.52.camel@johannes.berg>	 <486904D4.4010705@lwfinger.net> <69e28c910806300913m6ce12448m1326c3801d727273@mail.gmail.com>
+In-Reply-To: <69e28c910806300913m6ce12448m1326c3801d727273@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-MMNgcnOHXgJAtVKPFlH5
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2008-06-19 at 16:32 -0700, Harvey Harrison wrote:
-> On Fri, 2008-06-20 at 01:22 +0200, Johannes Berg wrote:
-> > +#define CALL_TXH(txh)		\
-> > +	res =3D txh(tx);		\
-> > +	if (res !=3D TX_CONTINUE)	\
-> > +		goto txh_done;
-> > +
-> > +	CALL_TXH(ieee80211_tx_h_check_assoc)
-> > +	CALL_TXH(ieee80211_tx_h_sequence);
-> > +	CALL_TXH(ieee80211_tx_h_ps_buf);
-> > +	CALL_TXH(ieee80211_tx_h_select_key);
-> > +	CALL_TXH(ieee80211_tx_h_michael_mic_add);
-> > +	CALL_TXH(ieee80211_tx_h_rate_ctrl);
-> > +	CALL_TXH(ieee80211_tx_h_misc);
-> > +	CALL_TXH(ieee80211_tx_h_fragment);
-> > +	/* handlers after fragment must be aware of tx info fragmentation! */
-> > +	CALL_TXH(ieee80211_tx_h_encrypt);
-> > +	CALL_TXH(ieee80211_tx_h_calculate_duration);
-> > +	CALL_TXH(ieee80211_tx_h_stats);
-> > +#undef CALL_TXH
+Stefanik G=E1bor wrote:
+> On Mon, Jun 30, 2008 at 6:07 PM, Larry Finger <Larry.Finger@lwfinger.=
+net> wrote:
+>> Johannes Berg wrote:
+>>> On Mon, 2008-06-30 at 10:39 -0500, Larry.Finger@lwfinger.net wrote:
+>>>> The p54 driver family reports a quality of 0 in iwconfig and iwlis=
+t
+>>>> output. This patch calculates a quality number as a percentage of =
+the
+>>>> rssi to the maximum signal of 127 reported as the maximum signal.
+>>> Unrelated, do you have a p54 card? Does it work? I wasn't sure whet=
+her
+>>> the tx-info sbk->cb change broke it or not after I fixed up some th=
+ings
+>>> there.
+>> It is DW1450, which is a p54usb. It works with the latest wireless t=
+esting,
+>> at least in b/g/mode. I don't have an 802.11a AP to try the 5 GHz mo=
+de.
+ >
 >=20
-> Unnecessary ; after each CALL_TXH()...except the first.
->=20
-> Same thing for 3/3 on the receive side.
+> What "special" modes work with it? (IBSS, monitor, AP, mesh, etc.)
 
-Yeah, that's fair, it's not a function call in any way so it need not
-look like one either. I'll resend tomorrow (just in case somebody else
-finds something else).
+I have only run it in managed mode. I bought it to use it in AP mode=20
+to test my BCM4312 802.11a/b/g card when b43 can handle 5 GHz=20
+channels, but that is for the future.
 
-johannes
+I gave a quick try of monitor mode with kismet. It saw the beacons=20
+from nearby APs, but never captured any other packets. I don't think=20
+it is working.
 
---=-MMNgcnOHXgJAtVKPFlH5
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Larry
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIWu1FAAoJEKVg1VMiehFYDVUP/jmnarvC4gyOBBsWrN4Er4LT
-reaZu69DOp8+9ZVKBEnwCsC7kl5TGYY7a8jm+mwY4B97ybcMnn83xodJeTF4JhtE
-2xCY0yjhI+wRnVamRW0ibLo3pffZ2zyH8qdZ4OiebMKFztzaCQbdeCgw9CoVlyV7
-8Cb7OYI7w5cFHF7D9b2glmx4caSA1SKlvyk3PUIRuNXIxfoEbnDelUneEVBcDhRH
-ZMuIso6xAHzZLCTCwe4sk2LdGEPFaEu7ZK/v1bsy4UBzfcLViAD2IS7O5ArDiTEC
-8dCoSYOHCNde1N5Vn52K9OWTPz4KL3w2AvzgyNCthIi1CBqIwHB3oKleczNFxkkl
-9s9SyJkC0UeEpisd/5doTnLn2DBjUAfvqghjkM95AR+tJ4hMiu9Nl8E5LnEdDuQI
-E6dT5JcKWhRk8JTd+p/Kay1bbwbBKVdTxrpi4x+eaF4Y/jaMibn+5pMXebjJIDF1
-/kL+bV7Ifk/Mk161HDHy78aX05hH3uFfE0z7uzLtXzxf7pEmCZ1VdIbf0dujFJjQ
-NVf4kpydouEEUcO6tZkKhgJps+GuwcmOCSVX26HCRvzNzoqrspwiyAC7YgcjRDJo
-2lV8dFQwjayi9D3Z9kISVPYKS2td8rxJEAvYNYZa7u3Vbdpt2WVWGY/ZwxG79OuF
-eH6InSQxNPyztp5bRL6v
-=a6FJ
------END PGP SIGNATURE-----
-
---=-MMNgcnOHXgJAtVKPFlH5--
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
