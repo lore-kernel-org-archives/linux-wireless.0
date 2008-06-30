@@ -1,22 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s131.mittwaldmedien.de ([62.216.178.31]:8943 "EHLO
-	s131.mittwaldmedien.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751721AbYFFGuq (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.177]:34735 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753182AbYF3IwU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jun 2008 02:50:46 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [english 93%] Re: Glossary for all words
-Date: Fri, 6 Jun 2008 08:50:37 +0200
-Cc: Sebastian Fudickar <Sebastian.Fudickar@gmx.de>
-References: <4848577F.50802@gmx.de> <69e28c910806051421m17efed1andf82b62246ca9f02@mail.gmail.com> <48485DE5.2050306@gmx.de>
-In-Reply-To: <48485DE5.2050306@gmx.de>
+	Mon, 30 Jun 2008 04:52:20 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so1128016waf.23
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2008 01:52:20 -0700 (PDT)
+Message-ID: <1ba2fa240806300152o6d5f7deby6d00a4421138177c@mail.gmail.com> (sfid-20080630_105226_587554_75EDAAC0)
+Date: Mon, 30 Jun 2008 11:52:20 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH 1/1 V2] cfg80211: adding NONE regdomain
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
+	"Ester Kummer" <ester.kummer@intel.com>
+In-Reply-To: <43e72e890806300118me4b20bv2b91f30f91eaa7f3@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200806060850.37216.hs4233@mail.mn-solutions.de> (sfid-20080606_085050_931099_4FABB7EB)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1214732604-4573-1-git-send-email-tomas.winkler@intel.com>
+	 <43e72e890806300118me4b20bv2b91f30f91eaa7f3@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maybe you want to make yourself an account at the wiki at 
-http://wireless.kernel.org and start your page there?
+On Mon, Jun 30, 2008 at 11:18 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Sun, Jun 29, 2008 at 2:43 AM, Tomas Winkler <tomas.winkler@intel.com> wrote:
+>> From: Ester Kummer <ester.kummer@intel.com>
+>>
+>> This patch adds an option to enable all the channels by adding a
+>> value of "NONE" to ieee80211_regdom module param. This is useful
+>> for NICs that rely on EEPROM regulatory enforcement and for testing
+>
+> For the EEPROM we should not rely on "none" but on a callback notifier
+> chain to let the driver do 'the right thing'. I'll post patches
+> hopefully tonight.
+
+Still can be useful for testing,
+Tomas
