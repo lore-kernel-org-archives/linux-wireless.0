@@ -1,66 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:55188 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752284AbYF2JLZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jun 2008 05:11:25 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Ester Kummer <ester.kummer@intel.com>
-Subject: [PATCH 1/1] cfg80211: adding NONE regdomain
-Date: Sun, 29 Jun 2008 12:11:21 +0300
-Message-Id: <1214730681-4475-1-git-send-email-tomas.winkler@intel.com> (sfid-20080629_111135_835813_DD31A8E3)
-Content-Type: text/plain; charset="us-ascii"
+Received: from xc.sipsolutions.net ([83.246.72.84]:59539 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751515AbYF3Pm4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jun 2008 11:42:56 -0400
+Subject: Re: [PATCH] p54: Add quality output to iwlist and iwconfig
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry.Finger@lwfinger.net
+Cc: linville@tuxdriver.com, flamingice@sourmilk.net,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4868fe45.swzEykllJP3Ow73U%Larry.Finger@lwfinger.net> (sfid-20080630_173834_531803_0FC8E191)
+References: <4868fe45.swzEykllJP3Ow73U%Larry.Finger@lwfinger.net>
+	 (sfid-20080630_173834_531803_0FC8E191)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zdjsuJxDIVC6T6p2UO8b"
+Date: Mon, 30 Jun 2008 17:42:10 +0200
+Message-Id: <1214840530.5507.52.camel@johannes.berg> (sfid-20080630_174259_747692_687CCB74)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ester Kummer <ester.kummer@intel.com>
 
-This patch adds an option to enable all the channels by adding a
-value of "NONE" to ieee80211_regdom module param. This is useful
-for NICs that rely on EEPROM regulatory enforcement and for testing
+--=-zdjsuJxDIVC6T6p2UO8b
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Esti Kummer <stkumer@localhost.localdomain>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/wireless/reg.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+On Mon, 2008-06-30 at 10:39 -0500, Larry.Finger@lwfinger.net wrote:
+> The p54 driver family reports a quality of 0 in iwconfig and iwlist
+> output. This patch calculates a quality number as a percentage of the
+> rssi to the maximum signal of 127 reported as the maximum signal.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 855bff4..140b931 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -97,6 +97,14 @@ static const struct ieee80211_channel_range ieee80211_EU_channels[] = {
- 				     IEEE80211_CHAN_RADAR),
- };
- 
-+static const struct ieee80211_channel_range ieee80211_NONE_channels[] = {
-+	/* IEEE 802.11b/g, channels 1..14 */
-+	RANGE_PWR(2412, 2484, 0xFF, 0xFF, 0),
-+	/* IEEE 802.11a, channels 36..165 */
-+	RANGE_PWR(5180, 6000, 0xFF, 0xFF, 0),
-+};
-+
-+
- #define REGDOM(_code)							\
- 	{								\
- 		.code = __stringify(_code),				\
-@@ -108,6 +116,7 @@ static const struct ieee80211_regdomain ieee80211_regdoms[] = {
- 	REGDOM(US),
- 	REGDOM(JP),
- 	REGDOM(EU),
-+	REGDOM(NONE),
- };
- 
- 
--- 
-1.5.4.1
+Unrelated, do you have a p54 card? Does it work? I wasn't sure whether
+the tx-info sbk->cb change broke it or not after I fixed up some things
+there.
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+johannes
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+--=-zdjsuJxDIVC6T6p2UO8b
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIaP7OAAoJEKVg1VMiehFYYBQP/AnmzieVG+8MqUuEh45kMGt1
+sSzA1dPgM3irFzNzwLTNpoSWRCIbHzjT6nLk2ibJ92cirn9Q19jP+7m4xIwdHdvQ
+Yz0Selw5jHUo27PwcPukHFa9HBilYUNNi8TZ9em89byXQLp05V/lcLyWrzb7r0R8
+rElguXTic3qx/ZuW9sLylGPRaLX1KQF2M587uznPS4SuYndy+Va62PQ7LkH2Y9Kl
+D841FFb4TGD+VxAxsOuEbxCBRHSTU4MAGQjMWXz9+Yn2yPQoX6nnDoUgJ7tBRj6E
+1k5CBWCTwhllHcXpu3w0bQOMxEfSbOAR6iutzMHqvkniFf+l3JJhtHNCH9VjUBVP
+ngGtnxH1ItV7P5thok9UsjmxCFgTJ9c3TDjKj2NQdwAag2wz+JEgX9zHc6vTZDL7
+kB/D12NuldSpJ67aq8MNIccHn2C0bN9qBV3YnuHMbcHWMlQsBNjmbmIZ2HN5ebFM
+xHRX7UyPswKJhuRshVJnMKPPDGm6DWBjfVNeRlFOmitbyKQxhT5g91ypRf6YQzHo
+6sWXEHrJnQ3435pMYkCtfG90H7nWktym4EJwRWphRldIKTCEdqHRX3n0/+0vNDF/
+6J7CNcbCXq9PX4M02ZgpeqRjiiFfW8ScK3A/DoRhUcUWxtwoKyaFrmUJndPRMt6L
+zW9DeHfQX1H+R7EJBHkF
+=4/YO
+-----END PGP SIGNATURE-----
+
+--=-zdjsuJxDIVC6T6p2UO8b--
 
