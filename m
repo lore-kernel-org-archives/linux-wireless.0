@@ -1,61 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:60483 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750858AbYFSTxX (ORCPT
+Received: from smtp.rutgers.edu ([128.6.72.243]:32331 "EHLO
+	annwn14.rutgers.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750877AbYF3DAv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jun 2008 15:53:23 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so676300waf.23
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jun 2008 12:53:22 -0700 (PDT)
-Message-ID: <1ba2fa240806191253l2769dec3q2a49638eafe01e48@mail.gmail.com> (sfid-20080619_215329_498639_4297B7D6)
-Date: Thu, 19 Jun 2008 22:53:22 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Mike Kershaw" <dragorn@kismetwireless.net>
-Subject: Re: More 4965 woes
-Cc: "Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20080619134138.GA27021@drd1813.lan>
+	Sun, 29 Jun 2008 23:00:51 -0400
+From: Michael Wu <flamingice@sourmilk.net>
+To: Adrian Bunk <bunk@kernel.org>
+Subject: Re: [PATCH] Comment out duplicate device entry
+Date: Sun, 29 Jun 2008 23:04:52 -0400
+Cc: Ben Collins <ben.collins@canonical.com>,
+	Linus Torvalds <torvalds@osdl.org>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+References: <1214495838.7150.10.camel@cunning> <20080626161152.GE22025@cs181140183.pp.htv.fi>
+In-Reply-To: <20080626161152.GE22025@cs181140183.pp.htv.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080617132401.GA8328@drd1813.lan>
-	 <1213781294.2625.52.camel@debian.sh.intel.com>
-	 <20080618154109.GB15170@drd1813.lan>
-	 <20080619134138.GA27021@drd1813.lan>
+Content-Type: multipart/signed;
+  boundary="nextPart41893139.k7kBxD6hNI";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200806292304.58429.flamingice@sourmilk.net> (sfid-20080630_050119_621708_1DBB385E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 19, 2008 at 4:41 PM, Mike Kershaw
-<dragorn@kismetwireless.net> wrote:
-> On Wed, Jun 18, 2008 at 11:41:10AM -0400, Mike Kershaw wrote:
->> On Wed, Jun 18, 2008 at 05:28:14PM +0800, Zhu Yi wrote:
->> > On Tue, 2008-06-17 at 09:24 -0400, Mike Kershaw wrote:
->> > > 1 - Inability to associate to a network on 5ghz.  Same AP on 2.4ghz
->> > >   works fine, scanning shows the AP fine.  Sniffing with an additional
->> > >   card shows no frames at all being sent by the 4965. AP is on a
->> > > channel
->> > >   the 4965 should be able to talk to according to iwlist channel (logs
->> > > attached)
->> >
->> > >From the log, you are trying to use channel 56 which is under radar
->> > detection. The card must hear from the AP first in order to send. Can
->> > you try 36?
->>
->> Must hear from the AP?  Like, beacons?  If beacons aren't enough, how is
->> something ever supposed to associate?
->>
->> The AP is detected normally via scanning (wpa_supplicant 'scan' and
->> iwlist scan) so the card is seeing beacons fine.
->>
->> I'll reboot into the git kernel later today and redo the test on another
->> channel.
+--nextPart41893139.k7kBxD6hNI
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+
+On Thursday 26 June 2008 12:11:52 Adrian Bunk wrote:
+> But it shouldn't be listed as both version 1 and version 2 device.
 >
-> On channel 36 things appear to work (well, as much as they do otherwise,
-> packet hanging still makes the device unusable).  I'm still confused as
-> to why the card can report it works on that channel, scan that channel,
-> see beacons, but then refuse to transmit.
+It could be both! They're a bit lazy about changing usb/pci ids with differ=
+ent=20
+cards anyway so I wouldn't be surprised. The driver differentiates the devi=
+ce=20
+version using a more reliable method anyway so it doesn't matter. This devi=
+ce=20
+id list was just copied from the islsm driver so I can't say for sure if=20
+there's both version 1 and version 2 devices sharing the same usb id.
 
-There is a bug in the firmware. the fix is on the way. Unfortunately I
-cannot currently commit to
-to any particular day it will be published yet.
+=2DMichael Wu
 
-What AP do you use I don't see such bad behviour on A band.
-Thanks
-Tomas
+--nextPart41893139.k7kBxD6hNI
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+
+iD8DBQBIaE1aT3Oqt9AH4aERAvNaAJ95oDEvidMJdzz0s/7wL0UmI7Z02gCeKFD9
+8AZsrQeSviJM72Y+K9umHvg=
+=xL9Z
+-----END PGP SIGNATURE-----
+
+--nextPart41893139.k7kBxD6hNI--
