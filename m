@@ -1,41 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:54565 "EHLO hostap.isc.org"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4180 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756055AbYFQSLm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 14:11:42 -0400
-Date: Tue, 17 Jun 2008 21:10:50 +0300
-From: Jouni Malinen <j@w1.fi>
+	id S1753154AbYF3ORS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jun 2008 10:17:18 -0400
+Date: Mon, 30 Jun 2008 09:55:39 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH 4/7] 802.11w: Use BIP (AES-128-CMAC)
-Message-ID: <20080617181050.GD4974@jm.kir.nu> (sfid-20080617_201146_239530_112A50A1)
-References: <20080617154008.883383150@localhost> <20080617155920.329586297@localhost> <1213722347.3803.89.camel@johannes.berg>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	Ester Kummer <ester.kummer@intel.com>
+Subject: Re: [PATCH 1/1 V2] cfg80211: adding NONE regdomain
+Message-ID: <20080630135539.GA6864@tuxdriver.com> (sfid-20080630_161720_997252_8F6FB03E)
+References: <1214732604-4573-1-git-send-email-tomas.winkler@intel.com> <43e72e890806300118me4b20bv2b91f30f91eaa7f3@mail.gmail.com> <1ba2fa240806300152o6d5f7deby6d00a4421138177c@mail.gmail.com> <43e72e890806300159j6c98ef9dpeac61d5aeca19f0e@mail.gmail.com> <1214817730.5507.27.camel@johannes.berg> <1ba2fa240806300425i609ababfj22a76718d3857f85@mail.gmail.com> <1214825747.5507.47.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1213722347.3803.89.camel@johannes.berg>
+In-Reply-To: <1214825747.5507.47.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 17, 2008 at 07:05:47PM +0200, Johannes Berg wrote:
+On Mon, Jun 30, 2008 at 01:35:47PM +0200, Johannes Berg wrote:
+> On Mon, 2008-06-30 at 14:25 +0300, Tomas Winkler wrote:
+> 
+> > The idea was ask troubled user to make change in modprobe.conf and not
+> > changing the code.
+> 
+> Yeah but IMHO you're solving the wrong problem. If we want any
+> credibility we shouldn't allow users to ignore any regdom that easily,
+> and this is system-wide.
 
-> > @@ -603,30 +605,38 @@ static int nl80211_set_key(struct sk_buf
-> > -	if (key_idx > 3)
-> > +	if (key_idx > 5)
-> >  		return -EINVAL;
-
-> > -	if (!info->attrs[NL80211_ATTR_KEY_DEFAULT])
-> > +	if (!info->attrs[NL80211_ATTR_KEY_DEFAULT] &&
-> > +	    !info->attrs[NL80211_ATTR_KEY_DEFAULT_MGMT])
-
-> I think this should probably check the key index depending on the type,
-> i.e. only permit 4 and 5 for mgmt and 0-3 for data keys.
-
-Yes, I started doing that, but did not cover all places yet. It's
-somewhat unclear to me where this type of validation should live, i.e.,
-what piece of code should know that key indexes 4 and 5 are used for
-IGTK at this point taken into account that the index could actually be
-0..65535.. Anyway, it may be safer to do it here than to trust on other
-places being able to handle odd indexes for data frame TX key index.
+I share this opinion.  I'm not inclined to merge this patch.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+John W. Linville
+linville@tuxdriver.com
