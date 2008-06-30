@@ -1,205 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47094
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753067AbYFCUgy (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.247]:6284 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751995AbYF3IVO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 16:36:54 -0400
-Date: Tue, 03 Jun 2008 13:28:20 -0700 (PDT)
-Message-Id: <20080603.132820.04181365.davem@davemloft.net> (sfid-20080603_223736_308352_3E139949)
-To: linux-wireless@vger.kernel.org
-CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 4/12]: wext: Extract private call iw_point handling into
- seperate functions.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 30 Jun 2008 04:21:14 -0400
+Received: by an-out-0708.google.com with SMTP id d40so274110and.103
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2008 01:21:12 -0700 (PDT)
+Message-ID: <43e72e890806300121q34a71b39o6f9868cc0f788a87@mail.gmail.com> (sfid-20080630_102118_142836_FC23180B)
+Date: Mon, 30 Jun 2008 01:21:12 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "George Fong" <george@lateralplains.com>
+Subject: Re: Problem making compat-wireless-2.6
+Cc: "=?UTF-8?Q?Stefanik_G=C3=A1bor?=" <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200806291133.45866.george@lateralplains.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <200806281953.16371.george@lateralplains.com>
+	 <69e28c910806280421t5e0de8edm8d6aab9cd582ccb7@mail.gmail.com>
+	 <200806291133.45866.george@lateralplains.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Jun 28, 2008 at 6:33 PM, George Fong <george@lateralplains.com> wrote:
+> <snip>
+>
+> Dang :-) This was the fix.
+>
+>> Try editing drivers/net/wireless/b43/rfkill.c, and replacing
+>> RFKILL_STATE_UNBLOCKED with RFKILL_STATE_ON and
+>> RFKILL_STATE_SOFT_BLOCKED with RFKILL_STATE_OFF. Looks like rfkill is
+>> not part of the compat package, and no work has been done to match
+>> compat-wireless to older RFKILLs.
+>
+> Thank you for such prompt responses. Although I did this for the b43 driver, I
+> ended up progressively having to do the same fix for the drivers for a couple
+> more, ie iwlwifi and rxt200
+>
+> I am not concerned about the rxt200 but the driver I was interested in was the
+> iwl4965, so I am not sure that by changing the settings on iwl-rfkill.c I
+> have affected the driver I am using ....
+>
+>
+> Having said that... the email is brought to you courtesy of the iwl9645 wifi
+> device .. which has got to be a Good Thing ;-)
+>
+> Agree about the proper way of doing things - should really install a newer
+> kernel, but I am strapped into an nVidia graphics card on my laptop and the
+> livna drivers keep pace well but I think I risk breaking these at the moment
+> with the newer kernel.
+>
+> Thank you all for your prompt responses and asistance... on a weekend no
+> less :-) I'll monitor progress and contribute whatever little I can as I get
+> this new laptop settled.
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/wireless/wext.c |  141 +++++++++++++++++++++++++++------------------------
- 1 files changed, 74 insertions(+), 67 deletions(-)
+I've fixed this in compat-wireless, it should now compile fine for
+kernels <= 2.6.26.
 
-diff --git a/net/wireless/wext.c b/net/wireless/wext.c
-index d17c0f4..a1cd19a 100644
---- a/net/wireless/wext.c
-+++ b/net/wireless/wext.c
-@@ -890,25 +890,22 @@ static int ioctl_standard_call(struct net_device *	dev,
-  * a iw_handler but process it in your ioctl handler (i.e. use the
-  * old driver API).
-  */
--static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
--			      unsigned int cmd, iw_handler handler)
-+static int get_priv_descr_and_size(struct net_device *dev, unsigned int cmd,
-+				   const struct iw_priv_args **descrp)
- {
--	struct iwreq *			iwr = (struct iwreq *) ifr;
--	const struct iw_priv_args *	descr = NULL;
--	struct iw_request_info		info;
--	int				extra_size = 0;
--	int				i;
--	int				ret = -EINVAL;
-+	const struct iw_priv_args *descr;
-+	int i, extra_size;
- 
--	/* Get the description of the IOCTL */
--	for (i = 0; i < dev->wireless_handlers->num_private_args; i++)
-+	descr = NULL;
-+	for (i = 0; i < dev->wireless_handlers->num_private_args; i++) {
- 		if (cmd == dev->wireless_handlers->private_args[i].cmd) {
--			descr = &(dev->wireless_handlers->private_args[i]);
-+			descr = &dev->wireless_handlers->private_args[i];
- 			break;
- 		}
-+	}
- 
--	/* Compute the size of the set/get arguments */
--	if (descr != NULL) {
-+	extra_size = 0;
-+	if (descr) {
- 		if (IW_IS_SET(cmd)) {
- 			int	offset = 0;	/* For sub-ioctls */
- 			/* Check for sub-ioctl handler */
-@@ -933,72 +930,82 @@ static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
- 				extra_size = 0;
- 		}
- 	}
-+	*descrp = descr;
-+	return extra_size;
-+}
- 
--	/* Prepare the call */
--	info.cmd = cmd;
--	info.flags = 0;
-+static int ioctl_private_iw_point(struct iw_point *iwp, unsigned int cmd,
-+				  const struct iw_priv_args *descr,
-+				  iw_handler handler, struct net_device *dev,
-+				  struct iw_request_info *info, int extra_size)
-+{
-+	char *extra;
-+	int err;
- 
--	/* Check if we have a pointer to user space data or not. */
--	if (extra_size == 0) {
--		/* No extra arguments. Trivial to handle */
--		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
--	} else {
--		char *	extra;
--		int	err;
-+	/* Check what user space is giving us */
-+	if (IW_IS_SET(cmd)) {
-+		if (!iwp->pointer && iwp->length != 0)
-+			return -EFAULT;
- 
--		/* Check what user space is giving us */
--		if (IW_IS_SET(cmd)) {
--			/* Check NULL pointer */
--			if ((iwr->u.data.pointer == NULL) &&
--			   (iwr->u.data.length != 0))
--				return -EFAULT;
-+		if (iwp->length > (descr->set_args & IW_PRIV_SIZE_MASK))
-+			return -E2BIG;
-+	} else if (!iwp->pointer)
-+		return -EFAULT;
- 
--			/* Does it fits within bounds ? */
--			if (iwr->u.data.length > (descr->set_args &
--						 IW_PRIV_SIZE_MASK))
--				return -E2BIG;
--		} else if (iwr->u.data.pointer == NULL)
--			return -EFAULT;
-+	extra = kmalloc(extra_size, GFP_KERNEL);
-+	if (!extra)
-+		return -ENOMEM;
- 
--		/* Always allocate for max space. Easier, and won't last
--		 * long... */
--		extra = kmalloc(extra_size, GFP_KERNEL);
--		if (extra == NULL)
--			return -ENOMEM;
--
--		/* If it is a SET, get all the extra data in here */
--		if (IW_IS_SET(cmd) && (iwr->u.data.length != 0)) {
--			err = copy_from_user(extra, iwr->u.data.pointer,
--					     extra_size);
--			if (err) {
--				kfree(extra);
--				return -EFAULT;
--			}
-+	/* If it is a SET, get all the extra data in here */
-+	if (IW_IS_SET(cmd) && (iwp->length != 0)) {
-+		if (copy_from_user(extra, iwp->pointer, extra_size)) {
-+			err = -EFAULT;
-+			goto out;
- 		}
-+	}
- 
--		/* Call the handler */
--		ret = handler(dev, &info, &(iwr->u), extra);
-+	/* Call the handler */
-+	err = handler(dev, info, (union iwreq_data *) iwp, extra);
- 
--		/* If we have something to return to the user */
--		if (!ret && IW_IS_GET(cmd)) {
-+	/* If we have something to return to the user */
-+	if (!err && IW_IS_GET(cmd)) {
-+		/* Adjust for the actual length if it's variable,
-+		 * avoid leaking kernel bits outside.
-+		 */
-+		if (!(descr->get_args & IW_PRIV_SIZE_FIXED))
-+			extra_size = adjust_priv_size(descr->get_args, iwp);
- 
--			/* Adjust for the actual length if it's variable,
--			 * avoid leaking kernel bits outside. */
--			if (!(descr->get_args & IW_PRIV_SIZE_FIXED)) {
--				extra_size = adjust_priv_size(descr->get_args,
--							      &(iwr->u.data));
--			}
-+		if (copy_to_user(iwp->pointer, extra, extra_size))
-+			err =  -EFAULT;
-+	}
- 
--			err = copy_to_user(iwr->u.data.pointer, extra,
--					   extra_size);
--			if (err)
--				ret =  -EFAULT;
--		}
-+out:
-+	kfree(extra);
-+	return err;
-+}
- 
--		/* Cleanup - I told you it wasn't that long ;-) */
--		kfree(extra);
--	}
-+static int ioctl_private_call(struct net_device *dev, struct ifreq *ifr,
-+			      unsigned int cmd, iw_handler handler)
-+{
-+	struct iwreq *iwr = (struct iwreq *) ifr;
-+	int extra_size = 0, ret = -EINVAL;
-+	const struct iw_priv_args *descr;
-+	struct iw_request_info info;
- 
-+	extra_size = get_priv_descr_and_size(dev, cmd, &descr);
-+
-+	/* Prepare the call */
-+	info.cmd = cmd;
-+	info.flags = 0;
-+
-+	/* Check if we have a pointer to user space data or not. */
-+	if (extra_size == 0) {
-+		/* No extra arguments. Trivial to handle */
-+		ret = handler(dev, &info, &(iwr->u), (char *) &(iwr->u));
-+	} else {
-+		ret = ioctl_private_iw_point(&iwr->u.data, cmd, descr,
-+					     handler, dev, &info, extra_size);
-+	}
- 
- 	/* Call commit handler if needed and defined */
- 	if (ret == -EIWCOMMIT)
--- 
-1.5.5.1.308.g1fbb5
-
+  Luis
