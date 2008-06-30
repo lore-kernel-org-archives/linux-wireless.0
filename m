@@ -1,60 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:62159 "EHLO c60.cesmail.net"
+Received: from mga02.intel.com ([134.134.136.20]:19551 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751288AbYFYP6t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2008 11:58:49 -0400
-Subject: Re: [PATCH 3/4 V2] mac80211: add last beacon time in scan list
-From: Pavel Roskin <proski@gnu.org>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-In-Reply-To: <1214396229-18782-1-git-send-email-tomas.winkler@intel.com>
-References: <1214396229-18782-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain
-Date: Wed, 25 Jun 2008 11:58:47 -0400
-Message-Id: <1214409527.5881.21.camel@dv> (sfid-20080625_175852_594095_A7F88457)
-Mime-Version: 1.0
+	id S1758765AbYF3J1M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jun 2008 05:27:12 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 19/33] iwlwifi: don't bring up interface if RF-kill avoids radio
+Date: Mon, 30 Jun 2008 17:23:19 +0800
+Message-Id: <1214817813-17639-20-git-send-email-yi.zhu@intel.com> (sfid-20080630_113814_395802_16376BFB)
+In-Reply-To: <1214817813-17639-19-git-send-email-yi.zhu@intel.com>
+References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-2-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-3-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-5-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-6-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-7-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-8-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-9-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-10-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-11-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-12-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-13-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-14-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-15-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-16-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-17-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-18-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-19-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-06-25 at 15:17 +0300, Tomas Winkler wrote:
-> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> 
-> This patch adds the interval between the scan results and the last time a
-> beacon was received in the result of the scan.
-> 
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> ---
->  net/mac80211/mlme.c |   14 ++++++++++++++
->  1 files changed, 14 insertions(+), 0 deletions(-)
-> 
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 7b930d1..e76e62a 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -4658,12 +4658,26 @@ ieee80211_sta_scan_result(struct net_device *dev,
->  		char *buf;
->  		buf = kmalloc(30, GFP_ATOMIC);
->  		if (buf) {
-> +			unsigned long mid_range = (-1) / 2 + 1;
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-What is that?  I guess that's where Riemann's zeta function has its
-non-trivial roots :-)
+This patch avoids the user from bringing up the interface if RF-kill
+doesn't allow radio.
 
-> +			time_diff = jiffies - bss->last_update > mid_range ?
-> +				jiffies - bss->last_update :
-> +				bss->last_update - jiffies;
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
 
-That's pretty hairy.  Do we really lack a function to calculate time
-difference?
-
-> +			sprintf(buf, "Last beacon:%dms ago",
-> +				jiffies_to_msecs(time_diff));
-
-You lost space after the colon for some reason.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index d1bf599..2d0d079 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -2187,13 +2187,15 @@ static int __iwl4965_up(struct iwl_priv *priv)
+ 	if (iwl_read32(priv, CSR_GP_CNTRL) &
+ 				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
+ 		clear_bit(STATUS_RF_KILL_HW, &priv->status);
+-	else {
++	else
+ 		set_bit(STATUS_RF_KILL_HW, &priv->status);
+-		if (!test_bit(STATUS_IN_SUSPEND, &priv->status)) {
+-			iwl_rfkill_set_hw_state(priv);
+-			IWL_WARNING("Radio disabled by HW RF Kill switch\n");
+-			return -ENODEV;
+-		}
++
++	if (!test_bit(STATUS_IN_SUSPEND, &priv->status) &&
++	    iwl_is_rfkill(priv)) {
++		iwl_rfkill_set_hw_state(priv);
++		IWL_WARNING("Radio disabled by %s RF Kill switch\n",
++		    test_bit(STATUS_RF_KILL_HW, &priv->status) ? "HW" : "SW");
++		return -ENODEV;
+ 	}
+ 
+ 	iwl_rfkill_set_hw_state(priv);
 -- 
-Regards,
-Pavel Roskin
+1.5.3.6
+
