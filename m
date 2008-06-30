@@ -1,66 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:56226 "EHLO hostap.isc.org"
+Received: from mga02.intel.com ([134.134.136.20]:19551 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757676AbYFQQAn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jun 2008 12:00:43 -0400
-Message-Id: <20080617155949.830340514@localhost> (sfid-20080617_180055_709783_4502BD3B)
-References: <20080617154008.883383150@localhost>
-Date: Tue, 17 Jun 2008 18:40:13 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC PATCH 5/7] 802.11w: WEXT parameter for setting mgmt cipher
+	id S1757651AbYF3J1L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jun 2008 05:27:11 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Assaf Krauss <assaf.krauss@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 17/33] iwlwifi: adjust TSF in IBSS
+Date: Mon, 30 Jun 2008 17:23:17 +0800
+Message-Id: <1214817813-17639-18-git-send-email-yi.zhu@intel.com> (sfid-20080630_113814_283344_70B7F650)
+In-Reply-To: <1214817813-17639-17-git-send-email-yi.zhu@intel.com>
+References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-2-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-3-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-5-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-6-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-7-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-8-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-9-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-10-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-11-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-12-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-13-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-14-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-15-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-16-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-17-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a new IW_AUTH parameter for setting cipher suite for
-multicast/broadcast management frames. This is for full-mac drivers
-that take care of RSN IE generation for (re)association request frames.
+From: Assaf Krauss <assaf.krauss@intel.com>
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
+This patch makes the driver, in IBSS mode, comply with TSF requirements
+in 2 ways:
+1. It notifies mac80211 of its TSF timestamp.
+2. It uses the given timestamp in the beacon template to update the ucode.
 
+Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-rx.c       |    2 +-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 +++
+ 2 files changed, 4 insertions(+), 1 deletions(-)
 
-Index: wireless-testing/include/linux/wireless.h
-===================================================================
---- wireless-testing.orig/include/linux/wireless.h
-+++ wireless-testing/include/linux/wireless.h
-@@ -577,18 +577,21 @@
- #define IW_AUTH_RX_UNENCRYPTED_EAPOL	8
- #define IW_AUTH_ROAMING_CONTROL		9
- #define IW_AUTH_PRIVACY_INVOKED		10
-+#define IW_AUTH_CIPHER_GROUP_MGMT	11
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index bfe1ad2..0c734fd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -1063,7 +1063,6 @@ static void iwl_pass_packet_to_mac80211(struct iwl_priv *priv,
+ 		return;
+ 	}
  
- /* IW_AUTH_WPA_VERSION values (bit field) */
- #define IW_AUTH_WPA_VERSION_DISABLED	0x00000001
- #define IW_AUTH_WPA_VERSION_WPA		0x00000002
- #define IW_AUTH_WPA_VERSION_WPA2	0x00000004
+-	stats->flag = 0;
+ 	hdr = (struct ieee80211_hdr *)rxb->skb->data;
  
--/* IW_AUTH_PAIRWISE_CIPHER and IW_AUTH_GROUP_CIPHER values (bit field) */
-+/* IW_AUTH_PAIRWISE_CIPHER, IW_AUTH_GROUP_CIPHER, and IW_AUTH_CIPHER_GROUP_MGMT
-+ * values (bit field) */
- #define IW_AUTH_CIPHER_NONE	0x00000001
- #define IW_AUTH_CIPHER_WEP40	0x00000002
- #define IW_AUTH_CIPHER_TKIP	0x00000004
- #define IW_AUTH_CIPHER_CCMP	0x00000008
- #define IW_AUTH_CIPHER_WEP104	0x00000010
-+#define IW_AUTH_CIPHER_AES_CMAC	0x00000020
+ 	/*  in case of HW accelerated crypto and bad decryption, drop */
+@@ -1197,6 +1196,7 @@ void iwl_rx_reply_rx(struct iwl_priv *priv,
  
- /* IW_AUTH_KEY_MGMT values (bit field) */
- #define IW_AUTH_KEY_MGMT_802_1X	1
-Index: wireless-testing/net/mac80211/wext.c
-===================================================================
---- wireless-testing.orig/net/mac80211/wext.c
-+++ wireless-testing/net/mac80211/wext.c
-@@ -966,6 +966,7 @@ static int ieee80211_ioctl_siwauth(struc
- 	case IW_AUTH_WPA_ENABLED:
- 	case IW_AUTH_RX_UNENCRYPTED_EAPOL:
- 	case IW_AUTH_KEY_MGMT:
-+	case IW_AUTH_CIPHER_GROUP_MGMT:
- 		break;
- 	case IW_AUTH_DROP_UNENCRYPTED:
- 		sdata->drop_unencrypted = !!data->value;
-
---
-
+ 	rx_status.antenna = 0;
+ 	rx_status.flag = 0;
++	rx_status.flag |= RX_FLAG_TSFT;
+ 
+ 	if ((unlikely(rx_start->cfg_phy_cnt > 20))) {
+ 		IWL_DEBUG_DROP("dsp size out of range [0,20]: %d/n",
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 1b2d9f1..d1bf599 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -3492,6 +3492,7 @@ static int iwl4965_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *sk
+ {
+ 	struct iwl_priv *priv = hw->priv;
+ 	unsigned long flags;
++	__le64 timestamp;
+ 
+ 	mutex_lock(&priv->mutex);
+ 	IWL_DEBUG_MAC80211("enter\n");
+@@ -3516,6 +3517,8 @@ static int iwl4965_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *sk
+ 	priv->ibss_beacon = skb;
+ 
+ 	priv->assoc_id = 0;
++	timestamp = ((struct ieee80211_mgmt *)skb->data)->u.beacon.timestamp;
++	priv->timestamp = le64_to_cpu(timestamp) +  (priv->beacon_int * 1000);
+ 
+ 	IWL_DEBUG_MAC80211("leave\n");
+ 	spin_unlock_irqrestore(&priv->lock, flags);
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.5.3.6
+
