@@ -1,81 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57217 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147AbYFZSJ4 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.177]:55876 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755211AbYF3L31 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jun 2008 14:09:56 -0400
-Subject: Re: [Q] ath5k : doesn't support AP mode?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
-	cs010101@gmail.com, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <1214503403.18039.6.camel@dv>
-References: <002901c8d737$e51bb2f0$3b0aa8c0@39fb6b6b6f434b3>
-	 <200806261821.31643.mb@bu3sch.de> <1214498071.30722.22.camel@dv>
-	 <200806261846.17962.mb@bu3sch.de>  <1214501000.3783.0.camel@johannes.berg>
-	 <1214503403.18039.6.camel@dv>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-A+snWrR3dk8gOq1UEjlV"
-Date: Thu, 26 Jun 2008 20:08:59 +0200
-Message-Id: <1214503739.3783.14.camel@johannes.berg> (sfid-20080626_200958_979253_FE61A685)
-Mime-Version: 1.0
+	Mon, 30 Jun 2008 07:29:27 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so1159215waf.23
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2008 04:29:26 -0700 (PDT)
+Message-ID: <1ba2fa240806300429l679f1568k584143b448455594@mail.gmail.com> (sfid-20080630_132930_015153_3D838E92)
+Date: Mon, 30 Jun 2008 14:29:26 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: compat-wireless high packet loss.
+Cc: "Guy Cohen" <guy.cohen@intel.com>,
+	"David Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Linux Wireless" <linux-wireless@vger.kernel.org>,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
+	"Patrick McHardy" <kaber@trash.net>
+In-Reply-To: <1214824149.5507.36.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1ba2fa240806261603g30c3e757y9166c2f9e05f7666@mail.gmail.com>
+	 <247d6d340806282323v3192ead8v149359e482375991@mail.gmail.com>
+	 <1214824149.5507.36.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Jun 30, 2008 at 2:09 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2008-06-29 at 09:23 +0300, Guy Cohen wrote:
+>> More info on the issue.. The problem is with TX of unrestrained UDP
+>> stream, when the traffic generated at the application layer is larger
+>> than the link can pass. With kernel 2.6.26-* the traffic is restrained
+>> when the TX FIFOs gets full while in 2.6.25.* frames are dropped at
+>> some layer. It seems that the drop happens after the IP fragmentation
+>> step at the stack.
+>
+> does compat use multiqueue now? if not, look in the mac80211 fake mq
+> code.
 
---=-A+snWrR3dk8gOq1UEjlV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2008-06-26 at 14:03 -0400, Pavel Roskin wrote:
-> On Thu, 2008-06-26 at 19:23 +0200, Johannes Berg wrote:
-> > > > What's the current TODO list for the AP mode?
-> > >=20
-> > > I think there are some issues with the rates.
-> > > Maybe more. I don't really know.
-> >=20
-> > It's on the todo list on wireless.kernel.org
->=20
-> I see it now:
-> http://wireless.kernel.org/en/developers/todo-list#APsupport
->=20
-> It would be great to split the list into categories.  I don't think
-> "data frames on cooked monitor" make the AP mode non-compliant.
-
-That's true.
-
-> I also suspect that certain fixed are needed only for 802.11g or 802.11b
-> compliance, but not for the original 802.11 compliance.
->=20
-> Say, if we limit the rate to 1 Mbps, are there any issues that really
-> make us non-compliant?
-
-The fact that we cannot limit the rate like that that?
-
-johannes
-
---=-A+snWrR3dk8gOq1UEjlV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIY9s3AAoJEKVg1VMiehFYy10P/0Juk1LjUbGBDl7FJE3l672E
-afcFQ8JIOVKzw13V7xkFuSFoCM60PmpMNIwceAi3sqOx8rXJswRHXInEqL7Va/c3
-95CP4QAC7jL9RD3IYkhFltN3qbh2YIYuIYpbvdrk0hnIACvA9MFTfDbpxgxaXLIn
-jAjn06nSWVZ594OS3ED497RiM64eEc5gLvbL9F+dOH43i6gjW6TafpZ5VONT+0T2
-8zE8cR9XEOKWndYphd7yHPn3qO/azwklSKiOP+tLXXowu3tmLlE8MoA41wmdwSUx
-j+MMNXza/LCxQE2o2mYA3a7yrYt/xt7U15Tr/kq5XOubMuqCPSSttbWHIMNjaoPm
-2Y7mOuCSF0SxK09J1ochndQiL2XoLUAKSU6rtIUlLv4Q/HGFVlptL5tD5NitHCeY
-nWWquKol60dSKJTDhRUc8ruzRm9Fdz/CUTVueH5wCecx903R+7sTyIR8M4Y+i9cB
-lfgKBpZSCbzjoUfcFC9xlHRP40MbM9E0HUbGO6tXr78X/PoIOelQzpaLQpQx6w3D
-nynJxTZdr2I0xF3MOSAfIbL444LHf0HCftbMeebS+q7W1svP/+BxvE6Iv+S/CHy8
-aU9SdKRrHwta7J7pXRA91chYscPhpbRoeIElxs4e0d6CrayS4v0BSG6ZCwWTrdUI
-5RWd/C6EOaDsveaJJC3o
-=YJUL
------END PGP SIGNATURE-----
-
---=-A+snWrR3dk8gOq1UEjlV--
-
+2.6.25 has a real mq
+Thanks
+Tomas
