@@ -1,146 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:42063 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752042AbYFLSOu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jun 2008 14:14:50 -0400
-Date: Thu, 12 Jun 2008 11:13:58 -0700
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-To: luisca@cozybit.com
-Cc: netdev@vger.kernel.org, j@w1.fi, johannes@sipsolutions.net,
-	bridge@linux-foundation.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] Do not activate promiscuous mode on wlan interfaces for
- bridging.
-Message-ID: <20080612111358.30980552@extreme> (sfid-20080612_201454_721843_B7B5527B)
-In-Reply-To: <4850672a.1abd600a.56e0.ffffa374@mx.google.com>
-References: <4850672a.1abd600a.56e0.ffffa374@mx.google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga02.intel.com ([134.134.136.20]:19551 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758876AbYF3J1N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jun 2008 05:27:13 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 21/33] iwlwifi: control 11n capabilities through module param
+Date: Mon, 30 Jun 2008 17:23:21 +0800
+Message-Id: <1214817813-17639-22-git-send-email-yi.zhu@intel.com> (sfid-20080630_113813_328566_59A238CE)
+In-Reply-To: <1214817813-17639-21-git-send-email-yi.zhu@intel.com>
+References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-2-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-3-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-5-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-6-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-7-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-8-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-9-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-10-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-11-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-12-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-13-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-14-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-15-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-16-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-17-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-18-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-19-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-20-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-21-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 11 Jun 2008 16:18:20 -0700
-luisca@cozybit.com wrote:
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-> I have come across a 802.11 device that stops acknowledging frames addressed to
-> it when in promiscuous mode. The device can act as an AP with hostapd. However,
-> when the interface is attached to a bridge the lack of acknowledgments makes the
-> device non-functional as an AP.
-> 
-> It seems that it is not really necessary to activate promiscuous mode when
-> attaching a wlan interface to a bridge, and it causes unnecessary processing
-> overhead to any wlan device.
-> 
-> Case 1: Ethernet to ethernet
-> ----------------------------
-> 
-> A <----> BRIDGE <----> B
-> 
-> The bridge needs to set promiscuous mode on both interfaces.
-> 
-> Case 2: Ethernet to 802.11 through AP
-> -------------------------------------
-> 
-> A <----> BRIDGE/AP -))  ((- B
-> 
-> The ethernet interface needs to be in promiscuous mode so that frames from A to
-> B are received by the bridge and then forwarded.
-> 
-> However, the wlan interface does _not_ need to be a promiscuous mode. A 802.11
-> frame from B to A will have:
-> 
-> ToDS
-> RA = BSSID = MAC_AP
-> TA = SA = MAC_B
-> DA = MAC_A
-> 
-> Frames are naturally addressed to the AP, so the wlan interface does not need to
-> be in promiscuous mode. Activating promiscuous mode would actually force the
-> device to deal with many frames it does not really have to deal with.
-> 
-> Case 3: Ethernet to 802.11 through IBSS / Managed STAs
-> ------------------------------------------------------
-> 
-> A <----> BRIDGE/IBSS_STA_B -))  ((- IBSS_STA_C
-> 
-> or
-> 
-> A <----> BRIDGE/STA -))  ((- AP
-> 
-> In this case the frames on the wireless segment will not be naturally addressed
-> to the bridge, so activating promiscuous mode on the wireless interface would be
-> necessary for the bridge to work. However there are three problems here:
-> 
-> First as Jouni Malinen states [1], this would not comply with 802.11 standard,
-> which does not allow to use as SA a MAC address other than our own. If we do it
-> anyway, we will have to look for 802.11 ACKs to the MAC address we bridge to
-> control frame retransmissions. I do not think any device does this.
-> 
-> Second, such a bridge would be responsible for sending 802.11 ACKs for any
-> 802.11 frame addressed to a MAC in the ethernet segment it bridges to. As acking
-> is usually implemented at MAC level I do not think any device supports this.
-> 
-> Third, on the managed STA case, the STA would have to fake an association with
-> the AP for A (and every other node in the ethernet segment it bridges to).  While
-> doable, it adds unnecessary ugly complexity.
-> 
-> Even with these problems the bridging might "work", but every frame on the wlan
-> segment from/to the bridged ethernet will have to be retransmitted the maximum
-> number of times since acks would not work properly.
-> 
-> Given this three cases, the best would be to consider case 3 to be not
-> supported (it is indeed not supported, AFAIK), and apply the patch below.
-> 
-> Please let me know what you think of this patch and whether it could interfere
-> with any functionality.
-> 
-> Nomenclature
-> RA = receiver address
-> TA = transmitter address
-> SA = source address
-> BSSID = basic service set identifier
-> <----> = Ethernet link
-> -)) ((- = 802.11 link
-> 
-> [1]: http://marc.info/?l=linux-wireless&m=117881727809631&w=2
-> 
-> Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
-> ---
->  net/bridge/br_if.c |   13 +++++++++++--
->  1 files changed, 11 insertions(+), 2 deletions(-)
-> 
-> diff --git a/net/bridge/br_if.c b/net/bridge/br_if.c
-> index c2397f5..155bd90 100644
-> --- a/net/bridge/br_if.c
-> +++ b/net/bridge/br_if.c
-> @@ -135,7 +135,8 @@ static void del_nbp(struct net_bridge_port *p)
->  
->  	sysfs_remove_link(br->ifobj, dev->name);
->  
-> -	dev_set_promiscuity(dev, -1);
-> +	if (!dev->ieee80211_ptr)
-> +		dev_set_promiscuity(dev, -1);
->  
->  	spin_lock_bh(&br->lock);
->  	br_stp_disable_port(p);
-> @@ -389,7 +390,15 @@ int br_add_if(struct net_bridge *br, struct net_device *dev)
->  		goto err2;
->  
->  	rcu_assign_pointer(dev->br_port, p);
-> -	dev_set_promiscuity(dev, 1);
-> +	/*
-> +	 * 802.11 interfaces working as Access Points do not need to be set to
-> +	 * promiscuous mode for bridging, as every frame is addressed to them.
-> +	 *
-> +	 * Bridging of 802.11 interfaces which are not in AP mode is not
-> +	 * supported.
-> +	 */
-> +	if (!dev->ieee80211_ptr)
-> +		dev_set_promiscuity(dev, 1);
->  
->  	list_add_rcu(&p->list, &br->port_list);
->  
+This patch adds module param 11n_disable to allow configuration of 11n
+capabilities. The default value of this param is 11n enabled (value 0).
 
-NACK too much of a one off hack. If the device can't do promiscuous or bridging
-properly, it should solve the problem there. Otherwise you will have to fix all
-other uses of promiscuous as well.
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    8 +++++++-
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-core.c |   16 ++++++++++++----
+ drivers/net/wireless/iwlwifi/iwl-core.h |    1 +
+ 4 files changed, 22 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 7f6713f..e4eab51 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2075,6 +2075,9 @@ int iwl4965_mac_ampdu_action(struct ieee80211_hw *hw,
+ 	IWL_DEBUG_HT("A-MPDU action on addr %s tid %d\n",
+ 		     print_mac(mac, addr), tid);
+ 
++	if (!(priv->cfg->sku & IWL_SKU_N))
++		return -EACCES;
++
+ 	switch (action) {
+ 	case IEEE80211_AMPDU_RX_START:
+ 		IWL_DEBUG_HT("start Rx\n");
+@@ -2457,11 +2460,14 @@ MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 0)");
+ 
+ module_param_named(queues_num, iwl4965_mod_params.num_of_queues, int, 0444);
+ MODULE_PARM_DESC(queues_num, "number of hw queues.");
+-
+ /* QoS */
+ module_param_named(qos_enable, iwl4965_mod_params.enable_qos, int, 0444);
+ MODULE_PARM_DESC(qos_enable, "enable all QoS functionality");
++/* 11n */
++module_param_named(11n_disable, iwl4965_mod_params.disable_11n, int, 0444);
++MODULE_PARM_DESC(11n_disable, "disable 11n functionality");
+ module_param_named(amsdu_size_8K, iwl4965_mod_params.amsdu_size_8K, int, 0444);
+ MODULE_PARM_DESC(amsdu_size_8K, "enable 8K amsdu size");
++
+ module_param_named(fw_restart4965, iwl4965_mod_params.restart_fw, int, 0444);
+ MODULE_PARM_DESC(fw_restart4965, "restart firmware in case of error");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 75283fb..099983f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -1540,6 +1540,8 @@ module_param_named(queues_num50, iwl50_mod_params.num_of_queues, int, 0444);
+ MODULE_PARM_DESC(queues_num50, "number of hw queues in 50xx series");
+ module_param_named(qos_enable50, iwl50_mod_params.enable_qos, int, 0444);
+ MODULE_PARM_DESC(qos_enable50, "enable all 50XX QoS functionality");
++module_param_named(11n_disable50, iwl50_mod_params.disable_11n, int, 0444);
++MODULE_PARM_DESC(11n_disable50, "disable 50XX 11n functionality");
+ module_param_named(amsdu_size_8K50, iwl50_mod_params.amsdu_size_8K, int, 0444);
+ MODULE_PARM_DESC(amsdu_size_8K50, "enable 8K amsdu size in 50XX series");
+ module_param_named(fw_restart50, iwl50_mod_params.restart_fw, int, 0444);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 97447df..08a42a7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -495,7 +495,9 @@ static int iwlcore_init_geos(struct iwl_priv *priv)
+ 	sband->bitrates = &rates[IWL_FIRST_OFDM_RATE];
+ 	sband->n_bitrates = IWL_RATE_COUNT - IWL_FIRST_OFDM_RATE;
+ 
+-	iwlcore_init_ht_hw_capab(priv, &sband->ht_info, IEEE80211_BAND_5GHZ);
++	if (priv->cfg->sku & IWL_SKU_N)
++		iwlcore_init_ht_hw_capab(priv, &sband->ht_info,
++					 IEEE80211_BAND_5GHZ);
+ 
+ 	sband = &priv->bands[IEEE80211_BAND_2GHZ];
+ 	sband->channels = channels;
+@@ -503,7 +505,9 @@ static int iwlcore_init_geos(struct iwl_priv *priv)
+ 	sband->bitrates = rates;
+ 	sband->n_bitrates = IWL_RATE_COUNT;
+ 
+-	iwlcore_init_ht_hw_capab(priv, &sband->ht_info, IEEE80211_BAND_2GHZ);
++	if (priv->cfg->sku & IWL_SKU_N)
++		iwlcore_init_ht_hw_capab(priv, &sband->ht_info,
++					 IEEE80211_BAND_2GHZ);
+ 
+ 	priv->ieee_channels = channels;
+ 	priv->ieee_rates = rates;
+@@ -819,8 +823,9 @@ int iwl_setup_mac(struct iwl_priv *priv)
+ 		    IEEE80211_HW_NOISE_DBM;
+ 	/* Default value; 4 EDCA QOS priorities */
+ 	hw->queues = 4;
+-	/* Enhanced value; more queues, to support 11n aggregation */
+-	hw->ampdu_queues = 12;
++	/* queues to support 11n aggregation */
++	if (priv->cfg->sku & IWL_SKU_N)
++		hw->ampdu_queues = 12;
+ 
+ 	hw->conf.beacon_int = 100;
+ 
+@@ -853,6 +858,9 @@ int iwl_set_hw_params(struct iwl_priv *priv)
+ 		priv->hw_params.rx_buf_size = IWL_RX_BUF_SIZE_4K;
+ 	priv->hw_params.max_pkt_size = priv->hw_params.rx_buf_size - 256;
+ 
++	if (priv->cfg->mod_params->disable_11n)
++		priv->cfg->sku &= ~IWL_SKU_N;
++
+ 	/* Device-specific setup */
+ 	return priv->cfg->ops->lib->set_hw_params(priv);
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index f156d27..d7562c3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -159,6 +159,7 @@ struct iwl_mod_params {
+ 	int disable_hw_scan;	/* def: 0 = use h/w scan */
+ 	int num_of_queues;	/* def: HW dependent */
+ 	int enable_qos;		/* def: 1 = use quality of service */
++	int disable_11n;	/* def: 0 = disable 11n capabilities */
+ 	int amsdu_size_8K;	/* def: 1 = enable 8K amsdu size */
+ 	int antenna;  		/* def: 0 = both antennas (use diversity) */
+ 	int restart_fw;		/* def: 1 = restart firmware */
+-- 
+1.5.3.6
+
