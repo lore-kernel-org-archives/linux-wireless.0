@@ -1,143 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:33239 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750868AbYFIPza (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jun 2008 11:55:30 -0400
-Subject: Re: iwl4965 oops in 2.6.26-rc5 x86_64
-From: Dan Williams <dcbw@redhat.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Thomas Backlund <tmb@mandriva.org>,
-	Ian Schram <ischram@telenet.be>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240806080831k4fce156an535caec87e374e19@mail.gmail.com>
-References: <4848289D.1080205@mandriva.org> <48492E85.6010307@mandriva.org>
-	 <1ba2fa240806060659wf4e4088s8afdd2f7f854ea09@mail.gmail.com>
-	 <48494EF6.4020506@mandriva.org>
-	 <1ba2fa240806060812q28c270c4i12cc08f8665e9cc0@mail.gmail.com>
-	 <4849AF9F.9010207@mandriva.org>
-	 <1ba2fa240806061659j7672f9d3w107be4509b533f68@mail.gmail.com>
-	 <484A8CF5.3060801@mandriva.org>
-	 <1ba2fa240806080327gec9b38vf6bb1faa0e5014b8@mail.gmail.com>
-	 <484BCECC.4040004@mandriva.org>
-	 <1ba2fa240806080831k4fce156an535caec87e374e19@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 09 Jun 2008 11:55:02 -0400
-Message-Id: <1213026902.31138.9.camel@localhost.localdomain> (sfid-20080609_175535_354248_53A8B18F)
+Received: from xc.sipsolutions.net ([83.246.72.84]:56811 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761720AbYF3NO0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jun 2008 09:14:26 -0400
+Message-Id: <20080630131200.750498000@sipsolutions.net> (sfid-20080630_151439_068850_19DE54B1)
+References: <20080630131043.136595000@sipsolutions.net>
+Date: Mon, 30 Jun 2008 15:10:45 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/3] mac80211: get rid of function pointers in RX path
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2008-06-08 at 18:31 +0300, Tomas Winkler wrote:
-> On Sun, Jun 8, 2008 at 3:21 PM, Thomas Backlund <tmb@mandriva.org> wrote:
-> > Tomas Winkler skrev:
-> >>
-> >> I'm not sure what distro are you running I haven't seen this
-> >> ifcfg-wlan0 config options
-> >> on my system but can it be that ifcg-wlan0 tries to set wep key which
-> >> will conflict
-> >> with wpa_supplicant setting. Can you try to remove this line from that
-> >> file
-> >>
-> >> ifcfg-wlan0 -
-> >> --- cut ---
-> >> WIRELESS_ENC_KEY='s:*************************'
-> >>
-> >>
-> >
-> >
-> > Nice.
-> >
-> > The distro is Mandriva Cooker (development) but we have the same in Mandriva
-> > 2008.1 Spring.
-> >
-> > Now this has not been any problem with kernels older than 2.6.25, so it's a
-> > regression, isn't it? I mean, shouldn't the module protect itself against
-> > empty variables?
-> >
-> This is not really regression. What happen is that we've enabled hw
-> crypto acceleration by default so when
-> you switched back to sw crypto it still worked.
-> There is bug no question, I believe it's the same bug as Ian Schram
-> and Joonwoo Park reported (PSK key is longer then 128 WEP Key)
+This changes the RX path to no longer use function pointers for  
+RX handlers but rather invoke them directly. If debugging is  
+enabled, mark the RX handlers noinline because otherwise they
+all get inlined into ieee80211_invoke_rx_handlers() which makes
+it harder to see where a bug is.
 
-I thought that issues was about actual WEP keys larger than 128-bit;
-some D-Link APs and cards allowed 152-bit WEP keys back before WPA was
-common.  We decided not to care about those right now, but I didn't
-think that would impact TKIP at all.  Does the TKIP key material go
-through the same path in the iwl driver that WEP key material does?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/rx.c |   93 ++++++++++++++++++++++++------------------------------
+ 1 file changed, 42 insertions(+), 51 deletions(-)
 
-Dan
+--- everything.orig/net/mac80211/rx.c	2008-06-27 21:42:22.000000000 +0200
++++ everything/net/mac80211/rx.c	2008-06-27 21:43:15.000000000 +0200
+@@ -386,7 +386,7 @@ static void ieee80211_verify_ip_alignmen
+ 
+ /* rx handlers */
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_passive_scan(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_local *local = rx->local;
+@@ -463,7 +463,7 @@ ieee80211_rx_mesh_check(struct ieee80211
+ }
+ 
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_hdr *hdr;
+@@ -522,7 +522,7 @@ ieee80211_rx_h_check(struct ieee80211_rx
+ }
+ 
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
+@@ -710,7 +710,7 @@ static int ap_sta_ps_end(struct net_devi
+ 	return sent;
+ }
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ {
+ 	struct sta_info *sta = rx->sta;
+@@ -858,7 +858,7 @@ ieee80211_reassemble_find(struct ieee802
+ 	return NULL;
+ }
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_hdr *hdr;
+@@ -974,7 +974,7 @@ ieee80211_rx_h_defragment(struct ieee802
+ 	return RX_CONTINUE;
+ }
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_ps_poll(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
+@@ -1049,7 +1049,7 @@ ieee80211_rx_h_ps_poll(struct ieee80211_
+ 	return RX_QUEUED;
+ }
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_remove_qos_control(struct ieee80211_rx_data *rx)
+ {
+ 	u16 fc = rx->fc;
+@@ -1367,7 +1367,7 @@ ieee80211_deliver_skb(struct ieee80211_r
+ 	}
+ }
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
+ {
+ 	struct net_device *dev = rx->dev;
+@@ -1484,7 +1484,7 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx
+ 	return RX_QUEUED;
+ }
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
+ {
+ 	struct net_device *dev = rx->dev;
+@@ -1515,7 +1515,7 @@ ieee80211_rx_h_data(struct ieee80211_rx_
+ 	return RX_QUEUED;
+ }
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_local *local = rx->local;
+@@ -1559,7 +1559,7 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_
+ 	return RX_CONTINUE;
+ }
+ 
+-static ieee80211_rx_result
++static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+@@ -1732,66 +1732,57 @@ static void ieee80211_rx_cooked_monitor(
+ 	dev_kfree_skb(skb);
+ }
+ 
+-typedef ieee80211_rx_result (*ieee80211_rx_handler)(struct ieee80211_rx_data *);
+-static ieee80211_rx_handler ieee80211_rx_handlers[] =
+-{
+-	ieee80211_rx_h_passive_scan,
+-	ieee80211_rx_h_check,
+-	ieee80211_rx_h_decrypt,
+-	ieee80211_rx_h_sta_process,
+-	ieee80211_rx_h_defragment,
+-	ieee80211_rx_h_ps_poll,
+-	ieee80211_rx_h_michael_mic_verify,
+-	/* this must be after decryption - so header is counted in MPDU mic
+-	 * must be before pae and data, so QOS_DATA format frames
+-	 * are not passed to user space by these functions
+-	 */
+-	ieee80211_rx_h_remove_qos_control,
+-	ieee80211_rx_h_amsdu,
+-	ieee80211_rx_h_data,
+-	ieee80211_rx_h_ctrl,
+-	ieee80211_rx_h_mgmt,
+-	NULL
+-};
+ 
+ static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
+ 					 struct ieee80211_rx_data *rx,
+ 					 struct sk_buff *skb)
+ {
+-	ieee80211_rx_handler *handler;
+ 	ieee80211_rx_result res = RX_DROP_MONITOR;
+ 
+ 	rx->skb = skb;
+ 	rx->sdata = sdata;
+ 	rx->dev = sdata->dev;
+ 
+-	for (handler = ieee80211_rx_handlers; *handler != NULL; handler++) {
+-		res = (*handler)(rx);
++#define CALL_RXH(rxh)		\
++	res = rxh(rx);		\
++	if (res != RX_CONTINUE)	\
++		goto rxh_done;
++
++	CALL_RXH(ieee80211_rx_h_passive_scan)
++	CALL_RXH(ieee80211_rx_h_check)
++	CALL_RXH(ieee80211_rx_h_decrypt)
++	CALL_RXH(ieee80211_rx_h_sta_process)
++	CALL_RXH(ieee80211_rx_h_defragment)
++	CALL_RXH(ieee80211_rx_h_ps_poll)
++	CALL_RXH(ieee80211_rx_h_michael_mic_verify)
++	/* must be after MMIC verify so header is counted in MPDU mic */
++	CALL_RXH(ieee80211_rx_h_remove_qos_control)
++	CALL_RXH(ieee80211_rx_h_amsdu)
++	CALL_RXH(ieee80211_rx_h_data)
++	CALL_RXH(ieee80211_rx_h_ctrl)
++	CALL_RXH(ieee80211_rx_h_mgmt)
+ 
+-		switch (res) {
+-		case RX_CONTINUE:
+-			continue;
+-		case RX_DROP_UNUSABLE:
+-		case RX_DROP_MONITOR:
+-			I802_DEBUG_INC(sdata->local->rx_handlers_drop);
+-			if (rx->sta)
+-				rx->sta->rx_dropped++;
+-			break;
+-		case RX_QUEUED:
+-			I802_DEBUG_INC(sdata->local->rx_handlers_queued);
+-			break;
+-		}
+-		break;
+-	}
++#undef CALL_RXH
+ 
++ rxh_done:
+ 	switch (res) {
+-	case RX_CONTINUE:
+ 	case RX_DROP_MONITOR:
++		I802_DEBUG_INC(sdata->local->rx_handlers_drop);
++		if (rx->sta)
++			rx->sta->rx_dropped++;
++		/* fall through */
++	case RX_CONTINUE:
+ 		ieee80211_rx_cooked_monitor(rx);
+ 		break;
+ 	case RX_DROP_UNUSABLE:
++		I802_DEBUG_INC(sdata->local->rx_handlers_drop);
++		if (rx->sta)
++			rx->sta->rx_dropped++;
+ 		dev_kfree_skb(rx->skb);
+ 		break;
++	case RX_QUEUED:
++		I802_DEBUG_INC(sdata->local->rx_handlers_queued);
++		break;
+ 	}
+ }
+ 
 
-
-> > And that config option also exist in Redhat initscripts ifup-wireless...
-> >
-> > Anyway, you found the initial problem, as the kernel now booted without an
-> > oops, and seems to work, but:
-> >
-> 
-> Try to disable this one from th config file MAC80211_DEBUG_PACKET_ALIGNMENT
-> 
-> Thanks
-> Tomas
-> 
-> 0: switched to short barker preamble (BSSID=00:19:5b:51:dc:27)
-> > wlan0 (WE) : Wireless Event too big (320)
-> > ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> > ------------[ cut here ]------------
-> > WARNING: at net/mac80211/rx.c:319 __ieee80211_rx_handle_packet+0x349/0x794
-> > [mac80211]()
-> > Modules linked in: af_packet kvm_intel kvm snd_seq_dummy snd_seq_oss
-> > snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss snd_mixer_oss ipv6
-> > xt_tcpudp iptable_filter ip_tables x_tables binfmt_misc loop dm_mod
-> > cpufreq_ondemand cpufreq_conservative cpufreq_powersave acpi_cpufreq
-> > freq_table tifm_sd tifm_7xx1 tifm_core nvram pcmcia ohci1394 ieee1394
-> > mmc_block arc4 ecb crypto_blkcipher battery ac video container output
-> > firewire_ohci firewire_core crc_itu_t sdhci iwl4965 firmware_class mmc_core
-> > yenta_socket rsrc_nonstatic iwlcore pcmcia_core acer_wmi thermal
-> > snd_hda_intel rfkill snd_pcsp button nsc_ircc snd_pcm mac80211 led_class
-> > i2c_i801 irda snd_timer rtc_cmos snd processor rtc_core wmi rtc_lib i2c_core
-> > soundcore iTCO_wdt iTCO_vendor_support snd_page_alloc tg3 cfg80211 intel_agp
-> > joydev crc_ccitt sr_mod serio_raw sg evdev cdrom ide_generic piix ide_core
-> > ata_piix ahci libata dock sd_mod scsi_mod ext3 jbd uhci_hcd ohci_hcd
-> > ehci_hcd usbcore [last unloaded: nf_conntrack]
-> > Pid: 0, comm: swapper Not tainted 2.6.26-0.rc5.1mdvsmp #1
-> >
-> > Call Trace:
-> >  <IRQ>  [<ffffffff802371ff>] warn_on_slowpath+0x58/0x94
-> >  [<ffffffff8044ad1b>] ? _spin_unlock_irqrestore+0x40/0x57
-> >  [<ffffffff8023c2f1>] ? __tasklet_schedule+0xae/0xc5
-> >  [<ffffffffa01eab1e>] ? :mac80211:ieee80211_rx_irqsafe+0x63/0x6a
-> >  [<ffffffffa0306d32>] ? :iwl4965:iwl4965_handle_data_packet+0x3c3/0x3fd
-> >  [<ffffffffa01eb1ce>] :mac80211:__ieee80211_rx_handle_packet+0x349/0x794
-> >  [<ffffffff8025791c>] ? __lock_acquire+0x635/0xd5a
-> >  [<ffffffffa01eba3c>] ? :mac80211:__ieee80211_rx+0x63/0x538
-> >  [<ffffffffa01ebe9d>] :mac80211:__ieee80211_rx+0x4c4/0x538
-> >  [<ffffffffa01dc348>] :mac80211:ieee80211_tasklet_handler+0x75/0x11b
-> >  [<ffffffff8023c079>] ? tasklet_action+0x4b/0xfb
-> >  [<ffffffff8023c0be>] tasklet_action+0x90/0xfb
-> >  [<ffffffff8023cae6>] __do_softirq+0x77/0x101
-> >  [<ffffffff8020d61c>] call_softirq+0x1c/0x28
-> >  [<ffffffff8020e92d>] do_softirq+0x4d/0xb0
-> >  [<ffffffff8023c5ab>] irq_exit+0x4e/0x8f
-> >  [<ffffffff8020ebc5>] do_IRQ+0xba/0xd8
-> >  [<ffffffff8020c6f2>] ret_from_intr+0x0/0x1e
-> >  <EOI>  [<ffffffff8021fe6d>] ? native_irq_enable+0x6/0x7
-> >  [<ffffffffa018d45a>] ? :processor:acpi_idle_enter_bm+0x2cf/0x35e
-> >  [<ffffffff803c338a>] ? menu_select+0x6f/0x8f
-> >  [<ffffffff803c2395>] ? cpuidle_idle_call+0x95/0xc9
-> >  [<ffffffff803c2300>] ? cpuidle_idle_call+0x0/0xc9
-> >  [<ffffffff8020b1cc>] ? default_idle+0x0/0x55
-> >  [<ffffffff8020b184>] ? cpu_idle+0x9c/0xe4
-> >  [<ffffffff80444e86>] ? start_secondary+0x179/0x17d
-> >
-> > ---[ end trace a4f2fe9605e20ed0 ]---
-> >
-> >
-> > --
-> > Thomas
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
 
