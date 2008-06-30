@@ -1,118 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:8848 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753733AbYFVXpY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jun 2008 19:45:24 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so1780017wfd.4
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Jun 2008 16:45:24 -0700 (PDT)
-Subject: [PATCH 1/4] mac80211: wep.c use new frame control helpers
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Content-Type: text/plain
-Date: Sun, 22 Jun 2008 16:45:23 -0700
-Message-Id: <1214178324.21092.14.camel@brick> (sfid-20080623_014552_635284_D3744E88)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:32658 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756640AbYF3J1Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jun 2008 05:27:16 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 29/33] iwlwifi: drop skb silently for Tx request in monitor mode
+Date: Mon, 30 Jun 2008 17:23:29 +0800
+Message-Id: <1214817813-17639-30-git-send-email-yi.zhu@intel.com> (sfid-20080630_113813_454594_52EC7F26)
+In-Reply-To: <1214817813-17639-29-git-send-email-yi.zhu@intel.com>
+References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-2-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-3-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-5-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-6-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-7-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-8-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-9-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-10-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-11-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-12-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-13-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-14-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-15-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-16-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-17-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-18-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-19-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-20-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-21-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-22-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-23-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-24-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-25-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-26-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-27-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-28-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-29-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+This patch fixes the problem to keep mac80211 resubmitting SKBs
+when Tx request cannot be met in monitor mode.
+
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- net/mac80211/wep.c |   39 +++++++++++++++------------------------
- 1 files changed, 15 insertions(+), 24 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
-index e7b6344..35b664d 100644
---- a/net/mac80211/wep.c
-+++ b/net/mac80211/wep.c
-@@ -84,20 +84,17 @@ static u8 *ieee80211_wep_add_iv(struct ieee80211_local *local,
- 				struct sk_buff *skb,
- 				struct ieee80211_key *key)
- {
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
--	u16 fc;
--	int hdrlen;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	unsigned int hdrlen;
- 	u8 *newhdr;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 4f0a18a..2744b0a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -6695,7 +6695,8 @@ static int iwl3945_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
  
--	fc = le16_to_cpu(hdr->frame_control);
--	fc |= IEEE80211_FCTL_PROTECTED;
--	hdr->frame_control = cpu_to_le16(fc);
-+	hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
+ 		IWL_DEBUG_MAC80211("leave - monitor\n");
+-		return -1;
++		dev_kfree_skb_any(skb);
++		return 0;
+ 	}
  
- 	if (WARN_ON(skb_tailroom(skb) < WEP_ICV_LEN ||
- 		    skb_headroom(skb) < WEP_IV_LEN))
- 		return NULL;
+ 	IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->len,
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index ba0f289..60b7a64 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -2682,7 +2682,8 @@ static int iwl4965_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
  
--	hdrlen = ieee80211_get_hdrlen(fc);
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	newhdr = skb_push(skb, WEP_IV_LEN);
- 	memmove(newhdr, newhdr + WEP_IV_LEN, hdrlen);
- 	ieee80211_wep_get_iv(local, key, newhdr + hdrlen);
-@@ -109,12 +106,10 @@ static void ieee80211_wep_remove_iv(struct ieee80211_local *local,
- 				    struct sk_buff *skb,
- 				    struct ieee80211_key *key)
- {
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
--	u16 fc;
--	int hdrlen;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	unsigned int hdrlen;
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
+ 		IWL_DEBUG_MAC80211("leave - monitor\n");
+-		return -1;
++		dev_kfree_skb_any(skb);
++		return 0;
+ 	}
  
--	fc = le16_to_cpu(hdr->frame_control);
--	hdrlen = ieee80211_get_hdrlen(fc);
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	memmove(skb->data + WEP_IV_LEN, skb->data, hdrlen);
- 	skb_pull(skb, WEP_IV_LEN);
- }
-@@ -224,17 +219,15 @@ int ieee80211_wep_decrypt(struct ieee80211_local *local, struct sk_buff *skb,
- 	u32 klen;
- 	u8 *rc4key;
- 	u8 keyidx;
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
--	u16 fc;
--	int hdrlen;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	unsigned int hdrlen;
- 	size_t len;
- 	int ret = 0;
- 
--	fc = le16_to_cpu(hdr->frame_control);
--	if (!(fc & IEEE80211_FCTL_PROTECTED))
-+	if (!ieee80211_has_protected(hdr->frame_control))
- 		return -1;
- 
--	hdrlen = ieee80211_get_hdrlen(fc);
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 
- 	if (skb->len < 8 + hdrlen)
- 		return -1;
-@@ -281,17 +274,15 @@ int ieee80211_wep_decrypt(struct ieee80211_local *local, struct sk_buff *skb,
- 
- u8 * ieee80211_wep_is_weak_iv(struct sk_buff *skb, struct ieee80211_key *key)
- {
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
--	u16 fc;
--	int hdrlen;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	unsigned int hdrlen;
- 	u8 *ivpos;
- 	u32 iv;
- 
--	fc = le16_to_cpu(hdr->frame_control);
--	if (!(fc & IEEE80211_FCTL_PROTECTED))
-+	if (!ieee80211_has_protected(hdr->frame_control))
- 		return NULL;
- 
--	hdrlen = ieee80211_get_hdrlen(fc);
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	ivpos = skb->data + hdrlen;
- 	iv = (ivpos[0] << 16) | (ivpos[1] << 8) | ivpos[2];
- 
+ 	IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->len,
 -- 
-1.5.6.290.gc4e15
-
+1.5.3.6
 
