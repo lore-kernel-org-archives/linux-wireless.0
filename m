@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47088
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752490AbYFCUgx (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.175]:43425 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752522AbYF3UQW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 16:36:53 -0400
-Date: Tue, 03 Jun 2008 12:19:51 -0700 (PDT)
-Message-Id: <20080603.121951.193695839.davem@davemloft.net> (sfid-20080603_223936_148155_4A31B548)
-To: linux-wireless@vger.kernel.org
-CC: linville@tuxdriver.com, mokuno@sm.sony.co.jp,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 0/12]: Proper compat WEXT support.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 30 Jun 2008 16:16:22 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so306961ugf.16
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2008 13:16:22 -0700 (PDT)
+Message-ID: <48693F0C.4060405@gmail.com> (sfid-20080630_221626_238779_0C090E97)
+Date: Mon, 30 Jun 2008 21:16:12 +0100
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, proski@gnu.org,
+	orinoco-devel@lists.sourceforge.net
+Subject: Re: [RFC PATCH 00/19] orinoco: WPA for Agere based cards
+References: <1214678305-7057-1-git-send-email-kilroyd@gmail.com> <20080630192820.GA878@tuxdriver.com>
+In-Reply-To: <20080630192820.GA878@tuxdriver.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+John W. Linville wrote:
+> On Sat, Jun 28, 2008 at 07:38:06PM +0100, kilroyd@googlemail.com wrote:
+>> This patch series enables WPA on Agere based orinoco devices. An
+>> earlier version has been available on the orinoco-devel list for a
+>> while. I'm looking to get more feedback and testing of these patches,
+>> so hopefully they can go into the kernel.
+> 
+> How "RFC" are these patches?  The release of 2.6.26 draws near.
+> Should I merge these now so they will be in 2.6.27?
 
-This is a refresh of my previous WEXT compat patch set.
+I'd be inclined to hold off merging for a bit.
 
-I've actually tested these exact patches on sparc64 with a RNDIS based
-USB wireless device from Linksys.  I was able to perform iwconfig
-commands, check iwlist, bring up the interface and use it properly.
-All with 32-bit tools.  I've also done an allmodconfig sanity
-build check on sparc64.
+Although rock solid for me, there has been very little feedback on these patches in orinoco-devel.
 
-The one thing I was not able to test yet is wpa_supplicant use, and
-that likely doesn't work properly yet, but we can fix that on top and
-these patches do not break native non-compat binaries.  They do make a
-lot of compat stuff work which wasn't the case before.  So applying
-this stuff makes sense, and we can get wpa_supplicant working if it
-isn't working using follow-on patches.
+Patches 01 and 02 are trivial and should be OK to merge now if we want.
 
-The patch set starts by cleaning up the code so that we can avoid
-having multiple copies of the WEXT main dispatch routines, one for
-compat and one for the non-compat case.
+The main concern I have is that patch 09/19 may adversely affect spectrum_cs and the other symbol based cards. This could be avoided by invoking the symbol firmware download only from spectrum_cs, but I don't know if this is necessary.
 
-Next, basic compat level handling of the WEXT ioctl is added, and the
-equivalent code in the compat_ioctl.c file is removed.
+I've been able to run/test all the other changes to my satisfaction on an Agere based card.
 
-Finally, compat IWE stream munging is added for the wireless layer.
-When we get a compat WEXT ioctl request, we set a bit in the request
-info blob, and the stream building helpers tip off this to format the
-stream entries properly.
 
-These patches are against net-next-2.6 and are also available as
-a GIT tree at:
-
-	master.kernel.org:/pub/scm/linux/kernel/git/davem/wireless-2.6.git
-
-John, please pull or apply as you deem appropriate.
-
-Thanks!
+Dave.
