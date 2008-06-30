@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:54745 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751175AbYFAHw2 (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.243]:47407 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753646AbYF3I7R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jun 2008 03:52:28 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so242635nfc.21
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jun 2008 00:52:25 -0700 (PDT)
-To: Andreas Gnau <Rondom@rondom.de>
-Subject: Re: Is there any working 802.11N USB Nic?
-Date: Sun, 1 Jun 2008 09:58:37 +0200
-Cc: Ken Mandelberg <km@mathcs.emory.edu>,
-	linux-wireless@vger.kernel.org
-References: <48419F4C.3010201@mathcs.emory.edu> <4841B245.10502@Rondom.de>
-In-Reply-To: <4841B245.10502@Rondom.de>
+	Mon, 30 Jun 2008 04:59:17 -0400
+Received: by an-out-0708.google.com with SMTP id d40so276331and.103
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jun 2008 01:59:16 -0700 (PDT)
+Message-ID: <43e72e890806300159j6c98ef9dpeac61d5aeca19f0e@mail.gmail.com> (sfid-20080630_105926_474629_74F7CA9A)
+Date: Mon, 30 Jun 2008 01:59:16 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [PATCH 1/1 V2] cfg80211: adding NONE regdomain
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
+	"Ester Kummer" <ester.kummer@intel.com>
+In-Reply-To: <1ba2fa240806300152o6d5f7deby6d00a4421138177c@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200806010958.37350.IvDoorn@gmail.com> (sfid-20080601_095232_270214_9AEE3D89)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <1214732604-4573-1-git-send-email-tomas.winkler@intel.com>
+	 <43e72e890806300118me4b20bv2b91f30f91eaa7f3@mail.gmail.com>
+	 <1ba2fa240806300152o6d5f7deby6d00a4421138177c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 31 May 2008, Andreas Gnau wrote:
-> Ken Mandelberg schrieb:
-> > I have an Airlink AWLL6080 (Ralink 2870). Is there any native work for
-> > this chipset? I've tried ndiswrapper with an XP driver, but that only
-> > connects in G mode.
-> 
-> There are native drivers by Ralink for this chipset on their website.
-> [1]. I don't know how well they work, though. Maybe the rt2x00-project
-> will work on this once the current rt2x00 drivers are completely finished.
+On Mon, Jun 30, 2008 at 1:52 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+> On Mon, Jun 30, 2008 at 11:18 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Sun, Jun 29, 2008 at 2:43 AM, Tomas Winkler <tomas.winkler@intel.com> wrote:
+>>> From: Ester Kummer <ester.kummer@intel.com>
+>>>
+>>> This patch adds an option to enable all the channels by adding a
+>>> value of "NONE" to ieee80211_regdom module param. This is useful
+>>> for NICs that rely on EEPROM regulatory enforcement and for testing
+>>
+>> For the EEPROM we should not rely on "none" but on a callback notifier
+>> chain to let the driver do 'the right thing'. I'll post patches
+>> hopefully tonight.
+>
+> Still can be useful for testing,
 
-Work is already in progress to port the legacy drivers to rt2x00, but
-due to lack of time this is going very slowely.
+Testing can be done separately but not merged. The idea is to keep
+mac80211 and mac80211 drivers as compliant as possible. This steers in
+the other direction.
 
-> NDISWrapper should also support 802.1n, so start a new thread in the
-> NDISWrapper support forum [2], if you need additional help.
-> 
-> 
-> [1] http://www.ralinktech.com/ralink/Home/Support/Linux.html
-> [2]
-> http://ndiswrapper.sourceforge.net/joomla/index.php?/component/option,com_fireboard/Itemid,34/
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
+  Luis
