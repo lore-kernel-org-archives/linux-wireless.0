@@ -1,175 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:57215 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752940AbYFDDKY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jun 2008 23:10:24 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Dmitry Torokhov <dtor@mail.ru>
-Subject: [PATCH 05/12] rfkill: add read-write rfkill switch support
-Date: Wed,  4 Jun 2008 00:10:10 -0300
-Message-Id: <1212549017-30144-6-git-send-email-hmh@hmh.eng.br> (sfid-20080604_051034_500886_5F80CD64)
-In-Reply-To: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
-References: <1212549017-30144-1-git-send-email-hmh@hmh.eng.br>
+Received: from mga02.intel.com ([134.134.136.20]:18215 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755024AbYF3J1P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jun 2008 05:27:15 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Rick Farrington <rickdic@hotmail.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 28/33] iwlwifi: fix incorrect monitor mode operation
+Date: Mon, 30 Jun 2008 17:23:28 +0800
+Message-Id: <1214817813-17639-29-git-send-email-yi.zhu@intel.com> (sfid-20080630_113813_850480_A2FD9A07)
+In-Reply-To: <1214817813-17639-28-git-send-email-yi.zhu@intel.com>
+References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-2-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-3-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-5-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-6-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-7-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-8-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-9-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-10-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-11-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-12-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-13-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-14-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-15-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-16-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-17-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-18-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-19-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-20-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-21-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-22-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-23-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-24-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-25-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-26-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-27-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-28-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, rfkill support for read/write rfkill switches is hacked through
-a round-trip over the input layer and rfkill-input to let a driver sync
-rfkill->state to hardware changes.
+From: Rick Farrington <rickdic@hotmail.com>
 
-This is buggy and sub-optimal.  It causes real problems.  It is best to
-think of the rfkill class as supporting only write-only switches at the
-moment.
+This patch fixes monitor mode operation for iwlwifi.
 
-In order to implement the read/write functionality properly:
+Problems addressed:
+1. when monitor mode was enabled, multiple, overlapped calls were being
+made to 'iwl3945_bg_set_monitor'
 
-Add a get_state() hook that is called by the class every time it needs to
-fetch the current state of the switch.  Add a call to this hook every time
-the *current* state of the radio plays a role in a decision.
+2. when monitor mode was disabled (via the configure_filter callback),
+the driver was still enabling monitor mode
 
-Also add a force_state() method that can be used to forcefully syncronize
-the class' idea of the current state of the switch.  This allows for a
-faster implementation of the read/write functionality, as a driver which
-get events on switch changes can avoid the need for a get_state() hook.
+3. when monitor mode was enabled, the selected channel was not set
+(eg. 'iwconfig wlanx mode monitor channel n' DID NOT SET channel 'n'
+when packet capture was subsequently enabled)
 
-If the get_state() hook is left as NULL, current behaviour is maintained,
-so this change is fully backwards compatible with the current rfkill
-drivers.
-
-For hardware that issues events when the rfkill state changes, leave
-get_state() NULL in the rfkill struct, set the initial state properly
-before registering with the rfkill class, and use the force_state() method
-in the driver to keep the rfkill interface up-to-date.
-
-get_state() can be called by the class from atomic context. It must not
-sleep.
-
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Dmitry Torokhov <dtor@mail.ru>
+Signed-off-by: Rick Farrington <rickdic@hotmail.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- include/linux/rfkill.h |    5 ++++
- net/rfkill/rfkill.c    |   49 +++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 51 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   30 +++++++++---------------
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   33 +++++++++------------------
+ 2 files changed, 22 insertions(+), 41 deletions(-)
 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index ca89ae1..844e961 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -61,6 +61,8 @@ enum rfkill_state {
-  * @data: Pointer to the RF button drivers private data which will be
-  *	passed along when toggling radio state.
-  * @toggle_radio(): Mandatory handler to control state of the radio.
-+ * @get_state(): handler to read current radio state from hardware,
-+ *      may be called from atomic context, should return 0 on success.
-  * @led_trigger: A LED trigger for this button's LED.
-  * @dev: Device structure integrating the switch into device tree.
-  * @node: Used to place switch into list of all switches known to the
-@@ -80,6 +82,7 @@ struct rfkill {
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 43cb8ff..4f0a18a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2312,7 +2312,7 @@ static void iwl3945_connection_init_rx_config(struct iwl3945_priv *priv)
+ #endif
  
- 	void *data;
- 	int (*toggle_radio)(void *data, enum rfkill_state state);
-+	int (*get_state)(void *data, enum rfkill_state *state);
+ 	ch_info = iwl3945_get_channel_info(priv, priv->band,
+-				       le16_to_cpu(priv->staging_rxon.channel));
++				       le16_to_cpu(priv->active_rxon.channel));
  
- #ifdef CONFIG_RFKILL_LEDS
- 	struct led_trigger led_trigger;
-@@ -95,6 +98,8 @@ void rfkill_free(struct rfkill *rfkill);
- int rfkill_register(struct rfkill *rfkill);
- void rfkill_unregister(struct rfkill *rfkill);
- 
-+int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state);
-+
- /**
-  * rfkill_get_led_name - Get the LED trigger name for the button's LED.
-  * This function might return a NULL pointer if registering of the
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 3edc585..2e19b68 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -62,19 +62,39 @@ static void rfkill_led_trigger(struct rfkill *rfkill,
- #endif /* CONFIG_RFKILL_LEDS */
- }
- 
-+static void update_rfkill_state(struct rfkill *rfkill)
-+{
-+	enum rfkill_state newstate;
-+
-+	if (rfkill->get_state) {
-+		mutex_lock(&rfkill->mutex);
-+		if (!rfkill->get_state(rfkill->data, &newstate))
-+			rfkill->state = newstate;
-+		mutex_unlock(&rfkill->mutex);
-+	}
-+}
-+
- static int rfkill_toggle_radio(struct rfkill *rfkill,
- 				enum rfkill_state state)
+ 	if (!ch_info)
+ 		ch_info = &priv->channel_info[0];
+@@ -7006,26 +7006,18 @@ static void iwl3945_configure_filter(struct ieee80211_hw *hw,
+ 				 unsigned int *total_flags,
+ 				 int mc_count, struct dev_addr_list *mc_list)
  {
- 	int retval = 0;
-+	enum rfkill_state oldstate, newstate;
-+
-+	oldstate = rfkill->state;
-+
-+	if (rfkill->get_state &&
-+	    !rfkill->get_state(rfkill->data, &newstate))
-+		rfkill->state = newstate;
- 
- 	if (state != rfkill->state) {
- 		retval = rfkill->toggle_radio(rfkill->data, state);
--		if (!retval) {
-+		if (!retval)
- 			rfkill->state = state;
--			rfkill_led_trigger(rfkill, state);
+-	/*
+-	 * XXX: dummy
+-	 * see also iwl3945_connection_init_rx_config
+-	 */
+ 	struct iwl3945_priv *priv = hw->priv;
+-	int new_flags = 0;
+-	if (changed_flags & (FIF_PROMISC_IN_BSS | FIF_OTHER_BSS)) {
+-		if (*total_flags & (FIF_PROMISC_IN_BSS | FIF_OTHER_BSS)) {
+-			IWL_DEBUG_MAC80211("Enter: type %d (0x%x, 0x%x)\n",
+-					   IEEE80211_IF_TYPE_MNTR,
+-					   changed_flags, *total_flags);
+-			/* queue work 'cuz mac80211 is holding a lock which
+-			 * prevents us from issuing (synchronous) f/w cmds */
+-			queue_work(priv->workqueue, &priv->set_monitor);
+-			new_flags &= FIF_PROMISC_IN_BSS |
+-				     FIF_OTHER_BSS |
+-				     FIF_ALLMULTI;
 -		}
++
++	if (changed_flags & (*total_flags) & FIF_OTHER_BSS) {
++		IWL_DEBUG_MAC80211("Enter: type %d (0x%x, 0x%x)\n",
++				   IEEE80211_IF_TYPE_MNTR,
++				   changed_flags, *total_flags);
++		/* queue work 'cuz mac80211 is holding a lock which
++		 * prevents us from issuing (synchronous) f/w cmds */
++		queue_work(priv->workqueue, &priv->set_monitor);
  	}
- 
-+	if (rfkill->state != oldstate)
-+		rfkill_led_trigger(rfkill, rfkill->state);
-+
- 	return retval;
+-	*total_flags = new_flags;
++	*total_flags &= FIF_OTHER_BSS | FIF_ALLMULTI |
++			FIF_BCN_PRBRESP_PROMISC | FIF_CONTROL;
  }
  
-@@ -105,6 +125,28 @@ void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
- }
- EXPORT_SYMBOL(rfkill_switch_all);
+ static void iwl3945_mac_remove_interface(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 5eb2a3e..ba0f289 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -758,7 +758,7 @@ static void iwl4965_connection_init_rx_config(struct iwl_priv *priv)
+ #endif
  
-+/**
-+ * rfkill_force_state - Force the internal rfkill radio state
-+ * @rfkill: pointer to the rfkill class to modify.
-+ * @state: the current radio state the class should be forced to.
-+ *
-+ * This function updates the internal state of the radio cached
-+ * by the rfkill class.  It should be used when the driver gets
-+ * a notification by the firmware/hardware of the current *real*
-+ * state of the radio rfkill switch.
-+ *
-+ * It may not be called from an atomic context.
-+ */
-+int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state)
-+{
-+	mutex_lock(&rfkill->mutex);
-+	rfkill->state = state;
-+	mutex_unlock(&rfkill->mutex);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(rfkill_force_state);
-+
- static ssize_t rfkill_name_show(struct device *dev,
- 				struct device_attribute *attr,
- 				char *buf)
-@@ -147,6 +189,7 @@ static ssize_t rfkill_state_show(struct device *dev,
+ 	ch_info = iwl_get_channel_info(priv, priv->band,
+-				       le16_to_cpu(priv->staging_rxon.channel));
++				       le16_to_cpu(priv->active_rxon.channel));
+ 
+ 	if (!ch_info)
+ 		ch_info = &priv->channel_info[0];
+@@ -794,9 +794,6 @@ static int iwl4965_set_mode(struct iwl_priv *priv, int mode)
  {
- 	struct rfkill *rfkill = to_rfkill(dev);
+ 	priv->iw_mode = mode;
  
-+	update_rfkill_state(rfkill);
- 	return sprintf(buf, "%d\n", rfkill->state);
+-	/* init channel/phymode to values given at driver init */
+-	iwl_set_rxon_channel(priv, IEEE80211_BAND_2GHZ, 6);
+-
+ 	iwl4965_connection_init_rx_config(priv);
+ 	memcpy(priv->staging_rxon.node_addr, priv->mac_addr, ETH_ALEN);
+ 
+@@ -3025,26 +3022,18 @@ static void iwl4965_configure_filter(struct ieee80211_hw *hw,
+ 				 unsigned int *total_flags,
+ 				 int mc_count, struct dev_addr_list *mc_list)
+ {
+-	/*
+-	 * XXX: dummy
+-	 * see also iwl4965_connection_init_rx_config
+-	 */
+ 	struct iwl_priv *priv = hw->priv;
+-	int new_flags = 0;
+-	if (changed_flags & (FIF_PROMISC_IN_BSS | FIF_OTHER_BSS)) {
+-		if (*total_flags & (FIF_PROMISC_IN_BSS | FIF_OTHER_BSS)) {
+-			IWL_DEBUG_MAC80211("Enter: type %d (0x%x, 0x%x)\n",
+-					   IEEE80211_IF_TYPE_MNTR,
+-					   changed_flags, *total_flags);
+-			/* queue work 'cuz mac80211 is holding a lock which
+-			 * prevents us from issuing (synchronous) f/w cmds */
+-			queue_work(priv->workqueue, &priv->set_monitor);
+-			new_flags &= FIF_PROMISC_IN_BSS |
+-				     FIF_OTHER_BSS |
+-				     FIF_ALLMULTI;
+-		}
++
++	if (changed_flags & (*total_flags) & FIF_OTHER_BSS) {
++		IWL_DEBUG_MAC80211("Enter: type %d (0x%x, 0x%x)\n",
++				   IEEE80211_IF_TYPE_MNTR,
++				   changed_flags, *total_flags);
++		/* queue work 'cuz mac80211 is holding a lock which
++		 * prevents us from issuing (synchronous) f/w cmds */
++		queue_work(priv->workqueue, &priv->set_monitor);
+ 	}
+-	*total_flags = new_flags;
++	*total_flags &= FIF_OTHER_BSS | FIF_ALLMULTI |
++			FIF_BCN_PRBRESP_PROMISC | FIF_CONTROL;
  }
  
+ static void iwl4965_mac_remove_interface(struct ieee80211_hw *hw,
 -- 
-1.5.5.3
+1.5.3.6
 
