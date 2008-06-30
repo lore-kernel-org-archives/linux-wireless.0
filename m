@@ -1,52 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.248]:20918 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750750AbYF1Syx (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:45695 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752486AbYF3QG2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jun 2008 14:54:53 -0400
-Received: by an-out-0708.google.com with SMTP id d40so195140and.103
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jun 2008 11:54:52 -0700 (PDT)
-Message-ID: <43e72e890806281154j10c7032cpccfcd88469dfe187@mail.gmail.com> (sfid-20080628_205524_955042_3A74F309)
-Date: Sat, 28 Jun 2008 11:54:52 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: compat-wireless high packet loss.
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"David Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Linux Wireless" <linux-wireless@vger.kernel.org>,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
-	"Cohen, Guy" <guy.cohen@intel.com>
-In-Reply-To: <1ba2fa240806271746m15f967edj5693e2a6eecf15e2@mail.gmail.com>
+	Mon, 30 Jun 2008 12:06:28 -0400
+Message-ID: <486904D4.4010705@lwfinger.net> (sfid-20080630_180631_942585_08D5BDF0)
+Date: Mon, 30 Jun 2008 11:07:48 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1ba2fa240806261603g30c3e757y9166c2f9e05f7666@mail.gmail.com>
-	 <43e72e890806271300m626f67ayabf43fa02fe239b8@mail.gmail.com>
-	 <1ba2fa240806271746m15f967edj5693e2a6eecf15e2@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linville@tuxdriver.com, flamingice@sourmilk.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] p54: Add quality output to iwlist and iwconfig
+References: <4868fe45.swzEykllJP3Ow73U%Larry.Finger@lwfinger.net>	 (sfid-20080630_173834_531803_0FC8E191) <1214840530.5507.52.camel@johannes.berg>
+In-Reply-To: <1214840530.5507.52.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 27, 2008 at 5:46 PM, Tomas Winkler <tomasw@gmail.com> wrote:
-> On Fri, Jun 27, 2008 at 11:00 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Thu, Jun 26, 2008 at 4:03 PM, Tomas Winkler <tomasw@gmail.com> wrote:
->>> We've experienced very high packet loss when using latest
->>> compat-wireless witth iwlwifi driver over 2.6.24 and 2.6.25 stable
->>> kernels. This is not happening with 2.6.26-rc3 as a target kernel (not
->>> sure about rc1 and rc2)
->>> The traffic is UDP TX with large tx buffers ~26000.
->>> We are still investigating yet if someone has any idea please share with us.
->>
->> I can't think of anything off the top of my head, really...
->
-> This is something in the network stack. This is also happening with
-> ethernet USB devices. Something between 2.6.25 and 2.6.26-rc3 has
-> fixed it.
-> Have to find what otherwise all the compat-wireless will be unusable for us
-> Thanks for the answer anyway.
+Johannes Berg wrote:
+> On Mon, 2008-06-30 at 10:39 -0500, Larry.Finger@lwfinger.net wrote:
+>> The p54 driver family reports a quality of 0 in iwconfig and iwlist
+>> output. This patch calculates a quality number as a percentage of the
+>> rssi to the maximum signal of 127 reported as the maximum signal.
+> 
+> Unrelated, do you have a p54 card? Does it work? I wasn't sure whether
+> the tx-info sbk->cb change broke it or not after I fixed up some things
+> there.
 
-Either way if you try to port wireless-testing drivers to 2.6.25
-you'll probably end up using the same things on compat-wirelesss or
-just slightly modified, so if there is an issue regardless it can be
-fixed through compat-wireless. Just my $0.02 Rupees.
+It is DW1450, which is a p54usb. It works with the latest wireless 
+testing, at least in b/g/mode. I don't have an 802.11a AP to try the 5 
+GHz mode.
 
-  Luis
+Larry
