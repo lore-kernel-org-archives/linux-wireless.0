@@ -1,44 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vs166246.vserver.de ([62.75.166.246]:56726 "EHLO
-	vs166246.vserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754258AbYFJOX7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jun 2008 10:23:59 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Miles Lane" <miles.lane@gmail.com>
-Subject: Re: BUG: NULL pointer dereference at 00000000 -- IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
-Date: Tue, 10 Jun 2008 16:23:33 +0200
-Cc: "Andrew Morton" <akpm@linux-foundation.org>,
-	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <a44ae5cd0806100709rf4602f2x587631852502c0b5@mail.gmail.com>
-In-Reply-To: <a44ae5cd0806100709rf4602f2x587631852502c0b5@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200806101623.34082.mb@bu3sch.de> (sfid-20080610_162402_421715_E8EDB95F)
+Received: from mga02.intel.com ([134.134.136.20]:18215 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755259AbYF3J1N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jun 2008 05:27:13 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 22/33] iwlwifi: Remove unnecessary code
+Date: Mon, 30 Jun 2008 17:23:22 +0800
+Message-Id: <1214817813-17639-23-git-send-email-yi.zhu@intel.com> (sfid-20080630_113812_408580_FD2D4BFF)
+In-Reply-To: <1214817813-17639-22-git-send-email-yi.zhu@intel.com>
+References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-2-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-3-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-4-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-5-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-6-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-7-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-8-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-9-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-10-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-11-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-12-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-13-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-14-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-15-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-16-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-17-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-18-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-19-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-20-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-21-git-send-email-yi.zhu@intel.com>
+ <1214817813-17639-22-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 10 June 2008 16:09:37 Miles Lane wrote:
-> BUG: unable to handle kernel NULL pointer dereference at 00000000
-> IP: [<f8e783d5>] :b43:b43_dma_mapping_error+0x16/0x155
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
+Removed unnecessary goto.
 
-It seems to crash at
- 60 extern const struct dma_mapping_ops *dma_ops;
- 61 
- 62 static inline int dma_mapping_error(dma_addr_t dma_addr)
- 63 {
- 64         if (dma_ops->mapping_error)
- 65                 return dma_ops->mapping_error(dma_addr);
- 66 
- 67         return (dma_addr == bad_dma_address);
- 68 }
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965-rs.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-because dma_ops is a NULL pointer here.
-Can you add a WARN_ON(!dma_ops); at the beginning of the function
-inside of include/asm/x86/dma-mapping.h to confirm this?
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+index c2f21d7..c7ebb3b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
+@@ -2133,11 +2133,8 @@ static void rs_get_rate(void *priv_rate, struct net_device *dev,
+ 			lq_sta->ibss_sta_added = 1;
+ 			rs_initialize_lq(priv, conf, sta);
+ 		}
+-		if (!lq_sta->ibss_sta_added)
+-			goto done;
+ 	}
+ 
+-done:
+ 	if ((i < 0) || (i > IWL_RATE_COUNT)) {
+ 		sel->rate_idx = rate_lowest_index(local, sband, sta);
+ 		goto out;
 -- 
-Greetings Michael.
+1.5.3.6
+
