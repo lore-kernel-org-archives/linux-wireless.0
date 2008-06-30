@@ -1,90 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34707 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:54927 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751130AbYFYKCy (ORCPT
+	with ESMTP id S1755865AbYF3LJz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jun 2008 06:02:54 -0400
-Subject: Re: Broken fragmentation
+	Mon, 30 Jun 2008 07:09:55 -0400
+Subject: Re: compat-wireless high packet loss.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240806250250k2ae66eddre00172f6bc871fcb@mail.gmail.com> (sfid-20080625_115014_290743_215B6A5E)
-References: <1ba2fa240806190220l18fe5dcdsf44fe81412a5f35d@mail.gmail.com>
-	 <1213878207.8967.6.camel@johannes.berg>
-	 <1ba2fa240806190608h3d833dbaua412446e8a9f560d@mail.gmail.com>
-	 <1213881855.8967.19.camel@johannes.berg>
-	 <1ba2fa240806190745u2fe7e435y3ca207af4156767b@mail.gmail.com>
-	 <1213889200.8967.26.camel@johannes.berg>
-	 <1ba2fa240806191113nd6a221eiac9648edd3404a80@mail.gmail.com>
-	 <1213899419.8967.59.camel@johannes.berg>
-	 <1ba2fa240806191409k7200ad53y654a7f8a117c8f14@mail.gmail.com>
-	 <1213910734.8967.117.camel@johannes.berg>
-	 <1ba2fa240806250250k2ae66eddre00172f6bc871fcb@mail.gmail.com>
-	 (sfid-20080625_115014_290743_215B6A5E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Wrl5xxlGGzF6m1nZ/rRz"
-Date: Wed, 25 Jun 2008 12:02:13 +0200
-Message-Id: <1214388133.21847.8.camel@johannes.berg> (sfid-20080625_120258_171286_55DA19F4)
+To: Guy Cohen <guy.cohen@intel.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Patrick McHardy <kaber@trash.net>
+In-Reply-To: <247d6d340806282323v3192ead8v149359e482375991@mail.gmail.com> (sfid-20080629_082355_009658_4E662435)
+References: <1ba2fa240806261603g30c3e757y9166c2f9e05f7666@mail.gmail.com>
+	 <247d6d340806282323v3192ead8v149359e482375991@mail.gmail.com>
+	 (sfid-20080629_082355_009658_4E662435)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-d28OrUwL7NdCqCrsbT2/"
+Date: Mon, 30 Jun 2008 13:09:09 +0200
+Message-Id: <1214824149.5507.36.camel@johannes.berg> (sfid-20080630_130959_317441_6930A2C3)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-Wrl5xxlGGzF6m1nZ/rRz
+--=-d28OrUwL7NdCqCrsbT2/
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2008-06-25 at 12:50 +0300, Tomas Winkler wrote:
-> On Fri, Jun 20, 2008 at 12:25 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> >
-> >> >> Fragments are in the air but the peer is not able to reassemble the=
-m.
-> >> >> Something is wrong with the first fragment but I'm not sure yet.
-> >> >
-> >> > Hm, ok. got a packet capture? Maybe that was broken before, I rememb=
-er
-> >> > having problems with fragmentation but putting it down to the
-> >> > known-to-be-completely-broken AP I was using.
-> >>
-> >> It is working the latest problem was caused by the driver, Yet i still
-> >> don't understand the regression
-> >> in the driver.
-> >
-> > Hmm, ok.
-> >
-> So the bug is still in mac80211. Fragments are scheduled to different
-> TIDs and hence to different queues.
-> Investigating further. If you have something in mind let me know
+On Sun, 2008-06-29 at 09:23 +0300, Guy Cohen wrote:
+> More info on the issue.. The problem is with TX of unrestrained UDP
+> stream, when the traffic generated at the application layer is larger
+> than the link can pass. With kernel 2.6.26-* the traffic is restrained
+> when the TX FIFOs gets full while in 2.6.25.* frames are dropped at
+> some layer. It seems that the drop happens after the IP fragmentation
+> step at the stack.
 
-Hmm, yes, I do indeed, try
-
-skb_copy_queue_mapping(frag, first);
-
-where you previously added the cb copy.
+does compat use multiqueue now? if not, look in the mac80211 fake mq
+code.
 
 johannes
 
---=-Wrl5xxlGGzF6m1nZ/rRz
+--=-d28OrUwL7NdCqCrsbT2/
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIYheiAAoJEKVg1VMiehFYq9MQAIKTVj4ofFil7LKnAjDDrkJi
-vAfJdp9eb7QqVMb2LsExcYz/g09AjWo/ogxHXoaaz5ruM+E/DAinO+1yja7pFSrT
-f2kWmociO9ABWnDFzMi1abYj95oTonUshVpBgYDSmeb2j5fRz7Bu45ErZewoMqz0
-ZXlTx6n4d2E/fAo0T0C1gS9VShFKeFRU4KBDr2Bu+R9Ok6fXsCexjtqfC4ShtrDT
-zoekr0EH6+VGoZPYNHkC5HIhuUp+1cqTTIEbanwarXE5syYtQbCyKDjxvEAYzsE1
-8Vd4pi8lPHuAb09hWoT3uRjEttEkEwiVZID+fmhYNc/K0zwGmTS43NwhmVvDE8BC
-7HiAq/vwk+onyJ8Z5uEPPPEchNpwte8bqW9Q1xiU2UJPtI009NQ+05+sbXkjyT3A
-+gHg/BxKPKl6R4lYPQ/eSUphUakPx/ABZzppfYe+3Ez8wNkD5B75p0MzvpAG1CST
-+vC8X2KBKHJewjNursnRV+G1JZ7V9O0nJGIMUgwZ3rE9n0kx53p+D1kWimTcz4LE
-9u+lWxrI8goUsIpYXiT1KxQ6kY6ruddz7CN/uHeDfdtTqyktXCczZOuTeobqqtI5
-01nxBFE6dl3aWJ82wHhbb05oobmg16X9okdbJzkA8IMCunDH6NPw6z94MrzMCka3
-RYtIDazdeDkQ+eQY0Vlj
-=VVNl
+iQIcBAABAgAGBQJIaL7SAAoJEKVg1VMiehFYBTEP/il6uOq0lb5S8y09nCYqdK5d
+qfenCdlYS/Z/km2JkYxfLLB33MCvwyMDeAe3YuGlYH4zfrPsUPdgXENrYhiCBicl
+TyvAWgODdtDR7kvt3Pd3tdgifyZOBh8A7zxCQ5/KwnjEMWeHLfUssPAuBTcT0/xy
+1TPaz5LqZ2/s0G1x3qfCdQKU3uu6R7nxz8hQdnPANujckBYEcCFG0edwVZskfho3
+8NDyiJPleKGG3F0mQblG6QmSazW1dTvIkTv3ADYf6bikpqtX68zbyy4xUfWgJWZI
+BEA/U7Dbk+dIwnL6HZKgI0WPw8eXXkfnAS0DLBiv5gXw0hIkrfylERzEwIs+2bNc
+Q9HLcoPTTIJCE5Y8hlYr2d3ed27yBIBOvp1UhKmDFyJ2F+DfBAUsuYf0WYK1HJSN
+THDHubEq5znqYrlqCb/fpCR/ZAlSmkqsGqe5QU6EGzZ4pQoWRIn6Kd+OJdGlv21p
+seKVpx5kC0EjJVaraqdfRYobjF7ktGkXXtSg8gfi602KwhQTjf9Z5bo5MnJBgvMF
+3ABrK6qbSoeR6m6UxMzj/K/yHrUQeIk3gXAebwuISxZLhjnjDq2nduU0UjKwqTmF
++mFgwMY7LuNf6N+BdH0GXOKeSB1oVNzsUqJSNVcRVFy16UW2QVbgsGKx64AqhWQd
+pc5uDFXo/O7CQY7KshFO
+=4HWO
 -----END PGP SIGNATURE-----
 
---=-Wrl5xxlGGzF6m1nZ/rRz--
+--=-d28OrUwL7NdCqCrsbT2/--
 
