@@ -1,73 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:47722 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753121AbYFMVIJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jun 2008 17:08:09 -0400
-Subject: Re: iwl3945 and WPA
-From: Pavel Roskin <proski@gnu.org>
-To: Maciek Kaliszewski <mkalkal@interia.pl>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4852D6EB.3020304@interia.pl>
-References: <4852658A.4040402@interia.pl>
-	 <20080613132317.GB5333@tuxdriver.com>
-	 <1ba2fa240806130637u1f4b485dked28ce04ff52a9b5@mail.gmail.com>
-	 <48527D72.4070509@interia.pl> <1213375014.29669.36.camel@dv>
-	 <4852D6EB.3020304@interia.pl>
-Content-Type: text/plain
-Date: Fri, 13 Jun 2008 17:08:07 -0400
-Message-Id: <1213391287.22425.31.camel@dv> (sfid-20080613_230813_891207_B4CEF0F2)
+Received: from xc.sipsolutions.net ([83.246.72.84]:44821 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756940AbYF3LHk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jun 2008 07:07:40 -0400
+Subject: Re: [RFC PATCH 19/19] orinoco: Add MIC on TX and check on RX
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: kilroyd@googlemail.com, linux-wireless@vger.kernel.org,
+	proski@gnu.org, orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>
+In-Reply-To: <1214776609.6037.11.camel@brick> (sfid-20080629_235718_050248_F270D991)
+References: <1214678305-7057-1-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-2-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-3-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-4-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-5-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-6-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-7-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-8-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-9-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-10-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-11-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-12-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-13-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-14-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-15-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-16-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-17-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-18-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-19-git-send-email-kilroyd@gmail.com>
+	 <1214678305-7057-20-git-send-email-kilroyd@gmail.com>
+	 <1214776609.6037.11.camel@brick> (sfid-20080629_235718_050248_F270D991)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SZTHW0vhwr3wgke5txlB"
+Date: Mon, 30 Jun 2008 13:06:48 +0200
+Message-Id: <1214824008.5507.34.camel@johannes.berg> (sfid-20080630_130742_992107_D98D523C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-06-13 at 22:22 +0200, Maciek Kaliszewski wrote:
 
-> I've checked and 0.6.3 is latest development version of wpa_supplicant.
-> > Try removing "scan_ssid=1".   Also try ESSID scanning in iwlist:
-> > iwlist wlan0_rename scanning essid APTEKA
-> >   
->  Removing scan_ssid doesn't help .
-> 
-> iwlist wlan0_rename scanning essid APTEKA
-> 
-> gives the same results like
-> 
-> iwlist wlan0_rename scanning
-> and
-> iwlist wlan0_rename scanning essid AAAA
-> so driver ignores essid parameter
+--=-SZTHW0vhwr3wgke5txlB
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Well, if iwlist doesn't confuse the driver by "essid", neither should
-wpa_supplicant.
+On Sun, 2008-06-29 at 14:56 -0700, Harvey Harrison wrote:
+> On Sat, 2008-06-28 at 19:38 +0100, kilroyd@googlemail.com wrote:
+> > Use the MIC algorithm from the crypto subsystem.
+> >=20
+> > Signed-off-by: David Kilroy <kilroyd@gmail.com>
+>=20
+> Any reason not to use the net/mac80211/michael.c implementation?
 
-> It looks like driver issue (driver is returning bogus data)
+Yes, depending on mac80211 for a full-mac driver wouldn't be too
+smart :)
 
-But why does iwlist display the same data correctly?  If iwlist can
-parse it, wpa_supplicant should be able to parse it as well.
+johannes
 
-Google search for "Invalid freq in scan results" finds another such case
-back in year 2004:
-http://lists.shmoo.com/pipermail/hostap/2004-March/thread.html#6134
+--=-SZTHW0vhwr3wgke5txlB
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> there is no AP with BSSID 00:00:01:00:00:1d and hidden SSID in vicinity 
-> . There is only one (my) AP in the range .
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Of course.  It looks like the initial "00:00:01:00" is bogus and the
-final "00:1d" is the beginning of the correct BSSID.
+iQIcBAABAgAGBQJIaL5FAAoJEKVg1VMiehFYmAsP/0eV6V+k3pqgr+y70fnnGGQ8
+gT466/1fBoYtNQAnov0GVZ1s6GWDg9zGk+29kiRO5Yn09VsC9vgH92b828uMW6l4
+KdYkuJh4vo/GFygGyMKdoS82N6AOj/6nzoThG356iTJjDOymLzB4b3PpJe8wslpQ
+dmVEmABl7f0VJK5hZWalXQQQDkwAnnYGZH/lotpuPGgQzKIwfHdy5OWdfQ7dPj6h
+tJBKomEU8K6V6RV4cLlVouGk2mYkycbzLtCVeluBMiFWHnjRskGYNKTrS3g/44XH
+ehP6MRS9EV2FCQ2+6M4gCkg0a4rLBj/3bEiQijNdgvon9ckD/BQ7JhZZup777TKT
+qCMzrxYIIkOg5O2sHlvxeANPmAE2odysFf0Vj2sgOiQxCAtsY2ggOOCPJvTxofdg
+TeCf7oeNNxKYHy1xbauucNeAS3x40vy6PgLBkgsQt/b916ju3vvfYasi6u/ou3XK
+BuMQNJYyiSJabA03z0kv9H2HWWLvIu7sVTtR5Gm2IOXPEvIE6JPS7n3H8pcFOGB0
+C12gby+KutNe1ClfVP9M78KgB7UD01n4kh/rx7xMHILVfGGJjThkUqwUoPdrxeXC
+nGmVLFNSj4QzWvCPbpYq+XfQh7BUCfmFYcr3J7ly1oYbrVEaKWATXLAg8mzsmllV
+Jq8aOX+XlzP6fGzJJmNU
+=JpSQ
+-----END PGP SIGNATURE-----
 
-> Moreover p54pci.ko driver  (from the  same family  )  works  just fine 
-> with  this  version  of  wpa_supplicant .
-> Command line and config file I run wpa_supplicant with  is the same.
+--=-SZTHW0vhwr3wgke5txlB--
 
-It may be an alignment issue.  Different drivers may include different
-data, in different order.
-
-I suggest that you debug wpa_supplicant, specifically
-wpa_driver_wext_get_scan_results() in src/drivers/driver_wext.c.  Try
-printing iwe->cmd and iwe->len before the switch.  And please move it to
-the hostap list.  If there is anything definitely wrong with the driver,
-then please let us know.
-
--- 
-Regards,
-Pavel Roskin
