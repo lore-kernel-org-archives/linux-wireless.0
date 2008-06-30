@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:22874 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751263AbYFDLZI (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53289 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751860AbYF3Pxm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jun 2008 07:25:08 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so26571fgg.17
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jun 2008 04:25:06 -0700 (PDT)
-Date: Wed, 04 Jun 2008 13:25:00 +0200
-To: "Emmanuel Grumbach" <egrumbach@gmail.com>
-Subject: Re: iwlwifi: Bug - can't connect to WPA PSK access point any more
-From: Barteq <barteqpl@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=utf-8;
-	format=flowed	delsp=yes
-MIME-Version: 1.0
-References: <op.ub3jirfui79708@thinkpad> <8704f27d0806020801g1785d067j9c28832a7e5c39e3@mail.gmail.com> <op.ub4p98zui79708@thinkpad> <8704f27d0806030409n7e5ef084x5801871c36b6f846@mail.gmail.com> <op.ub6muuyji79708@thinkpad> <8704f27d0806040040n5aa05b87j10142e31ed1a2b44@mail.gmail.com>
-Message-ID: <op.ub71zybqi79708@thinkpad> (sfid-20080604_132512_740705_1F1F04B8)
-In-Reply-To: <8704f27d0806040040n5aa05b87j10142e31ed1a2b44@mail.gmail.com>
+	Mon, 30 Jun 2008 11:53:42 -0400
+Subject: Re: IBSS lockdep failure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240806300848v4fd92b72n565fc113e1c122b8@mail.gmail.com> (sfid-20080630_174814_501720_63E14E28)
+References: <1ba2fa240806300848v4fd92b72n565fc113e1c122b8@mail.gmail.com>
+	 (sfid-20080630_174814_501720_63E14E28)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-r5MMhhmefVapUtHZk4Ew"
+Date: Mon, 30 Jun 2008 17:53:01 +0200
+Message-Id: <1214841181.5507.54.camel@johannes.berg> (sfid-20080630_175346_689682_57ED193B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dnia 04-06-2008 o 09:40:10 Emmanuel Grumbach <egrumbach@gmail.com> =20
-napisa=C5=82(a):
 
-> black magic here... are you sure there is no other services in the
-> area ? NM avahi and friends ?
->
+--=-r5MMhhmefVapUtHZk4Ew
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Nm works in background with wifi turned off.
-wlan0 is manually turned on again (ifconfig wlan0 up) and then =20
-wpa_supplicant run.
 
-There are no other supplicants.
+> phy0: Adding new IBSS station XX:XX:XX:XX:XX:XX (dev=3Dwlan0)
 
-Avahi? avahi only works while using ifup (debian/ubuntu specific) or NM=
-=2E
-Wpa_supplicant run by hand doesn't interfere with this service.. If not=
- - =20
-please tell me how?
+are all of those XX entries the same?
 
-It's quite black magic for me too.. Im lost from about two months of =20
-fighitng.. First wifi was extremly unstable and associated after 20 =20
-minutes,
-now it sometimes works after 30 min, but just after executing dhclient =
-=20
-connection drops with message about (i don't remeber well and no logs h=
-ere)
-'dropping packet, tkip counter didn't increase' or something like that.
+johannes
 
-This list is the last place where I can find any help. Trying to solve =
-my =20
-problems myself, but it took me too long without any positive results.
+--=-r5MMhhmefVapUtHZk4Ew
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Regards,
-Bartek
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIaQFZAAoJEKVg1VMiehFYTJQP/RYrObP/NUAxIyaGIuS1x83r
+tMDJfJ4e4BHFmloDoiwE9fTAR0AxN6BPp9KGLQODlGUxDiR/dpLaWzD63cyIYK6O
+YijPhsuK0d6qc611EM1nG4SV6xRj176Vwrt5bowNfA7gRb9ZekCtdrX4vfQkc+GP
+EXDFIkN5hdcO3oRtsSF7xtfsvGjusDXzL0d+mxl9aAQFTaQgDvxiLl10H4dCKJEA
+C95+RywO8JVPHy5iXaFA47OrASElFlR7omt3cSQzAAxqnE2aNbuzPthQAH6F3oYd
+DmYFj0rbdZXZI/hwH/kv4nE5wyb/n7n8Bw8s2Jai6v6FQDx3y7GLCCYjTGCa4tpZ
+cGFum+by8xWXM6Kv/uqRwu3G6Q+uh1aKAkfNI7Q+AHiYx5Nim1IZr7UolcmC0Ea2
+LF5fME/vvckzzrSn95SvhQkIWU+0Am9cJUPtZqIrJTScOmXYmj4itMK0HRnmLVeK
+SnhfV5YN55ZCkQExsZFUc5sKRvQrvmAqSGgWcreGeQYSAvXSE3fiVpPWl0xqdXOV
+mu8UFXxf4hxzyQOeto+dxUNHlSevqIm8IgsqGhxzX1ongvWNg76stIZ97Ichnz+8
+Ke7CNwN65vgFvr7oCMiVvTzeNuRcED3znH3A4nuNkmL1DcV6mao9xxXlWd9G7RFS
+gqcOm4+oOuymNZmLhPk9
+=vnF5
+-----END PGP SIGNATURE-----
+
+--=-r5MMhhmefVapUtHZk4Ew--
+
