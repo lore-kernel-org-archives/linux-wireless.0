@@ -1,45 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:32145 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751223AbYG1NKD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2008 09:10:03 -0400
-Subject: Re: [ath5k-devel] [PATCH 12/12] ath5k: Fix a compilation error
-	after reg list update
-From: Pavel Roskin <proski@gnu.org>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@gmail.com
-In-Reply-To: <40f31dec0807280604m19a8c511nf2568bb7aa357b90@mail.gmail.com>
-References: <20080720035221.GL7440@makis> <4885F055.8000304@gmail.com>
-	 <40f31dec0807280604m19a8c511nf2568bb7aa357b90@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 28 Jul 2008 09:10:01 -0400
-Message-Id: <1217250601.2441.20.camel@dv> (sfid-20080728_151008_549811_00493746)
-Mime-Version: 1.0
+Received: from ug-out-1314.google.com ([66.249.92.170]:18972 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750884AbYGALBC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jul 2008 07:01:02 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so378401ugf.16
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Jul 2008 04:01:00 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: rt61 and TSF reporting?
+Date: Tue, 1 Jul 2008 13:05:18 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <1214907990.7763.40.camel@johannes.berg> <200807011247.57739.IvDoorn@gmail.com> <1214909314.7763.43.camel@johannes.berg>
+In-Reply-To: <1214909314.7763.43.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200807011305.18802.IvDoorn@gmail.com> (sfid-20080701_130111_936313_44188E4F)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-07-28 at 16:04 +0300, Nick Kossifidis wrote:
-
-> > Please amend this to the patch 1 to not break bisectability.
+On Tuesday 01 July 2008, Johannes Berg wrote:
+> Hi,
 > 
-> I see your point but this series is meant to be applied as a whole, i
-> didn't notice this bug until i tested the code with debugging enabled
-> (which is off by default), that's why it's "last minute fix". Is it
-> really that much needed to repost the first patch ? I mean the patch
-> series works and doesn't introduce any problems...
+> > The specsheets say nothing about TSF timestamps anywhere else then
+> > the registers (which is accessed by the get_tsf() callback function).
+> > To be more exact, the specsheets say _nothing_ about the RXD descriptors at all,
+> > which means they are not helpful for that. ;)
+> 
+> Heh.
+> 
+> > However there are a few RXD fields which are labeled as "reserved" which could
+> > mean the field is present, just not documented.
+> > 
+> > You could try printing the values of those words to see if they contain valid data,
+> > and to be more exact the TSF data (this can be done in the function rt61pci_fill_rxdone(...))
+> > The undocumented/reserved words are: 6 to 15
+> > 
+> > Do you want me to come up with a patch for this?
+> > 
+> > Note that these undocumented fields only are present in rt2500pci and rt61pci.
+> 
+> Ok cool, I'll play with that, I should be able to make a patch myself,
+> thanks.
 
-The reason is that git-bisect divides the number of commits in half and
-checks out the middle commit.  That commit make be a broken one.
-Hitting one bug while hunting another is not nice.
+Oh wait, just found a reference about those RXD words:
 
-Besides, nobody wants to apply a known bad patch.
+ * The following fields are for DMA block and HOST usage only.
+ * Can't be touched by ASIC MAC block.
 
-It would be great if you repost fixed patches.  If you are not using
-stgit, please try it.  I would make it easy to return to older patches
-and change them.  "stg edit -d" even allows editing the patch.
+In other words, they are for driver usage only. :S
 
--- 
-Regards,
-Pavel Roskin
+> > Neither rt2500usb or rt73usb contain them, which means that they can't report the TSF
+> > based on descriptor information.
+> 
+> So I guess they just don't transfer those reserved fields on USB.
+
+Which means they are pretty much screwed for TSF handling since get_tsf() has been disabled
+for USB drivers due to the atomic requirements of that callback function.. :S
+
+Ivo
