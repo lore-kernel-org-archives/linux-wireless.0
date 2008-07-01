@@ -1,37 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sj-iport-2.cisco.com ([171.71.176.71]:48907 "EHLO
-	sj-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761054AbYGRRKY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 13:10:24 -0400
-From: Roland Dreier <rdreier@cisco.com>
-To: hadi@cyberus.ca
-Cc: Patrick McHardy <kaber@trash.net>,
-	David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in RCU.
-References: <487F4327.1000107@trash.net> <1216301732.4726.26.camel@localhost>
-	<487F50EC.80008@trash.net>
-	<20080717.152447.89672084.davem@davemloft.net>
-	<487FDA67.30902@trash.net> <1216386624.4833.94.camel@localhost>
-Date: Fri, 18 Jul 2008 10:10:21 -0700
-In-Reply-To: <1216386624.4833.94.camel@localhost> (jamal's message of "Fri, 18
-	Jul 2008 09:10:24 -0400")
-Message-ID: <adaljzz6ruq.fsf@cisco.com> (sfid-20080718_191037_439223_827FADD3)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:4746 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756866AbYGABXb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jun 2008 21:23:31 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH-2.6.26 2/2] iwlwifi: drop skb silently for Tx request in monitor mode
+Date: Tue,  1 Jul 2008 09:20:34 +0800
+Message-Id: <1214875234-23567-3-git-send-email-yi.zhu@intel.com> (sfid-20080701_032337_943385_9049B203)
+In-Reply-To: <1214875234-23567-2-git-send-email-yi.zhu@intel.com>
+References: <1214875234-23567-1-git-send-email-yi.zhu@intel.com>
+ <1214875234-23567-2-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- > The question is whether the packets sitting on the fifo qdisc are being
- > sorted fairly when congestion kicks in. Remember there is still a single
- > wire still even on multiple rings;->
+This patch fixes the problem to keep mac80211 resubmitting SKBs
+when Tx request cannot be met in monitor mode.
 
-This is definitely true, but it is good to keep in mind that in the near
-future we will start to see things look a little like multiple "virtual
-wires."  This is because of new ethernet standards like per-priority
-pause, which makes it possible that one hardware ring on a NIC can
-transmit while another ring is paused (possibly because of congestion
-far off in the network).
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
- - R.
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 13925b6..2c7f054 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -6684,7 +6684,8 @@ static int iwl3945_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
+ 		IWL_DEBUG_MAC80211("leave - monitor\n");
+-		return -1;
++		dev_kfree_skb_any(skb);
++		return 0;
+ 	}
+ 
+ 	IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->len,
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 883b42f..101eb56 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -6234,7 +6234,8 @@ static int iwl4965_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
+ 		IWL_DEBUG_MAC80211("leave - monitor\n");
+-		return -1;
++		dev_kfree_skb_any(skb);
++		return 0;
+ 	}
+ 
+ 	IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->len,
+-- 
+1.5.3.6
+
