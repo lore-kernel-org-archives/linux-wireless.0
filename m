@@ -1,71 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:18374 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752343AbYGNNOE (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:62688 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750872AbYGARNS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 09:14:04 -0400
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: Tomas Winkler <tomas.winkler@intel.com>, linville@tuxdriver.com,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by low level driver
-References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
-	<1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
-	<1216039127.11189.15.camel@johannes.berg>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Mon, 14 Jul 2008 16:13:06 +0300
-In-Reply-To: <1216039127.11189.15.camel@johannes.berg> (ext Johannes Berg's message of "Mon\, 14 Jul 2008 14\:38\:47 +0200")
-Message-ID: <87od50obh9.fsf@nokia.com> (sfid-20080714_151408_396441_E109584A)
+	Tue, 1 Jul 2008 13:13:18 -0400
+Message-ID: <486A65F5.5030909@lwfinger.net> (sfid-20080701_191321_900614_13EED3C3)
+Date: Tue, 01 Jul 2008 12:14:29 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Michael Buesch <mb@bu3sch.de>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
+References: <6cf6b73e0807010255x1f2d8a21m8ed3e712012ea757@mail.gmail.com>	 <200807011227.15805.mb@bu3sch.de>	 <20080701143439.GA6962@khazad-dum.debian.net>	 <1214923097.3462.0.camel@johannes.berg>	 <20080701165036.GB6962@khazad-dum.debian.net> <1214931676.3462.5.camel@johannes.berg>
+In-Reply-To: <1214931676.3462.5.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Johannes Berg wrote:
+> On Tue, 2008-07-01 at 13:50 -0300, Henrique de Moraes Holschuh wrote:
+>> On Tue, 01 Jul 2008, Johannes Berg wrote:
+>>>> 1. It has an input pin that sometimes people connect buttons/switches
+>>>> to.
+>>>>
+>>>> Does that input pin act as an input for a FLIP-FLOP (and that flip-flop
+>>>> output is the hardware rfkill line), or is it the hardware rfkill line
+>>>> itself?
+>>> Neither. It's not hw kill, but it's not just edge detect either, it does
+>>> have 'kill' and 'not kill' states.
+>> What exactly the input pin does?  what exactly the hardware does when
+>> the input pin state changes?
+> 
+> The hardware does nothing, it just sets a bit high or low depending on
+> the input pin.
 
-> On Mon, 2008-07-14 at 15:31 +0300, Tomas Winkler wrote:
->> This patch makes listen_interval configurable by low level driver.
->
-> I'm not sure we we really want that.
+On my HP laptop using the RFKILL code currently in wireless-testing, 
+sliding the "Wireless switch" results in b43_rfkill_poll being called. 
+It then issues KEY_WLAN press and release events. This changes the 
+state of the wireless light and the contents of a read-only bit in the 
+status register of the device. I believe that if this bit is off, the 
+radio is blocked by the hardware.
 
-Me neither.
-
-> With this, you're again putting more features and more decision making
-> processes with the driver, I would much prefer this to be worked out in
-> mac80211 so we can do it across all drivers.
-
-I was just thinking the same. In my opinion the driver should be as
-simple as possible, and all the logic should be in mac80211 or, if
-possible, even in user space.
-
-> If this is a knob that should be adjusted then we want to enable users
-> to do it, and if it isn't then we can put a value into mac80211 and fix
-> it.
-
-Listen interval is very much dependent on the DTIM period and for
-which beacons firmware wakes up (every beacon, every DTIM beacon,
-every second DTIM beacon etc). For user space making this decision is
-very difficult because it would need to know the current DTIM setting
-and capabilities of the driver/hardware. It will get complicated
-pretty quickly and I don't see any advantage to push this decision to
-user space.
-
-I think we need to soon come up with an idea what kind of PSM control
-interface are we going to offer for the user space. Is it going to be
-very low level (eg. based on listen interval and DTIMs and what not),
-a higher level (eg. levels from one to five, five being the most
-aggressive level from powersaving point of view) or what? We have a
-plenty of options and I think we should discuss about this at the
-summit.
-
-> Having drivers make these kinds of decisions is very bad for uniform
-> wireless behaviour.
-
-I agree. 
-
-On the other hand different hardware have different ways to configure,
-and support, PSM so the implementation might get complicated. But
-still I believe that the driver shouldn't be making this kind of
-decisions.
-
--- 
-Kalle Valo
+Larry
