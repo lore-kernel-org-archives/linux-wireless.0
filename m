@@ -1,71 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44997 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751898AbYG1MKJ (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.245]:57545 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756384AbYGAJ3R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2008 08:10:09 -0400
-Subject: Re: [ath5k-devel] [PATCH] ath5k: add Mesh Point support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: sbrown@cortland.com
-Cc: YanBo <dreamfly281@gmail.com>,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
-In-Reply-To: <488D9E79.8050408@cortland.com> (sfid-20080728_122546_840137_51FD7C0F)
-References: <487fa7a8.14da600a.1aae.48b1@mx.google.com>
-	 <1197ff4c0807280209x754f3a15j9dca3e60e99c69cb@mail.gmail.com>
-	 <488D9E79.8050408@cortland.com> (sfid-20080728_122546_840137_51FD7C0F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-lFN3MJyJgKKd/YizjOuO"
-Date: Mon, 28 Jul 2008 14:10:04 +0200
-Message-Id: <1217247004.12662.3.camel@johannes.berg> (sfid-20080728_141015_015506_8908639D)
-Mime-Version: 1.0
+	Tue, 1 Jul 2008 05:29:17 -0400
+Received: by an-out-0708.google.com with SMTP id d40so382092and.103
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Jul 2008 02:29:16 -0700 (PDT)
+Message-ID: <43e72e890807010229m12b7382ft8675924cac923c7b@mail.gmail.com> (sfid-20080701_112938_014662_BF5C7419)
+Date: Tue, 1 Jul 2008 02:29:16 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: compat-wireless high packet loss.
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Guy Cohen" <guy.cohen@intel.com>,
+	"David Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Linux Wireless" <linux-wireless@vger.kernel.org>,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
+	"Patrick McHardy" <kaber@trash.net>
+In-Reply-To: <1ba2fa240806300429l679f1568k584143b448455594@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1ba2fa240806261603g30c3e757y9166c2f9e05f7666@mail.gmail.com>
+	 <247d6d340806282323v3192ead8v149359e482375991@mail.gmail.com>
+	 <1214824149.5507.36.camel@johannes.berg>
+	 <1ba2fa240806300429l679f1568k584143b448455594@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Jun 30, 2008 at 4:29 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+> On Mon, Jun 30, 2008 at 2:09 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Sun, 2008-06-29 at 09:23 +0300, Guy Cohen wrote:
+>>> More info on the issue.. The problem is with TX of unrestrained UDP
+>>> stream, when the traffic generated at the application layer is larger
+>>> than the link can pass. With kernel 2.6.26-* the traffic is restrained
+>>> when the TX FIFOs gets full while in 2.6.25.* frames are dropped at
+>>> some layer. It seems that the drop happens after the IP fragmentation
+>>> step at the stack.
+>>
+>> does compat use multiqueue now? if not, look in the mac80211 fake mq
+>> code.
+>
+> 2.6.25 has a real mq
 
---=-lFN3MJyJgKKd/YizjOuO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+We only use fake mq support for kernels <= 2.6.22 as 2.6.23 added
+support for MQ. Also if your 2.6.23 doesn't have MQ it will warn you.
 
-
-> I've been looking at this too. After the "revamp beacon configuration"=20
-> patch, mesh no longer send beacons. If I revert it, beacons reappear and=20
-> my two stations are found. I'm using both a b43 & zd1211rw.
->=20
-> I believe the problem is in mac80211. It appears that the call to=20
-> ieee80211_if_config that was previously in ieee80211_open never made it=20
-> to the new start_mesh routine in the revision. The attached patch seems=20
-> to revive beacons and both stations are now found. I'm not familiar with=20
-> the code and wouldn't call this a fix.
-
-Yeah, we talked about it yesterday or the day before, and this seems
-like the right fix, except you say that AP is also broken.
-
-I'll look into everything when I no longer feel hung over from
-travelling for about 18 hours.
-
-johannes
-
---=-lFN3MJyJgKKd/YizjOuO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIjbcYAAoJEKVg1VMiehFYgVcP/3imjPdHyscMtJ5aS/LQUU7y
-0O7rHxjoCPXajR0boJOLVO6fWUXruVru7zBUGxDynFiFN4lmNhk+FWgVO5+LHoml
-sUZa8VtIYx8cb+rDz+12xLaLQpXkhbXDjMaOgUyL5ZS3WdkN3p2fVW8NGGEAy6Jv
-7QAVGTmiaqkjEOROdqyiY+RXslLn9cVlSUYtwdBSZzEH+nZcU2eiLVw+gDYG6QwI
-A9tmaSt4aj23DsRkX0BRnYX/42l9c/1eGKCijuv5TIHNaC08n+7vckTaQNgqB+IB
-tlbiKY2bwKSbJbgjCYenB7Rg4BtHMwmzCZ7rH8yeJSzHS2Ur/DpfdjshJdzq4s+P
-zR5slOQpD0+u1jVzSXwFm03mkNiMmDit0TkODtpIxkTKijbsLsVout5eodJWkWYD
-8CBZblTJ0E3/Mfun6iwI08jrGhniT/E0KrpYTN4HPqXu50aZz00JbLhlqAZdCON3
-w9omqgr6/5plc0q8P6mQv96t4aTYapI24xOc/k7iZCW6KYyJrYJLtiBqzrzJis4H
-sodCkOen/YxvKbmueHPqD/AUPiC4f5cPhjHMicEHhSQeba2nLV6EtoFqGgeToMj0
-ZHQEkXn6ug+R7NASyeIn+Pn9oJADg5ayu/SaWhQ5HxaM5dcdVJFNqo88YhETIcZN
-wW+ntWZQxZrUbsl0cvvb
-=Em+h
------END PGP SIGNATURE-----
-
---=-lFN3MJyJgKKd/YizjOuO--
-
+  Luis
