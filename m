@@ -1,86 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35137 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:55255 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750820AbYG2McH (ORCPT
+	with ESMTP id S1753265AbYGAKJK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 08:32:07 -0400
-Subject: Re: [BUG] wireless : cpu stuck for 61s
+	Tue, 1 Jul 2008 06:09:10 -0400
+Subject: Re: [PATCH/RFC v2] b43: remove input device usage for rfkill
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Dave Young <hidave.darkstar@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20080729055731.GA3265@darkstar> (sfid-20080729_075630_082047_A76939B2)
-References: <20080729055731.GA3265@darkstar>
-	 (sfid-20080729_075630_082047_A76939B2)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kyWXSlAmbCdnLeYTI2Qr"
-Date: Tue, 29 Jul 2008 14:32:04 +0200
-Message-Id: <1217334724.10489.47.camel@johannes.berg> (sfid-20080729_143211_590846_BB841CA4)
+To: Adel Gadllah <adel.gadllah@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	stefano.brivio@polimi.it, Larry Finger <larry.finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <6cf6b73e0807010305ne1c4b3bwb083c25953292f9d@mail.gmail.com> (sfid-20080701_120559_478335_D6FF76AC)
+References: <6cf6b73e0807010255x1f2d8a21m8ed3e712012ea757@mail.gmail.com>
+	 <1214906304.7763.34.camel@johannes.berg>
+	 <6cf6b73e0807010305ne1c4b3bwb083c25953292f9d@mail.gmail.com>
+	 (sfid-20080701_120559_478335_D6FF76AC)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-meH7pvRIyPW3ftyBQeL5"
+Date: Tue, 01 Jul 2008 12:08:27 +0200
+Message-Id: <1214906908.7763.36.camel@johannes.berg> (sfid-20080701_120914_339386_398F0DD8)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-kyWXSlAmbCdnLeYTI2Qr
+--=-meH7pvRIyPW3ftyBQeL5
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2008-07-29 at 13:57 +0800, Dave Young wrote:
-> While set my wlan0 to ad-hoc mode and then set the essid to something,
-> this bug triggered.
+On Tue, 2008-07-01 at 12:05 +0200, Adel Gadllah wrote:
+> 2008/7/1 Johannes Berg <johannes@sipsolutions.net>:
+> >
+> >> +     rfk->poll_timer->expires =3D jiffies + B43_RFKILL_POLL_DELAY;
+> >
+> > round_jiffies.
 >=20
-> I suspect it's related to debugfs or mutex? But I'm not sure.
->=20
-> Jul 29 13:01:46 darkstar kernel: [ 8033.736493] BUG: soft lockup - CPU#0 =
-stuck for 61s! [events/0:9]
-> Jul 29 13:01:46 darkstar kernel: [ 8033.736493]=20
-> Jul 29 13:01:46 darkstar kernel: [ 8033.736493] Pid: 9, comm: events/0 Ta=
-inted: G        W (2.6.26-smp #3)
-> Jul 29 13:01:46 darkstar kernel: [ 8033.736493] EIP: 0060:[<c0450bc3>] EF=
-LAGS: 00000246 CPU: 0
-> Jul 29 13:01:46 darkstar kernel: [ 8033.736493] EIP is at mutex_lock_nest=
-ed+0x1b3/0x280
-> Jul 29 13:01:46 darkstar kernel: [ 8033.736493] EAX: 00000000 EBX: f7bf52=
-84 ECX: f7c7e000 EDX: f7bf52a8
-> Jul 29 13:01:46 darkstar kernel: [ 8033.736493] ESI: f7bf5288 EDI: 000002=
-46 EBP: f7c7fedc ESP: f7c7fe9c
-> Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  DS: 007b ES: 007b FS: 00=
-d8 GS: 0000 SS: 0068
-> Jul 29 13:01:46 darkstar kernel: [ 8033.736493] CR0: 8005003b CR2: b800c5=
-ac CR3: 36e71000 CR4: 000006d0
-> Jul 29 13:01:46 darkstar kernel: [ 8033.736493] DR0: 00000000 DR1: 000000=
-00 DR2: 00000000 DR3: 00000000
-> Jul 29 13:01:46 darkstar kernel: [ 8033.736493] DR6: ffff0ff0 DR7: 000004=
-00
-> Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  [<c02375a6>] ? debugfs_c=
-reate_file+0x46/0x210
+> v2 attached.
 
-It looks like it's getting stuck on
-mutex_lock(&parent->d_inode->i_mutex);
-
-inside debugfs_create_by_name, but I have no idea why that would happen.
+That wasn't meant _literally_ but _conceptually_. You want that in the
+other places too.
 
 johannes
 
---=-kyWXSlAmbCdnLeYTI2Qr
+--=-meH7pvRIyPW3ftyBQeL5
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIjw3BAAoJEKVg1VMiehFYOZwP/11dY3jSjsgijyXBZjeB+Kn6
-dCiil4c110dgMF/Q1e1vO/RaGc9pQPfx0vagFPGFYVszGUF36EXmPBMlB2XdT22k
-K3HCnmxFYxqPekWnxS1RNAJO5B6jxQzu0qpnIm5inO9XH/HrEv4MJh2e2A7+1PHb
-clHVn1dl4srQBytqPxvRomKMjIggvUGywYSP0yLYxO3S5VzQlWu1mkeOqS6jHgaz
-O30MusmWIFdmXkArYlpSJvRc9oKpjKph77xb5FpP/EhWjWyAERaDZQcuTO/0VDZL
-laJYI6c1cNmEZY7If7jv19huPYiAZMtCW3F5U/DkNHEPZRK/+SQgtzhWEp2MGqmk
-fpTanM9koK2XXS0wk+dySLavTcXRRDduQ+225Iv58A2MSIOisOB4TzTFpGkxdfsI
-YPn8AzdV8/bxwfSVy3RLehE2MppoUkneAzSvufm+XYyOk/4mmUBRTlmIYZrIZMhG
-/k/Ui6blIaN1fcaQ1uFDod13Bz0UdBletodXf8dgIwdon7bZS6TUziTqCBz6zEj9
-98Zf35D/1Yu0G85rBfNqHw4cluehpnqf2xkuFe6Bz3+hFrCPWoPw1O8lH+Tpx1E+
-ykCakCZfDdZnKEeKR/RS+zETrBlOUny8ipeeFviaZRDqYGzGWEvigINmZoegTUeY
-5UfVH0Rbx/uu/kF5Hfs8
-=/HPO
+iQIcBAABAgAGBQJIagIYAAoJEKVg1VMiehFY34QP/3FtzgP+NaJBaBrr16G42OGj
+zFbWbk3+S+xyyTBULHA8z1Ecs2yurZDEwQ3EwOIHet11CTNR+pJa7IuHAssYkceC
+NsV9CKh9B0KZr5K+g3pA46K9ilURemnEDDo5ERkzQmpLed8CoLp0SHaTuhTNgNGd
+SuoEHBhGz+M6IWTmDqF2SUOxHlXRF26rfB5j0BFoTV8NmbbMYeij+pRh8liAph9T
+w/WNRrbQPbu0YWu8UQAhLGz0vvOIEqS7KcHqu0U+vSmvhxuYf/sbHVrDR8g7jpLJ
++IpGe77lkC8bkoJKNJk/7eynvmTSeqDi1qX9fHFpGId+YIemk6+uiVCpDY79kI/d
+MDwD90jN8NNQwtmzvSPAxW/5O3CrwHeiJlV1ks95oULwozBSEx+smwDd9d3pakDR
+Hc3rpWeh0JuyTh/2AMypngDohWnrNTuER9PqBzYBNxMCTGT0kxZKx0BAcgX9VJbT
+lT7Xo1L5RL50S4mOQNsgpGYyuMV7Gmn5LJ+KdPc50cxxwsDg32eFxHLQdxVJTDLK
+S4q60ysFG/bhuTbWx03YejZlNzYH0Do9P3hA6VnWbDWX/ZzZMWeheHd338aM8Gln
+06VmTEf87VN2ZWLmQ08IGkC1Nq09xDHEyz6ef9SjbfH1x8bGzdACe7DqPwUm9NkI
+EAVsrKrbs7cb3XV+4CSb
+=RRjt
 -----END PGP SIGNATURE-----
 
---=-kyWXSlAmbCdnLeYTI2Qr--
+--=-meH7pvRIyPW3ftyBQeL5--
 
