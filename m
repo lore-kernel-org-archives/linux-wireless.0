@@ -1,122 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:54091 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752037AbYGRF4V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 01:56:21 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 04/13] mac80211: make listen_interval be limited by low level driver
-Date: Fri, 18 Jul 2008 13:53:00 +0800
-Message-Id: <1216360389-5352-5-git-send-email-yi.zhu@intel.com> (sfid-20080718_075626_985659_FDF1072D)
-In-Reply-To: <1216360389-5352-4-git-send-email-yi.zhu@intel.com>
-References: <1216360389-5352-1-git-send-email-yi.zhu@intel.com>
- <1216360389-5352-2-git-send-email-yi.zhu@intel.com>
- <1216360389-5352-3-git-send-email-yi.zhu@intel.com>
- <1216360389-5352-4-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:40873 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752284AbYGASCS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jul 2008 14:02:18 -0400
+Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
+	Larry Finger <larry.finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <20080701173345.GA24605@khazad-dum.debian.net>
+References: <6cf6b73e0807010255x1f2d8a21m8ed3e712012ea757@mail.gmail.com>
+	 <200807011227.15805.mb@bu3sch.de>
+	 <20080701143439.GA6962@khazad-dum.debian.net>
+	 <1214923097.3462.0.camel@johannes.berg>
+	 <20080701165036.GB6962@khazad-dum.debian.net>
+	 <1214931676.3462.5.camel@johannes.berg>
+	 <20080701173345.GA24605@khazad-dum.debian.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-q+9WBQNg7SQEWQiCMk9I"
+Date: Tue, 01 Jul 2008 20:01:31 +0200
+Message-Id: <1214935291.3462.7.camel@johannes.berg> (sfid-20080701_200222_029864_3BBA8EB3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
 
-This patch makes possible for a driver to specify maximal listen interval
-The possibility for user to configure listen interval is not implemented
-yet, currently the maximum provided by the driver or 1 is used.
-Mac80211 uses config handler to set listen interval for to the driver.
+--=-q+9WBQNg7SQEWQiCMk9I
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- include/net/mac80211.h |    9 ++++++++-
- net/mac80211/main.c    |    5 +++++
- net/mac80211/mlme.c    |    6 ++++--
- 3 files changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index e0e4cd9..612634f 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -438,6 +438,7 @@ enum ieee80211_conf_flags {
-  * @radio_enabled: when zero, driver is required to switch off the radio.
-  *	TODO make a flag
-  * @beacon_int: beacon interval (TODO make interface config)
-+ * @listen_interval: listen interval in units of beacon interval
-  * @flags: configuration flags defined above
-  * @power_level: requested transmit power (in dBm)
-  * @max_antenna_gain: maximum antenna gain (in dBi)
-@@ -452,6 +453,7 @@ struct ieee80211_conf {
- 	int radio_enabled;
- 
- 	int beacon_int;
-+	u16 listen_interval;
- 	u32 flags;
- 	int power_level;
- 	int max_antenna_gain;
-@@ -794,6 +796,9 @@ enum ieee80211_hw_flags {
-  * @max_signal: Maximum value for signal (rssi) in RX information, used
-  *     only when @IEEE80211_HW_SIGNAL_UNSPEC or @IEEE80211_HW_SIGNAL_DB
-  *
-+ * @max_listen_interval: max listen interval in units of beacon interval
-+ *     that HW supports
-+ *
-  * @queues: number of available hardware transmit queues for
-  *	data packets. WMM/QoS requires at least four, these
-  *	queues need to have configurable access parameters.
-@@ -821,7 +826,9 @@ struct ieee80211_hw {
- 	unsigned int extra_tx_headroom;
- 	int channel_change_time;
- 	int vif_data_size;
--	u16 queues, ampdu_queues;
-+	u16 queues;
-+	u16 ampdu_queues;
-+	u16 max_listen_interval;
- 	s8 max_signal;
- };
- 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 10533bf..6fa2336 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1712,6 +1712,11 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	if (local->hw.conf.beacon_int < 10)
- 		local->hw.conf.beacon_int = 100;
- 
-+	if (local->hw.max_listen_interval == 0)
-+		local->hw.max_listen_interval = 1;
-+
-+	local->hw.conf.listen_interval = local->hw.max_listen_interval;
-+
- 	local->wstats_flags |= local->hw.flags & (IEEE80211_HW_SIGNAL_UNSPEC |
- 						  IEEE80211_HW_SIGNAL_DB |
- 						  IEEE80211_HW_SIGNAL_DBM) ?
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 8925b0e..1dabfba 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -778,7 +778,8 @@ static void ieee80211_send_assoc(struct net_device *dev,
- 		mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
- 						   IEEE80211_STYPE_REASSOC_REQ);
- 		mgmt->u.reassoc_req.capab_info = cpu_to_le16(capab);
--		mgmt->u.reassoc_req.listen_interval = cpu_to_le16(1);
-+		mgmt->u.reassoc_req.listen_interval =
-+				cpu_to_le16(local->hw.conf.listen_interval);
- 		memcpy(mgmt->u.reassoc_req.current_ap, ifsta->prev_bssid,
- 		       ETH_ALEN);
- 	} else {
-@@ -786,7 +787,8 @@ static void ieee80211_send_assoc(struct net_device *dev,
- 		mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
- 						   IEEE80211_STYPE_ASSOC_REQ);
- 		mgmt->u.assoc_req.capab_info = cpu_to_le16(capab);
--		mgmt->u.assoc_req.listen_interval = cpu_to_le16(1);
-+		mgmt->u.reassoc_req.listen_interval =
-+				cpu_to_le16(local->hw.conf.listen_interval);
- 	}
- 
- 	/* SSID */
--- 
-1.5.3.6
+> THIS is very interesting alright...  and it is *extremely* important, so
+> let's triple verify it, shall we?
+>=20
+> Please hack the driver to try to transmit data with that bit set to high,=
+ and
+> also with that bit set to low.  The best way to go about it is probably t=
+o
+> disable the rfkill support (so that it doesn't get in the way), hack the
+> check-the-bit function to just printk its state, and see if the radio can
+> effectively transmit and communicate no matter what state the input pin i=
+s
+> at.
+>=20
+> This is very important.  It will caracterize that input pin as either an
+> hardware rfkill line, or as an input device (in which case I would be wro=
+ng
+> when I asked to remove the input support from b43, but one step at a time=
+).
+
+Sorry, no, I think I got confused, it should be a hardware rfkill line.
+
+johannes
+
+--=-q+9WBQNg7SQEWQiCMk9I
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIanD3AAoJEKVg1VMiehFYQxYP/19YoNWLUn0jWDkdP3NUk0PC
+IblT6k0mQx3fSeen39TtDyxdSXXOnXGlqJNSsLgPQks1cYYj8bvjODESFNH3QoXh
+T6I7Ovv3uUFKKEWkKZ+nXrKdN0nfS0eGYYx7zOOuIom9V9WqigDmuCATwRRNtiBd
+9kwwVF2AGRbWkE/1MMyxQCoU3e6XgxEexYPYsHn8XGhpB1SNPlpQGoQ0961IVDQG
+0RqEkPE/saxgG1+34ad1G+ret+WJ31k54hDM7Ab9Yd5N2JYeKxdTFG3wmEMHXLto
+qpdpZARRrJrAn8yBGU13BirU8os7zWSCc+lWsBRt/fQL2pz574DPur7B0hGFRhxI
+Na8nsU0yHHUqT7aplTFP+YU1Ne+B0+wzL8HstXryAQH5LmlcQ2lUsw9Dir//z3Zw
+WgBa8Efy+k8oFKjFQYOyk+P1vHcoYPQpr+rApxqcul/oOzb3urxbz9pbrwVzRM96
+oHzNcubdlS+KODswIHOZeRMbmhm34yTEAD6bnRgkiMG4WH7RTGtT3Bbdj0SiFQT5
+3TojwXxI8nUR1paQZPOmjB3zUYW/lYUDCEa80U4Y5ls5eWRBR2bvJs9WCjYBLtZp
+0Yfesx6/jeTyWiqdqdKKBj6bmUlLrKd9edzqGQiZKPINNnTA2QR+/QPezYTnboB9
+nPd81S0hNrh7dK1Y0rQ3
+=DjhH
+-----END PGP SIGNATURE-----
+
+--=-q+9WBQNg7SQEWQiCMk9I--
 
