@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43202 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752592AbYGaGmD (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:46915 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754348AbYGAUCY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 02:42:03 -0400
-Subject: Re: Issue: iwlist scanning sees the network; dhclient can't connect
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	"Thiago F. Tavares" <ttavares@halogica.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1217447463.25919.10.camel@dv> (sfid-20080730_215124_120619_94F43935)
-References: <1127857B97C63B4285A9B02BEF67AEE601627648@afrodite.halogica.com.br>
-	 <1217446602.25919.5.camel@dv>  <200807302141.07738.mb@bu3sch.de>
-	 <1217447463.25919.10.camel@dv> (sfid-20080730_215124_120619_94F43935)
-Content-Type: text/plain
-Date: Thu, 31 Jul 2008 09:41:05 +0100
-Message-Id: <1217493665.3392.0.camel@Friederike-PC.hoffi> (sfid-20080731_084209_611359_C5D21713)
-Mime-Version: 1.0
+	Tue, 1 Jul 2008 16:02:24 -0400
+Message-ID: <486A8DA3.7070805@lwfinger.net> (sfid-20080701_220228_332616_79D145EE)
+Date: Tue, 01 Jul 2008 15:03:47 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Compilation warnings for latest wireless-testing
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-07-30 at 15:51 -0400, Pavel Roskin wrote:
-> On Wed, 2008-07-30 at 21:41 +0200, Michael Buesch wrote:
-> 
-> > dhclient works fine for me. Although it's true that it sometimes
-> > messes with up/down state. But you _can_ use it, if you take some care.
-> 
-> True.  But b43 has the lowest dhclient survival rate of all drivers I
-> know.  That's an empirical observation, of course.
+On x86_64, the latest wireless-testing gets the following warnings:
 
-I think debian patches out the down/up behaviour. We may be seeing that.
+   CC [M]  net/mac80211/michael.o
+net/mac80211/michael.c: In function =E2=80=98michael_mic_hdr=E2=80=99:
+net/mac80211/michael.c:35: warning: passing argument 1 of=20
+=E2=80=98ieee80211_get_DA=E2=80=99 discards qualifiers from pointer tar=
+get type
+net/mac80211/michael.c:36: warning: passing argument 1 of=20
+=E2=80=98ieee80211_get_SA=E2=80=99 discards qualifiers from pointer tar=
+get type
+net/mac80211/michael.c:37: warning: passing argument 1 of=20
+=E2=80=98ieee80211_get_qos_ctl=E2=80=99 discards qualifiers from pointe=
+r target type
 
-johannes
-
+Larry
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
