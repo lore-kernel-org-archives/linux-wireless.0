@@ -1,56 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60993
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751629AbYGVUnl (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:55994 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751005AbYGAWwN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 16:43:41 -0400
-Date: Tue, 22 Jul 2008 13:43:41 -0700 (PDT)
-Message-Id: <20080722.134341.143920039.davem@davemloft.net> (sfid-20080722_224345_244974_0949700C)
-To: Larry.Finger@lwfinger.net
-Cc: kaber@trash.net, mingo@elte.hu, ischram@telenet.be,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, j@w1.fi
-Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
- at 0000000000000370
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <4885D808.9060203@lwfinger.net>
-References: <48857F74.2040406@lwfinger.net>
-	<20080722.043220.247312412.davem@davemloft.net>
-	<4885D808.9060203@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 1 Jul 2008 18:52:13 -0400
+Date: Tue, 1 Jul 2008 19:52:07 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
+	Larry Finger <larry.finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
+Message-ID: <20080701225207.GB4292@khazad-dum.debian.net> (sfid-20080702_005216_832707_C0476182)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1214937876.3462.10.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Date: Tue, 22 Jul 2008 07:52:24 -0500
+Dmitry (input layer maintainer) added to CC.  This is a [gross misuse of
+the] input layer issue.
 
-> David Miller wrote:
-> > From: Larry Finger <Larry.Finger@lwfinger.net>
-> > Date: Tue, 22 Jul 2008 01:34:28 -0500
+On Tue, 01 Jul 2008, Johannes Berg wrote:
+> On Tue, 2008-07-01 at 15:41 -0300, Henrique de Moraes Holschuh wrote:
+> > On Tue, 01 Jul 2008, Johannes Berg wrote:
+> > > > This is very important.  It will caracterize that input pin as either an
+> > > > hardware rfkill line, or as an input device (in which case I would be wrong
+> > > > when I asked to remove the input support from b43, but one step at a time).
+> > > 
+> > > Sorry, no, I think I got confused, it should be a hardware rfkill line.
 > > 
-> >> David Miller wrote:
-> >>> From: Larry Finger <Larry.Finger@lwfinger.net>
-> >>> Date: Mon, 21 Jul 2008 17:40:10 -0500
-> >>>
-> >>>> Sorry :(
-> >>>>
-> >>>> I used the davem patch, the second version of your first one, and your second 
-> >>>> one. Both problems persist.
-> >>>>
-> >>>> Still plugging away on bisection.
-> >>> GIT bisecting the lockdep problem is surely going the land you on:
-> >>>
-> >>> commit e308a5d806c852f56590ffdd3834d0df0cbed8d7
-> >> No. It landed on this one.
+> > I'd like to have a certain response for this.  Can you test, and assert
+> > whether it is a rfkill line or not?
 > > 
-> > For the lockdep warnings?
+> > And, if it IS a rfkill line, I still need to know if it is flip-flop-like or
+> > not...  I am not certain I got the right idea (I understood it was NOT
+> > flip-flop-like).
 > 
-> No - this one triggers the kernel BUG as follows:
+> No, it's not flip-flop, there's definitely an on/off bit that always
+> matches the button/hardware state.
 
-Well, we were trying to fix the lockdep warnings.  One
-thing at a time :-)
+Ok, so based on the above information, here is the sad truth:  B43 has been
+buggy all along, and in more ways than I would have expected.
 
-And that BUG is now just a WARN in Linus's tree, so if
-you update you should get further along.
+1. That input pin is a hardware rfkill line.  It has to contribute to the
+device-wide rfkill class state.  The rfkill API, before my patchset, simply
+did NOT support such a thing (but some where in the incorrect impression
+that it could, through the input layer.  That's not true).
+
+2. hardware rfkill lines are NOT flip-flop, so if it is ever connected to an
+input device, it has to work like a switch.   It has to tell the world
+whether it is active or not active.  It doesn't go "pressed/unpressed" to
+switch from active to inactive, then "pressed/unpressed" to switch to
+inactive back to active (THAT would be a KEY_*).
+
+So, b43 should NEVER have issued KEY_WLAN in the first place.  It should
+have asked for a EV_SW SW_WLAN event, added EV_SW SW_WLAN handling to
+rfkill-input (for completeness), and used that one instead of KEY_WLAN.
+
+And this has *nothing* to do with rfkill at all.  It is pure input layer
+stuff.
+
+For those who are not used to the input layer, the rule is very simple (as
+it was explained to me): Input events come from anywhere and evertwhere, and
+are all equal.  You are not, and I do mean NOT allowed to have KEY_WLAN
+coming from b43 be any more special to the system than KEY_WLAN coming from
+a USB keyboard that was plugged into the system.
+
+The entire system fights against you if you try to go against this rule.
+Userspace doesn't, as a rule, expect that EV_KEY KEY_FOO from one input
+device is to be treated any differently than EV_KEY KEY_FOO from some other
+input device.  rfkill-input and other in-kernel input handlers don't,
+either.
+
+b43 cannot even add an input handle to trap and update its "emulation of a
+switch through KEY_*" state, as it has no way of knowing WHAT userspace or
+rfkill-input is going to do with KEY_WLAN in the first place.  What if it is
+not a toggle, but rather it is being diverted to launch an application that
+asks the user?  What if it is a multi-value selector, that changes state at
+every KEY_WLAN event, and has more than two states?
+
+THIS is the reason why the input layer must not EVER be used as an IPC to
+propagate state changes, BTW.  Handlers *are* allowed to just ignore events,
+for one.
+
+So, unless that input pin in b43 is really a flip-flop and point (1) above
+is wrong (thus making most of this email not apply to b43), I see no way to
+salvage this mess, at all.
+
+IMO, this all means that the input layer support in b43 has to go.  It is
+not the best place to add a EV_SW SW_WLAN-issuing input device anyway, and
+userspace will already need to be reconfigured to deal with the fact that
+b43 simply cannot issue KEY_WLAN, so it is not even worth the effort to add
+a temporary hack to issue such events.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
