@@ -1,78 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:44506 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752047AbYG3Dj7 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55721 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754031AbYGAIwz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 23:39:59 -0400
-Date: Wed, 30 Jul 2008 00:39:52 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 5/6] rfkill: query EV_SW states when rfkill-input
-	(re)?connects to a input device
-Message-ID: <20080730033952.GA19961@khazad-dum.debian.net> (sfid-20080730_054023_922979_0ABD0FA8)
-References: <1216685902-9373-1-git-send-email-hmh@hmh.eng.br> <1216685902-9373-6-git-send-email-hmh@hmh.eng.br> <20080729205315.GB10188@tuxdriver.com> <20080730013024.GB22649@anvil.corenet.prv>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080730013024.GB22649@anvil.corenet.prv>
+	Tue, 1 Jul 2008 04:52:55 -0400
+Subject: Re: [PATCH 1/2] mac80211: add bar capability
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <1ba2fa240807010130t7641ec90o2ce95ec985b63125@mail.gmail.com> (sfid-20080701_103038_885558_0FB0EC9F)
+References: <1214898291-6232-1-git-send-email-tomas.winkler@intel.com>
+	 <1214898291-6232-2-git-send-email-tomas.winkler@intel.com>
+	 <1214899385.7763.9.camel@johannes.berg>
+	 <1ba2fa240807010130t7641ec90o2ce95ec985b63125@mail.gmail.com>
+	 (sfid-20080701_103038_885558_0FB0EC9F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wlBGHAFRK8AB/GvqlPzq"
+Date: Tue, 01 Jul 2008 10:52:12 +0200
+Message-Id: <1214902332.7763.17.camel@johannes.berg> (sfid-20080701_105305_210936_1EB1F3E3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 29 Jul 2008, Dmitry Torokhov wrote:
-> On Tue, Jul 29, 2008 at 04:53:15PM -0400, John W. Linville wrote:
-> > On Mon, Jul 21, 2008 at 09:18:21PM -0300, Henrique de Moraes Holschuh wrote:
-> > > Every time a new input device that is capable of one of the rfkill EV_SW events
-> > > (currently only SW_RFKILL_ALL) is connected to rfkill-input, we must check the
-> > > states of the input EV_SW switches and take action.  Otherwise, we will ignore
-> > > the initial switch state.
-> > > 
-> > > We also need to re-check the states of the EV_SW switches after a device that
-> > > was under an exclusive grab is released back to us, since we got no input
-> > > events from that device while it was grabbed.
-> > > 
-> > > Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> > > Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> > > Cc: Dmitry Torokhov <dtor@mail.ru>
-> > 
-> >   CC [M]  net/rfkill/rfkill-input.o
-> > net/rfkill/rfkill-input.c: In function ???rfkill_start???:
-> > net/rfkill/rfkill-input.c:201: warning: passing argument 2 of ???constant_test_bit??? from incompatible pointer type
-> > net/rfkill/rfkill-input.c:201: warning: passing argument 2 of ???variable_test_bit??? from incompatible pointer type
-> > net/rfkill/rfkill-input.c:202: warning: passing argument 2 of ???constant_test_bit??? from incompatible pointer type
-> > net/rfkill/rfkill-input.c:202: warning: passing argument 2 of ???variable_test_bit??? from incompatible pointer type
-> > net/rfkill/rfkill-input.c:203: warning: passing argument 2 of ???constant_test_bit??? from incompatible pointer type
-> > net/rfkill/rfkill-input.c:203: warning: passing argument 2 of ???variable_test_bit??? from incompatible pointer type
-> > 
-> > Don't you need an index for those evbit, swbit, and sw arrays?
-> 
-> No, we just need to drop the &:
-> 
-> diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
-> index 827f178..e5b6955 100644
-> --- a/net/rfkill/rfkill-input.c
-> +++ b/net/rfkill/rfkill-input.c
-> @@ -198,10 +198,10 @@ static void rfkill_start(struct input_handle *handle)
->  	 * just fine (which event_lock will also avoid). */
->  	spin_lock_irq(&handle->dev->event_lock);
->  
-> -	if (test_bit(EV_SW, &handle->dev->evbit)) {
-> -		if (test_bit(SW_RFKILL_ALL, &handle->dev->swbit))
-> +	if (test_bit(EV_SW, handle->dev->evbit)) {
-[...]
 
-Acked-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+--=-wlBGHAFRK8AB/GvqlPzq
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-John, do you want me to fix the patch and resend it, instead of Dmitry's
-incremental fix?
 
-Anyway, gcc 4.3 and 4.2 don't complain about the &array here, and
-unfortunately my C-spec-fu is not strong enough to know what is wrong with
-"&array" instead of just "array", or "&array[0]".  They are all equivalent
-to gcc 4.2 and 4.3.
+> >> + * @IEEE80211_TX_STAT_AMPDU_NO_BACK: no block ack was returned,
+> >> + *   so consider using block ack request (BAR).
+> >
+> > This flag I don't understand. When does the driver set this? And what
+> > does mac80211 do to "consider", it seems to always just try to set up a
+> > block-ack session.
+>=20
+> This is required during BA session. BAR solicited Block ACK for the SN
+> and on specified in BAR. Driver will send it if it doesn't hear BACK.
+> Iwlwifi uses this BAR just says to the recipient that we were not able
+> to transmit the frame and we won't retransmit. This immediately shifts
+> recipient reordering buffer not waiting for high SN numbers of the
+> next traffic otherwise there will be visible deep in the throughput as
+> packets are not released to upper layer till all are received.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Hm, ok, I don't think I understand the subtleties of the protocol. So
+when you have a BA session you have to send a BAR if you can't transmit
+a frame for some reason? When would that happen?
+
+> >> +     bar_control |=3D (u16)IEEE80211_BAR_CTRL_ACK_POLICY_NORMAL;
+> >
+> > ??
+> >
+> >> +     bar_control |=3D (u16)IEEE80211_BAR_CTRL_CBMTID_COMPRESSED_BA;
+> >> +     bar_control |=3D (u16)(tid << 12);
+> >> +     bar->control =3D cpu_to_le16(bar_control);
+> >> +     bar->start_seq_num =3D cpu_to_le16(ssn);
+> >> +
+> >> +     /* must be sent through voice AC */
+> >> +     skb->priority =3D 3;
+> >
+> > Does that actually work? The current wme.c code will still call
+> > classify_1d() and that will use the IP TOS unless you set the priority
+> > to 256..263.
+>=20
+> Good point. Have to look at this again we might missed this point when
+> moving this out from the driver to the mac8011.
+> Not sure this is classified at all as this is a control frame.
+
+Oh, hmm, yeah those work differently, non-data frames aren't classified
+at all and always go out on AC_VO regardless of what you set there so
+you can just remove that.
+
+johannes
+
+--=-wlBGHAFRK8AB/GvqlPzq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIafA4AAoJEKVg1VMiehFYFvoQAMUVkT+WfBmppU7JDyZe4TzA
+8NIwhbnVVHGAqgvLcewpTybErfzDDvpYifJ1cJDUtFQl3mYm6+T6GzNI0IXGn9ne
+TM6xOhuLvITcKjoqtEoraBs/E1SP2v61ZJyQo2IT2/elX/jo6TsfeL8WRoYZt0w/
+oTT+nGfwxt2uRQ3hW4LtbXWfsCskRrpqCz3tHpyn+CgtNrPQO668iLS/uTuYEK59
+aChxtxxpywQUwIRCFveYbS8zu0jSZu2eytXQb75lj8XmaNgLMlzCDRK5kYdNFFFO
+ug9hxHlEXYDQIT6lyQAM7PgmKDGggvrn4EKG+kCpWOYlLTksWj1REKiozeYtLglS
+zDmdcmc5ppfb93SdDiAVRI8Hv18noX1PeLzvk/Tv2dc/bx5rpx4L5iOODILlwx1o
+FxUpfGbyB2bjExVz1sn/o9OT185qZg2vd1yIu7wsaBgzqi626qkVcI2fOeWo3JgJ
+fa2CVh+DT6jCkEaJNqqNl8SMJe1R7mB+EwhgVDRnEn10aHmbJvlqMABEYFgmIfVU
+jWga0gcZJaq6W23KGRF9fr+hzRwoWs1Pjp2hD9BSk7+I3fhhg31yzcdDDPxGagDx
+9XAYq4i0XVtygcQ2eHCe88TM78eH3D4UZ82OPE1LWHVR7UGAvEsmdZGrAebj87Zg
+XhAsvXXstQ/S1Nrkzcaq
+=Fdda
+-----END PGP SIGNATURE-----
+
+--=-wlBGHAFRK8AB/GvqlPzq--
+
