@@ -1,109 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:46237 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753129AbYGAWsY (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56381 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753711AbYGAKYh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 18:48:24 -0400
-Date: Tue, 1 Jul 2008 19:48:17 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
-	Larry Finger <larry.finger@lwfinger.net>,
+	Tue, 1 Jul 2008 06:24:37 -0400
+Subject: Re: [PATCH/RFC v3] b43: remove input device usage for rfkill
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Adel Gadllah <adel.gadllah@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	stefano.brivio@polimi.it, Larry Finger <larry.finger@lwfinger.net>,
 	"John W. Linville" <linville@tuxdriver.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
 	Ivo van Doorn <ivdoorn@gmail.com>
-Message-ID: <20080701224817.GA4292@khazad-dum.debian.net> (sfid-20080702_004829_015391_A75D8F71)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6cf6b73e0807010319x88f3624x83465cc314d8962f@mail.gmail.com> (sfid-20080701_121936_702983_AF90F1DA)
+References: <6cf6b73e0807010255x1f2d8a21m8ed3e712012ea757@mail.gmail.com>
+	 <1214906304.7763.34.camel@johannes.berg>
+	 <6cf6b73e0807010305ne1c4b3bwb083c25953292f9d@mail.gmail.com>
+	 <1214906908.7763.36.camel@johannes.berg>
+	 <6cf6b73e0807010319x88f3624x83465cc314d8962f@mail.gmail.com>
+	 (sfid-20080701_121936_702983_AF90F1DA)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-41JEzOcju7PQSeILKJOL"
+Date: Tue, 01 Jul 2008 12:23:53 +0200
+Message-Id: <1214907833.7763.38.camel@johannes.berg> (sfid-20080701_122439_805313_12866532)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bcc: 
-Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
-Reply-To: 
-In-Reply-To: <1214937876.3462.10.camel@johannes.berg>
-X-GPG-Fingerprint: 1024D/1CDB0FE3 5422 5C61 F6B7 06FB 7E04  3738 EE25 DE3F
-	1CDB 0FE3
 
-Dmitry (input layer maintainer) added to CC.  This is a [gross misuse of
-the] input layer issue.
+--=-41JEzOcju7PQSeILKJOL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, 01 Jul 2008, Johannes Berg wrote:
-> On Tue, 2008-07-01 at 15:41 -0300, Henrique de Moraes Holschuh wrote:
-> > On Tue, 01 Jul 2008, Johannes Berg wrote:
-> > > > This is very important.  It will caracterize that input pin as either an
-> > > > hardware rfkill line, or as an input device (in which case I would be wrong
-> > > > when I asked to remove the input support from b43, but one step at a time).
-> > > 
-> > > Sorry, no, I think I got confused, it should be a hardware rfkill line.
-> > 
-> > I'd like to have a certain response for this.  Can you test, and assert
-> > whether it is a rfkill line or not?
-> > 
-> > And, if it IS a rfkill line, I still need to know if it is flip-flop-like or
-> > not...  I am not certain I got the right idea (I understood it was NOT
-> > flip-flop-like).
-> 
-> No, it's not flip-flop, there's definitely an on/off bit that always
-> matches the button/hardware state.
 
-Ok, so based on the above information, here is the sad truth:  B43 has been
-buggy all along, and in more ways than I would have expected.
+> +	rfk->poll_timer->expires +=3D round_jiffies(B43_RFKILL_POLL_DELAY);
 
-1. That input pin is a hardware rfkill line.  It has to contribute to the
-device-wide rfkill class state.  The rfkill API, before my patchset, simply
-did NOT support such a thing (but some where in the incorrect impression
-that it could, through the input layer.  That's not true).
+Umm, no. Can you please read the docs for round_jiffies?
 
-2. hardware rfkill lines are NOT flip-flop, so if it is ever connected to an
-input device, it has to work like a switch.   It has to tell the world
-whether it is active or not active.  It doesn't go "pressed/unpressed" to
-switch from active to inactive, then "pressed/unpressed" to switch to
-inactive back to active (THAT would be a KEY_*).
+johannes
 
-So, b43 should NEVER have issued KEY_WLAN in the first place.  It should
-have asked for a EV_SW SW_WLAN event, added EV_SW SW_WLAN handling to
-rfkill-input (for completeness), and used that one instead of KEY_WLAN.
+--=-41JEzOcju7PQSeILKJOL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-And this has *nothing* to do with rfkill at all.  It is pure input layer
-stuff.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-For those who are not used to the input layer, the rule is very simple (as
-it was explained to me): Input events come from anywhere and evertwhere, and
-are all equal.  You are not, and I do mean NOT allowed to have KEY_WLAN
-coming from b43 be any more special to the system than KEY_WLAN coming from
-a USB keyboard that was plugged into the system.
+iQIcBAABAgAGBQJIagW1AAoJEKVg1VMiehFYBhQP/3iMFMQTazQkV5OvHBacCnbw
+gB7WCHii+K+1gy/WyPr91nLRBdwhho9xccs0MgpZIgmrOXhVyWL7UvcslhW0sS9O
+ty6OZ6HFhkoKa0jRTpEM2sCCkdkg6sw84edYyzcZJeABa+9p7NsNv93iKAObphYa
+SOYAObPowKkogfOlwJYkmXFQ4EL5NAAQ63IOYaeu/swE1g3d1sbwKBUBm5cP+/eM
+Bcq8Z8CstKJVCaJ2jBA61NCiuYKbC9IaUglL1ecqP0tgvFAU6FykkEXXXbAf1zMT
+EtSKNqt5fSAfXfpLU+Kax//XPkSD7UC/pdSs7KUr2/JGMC7OPDOETaYrPbXJ0oP+
+j8R1eYofpOWzpWAKDwIHWCw/jP7+RTuCl6lujryKt9uwu/V1d4u2vsTZmjgaoH1h
+wv2bMUEKbHEnngVGko2iIaLqxt1ktZ3WPDoBLLLH2JozD6HVYFRe9M5A5nfacqR5
+gJMJgB/9SYNFuJjPbeUe0WdG4Z4nCSEmJHcXSNyqalzVE9q4hNxh3abBgGIvJyie
+NMNPPZ1114mCDytpzrjf6fszF2HjqdpMe0TSDLm5eHGHZnQpjaUrXPOpzPl7VLoU
+oAnpZiXuvlcbpnWX8hM8+HbDFqhrS62JqvlAutf57vjMSvXu4/6MHbVDic0IDIlv
+p4tKXhy0z2qUrA2btZr4
+=v1i0
+-----END PGP SIGNATURE-----
 
-The entire system fights against you if you try to go against this rule.
-Userspace doesn't, as a rule, expect that EV_KEY KEY_FOO from one input
-device is to be treated any differently than EV_KEY KEY_FOO from some other
-input device.  rfkill-input and other in-kernel input handlers don't,
-either.
+--=-41JEzOcju7PQSeILKJOL--
 
-b43 cannot even add an input handle to trap and update its "emulation of a
-switch through KEY_*" state, as it has no way of knowing WHAT userspace or
-rfkill-input is going to do with KEY_WLAN in the first place.  What if it is
-not a toggle, but rather it is being diverted to launch an application that
-asks the user?  What if it is a multi-value selector, that changes state at
-every KEY_WLAN event, and has more than two states?
-
-THIS is the reason why the input layer must not EVER be used as an IPC to
-propagate state changes, BTW.  Handlers *are* allowed to just ignore events,
-for one.
-
-So, unless that input pin in b43 is really a flip-flop and point (1) above
-is wrong (thus making most of this email not apply to b43), I see no way to
-salvage this mess, at all.
-
-IMO, this all means that the input layer support in b43 has to go.  It is
-not the best place to add a EV_SW SW_WLAN-issuing input device anyway, and
-userspace will already need to be reconfigured to deal with the fact that
-b43 simply cannot issue KEY_WLAN, so it is not even worth the effort to add
-a temporary hack to issue such events.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
