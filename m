@@ -1,453 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47442
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755528AbYGCHCd (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:24984 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752165AbYGAJlq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:02:33 -0400
-Date: Thu, 03 Jul 2008 00:02:32 -0700 (PDT)
-Message-Id: <20080703.000232.39861363.davem@davemloft.net> (sfid-20080703_103140_829862_3690DB79)
-To: netdev@vger.kernel.org
-CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
-Subject: [PATCH 03/39]: netdev: Create netdev_queue abstraction.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 1 Jul 2008 05:41:46 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=gb2312
+Subject: RE: [PATCH 1/1] iwlwifi: fix error path of iwl_rfkill_init
+Date: Tue, 1 Jul 2008 17:41:41 +0800
+Message-ID: <8AD95083DC3E36478732061D97524415035E38AB@pdsmsx411.ccr.corp.intel.com> (sfid-20080701_114150_030677_F604C9EC)
+In-Reply-To: <1214898291-6232-1-git-send-email-tomas.winkler@intel.com>
+References: <1214898291-6232-1-git-send-email-tomas.winkler@intel.com>
+From: "Zhu, Yi" <yi.zhu@intel.com>
+To: "Winkler, Tomas" <tomas.winkler@intel.com>,
+	<linville@tuxdriver.com>, <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+John, looks like you didn't merge the last patch "[PATCH 33/33] iwlwifi=
+: remove the input device from rfkill_mngr" from me but merged an earli=
+er patch from Adel directly. Tomas' this patch fixes the iwl-rfkill.c p=
+art, but we should also remove the input layer for 3945. Do you want me=
+ to submit another patch on top of the current tip or you can handle it=
+ yourself.
 
-A netdev_queue is an entity managed by a qdisc.
+http://marc.info/?l=3Dlinux-wireless&m=3D121481826531792&w=3D2
 
-Currently there is one RX and one TX queue, and
-a netdev_queue merely contains a backpointer to
-the net_device.
+Thanks,
+-yi
 
-The Qdisc struct is augmented with a netdev_queue
-pointer as well.  Eventually the 'dev' Qdisc member
-will go away and we will have the resulting hierarchy:
+> -----Original Message-----
+> From: Winkler, Tomas
+> Sent: 2008=C4=EA7=D4=C21=C8=D5 15:45
+> To: linville@tuxdriver.com; johannes@sipsolutions.net; Zhu, Yi
+> Cc: linux-wireless@vger.kernel.org; Winkler, Tomas
+> Subject: [PATCH 1/1] iwlwifi: fix error path of iwl_rfkill_init
+>=20
+> This patch cleans rfkill error path. The problem was result of removi=
+ng
+> the input device
+>=20
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-rfkill.c |    8 ++------
+>  1 files changed, 2 insertions(+), 6 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+> b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+> index aa9f31e..eebaf43 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+> @@ -101,17 +101,13 @@ int iwl_rfkill_init(struct iwl_priv *priv)
+>  	ret =3D rfkill_register(priv->rfkill_mngr.rfkill);
+>  	if (ret) {
+>  		IWL_ERROR("Unable to register rfkill: %d\n", ret);
+> -		goto unregister_rfkill;
+> +		goto free_rfkill;
+>  	}
+>=20
+>  	IWL_DEBUG_RF_KILL("RFKILL initialization complete.\n");
+>  	return ret;
+>=20
+> -unregister_rfkill:
+> -	rfkill_unregister(priv->rfkill_mngr.rfkill);
+> -	priv->rfkill_mngr.rfkill =3D NULL;
+> -
+> -freed_rfkill:
+> +free_rfkill:
+>  	if (priv->rfkill_mngr.rfkill !=3D NULL)
+>  		rfkill_free(priv->rfkill_mngr.rfkill);
+>  	priv->rfkill_mngr.rfkill =3D NULL;
+> --
+> 1.5.4.1
 
-	net_device --> netdev_queue --> Qdisc
-
-Also, qdisc_alloc() and qdisc_create_dflt() now take
-a netdev_queue pointer argument.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- include/linux/netdevice.h |    7 +++++++
- include/net/sch_generic.h |    6 +++++-
- net/core/dev.c            |    8 ++++++++
- net/mac80211/wme.c        |    6 ++++--
- net/sched/sch_api.c       |   12 +++++++-----
- net/sched/sch_atm.c       |    6 ++++--
- net/sched/sch_cbq.c       |    9 ++++++---
- net/sched/sch_dsmark.c    |    6 ++++--
- net/sched/sch_generic.c   |   14 ++++++++++----
- net/sched/sch_hfsc.c      |    9 ++++++---
- net/sched/sch_htb.c       |   11 +++++++----
- net/sched/sch_netem.c     |    3 ++-
- net/sched/sch_prio.c      |    3 ++-
- net/sched/sch_red.c       |    3 ++-
- net/sched/sch_tbf.c       |    3 ++-
- 15 files changed, 76 insertions(+), 30 deletions(-)
-
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index 56dadb5..2c792e6 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -448,6 +448,10 @@ static inline void napi_synchronize(const struct napi_struct *n)
- # define napi_synchronize(n)	barrier()
- #endif
- 
-+struct netdev_queue {
-+	struct net_device	*dev;
-+};
-+
- /*
-  *	The DEVICE structure.
-  *	Actually, this whole structure is a big mistake.  It mixes I/O
-@@ -624,6 +628,9 @@ struct net_device
- 
- 	unsigned char		broadcast[MAX_ADDR_LEN];	/* hw bcast add	*/
- 
-+	struct netdev_queue	rx_queue;
-+	struct netdev_queue	tx_queue;
-+
- 	/* ingress path synchronizer */
- 	spinlock_t		ingress_lock;
- 	struct Qdisc		*qdisc_ingress;
-diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
-index ab502ec..4fa07c6 100644
---- a/include/net/sch_generic.h
-+++ b/include/net/sch_generic.h
-@@ -37,6 +37,7 @@ struct Qdisc
- 	u32			parent;
- 	atomic_t		refcnt;
- 	struct sk_buff_head	q;
-+	struct netdev_queue	*dev_queue;
- 	struct net_device	*dev;
- 	struct list_head	list;
- 
-@@ -174,8 +175,11 @@ extern void dev_deactivate(struct net_device *dev);
- extern void qdisc_reset(struct Qdisc *qdisc);
- extern void qdisc_destroy(struct Qdisc *qdisc);
- extern void qdisc_tree_decrease_qlen(struct Qdisc *qdisc, unsigned int n);
--extern struct Qdisc *qdisc_alloc(struct net_device *dev, struct Qdisc_ops *ops);
-+extern struct Qdisc *qdisc_alloc(struct net_device *dev,
-+				 struct netdev_queue *dev_queue,
-+				 struct Qdisc_ops *ops);
- extern struct Qdisc *qdisc_create_dflt(struct net_device *dev,
-+				       struct netdev_queue *dev_queue,
- 				       struct Qdisc_ops *ops, u32 parentid);
- extern void tcf_destroy(struct tcf_proto *tp);
- extern void tcf_destroy_chain(struct tcf_proto *fl);
-diff --git a/net/core/dev.c b/net/core/dev.c
-index 472676d..26ba606 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -4072,6 +4072,12 @@ static struct net_device_stats *internal_stats(struct net_device *dev)
- 	return &dev->stats;
- }
- 
-+static void netdev_init_queues(struct net_device *dev)
-+{
-+	dev->rx_queue.dev = dev;
-+	dev->tx_queue.dev = dev;
-+}
-+
- /**
-  *	alloc_netdev_mq - allocate network device
-  *	@sizeof_priv:	size of private data to allocate space for
-@@ -4124,6 +4130,8 @@ struct net_device *alloc_netdev_mq(int sizeof_priv, const char *name,
- 	dev->egress_subqueue_count = queue_count;
- 	dev->gso_max_size = GSO_MAX_SIZE;
- 
-+	netdev_init_queues(dev);
-+
- 	dev->get_stats = internal_stats;
- 	netpoll_netdev_init(dev);
- 	setup(dev);
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index cfa8fbb..0ba081a 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -361,7 +361,8 @@ static int wme_qdiscop_init(struct Qdisc *qd, struct nlattr *opt)
- 	/* create child queues */
- 	for (i = 0; i < QD_NUM(hw); i++) {
- 		skb_queue_head_init(&q->requeued[i]);
--		q->queues[i] = qdisc_create_dflt(qd->dev, &pfifo_qdisc_ops,
-+		q->queues[i] = qdisc_create_dflt(qd->dev, qd->dev_queue,
-+						 &pfifo_qdisc_ops,
- 						 qd->handle);
- 		if (!q->queues[i]) {
- 			q->queues[i] = &noop_qdisc;
-@@ -577,7 +578,8 @@ void ieee80211_install_qdisc(struct net_device *dev)
- {
- 	struct Qdisc *qdisc;
- 
--	qdisc = qdisc_create_dflt(dev, &wme_qdisc_ops, TC_H_ROOT);
-+	qdisc = qdisc_create_dflt(dev, &dev->tx_queue,
-+				  &wme_qdisc_ops, TC_H_ROOT);
- 	if (!qdisc) {
- 		printk(KERN_ERR "%s: qdisc installation failed\n", dev->name);
- 		return;
-diff --git a/net/sched/sch_api.c b/net/sched/sch_api.c
-index 365a84c..4de7410 100644
---- a/net/sched/sch_api.c
-+++ b/net/sched/sch_api.c
-@@ -448,8 +448,8 @@ static int qdisc_graft(struct net_device *dev, struct Qdisc *parent,
-  */
- 
- static struct Qdisc *
--qdisc_create(struct net_device *dev, u32 parent, u32 handle,
--	   struct nlattr **tca, int *errp)
-+qdisc_create(struct net_device *dev, struct netdev_queue *dev_queue,
-+	     u32 parent, u32 handle, struct nlattr **tca, int *errp)
- {
- 	int err;
- 	struct nlattr *kind = tca[TCA_KIND];
-@@ -489,7 +489,7 @@ qdisc_create(struct net_device *dev, u32 parent, u32 handle,
- 	if (ops == NULL)
- 		goto err_out;
- 
--	sch = qdisc_alloc(dev, ops);
-+	sch = qdisc_alloc(dev, dev_queue, ops);
- 	if (IS_ERR(sch)) {
- 		err = PTR_ERR(sch);
- 		goto err_out2;
-@@ -788,10 +788,12 @@ create_n_graft:
- 	if (!(n->nlmsg_flags&NLM_F_CREATE))
- 		return -ENOENT;
- 	if (clid == TC_H_INGRESS)
--		q = qdisc_create(dev, tcm->tcm_parent, tcm->tcm_parent,
-+		q = qdisc_create(dev, &dev->rx_queue,
-+				 tcm->tcm_parent, tcm->tcm_parent,
- 				 tca, &err);
- 	else
--		q = qdisc_create(dev, tcm->tcm_parent, tcm->tcm_handle,
-+		q = qdisc_create(dev, &dev->tx_queue,
-+				 tcm->tcm_parent, tcm->tcm_handle,
- 				 tca, &err);
- 	if (q == NULL) {
- 		if (err == -EAGAIN)
-diff --git a/net/sched/sch_atm.c b/net/sched/sch_atm.c
-index 3352734..97bab52 100644
---- a/net/sched/sch_atm.c
-+++ b/net/sched/sch_atm.c
-@@ -296,7 +296,8 @@ static int atm_tc_change(struct Qdisc *sch, u32 classid, u32 parent,
- 		goto err_out;
- 	}
- 	flow->filter_list = NULL;
--	flow->q = qdisc_create_dflt(sch->dev, &pfifo_qdisc_ops, classid);
-+	flow->q = qdisc_create_dflt(sch->dev, sch->dev_queue,
-+				    &pfifo_qdisc_ops, classid);
- 	if (!flow->q)
- 		flow->q = &noop_qdisc;
- 	pr_debug("atm_tc_change: qdisc %p\n", flow->q);
-@@ -555,7 +556,8 @@ static int atm_tc_init(struct Qdisc *sch, struct nlattr *opt)
- 
- 	pr_debug("atm_tc_init(sch %p,[qdisc %p],opt %p)\n", sch, p, opt);
- 	p->flows = &p->link;
--	p->link.q = qdisc_create_dflt(sch->dev, &pfifo_qdisc_ops, sch->handle);
-+	p->link.q = qdisc_create_dflt(sch->dev, sch->dev_queue,
-+				      &pfifo_qdisc_ops, sch->handle);
- 	if (!p->link.q)
- 		p->link.q = &noop_qdisc;
- 	pr_debug("atm_tc_init: link (%p) qdisc %p\n", &p->link, p->link.q);
-diff --git a/net/sched/sch_cbq.c b/net/sched/sch_cbq.c
-index 09969c1..78923a6 100644
---- a/net/sched/sch_cbq.c
-+++ b/net/sched/sch_cbq.c
-@@ -1410,7 +1410,8 @@ static int cbq_init(struct Qdisc *sch, struct nlattr *opt)
- 	q->link.sibling = &q->link;
- 	q->link.classid = sch->handle;
- 	q->link.qdisc = sch;
--	if (!(q->link.q = qdisc_create_dflt(sch->dev, &pfifo_qdisc_ops,
-+	if (!(q->link.q = qdisc_create_dflt(sch->dev, sch->dev_queue,
-+					    &pfifo_qdisc_ops,
- 					    sch->handle)))
- 		q->link.q = &noop_qdisc;
- 
-@@ -1650,7 +1651,8 @@ static int cbq_graft(struct Qdisc *sch, unsigned long arg, struct Qdisc *new,
- 
- 	if (cl) {
- 		if (new == NULL) {
--			if ((new = qdisc_create_dflt(sch->dev, &pfifo_qdisc_ops,
-+			if ((new = qdisc_create_dflt(sch->dev, sch->dev_queue,
-+						     &pfifo_qdisc_ops,
- 						     cl->classid)) == NULL)
- 				return -ENOBUFS;
- 		} else {
-@@ -1883,7 +1885,8 @@ cbq_change_class(struct Qdisc *sch, u32 classid, u32 parentid, struct nlattr **t
- 	cl->R_tab = rtab;
- 	rtab = NULL;
- 	cl->refcnt = 1;
--	if (!(cl->q = qdisc_create_dflt(sch->dev, &pfifo_qdisc_ops, classid)))
-+	if (!(cl->q = qdisc_create_dflt(sch->dev, sch->dev_queue,
-+					&pfifo_qdisc_ops, classid)))
- 		cl->q = &noop_qdisc;
- 	cl->classid = classid;
- 	cl->tparent = parent;
-diff --git a/net/sched/sch_dsmark.c b/net/sched/sch_dsmark.c
-index 64465ba..adee048 100644
---- a/net/sched/sch_dsmark.c
-+++ b/net/sched/sch_dsmark.c
-@@ -60,7 +60,8 @@ static int dsmark_graft(struct Qdisc *sch, unsigned long arg,
- 		sch, p, new, old);
- 
- 	if (new == NULL) {
--		new = qdisc_create_dflt(sch->dev, &pfifo_qdisc_ops,
-+		new = qdisc_create_dflt(sch->dev, sch->dev_queue,
-+					&pfifo_qdisc_ops,
- 					sch->handle);
- 		if (new == NULL)
- 			new = &noop_qdisc;
-@@ -390,7 +391,8 @@ static int dsmark_init(struct Qdisc *sch, struct nlattr *opt)
- 	p->default_index = default_index;
- 	p->set_tc_index = nla_get_flag(tb[TCA_DSMARK_SET_TC_INDEX]);
- 
--	p->q = qdisc_create_dflt(sch->dev, &pfifo_qdisc_ops, sch->handle);
-+	p->q = qdisc_create_dflt(sch->dev, sch->dev_queue,
-+				 &pfifo_qdisc_ops, sch->handle);
- 	if (p->q == NULL)
- 		p->q = &noop_qdisc;
- 
-diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
-index 13afa72..d970864 100644
---- a/net/sched/sch_generic.c
-+++ b/net/sched/sch_generic.c
-@@ -440,7 +440,9 @@ static struct Qdisc_ops pfifo_fast_ops __read_mostly = {
- 	.owner		=	THIS_MODULE,
- };
- 
--struct Qdisc *qdisc_alloc(struct net_device *dev, struct Qdisc_ops *ops)
-+struct Qdisc *qdisc_alloc(struct net_device *dev,
-+			  struct netdev_queue *dev_queue,
-+			  struct Qdisc_ops *ops)
- {
- 	void *p;
- 	struct Qdisc *sch;
-@@ -462,6 +464,7 @@ struct Qdisc *qdisc_alloc(struct net_device *dev, struct Qdisc_ops *ops)
- 	sch->ops = ops;
- 	sch->enqueue = ops->enqueue;
- 	sch->dequeue = ops->dequeue;
-+	sch->dev_queue = dev_queue;
- 	sch->dev = dev;
- 	dev_hold(dev);
- 	atomic_set(&sch->refcnt, 1);
-@@ -471,12 +474,14 @@ errout:
- 	return ERR_PTR(err);
- }
- 
--struct Qdisc * qdisc_create_dflt(struct net_device *dev, struct Qdisc_ops *ops,
-+struct Qdisc * qdisc_create_dflt(struct net_device *dev,
-+				 struct netdev_queue *dev_queue,
-+				 struct Qdisc_ops *ops,
- 				 unsigned int parentid)
- {
- 	struct Qdisc *sch;
- 
--	sch = qdisc_alloc(dev, ops);
-+	sch = qdisc_alloc(dev, dev_queue, ops);
- 	if (IS_ERR(sch))
- 		goto errout;
- 	sch->stats_lock = &dev->queue_lock;
-@@ -545,7 +550,8 @@ void dev_activate(struct net_device *dev)
- 	if (dev->qdisc_sleeping == &noop_qdisc) {
- 		struct Qdisc *qdisc;
- 		if (dev->tx_queue_len) {
--			qdisc = qdisc_create_dflt(dev, &pfifo_fast_ops,
-+			qdisc = qdisc_create_dflt(dev, &dev->tx_queue,
-+						  &pfifo_fast_ops,
- 						  TC_H_ROOT);
- 			if (qdisc == NULL) {
- 				printk(KERN_INFO "%s: activation failed\n", dev->name);
-diff --git a/net/sched/sch_hfsc.c b/net/sched/sch_hfsc.c
-index fdfaa3f..b5f80ba 100644
---- a/net/sched/sch_hfsc.c
-+++ b/net/sched/sch_hfsc.c
-@@ -1095,7 +1095,8 @@ hfsc_change_class(struct Qdisc *sch, u32 classid, u32 parentid,
- 	cl->classid   = classid;
- 	cl->sched     = q;
- 	cl->cl_parent = parent;
--	cl->qdisc = qdisc_create_dflt(sch->dev, &pfifo_qdisc_ops, classid);
-+	cl->qdisc = qdisc_create_dflt(sch->dev, sch->dev_queue,
-+				      &pfifo_qdisc_ops, classid);
- 	if (cl->qdisc == NULL)
- 		cl->qdisc = &noop_qdisc;
- 	INIT_LIST_HEAD(&cl->children);
-@@ -1211,7 +1212,8 @@ hfsc_graft_class(struct Qdisc *sch, unsigned long arg, struct Qdisc *new,
- 	if (cl->level > 0)
- 		return -EINVAL;
- 	if (new == NULL) {
--		new = qdisc_create_dflt(sch->dev, &pfifo_qdisc_ops,
-+		new = qdisc_create_dflt(sch->dev, sch->dev_queue,
-+					&pfifo_qdisc_ops,
- 					cl->classid);
- 		if (new == NULL)
- 			new = &noop_qdisc;
-@@ -1449,7 +1451,8 @@ hfsc_init_qdisc(struct Qdisc *sch, struct nlattr *opt)
- 	q->root.refcnt  = 1;
- 	q->root.classid = sch->handle;
- 	q->root.sched   = q;
--	q->root.qdisc = qdisc_create_dflt(sch->dev, &pfifo_qdisc_ops,
-+	q->root.qdisc = qdisc_create_dflt(sch->dev, sch->dev_queue,
-+					  &pfifo_qdisc_ops,
- 					  sch->handle);
- 	if (q->root.qdisc == NULL)
- 		q->root.qdisc = &noop_qdisc;
-diff --git a/net/sched/sch_htb.c b/net/sched/sch_htb.c
-index 2cef8f3..42f7fce 100644
---- a/net/sched/sch_htb.c
-+++ b/net/sched/sch_htb.c
-@@ -1151,7 +1151,8 @@ static int htb_graft(struct Qdisc *sch, unsigned long arg, struct Qdisc *new,
- 
- 	if (cl && !cl->level) {
- 		if (new == NULL &&
--		    (new = qdisc_create_dflt(sch->dev, &pfifo_qdisc_ops,
-+		    (new = qdisc_create_dflt(sch->dev, sch->dev_queue,
-+					     &pfifo_qdisc_ops,
- 					     cl->classid))
- 		    == NULL)
- 			return -ENOBUFS;
-@@ -1289,8 +1290,9 @@ static int htb_delete(struct Qdisc *sch, unsigned long arg)
- 		return -EBUSY;
- 
- 	if (!cl->level && htb_parent_last_child(cl)) {
--		new_q = qdisc_create_dflt(sch->dev, &pfifo_qdisc_ops,
--						cl->parent->classid);
-+		new_q = qdisc_create_dflt(sch->dev, sch->dev_queue,
-+					  &pfifo_qdisc_ops,
-+					  cl->parent->classid);
- 		last_child = 1;
- 	}
- 
-@@ -1407,7 +1409,8 @@ static int htb_change_class(struct Qdisc *sch, u32 classid,
- 		/* create leaf qdisc early because it uses kmalloc(GFP_KERNEL)
- 		   so that can't be used inside of sch_tree_lock
- 		   -- thanks to Karlis Peisenieks */
--		new_q = qdisc_create_dflt(sch->dev, &pfifo_qdisc_ops, classid);
-+		new_q = qdisc_create_dflt(sch->dev, sch->dev_queue,
-+					  &pfifo_qdisc_ops, classid);
- 		sch_tree_lock(sch);
- 		if (parent && !parent->level) {
- 			unsigned int qlen = parent->un.leaf.q->q.qlen;
-diff --git a/net/sched/sch_netem.c b/net/sched/sch_netem.c
-index c9c649b..5f1adc0 100644
---- a/net/sched/sch_netem.c
-+++ b/net/sched/sch_netem.c
-@@ -558,7 +558,8 @@ static int netem_init(struct Qdisc *sch, struct nlattr *opt)
- 
- 	qdisc_watchdog_init(&q->watchdog, sch);
- 
--	q->qdisc = qdisc_create_dflt(sch->dev, &tfifo_qdisc_ops,
-+	q->qdisc = qdisc_create_dflt(sch->dev, sch->dev_queue,
-+				     &tfifo_qdisc_ops,
- 				     TC_H_MAKE(sch->handle, 1));
- 	if (!q->qdisc) {
- 		pr_debug("netem: qdisc create failed\n");
-diff --git a/net/sched/sch_prio.c b/net/sched/sch_prio.c
-index b050c26..0ffefb6 100644
---- a/net/sched/sch_prio.c
-+++ b/net/sched/sch_prio.c
-@@ -212,7 +212,8 @@ static int prio_tune(struct Qdisc *sch, struct nlattr *opt)
- 	for (i=0; i<q->bands; i++) {
- 		if (q->queues[i] == &noop_qdisc) {
- 			struct Qdisc *child;
--			child = qdisc_create_dflt(sch->dev, &pfifo_qdisc_ops,
-+			child = qdisc_create_dflt(sch->dev, sch->dev_queue,
-+						  &pfifo_qdisc_ops,
- 						  TC_H_MAKE(sch->handle, i + 1));
- 			if (child) {
- 				sch_tree_lock(sch);
-diff --git a/net/sched/sch_red.c b/net/sched/sch_red.c
-index 5c56985..d10c47a 100644
---- a/net/sched/sch_red.c
-+++ b/net/sched/sch_red.c
-@@ -180,7 +180,8 @@ static struct Qdisc *red_create_dflt(struct Qdisc *sch, u32 limit)
- 	struct nlattr *nla;
- 	int ret;
- 
--	q = qdisc_create_dflt(sch->dev, &bfifo_qdisc_ops,
-+	q = qdisc_create_dflt(sch->dev, sch->dev_queue,
-+			      &bfifo_qdisc_ops,
- 			      TC_H_MAKE(sch->handle, 1));
- 	if (q) {
- 		nla = kmalloc(nla_attr_size(sizeof(struct tc_fifo_qopt)),
-diff --git a/net/sched/sch_tbf.c b/net/sched/sch_tbf.c
-index 0b7d78f..61559e1 100644
---- a/net/sched/sch_tbf.c
-+++ b/net/sched/sch_tbf.c
-@@ -248,7 +248,8 @@ static struct Qdisc *tbf_create_dflt_qdisc(struct Qdisc *sch, u32 limit)
- 	struct nlattr *nla;
- 	int ret;
- 
--	q = qdisc_create_dflt(sch->dev, &bfifo_qdisc_ops,
-+	q = qdisc_create_dflt(sch->dev, sch->dev_queue,
-+			      &bfifo_qdisc_ops,
- 			      TC_H_MAKE(sch->handle, 1));
- 	if (q) {
- 		nla = kmalloc(nla_attr_size(sizeof(struct tc_fifo_qopt)),
--- 
-1.5.6
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
