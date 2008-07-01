@@ -1,39 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.232]:38479 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751472AbYGKM7v (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jul 2008 08:59:51 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so4414521rvb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Jul 2008 05:59:51 -0700 (PDT)
-Message-ID: <1ba2fa240807110559x5d4bbbcx63bdf007bb99e067@mail.gmail.com> (sfid-20080711_150005_428556_D7C733C4)
-Date: Fri, 11 Jul 2008 15:59:50 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: removing STAs while aggregation is in effect?
-Cc: "Ron Rindjunsky" <ron.rindjunsky@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1215770111.3483.112.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3837 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751116AbYGAUrD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jul 2008 16:47:03 -0400
+Date: Tue, 1 Jul 2008 16:36:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Harvey Harrison <harvey.harrison@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Commit c4438fa71bf412862ed0b73111956b0ffd8209d3 breaks WPA
+Message-ID: <20080701203658.GA9225@tuxdriver.com> (sfid-20080701_224709_770306_9729812D)
+References: <486A9248.9000607@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1215770111.3483.112.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <486A9248.9000607@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 11, 2008 at 12:55 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Hi Ron,
+On Tue, Jul 01, 2008 at 03:23:36PM -0500, Larry Finger wrote:
+> After the latest wireless-testing update, b43 was unable to connect to  
+> my WPA network. Bisection leads to the following commit as the culprit:
 >
-> Quick question: I was looking through the new tx queue rework davem did
-> and couldn't immediately tell whether or not the right thing happens
-> when a STA is removed while aggregation is in effect. Say mac80211 is
-> operating as an AP and a STA disassociates in the middle of an
-> aggregation session, I can see nothing that guarantees the aggregation
-> queue will be drained and returned to the pool etc.
+> commit c4438fa71bf412862ed0b73111956b0ffd8209d3
+> Author: Harvey Harrison <harvey.harrison@gmail.com>
+> Date:   Thu Jun 26 13:21:50 2008 -0700
 >
-> Am I missing something?
+>     mac80211: remove ieee80211_get_hdr_info
 >
-We found that too. We will soon release dissociation patches for review.
-Tomas
-> johannes
+>     Move the address selection into the michale_mic header calculation 
+> helper
+>     and pass a pointer to the ieee80211_hdr directly.
 >
+>     Reorganize ccmp_special_blocks while eliminating the unneeded  
+> sa/da/qos
+>     variables.
+>
+>     Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>
+> :040000 040000 c77af99ab0477f3ec3159af8566fb1de61856ab8  
+> 7fa906d1d2acc6f9d88b923eed0990b9b14ea830 M      net
+>
+> This commit was confirmed as the problem by reverting it.
+
+Luckily that is just in my "pending" stack.  I'll revert it ASAP.
+Harvey, you are welcome to resubmit if you can tell us what broke
+things! :-)
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
