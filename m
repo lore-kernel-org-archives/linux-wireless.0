@@ -1,57 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:39233 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752354AbYG3T1n (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:14781 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752300AbYGAKF7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 15:27:43 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so98142nfc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 12:27:42 -0700 (PDT)
-Subject: Re: [ath5k-devel] [PATCH] ath5k: add Mesh Point support
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: sbrown@cortland.com
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	YanBo <dreamfly281@gmail.com>,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
-In-Reply-To: <488DBF6E.10606@cortland.com>
-References: <487fa7a8.14da600a.1aae.48b1@mx.google.com>
-	 <1197ff4c0807280209x754f3a15j9dca3e60e99c69cb@mail.gmail.com>
-	 <488D9E79.8050408@cortland.com>
-	 (sfid-20080728_122546_840137_51FD7C0F) <1217247004.12662.3.camel@johannes.berg>
-	 <488DBF6E.10606@cortland.com>
-Content-Type: text/plain; charset=utf-8
-Date: Wed, 30 Jul 2008 21:27:31 +0200
-Message-Id: <1217446051.6379.231.camel@localhost> (sfid-20080730_212748_092544_09A53F9F)
-Mime-Version: 1.0
+	Tue, 1 Jul 2008 06:05:59 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so923961fgg.17
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Jul 2008 03:05:57 -0700 (PDT)
+Message-ID: <6cf6b73e0807010305ne1c4b3bwb083c25953292f9d@mail.gmail.com> (sfid-20080701_120608_219067_289FA31F)
+Date: Tue, 1 Jul 2008 12:05:57 +0200
+From: "Adel Gadllah" <adel.gadllah@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: [PATCH/RFC v2] b43: remove input device usage for rfkill
+Cc: linux-wireless@vger.kernel.org, "Michael Buesch" <mb@bu3sch.de>,
+	stefano.brivio@polimi.it,
+	"Larry Finger" <larry.finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
+	"Ivo van Doorn" <ivdoorn@gmail.com>
+In-Reply-To: <1214906304.7763.34.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <6cf6b73e0807010255x1f2d8a21m8ed3e712012ea757@mail.gmail.com>
+	 <1214906304.7763.34.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-07-28 at 08:45 -0400, Steve Brown wrote:
-> Although mesh path timeout seems to default to 5000ms, in my testing =
-it=20
-> takes about 50 min. Is this really the timeout that removes a node wh=
-en=20
-> it's beacon is off for this period?
+2008/7/1 Johannes Berg <johannes@sipsolutions.net>:
+>
+>> +     rfk->poll_timer->expires = jiffies + B43_RFKILL_POLL_DELAY;
+>
+> round_jiffies.
 
-=EF=BB=BF
-When a mesh path timeouts it is marked accordingly and it is no longer
-valid for routing. In a continuous traffic scenario this means that
-every five seconds, the route are refreshed. Actually we start
-refreshing one second before the route expires, so that we have a fresh
-path before the current one times out.
+v2 attached.
+-----
+This patch removes the dependency on the input device and replaces the
+polldev with a timer for polling the rfkill state.
 
-Mesh path timeout does not _remove_ the path from the mesh path table,
-so you will see it for a while, the table cleanup function which remove=
-s
-from the table paths that have expired long ago has a separate timing.
+Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
 
---=20
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
+diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+index 1fa043d..af15e5c 100644
+--- a/drivers/net/wireless/b43/Kconfig
++++ b/drivers/net/wireless/b43/Kconfig
+@@ -91,7 +91,7 @@ config B43_LEDS
+ # if it's possible.
+ config B43_RFKILL
+ 	bool
+-	depends on B43 && (RFKILL = y || RFKILL = B43) && RFKILL_INPUT &&
+(INPUT_POLLDEV = y || INPUT_POLLDEV = B43)
++	depends on B43 && (RFKILL = y || RFKILL = B43)
+ 	default y
 
+ config B43_DEBUG
+diff --git a/drivers/net/wireless/b43/rfkill.c
+b/drivers/net/wireless/b43/rfkill.c
+index fec5645..dde5cd4 100644
+--- a/drivers/net/wireless/b43/rfkill.c
++++ b/drivers/net/wireless/b43/rfkill.c
+@@ -61,34 +61,29 @@ static void b43_rfkill_update_state(struct b43_wldev *dev)
+ }
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ /* The poll callback for the hardware button. */
+-static void b43_rfkill_poll(struct input_polled_dev *poll_dev)
++static void b43_rfkill_poll(unsigned long data)
+ {
+-	struct b43_wldev *dev = poll_dev->private;
++	struct b43_wldev *dev = (struct b43_wldev *) data;
+ 	struct b43_wl *wl = dev->wl;
++	struct b43_rfkill *rfk = &(dev->wl->rfkill);
+ 	bool enabled;
+-	bool report_change = 0;
+
+ 	mutex_lock(&wl->mutex);
+-	if (unlikely(b43_status(dev) < B43_STAT_INITIALIZED)) {
+-		mutex_unlock(&wl->mutex);
+-		return;
+-	}
++	if (unlikely(b43_status(dev) < B43_STAT_INITIALIZED))
++		goto out;
++
+ 	enabled = b43_is_hw_radio_enabled(dev);
+ 	if (unlikely(enabled != dev->radio_hw_enable)) {
+ 		dev->radio_hw_enable = enabled;
+-		report_change = 1;
+ 		b43_rfkill_update_state(dev);
+ 		b43info(wl, "Radio hardware status changed to %s\n",
+ 			enabled ? "ENABLED" : "DISABLED");
+ 	}
+-	mutex_unlock(&wl->mutex);
++out:
++	rfk->poll_timer->expires += B43_RFKILL_POLL_DELAY;
++	add_timer(rfk->poll_timer);
+
+-	/* send the radio switch event to the system - note both a key press
+-	 * and a release are required */
+-	if (unlikely(report_change)) {
+-		input_report_key(poll_dev->input, KEY_WLAN, 1);
+-		input_report_key(poll_dev->input, KEY_WLAN, 0);
+-	}
++	mutex_unlock(&wl->mutex);
+ }
+
+ /* Called when the RFKILL toggled in software. */
+@@ -158,51 +153,24 @@ void b43_rfkill_init(struct b43_wldev *dev)
+ 	rfk->rfkill->toggle_radio = b43_rfkill_soft_toggle;
+ 	rfk->rfkill->user_claim_unsupported = 1;
+
+-	rfk->poll_dev = input_allocate_polled_device();
+-	if (!rfk->poll_dev) {
+-		rfkill_free(rfk->rfkill);
+-		goto err_freed_rfk;
+-	}
+-
+-	rfk->poll_dev->private = dev;
+-	rfk->poll_dev->poll = b43_rfkill_poll;
+-	rfk->poll_dev->poll_interval = 1000; /* msecs */
+-
+-	rfk->poll_dev->input->name = rfk->name;
+-	rfk->poll_dev->input->id.bustype = BUS_HOST;
+-	rfk->poll_dev->input->id.vendor = dev->dev->bus->boardinfo.vendor;
+-	rfk->poll_dev->input->evbit[0] = BIT(EV_KEY);
+-	set_bit(KEY_WLAN, rfk->poll_dev->input->keybit);
++	setup_timer(rfk->poll_timer, &b43_rfkill_poll, (unsigned long) dev);
++	rfk->poll_timer->expires =
++		round_jiffies(jiffies + B43_RFKILL_POLL_DELAY);
+
+ 	err = rfkill_register(rfk->rfkill);
+ 	if (err)
+-		goto err_free_polldev;
+-
+-#ifdef CONFIG_RFKILL_INPUT_MODULE
+-	/* B43 RF-kill isn't useful without the rfkill-input subsystem.
+-	 * Try to load the module. */
+-	err = request_module("rfkill-input");
+-	if (err)
+-		b43warn(wl, "Failed to load the rfkill-input module. "
+-			"The built-in radio LED will not work.\n");
+-#endif /* CONFIG_RFKILL_INPUT */
+-
+-	err = input_register_polled_device(rfk->poll_dev);
+-	if (err)
+-		goto err_unreg_rfk;
++		goto err_freed_rfk;
+
+ 	rfk->registered = 1;
++	add_timer(rfk->poll_timer);
+
+ 	return;
+-err_unreg_rfk:
+-	rfkill_unregister(rfk->rfkill);
+-err_free_polldev:
+-	input_free_polled_device(rfk->poll_dev);
+-	rfk->poll_dev = NULL;
++
+ err_freed_rfk:
+ 	rfk->rfkill = NULL;
+ out_error:
+ 	rfk->registered = 0;
++	del_timer_sync(rfk->poll_timer);
+ 	b43warn(wl, "RF-kill button init failed\n");
+ }
+
+@@ -213,10 +181,7 @@ void b43_rfkill_exit(struct b43_wldev *dev)
+ 	if (!rfk->registered)
+ 		return;
+ 	rfk->registered = 0;
+-
+-	input_unregister_polled_device(rfk->poll_dev);
++	del_timer_sync(rfk->poll_timer);
+ 	rfkill_unregister(rfk->rfkill);
+-	input_free_polled_device(rfk->poll_dev);
+-	rfk->poll_dev = NULL;
+ 	rfk->rfkill = NULL;
+ }
+diff --git a/drivers/net/wireless/b43/rfkill.h
+b/drivers/net/wireless/b43/rfkill.h
+index adacf93..d25fbbd 100644
+--- a/drivers/net/wireless/b43/rfkill.h
++++ b/drivers/net/wireless/b43/rfkill.h
+@@ -7,14 +7,16 @@ struct b43_wldev;
+ #ifdef CONFIG_B43_RFKILL
+
+ #include <linux/rfkill.h>
+-#include <linux/input-polldev.h>
++#include <linux/timer.h>
++#include <linux/jiffies.h>
+
++#define B43_RFKILL_POLL_DELAY msecs_to_jiffies(1000)
+
+ struct b43_rfkill {
+ 	/* The RFKILL subsystem data structure */
+ 	struct rfkill *rfkill;
+-	/* The poll device for the RFKILL input button */
+-	struct input_polled_dev *poll_dev;
++	/* Timer for polling the rfkill state */
++	struct timer_list *poll_timer;
+ 	/* Did initialization succeed? Used for freeing. */
+ 	bool registered;
+ 	/* The unique name of this rfkill switch */
