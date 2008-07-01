@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:51950 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751548AbYGIVH6 (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.185]:7524 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753618AbYGAKbG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 17:07:58 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so914737yxm.1
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 14:07:57 -0700 (PDT)
-Message-ID: <fce2a370807091407h124fc10en64f56d5211748ae2@mail.gmail.com> (sfid-20080709_230801_639826_25E1D8BB)
-Date: Thu, 10 Jul 2008 00:07:57 +0300
-From: "Ihar Hrachyshka" <ihar.hrachyshka@gmail.com>
-To: "Holger Schurig" <hs4233@mail.mn-solutions.de>
-Subject: Re: [PATCH] libertas: fix memory alignment problems on the blackfin
-Cc: libertas-dev@lists.infradead.org,
-	"Ihar Hrachyshka" <ihar.hrachyshka@promwad.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200807091521.04520.hs4233@mail.mn-solutions.de>
+	Tue, 1 Jul 2008 06:31:06 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so568133nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Jul 2008 03:31:04 -0700 (PDT)
+Message-ID: <f6ca9fed0807010331h7bfe33aame35873ffaa4181b0@mail.gmail.com> (sfid-20080701_123111_632701_D200EDE7)
+Date: Tue, 1 Jul 2008 12:31:04 +0200
+From: drago01 <drago01@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH/RFC v3] b43: remove input device usage for rfkill
+Cc: "Adel Gadllah" <adel.gadllah@gmail.com>,
+	linux-wireless@vger.kernel.org, "Michael Buesch" <mb@bu3sch.de>,
+	stefano.brivio@polimi.it,
+	"Larry Finger" <larry.finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
+	"Ivo van Doorn" <ivdoorn@gmail.com>
+In-Reply-To: <1214907833.7763.38.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080709031850.2e7bf50f@promwad.com>
-	 <200807091521.04520.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <6cf6b73e0807010255x1f2d8a21m8ed3e712012ea757@mail.gmail.com>
+	 <1214906304.7763.34.camel@johannes.berg>
+	 <6cf6b73e0807010305ne1c4b3bwb083c25953292f9d@mail.gmail.com>
+	 <1214906908.7763.36.camel@johannes.berg>
+	 <6cf6b73e0807010319x88f3624x83465cc314d8962f@mail.gmail.com>
+	 <1214907833.7763.38.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 9, 2008 at 4:21 PM, Holger Schurig
-<hs4233@mail.mn-solutions.de> wrote:
->> Fixing unaligned memory access on the blackfin architecture
->> (maybe on the ARM also).
+On Tue, Jul 1, 2008 at 12:23 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
 >
-> You can delete the "maybe", on ARM (more specificially, on a
-> PXA255, which is ARMv5TE) I didn't had a problem.
+>> +     rfk->poll_timer->expires += round_jiffies(B43_RFKILL_POLL_DELAY);
+>
+> Umm, no. Can you please read the docs for round_jiffies?
 
-As I know, ARMs are too different to say about some "generic" ARM
-behavior, in memory alignment also I think.
-Too be more correct, the patch fixes alignment problems on all
-machines where structures aren't aligned for even addresses by
-default, blackfin, arm, or anything else I don't know about.
-
->
-> _______________________________________________
-> libertas-dev mailing list
-> libertas-dev@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/libertas-dev
->
+did now, sorry for being stupid.
