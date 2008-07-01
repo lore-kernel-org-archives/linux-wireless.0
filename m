@@ -1,36 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:54021 "EHLO
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:43158 "EHLO
 	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751331AbYGARfQ (ORCPT
+	by vger.kernel.org with ESMTP id S1757651AbYGAOen (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 13:35:16 -0400
-Date: Tue, 1 Jul 2008 14:35:02 -0300
+	Tue, 1 Jul 2008 10:34:43 -0400
+Date: Tue, 1 Jul 2008 11:34:39 -0300
 From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Buesch <mb@bu3sch.de>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Adel Gadllah <adel.gadllah@gmail.com>,
 	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
+	Larry Finger <larry.finger@lwfinger.net>,
 	"John W. Linville" <linville@tuxdriver.com>,
 	Ivo van Doorn <ivdoorn@gmail.com>
 Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
-Message-ID: <20080701173502.GB24605@khazad-dum.debian.net> (sfid-20080701_193520_927033_DE544945)
-References: <6cf6b73e0807010255x1f2d8a21m8ed3e712012ea757@mail.gmail.com> <200807011227.15805.mb@bu3sch.de> <20080701143439.GA6962@khazad-dum.debian.net> <1214923097.3462.0.camel@johannes.berg> <20080701165036.GB6962@khazad-dum.debian.net> <1214931676.3462.5.camel@johannes.berg> <486A65F5.5030909@lwfinger.net>
+Message-ID: <20080701143439.GA6962@khazad-dum.debian.net> (sfid-20080701_163519_434021_0B584900)
+References: <6cf6b73e0807010255x1f2d8a21m8ed3e712012ea757@mail.gmail.com> <200807011227.15805.mb@bu3sch.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <486A65F5.5030909@lwfinger.net>
+In-Reply-To: <200807011227.15805.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 01 Jul 2008, Larry Finger wrote:
-> On my HP laptop using the RFKILL code currently in wireless-testing,  
-> sliding the "Wireless switch" results in b43_rfkill_poll being called.  
+Ok, let's take it slow and one question/answer at a time, then.
 
-Can you confirm (remove rfkill-input, hp-wmi, and anything else that could
-mess with the results) that the HP laptop wireless switch is wired directly
-to that b43 input pin?
+First, I need to know some details about the B43 hardware, to help with
+this.
 
-Is it wired to anything else? e.g. can hp-wmi see that switch?
+1. It has an input pin that sometimes people connect buttons/switches
+to.
+
+Does that input pin act as an input for a FLIP-FLOP (and that flip-flop
+output is the hardware rfkill line), or is it the hardware rfkill line
+itself?
+
+input for a flip-flop means it toggles the kill/unkill behaviour when
+the input pin detects an edge (press/release of a button).
+
+direct hardware rfkill line means you need a SWITCH in that pin, because
+it directly sets the state.  If the pin is active, the hardware rfkill
+line is active.  If the pin is inactive, the hardware rfkill line is
+inactive.
 
 -- 
   "One disk to rule them all, One disk to find them. One disk to bring
