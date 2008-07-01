@@ -1,76 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42368 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:51071 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752195AbYGIOuf (ORCPT
+	with ESMTP id S1752116AbYGARCB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 10:50:35 -0400
-Subject: Re: [PATCH 1/3] mac80211: Include sequence number in IBSS and Mesh
-	beacons
+	Tue, 1 Jul 2008 13:02:01 -0400
+Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
 Cc: Michael Buesch <mb@bu3sch.de>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
+	Larry Finger <larry.finger@lwfinger.net>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200807091657.54657.IvDoorn@gmail.com> (sfid-20080709_164905_644218_D7086E89)
-References: <200807091511.14288.IvDoorn@gmail.com>
-	 <200807091604.50199.IvDoorn@gmail.com>
-	 <1215611931.3246.8.camel@johannes.berg>
-	 <200807091657.54657.IvDoorn@gmail.com>
-	 (sfid-20080709_164905_644218_D7086E89)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LMLaPaDfuoRfIg68D07o"
-Date: Wed, 09 Jul 2008 16:49:46 +0200
-Message-Id: <1215614986.3246.19.camel@johannes.berg> (sfid-20080709_165038_600404_83701837)
+	Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <20080701165036.GB6962@khazad-dum.debian.net>
+References: <6cf6b73e0807010255x1f2d8a21m8ed3e712012ea757@mail.gmail.com>
+	 <200807011227.15805.mb@bu3sch.de>
+	 <20080701143439.GA6962@khazad-dum.debian.net>
+	 <1214923097.3462.0.camel@johannes.berg>
+	 <20080701165036.GB6962@khazad-dum.debian.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NDwgUgDlWZFPvmZkAHWk"
+Date: Tue, 01 Jul 2008 19:01:16 +0200
+Message-Id: <1214931676.3462.5.camel@johannes.berg> (sfid-20080701_190206_599994_15B198F9)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-LMLaPaDfuoRfIg68D07o
+--=-NDwgUgDlWZFPvmZkAHWk
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2008-07-09 at 16:57 +0200, Ivo van Doorn wrote:
-
-> > Well, if you care about the beacon in config_interface() you're
-> > implementing hwseq since otherwise you'd only request it when you need
-> > it, no?
+On Tue, 2008-07-01 at 13:50 -0300, Henrique de Moraes Holschuh wrote:
+> On Tue, 01 Jul 2008, Johannes Berg wrote:
+> > > 1. It has an input pin that sometimes people connect buttons/switches
+> > > to.
+> > >=20
+> > > Does that input pin act as an input for a FLIP-FLOP (and that flip-fl=
+op
+> > > output is the hardware rfkill line), or is it the hardware rfkill lin=
+e
+> > > itself?
+> >=20
+> > Neither. It's not hw kill, but it's not just edge detect either, it doe=
+s
+> > have 'kill' and 'not kill' states.
 >=20
-> No not really, because from what moment can the driver start requesting b=
-eacons?
-> I would think when mac80211 calls config_interface with the IEEE80211_IFC=
-C_BEACON
-> flag. ;)
->=20
-> At that moment the first beacon is loaded, and the device will trigger th=
-e interrupt
-> to request a new beacon every x milliseconds.
+> What exactly the input pin does?  what exactly the hardware does when
+> the input pin state changes?
 
-Ok, I'd have thought you just set the "please send beacons now" flag and
-request one on the next round.
+The hardware does nothing, it just sets a bit high or low depending on
+the input pin.
 
 johannes
 
---=-LMLaPaDfuoRfIg68D07o
+--=-NDwgUgDlWZFPvmZkAHWk
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIdNAGAAoJEKVg1VMiehFYIvsQAITjmNSpKLifp+oLY2IXS1dn
-EdyNBXPDm6jV/zeejKgy8Txd5kKaXlU4JIXS6cqIV/BaY+qOxJukamSDFVFL+77p
-m1nTSQV3sS7NB91DaO7NxUo6aE08DL1wyrFtz2U6k/16tgcUw9LUYrlpuUV5v3PP
-SBO3wdWd1C1PhyJeS78k0wcUfiZtRmKUk5L6V50iTOV+tsukjGXY0FMu4HtT6ty3
-6VhhxIcl5u8YtlgeIoPaxKwMft2LE2E9wevJdwN3KXE0oXWl2AUhh2e/WbO90lA7
-wMzDP2XyQuGOuFy6YCSee2WlcGcIFwz7216Zxu0nu9D+sKzzNB6v3Ds2nSRcReU3
-Rsc6Cg6ZHZ5O/KoslJUox+GuiPzdjPlhDBKiKy2AdmmJgpD5XnGaqY6aWaJxhx2a
-qCCSQaoidbi8yktIfYaPGHxvFWWiV840oVlC4d1qzf04bFkzPaUB38MyHQl7tnMt
-ZOFXESz+SN3llUc5pRtSp+G4jVIZ5XRsDzNABocEhfnsfeJUAocm5YO/RGzoSrnL
-sKs5sJkig3BpKmDlP5kwuiyolm+HvSkOOeFN0m2fYZeAL+l0ujI9jcm3HSnIjZ7D
-uimX9k/y25H9Y1Hci45oPQvDSz7A3klz/APndz5IAgTg3EaUcIyoU4z5PEEEzU7i
-48XOSn45OUQVanim1lan
-=gIWv
+iQIcBAABAgAGBQJIamLZAAoJEKVg1VMiehFYbhIP/R1QfWfukNOPhAdZP/T5cvCE
+KbcrFNI06DSuxjKbRh6Ab/yXUwdDCil3yA8gBc9MBtuuwJac/LD3zBWnX9mIoKGS
+VA6cGx1pDkwjiye8QGqUiScBi0CZWg2Yek/1XSHd2fuxwTz060UBMGqMomrmORLU
+QQxzdN3im88jp2z5tJwB5/vKK8nv3mbDTcJd/diN94R5IDcE3XYy2HgUP1jzxK3I
+gsR5Qg81v6JwVmrDiQ7fsT89x8gy5lGV3nI5qL/1F8K9FnZzjdaF8e/4RnRp3WT2
+gErGhL8VwzstWadAVrU1lmFVqZDvfc5TunkNsKqyHc5AhNwPoOoMX7lVizaop6sl
+BmJFdAK15Dlgc8+PI6jw8fofy9FkMQmOep3mtN6tkEH5zW1Xo5JVbrwYD1Q6AbJR
+S0vbzFNyLeY+0NWjniScs5Qn2IV/+jYA1pu6FcWovHsGw2WxlXB+kdQLDmCTy36S
+p4TlyDmUq0jXyxELTLBdUzwBd+s8WSZOjFnBbF5ZV8EhMVLrtFdBa9tzdhXMJdF+
+xvB9Aym0bxHHV5t12RS/BRYjX3BvsvzmzNHQtbdyk38UYXUZYkWeFWIJHDf0H0Gl
+wOuF+s4vbVZE/6/6BjiZjiWD5RFJSgayh+yaeH4TG7Om3XDLoXIypIOZN6+baWui
+lHCpY0nXWls5x3VRR/i+
+=Q5Tg
 -----END PGP SIGNATURE-----
 
---=-LMLaPaDfuoRfIg68D07o--
+--=-NDwgUgDlWZFPvmZkAHWk--
 
