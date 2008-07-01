@@ -1,49 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.191]:62474 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751877AbYGERHf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jul 2008 13:07:35 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so995849fkq.5
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Jul 2008 10:07:33 -0700 (PDT)
-Message-ID: <486FAA4D.2080601@gmail.com> (sfid-20080705_190750_083585_E6F90CDB)
-Date: Sat, 05 Jul 2008 18:07:25 +0100
-MIME-Version: 1.0
-To: matthieu castet <castet.matthieu@free.fr>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [Fwd: airo with WPA support merge]
-References: <4807C194.4040108@free.fr> <486F46A7.4020105@free.fr>
-In-Reply-To: <486F46A7.4020105@free.fr>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-From: Dave <kilroyd@googlemail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2063 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754999AbYGANr0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jul 2008 09:47:26 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Fabien Crespel <fcrespel@gmail.com>, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH] iwlwifi: remove input device from iwl3945
+Date: Tue,  1 Jul 2008 09:23:00 -0400
+Message-Id: <1214918580-5855-1-git-send-email-linville@tuxdriver.com> (sfid-20080701_154730_083638_3FCC1E62)
+In-Reply-To: <8AD95083DC3E36478732061D97524415035E38AB@pdsmsx411.ccr.corp.intel.com>
+References: <8AD95083DC3E36478732061D97524415035E38AB@pdsmsx411.ccr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-matthieu castet wrote:
->> [2]
->> http://svn.gna.org/viewcvs/airo-wpa/branches/kernel-merge/
->>
->> [3]
->> Dan Williams :
->> One problem I have is that after setting the TKIP key, I always get a
->> sequence of 3 bad MICs, and then the MAC sends a status of 0x8117 which
->> causes the driver to send a disconnection event to userspace, which
->> makes wpa_supplicant fail the connection.  If I comment out the 'goto
->> badrx;' in the interrupt handler where the WPA mic is checked,
->> everything works great and I can complete the 4-way handshake.  It needs
->> more investigation, but do you have any thoughts on what might be going
->> on here?
+I merged an early version of a patch and missed some bits included in a
+later version.
 
-I had a quick look at [2].
+	http://marc.info/?l=linux-wireless&m=121481826531792&w=2
 
-The WPA support is similar to that posted for the orinoco driver last weekend. The driver calculates the MIC using the current software keys and appends it to the packet to be transmitted; the firmware/hardware encrypts the packet with the keys set in hardware.
+I have replicated the missing bits here.
 
-For orinoco the TKIP changing code waits until the card has finished transmitting queued packets before changing the keys [4]. This prevents the software keys from getting out of step with the hardware keys. Orinoco makes use of a RID to determine if there's anything in the TX queue, but I don't think this is necessary.
+Cc: Adel Gadllah <adel.gadllah@gmail.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Fabien Crespel <fcrespel@gmail.com>
+Cc: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/iwlwifi/Kconfig        |    5 +++
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    4 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   38 +-------------------------
+ 3 files changed, 9 insertions(+), 38 deletions(-)
 
-Might a similar change work for the airo driver?
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index b628a44..82b66a3 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -104,6 +104,7 @@ config IWL3945
+ 	select IWLWIFI
+ 	select MAC80211_LEDS if IWL3945_LEDS
+ 	select LEDS_CLASS if IWL3945_LEDS
++	select RFKILL if IWL3945_RFKILL
+ 	---help---
+ 	  Select to build the driver supporting the:
+ 
+@@ -126,6 +127,10 @@ config IWL3945
+ 	  say M here and read <file:Documentation/kbuild/modules.txt>.  The
+ 	  module will be called iwl3945.ko.
+ 
++config IWL3945_RFKILL
++	bool "Enable RF kill support in iwl3945 drivers"
++	depends on IWL3945
++
+ config IWL3945_SPECTRUM_MEASUREMENT
+ 	bool "Enable Spectrum Measurement in iwl3945 drivers"
+ 	depends on IWL3945
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index a774978..4df42ad 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -690,7 +690,7 @@ enum {
+ 
+ #endif
+ 
+-#ifdef CONFIG_IWLWIFI_RFKILL
++#ifdef CONFIG_IWL3945_RFKILL
+ struct iwl3945_priv;
+ 
+ struct iwl3945_rfkill_mngr {
+@@ -800,7 +800,7 @@ struct iwl3945_priv {
+ 	struct iwl3945_init_alive_resp card_alive_init;
+ 	struct iwl3945_alive_resp card_alive;
+ 
+-#ifdef CONFIG_IWLWIFI_RFKILL
++#ifdef CONFIG_IWL3945_RFKILL
+ 	struct iwl3945_rfkill_mngr rfkill_mngr;
+ #endif
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 3bc2644..a604a29 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -8270,7 +8270,7 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
+ #endif /* CONFIG_PM */
+ 
+ /*************** RFKILL FUNCTIONS **********/
+-#ifdef CONFIG_IWLWIFI_RFKILL
++#ifdef CONFIG_IWL3945_RFKILL
+ /* software rf-kill from user */
+ static int iwl3945_rfkill_soft_rf_kill(void *data, enum rfkill_state state)
+ {
+@@ -8331,44 +8331,15 @@ int iwl3945_rfkill_init(struct iwl3945_priv *priv)
+ 	priv->rfkill_mngr.rfkill->dev.class->suspend = NULL;
+ 	priv->rfkill_mngr.rfkill->dev.class->resume = NULL;
+ 
+-	priv->rfkill_mngr.input_dev = input_allocate_device();
+-	if (!priv->rfkill_mngr.input_dev) {
+-		IWL_ERROR("Unable to allocate rfkill input device.\n");
+-		ret = -ENOMEM;
+-		goto freed_rfkill;
+-	}
+-
+-	priv->rfkill_mngr.input_dev->name = priv->cfg->name;
+-	priv->rfkill_mngr.input_dev->phys = wiphy_name(priv->hw->wiphy);
+-	priv->rfkill_mngr.input_dev->id.bustype = BUS_HOST;
+-	priv->rfkill_mngr.input_dev->id.vendor = priv->pci_dev->vendor;
+-	priv->rfkill_mngr.input_dev->dev.parent = device;
+-	priv->rfkill_mngr.input_dev->evbit[0] = BIT(EV_KEY);
+-	set_bit(KEY_WLAN, priv->rfkill_mngr.input_dev->keybit);
+-
+ 	ret = rfkill_register(priv->rfkill_mngr.rfkill);
+ 	if (ret) {
+ 		IWL_ERROR("Unable to register rfkill: %d\n", ret);
+-		goto free_input_dev;
+-	}
+-
+-	ret = input_register_device(priv->rfkill_mngr.input_dev);
+-	if (ret) {
+-		IWL_ERROR("Unable to register rfkill input device: %d\n", ret);
+-		goto unregister_rfkill;
++		goto freed_rfkill;
+ 	}
+ 
+ 	IWL_DEBUG_RF_KILL("RFKILL initialization complete.\n");
+ 	return ret;
+ 
+-unregister_rfkill:
+-	rfkill_unregister(priv->rfkill_mngr.rfkill);
+-	priv->rfkill_mngr.rfkill = NULL;
+-
+-free_input_dev:
+-	input_free_device(priv->rfkill_mngr.input_dev);
+-	priv->rfkill_mngr.input_dev = NULL;
+-
+ freed_rfkill:
+ 	if (priv->rfkill_mngr.rfkill != NULL)
+ 		rfkill_free(priv->rfkill_mngr.rfkill);
+@@ -8381,14 +8352,9 @@ error:
+ 
+ void iwl3945_rfkill_unregister(struct iwl3945_priv *priv)
+ {
+-
+-	if (priv->rfkill_mngr.input_dev)
+-		input_unregister_device(priv->rfkill_mngr.input_dev);
+-
+ 	if (priv->rfkill_mngr.rfkill)
+ 		rfkill_unregister(priv->rfkill_mngr.rfkill);
+ 
+-	priv->rfkill_mngr.input_dev = NULL;
+ 	priv->rfkill_mngr.rfkill = NULL;
+ }
+ 
+-- 
+1.5.5.1
 
-Regards,
-
-Dave.
-
-[4] <http://marc.info/?l=linux-wireless&m=121467838917394&w=4>
