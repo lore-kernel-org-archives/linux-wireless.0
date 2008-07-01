@@ -1,57 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:64951 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1752232AbYGWPWr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 11:22:47 -0400
-Message-ID: <48874C6A.1020604@cn.fujitsu.com> (sfid-20080723_172250_299229_7B9F769B)
-Date: Wed, 23 Jul 2008 23:21:14 +0800
-From: Wang Chen <wangchen@cn.fujitsu.com>
-MIME-Version: 1.0
-To: Markus Trippelsdorf <markus@trippelsdorf.de>,
-	David Miller <davem@davemloft.net>
-CC: Alessandro Guido <ag@alessandroguido.name>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] skge: resolve tx multiqueue bug
-References: <d4b984a30807210914nd4d0db5yb7b93ca5143ff0d5@mail.gmail.com> <20080721.092027.14394005.davem@davemloft.net> <d4b984a30807220254t1aaf6ac4q874329966511b0c5@mail.gmail.com> <20080723054039.GA2272@gentoox2.trippelsdorf.de> <4886F0C5.7040605@cn.fujitsu.com> <20080723101827.GA2236@gentoox2.trippelsdorf.de> <20080723140347.GA2245@gentoox2.trippelsdorf.de>
-In-Reply-To: <20080723140347.GA2245@gentoox2.trippelsdorf.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from xc.sipsolutions.net ([83.246.72.84]:40716 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751727AbYGALHh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jul 2008 07:07:37 -0400
+Subject: Re: rt61 and TSF reporting?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200807011305.18802.IvDoorn@gmail.com> (sfid-20080701_130101_443742_9C502412)
+References: <1214907990.7763.40.camel@johannes.berg>
+	 <200807011247.57739.IvDoorn@gmail.com>
+	 <1214909314.7763.43.camel@johannes.berg>
+	 <200807011305.18802.IvDoorn@gmail.com>
+	 (sfid-20080701_130101_443742_9C502412)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PfDVWoqGAxvZnaBEIKLH"
+Date: Tue, 01 Jul 2008 13:06:45 +0200
+Message-Id: <1214910405.29181.0.camel@johannes.berg> (sfid-20080701_130740_297045_A24D4504)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Markus Trippelsdorf said the following on 2008-7-23 22:03:
-> On Wed, Jul 23, 2008 at 12:18:27PM +0200, Markus Trippelsdorf wrote:
->> On Wed, Jul 23, 2008 at 04:50:13PM +0800, Wang Chen wrote:
->>> Markus Trippelsdorf said the following on 2008-7-23 13:40:
->>>> On Tue, Jul 22, 2008 at 11:54:26AM +0200, Alessandro Guido wrote:
->>>>> Got a WARNING this morning (2.6.26-05752-g93ded9b) and I think it's related.
->>>> Same thing here (latest git):
->>>>
->>>> skge eth1: enabling interface
->>>> skge eth1: disabling interface
->>>> ------------[ cut here ]------------
->>>> WARNING: at net/core/dev.c:1344 __netif_schedule+0x24/0x6d()
->>>> Pid: 1904, comm: ip Not tainted 2.6.26-06077-gc010b2f #33
->>>>  [<ffffffff8020b3eb>] system_call_after_swapgs+0x7b/0x80
->> ...
->>>> ---[ end trace 92936ef183e09876 ]---
->>>> skge eth1: enabling interface
->>>> skge eth1: Link is up at 100 Mbps, full duplex, flow control both
->>>>
->>> Markus, please try this.
->>>
->>> - Add netif_start_queue() in ->open()
->>> - netif_carrier_*() is enough, remove netif_*_queue()
->> Unfortunately, your patch does not fix this. I still get the same warning.
->>
-> 
-> This patch works for me:
 
-Your patch works for me too. So I think it's better than mine. :)
-
-Tested-by: Wang Chen <wangchen@cn.fujitsu.com>
-
-Dave, since Markus and me tested this patch, would you please apply it?
+--=-PfDVWoqGAxvZnaBEIKLH
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
+> > > Note that these undocumented fields only are present in rt2500pci and=
+ rt61pci.
+> >=20
+> > Ok cool, I'll play with that, I should be able to make a patch myself,
+> > thanks.
+>=20
+> Oh wait, just found a reference about those RXD words:
+>=20
+>  * The following fields are for DMA block and HOST usage only.
+>  * Can't be touched by ASIC MAC block.
+>=20
+> In other words, they are for driver usage only. :S
+
+The only ones that are ever non-zero are 0, 1, 4 and 5. Guess not then.
+
+johannes
+
+--=-PfDVWoqGAxvZnaBEIKLH
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIag/CAAoJEKVg1VMiehFYjZ8P/RqRFXtbS7sb+lUnV1Hg2YJg
+V/nbDiHSRchIFKGsJ2hz/VD2fDrF1yiTWKHjTiRK26Jgh+PCuD/Rk0nOhTZIi8KJ
+OI0/YXysRZUSPnYfJM0SkiBezebXYOfVegbx5hkSYh06R6rcQaN4fG2R+PL+Y0I4
+lG2aQDc89dt3e/KZUD7nIS3FpeTumwHctXcTLzbA8BaATqYkMf/VJo3uz2LWbQgI
+i8u6oQ6J/BsmxPYLYgnWdbdMULZ2IRdZr3FtwTX4zwi5bSIyaX02/yqST4ubtp5y
+eFoSSwlKC3KK1BxwDSWNA+CVBE5I+0XQJlAnznsuBUoCKE+g2WnRt5FzzYSsI3rh
+mXKkxMdenvGifXvRMcV6sck2AQhoLRT4YQhTDUIOyo1QjNPNaCytwuCncPpW9Z5s
+25K/y+FV2FC9b68BYWpsYyIMlPKDRM1MG6Me1oyJ8wimyZxRguoZ5rk9oN1S+6/x
+0VFQxnec8XmmtA2+DVaPVZiLH0QtiWvgHd3kuqCB2XG+L9+fYtMX4Nn2y981TMjT
+mbuoy4W9m91zO0PxBQ2AgMsZ2XT18N3JzULjuOmyiJIx4UKdEQPQpWLunXgU8WmJ
+/UXuKzm7lyiUJiZEqmcjKR+EF3Oq4kGi+bPXBgEd8V8wESadByuvjnmGOUMAbIeg
+hc431rTAp15EaqSMVuem
+=igcU
+-----END PGP SIGNATURE-----
+
+--=-PfDVWoqGAxvZnaBEIKLH--
 
