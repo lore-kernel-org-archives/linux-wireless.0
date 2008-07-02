@@ -1,313 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:12089 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752113AbYGDLgU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jul 2008 07:36:20 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so359293nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Jul 2008 04:36:18 -0700 (PDT)
-To: linville@tuxdriver.com
-Subject: [PATCH 1/4] rt2x00: Remove input_polldev requirements for rfkill
-Date: Fri, 4 Jul 2008 13:41:25 +0200
+Received: from ra.tuxdriver.com ([70.61.120.52]:4457 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753041AbYGBUrE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jul 2008 16:47:04 -0400
+Date: Wed, 2 Jul 2008 16:18:51 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: pull request: wireless-2.6 2008-07-02
+Message-ID: <20080702201851.GA10272@tuxdriver.com> (sfid-20080702_224709_449250_59CDC601)
 MIME-Version: 1.0
-Message-Id: <200807041341.26003.IvDoorn@gmail.com> (sfid-20080704_133624_617866_C2188B26)
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the new rfkill interface there is no longer a need
-for the input_polldev. Create a delayed_work structure
-which we can put on the mac80211 workqueue and poll the
-hardware every 100ms.
+Dave,
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+A few stragglers for 2.6.26...
+
+Let me know if there are problems!
+
+Thanks,
+
+John
+
 ---
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-index 3a9b1d7..d485a86 100644
---- a/drivers/net/wireless/rt2x00/Kconfig
-+++ b/drivers/net/wireless/rt2x00/Kconfig
-@@ -36,9 +36,7 @@ config RT2X00_LIB_FIRMWARE
- config RT2X00_LIB_RFKILL
- 	boolean
- 	depends on RT2X00_LIB
--	depends on INPUT
- 	select RFKILL
--	select INPUT_POLLDEV
+
+Individual patches are available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
+
+---
+
+The following changes since commit 2fe195cfe3e53c144d247b2768e37732e8eae4d8:
+  Patrick McHardy (1):
+        net: fib_rules: fix error code for unsupported families
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+Rick Farrington (1):
+      iwlwifi: fix incorrect 5GHz rates reported in monitor mode
+
+Zhu Yi (1):
+      iwlwifi: drop skb silently for Tx request in monitor mode
+
+andrey@cozybit.com (1):
+      libertas: support USB persistence on suspend/resume (resend)
+
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    6 +++++-
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    6 +++++-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    3 ++-
+ drivers/net/wireless/libertas/if_usb.c      |    1 +
+ 5 files changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 62a3d8f..f5387a7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -588,8 +588,12 @@ static void iwl3945_add_radiotap(struct iwl3945_priv *priv,
  
- config RT2X00_LIB_LEDS
- 	boolean
-@@ -57,7 +55,7 @@ config RT2400PCI
+ 	if (rate == -1)
+ 		iwl3945_rt->rt_rate = 0;
+-	else
++	else {
++		if (stats->band == IEEE80211_BAND_5GHZ)
++			rate += IWL_FIRST_OFDM_RATE;
++
+ 		iwl3945_rt->rt_rate = iwl3945_rates[rate].ieee;
++	}
  
- config RT2400PCI_RFKILL
- 	bool "Ralink rt2400 rfkill support"
--	depends on RT2400PCI && INPUT
-+	depends on RT2400PCI
- 	select RT2X00_LIB_RFKILL
- 	---help---
- 	  This adds support for integrated rt2400 hardware that features a
-@@ -85,7 +83,7 @@ config RT2500PCI
+ 	/* antenna number */
+ 	antenna = phy_flags_hw & RX_RES_PHY_FLAGS_ANTENNA_MSK;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index bf19eb8..de330ae 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -3528,8 +3528,12 @@ static void iwl4965_add_radiotap(struct iwl_priv *priv,
  
- config RT2500PCI_RFKILL
- 	bool "Ralink rt2500 rfkill support"
--	depends on RT2500PCI && INPUT
-+	depends on RT2500PCI
- 	select RT2X00_LIB_RFKILL
- 	---help---
- 	  This adds support for integrated rt2500 hardware that features a
-@@ -115,7 +113,7 @@ config RT61PCI
- 
- config RT61PCI_RFKILL
- 	bool "Ralink rt2501/rt61 rfkill support"
--	depends on RT61PCI && INPUT
-+	depends on RT61PCI
- 	select RT2X00_LIB_RFKILL
- 	---help---
- 	  This adds support for integrated rt61 hardware that features a
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 6842464..1b28dad 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -649,7 +649,7 @@ struct rt2x00_dev {
- #define RFKILL_STATE_ALLOCATED		1
- #define RFKILL_STATE_REGISTERED		2
- 	struct rfkill *rfkill;
--	struct input_polled_dev *poll_dev;
-+	struct delayed_work rfkill_work;
- #endif /* CONFIG_RT2X00_LIB_RFKILL */
+ 	if (rate == -1)
+ 		iwl4965_rt->rt_rate = 0;
+-	else
++	else {
++		if (stats->band == IEEE80211_BAND_5GHZ)
++			rate += IWL_FIRST_OFDM_RATE;
++
+ 		iwl4965_rt->rt_rate = iwl4965_rates[rate].ieee;
++	}
  
  	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index ae8ab71..41b3289 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -1179,7 +1179,6 @@ int rt2x00lib_suspend(struct rt2x00_dev *rt2x00dev, pm_message_t state)
- 	 * Suspend/disable extra components.
- 	 */
- 	rt2x00leds_suspend(rt2x00dev);
--	rt2x00rfkill_suspend(rt2x00dev);
- 	rt2x00debug_deregister(rt2x00dev);
+ 	 * "antenna number"
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index b1b3c52..6027e11 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -6687,7 +6687,8 @@ static int iwl3945_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb,
  
- exit:
-@@ -1235,7 +1234,6 @@ int rt2x00lib_resume(struct rt2x00_dev *rt2x00dev)
- 	 * Restore/enable extra components.
- 	 */
- 	rt2x00debug_register(rt2x00dev);
--	rt2x00rfkill_resume(rt2x00dev);
- 	rt2x00leds_resume(rt2x00dev);
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
-index 1d1f074..4b31c69 100644
---- a/drivers/net/wireless/rt2x00/rt2x00lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
-@@ -30,10 +30,11 @@
- 
- /*
-  * Interval defines
-- * Both the link tuner as the rfkill will be called once per second.
-+ * The link tuner will be called once per second, while the rfkill poller
-+ * will be called every 100ms.
-  */
- #define LINK_TUNE_INTERVAL	( round_jiffies_relative(HZ) )
--#define RFKILL_POLL_INTERVAL	( 1000 )
-+#define RFKILL_POLL_INTERVAL	( round_jiffies_relative(HZ / 10) )
- 
- /*
-  * rt2x00_rate: Per rate device information
-@@ -204,8 +205,6 @@ void rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev);
- void rt2x00rfkill_unregister(struct rt2x00_dev *rt2x00dev);
- void rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev);
- void rt2x00rfkill_free(struct rt2x00_dev *rt2x00dev);
--void rt2x00rfkill_suspend(struct rt2x00_dev *rt2x00dev);
--void rt2x00rfkill_resume(struct rt2x00_dev *rt2x00dev);
- #else
- static inline void rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev)
- {
-@@ -222,14 +221,6 @@ static inline void rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
- static inline void rt2x00rfkill_free(struct rt2x00_dev *rt2x00dev)
- {
- }
--
--static inline void rt2x00rfkill_suspend(struct rt2x00_dev *rt2x00dev)
--{
--}
--
--static inline void rt2x00rfkill_resume(struct rt2x00_dev *rt2x00dev)
--{
--}
- #endif /* CONFIG_RT2X00_LIB_RFKILL */
- 
- /*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00rfkill.c b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-index 207281c..04b2971 100644
---- a/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-@@ -23,7 +23,6 @@
- 	Abstract: rt2x00 rfkill routines.
-  */
- 
--#include <linux/input-polldev.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/rfkill.h>
-@@ -61,15 +60,35 @@ static int rt2x00rfkill_toggle_radio(void *data, enum rfkill_state state)
- 	return retval;
- }
- 
--static void rt2x00rfkill_poll(struct input_polled_dev *poll_dev)
-+static int rt2x00rfkill_get_state(void *data, enum rfkill_state *state)
- {
--	struct rt2x00_dev *rt2x00dev = poll_dev->private;
--	int state = rt2x00dev->ops->lib->rfkill_poll(rt2x00dev);
-+	struct rt2x00_dev *rt2x00dev = data;
- 
--	if (rt2x00dev->rfkill->state != state) {
--		input_report_key(poll_dev->input, KEY_WLAN, 1);
--		input_report_key(poll_dev->input, KEY_WLAN, 0);
--	}
-+	*state = rt2x00dev->rfkill->state;
-+
-+	return 0;
-+}
-+
-+static void rt2x00rfkill_poll(struct work_struct *work)
-+{
-+	struct rt2x00_dev *rt2x00dev =
-+	    container_of(work, struct rt2x00_dev, rfkill_work.work);
-+	int state;
-+
-+	if (!test_bit(RFKILL_STATE_REGISTERED, &rt2x00dev->rfkill_state))
-+		return;
-+
-+	/*
-+	 * rfkill_poll reports 1 when the key has been pressed and the
-+	 * radio should be blocked.
-+	 */
-+	state = !rt2x00dev->ops->lib->rfkill_poll(rt2x00dev) ?
-+	    RFKILL_STATE_UNBLOCKED : RFKILL_STATE_SOFT_BLOCKED;
-+
-+	rfkill_force_state(rt2x00dev->rfkill, state);
-+
-+	queue_delayed_work(rt2x00dev->hw->workqueue,
-+			   &rt2x00dev->rfkill_work, RFKILL_POLL_INTERVAL);
- }
- 
- void rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev)
-@@ -83,12 +102,6 @@ void rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev)
- 		return;
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
+ 		IWL_DEBUG_MAC80211("leave - monitor\n");
+-		return -1;
++		dev_kfree_skb_any(skb);
++		return 0;
  	}
  
--	if (input_register_polled_device(rt2x00dev->poll_dev)) {
--		ERROR(rt2x00dev, "Failed to register polled device.\n");
--		rfkill_unregister(rt2x00dev->rfkill);
--		return;
--	}
--
- 	__set_bit(RFKILL_STATE_REGISTERED, &rt2x00dev->rfkill_state);
+ 	IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->len,
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 5ed16ce..0bd55bb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -6237,7 +6237,8 @@ static int iwl4965_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb,
  
- 	/*
-@@ -96,7 +109,7 @@ void rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev)
- 	 * and correctly sends the signal to the rfkill layer about this
- 	 * state.
- 	 */
--	rt2x00rfkill_poll(rt2x00dev->poll_dev);
-+	rt2x00rfkill_poll(&rt2x00dev->rfkill_work.work);
- }
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
+ 		IWL_DEBUG_MAC80211("leave - monitor\n");
+-		return -1;
++		dev_kfree_skb_any(skb);
++		return 0;
+ 	}
  
- void rt2x00rfkill_unregister(struct rt2x00_dev *rt2x00dev)
-@@ -105,38 +118,13 @@ void rt2x00rfkill_unregister(struct rt2x00_dev *rt2x00dev)
- 	    !test_bit(RFKILL_STATE_REGISTERED, &rt2x00dev->rfkill_state))
- 		return;
+ 	IWL_DEBUG_TX("dev->xmit(%d bytes) at rate 0x%02x\n", skb->len,
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index 8032df7..36288b2 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -925,6 +925,7 @@ static struct usb_driver if_usb_driver = {
+ 	.id_table = if_usb_table,
+ 	.suspend = if_usb_suspend,
+ 	.resume = if_usb_resume,
++	.reset_resume = if_usb_resume,
+ };
  
--	input_unregister_polled_device(rt2x00dev->poll_dev);
-+	cancel_delayed_work_sync(&rt2x00dev->rfkill_work);
-+
- 	rfkill_unregister(rt2x00dev->rfkill);
- 
- 	__clear_bit(RFKILL_STATE_REGISTERED, &rt2x00dev->rfkill_state);
- }
- 
--static struct input_polled_dev *
--rt2x00rfkill_allocate_polldev(struct rt2x00_dev *rt2x00dev)
--{
--	struct input_polled_dev *poll_dev;
--
--	poll_dev = input_allocate_polled_device();
--	if (!poll_dev)
--		return NULL;
--
--	poll_dev->private = rt2x00dev;
--	poll_dev->poll = rt2x00rfkill_poll;
--	poll_dev->poll_interval = RFKILL_POLL_INTERVAL;
--
--	poll_dev->input->name = rt2x00dev->ops->name;
--	poll_dev->input->phys = wiphy_name(rt2x00dev->hw->wiphy);
--	poll_dev->input->id.bustype = BUS_HOST;
--	poll_dev->input->id.vendor = 0x1814;
--	poll_dev->input->id.product = rt2x00dev->chip.rt;
--	poll_dev->input->id.version = rt2x00dev->chip.rev;
--	poll_dev->input->dev.parent = wiphy_dev(rt2x00dev->hw->wiphy);
--	poll_dev->input->evbit[0] = BIT(EV_KEY);
--	set_bit(KEY_WLAN, poll_dev->input->keybit);
--
--	return poll_dev;
--}
--
- void rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
- {
- 	if (!test_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags))
-@@ -153,14 +141,9 @@ void rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
- 	rt2x00dev->rfkill->data = rt2x00dev;
- 	rt2x00dev->rfkill->state = -1;
- 	rt2x00dev->rfkill->toggle_radio = rt2x00rfkill_toggle_radio;
-+	rt2x00dev->rfkill->get_state = rt2x00rfkill_get_state;
- 
--	rt2x00dev->poll_dev = rt2x00rfkill_allocate_polldev(rt2x00dev);
--	if (!rt2x00dev->poll_dev) {
--		ERROR(rt2x00dev, "Failed to allocate polled device.\n");
--		rfkill_free(rt2x00dev->rfkill);
--		rt2x00dev->rfkill = NULL;
--		return;
--	}
-+	INIT_DELAYED_WORK(&rt2x00dev->rfkill_work, rt2x00rfkill_poll);
- 
- 	return;
- }
-@@ -171,32 +154,8 @@ void rt2x00rfkill_free(struct rt2x00_dev *rt2x00dev)
- 	    !test_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state))
- 		return;
- 
--	input_free_polled_device(rt2x00dev->poll_dev);
--	rt2x00dev->poll_dev = NULL;
-+	cancel_delayed_work_sync(&rt2x00dev->rfkill_work);
- 
- 	rfkill_free(rt2x00dev->rfkill);
- 	rt2x00dev->rfkill = NULL;
- }
--
--void rt2x00rfkill_suspend(struct rt2x00_dev *rt2x00dev)
--{
--	if (!test_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags) ||
--	    !test_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state))
--		return;
--
--	input_free_polled_device(rt2x00dev->poll_dev);
--	rt2x00dev->poll_dev = NULL;
--}
--
--void rt2x00rfkill_resume(struct rt2x00_dev *rt2x00dev)
--{
--	if (!test_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags) ||
--	    !test_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state))
--		return;
--
--	rt2x00dev->poll_dev = rt2x00rfkill_allocate_polldev(rt2x00dev);
--	if (!rt2x00dev->poll_dev) {
--		ERROR(rt2x00dev, "Failed to allocate polled device.\n");
--		return;
--	}
--}
+ static int __init if_usb_init_module(void)
+-- 
+John W. Linville
+linville@tuxdriver.com
