@@ -1,50 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:61389 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753036AbYGKD4w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 23:56:52 -0400
-From: Zhu Yi <yi.zhu@intel.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54942
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753943AbYGBUYJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jul 2008 16:24:09 -0400
+Date: Wed, 02 Jul 2008 13:24:08 -0700 (PDT)
+Message-Id: <20080702.132408.97330339.davem@davemloft.net> (sfid-20080702_222415_292171_DEDFE693)
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Guy Cohen <guy.cohen@intel.com>, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 05/14] iwlwifi: rs always set lq_sta->priv
-Date: Fri, 11 Jul 2008 11:53:33 +0800
-Message-Id: <1215748422-12672-6-git-send-email-yi.zhu@intel.com> (sfid-20080711_055655_990497_C8A7458E)
-In-Reply-To: <1215748422-12672-5-git-send-email-yi.zhu@intel.com>
-References: <1215748422-12672-1-git-send-email-yi.zhu@intel.com>
- <1215748422-12672-2-git-send-email-yi.zhu@intel.com>
- <1215748422-12672-3-git-send-email-yi.zhu@intel.com>
- <1215748422-12672-4-git-send-email-yi.zhu@intel.com>
- <1215748422-12672-5-git-send-email-yi.zhu@intel.com>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2008-06-30
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080702193710.GA4682@tuxdriver.com>
+References: <20080630215651.GA666@tuxdriver.com>
+	<20080702193710.GA4682@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 2 Jul 2008 15:37:10 -0400
 
-This patch fixes printk NULL pointer exceptions in rs code.
+> On Mon, Jun 30, 2008 at 05:56:51PM -0400, John W. Linville wrote:
+> 
+> >       iwlwifi: fix incorrect 5GHz rates reported in monitor mode
+> 
+> >       iwlwifi: drop skb silently for Tx request in monitor mode
+> 
+> It looks like these two are appropriate for 2.6.26.  Since you
+> haven't pulled this yet, I'll push them that way, drop them from
+> wireless-next-2.6, and send a new pull request.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Guy Cohen <guy.cohen@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-index c7ebb3b..3ccb84a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-rs.c
-@@ -2265,9 +2265,7 @@ static void rs_rate_init(void *priv_rate, void *priv_sta,
- 
- 	/* as default allow aggregation for all tids */
- 	lq_sta->tx_agg_tid_en = IWL_AGG_ALL_TID;
--#ifdef CONFIG_MAC80211_DEBUGFS
- 	lq_sta->drv = priv;
--#endif
- 
- 	rs_initialize_lq(priv, conf, sta);
- }
--- 
-1.5.3.6
-
+Ok, thanks for the heads up.
