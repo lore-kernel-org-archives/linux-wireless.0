@@ -1,74 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41586 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753156AbYGJKXB (ORCPT
+Received: from n11b.bullet.mail.mud.yahoo.com ([209.191.125.178]:35396 "HELO
+	n11b.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756384AbYGBObQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 06:23:01 -0400
-Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <20080709190915.GA8238@tuxdriver.com> (sfid-20080709_213808_434368_5FE083A0)
-References: <20080709190915.GA8238@tuxdriver.com>
-	 (sfid-20080709_213808_434368_5FE083A0)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yEpiEa3Bj02we0wir1ny"
-Date: Thu, 10 Jul 2008 12:22:15 +0200
-Message-Id: <1215685335.3483.5.camel@johannes.berg> (sfid-20080710_122307_490870_7637E0C4)
-Mime-Version: 1.0
+	Wed, 2 Jul 2008 10:31:16 -0400
+Message-ID: <486B8FCF.8080201@yahoo.it> (sfid-20080702_163120_395468_EB5E0E34)
+Date: Wed, 02 Jul 2008 16:25:19 +0200
+From: Filippo Zangheri <filippo.zangheri@yahoo.it>
+MIME-Version: 1.0
+To: Darren Jenkins <darrenrjenkins@gmail.com>
+CC: kernel Janitors <kernel-janitors@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	ipw2100-admin@linux.intel.com, yi.zhu@intel.com,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH]  drivers/net/wireless/iwlwifi/iwl-3945.c
+References: <1214962647.18261.15.camel@localhost.localdomain>
+In-Reply-To: <1214962647.18261.15.camel@localhost.localdomain>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+(Cc'ing linux-wireless)
 
---=-yEpiEa3Bj02we0wir1ny
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-
-> 0900	Status Reports
-> 	Overview of where things stand today
-> 	- 802.11n
-> 	- QoS/Multiqueue
-> 	- Mesh mode (802.11s)
-> 	- RF kill
-
-And spectrum management (Tomas) please.
-
-> 1300	Current Work
+On 02/07/2008 03:37, Darren Jenkins\ wrote:
+> G'day people
 >=20
-> 	Short presentations/discussions about work in progress
-> 	- encrypted management frames (802.11w)
-> 	- regulatory enforcement (802.11d, CRDA)
-> 	- virtual hardware (mac80211_hwsim)
+> Coverity CID: 2265 NEGATIVE_RETURNS
+>=20
+> "rate" is of an unsigned type, and the code requires a signed type.
+> The following patch makes it so.
+>=20
+> Only compile tested.
+>=20
+> =EF=BB=BFSigned-off-by: Darren Jenkins <darrenrjenkins@gmailcom>
+>=20
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wi=
+reless/iwlwifi/iwl-3945.c
+> index 62a3d8f..31d38cd 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> @@ -449,7 +449,7 @@ static void iwl3945_dbg_report_frame(struct iwl39=
+45_priv *priv,
+> =20
+>  	if (print_summary) {
+>  		char *title;
+> -		u32 rate;
+> +		int rate;
+> =20
+>  		if (hundred)
+>  			title =3D "100Frames";
 
-or here :)
+--=20
+=46ilippo Zangheri
 
-We've seen initial patches that add a bit of infrastructure, but aren't
-using these things yet.
+GPG key ID: 0x6C1F2F2F
 
-johannes
-
---=-yEpiEa3Bj02we0wir1ny
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIdeLTAAoJEKVg1VMiehFY/5MP/RU7a4XP4ZmXRUju2U8LLb+U
-lfDtoT41kKPfGCYufpndVed8UVaMF/x5T6aERZHmmzjZIWBS7CoaA02DKTWEIPax
-uhdRppYSeI+CWLNPXwh6+ivHHo7rpxkZYwbrutDfsB3IrLDBtaE2IG2EOV6kVDg7
-QC18KAnlwxdmsbQIC/ti7vouqql7jzG5igEY7a4aFth3KwgC24gYoKGTYRCcNryc
-VAzGi2ybqIFRn9HflmWvU31k3vYHJQri8c9JuGcPGZn8PfgTyBGpKAsFVkTPCZZE
-EKFq4ua/waChgzA2/iMfaHnaW019hE7M6JUoaY0HSwJo1mfW7yN8XOsLBqORyecf
-+fxdqhK3p8UAkqHhACdzwPuTvLQdAC/v5wbybOGodCj46QWceSCqnbR+baMvNxYZ
-+FGEKWDXZWJ2mCkTUETE+MFuSXU3Rv+LV7pKfnYl+4VhUI7ZxSrBqEcyh8m5C+0H
-fl8oBBPV25ac6yTORfJh2wKqduyAzRsZUVVNUDhmK9veRdHDBKmnIIVLvzpCeXuU
-GQm6XZD0rhKgftEV3BPom6POTCKyXl/MK1u4ceHhppOqn0aFJbxKFojRchO378Mb
-LCBgg+fiwf2kFD3hh1FW5un09WpkQfqLBOC1eX7MnGRFZdjeOstmfxYAH0JBIydC
-IFbRvgTzvRZnzlqdrT0C
-=4SlM
------END PGP SIGNATURE-----
-
---=-yEpiEa3Bj02we0wir1ny--
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
