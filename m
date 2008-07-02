@@ -1,62 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.226]:52161 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754984AbYG2LQB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 07:16:01 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so4970806rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 04:16:01 -0700 (PDT)
-Message-ID: <1ba2fa240807290416l7c489b50yca9efe637895725b@mail.gmail.com> (sfid-20080729_131605_897094_754562A4)
-Date: Tue, 29 Jul 2008 14:16:01 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks rtl8187
-Cc: "Herton Ronaldo Krzesinski" <herton@mandriva.com.br>,
-	"Hin-Tak Leung" <hintak.leung@gmail.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <1217323749.10489.7.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4065 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752180AbYGBTRS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jul 2008 15:17:18 -0400
+Date: Wed, 2 Jul 2008 15:00:59 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Vladimir Koutny <vlado@work.ksp.sk>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	bruno randolf <bruno@thinktube.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH] mac80211: fix alternating-BSSID issue in IBSS
+Message-ID: <20080702190059.GA31288@tuxdriver.com> (sfid-20080702_211721_604255_1F78CFF0)
+References: <486A43D0.8020507@work.ksp.sk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
-	 <3ace41890807281939y462c9b91n5fa952e167b6ff8c@mail.gmail.com>
-	 <200807290021.45400.herton@mandriva.com.br>
-	 <1217314430.15381.11.camel@johannes.berg>
-	 <1ba2fa240807290123n7673dbb9m7121c1e76fe57e94@mail.gmail.com>
-	 <1217320089.15381.25.camel@johannes.berg>
-	 <1ba2fa240807290138h7deced1cob0836ae3e3c1e71a@mail.gmail.com>
-	 <1217322974.10489.0.camel@johannes.berg>
-	 <1ba2fa240807290226n19ab0944u8e27f40cb688cfcc@mail.gmail.com>
-	 <1217323749.10489.7.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <486A43D0.8020507@work.ksp.sk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 29, 2008 at 12:29 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->> PS setting is rather global NIC state and should be set as user
->> preference rather then per application ... socket. If I understand
->> correctly what you mean by application.
->> What user actually selects is performance/power consumption trade off.
->
-> yes, but what we also pointed out was that the user isn't able to make a
-> good trade-off, and PS isn't necessarily linear anyway. Therefore,
-> making the default be based on letting applications set what sort of
-> latency/quality guarantees they set makes sense for a good user
-> experience with maximum power saving that doesn't affect applications,
-> if the user wants to go higher maybe we can later allow that in some
-> way, but the default should be based on what performance apps expect.
+On Tue, Jul 01, 2008 at 04:48:48PM +0200, Vladimir Koutny wrote:
+> Due to the fact that we (still) keep old BSS information, we can end
+> up switching between 2 or more BSSIDs when in IBSS (these are the
+> BSSIDs of networks with the same name we've seen before, even if they
+> are not around anymore). This switching happens in 30sec intervals
+> (IBSS merge attempt when no active STAs are around).
+> 
+> This patch expires old BSS entries after IEEE80211_SCAN_RESULT_EXPIRE
+> seconds (the same time after it will not be reported in scan results)
+> when trying to merge.
+> 
+> Signed-off-by: Vladimir Koutny <vlado@ksp.sk>
 
-I think the path of enabling user to control this through iw(nl) or
-wext is closer to
-come to usability as to relay on any application to implement it in
-next half a year.
-You need single API anyway since there have to be single point of
-decision as there are many applications
-running over single NIC e.g. VoIP and web browser have different requirements.
+This seems like a good thing to do, but the sta_bss_list is used in STA
+mode too.  Perhaps we should find a time to run ieee80211_bss_expire
+in STA mode as well?
 
-What I would actually start with is to get notification about dc or
-battery supply. I don't think that class
-implements notification chain though.
+> 
+> ---
+> 
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 2b49852..b9ec4f6 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -3276,12 +3276,32 @@ static void ieee80211_sta_expire(struct net_device *dev, unsigned long exp_time)
+>  }
+> 
+> 
+> +static void ieee80211_bss_expire(struct net_device *dev, unsigned long exp_time)
 
-Tomas
+You probably want this positioned before (or
+after?) ieee80211_rx_bss_free, and change the name to match.
+
+> +{
+> +	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+> +	struct ieee80211_sta_bss *bss, *tmp;
+> +	DECLARE_MAC_BUF(mac);
+> +
+> +	spin_lock_bh(&local->sta_bss_lock);
+> +	list_for_each_entry_safe(bss, tmp, &local->sta_bss_list, list) {
+> +		if (time_after(jiffies, bss->last_update + exp_time)) {
+> +#ifdef CONFIG_MAC80211_IBSS_DEBUG
+
+Since this hopefully won't be IBSS-specific, maybe use
+MAC80211_VERBOSE_DEBUG instead?
+
+> +			printk(KERN_DEBUG "%s: expiring inactive BSS %s\n",
+> +				dev->name, print_mac(mac, bss->bssid));
+> +#endif /* CONFIG_MAC80211_IBSS_DEBUG */
+> +			ieee80211_rx_bss_put(dev, bss);
+> +		}
+> +	}
+> +	spin_unlock_bh(&local->sta_bss_lock);
+> +}
+> +
+>  static void ieee80211_sta_merge_ibss(struct net_device *dev,
+>  				     struct ieee80211_if_sta *ifsta)
+>  {
+>  	mod_timer(&ifsta->timer, jiffies + IEEE80211_IBSS_MERGE_INTERVAL);
+> 
+>  	ieee80211_sta_expire(dev, IEEE80211_IBSS_INACTIVITY_LIMIT);
+> +	ieee80211_bss_expire(dev, IEEE80211_SCAN_RESULT_EXPIRE);
+>  	if (ieee80211_sta_active_ibss(dev))
+>  		return;
+> 
+> @@ -3662,8 +3662,10 @@ static int ieee80211_sta_find_ibss(struct net_device *dev,
+>  	spin_unlock_bh(&local->sta_bss_lock);
+> 
+>  #ifdef CONFIG_MAC80211_IBSS_DEBUG
+> -	printk(KERN_DEBUG "   sta_find_ibss: selected %s current "
+> -	       "%s\n", print_mac(mac, bssid), print_mac(mac2, ifsta->bssid));
+> +	if (found)
+> +		printk(KERN_DEBUG "   sta_find_ibss: selected %s current "
+> +		       "%s\n", print_mac(mac, bssid),
+> +		       print_mac(mac2, ifsta->bssid));
+>  #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+>  	if (found && memcmp(ifsta->bssid, bssid, ETH_ALEN) != 0 &&
+>  	    (bss = ieee80211_rx_bss_get(dev, bssid,
+
+Should the last hunk be a different patch?
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
