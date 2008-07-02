@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.247]:21715 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757804AbYG0VCL (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:32859 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753395AbYGBCn6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jul 2008 17:02:11 -0400
-Received: by an-out-0708.google.com with SMTP id d40so858079and.103
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Jul 2008 14:02:10 -0700 (PDT)
-Message-ID: <52d4a3890807271402n792dbaces52555f545a7bfa46@mail.gmail.com> (sfid-20080727_230240_463820_B8AC01E8)
-Date: Mon, 28 Jul 2008 00:02:10 +0300
-From: "Mohammed Gamal" <m.gamal005@gmail.com>
-To: "Andrew Morton" <akpm@linux-foundation.org>
-Subject: Re: Fw: [Oops] b43 driver on 2.6.26
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080727135840.a040e368.akpm@linux-foundation.org>
+	Tue, 1 Jul 2008 22:43:58 -0400
+Message-ID: <486AEBC1.4040903@lwfinger.net> (sfid-20080702_044400_835163_71AE1CE7)
+Date: Tue, 01 Jul 2008 21:45:21 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080727135840.a040e368.akpm@linux-foundation.org>
+To: Dan Williams <dcbw@redhat.com>
+CC: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Buesch <mb@bu3sch.de>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
+References: <6cf6b73e0807010255x1f2d8a21m8ed3e712012ea757@mail.gmail.com>	 <200807011227.15805.mb@bu3sch.de>	 <20080701143439.GA6962@khazad-dum.debian.net>	 <1214923097.3462.0.camel@johannes.berg>	 <20080701165036.GB6962@khazad-dum.debian.net>	 <1214931676.3462.5.camel@johannes.berg> <486A65F5.5030909@lwfinger.net>	 <20080701173502.GB24605@khazad-dum.debian.net>	 <486A75C0.3010306@lwfinger.net> <1214947251.28817.15.camel@localhost.localdomain>
+In-Reply-To: <1214947251.28817.15.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 27, 2008 at 11:58 PM, Andrew Morton
-<akpm@linux-foundation.org> wrote:
->
->
-> Begin forwarded message:
->
-> Date: Wed, 23 Jul 2008 01:03:24 +0300
-> From: "Mohammed Gamal" <m.gamal005@gmail.com>
-> To: linux-net@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Subject: [Oops] b43 driver on 2.6.26
->
->
-> I get the following oops with b43 driver on scanning for wireless networks.
-> ----
-> [...]
+Dan Williams wrote:
+> 
+> No, it's a linux kernel module for HP laptops that talks to BIOS
+> routines to get the state of the killswitch on some HP laptops.
+> Unfortunately this has to happen through WMI hooks, even on Linux.
 
-Ignore this, I'm no longer getting this oops on the latest git tree.
+I do not have that module configured, thus it cannot get in the way.
+
+Larry
+
