@@ -1,53 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:40845 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755967AbYGUWom (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 18:44:42 -0400
-Subject: Re: [PATCH] ath9k: fix build errors and warnings on 64-bit systems
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890807211539p358fa0cbw2c9868ed8f9c9b4e@mail.gmail.com>
-References: <20080721000313.24845.10866.stgit@dv.roinet.com>
-	 <15B47C78534E094AA9A41F58FB8D74F3D6EF4A7EEE@SC1EXMB-MBCL.global.atheros.com>
-	 <43e72e890807211539p358fa0cbw2c9868ed8f9c9b4e@mail.gmail.com>
+Received: from rv-out-0506.google.com ([209.85.198.231]:4442 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751916AbYGBXa6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jul 2008 19:30:58 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so686600rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Jul 2008 16:30:58 -0700 (PDT)
+Subject: [PATCH 2/4] mac80211: wpa.c remove rx/tx_data ->fc users
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Mon, 21 Jul 2008 18:44:39 -0400
-Message-Id: <1216680279.11291.45.camel@dv> (sfid-20080722_004445_755192_0810AFC4)
+Date: Wed, 02 Jul 2008 16:30:52 -0700
+Message-Id: <1215041452.16647.6.camel@brick> (sfid-20080703_013103_856820_5FF43C2A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-07-21 at 15:39 -0700, Luis R. Rodriguez wrote:
-> > diff --git a/ksrc/hw.c b/ksrc/hw.c
-> > index b8a9321..5a24cbe 100644
-> > --- a/ksrc/hw.c
-> > +++ b/ksrc/hw.c
-> > @@ -852,9 +852,11 @@ static inline enum hal_status ath9k_hw_check_eeprom(struct ath_hal *ah)
-> >        else
-> >                el = ahp->ah_eeprom.baseEepHeader.length;
-> >
-> > +       if (el < sizeof(struct ar5416_eeprom) / sizeof(u_int16_t))
-> > +               el = sizeof(struct ar5416_eeprom) / sizeof(u_int16_t);
-> > +
-> >        eepdata = (u_int16_t *) (&ahp->ah_eeprom);
-> > -       for (i = 0; i <
-> > -               min(el, sizeof(struct ar5416_eeprom)) / sizeof(u_int16_t); i++)
-> > +       for (i = 0; i < el; i++)
-> >                sum ^= *eepdata++;
-> >
-> >        if (need_swap) {
-> 
-> Its a good thing indeed I split this into two patches, as your first
-> hunk breaks the check. Had you tested this??? Anyway I've fixed this
-> now.
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ net/mac80211/wpa.c |   21 ++++++++-------------
+ 1 files changed, 8 insertions(+), 13 deletions(-)
 
-Sorry, I only compile tested it.  Indeed, the first comparison should be
-inverted, or we get maximum, not minimum.  I didn't want to change the
-code so much, but I wanted to avoid breaking the 80 character limit with
-casts.
-
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 241c932..ec2ae86 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -28,19 +28,16 @@ ieee80211_tx_h_michael_mic_add(struct ieee80211_tx_data *tx)
+ 	size_t data_len;
+ 	unsigned int hdrlen;
+ 	struct ieee80211_hdr *hdr;
+-	u16 fc;
+ 	struct sk_buff *skb = tx->skb;
+ 	int authenticator;
+ 	int wpa_test = 0;
+ 	int tail;
+ 
+-	fc = tx->fc;
+-
++	hdr = (struct ieee80211_hdr *)skb->data;
+ 	if (!tx->key || tx->key->conf.alg != ALG_TKIP || skb->len < 24 ||
+-	    !WLAN_FC_DATA_PRESENT(fc))
++	    !ieee80211_is_data_present(hdr->frame_control))
+ 		return TX_CONTINUE;
+ 
+-	hdr = (struct ieee80211_hdr *)skb->data;
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	if (skb->len < hdrlen)
+ 		return TX_DROP;
+@@ -90,25 +87,23 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
+ 	size_t data_len;
+ 	unsigned int hdrlen;
+ 	struct ieee80211_hdr *hdr;
+-	u16 fc;
+ 	u8 mic[MICHAEL_MIC_LEN];
+ 	struct sk_buff *skb = rx->skb;
+ 	int authenticator = 1, wpa_test = 0;
+ 	DECLARE_MAC_BUF(mac);
+ 
+-	fc = rx->fc;
+-
+ 	/*
+ 	 * No way to verify the MIC if the hardware stripped it
+ 	 */
+ 	if (rx->status->flag & RX_FLAG_MMIC_STRIPPED)
+ 		return RX_CONTINUE;
+ 
++	hdr = (struct ieee80211_hdr *)skb->data;
+ 	if (!rx->key || rx->key->conf.alg != ALG_TKIP ||
+-	    !(rx->fc & IEEE80211_FCTL_PROTECTED) || !WLAN_FC_DATA_PRESENT(fc))
++	    !ieee80211_has_protected(hdr->frame_control) ||
++	    !ieee80211_is_data_present(hdr->frame_control))
+ 		return RX_CONTINUE;
+ 
+-	hdr = (struct ieee80211_hdr *)skb->data;
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	if (skb->len < hdrlen + MICHAEL_MIC_LEN)
+ 		return RX_DROP_UNUSABLE;
+@@ -239,7 +234,7 @@ ieee80211_crypto_tkip_decrypt(struct ieee80211_rx_data *rx)
+ 
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 
+-	if ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
++	if (!ieee80211_is_data(hdr->frame_control))
+ 		return RX_CONTINUE;
+ 
+ 	if (!rx->sta || skb->len - hdrlen < 12)
+@@ -458,7 +453,7 @@ ieee80211_crypto_ccmp_encrypt(struct ieee80211_tx_data *tx)
+ ieee80211_rx_result
+ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
+ {
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
+ 	int hdrlen;
+ 	struct ieee80211_key *key = rx->key;
+ 	struct sk_buff *skb = rx->skb;
+@@ -468,7 +463,7 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
+ 
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 
+-	if ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA)
++	if (!ieee80211_is_data(hdr->frame_control))
+ 		return RX_CONTINUE;
+ 
+ 	data_len = skb->len - hdrlen - CCMP_HDR_LEN - CCMP_MIC_LEN;
 -- 
-Regards,
-Pavel Roskin
+1.5.6.1.242.g4f9d0
+
+
