@@ -1,121 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ruslug.rutgers.edu ([165.230.139.146]:47716 "EHLO
-	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755242AbYGTCsI (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.170]:47686 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751295AbYGBSFj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2008 22:48:08 -0400
-Date: Sat, 19 Jul 2008 22:48:02 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH] [PATCH 4/4] list.h: add list_cut_position()
-Message-ID: <20080720024802.GU17936@ruslug.rutgers.edu> (sfid-20080720_044811_689118_D2361999)
-References: <20080720024341.GQ17936@ruslug.rutgers.edu> <20080720024500.GR17936@ruslug.rutgers.edu> <20080720024554.GS17936@ruslug.rutgers.edu> <20080720024709.GT17936@ruslug.rutgers.edu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080720024709.GT17936@ruslug.rutgers.edu>
+	Wed, 2 Jul 2008 14:05:39 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so452597wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Jul 2008 11:05:39 -0700 (PDT)
+Subject: [PATCH 2/4] mac80211: use symbolic defines in wpa.c
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 02 Jul 2008 11:05:34 -0700
+Message-Id: <1215021934.24353.14.camel@brick> (sfid-20080702_200542_662198_256D04F7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds list_cut_position() which lets you cut a list into
-two lists given a pivot in in the list.
+ETH_ALEN and IEEE80211_QOS_CTL_LEN
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
- drivers/net/wireless/ath9k/core.h |   35 -----------------------------------
- include/linux/list.h              |   32 ++++++++++++++++++++++++++++++++
- 2 files changed, 32 insertions(+), 35 deletions(-)
+ net/mac80211/wpa.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index 807dcdf..65f8c50 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -49,41 +49,6 @@ struct ath_node;
- /* Utility macros */
- /******************/
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index b414d5d..222001c 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -38,7 +38,7 @@ static int ieee80211_get_hdr_info(const struct sk_buff *skb, u8 **sa, u8 **da,
+ 	*data_len = skb->len - hdrlen;
  
--/* An attempt will be made to merge these link list helpers upstream
-- * instead */
--
--static inline void __list_cut_position(struct list_head *list,
--		struct list_head *head, struct list_head *entry)
--{
--	struct list_head *new_first =
--		(entry->next != head) ? entry->next : head;
--	list->next = head->next;
--	list->next->prev = list;
--	list->prev = entry;
--	entry->next = list;
--	head->next = new_first;
--	new_first->prev = head;
--}
--
--/**
-- * list_cut_position - cut a list into two
-- * @list: a new list to add all removed entries
-- * @head: a list with entries
-- * @entry: an entry within head, could be the head itself
-- *	and if so we won't won't cut the list
-- */
--static inline void list_cut_position(struct list_head *list,
--		struct list_head *head, struct list_head *entry)
--{
--	BUG_ON(list_empty(head));
--	if (list_is_singular(head))
--		BUG_ON(head->next != entry && head != entry);
--	if (entry == head)
--		INIT_LIST_HEAD(list);
--	else
--		__list_cut_position(list, head, entry);
--}
--
- /* Macro to expand scalars to 64-bit objects */
+ 	if (ieee80211_is_data_qos(fc))
+-		*qos_tid = (*ieee80211_get_qos_ctl(hdr) & 0x0f) | 0x80;
++		*qos_tid = (*ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK) | 0x80;
+ 	else
+ 		*qos_tid = 0;
  
- #define	ito64(x) (sizeof(x) == 8) ? \
-diff --git a/include/linux/list.h b/include/linux/list.h
-index fc7b700..8766d33 100644
---- a/include/linux/list.h
-+++ b/include/linux/list.h
-@@ -326,6 +326,38 @@ static inline int list_is_singular(const struct list_head *head)
- 	return !list_empty(head) && (head->next == head->prev);
- }
+@@ -312,7 +312,7 @@ static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad,
+ 	data_len -= CCMP_HDR_LEN + (encrypted ? CCMP_MIC_LEN : 0);
+ 	if (qos_tid & 0x80) {
+ 		qos_included = 1;
+-		qos_tid &= 0x0f;
++		qos_tid &= IEEE80211_QOS_CTL_TID_MASK;
+ 	} else
+ 		qos_included = 0;
+ 	/* First block, b_0 */
+@@ -320,7 +320,7 @@ static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad,
+ 	b_0[0] = 0x59; /* flags: Adata: 1, M: 011, L: 001 */
+ 	/* Nonce: QoS Priority | A2 | PN */
+ 	b_0[1] = qos_tid;
+-	memcpy(&b_0[2], hdr->addr2, 6);
++	memcpy(&b_0[2], hdr->addr2, ETH_ALEN);
+ 	memcpy(&b_0[8], pn, CCMP_PN_LEN);
+ 	/* l(m) */
+ 	b_0[14] = (data_len >> 8) & 0xff;
+@@ -332,7 +332,7 @@ static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad,
  
-+static inline void __list_cut_position(struct list_head *list,
-+		struct list_head *head, struct list_head *entry)
-+{
-+	struct list_head *new_first =
-+		(entry->next != head) ? entry->next : head;
-+	list->next = head->next;
-+	list->next->prev = list;
-+	list->prev = entry;
-+	entry->next = list;
-+	head->next = new_first;
-+	new_first->prev = head;
-+}
-+
-+/**
-+ * list_cut_position - cut a list into two
-+ * @list: a new list to add all removed entries
-+ * @head: a list with entries
-+ * @entry: an entry within head, could be the head itself
-+ *	and if so we won't won't cut the list
-+ */
-+static inline void list_cut_position(struct list_head *list,
-+		struct list_head *head, struct list_head *entry)
-+{
-+	BUG_ON(list_empty(head));
-+	if (list_is_singular(head))
-+		BUG_ON(head->next != entry && head != entry);
-+	if (entry == head)
-+		INIT_LIST_HEAD(list);
-+	else
-+		__list_cut_position(list, head, entry);
-+}
-+
- static inline void __list_splice(const struct list_head *list,
- 				 struct list_head *head)
- {
+ 	len_a = a4_included ? 28 : 22;
+ 	if (qos_included)
+-		len_a += 2;
++		len_a += IEEE80211_QOS_CTL_LEN;
+ 
+ 	aad[0] = 0; /* (len_a >> 8) & 0xff; */
+ 	aad[1] = len_a & 0xff;
+@@ -340,17 +340,17 @@ static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad,
+ 	aad[2] = fc_pos[0] & ~(BIT(4) | BIT(5) | BIT(6));
+ 	/* Retry, PwrMgt, MoreData; set Protected */
+ 	aad[3] = (fc_pos[1] & ~(BIT(3) | BIT(4) | BIT(5))) | BIT(6);
+-	memcpy(&aad[4], &hdr->addr1, 18);
++	memcpy(&aad[4], &hdr->addr1, 3 * ETH_ALEN);
+ 
+ 	/* Mask Seq#, leave Frag# */
+ 	aad[22] = *((u8 *) &hdr->seq_ctrl) & 0x0f;
+ 	aad[23] = 0;
+ 	if (a4_included) {
+-		memcpy(&aad[24], hdr->addr4, 6);
++		memcpy(&aad[24], hdr->addr4, ETH_ALEN);
+ 		aad[30] = 0;
+ 		aad[31] = 0;
+ 	} else
+-		memset(&aad[24], 0, 8);
++		memset(&aad[24], 0, ETH_ALEN + IEEE80211_QOS_CTL_LEN);
+ 	if (qos_included) {
+ 		u8 *dpos = &aad[a4_included ? 30 : 24];
+ 
 -- 
-1.5.4.3
+1.5.6.1.242.g4f9d0
+
 
