@@ -1,355 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51660
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1758425AbYGQMRK (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:35764 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755133AbYGBQDF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 08:17:10 -0400
-Date: Thu, 17 Jul 2008 05:17:10 -0700 (PDT)
-Message-Id: <20080717.051710.82593078.davem@davemloft.net> (sfid-20080717_141722_111856_99D4FF13)
-To: netdev@vger.kernel.org
-CC: kaber@trash.net, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 17/31]: pkt_sched: Add and use qdisc_root() and
- qdisc_root_lock().
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 2 Jul 2008 12:03:05 -0400
+Date: Wed, 2 Jul 2008 13:02:58 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
+	Larry Finger <larry.finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
+Message-ID: <20080702160258.GB11309@khazad-dum.debian.net> (sfid-20080702_180309_436913_9771F60E)
+References: <20080701225207.GB4292@khazad-dum.debian.net> <1214952993.3462.14.camel@johannes.berg> <20080701235747.GG4292@khazad-dum.debian.net> <1214983270.3462.18.camel@johannes.berg> <1214983918.13270.2.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1214983918.13270.2.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 02 Jul 2008, Johannes Berg wrote:
+> > (I've written real input drivers before) but rather that nobody really
+> > knows how userspace/kernel interaction wrt. rfkill should work.
+> 
+> Oh and there's no need to explain on the mailing list, just make sure
+> the new rfkill docs are clear wrt. the way forward.
 
-When code wants to lock the qdisc tree state, the logic
-operation it's doing is locking the top-level qdisc that
-sits of the root of the netdev_queue.
+Ok.  Is what we currently have (i.e. what is in -next/wireless-testing)
+already enough?  Are there any topics I should try to clarify better on
+Documentation/rfkill.txt ?
 
-Add qdisc_root_lock() to represent this and convert the
-easiest cases.
+> Another thing that just occurred to me: it might be nice to have a few
+> (per-hardware, global?) LED triggers that can be bound to LEDs and that
+> always reflect the state the driver says the radio has (hw-rfkill) or
+> the driver is asked to enforce (sw-rfkill)
 
-In order for this to work out in all cases, we have to
-hook up the noop_qdisc to a dummy netdev_queue.
+Well, it should be doable with the new rfkill notify chain.  The chain is
+called on every rfkill state change, and it will also get called when global
+state changes (I am working on exposing the global state to userspace and
+the rest of the kernel, now.  I don't exactly know the best way to go about
+it, expect an RFC post soon about it).
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- include/net/sch_generic.h |   12 ++++++++++++
- net/sched/sch_api.c       |    8 ++++----
- net/sched/sch_cbq.c       |    9 +++++----
- net/sched/sch_generic.c   |   21 ++++++++++++++++-----
- net/sched/sch_hfsc.c      |    4 ++--
- net/sched/sch_htb.c       |   18 ++++++++++--------
- net/sched/sch_netem.c     |    9 ++++++---
- 7 files changed, 55 insertions(+), 26 deletions(-)
+So, one could write a separate module (e.g. rfkill-led) that registers with
+the notify chain, and feeds the events to as many led triggers as he wants
+to.  That would add LED trigger support to every rfkill driver in one go.
 
-diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
-index bc2a09d..9241782 100644
---- a/include/net/sch_generic.h
-+++ b/include/net/sch_generic.h
-@@ -161,6 +161,18 @@ struct tcf_proto
- 	struct tcf_proto_ops	*ops;
- };
- 
-+static inline struct Qdisc *qdisc_root(struct Qdisc *qdisc)
-+{
-+	return qdisc->dev_queue->qdisc;
-+}
-+
-+static inline spinlock_t *qdisc_root_lock(struct Qdisc *qdisc)
-+{
-+	struct Qdisc *root = qdisc_root(qdisc);
-+
-+	return &root->dev_queue->lock;
-+}
-+
- static inline struct net_device *qdisc_dev(struct Qdisc *qdisc)
- {
- 	return qdisc->dev_queue->dev;
-diff --git a/net/sched/sch_api.c b/net/sched/sch_api.c
-index 830ccc5..19c244a 100644
---- a/net/sched/sch_api.c
-+++ b/net/sched/sch_api.c
-@@ -633,7 +633,7 @@ qdisc_create(struct net_device *dev, struct netdev_queue *dev_queue,
- 	if (!ops->init || (err = ops->init(sch, tca[TCA_OPTIONS])) == 0) {
- 		if (tca[TCA_RATE]) {
- 			err = gen_new_estimator(&sch->bstats, &sch->rate_est,
--						&sch->dev_queue->lock,
-+						qdisc_root_lock(sch),
- 						tca[TCA_RATE]);
- 			if (err) {
- 				/*
-@@ -675,7 +675,7 @@ static int qdisc_change(struct Qdisc *sch, struct nlattr **tca)
- 	}
- 	if (tca[TCA_RATE])
- 		gen_replace_estimator(&sch->bstats, &sch->rate_est,
--				      &sch->dev_queue->lock, tca[TCA_RATE]);
-+				      qdisc_root_lock(sch), tca[TCA_RATE]);
- 	return 0;
- }
- 
-@@ -967,7 +967,7 @@ static int tc_fill_qdisc(struct sk_buff *skb, struct Qdisc *q, u32 clid,
- 	q->qstats.qlen = q->q.qlen;
- 
- 	if (gnet_stats_start_copy_compat(skb, TCA_STATS2, TCA_STATS,
--					 TCA_XSTATS, &q->dev_queue->lock, &d) < 0)
-+					 TCA_XSTATS, qdisc_root_lock(q), &d) < 0)
- 		goto nla_put_failure;
- 
- 	if (q->ops->dump_stats && q->ops->dump_stats(q, &d) < 0)
-@@ -1216,7 +1216,7 @@ static int tc_fill_tclass(struct sk_buff *skb, struct Qdisc *q,
- 		goto nla_put_failure;
- 
- 	if (gnet_stats_start_copy_compat(skb, TCA_STATS2, TCA_STATS,
--					 TCA_XSTATS, &q->dev_queue->lock, &d) < 0)
-+					 TCA_XSTATS, qdisc_root_lock(q), &d) < 0)
- 		goto nla_put_failure;
- 
- 	if (cl_ops->dump_stats && cl_ops->dump_stats(q, cl, &d) < 0)
-diff --git a/net/sched/sch_cbq.c b/net/sched/sch_cbq.c
-index 4efc836..37ae653 100644
---- a/net/sched/sch_cbq.c
-+++ b/net/sched/sch_cbq.c
-@@ -1744,12 +1744,13 @@ static void cbq_put(struct Qdisc *sch, unsigned long arg)
- 
- 	if (--cl->refcnt == 0) {
- #ifdef CONFIG_NET_CLS_ACT
-+		spinlock_t *root_lock = qdisc_root_lock(sch);
- 		struct cbq_sched_data *q = qdisc_priv(sch);
- 
--		spin_lock_bh(&sch->dev_queue->lock);
-+		spin_lock_bh(root_lock);
- 		if (q->rx_class == cl)
- 			q->rx_class = NULL;
--		spin_unlock_bh(&sch->dev_queue->lock);
-+		spin_unlock_bh(root_lock);
- #endif
- 
- 		cbq_destroy_class(sch, cl);
-@@ -1828,7 +1829,7 @@ cbq_change_class(struct Qdisc *sch, u32 classid, u32 parentid, struct nlattr **t
- 
- 		if (tca[TCA_RATE])
- 			gen_replace_estimator(&cl->bstats, &cl->rate_est,
--					      &sch->dev_queue->lock,
-+					      qdisc_root_lock(sch),
- 					      tca[TCA_RATE]);
- 		return 0;
- 	}
-@@ -1919,7 +1920,7 @@ cbq_change_class(struct Qdisc *sch, u32 classid, u32 parentid, struct nlattr **t
- 
- 	if (tca[TCA_RATE])
- 		gen_new_estimator(&cl->bstats, &cl->rate_est,
--				  &sch->dev_queue->lock, tca[TCA_RATE]);
-+				  qdisc_root_lock(sch), tca[TCA_RATE]);
- 
- 	*arg = (unsigned long)cl;
- 	return 0;
-diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
-index ac208c2..739a871 100644
---- a/net/sched/sch_generic.c
-+++ b/net/sched/sch_generic.c
-@@ -151,14 +151,17 @@ static inline int qdisc_restart(struct netdev_queue *txq,
- {
- 	int ret = NETDEV_TX_BUSY;
- 	struct net_device *dev;
-+	spinlock_t *root_lock;
- 	struct sk_buff *skb;
- 
- 	/* Dequeue packet */
- 	if (unlikely((skb = dequeue_skb(q)) == NULL))
- 		return 0;
- 
--	/* And release queue */
--	spin_unlock(&txq->lock);
-+	root_lock = qdisc_root_lock(q);
-+
-+	/* And release qdisc */
-+	spin_unlock(root_lock);
- 
- 	dev = txq->dev;
- 
-@@ -167,7 +170,7 @@ static inline int qdisc_restart(struct netdev_queue *txq,
- 		ret = dev_hard_start_xmit(skb, dev, txq);
- 	HARD_TX_UNLOCK(dev, txq);
- 
--	spin_lock(&txq->lock);
-+	spin_lock(root_lock);
- 
- 	switch (ret) {
- 	case NETDEV_TX_OK:
-@@ -345,12 +348,18 @@ struct Qdisc_ops noop_qdisc_ops __read_mostly = {
- 	.owner		=	THIS_MODULE,
- };
- 
-+static struct netdev_queue noop_netdev_queue = {
-+	.lock		=	__SPIN_LOCK_UNLOCKED(noop_netdev_queue.lock),
-+	.qdisc		=	&noop_qdisc,
-+};
-+
- struct Qdisc noop_qdisc = {
- 	.enqueue	=	noop_enqueue,
- 	.dequeue	=	noop_dequeue,
- 	.flags		=	TCQ_F_BUILTIN,
- 	.ops		=	&noop_qdisc_ops,
- 	.list		=	LIST_HEAD_INIT(noop_qdisc.list),
-+	.dev_queue	=	&noop_netdev_queue,
- };
- EXPORT_SYMBOL(noop_qdisc);
- 
-@@ -666,19 +675,21 @@ static bool some_qdisc_is_running(struct net_device *dev, int lock)
- 
- 	for (i = 0; i < dev->num_tx_queues; i++) {
- 		struct netdev_queue *dev_queue;
-+		spinlock_t *root_lock;
- 		struct Qdisc *q;
- 		int val;
- 
- 		dev_queue = netdev_get_tx_queue(dev, i);
- 		q = dev_queue->qdisc;
-+		root_lock = qdisc_root_lock(q);
- 
- 		if (lock)
--			spin_lock_bh(&dev_queue->lock);
-+			spin_lock_bh(root_lock);
- 
- 		val = test_bit(__QDISC_STATE_RUNNING, &q->state);
- 
- 		if (lock)
--			spin_unlock_bh(&dev_queue->lock);
-+			spin_unlock_bh(root_lock);
- 
- 		if (val)
- 			return true;
-diff --git a/net/sched/sch_hfsc.c b/net/sched/sch_hfsc.c
-index 997d520..5090708 100644
---- a/net/sched/sch_hfsc.c
-+++ b/net/sched/sch_hfsc.c
-@@ -1045,7 +1045,7 @@ hfsc_change_class(struct Qdisc *sch, u32 classid, u32 parentid,
- 
- 		if (tca[TCA_RATE])
- 			gen_replace_estimator(&cl->bstats, &cl->rate_est,
--					      &sch->dev_queue->lock,
-+					      qdisc_root_lock(sch),
- 					      tca[TCA_RATE]);
- 		return 0;
- 	}
-@@ -1104,7 +1104,7 @@ hfsc_change_class(struct Qdisc *sch, u32 classid, u32 parentid,
- 
- 	if (tca[TCA_RATE])
- 		gen_new_estimator(&cl->bstats, &cl->rate_est,
--				  &sch->dev_queue->lock, tca[TCA_RATE]);
-+				  qdisc_root_lock(sch), tca[TCA_RATE]);
- 	*arg = (unsigned long)cl;
- 	return 0;
- }
-diff --git a/net/sched/sch_htb.c b/net/sched/sch_htb.c
-index c8ca54c..ee48457 100644
---- a/net/sched/sch_htb.c
-+++ b/net/sched/sch_htb.c
-@@ -1039,11 +1039,12 @@ static int htb_init(struct Qdisc *sch, struct nlattr *opt)
- 
- static int htb_dump(struct Qdisc *sch, struct sk_buff *skb)
- {
-+	spinlock_t *root_lock = qdisc_root_lock(sch);
- 	struct htb_sched *q = qdisc_priv(sch);
- 	struct nlattr *nest;
- 	struct tc_htb_glob gopt;
- 
--	spin_lock_bh(&sch->dev_queue->lock);
-+	spin_lock_bh(root_lock);
- 
- 	gopt.direct_pkts = q->direct_pkts;
- 	gopt.version = HTB_VER;
-@@ -1057,11 +1058,11 @@ static int htb_dump(struct Qdisc *sch, struct sk_buff *skb)
- 	NLA_PUT(skb, TCA_HTB_INIT, sizeof(gopt), &gopt);
- 	nla_nest_end(skb, nest);
- 
--	spin_unlock_bh(&sch->dev_queue->lock);
-+	spin_unlock_bh(root_lock);
- 	return skb->len;
- 
- nla_put_failure:
--	spin_unlock_bh(&sch->dev_queue->lock);
-+	spin_unlock_bh(root_lock);
- 	nla_nest_cancel(skb, nest);
- 	return -1;
- }
-@@ -1070,10 +1071,11 @@ static int htb_dump_class(struct Qdisc *sch, unsigned long arg,
- 			  struct sk_buff *skb, struct tcmsg *tcm)
- {
- 	struct htb_class *cl = (struct htb_class *)arg;
-+	spinlock_t *root_lock = qdisc_root_lock(sch);
- 	struct nlattr *nest;
- 	struct tc_htb_opt opt;
- 
--	spin_lock_bh(&sch->dev_queue->lock);
-+	spin_lock_bh(root_lock);
- 	tcm->tcm_parent = cl->parent ? cl->parent->common.classid : TC_H_ROOT;
- 	tcm->tcm_handle = cl->common.classid;
- 	if (!cl->level && cl->un.leaf.q)
-@@ -1095,11 +1097,11 @@ static int htb_dump_class(struct Qdisc *sch, unsigned long arg,
- 	NLA_PUT(skb, TCA_HTB_PARMS, sizeof(opt), &opt);
- 
- 	nla_nest_end(skb, nest);
--	spin_unlock_bh(&sch->dev_queue->lock);
-+	spin_unlock_bh(root_lock);
- 	return skb->len;
- 
- nla_put_failure:
--	spin_unlock_bh(&sch->dev_queue->lock);
-+	spin_unlock_bh(root_lock);
- 	nla_nest_cancel(skb, nest);
- 	return -1;
- }
-@@ -1365,7 +1367,7 @@ static int htb_change_class(struct Qdisc *sch, u32 classid,
- 			goto failure;
- 
- 		gen_new_estimator(&cl->bstats, &cl->rate_est,
--				  &sch->dev_queue->lock,
-+				  qdisc_root_lock(sch),
- 				  tca[TCA_RATE] ? : &est.nla);
- 		cl->refcnt = 1;
- 		cl->children = 0;
-@@ -1420,7 +1422,7 @@ static int htb_change_class(struct Qdisc *sch, u32 classid,
- 	} else {
- 		if (tca[TCA_RATE])
- 			gen_replace_estimator(&cl->bstats, &cl->rate_est,
--					      &sch->dev_queue->lock,
-+					      qdisc_root_lock(sch),
- 					      tca[TCA_RATE]);
- 		sch_tree_lock(sch);
- 	}
-diff --git a/net/sched/sch_netem.c b/net/sched/sch_netem.c
-index bc585f2..c5ea40c 100644
---- a/net/sched/sch_netem.c
-+++ b/net/sched/sch_netem.c
-@@ -180,7 +180,7 @@ static int netem_enqueue(struct sk_buff *skb, struct Qdisc *sch)
- 	 * skb will be queued.
- 	 */
- 	if (count > 1 && (skb2 = skb_clone(skb, GFP_ATOMIC)) != NULL) {
--		struct Qdisc *rootq = sch->dev_queue->qdisc;
-+		struct Qdisc *rootq = qdisc_root(sch);
- 		u32 dupsave = q->duplicate; /* prevent duplicating a dup... */
- 		q->duplicate = 0;
- 
-@@ -319,6 +319,7 @@ static int get_dist_table(struct Qdisc *sch, const struct nlattr *attr)
- 	struct netem_sched_data *q = qdisc_priv(sch);
- 	unsigned long n = nla_len(attr)/sizeof(__s16);
- 	const __s16 *data = nla_data(attr);
-+	spinlock_t *root_lock;
- 	struct disttable *d;
- 	int i;
- 
-@@ -333,9 +334,11 @@ static int get_dist_table(struct Qdisc *sch, const struct nlattr *attr)
- 	for (i = 0; i < n; i++)
- 		d->table[i] = data[i];
- 
--	spin_lock_bh(&sch->dev_queue->lock);
-+	root_lock = qdisc_root_lock(sch);
-+
-+	spin_lock_bh(root_lock);
- 	d = xchg(&q->delay_dist, d);
--	spin_unlock_bh(&sch->dev_queue->lock);
-+	spin_unlock_bh(root_lock);
- 
- 	kfree(d);
- 	return 0;
+You could have different triggers for global states (there is one global
+state per switch type), as well as triggers for each individual kill switch,
+the notify chain exports enough data (a pointer to the rfkill structure) for
+that (and if it doesn't, we ought to fix it so that it will :-) ).
+
+Would "rfkill switch registered" and "rfkill switch unregistered"
+notifications on the rfkill notify chain help write something like a led
+trigger driver?  If so, I will add them.
+
 -- 
-1.5.6.2.255.gbed62
-
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
