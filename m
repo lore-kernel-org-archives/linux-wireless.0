@@ -1,46 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.177]:51261 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752411AbYGAKnl (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.170]:52806 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751934AbYGBIvQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 06:43:41 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so880323ika.5
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Jul 2008 03:43:40 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: rt61 and TSF reporting?
-Date: Tue, 1 Jul 2008 12:47:57 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1214907990.7763.40.camel@johannes.berg>
-In-Reply-To: <1214907990.7763.40.camel@johannes.berg>
+	Wed, 2 Jul 2008 04:51:16 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so510951ugf.16
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Jul 2008 01:51:14 -0700 (PDT)
+Message-ID: <f6ca9fed0807020151l566bbeafj630e1455b60c0072@mail.gmail.com> (sfid-20080702_105119_617284_C0CE506C)
+Date: Wed, 2 Jul 2008 10:51:14 +0200
+From: drago01 <drago01@gmail.com>
+To: "Zhu Yi" <yi.zhu@intel.com>
+Subject: Re: [PATCH 00/33] iwlwifi driver 06/30 updates
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1214988109.14590.497.camel@debian.sh.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807011247.57739.IvDoorn@gmail.com> (sfid-20080701_124344_988121_63ACA7F2)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
+	 <f6ca9fed0806300256x31d4125yc5c98a63013beadf@mail.gmail.com>
+	 <1214967925.14590.446.camel@debian.sh.intel.com>
+	 <f6ca9fed0807020139r7036ba14nbc41c501fcb1c8fa@mail.gmail.com>
+	 <1214988109.14590.497.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, Jul 2, 2008 at 10:41 AM, Zhu Yi <yi.zhu@intel.com> wrote:
+> On Wed, 2008-07-02 at 10:39 +0200, drago01 wrote:
+>> Can you attach the patch here?
+>> Seems like gitweb is having problems:
+>> "Can't use an undefined value as an ARRAY reference at
+>> /home/httpd/html/git/index.cgi line 1607."
+>
+> Try this. Or just look at the tip of the tree.
+> http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=commitdiff;h=a75a48536614acebb010c09d9767d6cfbd6f8e48
 
-> Is there any way to get rt61 to report the receive timestamp? That would
-> be very useful for monitor mode and good for IBSS.
-
-The specsheets say nothing about TSF timestamps anywhere else then
-the registers (which is accessed by the get_tsf() callback function).
-To be more exact, the specsheets say _nothing_ about the RXD descriptors at all,
-which means they are not helpful for that. ;)
-
-However there are a few RXD fields which are labeled as "reserved" which could
-mean the field is present, just not documented.
-
-You could try printing the values of those words to see if they contain valid data,
-and to be more exact the TSF data (this can be done in the function rt61pci_fill_rxdone(...))
-The undocumented/reserved words are: 6 to 15
-
-Do you want me to come up with a patch for this?
-
-Note that these undocumented fields only are present in rt2500pci and rt61pci.
-Neither rt2500usb or rt73usb contain them, which means that they can't report the TSF
-based on descriptor information.
-
-Ivo
+Got the patch already looks fine and from a quick test (using it now)
+it seems to work fine.
