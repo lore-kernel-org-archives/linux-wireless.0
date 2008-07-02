@@ -1,54 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.168]:26419 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754525AbYGHLiD (ORCPT
+Received: from mamona.cetuc.puc-rio.br ([139.82.74.4]:59143 "EHLO
+	mamona.cetuc.puc-rio.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757045AbYGBMZD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 07:38:03 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2497849wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2008 04:38:03 -0700 (PDT)
-Message-ID: <3ace41890807080438x7d55e67fkc65b0ee69b51d4c6@mail.gmail.com> (sfid-20080708_133807_380736_F32897B4)
-Date: Tue, 8 Jul 2008 12:38:02 +0100
-From: "Hin-Tak Leung" <hintak.leung@gmail.com>
-To: linux-wireless@vger.kernel.org, linville@redhat.com,
-	flamingice@sourmilk.net, andreamrl@tiscali.it
-Subject: [PATCH 6/6] rtl8187: updating Kconfig to support RTL8187B
-Cc: herton@mandriva.com.br, Larry.Finger@lwfinger.net, proski@gnu.org
+	Wed, 2 Jul 2008 08:25:03 -0400
+Message-ID: <34838.201.36.206.138.1215000227.squirrel@mamao.cetuc.puc-rio.br> (sfid-20080702_142510_482691_5DF13CCB)
+Date: Wed, 2 Jul 2008 09:03:47 -0300 (BRT)
+Subject: b43 ssb inplicit declaration
+From: "Felipe Maya" <fmay@cetuc.puc-rio.br>
+To: linux-wireless@vger.kernel.org
+Cc: marcelo.toledo@vexcorp.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rtl8187: updating Kconfig to support RTL8187B
+Where can I get an updated SSB source?
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 6d1e4de..5e0eda0 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -619,14 +619,20 @@ config RTL8180
- 	  Thanks to Realtek for their support!
+Thanks.
+Felipe Maya
 
- config RTL8187
--	tristate "Realtek 8187 USB support"
-+	tristate "Realtek 8187 and 8187B USB support"
- 	depends on MAC80211 && USB && WLAN_80211 && EXPERIMENTAL
- 	select EEPROM_93CX6
- 	---help---
--	  This is a driver for RTL8187 based cards.
--	  These are USB based chips found in cards such as:
-+	  This is a driver for RTL8187 and RTL8187B based cards.
-+	  These are USB based chips found in devices such as:
+CC [M] 
+/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.o
+/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:
+In function 'map_descbuffer':
+/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:331:
+error: implicit declaration of function 'ssb_dma_map_single'
+/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:
+In function 'unmap_descbuffer':
+/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:346:
+error: implicit declaration of function 'ssb_dma_unmap_single'
+/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:
+In function 'sync_descbuffer_for_cpu':
+/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:359:
+error: implicit declaration of function 'ssb_dma_sync_single_for_cpu'
+/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:
+In function 'sync_descbuffer_for_device':
+/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:368:
+error: implicit declaration of function 'ssb_dma_sync_single_for_device'
+/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:
+In function 'alloc_ringmemory':
+/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:399:
+error: implicit declaration of function 'ssb_dma_alloc_consistent'
+/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:401:
+warning: assignment makes pointer from integer without a cast
+/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:
+In function 'free_ringmemory':
+/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:418:
+error: implicit declaration of function 'ssb_dma_free_consistent'
+/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:
+In function 'b43_dma_mapping_error':
+/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:526:
+error: implicit declaration of function 'ssb_dma_mapping_error'
+make[8]: ***
+[/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.o]
+Error 1
+make[7]: ***
+[/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43]
+Error 2
+make[6]: ***
+[/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless]
+Error 2
+make[5]: ***
+[_module_/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01]
+Error 2
+make[5]: Leaving directory
+`/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/linux-2.6.25.9'
+make[4]: *** [modules] Error 2
+make[4]: Leaving directory
+`/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01'
+make[3]: ***
+[/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/.built]
+Error 2
 
- 	  Netgear WG111v2
-+	  Level 1 WNC-0301USB
-+	  Micronet SP907GK V5
-+	  Encore ENUWI-G2
-+	  Trendnet TEW-424UB
-+	  ASUS P5B Deluxe
-+	  Toshiba Satellite Pro series of laptops
-
- 	  Thanks to Realtek for their support!
