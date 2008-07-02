@@ -1,143 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:13203 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754479AbYGHLhF (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42236 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751767AbYGBIBG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 07:37:05 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so758741nfc.21
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2008 04:37:03 -0700 (PDT)
-To: linville@tuxdriver.com
-Subject: [PATCH] rt2x00: Disable synchronization during initialization
-Date: Tue, 8 Jul 2008 13:45:20 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200807081345.20404.IvDoorn@gmail.com> (sfid-20080708_133710_961756_FB49400D)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Wed, 2 Jul 2008 04:01:06 -0400
+Subject: Re: [PATCH 1/1] mac80211: remove MAC80211_DEBUG from
+	net/mac80211/Kconfig.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rami Rosen <ramirose@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <eb3ff54b0807020053h1b34a8e9p476f7cb149fd6805@mail.gmail.com> (sfid-20080702_095400_027604_47BF358E)
+References: <eb3ff54b0807020053h1b34a8e9p476f7cb149fd6805@mail.gmail.com>
+	 (sfid-20080702_095400_027604_47BF358E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Brv/i0D+nI5BnSDv77i4"
+Date: Wed, 02 Jul 2008 10:00:19 +0200
+Message-Id: <1214985619.13270.4.camel@johannes.berg> (sfid-20080702_100110_181296_E1152327)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As soon as init_registers() was called, the rt2400/rt2500
-would start raising beacondone interrupts. Since this is highly
-premature since no beacons were provided yet, we should
-initialize the synchronization register to 0.
 
-This will make all drivers initialize it to 0 regardless
-if they are raising beacondone interrupts or not, since it only
-makes sense to have it completely disabled.
+--=-Brv/i0D+nI5BnSDv77i4
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2400pci.c |   11 +++++++++++
- drivers/net/wireless/rt2x00/rt2500pci.c |   11 +++++++++++
- drivers/net/wireless/rt2x00/rt2500usb.c |    7 +++++++
- drivers/net/wireless/rt2x00/rt61pci.c   |    9 +++++++++
- drivers/net/wireless/rt2x00/rt73usb.c   |    9 +++++++++
- 5 files changed, 47 insertions(+), 0 deletions(-)
+On Wed, 2008-07-02 at 10:53 +0300, Rami Rosen wrote:
+> Hi,
+> This patch removes MAC80211_DEBUG from /net/mac80211/Kconfig
+> (in MAC80211_DEBUG_COUNTERS config entry), and replaces
+> MAC80211_DEBUG_MENU instead of MAC80211_DEBUG
+> (in MAC80211_VERBOSE_SPECT_MGMT_DEBUG config entry).
+>=20
+> (for wireless-next-2.6 tree)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index ee953ca..91cbd9e 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -733,6 +733,17 @@ static int rt2400pci_init_registers(struct rt2x00_dev *rt2x00dev)
- 			   (rt2x00dev->rx->data_size / 128));
- 	rt2x00pci_register_write(rt2x00dev, CSR9, reg);
- 
-+	rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
-+	rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 0);
-+	rt2x00_set_field32(&reg, CSR14_TSF_SYNC, 0);
-+	rt2x00_set_field32(&reg, CSR14_TBCN, 0);
-+	rt2x00_set_field32(&reg, CSR14_TCFP, 0);
-+	rt2x00_set_field32(&reg, CSR14_TATIMW, 0);
-+	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 0);
-+	rt2x00_set_field32(&reg, CSR14_CFP_COUNT_PRELOAD, 0);
-+	rt2x00_set_field32(&reg, CSR14_TBCM_PRELOAD, 0);
-+	rt2x00pci_register_write(rt2x00dev, CSR14, reg);
-+
- 	rt2x00pci_register_write(rt2x00dev, CNT3, 0x3f080000);
- 
- 	rt2x00pci_register_read(rt2x00dev, ARCSR0, &reg);
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 0423c25..0f2a0e2 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -831,6 +831,17 @@ static int rt2500pci_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_set_field32(&reg, CSR11_CW_SELECT, 0);
- 	rt2x00pci_register_write(rt2x00dev, CSR11, reg);
- 
-+	rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
-+	rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 0);
-+	rt2x00_set_field32(&reg, CSR14_TSF_SYNC, 0);
-+	rt2x00_set_field32(&reg, CSR14_TBCN, 0);
-+	rt2x00_set_field32(&reg, CSR14_TCFP, 0);
-+	rt2x00_set_field32(&reg, CSR14_TATIMW, 0);
-+	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 0);
-+	rt2x00_set_field32(&reg, CSR14_CFP_COUNT_PRELOAD, 0);
-+	rt2x00_set_field32(&reg, CSR14_TBCM_PRELOAD, 0);
-+	rt2x00pci_register_write(rt2x00dev, CSR14, reg);
-+
- 	rt2x00pci_register_write(rt2x00dev, CNT3, 0);
- 
- 	rt2x00pci_register_read(rt2x00dev, TXCSR8, &reg);
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 0dd1cb5..367db10 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -812,6 +812,13 @@ static int rt2500usb_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_set_field16(&reg, TXRX_CSR8_BBP_ID1_VALID, 0);
- 	rt2500usb_register_write(rt2x00dev, TXRX_CSR8, reg);
- 
-+	rt2500usb_register_read(rt2x00dev, TXRX_CSR19, &reg);
-+	rt2x00_set_field16(&reg, TXRX_CSR19_TSF_COUNT, 0);
-+	rt2x00_set_field16(&reg, TXRX_CSR19_TSF_SYNC, 0);
-+	rt2x00_set_field16(&reg, TXRX_CSR19_TBCN, 0);
-+	rt2x00_set_field16(&reg, TXRX_CSR19_BEACON_GEN, 0);
-+	rt2500usb_register_write(rt2x00dev, TXRX_CSR19, reg);
-+
- 	rt2500usb_register_write(rt2x00dev, TXRX_CSR21, 0xe78f);
- 	rt2500usb_register_write(rt2x00dev, MAC_CSR9, 0xff1d);
- 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index bbf1048..5a1330c 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1198,6 +1198,15 @@ static int rt61pci_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_set_field32(&reg, TXRX_CSR8_ACK_CTS_54MBS, 42);
- 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR8, reg);
- 
-+	rt2x00pci_register_read(rt2x00dev, TXRX_CSR9, &reg);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_INTERVAL, 0);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 0);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_TSF_SYNC, 0);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 0);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_TIMESTAMP_COMPENSATE, 0);
-+	rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
-+
- 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR15, 0x0000000f);
- 
- 	rt2x00pci_register_write(rt2x00dev, MAC_CSR6, 0x00000fff);
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 3ef318e..25d8b66 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1016,6 +1016,15 @@ static int rt73usb_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_set_field32(&reg, TXRX_CSR8_ACK_CTS_54MBS, 42);
- 	rt73usb_register_write(rt2x00dev, TXRX_CSR8, reg);
- 
-+	rt73usb_register_read(rt2x00dev, TXRX_CSR9, &reg);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_INTERVAL, 0);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 0);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_TSF_SYNC, 0);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 0);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
-+	rt2x00_set_field32(&reg, TXRX_CSR9_TIMESTAMP_COMPENSATE, 0);
-+	rt73usb_register_write(rt2x00dev, TXRX_CSR9, reg);
-+
- 	rt73usb_register_write(rt2x00dev, TXRX_CSR15, 0x0000000f);
- 
- 	rt73usb_register_read(rt2x00dev, MAC_CSR6, &reg);
--- 
-1.5.6.1
+Oops, thanks.
+
+> Regards,
+> Rami Rosen
+>=20
+> Signed-off-by: Rami Rosen <ramirose@gmail.com>
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> =EF=BB=BFdiff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+> index 11a1e7f..40f1add 100644
+> --- a/net/mac80211/Kconfig
+> +++ b/net/mac80211/Kconfig
+> @@ -207,7 +207,6 @@ config MAC80211_LOWTX_FRAME_DUMP
+> =20
+>  config MAC80211_DEBUG_COUNTERS
+>         bool "Extra statistics for TX/RX debugging"
+> -       depends on MAC80211_DEBUG
+>         depends on MAC80211_DEBUG_MENU
+>         depends on MAC80211_DEBUGFS
+>         ---help---
+> @@ -219,7 +218,7 @@ config MAC80211_DEBUG_COUNTERS
+> =20
+>  config MAC80211_VERBOSE_SPECT_MGMT_DEBUG
+>         bool "Verbose Spectrum Management (IEEE 802.11h)debugging"
+> -       depends on MAC80211_DEBUG
+> +       depends on MAC80211_DEBUG_MENU
+>         ---help---
+>           Say Y here to print out verbose Spectrum Management (IEEE 802.1=
+1h)
+>           debug messages.
+
+--=-Brv/i0D+nI5BnSDv77i4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIazWPAAoJEKVg1VMiehFYi20P/jeLq1kxQ23Q4AQ+mqxvH8u2
+K30iEW03NUc5r8hxzZv9nKvVqkDJJ4CPPS/qRb6Jrz8O96EHcT1iyKWtAEREbCVD
+9fvjKU051WjlFFGeEBas3GwNlnRWaYf0TlNHfAV5yHaLeBvIf8JVGVV1DFoZ+zs3
+vnnPrdG4pSW7zRsaRnxVVboWVJWG5tWr0q99EFp1yqWOL80BIb+2K4zAcFAztjKO
+kWZn1nEdC9fjUSVhntvUImpdgrfcAk0FqQIe31HMiJuxTt1YEwBxiStsTh2qYuYm
+un39zBAEN5hrVkLxQLQuN1wKHB/PAiTO7hEGsM93tRhlWOI3R28ijSoF/4z+93el
+GUVLCalbLmkYk4EjopumLR91LlBEH2pNY5pZsdJq8yqxgWwFNImbIdGRCmnAgoil
+2aWvhsHAhzvdXL84R04t2w7Zj9mrmIanXmswphnF2UKLmFSKegRdIGxB2joUtCNt
+Goef+CFjqp0zBLZTukkUeGYp8pT01D1xSEfUEgjj9eoi6FlGKKaCZZMSLxjKqSxV
+P1DZPtiIfot97Rb/GIpAxYn1VALrOK5BXEus/We5nJ+y5/deWSv0/+j5xjDGFIC6
+Frh2GPiJfAIZKicP0bZFWnZOilzIZdybftvau1Sb/w/1J4EYL7tXiTImecC/oISw
+h/djhHQAo+mGXr/+fgk0
+=Lbq4
+-----END PGP SIGNATURE-----
+
+--=-Brv/i0D+nI5BnSDv77i4--
 
