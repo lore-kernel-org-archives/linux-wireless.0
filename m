@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:11458 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751303AbYGYUAa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2008 16:00:30 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so1314820nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2008 13:00:28 -0700 (PDT)
-Date: Fri, 25 Jul 2008 22:01:37 +0200
-From: Jarek Poplawski <jarkao2@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ingo Oeser <netdev@axxeo.de>, David Miller <davem@davemloft.net>,
-	peterz@infradead.org, Larry.Finger@lwfinger.net, kaber@trash.net,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, mingo@redhat.com
-Subject: Re: Kernel WARNING: at net/core/dev.c:1330
-	__netif_schedule+0x2c/0x98()
-Message-ID: <20080725200137.GC3107@ami.dom.local> (sfid-20080725_220038_413077_2262A15A)
-References: <1216806614.7257.152.camel@twins> <1216810696.7257.175.camel@twins> <20080723.131441.200166513.davem@davemloft.net> <200807251904.37302.netdev@axxeo.de> <20080725183622.GA3107@ami.dom.local> <1217013384.4758.5.camel@johannes.berg> <20080725193416.GB3107@ami.dom.local> <1217014575.4758.7.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1217014575.4758.7.camel@johannes.berg>
+Received: from mga02.intel.com ([134.134.136.20]:55944 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754227AbYGBG0t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jul 2008 02:26:49 -0400
+Subject: Re: [PATCH] iwlwifi: remove input device from iwl3945
+From: Zhu Yi <yi.zhu@intel.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	Fabien Crespel <fcrespel@gmail.com>
+In-Reply-To: <200807011613.43501.IvDoorn@gmail.com>
+References: <8AD95083DC3E36478732061D97524415035E38AB@pdsmsx411.ccr.corp.intel.com>
+	 <1214918580-5855-1-git-send-email-linville@tuxdriver.com>
+	 <200807011613.43501.IvDoorn@gmail.com>
+Content-Type: text/plain
+Date: Wed, 02 Jul 2008 14:25:14 +0800
+Message-Id: <1214979914.14590.453.camel@debian.sh.intel.com> (sfid-20080702_082652_985401_59A33F23)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 25, 2008 at 09:36:15PM +0200, Johannes Berg wrote:
-> On Fri, 2008-07-25 at 21:34 +0200, Jarek Poplawski wrote:
-> 
-> > > Umm, of course it cannot, because then we'd have to take the mutex in
-> > > the TX path, which we cannot. We cannot have another lock in the TX
-> > > path, what's so hard to understand about? We need to be able to lock all
-> > > queues to lock out multiple tx paths at once in some (really) slow paths
-> > > but not have any extra lock overhead for the tx path, especially not a
-> > > single lock.
-> > 
-> > But this mutex doesn't have to be mutex. And it's not for the tx path,
-> > only for "service" just like netif_tx_lock(). The fast path needs only
-> > queue->tx_lock.
-> 
-> No, we need to be able to lock out multiple TX paths at once.
+On Tue, 2008-07-01 at 16:13 +0200, Ivo van Doorn wrote:
+> How is the changed rfkill state of the driver reported to rfkill?
+> I see that the patch to remove the input device doesn't remove the
+> call input_report_key() by which I assume such call was never made.
+> This would mean rfkill support in iwlwifi has always been broken and
+> the entire input device wasn't used at all.
 
-IMHO, it can do the same. We could e.g. insert a locked spinlock into
-this noop_tx_handler(), to give everyone some waiting.
+Yes, we don't use the input device before and I believe we shouldn't.
+The patch just removes it.
 
-Jarek P.
+> From what I gather from the code itself is the function responsible
+> for changing the state iwl_rfkill_set_hw_state() but that only updates
+> the state, and doesn't report anything to the rfkill layer.
+
+Right, we will switch to use rfkill_force_state() instead.
+
+Thanks,
+-yi
+
