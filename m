@@ -1,57 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:16274 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754637AbYGPBoF (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.179]:38179 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751767AbYGBHx6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 21:44:05 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so1738137yxm.1
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2008 18:44:04 -0700 (PDT)
-Subject: [PATCH 03/12] ath5k: explicitly check skb->len
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 15 Jul 2008 18:44:02 -0700
-Message-Id: <1216172642.6610.50.camel@brick> (sfid-20080716_034408_221089_187A6F9B)
-Mime-Version: 1.0
+	Wed, 2 Jul 2008 03:53:58 -0400
+Received: by py-out-1112.google.com with SMTP id p76so112220pyb.10
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Jul 2008 00:53:57 -0700 (PDT)
+Message-ID: <eb3ff54b0807020053h1b34a8e9p476f7cb149fd6805@mail.gmail.com> (sfid-20080702_095401_977617_CCE8CD8C)
+Date: Wed, 2 Jul 2008 10:53:57 +0300
+From: "Rami Rosen" <ramirose@gmail.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH 1/1] mac80211: remove MAC80211_DEBUG from net/mac80211/Kconfig.
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_Part_965_12739909.1214985237332"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_get_hdrlen_from_skb internally checks that the skb is long
-enough to hold the full header, or it returns 0 if not.  The check in
-ath5k does not check this case and assumes it always got the actual
-header length which it then checks against the skb->len plus some headroom.
+------=_Part_965_12739909.1214985237332
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Change to ieee80211_hdrlen which always returns the hdrlen and keep the
-existing headroom check.
+Hi,
+This patch removes MAC80211_DEBUG from /net/mac80211/Kconfig
+(in MAC80211_DEBUG_COUNTERS config entry), and replaces
+MAC80211_DEBUG_MENU instead of MAC80211_DEBUG
+(in MAC80211_VERBOSE_SPECT_MGMT_DEBUG config entry).
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- drivers/net/wireless/ath5k/base.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+(for wireless-next-2.6 tree)
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 217d506..a93ed81 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1595,7 +1595,7 @@ ath5k_rx_decrypted(struct ath5k_softc *sc, struct ath5k_desc *ds,
- 		struct sk_buff *skb, struct ath5k_rx_status *rs)
- {
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
--	unsigned int keyix, hlen = ieee80211_get_hdrlen_from_skb(skb);
-+	unsigned int keyix, hlen;
- 
- 	if (!(rs->rs_status & AR5K_RXERR_DECRYPT) &&
- 			rs->rs_keyix != AR5K_RXKEYIX_INVALID)
-@@ -1604,6 +1604,7 @@ ath5k_rx_decrypted(struct ath5k_softc *sc, struct ath5k_desc *ds,
- 	/* Apparently when a default key is used to decrypt the packet
- 	   the hw does not set the index used to decrypt.  In such cases
- 	   get the index from the packet. */
-+	hlen = ieee80211_hdrlen(hdr->frame_control);
- 	if (ieee80211_has_protected(hdr->frame_control) &&
- 	    !(rs->rs_status & AR5K_RXERR_DECRYPT) &&
- 	    skb->len >= hlen + 4) {
--- 
-1.5.6.3.499.geae9
+Regards,
+Rami Rosen
 
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
 
+------=_Part_965_12739909.1214985237332
+Content-Type: text/plain; name=patch.txt
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fi5msarg0
+Content-Disposition: attachment; filename=patch.txt
+
+ZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9LY29uZmlnIGIvbmV0L21hYzgwMjExL0tjb25maWcK
+aW5kZXggMTFhMWU3Zi4uNDBmMWFkZCAxMDA2NDQKLS0tIGEvbmV0L21hYzgwMjExL0tjb25maWcK
+KysrIGIvbmV0L21hYzgwMjExL0tjb25maWcKQEAgLTIwNyw3ICsyMDcsNiBAQCBjb25maWcgTUFD
+ODAyMTFfTE9XVFhfRlJBTUVfRFVNUAogCiBjb25maWcgTUFDODAyMTFfREVCVUdfQ09VTlRFUlMK
+IAlib29sICJFeHRyYSBzdGF0aXN0aWNzIGZvciBUWC9SWCBkZWJ1Z2dpbmciCi0JZGVwZW5kcyBv
+biBNQUM4MDIxMV9ERUJVRwogCWRlcGVuZHMgb24gTUFDODAyMTFfREVCVUdfTUVOVQogCWRlcGVu
+ZHMgb24gTUFDODAyMTFfREVCVUdGUwogCS0tLWhlbHAtLS0KQEAgLTIxOSw3ICsyMTgsNyBAQCBj
+b25maWcgTUFDODAyMTFfREVCVUdfQ09VTlRFUlMKIAogY29uZmlnIE1BQzgwMjExX1ZFUkJPU0Vf
+U1BFQ1RfTUdNVF9ERUJVRwogCWJvb2wgIlZlcmJvc2UgU3BlY3RydW0gTWFuYWdlbWVudCAoSUVF
+RSA4MDIuMTFoKWRlYnVnZ2luZyIKLQlkZXBlbmRzIG9uIE1BQzgwMjExX0RFQlVHCisJZGVwZW5k
+cyBvbiBNQUM4MDIxMV9ERUJVR19NRU5VCiAJLS0taGVscC0tLQogCSAgU2F5IFkgaGVyZSB0byBw
+cmludCBvdXQgdmVyYm9zZSBTcGVjdHJ1bSBNYW5hZ2VtZW50IChJRUVFIDgwMi4xMWgpCiAJICBk
+ZWJ1ZyBtZXNzYWdlcy4K
+------=_Part_965_12739909.1214985237332--
