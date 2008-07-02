@@ -1,83 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:35041 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751616AbYG3Sok (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:52302 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753187AbYGBNQW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 14:44:40 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so87448nfc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 11:44:38 -0700 (PDT)
-To: Peter Chubb <peterc@gelato.unsw.edu.au>
-Subject: Re: Fixing rt2500pci
-Date: Wed, 30 Jul 2008 21:05:56 +0200
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-References: <87tze8vu18.wl%peterc@chubb.wattle.id.au>
-In-Reply-To: <87tze8vu18.wl%peterc@chubb.wattle.id.au>
+	Wed, 2 Jul 2008 09:16:22 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so79699yxm.1
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Jul 2008 06:16:20 -0700 (PDT)
+Date: Wed, 2 Jul 2008 09:16:15 -0400
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Michael Buesch <mb@bu3sch.de>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
+	Larry Finger <larry.finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
+Message-ID: <20080702091315.ZZRA012@mailhub.coreip.homeip.net> (sfid-20080702_151626_755447_A4844177)
+References: <20080701225207.GB4292@khazad-dum.debian.net> <1214952993.3462.14.camel@johannes.berg> <20080701235747.GG4292@khazad-dum.debian.net> <1214983270.3462.18.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200807302105.56909.IvDoorn@gmail.com> (sfid-20080730_204443_255950_3CC64BF5)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1214983270.3462.18.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 30 July 2008, Peter Chubb wrote:
+On Wed, Jul 02, 2008 at 09:21:10AM +0200, Johannes Berg wrote:
 > 
-> In kernel version 2.6.26-rc9 my wireless LAN card worked; but in the
-> released 2.6.26, my RaLink rt2500 card wouldn't associate.
+> > So, please accept my appologies on the tone of the last email.  Please
+> > reconsider reading that email in full, and please try to ignore the rantness
+> > smell in it.  I did try to explain the technical reasons why some changes
+> > would be needed in b43.
 > 
-> Git-bisect led me to this patch:
+> Ok. I actually did read it but decided not to reply to most things. I
+> don't think it's that everybody needs to be educated on the input layer
+> (I've written real input drivers before) but rather that nobody really
+> knows how userspace/kernel interaction wrt. rfkill should work.
 > 
-> 	61486e0f68d1f8966c09b734566a187d42d65c54
-> 	rt2x00: Remove ieee80211_tx_control argument from write_tx_desc()
-> 
-> I believe that there are two problems with that patch.  Setting the Tx
-> Length has been removed inadvertently, and one of the conditions for
-> when to set ifs to IFS_SIFS has also been removed.
-> 
-> This patch fixes those things, and with it my card works again.
-> 
-> Signed-off-by: Peter Chubb <peterc@gelato.unsw.edu.au>
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-> index 1724ce9..4ba2165 100644
-> --- a/drivers/net/wireless/rt2x00/rt2500pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-> @@ -1198,6 +1198,7 @@ static void rt2500pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
->  	rt2x00_set_field32(&word, TXD_W0_IFS, txdesc->ifs);
->  	rt2x00_set_field32(&word, TXD_W0_RETRY_MODE,
->  			   test_bit(ENTRY_TXD_RETRY_MODE, &txdesc->flags));
-> +	rt2x00_set_field32(&word, TXD_W0_DATABYTE_COUNT, skbdesc->data_len);
->  	rt2x00_set_field32(&word, TXD_W0_CIPHER_ALG, CIPHER_NONE);
->  	rt2x00_desc_write(txd, 0, word);
->  }
 
-How could that have disappeared? good catch.
-The above change is:
+I guess I just need to re-iterate that using input layer to propagate
+state change was not the best idea, because at any moment userspace
+can issue EVIOCGRAB on the event device preventing anyone from getting
+such event. I think I mentioned this to Michael once before.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-
-But:
-
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> index e1368f7..a11d6ff 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -691,7 +691,8 @@ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
->  	 * Set ifs to IFS_SIFS when the this is not the first fragment,
->  	 * or this fragment came after RTS/CTS.
->  	 */
-> -	if (test_bit(ENTRY_TXD_RTS_FRAME, &txdesc.flags)) {
-> +	if ((seq_ctrl & IEEE80211_SCTL_FRAG)  ||
-> +		test_bit(ENTRY_TXD_RTS_FRAME, &txdesc.flags)) {
->  		txdesc.ifs = IFS_SIFS;
->  	} else if (control->flags & IEEE80211_TXCTL_FIRST_FRAGMENT) {
->  		__set_bit(ENTRY_TXD_FIRST_FRAGMENT, &txdesc.flags);
-
-The above does not correspond with legacy driver, so I am hesitant in accepting this change.
-Unless you are _absolutely_ sure this change does fix the issue, and the databate count
-initialization is not sufficient on its own. If that is not the case, please resend the patch with the
-rt2x00dev.c change ommitted and my ack added. (Please add John Linville to the CC list as well,
-so it can be merged faster :) )
-
-Ivo
+-- 
+Dmitry
