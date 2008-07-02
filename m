@@ -1,58 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:39602 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753309AbYGFAUn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jul 2008 20:20:43 -0400
-Date: Sat, 5 Jul 2008 21:20:37 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	Dan Williams <dcbw@redhat.com>
-Subject: Re: Question on rfkill double block
-Message-ID: <20080706002037.GD21973@khazad-dum.debian.net> (sfid-20080706_022046_845245_9E3A8D18)
-References: <1214982208.14590.473.camel@debian.sh.intel.com> <20080702193202.GA20410@khazad-dum.debian.net> <1ba2fa240807051428i3f49f621i7b583bec58a02869@mail.gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:36237 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753546AbYGBVE1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jul 2008 17:04:27 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: + drivers-net-wireless-b43legacy-dmac-remove-the-switch-in-b43legacy_dma_init.patch added to -mm tree
+Date: Wed, 2 Jul 2008 23:03:49 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Adrian Bunk <bunk@kernel.org>, dhowells@redhat.com,
+	linville@tuxdriver.com, stefano.brivio@polimi.it,
+	Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <200807020835.m628Zx2e007473@imap1.linux-foundation.org> <486BB332.6000703@lwfinger.net> <20080702101650.3f579d21.akpm@linux-foundation.org>
+In-Reply-To: <20080702101650.3f579d21.akpm@linux-foundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240807051428i3f49f621i7b583bec58a02869@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200807022303.50142.mb@bu3sch.de> (sfid-20080702_230431_340923_983F8345)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 06 Jul 2008, Tomas Winkler wrote:
-> From my experience from other OS the states of SW and HW RF KILL
-> switches should be independent and visible to user space
-> otherwise it's very hard to make something coherent out of it. It
-> should be visible to user himself so he/she knows what switch actually
-> press. And also to let say unmanned application, most important in
-> preserving SW switch state across reboots and resume/suspend events.
-> Radio state is just simple AND function of all the switches in the
-> game anything else just leads to confusion.
-> Currently we have rkill switch from sysfs, hw rfkill, iwconfig txpower
-> off, the last one is better to eliminate but still we have TRIPLE
-> BLOCKING
+On Wednesday 02 July 2008 19:16:50 Andrew Morton wrote:
+> I don't think we need to fix this in 2.6.26 - I doubt if anyone uses
+> this driver on frv - it's mainly a "make allmodconfig work on FRV"
+> thing.
 
-I am not convinced it is the best way to go, but I thought on it, and that
-fourth state will at least help on sleep-to-ram resume, so you guys will get
-four states.  
+I fully agree.
 
-But I can't give you a bitmap.  Sorry, there is a stablished sysfs ABI in
-mainline that says this:
-
-00 - BLOCK ("off")
-01 - UNBLOCK ("on")
-
-I hate it, but I can't change it.  We can *extend* it, but that's it.
-
-rfkill is difficult enough already without a state field whose usage
-description claims that bit 1 is active high and bit 0 is active low... So,
-please do NOT look at the rfkill->state as you would look at a bitmap, look
-at it as an enum, let the compiler do whatever bit-op optimizations might
-apply behind the scenes, and all will be well ;-)
-
-I will start working on a patch for the DOUBLE_BLOCKED state.
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Greetings Michael.
