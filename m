@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3299 "EHLO ra.tuxdriver.com"
+Received: from mga11.intel.com ([192.55.52.93]:60831 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751996AbYGaRC3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 13:02:29 -0400
-Date: Thu, 31 Jul 2008 12:50:54 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tilman Schmidt <tilman@imap.cc>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Q: support for AVM Fritz! WLAN USB in kernel 2.6.25+
-Message-ID: <20080731165054.GA14485@tuxdriver.com> (sfid-20080731_190234_643979_2082E34D)
-References: <4891D1B9.70703@imap.cc> <1217517915.10489.143.camel@johannes.berg> <4891E97C.1060302@imap.cc>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4891E97C.1060302@imap.cc>
+	id S1757502AbYGBBIu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jul 2008 21:08:50 -0400
+Subject: Re: [PATCH 29/33] iwlwifi: drop skb silently for Tx request in
+	monitor mode
+From: Zhu Yi <yi.zhu@intel.com>
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <69e28c910806300328v34c0d1efk55792256c49c39f9@mail.gmail.com>
+References: <1214817813-17639-1-git-send-email-yi.zhu@intel.com>
+	 <1214817813-17639-30-git-send-email-yi.zhu@intel.com>
+	 <69e28c910806300322i5ac6e123h23ed5c0419d087c1@mail.gmail.com>
+	 <200806301226.50085.mb@bu3sch.de>
+	 <69e28c910806300328v34c0d1efk55792256c49c39f9@mail.gmail.com>
+Content-Type: text/plain; charset=GB2312
+Date: Wed, 02 Jul 2008 09:07:16 +0800
+Message-Id: <1214960836.14590.432.camel@debian.sh.intel.com> (sfid-20080702_030854_942815_3EA1890E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 31, 2008 at 06:34:04PM +0200, Tilman Schmidt wrote:
-> Johannes Berg schrieb:
->> On Thu, 2008-07-31 at 16:52 +0200, Tilman Schmidt wrote:
->>> Commit 782e70c6fc2290a0395850e8e02583b8b62264d8, which went into
->>> 2.6.25, broke AVM's closed-source driver for this device:
->>>
->>> ID 057c:62ff AVM GmbH WLAN USB v1.1 (cdrom mode)
->>> ID 057c:6201 AVM GmbH WLAN USB v1.1
->>>
->>> Is there an open source alternative for that driver, or do systems
->>> with that device have to stay with kernel 2.6.24?
->>
->> Never heard of any such driver, what chip does it contain?
->
-> I don't know. How can I find out?
-> (Preferably without cracking the thing open. ;-)
->
-> http://acx100.sourceforge.net/matrix.html claims "Chipset TNETW1450"
-> and "support should be quite easy" - but that entry is two years old
-> and the "Model" link doesn't work, so I'm not sure how far that can
-> be trusted.
+On Mon, 2008-06-30 at 12:28 +0200, Stefanik G=A8=A2bor wrote:
+> There is another patch in this same patchset, which completely remove=
+s
+> the anti-injection code from 3945, so this actually causes a merge
+> conflict. That's why I NACKed.
 
-Did the acx100 driver work with your card?
+No, if you apply the patches in order.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Thanks,
+-yi
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
