@@ -1,47 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4408 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750804AbYGGNiE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2008 09:38:04 -0400
-Date: Mon, 7 Jul 2008 09:15:02 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2008-07-02
-Message-ID: <20080707131502.GD5457@tuxdriver.com> (sfid-20080707_153809_609479_E7A547CC)
-References: <20080630215651.GA666@tuxdriver.com> <20080702193710.GA4682@tuxdriver.com> <20080702202653.GA10719@tuxdriver.com> <20080705.214752.85024966.davem@davemloft.net> <1ba2fa240807060007i572d054va60aa16b41cadce3@mail.gmail.com>
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:34352 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752477AbYGBSl7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jul 2008 14:41:59 -0400
+Date: Wed, 2 Jul 2008 15:41:53 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Zhu Yi <yi.zhu@intel.com>, Adel Gadllah <adel.gadllah@gmail.com>,
+	linux-wireless@vger.kernel.org, randy.dunlap@oracle.com,
+	"John W. Linville" <linville@tuxdriver.com>, fcrespel@gmail.com
+Subject: Re: [PATCH] iwlwifi: remove input device and fix rfkill state
+Message-ID: <20080702184153.GA19949@khazad-dum.debian.net> (sfid-20080702_204209_962131_62C00753)
+References: <6cf6b73e0807010849t42de3f3fn68085daca8d8009e@mail.gmail.com> <1214987135.14590.496.camel@debian.sh.intel.com> <20080702154327.GA11309@khazad-dum.debian.net> <200807021800.25894.IvDoorn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240807060007i572d054va60aa16b41cadce3@mail.gmail.com>
+In-Reply-To: <200807021800.25894.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 06, 2008 at 10:07:42AM +0300, Tomas Winkler wrote:
-> On Sun, Jul 6, 2008 at 7:47 AM, David Miller <davem@davemloft.net> wrote:
-> > From: "John W. Linville" <linville@tuxdriver.com>
-> > Date: Wed, 2 Jul 2008 16:26:53 -0400
-> >
-> >> Here is another slew of updates for 2.6.27.  The bulk of this batch is
-> >> for iwlwifi, with some mac80211 and other bits thrown-in.
-> >>
-> >> Let me know if there are problems!
-> >
-> > Pulled and pushed back out to net-next-2.6, thanks.
-> >
-> > Here are some warnings I noticed during an allmodconfig build
-> > on sparc64, please fix:
-> >
-> > drivers/net/wireless/hostap/hostap_hw.c:3422: warning: 'prism2_suspend' defined but not used
-> > drivers/net/wireless/iwlwifi/iwl-rfkill.c:114: warning: label 'freed_rfkill' defined but not used
-> 
-> John what happened to to those patches?
-> http://marc.info/?l=linux-wireless&m=121489830307988&w=2
-> http://marc.info/?l=linux-wireless&m=121481826531792&w=2
+On Wed, 02 Jul 2008, Ivo van Doorn wrote:
+> Well actually it isn't that easy, the lock would also be used for the state change
+> callback function toward the driver. And if that is done under a spinlock, USB
+> drivers will start complaining since they can't access the hardware under atomic
+> context...
 
-They were posted after this round of patches.  I still have them.
+Would it be worth it to use a hybrid scheme?
 
-John
+Callbacks and the notify chain would remain in task context, while the
+locking is changed to spinlocks so that it can also work in interrupt
+context when needed.   We document better (in the text documentation,
+include files and kernel-doc) the contextes so that people don't get
+confused by the code and think that a spinlock means atomic context is OK
+for these handlers.
+
+For rfkill_force_state(), we'd either add a flags parameter that can take,
+e.g., GFP_ATOMIC, to tell us whether it is being called from an interrupt
+handler or a task context, or we could simply add rfkill_force_state_atomic().
+
+This would be safer (because the state would still be updated synchronously
+when one calls rfkill_force_state(_atomic)?) than adding a
+rfkill_schedule_force_state() for drivers to call in interrupt context.
+
+So far, the only function I can see that would have to work in
+interrupt/atomic context would be rfkill_force_state_atomic.
+
 -- 
-John W. Linville
-linville@tuxdriver.com
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
