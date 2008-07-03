@@ -1,72 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:37411 "EHLO mx3.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756123AbYGUTek (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 15:34:40 -0400
-Date: Mon, 21 Jul 2008 21:34:25 +0200
-From: Ingo Molnar <mingo@elte.hu>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ian Schram <ischram@telenet.be>,
-	David Miller <davem@davemloft.net>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	wireless <linux-wireless@vger.kernel.org>, j@w1.fi
-Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
-	at 0000000000000370
-Message-ID: <20080721193425.GA29287@elte.hu> (sfid-20080721_213451_479485_2EA0360E)
-References: <20080721134506.GA27598@elte.hu> <20080721143023.GA32451@elte.hu> <20080721150446.GA17746@elte.hu> <20080721.082419.70392960.davem@davemloft.net> <4884D2F1.2030704@telenet.be> <20080721190646.GA19044@elte.hu> <4884DFEE.4060003@lwfinger.net>
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:46496 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751725AbYGCMtL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jul 2008 08:49:11 -0400
+Date: Thu, 3 Jul 2008 09:49:06 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	linux-wireless@vger.kernel.org, randy.dunlap@oracle.com,
+	"John W. Linville" <linville@tuxdriver.com>, fcrespel@gmail.com
+Subject: Re: [PATCH] iwlwifi: remove input device and fix rfkill state
+Message-ID: <20080703124906.GC17823@khazad-dum.debian.net> (sfid-20080703_144933_221525_EBD3F9C1)
+References: <6cf6b73e0807010849t42de3f3fn68085daca8d8009e@mail.gmail.com> <200807021800.25894.IvDoorn@gmail.com> <20080702184153.GA19949@khazad-dum.debian.net> <200807030031.20202.IvDoorn@gmail.com> <20080703015355.GB20410@khazad-dum.debian.net> <1215054671.14590.555.camel@debian.sh.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4884DFEE.4060003@lwfinger.net>
+In-Reply-To: <1215054671.14590.555.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 03 Jul 2008, Zhu Yi wrote:
+> On Wed, 2008-07-02 at 22:53 -0300, Henrique de Moraes Holschuh wrote:
+> > Hmm, it could cause deadlocks I think.  task context takes lock.
+> > interrupt context tries to run, needs lock, keeps spinning forever
+> > waiting for it, and if we are not SMP, task context never has a chance
+> > to release the lock, so we get a deadlock.  Is this correct?
+> 
+> Never heard of spin_lock_irqsave()?
 
-* Larry Finger <Larry.Finger@lwfinger.net> wrote:
+Studying it now...  I did say I was not the right person for the job because
+I am still learning all the locks we have :-)
 
-> Ingo Molnar wrote:
->> * Ian Schram <ischram@telenet.be> wrote:
->>
->>> I was looking at this out of interest, but I'm in no way familiar 
->>> with the code.
->>
->> thanks Ian for the patch, i'll test it.
->>
->> Note that it was whitespace damaged, find below a tidied up version of  
->> the patch that i've applied to tip/out-of-tree.
->>
->> 	Ingo
->
-> This patch may be needed to fix error handling in the hw_sim code, but 
-> I get the crash even with that code disabled. I'm currently bisecting 
-> to find the culprit.
+> > If it is, we better make the atomic path lock-free.  Argh.  This means
+> > rfkill->state (the only thing we care about in the atomic path) would
+> > have to become an atomic variable, and the code changed to cope with
+> > its value being "volatile", so that it can be used in a lockless
+> > fashion.
+> 
+> Yup, if protecting rfkill->state is the only intention, a spinlock is
+> too heavy. set|clear_bit is enough if organizing the state into bitmaps.
+> BTW, read/write 32-bits aligned on x86 is already atomic.
 
-ok. I just reactivated CONFIG_MAC80211_HWSIM, applied Ian's fix and the 
-crash went away:
+I know rfkill->state is already atomic on x86, and I think it is also atomic
+on every other platform Linux supports (I need to check this, since I am not
+sure).  However, explicitly making it atomic_t is a damn heavy hint to
+anyone using rfkill about how to deal with rfkill->state, and that can be a
+big advantage.
 
- calling  iwl4965_init+0x0/0x6c
- iwl4965: Intel(R) Wireless WiFi Link 4965AGN driver for Linux, 1.3.27kd
- iwl4965: Copyright(c) 2003-2008 Intel Corporation
- initcall iwl4965_init+0x0/0x6c returned 0 after 10 msecs
- calling  init_mac80211_hwsim+0x0/0x31c
- mac80211_hwsim: Initializing radio 0
- PM: Adding info for No Bus:hwsim0
- PM: Adding info for No Bus:phy0
- PM: Adding info for No Bus:wmaster0
- phy0: Failed to select rate control algorithm
- phy0: Failed to initialize rate control algorithm
- PM: Removing info for No Bus:wmaster0
- PM: Removing info for No Bus:phy0
- mac80211_hwsim: ieee80211_register_hw failed (-2)
- PM: Removing info for No Bus:hwsim0
- initcall init_mac80211_hwsim+0x0/0x31c returned -2 after 58 msecs
- initcall init_mac80211_hwsim+0x0/0x31c returned with error code -2
- calling  dmfe_init_module+0x0/0xea
- dmfe: Davicom DM9xxx net driver, version 1.36.4 (2002-01-17)
- initcall dmfe_init_module+0x0/0xea returned 0 after 5 msecs
-
-So at least as far as the init_mac80211_hwsim() deinit crash goes:
-
-Tested-by: Ingo Molnar <mingo@elte.hu>
-
-	Ingo
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
