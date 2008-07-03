@@ -1,75 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46966 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751126AbYGIWZi (ORCPT
+Received: from e28smtp03.in.ibm.com ([59.145.155.3]:45743 "EHLO
+	e28esmtp03.in.ibm.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751915AbYGCLze (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 18:25:38 -0400
-Subject: Re: iwlwifi workaround for mac80211 sequence number bug
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ron Rindjunksi <ron.rindjunski@intel.com>
-In-Reply-To: <1ba2fa240807091517y40f6ab8cscc352bfdaa0d715@mail.gmail.com> (sfid-20080710_001755_843107_650682D8)
-References: <1215641485.3246.72.camel@johannes.berg>
-	 <1ba2fa240807091517y40f6ab8cscc352bfdaa0d715@mail.gmail.com>
-	 (sfid-20080710_001755_843107_650682D8)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XgmXE1MIuzjlXn1HKABL"
-Date: Thu, 10 Jul 2008 00:24:51 +0200
-Message-Id: <1215642292.3246.79.camel@johannes.berg> (sfid-20080710_002541_544861_780AF5A0)
-Mime-Version: 1.0
+	Thu, 3 Jul 2008 07:55:34 -0400
+In-Reply-To: <20080703.000436.77009639.davem@davemloft.net>
+Subject: Re: [PATCH 24/39]: netdev: Allocate multiple queues for TX.
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, Matheos.Worku@Sun.COM,
+	mchan@broadcom.com, netdev@vger.kernel.org,
+	vinay@linux.vnet.ibm.com
+Message-ID: <OF4D241345.95F11555-ON6525747B.002760BE-6525747B.00360059@in.ibm.com> (sfid-20080703_135615_903974_5652AB88)
+From: Krishna Kumar2 <krkumar2@in.ibm.com>
+Date: Thu, 3 Jul 2008 15:19:50 +0530
+MIME-Version: 1.0
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Dave,
 
---=-XgmXE1MIuzjlXn1HKABL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I have to clone to get a full picture of the changes and that
+unfortunately works only in the mornings due to network issues,
+so from looking at code on kernel.org:
 
-On Thu, 2008-07-10 at 01:17 +0300, Tomas Winkler wrote:
+1. Some netdev_queue variables are called dev_queue and others are
+   called txq. Is it to signify difference between functions that are
+   single queue vs multiqueue? Can it be made consistent to use txq
+   instead since everything is a transmit queue?
 
-> This is not a bug in mac.
-> The sequence number can be committed only if the packet is not dropped
-> somewhere in the driver. See lower in the function.. There are plenty
-> of  places on the TX path when packet can be dropped this it's last
-> station.  There is no reason to pushing this into mac
+2. netif_queue_stopped and netif_subqueue_stopped can be both made to
+   call netif_tx_queue_stopped to make them look consistent. Then you
+   can delete __netif_subqueue_stopped(). However, I haven't looked if
+   any other user of this function is there or not (due to download
+   issue).
 
-I don't see it that way. In fact, in the code I'm looking at, there is
-nothing that drops the frame before committing the sequence number
-change after assigning it.
+static inline int netif_tx_queue_stopped(const struct netdev_queue
+*dev_queue)
+{
+      return test_bit(__QUEUE_STATE_XOFF, &dev_queue->state);
+}
 
-And all the cases where it drops the frame _before_ the piece of code I
-quoted don't actually matter, the first bunch of those are bugs and the
-not associated one is strange but most likely doesn't matter either (if
-we're not associated sequence numbers don't matter), and the
-"destination STA entry not found" one doesn't matter either since that
-means there's some disconnect/bug between iwlwifi and mac80211 since
-they should synchronise via sta_notify().
+static inline int netif_queue_stopped(const struct net_device *dev)
+{
+      return netif_tx_queue_stopped(netdev_get_tx_queue(dev, 0));
+}
 
-Which particular item do you see as problematic?
+static inline int netif_subqueue_stopped(const struct net_device *dev,
+                                         struct sk_buff *skb)
+{
+      return netif_tx_queue_stopped(netdev_get_tx_queue(dev,
+                                    skb_get_queue_mapping(skb)));
+}
 
-johannes
+3. Since many functions iterate over the list of tx-queues, you could
+   optimize all those functions (saving a few cycles per loop), eg:
 
---=-XgmXE1MIuzjlXn1HKABL
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+struct Qdisc *qdisc_lookup(struct net_device *dev, u32 handle)
+{
+      unsigned int i;
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+      for (i = 0; i < dev->num_tx_queues; i++) {
+            struct netdev_queue *txq = netdev_get_tx_queue(dev, i);
+            struct Qdisc *q = __qdisc_lookup(txq, handle);
+            if (q)
+                  return q;
+      }
+      return NULL;
+}
+To ->
+struct Qdisc *qdisc_lookup(struct net_device *dev, u32 handle)
+{
+      struct netdev_queue *txq;
+      unsigned int i;
 
-iQIcBAABAgAGBQJIdTqwAAoJEKVg1VMiehFYLL0P/RxnMp1YKsNtakv7ddkxdEzb
-uWbMhyaTm5a0Uy3pJUnFgUvt7GVNZOjQe2L7NxGvoP7am2miH0czHuxefZicmdc0
-FAYAbVa+fW5pFLfDZI7tRglJ5VKzj5/2AF6qkwWN6/Yeuj/umC+C3QtOTDxUfUaS
-V99cMcGeunFmYUqV6xgcregt8eNBp8uJ3gNzcwG/pboBolk37qzeCbe/linpsUJZ
-bdUrHufJX3MfRJopdrn2QzATHvaUd1QXAQT4MLEDOsh+n/6JfZW7I0sm2AJzoqoj
-0B8VIX/j6sX/ZyR3953BfIZGmhpEKhF9oKDjTRxop/b/pycUTIXl88pWaYW174l3
-x15tSz8+0iQKTWgKtLcqvFb8SVCxXxUwi1fGX03idMdh2pBjINmiH9Cr1yRA/J1G
-BhxbQVR8vIjnUzSPWBozfNIcRENxlsyNU+Nlse5kEpBfH75t22uB3nJ8ZyLiRpJO
-cC3nBAcPROQK9K9WuhAGoYInnIVD5Qrt4qaoa8HOvxkEuMoRJVPz2UiGVAGsiEQC
-byykQY+yEdwmaKISuCnSXAP0kUXWu+FI1s+1KxbPqa079987eamGaVp6fLIAf9RR
-z8riCOLGlssqogyn7JooCNh7x2SZm3GEDfL97px4CdlfKfZOk92HKXMY3cN3hEc9
-a7w+szLikrpnKiFlmho0
-=klOO
------END PGP SIGNATURE-----
+      for (i = 0, txq = netdev_get_tx_queue(dev, 0); i <
+dev->num_tx_queues; i++, txq++) {
+            struct Qdisc *q = __qdisc_lookup(txq, handle);
+            if (q)
+                  return q;
+      }
+      return NULL;
+}
 
---=-XgmXE1MIuzjlXn1HKABL--
+And since there are many functions doing:
+      for (i = 0; i < dev->num_tx_queues; i++) {
+            struct netdev_queue *txq = netdev_get_tx_queue(dev, i);
+
+this can be changed to:
+      list_for_each_txq(...)?
+
+If you feel either of these or both will help, I can submit a patch to do
+similarly for all the other occurences.
+
+Thanks,
+
+- KK
 
