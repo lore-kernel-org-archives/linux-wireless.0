@@ -1,68 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47545
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1757483AbYGCHDz (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:7702 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753230AbYGCRpq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:03:55 -0400
-Date: Thu, 03 Jul 2008 00:03:54 -0700 (PDT)
-Message-Id: <20080703.000354.07929431.davem@davemloft.net> (sfid-20080703_103231_509051_CE5BE20D)
-To: netdev@vger.kernel.org
-CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
-Subject: [PATCH 15/39]: pkt_sched: Add qdisc_tx_is_noop() helper and use in
- IPV6.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 3 Jul 2008 13:45:46 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so305836yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Jul 2008 10:45:45 -0700 (PDT)
+Message-ID: <1ba2fa240807031045q74065c7bna6e66b5aa219d41c@mail.gmail.com> (sfid-20080703_194549_761053_F1768205)
+Date: Thu, 3 Jul 2008 20:45:44 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/1] mac80211: move netif_carrier_on to after ieee80211_bss_info_change_notify
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org, "Guy Cohen" <guy.cohen@intel.com>
+In-Reply-To: <1215106393.9975.21.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1215104173-8918-1-git-send-email-tomas.winkler@intel.com>
+	 <1215104870.9975.17.camel@johannes.berg>
+	 <1ba2fa240807031026k1763f64bu66fd03d0c1b254dc@mail.gmail.com>
+	 <1215106393.9975.21.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-This indicates if the NOOP scheduler is what is active
-for TX on a given device.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- include/net/sch_generic.h |    8 ++++++++
- net/ipv6/addrconf.c       |    5 ++---
- 2 files changed, 10 insertions(+), 3 deletions(-)
-
-diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
-index 9f5e644..bfb05a7 100644
---- a/include/net/sch_generic.h
-+++ b/include/net/sch_generic.h
-@@ -212,6 +212,14 @@ static inline bool qdisc_tx_changing(struct net_device *dev)
- 	return (txq->qdisc != txq->qdisc_sleeping);
- }
- 
-+/* Is the device using the noop qdisc?  */
-+static inline bool qdisc_tx_is_noop(struct net_device *dev)
-+{
-+	struct netdev_queue *txq = &dev->tx_queue;
-+
-+	return (txq->qdisc == &noop_qdisc);
-+}
-+
- static inline int __qdisc_enqueue_tail(struct sk_buff *skb, struct Qdisc *sch,
- 				       struct sk_buff_head *list)
- {
-diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
-index e6acb89..6dd8c63 100644
---- a/net/ipv6/addrconf.c
-+++ b/net/ipv6/addrconf.c
-@@ -224,10 +224,9 @@ const struct in6_addr in6addr_linklocal_allnodes = IN6ADDR_LINKLOCAL_ALLNODES_IN
- const struct in6_addr in6addr_linklocal_allrouters = IN6ADDR_LINKLOCAL_ALLROUTERS_INIT;
- 
- /* Check if a valid qdisc is available */
--static inline int addrconf_qdisc_ok(struct net_device *dev)
-+static inline bool addrconf_qdisc_ok(struct net_device *dev)
- {
--	struct netdev_queue *txq = &dev->tx_queue;
--	return (txq->qdisc != &noop_qdisc);
-+	return !qdisc_tx_is_noop(dev);
- }
- 
- /* Check if a route is valid prefix route */
--- 
-1.5.6
-
+T24gVGh1LCBKdWwgMywgMjAwOCBhdCA4OjMzIFBNLCBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lc0Bz
+aXBzb2x1dGlvbnMubmV0PiB3cm90ZToKPiBPbiBUaHUsIDIwMDgtMDctMDMgYXQgMjA6MjYgKzAz
+MDAsIFRvbWFzIFdpbmtsZXIgd3JvdGU6Cj4+IE9uIFRodSwgSnVsIDMsIDIwMDggYXQgODowNyBQ
+TSwgSm9oYW5uZXMgQmVyZyA8am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldD4gd3JvdGU6Cj4+ID4K
+Pj4gPj4gLSAgICAgICAgICAgICBuZXRpZl9jYXJyaWVyX29uKGRldik7Cj4+ID4+ICAgICAgICAg
+ICAgICAgaWZzdGEtPmZsYWdzIHw9IElFRUU4MDIxMV9TVEFfUFJFVl9CU1NJRF9TRVQ7Cj4+ID4+
+ICAgICAgICAgICAgICAgbWVtY3B5KGlmc3RhLT5wcmV2X2Jzc2lkLCBzZGF0YS0+dS5zdGEuYnNz
+aWQsIEVUSF9BTEVOKTsKPj4gPj4gICAgICAgICAgICAgICBtZW1jcHkod3JxdS5hcF9hZGRyLnNh
+X2RhdGEsIHNkYXRhLT51LnN0YS5ic3NpZCwgRVRIX0FMRU4pOwo+PiA+PiAgICAgICAgICAgICAg
+IGllZWU4MDIxMV9zdGFfc2VuZF9hc3NvY2luZm8oZGV2LCBpZnN0YSk7Cj4+ID4+ICAgICAgIH0g
+ZWxzZSB7Cj4+ID4+ICsgICAgICAgICAgICAgbmV0aWZfY2Fycmllcl9vZmYoZGV2KTsKPj4gPj4g
+ICAgICAgICAgICAgICBpZWVlODAyMTFfc3RhX3RlYXJfZG93bl9CQV9zZXNzaW9ucyhkZXYsIGlm
+c3RhLT5ic3NpZCk7Cj4+ID4+ICAgICAgICAgICAgICAgaWZzdGEtPmZsYWdzICY9IH5JRUVFODAy
+MTFfU1RBX0FTU09DSUFURUQ7Cj4+ID4+IC0gICAgICAgICAgICAgbmV0aWZfY2Fycmllcl9vZmYo
+ZGV2KTsKPj4gPgo+PiA+IE1heWJlIGl0IHNob3VsZCB0aGVuIGJlIHN5bW1ldHJpYyBzbyB0aGF0
+IGNhbGxlcnMgb2YgdGhlIGZ1bmN0aW9uIGhhdmUKPj4gPiB0byBkbyBpdCBpbiBib3RoIGNhc2Vz
+PyBPdGhlciB0aGFuIHRoYXQsIGxvb2tzIGdvb2QuCj4+Cj4+IFRoZSBzZXF1ZW5jZSBub3cgaXMK
+Pj4gICBjb25maWd1cmUgYXNzb2NpYXRpb24gaW4gdGhlIGRyaXZlciAgLT4gY2Fycmllcl9vbiAu
+Li4uLiBjYXJyaWVyX29mZgo+PiAtPiBjb25maWd1cmUgZGlzYXNzb2NpYXRpb24gaW4gdGhlIGRy
+aXZlcgo+Pgo+PiBTbyB0aGlzIGlzIGFscmVhZHkgc3ltbWV0cmljIG9yIEkgZG9uJ3QgdW5kZXJz
+dGFuZCB3aGF0ICB5b3UgbWVhbi4KPgo+IFllcywgdGhlIGNhbGwgc2VxdWVuY2UgaXMgc3ltbWV0
+cmljLCBidXQgSSB3YXMgdGhpbmtpbmcgd2hldGhlciBpdCB3b3VsZAo+IGJlIGJldHRlciBBUEkt
+d2lzZSB0byBoYXZlIHRoZSBjYWxsZXIgb2Yg77u/aWVlZTgwMjExX3NldF9hc3NvY2lhdGVkKCkg
+ZG8KPiBib3RoIGNhcnJpZXJfb24gYW5kIGNhcnJpZXJfb2ZmLCBpbnN0ZWFkIG9mIHJlcXVpcmlu
+ZyB0aGF0IGl0IGNhbGxzCj4gY2Fycmllcl9vbiBidXQgY2FsbGluZyBjYXJyaWVyX29mZiBmb3Ig
+aXQuCgpJIHRoaW5rIGl0J3MgYWN0dWFsbHkgb2theSB0byBiZSAgaW5zaWRlIGFuZCBJIHdvdWxk
+IHJhdGhlciBwcmVmZXIgdG8Kc3BsaXQgdGhpcyBmdW5jdGlvbjsgdGhlcmUgaXMgYWxyZWFkeSBv
+bmUgZnVuY3Rpb24gY2FsbGVkCmllZWU4MDIxMV9zZXRfZGlzYXNzb2NpYXRlZC4gQnV0IHNpbmNl
+IHdlIGhhdmUgdG8gZml4IGRpc3NhY29zaWF0aW9uCmFud2F5IGFuZCB3ZSBuZWVkIHRvIGludmVz
+dGlnYXRlIGl0IG1vcmUgSSB3b3VsZCBmaXJzdCB1c2UgdGhpcyBsaXR0bGUKZml4LgpUaGFua3MK
+VG9tYXMK
