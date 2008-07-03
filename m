@@ -1,41 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:56977 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755080AbYGJOr7 (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:59676 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751885AbYGCBfI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 10:47:59 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so1621181ywe.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2008 07:47:58 -0700 (PDT)
-Message-ID: <1ba2fa240807100747g285b5ff0of81bf619ad9ee3b9@mail.gmail.com> (sfid-20080710_164802_342132_0A624BFF)
-Date: Thu, 10 Jul 2008 17:47:57 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/1] iwlwif: remove compilation warnings iwl_add_radiotap
-Cc: "Bruno Randolf" <br1@einfach.org>, linville@tuxdriver.com,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1215697922.3483.18.camel@johannes.berg>
+	Wed, 2 Jul 2008 21:35:08 -0400
+Date: Wed, 02 Jul 2008 20:36:31 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: stable@kernel.org, Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [stable PATCH] mac80211: detect driver tx bugs
+Message-ID: <486c2d1f.ntPY4RgDHDbYfPvX%Larry.Finger@lwfinger.net> (sfid-20080703_103136_032545_855F2477)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1215689322-25017-1-git-send-email-tomas.winkler@intel.com>
-	 <200807101342.36920.br1@einfach.org>
-	 <1ba2fa240807100525u3697e2f2rcde945a765412eb5@mail.gmail.com>
-	 <1215697922.3483.18.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 10, 2008 at 4:52 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2008-07-10 at 15:25 +0300, Tomas Winkler wrote:
->
->> > what about using the generic function to add the radiotap header from
->> > mac80211? it should be flexible enough to handle all devices by now.
->
->> Why not go ahead.
->
-> I always thought you were adding 11n stuff, but if that's not the case
-> (and we may make mac80211 do that at some point) then that'd be a nice
-> code removal.
+When a driver rejects a frame in it's ->tx() callback, it must also
+stop queues, otherwise mac80211 can go into a loop here. Detect this
+situation and abort the loop after five retries, warning about the
+driver bug.
 
-I have never really looked into radio tap so I don't want to make any
-statements here. If the 11n part can be done in mac80211 why not.
-Tomas
+This patch was added to mainline as
+commit ef3a62d272f033989e83eb1f26505f93f93e3e69.
+
+Thanks to Larry Finger <Larry.Finger@lwfinger.net> for doing the -stable
+port.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+
+ tx.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+Index: linux-2.6/net/mac80211/tx.c
+===================================================================
+--- linux-2.6.orig/net/mac80211/tx.c
++++ linux-2.6/net/mac80211/tx.c
+@@ -1090,7 +1090,7 @@ static int ieee80211_tx(struct net_devic
+ 	ieee80211_tx_handler *handler;
+ 	struct ieee80211_txrx_data tx;
+ 	ieee80211_txrx_result res = TXRX_DROP, res_prepare;
+-	int ret, i;
++	int ret, i, retries = 0;
+ 
+ 	WARN_ON(__ieee80211_queue_pending(local, control->queue));
+ 
+@@ -1181,6 +1181,13 @@ retry:
+ 		if (!__ieee80211_queue_stopped(local, control->queue)) {
+ 			clear_bit(IEEE80211_LINK_STATE_PENDING,
+ 				  &local->state[control->queue]);
++			retries++;
++			/*
++			 * Driver bug, it's rejecting packets but
++			 * not stopping queues.
++			 */
++			if (WARN_ON_ONCE(retries > 5))
++				goto drop;
+ 			goto retry;
+ 		}
+ 		memcpy(&store->control, control,
+
