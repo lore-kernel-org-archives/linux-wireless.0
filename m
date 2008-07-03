@@ -1,70 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from igw3.br.ibm.com ([32.104.18.26]:51155 "EHLO igw3.br.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752741AbYGWNlw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 09:41:52 -0400
-Message-ID: <48873502.1030106@linux.vnet.ibm.com> (sfid-20080723_154156_937455_0E404DDA)
-Date: Wed, 23 Jul 2008 10:41:22 -0300
-From: Breno Leitao <leitao@linux.vnet.ibm.com>
-MIME-Version: 1.0
-To: Jiri Slaby <jirislaby@GMAIL.COM>
-CC: "David S. Miller" <davem@davemloft.net>,
-	netdev <netdev@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: q == &noop_qdisc warning from 802.11 code
-References: <488723FF.8070707@gmail.com>
-In-Reply-To: <488723FF.8070707@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50732
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1759240AbYGCHFl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jul 2008 03:05:41 -0400
+Date: Thu, 03 Jul 2008 00:05:39 -0700 (PDT)
+Message-Id: <20080703.000539.114289147.davem@davemloft.net> (sfid-20080703_103231_173687_CF39A414)
+To: netdev@vger.kernel.org
+CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
+	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
+Subject: [PATCH 35/39]: netdev: Add helpers for operating on all TX queues.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri Slaby wrote:
-> Hi,
-> 
-> I hit the warning from __netif_schedule:
 
-I also hit a bug related to noop_qdisc running the net-next kernel. 
-I hit this bug every time I run "ifconfig eth0 mtu 9000; ifconfg eth0 1500" for any
-interface (tested against s2io and e1000) that is up, otherwise the bug isn't
-reproducible.
+Add netif_tx_{start,stop,wake}_all_queues() and
+netif_tx_schedule_all() helper functions.
 
-The bug dumps the following calltrace: 
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ include/linux/netdevice.h |   38 ++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 38 insertions(+), 0 deletions(-)
 
-[root@io-dolphins net-next-2.6]# ifconfig eth0  mtu 9000; ifconfig eth0 mtu 1500
-------------[ cut here ]------------
-kernel BUG at net/core/dev.c:1328!
-cpu 0x1: Vector: 700 (Program Check) at [c0000000be3d3460]
-    pc: c0000000003603ac: .__netif_schedule+0x2c/0xb8
-    lr: d00000000026b014: .s2io_change_mtu+0x1c4/0x27c [s2io]
-    sp: c0000000be3d36e0
-   msr: 8000000000029032
-  current = 0xc0000000bc4042b0
-  paca    = 0xc0000000006f3680
-    pid   = 3496, comm = ifconfig
-kernel BUG at net/core/dev.c:1328!
-enter ? for help
-[c0000000be3d3760] d00000000026b014 .s2io_change_mtu+0x1c4/0x27c [s2io]
-[c0000000be3d3800] c0000000003631ac .dev_set_mtu+0x68/0xb0
-[c0000000be3d3880] c000000000364bc4 .dev_ioctl+0x67c/0x780
-[c0000000be3d3990] c000000000354394 .sock_ioctl+0x2d8/0x310
-[c0000000be3d3a30] c0000000001054b4 .vfs_ioctl+0x5c/0xf0
-[c0000000be3d3ad0] c000000000105954 .do_vfs_ioctl+0x40c/0x448
-[c0000000be3d3b80] c000000000105a00 .sys_ioctl+0x70/0xb4
-[c0000000be3d3c30] c00000000013a2e8 .dev_ifsioc+0x1b0/0x3e4
-[c0000000be3d3d40] c0000000001398a8 .compat_sys_ioctl+0x3d4/0x468
-[c0000000be3d3e30] c0000000000086b4 syscall_exit+0x0/0x40
---- Exception: c00 (System Call) at 000000000ff15fe8
-SP (ffecf8a0) is in userspace
-
-And the code which is causing the bug is the following: 
-
-void __netif_schedule(struct Qdisc *q)
-{
-        BUG_ON(q == &noop_qdisc);
-
-So, somehow we're reaching __netif_schedule() using a noop_qdisc. 
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index 79a153f..8b83d1f 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -983,6 +983,14 @@ static inline void netif_schedule(struct net_device *dev)
+ 	netif_schedule_queue(netdev_get_tx_queue(dev, 0));
+ }
+ 
++static inline void netif_tx_schedule_all(struct net_device *dev)
++{
++	unsigned int i;
++
++	for (i = 0; i < dev->num_tx_queues; i++)
++		netif_schedule_queue(netdev_get_tx_queue(dev, i));
++}
++
+ /**
+  *	netif_start_queue - allow transmit
+  *	@dev: network device
+@@ -999,6 +1007,16 @@ static inline void netif_start_queue(struct net_device *dev)
+ 	netif_tx_start_queue(netdev_get_tx_queue(dev, 0));
+ }
+ 
++static inline void netif_tx_start_all_queues(struct net_device *dev)
++{
++	unsigned int i;
++
++	for (i = 0; i < dev->num_tx_queues; i++) {
++		struct netdev_queue *txq = netdev_get_tx_queue(dev, i);
++		netif_tx_start_queue(txq);
++	}
++}
++
+ /**
+  *	netif_wake_queue - restart transmit
+  *	@dev: network device
+@@ -1023,6 +1041,16 @@ static inline void netif_wake_queue(struct net_device *dev)
+ 	netif_tx_wake_queue(netdev_get_tx_queue(dev, 0));
+ }
+ 
++static inline void netif_tx_wake_all_queues(struct net_device *dev)
++{
++	unsigned int i;
++
++	for (i = 0; i < dev->num_tx_queues; i++) {
++		struct netdev_queue *txq = netdev_get_tx_queue(dev, i);
++		netif_tx_wake_queue(txq);
++	}
++}
++
+ /**
+  *	netif_stop_queue - stop transmitted packets
+  *	@dev: network device
+@@ -1040,6 +1068,16 @@ static inline void netif_stop_queue(struct net_device *dev)
+ 	netif_tx_stop_queue(netdev_get_tx_queue(dev, 0));
+ }
+ 
++static inline void netif_tx_stop_all_queues(struct net_device *dev)
++{
++	unsigned int i;
++
++	for (i = 0; i < dev->num_tx_queues; i++) {
++		struct netdev_queue *txq = netdev_get_tx_queue(dev, i);
++		netif_tx_stop_queue(txq);
++	}
++}
++
+ /**
+  *	netif_queue_stopped - test if transmit queue is flowblocked
+  *	@dev: network device
 -- 
-Breno Leitao
-leitao@linux.vnet.ibm.com
+1.5.6
+
