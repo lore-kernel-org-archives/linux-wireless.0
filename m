@@ -1,46 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51934
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47591
 	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750902AbYGaMoB (ORCPT
+	by vger.kernel.org with ESMTP id S1757825AbYGCHEP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 08:44:01 -0400
-Date: Thu, 31 Jul 2008 05:44:01 -0700 (PDT)
-Message-Id: <20080731.054401.06991829.davem@davemloft.net> (sfid-20080731_144407_498379_33DFEC62)
-To: nickpiggin@yahoo.com.au
-Cc: jarkao2@gmail.com, johannes@sipsolutions.net, netdev@axxeo.de,
-	peterz@infradead.org, Larry.Finger@lwfinger.net, kaber@trash.net,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, mingo@redhat.com
-Subject: Re: Kernel WARNING: at net/core/dev.c:1330
- __netif_schedule+0x2c/0x98()
+	Thu, 3 Jul 2008 03:04:15 -0400
+Date: Thu, 03 Jul 2008 00:04:13 -0700 (PDT)
+Message-Id: <20080703.000413.44636387.davem@davemloft.net> (sfid-20080703_103231_602465_9DC1B8B0)
+To: netdev@vger.kernel.org
+CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
+	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
+Subject: [PATCH 19/39]: pkt_sched: Make qdisc_run take a netdev_queue.
 From: David Miller <davem@davemloft.net>
-In-Reply-To: <200807312238.20264.nickpiggin@yahoo.com.au>
-References: <20080727203757.GA2527@ami.dom.local>
-	<20080731.052932.110299354.davem@davemloft.net>
-	<200807312238.20264.nickpiggin@yahoo.com.au>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Nick Piggin <nickpiggin@yahoo.com.au>
-Date: Thu, 31 Jul 2008 22:38:19 +1000
 
-> Except for the braindead volatile that gets stuck on the bitops pointer.
-> 
-> Last time I complained about this, a lot of noise was made and I think
-> Linus wanted it to stay around so we could pass volatile pointers to
-> bitops & co without warnings. I say we should just remove the volatile
-> and kill any callers that might warn...
+This allows us to use this calling convention all the
+way down into qdisc_restart().
 
-Ho hum... :)
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ include/net/pkt_sched.h |    8 +++++---
+ net/core/dev.c          |    4 ++--
+ net/sched/sch_generic.c |   26 ++++++++++++++------------
+ 3 files changed, 21 insertions(+), 17 deletions(-)
 
-Another way to approach that, and keep the volatile, is to have
-a "test_flags()" interface that takes the bit mask of values
-you want to test for cases where you know it is a single word
-flags value.
+diff --git a/include/net/pkt_sched.h b/include/net/pkt_sched.h
+index 46fb4d8..554d6c9 100644
+--- a/include/net/pkt_sched.h
++++ b/include/net/pkt_sched.h
+@@ -80,13 +80,15 @@ extern struct qdisc_rate_table *qdisc_get_rtab(struct tc_ratespec *r,
+ 		struct nlattr *tab);
+ extern void qdisc_put_rtab(struct qdisc_rate_table *tab);
+ 
+-extern void __qdisc_run(struct net_device *dev);
++extern void __qdisc_run(struct netdev_queue *dev_queue);
+ 
+-static inline void qdisc_run(struct net_device *dev)
++static inline void qdisc_run(struct netdev_queue *dev_queue)
+ {
++	struct net_device *dev = dev_queue->dev;
++
+ 	if (!netif_queue_stopped(dev) &&
+ 	    !test_and_set_bit(__LINK_STATE_QDISC_RUNNING, &dev->state))
+-		__qdisc_run(dev);
++		__qdisc_run(dev_queue);
+ }
+ 
+ extern int tc_classify_compat(struct sk_buff *skb, struct tcf_proto *tp,
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 1313eee..bb4a724 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -1734,7 +1734,7 @@ gso:
+ 			/* reset queue_mapping to zero */
+ 			skb_set_queue_mapping(skb, 0);
+ 			rc = q->enqueue(skb, q);
+-			qdisc_run(dev);
++			qdisc_run(txq);
+ 			spin_unlock(&txq->lock);
+ 
+ 			rc = rc == NET_XMIT_BYPASS ? NET_XMIT_SUCCESS : rc;
+@@ -1930,7 +1930,7 @@ static void net_tx_action(struct softirq_action *h)
+ 			clear_bit(__LINK_STATE_SCHED, &dev->state);
+ 
+ 			if (spin_trylock(&txq->lock)) {
+-				qdisc_run(dev);
++				qdisc_run(txq);
+ 				spin_unlock(&txq->lock);
+ 			} else {
+ 				netif_schedule_queue(txq);
+diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
+index b1b7422..3f3e699 100644
+--- a/net/sched/sch_generic.c
++++ b/net/sched/sch_generic.c
+@@ -75,9 +75,8 @@ static inline int dev_requeue_skb(struct sk_buff *skb,
+ 	return 0;
+ }
+ 
+-static inline struct sk_buff *dev_dequeue_skb(struct net_device *dev,
+-					      struct netdev_queue *dev_queue,
+-					      struct Qdisc *q)
++static inline struct sk_buff *dequeue_skb(struct netdev_queue *dev_queue,
++					  struct Qdisc *q)
+ {
+ 	struct sk_buff *skb;
+ 
+@@ -90,10 +89,10 @@ static inline struct sk_buff *dev_dequeue_skb(struct net_device *dev,
+ }
+ 
+ static inline int handle_dev_cpu_collision(struct sk_buff *skb,
+-					   struct net_device *dev,
+ 					   struct netdev_queue *dev_queue,
+ 					   struct Qdisc *q)
+ {
++	struct net_device *dev = dev_queue->dev;
+ 	int ret;
+ 
+ 	if (unlikely(dev->xmit_lock_owner == smp_processor_id())) {
+@@ -139,21 +138,23 @@ static inline int handle_dev_cpu_collision(struct sk_buff *skb,
+  *				>0 - queue is not empty.
+  *
+  */
+-static inline int qdisc_restart(struct net_device *dev)
++static inline int qdisc_restart(struct netdev_queue *dev_queue)
+ {
+-	struct netdev_queue *dev_queue = &dev->tx_queue;
+ 	struct Qdisc *q = dev_queue->qdisc;
+-	struct sk_buff *skb;
+ 	int ret = NETDEV_TX_BUSY;
++	struct net_device *dev;
++	struct sk_buff *skb;
+ 
+ 	/* Dequeue packet */
+-	if (unlikely((skb = dev_dequeue_skb(dev, dev_queue, q)) == NULL))
++	if (unlikely((skb = dequeue_skb(dev_queue, q)) == NULL))
+ 		return 0;
+ 
+ 
+ 	/* And release queue */
+ 	spin_unlock(&dev_queue->lock);
+ 
++	dev = dev_queue->dev;
++
+ 	HARD_TX_LOCK(dev, smp_processor_id());
+ 	if (!netif_subqueue_stopped(dev, skb))
+ 		ret = dev_hard_start_xmit(skb, dev);
+@@ -170,7 +171,7 @@ static inline int qdisc_restart(struct net_device *dev)
+ 
+ 	case NETDEV_TX_LOCKED:
+ 		/* Driver try lock failed */
+-		ret = handle_dev_cpu_collision(skb, dev, dev_queue, q);
++		ret = handle_dev_cpu_collision(skb, dev_queue, q);
+ 		break;
+ 
+ 	default:
+@@ -186,11 +187,12 @@ static inline int qdisc_restart(struct net_device *dev)
+ 	return ret;
+ }
+ 
+-void __qdisc_run(struct net_device *dev)
++void __qdisc_run(struct netdev_queue *dev_queue)
+ {
++	struct net_device *dev = dev_queue->dev;
+ 	unsigned long start_time = jiffies;
+ 
+-	while (qdisc_restart(dev)) {
++	while (qdisc_restart(dev_queue)) {
+ 		if (netif_queue_stopped(dev))
+ 			break;
+ 
+@@ -200,7 +202,7 @@ void __qdisc_run(struct net_device *dev)
+ 		 * 2. we've been doing it for too long.
+ 		 */
+ 		if (need_resched() || jiffies != start_time) {
+-			netif_schedule_queue(&dev->tx_queue);
++			netif_schedule_queue(dev_queue);
+ 			break;
+ 		}
+ 	}
+-- 
+1.5.6
 
-The downside is that this kind of interface is easy to use
-incorrectly especially when accesses to the same flags use
-bot test_bit() and test_flags().
