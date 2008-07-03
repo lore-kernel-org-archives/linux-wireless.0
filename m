@@ -1,68 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.179]:48159 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753944AbYGULOm (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:37516 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752675AbYGCOyh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 07:14:42 -0400
-Received: by py-out-1112.google.com with SMTP id p76so992762pyb.10
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 04:14:42 -0700 (PDT)
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
-	RCU.
-From: jamal <hadi@cyberus.ca>
-Reply-To: hadi@cyberus.ca
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: kaber@trash.net, davem@davemloft.net, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-In-Reply-To: <20080721031716.GA7535@gondor.apana.org.au>
-References: <E1KKZmE-0000ty-00@gondolin.me.apana.org.au>
-	 <1216568119.4847.101.camel@localhost>
-	 <20080721001119.GA6515@gondor.apana.org.au>
-	 <1216607637.4847.172.camel@localhost>
-	 <20080721031716.GA7535@gondor.apana.org.au>
-Content-Type: text/plain
-Date: Mon, 21 Jul 2008 07:14:39 -0400
-Message-Id: <1216638879.4847.210.camel@localhost> (sfid-20080721_131512_708196_C4140F35)
-Mime-Version: 1.0
+	Thu, 3 Jul 2008 10:54:37 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so817731wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Jul 2008 07:54:37 -0700 (PDT)
+Message-ID: <69e28c910807030754j36d0bff0lf6dbb237d1130d44@mail.gmail.com> (sfid-20080703_165442_727981_F55C5327)
+Date: Thu, 3 Jul 2008 16:54:37 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "David Miller" <davem@davemloft.net>
+Subject: Re: [PATCH 00/39]: New multiqueue TX implementation.
+Cc: netdev@vger.kernel.org, vinay@linux.vnet.ibm.com,
+	krkumar2@in.ibm.com, mchan@broadcom.com, Matheos.Worku@sun.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080703.000146.168093325.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080703.000146.168093325.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-21-07 at 11:17 +0800, Herbert Xu wrote:
+On Thu, Jul 3, 2008 at 9:01 AM, David Miller <davem@davemloft.net> wrote:
+>
+> I'm finally at the point where I can post a patch series that actually
+> does something and I know works for at least one card :-)
+>
+> The backlog and batching bits are sidelined for the time being.
+> Don't worry, we'll get back to that soon enough :)
+>
+> This can all be found in:
+>
+>        kernel.org:/pub/scm/linux/kernel/git/davem/net-tx-2.6.git
+>
+> which uses net-next-2.6 as it's origin.
+>
+> The summarized state is:
+>
+> 1) Everything in the transmit path is multiqueue aware.
+>
+> 2) Qdisc and classification is not.  We hook up default
+>   qdiscs to each TX queue when the device comes up,
+>   but the configuration infrastructure still hardcodes
+>   it's operations to TX queue zero.  This is a temporary
+>   situation.
+>
+> 3) I rewrote the mac80211 QoS support using the new
+>   netdev hook added for TX hashing.  I know it is broken
+>   and not as fully functional as the qdisc implementation.
+>   It can and will be fixed to match existing functionality.
+>   The broken parts are:
+>
+>   a) It no longer does dropping.
+>   b) Requeueing is not implemented.
+>
+>   Dropping is easy to add, and we need to investigate
+>   whether the requeueing is really even useful.
+>
+> I have tested basic TCP stream functionality on the NIU
+> driver multiqueue support.  I verified that different
+> TCP streams end up on different TX queues.
+>
+> I went through the existing multiqueue capable drivers and
+> made sure they use the new interfaces properly.  I anticipate
+> that they will largely still work properly.
+>
+> For the qdisc/cls issues, I intend to simply use replication as a
+> first step.  So if a qdisc or classifier config change comes in,
+> we just replicate that change to all of the TX queues.  The biggest
+> pain in the butt will be rolling things back if the first few
+> queues succeed but then one fails.
+>
+> The observant will note that egress and ingress qdisc handling is now
+> more consolidated than ever.  I expect many more simplications in this
+> area.
+>
+> Some of these config changes make non-trivial things happen, so what I
+> might do is split qdisc/cls config into two passes.  The first pass
+> implements the allocation of resources (memory, etc.), the second
+> pass commits the changes and cannot fail.  So if anything in the
+> first pass fails, we simply release everything, cleanup, and return
+> an error.
+>
+> Quick 'n dirty multiqueue driver port:
+>
+> 1) alloc_etherdev() --> alloc_etherdev_mq().  Specify the maximum
+>   number of TX queues that the device might be using.
+>
+> 2) Once you know how many TX queues will be in use, set
+>   netdev->real_num_tx_queues to that value.
+>
+>   Do not modify this value when the device is up.  It may only be
+>   changed while the device is down.
+>
+> 3) In ->hard_start_xmit(), skb_get_queue_mapping() tells you which
+>   TX queue to use.  It will always be in the range 0 --> real_num_tx_queue
+>
+> 4) When operating on a specific TX queue, use netif_tx_{start,stop,wake}_queue()
+>
+> 5) When you want to operate on all queues (bringing the device down,
+>   bringing it up, resetting, changing some MAC configuration that
+>   requires full device quiesce) use netif_tx_{start,stop,wake}_all_queues().
+>
+> And then you're done.  Really, it's as simply as that.  The final
+> patch in this series that implements TX multiqueue for NIU is a good
+> guide for other driver authors.
+>
+> net/core/dev.c:simple_tx_hash() implements the current hashing
+> algorithm.  This is just to get things going, and will in the end be
+> augmented with a user-configurable algorithm selection.
+>
+> There is a lot to clean up, fix up, and flesh out.  But at least
+> we're this far along.  More details are in the commit log messages.
+>
+> You'll notice that a lot of it is just moving things around, making
+> interfaces work with queue objects instead of net devices, and
+> finally deciding at each spot "what does this operation mean in
+> a TX multiqueue setting?"
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-> Unfortunately the scenario that I wrote this for requires frequent
-> addition/removal.
+Patch 15/39 appears to be missing from the series.
 
-Aha - makes absolute sense then;->
-
-> Only if you also want to share it :) In the end I patched it to
-> not share it which is much easier.
-
-I am trying to visualize: if you dont share, you must have 256K copies
-then? Assuming also you have a fast lookup since that was design intent.
-
-> Of course if you're volunteering to write the dynamic hash table
-> for actions then I'd happily switch back to sharing :)
-
-It is a unique need like you said earlier (and would require a
-medium-size surgery).
-How about this: if a second user shows up with such a need I could do
-it.
-
-If you knew you had a 256K entry, then you could make
-NAT_TAB_MASK to be (256K-1) and you are guaranteed to get O(1) lookup if
-you dont specify indices.
-I know youve patched it already -havent quiet understood how and your
-current solution may be better- but one other way is to have a Kconfig
-option which lets the user type the size of the nat hash table size at
-kernel compile time. So then a change
-of the sort:
-#ifdef CONFIG_HASH_SIZE
-#define NAT_TAB_MASK CONFIGURED_HASH_SIZE
-#else
-#define NAT_TAB_MASK 15
-#endif
-
-What do you think?
-
-cheers,
-jamal
-
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
