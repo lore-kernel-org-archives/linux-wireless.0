@@ -1,67 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38461 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757249AbYG1PHW (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50727
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1758988AbYGCHFf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2008 11:07:22 -0400
-Subject: Re: [PATCH 1/6] mac80211: allow no mac address until firmware load
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Luis Carlos Cobo <luisca@cozybit.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1217257174.28198.27.camel@localhost.localdomain>
-References: <48763814.27052c0a.1794.2095@mx.google.com>
-	 <200807281544.33509.mb@bu3sch.de> <1217253397.6364.2.camel@localhost>
-	 <200807281600.39103.mb@bu3sch.de>
-	 <1217257174.28198.27.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GdmhWOLE7dlP6iPW9++A"
-Date: Mon, 28 Jul 2008 17:07:08 +0200
-Message-Id: <1217257628.15381.2.camel@johannes.berg> (sfid-20080728_170752_212468_041C3DAA)
+	Thu, 3 Jul 2008 03:05:35 -0400
+Date: Thu, 03 Jul 2008 00:05:34 -0700 (PDT)
+Message-Id: <20080703.000534.203160848.davem@davemloft.net> (sfid-20080703_103231_389199_67C99538)
+To: netdev@vger.kernel.org
+CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
+	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
+Subject: [PATCH 34/39]: netdev: Kill NETIF_F_MULTI_QUEUE.
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-GdmhWOLE7dlP6iPW9++A
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+There is no need for a feature bit for something that
+can be tested by simply checking the TX queue count.
 
-On Mon, 2008-07-28 at 10:59 -0400, Dan Williams wrote:
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ Documentation/networking/multiqueue.txt |   11 -----------
+ drivers/net/cpmac.c                     |    1 -
+ drivers/net/ixgbe/ixgbe_main.c          |    2 --
+ drivers/net/s2io.c                      |    2 --
+ include/linux/netdevice.h               |    4 +---
+ net/mac80211/main.c                     |    3 ---
+ 6 files changed, 1 insertions(+), 22 deletions(-)
 
-> > If that's really a problem, yes. 01:00:00:00:00:00 is still better
-> > than a pseudo random MAC, IMO. It's immediately obvious to the user
-> > that the MAC currently is not set.
->=20
-> How about 44:44:44:44:44:44 like orinoco uses for bogus BSSID?  If we
-> can, let's not keep creating yet more bogus MAC addresses.
-
-Either way, the problem is that these will confuse udev if you have two
-at the same time, no?
-
-johannes
-
---=-GdmhWOLE7dlP6iPW9++A
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIjeCYAAoJEKVg1VMiehFYJ4QP/3fCdcES51uNpf4ZM4i9Aofn
-Rni95jrFumZ732Oyc1xTh657/LhGhnj5Yogaxv+rI7UoaiotriwALzHQ543bHN3z
-bdSg7wv7VcCyRwsrwvhv9UwFbqloW0fza1uj7/XxREIN+CvwdQPtEDTkGV1mBCak
-XCKqRxYioOzXqCS8eKJTjveAN2WU+NLiYUU1Z4uU4dX8aMpYa5/tFaNrD776yb4D
-rIh5WyDfY7I2BivFimf0nvvVuaqpBjoCDB6S6k1kyvpBS+8BqEF4TBwUYDnTcmTr
-O1+/7a1cVI8f3iMwhpZqr4XzmFpW3ZURurpYQTiphFOHEVxZgPxgUgAmSRHbgd+B
-GEVMju9eAiC4hNKJBDVGi8y9d44vBSPNszgcC/rIBVVqA8brmyruWwBwJNFge4VC
-4f+Zx15Z0XgFau4P9fHURIHXUPZPDpGAFp4lQezbo7DB6TpUU2NVgx+MVWTkWXlX
-3JGb8YKiPzlMRMmq/Xz+K1ponbifVi7xSxT9mF623Im+sJwVZZIR2xT7sZ87iU/G
-UJrR7SwxesrIz1SJ6oCpNmSkhZ5ZeZJoEWJL7D7zv1vqIusw8cGg+GO9IgNohnJS
-Rbfj+anStzHwLbexABMs2rPEjycExK4uxCqGoXjwDfl6CC/CpQ8qHp9Bjy5nrMxd
-ajArlQwusdyvPDDCgdsO
-=6fVx
------END PGP SIGNATURE-----
-
---=-GdmhWOLE7dlP6iPW9++A--
+diff --git a/Documentation/networking/multiqueue.txt b/Documentation/networking/multiqueue.txt
+index e6dc1ee..d391ea6 100644
+--- a/Documentation/networking/multiqueue.txt
++++ b/Documentation/networking/multiqueue.txt
+@@ -24,15 +24,4 @@ netif_{start|stop|wake}_subqueue() functions to manage each queue while the
+ device is still operational.  netdev->queue_lock is still used when the device
+ comes online or when it's completely shut down (unregister_netdev(), etc.).
+ 
+-Finally, the base driver should indicate that it is a multiqueue device.  The
+-feature flag NETIF_F_MULTI_QUEUE should be added to the netdev->features
+-bitmap on device initialization.  Below is an example from e1000:
+-
+-#ifdef CONFIG_E1000_MQ
+-	if ( (adapter->hw.mac.type == e1000_82571) ||
+-	     (adapter->hw.mac.type == e1000_82572) ||
+-	     (adapter->hw.mac.type == e1000_80003es2lan))
+-		netdev->features |= NETIF_F_MULTI_QUEUE;
+-#endif
+-
+ Author: Peter P. Waskiewicz Jr. <peter.p.waskiewicz.jr@intel.com>
+diff --git a/drivers/net/cpmac.c b/drivers/net/cpmac.c
+index d630e2a..7c7b54e 100644
+--- a/drivers/net/cpmac.c
++++ b/drivers/net/cpmac.c
+@@ -1165,7 +1165,6 @@ static int __devinit cpmac_probe(struct platform_device *pdev)
+ 	dev->set_multicast_list = cpmac_set_multicast_list;
+ 	dev->tx_timeout         = cpmac_tx_timeout;
+ 	dev->ethtool_ops        = &cpmac_ethtool_ops;
+-	dev->features |= NETIF_F_MULTI_QUEUE;
+ 
+ 	netif_napi_add(dev, &priv->napi, cpmac_poll, 64);
+ 
+diff --git a/drivers/net/ixgbe/ixgbe_main.c b/drivers/net/ixgbe/ixgbe_main.c
+index db50962..9a0bb4d 100644
+--- a/drivers/net/ixgbe/ixgbe_main.c
++++ b/drivers/net/ixgbe/ixgbe_main.c
+@@ -3562,8 +3562,6 @@ static int __devinit ixgbe_probe(struct pci_dev *pdev,
+ 	if (pci_using_dac)
+ 		netdev->features |= NETIF_F_HIGHDMA;
+ 
+-	netdev->features |= NETIF_F_MULTI_QUEUE;
+-
+ 	/* make sure the EEPROM is good */
+ 	if (ixgbe_validate_eeprom_checksum(hw, NULL) < 0) {
+ 		dev_err(&pdev->dev, "The EEPROM Checksum Is Not Valid\n");
+diff --git a/drivers/net/s2io.c b/drivers/net/s2io.c
+index 51a9115..6acbfbc 100644
+--- a/drivers/net/s2io.c
++++ b/drivers/net/s2io.c
+@@ -7950,8 +7950,6 @@ s2io_init_nic(struct pci_dev *pdev, const struct pci_device_id *pre)
+ 		dev->features |= NETIF_F_UFO;
+ 		dev->features |= NETIF_F_HW_CSUM;
+ 	}
+-	if (config->multiq)
+-		dev->features |= NETIF_F_MULTI_QUEUE;
+ 	dev->tx_timeout = &s2io_tx_watchdog;
+ 	dev->watchdog_timeo = WATCH_DOG_TIMEOUT;
+ 	INIT_WORK(&sp->rst_timer_task, s2io_restart_nic);
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index 6ba9cd0..79a153f 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -525,7 +525,6 @@ struct net_device
+ #define NETIF_F_LLTX		4096	/* LockLess TX - deprecated. Please */
+ 					/* do not use LLTX in new drivers */
+ #define NETIF_F_NETNS_LOCAL	8192	/* Does not change network namespaces */
+-#define NETIF_F_MULTI_QUEUE	16384	/* Has multiple TX/RX queues */
+ #define NETIF_F_LRO		32768	/* large receive offload */
+ 
+ 	/* Segmentation offload features */
+@@ -1148,11 +1147,10 @@ static inline void netif_wake_subqueue(struct net_device *dev, u16 queue_index)
+  *	@dev: network device
+  *
+  * Check if device has multiple transmit queues
+- * Always falls if NETDEVICE_MULTIQUEUE is not configured
+  */
+ static inline int netif_is_multiqueue(const struct net_device *dev)
+ {
+-	return (!!(NETIF_F_MULTI_QUEUE & dev->features));
++	return (dev->num_tx_queues > 1);
+ }
+ 
+ /* Use this variant when it is known for sure that it
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index b78b56e..be32e8a 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1686,9 +1686,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if (!mdev)
+ 		goto fail_mdev_alloc;
+ 
+-	if (ieee80211_num_queues(hw) > 1)
+-		mdev->features |= NETIF_F_MULTI_QUEUE;
+-
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(mdev);
+ 	mdev->ieee80211_ptr = &sdata->wdev;
+ 	sdata->wdev.wiphy = local->hw.wiphy;
+-- 
+1.5.6
 
