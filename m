@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4095 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752694AbYGHOiW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 10:38:22 -0400
-Date: Tue, 8 Jul 2008 10:04:57 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Hin-Tak Leung <hintak.leung@gmail.com>, herton@mandriva.com.br,
-	proski@gnu.org, wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/6] rtl8187: Adding Realtek rtl8187B support
-Message-ID: <20080708140457.GA10361@tuxdriver.com> (sfid-20080708_163826_469438_18454191)
-References: <3ace41890807080412w3f24a8c1wa2665d8d6de785c9@mail.gmail.com> <48736E18.5060708@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <48736E18.5060708@lwfinger.net>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47433
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1755392AbYGCHCT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jul 2008 03:02:19 -0400
+Date: Thu, 03 Jul 2008 00:02:18 -0700 (PDT)
+Message-Id: <20080703.000218.65542674.davem@davemloft.net> (sfid-20080703_103139_990991_7F54363D)
+To: netdev@vger.kernel.org
+CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
+	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
+Subject: [PATCH 02/39]: pkt_sched: Remove comment reference to old style TX
+ locking.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 08, 2008 at 08:39:36AM -0500, Larry Finger wrote:
-> Hin-Tak,
->
-> Good job getting these posted. For the first time in a long time, my unit 
-> was able to connect and authenticate. It certainly looks as if you solved 
-> the ep12 problem. I'm using the device to write this E-mail.
->
-> Unfortunately, your mailer still wrapped some lines in the patches. It 
-> wasn't difficult to repair them, but it still is a bother. For the next 
-> round, we can work out a procedure that uses the mail utility to send the 
-> patches. I've used this method since Linville was unable to process my 
-> patches that were sent from Thunderbird.
 
-FWIW, git-send-email does a decent job.  If you commit your patches
-in a git tree, you can use git-format-patch to extract them and then
-git-send-email to send them out -- works fairly well.
+We haven't had netdev->tbusy in many years :)
 
-> The patch to revise the detection of B units with an 8187 ID is ready. I 
-> can send it at any time.
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/sched/sch_api.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Please do!
-
-John
+diff --git a/net/sched/sch_api.c b/net/sched/sch_api.c
+index c40773c..365a84c 100644
+--- a/net/sched/sch_api.c
++++ b/net/sched/sch_api.c
+@@ -99,7 +99,7 @@ static int tclass_notify(struct sk_buff *oskb, struct nlmsghdr *n,
+    ---requeue
+ 
+    requeues once dequeued packet. It is used for non-standard or
+-   just buggy devices, which can defer output even if dev->tbusy=0.
++   just buggy devices, which can defer output even if netif_queue_stopped()=0.
+ 
+    ---reset
+ 
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.6
+
