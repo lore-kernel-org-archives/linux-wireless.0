@@ -1,58 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:19229 "EHLO mga01.intel.com"
+Received: from element.ksp.sk ([158.195.16.154]:52610 "EHLO element.ksp.sk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750885AbYGIVr0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 17:47:26 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net,
-	yi.zhu@intel.com, harvey.harrison@gmail.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 1/1 V3] mac80211: Fix ieee80211_rx_reorder_ampdu: ignore QoS null packets
-Date: Thu, 10 Jul 2008 00:47:19 +0300
-Message-Id: <1215640039-15992-1-git-send-email-tomas.winkler@intel.com> (sfid-20080709_234732_486356_47CFEC51)
-Content-Type: text/plain; charset="us-ascii"
+	id S1752630AbYGCNvE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jul 2008 09:51:04 -0400
+Message-ID: <486CD93B.90503@work.ksp.sk> (sfid-20080703_155151_271493_A8BED51A)
+Date: Thu, 03 Jul 2008 15:50:51 +0200
+From: Vladimir Koutny <vlado@work.ksp.sk>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	bruno randolf <bruno@thinktube.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Benc <jbenc@suse.cz>
+Subject: Re: [PATCH] mac80211: fix alternating-BSSID issue in IBSS
+References: <486A43D0.8020507@work.ksp.sk> <20080702190059.GA31288@tuxdriver.com>
+In-Reply-To: <20080702190059.GA31288@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigB2143141FBA987B07EE0B6AC"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigB2143141FBA987B07EE0B6AC
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-This patch fixes the check at the entrance to ieee80211_rx_reorder_ampdu.
-This check has been broken by 511fe3f3c4ba0b5b77421336f64a19b6cd00e65f
-'mac80211: rx.c use new helpers'
+John W. Linville wrote:
+> On Tue, Jul 01, 2008 at 04:48:48PM +0200, Vladimir Koutny wrote:
+>> Due to the fact that we (still) keep old BSS information, we can end
+>> up switching between 2 or more BSSIDs when in IBSS (these are the
+>> BSSIDs of networks with the same name we've seen before, even if they
+>> are not around anymore). This switching happens in 30sec intervals
+>> (IBSS merge attempt when no active STAs are around).
+>>
+>> This patch expires old BSS entries after IEEE80211_SCAN_RESULT_EXPIRE
+>> seconds (the same time after it will not be reported in scan results)
+>> when trying to merge.
+>>
+>> Signed-off-by: Vladimir Koutny <vlado@ksp.sk>
+>=20
+> This seems like a good thing to do, but the sta_bss_list is used in STA=
 
-Letting QoS NULL packet in ieee80211_rx_reorder_ampdu led to packet loss in
-RX.
+> mode too.  Perhaps we should find a time to run ieee80211_bss_expire
+> in STA mode as well?
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/rx.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Yes, probably. Any suggestions for a suitable place? (I'm not that
+familiar with the code..) It should probably be done on some timer (and
+probably also right before we try to associate?)..
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index fab443d..e977ff6 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2046,8 +2046,8 @@ static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
- 
- 	tid_agg_rx = sta->ampdu_mlme.tid_rx[tid];
- 
--	/* null data frames are excluded */
--	if (unlikely(ieee80211_is_nullfunc(hdr->frame_control)))
-+	/* qos null data frames are excluded */
-+	if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
- 		goto end_reorder;
- 
- 	/* new un-ordered ampdu frame - process it */
--- 
-1.5.4.1
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+>> +static void ieee80211_bss_expire(struct net_device *dev, unsigned lon=
+g exp_time)
+>=20
+> You probably want this positioned before (or
+> after?) ieee80211_rx_bss_free, and change the name to match.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+OK, moved and renamed to ieee80211_rx_bss_expire.
 
+
+>> @@ -3662,8 +3662,10 @@ static int ieee80211_sta_find_ibss(struct net_d=
+evice *dev,
+>>  	spin_unlock_bh(&local->sta_bss_lock);
+>>
+>>  #ifdef CONFIG_MAC80211_IBSS_DEBUG
+>> -	printk(KERN_DEBUG "   sta_find_ibss: selected %s current "
+>> -	       "%s\n", print_mac(mac, bssid), print_mac(mac2, ifsta->bssid))=
+;
+>> +	if (found)
+>> +		printk(KERN_DEBUG "   sta_find_ibss: selected %s current "
+>> +		       "%s\n", print_mac(mac, bssid),
+>> +		       print_mac(mac2, ifsta->bssid));
+>>  #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+>>  	if (found && memcmp(ifsta->bssid, bssid, ETH_ALEN) !=3D 0 &&
+>>  	    (bss =3D ieee80211_rx_bss_get(dev, bssid,
+>=20
+> Should the last hunk be a different patch?
+
+Oops - I've found this out at the same time I was doing the rest and
+I kept it in the same patch.. I'll split this.
+
+Vladimir
+
+>=20
+> John
+
+
+
+--------------enigB2143141FBA987B07EE0B6AC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iJwEAQECAAYFAkhs2UMACgkQutgEj9ZLuzTKZgP8C8y+kO/LNydto3y3ZoddERrg
+utFjl+2ueYxrMV96zRP68CH4zT0tESuMQW5enB+MORVArPlY6Le/YK8DuuNkJPWG
+Kdy9XAo5ejJwzv1xmvgL5pq5VlicRH9t/l0kRhic4F+hqsqF0ewyXy5PAElFE31/
+ryl5GA6xxLYNc0OLxrk=
+=l0+Q
+-----END PGP SIGNATURE-----
+
+--------------enigB2143141FBA987B07EE0B6AC--
