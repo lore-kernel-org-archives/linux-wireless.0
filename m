@@ -1,75 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50864 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750893AbYGWQaO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 12:30:14 -0400
-Subject: Re: [PATCH] rfkill: detect bogus double-registering
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <20080723152759.GC4684@khazad-dum.debian.net>
-References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br>
-	 <1216775046-9506-2-git-send-email-hmh@hmh.eng.br>
-	 <1216784519.13587.4.camel@johannes.berg>
-	 <20080723152759.GC4684@khazad-dum.debian.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yTUaYlXe0Qcm3Cv2IrcA"
-Date: Wed, 23 Jul 2008 18:30:07 +0200
-Message-Id: <1216830607.13587.20.camel@johannes.berg> (sfid-20080723_183017_554077_9A48D560)
+Received: from mail.vyatta.com ([216.93.170.194]:38519 "EHLO mail.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752173AbYGCP6H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jul 2008 11:58:07 -0400
+Date: Thu, 3 Jul 2008 08:58:03 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, vinay@linux.vnet.ibm.com,
+	krkumar2@in.ibm.com, mchan@broadcom.com, Matheos.Worku@Sun.COM,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 14/39]: pkt_sched: Add qdisc_tx_is_noop() helper and use
+ in IPV6.
+Message-ID: <20080703085803.3a81d67c@extreme> (sfid-20080703_175812_463724_8266ED05)
+In-Reply-To: <20080703.000349.266937189.davem@davemloft.net>
+References: <20080703.000349.266937189.davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 03 Jul 2008 00:03:49 -0700 (PDT)
+David Miller <davem@davemloft.net> wrote:
 
---=-yTUaYlXe0Qcm3Cv2IrcA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> 
+> This indicates if the NOOP scheduler is what is active
+> for TX on a given device.
+> 
+> Signed-off-by: David S. Miller <davem@davemloft.net>
+> ---
+>  include/net/sch_generic.h |    8 ++++++++
+>  net/ipv6/addrconf.c       |    5 ++---
+>  2 files changed, 10 insertions(+), 3 deletions(-)
+> 
+> diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
+> index 9f5e644..bfb05a7 100644
+> --- a/include/net/sch_generic.h
+> +++ b/include/net/sch_generic.h
+> @@ -212,6 +212,14 @@ static inline bool qdisc_tx_changing(struct net_device *dev)
+>  	return (txq->qdisc != txq->qdisc_sleeping);
+>  }
+>  
+> +/* Is the device using the noop qdisc?  */
+> +static inline bool qdisc_tx_is_noop(struct net_device *dev)
+> +{
+> +	struct netdev_queue *txq = &dev->tx_queue;
+> +
+> +	return (txq->qdisc == &noop_qdisc);
+> +}
+static inline bool qdisc_tx_is_noop(const struct net_device *dev)?
 
-On Wed, 2008-07-23 at 12:27 -0300, Henrique de Moraes Holschuh wrote:
-> On Wed, 23 Jul 2008, Johannes Berg wrote:
-> > > +	list_for_each_entry(p, &rfkill_list, node) {
-> > > +		if (p =3D=3D rfkill)
-> > > +			return -EEXIST;
-> > > +		set_bit(p->type, &seen);
-> >=20
-> > You should WARN_ON so it can get fixed.
->=20
-> I'd rather make rfkill_register __must_check, actually.  With or without
-> WARN_ON.
->=20
-> In fact, lots of stuff in rfkill should be __must_check.  Ivo, what do yo=
-u
-> think?  Add __must_check?  Add WARN_ON?  Add both?
+>  static inline int __qdisc_enqueue_tail(struct sk_buff *skb, struct Qdisc *sch,
+>  				       struct sk_buff_head *list)
+>  {
+> diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
+> index e6acb89..6dd8c63 100644
+> --- a/net/ipv6/addrconf.c
+> +++ b/net/ipv6/addrconf.c
+> @@ -224,10 +224,9 @@ const struct in6_addr in6addr_linklocal_allnodes = IN6ADDR_LINKLOCAL_ALLNODES_IN
+>  const struct in6_addr in6addr_linklocal_allrouters = IN6ADDR_LINKLOCAL_ALLROUTERS_INIT;
+>  
+>  /* Check if a valid qdisc is available */
+> -static inline int addrconf_qdisc_ok(struct net_device *dev)
+> +static inline bool addrconf_qdisc_ok(struct net_device *dev)
+>  {
+> -	struct netdev_queue *txq = &dev->tx_queue;
+> -	return (txq->qdisc != &noop_qdisc);
+> +	return !qdisc_tx_is_noop(dev);
+>  }
 
-Do both then. __must_check annotations get ignored regularly, or
-"handled" like this:
-
-if (...)
-	// nothing we can do.
-
-johannes
-
---=-yTUaYlXe0Qcm3Cv2IrcA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIh1yMAAoJEKVg1VMiehFYbMQQAMKKebSx2L/Ru6WVtJ4aXbMc
-sMrp4EdfbX6hubxbq5Ir1HapZKH8tR2wn3C6YmeNBjnjK/+FqHFZnYp/rP5+zv+C
-pmbcBUB25V2TLBuDkSjNfRqkkYyI0eetv0WCXvFtNmplUQ1XGitMCXQiZcf0/ah4
-97WHx4+jt7u63JK3FoJ+Zk56K2MUuOQ7f8HtkT0e4J8v829pdDDfSpE8TaJrXXGg
-UdZ8+On7kdXi4exFetrXoB5aExDjmi43lukKDFi10QDixqjh3ai/8KwhS79o3W/K
-vLTEMj6oge0uf8W621zujz2/4is6DWzmvC83tjp6CvUOAPiofzoYaAPkk8FprYXX
-oMID0TK736b0EJL4xtE7QZEzuBObPxAkgi+u8QKQUezTPlT2q8C+f6XpKh8hP3ND
-5N9VnrPP3rsET5t4maoEb9uLEUksuSZ30rQetIdZN/JPR4NuClPO9wI7rcMxXsd0
-iKAFdQsc+V8VZNgkBeJdzIwY5Cse25Ovqsd8y/Qrc+nfw/C8em1QP/VCBg7kF+d9
-v6L6fq0brnR0iCxzdfDJzPCSXRXNnQH1muP4FXujnKHb5V9g165UdixGvfFqlc3z
-8SLviYxWoYGZ7BXOy7tUrFBY607l+5+Sy3LY+XQLYDxPnC4hQzK6FmzB5uvS8/xE
-3MwKFaC9+AqshfrtJMlC
-=kpcH
------END PGP SIGNATURE-----
-
---=-yTUaYlXe0Qcm3Cv2IrcA--
-
+Ditto const
