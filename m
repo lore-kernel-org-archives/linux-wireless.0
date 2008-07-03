@@ -1,36 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:42521 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750903AbYGQE5K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 00:57:10 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH 4/4] rfkill: mutex fixes
-Date: Thu, 17 Jul 2008 06:56:36 +0200
+Received: from smtp.nokia.com ([192.100.105.134]:37441 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755349AbYGCGgF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jul 2008 02:36:05 -0400
+To: "Michael Buesch" <mb@bu3sch.de>
 Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-References: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br> <1216150327-10904-5-git-send-email-hmh@hmh.eng.br>
-In-Reply-To: <1216150327-10904-5-git-send-email-hmh@hmh.eng.br>
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH stable] b43: Do not return TX_BUSY from op_tx
+References: <200807030104.30100.mb@bu3sch.de>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Thu, 03 Jul 2008 09:35:23 +0300
+In-Reply-To: <200807030104.30100.mb@bu3sch.de> (ext Michael Buesch's message of "Thu\, 3 Jul 2008 01\:04\:29 +0200")
+Message-ID: <87y74jtqz8.fsf@nokia.com> (sfid-20080703_085917_271227_5FFBCFE5)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200807170656.37190.mb@bu3sch.de> (sfid-20080717_065725_223563_4D5256EE)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 15 July 2008, Henrique de Moraes Holschuh wrote:
-> There are two mutexes in rfkill:
-> 
-> rfkill->mutex, which protects some of the fields of a rfkill struct, and is
-> also used for callback serialization.
-> 
-> rfkill_mutex, which protects the global state, the list of registered
-> rfkill structs and rfkill->claim.
-> 
-> Make sure to use the correct mutex, and to not miss locking rfkill->mutex
-> even when we already took rfkill_mutex.
+Michael Buesch <mb@bu3sch.de> writes:
 
-Can't we rename the global rfkill_mutex?
-I think the current situation is highly confusing.
-Perhaps rfkill_global_mutex would be good enough. Maybe somebody has a better
-idea, however.
+> +drop_packet:
+> +	/* We can not transmit this packet. Drop it. */
+> +	dev_kfree_skb_any(skb);
+>  	return NETDEV_TX_OK;
+
+So no need to call ieee80211_tx_status() in this case? I'm just
+curious about this, nothing else.
+
+-- 
+Kalle Valo
