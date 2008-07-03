@@ -1,233 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50634
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1757956AbYGCHEc (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:39161 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751782AbYGCQPD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:04:32 -0400
-Date: Thu, 03 Jul 2008 00:04:31 -0700 (PDT)
-Message-Id: <20080703.000431.36765176.davem@davemloft.net> (sfid-20080703_103229_783510_71666E6E)
-To: netdev@vger.kernel.org
-CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
-Subject: [PATCH 23/39]: net: In core generic transmit paths, use queue
- aware tests.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 3 Jul 2008 12:15:03 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Ivo van Doorn <IvDoorn@gmail.com>
+Subject: [PATCH 1/2] rfkill: some minor kernel-doc changes for rfkill_toggle_radio
+Date: Thu,  3 Jul 2008 13:14:56 -0300
+Message-Id: <1215101697-30576-2-git-send-email-hmh@hmh.eng.br> (sfid-20080703_181507_930881_8A4C142D)
+In-Reply-To: <1215101697-30576-1-git-send-email-hmh@hmh.eng.br>
+References: <1215101697-30576-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Improve rfkill_toggle_radio's kernel-doc header a bit.
 
-Even pktgen is mostly queue aware now.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- include/linux/netdevice.h |    3 ++-
- include/net/pkt_sched.h   |    4 +---
- net/core/dev.c            |   11 +++++------
- net/core/netpoll.c        |    8 +++-----
- net/core/pktgen.c         |   16 +++++++---------
- net/sched/sch_generic.c   |    5 ++---
- net/sched/sch_teql.c      |    6 ++----
- 7 files changed, 22 insertions(+), 31 deletions(-)
+ net/rfkill/rfkill.c |   12 +++++++-----
+ 1 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index 89bab7e..2ab4d92 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -1162,7 +1162,8 @@ extern int		dev_set_mtu(struct net_device *, int);
- extern int		dev_set_mac_address(struct net_device *,
- 					    struct sockaddr *);
- extern int		dev_hard_start_xmit(struct sk_buff *skb,
--					    struct net_device *dev);
-+					    struct net_device *dev,
-+					    struct netdev_queue *dev_queue);
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index ce0e231..aa7039d 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -130,17 +130,19 @@ static void update_rfkill_state(struct rfkill *rfkill)
  
- extern int		netdev_budget;
- 
-diff --git a/include/net/pkt_sched.h b/include/net/pkt_sched.h
-index 1e2263c..89b106e 100644
---- a/include/net/pkt_sched.h
-+++ b/include/net/pkt_sched.h
-@@ -84,9 +84,7 @@ extern void __qdisc_run(struct netdev_queue *dev_queue);
- 
- static inline void qdisc_run(struct netdev_queue *dev_queue)
- {
--	struct net_device *dev = dev_queue->dev;
--
--	if (!netif_queue_stopped(dev) &&
-+	if (!netif_tx_queue_stopped(dev_queue) &&
- 	    !test_and_set_bit(__QUEUE_STATE_QDISC_RUNNING, &dev_queue->state))
- 		__qdisc_run(dev_queue);
- }
-diff --git a/net/core/dev.c b/net/core/dev.c
-index 039ceff..5209a3f 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -1598,7 +1598,8 @@ static int dev_gso_segment(struct sk_buff *skb)
- 	return 0;
- }
- 
--int dev_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
-+int dev_hard_start_xmit(struct sk_buff *skb, struct net_device *dev,
-+			struct netdev_queue *dev_queue)
- {
- 	if (likely(!skb->next)) {
- 		if (!list_empty(&ptype_all))
-@@ -1627,8 +1628,7 @@ gso:
- 			skb->next = nskb;
- 			return rc;
- 		}
--		if (unlikely((netif_queue_stopped(dev) ||
--			     netif_subqueue_stopped(dev, skb)) &&
-+		if (unlikely(netif_tx_queue_stopped(dev_queue) &&
- 			     skb->next))
- 			return NETDEV_TX_BUSY;
- 	} while (skb->next);
-@@ -1762,10 +1762,9 @@ gso:
- 
- 			HARD_TX_LOCK(dev, txq, cpu);
- 
--			if (!netif_queue_stopped(dev) &&
--			    !netif_subqueue_stopped(dev, skb)) {
-+			if (!netif_tx_queue_stopped(txq)) {
- 				rc = 0;
--				if (!dev_hard_start_xmit(skb, dev)) {
-+				if (!dev_hard_start_xmit(skb, dev, txq)) {
- 					HARD_TX_UNLOCK(dev, txq);
- 					goto out;
- 				}
-diff --git a/net/core/netpoll.c b/net/core/netpoll.c
-index 8fb134d..2271d19 100644
---- a/net/core/netpoll.c
-+++ b/net/core/netpoll.c
-@@ -66,9 +66,8 @@ static void queue_process(struct work_struct *work)
- 
- 		local_irq_save(flags);
- 		netif_tx_lock(dev);
--		if ((netif_queue_stopped(dev) ||
--		     netif_subqueue_stopped(dev, skb)) ||
--		     dev->hard_start_xmit(skb, dev) != NETDEV_TX_OK) {
-+		if (netif_subqueue_stopped(dev, skb) ||
-+		    dev->hard_start_xmit(skb, dev) != NETDEV_TX_OK) {
- 			skb_queue_head(&npinfo->txq, skb);
- 			netif_tx_unlock(dev);
- 			local_irq_restore(flags);
-@@ -285,8 +284,7 @@ static void netpoll_send_skb(struct netpoll *np, struct sk_buff *skb)
- 		for (tries = jiffies_to_usecs(1)/USEC_PER_POLL;
- 		     tries > 0; --tries) {
- 			if (netif_tx_trylock(dev)) {
--				if (!netif_queue_stopped(dev) &&
--				    !netif_subqueue_stopped(dev, skb))
-+				if (!netif_subqueue_stopped(dev, skb))
- 					status = dev->hard_start_xmit(skb, dev);
- 				netif_tx_unlock(dev);
- 
-diff --git a/net/core/pktgen.c b/net/core/pktgen.c
-index fdf5377..f6dc5b3 100644
---- a/net/core/pktgen.c
-+++ b/net/core/pktgen.c
-@@ -3262,6 +3262,7 @@ static void pktgen_rem_thread(struct pktgen_thread *t)
- 
- static __inline__ void pktgen_xmit(struct pktgen_dev *pkt_dev)
- {
-+	struct netdev_queue *odev_queue;
- 	struct net_device *odev = NULL;
- 	__u64 idle_start = 0;
- 	int ret;
-@@ -3285,9 +3286,8 @@ static __inline__ void pktgen_xmit(struct pktgen_dev *pkt_dev)
- 		}
- 	}
- 
--	if ((netif_queue_stopped(odev) ||
--	     (pkt_dev->skb &&
--	      netif_subqueue_stopped(odev, pkt_dev->skb))) ||
-+	odev_queue = &odev->tx_queue;
-+	if (netif_tx_queue_stopped(odev_queue) ||
- 	    need_resched()) {
- 		idle_start = getCurUs();
- 
-@@ -3303,8 +3303,7 @@ static __inline__ void pktgen_xmit(struct pktgen_dev *pkt_dev)
- 
- 		pkt_dev->idle_acc += getCurUs() - idle_start;
- 
--		if (netif_queue_stopped(odev) ||
--		    netif_subqueue_stopped(odev, pkt_dev->skb)) {
-+		if (netif_tx_queue_stopped(odev_queue)) {
- 			pkt_dev->next_tx_us = getCurUs();	/* TODO */
- 			pkt_dev->next_tx_ns = 0;
- 			goto out;	/* Try the next interface */
-@@ -3331,9 +3330,8 @@ static __inline__ void pktgen_xmit(struct pktgen_dev *pkt_dev)
- 		}
- 	}
- 
--	netif_tx_lock_bh(odev);
--	if (!netif_queue_stopped(odev) &&
--	    !netif_subqueue_stopped(odev, pkt_dev->skb)) {
-+	__netif_tx_lock_bh(odev_queue);
-+	if (!netif_tx_queue_stopped(odev_queue)) {
- 
- 		atomic_inc(&(pkt_dev->skb->users));
- 	      retry_now:
-@@ -3377,7 +3375,7 @@ static __inline__ void pktgen_xmit(struct pktgen_dev *pkt_dev)
- 		pkt_dev->next_tx_ns = 0;
- 	}
- 
--	netif_tx_unlock_bh(odev);
-+	__netif_tx_unlock_bh(odev_queue);
- 
- 	/* If pkt_dev->count is zero, then run forever */
- 	if ((pkt_dev->count != 0) && (pkt_dev->sofar >= pkt_dev->count)) {
-diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
-index b919c0b..1092d54 100644
---- a/net/sched/sch_generic.c
-+++ b/net/sched/sch_generic.c
-@@ -156,7 +156,7 @@ static inline int qdisc_restart(struct netdev_queue *dev_queue)
- 
- 	HARD_TX_LOCK(dev, dev_queue, smp_processor_id());
- 	if (!netif_subqueue_stopped(dev, skb))
--		ret = dev_hard_start_xmit(skb, dev);
-+		ret = dev_hard_start_xmit(skb, dev, dev_queue);
- 	HARD_TX_UNLOCK(dev, dev_queue);
- 
- 	spin_lock(&dev_queue->lock);
-@@ -188,11 +188,10 @@ static inline int qdisc_restart(struct netdev_queue *dev_queue)
- 
- void __qdisc_run(struct netdev_queue *dev_queue)
- {
--	struct net_device *dev = dev_queue->dev;
- 	unsigned long start_time = jiffies;
- 
- 	while (qdisc_restart(dev_queue)) {
--		if (netif_queue_stopped(dev))
-+		if (netif_tx_queue_stopped(dev_queue))
- 			break;
- 
- 		/*
-diff --git a/net/sched/sch_teql.c b/net/sched/sch_teql.c
-index 8ac0598..16d975f 100644
---- a/net/sched/sch_teql.c
-+++ b/net/sched/sch_teql.c
-@@ -288,8 +288,7 @@ restart:
- 
- 		if (slave->tx_queue.qdisc_sleeping != q)
- 			continue;
--		if (netif_queue_stopped(slave) ||
--		    __netif_subqueue_stopped(slave, subq) ||
-+		if (__netif_subqueue_stopped(slave, subq) ||
- 		    !netif_running(slave)) {
- 			busy = 1;
- 			continue;
-@@ -298,8 +297,7 @@ restart:
- 		switch (teql_resolve(skb, skb_res, slave)) {
- 		case 0:
- 			if (netif_tx_trylock(slave)) {
--				if (!netif_queue_stopped(slave) &&
--				    !__netif_subqueue_stopped(slave, subq) &&
-+				if (!__netif_subqueue_stopped(slave, subq) &&
- 				    slave->hard_start_xmit(skb, slave) == 0) {
- 					netif_tx_unlock(slave);
- 					master->slaves = NEXT_SLAVE(q);
+ /**
+  * rfkill_toggle_radio - wrapper for toggle_radio hook
+- * calls toggle_radio taking into account a lot of "small"
+- * details.
++ *
+  * @rfkill: the rfkill struct to use
+  * @force: calls toggle_radio even if cache says it is not needed,
+  *	and also makes sure notifications of the state will be
+  *	sent even if it didn't change
+  * @state: the new state to call toggle_radio() with
+  *
+- * This wrappen protects and enforces the API for toggle_radio
+- * calls.  Note that @force cannot override a (possibly cached)
+- * state of RFKILL_STATE_HARD_BLOCKED.  Any device making use of
++ * Calls rfkill->toggle_radio, enforcing the API for toggle_radio
++ * calls and handling all the red tape such as issuing notifications
++ * if the call is successful.
++ *
++ * Note that @force cannot override a (possibly cached) state of
++ * RFKILL_STATE_HARD_BLOCKED.  Any device making use of
+  * RFKILL_STATE_HARD_BLOCKED implements either get_state() or
+  * rfkill_force_state(), so the cache either is bypassed or valid.
+  *
 -- 
-1.5.6
+1.5.5.4
 
