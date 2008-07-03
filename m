@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:37072 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754109AbYG1PAE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2008 11:00:04 -0400
-Subject: Re: [PATCH 1/6] mac80211: allow no mac address until firmware load
-From: Dan Williams <dcbw@redhat.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Luis Carlos Cobo <luisca@cozybit.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240807280744r5ea8c58aqf53cc99abb4cf084@mail.gmail.com>
-References: <48763814.27052c0a.1794.2095@mx.google.com>
-	 <200807281544.33509.mb@bu3sch.de>
-	 <1217253465.28198.20.camel@localhost.localdomain>
-	 <200807281625.58188.mb@bu3sch.de>
-	 <1ba2fa240807280744r5ea8c58aqf53cc99abb4cf084@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 28 Jul 2008 10:57:45 -0400
-Message-Id: <1217257065.28198.25.camel@localhost.localdomain> (sfid-20080728_170035_354698_591D1D26)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47502
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1756927AbYGCHD3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jul 2008 03:03:29 -0400
+Date: Thu, 03 Jul 2008 00:03:28 -0700 (PDT)
+Message-Id: <20080703.000328.124016952.davem@davemloft.net> (sfid-20080703_103230_667915_0E8DD2C2)
+To: netdev@vger.kernel.org
+CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
+	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
+Subject: [PATCH 10/39]: pkt_sched: Make netem queue agnostic.
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-07-28 at 17:44 +0300, Tomas Winkler wrote:
-> On Mon, Jul 28, 2008 at 5:25 PM, Michael Buesch <mb@bu3sch.de> wrote:
-> > On Monday 28 July 2008 15:57:45 Dan Williams wrote:
-> >> > (What are the udev problems, btw?)
-> >>
-> >> People seem to want persistent device names.  Since the kernel doesn't
-> >> provide stable device/bus enumeration, there are udev hacks (see
-> >> attached from Fedora 9) that read the MAC address of the card on
-> >> hot-plug and then assign it to a cached device name so that every time I
-> >> plug in my Netgear MA401 it gets "eth2".
-> >
-> > Yeah well. But using a pseudo-random MAC as a base to build a persistent
-> > naming scheme on sounds pretty fragile to me. ;)
-> >
-> > I think cards that don't supply MAC early simply cannot support
-> > a really working persistent naming scheme well. udev should probably
-> > just enumerate eth0 - ethX as it sees the devices. That's as good
-> > as mixing a numbering scheme into a pseudo MAC, IMO. And it's
-> > less confusing and it pushes a lot of policy decisions into userspace.
-> 
-> Can devices supply something depending on its bus numbering that will
-> not change unless it's plugged out.
 
-No, because it's precisely the bus numbering that the kernel might
-change on you.  You're not guaranteed persistent device enumeration in
-the kernel, and the only thing you could rely on is some sort of UUID of
-the hardware itself, which in the case of network devices is the MAC
-address.  If you have no MAC address then you don't get a persistent
-name.
+It just wants the root qdisc given an arbitrary qdisc,
+and that is simply qdisc->dev_queue->qdisc
 
-Dan
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/sched/sch_netem.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/net/sched/sch_netem.c b/net/sched/sch_netem.c
+index 4439aea..e882908 100644
+--- a/net/sched/sch_netem.c
++++ b/net/sched/sch_netem.c
+@@ -180,7 +180,7 @@ static int netem_enqueue(struct sk_buff *skb, struct Qdisc *sch)
+ 	 * skb will be queued.
+ 	 */
+ 	if (count > 1 && (skb2 = skb_clone(skb, GFP_ATOMIC)) != NULL) {
+-		struct Qdisc *rootq = qdisc_dev(sch)->tx_queue.qdisc;
++		struct Qdisc *rootq = sch->dev_queue->qdisc;
+ 		u32 dupsave = q->duplicate; /* prevent duplicating a dup... */
+ 		q->duplicate = 0;
+ 
+-- 
+1.5.6
 
