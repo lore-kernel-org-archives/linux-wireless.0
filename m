@@ -1,82 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:64453 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753487AbYG3T0m (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47485
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1756778AbYGCHDP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 15:26:42 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so54023yxm.1
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 12:26:41 -0700 (PDT)
-Message-ID: <3ace41890807301226u432e18dbha32253420529e2f7@mail.gmail.com> (sfid-20080730_212646_794628_03FD1503)
-Date: Wed, 30 Jul 2008 20:26:40 +0100
-From: "Hin-Tak Leung" <hintak.leung@gmail.com>
-To: "Herton Ronaldo Krzesinski" <herton@mandriva.com.br>
-Subject: Re: [RFC/RFT] rtl8187: Protect the config callback from mac80211 with a mutex
-Cc: "Michael Buesch" <mb@bu3sch.de>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Pavel Roskin" <proski@gnu.org>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200807301511.12267.herton@mandriva.com.br>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <48900654.7030100@lwfinger.net>
-	 <200807301413.53059.herton@mandriva.com.br>
-	 <200807301946.41182.mb@bu3sch.de>
-	 <200807301511.12267.herton@mandriva.com.br>
+	Thu, 3 Jul 2008 03:03:15 -0400
+Date: Thu, 03 Jul 2008 00:03:14 -0700 (PDT)
+Message-Id: <20080703.000314.213545851.davem@davemloft.net> (sfid-20080703_103231_935995_9DABB5D6)
+To: netdev@vger.kernel.org
+CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
+	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
+Subject: [PATCH 08/39]: netdev: Kill qdisc_ingress, use
+ netdev->rx_queue.qdisc instead.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/30/08, Herton Ronaldo Krzesinski <herton@mandriva.com.br> wrote:
-> Em Wednesday 30 July 2008 14:46:40 Michael Buesch escreveu:
->
-> > On Wednesday 30 July 2008 19:13:52 Herton Ronaldo Krzesinski wrote:
->  > > > Yeah, I said exactly that.
->  > > > You protect the loopback stuff. Not any config callback or anything else.
->  > >
->  > > Ah ok, only protect the section, like this?
->  >
->  > Yeah, well. In theory, yes. In practice: Aren't there other races possible, too?
->  > I mean even races with other parts of the driver.
->  > b43 needs to take the global driver mutex in the conf callback to make
->  > sure nothing changes (device init state probably is the most important one.
->  > Device going down while configuring would be a fatal crash).
->
->
-> In practice I don't get other problems, but better to stick to the patch posted
->  by Larry, like he said to avoid config data from one call mixed to the other.
->  rtl8187 is more simpler, besides this issue with configuration it all depends
->  on how mac80211 calls another functions, I have yet to see but doesn't look like
->  a general lock is needed.
 
-I have been wondering about two things: (1) I occasionally have problems
-modprobe -r (particularly right after a bit of use and the driver is
-stuck), ksoftirqd just suck CPU cycles like crazy in some timer code.
-It seems to be less often if I just leave it for some time before
-modprobe -r. I am on a dual core system. (2) although Larry says
-wpa_supplicant works, I can't get it to work for me at all, but the
-driver is alright and quite useable with ifconfig/iwconfig, etc.
+Now that our qdisc management is bi-directional, per-queue, and fully
+orthogonal, there is no reason to have a special ingress qdisc
+pointer in struct net_device.
 
-Had a look at wpa_supplicant itself and it doesn't seem to do much
-more than the iwconfig/iwlist stuff, but obviously it does it job
-faster (and potentially through two cores).
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ include/linux/netdevice.h |    3 ---
+ net/core/dev.c            |    4 ++--
+ net/sched/sch_api.c       |   11 ++++++-----
+ 3 files changed, 8 insertions(+), 10 deletions(-)
 
-The wpa_supplicant issue is probably also about config data, but I
-wonder if the shutdown also needs some sort of spin lock. Some of the
-other drivers has spin locks,
-and rtl8187 actually is one with the fewest spin locks.
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index e1e033b..1151d17 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -634,9 +634,6 @@ struct net_device
+ 
+ 	struct netdev_queue	rx_queue;
+ 	struct netdev_queue	tx_queue;
+-
+-	struct Qdisc		*qdisc_ingress;
+-
+ 	unsigned long		tx_queue_len;	/* Max frames per queue allowed */
+ 
+ 	/* Partially transmitted GSO packet. */
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 3ccb6da..8e38948 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -2033,7 +2033,7 @@ static int ing_filter(struct sk_buff *skb)
+ 	rxq = &dev->rx_queue;
+ 
+ 	spin_lock(&rxq->lock);
+-	if ((q = dev->qdisc_ingress) != NULL)
++	if ((q = rxq->qdisc) != NULL)
+ 		result = q->enqueue(skb, q);
+ 	spin_unlock(&rxq->lock);
+ 
+@@ -2044,7 +2044,7 @@ static inline struct sk_buff *handle_ing(struct sk_buff *skb,
+ 					 struct packet_type **pt_prev,
+ 					 int *ret, struct net_device *orig_dev)
+ {
+-	if (!skb->dev->qdisc_ingress)
++	if (!skb->dev->rx_queue.qdisc)
+ 		goto out;
+ 
+ 	if (*pt_prev) {
+diff --git a/net/sched/sch_api.c b/net/sched/sch_api.c
+index 4a51729..a2e62b3 100644
+--- a/net/sched/sch_api.c
++++ b/net/sched/sch_api.c
+@@ -346,14 +346,15 @@ dev_graft_qdisc(struct net_device *dev, struct Qdisc *qdisc)
+ 
+ 	qdisc_lock_tree(dev);
+ 	if (qdisc && qdisc->flags&TCQ_F_INGRESS) {
+-		oqdisc = dev->qdisc_ingress;
++		dev_queue = &dev->rx_queue;
++		oqdisc = dev_queue->qdisc;
+ 		/* Prune old scheduler */
+ 		if (oqdisc && atomic_read(&oqdisc->refcnt) <= 1) {
+ 			/* delete */
+ 			qdisc_reset(oqdisc);
+-			dev->qdisc_ingress = NULL;
++			dev_queue->qdisc = NULL;
+ 		} else {  /* new */
+-			dev->qdisc_ingress = qdisc;
++			dev_queue->qdisc = qdisc;
+ 		}
+ 
+ 	} else {
+@@ -635,7 +636,7 @@ static int tc_get_qdisc(struct sk_buff *skb, struct nlmsghdr *n, void *arg)
+ 					return -ENOENT;
+ 				q = qdisc_leaf(p, clid);
+ 			} else { /* ingress */
+-				q = dev->qdisc_ingress;
++				q = dev->rx_queue.qdisc;
+ 			}
+ 		} else {
+ 			struct netdev_queue *dev_queue = &dev->tx_queue;
+@@ -710,7 +711,7 @@ replay:
+ 					return -ENOENT;
+ 				q = qdisc_leaf(p, clid);
+ 			} else { /*ingress */
+-				q = dev->qdisc_ingress;
++				q = dev->rx_queue.qdisc;
+ 			}
+ 		} else {
+ 			struct netdev_queue *dev_queue = &dev->tx_queue;
+-- 
+1.5.6
 
-
->
->
->  >
->  > So in b43 we have a global mutex which protects everything (all data
->  > and all device state), except the data and state that's accessed in the IRQ paths.
->  > (We have more locks for shared device memory and so on... But these are nested
->  > inside of the mutex or the IRQ state lock)
->  >
->
->  --
->
-> []'s
->
-> Herton
->
