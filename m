@@ -1,43 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:56045 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755497AbYGOTcN (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47537
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1757387AbYGCHDu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 15:32:13 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: [GIT PATCH] rfkill fixes, set 2
-Date: Tue, 15 Jul 2008 16:32:03 -0300
-Message-Id: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br> (sfid-20080715_213217_834300_3B08C8FB)
+	Thu, 3 Jul 2008 03:03:50 -0400
+Date: Thu, 03 Jul 2008 00:03:49 -0700 (PDT)
+Message-Id: <20080703.000349.266937189.davem@davemloft.net> (sfid-20080703_103232_476003_4A8A07A8)
+To: netdev@vger.kernel.org
+CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
+	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
+Subject: [PATCH 14/39]: pkt_sched: Add qdisc_tx_is_noop() helper and use in
+ IPV6.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Here is a small set of fixes for rfkill, mostly stuff I noticed while I
-was working on other patches that I will send in for RFC and testing,
-later.
+This indicates if the NOOP scheduler is what is active
+for TX on a given device.
 
-It does include the documentation change requested by Ivo that makes
-rfkill_force_state non-optional where applicable (devices that get
-external state changes).
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ include/net/sch_generic.h |    8 ++++++++
+ net/ipv6/addrconf.c       |    5 ++---
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-Shortlog:
-
-Henrique de Moraes Holschuh (4):
-      rfkill: document rfkill_force_state as required
-      rfkill: fix led-trigger unregister order in error unwind
-      rfkill: document the rfkill struct locking
-      rfkill: mutex fixes
-
-Please consider for merging for 2.6.26, as they are fixes and not
-enhancements.  Ivo, please be specially hard on the last patch, I did
-test it here, but locking is always tricky...
-
-Patches based on wireless-testing master.
-
+diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
+index 9f5e644..bfb05a7 100644
+--- a/include/net/sch_generic.h
++++ b/include/net/sch_generic.h
+@@ -212,6 +212,14 @@ static inline bool qdisc_tx_changing(struct net_device *dev)
+ 	return (txq->qdisc != txq->qdisc_sleeping);
+ }
+ 
++/* Is the device using the noop qdisc?  */
++static inline bool qdisc_tx_is_noop(struct net_device *dev)
++{
++	struct netdev_queue *txq = &dev->tx_queue;
++
++	return (txq->qdisc == &noop_qdisc);
++}
++
+ static inline int __qdisc_enqueue_tail(struct sk_buff *skb, struct Qdisc *sch,
+ 				       struct sk_buff_head *list)
+ {
+diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
+index e6acb89..6dd8c63 100644
+--- a/net/ipv6/addrconf.c
++++ b/net/ipv6/addrconf.c
+@@ -224,10 +224,9 @@ const struct in6_addr in6addr_linklocal_allnodes = IN6ADDR_LINKLOCAL_ALLNODES_IN
+ const struct in6_addr in6addr_linklocal_allrouters = IN6ADDR_LINKLOCAL_ALLROUTERS_INIT;
+ 
+ /* Check if a valid qdisc is available */
+-static inline int addrconf_qdisc_ok(struct net_device *dev)
++static inline bool addrconf_qdisc_ok(struct net_device *dev)
+ {
+-	struct netdev_queue *txq = &dev->tx_queue;
+-	return (txq->qdisc != &noop_qdisc);
++	return !qdisc_tx_is_noop(dev);
+ }
+ 
+ /* Check if a route is valid prefix route */
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+1.5.6
+
