@@ -1,51 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:15773 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751433AbYGDMuF (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47556
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1757592AbYGCHD7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jul 2008 08:50:05 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so365081nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Jul 2008 05:50:03 -0700 (PDT)
-To: linville@tuxdriver.com
-Subject: [PATCH 2/4 v2] rt2x00: Decrease alignment headroom
-Date: Fri, 4 Jul 2008 14:56:07 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
-References: <200807041340.28103.IvDoorn@gmail.com> <200807041341.29802.IvDoorn@gmail.com>
-In-Reply-To: <200807041341.29802.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200807041456.08029.IvDoorn@gmail.com> (sfid-20080704_145012_441356_518705E9)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 3 Jul 2008 03:03:59 -0400
+Date: Thu, 03 Jul 2008 00:03:58 -0700 (PDT)
+Message-Id: <20080703.000358.13934940.davem@davemloft.net> (sfid-20080703_103232_591389_CADC3910)
+To: netdev@vger.kernel.org
+CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
+	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
+Subject: [PATCH 16/39]: mac80211: Decrease number of explicit ->tx_queue
+ references.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We only need 4 bytes of headroom for alignment
-purposes in the RX frame. It was previously higher
-for optimization purposes which are no longer
-possible due to DMA mappings.
 
-v2: Fix patch error
+Accomplish this by using local variables.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 8e86611..3ddce53 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -45,10 +45,11 @@ struct sk_buff *rt2x00queue_alloc_rxskb(struct rt2x00_dev *rt2x00dev,
- 	frame_size = entry->queue->data_size + entry->queue->desc_size;
+ net/mac80211/main.c |   14 +++++++++-----
+ 1 files changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 81fe145..b00bb73 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -570,6 +570,7 @@ static int ieee80211_stop(struct net_device *dev)
+ int ieee80211_start_tx_ba_session(struct ieee80211_hw *hw, u8 *ra, u16 tid)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
++	struct netdev_queue *dev_queue;
+ 	struct sta_info *sta;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	u16 start_seq_num = 0;
+@@ -632,7 +633,8 @@ int ieee80211_start_tx_ba_session(struct ieee80211_hw *hw, u8 *ra, u16 tid)
  
- 	/*
--	 * Reserve a few bytes extra headroom to allow drivers some moving
--	 * space (e.g. for alignment), while keeping the skb aligned.
-+	 * The payload should be aligned to a 4-byte boundary,
-+	 * this means we need at least 3 bytes for moving the frame
-+	 * into the correct offset.
- 	 */
--	reserved_size = 8;
-+	reserved_size = 4;
+ 	/* ensure that TX flow won't interrupt us
+ 	 * until the end of the call to requeue function */
+-	spin_lock_bh(&local->mdev->tx_queue.lock);
++	dev_queue = &local->mdev->tx_queue;
++	spin_lock_bh(&dev_queue->lock);
  
- 	/*
- 	 * Allocate skbuffer.
+ 	/* create a new queue for this aggregation */
+ 	ret = ieee80211_ht_agg_queue_add(local, sta, tid);
+@@ -671,7 +673,7 @@ int ieee80211_start_tx_ba_session(struct ieee80211_hw *hw, u8 *ra, u16 tid)
+ 
+ 	/* Will put all the packets in the new SW queue */
+ 	ieee80211_requeue(local, ieee802_1d_to_ac[tid]);
+-	spin_unlock_bh(&local->mdev->tx_queue.lock);
++	spin_unlock_bh(&dev_queue->lock);
+ 	spin_unlock_bh(&sta->lock);
+ 
+ 	/* send an addBA request */
+@@ -695,7 +697,7 @@ int ieee80211_start_tx_ba_session(struct ieee80211_hw *hw, u8 *ra, u16 tid)
+ err_unlock_queue:
+ 	kfree(sta->ampdu_mlme.tid_tx[tid]);
+ 	sta->ampdu_mlme.tid_tx[tid] = NULL;
+-	spin_unlock_bh(&local->mdev->tx_queue.lock);
++	spin_unlock_bh(&dev_queue->lock);
+ 	ret = -EBUSY;
+ err_unlock_sta:
+ 	spin_unlock_bh(&sta->lock);
+@@ -812,6 +814,7 @@ EXPORT_SYMBOL(ieee80211_start_tx_ba_cb);
+ void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw, u8 *ra, u8 tid)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
++	struct netdev_queue *dev_queue;
+ 	struct sta_info *sta;
+ 	u8 *state;
+ 	int agg_queue;
+@@ -855,10 +858,11 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw, u8 *ra, u8 tid)
+ 
+ 	/* avoid ordering issues: we are the only one that can modify
+ 	 * the content of the qdiscs */
+-	spin_lock_bh(&local->mdev->tx_queue.lock);
++	dev_queue = &local->mdev->tx_queue;
++	spin_lock_bh(&dev_queue->lock);
+ 	/* remove the queue for this aggregation */
+ 	ieee80211_ht_agg_queue_remove(local, sta, tid, 1);
+-	spin_unlock_bh(&local->mdev->tx_queue.lock);
++	spin_unlock_bh(&dev_queue->lock);
+ 
+ 	/* we just requeued the all the frames that were in the removed
+ 	 * queue, and since we might miss a softirq we do netif_schedule.
+-- 
+1.5.6
+
