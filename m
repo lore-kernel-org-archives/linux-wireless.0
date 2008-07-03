@@ -1,87 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44520 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750965AbYGHV3k (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:40855 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751665AbYGCQUV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 17:29:40 -0400
-Subject: Re: [PATCH 5/6] mac80211: rx.c/tx.c remove more users of
-	tx/rx_data->fc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Harvey Harrison <harvey.harrison@gmail.com>
+	Thu, 3 Jul 2008 12:20:21 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so283467yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Jul 2008 09:20:18 -0700 (PDT)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH 2/2] rfkill: ignore errors from rfkill_toggle_radio in rfkill_add_switch
+Date: Thu, 3 Jul 2008 18:25:00 +0200
 Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1215550044.476.43.camel@brick> (sfid-20080708_224734_565441_65F98FD9)
-References: <1215550044.476.43.camel@brick>
-	 (sfid-20080708_224734_565441_65F98FD9)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nTmZrAeCDymbTKSGs72j"
-Date: Tue, 08 Jul 2008 23:28:54 +0200
-Message-Id: <1215552534.3670.20.camel@johannes.berg> (sfid-20080708_232943_192232_684A4021)
-Mime-Version: 1.0
+	linux-wireless@vger.kernel.org, kionez <kionez@anche.no>
+References: <1215101697-30576-1-git-send-email-hmh@hmh.eng.br> <1215101697-30576-3-git-send-email-hmh@hmh.eng.br>
+In-Reply-To: <1215101697-30576-3-git-send-email-hmh@hmh.eng.br>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200807031825.00955.IvDoorn@gmail.com> (sfid-20080703_182025_019591_7ED36719)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 03 July 2008, Henrique de Moraes Holschuh wrote:
+> rfkill_add_switch() calls rfkill_toggle_radio() to set the state of a
+> recently registered rfkill class to the current global state [for that
+> rfkill->type].
+> 
+> The rfkill_toggle_radio() call is going to error out if the hardware is
+> RFKILL_STATE_HARD_BLOCKED, and the global state is RFKILL_STATE_UNBLOCKED.
+> 
+> That is a quite normal situation which I missed to account for.  As things
+> stand, the error return from rfkill_toggle_radio ends up causing
+> rfkill_register to bail out with an error (de-registering the new switch in
+> the process), which is Not Nice.
+> 
+> Change rfkill_add_switch() to not return errors because of a failed call to
+> rfkill_toggle_radio().  We can go back to returning errors again (if that's
+> indeed the right thing to do) if we define the exact error codes the
+> rfkill->toggle_radio callbacks are to return in each situation, so that we
+> can ignore the right ones only.
+> 
+> Bug reported by "kionez <kionez@anche.no>".
+> 
+> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> Cc: Ivo van Doorn <IvDoorn@gmail.com>
 
---=-nTmZrAeCDymbTKSGs72j
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-> =20
-> -	switch (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
-> -	case IEEE80211_FCTL_TODS:
+> Cc: kionez <kionez@anche.no>
+> ---
+>  net/rfkill/rfkill.c |   10 ++++------
+>  1 files changed, 4 insertions(+), 6 deletions(-)
+> 
+> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+> index aa7039d..7a560b7 100644
+> --- a/net/rfkill/rfkill.c
+> +++ b/net/rfkill/rfkill.c
+> @@ -501,17 +501,15 @@ static struct class rfkill_class = {
+>  
+>  static int rfkill_add_switch(struct rfkill *rfkill)
+>  {
+> -	int error;
+> -
+>  	mutex_lock(&rfkill_mutex);
+>  
+> -	error = rfkill_toggle_radio(rfkill, rfkill_states[rfkill->type], 0);
+> -	if (!error)
+> -		list_add_tail(&rfkill->node, &rfkill_list);
+> +	rfkill_toggle_radio(rfkill, rfkill_states[rfkill->type], 0);
+> +
+> +	list_add_tail(&rfkill->node, &rfkill_list);
+>  
+>  	mutex_unlock(&rfkill_mutex);
+>  
+> -	return error;
+> +	return 0;
+>  }
+>  
+>  static void rfkill_remove_switch(struct rfkill *rfkill)
 
-> +	if (ieee80211_has_a4(hdr->frame_control)) {
-> +		if (unlikely(sdata->vif.type !=3D IEEE80211_IF_TYPE_WDS &&
-> +			     sdata->vif.type !=3D IEEE80211_IF_TYPE_MESH_POINT))
-> +			return -1;
-> +	} else if (ieee80211_has_tods(hdr->frame_control)) {
-
-I don't particularly like converting a switch statement to chained ifs
-in this path, you even put the most unlikely one first. With the switch,
-the compiler should be able to generate just two compares for each path
-(binary tree), while with this the common STA path already needs three.
-
-We could instead open-code the binary tree that the compiler should
-create for the switch, I guess, i.e.
-
-if (has_tods()) {
-	if (has_fromds()) {
-		// a4 code
-	} else {
-		// tods code
-	}
-} else {
-	if (has_fromds()) {
-		// fromds code
-	} else {
-		// none
-	}
-}
-
-but I think the switch is more readable.
-
-johannes
-
---=-nTmZrAeCDymbTKSGs72j
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIc9wSAAoJEKVg1VMiehFYCrcQAMHtkBDheOTRy6fvcNHu+7nt
-jqpT3rU/c9pGm6TgVTrPzKoxh14w891DxJ1AdC+uGZ78b8Oyojc+kEnYJSFu737h
-uAj0mWzAsdVvHeVqe6WX23Rzr07c34sywHOyuh0bblrsevOaAeVbczrm84k8wSGn
-NVlfrGJAX7eHugPMA7aWdy6KdyK0DTOkFT+hIRx92VqBHtcp71D03xrHx15FOdgw
-VG+jxRmPwm/PVMtvd7CTty3YHQ6n6IZNJMcUABV1dhwCE27suaLj7CuvMmLQSp/G
-aYaxsAhqywvtYm1ry2szXaCkbjfVJrCG5FxE4Nv/ioor4cX2Zzz0gF5Ke5XMKV7a
-uuT/74fYidbot31HY2BCcI+PJHEQy5JZ8jbkvJ6UaSy6j7kIO2fJo96JUF6mp51P
-xrl/SzJpw+Yu9xmk8mQbtxZ4q8ys/VVcArEOw4ntkI5TDS8899DhRgl3pjGkAiMf
-SEaAeLWvb5aFW2Tl1cxS6R5fEuGtNQ4rKa/udOa80m7agrlVuD0+prZ6p2W5UIz6
-/PY87/FqPj0aMNgP1RWgzApAf2xT8/PtHsynyGsiO35xQbs6ULAFSBB9+jKBKOkf
-2dsFi/MxsuJiIkwFYy8Oz69DfZUCKU8GSA96zIHMaODCl8EQ6DEjpFVQJQae1goe
-f32M2H9jkyHqv2w71YCs
-=6KL8
------END PGP SIGNATURE-----
-
---=-nTmZrAeCDymbTKSGs72j--
 
