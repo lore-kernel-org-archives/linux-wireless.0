@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:59538 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751835AbYGULUE (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49137
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752331AbYGCUqK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 07:20:04 -0400
-Received: by py-out-1112.google.com with SMTP id p76so994484pyb.10
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 04:20:03 -0700 (PDT)
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
-	RCU.
-From: jamal <hadi@cyberus.ca>
-Reply-To: hadi@cyberus.ca
-To: David Miller <davem@davemloft.net>
-Cc: kaber@trash.net, netdev@vger.kernel.org, johannes@sipsolutions.net,
+	Thu, 3 Jul 2008 16:46:10 -0400
+Date: Thu, 03 Jul 2008 13:46:10 -0700 (PDT)
+Message-Id: <20080703.134610.250208084.davem@davemloft.net> (sfid-20080703_224616_197200_5EE57A19)
+To: kaber@trash.net
+Cc: netdev@vger.kernel.org, vinay@linux.vnet.ibm.com,
+	krkumar2@in.ibm.com, mchan@broadcom.com, Matheos.Worku@Sun.COM,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <1216606839.4847.159.camel@localhost>
-References: <1216566963.4847.81.camel@localhost>
-	 <20080720.102534.246150854.davem@davemloft.net>
-	 <1216593170.4847.137.camel@localhost>
-	 <20080720.165911.86437240.davem@davemloft.net>
-	 <1216606839.4847.159.camel@localhost>
-Content-Type: text/plain
-Date: Mon, 21 Jul 2008 07:20:01 -0400
-Message-Id: <1216639201.4847.217.camel@localhost> (sfid-20080721_132012_278152_319A5A68)
+Subject: Re: [PATCH 13/39]: pkt_sched: Add qdisc_all_tx_empty()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <486CCFFE.7060009@trash.net>
+References: <20080703.000343.16709755.davem@davemloft.net>
+	<486CCFFE.7060009@trash.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2008-20-07 at 22:20 -0400, jamal wrote:
+From: Patrick McHardy <kaber@trash.net>
+Date: Thu, 03 Jul 2008 15:11:26 +0200
 
-> We are in sync i think, a single pfifo per TX queue is the way to go. I
-> was suggesting it goes in the driver, but this is cleaner: In the
+> David Miller wrote:
+> > As per comments, this isn't a foolproof implementation.  This is being
+> > added so that we can contain and isolate all the explicit ->tx_queue
+> > references in the tree.
+> > 
+> > +/* Are all TX queues of the device empty?  */
+> > +static inline bool qdisc_all_tx_empty(const struct net_device *dev)
+> > +{
+> > +	struct netdev_queue *txq = &dev->tx_queue;
+> > +
+> > +	/* XXX This is not correct but it is good enough for the
+> > +	 * XXX one place that wants this, IRDA.  If we wanted to
+> > +	 * XXX do this right, we'd need to add a qdisc op to
+> > +	 * XXX probe for the queue state.
+> > +	 */
+> > +	return skb_queue_empty(&txq->qdisc->q);
+> > +}
+> 
+> 
+> It this comment referring to the fact that its looking at
+> qdisc->q itself, while the qdisc might be using internal
+> queues? If so, just using txq->qdisc->q.qlen should be
+> fine since qdiscs are required to always update this value,
+> even if they're not using the queue itself.
 
-Actually, can i modify that thought and go back to my initial contention
-now that things are making more sense?;->
-A single s/ware queue per hardware transmit queue is good - but that
-being pfifo_fast would be a lot better. It would, in the minimal, keep
-things as they were for non-multiq and is a sane choice for any virtual
-wire.
+Indeed, and this is exactly what the sch_generic.c packet output path
+uses as a test too.
 
-cheers,
-jamal
-
+Thanks Patrick, I'll fix this up.
