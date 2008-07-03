@@ -1,32 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:59610 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753046AbYGWSDP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 14:03:15 -0400
-Message-ID: <48877260.7040008@lwfinger.net>
-Date: Wed, 23 Jul 2008 13:03:12 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks
- rtl8187
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>	 <200807221613.34434.herton@mandriva.com.br>	 <3ace41890807221525r67716ea0r251068df773fe53f@mail.gmail.com>	 <200807221940.20009.herton@mandriva.com.br> <4886AA3B.3000406@lwfinger.net>		 <4886C50E.6040304@lwfinger.net> <1216824917.13587.9.camel@johannes.berg>	  <48874F09.7060400@lwfinger.net> <1216830449.13587.17.camel@johannes.berg>
-In-Reply-To: <1216830449.13587.17.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:17332 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751938AbYGCQ4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jul 2008 12:56:20 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org, Guy Cohen <guy.cohen@intel.com>
+Subject: [PATCH 1/1] mac80211: move netif_carrier_on to after ieee80211_bss_info_change_notify
+Date: Thu,  3 Jul 2008 19:56:13 +0300
+Message-Id: <1215104173-8918-1-git-send-email-tomas.winkler@intel.com> (sfid-20080703_185624_218376_9C0B3658)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> 
-> Odd, that looks like it should work. Can you try printing the seqno and
-> see if it does increase? Or maybe I messed up something with the
-> flags...
+From: Guy Cohen <guy.cohen@intel.com>
 
-It is increasing just as expected, but no connection.
+Putting netif_carrier_on before configuring the driver/device with the
+new association state may cause a race (tx frames may be sent before
+configuration is done)
 
-Larry
+Signed-off-by: Guy Cohen <guy.cohen@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ net/mac80211/mlme.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 37ea04f..cb414de 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -564,15 +564,14 @@ static void ieee80211_set_associated(struct net_device *dev,
+ 			sdata->bss_conf.ht_bss_conf = &conf->ht_bss_conf;
+ 		}
+ 
+-		netif_carrier_on(dev);
+ 		ifsta->flags |= IEEE80211_STA_PREV_BSSID_SET;
+ 		memcpy(ifsta->prev_bssid, sdata->u.sta.bssid, ETH_ALEN);
+ 		memcpy(wrqu.ap_addr.sa_data, sdata->u.sta.bssid, ETH_ALEN);
+ 		ieee80211_sta_send_associnfo(dev, ifsta);
+ 	} else {
++		netif_carrier_off(dev);
+ 		ieee80211_sta_tear_down_BA_sessions(dev, ifsta->bssid);
+ 		ifsta->flags &= ~IEEE80211_STA_ASSOCIATED;
+-		netif_carrier_off(dev);
+ 		changed |= ieee80211_reset_erp_info(dev);
+ 
+ 		sdata->bss_conf.assoc_ht = 0;
+@@ -586,6 +585,10 @@ static void ieee80211_set_associated(struct net_device *dev,
+ 
+ 	sdata->bss_conf.assoc = assoc;
+ 	ieee80211_bss_info_change_notify(sdata, changed);
++
++	if (assoc)
++		netif_carrier_on(dev);
++
+ 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+ 	wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
+ }
+-- 
+1.5.4.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
