@@ -1,38 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:33684 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751778AbYGVLWt (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50662
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1758149AbYGCHEr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 07:22:49 -0400
-Date: Tue, 22 Jul 2008 08:22:45 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Dmitry Baryshkov <dbaryshkov@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	akpm@linux-foundation.org
-Subject: Re: [PATCH 2/2] RFKILL: set the status of the leds on activation.
-Message-ID: <20080722112245.GC15136@khazad-dum.debian.net> (sfid-20080722_132252_190299_60F0C802)
-References: <20080722102159.GA32682@doriath.ww600.siemens.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080722102159.GA32682@doriath.ww600.siemens.net>
+	Thu, 3 Jul 2008 03:04:47 -0400
+Date: Thu, 03 Jul 2008 00:04:46 -0700 (PDT)
+Message-Id: <20080703.000446.125029084.davem@davemloft.net> (sfid-20080703_103231_823643_2EDED2E1)
+To: netdev@vger.kernel.org
+CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
+	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
+Subject: [PATCH 26/39]: netdev: netdev_priv() can now be sane again.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 22 Jul 2008, Dmitry Baryshkov wrote:
-> Provide default activate function to set the state of the led
-> when the led becomes bound to the trigger
 
-I think I understand what this is for, but I better ask to be sure...
-What does it do, what is the use case?
+The private area of a netdev is now at a fixed offset once more.
 
->  This patch depends on the patch "leds: make sure led->trigger is set
->  earlier" which was staged in -mm for some time and recently got merged
->  into leds tree.
+Unfortunately, some assumptions that netdev_priv() == netdev->priv
+crept back into the tree.  In particular this happened in the
+loopback driver.  Make it use netdev->ml_priv.
 
-Will it get in mainline for 2.6.27-rc?
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ drivers/net/loopback.c    |    8 ++++----
+ include/linux/netdevice.h |    4 +++-
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/loopback.c b/drivers/net/loopback.c
+index 41b774b..49f6bc0 100644
+--- a/drivers/net/loopback.c
++++ b/drivers/net/loopback.c
+@@ -153,7 +153,7 @@ static int loopback_xmit(struct sk_buff *skb, struct net_device *dev)
+ 	dev->last_rx = jiffies;
+ 
+ 	/* it's OK to use per_cpu_ptr() because BHs are off */
+-	pcpu_lstats = netdev_priv(dev);
++	pcpu_lstats = dev->ml_priv;
+ 	lb_stats = per_cpu_ptr(pcpu_lstats, smp_processor_id());
+ 	lb_stats->bytes += skb->len;
+ 	lb_stats->packets++;
+@@ -171,7 +171,7 @@ static struct net_device_stats *get_stats(struct net_device *dev)
+ 	unsigned long packets = 0;
+ 	int i;
+ 
+-	pcpu_lstats = netdev_priv(dev);
++	pcpu_lstats = dev->ml_priv;
+ 	for_each_possible_cpu(i) {
+ 		const struct pcpu_lstats *lb_stats;
+ 
+@@ -207,13 +207,13 @@ static int loopback_dev_init(struct net_device *dev)
+ 	if (!lstats)
+ 		return -ENOMEM;
+ 
+-	dev->priv = lstats;
++	dev->ml_priv = lstats;
+ 	return 0;
+ }
+ 
+ static void loopback_dev_free(struct net_device *dev)
+ {
+-	struct pcpu_lstats *lstats = netdev_priv(dev);
++	struct pcpu_lstats *lstats = dev->ml_priv;
+ 
+ 	free_percpu(lstats);
+ 	free_netdev(dev);
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index df44e44..8558046 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -809,7 +809,9 @@ void dev_net_set(struct net_device *dev, struct net *net)
+  */
+ static inline void *netdev_priv(const struct net_device *dev)
+ {
+-	return dev->priv;
++	return (char *)dev + ((sizeof(struct net_device)
++			       + NETDEV_ALIGN_CONST)
++			      & ~NETDEV_ALIGN_CONST);
+ }
+ 
+ /* Set the sysfs physical device reference for the network logical device
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+1.5.6
+
