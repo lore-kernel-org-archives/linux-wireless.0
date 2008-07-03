@@ -1,35 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:53019 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756247AbYGKVTB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jul 2008 17:19:01 -0400
-Received: from [192.168.0.21] (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
-	by relay.cesmail.net (Postfix) with ESMTP id 6FECB4F1869
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Jul 2008 17:19:00 -0400 (EDT)
-Subject: rt2x00 is still experimental?
-From: Pavel Roskin <proski@gnu.org>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Fri, 11 Jul 2008 17:18:59 -0400
-Message-Id: <1215811139.30975.10.camel@dv> (sfid-20080711_231928_487776_F8477FE6)
-Mime-Version: 1.0
+Received: from cn.fujitsu.com ([222.73.24.84]:56687 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1752897AbYGCN3i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jul 2008 09:29:38 -0400
+Message-ID: <486CA36E.60704@cn.fujitsu.com> (sfid-20080703_152945_128207_3A8878C4)
+Date: Thu, 03 Jul 2008 18:01:18 +0800
+From: Wang Chen <wangchen@cn.fujitsu.com>
+MIME-Version: 1.0
+To: David Miller <davem@davemloft.net>
+CC: netdev@vger.kernel.org, vinay@linux.vnet.ibm.com,
+	krkumar2@in.ibm.com, mchan@broadcom.com, Matheos.Worku@Sun.COM,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 06/39]: netdev: ->ingress_lock is no longer needed.
+References: <20080703.000303.167904111.davem@davemloft.net>	<486CA212.6020705@cn.fujitsu.com> <20080703.030241.34728979.davem@davemloft.net>
+In-Reply-To: <20080703.030241.34728979.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+David Miller said the following on 2008-7-3 18:02:
+> From: Wang Chen <wangchen@cn.fujitsu.com>
+> Date: Thu, 03 Jul 2008 17:55:30 +0800
+> 
+>> David Miller said the following on 2008-7-3 15:03:
+>>> @@ -2014,10 +2014,11 @@ static inline struct sk_buff *handle_macvlan(struct sk_buff *skb,
+>>>   */
+>>>  static int ing_filter(struct sk_buff *skb)
+>>>  {
+>>> -	struct Qdisc *q;
+>>>  	struct net_device *dev = skb->dev;
+>>> -	int result = TC_ACT_OK;
+>>>  	u32 ttl = G_TC_RTTL(skb->tc_verd);
+>>> +	struct netdev_queue *rxq;
+>>> +	int result = TC_ACT_OK;
+>>> +	struct Qdisc *q;
+>>>  
+>> Two lines do not change anything.
+> 
+> They make the variables have a nice style slope from longest
+> lines to the shortest.
+> 
 
-Can we please have rt2x00 drivers considered stable in Linux 2.6.27?  My
-experience running rt73 day by day with WPA on a very crowded network
-shows that it's a pretty reliable driver already.
+Understood now :)
 
-I realize that distros would enable whatever they want, and most people
-here have CONFIG_EXPERIMENTAL on anyway, but still, it could help direct
-users towards better supported hardware and make CONFIG_EXPERIMENTAL
-more relevant.
-
-The latest commits to the drivers/net/wireless/rt2x00 directory seem to
-confirm that the major issues have been addressed already.
-
--- 
-Regards,
-Pavel Roskin
