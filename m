@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45228
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752675AbYGWUOm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 16:14:42 -0400
-Date: Wed, 23 Jul 2008 13:14:41 -0700 (PDT)
-Message-Id: <20080723.131441.200166513.davem@davemloft.net> (sfid-20080723_221445_778780_FB9E5226)
-To: peterz@infradead.org
-Cc: jarkao2@gmail.com, Larry.Finger@lwfinger.net, kaber@trash.net,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, mingo@redhat.com
-Subject: Re: Kernel WARNING: at net/core/dev.c:1330
- __netif_schedule+0x2c/0x98()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1216810696.7257.175.camel@twins>
-References: <1216806614.7257.152.camel@twins>
-	<20080723101352.GD4561@ff.dom.local>
-	<1216810696.7257.175.camel@twins>
+Received: from mga03.intel.com ([143.182.124.21]:26360 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754578AbYGCDMv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jul 2008 23:12:51 -0400
+Subject: Re: [PATCH] iwlwifi: remove input device and fix rfkill state
+From: Zhu Yi <yi.zhu@intel.com>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	linux-wireless@vger.kernel.org, randy.dunlap@oracle.com,
+	"John W. Linville" <linville@tuxdriver.com>, fcrespel@gmail.com
+In-Reply-To: <20080703015355.GB20410@khazad-dum.debian.net>
+References: <6cf6b73e0807010849t42de3f3fn68085daca8d8009e@mail.gmail.com>
+	 <200807021800.25894.IvDoorn@gmail.com>
+	 <20080702184153.GA19949@khazad-dum.debian.net>
+	 <200807030031.20202.IvDoorn@gmail.com>
+	 <20080703015355.GB20410@khazad-dum.debian.net>
+Content-Type: text/plain
+Date: Thu, 03 Jul 2008 11:11:11 +0800
+Message-Id: <1215054671.14590.555.camel@debian.sh.intel.com> (sfid-20080703_085916_676770_9279E849)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Peter Zijlstra <peterz@infradead.org>
-Date: Wed, 23 Jul 2008 12:58:16 +0200
+On Wed, 2008-07-02 at 22:53 -0300, Henrique de Moraes Holschuh wrote:
+> Hmm, it could cause deadlocks I think.  task context takes lock.
+> interrupt context tries to run, needs lock, keeps spinning forever
+> waiting for it, and if we are not SMP, task context never has a chance
+> to release the lock, so we get a deadlock.  Is this correct?
 
-> So I guess my question is, is netif_tx_lock() here to stay, or is the
-> right fix to convert all those drivers to use __netif_tx_lock() which
-> locks only a single queue?
+Never heard of spin_lock_irqsave()?
 
-It's staying.
+> If it is, we better make the atomic path lock-free.  Argh.  This means
+> rfkill->state (the only thing we care about in the atomic path) would
+> have to become an atomic variable, and the code changed to cope with
+> its value being "volatile", so that it can be used in a lockless
+> fashion.
 
-It's trying to block all potential calls into the ->hard_start_xmit()
-method of the driver, and the only reliable way to do that is to take
-all the TX queue locks.  And in one form or another, we're going to
-have this "grab/release all the TX queue locks" construct.
+Yup, if protecting rfkill->state is the only intention, a spinlock is
+too heavy. set|clear_bit is enough if organizing the state into bitmaps.
+BTW, read/write 32-bits aligned on x86 is already atomic.
 
-I find it interesting that this cannot be simply described to lockdep
-:-)
+Thanks,
+-yi
+
