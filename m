@@ -1,46 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:30138 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752934AbYGBI1U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2008 04:27:20 -0400
-Subject: Re: [PATCH] iwlwifi: remove input device and fix rfkill state
-From: Zhu Yi <yi.zhu@intel.com>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Adel Gadllah <adel.gadllah@gmail.com>,
-	linux-wireless@vger.kernel.org, randy.dunlap@oracle.com,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>, fcrespel@gmail.com
-In-Reply-To: <20080701165657.GC6962@khazad-dum.debian.net>
-References: <6cf6b73e0807010849t42de3f3fn68085daca8d8009e@mail.gmail.com>
-	 <20080701165657.GC6962@khazad-dum.debian.net>
-Content-Type: text/plain
-Date: Wed, 02 Jul 2008 16:25:35 +0800
-Message-Id: <1214987135.14590.496.camel@debian.sh.intel.com> (sfid-20080702_102727_267183_2311B9D2)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46119
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1757448AbYGCWzj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jul 2008 18:55:39 -0400
+Date: Thu, 03 Jul 2008 15:55:38 -0700 (PDT)
+Message-Id: <20080703.155538.127636390.davem@davemloft.net> (sfid-20080704_005604_636050_7BE683F9)
+To: khc@pm.waw.pl
+Cc: netdev@vger.kernel.org, vinay@linux.vnet.ibm.com,
+	krkumar2@in.ibm.com, mchan@broadcom.com, Matheos.Worku@Sun.COM,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 26/39]: netdev: netdev_priv() can now be sane again.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <m3d4lvnj9u.fsf@maximus.localdomain>
+References: <m3tzf7nrd7.fsf@maximus.localdomain>
+	<20080703.042614.244608628.davem@davemloft.net>
+	<m3d4lvnj9u.fsf@maximus.localdomain>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-07-01 at 13:56 -0300, Henrique de Moraes Holschuh wrote:
-> On Tue, 01 Jul 2008, Adel Gadllah wrote:
-> > The calls to iwl|iwl3945_rfkill_set_hw_state() had to be moved
-> because rfkill_force_state() cannot be called from an atomic context.
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Date: Thu, 03 Jul 2008 16:18:21 +0200
 
-Yes, but what your patch changed is not in the atomic context. It is
-just inside the driver's priv->mutex. I don't see any problem if you
-call rfkill_force_state() inside it.
+> David Miller <davem@davemloft.net> writes:
+> 
+> > If all drivers call netdev_priv(), there is no confusion :)
+> >
+> > I plan to rename dev->priv to dev->_priv and fix all the fallout.
+> 
+> Do you mean practically deleting dev->priv? That would make sense.
 
-> Yeah, the joys of mutexes.  If this is going to be a severe annoyance
-> to drivers, I don't see why rfkill could not be changed to use some
-> other locking primitive that does work on atomic contexes.
-
-Allowing rfkill_force_state() to be called in the atomic context would
-be useful especially for hardware rfkill. Devices (i.e iwl4965) receive
-an interrupt when the hw-rfkill state changes. It's natural to update
-the rfkill state in this context.
-
-How about protect the rfkill->state by a spinlock and put the
-notifier_call_chain() into a workqueue in the rfkill subsystem?
-
-Thanks,
--yi
-
+Yes, that's the basic idea.  It's probably the only way to
+prevent this problem in the future.
