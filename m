@@ -1,62 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.245]:17894 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751653AbYGaRFa (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42559 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752910AbYGCMZF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 13:05:30 -0400
-Received: by an-out-0708.google.com with SMTP id d40so103005and.103
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Jul 2008 10:05:29 -0700 (PDT)
-Message-ID: <43e72e890807311005l3fd7823ej68497586ec9ff6bc@mail.gmail.com> (sfid-20080731_190533_721507_B54661D9)
-Date: Thu, 31 Jul 2008 10:05:29 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Vendor support stickers for devices supported under Linux wireless
-Cc: drago01 <drago01@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1217498887.10489.138.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890807301327j54be2453r836964c708d75458@mail.gmail.com>
-	 <f6ca9fed0807301357k3c096c37q906ecd68a0219f7f@mail.gmail.com>
-	 <43e72e890807301358r6d8cadc1j4f40b501319fb7dc@mail.gmail.com>
-	 <1217498887.10489.138.camel@johannes.berg>
+	Thu, 3 Jul 2008 08:25:05 -0400
+Subject: Re: [PATCH stable] b43: Do not return TX_BUSY from op_tx
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Kalle Valo <kalle.valo@nokia.com>,
+	John Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+In-Reply-To: <200807031031.45955.mb@bu3sch.de> (sfid-20080703_141240_408789_D701059A)
+References: <200807030104.30100.mb@bu3sch.de> <87y74jtqz8.fsf@nokia.com>
+	 <200807031031.45955.mb@bu3sch.de> (sfid-20080703_141240_408789_D701059A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XBMWd7fHKVY+HMw7IckD"
+Date: Thu, 03 Jul 2008 14:24:13 +0200
+Message-Id: <1215087853.9975.9.camel@johannes.berg> (sfid-20080703_142510_768586_A60EFF6F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 31, 2008 at 3:08 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2008-07-30 at 13:58 -0700, Luis R. Rodriguez wrote:
->> >> We could even put the name of the driver on
->> >> the sticker/logo. Thoughts?
->> >
->> > I would rather do s/driver name/kernel version/ ... its easier for
->> > users that way.
->>
->> True, do you mean since a specific kernel version?
->
-> Down that road lies madness. Distros backport, you (in compat) backport,
-> kernel versions sound old very quickly and in a year, when linux is
-> called 2.9.06 you may not even want to sell a card that says "2.6.25" on
-> it because it sounds ancient.
->
-> Just leave it out, make it depend on the driver being merged into
-> Linus's tree, leave it up to the distros to actually ship the code.
 
-Make sense.
+--=-XBMWd7fHKVY+HMw7IckD
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> I would also add to the contract a requirement to offer Linux support
-> for, say, the next five years.
+On Thu, 2008-07-03 at 10:31 +0200, Michael Buesch wrote:
+> On Thursday 03 July 2008 08:35:23 Kalle Valo wrote:
+> > Michael Buesch <mb@bu3sch.de> writes:
+> >=20
+> > > +drop_packet:
+> > > +	/* We can not transmit this packet. Drop it. */
+> > > +	dev_kfree_skb_any(skb);
+> > >  	return NETDEV_TX_OK;
+> >=20
+> > So no need to call ieee80211_tx_status() in this case? I'm just
+> > curious about this, nothing else.
+>=20
+> I don't think we must call tx_status for dropped or lost packets.
 
-Not sure if we should call it a contract unless its understood its an
-informal contract with the community. Also I don't think we should be
-specific about a time frame for support -- its difficult enough to get
-the driver upstream, not that its not possible I just think it we
-should strive to at least get vendors to properly support Linux by
-submitting their drivers for upstream into Linus' tree. Support tends
-to come naturally after that :)
+That's a bit of a corner case really. If you call tx-status then the
+rate control algorithm will adjust to something that hasn't happened,
+and if you don't then the packet won't be on the monitor interface.
 
-http://linuxwireless.org/download/images/in-linux-green.png
+In practice, it doesn't really matter because so far this only happens
+during resume and that'll hopefully get fixed.
 
-Hm?
+johannes
 
-  Luis
+--=-XBMWd7fHKVY+HMw7IckD
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIbMTqAAoJEKVg1VMiehFYgbAQAL5Ro+3XCnIj4wSc52LLSps+
+N4m2z1qYAgUQ0PId/3ICEULGPt5MW+7NOtzDgoWZYFhj48n8euONPHMbU6DdF3j9
+2aa03EL8tdC/TSBUsBO33+WusdOgUk5WUg62kMyTiDflwWi/D+7FZjZa6ZGWGrNP
+DGlFFBMGtxfTvk+vp156iTWdWzXrrU0kGoTcHckgWtiLaVnS0eqEZcqbiLqe4oYs
+MZ8I80HdF9/iruL8S+/QOLME+OGGrIceFTymH/ZAN6mffXV68H78mfLiqqBtYgQM
++Nbc/FDpGZOaogJ1TpK4T3iwnfFA1UM0mjs75YIqnuBx+N5uTsaXHjP6irzHLyDY
+fG04UJfTOFj6nSeDESqz0MKOY5WB0RxOQgDY8NWibPm2SMRZHbIIJ6EZGg/eQoFV
+cYDnI9r/AhFMMhwgMZOb/UbEvfT/f4fse1iN0wvKa6tZ9p1R5zKM5uN+XJpRLH7s
+TfEGFIDQCz/9n1+TCDritYf5GwNUYA2X5VNtHggzeINArVEosI0vmFOyQVGdAhvM
+mxQdb7++cUf08v3WvLgcAzQsV51IE7vpYgRUiuLW1zFnNnjfGkZ4ASrVlBZICkPX
+MWQIyxEu2m8m6I1eWN1sWrSRZVrPR2hsQW3vemxb1/yqERfyPXgKD4lvmIxqnsh7
+FVAElky+JlTK1BEoChJe
+=egG9
+-----END PGP SIGNATURE-----
+
+--=-XBMWd7fHKVY+HMw7IckD--
+
