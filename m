@@ -1,44 +1,210 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.245]:38340 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750698AbYGSEBl (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50680
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1758490AbYGCHFA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2008 00:01:41 -0400
-Received: by an-out-0708.google.com with SMTP id d40so270303and.103
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jul 2008 21:01:41 -0700 (PDT)
-Date: Sat, 19 Jul 2008 00:01:38 -0400
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 5/4] rfkill: query EV_SW states when rfkill-input
-	connects to a input device
-Message-ID: <20080719040138.GB29551@anvil.corenet.prv> (sfid-20080719_060145_026450_46131DF3)
-References: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br> <1216331814-31802-1-git-send-email-hmh@hmh.eng.br>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1216331814-31802-1-git-send-email-hmh@hmh.eng.br>
+	Thu, 3 Jul 2008 03:05:00 -0400
+Date: Thu, 03 Jul 2008 00:04:59 -0700 (PDT)
+Message-Id: <20080703.000459.256709613.davem@davemloft.net> (sfid-20080703_103234_077329_DDB9CE2E)
+To: netdev@vger.kernel.org
+CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
+	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
+Subject: [PATCH 28/39]: pktgen: Fix multiqueue handling.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Henrique,
 
-On Thu, Jul 17, 2008 at 06:56:54PM -0300, Henrique de Moraes Holschuh wrote:
-> Every time a new input device that is capable of one of the rfkill EV_SW
-> events (currently only SW_RFKILL_ALL) is connected to rfkill-input, we must
-> check the switch state and take action.
-> 
-> Otherwise, we will ignore the initial switch state.
-> 
+We make sure we operate on whatever queue gets mapped
+to the pkt_dev->skb.
 
-I think this task is more suited for the ->start() method of the input
-handler. This way, if userspace grabs the switch input device and then
-releases it rfkill will get a chance to re-synchronize with the switch
-state.
+This is currently functional, but it could be largely
+improved.  The initial check in pktgen_xmit() will
+sometimes check the wrong queue, which is mostly
+harmless.  The thing to do is probably to invoke
+fill_packet() earlier.
 
-Also I think it would be a good idea to take input_dev->event_lock
-while scheduling the state change so that the switch state does not
-change underneath you.
+Also, dev_pick_tx() has no external references, so we
+can mark it static and kill the module export.
 
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ include/linux/netdevice.h |    3 --
+ net/core/dev.c            |    5 +--
+ net/core/pktgen.c         |   55 +++++++++++++++++++++++++++++++--------------
+ 3 files changed, 40 insertions(+), 23 deletions(-)
+
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index 510a420..f119532 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -757,9 +757,6 @@ struct net_device
+ #define	NETDEV_ALIGN		32
+ #define	NETDEV_ALIGN_CONST	(NETDEV_ALIGN - 1)
+ 
+-extern struct netdev_queue *dev_pick_tx(struct net_device *dev,
+-					struct sk_buff *skb);
+-
+ static inline
+ struct netdev_queue *netdev_get_tx_queue(const struct net_device *dev,
+ 					 int index)
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 6bf4930..cfda430 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -1666,12 +1666,11 @@ out_kfree_skb:
+  *          --BLG
+  */
+ 
+-struct netdev_queue *dev_pick_tx(struct net_device *dev,
+-				 struct sk_buff *skb)
++static struct netdev_queue *dev_pick_tx(struct net_device *dev,
++					struct sk_buff *skb)
+ {
+ 	return netdev_get_tx_queue(dev, 0);
+ }
+-EXPORT_SYMBOL(dev_pick_tx);
+ 
+ int dev_queue_xmit(struct sk_buff *skb)
+ {
+diff --git a/net/core/pktgen.c b/net/core/pktgen.c
+index 6aeff58..3b08df4 100644
+--- a/net/core/pktgen.c
++++ b/net/core/pktgen.c
+@@ -2123,6 +2123,24 @@ static void get_ipsec_sa(struct pktgen_dev *pkt_dev, int flow)
+ 	}
+ }
+ #endif
++static void set_cur_queue_map(struct pktgen_dev *pkt_dev)
++{
++	if (pkt_dev->queue_map_min < pkt_dev->queue_map_max) {
++		__u16 t;
++		if (pkt_dev->flags & F_QUEUE_MAP_RND) {
++			t = random32() %
++				(pkt_dev->queue_map_max -
++				 pkt_dev->queue_map_min + 1)
++				+ pkt_dev->queue_map_min;
++		} else {
++			t = pkt_dev->cur_queue_map + 1;
++			if (t > pkt_dev->queue_map_max)
++				t = pkt_dev->queue_map_min;
++		}
++		pkt_dev->cur_queue_map = t;
++	}
++}
++
+ /* Increment/randomize headers according to flags and current values
+  * for IP src/dest, UDP src/dst port, MAC-Addr src/dst
+  */
+@@ -2325,19 +2343,7 @@ static void mod_cur_headers(struct pktgen_dev *pkt_dev)
+ 		pkt_dev->cur_pkt_size = t;
+ 	}
+ 
+-	if (pkt_dev->queue_map_min < pkt_dev->queue_map_max) {
+-		__u16 t;
+-		if (pkt_dev->flags & F_QUEUE_MAP_RND) {
+-			t = random32() %
+-				(pkt_dev->queue_map_max - pkt_dev->queue_map_min + 1)
+-				+ pkt_dev->queue_map_min;
+-		} else {
+-			t = pkt_dev->cur_queue_map + 1;
+-			if (t > pkt_dev->queue_map_max)
+-				t = pkt_dev->queue_map_min;
+-		}
+-		pkt_dev->cur_queue_map = t;
+-	}
++	set_cur_queue_map(pkt_dev);
+ 
+ 	pkt_dev->flows[flow].count++;
+ }
+@@ -2458,7 +2464,7 @@ static struct sk_buff *fill_packet_ipv4(struct net_device *odev,
+ 	__be16 *vlan_encapsulated_proto = NULL;  /* packet type ID field (or len) for VLAN tag */
+ 	__be16 *svlan_tci = NULL;                /* Encapsulates priority and SVLAN ID */
+ 	__be16 *svlan_encapsulated_proto = NULL; /* packet type ID field (or len) for SVLAN tag */
+-
++	u16 queue_map;
+ 
+ 	if (pkt_dev->nr_labels)
+ 		protocol = htons(ETH_P_MPLS_UC);
+@@ -2469,6 +2475,7 @@ static struct sk_buff *fill_packet_ipv4(struct net_device *odev,
+ 	/* Update any of the values, used when we're incrementing various
+ 	 * fields.
+ 	 */
++	queue_map = pkt_dev->cur_queue_map;
+ 	mod_cur_headers(pkt_dev);
+ 
+ 	datalen = (odev->hard_header_len + 16) & ~0xf;
+@@ -2507,7 +2514,7 @@ static struct sk_buff *fill_packet_ipv4(struct net_device *odev,
+ 	skb->network_header = skb->tail;
+ 	skb->transport_header = skb->network_header + sizeof(struct iphdr);
+ 	skb_put(skb, sizeof(struct iphdr) + sizeof(struct udphdr));
+-	skb_set_queue_mapping(skb, pkt_dev->cur_queue_map);
++	skb_set_queue_mapping(skb, queue_map);
+ 	iph = ip_hdr(skb);
+ 	udph = udp_hdr(skb);
+ 
+@@ -2797,6 +2804,7 @@ static struct sk_buff *fill_packet_ipv6(struct net_device *odev,
+ 	__be16 *vlan_encapsulated_proto = NULL;  /* packet type ID field (or len) for VLAN tag */
+ 	__be16 *svlan_tci = NULL;                /* Encapsulates priority and SVLAN ID */
+ 	__be16 *svlan_encapsulated_proto = NULL; /* packet type ID field (or len) for SVLAN tag */
++	u16 queue_map;
+ 
+ 	if (pkt_dev->nr_labels)
+ 		protocol = htons(ETH_P_MPLS_UC);
+@@ -2807,6 +2815,7 @@ static struct sk_buff *fill_packet_ipv6(struct net_device *odev,
+ 	/* Update any of the values, used when we're incrementing various
+ 	 * fields.
+ 	 */
++	queue_map = pkt_dev->cur_queue_map;
+ 	mod_cur_headers(pkt_dev);
+ 
+ 	skb = alloc_skb(pkt_dev->cur_pkt_size + 64 + 16 +
+@@ -2844,7 +2853,7 @@ static struct sk_buff *fill_packet_ipv6(struct net_device *odev,
+ 	skb->network_header = skb->tail;
+ 	skb->transport_header = skb->network_header + sizeof(struct ipv6hdr);
+ 	skb_put(skb, sizeof(struct ipv6hdr) + sizeof(struct udphdr));
+-	skb_set_queue_mapping(skb, pkt_dev->cur_queue_map);
++	skb_set_queue_mapping(skb, queue_map);
+ 	iph = ipv6_hdr(skb);
+ 	udph = udp_hdr(skb);
+ 
+@@ -3265,6 +3274,7 @@ static __inline__ void pktgen_xmit(struct pktgen_dev *pkt_dev)
+ 	struct netdev_queue *odev_queue;
+ 	struct net_device *odev = NULL;
+ 	__u64 idle_start = 0;
++	u16 queue_map;
+ 	int ret;
+ 
+ 	odev = pkt_dev->odev;
+@@ -3286,7 +3296,14 @@ static __inline__ void pktgen_xmit(struct pktgen_dev *pkt_dev)
+ 		}
+ 	}
+ 
+-	odev_queue = dev_pick_tx(odev, pkt_dev->skb);
++	if (!pkt_dev->skb) {
++		set_cur_queue_map(pkt_dev);
++		queue_map = pkt_dev->cur_queue_map;
++	} else {
++		queue_map = skb_get_queue_mapping(pkt_dev->skb);
++	}
++
++	odev_queue = netdev_get_tx_queue(odev, queue_map);
+ 	if (netif_tx_queue_stopped(odev_queue) ||
+ 	    need_resched()) {
+ 		idle_start = getCurUs();
+@@ -3330,6 +3347,10 @@ static __inline__ void pktgen_xmit(struct pktgen_dev *pkt_dev)
+ 		}
+ 	}
+ 
++	/* fill_packet() might have changed the queue */
++	queue_map = skb_get_queue_mapping(pkt_dev->skb);
++	odev_queue = netdev_get_tx_queue(odev, queue_map);
++
+ 	__netif_tx_lock_bh(odev_queue);
+ 	if (!netif_tx_queue_stopped(odev_queue)) {
+ 
 -- 
-Dmitry
+1.5.6
+
