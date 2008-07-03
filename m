@@ -1,75 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:8746 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752956AbYGSMU7 (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:65385 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752621AbYGCR0K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2008 08:20:59 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so241273nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2008 05:20:57 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH 2/4] rfkill: fix led-trigger unregister order in error unwind
-Date: Sat, 19 Jul 2008 14:35:39 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
-	Dmitry Baryshkov <dbaryshkov@gmail.com>
-References: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br> <1216150327-10904-3-git-send-email-hmh@hmh.eng.br>
-In-Reply-To: <1216150327-10904-3-git-send-email-hmh@hmh.eng.br>
+	Thu, 3 Jul 2008 13:26:10 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so300739yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Jul 2008 10:26:05 -0700 (PDT)
+Message-ID: <1ba2fa240807031026k1763f64bu66fd03d0c1b254dc@mail.gmail.com> (sfid-20080703_192617_918907_449786D1)
+Date: Thu, 3 Jul 2008 20:26:04 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/1] mac80211: move netif_carrier_on to after ieee80211_bss_info_change_notify
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org, "Guy Cohen" <guy.cohen@intel.com>
+In-Reply-To: <1215104870.9975.17.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807191435.39305.IvDoorn@gmail.com> (sfid-20080719_142101_728822_2D375E8B)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1215104173-8918-1-git-send-email-tomas.winkler@intel.com>
+	 <1215104870.9975.17.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 15 July 2008, Henrique de Moraes Holschuh wrote:
-> rfkill needs to unregister the led trigger AFTER a call to
-> rfkill_remove_switch(), otherwise it will not update the LED state,
-> possibly leaving it ON when it should be OFF.
-> 
-> To make led-trigger unregistering safer, guard against unregistering a
-> trigger twice, and also against issuing trigger events to a led trigger
-> that was unregistered.  This makes the error unwind paths more resilient.
-> 
-> Refer to commit 8a8f1c0437a77cce29c1cb6089f01f22a6d9ca6e,
-> "rfkill: Register LED triggers before registering switch".
-> 
-> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> Cc: Michael Buesch <mb@bu3sch.de>
-> Cc: Dmitry Baryshkov <dbaryshkov@gmail.com>
+On Thu, Jul 3, 2008 at 8:07 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+>> -             netif_carrier_on(dev);
+>>               ifsta->flags |= IEEE80211_STA_PREV_BSSID_SET;
+>>               memcpy(ifsta->prev_bssid, sdata->u.sta.bssid, ETH_ALEN);
+>>               memcpy(wrqu.ap_addr.sa_data, sdata->u.sta.bssid, ETH_ALEN);
+>>               ieee80211_sta_send_associnfo(dev, ifsta);
+>>       } else {
+>> +             netif_carrier_off(dev);
+>>               ieee80211_sta_tear_down_BA_sessions(dev, ifsta->bssid);
+>>               ifsta->flags &= ~IEEE80211_STA_ASSOCIATED;
+>> -             netif_carrier_off(dev);
+>
+> Maybe it should then be symmetric so that callers of the function have
+> to do it in both cases? Other than that, looks good.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+The sequence now is
+  configure association in the driver  -> carrier_on ..... carrier_off
+-> configure disassociation in the driver
 
-> ---
->  net/rfkill/rfkill.c |    6 ++++--
->  1 files changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-> index 022fe50..fc3a4fd 100644
-> --- a/net/rfkill/rfkill.c
-> +++ b/net/rfkill/rfkill.c
-> @@ -590,8 +590,10 @@ static void rfkill_led_trigger_register(struct rfkill *rfkill)
->  static void rfkill_led_trigger_unregister(struct rfkill *rfkill)
->  {
->  #ifdef CONFIG_RFKILL_LEDS
-> -	if (rfkill->led_trigger.name)
-> +	if (rfkill->led_trigger.name) {
->  		led_trigger_unregister(&rfkill->led_trigger);
-> +		rfkill->led_trigger.name = NULL;
-> +	}
->  #endif
->  }
->  
-> @@ -627,8 +629,8 @@ int rfkill_register(struct rfkill *rfkill)
->  
->  	error = device_add(dev);
->  	if (error) {
-> -		rfkill_led_trigger_unregister(rfkill);
->  		rfkill_remove_switch(rfkill);
-> +		rfkill_led_trigger_unregister(rfkill);
->  		return error;
->  	}
->  
+So this is already symmetric or I don't understand what  you mean.
 
-
+Thanks
+Tomas
