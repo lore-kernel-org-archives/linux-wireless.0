@@ -1,499 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53122 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755686AbYG2LXv (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50774
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1759709AbYGCHF7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 07:23:51 -0400
-Message-Id: <20080729112306.981017000@sipsolutions.net> (sfid-20080729_132355_300325_6E43A67B)
-References: <20080729112249.877813000@sipsolutions.net>
-Date: Tue, 29 Jul 2008 13:22:51 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Julius Volz <juliusv@google.com>,
-	Thomas Graf <tgraf@suug.ch>
-Subject: [PATCH 2/3] nl80211: fix dump callbacks
+	Thu, 3 Jul 2008 03:05:59 -0400
+Date: Thu, 03 Jul 2008 00:05:58 -0700 (PDT)
+Message-Id: <20080703.000558.10591431.davem@davemloft.net> (sfid-20080703_103231_037444_69E539FC)
+To: netdev@vger.kernel.org
+CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
+	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
+Subject: [PATCH 39/39]: niu: Add TX multiqueue support.
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Julius Volz pointed out that the dump callbacks in nl80211 were
-broken and fixed one of them. This patch fixes the other three
-and also addresses the TODOs there.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Julius Volz <juliusv@google.com>
-Cc: Thomas Graf <tgraf@suug.ch>
+Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
- net/wireless/nl80211.c |  275 +++++++++++++++++++++++++++----------------------
- 1 file changed, 153 insertions(+), 122 deletions(-)
+ drivers/net/niu.c |   45 +++++++++++++++++++++++++--------------------
+ 1 files changed, 25 insertions(+), 20 deletions(-)
 
---- everything.orig/net/wireless/nl80211.c	2008-07-29 13:15:44.000000000 +0200
-+++ everything/net/wireless/nl80211.c	2008-07-29 13:16:04.000000000 +0200
-@@ -29,16 +29,16 @@ static struct genl_family nl80211_fam = 
- };
+diff --git a/drivers/net/niu.c b/drivers/net/niu.c
+index de2a8a3..8ee7d7b 100644
+--- a/drivers/net/niu.c
++++ b/drivers/net/niu.c
+@@ -3236,10 +3236,14 @@ static int release_tx_packet(struct niu *np, struct tx_ring_info *rp, int idx)
  
- /* internal helper: get drv and dev */
--static int get_drv_dev_by_info_ifindex(struct genl_info *info,
-+static int get_drv_dev_by_info_ifindex(struct nlattr **attrs,
- 				       struct cfg80211_registered_device **drv,
- 				       struct net_device **dev)
+ static void niu_tx_work(struct niu *np, struct tx_ring_info *rp)
  {
- 	int ifindex;
++	struct netdev_queue *txq;
+ 	u16 pkt_cnt, tmp;
+-	int cons;
++	int cons, index;
+ 	u64 cs;
  
--	if (!info->attrs[NL80211_ATTR_IFINDEX])
-+	if (!attrs[NL80211_ATTR_IFINDEX])
- 		return -EINVAL;
- 
--	ifindex = nla_get_u32(info->attrs[NL80211_ATTR_IFINDEX]);
-+	ifindex = nla_get_u32(attrs[NL80211_ATTR_IFINDEX]);
- 	*dev = dev_get_by_index(&init_net, ifindex);
- 	if (!*dev)
- 		return -ENODEV;
-@@ -291,21 +291,31 @@ static int nl80211_dump_interface(struct
- 
- 	mutex_lock(&cfg80211_drv_mutex);
- 	list_for_each_entry(dev, &cfg80211_drv_list, list) {
--		if (++wp_idx < wp_start)
-+		if (wp_idx < wp_start) {
-+			wp_idx++;
- 			continue;
-+		}
- 		if_idx = 0;
- 
- 		mutex_lock(&dev->devlist_mtx);
- 		list_for_each_entry(wdev, &dev->netdev_list, list) {
--			if (++if_idx < if_start)
-+			if (if_idx < if_start) {
-+				if_idx++;
- 				continue;
-+			}
- 			if (nl80211_send_iface(skb, NETLINK_CB(cb->skb).pid,
- 					       cb->nlh->nlmsg_seq, NLM_F_MULTI,
--					       wdev->netdev) < 0)
--				break;
-+					       wdev->netdev) < 0) {
-+				mutex_unlock(&dev->devlist_mtx);
-+				goto out;
-+			}
-+			if_idx++;
- 		}
- 		mutex_unlock(&dev->devlist_mtx);
++	index = (rp - np->tx_rings);
++	txq = netdev_get_tx_queue(np->dev, index);
 +
-+		wp_idx++;
+ 	cs = rp->tx_cs;
+ 	if (unlikely(!(cs & (TX_CS_MK | TX_CS_MMK))))
+ 		goto out;
+@@ -3262,13 +3266,13 @@ static void niu_tx_work(struct niu *np, struct tx_ring_info *rp)
+ 	smp_mb();
+ 
+ out:
+-	if (unlikely(netif_queue_stopped(np->dev) &&
++	if (unlikely(netif_tx_queue_stopped(txq) &&
+ 		     (niu_tx_avail(rp) > NIU_TX_WAKEUP_THRESH(rp)))) {
+-		netif_tx_lock(np->dev);
+-		if (netif_queue_stopped(np->dev) &&
++		__netif_tx_lock(txq, smp_processor_id());
++		if (netif_tx_queue_stopped(txq) &&
+ 		    (niu_tx_avail(rp) > NIU_TX_WAKEUP_THRESH(rp)))
+-			netif_wake_queue(np->dev);
+-		netif_tx_unlock(np->dev);
++			netif_tx_wake_queue(txq);
++		__netif_tx_unlock(txq);
  	}
-+ out:
- 	mutex_unlock(&cfg80211_drv_mutex);
- 
- 	cb->args[0] = wp_idx;
-@@ -321,7 +331,7 @@ static int nl80211_get_interface(struct 
- 	struct net_device *netdev;
- 	int err;
- 
--	err = get_drv_dev_by_info_ifindex(info, &dev, &netdev);
-+	err = get_drv_dev_by_info_ifindex(info->attrs, &dev, &netdev);
- 	if (err)
- 		return err;
- 
-@@ -392,7 +402,7 @@ static int nl80211_set_interface(struct 
- 	} else
- 		return -EINVAL;
- 
--	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
- 	if (err)
- 		return err;
- 	ifindex = dev->ifindex;
-@@ -477,7 +487,7 @@ static int nl80211_del_interface(struct 
- 	int ifindex, err;
- 	struct net_device *dev;
- 
--	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
- 	if (err)
- 		return err;
- 	ifindex = dev->ifindex;
-@@ -545,7 +555,7 @@ static int nl80211_get_key(struct sk_buf
- 	if (info->attrs[NL80211_ATTR_MAC])
- 		mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
- 
--	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
- 	if (err)
- 		return err;
- 
-@@ -618,7 +628,7 @@ static int nl80211_set_key(struct sk_buf
- 	if (!info->attrs[NL80211_ATTR_KEY_DEFAULT])
- 		return -EINVAL;
- 
--	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
- 	if (err)
- 		return err;
- 
-@@ -699,7 +709,7 @@ static int nl80211_new_key(struct sk_buf
- 		return -EINVAL;
- 	}
- 
--	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
- 	if (err)
- 		return err;
- 
-@@ -735,7 +745,7 @@ static int nl80211_del_key(struct sk_buf
- 	if (info->attrs[NL80211_ATTR_MAC])
- 		mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
- 
--	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
- 	if (err)
- 		return err;
- 
-@@ -764,7 +774,7 @@ static int nl80211_addset_beacon(struct 
- 	struct beacon_parameters params;
- 	int haveinfo = 0;
- 
--	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
- 	if (err)
- 		return err;
- 
-@@ -843,7 +853,7 @@ static int nl80211_del_beacon(struct sk_
- 	int err;
- 	struct net_device *dev;
- 
--	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
- 	if (err)
- 		return err;
- 
-@@ -937,67 +947,78 @@ static int nl80211_send_station(struct s
  }
  
- static int nl80211_dump_station(struct sk_buff *skb,
--		struct netlink_callback *cb)
-+				struct netlink_callback *cb)
+@@ -4061,6 +4065,8 @@ static int niu_alloc_channels(struct niu *np)
+ 	np->num_rx_rings = parent->rxchan_per_port[port];
+ 	np->num_tx_rings = parent->txchan_per_port[port];
+ 
++	np->dev->real_num_tx_queues = np->num_tx_rings;
++
+ 	np->rx_rings = kzalloc(np->num_rx_rings * sizeof(struct rx_ring_info),
+ 			       GFP_KERNEL);
+ 	err = -ENOMEM;
+@@ -5686,7 +5692,7 @@ static int niu_open(struct net_device *dev)
+ 		goto out_free_irq;
+ 	}
+ 
+-	netif_start_queue(dev);
++	netif_tx_start_all_queues(dev);
+ 
+ 	if (np->link_config.loopback_mode != LOOPBACK_DISABLED)
+ 		netif_carrier_on(dev);
+@@ -5710,7 +5716,7 @@ static void niu_full_shutdown(struct niu *np, struct net_device *dev)
+ 	cancel_work_sync(&np->reset_task);
+ 
+ 	niu_disable_napi(np);
+-	netif_stop_queue(dev);
++	netif_tx_stop_all_queues(dev);
+ 
+ 	del_timer_sync(&np->timer);
+ 
+@@ -5971,7 +5977,7 @@ static void niu_netif_start(struct niu *np)
+ 	 * so long as all callers are assured to have free tx slots
+ 	 * (such as after niu_init_hw).
+ 	 */
+-	netif_wake_queue(np->dev);
++	netif_tx_wake_all_queues(np->dev);
+ 
+ 	niu_enable_napi(np);
+ 
+@@ -6097,15 +6103,11 @@ static u64 niu_compute_tx_flags(struct sk_buff *skb, struct ethhdr *ehdr,
+ 	return ret;
+ }
+ 
+-static struct tx_ring_info *tx_ring_select(struct niu *np, struct sk_buff *skb)
+-{
+-	return &np->tx_rings[0];
+-}
+-
+ static int niu_start_xmit(struct sk_buff *skb, struct net_device *dev)
  {
--	int wp_idx = 0;
--	int if_idx = 0;
--	int sta_idx = cb->args[2];
--	int wp_start = cb->args[0];
--	int if_start = cb->args[1];
- 	struct station_info sinfo;
- 	struct cfg80211_registered_device *dev;
--	struct wireless_dev *wdev;
-+	struct net_device *netdev;
- 	u8 mac_addr[ETH_ALEN];
-+	int ifidx = cb->args[0];
-+	int sta_idx = cb->args[1];
- 	int err;
--	int exit = 0;
+ 	struct niu *np = netdev_priv(dev);
+ 	unsigned long align, headroom;
++	struct netdev_queue *txq;
+ 	struct tx_ring_info *rp;
+ 	struct tx_pkt_hdr *tp;
+ 	unsigned int len, nfg;
+@@ -6113,10 +6115,12 @@ static int niu_start_xmit(struct sk_buff *skb, struct net_device *dev)
+ 	int prod, i, tlen;
+ 	u64 mapping, mrk;
  
--	/* TODO: filter by device */
--	mutex_lock(&cfg80211_drv_mutex);
--	list_for_each_entry(dev, &cfg80211_drv_list, list) {
--		if (exit)
-+	if (!ifidx) {
-+		err = nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
-+				  nl80211_fam.attrbuf, nl80211_fam.maxattr,
-+				  nl80211_policy);
-+		if (err)
-+			return err;
-+
-+		if (!nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX])
-+			return -EINVAL;
-+
-+		ifidx = nla_get_u32(nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX]);
-+		if (!ifidx)
-+			return -EINVAL;
-+	}
-+
-+	netdev = dev_get_by_index(&init_net, ifidx);
-+	if (!netdev)
-+		return -ENODEV;
-+
-+	dev = cfg80211_get_dev_from_ifindex(ifidx);
-+	if (IS_ERR(dev)) {
-+		err = PTR_ERR(dev);
-+		goto out_put_netdev;
-+	}
-+
-+	if (!dev->ops->dump_station) {
-+		err = -ENOSYS;
-+		goto out_err;
-+	}
-+
-+	rtnl_lock();
-+
-+	while (1) {
-+		err = dev->ops->dump_station(&dev->wiphy, netdev, sta_idx,
-+					     mac_addr, &sinfo);
-+		if (err == -ENOENT)
- 			break;
--		if (++wp_idx < wp_start)
--			continue;
--		if_idx = 0;
-+		if (err)
-+			goto out_err_rtnl;
+-	rp = tx_ring_select(np, skb);
++	i = skb_get_queue_mapping(skb);
++	rp = &np->tx_rings[i];
++	txq = netdev_get_tx_queue(dev, i);
  
--		mutex_lock(&dev->devlist_mtx);
--		list_for_each_entry(wdev, &dev->netdev_list, list) {
--			if (exit)
--				break;
--			if (++if_idx < if_start)
--				continue;
--			if (!dev->ops->dump_station)
--				continue;
-+		if (nl80211_send_station(skb,
-+				NETLINK_CB(cb->skb).pid,
-+				cb->nlh->nlmsg_seq, NLM_F_MULTI,
-+				netdev, mac_addr,
-+				&sinfo) < 0)
-+			goto out;
+ 	if (niu_tx_avail(rp) <= (skb_shinfo(skb)->nr_frags + 1)) {
+-		netif_stop_queue(dev);
++		netif_tx_stop_queue(txq);
+ 		dev_err(np->device, PFX "%s: BUG! Tx ring full when "
+ 			"queue awake!\n", dev->name);
+ 		rp->tx_errors++;
+@@ -6215,9 +6219,9 @@ static int niu_start_xmit(struct sk_buff *skb, struct net_device *dev)
+ 	nw64(TX_RING_KICK(rp->tx_channel), rp->wrap_bit | (prod << 3));
  
--			for (;; ++sta_idx) {
--				rtnl_lock();
--				err = dev->ops->dump_station(&dev->wiphy,
--						wdev->netdev, sta_idx, mac_addr,
--						&sinfo);
--				rtnl_unlock();
--				if (err) {
--					sta_idx = 0;
--					break;
--				}
--				if (nl80211_send_station(skb,
--						NETLINK_CB(cb->skb).pid,
--						cb->nlh->nlmsg_seq, NLM_F_MULTI,
--						wdev->netdev, mac_addr,
--						&sinfo) < 0) {
--					exit = 1;
--					break;
--				}
--			}
--		}
--		mutex_unlock(&dev->devlist_mtx);
-+		sta_idx++;
+ 	if (unlikely(niu_tx_avail(rp) <= (MAX_SKB_FRAGS + 1))) {
+-		netif_stop_queue(dev);
++		netif_tx_stop_queue(txq);
+ 		if (niu_tx_avail(rp) > NIU_TX_WAKEUP_THRESH(rp))
+-			netif_wake_queue(dev);
++			netif_tx_wake_queue(txq);
  	}
--	mutex_unlock(&cfg80211_drv_mutex);
  
--	cb->args[0] = wp_idx;
--	cb->args[1] = if_idx;
--	cb->args[2] = sta_idx;
+ 	dev->trans_start = jiffies;
+@@ -6275,7 +6279,7 @@ static int niu_change_mtu(struct net_device *dev, int new_mtu)
+ 	spin_unlock_irq(&np->lock);
  
--	return skb->len;
-+ out:
-+	cb->args[1] = sta_idx;
-+	err = skb->len;
-+ out_err_rtnl:
-+ 	rtnl_unlock();
-+ out_err:
-+	cfg80211_put_dev(dev);
-+ out_put_netdev:
-+	dev_put(netdev);
-+
-+	return err;
- }
+ 	if (!err) {
+-		netif_start_queue(dev);
++		netif_tx_start_all_queues(dev);
+ 		if (np->link_config.loopback_mode != LOOPBACK_DISABLED)
+ 			netif_carrier_on(dev);
  
- static int nl80211_get_station(struct sk_buff *skb, struct genl_info *info)
-@@ -1016,7 +1037,7 @@ static int nl80211_get_station(struct sk
- 
- 	mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
- 
--	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
- 	if (err)
- 		return err;
- 
-@@ -1112,7 +1133,7 @@ static int nl80211_set_station(struct sk
- 		params.plink_action =
- 		    nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_ACTION]);
- 
--	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
- 	if (err)
- 		return err;
- 
-@@ -1172,7 +1193,7 @@ static int nl80211_new_station(struct sk
- 				&params.station_flags))
- 		return -EINVAL;
- 
--	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
- 	if (err)
- 		return err;
- 
-@@ -1207,7 +1228,7 @@ static int nl80211_del_station(struct sk
- 	if (info->attrs[NL80211_ATTR_MAC])
- 		mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
- 
--	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
- 	if (err)
- 		return err;
- 
-@@ -1277,68 +1298,78 @@ static int nl80211_send_mpath(struct sk_
- }
- 
- static int nl80211_dump_mpath(struct sk_buff *skb,
--		struct netlink_callback *cb)
-+			      struct netlink_callback *cb)
+@@ -8532,9 +8536,10 @@ static struct net_device * __devinit niu_alloc_and_init(
+ 	struct of_device *op, const struct niu_ops *ops,
+ 	u8 port)
  {
--	int wp_idx = 0;
--	int if_idx = 0;
--	int sta_idx = cb->args[2];
--	int wp_start = cb->args[0];
--	int if_start = cb->args[1];
- 	struct mpath_info pinfo;
- 	struct cfg80211_registered_device *dev;
--	struct wireless_dev *wdev;
-+	struct net_device *netdev;
- 	u8 dst[ETH_ALEN];
- 	u8 next_hop[ETH_ALEN];
-+	int ifidx = cb->args[0];
-+	int path_idx = cb->args[1];
- 	int err;
--	int exit = 0;
+-	struct net_device *dev = alloc_etherdev(sizeof(struct niu));
++	struct net_device *dev;
+ 	struct niu *np;
  
--	/* TODO: filter by device */
--	mutex_lock(&cfg80211_drv_mutex);
--	list_for_each_entry(dev, &cfg80211_drv_list, list) {
--		if (exit)
-+	if (!ifidx) {
-+		err = nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
-+				  nl80211_fam.attrbuf, nl80211_fam.maxattr,
-+				  nl80211_policy);
-+		if (err)
-+			return err;
-+
-+		if (!nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX])
-+			return -EINVAL;
-+
-+		ifidx = nla_get_u32(nl80211_fam.attrbuf[NL80211_ATTR_IFINDEX]);
-+		if (!ifidx)
-+			return -EINVAL;
-+	}
-+
-+	netdev = dev_get_by_index(&init_net, ifidx);
-+	if (!netdev)
-+		return -ENODEV;
-+
-+	dev = cfg80211_get_dev_from_ifindex(ifidx);
-+	if (IS_ERR(dev)) {
-+		err = PTR_ERR(dev);
-+		goto out_put_netdev;
-+	}
-+
-+	if (!dev->ops->dump_mpath) {
-+		err = -ENOSYS;
-+		goto out_err;
-+	}
-+
-+	rtnl_lock();
-+
-+	while (1) {
-+		err = dev->ops->dump_mpath(&dev->wiphy, netdev, path_idx,
-+					   dst, next_hop, &pinfo);
-+		if (err == -ENOENT)
- 			break;
--		if (++wp_idx < wp_start)
--			continue;
--		if_idx = 0;
-+		if (err)
-+			goto out_err_rtnl;
- 
--		mutex_lock(&dev->devlist_mtx);
--		list_for_each_entry(wdev, &dev->netdev_list, list) {
--			if (exit)
--				break;
--			if (++if_idx < if_start)
--				continue;
--			if (!dev->ops->dump_mpath)
--				continue;
-+		if (nl80211_send_mpath(skb, NETLINK_CB(cb->skb).pid,
-+				       cb->nlh->nlmsg_seq, NLM_F_MULTI,
-+				       netdev, dst, next_hop,
-+				       &pinfo) < 0)
-+			goto out;
- 
--			for (;; ++sta_idx) {
--				rtnl_lock();
--				err = dev->ops->dump_mpath(&dev->wiphy,
--						wdev->netdev, sta_idx, dst,
--						next_hop, &pinfo);
--				rtnl_unlock();
--				if (err) {
--					sta_idx = 0;
--					break;
--				}
--				if (nl80211_send_mpath(skb,
--						NETLINK_CB(cb->skb).pid,
--						cb->nlh->nlmsg_seq, NLM_F_MULTI,
--						wdev->netdev, dst, next_hop,
--						&pinfo) < 0) {
--					exit = 1;
--					break;
--				}
--			}
--		}
--		mutex_unlock(&dev->devlist_mtx);
-+		path_idx++;
- 	}
--	mutex_unlock(&cfg80211_drv_mutex);
- 
--	cb->args[0] = wp_idx;
--	cb->args[1] = if_idx;
--	cb->args[2] = sta_idx;
- 
--	return skb->len;
-+ out:
-+	cb->args[1] = path_idx;
-+	err = skb->len;
-+ out_err_rtnl:
-+	rtnl_unlock();
-+ out_err:
-+	cfg80211_put_dev(dev);
-+ out_put_netdev:
-+	dev_put(netdev);
-+
-+	return err;
- }
- 
- static int nl80211_get_mpath(struct sk_buff *skb, struct genl_info *info)
-@@ -1358,7 +1389,7 @@ static int nl80211_get_mpath(struct sk_b
- 
- 	dst = nla_data(info->attrs[NL80211_ATTR_MAC]);
- 
--	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
- 	if (err)
- 		return err;
- 
-@@ -1411,7 +1442,7 @@ static int nl80211_set_mpath(struct sk_b
- 	dst = nla_data(info->attrs[NL80211_ATTR_MAC]);
- 	next_hop = nla_data(info->attrs[NL80211_ATTR_MPATH_NEXT_HOP]);
- 
--	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
- 	if (err)
- 		return err;
- 
-@@ -1446,7 +1477,7 @@ static int nl80211_new_mpath(struct sk_b
- 	dst = nla_data(info->attrs[NL80211_ATTR_MAC]);
- 	next_hop = nla_data(info->attrs[NL80211_ATTR_MPATH_NEXT_HOP]);
- 
--	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
- 	if (err)
- 		return err;
- 
-@@ -1475,7 +1506,7 @@ static int nl80211_del_mpath(struct sk_b
- 	if (info->attrs[NL80211_ATTR_MAC])
- 		dst = nla_data(info->attrs[NL80211_ATTR_MAC]);
- 
--	err = get_drv_dev_by_info_ifindex(info, &drv, &dev);
-+	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
- 	if (err)
- 		return err;
- 
-
++	dev = alloc_etherdev_mq(sizeof(struct niu), NIU_NUM_TXCHAN);
+ 	if (!dev) {
+ 		dev_err(gen_dev, PFX "Etherdev alloc failed, aborting.\n");
+ 		return NULL;
 -- 
+1.5.6
 
