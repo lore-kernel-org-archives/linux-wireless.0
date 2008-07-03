@@ -1,117 +1,261 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:35008 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756276AbYGUJgw (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50623
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1757929AbYGCHE2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 05:36:52 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so428461nfc.21
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 02:36:51 -0700 (PDT)
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Force full register config after start()
-Date: Mon, 21 Jul 2008 11:52:44 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200807211152.44208.IvDoorn@gmail.com> (sfid-20080721_113656_059493_F1BF835E)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 3 Jul 2008 03:04:28 -0400
+Date: Thu, 03 Jul 2008 00:04:27 -0700 (PDT)
+Message-Id: <20080703.000427.00358559.davem@davemloft.net> (sfid-20080703_103233_096857_5511AEB9)
+To: netdev@vger.kernel.org
+CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
+	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
+Subject: [PATCH 22/39]: netdev: Move atomic queue state bits into
+ netdev_queue.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rt2x00 will only perform configuration changes from
-mac80211 when the configuration option has changed.
-This means it keeps track of the current active configuration
-and will check these values when the config() callback function
-is used.
 
-However this causes breakage when the interface has been
-brought down and up again, since all stored active values
-aren't reset while the registers might have.
-This is for example the case with rt61pci antenna registers which
-will jump to invalid values when the interface has been started.
-
-To make sure a full configuration takes place after the start()
-callback function, a new flag is added which will be checked
-during config() and skips the "what's changed" phase.
-
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
-John, please queue for 2.6.27, this prevents dead hardware after
-an ifdown & ifup sequence.
+ include/linux/netdevice.h |   55 +++++++++++++++++++++++++++++++-------------
+ include/net/pkt_sched.h   |    2 +-
+ net/sched/sch_generic.c   |   20 +++++++++-------
+ 3 files changed, 51 insertions(+), 26 deletions(-)
 
- drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
- drivers/net/wireless/rt2x00/rt2x00dev.c |    7 ++++---
- drivers/net/wireless/rt2x00/rt2x00mac.c |   13 ++++++++++++-
- 3 files changed, 17 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index fe5ee8a..37c9968 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -600,6 +600,7 @@ enum rt2x00_flags {
- 	DEVICE_STARTED_SUSPEND,
- 	DEVICE_ENABLED_RADIO,
- 	DEVICE_DISABLED_RADIO_HW,
-+	DEVICE_DIRTY_CONFIG,
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index d43bfc6..89bab7e 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -281,14 +281,12 @@ struct header_ops {
  
- 	/*
- 	 * Driver features
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 8c93eb8..f42283a 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -1013,6 +1013,7 @@ int rt2x00lib_start(struct rt2x00_dev *rt2x00dev)
- 	rt2x00dev->intf_associated = 0;
- 
- 	__set_bit(DEVICE_STARTED, &rt2x00dev->flags);
-+	__set_bit(DEVICE_DIRTY_CONFIG, &rt2x00dev->flags);
- 
- 	return 0;
- }
-@@ -1237,9 +1238,9 @@ int rt2x00lib_resume(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Reconfigure device.
- 	 */
--	rt2x00lib_config(rt2x00dev, &rt2x00dev->hw->conf, 1);
--	if (!rt2x00dev->hw->conf.radio_enabled)
--		rt2x00lib_disable_radio(rt2x00dev);
-+	retval = rt2x00mac_config(rt2x00dev->hw, &rt2x00dev->hw->conf);
-+	if (retval)
-+		goto exit;
- 
- 	/*
- 	 * Iterator over each active interface to
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 64a4fc6..f7fd995 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -310,6 +310,7 @@ EXPORT_SYMBOL_GPL(rt2x00mac_remove_interface);
- int rt2x00mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
+ enum netdev_state_t
  {
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
-+	int force_reconfig;
+-	__LINK_STATE_XOFF=0,
+ 	__LINK_STATE_START,
+ 	__LINK_STATE_PRESENT,
+ 	__LINK_STATE_SCHED,
+ 	__LINK_STATE_NOCARRIER,
+ 	__LINK_STATE_LINKWATCH_PENDING,
+ 	__LINK_STATE_DORMANT,
+-	__LINK_STATE_QDISC_RUNNING,
+ };
  
- 	/*
- 	 * Mac80211 might be calling this function while we are trying
-@@ -329,7 +330,17 @@ int rt2x00mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
- 			rt2x00lib_toggle_rx(rt2x00dev, STATE_RADIO_RX_OFF);
+ 
+@@ -448,10 +446,17 @@ static inline void napi_synchronize(const struct napi_struct *n)
+ # define napi_synchronize(n)	barrier()
+ #endif
+ 
++enum netdev_queue_state_t
++{
++	__QUEUE_STATE_XOFF,
++	__QUEUE_STATE_QDISC_RUNNING,
++};
++
+ struct netdev_queue {
+ 	spinlock_t		lock;
+ 	struct net_device	*dev;
+ 	struct Qdisc		*qdisc;
++	unsigned long		state;
+ 	struct sk_buff		*gso_skb;
+ 	spinlock_t		_xmit_lock;
+ 	int			xmit_lock_owner;
+@@ -950,9 +955,7 @@ extern void __netif_schedule(struct netdev_queue *dev_queue);
+ 
+ static inline void netif_schedule_queue(struct netdev_queue *dev_queue)
+ {
+-	struct net_device *dev = dev_queue->dev;
+-
+-	if (!test_bit(__LINK_STATE_XOFF, &dev->state))
++	if (!test_bit(__QUEUE_STATE_XOFF, &dev_queue->state))
+ 		__netif_schedule(dev_queue);
+ }
+ 
+@@ -967,9 +970,14 @@ static inline void netif_schedule(struct net_device *dev)
+  *
+  *	Allow upper layers to call the device hard_start_xmit routine.
+  */
++static inline void netif_tx_start_queue(struct netdev_queue *dev_queue)
++{
++	clear_bit(__QUEUE_STATE_XOFF, &dev_queue->state);
++}
++
+ static inline void netif_start_queue(struct net_device *dev)
+ {
+-	clear_bit(__LINK_STATE_XOFF, &dev->state);
++	netif_tx_start_queue(&dev->tx_queue);
+ }
+ 
+ /**
+@@ -979,16 +987,21 @@ static inline void netif_start_queue(struct net_device *dev)
+  *	Allow upper layers to call the device hard_start_xmit routine.
+  *	Used for flow control when transmit resources are available.
+  */
+-static inline void netif_wake_queue(struct net_device *dev)
++static inline void netif_tx_wake_queue(struct netdev_queue *dev_queue)
+ {
+ #ifdef CONFIG_NETPOLL_TRAP
+ 	if (netpoll_trap()) {
+-		clear_bit(__LINK_STATE_XOFF, &dev->state);
++		clear_bit(__QUEUE_STATE_XOFF, &dev_queue->state);
+ 		return;
+ 	}
+ #endif
+-	if (test_and_clear_bit(__LINK_STATE_XOFF, &dev->state))
+-		__netif_schedule(&dev->tx_queue);
++	if (test_and_clear_bit(__QUEUE_STATE_XOFF, &dev_queue->state))
++		__netif_schedule(dev_queue);
++}
++
++static inline void netif_wake_queue(struct net_device *dev)
++{
++	netif_tx_wake_queue(&dev->tx_queue);
+ }
+ 
+ /**
+@@ -998,9 +1011,14 @@ static inline void netif_wake_queue(struct net_device *dev)
+  *	Stop upper layers calling the device hard_start_xmit routine.
+  *	Used for flow control when transmit resources are unavailable.
+  */
++static inline void netif_tx_stop_queue(struct netdev_queue *dev_queue)
++{
++	set_bit(__QUEUE_STATE_XOFF, &dev_queue->state);
++}
++
+ static inline void netif_stop_queue(struct net_device *dev)
+ {
+-	set_bit(__LINK_STATE_XOFF, &dev->state);
++	netif_tx_stop_queue(&dev->tx_queue);
+ }
+ 
+ /**
+@@ -1009,9 +1027,14 @@ static inline void netif_stop_queue(struct net_device *dev)
+  *
+  *	Test if transmit queue on device is currently unable to send.
+  */
++static inline int netif_tx_queue_stopped(const struct netdev_queue *dev_queue)
++{
++	return test_bit(__QUEUE_STATE_XOFF, &dev_queue->state);
++}
++
+ static inline int netif_queue_stopped(const struct net_device *dev)
+ {
+-	return test_bit(__LINK_STATE_XOFF, &dev->state);
++	return netif_tx_queue_stopped(&dev->tx_queue);
+ }
+ 
+ /**
+@@ -1041,7 +1064,7 @@ static inline int netif_running(const struct net_device *dev)
+  */
+ static inline void netif_start_subqueue(struct net_device *dev, u16 queue_index)
+ {
+-	clear_bit(__LINK_STATE_XOFF, &dev->egress_subqueue[queue_index].state);
++	clear_bit(__QUEUE_STATE_XOFF, &dev->egress_subqueue[queue_index].state);
+ }
+ 
+ /**
+@@ -1057,7 +1080,7 @@ static inline void netif_stop_subqueue(struct net_device *dev, u16 queue_index)
+ 	if (netpoll_trap())
+ 		return;
+ #endif
+-	set_bit(__LINK_STATE_XOFF, &dev->egress_subqueue[queue_index].state);
++	set_bit(__QUEUE_STATE_XOFF, &dev->egress_subqueue[queue_index].state);
+ }
+ 
+ /**
+@@ -1070,7 +1093,7 @@ static inline void netif_stop_subqueue(struct net_device *dev, u16 queue_index)
+ static inline int __netif_subqueue_stopped(const struct net_device *dev,
+ 					 u16 queue_index)
+ {
+-	return test_bit(__LINK_STATE_XOFF,
++	return test_bit(__QUEUE_STATE_XOFF,
+ 			&dev->egress_subqueue[queue_index].state);
+ }
+ 
+@@ -1093,7 +1116,7 @@ static inline void netif_wake_subqueue(struct net_device *dev, u16 queue_index)
+ 	if (netpoll_trap())
+ 		return;
+ #endif
+-	if (test_and_clear_bit(__LINK_STATE_XOFF,
++	if (test_and_clear_bit(__QUEUE_STATE_XOFF,
+ 			       &dev->egress_subqueue[queue_index].state))
+ 		__netif_schedule(&dev->tx_queue);
+ }
+diff --git a/include/net/pkt_sched.h b/include/net/pkt_sched.h
+index 554d6c9..1e2263c 100644
+--- a/include/net/pkt_sched.h
++++ b/include/net/pkt_sched.h
+@@ -87,7 +87,7 @@ static inline void qdisc_run(struct netdev_queue *dev_queue)
+ 	struct net_device *dev = dev_queue->dev;
+ 
+ 	if (!netif_queue_stopped(dev) &&
+-	    !test_and_set_bit(__LINK_STATE_QDISC_RUNNING, &dev->state))
++	    !test_and_set_bit(__QUEUE_STATE_QDISC_RUNNING, &dev_queue->state))
+ 		__qdisc_run(dev_queue);
+ }
+ 
+diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
+index 00f4e3e..b919c0b 100644
+--- a/net/sched/sch_generic.c
++++ b/net/sched/sch_generic.c
+@@ -121,9 +121,9 @@ static inline int handle_dev_cpu_collision(struct sk_buff *skb,
+ /*
+  * NOTE: Called under queue->lock with locally disabled BH.
+  *
+- * __LINK_STATE_QDISC_RUNNING guarantees only one CPU can process this
+- * device at a time. queue->lock serializes queue accesses for
+- * this device AND dev_queue->qdisc pointer itself.
++ * __QUEUE_STATE_QDISC_RUNNING guarantees only one CPU can process
++ * this queue at a time. queue->lock serializes queue accesses for
++ * this queue AND dev_queue->qdisc pointer itself.
+  *
+  *  netif_tx_lock serializes accesses to device driver.
+  *
+@@ -206,7 +206,7 @@ void __qdisc_run(struct netdev_queue *dev_queue)
+ 		}
  	}
  
--	rt2x00lib_config(rt2x00dev, conf, 0);
-+	/*
-+	 * When the DEVICE_DIRTY_CONFIG flag is set, the device has recently
-+	 * been started and the configuration must be forced upon the hardware.
-+	 * Otherwise registers will not be intialized correctly and could
-+	 * result in non-working hardware because essential registers aren't
-+	 * initialized.
-+	 */
-+	force_reconfig =
-+	    __test_and_clear_bit(DEVICE_DIRTY_CONFIG, &rt2x00dev->flags);
-+
-+	rt2x00lib_config(rt2x00dev, conf, force_reconfig);
+-	clear_bit(__LINK_STATE_QDISC_RUNNING, &dev->state);
++	clear_bit(__QUEUE_STATE_QDISC_RUNNING, &dev_queue->state);
+ }
  
- 	/*
- 	 * Reenable RX only if the radio should be on.
+ static void dev_watchdog(unsigned long arg)
+@@ -605,9 +605,10 @@ static void dev_deactivate_queue(struct netdev_queue *dev_queue,
+ 
+ void dev_deactivate(struct net_device *dev)
+ {
++	struct netdev_queue *dev_queue = &dev->tx_queue;
+ 	int running;
+ 
+-	dev_deactivate_queue(&dev->tx_queue, &noop_qdisc);
++	dev_deactivate_queue(dev_queue, &noop_qdisc);
+ 
+ 	dev_watchdog_down(dev);
+ 
+@@ -616,16 +617,17 @@ void dev_deactivate(struct net_device *dev)
+ 
+ 	/* Wait for outstanding qdisc_run calls. */
+ 	do {
+-		while (test_bit(__LINK_STATE_QDISC_RUNNING, &dev->state))
++		while (test_bit(__QUEUE_STATE_QDISC_RUNNING, &dev_queue->state))
+ 			yield();
+ 
+ 		/*
+ 		 * Double-check inside queue lock to ensure that all effects
+ 		 * of the queue run are visible when we return.
+ 		 */
+-		spin_lock_bh(&dev->tx_queue.lock);
+-		running = test_bit(__LINK_STATE_QDISC_RUNNING, &dev->state);
+-		spin_unlock_bh(&dev->tx_queue.lock);
++		spin_lock_bh(&dev_queue->lock);
++		running = test_bit(__QUEUE_STATE_QDISC_RUNNING,
++				   &dev_queue->state);
++		spin_unlock_bh(&dev_queue->lock);
+ 
+ 		/*
+ 		 * The running flag should never be set at this point because
 -- 
-1.5.6.1
+1.5.6
 
