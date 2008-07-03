@@ -1,77 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:55950 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752688AbYGUNIs (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45285 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751190AbYGCO7E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 09:08:48 -0400
-Received: by py-out-1112.google.com with SMTP id p76so1032875pyb.10
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 06:08:47 -0700 (PDT)
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction
-	in	RCU.
-From: jamal <hadi@cyberus.ca>
-Reply-To: hadi@cyberus.ca
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: davem@davemloft.net, kaber@trash.net, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-In-Reply-To: <E1KKu2D-0002kd-00@gondolin.me.apana.org.au>
-References: <E1KKu2D-0002kd-00@gondolin.me.apana.org.au>
-Content-Type: text/plain
-Date: Mon, 21 Jul 2008 09:08:44 -0400
-Message-Id: <1216645724.4847.275.camel@localhost> (sfid-20080721_150859_777395_EFF563F6)
+	Thu, 3 Jul 2008 10:59:04 -0400
+Subject: Re: [PATCH 00/39]: New multiqueue TX implementation.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
+	Matheos.Worku@sun.com, linux-wireless@vger.kernel.org
+In-Reply-To: <69e28c910807030754j36d0bff0lf6dbb237d1130d44@mail.gmail.com> (sfid-20080703_165442_727981_F55C5327)
+References: <20080703.000146.168093325.davem@davemloft.net>
+	 <69e28c910807030754j36d0bff0lf6dbb237d1130d44@mail.gmail.com>
+	 (sfid-20080703_165442_727981_F55C5327)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LSm64rLfmPrx0iNPT4O6"
+Date: Thu, 03 Jul 2008 16:56:49 +0200
+Message-Id: <1215097009.9975.11.camel@johannes.berg> (sfid-20080703_165926_961752_C3FAC0D1)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-21-07 at 19:58 +0800, Herbert Xu wrote:
 
-> I think I get you now.  You're suggesting that we essentially
-> do what Dave has right now in the non-contending case, i.e.,
-> bypassing the qdisc so we get fully parallel processing until
-> one of the hardware queues seizes up.
+--=-LSm64rLfmPrx0iNPT4O6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-yes. That way there is no need for an intermediate queueing. As it is
-now, packets first get queued to qdisc then we dequeu and send to driver
-even when the driver would be happy to take it. That approach is fine
-if you want to support non-work conserving schedulers on single-hwqueue
-hardware.
+Can you please quote less?
 
-> At that point you'd stop all queues and make every packet go
-> through the software qdisc to ensure ordering.  This continues
-> until all queues have vacancies again.
+> Patch 15/39 appears to be missing from the series.
 
-I always visualize these as a single netdevice per hardware tx queue.
-If i understood correctly, ordering is taken care of already in the
-current patches because the  stateless filter selects a hardware-queue.
+I have it. If you don't you can look at it in the git tree.
 
-Dave has those queues sitting as a qdisc level (as pfifo) - which seems
-better in retrospect (than what i was thinking that they should sit in
-the driver) because one could decide they want to shape packets in the
-future on a per-virtual-customer-sharing-a-virtual-wire and attach an
-HTB instead.
+johannes
 
-The one thing i am unsure of still:
-I think it would be cleaner to just stop a single queue (instead of all)
-when one hardware queue fills up. i.e if there is no congestion on the
-other hardware queues, packets should continue to be fed to their
-hardware queues and not be buffered at qdisc level.
+--=-LSm64rLfmPrx0iNPT4O6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> If this is what you're suggesting, then I think that will offer
-> pretty much the same behaviour as what we've got, while still
-> offering at least some (perhaps even most, but that is debatable)
-> of the benefits of multi-queue.
-> 
-> At this point I don't think this is something that we need right
-> now, but it would be good to make sure that the architecture
-> allows such a thing to be implemented in future.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-I think it is a pretty good first start (I am a lot more optimistic to
-be honest).
-Parallelization would work if you can get X CPUs to send to X hardware
-queues concurently. Feasible in static host setup like virtualization
-environment where you can tie a vm to a cpu. Not very feasible in
-routing where you are driven to a random hardware tx queue by arriving
-packets.
+iQIcBAABAgAGBQJIbOiuAAoJEKVg1VMiehFYEnUP/3nnzkV8zEoTzkGdTSO2QFSC
+yw9N1uV6C+dgMRNKZNrGIMv//uyyNbAh2x1WMt/LKyouf3lamsi9Ggl6b1Hdv+UX
+VmFwP/Tz9EN5QFSv+jnxNEyC2/PS+VTPc1U0/KhUIbIaPGmUktf5rWbnmdND756G
+/ktyje9DkUbHZdv/n7GlkMJ9YpFT97+ltY/mM+ZzF4VkS466iGdr1zCStdcfX5Ov
+BoB40jVh8wuizTHvwMNPHDJO++OoZ2F4ubPn4D4ljmKulV9FzZZLH/DJQyqiB2mm
+JH3dAAT2sC2xig6JmFE/H4txOMdueskam5UIrrd7cldx+6VFIkXom6UX6qe553Jq
+vxIhBqIaSkQnoi38YX3aoyk94zChfEbm72iDGIm1UDRFaHSh8DgXBv8NJY/sEac0
+HTiqASKybd+gSa+apJLm8kDzd1b8mmW/qGrxMm+oot8GGaGV3ROt+bD798kNuNEZ
+3Q0QEsTILz3HCAeDPgdsC8FfSa6sx/Z8Wi8omlKIV4FUfHbv8CzO2vZJl9iOjIK2
+ECqapnK9jNh5KUCsPuYwAwdqPRmIi9rJu8pBKxvrYkwHViuKE68jZl0r9y4zbFah
+4x46Wqk24EW/TiN1C22zIoLND7GJ4EFW+0cxacfQ9aERCW+T1D6eNOapY8bJyEhy
+NksmnVTabwpz7KQjUVD+
+=XkGQ
+-----END PGP SIGNATURE-----
 
-cheers,
-jamal
+--=-LSm64rLfmPrx0iNPT4O6--
 
