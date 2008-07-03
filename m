@@ -1,82 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from BISCAYNE-ONE-STATION.MIT.EDU ([18.7.7.80]:33111 "EHLO
-	biscayne-one-station.mit.edu" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755080AbYGWVgw (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50895
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754362AbYGCMCY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 17:36:52 -0400
-To: yi.zhu@intel.com, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Potential iwlwifi locking problem in 2.6.26-git9
-From: "Theodore Ts'o" <tytso@MIT.EDU>
-Message-Id: <E1KLm0c-0002O6-RO@closure.thunk.org> (sfid-20080723_233701_661431_DD419F2F)
-Date: Wed, 23 Jul 2008 17:36:30 -0400
+	Thu, 3 Jul 2008 08:02:24 -0400
+Date: Thu, 03 Jul 2008 04:26:14 -0700 (PDT)
+Message-Id: <20080703.042614.244608628.davem@davemloft.net> (sfid-20080703_140435_681470_4B47F3AB)
+To: khc@pm.waw.pl
+Cc: netdev@vger.kernel.org, vinay@linux.vnet.ibm.com,
+	krkumar2@in.ibm.com, mchan@broadcom.com, Matheos.Worku@Sun.COM,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 26/39]: netdev: netdev_priv() can now be sane again.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <m3tzf7nrd7.fsf@maximus.localdomain>
+References: <20080703.000446.125029084.davem@davemloft.net>
+	<m3tzf7nrd7.fsf@maximus.localdomain>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Date: Thu, 03 Jul 2008 13:23:32 +0200
 
-Is this a new one?  I don't think I've seen this on LKML....
+> David Miller <davem@davemloft.net> writes:
+> 
+> > The private area of a netdev is now at a fixed offset once more.
+> >
+> > Unfortunately, some assumptions that netdev_priv() == netdev->priv
+> > crept back into the tree.  In particular this happened in the
+> > loopback driver.
+> 
+> Perhaps the netdev_priv() should be renamed to avoid confusion?
 
-      	      	    	       	    	    - Ted
+If all drivers call netdev_priv(), there is no confusion :)
 
-[  728.456792] 
-[  728.456795] =============================================
-[  728.456810] [ INFO: possible recursive locking detected ]
-[  728.456818] 2.6.26-05781-g44ea66a #25
-[  728.456823] ---------------------------------------------
-[  728.456830] NetworkManager/8287 is trying to acquire lock:
-[  728.456836]  (&dev->addr_list_lock){-...}, at: [<c028c81e>] dev_mc_sync+0x1c/0x59
-[  728.456867] 
-[  728.456869] but task is already holding lock:
-[  728.456875]  (&dev->addr_list_lock){-...}, at: [<c0287ffe>] dev_set_rx_mode+0x19/0x2b
-[  728.456894] 
-[  728.456895] other info that might help us debug this:
-[  728.456902] 2 locks held by NetworkManager/8287:
-[  728.456908]  #0:  (rtnl_mutex){--..}, at: [<c029150a>] rtnl_lock+0x14/0x16
-[  728.456929]  #1:  (&dev->addr_list_lock){-...}, at: [<c0287ffe>] dev_set_rx_mode+0x19/0x2b
-[  728.456949] 
-[  728.456951] stack backtrace:
-[  728.456961] Pid: 8287, comm: NetworkManager Not tainted 2.6.26-05781-g44ea66a #25
-[  728.456999]  [<c014568e>] __lock_acquire+0x99f/0xcc5
-[  728.457037]  [<c0144924>] ? trace_hardirqs_on+0xb/0xd
-[  728.457054]  [<c01448ce>] ? trace_hardirqs_on_caller+0xd2/0x11d
-[  728.457076]  [<c0145da6>] lock_acquire+0x6a/0x90
-[  728.457091]  [<c028c81e>] ? dev_mc_sync+0x1c/0x59
-[  728.457109]  [<c02f7189>] _spin_lock_bh+0x26/0x53
-[  728.457126]  [<c028c81e>] ? dev_mc_sync+0x1c/0x59
-[  728.457143]  [<c028c81e>] dev_mc_sync+0x1c/0x59
-[  728.457159]  [<f90bebd6>] ieee80211_set_multicast_list+0xca/0xd2 [mac80211]
-[  728.457223]  [<c0287f6c>] __dev_set_rx_mode+0x7e/0x81
-[  728.457239]  [<c0288005>] dev_set_rx_mode+0x20/0x2b
-[  728.457255]  [<c028ad54>] dev_open+0x84/0x9e
-[  728.457269]  [<c0288e9d>] dev_change_flags+0xa1/0x14f
-[  728.457286]  [<c0290af3>] do_setlink+0x250/0x300
-[  728.457308]  [<c02f7000>] ? _read_unlock+0x22/0x25
-[  728.457327]  [<c0291a8f>] rtnl_setlink+0xa9/0xc1
-[  728.457364]  [<c01448e4>] ? trace_hardirqs_on_caller+0xe8/0x11d
-[  728.457384]  [<c02919e6>] ? rtnl_setlink+0x0/0xc1
-[  728.457401]  [<c02916c7>] rtnetlink_rcv_msg+0x197/0x1b1
-[  728.457424]  [<c0291530>] ? rtnetlink_rcv_msg+0x0/0x1b1
-[  728.457441]  [<c029e55d>] netlink_rcv_skb+0x35/0x7a
-[  728.457460]  [<c0291528>] rtnetlink_rcv+0x1c/0x24
-[  728.457476]  [<c029e381>] netlink_unicast+0x1ad/0x20e
-[  728.457499]  [<c029eaca>] netlink_sendmsg+0x248/0x255
-[  728.457530]  [<c027e91d>] sock_sendmsg+0xe3/0xfe
-[  728.457562]  [<c0138a71>] ? autoremove_wake_function+0x0/0x35
-[  728.457583]  [<c010878a>] ? native_sched_clock+0xd5/0xf4
-[  728.457609]  [<c010857f>] ? sched_clock+0xb/0x1c
-[  728.457628]  [<c0142ca9>] ? lock_release_holdtime+0x3f/0x44
-[  728.457652]  [<c0208670>] ? copy_from_user+0x45/0x68
-[  728.457672]  [<c02852d6>] ? verify_iovec+0x45/0x73
-[  728.457693]  [<c027ea8a>] sys_sendmsg+0x152/0x1ad
-[  728.457713]  [<c027f541>] ? sys_recvmsg+0x177/0x184
-[  728.457734]  [<c019136e>] ? fget_light+0x95/0xb5
-[  728.457757]  [<c02088db>] ? copy_to_user+0x47/0x50
-[  728.457776]  [<c027f3b2>] ? move_addr_to_user+0x5b/0x73
-[  728.457796]  [<c027f717>] ? sys_getsockname+0x70/0x7b
-[  728.457814]  [<c02f702d>] ? _spin_unlock_bh+0x2a/0x2d
-[  728.457831]  [<c028045d>] ? release_sock+0xb3/0xbb
-[  728.457851]  [<c0281909>] ? sock_setsockopt+0x49d/0x4a8
-[  728.457874]  [<c0191384>] ? fget_light+0xab/0xb5
-[  728.457909]  [<c027fa05>] sys_socketcall+0x168/0x183
-[  728.457935]  [<c0103a0b>] sysenter_past_esp+0x78/0xc5
-[  728.457969]  =======================
+I plan to rename dev->priv to dev->_priv and fix all the fallout.
