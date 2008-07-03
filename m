@@ -1,16 +1,16 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50623
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50634
 	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1757929AbYGCHE2 (ORCPT
+	by vger.kernel.org with ESMTP id S1757956AbYGCHEc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:04:28 -0400
-Date: Thu, 03 Jul 2008 00:04:27 -0700 (PDT)
-Message-Id: <20080703.000427.00358559.davem@davemloft.net> (sfid-20080703_103233_096857_5511AEB9)
+	Thu, 3 Jul 2008 03:04:32 -0400
+Date: Thu, 03 Jul 2008 00:04:31 -0700 (PDT)
+Message-Id: <20080703.000431.36765176.davem@davemloft.net> (sfid-20080703_103229_783510_71666E6E)
 To: netdev@vger.kernel.org
 CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
 	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
-Subject: [PATCH 22/39]: netdev: Move atomic queue state bits into
- netdev_queue.
+Subject: [PATCH 23/39]: net: In core generic transmit paths, use queue
+ aware tests.
 From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -18,244 +18,216 @@ Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
+Even pktgen is mostly queue aware now.
+
 Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
- include/linux/netdevice.h |   55 +++++++++++++++++++++++++++++++-------------
- include/net/pkt_sched.h   |    2 +-
- net/sched/sch_generic.c   |   20 +++++++++-------
- 3 files changed, 51 insertions(+), 26 deletions(-)
+ include/linux/netdevice.h |    3 ++-
+ include/net/pkt_sched.h   |    4 +---
+ net/core/dev.c            |   11 +++++------
+ net/core/netpoll.c        |    8 +++-----
+ net/core/pktgen.c         |   16 +++++++---------
+ net/sched/sch_generic.c   |    5 ++---
+ net/sched/sch_teql.c      |    6 ++----
+ 7 files changed, 22 insertions(+), 31 deletions(-)
 
 diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index d43bfc6..89bab7e 100644
+index 89bab7e..2ab4d92 100644
 --- a/include/linux/netdevice.h
 +++ b/include/linux/netdevice.h
-@@ -281,14 +281,12 @@ struct header_ops {
+@@ -1162,7 +1162,8 @@ extern int		dev_set_mtu(struct net_device *, int);
+ extern int		dev_set_mac_address(struct net_device *,
+ 					    struct sockaddr *);
+ extern int		dev_hard_start_xmit(struct sk_buff *skb,
+-					    struct net_device *dev);
++					    struct net_device *dev,
++					    struct netdev_queue *dev_queue);
  
- enum netdev_state_t
- {
--	__LINK_STATE_XOFF=0,
- 	__LINK_STATE_START,
- 	__LINK_STATE_PRESENT,
- 	__LINK_STATE_SCHED,
- 	__LINK_STATE_NOCARRIER,
- 	__LINK_STATE_LINKWATCH_PENDING,
- 	__LINK_STATE_DORMANT,
--	__LINK_STATE_QDISC_RUNNING,
- };
+ extern int		netdev_budget;
  
+diff --git a/include/net/pkt_sched.h b/include/net/pkt_sched.h
+index 1e2263c..89b106e 100644
+--- a/include/net/pkt_sched.h
++++ b/include/net/pkt_sched.h
+@@ -84,9 +84,7 @@ extern void __qdisc_run(struct netdev_queue *dev_queue);
  
-@@ -448,10 +446,17 @@ static inline void napi_synchronize(const struct napi_struct *n)
- # define napi_synchronize(n)	barrier()
- #endif
- 
-+enum netdev_queue_state_t
-+{
-+	__QUEUE_STATE_XOFF,
-+	__QUEUE_STATE_QDISC_RUNNING,
-+};
-+
- struct netdev_queue {
- 	spinlock_t		lock;
- 	struct net_device	*dev;
- 	struct Qdisc		*qdisc;
-+	unsigned long		state;
- 	struct sk_buff		*gso_skb;
- 	spinlock_t		_xmit_lock;
- 	int			xmit_lock_owner;
-@@ -950,9 +955,7 @@ extern void __netif_schedule(struct netdev_queue *dev_queue);
- 
- static inline void netif_schedule_queue(struct netdev_queue *dev_queue)
+ static inline void qdisc_run(struct netdev_queue *dev_queue)
  {
 -	struct net_device *dev = dev_queue->dev;
 -
--	if (!test_bit(__LINK_STATE_XOFF, &dev->state))
-+	if (!test_bit(__QUEUE_STATE_XOFF, &dev_queue->state))
- 		__netif_schedule(dev_queue);
- }
- 
-@@ -967,9 +970,14 @@ static inline void netif_schedule(struct net_device *dev)
-  *
-  *	Allow upper layers to call the device hard_start_xmit routine.
-  */
-+static inline void netif_tx_start_queue(struct netdev_queue *dev_queue)
-+{
-+	clear_bit(__QUEUE_STATE_XOFF, &dev_queue->state);
-+}
-+
- static inline void netif_start_queue(struct net_device *dev)
- {
--	clear_bit(__LINK_STATE_XOFF, &dev->state);
-+	netif_tx_start_queue(&dev->tx_queue);
- }
- 
- /**
-@@ -979,16 +987,21 @@ static inline void netif_start_queue(struct net_device *dev)
-  *	Allow upper layers to call the device hard_start_xmit routine.
-  *	Used for flow control when transmit resources are available.
-  */
--static inline void netif_wake_queue(struct net_device *dev)
-+static inline void netif_tx_wake_queue(struct netdev_queue *dev_queue)
- {
- #ifdef CONFIG_NETPOLL_TRAP
- 	if (netpoll_trap()) {
--		clear_bit(__LINK_STATE_XOFF, &dev->state);
-+		clear_bit(__QUEUE_STATE_XOFF, &dev_queue->state);
- 		return;
- 	}
- #endif
--	if (test_and_clear_bit(__LINK_STATE_XOFF, &dev->state))
--		__netif_schedule(&dev->tx_queue);
-+	if (test_and_clear_bit(__QUEUE_STATE_XOFF, &dev_queue->state))
-+		__netif_schedule(dev_queue);
-+}
-+
-+static inline void netif_wake_queue(struct net_device *dev)
-+{
-+	netif_tx_wake_queue(&dev->tx_queue);
- }
- 
- /**
-@@ -998,9 +1011,14 @@ static inline void netif_wake_queue(struct net_device *dev)
-  *	Stop upper layers calling the device hard_start_xmit routine.
-  *	Used for flow control when transmit resources are unavailable.
-  */
-+static inline void netif_tx_stop_queue(struct netdev_queue *dev_queue)
-+{
-+	set_bit(__QUEUE_STATE_XOFF, &dev_queue->state);
-+}
-+
- static inline void netif_stop_queue(struct net_device *dev)
- {
--	set_bit(__LINK_STATE_XOFF, &dev->state);
-+	netif_tx_stop_queue(&dev->tx_queue);
- }
- 
- /**
-@@ -1009,9 +1027,14 @@ static inline void netif_stop_queue(struct net_device *dev)
-  *
-  *	Test if transmit queue on device is currently unable to send.
-  */
-+static inline int netif_tx_queue_stopped(const struct netdev_queue *dev_queue)
-+{
-+	return test_bit(__QUEUE_STATE_XOFF, &dev_queue->state);
-+}
-+
- static inline int netif_queue_stopped(const struct net_device *dev)
- {
--	return test_bit(__LINK_STATE_XOFF, &dev->state);
-+	return netif_tx_queue_stopped(&dev->tx_queue);
- }
- 
- /**
-@@ -1041,7 +1064,7 @@ static inline int netif_running(const struct net_device *dev)
-  */
- static inline void netif_start_subqueue(struct net_device *dev, u16 queue_index)
- {
--	clear_bit(__LINK_STATE_XOFF, &dev->egress_subqueue[queue_index].state);
-+	clear_bit(__QUEUE_STATE_XOFF, &dev->egress_subqueue[queue_index].state);
- }
- 
- /**
-@@ -1057,7 +1080,7 @@ static inline void netif_stop_subqueue(struct net_device *dev, u16 queue_index)
- 	if (netpoll_trap())
- 		return;
- #endif
--	set_bit(__LINK_STATE_XOFF, &dev->egress_subqueue[queue_index].state);
-+	set_bit(__QUEUE_STATE_XOFF, &dev->egress_subqueue[queue_index].state);
- }
- 
- /**
-@@ -1070,7 +1093,7 @@ static inline void netif_stop_subqueue(struct net_device *dev, u16 queue_index)
- static inline int __netif_subqueue_stopped(const struct net_device *dev,
- 					 u16 queue_index)
- {
--	return test_bit(__LINK_STATE_XOFF,
-+	return test_bit(__QUEUE_STATE_XOFF,
- 			&dev->egress_subqueue[queue_index].state);
- }
- 
-@@ -1093,7 +1116,7 @@ static inline void netif_wake_subqueue(struct net_device *dev, u16 queue_index)
- 	if (netpoll_trap())
- 		return;
- #endif
--	if (test_and_clear_bit(__LINK_STATE_XOFF,
-+	if (test_and_clear_bit(__QUEUE_STATE_XOFF,
- 			       &dev->egress_subqueue[queue_index].state))
- 		__netif_schedule(&dev->tx_queue);
- }
-diff --git a/include/net/pkt_sched.h b/include/net/pkt_sched.h
-index 554d6c9..1e2263c 100644
---- a/include/net/pkt_sched.h
-+++ b/include/net/pkt_sched.h
-@@ -87,7 +87,7 @@ static inline void qdisc_run(struct netdev_queue *dev_queue)
- 	struct net_device *dev = dev_queue->dev;
- 
- 	if (!netif_queue_stopped(dev) &&
--	    !test_and_set_bit(__LINK_STATE_QDISC_RUNNING, &dev->state))
-+	    !test_and_set_bit(__QUEUE_STATE_QDISC_RUNNING, &dev_queue->state))
+-	if (!netif_queue_stopped(dev) &&
++	if (!netif_tx_queue_stopped(dev_queue) &&
+ 	    !test_and_set_bit(__QUEUE_STATE_QDISC_RUNNING, &dev_queue->state))
  		__qdisc_run(dev_queue);
  }
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 039ceff..5209a3f 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -1598,7 +1598,8 @@ static int dev_gso_segment(struct sk_buff *skb)
+ 	return 0;
+ }
  
-diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
-index 00f4e3e..b919c0b 100644
---- a/net/sched/sch_generic.c
-+++ b/net/sched/sch_generic.c
-@@ -121,9 +121,9 @@ static inline int handle_dev_cpu_collision(struct sk_buff *skb,
- /*
-  * NOTE: Called under queue->lock with locally disabled BH.
-  *
-- * __LINK_STATE_QDISC_RUNNING guarantees only one CPU can process this
-- * device at a time. queue->lock serializes queue accesses for
-- * this device AND dev_queue->qdisc pointer itself.
-+ * __QUEUE_STATE_QDISC_RUNNING guarantees only one CPU can process
-+ * this queue at a time. queue->lock serializes queue accesses for
-+ * this queue AND dev_queue->qdisc pointer itself.
-  *
-  *  netif_tx_lock serializes accesses to device driver.
-  *
-@@ -206,7 +206,7 @@ void __qdisc_run(struct netdev_queue *dev_queue)
+-int dev_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
++int dev_hard_start_xmit(struct sk_buff *skb, struct net_device *dev,
++			struct netdev_queue *dev_queue)
+ {
+ 	if (likely(!skb->next)) {
+ 		if (!list_empty(&ptype_all))
+@@ -1627,8 +1628,7 @@ gso:
+ 			skb->next = nskb;
+ 			return rc;
+ 		}
+-		if (unlikely((netif_queue_stopped(dev) ||
+-			     netif_subqueue_stopped(dev, skb)) &&
++		if (unlikely(netif_tx_queue_stopped(dev_queue) &&
+ 			     skb->next))
+ 			return NETDEV_TX_BUSY;
+ 	} while (skb->next);
+@@ -1762,10 +1762,9 @@ gso:
+ 
+ 			HARD_TX_LOCK(dev, txq, cpu);
+ 
+-			if (!netif_queue_stopped(dev) &&
+-			    !netif_subqueue_stopped(dev, skb)) {
++			if (!netif_tx_queue_stopped(txq)) {
+ 				rc = 0;
+-				if (!dev_hard_start_xmit(skb, dev)) {
++				if (!dev_hard_start_xmit(skb, dev, txq)) {
+ 					HARD_TX_UNLOCK(dev, txq);
+ 					goto out;
+ 				}
+diff --git a/net/core/netpoll.c b/net/core/netpoll.c
+index 8fb134d..2271d19 100644
+--- a/net/core/netpoll.c
++++ b/net/core/netpoll.c
+@@ -66,9 +66,8 @@ static void queue_process(struct work_struct *work)
+ 
+ 		local_irq_save(flags);
+ 		netif_tx_lock(dev);
+-		if ((netif_queue_stopped(dev) ||
+-		     netif_subqueue_stopped(dev, skb)) ||
+-		     dev->hard_start_xmit(skb, dev) != NETDEV_TX_OK) {
++		if (netif_subqueue_stopped(dev, skb) ||
++		    dev->hard_start_xmit(skb, dev) != NETDEV_TX_OK) {
+ 			skb_queue_head(&npinfo->txq, skb);
+ 			netif_tx_unlock(dev);
+ 			local_irq_restore(flags);
+@@ -285,8 +284,7 @@ static void netpoll_send_skb(struct netpoll *np, struct sk_buff *skb)
+ 		for (tries = jiffies_to_usecs(1)/USEC_PER_POLL;
+ 		     tries > 0; --tries) {
+ 			if (netif_tx_trylock(dev)) {
+-				if (!netif_queue_stopped(dev) &&
+-				    !netif_subqueue_stopped(dev, skb))
++				if (!netif_subqueue_stopped(dev, skb))
+ 					status = dev->hard_start_xmit(skb, dev);
+ 				netif_tx_unlock(dev);
+ 
+diff --git a/net/core/pktgen.c b/net/core/pktgen.c
+index fdf5377..f6dc5b3 100644
+--- a/net/core/pktgen.c
++++ b/net/core/pktgen.c
+@@ -3262,6 +3262,7 @@ static void pktgen_rem_thread(struct pktgen_thread *t)
+ 
+ static __inline__ void pktgen_xmit(struct pktgen_dev *pkt_dev)
+ {
++	struct netdev_queue *odev_queue;
+ 	struct net_device *odev = NULL;
+ 	__u64 idle_start = 0;
+ 	int ret;
+@@ -3285,9 +3286,8 @@ static __inline__ void pktgen_xmit(struct pktgen_dev *pkt_dev)
  		}
  	}
  
--	clear_bit(__LINK_STATE_QDISC_RUNNING, &dev->state);
-+	clear_bit(__QUEUE_STATE_QDISC_RUNNING, &dev_queue->state);
- }
+-	if ((netif_queue_stopped(odev) ||
+-	     (pkt_dev->skb &&
+-	      netif_subqueue_stopped(odev, pkt_dev->skb))) ||
++	odev_queue = &odev->tx_queue;
++	if (netif_tx_queue_stopped(odev_queue) ||
+ 	    need_resched()) {
+ 		idle_start = getCurUs();
  
- static void dev_watchdog(unsigned long arg)
-@@ -605,9 +605,10 @@ static void dev_deactivate_queue(struct netdev_queue *dev_queue,
+@@ -3303,8 +3303,7 @@ static __inline__ void pktgen_xmit(struct pktgen_dev *pkt_dev)
  
- void dev_deactivate(struct net_device *dev)
+ 		pkt_dev->idle_acc += getCurUs() - idle_start;
+ 
+-		if (netif_queue_stopped(odev) ||
+-		    netif_subqueue_stopped(odev, pkt_dev->skb)) {
++		if (netif_tx_queue_stopped(odev_queue)) {
+ 			pkt_dev->next_tx_us = getCurUs();	/* TODO */
+ 			pkt_dev->next_tx_ns = 0;
+ 			goto out;	/* Try the next interface */
+@@ -3331,9 +3330,8 @@ static __inline__ void pktgen_xmit(struct pktgen_dev *pkt_dev)
+ 		}
+ 	}
+ 
+-	netif_tx_lock_bh(odev);
+-	if (!netif_queue_stopped(odev) &&
+-	    !netif_subqueue_stopped(odev, pkt_dev->skb)) {
++	__netif_tx_lock_bh(odev_queue);
++	if (!netif_tx_queue_stopped(odev_queue)) {
+ 
+ 		atomic_inc(&(pkt_dev->skb->users));
+ 	      retry_now:
+@@ -3377,7 +3375,7 @@ static __inline__ void pktgen_xmit(struct pktgen_dev *pkt_dev)
+ 		pkt_dev->next_tx_ns = 0;
+ 	}
+ 
+-	netif_tx_unlock_bh(odev);
++	__netif_tx_unlock_bh(odev_queue);
+ 
+ 	/* If pkt_dev->count is zero, then run forever */
+ 	if ((pkt_dev->count != 0) && (pkt_dev->sofar >= pkt_dev->count)) {
+diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
+index b919c0b..1092d54 100644
+--- a/net/sched/sch_generic.c
++++ b/net/sched/sch_generic.c
+@@ -156,7 +156,7 @@ static inline int qdisc_restart(struct netdev_queue *dev_queue)
+ 
+ 	HARD_TX_LOCK(dev, dev_queue, smp_processor_id());
+ 	if (!netif_subqueue_stopped(dev, skb))
+-		ret = dev_hard_start_xmit(skb, dev);
++		ret = dev_hard_start_xmit(skb, dev, dev_queue);
+ 	HARD_TX_UNLOCK(dev, dev_queue);
+ 
+ 	spin_lock(&dev_queue->lock);
+@@ -188,11 +188,10 @@ static inline int qdisc_restart(struct netdev_queue *dev_queue)
+ 
+ void __qdisc_run(struct netdev_queue *dev_queue)
  {
-+	struct netdev_queue *dev_queue = &dev->tx_queue;
- 	int running;
+-	struct net_device *dev = dev_queue->dev;
+ 	unsigned long start_time = jiffies;
  
--	dev_deactivate_queue(&dev->tx_queue, &noop_qdisc);
-+	dev_deactivate_queue(dev_queue, &noop_qdisc);
- 
- 	dev_watchdog_down(dev);
- 
-@@ -616,16 +617,17 @@ void dev_deactivate(struct net_device *dev)
- 
- 	/* Wait for outstanding qdisc_run calls. */
- 	do {
--		while (test_bit(__LINK_STATE_QDISC_RUNNING, &dev->state))
-+		while (test_bit(__QUEUE_STATE_QDISC_RUNNING, &dev_queue->state))
- 			yield();
+ 	while (qdisc_restart(dev_queue)) {
+-		if (netif_queue_stopped(dev))
++		if (netif_tx_queue_stopped(dev_queue))
+ 			break;
  
  		/*
- 		 * Double-check inside queue lock to ensure that all effects
- 		 * of the queue run are visible when we return.
- 		 */
--		spin_lock_bh(&dev->tx_queue.lock);
--		running = test_bit(__LINK_STATE_QDISC_RUNNING, &dev->state);
--		spin_unlock_bh(&dev->tx_queue.lock);
-+		spin_lock_bh(&dev_queue->lock);
-+		running = test_bit(__QUEUE_STATE_QDISC_RUNNING,
-+				   &dev_queue->state);
-+		spin_unlock_bh(&dev_queue->lock);
+diff --git a/net/sched/sch_teql.c b/net/sched/sch_teql.c
+index 8ac0598..16d975f 100644
+--- a/net/sched/sch_teql.c
++++ b/net/sched/sch_teql.c
+@@ -288,8 +288,7 @@ restart:
  
- 		/*
- 		 * The running flag should never be set at this point because
+ 		if (slave->tx_queue.qdisc_sleeping != q)
+ 			continue;
+-		if (netif_queue_stopped(slave) ||
+-		    __netif_subqueue_stopped(slave, subq) ||
++		if (__netif_subqueue_stopped(slave, subq) ||
+ 		    !netif_running(slave)) {
+ 			busy = 1;
+ 			continue;
+@@ -298,8 +297,7 @@ restart:
+ 		switch (teql_resolve(skb, skb_res, slave)) {
+ 		case 0:
+ 			if (netif_tx_trylock(slave)) {
+-				if (!netif_queue_stopped(slave) &&
+-				    !__netif_subqueue_stopped(slave, subq) &&
++				if (!__netif_subqueue_stopped(slave, subq) &&
+ 				    slave->hard_start_xmit(skb, slave) == 0) {
+ 					netif_tx_unlock(slave);
+ 					master->slaves = NEXT_SLAVE(q);
 -- 
 1.5.6
 
