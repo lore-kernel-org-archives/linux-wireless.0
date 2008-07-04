@@ -1,37 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.234]:50657 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752329AbYGINEE (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.191]:15773 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751433AbYGDMuF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 09:04:04 -0400
-Received: by wr-out-0506.google.com with SMTP id 69so2127384wri.5
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 06:04:03 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 0/3] rt2x00 update
-Date: Wed, 9 Jul 2008 15:11:14 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>
+	Fri, 4 Jul 2008 08:50:05 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so365081nfc.21
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Jul 2008 05:50:03 -0700 (PDT)
+To: linville@tuxdriver.com
+Subject: [PATCH 2/4 v2] rt2x00: Decrease alignment headroom
+Date: Fri, 4 Jul 2008 14:56:07 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+References: <200807041340.28103.IvDoorn@gmail.com> <200807041341.29802.IvDoorn@gmail.com>
+In-Reply-To: <200807041341.29802.IvDoorn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="utf-8"
-Message-Id: <200807091511.14288.IvDoorn@gmail.com> (sfid-20080709_150408_462811_DB0B426A)
+Message-Id: <200807041456.08029.IvDoorn@gmail.com> (sfid-20080704_145012_441356_518705E9)
 From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+We only need 4 bytes of headroom for alignment
+purposes in the RX frame. It was previously higher
+for optimization purposes which are no longer
+possible due to DMA mappings.
 
-The following 3 patches are intended on top of
-the patch series "mac80211 interface (config) cleanups"
-which were send to the list by Johannes.
+v2: Fix patch error
 
-The first one is a mac80211 bugfix for drivers that require
-the sequence counting to be done in software.
-The second is a minor update for CTS protection support in
-rt2x00lib. There aren't any users for it at this time, but it is
-small, harmless and not really worth the effor for keepin it
-seperate. ;)
-The last one cleans up beacon handling in rt2x00 which was
-possible because of Johannes' patch series.
-
-Ivo
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index 8e86611..3ddce53 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -45,10 +45,11 @@ struct sk_buff *rt2x00queue_alloc_rxskb(struct rt2x00_dev *rt2x00dev,
+ 	frame_size = entry->queue->data_size + entry->queue->desc_size;
+ 
+ 	/*
+-	 * Reserve a few bytes extra headroom to allow drivers some moving
+-	 * space (e.g. for alignment), while keeping the skb aligned.
++	 * The payload should be aligned to a 4-byte boundary,
++	 * this means we need at least 3 bytes for moving the frame
++	 * into the correct offset.
+ 	 */
+-	reserved_size = 8;
++	reserved_size = 4;
+ 
+ 	/*
+ 	 * Allocate skbuffer.
