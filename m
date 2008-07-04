@@ -1,114 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qmta07.westchester.pa.mail.comcast.net ([76.96.62.64]:45108
-	"EHLO QMTA07.westchester.pa.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750817AbYGFES1 (ORCPT
+Received: from qmta05.emeryville.ca.mail.comcast.net ([76.96.30.48]:45425 "EHLO
+	QMTA05.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751629AbYGDV4V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jul 2008 00:18:27 -0400
-Message-ID: <4870556A.5050002@gentoo.org> (sfid-20080706_061831_175291_526004F6)
-Date: Sun, 06 Jul 2008 00:17:30 -0500
+	Fri, 4 Jul 2008 17:56:21 -0400
+Message-ID: <486EA910.80408@gentoo.org> (sfid-20080704_235624_726535_A49156D3)
+Date: Fri, 04 Jul 2008 17:49:52 -0500
 From: Daniel Drake <dsd@gentoo.org>
 MIME-Version: 1.0
 To: wireless <linux-wireless@vger.kernel.org>
 CC: bruno@thinktube.com, vlado@work.ksp.sk
-Subject: Re: mac80211 ad-hoc problems
-References: <486EA910.80408@gentoo.org>
-In-Reply-To: <486EA910.80408@gentoo.org>
-Content-Type: multipart/mixed;
- boundary="------------010906050401070908050506"
+Subject: mac80211 ad-hoc problems
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------010906050401070908050506
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Hi,
 
-Daniel Drake wrote:
-> Looking at the code, ieee80211_sta_find_ibss() in mlme.c, I can't see 
-> how it's supposed to work.  It's clear why it said it found the other 
-> network, because the ESSID matches. But it's also clear why it didn't 
-> actually bother to try and connect: the ieee80211_sta_join_ibss() call 
-> is surrounded in an if condition which checks the BSSID - but I 
-> (intentionally) didn't specify one, so the condition evaluates as false.
+I'm trying to implement ad-hoc mode in zd1211rw. I partially succeeded 
+and posted a patch, but now I'm trying to investigate why I had trouble 
+getting my laptops to talk...
 
-Oh, I misread the code. I thought it was only looking for a 
-user-specified BSSID (but I had not specified one). Actually it is 
-checking that we aren't attempting to join the same network that we are 
-already on.
+I'm running iwl4965 on one box and zd1211rw on another, both running 
+2.6.26-rc8
 
-The problem that was preventing me from getting connectivity was 
-channel. It was only accepting IBSSes on local->hw.conf.channel, so I 
-was required to do "iwconfig wlan0 channel X" first.
+I create the network on the iwl4965 system:
+	iwconfig wlan0 mode ad-hoc
+	ifconfig wlan0 up
+	iwconfig wlan0 essid dev
 
-Is this by design, or is automatic channel selection a desirable 
-feature? see attached patch, which seems to be working
+And then I try to connect on the zd1211rw system:
+	iwconfig wlan0 mode ad-hoc
+	ifconfig wlan0 up
+	iwconfig wlan0 essid dev
 
+If that's not the right way to create an ad-hoc network between 2 
+systems, please discard the rest of this email and instead tell me how 
+it should be done...
+
+
+After running the 3rd command on the zd1211rw system, this happens:
+
+<7>eth7: sta_find_ibss (active_ibss=0)
+<7>   bssid=66:18:74:24:c1:d8 found
+<7>   sta_find_ibss: selected 66:18:74:24:c1:d8 current 00:00:00:00:00:00
+<7>   did not try to join ibss
+<7>eth7: Trigger new scan to find an IBSS to join
+<7>phy5: HW CONFIG: freq=2412
+<7>phy5: HW CONFIG: freq=2417
+<7>phy5: HW CONFIG: freq=2422
+<7>phy5: HW CONFIG: freq=2427
+<7>phy5: HW CONFIG: freq=2432
+<7>phy5: HW CONFIG: freq=2437
+<7>phy5: HW CONFIG: freq=2442
+<7>phy5: HW CONFIG: freq=2447
+<7>phy5: HW CONFIG: freq=2452
+<7>phy5: HW CONFIG: freq=2457
+<7>phy5: HW CONFIG: freq=2462
+<7>phy5: HW CONFIG: freq=2467
+<7>phy5: HW CONFIG: freq=2472
+<4>__ratelimit: 4 messages suppressed
+<7>phy5: HW CONFIG: freq=2462
+<7>eth7: sta_find_ibss (active_ibss=0)
+<7>   bssid=66:18:74:24:c1:d8 found
+<7>   sta_find_ibss: selected 66:18:74:24:c1:d8 current 00:00:00:00:00:00
+<7>   did not try to join ibss
+<7>phy5: Adding new IBSS station 00:16:6f:47:00:46 (dev=eth7)
+<7>phy5: Allocated STA 00:16:6f:47:00:46
+<7>phy5: Inserted STA 00:16:6f:47:00:46
+<7>eth7: sta_find_ibss (active_ibss=0)
+<7>   bssid=66:18:74:24:c1:d8 found
+<7>   sta_find_ibss: selected 66:18:74:24:c1:d8 current 00:00:00:00:00:00
+<7>   did not try to join ibss
+<7>eth7: Trigger new scan to find an IBSS to join
+<7>phy5: HW CONFIG: freq=2412
+<7>phy5: HW CONFIG: freq=2417
+
+and soon after it creates its own IBSS.
+
+Should it not have joined the IBSS it found? That one 
+(66:18:74:24:c1:d8) is indeed the network I wanted it to connect to, 
+hosted on my other laptop.
+
+Looking at the code, ieee80211_sta_find_ibss() in mlme.c, I can't see 
+how it's supposed to work.  It's clear why it said it found the other 
+network, because the ESSID matches. But it's also clear why it didn't 
+actually bother to try and connect: the ieee80211_sta_join_ibss() call 
+is surrounded in an if condition which checks the BSSID - but I 
+(intentionally) didn't specify one, so the condition evaluates as false.
+
+Is this a bug, or am I required to specify an ESSID *and* a BSSID in 
+order to connect to a pre-existing IBSS network?
+
+Thanks,
 Daniel
-
---------------010906050401070908050506
-Content-Type: text/plain;
- name="ibss-channel.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ibss-channel.txt"
-
-[PATCH] mac80211: automatic IBSS channel selection
-
-When joining an ad-hoc network, the user is currently required to specify
-the channel. The network will not be joined otherwise, unless it happens
-to be sitting on the currently active channel.
-
-This patch implements automatic channel selection when the user has not
-locked the interface onto a specific channel.
-
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
-
-Index: linux-2.6.26-rc8/net/mac80211/mlme.c
-===================================================================
---- linux-2.6.26-rc8.orig/net/mac80211/mlme.c
-+++ linux-2.6.26-rc8/net/mac80211/mlme.c
-@@ -3582,6 +3582,7 @@ static int ieee80211_sta_find_ibss(struc
- 	int found = 0;
- 	u8 bssid[ETH_ALEN];
- 	int active_ibss;
-+	int search_freq;
- 	DECLARE_MAC_BUF(mac);
- 	DECLARE_MAC_BUF(mac2);
- 
-@@ -3614,11 +3615,21 @@ static int ieee80211_sta_find_ibss(struc
- 	printk(KERN_DEBUG "   sta_find_ibss: selected %s current "
- 	       "%s\n", print_mac(mac, bssid), print_mac(mac2, ifsta->bssid));
- #endif /* CONFIG_MAC80211_IBSS_DEBUG */
--	if (found && memcmp(ifsta->bssid, bssid, ETH_ALEN) != 0 &&
--	    (bss = ieee80211_rx_bss_get(dev, bssid,
--					local->hw.conf.channel->center_freq,
--					ifsta->ssid, ifsta->ssid_len))) {
-+
-+	if (found && memcmp(ifsta->bssid, bssid, ETH_ALEN) != 0) {
- 		int ret;
-+		int search_freq;
-+
-+		if (ifsta->flags & IEEE80211_STA_AUTO_CHANNEL_SEL)
-+			search_freq = bss->freq;
-+		else
-+			search_freq = local->hw.conf.channel->center_freq;
-+
-+		bss = ieee80211_rx_bss_get(dev, bssid, search_freq,
-+					   ifsta->ssid, ifsta->ssid_len);
-+		if (!bss)
-+			goto dont_join;
-+
- 		printk(KERN_DEBUG "%s: Selected IBSS BSSID %s"
- 		       " based on configured SSID\n",
- 		       dev->name, print_mac(mac, bssid));
-@@ -3626,6 +3637,8 @@ static int ieee80211_sta_find_ibss(struc
- 		ieee80211_rx_bss_put(dev, bss);
- 		return ret;
- 	}
-+
-+dont_join:
- #ifdef CONFIG_MAC80211_IBSS_DEBUG
- 	printk(KERN_DEBUG "   did not try to join ibss\n");
- #endif /* CONFIG_MAC80211_IBSS_DEBUG */
-
---------------010906050401070908050506--
