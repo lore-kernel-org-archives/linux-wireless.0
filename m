@@ -1,131 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:59762 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758394AbYGOTcO (ORCPT
+Received: from queueout01-winn.ispmail.ntl.com ([81.103.221.31]:44332 "EHLO
+	queueout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753656AbYGDDet (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 15:32:14 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: [PATCH 4/4] rfkill: mutex fixes
-Date: Tue, 15 Jul 2008 16:32:07 -0300
-Message-Id: <1216150327-10904-5-git-send-email-hmh@hmh.eng.br> (sfid-20080715_213219_075147_2C501B81)
-In-Reply-To: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br>
-References: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br>
+	Thu, 3 Jul 2008 23:34:49 -0400
+From: Daniel Drake <dsd@gentoo.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Cc: firat@airties.com
+Subject: [PATCH] zd1211rw: add ID for AirTies WUS-201
+Message-Id: <20080704033151.0494872C001@zog.reactivated.net> (sfid-20080704_053453_530848_02A3D763)
+Date: Fri,  4 Jul 2008 04:31:50 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are two mutexes in rfkill:
+From: Firat Birlik <firat@airties.com>
 
-rfkill->mutex, which protects some of the fields of a rfkill struct, and is
-also used for callback serialization.
+I would like to inform you of our zd1211 based usb wifi adapter (AirTies
+WUS-201), which works with the zd1211rw driver with the following device
+id definition.
 
-rfkill_mutex, which protects the global state, the list of registered
-rfkill structs and rfkill->claim.
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
 
-Make sure to use the correct mutex, and to not miss locking rfkill->mutex
-even when we already took rfkill_mutex.
-
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
----
- net/rfkill/rfkill.c |   29 +++++++++++++++++++----------
- 1 files changed, 19 insertions(+), 10 deletions(-)
-
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index fc3a4fd..ac205ec 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -150,7 +150,7 @@ static void update_rfkill_state(struct rfkill *rfkill)
-  * even if the radio is in RFKILL_STATE_HARD_BLOCKED state, so as to
-  * give the driver a hint that it should double-BLOCK the transmitter.
-  *
-- * Caller must have aquired rfkill_mutex.
-+ * Caller must have acquired rfkill->mutex.
-  */
- static int rfkill_toggle_radio(struct rfkill *rfkill,
- 				enum rfkill_state state,
-@@ -216,8 +216,11 @@ void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
- 	rfkill_states[type] = state;
- 
- 	list_for_each_entry(rfkill, &rfkill_list, node) {
--		if ((!rfkill->user_claim) && (rfkill->type == type))
-+		if ((!rfkill->user_claim) && (rfkill->type == type)) {
-+			mutex_lock(&rfkill->mutex);
- 			rfkill_toggle_radio(rfkill, state, 0);
-+			mutex_unlock(&rfkill->mutex);
-+		}
- 	}
- 
- 	mutex_unlock(&rfkill_mutex);
-@@ -228,7 +231,7 @@ EXPORT_SYMBOL(rfkill_switch_all);
-  * rfkill_epo - emergency power off all transmitters
-  *
-  * This kicks all rfkill devices to RFKILL_STATE_SOFT_BLOCKED, ignoring
-- * everything in its path but rfkill_mutex.
-+ * everything in its path but rfkill_mutex and rfkill->mutex.
-  */
- void rfkill_epo(void)
- {
-@@ -236,7 +239,9 @@ void rfkill_epo(void)
- 
- 	mutex_lock(&rfkill_mutex);
- 	list_for_each_entry(rfkill, &rfkill_list, node) {
-+		mutex_lock(&rfkill->mutex);
- 		rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
-+		mutex_unlock(&rfkill->mutex);
- 	}
- 	mutex_unlock(&rfkill_mutex);
- }
-@@ -372,6 +377,9 @@ static ssize_t rfkill_claim_store(struct device *dev,
- 	if (!capable(CAP_NET_ADMIN))
- 		return -EPERM;
- 
-+	if (rfkill->user_claim_unsupported)
-+		return -EOPNOTSUPP;
-+
- 	/*
- 	 * Take the global lock to make sure the kernel is not in
- 	 * the middle of rfkill_switch_all
-@@ -380,19 +388,17 @@ static ssize_t rfkill_claim_store(struct device *dev,
- 	if (error)
- 		return error;
- 
--	if (rfkill->user_claim_unsupported) {
--		error = -EOPNOTSUPP;
--		goto out_unlock;
--	}
- 	if (rfkill->user_claim != claim) {
--		if (!claim)
-+		if (!claim) {
-+			mutex_lock(&rfkill->mutex);
- 			rfkill_toggle_radio(rfkill,
- 					    rfkill_states[rfkill->type],
- 					    0);
-+			mutex_unlock(&rfkill->mutex);
-+		}
- 		rfkill->user_claim = claim;
- 	}
- 
--out_unlock:
- 	mutex_unlock(&rfkill_mutex);
- 
- 	return error ? error : count;
-@@ -521,8 +527,11 @@ static void rfkill_remove_switch(struct rfkill *rfkill)
- {
- 	mutex_lock(&rfkill_mutex);
- 	list_del_init(&rfkill->node);
--	rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
- 	mutex_unlock(&rfkill_mutex);
-+
-+	mutex_lock(&rfkill->mutex);
-+	rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
-+	mutex_unlock(&rfkill->mutex);
- }
- 
- /**
--- 
-1.5.6.2
-
+Index: linux-2.6.26-rc8/drivers/net/wireless/zd1211rw/zd_usb.c
+===================================================================
+--- linux-2.6.26-rc8.orig/drivers/net/wireless/zd1211rw/zd_usb.c
++++ linux-2.6.26-rc8/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -64,6 +64,7 @@ static struct usb_device_id usb_ids[] = 
+ 	{ USB_DEVICE(0x079b, 0x0062), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x1582, 0x6003), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x050d, 0x705c), .driver_info = DEVICE_ZD1211B },
++	{ USB_DEVICE(0x083a, 0xe506), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x083a, 0x4505), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x0471, 0x1236), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x13b1, 0x0024), .driver_info = DEVICE_ZD1211B },
