@@ -1,41 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.235]:22311 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756162AbYGYKJD (ORCPT
+Received: from netrider.rowland.org ([192.131.102.5]:2159 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750978AbYGDSVV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2008 06:09:03 -0400
-Received: by wr-out-0506.google.com with SMTP id 69so2275096wri.5
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2008 03:09:03 -0700 (PDT)
-Message-ID: <4889A63D.1080005@gmail.com> (sfid-20080725_120924_512842_609A87C8)
-Date: Fri, 25 Jul 2008 06:09:01 -0400
-From: Zappacky <zappacky.lists@gmail.com>
+	Fri, 4 Jul 2008 14:21:21 -0400
+Date: Fri, 4 Jul 2008 14:21:20 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Chr <chunkeey@web.de>
+cc: Ivo Couckuyt <iv0co@yahoo.co.uk>, <linux-usb@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: PROBLEM: p54usb doesn't work with my Philips CPWUA054 usb adapter
+In-Reply-To: <200807041956.34051.chunkeey@web.de>
+Message-ID: <Pine.LNX.4.44L0.0807041420430.10060-100000@netrider.rowland.org> (sfid-20080704_202127_077757_1A042F78)
 MIME-Version: 1.0
-To: G L <gusgl2001@hotmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Volunteer for BC4328 Development
-References: <200807202353.29120.mb@bu3sch.de> <4883BE6E.7040704@lwfinger.net> <200807210054.57070.mb@bu3sch.de> <BAY108-W2814460AA0EC5F04885C08A68B0@phx.gbl>
-In-Reply-To: <BAY108-W2814460AA0EC5F04885C08A68B0@phx.gbl>
-Content-Type: text/plain; charset=windows-1251; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 4 Jul 2008, Chr wrote:
 
+> So, maybe someone of the linux-usb people knows why this happens?!
+> How to fix it, or how to DEBUG?! (any tips/hints? or is there a util like 
+> strace/usbsnopper which can monitor/compare the function-calls and
+> the resulting traffic of ndiswrapper AND the p54usb driver?)
+> (Chipset seems to be a nForce 2 OHCI/EHCI):
 
-G L wrote:
-> I see from the mailing lists that Zappacky was also interested in this. 
-> Perhaps Zappacky can give me info as to how he got started here.
-> 
+See Documentation/usb/usbmon.txt.
 
-I absolutely can! I've been a tad bit inactive lately, as I recently got a full 
-time job, but I'll be restarting work on it soon. I can't give you a whole lot 
-of info right now (I'm running out the door), but I just wanted to let you know 
-that I'm not dead/invisible/gone.
+Alan Stern
 
-Welcome to the team!
-
-In a separate email I have sent you 3 pdf files which I have found EXTREMELY 
-helpful. They are the MIPS ABI (so you know what the heck the stack is doing and 
-how parameters etc are laid out), the MIPS IV instruction set (a nice 
-reference), and the MIPS programmmer's guide (also a nice reference).
-
--Andrew (a.k.a. Zappacky)
