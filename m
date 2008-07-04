@@ -1,92 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:55485 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751586AbYG3N1Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 09:27:16 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC/RFT] rtl8187: Protect the config callback from mac80211 with a mutex
-Date: Wed, 30 Jul 2008 10:27:24 -0300
-Cc: "Hin-Tak Leung" <hintak.leung@gmail.com>,
-	Pavel Roskin <proski@gnu.org>,
-	wireless <linux-wireless@vger.kernel.org>
-References: <48900654.7030100@lwfinger.net>
-In-Reply-To: <48900654.7030100@lwfinger.net>
+Received: from smtp28.orange.fr ([80.12.242.100]:57359 "EHLO smtp28.orange.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752607AbYGDIsF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jul 2008 04:48:05 -0400
+Date: Fri, 4 Jul 2008 10:49:31 +0200
+From: Samuel Ortiz <samuel@sortiz.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Miguel =?iso-8859-1?Q?Bot=F3n?= <mboton.lkml@gmail.com>,
+	linux-wireless@vger.kernel.org, yi.zhu@intel.com
+Subject: [PATCH] mac80211: power management wext hooks (was [PATCH 1/2]
+	mac80211: add power management support)
+Message-ID: <20080704084930.GA3061@sortiz.org> (sfid-20080704_104814_996713_85E1E3C3)
+Reply-To: Samuel Ortiz <samuel@sortiz.org>
+References: <200711161929.36283.mboton.lkml@gmail.com> <200711161953.26801.mboton.lkml@gmail.com> <20080626174058.GA3063@sortiz.org> <20080626175507.GA23142@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200807301027.25076.herton@mandriva.com.br> (sfid-20080730_152718_178666_74DF415C)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080626175507.GA23142@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Wednesday 30 July 2008 03:12:36 Larry Finger escreveu:
-> Herton,
->
-> Does this patch help your problem? I haven't done much testing, but things
-> seem to be better with it here.
->
-> Larry
->
+Hi John,
 
-Acked-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+On Thu, Jun 26, 2008 at 01:55:07PM -0400, John W. Linville wrote:
+> > > This patch adds power management support in mac80211.
+> > Sorry for being late to the game, but would a similar patch against your
+> > -next-2.6 tree be considered for inclusion ?
+> 
+> It seems like a reasonable start to me.  Anyone else have comments?
+Here is my version then, against your wireless-next tree:
 
-It works fine here and solves the problem, it was a solution I had in mind 
-too.
+This patch implements the power management routines wireless extensions
+for mac80211.
+For now we only support switching PS mode between on and off.
 
-> ==================
->
-> Some users of the RTL8187B have experienced difficulties since commit
-> 8f87dd7e540d455f8e7f11478133b85edc969c67 that introduced the power
-> management wext hooks. This difficulty has not made much sense until
-> it was realized that it was possible for mac80211 to make a call to the
-> config routine while that routine was already being executed. This patch
-> protects the critical section with a mutex.
->
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->
-> Index: wireless-testing/drivers/net/wireless/rtl8187.h
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/rtl8187.h
-> +++ wireless-testing/drivers/net/wireless/rtl8187.h
-> @@ -94,6 +94,7 @@ struct rtl8187_priv {
->   	const struct rtl818x_rf_ops *rf;
->   	struct ieee80211_vif *vif;
->   	int mode;
-> +	struct mutex mutex;	/* used to lock config callback */
->
->   	/* rtl8187 specific */
->   	struct ieee80211_channel channels[14];
-> Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
-> +++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
-> @@ -864,6 +864,7 @@ static int rtl8187_config(struct ieee802
->   	struct rtl8187_priv *priv = dev->priv;
->   	u32 reg;
->
-> +	mutex_lock(&priv->mutex);
->   	reg = rtl818x_ioread32(priv, &priv->map->TX_CONF);
->   	/* Enable TX loopback on MAC level to avoid TX during channel
->   	 * changes, as this has be seen to causes problems and the
-> @@ -896,6 +897,7 @@ static int rtl8187_config(struct ieee802
->   	rtl818x_iowrite16(priv, &priv->map->ATIMTR_INTERVAL, 100);
->   	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL, 100);
->   	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL_TIME, 100);
-> +	mutex_unlock(&priv->mutex);
->   	return 0;
->   }
->
-> @@ -1187,6 +1189,7 @@ static int __devinit rtl8187_probe(struc
->   		printk(KERN_ERR "rtl8187: Cannot register device\n");
->   		goto err_free_dev;
->   	}
-> +	mutex_init(&priv->mutex);
->
->   	printk(KERN_INFO "%s: hwaddr %s, %s V%d + %s\n",
->   	       wiphy_name(dev->wiphy), print_mac(mac, dev->wiphy->perm_addr),
+Signed-off-by: Samuel Ortiz <sameo@openedhand.com>
+---
+ include/net/mac80211.h |    2 ++
+ net/mac80211/wext.c    |   43 +++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 43 insertions(+), 2 deletions(-)
 
--- 
-[]'s
-Herton
+Index: wireless-next-2.6/net/mac80211/wext.c
+===================================================================
+--- wireless-next-2.6.orig/net/mac80211/wext.c	2008-07-04 10:05:46.000000000 +0200
++++ wireless-next-2.6/net/mac80211/wext.c	2008-07-04 10:42:03.000000000 +0200
+@@ -1000,6 +1000,45 @@ static int ieee80211_ioctl_giwencode(str
+ 	return 0;
+ }
+ 
++static int ieee80211_ioctl_siwpower(struct net_device *dev,
++				    struct iw_request_info *info,
++				    struct iw_param *wrq,
++				    char *extra)
++{
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_conf *conf = &local->hw.conf;
++
++	if (wrq->disabled) {
++		conf->flags &= ~IEEE80211_CONF_PS;
++		return ieee80211_hw_config(local);
++	}
++
++	switch (wrq->flags & IW_POWER_MODE) {
++	case IW_POWER_ON:       /* If not specified */
++	case IW_POWER_MODE:     /* If set all mask */
++	case IW_POWER_ALL_R:    /* If explicitely state all */
++		conf->flags |= IEEE80211_CONF_PS;
++		break;
++	default:                /* Otherwise we don't support it */
++		return -EINVAL;
++	}
++
++	return ieee80211_hw_config(local);
++}
++
++static int ieee80211_ioctl_giwpower(struct net_device *dev,
++				    struct iw_request_info *info,
++				    union iwreq_data *wrqu,
++				    char *extra)
++{
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_conf *conf = &local->hw.conf;
++
++	wrqu->power.disabled = !(conf->flags & IEEE80211_CONF_PS);
++
++	return 0;
++}
++
+ static int ieee80211_ioctl_siwauth(struct net_device *dev,
+ 				   struct iw_request_info *info,
+ 				   struct iw_param *data, char *extra)
+@@ -1202,8 +1241,8 @@ static const iw_handler ieee80211_handle
+ 	(iw_handler) ieee80211_ioctl_giwretry,		/* SIOCGIWRETRY */
+ 	(iw_handler) ieee80211_ioctl_siwencode,		/* SIOCSIWENCODE */
+ 	(iw_handler) ieee80211_ioctl_giwencode,		/* SIOCGIWENCODE */
+-	(iw_handler) NULL,				/* SIOCSIWPOWER */
+-	(iw_handler) NULL,				/* SIOCGIWPOWER */
++	(iw_handler) ieee80211_ioctl_siwpower,		/* SIOCSIWPOWER */
++	(iw_handler) ieee80211_ioctl_giwpower,		/* SIOCGIWPOWER */
+ 	(iw_handler) NULL,				/* -- hole -- */
+ 	(iw_handler) NULL,				/* -- hole -- */
+ 	(iw_handler) ieee80211_ioctl_siwgenie,		/* SIOCSIWGENIE */
+Index: wireless-next-2.6/include/net/mac80211.h
+===================================================================
+--- wireless-next-2.6.orig/include/net/mac80211.h	2008-07-04 10:05:45.000000000 +0200
++++ wireless-next-2.6/include/net/mac80211.h	2008-07-04 10:42:03.000000000 +0200
+@@ -396,11 +396,13 @@ struct ieee80211_rx_status {
+  * @IEEE80211_CONF_SHORT_SLOT_TIME: use 802.11g short slot time
+  * @IEEE80211_CONF_RADIOTAP: add radiotap header at receive time (if supported)
+  * @IEEE80211_CONF_SUPPORT_HT_MODE: use 802.11n HT capabilities (if supported)
++ * @IEEE80211_CONF_PS: Enable 802.11 power save mode
+  */
+ enum ieee80211_conf_flags {
+ 	IEEE80211_CONF_SHORT_SLOT_TIME	= (1<<0),
+ 	IEEE80211_CONF_RADIOTAP		= (1<<1),
+ 	IEEE80211_CONF_SUPPORT_HT_MODE	= (1<<2),
++	IEEE80211_CONF_PS		= (1<<3),
+ };
+ 
+ /**
+
