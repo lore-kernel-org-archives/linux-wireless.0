@@ -1,76 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.237]:50777 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751788AbYGXLfq (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.179]:14817 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751268AbYGDLIC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2008 07:35:46 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2831568rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2008 04:35:46 -0700 (PDT)
-Message-ID: <1ba2fa240807240435g36daa80at254144afffc39c32@mail.gmail.com> (sfid-20080724_133550_701095_354A4111)
-Date: Thu, 24 Jul 2008 14:35:46 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Patrick McHardy" <kaber@trash.net>
-Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
-Cc: "David Miller" <davem@davemloft.net>,
-	francois.valenduc@tvcablenet.be, akpm@linux-foundation.org,
-	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, netdev@vger.kernel.org,
-	jussi.kivilinna@mbnet.fi
-In-Reply-To: <48885743.8030505@trash.net>
+	Fri, 4 Jul 2008 07:08:02 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so559681ika.5
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Jul 2008 04:08:01 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: rt61 and TSF reporting?
+Date: Fri, 4 Jul 2008 13:14:05 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <1214907990.7763.40.camel@johannes.berg> <200807041302.44288.IvDoorn@gmail.com> <1215169362.19862.2.camel@johannes.berg>
+In-Reply-To: <1215169362.19862.2.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <4887550B.2070704@tvcablenet.be> <4887555A.30605@trash.net>
-	 <48875B8C.2090800@trash.net>
-	 <20080723.142147.61941255.davem@davemloft.net>
-	 <48884451.1090703@trash.net>
-	 <1ba2fa240807240317g15f6ba84h91b513cce75975e9@mail.gmail.com>
-	 <48885743.8030505@trash.net>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200807041314.05908.IvDoorn@gmail.com> (sfid-20080704_130807_779153_1BBEECE4)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 24, 2008 at 1:19 PM, Patrick McHardy <kaber@trash.net> wrote:
-> Tomas Winkler wrote:
->>
->> On Thu, Jul 24, 2008 at 11:58 AM, Patrick McHardy <kaber@trash.net> wrote:
->>>
->>> David Miller wrote:
->>>>
->>>> From: Patrick McHardy <kaber@trash.net>
->>>> Date: Wed, 23 Jul 2008 18:25:48 +0200
->>>>
->>>>> We can't fit them into the cb together, I don't see a way to
->>>>> shrink ieee80211_tx_info.
->>>>>
->>>>> Maybe one of the wireless folks can suggest something? Is it
->>>>> really necessary to pass the full struct ieee80211_tx_info
->>>>> through the qdisc layer, or could the struct be split? It
->>>>> needs to find a way to co-exist peacefully with qdiscs'
->>>>> skb->cb usage.
->>>>
->>>> This is another area that got mangled up in the ->select_queue()
->>>> conversion of the WME bits, but in another aspect this problem
->>>> existed beforehand as well.
->>>>
->>>> Specifically, when RX packets get requeued out to transmit in
->>>> the code in net/mac80211/rx.c that resends packets back out the
->>>> wireless device by setting a bit in the SKB CB then calling
->>>> dev_queue_xmit().
->>>>
->>>> That's completely illegal :-)
->>>
->>> It seems its doing even more illegal things that were also
->>> present previously. The ieee80211_master_start_xmit function
->>> expects to get a valid IEEE80211_SKB_CB, which means it
->>> expects it to survive through the entire qdisc layer. I'm
->>> not sure how packets get to the master device from the
->>> subifs though, so I might be wrong.
->>>
->> Isn't this time to make 802.11 native?
->
->
-> You mean by making these things real skb members? I hope you're
-> not talking about the entire 48 bytes? :)
+On Friday 04 July 2008, Johannes Berg wrote:
+> 
+> > I just received an answer from Ralink about this issue,
+> 
+> Cool.
+> 
+> > 1.       For 11b/g based chips rt2500, rt2570, rt61, rt73 doesn't implement this.
+> 
+> Oh, too bad.
+> 
+> > 2.       For 11n based chips, there is one MAC register have to enable to have this feature.
+> > 	  But, Word 2 of RXWI will put the timestamp and the RSSI will put to Word 3.
+> > 	 The original Word 3 SNR will disappear and replace by RSSI.
+> 
+> Nice.
+> 
+> > As for the timestamps in 2400 and rt2800, they are both in 32bits, so I am not sure how
+> > reliable they will be for IBSS.
+> 
+> Well 32-bits is plenty if you can also read the TSF to extend it to 64,
+> b43 only gets 16 by the firmware and we just extend it on packet RX.
 
-I mean elevating 802.11 header to 802.3 level. Not doing 802.3 ->
-802.11 translation where not needed.
-Tomas
+Ok, I'll update rt2x00 so rt2400pci can already start reporting the timestamp,
+I assume the timestamp reporting is more important then reporting the SNR,
+because apparenly for rt2800 we can only get one of those. :S
+
+Ivo
