@@ -1,101 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.225]:32393 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753092AbYGEV2j (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41448 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751760AbYGDLDq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jul 2008 17:28:39 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2062326rvb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Jul 2008 14:28:39 -0700 (PDT)
-Message-ID: <1ba2fa240807051428i3f49f621i7b583bec58a02869@mail.gmail.com> (sfid-20080705_232844_206868_1D91B2B0)
-Date: Sun, 6 Jul 2008 00:28:39 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
-Subject: Re: Question on rfkill double block
-Cc: "Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	"Dan Williams" <dcbw@redhat.com>
-In-Reply-To: <20080702193202.GA20410@khazad-dum.debian.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1214982208.14590.473.camel@debian.sh.intel.com>
-	 <20080702193202.GA20410@khazad-dum.debian.net>
+	Fri, 4 Jul 2008 07:03:46 -0400
+Subject: Re: rt61 and TSF reporting?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200807041302.44288.IvDoorn@gmail.com> (sfid-20080704_125645_560925_85131DEE)
+References: <1214907990.7763.40.camel@johannes.berg>
+	 <200807041302.44288.IvDoorn@gmail.com>
+	 (sfid-20080704_125645_560925_85131DEE)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-poQs5n91C2GrDGDcNmYA"
+Date: Fri, 04 Jul 2008 13:02:42 +0200
+Message-Id: <1215169362.19862.2.camel@johannes.berg> (sfid-20080704_130351_545531_7C69BFB1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 2, 2008 at 10:32 PM, Henrique de Moraes Holschuh
-<hmh@hmh.eng.br> wrote:
-> On Wed, 02 Jul 2008, Zhu Yi wrote:
->> It doesn't say what to do if both the hardware and software rfkill lines
->> are active when RFKILL_STATE_UNBLOCKED is asked. Should we deactivate
->> the software rfkill in this case? Otherwise below usage won't turn on
->> the radio:
->
-> Well, we allow double-blocking to make sure the radio isn't unblocked by
-> mistake.  The bias in rfkill is to block, as that is safer.
->
-> The issue is that if we get a RFKILL_STATE_UNBLOCKED request, and we are at
-> RFKILL_STATE_HARD_BLOCKED, we need to return an error (we can't set the
-> requested state).  But since we returned an error, should we do the best we
-> can, or should we do nothing?
->
-> I am really not sure what would be better: to remove the double-blocking
-> while still returning an error, or to leave the radio as is (be it
-> double-blocked or just blocked by the hardware rfkill line) and return an
-> error.
->
-> Both would work just fine as far as the rfkill class goes, it wouldn't get
-> confused by either as far as I can tell (*as long as an error is
-> returned!*).  But we really should pick one of the two, and document that
-> IMHO.
->
-> My best guess is that doing a half-unblock would be less confusing to the
-> user, but we can ask the userspace GUI people about it ;-)  Dan?
->
->> hardware rfkill activate
->> software rfkill activate
->> RFKILL_STATE_UNBLOCKED request
->> hardware rfkill deactivate
->>
->> Furthermore, if we permit double block, what should get_state() return?
->
-> get_state() returns RFKILL_STATE_HARD_BLOCKED when any hardware rfkill lines
-> are active.  If ALL hardware rfkill lines are inactive, it will return
-> RFKILL_STATE_SOFT_BLOCKED if any software rfkill lines are ative.
->
-> And if EVERY rfkill line is inactive, it returns RFKILL_STATE_UNBLOCKED.
->
-> This makes sense, as you are basically stuck without being able to go
-> anywere when in RFKILL_STATE_HARD_BLOCKED, until something external changes
-> the hardware rfkill lines.
->
->> Shouldn't rfkill_state ???be bitmap instead of enum?
->
-> We could do that, too.  But a bitmap would cause trouble due to the ABI we
-> inherited from the rfkill in the stable kernels, so it would be cleaner to
-> just add a fourth state (RFKILL_STATE_DOUBLE_BLOCKED).
->
-> However, I am pretty certain we will find firmware (hardware is less likely
-> to be this stupid) that has erratic behaviour when RFKILL_STATE_HARD_BLOCKED
-> (and thus you don't really know if you managed to double-block or remove a
-> double-block).  In fact, that's the kind of crap I am used to fight in
-> thinkpad-acpi, although I sure hope thinkpads don't have this particular
-> quirk.
->
-> So, I pose this question:  Four states would allow us to tell the user the
-> radio is JUST hardware-killed or JUST software-killed for some hardware, but
-> does THAT enhance the user experience in any way?  Do GUIs really need that
-> detail?
 
->From my experience from other OS the states of SW and HW RF KILL
-switches should be independent and visible to user space
-otherwise it's very hard to make something coherent out of it. It
-should be visible to user himself so he/she knows what switch actually
-press. And also to let say unmanned application, most important in
-preserving SW switch state across reboots and resume/suspend events.
-Radio state is just simple AND function of all the switches in the
-game anything else just leads to confusion.
-Currently we have rkill switch from sysfs, hw rfkill, iwconfig txpower
-off, the last one is better to eliminate but still we have TRIPLE
-BLOCKING
+--=-poQs5n91C2GrDGDcNmYA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks
-Tomas
+
+> I just received an answer from Ralink about this issue,
+
+Cool.
+
+> 1.       For 11b/g based chips rt2500, rt2570, rt61, rt73 doesn't impleme=
+nt this.
+
+Oh, too bad.
+
+> 2.       For 11n based chips, there is one MAC register have to enable to=
+ have this feature.
+> 	  But, Word 2 of RXWI will put the timestamp and the RSSI will put to Wo=
+rd 3.
+> 	 The original Word 3 SNR will disappear and replace by RSSI.
+
+Nice.
+
+> As for the timestamps in 2400 and rt2800, they are both in 32bits, so I a=
+m not sure how
+> reliable they will be for IBSS.
+
+Well 32-bits is plenty if you can also read the TSF to extend it to 64,
+b43 only gets 16 by the firmware and we just extend it on packet RX.
+
+johannes
+
+--=-poQs5n91C2GrDGDcNmYA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIbgNNAAoJEKVg1VMiehFYeaYP/iC2SGwxKvjRhdfl9UMY5Dtu
+0v1bh0jVRexz0KVwbHTNvKgcdUlGmCZj9q2YpQcuuNrn4b2qkQILcI+q9a3dMaTW
+yKMZyay/8dKehNBZ81VNWbgxrhm+FWH1c5FUHqs77oti9Q4osOD7EQhK2ijWUeyR
+7Vg3FipJ0HuCtYCmoh78Y6eAmnHMR676SPGOPl8lFCZErpiHKxgy2dGurEMzEblo
+qv2plnSJ2xaoCwhtdsj8Azhv9/BBVl5ok+Ihs+vlbx/hsBp61m3EsKGDUKfGKG/E
+MrnmJiWciR80F3XgpoOxL2BGlA1N6ldCIuv/UvlhKOnvYvnoYbZKMGs/vgqUcYa0
+sRpep5CfFXSHtKmtBUHjJ4J4APk/NaRSaljOtz9nhJXUThaf81j/Ui+RNCcKNttT
+K8vFNN5PBxY5WNuy7y73WgXd8dKLlb6fwE6IbZjJDw0RQAjK/4c7p6t2wD2M9kbv
+/v1SBZWhg3sSVSLZAqqEX8mXxy82DTi0erfzRJ9ignRaI/0AaOwncVE4KH04RhEp
+U0JH9bbKLtJd8ezntwHrs+RrBQB6Y4fVcy471euFezUtb7iLBDzmMZVhQeXSkI5O
+s63TGNL997n4dlcwp4OamEiGKiK1hd2RXIKG5kGTu+X6KlKDuF70qYCuO2O7q2R2
+hCDAhjqtc5ZO1lCSKfok
+=bJgr
+-----END PGP SIGNATURE-----
+
+--=-poQs5n91C2GrDGDcNmYA--
+
