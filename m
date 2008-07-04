@@ -1,93 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:47686 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751295AbYGBSFj (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.182]:34880 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752953AbYGDWcs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2008 14:05:39 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so452597wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Jul 2008 11:05:39 -0700 (PDT)
-Subject: [PATCH 2/4] mac80211: use symbolic defines in wpa.c
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 02 Jul 2008 11:05:34 -0700
-Message-Id: <1215021934.24353.14.camel@brick> (sfid-20080702_200542_662198_256D04F7)
-Mime-Version: 1.0
+	Fri, 4 Jul 2008 18:32:48 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so648254ika.5
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Jul 2008 15:32:46 -0700 (PDT)
+To: linville@tuxdriver.com
+Subject: Re: Oops/Warning report of the week of July 4th 2008
+Date: Sat, 5 Jul 2008 00:38:49 +0200
+Cc: Arjan van de Ven <arjan@linux.intel.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <486EA0D6.2040504@linux.intel.com>
+In-Reply-To: <486EA0D6.2040504@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200807050038.49712.IvDoorn@gmail.com> (sfid-20080705_003252_292958_550E5B15)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ETH_ALEN and IEEE80211_QOS_CTL_LEN
+Hi,
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/wpa.c |   14 +++++++-------
- 1 files changed, 7 insertions(+), 7 deletions(-)
+> Rank 12: flush_workqueue (oops)
+> 	Reported 39 times
+> 	Bug in the rt25xx driver passing NULL to the flush_workqueue() function
+> 	This oops was last seen in version 2.6.25.9, and first seen in 2.6.25.9.
+> 	More info: http://www.kerneloops.org/searchweek.php?search=flush_workqueue
 
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index b414d5d..222001c 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -38,7 +38,7 @@ static int ieee80211_get_hdr_info(const struct sk_buff *skb, u8 **sa, u8 **da,
- 	*data_len = skb->len - hdrlen;
- 
- 	if (ieee80211_is_data_qos(fc))
--		*qos_tid = (*ieee80211_get_qos_ctl(hdr) & 0x0f) | 0x80;
-+		*qos_tid = (*ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK) | 0x80;
- 	else
- 		*qos_tid = 0;
- 
-@@ -312,7 +312,7 @@ static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad,
- 	data_len -= CCMP_HDR_LEN + (encrypted ? CCMP_MIC_LEN : 0);
- 	if (qos_tid & 0x80) {
- 		qos_included = 1;
--		qos_tid &= 0x0f;
-+		qos_tid &= IEEE80211_QOS_CTL_TID_MASK;
- 	} else
- 		qos_included = 0;
- 	/* First block, b_0 */
-@@ -320,7 +320,7 @@ static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad,
- 	b_0[0] = 0x59; /* flags: Adata: 1, M: 011, L: 001 */
- 	/* Nonce: QoS Priority | A2 | PN */
- 	b_0[1] = qos_tid;
--	memcpy(&b_0[2], hdr->addr2, 6);
-+	memcpy(&b_0[2], hdr->addr2, ETH_ALEN);
- 	memcpy(&b_0[8], pn, CCMP_PN_LEN);
- 	/* l(m) */
- 	b_0[14] = (data_len >> 8) & 0xff;
-@@ -332,7 +332,7 @@ static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad,
- 
- 	len_a = a4_included ? 28 : 22;
- 	if (qos_included)
--		len_a += 2;
-+		len_a += IEEE80211_QOS_CTL_LEN;
- 
- 	aad[0] = 0; /* (len_a >> 8) & 0xff; */
- 	aad[1] = len_a & 0xff;
-@@ -340,17 +340,17 @@ static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad,
- 	aad[2] = fc_pos[0] & ~(BIT(4) | BIT(5) | BIT(6));
- 	/* Retry, PwrMgt, MoreData; set Protected */
- 	aad[3] = (fc_pos[1] & ~(BIT(3) | BIT(4) | BIT(5))) | BIT(6);
--	memcpy(&aad[4], &hdr->addr1, 18);
-+	memcpy(&aad[4], &hdr->addr1, 3 * ETH_ALEN);
- 
- 	/* Mask Seq#, leave Frag# */
- 	aad[22] = *((u8 *) &hdr->seq_ctrl) & 0x0f;
- 	aad[23] = 0;
- 	if (a4_included) {
--		memcpy(&aad[24], hdr->addr4, 6);
-+		memcpy(&aad[24], hdr->addr4, ETH_ALEN);
- 		aad[30] = 0;
- 		aad[31] = 0;
- 	} else
--		memset(&aad[24], 0, 8);
-+		memset(&aad[24], 0, ETH_ALEN + IEEE80211_QOS_CTL_LEN);
- 	if (qos_included) {
- 		u8 *dpos = &aad[a4_included ? 30 : 24];
- 
--- 
-1.5.6.1.242.g4f9d0
+Hmm, interesting I hadn't received such reports yet..
+I am afraid this was caused by a patch which was send to 2.6.26 to fix a lockdep problem. :(
 
+John, earlier today I released the patch:
+	rt2x00: Use ieee80211_hw->workqueue again
+	http://article.gmane.org/gmane.linux.kernel.wireless.general/17305
+actually intended for 2.6.27, but if this bug means 2.6.26 might be crashing, it might
+be wiser to push it to 2.6.26.
 
+Ivo
