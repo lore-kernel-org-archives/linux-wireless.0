@@ -1,36 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:34191 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753686AbYGUPWf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 11:22:35 -0400
-Date: Mon, 21 Jul 2008 23:22:20 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: David Miller <davem@davemloft.net>
-Cc: hadi@cyberus.ca, kaber@trash.net, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in RCU.
-Message-ID: <20080721152220.GA12341@gondor.apana.org.au> (sfid-20080721_172243_078992_C72A18C3)
-References: <20080721131918.GA11114@gondor.apana.org.au> <1216648585.4847.303.camel@localhost> <20080721135846.GA11543@gondor.apana.org.au> <20080721.080901.214889979.davem@davemloft.net>
+Received: from bu3sch.de ([62.75.166.246]:57659 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754080AbYGDVpn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jul 2008 17:45:43 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] ssb-pcicore: Fix IRQ-vector init on embedded devices
+Date: Fri, 4 Jul 2008 23:44:37 +0200
+Cc: Steve Brown <sbrown@cortland.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080721.080901.214889979.davem@davemloft.net>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200807042344.38034.mb@bu3sch.de> (sfid-20080704_234556_710104_58A79824)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 21, 2008 at 08:09:01AM -0700, David Miller wrote:
->
-> > Actually you've hit it on the head, as an alternative to TX hashing
-> > on the packet content, we need to allow TX queue selection based on
-> > the current CPU ID.
-> 
-> This we should avoid, it would allow reordering within a flow.
+On embedded devices we must not route the interrupts through
+the PCI core, if our host-bus is not PCI.
 
-Not if the RX hashing is flow-based...
+Reported-by: Steve Brown <sbrown@cortland.com>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Cheers,
+---
+
+John, If still possible, please queue for 2.6.26.
+
+
+Index: wireless-testing/drivers/ssb/driver_pcicore.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/driver_pcicore.c	2008-06-10 13:58:23.000000000 +0200
++++ wireless-testing/drivers/ssb/driver_pcicore.c	2008-07-04 23:16:02.000000000 +0200
+@@ -537,6 +537,13 @@ int ssb_pcicore_dev_irqvecs_enable(struc
+ 	int err = 0;
+ 	u32 tmp;
+ 
++	if (dev->bus->bustype != SSB_BUSTYPE_PCI) {
++		/* This SSB device is not on a PCI host-bus. So the IRQs are
++		 * not routed through the PCI core.
++		 * So we must not enable routing through the PCI core. */
++		goto out;
++	}
++
+ 	if (!pdev)
+ 		goto out;
+ 	bus = pdev->bus;
+
 -- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Greetings Michael.
