@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:44894 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754348AbYGSNmf (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.191]:13916 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752129AbYGDMS7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2008 09:42:35 -0400
-Date: Sat, 19 Jul 2008 10:42:30 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/4] rfkill: document rfkill_force_state as required
-Message-ID: <20080719134230.GA11269@khazad-dum.debian.net> (sfid-20080719_154240_314023_CF2EB096)
-References: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br> <1216150327-10904-2-git-send-email-hmh@hmh.eng.br> <200807191434.30815.IvDoorn@gmail.com>
+	Fri, 4 Jul 2008 08:18:59 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so362686nfc.21
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Jul 2008 05:18:58 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 4/4] rt2x00: Report RX end time for rt2400pci
+Date: Fri, 4 Jul 2008 14:25:00 +0200
+Cc: linville@tuxdriver.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+References: <200807041340.28103.IvDoorn@gmail.com> <200807041341.57998.IvDoorn@gmail.com> <1215171723.19862.4.camel@johannes.berg>
+In-Reply-To: <1215171723.19862.4.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200807191434.30815.IvDoorn@gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200807041425.00591.IvDoorn@gmail.com> (sfid-20080704_141902_092454_66046E8B)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 19 Jul 2008, Ivo van Doorn wrote:
-> >  Every time the driver gets a notification from the card that one of its rfkill
-> >  lines changed state (polling might be needed on badly designed cards that don't
-> > @@ -422,13 +423,24 @@ of the hardware is unknown), or read-write (where the hardware can be queried
-> >  about its current state).
+On Friday 04 July 2008, Johannes Berg wrote:
+> 
+> >  	rt2x00_desc_read(entry_priv->desc, 0, &word0);
+> >  	rt2x00_desc_read(entry_priv->desc, 2, &word2);
+> >  	rt2x00_desc_read(entry_priv->desc, 3, &word3);
+> > +	rt2x00_desc_read(entry_priv->desc, 4, &word4);
 > >  
-> >  The rfkill class will call the get_state hook of a device every time it needs
-> > -to know the *real* current state of the hardware.  This can happen often.
-> > +to know the *real* current state of the hardware.  This can happen often, but
-> > +it does not do any pooling, so it is not enough on hardware that is subject
-> > +to state changes outside of the rfkill subsystem.
+> >  	if (rt2x00_get_field32(word0, RXD_W0_CRC_ERROR))
+> >  		rxdesc->flags |= RX_FLAG_FAILED_FCS_CRC;
+> > @@ -1106,6 +1108,7 @@ static void rt2400pci_fill_rxdone(struct queue_entry *entry,
+> >  	 * The signal is the PLCP value, and needs to be stripped
+> >  	 * of the preamble bit (0x08).
+> >  	 */
+> > +	rxdesc->timestamp = rt2x00_get_field32(word4, RXD_W4_RX_END_TIME);
 > 
-> pooling -> polling
-> 
-> With that typo fixed, you can add my:
-> 
-> Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+> You really should extend that, like this it's going to cause trouble as
+> soon as it has overflowed 32 bits once.
 
-Done, will send v2 soon.
+Ok, but if I do the get_tsf() callback, to grab the upper 32 bytes of the timestamp,
+you will get the same problems during wraparounds, because the upper 32 bytes
+can be from _after_ the wrapround while the lower 32 bytes from the descriptor
+are still from _before_ the wraparound.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Ivo
