@@ -1,62 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3404 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751661AbYGOSH0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 14:07:26 -0400
-Date: Tue, 15 Jul 2008 13:42:46 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Guy Cohen <guy@cguy.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
-Message-ID: <20080715174246.GA3117@tuxdriver.com> (sfid-20080715_200731_267923_C900F22A)
-References: <20080709190915.GA8238@tuxdriver.com> <247d6d340807140805gfb6523en74384f6f47469d79@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <247d6d340807140805gfb6523en74384f6f47469d79@mail.gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:36774 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752760AbYGDMZN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jul 2008 08:25:13 -0400
+Subject: Re: [PATCH 4/4] rt2x00: Report RX end time for rt2400pci
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linville@tuxdriver.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+In-Reply-To: <200807041425.00591.IvDoorn@gmail.com> (sfid-20080704_141900_848972_FC3E76EA)
+References: <200807041340.28103.IvDoorn@gmail.com>
+	 <200807041341.57998.IvDoorn@gmail.com>
+	 <1215171723.19862.4.camel@johannes.berg>
+	 <200807041425.00591.IvDoorn@gmail.com>
+	 (sfid-20080704_141900_848972_FC3E76EA)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9a3K42siO5RD864aTG6a"
+Date: Fri, 04 Jul 2008 14:23:53 +0200
+Message-Id: <1215174233.19862.8.camel@johannes.berg> (sfid-20080704_142516_861612_C42F4B39)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 14, 2008 at 06:05:13PM +0300, Guy Cohen wrote:
-> I think that probably the most burning topics were a little diminished
-> in our agenda, and should be put higher:
-> - cfg80211/nl80211 - much of the current wext begins to fall behind
-> the emerging capabilities of the mac80211 and moreover - from future
-> abilities and needs of future fullmac devices. The functionality and
-> ABI to userspace must be finalized as soon as possible. The status of
-> this is very unclear and should be treated more thoroughly, and it
-> seems it can't be shared with 5 other topics in less than 2 hours.
 
-FWIW, I listed this one first under Future Work.
+--=-9a3K42siO5RD864aTG6a
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-> - fullmac support - seems to be very relevant in the next couple of
-> years with the integration of wifi into low power devices running
-> linux.
+On Fri, 2008-07-04 at 14:25 +0200, Ivo van Doorn wrote:
+> On Friday 04 July 2008, Johannes Berg wrote:
+> >=20
+> > >  	rt2x00_desc_read(entry_priv->desc, 0, &word0);
+> > >  	rt2x00_desc_read(entry_priv->desc, 2, &word2);
+> > >  	rt2x00_desc_read(entry_priv->desc, 3, &word3);
+> > > +	rt2x00_desc_read(entry_priv->desc, 4, &word4);
+> > > =20
+> > >  	if (rt2x00_get_field32(word0, RXD_W0_CRC_ERROR))
+> > >  		rxdesc->flags |=3D RX_FLAG_FAILED_FCS_CRC;
+> > > @@ -1106,6 +1108,7 @@ static void rt2400pci_fill_rxdone(struct queue_=
+entry *entry,
+> > >  	 * The signal is the PLCP value, and needs to be stripped
+> > >  	 * of the preamble bit (0x08).
+> > >  	 */
+> > > +	rxdesc->timestamp =3D rt2x00_get_field32(word4, RXD_W4_RX_END_TIME)=
+;
+> >=20
+> > You really should extend that, like this it's going to cause trouble as
+> > soon as it has overflowed 32 bits once.
+>=20
+> Ok, but if I do the get_tsf() callback, to grab the upper 32 bytes of the=
+ timestamp,
+> you will get the same problems during wraparounds, because the upper 32 b=
+ytes
+> can be from _after_ the wrapround while the lower 32 bytes from the descr=
+iptor
+> are still from _before_ the wraparound.
 
-Not sure exactly what you mean with this one.  Are you talking about
-the lib80211 line item?  Or enhancements to the mac80211 component
-to support full(er) MAC designs?
+You mean bits. But no, it's not a problem, you can safely assume that
+you call get_tsf() within 2^32 usecs of getting the frame (that's quite
+a long time after all).
 
-> I think that these two topics should take precedence over other topics
-> that although important consume more time in the agenda, and are
-> currently less likely to have impact on the average users such as 11s
-> and 11w.
-> 
-> it would be good if these topics will get substantial time slot in the agenda.
+Then do something like this:
 
-There are lots of items listed, and I'm not sure we will cover all
-of them.  If there are any that you would like to suggest be dropped
-completely then please do so.
+ts =3D word4
+high32 | =EF=BB=BFlow32 =3D get_tsf()
 
-That said, I don't think we have enough time for real working sessions
-on Tuesday.  I think it would be better just to touch on a variety
-of topics that can benefit from some face-to-face discussions.
->From that perspective, I think some status reports and some brief
-proposals are most appropriate.
+if (ts >=3D low32)
+  // wrapped around while we were not looking
+  high32 -=3D 1
 
-I'll post a revised (mostly just augmented) agenda proposal today.
+tsf =3D high32 | ts
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+johannes
+
+--=-9a3K42siO5RD864aTG6a
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIbhZUAAoJEKVg1VMiehFYkBUP/jzyhWYZuqEftWHUFlqtbCWM
+B+gxgtqKE2tyiItJlh79s+fbqyvU+rHyp0s+B8HK3XCQq9LrnJbuJSbo7ZcMyZ6O
+GAn+nARKzHPs1rLhkfFbWCeJeSN/YQstml1sR9TtijKcvNC8Yb+5yOlbY+K+uhYV
+OXorS47zq/sVp29myadRDZ4Fqjoz501sosP9Fs3duWXBrzXgP2zdeLkQyGoptRB2
+IN0FPvd6M6n0cewUSgdlwun3bitktNHgbp0891maWtgW9piDuVX2827lLVVj0AxJ
+nfKnb+Ao/K7YaszdFtte2bXa6iLNyh4JIYDUg9A/0IXCF1dOvdbjAC0R3Srivqe3
+QbwF+GatVmw+GuGQNHxBNbCydfQrKz8vnFxYE7oeDWWnUMV07q390kidvVfB2/1N
+JfV+1jRWbx9xkpcNT8E9WtOLT/FAVR/Eep0TC4KAK5nS6dyzhFSG5Jl16nbbmUb7
+6Fx7V6z7qRTCoP36EZ8mKTmH6xYQ/P4DaPS0ve0YyqcpgZ7IQ/QaDoOGHgoA83Bu
+dGbYgHO2XW9i1DhQk8WS755rKXJa4EHl5ABXFn+7WE2rUBGHbRlc0/ZXVSegJsPU
+quNIhXVCa+6tkIj6gsgSxfz+ul34uUmCeoeLXMISTMjVC192TPfoRa/rDRRCC8uG
+oF/QraACDgsr6RqcknF0
+=eyhB
+-----END PGP SIGNATURE-----
+
+--=-9a3K42siO5RD864aTG6a--
+
