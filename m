@@ -1,117 +1,313 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n7a.bullet.ukl.yahoo.com ([217.146.183.155]:20481 "HELO
-	n7a.bullet.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751337AbYGHGdL (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:12089 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752113AbYGDLgU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 02:33:11 -0400
-Message-ID: <48730C05.7060008@yahoo.co.uk> (sfid-20080708_083314_139846_28A50375)
-Date: Tue, 08 Jul 2008 07:41:09 +0100
-From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+	Fri, 4 Jul 2008 07:36:20 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so359293nfc.21
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Jul 2008 04:36:18 -0700 (PDT)
+To: linville@tuxdriver.com
+Subject: [PATCH 1/4] rt2x00: Remove input_polldev requirements for rfkill
+Date: Fri, 4 Jul 2008 13:41:25 +0200
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@redhat.com>, flamingice@sourmilk.net,
-	Andrea Merello <andreamrl@tiscali.it>
-CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 2/6] rtl8187: updating rtl818x.h to support RTL8187B
-References: <4873088C.2090603@yahoo.co.uk>
-In-Reply-To: <4873088C.2090603@yahoo.co.uk>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Message-Id: <200807041341.26003.IvDoorn@gmail.com> (sfid-20080704_133624_617866_C2188B26)
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rtl8187: updating rtl818x.h to support RTL8187B
+With the new rfkill interface there is no longer a need
+for the input_polldev. Create a delayed_work structure
+which we can put on the mac80211 workqueue and poll the
+hardware every 100ms.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
-Signed-off-by: Pavel Roskin <proski@gnu.org>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
-diff --git a/drivers/net/wireless/rtl818x.h b/drivers/net/wireless/rtl818x.h
-index 4f7d38f..85a6394 100644
---- a/drivers/net/wireless/rtl818x.h
-+++ b/drivers/net/wireless/rtl818x.h
-@@ -66,7 +66,10 @@ struct rtl818x_csr {
-  #define RTL818X_TX_CONF_R8180_F		(3 << 25)
-  #define RTL818X_TX_CONF_R8185_ABC	(4 << 25)
-  #define RTL818X_TX_CONF_R8185_D		(5 << 25)
-+#define RTL818X_TX_CONF_R8187vD_1	(5 << 25)
-+#define RTL818X_TX_CONF_R8187vD_2	(6 << 25)
-  #define RTL818X_TX_CONF_HWVER_MASK	(7 << 25)
-+#define RTL818X_TX_CONF_DISREQQSIZE	(1 << 28)
-  #define RTL818X_TX_CONF_PROBE_DTS	(1 << 29)
-  #define RTL818X_TX_CONF_HW_SEQNUM	(1 << 30)
-  #define RTL818X_TX_CONF_CW_MIN		(1 << 31)
-@@ -106,8 +109,11 @@ struct rtl818x_csr {
-  #define RTL818X_MSR_NO_LINK		(0 << 2)
-  #define RTL818X_MSR_ADHOC		(1 << 2)
-  #define RTL818X_MSR_INFRA		(2 << 2)
-+#define RTL818X_MSR_MASTER		(3 << 2)
-+#define RTL818X_MSR_ENEDCA		(4 << 2)
-  	u8	CONFIG3;
-  #define RTL818X_CONFIG3_ANAPARAM_WRITE	(1 << 6)
-+#define RTL818X_CONFIG3_GNT_SELECT	(1 << 7)
-  	u8	CONFIG4;
-  #define RTL818X_CONFIG4_POWEROFF	(1 << 6)
-  #define RTL818X_CONFIG4_VCOOFF		(1 << 7)
-@@ -133,7 +139,9 @@ struct rtl818x_csr {
-  	__le32	RF_TIMING;
-  	u8	GP_ENABLE;
-  	u8	GPIO;
--	u8	reserved_12[10];
-+	u8	reserved_12[2];
-+	__le32	HSSI_PARA;
-+	u8	reserved_13[4];
-  	u8	TX_AGC_CTL;
-  #define RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT		(1 << 0)
-  #define RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT	(1 << 1)
-@@ -141,29 +149,39 @@ struct rtl818x_csr {
-  	u8	TX_GAIN_CCK;
-  	u8	TX_GAIN_OFDM;
-  	u8	TX_ANTENNA;
--	u8	reserved_13[16];
-+	u8	reserved_14[16];
-  	u8	WPA_CONF;
--	u8	reserved_14[3];
-+	u8	reserved_15[3];
-  	u8	SIFS;
-  	u8	DIFS;
-  	u8	SLOT;
--	u8	reserved_15[5];
-+	u8	reserved_16[5];
-  	u8	CW_CONF;
-  #define RTL818X_CW_CONF_PERPACKET_CW_SHIFT	(1 << 0)
-  #define RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT	(1 << 1)
-  	u8	CW_VAL;
-  	u8	RATE_FALLBACK;
--	u8	reserved_16[25];
-+#define RTL818X_RATE_FALLBACK_ENABLE	(1 << 7)
-+	u8	ACM_CONTROL;
-+	u8	reserved_17[24];
-  	u8	CONFIG5;
-  	u8	TX_DMA_POLLING;
--	u8	reserved_17[2];
-+	u8	reserved_18[2];
-  	__le16	CWR;
-  	u8	RETRY_CTR;
--	u8	reserved_18[5];
-+	u8	reserved_19[3];
-+	__le16	INT_MIG;
-+/* RTL818X_R8187B_*: magic numbers from ioregisters */
-+#define RTL818X_R8187B_B	0
-+#define RTL818X_R8187B_D	1
-+#define RTL818X_R8187B_E	2
-  	__le32	RDSAR;
--	u8	reserved_19[12];
--	__le16	FEMR;
-+	__le16	TID_AC_MAP;
-  	u8	reserved_20[4];
-+	u8	ANAPARAM3;
-+	u8	reserved_21[5];
-+	__le16	FEMR;
-+	u8	reserved_22[4];
-  	__le16	TALLY_CNT;
-  	u8	TALLY_SEL;
-  } __attribute__((packed));
-
+diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+index 3a9b1d7..d485a86 100644
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -36,9 +36,7 @@ config RT2X00_LIB_FIRMWARE
+ config RT2X00_LIB_RFKILL
+ 	boolean
+ 	depends on RT2X00_LIB
+-	depends on INPUT
+ 	select RFKILL
+-	select INPUT_POLLDEV
+ 
+ config RT2X00_LIB_LEDS
+ 	boolean
+@@ -57,7 +55,7 @@ config RT2400PCI
+ 
+ config RT2400PCI_RFKILL
+ 	bool "Ralink rt2400 rfkill support"
+-	depends on RT2400PCI && INPUT
++	depends on RT2400PCI
+ 	select RT2X00_LIB_RFKILL
+ 	---help---
+ 	  This adds support for integrated rt2400 hardware that features a
+@@ -85,7 +83,7 @@ config RT2500PCI
+ 
+ config RT2500PCI_RFKILL
+ 	bool "Ralink rt2500 rfkill support"
+-	depends on RT2500PCI && INPUT
++	depends on RT2500PCI
+ 	select RT2X00_LIB_RFKILL
+ 	---help---
+ 	  This adds support for integrated rt2500 hardware that features a
+@@ -115,7 +113,7 @@ config RT61PCI
+ 
+ config RT61PCI_RFKILL
+ 	bool "Ralink rt2501/rt61 rfkill support"
+-	depends on RT61PCI && INPUT
++	depends on RT61PCI
+ 	select RT2X00_LIB_RFKILL
+ 	---help---
+ 	  This adds support for integrated rt61 hardware that features a
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 6842464..1b28dad 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -649,7 +649,7 @@ struct rt2x00_dev {
+ #define RFKILL_STATE_ALLOCATED		1
+ #define RFKILL_STATE_REGISTERED		2
+ 	struct rfkill *rfkill;
+-	struct input_polled_dev *poll_dev;
++	struct delayed_work rfkill_work;
+ #endif /* CONFIG_RT2X00_LIB_RFKILL */
+ 
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index ae8ab71..41b3289 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -1179,7 +1179,6 @@ int rt2x00lib_suspend(struct rt2x00_dev *rt2x00dev, pm_message_t state)
+ 	 * Suspend/disable extra components.
+ 	 */
+ 	rt2x00leds_suspend(rt2x00dev);
+-	rt2x00rfkill_suspend(rt2x00dev);
+ 	rt2x00debug_deregister(rt2x00dev);
+ 
+ exit:
+@@ -1235,7 +1234,6 @@ int rt2x00lib_resume(struct rt2x00_dev *rt2x00dev)
+ 	 * Restore/enable extra components.
+ 	 */
+ 	rt2x00debug_register(rt2x00dev);
+-	rt2x00rfkill_resume(rt2x00dev);
+ 	rt2x00leds_resume(rt2x00dev);
+ 
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
+index 1d1f074..4b31c69 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00lib.h
++++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
+@@ -30,10 +30,11 @@
+ 
+ /*
+  * Interval defines
+- * Both the link tuner as the rfkill will be called once per second.
++ * The link tuner will be called once per second, while the rfkill poller
++ * will be called every 100ms.
+  */
+ #define LINK_TUNE_INTERVAL	( round_jiffies_relative(HZ) )
+-#define RFKILL_POLL_INTERVAL	( 1000 )
++#define RFKILL_POLL_INTERVAL	( round_jiffies_relative(HZ / 10) )
+ 
+ /*
+  * rt2x00_rate: Per rate device information
+@@ -204,8 +205,6 @@ void rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev);
+ void rt2x00rfkill_unregister(struct rt2x00_dev *rt2x00dev);
+ void rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev);
+ void rt2x00rfkill_free(struct rt2x00_dev *rt2x00dev);
+-void rt2x00rfkill_suspend(struct rt2x00_dev *rt2x00dev);
+-void rt2x00rfkill_resume(struct rt2x00_dev *rt2x00dev);
+ #else
+ static inline void rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev)
+ {
+@@ -222,14 +221,6 @@ static inline void rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
+ static inline void rt2x00rfkill_free(struct rt2x00_dev *rt2x00dev)
+ {
+ }
+-
+-static inline void rt2x00rfkill_suspend(struct rt2x00_dev *rt2x00dev)
+-{
+-}
+-
+-static inline void rt2x00rfkill_resume(struct rt2x00_dev *rt2x00dev)
+-{
+-}
+ #endif /* CONFIG_RT2X00_LIB_RFKILL */
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00rfkill.c b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
+index 207281c..04b2971 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00rfkill.c
++++ b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
+@@ -23,7 +23,6 @@
+ 	Abstract: rt2x00 rfkill routines.
+  */
+ 
+-#include <linux/input-polldev.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/rfkill.h>
+@@ -61,15 +60,35 @@ static int rt2x00rfkill_toggle_radio(void *data, enum rfkill_state state)
+ 	return retval;
+ }
+ 
+-static void rt2x00rfkill_poll(struct input_polled_dev *poll_dev)
++static int rt2x00rfkill_get_state(void *data, enum rfkill_state *state)
+ {
+-	struct rt2x00_dev *rt2x00dev = poll_dev->private;
+-	int state = rt2x00dev->ops->lib->rfkill_poll(rt2x00dev);
++	struct rt2x00_dev *rt2x00dev = data;
+ 
+-	if (rt2x00dev->rfkill->state != state) {
+-		input_report_key(poll_dev->input, KEY_WLAN, 1);
+-		input_report_key(poll_dev->input, KEY_WLAN, 0);
+-	}
++	*state = rt2x00dev->rfkill->state;
++
++	return 0;
++}
++
++static void rt2x00rfkill_poll(struct work_struct *work)
++{
++	struct rt2x00_dev *rt2x00dev =
++	    container_of(work, struct rt2x00_dev, rfkill_work.work);
++	int state;
++
++	if (!test_bit(RFKILL_STATE_REGISTERED, &rt2x00dev->rfkill_state))
++		return;
++
++	/*
++	 * rfkill_poll reports 1 when the key has been pressed and the
++	 * radio should be blocked.
++	 */
++	state = !rt2x00dev->ops->lib->rfkill_poll(rt2x00dev) ?
++	    RFKILL_STATE_UNBLOCKED : RFKILL_STATE_SOFT_BLOCKED;
++
++	rfkill_force_state(rt2x00dev->rfkill, state);
++
++	queue_delayed_work(rt2x00dev->hw->workqueue,
++			   &rt2x00dev->rfkill_work, RFKILL_POLL_INTERVAL);
+ }
+ 
+ void rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev)
+@@ -83,12 +102,6 @@ void rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev)
+ 		return;
+ 	}
+ 
+-	if (input_register_polled_device(rt2x00dev->poll_dev)) {
+-		ERROR(rt2x00dev, "Failed to register polled device.\n");
+-		rfkill_unregister(rt2x00dev->rfkill);
+-		return;
+-	}
+-
+ 	__set_bit(RFKILL_STATE_REGISTERED, &rt2x00dev->rfkill_state);
+ 
+ 	/*
+@@ -96,7 +109,7 @@ void rt2x00rfkill_register(struct rt2x00_dev *rt2x00dev)
+ 	 * and correctly sends the signal to the rfkill layer about this
+ 	 * state.
+ 	 */
+-	rt2x00rfkill_poll(rt2x00dev->poll_dev);
++	rt2x00rfkill_poll(&rt2x00dev->rfkill_work.work);
+ }
+ 
+ void rt2x00rfkill_unregister(struct rt2x00_dev *rt2x00dev)
+@@ -105,38 +118,13 @@ void rt2x00rfkill_unregister(struct rt2x00_dev *rt2x00dev)
+ 	    !test_bit(RFKILL_STATE_REGISTERED, &rt2x00dev->rfkill_state))
+ 		return;
+ 
+-	input_unregister_polled_device(rt2x00dev->poll_dev);
++	cancel_delayed_work_sync(&rt2x00dev->rfkill_work);
++
+ 	rfkill_unregister(rt2x00dev->rfkill);
+ 
+ 	__clear_bit(RFKILL_STATE_REGISTERED, &rt2x00dev->rfkill_state);
+ }
+ 
+-static struct input_polled_dev *
+-rt2x00rfkill_allocate_polldev(struct rt2x00_dev *rt2x00dev)
+-{
+-	struct input_polled_dev *poll_dev;
+-
+-	poll_dev = input_allocate_polled_device();
+-	if (!poll_dev)
+-		return NULL;
+-
+-	poll_dev->private = rt2x00dev;
+-	poll_dev->poll = rt2x00rfkill_poll;
+-	poll_dev->poll_interval = RFKILL_POLL_INTERVAL;
+-
+-	poll_dev->input->name = rt2x00dev->ops->name;
+-	poll_dev->input->phys = wiphy_name(rt2x00dev->hw->wiphy);
+-	poll_dev->input->id.bustype = BUS_HOST;
+-	poll_dev->input->id.vendor = 0x1814;
+-	poll_dev->input->id.product = rt2x00dev->chip.rt;
+-	poll_dev->input->id.version = rt2x00dev->chip.rev;
+-	poll_dev->input->dev.parent = wiphy_dev(rt2x00dev->hw->wiphy);
+-	poll_dev->input->evbit[0] = BIT(EV_KEY);
+-	set_bit(KEY_WLAN, poll_dev->input->keybit);
+-
+-	return poll_dev;
+-}
+-
+ void rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
+ {
+ 	if (!test_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags))
+@@ -153,14 +141,9 @@ void rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00dev->rfkill->data = rt2x00dev;
+ 	rt2x00dev->rfkill->state = -1;
+ 	rt2x00dev->rfkill->toggle_radio = rt2x00rfkill_toggle_radio;
++	rt2x00dev->rfkill->get_state = rt2x00rfkill_get_state;
+ 
+-	rt2x00dev->poll_dev = rt2x00rfkill_allocate_polldev(rt2x00dev);
+-	if (!rt2x00dev->poll_dev) {
+-		ERROR(rt2x00dev, "Failed to allocate polled device.\n");
+-		rfkill_free(rt2x00dev->rfkill);
+-		rt2x00dev->rfkill = NULL;
+-		return;
+-	}
++	INIT_DELAYED_WORK(&rt2x00dev->rfkill_work, rt2x00rfkill_poll);
+ 
+ 	return;
+ }
+@@ -171,32 +154,8 @@ void rt2x00rfkill_free(struct rt2x00_dev *rt2x00dev)
+ 	    !test_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state))
+ 		return;
+ 
+-	input_free_polled_device(rt2x00dev->poll_dev);
+-	rt2x00dev->poll_dev = NULL;
++	cancel_delayed_work_sync(&rt2x00dev->rfkill_work);
+ 
+ 	rfkill_free(rt2x00dev->rfkill);
+ 	rt2x00dev->rfkill = NULL;
+ }
+-
+-void rt2x00rfkill_suspend(struct rt2x00_dev *rt2x00dev)
+-{
+-	if (!test_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags) ||
+-	    !test_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state))
+-		return;
+-
+-	input_free_polled_device(rt2x00dev->poll_dev);
+-	rt2x00dev->poll_dev = NULL;
+-}
+-
+-void rt2x00rfkill_resume(struct rt2x00_dev *rt2x00dev)
+-{
+-	if (!test_bit(CONFIG_SUPPORT_HW_BUTTON, &rt2x00dev->flags) ||
+-	    !test_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state))
+-		return;
+-
+-	rt2x00dev->poll_dev = rt2x00rfkill_allocate_polldev(rt2x00dev);
+-	if (!rt2x00dev->poll_dev) {
+-		ERROR(rt2x00dev, "Failed to allocate polled device.\n");
+-		return;
+-	}
+-}
