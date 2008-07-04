@@ -1,68 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:33226 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.190]:10517 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751058AbYGVQyu (ORCPT
+	with ESMTP id S1751630AbYGDK4q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 12:54:50 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so708172nfc.21
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2008 09:54:48 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH 3/6] rfkill: document the rfkill struct locking (v2)
-Date: Tue, 22 Jul 2008 19:11:28 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <1216685902-9373-1-git-send-email-hmh@hmh.eng.br> <1216685902-9373-4-git-send-email-hmh@hmh.eng.br>
-In-Reply-To: <1216685902-9373-4-git-send-email-hmh@hmh.eng.br>
+	Fri, 4 Jul 2008 06:56:46 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so355981nfc.21
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Jul 2008 03:56:44 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: rt61 and TSF reporting?
+Date: Fri, 4 Jul 2008 13:02:44 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+References: <1214907990.7763.40.camel@johannes.berg>
+In-Reply-To: <1214907990.7763.40.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-15"
-Message-Id: <200807221911.28873.IvDoorn@gmail.com> (sfid-20080722_185452_945450_27DFDB2B)
+Message-Id: <200807041302.44288.IvDoorn@gmail.com> (sfid-20080704_125649_829692_27873090)
 From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 22 July 2008, Henrique de Moraes Holschuh wrote:
-> Reorder fields in struct rfkill and add comments to make it clear
-> which fields are protected by rfkill->mutex.
-> 
-> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Hi,
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+> Is there any way to get rt61 to report the receive timestamp? That would
+> be very useful for monitor mode and good for IBSS.
 
-> ---
->  include/linux/rfkill.h |    8 +++++---
->  1 files changed, 5 insertions(+), 3 deletions(-)
-> 
-> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-> index c5f6e54..741d1a6 100644
-> --- a/include/linux/rfkill.h
-> +++ b/include/linux/rfkill.h
-> @@ -68,7 +68,8 @@ enum rfkill_state {
->   * @user_claim_unsupported: Whether the hardware supports exclusive
->   *	RF-kill control by userspace. Set this before registering.
->   * @user_claim: Set when the switch is controlled exlusively by userspace.
-> - * @mutex: Guards switch state transitions
-> + * @mutex: Guards switch state transitions.  It serializes callbacks
-> + *	and also protects the state.
->   * @data: Pointer to the RF button drivers private data which will be
->   *	passed along when toggling radio state.
->   * @toggle_radio(): Mandatory handler to control state of the radio.
-> @@ -89,12 +90,13 @@ struct rfkill {
->  	const char *name;
->  	enum rfkill_type type;
->  
-> -	enum rfkill_state state;
->  	bool user_claim_unsupported;
->  	bool user_claim;
->  
-> +	/* the mutex serializes callbacks and also protects
-> +	 * the state */
->  	struct mutex mutex;
-> -
-> +	enum rfkill_state state;
->  	void *data;
->  	int (*toggle_radio)(void *data, enum rfkill_state state);
->  	int (*get_state)(void *data, enum rfkill_state *state);
+I just received an answer from Ralink about this issue,
 
+---
+1.       For 11b/g based chips rt2500, rt2570, rt61, rt73 doesn't implement this.
 
+2.       For 11n based chips, there is one MAC register have to enable to have this feature.
+	  But, Word 2 of RXWI will put the timestamp and the RSSI will put to Word 3.
+	 The original Word 3 SNR will disappear and replace by RSSI.
+---
+
+As for the timestamps in 2400 and rt2800, they are both in 32bits, so I am not sure how
+reliable they will be for IBSS.
+
+Ivo
