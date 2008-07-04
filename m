@@ -1,148 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3814 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757067AbYGOShZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 14:37:25 -0400
-Date: Tue, 15 Jul 2008 14:26:54 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: REVISED AGENDA -- Re: Linux Wireless Mini-Summit -- Ottawa -- July
-	22, 2008
-Message-ID: <20080715182654.GA5969@tuxdriver.com> (sfid-20080715_203731_863327_623FD323)
-References: <20080709190915.GA8238@tuxdriver.com>
+Received: from mga10.intel.com ([192.55.52.92]:42527 "EHLO
+	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750919AbYGDW47 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jul 2008 18:56:59 -0400
+Message-ID: <486EAAB6.2070000@linux.intel.com> (sfid-20080705_005704_078175_395EFA0F)
+Date: Fri, 04 Jul 2008 15:56:54 -0700
+From: Arjan van de Ven <arjan@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080709190915.GA8238@tuxdriver.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: linville@tuxdriver.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Oops/Warning report of the week of July 4th 2008
+References: <486EA0D6.2040504@linux.intel.com> <200807050038.49712.IvDoorn@gmail.com>
+In-Reply-To: <200807050038.49712.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I revised the agenda based on the feedback from last week.
-Most changes are fairly minor, although I moved the vendor/distro
-round table after lunch to give us a chance to cover some in-progress
-work beforehand.
+Ivo van Doorn wrote:
+> Hi,
+> 
+>> Rank 12: flush_workqueue (oops)
+>> 	Reported 39 times
+>> 	Bug in the rt25xx driver passing NULL to the flush_workqueue() function
+>> 	This oops was last seen in version 2.6.25.9, and first seen in 2.6.25.9.
+>> 	More info: http://www.kerneloops.org/searchweek.php?search=flush_workqueue
+> 
+> Hmm, interesting I hadn't received such reports yet..
 
-As I mentioned elsewhere in the thread, I don't think we have enough
-time for work sessions on Tuesday.  As others have pointed-out, there
-is plenty of time for extended discussions during the days at OLS.
-So I think we should keep Tuesday for more high-level design and
-development process discussions.
+it only very recently showed up on kerneloops.org (the .9 release from Fedora is only a 2 or 3 days old).
+In addition, while I monitor what's going on, oops patterns need to cross roughly a 25/week pattern for
+me to notice them as standing out...
 
-Feel free to volunteer to cover any of the listed topics.  Further
-suggestions to alter or augment the agenda are, of course, still
-welcome as well.
-
-Thanks!
-
-John
-
----
-
-3rd Linux Wireless Summit
-Ottawa, Canada
-22 July 2008
-
-Proposed Agenda
-
-0830	Meet & Greet
-
-	Introductions and opening remarks
-
-0900	Status Reports
-
-	Overview of where things stand today
-
-	- 802.11n
-
-	- QoS/Multiqueue
-
-	- spectrum management
-
-	- Mesh mode (802.11s)
-
-	- RF kill
-
-1015	Break
-
-1030	Current Work
-
-	Short presentations/discussions about work in progress
-
-	- access point mode
-
-	- cfg80211/nl80211
-		- time to push to replace WEXT?
-		- tool enhancements and/or userland support?
-
-	- regulatory enforcement (802.11d, CRDA)
-
-	- encrypted management frames (802.11w)
-
-	- virtual hardware (mac80211_hwsim)
-
-	- WiMAX
-
-1200	Lunch/Break (provided by HP)
-
-1300	Vendor/Distro Round Table
-
-	Representatives from hardware vendors and Linux distributions
-	discuss issues around cooperation between themselves and the
-	development community, what we are doing well, and what problems we
-	are causing for each other.
-
-1445	Break
-
-1500	Future work
-
-	Short presentations/discussions about work that has previously
-	been suggested or requested
-
-	- power management 
-		- suspend/resume
-		- power savings
-
-	- lib80211 (code sharing w/ full MAC drivers)
-
-	- rate scaling algorithms
-		- minstrel
-		- others?
-
-	- userland MLME
-
-	- userland driver implementation
-
-	- organized testing?
-
-1645	Break
-
-1700	Maintainence Issues
-
-	Round table discussion of issues related to maintenance of
-	the wireless trees
-
-	- trivial/cleanup patches
-		- testing or other requirements?
-		- should they have lower priority?
-		- should they require ACKs from primary author?
-
-	- submissions to -stable
-		- who should drive it?
-		- what policies?
-
-	- rate scaling algs
-		- driver-specific ok?  what limitations?
-		- build policies (part of mac80211.ko?)
-
-	- questions/suggestions/complaints
-
-1800	Dinner/Break (sorry, no funding)
-
-2000	BoF/Break-out Sessions
-
-	Impromptu and/or unscheduled discussions as desired by group
-	participants
-
--- 
-John W. Linville
-linville@tuxdriver.com
+If I see other patterns come up I'll send out email again ;-)
