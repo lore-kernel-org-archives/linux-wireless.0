@@ -1,73 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.249]:3499 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752614AbYGZDao convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52537 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756310AbYGEXvW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2008 23:30:44 -0400
-Received: by an-out-0708.google.com with SMTP id d40so774840and.103
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2008 20:30:43 -0700 (PDT)
-Message-ID: <f2efd86c0807252030t1d73f4ffu8b23d6221f8f3212@mail.gmail.com> (sfid-20080726_053102_662997_F0068AD1)
-Date: Fri, 25 Jul 2008 23:30:43 -0400
-From: "Junty Mesmon" <jmesmon@gmail.com>
-To: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: [ipw3945-devel] [PATCH] iwlwifi: Enable packet injection for iwl4965
-Cc: "Zhu Yi" <yi.zhu@intel.com>,
-	"=?ISO-8859-1?Q?St=E9phane_Jourdois?=" <stephane@jourdois.fr>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <69e28c910807251449h6e389cd2n72de63c558338335@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <69e28c910807181205m6dd0cdcek83f9717bf1ac9dcc@mail.gmail.com>
-	 <69e28c910807220454q7c8371e1m11b1015ed8398758@mail.gmail.com>
-	 <4885DDC4.2060609@googlemail.com> <4886235F.6010407@jourdois.fr>
-	 <1216951133.2705.227.camel@debian.sh.intel.com>
-	 <69e28c910807251449h6e389cd2n72de63c558338335@mail.gmail.com>
+	Sat, 5 Jul 2008 19:51:22 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1KFHXF-0003Jl-DL
+	for linux-wireless@vger.kernel.org; Sun, 06 Jul 2008 01:51:21 +0200
+Message-Id: <20080705235014.191243000@sipsolutions.net> (sfid-20080706_015142_608755_311966E0)
+References: <20080705234735.210585000@sipsolutions.net>
+Date: Sun, 06 Jul 2008 01:47:38 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFT 3/4] mac80211: push interface checks down
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If this is the right place to do it, i would like to confirm that i
-have had success injecting data packets with the stated patchto the
-iwl4965 driver.
+This patch pushes the "netif_running()" and "same type as before"
+checks down into ieee80211_if_change_type() to centralise the
+logic instead of duplicating it for cfg80211 and wext.
 
-On Fri, Jul 25, 2008 at 5:49 PM, Stefanik G=E1bor <netrolller.3d@gmail.=
-com> wrote:
-> 2008/7/25 Zhu Yi <yi.zhu@intel.com>:
->> On Tue, 2008-07-22 at 20:13 +0200, St=E9phane Jourdois wrote:
->>> but this commit is for iwl3945, not iwl4965.
->>> The patch for iwl4965 is currently not in any git tree.
->>
->> We are waiting for more "confirmed success" response before merging =
-it.
->>
->> Thanks,
->> -yi
->
-> I think we now have a lot of "confirmed success", as aircrack-ng user=
-s
-> are now using this card with aireplay-ng - injecting association
-> frames is unstable, but injecting data packets works.
->
-> --
-> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
->
-> ---------------------------------------------------------------------=
-----
-> This SF.Net email is sponsored by the Moblin Your Move Developer's ch=
-allenge
-> Build the coolest Linux based applications with Moblin SDK & win grea=
-t prizes
-> Grand prize is a trip for two to an Open Source event anywhere in the=
- world
-> http://moblin-contest.org/redirect.php?banner_id=3D100&url=3D/
-> _______________________________________________
-> Ipw3945-devel mailing list
-> Ipw3945-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/cfg.c         |    8 ++++----
+ net/mac80211/ieee80211_i.h |    4 ++--
+ net/mac80211/iface.c       |   20 ++++++++++++++++++--
+ net/mac80211/wext.c        |    9 +--------
+ 4 files changed, 25 insertions(+), 16 deletions(-)
+
+--- everything.orig/net/mac80211/cfg.c	2008-07-05 23:33:16.000000000 +0200
++++ everything/net/mac80211/cfg.c	2008-07-05 23:33:18.000000000 +0200
+@@ -84,22 +84,22 @@ static int ieee80211_change_iface(struct
+ 	struct net_device *dev;
+ 	enum ieee80211_if_types itype;
+ 	struct ieee80211_sub_if_data *sdata;
++	int ret;
+ 
+ 	/* we're under RTNL */
+ 	dev = __dev_get_by_index(&init_net, ifindex);
+ 	if (!dev)
+ 		return -ENODEV;
+ 
+-	if (netif_running(dev))
+-		return -EBUSY;
+-
+ 	itype = nl80211_type_to_mac80211_type(type);
+ 	if (itype == IEEE80211_IF_TYPE_INVALID)
+ 		return -EINVAL;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+-	ieee80211_if_change_type(sdata, itype);
++	ret = ieee80211_if_change_type(sdata, itype);
++	if (ret)
++		return ret;
+ 
+ 	if (ieee80211_vif_is_mesh(&sdata->vif) && params->mesh_id_len)
+ 		ieee80211_if_sta_set_mesh_id(&sdata->u.sta,
+--- everything.orig/net/mac80211/ieee80211_i.h	2008-07-05 23:33:16.000000000 +0200
++++ everything/net/mac80211/ieee80211_i.h	2008-07-05 23:33:18.000000000 +0200
+@@ -929,8 +929,8 @@ void ieee80211_if_setup(struct net_devic
+ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 		     struct net_device **new_dev, enum ieee80211_if_types type,
+ 		     struct vif_params *params);
+-void ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
+-			      enum ieee80211_if_types type);
++int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
++			     enum ieee80211_if_types type);
+ void ieee80211_if_remove(struct net_device *dev);
+ void ieee80211_remove_interfaces(struct ieee80211_local *local);
+ 
+--- everything.orig/net/mac80211/iface.c	2008-07-05 23:33:16.000000000 +0200
++++ everything/net/mac80211/iface.c	2008-07-05 23:33:18.000000000 +0200
+@@ -138,9 +138,23 @@ static void ieee80211_setup_sdata(struct
+ 	ieee80211_debugfs_add_netdev(sdata);
+ }
+ 
+-void ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
+-			      enum ieee80211_if_types type)
++int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
++			     enum ieee80211_if_types type)
+ {
++	ASSERT_RTNL();
++
++	if (type == sdata->vif.type)
++		return 0;
++
++	/*
++	 * We could, here, on changes between IBSS/STA/MESH modes,
++	 * invoke an MLME function instead that disassociates etc.
++	 * and goes into the requested mode.
++	 */
++
++	if (netif_running(sdata->dev))
++		return -EBUSY;
++
+ 	/* Purge and reset type-dependent state. */
+ 	ieee80211_teardown_sdata(sdata->dev);
+ 	ieee80211_setup_sdata(sdata, type);
+@@ -149,6 +163,8 @@ void ieee80211_if_change_type(struct iee
+ 	sdata->basic_rates = 0;
+ 	sdata->drop_unencrypted = 0;
+ 	sdata->sequence = 0;
++
++	return 0;
+ }
+ 
+ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+--- everything.orig/net/mac80211/wext.c	2008-07-05 23:33:16.000000000 +0200
++++ everything/net/mac80211/wext.c	2008-07-05 23:33:18.000000000 +0200
+@@ -296,14 +296,7 @@ static int ieee80211_ioctl_siwmode(struc
+ 		return -EINVAL;
+ 	}
+ 
+-	if (type == sdata->vif.type)
+-		return 0;
+-	if (netif_running(dev))
+-		return -EBUSY;
+-
+-	ieee80211_if_change_type(sdata, type);
+-
+-	return 0;
++	return ieee80211_if_change_type(sdata, type);
+ }
+ 
+ 
+
+-- 
+
