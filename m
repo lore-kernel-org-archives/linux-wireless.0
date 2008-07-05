@@ -1,35 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.248]:38813 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750845AbYGVNlt (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:47714 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751183AbYGEKJ1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 09:41:49 -0400
-Received: by an-out-0708.google.com with SMTP id d40so442280and.103
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2008 06:41:48 -0700 (PDT)
-Message-ID: <43e72e890807220641y7368f818h20f2410ce449a76b@mail.gmail.com> (sfid-20080722_154153_127419_3F3BC7CC)
-Date: Tue, 22 Jul 2008 06:41:48 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Maarten Wisse" <WisseAanen@gmx.de>
-Subject: Re: No led with compat-20080721 and iwl3945
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200807220833.54383.WisseAanen@gmx.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <200807220833.54383.WisseAanen@gmx.de>
+	Sat, 5 Jul 2008 06:09:27 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1KF4hp-0003Ee-On
+	for linux-wireless@vger.kernel.org; Sat, 05 Jul 2008 12:09:25 +0200
+Message-Id: <20080705100655.419906000@sipsolutions.net> (sfid-20080705_120930_145183_54B9CAAA)
+Date: Sat, 05 Jul 2008 12:06:55 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH/RFT 0/2] mac80211 virtual interface improvement
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 21, 2008 at 11:33 PM, Maarten Wisse <WisseAanen@gmx.de> wrote:
-> Dear wireless developers,
->
-> You might know it already, but the led doesn't blink anymore in iwl3945, on a
-> dell D620 with a gentoo 2.6.25-tuxonice-r6 kernel with compat-20080721
-> installed. The connection seems quite stable though. Thanks for that!
+Since I complained a while ago about the state of the iface.c file
+being a complete mess, I decided to just rewrite it.
 
-The goal of compat-wireless was to support everything we can from
-wireless-testing on older kernels. Because of this we need to backport
-all supported work down to older kernels. Led and RFKILL particularly
-were not as critical to backport as basic driver functionality.
-Consider it a todo list item and those interested can work on it.
+Tested lightly (not in AP mode)
 
-  Luis
+johannes
+
