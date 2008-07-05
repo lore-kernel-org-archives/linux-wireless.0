@@ -1,82 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:65160 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753886AbYG2F40 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:47718 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751310AbYGEKJb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 01:56:26 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so1621506nfc.21
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 22:56:24 -0700 (PDT)
-Date: Tue, 29 Jul 2008 13:57:31 +0800
-From: Dave Young <hidave.darkstar@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [BUG] wireless : cpu stuck for 61s
-Message-ID: <20080729055731.GA3265@darkstar> (sfid-20080729_075630_082047_A76939B2)
+	Sat, 5 Jul 2008 06:09:31 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1KF4hu-0003Em-3D
+	for linux-wireless@vger.kernel.org; Sat, 05 Jul 2008 12:09:30 +0200
+Message-Id: <20080705100826.860226000@sipsolutions.net> (sfid-20080705_120935_523968_9F223499)
+References: <20080705100655.419906000@sipsolutions.net>
+Date: Sat, 05 Jul 2008 12:06:57 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH/RFT 2/2] mac80211: push interface checks down
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While set my wlan0 to ad-hoc mode and then set the essid to something,
-this bug triggered.
+This patch pushes the "netif_running()" and "same type as before"
+checks down into ieee80211_if_change_type() to centralise the
+logic instead of duplicating it for cfg80211 and wext.
 
-I suspect it's related to debugfs or mutex? But I'm not sure.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/cfg.c         |    8 ++++----
+ net/mac80211/ieee80211_i.h |    4 ++--
+ net/mac80211/iface.c       |   20 ++++++++++++++++++--
+ net/mac80211/wext.c        |    9 +--------
+ 4 files changed, 25 insertions(+), 16 deletions(-)
 
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493] BUG: soft lockup - CPU#0 stuck for 61s! [events/0:9]
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493] Modules linked in: radeonfb fb_ddc i2c_algo_bit snd_seq_dummy snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss snd_mixer_oss rfcomm l2cap bluetooth vfat fuse rtc_cmos rtc_core psmouse intel_agp pl2303 rtc_lib ath5k e100 i2c_i801 serio_raw usbserial agpgart 3c59x mii snd_hda_intel snd_pcm mac80211 snd_timer snd_page_alloc cfg80211 snd_hwdep snd soundcore thermal processor button thermal_sys evdev sg
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493] 
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493] Pid: 9, comm: events/0 Tainted: G        W (2.6.26-smp #3)
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493] EIP: 0060:[<c0450bc3>] EFLAGS: 00000246 CPU: 0
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493] EIP is at mutex_lock_nested+0x1b3/0x280
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493] EAX: 00000000 EBX: f7bf5284 ECX: f7c7e000 EDX: f7bf52a8
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493] ESI: f7bf5288 EDI: 00000246 EBP: f7c7fedc ESP: f7c7fe9c
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493] CR0: 8005003b CR2: b800c5ac CR3: 36e71000 CR4: 000006d0
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493] DR6: ffff0ff0 DR7: 00000400
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  [<c02375a6>] ? debugfs_create_file+0x46/0x210
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  [<c02375a6>] ? debugfs_create_file+0x46/0x210
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  [<c02375a6>] debugfs_create_file+0x46/0x210
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  [<c02377f1>] debugfs_create_dir+0x21/0x30
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  [<f8901f6d>] ieee80211_sta_debugfs_add+0x2d/0x150 [mac80211]
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  [<f88eba89>] sta_info_debugfs_add_work+0x89/0x130 [mac80211]
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  [<f890a170>] ? rate_control_pid_add_sta_debugfs+0x0/0x30 [mac80211]
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  [<c01394c6>] run_workqueue+0x156/0x1d0
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  [<c0139472>] ? run_workqueue+0x102/0x1d0
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  [<f88eba00>] ? sta_info_debugfs_add_work+0x0/0x130 [mac80211]
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  [<c0139f18>] worker_thread+0x88/0xe0
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  [<c013cd20>] ? autoremove_wake_function+0x0/0x40
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  [<c0139e90>] ? worker_thread+0x0/0xe0
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  [<c013ca32>] kthread+0x42/0x70
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  [<c013c9f0>] ? kthread+0x0/0x70
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  [<c0104993>] kernel_thread_helper+0x7/0x14
-Jul 29 13:01:46 darkstar kernel: [ 8033.736493]  =======================
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898] BUG: soft lockup - CPU#0 stuck for 61s! [events/0:9]
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898] Modules linked in: radeonfb fb_ddc i2c_algo_bit snd_seq_dummy snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss snd_mixer_oss rfcomm l2cap bluetooth vfat fuse rtc_cmos rtc_core psmouse intel_agp pl2303 rtc_lib ath5k e100 i2c_i801 serio_raw usbserial agpgart 3c59x mii snd_hda_intel snd_pcm mac80211 snd_timer snd_page_alloc cfg80211 snd_hwdep snd soundcore thermal processor button thermal_sys evdev sg
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898] 
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898] Pid: 9, comm: events/0 Tainted: G        W (2.6.26-smp #3)
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898] EIP: 0060:[<c0450bc3>] EFLAGS: 00000246 CPU: 0
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898] EIP is at mutex_lock_nested+0x1b3/0x280
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898] EAX: 00000000 EBX: f7bf5284 ECX: f7c7e000 EDX: f7bf52a8
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898] ESI: f7bf5288 EDI: 00000246 EBP: f7c7fedc ESP: f7c7fe9c
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898] CR0: 8005003b CR2: b800c5ac CR3: 36e71000 CR4: 000006d0
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898] DR6: ffff0ff0 DR7: 00000400
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898]  [<c02375a6>] ? debugfs_create_file+0x46/0x210
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898]  [<c02375a6>] ? debugfs_create_file+0x46/0x210
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898]  [<c02375a6>] debugfs_create_file+0x46/0x210
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898]  [<c02377f1>] debugfs_create_dir+0x21/0x30
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898]  [<f8901f6d>] ieee80211_sta_debugfs_add+0x2d/0x150 [mac80211]
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898]  [<f88eba89>] sta_info_debugfs_add_work+0x89/0x130 [mac80211]
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898]  [<f890a170>] ? rate_control_pid_add_sta_debugfs+0x0/0x30 [mac80211]
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898]  [<c01394c6>] run_workqueue+0x156/0x1d0
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898]  [<c0139472>] ? run_workqueue+0x102/0x1d0
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898]  [<f88eba00>] ? sta_info_debugfs_add_work+0x0/0x130 [mac80211]
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898]  [<c0139f18>] worker_thread+0x88/0xe0
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898]  [<c013cd20>] ? autoremove_wake_function+0x0/0x40
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898]  [<c0139e90>] ? worker_thread+0x0/0xe0
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898]  [<c013ca32>] kthread+0x42/0x70
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898]  [<c013c9f0>] ? kthread+0x0/0x70
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898]  [<c0104993>] kernel_thread_helper+0x7/0x14
-Jul 29 13:02:51 darkstar kernel: [ 8099.234898]  =======================
+--- everything.orig/net/mac80211/cfg.c	2008-07-05 11:35:09.000000000 +0200
++++ everything/net/mac80211/cfg.c	2008-07-05 12:04:14.000000000 +0200
+@@ -84,22 +84,22 @@ static int ieee80211_change_iface(struct
+ 	struct net_device *dev;
+ 	enum ieee80211_if_types itype;
+ 	struct ieee80211_sub_if_data *sdata;
++	int ret;
+ 
+ 	/* we're under RTNL */
+ 	dev = __dev_get_by_index(&init_net, ifindex);
+ 	if (!dev)
+ 		return -ENODEV;
+ 
+-	if (netif_running(dev))
+-		return -EBUSY;
+-
+ 	itype = nl80211_type_to_mac80211_type(type);
+ 	if (itype == IEEE80211_IF_TYPE_INVALID)
+ 		return -EINVAL;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+-	ieee80211_if_change_type(sdata, itype);
++	ret = ieee80211_if_change_type(sdata, itype);
++	if (ret)
++		return ret;
+ 
+ 	if (ieee80211_vif_is_mesh(&sdata->vif) && params->mesh_id_len)
+ 		ieee80211_if_sta_set_mesh_id(&sdata->u.sta,
+--- everything.orig/net/mac80211/ieee80211_i.h	2008-07-05 11:35:09.000000000 +0200
++++ everything/net/mac80211/ieee80211_i.h	2008-07-05 12:04:14.000000000 +0200
+@@ -929,8 +929,8 @@ void ieee80211_if_setup(struct net_devic
+ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 		     struct net_device **new_dev, enum ieee80211_if_types type,
+ 		     struct vif_params *params);
+-void ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
+-			      enum ieee80211_if_types type);
++int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
++			     enum ieee80211_if_types type);
+ void ieee80211_if_remove(struct net_device *dev);
+ void ieee80211_remove_interfaces(struct ieee80211_local *local);
+ 
+--- everything.orig/net/mac80211/iface.c	2008-07-05 12:02:21.000000000 +0200
++++ everything/net/mac80211/iface.c	2008-07-05 12:04:14.000000000 +0200
+@@ -138,9 +138,23 @@ static void ieee80211_setup_sdata(struct
+ 	ieee80211_debugfs_add_netdev(sdata);
+ }
+ 
+-void ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
+-			      enum ieee80211_if_types type)
++int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
++			     enum ieee80211_if_types type)
+ {
++	ASSERT_RTNL();
++
++	if (type == sdata->vif.type)
++		return 0;
++
++	/*
++	 * We could, here, on changes between IBSS/STA/MESH modes,
++	 * invoke an MLME function instead that disassociates etc.
++	 * and goes into the requested mode.
++	 */
++
++	if (netif_running(sdata->dev))
++		return -EBUSY;
++
+ 	/* Purge and reset type-dependent state. */
+ 	ieee80211_teardown_sdata(sdata->dev);
+ 	ieee80211_setup_sdata(sdata, type);
+@@ -149,6 +163,8 @@ void ieee80211_if_change_type(struct iee
+ 	sdata->basic_rates = 0;
+ 	sdata->drop_unencrypted = 0;
+ 	sdata->sequence = 0;
++
++	return 0;
+ }
+ 
+ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+--- everything.orig/net/mac80211/wext.c	2008-07-05 11:35:09.000000000 +0200
++++ everything/net/mac80211/wext.c	2008-07-05 12:04:14.000000000 +0200
+@@ -296,14 +296,7 @@ static int ieee80211_ioctl_siwmode(struc
+ 		return -EINVAL;
+ 	}
+ 
+-	if (type == sdata->vif.type)
+-		return 0;
+-	if (netif_running(dev))
+-		return -EBUSY;
+-
+-	ieee80211_if_change_type(sdata, type);
+-
+-	return 0;
++	return ieee80211_if_change_type(sdata, type);
+ }
+ 
+ 
+
+-- 
+
