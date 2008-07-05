@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51668
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1757732AbYGQMRU (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.186]:45961 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750722AbYGETTp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 08:17:20 -0400
-Date: Thu, 17 Jul 2008 05:17:19 -0700 (PDT)
-Message-Id: <20080717.051719.04384502.davem@davemloft.net> (sfid-20080717_141729_030159_FD1787E5)
-To: netdev@vger.kernel.org
-CC: kaber@trash.net, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 19/31]: pkt_sched: dev_init_scheduler() does not need to
- lock qdisc tree.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 5 Jul 2008 15:19:45 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so482540nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Jul 2008 12:19:44 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [Rt2400-devel] [PATCH] rt2x00: Fix NULL pointer error =?iso-8859-15?q?in=09adhoc/master?= mode
+Date: Sat, 5 Jul 2008 21:26:16 +0200
+Cc: Bryan Batten <BryanBatten@sbcglobal.net>, linville@tuxdriver.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+References: <200807051511.57995.IvDoorn@gmail.com> <200807052042.47008.IvDoorn@gmail.com> <1215283415.6848.14.camel@johannes.berg>
+In-Reply-To: <1215283415.6848.14.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200807052126.16913.IvDoorn@gmail.com> (sfid-20080705_211949_061307_77AA8FE5)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Saturday 05 July 2008, Johannes Berg wrote:
+> 
+> > Hmm, in that case I have to fix something in the beacondone handler
+> > to prevent it requesting a beacon when mac80211 hasn't supplied anything
+> > yet..
+> 
+> I was working in this area... Can you take a quick look at this patch
+> and let me know what you think?
+> http://johannes.sipsolutions.net/patches/kernel/all/2008-07-05-18%3a42/mac80211-beacon-revamp.patch
 
-We are registering the device, there is no way anyone can get
-at this object's qdiscs yet in any meaningful way.
+Patch looks good to me, it wouldn't change anything about the above since t2x00 would still
+call ieee80211_beacon_get() when the beacon wasn't provided by mac80211 yet.
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/sched/sch_generic.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+But the flags that mark what has changed is definately a good idea,
+that will prevent some redundant register writes. :)
 
-diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
-index dd5c4e7..7e078c5 100644
---- a/net/sched/sch_generic.c
-+++ b/net/sched/sch_generic.c
-@@ -741,10 +741,8 @@ static void dev_init_scheduler_queue(struct net_device *dev,
- 
- void dev_init_scheduler(struct net_device *dev)
- {
--	qdisc_lock_tree(dev);
- 	netdev_for_each_tx_queue(dev, dev_init_scheduler_queue, &noop_qdisc);
- 	dev_init_scheduler_queue(dev, &dev->rx_queue, NULL);
--	qdisc_unlock_tree(dev);
- 
- 	setup_timer(&dev->watchdog_timer, dev_watchdog, (unsigned long)dev);
- }
--- 
-1.5.6.2.255.gbed62
-
+Ivo
