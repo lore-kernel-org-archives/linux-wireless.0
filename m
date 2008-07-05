@@ -1,97 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:27393 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750963AbYG3Hxk (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49783 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752468AbYGETh1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 03:53:40 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org, rschneiderman@yahoo.com
-Subject: Re: broadcom 4306 rev. 3 uses b43 instead of b43legacy
-Date: Wed, 30 Jul 2008 09:53:33 +0200
-References: <346184.16399.qm@web52404.mail.re2.yahoo.com>
-In-Reply-To: <346184.16399.qm@web52404.mail.re2.yahoo.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200807300953.33588.hs4233@mail.mn-solutions.de> (sfid-20080730_095344_149992_22AD74C9)
+	Sat, 5 Jul 2008 15:37:27 -0400
+Subject: Re: [Rt2400-devel] [PATCH] rt2x00: Fix NULL pointer error
+	in	adhoc/master mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Bryan Batten <BryanBatten@sbcglobal.net>, linville@tuxdriver.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+In-Reply-To: <200807052137.59412.IvDoorn@gmail.com> (sfid-20080705_213128_827852_921377F3)
+References: <200807051511.57995.IvDoorn@gmail.com>
+	 <200807052126.16913.IvDoorn@gmail.com>
+	 <1215285776.6848.21.camel@johannes.berg>
+	 <200807052137.59412.IvDoorn@gmail.com>
+	 (sfid-20080705_213128_827852_921377F3)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-t/8x4GohT/agGFo936By"
+Date: Sat, 05 Jul 2008 21:37:09 +0200
+Message-Id: <1215286630.6848.24.camel@johannes.berg> (sfid-20080705_213730_267938_B9102F48)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Is this known bug? I can see my wireless network using wlist
-> wlan0 scan.
 
-This card (which seems to be a 4306 rev 3 like yours), works for me:
-
-03:00.0 Network controller [0280]: Broadcom Corporation BCM4306 802.11b/g Wireless LAN Controller [14e4:4320] (rev 03)
-        Subsystem: Melco Inc Unknown device [1154:0324]
-        Flags: bus master, fast devsel, latency 64, IRQ 11
-        Memory at 5c000000 (32-bit, non-prefetchable) [size=8K]
-
-I'm currently associated via WPA2 to an AP.
+--=-t/8x4GohT/agGFo936By
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-Inserting the card:
+> That problem is only in rt2400pci and rt2500pci who raise the beacon inte=
+rrupt,
+> all other drivers have the template and auto sequence numbers.
 
-pccard: CardBus card inserted into slot 0
-b43-pci-bridge 0000:03:00.0: enabling device (0000 -> 0002)
-ACPI: PCI Interrupt 0000:03:00.0[A] -> Link [LNKC] -> GSI 11 (level, low) -> IRQ 11
-PCI: Setting latency timer of device 0000:03:00.0 to 64
-ssb: Sonics Silicon Backplane found on PCI device 0000:03:00.0
-b43-phy0: Broadcom 4306 WLAN found
-phy0: Selected rate control algorithm 'pid'
-Broadcom 43xx driver loaded [ Features: PML, Firmware-ID: FW13 ]
+Ok.
 
-Associating:
+> But no sequence numbers for the beacons, I think that will definately cau=
+se
+> problems for those 2 drivers.
+>=20
+> But the function ieee80211_include_sequence() is being called from within=
+ the
+> ieee80211_beacon_get() function. Only for the Mesh it doesn't seem to be =
+called.
 
-firmware: requesting b43/ucode5.fw
-firmware: requesting b43/pcm5.fw
-firmware: requesting b43/b0g0initvals5.fw
-firmware: requesting b43/b0g0bsinitvals5.fw
-b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
-Registered led device: b43-phy0::tx
-Registered led device: b43-phy0::rx
-phy0: HW CONFIG: freq=2412
-phy0: HW CONFIG: freq=2412
-phy0: HW CONFIG: freq=2417
-phy0: HW CONFIG: freq=2422
-phy0: HW CONFIG: freq=2427
-phy0: HW CONFIG: freq=2432
-phy0: HW CONFIG: freq=2437
-phy0: HW CONFIG: freq=2442
-phy0: HW CONFIG: freq=2447
-phy0: HW CONFIG: freq=2452
-phy0: HW CONFIG: freq=2457
-phy0: HW CONFIG: freq=2462
-phy0: HW CONFIG: freq=2412
-phy0: HW CONFIG: freq=2437
-phy0: HW CONFIG: freq=2437
-eth1: authenticate with AP 00:13:19:80:da:30
-eth1: authenticated
-eth1: associate with AP 00:13:19:80:da:30
-eth1: RX AssocResp from 00:13:19:80:da:30 (capab=0x11 status=0 aid=2)
-eth1: associated
-phy0: Allocated STA 00:13:19:80:da:30
-phy0: Inserted STA 00:13:19:80:da:30
-eth1: switched to short barker preamble (BSSID=00:13:19:80:da:30)
-eth1: switched to long barker preamble (BSSID=00:13:19:80:da:30)
+Well it's not called from where the IBSS beacon is set either, and the
+IBSS beacon isn't generated every time anyway. So I'm confused now. Do
+rt2{4,5}00pci not support IBSS?
 
+johannes
 
+--=-t/8x4GohT/agGFo936By
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> How do I make it use the b43legacy
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-This is for a different card / firmware. Please refer to
-http://wireless.kernel.org/en/users/Drivers/b43 for more
-information. There's a section there "bcm43xx, b43legacy, b43,
-softmac,... the full story". b43legacy won't solve your problem.
+iQIcBAABAgAGBQJIb81iAAoJEKVg1VMiehFYoz0QAK8n/coXkBwP8X+tCbtitkt/
+7bLNNBhm4TJ8mJYXedyi5txloZwOgwRKxgjcfpR4vMpx2A84WWnc/ihzE/d8DBly
+BRf9TqM2SKimbgNmkjZURkQdplXUS7ts0z2sRbgquug5XTX+X3mU1CQaehSl6MHg
+LMtQFu6233A44097puZvNZvBoTQryWtO+OvW46+JMbb1x+WOWiePslKn+/44rzyk
+IaepkL1qUjFxwudiZoA9hJPePogFsuNPrkS0EjtWC+B7azuq/0J/A8ytibhrxiBP
+aJgCOF+cVhqwCwmy9fSYNPb4ki0sqGgLrsY1homBI7oeinhgbPEyET/cgOznXBLe
+bLTh2O7RaQQSIvmTgR+O00rvDosHiyDNF4IETWGW2D/Y7W59nEoMm8jRkQC3OA6Q
+3HBHQMdHerc6cck13v2AHGweTfo4k55EJklpeIvzs/UPpNrEd1EkEfzguyUi8IWI
+7GAOs8fw6k5H9O2cMbFKbuSXSv+AZqtNZweGGAl0z6so16R+Zk+98mi4sMhlYZp6
+mTu6KUZkkWdhf3Ji6vUE6PcZ8wYp50fxvzRR43Csq1ZtAe4nXcdA5qn0bOaQKsWW
+mXU3HU9/sGVTOV+qwGWnO5l9D3fRYS8cEA7kDwnLFl+T6Rc88G9OxqG40aaqsbgw
+/Egf2VyiSNk9pSHB6N5g
+=33t8
+-----END PGP SIGNATURE-----
 
+--=-t/8x4GohT/agGFo936By--
 
-> I'm using opensuse 11 and have compiled the latest code and it
-> is still not working. This worked BTW, in 10.2 and 10.3 with no
-> problems and the card is currently working in vista (ugh).
-
-Then it's a SuSE-Problem and you should ask your vendor.
-
-However, you wrote "I compiled latest code" without specifing
-what "latest" is. I'm using almost-latest-code (tm), e.g. I used
-for my test wireless-testing, git describe
-"v2.6.26-rc9-14207-ga520bdb".
