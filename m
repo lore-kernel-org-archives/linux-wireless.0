@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:12169 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755385AbYG2LBD (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:51056 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752193AbYGEVNJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 07:01:03 -0400
-Received: by py-out-1112.google.com with SMTP id p76so3629733pyb.10
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 04:01:02 -0700 (PDT)
-Message-ID: <1ba2fa240807290401w3bf88e61lbcbc2a78f97f4833@mail.gmail.com> (sfid-20080729_130107_659795_BC9FAA46)
-Date: Tue, 29 Jul 2008 14:01:01 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: partially fix skb->cb use
-Cc: "David S. Miller" <davem@davemloft.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1217328563.10489.12.camel@johannes.berg>
+	Sat, 5 Jul 2008 17:13:09 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so489426nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Jul 2008 14:13:07 -0700 (PDT)
+To: Bryan Batten <BryanBatten@sbcglobal.net>
+Subject: Re: [Rt2400-devel] [PATCH] rt2x00: Fix NULL pointer error in adhoc/master mode
+Date: Sat, 5 Jul 2008 23:19:39 +0200
+Cc: linville@tuxdriver.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+References: <200807051511.57995.IvDoorn@gmail.com> <200807052042.47008.IvDoorn@gmail.com> <486FD8AF.5050001@sbcglobal.net>
+In-Reply-To: <486FD8AF.5050001@sbcglobal.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1217323927.10489.9.camel@johannes.berg>
-	 <1ba2fa240807290348y58026caag341a7115c0d78083@mail.gmail.com>
-	 <1217328563.10489.12.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200807052319.40115.IvDoorn@gmail.com> (sfid-20080705_231312_609872_5C29EE2D)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 29, 2008 at 1:49 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2008-07-29 at 13:48 +0300, Tomas Winkler wrote:
->> On Tue, Jul 29, 2008 at 12:32 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > This patch fixes mac80211 to not use the skb->cb over the queue step
->> > from virtual interfaces to the master. The patch also, for now,
->> > disables aggregation because that would still require requeuing,
->> > will fix that in a separate patch. There are two other places (software
->> > requeue and powersaving stations) where requeue can happen, but that is
->> > not currently used by any drivers/not possible to use respectively.
->>
->> What about about ieee80211_get_rate(hw, const struct ieee80211_tx_info *c).
->> It's used in tx path in the drivers and info is fetched from cb
->
-> So what about it? mac80211 builds the info in skb->cb just fine before
-> it passes the frame to the driver.
+On Saturday 05 July 2008, Bryan Batten wrote:
+> Ivo van Doorn wrote:
+> ...
+> > That is interesting, have you tried controlling CSR14 and more
+> > specifically the TBCN or BeaconGen fields?
+> 
+> No. It turns out that if I set the RT2500's CSR14 to zero (the default 
+> power on state according to the data sheet) at driver initialization, 
+> there are no beacon interrupts until enabled in AsicEnableIbssSync(). 
+> I deem this a bug, the fix for which in now in CVS.
 
-Sorry my mistake. This is built after the packet get to  master xmit
-Tomas
+Heh, that will bring down the number of raised interrupts in the legacy driver. :)
+You might want to add it to rt2400 as well, I expect the same behavior for that. ;)
+
+I'll put the initialization into rt2x00 as well, since it doesn't set it to 0 by default either.
+
+Ivo
