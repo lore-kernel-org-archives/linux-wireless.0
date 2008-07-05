@@ -1,28 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web52404.mail.re2.yahoo.com ([206.190.48.167]:41406 "HELO
-	web52404.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750829AbYG3ENt (ORCPT
+Received: from smtp124.sbc.mail.sp1.yahoo.com ([69.147.64.97]:48077 "HELO
+	smtp124.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752537AbYGEUZk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 00:13:49 -0400
-Date: Tue, 29 Jul 2008 21:07:07 -0700 (PDT)
-From: Richard Schneiderman <rschneiderman@yahoo.com>
-Reply-To: rschneiderman@yahoo.com
-Subject: broadcom 4306 rev. 3 uses b43 instead of b43legacy
-To: linux-wireless@vger.kernel.org
+	Sat, 5 Jul 2008 16:25:40 -0400
+Message-ID: <486FD8AF.5050001@sbcglobal.net> (sfid-20080705_222543_334498_42979422)
+Date: Sat, 05 Jul 2008 13:25:19 -0700
+From: Bryan Batten <BryanBatten@sbcglobal.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <346184.16399.qm@web52404.mail.re2.yahoo.com> (sfid-20080730_061352_410370_B40DBC9D)
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: linville@tuxdriver.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+Subject: Re: [Rt2400-devel] [PATCH] rt2x00: Fix NULL pointer error in adhoc/master
+ mode
+References: <200807051511.57995.IvDoorn@gmail.com> <486FBE75.5040100@sbcglobal.net> <200807052042.47008.IvDoorn@gmail.com>
+In-Reply-To: <200807052042.47008.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is this known bug? I can see my wireless network using wlist wlan0 scan.
+Ivo van Doorn wrote:
+...
+> That is interesting, have you tried controlling CSR14 and more
+> specifically the TBCN or BeaconGen fields?
 
-How do I make it use the b43legacy instead of b43. I'm using opensuse 11 and have compiled the latest code and it is still not working.
+No. It turns out that if I set the RT2500's CSR14 to zero (the default 
+power on state according to the data sheet) at driver initialization, 
+there are no beacon interrupts until enabled in AsicEnableIbssSync(). 
+I deem this a bug, the fix for which in now in CVS.
 
-This worked BTW, in 10.2 and 10.3 with no problems and the card is currently working in vista (ugh).
+Thanks,
+-- 
+Bryan
+-
+"Beyond the point of no return, there's no going back."
 
-Thank you from your time.
-Richard Schneiderman
-
-
-      
+Narration to "Mars Rising" on the Science Channel
