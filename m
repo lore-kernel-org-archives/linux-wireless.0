@@ -1,93 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:35026 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753028AbYGUTne (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.182]:39460 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753169AbYGESoz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 15:43:34 -0400
-Message-ID: <4884E6E6.7010800@lwfinger.net> (sfid-20080721_214339_063982_A19C5275)
-Date: Mon, 21 Jul 2008 14:43:34 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 5 Jul 2008 14:44:55 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so1045213waf.23
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Jul 2008 11:44:54 -0700 (PDT)
+Message-ID: <1ba2fa240807051144g65821ba1neabcd56ff56d273c@mail.gmail.com> (sfid-20080705_204505_915789_B450D197)
+Date: Sat, 5 Jul 2008 21:44:54 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC PATCH] iwlwifi: Memory allocation optimization.
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	"Gregory Greenman" <gregory.greenman@intel.com>
+In-Reply-To: <1215275435.6848.12.camel@johannes.berg>
 MIME-Version: 1.0
-To: Ingo Molnar <mingo@elte.hu>
-CC: Ian Schram <ischram@telenet.be>,
-	David Miller <davem@davemloft.net>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	wireless <linux-wireless@vger.kernel.org>, j@w1.fi
-Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
- at 0000000000000370
-References: <20080721134506.GA27598@elte.hu> <20080721143023.GA32451@elte.hu> <20080721150446.GA17746@elte.hu> <20080721.082419.70392960.davem@davemloft.net> <4884D2F1.2030704@telenet.be> <20080721190646.GA19044@elte.hu> <4884DFEE.4060003@lwfinger.net> <20080721193425.GA29287@elte.hu>
-In-Reply-To: <20080721193425.GA29287@elte.hu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1215103274-8516-1-git-send-email-tomas.winkler@intel.com>
+	 <1215275435.6848.12.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ingo Molnar wrote:
-> * Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> 
->> Ingo Molnar wrote:
->>> * Ian Schram <ischram@telenet.be> wrote:
->>>
->>>> I was looking at this out of interest, but I'm in no way familiar 
->>>> with the code.
->>> thanks Ian for the patch, i'll test it.
->>>
->>> Note that it was whitespace damaged, find below a tidied up version of  
->>> the patch that i've applied to tip/out-of-tree.
->>>
->>> 	Ingo
->> This patch may be needed to fix error handling in the hw_sim code, but 
->> I get the crash even with that code disabled. I'm currently bisecting 
->> to find the culprit.
-> 
-> ok. I just reactivated CONFIG_MAC80211_HWSIM, applied Ian's fix and the 
-> crash went away:
-> 
->  calling  iwl4965_init+0x0/0x6c
->  iwl4965: Intel(R) Wireless WiFi Link 4965AGN driver for Linux, 1.3.27kd
->  iwl4965: Copyright(c) 2003-2008 Intel Corporation
->  initcall iwl4965_init+0x0/0x6c returned 0 after 10 msecs
->  calling  init_mac80211_hwsim+0x0/0x31c
->  mac80211_hwsim: Initializing radio 0
->  PM: Adding info for No Bus:hwsim0
->  PM: Adding info for No Bus:phy0
->  PM: Adding info for No Bus:wmaster0
->  phy0: Failed to select rate control algorithm
->  phy0: Failed to initialize rate control algorithm
->  PM: Removing info for No Bus:wmaster0
->  PM: Removing info for No Bus:phy0
->  mac80211_hwsim: ieee80211_register_hw failed (-2)
->  PM: Removing info for No Bus:hwsim0
->  initcall init_mac80211_hwsim+0x0/0x31c returned -2 after 58 msecs
->  initcall init_mac80211_hwsim+0x0/0x31c returned with error code -2
->  calling  dmfe_init_module+0x0/0xea
->  dmfe: Davicom DM9xxx net driver, version 1.36.4 (2002-01-17)
->  initcall dmfe_init_module+0x0/0xea returned 0 after 5 msecs
-> 
-> So at least as far as the init_mac80211_hwsim() deinit crash goes:
-> 
-> Tested-by: Ingo Molnar <mingo@elte.hu>
+On Sat, Jul 5, 2008 at 7:30 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2008-07-03 at 19:41 +0300, Tomas Winkler wrote:
+>> From: Gregory Greenman <gregory.greenman@intel.com>
+>>
+>> This patch optimizes memory allocation. The cmd member of
+>> iwl_tx_queue was allocated previously as a continuous block
+>> of memory. This patch allocates separate memory chunks for each command
+>> and maps/unmaps these chunks in the run time.
+>
+> You still allocate a lot of unused memory. Why don't you, at least
+> temporarily until you've figured out how to do gather-IO [1], reduce the
+> maximum number of DMA fragments to 2 so you need 1/10th the memory? You
+> can always bump it back up after you do the necessary mac80211 changes.
 
-Yes, I'm chasing a distinct bug. The header for mine is
+We have to improve more places in allocation and we hopefully had
+mapped all of them.
+This patch fixes allocation that was in order 5 in( (ATOMCI | DMA) and
+was most urgent.
+The section you've suggested is I think on 3rd or 4th place. Don't
+worry we get there.
+What is more important now that we get some feedback on this fix.
+Thanks
+Tomas
 
-Jul 21 12:19:37 larrylap kernel: kernel BUG at net/core/dev.c:1328!
-Jul 21 12:19:37 larrylap kernel: invalid opcode: 0000 [1] SMP
-Jul 21 12:19:37 larrylap kernel: CPU 0
-Jul 21 12:19:37 larrylap kernel: Modules linked in: af_packet rfkill_input nfs 
-lockd nfs_acl sunrpc cpufreq_conservative cpu
-freq_userspace cpufreq_powersave powernow_k8 fuse loop dm_mod arc4 ecb 
-crypto_blkcipher b43 firmware_class rfkill mac80211 c
-fg80211 snd_hda_intel snd_pcm snd_timer led_class snd k8temp input_polldev 
-sr_mod soundcore button battery hwmon cdrom force
-deth ac serio_raw ssb snd_page_alloc sg ehci_hcd sd_mod ohci_hcd usbcore edd fan 
-thermal processor ext3 mbcache jbd pata_amd
-  ahci libata scsi_mod dock
-Jul 21 12:19:37 larrylap kernel: Pid: 2057, comm: b43 Not tainted 
-2.6.26-Linus-git-05253-g14b395e #1
-Jul 21 12:19:37 larrylap kernel: RIP: 0010:[<ffffffff8039ec4d>] 
-[<ffffffff8039ec4d>] __netif_schedule+0x12/0x75
-Jul 21 12:19:37 larrylap kernel: RSP: 0000:ffff8800b9ae1de0  EFLAGS: 00010246
 
-With an invalid opcode, mine is likely due to stack corruption.
-
-Larry
+> johannes
+>
+> [1] and I still maintain that you will not be able to, but that's
+> irrelevant.
+>
