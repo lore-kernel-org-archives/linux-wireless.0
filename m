@@ -1,87 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43546 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756083AbYGIWMM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 18:12:12 -0400
-Subject: iwlwifi workaround for mac80211 sequence number bug
-From: Johannes Berg <johannes@sipsolutions.net>
-To: tomasw <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ron Rindjunksi <ron.rindjunski@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-S666sQoqzc26HC/IHhxH"
-Date: Thu, 10 Jul 2008 00:11:25 +0200
-Message-Id: <1215641485.3246.72.camel@johannes.berg> (sfid-20080710_001234_329965_EFB06AD3)
-Mime-Version: 1.0
+Received: from smtp2-g19.free.fr ([212.27.42.28]:51220 "EHLO smtp2-g19.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751134AbYGEKCQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Jul 2008 06:02:16 -0400
+Received: from smtp2-g19.free.fr (localhost.localdomain [127.0.0.1])
+	by smtp2-g19.free.fr (Postfix) with ESMTP id 8B1E212B6ED
+	for <linux-wireless@vger.kernel.org>; Sat,  5 Jul 2008 12:02:14 +0200 (CEST)
+Received: from [192.168.0.6] (cac94-1-81-57-151-96.fbx.proxad.net [81.57.151.96])
+	by smtp2-g19.free.fr (Postfix) with ESMTP id 66F1512B6E3
+	for <linux-wireless@vger.kernel.org>; Sat,  5 Jul 2008 12:02:14 +0200 (CEST)
+Message-ID: <486F46A7.4020105@free.fr> (sfid-20080705_120234_518879_E8AD5135)
+Date: Sat, 05 Jul 2008 12:02:15 +0200
+From: matthieu castet <castet.matthieu@free.fr>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: [Fwd: airo with WPA support merge]
+References: <4807C194.4040108@free.fr>
+In-Reply-To: <4807C194.4040108@free.fr>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-S666sQoqzc26HC/IHhxH
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-Ok, so I'm frustrated. I spent a few hours today chasing docs, trying to
-understand sequence numbering from the specs, how we implement it in
-mac80211 for TX and RX, how hardware/firmware implements it. Finally, I
-figure out that mac80211 is buggy, and come up with a buggy (now I know)
-patch.
-
-Then, now, I find out that iwlwifi contains a workaround for the
-mac80211 sequence numbering, so you've known all along!
-
-Why don't you tell anyone about the problems you find? It can't be that
-hard. Are there any other lurking issues like that?
-
-Here's the code from iwlwifi:
-
-        if (ieee80211_is_data_qos(fc)) {
-                qc =3D ieee80211_get_qos_ctl(hdr);
-                tid =3D qc[0] & 0xf;
-                seq_number =3D priv->stations[sta_id].tid[tid].seq_number &
-                                IEEE80211_SCTL_SEQ;
-                hdr->seq_ctrl =3D cpu_to_le16(seq_number) |
-                        (hdr->seq_ctrl &
-                                __constant_cpu_to_le16(IEEE80211_SCTL_FRAG)=
-);
-                seq_number +=3D 0x10;
-                /* aggregation is on for this <sta,tid> */
-                if (info->flags & IEEE80211_TX_CTL_AMPDU)
-                        txq_id =3D priv->stations[sta_id].tid[tid].agg.txq_=
-id;
-                priv->stations[sta_id].tid[tid].tfds_in_queue++;
-        }
-
-We can implement that trivially in mac80211 and make it do the right
-thing for all drivers instead of having iwlwifi work around the bug in
-mac80211.
-
-Additionally, we can then remove the ssn argument to the ampdu_action
-callback.
-
-johannes
-
---=-S666sQoqzc26HC/IHhxH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIdTeDAAoJEKVg1VMiehFY5BYQAImprwVdBE+TPZJLSiQxkYEs
-83TjyDRSx43E/qTeENRXeMgYZnadKFGs88Yfm7O9Tq/ciZaEdW2j8vmKQFZCyI3v
-JB6rGhMfC054DpOxCX1nxNonzxhJ4deJyD9MxNCx0euOrHwQnmn9GYtS0NtPDXal
-UyL0+4/XJsTkn5ZbJbTgNUjNFb1zqGDsiNv8lr/BTKZRh7Ckhl+Kp0S/ctEHEkaw
-5eYKrzPQbFoLs9hegNcqY5yVwGMfW9GCDp7rLfQyY18FRbmV4hawdtAlmbqPPzJd
-/Df5K9MrzUBTrlIcHEK0qnj0Q5ea+Www4T87L+f3O7FzTniUZZxOBdqTc5khxL4/
-hBD5N8pli9J+T8onFEMmyvhAsxOgsFGCfJlYxCFWiql6JiZVgSrKoXO7+Q1Ww4IV
-4WySHBgo5BN0w4htF4C+6WM9K6GTQ8jrn1bdaTXJtQgC86Gn/t4Y3yDBrw/2qb8T
-4c0laU/2KblGBiUCcdO8lT/yujg4uuNTuMFMaxsNpt4B0je5f6vTy7k5vazfjIzA
-dKmjFbgHSotju2rYBh1Ru8Uw7hCcmkyQd8S3o7GwtGsFjMAyfuFeWyxkSAukpdQK
-9i2OERcdWjpX54j8x4tMmCa/YSDCKrwn96j73ezaXzxTwNYxx0NsoWxKb9xGsNgT
-z6c9VUaogH2etv4L2dFX
-=agyu
------END PGP SIGNATURE-----
-
---=-S666sQoqzc26HC/IHhxH--
+ > To: prjmgr@linuxdriverproject.org
+matthieu castet wrote:
+> Hi,
+> 
+> I added wpa support to airo driver some years ago, but I maintain the 
+> support as a OutOfTreeDrivers [1]. I use it everyday in wpa mode.
+> 
+> It can't be merged in main because the wpa support is selected by a 
+> module option. I did this because supporting wpa and other mode together 
+> may need a large rewrite of the driver (when I did first 
+> experimentation, I got firmware hang if I mix wpa command that use a new 
+> firmware API and wep command that use old firmware API).
+> 
+> 
+> But they have been some work to make it ok for main Linux tree [2], but 
+> it failed because of some issues [3].
+> 
+> I don't have time nor interest to continue the work made in [2].
+> May be somebody is interested.
+> 
+> Matthieu
+> 
+> [1]
+> https://gna.org/projects/airo-wpa/ and 
+> http://svn.gna.org/viewcvs/airo-wpa/branches/kernel/
+> 
+> [2]
+> http://svn.gna.org/viewcvs/airo-wpa/branches/kernel-merge/
+> 
+> [3]
+> Dan Williams :
+> One problem I have is that after setting the TKIP key, I always get a
+> sequence of 3 bad MICs, and then the MAC sends a status of 0x8117 which
+> causes the driver to send a disconnection event to userspace, which
+> makes wpa_supplicant fail the connection.  If I comment out the 'goto
+> badrx;' in the interrupt handler where the WPA mic is checked,
+> everything works great and I can complete the 4-way handshake.  It needs
+> more investigation, but do you have any thoughts on what might be going
+> on here?
+> 
 
