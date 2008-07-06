@@ -1,69 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from agave.telenet-ops.be ([195.130.137.77]:33075 "EHLO
-	agave.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753762AbYGWO5k (ORCPT
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:39602 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753309AbYGFAUn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 10:57:40 -0400
-Message-ID: <488746DF.1050501@tvcablenet.be> (sfid-20080723_165820_188455_F017408A)
-Date: Wed, 23 Jul 2008 16:57:35 +0200
-From: =?ISO-8859-15?Q?Fran=E7ois_Valenduc?=
-	<francois.valenduc@tvcablenet.be>
+	Sat, 5 Jul 2008 20:20:43 -0400
+Date: Sat, 5 Jul 2008 21:20:37 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: Question on rfkill double block
+Message-ID: <20080706002037.GD21973@khazad-dum.debian.net> (sfid-20080706_022046_845245_9E3A8D18)
+References: <1214982208.14590.473.camel@debian.sh.intel.com> <20080702193202.GA20410@khazad-dum.debian.net> <1ba2fa240807051428i3f49f621i7b583bec58a02869@mail.gmail.com>
 MIME-Version: 1.0
-To: Patrick McHardy <kaber@trash.net>
-CC: Andrew Morton <akpm@linux-foundation.org>,
-	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>, netdev@vger.kernel.org
-Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
-References: <bug-11144-10286@http.bugzilla.kernel.org/>	<20080722034850.dbbc5566.akpm@linux-foundation.org>	<4886E49D.6010700@tvcablenet.be> <20080723010522.389a948f.akpm@linux-foundation.org> <4886F727.6010301@tvcablenet.be> <48870425.50908@trash.net> <48871632.3010205@tvcablenet.be> <4887169B.6090102@trash.net> <488725D5.8030900@tvcablenet.be> <488727B3.7040007@trash.net> <48872968.9000103@trash.net>
-In-Reply-To: <48872968.9000103@trash.net>
-Content-Type: text/plain; charset=ISO-8859-15;
-	format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240807051428i3f49f621i7b583bec58a02869@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patrick McHardy a =E9crit :
-> Patrick McHardy wrote:
->> Fran=E7ois Valenduc wrote:
->>> Patrick McHardy a =E9crit :
->>>> Interesting. Could you post straces of both commands please?
->>>>
->>> I also send the output of strace for dhcpd under kernel 2.6.26=20
->>> (where it works correctly).
->>
->> Thanks, I couldn't spot anything in these traces. I'll try to
->> reproduce this with iwl3945.
->
->
-> Well, no luck, the current -git kernel doesn't boot on my notebook
-> and I don't have time for a bisection currently. Could someone
-> else try to verify/debug this?
->
->
-I did the bisection again, this time on the whole tree and the first ba=
-d=20
-commit is again the one I mentioned previously:
+On Sun, 06 Jul 2008, Tomas Winkler wrote:
+> From my experience from other OS the states of SW and HW RF KILL
+> switches should be independent and visible to user space
+> otherwise it's very hard to make something coherent out of it. It
+> should be visible to user himself so he/she knows what switch actually
+> press. And also to let say unmanned application, most important in
+> preserving SW switch state across reboots and resume/suspend events.
+> Radio state is just simple AND function of all the switches in the
+> game anything else just leads to confusion.
+> Currently we have rkill switch from sysfs, hw rfkill, iwconfig txpower
+> off, the last one is better to eliminate but still we have TRIPLE
+> BLOCKING
 
-175f9c1bba9b825d22b142d183c9e175488b260c is first bad commit
-commit 175f9c1bba9b825d22b142d183c9e175488b260c
-Author: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Date:   Sun Jul 20 00:08:47 2008 -0700
+I am not convinced it is the best way to go, but I thought on it, and that
+fourth state will at least help on sleep-to-ram resume, so you guys will get
+four states.  
 
-    net_sched: Add size table for qdiscs
+But I can't give you a bitmap.  Sorry, there is a stablished sysfs ABI in
+mainline that says this:
 
-    Add size table functions for qdiscs and calculate packet size in
-    qdisc_enqueue().
+00 - BLOCK ("off")
+01 - UNBLOCK ("on")
 
-    Based on patch by Patrick McHardy
-     http://marc.info/?l=3Dlinux-netdev&m=3D115201979221729&w=3D2
+I hate it, but I can't change it.  We can *extend* it, but that's it.
 
-This time, I didn't encounter kernels which didn't compile. So, I didn'=
-t=20
-use git-reset or git-bisect skip.
+rfkill is difficult enough already without a state field whose usage
+description claims that bit 1 is active high and bit 0 is active low... So,
+please do NOT look at the rfkill->state as you would look at a bitmap, look
+at it as an enum, let the compiler do whatever bit-op optimizations might
+apply behind the scenes, and all will be well ;-)
 
-=46ran=E7ois
+I will start working on a patch for the DOUBLE_BLOCKED state.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
