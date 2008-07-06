@@ -1,57 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.248]:44145 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756896AbYGQQFE (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:44716 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757305AbYGFUo7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 12:05:04 -0400
-Received: by an-out-0708.google.com with SMTP id d40so170362and.103
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2008 09:05:03 -0700 (PDT)
-Message-ID: <43e72e890807170905h5a261879u9d87963c621b57bf@mail.gmail.com> (sfid-20080717_180514_910751_C1D60348)
-Date: Thu, 17 Jul 2008 09:05:03 -0700
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "Yingying Zhao" <yingying.zhao@linux.intel.com>
-Subject: Re: [PATCH]compat-2.6: fix compiling configurations for iwlwifi
-Cc: "Tomas Winkler" <tomasw@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890807170621r25616966w1d542e4e235f9a3f@mail.gmail.com>
+	Sun, 6 Jul 2008 16:44:59 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so721473fgg.17
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2008 13:44:57 -0700 (PDT)
+To: Zhu Yi <yi.zhu@intel.com>
+Subject: Re: [2.6.26-rc5] iwlwifi 4965 not working - last on 2.6.23
+Date: Sun, 6 Jul 2008 22:44:53 +0200
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <200806060039.48488.m1k0@wp.pl> <200806240537.08888.Michal.Kudla@gmail.com> <1214279513.14590.198.camel@debian.sh.intel.com>
+In-Reply-To: <1214279513.14590.198.camel@debian.sh.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080717081554.GA1279@amber-desktop.bj.intel.com>
-	 <1ba2fa240807170129w251a95f3i8eab918d50a77f97@mail.gmail.com>
-	 <43e72e890807170248v7a873c15oc3aea315a59e9f19@mail.gmail.com>
-	 <20080717100449.GB1279@amber-desktop.bj.intel.com>
-	 <43e72e890807170307g3310ffcbv51f89c93dfbc64a0@mail.gmail.com>
-	 <43e72e890807170621r25616966w1d542e4e235f9a3f@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200807062244.53787.Michal.Kudla@gmail.com> (sfid-20080706_224504_674949_9B3B9EED)
+From: =?utf-8?q?Micha=C5=82_Kud=C5=82a?= <michal.kudla@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 17, 2008 at 6:21 AM, Luis R. Rodriguez
-<mcgrof@winlab.rutgers.edu> wrote:
-> On Thu, Jul 17, 2008 at 3:07 AM, Luis R. Rodriguez
-> <mcgrof@winlab.rutgers.edu> wrote:
->> On Thu, Jul 17, 2008 at 3:04 AM, Yingying Zhao
->> <yingying.zhao@linux.intel.com> wrote:
->>
->>>> Also, was this tested with 2.6.22?
->>>>
->>>>   Luis
->>> No. I just tested on 2.6.24.
->>> I'll wait for iwlwifi Kconfig is finalized by Tomas and retest this on
->>> 2.6.22.
->>
->> OK cool -- just a heads up then, I hadn't enabled LEDs or RFKILL
->> options for drivers as the framework needs backporting. Once
->> backported I expect it will compile well for older kernels.
->
-> compat-wireless wasn't actually compiling for 2.6.22 anymore. I just
-> fixed that. It loads mac80211. Either I did a mistake or we get an
-> oops now when loading a driver on 2.6.22.
+Hi,
+with new build -rc9 iwl4965 still don't work.
+I don't know, witch distro I should use to check, that current kernel a=
+nd my=20
+WiFi is OK.
 
-Yeah ok I can confirm there is a bug there on 2.6.22. We hit:
+I returned to good 2.6.24-gentoo-r8
 
-BUG_ON(!local || local->mdev == dev);
 
-on ieee80211_i.h in IEEE80211_DEV_TO_SUB_IF()
+W li=C5=9Bcie datowanym na wtorek, 24 czerwca 2008, Zhu Yi pisze:
+>ZY On Tue, 2008-06-24 at 05:37 +0200, Micha=C5=82 Kud=C5=82a wrote:
+>ZY > laptok ~ # cat /sys/bus/pci/drivers/iwl4965/0000\:04\:00.0/rfkill
+>ZY > \:rfkill1/state
+>ZY > 0
+>ZY > laptok ~ # echo "1"> /sys/bus/pci/drivers/iwl4965/0000\:04
+>ZY > \:00.0/rfkill\:rfkill1/state
+>ZY > laptok ~ # iwconfig wlan0 txpower on
+>ZY > laptok ~ # /etc/init.d/net.wlan0 restart
+>ZY >  * Service net.wlan0 starting
+>ZY >  Failed to configure wireless for wlan0
+>ZY > [ !! ] * ERROR:  net.wlan0 failed to start
+>ZY
+>ZY Looks like the wireless config scripts in your distro did something
+>ZY (probably txpower off) to disable the SW radio. Can you try the
+>ZY following commands after wlan0 restart?
+>ZY
+>ZY $ cat /sys/bus/pci/drivers/iwl4965/0000\:04\:00.0/rfkill\:rfkill1/s=
+tate
+>ZY $ echo 1 > /sys/bus/pci/drivers/iwl4965/0000\:04\:00.0/rfkill
+>ZY \:rfkill1/state
+>ZY $ ifconfig wlan0 up
+>ZY
+>ZY Thanks,
+>ZY -yi
+>ZY
+>ZY
 
-Don't have time to debug this right now though.
 
-  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
