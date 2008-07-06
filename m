@@ -1,57 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from agave.telenet-ops.be ([195.130.137.77]:43988 "EHLO
-	agave.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751385AbYGWJRa (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49387
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750744AbYGFErx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 05:17:30 -0400
-Message-ID: <4886F727.6010301@tvcablenet.be> (sfid-20080723_111737_061390_64CD382D)
-Date: Wed, 23 Jul 2008 11:17:27 +0200
-From: =?ISO-8859-1?Q?Fran=E7ois_Valenduc?=
-	<francois.valenduc@tvcablenet.be>
-MIME-Version: 1.0
-To: Andrew Morton <akpm@linux-foundation.org>
-CC: bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	netdev@vger.kernel.org, Patrick McHardy <kaber@trash.net>
-Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
-References: <bug-11144-10286@http.bugzilla.kernel.org/>	<20080722034850.dbbc5566.akpm@linux-foundation.org>	<4886E49D.6010700@tvcablenet.be> <20080723010522.389a948f.akpm@linux-foundation.org>
-In-Reply-To: <20080723010522.389a948f.akpm@linux-foundation.org>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+	Sun, 6 Jul 2008 00:47:53 -0400
+Date: Sat, 05 Jul 2008 21:47:52 -0700 (PDT)
+Message-Id: <20080705.214752.85024966.davem@davemloft.net> (sfid-20080706_064815_292984_103E5675)
+To: linville@tuxdriver.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2008-07-02
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080702202653.GA10719@tuxdriver.com>
+References: <20080630215651.GA666@tuxdriver.com>
+	<20080702193710.GA4682@tuxdriver.com>
+	<20080702202653.GA10719@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrew Morton a =E9crit :
-> On Wed, 23 Jul 2008 09:58:21 +0200 Fran__ois Valenduc <francois.valen=
-duc@tvcablenet.be> wrote:
->
->  =20
->> P.S: why don't you want to use the bugzilla interface ?
->>    =20
->
-> Depends on the subsystem.  ACPI is 100% bugzilla-based, net people=20
-> prefer email, others are in-between.
->
-> Plus for recently-occurring bugs it's best to knock them over via ema=
-il
-> without getting into bugzilla bureaucracy.  bugzilla is more
-> appropriate to longer-term bugs.
->
-> And when the bug affects multiple subsystems, multiple
-> developers and we don't even know which subsystem introduced it, it i=
-s
-> much better to perform the diagnosis and repair via email.
->
->
-> I make a judgement call on each report.  Been doing it for a while,
-> don't get too many complaints ;)
->
->
->  =20
-OK, thanks for the explanation. But do you have more ideas about the=20
-problem ?
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 2 Jul 2008 16:26:53 -0400
+
+> Here is another slew of updates for 2.6.27.  The bulk of this batch is
+> for iwlwifi, with some mac80211 and other bits thrown-in.
+> 
+> Let me know if there are problems!
+
+Pulled and pushed back out to net-next-2.6, thanks.
+
+Here are some warnings I noticed during an allmodconfig build
+on sparc64, please fix:
+
+drivers/net/wireless/hostap/hostap_hw.c:3422: warning: 'prism2_suspend' defined but not used
+drivers/net/wireless/iwlwifi/iwl-rfkill.c:114: warning: label 'freed_rfkill' defined but not used
+
+I'll take on the net-2.6 merge into net-next-2.6 next.
+
+Thanks!
