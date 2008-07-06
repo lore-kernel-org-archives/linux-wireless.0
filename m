@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4402 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750865AbYGOOSv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 10:18:51 -0400
-Date: Tue, 15 Jul 2008 09:48:49 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2008-07-14
-Message-ID: <20080715134849.GA24361@tuxdriver.com> (sfid-20080715_161856_039086_EAE353FC)
-References: <20080714192302.GA2541@tuxdriver.com> <20080714132918.30a1794f.randy.dunlap@oracle.com>
+Received: from wa-out-1112.google.com ([209.85.146.180]:27321 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751788AbYGFHHp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jul 2008 03:07:45 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so1135499waf.23
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2008 00:07:42 -0700 (PDT)
+Message-ID: <1ba2fa240807060007i572d054va60aa16b41cadce3@mail.gmail.com> (sfid-20080706_090805_397712_40FAB391)
+Date: Sun, 6 Jul 2008 10:07:42 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "David Miller" <davem@davemloft.net>
+Subject: Re: pull request: wireless-next-2.6 2008-07-02
+Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20080705.214752.85024966.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080714132918.30a1794f.randy.dunlap@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080630215651.GA666@tuxdriver.com>
+	 <20080702193710.GA4682@tuxdriver.com>
+	 <20080702202653.GA10719@tuxdriver.com>
+	 <20080705.214752.85024966.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 14, 2008 at 01:29:18PM -0700, Randy Dunlap wrote:
-> On Mon, 14 Jul 2008 15:23:02 -0400 John W. Linville wrote:
-> 
-> > Dave,
-> > 
-> > Here is one last(?) round of miscellaneous patches I hope to get into
-> > 2.6.27.  There are mostly driver updates, including a sizable iwlwifi
-> > set of changes.
-> > 
-> > Please let me know if there are problems!
-> 
-> Hi,
-> Dare I ask what happened to the mac80211 kernel-doc patch?
-> 
-> Thanks,
-> ~Randy
+On Sun, Jul 6, 2008 at 7:47 AM, David Miller <davem@davemloft.net> wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Wed, 2 Jul 2008 16:26:53 -0400
+>
+>> Here is another slew of updates for 2.6.27.  The bulk of this batch is
+>> for iwlwifi, with some mac80211 and other bits thrown-in.
+>>
+>> Let me know if there are problems!
+>
+> Pulled and pushed back out to net-next-2.6, thanks.
+>
+> Here are some warnings I noticed during an allmodconfig build
+> on sparc64, please fix:
+>
+> drivers/net/wireless/hostap/hostap_hw.c:3422: warning: 'prism2_suspend' defined but not used
+> drivers/net/wireless/iwlwifi/iwl-rfkill.c:114: warning: label 'freed_rfkill' defined but not used
 
-commit 6ef307bc561911c8cdda98ef3896b5982b602a43
-Author: Randy Dunlap <randy.dunlap@oracle.com>
-Date:   Thu Jul 3 13:52:18 2008 -0700
-
-    mac80211: fix lots of kernel-doc
-    
-    Fix more than 50 kernel-doc warnings in ieee80211/mac80211 kernel-doc notati
-    Fix a few typos also.
-    
-    Note: Some fields are marked as TBD and need to have their description
-    corrected.
-    
-    Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
--- 
-John W. Linville
-linville@tuxdriver.com
+John what happened to to those patches?
+http://marc.info/?l=linux-wireless&m=121489830307988&w=2
+http://marc.info/?l=linux-wireless&m=121481826531792&w=2
+Thanks
+Tomas
