@@ -1,79 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51747 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:39391 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751772AbYGWOxx (ORCPT
+	with ESMTP id S1752002AbYGFIqF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 10:53:53 -0400
-Subject: Re: q == &noop_qdisc warning from 802.11 code
+	Sun, 6 Jul 2008 04:46:05 -0400
+Subject: Re: mac80211 ad-hoc problems
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Breno Leitao <leitao@linux.vnet.ibm.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	netdev <netdev@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <48873502.1030106@linux.vnet.ibm.com>
-References: <488723FF.8070707@gmail.com>
-	 <48873502.1030106@linux.vnet.ibm.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kZWZg+XRbptxpsYasww1"
-Date: Wed, 23 Jul 2008 16:53:05 +0200
-Message-Id: <1216824786.13587.6.camel@johannes.berg> (sfid-20080723_165357_798339_A33454F6)
+To: Daniel Drake <dsd@gentoo.org>
+Cc: wireless <linux-wireless@vger.kernel.org>, bruno@thinktube.com,
+	vlado@work.ksp.sk
+In-Reply-To: <4870556A.5050002@gentoo.org> (sfid-20080706_061831_175291_526004F6)
+References: <486EA910.80408@gentoo.org>  <4870556A.5050002@gentoo.org>
+	 (sfid-20080706_061831_175291_526004F6)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MdZ3/N1gBYEyasvp6tVo"
+Date: Sun, 06 Jul 2008 10:45:46 +0200
+Message-Id: <1215333946.9610.4.camel@johannes.berg> (sfid-20080706_104612_945560_180C421F)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-kZWZg+XRbptxpsYasww1
+--=-MdZ3/N1gBYEyasvp6tVo
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
 
-> I also hit a bug related to noop_qdisc running the net-next kernel.=20
-> I hit this bug every time I run "ifconfig eth0 mtu 9000; ifconfg eth0 150=
-0" for any
-> interface (tested against s2io and e1000) that is up, otherwise the bug i=
-sn't
-> reproducible.
+> Oh, I misread the code. I thought it was only looking for a=20
+> user-specified BSSID (but I had not specified one). Actually it is=20
+> checking that we aren't attempting to join the same network that we are=20
+> already on.
 >=20
-> The bug dumps the following calltrace:=20
+> The problem that was preventing me from getting connectivity was=20
+> channel. It was only accepting IBSSes on local->hw.conf.channel, so I=20
+> was required to do "iwconfig wlan0 channel X" first.
+
+Heh. I might have done that, yeah.
+
+> Is this by design, or is automatic channel selection a desirable=20
+> feature? see attached patch, which seems to be working
+
+Seems we should do automatic selection, the patch looks ok to me.
+
+I wonder though, if we decide to create a new IBSS, which channel will
+we choose?
+
+> Daniel
+> plain text document attachment (ibss-channel.txt)
+> [PATCH] mac80211: automatic IBSS channel selection
 >=20
-> [root@io-dolphins net-next-2.6]# ifconfig eth0  mtu 9000; ifconfig eth0 m=
-tu 1500
-> ------------[ cut here ]------------
-> kernel BUG at net/core/dev.c:1328!
-
-> void __netif_schedule(struct Qdisc *q)
-> {
->         BUG_ON(q =3D=3D &noop_qdisc);
+> When joining an ad-hoc network, the user is currently required to specify
+> the channel. The network will not be joined otherwise, unless it happens
+> to be sitting on the currently active channel.
 >=20
-> So, somehow we're reaching __netif_schedule() using a noop_qdisc.=20
+> This patch implements automatic channel selection when the user has not
+> locked the interface onto a specific channel.
+>=20
+> Signed-off-by: Daniel Drake <dsd@gentoo.org>
 
-Yeah, I'm looking into it. Just removing the netif_wake calls in mlme.c
-might work.
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-johannes
+>=20
+> Index: linux-2.6.26-rc8/net/mac80211/mlme.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-2.6.26-rc8.orig/net/mac80211/mlme.c
+> +++ linux-2.6.26-rc8/net/mac80211/mlme.c
+> @@ -3582,6 +3582,7 @@ static int ieee80211_sta_find_ibss(struc
+>  	int found =3D 0;
+>  	u8 bssid[ETH_ALEN];
+>  	int active_ibss;
+> +	int search_freq;
+>  	DECLARE_MAC_BUF(mac);
+>  	DECLARE_MAC_BUF(mac2);
+> =20
+> @@ -3614,11 +3615,21 @@ static int ieee80211_sta_find_ibss(struc
+>  	printk(KERN_DEBUG "   sta_find_ibss: selected %s current "
+>  	       "%s\n", print_mac(mac, bssid), print_mac(mac2, ifsta->bssid));
+>  #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+> -	if (found && memcmp(ifsta->bssid, bssid, ETH_ALEN) !=3D 0 &&
+> -	    (bss =3D ieee80211_rx_bss_get(dev, bssid,
+> -					local->hw.conf.channel->center_freq,
+> -					ifsta->ssid, ifsta->ssid_len))) {
+> +
+> +	if (found && memcmp(ifsta->bssid, bssid, ETH_ALEN) !=3D 0) {
+>  		int ret;
+> +		int search_freq;
+> +
+> +		if (ifsta->flags & IEEE80211_STA_AUTO_CHANNEL_SEL)
+> +			search_freq =3D bss->freq;
+> +		else
+> +			search_freq =3D local->hw.conf.channel->center_freq;
+> +
+> +		bss =3D ieee80211_rx_bss_get(dev, bssid, search_freq,
+> +					   ifsta->ssid, ifsta->ssid_len);
+> +		if (!bss)
+> +			goto dont_join;
+> +
+>  		printk(KERN_DEBUG "%s: Selected IBSS BSSID %s"
+>  		       " based on configured SSID\n",
+>  		       dev->name, print_mac(mac, bssid));
+> @@ -3626,6 +3637,8 @@ static int ieee80211_sta_find_ibss(struc
+>  		ieee80211_rx_bss_put(dev, bss);
+>  		return ret;
+>  	}
+> +
+> +dont_join:
+>  #ifdef CONFIG_MAC80211_IBSS_DEBUG
+>  	printk(KERN_DEBUG "   did not try to join ibss\n");
+>  #endif /* CONFIG_MAC80211_IBSS_DEBUG */
 
---=-kZWZg+XRbptxpsYasww1
+--=-MdZ3/N1gBYEyasvp6tVo
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIh0XOAAoJEKVg1VMiehFYcN8QAL54wgOVKSi9Cc0Ud2DT43Hb
-uk4aPPnbJd5YoQWRxD5HswVG616SDd6Bfd8jmbljgBoT/QUvOabaKTrUKN5dHICZ
-HG5CmqArK290WX0Fewj6bwBm2ctGeItRx4Baj7AUE1x2q+dHtYOT1R0gTZWg5p7P
-myrw15Ch4joAxj5JUIbbHnQFs34YSLNRj3TTJ0/BgT14rbQzrVLhjrvNNO2iDwKY
-1pFgcvKrZrEq1DcjOA4No3rp4DoocH3mZUjQJFFjPP/zsBlcu3g/HngnLr8pox47
-JPx+wVqY9GBXPqhpZ28YRglWaYdW9SA7Cc0d8jKxx06IvcVyJ+z/9WQ9+Yex6QlY
-7Il/962BI7gbvg7MQh1GHAzHNvqFsmMms+tMTFk1M3IY2yxtH3YwR7K+JQynFA/+
-7taeoKlJ4GQA2sgtup91yrPmbkEXhoDzIXVgPYh2FrQluMxuvtxztIdSY7TZ5ZW3
-mpWdhQ3B7EViclV9RclCa4AteEN7awgtM6xnQhRaNRyjXE4X3o6al7OLkvDG+zhR
-gReIQWQ1pyP8xsaolGTyL3dOz3Mpfn/4oFdYjFPgZdyR+aGvrPcNUR+Wr5sCajbD
-zdwdJ4fg/37kR+7sE686zfVE9O49s1lpR1NcWDGJqkX1MCK3/gLdqFSV0mzvTTgL
-gIkqp3/78OyJ93zXF3iv
-=s/3a
+iQIcBAABAgAGBQJIcIY1AAoJEKVg1VMiehFY4LQP/09AoMNGs7/l9SdIRWa2Vjrt
+3R12gTYFlgEF9KbRb/YJuBinA9uB2BX7i0g0yLoKnKTxdlgsmqdW03t/bHq+TD6a
+xkyZ7yXQsRN/6uCH9I3u/6b0dWhxK65Nrms6JHX1v4rQvl22dKSTpPbBFUG9CX/e
+Q0jxTwiIYnWppi13XHsxw/8CoCdLuIAqgDOr3VNsCcVulwHC4AVyZCJHOSIIs4gi
+GW9PYIM6WfLGrXePd7ug3UpGs7ivwO9g2ERTL/8XBZ9oUZ2ixV9EYMeQVxOrBHHq
+YCXvMenPvcfcVnCJu5kRWAiVs57Gw41Mw4aqvFDyP6/jviSbIC3weci6XDBwNxvZ
+B4VHUthb6sb8TjT6Crc12wCtJ3NRgc7761j6m+sQafvKlTr5mEfJVdGAVwWkhbVg
+XOpQhWeBLd8Ba+xI97xXQs+0AIWXcOWmLsPMa5laBEUY+F9K1HijYIR8NN/LYP5F
+yiQZQnc6XMluymAbZ7DX8iGLOk/hH3xF1knDo84UYe+AjOatbjh2idBRKvWQexxv
+qLEOxLCsygJ+aMcI+S4+hev5Vf+5fcLyFrYqUlWfG2vmLwefVhAFZyhTPQQyA3xv
+SzLVT8PPJoqLtXnv47JjaXFsYBpMQHSEwWQOn5NEttON/JSiAxSe5uoZ/M/fNYd8
+zvbUA+QbwA2vBymRR7Pq
+=vt9H
 -----END PGP SIGNATURE-----
 
---=-kZWZg+XRbptxpsYasww1--
+--=-MdZ3/N1gBYEyasvp6tVo--
 
