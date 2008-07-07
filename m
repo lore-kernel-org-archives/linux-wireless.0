@@ -1,64 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from astoria.ccjclearline.com ([64.235.106.9]:37064 "EHLO
-	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751155AbYGXQVY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2008 12:21:24 -0400
-Received: from [205.233.55.237] (helo=crashcourse.ca)
-	by astoria.ccjclearline.com with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.69)
-	(envelope-from <rpjday@crashcourse.ca>)
-	id 1KM3ZB-0006Su-Dd
-	for linux-wireless@vger.kernel.org; Thu, 24 Jul 2008 12:21:21 -0400
-Date: Thu, 24 Jul 2008 12:20:09 -0400 (EDT)
-From: "Robert P. J. Day" <rpjday@crashcourse.ca>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] WIRELESS: Make wireless one-click selectable.
-Message-ID: <alpine.LFD.1.10.0807241218170.7169@localhost.localdomain> (sfid-20080724_182129_448833_6C68C072)
+Received: from element.ksp.sk ([158.195.16.154]:51119 "EHLO element.ksp.sk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753356AbYGGMXG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jul 2008 08:23:06 -0400
+Message-ID: <48720AA5.9070303@work.ksp.sk> (sfid-20080707_142311_242341_C2D5E3D4)
+Date: Mon, 07 Jul 2008 14:23:01 +0200
+From: Vladimir Koutny <vlado@work.ksp.sk>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	bruno randolf <bruno@thinktube.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] mac80211: don't report selected IBSS when not found
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Don't report a 'selected' IBSS in sta_find_ibss when none was found.
 
-Use "menuconfig" to make wireless support one-click selectable.
-
-Signed-off-by: Robert P. J. Day <rpjday@crashcourse.ca>
+Signed-off-by: Vladimir Koutny <vlado@ksp.sk>
 
 ---
 
-  revised from earlier patch so that wireless defaults to "y".
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3694,8 +3694,10 @@ static int ieee80211_sta_find_ibss(struct net_device *dev,
+ 	spin_unlock_bh(&local->sta_bss_lock);
 
-diff --git a/net/Kconfig b/net/Kconfig
-index b986687..d05029b 100644
---- a/net/Kconfig
-+++ b/net/Kconfig
-@@ -239,14 +239,18 @@ source "net/rxrpc/Kconfig"
- config FIB_RULES
- 	bool
-
--menu "Wireless"
-+menuconfig WIRELESS
-+	bool "Wireless"
- 	depends on !S390
-+	default y
-+
-+if WIRELESS
-
- source "net/wireless/Kconfig"
- source "net/mac80211/Kconfig"
- source "net/ieee80211/Kconfig"
-
--endmenu
-+endif # WIRELESS
-
- source "net/rfkill/Kconfig"
- source "net/9p/Kconfig"
-
-========================================================================
-Robert P. J. Day
-Linux Consulting, Training and Annoying Kernel Pedantry:
-    Have classroom, will lecture.
-
-http://crashcourse.ca                          Waterloo, Ontario, CANADA
-========================================================================
+ #ifdef CONFIG_MAC80211_IBSS_DEBUG
+-	printk(KERN_DEBUG "   sta_find_ibss: selected %s current "
+-	       "%s\n", print_mac(mac, bssid), print_mac(mac2, ifsta->bssid));
++	if (found)
++		printk(KERN_DEBUG "   sta_find_ibss: selected %s current "
++		       "%s\n", print_mac(mac, bssid),
++		       print_mac(mac2, ifsta->bssid));
+ #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+ 	if (found && memcmp(ifsta->bssid, bssid, ETH_ALEN) != 0 &&
+ 	    (bss = ieee80211_rx_bss_get(dev, bssid,
