@@ -1,50 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:36593 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752351AbYGULgL (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.176]:7295 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756796AbYGGVXb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 07:36:11 -0400
-Date: Mon, 21 Jul 2008 19:36:00 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: jamal <hadi@cyberus.ca>
-Cc: kaber@trash.net, davem@davemloft.net, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in RCU.
-Message-ID: <20080721113600.GA10322@gondor.apana.org.au> (sfid-20080721_133615_684428_705E2151)
-References: <E1KKZmE-0000ty-00@gondolin.me.apana.org.au> <1216568119.4847.101.camel@localhost> <20080721001119.GA6515@gondor.apana.org.au> <1216607637.4847.172.camel@localhost> <20080721031716.GA7535@gondor.apana.org.au> <1216638879.4847.210.camel@localhost>
+	Mon, 7 Jul 2008 17:23:31 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so1467183waf.23
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2008 14:23:29 -0700 (PDT)
+Message-ID: <1ba2fa240807071423n755d4e5ay81a6543be7761a92@mail.gmail.com> (sfid-20080707_232343_301240_C9065E9E)
+Date: Tue, 8 Jul 2008 00:23:29 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Harvey Harrison" <harvey.harrison@gmail.com>
+Subject: Re: [PATCH 1/1 V2] mac80211: Fix ieee80211_rx_reorder_ampdu: ignore QoS null packets
+Cc: "Michael Buesch" <mb@bu3sch.de>, linville@tuxdriver.com,
+	johannes@sipsolutions.net, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
+In-Reply-To: <1215458792.14247.7.camel@brick>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1216638879.4847.210.camel@localhost>
+Content-Type: text/plain; charset=UTF-8
+References: <1215434881-5410-1-git-send-email-tomas.winkler@intel.com>
+	 <1215447824.14247.2.camel@brick> <200807071902.51683.mb@bu3sch.de>
+	 <1215458792.14247.7.camel@brick>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 21, 2008 at 07:14:39AM -0400, jamal wrote:
-> 
-> > Only if you also want to share it :) In the end I patched it to
-> > not share it which is much easier.
-> 
-> I am trying to visualize: if you dont share, you must have 256K copies
-> then? Assuming also you have a fast lookup since that was design intent.
-
-They can't be shared anyway because each of those 256K rules NATs
-to a different IP address.
-
-> #ifdef CONFIG_HASH_SIZE
-> #define NAT_TAB_MASK CONFIGURED_HASH_SIZE
-> #else
-> #define NAT_TAB_MASK 15
-> #endif
-> 
-> What do you think?
-
-Sorry, I think I'll have to poke my eyes out :)
-
-But yeah if we ever get a generic dynamic hash table implmenetation
-then I'd be happy for act_nat to use that.
-
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+T24gTW9uLCBKdWwgNywgMjAwOCBhdCAxMDoyNiBQTSwgSGFydmV5IEhhcnJpc29uCjxoYXJ2ZXku
+aGFycmlzb25AZ21haWwuY29tPiB3cm90ZToKPiBPbiBNb24sIDIwMDgtMDctMDcgYXQgMTk6MDIg
+KzAyMDAsIE1pY2hhZWwgQnVlc2NoIHdyb3RlOgo+PiBPbiBNb25kYXkgMDcgSnVseSAyMDA4IDE4
+OjIzOjQ0IEhhcnZleSBIYXJyaXNvbiB3cm90ZToKPj4gPiBPbiBNb24sIDIwMDgtMDctMDcgYXQg
+MTU6NDggKzAzMDAsIFRvbWFzIFdpbmtsZXIgd3JvdGU6Cj4+ID4gPiBGcm9tOiBFbW1hbnVlbCBH
+cnVtYmFjaCA8ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPgo+PiA+ID4KPj4gPiA+IFRoaXMg
+cGF0Y2ggZml4ZXMgdGhlIGNoZWNrIGF0IHRoZSBlbnRyYW5jZSB0byBpZWVlODAyMTFfcnhfcmVv
+cmRlcl9hbXBkdS4KPj4gPiA+IFRoaXMgY2hlY2sgaGFzIGJlZW4gYnJva2VuIGJ5IDUxMWZlM2Yz
+YzRiYTBiNWI3NzQyMTMzNmY2NGExOWI2Y2QwMGU2NWYKPj4gPiA+ICdtYWM4MDIxMTogcnguYyB1
+c2UgbmV3IGhlbHBlcnMnCj4+ID4gPgo+PiA+IEFjdHVhbGx5LCBkbyB3ZSB3YW50IHNvbWV0aGlu
+ZyBsaWtlIHRoaXMgaW5zdGVhZDoKPj4gPgo+Cj4gT3IsIGFmdGVyIGhhdmluZyBhIGNvZmZlZSBh
+bmQgYWN0dWFsbHkgZW5nYWdpbmcgYnJhaW4gKHNpbWlsYXIgdG8KPiBpZWVlODAyMTFfaXNfZGF0
+YV9xb3MpCj4KPiBpbnQgaWVlZTgwMjExX2lzX2RhdGFfbnVsbGZ1bmMoX19sZTE2IGZjKQo+IHsK
+PiAgICAgICAgcmV0dXJuIChmYyAmIGNwdV90b19sZTE2KElFRUU4MDIxMV9GQ1RMX0ZUWVBFIHwg
+77u/SUVFRTgwMjExX++7v1NUWVBFX05VTExGVU5DKSkgPT0KPiAgICAgICAgICAgICAgICBjcHVf
+dG9fbGUxNihJRUVFODAyMTFfRlRZUEVfREFUQSB8IElFRUU4MDIxMV9TVFlQRV9OVUxMRlVOQyk7
+Cj4gfQo+Cj4gVG9tYXMsIHlvdSB3YW50IGEgcGF0Y2g/Cj4KPiBIYXJ2ZXkKCk1heWJlIGl0J3Mg
+dGhlIGxhdGUgaG91ciBidXQgSSdtIG5vdCBzdXJlIHdoYXQgaXMgd3Jvbmcgd2l0aCB0aGUKRW1t
+YW51ZWwncyAgcGF0Y2guIE1vc3RseSBpdCBmaXhlcyBiaWcgc3RhbGwgaW4gUlguCkNoZWNrZWQg
+YW5kIHZhbGlkYXRlZC4KVGhhbmtzClRvbWFzCg==
