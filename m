@@ -1,63 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:60131 "EHLO mgw2.diku.dk"
+Received: from mga11.intel.com ([192.55.52.93]:19255 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757456AbYGUH5t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 03:57:49 -0400
-Date: Mon, 21 Jul 2008 09:57:47 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: Larry.Finger@lwfinger.net, stefano.brivio@polimi.it,
-	linux-wireless@vger.kernel.org, jgarzik@pobox.com,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH 3/7] drivers/net/wireless/b43legacy/main.c: Release mutex in
- error handling code
-Message-ID: <Pine.LNX.4.64.0807210957270.24625@ask.diku.dk> (sfid-20080721_095827_121251_FE304C9E)
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	id S1752921AbYGGMcV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jul 2008 08:32:21 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/1] mac80211: Fix ieee80211_rx_reorder_ampdu: ignore QoS null packets
+Date: Mon,  7 Jul 2008 15:32:16 +0300
+Message-Id: <1215433936-5241-1-git-send-email-tomas.winkler@intel.com> (sfid-20080707_143227_232319_7DE303A5)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-The mutex is released on a successful return, so it would seem that it
-should be released on an error return as well.
+This patch fixes the check at the entrance to ieee80211_rx_reorder_ampdu.
+This check has been broken by 511fe3f3c4ba0b5b77421336f64a19b6cd00e65f
+'mac80211: rx.c use new helpers'
 
-The semantic patch finds this problem is as follows:
-(http://www.emn.fr/x-info/coccinelle/)
+Letting QoS NULL packet in ieee80211_rx_reorder_ampdu led to packet loss in
+RX.
 
-// <smpl>
-@@
-expression l;
-@@
-
-mutex_lock(l);
-... when != mutex_unlock(l)
-    when any
-    when strict
-(
-if (...) { ... when != mutex_unlock(l)
-+   mutex_unlock(l);
-    return ...;
-}
-|
-mutex_unlock(l);
-)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
-diff -u -p a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -3862,10 +3862,10 @@ static int b43legacy_resume(struct ssb_d
- 			goto out;
- 		}
- 	}
--	mutex_unlock(&wl->mutex);
- 
- 	b43legacydbg(wl, "Device resumed.\n");
- out:
-+	mutex_unlock(&wl->mutex);
- 	return err;
+ include/linux/ieee80211.h |   11 +++++++++++
+ net/mac80211/rx.c         |    2 +-
+ 2 files changed, 12 insertions(+), 1 deletions(-)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index aa603c3..3865d4c 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -460,6 +460,17 @@ static inline int ieee80211_is_nullfunc(__le16 fc)
+ 	       cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_NULLFUNC);
  }
  
++/**
++ * ieee80211_is_nullfunc - check if FTYPE=IEEE80211_FTYPE_DATA and
++ * STYPE=IEEE80211_STYPE_QOS_NULLFUNC
++ * @fc: frame control bytes in little-endian byteorder
++ */
++static inline int ieee80211_is_qos_nullfunc(__le16 fc)
++{
++	return (fc & cpu_to_le16(IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE)) ==
++	       cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_QOS_NULLFUNC);
++}
++
+ struct ieee80211s_hdr {
+ 	u8 flags;
+ 	u8 ttl;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 6a88e8f..a6e8214 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2052,7 +2052,7 @@ static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
+ 	tid_agg_rx = sta->ampdu_mlme.tid_rx[tid];
+ 
+ 	/* null data frames are excluded */
+-	if (unlikely(ieee80211_is_nullfunc(hdr->frame_control)))
++	if (unlikely(ieee80211_is_qos_nullfunc(hdr->frame_control)))
+ 		goto end_reorder;
+ 
+ 	/* new un-ordered ampdu frame - process it */
+-- 
+1.5.4.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
