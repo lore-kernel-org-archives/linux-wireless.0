@@ -1,83 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52849 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752874AbYGJKwa (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:40141 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756150AbYGGUrO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 06:52:30 -0400
-Subject: Re: sparse warnings on iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240807100345n15c5ff84mb47267fe547a545@mail.gmail.com> (sfid-20080710_124533_279364_D3E6E16C)
-References: <1215681008.3932.5.camel@johannes.berg>
-	 <1ba2fa240807100345n15c5ff84mb47267fe547a545@mail.gmail.com>
-	 (sfid-20080710_124533_279364_D3E6E16C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-de0blkYcHlMHgObI9Q1c"
-Date: Thu, 10 Jul 2008 12:51:44 +0200
-Message-Id: <1215687104.3483.14.camel@johannes.berg> (sfid-20080710_125233_873590_73629B6B)
-Mime-Version: 1.0
+	Mon, 7 Jul 2008 16:47:14 -0400
+Date: Mon, 7 Jul 2008 17:47:08 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
+Subject: Re: Question on rfkill double block
+Message-ID: <20080707204708.GA3166@khazad-dum.debian.net> (sfid-20080707_224717_625113_822810F3)
+References: <1214982208.14590.473.camel@debian.sh.intel.com> <1215018189.29117.32.camel@localhost.localdomain> <20080704195543.GB27898@khazad-dum.debian.net> <1215450664.17128.64.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1215450664.17128.64.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 07 Jul 2008, Dan Williams wrote:
+> On Fri, 2008-07-04 at 16:55 -0300, Henrique de Moraes Holschuh wrote:
+> > On Wed, 02 Jul 2008, Dan Williams wrote:
+> > > That would be more useful than the current enum, yes.
+> > 
+> > Dan, you do have a strong user case for "just software rfkilled", "just
+> > hardware rfkilled" and "soft+hard rfkilled" as opposed to simply "software
+> > rfkilled" and "hardware rfkilled, maybe software rfkilled as well" ?
+> 
+> No, I don't have a _NetworkManager_ usecase for being able to
+> distinguish between HW and HW+SW.  Just an observation that stuff other
+> than NM might want to figure that out for UI or something.
 
---=-de0blkYcHlMHgObI9Q1c
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Ok.  I will still *try* to implement the fourth state, but I will post the
+patch as a RFC.  If it is too messy or complex, I will recommend that we
+drop it.
 
-On Thu, 2008-07-10 at 13:45 +0300, Tomas Winkler wrote:
-> On Thu, Jul 10, 2008 at 12:10 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > Was just running sparse for something unrelated and noticed these:
-> >
-> > drivers/net/wireless/iwlwifi/iwl-rx.c:832:2: warning: cast truncates bi=
-ts from constant value (1c00 becomes 0)
-> > drivers/net/wireless/iwlwifi/iwl-rx.c:836:2: warning: cast truncates bi=
-ts from constant value (6f080000 becomes 0)
-> > drivers/net/wireless/iwlwifi/iwl-rx.c:836:2: warning: cast truncates bi=
-ts from constant value (6f080000 becomes 0)
-> > drivers/net/wireless/iwlwifi/iwl-rx.c:856:3: warning: cast truncates bi=
-ts from constant value (4001 becomes 1)
-> > drivers/net/wireless/iwlwifi/iwl-rx.c:860:3: warning: cast truncates bi=
-ts from constant value (a000 becomes 0)
-> > drivers/net/wireless/iwlwifi/iwl-rx.c:864:3: warning: cast truncates bi=
-ts from constant value (c000 becomes 0)
->=20
-> Yeah I've actually wanted to ask someone how to solve. This comes from
-> radio tap code, frankly currently very low priority on my list.
-> Not sure why but only calling directly to put_unalinged_le32 fixes
-> this warning. In general put_unaligned should be expanded to this
-> macro.
+> But if the HW block is on, NM doesn't care about softblock because you
+> can't use the radio anyway.  If the HW switch is unblocked, NM will
+> un-SW-block the radio anyway, since HW-unblock is definitely a
+> user-initiated option and signals user intent to unblock the radio
+> irregardless of SW block state from something else.
 
-Yeah I was also just looking at it and couldn't make sense of it. It
-seems sparse gets confused about the pointer type or something.
+I intend to offer the *possibility* of using the HW switch like this on
+rfkill-input: on block, block all (EPO).  On unblock, restore previous state
+(so, e.g. if WLAN was enabled and bluetooth was disabled, after a HW switch
+on/off/on cycle, you will not get bluetooth and WLAN enabled).  But that's
+not ready yet, and I am not sure I will be able to do it cleanly.  If I
+can't, I will drop it.
 
-> I will submit patch that solves this.
-
-Cool, thanks.
-
-johannes
-
---=-de0blkYcHlMHgObI9Q1c
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIdem9AAoJEKVg1VMiehFYdo0P/1/9jg9JkHbWfzPKg4IjnIV0
-cdCEdxiWjyzLuvc+xXug/QKDmW5QCP4GhoQ3E7C06hX69PB1GsIdPJCdaP29WWER
-S0d8EAhifdvKNY5bFmAov9NMRPCWbkdJU1If8ENZLO3MMK1lNFKrdaKCwVmIg6CN
-E5xGi9K9QplRq3A5QAPp4z2IWT+hBSU3rVvZZoGO2O9s5jWeUr0KaNuVsMuWas7u
-xv9TQ30JIth9EKfdWbyAAJxMIgVKxpcw7mAQAqWnL24dbwZFnQigLCMNWpSbclE7
-GsZ2RiYw/VsiAwm6K+hue8QlkFz0MROoblbFLcLl30E9YIdsN1Hydi7zwjTMh4x2
-QO6PKtI+AlioPbvXdwAflDELjM47EI9CBFABM8UcXvDG6jgYG/AEOpKmbkJhu0OO
-tkse/BuEhajYAV0SBa7KbDrupFK6irJpEzQxMifG9jTJtaN5dGZHPeOzmUGlQNIs
-0HtwZGkwOi+ewoN5XrMvBNC86Jk9xSLcdmPaQp2dKWDNCo/jQs3XF/tG/CFi0lAj
-8/BzbNidJAV/oDhKAC7iylYkbHs933L3ecaaWnnhfiOpRuxerK0zHzxTEBz1FFEO
-9/UfiSvFcTet3DIXyFiEdDXw0ydsNKRdPg2g5LBYiY5hK38RGMdWbmmEhavl3JgV
-Sr0tL437qfE0d7rTDBci
-=kb/g
------END PGP SIGNATURE-----
-
---=-de0blkYcHlMHgObI9Q1c--
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
