@@ -1,71 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:57383 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([66.187.233.31]:37081 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751768AbYGVXR2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 19:17:28 -0400
-Date: Tue, 22 Jul 2008 16:14:06 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>, Willy Tarreau <w@1wt.eu>,
-	Rodrigo Rubira Branco <rbranco@la.checkpoint.com>,
-	Jake Edge <jake@lwn.net>, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>
-Subject: [patch 01/47] b43legacy: Do not return TX_BUSY from op_tx
-Message-ID: <20080722231406.GB8282@suse.de> (sfid-20080723_011732_289639_A3C29BB8)
-References: <20080722230208.148102983@mini.kroah.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080722231342.GA8282@suse.de>
+	id S1753805AbYGGRFv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jul 2008 13:05:51 -0400
+Subject: Re: Question on rfkill double block
+From: Dan Williams <dcbw@redhat.com>
+To: Andy Lutomirski <luto@myrealbox.com>
+Cc: hmh@hmh.eng.br, thomasw@gmail.com, zhu.yi@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <48719F2F.5060301@myrealbox.com>
+References: <1214982208.14590.473.camel@debian.sh.intel.com>
+	 <20080702193202.GA20410@khazad-dum.debian.net>
+	 <1ba2fa240807051428i3f49f621i7b583bec58a02869@mail.gmail.com>
+	 <20080706002037.GD21973@khazad-dum.debian.net>
+	 <48719F2F.5060301@myrealbox.com>
+Content-Type: text/plain
+Date: Mon, 07 Jul 2008 13:02:20 -0400
+Message-Id: <1215450140.17128.54.camel@localhost.localdomain> (sfid-20080707_190554_781966_5780D137)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.25-stable review patch.  If anyone has any objections, please let us know.
+On Mon, 2008-07-07 at 00:44 -0400, Andy Lutomirski wrote:
+> Henrique de Moraes Holschuh wrote:
+> > On Sun, 06 Jul 2008, Tomas Winkler wrote:
+> >> From my experience from other OS the states of SW and HW RF KILL
+> >> switches should be independent and visible to user space
+> >> otherwise it's very hard to make something coherent out of it. It
+> >> should be visible to user himself so he/she knows what switch actually
+> >> press. And also to let say unmanned application, most important in
+> >> preserving SW switch state across reboots and resume/suspend events.
+> >> Radio state is just simple AND function of all the switches in the
+> >> game anything else just leads to confusion.
+> >> Currently we have rkill switch from sysfs, hw rfkill, iwconfig txpower
+> >> off, the last one is better to eliminate but still we have TRIPLE
+> >> BLOCKING
+> > 
+> > I am not convinced it is the best way to go, but I thought on it, and that
+> > fourth state will at least help on sleep-to-ram resume, so you guys will get
+> > four states.  
+> > 
+> > But I can't give you a bitmap.  Sorry, there is a stablished sysfs ABI in
+> > mainline that says this:
+> > 
+> > 00 - BLOCK ("off")
+> > 01 - UNBLOCK ("on")
+> > 
+> > I hate it, but I can't change it.  We can *extend* it, but that's it.
+> 
+> Perhaps it's time to throw out the userspace interface and start over, 
+> or at least replace it and emulate the old one, too.
+> 
+> I'm not even kidding.  I have an iwl4965, and I've tried 2.6.25.10's 
+> built-in driver and wireless-compat from a couple days ago.  The rfkill 
+> switch *works* but the userspace interface does nothing.  (2.6.25.10's 
+> module at least causes network-manager to notice that the interface went 
+> down and gets a ton of "Requesting MAC access during RFKILL wakes up 
+> NIC."  Wireless-compat's driver just confuses network-manager.)  The 
 
-------------------
-From: Michael Buesch <mb@bu3sch.de>
+NM talks to HAL for rfkill information as an abstraction over all the
+random rfkill implementations that came before the kernel one, so you'll
+have to see if the HAL rfkill callouts correctly determine state for
+your driver.
 
-Never return TX_BUSY from op_tx. It doesn't make sense to return
-TX_BUSY, if we can not transmit the packet.
-Drop the packet and return TX_OK.
+Note that the HAL killswitch interface does not yet support soft-block,
+which as something that I was going to poke at after this patch landed
+if nobody fixed up HAL first.
 
-Upstream commit is
-eb803e419ca6be06ece2e42027bb4ebd8ec09f91
+Dan
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+> rfkill module seems to have no effect, and 'find /sys -name *rfkill*' 
+> shows nothing (other than the rfkill class and module).  Rfkill doesn't 
+> work on my ath5k system either (no rfkill file).  This is Ubuntu Hardy, 
+> which has nm 0.6, but I once tried nm 0.7 from svn and I don't recall it 
+> working any better.
+> 
+> Not to mention the fact that I have both an rfkill switch and an rfkill 
+> button.  Pressing the button turns WLAN off (same RFKILL messages 
+> spammed to dmesg) and Bluetooth *on*.  Maybe it's thinkpad_acpi's fault, 
+> but I don't really see how it's supposed to work right.
+> 
+> So it seems to me that the status quo is:
+>   - If there's a sysfs file called rfkill, it has such and such 
+> semantics, and you probably can't change it by writing to it.
+>   - There probably isn't an rfkill file.
+>   - Userspace, at least on my laptops, doesn't currently use the rfkill 
+> ABI in any meaningful manner.
+>   - Software rfkill control can easily do the wrong thing and there's no 
+> obvious way to make it do the right thing from userspace, .config, or sysfs.
+> 
+> Maybe the new semantics should be something sensible with a read-only 
+> file called "rfkill" that's backwards-compatible and shows the overall 
+> state.  Then we could do gnarly things like making *every* mac80211 
+> driver have software rfkill control, add inotify or something to the 
+> rfkill file, and generally have good and easily comprehensible control 
+> over all radios.  Hardware switches (and momentary swtiches and buttons 
+> and whatnot) could all be exposed directly to userspace.  Who knows -- 
+> there could even be files like "hard_rf_enable" (read-only, only there 
+> if there's a readable switch, like on iwl4965) and "soft_rf_enable" 
+> (read-write, unconditionally present), and a mechanism for userspace to 
+> control the software part (i.e. userspace could tell rfkill-input to 
+> stop doing anything and take control itself).
+> 
+> I'd suggest that nothing visible to userspace on the rfkill side go into 
+> 2.6.27 until it can be done right and it's clear what this whole 
+> mechanism is supposed to do.  I might even be talked into writing some 
+> patches, because it would be kind of nice for all this stuff to work 
+> right on my laptops.
+> 
+> If I'm missing something I need to make rfkill suddenly work on my 
+> machine, please give me some hints, too :)
+> 
+> --Andy
+> 
 
-
----
- drivers/net/wireless/b43legacy/main.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -2350,8 +2350,10 @@ static int b43legacy_op_tx(struct ieee80
- 	} else
- 		err = b43legacy_dma_tx(dev, skb, ctl);
- out:
--	if (unlikely(err))
--		return NETDEV_TX_BUSY;
-+	if (unlikely(err)) {
-+		/* Drop the packet. */
-+		dev_kfree_skb_any(skb);
-+	}
- 	return NETDEV_TX_OK;
- }
- 
-
--- 
