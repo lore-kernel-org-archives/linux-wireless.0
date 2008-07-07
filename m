@@ -1,30 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:40789 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752665AbYGNNSw (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:9078 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755663AbYGGS4y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 09:18:52 -0400
-To: "Tomas Winkler" <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: Re: [PATCH 1/2] mac80211: pass dtim_period to low level driver
-References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Mon, 14 Jul 2008 16:17:28 +0300
-In-Reply-To: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com> (ext Tomas Winkler's message of "Mon\, 14 Jul 2008 15\:31\:23 +0300")
-Message-ID: <87k5foob9z.fsf@nokia.com> (sfid-20080714_151856_036046_7DA32519)
+	Mon, 7 Jul 2008 14:56:54 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so487568yxm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2008 11:56:53 -0700 (PDT)
+Message-ID: <cb0375e10807071156x26df8332j4b167e8cc9bb289@mail.gmail.com> (sfid-20080707_205658_933630_387D553F)
+Date: Mon, 7 Jul 2008 14:56:53 -0400
+From: "Andrew Lutomirski" <andy@luto.us>
+To: linux-wireless@vger.kernel.org
+Subject: [BUG] iwl4965: huge latency and errors when unblocking the hardware rfkill
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler <tomas.winkler@intel.com> writes:
+This is wireless-testing c80200cd38c265da90f0d9d031ace84aa56b0453, pulled today.
 
-> This patch adds the dtim_period in ieee80211_bss_conf, this allows the low
-> level driver to know the dtim_period, and to plan power save accordingly.
+I have a Lenovo X61s with a physical rfkill switch (the kind that
+slides between blocked and unblocked).
 
-Very good. This is a needed feature in my opinion.
+If I turn off the hardware rfkill switch (set to block) while
+associated, I lose the connection (obviously).  If I turn it back on
+again (set to unblock), I get a lot of latency (my mouse stops moving
+for a second or two) and I sometimes get errors in the syslog like
+this:
 
--- 
-Kalle Valo
+iwl4965: Error sending REPLY_CT_KILL_CONFIG_CMD: time out after 500ms.
+
+The card fails to associate afterwards.  If I tell network-manager to
+turn off wireless, then block rfkill, then wait a few seconds, then
+unblock it, then turn nm back on, everything works again.
+
+This seems like at least two different bugs:
+
+ - iwl4965 causes latency.  This latency issue has been reproducible
+every time for me on 2.6.24-ubuntu_something, 2.5.25, wireless-compat
+(recent), and current wireless-testing.
+ - iwl4965 doesn't work right after hard unblocking rfkill.
+
+I'm happy to do further troubleshooting and/or test patches.
+
+--Andy
