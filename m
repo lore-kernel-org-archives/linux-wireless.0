@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:40271 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753324AbYGOJ6N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 05:58:13 -0400
-Message-ID: <20080715115810.nxudx5jrms8s4cko@imap.suse.de> (sfid-20080715_115816_990669_7E9C0B53)
-Date: Tue, 15 Jul 2008 11:58:10 +0200
-From: Helmut Schaa <hschaa@suse.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	Kalle Valo <kalle.valo@nokia.com>, linville@tuxdriver.com,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by
-	low level driver
-References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
-	<1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
-	<1216039127.11189.15.camel@johannes.berg>
-	<1ba2fa240807140546w4f08e32l59ed88dfa1b86403@mail.gmail.com>
-	<87fxqcoaue.fsf@nokia.com> <1216109543.23746.21.camel@johannes.berg>
-	<1ba2fa240807150129v4906b7bcyba66ab62b57c5d71@mail.gmail.com>
-	(sfid-20080715_102953_982307_5BF8D17D)
-	<1216111261.3535.7.camel@johannes.berg>
-In-Reply-To: <1216111261.3535.7.camel@johannes.berg>
+Received: from yw-out-2324.google.com ([74.125.46.30]:28509 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754257AbYGGMhR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jul 2008 08:37:17 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so999761ywe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2008 05:37:06 -0700 (PDT)
+Message-ID: <69e28c910807070537u194703a0i26d210c53436d6c2@mail.gmail.com> (sfid-20080707_143727_211640_C6A35968)
+Date: Mon, 7 Jul 2008 14:37:05 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Tomas Winkler" <tomas.winkler@intel.com>
+Subject: Re: [PATCH 1/1] mac80211: Fix ieee80211_rx_reorder_ampdu: ignore QoS null packets
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
+In-Reply-To: <1215433936-5241-1-git-send-email-tomas.winkler@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1215433936-5241-1-git-send-email-tomas.winkler@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Di 15 Jul 2008 10:41:01 CEST schrieb Johannes Berg  
-<johannes@sipsolutions.net>:
+On Mon, Jul 7, 2008 at 2:32 PM, Tomas Winkler <tomas.winkler@intel.com> wrote:
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>
+> This patch fixes the check at the entrance to ieee80211_rx_reorder_ampdu.
+> This check has been broken by 511fe3f3c4ba0b5b77421336f64a19b6cd00e65f
+> 'mac80211: rx.c use new helpers'
+>
+> Letting QoS NULL packet in ieee80211_rx_reorder_ampdu led to packet loss in
+> RX.
+>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> ---
+>  include/linux/ieee80211.h |   11 +++++++++++
+>  net/mac80211/rx.c         |    2 +-
+>  2 files changed, 12 insertions(+), 1 deletions(-)
+>
+> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+> index aa603c3..3865d4c 100644
+> --- a/include/linux/ieee80211.h
+> +++ b/include/linux/ieee80211.h
+> @@ -460,6 +460,17 @@ static inline int ieee80211_is_nullfunc(__le16 fc)
+>               cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_NULLFUNC);
+>  }
+>
+> +/**
+> + * ieee80211_is_nullfunc - check if FTYPE=IEEE80211_FTYPE_DATA and
 
-> Right, but it does make sense to advertise what we're using, and this
-> patch just adds a strict "driver tells mac80211 what it's using" flow.
-> That's mostly what I'm objecting to. If you were calling the variable
-> "max_listen_interval" and having mac80211 send it back to the driver in
-> the BSS config as bssconf->listen_interval, and, for now, simply use the
-> max, I wouldn't have a problem with it.
-
-Using "max_listen_interval" as default may possibly result in APs  
-rejecting the association. At least the 802.11 spec defines a status  
-code 51 with the description "Association denied because the  
-ListenInterval is too large".
-
-Maybe retrying the association with a lower listen interval could help  
-here. Therefore I agree with Johannes that the decision about what  
-value to actually use should be made in mac80211.
-
-Helmut
+Was this intended to be "ieee80211_is_qos_nullfunc - check..."?
