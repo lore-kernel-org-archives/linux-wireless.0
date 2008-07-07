@@ -1,82 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:52677 "EHLO mx1.suse.de"
+Received: from ra.tuxdriver.com ([70.61.120.52]:4408 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754137AbYGVXRc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 19:17:32 -0400
-Date: Tue, 22 Jul 2008 16:14:10 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>, Willy Tarreau <w@1wt.eu>,
-	Rodrigo Rubira Branco <rbranco@la.checkpoint.com>,
-	Jake Edge <jake@lwn.net>, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>
-Subject: [patch 02/47] b43: Do not return TX_BUSY from op_tx
-Message-ID: <20080722231410.GC8282@suse.de> (sfid-20080723_011735_410350_A5F89781)
-References: <20080722230208.148102983@mini.kroah.org>
+	id S1750804AbYGGNiE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jul 2008 09:38:04 -0400
+Date: Mon, 7 Jul 2008 09:15:02 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2008-07-02
+Message-ID: <20080707131502.GD5457@tuxdriver.com> (sfid-20080707_153809_609479_E7A547CC)
+References: <20080630215651.GA666@tuxdriver.com> <20080702193710.GA4682@tuxdriver.com> <20080702202653.GA10719@tuxdriver.com> <20080705.214752.85024966.davem@davemloft.net> <1ba2fa240807060007i572d054va60aa16b41cadce3@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080722231342.GA8282@suse.de>
+In-Reply-To: <1ba2fa240807060007i572d054va60aa16b41cadce3@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.25-stable review patch.  If anyone has any objections, please let us
-know.
+On Sun, Jul 06, 2008 at 10:07:42AM +0300, Tomas Winkler wrote:
+> On Sun, Jul 6, 2008 at 7:47 AM, David Miller <davem@davemloft.net> wrote:
+> > From: "John W. Linville" <linville@tuxdriver.com>
+> > Date: Wed, 2 Jul 2008 16:26:53 -0400
+> >
+> >> Here is another slew of updates for 2.6.27.  The bulk of this batch is
+> >> for iwlwifi, with some mac80211 and other bits thrown-in.
+> >>
+> >> Let me know if there are problems!
+> >
+> > Pulled and pushed back out to net-next-2.6, thanks.
+> >
+> > Here are some warnings I noticed during an allmodconfig build
+> > on sparc64, please fix:
+> >
+> > drivers/net/wireless/hostap/hostap_hw.c:3422: warning: 'prism2_suspend' defined but not used
+> > drivers/net/wireless/iwlwifi/iwl-rfkill.c:114: warning: label 'freed_rfkill' defined but not used
+> 
+> John what happened to to those patches?
+> http://marc.info/?l=linux-wireless&m=121489830307988&w=2
+> http://marc.info/?l=linux-wireless&m=121481826531792&w=2
 
-------------------
-From: Michael Buesch <mb@bu3sch.de>
+They were posted after this round of patches.  I still have them.
 
-Never return TX_BUSY from op_tx. It doesn't make sense to return
-TX_BUSY, if we can not transmit the packet.
-Drop the packet and return TX_OK.
-This will fix the resume hang.
-
-Upstream commit is
-66193a7cef2239bfd1b9b96e304770facf7a49c7
-
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
-
----
- drivers/net/wireless/b43/main.c |    9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
-
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2607,7 +2607,7 @@ static int b43_op_tx(struct ieee80211_hw
- 	int err;
- 
- 	if (unlikely(!dev))
--		return NETDEV_TX_BUSY;
-+		goto drop_packet;
- 
- 	/* Transmissions on seperate queues can run concurrently. */
- 	read_lock_irqsave(&wl->tx_lock, flags);
-@@ -2619,7 +2619,12 @@ static int b43_op_tx(struct ieee80211_hw
- 	read_unlock_irqrestore(&wl->tx_lock, flags);
- 
- 	if (unlikely(err))
--		return NETDEV_TX_BUSY;
-+		goto drop_packet;
-+	return NETDEV_TX_OK;
-+
-+drop_packet:
-+	/* We can not transmit this packet. Drop it. */
-+	dev_kfree_skb_any(skb);
- 	return NETDEV_TX_OK;
- }
- 
-
+John
 -- 
+John W. Linville
+linville@tuxdriver.com
