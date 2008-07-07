@@ -1,71 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:60859 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755589AbYGVOyl (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:4188 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754769AbYGGSsB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 10:54:41 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so387042ugf.16
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2008 07:54:39 -0700 (PDT)
-Message-ID: <4885F42F.9050503@gmail.com> (sfid-20080722_165500_848383_2BB56854)
-Date: Tue, 22 Jul 2008 16:52:31 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+	Mon, 7 Jul 2008 14:48:01 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so485091yxm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2008 11:48:00 -0700 (PDT)
+Message-ID: <cb0375e10807071147u5a8ce6bsd6193a2e11dac24@mail.gmail.com> (sfid-20080707_204808_506828_F37BEA8C)
+Date: Mon, 7 Jul 2008 14:47:59 -0400
+From: "Andrew Lutomirski" <luto@myrealbox.com>
+To: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
+Subject: Re: Question on rfkill double block
+Cc: thomasw@gmail.com, zhu.yi@intel.com,
+	linux-wireless@vger.kernel.org, dcbw@redhat.com
+In-Reply-To: <20080707165634.GA24815@khazad-dum.debian.net>
 MIME-Version: 1.0
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: Re: [PATCH 6/12] ath5k: Reorder calibration calls during reset and
- update hw_set_power
-References: <20080720034126.GF7440@makis>
-In-Reply-To: <20080720034126.GF7440@makis>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1214982208.14590.473.camel@debian.sh.intel.com>
+	 <20080702193202.GA20410@khazad-dum.debian.net>
+	 <1ba2fa240807051428i3f49f621i7b583bec58a02869@mail.gmail.com>
+	 <20080706002037.GD21973@khazad-dum.debian.net>
+	 <48719F2F.5060301@myrealbox.com>
+	 <20080707165634.GA24815@khazad-dum.debian.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/20/2008 05:41 AM, Nick Kossifidis wrote:
->  * Update ath5k_hw_reset and add some more documentation about PHY calibration
->  * Fix ath5k_hw_set_power to use AR5K_SLEEP_CTL_SLE_ALLOW for Network sleep
->  * Preserve sleep duration field while setting AR5K_SLEEP_CTL and reduce delays & checks for register's status (got this from decompiling & dumps, it works for me but it needs testing)
-> 
->  Changes-licensed-under: ISC
->  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
-> 
-> ---
-> diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-> index cab1a8a..4fb048c 100644
-> --- a/drivers/net/wireless/ath5k/hw.c
-> +++ b/drivers/net/wireless/ath5k/hw.c
-[...]
-> @@ -1461,6 +1496,7 @@ int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue)
->  
->  		/* Stop queue */
->  		ath5k_hw_reg_write(ah, tx_queue, AR5K_CR);
-> +		ath5k_hw_reg_read(ah, AR5K_CR);
+On Mon, Jul 7, 2008 at 12:56 PM, Henrique de Moraes Holschuh
+<hmh@hmh.eng.br> wrote:
+> On Mon, 07 Jul 2008, Andy Lutomirski wrote:
+>> Perhaps it's time to throw out the userspace interface and start over,
+>> or at least replace it and emulate the old one, too.
+>
+>> Maybe the new semantics should be something sensible with a read-only
+>> file called "rfkill" that's backwards-compatible and shows the overall
+>> state.  Then we could do gnarly things like making *every* mac80211
+>> driver have software rfkill control, add inotify or something to the
+>> rfkill file, and generally have good and easily comprehensible control
+>> over all radios.  Hardware switches (and momentary swtiches and buttons
+>
+> wireless network device driver support for the rfkill class is on the way,
+> but I don't think the mac80211 layer can help much (it is a very device
+> specific thing, rfkill is not about stopping data transfers, it is about
+> stopping energy emissions from the antennae).  If I am wrong about this,
+> someone will step up and correct me quite soon :-)
 
-This one was in my patch already.
+I agree that rfkill is about stopping rf emission, but rf devices with
+the emission turned off are generally useless (other than monitor
+mode) and it might be nice to do everything possible to reduce power
+consumption when rfkill is blocked.  Also, even if a device can't
+specifically block RF emission, having an easy-to-use off switch is
+still handy.
 
->  	} else {
->  		/*
->  		 * Schedule TX disable and wait until queue is empty
-> @@ -1705,6 +1741,7 @@ enum ath5k_int ath5k_hw_set_intr(struct ath5k_hw *ah, enum ath5k_int new_mask)
+>
+>> I'd suggest that nothing visible to userspace on the rfkill side go into
+>> 2.6.27 until it can be done right and it's clear what this whole
+>> mechanism is supposed to do.  I might even be talked into writing some
+>> patches, because it would be kind of nice for all this stuff to work
+>> right on my laptops.
+>
+> Well, please get the very latest wireless-testing tree, and read
+> Documentation/rfkill.txt to see what has been done already (and remember
+> that there could be some recent patches in this ML that have not been
+> applied to wireless-testing yet).  You may need to read some threads from
+> the last month too.
+>
+> In particular, read the small, recent thread about rfkill double-locking
+> after you read Documentation/rfkill.txt.
+>
+> That will bring you up to speed with what is being done, and then we can
+> talk more about it.  A lot of what you commented about is already in there,
+> although not exactly in the same way as you talked about it.  The various ML
+> threads (you can search linux-wireless and LKML for "rfkill" to find them)
+> have the reasoning behind most of the details.
+>
+>> If I'm missing something I need to make rfkill suddenly work on my
+>> machine, please give me some hints, too :)
+>
+> [...]
 
-Adding from the code:
-         /*
-          * Disable card interrupts to prevent any race conditions
->  	 * (they will be re-enabled afterwards).
->  	 */
->  	ath5k_hw_reg_write(ah, AR5K_IER_DISABLE, AR5K_IER);
-> +	ath5k_hw_reg_read(ah, AR5K_IER);
+Now I'm running wireless-testing + thinkpad-acpi 0.21-20080703 and
+everything appears to work (the button controls just bluetooth, the
+switch works and gets noticed by the driver, etc).  I turned off
+Ubuntu's hotkey-setup, which had some alternate thinkpad thing.
 
-Is this first flush needed? Writes cannot be reordered, they are just 
-asynchronous and flushed below. What race is this against? The interrupt might 
-be processed (or pending) at this moment on other processor anyway.
+Nice work on the new thinkpad-acpi, BTW.  It's quite an improvement.
 
->  	old_mask = ah->ah_imr;
->  
-> @@ -1737,6 +1774,7 @@ enum ath5k_int ath5k_hw_set_intr(struct ath5k_hw *ah, enum ath5k_int new_mask)
->  
->  	/* ..re-enable interrupts */
->  	ath5k_hw_reg_write(ah, AR5K_IER_ENABLE, AR5K_IER);
-> +	ath5k_hw_reg_read(ah, AR5K_IER);
+I'll play around with the new stuff.
 
-This was fixed too.
+--Andy
