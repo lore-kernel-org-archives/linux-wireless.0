@@ -1,84 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:32895 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752997AbYGaSXY (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.168]:24168 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754030AbYGGWos (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 14:23:24 -0400
-Subject: Re: iwlwifi aggregation info
-From: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 7 Jul 2008 18:44:48 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2295151wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2008 15:44:47 -0700 (PDT)
+Subject: Re: [PATCH 1/1 V2] mac80211: Fix ieee80211_rx_reorder_ampdu:
+	ignore QoS null packets
+From: Harvey Harrison <harvey.harrison@gmail.com>
 To: Tomas Winkler <tomasw@gmail.com>
-Cc: Friedrich.Beckmann@infineon.com, linux-wireless@vger.kernel.org,
-	j@w1.fi
-In-Reply-To: <1ba2fa240807311114t3e1b4fb3oe6643fbe28f2c2ac@mail.gmail.com> (sfid-20080731_201501_253355_AC4EB569)
-References: <1217331138.10489.24.camel@johannes.berg>
-	 <1217411631.10489.103.camel@johannes.berg>
-	 <8469FC7DDCBE054D9653D8506E1FF0F001F1E7B606@mucse406.eu.infineon.com>
-	 <1217423948.10489.121.camel@johannes.berg>
-	 <1ba2fa240807300645j654a82b4rb813b71681dfab71@mail.gmail.com>
-	 <1217425854.10489.125.camel@johannes.berg>
-	 <1ba2fa240807300659p4d743f31se265f550a2da0dd1@mail.gmail.com>
-	 <1217431179.10489.134.camel@johannes.berg>
-	 <1ba2fa240807300908x5489e3f8g54ff83e7e5912c0b@mail.gmail.com>
-	 <1217509511.10489.140.camel@johannes.berg>
-	 <1ba2fa240807311114t3e1b4fb3oe6643fbe28f2c2ac@mail.gmail.com>
-	 (sfid-20080731_201501_253355_AC4EB569)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aqKPmXkVvgTtyBkfQh1o"
-Date: Thu, 31 Jul 2008 20:23:17 +0200
-Message-Id: <1217528597.10489.150.camel@johannes.berg> (sfid-20080731_202327_361703_968C1EA2)
+Cc: Michael Buesch <mb@bu3sch.de>, linville@tuxdriver.com,
+	johannes@sipsolutions.net, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+In-Reply-To: <1ba2fa240807071516m6220a15sf02fe0b954d0d4ae@mail.gmail.com>
+References: <1215434881-5410-1-git-send-email-tomas.winkler@intel.com>
+	 <1215447824.14247.2.camel@brick> <200807071902.51683.mb@bu3sch.de>
+	 <1215458792.14247.7.camel@brick>
+	 <1ba2fa240807071423n755d4e5ay81a6543be7761a92@mail.gmail.com>
+	 <1215466987.14247.12.camel@brick>
+	 <1ba2fa240807071516m6220a15sf02fe0b954d0d4ae@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 07 Jul 2008 15:44:45 -0700
+Message-Id: <1215470685.14247.15.camel@brick> (sfid-20080708_004451_805370_EC0C0F0A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-aqKPmXkVvgTtyBkfQh1o
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2008-07-31 at 21:14 +0300, Tomas Winkler wrote:
-> On Thu, Jul 31, 2008 at 4:05 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Wed, 2008-07-30 at 19:08 +0300, Tomas Winkler wrote:
+On Tue, 2008-07-08 at 01:16 +0300, Tomas Winkler wrote:
+> On Tue, Jul 8, 2008 at 12:43 AM, Harvey Harrison
+> > set.
 > >
-> >> > Can you explain how starvation happens? In what scenarios? With or
-> >> > without aggregation?
-> >>
-> >> for (queue =3D 0; queue < QD_NUM(hw); queue++)
-> >>
-> >> This always starts 0  prioritize dequeue the first frame. But what we
-> >> need is RR and let HW to prioritize the transmission according AC
-> >
-> > That's from the old code not having real MQ though, right? I'm totally
-> > not concerned about that.
->=20
-> Correct. The bottom line is that correct behavior MQ would be shift
-> scheduling decision to the HW.
+> I know but, what you missing is the check above. we bail out from the
+> function if the packet is not qos data before so it's not relevant for
+> checking
+> of any null data just qos null data. I didn't want to touch the PS
+> code that's why we've created a special handler for this particular
+> case.
+> I think you patch works as well  and maybe can be used  PS mode as
+> well but I'm not sure now.. I will look at this alter.
+> Tomas
+> 
 
-Right. Which brings us back to the original point, why does the hw need
-to make the scheduling decision between agg and non-agg?
+Good point, a helper probably isn't right for this as it's already been
+checked that it's a data packet with qos, so opencoding the nullfunc
+test is probably the right thing (as it was before my change).
 
-johannes
+if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
 
---=-aqKPmXkVvgTtyBkfQh1o
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Cheers,
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIkgMSAAoJEKVg1VMiehFY6mYP/2Na8bPxdm+rVpNjqdPA3Qk7
-QL6So2nuZJIDBF3Wx71R0ucUKBmRdX2cr3dYzzKpt6cUxChIIg65FXGZSRUxVodw
-YXoQP1w0gLIGQb8+9oCKWpj8FZmnsMRlqDGOAbIUo0FqTs6rrVOPanS7bQvT9nbA
-sT5x4jhjnEWLGWoRgUo+trs8rHtPKKs7ayQI7uhWQEV/t3aFmvB1pODtX1Y3XhZx
-rjeNg6teu2YWgoYGEWGPEhU5pUapIq2xgpHe6b78FgS0fb8io8D0W/s4gaZdg0Zy
-TUiCfuesDJzzt1Hht0012fpks1l8MkmHEk9Zt2oE97DFeHYoAQfR/kLtckAAjg3g
-68hmDO9nN3UIWtSRryhth27CkFZbVg5uDfI9JVozTSJv/m3yowJ8PHGME/ktBWqk
-7Mipm2flo8by1+T9mPNuxj8M6T4+4uEBX0dur7b1tyDbpXwNjN7Qa89Qq41pkaQj
-NYICL+FVz9Ex4EMOtVBOQdwPKskZb8iuq3fgxtpXlrqvftnJCXGP76LnUgoU9B+b
-55FWVuieq4iCcagBe/HIf+wD4D6JIIArYmlpeRekZUKTLcpnnsEFfNgNxf59ei0d
-dhbMoEowe2hrQAYAK1XYSs0n7op1pCLqX0IBhWLPnCKXujtJzc+Z0AU9fTQArxiI
-0P4lxS2JlAmDRadz587y
-=VpRF
------END PGP SIGNATURE-----
-
---=-aqKPmXkVvgTtyBkfQh1o--
+Harvey
 
