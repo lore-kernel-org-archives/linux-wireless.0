@@ -1,31 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:34003 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750744AbYGXVef (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2008 17:34:35 -0400
-Subject: Re: [ath5k-devel] [PATCH 9/12] ath5k: Update phy calibration
-	functions
-From: Pavel Roskin <proski@gnu.org>
-To: Nick Kossifidis <mick@madwifi.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com
-In-Reply-To: <20080720034712.GI7440@makis>
-References: <20080720034712.GI7440@makis>
-Content-Type: text/plain
-Date: Thu, 24 Jul 2008 17:34:33 -0400
-Message-Id: <1216935273.3094.14.camel@dv> (sfid-20080724_233438_043584_EDB21C45)
-Mime-Version: 1.0
+Received: from yx-out-2324.google.com ([74.125.44.29]:51826 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756545AbYGGVKK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jul 2008 17:10:10 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so517214yxm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2008 14:10:09 -0700 (PDT)
+Message-ID: <69e28c910807071410h17cd6815jd6577673f73dc092@mail.gmail.com> (sfid-20080707_231014_750400_F0F78358)
+Date: Mon, 7 Jul 2008 23:10:08 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Subject: Re: [Rt2400-devel] rt2500pci: Failed to initialize hw. But works with ancient rt2500-1.1.0
+Cc: rt2400-devel@lists.sourceforge.net,
+	"Stefan Bauer" <stefan.bauer@cs.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <200807072308.57529.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200807072253.46295.stefan.bauer@cs.tu-chemnitz.de>
+	 <200807072308.57529.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2008-07-20 at 06:47 +0300, Nick Kossifidis wrote:
+On Mon, Jul 7, 2008 at 11:08 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> Check if the arc4 and ecb modules are loaded before loading mac80211 & rt2500pci.
+>
+> Ivo
 
-> + * XXX: Since during noise floor calibration antennas are detached acording to
-> + * the pattent, we should stop tx queues here.
-
-Two spelling fixes: "according to the patent".  What patent is that?
-Can we use it legally?
+Shouldn't we make mac80211 depend on arc4 and ecb?
 
 -- 
-Regards,
-Pavel Roskin
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
