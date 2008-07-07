@@ -1,229 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n35.bullet.mail.ukl.yahoo.com ([87.248.110.168]:37605 "HELO
-	n35.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750914AbYGHGWU (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:16496 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755977AbYGGTSb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 02:22:20 -0400
-Message-ID: <48730977.6080401@yahoo.co.uk> (sfid-20080708_082223_588382_4E2CE24E)
-Date: Tue, 08 Jul 2008 07:30:15 +0100
-From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+	Mon, 7 Jul 2008 15:18:31 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so492922yxm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2008 12:18:30 -0700 (PDT)
+Message-ID: <cb0375e10807071218w3dacef45kaaaba102ecc03c59@mail.gmail.com> (sfid-20080707_211836_106572_D674702B)
+Date: Mon, 7 Jul 2008 15:18:30 -0400
+From: "Andrew Lutomirski" <luto@myrealbox.com>
+To: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
+Subject: Re: Question on rfkill double block
+Cc: thomasw@gmail.com, zhu.yi@intel.com,
+	linux-wireless@vger.kernel.org, dcbw@redhat.com
+In-Reply-To: <cb0375e10807071147u5a8ce6bsd6193a2e11dac24@mail.gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@redhat.com>, flamingice@sourmilk.net,
-	Andrea Merello <andreamrl@tiscali.it>
-CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 1/6] rtl8187: Adding Realtek rtl8187B support
-References: <4873088C.2090603@yahoo.co.uk>
-In-Reply-To: <4873088C.2090603@yahoo.co.uk>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1214982208.14590.473.camel@debian.sh.intel.com>
+	 <20080702193202.GA20410@khazad-dum.debian.net>
+	 <1ba2fa240807051428i3f49f621i7b583bec58a02869@mail.gmail.com>
+	 <20080706002037.GD21973@khazad-dum.debian.net>
+	 <48719F2F.5060301@myrealbox.com>
+	 <20080707165634.GA24815@khazad-dum.debian.net>
+	 <cb0375e10807071147u5a8ce6bsd6193a2e11dac24@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rtl8187: Adding Realtek rtl8187B support
+On Mon, Jul 7, 2008 at 2:47 PM, Andrew Lutomirski <luto@myrealbox.com> wrote:
+> On Mon, Jul 7, 2008 at 12:56 PM, Henrique de Moraes Holschuh
+> <hmh@hmh.eng.br> wrote:
+>> On Mon, 07 Jul 2008, Andy Lutomirski wrote:
 
-Herton wrote most of this based on the Realtek vendor driver, with
-contributions from John W. Linville and feedbacks from Pavel. Hin-Tak
-fixed tranmission of management frames and got it to work. Pavel removed
-procfs support and tidied up the patch. Larry split the patch into 6 parts.
+>>
+>>> If I'm missing something I need to make rfkill suddenly work on my
+>>> machine, please give me some hints, too :)
+>>
+>> [...]
+>
+> Now I'm running wireless-testing + thinkpad-acpi 0.21-20080703 and
+> everything appears to work (the button controls just bluetooth, the
+> switch works and gets noticed by the driver, etc).  I turned off
+> Ubuntu's hotkey-setup, which had some alternate thinkpad thing.
+>
+> Nice work on the new thinkpad-acpi, BTW.  It's quite an improvement.
+>
+> I'll play around with the new stuff.
 
-Larry is working on a 7th patch to detect early 8187B's with 0x8187 id having
-a weaker radio chip. See patch 0 for details.
+OK, got a "bug" for you.  I'm not sure whether it's a bug in rfkill,
+rfkill-input, iwlwifi, thinkpad-acpi, or the way they all interact.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
-diff --git a/drivers/net/wireless/rtl8187.h b/drivers/net/wireless/rtl8187.h
-index a0cfb66..3afb49f 100644
---- a/drivers/net/wireless/rtl8187.h
-+++ b/drivers/net/wireless/rtl8187.h
-@@ -44,17 +44,48 @@ struct rtl8187_rx_hdr {
-  	__le64 mac_time;
-  } __attribute__((packed));
+If I press the button on the keyboard (the icon makes it look like
+wifi), then bluetooth is toggled on and off and nothing happens to
+wlan rfkill.  This is fine with me.
 
--struct rtl8187_tx_hdr {
-+struct rtl8187b_rx_hdr {
-  	__le32 flags;
-+	__le64 mac_time;
-+	u8 noise;
-+	u8 signal;
-+	u8 agc;
-+	u8 reserved;
-+	__le32 unused;
-+} __attribute__((packed));
-+
-+/* {rtl8187,rtl8187b}_tx_info is in skb */
-+
-+/* Tx flags are common between rtl8187 and rtl8187b */
-  #define RTL8187_TX_FLAG_NO_ENCRYPT	(1 << 15)
-  #define RTL8187_TX_FLAG_MORE_FRAG	(1 << 17)
-  #define RTL8187_TX_FLAG_CTS		(1 << 18)
-  #define RTL8187_TX_FLAG_RTS		(1 << 23)
-+
-+struct rtl8187_tx_hdr {
-+	__le32 flags;
-  	__le16 rts_duration;
-  	__le16 len;
-  	__le32 retry;
-  } __attribute__((packed));
+But if I toggle bluetooth off (killed and therefore not present in the
+system per thinkpad-acpi), then block wlan with the switch, then
+unblock wlan with the switch, then bluetooth turns back on.  This only
+happens with rfkill-input loaded.  I hope this isn't the intended
+behavior.
 
-+struct rtl8187b_tx_hdr {
-+	__le32 flags;
-+	__le16 rts_duration;
-+	__le16 len;
-+	__le32 unused_1;
-+	__le16 unused_2;
-+	__le16 tx_duration;
-+	__le32 unused_3;
-+	__le32 retry;
-+	__le32 unused_4[2];
-+} __attribute__((packed));
-+
-+enum {
-+	DEVICE_RTL8187,
-+	DEVICE_RTL8187B
-+};
-+
-  struct rtl8187_priv {
-  	/* common between rtl818x drivers */
-  	struct rtl818x_csr *map;
-@@ -70,70 +101,120 @@ struct rtl8187_priv {
-  	u32 rx_conf;
-  	u16 txpwr_base;
-  	u8 asic_rev;
-+	u8 is_rtl8187b;
-+	enum {
-+		RTL8187BvB,
-+		RTL8187BvD,
-+		RTL8187BvE
-+	} hw_rev;
-  	struct sk_buff_head rx_queue;
-+	u8 signal;
-+	u8 quality;
-+	u8 noise;
-  };
+The radio button does this (from evtest on "ThinkPad Extra Buttons"):
 
-  void rtl8187_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
+Event: time 1215457292.276962, type 1 (Key), code 385 (Radio), value 1
+Event: time 1215457292.276977, -------------- Report Sync ------------
+Event: time 1215457292.276982, type 1 (Key), code 385 (Radio), value 0
+Event: time 1215457292.276984, -------------- Report Sync ------------
 
--static inline u8 rtl818x_ioread8(struct rtl8187_priv *priv, u8 *addr)
-+static inline u8 rtl818x_ioread8_idx(struct rtl8187_priv *priv,
-+				     u8 *addr, u8 idx)
-  {
-  	u8 val;
 
-  	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
-  			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
--			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
-+			(unsigned long)addr, idx & 0x03, &val,
-+			sizeof(val), HZ / 2);
+Toggling the switch to blocked then back to unblocked does:
 
-  	return val;
-  }
+Event: time 1215457296.509094, type 5 (?), code 3 (?), value 0
+Event: time 1215457296.509107, -------------- Report Sync ------------
+Event: time 1215457297.544226, type 5 (?), code 3 (?), value 1
+Event: time 1215457297.544244, -------------- Report Sync ------------
 
--static inline u16 rtl818x_ioread16(struct rtl8187_priv *priv, __le16 *addr)
-+static inline u8 rtl818x_ioread8(struct rtl8187_priv *priv, u8 *addr)
-+{
-+	return rtl818x_ioread8_idx(priv, addr, 0);
-+}
-+
-+static inline u16 rtl818x_ioread16_idx(struct rtl8187_priv *priv,
-+				       __le16 *addr, u8 idx)
-  {
-  	__le16 val;
+So the right input events are generated (or maybe not -- should
+thinkpad-acpi generate events at all for a hardware switch?), but it
+looks like rfkill-input thinks that it's supposed to turn bluetooth on
+when the switch goes on.
 
-  	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
-  			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
--			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
-+			(unsigned long)addr, idx & 0x03, &val,
-+			sizeof(val), HZ / 2);
+Is this an artifact of the present design or is it just a bug?
 
-  	return le16_to_cpu(val);
-  }
+(My mental picture of how it should work is that there should be
+"switches" and "switchable things," both of which show up in sysfs,
+and which can be wired up arbitrarily (consistent with hardware, so a
+switch that physically controls an rfkill line couldn't be unwired
+from it) in sysfs, kinda like led triggers.  "switches" would be
+things like the radio switch (which thinkpad-acpi can ignore
+completely because iwlwifi or presumably any other wireless driver can
+also see it), the rfkill minipci line, and virtual switches
+synthesized from buttons (the bluetooth button, the light button, etc)
+and switchable things could be radios, bluetooth devices, keyboard
+lights, etc.)
 
--static inline u32 rtl818x_ioread32(struct rtl8187_priv *priv, __le32 *addr)
-+static inline u16 rtl818x_ioread16(struct rtl8187_priv *priv, __le16 *addr)
-+{
-+	return rtl818x_ioread16_idx(priv, addr, 0);
-+}
-+
-+static inline u32 rtl818x_ioread32_idx(struct rtl8187_priv *priv,
-+				       __le32 *addr, u8 idx)
-  {
-  	__le32 val;
-
-  	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
-  			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
--			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
-+			(unsigned long)addr, idx & 0x03, &val,
-+			sizeof(val), HZ / 2);
-
-  	return le32_to_cpu(val);
-  }
-
--static inline void rtl818x_iowrite8(struct rtl8187_priv *priv,
--				    u8 *addr, u8 val)
-+static inline u32 rtl818x_ioread32(struct rtl8187_priv *priv, __le32 *addr)
-+{
-+	return rtl818x_ioread32_idx(priv, addr, 0);
-+}
-+
-+static inline void rtl818x_iowrite8_idx(struct rtl8187_priv *priv,
-+					u8 *addr, u8 val, u8 idx)
-  {
-  	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
-  			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
--			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
-+			(unsigned long)addr, idx & 0x03, &val,
-+			sizeof(val), HZ / 2);
-+}
-+
-+static inline void rtl818x_iowrite8(struct rtl8187_priv *priv, u8 *addr, u8 val)
-+{
-+	rtl818x_iowrite8_idx(priv, addr, val, 0);
-  }
-
--static inline void rtl818x_iowrite16(struct rtl8187_priv *priv,
--				     __le16 *addr, u16 val)
-+static inline void rtl818x_iowrite16_idx(struct rtl8187_priv *priv,
-+					 __le16 *addr, u16 val, u8 idx)
-  {
-  	__le16 buf = cpu_to_le16(val);
-
-  	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
-  			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
--			(unsigned long)addr, 0, &buf, sizeof(buf), HZ / 2);
-+			(unsigned long)addr, idx & 0x03, &buf, sizeof(buf),
-+			HZ / 2);
-  }
-
--static inline void rtl818x_iowrite32(struct rtl8187_priv *priv,
--				     __le32 *addr, u32 val)
-+static inline void rtl818x_iowrite16(struct rtl8187_priv *priv, __le16 *addr,
-+				     u16 val)
-+{
-+	rtl818x_iowrite16_idx(priv, addr, val, 0);
-+}
-+
-+static inline void rtl818x_iowrite32_idx(struct rtl8187_priv *priv,
-+					 __le32 *addr, u32 val, u8 idx)
-  {
-  	__le32 buf = cpu_to_le32(val);
-
-  	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
-  			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
--			(unsigned long)addr, 0, &buf, sizeof(buf), HZ / 2);
-+			(unsigned long)addr, idx & 0x03, &buf, sizeof(buf),
-+			HZ / 2);
-+}
-+
-+static inline void rtl818x_iowrite32(struct rtl8187_priv *priv, __le32 *addr,
-+				     u32 val)
-+{
-+	rtl818x_iowrite32_idx(priv, addr, val, 0);
-  }
-
-  #endif /* RTL8187_H */
-
+--Andy
