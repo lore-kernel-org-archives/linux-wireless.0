@@ -1,172 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47564
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1757689AbYGCHEF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:04:05 -0400
-Date: Thu, 03 Jul 2008 00:04:04 -0700 (PDT)
-Message-Id: <20080703.000404.38890089.davem@davemloft.net> (sfid-20080703_103233_796702_51C8D416)
-To: netdev@vger.kernel.org
-CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
-Subject: [PATCH 17/39]: netdev: Move gso_skb into netdev_queue.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail.gmx.net ([213.165.64.20]:52229 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1756301AbYGGV1U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jul 2008 17:27:20 -0400
+From: Stefan Bauer <stefan-a-bauer@gmx.net>
+To: rt2400-devel@lists.sourceforge.net
+Subject: Re: [Rt2400-devel] rt2500pci: Failed to initialize hw. But works with ancient rt2500-1.1.0
+Date: Mon, 7 Jul 2008 23:27:17 +0200
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <200807072253.46295.stefan.bauer@cs.tu-chemnitz.de>
+In-Reply-To: <200807072253.46295.stefan.bauer@cs.tu-chemnitz.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200807072327.17714.stefan-a-bauer@gmx.net> (sfid-20080707_232727_118818_771335A1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Am Montag, 7. Juli 2008 schrieb Stefan Bauer:
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- include/linux/netdevice.h |    4 +---
- net/sched/sch_generic.c   |   42 +++++++++++++++++++++++-------------------
- 2 files changed, 24 insertions(+), 22 deletions(-)
+> dmesg 2.6.26-rc9
+> ACPI: PCI Interrupt 0000:00:0c.0[A] -> GSI 17 (level, low) -> IRQ 17
+> phy0: Selected rate control algorithm 'pid'
+> phy0: Failed to initialize wep
+> phy0 -> rt2x00lib_probe_dev: Error - Failed to initialize hw.
+> rt2500pci: probe of 0000:00:0c.0 failed with error -12
+>
+> .config 2.6.26-rc9
+> <http://www-user.tu-chemnitz.de/~stefb/rt2500pci/config>
+>
+> Next I'm going to test 2.6.24 and 2.6.25 to check whether it's an
+> regression or not.
 
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index 60f7665..e9e0cd4 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -452,6 +452,7 @@ struct netdev_queue {
- 	spinlock_t		lock;
- 	struct net_device	*dev;
- 	struct Qdisc		*qdisc;
-+	struct sk_buff		*gso_skb;
- 	struct Qdisc		*qdisc_sleeping;
- 	struct list_head	qdisc_list;
- 	struct netdev_queue	*next_sched;
-@@ -635,9 +636,6 @@ struct net_device
- 	struct netdev_queue	tx_queue;
- 	unsigned long		tx_queue_len;	/* Max frames per queue allowed */
- 
--	/* Partially transmitted GSO packet. */
--	struct sk_buff		*gso_skb;
--
- /*
-  * One part is mostly used on xmit path (device)
-  */
-diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
-index 6e7068c..96f16a8 100644
---- a/net/sched/sch_generic.c
-+++ b/net/sched/sch_generic.c
-@@ -63,10 +63,11 @@ static inline int qdisc_qlen(struct Qdisc *q)
- }
- 
- static inline int dev_requeue_skb(struct sk_buff *skb, struct net_device *dev,
-+				  struct netdev_queue *dev_queue,
- 				  struct Qdisc *q)
- {
- 	if (unlikely(skb->next))
--		dev->gso_skb = skb;
-+		dev_queue->gso_skb = skb;
- 	else
- 		q->ops->requeue(skb, q);
- 
-@@ -75,12 +76,13 @@ static inline int dev_requeue_skb(struct sk_buff *skb, struct net_device *dev,
- }
- 
- static inline struct sk_buff *dev_dequeue_skb(struct net_device *dev,
-+					      struct netdev_queue *dev_queue,
- 					      struct Qdisc *q)
- {
- 	struct sk_buff *skb;
- 
--	if ((skb = dev->gso_skb))
--		dev->gso_skb = NULL;
-+	if ((skb = dev_queue->gso_skb))
-+		dev_queue->gso_skb = NULL;
- 	else
- 		skb = q->dequeue(q);
- 
-@@ -89,6 +91,7 @@ static inline struct sk_buff *dev_dequeue_skb(struct net_device *dev,
- 
- static inline int handle_dev_cpu_collision(struct sk_buff *skb,
- 					   struct net_device *dev,
-+					   struct netdev_queue *dev_queue,
- 					   struct Qdisc *q)
- {
- 	int ret;
-@@ -111,7 +114,7 @@ static inline int handle_dev_cpu_collision(struct sk_buff *skb,
- 		 * some time.
- 		 */
- 		__get_cpu_var(netdev_rx_stat).cpu_collision++;
--		ret = dev_requeue_skb(skb, dev, q);
-+		ret = dev_requeue_skb(skb, dev, dev_queue, q);
- 	}
- 
- 	return ret;
-@@ -144,7 +147,7 @@ static inline int qdisc_restart(struct net_device *dev)
- 	int ret = NETDEV_TX_BUSY;
- 
- 	/* Dequeue packet */
--	if (unlikely((skb = dev_dequeue_skb(dev, q)) == NULL))
-+	if (unlikely((skb = dev_dequeue_skb(dev, dev_queue, q)) == NULL))
- 		return 0;
- 
- 
-@@ -167,7 +170,7 @@ static inline int qdisc_restart(struct net_device *dev)
- 
- 	case NETDEV_TX_LOCKED:
- 		/* Driver try lock failed */
--		ret = handle_dev_cpu_collision(skb, dev, q);
-+		ret = handle_dev_cpu_collision(skb, dev, dev_queue, q);
- 		break;
- 
- 	default:
-@@ -176,7 +179,7 @@ static inline int qdisc_restart(struct net_device *dev)
- 			printk(KERN_WARNING "BUG %s code %d qlen %d\n",
- 			       dev->name, ret, q->q.qlen);
- 
--		ret = dev_requeue_skb(skb, dev, q);
-+		ret = dev_requeue_skb(skb, dev, dev_queue, q);
- 		break;
- 	}
- 
-@@ -578,31 +581,32 @@ void dev_activate(struct net_device *dev)
- 	spin_unlock_bh(&dev_queue->lock);
- }
- 
--static void dev_deactivate_queue(struct net_device *dev,
--				 struct netdev_queue *dev_queue,
-+static void dev_deactivate_queue(struct netdev_queue *dev_queue,
- 				 struct Qdisc *qdisc_default)
- {
--	struct Qdisc *qdisc = dev_queue->qdisc;
-+	struct Qdisc *qdisc;
-+	struct sk_buff *skb;
-+
-+	spin_lock_bh(&dev_queue->lock);
- 
-+	qdisc = dev_queue->qdisc;
- 	if (qdisc) {
- 		dev_queue->qdisc = qdisc_default;
- 		qdisc_reset(qdisc);
- 	}
-+	skb = dev_queue->gso_skb;
-+	dev_queue->gso_skb = NULL;
-+
-+	spin_unlock_bh(&dev_queue->lock);
-+
-+	kfree_skb(skb);
- }
- 
- void dev_deactivate(struct net_device *dev)
- {
--	struct sk_buff *skb;
- 	int running;
- 
--	spin_lock_bh(&dev->tx_queue.lock);
--	dev_deactivate_queue(dev, &dev->tx_queue, &noop_qdisc);
--
--	skb = dev->gso_skb;
--	dev->gso_skb = NULL;
--	spin_unlock_bh(&dev->tx_queue.lock);
--
--	kfree_skb(skb);
-+	dev_deactivate_queue(&dev->tx_queue, &noop_qdisc);
- 
- 	dev_watchdog_down(dev);
- 
--- 
-1.5.6
+Same problem with 2.6.24.7, I'll skip 2.6.25.
 
+
+Regards, Stefan
