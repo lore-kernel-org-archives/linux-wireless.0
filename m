@@ -1,171 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47467
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1756707AbYGCHDD (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.169]:50332 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752677AbYGGQXj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:03:03 -0400
-Date: Thu, 03 Jul 2008 00:03:03 -0700 (PDT)
-Message-Id: <20080703.000303.167904111.davem@davemloft.net> (sfid-20080703_103142_906671_15C6D5B8)
-To: netdev@vger.kernel.org
-CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
-Subject: [PATCH 06/39]: netdev: ->ingress_lock is no longer needed.
-From: David Miller <davem@davemloft.net>
+	Mon, 7 Jul 2008 12:23:39 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2173354wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2008 09:23:39 -0700 (PDT)
+Subject: Re: [PATCH 1/1 V2] mac80211: Fix ieee80211_rx_reorder_ampdu:
+	ignore QoS null packets
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+In-Reply-To: <1215434881-5410-1-git-send-email-tomas.winkler@intel.com>
+References: <1215434881-5410-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain
+Date: Mon, 07 Jul 2008 09:23:44 -0700
+Message-Id: <1215447824.14247.2.camel@brick> (sfid-20080707_182343_781313_1B88BA63)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2008-07-07 at 15:48 +0300, Tomas Winkler wrote:
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> 
+> This patch fixes the check at the entrance to ieee80211_rx_reorder_ampdu.
+> This check has been broken by 511fe3f3c4ba0b5b77421336f64a19b6cd00e65f
+> 'mac80211: rx.c use new helpers'
+> 
+Actually, do we want something like this instead:
 
-Every qdisc is assosciated with a queue, and in the
-case of ingress qdiscs that will now be netdev->rx_queue
-so using that queue's lock is the thing to do.
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index 6a88e8f..a6e8214 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -2052,7 +2052,7 @@ static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
+>  	tid_agg_rx = sta->ampdu_mlme.tid_rx[tid];
+>  
+>  	/* null data frames are excluded */
+> -	if (unlikely(ieee80211_is_nullfunc(hdr->frame_control)))
+> +	if (unlikely(ieee80211_is_qos_nullfunc(hdr->frame_control)))
+>  		goto end_reorder;
+>  
+>  	/* new un-ordered ampdu frame - process it */
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- drivers/net/ifb.c         |    8 ++++----
- include/linux/netdevice.h |    2 --
- net/core/dev.c            |   12 +++++++-----
- net/sched/sch_api.c       |    3 +--
- net/sched/sch_generic.c   |   10 +++++-----
- 5 files changed, 17 insertions(+), 18 deletions(-)
+	if (unlikely(ieee80211_is_data(hdr->frame_control) && (hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC))))
 
-diff --git a/drivers/net/ifb.c b/drivers/net/ifb.c
-index bc3de27..ccbd655 100644
---- a/drivers/net/ifb.c
-+++ b/drivers/net/ifb.c
-@@ -229,13 +229,13 @@ module_param(numifbs, int, 0);
- MODULE_PARM_DESC(numifbs, "Number of ifb devices");
- 
- /*
-- * dev_ifb->tx_queue.lock is usually taken after dev->ingress_lock,
-+ * dev_ifb->tx_queue.lock is usually taken after dev->rx_queue.lock,
-  * reversely to e.g. qdisc_lock_tree(). It should be safe until
-- * ifb doesn't take dev->tx_queue.lock with dev_ifb->ingress_lock.
-+ * ifb doesn't take dev->tx_queue.lock with dev_ifb->rx_queue.lock.
-  * But lockdep should know that ifb has different locks from dev.
-  */
- static struct lock_class_key ifb_tx_queue_lock_key;
--static struct lock_class_key ifb_ingress_lock_key;
-+static struct lock_class_key ifb_rx_queue_lock_key;
- 
- 
- static int __init ifb_init_one(int index)
-@@ -259,7 +259,7 @@ static int __init ifb_init_one(int index)
- 		goto err;
- 
- 	lockdep_set_class(&dev_ifb->tx_queue.lock, &ifb_tx_queue_lock_key);
--	lockdep_set_class(&dev_ifb->ingress_lock, &ifb_ingress_lock_key);
-+	lockdep_set_class(&dev_ifb->rx_queue.lock, &ifb_rx_queue_lock_key);
- 
- 	return 0;
- 
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index 40542e3..ec88b46 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -632,8 +632,6 @@ struct net_device
- 	struct netdev_queue	rx_queue;
- 	struct netdev_queue	tx_queue;
- 
--	/* ingress path synchronizer */
--	spinlock_t		ingress_lock;
- 	struct Qdisc		*qdisc_ingress;
- 
- /*
-diff --git a/net/core/dev.c b/net/core/dev.c
-index 8565f94..7013562 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -2014,10 +2014,11 @@ static inline struct sk_buff *handle_macvlan(struct sk_buff *skb,
-  */
- static int ing_filter(struct sk_buff *skb)
- {
--	struct Qdisc *q;
- 	struct net_device *dev = skb->dev;
--	int result = TC_ACT_OK;
- 	u32 ttl = G_TC_RTTL(skb->tc_verd);
-+	struct netdev_queue *rxq;
-+	int result = TC_ACT_OK;
-+	struct Qdisc *q;
- 
- 	if (MAX_RED_LOOP < ttl++) {
- 		printk(KERN_WARNING
-@@ -2029,10 +2030,12 @@ static int ing_filter(struct sk_buff *skb)
- 	skb->tc_verd = SET_TC_RTTL(skb->tc_verd, ttl);
- 	skb->tc_verd = SET_TC_AT(skb->tc_verd, AT_INGRESS);
- 
--	spin_lock(&dev->ingress_lock);
-+	rxq = &dev->rx_queue;
-+
-+	spin_lock(&rxq->lock);
- 	if ((q = dev->qdisc_ingress) != NULL)
- 		result = q->enqueue(skb, q);
--	spin_unlock(&dev->ingress_lock);
-+	spin_unlock(&rxq->lock);
- 
- 	return result;
- }
-@@ -3795,7 +3798,6 @@ int register_netdevice(struct net_device *dev)
- 	spin_lock_init(&dev->_xmit_lock);
- 	netdev_set_lockdep_class(&dev->_xmit_lock, dev->type);
- 	dev->xmit_lock_owner = -1;
--	spin_lock_init(&dev->ingress_lock);
- 
- 	dev->iflink = -1;
- 
-diff --git a/net/sched/sch_api.c b/net/sched/sch_api.c
-index e3feb88..c33e65a 100644
---- a/net/sched/sch_api.c
-+++ b/net/sched/sch_api.c
-@@ -497,12 +497,11 @@ qdisc_create(struct net_device *dev, struct netdev_queue *dev_queue,
- 
- 	sch->parent = parent;
- 
-+	sch->stats_lock = &dev_queue->lock;
- 	if (handle == TC_H_INGRESS) {
- 		sch->flags |= TCQ_F_INGRESS;
--		sch->stats_lock = &dev->ingress_lock;
- 		handle = TC_H_MAKE(TC_H_INGRESS, 0);
- 	} else {
--		sch->stats_lock = &dev_queue->lock;
- 		if (handle == 0) {
- 			handle = qdisc_alloc_handle(dev);
- 			err = -ENOMEM;
-diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
-index ee8f9f7..804d44b 100644
---- a/net/sched/sch_generic.c
-+++ b/net/sched/sch_generic.c
-@@ -35,24 +35,24 @@
-  * - enqueue, dequeue are serialized via top level device
-  *   spinlock queue->lock.
-  * - ingress filtering is serialized via top level device
-- *   spinlock dev->ingress_lock.
-+ *   spinlock dev->rx_queue.lock.
-  * - updates to tree and tree walking are only done under the rtnl mutex.
-  */
- 
- void qdisc_lock_tree(struct net_device *dev)
- 	__acquires(dev->tx_queue.lock)
--	__acquires(dev->ingress_lock)
-+	__acquires(dev->rx_queue.lock)
- {
- 	spin_lock_bh(&dev->tx_queue.lock);
--	spin_lock(&dev->ingress_lock);
-+	spin_lock(&dev->rx_queue.lock);
- }
- EXPORT_SYMBOL(qdisc_lock_tree);
- 
- void qdisc_unlock_tree(struct net_device *dev)
--	__releases(dev->ingress_lock)
-+	__releases(dev->rx_queue.lock)
- 	__releases(dev->tx_queue.lock)
- {
--	spin_unlock(&dev->ingress_lock);
-+	spin_unlock(&dev->rx_queue.lock);
- 	spin_unlock_bh(&dev->tx_queue.lock);
- }
- EXPORT_SYMBOL(qdisc_unlock_tree);
--- 
-1.5.6
+Or wrap the above in a ieee80211_is_data_has_nullfunc() helper?
+
+Cheers,
+
+Harvey
+
 
