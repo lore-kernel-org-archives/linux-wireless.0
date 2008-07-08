@@ -1,68 +1,229 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52059 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753653AbYGHLlm (ORCPT
+Received: from n35.bullet.mail.ukl.yahoo.com ([87.248.110.168]:37605 "HELO
+	n35.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750914AbYGHGWU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 07:41:42 -0400
-Subject: Re: [Rt2400-devel] rt2500pci: Failed to initialize hw. But works
-	with ancient rt2500-1.1.0
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
-	rt2400-devel@lists.sourceforge.net,
-	Stefan Bauer <stefan.bauer@cs.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <1ba2fa240807071525m222efa91uf2ed009eb7b039b5@mail.gmail.com> (sfid-20080708_002612_572710_E45278A7)
-References: <200807072253.46295.stefan.bauer@cs.tu-chemnitz.de>
-	 <200807072308.57529.IvDoorn@gmail.com>
-	 <69e28c910807071410h17cd6815jd6577673f73dc092@mail.gmail.com>
-	 <200807072319.44733.IvDoorn@gmail.com>
-	 <1ba2fa240807071525m222efa91uf2ed009eb7b039b5@mail.gmail.com>
-	 (sfid-20080708_002612_572710_E45278A7)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qTfKJbfyt/IRlbDLR87F"
-Date: Tue, 08 Jul 2008 13:40:47 +0200
-Message-Id: <1215517247.9610.24.camel@johannes.berg> (sfid-20080708_134145_858827_F42AC32F)
-Mime-Version: 1.0
+	Tue, 8 Jul 2008 02:22:20 -0400
+Message-ID: <48730977.6080401@yahoo.co.uk> (sfid-20080708_082223_588382_4E2CE24E)
+Date: Tue, 08 Jul 2008 07:30:15 +0100
+From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@redhat.com>, flamingice@sourmilk.net,
+	Andrea Merello <andreamrl@tiscali.it>
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 1/6] rtl8187: Adding Realtek rtl8187B support
+References: <4873088C.2090603@yahoo.co.uk>
+In-Reply-To: <4873088C.2090603@yahoo.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+rtl8187: Adding Realtek rtl8187B support
 
---=-qTfKJbfyt/IRlbDLR87F
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Herton wrote most of this based on the Realtek vendor driver, with
+contributions from John W. Linville and feedbacks from Pavel. Hin-Tak
+fixed tranmission of management frames and got it to work. Pavel removed
+procfs support and tidied up the patch. Larry split the patch into 6 parts.
 
+Larry is working on a 7th patch to detect early 8187B's with 0x8187 id having
+a weaker radio chip. See patch 0 for details.
 
-> This is bug is reported very often mostly on ubuntu based distoros.
-> There is no linkage dependency so it doesn't produce entry in the
-> depmod.
-> mac should somehow request these modules dynamically.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+diff --git a/drivers/net/wireless/rtl8187.h b/drivers/net/wireless/rtl8187.h
+index a0cfb66..3afb49f 100644
+--- a/drivers/net/wireless/rtl8187.h
++++ b/drivers/net/wireless/rtl8187.h
+@@ -44,17 +44,48 @@ struct rtl8187_rx_hdr {
+  	__le64 mac_time;
+  } __attribute__((packed));
 
-Wouldn't help. Bug reporter has a broken config with CONFIG_KMOD unset.
+-struct rtl8187_tx_hdr {
++struct rtl8187b_rx_hdr {
+  	__le32 flags;
++	__le64 mac_time;
++	u8 noise;
++	u8 signal;
++	u8 agc;
++	u8 reserved;
++	__le32 unused;
++} __attribute__((packed));
++
++/* {rtl8187,rtl8187b}_tx_info is in skb */
++
++/* Tx flags are common between rtl8187 and rtl8187b */
+  #define RTL8187_TX_FLAG_NO_ENCRYPT	(1 << 15)
+  #define RTL8187_TX_FLAG_MORE_FRAG	(1 << 17)
+  #define RTL8187_TX_FLAG_CTS		(1 << 18)
+  #define RTL8187_TX_FLAG_RTS		(1 << 23)
++
++struct rtl8187_tx_hdr {
++	__le32 flags;
+  	__le16 rts_duration;
+  	__le16 len;
+  	__le32 retry;
+  } __attribute__((packed));
 
-johannes
++struct rtl8187b_tx_hdr {
++	__le32 flags;
++	__le16 rts_duration;
++	__le16 len;
++	__le32 unused_1;
++	__le16 unused_2;
++	__le16 tx_duration;
++	__le32 unused_3;
++	__le32 retry;
++	__le32 unused_4[2];
++} __attribute__((packed));
++
++enum {
++	DEVICE_RTL8187,
++	DEVICE_RTL8187B
++};
++
+  struct rtl8187_priv {
+  	/* common between rtl818x drivers */
+  	struct rtl818x_csr *map;
+@@ -70,70 +101,120 @@ struct rtl8187_priv {
+  	u32 rx_conf;
+  	u16 txpwr_base;
+  	u8 asic_rev;
++	u8 is_rtl8187b;
++	enum {
++		RTL8187BvB,
++		RTL8187BvD,
++		RTL8187BvE
++	} hw_rev;
+  	struct sk_buff_head rx_queue;
++	u8 signal;
++	u8 quality;
++	u8 noise;
+  };
 
---=-qTfKJbfyt/IRlbDLR87F
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+  void rtl8187_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+-static inline u8 rtl818x_ioread8(struct rtl8187_priv *priv, u8 *addr)
++static inline u8 rtl818x_ioread8_idx(struct rtl8187_priv *priv,
++				     u8 *addr, u8 idx)
+  {
+  	u8 val;
 
-iQIcBAABAgAGBQJIc1I7AAoJEKVg1VMiehFYnzwP/3n9lQUKix3Ul+0QvxvZHELb
-bA1RwhC9POLKGiQ2qjqBVg7pGtq+Yz06c7xnkeufX4lrMXyYRPrcQY7nHjOHr5tg
-0zV03NIwJjELD7gLzi47s3SlhJDdK4qrpS0F9uVVMHaNvZLZubmzjxNvWbvFy99Y
-HA4FwFHlwjHhumLALEACBXiE4hsXMqw8N2dHd/U0vFlruNn7OUz0JkuUiIuN5Eid
-XAlv8ImmrfOOqnLh4Ov+lUQ67fXDzXQg5K1rPFunkABHIblo2NwwUto9zhxmGAls
-n82zcXmYbBh0qw1/VRJunav6MScvpIcSda0Wlt23qp37mQg3xewgmsCP29W/iWro
-qRASlxL1L8pZ1F4x1Y1/05YrmP0UPIgb0jV0h2O1efKqGwWPTSH2pcc0UTv/plh+
-8lDY/NGhJHse7KT5dyFUvChUggzgJa95RbAMHap0Al0ecfqiePv6WS/McEcGnSbc
-USQZiMrePfGwz69dQp97Ws3IGJ58SLe/5bmgIQILyxhu7PFcVHe3tpaSCukPw7OR
-RxrCL9nOTyFfyI1L5y0ZwxJj+ScRbVCML1LbVhFoMXzWZanJNWmt/ISfWv96I6iH
-4qSQxeG5hkmsSaudzIIOi4ovWVuVpCGn8D27xkRp0TELH4JD6n7ZtS3XpzUu1DIX
-NUbPh5VxVI1kwREzdRYg
-=X1xQ
------END PGP SIGNATURE-----
+  	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+  			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+-			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &val,
++			sizeof(val), HZ / 2);
 
---=-qTfKJbfyt/IRlbDLR87F--
+  	return val;
+  }
+
+-static inline u16 rtl818x_ioread16(struct rtl8187_priv *priv, __le16 *addr)
++static inline u8 rtl818x_ioread8(struct rtl8187_priv *priv, u8 *addr)
++{
++	return rtl818x_ioread8_idx(priv, addr, 0);
++}
++
++static inline u16 rtl818x_ioread16_idx(struct rtl8187_priv *priv,
++				       __le16 *addr, u8 idx)
+  {
+  	__le16 val;
+
+  	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+  			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+-			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &val,
++			sizeof(val), HZ / 2);
+
+  	return le16_to_cpu(val);
+  }
+
+-static inline u32 rtl818x_ioread32(struct rtl8187_priv *priv, __le32 *addr)
++static inline u16 rtl818x_ioread16(struct rtl8187_priv *priv, __le16 *addr)
++{
++	return rtl818x_ioread16_idx(priv, addr, 0);
++}
++
++static inline u32 rtl818x_ioread32_idx(struct rtl8187_priv *priv,
++				       __le32 *addr, u8 idx)
+  {
+  	__le32 val;
+
+  	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+  			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+-			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &val,
++			sizeof(val), HZ / 2);
+
+  	return le32_to_cpu(val);
+  }
+
+-static inline void rtl818x_iowrite8(struct rtl8187_priv *priv,
+-				    u8 *addr, u8 val)
++static inline u32 rtl818x_ioread32(struct rtl8187_priv *priv, __le32 *addr)
++{
++	return rtl818x_ioread32_idx(priv, addr, 0);
++}
++
++static inline void rtl818x_iowrite8_idx(struct rtl8187_priv *priv,
++					u8 *addr, u8 val, u8 idx)
+  {
+  	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+  			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+-			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &val,
++			sizeof(val), HZ / 2);
++}
++
++static inline void rtl818x_iowrite8(struct rtl8187_priv *priv, u8 *addr, u8 val)
++{
++	rtl818x_iowrite8_idx(priv, addr, val, 0);
+  }
+
+-static inline void rtl818x_iowrite16(struct rtl8187_priv *priv,
+-				     __le16 *addr, u16 val)
++static inline void rtl818x_iowrite16_idx(struct rtl8187_priv *priv,
++					 __le16 *addr, u16 val, u8 idx)
+  {
+  	__le16 buf = cpu_to_le16(val);
+
+  	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+  			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+-			(unsigned long)addr, 0, &buf, sizeof(buf), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &buf, sizeof(buf),
++			HZ / 2);
+  }
+
+-static inline void rtl818x_iowrite32(struct rtl8187_priv *priv,
+-				     __le32 *addr, u32 val)
++static inline void rtl818x_iowrite16(struct rtl8187_priv *priv, __le16 *addr,
++				     u16 val)
++{
++	rtl818x_iowrite16_idx(priv, addr, val, 0);
++}
++
++static inline void rtl818x_iowrite32_idx(struct rtl8187_priv *priv,
++					 __le32 *addr, u32 val, u8 idx)
+  {
+  	__le32 buf = cpu_to_le32(val);
+
+  	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+  			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+-			(unsigned long)addr, 0, &buf, sizeof(buf), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &buf, sizeof(buf),
++			HZ / 2);
++}
++
++static inline void rtl818x_iowrite32(struct rtl8187_priv *priv, __le32 *addr,
++				     u32 val)
++{
++	rtl818x_iowrite32_idx(priv, addr, val, 0);
+  }
+
+  #endif /* RTL8187_H */
 
