@@ -1,57 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:17150 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753895AbYG2Frs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 01:47:48 -0400
-Received: from mail.atheros.com ([192.168.11.2])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 22:47:48 -0700
-From: <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	<Jouni.Malinen@Atheros.com>,
-	Sujith Manoharan <smanoharan@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 15/16] ath9k: Don't set the channel in ath_rate_init().
-Date: Mon, 28 Jul 2008 22:47:24 -0700
-Message-ID: <9ef806c861e93ddde2fc0797e1845d9343567799.1217309552.git.lrodriguez@atheros.com> (sfid-20080729_081546_892049_C3F65C44)
-In-Reply-To: <4800d552efce6350888c68b859f66767196d720b.1217309551.git.lrodriguez@atheros.com>
-References: <4800d552efce6350888c68b859f66767196d720b.1217309551.git.lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from qb-out-0506.google.com ([72.14.204.237]:3924 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753805AbYGHQUL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jul 2008 12:20:11 -0400
+Received: by qb-out-0506.google.com with SMTP id d8so5878690qbc.37
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2008 09:20:09 -0700 (PDT)
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: Hin-Tak Leung <HinTak.Leung@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 1/6] rtl8187: updating rtl8187.h to support RTL8187B
+Date: Tue,  8 Jul 2008 17:18:08 +0100
+Message-Id: <1215533893-8598-1-git-send-email-HinTak.Leung@gmail.com> (sfid-20080708_182015_640586_81160239)
+From: Hin-Tak Leung <hintak.leung@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <smanoharan@atheros.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+ drivers/net/wireless/rtl8187.h |  113 ++++++++++++++++++++++++++++++++++------
+ 1 files changed, 97 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
-index 996b54c..22b6550 100644
---- a/drivers/net/wireless/ath9k/rc.c
-+++ b/drivers/net/wireless/ath9k/rc.c
-@@ -2034,21 +2034,15 @@ static void ath_rate_init(void *priv, void *priv_sta,
- 	struct ieee80211_hw *hw = local_to_hw(local);
- 	struct ieee80211_conf *conf = &local->hw.conf;
- 	struct ath_softc *sc = hw->priv;
--	struct hal_channel hchan;
- 	int i, j = 0;
+diff --git a/drivers/net/wireless/rtl8187.h b/drivers/net/wireless/rtl8187.h
+index a0cfb66..3afb49f 100644
+--- a/drivers/net/wireless/rtl8187.h
++++ b/drivers/net/wireless/rtl8187.h
+@@ -44,17 +44,48 @@ struct rtl8187_rx_hdr {
+ 	__le64 mac_time;
+ } __attribute__((packed));
  
--	DPRINTF(sc, ATH_DBG_RATE, "%s", __func__);
-+	DPRINTF(sc, ATH_DBG_RATE, "%s\n", __func__);
+-struct rtl8187_tx_hdr {
++struct rtl8187b_rx_hdr {
+ 	__le32 flags;
++	__le64 mac_time;
++	u8 noise;
++	u8 signal;
++	u8 agc;
++	u8 reserved;
++	__le32 unused;
++} __attribute__((packed));
++
++/* {rtl8187,rtl8187b}_tx_info is in skb */
++
++/* Tx flags are common between rtl8187 and rtl8187b */
+ #define RTL8187_TX_FLAG_NO_ENCRYPT	(1 << 15)
+ #define RTL8187_TX_FLAG_MORE_FRAG	(1 << 17)
+ #define RTL8187_TX_FLAG_CTS		(1 << 18)
+ #define RTL8187_TX_FLAG_RTS		(1 << 23)
++
++struct rtl8187_tx_hdr {
++	__le32 flags;
+ 	__le16 rts_duration;
+ 	__le16 len;
+ 	__le32 retry;
+ } __attribute__((packed));
  
- 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
- 	sta->txrate_idx = rate_lowest_index(local, sband, sta);
++struct rtl8187b_tx_hdr {
++	__le32 flags;
++	__le16 rts_duration;
++	__le16 len;
++	__le32 unused_1;
++	__le16 unused_2;
++	__le16 tx_duration;
++	__le32 unused_3;
++	__le32 retry;
++	__le32 unused_4[2];
++} __attribute__((packed));
++
++enum {
++	DEVICE_RTL8187,
++	DEVICE_RTL8187B
++};
++
+ struct rtl8187_priv {
+ 	/* common between rtl818x drivers */
+ 	struct rtl818x_csr *map;
+@@ -70,70 +101,120 @@ struct rtl8187_priv {
+ 	u32 rx_conf;
+ 	u16 txpwr_base;
+ 	u8 asic_rev;
++	u8 is_rtl8187b;
++	enum {
++		RTL8187BvB,
++		RTL8187BvD,
++		RTL8187BvE
++	} hw_rev;
+ 	struct sk_buff_head rx_queue;
++	u8 signal;
++	u8 quality;
++	u8 noise;
+ };
  
--	hchan.channel = conf->channel->center_freq;
--	hchan.channelFlags = ath_chan2flags(conf->channel, sc);
--	if (ath_set_channel(sc, &hchan) < 0)
--		DPRINTF(sc, ATH_DBG_FATAL, "%s: Unable to set channel\n",
--			__func__);
- 	ath_setup_rates(local, sta);
--	if (conf->flags&IEEE80211_CONF_SUPPORT_HT_MODE) {
-+	if (conf->flags & IEEE80211_CONF_SUPPORT_HT_MODE) {
- 		for (i = 0; i < MCS_SET_SIZE; i++) {
- 			if (conf->ht_conf.supp_mcs_set[i/8] & (1<<(i%8)))
- 				((struct ath_rate_node *)
+ void rtl8187_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
+ 
+-static inline u8 rtl818x_ioread8(struct rtl8187_priv *priv, u8 *addr)
++static inline u8 rtl818x_ioread8_idx(struct rtl8187_priv *priv,
++				     u8 *addr, u8 idx)
+ {
+ 	u8 val;
+ 
+ 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+-			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &val,
++			sizeof(val), HZ / 2);
+ 
+ 	return val;
+ }
+ 
+-static inline u16 rtl818x_ioread16(struct rtl8187_priv *priv, __le16 *addr)
++static inline u8 rtl818x_ioread8(struct rtl8187_priv *priv, u8 *addr)
++{
++	return rtl818x_ioread8_idx(priv, addr, 0);
++}
++
++static inline u16 rtl818x_ioread16_idx(struct rtl8187_priv *priv,
++				       __le16 *addr, u8 idx)
+ {
+ 	__le16 val;
+ 
+ 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+-			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &val,
++			sizeof(val), HZ / 2);
+ 
+ 	return le16_to_cpu(val);
+ }
+ 
+-static inline u32 rtl818x_ioread32(struct rtl8187_priv *priv, __le32 *addr)
++static inline u16 rtl818x_ioread16(struct rtl8187_priv *priv, __le16 *addr)
++{
++	return rtl818x_ioread16_idx(priv, addr, 0);
++}
++
++static inline u32 rtl818x_ioread32_idx(struct rtl8187_priv *priv,
++				       __le32 *addr, u8 idx)
+ {
+ 	__le32 val;
+ 
+ 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+-			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &val,
++			sizeof(val), HZ / 2);
+ 
+ 	return le32_to_cpu(val);
+ }
+ 
+-static inline void rtl818x_iowrite8(struct rtl8187_priv *priv,
+-				    u8 *addr, u8 val)
++static inline u32 rtl818x_ioread32(struct rtl8187_priv *priv, __le32 *addr)
++{
++	return rtl818x_ioread32_idx(priv, addr, 0);
++}
++
++static inline void rtl818x_iowrite8_idx(struct rtl8187_priv *priv,
++					u8 *addr, u8 val, u8 idx)
+ {
+ 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+-			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &val,
++			sizeof(val), HZ / 2);
++}
++
++static inline void rtl818x_iowrite8(struct rtl8187_priv *priv, u8 *addr, u8 val)
++{
++	rtl818x_iowrite8_idx(priv, addr, val, 0);
+ }
+ 
+-static inline void rtl818x_iowrite16(struct rtl8187_priv *priv,
+-				     __le16 *addr, u16 val)
++static inline void rtl818x_iowrite16_idx(struct rtl8187_priv *priv,
++					 __le16 *addr, u16 val, u8 idx)
+ {
+ 	__le16 buf = cpu_to_le16(val);
+ 
+ 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+-			(unsigned long)addr, 0, &buf, sizeof(buf), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &buf, sizeof(buf),
++			HZ / 2);
+ }
+ 
+-static inline void rtl818x_iowrite32(struct rtl8187_priv *priv,
+-				     __le32 *addr, u32 val)
++static inline void rtl818x_iowrite16(struct rtl8187_priv *priv, __le16 *addr,
++				     u16 val)
++{
++	rtl818x_iowrite16_idx(priv, addr, val, 0);
++}
++
++static inline void rtl818x_iowrite32_idx(struct rtl8187_priv *priv,
++					 __le32 *addr, u32 val, u8 idx)
+ {
+ 	__le32 buf = cpu_to_le32(val);
+ 
+ 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+-			(unsigned long)addr, 0, &buf, sizeof(buf), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &buf, sizeof(buf),
++			HZ / 2);
++}
++
++static inline void rtl818x_iowrite32(struct rtl8187_priv *priv, __le32 *addr,
++				     u32 val)
++{
++	rtl818x_iowrite32_idx(priv, addr, val, 0);
+ }
+ 
+ #endif /* RTL8187_H */
 -- 
-1.5.4.3
+1.5.5.1
 
