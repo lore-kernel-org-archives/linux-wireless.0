@@ -1,48 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:5477 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752636AbYGLPDV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jul 2008 11:03:21 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so1296961nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Jul 2008 08:03:17 -0700 (PDT)
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: rt2x00 is still experimental?
-Date: Sat, 12 Jul 2008 17:13:54 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <1215811139.30975.10.camel@dv> <200807121025.43801.IvDoorn@gmail.com> <20080712104659.jsizw0ndw44cw4kc-cebfxv@webmail.spamcop.net>
-In-Reply-To: <20080712104659.jsizw0ndw44cw4kc-cebfxv@webmail.spamcop.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4095 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752694AbYGHOiW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jul 2008 10:38:22 -0400
+Date: Tue, 8 Jul 2008 10:04:57 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Hin-Tak Leung <hintak.leung@gmail.com>, herton@mandriva.com.br,
+	proski@gnu.org, wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/6] rtl8187: Adding Realtek rtl8187B support
+Message-ID: <20080708140457.GA10361@tuxdriver.com> (sfid-20080708_163826_469438_18454191)
+References: <3ace41890807080412w3f24a8c1wa2665d8d6de785c9@mail.gmail.com> <48736E18.5060708@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200807121713.54123.IvDoorn@gmail.com> (sfid-20080712_170327_591241_4954A0BC)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <48736E18.5060708@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 12 July 2008, Pavel Roskin wrote:
-> Quoting Ivo van Doorn <ivdoorn@gmail.com>:
-> 
-> > Hi,
-> >
-> >> Can we please have rt2x00 drivers considered stable in Linux 2.6.27?
-> >
-> > No.
-> >
-> >> My experience running rt73 day by day with WPA on a very crowded network
-> >> shows that it's a pretty reliable driver already.
-> >
-> > Perhaps managed mode, but not adhoc mode, beaconing is still broken.
-> > In addition the leds are broken as well, and hardware encryption   
-> > isn't in either.
-> 
-> I see.  It must be a perception thing.  Things I hack on seem  
-> unstable, but things that just work seem stable :)
+On Tue, Jul 08, 2008 at 08:39:36AM -0500, Larry Finger wrote:
+> Hin-Tak,
+>
+> Good job getting these posted. For the first time in a long time, my unit 
+> was able to connect and authenticate. It certainly looks as if you solved 
+> the ep12 problem. I'm using the device to write this E-mail.
+>
+> Unfortunately, your mailer still wrapped some lines in the patches. It 
+> wasn't difficult to repair them, but it still is a bother. For the next 
+> round, we can work out a procedure that uses the mail utility to send the 
+> patches. I've used this method since Linville was unable to process my 
+> patches that were sent from Thunderbird.
 
-Well it is at least good to know managed mode is working well for you. :)
+FWIW, git-send-email does a decent job.  If you commit your patches
+in a git tree, you can use git-format-patch to extract them and then
+git-send-email to send them out -- works fairly well.
 
-> Thank you for the status.  Good luck with fixing the remaining problems!
+> The patch to revise the detection of B units with an 8187 ID is ready. I 
+> can send it at any time.
 
-Thanks,
+Please do!
 
-Ivo
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
