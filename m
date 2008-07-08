@@ -1,75 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mamona.cetuc.puc-rio.br ([139.82.74.4]:59143 "EHLO
-	mamona.cetuc.puc-rio.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757045AbYGBMZD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2008 08:25:03 -0400
-Message-ID: <34838.201.36.206.138.1215000227.squirrel@mamao.cetuc.puc-rio.br> (sfid-20080702_142510_482691_5DF13CCB)
-Date: Wed, 2 Jul 2008 09:03:47 -0300 (BRT)
-Subject: b43 ssb inplicit declaration
-From: "Felipe Maya" <fmay@cetuc.puc-rio.br>
-To: linux-wireless@vger.kernel.org
-Cc: marcelo.toledo@vexcorp.com
+Received: from bu3sch.de ([62.75.166.246]:42225 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757766AbYGHRFJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jul 2008 13:05:09 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: sbrown@cortland.com
+Subject: Re: [PATCH] ssb, b43, b43legacy, b44: Rewrite SSB DMA API
+Date: Tue, 8 Jul 2008 19:04:42 +0200
+Cc: Felipe Maya <felipe.maya@vexcorp.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+References: <200806201150.29497.mb@bu3sch.de> <200807032252.35662.mb@bu3sch.de> <48738EC2.1060402@cortland.com>
+In-Reply-To: <48738EC2.1060402@cortland.com>
 MIME-Version: 1.0
-Content-Type: text/plain;charset=utf-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200807081904.42837.mb@bu3sch.de> (sfid-20080708_190530_605120_16DADA81)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Where can I get an updated SSB source?
+On Tuesday 08 July 2008 17:58:58 Steve Brown wrote:
+> I'll post the problem to linux-mips.
 
-Thanks.
-Felipe Maya
+Please do so. This really is a DMA API issue. It's either using the masks
+incorrectly, or ot should provide a function to set the coherent mask.
 
-CC [M] 
-/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.o
-/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:
-In function 'map_descbuffer':
-/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:331:
-error: implicit declaration of function 'ssb_dma_map_single'
-/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:
-In function 'unmap_descbuffer':
-/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:346:
-error: implicit declaration of function 'ssb_dma_unmap_single'
-/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:
-In function 'sync_descbuffer_for_cpu':
-/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:359:
-error: implicit declaration of function 'ssb_dma_sync_single_for_cpu'
-/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:
-In function 'sync_descbuffer_for_device':
-/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:368:
-error: implicit declaration of function 'ssb_dma_sync_single_for_device'
-/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:
-In function 'alloc_ringmemory':
-/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:399:
-error: implicit declaration of function 'ssb_dma_alloc_consistent'
-/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:401:
-warning: assignment makes pointer from integer without a cast
-/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:
-In function 'free_ringmemory':
-/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:418:
-error: implicit declaration of function 'ssb_dma_free_consistent'
-/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:
-In function 'b43_dma_mapping_error':
-/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.c:526:
-error: implicit declaration of function 'ssb_dma_mapping_error'
-make[8]: ***
-[/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43/dma.o]
-Error 1
-make[7]: ***
-[/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless/b43]
-Error 2
-make[6]: ***
-[/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/drivers/net/wireless]
-Error 2
-make[5]: ***
-[_module_/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01]
-Error 2
-make[5]: Leaving directory
-`/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/linux-2.6.25.9'
-make[4]: *** [modules] Error 2
-make[4]: Leaving directory
-`/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01'
-make[3]: ***
-[/opt/openwrt-ssb-ehci-ohci/build_dir/linux-brcm47xx/compat-wireless-2008-07-01/.built]
-Error 2
+SSB does use The Right (TM) API. So it should not break, in my opinion.
+I'm fully aware, that there is no non-PCI function that sets the coherent
+mask. But I really expected that nobody is using it for non-PCI devices
+either.
 
+-- 
+Greetings Michael.
