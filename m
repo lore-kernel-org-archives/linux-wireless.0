@@ -1,53 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:40457 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750740AbYG1LUE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2008 07:20:04 -0400
-Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
-	through rfkill
-From: Dan Williams <dcbw@redhat.com>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Philip Langdale <philipl@overt.org>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	toshiba_acpi@memebeam.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20080728030437.GC10672@khazad-dum.debian.net>
-References: <488CBBAB.6010508@overt.org>
-	 <200807272259.44364.IvDoorn@gmail.com> <488CF6D8.6000700@overt.org>
-	 <20080728030437.GC10672@khazad-dum.debian.net>
-Content-Type: text/plain
-Date: Mon, 28 Jul 2008 07:17:43 -0400
-Message-Id: <1217243863.24609.6.camel@localhost.localdomain> (sfid-20080728_132008_852164_0400B837)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44959
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754878AbYGHXof (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jul 2008 19:44:35 -0400
+Date: Tue, 08 Jul 2008 16:44:35 -0700 (PDT)
+Message-Id: <20080708.164435.141370914.davem@davemloft.net> (sfid-20080709_014438_476068_EC1A9CBA)
+To: sfr@canb.auug.org.au
+Cc: linville@tuxdriver.com, linux-next@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: linux-next: pending wireless/wireless-current merge conflict
+ 2008-07-08
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080709094037.8e3050d9.sfr@canb.auug.org.au>
+References: <20080702220212.GA31582@tuxdriver.com>
+	<20080708203044.GA6381@tuxdriver.com>
+	<20080709094037.8e3050d9.sfr@canb.auug.org.au>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-07-28 at 00:04 -0300, Henrique de Moraes Holschuh wrote:
-> On Sun, 27 Jul 2008, Philip Langdale wrote:
-> > Ivo van Doorn wrote:
-> >>
-> >> You don't seem to be using rfkill_force_state() which is required to inform the rfkill
-> >> layer about the state changes.
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Date: Wed, 9 Jul 2008 09:40:37 +1000
+
+> Hi John,
+> 
+> On Tue, 8 Jul 2008 16:30:44 -0400 "John W. Linville" <linville@tuxdriver.com> wrote:
 > >
-> > Hmm? According to rfkill.txt, one can either use force_state() or implement the
-> > get_state() hook, and I have done the later. If this is not the correct method,
-> > can you please explain when I should be using force_state?
+> > I just sent a pull request for Dave that will result in a merge
+> > conflict in linux-next.  I have a sample merge available here:
+> > 
+> > 	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6 merge-test
+> > 
+> > Just a heads-up... :-)
+> > 
+> > John
+> > 
+> > P.S.  These are one-liners (including the one from yesterday).
+> > Nevertheless, it can't hurt to provide a reference "just in
+> > case"... :-)
 > 
-> There is a bunch of rfkill bug fix patches that was not merged in
-> wireless-testing yet (which is a pity, it would be really good if they could
-> go into 2.6.27).  One of those patches fixes the docs to make it clear that
+> Appreciated, thanks.
 
-Lots of wireless people (including John) were at OLS this past week, so
-it's not entirely surprising that patch merging might have been slow.
-
-Dan
-
-> rfkill_force_state() is the way to go if you have events of any sort.
-> 
-> The big difference from get_state() is that rfkill_force_state() propagates
-> state changes as soon as your driver notices them and sends them to rfkill
-> through rfkill_force_state()... while get_state() can only do that when
-> someone asks rfkill about the current state.
-> 
-
+I just merged net-2.6 into net-next-2.6 and sorted all of the
+merge issues out, so I hope you won't bump into anything :)
