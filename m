@@ -1,60 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.248]:13978 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753431AbYGNUj6 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37279
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1755775AbYGHXkT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 16:39:58 -0400
-Received: by an-out-0708.google.com with SMTP id d40so970308and.103
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2008 13:39:57 -0700 (PDT)
-Message-ID: <43e72e890807141339g5abbcf8cj78622e438087a659@mail.gmail.com> (sfid-20080714_224003_691300_0B8987E8)
-Date: Mon, 14 Jul 2008 13:39:57 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [PATCH] Add new regulatory framework for Linux wireless
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	"Rindjunsky, Ron" <ron.rindjunsky@intel.com>,
-	"Tim Gardner" <tim.gardner@canonical.com>,
-	"Jouni Malinen" <j@w1.fi>
-In-Reply-To: <1ba2fa240807140321m2c111de1x38affda7de4f6f2d@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080711123039.GP17936@ruslug.rutgers.edu>
-	 <1ba2fa240807140321m2c111de1x38affda7de4f6f2d@mail.gmail.com>
+	Tue, 8 Jul 2008 19:40:19 -0400
+Date: Tue, 08 Jul 2008 16:40:19 -0700 (PDT)
+Message-Id: <20080708.164019.147997133.davem@davemloft.net> (sfid-20080709_014025_153454_DEB4D955)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2008-07-08
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080708.161746.19053390.davem@davemloft.net>
+References: <20080708185146.GA30833@tuxdriver.com>
+	<20080708.161746.19053390.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 14, 2008 at 3:21 AM, Tomas Winkler <tomasw@gmail.com> wrote:
-> I've submitted RFC patch for Country IE parsing in mac80211 as part of
-> the work on 802.11h.  (TGh)
+From: David Miller <davem@davemloft.net>
+Date: Tue, 08 Jul 2008 16:17:46 -0700 (PDT)
 
-I saw, I have to review it now with this in mind.
+> I'll try to sort out the merge issues next.
 
-> Q. How do you plan to merge CRDA and Country IE
-
-When a Country IE is received and parsed in mac80211 its up to
-mac80211 then to decide what to do. As per the specification you
-should use what the AP sends in the country IE but from what I am
-seeing vendors tend to do different things with the Country IE. Some
-considerations against parsing the Country IE and trusting it
-completely is concerns about "rogue" APs. So as a compromise I was
-thinking that initially we can simply call CRDA with the alpha2 passed
-in the Country IE. Then later we can have it actually get the
-intersection between what the AP provides and what CRDA has. The
-driver will *always* have the ultimate say though through the callback
-if it is registered. The callback will usually be used by vendor
-drivers who have more stringent requirements on their regulatory
-considerations. In the end though if trust is built around the data
-CRDA provides it should be more than enough.
-
-Now these are just my observations so far. Please feel free to chime
-in if there are better alternatives. We probably should take some time
-to talk about this at OLS but for now that's what I'm aiming for.
-
-> where you will keep
-> Country IE info cfg80211 or mac80211?
-
-That belongs in mac80211. You only need to tell cfg80211 the alpha2 so
-it can query CRDA for you.
-
-  Luis
+I've just pushed out a merge of net-2.6 into net-next-2.6
+so this should all be sorted.
