@@ -1,54 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45455
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751345AbYGURfx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 13:35:53 -0400
-Date: Mon, 21 Jul 2008 10:35:53 -0700 (PDT)
-Message-Id: <20080721.103553.121723118.davem@davemloft.net> (sfid-20080721_193557_755761_4EF7744D)
-To: herbert@gondor.apana.org.au
-Cc: hadi@cyberus.ca, kaber@trash.net, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
- RCU.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <E1KKu2D-0002kd-00@gondolin.me.apana.org.au>
-References: <1216606839.4847.159.camel@localhost>
-	<E1KKu2D-0002kd-00@gondolin.me.apana.org.au>
+Received: from mx1.redhat.com ([66.187.233.31]:55664 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753731AbYGHQkc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jul 2008 12:40:32 -0400
+Subject: Re: [BUG] iwl4965: huge latency and errors when unblocking the
+	hardware rfkill
+From: Dan Williams <dcbw@redhat.com>
+To: Andrew Lutomirski <andy@luto.us>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <cb0375e10807071301r678a2155m322f40635b19dc73@mail.gmail.com>
+References: <cb0375e10807071156x26df8332j4b167e8cc9bb289@mail.gmail.com>
+	 <1215459906.23993.2.camel@localhost.localdomain>
+	 <cb0375e10807071301r678a2155m322f40635b19dc73@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 08 Jul 2008 12:38:59 -0400
+Message-Id: <1215535139.17812.22.camel@localhost.localdomain> (sfid-20080708_184034_685740_D440CEF9)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Date: Mon, 21 Jul 2008 19:58:33 +0800
-
-> I think I get you now.  You're suggesting that we essentially
-> do what Dave has right now in the non-contending case, i.e.,
-> bypassing the qdisc so we get fully parallel processing until
-> one of the hardware queues seizes up.
+On Mon, 2008-07-07 at 16:01 -0400, Andrew Lutomirski wrote:
+> On Mon, Jul 7, 2008 at 3:45 PM, Dan Williams <dcbw@redhat.com> wrote:
+> > On Mon, 2008-07-07 at 14:56 -0400, Andrew Lutomirski wrote:
+> >> This is wireless-testing c80200cd38c265da90f0d9d031ace84aa56b0453, pulled today.
+> >>
+> >> I have a Lenovo X61s with a physical rfkill switch (the kind that
+> >> slides between blocked and unblocked).
+> >>
+> >> If I turn off the hardware rfkill switch (set to block) while
+> >> associated, I lose the connection (obviously).  If I turn it back on
+> >> again (set to unblock), I get a lot of latency (my mouse stops moving
+> >> for a second or two) and I sometimes get errors in the syslog like
+> >> this:
+> >>
+> >> iwl4965: Error sending REPLY_CT_KILL_CONFIG_CMD: time out after 500ms.
+> >>
+> >> The card fails to associate afterwards.  If I tell network-manager to
+> >> turn off wireless, then block rfkill, then wait a few seconds, then
+> >> unblock it, then turn nm back on, everything works again.
+> >>
+> >> This seems like at least two different bugs:
+> >>
+> >>  - iwl4965 causes latency.  This latency issue has been reproducible
+> >> every time for me on 2.6.24-ubuntu_something, 2.5.25, wireless-compat
+> >> (recent), and current wireless-testing.
+> >>  - iwl4965 doesn't work right after hard unblocking rfkill.
+> >>
+> >> I'm happy to do further troubleshooting and/or test patches.
+> >
+> > It depends on what HAL reports for the killswitch's status.  NM asks HAL
+> > what the radio's rfkill state is every 6 seconds (since we can't get
+> > event notifications when the state changes until 2.6.27).  If HAL
+> > reports the radio is killed, NM won't touch the device.  It sounds like
+> > something is trying to poke the device before it's ready, which may mean
+> > that either NM isn't aware you have a killswitch, or HAL isn't correctly
+> > talking to the iwlwifi killswitch bits (either old-style or new-style
+> > with Henrique's patches).
 > 
-> At that point you'd stop all queues and make every packet go
-> through the software qdisc to ensure ordering.  This continues
-> until all queues have vacancies again.
+> OK.  But IMO iwl4965 should still avoid freaking out when this happens.
 > 
-> If this is what you're suggesting, then I think that will offer
-> pretty much the same behaviour as what we've got, while still
-> offering at least some (perhaps even most, but that is debatable)
-> of the benefits of multi-queue.
+> >
+> > Can you post some logs from /var/log/daemon.log around when flipping the
+> > killswitch to BLOCKED, waiting about 20 seconds, then flipping it back
+> > to UNBLOCKED and waiting 10 seconds?  That will tell whether NM is
+> > correctly talking to HAL or not.
 > 
-> At this point I don't think this is something that we need right
-> now, but it would be good to make sure that the architecture
-> allows such a thing to be implemented in future.
+> Attached.  While the connection was failing to happen after
+> re-enabling the radio, dmesg showed a lot of crap like:
 
-Doing something like the noqueue_qdisc (bypassing the qdisc entirely)
-is very attractive because it eliminates the qdisc lock.  We're only
-left with the TX lock.
+Ok, so with the patches HAL no longer knows about the killswitch and NM
+is unable to poll the switch for the radio state.  So NM doesn't stop
+trying to poke the radio and connect to stuff because it doesn't know
+the radio is off.
 
-This whole idea of doing an optimized send to the device when the
-TX queue has space is indeed tempting.
+Yes, iwlwifi shouldn't freak out.  We also need to get HAL fixed up to
+recognize the new rfkill stuff as a switch.
 
-But we can't do it for qdiscs that measure rates, enforce limits, etc.
+Dan
 
-And if the device kicks back at us with an error, we have to
-perform the normal ->enqueue() path.
