@@ -1,181 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:34606 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752758AbYGAHo4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 03:44:56 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 1/2] mac80211: add bar capability
-Date: Tue,  1 Jul 2008 10:44:49 +0300
-Message-Id: <1214898291-6232-2-git-send-email-tomas.winkler@intel.com> (sfid-20080701_094502_000549_C167E7DA)
-In-Reply-To: <1214898291-6232-1-git-send-email-tomas.winkler@intel.com>
-References: <1214898291-6232-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from n7a.bullet.ukl.yahoo.com ([217.146.183.155]:20481 "HELO
+	n7a.bullet.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751337AbYGHGdL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jul 2008 02:33:11 -0400
+Message-ID: <48730C05.7060008@yahoo.co.uk> (sfid-20080708_083314_139846_28A50375)
+Date: Tue, 08 Jul 2008 07:41:09 +0100
+From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@redhat.com>, flamingice@sourmilk.net,
+	Andrea Merello <andreamrl@tiscali.it>
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 2/6] rtl8187: updating rtl818x.h to support RTL8187B
+References: <4873088C.2090603@yahoo.co.uk>
+In-Reply-To: <4873088C.2090603@yahoo.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+rtl8187: updating rtl818x.h to support RTL8187B
 
-This patch adds block ack request capability
-
-Signed-off-by: Ester Kummer <ester.kummer@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
- include/linux/ieee80211.h  |    4 ++++
- include/net/mac80211.h     |    3 +++
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/main.c        |   21 +++++++++++++++++++--
- net/mac80211/mlme.c        |   31 +++++++++++++++++++++++++++++++
- 5 files changed, 58 insertions(+), 2 deletions(-)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index cffd6d0..aa603c3 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -658,6 +658,10 @@ struct ieee80211_bar {
- 	__le16 start_seq_num;
- } __attribute__((packed));
- 
-+/* 802.11 BAR control masks */
-+#define IEEE80211_BAR_CTRL_ACK_POLICY_NORMAL     0x0000
-+#define IEEE80211_BAR_CTRL_CBMTID_COMPRESSED_BA  0x0004
-+
- /**
-  * struct ieee80211_ht_cap - HT capabilities
-  *
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 3a204ac..0a5de3e 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -235,6 +235,8 @@ struct ieee80211_bss_conf {
-  * @IEEE80211_TX_STAT_ACK: Frame was acknowledged
-  * @IEEE80211_TX_STAT_AMPDU: The frame was aggregated, so status
-  * 	is for the whole aggregation.
-+ * @IEEE80211_TX_STAT_AMPDU_NO_BACK: no block ack was returned,
-+ * 	so consider using block ack request (BAR).
-  */
- enum mac80211_tx_control_flags {
- 	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
-@@ -260,6 +262,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_STAT_TX_FILTERED		= BIT(20),
- 	IEEE80211_TX_STAT_ACK			= BIT(21),
- 	IEEE80211_TX_STAT_AMPDU			= BIT(22),
-+	IEEE80211_TX_STAT_AMPDU_NO_BACK		= BIT(23),
- };
- 
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index fcdbf09..775d5e8 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -903,6 +903,7 @@ void ieee80211_send_addba_request(struct net_device *dev, const u8 *da,
- 				  u16 agg_size, u16 timeout);
- void ieee80211_send_delba(struct net_device *dev, const u8 *da, u16 tid,
- 				u16 initiator, u16 reason_code);
-+void ieee80211_send_bar(struct net_device *dev, u8 *ra, u16 tid, u16 ssn);
- 
- void ieee80211_sta_stop_rx_ba_session(struct net_device *dev, u8 *da,
- 				u16 tid, u16 initiator, u16 reason);
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index f18cfd7..074f71a 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1404,14 +1404,15 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	u16 frag, type;
-+	__le16 fc;
- 	struct ieee80211_tx_status_rtap_hdr *rthdr;
- 	struct ieee80211_sub_if_data *sdata;
- 	struct net_device *prev_dev = NULL;
-+	struct sta_info *sta;
- 
- 	rcu_read_lock();
- 
- 	if (info->status.excessive_retries) {
--		struct sta_info *sta;
- 		sta = sta_info_get(local, hdr->addr1);
- 		if (sta) {
- 			if (test_sta_flags(sta, WLAN_STA_PS)) {
-@@ -1426,8 +1427,24 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 		}
- 	}
- 
-+	fc = hdr->frame_control;
-+
-+	if ((info->flags & IEEE80211_TX_STAT_AMPDU_NO_BACK) &&
-+	    (ieee80211_is_data_qos(fc))) {
-+		u16 tid, ssn;
-+		u8 *qc;
-+		sta = sta_info_get(local, hdr->addr1);
-+		if (sta) {
-+			qc = ieee80211_get_qos_ctl(hdr);
-+			tid = qc[0] & 0xf;
-+			ssn = ((le16_to_cpu(hdr->seq_ctrl) + 0x10)
-+						& IEEE80211_SCTL_SEQ);
-+			ieee80211_send_bar(sta->sdata->dev, hdr->addr1,
-+					   tid, ssn);
-+		}
-+	}
-+
- 	if (info->flags & IEEE80211_TX_STAT_TX_FILTERED) {
--		struct sta_info *sta;
- 		sta = sta_info_get(local, hdr->addr1);
- 		if (sta) {
- 			ieee80211_handle_filtered_frame(local, sta, skb);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 0d50d52..283e55f 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1538,6 +1538,37 @@ void ieee80211_send_delba(struct net_device *dev, const u8 *da, u16 tid,
- 	ieee80211_sta_tx(dev, skb, 0);
- }
- 
-+void ieee80211_send_bar(struct net_device *dev, u8 *ra, u16 tid, u16 ssn)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct sk_buff *skb;
-+	struct ieee80211_bar *bar;
-+	u16 bar_control = 0;
-+
-+	skb = dev_alloc_skb(sizeof(*bar) + local->hw.extra_tx_headroom);
-+	if (!skb) {
-+		printk(KERN_ERR "%s: failed to allocate buffer for "
-+			"bar frame\n", dev->name);
-+		return;
-+	}
-+	skb_reserve(skb, local->hw.extra_tx_headroom);
-+	bar = (struct ieee80211_bar *)skb_put(skb, sizeof(*bar));
-+	memset(bar, 0, sizeof(*bar));
-+	bar->frame_control = IEEE80211_FC(IEEE80211_FTYPE_CTL,
-+					IEEE80211_STYPE_BACK_REQ);
-+	memcpy(bar->ra, ra, ETH_ALEN);
-+	memcpy(bar->ta, dev->dev_addr, ETH_ALEN);
-+	bar_control |= (u16)IEEE80211_BAR_CTRL_ACK_POLICY_NORMAL;
-+	bar_control |= (u16)IEEE80211_BAR_CTRL_CBMTID_COMPRESSED_BA;
-+	bar_control |= (u16)(tid << 12);
-+	bar->control = cpu_to_le16(bar_control);
-+	bar->start_seq_num = cpu_to_le16(ssn);
-+
-+	/* must be sent through voice AC */
-+	skb->priority = 3;
-+	ieee80211_sta_tx(dev, skb, 0);
-+}
-+
- void ieee80211_sta_stop_rx_ba_session(struct net_device *dev, u8 *ra, u16 tid,
- 					u16 initiator, u16 reason)
- {
--- 
-1.5.4.1
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+diff --git a/drivers/net/wireless/rtl818x.h b/drivers/net/wireless/rtl818x.h
+index 4f7d38f..85a6394 100644
+--- a/drivers/net/wireless/rtl818x.h
++++ b/drivers/net/wireless/rtl818x.h
+@@ -66,7 +66,10 @@ struct rtl818x_csr {
+  #define RTL818X_TX_CONF_R8180_F		(3 << 25)
+  #define RTL818X_TX_CONF_R8185_ABC	(4 << 25)
+  #define RTL818X_TX_CONF_R8185_D		(5 << 25)
++#define RTL818X_TX_CONF_R8187vD_1	(5 << 25)
++#define RTL818X_TX_CONF_R8187vD_2	(6 << 25)
+  #define RTL818X_TX_CONF_HWVER_MASK	(7 << 25)
++#define RTL818X_TX_CONF_DISREQQSIZE	(1 << 28)
+  #define RTL818X_TX_CONF_PROBE_DTS	(1 << 29)
+  #define RTL818X_TX_CONF_HW_SEQNUM	(1 << 30)
+  #define RTL818X_TX_CONF_CW_MIN		(1 << 31)
+@@ -106,8 +109,11 @@ struct rtl818x_csr {
+  #define RTL818X_MSR_NO_LINK		(0 << 2)
+  #define RTL818X_MSR_ADHOC		(1 << 2)
+  #define RTL818X_MSR_INFRA		(2 << 2)
++#define RTL818X_MSR_MASTER		(3 << 2)
++#define RTL818X_MSR_ENEDCA		(4 << 2)
+  	u8	CONFIG3;
+  #define RTL818X_CONFIG3_ANAPARAM_WRITE	(1 << 6)
++#define RTL818X_CONFIG3_GNT_SELECT	(1 << 7)
+  	u8	CONFIG4;
+  #define RTL818X_CONFIG4_POWEROFF	(1 << 6)
+  #define RTL818X_CONFIG4_VCOOFF		(1 << 7)
+@@ -133,7 +139,9 @@ struct rtl818x_csr {
+  	__le32	RF_TIMING;
+  	u8	GP_ENABLE;
+  	u8	GPIO;
+-	u8	reserved_12[10];
++	u8	reserved_12[2];
++	__le32	HSSI_PARA;
++	u8	reserved_13[4];
+  	u8	TX_AGC_CTL;
+  #define RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT		(1 << 0)
+  #define RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT	(1 << 1)
+@@ -141,29 +149,39 @@ struct rtl818x_csr {
+  	u8	TX_GAIN_CCK;
+  	u8	TX_GAIN_OFDM;
+  	u8	TX_ANTENNA;
+-	u8	reserved_13[16];
++	u8	reserved_14[16];
+  	u8	WPA_CONF;
+-	u8	reserved_14[3];
++	u8	reserved_15[3];
+  	u8	SIFS;
+  	u8	DIFS;
+  	u8	SLOT;
+-	u8	reserved_15[5];
++	u8	reserved_16[5];
+  	u8	CW_CONF;
+  #define RTL818X_CW_CONF_PERPACKET_CW_SHIFT	(1 << 0)
+  #define RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT	(1 << 1)
+  	u8	CW_VAL;
+  	u8	RATE_FALLBACK;
+-	u8	reserved_16[25];
++#define RTL818X_RATE_FALLBACK_ENABLE	(1 << 7)
++	u8	ACM_CONTROL;
++	u8	reserved_17[24];
+  	u8	CONFIG5;
+  	u8	TX_DMA_POLLING;
+-	u8	reserved_17[2];
++	u8	reserved_18[2];
+  	__le16	CWR;
+  	u8	RETRY_CTR;
+-	u8	reserved_18[5];
++	u8	reserved_19[3];
++	__le16	INT_MIG;
++/* RTL818X_R8187B_*: magic numbers from ioregisters */
++#define RTL818X_R8187B_B	0
++#define RTL818X_R8187B_D	1
++#define RTL818X_R8187B_E	2
+  	__le32	RDSAR;
+-	u8	reserved_19[12];
+-	__le16	FEMR;
++	__le16	TID_AC_MAP;
+  	u8	reserved_20[4];
++	u8	ANAPARAM3;
++	u8	reserved_21[5];
++	__le16	FEMR;
++	u8	reserved_22[4];
+  	__le16	TALLY_CNT;
+  	u8	TALLY_SEL;
+  } __attribute__((packed));
 
