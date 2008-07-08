@@ -1,91 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:1076 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753083AbYGWSLg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 14:11:36 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so929008nfc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 11:11:34 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH] rfkill: add default global states
-Date: Wed, 23 Jul 2008 20:28:49 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br> <1216775046-9506-3-git-send-email-hmh@hmh.eng.br>
-In-Reply-To: <1216775046-9506-3-git-send-email-hmh@hmh.eng.br>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807232028.49239.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from promwad.com ([83.149.69.23]:37709 "EHLO promwad.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752666AbYGHWuw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jul 2008 18:50:52 -0400
+Date: Wed, 9 Jul 2008 01:11:59 +0300
+From: Ihar Hrachyshka <ihar.hrachyshka@promwad.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, flamingice@sourmilk.net,
+	andreamrl@tiscali.it
+Subject: [PATCH] rtl8187: Fixed section mismatch in rtl8187_dev.c
+Message-ID: <20080709011159.5b11550b@promwad.com> (sfid-20080709_005056_005012_4C73580A)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->  #endif /* __RFKILL_INPUT_H */
-> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-> index 0a78e32..eaaabbd 100644
-> --- a/net/rfkill/rfkill.c
-> +++ b/net/rfkill/rfkill.c
-> @@ -45,6 +45,8 @@ MODULE_PARM_DESC(default_state,
->  		 "Default initial state for all radio types, 0 = radio off");
->  
->  static enum rfkill_state rfkill_states[RFKILL_TYPE_MAX];
-> +static enum rfkill_state rfkill_default_states[RFKILL_TYPE_MAX];
-> +static unsigned long rfkill_states_lockdflt[BITS_TO_LONGS(RFKILL_TYPE_MAX)];
+When CONFIG_HOTPLUG=n the following error occures on vmlinux linkage:
 
-I have a slight distaste for using multiple arrays where each variable is a different
-variable for the same object. Perhaps it is time to move it into a structure:
+`.exit.text' referenced in section `.data' of drivers/built-in.o:
+defined in discarded section `.exit.text' of drivers/built-in.o
 
-struct .. {
-	enum rfkill_state current
-	enum rfkill_state default
-};
+'rtl8187_disconnect' function marked as __devexit isn't compiled with no
+hotplug support. Added __devexit_p macros to fix the problem.
 
-static struct .. rfkill_states[RFKILL_TYPE_MAX];
+Signed-off-by: Ihar Hrachyshka <ihar.hrachyshka@promwad.com>
 
-It probably won't optimize anything, but I think it looks a bit nicer.
+---
 
-Just a suggestion, if it easier to keep it as multiple arrays I would still ack it. ;)
+ drivers/net/wireless/rtl8187_dev.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
->  	list_add_tail(&rfkill->node, &rfkill_list);
-> @@ -689,6 +737,49 @@ void rfkill_unregister(struct rfkill *rfkill)
->  }
->  EXPORT_SYMBOL(rfkill_unregister);
->  
-> +/**
-> + * rfkill_set_default - set initial value for a switch type
-> + * @type - the type of switch to set the default state of
-> + * @state - the new default state for that group of switches
-> + *
-> + * Sets the initial state rfkill should use for a given type.  Only "soft"
-> + * states are allowed, i.e. RFKILL_STATE_SOFT_BLOCKED and
-> + * RFKILL_STATE_UNBLOCKED.
-> + *
-> + * This function is meant to be used by platform drivers for platforms that
-> + * can save switch state across power down/reboot.
+diff --git a/drivers/net/wireless/rtl8187_dev.c
+b/drivers/net/wireless/rtl8187_dev.c index bec96d7..b70cc5d 100644
+--- a/drivers/net/wireless/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl8187_dev.c
+@@ -836,7 +836,7 @@ static struct usb_driver rtl8187_driver = {
+ 	.name		= KBUILD_MODNAME,
+ 	.id_table	= rtl8187_table,
+ 	.probe		= rtl8187_probe,
+-	.disconnect	= rtl8187_disconnect,
++	.disconnect	= __devexit_p(rtl8187_disconnect),
+ };
 
-As sideinfo: I found a hardware bug in a broadcom rfkill key a few days ago
-which would not work well with this function:
+ static int __init rtl8187_init(void)
 
-* laptop was powered on, HW rfkill was set to allow WiFi
-* laptop halted, something about a missing power supply and a battery which was drained
-	without any userspace tool checking the battery status. ;)
-* laptop was powered on and booted,  HW rkfill decided to block WiFi.
-
-In any case not really important for this patch, but just for information. ;)
-
->   * Rfkill module initialization/deinitialization.
->   */
-> @@ -702,8 +793,8 @@ static int __init rfkill_init(void)
->  	    rfkill_default_state != RFKILL_STATE_UNBLOCKED)
->  		return -EINVAL;
->  
-> -	for (i = 0; i < ARRAY_SIZE(rfkill_states); i++)
-> -		rfkill_states[i] = rfkill_default_state;
-> +	for (i = 0; i < ARRAY_SIZE(rfkill_default_states); i++)
-> +		rfkill_default_states[i] = rfkill_default_state;
-
-rfkill_states[] is now no longer initialized, I guess that is a bad thing ;)
-
-The rest of the patch looks good.
-
-Ivo
+--
+Ihar Hrachyshka
+Software Developer
+Promwad Innovation Company
+19, Sharangovicha Str.
+220018, Minsk, Belarus
+Phone/Fax: +375 (17) 211-5826
+Web: www.promwad.com
