@@ -1,26 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.191]:44824 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751175AbYGQFeD (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:56816 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754137AbYGHNjj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 01:34:03 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so3207546tic.23
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2008 22:34:02 -0700 (PDT)
-Reply-To: <cs010101@gmail.com>
-From: =?ks_c_5601-1987?B?sei/tciv?= <cs010101@gmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: Q) What's different MadWiFi driver and Compat Driver?
-Date: Thu, 17 Jul 2008 14:33:51 +0900
-Message-ID: <001c01c8e7ce$b4178a60$3b0aa8c0@39fb6b6b6f434b3> (sfid-20080717_073410_400868_E97F225F)
+	Tue, 8 Jul 2008 09:39:39 -0400
+Message-ID: <48736E18.5060708@lwfinger.net> (sfid-20080708_153952_880203_4B722329)
+Date: Tue, 08 Jul 2008 08:39:36 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="ks_c_5601-1987"
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+CC: herton@mandriva.com.br, proski@gnu.org,
+	John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/6] rtl8187: Adding Realtek rtl8187B support
+References: <3ace41890807080412w3f24a8c1wa2665d8d6de785c9@mail.gmail.com>
+In-Reply-To: <3ace41890807080412w3f24a8c1wa2665d8d6de785c9@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
--.-;; too short ?
+Hin-Tak,
 
-I really want to know the difference.
+Good job getting these posted. For the first time in a long time, my unit was 
+able to connect and authenticate. It certainly looks as if you solved the ep12 
+problem. I'm using the device to write this E-mail.
 
-thanks.
+Unfortunately, your mailer still wrapped some lines in the patches. It wasn't 
+difficult to repair them, but it still is a bother. For the next round, we can 
+work out a procedure that uses the mail utility to send the patches. I've used 
+this method since Linville was unable to process my patches that were sent from 
+Thunderbird.
 
+The patch to revise the detection of B units with an 8187 ID is ready. I can 
+send it at any time.
+
+Larry
