@@ -1,39 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.183]:30869 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751202AbYGQLd3 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33772 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750717AbYGHMbU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 07:33:29 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so2863509ika.5
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2008 04:33:27 -0700 (PDT)
-Message-ID: <f6ca9fed0807170433m5199b66bl7e8bafd1002c566e@mail.gmail.com> (sfid-20080717_133334_299673_2586B8D7)
-Date: Thu, 17 Jul 2008 13:33:27 +0200
-From: drago01 <drago01@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: [PATCH 4/4] rfkill: mutex fixes
-Cc: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, "Ivo van Doorn" <ivdoorn@gmail.com>
-In-Reply-To: <200807170656.37190.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br>
-	 <1216150327-10904-5-git-send-email-hmh@hmh.eng.br>
-	 <200807170656.37190.mb@bu3sch.de>
+	Tue, 8 Jul 2008 08:31:20 -0400
+Subject: Re: [PATCH] net/wireless/nl80211.c: fix endless Netlink callback
+	loop.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Julius Volz <juliusv@google.com>
+Cc: netdev@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <f4845fc0807080523o7e773de2u94c10a8739f4ddf4@mail.gmail.com> (sfid-20080708_142402_544799_C3AAFC88)
+References: <1215518539-19587-1-git-send-email-juliusv@google.com>
+	 <1215518799.9610.33.camel@johannes.berg>
+	 <f4845fc0807080523o7e773de2u94c10a8739f4ddf4@mail.gmail.com>
+	 (sfid-20080708_142402_544799_C3AAFC88)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BTeYy4ViqGm9xAHSw1ZE"
+Date: Tue, 08 Jul 2008 14:30:35 +0200
+Message-Id: <1215520235.9610.39.camel@johannes.berg> (sfid-20080708_143124_048160_2346559A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 17, 2008 at 6:56 AM, Michael Buesch <mb@bu3sch.de> wrote:
-> On Tuesday 15 July 2008, Henrique de Moraes Holschuh wrote:
->> There are two mutexes in rfkill:
->>
->> rfkill->mutex, which protects some of the fields of a rfkill struct, and is
->> also used for callback serialization.
->>
->> rfkill_mutex, which protects the global state, the list of registered
->> rfkill structs and rfkill->claim.
->>
->> Make sure to use the correct mutex, and to not miss locking rfkill->mutex
->> even when we already took rfkill_mutex.
 
-rfkill_state_mutex ?
+--=-BTeYy4ViqGm9xAHSw1ZE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+
+> >>       int idx =3D 0;
+> >>       int start =3D cb->args[0];
+> >>       struct cfg80211_registered_device *dev;
+> >>
+> >>       mutex_lock(&cfg80211_drv_mutex);
+> >>       list_for_each_entry(dev, &cfg80211_drv_list, list) {
+> >> -             if (++idx < start)
+> >> +             if (++idx <=3D start)
+> >>                       continue;
+> >>               if (nl80211_send_wiphy(skb, NETLINK_CB(cb->skb).pid,
+> >>                                      cb->nlh->nlmsg_seq, NLM_F_MULTI,
+> >> -                                    dev) < 0)
+> >> +                                    dev) < 0) {
+> >> +                     idx--;
+> >>                       break;
+> >> +             }
+> >
+> > I see much of the problem stemming from incrementing 'idx' at the
+> > beginning of the loop, can't we just move it to the end?
+>=20
+> idx still needs to be incremented in the 'continue' case, so that
+> alone wouldn't help. I'm not sure if there is a way to make this look
+> more intuitive?
+
+Good point. The only ways I can come up with add further to the already
+quite deep indentation:
+
+list_for_each_entry(...) {
+	if (idx > start)
+		if (nl80211_send_wiphy(...) < 0)
+			break;
+	idx++;
+}
+
+or hide the call into an if ():
+
+=EF=BB=BFlist_for_each_entry(...) {
+	if (idx > start && nl80211_send_wiphy(...))
+		break;
+	idx++;
+}
+
+Not sure. I guess the code isn't touched often so your patch is fine.
+
+johannes
+
+--=-BTeYy4ViqGm9xAHSw1ZE
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIc13jAAoJEKVg1VMiehFYIXIP/1e0QoRUKu6kR2afGzgj6k1G
+kw2s8DBI9mxa5mR3rExcMbPsJlV6+V/PKZt5IECfx6iT89Srl0grpvd2ctEEQnvT
+C5aar1+cl3ZQEGP8Jl8x8xIGNc3cc9h6oKTHFaQ2FUGEZR3s0uOoAR/0PJmXFkA3
+qIBn4zdgOCpvcTbpjiuac/jD8oC04RLyeDSgKY+bj5xXEv6WBvV7s8b+1K0bc5OU
+ccjm8d4lqp3zt+Iql+6qXiYO2lYZ6xA5RNmDsrM1G8dt5RSSv7SXZsa25Ehgzkw0
+eEvF0i4h0okVdWd7FKZnh3LfjWiDB0pgagcM7nGiqj/SjDtVe263kIfgG/R+7lNA
+G8QXaNV0YaQv9k+RJJyzhNtK+rlKvXJJwXKbp+oD3YZgt5a0SeLN2PPVAkQZFUts
+8jMJljiu7nj2zceQfJzT1IQrPuGRUvwnVQNiNBCcAiXH1ztSjiGNUk9j6lHAFM9x
+1TWPZ/tLisG6iOsaHQtPTXp8u/wxmcy9YELbFC9bOQLFCyfdznv68/cJLSN7H1aL
+qIghtzKbkiaNjHEP0ZBRDQR73mhsA5KDp1vKXLvE0M7Q0CTM9UOQS2Neggc2KDRk
+5D6uP+xJ5KKaLhL5q+LbAVb+sn5fY7WyPKnABsOC5mzghj2aSa1pkNr0lCG8Akw5
+5um1GfTZg8xfrf2S7/jN
+=C4aF
+-----END PGP SIGNATURE-----
+
+--=-BTeYy4ViqGm9xAHSw1ZE--
+
