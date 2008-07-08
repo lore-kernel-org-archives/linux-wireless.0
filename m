@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:35764 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755133AbYGBQDF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2008 12:03:05 -0400
-Date: Wed, 2 Jul 2008 13:02:58 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
-	Larry Finger <larry.finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
-Message-ID: <20080702160258.GB11309@khazad-dum.debian.net> (sfid-20080702_180309_436913_9771F60E)
-References: <20080701225207.GB4292@khazad-dum.debian.net> <1214952993.3462.14.camel@johannes.berg> <20080701235747.GG4292@khazad-dum.debian.net> <1214983270.3462.18.camel@johannes.berg> <1214983918.13270.2.camel@johannes.berg>
+Received: from THAUM.MIT.EDU ([18.95.3.27]:47024 "EHLO luto.stanford.edu"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750717AbYGHFMd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jul 2008 01:12:33 -0400
+Message-ID: <4872F740.50608@myrealbox.com> (sfid-20080708_071247_522131_B33CE808)
+Date: Tue, 08 Jul 2008 01:12:32 -0400
+From: Andy Lutomirski <luto@myrealbox.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1214983918.13270.2.camel@johannes.berg>
+To: hmh@hmh.eng.br
+CC: dcbw@redhat.com, zhu.yi@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: Question on rfkill double block
+References: <1214982208.14590.473.camel@debian.sh.intel.com> <1215018189.29117.32.camel@localhost.localdomain> <20080704195543.GB27898@khazad-dum.debian.net> <1215450664.17128.64.camel@localhost.localdomain> <20080707204708.GA3166@khazad-dum.debian.net>
+In-Reply-To: <20080707204708.GA3166@khazad-dum.debian.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 02 Jul 2008, Johannes Berg wrote:
-> > (I've written real input drivers before) but rather that nobody really
-> > knows how userspace/kernel interaction wrt. rfkill should work.
+Henrique de Moraes Holschuh wrote:
+> On Mon, 07 Jul 2008, Dan Williams wrote:
+>> On Fri, 2008-07-04 at 16:55 -0300, Henrique de Moraes Holschuh wrote:
+>>> On Wed, 02 Jul 2008, Dan Williams wrote:
+>>>> That would be more useful than the current enum, yes.
+>>> Dan, you do have a strong user case for "just software rfkilled", "just
+>>> hardware rfkilled" and "soft+hard rfkilled" as opposed to simply "software
+>>> rfkilled" and "hardware rfkilled, maybe software rfkilled as well" ?
+>> No, I don't have a _NetworkManager_ usecase for being able to
+>> distinguish between HW and HW+SW.  Just an observation that stuff other
+>> than NM might want to figure that out for UI or something.
 > 
-> Oh and there's no need to explain on the mailing list, just make sure
-> the new rfkill docs are clear wrt. the way forward.
+> Ok.  I will still *try* to implement the fourth state, but I will post the
+> patch as a RFC.  If it is too messy or complex, I will recommend that we
+> drop it.
 
-Ok.  Is what we currently have (i.e. what is in -next/wireless-testing)
-already enough?  Are there any topics I should try to clarify better on
-Documentation/rfkill.txt ?
+I'm still a bit confused.
 
-> Another thing that just occurred to me: it might be nice to have a few
-> (per-hardware, global?) LED triggers that can be bound to LEDs and that
-> always reflect the state the driver says the radio has (hw-rfkill) or
-> the driver is asked to enforce (sw-rfkill)
+Suppose I have a laptop with a physical switch marked "radio" which 
+tells the OS which position it's in *and does nothing else* (via ACPI or 
+whatever) and a radio which has a (pure) software rfkill controller. 
+Suppose further that this laptop has a radio button as well.
 
-Well, it should be doable with the new rfkill notify chain.  The chain is
-called on every rfkill state change, and it will also get called when global
-state changes (I am working on exposing the global state to userspace and
-the rest of the kernel, now.  I don't exactly know the best way to go about
-it, expect an RFC post soon about it).
+This would look exactly like my Thinkpad X61s, except that the rfkill 
+switch would be connected to the rfkill controller in software, not 
+hardware.
 
-So, one could write a separate module (e.g. rfkill-led) that registers with
-the notify chain, and feeds the events to as many led triggers as he wants
-to.  That would add LED trigger support to every rfkill driver in one go.
+I think it would have the exact same problem and the fourth state 
+wouldn't help because it would never be any variety of HARD_BLOCKED.
 
-You could have different triggers for global states (there is one global
-state per switch type), as well as triggers for each individual kill switch,
-the notify chain exports enough data (a pointer to the rfkill structure) for
-that (and if it doesn't, we ought to fix it so that it will :-) ).
-
-Would "rfkill switch registered" and "rfkill switch unregistered"
-notifications on the rfkill notify chain help write something like a led
-trigger driver?  If so, I will add them.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+--Andy
