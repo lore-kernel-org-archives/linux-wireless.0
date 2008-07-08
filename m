@@ -1,44 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tdb.com ([216.99.214.4]:35711 "HELO mail.tdb.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750843AbYG0XSW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jul 2008 19:18:22 -0400
-To: linux-wireless@vger.kernel.org
-Subject: Re: ath9k working, almost
-References: <200807261742.15693.alistair@devzero.co.uk>
-	<1217170761.2700.12.camel@localhost.localdomain>
-	<43e72e890807270807k1a5967bfs1adf74f1a4d1e864@mail.gmail.com>
-	<200807271720.34696.alistair@devzero.co.uk>
-	<43e72e890807270930o43a75071i9415445d4110b069@mail.gmail.com>
-	<69e28c910807271211u18779b39v42e35e4e78dd949d@mail.gmail.com>
-From: Russell Senior <seniorr@aracnet.com>
-Date: 27 Jul 2008 16:11:41 -0700
-In-Reply-To: <69e28c910807271211u18779b39v42e35e4e78dd949d@mail.gmail.com>
-Message-ID: <86zlo2sz0y.fsf@coulee.tdb.com> (sfid-20080728_011826_895206_077815C7)
+Received: from ra.tuxdriver.com ([70.61.120.52]:2802 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754384AbYGHTiM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jul 2008 15:38:12 -0400
+Date: Tue, 8 Jul 2008 15:04:52 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/8] mac80211: move QOS control helpers into ieee80211.h
+Message-ID: <20080708190452.GD30833@tuxdriver.com> (sfid-20080708_213827_704038_EEEA029D)
+References: <1215540026.476.15.camel@brick>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1215540026.476.15.camel@brick>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>>>> "Stefanik" =3D=3D Stefanik G=E1bor <netrolller.3d@gmail.com> writ=
-es:
+On Tue, Jul 08, 2008 at 11:00:26AM -0700, Harvey Harrison wrote:
+> Also remove the WLAN_IS_QOS_DATA inline after removing the last
+> two users.  This starts moving away from using rx->fc to using
+> the header frame_control directly.
+> 
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 
-Luis> What you can expect from us soon is more enhancements to STA,
-Luis> enabling IBSS, and AP.
+I just merged these eight from your previous sends.  Are there
+changes here?  If so, could you send more patches on top?
 
-Stefanik> Not really related, but is monitor mode also planned to be
-Stefanik> enabled? Or is it already enabled?
+Thanks,
 
-And how about WDS?  That's something I'm using on madwifi (on older
-atheros hardware) right now.
-
-
---=20
-Russell Senior         ``I have nine fingers; you have ten.''
-seniorr@aracnet.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
