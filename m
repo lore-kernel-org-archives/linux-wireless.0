@@ -1,60 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49694 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751540AbYGAJ7M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 05:59:12 -0400
-Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Adel Gadllah <adel.gadllah@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
-	stefano.brivio@polimi.it, Larry Finger <larry.finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <6cf6b73e0807010255x1f2d8a21m8ed3e712012ea757@mail.gmail.com> (sfid-20080701_115519_696541_D5864902)
-References: <6cf6b73e0807010255x1f2d8a21m8ed3e712012ea757@mail.gmail.com>
-	 (sfid-20080701_115519_696541_D5864902)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dbvzEn28OO+liWRJMUkL"
-Date: Tue, 01 Jul 2008 11:58:24 +0200
-Message-Id: <1214906304.7763.34.camel@johannes.berg> (sfid-20080701_115915_919075_D634F174)
-Mime-Version: 1.0
+Received: from web51408.mail.re2.yahoo.com ([206.190.38.187]:25286 "HELO
+	web51408.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750804AbYGHT2K convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jul 2008 15:28:10 -0400
+Date: Tue, 8 Jul 2008 12:28:08 -0700 (PDT)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Reply-To: pommnitz@yahoo.com
+Subject: Re: Linux capable PDA with WLAN NIC that supports access point mode?
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1215544570.3670.7.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-ID: <573701.63380.qm@web51408.mail.re2.yahoo.com> (sfid-20080708_212813_851110_D1BACCBD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--- Johannes Berg <johannes@sipsolutions.net> schrieb am Di, 8.7.2008:
 
---=-dbvzEn28OO+liWRJMUkL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Von: Johannes Berg <johannes@sipsolutions.net>
+> Betreff: Re: Linux capable PDA with WLAN NIC that supports access point mode?
+> An: pommnitz@yahoo.com
+> CC: linux-wireless@vger.kernel.org
+> Datum: Dienstag, 8. Juli 2008, 21:16
+> > I know that mac80211 is not there yet, but on the other
+> hand
+> > OpenWRT seems to run on a lot of hardware with very
+> different NICs. How
+> > does OpenWRT implement the AP functionality? 
+> 
+> Either with hostapd or the broadcom proprietary driver.
+
+This is what I suspected, but according to 
+http://hostap.epitest.fi/hostapd/ only the following drivers
+are supported:
+
+Supported wireless cards/drivers
+
+    * Host AP driver for Prism2/2.5/3
+    * madwifi (Atheros ar521x)
+    * Prism54.org (Prism GT/Duette/Indigo)
+    * BSD net80211 layer (e.g., Atheros driver) (FreeBSD 6-CURRENT)
+
+Looking at the OpenWRT supported hardware list I see a lot of
+other NICs. Is the hostapd list incomplete?
+
+> > I'm considering a PCCard based NIC with something
+> like the old Compaq iPAQ
+> > PC Card Expansion Pack. In this case an Atheros card
+> with Madwifi might
+> > work. Does this work? Is there a NIC (Broadcom maybe)
+> that is better
+> > suited?
+> > 
+> > Is there a CompactFlash based WLAN NIC with an AP
+> capable Linux driver?
+> 
+> There's a Broadcom CF card. I have one, but it's
+> not DMA capable in
+> Linux because of the PCMCIA subsystem (IIRC).
+
+What driver?
+
+> If you're willing to invest some work, it should be
+> possible to get the
+> the N810 working with mac80211/p54spi but it's not
+> there yet and I don't
+> have time to work on it.
+
+I thought that the Connexant chip in the N810 resembles a FullMAC
+card. Can this one support AP mode with the standard firmware?
+
+> johannes
 
 
-> +	rfk->poll_timer->expires =3D jiffies + B43_RFKILL_POLL_DELAY;
-
-round_jiffies.
-
-johannes
-
---=-dbvzEn28OO+liWRJMUkL
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIaf+8AAoJEKVg1VMiehFY9HYQAITgC65PszCPErl7lSMn/GT/
-ckxV8lug0iVkgTwyU+stHKdp8uuue+/TonFcTtQY4kxCbGF/KzlwLN8lMjgrsypZ
-nI0CclZ63XpY4gxG9ug35kwjl4rYvS/thAfEAOIXbja8Qg9aXJ74DVHXu5d855vB
-kbGeEPt5+GdfWORI3Ac1w//nOeakCjhERXoapGenOmEPk85hXeYfKy5MbMeiGYag
-ZfIGeBf1hAvLUp/0xNqfCX1aT7myITwPcAcqV1nR4XbwXFl09vL8c60xI2oB+d0e
-XnTGUOn3/KrJNpyDx+dB7OaVHYVb/cXRaeBM4YS+/cI3rYmKqPH/1oQxH7uWx+gq
-OKKOIwa4T03eASEzqT2vFTTgUBo7sP3i7svtN3eF8+nRgujY5JYfxs2VInYHtudH
-wsUiWgAdseyKP9bLAL1tUZ1kcqXYDVR/ZUC3XrGXFrU/EWfOmWEmq3F/hvsv6QJ0
-XG/wl1TAad6vVSywpkr02lUuC3CGcWtebnX80kcCDpR6o97lFA4SHZHUrCFvtvCb
-67CTTrHtPqy0Tp4CGSupmAeP07LONZnjE2tlgpAvLEiIY4khqZ74hMfJhVE25k6g
-GDCeafUSkwrlFIbexIuE/r/gSfEHOVouR1FGiHQ1e8Nc6jdkGRPaYuNGc1tbLn53
-C5BXVtpC/f/2LIVv7rgu
-=SpmM
------END PGP SIGNATURE-----
-
---=-dbvzEn28OO+liWRJMUkL--
-
+      __________________________________________________________
+Gesendet von Yahoo! Mail.
+Dem pfiffigeren Posteingang.
+http://de.overview.mail.yahoo.com
