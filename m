@@ -1,46 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:26360 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754578AbYGCDMv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2008 23:12:51 -0400
-Subject: Re: [PATCH] iwlwifi: remove input device and fix rfkill state
-From: Zhu Yi <yi.zhu@intel.com>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	linux-wireless@vger.kernel.org, randy.dunlap@oracle.com,
-	"John W. Linville" <linville@tuxdriver.com>, fcrespel@gmail.com
-In-Reply-To: <20080703015355.GB20410@khazad-dum.debian.net>
-References: <6cf6b73e0807010849t42de3f3fn68085daca8d8009e@mail.gmail.com>
-	 <200807021800.25894.IvDoorn@gmail.com>
-	 <20080702184153.GA19949@khazad-dum.debian.net>
-	 <200807030031.20202.IvDoorn@gmail.com>
-	 <20080703015355.GB20410@khazad-dum.debian.net>
-Content-Type: text/plain
-Date: Thu, 03 Jul 2008 11:11:11 +0800
-Message-Id: <1215054671.14590.555.camel@debian.sh.intel.com> (sfid-20080703_085916_676770_9279E849)
-Mime-Version: 1.0
+Received: from [66.209.47.173] ([66.209.47.173]:37397 "EHLO mythtv.ewol.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753489AbYGHQjq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jul 2008 12:39:46 -0400
+Message-ID: <48738EC2.1060402@cortland.com> (sfid-20080708_183949_537668_F551B9CC)
+Date: Tue, 08 Jul 2008 11:58:58 -0400
+From: Steve Brown <sbrown@cortland.com>
+Reply-To: sbrown@cortland.com
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: Felipe Maya <felipe.maya@vexcorp.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] ssb, b43, b43legacy, b44: Rewrite SSB DMA API
+References: <200806201150.29497.mb@bu3sch.de> <1215102618.17143.13.camel@you> <200807032252.35662.mb@bu3sch.de>
+In-Reply-To: <200807032252.35662.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-07-02 at 22:53 -0300, Henrique de Moraes Holschuh wrote:
-> Hmm, it could cause deadlocks I think.  task context takes lock.
-> interrupt context tries to run, needs lock, keeps spinning forever
-> waiting for it, and if we are not SMP, task context never has a chance
-> to release the lock, so we get a deadlock.  Is this correct?
+Michael Buesch wrote:
+> On Thursday 03 July 2008 18:30:18 Felipe Maya wrote:
+>   
+>> Hi, I have applied this patch and i tested on a wl500gpv2 (BCM5354). The
+>> following part disable the ethernet device. If this part of the patch is
+>> restored the device work ok.
+>>     
+>
+>
+> Well, I would say your architecture is pretty broken then.
+> This patch replaces an incorrect manual DMA mask setting by
+> a call to the official API.
+> Please report this to your archtitecture maintainer.
+>
+>
+>   
+This also breaks at least b44 on my wl500gpv1.
 
-Never heard of spin_lock_irqsave()?
+with wireless-testing rc9-wl tree:
+b44.c:v2.0
+b44 ssb0:0: Required 30BIT DMA mask unsupported by the system.
+b44: probe of ssb0:0 failed with error -5
+b44 ssb0:1: Required 30BIT DMA mask unsupported by the system.
+b44: probe of ssb0:1 failed with error -5
 
-> If it is, we better make the atomic path lock-free.  Argh.  This means
-> rfkill->state (the only thing we care about in the atomic path) would
-> have to become an atomic variable, and the code changed to cope with
-> its value being "volatile", so that it can be used in a lockless
-> fashion.
+and reverting the patch:
+b44.c:v2.0
+eth0: Broadcom 44xx/47xx 10/100BaseT Ethernet 00:17:31:ba:ec:35
+eth1: Broadcom 44xx/47xx 10/100BaseT Ethernet 40:10:18:00:00:2d
 
-Yup, if protecting rfkill->state is the only intention, a spinlock is
-too heavy. set|clear_bit is enough if organizing the state into bitmaps.
-BTW, read/write 32-bits aligned on x86 is already atomic.
+The problem appears to be a missing non-pci equivalent of 
+pci_set_consistent_dma_mask. Maybe that's why the mask was set manually. 
+I can not find anything that sets coherent_dma_mask for other than a pci 
+device. If somebody can confirm my (mis)understanding of this, I'll post 
+the problem to linux-mips.
 
-Thanks,
--yi
+Steve
+
 
