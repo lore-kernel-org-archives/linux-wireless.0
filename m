@@ -1,127 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp8-g19.free.fr ([212.27.42.65]:35994 "EHLO smtp8-g19.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758933AbYG0Gav convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33605 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750929AbYGHQHJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jul 2008 02:30:51 -0400
-Received: from smtp8-g19.free.fr (localhost [127.0.0.1])
-	by smtp8-g19.free.fr (Postfix) with ESMTP id 8BD1832A7F4
-	for <linux-wireless@vger.kernel.org>; Sun, 27 Jul 2008 08:30:49 +0200 (CEST)
-Received: from localhost (ble59-5-82-233-204-229.fbx.proxad.net [82.233.204.229])
-	by smtp8-g19.free.fr (Postfix) with ESMTP id 435F432A7C6
-	for <linux-wireless@vger.kernel.org>; Sun, 27 Jul 2008 08:30:49 +0200 (CEST)
-Date: Sun, 27 Jul 2008 08:30:48 +0200
-From: =?UTF-8?B?Q8OpZHJpYw==?= Auger <cedric@grisbi.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: iwl3945 slow for downloading
-Message-ID: <20080727083048.4279c9b9@grisbi.org> (sfid-20080727_083118_289920_78EB8A35)
-In-Reply-To: <488B92E3.6050200@lwfinger.net>
-References: <20080726161140.59041730@grisbi.org>
-	<488B3969.4050405@openwrt.org>
-	<488B48C1.6090506@lwfinger.net>
-	<20080726183237.02a1e28e@grisbi.org>
-	<488B92E3.6050200@lwfinger.net>
+	Tue, 8 Jul 2008 12:07:09 -0400
+Subject: Re: [PATCH] CONFIG_KMOD needs to be default y
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Tomas Winkler <tomasw@gmail.com>
+In-Reply-To: <200807082303.26194.rusty@rustcorp.com.au>
+References: <1215517771.9610.28.camel@johannes.berg>
+	 <20080708124208.GA6704@infradead.org>
+	 <200807082303.26194.rusty@rustcorp.com.au>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rx8yDPjSCz+FUX3y/6vH"
+Date: Tue, 08 Jul 2008 18:06:15 +0200
+Message-Id: <1215533175.9610.51.camel@johannes.berg> (sfid-20080708_180716_966611_589BAABD)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le Sat, 26 Jul 2008 16:10:59 -0500,
-Larry Finger <Larry.Finger@lwfinger.net> a =C3=A9crit :
 
-> C=C3=A9dric Auger wrote:
-> > Le Sat, 26 Jul 2008 10:54:41 -0500,
-> > Larry Finger <Larry.Finger@lwfinger.net> a =C3=A9crit :
-> >=20
-> >> Felix Fietkau wrote:
-> >>> I don't know if it helps with debugging this issue, but I've seen
-> >>> the same on a laptop from a friend of mine (same card).
-> >>>
-> >>> After some searching I found that setting the AP to g-only mode
-> >>> instead of b+g mixed made it work at decent speeds. Another
-> >>> symptom of this slowdown is that there is typically an
-> >>> unnaturally high number of retransmissions on the air, which eats
-> >>> up a lot of airtime.
-> >>>
-> >>> I've spent some time looking through the code to find the reason
-> >>> for this but couldn't find anything yet (maybe somebody from Inte=
-l
-> >>> could help).
-> >> Just for comparison, my BCM4312 running b43 from the latest
-> >> wireless-testing gets the following tcpperf throughput:
-> >>
-> >> AP Mode          TX          RX
-> >>
-> >> Mixed b/g    19.8 MB/s   23.0 MB/s
-> >> g-only       20.5 MB/s   23.1 MB/s
-> >>
-> >> For these tests, the connecting end was wired to the router. The
-> >> difference in TX speeds was about what I expected - the small
-> >> difference in RX speeds was not. In any case, if you see a large
-> >> difference with iwl3945, that would be useful information.
-> >>
-> >> You can obtain tcpperf from
-> >> http://wand.cs.waikato.ac.nz/~stj2/nsc/software.html
-> >=20
-> > hello
-> > thanks for your answers.
-> > i tried to set my ap to g-only, but i cannot :-( the wifi box is
-> > given by my provider and it seems cannot be changed...
-> > so i tried tcpperf, this is the result :
-> >=20
-> > cedric:/home/grisbi/tcpperf-1.754# ./tcpperf -c 192.168.0.4 -t 30
-> > Duration: 30 9482usec
-> > Bytes sent: 5481472 (5353 kB 5 MB 0 GB)
-> > Bandwidth: 1461264 b/s (1461.26 kb/s 1.46 Mb/s)
-> > Close duration: 0s 22usec
-> >=20
-> > then i tried to download an image of ubuntu and i had about 900kb/s=
-,
-> > so very good and i don't understand...  then i tried to send a big
-> > file with scp to the other computer, as user and as root, it begins
-> > at 2,2MB/s and decrease untill 150kb/s and stays between 130-200kb/=
-s
-> > i did again a tcpperf with -t 300 to check if it's not with the
-> > time, but i have 1,30MB/s, seems correct.
-> >=20
-> > second test :
-> > i stop the wifi and plug a cable. the second computer is still in
-> > wifi. tcpperf gives me 17Mb/s and the same file with scp is sent
-> > with about 2,2MB/s...
-> > so now i really don't understand, from internet, loading work until=
-l
-> > 900kb/s (ok for me), but beween 2 computers on my network i have ma=
-x
-> > 200kb/s...
-> > hopes this can be usefull
+--=-rx8yDPjSCz+FUX3y/6vH
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2008-07-08 at 23:03 +1000, Rusty Russell wrote:
+
+> > What about just killing the config option entirely?  It' basically
+> > guarding a ~50 lines function + a sysctl variable.  I think having
+> > modules but not CONFIG_KMOD is entirely unreasonable.
 >=20
-> It looks as if your receive rate is a lot higher than the transmit
-> rate. You can check that by using the computer with the iwl3945 as
-> the server and initiate tcpperf from the other end.
+> I agree with Christoph here.
 
-hi
-i didn't think about that...=20
-i did the test and i have a bandwidth of 7,55Mb/s... more than for the
-other test...
-so i did a transfer by scp from the other computer to my computer,
-begin to 2,2Mb/s and decrease to 930kb/s, which is good for me.
-so if i resume :
+Yeah, like I said, I wasn't sure why it's there anyway.
 
-my computer 1 to computer 2 : 100-200kb/s
-computer 2 to computer 1 : 950kb/s
-internet to computer 1 : 950kb/s
+> But as a patch series please: it's spread pretty wide.  eg. first make it=
+ a=20
+> non-prompting CONFIG option, then remove the users, then finally kill it.
 
-then download seems correct, but upload seems bad. but if we look the
-results of tcpperf :
-computer 1 to computer 2 : 1,5Mb/s
-computer 2 to computer 1 : 7,5Mb/s
+Sure.
 
-perhaps 1,5Mb/s for upload is not good as i thought ?
-thanks
-cedric
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Some existing request_module users might be able to use=20
+> try_then_request_module, too...
+
+try_then_request_module seems buggy though. Or at least, doing something
+unexpected. Here's the macro, for reference:
+
+#define try_then_request_module(x, mod...) ((x) ?: (request_module(mod), (x=
+)))
+
+I think it should be
+#define try_then_request_module(x, mod...) \
+	((x) ?: ({request_module(mod); (x)}))
+
+the difference being that it returns the result of the second "x" when
+the first "x" fails. A potential user would be
+net/bridge/netfilter/ebtables.c:
+
+        ret =3D find_inlist_lock_noload(head, name, error, mutex);
+        if (!ret) {
+                request_module("%s%s", prefix, name);
+                ret =3D find_inlist_lock_noload(head, name, error, mutex);
+        }
+
+which could then be written as
+
+ret =3D try_then_request_module(
+	find_inlist_lock_noload(head, name, error, mutex),
+	"%s%s", prefix, name);
+
+Also, in the case of MODULES=3Dn, I think it should just be
+
+static inline void printf_check(char *name, ...) __attribute__((format(prin=
+tf, 1, 2))) {};
+#define try_then_request_module(x, mod...) \
+	({ printf_check(mod); (x) })
+
+so (x) is only evaluated once.
+
+A different variation you could make a case for is to not re-evaluate x
+if request_module fails, which would then automatically collapse the
+MODULES=3Dn case:
+
+#define try_then_request_module(x, mod...) \
+	({ typeof(x) __ret =3D (x); __ret ?: \
+		(request_module(mod) ? __r : (x)); })
+
+johannes
+
+--=-rx8yDPjSCz+FUX3y/6vH
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIc5BzAAoJEKVg1VMiehFY8+oP/29NDYKseyH7ajgzGXdkPw0l
+uMcuP8j1vayGwgjf10k7fr7qHRVPR/UJvu5fyGYOv6Zlt6PogeiWvoHum+S/V6cL
+A6soZ0htg7Ru/kK2hSpz9/ILd2J3peVVINNPhPFiPaUp7Le1YS5p99qm0W/HvxKn
+vpa55XNozVz3JXYx+zbHITH6XE1LDnFuHnup3gLszfKwWUPpCnlKKbvL9MDY058b
+awDnntTCeDz5DSYRBdrxLhyF+IW42FR5qKCAB/dgUs1+A/Q5ZIRU+MdU9H9wS2bc
+14T45ZMAHRft2XBWlQ6O5TU5OEuX47VKPS7V8YPpvm3FRd7/EZStpFc1x0Sl14d9
+PbGdO3d6Nf3djyoGXmYG1c+2GcnZKiUR/+LG9i0S5w1s+sADz4Rt88oi4QjO6EEJ
+4tWGqbrO75V8J0hn6XD+bz8NbZiFlMr4cgZJEn71J9utZFi8gO0l85YZRY7x4kkR
+aVuqAMZK6yEfeFIgvZF0I2cQ8AYC7+SZvmEhYuymZQodr8LAf7pSdOYVrh+nXvL2
+zwedFBqCPcd0/mX7SuMeCSkLb5f6wQ4zjfvyNdWpaFBzhNBqYEf0G2Iqcp4buCHT
+4ZIvoIEBHZTn0wIHYAmIgrX+o1lbXR/0DVKpapvUfxToOFZZEjuQk/u/rof7via/
+GCZIb6uk38lIqweNSt1R
+=wKfA
+-----END PGP SIGNATURE-----
+
+--=-rx8yDPjSCz+FUX3y/6vH--
+
