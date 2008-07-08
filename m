@@ -1,42 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.241]:40911 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751002AbYGVN5I (ORCPT
+Received: from n5.bullet.ukl.yahoo.com ([217.146.182.182]:40833 "HELO
+	n5.bullet.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751548AbYGHGzQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 09:57:08 -0400
-Received: by an-out-0708.google.com with SMTP id d40so443417and.103
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2008 06:57:07 -0700 (PDT)
-Date: Tue, 22 Jul 2008 09:57:02 -0400
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 5/6] rfkill: query EV_SW states when rfkill-input
-	(re)?connects to a input device
-Message-ID: <20080722095600.ZZRA012@mailhub.coreip.homeip.net> (sfid-20080722_155714_034028_5FD93D64)
-References: <1216685902-9373-1-git-send-email-hmh@hmh.eng.br> <1216685902-9373-6-git-send-email-hmh@hmh.eng.br>
+	Tue, 8 Jul 2008 02:55:16 -0400
+Message-ID: <48730FD2.2070201@yahoo.co.uk> (sfid-20080708_085520_947540_89C2C6F1)
+Date: Tue, 08 Jul 2008 07:57:22 +0100
+From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1216685902-9373-6-git-send-email-hmh@hmh.eng.br>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@redhat.com>, flamingice@sourmilk.net,
+	Andrea Merello <andreamrl@tiscali.it>
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 6/6] rtl8187: updating Kconfig to support RTL8187B
+References: <4873088C.2090603@yahoo.co.uk>
+In-Reply-To: <4873088C.2090603@yahoo.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 21, 2008 at 09:18:21PM -0300, Henrique de Moraes Holschuh wrote:
-> Every time a new input device that is capable of one of the rfkill EV_SW events
-> (currently only SW_RFKILL_ALL) is connected to rfkill-input, we must check the
-> states of the input EV_SW switches and take action.  Otherwise, we will ignore
-> the initial switch state.
-> 
-> We also need to re-check the states of the EV_SW switches after a device that
-> was under an exclusive grab is released back to us, since we got no input
-> events from that device while it was grabbed.
-> 
-> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+rtl8187: updating Kconfig to support RTL8187B
 
-Looks good, you may add:
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 6d1e4de..5e0eda0 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -619,14 +619,20 @@ config RTL8180
+  	  Thanks to Realtek for their support!
 
-Acked-by: Dmitry Torokhov <dtor@mail.ru>
+  config RTL8187
+-	tristate "Realtek 8187 USB support"
++	tristate "Realtek 8187 and 8187B USB support"
+  	depends on MAC80211 && USB && WLAN_80211 && EXPERIMENTAL
+  	select EEPROM_93CX6
+  	---help---
+-	  This is a driver for RTL8187 based cards.
+-	  These are USB based chips found in cards such as:
++	  This is a driver for RTL8187 and RTL8187B based cards.
++	  These are USB based chips found in devices such as:
 
--- 
-Dmitry
+  	  Netgear WG111v2
++	  Level 1 WNC-0301USB
++	  Micronet SP907GK V5
++	  Encore ENUWI-G2
++	  Trendnet TEW-424UB
++	  ASUS P5B Deluxe
++	  Toshiba Satellite Pro series of laptops
+
+  	  Thanks to Realtek for their support!
+
+
