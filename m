@@ -1,76 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:8181 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751156AbYGIN4C (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.173]:13040 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751292AbYGHL1z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 09:56:02 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so909474nfc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 06:56:00 -0700 (PDT)
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCH 1/3] mac80211: Include sequence number in IBSS and Mesh beacons
-Date: Wed, 9 Jul 2008 16:04:50 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <200807091511.14288.IvDoorn@gmail.com> <200807091511.45779.IvDoorn@gmail.com> <200807091538.09387.mb@bu3sch.de>
-In-Reply-To: <200807091538.09387.mb@bu3sch.de>
+	Tue, 8 Jul 2008 07:27:55 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2495171wfd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2008 04:27:55 -0700 (PDT)
+Message-ID: <3ace41890807080427n5bdccdddi5d6065dcc1d9baf5@mail.gmail.com> (sfid-20080708_132759_524661_965ABFA8)
+Date: Tue, 8 Jul 2008 12:27:54 +0100
+From: "Hin-Tak Leung" <hintak.leung@gmail.com>
+To: linux-wireless@vger.kernel.org, linville@redhat.com,
+	flamingice@sourmilk.net, andreamrl@tiscali.it
+Subject: [PATCH 1/6] rtl8187: updating rtl8187.h to support RTL8187B
+Cc: herton@mandriva.com.br, Larry.Finger@lwfinger.net, proski@gnu.org
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200807091604.50199.IvDoorn@gmail.com> (sfid-20080709_155609_180215_845D7756)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 09 July 2008, Michael Buesch wrote:
-> On Wednesday 09 July 2008 15:11:45 Ivo van Doorn wrote:
-> > Currently only beacons generated in AP mode have the software
-> > sequence number inserted. This means IBSS and Mesh mode are broken
-> > for all hardware that require software sequence numbers.
-> 
-> Does software seq numbering even work at all?
-> What about packets that get sent between the driver requested the
-> beacon and the driver does actually queue it?
+rtl8187: updating rtl8187.h to support RTL8187B
 
-For rt2x00 the beacon is requested and queued within interrupt context
-or during resume when it doesn't allow mac80211 to send any frames yet.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+diff --git a/drivers/net/wireless/rtl8187.h b/drivers/net/wireless/rtl8187.h
+index a0cfb66..3afb49f 100644
+--- a/drivers/net/wireless/rtl8187.h
++++ b/drivers/net/wireless/rtl8187.h
+@@ -44,17 +44,48 @@ struct rtl8187_rx_hdr {
+ 	__le64 mac_time;
+ } __attribute__((packed));
 
-The problem would be when the config_interface() is called, if during that
-call mac80211 also sends out TX frames, then you get problems in the
-sequence counting.
+-struct rtl8187_tx_hdr {
++struct rtl8187b_rx_hdr {
+ 	__le32 flags;
++	__le64 mac_time;
++	u8 noise;
++	u8 signal;
++	u8 agc;
++	u8 reserved;
++	__le32 unused;
++} __attribute__((packed));
++
++/* {rtl8187,rtl8187b}_tx_info is in skb */
++
++/* Tx flags are common between rtl8187 and rtl8187b */
+ #define RTL8187_TX_FLAG_NO_ENCRYPT	(1 << 15)
+ #define RTL8187_TX_FLAG_MORE_FRAG	(1 << 17)
+ #define RTL8187_TX_FLAG_CTS		(1 << 18)
+ #define RTL8187_TX_FLAG_RTS		(1 << 23)
++
++struct rtl8187_tx_hdr {
++	__le32 flags;
+ 	__le16 rts_duration;
+ 	__le16 len;
+ 	__le32 retry;
+ } __attribute__((packed));
 
-Ivo
++struct rtl8187b_tx_hdr {
++	__le32 flags;
++	__le16 rts_duration;
++	__le16 len;
++	__le32 unused_1;
++	__le16 unused_2;
++	__le16 tx_duration;
++	__le32 unused_3;
++	__le32 retry;
++	__le32 unused_4[2];
++} __attribute__((packed));
++
++enum {
++	DEVICE_RTL8187,
++	DEVICE_RTL8187B
++};
++
+ struct rtl8187_priv {
+ 	/* common between rtl818x drivers */
+ 	struct rtl818x_csr *map;
+@@ -70,70 +101,120 @@ struct rtl8187_priv {
+ 	u32 rx_conf;
+ 	u16 txpwr_base;
+ 	u8 asic_rev;
++	u8 is_rtl8187b;
++	enum {
++		RTL8187BvB,
++		RTL8187BvD,
++		RTL8187BvE
++	} hw_rev;
+ 	struct sk_buff_head rx_queue;
++	u8 signal;
++	u8 quality;
++	u8 noise;
+ };
 
-> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> > ---
-> >  net/mac80211/tx.c |    5 +++++
-> >  1 files changed, 5 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> > index 359cb36..0e7e1f3 100644
-> > --- a/net/mac80211/tx.c
-> > +++ b/net/mac80211/tx.c
-> > @@ -1876,6 +1876,8 @@ struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
-> >  		hdr->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
-> >  						  IEEE80211_STYPE_BEACON);
-> >  
-> > +		ieee80211_include_sequence(sdata, hdr);
-> > +
-> >  		num_beacons = &ifsta->num_beacons;
-> >  	} else if (ieee80211_vif_is_mesh(&sdata->vif)) {
-> >  		/* headroom, head length, tail length and maximum TIM length */
-> > @@ -1896,6 +1898,9 @@ struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
-> >  			cpu_to_le16(local->hw.conf.beacon_int);
-> >  		mgmt->u.beacon.capab_info = 0x0; /* 0x0 for MPs */
-> >  
-> > +		ieee80211_include_sequence(sdata,
-> > +					   (struct ieee80211_hdr *)skb->data);
-> > +
-> >  		pos = skb_put(skb, 2);
-> >  		*pos++ = WLAN_EID_SSID;
-> >  		*pos++ = 0x0;
-> 
-> 
-> 
+ void rtl8187_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
 
+-static inline u8 rtl818x_ioread8(struct rtl8187_priv *priv, u8 *addr)
++static inline u8 rtl818x_ioread8_idx(struct rtl8187_priv *priv,
++				     u8 *addr, u8 idx)
+ {
+ 	u8 val;
 
+ 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+-			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &val,
++			sizeof(val), HZ / 2);
+
+ 	return val;
+ }
+
+-static inline u16 rtl818x_ioread16(struct rtl8187_priv *priv, __le16 *addr)
++static inline u8 rtl818x_ioread8(struct rtl8187_priv *priv, u8 *addr)
++{
++	return rtl818x_ioread8_idx(priv, addr, 0);
++}
++
++static inline u16 rtl818x_ioread16_idx(struct rtl8187_priv *priv,
++				       __le16 *addr, u8 idx)
+ {
+ 	__le16 val;
+
+ 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+-			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &val,
++			sizeof(val), HZ / 2);
+
+ 	return le16_to_cpu(val);
+ }
+
+-static inline u32 rtl818x_ioread32(struct rtl8187_priv *priv, __le32 *addr)
++static inline u16 rtl818x_ioread16(struct rtl8187_priv *priv, __le16 *addr)
++{
++	return rtl818x_ioread16_idx(priv, addr, 0);
++}
++
++static inline u32 rtl818x_ioread32_idx(struct rtl8187_priv *priv,
++				       __le32 *addr, u8 idx)
+ {
+ 	__le32 val;
+
+ 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
+-			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &val,
++			sizeof(val), HZ / 2);
+
+ 	return le32_to_cpu(val);
+ }
+
+-static inline void rtl818x_iowrite8(struct rtl8187_priv *priv,
+-				    u8 *addr, u8 val)
++static inline u32 rtl818x_ioread32(struct rtl8187_priv *priv, __le32 *addr)
++{
++	return rtl818x_ioread32_idx(priv, addr, 0);
++}
++
++static inline void rtl818x_iowrite8_idx(struct rtl8187_priv *priv,
++					u8 *addr, u8 val, u8 idx)
+ {
+ 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+-			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &val,
++			sizeof(val), HZ / 2);
++}
++
++static inline void rtl818x_iowrite8(struct rtl8187_priv *priv, u8
+*addr, u8 val)
++{
++	rtl818x_iowrite8_idx(priv, addr, val, 0);
+ }
+
+-static inline void rtl818x_iowrite16(struct rtl8187_priv *priv,
+-				     __le16 *addr, u16 val)
++static inline void rtl818x_iowrite16_idx(struct rtl8187_priv *priv,
++					 __le16 *addr, u16 val, u8 idx)
+ {
+ 	__le16 buf = cpu_to_le16(val);
+
+ 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+-			(unsigned long)addr, 0, &buf, sizeof(buf), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &buf, sizeof(buf),
++			HZ / 2);
+ }
+
+-static inline void rtl818x_iowrite32(struct rtl8187_priv *priv,
+-				     __le32 *addr, u32 val)
++static inline void rtl818x_iowrite16(struct rtl8187_priv *priv, __le16 *addr,
++				     u16 val)
++{
++	rtl818x_iowrite16_idx(priv, addr, val, 0);
++}
++
++static inline void rtl818x_iowrite32_idx(struct rtl8187_priv *priv,
++					 __le32 *addr, u32 val, u8 idx)
+ {
+ 	__le32 buf = cpu_to_le32(val);
+
+ 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
+ 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
+-			(unsigned long)addr, 0, &buf, sizeof(buf), HZ / 2);
++			(unsigned long)addr, idx & 0x03, &buf, sizeof(buf),
++			HZ / 2);
++}
++
++static inline void rtl818x_iowrite32(struct rtl8187_priv *priv, __le32 *addr,
++				     u32 val)
++{
++	rtl818x_iowrite32_idx(priv, addr, val, 0);
+ }
+
+ #endif /* RTL8187_H */
