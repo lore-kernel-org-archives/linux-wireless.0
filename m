@@ -1,63 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:54392 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750971AbYGWPWI (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52059 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753653AbYGHLlm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 11:22:08 -0400
-Message-ID: <48874C9D.2050900@lwfinger.net> (sfid-20080723_172211_495519_93F088E7)
-Date: Wed, 23 Jul 2008 10:22:05 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Gautam Iyer <gi1242+vger@stanford.edu>,
-	linux-wireless@vger.kernel.org
-Subject: Re: 2.6.26 b43 speed issue (redux) and new firmware drivers
-References: <20080722193637.GC19885@stanford.edu>
-In-Reply-To: <20080722193637.GC19885@stanford.edu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 8 Jul 2008 07:41:42 -0400
+Subject: Re: [Rt2400-devel] rt2500pci: Failed to initialize hw. But works
+	with ancient rt2500-1.1.0
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
+	rt2400-devel@lists.sourceforge.net,
+	Stefan Bauer <stefan.bauer@cs.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1ba2fa240807071525m222efa91uf2ed009eb7b039b5@mail.gmail.com> (sfid-20080708_002612_572710_E45278A7)
+References: <200807072253.46295.stefan.bauer@cs.tu-chemnitz.de>
+	 <200807072308.57529.IvDoorn@gmail.com>
+	 <69e28c910807071410h17cd6815jd6577673f73dc092@mail.gmail.com>
+	 <200807072319.44733.IvDoorn@gmail.com>
+	 <1ba2fa240807071525m222efa91uf2ed009eb7b039b5@mail.gmail.com>
+	 (sfid-20080708_002612_572710_E45278A7)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qTfKJbfyt/IRlbDLR87F"
+Date: Tue, 08 Jul 2008 13:40:47 +0200
+Message-Id: <1215517247.9610.24.camel@johannes.berg> (sfid-20080708_134145_858827_F42AC32F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gautam Iyer wrote:
-> Hi All,
-> 
-> I'm writing to inquire about a "new" firmware drivers for Broadcom 43xx:
-> On April 6, 2008 it looks like broadcom-wl-4.150.10.5.2.tar.bz2 appeared
-> on http://mirror2.openwrt.org/sources/. The install guide for b43
-> recommends you use b43-fwcutter-011 and broadcom-wl-4.150.10.5.tar.bz2
-> 
-> I tried to use broadcom-wl-4.150.10.5.2.tar.bz2 with b43-fwcutter-011,
-> but it complained that the md5 sum was not recognized :). Just wondering
-> if there is any way to use this new firmware?
-> 
-> Thanks in advance,
-> 
-> GI
-> 
-> PS: The main reason I ask is for "performance": A while ago I reported
->     that my Broadcom 4312 gave 2/3 the speed under b43 (2.6.25), when
->     compared to ndiswrapper. (I tested by running ttcp, and measuring
->     the throughput. I got roughly 3MB/s with ndiswrapper, and
->     2 MB/s with b43).
-> 
->     I just upgraded to 2.6.26, and found that my b43 speed *increased*
->     to 2.4MB/s :). So thanks to whomever is responsible! I was also
->     hoping that if I upgrade even the firmware I would be able to
->     "toast" ndiswrapper. (I transfer large files on my home network
->     often, which is why I care about the speed so much.)
 
-I do not know what changed between 4.150.10.5 and 4.150.10.2, but I doubt that 
-the firmware in the new driver will make any appreciable difference in the 
-performance of the BCM4312. My guess is that they found some errors in the 
-handling of the N PHY or the LP PHY, which are the two newest devices, and fixed 
-them. Of course, we do need to update fwcutter to test my hypothesis. As a 
-reverse engineer, I also need to see what changed. What version is the Windows 
-driver that you use?
+--=-qTfKJbfyt/IRlbDLR87F
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-It is a fact of life that this kind of reverse engineering rarely will perform 
-better than the original driver. After all, if we make an exact copy, then we 
-repeat their mistakes. Any mistakes of ours have a small chance of improving 
-performance. Where we do improve on the original is in the error handling.
 
-I get the same performance with my BCM4312 as you do.
+> This is bug is reported very often mostly on ubuntu based distoros.
+> There is no linkage dependency so it doesn't produce entry in the
+> depmod.
+> mac should somehow request these modules dynamically.
 
-Larry
+Wouldn't help. Bug reporter has a broken config with CONFIG_KMOD unset.
+
+johannes
+
+--=-qTfKJbfyt/IRlbDLR87F
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIc1I7AAoJEKVg1VMiehFYnzwP/3n9lQUKix3Ul+0QvxvZHELb
+bA1RwhC9POLKGiQ2qjqBVg7pGtq+Yz06c7xnkeufX4lrMXyYRPrcQY7nHjOHr5tg
+0zV03NIwJjELD7gLzi47s3SlhJDdK4qrpS0F9uVVMHaNvZLZubmzjxNvWbvFy99Y
+HA4FwFHlwjHhumLALEACBXiE4hsXMqw8N2dHd/U0vFlruNn7OUz0JkuUiIuN5Eid
+XAlv8ImmrfOOqnLh4Ov+lUQ67fXDzXQg5K1rPFunkABHIblo2NwwUto9zhxmGAls
+n82zcXmYbBh0qw1/VRJunav6MScvpIcSda0Wlt23qp37mQg3xewgmsCP29W/iWro
+qRASlxL1L8pZ1F4x1Y1/05YrmP0UPIgb0jV0h2O1efKqGwWPTSH2pcc0UTv/plh+
+8lDY/NGhJHse7KT5dyFUvChUggzgJa95RbAMHap0Al0ecfqiePv6WS/McEcGnSbc
+USQZiMrePfGwz69dQp97Ws3IGJ58SLe/5bmgIQILyxhu7PFcVHe3tpaSCukPw7OR
+RxrCL9nOTyFfyI1L5y0ZwxJj+ScRbVCML1LbVhFoMXzWZanJNWmt/ISfWv96I6iH
+4qSQxeG5hkmsSaudzIIOi4ovWVuVpCGn8D27xkRp0TELH4JD6n7ZtS3XpzUu1DIX
+NUbPh5VxVI1kwREzdRYg
+=X1xQ
+-----END PGP SIGNATURE-----
+
+--=-qTfKJbfyt/IRlbDLR87F--
+
