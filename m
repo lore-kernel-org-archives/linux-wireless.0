@@ -1,64 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from stinky.trash.net ([213.144.137.162]:38453 "EHLO
-	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752894AbYGWPwo (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36227 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753636AbYGHKEP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 11:52:44 -0400
-Message-ID: <488753C6.2090807@trash.net> (sfid-20080723_175249_155369_A54AA09A)
-Date: Wed, 23 Jul 2008 17:52:38 +0200
-From: Patrick McHardy <kaber@trash.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?RnJhbsOnb2lzIFZhbGVuZHVj?=
-	<francois.valenduc@tvcablenet.be>
-CC: Andrew Morton <akpm@linux-foundation.org>,
-	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Linux Netdev List <netdev@vger.kernel.org>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
-References: <bug-11144-10286@http.bugzilla.kernel.org/>	<20080722034850.dbbc5566.akpm@linux-foundation.org>	<4886E49D.6010700@tvcablenet.be> <20080723010522.389a948f.akpm@linux-foundation.org> <4886F727.6010301@tvcablenet.be> <48870425.50908@trash.net> <48871632.3010205@tvcablenet.be> <4887169B.6090102@trash.net> <488725D5.8030900@tvcablenet.be> <488727B3.7040007@trash.net> <48872968.9000103@trash.net> <488746DF.1050501@tvcablenet.be> <48874BD8.60600@trash.net> <48874C12.10606@trash.net> <4887514C.6080903@tvcablenet.be>
-In-Reply-To: <4887514C.6080903@tvcablenet.be>
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+	Tue, 8 Jul 2008 06:04:15 -0400
+Subject: Re: [RFT 1/4] mac80211: make master netdev handling sane
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <87tzf3p1no.fsf@nokia.com>
+References: <20080705234735.210585000@sipsolutions.net>
+	 <20080705235012.501072000@sipsolutions.net>  <87tzf3p1no.fsf@nokia.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-C1u/pZWxfIp+2bRtAs3O"
+Date: Tue, 08 Jul 2008 12:03:27 +0200
+Message-Id: <1215511407.9610.18.camel@johannes.berg> (sfid-20080708_120419_090350_0113979C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-=46ran=C3=A7ois Valenduc wrote:
-> Patrick McHardy a =C3=A9crit :
->>> I think I know whats happening (Jussi CCed). That commit introduced
->>> a qdisc_skb_cb, which conflicts with the mac80211 usage of skb->cb.
->>> mac80211 seems to expect the CB to survive the qdisc layer, which
->>> is wrong. One possibility to fix this (or just test my theory)
->>> would be to make sure they don't clash by adding the struct
->>> ieee80211_tx_info to qdisc_skb_cb->data. Something like this patch.
->>>
->>
-> I tested your last patch. Unfortunately, I get the following compile =
-error:
+
+--=-C1u/pZWxfIp+2bRtAs3O
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+
+> Are there any devices on the market which properly support PSM in
+> Ad-Hoc mode? At least N800/N810 don't support it.=20
+
+I haven't got a clue. I didn't even know the N810 supported ad-hoc until
+I connected it to another network and it saved it ;)
+
+> I have heard that the standard is quite unclear regarding this. And,
+> after seeing the countless ways APs have managed to break PSM in
+> infrastructure mode, I can only imagine what kind of interoperability
+> problems there are with PSM in Ad-Hoc mode :)
 >=20
-> In file included from net/mac80211/main.c:11:
-> include/net/mac80211.h: In function =E2=80=98IEEE80211_SKB_CB=E2=80=99=
-:
-> include/net/mac80211.h:347: erreur: size of array =E2=80=98type name=E2=
-=80=99 is negative
+> So I think we should forget PSM in Ad-Hoc mode, at least for now.
 
+I briefly looked at 802.11-2007 and couldn't really figure out what is
+required and what isn't so it does seem a little unclear. I agree with
+you on this point, if somebody cares to research it should be easy to
+add back since we're not removing the AP mode code.
 
-I was afraid that might happen. This means skb->cb is not large
-enough to hold both the qdisc and the ieee80211 structs.
+johannes
 
-Just for testing, changing (include/net/mac80211.h):
+--=-C1u/pZWxfIp+2bRtAs3O
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-#define IEEE80211_TX_INFO_DRIVER_DATA_SIZE \
-         (sizeof(((struct sk_buff *)0)->cb) - 8)
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-to
+iQIcBAABAgAGBQJIcztrAAoJEKVg1VMiehFYuiIQAJsHJhyEOUjBHpbEd5OPOojD
+Tt97+CYUs99RhxMTxpJqFa69oumrgLxqC3KkgdaraeD9jmoxHNHypvNn9uFQliB0
+t/MyFe0kmeiFCujdOvHlgWED5AyG6iWOF5Riii9ENi1wJpkG90SfXj7FWMnRzAWU
+olo6DCaaU1m7jfOsOUieKtZZEuvnRZXxqYrDSciUz5GkahXUhoBe61djHS8Canqj
+V3JrLLU5BgsLnwHfs0IqG9l0ViaNhD2s2smrX+yXP0g2GKcgSWR4EAl7iaEGk3RM
+ZREKX1xMyvC0Bhcyz/JrvQAYm9vDUYGVkzDdXZHBOK+ffBDPygTqmnPEQ58WmpUZ
+74bUqtrqPiNZzYkIlZjzLdYC+T4m7+xkA07FrRVHOOwLC6EeGIm23IS3mo4I9Ozh
+gyefyeO+mpOTZTB5KHikrvJdZQPUwDL9xDmH7S+FIcY9FIVHYbZ56a6Vv+Ehc4/k
+NpV1ok24QqwwWKYbObjW0kzsI+iO9myhZ+TXoSsWZqzt5ulaJr7ejhuGAl783AvW
+dtc5dcEwxQhdv/dPmsbwPs66zIGuenfASrprG+qMDyK77YamSleYR3u0nLp0i0y+
+PJQ+fz3yGa1hdTJFWssN9vqacudY5g1gZNAryvq9pMBNDuonZsFIa8eYeYZpeGvl
+eEbz7A34z9DLMdIcm5EF
+=4P42
+-----END PGP SIGNATURE-----
 
-#define IEEE80211_TX_INFO_DRIVER_DATA_SIZE \
-         (sizeof(((struct sk_buff *)0)->cb) - 12)
+--=-C1u/pZWxfIp+2bRtAs3O--
 
-might help to get it to compile. If that doesn't work, try -16.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
