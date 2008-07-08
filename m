@@ -1,100 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33772 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750717AbYGHMbU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 08:31:20 -0400
-Subject: Re: [PATCH] net/wireless/nl80211.c: fix endless Netlink callback
-	loop.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Julius Volz <juliusv@google.com>
-Cc: netdev@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <f4845fc0807080523o7e773de2u94c10a8739f4ddf4@mail.gmail.com> (sfid-20080708_142402_544799_C3AAFC88)
-References: <1215518539-19587-1-git-send-email-juliusv@google.com>
-	 <1215518799.9610.33.camel@johannes.berg>
-	 <f4845fc0807080523o7e773de2u94c10a8739f4ddf4@mail.gmail.com>
-	 (sfid-20080708_142402_544799_C3AAFC88)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BTeYy4ViqGm9xAHSw1ZE"
-Date: Tue, 08 Jul 2008 14:30:35 +0200
-Message-Id: <1215520235.9610.39.camel@johannes.berg> (sfid-20080708_143124_048160_2346559A)
-Mime-Version: 1.0
+Received: from web51401.mail.re2.yahoo.com ([206.190.38.180]:47019 "HELO
+	web51401.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752350AbYGHS67 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jul 2008 14:58:59 -0400
+Date: Tue, 8 Jul 2008 11:58:57 -0700 (PDT)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Reply-To: pommnitz@yahoo.com
+Subject: Linux capable PDA with WLAN NIC that supports access point mode? 
+To: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-ID: <899764.45398.qm@web51401.mail.re2.yahoo.com> (sfid-20080708_205902_248573_ACA5C480)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello all,
+I'm looking for either a Linux capable PDA or a NIC that works
+with a Linux capable PDA that supports access point mode.
 
---=-BTeYy4ViqGm9xAHSw1ZE
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Here are my thoughts on this topic:
+
+I know that mac80211 is not there yet, but on the other hand
+OpenWRT seems to run on a lot of hardware with very different NICs. How
+does OpenWRT implement the AP functionality? 
+
+The SDIO based adapters are probably out of the question. Most of them
+seem to be of the full mac variation (e.g. libertas_sdio). Correct?
+
+I'm considering a PCCard based NIC with something like the old Compaq iPAQ
+PC Card Expansion Pack. In this case an Atheros card with Madwifi might
+work. Does this work? Is there a NIC (Broadcom maybe) that is better
+suited?
+
+Is there a CompactFlash based WLAN NIC with an AP capable Linux driver?
+
+-- 
+Thanks in advance an kind regards
+       Joerg
 
 
-> >>       int idx =3D 0;
-> >>       int start =3D cb->args[0];
-> >>       struct cfg80211_registered_device *dev;
-> >>
-> >>       mutex_lock(&cfg80211_drv_mutex);
-> >>       list_for_each_entry(dev, &cfg80211_drv_list, list) {
-> >> -             if (++idx < start)
-> >> +             if (++idx <=3D start)
-> >>                       continue;
-> >>               if (nl80211_send_wiphy(skb, NETLINK_CB(cb->skb).pid,
-> >>                                      cb->nlh->nlmsg_seq, NLM_F_MULTI,
-> >> -                                    dev) < 0)
-> >> +                                    dev) < 0) {
-> >> +                     idx--;
-> >>                       break;
-> >> +             }
-> >
-> > I see much of the problem stemming from incrementing 'idx' at the
-> > beginning of the loop, can't we just move it to the end?
->=20
-> idx still needs to be incremented in the 'continue' case, so that
-> alone wouldn't help. I'm not sure if there is a way to make this look
-> more intuitive?
-
-Good point. The only ways I can come up with add further to the already
-quite deep indentation:
-
-list_for_each_entry(...) {
-	if (idx > start)
-		if (nl80211_send_wiphy(...) < 0)
-			break;
-	idx++;
-}
-
-or hide the call into an if ():
-
-=EF=BB=BFlist_for_each_entry(...) {
-	if (idx > start && nl80211_send_wiphy(...))
-		break;
-	idx++;
-}
-
-Not sure. I guess the code isn't touched often so your patch is fine.
-
-johannes
-
---=-BTeYy4ViqGm9xAHSw1ZE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIc13jAAoJEKVg1VMiehFYIXIP/1e0QoRUKu6kR2afGzgj6k1G
-kw2s8DBI9mxa5mR3rExcMbPsJlV6+V/PKZt5IECfx6iT89Srl0grpvd2ctEEQnvT
-C5aar1+cl3ZQEGP8Jl8x8xIGNc3cc9h6oKTHFaQ2FUGEZR3s0uOoAR/0PJmXFkA3
-qIBn4zdgOCpvcTbpjiuac/jD8oC04RLyeDSgKY+bj5xXEv6WBvV7s8b+1K0bc5OU
-ccjm8d4lqp3zt+Iql+6qXiYO2lYZ6xA5RNmDsrM1G8dt5RSSv7SXZsa25Ehgzkw0
-eEvF0i4h0okVdWd7FKZnh3LfjWiDB0pgagcM7nGiqj/SjDtVe263kIfgG/R+7lNA
-G8QXaNV0YaQv9k+RJJyzhNtK+rlKvXJJwXKbp+oD3YZgt5a0SeLN2PPVAkQZFUts
-8jMJljiu7nj2zceQfJzT1IQrPuGRUvwnVQNiNBCcAiXH1ztSjiGNUk9j6lHAFM9x
-1TWPZ/tLisG6iOsaHQtPTXp8u/wxmcy9YELbFC9bOQLFCyfdznv68/cJLSN7H1aL
-qIghtzKbkiaNjHEP0ZBRDQR73mhsA5KDp1vKXLvE0M7Q0CTM9UOQS2Neggc2KDRk
-5D6uP+xJ5KKaLhL5q+LbAVb+sn5fY7WyPKnABsOC5mzghj2aSa1pkNr0lCG8Akw5
-5um1GfTZg8xfrf2S7/jN
-=C4aF
------END PGP SIGNATURE-----
-
---=-BTeYy4ViqGm9xAHSw1ZE--
-
+      __________________________________________________________
+Gesendet von Yahoo! Mail.
+Dem pfiffigeren Posteingang.
+http://de.overview.mail.yahoo.com
