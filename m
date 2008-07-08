@@ -1,71 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.vyatta.com ([216.93.170.194]:38519 "EHLO mail.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752173AbYGCP6H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 11:58:07 -0400
-Date: Thu, 3 Jul 2008 08:58:03 -0700
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, vinay@linux.vnet.ibm.com,
-	krkumar2@in.ibm.com, mchan@broadcom.com, Matheos.Worku@Sun.COM,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 14/39]: pkt_sched: Add qdisc_tx_is_noop() helper and use
- in IPV6.
-Message-ID: <20080703085803.3a81d67c@extreme> (sfid-20080703_175812_463724_8266ED05)
-In-Reply-To: <20080703.000349.266937189.davem@davemloft.net>
-References: <20080703.000349.266937189.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from nf-out-0910.google.com ([64.233.182.184]:13203 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754479AbYGHLhF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jul 2008 07:37:05 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so758741nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2008 04:37:03 -0700 (PDT)
+To: linville@tuxdriver.com
+Subject: [PATCH] rt2x00: Disable synchronization during initialization
+Date: Tue, 8 Jul 2008 13:45:20 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200807081345.20404.IvDoorn@gmail.com> (sfid-20080708_133710_961756_FB49400D)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 03 Jul 2008 00:03:49 -0700 (PDT)
-David Miller <davem@davemloft.net> wrote:
+As soon as init_registers() was called, the rt2400/rt2500
+would start raising beacondone interrupts. Since this is highly
+premature since no beacons were provided yet, we should
+initialize the synchronization register to 0.
 
-> 
-> This indicates if the NOOP scheduler is what is active
-> for TX on a given device.
-> 
-> Signed-off-by: David S. Miller <davem@davemloft.net>
-> ---
->  include/net/sch_generic.h |    8 ++++++++
->  net/ipv6/addrconf.c       |    5 ++---
->  2 files changed, 10 insertions(+), 3 deletions(-)
-> 
-> diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
-> index 9f5e644..bfb05a7 100644
-> --- a/include/net/sch_generic.h
-> +++ b/include/net/sch_generic.h
-> @@ -212,6 +212,14 @@ static inline bool qdisc_tx_changing(struct net_device *dev)
->  	return (txq->qdisc != txq->qdisc_sleeping);
->  }
->  
-> +/* Is the device using the noop qdisc?  */
-> +static inline bool qdisc_tx_is_noop(struct net_device *dev)
-> +{
-> +	struct netdev_queue *txq = &dev->tx_queue;
-> +
-> +	return (txq->qdisc == &noop_qdisc);
-> +}
-static inline bool qdisc_tx_is_noop(const struct net_device *dev)?
+This will make all drivers initialize it to 0 regardless
+if they are raising beacondone interrupts or not, since it only
+makes sense to have it completely disabled.
 
->  static inline int __qdisc_enqueue_tail(struct sk_buff *skb, struct Qdisc *sch,
->  				       struct sk_buff_head *list)
->  {
-> diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
-> index e6acb89..6dd8c63 100644
-> --- a/net/ipv6/addrconf.c
-> +++ b/net/ipv6/addrconf.c
-> @@ -224,10 +224,9 @@ const struct in6_addr in6addr_linklocal_allnodes = IN6ADDR_LINKLOCAL_ALLNODES_IN
->  const struct in6_addr in6addr_linklocal_allrouters = IN6ADDR_LINKLOCAL_ALLROUTERS_INIT;
->  
->  /* Check if a valid qdisc is available */
-> -static inline int addrconf_qdisc_ok(struct net_device *dev)
-> +static inline bool addrconf_qdisc_ok(struct net_device *dev)
->  {
-> -	struct netdev_queue *txq = &dev->tx_queue;
-> -	return (txq->qdisc != &noop_qdisc);
-> +	return !qdisc_tx_is_noop(dev);
->  }
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2400pci.c |   11 +++++++++++
+ drivers/net/wireless/rt2x00/rt2500pci.c |   11 +++++++++++
+ drivers/net/wireless/rt2x00/rt2500usb.c |    7 +++++++
+ drivers/net/wireless/rt2x00/rt61pci.c   |    9 +++++++++
+ drivers/net/wireless/rt2x00/rt73usb.c   |    9 +++++++++
+ 5 files changed, 47 insertions(+), 0 deletions(-)
 
-Ditto const
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index ee953ca..91cbd9e 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -733,6 +733,17 @@ static int rt2400pci_init_registers(struct rt2x00_dev *rt2x00dev)
+ 			   (rt2x00dev->rx->data_size / 128));
+ 	rt2x00pci_register_write(rt2x00dev, CSR9, reg);
+ 
++	rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
++	rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 0);
++	rt2x00_set_field32(&reg, CSR14_TSF_SYNC, 0);
++	rt2x00_set_field32(&reg, CSR14_TBCN, 0);
++	rt2x00_set_field32(&reg, CSR14_TCFP, 0);
++	rt2x00_set_field32(&reg, CSR14_TATIMW, 0);
++	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 0);
++	rt2x00_set_field32(&reg, CSR14_CFP_COUNT_PRELOAD, 0);
++	rt2x00_set_field32(&reg, CSR14_TBCM_PRELOAD, 0);
++	rt2x00pci_register_write(rt2x00dev, CSR14, reg);
++
+ 	rt2x00pci_register_write(rt2x00dev, CNT3, 0x3f080000);
+ 
+ 	rt2x00pci_register_read(rt2x00dev, ARCSR0, &reg);
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 0423c25..0f2a0e2 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -831,6 +831,17 @@ static int rt2500pci_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field32(&reg, CSR11_CW_SELECT, 0);
+ 	rt2x00pci_register_write(rt2x00dev, CSR11, reg);
+ 
++	rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
++	rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 0);
++	rt2x00_set_field32(&reg, CSR14_TSF_SYNC, 0);
++	rt2x00_set_field32(&reg, CSR14_TBCN, 0);
++	rt2x00_set_field32(&reg, CSR14_TCFP, 0);
++	rt2x00_set_field32(&reg, CSR14_TATIMW, 0);
++	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 0);
++	rt2x00_set_field32(&reg, CSR14_CFP_COUNT_PRELOAD, 0);
++	rt2x00_set_field32(&reg, CSR14_TBCM_PRELOAD, 0);
++	rt2x00pci_register_write(rt2x00dev, CSR14, reg);
++
+ 	rt2x00pci_register_write(rt2x00dev, CNT3, 0);
+ 
+ 	rt2x00pci_register_read(rt2x00dev, TXCSR8, &reg);
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 0dd1cb5..367db10 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -812,6 +812,13 @@ static int rt2500usb_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field16(&reg, TXRX_CSR8_BBP_ID1_VALID, 0);
+ 	rt2500usb_register_write(rt2x00dev, TXRX_CSR8, reg);
+ 
++	rt2500usb_register_read(rt2x00dev, TXRX_CSR19, &reg);
++	rt2x00_set_field16(&reg, TXRX_CSR19_TSF_COUNT, 0);
++	rt2x00_set_field16(&reg, TXRX_CSR19_TSF_SYNC, 0);
++	rt2x00_set_field16(&reg, TXRX_CSR19_TBCN, 0);
++	rt2x00_set_field16(&reg, TXRX_CSR19_BEACON_GEN, 0);
++	rt2500usb_register_write(rt2x00dev, TXRX_CSR19, reg);
++
+ 	rt2500usb_register_write(rt2x00dev, TXRX_CSR21, 0xe78f);
+ 	rt2500usb_register_write(rt2x00dev, MAC_CSR9, 0xff1d);
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index bbf1048..5a1330c 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -1198,6 +1198,15 @@ static int rt61pci_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field32(&reg, TXRX_CSR8_ACK_CTS_54MBS, 42);
+ 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR8, reg);
+ 
++	rt2x00pci_register_read(rt2x00dev, TXRX_CSR9, &reg);
++	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_INTERVAL, 0);
++	rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 0);
++	rt2x00_set_field32(&reg, TXRX_CSR9_TSF_SYNC, 0);
++	rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 0);
++	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
++	rt2x00_set_field32(&reg, TXRX_CSR9_TIMESTAMP_COMPENSATE, 0);
++	rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
++
+ 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR15, 0x0000000f);
+ 
+ 	rt2x00pci_register_write(rt2x00dev, MAC_CSR6, 0x00000fff);
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 3ef318e..25d8b66 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1016,6 +1016,15 @@ static int rt73usb_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field32(&reg, TXRX_CSR8_ACK_CTS_54MBS, 42);
+ 	rt73usb_register_write(rt2x00dev, TXRX_CSR8, reg);
+ 
++	rt73usb_register_read(rt2x00dev, TXRX_CSR9, &reg);
++	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_INTERVAL, 0);
++	rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 0);
++	rt2x00_set_field32(&reg, TXRX_CSR9_TSF_SYNC, 0);
++	rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 0);
++	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
++	rt2x00_set_field32(&reg, TXRX_CSR9_TIMESTAMP_COMPENSATE, 0);
++	rt73usb_register_write(rt2x00dev, TXRX_CSR9, reg);
++
+ 	rt73usb_register_write(rt2x00dev, TXRX_CSR15, 0x0000000f);
+ 
+ 	rt73usb_register_read(rt2x00dev, MAC_CSR6, &reg);
+-- 
+1.5.6.1
+
