@@ -1,99 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:53063 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755554AbYGOSEm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 14:04:42 -0400
-Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
-From: Dan Williams <dcbw@redhat.com>
-To: Nicolas Pitre <nico@cam.org>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	lkml <linux-kernel@vger.kernel.org>
-In-Reply-To: <1216144711.13411.18.camel@localhost.localdomain>
-References: <20080709190915.GA8238@tuxdriver.com>
-	 <69e28c910807100912h30fcb57fpb4fb48b95c640f77@mail.gmail.com>
-	 <200807101815.27204.mb@bu3sch.de>
-	 <1216142191.6039.113.camel@localhost.localdomain>
-	 <alpine.LFD.1.10.0807151323570.12484@xanadu.home>
-	 <1216144711.13411.18.camel@localhost.localdomain>
-Content-Type: text/plain; charset=utf-8
-Date: Tue, 15 Jul 2008 14:02:48 -0400
-Message-Id: <1216144968.13411.22.camel@localhost.localdomain> (sfid-20080715_200447_152805_8A72979E)
-Mime-Version: 1.0
+Received: from qb-out-0506.google.com ([72.14.204.237]:3924 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753731AbYGHQUM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jul 2008 12:20:12 -0400
+Received: by qb-out-0506.google.com with SMTP id d8so5878690qbc.37
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2008 09:20:11 -0700 (PDT)
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: Hin-Tak Leung <HinTak.Leung@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 2/6] rtl8187: updating rtl818x.h to support RTL8187B
+Date: Tue,  8 Jul 2008 17:18:09 +0100
+Message-Id: <1215533893-8598-2-git-send-email-HinTak.Leung@gmail.com> (sfid-20080708_182016_337488_32547D5E)
+In-Reply-To: <1215533893-8598-1-git-send-email-HinTak.Leung@gmail.com>
+References: <1215533893-8598-1-git-send-email-HinTak.Leung@gmail.com>
+From: Hin-Tak Leung <hintak.leung@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-07-15 at 13:58 -0400, Dan Williams wrote:
-> On Tue, 2008-07-15 at 13:31 -0400, Nicolas Pitre wrote:
-> > On Tue, 15 Jul 2008, Dan Williams wrote:
-> >=20
-> > > On Thu, 2008-07-10 at 18:15 +0200, Michael Buesch wrote:
-> > > > On Thursday 10 July 2008 18:12:32 Stefanik G=C3=A1bor wrote:
-> > > > > Some other topics which might be of interest/good to include:
-> > > > > - New chipsets needing drivers (SiS 16x, Marvell, etc.)
-> > > >=20
-> > > > I have no idea what to discuss about non-existing drivers, real=
-ly.
-> > > > Something like: "Do we need that driver? Everyone votes YES and=
- is happy"?
-> > >=20
-> > > Maybe during the week we could organize some hackfests to work on=
- the
-> > > Marvell/SiS/etc mac80211 drivers?  Everyone bring their favorite
-> > > non-working Marvell 88w83xx card and we make mrv8k our bitch or
-> > > something like that.
-> >=20
-> > FYI...
-> >=20
-> > Lennert Buytenhek and I are writing a GPL driver for mv8300 class o=
-f=20
-> > Marvell WIFI chips right now, present and future versions. This is=20
-> > Marvell work as we work for Marvell.  I have access to firmware sou=
-rces,=20
-> > etc. but obviously cannot share them.
-> >=20
-> > We both will be in Ottawa next week.
->=20
-> Great!  Lets definitely sit down and talk then.  There is already som=
-e
-> GPL-ed source code for 83xx chips out there but it always used net802=
-11,
-> not mac80211.  So the mrv8k effort is meant to write a mac80211 drive=
-r
-> for 8310/8335/etc and perhaps TopDog chips too since they don't seem
-> that much different from a driver perspective.
->=20
-> Some of the issues with the current Marvell 83xx GPL drivers that hav=
-e
-> gotten out are (a) code style, (b) lots of commented out stuff that's
-> never used, (c) OS abstraction that's unnecessary on Linux, (d) doesn=
-'t
-> use mac80211, and (e) uses private ioctls.  So hopefully you're writi=
-ng
-> a new 83xx driver from scratch :)
->=20
-> We cleaned up a lot of stuff for the OLPC 8388 libertas driver, but
-> unfortunately we never were able to get the Marvell 8388 team onboard=
-,
-> and so they just went off and kept working on their driver and didn't
-> really move the upstream libertas driver forward at all.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+ drivers/net/wireless/rtl818x.h |   36 +++++++++++++++++++++++++++---------
+ 1 files changed, 27 insertions(+), 9 deletions(-)
 
-=46orgot to finish this last bit...
+diff --git a/drivers/net/wireless/rtl818x.h b/drivers/net/wireless/rtl818x.h
+index 4f7d38f..85a6394 100644
+--- a/drivers/net/wireless/rtl818x.h
++++ b/drivers/net/wireless/rtl818x.h
+@@ -66,7 +66,10 @@ struct rtl818x_csr {
+ #define RTL818X_TX_CONF_R8180_F		(3 << 25)
+ #define RTL818X_TX_CONF_R8185_ABC	(4 << 25)
+ #define RTL818X_TX_CONF_R8185_D		(5 << 25)
++#define RTL818X_TX_CONF_R8187vD_1	(5 << 25)
++#define RTL818X_TX_CONF_R8187vD_2	(6 << 25)
+ #define RTL818X_TX_CONF_HWVER_MASK	(7 << 25)
++#define RTL818X_TX_CONF_DISREQQSIZE	(1 << 28)
+ #define RTL818X_TX_CONF_PROBE_DTS	(1 << 29)
+ #define RTL818X_TX_CONF_HW_SEQNUM	(1 << 30)
+ #define RTL818X_TX_CONF_CW_MIN		(1 << 31)
+@@ -106,8 +109,11 @@ struct rtl818x_csr {
+ #define RTL818X_MSR_NO_LINK		(0 << 2)
+ #define RTL818X_MSR_ADHOC		(1 << 2)
+ #define RTL818X_MSR_INFRA		(2 << 2)
++#define RTL818X_MSR_MASTER		(3 << 2)
++#define RTL818X_MSR_ENEDCA		(4 << 2)
+ 	u8	CONFIG3;
+ #define RTL818X_CONFIG3_ANAPARAM_WRITE	(1 << 6)
++#define RTL818X_CONFIG3_GNT_SELECT	(1 << 7)
+ 	u8	CONFIG4;
+ #define RTL818X_CONFIG4_POWEROFF	(1 << 6)
+ #define RTL818X_CONFIG4_VCOOFF		(1 << 7)
+@@ -133,7 +139,9 @@ struct rtl818x_csr {
+ 	__le32	RF_TIMING;
+ 	u8	GP_ENABLE;
+ 	u8	GPIO;
+-	u8	reserved_12[10];
++	u8	reserved_12[2];
++	__le32	HSSI_PARA;
++	u8	reserved_13[4];
+ 	u8	TX_AGC_CTL;
+ #define RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT		(1 << 0)
+ #define RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT	(1 << 1)
+@@ -141,29 +149,39 @@ struct rtl818x_csr {
+ 	u8	TX_GAIN_CCK;
+ 	u8	TX_GAIN_OFDM;
+ 	u8	TX_ANTENNA;
+-	u8	reserved_13[16];
++	u8	reserved_14[16];
+ 	u8	WPA_CONF;
+-	u8	reserved_14[3];
++	u8	reserved_15[3];
+ 	u8	SIFS;
+ 	u8	DIFS;
+ 	u8	SLOT;
+-	u8	reserved_15[5];
++	u8	reserved_16[5];
+ 	u8	CW_CONF;
+ #define RTL818X_CW_CONF_PERPACKET_CW_SHIFT	(1 << 0)
+ #define RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT	(1 << 1)
+ 	u8	CW_VAL;
+ 	u8	RATE_FALLBACK;
+-	u8	reserved_16[25];
++#define RTL818X_RATE_FALLBACK_ENABLE	(1 << 7)
++	u8	ACM_CONTROL;
++	u8	reserved_17[24];
+ 	u8	CONFIG5;
+ 	u8	TX_DMA_POLLING;
+-	u8	reserved_17[2];
++	u8	reserved_18[2];
+ 	__le16	CWR;
+ 	u8	RETRY_CTR;
+-	u8	reserved_18[5];
++	u8	reserved_19[3];
++	__le16	INT_MIG;
++/* RTL818X_R8187B_*: magic numbers from ioregisters */
++#define RTL818X_R8187B_B	0
++#define RTL818X_R8187B_D	1
++#define RTL818X_R8187B_E	2
+ 	__le32	RDSAR;
+-	u8	reserved_19[12];
+-	__le16	FEMR;
++	__le16	TID_AC_MAP;
+ 	u8	reserved_20[4];
++	u8	ANAPARAM3;
++	u8	reserved_21[5];
++	__le16	FEMR;
++	u8	reserved_22[4];
+ 	__le16	TALLY_CNT;
+ 	u8	TALLY_SEL;
+ } __attribute__((packed));
+-- 
+1.5.5.1
 
-So hopefully that won't happen here, since this would be pretty much th=
-e
-same situation up to this point.  Ideally you can get the internal
-Marvell developers onboard so we're all working on essentially the same
-bits, exactly like Intel has done.  Yeah, they develop on private trees
-internally but at the end of the day, their base code is the same
-upstream base code everyone else uses.
-
-Dan
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
