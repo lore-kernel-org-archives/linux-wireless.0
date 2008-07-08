@@ -1,38 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4037 "EHLO ra.tuxdriver.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2804 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753815AbYG3AQG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 20:16:06 -0400
-Date: Tue, 29 Jul 2008 16:40:54 -0400
+	id S1754650AbYGHTiU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jul 2008 15:38:20 -0400
+Date: Tue, 8 Jul 2008 15:02:34 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	jirislaby@gmail.com, mcgrof@gmail.com
-Subject: Re: [PATCH 1/12] ath5k: Update register list
-Message-ID: <20080729204054.GA10188@tuxdriver.com> (sfid-20080730_021609_319249_802E8B79)
-References: <20080720033041.GA7440@makis>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, herton@mandriva.com.br,
+	proski@gnu.org, wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/6] rtl8187: Adding Realtek rtl8187B support
+Message-ID: <20080708190234.GC30833@tuxdriver.com> (sfid-20080708_213828_988202_DA2C1BF0)
+References: <3ace41890807080412w3f24a8c1wa2665d8d6de785c9@mail.gmail.com> <48736E18.5060708@lwfinger.net> <20080708140457.GA10361@tuxdriver.com> <3ace41890807080924t6e7123bbk344cb236e43e1b2e@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080720033041.GA7440@makis>
+In-Reply-To: <3ace41890807080924t6e7123bbk344cb236e43e1b2e@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 20, 2008 at 06:30:41AM +0300, Nick Kossifidis wrote:
->  * Update list of registers
->  * Use updated register macros inside hw.c and initvals.c
+On Tue, Jul 08, 2008 at 05:24:26PM +0100, Hin-Tak Leung wrote:
+> On Tue, Jul 8, 2008 at 3:04 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> > FWIW, git-send-email does a decent job.  If you commit your patches
+> > in a git tree, you can use git-format-patch to extract them and then
+> > git-send-email to send them out -- works fairly well.
 > 
->  Changes-licensed-under: ISC
->  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+> Sorry for send this out a 3rd time! took me a couple of hours to get
+> git-send-email to work fo me :-).
+> I hope this last round is correct... (or I'll have to throw in the towel...).
 
-Nick,
-
-Some of the changes in this patch break the build unless the rest
-of the series is applied, and those patches can't be applied before
-applying this one.  This breaks git-bisect.  Could I trouble you
-to include the pieces of this patch that break the build into those
-later patches that fix the build?  Or perhaps you can simply split
-this into a patch that adds new definitions and one that deletes
-older definitions?  The latter could then be applied at the end of
-the series.
+It looks better, although FWIW I was able to fix-up the 2nd round by
+hand without much problems. :-)
 
 Thanks,
 
