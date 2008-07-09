@@ -1,42 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4039 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753981AbYG3AQL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 20:16:11 -0400
-Date: Tue, 29 Jul 2008 17:21:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Randy Dunlap <rdunlap@xenotime.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Andreas Schwab <schwab@suse.de>,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-Subject: Re: Fix iwlwifi compilation without CONFIG_IWLWIFI_DEBUG
-Message-ID: <20080729212135.GA7443@tuxdriver.com> (sfid-20080730_021614_319632_2233D159)
-References: <jebq0g8qdf.fsf@sykes.suse.de> <1ba2fa240807291350m4d698713k7c3ea21d25ee105f@mail.gmail.com> <20080729135509.6db7c9b4.rdunlap@xenotime.net> <1ba2fa240807291411j14e0db0etc7d0d56def66104e@mail.gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:39591 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752049AbYGIG6F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jul 2008 02:58:05 -0400
+Message-ID: <48746177.8040903@gmx.de> (sfid-20080709_085808_780844_E9B2F883)
+Date: Wed, 09 Jul 2008 08:57:59 +0200
+From: Helge Deller <deller@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240807291411j14e0db0etc7d0d56def66104e@mail.gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+CC: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath5k: convert LED code to use mac80211 triggers
+References: <20080622181134.GA26571@hash.localnet> <20080626023528.GA16068@hash.localnet> <20080709024053.GA3715@hash.localnet>
+In-Reply-To: <20080709024053.GA3715@hash.localnet>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 30, 2008 at 12:11:47AM +0300, Tomas Winkler wrote:
-
-> Definitely. John Linville was also on OLS I guess that's the reason
-> for delay in merge.  I've even reposed this patches to LKML IRCC to
-> Andrew Morton's request
-> What more can I do.  Maybe David Miller can somehow speed up the
-> process not sure.
-> But this is like 5th patch I've received to fix this starting to be a
-> bit annoying.
+Bob Copeland wrote:
+> I wrote:
+>> I guess the conservative approach is to just use sc->led_on = 1 in the
+>> VENDOR_ID_COMPAQ branch
 > 
-> BTW 'Denis V. Lunev' is the author of the 3 patches that fixes this
-> http://marc.info/?l=linux-wireless&m=121642949226032&w=2
-> http://marc.info/?l=linux-wireless&m=121636411821968&w=2
-> http://marc.info/?l=linux-wireless&m=121629329109400&w=2
+> ...here's the obvious patch for this, let me know if it works for you.
 
-Hold your wedgie, the patches are in flight...
+Thanks Bob!
+Patch works OK.
 
--- 
-John W. Linville
-linville@tuxdriver.com
+Helge
+
+> Subject: [PATCH] ath5k: use positive logic for HP laptop LEDs
+> 
+> Helge Deller reports that HP laptops (NC4010 and NC6000) use active-
+> high signals to turn on the LEDs.  Previous code used active-low for
+> all devices.
+> 
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
+>  drivers/net/wireless/ath5k/base.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+> index a43e9b2..fb6fd14 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+> @@ -2551,8 +2551,6 @@ ath5k_init_leds(struct ath5k_softc *sc)
+>  	struct pci_dev *pdev = sc->pdev;
+>  	char name[ATH5K_LED_MAX_NAME_LEN + 1];
+>  
+> -	sc->led_on = 0;  /* active low */
+> -
+>  	/*
+>  	 * Auto-enable soft led processing for IBM cards and for
+>  	 * 5211 minipci cards.
+> @@ -2561,11 +2559,13 @@ ath5k_init_leds(struct ath5k_softc *sc)
+>  	    pdev->device == PCI_DEVICE_ID_ATHEROS_AR5211) {
+>  		__set_bit(ATH_STAT_LEDSOFT, sc->status);
+>  		sc->led_pin = 0;
+> +		sc->led_on = 0;  /* active low */
+>  	}
+>  	/* Enable softled on PIN1 on HP Compaq nc6xx, nc4000 & nx5000 laptops */
+>  	if (pdev->subsystem_vendor == PCI_VENDOR_ID_COMPAQ) {
+>  		__set_bit(ATH_STAT_LEDSOFT, sc->status);
+>  		sc->led_pin = 1;
+> +		sc->led_on = 1;  /* active high */
+>  	}
+>  	if (!test_bit(ATH_STAT_LEDSOFT, sc->status))
+>  		goto out;
+
