@@ -1,97 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51603
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755477AbYGQMP1 (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.231]:59704 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752194AbYGIO7Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 08:15:27 -0400
-Date: Thu, 17 Jul 2008 05:15:26 -0700 (PDT)
-Message-Id: <20080717.051526.193688049.davem@davemloft.net> (sfid-20080717_141531_507757_4CF5044D)
-To: netdev@vger.kernel.org
-CC: kaber@trash.net, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 0/31]: Final set of TX multiqueue changes.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 9 Jul 2008 10:59:16 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so2164852wri.5
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 07:59:15 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/3] mac80211: Include sequence number in IBSS and Mesh beacons
+Date: Wed, 9 Jul 2008 17:08:04 +0200
+Cc: Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200807091511.14288.IvDoorn@gmail.com> <200807091637.02090.IvDoorn@gmail.com> <1215614895.3246.17.camel@johannes.berg>
+In-Reply-To: <1215614895.3246.17.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200807091708.04870.IvDoorn@gmail.com> (sfid-20080709_165919_690389_57EF815B)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 09 July 2008, Johannes Berg wrote:
+> 
+> > If rt2x00 would use a global lock to block all TX and beacons, then yes.
+> > But rt2x00 uses per-queue locking. When a beacon is being updated rt2x00
+> > will still allow regular frames to be queued.
+> 
+> That just widens the window. And if you have multiple queues then you
+> can't do sw sequence numbers anyway because the hardware might reorder
+> the frames.
 
-I'd like to first thank Patrick McHardy for pointing out the need for
-shared qdisc handling, even though it meant that I had to essentially
-toss out the 10,000 lines of code I wrote last weekend and start all
-over again :-)
+That doesn't seem to be a problem in the legacy drivers, so I guess the hardware
+does *something* to prevent problems.
 
-I'd also like to thank Johannes for help he has provided on the
-wireless front.
+> > As far as rt2x00 is concerned, all hardware that supports multi-bss also
+> > support HW sequence counters. rt2400pci and rt2500pci are the only ones
+> > requiring SW sequence counters, and they can't do multi-bss.
+> 
+> Do they keep per-BSS counters?
 
-Johannes, I did everything except move the wireless mac80211 requeue
-work into a workqueue and then add the synchronize_net() call.  If you
-could hack up that patch and test it I'd really appreciate it.
+Not sure what you mean, but rt2400pci and rt2500pci don't support multi-bss,
+so they wouldn't have per-BSS counters.
+rt61pci and rt73usb do support multi-bss and keep the sequence counting
+completely in firmware/hardware and I am not sure how they can be read
+by the driver. So I don't know how those are stored either.
 
-Next, I'd like to thank Eric Dumazet for his great feedback as well.
-I still have to think about how I want to make the hash modulus
-cheaper.
 
-And finally I'd like to thank Jeff Kirsher for sending me the IGB
-multiqueue patches.  He's the only person who sent me any driver work
-for this new infrastructure.
-
-With these changesets, a single qdisc shared as the root of several TX
-queues is implemented.  It is all refreshed and present in:
-
-	kernel.org:/pub/scm/linux/kernel/git/davem/net-tx-2.6.git
-
-which is a clone of current net-next-2.6 as usual.
-
-The default qdisc has changed to one that is simple enough to not
-require sharing.  It's a completely dumb fifo, and pfifo_fast is gone.
-We can look at borrowing the sch_fifo.c code for this, but that would
-require a few changes, for example we'd need to build it in even when
-NET_SCHED is not set.
-
-The locking is now completely refreshed.  This was the largest hurdle
-in the new work of allowing shared qdiscs.  It basically comes down to
-three things:
-
-1) RCU is used more aggressively for qdisc destruction.  We can queue
-   into a qdisc after qdisc_destroy() is called, up until the RCU
-   handler is invoked.
-
-   This allows us to relax several things tremendously.  It means that
-   dev_queue->qdisc can be accessed purely with RCU locking and then
-   we continue to use that sampled qdisc pointer as long as preemption
-   is disabled (via BH's etc.) or when we have some other reason to
-   know the qdisc isn't going away.
-
-   As a result, and the intended main consequence, is that the we are
-   divorced from having to spinlock in order to synchronize with root
-   qdisc changes in the packet processing paths.
-
-2) qdisc_lock_tree() and all of that crap is now gone.
-
-   Instead, we lock qdisc roots of the tree we wish to operate on.
-
-   Someone anticipated this kind of change, which is why we had these
-   sch_tree_lock and tbf_tree_lock macros already.  This allowed these
-   changes to be smaller than they otherwise would have been.
-
-3) We schedule qdiscs, not netdev_queues.  So when a TX queue wakes
-   up, we signal it's attached qdisc.  The qdisc we sample is used
-   consistently all the way down into qdisc_restart() so all of that
-   "resample the qdisc after grabbing lock" code is no longer
-   necessary.
-
-Initially all TX queues get the simple FIFO qdisc.
-
-But once any qdisc root change operation is performed, we use one
-shared qdisc amongst the queues until the root qdisc is deleted, at
-which point we go back to the default.
-
-Note that this new setup means that we can add funky things like have
-qdiscs, classifiers, meta match, and tc actions that modify the SKB TX
-queue mapping.
-
-Unless I hear a huge objection, I intend to pull this work into
-net-next-2.6 tomorrow so I can toss it all to Linus this coming
-Sunday.
+Ivo
