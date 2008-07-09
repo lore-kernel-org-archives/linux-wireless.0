@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.240]:38966 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754121AbYGKXh0 (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:51950 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751548AbYGIVH6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jul 2008 19:37:26 -0400
-Received: by an-out-0708.google.com with SMTP id d40so810132and.103
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Jul 2008 16:37:23 -0700 (PDT)
-Message-ID: <43e72e890807111637x6432010fk309bffb99ce63ddb@mail.gmail.com> (sfid-20080712_013731_630142_56A9FD89)
-Date: Fri, 11 Jul 2008 16:37:22 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: Compilation Problem
-Cc: "Chris Calitz" <chris@sabest.co.za>, linux-wireless@vger.kernel.org
-In-Reply-To: <b6c5339f0807111430w46b8a318yb35d787e084205b5@mail.gmail.com>
+	Wed, 9 Jul 2008 17:07:58 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so914737yxm.1
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 14:07:57 -0700 (PDT)
+Message-ID: <fce2a370807091407h124fc10en64f56d5211748ae2@mail.gmail.com> (sfid-20080709_230801_639826_25E1D8BB)
+Date: Thu, 10 Jul 2008 00:07:57 +0300
+From: "Ihar Hrachyshka" <ihar.hrachyshka@gmail.com>
+To: "Holger Schurig" <hs4233@mail.mn-solutions.de>
+Subject: Re: [PATCH] libertas: fix memory alignment problems on the blackfin
+Cc: libertas-dev@lists.infradead.org,
+	"Ihar Hrachyshka" <ihar.hrachyshka@promwad.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200807091521.04520.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <1215680282.6376.5.camel@chris-laptop>
-	 <b6c5339f0807111430w46b8a318yb35d787e084205b5@mail.gmail.com>
+References: <20080709031850.2e7bf50f@promwad.com>
+	 <200807091521.04520.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 11, 2008 at 2:30 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Thu, Jul 10, 2008 at 4:58 AM, Chris Calitz <chris@sabest.co.za> wrote:
->> Hi Everyone
+On Wed, Jul 9, 2008 at 4:21 PM, Holger Schurig
+<hs4233@mail.mn-solutions.de> wrote:
+>> Fixing unaligned memory access on the blackfin architecture
+>> (maybe on the ARM also).
 >
-> Hi!
->
->> I have found that the compact-wireless driver apparently fixes this
->> issue but when I try to build this driver I get the following errors.
->
->> /home/chris/wireless/compat-wireless-2008-07-10/drivers/net/wireless/mac80211_hwsim.c: In function 'init_mac80211_hwsim':
->
-> For now you can just turn off building mac80211_hwsim; it's a test driver so
-> you don't need it, and I don't think it is fully back-ported.  Edit config.mk
-> and set CONFIG_MAC80211_HWSIM=n.
+> You can delete the "maybe", on ARM (more specificially, on a
+> PXA255, which is ARMv5TE) I didn't had a problem.
 
-TIm sent in a patch which backports this call correctly, should be
-propagated to a new tarball by tomorrow.
+As I know, ARMs are too different to say about some "generic" ARM
+behavior, in memory alignment also I think.
+Too be more correct, the patch fixes alignment problems on all
+machines where structures aren't aligned for even addresses by
+default, blackfin, arm, or anything else I don't know about.
 
-  Luis
+>
+> _______________________________________________
+> libertas-dev mailing list
+> libertas-dev@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/libertas-dev
+>
