@@ -1,99 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.168]:44645 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753162AbYG1JKA (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.232]:51917 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750848AbYGICWK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2008 05:10:00 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so5603800wfd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 02:09:59 -0700 (PDT)
-Message-ID: <1197ff4c0807280209x754f3a15j9dca3e60e99c69cb@mail.gmail.com> (sfid-20080728_111006_605060_E928616F)
-Date: Mon, 28 Jul 2008 17:09:59 +0800
-From: YanBo <dreamfly281@gmail.com>
-To: "Andrey Yurovsky" <andrey@cozybit.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: add Mesh Point support
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-In-Reply-To: <487fa7a8.14da600a.1aae.48b1@mx.google.com>
+	Tue, 8 Jul 2008 22:22:10 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so3387442rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2008 19:22:09 -0700 (PDT)
+Message-ID: <b6c5339f0807081922q2941a597m6e135fc7fb907fb@mail.gmail.com> (sfid-20080709_042229_864639_D7475156)
+Date: Tue, 8 Jul 2008 22:22:09 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "Helge Deller" <deller@gmx.de>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: convert LED code to use mac80211 triggers
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+In-Reply-To: <g50s14$8n1$1@ger.gmane.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <487fa7a8.14da600a.1aae.48b1@mx.google.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080622181134.GA26571@hash.localnet>
+	 <20080626023528.GA16068@hash.localnet> <g50s14$8n1$1@ger.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 18, 2008 at 4:12 AM, Andrey Yurovsky <andrey@cozybit.com> wrote:
-> This enables draft-802.11s Mesh Point operation.  For that we need mesh
-> beaconing.  Tested with AR5212/AR5213 PCI card against Zydas and b43 mesh
-> nodes.
+On Tue, Jul 8, 2008 at 7:08 PM, Helge Deller <deller@gmx.de> wrote:
+> I tested it against Linus' head version (it applied with minor
+> modifications) on my HP NC6000 laptop with this built-in Atheros card:
+[...]
 >
-> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
-> ---
-> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> index 217d506..6d9f4e1 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -1425,7 +1425,8 @@ ath5k_beaconq_config(struct ath5k_softc *sc)
->        ret = ath5k_hw_get_tx_queueprops(ah, sc->bhalq, &qi);
->        if (ret)
->                return ret;
-> -       if (sc->opmode == IEEE80211_IF_TYPE_AP) {
-> +       if (sc->opmode == IEEE80211_IF_TYPE_AP ||
-> +               sc->opmode == IEEE80211_IF_TYPE_MESH_POINT) {
->                /*
->                 * Always burst out beacon and CAB traffic
->                 * (aifs = cwmin = cwmax = 0)
-> @@ -2911,6 +2912,7 @@ static void ath5k_configure_filter(struct ieee80211_hw *hw,
->        if (sc->opmode != IEEE80211_IF_TYPE_STA)
->                rfilt |= AR5K_RX_FILTER_PROBEREQ;
->        if (sc->opmode != IEEE80211_IF_TYPE_AP &&
-> +               sc->opmode != IEEE80211_IF_TYPE_MESH_POINT &&
->                test_bit(ATH_STAT_PROMISC, sc->status))
->                rfilt |= AR5K_RX_FILTER_PROM;
->        if (sc->opmode == IEEE80211_IF_TYPE_STA ||
-> diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-> index c6d12c5..8854820 100644
-> --- a/drivers/net/wireless/ath5k/hw.c
-> +++ b/drivers/net/wireless/ath5k/hw.c
-> @@ -2326,6 +2326,7 @@ int ath5k_hw_set_opmode(struct ath5k_hw *ah)
->                break;
+> Basically it works, but I think the sc->led_on in:
+>> +     sc->led_on = 0;  /* active low */
 >
->        case IEEE80211_IF_TYPE_AP:
-> +       case IEEE80211_IF_TYPE_MESH_POINT:
->                pcu_reg |= AR5K_STA_ID1_AP | AR5K_STA_ID1_RTS_DEF_ANTENNA |
->                        (ah->ah_version == AR5K_AR5210 ?
->                                AR5K_STA_ID1_NO_PSPOLL : 0);
->
->
+> needs to be:
+>> +     sc->led_on = 1;  /* active high */
+> for the AR5212 in the HP laptop.
 
-Hi Andrey
+Thanks for the test!
 
-First of all, Thanks for your works to enable the ath5k support
-80211s.  I just testing them with the newest wireless-testing tree and
-meet some problems:
+> See also the changes to if_ath_pci.c in:
+>  http://madwifi.org/attachment/ticket/1018/led.patch
+> and
+>  http://madwifi.org/ticket/1018
+> for an old discussion about madwifi for LEDs in the HP box.
 
-The Atheros chipset what I used is one AR2413 cardbus card and one
-AR5414(the lspci show it as AR5413 but debug message show is as
-AR5414) , after apply the patch, I  waked the up them by follow
-commands:
+So current madwifi doesn't have this change unless I missed something?
+ It appears to use active-low leds in the current version regardless
+of the vendor.
 
-iw dev wmaster0 interface add mesh type mp mesh_id 12345
-iwconfig mesh channel 1
-ifconfig mesh 192.168.3.80/192.168.3.81
+> Without this change the LED stays on after a "rmmod ath5k" as well.
 
-but there is no  beacon was send from any of them, after input "iw dev
-mesh station dump"
-it also no station was found,(PS:the two PC are very close), ping each
-other also no response.
+Yeah, that would definitely happen if the logic was backwards.  I
+guess the conservative approach is to just use sc->led_on = 1 in the
+VENDOR_ID_COMPAQ branch.
 
-After roughly browse the ath5k code and the patch, I have below questions:
-1. From the patch, there is no any place to set the  sc->opmode's
-value to IEEE80211_IF_TYPE_MESH_POINT.
-2. it also haven't found code to enable/trigger "beacon send" in
-MESH_POINT mode.
-
-So I think maybe this patch can make ath5k work in mesh mode if some
-mesh point(with b43 or zd1211rw) has been waked up early. because it
-can correctly deal with the RX mesh packet. but it can't work
-independent in a pure ath5k mesh network, cause none can send beacon
-correctly, and hence they can't set up link each other.
-
-BR
-yanbo
+-- 
+Bob Copeland %% www.bobcopeland.com
