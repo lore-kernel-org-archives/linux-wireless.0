@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:56774 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754107AbYGBXFl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2008 19:05:41 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: stable@kernel.org
-Subject: [PATCH stable] b43: Do not return TX_BUSY from op_tx
-Date: Thu, 3 Jul 2008 01:04:29 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200807030104.30100.mb@bu3sch.de> (sfid-20080703_010639_122352_267C7D9C)
+Received: from xc.sipsolutions.net ([83.246.72.84]:52411 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752295AbYGINmY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jul 2008 09:42:24 -0400
+Subject: Re: [PATCH 1/3] mac80211: Include sequence number in IBSS and Mesh
+	beacons
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+In-Reply-To: <200807091538.09387.mb@bu3sch.de>
+References: <200807091511.14288.IvDoorn@gmail.com>
+	 <200807091511.45779.IvDoorn@gmail.com>  <200807091538.09387.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VHvQ/v1/rxIL7q9W+LN0"
+Date: Wed, 09 Jul 2008 15:41:38 +0200
+Message-Id: <1215610898.3246.6.camel@johannes.berg> (sfid-20080709_154227_861431_20D09CF9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Never return TX_BUSY from op_tx. It doesn't make sense to return
-TX_BUSY, if we can not transmit the packet.
-Drop the packet and return TX_OK.
-This will fix the resume hang.
 
-Upstream commit is
-66193a7cef2239bfd1b9b96e304770facf7a49c7
+--=-VHvQ/v1/rxIL7q9W+LN0
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+On Wed, 2008-07-09 at 15:38 +0200, Michael Buesch wrote:
+> On Wednesday 09 July 2008 15:11:45 Ivo van Doorn wrote:
+> > Currently only beacons generated in AP mode have the software
+> > sequence number inserted. This means IBSS and Mesh mode are broken
+> > for all hardware that require software sequence numbers.
+>=20
+> Does software seq numbering even work at all?
+> What about packets that get sent between the driver requested the
+> beacon and the driver does actually queue it?
 
+Hmm. I guess we'd have to lock the master device while requesting a
+beacon... but also lock around the driver code queuing the beacon or
+something?
 
-Index: linux-2.6.25.6/drivers/net/wireless/b43/main.c
-===================================================================
---- linux-2.6.25.6.orig/drivers/net/wireless/b43/main.c	2008-06-14 22:47:31.000000000 +0200
-+++ linux-2.6.25.6/drivers/net/wireless/b43/main.c	2008-07-03 00:50:53.000000000 +0200
-@@ -2604,25 +2604,30 @@ static int b43_op_tx(struct ieee80211_hw
- 	struct b43_wl *wl = hw_to_b43_wl(hw);
- 	struct b43_wldev *dev = wl->current_dev;
- 	unsigned long flags;
- 	int err;
- 
- 	if (unlikely(!dev))
--		return NETDEV_TX_BUSY;
-+		goto drop_packet;
- 
- 	/* Transmissions on seperate queues can run concurrently. */
- 	read_lock_irqsave(&wl->tx_lock, flags);
- 
- 	err = -ENODEV;
- 	if (likely(b43_status(dev) >= B43_STAT_STARTED))
- 		err = b43_dma_tx(dev, skb, ctl);
- 
- 	read_unlock_irqrestore(&wl->tx_lock, flags);
- 
- 	if (unlikely(err))
--		return NETDEV_TX_BUSY;
-+		goto drop_packet;
-+	return NETDEV_TX_OK;
-+
-+drop_packet:
-+	/* We can not transmit this packet. Drop it. */
-+	dev_kfree_skb_any(skb);
- 	return NETDEV_TX_OK;
- }
- 
- static int b43_op_conf_tx(struct ieee80211_hw *hw,
- 			  int queue,
- 			  const struct ieee80211_tx_queue_params *params)
+johannes
+
+--=-VHvQ/v1/rxIL7q9W+LN0
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIdMAOAAoJEKVg1VMiehFYvOgP/13wCm6X+oSl8HVO+QDOLwm/
+lW+Z6PEji1k9YdBUCXkhFP21YaSSCcwwY5jnYABRVO3CNAVPa2XAYkED57hTRgnq
+kKGfr9vDE3/vXHYYOCTAjWNFStTAW2vQxLADLHG9LOfROcsUla/+OSZMzecTPcLo
+t6qgE6cH036jG29m01M8u15G8G6eEMfwvN3Ma8lqr0d5P+kOs/FxxbqFHohlbT3B
+XDgSZaZkZwgMnm2cKyA8c1YkKNzEaMwtB6oDNanSlWmb6d6EuK7OckpFoj+rJLmr
+5cJYjC+KtoY/Vv8D9VLa9iN4GvB0YJSZD73x1oC8w2iGMRERhqnAHlh4PLlTNxe7
+A9waooxJRrQafBy88fwNobczP6J+a5b5S40cIPtH1mWQ3tqvhefGzKwAbOetK1XI
+ThJE95TS6crbswn5BetBAF1ET7/qSD8mcqPjuXgB1iHOtvBprK7l2YCXyKxkiWpu
+BjiMPlKzltu1UeFuGDtc2Ot9GYVmb+HCffqoGn7GiERdZhjXdqLOa7iXwCrO/JZu
+BbjDOuByQQq4rMvV/pztWlVLuOZQG9DZrTpxJ9mJlAqZmgud3edAbhhARLS+6KD3
+uTqsO/oo5VkXRcFF1BMP5v1dCABchhv5ZGGh2Dmcwtcpab8NycU/cY0SmQpzQ8tz
+t2NxxbMXo1LCFRlCKUHj
+=5dck
+-----END PGP SIGNATURE-----
+
+--=-VHvQ/v1/rxIL7q9W+LN0--
+
