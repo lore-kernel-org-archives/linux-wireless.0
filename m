@@ -1,56 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:39373 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753823AbYGJLbQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 07:31:16 -0400
-Subject: Re: [PATCH] libertas: fix memory alignment problems on the blackfin
-From: Dan Williams <dcbw@redhat.com>
-To: Ihar Hrachyshka <ihar.hrachyshka@promwad.com>
-Cc: Harvey Harrison <harvey.harrison@gmail.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20080709092958.72e82f25@promwad.com>
-References: <20080709031850.2e7bf50f@promwad.com>
-	 <1215563092.476.58.camel@brick>  <20080709092958.72e82f25@promwad.com>
-Content-Type: text/plain
-Date: Thu, 10 Jul 2008 07:29:45 -0400
-Message-Id: <1215689385.16792.19.camel@localhost.localdomain> (sfid-20080710_133118_949284_3334EB54)
-Mime-Version: 1.0
+Received: from hs-out-0708.google.com ([64.233.178.243]:39614 "EHLO
+	hs-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750940AbYGIQZ6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jul 2008 12:25:58 -0400
+Received: by hs-out-0708.google.com with SMTP id 4so675386hsl.5
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 09:25:57 -0700 (PDT)
+Message-ID: <4874E68F.7090106@gmail.com> (sfid-20080709_182602_610356_C23620B6)
+Date: Wed, 09 Jul 2008 19:25:51 +0300
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+CC: ipw3945-devel@lists.sourceforge.net,
+	=?ISO-8859-1?Q?Stefanik_G=E1bo?= =?ISO-8859-1?Q?r?=
+	<netrolller.3d@gmail.com>
+Subject: Re: [BUG] Two bugs in monitor mode, iwl3945
+References: <485F687C.1050407@gmail.com>
+In-Reply-To: <485F687C.1050407@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-07-09 at 09:29 +0300, Ihar Hrachyshka wrote:
-> > There's helpers for this now: get_unaligned_le16
-> Ok, third pass - the first was in January... :)
-> 
-> Fixing unaligned memory access on the blackfin architecture (maybe on
-> the ARM also).
-> 
-> Signed-off-by: Ihar Hrachyshka <ihar.hrachyshka@promwad.com>
+Maxim Levitsky wrote:
+> I noticed two bugs:
+>=20
+> 1) Monitor mode hangs the system randomly, and what is interesting th=
+at=20
+> this
+> bug disappears if I patch the driver with packet injection patch from=
+=20
+> G=E1bor Stefanik.
+> I noticed this bug, after I removed his patch to see if it caused som=
+e=20
+> problems.
+> Always reproducible, usually hangs just after airodump launch.
+>=20
+> 2) If I enable monitor mode regardless of injection patch, the scanni=
+ng=20
+> results got garbaged,
+> iwlist scan reports > 100 quality on most APs, or 0% quality on my=20
+> router, shows extremely low and hi power levels, like
+> -127dBm or 160 dBm, and those levels change rapidly.
+> This why I removed the injection patch, I suspected it, but this bug=20
+> appears to be not related to it.
+I noticed that exactly same bug happens if I enable promisc mode on the=
+=20
+wlan0. Does this give any additional clue why this bug happens?
 
-Acked-by: Dan Williams <dcbw@redhat.com>
-
-> ---
-> 
-> diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
-> index 343ed38..4b27456 100644
-> --- a/drivers/net/wireless/libertas/scan.c
-> +++ b/drivers/net/wireless/libertas/scan.c
-> @@ -567,11 +567,11 @@ static int lbs_process_bss(struct bss_descriptor *bss,
-> 	pos += 8;
-> 
-> 	/* beacon interval is 2 bytes long */
-> -	bss->beaconperiod = le16_to_cpup((void *) pos);
-> +	bss->beaconperiod = get_unaligned_le16(pos);
-> 	pos += 2;
-> 
-> 	/* capability information is 2 bytes long */
-> -	bss->capability = le16_to_cpup((void *) pos);
-> +	bss->capability = get_unaligned_le16(pos);
-> 	lbs_deb_scan("process_bss: capabilities 0x%04x\n", bss->capability);
-> 	pos += 2;
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Best regards,
+	Maxim levitsky
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
