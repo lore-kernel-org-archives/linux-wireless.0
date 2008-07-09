@@ -1,36 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from queueout01-winn.ispmail.ntl.com ([81.103.221.31]:44332 "EHLO
-	queueout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753656AbYGDDet (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 23:34:49 -0400
-From: Daniel Drake <dsd@gentoo.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Cc: firat@airties.com
-Subject: [PATCH] zd1211rw: add ID for AirTies WUS-201
-Message-Id: <20080704033151.0494872C001@zog.reactivated.net> (sfid-20080704_053453_530848_02A3D763)
-Date: Fri,  4 Jul 2008 04:31:50 +0100 (BST)
+Received: from bu3sch.de ([62.75.166.246]:42890 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753419AbYGIMrn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jul 2008 08:47:43 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: Re: [PATCH 3/6] b43legacy: use le16 frame control directly, avoid byteswapping
+Date: Wed, 9 Jul 2008 14:47:15 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1215550043.476.41.camel@brick>
+In-Reply-To: <1215550043.476.41.camel@brick>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200807091447.15828.mb@bu3sch.de> (sfid-20080709_144753_629005_558F5106)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Firat Birlik <firat@airties.com>
+On Tuesday 08 July 2008 22:47:23 Harvey Harrison wrote:
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 
-I would like to inform you of our zd1211 based usb wifi adapter (AirTies
-WUS-201), which works with the zd1211rw driver with the following device
-id definition.
+ACK
 
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
+> ---
+>  drivers/net/wireless/b43legacy/xmit.c |    7 ++-----
+>  1 files changed, 2 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43legacy/xmit.c b/drivers/net/wireless/b43legacy/xmit.c
+> index a354078..5e8a575 100644
+> --- a/drivers/net/wireless/b43legacy/xmit.c
+> +++ b/drivers/net/wireless/b43legacy/xmit.c
+> @@ -193,7 +193,6 @@ static int generate_txhdr_fw3(struct b43legacy_wldev *dev,
+>  {
+>  	const struct ieee80211_hdr *wlhdr;
+>  	int use_encryption = (!(info->flags & IEEE80211_TX_CTL_DO_NOT_ENCRYPT));
+> -	u16 fctl;
+>  	u8 rate;
+>  	struct ieee80211_rate *rate_fb;
+>  	int rate_ofdm;
+> @@ -204,7 +203,6 @@ static int generate_txhdr_fw3(struct b43legacy_wldev *dev,
+>  	struct ieee80211_rate *tx_rate;
+>  
+>  	wlhdr = (const struct ieee80211_hdr *)fragment_data;
+> -	fctl = le16_to_cpu(wlhdr->frame_control);
+>  
+>  	memset(txhdr, 0, sizeof(*txhdr));
+>  
+> @@ -253,7 +251,7 @@ static int generate_txhdr_fw3(struct b43legacy_wldev *dev,
+>  			mac_ctl |= (key->algorithm <<
+>  				   B43legacy_TX4_MAC_KEYALG_SHIFT) &
+>  				   B43legacy_TX4_MAC_KEYALG;
+> -			wlhdr_len = ieee80211_get_hdrlen(fctl);
+> +			wlhdr_len = ieee80211_hdrlen(wlhdr->frame_control);
+>  			iv_len = min((size_t)info->control.iv_len,
+>  				     ARRAY_SIZE(txhdr->iv));
+>  			memcpy(txhdr->iv, ((u8 *)wlhdr) + wlhdr_len, iv_len);
+> @@ -295,8 +293,7 @@ static int generate_txhdr_fw3(struct b43legacy_wldev *dev,
+>  	/* MAC control */
+>  	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
+>  		mac_ctl |= B43legacy_TX4_MAC_ACK;
+> -	if (!(((fctl & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_CTL) &&
+> -	      ((fctl & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PSPOLL)))
+> +	if (!ieee80211_is_pspoll(wlhdr->frame_control))
+>  		mac_ctl |= B43legacy_TX4_MAC_HWSEQ;
+>  	if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
+>  		mac_ctl |= B43legacy_TX4_MAC_STMSDU;
 
-Index: linux-2.6.26-rc8/drivers/net/wireless/zd1211rw/zd_usb.c
-===================================================================
---- linux-2.6.26-rc8.orig/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ linux-2.6.26-rc8/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -64,6 +64,7 @@ static struct usb_device_id usb_ids[] = 
- 	{ USB_DEVICE(0x079b, 0x0062), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x1582, 0x6003), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x050d, 0x705c), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x083a, 0xe506), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x083a, 0x4505), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0471, 0x1236), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x13b1, 0x0024), .driver_info = DEVICE_ZD1211B },
+
+
+-- 
+Greetings Michael.
