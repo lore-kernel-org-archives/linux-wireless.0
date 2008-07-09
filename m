@@ -1,63 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45596 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754569AbYG2Lgu (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.28]:1366 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751550AbYGICAu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 07:36:50 -0400
-Subject: Re: iwlwifi aggregation info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: tomasw <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1217331138.10489.24.camel@johannes.berg> (sfid-20080729_133224_832207_85DF1976)
-References: <1217331138.10489.24.camel@johannes.berg>
-	 (sfid-20080729_133224_832207_85DF1976)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ktde1t4MOOSzsCG/2Z5+"
-Date: Tue, 29 Jul 2008 13:36:48 +0200
-Message-Id: <1217331408.10489.26.camel@johannes.berg> (sfid-20080729_133653_598683_754D9EC1)
+	Tue, 8 Jul 2008 22:00:50 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so1259701ywe.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2008 19:00:49 -0700 (PDT)
+Subject: [PATCH 3/3] mac80211: remove rx/tx_data->fc member
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 08 Jul 2008 19:00:46 -0700
+Message-Id: <1215568846.476.69.camel@brick> (sfid-20080709_040053_456187_A103EAB4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ net/mac80211/ieee80211_i.h |    4 ++--
+ net/mac80211/rx.c          |    8 ++------
+ net/mac80211/tx.c          |    1 -
+ 3 files changed, 4 insertions(+), 9 deletions(-)
 
---=-ktde1t4MOOSzsCG/2Z5+
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-
-> Say a station enables aggregation on a low-priority TID, manages to fill
-> the hw queue because high-prio frames are eating up all the airtime and
-> then disables aggregation again. Now another station enables aggregation
-> on a high-priority TID, and gets assigned to the same hw queue. Now
-> frames for that station will be stalled, no? Seems like a bug to me.
-
-Never mind, the queue won't get reassigned. I was just confused by a
-bunch of superfluous code in iwl-tx.c. You cannot ever run into having
-IWL_EMPTYING_HW_QUEUE_ADDBA set because you wait for the queue to drain
-before fully disabling it.
-
-johannes
-
---=-ktde1t4MOOSzsCG/2Z5+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIjwDMAAoJEKVg1VMiehFYZOMQALmMyGLwwYOb/HZ0HMCT5xtu
-zUadJIJ1zfxP7v+/R+RtxlDB1X9M4+/5LL9hOdZjNDnfJbqSeTDUD65qRdHbOGdt
-gHHgBVEonpn2mJ5p+J/X8sgS8t/E3ikMXF+Q5DHUKn9oxmUsvMb+9whMFjwMKPql
-8039sL2FO0/Dj8oiJqnzv6lOhFCOhYPiHRo/ESTbUqAQCcJI8M1csvMXDVQsEc/k
-HLjgPo2K+8uZREl7aYfgzKmIPgJrTEotLRmeMPhEBcFl4bQCFhsj8zXJk2XgEuy8
-knFmLAmG8zeM7dTYN/zSma802Vid1D2W8l3wTnndAMZ0xpoAejfFwDPX/JLhvd+G
-pV0Z4YJPVxATBpAufj7cMXmA7wfehYy02aR3lyu6RvCVNR/p3aIXvmoaXK9f1a9n
-qb/i5e1W2PIpZRXHH1NiHxk1yRO82IRNk38spCFxV/qXdEa3PUeD5SGMSedV+EMy
-+6NOGmhDvOZcKHztm4ec+2z3kvxqqCeCL7aYXU56BKRzty9Dln+o5Cn4fCjdDUzX
-mqywIJxq/Abdi0yh5WvfonvMcmAjVk2q5R+nZ9DfwDo81qdqFELoKboaBJ8Ejbpw
-hox7DAkYJzzlx7pnuyJfUU6/unzQMVL7mmz/OGtHAv0tehXqMr9jQksnb/k6U1gZ
-AkSrg2S4ZD1YWzJ98Tn+
-=P3kb
------END PGP SIGNATURE-----
-
---=-ktde1t4MOOSzsCG/2Z5+--
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index bf5d4d6..44e81cb 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -170,7 +170,7 @@ struct ieee80211_tx_data {
+ 	struct sk_buff **extra_frag;
+ 	int num_extra_frag;
+ 
+-	u16 fc, ethertype;
++	u16 ethertype;
+ 	unsigned int flags;
+ };
+ 
+@@ -198,7 +198,7 @@ struct ieee80211_rx_data {
+ 	struct ieee80211_rx_status *status;
+ 	struct ieee80211_rate *rate;
+ 
+-	u16 fc, ethertype;
++	u16 ethertype;
+ 	unsigned int flags;
+ 	int sent_ps_buffered;
+ 	int queue;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index f550a93..cdb9616 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1047,7 +1047,6 @@ ieee80211_rx_h_remove_qos_control(struct ieee80211_rx_data *rx)
+ 		ieee80211_hdrlen(hdr->frame_control) - IEEE80211_QOS_CTL_LEN);
+ 	hdr = (struct ieee80211_hdr *)skb_pull(rx->skb, IEEE80211_QOS_CTL_LEN);
+ 	/* change frame type to non QOS */
+-	rx->fc &= ~IEEE80211_STYPE_QOS_DATA;
+ 	hdr->frame_control &= ~cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
+ 
+ 	return RX_CONTINUE;
+@@ -1808,7 +1807,6 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 
+ 	rx.status = status;
+ 	rx.rate = rate;
+-	rx.fc = le16_to_cpu(hdr->frame_control);
+ 
+ 	if (ieee80211_is_data(hdr->frame_control) || ieee80211_is_mgmt(hdr->frame_control))
+ 		local->dot11ReceivedFragmentCount++;
+@@ -1871,14 +1869,12 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 				       prev->dev->name);
+ 			continue;
+ 		}
+-		rx.fc = le16_to_cpu(hdr->frame_control);
+ 		ieee80211_invoke_rx_handlers(prev, &rx, skb_new);
+ 		prev = sdata;
+ 	}
+-	if (prev) {
+-		rx.fc = le16_to_cpu(hdr->frame_control);
++	if (prev)
+ 		ieee80211_invoke_rx_handlers(prev, &rx, skb);
+-	} else
++	else
+ 		dev_kfree_skb(skb);
+ }
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 70d5092..c867144 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -968,7 +968,6 @@ __ieee80211_tx_prepare(struct ieee80211_tx_data *tx,
+ 	hdr = (struct ieee80211_hdr *) skb->data;
+ 
+ 	tx->sta = sta_info_get(local, hdr->addr1);
+-	tx->fc = le16_to_cpu(hdr->frame_control);
+ 
+ 	if (is_multicast_ether_addr(hdr->addr1)) {
+ 		tx->flags &= ~IEEE80211_TX_UNICAST;
+-- 
+1.5.6.1.322.ge904b
 
