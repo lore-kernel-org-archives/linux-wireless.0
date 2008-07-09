@@ -1,43 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:19346 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752916AbYGaPTd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 11:19:33 -0400
-Subject: Re: Driver for the FullMAC card
-From: Pavel Roskin <proski@gnu.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Dmitry <dbaryshkov@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1217514241.12016.13.camel@localhost.localdomain>
-References: <g6qr98$q28$2@ger.gmane.org>
-	 <1217512488.12016.8.camel@localhost.localdomain>
-	 <bc64b4640807310715j41bb0029i5c8be73a311ed52@mail.gmail.com>
-	 <1217514241.12016.13.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Thu, 31 Jul 2008 11:19:31 -0400
-Message-Id: <1217517571.22143.17.camel@dv> (sfid-20080731_171939_644245_A348C76E)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:35455
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750864AbYGIWKt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jul 2008 18:10:49 -0400
+Date: Wed, 09 Jul 2008 15:10:49 -0700 (PDT)
+Message-Id: <20080709.151049.240584078.davem@davemloft.net> (sfid-20080710_001053_704560_7CE00BA6)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-07-09
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080709204202.GA17820@tuxdriver.com>
+References: <20080709204202.GA17820@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-07-31 at 10:24 -0400, Dan Williams wrote:
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 9 Jul 2008 16:42:02 -0400
 
-> prism2_usb already uses p80211, which is a softmac stack.  So the cards
-> are already being driven in softmac mode.  You basically just have to
-> write a mac80211 driver for the hardware and ignore p80211 completely.
+> A few more fixes for 2.6.26...the only big parts are either moving
+> existing code or adding missing initializations to zero.
 
-I don't think p80211 is a softmac stack.  It's just a thin layer for
-802.11 packet manipulation.  There were some talks about splitting
-lib80211 from mac80211 so that FullMAC cards could make use of the
-existing code.  p80211 is something of that kind.
+Pulled into net-2.6
 
-Prism USB is not much different from other Prism cards.  Sure, it needs
-packet interface for communicating to the device, but it associates on
-its own.
+I'll push back out to kernel.org after some build tests.
 
-I asked Jouni if HostAP could be converted to SoftMAC, and his answer
-was that it may be a good AP but a poor station (sorry I cannot find it
-in the archives).  The same would apply to Prism USB.
-
--- 
-Regards,
-Pavel Roskin
+Thanks!
