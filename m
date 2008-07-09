@@ -1,41 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:58740 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757062AbYG0Gla (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jul 2008 02:41:30 -0400
-Message-ID: <1617.92.50.126.45.1217140888.squirrel@webmail.madwifi.org> (sfid-20080727_084143_586634_C75E3674)
-In-Reply-To: <43e72e890807260744j5473d723qba9d30f29e87abee@mail.gmail.com>
-References: <43e72e890807260744j5473d723qba9d30f29e87abee@mail.gmail.com>
-Date: Sun, 27 Jul 2008 08:41:28 +0200 (CEST)
-Subject: Re: Reporting the right Linux wireless bug
-From: "Michael Renzmann" <mrenzmann@madwifi.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Dan Williams" <dcbw@redhat.com>, "Jouni Malinen" <j@w1.fi>
+Received: from mx51.mymxserver.com ([85.199.173.110]:56954 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751930AbYGINVX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jul 2008 09:21:23 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: Re: [PATCH] libertas: fix memory alignment problems on the blackfin
+Date: Wed, 9 Jul 2008 15:21:04 +0200
+Cc: Ihar Hrachyshka <ihar.hrachyshka@promwad.com>,
+	linux-wireless@vger.kernel.org
+References: <20080709031850.2e7bf50f@promwad.com>
+In-Reply-To: <20080709031850.2e7bf50f@promwad.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200807091521.04520.hs4233@mail.mn-solutions.de> (sfid-20080709_152126_670371_C783994E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis.
+> Fixing unaligned memory access on the blackfin architecture
+> (maybe on the ARM also).
 
-Luis R. Rodriguez wrote:
-> To help users report bugs correctly I've set up this page:
-> http://wireless.kernel.org/en/users/Reporting_bugs
->
-> Please help review/edit/expand accordingly.
-
-I understand that the page is not yet complete, but still I'd like to note
-two things I came across on a first quick glance:
-
-Section "Wireless Components":
-"... which let users use to use wireless. ..." doesn't sound correct. How
-about "... which let users use wireless devices. ..."?
-
-Section "Kernel Panics":
-It states that kernel panics should be reported immediately, but it does
-not explain where or how to report them. The following text then just
-explains how to identify the component that causes "other bugs" and where
-to report them.
-
-Bye, Mike
+You can delete the "maybe", on ARM (more specificially, on a 
+PXA255, which is ARMv5TE) I didn't had a problem.
