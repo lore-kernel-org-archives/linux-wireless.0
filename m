@@ -1,85 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35515 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755385AbYG2LTO (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.178]:45298 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751351AbYGISUW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 07:19:14 -0400
-Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks
-	rtl8187
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240807290416l7c489b50yca9efe637895725b@mail.gmail.com> (sfid-20080729_131603_908568_547AEACB)
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
-	 <3ace41890807281939y462c9b91n5fa952e167b6ff8c@mail.gmail.com>
-	 <200807290021.45400.herton@mandriva.com.br>
-	 <1217314430.15381.11.camel@johannes.berg>
-	 <1ba2fa240807290123n7673dbb9m7121c1e76fe57e94@mail.gmail.com>
-	 <1217320089.15381.25.camel@johannes.berg>
-	 <1ba2fa240807290138h7deced1cob0836ae3e3c1e71a@mail.gmail.com>
-	 <1217322974.10489.0.camel@johannes.berg>
-	 <1ba2fa240807290226n19ab0944u8e27f40cb688cfcc@mail.gmail.com>
-	 <1217323749.10489.7.camel@johannes.berg>
-	 <1ba2fa240807290416l7c489b50yca9efe637895725b@mail.gmail.com>
-	 (sfid-20080729_131603_908568_547AEACB)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xEnGL8UOeug+1J7FxJ37"
-Date: Tue, 29 Jul 2008 13:18:53 +0200
-Message-Id: <1217330333.10489.17.camel@johannes.berg> (sfid-20080729_131917_857274_90FC00A0)
-Mime-Version: 1.0
+	Wed, 9 Jul 2008 14:20:22 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so1439923ika.5
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 11:20:20 -0700 (PDT)
+To: Bryan Batten <BryanBatten@sbcglobal.net>
+Subject: Re: [Rt2400-devel] [PATCH] rt2x00: Fix NULL pointer error in adhoc/master mode
+Date: Wed, 9 Jul 2008 20:29:09 +0200
+Cc: linville@tuxdriver.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+References: <200807051511.57995.IvDoorn@gmail.com> <200807052042.47008.IvDoorn@gmail.com> <4874FC95.3050904@sbcglobal.net>
+In-Reply-To: <4874FC95.3050904@sbcglobal.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200807092029.10007.IvDoorn@gmail.com> (sfid-20080709_202025_913572_6F09E47D)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 09 July 2008, Bryan Batten wrote:
+> Ivo van Doorn wrote:
+> > On Saturday 05 July 2008, Bryan Batten wrote:
+> >> Ivo van Doorn wrote:
+> ...
+> >>> Note that the "raise beacondone interrupts without a beacon" is
+> >>>  also a bug, and will be addressed later.
+> ...
+> >> FWIW, I've never been able to figure out a way to shut it off in 
+> >> the legacy drivers. Unless there's some mechanism I've missed, I 
+> >> would consider this a bug, but its a hardware bug because - in 
+> >> the rt2500 driver at least - even disabling it in the interrupt 
+> >> mask register has no effect.
+> 
+> Looking thru the RT2400 and RT2500 datasheets, I notice that on pp. 12
+> of the 2400 datasheet, CSR8 bits 0 and 1 are described. On the same
+> page of the RT2500 datasheet, CSR8 bits 0 and 1 are not described. If
+> that is not a typo, that means to me that on the RT2400 you can
+> mask off beacon timer and wakeup timer interrupts with CSR8, but on
+> the RT2500 you cannot.
 
---=-xEnGL8UOeug+1J7FxJ37
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yes, but if you look again you see that the legacy driver does define it,
+and even includes the description of bits 9 -> 19
+And the legacy driver source code has always been more reliable then
+the datasheet, so I would put my money on the code. ;)
 
-On Tue, 2008-07-29 at 14:16 +0300, Tomas Winkler wrote:
+> Would it be possible to verify with Ralink that this is not a typo in
+> the RT2500 datasheet?
 
-> I think the path of enabling user to control this through iw(nl) or
-> wext is closer to
-> come to usability as to relay on any application to implement it in
-> next half a year.
-> You need single API anyway since there have to be single point of
-> decision as there are many applications
-> running over single NIC e.g. VoIP and web browser have different requirem=
-ents.
+I'll see what I can find out.
 
-Umm, no, you just use min(what applications requested).
-
-> What I would actually start with is to get notification about dc or
-> battery supply. I don't think that class
-> implements notification chain though.
-
-That policy is probably just powersave on/off and definitely belongs
-into userland.
-
-johannes
-
---=-xEnGL8UOeug+1J7FxJ37
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIjvyZAAoJEKVg1VMiehFY5KEP/1eG9UDuZW8j8cIPO+VGO1lj
-Mu8Zhsau6dvQVIROu9l0v46aqWSd4NIoflWt3Xd2nL7dcVfShWAjYACKSCAFzErd
-vS+rlUZCXetSDtvfNIPPZGIoVQ8phuc8AerL1ZsnDO1TpBMBxxyu0PS6M8vSVvyJ
-LkexK7nDN8pksrJqA7G2BvCtrahIe2jGbSzUMGzxLYZdAw8p+qMra9RQPLX8TrfI
-8tOyhvoiGkYJvJan+vmW/IYrLCbhdAxpOCBt/cOGbBiLvPdVt+r8t1sUyJcBOzRY
-8EKZcG5jBNgsL1OsYkzIUS+YTSNnSPklHif115CN2wnUPqrWEnOISkUm4kRtC4m6
-zolnSI4LZpB92TSJl++j+HlBwQbOmyPoKTNiSlW0kcJ+Um9a1w1auGTNDUdLvXJM
-USDZjBbhFZKGTaIxsNGH2QGRn+lLa2aWd+GFeO/SlfSS84D8gDK69xo/1z3VN5zO
-2snlPPwI1+SG7WbD0dmjn/p4e47wugZhi1zxCQE5vXQZBFNssh0SllGHo4wcmbiQ
-LQ90enbGsVyJx3kjMLyV837MF5ic0vCoXYFPa7YgfTPwoTgkrjy5DkCEaQ9pMDZi
-KoXf1Sm6Jwk+xbjaM6BqXe5X51y1ZObagiOMI2TS3J220lQQDL+sG0+lPDe6dsLk
-pKoPWBr3yJrA4SPUGGuK
-=HrGm
------END PGP SIGNATURE-----
-
---=-xEnGL8UOeug+1J7FxJ37--
-
+Ivo
