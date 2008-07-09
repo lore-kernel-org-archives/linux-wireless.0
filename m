@@ -1,44 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:62664 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753768AbYGNMjB (ORCPT
+Received: from tebo.cs.washington.edu ([128.208.6.74]:44168 "EHLO
+	tebo.cs.washington.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751924AbYGIRlo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 08:39:01 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so2384887ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2008 05:38:54 -0700 (PDT)
-Message-ID: <1ba2fa240807140538n671ac95cm3e4b1a9d25af411a@mail.gmail.com> (sfid-20080714_143906_742001_502D8EB0)
-Date: Mon, 14 Jul 2008 15:38:53 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/2] mac80211: pass dtim_period to low level driver
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
-In-Reply-To: <1216038966.11189.12.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
-	 <1216038966.11189.12.camel@johannes.berg>
+	Wed, 9 Jul 2008 13:41:44 -0400
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	=?ISO-8859-1?Q?Stefanik_G=E1bo@sc8-sf-spam2-b.sourceforge.net?=,
+	ipw3945-devel@lists.sourceforge.net
+Message-Id: <62912CC9-C856-4FD1-8642-8A80DB657468@cs.washington.edu> (sfid-20080709_194146_902955_489F51E0)
+From: Dan Halperin <dhalperi@cs.washington.edu>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+In-Reply-To: <4874E68F.7090106@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed	delsp=yes
+Mime-Version: 1.0 (Apple Message framework v926)
+Subject: Re: [ipw3945-devel] [BUG] Two bugs in monitor mode, iwl3945
+Date: Wed, 9 Jul 2008 10:04:53 -0700
+References: <485F687C.1050407@gmail.com> <4874E68F.7090106@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 14, 2008 at 3:36 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->> --- a/include/net/mac80211.h
->> +++ b/include/net/mac80211.h
->> @@ -191,6 +191,7 @@ struct ieee80211_bss_conf {
->>       /* erp related data */
->>       bool use_cts_prot;
->>       bool use_short_preamble;
->> +     u8 dtim_period;
->>       u16 beacon_int;
->>       u16 assoc_capability;
->>       u64 timestamp;
->
-> Can you add documentation please, especially about the fact that it can
-> be zero if the network is buggy / IBSS.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Right, I will also add fallback to 1 if it's 0
-Thanks
-Tomas
+I've observed that (often?) if you ifconfig wlan0 down before enabling =
+=20
+monitor/promisc mode, then it seems to not hang the system.
+
+- -Dan
+
+On Jul 9, 2008, at 9:25 AM, Maxim Levitsky wrote:
+
+> Maxim Levitsky wrote:
+>> I noticed two bugs:
+>>
+>> 1) Monitor mode hangs the system randomly, and what is interesting =20
+>> that
+>> this
+>> bug disappears if I patch the driver with packet injection patch fro=
+m
+>> G=E1bor Stefanik.
+>> I noticed this bug, after I removed his patch to see if it caused =20
+>> some
+>> problems.
+>> Always reproducible, usually hangs just after airodump launch.
+>>
+>> 2) If I enable monitor mode regardless of injection patch, the =20
+>> scanning
+>> results got garbaged,
+>> iwlist scan reports > 100 quality on most APs, or 0% quality on my
+>> router, shows extremely low and hi power levels, like
+>> -127dBm or 160 dBm, and those levels change rapidly.
+>> This why I removed the injection patch, I suspected it, but this bug
+>> appears to be not related to it.
+> I noticed that exactly same bug happens if I enable promisc mode on =20
+> the
+> wlan0. Does this give any additional clue why this bug happens?
+>
+> Best regards,
+> 	Maxim levitsky
+>
+> ---------------------------------------------------------------------=
+----
+> Sponsored by: SourceForge.net Community Choice Awards: VOTE NOW!
+> Studies have shown that voting for your favorite open source project,
+> along with a healthy diet, reduces your potential for chronic lamenes=
+s
+> and boredom. Vote Now at http://www.sourceforge.net/community/cca08
+> _______________________________________________
+> Ipw3945-devel mailing list
+> Ipw3945-devel@lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.8 (Darwin)
+
+iEYEARECAAYFAkh077UACgkQy9GYuuMoUJ4dHwCfUMQxWYvXEHTtna7YYZoAHLYw
+m4MAoMMjySqqdA8K5UmiwqE83Sr5K+L9
+=3Dkx/b
+-----END PGP SIGNATURE-----
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
