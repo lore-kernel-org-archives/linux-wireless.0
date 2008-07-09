@@ -1,89 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51673
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1757430AbYGQMR0 (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.174]:3223 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754902AbYGIQEG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 08:17:26 -0400
-Date: Thu, 17 Jul 2008 05:17:26 -0700 (PDT)
-Message-Id: <20080717.051726.226040470.davem@davemloft.net> (sfid-20080717_141733_891257_35243809)
-To: netdev@vger.kernel.org
-CC: kaber@trash.net, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in RCU.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 9 Jul 2008 12:04:06 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so89820ugf.16
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 09:04:05 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/3] mac80211: Include sequence number in IBSS and Mesh beacons
+Date: Wed, 9 Jul 2008 18:12:55 +0200
+Cc: Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200807091511.14288.IvDoorn@gmail.com> <1215618570.3246.30.camel@johannes.berg> <1215618957.3246.35.camel@johannes.berg>
+In-Reply-To: <1215618957.3246.35.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200807091812.55271.IvDoorn@gmail.com> (sfid-20080709_180411_211560_705828AB)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 09 July 2008, Johannes Berg wrote:
+> On Wed, 2008-07-09 at 17:49 +0200, Johannes Berg wrote:
+>=20
+> > Ok so the thing is this: 802.11-2007 7.1.3.4.1 requires that we kee=
+p
+> > sequence counters per TID (and one for "not QoS"), which we only as=
+sign
+> > rather late in the wme code. Because even b43 hardware only keeps t=
+rack
+> > of a single sequence counter, it requires not using that counter fo=
+r QoS
+> > frames. =EF=BB=BFI suspect no driver except the overly smart iwlwif=
+i gets this
+> > right.
+>=20
+> Even if we fix this, we still haven't solved the problem of the beaco=
+n
+> sequence number. I'm currently favouring putting the burden on the
+> driver since only =EF=BB=BFrt2400pci and rt2500pci seem to require it=
+ and it's
+> fairly simple to keep a race-free per-VIF counter for non-QoS frames =
+in
+> the driver (you can just do it under the queue lock), but doing it
+> race-free in mac80211 will need a bunch of extra locking.
+>=20
+> I'll put off the fix until after davem's TX MQ rework though.
 
-This allows less strict control of access to the qdisc attached to a
-netdev_queue.  It is even allowed to enqueue into a qdisc which is
-in the process of being destroyed.  The RCU handler will toss out
-those packets.
+Ok, that would allow some time for rt2x00 to come up with the
+implementation for the rt2400pci and rt2500pci drivers.
 
-We will need this to handle sharing of a qdisc amongst multiple
-TX queues.  In such a setup the lock has to be shared, so will
-be inside of the qdisc itself.  At which point the netdev_queue
-lock cannot be used to hard synchronize access to the ->qdisc
-pointer.
+And this is extra motivation for a volunteer to look into this,
+because when mac80211 removes the seq counting, it is not
+just adhoc and master mode that are broken. ;)
 
-One operation we have to keep inside of qdisc_destroy() is the list
-deletion.  It is the only piece of state visible after the RCU quiesce
-period, so we have to undo it early and under the appropriate locking.
-
-The operations in the RCU handler do not need any looking because the
-qdisc tree is no longer visible to anything at that point.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/sched/sch_generic.c |   20 +++++++++++---------
- 1 files changed, 11 insertions(+), 9 deletions(-)
-
-diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
-index 7e078c5..082db8a 100644
---- a/net/sched/sch_generic.c
-+++ b/net/sched/sch_generic.c
-@@ -545,6 +545,17 @@ EXPORT_SYMBOL(qdisc_reset);
- static void __qdisc_destroy(struct rcu_head *head)
- {
- 	struct Qdisc *qdisc = container_of(head, struct Qdisc, q_rcu);
-+	const struct Qdisc_ops  *ops = qdisc->ops;
-+
-+	gen_kill_estimator(&qdisc->bstats, &qdisc->rate_est);
-+	if (ops->reset)
-+		ops->reset(qdisc);
-+	if (ops->destroy)
-+		ops->destroy(qdisc);
-+
-+	module_put(ops->owner);
-+	dev_put(qdisc_dev(qdisc));
-+
- 	kfree((char *) qdisc - qdisc->padded);
- }
- 
-@@ -552,21 +563,12 @@ static void __qdisc_destroy(struct rcu_head *head)
- 
- void qdisc_destroy(struct Qdisc *qdisc)
- {
--	const struct Qdisc_ops  *ops = qdisc->ops;
--
- 	if (qdisc->flags & TCQ_F_BUILTIN ||
- 	    !atomic_dec_and_test(&qdisc->refcnt))
- 		return;
- 
- 	list_del(&qdisc->list);
--	gen_kill_estimator(&qdisc->bstats, &qdisc->rate_est);
--	if (ops->reset)
--		ops->reset(qdisc);
--	if (ops->destroy)
--		ops->destroy(qdisc);
- 
--	module_put(ops->owner);
--	dev_put(qdisc_dev(qdisc));
- 	call_rcu(&qdisc->q_rcu, __qdisc_destroy);
- }
- EXPORT_SYMBOL(qdisc_destroy);
--- 
-1.5.6.2.255.gbed62
-
+Ivo
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
