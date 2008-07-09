@@ -1,80 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:41048 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753725AbYGNROC (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33200 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753413AbYGIMva (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 13:14:02 -0400
-Date: Mon, 14 Jul 2008 10:13:49 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Vivek Dasmohapatra <vivek@etla.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.24 ipw2200 driver can't be reset after firmware explodes
-Message-Id: <20080714101349.38079048.akpm@linux-foundation.org> (sfid-20080714_191408_936285_41DDB967)
-In-Reply-To: <Pine.LNX.4.64.0807141240020.6889@localhost>
-References: <Pine.LNX.4.64.0807141240020.6889@localhost>
+	Wed, 9 Jul 2008 08:51:30 -0400
+Message-Id: <20080709124254.039606000@sipsolutions.net> (sfid-20080709_145139_709515_638ADA0D)
+References: <20080709124033.781606000@sipsolutions.net>
+Date: Wed, 09 Jul 2008 14:40:36 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Tomas Winkler <tomasw@gmail.com>
+Subject: [PATCH 3/4] mac80211: push interface checks down
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(cc linux-wireless)
+This patch pushes the "netif_running()" and "same type as before"
+checks down into ieee80211_if_change_type() to centralise the
+logic instead of duplicating it for cfg80211 and wext.
 
-On Mon, 14 Jul 2008 13:27:51 +0100 (BST) Vivek Dasmohapatra <vivek@etla.org> wrote:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/cfg.c         |    8 ++++----
+ net/mac80211/ieee80211_i.h |    4 ++--
+ net/mac80211/iface.c       |   20 ++++++++++++++++++--
+ net/mac80211/wext.c        |    9 +--------
+ 4 files changed, 25 insertions(+), 16 deletions(-)
 
-> Hi: I have a thinkpad t43p with an ipw2200 driven piece of hardware in it.
-> 
-> 04:02.0 Network controller [0280]:
->   Intel Corporation PRO/Wireless 2915ABG Network Connection [8086:4224] (rev 05)
->          Kernel driver in use: ipw2200
->          Kernel modules: ipw2200
-> 
-> >From time to time, the firmware flakes out, and I get messages like this:
-> [ I'm not sure which version of the firmware I have, I can't see anything
->    obvious in dmesg when the ipw2200 module loads: I have files like
->    ipw-2.4-bss.fw in /lib/firmware if that helps ]
-> 
-> Jul 14 03:42:25 neko kernel: 
-> ipw2200: Failed to send SCAN_ABORT: Command timed out.
-> Jul 14 03:42:26 neko kernel: 
-> ipw2200: Failed to send CARD_DISABLE: Command timed out.
-> Jul 14 03:42:32 neko kernel: 
-> ipw2200: Failed to send SCAN_ABORT: Command timed out.
-> Jul 14 03:42:33 neko kernel: 
-> ipw2200: Failed to send CARD_DISABLE: Command timed out.
-> Jul 14 03:42:39 neko kernel: 
-> ipw2200: Failed to send SCAN_ABORT: Command timed out.
-> 
-> repeated again and again.
-> 
-> There's usually a "firmware error detected, restarting" message buried
-> somewhere in the logs before that happens.
-> 
-> Under kernel 2.6.16, I was able to fix this as follows:
-> 
-> echo -n 3 > /sys/class/net/$IFACE/device/power/state
-> sleep 1
-> echo -n 0 > /sys/class/net/$IFACE/device/power/state
-> 
-> ( removing and reloading the module has no effect here, under
->    either kernel 2.6.16 or 2.6.24: taking the interface down and
->    bringing it up again is likewise ineffective )
-> 
-> However, I note that under 2.6.24 said /sys interface is no
-> longer present, so once the firmware dies, I am forced to either
-> hunt down a network cable with something useful on the other end,
-> or live without networking, or reboot.
-> 
-> Is there a new way to achieve the same effect in 2.6.24? If there's not,
-> is there likely to be in the future? Or should I just revert to 2.6.16
-> until such time as I replace my laptop and (hopefully) don't have to
-> struggle with the intel wifi hardware any more?
-> 
-> The firmware bug is covered here: 
-> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=875
-> if that's helpful/relevant.
-> 
-> [ CCd to netdev as I was told it would be of interest there too,
->    apologies if this is not the case ]
-> 
+--- everything.orig/net/mac80211/cfg.c	2008-07-08 22:01:56.000000000 +0200
++++ everything/net/mac80211/cfg.c	2008-07-08 22:01:57.000000000 +0200
+@@ -84,22 +84,22 @@ static int ieee80211_change_iface(struct
+ 	struct net_device *dev;
+ 	enum ieee80211_if_types itype;
+ 	struct ieee80211_sub_if_data *sdata;
++	int ret;
+ 
+ 	/* we're under RTNL */
+ 	dev = __dev_get_by_index(&init_net, ifindex);
+ 	if (!dev)
+ 		return -ENODEV;
+ 
+-	if (netif_running(dev))
+-		return -EBUSY;
+-
+ 	itype = nl80211_type_to_mac80211_type(type);
+ 	if (itype == IEEE80211_IF_TYPE_INVALID)
+ 		return -EINVAL;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+-	ieee80211_if_change_type(sdata, itype);
++	ret = ieee80211_if_change_type(sdata, itype);
++	if (ret)
++		return ret;
+ 
+ 	if (ieee80211_vif_is_mesh(&sdata->vif) && params->mesh_id_len)
+ 		ieee80211_if_sta_set_mesh_id(&sdata->u.sta,
+--- everything.orig/net/mac80211/ieee80211_i.h	2008-07-08 22:01:56.000000000 +0200
++++ everything/net/mac80211/ieee80211_i.h	2008-07-08 22:01:57.000000000 +0200
+@@ -929,8 +929,8 @@ void ieee80211_if_setup(struct net_devic
+ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 		     struct net_device **new_dev, enum ieee80211_if_types type,
+ 		     struct vif_params *params);
+-void ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
+-			      enum ieee80211_if_types type);
++int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
++			     enum ieee80211_if_types type);
+ void ieee80211_if_remove(struct net_device *dev);
+ void ieee80211_remove_interfaces(struct ieee80211_local *local);
+ 
+--- everything.orig/net/mac80211/iface.c	2008-07-08 22:01:56.000000000 +0200
++++ everything/net/mac80211/iface.c	2008-07-08 22:01:57.000000000 +0200
+@@ -138,9 +138,23 @@ static void ieee80211_setup_sdata(struct
+ 	ieee80211_debugfs_add_netdev(sdata);
+ }
+ 
+-void ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
+-			      enum ieee80211_if_types type)
++int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
++			     enum ieee80211_if_types type)
+ {
++	ASSERT_RTNL();
++
++	if (type == sdata->vif.type)
++		return 0;
++
++	/*
++	 * We could, here, on changes between IBSS/STA/MESH modes,
++	 * invoke an MLME function instead that disassociates etc.
++	 * and goes into the requested mode.
++	 */
++
++	if (netif_running(sdata->dev))
++		return -EBUSY;
++
+ 	/* Purge and reset type-dependent state. */
+ 	ieee80211_teardown_sdata(sdata->dev);
+ 	ieee80211_setup_sdata(sdata, type);
+@@ -149,6 +163,8 @@ void ieee80211_if_change_type(struct iee
+ 	sdata->basic_rates = 0;
+ 	sdata->drop_unencrypted = 0;
+ 	sdata->sequence = 0;
++
++	return 0;
+ }
+ 
+ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+--- everything.orig/net/mac80211/wext.c	2008-07-08 22:01:56.000000000 +0200
++++ everything/net/mac80211/wext.c	2008-07-08 22:01:57.000000000 +0200
+@@ -296,14 +296,7 @@ static int ieee80211_ioctl_siwmode(struc
+ 		return -EINVAL;
+ 	}
+ 
+-	if (type == sdata->vif.type)
+-		return 0;
+-	if (netif_running(dev))
+-		return -EBUSY;
+-
+-	ieee80211_if_change_type(sdata, type);
+-
+-	return 0;
++	return ieee80211_if_change_type(sdata, type);
+ }
+ 
+ 
+
+-- 
 
