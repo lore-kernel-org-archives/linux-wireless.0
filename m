@@ -1,71 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60922 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:43546 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753680AbYG3HRT (ORCPT
+	with ESMTP id S1756083AbYGIWMM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 03:17:19 -0400
-Subject: Re: [PATCH] mac80211: partially fix skb->cb use
+	Wed, 9 Jul 2008 18:12:12 -0400
+Subject: iwlwifi workaround for mac80211 sequence number bug
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1217347091.6379.57.camel@localhost> (sfid-20080729_175816_515768_CDBB713C)
-References: <1217323927.10489.9.camel@johannes.berg>
-	 <1217330604.6379.12.camel@localhost>
-	 (sfid-20080729_132329_995714_6D2C9701)  <1217330667.10489.19.camel@johannes.berg>
-	 <1217331773.6379.25.camel@localhost>
-	 (sfid-20080729_134300_214751_172329C5)  <1217332288.10489.33.camel@johannes.berg>
-	 <1217333020.6379.31.camel@localhost>
-	 (sfid-20080729_140346_036234_85BD2AA9)  <1217333247.10489.35.camel@johannes.berg>
-	 <1217347091.6379.57.camel@localhost> (sfid-20080729_175816_515768_CDBB713C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ecRnQejy5VCjAp7vITwY"
-Date: Wed, 30 Jul 2008 09:17:15 +0200
-Message-Id: <1217402235.10489.83.camel@johannes.berg> (sfid-20080730_091723_345501_321BAADD)
+To: tomasw <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ron Rindjunksi <ron.rindjunski@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-S666sQoqzc26HC/IHhxH"
+Date: Thu, 10 Jul 2008 00:11:25 +0200
+Message-Id: <1215641485.3246.72.camel@johannes.berg> (sfid-20080710_001234_329965_EFB06AD3)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-ecRnQejy5VCjAp7vITwY
+--=-S666sQoqzc26HC/IHhxH
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2008-07-29 at 17:58 +0200, Luis Carlos Cobo wrote:
-> On Tue, 2008-07-29 at 14:07 +0200, Johannes Berg wrote:
-> > Ok. How is that supposed to work with crypto? Do each two peers
-> > negotiate a key and forwarding just doesn't change anything so crypto i=
-s
-> > effectively end-to-end?
->=20
-> Actually not, crypto is per link (per hop). We don't have a schedule to
-> support that but anyway, where do you suggest to save the mesh header in
-> this case?
+Ok, so I'm frustrated. I spent a few hours today chasing docs, trying to
+understand sequence numbering from the specs, how we implement it in
+mac80211 for TX and RX, how hardware/firmware implements it. Finally, I
+figure out that mac80211 is buggy, and come up with a buggy (now I know)
+patch.
 
-Can we just retransmit the frame directly to the master interface, with
-all that still intact?
+Then, now, I find out that iwlwifi contains a workaround for the
+mac80211 sequence numbering, so you've known all along!
+
+Why don't you tell anyone about the problems you find? It can't be that
+hard. Are there any other lurking issues like that?
+
+Here's the code from iwlwifi:
+
+        if (ieee80211_is_data_qos(fc)) {
+                qc =3D ieee80211_get_qos_ctl(hdr);
+                tid =3D qc[0] & 0xf;
+                seq_number =3D priv->stations[sta_id].tid[tid].seq_number &
+                                IEEE80211_SCTL_SEQ;
+                hdr->seq_ctrl =3D cpu_to_le16(seq_number) |
+                        (hdr->seq_ctrl &
+                                __constant_cpu_to_le16(IEEE80211_SCTL_FRAG)=
+);
+                seq_number +=3D 0x10;
+                /* aggregation is on for this <sta,tid> */
+                if (info->flags & IEEE80211_TX_CTL_AMPDU)
+                        txq_id =3D priv->stations[sta_id].tid[tid].agg.txq_=
+id;
+                priv->stations[sta_id].tid[tid].tfds_in_queue++;
+        }
+
+We can implement that trivially in mac80211 and make it do the right
+thing for all drivers instead of having iwlwifi work around the bug in
+mac80211.
+
+Additionally, we can then remove the ssn argument to the ampdu_action
+callback.
 
 johannes
 
---=-ecRnQejy5VCjAp7vITwY
+--=-S666sQoqzc26HC/IHhxH
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIkBV4AAoJEKVg1VMiehFYHFgP/R6jrXIU2YsfNUY0JjRvEf5B
-4E+IBGsQuIGe5lclMC5N6wQwZUxjVjpxk0GhaysiFcqja1vvzj+0pzMlbm/E1Sv0
-zVn7ysdDl3fzlc+nHnC8diSAnLZ34ZqOx+f1W/DMkO2IkO5Qrwdw9HpB9+H+hUzw
-Ef2lbwX2P6QeqDGei+DpgqZiC5zDLhIZsMMMJ7pHLAlxXqcECdmtyhIvLkk94YrX
-VT/2N3p+0Zg3oAjx/CEEphIat/VhXfw1/gYAxW910QEnK8HAZr1MSWKI+BygVQYB
-AkTiblBuQ6OAT9/N+kZ9o+dvItm5J/I9N7WvUQB12IAT95He9LvnYkNv4fzhr+Wn
-dSBw07m/E1jhZMYddCoK9WmGNpqvFSX4maBbxgNfQ1mtLsrItwSaLim3OacEcKEg
-KbdBdlxqjPapSRorAO/b1YZHfGVRVMZEUwmq0y6NiF5HfFSw/D9Q+qapik5Z2hWT
-p4gBaFTOiYBxAH6THA18neUW/IfrlXi0urcvI/FyDVnuodaWMDYGV4BV1qyXM0b5
-Zfli8fStS00CAIYm5964K5hDtv3g60HHonsXlE93SzsVHiBln6rmDHCXnCCeoIVC
-7REAaPaLXDWujhjzFPIAJIDGMVigJXk65Ew59oKkRhbqmfzzorJK5hYipl1vcRO1
-PrYXCxt9OJ4bkYx0FBh0
-=pO42
+iQIcBAABAgAGBQJIdTeDAAoJEKVg1VMiehFY5BYQAImprwVdBE+TPZJLSiQxkYEs
+83TjyDRSx43E/qTeENRXeMgYZnadKFGs88Yfm7O9Tq/ciZaEdW2j8vmKQFZCyI3v
+JB6rGhMfC054DpOxCX1nxNonzxhJ4deJyD9MxNCx0euOrHwQnmn9GYtS0NtPDXal
+UyL0+4/XJsTkn5ZbJbTgNUjNFb1zqGDsiNv8lr/BTKZRh7Ckhl+Kp0S/ctEHEkaw
+5eYKrzPQbFoLs9hegNcqY5yVwGMfW9GCDp7rLfQyY18FRbmV4hawdtAlmbqPPzJd
+/Df5K9MrzUBTrlIcHEK0qnj0Q5ea+Www4T87L+f3O7FzTniUZZxOBdqTc5khxL4/
+hBD5N8pli9J+T8onFEMmyvhAsxOgsFGCfJlYxCFWiql6JiZVgSrKoXO7+Q1Ww4IV
+4WySHBgo5BN0w4htF4C+6WM9K6GTQ8jrn1bdaTXJtQgC86Gn/t4Y3yDBrw/2qb8T
+4c0laU/2KblGBiUCcdO8lT/yujg4uuNTuMFMaxsNpt4B0je5f6vTy7k5vazfjIzA
+dKmjFbgHSotju2rYBh1Ru8Uw7hCcmkyQd8S3o7GwtGsFjMAyfuFeWyxkSAukpdQK
+9i2OERcdWjpX54j8x4tMmCa/YSDCKrwn96j73ezaXzxTwNYxx0NsoWxKb9xGsNgT
+z6c9VUaogH2etv4L2dFX
+=agyu
 -----END PGP SIGNATURE-----
 
---=-ecRnQejy5VCjAp7vITwY--
+--=-S666sQoqzc26HC/IHhxH--
 
