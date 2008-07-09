@@ -1,60 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:30208 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750894AbYGXDmM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 23:42:12 -0400
-Subject: Re: [ath5k-devel] AR5418 works with ath9k
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Davide Pesavento <davidepesa@gmail.com>,
-	ath9k-devel@lists.ath9k.org, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890807230513u81e68aaj443110d734161368@mail.gmail.com>
-References: <2da21fe50807221453m5275f59dj7369da5e667815d7@mail.gmail.com>
-	 <43e72e890807230513u81e68aaj443110d734161368@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 23 Jul 2008 23:42:09 -0400
-Message-Id: <1216870929.30436.34.camel@dv> (sfid-20080724_054218_895175_B223F552)
+Received: from xc.sipsolutions.net ([83.246.72.84]:52200 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751915AbYGIRlc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jul 2008 13:41:32 -0400
+Subject: Re: [RFC PATCH 0/7] IEEE 802.11w / management frame protection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080617154008.883383150@localhost> (sfid-20080617_175912_673335_B33F2037)
+References: <20080617154008.883383150@localhost>
+	 (sfid-20080617_175912_673335_B33F2037)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VGLOkstWWcAl0qyBc9iN"
+Date: Wed, 09 Jul 2008 19:40:46 +0200
+Message-Id: <1215625246.3246.40.camel@johannes.berg> (sfid-20080709_194135_916590_FC9A6131)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-07-23 at 05:13 -0700, Luis R. Rodriguez wrote:
-> > Maybe MacBook Pro's card has different eeprom's contents? Anyway the
-> > card now works fine, and it also appears quite stable! ;-)
-> > Thank you very much for your work!
-> 
-> I believe your last patch may have been "Use skb_end_pointer() ..." if
-> so then this is why you had this issue. Give the git tree a shot:
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/ath9k.git
 
-Luis, I'm afraid that code is still wrong.  It used to be min(), but now
-it's essentially max().  You wrote that there was an error in my patch
-and I agreed, but we were talking of different errors, I'm afraid.
-
-Since you have touched the code after me and you know more about the
-hardware, I would prefer that you fix it and recheck everything once
-again.
-
-Here's the patch.  I don't feel comfortable about describing things I
-don't fully understand.
-
-diff --git a/ksrc/hw.c b/ksrc/hw.c
-index 5c8127e..e0a5464 100644
---- a/ksrc/hw.c
-+++ b/ksrc/hw.c
-@@ -852,7 +852,7 @@ static inline enum hal_status ath9k_hw_check_eeprom(struct ath_hal *ah)
- 	else
- 		el = ahp->ah_eeprom.baseEepHeader.length;
- 
--	if (el < sizeof(struct ar5416_eeprom))
-+	if (el > sizeof(struct ar5416_eeprom))
- 		el = sizeof(struct ar5416_eeprom) / sizeof(u_int16_t);
- 	else
- 		el = el / sizeof(u_int16_t);
+--=-VGLOkstWWcAl0qyBc9iN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
--- 
-Regards,
-Pavel Roskin
+> This patch set does not address the issues found in configuring default
+> keys for monitor interfaces, i.e., this still needs a workaround in
+> hostapd to set IGTK for both wlan# and mon.wlan#. In addition, the
+> debugfs directory is left behind when the monitor interface is removed.
+
+Can you try this patch?
+http://johannes.sipsolutions.net/patches/kernel/all/2008-07-09-17%3a38/021-=
+mac80211-inject-sdata.patch
+
+It should use the sdata from the TA instead of the monitor when treating
+injecting frames, where possible.
+
+johannes
+
+--=-VGLOkstWWcAl0qyBc9iN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIdPgaAAoJEKVg1VMiehFYAhgP/A00bSl6wrZigk51fAoqqRxj
+x7p5i6b1OimSrCcMehVDnGCB5x1fIE9qdnlGtMEB1Q2La8nGRtWalPq0GAI9IJhF
+v50VVZ5vPQ4Mxm2m6z+solN6fJzrbF5UV8A0K4Z/pWlfV4I6f7HBNN21suTM6PfG
+QJVFz6RbMVQLg1Q21wVm3wC0CTmSDcFCz54tLgx6+D8Aj/4+d/czOk6pFbnzx6vj
+5zE4e7P7jzLoMgW0lqo6fkBGHfEuoC/HX12+okkvVNDHT6y7MwZqLL2X7ZMr7jUG
+iyE1oT0/dTdz41cyz1sr+3JBvyfXQz9mzc/rFyzfEgxY4r1nq0BdgGVMstV88Fb9
+pymDmQ+gsv0oxMaT+J3xMupUrR8YTIll4pk/Hi+uozxLznBdu2RlmUIaYcAWgw1f
+ppIDXA72Rj86deFwFlv0AXbLed+rM+qyzku6PRXLv59MMT3qXzMJ4nGxUd3Th3Gf
+zFpHacTouaZKDfOwkthPMX2lafxet27igKYEBoYkT8sh8qywc91GE77AU1WoQXtW
+yigU+fSf6YWEUdvkSwx3g0CMi2le55WHmJXHHdShN6ljytpKZJYST1G54DAzG2Q7
+5tgqbUD63eti8FUMqanzaqAPMKIR5kM8aTsBruVqWXBA+bt4KOF0KpSvdUdZ2X9Z
+9d7u+BR4//LqMRejAZMQ
+=FQcb
+-----END PGP SIGNATURE-----
+
+--=-VGLOkstWWcAl0qyBc9iN--
+
