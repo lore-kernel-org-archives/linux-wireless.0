@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.238]:55739 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757622AbYGTReT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2008 13:34:19 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1039644rvb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2008 10:34:19 -0700 (PDT)
-Message-ID: <1ba2fa240807201034u1fbe3343tdcc858f7772d2b39@mail.gmail.com> (sfid-20080720_193424_337234_E35974CD)
-Date: Sun, 20 Jul 2008 20:34:18 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "David Miller" <davem@davemloft.net>
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in RCU.
-Cc: hadi@cyberus.ca, kaber@trash.net, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-In-Reply-To: <20080720.102534.246150854.davem@davemloft.net>
+Received: from mail.gmx.net ([213.165.64.20]:56468 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1757119AbYGIHAu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jul 2008 03:00:50 -0400
+Message-ID: <48746220.8010703@gmx.de> (sfid-20080709_090103_831545_199ECE56)
+Date: Wed, 09 Jul 2008 09:00:48 +0200
+From: Helge Deller <deller@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1216387641.4833.96.camel@localhost>
-	 <20080718.140539.122169028.davem@davemloft.net>
-	 <1216566963.4847.81.camel@localhost>
-	 <20080720.102534.246150854.davem@davemloft.net>
+To: Bob Copeland <me@bobcopeland.com>
+CC: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Subject: Re: [ath5k-devel] [PATCH] ath5k: convert LED code to use mac80211
+ triggers
+References: <20080622181134.GA26571@hash.localnet>	 <20080626023528.GA16068@hash.localnet> <g50s14$8n1$1@ger.gmane.org> <b6c5339f0807081922q2941a597m6e135fc7fb907fb@mail.gmail.com>
+In-Reply-To: <b6c5339f0807081922q2941a597m6e135fc7fb907fb@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 20, 2008 at 8:25 PM, David Miller <davem@davemloft.net> wrote:
-> From: jamal <hadi@cyberus.ca>
-> Date: Sun, 20 Jul 2008 11:16:03 -0400
->
->> IMO, in the case of multiple hardware queues per physical wire,
->> and such a netdevice already has a built-in hardware scheduler (they all
->> seem to have this feature) then if we can feed the hardware queues
->> directly, theres no need for any intermediate buffer(s).
->> In such a case, to compare with qdisc arch, its like the root qdisc is
->> in hardware.
->
-> They tend to implement round-robin or some similar fairness algorithm
-> amongst the queues, with zero concern about packet priorities.
->
-> It really is just like a bunch of queues to the phsyical layer,
-> fairly shared.
->
-> These things are built for parallelization, not prioritization.
+Bob Copeland wrote:
+> On Tue, Jul 8, 2008 at 7:08 PM, Helge Deller <deller@gmx.de> wrote:
+>> I tested it against Linus' head version (it applied with minor
+>> modifications) on my HP NC6000 laptop with this built-in Atheros card:
+> [...]
+>> Basically it works, but I think the sc->led_on in:
+>>> +     sc->led_on = 0;  /* active low */
+>> needs to be:
+>>> +     sc->led_on = 1;  /* active high */
+>> for the AR5212 in the HP laptop.
+> 
+> Thanks for the test!
+> 
+>> See also the changes to if_ath_pci.c in:
+>>  http://madwifi.org/attachment/ticket/1018/led.patch
+>> and
+>>  http://madwifi.org/ticket/1018
+>> for an old discussion about madwifi for LEDs in the HP box.
+> 
+> So current madwifi doesn't have this change unless I missed something?
 
-Except wireless where HW has prioritizing scheduler per physical non-wire.
-Tomas
+Yes, the patch has not been applied yet.
+
+>  It appears to use active-low leds in the current version regardless
+> of the vendor.
+
+Yes.
+
+Helge
