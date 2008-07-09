@@ -1,100 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:55510 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751426AbYGSBl3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 21:41:29 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 05/13 V2] iwlwifi: use dtim_period from association, and set listen_interval
-Date: Sat, 19 Jul 2008 04:41:24 +0300
-Message-Id: <1216431684-10598-1-git-send-email-tomas.winkler@intel.com> (sfid-20080719_034148_114186_0E5EA3D6)
-Content-Type: text/plain; charset="us-ascii"
+Received: from xc.sipsolutions.net ([83.246.72.84]:46966 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751126AbYGIWZi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jul 2008 18:25:38 -0400
+Subject: Re: iwlwifi workaround for mac80211 sequence number bug
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ron Rindjunksi <ron.rindjunski@intel.com>
+In-Reply-To: <1ba2fa240807091517y40f6ab8cscc352bfdaa0d715@mail.gmail.com> (sfid-20080710_001755_843107_650682D8)
+References: <1215641485.3246.72.camel@johannes.berg>
+	 <1ba2fa240807091517y40f6ab8cscc352bfdaa0d715@mail.gmail.com>
+	 (sfid-20080710_001755_843107_650682D8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XgmXE1MIuzjlXn1HKABL"
+Date: Thu, 10 Jul 2008 00:24:51 +0200
+Message-Id: <1215642292.3246.79.camel@johannes.berg> (sfid-20080710_002541_544861_780AF5A0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch uses dtim_period from association, and sets the listen_interval.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-commands.h |    3 +--
- drivers/net/wireless/iwlwifi/iwl-core.c     |    1 +
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    5 +++--
- 3 files changed, 5 insertions(+), 4 deletions(-)
+--=-XgmXE1MIuzjlXn1HKABL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index cd6d668..5e57f3a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -666,8 +666,7 @@ struct iwl4965_rxon_assoc_cmd {
- 	__le16 reserved;
- } __attribute__ ((packed));
- 
--
--
-+#define IWL_CONN_MAX_LISTEN_INTERVAL	10
- 
- /*
-  * REPLY_RXON_TIMING = 0x14 (command, has simple generic response)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 7fa0e91..344c33a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -828,6 +828,7 @@ int iwl_setup_mac(struct iwl_priv *priv)
- 		hw->ampdu_queues = priv->cfg->mod_params->num_of_ampdu_queues;
- 
- 	hw->conf.beacon_int = 100;
-+	hw->max_listen_interval = IWL_CONN_MAX_LISTEN_INTERVAL;
- 
- 	if (priv->bands[IEEE80211_BAND_2GHZ].n_channels)
- 		priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 38488c0..7ca01cd 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -639,7 +639,6 @@ static void iwl_activate_qos(struct iwl_priv *priv, u8 force)
- }
- 
- #define MAX_UCODE_BEACON_INTERVAL	4096
--#define INTEL_CONN_LISTEN_INTERVAL	__constant_cpu_to_le16(0xA)
- 
- static __le16 iwl4965_adjust_beacon_interval(u16 beacon_val)
- {
-@@ -669,7 +668,7 @@ static void iwl4965_setup_rxon_timing(struct iwl_priv *priv)
- 	priv->rxon_timing.timestamp.dw[0] =
- 				cpu_to_le32(priv->timestamp & 0xFFFFFFFF);
- 
--	priv->rxon_timing.listen_interval = INTEL_CONN_LISTEN_INTERVAL;
-+	priv->rxon_timing.listen_interval = cpu_to_le16(conf->listen_interval);
- 
- 	tsf = priv->timestamp;
- 
-@@ -2835,6 +2834,7 @@ static int iwl4965_mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *co
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 
-+
- 	/* if we are switching from ht to 2.4 clear flags
- 	 * from any ht related info since 2.4 does not
- 	 * support ht */
-@@ -3151,6 +3151,7 @@ static void iwl4965_bss_info_changed(struct ieee80211_hw *hw,
- 		if (bss_conf->assoc) {
- 			priv->assoc_id = bss_conf->aid;
- 			priv->beacon_int = bss_conf->beacon_int;
-+			priv->power_data.dtim_period = bss_conf->dtim_period;
- 			priv->timestamp = bss_conf->timestamp;
- 			priv->assoc_capability = bss_conf->assoc_capability;
- 			priv->next_scan_jiffies = jiffies +
--- 
-1.5.4.1
+On Thu, 2008-07-10 at 01:17 +0300, Tomas Winkler wrote:
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+> This is not a bug in mac.
+> The sequence number can be committed only if the packet is not dropped
+> somewhere in the driver. See lower in the function.. There are plenty
+> of  places on the TX path when packet can be dropped this it's last
+> station.  There is no reason to pushing this into mac
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+I don't see it that way. In fact, in the code I'm looking at, there is
+nothing that drops the frame before committing the sequence number
+change after assigning it.
+
+And all the cases where it drops the frame _before_ the piece of code I
+quoted don't actually matter, the first bunch of those are bugs and the
+not associated one is strange but most likely doesn't matter either (if
+we're not associated sequence numbers don't matter), and the
+"destination STA entry not found" one doesn't matter either since that
+means there's some disconnect/bug between iwlwifi and mac80211 since
+they should synchronise via sta_notify().
+
+Which particular item do you see as problematic?
+
+johannes
+
+--=-XgmXE1MIuzjlXn1HKABL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIdTqwAAoJEKVg1VMiehFYLL0P/RxnMp1YKsNtakv7ddkxdEzb
+uWbMhyaTm5a0Uy3pJUnFgUvt7GVNZOjQe2L7NxGvoP7am2miH0czHuxefZicmdc0
+FAYAbVa+fW5pFLfDZI7tRglJ5VKzj5/2AF6qkwWN6/Yeuj/umC+C3QtOTDxUfUaS
+V99cMcGeunFmYUqV6xgcregt8eNBp8uJ3gNzcwG/pboBolk37qzeCbe/linpsUJZ
+bdUrHufJX3MfRJopdrn2QzATHvaUd1QXAQT4MLEDOsh+n/6JfZW7I0sm2AJzoqoj
+0B8VIX/j6sX/ZyR3953BfIZGmhpEKhF9oKDjTRxop/b/pycUTIXl88pWaYW174l3
+x15tSz8+0iQKTWgKtLcqvFb8SVCxXxUwi1fGX03idMdh2pBjINmiH9Cr1yRA/J1G
+BhxbQVR8vIjnUzSPWBozfNIcRENxlsyNU+Nlse5kEpBfH75t22uB3nJ8ZyLiRpJO
+cC3nBAcPROQK9K9WuhAGoYInnIVD5Qrt4qaoa8HOvxkEuMoRJVPz2UiGVAGsiEQC
+byykQY+yEdwmaKISuCnSXAP0kUXWu+FI1s+1KxbPqa079987eamGaVp6fLIAf9RR
+z8riCOLGlssqogyn7JooCNh7x2SZm3GEDfL97px4CdlfKfZOk92HKXMY3cN3hEc9
+a7w+szLikrpnKiFlmho0
+=klOO
+-----END PGP SIGNATURE-----
+
+--=-XgmXE1MIuzjlXn1HKABL--
 
