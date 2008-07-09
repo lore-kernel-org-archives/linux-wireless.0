@@ -1,74 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43783 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:48622 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756600AbYG2MPZ (ORCPT
+	with ESMTP id S1751924AbYGIQHt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 08:15:25 -0400
-Subject: Re: 2.6.27-rc1: zd1211rw association fails
+	Wed, 9 Jul 2008 12:07:49 -0400
+Subject: Re: [PATCH 1/3] mac80211: Include sequence number in IBSS and Mesh
+	beacons
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Theodore Tso <tytso@MIT.EDU>
-Cc: Alistair John Strachan <alistair@devzero.co.uk>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	dsd@gentoo.org, kune@deine-taler.de, linux-wireless@vger.kernel.org
-In-Reply-To: <1217333359.10489.38.camel@johannes.berg> (sfid-20080729_140943_166070_07F28935)
-References: <alpine.LFD.1.10.0807281956030.3334@nehalem.linux-foundation.org>
-	 <200807291049.47342.alistair@devzero.co.uk>
-	 <1217326195.10489.10.camel@johannes.berg>  <20080729120442.GE9378@mit.edu>
-	 <1217333359.10489.38.camel@johannes.berg>
-	 (sfid-20080729_140943_166070_07F28935)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Y2mQH8GqJmfh6YWhZwqr"
-Date: Tue, 29 Jul 2008 14:15:06 +0200
-Message-Id: <1217333706.10489.40.camel@johannes.berg> (sfid-20080729_141528_889534_72A05E64)
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+In-Reply-To: <200807091808.18664.IvDoorn@gmail.com> (sfid-20080709_175930_612304_B9C46F05)
+References: <200807091511.14288.IvDoorn@gmail.com>
+	 <200807091748.49796.IvDoorn@gmail.com>
+	 <1215618570.3246.30.camel@johannes.berg>
+	 <200807091808.18664.IvDoorn@gmail.com>
+	 (sfid-20080709_175930_612304_B9C46F05)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0f0wrUuDFtNC3pgzKTpc"
+Date: Wed, 09 Jul 2008 18:07:01 +0200
+Message-Id: <1215619621.3246.37.camel@johannes.berg> (sfid-20080709_180754_956454_C41060B9)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-Y2mQH8GqJmfh6YWhZwqr
+--=-0f0wrUuDFtNC3pgzKTpc
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
+On Wed, 2008-07-09 at 18:08 +0200, Ivo van Doorn wrote:
 
-> > Yeah, it's really too bad -rc1 got released just before you were able
-> > to post the fix to this, since if there were 100 million people who
-> > were trying out kernels starting with -git7 that use wireless, there
-> > will probably be 200 million people trying out -rc1.  :-)
-> >=20
-> > Thanks for finding and fixing it, though.  I stopped trying out
-> > kernels after -git6 since I was travelling at OSCON, and not having
-> > wireless was a show-stopper for me....
->=20
-> If everybody's going to decide now to hit on _me_, I'll point out that
-> davem's MQ TX changes broke it
+> rt2500usb: Not per-frame, it can only be disabled globally
+> rt61pci: Both per-frame as well as globally
+> rt73usb: Both per-frame as well as globally
+> rt2800pci: Not per-frame, not sure about globally
+> rt2800usb: Not per-frame, not sure about globally
 
-Of course that's not strictly true, it had been broken forever, it just
-happened to never show up before. And I mean forever, the original
-devicescape code that got in was already broken.
+Interesting. The reason that broadcom firmware allows to disable
+per-frame is actually to implement the per-TID counters in software.
+
+> Note that I don't know if these devices handle the TID and the not QOS se=
+quence
+> counting in the hardware. I'll have to consult the specsheets for that.
+
+Not much we can do about it either way unless you want to always disable
+globally.
 
 johannes
 
---=-Y2mQH8GqJmfh6YWhZwqr
+--=-0f0wrUuDFtNC3pgzKTpc
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIjwnHAAoJEKVg1VMiehFYZ14P/19rawXslWwYfN0YodvWyRcM
-2SLXlNog06zelMyR9CpfAzyzkkhHAMBfTCWWLbN4mJ8anLDQprTXuD2/nK/E1WTF
-c5Z6WLlWBFoPeR559j0K34f6nL/4moPVilxKfdOANMnyhUhfKCQfG41iei2BE0NA
-cIc+MkXBji1FvgSZgyqnVdVDZ7/aO+KeNsEx4+gM+lGgRDeVNDBMVOhMdvRMHkvy
-C4WKP09IeyU+0vW4WYNSj6V3lDRNUF6e0Tdp1vYTxUXq75wSFUQoUbSKBekggIcb
-0Z6kWIbLO6Cpf/N7Q6LvSeWtcOYdG/2Py+MXAyGK9TiX9t30H6vwlBwcnhGWNwb3
-MPA2SFGSkylzTOXyflsqKzpnMWG8JR6pQ9fOs0kk3Mn/1hbT6xV1m4ZqJKpEAO25
-YDUd51AY+oTm9yOY1M5HRjgrzlH0yzoTgaKGgUW1tSJSg/aPmybUyhiJiRbWAqKw
-UuaIbPoRxvUXBQ8ZEm4JahKUyKCv8gUp2y5+W9dNUbll0NFS7WpY30Beds7b4vvs
-qErAxlAaLDRuknHCBpOI4dqX0n7+scH/dShP2K20wanTqzQOw8RzVZqREXHUAD2A
-N4jqdYu9hsVenzUpDSaLFN+mhWsBX5Kt8kZIkEoFR3tH8k2lvb+Fvs0SQJoULWOM
-FtH4Ay3sUrfYhE6aLMyX
-=Saww
+iQIcBAABAgAGBQJIdOIiAAoJEKVg1VMiehFYecEP/1u36PL/IBdGQWoxrutwguLo
+BHVBv/BoM3H86siv6o8mEAsG7mEUY5YkFhkxHYMsjnnfy11/Eh7ZOQlkLqpR/Zqu
+NqA9Edk9NlT+m5XAk6gdyT5uFwXKvy9VpUaeKFM8Or6ZxQ8p5i96dojj2tw6Qgh9
+y1AjGi6EUIUUn/O3sfxqhb6TY8NCJbu3mlqZ8bpzSGFDWTn007uuZDDuZB2x1rve
+69m3xTmoOEIFe2kbxiDXuPXGRdt/yTFJ0jJXidLt7aqjLz9KraLPyjofUJ/tb10y
+RxWkYIS3tur57T4CvJkhQrBGMFyvSXys7HGvNjWC3K5sCioVmFAz49NKbVAlVV8r
+XzjTJKhQKeTZ0iwkkd3xQIvbei4jaVzTUQQtOILJFC8ANqteXibqlSHH0EgVAoTZ
+e3Ah7E2kFWPJ+teouJRfCG6jHsPEG9YvI8ouipBLOOTp2AyrXeZsBDmauZqlgVk7
+JiyLBSZzXaQYtNehZLUWQQ52dxR7ehJFkHswBDmeug9B6XInYjlFGXnHdRZKV3bk
+6IUsmA2FqJtdQneQ/7psVdB42pOXpZBuQSNHpX6P3O7A6BPAWKY1mN/Su8VQIBBM
+sDO5gX4I5RfADrUgQnQAGAFDWjQftTryW0o8KwI8M4wkFWh/YSeNO42k23f8SXPS
+YRWHz3uLP+WIIB1aXiKD
+=/vti
 -----END PGP SIGNATURE-----
 
---=-Y2mQH8GqJmfh6YWhZwqr--
+--=-0f0wrUuDFtNC3pgzKTpc--
 
