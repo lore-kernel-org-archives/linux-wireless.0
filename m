@@ -1,85 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54223 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:41469 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752231AbYG1Otl (ORCPT
+	with ESMTP id S1750933AbYGIUIN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2008 10:49:41 -0400
-Subject: Re: [PATCH 1/6] mac80211: allow no mac address until firmware load
+	Wed, 9 Jul 2008 16:08:13 -0400
+Subject: Re: [PATCH] libertas: fix memory alignment problems on the blackfin
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>, Dan Williams <dcbw@redhat.com>,
-	Luis Carlos Cobo <luisca@cozybit.com>,
+To: Ihar Hrachyshka <ihar.hrachyshka@gmail.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	libertas-dev@lists.infradead.org,
+	Ihar Hrachyshka <ihar.hrachyshka@promwad.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240807280744r5ea8c58aqf53cc99abb4cf084@mail.gmail.com> (sfid-20080728_164417_087826_D8B5C59D)
-References: <48763814.27052c0a.1794.2095@mx.google.com>
-	 <200807281544.33509.mb@bu3sch.de>
-	 <1217253465.28198.20.camel@localhost.localdomain>
-	 <200807281625.58188.mb@bu3sch.de>
-	 <1ba2fa240807280744r5ea8c58aqf53cc99abb4cf084@mail.gmail.com>
-	 (sfid-20080728_164417_087826_D8B5C59D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1/iKUnUEBZnGzuTGgcvT"
-Date: Mon, 28 Jul 2008 16:49:25 +0200
-Message-Id: <1217256565.15381.0.camel@johannes.berg> (sfid-20080728_164946_606826_7842A34C)
+In-Reply-To: <fce2a370807091303m4699e7dbl336eddd86735619e@mail.gmail.com> (sfid-20080709_220315_017163_15F72AF9)
+References: <20080709031850.2e7bf50f@promwad.com>
+	 <200807091521.04520.hs4233@mail.mn-solutions.de>
+	 <fce2a370807091303m4699e7dbl336eddd86735619e@mail.gmail.com>
+	 (sfid-20080709_220315_017163_15F72AF9)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-S4w6w4gsmL0G/B270v+G"
+Date: Wed, 09 Jul 2008 22:07:24 +0200
+Message-Id: <1215634044.3246.50.camel@johannes.berg> (sfid-20080709_220816_912972_200F297B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-1/iKUnUEBZnGzuTGgcvT
+--=-S4w6w4gsmL0G/B270v+G
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2008-07-28 at 17:44 +0300, Tomas Winkler wrote:
-> On Mon, Jul 28, 2008 at 5:25 PM, Michael Buesch <mb@bu3sch.de> wrote:
-> > On Monday 28 July 2008 15:57:45 Dan Williams wrote:
-> >> > (What are the udev problems, btw?)
-> >>
-> >> People seem to want persistent device names.  Since the kernel doesn't
-> >> provide stable device/bus enumeration, there are udev hacks (see
-> >> attached from Fedora 9) that read the MAC address of the card on
-> >> hot-plug and then assign it to a cached device name so that every time=
- I
-> >> plug in my Netgear MA401 it gets "eth2".
+On Wed, 2008-07-09 at 23:03 +0300, Ihar Hrachyshka wrote:
+> On Wed, Jul 9, 2008 at 4:21 PM, Holger Schurig
+> <hs4233@mail.mn-solutions.de> wrote:
+> >> Fixing unaligned memory access on the blackfin architecture
+> >> (maybe on the ARM also).
 > >
-> > Yeah well. But using a pseudo-random MAC as a base to build a persisten=
-t
-> > naming scheme on sounds pretty fragile to me. ;)
-> >
-> > I think cards that don't supply MAC early simply cannot support
-> > a really working persistent naming scheme well. udev should probably
-> > just enumerate eth0 - ethX as it sees the devices. That's as good
-> > as mixing a numbering scheme into a pseudo MAC, IMO. And it's
-> > less confusing and it pushes a lot of policy decisions into userspace.
+> > You can delete the "maybe", on ARM (more specificially, on a
+> > PXA255, which is ARMv5TE) I didn't had a problem.
 >=20
-> Can devices supply something depending on its bus numbering that will
-> not change unless it's plugged out.
+> Ok, just blackfin. Is it a joke or should I resend the patch with
+> another description?..
 
-Doesn't even need to provide it, udev can look at all that info if it
-wants.
+I'm sure arm has that problem too and sparc and others, but it may not
+always show up because the frame might actually be aligned sometimes.
+
+OTOH, why are you getting unaligned frames in the first place? This is
+the beacon interval, so it's at a fixed modulo-two position from the
+start of the frame.
 
 johannes
 
---=-1/iKUnUEBZnGzuTGgcvT
+--=-S4w6w4gsmL0G/B270v+G
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIjdxxAAoJEKVg1VMiehFYYGIP/0kD+vimUp8wIQBYwmBUsFz1
-0QSIlaqKKbQmBH39dZAY6Ppyxx2uQhFMiAYLS1grju1StbApV/A/N76zDKdDO2jJ
-99qeZU0cJ1ntStxIz8XdrPjSFq/cer9OgfzBfdsEmSUdsZ0QvkFtdFKcYIRj3khh
-G/NwOuJVutz9bdgpTJ9EUNzcs14PLN6tQPeJuK8m4TJ6Xe8XNIJvE/K3C4h8LRf/
-qafnlv8KV5xbrLm3Qj/SRWJLUFm8/e6f4mVhhMynWNlIfxl3tKNZn84YhQFXhRph
-Ey2iGYilzQ3UrYHIS29NJN4o6q/KkKlr8fTTeO8Vc7mNfF8noKL/5TrIG33UWo9t
-S3FQdcLtQIIivJ+nKkxB2lQYCQDcmEK9IvKRDAhgRrnz12GXJxOc0GsK9aoA6/aT
-+DkFw8DGnI4ABRt/dHsoTAZEfKLt4Ov3BL2HG6G/vnYy/S01HnCVd9llDjUQB5PZ
-M2AQLZMyhtL0aFbuOvVwtFExllDNDDiOKLAykot+frqXzpwte9wMw0F6IMAEzKYS
-c96A71+rJd1L0ErFXxwjrUCtylG4bl2KNYQyuCZ3uerTybRbI5MxWcKILHCW6zOX
-y4/7HRiQatg9ANnks3B0NAvAZuWLOZLZLOHP1jk4GSX8Zdv8HCN7UdbEDev6NCVt
-S7SIC6WSKGhaO9sdj78s
-=ExFD
+iQIcBAABAgAGBQJIdRp4AAoJEKVg1VMiehFY3OsP/33K2/Azjzmt4A6zXxJztUSL
+7H2ZYSWzKTSpNSxEgsG1OP4Lv5sLRtdfInBmtJmpeS8dMEDIf3gXF12/FxcZtDSZ
+bJIGmIGcbTXFc/o+r1deJwFfBn4MFFwruAa1nklrrFyCaCt9rS1vOX0cl90Z5FL+
+rmazcVxjgXZRgssFC4AGwU63dx5+tnOTr6IMzXgdNCWlV5TeacO5Oy1ylCz4TrY/
+Gb/7vZJBbjl+4yI25NIZ6g1tKQjiIDYuSOQsDWqiRlujPfHti3/5/qlDed0QrjyV
+71hpEgsQQ0jWo8UvMK5ipoP7xBEjdSRTJB8zEOtAkI/Wp3UZiItRColRjmbX5ABv
+J1tW61+T+GHY09i3CUgR/9aVQmK/P45ot6PDc9axiDpGeq5ECnkjC1xYR3IlGPxW
+Z2yRIINKxv54PNS8S3DompQXVk61TBjWOuU4JHRmN7wQEUt96YZqvSR2w09EOAg5
+V7OuPCikeHo1Z0s7xoOSRdFQs6QwaVkhHZ8w6v4ZY/PiPG87jGOCfjptDZ2qc2ST
+sKOo9Kl6ImqR6YS4pdgxT375l1gzJPJnV4uNExdsUmzWFcRw8qUK9TsIsAKQQTCI
+RvfEp8KAD75Ms6zUvdWB5E0GWxCAt1YOWsBsgAe+n2nUUzujof2Q5aBm/ET96JP6
+d6He3APEnmxGjoSejCZL
+=ZxAn
 -----END PGP SIGNATURE-----
 
---=-1/iKUnUEBZnGzuTGgcvT--
+--=-S4w6w4gsmL0G/B270v+G--
 
