@@ -1,74 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:50471 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753231AbYGXHki (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2008 03:40:38 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so3275953wfd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2008 00:40:37 -0700 (PDT)
-Message-ID: <eb3ff54b0807240040p73253d42vec5ff82504cbffdd@mail.gmail.com> (sfid-20080724_094059_145782_04B10446)
-Date: Thu, 24 Jul 2008 10:40:37 +0300
-From: "Rami Rosen" <ramirose@gmail.com>
-To: linville@tuxdriver.com
-Subject: [PATCH 1/1] mac80211: replace MAC80211_VERBOSE_PS_DEBUG with CONFIG_MAC80211_VERBOSE_PS_DEBUG in net/mac80211/tx.c.
-Cc: tomas.winkler@intel.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_981_26112877.1216885237637"
+Received: from main.gmane.org ([80.91.229.2]:47662 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750882AbYGIQMz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jul 2008 12:12:55 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1KGcHf-0005W1-Tb
+	for linux-wireless@vger.kernel.org; Wed, 09 Jul 2008 16:12:48 +0000
+Received: from 206-248-135-194.dsl.teksavvy.com ([206.248.135.194])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 16:12:47 +0000
+Received: from monnier by 206-248-135-194.dsl.teksavvy.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 16:12:47 +0000
+To: linux-wireless@vger.kernel.org
+From: Stefan Monnier <monnier@iro.umontreal.ca>
+Subject: Re: Slow b43 with 2.6.25.9 on an asus wl-700ge home-router
+Date: Wed, 09 Jul 2008 12:12:34 -0400
+Message-ID: <jwv7ibvqci3.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org> (sfid-20080709_181259_644875_67AF0700)
+References: <jwvlk0bsjk7.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
+	<4874D8DD.3020803@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------=_Part_981_26112877.1216885237637
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> What model is your card? Please post the output of 'dmesg | grep b43'.
 
-Hi,
+   b43-phy0: Broadcom 4318 WLAN found
+   b43-phy0 debug: Found PHY: Analog 3, Type 2, Revision 7
+   b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 8
+   b43-phy0 debug: DebugFS (CONFIG_DEBUG_FS) not enabled in kernel config
+   input: b43-phy0 as /devices/virtual/input/input0
+   b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
+   b43-phy0 debug: Chip initialized
+   b43-phy0 debug: 32-bit DMA initialized
+   Registered led device: b43-phy0::radio
+   b43-phy0 debug: Wireless interface started
+   b43-phy0 debug: Adding Interface type 2
+   b43-phy0 debug: Removing Interface type 2
+   b43-phy0 debug: Wireless interface stopped
+   b43-phy0 debug: DMA-32 rx_ring: Used slots 0/64, Failed frames 0/0 = 0.0%, Average tries 0.00
+   b43-phy0 debug: DMA-32 tx_ring_AC_BK: Used slots 0/128, Failed frames 0/0 = 0.0%, Average tries 0.00
+   b43-phy0 debug: DMA-32 tx_ring_AC_BE: Used slots 0/128, Failed frames 0/0 = 0.0%, Average tries 0.00
+   b43-phy0 debug: DMA-32 tx_ring_AC_VI: Used slots 0/128, Failed frames 0/0 = 0.0%, Average tries 0.00
+   b43-phy0 debug: DMA-32 tx_ring_AC_VO: Used slots 0/128, Failed frames 0/0 = 0.0%, Average tries 0.00
+   b43-phy0 debug: DMA-32 tx_ring_mcast: Used slots 0/128, Failed frames 0/0 = 0.0%, Average tries 0.00
+   input: b43-phy0 as /devices/virtual/input/input1
+   b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
+   b43-phy0 debug: Chip initialized
+   b43-phy0 debug: 32-bit DMA initialized
+   Registered led device: b43-phy0::radio
+   b43-phy0 debug: Wireless interface started
+   b43-phy0 debug: Adding Interface type 2
 
-In net/mac80211/tx.c, there are some #ifdef which checks
-MAC80211_VERBOSE_PS_DEBUG
-(which in fact is never set) instead of
-CONFIG_MAC80211_VERBOSE_PS_DEBUG, as should be.
+> With the current versions of mac80211, the rate-setting mechanism is very
+> good. If you force a high rate, i.e. with 'iwconfig ... 54M', you run the
+> risk of increasing your error rate causing many more retransmits, and might
+> reduce the throughput.
 
-This patch replaces MAC80211_VERBOSE_PS_DEBUG with
-CONFIG_MAC80211_VERBOSE_PS_DEBUG in these #ifdef commands in
-net/mac80211/tx.c.
+Yes, that's what I'd expect.  I only did it to see if it made any
+difference, and as a matter of fact, it makes no difference: I get the
+same 90-92 KB/s on average (averaged over a 3.6MB http transfer).
 
-(for wireless-next-2.6 tree)
+> That may not be happening here, but I wonder why the
+> rate capped at 2M. Incidentally, the quality numbers for my BCM4312 located
+> about 2m from the AP are "Link Quality=93/100  Signal level:-37 dBm  Noise
+> level=-71 dBm". My Link Quality is lower than yours, but S/N is much
+> better - not that any of those numbers have much validity.
 
-Regards,
-Rami Rosen
+I've moved the machine to get a better signal, it now says:
 
-Signed-off-by: Rami Rosen <ramirose@gmail.com>
+wlan0     IEEE 802.11  ESSID:"MM"  
+          Mode:Managed  Frequency:2.457 GHz  Access Point: 00:18:3F:CB:5A:59   
+          Bit Rate=2 Mb/s   Tx-Power=27 dBm   
+          Retry min limit:7   RTS thr:off   Fragment thr=2352 B   
+          Encryption key:ADAD-D31C-F6E7-1781-F165-21F0-A155-44C2-03C4-0D43-167C-05E8-C6EE-B111-1125-F1CD [2]
+          Link Quality=114/100  Signal level:-41 dBm  Noise level=-64 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
 
-------=_Part_981_26112877.1216885237637
-Content-Type: text/plain; name=patch.txt
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fj11wvyy0
-Content-Disposition: attachment; filename=patch.txt
+I.e. it's not just better: it's more than perfect ;-)
+But the bandwidth is still the same 90-92KB/s.
 
-ZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS90eC5jIGIvbmV0L21hYzgwMjExL3R4LmMKaW5kZXgg
-MGZiYWRkOC4uYTJkZGMwMyAxMDA2NDQKLS0tIGEvbmV0L21hYzgwMjExL3R4LmMKKysrIGIvbmV0
-L21hYzgwMjExL3R4LmMKQEAgLTMwNSw3ICszMDUsNyBAQCBzdGF0aWMgdm9pZCBwdXJnZV9vbGRf
-cHNfYnVmZmVycyhzdHJ1Y3QgaWVlZTgwMjExX2xvY2FsICpsb2NhbCkKIAlyY3VfcmVhZF91bmxv
-Y2soKTsKIAogCWxvY2FsLT50b3RhbF9wc19idWZmZXJlZCA9IHRvdGFsOwotI2lmZGVmIE1BQzgw
-MjExX1ZFUkJPU0VfUFNfREVCVUcKKyNpZmRlZiBDT05GSUdfTUFDODAyMTFfVkVSQk9TRV9QU19E
-RUJVRwogCXByaW50ayhLRVJOX0RFQlVHICIlczogUFMgYnVmZmVycyBmdWxsIC0gcHVyZ2VkICVk
-IGZyYW1lc1xuIiwKIAkgICAgICAgd2lwaHlfbmFtZShsb2NhbC0+aHcud2lwaHkpLCBwdXJnZWQp
-OwogI2VuZGlmCkBAIC0zNDIsNyArMzQyLDcgQEAgaWVlZTgwMjExX3R4X2hfbXVsdGljYXN0X3Bz
-X2J1ZihzdHJ1Y3QgaWVlZTgwMjExX3R4X2RhdGEgKnR4KQogCQkJcHVyZ2Vfb2xkX3BzX2J1ZmZl
-cnModHgtPmxvY2FsKTsKIAkJaWYgKHNrYl9xdWV1ZV9sZW4oJnR4LT5zZGF0YS0+YnNzLT5wc19i
-Y19idWYpID49CiAJCSAgICBBUF9NQVhfQkNfQlVGRkVSKSB7Ci0jaWZkZWYgTUFDODAyMTFfVkVS
-Qk9TRV9QU19ERUJVRworI2lmZGVmIENPTkZJR19NQUM4MDIxMV9WRVJCT1NFX1BTX0RFQlVHCiAJ
-CQlpZiAobmV0X3JhdGVsaW1pdCgpKSB7CiAJCQkJcHJpbnRrKEtFUk5fREVCVUcgIiVzOiBCQyBU
-WCBidWZmZXIgZnVsbCAtICIKIAkJCQkgICAgICAgImRyb3BwaW5nIHRoZSBvbGRlc3QgZnJhbWVc
-biIsCkBAIC0zODksNyArMzg5LDcgQEAgaWVlZTgwMjExX3R4X2hfdW5pY2FzdF9wc19idWYoc3Ry
-dWN0IGllZWU4MDIxMV90eF9kYXRhICp0eCkKIAkJCXB1cmdlX29sZF9wc19idWZmZXJzKHR4LT5s
-b2NhbCk7CiAJCWlmIChza2JfcXVldWVfbGVuKCZzdGEtPnBzX3R4X2J1ZikgPj0gU1RBX01BWF9U
-WF9CVUZGRVIpIHsKIAkJCXN0cnVjdCBza19idWZmICpvbGQgPSBza2JfZGVxdWV1ZSgmc3RhLT5w
-c190eF9idWYpOwotI2lmZGVmIE1BQzgwMjExX1ZFUkJPU0VfUFNfREVCVUcKKyNpZmRlZiBDT05G
-SUdfTUFDODAyMTFfVkVSQk9TRV9QU19ERUJVRwogCQkJaWYgKG5ldF9yYXRlbGltaXQoKSkgewog
-CQkJCXByaW50ayhLRVJOX0RFQlVHICIlczogU1RBICVzIFRYICIKIAkJCQkgICAgICAgImJ1ZmZl
-ciBmdWxsIC0gZHJvcHBpbmcgb2xkZXN0IGZyYW1lXG4iLAo=
-------=_Part_981_26112877.1216885237637--
+> My transmit throughput is consistently over 2 Mbs,
+
+All the other wireless clients I've used around here (other
+broadcomm-based home routers, rt73usb dongles, and iwl3945, hostap,
+madwifi laptops), I basically always get pretty much the same bandwidth,
+of around 10Mb/s, so there's definitely something odd going on here.
+
+> but I'm not bridging.  Roughly 6 months ago, I did set up routing, but
+> that was using iptables, not a formal bridge device. That
+> configuration had full speed.
+
+As mentioned, I get the same result without bridging.
+
+> If you shut down the bridge, what speed do you get?
+
+Same old 90-92KB/s.
+
+
+        Stefan
+
+
+PS: The code I use is the one from the OpenWRT svn repository.
+
