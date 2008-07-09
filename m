@@ -1,190 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51691
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1758532AbYGQMRr (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.178]:22910 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751801AbYGIWpQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 08:17:47 -0400
-Date: Thu, 17 Jul 2008 05:17:47 -0700 (PDT)
-Message-Id: <20080717.051747.43598391.davem@davemloft.net> (sfid-20080717_141752_823856_F3B19D32)
-To: netdev@vger.kernel.org
-CC: kaber@trash.net, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 24/31]: netdevice: Move qdisc_list back into net_device
- proper.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 9 Jul 2008 18:45:16 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so1906076waf.23
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 15:45:14 -0700 (PDT)
+Message-ID: <1ba2fa240807091545r37c6cff2l109bc24fa416b0a0@mail.gmail.com> (sfid-20080710_004521_062552_8E1E1674)
+Date: Thu, 10 Jul 2008 01:45:13 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: iwlwifi workaround for mac80211 sequence number bug
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Ron Rindjunksi" <ron.rindjunski@intel.com>
+In-Reply-To: <1215642292.3246.79.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1215641485.3246.72.camel@johannes.berg>
+	 <1ba2fa240807091517y40f6ab8cscc352bfdaa0d715@mail.gmail.com>
+	 <1215642292.3246.79.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jul 10, 2008 at 1:24 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2008-07-10 at 01:17 +0300, Tomas Winkler wrote:
+>
+>> This is not a bug in mac.
+>> The sequence number can be committed only if the packet is not dropped
+>> somewhere in the driver. See lower in the function.. There are plenty
+>> of  places on the TX path when packet can be dropped this it's last
+>> station.  There is no reason to pushing this into mac
+>
+> I don't see it that way. In fact, in the code I'm looking at, there is
+> nothing that drops the frame before committing the sequence number
+> change after assigning it.
+>
+> And all the cases where it drops the frame _before_ the piece of code I
+> quoted don't actually matter, the first bunch of those are bugs and the
+> not associated one is strange but most likely doesn't matter either (if
+> we're not associated sequence numbers don't matter), and the
+> "destination STA entry not found" one doesn't matter either since that
+> means there's some disconnect/bug between iwlwifi and mac80211 since
+> they should synchronise via sta_notify().
 
-And give it it's own lock.
+Unfortunately sta_notify still does nothing in iwlwifi, need some more
+work on this.
+I've eliminated most dropping places over the time if you look in the
+history it wasn't like that before and not all of the parts of the
+code develops in the same speed.
+Anyhow it doesn't matter for the packet that was dropped but it matter
+for the packet that will come.  I think that advancing sequence number
+should be low as possible. I'm not sure about other drivers' drop
+points.
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- include/linux/netdevice.h |    3 ++-
- net/core/dev.c            |    2 ++
- net/sched/sch_api.c       |   31 +++++++------------------------
- net/sched/sch_generic.c   |    9 +++++++--
- 4 files changed, 18 insertions(+), 27 deletions(-)
+> Which particular item do you see as problematic?
+Most problem at the time was found a good place for it in the mac80211.
 
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index 1e839fa..3170bce 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -450,7 +450,6 @@ struct netdev_queue {
- 	spinlock_t		_xmit_lock;
- 	int			xmit_lock_owner;
- 	struct Qdisc		*qdisc_sleeping;
--	struct list_head	qdisc_list;
- } ____cacheline_aligned_in_smp;
- 
- /*
-@@ -638,6 +637,8 @@ struct net_device
- 	unsigned int		real_num_tx_queues;
- 
- 	unsigned long		tx_queue_len;	/* Max frames per queue allowed */
-+	spinlock_t		qdisc_list_lock;
-+	struct list_head	qdisc_list;
- 
- /*
-  * One part is mostly used on xmit path (device)
-diff --git a/net/core/dev.c b/net/core/dev.c
-index 0b909b7..6741e34 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -3886,6 +3886,8 @@ int register_netdevice(struct net_device *dev)
- 	net = dev_net(dev);
- 
- 	spin_lock_init(&dev->addr_list_lock);
-+	spin_lock_init(&dev->qdisc_list_lock);
-+	INIT_LIST_HEAD(&dev->qdisc_list);
- 	netdev_init_queue_locks(dev);
- 
- 	dev->iflink = -1;
-diff --git a/net/sched/sch_api.c b/net/sched/sch_api.c
-index 8e8c5be..6958fe7 100644
---- a/net/sched/sch_api.c
-+++ b/net/sched/sch_api.c
-@@ -183,30 +183,17 @@ EXPORT_SYMBOL(unregister_qdisc);
-    (root qdisc, all its children, children of children etc.)
-  */
- 
--static struct Qdisc *__qdisc_lookup(struct netdev_queue *dev_queue, u32 handle)
-+struct Qdisc *qdisc_lookup(struct net_device *dev, u32 handle)
- {
- 	struct Qdisc *q;
- 
--	list_for_each_entry(q, &dev_queue->qdisc_list, list) {
-+	list_for_each_entry(q, &dev->qdisc_list, list) {
- 		if (q->handle == handle)
- 			return q;
- 	}
- 	return NULL;
- }
- 
--struct Qdisc *qdisc_lookup(struct net_device *dev, u32 handle)
--{
--	unsigned int i;
--
--	for (i = 0; i < dev->num_tx_queues; i++) {
--		struct netdev_queue *txq = netdev_get_tx_queue(dev, i);
--		struct Qdisc *q = __qdisc_lookup(txq, handle);
--		if (q)
--			return q;
--	}
--	return NULL;
--}
--
- static struct Qdisc *qdisc_leaf(struct Qdisc *p, u32 classid)
- {
- 	unsigned long cl;
-@@ -645,9 +632,9 @@ qdisc_create(struct net_device *dev, struct netdev_queue *dev_queue,
- 				goto err_out3;
- 			}
- 		}
--		qdisc_lock_tree(dev);
--		list_add_tail(&sch->list, &dev_queue->qdisc_list);
--		qdisc_unlock_tree(dev);
-+		spin_lock_bh(&dev->qdisc_list_lock);
-+		list_add_tail(&sch->list, &dev->qdisc_list);
-+		spin_unlock_bh(&dev->qdisc_list_lock);
- 
- 		return sch;
- 	}
-@@ -1032,14 +1019,12 @@ static int tc_dump_qdisc(struct sk_buff *skb, struct netlink_callback *cb)
- 	read_lock(&dev_base_lock);
- 	idx = 0;
- 	for_each_netdev(&init_net, dev) {
--		struct netdev_queue *dev_queue;
- 		if (idx < s_idx)
- 			goto cont;
- 		if (idx > s_idx)
- 			s_q_idx = 0;
- 		q_idx = 0;
--		dev_queue = netdev_get_tx_queue(dev, 0);
--		list_for_each_entry(q, &dev_queue->qdisc_list, list) {
-+		list_for_each_entry(q, &dev->qdisc_list, list) {
- 			if (q_idx < s_q_idx) {
- 				q_idx++;
- 				continue;
-@@ -1269,7 +1254,6 @@ static int qdisc_class_dump(struct Qdisc *q, unsigned long cl, struct qdisc_walk
- static int tc_dump_tclass(struct sk_buff *skb, struct netlink_callback *cb)
- {
- 	struct net *net = sock_net(skb->sk);
--	struct netdev_queue *dev_queue;
- 	int t;
- 	int s_t;
- 	struct net_device *dev;
-@@ -1288,8 +1272,7 @@ static int tc_dump_tclass(struct sk_buff *skb, struct netlink_callback *cb)
- 	s_t = cb->args[0];
- 	t = 0;
- 
--	dev_queue = netdev_get_tx_queue(dev, 0);
--	list_for_each_entry(q, &dev_queue->qdisc_list, list) {
-+	list_for_each_entry(q, &dev->qdisc_list, list) {
- 		if (t < s_t || !q->ops->cl_ops ||
- 		    (tcm->tcm_parent &&
- 		     TC_H_MAJ(tcm->tcm_parent) != q->handle)) {
-diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
-index efa418a..8cdf0b4 100644
---- a/net/sched/sch_generic.c
-+++ b/net/sched/sch_generic.c
-@@ -563,11 +563,15 @@ static void __qdisc_destroy(struct rcu_head *head)
- 
- void qdisc_destroy(struct Qdisc *qdisc)
- {
-+	struct net_device *dev = qdisc_dev(qdisc);
-+
- 	if (qdisc->flags & TCQ_F_BUILTIN ||
- 	    !atomic_dec_and_test(&qdisc->refcnt))
- 		return;
- 
-+	spin_lock_bh(&dev->qdisc_list_lock);
- 	list_del(&qdisc->list);
-+	spin_unlock_bh(&dev->qdisc_list_lock);
- 
- 	call_rcu(&qdisc->q_rcu, __qdisc_destroy);
- }
-@@ -599,7 +603,9 @@ static void attach_one_default_qdisc(struct net_device *dev,
- 			printk(KERN_INFO "%s: activation failed\n", dev->name);
- 			return;
- 		}
--		list_add_tail(&qdisc->list, &dev_queue->qdisc_list);
-+		spin_lock_bh(&dev->qdisc_list_lock);
-+		list_add_tail(&qdisc->list, &dev->qdisc_list);
-+		spin_unlock_bh(&dev->qdisc_list_lock);
- 	} else {
- 		qdisc =  &noqueue_qdisc;
- 	}
-@@ -738,7 +744,6 @@ static void dev_init_scheduler_queue(struct net_device *dev,
- 
- 	dev_queue->qdisc = qdisc;
- 	dev_queue->qdisc_sleeping = qdisc;
--	INIT_LIST_HEAD(&dev_queue->qdisc_list);
- }
- 
- void dev_init_scheduler(struct net_device *dev)
--- 
-1.5.6.2.255.gbed62
-
+Tomas
