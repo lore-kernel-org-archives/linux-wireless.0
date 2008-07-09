@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:14440 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753104AbYGSODQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2008 10:03:16 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so250603nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2008 07:03:15 -0700 (PDT)
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 1/5] rt2x00: Remove duplicate declaration
-Date: Sat, 19 Jul 2008 16:15:42 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200807191615.22752.IvDoorn@gmail.com>
-In-Reply-To: <200807191615.22752.IvDoorn@gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:33562 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752153AbYGINid (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jul 2008 09:38:33 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 1/3] mac80211: Include sequence number in IBSS and Mesh beacons
+Date: Wed, 9 Jul 2008 15:38:09 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <200807091511.14288.IvDoorn@gmail.com> <200807091511.45779.IvDoorn@gmail.com>
+In-Reply-To: <200807091511.45779.IvDoorn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="utf-8"
-Message-Id: <200807191615.42755.IvDoorn@gmail.com> (sfid-20080719_160321_382046_EFE770CC)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Message-Id: <200807091538.09387.mb@bu3sch.de> (sfid-20080709_153835_854973_9C06F76F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rt2x00queue_free_skb() was declared twice.
+On Wednesday 09 July 2008 15:11:45 Ivo van Doorn wrote:
+> Currently only beacons generated in AP mode have the software
+> sequence number inserted. This means IBSS and Mesh mode are broken
+> for all hardware that require software sequence numbers.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00lib.h |    7 -------
- 1 files changed, 0 insertions(+), 7 deletions(-)
+Does software seq numbering even work at all?
+What about packets that get sent between the driver requested the
+beacon and the driver does actually queue it?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
-index f2c9b0e..c5fb3a7 100644
---- a/drivers/net/wireless/rt2x00/rt2x00lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
-@@ -125,13 +125,6 @@ void rt2x00queue_unmap_skb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb);
- void rt2x00queue_free_skb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb);
- 
- /**
-- * rt2x00queue_free_skb - free a skb
-- * @rt2x00dev: Pointer to &struct rt2x00_dev.
-- * @skb: The skb to free.
-- */
--void rt2x00queue_free_skb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb);
--
--/**
-  * rt2x00queue_write_tx_frame - Write TX frame to hardware
-  * @queue: Queue over which the frame should be send
-  * @skb: The skb to send
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> ---
+>  net/mac80211/tx.c |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 359cb36..0e7e1f3 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -1876,6 +1876,8 @@ struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
+>  		hdr->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
+>  						  IEEE80211_STYPE_BEACON);
+>  
+> +		ieee80211_include_sequence(sdata, hdr);
+> +
+>  		num_beacons = &ifsta->num_beacons;
+>  	} else if (ieee80211_vif_is_mesh(&sdata->vif)) {
+>  		/* headroom, head length, tail length and maximum TIM length */
+> @@ -1896,6 +1898,9 @@ struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
+>  			cpu_to_le16(local->hw.conf.beacon_int);
+>  		mgmt->u.beacon.capab_info = 0x0; /* 0x0 for MPs */
+>  
+> +		ieee80211_include_sequence(sdata,
+> +					   (struct ieee80211_hdr *)skb->data);
+> +
+>  		pos = skb_put(skb, 2);
+>  		*pos++ = WLAN_EID_SSID;
+>  		*pos++ = 0x0;
+
+
+
 -- 
-1.5.6.1
-
+Greetings Michael.
