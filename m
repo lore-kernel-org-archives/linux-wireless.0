@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:47456 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751480AbYG1O01 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2008 10:26:27 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH 1/6] mac80211: allow no mac address until firmware load
-Date: Mon, 28 Jul 2008 16:25:57 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Luis Carlos Cobo <luisca@cozybit.com>,
-	linux-wireless@vger.kernel.org
-References: <48763814.27052c0a.1794.2095@mx.google.com> <200807281544.33509.mb@bu3sch.de> <1217253465.28198.20.camel@localhost.localdomain>
-In-Reply-To: <1217253465.28198.20.camel@localhost.localdomain>
+Received: from smtp121.sbc.mail.sp1.yahoo.com ([69.147.64.94]:31850 "HELO
+	smtp121.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751470AbYGISeM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jul 2008 14:34:12 -0400
+Message-ID: <48750494.8010802@sbcglobal.net> (sfid-20080709_203415_902309_431735E2)
+Date: Wed, 09 Jul 2008 11:33:56 -0700
+From: Bryan Batten <BryanBatten@sbcglobal.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807281625.58188.mb@bu3sch.de> (sfid-20080728_162630_459587_DFDC0341)
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	linville@tuxdriver.com, rt2400-devel@lists.sourceforge.net
+Subject: Re: [Rt2400-devel] [PATCH] rt2x00: Fix NULL pointer error in	adhoc/master
+ mode
+References: <200807051511.57995.IvDoorn@gmail.com>	<200807052042.47008.IvDoorn@gmail.com>	<4874FC95.3050904@sbcglobal.net> <200807092029.10007.IvDoorn@gmail.com>
+In-Reply-To: <200807092029.10007.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 28 July 2008 15:57:45 Dan Williams wrote:
-> > (What are the udev problems, btw?)
+Ivo van Doorn wrote:
+...
+> Yes, but if you look again you see that the legacy driver does
+> define it, and even includes the description of bits 9 -> 19 And
+> the legacy driver source code has always been more reliable then 
+> the datasheet, so I would put my money on the code. ;)
+
+I know. But I suspect that in this case, the datasheet just *may* be 
+correct.
+
+>> Would it be possible to verify with Ralink that this is not a
+>> typo in the RT2500 datasheet?
 > 
-> People seem to want persistent device names.  Since the kernel doesn't
-> provide stable device/bus enumeration, there are udev hacks (see
-> attached from Fedora 9) that read the MAC address of the card on
-> hot-plug and then assign it to a cached device name so that every time I
-> plug in my Netgear MA401 it gets "eth2".
+> I'll see what I can find out.
+> 
 
-Yeah well. But using a pseudo-random MAC as a base to build a persistent
-naming scheme on sounds pretty fragile to me. ;)
-
-I think cards that don't supply MAC early simply cannot support
-a really working persistent naming scheme well. udev should probably
-just enumerate eth0 - ethX as it sees the devices. That's as good
-as mixing a numbering scheme into a pseudo MAC, IMO. And it's
-less confusing and it pushes a lot of policy decisions into userspace.
-
+Thanks,
 -- 
-Greetings Michael.
+Bryan
+-
+"Beyond the point of no return, there's no going back."
+
+Narration to "Mars Rising" on the Science Channel
