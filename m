@@ -1,132 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50727
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1758988AbYGCHFf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:05:35 -0400
-Date: Thu, 03 Jul 2008 00:05:34 -0700 (PDT)
-Message-Id: <20080703.000534.203160848.davem@davemloft.net> (sfid-20080703_103231_389199_67C99538)
-To: netdev@vger.kernel.org
-CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
-Subject: [PATCH 34/39]: netdev: Kill NETIF_F_MULTI_QUEUE.
-From: David Miller <davem@davemloft.net>
+Received: from promwad.com ([83.149.69.23]:37107 "EHLO promwad.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751962AbYGIGa3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jul 2008 02:30:29 -0400
+Date: Wed, 9 Jul 2008 09:29:58 +0300
+From: Ihar Hrachyshka <ihar.hrachyshka@promwad.com>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: fix memory alignment problems on the blackfin
+Message-ID: <20080709092958.72e82f25@promwad.com> (sfid-20080709_083035_261251_33DF632B)
+In-Reply-To: <1215563092.476.58.camel@brick>
+References: <20080709031850.2e7bf50f@promwad.com>
+	<1215563092.476.58.camel@brick>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> There's helpers for this now: get_unaligned_le16
+Ok, third pass - the first was in January... :)
 
-There is no need for a feature bit for something that
-can be tested by simply checking the TX queue count.
+Fixing unaligned memory access on the blackfin architecture (maybe on
+the ARM also).
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
+Signed-off-by: Ihar Hrachyshka <ihar.hrachyshka@promwad.com>
+
 ---
- Documentation/networking/multiqueue.txt |   11 -----------
- drivers/net/cpmac.c                     |    1 -
- drivers/net/ixgbe/ixgbe_main.c          |    2 --
- drivers/net/s2io.c                      |    2 --
- include/linux/netdevice.h               |    4 +---
- net/mac80211/main.c                     |    3 ---
- 6 files changed, 1 insertions(+), 22 deletions(-)
 
-diff --git a/Documentation/networking/multiqueue.txt b/Documentation/networking/multiqueue.txt
-index e6dc1ee..d391ea6 100644
---- a/Documentation/networking/multiqueue.txt
-+++ b/Documentation/networking/multiqueue.txt
-@@ -24,15 +24,4 @@ netif_{start|stop|wake}_subqueue() functions to manage each queue while the
- device is still operational.  netdev->queue_lock is still used when the device
- comes online or when it's completely shut down (unregister_netdev(), etc.).
- 
--Finally, the base driver should indicate that it is a multiqueue device.  The
--feature flag NETIF_F_MULTI_QUEUE should be added to the netdev->features
--bitmap on device initialization.  Below is an example from e1000:
--
--#ifdef CONFIG_E1000_MQ
--	if ( (adapter->hw.mac.type == e1000_82571) ||
--	     (adapter->hw.mac.type == e1000_82572) ||
--	     (adapter->hw.mac.type == e1000_80003es2lan))
--		netdev->features |= NETIF_F_MULTI_QUEUE;
--#endif
--
- Author: Peter P. Waskiewicz Jr. <peter.p.waskiewicz.jr@intel.com>
-diff --git a/drivers/net/cpmac.c b/drivers/net/cpmac.c
-index d630e2a..7c7b54e 100644
---- a/drivers/net/cpmac.c
-+++ b/drivers/net/cpmac.c
-@@ -1165,7 +1165,6 @@ static int __devinit cpmac_probe(struct platform_device *pdev)
- 	dev->set_multicast_list = cpmac_set_multicast_list;
- 	dev->tx_timeout         = cpmac_tx_timeout;
- 	dev->ethtool_ops        = &cpmac_ethtool_ops;
--	dev->features |= NETIF_F_MULTI_QUEUE;
- 
- 	netif_napi_add(dev, &priv->napi, cpmac_poll, 64);
- 
-diff --git a/drivers/net/ixgbe/ixgbe_main.c b/drivers/net/ixgbe/ixgbe_main.c
-index db50962..9a0bb4d 100644
---- a/drivers/net/ixgbe/ixgbe_main.c
-+++ b/drivers/net/ixgbe/ixgbe_main.c
-@@ -3562,8 +3562,6 @@ static int __devinit ixgbe_probe(struct pci_dev *pdev,
- 	if (pci_using_dac)
- 		netdev->features |= NETIF_F_HIGHDMA;
- 
--	netdev->features |= NETIF_F_MULTI_QUEUE;
--
- 	/* make sure the EEPROM is good */
- 	if (ixgbe_validate_eeprom_checksum(hw, NULL) < 0) {
- 		dev_err(&pdev->dev, "The EEPROM Checksum Is Not Valid\n");
-diff --git a/drivers/net/s2io.c b/drivers/net/s2io.c
-index 51a9115..6acbfbc 100644
---- a/drivers/net/s2io.c
-+++ b/drivers/net/s2io.c
-@@ -7950,8 +7950,6 @@ s2io_init_nic(struct pci_dev *pdev, const struct pci_device_id *pre)
- 		dev->features |= NETIF_F_UFO;
- 		dev->features |= NETIF_F_HW_CSUM;
- 	}
--	if (config->multiq)
--		dev->features |= NETIF_F_MULTI_QUEUE;
- 	dev->tx_timeout = &s2io_tx_watchdog;
- 	dev->watchdog_timeo = WATCH_DOG_TIMEOUT;
- 	INIT_WORK(&sp->rst_timer_task, s2io_restart_nic);
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index 6ba9cd0..79a153f 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -525,7 +525,6 @@ struct net_device
- #define NETIF_F_LLTX		4096	/* LockLess TX - deprecated. Please */
- 					/* do not use LLTX in new drivers */
- #define NETIF_F_NETNS_LOCAL	8192	/* Does not change network namespaces */
--#define NETIF_F_MULTI_QUEUE	16384	/* Has multiple TX/RX queues */
- #define NETIF_F_LRO		32768	/* large receive offload */
- 
- 	/* Segmentation offload features */
-@@ -1148,11 +1147,10 @@ static inline void netif_wake_subqueue(struct net_device *dev, u16 queue_index)
-  *	@dev: network device
-  *
-  * Check if device has multiple transmit queues
-- * Always falls if NETDEVICE_MULTIQUEUE is not configured
-  */
- static inline int netif_is_multiqueue(const struct net_device *dev)
- {
--	return (!!(NETIF_F_MULTI_QUEUE & dev->features));
-+	return (dev->num_tx_queues > 1);
- }
- 
- /* Use this variant when it is known for sure that it
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index b78b56e..be32e8a 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1686,9 +1686,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	if (!mdev)
- 		goto fail_mdev_alloc;
- 
--	if (ieee80211_num_queues(hw) > 1)
--		mdev->features |= NETIF_F_MULTI_QUEUE;
--
- 	sdata = IEEE80211_DEV_TO_SUB_IF(mdev);
- 	mdev->ieee80211_ptr = &sdata->wdev;
- 	sdata->wdev.wiphy = local->hw.wiphy;
--- 
-1.5.6
+diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
+index 343ed38..4b27456 100644
+--- a/drivers/net/wireless/libertas/scan.c
++++ b/drivers/net/wireless/libertas/scan.c
+@@ -567,11 +567,11 @@ static int lbs_process_bss(struct bss_descriptor *bss,
+	pos += 8;
+
+	/* beacon interval is 2 bytes long */
+-	bss->beaconperiod = le16_to_cpup((void *) pos);
++	bss->beaconperiod = get_unaligned_le16(pos);
+	pos += 2;
+
+	/* capability information is 2 bytes long */
+-	bss->capability = le16_to_cpup((void *) pos);
++	bss->capability = get_unaligned_le16(pos);
+	lbs_deb_scan("process_bss: capabilities 0x%04x\n", bss->capability);
+	pos += 2;
 
