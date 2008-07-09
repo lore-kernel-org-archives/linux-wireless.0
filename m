@@ -1,33 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:10646 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753873AbYGNSSs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 14:18:48 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so1541094nfc.21
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2008 11:18:47 -0700 (PDT)
-Message-ID: <f6ca9fed0807141118w10d9817n5c9a47cf0a9f8ca@mail.gmail.com> (sfid-20080714_201852_140945_27E3966D)
-Date: Mon, 14 Jul 2008 20:18:46 +0200
-From: drago01 <drago01@gmail.com>
-To: "Cahill, Ben M" <ben.m.cahill@intel.com>
-Subject: Re: [ipw3945-devel] iwl3945 random firmware crashes
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <4220499A1B034C4FA93B547BA01E1FF0017469B4@orsmsx413.amr.corp.intel.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3149 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750985AbYGITiD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jul 2008 15:38:03 -0400
+Date: Wed, 9 Jul 2008 15:09:15 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
+Message-ID: <20080709190915.GA8238@tuxdriver.com> (sfid-20080709_213808_434368_5FE083A0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0807140437i2563cfa1ge68a06ef1040d0f8@mail.gmail.com>
-	 <4220499A1B034C4FA93B547BA01E1FF0017469B4@orsmsx413.amr.corp.intel.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 14, 2008 at 8:05 PM, Cahill, Ben M <ben.m.cahill@intel.com> wrote:
-> Try loading driver using module param:
->
-> debug=0x43fff
->
-> This will provide more information in the log, including an event log
-> (where you see "Microcode SW Error detected" in your log, you would have
-> captured Event Log if you had the debug=0x43fff setting).
+The third Linux Wireless mini-summit will occur on Tuesday July 22,
+2008 in Ottawa, just before the Ottawa Linux Symposium.  OLS is
+generously supporting Linux mini-summits by providing the room and
+projector (http://www.linuxsymposium.org/2008/minisummits.php).
+Several vendors are supporting the event by sponsoring their own
+employees to attend, and Canonical and Intel have both helped with
+travel funds for key community participants as well.
 
-will try to capture the event log when it happens again.
+Although it is already a bit late, I would like to re-open discussions
+on our agenda for the meeting.  Based on current upstream topics and
+those persons whom I expect to be attending, I have cobbled together
+an agenda proposal below.  Please review it and feel free to suggest
+amendments or alterations, or to elaborate or ask questions about my
+proposed schedule of topics.
+
+I look forward to seeing many of you in Ottawa!
+
+John
+
+P.S.  If you intend to attend the event in Ottawa, please send me a
+private reply to this note -- even if you believe that I already know
+that you are coming! :-)
+
+---
+
+3rd Linux Wireless Summit
+Ottawa, Canada
+22 July 2008
+
+Proposed Agenda
+
+0830	Meet & Greet
+
+	Introductions and opening remarks
+
+0900	Status Reports
+
+	Overview of where things stand today
+
+	- 802.11n
+
+	- QoS/Multiqueue
+
+	- Mesh mode (802.11s)
+
+	- RF kill
+
+1015	Break
+
+1100	Vendor/Distro Round Table
+
+	Representatives from hardware vendors and Linux distributions
+	discuss issues around cooperation between themselves and the
+	development community, what we are doing well, and what problems we
+	are causing for each other.
+
+1200	Lunch/Break (sorry, no funding)
+
+1300	Current Work
+
+	Short presentations/discussions about work in progress
+
+	- encrypted management frames (802.11w)
+
+	- regulatory enforcement (802.11d, CRDA)
+
+	- virtual hardware (mac80211_hwsim)
+
+1445	Break
+
+1500	Future work
+
+	Short presentations/discussions about work that has previously
+	been suggested or requested
+
+	- cfg80211/nl80211
+		- time to push to replace WEXT?
+		- tool enhancements and/or userland support?
+
+	- power management (suspend/resume)
+
+	- lib80211 (code sharing w/ full MAC drivers)
+
+	- rate scaling algorithms
+		- minstrel
+		- others?
+
+	- userland MLME
+
+	- userland driver implementation
+
+1645	Break
+
+1700	Maintainence Issues
+
+	Round table discussion of issues related to maintenance of
+	the wireless trees
+
+	- trivial/cleanup patches
+		- testing or other requirements?
+		- should they have lower priority?
+		- should they require ACKs from primary author?
+
+	- submissions to -stable
+		- who should drive it?
+		- what policies?
+
+	- rate scaling algs
+		- driver-specific ok?  what limitations?
+		- build policies (part of mac80211.ko?)
+
+	- questions/suggestions/complaints
+
+1800	Dinner/Break (sorry, no funding)
+
+2000	BoF/Break-out Sessions
+
+	Impromptu and/or unscheduled discussions as desired by group
+	participants
+
+-- 
+John W. Linville
+linville@tuxdriver.com
