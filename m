@@ -1,87 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:53832 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753162AbYG2DI1 (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:58101 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750864AbYGIQQO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2008 23:08:27 -0400
-Message-ID: <488E89A2.9010308@lwfinger.net> (sfid-20080729_050830_953571_C3642409)
-Date: Mon, 28 Jul 2008 22:08:18 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 9 Jul 2008 12:16:14 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] rtl8187: use different ANAPARAM*_OFF values for 8187B
+Date: Wed, 9 Jul 2008 13:16:19 -0300
+Cc: "Hin-Tak Leung" <htl10@users.sourceforge.net>, proski@gnu.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, Pavel Roskin <proski@gnu.org>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <hintak.leung@gmail.com>
-Subject: [PATCH] rtl8187: Fix for TX sequence number problem that resulted
- from commit 741b4fbc44
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200807091316.20334.herton@mandriva.com.br> (sfid-20080709_181618_168790_4466B68D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 741b4fbc441dba885cc8f97a10e87f2acd04c5f2 broke rtl8187. This
-patch makes the same kind of fix that was done for rt2x00. Note that
-this code will have to be reworked for proper sequence numbers on beacons.
-In addition, the sequence number has been placed in the hardware state,
-not the vif state.
+For RTL8187B it seems we need special values too for ANAPARAM*_OFF
+values (and not use RTL8187L ones). The ANAPARAM*_OFF values used are
+the stock ones read from the hardware after a cold boot.
 
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
 
-John and Johnannes,
-
-This is a bug fix for 2.6.27.
-
-Larry
----
-
-  rtl8187.h     |    1 +
-  rtl8187_dev.c |   13 +++++++++++++
-  2 files changed, 14 insertions(+)
-
-Index: wireless-testing/drivers/net/wireless/rtl8187.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl8187.h
-+++ wireless-testing/drivers/net/wireless/rtl8187.h
-@@ -100,6 +100,7 @@ struct rtl8187_priv {
-  	struct usb_device *udev;
-  	u32 rx_conf;
-  	u16 txpwr_base;
-+	u16 seqno;
-  	u8 asic_rev;
-  	u8 is_rtl8187b;
-  	enum {
-Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
-@@ -169,6 +169,7 @@ static int rtl8187_tx(struct ieee80211_h
-  {
-  	struct rtl8187_priv *priv = dev->priv;
-  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_hdr *ieee80211hdr = (struct ieee80211_hdr *)skb->data;
-  	unsigned int ep;
-  	void *buf;
-  	struct urb *urb;
-@@ -234,6 +235,20 @@ static int rtl8187_tx(struct ieee80211_h
-  			ep = epmap[skb_get_queue_mapping(skb)];
-  	}
-
-+	/* XXX: The sequence that follows is needed for this driver to work
-+	 * with mac80211 since commit 741b4fbc44 (mac80211: fix TX sequence
-+	 * numbers). As with the temporary code in rt2x00, changes will be
-+	 * needed to get proper sequence numbers on beacons. In addition,
-+	 * this patch places the sequence number in the hardware state, which
-+	 * limits us to a single virtual state.
-+	 */
-+	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
-+		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
-+			priv->seqno += 0x10;
-+		ieee80211hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-+		ieee80211hdr->seq_ctrl |= cpu_to_le16(priv->seqno);
+diff --git a/drivers/net/wireless/rtl8187_dev.c 
+b/drivers/net/wireless/rtl8187_dev.c
+index 33527e5..f981fdb 100644
+--- a/drivers/net/wireless/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl8187_dev.c
+@@ -430,8 +430,10 @@ static int rtl8187_init_hw(struct ieee80211_hw *dev)
+ 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg |
+ 			 RTL818X_CONFIG3_ANAPARAM_WRITE);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, RTL8225_ANAPARAM_ON);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_ON);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM,
++			  RTL8187_RTL8225_ANAPARAM_ON);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2,
++			  RTL8187_RTL8225_ANAPARAM2_ON);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg &
+ 			 ~RTL818X_CONFIG3_ANAPARAM_WRITE);
+ 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
+@@ -453,8 +455,10 @@ static int rtl8187_init_hw(struct ieee80211_hw *dev)
+ 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3,
+ 			reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, RTL8225_ANAPARAM_ON);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_ON);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM,
++			  RTL8187_RTL8225_ANAPARAM_ON);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2,
++			  RTL8187_RTL8225_ANAPARAM2_ON);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3,
+ 			reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
+ 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
+@@ -566,9 +570,12 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
+ 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
+ 	reg |= RTL818X_CONFIG3_ANAPARAM_WRITE | RTL818X_CONFIG3_GNT_SELECT;
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, 0x727f3f52);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, 0x45090658);
+-	rtl818x_iowrite8(priv, &priv->map->ANAPARAM3, 0);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2,
++			  RTL8187B_RTL8225_ANAPARAM2_ON);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM,
++			  RTL8187B_RTL8225_ANAPARAM_ON);
++	rtl818x_iowrite8(priv, &priv->map->ANAPARAM3,
++			 RTL8187B_RTL8225_ANAPARAM3_ON);
+ 
+ 	rtl818x_iowrite8(priv, (u8 *)0xFF61, 0x10);
+ 	reg = rtl818x_ioread8(priv, (u8 *)0xFF62);
+diff --git a/drivers/net/wireless/rtl8187_rtl8225.c 
+b/drivers/net/wireless/rtl8187_rtl8225.c
+index 1e059de..1bae899 100644
+--- a/drivers/net/wireless/rtl8187_rtl8225.c
++++ b/drivers/net/wireless/rtl8187_rtl8225.c
+@@ -307,7 +307,8 @@ static void rtl8225_rf_set_tx_power(struct ieee80211_hw 
+*dev, int channel)
+ 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3,
+ 			reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_ON);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2,
++			  RTL8187_RTL8225_ANAPARAM2_ON);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3,
+ 			reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
+ 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
+@@ -560,7 +561,8 @@ static void rtl8225z2_rf_set_tx_power(struct ieee80211_hw 
+*dev, int channel)
+ 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3,
+ 			reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_ON);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2,
++			  RTL8187_RTL8225_ANAPARAM2_ON);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3,
+ 			reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
+ 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
+@@ -913,8 +915,19 @@ static void rtl8225_rf_stop(struct ieee80211_hw *dev)
+ 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
+ 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | 
+RTL818X_CONFIG3_ANAPARAM_WRITE);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_OFF);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, RTL8225_ANAPARAM_OFF);
++	if (!priv->is_rtl8187b) {
++		rtl818x_iowrite32(priv, &priv->map->ANAPARAM2,
++				  RTL8187_RTL8225_ANAPARAM2_OFF);
++		rtl818x_iowrite32(priv, &priv->map->ANAPARAM,
++				  RTL8187_RTL8225_ANAPARAM_OFF);
++	} else {
++		rtl818x_iowrite32(priv, &priv->map->ANAPARAM2,
++				  RTL8187B_RTL8225_ANAPARAM2_OFF);
++		rtl818x_iowrite32(priv, &priv->map->ANAPARAM,
++				  RTL8187B_RTL8225_ANAPARAM_OFF);
++		rtl818x_iowrite8(priv, &priv->map->ANAPARAM3,
++				  RTL8187B_RTL8225_ANAPARAM3_OFF);
 +	}
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & 
+~RTL818X_CONFIG3_ANAPARAM_WRITE);
+ 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
+ }
+diff --git a/drivers/net/wireless/rtl8187_rtl8225.h 
+b/drivers/net/wireless/rtl8187_rtl8225.h
+index d39ed02..20c5b6e 100644
+--- a/drivers/net/wireless/rtl8187_rtl8225.h
++++ b/drivers/net/wireless/rtl8187_rtl8225.h
+@@ -15,10 +15,17 @@
+ #ifndef RTL8187_RTL8225_H
+ #define RTL8187_RTL8225_H
+ 
+-#define RTL8225_ANAPARAM_ON	0xa0000a59
+-#define RTL8225_ANAPARAM2_ON	0x860c7312
+-#define RTL8225_ANAPARAM_OFF	0xa00beb59
+-#define RTL8225_ANAPARAM2_OFF	0x840dec11
++#define RTL8187_RTL8225_ANAPARAM_ON	0xa0000a59
++#define RTL8187_RTL8225_ANAPARAM2_ON	0x860c7312
++#define RTL8187_RTL8225_ANAPARAM_OFF	0xa00beb59
++#define RTL8187_RTL8225_ANAPARAM2_OFF	0x840dec11
 +
-  	info->driver_data[0] = dev;
-  	info->driver_data[1] = urb;
-
++#define RTL8187B_RTL8225_ANAPARAM_ON	0x45090658
++#define RTL8187B_RTL8225_ANAPARAM2_ON	0x727f3f52
++#define RTL8187B_RTL8225_ANAPARAM3_ON	0x00
++#define RTL8187B_RTL8225_ANAPARAM_OFF	0x55480658
++#define RTL8187B_RTL8225_ANAPARAM2_OFF	0x72003f50
++#define RTL8187B_RTL8225_ANAPARAM3_OFF	0x00
+ 
+ const struct rtl818x_rf_ops * rtl8187_detect_rf(struct ieee80211_hw *);
+ 
+-- 
+1.5.6
 
