@@ -1,58 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:55097 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754950AbYGGXB1 (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:31561 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753224AbYGINvj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2008 19:01:27 -0400
-Received: by py-out-1112.google.com with SMTP id p76so1042242pyb.10
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2008 16:01:24 -0700 (PDT)
-Message-ID: <1ba2fa240807071601s79590b3cpe0974b15a0aab18@mail.gmail.com> (sfid-20080708_010143_756334_87DF4D37)
-Date: Tue, 8 Jul 2008 02:01:23 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Harvey Harrison" <harvey.harrison@gmail.com>
-Subject: Re: [PATCH 1/1 V2] mac80211: Fix ieee80211_rx_reorder_ampdu: ignore QoS null packets
-Cc: "Michael Buesch" <mb@bu3sch.de>, linville@tuxdriver.com,
-	johannes@sipsolutions.net, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
-In-Reply-To: <1215470685.14247.15.camel@brick>
+	Wed, 9 Jul 2008 09:51:39 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so823683yxm.1
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 06:51:36 -0700 (PDT)
+Message-ID: <69e28c910807090651xc253bcawf3900c53d1a3e046@mail.gmail.com> (sfid-20080709_155143_510928_33AEC887)
+Date: Wed, 9 Jul 2008 15:51:35 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Stefan Monnier" <monnier@iro.umontreal.ca>
+Subject: Re: Slow b43 with 2.6.25.9 on an asus wl-700ge home-router
+Cc: linux-wireless@vger.kernel.org,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
+	"Michael Buesch" <mb@bu3sch.de>
+In-Reply-To: <jwvlk0bsjk7.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <1215434881-5410-1-git-send-email-tomas.winkler@intel.com>
-	 <1215447824.14247.2.camel@brick> <200807071902.51683.mb@bu3sch.de>
-	 <1215458792.14247.7.camel@brick>
-	 <1ba2fa240807071423n755d4e5ay81a6543be7761a92@mail.gmail.com>
-	 <1215466987.14247.12.camel@brick>
-	 <1ba2fa240807071516m6220a15sf02fe0b954d0d4ae@mail.gmail.com>
-	 <1215470685.14247.15.camel@brick>
+References: <jwvlk0bsjk7.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 8, 2008 at 1:44 AM, Harvey Harrison
-<harvey.harrison@gmail.com> wrote:
-> On Tue, 2008-07-08 at 01:16 +0300, Tomas Winkler wrote:
->> On Tue, Jul 8, 2008 at 12:43 AM, Harvey Harrison
->> > set.
->> >
->> I know but, what you missing is the check above. we bail out from the
->> function if the packet is not qos data before so it's not relevant for
->> checking
->> of any null data just qos null data. I didn't want to touch the PS
->> code that's why we've created a special handler for this particular
->> case.
->> I think you patch works as well  and maybe can be used  PS mode as
->> well but I'm not sure now.. I will look at this alter.
->> Tomas
->>
+On Wed, Jul 9, 2008 at 7:50 AM, Stefan Monnier <monnier@iro.umontreal.ca> wrote:
+> I finally started to use the b43 driver on my home-router and am happy
+> to have it working at all (with WPA), but I notice that the speed is
+> pretty terrible: I cannot seem to get more than 100KB/s out of it (I
+> use it as a personal web proxy, so it ends up slowing down my
+> web-surfing :-( ).
 >
-> Good point, a helper probably isn't right for this as it's already been
-> checked that it's a data packet with qos, so opencoding the nullfunc
-> test is probably the right thing (as it was before my change).
+> Originally "iwconfig" told me that the bit rate was 2Mb/s (and even
+> that should allow me to get a bit more than 100KB/s).
+> After "iwconfig wlan0 rate 54M", the result is the same (except that
+> "iwconfig" tells me the bit rate is 54Mb/s).
 >
-> if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
+> More specifically, iwconfig tells me things like:
 >
-> Cheers,
+> wlan0     IEEE 802.11  ESSID:"test"
+>          Mode:Managed  Frequency:2.457 GHz  Access Point: 00:10:30:C0:50:50
+>          Bit Rate=54 Mb/s   Tx-Power=27 dBm
+>          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
+>          Link Quality=95/100  Signal level:-54 dBm  Noise level=-63 dBm
+>          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+>
+> which seems to indicate that the reception is indeed good.
+> Any idea what I might want to check?
+>
+> I did notice that my dmesg says things like
+> "received packet with  own address as source address".  This seems
+> related to my use of bridging, but:
+> 1 - I have no bridging loop (actually I unplugged all ethernet cables,
+>    so the only active network interface in the bridge is wlan0).
+> 2 - taking wlan0 out of the bridge eliminates those messages, but
+>    doesn't improve the bandwidth.
+>
+> Any idea what might be going on?
+>
+>
+>        Stefan
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Sound reasonable will drop this patch in favor of the open code.
-Thanks
-Tomas
+Can you see "PHY transmission error" messages in dmesg? If you get
+those, then that's a known bug.
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
