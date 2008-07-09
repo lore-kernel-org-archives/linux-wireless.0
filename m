@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:17567 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752231AbYG1UMc (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.168]:40572 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751382AbYGITog (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2008 16:12:32 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so1573295nfc.21
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 13:12:31 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling through rfkill
-Date: Mon, 28 Jul 2008 22:32:37 +0200
-Cc: Dan Williams <dcbw@redhat.com>,
-	Philip Langdale <philipl@overt.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	toshiba_acpi@memebeam.org, linux-wireless@vger.kernel.org
-References: <488CBBAB.6010508@overt.org> <1217243863.24609.6.camel@localhost.localdomain> <20080728185233.GB26564@khazad-dum.debian.net>
-In-Reply-To: <20080728185233.GB26564@khazad-dum.debian.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200807282232.38076.IvDoorn@gmail.com> (sfid-20080728_221239_150156_2405D638)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Wed, 9 Jul 2008 15:44:36 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so3007816wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 12:44:36 -0700 (PDT)
+Subject: [PATCH 3/4] ath5k: explicitly check skb->len
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 09 Jul 2008 12:44:32 -0700
+Message-Id: <1215632672.476.86.camel@brick> (sfid-20080709_214438_751531_10B97091)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 28 July 2008, Henrique de Moraes Holschuh wrote:
-> On Mon, 28 Jul 2008, Dan Williams wrote:
-> > On Mon, 2008-07-28 at 00:04 -0300, Henrique de Moraes Holschuh wrote:
-> > > On Sun, 27 Jul 2008, Philip Langdale wrote:
-> > > > Ivo van Doorn wrote:
-> > > >> You don't seem to be using rfkill_force_state() which is required to inform the rfkill
-> > > >> layer about the state changes.
-> > > >
-> > > > Hmm? According to rfkill.txt, one can either use force_state() or implement the
-> > > > get_state() hook, and I have done the later. If this is not the correct method,
-> > > > can you please explain when I should be using force_state?
-> > > 
-> > > There is a bunch of rfkill bug fix patches that was not merged in
-> > > wireless-testing yet (which is a pity, it would be really good if they could
-> > > go into 2.6.27).  One of those patches fixes the docs to make it clear that
-> > 
-> > Lots of wireless people (including John) were at OLS this past week, so
-> > it's not entirely surprising that patch merging might have been slow.
-> 
-> That would explain it, yes...  Well, I sure hope this means the patches
-> still have a non-zero chance of being sent to mainline for 2.6.27 :-)  I am
-> not up to date on how merges are usually handled in the wireless and net
-> subsystems.
+ieee80211_get_hdrlen_from_skb internally checks that the skb is long
+enough to hold the full header, or it returns 0 if not.  The check in
+ath5k does not check this case and assumes it always got the actual
+header length which it then checks against the skb->len plus some headroom.
 
-The feature window for 2.6.27 closed with the release of 2.6.26, after that
-only bugfixes can go in.
+Change to ieee80211_hdrlen which always returns the hdrlen and keep the
+existing headroom check.
 
-Ivo
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ drivers/net/wireless/ath5k/base.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index a43e9b2..ae10ee0 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1596,7 +1596,7 @@ ath5k_rx_decrypted(struct ath5k_softc *sc, struct ath5k_desc *ds,
+ 		struct sk_buff *skb, struct ath5k_rx_status *rs)
+ {
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+-	unsigned int keyix, hlen = ieee80211_get_hdrlen_from_skb(skb);
++	unsigned int keyix, hlen;
+ 
+ 	if (!(rs->rs_status & AR5K_RXERR_DECRYPT) &&
+ 			rs->rs_keyix != AR5K_RXKEYIX_INVALID)
+@@ -1605,6 +1605,7 @@ ath5k_rx_decrypted(struct ath5k_softc *sc, struct ath5k_desc *ds,
+ 	/* Apparently when a default key is used to decrypt the packet
+ 	   the hw does not set the index used to decrypt.  In such cases
+ 	   get the index from the packet. */
++	hlen = ieee80211_hdrlen(hdr->frame_control);
+ 	if (ieee80211_has_protected(hdr->frame_control) &&
+ 	    !(rs->rs_status & AR5K_RXERR_DECRYPT) &&
+ 	    skb->len >= hlen + 4) {
+-- 
+1.5.6.1.322.ge904b
+
+
