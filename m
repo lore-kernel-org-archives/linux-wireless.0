@@ -1,63 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57718
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755318AbYGQWYr (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33889 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753523AbYGISJn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 18:24:47 -0400
-Date: Thu, 17 Jul 2008 15:24:47 -0700 (PDT)
-Message-Id: <20080717.152447.89672084.davem@davemloft.net> (sfid-20080718_002452_232868_C1776FFC)
-To: kaber@trash.net
-Cc: hadi@cyberus.ca, netdev@vger.kernel.org, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
- RCU.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <487F50EC.80008@trash.net>
-References: <487F4327.1000107@trash.net>
-	<1216301732.4726.26.camel@localhost>
-	<487F50EC.80008@trash.net>
+	Wed, 9 Jul 2008 14:09:43 -0400
+Subject: Re: [RFC PATCH 0/7] IEEE 802.11w / management frame protection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1215625246.3246.40.camel@johannes.berg> (sfid-20080709_194135_916590_FC9A6131)
+References: <20080617154008.883383150@localhost>
+	 (sfid-20080617_175912_673335_B33F2037)  <1215625246.3246.40.camel@johannes.berg>
+	 (sfid-20080709_194135_916590_FC9A6131)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UMeMOJyB2FbXzMkl5CLW"
+Date: Wed, 09 Jul 2008 20:08:56 +0200
+Message-Id: <1215626936.3246.45.camel@johannes.berg> (sfid-20080709_200945_861029_93F1B86F)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Patrick McHardy <kaber@trash.net>
-Date: Thu, 17 Jul 2008 16:02:20 +0200
 
-> jamal wrote:
-> > On Thu, 2008-17-07 at 15:03 +0200, Patrick McHardy wrote:
-> > 
-> > Like you i need to digest the patches to understand the impact on the
-> > rest but one thing i did notice was the last patch (replacement of
-> > pfifo_fast):
-> > prioritization based on TOS/DSCP (setsockopt) would no longer work, some
-> > user space code may suffer (routing daemons likely). One suggestion to
-> > fix it is to load pfifo qdisc (which does what fifo_fast is attempting)
-> > for drivers that are h/ware multiq capable.
-> 
-> That would perform priorization within each qdisc, the individual
-> qdiscs would still be transmitted using seperate HW queues though.
+--=-UMeMOJyB2FbXzMkl5CLW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I think from certain perspectives it frankly doesn't matter.
+On Wed, 2008-07-09 at 19:40 +0200, Johannes Berg wrote:
+> > This patch set does not address the issues found in configuring default
+> > keys for monitor interfaces, i.e., this still needs a workaround in
+> > hostapd to set IGTK for both wlan# and mon.wlan#. In addition, the
+> > debugfs directory is left behind when the monitor interface is removed.
+>=20
+> Can you try this patch?
+> http://johannes.sipsolutions.net/patches/kernel/all/2008-07-09-17%3a38/02=
+1-mac80211-inject-sdata.patch
+>=20
+> It should use the sdata from the TA instead of the monitor when treating
+> injecting frames, where possible.
 
-It's not like the skb->priority field lets the SKB bypass the packets
-already in the TX ring of the chip with a lower priority.
+Just realised that it doesn't handle VLANs properly. Could you add a
+static MAC/VLAN mapping to hostapd to make VLANs possible without
+setting up radius? :)
 
-It is true that, once the TX ring is full, the skb->priority thus
-begins to have an influence on which packets are moved from the
-qdisc to the TX ring of the device.
+johannes
 
-However, I wonder if we're so sure that we want to give normal users
-that kind of powers.  Let's say for example that you set the highest
-priority possible in the TOS socket option, and you do this for a ton
-of UDP sockets, and you just blast packets out as fast as possible.
-This backlogs the device TX ring, and if done effectively enough could
-keep other sockets blocked out of the device completely.
+--=-UMeMOJyB2FbXzMkl5CLW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Are we really really sure it's OK to let users do this?  :)
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-To me, as a default, I think TOS and DSCP really means just on-wire
-priority.
+iQIcBAABAgAGBQJIdP60AAoJEKVg1VMiehFYf4UP/iId4CY/R6V3YvQa17Kp2wsd
+nuRtgKqxBPPbjIEs/69H83UJjU9eQ65A2ZqIbRSwsqK3PzHsS06XMWr4jbeLUozT
+kbKDgtPO7zDeaH+rplO9oGZzzdn/c9UlgW+TQZ6DPTiH8lIDaGuyppdj2IKROPD+
+DgSKSxZUagS2qmuBw+P73YsWDDCmMnMmA83gQ6h6zhcflL+etGdyVfOlsseQ9QpB
+x32UwtWXh/ddgaGPdM2p0SPyYwTzBAU0XwmNxDCtmtnKmnV1LdKLz3noscq3dDGu
+a91lTaoRRC5sW3UUjDaTvwbXIseIMTonZPEuXR8nT2oPD3Eq0C66pj+NdYeSylGq
+LcGAkqAYBqc5WT1E366HIm1M8bwrDcBC4/elvKAQ2vgu8YIDxv3Wa4eJO8zSYym0
+PvPIdsYCnMNbCtMslGBSEznBHb2Co8b5yi7tm6bCs6/LgERUIp7QNYPHWOXWz793
+Qvum0o66vfUkZmE9z8uuGRsuCZBWQ+WGFsLKlLEze53HAEweyZCQApABXb3Z41/2
+G1873C56fmK8+De8VctBiJsRpWXOtLrZwx0ASCsAyrdfL8F3a3J97lhzUJ1uv6w2
+6PfS0PIrzzBJqiTIBC42qJgpKRaPYUPYk6GcYfXYQUQ40rYhV2fbsq/uoPRnoDMk
+65M3zdZyNyXuC30oWbvj
+=ea6t
+-----END PGP SIGNATURE-----
 
-If we absolutely want to, we can keep the old pfifo_fast around and use
-it (shared on multiq) if a certain sysctl knob is set.
+--=-UMeMOJyB2FbXzMkl5CLW--
+
