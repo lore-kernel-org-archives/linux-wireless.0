@@ -1,51 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:20313 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752673AbYGNN2S (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.168]:40572 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750955AbYGIToh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 09:28:18 -0400
-To: "Tomas Winkler" <tomasw@gmail.com>
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by low level driver
-References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
-	<1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
-	<1216039127.11189.15.camel@johannes.berg>
-	<1ba2fa240807140546w4f08e32l59ed88dfa1b86403@mail.gmail.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Mon, 14 Jul 2008 16:26:49 +0300
-In-Reply-To: <1ba2fa240807140546w4f08e32l59ed88dfa1b86403@mail.gmail.com> (ext Tomas Winkler's message of "Mon\, 14 Jul 2008 15\:46\:41 +0300")
-Message-ID: <87fxqcoaue.fsf@nokia.com> (sfid-20080714_152822_338452_CA3B4FAB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 9 Jul 2008 15:44:37 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so3007816wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 12:44:37 -0700 (PDT)
+Subject: [PATCH 4/4] mac80211: explicitly check skb->len
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 09 Jul 2008 12:44:32 -0700
+Message-Id: <1215632672.476.88.camel@brick> (sfid-20080709_214439_907988_029DA10D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler <tomasw@gmail.com> writes:
+ieee80211_get_hdrlen_from_skb internally checks the skb is long enough to
+hold the full ieee80211_hdr, else it returns zero.  Use ieee80211_hdrlen
+which always returns the hdrlen and check the remaining room in the
+skb explicitly when removing encryption headers or the qos control field.
 
->> If this is a knob that should be adjusted then we want to enable users
->> to do it, and if it isn't then we can put a value into mac80211 and fix
->> it. Having drivers make these kinds of decisions is very bad for uniform
->> wireless behaviour.
->
-> The same story as with beacon interval. This is for the power
-> management. It's really hw dependent for how many beacons we can stay
-> dormant.
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ net/mac80211/main.c |   26 +++++++++++---------------
+ 1 files changed, 11 insertions(+), 15 deletions(-)
 
-This stuff is very much hardware dependent, I don't deny that, but
-still I would assume that the basic principles are almost the same. We
-just need to come up with a good interface for the drivers. Sure, it's
-more work now, but if we don't do it, PSM support will eventually get
-really messy because all drivers do it somehow differently.
-
-> I really don't know what other vendors do and user should not guess
-> this.
-
-Yes, for the user this is too difficult, but I think the driver
-shouldn't be making the decision either. So mac80211 stack would be
-the most logical choice, and it could be make the decisions based on
-user input (or something like that).
-
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index cf477ad..c247ecc 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1274,16 +1274,16 @@ static void ieee80211_remove_tx_extra(struct ieee80211_local *local,
+ 				      struct ieee80211_key *key,
+ 				      struct sk_buff *skb)
+ {
+-	int hdrlen, iv_len, mic_len;
++	unsigned int hdrlen, iv_len, mic_len;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 
++	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	info->flags &=	IEEE80211_TX_CTL_REQ_TX_STATUS |
+ 			IEEE80211_TX_CTL_DO_NOT_ENCRYPT |
+ 			IEEE80211_TX_CTL_REQUEUE |
+ 			IEEE80211_TX_CTL_EAPOL_FRAME;
+ 
+-	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+-
+ 	if (!key)
+ 		goto no_key;
+ 
+@@ -1304,24 +1304,20 @@ static void ieee80211_remove_tx_extra(struct ieee80211_local *local,
+ 		goto no_key;
+ 	}
+ 
+-	if (skb->len >= mic_len &&
++	if (skb->len >= hdrlen + mic_len &&
+ 	    !(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
+ 		skb_trim(skb, skb->len - mic_len);
+-	if (skb->len >= iv_len && skb->len > hdrlen) {
++	if (skb->len >= hdrlen + iv_len) {
+ 		memmove(skb->data + iv_len, skb->data, hdrlen);
+-		skb_pull(skb, iv_len);
++		hdr = (struct ieee80211_hdr *)skb_pull(skb, iv_len);
+ 	}
+ 
+ no_key:
+-	{
+-		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-		u16 fc = le16_to_cpu(hdr->frame_control);
+-		if ((fc & 0x8C) == 0x88) /* QoS Control Field */ {
+-			fc &= ~IEEE80211_STYPE_QOS_DATA;
+-			hdr->frame_control = cpu_to_le16(fc);
+-			memmove(skb->data + 2, skb->data, hdrlen - 2);
+-			skb_pull(skb, 2);
+-		}
++	if (ieee80211_is_data_qos(hdr->frame_control)) {
++		hdr->frame_control &= ~cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
++		memmove(skb->data + IEEE80211_QOS_CTL_LEN, skb->data,
++			hdrlen - IEEE80211_QOS_CTL_LEN);
++		skb_pull(skb, IEEE80211_QOS_CTL_LEN);
+ 	}
+ }
+ 
 -- 
-Kalle Valo
+1.5.6.1.322.ge904b
+
