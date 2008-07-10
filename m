@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from BISCAYNE-ONE-STATION.MIT.EDU ([18.7.7.80]:35114 "EHLO
-	biscayne-one-station.mit.edu" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751676AbYG2PUK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 11:20:10 -0400
-Date: Tue, 29 Jul 2008 11:18:30 -0400
-From: Theodore Tso <tytso@MIT.EDU>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Alistair John Strachan <alistair@devzero.co.uk>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	dsd@gentoo.org, kune@deine-taler.de, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.27-rc1: zd1211rw association fails
-Message-ID: <20080729151830.GA5126@mit.edu> (sfid-20080729_172016_962610_5B4C0740)
-References: <alpine.LFD.1.10.0807281956030.3334@nehalem.linux-foundation.org> <200807291049.47342.alistair@devzero.co.uk> <1217326195.10489.10.camel@johannes.berg> <20080729120442.GE9378@mit.edu> <1217333359.10489.38.camel@johannes.berg> <1217333706.10489.40.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1217333706.10489.40.camel@johannes.berg>
+Received: from mga09.intel.com ([134.134.136.24]:46170 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752367AbYGJOyn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jul 2008 10:54:43 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/1] mac80211: dont add a STA which is not in the same IBSS
+Date: Thu, 10 Jul 2008 17:54:14 +0300
+Message-Id: <1215701654-27769-1-git-send-email-tomas.winkler@intel.com> (sfid-20080710_165512_058298_7668A06A)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 29, 2008 at 02:15:06PM +0200, Johannes Berg wrote:
-> > If everybody's going to decide now to hit on _me_, I'll point out that
-> > davem's MQ TX changes broke it
-> 
-> Of course that's not strictly true, it had been broken forever, it just
-> happened to never show up before. And I mean forever, the original
-> devicescape code that got in was already broken.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Sorry, no, I wasn't trying to blame you.  I understand that this was a
-hard problem to fix, and it wasn't at all obvious that changes in one
-part of the networking stack would break wireless stack due to bad
-assumptions it had made, that had been hiding for quite some time.
+This patch avoids adding STAs that don't belong to our IBSS
+ieee80211_bssid_match matches also bcast address so also APs
+were added
 
-The timing is just very unfortunate, since if -rc1 had been delayed by
-just one more day so it could have incorporated it we would probably
-reduce the large number of regression reports; a lot of people who
-test -rc1 don't necessarily follow netdev or linux-wireless.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ net/mac80211/mlme.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-I'm of course also nervously building -rc1 and about to test it, since
-I haven't had a chance to test anything since -git6, and I'm wondering
-if some other regression may have been introduced since then.
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index dbc8cf4..00b7186 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4398,7 +4398,7 @@ struct sta_info *ieee80211_ibss_add_sta(struct net_device *dev,
+ 		return NULL;
+ 	}
+ 
+-	if (!ieee80211_bssid_match(bssid, sdata->u.sta.bssid))
++	if (compare_ether_addr(bssid, sdata->u.sta.bssid))
+ 		return NULL;
+ 
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+-- 
+1.5.4.1
 
-Since it probably doesn't get said enough to everyone who works of
-fixing bugs/regressions, thanks very much for your efforts; I (and
-many other people) very much appreciate it!!
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-						- Ted
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
