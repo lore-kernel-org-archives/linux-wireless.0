@@ -1,56 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:30047 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753053AbYG2VU5 (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:40975 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752478AbYGJVzQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 17:20:57 -0400
-To: "Tomas Winkler" <tomasw@gmail.com>
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Herton Ronaldo Krzesinski" <herton@mandriva.com.br>,
-	"Hin-Tak Leung" <hintak.leung@gmail.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
-Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks rtl8187
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
-	<48874F09.7060400@lwfinger.net>
-	<3ace41890807281939y462c9b91n5fa952e167b6ff8c@mail.gmail.com>
-	<200807290021.45400.herton@mandriva.com.br>
-	<1217314430.15381.11.camel@johannes.berg>
-	<1ba2fa240807290123n7673dbb9m7121c1e76fe57e94@mail.gmail.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Wed, 30 Jul 2008 00:19:54 +0300
-In-Reply-To: <1ba2fa240807290123n7673dbb9m7121c1e76fe57e94@mail.gmail.com> (ext Tomas Winkler's message of "Tue\, 29 Jul 2008 11\:23\:30 +0300")
-Message-ID: <874p68l75x.fsf@nokia.com> (sfid-20080729_232101_081283_DBFD451C)
+	Thu, 10 Jul 2008 17:55:16 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8187: use different ANAPARAM*_OFF values for 8187B
+Date: Thu, 10 Jul 2008 18:55:23 -0300
+Cc: "Hin-Tak Leung" <htl10@users.sourceforge.net>, proski@gnu.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <200807091316.20334.herton@mandriva.com.br>
+In-Reply-To: <200807091316.20334.herton@mandriva.com.br>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200807101855.23766.herton@mandriva.com.br> (sfid-20080710_235520_527590_BA0FF941)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler <tomasw@gmail.com> writes:
+Now a version properly inlined into the mail message...
+________________________
 
-> On Tue, Jul 29, 2008 at 9:53 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Tue, 2008-07-29 at 00:21 -0300, Herton Ronaldo Krzesinski wrote:
->>
->>> [3] /sbin/iwconfig wlan0 power on
->>
->> I don't think turning on power management (yes, this command is
->> completely misnamed, it turns on power _management_ not the power, you
->> may want "txpower auto") does anything on this chip, does it?
->
-> iwconfig power on is not implemented by mac80211 yet. There was one
-> patch posted that implements it.
+rtl8187: use different ANAPARAM*_OFF values for 8187B
 
-John has already applied Samuel's patch to wireless-testing:
+For RTL8187B it seems we need special values too for ANAPARAM*_OFF
+values (and not use RTL8187 ones). The ANAPARAM*_OFF values used are the
+stock ones read from the hardware after a cold boot.
 
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commitdiff;h=8f87dd7e540d455f8e7f11478133b85edc969c67
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtl8187_dev.c     |   21 ++++++++++++++-------
+ drivers/net/wireless/rtl8187_rtl8225.c |   21 +++++++++++++++++----
+ drivers/net/wireless/rtl8187_rtl8225.h |   15 +++++++++++----
+ 3 files changed, 42 insertions(+), 15 deletions(-)
 
-> I wanted to expand it but wireless_tools 29 has a bug in parsing
-> this command. It is fixed only in 30.pre6 which is usually not in
-> distros.
-
-Could you be more specific, please? We have been using it for few
-years now.
-
+diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
+index 33527e5..f981fdb 100644
+--- a/drivers/net/wireless/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl8187_dev.c
+@@ -430,8 +430,10 @@ static int rtl8187_init_hw(struct ieee80211_hw *dev)
+ 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg |
+ 			 RTL818X_CONFIG3_ANAPARAM_WRITE);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, RTL8225_ANAPARAM_ON);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_ON);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM,
++			  RTL8187_RTL8225_ANAPARAM_ON);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2,
++			  RTL8187_RTL8225_ANAPARAM2_ON);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg &
+ 			 ~RTL818X_CONFIG3_ANAPARAM_WRITE);
+ 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
+@@ -453,8 +455,10 @@ static int rtl8187_init_hw(struct ieee80211_hw *dev)
+ 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3,
+ 			reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, RTL8225_ANAPARAM_ON);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_ON);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM,
++			  RTL8187_RTL8225_ANAPARAM_ON);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2,
++			  RTL8187_RTL8225_ANAPARAM2_ON);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3,
+ 			reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
+ 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
+@@ -566,9 +570,12 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
+ 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
+ 	reg |= RTL818X_CONFIG3_ANAPARAM_WRITE | RTL818X_CONFIG3_GNT_SELECT;
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, 0x727f3f52);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, 0x45090658);
+-	rtl818x_iowrite8(priv, &priv->map->ANAPARAM3, 0);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2,
++			  RTL8187B_RTL8225_ANAPARAM2_ON);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM,
++			  RTL8187B_RTL8225_ANAPARAM_ON);
++	rtl818x_iowrite8(priv, &priv->map->ANAPARAM3,
++			 RTL8187B_RTL8225_ANAPARAM3_ON);
+ 
+ 	rtl818x_iowrite8(priv, (u8 *)0xFF61, 0x10);
+ 	reg = rtl818x_ioread8(priv, (u8 *)0xFF62);
+diff --git a/drivers/net/wireless/rtl8187_rtl8225.c b/drivers/net/wireless/rtl8187_rtl8225.c
+index 1e059de..1bae899 100644
+--- a/drivers/net/wireless/rtl8187_rtl8225.c
++++ b/drivers/net/wireless/rtl8187_rtl8225.c
+@@ -307,7 +307,8 @@ static void rtl8225_rf_set_tx_power(struct ieee80211_hw *dev, int channel)
+ 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3,
+ 			reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_ON);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2,
++			  RTL8187_RTL8225_ANAPARAM2_ON);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3,
+ 			reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
+ 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
+@@ -560,7 +561,8 @@ static void rtl8225z2_rf_set_tx_power(struct ieee80211_hw *dev, int channel)
+ 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3,
+ 			reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_ON);
++	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2,
++			  RTL8187_RTL8225_ANAPARAM2_ON);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3,
+ 			reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
+ 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
+@@ -913,8 +915,19 @@ static void rtl8225_rf_stop(struct ieee80211_hw *dev)
+ 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_CONFIG);
+ 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg | RTL818X_CONFIG3_ANAPARAM_WRITE);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2, RTL8225_ANAPARAM2_OFF);
+-	rtl818x_iowrite32(priv, &priv->map->ANAPARAM, RTL8225_ANAPARAM_OFF);
++	if (!priv->is_rtl8187b) {
++		rtl818x_iowrite32(priv, &priv->map->ANAPARAM2,
++				  RTL8187_RTL8225_ANAPARAM2_OFF);
++		rtl818x_iowrite32(priv, &priv->map->ANAPARAM,
++				  RTL8187_RTL8225_ANAPARAM_OFF);
++	} else {
++		rtl818x_iowrite32(priv, &priv->map->ANAPARAM2,
++				  RTL8187B_RTL8225_ANAPARAM2_OFF);
++		rtl818x_iowrite32(priv, &priv->map->ANAPARAM,
++				  RTL8187B_RTL8225_ANAPARAM_OFF);
++		rtl818x_iowrite8(priv, &priv->map->ANAPARAM3,
++				  RTL8187B_RTL8225_ANAPARAM3_OFF);
++	}
+ 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg & ~RTL818X_CONFIG3_ANAPARAM_WRITE);
+ 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
+ }
+diff --git a/drivers/net/wireless/rtl8187_rtl8225.h b/drivers/net/wireless/rtl8187_rtl8225.h
+index d39ed02..20c5b6e 100644
+--- a/drivers/net/wireless/rtl8187_rtl8225.h
++++ b/drivers/net/wireless/rtl8187_rtl8225.h
+@@ -15,10 +15,17 @@
+ #ifndef RTL8187_RTL8225_H
+ #define RTL8187_RTL8225_H
+ 
+-#define RTL8225_ANAPARAM_ON	0xa0000a59
+-#define RTL8225_ANAPARAM2_ON	0x860c7312
+-#define RTL8225_ANAPARAM_OFF	0xa00beb59
+-#define RTL8225_ANAPARAM2_OFF	0x840dec11
++#define RTL8187_RTL8225_ANAPARAM_ON	0xa0000a59
++#define RTL8187_RTL8225_ANAPARAM2_ON	0x860c7312
++#define RTL8187_RTL8225_ANAPARAM_OFF	0xa00beb59
++#define RTL8187_RTL8225_ANAPARAM2_OFF	0x840dec11
++
++#define RTL8187B_RTL8225_ANAPARAM_ON	0x45090658
++#define RTL8187B_RTL8225_ANAPARAM2_ON	0x727f3f52
++#define RTL8187B_RTL8225_ANAPARAM3_ON	0x00
++#define RTL8187B_RTL8225_ANAPARAM_OFF	0x55480658
++#define RTL8187B_RTL8225_ANAPARAM2_OFF	0x72003f50
++#define RTL8187B_RTL8225_ANAPARAM3_OFF	0x00
+ 
+ const struct rtl818x_rf_ops * rtl8187_detect_rf(struct ieee80211_hw *);
+ 
 -- 
-Kalle Valo
+1.5.6
+
+
