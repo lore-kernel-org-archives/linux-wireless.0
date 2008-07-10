@@ -1,69 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:58453 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753640AbYGWTh5 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53486 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756592AbYGJOck (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 15:37:57 -0400
-Date: Wed, 23 Jul 2008 16:37:52 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rfkill: add master_switch_mode functionality
-Message-ID: <20080723193752.GG11009@khazad-dum.debian.net> (sfid-20080723_213800_220330_CDE3396E)
-References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br> <1216775046-9506-4-git-send-email-hmh@hmh.eng.br> <200807232039.39602.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200807232039.39602.IvDoorn@gmail.com>
+	Thu, 10 Jul 2008 10:32:40 -0400
+Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <20080709190915.GA8238@tuxdriver.com> (sfid-20080709_213808_434368_5FE083A0)
+References: <20080709190915.GA8238@tuxdriver.com>
+	 (sfid-20080709_213808_434368_5FE083A0)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/6metlsUcf40iya5uiWZ"
+Date: Thu, 10 Jul 2008 16:31:49 +0200
+Message-Id: <1215700309.3483.21.camel@johannes.berg> (sfid-20080710_163245_143412_EB004BB0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 23 Jul 2008, Ivo van Doorn wrote:
-> > +enum rfkill_input_master_mode {
-> > +	RFKILL_INPUT_MASTER_DONOTHING = 0,
-> > +	RFKILL_INPUT_MASTER_RESTORE = 1,
-> > +	RFKILL_INPUT_MASTER_UNBLOCKALL = 2,
-> 
-> RFKILL_INPUT_MASTER_LAST, /* Internal */
-> 
-> See below for reason. :)
 
-[...]
+--=-/6metlsUcf40iya5uiWZ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> >  static int __init rfkill_handler_init(void)
-> >  {
-> > +	switch (rfkill_master_switch_mode) {
-> > +	case RFKILL_INPUT_MASTER_DONOTHING:
-> > +	case RFKILL_INPUT_MASTER_RESTORE:
-> > +	case RFKILL_INPUT_MASTER_UNBLOCKALL:
-> > +		break;
-> > +	default:
-> > +		return -EINVAL;
-> > +	}
-> 
-> if (rfkill_master_switch_mode >= RFKILL_INPUT_MASTER_LAST)
-> 	return -EINVAL
 
-It will generate the same code :-)  I can certainly do it that way, but if I
-do, every switch() statement will HAVE to handle either default or
-RFKILL_INPUT_MASTER_LAST...  which is bad, as you don't get the warning that
-you forgot to handle something in other code paths that don't need default:
-handling.
+> 1500	Future work
 
-That reminds me that I should kill the default: clause in
-rfkill_schedule_evsw_rfkillall().  It is there because an earlier version of
-the patch would let userspace modify the module paramenter.  That didn't
-play out well (if we want to do that, we should do it in some other way),
-and I forgot to remove the default handling when I made the attribute
-read-only.
+Maybe something about testing? Or I'll do a testing brainstorming
+session after dinner.
 
-> This will make sure new entries in the enum are automatically handled.
-> Note that your next patch doesn't update the above switch statement,
+Obviously, testing at orbit never worked out, but it'd be good to have
+_something_ other than everybody testing their thing locally. Ties in
+with the virtual hardware, maybe?
 
-My next patch doesn't deal with RFKILL_INPUT_MASTER_* :-) I guess you
-misread.
+johannes
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+--=-/6metlsUcf40iya5uiWZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIdh1RAAoJEKVg1VMiehFY/aYP/iHzQeuInHrBEb1rCmL9Avbi
+o6zFcHixMYHliZmKmkPiEtgtdY5sa1oXRtoTO9hkXnVM5faLND1OL4JB5V4xI56T
+WCyx6zyG/NlXJFdGpIoY2rcBgZ6sL3oFao4qmiekBEzYxUUIcxrlwvQ98WAvZvBo
+JZLky9FWQwicl7SZgKutt4LjKthEKDqDzqNQvDf13pxfhCjsy/sIF/W4hQJZY4OU
+fIkjrW8wwovYg4au3IGum1uF/lGKByuead/MKzUPk5VNx4tmkU/baujdKyL7TTbf
+jDud+5ztgiEcs0FJY3Lx6w60yUK13cawbwR6DkhK/6CNP4MYQKHQy2E0Zqa7Fb0M
+8IFTvOfJB9sinDtBSOL4w1NDWOCbDFst6KUWWWRxdGyF9S0JkvPF3HXiKpmsPLRj
+cWRlV4uwrkhq4am0J/YyoOi48S9PIopXQr98R1Cc0W4y4U9LLWF9OQxzPwFZgclk
+Cm+agZScdIbc2RsMCyLDU0mz9IljVtOUK/SsCK0QwrWwhrCPMCCqd1PWFFhorbix
+mEgBP73R7Fl5oinQK8nNqFl5jHJaqMc17v+FRg4MuCQCjSpo9WTeb0zaHDHly5ap
+vj0wd5RutWPLphSgzEhJ8+QtTijGRqgQTp06VZmeetfmr78Wdea898NdKpgq6yRh
+IpCOWoW2/1fmQjnkSpYa
+=8jkp
+-----END PGP SIGNATURE-----
+
+--=-/6metlsUcf40iya5uiWZ--
+
