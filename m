@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:62563 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755519AbYGVTag (ORCPT
+Received: from ctb-mesg8.saix.net ([196.25.240.78]:56561 "EHLO
+	ctb-mesg8.saix.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752751AbYGJKDZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 15:30:36 -0400
-Message-ID: <48863559.1090104@lwfinger.net> (sfid-20080722_213101_253119_45DBCFCF)
-Date: Tue, 22 Jul 2008 14:30:33 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Patrick McHardy <kaber@trash.net>
-CC: David Miller <davem@davemloft.net>, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Kernel WARNING: at net/core/dev.c:1330 __netif_schedule+0x2c/0x98()
-References: <4885104A.2070201@lwfinger.net>	<20080721.161517.27161039.davem@davemloft.net>	<48857F74.2040406@lwfinger.net> <20080722.043220.247312412.davem@davemloft.net> <4885DA49.50703@lwfinger.net> <48860D4B.8070003@lwfinger.net> <488616C0.8070505@trash.net> <4886294C.4060905@lwfinger.net> <48862A76.8030307@trash.net>
-In-Reply-To: <48862A76.8030307@trash.net>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+	Thu, 10 Jul 2008 06:03:25 -0400
+Received: from atlantis.local.uls.co.za (dsl-146-147-234.telkomadsl.co.za [165.146.147.234])
+	by ctb-mesg8.saix.net (Postfix) with ESMTP id 44F7518FF
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2008 10:58:02 +0200 (SAST)
+Received: from [192.168.42.123]
+	by atlantis with esmtp (Exim 4.69)
+	(envelope-from <chris@sabest.co.za>)
+	id 1KGryU-0007VM-HK
+	for linux-wireless@vger.kernel.org; Thu, 10 Jul 2008 10:58:02 +0200
+From: Chris Calitz <chris@sabest.co.za>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 10 Jul 2008 10:58:02 +0200
+Message-Id: <1215680282.6376.5.camel@chris-laptop> (sfid-20080710_120329_387954_007A8DBC)
+Mime-Version: 1.0
+Subject: Compilation Problem
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patrick McHardy wrote:
-> Larry Finger wrote:
->> Patrick McHardy wrote:
->>> Larry Finger wrote:
->>>>
->>>> =============================================
->>>> [ INFO: possible recursive locking detected ]
->>>> 2.6.26-Linus-git-05752-g93ded9b #49
->>>
->>>                    ^^^^^^^^^^^^^^ dirty?
->>>
->>> This kernel is not using the patches we sent.
->>
->> No, but they didn't make any difference. I tried with all 3 applied, 
->> then backed them out one by one. That was the state when I posted before.
-> 
-> Well, this is a completely different warning.
-> 
->>
->> Here are the dumps with all 3 patches applied:
->>
->> =============================================
->> [ INFO: possible recursive locking detected ]
->> 2.6.26-Linus-05752-g93ded9b-dirty #53
->> ---------------------------------------------
->> b43/1997 is trying to acquire lock:
->>  (_xmit_IEEE80211#2){-...}, at: [<ffffffffa028f322>] 
->> ieee80211_scan_completed+0x130/0x2e1 [mac80211]
->>
->> but task is already holding lock:
->>  (_xmit_IEEE80211#2){-...}, at: [<ffffffffa028f322>] 
->> ieee80211_scan_completed+0x130/0x2e1 [mac80211] 
+Hi Everyone
 
-Sorry. After all those kernel builds I got bleary-eyed and just looked for 
-recursive locking without any regard for the details.
+I'm currently running ubuntu hardy 8.04 and struggling with default
+iwl3945 driver dropping connection randomly and needing me to disable
+and enable before it comes back up.=20
 
-Larry
+I have found that the compact-wireless driver apparently fixes this
+issue but when I try to build this driver I get the following errors.
+
+=20
+
+/home/chris/wireless/compat-wireless-2008-07-10/drivers/net/wireless/ma=
+c80211_hwsim.c: In function =E2=80=98init_mac80211_hwsim=E2=80=99:
+/home/chris/wireless/compat-wireless-2008-07-10/drivers/net/wireless/ma=
+c80211_hwsim.c:433: error: implicit declaration of function =E2=80=98de=
+vice_create_drvdata=E2=80=99
+/home/chris/wireless/compat-wireless-2008-07-10/drivers/net/wireless/ma=
+c80211_hwsim.c:434: warning: assignment makes pointer from integer with=
+out a cast
+make[3]: ***
+[/home/chris/wireless/compat-wireless-2008-07-10/drivers/net/wireless/m=
+ac80211_hwsim.o] Error 1
+make[2]: ***
+[/home/chris/wireless/compat-wireless-2008-07-10/drivers/net/wireless]
+Error 2
+make[1]: *** [_module_/home/chris/wireless/compat-wireless-2008-07-10]
+Error 2
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.24-19-generic'
+make: *** [modules] Error 2
+
+
+Can anybody help met to get this working?
+
+Thanks
+Chris
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
