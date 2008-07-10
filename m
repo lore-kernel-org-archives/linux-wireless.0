@@ -1,57 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.231]:2241 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755321AbYGPBoV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 21:44:21 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so6244946rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2008 18:44:20 -0700 (PDT)
-Subject: [PATCH 06/12] mac80211: wep.c replace magic numbers in IV/ICV
-	removal
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 15 Jul 2008 18:44:10 -0700
-Message-Id: <1216172650.6610.54.camel@brick> (sfid-20080716_034424_240592_9A111163)
-Mime-Version: 1.0
+Received: from web51402.mail.re2.yahoo.com ([206.190.38.181]:27416 "HELO
+	web51402.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752493AbYGJHlq convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jul 2008 03:41:46 -0400
+Date: Thu, 10 Jul 2008 00:41:45 -0700 (PDT)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Reply-To: pommnitz@yahoo.com
+Subject: RE: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
+To: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-ID: <670807.24727.qm@web51402.mail.re2.yahoo.com> (sfid-20080710_094150_237866_D0D07386)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/wep.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+Hello all,
+another topic of interest to a substantial minority came up
+a few days ago: "Link specific statistics in Adhoc-Mode",
+see http://marc.info/?l=linux-wireless&m=121492872932293&w=2
 
-diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
-index 872d2fc..e50b421 100644
---- a/net/mac80211/wep.c
-+++ b/net/mac80211/wep.c
-@@ -228,11 +228,10 @@ int ieee80211_wep_decrypt(struct ieee80211_local *local, struct sk_buff *skb,
- 		return -1;
- 
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
--
--	if (skb->len < 8 + hdrlen)
-+	if (skb->len < hdrlen + WEP_IV_LEN + WEP_ICV_LEN)
- 		return -1;
- 
--	len = skb->len - hdrlen - 8;
-+	len = skb->len - hdrlen - WEP_IV_LEN - WEP_ICV_LEN;
- 
- 	keyidx = skb->data[hdrlen + 3] >> 6;
- 
-@@ -303,7 +302,7 @@ ieee80211_crypto_wep_decrypt(struct ieee80211_rx_data *rx)
- 	} else if (!(rx->status->flag & RX_FLAG_IV_STRIPPED)) {
- 		ieee80211_wep_remove_iv(rx->local, rx->skb, rx->key);
- 		/* remove ICV */
--		skb_trim(rx->skb, rx->skb->len - 4);
-+		skb_trim(rx->skb, rx->skb->len - WEP_ICV_LEN);
- 	}
- 
- 	return RX_CONTINUE;
+Access to per node statistics would make routing decisions
+in user land mesh networks more efficient.
+
 -- 
-1.5.6.3.499.geae9
+Regards
+       Joerg
 
 
+      __________________________________________________________
+Gesendet von Yahoo! Mail.
+Dem pfiffigeren Posteingang.
+http://de.overview.mail.yahoo.com
