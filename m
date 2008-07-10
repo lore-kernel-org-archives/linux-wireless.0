@@ -1,78 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59814 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754697AbYGIP4n (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.179]:65489 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752441AbYGJQ1J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 11:56:43 -0400
-Subject: Re: [PATCH 1/3] mac80211: Include sequence number in IBSS and Mesh
-	beacons
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-In-Reply-To: <1215618570.3246.30.camel@johannes.berg> (sfid-20080709_175024_447098_AC2954E9)
-References: <200807091511.14288.IvDoorn@gmail.com>
-	 <200807091736.55061.IvDoorn@gmail.com>
-	 <1215617595.3246.26.camel@johannes.berg>
-	 <200807091748.49796.IvDoorn@gmail.com>
-	 (sfid-20080709_174000_972007_A27DDD5C)  <1215618570.3246.30.camel@johannes.berg>
-	 (sfid-20080709_175024_447098_AC2954E9)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9a2y1n3nAoJiadfsqN86"
-Date: Wed, 09 Jul 2008 17:55:57 +0200
-Message-Id: <1215618957.3246.35.camel@johannes.berg> (sfid-20080709_175646_539102_692CBE38)
-Mime-Version: 1.0
+	Thu, 10 Jul 2008 12:27:09 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so2079436waf.23
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2008 09:27:08 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+From: Luis Carlos Cobo <luisca@cozybit.com>
+Date: Thu, 10 Jul 2008 16:57:25 +0200
+Subject: [PATCH 1/6] mac80211: allow no mac address until firmware load
+Message-ID: <48763814.27052c0a.1794.2095@mx.google.com> (sfid-20080710_182713_086368_4756C52A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Originally by Johannes Berg. This patch adds support for devices that do not
+report their MAC address until the firmware is loaded. While the address is not
+known, a multicast on is used.
 
---=-9a2y1n3nAoJiadfsqN86
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+Tested-by: Javier Cardona <javier@cozybit.com>
+---
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/main.c        |   61 ++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 62 insertions(+), 0 deletions(-)
 
-On Wed, 2008-07-09 at 17:49 +0200, Johannes Berg wrote:
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index c916c2f..8e8c0eb 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -551,6 +551,7 @@ struct ieee80211_local {
+ 	const struct ieee80211_ops *ops;
+ 
+ 	struct net_device *mdev; /* wmaster# - "master" 802.11 device */
++	unsigned int hwid;
+ 	int open_count;
+ 	int monitors, cooked_mntrs;
+ 	/* number of interfaces with corresponding FIF_ flags */
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index cf477ad..2204aa5 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -178,6 +178,20 @@ static inline int identical_mac_addr_allowed(int type1, int type2)
+ 		  type2 == IEEE80211_IF_TYPE_VLAN)));
+ }
+ 
++static void calculate_invalid_mac(u8 *addr, unsigned int hwid)
++{
++	/*
++	 * Random multicast, private use address with hwid mixed in.
++	 * Must be multicast to let is_valid_ether_addr() fail on it.
++	 */
++	addr[0] = 0xe7;
++	addr[1] = 0xc4;
++	addr[2] = 0x2e ^ ((hwid >> 24) & 0xFF);
++	addr[3] = 0xdd ^ ((hwid >> 16) & 0xFF);
++	addr[4] = 0xcb ^ ((hwid >>  8) & 0xFF);
++	addr[5] = 0x8c ^ ((hwid >>  0) & 0xFF);
++}
++
+ static int ieee80211_open(struct net_device *dev)
+ {
+ 	struct ieee80211_sub_if_data *sdata, *nsdata;
+@@ -187,9 +201,17 @@ static int ieee80211_open(struct net_device *dev)
+ 	u32 changed = 0;
+ 	int res;
+ 	bool need_hw_reconfig = 0;
++	u8 inval_addr[ETH_ALEN];
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
++	calculate_invalid_mac(inval_addr, local->hwid);
++
++	/* fail early if user set an invalid address */
++	if (compare_ether_addr(dev->dev_addr, inval_addr) &&
++	    !is_valid_ether_addr(dev->dev_addr))
++		return -EADDRNOTAVAIL;
++
+ 	/* we hold the RTNL here so can safely walk the list */
+ 	list_for_each_entry(nsdata, &local->interfaces, list) {
+ 		struct net_device *ndev = nsdata->dev;
+@@ -288,6 +310,32 @@ static int ieee80211_open(struct net_device *dev)
+ 		ieee80211_led_radio(local, local->hw.conf.radio_enabled);
+ 	}
+ 
++	/*
++	 * Check all interfaces and copy the hopefully now-present
++	 * MAC address to those that have the special invalid one.
++	 */
++	list_for_each_entry(nsdata, &local->interfaces, list) {
++		struct net_device *ndev = nsdata->dev;
++
++		/*
++		 * No need to check netif_running since we do not allow
++		 * it to start up with this invalid address.
++		 */
++		if (compare_ether_addr(inval_addr, ndev->dev_addr) == 0)
++			memcpy(ndev->dev_addr,
++			       local->hw.wiphy->perm_addr,
++			       ETH_ALEN);
++	}
++
++	/*
++	 * Validate the MAC address for this device.
++	 */
++	if (!is_valid_ether_addr(dev->dev_addr)) {
++		if (!local->open_count && local->ops->stop)
++			local->ops->stop(local_to_hw(local));
++		return -EADDRNOTAVAIL;
++	}
++
+ 	switch (sdata->vif.type) {
+ 	case IEEE80211_IF_TYPE_VLAN:
+ 		list_add(&sdata->u.vlan.list, &sdata->u.vlan.ap->u.ap.vlans);
+@@ -995,6 +1043,8 @@ void ieee80211_if_setup(struct net_device *dev)
+ 	dev->open = ieee80211_open;
+ 	dev->stop = ieee80211_stop;
+ 	dev->destructor = ieee80211_if_free;
++	/* we will validate the address ourselves in ->open */
++	dev->validate_addr = NULL;
+ }
+ 
+ /* everything else */
+@@ -1571,6 +1621,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	struct ieee80211_local *local;
+ 	int priv_size;
+ 	struct wiphy *wiphy;
++	static atomic_t hw_counter = ATOMIC_INIT(0);
++	u8 inval_addr[ETH_ALEN];
+ 
+ 	/* Ensure 32-byte alignment of our private data and hw private data.
+ 	 * We use the wiphy priv data for both our ieee80211_local and for
+@@ -1601,6 +1653,15 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	local = wiphy_priv(wiphy);
+ 	local->hw.wiphy = wiphy;
+ 
++	/*
++	 * Hack for devices that cannot read the mac address until they are
++	 * started... keep an invalid multicast address as the device MAC...
++	 * Read on in ieee80211_open().
++	 */
++	local->hwid = atomic_inc_return(&hw_counter);
++	calculate_invalid_mac(inval_addr, local->hwid);
++	memcpy(local->hw.wiphy->perm_addr, inval_addr, ETH_ALEN);
++
+ 	local->hw.priv = (char *)local +
+ 			 ((sizeof(struct ieee80211_local) +
+ 			   NETDEV_ALIGN_CONST) & ~NETDEV_ALIGN_CONST);
+-- 
+1.5.4.3
 
-> Ok so the thing is this: 802.11-2007 7.1.3.4.1 requires that we keep
-> sequence counters per TID (and one for "not QoS"), which we only assign
-> rather late in the wme code. Because even b43 hardware only keeps track
-> of a single sequence counter, it requires not using that counter for QoS
-> frames. =EF=BB=BFI suspect no driver except the overly smart iwlwifi gets=
- this
-> right.
 
-Even if we fix this, we still haven't solved the problem of the beacon
-sequence number. I'm currently favouring putting the burden on the
-driver since only =EF=BB=BFrt2400pci and rt2500pci seem to require it and i=
-t's
-fairly simple to keep a race-free per-VIF counter for non-QoS frames in
-the driver (you can just do it under the queue lock), but doing it
-race-free in mac80211 will need a bunch of extra locking.
-
-I'll put off the fix until after davem's TX MQ rework though.
-
-johannes
-
---=-9a2y1n3nAoJiadfsqN86
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIdN+JAAoJEKVg1VMiehFY7H8P+QEx8z0NwHFgd/Nh6ex9Ijwk
-beERHOgwhOEzcn+MAczMA9fzI4XGz9zThB0T9uBdk/PJICSdesqRnxmGwuEN2kwW
-aGol5FyDLJxR/ryroyOvp0gWjMMtsJ6s9Yffg4Im3WaP60VXmYdJ2qKidRCCnw41
-1r8xc99YB88/TKUY2gm6yq7O3DiAV4jULJgLn3vrhEg4bhs233aJHtjfA2KKpURu
-u9tTHg3YhhhTHEtZ2ekMTTiO06B0WnaJfck1e5oxiEBD0GnZcScQn7g+b9+C5WGZ
-ZFmSgo897oBTyaIXhMvcct9kGEsvsxqWDTL63C58aJpMmiTCCd9eJEgwL4fH+rXq
-iFUnCd7qJKHLrLt2PL6fCLwprIoFvZHRoanit/YP6PaPqDqF3bdIS407CaEvu2hR
-HP/bMlxNaHMxRp4vOLtV3373BLF3iGaP535zz9nEWs8gGiaxTokhRV2HOFGI7w9G
-lzemDGmNnKWs2ulkPsnODiOGAzCy9hoPZu++hxnLgM3Z11RyaMWGcuBVkyFcbg0f
-x1M4XYBVR+aMUlFHZ4xL7OkLEYWK2MwQDjzhJzfmhr/o9GhzMFbYbUCSSJw9T3Rd
-1ek3w+TYwTjaDRpmNHBQrlbjfWJR33RCrASZ9swM5H9Y9rHne8IRb0sxb029dMoP
-GrmaidFKe7xNqfU8l4X4
-=aOTu
------END PGP SIGNATURE-----
-
---=-9a2y1n3nAoJiadfsqN86--
 
