@@ -1,200 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:14781 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752300AbYGAKF7 (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.180]:43954 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751861AbYGJGwm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 06:05:59 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so923961fgg.17
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Jul 2008 03:05:57 -0700 (PDT)
-Message-ID: <6cf6b73e0807010305ne1c4b3bwb083c25953292f9d@mail.gmail.com> (sfid-20080701_120608_219067_289FA31F)
-Date: Tue, 1 Jul 2008 12:05:57 +0200
-From: "Adel Gadllah" <adel.gadllah@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: [PATCH/RFC v2] b43: remove input device usage for rfkill
-Cc: linux-wireless@vger.kernel.org, "Michael Buesch" <mb@bu3sch.de>,
-	stefano.brivio@polimi.it,
-	"Larry Finger" <larry.finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
-	"Ivo van Doorn" <ivdoorn@gmail.com>
-In-Reply-To: <1214906304.7763.34.camel@johannes.berg>
+	Thu, 10 Jul 2008 02:52:42 -0400
+Received: by py-out-1112.google.com with SMTP id p76so1743167pyb.10
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 23:52:41 -0700 (PDT)
+Message-ID: <c85cb4470807092352m455667c3jf77fd2599b433c89@mail.gmail.com> (sfid-20080710_085254_299664_38D46AF3)
+Date: Thu, 10 Jul 2008 09:52:41 +0300
+From: "Ron Rindjunsky" <rindjon@googlemail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
+Cc: "Tomas Winkler" <tomasw@gmail.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1ba2fa240807091713t1158c1ddp81c92ae26a002e46@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <6cf6b73e0807010255x1f2d8a21m8ed3e712012ea757@mail.gmail.com>
-	 <1214906304.7763.34.camel@johannes.berg>
+References: <20080709190915.GA8238@tuxdriver.com>
+	 <1ba2fa240807091713t1158c1ddp81c92ae26a002e46@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/7/1 Johannes Berg <johannes@sipsolutions.net>:
 >
->> +     rfk->poll_timer->expires = jiffies + B43_RFKILL_POLL_DELAY;
+> > The third Linux Wireless mini-summit will occur on Tuesday July 22,
+> > 2008 in Ottawa, just before the Ottawa Linux Symposium.  OLS is
+> > generously supporting Linux mini-summits by providing the room and
+> > projector (http://www.linuxsymposium.org/2008/minisummits.php).
+> > Several vendors are supporting the event by sponsoring their own
+> > employees to attend, and Canonical and Intel have both helped with
+> > travel funds for key community participants as well.
+> >
+> > Although it is already a bit late, I would like to re-open discussions
+> > on our agenda for the meeting.  Based on current upstream topics and
+> > those persons whom I expect to be attending, I have cobbled together
+> > an agenda proposal below.  Please review it and feel free to suggest
+> > amendments or alterations, or to elaborate or ask questions about my
+> > proposed schedule of topics.
+> >
+> > I look forward to seeing many of you in Ottawa!
 >
-> round_jiffies.
+> One more topic would be probably
+> power management/power save - connection to system power/power supply
+> (Battery/AC)
 
-v2 attached.
------
-This patch removes the dependency on the input device and replaces the
-polldev with a timer for polling the rfkill state.
-
-Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
-
-diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
-index 1fa043d..af15e5c 100644
---- a/drivers/net/wireless/b43/Kconfig
-+++ b/drivers/net/wireless/b43/Kconfig
-@@ -91,7 +91,7 @@ config B43_LEDS
- # if it's possible.
- config B43_RFKILL
- 	bool
--	depends on B43 && (RFKILL = y || RFKILL = B43) && RFKILL_INPUT &&
-(INPUT_POLLDEV = y || INPUT_POLLDEV = B43)
-+	depends on B43 && (RFKILL = y || RFKILL = B43)
- 	default y
-
- config B43_DEBUG
-diff --git a/drivers/net/wireless/b43/rfkill.c
-b/drivers/net/wireless/b43/rfkill.c
-index fec5645..dde5cd4 100644
---- a/drivers/net/wireless/b43/rfkill.c
-+++ b/drivers/net/wireless/b43/rfkill.c
-@@ -61,34 +61,29 @@ static void b43_rfkill_update_state(struct b43_wldev *dev)
- }
-
- /* The poll callback for the hardware button. */
--static void b43_rfkill_poll(struct input_polled_dev *poll_dev)
-+static void b43_rfkill_poll(unsigned long data)
- {
--	struct b43_wldev *dev = poll_dev->private;
-+	struct b43_wldev *dev = (struct b43_wldev *) data;
- 	struct b43_wl *wl = dev->wl;
-+	struct b43_rfkill *rfk = &(dev->wl->rfkill);
- 	bool enabled;
--	bool report_change = 0;
-
- 	mutex_lock(&wl->mutex);
--	if (unlikely(b43_status(dev) < B43_STAT_INITIALIZED)) {
--		mutex_unlock(&wl->mutex);
--		return;
--	}
-+	if (unlikely(b43_status(dev) < B43_STAT_INITIALIZED))
-+		goto out;
-+
- 	enabled = b43_is_hw_radio_enabled(dev);
- 	if (unlikely(enabled != dev->radio_hw_enable)) {
- 		dev->radio_hw_enable = enabled;
--		report_change = 1;
- 		b43_rfkill_update_state(dev);
- 		b43info(wl, "Radio hardware status changed to %s\n",
- 			enabled ? "ENABLED" : "DISABLED");
- 	}
--	mutex_unlock(&wl->mutex);
-+out:
-+	rfk->poll_timer->expires += B43_RFKILL_POLL_DELAY;
-+	add_timer(rfk->poll_timer);
-
--	/* send the radio switch event to the system - note both a key press
--	 * and a release are required */
--	if (unlikely(report_change)) {
--		input_report_key(poll_dev->input, KEY_WLAN, 1);
--		input_report_key(poll_dev->input, KEY_WLAN, 0);
--	}
-+	mutex_unlock(&wl->mutex);
- }
-
- /* Called when the RFKILL toggled in software. */
-@@ -158,51 +153,24 @@ void b43_rfkill_init(struct b43_wldev *dev)
- 	rfk->rfkill->toggle_radio = b43_rfkill_soft_toggle;
- 	rfk->rfkill->user_claim_unsupported = 1;
-
--	rfk->poll_dev = input_allocate_polled_device();
--	if (!rfk->poll_dev) {
--		rfkill_free(rfk->rfkill);
--		goto err_freed_rfk;
--	}
--
--	rfk->poll_dev->private = dev;
--	rfk->poll_dev->poll = b43_rfkill_poll;
--	rfk->poll_dev->poll_interval = 1000; /* msecs */
--
--	rfk->poll_dev->input->name = rfk->name;
--	rfk->poll_dev->input->id.bustype = BUS_HOST;
--	rfk->poll_dev->input->id.vendor = dev->dev->bus->boardinfo.vendor;
--	rfk->poll_dev->input->evbit[0] = BIT(EV_KEY);
--	set_bit(KEY_WLAN, rfk->poll_dev->input->keybit);
-+	setup_timer(rfk->poll_timer, &b43_rfkill_poll, (unsigned long) dev);
-+	rfk->poll_timer->expires =
-+		round_jiffies(jiffies + B43_RFKILL_POLL_DELAY);
-
- 	err = rfkill_register(rfk->rfkill);
- 	if (err)
--		goto err_free_polldev;
--
--#ifdef CONFIG_RFKILL_INPUT_MODULE
--	/* B43 RF-kill isn't useful without the rfkill-input subsystem.
--	 * Try to load the module. */
--	err = request_module("rfkill-input");
--	if (err)
--		b43warn(wl, "Failed to load the rfkill-input module. "
--			"The built-in radio LED will not work.\n");
--#endif /* CONFIG_RFKILL_INPUT */
--
--	err = input_register_polled_device(rfk->poll_dev);
--	if (err)
--		goto err_unreg_rfk;
-+		goto err_freed_rfk;
-
- 	rfk->registered = 1;
-+	add_timer(rfk->poll_timer);
-
- 	return;
--err_unreg_rfk:
--	rfkill_unregister(rfk->rfkill);
--err_free_polldev:
--	input_free_polled_device(rfk->poll_dev);
--	rfk->poll_dev = NULL;
-+
- err_freed_rfk:
- 	rfk->rfkill = NULL;
- out_error:
- 	rfk->registered = 0;
-+	del_timer_sync(rfk->poll_timer);
- 	b43warn(wl, "RF-kill button init failed\n");
- }
-
-@@ -213,10 +181,7 @@ void b43_rfkill_exit(struct b43_wldev *dev)
- 	if (!rfk->registered)
- 		return;
- 	rfk->registered = 0;
--
--	input_unregister_polled_device(rfk->poll_dev);
-+	del_timer_sync(rfk->poll_timer);
- 	rfkill_unregister(rfk->rfkill);
--	input_free_polled_device(rfk->poll_dev);
--	rfk->poll_dev = NULL;
- 	rfk->rfkill = NULL;
- }
-diff --git a/drivers/net/wireless/b43/rfkill.h
-b/drivers/net/wireless/b43/rfkill.h
-index adacf93..d25fbbd 100644
---- a/drivers/net/wireless/b43/rfkill.h
-+++ b/drivers/net/wireless/b43/rfkill.h
-@@ -7,14 +7,16 @@ struct b43_wldev;
- #ifdef CONFIG_B43_RFKILL
-
- #include <linux/rfkill.h>
--#include <linux/input-polldev.h>
-+#include <linux/timer.h>
-+#include <linux/jiffies.h>
-
-+#define B43_RFKILL_POLL_DELAY msecs_to_jiffies(1000)
-
- struct b43_rfkill {
- 	/* The RFKILL subsystem data structure */
- 	struct rfkill *rfkill;
--	/* The poll device for the RFKILL input button */
--	struct input_polled_dev *poll_dev;
-+	/* Timer for polling the rfkill state */
-+	struct timer_list *poll_timer;
- 	/* Did initialization succeed? Used for freeing. */
- 	bool registered;
- 	/* The unique name of this rfkill switch */
+brief discussion about AP mode current and future plans would be
+appreciated, maybe as part of the MLME topic.
