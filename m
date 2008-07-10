@@ -1,53 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:33160 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752961AbYG2NEe (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:26113 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752052AbYGJLmo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 09:04:34 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so1496221ywe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 06:04:33 -0700 (PDT)
-Message-ID: <1ba2fa240807290604y47edafe1k7cf93831c31b6112@mail.gmail.com> (sfid-20080729_150443_989981_B03BBC58)
-Date: Tue, 29 Jul 2008 16:04:32 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: iwlwifi aggregation info
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1217336023.10489.51.camel@johannes.berg>
+	Thu, 10 Jul 2008 07:42:44 -0400
+From: Bruno Randolf <br1@einfach.org>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Subject: Re: [PATCH 1/1] iwlwif: remove compilation warnings iwl_add_radiotap
+Date: Thu, 10 Jul 2008 13:42:36 +0200
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org
+References: <1215689322-25017-1-git-send-email-tomas.winkler@intel.com>
+In-Reply-To: <1215689322-25017-1-git-send-email-tomas.winkler@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1217331138.10489.24.camel@johannes.berg>
-	 <1217331408.10489.26.camel@johannes.berg>
-	 <1ba2fa240807290525o41832ccei92ff554bef876b37@mail.gmail.com>
-	 <1217334452.10489.42.camel@johannes.berg>
-	 <1ba2fa240807290535h3ebd4121h399b8a8cd1d8b276@mail.gmail.com>
-	 <1217336023.10489.51.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200807101342.36920.br1@einfach.org> (sfid-20080710_134259_985805_897AA063)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 29, 2008 at 3:53 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2008-07-29 at 15:35 +0300, Tomas Winkler wrote:
+On Thursday 10 July 2008 13:28:42 Tomas Winkler wrote:
+> Use directly put_unaligned_leX instead of put_unaligned(cpu_to_leX
 >
->> Sorry for misleading I'm not in focus today :). You cannot remove this
->> code. This is form
->> This is required for emptying packets from legacy queue before
->> starting aggregation queue.
->> You cannot transmit from both queues for the same tid  Aggregation is
->> sensitive on ordering.
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+
+hi!
+
+what about using the generic function to add the radiotap header from 
+mac80211? it should be flexible enough to handle all devices by now.
+
+bruno
+
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-rx.c |   37
+> +++++++++++++++----------------- 1 files changed, 17 insertions(+), 20
+> deletions(-)
 >
-> I see, it's required because mac80211 would otherwise start putting
-> packets into the new agg queue and then that could be used by the hw
-> before all frames from that sta/tid in the regular queue were sent,
-> right?
-
-Correct.
-Other thing is you probably not seeing the latest code as well. Yi is
-not publish new code before John is merging what we've already sent
-out. I also have something still in the drawer.
-This quite bad position still have to fix bugs on old MQ because the
-new one cannot be ported at all to old kernels and already face the
-breakage in the new one.
-I'm starting to be frustrated about this development model it looks
-like there is no single stable point of this code base.
-
-Tomas
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c
+> b/drivers/net/wireless/iwlwifi/iwl-rx.c index d062d4d..6a465d5 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-rx.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+> @@ -29,6 +29,7 @@
+>
+>  #include <linux/etherdevice.h>
+>  #include <net/mac80211.h>
+> +#include <asm/unaligned.h>
+>  #include "iwl-eeprom.h"
+>  #include "iwl-dev.h"
+>  #include "iwl-core.h"
+> @@ -829,23 +830,22 @@ static void iwl_add_radiotap(struct iwl_priv *priv,
+>  	iwl4965_rt->rt_hdr.it_pad = 0;
+>
+>  	/* total header + data */
+> -	put_unaligned(cpu_to_le16(sizeof(*iwl4965_rt)),
+> -		      &iwl4965_rt->rt_hdr.it_len);
+> +	put_unaligned_le16(sizeof(*iwl4965_rt), &iwl4965_rt->rt_hdr.it_len);
+>
+>  	/* Indicate all the fields we add to the radiotap header */
+> -	put_unaligned(cpu_to_le32((1 << IEEE80211_RADIOTAP_TSFT) |
+> -				  (1 << IEEE80211_RADIOTAP_FLAGS) |
+> -				  (1 << IEEE80211_RADIOTAP_RATE) |
+> -				  (1 << IEEE80211_RADIOTAP_CHANNEL) |
+> -				  (1 << IEEE80211_RADIOTAP_DBM_ANTSIGNAL) |
+> -				  (1 << IEEE80211_RADIOTAP_DBM_ANTNOISE) |
+> -				  (1 << IEEE80211_RADIOTAP_ANTENNA)),
+> -		      &iwl4965_rt->rt_hdr.it_present);
+> +	put_unaligned_le32((1 << IEEE80211_RADIOTAP_TSFT) |
+> +			   (1 << IEEE80211_RADIOTAP_FLAGS) |
+> +			   (1 << IEEE80211_RADIOTAP_RATE) |
+> +			   (1 << IEEE80211_RADIOTAP_CHANNEL) |
+> +			   (1 << IEEE80211_RADIOTAP_DBM_ANTSIGNAL) |
+> +			   (1 << IEEE80211_RADIOTAP_DBM_ANTNOISE) |
+> +			   (1 << IEEE80211_RADIOTAP_ANTENNA),
+> +			   &(iwl4965_rt->rt_hdr.it_present));
+>
+>  	/* Zero the flags, we'll add to them as we go */
+>  	iwl4965_rt->rt_flags = 0;
+>
+> -	put_unaligned(cpu_to_le64(tsf), &iwl4965_rt->rt_tsf);
+> +	put_unaligned_le64(tsf, &iwl4965_rt->rt_tsf);
+>
+>  	iwl4965_rt->rt_dbmsignal = signal;
+>  	iwl4965_rt->rt_dbmnoise = noise;
+> @@ -853,17 +853,14 @@ static void iwl_add_radiotap(struct iwl_priv *priv,
+>  	/* Convert the channel frequency and set the flags */
+>  	put_unaligned(cpu_to_le16(stats->freq), &iwl4965_rt->rt_channelMHz);
+>  	if (!(phy_flags_hw & RX_RES_PHY_FLAGS_BAND_24_MSK))
+> -		put_unaligned(cpu_to_le16(IEEE80211_CHAN_OFDM |
+> -					  IEEE80211_CHAN_5GHZ),
+> -			      &iwl4965_rt->rt_chbitmask);
+> +		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ,
+> +				   &iwl4965_rt->rt_chbitmask);
+>  	else if (phy_flags_hw & RX_RES_PHY_FLAGS_MOD_CCK_MSK)
+> -		put_unaligned(cpu_to_le16(IEEE80211_CHAN_CCK |
+> -					  IEEE80211_CHAN_2GHZ),
+> -			      &iwl4965_rt->rt_chbitmask);
+> +		put_unaligned_le16(IEEE80211_CHAN_CCK | IEEE80211_CHAN_2GHZ,
+> +				   &iwl4965_rt->rt_chbitmask);
+>  	else	/* 802.11g */
+> -		put_unaligned(cpu_to_le16(IEEE80211_CHAN_OFDM |
+> -					  IEEE80211_CHAN_2GHZ),
+> -			      &iwl4965_rt->rt_chbitmask);
+> +		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ,
+> +				   &iwl4965_rt->rt_chbitmask);
+>
+>  	if (rate == -1)
+>  		iwl4965_rt->rt_rate = 0;
