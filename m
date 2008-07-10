@@ -1,72 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:35944 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750711AbYGVTNS (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:43871 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750965AbYGJQQH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 15:13:18 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC/RFT] rtl8187: Improve wireless statistics for RTL8187B
-Date: Tue, 22 Jul 2008 16:13:34 -0300
-Cc: "Hin-Tak Leung" <hintak.leung@gmail.com>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net> <3ace41890807191739t5969f38au170e4b73a3d0b7de@mail.gmail.com> <4882A910.4040408@lwfinger.net>
-In-Reply-To: <4882A910.4040408@lwfinger.net>
+	Thu, 10 Jul 2008 12:16:07 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
+Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
+Date: Thu, 10 Jul 2008 18:15:26 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+References: <20080709190915.GA8238@tuxdriver.com> <69e28c910807100912h30fcb57fpb4fb48b95c640f77@mail.gmail.com>
+In-Reply-To: <69e28c910807100912h30fcb57fpb4fb48b95c640f77@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200807221613.34434.herton@mandriva.com.br> (sfid-20080722_211322_347157_DC30CDCB)
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200807101815.27204.mb@bu3sch.de> (sfid-20080710_181611_626263_1ABFE943)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Saturday 19 July 2008 23:55:12 Larry Finger escreveu:
-> Hin-Tak Leung wrote:
-> > I am on x86_64 and I am on a similar situation - I am using the
-> > rawhide kernels from:
-> > http://koji.fedoraproject.org/koji/packageinfo?packageID=8
-> > and the last one that worked for me is kernel-2.6.25.11-92.fc9 -
-> > something in kernel-2.6.25.11-93.fc9 broke connectivity. Apparently the
-> > difference is this set of changes:
-> > http://marc.info/?l=linux-wireless&m=121606436000705&w=2
-> >
-> > I just don't feel like mentioning it earlier because I had mistakenly
-> > complained about Herton's
-> > last patch and I don't want to make the same mistake - and I did test
-> > it. Beside Herton's
-> >  ANAPARAM*_OFF patch (which I don't think is the source of the
-> > problem), there is
-> > only one other "rtl8187: Fixed section mismatch in rtl8187_dev.c"
-> > change - but that's is also
-> > obviously right, and besides, its nature shouldn't affect association
-> > anyway; but there is
-> > a lot of mac80211 changes elsewhere, and I wonder.
-> >
-> > My symptom is that I can authenticate and associate (apparently,
-> > according to dmesg)
-> > but cannot get an ip address via dhcp. I have tried and just alternate
-> > between the two kernels,
-> > identical steps, etc and one works and the other doesn't.
->
-> Curious. According to the git log, my copy of the wireless-testing tree has
-> all those patches installed. There must be some really obscure
-> configuration difference, or the rawhide kernel has some unexpected
-> difference with the wl kernels.
+On Thursday 10 July 2008 18:12:32 Stefanik G=E1bor wrote:
+> Some other topics which might be of interest/good to include:
+> - New chipsets needing drivers (SiS 16x, Marvell, etc.)
 
-I got some time to take at a look at it again, I did the bisect and found 
-commit 8f87dd7e540d455f8e7f11478133b85edc969c67 ("mac80211: power management 
-wext hooks") to cause the issue here (non working interface). But with it, 
-making "iwconfig wlan* power off" and making interface go up again, it starts 
-to work. May be something related to the power management needs to be 
-implemented in driver now? or keep it disabled with rtl8187...
+I have no idea what to discuss about non-existing drivers, really.
+Something like: "Do we need that driver? Everyone votes YES and is happ=
+y"?
 
->
-> Larry
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> in the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> - Radiotap enhancements
 
+What radiotap enhancements specifically? If it's just a field or a bit
+to add, just mail the radiotap people. I think there's no need to discu=
+ss that
+(except for with the radiotap people on their mailinglist).
+
+> - Userspace MLME: Plans and status
+
+Already on the list.
+
+--=20
+Greetings Michael.
 --
-[]'s
-Herton
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
