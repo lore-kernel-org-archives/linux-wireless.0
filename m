@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:12342 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755970AbYGIOtI (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49784 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752964AbYGJHYg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 10:49:08 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so916520nfc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 07:49:05 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/3] mac80211: Include sequence number in IBSS and Mesh beacons
-Date: Wed, 9 Jul 2008 16:57:54 +0200
-Cc: Michael Buesch <mb@bu3sch.de>,
+	Thu, 10 Jul 2008 03:24:36 -0400
+Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200807091511.14288.IvDoorn@gmail.com> <200807091604.50199.IvDoorn@gmail.com> <1215611931.3246.8.camel@johannes.berg>
-In-Reply-To: <1215611931.3246.8.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807091657.54657.IvDoorn@gmail.com> (sfid-20080709_164915_782685_F86664CA)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <200807100921.44079.hs4233@mail.mn-solutions.de> (sfid-20080710_092210_133981_D90374F8)
+References: <20080709190915.GA8238@tuxdriver.com>
+	 <200807100921.44079.hs4233@mail.mn-solutions.de>
+	 (sfid-20080710_092210_133981_D90374F8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4L9oSr/OnXLD6PXi3wMs"
+Date: Thu, 10 Jul 2008 09:23:42 +0200
+Message-Id: <1215674622.3932.0.camel@johannes.berg> (sfid-20080710_092449_056171_199353C6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 09 July 2008, Johannes Berg wrote:
-> On Wed, 2008-07-09 at 16:04 +0200, Ivo van Doorn wrote:
-> > On Wednesday 09 July 2008, Michael Buesch wrote:
-> > > On Wednesday 09 July 2008 15:11:45 Ivo van Doorn wrote:
-> > > > Currently only beacons generated in AP mode have the software
-> > > > sequence number inserted. This means IBSS and Mesh mode are broken
-> > > > for all hardware that require software sequence numbers.
-> > > 
-> > > Does software seq numbering even work at all?
-> > > What about packets that get sent between the driver requested the
-> > > beacon and the driver does actually queue it?
-> > 
-> > For rt2x00 the beacon is requested and queued within interrupt context
-> > or during resume when it doesn't allow mac80211 to send any frames yet.
-> 
-> Ok, in interrupt context definitely works.
-> 
-> > The problem would be when the config_interface() is called, if during that
-> > call mac80211 also sends out TX frames, then you get problems in the
-> > sequence counting.
-> 
-> Well, if you care about the beacon in config_interface() you're
-> implementing hwseq since otherwise you'd only request it when you need
-> it, no?
 
-No not really, because from what moment can the driver start requesting beacons?
-I would think when mac80211 calls config_interface with the IEEE80211_IFCC_BEACON
-flag. ;)
+--=-4L9oSr/OnXLD6PXi3wMs
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-At that moment the first beacon is loaded, and the device will trigger the interrupt
-to request a new beacon every x milliseconds.
+On Thu, 2008-07-10 at 09:21 +0200, Holger Schurig wrote:
+> Suspend/Resume?
 
-Ivo
+Umm? It's on his list.
+
+johannes
+
+--=-4L9oSr/OnXLD6PXi3wMs
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIdbj7AAoJEKVg1VMiehFYidgQAKR0A709xCShp5Wu9+N5GX8V
+dggsa52L88pL7YSr7xIPHzX4myCiPJZmAPaux5nmWymEkUzccKkNwHWhhpVHr/0k
+Fg+w3kFFHVN39iZAlZOQdAo7IAyvBPC2QyKNsC4uleRYwlMHMxz51+1M+qMDlIAl
+myQTnCPtZEmqS1hoMC0/Ka78mQMSvzj3I/ht3PRrpshoE6iqp088pFYb1VCJuOdU
+9YOFI0/m3oBg/JsAsyA5cUXKi3J2nsHQh9KVjBwTw4J5Ut5f69wepGsjPHkiUnvg
+KF/0H9y8I3Ai/1XE6jGv0G4qDwfc7Ent7LuaaNHveMn+hlcgYZ+4YybNBS6u1EWL
+DvG908RfqSQ/Pj7Nk0urRze+uy8ttqeNiFZY4R3e0nAhbJRv9WMHgdoB42+PIDAL
+GB4qGoRSJ5cU1OOCnjr1lJsotl+T2NZBJbMphBoEFFGwWYZuUX8XJ8mOOrR+2SuV
+ezpqwHNOV5zP1dd62PhmF3EAIwn9IVrByVeessIMvZIWsLRyCktKa4ihyegpaDke
+fT0TwCF+N6R/MfkrlCtC5ldCea5+uNZOadp/Jx5CpeBytbtS1hc5m1KjxcKNR/Ah
+bwbPlw0VErsbhsY8/TyqCuFJx1/4gQou1HHQaSnL17Eys6gHR5EVlSOeiPZ/a5Mh
+AQJKVf+/j/vE+swrorrH
+=bOQT
+-----END PGP SIGNATURE-----
+
+--=-4L9oSr/OnXLD6PXi3wMs--
+
