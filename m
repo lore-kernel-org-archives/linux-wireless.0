@@ -1,99 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.178]:40650 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752526AbYG1IB1 (ORCPT
+Received: from n20.bullet.mail.ukl.yahoo.com ([87.248.110.137]:29028 "HELO
+	n20.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754654AbYGJWnl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2008 04:01:27 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so4022156ika.5
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 01:01:26 -0700 (PDT)
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 2/2] rt2x00: Sequence counter should be protected in irqsave
-Date: Mon, 28 Jul 2008 10:21:16 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200807281020.13080.IvDoorn@gmail.com>
-In-Reply-To: <200807281020.13080.IvDoorn@gmail.com>
+	Thu, 10 Jul 2008 18:43:41 -0400
+Message-ID: <48769266.4090407@yahoo.co.uk> (sfid-20080711_004347_996169_1DE923A8)
+Date: Thu, 10 Jul 2008 23:51:18 +0100
+From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200807281021.16861.IvDoorn@gmail.com> (sfid-20080728_100130_586220_3742942E)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+CC: linux-wireless@vger.kernel.org,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>, proski@gnu.org
+Subject: Re: [RFC] Try to improve RTL8187B initialization time
+References: <200807101851.31985.herton@mandriva.com.br>
+In-Reply-To: <200807101851.31985.herton@mandriva.com.br>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The sequence counter can be accessed in IRQ context,
-which means the lock protecting the counter should
-be irqsave. To prevent making the entire intf->lock irqsave
-without reason, create a new lock which only protects
-the sequence counter.
+Herton Ronaldo Krzesinski wrote:
+> As reported before, we know that the initialization of rtl8187b interfaces is
+> slow. There were some strange sleeps from vendor driver that were imported too
+> just to be sure, but they don't seem to be needed. After looking at r8180 code,
+> I think they really aren't needed, and using it as reference, I did a similar
+> initialization now for rtl8187b, on quick tests seems to work well.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
-John. Please queue for 2.6.27. This fixes deplock warnings
-under some circumstances when the interface is up.
+Most of the change is minor - mainly 6 secs is removed in 3 big chunks, but
+a fraction of a sec here and there is added back elsewhere, so the net effect
+is probably 4-5 sec, or less, since you also added some new code.
+How about just removing the 3 chunks as below?
 
- drivers/net/wireless/rt2x00/rt2x00.h      |    6 ++++++
- drivers/net/wireless/rt2x00/rt2x00mac.c   |    1 +
- drivers/net/wireless/rt2x00/rt2x00queue.c |    5 +++--
- 3 files changed, 10 insertions(+), 2 deletions(-)
+I am wondering also if some of the delays is simply that some of the init
+numbers is wrong and the firmware gets thrown into some mini-recovery over-ride
+routine.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 37c9968..3952d2d 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -368,6 +368,12 @@ struct rt2x00_intf {
- #define DELAYED_CONFIG_ERP		0x00000002
- #define DELAYED_LED_ASSOC		0x00000004
- 
-+	/*
-+	 * Software sequence counter, this is only required
-+	 * for hardware which doesn't support hardware
-+	 * sequence counting.
-+	 */
-+	spinlock_t seqlock;
- 	u16 seqno;
- };
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index f7fd995..d1fe91a 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -247,6 +247,7 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
- 		rt2x00dev->intf_sta_count++;
- 
- 	spin_lock_init(&intf->lock);
-+	spin_lock_init(&intf->seqlock);
- 	intf->beacon = entry;
- 
- 	if (conf->type == IEEE80211_IF_TYPE_AP)
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 3b27f6a..898cdd7 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -128,6 +128,7 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 	unsigned int data_length;
- 	unsigned int duration;
- 	unsigned int residual;
-+	unsigned long irqflags;
- 
- 	memset(txdesc, 0, sizeof(*txdesc));
- 
-@@ -213,14 +214,14 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 	 * sequence counter given by mac80211.
- 	 */
- 	if (tx_info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
--		spin_lock(&intf->lock);
-+		spin_lock_irqsave(&intf->seqlock, irqflags);
- 
- 		if (test_bit(ENTRY_TXD_FIRST_FRAGMENT, &txdesc->flags))
- 			intf->seqno += 0x10;
- 		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
- 		hdr->seq_ctrl |= cpu_to_le16(intf->seqno);
- 
--		spin_unlock(&intf->lock);
-+		spin_unlock_irqrestore(&intf->seqlock, irqflags);
- 
- 		__set_bit(ENTRY_TXD_GENERATE_SEQ, &txdesc->flags);
- 	}
--- 
-1.5.6.1
+I also have another "theory" - the windows driver is sensitive to the hardware 
+switch and the linux driver not, so obviously the effect of the hardware switch
+can be overrided in software. To give the *appearance* of fast initialization,
+maybe the windows driver simply initialize everything on load (i.e. when windows 
+starts), then switch the radio on and off when the user asks to shut off the
+interface, etc. I have never got ndiswrapper to work on x86_64 (ifconfig up
+stuck) - how does timing of ifconfig up/down with ndiswrapper compare?
+
+BTW, ndiswrapper won't even build with 2.6.26-rc9.
+
+> diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
+> index f981fdb..25d9a0e 100644
+> --- a/drivers/net/wireless/rtl8187_dev.c
+> +++ b/drivers/net/wireless/rtl8187_dev.c
+
+> @@ -643,14 +641,13 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
+
+> -	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, 0x0480);
+> -	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, 0x2488);
+> -	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x1FFF);
+> -	msleep(1100);
+> -
+
+1st one.
+
+> diff --git a/drivers/net/wireless/rtl8187_rtl8225.c b/drivers/net/wireless/rtl8187_rtl8225.c
+> index 1bae899..9549e33 100644
+> --- a/drivers/net/wireless/rtl8187_rtl8225.c
+> +++ b/drivers/net/wireless/rtl8187_rtl8225.c
+
+> @@ -850,25 +859,36 @@ static void rtl8225z2_b_rf_init(struct ieee80211_hw *dev)
+
+> -	rtl8225_write(dev, 0x3, 0x080); msleep(1);
+> -	rtl8225_write(dev, 0x5, 0x004); msleep(1);
+> -	rtl8225_write(dev, 0x0, 0x0B7); msleep(1);
+> -	msleep(3000);
+
+2nd
+
+
+> +	rtl8225_write(dev, 0x0, 0x0B7);
+> +	msleep(100);
+> +	rtl8225_write(dev, 0x2, 0xC4D);
+> +	msleep(200);
+> +	rtl8225_write(dev, 0x2, 0x44D);
+> +	msleep(100);
+>  
+> -	rtl8225_write(dev, 0x2, 0xC4D); msleep(1);
+> -	msleep(2000);
+
+3rd, but some are added as above.
 
