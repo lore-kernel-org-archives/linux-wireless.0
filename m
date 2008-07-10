@@ -1,103 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:14299 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753549AbYGSODW (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.182]:40010 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752535AbYGJANw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2008 10:03:22 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so250599nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2008 07:03:22 -0700 (PDT)
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 5/5] rt2x00: Fix the beacon length bug
-Date: Sat, 19 Jul 2008 16:17:40 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	Iwo Mergler <iwo@call-direct.com.au>
-References: <200807191615.22752.IvDoorn@gmail.com> <200807191616.54313.IvDoorn@gmail.com> <200807191617.16820.IvDoorn@gmail.com>
-In-Reply-To: <200807191617.16820.IvDoorn@gmail.com>
+	Wed, 9 Jul 2008 20:13:52 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so1918300waf.23
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 17:13:49 -0700 (PDT)
+Message-ID: <1ba2fa240807091713t1158c1ddp81c92ae26a002e46@mail.gmail.com> (sfid-20080710_021403_385848_4966191C)
+Date: Thu, 10 Jul 2008 03:13:49 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <20080709190915.GA8238@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200807191617.40902.IvDoorn@gmail.com> (sfid-20080719_160325_804630_0F251E02)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080709190915.GA8238@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Iwo Mergler <iwo@call-direct.com.au>
+On Wed, Jul 9, 2008 at 10:09 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> The third Linux Wireless mini-summit will occur on Tuesday July 22,
+> 2008 in Ottawa, just before the Ottawa Linux Symposium.  OLS is
+> generously supporting Linux mini-summits by providing the room and
+> projector (http://www.linuxsymposium.org/2008/minisummits.php).
+> Several vendors are supporting the event by sponsoring their own
+> employees to attend, and Canonical and Intel have both helped with
+> travel funds for key community participants as well.
+>
+> Although it is already a bit late, I would like to re-open discussions
+> on our agenda for the meeting.  Based on current upstream topics and
+> those persons whom I expect to be attending, I have cobbled together
+> an agenda proposal below.  Please review it and feel free to suggest
+> amendments or alterations, or to elaborate or ask questions about my
+> proposed schedule of topics.
+>
+> I look forward to seeing many of you in Ottawa!
 
-When setting up a beacon template, the length of the beacon is
-calculated with the assumption that the SKB already contains
-the Tx descriptor. In the case of beacons it doesn't.
-
-This patch undoes the damage by adding the Tx descriptor length
-to the beacon length. This is safe, because the shortest possible
-beacon is longer than the Tx header.
-
-Signed-off-by: Iwo Mergler <Iwo@call-direct.com.au>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2500usb.c |   12 ++++++++++++
- drivers/net/wireless/rt2x00/rt73usb.c   |   12 ++++++++++++
- 2 files changed, 24 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 3558cb2..5ca9799 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1121,6 +1121,7 @@ static void rt2500usb_write_beacon(struct queue_entry *entry)
- 	int pipe = usb_sndbulkpipe(usb_dev, 1);
- 	int length;
- 	u16 reg;
-+	u32 word, len;
- 
- 	/*
- 	 * Add the descriptor in front of the skb.
-@@ -1130,6 +1131,17 @@ static void rt2500usb_write_beacon(struct queue_entry *entry)
- 	skbdesc->desc = entry->skb->data;
- 
- 	/*
-+	 * Adjust the beacon databyte count. The current number is
-+	 * calculated before this function gets called, but falsely
-+	 * assumes that the descriptor was already present in the SKB.
-+	 */
-+	rt2x00_desc_read(skbdesc->desc, 0, &word);
-+	len  = rt2x00_get_field32(word, TXD_W0_DATABYTE_COUNT);
-+	len += skbdesc->desc_len;
-+	rt2x00_set_field32(&word, TXD_W0_DATABYTE_COUNT, len);
-+	rt2x00_desc_write(skbdesc->desc, 0, word);
-+
-+	/*
- 	 * Disable beaconing while we are reloading the beacon data,
- 	 * otherwise we might be sending out invalid data.
- 	 */
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 26265c7..0a689cd 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1330,6 +1330,7 @@ static void rt73usb_write_beacon(struct queue_entry *entry)
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 	unsigned int beacon_base;
- 	u32 reg;
-+	u32 word, len;
- 
- 	/*
- 	 * Add the descriptor in front of the skb.
-@@ -1339,6 +1340,17 @@ static void rt73usb_write_beacon(struct queue_entry *entry)
- 	skbdesc->desc = entry->skb->data;
- 
- 	/*
-+	 * Adjust the beacon databyte count. The current number is
-+	 * calculated before this function gets called, but falsely
-+	 * assumes that the descriptor was already present in the SKB.
-+	 */
-+	rt2x00_desc_read(skbdesc->desc, 0, &word);
-+	len  = rt2x00_get_field32(word, TXD_W0_DATABYTE_COUNT);
-+	len += skbdesc->desc_len;
-+	rt2x00_set_field32(&word, TXD_W0_DATABYTE_COUNT, len);
-+	rt2x00_desc_write(skbdesc->desc, 0, word);
-+
-+	/*
- 	 * Disable beaconing while we are reloading the beacon data,
- 	 * otherwise we might be sending out invalid data.
- 	 */
--- 
-1.5.6.1
-
+One more topic would be probably
+ power management/power save - connection to system power/power supply
+(Battery/AC)
