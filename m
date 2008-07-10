@@ -1,62 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47472 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754692AbYGGTqb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2008 15:46:31 -0400
-Subject: Re: [BUG] iwl4965: huge latency and errors when unblocking the
-	hardware rfkill
-From: Dan Williams <dcbw@redhat.com>
-To: Andrew Lutomirski <andy@luto.us>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <cb0375e10807071156x26df8332j4b167e8cc9bb289@mail.gmail.com>
-References: <cb0375e10807071156x26df8332j4b167e8cc9bb289@mail.gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:45551 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751648AbYGJJRf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jul 2008 05:17:35 -0400
+Subject: [PATCH] wext: make sysfs bits optional and deprecate them
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, Jean Tourrilhes <jt@hpl.hp.com>
 Content-Type: text/plain
-Date: Mon, 07 Jul 2008 15:45:06 -0400
-Message-Id: <1215459906.23993.2.camel@localhost.localdomain> (sfid-20080707_214634_599354_B98FEA48)
+Date: Thu, 10 Jul 2008 11:16:47 +0200
+Message-Id: <1215681407.3932.10.camel@johannes.berg> (sfid-20080710_111738_825714_DF5C487B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-07-07 at 14:56 -0400, Andrew Lutomirski wrote:
-> This is wireless-testing c80200cd38c265da90f0d9d031ace84aa56b0453, pulled today.
-> 
-> I have a Lenovo X61s with a physical rfkill switch (the kind that
-> slides between blocked and unblocked).
-> 
-> If I turn off the hardware rfkill switch (set to block) while
-> associated, I lose the connection (obviously).  If I turn it back on
-> again (set to unblock), I get a lot of latency (my mouse stops moving
-> for a second or two) and I sometimes get errors in the syslog like
-> this:
-> 
-> iwl4965: Error sending REPLY_CT_KILL_CONFIG_CMD: time out after 500ms.
-> 
-> The card fails to associate afterwards.  If I tell network-manager to
-> turn off wireless, then block rfkill, then wait a few seconds, then
-> unblock it, then turn nm back on, everything works again.
-> 
-> This seems like at least two different bugs:
-> 
->  - iwl4965 causes latency.  This latency issue has been reproducible
-> every time for me on 2.6.24-ubuntu_something, 2.5.25, wireless-compat
-> (recent), and current wireless-testing.
->  - iwl4965 doesn't work right after hard unblocking rfkill.
-> 
-> I'm happy to do further troubleshooting and/or test patches.
+The /sys/class/net/*/wireless/ direcory is, as far as I know, not
+used by anyone. Additionally, the same data is available via wext
+ioctls. Hence the sysfs files are pretty much useless. This patch
+makes them optional and schedules them for removal.
 
-It depends on what HAL reports for the killswitch's status.  NM asks HAL
-what the radio's rfkill state is every 6 seconds (since we can't get
-event notifications when the state changes until 2.6.27).  If HAL
-reports the radio is killed, NM won't touch the device.  It sounds like
-something is trying to poke the device before it's ready, which may mean
-that either NM isn't aware you have a killswitch, or HAL isn't correctly
-talking to the iwlwifi killswitch bits (either old-style or new-style
-with Henrique's patches).
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jean Tourrilhes <jt@hpl.hp.com>
+---
+The only known user was hal
+(http://www.freedesktop.org/wiki/Software/hal) and I have removed those,
+the patches are in the git repository for the next release.
 
-Can you post some logs from /var/log/daemon.log around when flipping the
-killswitch to BLOCKED, waiting about 20 seconds, then flipping it back
-to UNBLOCKED and waiting 10 seconds?  That will tell whether NM is
-correctly talking to HAL or not.
+ Documentation/feature-removal-schedule.txt |   10 ++++++++++
+ net/core/net-sysfs.c                       |    4 ++--
+ net/wireless/Kconfig                       |   11 +++++++++++
+ 3 files changed, 23 insertions(+), 2 deletions(-)
 
-Dan
+--- everything.orig/net/core/net-sysfs.c	2008-07-10 10:23:08.000000000 +0200
++++ everything/net/core/net-sysfs.c	2008-07-10 10:26:25.000000000 +0200
+@@ -318,7 +318,7 @@ static struct attribute_group netstat_gr
+ 	.attrs  = netstat_attrs,
+ };
+ 
+-#ifdef CONFIG_WIRELESS_EXT
++#ifdef CONFIG_WIRELESS_EXT_SYSFS
+ /* helper function that does all the locking etc for wireless stats */
+ static ssize_t wireless_show(struct device *d, char *buf,
+ 			     ssize_t (*format)(const struct iw_statistics *,
+@@ -460,7 +460,7 @@ int netdev_register_kobject(struct net_d
+ 	if (net->get_stats)
+ 		*groups++ = &netstat_group;
+ 
+-#ifdef CONFIG_WIRELESS_EXT
++#ifdef CONFIG_WIRELESS_EXT_SYSFS
+ 	if (net->wireless_handlers && net->wireless_handlers->get_wireless_stats)
+ 		*groups++ = &wireless_group;
+ #endif
+--- everything.orig/net/wireless/Kconfig	2008-07-10 08:47:16.000000000 +0200
++++ everything/net/wireless/Kconfig	2008-07-10 10:26:25.000000000 +0200
+@@ -29,3 +29,14 @@ config WIRELESS_EXT
+ 
+ 	  Say N (if you can) unless you know you need wireless
+ 	  extensions for external modules.
++
++config WIRELESS_EXT_SYSFS
++	bool "Wireless extensions sysfs files"
++	default y
++	depends on WIRELESS_EXT && SYSFS
++	help
++	  This option enables the deprecated wireless statistics
++	  files in /sys/class/net/*/wireless/. The same information
++	  is available via the ioctls as well.
++
++	  Say Y if you have programs using it (we don't know of any).
+--- everything.orig/Documentation/feature-removal-schedule.txt	2008-07-10 10:23:19.000000000 +0200
++++ everything/Documentation/feature-removal-schedule.txt	2008-07-10 11:15:56.000000000 +0200
+@@ -280,6 +280,16 @@ Why:	Not used in-tree. The current out-o
+ 	out-of-tree driver.
+ Who:	Thomas Gleixner <tglx@linutronix.de>
+ 
++---------------------------
++
++What:	Code that is now under CONFIG_WIRELESS_EXT_SYSFS
++	(in net/core/net-sysfs.c)
++When:	After the only user (hal) has seen a release with the patches
++	for enough time, probably some time in 2010.
++Why:	Over 1K .text/.data size reduction, data is available in other
++	ways (ioctls)
++Who:	Johannes Berg <johannes@sipsolutions.net>
++
+ ----------------------------
+ 
+ What:	usedac i386 kernel parameter
+
 
