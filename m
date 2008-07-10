@@ -1,69 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33889 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753523AbYGISJn (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.190]:52968 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752078AbYGJQ2b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 14:09:43 -0400
-Subject: Re: [RFC PATCH 0/7] IEEE 802.11w / management frame protection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1215625246.3246.40.camel@johannes.berg> (sfid-20080709_194135_916590_FC9A6131)
-References: <20080617154008.883383150@localhost>
-	 (sfid-20080617_175912_673335_B33F2037)  <1215625246.3246.40.camel@johannes.berg>
-	 (sfid-20080709_194135_916590_FC9A6131)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UMeMOJyB2FbXzMkl5CLW"
-Date: Wed, 09 Jul 2008 20:08:56 +0200
-Message-Id: <1215626936.3246.45.camel@johannes.berg> (sfid-20080709_200945_861029_93F1B86F)
-Mime-Version: 1.0
+	Thu, 10 Jul 2008 12:28:31 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so1795679fkq.5
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2008 09:28:30 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+From: Luis Carlos Cobo <luisca@cozybit.com>
+Date: Thu, 10 Jul 2008 17:32:17 +0200
+Subject: [PATCH 6/6] libertastf: config and makefile
+Message-ID: <487638a9.25014e0a.34c2.42c4@mx.google.com> (sfid-20080710_182833_274857_EBF773E9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-UMeMOJyB2FbXzMkl5CLW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+Tested-by: Javier Cardona <javier@cozybit.com>
+---
+ drivers/net/wireless/Kconfig             |   13 +++++++++++++
+ drivers/net/wireless/Makefile            |    2 ++
+ drivers/net/wireless/libertastf/Makefile |    6 ++++++
+ 3 files changed, 21 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/libertastf/Makefile
 
-On Wed, 2008-07-09 at 19:40 +0200, Johannes Berg wrote:
-> > This patch set does not address the issues found in configuring default
-> > keys for monitor interfaces, i.e., this still needs a workaround in
-> > hostapd to set IGTK for both wlan# and mon.wlan#. In addition, the
-> > debugfs directory is left behind when the monitor interface is removed.
->=20
-> Can you try this patch?
-> http://johannes.sipsolutions.net/patches/kernel/all/2008-07-09-17%3a38/02=
-1-mac80211-inject-sdata.patch
->=20
-> It should use the sdata from the TA instead of the monitor when treating
-> injecting frames, where possible.
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 5e0eda0..a14728d 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -276,6 +276,19 @@ config LIBERTAS_DEBUG
+ 	---help---
+ 	  Debugging support.
+ 
++config LIBERTAS_THINFIRM
++	tristate "Marvell 8xxx Libertas WLAN driver support with thin firmware"
++	depends on WLAN_80211 && MAC80211
++	select FW_LOADER
++	---help---
++	  A library for Marvell Libertas 8xxx devices using thinfirm.
++
++config LIBERTAS_THINFIRM_USB
++	tristate "Marvell Libertas 8388 USB 802.11b/g cards with thin firmware"
++	depends on LIBERTAS_THINFIRM && USB
++	---help---
++	  A driver for Marvell Libertas 8388 USB devices using thinfirm.
++
+ config AIRO
+ 	tristate "Cisco/Aironet 34X/35X/4500/4800 ISA and PCI cards"
+ 	depends on ISA_DMA_API && WLAN_80211 && (PCI || BROKEN)
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index c3e45bd..1b08a2f 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -49,6 +49,8 @@ obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
+ obj-$(CONFIG_USB_ZD1201)	+= zd1201.o
+ obj-$(CONFIG_LIBERTAS)		+= libertas/
+ 
++obj-$(CONFIG_LIBERTAS_THINFIRM)	+= libertastf/
++
+ rtl8180-objs		:= rtl8180_dev.o rtl8180_rtl8225.o rtl8180_sa2400.o rtl8180_max2820.o rtl8180_grf5101.o
+ rtl8187-objs		:= rtl8187_dev.o rtl8187_rtl8225.o
+ 
+diff --git a/drivers/net/wireless/libertastf/Makefile b/drivers/net/wireless/libertastf/Makefile
+new file mode 100644
+index 0000000..7f8896e
+--- /dev/null
++++ b/drivers/net/wireless/libertastf/Makefile
+@@ -0,0 +1,6 @@
++libertastf-objs := main.o cmd.o
++
++libertastf_usb-objs += if_usb.o
++
++obj-$(CONFIG_LIBERTAS_THINFIRM) += libertastf.o
++obj-$(CONFIG_LIBERTAS_THINFIRM_USB) += libertastf_usb.o
+-- 
+1.5.4.3
 
-Just realised that it doesn't handle VLANs properly. Could you add a
-static MAC/VLAN mapping to hostapd to make VLANs possible without
-setting up radius? :)
 
-johannes
-
---=-UMeMOJyB2FbXzMkl5CLW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIdP60AAoJEKVg1VMiehFYf4UP/iId4CY/R6V3YvQa17Kp2wsd
-nuRtgKqxBPPbjIEs/69H83UJjU9eQ65A2ZqIbRSwsqK3PzHsS06XMWr4jbeLUozT
-kbKDgtPO7zDeaH+rplO9oGZzzdn/c9UlgW+TQZ6DPTiH8lIDaGuyppdj2IKROPD+
-DgSKSxZUagS2qmuBw+P73YsWDDCmMnMmA83gQ6h6zhcflL+etGdyVfOlsseQ9QpB
-x32UwtWXh/ddgaGPdM2p0SPyYwTzBAU0XwmNxDCtmtnKmnV1LdKLz3noscq3dDGu
-a91lTaoRRC5sW3UUjDaTvwbXIseIMTonZPEuXR8nT2oPD3Eq0C66pj+NdYeSylGq
-LcGAkqAYBqc5WT1E366HIm1M8bwrDcBC4/elvKAQ2vgu8YIDxv3Wa4eJO8zSYym0
-PvPIdsYCnMNbCtMslGBSEznBHb2Co8b5yi7tm6bCs6/LgERUIp7QNYPHWOXWz793
-Qvum0o66vfUkZmE9z8uuGRsuCZBWQ+WGFsLKlLEze53HAEweyZCQApABXb3Z41/2
-G1873C56fmK8+De8VctBiJsRpWXOtLrZwx0ASCsAyrdfL8F3a3J97lhzUJ1uv6w2
-6PfS0PIrzzBJqiTIBC42qJgpKRaPYUPYk6GcYfXYQUQ40rYhV2fbsq/uoPRnoDMk
-65M3zdZyNyXuC30oWbvj
-=ea6t
------END PGP SIGNATURE-----
-
---=-UMeMOJyB2FbXzMkl5CLW--
 
