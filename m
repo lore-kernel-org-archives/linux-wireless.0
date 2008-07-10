@@ -1,67 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46886 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752323AbYGNMgJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 08:36:09 -0400
-Subject: Re: [PATCH 1/2] mac80211: pass dtim_period to low level driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-In-Reply-To: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
-References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-domwe55I6qS3bnZ86WKe"
-Date: Mon, 14 Jul 2008 14:36:06 +0200
-Message-Id: <1216038966.11189.12.camel@johannes.berg> (sfid-20080714_143613_099009_E40F3353)
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:51065 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754109AbYGJNJj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jul 2008 09:09:39 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: fix TX sequence numbers
+Date: Thu, 10 Jul 2008 15:09:15 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1215681686.3932.12.camel@johannes.berg>
+In-Reply-To: <1215681686.3932.12.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200807101509.15833.mb@bu3sch.de> (sfid-20080710_150942_434079_863970AC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 10 July 2008 11:21:26 Johannes Berg wrote:
+> This patch makes mac80211 assign proper sequence numbers to
+> QoS-data frames. It also removes the old sequence number code
+> because we noticed that only the driver or hardware can assign
+> sequence numbers to non-QoS-data and especially management
+> frames in a race-free manner because beacons aren't passed
+> through mac80211's TX path.
+> 
+> This patch also adds temporary code to the rt2x00 drivers to
+> not break them completely, that code will have to be reworked
+> for proper sequence numbers on beacons.
+> 
+> It also moves sequence number assignment down in the TX path
+> so no sequence numbers are assigned to frames that are dropped.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
 
---=-domwe55I6qS3bnZ86WKe
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
+>  drivers/net/wireless/b43/xmit.c         |    3 -
+>  drivers/net/wireless/b43legacy/xmit.c   |    3 -
 
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -191,6 +191,7 @@ struct ieee80211_bss_conf {
->  	/* erp related data */
->  	bool use_cts_prot;
->  	bool use_short_preamble;
-> +	u8 dtim_period;
->  	u16 beacon_int;
->  	u16 assoc_capability;
->  	u64 timestamp;
+ACK
 
-Can you add documentation please, especially about the fact that it can
-be zero if the network is buggy / IBSS.
-
-johannes
-
---=-domwe55I6qS3bnZ86WKe
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIe0gyAAoJEKVg1VMiehFYoLYP/jw75INfNYpSkOBEF4iw+n2R
-9SjQb2hLLx/lv8JRDA445PolvP4403Amv/S10WXr52DstfuNknbX+oW1BHEvHjTV
-jUoelGAfOWcllt+xkjCHM6MF+tnuxz0UGgo4qQg2PFWLn4MRTxta2z2iP1+eNzbp
-MbYsY6oYCgpFT5GZJ7mQdkLcsqRpW6j8SajnFJIvg9HWfVkc2Av2JuXE4ykXRTk9
-TBwLJEr3ubpu9E2rO87ORODHg1sl/O9KmwXprbsIEwuxe8KtHp9S5TaUigMH7dZ+
-f7FFY+k4gEBvkN6ioAGOLpcvAjhHd3xRJqdB7TqhiOZ/BDRyqe5f1YZ52m3G284V
-c5kWPxQ+DU8Ci32B/DRx9Bkbqr/PkOaarkK/FfEmbwJQH1tlrzh66BIy2Zd8q1Rt
-LylV9tZ3ZtvkfzAJacTTxIp06nPb60zm3FKCWosYlhk2cxWSK3Uk08Y/55/N+VM2
-qopOwqDf5f+qvHgwus8ZWKUVqRGNCBCI8LvQ4+hiEVNbpYwJRFVe848selnLIh6J
-kGCTImnu4LFCGzsL9gl1kqHBaP+UFuk2m9sa7LyoxGkPgMcrzFK1aBEqt4aSFqkb
-ZwB+oRmfD6+4bi3u+x7n2F+/0LXvFq6jKm/+LaZ/QMqOPfQZdVRor3iTlgViT5GM
-vd59vveJRtRAZVnLp4WU
-=CsGj
------END PGP SIGNATURE-----
-
---=-domwe55I6qS3bnZ86WKe--
-
+-- 
+Greetings Michael.
