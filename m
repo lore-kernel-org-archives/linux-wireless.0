@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:53507 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752205AbYGGBrr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jul 2008 21:47:47 -0400
-Subject: Re: [2.6.26-rc5] iwlwifi 4965 not working - last on 2.6.23
-From: Zhu Yi <yi.zhu@intel.com>
-To: =?UTF-8?Q?Micha=C5=82_Kud=C5=82a?= <michal.kudla@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <200807062244.53787.Michal.Kudla@gmail.com>
-References: <200806060039.48488.m1k0@wp.pl>
-	 <200806240537.08888.Michal.Kudla@gmail.com>
-	 <1214279513.14590.198.camel@debian.sh.intel.com>
-	 <200807062244.53787.Michal.Kudla@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 07 Jul 2008 09:45:46 +0800
-Message-Id: <1215395146.14590.710.camel@debian.sh.intel.com> (sfid-20080707_034752_515335_19DF7D2E)
-Mime-Version: 1.0
+Received: from ruslug.rutgers.edu ([165.230.139.146]:48616 "EHLO
+	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751841AbYGJTiw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jul 2008 15:38:52 -0400
+Date: Thu, 10 Jul 2008 15:38:48 -0400
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Sam Leffler <sam@errno.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC] Add new regulatory framework for Linux wireless
+Message-ID: <20080710193848.GM17936@ruslug.rutgers.edu> (sfid-20080710_213855_757392_54CCFBA9)
+References: <20080710152415.GK17936@ruslug.rutgers.edu> <4876304E.9070508@errno.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4876304E.9070508@errno.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2008-07-06 at 22:44 +0200, Micha=C5=82 Kud=C5=82a wrote:
-> with new build -rc9 iwl4965 still don't work.
-> I don't know, witch distro I should use to check, that current kernel
-> and my WiFi is OK.
->=20
-> I returned to good 2.6.24-gentoo-r8
+On Thu, Jul 10, 2008 at 08:52:46AM -0700, Sam Leffler wrote:
+> Luis R. Rodriguez wrote:
+> >The industry currently has different techniques for parsing and using
+> >Country IEs. What I currently propose is to take the common denominator
+> >between what the AP provides, what CRDA has and what the driver can
+> >provide privately through its callback. So the wireless core can keep
+> >as the common denominator between the AP's Country IE and what CRDA
+> >has for the alpha2 provided by the Country IE. Drivers themselves can
+> >further enhance regulatory enforcement by relying on private driver
+> >data if they wish so.
+> >
+> >  
+> Can you elaborate on the first sentence?  Are you just saying that some 
+> software blindly trusts the contents of the country IE and doesn't 
+> constrain it's use (as you describe)?  Or are you saying drivers 
+> interpret the contents of the country IE in ways different than spec'd?
 
-This is not a regression. The rfkill subsystem changed a lot since then=
-=2E
->From what you reported, it looks like a configuration problem since I
-don't see any other report on this. Could you please file a bug on
-bughost.org so we can track it there?
+I'm saying drivers and software stacks used tend to vary on how they
+use the country IE. I believe most vendor drivers *never* simply
+use what the AP provides due to considerations about "rogue" APs.
+I can see why too though -- but it just means the spec didn't
+account for these considerations. Hence my suggestion.
 
-Thanks,
--yi
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Luis
