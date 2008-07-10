@@ -1,30 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:39198 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751337AbYGHJSu (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.31]:44850 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755644AbYGJKus (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 05:18:50 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2461313wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2008 02:18:49 -0700 (PDT)
-Message-ID: <adbe58370807080218q3c349bbcgbac38b9252fd44ad@mail.gmail.com> (sfid-20080708_111854_076980_F903078D)
-Date: Tue, 8 Jul 2008 11:18:49 +0200
-From: "Basim Javed" <basimjaved@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: programming 802.11e
+	Thu, 10 Jul 2008 06:50:48 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so1551068ywe.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2008 03:50:38 -0700 (PDT)
+Message-ID: <1ba2fa240807100350n57e6121en46cc0febf12b6e50@mail.gmail.com> (sfid-20080710_125052_733705_D4CDC0FD)
+Date: Thu, 10 Jul 2008 13:50:37 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <1215685335.3483.5.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+References: <20080709190915.GA8238@tuxdriver.com>
+	 <1215685335.3483.5.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hello experts
+On Thu, Jul 10, 2008 at 1:22 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>> 0900  Status Reports
+>>       Overview of where things stand today
+>>       - 802.11n
+>>       - QoS/Multiqueue
+>>       - Mesh mode (802.11s)
+>>       - RF kill
+>
+> And spectrum management (Tomas) please.
 
-Could you please get some time on these 2 queries:
-1- how to make changes in the driver for 802.11e card?
-2- how the above driver communicates with the protocol stack of unix
-kernel? if there is an interface, how does it look like and can we
-change it?
 
-Thank you.
 
-regards
-basim
+>
+> We've seen initial patches that add a bit of infrastructure, but aren't
+> using these things yet.
+
+Hope to submit all the patches before symposium.
+The whole package is already visible in iwl5000 branch of
+iwlwifi-2.6.git Need to clean it up and submit.
+
+Thanks
+Tomas
