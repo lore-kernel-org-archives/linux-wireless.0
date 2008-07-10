@@ -1,57 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51678
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1758545AbYGQMRd (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41368 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752027AbYGJJKy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 08:17:33 -0400
-Date: Thu, 17 Jul 2008 05:17:32 -0700 (PDT)
-Message-Id: <20080717.051732.252374750.davem@davemloft.net> (sfid-20080717_141738_001144_FF2F9C78)
-To: netdev@vger.kernel.org
-CC: kaber@trash.net, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 21/31]: pkt_sched: Use per-queue locking in
- shutdown_scheduler_queue.
-From: David Miller <davem@davemloft.net>
+	Thu, 10 Jul 2008 05:10:54 -0400
+Subject: sparse warnings on iwlwifi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GHlUVklxLgvrc98/Kkk2"
+Date: Thu, 10 Jul 2008 11:10:08 +0200
+Message-Id: <1215681008.3932.5.camel@johannes.berg> (sfid-20080710_111057_967741_B0F2E717)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-This eliminates another qdisc_lock_tree user.
+--=-GHlUVklxLgvrc98/Kkk2
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/sched/sch_generic.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+Was just running sparse for something unrelated and noticed these:
 
-diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
-index 082db8a..efa418a 100644
---- a/net/sched/sch_generic.c
-+++ b/net/sched/sch_generic.c
-@@ -757,18 +757,20 @@ static void shutdown_scheduler_queue(struct net_device *dev,
- 	struct Qdisc *qdisc_default = _qdisc_default;
- 
- 	if (qdisc) {
-+		spinlock_t *root_lock = qdisc_root_lock(qdisc);
-+
- 		dev_queue->qdisc = qdisc_default;
- 		dev_queue->qdisc_sleeping = qdisc_default;
- 
-+		spin_lock(root_lock);
- 		qdisc_destroy(qdisc);
-+		spin_unlock(root_lock);
- 	}
- }
- 
- void dev_shutdown(struct net_device *dev)
- {
--	qdisc_lock_tree(dev);
- 	netdev_for_each_tx_queue(dev, shutdown_scheduler_queue, &noop_qdisc);
- 	shutdown_scheduler_queue(dev, &dev->rx_queue, NULL);
- 	BUG_TRAP(!timer_pending(&dev->watchdog_timer));
--	qdisc_unlock_tree(dev);
- }
--- 
-1.5.6.2.255.gbed62
+drivers/net/wireless/iwlwifi/iwl-rx.c:832:2: warning: cast truncates bits f=
+rom constant value (1c00 becomes 0)
+drivers/net/wireless/iwlwifi/iwl-rx.c:836:2: warning: cast truncates bits f=
+rom constant value (6f080000 becomes 0)
+drivers/net/wireless/iwlwifi/iwl-rx.c:836:2: warning: cast truncates bits f=
+rom constant value (6f080000 becomes 0)
+drivers/net/wireless/iwlwifi/iwl-rx.c:856:3: warning: cast truncates bits f=
+rom constant value (4001 becomes 1)
+drivers/net/wireless/iwlwifi/iwl-rx.c:860:3: warning: cast truncates bits f=
+rom constant value (a000 becomes 0)
+drivers/net/wireless/iwlwifi/iwl-rx.c:864:3: warning: cast truncates bits f=
+rom constant value (c000 becomes 0)
+
+johannes
+
+--=-GHlUVklxLgvrc98/Kkk2
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIddHsAAoJEKVg1VMiehFYF28P/173zu1ziK5Amzuxchon+9nI
+cY6h5gEh1nfSMq473bG/+6Oap8a4JOgZ9ozG8+jvHaXlnYIExLo+EVVppj+c1Ckx
+xVsXK2PNbl8uT78Qg7XjSWtnTHD92OCBuhPcr6TFmM88rf+JoXYZ3HRgqQHhT2By
+Zf4TQiLm1gspKjT3paOKSJOxcVEr9rj79hnyRkMDaXB11RNhRrvy0IPU2AK5Lp6z
+GZPEJ+uQMPahkhmtvHKwuxnrUWE1/rVc1y09tJBWRRUVApAkJG2xCiMQK9oSa/oS
+2RG1zbOC09eI0imsLF+DZokQEfmYsVfiFYItsOxErfkS+h20EkEM3kHroMExRXXp
+na9eOrBvPt2bREMXyPZxFLKg8ZD6muByeH5BNRt86wQvY3ysVYh3aGg2Xf15v7NI
+Qb7HTrHt/ykgXzRKEV4hmzlDZmo4S/0fa72hnGRDIT7hxlEBu2k2dtM4j727JW65
+yleQDqxHX3/sirzKwx/LUsYB4VcpHmmwoinZzUOCWcAQ4eTSbZKvrOYJKBlxBc0a
+5CcYYIWP7kGTL6hc252NRBADMis0nJslLflY/jAZOUs/wl6brlv3m8VSziRm2V3j
+EzZDD1iZJbcHmxLAB1RMdQ9llCw4RDmQ1b8m6ODX8OXahNNK7zqhOLDdUY0rAIzC
+V8rN8RrTnxfWqTAxgn3d
+=vOI9
+-----END PGP SIGNATURE-----
+
+--=-GHlUVklxLgvrc98/Kkk2--
 
