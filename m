@@ -1,370 +1,1156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:13809 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758472AbYGQRnJ (ORCPT
+Received: from ruslug.rutgers.edu ([165.230.139.146]:33486 "EHLO
+	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755395AbYGKMas (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 13:43:09 -0400
-Received: by qw-out-2122.google.com with SMTP id 3so15678qwe.37
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2008 10:43:08 -0700 (PDT)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-From: Brian Cavagnolo <brian@cozybit.com>
-Date: Tue, 15 Jul 2008 17:45:02 -0700
-Subject: [PATCH 1/3] libertas: support boot commands to write persistent firmware and bootloader
-Message-ID: <487f84aa.1f068e0a.7ee7.3360@mx.google.com> (sfid-20080717_194314_553748_26A5662C)
+	Fri, 11 Jul 2008 08:30:48 -0400
+Date: Fri, 11 Jul 2008 08:30:39 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	"Rindjunsky, Ron" <ron.rindjunsky@intel.com>,
+	Tim Gardner <tim.gardner@canonical.com>,
+	Jouni Malinen <j@w1.fi>
+Subject: [PATCH] Add new regulatory framework for Linux wireless
+Message-ID: <20080711123039.GP17936@ruslug.rutgers.edu> (sfid-20080711_143107_127486_70C485D1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add locking and non-locking versions of if_usb_prog_firmware to support
-programming firmware after and before driver bring-up respectively.
-Add more suitable error codes for firmware programming process.
-Add capability checks for persistent features before attempting to use them.
+Johannes' changes have been taken into consideration for this patch.
+Individual changes can be seen here:
 
-Based on patches from Brajesh Dave and Priyank Singh.
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/v3-regdomain-patches/
 
-Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
+This adds a new regulatory framework for the wireless subsystem (cfg80211).
+This relies on the new Central Regulaotry Domain Agent:
+
+http://wireless.kernel.org/en/developers/Regulatory/CRDA
+git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/crda.git
+
+CRDA and its integration allows us to keep the wireless regulatory
+database completely in userspace. This lets us update it without
+making kernel upgrades.
+
+For drivers wishing to verify the regulatory data a callback
+chain has been provided, regulatory_chain. Driver can use this
+to update further enhance their regulatory compliance if required.
+
+For drivers which can determine what country they were designed for
+and wishing to support that regulatory domain first (before
+considering Country IEs from APs) they can hint it to the wireless
+using regulatory_hint().
+
+Country IE parsing is not yet added by can be added and with this
+framework can be used to enhance trust for regulatory data from APs.
+The industry currently has different techniques for parsing and using
+Country IEs. What I currently propose is to take the common denominator
+between what the AP provides, what CRDA has and what the driver can
+provide privately through its callback. So the wireless core can keep
+as the common denominator between the AP's Country IE and what CRDA
+has for the alpha2 provided by the Country IE. Drivers themselves can
+further enhance regulatory enforcement by relying on private driver
+data if they wish so.
+
+For drivers with no regulatory information this work and CRDA will
+provide the full regulatory solution.
+
+Finally I'd like to invite you to review our current regulatory
+database and help contribute on expanding it.
+
+This has been work which has been going for over 2 years now. Hopefully
+we got it right now and it will attract more vendors to support Linux
+wireless drivers.
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/libertas/defs.h       |    6 ++-
- drivers/net/wireless/libertas/if_usb.c     |  107 ++++++++++++++++++++++-----
- drivers/net/wireless/libertas/if_usb.h     |    5 ++
- drivers/net/wireless/libertas/persistcfg.c |   24 ++++++
- 4 files changed, 121 insertions(+), 21 deletions(-)
+ include/linux/nl80211.h |   91 +++++++++-
+ include/net/cfg80211.h  |   48 +++++
+ include/net/wireless.h  |    4 +
+ net/wireless/core.c     |   61 ++++++-
+ net/wireless/nl80211.c  |  128 ++++++++++++
+ net/wireless/reg.c      |  492 +++++++++++++++++++++++++++++++++++++----------
+ 6 files changed, 717 insertions(+), 107 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/defs.h b/drivers/net/wireless/libertas/defs.h
-index 12e6875..4b2428a 100644
---- a/drivers/net/wireless/libertas/defs.h
-+++ b/drivers/net/wireless/libertas/defs.h
-@@ -243,6 +243,9 @@ static inline void lbs_deb_hex(unsigned int grp, const char *prompt, u8 *buf, in
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 2be7c63..a54f068 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -90,6 +90,17 @@
+  *	or, if no MAC address given, all mesh paths, on the interface identified
+  *	by %NL80211_ATTR_IFINDEX.
+  *
++ * @NL80211_CMD_SET_REG: Set current regulatory domain. CRDA sends this command
++ *	after being queried by the kernel. CRDA replies by sending a regulatory
++ *	domain structure which consists of %NL80211_ATTR_REG_ALPHA set to our
++ *	current alpha2 if it found a match. It also provides
++ * 	NL80211_ATTR_REG_RULE_FLAGS, and a set of regulatory rules. Each
++ * 	regulatory rule is a nested set of attributes  given by
++ * 	%NL80211_ATTR_REG_RULE_FREQ_[START|END] and
++ * 	%NL80211_ATTR_FREQ_RANGE_MAX_BW with an attached power rule given by
++ * 	%NL80211_ATTR_REG_RULE_POWER_MAX_ANT_GAIN and
++ * 	%NL80211_ATTR_REG_RULE_POWER_MAX_EIRP. We provide CRDA with a receipt,
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -129,6 +140,8 @@ enum nl80211_commands {
  
- #define	CMD_F_HOSTCMD		(1 << 0)
- #define FW_CAPINFO_WPA  	(1 << 0)
-+#define FW_CAPINFO_FIRMWARE_UPGRADE	(1 << 13)
-+#define FW_CAPINFO_BOOT2_UPGRADE	(1<<14)
-+#define FW_CAPINFO_PERSISTENT_CONFIG	(1<<15)
+ 	/* add commands here */
  
- #define KEY_LEN_WPA_AES			16
- #define KEY_LEN_WPA_TKIP		32
-@@ -316,7 +319,8 @@ enum PS_STATE {
- enum DNLD_STATE {
- 	DNLD_RES_RECEIVED,
- 	DNLD_DATA_SENT,
--	DNLD_CMD_SENT
-+	DNLD_CMD_SENT,
-+	DNLD_BOOTCMD_SENT,
++	NL80211_CMD_SET_REG,
++
+ 	/* used to define NL80211_CMD_MAX below */
+ 	__NL80211_CMD_AFTER_LAST,
+ 	NL80211_CMD_MAX = __NL80211_CMD_AFTER_LAST - 1
+@@ -188,10 +201,19 @@ enum nl80211_commands {
+  * 	info given for %NL80211_CMD_GET_MPATH, nested attribute described at
+  *	&enum nl80211_mpath_info.
+  *
+- *
+  * @NL80211_ATTR_MNTR_FLAGS: flags, nested element with NLA_FLAG attributes of
+  *      &enum nl80211_mntr_flags.
+  *
++ * @NL80211_ATTR_REG_ALPHA2: an ISO-3166-alpha2 country code for which the
++ * 	current regulatory domain should be set to or is already set to.
++ * 	For example, 'CR', for Costa Rica. This attribute is used by the kernel
++ * 	to query the CRDA to retrieve one regulatory domain. This attribute can
++ * 	also be used by userspace to query the kernel for the currently set
++ * 	regulatory domain. We chose an alpha2 as that is also used by the
++ * 	IEEE-802.11d country information element to identify a country.
++ * @NL80211_ATTR_REG_RULES: a nested array of regulatory domain regulatory
++ *	rules.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -235,6 +257,9 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_MPATH_NEXT_HOP,
+ 	NL80211_ATTR_MPATH_INFO,
+ 
++	NL80211_ATTR_REG_ALPHA2,
++	NL80211_ATTR_REG_RULES,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -242,6 +267,7 @@ enum nl80211_attrs {
  };
  
- /** LBS_MEDIA_STATE */
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index 2478310..e83a4c2 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -39,7 +39,10 @@ MODULE_DEVICE_TABLE(usb, if_usb_table);
+ #define NL80211_MAX_SUPP_RATES			32
++#define NL80211_MAX_SUPP_REG_RULES		32
+ #define NL80211_TKIP_DATA_OFFSET_ENCR_KEY	0
+ #define NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY	16
+ #define NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY	24
+@@ -436,6 +462,69 @@ enum nl80211_bitrate_attr {
+ };
  
- static void if_usb_receive(struct urb *urb);
- static void if_usb_receive_fwload(struct urb *urb);
--static int if_usb_prog_firmware(struct if_usb_card *cardp);
-+static int __if_usb_prog_firmware(struct if_usb_card *cardp,
-+					const char *fwname, int cmd);
-+static int if_usb_prog_firmware(struct if_usb_card *cardp,
-+					const char *fwname, int cmd);
- static int if_usb_host_to_card(struct lbs_private *priv, uint8_t type,
- 			       uint8_t *payload, uint16_t nb);
- static int usb_tx_block(struct if_usb_card *cardp, uint8_t *payload,
-@@ -66,10 +69,10 @@ static void if_usb_write_bulk_callback(struct urb *urb)
- 		lbs_deb_usb2(&urb->dev->dev, "Actual length transmitted %d\n",
- 			     urb->actual_length);
+ /**
++ * enum nl80211_reg_rule_attr - regulatory rule attributes
++ * @NL80211_ATTR_REG_RULE_FLAGS: a set of flags which specify additional
++ * 	considerations for a given frequency range. These are the
++ * 	&enum nl80211_reg_rule_flags.
++ * @NL80211_ATTR_FREQ_RANGE_START: starting frequencry for the regulatory
++ * 	rule in KHz. This is not a center of frequency but an actual regulatory
++ * 	band edge.
++ * @NL80211_ATTR_FREQ_RANGE_END: ending frequency for the regulatory rule
++ * 	in KHz. This is not a center a frequency but an actual regulatory
++ * 	band edge.
++ * @NL80211_ATTR_FREQ_RANGE_MAX_BW: maximum allowed bandwidth for this
++ * 	frequency range, in KHz.
++ * @NL80211_ATTR_POWER_RULE_MAX_ANT_GAIN: the maximum allowed antenna gain
++ * 	for a given frequency range. The value is in mBi (100 * dBi).
++ * 	If you don't have one then don't send this.
++ * @NL80211_ATTR_POWER_RULE_MAX_EIRP: the maximum allowed EIRP for
++ * 	a given frequency range. The value is in mBm (100 * dBm).
++ */
++enum nl80211_reg_rule_attr {
++	__NL80211_REG_RULE_ATTR_INVALID,
++	NL80211_ATTR_REG_RULE_FLAGS,
++
++	NL80211_ATTR_FREQ_RANGE_START,
++	NL80211_ATTR_FREQ_RANGE_END,
++	NL80211_ATTR_FREQ_RANGE_MAX_BW,
++
++	NL80211_ATTR_POWER_RULE_MAX_ANT_GAIN,
++	NL80211_ATTR_POWER_RULE_MAX_EIRP,
++
++	/* keep last */
++	__NL80211_REG_RULE_ATTR_AFTER_LAST,
++	NL80211_REG_RULE_ATTR_MAX = __NL80211_REG_RULE_ATTR_AFTER_LAST - 1
++};
++
++/**
++ * enum nl80211_reg_rule_flags - regulatory rule flags
++ *
++ * @NL80211_RRF_NO_OFDM: OFDM modulation not allowed
++ * @NL80211_RRF_NO_CCK: CCK modulation not allowed
++ * @NL80211_RRF_NO_INDOOR: indoor operation not allowed
++ * @NL80211_RRF_NO_OUTDOOR: outdoor operation not allowed
++ * @NL80211_RRF_DFS: DFS support is required to be used
++ * @NL80211_RRF_PTP_ONLY: this is only for Point To Point links
++ * @NL80211_RRF_PTMP_ONLY: this is only for Point To Multi Point links
++ * @NL80211_RRF_PASSIVE_SCAN: passive scan is required
++ * @NL80211_RRF_NO_IBSS: no IBSS is allowed
++ * @NL80211_RRF_NO_HT40: HT40 is not allowed
++ */
++enum nl80211_reg_rule_flags {
++	NL80211_RRF_NO_OFDM		= 1<<0,
++	NL80211_RRF_NO_CCK		= 1<<1,
++	NL80211_RRF_NO_INDOOR		= 1<<2,
++	NL80211_RRF_NO_OUTDOOR		= 1<<3,
++	NL80211_RRF_DFS			= 1<<4,
++	NL80211_RRF_PTP_ONLY		= 1<<4,
++	NL80211_RRF_PTMP_ONLY		= 1<<4,
++	NL80211_RRF_PASSIVE_SCAN	= 1<<4,
++	NL80211_RRF_NO_IBSS		= 1<<8,
++	/* hole at 9, used to be NO_HT20  */
++	NL80211_RRF_NO_HT40		= 1<<10,
++};
++
++/**
+  * enum nl80211_mntr_flags - monitor configuration flags
+  *
+  * Monitor configuration flags.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e007508..d117f3d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -268,6 +268,54 @@ struct mpath_info {
+ 	u8 flags;
+ };
  
--		/* Used for both firmware TX and regular TX.  priv isn't
--		 * valid at firmware load time.
-+		/* Boot commands such as UPDATE_FW and UPDATE_BOOT2 are not
-+		 * passed up to the lbs level.
- 		 */
--		if (priv)
-+		if (priv && priv->dnld_sent != DNLD_BOOTCMD_SENT)
- 			lbs_host_to_card_done(priv);
- 	} else {
- 		/* print the failure status number for debug */
-@@ -231,7 +234,7 @@ static int if_usb_probe(struct usb_interface *intf,
- 	}
++/**
++ * enum reg_set_by - Indicates who is trying to set the regulatory domain
++ * @REGDOM_SET_BY_INIT: regulatory domain was set by initialization. We will be
++ * 	using a static world regulatory domain by default.
++ * @REGDOM_SET_BY_CORE: Core queried CRDA for a dynamic world regulatory domain.
++ * @REGDOM_SET_BY_DRIVER: a wireless drivers has hinted to the wireless core
++ *	it thinks its knows the regulatory domain we should be in.
++ * @REGDOM_SET_BY_80211D: the wireless core has received an 802.11 country
++ *	information element with regulatory information it thinks we
++ *	should consider.
++ */
++enum reg_set_by {
++	REGDOM_SET_BY_INIT,
++	REGDOM_SET_BY_CORE,
++	REGDOM_SET_BY_DRIVER,
++	REGDOM_SET_BY_80211D,
++};
++
++
++struct ieee80211_freq_range {
++	u32 start_freq;
++	u32 end_freq;
++	u32 max_bandwidth;
++};
++
++struct ieee80211_power_rule {
++	u32 max_antenna_gain;
++	u32 max_eirp;
++};
++
++struct ieee80211_reg_rule {
++	struct ieee80211_freq_range freq_range;
++	struct ieee80211_power_rule power_rule;
++	u32 flags;
++};
++
++struct ieee80211_regdomain {
++	u32 n_reg_rules;
++	char alpha2[2];
++	struct ieee80211_reg_rule *reg_rules;
++};
++
++#define MHZ_TO_KHZ(freq) freq * 100
++#define KHZ_TO_MHZ(freq) freq / 100
++#define DBI_TO_MBI(gain) gain * 100
++#define MBI_TO_DBI(gain) gain / 100
++#define DBM_TO_MBM(gain) gain * 100
++#define MBM_TO_DBM(gain) gain / 100
  
- 	/* Upload firmware */
--	if (if_usb_prog_firmware(cardp)) {
-+	if (__if_usb_prog_firmware(cardp, lbs_fw_name, BOOT_CMD_FW_BY_USB)) {
- 		lbs_deb_usbd(&udev->dev, "FW upload failed\n");
- 		goto err_prog_firmware;
- 	}
-@@ -510,7 +513,7 @@ static void if_usb_receive_fwload(struct urb *urb)
- 		if (le16_to_cpu(cardp->udev->descriptor.bcdDevice) < 0x3106) {
- 			kfree_skb(skb);
- 			if_usb_submit_rx_urb_fwload(cardp);
--			cardp->bootcmdresp = 1;
-+			cardp->bootcmdresp = BOOT_CMD_RESP_OK;
- 			lbs_deb_usbd(&cardp->udev->dev,
- 				     "Received valid boot command response\n");
- 			return;
-@@ -526,7 +529,9 @@ static void if_usb_receive_fwload(struct urb *urb)
- 				lbs_pr_info("boot cmd response wrong magic number (0x%x)\n",
- 					    le32_to_cpu(bootcmdresp.magic));
- 			}
--		} else if (bootcmdresp.cmd != BOOT_CMD_FW_BY_USB) {
-+		} else if ((bootcmdresp.cmd != BOOT_CMD_FW_BY_USB) &&
-+			   (bootcmdresp.cmd != BOOT_CMD_UPDATE_FW) &&
-+			   (bootcmdresp.cmd != BOOT_CMD_UPDATE_BOOT2)) {
- 			lbs_pr_info("boot cmd response cmd_tag error (%d)\n",
- 				    bootcmdresp.cmd);
- 		} else if (bootcmdresp.result != BOOT_CMD_RESP_OK) {
-@@ -564,8 +569,8 @@ static void if_usb_receive_fwload(struct urb *urb)
+ /* from net/wireless.h */
+ struct wiphy;
+diff --git a/include/net/wireless.h b/include/net/wireless.h
+index 9324f8d..60be012 100644
+--- a/include/net/wireless.h
++++ b/include/net/wireless.h
+@@ -60,6 +60,7 @@ enum ieee80211_channel_flags {
+  * with cfg80211.
+  *
+  * @center_freq: center frequency in MHz
++ * @max_bandwidth: maximum allowed bandwidth for this channel, in MHz
+  * @hw_value: hardware-specific value for the channel
+  * @flags: channel flags from &enum ieee80211_channel_flags.
+  * @orig_flags: channel flags at registration time, used by regulatory
+@@ -73,6 +74,7 @@ enum ieee80211_channel_flags {
+ struct ieee80211_channel {
+ 	enum ieee80211_band band;
+ 	u16 center_freq;
++	u8 max_bandwidth;
+ 	u16 hw_value;
+ 	u32 flags;
+ 	int max_antenna_gain;
+@@ -320,6 +322,8 @@ extern int ieee80211_frequency_to_channel(int freq);
+ extern struct ieee80211_channel *__ieee80211_get_channel(struct wiphy *wiphy,
+ 							 int freq);
  
- 	kfree_skb(skb);
++extern int regulatory_hint(char *alpha2, struct wiphy *wiphy);
++
+ /**
+  * ieee80211_get_channel - get channel struct from wiphy for specified frequency
+  */
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index f1da0b9..3a4a691 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -13,12 +13,14 @@
+ #include <linux/debugfs.h>
+ #include <linux/notifier.h>
+ #include <linux/device.h>
++#include <linux/list.h>
+ #include <net/genetlink.h>
+ #include <net/cfg80211.h>
+ #include <net/wireless.h>
+ #include "nl80211.h"
+ #include "core.h"
+ #include "sysfs.h"
++#include "reg.h"
  
--	/* reschedule timer for 200ms hence */
--	mod_timer(&cardp->fw_timeout, jiffies + (HZ/5));
-+	/* Give device 5s to either write firmware to its RAM or eeprom */
-+	mod_timer(&cardp->fw_timeout, jiffies + (HZ*5));
+ /* name for sysfs, %d is appended */
+ #define PHY_NAME "phy"
+@@ -27,6 +29,33 @@ MODULE_AUTHOR("Johannes Berg");
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("wireless configuration support");
  
- 	if (cardp->fwfinalblk) {
- 		cardp->fwdnldover = 1;
-@@ -809,7 +814,49 @@ static int check_fwfile_format(uint8_t *data, uint32_t totlen)
++struct list_head regulatory_requests;
++
++/* Central wireless core regulatory domains, we only need two,
++ * the current one and a world regulatory domain in case we have no
++ * information to give us an alpha2 */
++struct ieee80211_regdomain *cfg80211_regdomain;
++
++/* We keep a static world regulatory domain in case of the absence of CRDA */
++struct ieee80211_reg_rule world_reg_rules[] = {
++		REG_RULE(2402, 2472, 40, 6, 20,
++			NL80211_RRF_PASSIVE_SCAN |
++			NL80211_RRF_NO_IBSS |
++			NL80211_RRF_NO_HT40),
++};
++
++const struct ieee80211_regdomain world_regdom = {
++	.n_reg_rules = ARRAY_SIZE(world_reg_rules),
++	.alpha2 =  "00",
++	.reg_rules = (struct ieee80211_reg_rule *) &world_reg_rules,
++};
++
++struct ieee80211_regdomain *cfg80211_world_regdom =
++	(struct ieee80211_regdomain *) &world_regdom;
++
++LIST_HEAD(regulatory_requests);
++DEFINE_MUTEX(cfg80211_reg_mutex);
++
+ /* RCU might be appropriate here since we usually
+  * only read the list, and that can happen quite
+  * often because we need to do it for each command */
+@@ -295,7 +324,9 @@ int wiphy_register(struct wiphy *wiphy)
+ 	ieee80211_set_bitrate_flags(wiphy);
+ 
+ 	/* set up regulatory info */
++	mutex_lock(&cfg80211_reg_mutex);
+ 	wiphy_update_regulatory(wiphy);
++	mutex_unlock(&cfg80211_reg_mutex);
+ 
+ 	mutex_lock(&cfg80211_drv_mutex);
+ 
+@@ -402,9 +433,14 @@ static struct notifier_block cfg80211_netdev_notifier = {
+ 	.notifier_call = cfg80211_netdev_notifier_call,
+ };
+ 
++
+ static int cfg80211_init(void)
+ {
+-	int err = wiphy_sysfs_init();
++	int err;
++
++	cfg80211_regdomain = (struct ieee80211_regdomain *) cfg80211_world_regdom;
++
++	err = wiphy_sysfs_init();
+ 	if (err)
+ 		goto out_fail_sysfs;
+ 
+@@ -418,6 +454,11 @@ static int cfg80211_init(void)
+ 
+ 	ieee80211_debugfs_dir = debugfs_create_dir("ieee80211", NULL);
+ 
++	err = __regulatory_hint("00", REGDOM_SET_BY_CORE, NULL);
++	if (err)
++		printk("cfg80211: calling CRDA failed - unable to update "
++			"world regulatory domain, using static definition\n");
++
+ 	return 0;
+ 
+ out_fail_nl80211:
+@@ -427,12 +468,30 @@ out_fail_notifier:
+ out_fail_sysfs:
+ 	return err;
+ }
++
+ subsys_initcall(cfg80211_init);
+ 
+ static void cfg80211_exit(void)
+ {
++	struct regulatory_request *req, *req_tmp;
+ 	debugfs_remove(ieee80211_debugfs_dir);
+ 	nl80211_exit();
++	if (cfg80211_world_regdom != &world_regdom) {
++		if (cfg80211_world_regdom == cfg80211_regdomain) {
++			kfree(cfg80211_regdomain->reg_rules);
++			kfree(cfg80211_regdomain);
++		}
++		else {
++			kfree(cfg80211_world_regdom->reg_rules);
++			kfree(cfg80211_world_regdom);
++			kfree(cfg80211_regdomain->reg_rules);
++			kfree(cfg80211_regdomain);
++		}
++	}
++	list_for_each_entry_safe(req, req_tmp, &regulatory_requests, list) {
++		list_del(&req->list);
++		kfree(req);
++	}
+ 	unregister_netdevice_notifier(&cfg80211_netdev_notifier);
+ 	wiphy_sysfs_exit();
+ }
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b7fefff..f16ee00 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -18,6 +18,7 @@
+ #include <net/cfg80211.h>
+ #include "core.h"
+ #include "nl80211.h"
++#include "reg.h"
+ 
+ /* the netlink family */
+ static struct genl_family nl80211_fam = {
+@@ -87,6 +88,9 @@ static struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] __read_mostly = {
+ 	[NL80211_ATTR_MESH_ID] = { .type = NLA_BINARY,
+ 				.len = IEEE80211_MAX_MESH_ID_LEN },
+ 	[NL80211_ATTR_MPATH_NEXT_HOP] = { .type = NLA_U32 },
++
++	[NL80211_ATTR_REG_ALPHA2] = { .type = NLA_STRING, .len = 2 },
++	[NL80211_ATTR_REG_RULES] = { .type = NLA_NESTED },
+ };
+ 
+ /* message building helper */
+@@ -1494,6 +1498,124 @@ static int nl80211_del_mpath(struct sk_buff *skb, struct genl_info *info)
+ 	return err;
  }
  
- 
--static int if_usb_prog_firmware(struct if_usb_card *cardp)
-+/**
-+*  @brief This function programs the firmware subject to cmd
-+*
-+*  @param cardp             the if_usb_card descriptor
-+*         fwname            firmware or boot2 image file name
-+*         cmd               either BOOT_CMD_FW_BY_USB, BOOT_CMD_UPDATE_FW,
-+*                           or BOOT_CMD_UPDATE_BOOT2.
-+*  @return     0 or error code
-+*/
-+static int if_usb_prog_firmware(struct if_usb_card *cardp,
-+				const char *fwname, int cmd)
++static const struct nla_policy
++	reg_rule_policy[NL80211_REG_RULE_ATTR_MAX + 1] = {
++	[NL80211_ATTR_REG_RULE_FLAGS]		= { .type = NLA_U32 },
++	[NL80211_ATTR_FREQ_RANGE_START]		= { .type = NLA_U32 },
++	[NL80211_ATTR_FREQ_RANGE_END]		= { .type = NLA_U32 },
++	[NL80211_ATTR_FREQ_RANGE_MAX_BW]	= { .type = NLA_U32 },
++	[NL80211_ATTR_POWER_RULE_MAX_ANT_GAIN]	= { .type = NLA_U32 },
++	[NL80211_ATTR_POWER_RULE_MAX_EIRP]	= { .type = NLA_U32 },
++};
++
++static int parse_reg_rule(struct nlattr *tb[], struct ieee80211_reg_rule *reg_rule)
 +{
-+	struct lbs_private *priv = cardp->priv;
-+	unsigned long flags;
-+	int ret;
++	struct ieee80211_freq_range *freq_range = &reg_rule->freq_range;
++	struct ieee80211_power_rule *power_rule = &reg_rule->power_rule;
 +
-+	/* Ensure main thread is idle. */
-+	spin_lock_irqsave(&priv->driver_lock, flags);
-+	while (priv->cur_cmd != NULL || priv->dnld_sent != DNLD_RES_RECEIVED) {
-+		spin_unlock_irqrestore(&priv->driver_lock, flags);
-+		if (wait_event_interruptible(priv->waitq,
-+				(priv->cur_cmd == NULL &&
-+				priv->dnld_sent == DNLD_RES_RECEIVED))) {
-+			return -ERESTARTSYS;
-+		}
-+		spin_lock_irqsave(&priv->driver_lock, flags);
-+	}
-+	priv->dnld_sent = DNLD_BOOTCMD_SENT;
-+	spin_unlock_irqrestore(&priv->driver_lock, flags);
++	if (!tb[NL80211_ATTR_REG_RULE_FLAGS])
++		return -EINVAL;
++	if (!tb[NL80211_ATTR_FREQ_RANGE_START])
++		return -EINVAL;
++	if (!tb[NL80211_ATTR_FREQ_RANGE_END])
++		return -EINVAL;
++	if (!tb[NL80211_ATTR_FREQ_RANGE_MAX_BW])
++		return -EINVAL;
++	if (!tb[NL80211_ATTR_POWER_RULE_MAX_EIRP])
++		return -EINVAL;
 +
-+	ret = __if_usb_prog_firmware(cardp, fwname, cmd);
++	reg_rule->flags = nla_get_u32(tb[NL80211_ATTR_REG_RULE_FLAGS]);
 +
-+	spin_lock_irqsave(&priv->driver_lock, flags);
-+	priv->dnld_sent = DNLD_RES_RECEIVED;
-+	spin_unlock_irqrestore(&priv->driver_lock, flags);
++	freq_range->start_freq	=
++		nla_get_u32(tb[NL80211_ATTR_FREQ_RANGE_START]);
++	freq_range->end_freq =
++		nla_get_u32(tb[NL80211_ATTR_FREQ_RANGE_END]);
++	freq_range->max_bandwidth =
++		nla_get_u32(tb[NL80211_ATTR_FREQ_RANGE_MAX_BW]);
 +
-+	wake_up_interruptible(&priv->waitq);
++	power_rule->max_eirp =
++		nla_get_u32(tb[NL80211_ATTR_POWER_RULE_MAX_EIRP]);
 +
-+	return ret;
++	if (tb[NL80211_ATTR_POWER_RULE_MAX_ANT_GAIN])
++		power_rule->max_antenna_gain =
++			nla_get_u32(tb[NL80211_ATTR_POWER_RULE_MAX_ANT_GAIN]);
++
++	return 0;
 +}
 +
-+static int __if_usb_prog_firmware(struct if_usb_card *cardp,
-+					const char *fwname, int cmd)
- {
- 	int i = 0;
- 	static int reset_count = 10;
-@@ -817,20 +864,32 @@ static int if_usb_prog_firmware(struct if_usb_card *cardp)
- 
- 	lbs_deb_enter(LBS_DEB_USB);
- 
--	if ((ret = request_firmware(&cardp->fw, lbs_fw_name,
--				    &cardp->udev->dev)) < 0) {
-+	ret = request_firmware(&cardp->fw, fwname, &cardp->udev->dev);
-+	if (ret < 0) {
- 		lbs_pr_err("request_firmware() failed with %#x\n", ret);
--		lbs_pr_err("firmware %s not found\n", lbs_fw_name);
-+		lbs_pr_err("firmware %s not found\n", fwname);
- 		goto done;
- 	}
- 
--	if (check_fwfile_format(cardp->fw->data, cardp->fw->size))
-+	if (check_fwfile_format(cardp->fw->data, cardp->fw->size)) {
-+		ret = -EINVAL;
- 		goto release_fw;
++static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
++{
++	struct nlattr *tb[NL80211_REG_RULE_ATTR_MAX + 1];
++	struct nlattr *nl_reg_rule;
++	char *alpha2 = NULL;
++	int rem_reg_rules = 0, r = 0;
++	u32 num_rules = 0, rule_idx = 0;
++	struct ieee80211_regdomain *rd = NULL;
++	struct ieee80211_reg_rule *reg_rules = NULL;
++
++	if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
++		return -EINVAL;
++
++	if (!info->attrs[NL80211_ATTR_REG_RULES])
++		return -EINVAL;
++
++	alpha2 = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
++
++	nla_for_each_nested(nl_reg_rule, info->attrs[NL80211_ATTR_REG_RULES],
++			rem_reg_rules) {
++		num_rules++;
++		if (num_rules > NL80211_MAX_SUPP_REG_RULES)
++			goto bad_reg;
 +	}
 +
-+	/* Cancel any pending usb business */
-+	usb_kill_urb(cardp->rx_urb);
-+	usb_kill_urb(cardp->tx_urb);
++	if (!reg_is_valid_request(alpha2))
++		return -EINVAL;
 +
-+	cardp->fwlastblksent = 0;
-+	cardp->fwdnldover = 0;
-+	cardp->totalbytes = 0;
-+	cardp->fwfinalblk = 0;
-+	cardp->bootcmdresp = 0;
++	rd = kzalloc(sizeof(struct ieee80211_regdomain), GFP_KERNEL);
++	if (!rd)
++		return -ENOMEM;
++
++	reg_rules = kzalloc(sizeof(struct ieee80211_reg_rule) * num_rules,
++		GFP_KERNEL);
++	if (!reg_rules) {
++		kfree(rd);
++		return -ENOMEM;
++	}
++
++	rd->reg_rules = reg_rules;
++	rd->n_reg_rules = num_rules;
++	rd->alpha2[0] = alpha2[0];
++	rd->alpha2[1] = alpha2[1];
++
++	nla_for_each_nested(nl_reg_rule, info->attrs[NL80211_ATTR_REG_RULES],
++			rem_reg_rules) {
++		nla_parse(tb, NL80211_REG_RULE_ATTR_MAX,
++			nla_data(nl_reg_rule), nla_len(nl_reg_rule),
++			reg_rule_policy);
++		r = parse_reg_rule(tb, &rd->reg_rules[rule_idx]);
++		if (r)
++			goto bad_reg;
++
++		rule_idx++;
++
++		if (rule_idx > NL80211_MAX_SUPP_REG_RULES)
++			goto bad_reg;
++	}
++
++	BUG_ON(rule_idx != num_rules);
++
++	r = set_regdom(rd);
++	if (r)
++		goto bad_reg;
++
++	return r;
++
++bad_reg:
++	kfree(rd);
++	kfree(reg_rules);
++	return -EINVAL;
++}
++
+ static struct genl_ops nl80211_ops[] = {
+ 	{
+ 		.cmd = NL80211_CMD_GET_WIPHY,
+@@ -1625,6 +1747,12 @@ static struct genl_ops nl80211_ops[] = {
+ 		.policy = nl80211_policy,
+ 		.flags = GENL_ADMIN_PERM,
+ 	},
++	{
++		.cmd = NL80211_CMD_SET_REG,
++		.doit = nl80211_set_reg,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++	},
+ };
  
- restart:
- 	if (if_usb_submit_rx_urb_fwload(cardp) < 0) {
- 		lbs_deb_usbd(&cardp->udev->dev, "URB submission is failed\n");
--		ret = -1;
-+		ret = -EIO;
- 		goto release_fw;
+ /* multicast groups */
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 855bff4..b62d8e8 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2,6 +2,7 @@
+  * Copyright 2002-2005, Instant802 Networks, Inc.
+  * Copyright 2005-2006, Devicescape Software, Inc.
+  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
++ * Copyright 2008	Luis R. Rodriguez <lrodriguz@atheros.com>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -9,155 +10,291 @@
+  */
+ 
+ /*
+- * This regulatory domain control implementation is highly incomplete, it
+- * only exists for the purpose of not regressing mac80211.
+- *
+- * For now, drivers can restrict the set of allowed channels by either
+- * not registering those channels or setting the IEEE80211_CHAN_DISABLED
+- * flag; that flag will only be *set* by this code, never *cleared.
+- *
+  * The usual implementation is for a driver to read a device EEPROM to
+  * determine which regulatory domain it should be operating under, then
+  * looking up the allowable channels in a driver-local table and finally
+  * registering those channels in the wiphy structure.
+  *
+- * Alternatively, drivers that trust the regulatory domain control here
+- * will register a complete set of capabilities and the control code
+- * will restrict the set by setting the IEEE80211_CHAN_* flags.
++ * Another set of compliance enforcement is for drivers to use their
++ * own compliance limits which can be stored on the EEPROM. The host
++ * driver or firmware may ensure these are used.
++ *
++ * In addition to all this we provide an extra layer of regulatory
++ * For some drivers which do not have any regulatory information CRDA
++ * provides the complete regulatory solution.
++ *
++ * Note: When number of rules --> infinity we will not be able to
++ * index on alpha2 any more, instead we'll probably have to
++ * rely on some SHA1 checksum of the regdomain for example.
++ *
+  */
+ #include <linux/kernel.h>
++#include <linux/list.h>
++#include <linux/random.h>
++#include <linux/nl80211.h>
+ #include <net/wireless.h>
++#include <net/cfg80211.h>
+ #include "core.h"
++#include "reg.h"
+ 
+-static char *ieee80211_regdom = "US";
+-module_param(ieee80211_regdom, charp, 0444);
+-MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
++static BLOCKING_NOTIFIER_HEAD(regulatory_chain);
+ 
+-struct ieee80211_channel_range {
+-	short start_freq;
+-	short end_freq;
+-	int max_power;
+-	int max_antenna_gain;
+-	u32 flags;
++/* Keep the ordering from to large small */
++static u32 supported_bandwidths[] = {
++	MHZ_TO_KHZ(40),
++	MHZ_TO_KHZ(20),
+ };
+ 
+-struct ieee80211_regdomain {
+-	const char *code;
+-	const struct ieee80211_channel_range *ranges;
+-	int n_ranges;
+-};
++static int is_world_regdom(char *alpha2)
++{
++	/* ASCII 0 */
++	if (alpha2[0] == 48 && alpha2[1] == 48)
++		return 1;
++	return 0;
++}
+ 
+-#define RANGE_PWR(_start, _end, _pwr, _ag, _flags)	\
+-	{ _start, _end, _pwr, _ag, _flags }
++/* This lets us keep regulatory code, which is updated on a regulatory
++ * basis to userspace. */
++static int call_crda(const char *alpha2)
++{
++	static char * crda_path = "/sbin/crda";
++	char *argv[] = { crda_path, (char *) alpha2, NULL };
++	char *envp[] = {
++		"HOME=/",
++		"TERM=linux",
++		"PATH=/sbin:/usr/sbin:/bin:/usr/bin",
++		NULL
++	};
++	if (likely(!is_world_regdom((char *) alpha2)))
++		printk("cfg80211: Calling CRDA for country: %c%c\n",
++			alpha2[0], alpha2[1]);
++	else
++		printk("cfg80211: Calling CRDA to update world "
++			"regulatory domain\n");
++	return call_usermodehelper(crda_path,
++		argv, envp, UMH_WAIT_EXEC);
++}
+ 
++int __regulatory_hint(char *alpha2, enum reg_set_by set_by,
++	struct wiphy *wiphy)
++{
++	struct regulatory_request *request;
++	int r = 0;
+ 
+-/*
+- * Ideally, in the future, these definitions will be loaded from a
+- * userspace table via some daemon.
+- */
+-static const struct ieee80211_channel_range ieee80211_US_channels[] = {
+-	/* IEEE 802.11b/g, channels 1..11 */
+-	RANGE_PWR(2412, 2462, 27, 6, 0),
+-	/* IEEE 802.11a, channel 36*/
+-	RANGE_PWR(5180, 5180, 23, 6, 0),
+-	/* IEEE 802.11a, channel 40*/
+-	RANGE_PWR(5200, 5200, 23, 6, 0),
+-	/* IEEE 802.11a, channel 44*/
+-	RANGE_PWR(5220, 5220, 23, 6, 0),
+-	/* IEEE 802.11a, channels 48..64 */
+-	RANGE_PWR(5240, 5320, 23, 6, 0),
+-	/* IEEE 802.11a, channels 149..165, outdoor */
+-	RANGE_PWR(5745, 5825, 30, 6, 0),
+-};
++	switch (set_by) {
++	case REGDOM_SET_BY_CORE:
++	case REGDOM_SET_BY_DRIVER:
++	/* we may do this differently eventually */
++	case REGDOM_SET_BY_80211D:
++		/* XXX: Do basic sanity checks against alpha2 */
+ 
+-static const struct ieee80211_channel_range ieee80211_JP_channels[] = {
+-	/* IEEE 802.11b/g, channels 1..14 */
+-	RANGE_PWR(2412, 2484, 20, 6, 0),
+-	/* IEEE 802.11a, channels 34..48 */
+-	RANGE_PWR(5170, 5240, 20, 6, IEEE80211_CHAN_PASSIVE_SCAN),
+-	/* IEEE 802.11a, channels 52..64 */
+-	RANGE_PWR(5260, 5320, 20, 6, IEEE80211_CHAN_NO_IBSS |
+-				     IEEE80211_CHAN_RADAR),
+-};
++		request = kzalloc(sizeof(struct regulatory_request),
++			GFP_KERNEL);
++		if (!request)
++			return -ENOMEM;
+ 
+-static const struct ieee80211_channel_range ieee80211_EU_channels[] = {
+-	/* IEEE 802.11b/g, channels 1..13 */
+-	RANGE_PWR(2412, 2472, 20, 6, 0),
+-	/* IEEE 802.11a, channel 36*/
+-	RANGE_PWR(5180, 5180, 23, 6, IEEE80211_CHAN_PASSIVE_SCAN),
+-	/* IEEE 802.11a, channel 40*/
+-	RANGE_PWR(5200, 5200, 23, 6, IEEE80211_CHAN_PASSIVE_SCAN),
+-	/* IEEE 802.11a, channel 44*/
+-	RANGE_PWR(5220, 5220, 23, 6, IEEE80211_CHAN_PASSIVE_SCAN),
+-	/* IEEE 802.11a, channels 48..64 */
+-	RANGE_PWR(5240, 5320, 23, 6, IEEE80211_CHAN_NO_IBSS |
+-				     IEEE80211_CHAN_RADAR),
+-	/* IEEE 802.11a, channels 100..140 */
+-	RANGE_PWR(5500, 5700, 30, 6, IEEE80211_CHAN_NO_IBSS |
+-				     IEEE80211_CHAN_RADAR),
+-};
++		request->alpha2[0] = alpha2[0];
++		request->alpha2[1] = alpha2[1];
++		request->initiator = set_by;
++		request->wiphy = wiphy;
+ 
+-#define REGDOM(_code)							\
+-	{								\
+-		.code = __stringify(_code),				\
+-		.ranges = ieee80211_ ##_code## _channels,		\
+-		.n_ranges = ARRAY_SIZE(ieee80211_ ##_code## _channels),	\
++		mutex_lock(&cfg80211_reg_mutex);
++		list_add_tail(&request->list, &regulatory_requests);
++		mutex_unlock(&cfg80211_reg_mutex);
++		r = call_crda(alpha2);
++		if (r)
++			printk("cfg80211: Failed calling CRDA\n");
++		return r;
++	default:
++		return -ENOTSUPP;
  	}
++}
  
-@@ -838,8 +897,7 @@ restart:
- 	do {
- 		int j = 0;
- 		i++;
--		/* Issue Boot command = 1, Boot from Download-FW */
--		if_usb_issue_boot_command(cardp, BOOT_CMD_FW_BY_USB);
-+		if_usb_issue_boot_command(cardp, cmd);
- 		/* wait for command response */
- 		do {
- 			j++;
-@@ -847,12 +905,21 @@ restart:
- 		} while (cardp->bootcmdresp == 0 && j < 10);
- 	} while (cardp->bootcmdresp == 0 && i < 5);
+-static const struct ieee80211_regdomain ieee80211_regdoms[] = {
+-	REGDOM(US),
+-	REGDOM(JP),
+-	REGDOM(EU),
+-};
++/**
++ * regulatory_hint - hint to the wireless core a regulatory domain
++ * @alpha2: the ISO-3166 alpha2 the driver thinks we're on
++ * @wiphy: the driver's very own &struct wiphy
++ *
++ * Wireless drivers can use this function to hint to the wireless core
++ * what it believes should be the current regulatory domain by
++ * giving it an ISO-3166 alpha2 country code. If drivers have
++ * EEPROM values for a set regulatory domain it should provide
++ * mappings to a respective alpha2.
++ */
++int regulatory_hint(char *alpha2, struct wiphy *wiphy)
++{
++	return __regulatory_hint(alpha2, REGDOM_SET_BY_DRIVER, wiphy);
++}
++EXPORT_SYMBOL(regulatory_hint);
++
++/* Informs callbacks registered to notifier when a regulatory
++ * event has occurred */
++static inline void reg_notify(int event, void *param)
++{
++	blocking_notifier_call_chain(&regulatory_chain, event, param);
++}
  
--	if (cardp->bootcmdresp <= 0) {
-+	if (cardp->bootcmdresp == BOOT_CMD_RESP_NOT_SUPPORTED) {
-+		/* Return to normal operation */
-+		ret = -EOPNOTSUPP;
-+		usb_kill_urb(cardp->rx_urb);
-+		usb_kill_urb(cardp->tx_urb);
-+		if (if_usb_submit_rx_urb(cardp) < 0)
-+			ret = -EIO;
-+		goto release_fw;
-+	} else if (cardp->bootcmdresp <= 0) {
- 		if (--reset_count >= 0) {
- 			if_usb_reset_device(cardp);
- 			goto restart;
- 		}
--		return -1;
-+		ret = -EIO;
-+		goto release_fw;
- 	}
++/**
++ * register_regulatory_notifier - register a driver regulatory notifier
++ * @nb: pointer to the driver's own notifier block
++ *
++ * Wireles drivers can use this function to register with cfg80211
++ * a notifier callback to be called upon regulatory domain changes.
++ */
++int register_regulatory_notifier(struct notifier_block *nb)
++{
++	return blocking_notifier_chain_register(&regulatory_chain, nb);
++}
++EXPORT_SYMBOL(register_regulatory_notifier);
  
- 	i = 0;
-@@ -882,7 +949,7 @@ restart:
- 		}
- 
- 		lbs_pr_info("FW download failure, time = %d ms\n", i * 100);
--		ret = -1;
-+		ret = -EIO;
- 		goto release_fw;
- 	}
- 
-diff --git a/drivers/net/wireless/libertas/if_usb.h b/drivers/net/wireless/libertas/if_usb.h
-index 5771a83..5ba0aee 100644
---- a/drivers/net/wireless/libertas/if_usb.h
-+++ b/drivers/net/wireless/libertas/if_usb.h
-@@ -30,6 +30,7 @@ struct bootcmd
- 
- #define BOOT_CMD_RESP_OK		0x0001
- #define BOOT_CMD_RESP_FAIL		0x0000
-+#define BOOT_CMD_RESP_NOT_SUPPORTED	0x0002
- 
- struct bootcmdresp
+-static const struct ieee80211_regdomain *get_regdom(void)
++/**
++ * unregister_regulatory_notifier - unregister a driver regulatory notifier
++ * @nb: pointer to the driver's own notifier block
++ *
++ * Wireles drivers use this function to unregister with cfg80211
++ * their notifier callback.
++ */
++static int unregister_regulatory_notifier(struct notifier_block *nb)
  {
-@@ -50,6 +51,10 @@ struct if_usb_card {
- 	uint8_t ep_in;
- 	uint8_t ep_out;
+-	static const struct ieee80211_channel_range
+-	ieee80211_world_channels[] = {
+-		/* IEEE 802.11b/g, channels 1..11 */
+-		RANGE_PWR(2412, 2462, 27, 6, 0),
+-	};
+-	static const struct ieee80211_regdomain regdom_world = REGDOM(world);
+-	int i;
++	return blocking_notifier_chain_unregister(&regulatory_chain, nb);
++}
++EXPORT_SYMBOL(unregister_regulatory_notifier);
  
-+	/* bootcmdresp == 0 means command is pending
-+	 * bootcmdresp < 0 means error
-+	 * bootcmdresp > 0 is a BOOT_CMD_RESP_* from firmware
-+	 */
- 	int8_t bootcmdresp;
+-	for (i = 0; i < ARRAY_SIZE(ieee80211_regdoms); i++)
+-		if (strcmp(ieee80211_regdom, ieee80211_regdoms[i].code) == 0)
+-			return &ieee80211_regdoms[i];
++static int is_alpha2_set(char *alpha2)
++{
++	if (alpha2[0] != 0 && alpha2[1] != 0)
++		return 1;
++	return 0;
++}
  
- 	int ep_in_size;
-diff --git a/drivers/net/wireless/libertas/persistcfg.c b/drivers/net/wireless/libertas/persistcfg.c
-index 6d0ff8d..1547160 100644
---- a/drivers/net/wireless/libertas/persistcfg.c
-+++ b/drivers/net/wireless/libertas/persistcfg.c
-@@ -22,6 +22,9 @@ static int mesh_get_default_parameters(struct device *dev,
- 	struct cmd_ds_mesh_config cmd;
- 	int ret;
+-	return &regdom_world;
++static int is_alpha_upper(char letter)
++{
++	/* ASCII A - Z */
++	if (letter >= 65 && letter <= 90)
++		return 1;
++	return 0;
+ }
  
-+	if (!(priv->fwcapinfo & FW_CAPINFO_PERSISTENT_CONFIG))
-+		return -EOPNOTSUPP;
++static int is_an_alpha2(char *alpha2)
++{
++	if (is_alpha_upper(alpha2[0]) && is_alpha_upper(alpha2[1]))
++		return 1;
++	return 0;
++}
 +
- 	memset(&cmd, 0, sizeof(struct cmd_ds_mesh_config));
- 	ret = lbs_mesh_config_send(priv, &cmd, CMD_ACT_MESH_CONFIG_GET,
- 				   CMD_TYPE_MESH_GET_DEFAULTS);
-@@ -62,6 +65,9 @@ static ssize_t bootflag_set(struct device *dev, struct device_attribute *attr,
- 	uint32_t datum;
- 	int ret;
- 
-+	if (!(priv->fwcapinfo & FW_CAPINFO_PERSISTENT_CONFIG))
-+		return -EOPNOTSUPP;
++static int alpha2_equal(char *alpha2_x, char *alpha2_y)
++{
++	if (alpha2_x[0] == alpha2_y[0] &&
++		alpha2_x[1] == alpha2_y[1])
++		return 1;
++	return 0;
++}
 +
- 	memset(&cmd, 0, sizeof(cmd));
- 	ret = sscanf(buf, "%x", &datum);
- 	if (ret != 1)
-@@ -105,6 +111,9 @@ static ssize_t boottime_set(struct device *dev,
- 	uint32_t datum;
- 	int ret;
- 
-+	if (!(priv->fwcapinfo & FW_CAPINFO_PERSISTENT_CONFIG))
-+		return -EOPNOTSUPP;
++static int regdom_changed(char *alpha2)
++{
++	if (alpha2_equal(cfg80211_regdomain->alpha2, alpha2))
++		return 0;
++	return 1;
++}
 +
- 	memset(&cmd, 0, sizeof(cmd));
- 	ret = sscanf(buf, "%x", &datum);
- 	if (ret != 1)
-@@ -157,6 +166,9 @@ static ssize_t channel_set(struct device *dev, struct device_attribute *attr,
- 	uint16_t datum;
- 	int ret;
- 
-+	if (!(priv->fwcapinfo & FW_CAPINFO_PERSISTENT_CONFIG))
-+		return -EOPNOTSUPP;
++/* caller must lock cfg80211_reg_mutex */
++int __reg_is_valid_request(char *alpha2,
++	struct regulatory_request **request)
++{
++	struct regulatory_request *req;
++	if (list_empty(&regulatory_requests))
++		return 0;
++	list_for_each_entry(req, &regulatory_requests, list) {
++		if (alpha2_equal(req->alpha2, alpha2)) {
++			*request = req;
++			return 1;
++		}
++		/* XXX: remove this else clause once we support handling
++		 * multiple requests, this is currenlty only respecting the
++		 * first request */
++		else
++			return 0;
++	}
++	return 0;
++}
 +
- 	memset(&cmd, 0, sizeof(cmd));
- 	ret = sscanf(buf, "%hx", &datum);
- 	if (ret != 1 || datum < 1 || datum > 11)
-@@ -214,6 +226,9 @@ static ssize_t mesh_id_set(struct device *dev, struct device_attribute *attr,
- 	int len;
- 	int ret;
- 
-+	if (!(priv->fwcapinfo & FW_CAPINFO_PERSISTENT_CONFIG))
-+		return -EOPNOTSUPP;
++/* Used by nl80211 before kmalloc'ing our regulatory domain */
++int reg_is_valid_request(char *alpha2) {
++	struct regulatory_request *request = NULL;
++	int r;
++	mutex_lock(&cfg80211_reg_mutex);
++	r = __reg_is_valid_request(alpha2, &request);
++	mutex_unlock(&cfg80211_reg_mutex);
++	return r;
++}
 +
- 	if (count < 2 || count > IW_ESSID_MAX_SIZE + 1)
- 		return -EINVAL;
- 
-@@ -273,6 +288,9 @@ static ssize_t protocol_id_set(struct device *dev,
- 	uint32_t datum;
- 	int ret;
- 
-+	if (!(priv->fwcapinfo & FW_CAPINFO_PERSISTENT_CONFIG))
-+		return -EOPNOTSUPP;
++static u32 freq_max_bandwidth(const struct ieee80211_freq_range *freq_range,
++	u32 freq)
++{
++	unsigned int i;
++	for (i=0; i<ARRAY_SIZE(supported_bandwidths); i++) {
++		u32 start_freq	= freq - supported_bandwidths[i];
++		u32 end_freq	= freq + supported_bandwidths[i];
++		if (likely(start_freq >= freq_range->start_freq &&
++			end_freq <= freq_range->end_freq))
++			return supported_bandwidths[i];
++	}
++	return 0;
++}
 +
- 	memset(&cmd, 0, sizeof(cmd));
- 	ret = sscanf(buf, "%x", &datum);
- 	if (ret != 1)
-@@ -327,6 +345,9 @@ static ssize_t metric_id_set(struct device *dev, struct device_attribute *attr,
- 	uint32_t datum;
- 	int ret;
++/* XXX: add support for the rest of enum nl80211_reg_rule_flags, we may
++ * want to just have the channel structure use these */
++static u32 map_regdom_flags(u32 rd_flags) {
++	u32 channel_flags = 0;
++	if (rd_flags & NL80211_RRF_PASSIVE_SCAN)
++		channel_flags |= IEEE80211_CHAN_PASSIVE_SCAN;
++	if (rd_flags & NL80211_RRF_NO_IBSS)
++		channel_flags |= IEEE80211_CHAN_NO_IBSS;
++	if (rd_flags & NL80211_RRF_DFS)
++		channel_flags |= IEEE80211_CHAN_RADAR;
++	return channel_flags;
++}
  
-+	if (!(priv->fwcapinfo & FW_CAPINFO_PERSISTENT_CONFIG))
-+		return -EOPNOTSUPP;
-+
- 	memset(&cmd, 0, sizeof(cmd));
- 	ret = sscanf(buf, "%x", &datum);
- 	if (ret != 1)
-@@ -381,6 +402,9 @@ static ssize_t capability_set(struct device *dev, struct device_attribute *attr,
- 	uint32_t datum;
- 	int ret;
+ static void handle_channel(struct ieee80211_channel *chan,
+ 			   const struct ieee80211_regdomain *rd)
+ {
+ 	int i;
+ 	u32 flags = chan->orig_flags;
+-	const struct ieee80211_channel_range *rg = NULL;
++	u32 max_bandwidth = 0;
++	const struct ieee80211_reg_rule *reg_rule = NULL;
++	const struct ieee80211_power_rule *power_rule = NULL;
  
-+	if (!(priv->fwcapinfo & FW_CAPINFO_PERSISTENT_CONFIG))
-+		return -EOPNOTSUPP;
+-	for (i = 0; i < rd->n_ranges; i++) {
+-		if (rd->ranges[i].start_freq <= chan->center_freq &&
+-		    chan->center_freq <= rd->ranges[i].end_freq) {
+-			rg = &rd->ranges[i];
++	for (i = 0; i < rd->n_reg_rules; i++) {
++		const struct ieee80211_reg_rule *rr;
++		const struct ieee80211_freq_range *fr = NULL;
++		const struct ieee80211_power_rule *pr = NULL;
++		rr = &rd->reg_rules[i];
++		fr = &rr->freq_range;
++		pr = &rr->power_rule;
++		max_bandwidth = freq_max_bandwidth(fr,
++			MHZ_TO_KHZ(chan->center_freq));
++		if (max_bandwidth) {
++			reg_rule = rr;
++			power_rule = &rr->power_rule;
+ 			break;
+ 		}
+ 	}
+ 
+-	if (!rg) {
+-		/* not found */
++	if (!max_bandwidth) {
+ 		flags |= IEEE80211_CHAN_DISABLED;
+ 		chan->flags = flags;
+ 		return;
+ 	}
+ 
+-	chan->flags = flags;
++	chan->flags = map_regdom_flags(reg_rule->flags);
+ 	chan->max_antenna_gain = min(chan->orig_mag,
+-					 rg->max_antenna_gain);
++		(int) MBI_TO_DBI(power_rule->max_antenna_gain));
++	chan->max_bandwidth = KHZ_TO_MHZ(max_bandwidth);
+ 	if (chan->orig_mpwr)
+-		chan->max_power = min(chan->orig_mpwr, rg->max_power);
++		chan->max_power = min(chan->orig_mpwr,
++			(int) MBM_TO_DBM(power_rule->max_eirp));
+ 	else
+-		chan->max_power = rg->max_power;
++		chan->max_power = (int) MBM_TO_DBM(power_rule->max_eirp);
+ }
+ 
+ static void handle_band(struct ieee80211_supported_band *sband,
+@@ -169,12 +306,157 @@ static void handle_band(struct ieee80211_supported_band *sband,
+ 		handle_channel(&sband->channels[i], rd);
+ }
+ 
++/* requires cfg80211_drv_mutex *and* cfg80211_reg_mutex to be held */
++static void update_all_wiphy_regulatory(void)
++{
++	struct cfg80211_registered_device *drv;
++	list_for_each_entry(drv, &cfg80211_drv_list, list) {
++		struct wiphy *wiphy = &drv->wiphy;
++		if (wiphy)
++			wiphy_update_regulatory(wiphy);
++	}
++}
 +
- 	memset(&cmd, 0, sizeof(cmd));
- 	ret = sscanf(buf, "%x", &datum);
- 	if (ret != 1)
++/* requires cfg80211_reg_mutex lock */
+ void wiphy_update_regulatory(struct wiphy *wiphy)
+ {
+ 	enum ieee80211_band band;
+-	const struct ieee80211_regdomain *rd = get_regdom();
+-
+ 	for (band = 0; band < IEEE80211_NUM_BANDS; band++)
+ 		if (wiphy->bands[band])
+-			handle_band(wiphy->bands[band], rd);
++			handle_band(wiphy->bands[band], cfg80211_regdomain);
+ }
++
++static void print_regdomain(struct ieee80211_regdomain *rd)
++{
++	unsigned int i;
++	struct ieee80211_reg_rule *reg_rule = NULL;
++	struct ieee80211_freq_range *freq_range = NULL;
++	struct ieee80211_power_rule *power_rule = NULL;
++
++	if (is_world_regdom(rd->alpha2))
++		printk("cfg80211: World regulatory domain updated:\n");
++	else
++		printk("cfg80211: Regulatory domain changed to "
++			"country: %c%c\n", rd->alpha2[0], rd->alpha2[1]);
++
++	for (i=0; i<rd->n_reg_rules; i++) {
++		reg_rule = &rd->reg_rules[i];
++		freq_range = &reg_rule->freq_range;
++		power_rule = &reg_rule->power_rule;
++
++		printk("\t(%d KHz - %d KHz @ %d KHz), (%d mBi, %d mBm)\n",
++			freq_range->start_freq,
++			freq_range->end_freq,
++			freq_range->max_bandwidth,
++			power_rule->max_antenna_gain,
++			power_rule->max_eirp);
++	}
++}
++
++/* Dynamic world regulatory domain requested by the wireless
++ * core upon initialization */
++static void update_world_regdomain(struct ieee80211_regdomain *rd)
++{
++	BUG_ON(list_empty(&regulatory_requests));
++
++	cfg80211_world_regdom = rd;
++	cfg80211_regdomain = rd;
++
++	print_regdomain(rd);
++
++	mutex_lock(&cfg80211_drv_mutex);
++	update_all_wiphy_regulatory();
++	mutex_unlock(&cfg80211_drv_mutex);
++
++	reg_notify(REGDOM_SET_BY_CORE, rd);
++}
++
++/* caller must hold cfg80211_reg_mutex
++ *
++ * nl80211 uses this call to set the current regulatory
++ * domain. For now we only consider the first request. Conflicts with multiple
++ * drivers can be ironed out later.  Caller must've already kmalloc'd
++ * the rd structure */
++int set_regdom(struct ieee80211_regdomain *rd)
++{
++	struct regulatory_request *request = NULL;
++	int r = 0;
++
++	/* Some basic sanity checks first */
++
++	if (is_world_regdom(rd->alpha2)) {
++		mutex_lock(&cfg80211_reg_mutex);
++		if (WARN_ON(!__reg_is_valid_request(rd->alpha2, &request))) {
++			mutex_unlock(&cfg80211_reg_mutex);
++		}
++		update_world_regdomain(rd);
++		list_del(&request->list);
++		mutex_unlock(&cfg80211_reg_mutex);
++		return r;
++	}
++
++	if (!is_alpha2_set(rd->alpha2) || !is_an_alpha2(rd->alpha2))
++		return -EINVAL;
++
++	mutex_lock(&cfg80211_reg_mutex);
++
++	if (list_empty(&regulatory_requests)) {
++		r = -EINVAL;
++		goto unlock_and_exit;
++	}
++
++	if (!regdom_changed(rd->alpha2)) {
++		r = -EINVAL;
++		goto unlock_and_exit;
++	}
++
++	/* _For_now_ we only respect the first request */
++	if (!list_is_singular(&regulatory_requests)) {
++		printk("cfg80211: multiple requests to change regulatory"
++			"domain are in our queue, for now we'll only respect"
++			"the first request");
++		goto unlock_and_exit;
++	}
++
++	/* Now lets set the regulatory domain, update all driver channels
++	 * and finally inform them of what we have done, in case they want
++	 * to review or adjust their own settings based on their own
++	 * internal EEPROM data */
++
++	if (WARN_ON(!__reg_is_valid_request(rd->alpha2, &request))) {
++		r = -EINVAL;
++		goto unlock_and_exit;
++	}
++
++	/* We only support the setting the regulatory domain by the driver or
++	 * core for a dynamic world regualtory domain right now. Country IE
++	 * parsing coming soon */
++	switch (request->initiator) {
++	case REGDOM_SET_BY_CORE:
++	case REGDOM_SET_BY_DRIVER:
++		break;
++	case REGDOM_SET_BY_80211D:
++	default:
++		r = -EOPNOTSUPP;
++		goto unlock_and_exit;
++	}
++
++	cfg80211_regdomain = rd;
++	print_regdomain(rd);
++
++	request->granted = 1;
++
++	/* update all wiphys first */
++	mutex_lock(&cfg80211_drv_mutex);
++	update_all_wiphy_regulatory();
++	mutex_unlock(&cfg80211_drv_mutex);
++
++	/* Keep the cfg80211_reg_mutex locked to ensure drivers
++	 * get a fair chance to review this new data. */
++	reg_notify(request->initiator, rd);
++
++unlock_and_exit:
++	mutex_unlock(&cfg80211_reg_mutex);
++	return r;
++}
++
 -- 
-1.5.5.3
-
-
+1.5.4.3
 
