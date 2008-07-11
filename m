@@ -1,434 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53557 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750939AbYGSApv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 20:45:51 -0400
-Message-Id: <20080719004518.846156000@sipsolutions.net> (sfid-20080719_024555_879060_770F8C6B)
-References: <20080719004147.795661000@sipsolutions.net>
-Date: Sat, 19 Jul 2008 02:41:50 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: David Miller <davem@davemloft.net>,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [RFC 3/3] mac80211: fix requeue race
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:61389 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753498AbYGKD4y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jul 2008 23:56:54 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 06/14] iwlwifi: make iwl4965_mac_conf_tx in atomic context
+Date: Fri, 11 Jul 2008 11:53:34 +0800
+Message-Id: <1215748422-12672-7-git-send-email-yi.zhu@intel.com> (sfid-20080711_055657_201060_387BC0D3)
+In-Reply-To: <1215748422-12672-6-git-send-email-yi.zhu@intel.com>
+References: <1215748422-12672-1-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-2-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-3-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-4-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-5-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-6-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/iwlwifi/iwl-tx.c |    4 
- include/net/mac80211.h                |   16 ---
- net/mac80211/ieee80211_i.h            |    7 +
- net/mac80211/main.c                   |  146 +++++++++++++++++++++-------------
- net/mac80211/wme.c                    |   76 ++++++++++++++++-
- net/mac80211/wme.h                    |    4 
- 6 files changed, 175 insertions(+), 78 deletions(-)
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
---- everything.orig/net/mac80211/ieee80211_i.h	2008-07-19 01:37:10.000000000 +0200
-+++ everything/net/mac80211/ieee80211_i.h	2008-07-19 02:04:39.000000000 +0200
-@@ -534,8 +534,7 @@ struct ieee80211_sub_if_data *vif_to_sda
- enum {
- 	IEEE80211_RX_MSG	= 1,
- 	IEEE80211_TX_STATUS_MSG	= 2,
--	IEEE80211_DELBA_MSG	= 3,
--	IEEE80211_ADDBA_MSG	= 4,
-+	IEEE80211_ADDBA_MSG	= 3,
+This patch fixes iwl4965_mac_conf_tx. A mutex was taken in atomic context
+leading to Oops. This patch removes the mutex and extends the hold
+priv->lock. None of the field of QOS is accessed without priv->lock held.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    6 ++--
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |   12 ++++----
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   39 ++++++++++----------------
+ 3 files changed, 24 insertions(+), 33 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index d877039..92754ee 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -725,7 +725,7 @@ struct iwl4965_csa_notification {
+  * transmission retry.  Device uses cw_max as a bit mask, ANDed with new CW
+  * value, to cap the CW value.
+  */
+-struct iwl4965_ac_qos {
++struct iwl_ac_qos {
+ 	__le16 cw_min;
+ 	__le16 cw_max;
+ 	u8 aifsn;
+@@ -747,9 +747,9 @@ struct iwl4965_ac_qos {
+  * This command sets up timings for each of the 4 prioritized EDCA Tx FIFOs
+  * 0: Background, 1: Best Effort, 2: Video, 3: Voice.
+  */
+-struct iwl4965_qosparam_cmd {
++struct iwl_qosparam_cmd {
+ 	__le32 qos_flags;
+-	struct iwl4965_ac_qos ac[AC_NUM];
++	struct iwl_ac_qos ac[AC_NUM];
+ } __attribute__ ((packed));
+ 
+ /******************************************************************************
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 81a57cb..92a3766 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -290,7 +290,7 @@ struct iwl_cmd {
+ 		struct iwl4965_bt_cmd bt;
+ 		struct iwl4965_rxon_time_cmd rxon_time;
+ 		struct iwl4965_powertable_cmd powertable;
+-		struct iwl4965_qosparam_cmd qosparam;
++		struct iwl_qosparam_cmd qosparam;
+ 		struct iwl_tx_cmd tx;
+ 		struct iwl4965_tx_beacon_cmd tx_beacon;
+ 		struct iwl4965_rxon_assoc_cmd rxon_assoc;
+@@ -435,7 +435,7 @@ struct iwl_ht_info {
+ 	u8 non_GF_STA_present;
  };
  
- /* maximum number of hardware queues we support. */
-@@ -557,6 +556,10 @@ struct ieee80211_local {
- 	 */
- 	unsigned long queue_pool[BITS_TO_LONGS(QD_MAX_QUEUES)];
+-union iwl4965_qos_capabity {
++union iwl_qos_capabity {
+ 	struct {
+ 		u8 edca_count:4;	/* bit 0-3 */
+ 		u8 q_ack:1;		/* bit 4 */
+@@ -456,11 +456,11 @@ union iwl4965_qos_capabity {
+ };
  
-+	struct work_struct tx_ba_stop_work;
-+	spinlock_t tx_ba_stop_lock;
-+	struct list_head tx_ba_stop_list;
-+
- 	struct net_device *mdev; /* wmaster# - "master" 802.11 device */
- 	int open_count;
- 	int monitors, cooked_mntrs;
---- everything.orig/net/mac80211/main.c	2008-07-19 01:38:52.000000000 +0200
-+++ everything/net/mac80211/main.c	2008-07-19 02:28:00.000000000 +0200
-@@ -644,7 +644,7 @@ int ieee80211_start_tx_ba_session(struct
- 		/* No need to requeue the packets in the agg queue, since we
- 		 * haven't yet marked the queue in the queue_pool no packet
- 		 * can have been enqueued to the newly allocated queue */
--		ieee80211_ht_agg_queue_remove(local, sta->tid_to_tx_q[tid], false);
-+		ieee80211_ht_agg_queue_remove(local, sta->tid_to_tx_q[tid], -1);
- 		sta->tid_to_tx_q[tid] = ieee80211_num_queues(hw);
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 		printk(KERN_DEBUG "BA request denied - HW unavailable for"
-@@ -658,7 +658,7 @@ int ieee80211_start_tx_ba_session(struct
- 	set_bit(reserved_queue, local->queue_pool);
+ /* QoS structures */
+-struct iwl4965_qos_info {
++struct iwl_qos_info {
+ 	int qos_enable;
+ 	int qos_active;
+-	union iwl4965_qos_capabity qos_cap;
+-	struct iwl4965_qosparam_cmd def_qos_parm;
++	union iwl_qos_capabity qos_cap;
++	struct iwl_qosparam_cmd def_qos_parm;
+ };
  
- 	/* Put all the packets onto the new aggregation queue */
--	ieee80211_requeue(local, ieee802_1d_to_ac[tid]);
-+	ieee80211_requeue_toagg(local, ieee802_1d_to_ac[tid]);
- 	spin_unlock_bh(&sta->lock);
+ #define STA_PS_STATUS_WAKE             0
+@@ -1042,7 +1042,7 @@ struct iwl_priv {
+ 	u16 assoc_capability;
+ 	u8 ps_mode;
  
- 	/* send an addBA request */
-@@ -805,9 +805,39 @@ void ieee80211_start_tx_ba_cb(struct iee
- }
- EXPORT_SYMBOL(ieee80211_start_tx_ba_cb);
+-	struct iwl4965_qos_info qos_data;
++	struct iwl_qos_info qos_data;
  
--void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw, u8 *ra, u8 tid)
-+void ieee80211_start_tx_ba_cb_irqsafe(struct ieee80211_hw *hw,
-+				      const u8 *ra, u16 tid)
+ 	struct workqueue_struct *workqueue;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 95ec61a..bc9aa8d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -575,25 +575,14 @@ static void iwl4965_ht_conf(struct iwl_priv *priv,
+ /*
+  * QoS  support
+ */
+-static int iwl4965_send_qos_params_command(struct iwl_priv *priv,
+-				       struct iwl4965_qosparam_cmd *qos)
++static void iwl_activate_qos(struct iwl_priv *priv, u8 force)
  {
- 	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_ra_tid *ra_tid;
-+	struct sk_buff *skb = dev_alloc_skb(0);
-+
-+	if (unlikely(!skb)) {
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		if (net_ratelimit())
-+			printk(KERN_WARNING "%s: Not enough memory, "
-+			       "dropping start BA session", skb->dev->name);
-+#endif
-+		return;
-+	}
-+	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
-+	memcpy(&ra_tid->ra, ra, ETH_ALEN);
-+	ra_tid->tid = tid;
-+
-+	skb->pkt_type = IEEE80211_ADDBA_MSG;
-+	skb_queue_tail(&local->skb_queue, skb);
-+	tasklet_schedule(&local->tasklet);
-+}
-+EXPORT_SYMBOL(ieee80211_start_tx_ba_cb_irqsafe);
-+
-+struct tx_ba_work {
-+	struct list_head list;
-+	u8 ra[ETH_ALEN];
-+	u8 tid;
-+};
-+
-+static void ieee80211_stop_tx_ba_do(struct ieee80211_local *local, u8 *ra, u8 tid)
-+{
- 	struct sta_info *sta;
- 	u8 *state;
- 	int agg_queue;
-@@ -856,15 +886,13 @@ void ieee80211_stop_tx_ba_cb(struct ieee
- 
- 	agg_queue = sta->tid_to_tx_q[tid];
- 
--	ieee80211_ht_agg_queue_remove(local, agg_queue, true);
--	sta->tid_to_tx_q[tid] = ieee80211_num_queues(hw);
 -
--	/* We just requeued the all the frames that were in the
--	 * removed queue, and since we might miss a softirq we do
--	 * netif_schedule_queue.  ieee80211_wake_queue is not used
--	 * here as this queue is not necessarily stopped
-+	/*
-+	 * From this point on, the queue will no longer be used to
-+	 * queue frames on.
- 	 */
--	netif_schedule_queue(netdev_get_tx_queue(local->mdev, agg_queue));
-+	sta->tid_to_tx_q[tid] = ieee80211_num_queues(&local->hw);
-+
-+	/* Therefore, we can free the state now. */
- 	spin_lock_bh(&sta->lock);
- 	*state = HT_AGG_STATE_IDLE;
- 	sta->ampdu_mlme.addba_req_num[tid] = 0;
-@@ -873,58 +901,72 @@ void ieee80211_stop_tx_ba_cb(struct ieee
- 	spin_unlock_bh(&sta->lock);
- 
- 	rcu_read_unlock();
-+
-+	/*
-+	 * Now we need to synchronise so that the select_queue function
-+	 * can no longer queue on the aggregation queue.
-+	 */
-+	synchronize_net();
-+
-+	/* Then, we can kill that queue. */
-+	ieee80211_ht_agg_queue_remove(local, agg_queue, ieee802_1d_to_ac[tid]);
-+
-+	/*
-+	 * We just requeued the all the frames that were in the
-+	 * removed queue, and since we might miss a softirq we do
-+	 * netif_schedule_queue.  ieee80211_wake_queue is not used
-+	 * here as this queue is not necessarily stopped
-+	 */
-+	netif_schedule_queue(netdev_get_tx_queue(local->mdev, agg_queue));
- }
--EXPORT_SYMBOL(ieee80211_stop_tx_ba_cb);
- 
--void ieee80211_start_tx_ba_cb_irqsafe(struct ieee80211_hw *hw,
--				      const u8 *ra, u16 tid)
-+static void ieee80211_stop_tx_ba_work(struct work_struct *work)
- {
--	struct ieee80211_local *local = hw_to_local(hw);
--	struct ieee80211_ra_tid *ra_tid;
--	struct sk_buff *skb = dev_alloc_skb(0);
-+	struct ieee80211_local *local;
-+	struct tx_ba_work *todo;
-+	unsigned long flags;
- 
--	if (unlikely(!skb)) {
--#ifdef CONFIG_MAC80211_HT_DEBUG
--		if (net_ratelimit())
--			printk(KERN_WARNING "%s: Not enough memory, "
--			       "dropping start BA session", skb->dev->name);
--#endif
--		return;
--	}
--	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
--	memcpy(&ra_tid->ra, ra, ETH_ALEN);
--	ra_tid->tid = tid;
-+	local = container_of(work, struct ieee80211_local, tx_ba_stop_work);
- 
--	skb->pkt_type = IEEE80211_ADDBA_MSG;
--	skb_queue_tail(&local->skb_queue, skb);
--	tasklet_schedule(&local->tasklet);
-+	spin_lock_irqsave(&local->tx_ba_stop_lock, flags);
-+	while (1) {
-+		if (list_empty(&local->tx_ba_stop_list))
-+			break;
-+		todo = list_first_entry(&local->tx_ba_stop_list,
-+					struct tx_ba_work, list);
-+		list_del(&todo->list);
-+		spin_unlock_irqrestore(&local->tx_ba_stop_lock, flags);
-+
-+		ieee80211_stop_tx_ba_do(local, todo->ra, todo->tid);
-+		kfree(todo);
-+
-+		spin_lock_irqsave(&local->tx_ba_stop_lock, flags);
-+	}
-+	spin_unlock_irqrestore(&local->tx_ba_stop_lock, flags);
- }
--EXPORT_SYMBOL(ieee80211_start_tx_ba_cb_irqsafe);
- 
--void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_hw *hw,
--				     const u8 *ra, u16 tid)
-+void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw, const u8 *ra, u8 tid)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
--	struct ieee80211_ra_tid *ra_tid;
--	struct sk_buff *skb = dev_alloc_skb(0);
-+	struct tx_ba_work *todo = kzalloc(sizeof(*todo), GFP_ATOMIC);
-+	unsigned long flags;
- 
--	if (unlikely(!skb)) {
-+	if (unlikely(!todo)) {
- #ifdef CONFIG_MAC80211_HT_DEBUG
--		if (net_ratelimit())
--			printk(KERN_WARNING "%s: Not enough memory, "
--			       "dropping stop BA session", skb->dev->name);
-+		printk(KERN_WARNING "%s: Not enough memory, "
-+		       "dropping stop BA session", wiphy_name(local->hw.wiphy));
- #endif
+-	return iwl_send_cmd_pdu(priv, REPLY_QOS_PARAM,
+-				sizeof(struct iwl4965_qosparam_cmd), qos);
+-}
+-
+-static void iwl4965_activate_qos(struct iwl_priv *priv, u8 force)
+-{
+-	unsigned long flags;
+-
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
  		return;
- 	}
--	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
--	memcpy(&ra_tid->ra, ra, ETH_ALEN);
--	ra_tid->tid = tid;
-+	memcpy(todo->ra, ra, ETH_ALEN);
-+	todo->tid = tid;
  
--	skb->pkt_type = IEEE80211_DELBA_MSG;
--	skb_queue_tail(&local->skb_queue, skb);
--	tasklet_schedule(&local->tasklet);
-+	spin_lock_irqsave(&local->tx_ba_stop_lock, flags);
-+	list_add_tail(&todo->list, &local->tx_ba_stop_list);
-+	queue_work(local->hw.workqueue, &local->tx_ba_stop_work);
-+	spin_unlock_irqrestore(&local->tx_ba_stop_lock, flags);
- }
--EXPORT_SYMBOL(ieee80211_stop_tx_ba_cb_irqsafe);
-+EXPORT_SYMBOL(ieee80211_stop_tx_ba_cb);
+ 	if (!priv->qos_data.qos_enable)
+ 		return;
  
- static void ieee80211_set_multicast_list(struct net_device *dev)
- {
-@@ -1215,12 +1257,6 @@ static void ieee80211_tasklet_handler(un
- 			skb->pkt_type = 0;
- 			ieee80211_tx_status(local_to_hw(local), skb);
- 			break;
--		case IEEE80211_DELBA_MSG:
--			ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
--			ieee80211_stop_tx_ba_cb(local_to_hw(local),
--						ra_tid->ra, ra_tid->tid);
--			dev_kfree_skb(skb);
--			break;
- 		case IEEE80211_ADDBA_MSG:
- 			ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
- 			ieee80211_start_tx_ba_cb(local_to_hw(local),
-@@ -1599,6 +1635,10 @@ struct ieee80211_hw *ieee80211_alloc_hw(
+-	spin_lock_irqsave(&priv->lock, flags);
+ 	priv->qos_data.def_qos_parm.qos_flags = 0;
  
- 	INIT_DELAYED_WORK(&local->scan_work, ieee80211_sta_scan_work);
+ 	if (priv->qos_data.qos_cap.q_AP.queue_request &&
+@@ -607,15 +596,14 @@ static void iwl4965_activate_qos(struct iwl_priv *priv, u8 force)
+ 	if (priv->current_ht_config.is_ht)
+ 		priv->qos_data.def_qos_parm.qos_flags |= QOS_PARAM_FLG_TGN_MSK;
  
-+	INIT_LIST_HEAD(&local->tx_ba_stop_list);
-+	spin_lock_init(&local->tx_ba_stop_lock);
-+	INIT_WORK(&local->tx_ba_stop_work, ieee80211_stop_tx_ba_work);
-+
- 	sta_info_init(local);
- 
- 	tasklet_init(&local->tx_pending_tasklet, ieee80211_tx_pending,
---- everything.orig/include/net/mac80211.h	2008-07-19 02:03:18.000000000 +0200
-+++ everything/include/net/mac80211.h	2008-07-19 02:07:08.000000000 +0200
-@@ -1734,21 +1734,9 @@ int ieee80211_stop_tx_ba_session(struct 
-  *
-  * This function must be called by low level driver once it has
-  * finished with preparations for the BA session tear down.
-+ * This function can be called in any context.
-  */
--void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw, u8 *ra, u8 tid);
+-	spin_unlock_irqrestore(&priv->lock, flags);
 -
--/**
-- * ieee80211_stop_tx_ba_cb_irqsafe - low level driver ready to stop aggregate.
-- * @hw: pointer as obtained from ieee80211_alloc_hw().
-- * @ra: receiver address of the BA session recipient.
-- * @tid: the desired TID to BA on.
-- *
-- * This function must be called by low level driver once it has
-- * finished with preparations for the BA session tear down.
-- * This version of the function is IRQ-safe.
-- */
--void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_hw *hw, const u8 *ra,
--				     u16 tid);
-+void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw, const u8 *ra, u8 tid);
+ 	if (force || iwl_is_associated(priv)) {
+ 		IWL_DEBUG_QOS("send QoS cmd with Qos active=%d FLAGS=0x%X\n",
+ 				priv->qos_data.qos_active,
+ 				priv->qos_data.def_qos_parm.qos_flags);
  
- /**
-  * ieee80211_notify_mac - low level driver notification
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-tx.c	2008-07-19 02:10:42.000000000 +0200
-+++ everything/drivers/net/wireless/iwlwifi/iwl-tx.c	2008-07-19 02:10:46.000000000 +0200
-@@ -1304,7 +1304,7 @@ int iwl_tx_agg_stop(struct iwl_priv *pri
- 	if (ret)
- 		return ret;
+-		iwl4965_send_qos_params_command(priv,
+-				&(priv->qos_data.def_qos_parm));
++		iwl_send_cmd_pdu_async(priv, REPLY_QOS_PARAM,
++				       sizeof(struct iwl_qosparam_cmd),
++				       &priv->qos_data.def_qos_parm, NULL);
+ 	}
+ }
  
--	ieee80211_stop_tx_ba_cb_irqsafe(priv->hw, ra, tid);
-+	ieee80211_stop_tx_ba_cb(priv->hw, ra, tid);
+@@ -2424,6 +2412,7 @@ static void iwl4965_post_associate(struct iwl_priv *priv)
+ 	struct ieee80211_conf *conf = NULL;
+ 	int ret = 0;
+ 	DECLARE_MAC_BUF(mac);
++	unsigned long flags;
  
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_AP) {
+ 		IWL_ERROR("%s Should not be called in AP mode\n", __FUNCTION__);
+@@ -2513,7 +2502,9 @@ static void iwl4965_post_associate(struct iwl_priv *priv)
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_IBSS)
+ 		priv->assoc_station_added = 1;
+ 
+-	iwl4965_activate_qos(priv, 0);
++	spin_lock_irqsave(&priv->lock, flags);
++	iwl_activate_qos(priv, 0);
++	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+ 	iwl_power_update_mode(priv, 0);
+ 	/* we have just associated, don't start scan too early */
+@@ -2845,6 +2836,7 @@ out:
+ static void iwl4965_config_ap(struct iwl_priv *priv)
+ {
+ 	int ret = 0;
++	unsigned long flags;
+ 
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+ 		return;
+@@ -2892,7 +2884,9 @@ static void iwl4965_config_ap(struct iwl_priv *priv)
+ 		/* restore RXON assoc */
+ 		priv->staging_rxon.filter_flags |= RXON_FILTER_ASSOC_MSK;
+ 		iwl4965_commit_rxon(priv);
+-		iwl4965_activate_qos(priv, 1);
++		spin_lock_irqsave(&priv->lock, flags);
++		iwl_activate_qos(priv, 1);
++		spin_unlock_irqrestore(&priv->lock, flags);
+ 		iwl_rxon_add_station(priv, iwl_bcast_addr, 0);
+ 	}
+ 	iwl4965_send_beacon_cmd(priv);
+@@ -3327,15 +3321,12 @@ static int iwl4965_mac_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 	priv->qos_data.def_qos_parm.ac[q].reserved1 = 0;
+ 	priv->qos_data.qos_active = 1;
+ 
+-	spin_unlock_irqrestore(&priv->lock, flags);
+-
+-	mutex_lock(&priv->mutex);
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_AP)
+-		iwl4965_activate_qos(priv, 1);
++		iwl_activate_qos(priv, 1);
+ 	else if (priv->assoc_id && iwl_is_associated(priv))
+-		iwl4965_activate_qos(priv, 0);
++		iwl_activate_qos(priv, 0);
+ 
+-	mutex_unlock(&priv->mutex);
++	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+ 	IWL_DEBUG_MAC80211("leave\n");
  	return 0;
- }
-@@ -1328,7 +1328,7 @@ int iwl_txq_check_empty(struct iwl_priv 
- 			priv->cfg->ops->lib->txq_agg_disable(priv, txq_id,
- 							     ssn, tx_fifo);
- 			tid_data->agg.state = IWL_AGG_OFF;
--			ieee80211_stop_tx_ba_cb_irqsafe(priv->hw, addr, tid);
-+			ieee80211_stop_tx_ba_cb(priv->hw, addr, tid);
- 		}
- 		break;
- 	case IWL_EMPTYING_HW_QUEUE_ADDBA:
---- everything.orig/net/mac80211/wme.c	2008-07-19 02:14:14.000000000 +0200
-+++ everything/net/mac80211/wme.c	2008-07-19 02:36:01.000000000 +0200
-@@ -222,17 +222,83 @@ int ieee80211_ht_agg_queue_add(struct ie
- 	return -EAGAIN;
- }
- 
-+static void ieee80211_requeue_fromagg(struct ieee80211_local *local,
-+				      int queue, u16 new_queue)
-+{
-+	struct netdev_queue *from_txq = netdev_get_tx_queue(local->mdev, queue);
-+	struct netdev_queue *to_txq;
-+	struct sk_buff_head list;
-+	spinlock_t *from_root_lock = NULL, *to_root_lock;
-+	struct Qdisc *qdisc, *to_qdisc = NULL;
-+	u32 len;
-+
-+	rcu_read_lock_bh();
-+
-+	qdisc = rcu_dereference(from_txq->qdisc);
-+	if (!qdisc || !qdisc->dequeue)
-+		goto out_unlock;
-+
-+	to_txq = netdev_get_tx_queue(local->mdev, new_queue);
-+	to_qdisc = rcu_dereference(to_txq->qdisc);
-+	if (!to_qdisc || !to_qdisc->enqueue)
-+		goto out_unlock;
-+
-+	to_root_lock = qdisc_root_lock(to_qdisc);
-+
-+	if (to_qdisc != qdisc)
-+		from_root_lock = qdisc_root_lock(qdisc);
-+
-+	skb_queue_head_init(&list);
-+
-+	spin_lock(to_root_lock);
-+
-+	if (from_root_lock) {
-+		spin_lock(from_root_lock);
-+		for (len = qdisc->q.qlen; len > 0; len--) {
-+			struct sk_buff *skb = qdisc->dequeue(qdisc);
-+
-+			if (skb)
-+				__skb_queue_tail(&list, skb);
-+		}
-+		spin_unlock(from_root_lock);
-+	} else {
-+		for (len = qdisc->q.qlen; len > 0; len--) {
-+			struct sk_buff *skb = qdisc->dequeue(qdisc);
-+
-+			if (skb)
-+				__skb_queue_tail(&list, skb);
-+		}
-+	}
-+
-+	for (len = list.qlen; len > 0; len--) {
-+		struct sk_buff *skb = __skb_dequeue(&list);
-+
-+		BUG_ON(!skb);
-+		skb_set_queue_mapping(skb, new_queue);
-+
-+		to_qdisc->enqueue(skb, qdisc);
-+	}
-+
-+	spin_unlock(to_root_lock);
-+
-+ out_unlock:
-+	rcu_read_unlock_bh();
-+}
-+
- /**
-  * the caller needs to hold netdev_get_tx_queue(local->mdev, X)->lock
-+ *
-+ * regular_queue >= 0 indicates that requeueing must be done and will
-+ * go to that queue.
-  */
- void ieee80211_ht_agg_queue_remove(struct ieee80211_local *local,
--				   u16 agg_queue, bool requeue)
-+				   u16 agg_queue, int regular_queue)
- {
- 	/* return the qdisc to the pool */
- 	clear_bit(agg_queue, local->queue_pool);
- 
--	if (requeue) {
--		ieee80211_requeue(local, agg_queue);
-+	if (regular_queue >= 0) {
-+		ieee80211_requeue_fromagg(local, agg_queue, regular_queue);
- 	} else {
- 		struct netdev_queue *txq;
- 		spinlock_t *root_lock;
-@@ -246,7 +312,7 @@ void ieee80211_ht_agg_queue_remove(struc
- 	}
- }
- 
--void ieee80211_requeue(struct ieee80211_local *local, int queue)
-+void ieee80211_requeue_toagg(struct ieee80211_local *local, int queue)
- {
- 	struct netdev_queue *txq = netdev_get_tx_queue(local->mdev, queue);
- 	struct sk_buff_head list;
-@@ -291,6 +357,6 @@ void ieee80211_requeue(struct ieee80211_
- 		spin_unlock(root_lock);
- 	}
- 
--out_unlock:
-+ out_unlock:
- 	rcu_read_unlock_bh();
- }
---- everything.orig/net/mac80211/wme.h	2008-07-19 02:14:37.000000000 +0200
-+++ everything/net/mac80211/wme.h	2008-07-19 02:28:12.000000000 +0200
-@@ -27,7 +27,7 @@ u16 ieee80211_select_queue(struct net_de
- int ieee80211_ht_agg_queue_add(struct ieee80211_local *local,
- 			       struct sta_info *sta, u16 tid);
- void ieee80211_ht_agg_queue_remove(struct ieee80211_local *local,
--				   u16 agg_queue, bool requeue);
--void ieee80211_requeue(struct ieee80211_local *local, int queue);
-+				   u16 agg_queue, int regular_queue);
-+void ieee80211_requeue_toagg(struct ieee80211_local *local, int from);
- 
- #endif /* _WME_H */
-
 -- 
+1.5.3.6
 
