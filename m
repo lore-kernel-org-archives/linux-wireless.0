@@ -1,86 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57421 "EHLO mx2.suse.de"
+Received: from mga11.intel.com ([192.55.52.93]:61394 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755289AbYGVXRk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 19:17:40 -0400
-Date: Tue, 22 Jul 2008 16:14:27 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>, Willy Tarreau <w@1wt.eu>,
-	Rodrigo Rubira Branco <rbranco@la.checkpoint.com>,
-	Jake Edge <jake@lwn.net>, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: [patch 04/47] mac80211: detect driver tx bugs
-Message-ID: <20080722231427.GE8282@suse.de> (sfid-20080723_011755_089287_D352C0E9)
-References: <20080722230208.148102983@mini.kroah.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080722231342.GA8282@suse.de>
+	id S1753546AbYGKD5H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jul 2008 23:57:07 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 12/14] iwlwifi: send TXPOWER command after a new RXON command
+Date: Fri, 11 Jul 2008 11:53:40 +0800
+Message-Id: <1215748422-12672-13-git-send-email-yi.zhu@intel.com> (sfid-20080711_055709_896648_8EDF84F4)
+In-Reply-To: <1215748422-12672-12-git-send-email-yi.zhu@intel.com>
+References: <1215748422-12672-1-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-2-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-3-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-4-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-5-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-6-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-7-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-8-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-9-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-10-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-11-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-12-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.25-stable review patch.  If anyone has any objections, please let us
-know.
+The patch fixes the problem that TXPOWER command is not sent
+after we issue a new RXON command which requires a tune. Otherwise
+we won't be able to Tx any frames.
 
-------------------
-From: Johannes Berg <johannes@sipsolutions.net>
-
-When a driver rejects a frame in it's ->tx() callback, it must also
-stop queues, otherwise mac80211 can go into a loop here. Detect this
-situation and abort the loop after five retries, warning about the
-driver bug.
-
-This patch was added to mainline as
-commit ef3a62d272f033989e83eb1f26505f93f93e3e69.
-
-Thanks to Larry Finger <Larry.Finger@lwfinger.net> for doing the -stable
-port.
-
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: David S. Miller <davem@davemloft.net>
-
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- net/mac80211/tx.c |    9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   20 ++++++++++----------
+ 1 files changed, 10 insertions(+), 10 deletions(-)
 
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1090,7 +1090,7 @@ static int ieee80211_tx(struct net_devic
- 	ieee80211_tx_handler *handler;
- 	struct ieee80211_txrx_data tx;
- 	ieee80211_txrx_result res = TXRX_DROP, res_prepare;
--	int ret, i;
-+	int ret, i, retries = 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index bc9aa8d..b2fae7c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -328,16 +328,6 @@ static int iwl4965_commit_rxon(struct iwl_priv *priv)
+ 	if (!priv->error_recovering)
+ 		priv->start_calib = 0;
  
- 	WARN_ON(__ieee80211_queue_pending(local, control->queue));
+-	iwl_init_sensitivity(priv);
+-
+-	/* If we issue a new RXON command which required a tune then we must
+-	 * send a new TXPOWER command or we won't be able to Tx any frames */
+-	ret = iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
+-	if (ret) {
+-		IWL_ERROR("Error sending TX power (%d)\n", ret);
+-		return ret;
+-	}
+-
+ 	/* Add the broadcast address so we can send broadcast frames */
+ 	if (iwl_rxon_add_station(priv, iwl_bcast_addr, 0) ==
+ 						IWL_INVALID_STATION) {
+@@ -373,6 +363,16 @@ static int iwl4965_commit_rxon(struct iwl_priv *priv)
+ 		memcpy(active_rxon, &priv->staging_rxon, sizeof(*active_rxon));
+ 	}
  
-@@ -1181,6 +1181,13 @@ retry:
- 		if (!__ieee80211_queue_stopped(local, control->queue)) {
- 			clear_bit(IEEE80211_LINK_STATE_PENDING,
- 				  &local->state[control->queue]);
-+			retries++;
-+			/*
-+			 * Driver bug, it's rejecting packets but
-+			 * not stopping queues.
-+			 */
-+			if (WARN_ON_ONCE(retries > 5))
-+				goto drop;
- 			goto retry;
- 		}
- 		memcpy(&store->control, control,
-
++	iwl_init_sensitivity(priv);
++
++	/* If we issue a new RXON command which required a tune then we must
++	 * send a new TXPOWER command or we won't be able to Tx any frames */
++	ret = iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
++	if (ret) {
++		IWL_ERROR("Error sending TX power (%d)\n", ret);
++		return ret;
++	}
++
+ 	return 0;
+ }
+ 
 -- 
+1.5.3.6
+
