@@ -1,74 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ananke.telenet-ops.be ([195.130.137.78]:46434 "EHLO
-	ananke.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751089AbYGWP6H (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 11:58:07 -0400
-Message-ID: <4887550B.2070704@tvcablenet.be> (sfid-20080723_175814_197235_670C568B)
-Date: Wed, 23 Jul 2008 17:58:03 +0200
-From: =?UTF-8?B?RnJhbsOnb2lzIFZhbGVuZHVj?=
-	<francois.valenduc@tvcablenet.be>
-MIME-Version: 1.0
-To: Patrick McHardy <kaber@trash.net>
-CC: Andrew Morton <akpm@linux-foundation.org>,
-	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Linux Netdev List <netdev@vger.kernel.org>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
-References: <bug-11144-10286@http.bugzilla.kernel.org/>	<20080722034850.dbbc5566.akpm@linux-foundation.org>	<4886E49D.6010700@tvcablenet.be> <20080723010522.389a948f.akpm@linux-foundation.org> <4886F727.6010301@tvcablenet.be> <48870425.50908@trash.net> <48871632.3010205@tvcablenet.be> <4887169B.6090102@trash.net> <488725D5.8030900@tvcablenet.be> <488727B3.7040007@trash.net> <48872968.9000103@trash.net> <488746DF.1050501@tvcablenet.be> <48874BD8.60600@trash.net> <48874C12.10606@trash.net> <4887514C.6080903@tvcablenet.be> <488753C6.2090807@trash.net>
-In-Reply-To: <488753C6.2090807@trash.net>
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:23678 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751777AbYGKD4t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jul 2008 23:56:49 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Esti Kummer <stkumer@localhost.localdomain>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 02/14] iwlwifi: adding pci device ids to iwl_hw_card_ids
+Date: Fri, 11 Jul 2008 11:53:30 +0800
+Message-Id: <1215748422-12672-3-git-send-email-yi.zhu@intel.com> (sfid-20080711_055653_928615_9A332D37)
+In-Reply-To: <1215748422-12672-2-git-send-email-yi.zhu@intel.com>
+References: <1215748422-12672-1-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-2-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patrick McHardy a =C3=A9crit :
-> Fran=C3=A7ois Valenduc wrote:
->> Patrick McHardy a =C3=A9crit :
->>>> I think I know whats happening (Jussi CCed). That commit introduce=
-d
->>>> a qdisc_skb_cb, which conflicts with the mac80211 usage of skb->cb=
-=2E
->>>> mac80211 seems to expect the CB to survive the qdisc layer, which
->>>> is wrong. One possibility to fix this (or just test my theory)
->>>> would be to make sure they don't clash by adding the struct
->>>> ieee80211_tx_info to qdisc_skb_cb->data. Something like this patch=
-=2E
->>>>
->>>
->> I tested your last patch. Unfortunately, I get the following compile=
-=20
->> error:
->>
->> In file included from net/mac80211/main.c:11:
->> include/net/mac80211.h: In function =E2=80=98IEEE80211_SKB_CB=E2=80=99=
-:
->> include/net/mac80211.h:347: erreur: size of array =E2=80=98type name=
-=E2=80=99 is=20
->> negative
->
->
-> I was afraid that might happen. This means skb->cb is not large
-> enough to hold both the qdisc and the ieee80211 structs.
->
-> Just for testing, changing (include/net/mac80211.h):
->
-> #define IEEE80211_TX_INFO_DRIVER_DATA_SIZE \
->         (sizeof(((struct sk_buff *)0)->cb) - 8)
->
-> to
->
-> #define IEEE80211_TX_INFO_DRIVER_DATA_SIZE \
->         (sizeof(((struct sk_buff *)0)->cb) - 12)
->
-> might help to get it to compile. If that doesn't work, try -16.
->
->
-That didn't work, neither with -12 or -16.
+From: Esti Kummer <stkumer@localhost.localdomain>
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The patch adds PCI device IDs to iwl_hw_card_ids.
+
+Signed-off-by: Esti Kummer <stkumer@localhost.localdomain>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |   18 ++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 ++
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   10 +++++++++-
+ 3 files changed, 29 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 717db0d..3697d03 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -1506,6 +1506,24 @@ struct iwl_cfg iwl5300_agn_cfg = {
+ 	.mod_params = &iwl50_mod_params,
+ };
+ 
++struct iwl_cfg iwl5100_bg_cfg = {
++	.name = "5100BG",
++	.fw_name = "iwlwifi-5000" IWL5000_UCODE_API ".ucode",
++	.sku = IWL_SKU_G,
++	.ops = &iwl5000_ops,
++	.eeprom_size = IWL_5000_EEPROM_IMG_SIZE,
++	.mod_params = &iwl50_mod_params,
++};
++
++struct iwl_cfg iwl5100_abg_cfg = {
++	.name = "5100ABG",
++	.fw_name = "iwlwifi-5000" IWL5000_UCODE_API ".ucode",
++	.sku = IWL_SKU_A|IWL_SKU_G,
++	.ops = &iwl5000_ops,
++	.eeprom_size = IWL_5000_EEPROM_IMG_SIZE,
++	.mod_params = &iwl50_mod_params,
++};
++
+ struct iwl_cfg iwl5100_agn_cfg = {
+ 	.name = "5100AGN",
+ 	.fw_name = "iwlwifi-5000" IWL5000_UCODE_API ".ucode",
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 163502d..0177a1d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -51,6 +51,8 @@ extern struct iwl_cfg iwl4965_agn_cfg;
+ extern struct iwl_cfg iwl5300_agn_cfg;
+ extern struct iwl_cfg iwl5100_agn_cfg;
+ extern struct iwl_cfg iwl5350_agn_cfg;
++extern struct iwl_cfg iwl5100_bg_cfg;
++extern struct iwl_cfg iwl5100_abg_cfg;
+ 
+ /* Change firmware file name, using "-" and incrementing number,
+  *   *only* when uCode interface or architecture changes so that it
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 7f65d91..47071f2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -4409,8 +4409,16 @@ static struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x4229, PCI_ANY_ID, iwl4965_agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x4230, PCI_ANY_ID, iwl4965_agn_cfg)},
+ #ifdef CONFIG_IWL5000
+-	{IWL_PCI_DEVICE(0x4235, PCI_ANY_ID, iwl5300_agn_cfg)},
++	{IWL_PCI_DEVICE(0x4232, 0x1205, iwl5100_bg_cfg)},
++	{IWL_PCI_DEVICE(0x4232, 0x1305, iwl5100_bg_cfg)},
++	{IWL_PCI_DEVICE(0x4232, 0x1206, iwl5100_abg_cfg)},
++	{IWL_PCI_DEVICE(0x4232, 0x1306, iwl5100_abg_cfg)},
++	{IWL_PCI_DEVICE(0x4232, 0x1326, iwl5100_abg_cfg)},
++	{IWL_PCI_DEVICE(0x4237, 0x1216, iwl5100_abg_cfg)},
+ 	{IWL_PCI_DEVICE(0x4232, PCI_ANY_ID, iwl5100_agn_cfg)},
++	{IWL_PCI_DEVICE(0x4235, PCI_ANY_ID, iwl5300_agn_cfg)},
++	{IWL_PCI_DEVICE(0x4236, PCI_ANY_ID, iwl5300_agn_cfg)},
++	{IWL_PCI_DEVICE(0x4237, PCI_ANY_ID, iwl5100_agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x423A, PCI_ANY_ID, iwl5350_agn_cfg)},
+ #endif /* CONFIG_IWL5000 */
+ 	{0}
+-- 
+1.5.3.6
+
