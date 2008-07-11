@@ -1,94 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59816
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754717AbYGOKFa (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38543 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753243AbYGKSIK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 06:05:30 -0400
-Date: Tue, 15 Jul 2008 03:05:31 -0700 (PDT)
-Message-Id: <20080715.030531.227856924.davem@davemloft.net> (sfid-20080715_120537_181575_FA8F6515)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: TXQ real_num_tx_queues comments/questions
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1216115349.3535.20.camel@johannes.berg>
-References: <1216114621.3535.18.camel@johannes.berg>
-	<20080715.023954.234208581.davem@davemloft.net>
-	<1216115349.3535.20.camel@johannes.berg>
+	Fri, 11 Jul 2008 14:08:10 -0400
+Subject: Re: removing STAs while aggregation is in effect?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <c85cb4470807111028w19f62abel31704deb18c73f6d@mail.gmail.com> (sfid-20080711_192850_305767_D979E950)
+References: <1215770111.3483.112.camel@johannes.berg>
+	 <c85cb4470807111028w19f62abel31704deb18c73f6d@mail.gmail.com>
+	 (sfid-20080711_192850_305767_D979E950)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-t1+4BLlZI9mHnVO55IRA"
+Date: Fri, 11 Jul 2008 20:06:53 +0200
+Message-Id: <1215799613.27426.0.camel@johannes.berg> (sfid-20080711_200815_298498_AA13E731)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 15 Jul 2008 11:49:09 +0200
 
-> Yes, I think we can fix it by deferring the requeue to a workqueue,
-> using synchronize_net() and putting RCU protection against the
-> select_queue call.
+--=-t1+4BLlZI9mHnVO55IRA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I'm respinning my net-tx-2.6 tree at the moment and I'll
-make patch 8 look like below.
 
-When I get to the mac80211 bits I'll add the appropriate
-synchronize_net() call.
+> funny, but by chance this is a flow i am dealing with right now in STA
+> mode as part of patch meant to clean a bit the dissassoc flow. as to
+> AP mode - i did not look at the rework as well and i will have to
+> check this part, but IMHO this is more to do with the general flow of
+> assoc/dissassoc. if the MLME decides to remove an STA - by all means
+> it has to free its resources first - aggregation queues is one if them
+> of course.
 
-netdev: Add netdev->select_queue() method.
+True, but it's actually quite different in AP mode since there we just
+get the request by userspace to remove the STA and never know what's
+happening until we do. Whereas in STA mode, I'm not even sure we
+completely remove the sta_info entry for the AP when we disassociate.
 
-Devices or device layers can set this to control the queue selection
-performed by dev_pick_tx().
+johannes
 
-This function runs under RCU protection, which allows overriding
-functions to have some way of synchronizing with things like dynamic
-->real_num_tx_queues adjustments.
+--=-t1+4BLlZI9mHnVO55IRA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-This makes the spinlock prefetch in dev_queue_xmit() a little bit
-less effective, but that's the price right now for correctness.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
+iQIcBAABAgAGBQJId6E5AAoJEKVg1VMiehFYMLAQALb152Tipzd1LJsg1I6n0EhW
+H/muT8xflKQAgdxOgerlD9L5wx4U9RoYSbmp3qj+CfKvswoDt5AzWy9EmobmOMmV
+jUJYW88qkPrUU9k6ndVAFxLwJBIU6Sgdcwfy2Yp2aoJ19D1f2wAu4iUHFwvgckL3
+1VK3x4mlDF2JqjaE3L3X+9Fz6I5qAZUzMf2zWaLMS2WRZOca16FwNCqvKsG8Ce5u
+IPh19ZkLyGF3HhxdnFkgUz5/9tjgkJchUAAFIy/xW+RpOTHWfpROaQmmKTxge2W6
+DbXerI1NffDxVxspNgtYXb8GtEXiGspmG4fwraujH0RdV4/TXbIIGG9eIvEdWWuC
+v9Dw5iEMRtAQtcCfXWq/rCwuV+NCw5lEVSKCW1OMBIZ1jHRRUC4aCME4KU6ntc9v
+9pT/Gto0RMcZbc8Wsl8iazSplh7Qo8IFrBNX1h86zg2Y2z+vksg43llzt5W+sSzX
+Cqa7lLli0avZZv4a672b4BFu3BuSUX742/ymdd4M+i2D1kDghfXX/9D/VMTYg06q
+mRlewnf83AwSuKUpFInFnSH6yiF2QVIlcLliOiU6JTHNoXA1S0tmVwqlLQ9X5GoA
+bAhx4+/G8JUuqqKqAwo9MjkY1e3hflzMiK1hEQPTJtwkVZo2prwkwMXjR1yC3IS2
+/GS3qyGzHhfo0KC5yJw/
+=VhJb
+-----END PGP SIGNATURE-----
 
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index fdac115..9464e64 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -724,6 +724,9 @@ struct net_device
- 	void                    (*poll_controller)(struct net_device *dev);
- #endif
- 
-+	u16			(*select_queue)(struct net_device *dev,
-+						struct sk_buff *skb);
-+
- #ifdef CONFIG_NET_NS
- 	/* Network namespace this network device is inside */
- 	struct net		*nd_net;
-diff --git a/net/core/dev.c b/net/core/dev.c
-index f027a1a..7ca9564 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -1670,6 +1670,9 @@ static struct netdev_queue *dev_pick_tx(struct net_device *dev,
- {
- 	u16 queue_index = 0;
- 
-+	if (dev->select_queue)
-+		queue_index = dev->select_queue(dev, skb);
-+
- 	skb_set_queue_mapping(skb, queue_index);
- 	return netdev_get_tx_queue(dev, queue_index);
- }
-@@ -1710,14 +1713,14 @@ int dev_queue_xmit(struct sk_buff *skb)
- 	}
- 
- gso:
--	txq = dev_pick_tx(dev, skb);
--	spin_lock_prefetch(&txq->lock);
--
- 	/* Disable soft irqs for various locks below. Also
- 	 * stops preemption for RCU.
- 	 */
- 	rcu_read_lock_bh();
- 
-+	txq = dev_pick_tx(dev, skb);
-+	spin_lock_prefetch(&txq->lock);
-+
- 	/* Updates of qdisc are serialized by queue->lock.
- 	 * The struct Qdisc which is pointed to by qdisc is now a
- 	 * rcu structure - it may be accessed without acquiring
+--=-t1+4BLlZI9mHnVO55IRA--
+
