@@ -1,135 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.178]:22588 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756566AbYGFPCi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jul 2008 11:02:38 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so858398ika.5
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jul 2008 08:02:36 -0700 (PDT)
-To: linville@tuxdriver.com
-Subject: rt2x00: Fix register comments
-Date: Sun, 6 Jul 2008 17:09:48 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
+Received: from hostap.isc.org ([149.20.54.63]:60952 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750902AbYGKBmN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jul 2008 21:42:13 -0400
+Date: Fri, 11 Jul 2008 04:41:13 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
+Message-ID: <20080711014113.GE7284@jm.kir.nu> (sfid-20080711_034217_095291_45DBDCD5)
+References: <20080709190915.GA8238@tuxdriver.com> <1ba2fa240807091713t1158c1ddp81c92ae26a002e46@mail.gmail.com> <87iqvd3j6w.fsf@nokia.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200807061709.48731.IvDoorn@gmail.com> (sfid-20080706_170259_190037_0248F8E4)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87iqvd3j6w.fsf@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix some register documentation in the register header files.
-This allows better parsing by userspace scripts which in turn
-helps debugging.
+On Thu, Jul 10, 2008 at 05:30:47PM +0300, Kalle Valo wrote:
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.h b/drivers/net/wireless/rt2x00/rt2500pci.h
-index cb648c3..42f3769 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.h
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.h
-@@ -751,7 +751,7 @@
- #define LEDCSR_LED_DEFAULT		FIELD32(0x00100000)
+> I'm just worried if one day is enough for us. The agenda is getting
+> quite long already.
+
+There should be plenty of time to continue discussions after (or even
+before) the mini-summit since I would assume most people stay for OLS.
+For example, I will be in Ottawa for the full week (July 18-27) and
+will be available for discussions related to wireless topics both
+before and after the mini-summit itself.
  
- /*
-- * AES control register.
-+ * SECCSR3: AES control register.
-  */
- #define SECCSR3				0x00fc
- 
-@@ -895,7 +895,7 @@
- #define ARTCSR2_ACK_CTS_54MBS		FIELD32(0xff000000)
- 
- /*
-- * SECCSR1_RT2509: WEP control register.
-+ * SECCSR1: WEP control register.
-  * KICK_ENCRYPT: Kick encryption engine, self-clear.
-  * ONE_SHOT: 0: ring mode, 1: One shot only mode.
-  * DESC_ADDRESS: Descriptor physical address of frame.
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.h b/drivers/net/wireless/rt2x00/rt2500usb.h
-index c8697b9..fe5a23e 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.h
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.h
-@@ -209,7 +209,7 @@
- #define MAC_CSR21_OFF_PERIOD		FIELD16(0xff00)
- 
- /*
-- * Collision window control register.
-+ * MAC_CSR22: Collision window control register.
-  */
- #define MAC_CSR22			0x042c
- 
-@@ -296,7 +296,7 @@
- #define TXRX_CSR7_BBP_ID1_VALID		FIELD16(0x8000)
- 
- /*
-- * TXRX_CSR5: OFDM TX BBP ID1.
-+ * TXRX_CSR8: OFDM TX BBP ID1.
-  */
- #define TXRX_CSR8			0x0450
- #define TXRX_CSR8_BBP_ID0		FIELD16(0x007f)
-@@ -370,7 +370,14 @@
-  */
- 
- /*
-- * SEC_CSR0-SEC_CSR7: Shared key 0, word 0-7
-+ * SEC_CSR0: Shared key 0, word 0
-+ * SEC_CSR1: Shared key 0, word 1
-+ * SEC_CSR2: Shared key 0, word 2
-+ * SEC_CSR3: Shared key 0, word 3
-+ * SEC_CSR4: Shared key 0, word 4
-+ * SEC_CSR5: Shared key 0, word 5
-+ * SEC_CSR6: Shared key 0, word 6
-+ * SEC_CSR7: Shared key 0, word 7
-  */
- #define SEC_CSR0			0x0480
- #define SEC_CSR1			0x0482
-@@ -382,7 +389,14 @@
- #define SEC_CSR7			0x048e
- 
- /*
-- * SEC_CSR8-SEC_CSR15: Shared key 1, word 0-7
-+ * SEC_CSR8: Shared key 1, word 0
-+ * SEC_CSR9: Shared key 1, word 1
-+ * SEC_CSR10: Shared key 1, word 2
-+ * SEC_CSR11: Shared key 1, word 3
-+ * SEC_CSR12: Shared key 1, word 4
-+ * SEC_CSR13: Shared key 1, word 5
-+ * SEC_CSR14: Shared key 1, word 6
-+ * SEC_CSR15: Shared key 1, word 7
-  */
- #define SEC_CSR8			0x0490
- #define SEC_CSR9			0x0492
-@@ -394,7 +408,14 @@
- #define SEC_CSR15			0x049e
- 
- /*
-- * SEC_CSR16-SEC_CSR23: Shared key 2, word 0-7
-+ * SEC_CSR16: Shared key 2, word 0
-+ * SEC_CSR17: Shared key 2, word 1
-+ * SEC_CSR18: Shared key 2, word 2
-+ * SEC_CSR19: Shared key 2, word 3
-+ * SEC_CSR20: Shared key 2, word 4
-+ * SEC_CSR21: Shared key 2, word 5
-+ * SEC_CSR22: Shared key 2, word 6
-+ * SEC_CSR23: Shared key 2, word 7
-  */
- #define SEC_CSR16			0x04a0
- #define SEC_CSR17			0x04a2
-@@ -406,7 +427,14 @@
- #define SEC_CSR23			0x04ae
- 
- /*
-- * SEC_CSR24-SEC_CSR31: Shared key 3, word 0-7
-+ * SEC_CSR24: Shared key 3, word 0
-+ * SEC_CSR25: Shared key 3, word 1
-+ * SEC_CSR26: Shared key 3, word 2
-+ * SEC_CSR27: Shared key 3, word 3
-+ * SEC_CSR28: Shared key 3, word 4
-+ * SEC_CSR29: Shared key 3, word 5
-+ * SEC_CSR30: Shared key 3, word 6
-+ * SEC_CSR31: Shared key 3, word 7
-  */
- #define SEC_CSR24			0x04b0
- #define SEC_CSR25			0x04b2
+-- 
+Jouni Malinen                                            PGP id EFC895FA
