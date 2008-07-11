@@ -1,341 +1,295 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.190]:17365 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753428AbYGRIv2 (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:33329 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755184AbYGKT4e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 04:51:28 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so225908tic.23
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jul 2008 01:51:27 -0700 (PDT)
-Message-ID: <da2e1ddd0807180151k707c77eeyf31b6ea2948c6ec3@mail.gmail.com> (sfid-20080718_105136_638316_750E0594)
-Date: Fri, 18 Jul 2008 17:51:26 +0900
-From: "=?EUC-KR?B?wNO/tbrz?=" <ybim@mmlab.snu.ac.kr>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: question about open11s installation
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1216313740.3422.44.camel@johannes.berg>
+	Fri, 11 Jul 2008 15:56:34 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC] Merge tx/rx descriptor flags of rtl818x devices
+Date: Fri, 11 Jul 2008 16:56:39 -0300
+Cc: Andrea Merello <andreamrl@tiscali.it>,
+	Michael Wu <flamingice@sourmilk.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <da2e1ddd0807170905j5121737bia15429aee0f7ffd6@mail.gmail.com>
-	 <1216313740.3422.44.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200807111656.40342.herton@mandriva.com.br> (sfid-20080711_215644_047676_DC398573)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks to your patch, I could avoid the strange operation of the
-system when I executed the command for showing mesh path.
-But the problem that there's no mesh connection established still remains.
-My wlan cards use broadcom 4318 chipsets, and I installed
-wireless-testing kernel, iw and libnl correctly, I think.
-Then what will be the possible cause?
+Hi,
 
-2008/7/18 Johannes Berg <johannes@sipsolutions.net>:
->
-> > [  276.676290] ------------[ cut here ]------------
-> > [  276.676290] kernel BUG at net/mac80211/ieee80211_i.h:757!
-> > [  276.676290] invalid opcode: 0000 [#1] SMP
-> > [  276.676290] Modules linked in: rfkill_input radeon drm rfcomm l2cap
-> > bluetooth ppdev speedstep_lib cpufreq_stats cpufreq_userspace
-> > cpufreq_powersave cpufreq_ondemand freq_table cpufreq_conservative
-> > video output container sbs sbshc battery iptable_filter ip_tables
-> > x_tables ac lp arc4 ecb crypto_blkcipher b43 rfkill mac80211
-> > parport_pc parport cfg80211 led_class psmouse input_polldev serio_raw
-> > pcspkr iTCO_wdt iTCO_vendor_support sky2 button intel_agp agpgart
-> > shpchp pci_hotplug ipv6 evdev ext3 jbd mbcache sd_mod sg sr_mod cdrom
-> > pata_acpi ata_generic 8139too ata_piix libata scsi_mod dock 8139cp mii
-> > ssb ehci_hcd uhci_hcd usbcore thermal processor fan thermal_sys fuse
-> > [  276.676290]
-> > [  276.676290] Pid: 5495, comm: iw Not tainted (2.6.26-custom-wl #1)
-> > [  276.676290] EIP: 0060:[<e09d6e0c>] EFLAGS: 00010246 CPU: 0
-> > [  276.676290] EIP is at ieee80211_dump_mpath+0x6c/0x80 [mac80211]
->
-> Clearly, there's a BUG_ON being hit, and that's under RTNL so after that
-> nothing works any more.
->
-> Please try the patch below.
->
-> johannes
->
-> --- everything.orig/net/mac80211/cfg.c  2008-07-17 18:40:29.000000000 +0200
-> +++ everything/net/mac80211/cfg.c       2008-07-17 18:55:03.000000000 +0200
-> @@ -85,6 +85,7 @@ static int ieee80211_change_iface(struct
->                                  enum nl80211_iftype type, u32 *flags,
->                                  struct vif_params *params)
->  {
-> +       struct ieee80211_local *local = wiphy_priv(wiphy);
->        struct net_device *dev;
->        enum ieee80211_if_types itype;
->        struct ieee80211_sub_if_data *sdata;
-> @@ -99,6 +100,9 @@ static int ieee80211_change_iface(struct
->        if (itype == IEEE80211_IF_TYPE_INVALID)
->                return -EINVAL;
->
-> +       if (dev == local->mdev)
-> +               return -EOPNOTSUPP;
-> +
->        sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->
->        ret = ieee80211_if_change_type(sdata, itype);
-> @@ -121,12 +125,16 @@ static int ieee80211_add_key(struct wiph
->                             u8 key_idx, u8 *mac_addr,
->                             struct key_params *params)
->  {
-> +       struct ieee80211_local *local = wiphy_priv(wiphy);
->        struct ieee80211_sub_if_data *sdata;
->        struct sta_info *sta = NULL;
->        enum ieee80211_key_alg alg;
->        struct ieee80211_key *key;
->        int err;
->
-> +       if (dev == local->mdev)
-> +               return -EOPNOTSUPP;
-> +
->        sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->
->        switch (params->cipher) {
-> @@ -171,10 +179,14 @@ static int ieee80211_add_key(struct wiph
->  static int ieee80211_del_key(struct wiphy *wiphy, struct net_device *dev,
->                             u8 key_idx, u8 *mac_addr)
->  {
-> +       struct ieee80211_local *local = wiphy_priv(wiphy);
->        struct ieee80211_sub_if_data *sdata;
->        struct sta_info *sta;
->        int ret;
->
-> +       if (dev == local->mdev)
-> +               return -EOPNOTSUPP;
-> +
->        sdata = IEEE80211_DEV_TO_SUB_IF(dev);
->
->        rcu_read_lock();
-> @@ -215,7 +227,8 @@ static int ieee80211_get_key(struct wiph
->                             void (*callback)(void *cookie,
->                                              struct key_params *params))
->  {
-> -       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +       struct ieee80211_local *local = wiphy_priv(wiphy);
-> +       struct ieee80211_sub_if_data *sdata;
->        struct sta_info *sta = NULL;
->        u8 seq[6] = {0};
->        struct key_params params;
-> @@ -224,6 +237,11 @@ static int ieee80211_get_key(struct wiph
->        u16 iv16;
->        int err = -ENOENT;
->
-> +       if (dev == local->mdev)
-> +               return -EOPNOTSUPP;
-> +
-> +       sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +
->        rcu_read_lock();
->
->        if (mac_addr) {
-> @@ -297,8 +315,12 @@ static int ieee80211_config_default_key(
->                                        struct net_device *dev,
->                                        u8 key_idx)
->  {
-> +       struct ieee80211_local *local = wiphy_priv(wiphy);
->        struct ieee80211_sub_if_data *sdata;
->
-> +       if (dev == local->mdev)
-> +               return -EOPNOTSUPP;
-> +
->        rcu_read_lock();
->
->        sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> @@ -479,9 +501,15 @@ static int ieee80211_config_beacon(struc
->  static int ieee80211_add_beacon(struct wiphy *wiphy, struct net_device *dev,
->                                struct beacon_parameters *params)
->  {
-> -       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +       struct ieee80211_local *local = wiphy_priv(wiphy);
-> +       struct ieee80211_sub_if_data *sdata;
->        struct beacon_data *old;
->
-> +       if (dev == local->mdev)
-> +               return -EOPNOTSUPP;
-> +
-> +       sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +
->        if (sdata->vif.type != IEEE80211_IF_TYPE_AP)
->                return -EINVAL;
->
-> @@ -496,9 +524,15 @@ static int ieee80211_add_beacon(struct w
->  static int ieee80211_set_beacon(struct wiphy *wiphy, struct net_device *dev,
->                                struct beacon_parameters *params)
->  {
-> -       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +       struct ieee80211_local *local = wiphy_priv(wiphy);
-> +       struct ieee80211_sub_if_data *sdata;
->        struct beacon_data *old;
->
-> +       if (dev == local->mdev)
-> +               return -EOPNOTSUPP;
-> +
-> +       sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +
->        if (sdata->vif.type != IEEE80211_IF_TYPE_AP)
->                return -EINVAL;
->
-> @@ -512,9 +546,15 @@ static int ieee80211_set_beacon(struct w
->
->  static int ieee80211_del_beacon(struct wiphy *wiphy, struct net_device *dev)
->  {
-> -       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +       struct ieee80211_local *local = wiphy_priv(wiphy);
-> +       struct ieee80211_sub_if_data *sdata;
->        struct beacon_data *old;
->
-> +       if (dev == local->mdev)
-> +               return -EOPNOTSUPP;
-> +
-> +       sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +
->        if (sdata->vif.type != IEEE80211_IF_TYPE_AP)
->                return -EINVAL;
->
-> @@ -650,11 +690,14 @@ static void sta_apply_parameters(struct
->  static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
->                                 u8 *mac, struct station_parameters *params)
->  {
-> -       struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-> +       struct ieee80211_local *local = wiphy_priv(wiphy);
->        struct sta_info *sta;
->        struct ieee80211_sub_if_data *sdata;
->        int err;
->
-> +       if (dev == local->mdev || params->vlan == local->mdev)
-> +               return -EOPNOTSUPP;
-> +
->        /* Prevent a race with changing the rate control algorithm */
->        if (!netif_running(dev))
->                return -ENETDOWN;
-> @@ -705,10 +748,15 @@ static int ieee80211_add_station(struct
->  static int ieee80211_del_station(struct wiphy *wiphy, struct net_device *dev,
->                                 u8 *mac)
->  {
-> -       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> -       struct ieee80211_local *local = sdata->local;
-> +       struct ieee80211_local *local = wiphy_priv(wiphy);
-> +       struct ieee80211_sub_if_data *sdata;
->        struct sta_info *sta;
->
-> +       if (dev == local->mdev)
-> +               return -EOPNOTSUPP;
-> +
-> +       sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +
->        if (mac) {
->                rcu_read_lock();
->
-> @@ -734,10 +782,13 @@ static int ieee80211_change_station(stru
->                                    u8 *mac,
->                                    struct station_parameters *params)
->  {
-> -       struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-> +       struct ieee80211_local *local = wiphy_priv(wiphy);
->        struct sta_info *sta;
->        struct ieee80211_sub_if_data *vlansdata;
->
-> +       if (dev == local->mdev || params->vlan == local->mdev)
-> +               return -EOPNOTSUPP;
-> +
->        rcu_read_lock();
->
->        /* XXX: get sta belonging to dev */
-> @@ -756,7 +807,7 @@ static int ieee80211_change_station(stru
->                        return -EINVAL;
->                }
->
-> -               sta->sdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
-> +               sta->sdata = vlansdata;
->                ieee80211_send_layer2_update(sta);
->        }
->
-> @@ -771,15 +822,20 @@ static int ieee80211_change_station(stru
->  static int ieee80211_add_mpath(struct wiphy *wiphy, struct net_device *dev,
->                                 u8 *dst, u8 *next_hop)
->  {
-> -       struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-> -       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +       struct ieee80211_local *local = wiphy_priv(wiphy);
-> +       struct ieee80211_sub_if_data *sdata;
->        struct mesh_path *mpath;
->        struct sta_info *sta;
->        int err;
->
-> +       if (dev == local->mdev)
-> +               return -EOPNOTSUPP;
-> +
->        if (!netif_running(dev))
->                return -ENETDOWN;
->
-> +       sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +
->        if (sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT)
->                return -ENOTSUPP;
->
-> @@ -821,14 +877,19 @@ static int ieee80211_change_mpath(struct
->                                    struct net_device *dev,
->                                    u8 *dst, u8 *next_hop)
->  {
-> -       struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-> -       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +       struct ieee80211_local *local = wiphy_priv(wiphy);
-> +       struct ieee80211_sub_if_data *sdata;
->        struct mesh_path *mpath;
->        struct sta_info *sta;
->
-> +       if (dev == local->mdev)
-> +               return -EOPNOTSUPP;
-> +
->        if (!netif_running(dev))
->                return -ENETDOWN;
->
-> +       sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +
->        if (sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT)
->                return -ENOTSUPP;
->
-> @@ -895,9 +956,15 @@ static int ieee80211_get_mpath(struct wi
->                               u8 *dst, u8 *next_hop, struct mpath_info *pinfo)
->
->  {
-> -       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +       struct ieee80211_local *local = wiphy_priv(wiphy);
-> +       struct ieee80211_sub_if_data *sdata;
->        struct mesh_path *mpath;
->
-> +       if (dev == local->mdev)
-> +               return -EOPNOTSUPP;
-> +
-> +       sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +
->        if (sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT)
->                return -ENOTSUPP;
->
-> @@ -917,9 +984,15 @@ static int ieee80211_dump_mpath(struct w
->                                 int idx, u8 *dst, u8 *next_hop,
->                                 struct mpath_info *pinfo)
->  {
-> -       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +       struct ieee80211_local *local = wiphy_priv(wiphy);
-> +       struct ieee80211_sub_if_data *sdata;
->        struct mesh_path *mpath;
->
-> +       if (dev == local->mdev)
-> +               return -EOPNOTSUPP;
-> +
-> +       sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +
->        if (sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT)
->                return -ENOTSUPP;
->
->
+In rtl818x code tx/rx descriptor flags are common between all devices as far
+as I could check (looking at r8180 specs I found on the web recently and on
+vendor rtl8187b driver). Here is a proposal for merging them:
+_________
+
+rtl818x: merge tx/rx descriptor flags
+
+Tx/Rx descriptor flags are common between rtl818x devices, only with
+additions for newer chips, thus use same flags in the code.
+
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+---
+ drivers/net/wireless/rtl8180.h     |   31 -------------------------------
+ drivers/net/wireless/rtl8180_dev.c |   34 +++++++++++++++++-----------------
+ drivers/net/wireless/rtl8187.h     |    6 ------
+ drivers/net/wireless/rtl8187_dev.c |   10 +++++-----
+ drivers/net/wireless/rtl818x.h     |   35 +++++++++++++++++++++++++++++++++++
+ 5 files changed, 57 insertions(+), 59 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl8180.h b/drivers/net/wireless/rtl8180.h
+index 082a11f..8721282 100644
+--- a/drivers/net/wireless/rtl8180.h
++++ b/drivers/net/wireless/rtl8180.h
+@@ -24,20 +24,6 @@
+ #define ANAPARAM_PWR1_SHIFT	20
+ #define ANAPARAM_PWR1_MASK	(0x7F << ANAPARAM_PWR1_SHIFT)
+ 
+-enum rtl8180_tx_desc_flags {
+-	RTL8180_TX_DESC_FLAG_NO_ENC	= (1 << 15),
+-	RTL8180_TX_DESC_FLAG_TX_OK	= (1 << 15),
+-	RTL8180_TX_DESC_FLAG_SPLCP	= (1 << 16),
+-	RTL8180_TX_DESC_FLAG_RX_UNDER	= (1 << 16),
+-	RTL8180_TX_DESC_FLAG_MOREFRAG	= (1 << 17),
+-	RTL8180_TX_DESC_FLAG_CTS	= (1 << 18),
+-	RTL8180_TX_DESC_FLAG_RTS	= (1 << 23),
+-	RTL8180_TX_DESC_FLAG_LS		= (1 << 28),
+-	RTL8180_TX_DESC_FLAG_FS		= (1 << 29),
+-	RTL8180_TX_DESC_FLAG_DMA	= (1 << 30),
+-	RTL8180_TX_DESC_FLAG_OWN	= (1 << 31)
+-};
+-
+ struct rtl8180_tx_desc {
+ 	__le32 flags;
+ 	__le16 rts_duration;
+@@ -52,23 +38,6 @@ struct rtl8180_tx_desc {
+ 	u32 reserved[2];
+ } __attribute__ ((packed));
+ 
+-enum rtl8180_rx_desc_flags {
+-	RTL8180_RX_DESC_FLAG_ICV_ERR	= (1 << 12),
+-	RTL8180_RX_DESC_FLAG_CRC32_ERR	= (1 << 13),
+-	RTL8180_RX_DESC_FLAG_PM		= (1 << 14),
+-	RTL8180_RX_DESC_FLAG_RX_ERR	= (1 << 15),
+-	RTL8180_RX_DESC_FLAG_BCAST	= (1 << 16),
+-	RTL8180_RX_DESC_FLAG_PAM	= (1 << 17),
+-	RTL8180_RX_DESC_FLAG_MCAST	= (1 << 18),
+-	RTL8180_RX_DESC_FLAG_SPLCP	= (1 << 25),
+-	RTL8180_RX_DESC_FLAG_FOF	= (1 << 26),
+-	RTL8180_RX_DESC_FLAG_DMA_FAIL	= (1 << 27),
+-	RTL8180_RX_DESC_FLAG_LS		= (1 << 28),
+-	RTL8180_RX_DESC_FLAG_FS		= (1 << 29),
+-	RTL8180_RX_DESC_FLAG_EOR	= (1 << 30),
+-	RTL8180_RX_DESC_FLAG_OWN	= (1 << 31)
+-};
+-
+ struct rtl8180_rx_desc {
+ 	__le32 flags;
+ 	__le32 flags2;
+diff --git a/drivers/net/wireless/rtl8180_dev.c b/drivers/net/wireless/rtl8180_dev.c
+index b7172a1..861c76a 100644
+--- a/drivers/net/wireless/rtl8180_dev.c
++++ b/drivers/net/wireless/rtl8180_dev.c
+@@ -110,12 +110,12 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
+ 		struct sk_buff *skb = priv->rx_buf[priv->rx_idx];
+ 		u32 flags = le32_to_cpu(entry->flags);
+ 
+-		if (flags & RTL8180_RX_DESC_FLAG_OWN)
++		if (flags & RTL818X_RX_DESC_FLAG_OWN)
+ 			return;
+ 
+-		if (unlikely(flags & (RTL8180_RX_DESC_FLAG_DMA_FAIL |
+-				      RTL8180_RX_DESC_FLAG_FOF |
+-				      RTL8180_RX_DESC_FLAG_RX_ERR)))
++		if (unlikely(flags & (RTL818X_RX_DESC_FLAG_DMA_FAIL |
++				      RTL818X_RX_DESC_FLAG_FOF |
++				      RTL818X_RX_DESC_FLAG_RX_ERR)))
+ 			goto done;
+ 		else {
+ 			u32 flags2 = le32_to_cpu(entry->flags2);
+@@ -140,7 +140,7 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
+ 			rx_status.band = dev->conf.channel->band;
+ 			rx_status.mactime = le64_to_cpu(entry->tsft);
+ 			rx_status.flag |= RX_FLAG_TSFT;
+-			if (flags & RTL8180_RX_DESC_FLAG_CRC32_ERR)
++			if (flags & RTL818X_RX_DESC_FLAG_CRC32_ERR)
+ 				rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
+ 
+ 			ieee80211_rx_irqsafe(dev, skb, &rx_status);
+@@ -154,10 +154,10 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
+ 
+ 	done:
+ 		entry->rx_buf = cpu_to_le32(*((dma_addr_t *)skb->cb));
+-		entry->flags = cpu_to_le32(RTL8180_RX_DESC_FLAG_OWN |
++		entry->flags = cpu_to_le32(RTL818X_RX_DESC_FLAG_OWN |
+ 					   MAX_RX_SIZE);
+ 		if (priv->rx_idx == 31)
+-			entry->flags |= cpu_to_le32(RTL8180_RX_DESC_FLAG_EOR);
++			entry->flags |= cpu_to_le32(RTL818X_RX_DESC_FLAG_EOR);
+ 		priv->rx_idx = (priv->rx_idx + 1) % 32;
+ 	}
+ }
+@@ -173,7 +173,7 @@ static void rtl8180_handle_tx(struct ieee80211_hw *dev, unsigned int prio)
+ 		struct ieee80211_tx_info *info;
+ 		u32 flags = le32_to_cpu(entry->flags);
+ 
+-		if (flags & RTL8180_TX_DESC_FLAG_OWN)
++		if (flags & RTL818X_TX_DESC_FLAG_OWN)
+ 			return;
+ 
+ 		ring->idx = (ring->idx + 1) % ring->entries;
+@@ -185,7 +185,7 @@ static void rtl8180_handle_tx(struct ieee80211_hw *dev, unsigned int prio)
+ 		memset(&info->status, 0, sizeof(info->status));
+ 
+ 		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
+-			if (flags & RTL8180_TX_DESC_FLAG_TX_OK)
++			if (flags & RTL818X_TX_DESC_FLAG_TX_OK)
+ 				info->flags |= IEEE80211_TX_STAT_ACK;
+ 			else
+ 				info->status.excessive_retries = 1;
+@@ -252,20 +252,20 @@ static int rtl8180_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 	mapping = pci_map_single(priv->pdev, skb->data,
+ 				 skb->len, PCI_DMA_TODEVICE);
+ 
+-	tx_flags = RTL8180_TX_DESC_FLAG_OWN | RTL8180_TX_DESC_FLAG_FS |
+-		   RTL8180_TX_DESC_FLAG_LS |
++	tx_flags = RTL818X_TX_DESC_FLAG_OWN | RTL818X_TX_DESC_FLAG_FS |
++		   RTL818X_TX_DESC_FLAG_LS |
+ 		   (ieee80211_get_tx_rate(dev, info)->hw_value << 24) |
+ 		   skb->len;
+ 
+ 	if (priv->r8185)
+-		tx_flags |= RTL8180_TX_DESC_FLAG_DMA |
+-			    RTL8180_TX_DESC_FLAG_NO_ENC;
++		tx_flags |= RTL818X_TX_DESC_FLAG_DMA |
++			    RTL818X_TX_DESC_FLAG_NO_ENC;
+ 
+ 	if (info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) {
+-		tx_flags |= RTL8180_TX_DESC_FLAG_RTS;
++		tx_flags |= RTL818X_TX_DESC_FLAG_RTS;
+ 		tx_flags |= ieee80211_get_rts_cts_rate(dev, info)->hw_value << 19;
+ 	} else if (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT) {
+-		tx_flags |= RTL8180_TX_DESC_FLAG_CTS;
++		tx_flags |= RTL818X_TX_DESC_FLAG_CTS;
+ 		tx_flags |= ieee80211_get_rts_cts_rate(dev, info)->hw_value << 19;
+ 	}
+ 
+@@ -446,10 +446,10 @@ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
+ 		*mapping = pci_map_single(priv->pdev, skb_tail_pointer(skb),
+ 					  MAX_RX_SIZE, PCI_DMA_FROMDEVICE);
+ 		entry->rx_buf = cpu_to_le32(*mapping);
+-		entry->flags = cpu_to_le32(RTL8180_RX_DESC_FLAG_OWN |
++		entry->flags = cpu_to_le32(RTL818X_RX_DESC_FLAG_OWN |
+ 					   MAX_RX_SIZE);
+ 	}
+-	entry->flags |= cpu_to_le32(RTL8180_RX_DESC_FLAG_EOR);
++	entry->flags |= cpu_to_le32(RTL818X_RX_DESC_FLAG_EOR);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/rtl8187.h b/drivers/net/wireless/rtl8187.h
+index 3afb49f..1f01eed 100644
+--- a/drivers/net/wireless/rtl8187.h
++++ b/drivers/net/wireless/rtl8187.h
+@@ -56,12 +56,6 @@ struct rtl8187b_rx_hdr {
+ 
+ /* {rtl8187,rtl8187b}_tx_info is in skb */
+ 
+-/* Tx flags are common between rtl8187 and rtl8187b */
+-#define RTL8187_TX_FLAG_NO_ENCRYPT	(1 << 15)
+-#define RTL8187_TX_FLAG_MORE_FRAG	(1 << 17)
+-#define RTL8187_TX_FLAG_CTS		(1 << 18)
+-#define RTL8187_TX_FLAG_RTS		(1 << 23)
+-
+ struct rtl8187_tx_hdr {
+ 	__le32 flags;
+ 	__le16 rts_duration;
+diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
+index 25d9a0e..217098b 100644
+--- a/drivers/net/wireless/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl8187_dev.c
+@@ -183,18 +183,18 @@ static int rtl8187_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 	}
+ 
+ 	flags = skb->len;
+-	flags |= RTL8187_TX_FLAG_NO_ENCRYPT;
++	flags |= RTL818X_TX_DESC_FLAG_NO_ENC;
+ 
+ 	flags |= ieee80211_get_tx_rate(dev, info)->hw_value << 24;
+ 	if (ieee80211_has_morefrags(((struct ieee80211_hdr *)skb->data)->frame_control))
+-		flags |= RTL8187_TX_FLAG_MORE_FRAG;
++		flags |= RTL818X_TX_DESC_FLAG_MOREFRAG;
+ 	if (info->flags & IEEE80211_TX_CTL_USE_RTS_CTS) {
+-		flags |= RTL8187_TX_FLAG_RTS;
++		flags |= RTL818X_TX_DESC_FLAG_RTS;
+ 		flags |= ieee80211_get_rts_cts_rate(dev, info)->hw_value << 19;
+ 		rts_dur = ieee80211_rts_duration(dev, priv->vif,
+ 						 skb->len, info);
+ 	} else if (info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT) {
+-		flags |= RTL8187_TX_FLAG_CTS;
++		flags |= RTL818X_TX_DESC_FLAG_CTS;
+ 		flags |= ieee80211_get_rts_cts_rate(dev, info)->hw_value << 19;
+ 	}
+ 
+@@ -322,7 +322,7 @@ static void rtl8187_rx_cb(struct urb *urb)
+ 	rx_status.freq = dev->conf.channel->center_freq;
+ 	rx_status.band = dev->conf.channel->band;
+ 	rx_status.flag |= RX_FLAG_TSFT;
+-	if (flags & (1 << 13))
++	if (flags & RTL818X_RX_DESC_FLAG_CRC32_ERR)
+ 		rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
+ 	ieee80211_rx_irqsafe(dev, skb, &rx_status);
+ 
+diff --git a/drivers/net/wireless/rtl818x.h b/drivers/net/wireless/rtl818x.h
+index 00900fe..3538b15 100644
+--- a/drivers/net/wireless/rtl818x.h
++++ b/drivers/net/wireless/rtl818x.h
+@@ -193,4 +193,39 @@ struct rtl818x_rf_ops {
+ 	void (*set_chan)(struct ieee80211_hw *, struct ieee80211_conf *);
+ };
+ 
++/* Tx/Rx flags are common between RTL818X chips */
++
++enum rtl818x_tx_desc_flags {
++	RTL818X_TX_DESC_FLAG_NO_ENC	= (1 << 15),
++	RTL818X_TX_DESC_FLAG_TX_OK	= (1 << 15),
++	RTL818X_TX_DESC_FLAG_SPLCP	= (1 << 16),
++	RTL818X_TX_DESC_FLAG_RX_UNDER	= (1 << 16),
++	RTL818X_TX_DESC_FLAG_MOREFRAG	= (1 << 17),
++	RTL818X_TX_DESC_FLAG_CTS	= (1 << 18),
++	RTL818X_TX_DESC_FLAG_RTS	= (1 << 23),
++	RTL818X_TX_DESC_FLAG_LS		= (1 << 28),
++	RTL818X_TX_DESC_FLAG_FS		= (1 << 29),
++	RTL818X_TX_DESC_FLAG_DMA	= (1 << 30),
++	RTL818X_TX_DESC_FLAG_OWN	= (1 << 31)
++};
++
++enum rtl818x_rx_desc_flags {
++	RTL818X_RX_DESC_FLAG_ICV_ERR	= (1 << 12),
++	RTL818X_RX_DESC_FLAG_CRC32_ERR	= (1 << 13),
++	RTL818X_RX_DESC_FLAG_PM		= (1 << 14),
++	RTL818X_RX_DESC_FLAG_RX_ERR	= (1 << 15),
++	RTL818X_RX_DESC_FLAG_BCAST	= (1 << 16),
++	RTL818X_RX_DESC_FLAG_PAM	= (1 << 17),
++	RTL818X_RX_DESC_FLAG_MCAST	= (1 << 18),
++	RTL818X_RX_DESC_FLAG_QOS	= (1 << 19), /* RTL8187(B) only */
++	RTL818X_RX_DESC_FLAG_TRSW	= (1 << 24), /* RTL8187(B) only */
++	RTL818X_RX_DESC_FLAG_SPLCP	= (1 << 25),
++	RTL818X_RX_DESC_FLAG_FOF	= (1 << 26),
++	RTL818X_RX_DESC_FLAG_DMA_FAIL	= (1 << 27),
++	RTL818X_RX_DESC_FLAG_LS		= (1 << 28),
++	RTL818X_RX_DESC_FLAG_FS		= (1 << 29),
++	RTL818X_RX_DESC_FLAG_EOR	= (1 << 30),
++	RTL818X_RX_DESC_FLAG_OWN	= (1 << 31)
++};
++
+ #endif /* RTL818X_H */
+-- 
+1.5.6
 
 
 
---
-YoungBin Im
-Master Course Student
-Multimedia & Mobile Communications Lab.
-School of Computer Science and Engineering
-Seoul National University, Republic of Korea.
+-- 
+[]'s
+Herton
