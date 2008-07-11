@@ -1,382 +1,332 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23678 "EHLO mga11.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:61404 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750925AbYGKD4s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 23:56:48 -0400
+	id S1753689AbYGKD5J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jul 2008 23:57:09 -0400
 From: Zhu Yi <yi.zhu@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Adel Gadllah <adel.gadllah@gmail.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
 	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 01/14] iwl3965: remove useless network and duplicate checking
-Date: Fri, 11 Jul 2008 11:53:29 +0800
-Message-Id: <1215748422-12672-2-git-send-email-yi.zhu@intel.com> (sfid-20080711_055653_339688_2265AEA1)
-In-Reply-To: <1215748422-12672-1-git-send-email-yi.zhu@intel.com>
+Subject: [PATCH 09/14] iwlwifi: LED use correctly blink table
+Date: Fri, 11 Jul 2008 11:53:37 +0800
+Message-Id: <1215748422-12672-10-git-send-email-yi.zhu@intel.com> (sfid-20080711_061545_310390_35F40838)
+In-Reply-To: <1215748422-12672-9-git-send-email-yi.zhu@intel.com>
 References: <1215748422-12672-1-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-2-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-3-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-4-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-5-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-6-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-7-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-8-git-send-email-yi.zhu@intel.com>
+ <1215748422-12672-9-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Adel Gadllah <adel.gadllah@gmail.com>
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-mac802 can handle duplicate packages on its own, so let it do it.
-The patch is based on patch from Johannes Berg for iwl4965.
+This patch makes correct usage of the LED blink table.
 
-Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-3945.c     |   50 +++++-----
- drivers/net/wireless/iwlwifi/iwl-3945.h     |   19 ----
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 -
- drivers/net/wireless/iwlwifi/iwl3945-base.c |  126 ---------------------------
- 4 files changed, 25 insertions(+), 172 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-led.c      |  125 ++++++++++++--------------
+ drivers/net/wireless/iwlwifi/iwl-led.h      |    3 +-
+ 4 files changed, 61 insertions(+), 71 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 94e177a..c2a7678 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -514,6 +514,23 @@ static inline void iwl3945_dbg_report_frame(struct iwl3945_priv *priv,
- }
- #endif
- 
-+/* This is necessary only for a number of statistics, see the caller. */
-+static int iwl3945_is_network_packet(struct iwl3945_priv *priv,
-+		struct ieee80211_hdr *header)
-+{
-+	/* Filter incoming packets to determine if they are targeted toward
-+	 * this network, discarding packets coming from ourselves */
-+	switch (priv->iw_mode) {
-+	case IEEE80211_IF_TYPE_IBSS: /* Header: Dest. | Source    | BSSID */
-+		/* packets to our IBSS update information */
-+		return !compare_ether_addr(header->addr3, priv->bssid);
-+	case IEEE80211_IF_TYPE_STA: /* Header: Dest. | AP{BSSID} | Source */
-+		/* packets to our IBSS update information */
-+		return !compare_ether_addr(header->addr2, priv->bssid);
-+	default:
-+		return 1;
-+	}
-+}
- 
- static void iwl3945_add_radiotap(struct iwl3945_priv *priv,
- 				 struct sk_buff *skb,
-@@ -608,12 +625,12 @@ static void iwl3945_add_radiotap(struct iwl3945_priv *priv,
- 	stats->flag |= RX_FLAG_RADIOTAP;
- }
- 
--static void iwl3945_handle_data_packet(struct iwl3945_priv *priv, int is_data,
-+static void iwl3945_pass_packet_to_mac80211(struct iwl3945_priv *priv,
- 				   struct iwl3945_rx_mem_buffer *rxb,
- 				   struct ieee80211_rx_status *stats)
- {
--	struct ieee80211_hdr *hdr;
- 	struct iwl3945_rx_packet *pkt = (struct iwl3945_rx_packet *)rxb->skb->data;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)IWL_RX_DATA(pkt);
- 	struct iwl3945_rx_frame_hdr *rx_hdr = IWL_RX_HDR(pkt);
- 	struct iwl3945_rx_frame_end *rx_end = IWL_RX_END(pkt);
- 	short len = le16_to_cpu(rx_hdr->len);
-@@ -635,8 +652,6 @@ static void iwl3945_handle_data_packet(struct iwl3945_priv *priv, int is_data,
- 	/* Set the size of the skb to the size of the frame */
- 	skb_put(rxb->skb, le16_to_cpu(rx_hdr->len));
- 
--	hdr = (void *)rxb->skb->data;
--
- 	if (iwl3945_param_hwcrypto)
- 		iwl3945_set_decrypted_flag(priv, rxb->skb,
- 				       le32_to_cpu(rx_end->status), stats);
-@@ -645,7 +660,7 @@ static void iwl3945_handle_data_packet(struct iwl3945_priv *priv, int is_data,
- 		iwl3945_add_radiotap(priv, rxb->skb, rx_hdr, stats);
- 
- #ifdef CONFIG_IWL3945_LEDS
--	if (is_data)
-+	if (ieee80211_is_data(hdr->frame_control))
- 		priv->rxtxpackets += len;
- #endif
- 	ieee80211_rx_irqsafe(priv->hw, rxb->skb, stats);
-@@ -694,7 +709,7 @@ static void iwl3945_rx_reply_rx(struct iwl3945_priv *priv,
- 	}
- 
- 	if (priv->iw_mode == IEEE80211_IF_TYPE_MNTR) {
--		iwl3945_handle_data_packet(priv, 1, rxb, &rx_status);
-+		iwl3945_pass_packet_to_mac80211(priv, rxb, &rx_status);
- 		return;
- 	}
- 
-@@ -842,27 +857,12 @@ static void iwl3945_rx_reply_rx(struct iwl3945_priv *priv,
- 			}
- 		}
- 
--		iwl3945_handle_data_packet(priv, 0, rxb, &rx_status);
--		break;
--
--	case IEEE80211_FTYPE_CTL:
--		break;
--
--	case IEEE80211_FTYPE_DATA: {
--		DECLARE_MAC_BUF(mac1);
--		DECLARE_MAC_BUF(mac2);
--		DECLARE_MAC_BUF(mac3);
--
--		if (unlikely(iwl3945_is_duplicate_packet(priv, header)))
--			IWL_DEBUG_DROP("Dropping (dup): %s, %s, %s\n",
--				       print_mac(mac1, header->addr1),
--				       print_mac(mac2, header->addr2),
--				       print_mac(mac3, header->addr3));
--		else
--			iwl3945_handle_data_packet(priv, 1, rxb, &rx_status);
-+	case IEEE80211_FTYPE_DATA:
-+		/* fall through */
-+	default:
-+		iwl3945_pass_packet_to_mac80211(priv, rxb, &rx_status);
- 		break;
- 	}
--	}
- }
- 
- int iwl3945_hw_txq_attach_buf_to_tfd(struct iwl3945_priv *priv, void *ptr,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index 9c0a09e..a7ef59b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -510,8 +510,6 @@ struct iwl3945_ucode {
- 	u8 data[0];		/* data in same order as "size" elements */
- };
- 
--#define IWL_IBSS_MAC_HASH_SIZE 32
--
- struct iwl3945_ibss_seq {
- 	u8 mac[ETH_ALEN];
- 	u16 seq_num;
-@@ -569,17 +567,8 @@ extern int iwl3945_send_add_station(struct iwl3945_priv *priv,
- 				struct iwl3945_addsta_cmd *sta, u8 flags);
- extern u8 iwl3945_add_station(struct iwl3945_priv *priv, const u8 *bssid,
- 			  int is_ap, u8 flags);
--extern int iwl3945_is_network_packet(struct iwl3945_priv *priv,
--				 struct ieee80211_hdr *header);
- extern int iwl3945_power_init_handle(struct iwl3945_priv *priv);
- extern int iwl3945_eeprom_init(struct iwl3945_priv *priv);
--extern void iwl3945_handle_data_packet_monitor(struct iwl3945_priv *priv,
--					   struct iwl3945_rx_mem_buffer *rxb,
--					   void *data, short len,
--					   struct ieee80211_rx_status *stats,
--					   u16 phy_flags);
--extern int iwl3945_is_duplicate_packet(struct iwl3945_priv *priv,
--				       struct ieee80211_hdr *header);
- extern int iwl3945_rx_queue_alloc(struct iwl3945_priv *priv);
- extern void iwl3945_rx_queue_reset(struct iwl3945_priv *priv,
- 			       struct iwl3945_rx_queue *rxq);
-@@ -859,14 +848,6 @@ struct iwl3945_priv {
- 	u32 last_beacon_time;
- 	u64 last_tsf;
- 
--	/* Duplicate packet detection */
--	u16 last_seq_num;
--	u16 last_frag_num;
--	unsigned long last_packet_time;
--
--	/* Hash table for finding stations in IBSS network */
--	struct list_head ibss_mac_hash[IWL_IBSS_MAC_HASH_SIZE];
--
- 	/* eeprom */
- 	struct iwl3945_eeprom eeprom;
- 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 92754ee..3e96df8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -2926,7 +2926,7 @@ struct iwl5000_calibration_chain_noise_gain_cmd {
+  * For each of 3 possible LEDs (Activity/Link/Tech, selected by "id" field),
+  * this command turns it on or off, or sets up a periodic blinking cycle.
+  */
+-struct iwl4965_led_cmd {
++struct iwl_led_cmd {
+ 	__le32 interval;	/* "interval" in uSec */
+ 	u8 id;			/* 1: Activity, 2: Link, 3: Tech */
+ 	u8 off;			/* # intervals off while blinking;
 diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index c8d3d97..163502d 100644
+index bd06e0f..84a3ecf 100644
 --- a/drivers/net/wireless/iwlwifi/iwl-dev.h
 +++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -490,8 +490,6 @@ struct iwl_ucode {
- 	u8 data[0];		/* data in same order as "size" elements */
+@@ -282,7 +282,7 @@ struct iwl_cmd {
+ 	struct iwl_cmd_header hdr;	/* uCode API */
+ 	union {
+ 		struct iwl_addsta_cmd addsta;
+-		struct iwl4965_led_cmd led;
++		struct iwl_led_cmd led;
+ 		u32 flags;
+ 		u8 val8;
+ 		u16 val16;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
+index afd1075..0c09b90 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-led.c
++++ b/drivers/net/wireless/iwlwifi/iwl-led.c
+@@ -44,10 +44,6 @@
+ #include "iwl-io.h"
+ #include "iwl-helpers.h"
+ 
+-#define IWL_1MB_RATE (128 * 1024)
+-#define IWL_LED_THRESHOLD (16)
+-#define IWL_MAX_BLINK_TBL (10)
+-
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ static const char *led_type_str[] = {
+ 	__stringify(IWL_LED_TRG_TX),
+@@ -74,26 +70,31 @@ static const struct {
+ 	{15, 95, 95 },
+ 	{10, 110, 110},
+ 	{5, 130, 130},
+-	{0, 167, 167}
++	{0, 167, 167},
++/* SOLID_ON */
++	{-1, IWL_LED_SOLID, 0}
  };
  
--#define IWL_IBSS_MAC_HASH_SIZE 32
--
- struct iwl4965_ibss_seq {
- 	u8 mac[ETH_ALEN];
- 	u16 seq_num;
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index f27c9fd..ae81072 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2035,36 +2035,6 @@ static int iwl3945_send_power_mode(struct iwl3945_priv *priv, u32 mode)
- 	return rc;
- }
- 
--int iwl3945_is_network_packet(struct iwl3945_priv *priv, struct ieee80211_hdr *header)
--{
--	/* Filter incoming packets to determine if they are targeted toward
--	 * this network, discarding packets coming from ourselves */
--	switch (priv->iw_mode) {
--	case IEEE80211_IF_TYPE_IBSS: /* Header: Dest. | Source    | BSSID */
--		/* packets from our adapter are dropped (echo) */
--		if (!compare_ether_addr(header->addr2, priv->mac_addr))
--			return 0;
--		/* {broad,multi}cast packets to our IBSS go through */
--		if (is_multicast_ether_addr(header->addr1))
--			return !compare_ether_addr(header->addr3, priv->bssid);
--		/* packets to our adapter go through */
--		return !compare_ether_addr(header->addr1, priv->mac_addr);
--	case IEEE80211_IF_TYPE_STA: /* Header: Dest. | AP{BSSID} | Source */
--		/* packets from our adapter are dropped (echo) */
--		if (!compare_ether_addr(header->addr3, priv->mac_addr))
--			return 0;
--		/* {broad,multi}cast packets to our BSS go through */
--		if (is_multicast_ether_addr(header->addr1))
--			return !compare_ether_addr(header->addr2, priv->bssid);
--		/* packets to our adapter go through */
--		return !compare_ether_addr(header->addr1, priv->mac_addr);
--	default:
--		return 1;
--	}
--
+-static int iwl_led_cmd_callback(struct iwl_priv *priv,
+-				struct iwl_cmd *cmd, struct sk_buff *skb)
++#define IWL_1MB_RATE (128 * 1024)
++#define IWL_LED_THRESHOLD (16)
++#define IWL_MAX_BLINK_TBL (ARRAY_SIZE(blink_tbl) - 1) /* exclude SOLID_ON */
++#define IWL_SOLID_BLINK_IDX (ARRAY_SIZE(blink_tbl) - 1)
++
++/*  [0-256] -> [0..8] FIXME: we need [0..10] */
++static inline int iwl_brightness_to_idx(enum led_brightness brightness)
+ {
 -	return 1;
--}
--
- /**
-  * iwl3945_scan_cancel - Cancel any currently executing HW scan
-  *
-@@ -2117,20 +2087,6 @@ static int iwl3945_scan_cancel_timeout(struct iwl3945_priv *priv, unsigned long
- 	return ret;
++	return fls(0x000000FF & (u32)brightness);
  }
  
--static void iwl3945_sequence_reset(struct iwl3945_priv *priv)
--{
--	/* Reset ieee stats */
 -
--	/* We don't reset the net_device_stats (ieee->stats) on
--	 * re-association */
--
--	priv->last_seq_num = -1;
--	priv->last_frag_num = -1;
--	priv->last_packet_time = 0;
--
--	iwl3945_scan_cancel(priv);
--}
--
- #define MAX_UCODE_BEACON_INTERVAL	1024
- #define INTEL_CONN_LISTEN_INTERVAL	__constant_cpu_to_le16(0xA)
+ /* Send led command */
+-static int iwl_send_led_cmd(struct iwl_priv *priv,
+-			    struct iwl4965_led_cmd *led_cmd)
++static int iwl_send_led_cmd(struct iwl_priv *priv, struct iwl_led_cmd *led_cmd)
+ {
+ 	struct iwl_host_cmd cmd = {
+ 		.id = REPLY_LEDS_CMD,
+-		.len = sizeof(struct iwl4965_led_cmd),
++		.len = sizeof(struct iwl_led_cmd),
+ 		.data = led_cmd,
+ 		.meta.flags = CMD_ASYNC,
+-		.meta.u.callback = iwl_led_cmd_callback
++		.meta.u.callback = NULL,
+ 	};
+ 	u32 reg;
  
-@@ -2925,72 +2881,6 @@ void iwl3945_set_decrypted_flag(struct iwl3945_priv *priv, struct sk_buff *skb,
- 	}
+@@ -104,33 +105,19 @@ static int iwl_send_led_cmd(struct iwl_priv *priv,
+ 	return iwl_send_cmd(priv, &cmd);
  }
  
--#define IWL_PACKET_RETRY_TIME HZ
 -
--int iwl3945_is_duplicate_packet(struct iwl3945_priv *priv, struct ieee80211_hdr *header)
--{
--	u16 sc = le16_to_cpu(header->seq_ctrl);
--	u16 seq = (sc & IEEE80211_SCTL_SEQ) >> 4;
--	u16 frag = sc & IEEE80211_SCTL_FRAG;
--	u16 *last_seq, *last_frag;
--	unsigned long *last_time;
--
--	switch (priv->iw_mode) {
--	case IEEE80211_IF_TYPE_IBSS:{
--		struct list_head *p;
--		struct iwl3945_ibss_seq *entry = NULL;
--		u8 *mac = header->addr2;
--		int index = mac[5] & (IWL_IBSS_MAC_HASH_SIZE - 1);
--
--		__list_for_each(p, &priv->ibss_mac_hash[index]) {
--			entry = list_entry(p, struct iwl3945_ibss_seq, list);
--			if (!compare_ether_addr(entry->mac, mac))
--				break;
--		}
--		if (p == &priv->ibss_mac_hash[index]) {
--			entry = kzalloc(sizeof(*entry), GFP_ATOMIC);
--			if (!entry) {
--				IWL_ERROR("Cannot malloc new mac entry\n");
--				return 0;
--			}
--			memcpy(entry->mac, mac, ETH_ALEN);
--			entry->seq_num = seq;
--			entry->frag_num = frag;
--			entry->packet_time = jiffies;
--			list_add(&entry->list, &priv->ibss_mac_hash[index]);
--			return 0;
--		}
--		last_seq = &entry->seq_num;
--		last_frag = &entry->frag_num;
--		last_time = &entry->packet_time;
--		break;
--	}
--	case IEEE80211_IF_TYPE_STA:
--		last_seq = &priv->last_seq_num;
--		last_frag = &priv->last_frag_num;
--		last_time = &priv->last_packet_time;
--		break;
--	default:
--		return 0;
--	}
--	if ((*last_seq == seq) &&
--	    time_after(*last_time + IWL_PACKET_RETRY_TIME, jiffies)) {
--		if (*last_frag == frag)
--			goto drop;
--		if (*last_frag + 1 != frag)
--			/* out-of-order fragment */
--			goto drop;
--	} else
--		*last_seq = seq;
--
--	*last_frag = frag;
--	*last_time = jiffies;
--	return 0;
--
-- drop:
--	return 1;
+-/* Set led on command */
+-static int iwl4965_led_on(struct iwl_priv *priv, int led_id)
++/* Set led pattern command */
++static int iwl4965_led_pattern(struct iwl_priv *priv, int led_id, int idx)
+ {
+-	struct iwl4965_led_cmd led_cmd = {
++	struct iwl_led_cmd led_cmd = {
+ 		.id = led_id,
+-		.on = IWL_LED_SOLID,
+-		.off = 0,
+ 		.interval = IWL_DEF_LED_INTRVL
+ 	};
+-	return iwl_send_led_cmd(priv, &led_cmd);
 -}
--
- #ifdef CONFIG_IWL3945_SPECTRUM_MEASUREMENT
  
- #include "iwl-spectrum.h"
-@@ -6531,8 +6421,6 @@ static void iwl3945_bg_post_associate(struct work_struct *data)
+-/* Set led on command */
+-static int iwl4965_led_pattern(struct iwl_priv *priv, int led_id,
+-			       enum led_brightness brightness)
+-{
+-	struct iwl4965_led_cmd led_cmd = {
+-		.id = led_id,
+-		.on = brightness,
+-		.off = brightness,
+-		.interval = IWL_DEF_LED_INTRVL
+-	};
+-	if (brightness == LED_FULL) {
+-		led_cmd.on = IWL_LED_SOLID;
+-		led_cmd.off = 0;
+-	}
++	BUG_ON(idx > IWL_MAX_BLINK_TBL);
++
++	led_cmd.on = blink_tbl[idx].on_time;
++	led_cmd.off = blink_tbl[idx].off_time;
++
+ 	return iwl_send_led_cmd(priv, &led_cmd);
+ }
+ 
+@@ -143,10 +130,22 @@ static int iwl4965_led_on_reg(struct iwl_priv *priv, int led_id)
+ }
+ 
+ #if 0
++/* Set led on command */
++static int iwl4965_led_on(struct iwl_priv *priv, int led_id)
++{
++	struct iwl_led_cmd led_cmd = {
++		.id = led_id,
++		.on = IWL_LED_SOLID,
++		.off = 0,
++		.interval = IWL_DEF_LED_INTRVL
++	};
++	return iwl_send_led_cmd(priv, &led_cmd);
++}
++
+ /* Set led off command */
+ int iwl4965_led_off(struct iwl_priv *priv, int led_id)
+ {
+-	struct iwl4965_led_cmd led_cmd = {
++	struct iwl_led_cmd led_cmd = {
+ 		.id = led_id,
+ 		.on = 0,
+ 		.off = 0,
+@@ -169,7 +168,7 @@ static int iwl4965_led_off_reg(struct iwl_priv *priv, int led_id)
+ /*
+  * brightness call back function for Tx/Rx LED
+  */
+-static int iwl4965_led_associated(struct iwl_priv *priv, int led_id)
++static int iwl_led_associated(struct iwl_priv *priv, int led_id)
+ {
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status) ||
+ 	    !test_bit(STATUS_READY, &priv->status))
+@@ -213,8 +212,10 @@ static void iwl_led_brightness_set(struct led_classdev *led_cdev,
+ 			led->led_off(priv, IWL_LED_LINK);
+ 		break;
+ 	default:
+-		if (led->led_pattern)
+-			led->led_pattern(priv, IWL_LED_LINK, brightness);
++		if (led->led_pattern) {
++			int idx = iwl_brightness_to_idx(brightness);
++			led->led_pattern(priv, IWL_LED_LINK, idx);
++		}
  		break;
  	}
- 
--	iwl3945_sequence_reset(priv);
--
- 	iwl3945_activate_qos(priv, 0);
- 
- 	/* we have just associated, don't start scan too early */
-@@ -7944,7 +7832,6 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	struct iwl3945_priv *priv;
- 	struct ieee80211_hw *hw;
- 	struct iwl_3945_cfg *cfg = (struct iwl_3945_cfg *)(ent->driver_data);
--	int i;
- 	unsigned long flags;
- 	DECLARE_MAC_BUF(mac);
- 
-@@ -8005,9 +7892,6 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	spin_lock_init(&priv->sta_lock);
- 	spin_lock_init(&priv->hcmd_lock);
- 
--	for (i = 0; i < IWL_IBSS_MAC_HASH_SIZE; i++)
--		INIT_LIST_HEAD(&priv->ibss_mac_hash[i]);
--
- 	INIT_LIST_HEAD(&priv->free_frames);
- 
- 	mutex_init(&priv->mutex);
-@@ -8180,8 +8064,6 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
+ }
+@@ -256,10 +257,9 @@ static int iwl_leds_register_led(struct iwl_priv *priv, struct iwl_led *led,
+ /*
+  * calculate blink rate according to last 2 sec Tx/Rx activities
+  */
+-static inline u8 get_blink_rate(struct iwl_priv *priv)
++static int iwl_get_blink_rate(struct iwl_priv *priv)
  {
- 	struct iwl3945_priv *priv = pci_get_drvdata(pdev);
--	struct list_head *p, *q;
--	int i;
- 	unsigned long flags;
+ 	int i;
+-	u8 blink_rate;
+ 	u64 current_tpt = priv->tx_stats[2].bytes;
+ 	/* FIXME: + priv->rx_stats[2].bytes; */
+ 	s64 tpt = current_tpt - priv->led_tpt;
+@@ -270,20 +270,15 @@ static inline u8 get_blink_rate(struct iwl_priv *priv)
+ 	IWL_DEBUG_LED("tpt %lld current_tpt %lld\n", tpt, current_tpt);
+ 	priv->led_tpt = current_tpt;
  
- 	if (!priv)
-@@ -8202,14 +8084,6 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
+-	if (tpt < IWL_LED_THRESHOLD) {
++	if (!priv->allow_blinking)
+ 		i = IWL_MAX_BLINK_TBL;
+-	} else {
++	else
+ 		for (i = 0; i < IWL_MAX_BLINK_TBL; i++)
+ 			if (tpt  > (blink_tbl[i].tpt * IWL_1MB_RATE))
+ 				break;
+-	}
+-	/* if 0 frame is transfered */
+-	if ((i == IWL_MAX_BLINK_TBL) || !priv->allow_blinking)
+-		blink_rate = IWL_LED_SOLID;
+-	else
+-		blink_rate = blink_tbl[i].on_time;
  
- 	iwl_synchronize_irq(priv);
+-	return blink_rate;
++	IWL_DEBUG_LED("LED BLINK IDX=%d", i);
++	return i;
+ }
  
--	/* Free MAC hash list for ADHOC */
--	for (i = 0; i < IWL_IBSS_MAC_HASH_SIZE; i++) {
--		list_for_each_safe(p, q, &priv->ibss_mac_hash[i]) {
--			list_del(p);
--			kfree(list_entry(p, struct iwl3945_ibss_seq, list));
+ static inline int is_rf_kill(struct iwl_priv *priv)
+@@ -299,7 +294,7 @@ static inline int is_rf_kill(struct iwl_priv *priv)
+  */
+ void iwl_leds_background(struct iwl_priv *priv)
+ {
+-	u8 blink_rate;
++	u8 blink_idx;
+ 
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status)) {
+ 		priv->last_blink_time = 0;
+@@ -312,9 +307,10 @@ void iwl_leds_background(struct iwl_priv *priv)
+ 
+ 	if (!priv->allow_blinking) {
+ 		priv->last_blink_time = 0;
+-		if (priv->last_blink_rate != IWL_LED_SOLID) {
+-			priv->last_blink_rate = IWL_LED_SOLID;
+-			iwl4965_led_on(priv, IWL_LED_LINK);
++		if (priv->last_blink_rate != IWL_SOLID_BLINK_IDX) {
++			priv->last_blink_rate = IWL_SOLID_BLINK_IDX;
++			iwl4965_led_pattern(priv, IWL_LED_LINK,
++					    IWL_SOLID_BLINK_IDX);
+ 		}
+ 		return;
+ 	}
+@@ -323,19 +319,14 @@ void iwl_leds_background(struct iwl_priv *priv)
+ 			msecs_to_jiffies(1000)))
+ 		return;
+ 
+-	blink_rate = get_blink_rate(priv);
++	blink_idx = iwl_get_blink_rate(priv);
+ 
+ 	/* call only if blink rate change */
+-	if (blink_rate != priv->last_blink_rate) {
+-		if (blink_rate != IWL_LED_SOLID) {
+-			iwl4965_led_pattern(priv, IWL_LED_LINK, blink_rate);
+-		} else {
+-			iwl4965_led_on(priv, IWL_LED_LINK);
 -		}
 -	}
--
- 	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
++	if (blink_idx != priv->last_blink_rate)
++		iwl4965_led_pattern(priv, IWL_LED_LINK, blink_idx);
  
- 	iwl3945_rfkill_unregister(priv);
+ 	priv->last_blink_time = jiffies;
+-	priv->last_blink_rate = blink_rate;
++	priv->last_blink_rate = blink_idx;
+ }
+ EXPORT_SYMBOL(iwl_leds_background);
+ 
+@@ -386,8 +377,8 @@ int iwl_leds_register(struct iwl_priv *priv)
+ 	ret = iwl_leds_register_led(priv, &priv->led[IWL_LED_TRG_RX],
+ 				   IWL_LED_TRG_RX, 0, name, trigger);
+ 
+-	priv->led[IWL_LED_TRG_RX].led_on = iwl4965_led_associated;
+-	priv->led[IWL_LED_TRG_RX].led_off = iwl4965_led_associated;
++	priv->led[IWL_LED_TRG_RX].led_on = iwl_led_associated;
++	priv->led[IWL_LED_TRG_RX].led_off = iwl_led_associated;
+ 	priv->led[IWL_LED_TRG_RX].led_pattern = iwl4965_led_pattern;
+ 
+ 	if (ret)
+@@ -398,8 +389,8 @@ int iwl_leds_register(struct iwl_priv *priv)
+ 	ret = iwl_leds_register_led(priv, &priv->led[IWL_LED_TRG_TX],
+ 				   IWL_LED_TRG_TX, 0, name, trigger);
+ 
+-	priv->led[IWL_LED_TRG_TX].led_on = iwl4965_led_associated;
+-	priv->led[IWL_LED_TRG_TX].led_off = iwl4965_led_associated;
++	priv->led[IWL_LED_TRG_TX].led_on = iwl_led_associated;
++	priv->led[IWL_LED_TRG_TX].led_off = iwl_led_associated;
+ 	priv->led[IWL_LED_TRG_TX].led_pattern = iwl4965_led_pattern;
+ 
+ 	if (ret)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-led.h b/drivers/net/wireless/iwlwifi/iwl-led.h
+index c9466d5..05e6a61 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-led.h
++++ b/drivers/net/wireless/iwlwifi/iwl-led.h
+@@ -55,8 +55,7 @@ struct iwl_led {
+ 
+ 	int (*led_on) (struct iwl_priv *priv, int led_id);
+ 	int (*led_off) (struct iwl_priv *priv, int led_id);
+-	int (*led_pattern) (struct iwl_priv *priv, int led_id,
+-			    enum led_brightness brightness);
++	int (*led_pattern) (struct iwl_priv *priv, int led_id, int idx);
+ 
+ 	enum led_type type;
+ 	unsigned int registered;
 -- 
 1.5.3.6
 
