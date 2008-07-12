@@ -1,39 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40136
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751554AbYGUUQA (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:42365 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751883AbYGLIPH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 16:16:00 -0400
-Date: Mon, 21 Jul 2008 13:15:59 -0700 (PDT)
-Message-Id: <20080721.131559.258601277.davem@davemloft.net> (sfid-20080721_221609_334578_4DD00799)
-To: torvalds@linux-foundation.org
-Cc: Larry.Finger@lwfinger.net, mingo@elte.hu, ischram@telenet.be,
-	akpm@linux-foundation.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	j@w1.fi
-Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
- at 0000000000000370
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <alpine.LFD.1.10.0807211246280.31863@woody.linux-foundation.org>
-References: <20080721193425.GA29287@elte.hu>
-	<4884E6E6.7010800@lwfinger.net>
-	<alpine.LFD.1.10.0807211246280.31863@woody.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 12 Jul 2008 04:15:07 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so1271538nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Jul 2008 01:15:06 -0700 (PDT)
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: rt2x00 is still experimental?
+Date: Sat, 12 Jul 2008 10:25:43 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <1215811139.30975.10.camel@dv>
+In-Reply-To: <1215811139.30975.10.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200807121025.43801.IvDoorn@gmail.com> (sfid-20080712_101520_447574_534AF3FF)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 21 Jul 2008 12:47:58 -0700 (PDT)
+Hi,
 
-> On Mon, 21 Jul 2008, Larry Finger wrote:
-> > With an invalid opcode, mine is likely due to stack corruption.
+> Can we please have rt2x00 drivers considered stable in Linux 2.6.27? 
+
+No.
+
+> My experience running rt73 day by day with WPA on a very crowded network
+> shows that it's a pretty reliable driver already.
+
+Perhaps managed mode, but not adhoc mode, beaconing is still broken.
+In addition the leds are broken as well, and hardware encryption isn't in either.
+
+But to make a very important nore:
+
+rt2400pci: unknown status
+rt2500pci: TX rate problems, LED problems
+rt2500usb: Completely broken, segfault on unplug, no HW crypto
+rt61pci: TX rate problems, LED problems, no HW crypto
+rt73usb: TX rate problems, LED problems. no HW crypto
+
+I have 4 open Fedora bugreports, and 3 open Kernel bugreports
+
+When I finally have my testsystem capable of running a >=2.6.26 kernel
+then I can test rt2400pci, and _perhaps_ I can mark that one as stable since
+it seems to work quite well on 2.6.25.
+
+But marking the drivers as stable with be a per-rt2x00-driver decision, so what
+I can do is moving the CONFIG_EXPERIMENTAL dependency to the drivers instead
+of globally on CONFIG_RT2X00
+
+> I realize that distros would enable whatever they want, and most people
+> here have CONFIG_EXPERIMENTAL on anyway, but still, it could help direct
+> users towards better supported hardware and make CONFIG_EXPERIMENTAL
+> more relevant.
 > 
-> No, invalid opcode is because we use the "ud2" instruction for BUG(), 
-> which causes an invalid op exception. So any BUG[_ON]() will always cause 
-> that on x86.
+> The latest commits to the drivers/net/wireless/rt2x00 directory seem to
+> confirm that the major issues have been addressed already.
 
-Is there really no more backtrace from that crash message?
-It would tell me what driver it's in.
+Not sure what you saw in the latest commits, but they are not confirming anything
+about stability. ;)
 
-There is some "comm: b43" in the log so I'll check that one.
+Ivo
