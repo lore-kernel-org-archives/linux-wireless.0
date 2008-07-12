@@ -1,57 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.168]:32944 "EHLO
+Received: from wf-out-1314.google.com ([209.85.200.174]:29056 "EHLO
 	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751816AbYG1Ooj (ORCPT
+	with ESMTP id S1751351AbYGLQP7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2008 10:44:39 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so5774694wfd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 07:44:38 -0700 (PDT)
-Message-ID: <40f31dec0807280744r22d9d279n3c6713f16ba29ac1@mail.gmail.com> (sfid-20080728_164441_832943_598E3E62)
-Date: Mon, 28 Jul 2008 17:44:38 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: [ath5k-devel] [PATCH 12/12] ath5k: Fix a compilation error after reg list update
-Cc: "Jiri Slaby" <jirislaby@gmail.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@gmail.com
-In-Reply-To: <1217250601.2441.20.camel@dv>
+	Sat, 12 Jul 2008 12:15:59 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so4138877wfd.4
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Jul 2008 09:15:57 -0700 (PDT)
+Message-ID: <69e28c910807120915h505640acp36efc67fd40a4953@mail.gmail.com> (sfid-20080712_181617_744190_7F47B5C6)
+Date: Sat, 12 Jul 2008 18:15:56 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: rt2x00 is still experimental?
+Cc: "Ivo van Doorn" <ivdoorn@gmail.com>,
+	"Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <200807121731.57208.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080720035221.GL7440@makis> <4885F055.8000304@gmail.com>
-	 <40f31dec0807280604m19a8c511nf2568bb7aa357b90@mail.gmail.com>
-	 <1217250601.2441.20.camel@dv>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1215811139.30975.10.camel@dv>
+	 <20080712104659.jsizw0ndw44cw4kc-cebfxv@webmail.spamcop.net>
+	 <200807121713.54123.IvDoorn@gmail.com>
+	 <200807121731.57208.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/7/28 Pavel Roskin <proski@gnu.org>:
-> On Mon, 2008-07-28 at 16:04 +0300, Nick Kossifidis wrote:
+On Sat, Jul 12, 2008 at 5:31 PM, Michael Buesch <mb@bu3sch.de> wrote:
+> I think the EXPERIMENTAL flag is just meaningless.
+> You cannot run a kernel without it, as so many required and working
+> subsystems and drivers depend on it.
+> So I decided to drop EXPERIMENTAL for b43, as It Works (tm) for most users.
+> Sure, there are a lot of corners that need fixing, but fixing them all
+> up before removing EXPERIMENTAL would most likely never happen.
 >
->> > Please amend this to the patch 1 to not break bisectability.
->>
->> I see your point but this series is meant to be applied as a whole, i
->> didn't notice this bug until i tested the code with debugging enabled
->> (which is off by default), that's why it's "last minute fix". Is it
->> really that much needed to repost the first patch ? I mean the patch
->> series works and doesn't introduce any problems...
->
-> The reason is that git-bisect divides the number of commits in half and
-> checks out the middle commit.  That commit make be a broken one.
-> Hitting one bug while hunting another is not nice.
->
-> Besides, nobody wants to apply a known bad patch.
->
-> It would be great if you repost fixed patches.  If you are not using
-> stgit, please try it.  I would make it easy to return to older patches
-> and change them.  "stg edit -d" even allows editing the patch.
->
-> --
-> Regards,
-> Pavel Roskin
->
+> So we removed EXPERIMENTAL from the driver when the driver worked
+> for most users in STA mode. IMO that improves the overall situation,
+> as it's one less EXPERIMENTAL dependency, that isn't really one.
 
-O.K. then i'll repost the first patch asap (i'm still in Ottawa :P)...
+I agree that we should reconsider what EXPERIMENTAL really means - the
+whole Linux kernel is slowly becoming EXPERIMENTAL, with the original
+purpose of the EXPERIMENTAL flag slowly being replaced with dependency
+on external patches (see AP mode in mac80211). IMHO in general, if
+something is working as most users would expect it, then it shouldn't
+be EXPERIMENTAL unless there is a legacy alternative and a good reason
+to suggest people to use that alternative. EXPERIMENTAL should mean
+something that is not ready for the general public yet, not something
+that is simply under active development.
 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
