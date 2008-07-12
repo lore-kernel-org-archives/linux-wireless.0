@@ -1,32 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:37441 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755349AbYGCGgF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 02:36:05 -0400
-To: "Michael Buesch" <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH stable] b43: Do not return TX_BUSY from op_tx
-References: <200807030104.30100.mb@bu3sch.de>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Thu, 03 Jul 2008 09:35:23 +0300
-In-Reply-To: <200807030104.30100.mb@bu3sch.de> (ext Michael Buesch's message of "Thu\, 3 Jul 2008 01\:04\:29 +0200")
-Message-ID: <87y74jtqz8.fsf@nokia.com> (sfid-20080703_085917_271227_5FFBCFE5)
+Received: from c60.cesmail.net ([216.154.195.49]:52239 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753044AbYGLOrA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jul 2008 10:47:00 -0400
+Message-ID: <20080712104659.jsizw0ndw44cw4kc-cebfxv@webmail.spamcop.net> (sfid-20080712_164715_036567_50AE2E97)
+Date: Sat, 12 Jul 2008 10:46:59 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rt2x00 is still experimental?
+References: <1215811139.30975.10.camel@dv>
+	<200807121025.43801.IvDoorn@gmail.com>
+In-Reply-To: <200807121025.43801.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch <mb@bu3sch.de> writes:
+Quoting Ivo van Doorn <ivdoorn@gmail.com>:
 
-> +drop_packet:
-> +	/* We can not transmit this packet. Drop it. */
-> +	dev_kfree_skb_any(skb);
->  	return NETDEV_TX_OK;
+> Hi,
+>
+>> Can we please have rt2x00 drivers considered stable in Linux 2.6.27?
+>
+> No.
+>
+>> My experience running rt73 day by day with WPA on a very crowded network
+>> shows that it's a pretty reliable driver already.
+>
+> Perhaps managed mode, but not adhoc mode, beaconing is still broken.
+> In addition the leds are broken as well, and hardware encryption   
+> isn't in either.
 
-So no need to call ieee80211_tx_status() in this case? I'm just
-curious about this, nothing else.
+I see.  It must be a perception thing.  Things I hack on seem  
+unstable, but things that just work seem stable :)
+
+Thank you for the status.  Good luck with fixing the remaining problems!
 
 -- 
-Kalle Valo
+Regards,
+Pavel Roskin
