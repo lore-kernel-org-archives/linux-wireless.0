@@ -1,54 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:44092 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751339AbYGESgQ (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:18374 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752343AbYGNNOE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jul 2008 14:36:16 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so479967nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Jul 2008 11:36:15 -0700 (PDT)
-To: Bryan Batten <BryanBatten@sbcglobal.net>
-Subject: Re: [Rt2400-devel] [PATCH] rt2x00: Fix NULL pointer error =?iso-8859-1?q?in=09adhoc/master?= mode
-Date: Sat, 5 Jul 2008 20:42:46 +0200
-Cc: linville@tuxdriver.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
-References: <200807051511.57995.IvDoorn@gmail.com> <486FBE75.5040100@sbcglobal.net>
-In-Reply-To: <486FBE75.5040100@sbcglobal.net>
+	Mon, 14 Jul 2008 09:14:04 -0400
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: Tomas Winkler <tomas.winkler@intel.com>, linville@tuxdriver.com,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by low level driver
+References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
+	<1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
+	<1216039127.11189.15.camel@johannes.berg>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Mon, 14 Jul 2008 16:13:06 +0300
+In-Reply-To: <1216039127.11189.15.camel@johannes.berg> (ext Johannes Berg's message of "Mon\, 14 Jul 2008 14\:38\:47 +0200")
+Message-ID: <87od50obh9.fsf@nokia.com> (sfid-20080714_151408_396441_E109584A)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200807052042.47008.IvDoorn@gmail.com> (sfid-20080705_203620_594861_13D70D58)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 05 July 2008, Bryan Batten wrote:
-> Ivo van Doorn wrote:
-> ...
-> > Note that the "raise beacondone interrupts without a beacon" is
-> > also a bug, and will be addressed later.
-> ...
-> 
-> FWIW, I've never been able to figure out a way to shut it off in the 
-> legacy drivers. Unless there's some mechanism I've missed, I would 
-> consider this a bug, but its a hardware bug because - in the rt2500 
-> driver at least - even disabling it in the interrupt mask register has 
-> no effect.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-That is interesting, have you tried controlling CSR14 and more specifically
-the TBCN or BeaconGen fields?
+> On Mon, 2008-07-14 at 15:31 +0300, Tomas Winkler wrote:
+>> This patch makes listen_interval configurable by low level driver.
+>
+> I'm not sure we we really want that.
 
-> I think it would be more accurately termed a target beacon 
-> transmission time interrupt. The rt61 driver's ISR simply does not 
-> test for the condition. The rt2400 and rt2500 drivers do nothing if 
-> not in adhoc mode. If in adhoc mode, they both assume a beacon frame 
-> is ready to go and send it. This relies on a canned frame that is set 
-> up during initialization.
+Me neither.
 
-Hmm, in that case I have to fix something in the beacondone handler
-to prevent it requesting a beacon when mac80211 hasn't supplied anything
-yet..
+> With this, you're again putting more features and more decision making
+> processes with the driver, I would much prefer this to be worked out in
+> mac80211 so we can do it across all drivers.
 
-Thanks for the notice. :)
+I was just thinking the same. In my opinion the driver should be as
+simple as possible, and all the logic should be in mac80211 or, if
+possible, even in user space.
 
-Ivo
+> If this is a knob that should be adjusted then we want to enable users
+> to do it, and if it isn't then we can put a value into mac80211 and fix
+> it.
+
+Listen interval is very much dependent on the DTIM period and for
+which beacons firmware wakes up (every beacon, every DTIM beacon,
+every second DTIM beacon etc). For user space making this decision is
+very difficult because it would need to know the current DTIM setting
+and capabilities of the driver/hardware. It will get complicated
+pretty quickly and I don't see any advantage to push this decision to
+user space.
+
+I think we need to soon come up with an idea what kind of PSM control
+interface are we going to offer for the user space. Is it going to be
+very low level (eg. based on listen interval and DTIMs and what not),
+a higher level (eg. levels from one to five, five being the most
+aggressive level from powersaving point of view) or what? We have a
+plenty of options and I think we should discuss about this at the
+summit.
+
+> Having drivers make these kinds of decisions is very bad for uniform
+> wireless behaviour.
+
+I agree. 
+
+On the other hand different hardware have different ways to configure,
+and support, PSM so the implementation might get complicated. But
+still I believe that the driver shouldn't be making this kind of
+decisions.
+
+-- 
+Kalle Valo
