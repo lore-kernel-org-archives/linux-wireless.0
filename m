@@ -1,69 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:59192 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750955AbYGHUr3 (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.184]:40440 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750989AbYGNQOd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 16:47:29 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so687168yxm.1
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2008 13:47:29 -0700 (PDT)
-Subject: [PATCH 3/6] b43legacy: use le16 frame control directly, avoid
-	byteswapping
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 08 Jul 2008 13:47:23 -0700
-Message-Id: <1215550043.476.41.camel@brick> (sfid-20080708_224733_108782_913B0E95)
-Mime-Version: 1.0
+	Mon, 14 Jul 2008 12:14:33 -0400
+Received: by rn-out-0910.google.com with SMTP id k40so1376366rnd.17
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2008 09:14:32 -0700 (PDT)
+Message-ID: <fce2a370807140914k153cc12ai1fd741f4ba84d2e1@mail.gmail.com> (sfid-20080714_181437_225335_B20A3035)
+Date: Mon, 14 Jul 2008 19:14:32 +0300
+From: "Ihar Hrachyshka" <ihar.hrachyshka@gmail.com>
+Subject: Re: [PATCH] rtl8187: Fixed section mismatch in rtl8187_dev.c
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net, andreamrl@tiscali.it
+In-Reply-To: <20080709011159.5b11550b@promwad.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080709011159.5b11550b@promwad.com>
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- drivers/net/wireless/b43legacy/xmit.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+What's the status of the patch?
 
-diff --git a/drivers/net/wireless/b43legacy/xmit.c b/drivers/net/wireless/b43legacy/xmit.c
-index a354078..5e8a575 100644
---- a/drivers/net/wireless/b43legacy/xmit.c
-+++ b/drivers/net/wireless/b43legacy/xmit.c
-@@ -193,7 +193,6 @@ static int generate_txhdr_fw3(struct b43legacy_wldev *dev,
- {
- 	const struct ieee80211_hdr *wlhdr;
- 	int use_encryption = (!(info->flags & IEEE80211_TX_CTL_DO_NOT_ENCRYPT));
--	u16 fctl;
- 	u8 rate;
- 	struct ieee80211_rate *rate_fb;
- 	int rate_ofdm;
-@@ -204,7 +203,6 @@ static int generate_txhdr_fw3(struct b43legacy_wldev *dev,
- 	struct ieee80211_rate *tx_rate;
- 
- 	wlhdr = (const struct ieee80211_hdr *)fragment_data;
--	fctl = le16_to_cpu(wlhdr->frame_control);
- 
- 	memset(txhdr, 0, sizeof(*txhdr));
- 
-@@ -253,7 +251,7 @@ static int generate_txhdr_fw3(struct b43legacy_wldev *dev,
- 			mac_ctl |= (key->algorithm <<
- 				   B43legacy_TX4_MAC_KEYALG_SHIFT) &
- 				   B43legacy_TX4_MAC_KEYALG;
--			wlhdr_len = ieee80211_get_hdrlen(fctl);
-+			wlhdr_len = ieee80211_hdrlen(wlhdr->frame_control);
- 			iv_len = min((size_t)info->control.iv_len,
- 				     ARRAY_SIZE(txhdr->iv));
- 			memcpy(txhdr->iv, ((u8 *)wlhdr) + wlhdr_len, iv_len);
-@@ -295,8 +293,7 @@ static int generate_txhdr_fw3(struct b43legacy_wldev *dev,
- 	/* MAC control */
- 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
- 		mac_ctl |= B43legacy_TX4_MAC_ACK;
--	if (!(((fctl & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_CTL) &&
--	      ((fctl & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_PSPOLL)))
-+	if (!ieee80211_is_pspoll(wlhdr->frame_control))
- 		mac_ctl |= B43legacy_TX4_MAC_HWSEQ;
- 	if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
- 		mac_ctl |= B43legacy_TX4_MAC_STMSDU;
--- 
-1.5.6.1.322.ge904b
-
-
+On 7/9/08, Ihar Hrachyshka <ihar.hrachyshka@promwad.com> wrote:
+> When CONFIG_HOTPLUG=n the following error occures on vmlinux linkage:
+>
+> `.exit.text' referenced in section `.data' of drivers/built-in.o:
+> defined in discarded section `.exit.text' of drivers/built-in.o
+>
+> 'rtl8187_disconnect' function marked as __devexit isn't compiled with no
+> hotplug support. Added __devexit_p macros to fix the problem.
+>
+> Signed-off-by: Ihar Hrachyshka <ihar.hrachyshka@promwad.com>
+>
+> ---
+>
+>  drivers/net/wireless/rtl8187_dev.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtl8187_dev.c
+> b/drivers/net/wireless/rtl8187_dev.c index bec96d7..b70cc5d 100644
+> --- a/drivers/net/wireless/rtl8187_dev.c
+> +++ b/drivers/net/wireless/rtl8187_dev.c
+> @@ -836,7 +836,7 @@ static struct usb_driver rtl8187_driver = {
+>        .name           = KBUILD_MODNAME,
+>        .id_table       = rtl8187_table,
+>        .probe          = rtl8187_probe,
+> -       .disconnect     = rtl8187_disconnect,
+> +       .disconnect     = __devexit_p(rtl8187_disconnect),
+>  };
+>
+>  static int __init rtl8187_init(void)
+>
+> --
+> Ihar Hrachyshka
+> Software Developer
+> Promwad Innovation Company
+> 19, Sharangovicha Str.
+> 220018, Minsk, Belarus
+> Phone/Fax: +375 (17) 211-5826
+> Web: www.promwad.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
