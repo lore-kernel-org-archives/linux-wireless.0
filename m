@@ -1,96 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qmta05.emeryville.ca.mail.comcast.net ([76.96.30.48]:45425 "EHLO
-	QMTA05.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751629AbYGDV4V (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59683 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752805AbYGNMiw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jul 2008 17:56:21 -0400
-Message-ID: <486EA910.80408@gentoo.org> (sfid-20080704_235624_726535_A49156D3)
-Date: Fri, 04 Jul 2008 17:49:52 -0500
-From: Daniel Drake <dsd@gentoo.org>
-MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>
-CC: bruno@thinktube.com, vlado@work.ksp.sk
-Subject: mac80211 ad-hoc problems
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 14 Jul 2008 08:38:52 -0400
+Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by
+	low level driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
+References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
+	 <1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-uEPKL7/UV6McoaNGserI"
+Date: Mon, 14 Jul 2008 14:38:47 +0200
+Message-Id: <1216039127.11189.15.camel@johannes.berg> (sfid-20080714_143857_086570_AEA692D4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-I'm trying to implement ad-hoc mode in zd1211rw. I partially succeeded 
-and posted a patch, but now I'm trying to investigate why I had trouble 
-getting my laptops to talk...
+--=-uEPKL7/UV6McoaNGserI
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I'm running iwl4965 on one box and zd1211rw on another, both running 
-2.6.26-rc8
+On Mon, 2008-07-14 at 15:31 +0300, Tomas Winkler wrote:
+> This patch makes listen_interval configurable by low level driver.
 
-I create the network on the iwl4965 system:
-	iwconfig wlan0 mode ad-hoc
-	ifconfig wlan0 up
-	iwconfig wlan0 essid dev
+I'm not sure we we really want that.
 
-And then I try to connect on the zd1211rw system:
-	iwconfig wlan0 mode ad-hoc
-	ifconfig wlan0 up
-	iwconfig wlan0 essid dev
+With this, you're again putting more features and more decision making
+processes with the driver, I would much prefer this to be worked out in
+mac80211 so we can do it across all drivers.
 
-If that's not the right way to create an ad-hoc network between 2 
-systems, please discard the rest of this email and instead tell me how 
-it should be done...
+If this is a knob that should be adjusted then we want to enable users
+to do it, and if it isn't then we can put a value into mac80211 and fix
+it. Having drivers make these kinds of decisions is very bad for uniform
+wireless behaviour.
 
+johannes
 
-After running the 3rd command on the zd1211rw system, this happens:
+--=-uEPKL7/UV6McoaNGserI
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-<7>eth7: sta_find_ibss (active_ibss=0)
-<7>   bssid=66:18:74:24:c1:d8 found
-<7>   sta_find_ibss: selected 66:18:74:24:c1:d8 current 00:00:00:00:00:00
-<7>   did not try to join ibss
-<7>eth7: Trigger new scan to find an IBSS to join
-<7>phy5: HW CONFIG: freq=2412
-<7>phy5: HW CONFIG: freq=2417
-<7>phy5: HW CONFIG: freq=2422
-<7>phy5: HW CONFIG: freq=2427
-<7>phy5: HW CONFIG: freq=2432
-<7>phy5: HW CONFIG: freq=2437
-<7>phy5: HW CONFIG: freq=2442
-<7>phy5: HW CONFIG: freq=2447
-<7>phy5: HW CONFIG: freq=2452
-<7>phy5: HW CONFIG: freq=2457
-<7>phy5: HW CONFIG: freq=2462
-<7>phy5: HW CONFIG: freq=2467
-<7>phy5: HW CONFIG: freq=2472
-<4>__ratelimit: 4 messages suppressed
-<7>phy5: HW CONFIG: freq=2462
-<7>eth7: sta_find_ibss (active_ibss=0)
-<7>   bssid=66:18:74:24:c1:d8 found
-<7>   sta_find_ibss: selected 66:18:74:24:c1:d8 current 00:00:00:00:00:00
-<7>   did not try to join ibss
-<7>phy5: Adding new IBSS station 00:16:6f:47:00:46 (dev=eth7)
-<7>phy5: Allocated STA 00:16:6f:47:00:46
-<7>phy5: Inserted STA 00:16:6f:47:00:46
-<7>eth7: sta_find_ibss (active_ibss=0)
-<7>   bssid=66:18:74:24:c1:d8 found
-<7>   sta_find_ibss: selected 66:18:74:24:c1:d8 current 00:00:00:00:00:00
-<7>   did not try to join ibss
-<7>eth7: Trigger new scan to find an IBSS to join
-<7>phy5: HW CONFIG: freq=2412
-<7>phy5: HW CONFIG: freq=2417
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-and soon after it creates its own IBSS.
+iQIcBAABAgAGBQJIe0jTAAoJEKVg1VMiehFYMpcQAIijNHzSnR9aFpjggRf5v2IF
+bzi1dyzTkcKM9yp3xYrHf9f+6sBQzRl/bjqNx85EEabHnTKlrbnGvLobFN1+Iiw+
+7xjyVcQPimmcJ/Dp7ZiOeldlryft5XC2tcLde32LFldLyNYJuUVJXhGZiVkeOZCL
+0KCw5d8OfBx6H/5i6Ni9encubN1NB8ThPSd6OcULZoYnfneDj4Q/fHpEw6pJFOKX
+giFs8GaQeWP5BU1W5S0BDXW5MR2kO3zvr9oCj5268/3RmQ2bIiDCXH4tii2uK063
++uLhDcSNk4qABBrVOV6uNb/ScIXtbHQux4p1o9yOJlrYHAl1sOqYGf4eQtSEDhMj
+a/bB1sEueWkA6xGblcfM2uauXR26aI9HcLIHsmYinTe7cWg8WOVGS9+xO8luGdiz
+09VOKWl4XIASwkdEO5Jrgz2oavqkvSlhKZUkBkWwcyqFHpxbOYhhSCuGwELjWY16
+K4prZb0t6AbiYh+XWCib4A+35uQKzg4aQIzbybECdxrrBy/kMw8ZjW9LvsH7Cf36
+YfrdX6npGoHT4T1n5OwSHtiB7zScTtRdbXihfTyoYOYpyp5UlitpOz9ZwNAjCC9l
+Ouei1P9ZYiwSSnkaUa3bj39iUZdNFh1NDxUliXPjj8d89zjgUPnamGS0OLUKA9Py
+mzPShdClt0csIi9lCrRC
+=s6Od
+-----END PGP SIGNATURE-----
 
-Should it not have joined the IBSS it found? That one 
-(66:18:74:24:c1:d8) is indeed the network I wanted it to connect to, 
-hosted on my other laptop.
+--=-uEPKL7/UV6McoaNGserI--
 
-Looking at the code, ieee80211_sta_find_ibss() in mlme.c, I can't see 
-how it's supposed to work.  It's clear why it said it found the other 
-network, because the ESSID matches. But it's also clear why it didn't 
-actually bother to try and connect: the ieee80211_sta_join_ibss() call 
-is surrounded in an if condition which checks the BSSID - but I 
-(intentionally) didn't specify one, so the condition evaluates as false.
-
-Is this a bug, or am I required to specify an ESSID *and* a BSSID in 
-order to connect to a pre-existing IBSS network?
-
-Thanks,
-Daniel
