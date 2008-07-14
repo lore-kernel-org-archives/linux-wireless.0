@@ -1,89 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:53499 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752023AbYG3DiA (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.186]:18610 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755085AbYGNHsz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 23:38:00 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: Kalle Valo <kalle.valo@nokia.com>
-Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks rtl8187
-Date: Wed, 30 Jul 2008 00:37:49 -0300
-Cc: "Hin-Tak Leung" <hintak.leung@gmail.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net> <200807290021.45400.herton@mandriva.com.br> <87d4kwl7hh.fsf@nokia.com>
-In-Reply-To: <87d4kwl7hh.fsf@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200807300037.50088.herton@mandriva.com.br> (sfid-20080730_053814_281333_D2FBC82A)
+	Mon, 14 Jul 2008 03:48:55 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so1446796nfc.21
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2008 00:48:49 -0700 (PDT)
+Date: Mon, 14 Jul 2008 15:50:10 +0800
+From: Dave Young <hidave.darkstar@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: mac80211 : WARN at net/mac80211/rate.h:153
+Message-ID: <20080714075010.GA3559@darkstar> (sfid-20080714_094900_870300_E6034B5B)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Tuesday 29 July 2008 18:12:58 Kalle Valo escreveu:
-> Herton Ronaldo Krzesinski <herton@mandriva.com.br> writes:
-> >> I also wonder how Herton encountered the problem :-). Older
-> >> wireless-testing simply say "unimplemented" or something if one
-> >> tries to set power-saving. Maybe Herton has a few devices which he
-> >> routinely tries out every part of iwconfig?
-> >
-> > The original sequence of commands:
-> > [1] /sbin/ip link set dev wlan0 down
-> > [2] /sbin/ip link set dev wlan0 up
-> > [3] /sbin/iwconfig wlan0 power on
-> > [4] /sbin/iwconfig wlan0 essid any
-> > [5] /sbin/iwconfig wlan0 power on
-> > [6] /sbin/iwconfig wlan0 essid <my AP>
-> > [7] /sbin/iwconfig wlan0 key open <my key>
-> >
-> > That show the issue on rtl8187b I have to test just is near on what
-> > Mandriva 2008.0 ifup-wireless script does, so that's what first made me
-> > catch the bug. the '... power on' after '... essid any' is what causes
-> > later the association or any scan attempt to fail, if I place a sleep
-> > between [4] and [5] I don't get the problem too.
->
-> Thanks for the clarification, this kind of information is important
-> when reporting a bug.
->
-> > The problem is, I couldn't see yet how a power on after essid any
-> > could cause this.
->
-> I'm guessing that it has something to do ieee80211_ioctl_siwpower()
-> calling ieee80211_hw_config(local) which ends up as an extra call to
-> rtl8187_config(). I do not know why this is a problem for rtl8187b.
+Hi,
+I get warnings when I run
+dhcpcd wlan0
+The driver using is ath5k
 
-You are right, I was looking at wrong place, indeed the issue is on rtl8187. 
-The problem here is that mac80211 can call rtl8187_config while another 
-instance of it is still running, and on rtl8187_config this is a critical 
-section:
+warnings like following:
 
-...
-        /* Enable TX loopback on MAC level to avoid TX during channel
-         * changes, as this has be seen to causes problems and the
-         * card will stop work until next reset
-         */
-        rtl818x_iowrite32(priv, &priv->map->TX_CONF,
-                          reg | RTL818X_TX_CONF_LOOPBACK_MAC);
-        msleep(10);
-        priv->rf->set_chan(dev, conf);
-        msleep(10);
-        rtl818x_iowrite32(priv, &priv->map->TX_CONF, reg);
-...
-
-My sequence of commands trigger this, so there are cases where it disables TX 
-loopback while there are another instance that can be still 
-inside ->set_chan, that's explain also why card stops to work. This section 
-should be lock protected or mac80211 ensure to not call local->ops->config 
-while another call is still running.
-
->
-> It would help if you, or someone else seeing the same problem, could
-> provide more information by enabling MAC80211_VERBOSE_DEBUG and
-> MAC80211_LOWTX_FRAME_DUMP config options, and sending the kernel log
-> output here. I don't have a rtl8187b card myself so I cannot test
-> this.
-
--- 
-[]'s
-Herton
+------------[ cut here ]------------
+WARNING: at net/mac80211/rate.h:153 rate_control_pid_rate_init+0x7a/0xa0 [mac80211]()
+Modules linked in: radeon drm snd_seq_dummy snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss snd_mixer_oss rfcomm l2cap bluetooth vfat fuse snd_hda_intel ath5k mac80211 rtc_cmos rtc_core rtc_lib psmouse snd_pcm snd_timer snd_page_alloc snd_hwdep 3c59x intel_agp snd e100 cfg80211 i2c_i801 serio_raw mii soundcore agpgart thermal processor button thermal_sys evdev sg
+Pid: 0, comm: swapper Tainted: G        W 2.6.26-smp #1
+ [<c0127954>] warn_on_slowpath+0x54/0x70
+ [<c0177000>] ? print_trailer+0xa0/0xf0
+ [<c0177071>] ? check_bytes_and_report+0x21/0xc0
+ [<c0177452>] ? check_object+0xe2/0x1e0
+ [<c0178117>] ? __slab_alloc+0x3a7/0x4c0
+ [<f8d6a196>] ? rate_control_pid_alloc_sta+0x16/0x50 [mac80211]
+ [<f8d6a2ba>] rate_control_pid_rate_init+0x7a/0xa0 [mac80211]
+ [<f8d4fcf7>] ieee80211_ibss_add_sta+0xc7/0x110 [mac80211]
+ [<f8d5a377>] __ieee80211_rx_handle_packet+0x417/0x7b0 [mac80211]
+ [<c0177071>] ? check_bytes_and_report+0x21/0xc0
+ [<f8d5c845>] __ieee80211_rx+0x185/0x560 [mac80211]
+ [<c0109769>] ? read_tsc+0x9/0x30
+ [<f89199dc>] ? ath5k_hw_get_tsf64+0x4c/0x90 [ath5k]
+ [<f89161e3>] ath5k_tasklet_rx+0xf3/0x710 [ath5k]
+ [<c0141f1d>] ? clocksource_get_next+0x3d/0x50
+ [<c01408ad>] ? update_wall_time+0x28d/0x800
+ [<f8919712>] ? ath5k_hw_is_intr_pending+0x22/0x50 [ath5k]
+ [<c012d019>] tasklet_action+0x49/0xb0
+ [<c012cae6>] __do_softirq+0x76/0xf0
+ [<c012cb9b>] do_softirq+0x3b/0x50
+ [<c012cf5c>] irq_exit+0x5c/0x70
+ [<c0106995>] do_IRQ+0x45/0x80
+ [<c012cf55>] ? irq_exit+0x55/0x70
+ [<c011288b>] ? smp_apic_timer_interrupt+0x5b/0x90
+ [<c010a220>] ? mwait_idle+0x0/0x40
+ [<c0104623>] common_interrupt+0x23/0x28
+ [<c010a220>] ? mwait_idle+0x0/0x40
+ [<c010a252>] ? mwait_idle+0x32/0x40
+ [<c01026db>] cpu_idle+0x5b/0xc0
+ [<c042054e>] rest_init+0x4e/0x60
+ =======================
+---[ end trace de545485c8f84982 ]---
