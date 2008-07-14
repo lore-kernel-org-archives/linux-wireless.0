@@ -1,77 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59725 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752063AbYGNMkH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 08:40:07 -0400
-Subject: Re: [PATCH 1/2] mac80211: pass dtim_period to low level driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-In-Reply-To: <1ba2fa240807140538n671ac95cm3e4b1a9d25af411a@mail.gmail.com> (sfid-20080714_143858_122719_7A7725E1)
+Received: from mga14.intel.com ([143.182.124.37]:38767 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751614AbYGNMbd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Jul 2008 08:31:33 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 2/2] mac80211: make listen_interval be configurable by low level driver
+Date: Mon, 14 Jul 2008 15:31:24 +0300
+Message-Id: <1216038684-29725-2-git-send-email-tomas.winkler@intel.com> (sfid-20080714_143137_516908_45AE6A21)
+In-Reply-To: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
 References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
-	 <1216038966.11189.12.camel@johannes.berg>
-	 <1ba2fa240807140538n671ac95cm3e4b1a9d25af411a@mail.gmail.com>
-	 (sfid-20080714_143858_122719_7A7725E1)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-j5eY6vpYwzycFdlgCyHS"
-Date: Mon, 14 Jul 2008 14:40:02 +0200
-Message-Id: <1216039202.11189.17.camel@johannes.berg> (sfid-20080714_144012_630713_C004FF68)
-Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch makes listen_interval configurable by low level driver.
 
---=-j5eY6vpYwzycFdlgCyHS
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ include/net/mac80211.h |    2 ++
+ net/mac80211/main.c    |    3 +++
+ net/mac80211/mlme.c    |    6 ++++--
+ 3 files changed, 9 insertions(+), 2 deletions(-)
 
-On Mon, 2008-07-14 at 15:38 +0300, Tomas Winkler wrote:
-> On Mon, Jul 14, 2008 at 3:36 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> >
-> >> --- a/include/net/mac80211.h
-> >> +++ b/include/net/mac80211.h
-> >> @@ -191,6 +191,7 @@ struct ieee80211_bss_conf {
-> >>       /* erp related data */
-> >>       bool use_cts_prot;
-> >>       bool use_short_preamble;
-> >> +     u8 dtim_period;
-> >>       u16 beacon_int;
-> >>       u16 assoc_capability;
-> >>       u64 timestamp;
-> >
-> > Can you add documentation please, especially about the fact that it can
-> > be zero if the network is buggy / IBSS.
->=20
-> Right, I will also add fallback to 1 if it's 0
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index f249820..677ba29 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -423,6 +423,7 @@ enum ieee80211_conf_flags {
+  * @radio_enabled: when zero, driver is required to switch off the radio.
+  *	TODO make a flag
+  * @beacon_int: beacon interval (TODO make interface config)
++ * @listen_interval: listen interval in units of beacon interval
+  * @flags: configuration flags defined above
+  * @power_level: requested transmit power (in dBm)
+  * @max_antenna_gain: maximum antenna gain (in dBi)
+@@ -437,6 +438,7 @@ struct ieee80211_conf {
+ 	int radio_enabled;
+ 
+ 	int beacon_int;
++	u16 listen_interval;
+ 	u32 flags;
+ 	int power_level;
+ 	int max_antenna_gain;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index cf477ad..b4b0c2d 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1750,6 +1750,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if (local->hw.conf.beacon_int < 10)
+ 		local->hw.conf.beacon_int = 100;
+ 
++	if (local->hw.conf.listen_interval == 0)
++		local->hw.conf.listen_interval = 1;
++
+ 	local->wstats_flags |= local->hw.flags & (IEEE80211_HW_SIGNAL_UNSPEC |
+ 						  IEEE80211_HW_SIGNAL_DB |
+ 						  IEEE80211_HW_SIGNAL_DBM) ?
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 22eaf86..73566e6 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -778,7 +778,8 @@ static void ieee80211_send_assoc(struct net_device *dev,
+ 		mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
+ 						   IEEE80211_STYPE_REASSOC_REQ);
+ 		mgmt->u.reassoc_req.capab_info = cpu_to_le16(capab);
+-		mgmt->u.reassoc_req.listen_interval = cpu_to_le16(1);
++		mgmt->u.reassoc_req.listen_interval =
++				cpu_to_le16(local->hw.conf.listen_interval);
+ 		memcpy(mgmt->u.reassoc_req.current_ap, ifsta->prev_bssid,
+ 		       ETH_ALEN);
+ 	} else {
+@@ -786,7 +787,8 @@ static void ieee80211_send_assoc(struct net_device *dev,
+ 		mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
+ 						   IEEE80211_STYPE_ASSOC_REQ);
+ 		mgmt->u.assoc_req.capab_info = cpu_to_le16(capab);
+-		mgmt->u.assoc_req.listen_interval = cpu_to_le16(1);
++		mgmt->u.reassoc_req.listen_interval =
++				cpu_to_le16(local->hw.conf.listen_interval);
+ 	}
+ 
+ 	/* SSID */
+-- 
+1.5.4.1
 
-Good point, I guess that's the best guess then.
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-johannes
-
---=-j5eY6vpYwzycFdlgCyHS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIe0keAAoJEKVg1VMiehFYraAQAL9BobV7INFti7lDLl72DZPb
-gMz1Rn1X0S3NYuxJ0s0eo7RxoNUwg5kQu/jNwbHrYka66KE9sd+Ae/3s0vfRjgSI
-Xbx8deRoYxFCXue4Qoid3wNHGTh+wxyb1r+PikFqllwaD2lgwM5atkd8y/f1/dTj
-Sn19XqmeqfaecQF//y2ck3w/YIMT0Sw5EusWRj9tJYjfZ8GqT+Lo6Wr+ItjWoG6e
-O0Qb+oXgd4JVMyxD7jcpCQ6hxl/XjjMMHj6EFs0OLTKQ1TduUayAehASagifMDvO
-Ir0pSsUoNRYDhp4B45bhNhPBzU8q0796unnkSVgODzUfrsX+WbSdHSi0kLqo4Q8b
-yg5vTnFCde8+u07tPbUVZx/HlMZasbT040cqAIj2Gs9RtieWrUwmT7ZVJa7G7nFx
-i+6TbIqhNXUJSRxx5wLA7pTc9CmFqVroDTVL64wNdF9fVMLkFDJg+XPWmzNXJZLc
-JCwI+0E0flGrsh5pbIVx2bOK97GvFx/t/V9kk6uc21LoatCtxqQkS8W5MqM9wOGm
-+AK5xOm41XQG8Vjdp6JtpmLUlEHnKhpWnzJ9wLeUJHtruwpzijx11fBb5Cm9lo4i
-MdXHGAItSuutrJSwNr0Z9vfSHP5c8aWLl6swpj7JHSAgFYpUwyZIn5RGGxM2f8Ka
-zMGf2m8NEMSGuS1WLUj3
-=zPCE
------END PGP SIGNATURE-----
-
---=-j5eY6vpYwzycFdlgCyHS--
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
