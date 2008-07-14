@@ -1,50 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out-41.synserver.de ([217.119.50.41]:1056 "HELO
-	smtp-out-41.synserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752439AbYGWKSc (ORCPT
+Received: from gv-out-0910.google.com ([216.239.58.190]:32134 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754410AbYGNPnf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 06:18:32 -0400
-Date: Wed, 23 Jul 2008 12:18:27 +0200
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-To: Wang Chen <wangchen@cn.fujitsu.com>
-Cc: Alessandro Guido <ag@alessandroguido.name>,
-	David Miller <davem@davemloft.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] skge: resolve tx multiqueue bug
-Message-ID: <20080723101827.GA2236@gentoox2.trippelsdorf.de> (sfid-20080723_121838_214339_76F16D2E)
-References: <d4b984a30807210914nd4d0db5yb7b93ca5143ff0d5@mail.gmail.com> <20080721.092027.14394005.davem@davemloft.net> <d4b984a30807220254t1aaf6ac4q874329966511b0c5@mail.gmail.com> <20080723054039.GA2272@gentoox2.trippelsdorf.de> <4886F0C5.7040605@cn.fujitsu.com>
+	Mon, 14 Jul 2008 11:43:35 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so878498gvc.37
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2008 08:43:28 -0700 (PDT)
+Message-ID: <247d6d340807140843t6903d779h90461ba54160817d@mail.gmail.com> (sfid-20080714_174339_632333_E2EDC13E)
+Date: Mon, 14 Jul 2008 18:43:27 +0300
+From: "Guy Cohen" <guy.cohen@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <20080709190915.GA8238@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4886F0C5.7040605@cn.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080709190915.GA8238@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 23, 2008 at 04:50:13PM +0800, Wang Chen wrote:
-> Markus Trippelsdorf said the following on 2008-7-23 13:40:
-> > On Tue, Jul 22, 2008 at 11:54:26AM +0200, Alessandro Guido wrote:
-> >> Got a WARNING this morning (2.6.26-05752-g93ded9b) and I think it's related.
-> > 
-> > Same thing here (latest git):
-> > 
-> > skge eth1: enabling interface
-> > skge eth1: disabling interface
-> > ------------[ cut here ]------------
-> > WARNING: at net/core/dev.c:1344 __netif_schedule+0x24/0x6d()
-> > Pid: 1904, comm: ip Not tainted 2.6.26-06077-gc010b2f #33
-> >  [<ffffffff8020b3eb>] system_call_after_swapgs+0x7b/0x80
-...
-> > ---[ end trace 92936ef183e09876 ]---
-> > skge eth1: enabling interface
-> > skge eth1: Link is up at 100 Mbps, full duplex, flow control both
-> > 
-> 
-> Markus, please try this.
-> 
-> - Add netif_start_queue() in ->open()
-> - netif_carrier_*() is enough, remove netif_*_queue()
+I think that probably the most burning topics were a little diminished
+in our agenda, and should be put higher:
+- cfg80211/nl80211 - much of the current wext begins to fall behind
+the emerging capabilities of the mac80211 and moreover - from future
+abilities and needs of future fullmac devices. The functionality and
+ABI to userspace must be finalized as soon as possible. The status of
+this is very unclear and should be treated more thoroughly, and it
+seems it can't be shared with 5 other topics in less than 2 hours.
+- fullmac support - seems to be very relevant in the next couple of
+years with the integration of wifi into low power devices running
+linux.
 
-Unfortunately, your patch does not fix this. I still get the same warning.
+I think that these two topics should take precedence over other topics
+that although important consume more time in the agenda, and are
+currently less likely to have impact on the average users such as 11s
+and 11w.
 
--- 
-Markus
+it would be good if these topics will get substantial time slot in the agenda.
