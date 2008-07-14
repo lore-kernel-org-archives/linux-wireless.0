@@ -1,89 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59878 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:46886 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751344AbYGETXQ (ORCPT
+	with ESMTP id S1752323AbYGNMgJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jul 2008 15:23:16 -0400
-Subject: Re: [Rt2400-devel] [PATCH] rt2x00: Fix NULL pointer error
-	in	adhoc/master mode
+	Mon, 14 Jul 2008 08:36:09 -0400
+Subject: Re: [PATCH 1/2] mac80211: pass dtim_period to low level driver
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Bryan Batten <BryanBatten@sbcglobal.net>, linville@tuxdriver.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200807052126.16913.IvDoorn@gmail.com> (sfid-20080705_211945_165330_117F5339)
-References: <200807051511.57995.IvDoorn@gmail.com>
-	 <200807052042.47008.IvDoorn@gmail.com>
-	 <1215283415.6848.14.camel@johannes.berg>
-	 <200807052126.16913.IvDoorn@gmail.com>
-	 (sfid-20080705_211945_165330_117F5339)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4lClqVabIue6S89XmyDK"
-Date: Sat, 05 Jul 2008 21:22:56 +0200
-Message-Id: <1215285776.6848.21.camel@johannes.berg> (sfid-20080705_212318_331674_43BFB486)
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+In-Reply-To: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
+References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-domwe55I6qS3bnZ86WKe"
+Date: Mon, 14 Jul 2008 14:36:06 +0200
+Message-Id: <1216038966.11189.12.camel@johannes.berg> (sfid-20080714_143613_099009_E40F3353)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-4lClqVabIue6S89XmyDK
+--=-domwe55I6qS3bnZ86WKe
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2008-07-05 at 21:26 +0200, Ivo van Doorn wrote:
-> On Saturday 05 July 2008, Johannes Berg wrote:
-> >=20
-> > > Hmm, in that case I have to fix something in the beacondone handler
-> > > to prevent it requesting a beacon when mac80211 hasn't supplied anyth=
-ing
-> > > yet..
-> >=20
-> > I was working in this area... Can you take a quick look at this patch
-> > and let me know what you think?
-> > http://johannes.sipsolutions.net/patches/kernel/all/2008-07-05-18%3a42/=
-mac80211-beacon-revamp.patch
->=20
-> Patch looks good to me, it wouldn't change anything about the above since=
- t2x00 would still
-> call ieee80211_beacon_get() when the beacon wasn't provided by mac80211 y=
-et.
 
-Oh, of course, I just was writing on the patch and read your mail and
-replied instead of sending you another one :)
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -191,6 +191,7 @@ struct ieee80211_bss_conf {
+>  	/* erp related data */
+>  	bool use_cts_prot;
+>  	bool use_short_preamble;
+> +	u8 dtim_period;
+>  	u16 beacon_int;
+>  	u16 assoc_capability;
+>  	u64 timestamp;
 
-One thing I'm worried about is the sequence numbers, but that bug is
-already there... IIRC you needed software sequence numbers for your
-drivers, but what about the beacons? I haven't _changed_ anything, but
-IBSS beacons seem to not get a software sequence number.
-
-> But the flags that mark what has changed is definately a good idea,
-> that will prevent some redundant register writes. :)
-
-:)
-Only once you use the flags. My patch is intentionally minimal.
+Can you add documentation please, especially about the fact that it can
+be zero if the network is buggy / IBSS.
 
 johannes
 
---=-4lClqVabIue6S89XmyDK
+--=-domwe55I6qS3bnZ86WKe
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIb8oLAAoJEKVg1VMiehFYCMkQAIE9QzQvgj55gcCCOL7s6rqm
-57lnn7V3OG3WHvviTPU+C2zQaHUKaTH34R4U/eiYU0zfqgMuJkOJibUtQCRNqf9T
-a37b3mb70IqxQwI3Kad1fRBDgZO0F7iAR+ddDAtZWwD2Q7RGeL9tWl3XIi9zJX4p
-ZyY0dT1hcxVad3KHVY7A1rrUzbafEKessDWAWmMRayqhS3Eq7uL1WBZRpNuH+Icq
-W+Kfs3nLs+vEYm+ZMfpQwEFYyP+qkqqWwTFOgX8quusHf4aKw/CQ5YyYYPnVnn3l
-yhECS+Lrak4RjFDHaj9qfH6wrtvzLYaB6Ve1brrhj7aaTPcRZ1J93EjsVdJ6HqdO
-cuhjygFE5DahSJTScrjFNo78cUkl1B33i/B0VpiZ7Z+aDAQLwY1z38uQ1SIt0S5j
-+/nYjIi2onrQZpLG9VpLiP3pIZXKQj//8Zo+7hcGUtl1xpDmmfY999hFLJLFVdKC
-KlYGhZucWyH0wx4kiPYTVF01ZFgsXiacdzhTtAQ4em1ieT+f+w6fU2TcSbrjPRIb
-YR/JTUREk0IAtmG29UWxIxEGxpGt/PtgzuI0ajgtxDSzjraPPQbmC3Od1muPZD/t
-qNxnvyPZ6qXYUl0obvr6Ka69zUI4eg1ngms/LmuBS9Hn4rzlviuXNeLByzzMMhv+
-+n7fjgh1xfLyt5TaRH3w
-=cnWe
+iQIcBAABAgAGBQJIe0gyAAoJEKVg1VMiehFYoLYP/jw75INfNYpSkOBEF4iw+n2R
+9SjQb2hLLx/lv8JRDA445PolvP4403Amv/S10WXr52DstfuNknbX+oW1BHEvHjTV
+jUoelGAfOWcllt+xkjCHM6MF+tnuxz0UGgo4qQg2PFWLn4MRTxta2z2iP1+eNzbp
+MbYsY6oYCgpFT5GZJ7mQdkLcsqRpW6j8SajnFJIvg9HWfVkc2Av2JuXE4ykXRTk9
+TBwLJEr3ubpu9E2rO87ORODHg1sl/O9KmwXprbsIEwuxe8KtHp9S5TaUigMH7dZ+
+f7FFY+k4gEBvkN6ioAGOLpcvAjhHd3xRJqdB7TqhiOZ/BDRyqe5f1YZ52m3G284V
+c5kWPxQ+DU8Ci32B/DRx9Bkbqr/PkOaarkK/FfEmbwJQH1tlrzh66BIy2Zd8q1Rt
+LylV9tZ3ZtvkfzAJacTTxIp06nPb60zm3FKCWosYlhk2cxWSK3Uk08Y/55/N+VM2
+qopOwqDf5f+qvHgwus8ZWKUVqRGNCBCI8LvQ4+hiEVNbpYwJRFVe848selnLIh6J
+kGCTImnu4LFCGzsL9gl1kqHBaP+UFuk2m9sa7LyoxGkPgMcrzFK1aBEqt4aSFqkb
+ZwB+oRmfD6+4bi3u+x7n2F+/0LXvFq6jKm/+LaZ/QMqOPfQZdVRor3iTlgViT5GM
+vd59vveJRtRAZVnLp4WU
+=CsGj
 -----END PGP SIGNATURE-----
 
---=-4lClqVabIue6S89XmyDK--
+--=-domwe55I6qS3bnZ86WKe--
 
