@@ -1,28 +1,20 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37444
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754817AbYGCFgF (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:24485 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753949AbYGNQYr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 01:36:05 -0400
-Date: Wed, 02 Jul 2008 22:36:03 -0700 (PDT)
-Message-Id: <20080702.223603.102672903.davem@davemloft.net> (sfid-20080703_103137_655617_99FD3C45)
-To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-07-02
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080702201851.GA10272@tuxdriver.com>
-References: <20080702201851.GA10272@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 14 Jul 2008 12:24:47 -0400
+Received: from vs30b.wh2.ocn.ne.jp (220.111.41.233)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0870692283
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2008 01:18:05 +0900 (JST)
+From: Bruno Randolf <bruno@thinktube.com>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 14 Jul 2008 18:18:02 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200807141818.03014.bruno@thinktube.com> (sfid-20080714_182451_061763_51E2A0C6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 2 Jul 2008 16:18:51 -0400
-
-> A few stragglers for 2.6.26...
-> 
-> Let me know if there are problems!
-
-Pulled and pushed out to net-2.6, thanks!
+unsubscribe
