@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51177 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755755AbYGOSR1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 14:17:27 -0400
-Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Guy Cohen <guy@cguy.net>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20080715174246.GA3117@tuxdriver.com>
-References: <20080709190915.GA8238@tuxdriver.com>
-	 <247d6d340807140805gfb6523en74384f6f47469d79@mail.gmail.com>
-	 <20080715174246.GA3117@tuxdriver.com>
-Content-Type: text/plain
-Date: Tue, 15 Jul 2008 14:15:31 -0400
-Message-Id: <1216145731.13411.25.camel@localhost.localdomain> (sfid-20080715_201731_895315_46FC8F2F)
-Mime-Version: 1.0
+Received: from yw-out-2324.google.com ([74.125.46.31]:62664 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753768AbYGNMjB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Jul 2008 08:39:01 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so2384887ywe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2008 05:38:54 -0700 (PDT)
+Message-ID: <1ba2fa240807140538n671ac95cm3e4b1a9d25af411a@mail.gmail.com> (sfid-20080714_143906_742001_502D8EB0)
+Date: Mon, 14 Jul 2008 15:38:53 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/2] mac80211: pass dtim_period to low level driver
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
+In-Reply-To: <1216038966.11189.12.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
+	 <1216038966.11189.12.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-07-15 at 13:42 -0400, John W. Linville wrote:
-> On Mon, Jul 14, 2008 at 06:05:13PM +0300, Guy Cohen wrote:
-> > I think that probably the most burning topics were a little diminished
-> > in our agenda, and should be put higher:
-> > - cfg80211/nl80211 - much of the current wext begins to fall behind
-> > the emerging capabilities of the mac80211 and moreover - from future
-> > abilities and needs of future fullmac devices. The functionality and
-> > ABI to userspace must be finalized as soon as possible. The status of
-> > this is very unclear and should be treated more thoroughly, and it
-> > seems it can't be shared with 5 other topics in less than 2 hours.
-> 
-> FWIW, I listed this one first under Future Work.
-> 
-> > - fullmac support - seems to be very relevant in the next couple of
-> > years with the integration of wifi into low power devices running
-> > linux.
-> 
-> Not sure exactly what you mean with this one.  Are you talking about
-> the lib80211 line item?  Or enhancements to the mac80211 component
-> to support full(er) MAC designs?
+On Mon, Jul 14, 2008 at 3:36 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>> --- a/include/net/mac80211.h
+>> +++ b/include/net/mac80211.h
+>> @@ -191,6 +191,7 @@ struct ieee80211_bss_conf {
+>>       /* erp related data */
+>>       bool use_cts_prot;
+>>       bool use_short_preamble;
+>> +     u8 dtim_period;
+>>       u16 beacon_int;
+>>       u16 assoc_capability;
+>>       u64 timestamp;
+>
+> Can you add documentation please, especially about the fact that it can
+> be zero if the network is buggy / IBSS.
 
-I hope just lib80211.  We shouldn't be extending mac80211 to fullmac or
-quasi-fullmac parts.  But we can certainly share a lot of stuff.
-lib80211 is where I see any additional fullmac effort going.
-
-Dan
-
-> > I think that these two topics should take precedence over other topics
-> > that although important consume more time in the agenda, and are
-> > currently less likely to have impact on the average users such as 11s
-> > and 11w.
-> > 
-> > it would be good if these topics will get substantial time slot in the agenda.
-> 
-> There are lots of items listed, and I'm not sure we will cover all
-> of them.  If there are any that you would like to suggest be dropped
-> completely then please do so.
-> 
-> That said, I don't think we have enough time for real working sessions
-> on Tuesday.  I think it would be better just to touch on a variety
-> of topics that can benefit from some face-to-face discussions.
-> From that perspective, I think some status reports and some brief
-> proposals are most appropriate.
-> 
-> I'll post a revised (mostly just augmented) agenda proposal today.
-> 
-> John
-
+Right, I will also add fallback to 1 if it's 0
+Thanks
+Tomas
