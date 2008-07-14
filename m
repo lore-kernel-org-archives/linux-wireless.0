@@ -1,63 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:34022 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803AbYGSAnE (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.187]:32455 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752761AbYGNLoU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 20:43:04 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC/RFT] rtl8187: Improve wireless statistics for RTL8187B
-Date: Fri, 18 Jul 2008 21:42:59 -0300
-Cc: "Hin-Tak Leung" <hintak.leung@gmail.com>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
-In-Reply-To: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
+	Mon, 14 Jul 2008 07:44:20 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so2834382fkq.5
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2008 04:44:19 -0700 (PDT)
+Date: Mon, 14 Jul 2008 11:49:13 +0000
+From: Jarek Poplawski <jarkao2@gmail.com>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, vinay@linux.vnet.ibm.com,
+	krkumar2@in.ibm.com, mchan@broadcom.com, Matheos.Worku@Sun.COM,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 11/39]: netdev: Move next_sched into struct
+	netdev_queue.
+Message-ID: <20080714114913.GA4504@ff.dom.local> (sfid-20080714_134425_033452_E445713F)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200807182142.59921.herton@mandriva.com.br> (sfid-20080719_024315_288855_F56EED44)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080703.000333.199735542.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Thursday 17 July 2008 12:02:56 Larry Finger escreveu:
-> Wireless statistics produced by the RTL8187B driver are not particularly
-> informative about the strength of the received signal. From the data sheet
-> provided by Realtek, I discovered that certain parts of the RX header
-> should have the information necessary to calculate signal quality and
-> strength. With testing, it became clear that most of these quantities were
-> very jittery - only the AGC correlated with the signals expected from
-> nearby AP's. As a result, the quality and strength are derived from the agc
-> value. The scaling has been determined so that the numbers are close to
-> those obtained by b43 under the same conditions. The results are
-> qualitatively correct.
->
-> Statistics derived for the RTL8187 have not been changed.
->
-> The RX header variables have been renamed to match the quantites described
-> in the Realtek data sheet.
+On 03-07-2008 09:03, David Miller wrote:
+> We schedule queues, not the device, for output queue
+> processing in BH.
+> 
+...
+> diff --git a/net/core/dev.c b/net/core/dev.c
+> index 8e38948..c5e3532 100644
+> --- a/net/core/dev.c
+> +++ b/net/core/dev.c
+> @@ -1323,13 +1323,14 @@ static void dev_queue_xmit_nit(struct sk_buff *skb, struct net_device *dev)
+>  void __netif_schedule(struct net_device *dev)
+>  {
+>  	if (!test_and_set_bit(__LINK_STATE_SCHED, &dev->state)) {
 
-Hi,
+Isn't this bit supposed to be set/tested per queue as well, or do I
+miss something?
 
-I did some tests here and statistics are better now. I only couldn't use 
-latest wireless-testing because something of latest changes broke 
-communication, I couldn't scan/associate anymore, but using wireless-testing 
-head at d61f20889de4978ed87d2a37d6f27147faec22d1 plus later anaparam*off 
-change, with your patch I can confirm the better statistics, later I'll try 
-to find what in wireless-testing broke here, I didn't have time to look into 
-this today.
+Jarek P.
 
->
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->
-> Pavel,
->
-> Please check that this patch does not break the RTL8187 statistics.
-> Perhaps, similar changes should be made there, but I don't have the
-> hardware.
->
-> Larry
-
--- 
-[]'s
-Herton
+> +		struct netdev_queue *txq = &dev->tx_queue;
+>  		unsigned long flags;
+>  		struct softnet_data *sd;
+>  
+>  		local_irq_save(flags);
+>  		sd = &__get_cpu_var(softnet_data);
+> -		dev->next_sched = sd->output_queue;
+> -		sd->output_queue = dev;
+> +		txq->next_sched = sd->output_queue;
+> +		sd->output_queue = txq;
+>  		raise_softirq_irqoff(NET_TX_SOFTIRQ);
+>  		local_irq_restore(flags);
+>  	}
+> @@ -1912,7 +1913,7 @@ static void net_tx_action(struct softirq_action *h)
+>  	}
+>  
+>  	if (sd->output_queue) {
+> -		struct net_device *head;
+> +		struct netdev_queue *head;
+>  
+>  		local_irq_disable();
+>  		head = sd->output_queue;
+> @@ -1920,12 +1921,10 @@ static void net_tx_action(struct softirq_action *h)
+>  		local_irq_enable();
+>  
+>  		while (head) {
+> -			struct net_device *dev = head;
+> -			struct netdev_queue *txq;
+> +			struct netdev_queue *txq = head;
+> +			struct net_device *dev = txq->dev;
+>  			head = head->next_sched;
+>  
+> -			txq = &dev->tx_queue;
+> -
+>  			smp_mb__before_clear_bit();
+>  			clear_bit(__LINK_STATE_SCHED, &dev->state);
+>  
+> @@ -4346,7 +4345,7 @@ static int dev_cpu_callback(struct notifier_block *nfb,
+>  			    void *ocpu)
+>  {
+>  	struct sk_buff **list_skb;
+> -	struct net_device **list_net;
+> +	struct netdev_queue **list_net;
+>  	struct sk_buff *skb;
+>  	unsigned int cpu, oldcpu = (unsigned long)ocpu;
+>  	struct softnet_data *sd, *oldsd;
