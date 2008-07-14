@@ -1,193 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:42276 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757009AbYGQPC7 (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:43962 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750763AbYGNSFt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 11:02:59 -0400
-Date: Thu, 17 Jul 2008 10:02:56 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Hin-Tak Leung <hintak.leung@gmail.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC/RFT] rtl8187: Improve wireless statistics for RTL8187B
-Message-ID: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net> (sfid-20080717_170305_743920_4552708F)
+	Mon, 14 Jul 2008 14:05:49 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [ipw3945-devel] iwl3945 random firmware crashes
+Date: Mon, 14 Jul 2008 11:05:40 -0700
+Message-ID: <4220499A1B034C4FA93B547BA01E1FF0017469B4@orsmsx413.amr.corp.intel.com> (sfid-20080714_200553_697427_3E61D4AC)
+In-reply-to: <f6ca9fed0807140437i2563cfa1ge68a06ef1040d0f8@mail.gmail.com>
+References: <f6ca9fed0807140437i2563cfa1ge68a06ef1040d0f8@mail.gmail.com>
+From: "Cahill, Ben M" <ben.m.cahill@intel.com>
+To: "drago01" <drago01@gmail.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel" <ipw3945-devel@lists.sourceforge.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wireless statistics produced by the RTL8187B driver are not particularly
-informative about the strength of the received signal. From the data sheet
-provided by Realtek, I discovered that certain parts of the RX header
-should have the information necessary to calculate signal quality and
-strength. With testing, it became clear that most of these quantities were
-very jittery - only the AGC correlated with the signals expected from nearby
-AP's. As a result, the quality and strength are derived from the agc value.
-The scaling has been determined so that the numbers are close to those
-obtained by b43 under the same conditions. The results are qualitatively
-correct.
+Try loading driver using module param:
 
-Statistics derived for the RTL8187 have not been changed.
+debug=0x43fff
 
-The RX header variables have been renamed to match the quantites described
-in the Realtek data sheet.
+This will provide more information in the log, including an event log
+(where you see "Microcode SW Error detected" in your log, you would have
+captured Event Log if you had the debug=0x43fff setting).
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+-- Ben --
 
-Pavel,
-
-Please check that this patch does not break the RTL8187 statistics. Perhaps,
-similar changes should be made there, but I don't have the hardware.
-
-Larry
-
-
-Index: wireless-testing/drivers/net/wireless/rtl8187.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl8187.h
-+++ wireless-testing/drivers/net/wireless/rtl8187.h
-@@ -47,11 +47,13 @@ struct rtl8187_rx_hdr {
- struct rtl8187b_rx_hdr {
- 	__le32 flags;
- 	__le64 mac_time;
--	u8 noise;
--	u8 signal;
-+	u8 sq;
-+	u8 rssi;
- 	u8 agc;
--	u8 reserved;
--	__le32 unused;
-+	u8 flags2;
-+	__le16 snr_long2end;
-+	s8 pwdb_g12;
-+	u8 fot;
- } __attribute__((packed));
- 
- /* {rtl8187,rtl8187b}_tx_info is in skb */
-Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
-@@ -257,6 +257,7 @@ static void rtl8187_rx_cb(struct urb *ur
- 	struct ieee80211_rx_status rx_status = { 0 };
- 	int rate, signal;
- 	u32 flags;
-+	u32 quality;
- 
- 	spin_lock(&priv->rx_queue.lock);
- 	if (skb->next)
-@@ -280,44 +281,57 @@ static void rtl8187_rx_cb(struct urb *ur
- 		flags = le32_to_cpu(hdr->flags);
- 		signal = hdr->signal & 0x7f;
- 		rx_status.antenna = (hdr->signal >> 7) & 1;
--		rx_status.signal = signal;
- 		rx_status.noise = hdr->noise;
- 		rx_status.mactime = le64_to_cpu(hdr->mac_time);
--		priv->signal = signal;
- 		priv->quality = signal;
-+		rx_status.qual = priv->quality;
- 		priv->noise = hdr->noise;
-+		rate = (flags >> 20) & 0xF;
-+		if (rate > 3) {	/* OFDM rate */
-+			if (signal > 90)
-+				signal = 90;
-+			else if (signal < 25)
-+				signal = 25;
-+			signal = 90 - signal;
-+		} else {	/* CCK rate */
-+			if (signal > 95)
-+				signal = 95;
-+			else if (signal < 30)
-+				signal = 30;
-+			signal = 95 - signal;
-+		}
-+		rx_status.signal = signal;
-+		priv->signal = signal;
- 	} else {
- 		struct rtl8187b_rx_hdr *hdr =
- 			(typeof(hdr))(skb_tail_pointer(skb) - sizeof(*hdr));
-+		/* The Realtek datasheet for the RTL8187B shows that the RX
-+		 * header contains the following quantities: signal quality,
-+		 * RSSI, AGC, the received power in dB, and the measured SNR.
-+		 * In testing, none of these quantities show qualitative
-+		 * agreement with AP signal strength, except for the AGC,
-+		 * which is inversely proportional to the strength of the
-+		 * signal. In the following, the quality and signal strength
-+		 * are derived from the AGC. The arbitrary scaling constants
-+		 * are chosen to make the results close to the values obtained
-+		 * for a BCM4312 using b43 as the driver. The noise is ignored
-+		 * for now.
-+		 */
- 		flags = le32_to_cpu(hdr->flags);
--		signal = hdr->agc >> 1;
--		rx_status.antenna = (hdr->signal >> 7) & 1;
--		rx_status.signal = 64 - min(hdr->noise, (u8)64);
--		rx_status.noise = hdr->noise;
-+		quality = 170 - hdr->agc;
-+		if (quality > 100)
-+			quality = 100;
-+		signal = 14 - hdr->agc / 2;
-+		rx_status.qual = quality;
-+		priv->quality = quality;
-+		rx_status.signal = signal;
-+		priv->signal = signal;
-+		rx_status.antenna = (hdr->rssi >> 7) & 1;
- 		rx_status.mactime = le64_to_cpu(hdr->mac_time);
--		priv->signal = hdr->signal;
--		priv->quality = hdr->agc >> 1;
--		priv->noise = hdr->noise;
-+		rate = (flags >> 20) & 0xF;
- 	}
- 
- 	skb_trim(skb, flags & 0x0FFF);
--	rate = (flags >> 20) & 0xF;
--	if (rate > 3) {	/* OFDM rate */
--		if (signal > 90)
--			signal = 90;
--		else if (signal < 25)
--			signal = 25;
--		signal = 90 - signal;
--	} else {	/* CCK rate */
--		if (signal > 95)
--			signal = 95;
--		else if (signal < 30)
--			signal = 30;
--		signal = 95 - signal;
--	}
--
--	rx_status.qual = priv->quality;
--	rx_status.signal = signal;
- 	rx_status.rate_idx = rate;
- 	rx_status.freq = dev->conf.channel->center_freq;
- 	rx_status.band = dev->conf.channel->band;
-@@ -1015,9 +1029,7 @@ static int __devinit rtl8187_probe(struc
- 
- 	priv->mode = IEEE80211_IF_TYPE_MNTR;
- 	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
--		     IEEE80211_HW_RX_INCLUDES_FCS |
--		     IEEE80211_HW_SIGNAL_UNSPEC;
--	dev->max_signal = 65;
-+		     IEEE80211_HW_RX_INCLUDES_FCS;
- 
- 	eeprom.data = dev;
- 	eeprom.register_read = rtl8187_eeprom_register_read;
-@@ -1132,10 +1144,16 @@ static int __devinit rtl8187_probe(struc
- 		(*channel++).hw_value = txpwr >> 8;
- 	}
- 
--	if (priv->is_rtl8187b)
-+	if (priv->is_rtl8187b) {
- 		printk(KERN_WARNING "rtl8187: 8187B chip detected. Support "
- 			"is EXPERIMENTAL, and could damage your\n"
- 			"         hardware, use at your own risk\n");
-+		dev->flags |= IEEE80211_HW_SIGNAL_DBM;
-+	} else {
-+		dev->flags |= IEEE80211_HW_SIGNAL_UNSPEC;
-+		dev->max_signal = 65;
-+	}
-+
- 	if ((id->driver_info == DEVICE_RTL8187) && priv->is_rtl8187b)
- 		printk(KERN_INFO "rtl8187: inconsistency between id with OEM"
- 		       " info!\n");
+> -----Original Message-----
+> From: ipw3945-devel-bounces@lists.sourceforge.net 
+> [mailto:ipw3945-devel-bounces@lists.sourceforge.net] On 
+> Behalf Of drago01
+> Sent: Monday, July 14, 2008 7:38 AM
+> To: linux-wireless; ipw3945-devel
+> Subject: [ipw3945-devel] iwl3945 random firmware crashes
+> 
+> Hi,
+> I noticed some weird firmware restarts with iwl3945 lately.
+> -----------------
+> iwl3945: Microcode SW error detected.  Restarting 0x82000008.
+> iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq
+> 0x4419 ser 0x0000004B
+> iwl3945: Can't stop Rx DMA.
+> Registered led device: iwl-phy0:radio
+> Registered led device: iwl-phy0:assoc
+> Registered led device: iwl-phy0:RX
+> Registered led device: iwl-phy0:TX
+> iwl3945: Microcode SW error detected.  Restarting 0x82000008.
+> iwl3945: Error Reply type 0x00000005 cmd REPLY_LEDS_CMD (0x48) seq
+> 0x0408 ser 0x0000004B
+> iwl3945: Can't stop Rx DMA.
+> Registered led device: iwl-phy0:radio
+> Registered led device: iwl-phy0:assoc
+> Registered led device: iwl-phy0:RX
+> Registered led device: iwl-phy0:TX
+> iwl3945: Microcode SW error detected.  Restarting 0x82000008.
+> iwl3945: Error Reply type 0x00000005 cmd REPLY_LEDS_CMD (0x48) seq
+> 0x0408 ser 0x0000004B
+> iwl3945: Can't stop Rx DMA.
+> Registered led device: iwl-phy0:radio
+> Registered led device: iwl-phy0:assoc
+> Registered led device: iwl-phy0:RX
+> Registered led device: iwl-phy0:TX
+> iwl3945: Microcode SW error detected.  Restarting 0x82000008.
+> iwl3945: Error Reply type 0x00000005 cmd REPLY_LEDS_CMD (0x48) seq
+> 0x0407 ser 0x0000004B
+> iwl3945: Can't stop Rx DMA.
+> ---------------
+> There seem to be random (can not reproduce them always) but 
+> the only way to get the wireless working is to
+> 1) unload the module
+> 2) go to another room
+> 3) load module
+> 4) connect to AP
+> 5) go back to the room and it works
+> 
+> If I stay in the same room after reloading the module the 
+> firmware crashes happen again.
+> 
+> I have no output with the event log because they happen 
+> randomly and I cannot reproduce them.
+> 
+> Any ideas?
+> 
+> --------------------------------------------------------------
+> -----------
+> Sponsored by: SourceForge.net Community Choice Awards: VOTE NOW!
+> Studies have shown that voting for your favorite open source 
+> project, along with a healthy diet, reduces your potential 
+> for chronic lameness and boredom. Vote Now at 
+> http://www.sourceforge.net/community/cca08
+> _______________________________________________
+> Ipw3945-devel mailing list
+> Ipw3945-devel@lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
+> 
