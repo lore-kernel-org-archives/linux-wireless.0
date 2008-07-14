@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:65339 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751561AbYG2P6R (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:6863 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752969AbYGNMqm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 11:58:17 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so1708933nfc.21
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 08:58:15 -0700 (PDT)
-Subject: Re: [PATCH] mac80211: partially fix skb->cb use
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1217333247.10489.35.camel@johannes.berg>
-References: <1217323927.10489.9.camel@johannes.berg>
-	 <1217330604.6379.12.camel@localhost>
-	 (sfid-20080729_132329_995714_6D2C9701)  <1217330667.10489.19.camel@johannes.berg>
-	 <1217331773.6379.25.camel@localhost>
-	 (sfid-20080729_134300_214751_172329C5)  <1217332288.10489.33.camel@johannes.berg>
-	 <1217333020.6379.31.camel@localhost>
-	 (sfid-20080729_140346_036234_85BD2AA9)  <1217333247.10489.35.camel@johannes.berg>
-Content-Type: text/plain
-Date: Tue, 29 Jul 2008 17:58:11 +0200
-Message-Id: <1217347091.6379.57.camel@localhost> (sfid-20080729_175820_206680_EEE13FDE)
-Mime-Version: 1.0
+	Mon, 14 Jul 2008 08:46:42 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so2385624ywe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2008 05:46:41 -0700 (PDT)
+Message-ID: <1ba2fa240807140546w4f08e32l59ed88dfa1b86403@mail.gmail.com> (sfid-20080714_144648_163524_E6E0D429)
+Date: Mon, 14 Jul 2008 15:46:41 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by low level driver
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1216039127.11189.15.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
+	 <1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
+	 <1216039127.11189.15.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-07-29 at 14:07 +0200, Johannes Berg wrote:
-> Ok. How is that supposed to work with crypto? Do each two peers
-> negotiate a key and forwarding just doesn't change anything so crypto is
-> effectively end-to-end?
+On Mon, Jul 14, 2008 at 3:38 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2008-07-14 at 15:31 +0300, Tomas Winkler wrote:
+>> This patch makes listen_interval configurable by low level driver.
+>
+> I'm not sure we we really want that.
+>
+> With this, you're again putting more features and more decision making
+> processes with the driver, I would much prefer this to be worked out in
+> mac80211 so we can do it across all drivers.
+>
+> If this is a knob that should be adjusted then we want to enable users
+> to do it, and if it isn't then we can put a value into mac80211 and fix
+> it. Having drivers make these kinds of decisions is very bad for uniform
+> wireless behaviour.
 
-Actually not, crypto is per link (per hop). We don't have a schedule to
-support that but anyway, where do you suggest to save the mesh header in
-this case?
+The same story as with beacon interval. This is for the power
+management. It's really hw dependent for how many beacons we can stay
+dormant. I really don't know what other vendors do and user should not
+guess this.
+Thanks
+Tomas
 
--- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
-
-
+> johannes
+>
