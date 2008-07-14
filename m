@@ -1,63 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47515
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1757200AbYGCHDj (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.248]:13978 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753431AbYGNUj6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:03:39 -0400
-Date: Thu, 03 Jul 2008 00:03:38 -0700 (PDT)
-Message-Id: <20080703.000338.01412664.davem@davemloft.net> (sfid-20080703_103230_153819_17082F19)
-To: netdev@vger.kernel.org
-CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
-Subject: [PATCH 12/39]: pkt_sched: Add qdisc_reset_all_tx().
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 14 Jul 2008 16:39:58 -0400
+Received: by an-out-0708.google.com with SMTP id d40so970308and.103
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2008 13:39:57 -0700 (PDT)
+Message-ID: <43e72e890807141339g5abbcf8cj78622e438087a659@mail.gmail.com> (sfid-20080714_224003_691300_0B8987E8)
+Date: Mon, 14 Jul 2008 13:39:57 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: [PATCH] Add new regulatory framework for Linux wireless
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	"Rindjunsky, Ron" <ron.rindjunsky@intel.com>,
+	"Tim Gardner" <tim.gardner@canonical.com>,
+	"Jouni Malinen" <j@w1.fi>
+In-Reply-To: <1ba2fa240807140321m2c111de1x38affda7de4f6f2d@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080711123039.GP17936@ruslug.rutgers.edu>
+	 <1ba2fa240807140321m2c111de1x38affda7de4f6f2d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Jul 14, 2008 at 3:21 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+> I've submitted RFC patch for Country IE parsing in mac80211 as part of
+> the work on 802.11h.  (TGh)
 
-Isolate callers that want to simply reset all the TX
-qdiscs from the details of TX queues.
+I saw, I have to review it now with this in mind.
 
-Use this in the ISDN code.
+> Q. How do you plan to merge CRDA and Country IE
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- drivers/isdn/i4l/isdn_net.c |    2 +-
- include/net/sch_generic.h   |    6 ++++++
- 2 files changed, 7 insertions(+), 1 deletions(-)
+When a Country IE is received and parsed in mac80211 its up to
+mac80211 then to decide what to do. As per the specification you
+should use what the AP sends in the country IE but from what I am
+seeing vendors tend to do different things with the Country IE. Some
+considerations against parsing the Country IE and trusting it
+completely is concerns about "rogue" APs. So as a compromise I was
+thinking that initially we can simply call CRDA with the alpha2 passed
+in the Country IE. Then later we can have it actually get the
+intersection between what the AP provides and what CRDA has. The
+driver will *always* have the ultimate say though through the callback
+if it is registered. The callback will usually be used by vendor
+drivers who have more stringent requirements on their regulatory
+considerations. In the end though if trust is built around the data
+CRDA provides it should be more than enough.
 
-diff --git a/drivers/isdn/i4l/isdn_net.c b/drivers/isdn/i4l/isdn_net.c
-index 457bbd1..bb904a0 100644
---- a/drivers/isdn/i4l/isdn_net.c
-+++ b/drivers/isdn/i4l/isdn_net.c
-@@ -287,7 +287,7 @@ isdn_net_unbind_channel(isdn_net_local * lp)
- 		   BEWARE! This chunk of code cannot be called from hardware
- 		   interrupt handler. I hope it is true. --ANK
- 		 */
--		qdisc_reset(lp->netdev->dev->tx_queue.qdisc);
-+		qdisc_reset_all_tx(lp->netdev->dev);
- 	}
- 	lp->dialstate = 0;
- 	dev->rx_netdev[isdn_dc2minor(lp->isdn_device, lp->isdn_channel)] = NULL;
-diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
-index 6bf63d9..a71994b 100644
---- a/include/net/sch_generic.h
-+++ b/include/net/sch_generic.h
-@@ -185,6 +185,12 @@ extern struct Qdisc *qdisc_create_dflt(struct net_device *dev,
- extern void tcf_destroy(struct tcf_proto *tp);
- extern void tcf_destroy_chain(struct tcf_proto *fl);
- 
-+/* Reset all TX qdiscs of a device.  */
-+static inline void qdisc_reset_all_tx(struct net_device *dev)
-+{
-+	qdisc_reset(dev->tx_queue.qdisc);
-+}
-+
- static inline int __qdisc_enqueue_tail(struct sk_buff *skb, struct Qdisc *sch,
- 				       struct sk_buff_head *list)
- {
--- 
-1.5.6
+Now these are just my observations so far. Please feel free to chime
+in if there are better alternatives. We probably should take some time
+to talk about this at OLS but for now that's what I'm aiming for.
 
+> where you will keep
+> Country IE info cfg80211 or mac80211?
+
+That belongs in mac80211. You only need to tell cfg80211 the alpha2 so
+it can query CRDA for you.
+
+  Luis
