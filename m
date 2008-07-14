@@ -1,65 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:32849 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492AbYGESnx (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.191]:35189 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752074AbYGNLhl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jul 2008 14:43:53 -0400
-Subject: Re: [Rt2400-devel] [PATCH] rt2x00: Fix NULL pointer error
-	in	adhoc/master mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Bryan Batten <BryanBatten@sbcglobal.net>, linville@tuxdriver.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200807052042.47008.IvDoorn@gmail.com> (sfid-20080705_203620_594861_13D70D58)
-References: <200807051511.57995.IvDoorn@gmail.com>
-	 <486FBE75.5040100@sbcglobal.net>  <200807052042.47008.IvDoorn@gmail.com>
-	 (sfid-20080705_203620_594861_13D70D58)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3NMIvZOMFmH4hWKxpWhM"
-Date: Sat, 05 Jul 2008 20:43:35 +0200
-Message-Id: <1215283415.6848.14.camel@johannes.berg> (sfid-20080705_204357_125313_0DEE2EC3)
-Mime-Version: 1.0
+	Mon, 14 Jul 2008 07:37:41 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so1484782nfc.21
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2008 04:37:39 -0700 (PDT)
+Message-ID: <f6ca9fed0807140437i2563cfa1ge68a06ef1040d0f8@mail.gmail.com> (sfid-20080714_133744_850260_52B1BB2F)
+Date: Mon, 14 Jul 2008 13:37:39 +0200
+From: drago01 <drago01@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
+Subject: iwl3945 random firmware crashes
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
+I noticed some weird firmware restarts with iwl3945 lately.
+-----------------
+iwl3945: Microcode SW error detected.  Restarting 0x82000008.
+iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq
+0x4419 ser 0x0000004B
+iwl3945: Can't stop Rx DMA.
+Registered led device: iwl-phy0:radio
+Registered led device: iwl-phy0:assoc
+Registered led device: iwl-phy0:RX
+Registered led device: iwl-phy0:TX
+iwl3945: Microcode SW error detected.  Restarting 0x82000008.
+iwl3945: Error Reply type 0x00000005 cmd REPLY_LEDS_CMD (0x48) seq
+0x0408 ser 0x0000004B
+iwl3945: Can't stop Rx DMA.
+Registered led device: iwl-phy0:radio
+Registered led device: iwl-phy0:assoc
+Registered led device: iwl-phy0:RX
+Registered led device: iwl-phy0:TX
+iwl3945: Microcode SW error detected.  Restarting 0x82000008.
+iwl3945: Error Reply type 0x00000005 cmd REPLY_LEDS_CMD (0x48) seq
+0x0408 ser 0x0000004B
+iwl3945: Can't stop Rx DMA.
+Registered led device: iwl-phy0:radio
+Registered led device: iwl-phy0:assoc
+Registered led device: iwl-phy0:RX
+Registered led device: iwl-phy0:TX
+iwl3945: Microcode SW error detected.  Restarting 0x82000008.
+iwl3945: Error Reply type 0x00000005 cmd REPLY_LEDS_CMD (0x48) seq
+0x0407 ser 0x0000004B
+iwl3945: Can't stop Rx DMA.
+---------------
+There seem to be random (can not reproduce them always) but the only
+way to get the wireless working is to
+1) unload the module
+2) go to another room
+3) load module
+4) connect to AP
+5) go back to the room and it works
 
---=-3NMIvZOMFmH4hWKxpWhM
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+If I stay in the same room after reloading the module the firmware
+crashes happen again.
 
+I have no output with the event log because they happen randomly and I
+cannot reproduce them.
 
-> Hmm, in that case I have to fix something in the beacondone handler
-> to prevent it requesting a beacon when mac80211 hasn't supplied anything
-> yet..
-
-I was working in this area... Can you take a quick look at this patch
-and let me know what you think?
-http://johannes.sipsolutions.net/patches/kernel/all/2008-07-05-18%3a42/mac8=
-0211-beacon-revamp.patch
-
-johannes
-
---=-3NMIvZOMFmH4hWKxpWhM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIb8DTAAoJEKVg1VMiehFYiP0P/2wMpS48ntOohXywyQ8BvolQ
-bJ4+v+DSI3CLBws+XPZWQKTzhiiT4+wXQkZZu+xqPxBtB9o9duwCzYcUt9HSYVDH
-RJ8cfJ5efizQrNHPNhtioYtMlGUKN76GoEnuv/STr+gGQZRqWgmwBH4BFkoBkd8x
-48v79B7IhioJTg+SiPeIWjIXDcA1vRCDC4K+klLLRgcy2zr1Kz51gReZrpEF4iyr
-Jnd4BU3ue/2D8bgJ3mgA8uBORKmvE4dWjEflCXAPkS+W4YaUm5TZWjWPMLUlx6JG
-DZvbMdWWuL9A9JEeOl4rtJzy6fbmZz0UrTQFh4vtSflf8avZhQdN/fpssp+9N/xg
-z1JXNjRWtIqw+rzEJ4GKCd5Pe9ehz51vsrdguh051taG/GbjLYrEzPxYpcRPE18g
-Iiuc+tjRRBn5y6SCT+Gkok4qeUp2OgyUx74PWVWOmxDrrrzsEjl4O31PTWyM3Elf
-9tExf862+Jn4Fmk9y8EboIiKrxdyLi4k8n8bOKagtETXRp6bzut520NcG51k2UPC
-pScoOKvjJovT/SBY/IwH473EMsk7NMxBoLNcgF30aslPOFH8opwVP1IiHvXM7j3w
-hVeRLhZYCHX7P4mlQ87OwhJM55G1fg/J1WazAUqwpR3S8T2Co4aOxHLP4EVZWHMr
-Mi0SobfI2eAtZLVzczsU
-=9YMH
------END PGP SIGNATURE-----
-
---=-3NMIvZOMFmH4hWKxpWhM--
-
+Any ideas?
