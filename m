@@ -1,68 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47537
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1757387AbYGCHDu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:03:50 -0400
-Date: Thu, 03 Jul 2008 00:03:49 -0700 (PDT)
-Message-Id: <20080703.000349.266937189.davem@davemloft.net> (sfid-20080703_103232_476003_4A8A07A8)
-To: netdev@vger.kernel.org
-CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
-Subject: [PATCH 14/39]: pkt_sched: Add qdisc_tx_is_noop() helper and use in
- IPV6.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from hostap.isc.org ([149.20.54.63]:43228 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758313AbYGNWCX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Jul 2008 18:02:23 -0400
+Date: Tue, 15 Jul 2008 01:01:38 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH 0/7] IEEE 802.11w / management frame protection
+Message-ID: <20080714220138.GD5155@jm.kir.nu> (sfid-20080715_000234_566865_87F3E3E1)
+References: <20080617154008.883383150@localhost> <1215625246.3246.40.camel@johannes.berg> <1215626936.3246.45.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1215626936.3246.45.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Jul 09, 2008 at 08:08:56PM +0200, Johannes Berg wrote:
 
-This indicates if the NOOP scheduler is what is active
-for TX on a given device.
+> Just realised that it doesn't handle VLANs properly. Could you add a
+> static MAC/VLAN mapping to hostapd to make VLANs possible without
+> setting up radius? :)
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- include/net/sch_generic.h |    8 ++++++++
- net/ipv6/addrconf.c       |    5 ++---
- 2 files changed, 10 insertions(+), 3 deletions(-)
+Well, I could, but this doesn't sound like a real world feature.. I
+would assume it would be relatively simple addition to the file-based
+MAC ACL (accept_mac_file) to allow optional listing of VLAN ID that
+would then be used as if it came from the authentication server.
 
-diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
-index 9f5e644..bfb05a7 100644
---- a/include/net/sch_generic.h
-+++ b/include/net/sch_generic.h
-@@ -212,6 +212,14 @@ static inline bool qdisc_tx_changing(struct net_device *dev)
- 	return (txq->qdisc != txq->qdisc_sleeping);
- }
- 
-+/* Is the device using the noop qdisc?  */
-+static inline bool qdisc_tx_is_noop(struct net_device *dev)
-+{
-+	struct netdev_queue *txq = &dev->tx_queue;
-+
-+	return (txq->qdisc == &noop_qdisc);
-+}
-+
- static inline int __qdisc_enqueue_tail(struct sk_buff *skb, struct Qdisc *sch,
- 				       struct sk_buff_head *list)
- {
-diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
-index e6acb89..6dd8c63 100644
---- a/net/ipv6/addrconf.c
-+++ b/net/ipv6/addrconf.c
-@@ -224,10 +224,9 @@ const struct in6_addr in6addr_linklocal_allnodes = IN6ADDR_LINKLOCAL_ALLNODES_IN
- const struct in6_addr in6addr_linklocal_allrouters = IN6ADDR_LINKLOCAL_ALLROUTERS_INIT;
- 
- /* Check if a valid qdisc is available */
--static inline int addrconf_qdisc_ok(struct net_device *dev)
-+static inline bool addrconf_qdisc_ok(struct net_device *dev)
- {
--	struct netdev_queue *txq = &dev->tx_queue;
--	return (txq->qdisc != &noop_qdisc);
-+	return !qdisc_tx_is_noop(dev);
- }
- 
- /* Check if a route is valid prefix route */
+Anyway, It shouldn't require much complexity to set up FreeRADIUS with
+two users that are assigned to different VLAN groups. hostapd.conf lists
+the needed tunnel attributes for this.. ;-)
+
 -- 
-1.5.6
-
+Jouni Malinen                                            PGP id EFC895FA
