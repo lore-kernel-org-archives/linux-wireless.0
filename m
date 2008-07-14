@@ -1,43 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:17151 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754090AbYG2Fru (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 01:47:50 -0400
-Received: from mail.atheros.com ([192.168.11.2])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 22:47:50 -0700
-From: <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	<Jouni.Malinen@Atheros.com>,
-	Sujith Manoharan <smanoharan@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 16/16] ath9k: Remove some unused macros
-Date: Mon, 28 Jul 2008 22:47:25 -0700
-Message-ID: <d1ed7eb640a14dc4ea01c86e3f533877014bb73d.1217309552.git.lrodriguez@atheros.com> (sfid-20080729_081543_874415_46120C93)
-In-Reply-To: <4800d552efce6350888c68b859f66767196d720b.1217309551.git.lrodriguez@atheros.com>
-References: <4800d552efce6350888c68b859f66767196d720b.1217309551.git.lrodriguez@atheros.com>
-MIME-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:39769 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1757397AbYGNRRd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Jul 2008 13:17:33 -0400
+Subject: Re: mac80211 : WARN at net/mac80211/rate.h:153
+From: Mattias Nissler <mattias.nissler@gmx.de>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Dave Young <hidave.darkstar@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
+In-Reply-To: <200807141614.51628.mb@bu3sch.de>
+References: <20080714075010.GA3559@darkstar>
+	 <200807141614.51628.mb@bu3sch.de>
 Content-Type: text/plain
+Date: Mon, 14 Jul 2008 19:17:29 +0200
+Message-Id: <1216055849.4435.7.camel@localhost> (sfid-20080714_191800_306683_95BC1A14)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <smanoharan@atheros.com>
+On Mon, 2008-07-14 at 16:14 +0200, Michael Buesch wrote:
+> CCing PID guys.
+> I've seen several people hitting this. What's the meaning of this warning?
 
-diff --git a/drivers/net/wireless/ath9k/regd.h b/drivers/net/wireless/ath9k/regd.h
-index 6d6c89f..125941c 100644
---- a/drivers/net/wireless/ath9k/regd.h
-+++ b/drivers/net/wireless/ath9k/regd.h
-@@ -19,9 +19,6 @@
- 
- #include "ath9k.h"
- 
--#define ATH9K_MODE_11A_TURBO  ATH9K_MODE_SEL_108A
--#define ATH9K_MODE_11G_TURBO  ATH9K_MODE_SEL_108G
--
- #define BMLEN 2
- #define BMZERO {(u_int64_t) 0, (u_int64_t) 0}
- 
--- 
-1.5.4.3
+It basically means the rate control cannot find any rate in
+local->hw.wiphy->bands[local->hw.conf.channel->band] that is supported
+by the sta in question. Normally this should not happen. I guess the
+reason is that the supported rates bits in the sta info are all zero,
+which would probably be a bug. I haven't seen this here, but I don't use
+the IBSS code either. To further investigate this, you could the
+following just before the WARN_ON:
+
+printk(KERN_DEBUG "supported rates bitmask: %08x\n",
+	sta->supp_rates[sband->band]);
+
+Mattias
 
