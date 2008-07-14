@@ -1,71 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51672 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753964AbYGOH36 (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41048 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753725AbYGNROC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 03:29:58 -0400
-Subject: Re: [PATCH 1/2 V2] mac80211: pass dtim_period to low level driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-In-Reply-To: <1216061040-954-1-git-send-email-tomas.winkler@intel.com>
-References: <1216061040-954-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oUi94vvPxKL7ah/K6TSc"
-Date: Tue, 15 Jul 2008 09:29:54 +0200
-Message-Id: <1216106994.23746.12.camel@johannes.berg> (sfid-20080715_093001_523257_36B2A359)
+	Mon, 14 Jul 2008 13:14:02 -0400
+Date: Mon, 14 Jul 2008 10:13:49 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Vivek Dasmohapatra <vivek@etla.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: 2.6.24 ipw2200 driver can't be reset after firmware explodes
+Message-Id: <20080714101349.38079048.akpm@linux-foundation.org> (sfid-20080714_191408_936285_41DDB967)
+In-Reply-To: <Pine.LNX.4.64.0807141240020.6889@localhost>
+References: <Pine.LNX.4.64.0807141240020.6889@localhost>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+(cc linux-wireless)
 
---=-oUi94vvPxKL7ah/K6TSc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Mon, 14 Jul 2008 13:27:51 +0100 (BST) Vivek Dasmohapatra <vivek@etla.org> wrote:
 
-On Mon, 2008-07-14 at 21:44 +0300, Tomas Winkler wrote:
-> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->=20
-> This patch adds the dtim_period in ieee80211_bss_conf, this allows the lo=
-w
-> level driver to know the dtim_period, and to plan power save accordingly.
->=20
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-except you have a typo (see below) but I don't really care too much.
-
-
-> +	/* set default value for bugy APs */
-
-buggy :)
-
-johannes
-
---=-oUi94vvPxKL7ah/K6TSc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIfFHtAAoJEKVg1VMiehFYuTsQAK9HZG+3SDjXo9dR3JgaI0ZW
-zcPorOuCrN9LlvcDO8h1v46zZ20I5Vo5VbRC79NJ6bsBX1LTos3FVEtV1uS4Uuqc
-NxzX29448KgYX+dkMGbWAjOKigsl82Rs3mhNl/Ov9T8cTQjalt2WXcIf1gVAgzOg
-zIz1R9m2nSlFwbN7iYFhpQDKNxH/GsO5utUHYJVhCZQ2y+a4EyTGg6gfJZBLqbP9
-NWJ0zPXSvHikuKQ/0GV6EymbKpZajbBKF9FkkVsoeSIJ7wnuutydOPK0k3VHGPd3
-JSSd/7ObLDJlfVokJO5jVPfeR4YDPQF4limg5wwLYLmHBRTSFNda3VdL9aKPjEzr
-ZnXHh8ITU+BIEp8XVcJ+aJd14/sIJ6nAlLejjXVi28+nipvd77Y2LXQPq2/05pig
-h3rj6rpL1tukdx8Z4jLc8PSbr8ZWYWezawhuOE29g62h3/Ve8bfDY/heR1+Ubu9L
-597j7Df2zLNvel49OdGZ3VsMwcpa3hEOUtBq0fiIlcziG0nDg5tkRvfLqnkRKPMg
-pQUclnq+qcSbN32J7LqBm1usyipdQ5Bdqsj3LYuxWZXi3JJtVTRW6Ff6972oBj2w
-wNJ4uW9vd3m8x8Ve8SBKZSVtS8NG04H6HntK9q2BNUR+YDrJ1FIRqu6EvdKpJNnh
-TAO93OazOQfn23/dn8WT
-=D2Nn
------END PGP SIGNATURE-----
-
---=-oUi94vvPxKL7ah/K6TSc--
+> Hi: I have a thinkpad t43p with an ipw2200 driven piece of hardware in it.
+> 
+> 04:02.0 Network controller [0280]:
+>   Intel Corporation PRO/Wireless 2915ABG Network Connection [8086:4224] (rev 05)
+>          Kernel driver in use: ipw2200
+>          Kernel modules: ipw2200
+> 
+> >From time to time, the firmware flakes out, and I get messages like this:
+> [ I'm not sure which version of the firmware I have, I can't see anything
+>    obvious in dmesg when the ipw2200 module loads: I have files like
+>    ipw-2.4-bss.fw in /lib/firmware if that helps ]
+> 
+> Jul 14 03:42:25 neko kernel: 
+> ipw2200: Failed to send SCAN_ABORT: Command timed out.
+> Jul 14 03:42:26 neko kernel: 
+> ipw2200: Failed to send CARD_DISABLE: Command timed out.
+> Jul 14 03:42:32 neko kernel: 
+> ipw2200: Failed to send SCAN_ABORT: Command timed out.
+> Jul 14 03:42:33 neko kernel: 
+> ipw2200: Failed to send CARD_DISABLE: Command timed out.
+> Jul 14 03:42:39 neko kernel: 
+> ipw2200: Failed to send SCAN_ABORT: Command timed out.
+> 
+> repeated again and again.
+> 
+> There's usually a "firmware error detected, restarting" message buried
+> somewhere in the logs before that happens.
+> 
+> Under kernel 2.6.16, I was able to fix this as follows:
+> 
+> echo -n 3 > /sys/class/net/$IFACE/device/power/state
+> sleep 1
+> echo -n 0 > /sys/class/net/$IFACE/device/power/state
+> 
+> ( removing and reloading the module has no effect here, under
+>    either kernel 2.6.16 or 2.6.24: taking the interface down and
+>    bringing it up again is likewise ineffective )
+> 
+> However, I note that under 2.6.24 said /sys interface is no
+> longer present, so once the firmware dies, I am forced to either
+> hunt down a network cable with something useful on the other end,
+> or live without networking, or reboot.
+> 
+> Is there a new way to achieve the same effect in 2.6.24? If there's not,
+> is there likely to be in the future? Or should I just revert to 2.6.16
+> until such time as I replace my laptop and (hopefully) don't have to
+> struggle with the intel wifi hardware any more?
+> 
+> The firmware bug is covered here: 
+> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=875
+> if that's helpful/relevant.
+> 
+> [ CCd to netdev as I was told it would be of interest there too,
+>    apologies if this is not the case ]
+> 
 
