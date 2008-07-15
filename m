@@ -1,93 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45551 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751648AbYGJJRf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 05:17:35 -0400
-Subject: [PATCH] wext: make sysfs bits optional and deprecate them
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, Jean Tourrilhes <jt@hpl.hp.com>
+Received: from mx1.redhat.com ([66.187.233.31]:51919 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754384AbYGOQvE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jul 2008 12:51:04 -0400
+Subject: Re: background scanning and fast handovers
+From: Dan Williams <dcbw@redhat.com>
+To: devel@e-doo.de
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <28167927.118721216023197288.JavaMail.servlet@kundenserver>
+References: <28167927.118721216023197288.JavaMail.servlet@kundenserver>
 Content-Type: text/plain
-Date: Thu, 10 Jul 2008 11:16:47 +0200
-Message-Id: <1215681407.3932.10.camel@johannes.berg> (sfid-20080710_111738_825714_DF5C487B)
+Date: Tue, 15 Jul 2008 12:48:58 -0400
+Message-Id: <1216140538.6039.95.camel@localhost.localdomain> (sfid-20080715_185109_999687_79922202)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The /sys/class/net/*/wireless/ direcory is, as far as I know, not
-used by anyone. Additionally, the same data is available via wext
-ioctls. Hence the sysfs files are pretty much useless. This patch
-makes them optional and schedules them for removal.
+On Mon, 2008-07-14 at 10:13 +0200, devel@e-doo.de wrote:
+> Hi Everybody,
+> I'm new on linux-wireless mailing list.
+> 
+> In the recent past I completed my diploma thesis, which included some software implementations with the Madwifi driver. In future the compact-wireless driver (with ath5k) will be used for Atheros Chipsets.
+> So - I'm very interessted to keep an eye on the development of the compact-wireless driver.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jean Tourrilhes <jt@hpl.hp.com>
----
-The only known user was hal
-(http://www.freedesktop.org/wiki/Software/hal) and I have removed those,
-the patches are in the git repository for the next release.
+I think you mean "compat-wireless", right?  In any case, we'll just take
+that to mean mac80211-based drivers really since that's what we can
+actually control.
 
- Documentation/feature-removal-schedule.txt |   10 ++++++++++
- net/core/net-sysfs.c                       |    4 ++--
- net/wireless/Kconfig                       |   11 +++++++++++
- 3 files changed, 23 insertions(+), 2 deletions(-)
+> Maybe I can be a part in enhancing the driver in the future.
+> 
+> But first, I have a few questions to you:
+> 
+> How does the compact-wireless driver handle the case, when a connection of a STA to an AP gets lost?
 
---- everything.orig/net/core/net-sysfs.c	2008-07-10 10:23:08.000000000 +0200
-+++ everything/net/core/net-sysfs.c	2008-07-10 10:26:25.000000000 +0200
-@@ -318,7 +318,7 @@ static struct attribute_group netstat_gr
- 	.attrs  = netstat_attrs,
- };
- 
--#ifdef CONFIG_WIRELESS_EXT
-+#ifdef CONFIG_WIRELESS_EXT_SYSFS
- /* helper function that does all the locking etc for wireless stats */
- static ssize_t wireless_show(struct device *d, char *buf,
- 			     ssize_t (*format)(const struct iw_statistics *,
-@@ -460,7 +460,7 @@ int netdev_register_kobject(struct net_d
- 	if (net->get_stats)
- 		*groups++ = &netstat_group;
- 
--#ifdef CONFIG_WIRELESS_EXT
-+#ifdef CONFIG_WIRELESS_EXT_SYSFS
- 	if (net->wireless_handlers && net->wireless_handlers->get_wireless_stats)
- 		*groups++ = &wireless_group;
- #endif
---- everything.orig/net/wireless/Kconfig	2008-07-10 08:47:16.000000000 +0200
-+++ everything/net/wireless/Kconfig	2008-07-10 10:26:25.000000000 +0200
-@@ -29,3 +29,14 @@ config WIRELESS_EXT
- 
- 	  Say N (if you can) unless you know you need wireless
- 	  extensions for external modules.
-+
-+config WIRELESS_EXT_SYSFS
-+	bool "Wireless extensions sysfs files"
-+	default y
-+	depends on WIRELESS_EXT && SYSFS
-+	help
-+	  This option enables the deprecated wireless statistics
-+	  files in /sys/class/net/*/wireless/. The same information
-+	  is available via the ioctls as well.
-+
-+	  Say Y if you have programs using it (we don't know of any).
---- everything.orig/Documentation/feature-removal-schedule.txt	2008-07-10 10:23:19.000000000 +0200
-+++ everything/Documentation/feature-removal-schedule.txt	2008-07-10 11:15:56.000000000 +0200
-@@ -280,6 +280,16 @@ Why:	Not used in-tree. The current out-o
- 	out-of-tree driver.
- Who:	Thomas Gleixner <tglx@linutronix.de>
- 
-+---------------------------
-+
-+What:	Code that is now under CONFIG_WIRELESS_EXT_SYSFS
-+	(in net/core/net-sysfs.c)
-+When:	After the only user (hal) has seen a release with the patches
-+	for enough time, probably some time in 2010.
-+Why:	Over 1K .text/.data size reduction, data is available in other
-+	ways (ioctls)
-+Who:	Johannes Berg <johannes@sipsolutions.net>
-+
- ----------------------------
- 
- What:	usedac i386 kernel parameter
+Right now, the lowest-common-denominator is that the driver sends a
+disconnection event to userspace, and userspace handles reconnection as
+it sees fit.  Some drivers may attempt to reconnect to the AP
+periodically until told not to.
 
+I personally think the driver/stack should try a few reconnections to
+the AP (without sending the SIOCSIWAP disconnect event) and only if
+those all fail, send the disconnect event.  But if the reconnection was
+successful, send the SCIOCSIWAP event for the AP even if it matches the
+old AP's BSSID just so userspace knows that something happened.
+wpa_supplicany may need to know this to rekey the connection or
+something.
+
+But really, the connection loss could be for any number of reasons, like
+the AP is out of resources, out of range, missed a few beacons because
+somebody turned a microwave on, etc.  A few reconnection attempts might
+help out some of these but at some point you just have to pick a new AP
+to associate with.
+
+> Is there a solution for "fast handovers" between two APs?
+
+Do you mean two BSSs in the same ESS?  In any case, roaming between to
+BSSes of the same SSID is currently highly driver dependent and it's
+pretty much assumed that drivers can choose which BSS to associate to
+within the same ESS
+
+Roaming between two APs _not_ in the same ESS is currently left to
+userspace.
+
+> Are there any activities to implement something like a "background scanning" in STA Mode?
+
+Some drivers already do this (ipw for example), but I don't think
+background scanning is really implemented in mac80211 at this time.
+mac80211 certainly will handle beacons and probe responses _on the same
+channel_, but I don't believe there is any sort of multi-channel
+background scanning going on, nor should there really be unless it can
+be made _very_ fast.  You don't want the driver doing a multi-channel
+background scan while you're using VOIP.
+
+> A background scanning will allow a STA to observe the neighbourhood for new APs.
+
+Right.
+
+> There are a few drivers that provide this functionality today.
+> The intention is to reduce Handover latency of a mobile STA, when it switches from one AP to an other AP.
+
+Again, within the same ESS?
+
+> What do you think:
+> Is it interessting for you, to work jointly on these challenges?
+
+Personally I think anything we can do to make intra-ESS handover faster
+is a good thing.  wpa_supplicant in userspace is obviously required here
+for WPA roaming and it can handle things like preauth and other bits of
+fast reauth defined in the WPA specs.  Since that's where things are
+going, it's going to need coordination between both the driver and the
+supplicant to get right.
+
+Dan
 
