@@ -1,40 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:52866 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750849AbYGURLu (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43564 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751809AbYGOJZY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 13:11:50 -0400
-Date: Tue, 22 Jul 2008 01:11:41 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
+	Tue, 15 Jul 2008 05:25:24 -0400
+Subject: Re: TXQ real_num_tx_queues comments/questions
+From: Johannes Berg <johannes@sipsolutions.net>
 To: David Miller <davem@davemloft.net>
-Cc: hadi@cyberus.ca, kaber@trash.net, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in RCU.
-Message-ID: <20080721171141.GA13573@gondor.apana.org.au> (sfid-20080721_191154_318094_22534DEA)
-References: <20080721164306.GA13131@gondor.apana.org.au> <20080721.095124.89249903.davem@davemloft.net> <20080721170233.GA13417@gondor.apana.org.au> <20080721.100821.38432201.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080721.100821.38432201.davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20080715.021637.103260952.davem@davemloft.net>
+References: <1215769627.3483.107.camel@johannes.berg>
+	 <20080715.021637.103260952.davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aZOo7ZmERGRAmIPS4DS2"
+Date: Tue, 15 Jul 2008 11:25:23 +0200
+Message-Id: <1216113923.3535.14.camel@johannes.berg> (sfid-20080715_112529_369952_A0154547)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 21, 2008 at 10:08:21AM -0700, David Miller wrote:
->
-> Can I at least get some commitment that someone will test
-> that this really is necessary before we add the CPU ID
-> hash option?
 
-Sure, I'll be testing some related things on this front so I'll
-try to produce some results that compare these two cases.
+--=-aZOo7ZmERGRAmIPS4DS2
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-For the purposes of demonstrating this I'll choose the worst-case
-scenario, that is, I'll ensure that the TX hash result exactly
-distributes each RX hash preimage across all possible TX hash
-values.
 
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+[...]
+
+> > I like the RCU variant better, as it means we don't need a "central"
+> > lock that is taken for all tx queues, and it also allows other drivers
+> > to actually change real_num_tx_queues in a similar fashion, should that
+> > ever be required.
+>=20
+> It seems to me that a simple synchronize_net() call near the end of
+> agg queue removal would solve your problem as-is, wouldn't it?
+
+Well, as far as I can tell we can't do that there because it's in
+tasklet context/called under spinlocks so it has to be atomic. I think.
+
+johannes
+
+--=-aZOo7ZmERGRAmIPS4DS2
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIfGz7AAoJEKVg1VMiehFYyrAQAJ+hOOeozVa1RzNlvPrIzLiK
+a3Yj4ivHpc8d3crnL3kdBAyilMaw6rQLRmHWgCScvgJXPY1zKrgYU4G5R1J1KgdB
+pORycYDc81v+Ts132Dq1H+Ji2yAhBIQI4dyyzlmMsCW6jp5tfQEe1DyI9JTpIYEZ
+gApXgUBwQXb1VOnExfP6HKaNUnydC9CK1NM8ksWIa/w+/GB0AQSUDuSVktgq9WF1
+6YTCEPaYBTdrtgvm9+l0NyCC/ywNbTQbQXeeapgx+CiOhT8HxpKwq+OmXCHhjOS8
+Gea4AzXjnEVBFzS/ZqMGakL0y3snY9VpJ02tJtuE5gAjJRV1k+LX/Z49Wujx7jlH
+75j80grwcxpS6Pxz7tQt7pljw8EOSrxt6vx+BLKrzgGaH+7/fRR+MTmP35ZuUj1z
+LF2lLHAZaFq9rcZmL9BRhPUtE6zUGEn7qD/qpKmffT5U+t0mY/lW3yoG6DbntVrR
+tt19PAGtn/FFPeroo8INbR3eZPztS7+9Ej0L+/15l3kl6beNUMEAudtMpCnt3mO3
+fpZUMGVgwMlIl9U8flg+WcpTETZSe7j+lpr21FdVIXpH2iJPrp6w3OUoQq88mL7j
+x59rZ5Fpn7GCGs7y3TkpqiN9ZHLzfg6ANhBBU/Z/Loa19kWwsAiaDJYISiKgxxEw
+PfK/QwkpfpKXafMcRdlG
+=rYvc
+-----END PGP SIGNATURE-----
+
+--=-aZOo7ZmERGRAmIPS4DS2--
+
