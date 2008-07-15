@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.228]:35384 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751633AbYG3U7A (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 16:59:00 -0400
-Received: by wr-out-0506.google.com with SMTP id 69so200037wri.5
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 13:58:58 -0700 (PDT)
-Message-ID: <43e72e890807301358r6d8cadc1j4f40b501319fb7dc@mail.gmail.com> (sfid-20080730_225903_471467_84258072)
-Date: Wed, 30 Jul 2008 13:58:44 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: drago01 <drago01@gmail.com>
-Subject: Re: Vendor support stickers for devices supported under Linux wireless
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <f6ca9fed0807301357k3c096c37q906ecd68a0219f7f@mail.gmail.com>
+Received: from cantor2.suse.de ([195.135.220.15]:40271 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753324AbYGOJ6N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jul 2008 05:58:13 -0400
+Message-ID: <20080715115810.nxudx5jrms8s4cko@imap.suse.de> (sfid-20080715_115816_990669_7E9C0B53)
+Date: Tue, 15 Jul 2008 11:58:10 +0200
+From: Helmut Schaa <hschaa@suse.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	Kalle Valo <kalle.valo@nokia.com>, linville@tuxdriver.com,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by
+	low level driver
+References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
+	<1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
+	<1216039127.11189.15.camel@johannes.berg>
+	<1ba2fa240807140546w4f08e32l59ed88dfa1b86403@mail.gmail.com>
+	<87fxqcoaue.fsf@nokia.com> <1216109543.23746.21.camel@johannes.berg>
+	<1ba2fa240807150129v4906b7bcyba66ab62b57c5d71@mail.gmail.com>
+	(sfid-20080715_102953_982307_5BF8D17D)
+	<1216111261.3535.7.camel@johannes.berg>
+In-Reply-To: <1216111261.3535.7.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890807301327j54be2453r836964c708d75458@mail.gmail.com>
-	 <f6ca9fed0807301357k3c096c37q906ecd68a0219f7f@mail.gmail.com>
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 30, 2008 at 1:57 PM, drago01 <drago01@gmail.com> wrote:
-> On Wed, Jul 30, 2008 at 10:27 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> A while back during our second Linux wireless summit we thought about
->> the possibility of letting vendors choose a sticker depending upon the
->> type of support they had for Linux:
->>
->> http://wireless.kernel.org/CertificationIdeas
->>
->> I propose we consolidate to just stick to one logo/sticker: You
->> properly support Linux.
->>
->> What this means is your driver is in the kernel and if you have
->> firmware this would mean you also provide a friendly redistributable
->> license for the firmware. We could even put the name of the driver on
->> the sticker/logo. Thoughts?
->
-> I would rather do s/driver name/kernel version/ ... its easier for
-> users that way.
+Am Di 15 Jul 2008 10:41:01 CEST schrieb Johannes Berg  
+<johannes@sipsolutions.net>:
 
-True, do you mean since a specific kernel version?
+> Right, but it does make sense to advertise what we're using, and this
+> patch just adds a strict "driver tells mac80211 what it's using" flow.
+> That's mostly what I'm objecting to. If you were calling the variable
+> "max_listen_interval" and having mac80211 send it back to the driver in
+> the BSS config as bssconf->listen_interval, and, for now, simply use the
+> max, I wouldn't have a problem with it.
 
-  Luis
+Using "max_listen_interval" as default may possibly result in APs  
+rejecting the association. At least the 802.11 spec defines a status  
+code 51 with the description "Association denied because the  
+ListenInterval is too large".
+
+Maybe retrying the association with a lower listen interval could help  
+here. Therefore I agree with Johannes that the decision about what  
+value to actually use should be made in mac80211.
+
+Helmut
