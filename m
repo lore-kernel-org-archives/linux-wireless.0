@@ -1,104 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:3423 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752345AbYGJL2s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 07:28:48 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] iwlwif: remove compilation warnings iwl_add_radiotap
-Date: Thu, 10 Jul 2008 14:28:42 +0300
-Message-Id: <1215689322-25017-1-git-send-email-tomas.winkler@intel.com> (sfid-20080710_132851_949265_F5B07E7F)
-Content-Type: text/plain; charset="us-ascii"
+Received: from smtp.wellnetcz.com ([212.24.148.102]:59197 "EHLO
+	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753217AbYGOPqi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jul 2008 11:46:38 -0400
+From: Jiri Slaby <jirislaby@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: [PATCH 3/5] Ath5k: flush work
+Date: Tue, 15 Jul 2008 17:44:20 +0200
+Message-Id: <1216136661-10930-3-git-send-email-jirislaby@gmail.com> (sfid-20080715_174642_119349_281E6EA4)
+In-Reply-To: <1216136661-10930-1-git-send-email-jirislaby@gmail.com>
+References: <1216136661-10930-1-git-send-email-jirislaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use directly put_unaligned_leX instead of put_unaligned(cpu_to_leX
+Make sure that the irq is not in progress after stop. This means
+two things:
+- ensure the intr setting register is set by flushing posted values
+- call synchronize_irq() after that
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Also flush stop tx write, inform callers of the tx stop about still
+pending transfers (unsuccessful stop) and finally don't wait another
+3ms in ath5k_rx_stop, since ath5k_hw_stop_rx_dma ensures transfer to
+be finished.
+
+Make sure all writes will be ordered in respect to locks by mmiowb().
+
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Luis R. Rodriguez <mcgrof@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-rx.c |   37 +++++++++++++++-----------------
- 1 files changed, 17 insertions(+), 20 deletions(-)
+ drivers/net/wireless/ath5k/base.c |   13 +++++++++++--
+ drivers/net/wireless/ath5k/hw.c   |    4 ++++
+ 2 files changed, 15 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index d062d4d..6a465d5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -29,6 +29,7 @@
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 4d9ff97..4874a6f 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -43,7 +43,9 @@
+ #include <linux/version.h>
+ #include <linux/module.h>
+ #include <linux/delay.h>
++#include <linux/hardirq.h>
+ #include <linux/if.h>
++#include <linux/io.h>
+ #include <linux/netdevice.h>
+ #include <linux/cache.h>
+ #include <linux/pci.h>
+@@ -1250,6 +1252,7 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
  
- #include <linux/etherdevice.h>
- #include <net/mac80211.h>
-+#include <asm/unaligned.h>
- #include "iwl-eeprom.h"
- #include "iwl-dev.h"
- #include "iwl-core.h"
-@@ -829,23 +830,22 @@ static void iwl_add_radiotap(struct iwl_priv *priv,
- 	iwl4965_rt->rt_hdr.it_pad = 0;
+ 	txq->link = &ds->ds_link;
+ 	ath5k_hw_tx_start(ah, txq->qnum);
++	mmiowb();
+ 	spin_unlock_bh(&txq->lock);
  
- 	/* total header + data */
--	put_unaligned(cpu_to_le16(sizeof(*iwl4965_rt)),
--		      &iwl4965_rt->rt_hdr.it_len);
-+	put_unaligned_le16(sizeof(*iwl4965_rt), &iwl4965_rt->rt_hdr.it_len);
+ 	return 0;
+@@ -1584,7 +1587,6 @@ ath5k_rx_stop(struct ath5k_softc *sc)
+ 	ath5k_hw_stop_pcu_recv(ah);	/* disable PCU */
+ 	ath5k_hw_set_rx_filter(ah, 0);	/* clear recv filter */
+ 	ath5k_hw_stop_rx_dma(ah);	/* disable DMA engine */
+-	mdelay(3);			/* 3ms is long enough for 1 frame */
  
- 	/* Indicate all the fields we add to the radiotap header */
--	put_unaligned(cpu_to_le32((1 << IEEE80211_RADIOTAP_TSFT) |
--				  (1 << IEEE80211_RADIOTAP_FLAGS) |
--				  (1 << IEEE80211_RADIOTAP_RATE) |
--				  (1 << IEEE80211_RADIOTAP_CHANNEL) |
--				  (1 << IEEE80211_RADIOTAP_DBM_ANTSIGNAL) |
--				  (1 << IEEE80211_RADIOTAP_DBM_ANTNOISE) |
--				  (1 << IEEE80211_RADIOTAP_ANTENNA)),
--		      &iwl4965_rt->rt_hdr.it_present);
-+	put_unaligned_le32((1 << IEEE80211_RADIOTAP_TSFT) |
-+			   (1 << IEEE80211_RADIOTAP_FLAGS) |
-+			   (1 << IEEE80211_RADIOTAP_RATE) |
-+			   (1 << IEEE80211_RADIOTAP_CHANNEL) |
-+			   (1 << IEEE80211_RADIOTAP_DBM_ANTSIGNAL) |
-+			   (1 << IEEE80211_RADIOTAP_DBM_ANTNOISE) |
-+			   (1 << IEEE80211_RADIOTAP_ANTENNA),
-+			   &(iwl4965_rt->rt_hdr.it_present));
+ 	ath5k_debug_printrxbuffs(sc, ah);
  
- 	/* Zero the flags, we'll add to them as we go */
- 	iwl4965_rt->rt_flags = 0;
+@@ -2259,6 +2261,7 @@ ath5k_init(struct ath5k_softc *sc)
  
--	put_unaligned(cpu_to_le64(tsf), &iwl4965_rt->rt_tsf);
-+	put_unaligned_le64(tsf, &iwl4965_rt->rt_tsf);
+ 	ret = 0;
+ done:
++	mmiowb();
+ 	mutex_unlock(&sc->lock);
+ 	return ret;
+ }
+@@ -2291,6 +2294,7 @@ ath5k_stop_locked(struct ath5k_softc *sc)
+ 	if (!test_bit(ATH_STAT_INVALID, sc->status)) {
+ 		ath5k_led_off(sc);
+ 		ath5k_hw_set_intr(ah, 0);
++		synchronize_irq(sc->pdev->irq);
+ 	}
+ 	ath5k_txq_cleanup(sc);
+ 	if (!test_bit(ATH_STAT_INVALID, sc->status)) {
+@@ -2340,6 +2344,7 @@ ath5k_stop_hw(struct ath5k_softc *sc)
+ 		}
+ 	}
+ 	ath5k_txbuf_free(sc, sc->bbuf);
++	mmiowb();
+ 	mutex_unlock(&sc->lock);
  
- 	iwl4965_rt->rt_dbmsignal = signal;
- 	iwl4965_rt->rt_dbmnoise = noise;
-@@ -853,17 +853,14 @@ static void iwl_add_radiotap(struct iwl_priv *priv,
- 	/* Convert the channel frequency and set the flags */
- 	put_unaligned(cpu_to_le16(stats->freq), &iwl4965_rt->rt_channelMHz);
- 	if (!(phy_flags_hw & RX_RES_PHY_FLAGS_BAND_24_MSK))
--		put_unaligned(cpu_to_le16(IEEE80211_CHAN_OFDM |
--					  IEEE80211_CHAN_5GHZ),
--			      &iwl4965_rt->rt_chbitmask);
-+		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ,
-+				   &iwl4965_rt->rt_chbitmask);
- 	else if (phy_flags_hw & RX_RES_PHY_FLAGS_MOD_CCK_MSK)
--		put_unaligned(cpu_to_le16(IEEE80211_CHAN_CCK |
--					  IEEE80211_CHAN_2GHZ),
--			      &iwl4965_rt->rt_chbitmask);
-+		put_unaligned_le16(IEEE80211_CHAN_CCK | IEEE80211_CHAN_2GHZ,
-+				   &iwl4965_rt->rt_chbitmask);
- 	else	/* 802.11g */
--		put_unaligned(cpu_to_le16(IEEE80211_CHAN_OFDM |
--					  IEEE80211_CHAN_2GHZ),
--			      &iwl4965_rt->rt_chbitmask);
-+		put_unaligned_le16(IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ,
-+				   &iwl4965_rt->rt_chbitmask);
+ 	del_timer_sync(&sc->calib_tim);
+@@ -2805,6 +2810,7 @@ ath5k_config_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		/* XXX: assoc id is set to 0 for now, mac80211 doesn't have
+ 		 * a clean way of letting us retrieve this yet. */
+ 		ath5k_hw_set_associd(ah, ah->ah_bssid, 0);
++		mmiowb();
+ 	}
+ 	mutex_unlock(&sc->lock);
  
- 	if (rate == -1)
- 		iwl4965_rt->rt_rate = 0;
+@@ -2981,6 +2987,7 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	}
+ 
+ unlock:
++	mmiowb();
+ 	mutex_unlock(&sc->lock);
+ 	return ret;
+ }
+@@ -3054,8 +3061,10 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	ret = ath5k_beacon_setup(sc, sc->bbuf);
+ 	if (ret)
+ 		sc->bbuf->skb = NULL;
+-	else
++	else {
+ 		ath5k_beacon_config(sc);
++		mmiowb();
++	}
+ 
+ end:
+ 	mutex_unlock(&sc->lock);
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index c6d12c5..7ca87a5 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -1440,6 +1440,7 @@ int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue)
+ 
+ 		/* Stop queue */
+ 		ath5k_hw_reg_write(ah, tx_queue, AR5K_CR);
++		ath5k_hw_reg_read(ah, AR5K_CR);
+ 	} else {
+ 		/*
+ 		 * Schedule TX disable and wait until queue is empty
+@@ -1456,6 +1457,8 @@ int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue)
+ 
+ 		/* Clear register */
+ 		ath5k_hw_reg_write(ah, 0, AR5K_QCU_TXD);
++		if (pending)
++			return -EBUSY;
+ 	}
+ 
+ 	/* TODO: Check for success else return error */
+@@ -1716,6 +1719,7 @@ enum ath5k_int ath5k_hw_set_intr(struct ath5k_hw *ah, enum ath5k_int new_mask)
+ 
+ 	/* ..re-enable interrupts */
+ 	ath5k_hw_reg_write(ah, AR5K_IER_ENABLE, AR5K_IER);
++	ath5k_hw_reg_read(ah, AR5K_IER);
+ 
+ 	return old_mask;
+ }
 -- 
-1.5.4.1
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+1.5.6.2
 
