@@ -1,306 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53126 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755686AbYG2LXx (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:19095 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753458AbYGOH12 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 07:23:53 -0400
-Message-Id: <20080729112307.703166000@sipsolutions.net> (sfid-20080729_132356_510557_240BCC54)
-References: <20080729112249.877813000@sipsolutions.net>
-Date: Tue, 29 Jul 2008 13:22:52 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3] mac80211: fix cfg80211 hooks for master interface
-Mime-Version: 1.0
+	Tue, 15 Jul 2008 03:27:28 -0400
+To: "Tomas Winkler" <tomasw@gmail.com>
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by low level driver
+References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
+	<1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
+	<1216039127.11189.15.camel@johannes.berg>
+	<1ba2fa240807140546w4f08e32l59ed88dfa1b86403@mail.gmail.com>
+	<87fxqcoaue.fsf@nokia.com>
+	<1ba2fa240807141434k5260e6b9q6468b450fccba3e7@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Tue, 15 Jul 2008 10:21:16 +0300
+In-Reply-To: <1ba2fa240807141434k5260e6b9q6468b450fccba3e7@mail.gmail.com> (ext Tomas Winkler's message of "Tue\, 15 Jul 2008 00\:34\:24 +0300")
+Message-ID: <87od4zd34j.fsf@nokia.com> (sfid-20080715_092732_589800_50479196)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The master interface is a virtual interface that is registered
-to mac80211, changing that does not seem like a good idea at
-the moment. However, since it has no sdata, we cannot accept
-any configuration for it. This patch makes the cfg80211 hooks
-reject any such attempt.
+Tomas Winkler <tomasw@gmail.com> writes:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/cfg.c |  103 +++++++++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 88 insertions(+), 15 deletions(-)
+>>
+>> This stuff is very much hardware dependent, I don't deny that, but
+>> still I would assume that the basic principles are almost the same. We
+>> just need to come up with a good interface for the drivers. Sure, it's
+>> more work now, but if we don't do it, PSM support will eventually get
+>> really messy because all drivers do it somehow differently.
+>>
+> This patch only sets value of listen interval from the driver I just
+> think this is exactly what you are suggesting.
 
---- everything.orig/net/mac80211/cfg.c	2008-07-29 13:15:44.000000000 +0200
-+++ everything/net/mac80211/cfg.c	2008-07-29 13:16:05.000000000 +0200
-@@ -81,6 +81,7 @@ static int ieee80211_change_iface(struct
- 				  enum nl80211_iftype type, u32 *flags,
- 				  struct vif_params *params)
- {
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	struct net_device *dev;
- 	enum ieee80211_if_types itype;
- 	struct ieee80211_sub_if_data *sdata;
-@@ -95,6 +96,9 @@ static int ieee80211_change_iface(struct
- 	if (itype == IEEE80211_IF_TYPE_INVALID)
- 		return -EINVAL;
- 
-+	if (dev == local->mdev)
-+		return -EOPNOTSUPP;
-+
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
- 	ret = ieee80211_if_change_type(sdata, itype);
-@@ -117,12 +121,16 @@ static int ieee80211_add_key(struct wiph
- 			     u8 key_idx, u8 *mac_addr,
- 			     struct key_params *params)
- {
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	struct ieee80211_sub_if_data *sdata;
- 	struct sta_info *sta = NULL;
- 	enum ieee80211_key_alg alg;
- 	struct ieee80211_key *key;
- 	int err;
- 
-+	if (dev == local->mdev)
-+		return -EOPNOTSUPP;
-+
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
- 	switch (params->cipher) {
-@@ -167,10 +175,14 @@ static int ieee80211_add_key(struct wiph
- static int ieee80211_del_key(struct wiphy *wiphy, struct net_device *dev,
- 			     u8 key_idx, u8 *mac_addr)
- {
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	struct ieee80211_sub_if_data *sdata;
- 	struct sta_info *sta;
- 	int ret;
- 
-+	if (dev == local->mdev)
-+		return -EOPNOTSUPP;
-+
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
- 	rcu_read_lock();
-@@ -211,7 +223,8 @@ static int ieee80211_get_key(struct wiph
- 			     void (*callback)(void *cookie,
- 					      struct key_params *params))
- {
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	struct ieee80211_sub_if_data *sdata;
- 	struct sta_info *sta = NULL;
- 	u8 seq[6] = {0};
- 	struct key_params params;
-@@ -220,6 +233,11 @@ static int ieee80211_get_key(struct wiph
- 	u16 iv16;
- 	int err = -ENOENT;
- 
-+	if (dev == local->mdev)
-+		return -EOPNOTSUPP;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
- 	rcu_read_lock();
- 
- 	if (mac_addr) {
-@@ -293,8 +311,12 @@ static int ieee80211_config_default_key(
- 					struct net_device *dev,
- 					u8 key_idx)
- {
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	struct ieee80211_sub_if_data *sdata;
- 
-+	if (dev == local->mdev)
-+		return -EOPNOTSUPP;
-+
- 	rcu_read_lock();
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-@@ -475,9 +497,15 @@ static int ieee80211_config_beacon(struc
- static int ieee80211_add_beacon(struct wiphy *wiphy, struct net_device *dev,
- 				struct beacon_parameters *params)
- {
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	struct ieee80211_sub_if_data *sdata;
- 	struct beacon_data *old;
- 
-+	if (dev == local->mdev)
-+		return -EOPNOTSUPP;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
- 	if (sdata->vif.type != IEEE80211_IF_TYPE_AP)
- 		return -EINVAL;
- 
-@@ -492,9 +520,15 @@ static int ieee80211_add_beacon(struct w
- static int ieee80211_set_beacon(struct wiphy *wiphy, struct net_device *dev,
- 				struct beacon_parameters *params)
- {
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	struct ieee80211_sub_if_data *sdata;
- 	struct beacon_data *old;
- 
-+	if (dev == local->mdev)
-+		return -EOPNOTSUPP;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
- 	if (sdata->vif.type != IEEE80211_IF_TYPE_AP)
- 		return -EINVAL;
- 
-@@ -508,9 +542,15 @@ static int ieee80211_set_beacon(struct w
- 
- static int ieee80211_del_beacon(struct wiphy *wiphy, struct net_device *dev)
- {
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	struct ieee80211_sub_if_data *sdata;
- 	struct beacon_data *old;
- 
-+	if (dev == local->mdev)
-+		return -EOPNOTSUPP;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
- 	if (sdata->vif.type != IEEE80211_IF_TYPE_AP)
- 		return -EINVAL;
- 
-@@ -646,11 +686,14 @@ static void sta_apply_parameters(struct 
- static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 				 u8 *mac, struct station_parameters *params)
- {
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	struct sta_info *sta;
- 	struct ieee80211_sub_if_data *sdata;
- 	int err;
- 
-+	if (dev == local->mdev || params->vlan == local->mdev)
-+		return -EOPNOTSUPP;
-+
- 	/* Prevent a race with changing the rate control algorithm */
- 	if (!netif_running(dev))
- 		return -ENETDOWN;
-@@ -701,10 +744,15 @@ static int ieee80211_add_station(struct 
- static int ieee80211_del_station(struct wiphy *wiphy, struct net_device *dev,
- 				 u8 *mac)
- {
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	struct ieee80211_sub_if_data *sdata;
- 	struct sta_info *sta;
- 
-+	if (dev == local->mdev)
-+		return -EOPNOTSUPP;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
- 	if (mac) {
- 		rcu_read_lock();
- 
-@@ -730,10 +778,13 @@ static int ieee80211_change_station(stru
- 				    u8 *mac,
- 				    struct station_parameters *params)
- {
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	struct sta_info *sta;
- 	struct ieee80211_sub_if_data *vlansdata;
- 
-+	if (dev == local->mdev || params->vlan == local->mdev)
-+		return -EOPNOTSUPP;
-+
- 	rcu_read_lock();
- 
- 	/* XXX: get sta belonging to dev */
-@@ -752,7 +803,7 @@ static int ieee80211_change_station(stru
- 			return -EINVAL;
- 		}
- 
--		sta->sdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
-+		sta->sdata = vlansdata;
- 		ieee80211_send_layer2_update(sta);
- 	}
- 
-@@ -767,15 +818,20 @@ static int ieee80211_change_station(stru
- static int ieee80211_add_mpath(struct wiphy *wiphy, struct net_device *dev,
- 				 u8 *dst, u8 *next_hop)
- {
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	struct ieee80211_sub_if_data *sdata;
- 	struct mesh_path *mpath;
- 	struct sta_info *sta;
- 	int err;
- 
-+	if (dev == local->mdev)
-+		return -EOPNOTSUPP;
-+
- 	if (!netif_running(dev))
- 		return -ENETDOWN;
- 
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
- 	if (sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT)
- 		return -ENOTSUPP;
- 
-@@ -817,14 +873,19 @@ static int ieee80211_change_mpath(struct
- 				    struct net_device *dev,
- 				    u8 *dst, u8 *next_hop)
- {
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	struct ieee80211_sub_if_data *sdata;
- 	struct mesh_path *mpath;
- 	struct sta_info *sta;
- 
-+	if (dev == local->mdev)
-+		return -EOPNOTSUPP;
-+
- 	if (!netif_running(dev))
- 		return -ENETDOWN;
- 
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
- 	if (sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT)
- 		return -ENOTSUPP;
- 
-@@ -891,9 +952,15 @@ static int ieee80211_get_mpath(struct wi
- 			       u8 *dst, u8 *next_hop, struct mpath_info *pinfo)
- 
- {
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	struct ieee80211_sub_if_data *sdata;
- 	struct mesh_path *mpath;
- 
-+	if (dev == local->mdev)
-+		return -EOPNOTSUPP;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
- 	if (sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT)
- 		return -ENOTSUPP;
- 
-@@ -913,9 +980,15 @@ static int ieee80211_dump_mpath(struct w
- 				 int idx, u8 *dst, u8 *next_hop,
- 				 struct mpath_info *pinfo)
- {
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	struct ieee80211_sub_if_data *sdata;
- 	struct mesh_path *mpath;
- 
-+	if (dev == local->mdev)
-+		return -EOPNOTSUPP;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
- 	if (sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT)
- 		return -ENOTSUPP;
- 
+No, I don't suggest that. I understood that for setting the
+listen_interval you are after something like this:
+
+         sysfs?                 register_hw()
+user   ---------->   driver    -------------->  mac80211
+
+(Please correct me if I misunderstood this.)
+
+But I think that the flow should be like this:
+
+       WE/cfg80211                config()
+user   ---------->   mac80211  -------------->  driver
+
+So that mac80211 would be one making the choice for the listen value
+based on user input. But what the user input would be, that's an
+another question.
+
+> This is only required for sending correct value of listen interval
+> to AP in association. Anything else is handled in the driver or
+> firmware anyway.
+
+Yes, driver will pass the information to the firmware. But I still
+think mac80211 should make the decision, and the driver should be only
+forwarding mac80211 decisions to the firmware.
+
+> This patch should go in and we can reconsider it when other HW
+> driver will implement PS so we can see the bigger picture.
+
+I guess it's a good compromise for now, but as long as we change it
+later.
 
 -- 
-
+Kalle Valo
