@@ -1,56 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.178]:49347 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759430AbYGUCeD (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60764 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754797AbYGOK2o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2008 22:34:03 -0400
-Received: by py-out-1112.google.com with SMTP id p76so911280pyb.10
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2008 19:34:01 -0700 (PDT)
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction
-	in	RCU.
-From: jamal <hadi@cyberus.ca>
-Reply-To: hadi@cyberus.ca
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: kaber@trash.net, davem@davemloft.net, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-In-Reply-To: <20080721001119.GA6515@gondor.apana.org.au>
-References: <E1KKZmE-0000ty-00@gondolin.me.apana.org.au>
-	 <1216568119.4847.101.camel@localhost>
-	 <20080721001119.GA6515@gondor.apana.org.au>
-Content-Type: text/plain
-Date: Sun, 20 Jul 2008 22:33:57 -0400
-Message-Id: <1216607637.4847.172.camel@localhost> (sfid-20080721_043411_008194_5F14D587)
+	Tue, 15 Jul 2008 06:28:44 -0400
+Subject: Re: TXQ real_num_tx_queues comments/questions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20080715.030531.227856924.davem@davemloft.net>
+References: <1216114621.3535.18.camel@johannes.berg>
+	 <20080715.023954.234208581.davem@davemloft.net>
+	 <1216115349.3535.20.camel@johannes.berg>
+	 <20080715.030531.227856924.davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gVWkmfCNxDFdNUoapZzi"
+Date: Tue, 15 Jul 2008 12:28:41 +0200
+Message-Id: <1216117721.3535.22.camel@johannes.berg> (sfid-20080715_122848_480723_2A59973F)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-21-07 at 08:11 +0800, Herbert Xu wrote:
 
-> This is exactly what I want to get rid of because otherwise even
-> if no index was specified we'll still do a hash insertion which
-> simply falls apart with a small hash table.  Using a large hash
-> table on the other is bad for people who only have a few rules.
+--=-gVWkmfCNxDFdNUoapZzi
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-True. 
-But note: this is only during rule creation - once you create the
-rule (user space to kernel path), then no more hash table reference.
-Fast path has already a filter with actions attached, and is a mere
-pointer dereference.
+On Tue, 2008-07-15 at 03:05 -0700, David Miller wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Tue, 15 Jul 2008 11:49:09 +0200
+>=20
+> > Yes, I think we can fix it by deferring the requeue to a workqueue,
+> > using synchronize_net() and putting RCU protection against the
+> > select_queue call.
+>=20
+> I'm respinning my net-tx-2.6 tree at the moment and I'll
+> make patch 8 look like below.
 
-> We could do a dynamic table but so far I'm not convinced that
-> it's worth anybody's effort to implement :)
+Looks good to me, thanks.
 
-If user<->kernel performance insertion/deletion is important, it is
-worth it.
-For example:
-Dave implemented dynamic hash tables on xfrm (voip setup time with ipsec
-is a metric used in the industry in that case) . The only operational
-problem i had with xfrm was lack of an upper bound of how large a table
-can grow; i would rather user space be told ENOMEM than continuing to
-grow in some cases (I actually implemented a patch which put a stop
-after a certain number of sad/spd - but i dont expect hugs if i was to
-post it;->).
+johannes
 
-cheers,
-jamal
+--=-gVWkmfCNxDFdNUoapZzi
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIfHvVAAoJEKVg1VMiehFYhlsP/3KgjsrUrCHtO+F6WHXap59E
+9I1jrYz32bNQPt29Ccx9TcpkgGxba9Csyy99iCqhZ4wTLWWz+FAaQekGLIsUx0fq
+0JBQ/fkkNX27UB0fsK2YhQ/0Pc+rqDjH/f+gS+uOdGqBYIhz0M+pSb6tgWIT+42D
+8k6Zsz4NfGhdvrFScUW8lRmlIYTokSDRZEJ0L8o3WgOtNjoLwhyD8PCsBghzjY64
+338aXO2lAJKAp5+88/mdLCpgWPR+VtoMecf0HIV6fDI0PCidc6iMNFg8XBVSqLIJ
+QBbKwkQqfuuq7lZ0iYWSLZbYjH6UN0beIKhcaSE7BmfRk2cFglPisxIl9bSpCMPz
+HDHd82vsfuZEJaA/QIZ95C+60ky6c0WgHziBioX6J/QLIH7dJ9Q7oISj7vKndiRx
+7gn7eFm8SnNGK8cU4eiwEz09+/vRvJhqHwDXWl7Pw3VvIWIqNBJ7tnRbTw3l9GQt
+0/InoqhHsDYcKucqrX7EeQT5V1PnUXsegSVk38QTlJLI6n33+lWjUoh4kjv8CpcN
+eGnHAfuu3CqshmgVUB8H6/6XLwlkU8u+6hfYEXHtIjygdooqlga2pAhXP5P64qFa
+AJuBhrSLmDR6NebRuVsI3I7RSkbdScgejR76+hxVYTbt/O5odwOLitFFt7RjUeYe
+ss7aDUIzLuVe4rMmxoHV
+=soc3
+-----END PGP SIGNATURE-----
+
+--=-gVWkmfCNxDFdNUoapZzi--
 
