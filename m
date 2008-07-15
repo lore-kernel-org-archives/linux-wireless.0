@@ -1,75 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from toronto053.server4you.de ([62.75.220.53]:56785 "EHLO
-	toronto053.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751263AbYGWJ7X (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49875 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754116AbYGOIPG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 05:59:23 -0400
-From: Daniel Wagner <wagi@monom.org>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <IvDoorn@gmail.com>, Daniel Wagner <wagi@monom.org>
-Subject: [PATCH] rt2x00mac: In error case stop netdev queue, free skb and return NETDEV_TX_OK
-Date: Wed, 23 Jul 2008 11:27:59 +0200
-Message-Id: <1216805279-19149-1-git-send-email-wagi@monom.org> (sfid-20080723_115928_859863_E9CEFEAE)
+	Tue, 15 Jul 2008 04:15:06 -0400
+Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by
+	low level driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: Tomas Winkler <tomasw@gmail.com>, linville@tuxdriver.com,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <87od4zd34j.fsf@nokia.com>
+References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
+	 <1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
+	 <1216039127.11189.15.camel@johannes.berg>
+	 <1ba2fa240807140546w4f08e32l59ed88dfa1b86403@mail.gmail.com>
+	 <87fxqcoaue.fsf@nokia.com>
+	 <1ba2fa240807141434k5260e6b9q6468b450fccba3e7@mail.gmail.com>
+	 <87od4zd34j.fsf@nokia.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BaSVkThe7vn9nXKoL7zX"
+Date: Tue, 15 Jul 2008 10:15:00 +0200
+Message-Id: <1216109700.23746.25.camel@johannes.berg> (sfid-20080715_101509_878841_2CC370E6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is not allowed to use NETDEV_TX_BUSY in tx path anymore.
 
-Signed-off-by: Daniel Wagner <wagi@monom.org>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00mac.c |   13 ++++++++-----
- 1 files changed, 8 insertions(+), 5 deletions(-)
+--=-BaSVkThe7vn9nXKoL7zX
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 77af1df..64a70c6 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -46,7 +46,7 @@ static int rt2x00mac_tx_rts_cts(struct rt2x00_dev *rt2x00dev,
- 	skb = dev_alloc_skb(size + rt2x00dev->hw->extra_tx_headroom);
- 	if (!skb) {
- 		WARNING(rt2x00dev, "Failed to create RTS/CTS frame.\n");
--		return NETDEV_TX_BUSY;
-+		return -1;
- 	}
- 
- 	skb_reserve(skb, rt2x00dev->hw->extra_tx_headroom);
-@@ -84,7 +84,7 @@ static int rt2x00mac_tx_rts_cts(struct rt2x00_dev *rt2x00dev,
- 
- 	if (rt2x00queue_write_tx_frame(queue, skb)) {
- 		WARNING(rt2x00dev, "Failed to send RTS/CTS frame.\n");
--		return NETDEV_TX_BUSY;
-+		return -1;
- 	}
- 
- 	return NETDEV_TX_OK;
-@@ -143,12 +143,14 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	    !rt2x00dev->ops->hw->set_rts_threshold) {
- 		if (rt2x00queue_available(queue) <= 1) {
- 			ieee80211_stop_queue(rt2x00dev->hw, qid);
--			return NETDEV_TX_BUSY;
-+			dev_kfree_skb_any(skb);
-+			return NETDEV_TX_OK;
- 		}
- 
- 		if (rt2x00mac_tx_rts_cts(rt2x00dev, queue, skb)) {
- 			ieee80211_stop_queue(rt2x00dev->hw, qid);
--			return NETDEV_TX_BUSY;
-+			dev_kfree_skb_any(skb);
-+			return NETDEV_TX_OK;
- 		}
- 	}
- 
-@@ -166,7 +168,8 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 
- 	if (rt2x00queue_write_tx_frame(queue, skb)) {
- 		ieee80211_stop_queue(rt2x00dev->hw, qid);
--		return NETDEV_TX_BUSY;
-+		dev_kfree_skb_any(skb);
-+		return NETDEV_TX_OK;
- 	}
- 
- 	if (rt2x00queue_threshold(queue))
--- 
-1.5.6.2
+
+>          sysfs?                 register_hw()
+> user   ---------->   driver    -------------->  mac80211
+
+> > This patch should go in and we can reconsider it when other HW
+> > driver will implement PS so we can see the bigger picture.
+>=20
+> I guess it's a good compromise for now, but as long as we change it
+> later.
+
+I disagree. The whole idea of handing an essentially configuration-
+dependent value from the driver to the stack is wrong.
+
+johannes
+
+--=-BaSVkThe7vn9nXKoL7zX
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIfFyBAAoJEKVg1VMiehFYxykP/3g940Z8UCyHHZ3hi9RwoGto
+DN6K5ajMhZx4jZcIIeqDew/yKzLWwTVTQ46AFtAVbuhqso4kztxkGh8Cx0J6OmAy
+QdL/4+p4bhuHLgVLrMBNAcJk+W6HReutvilTYJvHg8V3tQ/dFDUWOvmRAq5xrfUE
+AmlWhHBrt1AUFvEWTIpF268mlAmIJaxgXSDP0JtH/SXnyCX4zE1PYtmOgAM6buyJ
+Oq/MDU0ZTqHkNmKqCaYQIaD7QBkRNPpMUBnE2z7Dyzic0bugg1O1IOtOxw9lG+83
+Ko6YDi8E73SyYK+kVS0sGOpl8bH4BMw7MULwAyZeLkfDeBByopSthj0tLQrFE5Id
+O5N0/DyLoAhKG2siugLqgcyp3BvUw3FMmKd7dTPTs5BEOJ7S8Z8SfzTAEewOooJU
+I21ck0ph1/cJcUffMtmYS305I/qK/KKTLoa9e31ADNoGS8VwwYFeo1nA5nXKszRk
+zQa4C23sztz72eBKm1r7GLuEoPBn8wcBszIiF/5Wb6fz1pW4UL8e2F9x6+ubk/8D
+FcQREd6FpbOb1h4+iMk24k9sXArQe9hk6Ju848CdmPA/ftTc443tPjoHK/mn7Xhd
+uqGmLnlzxqQYWvB1CLIamehpgjp/8ESpz/tFKJwk+gi7ZU1/mId7CiKVuCj9VAyU
+ZJpEQxFJEt2Wy7c+24lC
+=RDtQ
+-----END PGP SIGNATURE-----
+
+--=-BaSVkThe7vn9nXKoL7zX--
 
