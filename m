@@ -1,119 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33605 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750929AbYGHQHJ (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:58250 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752203AbYGOTgR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 12:07:09 -0400
-Subject: Re: [PATCH] CONFIG_KMOD needs to be default y
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <200807082303.26194.rusty@rustcorp.com.au>
-References: <1215517771.9610.28.camel@johannes.berg>
-	 <20080708124208.GA6704@infradead.org>
-	 <200807082303.26194.rusty@rustcorp.com.au>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rx8yDPjSCz+FUX3y/6vH"
-Date: Tue, 08 Jul 2008 18:06:15 +0200
-Message-Id: <1215533175.9610.51.camel@johannes.berg> (sfid-20080708_180716_966611_589BAABD)
-Mime-Version: 1.0
+	Tue, 15 Jul 2008 15:36:17 -0400
+To: "Tomas Winkler" <tomasw@gmail.com>
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by low level driver
+References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
+	<1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
+	<1216039127.11189.15.camel@johannes.berg>
+	<1ba2fa240807140546w4f08e32l59ed88dfa1b86403@mail.gmail.com>
+	<87fxqcoaue.fsf@nokia.com> <1216109543.23746.21.camel@johannes.berg>
+	<1ba2fa240807150129v4906b7bcyba66ab62b57c5d71@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Tue, 15 Jul 2008 22:35:29 +0300
+In-Reply-To: <1ba2fa240807150129v4906b7bcyba66ab62b57c5d71@mail.gmail.com> (ext Tomas Winkler's message of "Tue\, 15 Jul 2008 11\:29\:50 +0300")
+Message-ID: <87od4z9bzy.fsf@nokia.com> (sfid-20080715_213620_323640_ED633A3C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Tomas Winkler <tomasw@gmail.com> writes:
 
---=-rx8yDPjSCz+FUX3y/6vH
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+[listen interval]
 
-On Tue, 2008-07-08 at 23:03 +1000, Rusty Russell wrote:
+> This value for iwlwifi hw is derived from maximal supported beacon
+> interval and size of the internal HW timers. This value is hard
+> coded in the driver.
 
-> > What about just killing the config option entirely?  It' basically
-> > guarding a ~50 lines function + a sysctl variable.  I think having
-> > modules but not CONFIG_KMOD is entirely unreasonable.
->=20
-> I agree with Christoph here.
+Ok, now I understand a bit better. Yes, a value like that would be
+good to deliver to mac80211.
 
-Yeah, like I said, I wasn't sure why it's there anyway.
+Just out of curiosity, what's the current hard coded maximum value?
 
-> But as a patch series please: it's spread pretty wide.  eg. first make it=
- a=20
-> non-prompting CONFIG option, then remove the users, then finally kill it.
-
-Sure.
-
-> Some existing request_module users might be able to use=20
-> try_then_request_module, too...
-
-try_then_request_module seems buggy though. Or at least, doing something
-unexpected. Here's the macro, for reference:
-
-#define try_then_request_module(x, mod...) ((x) ?: (request_module(mod), (x=
-)))
-
-I think it should be
-#define try_then_request_module(x, mod...) \
-	((x) ?: ({request_module(mod); (x)}))
-
-the difference being that it returns the result of the second "x" when
-the first "x" fails. A potential user would be
-net/bridge/netfilter/ebtables.c:
-
-        ret =3D find_inlist_lock_noload(head, name, error, mutex);
-        if (!ret) {
-                request_module("%s%s", prefix, name);
-                ret =3D find_inlist_lock_noload(head, name, error, mutex);
-        }
-
-which could then be written as
-
-ret =3D try_then_request_module(
-	find_inlist_lock_noload(head, name, error, mutex),
-	"%s%s", prefix, name);
-
-Also, in the case of MODULES=3Dn, I think it should just be
-
-static inline void printf_check(char *name, ...) __attribute__((format(prin=
-tf, 1, 2))) {};
-#define try_then_request_module(x, mod...) \
-	({ printf_check(mod); (x) })
-
-so (x) is only evaluated once.
-
-A different variation you could make a case for is to not re-evaluate x
-if request_module fails, which would then automatically collapse the
-MODULES=3Dn case:
-
-#define try_then_request_module(x, mod...) \
-	({ typeof(x) __ret =3D (x); __ret ?: \
-		(request_module(mod) ? __r : (x)); })
-
-johannes
-
---=-rx8yDPjSCz+FUX3y/6vH
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIc5BzAAoJEKVg1VMiehFY8+oP/29NDYKseyH7ajgzGXdkPw0l
-uMcuP8j1vayGwgjf10k7fr7qHRVPR/UJvu5fyGYOv6Zlt6PogeiWvoHum+S/V6cL
-A6soZ0htg7Ru/kK2hSpz9/ILd2J3peVVINNPhPFiPaUp7Le1YS5p99qm0W/HvxKn
-vpa55XNozVz3JXYx+zbHITH6XE1LDnFuHnup3gLszfKwWUPpCnlKKbvL9MDY058b
-awDnntTCeDz5DSYRBdrxLhyF+IW42FR5qKCAB/dgUs1+A/Q5ZIRU+MdU9H9wS2bc
-14T45ZMAHRft2XBWlQ6O5TU5OEuX47VKPS7V8YPpvm3FRd7/EZStpFc1x0Sl14d9
-PbGdO3d6Nf3djyoGXmYG1c+2GcnZKiUR/+LG9i0S5w1s+sADz4Rt88oi4QjO6EEJ
-4tWGqbrO75V8J0hn6XD+bz8NbZiFlMr4cgZJEn71J9utZFi8gO0l85YZRY7x4kkR
-aVuqAMZK6yEfeFIgvZF0I2cQ8AYC7+SZvmEhYuymZQodr8LAf7pSdOYVrh+nXvL2
-zwedFBqCPcd0/mX7SuMeCSkLb5f6wQ4zjfvyNdWpaFBzhNBqYEf0G2Iqcp4buCHT
-4ZIvoIEBHZTn0wIHYAmIgrX+o1lbXR/0DVKpapvUfxToOFZZEjuQk/u/rof7via/
-GCZIb6uk38lIqweNSt1R
-=wKfA
------END PGP SIGNATURE-----
-
---=-rx8yDPjSCz+FUX3y/6vH--
-
+-- 
+Kalle Valo
