@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:52302 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753187AbYGBNQW (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34026
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753659AbYGODpc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2008 09:16:22 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so79699yxm.1
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Jul 2008 06:16:20 -0700 (PDT)
-Date: Wed, 2 Jul 2008 09:16:15 -0400
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Michael Buesch <mb@bu3sch.de>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
-	Larry Finger <larry.finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
-Message-ID: <20080702091315.ZZRA012@mailhub.coreip.homeip.net> (sfid-20080702_151626_755447_A4844177)
-References: <20080701225207.GB4292@khazad-dum.debian.net> <1214952993.3462.14.camel@johannes.berg> <20080701235747.GG4292@khazad-dum.debian.net> <1214983270.3462.18.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1214983270.3462.18.camel@johannes.berg>
+	Mon, 14 Jul 2008 23:45:32 -0400
+Date: Mon, 14 Jul 2008 20:45:32 -0700 (PDT)
+Message-Id: <20080714.204532.116542087.davem@davemloft.net> (sfid-20080715_054536_698254_D32C0605)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2008-07-14
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080714192302.GA2541@tuxdriver.com>
+References: <20080714192302.GA2541@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 02, 2008 at 09:21:10AM +0200, Johannes Berg wrote:
-> 
-> > So, please accept my appologies on the tone of the last email.  Please
-> > reconsider reading that email in full, and please try to ignore the rantness
-> > smell in it.  I did try to explain the technical reasons why some changes
-> > would be needed in b43.
-> 
-> Ok. I actually did read it but decided not to reply to most things. I
-> don't think it's that everybody needs to be educated on the input layer
-> (I've written real input drivers before) but rather that nobody really
-> knows how userspace/kernel interaction wrt. rfkill should work.
-> 
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 14 Jul 2008 15:23:02 -0400
 
-I guess I just need to re-iterate that using input layer to propagate
-state change was not the best idea, because at any moment userspace
-can issue EVIOCGRAB on the event device preventing anyone from getting
-such event. I think I mentioned this to Michael once before.
+> Here is one last(?) round of miscellaneous patches I hope to get into
+> 2.6.27.  There are mostly driver updates, including a sizable iwlwifi
+> set of changes.
+> 
+> Please let me know if there are problems!
 
--- 
-Dmitry
+Pulled into net-next-2.6, thanks John.
+
+If someone could fix the following wireless warnings I'd appreciate
+it.
+
+Thanks!
+
+drivers/net/wireless/rt2x00/rt2x00mac.c: In function 'rt2x00mac_conf_tx':
+drivers/net/wireless/rt2x00/rt2x00mac.c:557: warning: comparison is always true due to limited range of data type
+drivers/net/wireless/b43/main.c: In function 'b43_qos_params_upload':
+drivers/net/wireless/b43/main.c:3085: warning: comparison is always false due to limited range of data type
+drivers/net/wireless/b43/main.c:3090: warning: comparison is always false due to limited range of data type
+drivers/net/wireless/b43/main.c:3095: warning: comparison is always false due to limited range of data type
+drivers/net/wireless/b43/main.c:3100: warning: comparison is always false due to limited range of data type
+drivers/net/wireless/iwlwifi/iwl-led.c: In function 'iwl_get_blink_rate':
+drivers/net/wireless/iwlwifi/iwl-led.c:271: warning: format '%lld' expects type 'long long int', but argument 6 has type 's64'
+drivers/net/wireless/iwlwifi/iwl-led.c:271: warning: format '%lld' expects type 'long long int', but argument 7 has type 'u64'
