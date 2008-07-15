@@ -1,222 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.237]:3924 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753805AbYGHQUL (ORCPT
+Received: from smtp.wellnetcz.com ([212.24.148.102]:59199 "EHLO
+	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754902AbYGOPqm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 12:20:11 -0400
-Received: by qb-out-0506.google.com with SMTP id d8so5878690qbc.37
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2008 09:20:09 -0700 (PDT)
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: Hin-Tak Leung <HinTak.Leung@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 1/6] rtl8187: updating rtl8187.h to support RTL8187B
-Date: Tue,  8 Jul 2008 17:18:08 +0100
-Message-Id: <1215533893-8598-1-git-send-email-HinTak.Leung@gmail.com> (sfid-20080708_182015_640586_81160239)
-From: Hin-Tak Leung <hintak.leung@gmail.com>
+	Tue, 15 Jul 2008 11:46:42 -0400
+From: Jiri Slaby <jirislaby@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: [PATCH 1/5] Ath5k: fix memory corruption
+Date: Tue, 15 Jul 2008 17:44:18 +0200
+Message-Id: <1216136661-10930-1-git-send-email-jirislaby@gmail.com> (sfid-20080715_174648_636903_28B9A4CC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
-Signed-off-by: Pavel Roskin <proski@gnu.org>
+When signal is noisy, hardware can use all RX buffers and since the las=
+t
+entry in the list is self-linked, it overwrites the entry until we link
+new buffers.
+
+Ensure that we don't free this last one until we are 100% sure that it
+is not used by the hardware anymore to not cause memory curruption as
+can be seen below.
+
+This is done by checking next buffer in the list. Even after that we
+know that the hardware refetched the new link and proceeded further
+(the next buffer is ready) we can finally free the overwritten buffer.
+
+We discard it since the status in its descriptor is overwritten (OR-ed
+by new status) too.
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D
+BUG kmalloc-4096: Poison overwritten
+-----------------------------------------------------------------------=
+------
+
+INFO: 0xffff810067419060-0xffff810067419667. First byte 0x8 instead of =
+0x6b
+INFO: Allocated in dev_alloc_skb+0x18/0x30 age=3D1118 cpu=3D1 pid=3D0
+INFO: Freed in skb_release_data+0x85/0xd0 age=3D1105 cpu=3D1 pid=3D3718
+INFO: Slab 0xffffe200019d0600 objects=3D7 used=3D0 fp=3D0xffff810067419=
+048 flags=3D0x40000000000020c3
+INFO: Object 0xffff810067419048 @offset=3D4168 fp=3D0xffff81006741c120
+
+Bytes b4 0xffff810067419038:  4f 0b 02 00 01 00 00 00 5a 5a 5a 5a 5a 5a=
+ 5a 5a O.......ZZZZZZZZ
+  Object 0xffff810067419048:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b=
+ 6b 6b kkkkkkkkkkkkkkkk
+  Object 0xffff810067419058:  6b 6b 6b 6b 6b 6b 6b 6b 08 42 30 00 00 0b=
+ 6b 80 kkkkkkkk.B0...k.
+  Object 0xffff810067419068:  f0 5d 00 4f 62 08 a3 64 00 0c 42 16 52 e4=
+ f0 5a 360].Ob.243d..B.R344360Z
+  Object 0xffff810067419078:  68 81 00 00 7b a5 b4 be 7d 3b 8f 53 cd d5=
+ de 12 h...{245264276};.S315325336.
+  Object 0xffff810067419088:  96 10 0b 89 48 54 23 41 0f 4e 2d b9 37 c3=
+ cb 29 ....HT#A.N-2717303313)
+  Object 0xffff810067419098:  d1 e0 de 14 8a 57 2a cc 3b 44 0d 78 7a 19=
+ 12 15 321340336..W*314;D.xz...
+  Object 0xffff8100674190a8:  a9 ec d4 35 a8 10 ec 8c 40 a7 06 0a 51 a7=
+ 48 bb 2513543245250.354.@247..Q247H273
+  Object 0xffff8100674190b8:  3e cf a1 c7 38 60 63 3f 51 15 c7 20 eb ba=
+ 65 30 >=CF=A13078`c?Q.307.353272e0
+ Redzone 0xffff81006741a048:  bb bb bb bb bb bb bb bb                  =
+       273273273273273273273273
+ Padding 0xffff81006741a088:  5a 5a 5a 5a 5a 5a 5a 5a                  =
+       ZZZZZZZZ
+Pid: 3297, comm: ath5k_pci Not tainted 2.6.26-rc8-mm1_64 #427
+
+Call Trace:
+ [<ffffffff802a7306>] print_trailer+0xf6/0x150
+ [<ffffffff802a7485>] check_bytes_and_report+0x125/0x180
+ [<ffffffff802a75dc>] check_object+0xac/0x260
+ [<ffffffff802a9308>] __slab_alloc+0x368/0x6d0
+ [<ffffffff80544f82>] ? wireless_send_event+0x142/0x310
+ [<ffffffff804b1bd4>] ? __alloc_skb+0x44/0x150
+ [<ffffffff80544f82>] ? wireless_send_event+0x142/0x310
+ [<ffffffff802aa853>] __kmalloc_track_caller+0xc3/0xf0
+ [<ffffffff804b1bfe>] __alloc_skb+0x6e/0x150
+[... stack snipped]
+
+=46IX kmalloc-4096: Restoring 0xffff810067419060-0xffff810067419667=3D0=
+x6b
+
+=46IX kmalloc-4096: Marking all objects used
+
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Luis R. Rodriguez <mcgrof@gmail.com>
 ---
- drivers/net/wireless/rtl8187.h |  113 ++++++++++++++++++++++++++++++++++------
- 1 files changed, 97 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath5k/base.c |   32 +++++++++++++++++++++++++----=
+---
+ drivers/net/wireless/ath5k/base.h |    2 +-
+ 2 files changed, 26 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/rtl8187.h b/drivers/net/wireless/rtl8187.h
-index a0cfb66..3afb49f 100644
---- a/drivers/net/wireless/rtl8187.h
-+++ b/drivers/net/wireless/rtl8187.h
-@@ -44,17 +44,48 @@ struct rtl8187_rx_hdr {
- 	__le64 mac_time;
- } __attribute__((packed));
- 
--struct rtl8187_tx_hdr {
-+struct rtl8187b_rx_hdr {
- 	__le32 flags;
-+	__le64 mac_time;
-+	u8 noise;
-+	u8 signal;
-+	u8 agc;
-+	u8 reserved;
-+	__le32 unused;
-+} __attribute__((packed));
-+
-+/* {rtl8187,rtl8187b}_tx_info is in skb */
-+
-+/* Tx flags are common between rtl8187 and rtl8187b */
- #define RTL8187_TX_FLAG_NO_ENCRYPT	(1 << 15)
- #define RTL8187_TX_FLAG_MORE_FRAG	(1 << 17)
- #define RTL8187_TX_FLAG_CTS		(1 << 18)
- #define RTL8187_TX_FLAG_RTS		(1 << 23)
-+
-+struct rtl8187_tx_hdr {
-+	__le32 flags;
- 	__le16 rts_duration;
- 	__le16 len;
- 	__le32 retry;
- } __attribute__((packed));
- 
-+struct rtl8187b_tx_hdr {
-+	__le32 flags;
-+	__le16 rts_duration;
-+	__le16 len;
-+	__le32 unused_1;
-+	__le16 unused_2;
-+	__le16 tx_duration;
-+	__le32 unused_3;
-+	__le32 retry;
-+	__le32 unused_4[2];
-+} __attribute__((packed));
-+
-+enum {
-+	DEVICE_RTL8187,
-+	DEVICE_RTL8187B
-+};
-+
- struct rtl8187_priv {
- 	/* common between rtl818x drivers */
- 	struct rtl818x_csr *map;
-@@ -70,70 +101,120 @@ struct rtl8187_priv {
- 	u32 rx_conf;
- 	u16 txpwr_base;
- 	u8 asic_rev;
-+	u8 is_rtl8187b;
-+	enum {
-+		RTL8187BvB,
-+		RTL8187BvD,
-+		RTL8187BvE
-+	} hw_rev;
- 	struct sk_buff_head rx_queue;
-+	u8 signal;
-+	u8 quality;
-+	u8 noise;
- };
- 
- void rtl8187_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
- 
--static inline u8 rtl818x_ioread8(struct rtl8187_priv *priv, u8 *addr)
-+static inline u8 rtl818x_ioread8_idx(struct rtl8187_priv *priv,
-+				     u8 *addr, u8 idx)
- {
- 	u8 val;
- 
- 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
- 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
--			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
-+			(unsigned long)addr, idx & 0x03, &val,
-+			sizeof(val), HZ / 2);
- 
- 	return val;
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/a=
+th5k/base.c
+index 12a9443..e9ec284 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1683,20 +1683,21 @@ ath5k_tasklet_rx(unsigned long data)
+ 	struct ath5k_rx_status rs =3D {};
+ 	struct sk_buff *skb;
+ 	struct ath5k_softc *sc =3D (void *)data;
+-	struct ath5k_buf *bf;
++	struct ath5k_buf *bf, *bf_last;
+ 	struct ath5k_desc *ds;
+ 	int ret;
+ 	int hdrlen;
+ 	int pad;
+=20
+ 	spin_lock(&sc->rxbuflock);
++	if (list_empty(&sc->rxbuf)) {
++		ATH5K_WARN(sc, "empty rx buf pool\n");
++		goto unlock;
++	}
++	bf_last =3D list_entry(sc->rxbuf.prev, struct ath5k_buf, list);
+ 	do {
+ 		rxs.flag =3D 0;
+=20
+-		if (unlikely(list_empty(&sc->rxbuf))) {
+-			ATH5K_WARN(sc, "empty rx buf pool\n");
+-			break;
+-		}
+ 		bf =3D list_first_entry(&sc->rxbuf, struct ath5k_buf, list);
+ 		BUG_ON(bf->skb =3D=3D NULL);
+ 		skb =3D bf->skb;
+@@ -1706,8 +1707,24 @@ ath5k_tasklet_rx(unsigned long data)
+ 		pci_dma_sync_single_for_cpu(sc->pdev, sc->desc_daddr,
+ 				sc->desc_len, PCI_DMA_FROMDEVICE);
+=20
+-		if (unlikely(ds->ds_link =3D=3D bf->daddr)) /* this is the end */
+-			break;
++		/*
++		 * last buffer must not be freed to ensure proper hardware
++		 * function. When the hardware finishes also a packet next to
++		 * it, we are sure, it doesn't use it anymore and we can go on.
++		 */
++		if (bf_last =3D=3D bf)
++			bf->flags |=3D 1;
++		if (bf->flags) {
++			struct ath5k_buf *bf_next =3D list_entry(bf->list.next,
++					struct ath5k_buf, list);
++			ret =3D sc->ah->ah_proc_rx_desc(sc->ah, bf_next->desc,
++					&rs);
++			if (ret)
++				break;
++			bf->flags &=3D ~1;
++			/* skip the overwritten one (even status is martian) */
++			goto next;
++		}
+=20
+ 		ret =3D sc->ah->ah_proc_rx_desc(sc->ah, ds, &rs);
+ 		if (unlikely(ret =3D=3D -EINPROGRESS))
+@@ -1817,6 +1834,7 @@ accept:
+ next:
+ 		list_move_tail(&bf->list, &sc->rxbuf);
+ 	} while (ath5k_rxbuf_setup(sc, bf) =3D=3D 0);
++unlock:
+ 	spin_unlock(&sc->rxbuflock);
  }
- 
--static inline u16 rtl818x_ioread16(struct rtl8187_priv *priv, __le16 *addr)
-+static inline u8 rtl818x_ioread8(struct rtl8187_priv *priv, u8 *addr)
-+{
-+	return rtl818x_ioread8_idx(priv, addr, 0);
-+}
-+
-+static inline u16 rtl818x_ioread16_idx(struct rtl8187_priv *priv,
-+				       __le16 *addr, u8 idx)
- {
- 	__le16 val;
- 
- 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
- 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
--			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
-+			(unsigned long)addr, idx & 0x03, &val,
-+			sizeof(val), HZ / 2);
- 
- 	return le16_to_cpu(val);
- }
- 
--static inline u32 rtl818x_ioread32(struct rtl8187_priv *priv, __le32 *addr)
-+static inline u16 rtl818x_ioread16(struct rtl8187_priv *priv, __le16 *addr)
-+{
-+	return rtl818x_ioread16_idx(priv, addr, 0);
-+}
-+
-+static inline u32 rtl818x_ioread32_idx(struct rtl8187_priv *priv,
-+				       __le32 *addr, u8 idx)
- {
- 	__le32 val;
- 
- 	usb_control_msg(priv->udev, usb_rcvctrlpipe(priv->udev, 0),
- 			RTL8187_REQ_GET_REG, RTL8187_REQT_READ,
--			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
-+			(unsigned long)addr, idx & 0x03, &val,
-+			sizeof(val), HZ / 2);
- 
- 	return le32_to_cpu(val);
- }
- 
--static inline void rtl818x_iowrite8(struct rtl8187_priv *priv,
--				    u8 *addr, u8 val)
-+static inline u32 rtl818x_ioread32(struct rtl8187_priv *priv, __le32 *addr)
-+{
-+	return rtl818x_ioread32_idx(priv, addr, 0);
-+}
-+
-+static inline void rtl818x_iowrite8_idx(struct rtl8187_priv *priv,
-+					u8 *addr, u8 val, u8 idx)
- {
- 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
- 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
--			(unsigned long)addr, 0, &val, sizeof(val), HZ / 2);
-+			(unsigned long)addr, idx & 0x03, &val,
-+			sizeof(val), HZ / 2);
-+}
-+
-+static inline void rtl818x_iowrite8(struct rtl8187_priv *priv, u8 *addr, u8 val)
-+{
-+	rtl818x_iowrite8_idx(priv, addr, val, 0);
- }
- 
--static inline void rtl818x_iowrite16(struct rtl8187_priv *priv,
--				     __le16 *addr, u16 val)
-+static inline void rtl818x_iowrite16_idx(struct rtl8187_priv *priv,
-+					 __le16 *addr, u16 val, u8 idx)
- {
- 	__le16 buf = cpu_to_le16(val);
- 
- 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
- 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
--			(unsigned long)addr, 0, &buf, sizeof(buf), HZ / 2);
-+			(unsigned long)addr, idx & 0x03, &buf, sizeof(buf),
-+			HZ / 2);
- }
- 
--static inline void rtl818x_iowrite32(struct rtl8187_priv *priv,
--				     __le32 *addr, u32 val)
-+static inline void rtl818x_iowrite16(struct rtl8187_priv *priv, __le16 *addr,
-+				     u16 val)
-+{
-+	rtl818x_iowrite16_idx(priv, addr, val, 0);
-+}
-+
-+static inline void rtl818x_iowrite32_idx(struct rtl8187_priv *priv,
-+					 __le32 *addr, u32 val, u8 idx)
- {
- 	__le32 buf = cpu_to_le32(val);
- 
- 	usb_control_msg(priv->udev, usb_sndctrlpipe(priv->udev, 0),
- 			RTL8187_REQ_SET_REG, RTL8187_REQT_WRITE,
--			(unsigned long)addr, 0, &buf, sizeof(buf), HZ / 2);
-+			(unsigned long)addr, idx & 0x03, &buf, sizeof(buf),
-+			HZ / 2);
-+}
-+
-+static inline void rtl818x_iowrite32(struct rtl8187_priv *priv, __le32 *addr,
-+				     u32 val)
-+{
-+	rtl818x_iowrite32_idx(priv, addr, val, 0);
- }
- 
- #endif /* RTL8187_H */
--- 
-1.5.5.1
+=20
+diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/a=
+th5k/base.h
+index 47f414b..d7e03e6 100644
+--- a/drivers/net/wireless/ath5k/base.h
++++ b/drivers/net/wireless/ath5k/base.h
+@@ -56,7 +56,7 @@
+=20
+ struct ath5k_buf {
+ 	struct list_head	list;
+-	unsigned int		flags;	/* tx descriptor flags */
++	unsigned int		flags;	/* rx descriptor flags */
+ 	struct ath5k_desc	*desc;	/* virtual addr of desc */
+ 	dma_addr_t		daddr;	/* physical addr of desc */
+ 	struct sk_buff		*skb;	/* skbuff for buf */
+--=20
+1.5.6.2
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
