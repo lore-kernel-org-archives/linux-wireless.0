@@ -1,38 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:40076 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751915AbYGaNc3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 09:32:29 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Issue: iwlist scanning sees the network; dhclient can't connect
-Date: Thu, 31 Jul 2008 15:31:54 +0200
-Cc: Pavel Roskin <proski@gnu.org>,
-	"Thiago F. Tavares" <ttavares@halogica.com>,
-	linux-wireless@vger.kernel.org
-References: <1127857B97C63B4285A9B02BEF67AEE601627648@afrodite.halogica.com.br> <1217447463.25919.10.camel@dv> <1217493665.3392.0.camel@Friederike-PC.hoffi>
-In-Reply-To: <1217493665.3392.0.camel@Friederike-PC.hoffi>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807311531.54665.mb@bu3sch.de> (sfid-20080731_153232_597492_F811B8D2)
+Received: from xc.sipsolutions.net ([83.246.72.84]:37740 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752380AbYGOIJc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jul 2008 04:09:32 -0400
+Subject: [PATCH] wireless: fix warnings from QoS patch
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <1216107805.23746.14.camel@johannes.berg> (sfid-20080715_094342_682387_B0174249)
+References: <20080714192302.GA2541@tuxdriver.com>
+	 <20080714.204532.116542087.davem@davemloft.net>
+	 (sfid-20080715_054536_698254_D32C0605)  <1216107805.23746.14.camel@johannes.berg>
+	 (sfid-20080715_094342_682387_B0174249)
+Content-Type: text/plain
+Date: Tue, 15 Jul 2008 10:09:24 +0200
+Message-Id: <1216109364.23746.17.camel@johannes.berg> (sfid-20080715_100943_796154_7003708B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 31 July 2008 10:41:05 Johannes Berg wrote:
-> On Wed, 2008-07-30 at 15:51 -0400, Pavel Roskin wrote:
-> > On Wed, 2008-07-30 at 21:41 +0200, Michael Buesch wrote:
-> > 
-> > > dhclient works fine for me. Although it's true that it sometimes
-> > > messes with up/down state. But you _can_ use it, if you take some care.
-> > 
-> > True.  But b43 has the lowest dhclient survival rate of all drivers I
-> > know.  That's an empirical observation, of course.
-> 
-> I think debian patches out the down/up behaviour. We may be seeing that.
+When I removed the special "default" meaning from the QoS
+parameters, I forgot to update drivers and this lead to
+warnings because some drivers were checking for the special
+values and putting in defaults. This fixes that by removing
+the default special-casing completely.
 
-Oh, that might explain why I don't see this behaviour.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/b43/main.c         |   47 ++++----------------------------
+ drivers/net/wireless/rt2x00/rt2x00mac.c |    5 ---
+ 2 files changed, 8 insertions(+), 44 deletions(-)
+
+--- everything.orig/drivers/net/wireless/b43/main.c	2008-07-15 09:57:06.000000000 +0200
++++ everything/drivers/net/wireless/b43/main.c	2008-07-15 10:01:33.000000000 +0200
+@@ -3073,53 +3073,20 @@ static void b43_qos_params_upload(struct
+ 				  u16 shm_offset)
+ {
+ 	u16 params[B43_NR_QOSPARAMS];
+-	int cw_min, cw_max, aifs, bslots, tmp;
++	int bslots, tmp;
+ 	unsigned int i;
+ 
+-	const u16 aCWmin = 0x0001;
+-	const u16 aCWmax = 0x03FF;
+-
+-	/* Calculate the default values for the parameters, if needed. */
+-	switch (shm_offset) {
+-	case B43_QOS_VOICE:
+-		aifs = (p->aifs == -1) ? 2 : p->aifs;
+-		cw_min = (p->cw_min == 0) ? ((aCWmin + 1) / 4 - 1) : p->cw_min;
+-		cw_max = (p->cw_max == 0) ? ((aCWmin + 1) / 2 - 1) : p->cw_max;
+-		break;
+-	case B43_QOS_VIDEO:
+-		aifs = (p->aifs == -1) ? 2 : p->aifs;
+-		cw_min = (p->cw_min == 0) ? ((aCWmin + 1) / 2 - 1) : p->cw_min;
+-		cw_max = (p->cw_max == 0) ? aCWmin : p->cw_max;
+-		break;
+-	case B43_QOS_BESTEFFORT:
+-		aifs = (p->aifs == -1) ? 3 : p->aifs;
+-		cw_min = (p->cw_min == 0) ? aCWmin : p->cw_min;
+-		cw_max = (p->cw_max == 0) ? aCWmax : p->cw_max;
+-		break;
+-	case B43_QOS_BACKGROUND:
+-		aifs = (p->aifs == -1) ? 7 : p->aifs;
+-		cw_min = (p->cw_min == 0) ? aCWmin : p->cw_min;
+-		cw_max = (p->cw_max == 0) ? aCWmax : p->cw_max;
+-		break;
+-	default:
+-		B43_WARN_ON(1);
+-		return;
+-	}
+-	if (cw_min <= 0)
+-		cw_min = aCWmin;
+-	if (cw_max <= 0)
+-		cw_max = aCWmin;
+-	bslots = b43_read16(dev, B43_MMIO_RNG) % cw_min;
++	bslots = b43_read16(dev, B43_MMIO_RNG) & p->cw_min;
+ 
+ 	memset(&params, 0, sizeof(params));
+ 
+ 	params[B43_QOSPARAM_TXOP] = p->txop * 32;
+-	params[B43_QOSPARAM_CWMIN] = cw_min;
+-	params[B43_QOSPARAM_CWMAX] = cw_max;
+-	params[B43_QOSPARAM_CWCUR] = cw_min;
+-	params[B43_QOSPARAM_AIFS] = aifs;
++	params[B43_QOSPARAM_CWMIN] = p->cw_min;
++	params[B43_QOSPARAM_CWMAX] = p->cw_max;
++	params[B43_QOSPARAM_CWCUR] = p->cw_min;
++	params[B43_QOSPARAM_AIFS] = p->aifs;
+ 	params[B43_QOSPARAM_BSLOTS] = bslots;
+-	params[B43_QOSPARAM_REGGAP] = bslots + aifs;
++	params[B43_QOSPARAM_REGGAP] = bslots + p->aifs;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(params); i++) {
+ 		if (i == B43_QOSPARAM_STATUS) {
+--- everything.orig/drivers/net/wireless/rt2x00/rt2x00mac.c	2008-07-15 10:02:02.000000000 +0200
++++ everything/drivers/net/wireless/rt2x00/rt2x00mac.c	2008-07-15 10:02:18.000000000 +0200
+@@ -554,10 +554,7 @@ int rt2x00mac_conf_tx(struct ieee80211_h
+ 	else
+ 		queue->cw_max = 10; /* cw_min: 2^10 = 1024. */
+ 
+-	if (params->aifs >= 0)
+-		queue->aifs = params->aifs;
+-	else
+-		queue->aifs = 2;
++	queue->aifs = params->aifs;
+ 
+ 	INFO(rt2x00dev,
+ 	     "Configured TX queue %d - CWmin: %d, CWmax: %d, Aifs: %d.\n",
 
 
--- 
-Greetings Michael.
