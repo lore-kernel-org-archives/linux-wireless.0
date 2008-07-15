@@ -1,99 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:49514 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752675AbYGWSnD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 14:43:03 -0400
-Date: Wed, 23 Jul 2008 15:42:57 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rfkill: add default global states
-Message-ID: <20080723184257.GD11009@khazad-dum.debian.net>
-References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br> <1216775046-9506-3-git-send-email-hmh@hmh.eng.br> <200807232028.49239.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200807232028.49239.IvDoorn@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:35503 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755285AbYGOSkh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jul 2008 14:40:37 -0400
+Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
+From: Dan Williams <dcbw@redhat.com>
+To: Nicolas Pitre <nico@cam.org>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	lkml <linux-kernel@vger.kernel.org>
+In-Reply-To: <alpine.LFD.1.10.0807151404530.12484@xanadu.home>
+References: <20080709190915.GA8238@tuxdriver.com>
+	 <69e28c910807100912h30fcb57fpb4fb48b95c640f77@mail.gmail.com>
+	 <200807101815.27204.mb@bu3sch.de>
+	 <1216142191.6039.113.camel@localhost.localdomain>
+	 <alpine.LFD.1.10.0807151323570.12484@xanadu.home>
+	 <1216144711.13411.18.camel@localhost.localdomain>
+	 <alpine.LFD.1.10.0807151404530.12484@xanadu.home>
+Content-Type: text/plain
+Date: Tue, 15 Jul 2008 14:38:38 -0400
+Message-Id: <1216147118.13411.29.camel@localhost.localdomain> (sfid-20080715_204053_762920_193E1C9D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 23 Jul 2008, Ivo van Doorn wrote:
-> >  static enum rfkill_state rfkill_states[RFKILL_TYPE_MAX];
-> > +static enum rfkill_state rfkill_default_states[RFKILL_TYPE_MAX];
-> > +static unsigned long rfkill_states_lockdflt[BITS_TO_LONGS(RFKILL_TYPE_MAX)];
+On Tue, 2008-07-15 at 14:14 -0400, Nicolas Pitre wrote:
+> On Tue, 15 Jul 2008, Dan Williams wrote:
 > 
-> I have a slight distaste for using multiple arrays where each variable is a different
-> variable for the same object. Perhaps it is time to move it into a structure:
+> > Some of the issues with the current Marvell 83xx GPL drivers that have
+> > gotten out are (a) code style, (b) lots of commented out stuff that's
+> > never used, (c) OS abstraction that's unnecessary on Linux, (d) doesn't
+> > use mac80211, and (e) uses private ioctls.  So hopefully you're writing
+> > a new 83xx driver from scratch :)
 > 
-> struct .. {
-> 	enum rfkill_state current
-> 	enum rfkill_state default
-> };
+> Yes, this is all from scratch.  The objective for this work is to be 
+> "mainlinable".
 > 
-> static struct .. rfkill_states[RFKILL_TYPE_MAX];
+> > We cleaned up a lot of stuff for the OLPC 8388 libertas driver, but
+> > unfortunately we never were able to get the Marvell 8388 team onboard,
+> > and so they just went off and kept working on their driver and didn't
+> > really move the upstream libertas driver forward at all.
 > 
-> It probably won't optimize anything, but I think it looks a bit nicer.
-> 
-> Just a suggestion, if it easier to keep it as multiple arrays I would still ack it. ;)
+> Libertas is a rather different beast.
 
-Sure, I can do that.  It doesn't work well for the bitfields, though (wastes
-a LOT of memory), so I will keep the bitfields as separate ulong arrays if
-that's OK with you?
+Obviously; this was just an observation about the last time we got a
+wireless driver from Marvell.  I expect it to work out rather
+differently this time simply on the strength of your and Lennert's
+track-record, but if it's really just you two guys and you don't have
+buy-in from the actual hardware and software teams inside Marvell, it's
+hard to see how this wouldn't just happen again.
 
-> > + * rfkill_set_default - set initial value for a switch type
-> > + * @type - the type of switch to set the default state of
-> > + * @state - the new default state for that group of switches
-> > + *
-> > + * Sets the initial state rfkill should use for a given type.  Only "soft"
-> > + * states are allowed, i.e. RFKILL_STATE_SOFT_BLOCKED and
-> > + * RFKILL_STATE_UNBLOCKED.
-> > + *
-> > + * This function is meant to be used by platform drivers for platforms that
-> > + * can save switch state across power down/reboot.
-> 
-> As sideinfo: I found a hardware bug in a broadcom rfkill key a few days ago
-> which would not work well with this function:
-> 
-> * laptop was powered on, HW rfkill was set to allow WiFi
-> * laptop halted, something about a missing power supply and a battery which was drained
-> 	without any userspace tool checking the battery status. ;)
-> * laptop was powered on and booted,  HW rkfill decided to block WiFi.
+Dan
 
-Heh.  Well, it is a hardware failure mode, it will be up to the broadcomm
-device driver to figure out when NOT to use rfkill_set_default() ;-)
-
-I just found out I can do that (store WWAN and bluetooth state) across
-power cycles on thinkpads as well.  I wonder what kind of weird failures
-will be hidden behind THAT... :)
-
-> In any case not really important for this patch, but just for information. ;)
-
-Heh, sure :-)  At least the failure mode for the hardware was safely handled
-(it HW-killed the radio instead of unblocking it :p).
-
-> >   * Rfkill module initialization/deinitialization.
-> >   */
-> > @@ -702,8 +793,8 @@ static int __init rfkill_init(void)
-> >  	    rfkill_default_state != RFKILL_STATE_UNBLOCKED)
-> >  		return -EINVAL;
-> >  
-> > -	for (i = 0; i < ARRAY_SIZE(rfkill_states); i++)
-> > -		rfkill_states[i] = rfkill_default_state;
-> > +	for (i = 0; i < ARRAY_SIZE(rfkill_default_states); i++)
-> > +		rfkill_default_states[i] = rfkill_default_state;
-> 
-> rfkill_states[] is now no longer initialized, I guess that is a bad thing ;)
-
-It is initialized from the [current] default state on first use... look at
-the hunk for rfkill_add_switch()  :)
-
-I could double-initialize it, but since the kernel will already zero it for
-us anyway, and we need to copy the default state to the current state on
-first use (so that rfkill_set_default() is easy to implement...) I would
-just be triple-initializing something :p
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
