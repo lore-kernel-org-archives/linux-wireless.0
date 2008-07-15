@@ -1,92 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from stinky.trash.net ([213.144.137.162]:37655 "EHLO
-	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751405AbYGWPSy (ORCPT
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:56045 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755497AbYGOTcN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 11:18:54 -0400
-Message-ID: <48874BD8.60600@trash.net> (sfid-20080723_171858_302769_20FF10BA)
-Date: Wed, 23 Jul 2008 17:18:48 +0200
-From: Patrick McHardy <kaber@trash.net>
-MIME-Version: 1.0
-To: =?ISO-8859-15?Q?Fran=E7ois_Valenduc?=
-	<francois.valenduc@tvcablenet.be>
-CC: Andrew Morton <akpm@linux-foundation.org>,
-	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Linux Netdev List <netdev@vger.kernel.org>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
-References: <bug-11144-10286@http.bugzilla.kernel.org/>	<20080722034850.dbbc5566.akpm@linux-foundation.org>	<4886E49D.6010700@tvcablenet.be> <20080723010522.389a948f.akpm@linux-foundation.org> <4886F727.6010301@tvcablenet.be> <48870425.50908@trash.net> <48871632.3010205@tvcablenet.be> <4887169B.6090102@trash.net> <488725D5.8030900@tvcablenet.be> <488727B3.7040007@trash.net> <48872968.9000103@trash.net> <488746DF.1050501@tvcablenet.be>
-In-Reply-To: <488746DF.1050501@tvcablenet.be>
-Content-Type: multipart/mixed;
- boundary="------------030704000304050709070806"
+	Tue, 15 Jul 2008 15:32:13 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: [GIT PATCH] rfkill fixes, set 2
+Date: Tue, 15 Jul 2008 16:32:03 -0300
+Message-Id: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br> (sfid-20080715_213217_834300_3B08C8FB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------030704000304050709070806
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 8bit
 
-François Valenduc wrote:
-> I did the bisection again, this time on the whole tree and the first bad 
-> commit is again the one I mentioned previously:
-> 
-> 175f9c1bba9b825d22b142d183c9e175488b260c is first bad commit
-> commit 175f9c1bba9b825d22b142d183c9e175488b260c
-> Author: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> Date:   Sun Jul 20 00:08:47 2008 -0700
-> 
->    net_sched: Add size table for qdiscs
-> 
->    Add size table functions for qdiscs and calculate packet size in
->    qdisc_enqueue().
-> 
->    Based on patch by Patrick McHardy
->     http://marc.info/?l=linux-netdev&m=115201979221729&w=2
-> 
-> This time, I didn't encounter kernels which didn't compile. So, I didn't 
-> use git-reset or git-bisect skip.
+Here is a small set of fixes for rfkill, mostly stuff I noticed while I
+was working on other patches that I will send in for RFC and testing,
+later.
 
+It does include the documentation change requested by Ivo that makes
+rfkill_force_state non-optional where applicable (devices that get
+external state changes).
 
-I think I know whats happening (Jussi CCed). That commit introduced
-a qdisc_skb_cb, which conflicts with the mac80211 usage of skb->cb.
-mac80211 seems to expect the CB to survive the qdisc layer, which
-is wrong. One possibility to fix this (or just test my theory)
-would be to make sure they don't clash by adding the struct
-ieee80211_tx_info to qdisc_skb_cb->data. Something like this patch.
+Shortlog:
 
+Henrique de Moraes Holschuh (4):
+      rfkill: document rfkill_force_state as required
+      rfkill: fix led-trigger unregister order in error unwind
+      rfkill: document the rfkill struct locking
+      rfkill: mutex fixes
 
---------------030704000304050709070806
-Content-Type: text/plain;
- name="x"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="x"
+Please consider for merging for 2.6.26, as they are fixes and not
+enhancements.  Ivo, please be specially hard on the last patch, I did
+test it here, but locking is always tricky...
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 4dd3d93..e19815e 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -19,6 +19,7 @@
- #include <linux/wireless.h>
- #include <linux/device.h>
- #include <linux/ieee80211.h>
-+#include <net/sched_generic.h>
- #include <net/wireless.h>
- #include <net/cfg80211.h>
- 
-@@ -343,7 +344,10 @@ struct ieee80211_tx_info {
- 
- static inline struct ieee80211_tx_info *IEEE80211_SKB_CB(struct sk_buff *skb)
- {
--	return (struct ieee80211_tx_info *)skb->cb;
-+	BUILD_BUG_ON(sizeof(skb->cb) <
-+		     sizeof(struct qdisc_skb_cb) +
-+		     sizeof(struct ieee80211_tx_info));
-+	return (struct ieee80211_tx_info *)qdisc_skb_cb(skb)->data;
- }
- 
- 
+Patches based on wireless-testing master.
 
---------------030704000304050709070806--
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
