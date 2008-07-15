@@ -1,160 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:36995 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753082AbYGWBET (ORCPT
+Received: from smtp.wellnetcz.com ([212.24.148.102]:59205 "EHLO
+	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760652AbYGOPrh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 21:04:19 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Dmitry Torokhov <dtor@mail.ru>
-Subject: [PATCH] rfkill: rate-limit rfkill-input workqueue usage
-Date: Tue, 22 Jul 2008 22:04:06 -0300
-Message-Id: <1216775046-9506-7-git-send-email-hmh@hmh.eng.br> (sfid-20080723_030423_859491_C6E1A0D0)
-In-Reply-To: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br>
-References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br>
+	Tue, 15 Jul 2008 11:47:37 -0400
+From: Jiri Slaby <jirislaby@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	davem@redhat.com, rth@cygnus.com, jakub@redhat.com,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: [PATCH 4/5] Ath5k: fix dma operation
+Date: Tue, 15 Jul 2008 17:44:43 +0200
+Message-Id: <1216136683-10955-1-git-send-email-jirislaby@gmail.com> (sfid-20080715_174744_210058_C3921271)
+In-Reply-To: <1216136661-10930-1-git-send-email-jirislaby@gmail.com>
+References: <1216136661-10930-1-git-send-email-jirislaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Limit the number of rfkill-input global operations per second.  It lacked
-the limiter that non-global operations (state changes) had.  This way, a
-rogue input event generator cannot force rfkill-input to hog the workqueue
-too much.
+Don't sync
+- coherent mapping (descriptors)
+- before unmap, it's useless
+- (wrongly anyway -- for_cpu) beacon skb, it's just mapped,
+  so by the device yet
 
-Rework the limiter code so that newer state change requests (rfkill input
-events) will override older ones that haven't been acted upon yet.  It used
-to ignore new ones that were past the rate limit.
-
-The hardcoded limit is to process requests only once every 200ms.  Limits
-are separate for each switch type and for the global operations (used by
-the master switch).
-
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Dmitry Torokhov <dtor@mail.ru>
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Luis R. Rodriguez <mcgrof@gmail.com>
 ---
- net/rfkill/rfkill-input.c |   43 ++++++++++++++++++++++++++++---------------
- 1 files changed, 28 insertions(+), 15 deletions(-)
+ drivers/net/wireless/ath5k/base.c |   11 -----------
+ 1 files changed, 0 insertions(+), 11 deletions(-)
 
-diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
-index 8e6781d..be3edda 100644
---- a/net/rfkill/rfkill-input.c
-+++ b/net/rfkill/rfkill-input.c
-@@ -23,6 +23,9 @@ MODULE_AUTHOR("Dmitry Torokhov <dtor@mail.ru>");
- MODULE_DESCRIPTION("Input layer to RF switch connector");
- MODULE_LICENSE("GPL");
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 4874a6f..713ee99 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1705,10 +1705,6 @@ ath5k_tasklet_rx(unsigned long data)
+ 		skb = bf->skb;
+ 		ds = bf->desc;
  
-+/* Delay (in ms) between consecutive switch ops */
-+#define	RFKILL_OPS_DELAY 200UL
-+
- enum rfkill_input_master_mode {
- 	RFKILL_INPUT_MASTER_DONOTHING = 0,
- 	RFKILL_INPUT_MASTER_RESTORE = 1,
-@@ -36,7 +39,7 @@ MODULE_PARM_DESC(master_switch_mode,
- 	"SW_RFKILL_ALL ON should: 0=do nothing; 1=restore; 2=unblock all");
- 
- struct rfkill_task {
--	struct work_struct work;
-+	struct delayed_work dwork;
- 	enum rfkill_type type;
- 	struct mutex mutex; /* ensures that task is serialized */
- 	spinlock_t lock; /* for accessing last and desired state */
-@@ -52,17 +55,18 @@ enum rfkill_global_sched_op {
- };
- 
- struct rfkill_global_task {
--	struct work_struct work;
-+	struct delayed_work dwork;
- 	struct mutex mutex; /* ensures that task is serialized */
- 	spinlock_t lock;
-+	unsigned long last; /* last schedule */
- 	enum rfkill_global_sched_op op;
- 	int op_count; /* avoid race window */
- };
- 
- static void rfkill_global_task_handler(struct work_struct *work)
- {
--	struct rfkill_global_task *task =
--			container_of(work, struct rfkill_global_task, work);
-+	struct rfkill_global_task *task = container_of(work,
-+			struct rfkill_global_task, dwork.work);
- 	enum rfkill_global_sched_op op;
- 	unsigned int i;
- 
-@@ -100,12 +104,18 @@ static void rfkill_global_task_handler(struct work_struct *work)
- }
- 
- static struct rfkill_global_task rfkill_global_task = {
--	.work = __WORK_INITIALIZER(rfkill_global_task.work,
-+	.dwork = __DELAYED_WORK_INITIALIZER(rfkill_global_task.dwork,
- 				rfkill_global_task_handler),
- 	.mutex =  __MUTEX_INITIALIZER(rfkill_global_task.mutex),
- 	.lock = __SPIN_LOCK_UNLOCKED(rfkill_global_task.lock),
- };
- 
-+static unsigned long rfkill_ratelimit(const unsigned long last)
-+{
-+	const unsigned long delay = msecs_to_jiffies(RFKILL_OPS_DELAY);
-+	return (time_after(jiffies, last + delay)) ? 0 : delay;
-+};
-+
- static void rfkill_schedule_global_op(enum rfkill_global_sched_op op)
- {
- 	unsigned long flags;
-@@ -113,13 +123,18 @@ static void rfkill_schedule_global_op(enum rfkill_global_sched_op op)
- 	spin_lock_irqsave(&rfkill_global_task.lock, flags);
- 	rfkill_global_task.op = op;
- 	rfkill_global_task.op_count = 1;
--	schedule_work(&rfkill_global_task.work);
-+	if (likely(!delayed_work_pending(&rfkill_global_task.dwork))) {
-+		schedule_delayed_work(&rfkill_global_task.dwork,
-+				rfkill_ratelimit(rfkill_global_task.last));
-+		rfkill_global_task.last = jiffies;
-+	}
- 	spin_unlock_irqrestore(&rfkill_global_task.lock, flags);
- }
- 
- static void rfkill_task_handler(struct work_struct *work)
- {
--	struct rfkill_task *task = container_of(work, struct rfkill_task, work);
-+	struct rfkill_task *task = container_of(work,
-+					struct rfkill_task, dwork.work);
- 
- 	mutex_lock(&task->mutex);
- 
-@@ -132,24 +147,22 @@ static void rfkill_schedule_toggle(struct rfkill_task *task)
- {
- 	unsigned long flags;
- 
--	if (unlikely(work_pending(&rfkill_global_task.work)))
-+	if (unlikely(delayed_work_pending(&rfkill_global_task.dwork)))
- 		return;
- 
- 	spin_lock_irqsave(&task->lock, flags);
+-		/* TODO only one segment */
+-		pci_dma_sync_single_for_cpu(sc->pdev, sc->desc_daddr,
+-				sc->desc_len, PCI_DMA_FROMDEVICE);
 -
--	if (time_after(jiffies, task->last + msecs_to_jiffies(200))) {
--		task->desired_state =
--				rfkill_state_complement(task->desired_state);
-+	task->desired_state = rfkill_state_complement(task->desired_state);
-+	if (likely(!delayed_work_pending(&task->dwork))) {
-+		schedule_delayed_work(&task->dwork,
-+					rfkill_ratelimit(task->last));
- 		task->last = jiffies;
--		schedule_work(&task->work);
+ 		/*
+ 		 * last buffer must not be freed to ensure proper hardware
+ 		 * function. When the hardware finishes also a packet next to
+@@ -1772,8 +1768,6 @@ ath5k_tasklet_rx(unsigned long data)
+ 				goto next;
+ 		}
+ accept:
+-		pci_dma_sync_single_for_cpu(sc->pdev, bf->skbaddr,
+-				rs.rs_datalen, PCI_DMA_FROMDEVICE);
+ 		pci_unmap_single(sc->pdev, bf->skbaddr, sc->rxbufsize,
+ 				PCI_DMA_FROMDEVICE);
+ 		bf->skb = NULL;
+@@ -1861,9 +1855,6 @@ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
+ 	list_for_each_entry_safe(bf, bf0, &txq->q, list) {
+ 		ds = bf->desc;
+ 
+-		/* TODO only one segment */
+-		pci_dma_sync_single_for_cpu(sc->pdev, sc->desc_daddr,
+-				sc->desc_len, PCI_DMA_FROMDEVICE);
+ 		ret = sc->ah->ah_proc_tx_desc(sc->ah, ds, &ts);
+ 		if (unlikely(ret == -EINPROGRESS))
+ 			break;
+@@ -2036,8 +2027,6 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+ 		ATH5K_WARN(sc, "beacon queue %u didn't stop?\n", sc->bhalq);
+ 		/* NB: hw still stops DMA, so proceed */
  	}
--
- 	spin_unlock_irqrestore(&task->lock, flags);
- }
+-	pci_dma_sync_single_for_cpu(sc->pdev, bf->skbaddr, bf->skb->len,
+-			PCI_DMA_TODEVICE);
  
- #define DEFINE_RFKILL_TASK(n, t)				\
- 	struct rfkill_task n = {				\
--		.work = __WORK_INITIALIZER(n.work,		\
-+		.dwork = __DELAYED_WORK_INITIALIZER(n.dwork,	\
- 				rfkill_task_handler),		\
- 		.type = t,					\
- 		.mutex = __MUTEX_INITIALIZER(n.mutex),		\
+ 	ath5k_hw_put_tx_buf(ah, sc->bhalq, bf->daddr);
+ 	ath5k_hw_tx_start(ah, sc->bhalq);
 -- 
 1.5.6.2
 
