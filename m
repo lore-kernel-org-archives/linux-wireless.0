@@ -1,83 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40873 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752284AbYGASCS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 14:02:18 -0400
-Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Received: from mx1.redhat.com ([66.187.233.31]:53063 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755554AbYGOSEm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jul 2008 14:04:42 -0400
+Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
+From: Dan Williams <dcbw@redhat.com>
+To: Nicolas Pitre <nico@cam.org>
 Cc: Michael Buesch <mb@bu3sch.de>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
-	Larry Finger <larry.finger@lwfinger.net>,
+	Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <20080701173345.GA24605@khazad-dum.debian.net>
-References: <6cf6b73e0807010255x1f2d8a21m8ed3e712012ea757@mail.gmail.com>
-	 <200807011227.15805.mb@bu3sch.de>
-	 <20080701143439.GA6962@khazad-dum.debian.net>
-	 <1214923097.3462.0.camel@johannes.berg>
-	 <20080701165036.GB6962@khazad-dum.debian.net>
-	 <1214931676.3462.5.camel@johannes.berg>
-	 <20080701173345.GA24605@khazad-dum.debian.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-q+9WBQNg7SQEWQiCMk9I"
-Date: Tue, 01 Jul 2008 20:01:31 +0200
-Message-Id: <1214935291.3462.7.camel@johannes.berg> (sfid-20080701_200222_029864_3BBA8EB3)
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	lkml <linux-kernel@vger.kernel.org>
+In-Reply-To: <1216144711.13411.18.camel@localhost.localdomain>
+References: <20080709190915.GA8238@tuxdriver.com>
+	 <69e28c910807100912h30fcb57fpb4fb48b95c640f77@mail.gmail.com>
+	 <200807101815.27204.mb@bu3sch.de>
+	 <1216142191.6039.113.camel@localhost.localdomain>
+	 <alpine.LFD.1.10.0807151323570.12484@xanadu.home>
+	 <1216144711.13411.18.camel@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 15 Jul 2008 14:02:48 -0400
+Message-Id: <1216144968.13411.22.camel@localhost.localdomain> (sfid-20080715_200447_152805_8A72979E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-q+9WBQNg7SQEWQiCMk9I
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-
-> THIS is very interesting alright...  and it is *extremely* important, so
-> let's triple verify it, shall we?
+On Tue, 2008-07-15 at 13:58 -0400, Dan Williams wrote:
+> On Tue, 2008-07-15 at 13:31 -0400, Nicolas Pitre wrote:
+> > On Tue, 15 Jul 2008, Dan Williams wrote:
+> >=20
+> > > On Thu, 2008-07-10 at 18:15 +0200, Michael Buesch wrote:
+> > > > On Thursday 10 July 2008 18:12:32 Stefanik G=C3=A1bor wrote:
+> > > > > Some other topics which might be of interest/good to include:
+> > > > > - New chipsets needing drivers (SiS 16x, Marvell, etc.)
+> > > >=20
+> > > > I have no idea what to discuss about non-existing drivers, real=
+ly.
+> > > > Something like: "Do we need that driver? Everyone votes YES and=
+ is happy"?
+> > >=20
+> > > Maybe during the week we could organize some hackfests to work on=
+ the
+> > > Marvell/SiS/etc mac80211 drivers?  Everyone bring their favorite
+> > > non-working Marvell 88w83xx card and we make mrv8k our bitch or
+> > > something like that.
+> >=20
+> > FYI...
+> >=20
+> > Lennert Buytenhek and I are writing a GPL driver for mv8300 class o=
+f=20
+> > Marvell WIFI chips right now, present and future versions. This is=20
+> > Marvell work as we work for Marvell.  I have access to firmware sou=
+rces,=20
+> > etc. but obviously cannot share them.
+> >=20
+> > We both will be in Ottawa next week.
 >=20
-> Please hack the driver to try to transmit data with that bit set to high,=
- and
-> also with that bit set to low.  The best way to go about it is probably t=
-o
-> disable the rfkill support (so that it doesn't get in the way), hack the
-> check-the-bit function to just printk its state, and see if the radio can
-> effectively transmit and communicate no matter what state the input pin i=
-s
-> at.
+> Great!  Lets definitely sit down and talk then.  There is already som=
+e
+> GPL-ed source code for 83xx chips out there but it always used net802=
+11,
+> not mac80211.  So the mrv8k effort is meant to write a mac80211 drive=
+r
+> for 8310/8335/etc and perhaps TopDog chips too since they don't seem
+> that much different from a driver perspective.
 >=20
-> This is very important.  It will caracterize that input pin as either an
-> hardware rfkill line, or as an input device (in which case I would be wro=
+> Some of the issues with the current Marvell 83xx GPL drivers that hav=
+e
+> gotten out are (a) code style, (b) lots of commented out stuff that's
+> never used, (c) OS abstraction that's unnecessary on Linux, (d) doesn=
+'t
+> use mac80211, and (e) uses private ioctls.  So hopefully you're writi=
 ng
-> when I asked to remove the input support from b43, but one step at a time=
-).
+> a new 83xx driver from scratch :)
+>=20
+> We cleaned up a lot of stuff for the OLPC 8388 libertas driver, but
+> unfortunately we never were able to get the Marvell 8388 team onboard=
+,
+> and so they just went off and kept working on their driver and didn't
+> really move the upstream libertas driver forward at all.
 
-Sorry, no, I think I got confused, it should be a hardware rfkill line.
+=46orgot to finish this last bit...
 
-johannes
+So hopefully that won't happen here, since this would be pretty much th=
+e
+same situation up to this point.  Ideally you can get the internal
+Marvell developers onboard so we're all working on essentially the same
+bits, exactly like Intel has done.  Yeah, they develop on private trees
+internally but at the end of the day, their base code is the same
+upstream base code everyone else uses.
 
---=-q+9WBQNg7SQEWQiCMk9I
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Dan
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIanD3AAoJEKVg1VMiehFYQxYP/19YoNWLUn0jWDkdP3NUk0PC
-IblT6k0mQx3fSeen39TtDyxdSXXOnXGlqJNSsLgPQks1cYYj8bvjODESFNH3QoXh
-T6I7Ovv3uUFKKEWkKZ+nXrKdN0nfS0eGYYx7zOOuIom9V9WqigDmuCATwRRNtiBd
-9kwwVF2AGRbWkE/1MMyxQCoU3e6XgxEexYPYsHn8XGhpB1SNPlpQGoQ0961IVDQG
-0RqEkPE/saxgG1+34ad1G+ret+WJ31k54hDM7Ab9Yd5N2JYeKxdTFG3wmEMHXLto
-qpdpZARRrJrAn8yBGU13BirU8os7zWSCc+lWsBRt/fQL2pz574DPur7B0hGFRhxI
-Na8nsU0yHHUqT7aplTFP+YU1Ne+B0+wzL8HstXryAQH5LmlcQ2lUsw9Dir//z3Zw
-WgBa8Efy+k8oFKjFQYOyk+P1vHcoYPQpr+rApxqcul/oOzb3urxbz9pbrwVzRM96
-oHzNcubdlS+KODswIHOZeRMbmhm34yTEAD6bnRgkiMG4WH7RTGtT3Bbdj0SiFQT5
-3TojwXxI8nUR1paQZPOmjB3zUYW/lYUDCEa80U4Y5ls5eWRBR2bvJs9WCjYBLtZp
-0Yfesx6/jeTyWiqdqdKKBj6bmUlLrKd9edzqGQiZKPINNnTA2QR+/QPezYTnboB9
-nPd81S0hNrh7dK1Y0rQ3
-=DjhH
------END PGP SIGNATURE-----
-
---=-q+9WBQNg7SQEWQiCMk9I--
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
