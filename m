@@ -1,116 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:14440 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753828AbYGSODV (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49893 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754867AbYGOIlI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2008 10:03:21 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so250603nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2008 07:03:20 -0700 (PDT)
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 4/5] rt2x00: Large vendor requests for rt73usb firmware upload and beacons
-Date: Sat, 19 Jul 2008 16:17:16 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	Iwo Mergler <iwo@call-direct.com.au>
-References: <200807191615.22752.IvDoorn@gmail.com> <200807191616.13129.IvDoorn@gmail.com> <200807191616.54313.IvDoorn@gmail.com>
-In-Reply-To: <200807191616.54313.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200807191617.16820.IvDoorn@gmail.com> (sfid-20080719_160324_653593_6E479C84)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Tue, 15 Jul 2008 04:41:08 -0400
+Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by
+	low level driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Kalle Valo <kalle.valo@nokia.com>, linville@tuxdriver.com,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240807150129v4906b7bcyba66ab62b57c5d71@mail.gmail.com> (sfid-20080715_102953_982307_5BF8D17D)
+References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
+	 <1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
+	 <1216039127.11189.15.camel@johannes.berg>
+	 <1ba2fa240807140546w4f08e32l59ed88dfa1b86403@mail.gmail.com>
+	 <87fxqcoaue.fsf@nokia.com> <1216109543.23746.21.camel@johannes.berg>
+	 <1ba2fa240807150129v4906b7bcyba66ab62b57c5d71@mail.gmail.com>
+	 (sfid-20080715_102953_982307_5BF8D17D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Pxi/pStDFwjHtQVlsfR7"
+Date: Tue, 15 Jul 2008 10:41:01 +0200
+Message-Id: <1216111261.3535.7.camel@johannes.berg> (sfid-20080715_104113_162448_2594C528)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Iwo Mergler <iwo@call-direct.com.au>
 
-Switches rt73usb to use large vendor requests for firmware
-and beacons. This also fixes the garbled beacon bug.
+--=-Pxi/pStDFwjHtQVlsfR7
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Iwo Mergler <Iwo@call-direct.com.au>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00usb.h |    1 -
- drivers/net/wireless/rt2x00/rt73usb.c   |   40 +++++++------------------------
- 2 files changed, 9 insertions(+), 32 deletions(-)
+On Tue, 2008-07-15 at 11:29 +0300, Tomas Winkler wrote:
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.h b/drivers/net/wireless/rt2x00/rt2x00usb.h
-index 8d5d427..ee3875f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
-@@ -71,7 +71,6 @@
-  * Cache size
-  */
- #define CSR_CACHE_SIZE			64
--#define CSR_CACHE_SIZE_FIRMWARE		64
- 
- /*
-  * USB request types.
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 34c6ff2..26265c7 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -890,9 +890,6 @@ static int rt73usb_load_firmware(struct rt2x00_dev *rt2x00dev, void *data,
- 	unsigned int i;
- 	int status;
- 	u32 reg;
--	char *ptr = data;
--	char *cache;
--	int buflen;
- 
- 	/*
- 	 * Wait for stable hardware.
-@@ -911,31 +908,12 @@ static int rt73usb_load_firmware(struct rt2x00_dev *rt2x00dev, void *data,
- 
- 	/*
- 	 * Write firmware to device.
--	 * We setup a seperate cache for this action,
--	 * since we are going to write larger chunks of data
--	 * then normally used cache size.
- 	 */
--	cache = kmalloc(CSR_CACHE_SIZE_FIRMWARE, GFP_KERNEL);
--	if (!cache) {
--		ERROR(rt2x00dev, "Failed to allocate firmware cache.\n");
--		return -ENOMEM;
--	}
--
--	for (i = 0; i < len; i += CSR_CACHE_SIZE_FIRMWARE) {
--		buflen = min_t(int, len - i, CSR_CACHE_SIZE_FIRMWARE);
--
--		memcpy(cache, ptr, buflen);
--
--		rt2x00usb_vendor_request(rt2x00dev, USB_MULTI_WRITE,
--					 USB_VENDOR_REQUEST_OUT,
--					 FIRMWARE_IMAGE_BASE + i, 0,
--					 cache, buflen,
--					 REGISTER_TIMEOUT32(buflen));
--
--		ptr += buflen;
--	}
--
--	kfree(cache);
-+	rt2x00usb_vendor_request_large_buff(rt2x00dev, USB_MULTI_WRITE,
-+					    USB_VENDOR_REQUEST_OUT,
-+					    FIRMWARE_IMAGE_BASE,
-+					    data, len,
-+					    REGISTER_TIMEOUT32(len));
- 
- 	/*
- 	 * Send firmware request to device to load firmware,
-@@ -1374,10 +1352,10 @@ static void rt73usb_write_beacon(struct queue_entry *entry)
- 	 * Write entire beacon with descriptor to register.
- 	 */
- 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
--	rt2x00usb_vendor_request(rt2x00dev, USB_MULTI_WRITE,
--				 USB_VENDOR_REQUEST_OUT, beacon_base, 0,
--				 entry->skb->data, entry->skb->len,
--				 REGISTER_TIMEOUT32(entry->skb->len));
-+	rt2x00usb_vendor_request_large_buff(rt2x00dev, USB_MULTI_WRITE,
-+					    USB_VENDOR_REQUEST_OUT, beacon_base,
-+					    entry->skb->data, entry->skb->len,
-+					    REGISTER_TIMEOUT32(entry->skb->len));
- 
- 	/*
- 	 * Clean up the beacon skb.
--- 
-1.5.6.1
+> We are providing power save user interface reach enough to specify all
+> the above requirements.
+> I think you are both misinterpreting listen interval meaning.
+> Listen interval merely says to AP for how many beacons save direct
+> packets for this STA. It doesn't mean
+> it's can be shorter and it  does say it's won't be longer.=20
+
+Right, but it does make sense to advertise what we're using, and this
+patch just adds a strict "driver tells mac80211 what it's using" flow.
+That's mostly what I'm objecting to. If you were calling the variable
+"max_listen_interval" and having mac80211 send it back to the driver in
+the BSS config as bssconf->listen_interval, and, for now, simply use the
+max, I wouldn't have a problem with it.
+
+> It's
+> doesn't affect power save dynamics it's just sets upper limit.
+> This value for iwlwifi hw is derived from maximal supported  beacon
+> interval and size of the internal HW timers.
+> This value is hard coded in the driver.
+
+Shouldn't it depend on the beacon interval then?
+
+johannes
+
+--=-Pxi/pStDFwjHtQVlsfR7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIfGKZAAoJEKVg1VMiehFYV9oP/3yhlvw/9Nj9SiIbAy40rBT3
+FsB4ZCfYIBd5By0YZcVgDpfqes6SXWY6vbG9YcY0q1Fc1fniTlv2DCem7GIUZIyh
+dafGnNNM6omziYWM3qTa5gjzGu8Qlfabzkd/H7oVlCLrLNX7IKv0kW3A6Vb4SVg5
+LYFfUlA/8/hqrpi5osIR6rEe4ZkuL8PimbeMh5BgDZoVc+au+sTAKGZz9lcmCCCO
+sF7FAIf6SqriDd5OEVSAQ6xjShreTZ5RTBuLbfTMvcbGdghCqKMX7U7CYzAC8V4H
+PLgLiUh2Srw9km/Mzt87O5/k+p8kzXV6iJoLBRdgNDlsGEjeCgdy1aTDGxGA87cG
+9EyuOqAZyOxgBQhOP4AavfjDAHv1mYaEFDr19a4nTlLfyGH66naM3rSLpcRYLfmB
+d8vdCx+7OOXCLaIa+cJWOb+27BdeTRWTtUAmnkipAcwa+2F8DLIrxAj1N/aa4Xx2
+tilG91MC2V8ay8G47ypN3Ens7sGOMmGvUjWNdz7FtKYrcmYBnbOu3b1dwglYkqlI
+/NnXlQk11n7+mTP+LOpdtkkCGV81+52EQxk2pgk4AiBhPZIiyfzqq/Lr6atU3Qv2
+whhDRSynMBky9sqw33cb+ibxFF+Rlq/UYcMOsuX/XjHuqJTop9Ma3LGh4gk9FYzQ
+nyteq3A7X141N7wyLyly
+=9rzO
+-----END PGP SIGNATURE-----
+
+--=-Pxi/pStDFwjHtQVlsfR7--
 
