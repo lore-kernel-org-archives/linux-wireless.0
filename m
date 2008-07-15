@@ -1,52 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:36399
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750975AbYGNMAL (ORCPT
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:59762 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758394AbYGOTcO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 08:00:11 -0400
-Date: Mon, 14 Jul 2008 05:00:11 -0700 (PDT)
-Message-Id: <20080714.050011.186100773.davem@davemloft.net> (sfid-20080714_140016_388254_F2E3CD73)
-To: jarkao2@gmail.com
-Cc: netdev@vger.kernel.org, vinay@linux.vnet.ibm.com,
-	krkumar2@in.ibm.com, mchan@broadcom.com, Matheos.Worku@Sun.COM,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 11/39]: netdev: Move next_sched into struct
- netdev_queue.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080714114913.GA4504@ff.dom.local>
-References: <20080703.000333.199735542.davem@davemloft.net>
-	<20080714114913.GA4504@ff.dom.local>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 15 Jul 2008 15:32:14 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Ivo van Doorn <IvDoorn@gmail.com>
+Subject: [PATCH 4/4] rfkill: mutex fixes
+Date: Tue, 15 Jul 2008 16:32:07 -0300
+Message-Id: <1216150327-10904-5-git-send-email-hmh@hmh.eng.br> (sfid-20080715_213219_075147_2C501B81)
+In-Reply-To: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br>
+References: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jarek Poplawski <jarkao2@gmail.com>
-Date: Mon, 14 Jul 2008 11:49:13 +0000
+There are two mutexes in rfkill:
 
-> On 03-07-2008 09:03, David Miller wrote:
-> > We schedule queues, not the device, for output queue
-> > processing in BH.
-> > 
-> ...
-> > diff --git a/net/core/dev.c b/net/core/dev.c
-> > index 8e38948..c5e3532 100644
-> > --- a/net/core/dev.c
-> > +++ b/net/core/dev.c
-> > @@ -1323,13 +1323,14 @@ static void dev_queue_xmit_nit(struct sk_buff *skb, struct net_device *dev)
-> >  void __netif_schedule(struct net_device *dev)
-> >  {
-> >  	if (!test_and_set_bit(__LINK_STATE_SCHED, &dev->state)) {
-> 
-> Isn't this bit supposed to be set/tested per queue as well, or do I
-> miss something?
+rfkill->mutex, which protects some of the fields of a rfkill struct, and is
+also used for callback serialization.
 
-That shoule not happen until my later patches which switch that all
-over.
+rfkill_mutex, which protects the global state, the list of registered
+rfkill structs and rfkill->claim.
 
-See patch 5/13 which I posted on Thursday, Jul 10.  That's when the
-transition from "global queue state + per-queue state" into "only
-per-queue state" happens.
+Make sure to use the correct mutex, and to not miss locking rfkill->mutex
+even when we already took rfkill_mutex.
 
-Until that point, we have to keep the existing quasi-multi-queue
-semantics in order to not break drivers etc.
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ net/rfkill/rfkill.c |   29 +++++++++++++++++++----------
+ 1 files changed, 19 insertions(+), 10 deletions(-)
+
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index fc3a4fd..ac205ec 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -150,7 +150,7 @@ static void update_rfkill_state(struct rfkill *rfkill)
+  * even if the radio is in RFKILL_STATE_HARD_BLOCKED state, so as to
+  * give the driver a hint that it should double-BLOCK the transmitter.
+  *
+- * Caller must have aquired rfkill_mutex.
++ * Caller must have acquired rfkill->mutex.
+  */
+ static int rfkill_toggle_radio(struct rfkill *rfkill,
+ 				enum rfkill_state state,
+@@ -216,8 +216,11 @@ void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
+ 	rfkill_states[type] = state;
+ 
+ 	list_for_each_entry(rfkill, &rfkill_list, node) {
+-		if ((!rfkill->user_claim) && (rfkill->type == type))
++		if ((!rfkill->user_claim) && (rfkill->type == type)) {
++			mutex_lock(&rfkill->mutex);
+ 			rfkill_toggle_radio(rfkill, state, 0);
++			mutex_unlock(&rfkill->mutex);
++		}
+ 	}
+ 
+ 	mutex_unlock(&rfkill_mutex);
+@@ -228,7 +231,7 @@ EXPORT_SYMBOL(rfkill_switch_all);
+  * rfkill_epo - emergency power off all transmitters
+  *
+  * This kicks all rfkill devices to RFKILL_STATE_SOFT_BLOCKED, ignoring
+- * everything in its path but rfkill_mutex.
++ * everything in its path but rfkill_mutex and rfkill->mutex.
+  */
+ void rfkill_epo(void)
+ {
+@@ -236,7 +239,9 @@ void rfkill_epo(void)
+ 
+ 	mutex_lock(&rfkill_mutex);
+ 	list_for_each_entry(rfkill, &rfkill_list, node) {
++		mutex_lock(&rfkill->mutex);
+ 		rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
++		mutex_unlock(&rfkill->mutex);
+ 	}
+ 	mutex_unlock(&rfkill_mutex);
+ }
+@@ -372,6 +377,9 @@ static ssize_t rfkill_claim_store(struct device *dev,
+ 	if (!capable(CAP_NET_ADMIN))
+ 		return -EPERM;
+ 
++	if (rfkill->user_claim_unsupported)
++		return -EOPNOTSUPP;
++
+ 	/*
+ 	 * Take the global lock to make sure the kernel is not in
+ 	 * the middle of rfkill_switch_all
+@@ -380,19 +388,17 @@ static ssize_t rfkill_claim_store(struct device *dev,
+ 	if (error)
+ 		return error;
+ 
+-	if (rfkill->user_claim_unsupported) {
+-		error = -EOPNOTSUPP;
+-		goto out_unlock;
+-	}
+ 	if (rfkill->user_claim != claim) {
+-		if (!claim)
++		if (!claim) {
++			mutex_lock(&rfkill->mutex);
+ 			rfkill_toggle_radio(rfkill,
+ 					    rfkill_states[rfkill->type],
+ 					    0);
++			mutex_unlock(&rfkill->mutex);
++		}
+ 		rfkill->user_claim = claim;
+ 	}
+ 
+-out_unlock:
+ 	mutex_unlock(&rfkill_mutex);
+ 
+ 	return error ? error : count;
+@@ -521,8 +527,11 @@ static void rfkill_remove_switch(struct rfkill *rfkill)
+ {
+ 	mutex_lock(&rfkill_mutex);
+ 	list_del_init(&rfkill->node);
+-	rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
+ 	mutex_unlock(&rfkill_mutex);
++
++	mutex_lock(&rfkill->mutex);
++	rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
++	mutex_unlock(&rfkill->mutex);
+ }
+ 
+ /**
+-- 
+1.5.6.2
+
