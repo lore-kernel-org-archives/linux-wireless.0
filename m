@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.249]:33409 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750838AbYGXHFn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2008 03:05:43 -0400
-Received: by an-out-0708.google.com with SMTP id d40so608346and.103
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2008 00:05:42 -0700 (PDT)
-Message-ID: <43e72e890807240005j5d37d7eat73f571288ea7a00b@mail.gmail.com> (sfid-20080724_090547_584889_6FE35D41)
-Date: Thu, 24 Jul 2008 00:05:42 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: [ath5k-devel] AR5418 works with ath9k
-Cc: "Davide Pesavento" <davidepesa@gmail.com>,
-	ath9k-devel@lists.ath9k.org, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1216870929.30436.34.camel@dv>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <2da21fe50807221453m5275f59dj7369da5e667815d7@mail.gmail.com>
-	 <43e72e890807230513u81e68aaj443110d734161368@mail.gmail.com>
-	 <1216870929.30436.34.camel@dv>
+Received: from mx1.redhat.com ([66.187.233.31]:46298 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754815AbYGORSW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jul 2008 13:18:22 -0400
+Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
+From: Dan Williams <dcbw@redhat.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <200807101815.27204.mb@bu3sch.de>
+References: <20080709190915.GA8238@tuxdriver.com>
+	 <69e28c910807100912h30fcb57fpb4fb48b95c640f77@mail.gmail.com>
+	 <200807101815.27204.mb@bu3sch.de>
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 15 Jul 2008 13:16:31 -0400
+Message-Id: <1216142191.6039.113.camel@localhost.localdomain> (sfid-20080715_191837_630080_302C802F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 23, 2008 at 8:42 PM, Pavel Roskin <proski@gnu.org> wrote:
-> On Wed, 2008-07-23 at 05:13 -0700, Luis R. Rodriguez wrote:
->> > Maybe MacBook Pro's card has different eeprom's contents? Anyway the
->> > card now works fine, and it also appears quite stable! ;-)
->> > Thank you very much for your work!
->>
->> I believe your last patch may have been "Use skb_end_pointer() ..." if
->> so then this is why you had this issue. Give the git tree a shot:
->>
->> git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/ath9k.git
->
-> Luis, I'm afraid that code is still wrong.  It used to be min(), but now
-> it's essentially max().  You wrote that there was an error in my patch
-> and I agreed, but we were talking of different errors, I'm afraid.
->
-> Since you have touched the code after me and you know more about the
-> hardware, I would prefer that you fix it and recheck everything once
-> again.
->
-> Here's the patch.  I don't feel comfortable about describing things I
-> don't fully understand.
+On Thu, 2008-07-10 at 18:15 +0200, Michael Buesch wrote:
+> On Thursday 10 July 2008 18:12:32 Stefanik G=C3=A1bor wrote:
+> > Some other topics which might be of interest/good to include:
+> > - New chipsets needing drivers (SiS 16x, Marvell, etc.)
+>=20
+> I have no idea what to discuss about non-existing drivers, really.
+> Something like: "Do we need that driver? Everyone votes YES and is ha=
+ppy"?
 
-Pavel, you are correct, thanks for the new fix. I'll arrange so that
-the patch that goes in only fixes this once on wireless-testing.
+Maybe during the week we could organize some hackfests to work on the
+Marvell/SiS/etc mac80211 drivers?  Everyone bring their favorite
+non-working Marvell 88w83xx card and we make mrv8k our bitch or
+something like that.
 
-  Luis
+Dan
+
+> > - Radiotap enhancements
+>=20
+> What radiotap enhancements specifically? If it's just a field or a bi=
+t
+> to add, just mail the radiotap people. I think there's no need to dis=
+cuss that
+> (except for with the radiotap people on their mailinglist).
+>=20
+> > - Userspace MLME: Plans and status
+>=20
+> Already on the list.
+>=20
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
