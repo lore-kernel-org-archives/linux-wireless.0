@@ -1,77 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60934 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:42350 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752743AbYG3HRk (ORCPT
+	with ESMTP id S1753853AbYGOJhE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 03:17:40 -0400
-Subject: Re: [PATCH] mac80211: fix mesh beaconing
+	Tue, 15 Jul 2008 05:37:04 -0400
+Subject: Re: TXQ real_num_tx_queues comments/questions
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <488f5b87.1636440a.2c8e.ffffb08d@mx.google.com> (sfid-20080729_200354_178638_CEB54BE0)
-References: <488f5b87.1636440a.2c8e.ffffb08d@mx.google.com>
-	 (sfid-20080729_200354_178638_CEB54BE0)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gXPE8Vm7Vo1aKXkblr5M"
-Date: Wed, 30 Jul 2008 09:17:36 +0200
-Message-Id: <1217402256.10489.85.camel@johannes.berg> (sfid-20080730_091756_201183_91B8B065)
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20080715.022854.55875400.davem@davemloft.net>
+References: <1215769627.3483.107.camel@johannes.berg>
+	 <20080715.021637.103260952.davem@davemloft.net>
+	 <1216113923.3535.14.camel@johannes.berg>
+	 <20080715.022854.55875400.davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JrPZzy9lLpE7gY2+S9VF"
+Date: Tue, 15 Jul 2008 11:37:01 +0200
+Message-Id: <1216114621.3535.18.camel@johannes.berg> (sfid-20080715_113714_231774_BE0DAD17)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-gXPE8Vm7Vo1aKXkblr5M
+--=-JrPZzy9lLpE7gY2+S9VF
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2008-07-29 at 19:59 +0200, Luis Carlos Cobo wrote:
-> This patch fixes mesh beaconing, which was broken by commit 1d22d3f6e3b (=
-revamp
-> beacon configuration).
-
-Thanks.
-
-> Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-> ---
->  net/mac80211/mlme.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
+On Tue, 2008-07-15 at 02:28 -0700, David Miller wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Tue, 15 Jul 2008 11:25:23 +0200
 >=20
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 8f51375..9c451eb 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -3303,6 +3303,7 @@ void ieee80211_start_mesh(struct net_device *dev)
->  	ifsta =3D &sdata->u.sta;
->  	ifsta->state =3D IEEE80211_MESH_UP;
->  	ieee80211_sta_timer((unsigned long)sdata);
-> +	ieee80211_if_config(sdata, IEEE80211_IFCC_BEACON);
->  }
->  #endif
-> =20
+> > > It seems to me that a simple synchronize_net() call near the end of
+> > > agg queue removal would solve your problem as-is, wouldn't it?
+> >=20
+> > Well, as far as I can tell we can't do that there because it's in
+> > tasklet context/called under spinlocks so it has to be atomic. I think.
+>=20
+> Right, my bad.
 
---=-gXPE8Vm7Vo1aKXkblr5M
+Also, I don't actually think it is sufficient since select_queue isn't
+called under rcu lock, so even if we synchronize_net() somewhere there
+we can still end up not having waited long enough, no?
+
+> It seems that there can end up being holes in the queue
+> space on mac80211, which slightly complicates matters.
+
+Yes, but why does it complicate matters? From mac80211's POV it's just
+that select_queue must have known about the removed queue when the
+requeue is done. And we can defer the requeue to a workqueue.
+
+johannes
+
+--=-JrPZzy9lLpE7gY2+S9VF
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIkBWMAAoJEKVg1VMiehFYkS8P/1fHEzIIjsCudaAWUc2c+TRH
-0nZlPyrtxQEX3npW32jOfpsYAQyfJv6lIfXgk2EH1ftKWXN1RXqukl8dngigITOL
-4+FNHCDPrPGM4frfJiFXSxxdVww2gCQNU9liEnhlCWhmiilmgYLITqvDJ8sPqaAO
-iNCzt3I6FWge7zhGsSWpI+TOTlZCDbfLRqFEIqE6D1zlrzXh+KJv1kYeeXo5MbJS
-J6ucS1lrjtx34cYap11Ey1M/3C2BUN0x0zuYlqh8BYmyqsEmIxrk/+lpPg7CiYOm
-9smn5cqc+UVoqg/qrp5TC3gN6j4rjRkY7cDBHlXpnBlRQZF5O6Qc1j6H6XevfERV
-JqEK6EhTQ2LJfcZUgaciTdKq7SSzcGgCvbNOc0x8ZkzrSaj0Sc/zDpyQnJhXv+hm
-3cISfNgfFXoDngGZsT5T8PZImJWaw7JHnvlgVs1UY29aXW976PUf9R3QV5vQ8/DD
-PODAdMLoL+ltym+TF0kADA0LwEoUqh+zxQ5/wwNed1y8T2/nxq8BnAMqxahxyjmI
-vSL+cCQ5LS+b+ygMNlFcoGulqX5tL2Bi4xo9Ad8BQdYUxBYwydVenMxYlt1DpERn
-U9t44hUaCzAav/bZ8e4U+cIG7EgVzgLGEQiP5mAxrbGK7N9qOfimcsAyHZ7QZ3c1
-8pBm04i81L0eN7izUT/6
-=HMJR
+iQIcBAABAgAGBQJIfG+5AAoJEKVg1VMiehFYPVIP/RFO0w0Xw5RYsbOgOHyEHAHP
+I/iJ3oi1vQdOvTK2aymo/ZiDjRAEWpveWpioPbhdwg7XJGddXncgSA3vXPcOSHR3
+VaCad0DTM0IdimQGSUbs3j28hWThiTEbbUJVV36QGo99q+dup9yTPSYTX/607Pt9
+2ktND/pRkLhyCk/i8KBRm7aE/Vsbh8rT7H7NcDiJDAr+6e3M7mtPajE1V+Flz7mF
+p6ww6pLWNr/wG31kS92ZB510aI/+0OjwraSWceYXq5Q8SajL18XtS7A04UxmfnDo
+YsDjmxkrynBFAmCDGBc18NKgNL16T9HP/EEHeiMpWVfKmTNo879BqsHBPn9iY2Sk
+KiwHxGwyYN78buCqEFvK7XxKWL7SHJRwF+fHZ4zbEvl6JblPMK5mY0nJTdXhX1PM
+hGCQRkL21j5ANoT8p7JnyKxuRJrCP6QSv3c/P8zrEWqBPQhaHVKjRHFUWb5WAC7l
+BRnOjYFoVfecjF0UH6jK9yFPuRY9CH5I2btVEtGRxuB900AhOgdVuDYLRJMDwagA
+zwO6s9dbz0AWVeCkS5Gdh56X7Wq9zKqSwJIRjxauJg4cg4VotFINstIRMp81LRsk
+kvE2WacuKcDbwnq00QFoYNzM5hj12AeXeJLWCCaWC4s2EWnKTAbiWuG/aPBhqJ4u
+KybqWJQqgNzQzk+WAQr7
+=AZe8
 -----END PGP SIGNATURE-----
 
---=-gXPE8Vm7Vo1aKXkblr5M--
+--=-JrPZzy9lLpE7gY2+S9VF--
 
