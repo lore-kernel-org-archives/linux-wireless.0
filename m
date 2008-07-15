@@ -1,125 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:54091 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752040AbYGRF42 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 01:56:28 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 08/13] iwlwifi: move iwl4965_set_pwr_src to iwl4965-base.c
-Date: Fri, 18 Jul 2008 13:53:04 +0800
-Message-Id: <1216360389-5352-9-git-send-email-yi.zhu@intel.com> (sfid-20080718_075631_927997_7259E736)
-In-Reply-To: <1216360389-5352-8-git-send-email-yi.zhu@intel.com>
-References: <1216360389-5352-1-git-send-email-yi.zhu@intel.com>
- <1216360389-5352-2-git-send-email-yi.zhu@intel.com>
- <1216360389-5352-3-git-send-email-yi.zhu@intel.com>
- <1216360389-5352-4-git-send-email-yi.zhu@intel.com>
- <1216360389-5352-5-git-send-email-yi.zhu@intel.com>
- <1216360389-5352-6-git-send-email-yi.zhu@intel.com>
- <1216360389-5352-7-git-send-email-yi.zhu@intel.com>
- <1216360389-5352-8-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:54820 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754220AbYGOISc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jul 2008 04:18:32 -0400
+Subject: Re: [PATCH 1/1] mac80211: add direct probe before association
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1216076865-9826-1-git-send-email-tomas.winkler@intel.com>
+References: <1216076865-9826-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-uk7FI3rQl89orTL/0qFc"
+Date: Tue, 15 Jul 2008 10:18:22 +0200
+Message-Id: <1216109902.23746.27.camel@johannes.berg> (sfid-20080715_101840_165250_E11BDC8E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
 
-This patch moves iwl4965_set_pwr_src to iwl4965-base.c.
+--=-uk7FI3rQl89orTL/0qFc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c     |   33 ---------------------------
- drivers/net/wireless/iwlwifi/iwl4965-base.c |   31 +++++++++++++++++++++++++
- 2 files changed, 31 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 32baeb2..1463421 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -341,39 +341,6 @@ err:
- 	return -EINVAL;
- 
- }
--int iwl4965_set_pwr_src(struct iwl_priv *priv, enum iwl_pwr_src src)
--{
--	int ret;
--	unsigned long flags;
--
--	spin_lock_irqsave(&priv->lock, flags);
--	ret = iwl_grab_nic_access(priv);
--	if (ret) {
--		spin_unlock_irqrestore(&priv->lock, flags);
--		return ret;
--	}
--
--	if (src == IWL_PWR_SRC_VAUX) {
--		u32 val;
--		ret = pci_read_config_dword(priv->pci_dev, PCI_POWER_SOURCE,
--					    &val);
--
--		if (val & PCI_CFG_PMC_PME_FROM_D3COLD_SUPPORT) {
--			iwl_set_bits_mask_prph(priv, APMG_PS_CTRL_REG,
--					       APMG_PS_CTRL_VAL_PWR_SRC_VAUX,
--					       ~APMG_PS_CTRL_MSK_PWR_SRC);
--		}
--	} else {
--		iwl_set_bits_mask_prph(priv, APMG_PS_CTRL_REG,
--				       APMG_PS_CTRL_VAL_PWR_SRC_VMAIN,
--				       ~APMG_PS_CTRL_MSK_PWR_SRC);
--	}
--
--	iwl_release_nic_access(priv);
--	spin_unlock_irqrestore(&priv->lock, flags);
--
--	return ret;
--}
- 
- /*
-  * Activate/Deactivat Tx DMA/FIFO channels according tx fifos mask
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index e468936..2798ab7 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -1262,6 +1262,37 @@ static void iwl4965_rx_card_state_notif(struct iwl_priv *priv,
- 		wake_up_interruptible(&priv->wait_command_queue);
- }
- 
-+int iwl4965_set_pwr_src(struct iwl_priv *priv, enum iwl_pwr_src src)
-+{
-+	int ret;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&priv->lock, flags);
-+	ret = iwl_grab_nic_access(priv);
-+	if (ret)
-+		goto err;
-+
-+	if (src == IWL_PWR_SRC_VAUX) {
-+		u32 val;
-+		ret = pci_read_config_dword(priv->pci_dev, PCI_POWER_SOURCE,
-+					    &val);
-+
-+		if (val & PCI_CFG_PMC_PME_FROM_D3COLD_SUPPORT)
-+			iwl_set_bits_mask_prph(priv, APMG_PS_CTRL_REG,
-+					       APMG_PS_CTRL_VAL_PWR_SRC_VAUX,
-+					       ~APMG_PS_CTRL_MSK_PWR_SRC);
-+	} else {
-+		iwl_set_bits_mask_prph(priv, APMG_PS_CTRL_REG,
-+				       APMG_PS_CTRL_VAL_PWR_SRC_VMAIN,
-+				       ~APMG_PS_CTRL_MSK_PWR_SRC);
-+	}
-+
-+	iwl_release_nic_access(priv);
-+err:
-+	spin_unlock_irqrestore(&priv->lock, flags);
-+	return ret;
-+}
-+
- /**
-  * iwl4965_setup_rx_handlers - Initialize Rx handler callbacks
-  *
--- 
-1.5.3.6
+> +	ifsta->direct_probe_tries++;
+> +	if (ifsta->direct_probe_tries > IEEE80211_AUTH_MAX_TRIES) {
+> +		printk(KERN_DEBUG "%s: direct probe to AP %s timed out\n",
+> +		       dev->name, print_mac(mac, ifsta->bssid));
+> +		ifsta->state =3D IEEE80211_DISABLED;
+> +		return;
+> +	}
+> +
+> +	printk(KERN_DEBUG "%s: direct probe to AP %s try %d\n",
+> +			dev->name, print_mac(mac, ifsta->bssid),
+> +			ifsta->direct_probe_tries);
+
+I just removed all the log flooding. Don't add it back please.
+
+johannes
+
+--=-uk7FI3rQl89orTL/0qFc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIfF1LAAoJEKVg1VMiehFYMOwP/2B2KFLjyzcDndtTLyp/s1ow
+Yz8CFlXN+2w1kaBBGecBN4TFRXsxRcfIEtb7FTZGy/DzXkxy0UjnS+pG1Gi/7juY
+XBp/9yof/xgBevktZN+gX19Qn0L9HT2sl3LJ3BjOcJGSTm8INYYKJTZPe6LqvbWJ
+9ClAcjbV6KXaTFF8+D9Tn6mLMV+qkoj9+sNHI+odOf+kd+zQwtw5Za8/XAtlhqu6
+bgHaLxvFFX/nPbhMrejrk9Sbea09+gUAfoGcXYGrSh2sBhfGNCnXMDa7fzQyYS8f
+CSw9D5kBuEvIUT9XWxCrzgvlQj5gefcGJ2UAXrm4rNuItIkFFTop2CUs5Iz0FnOI
+zJ5lsPm4JW/fGvuOnfdlLJMbXmOuShqxG5bqV4FOA14IAeX3WLsAS4607+6hk7nf
+SEAgMKBZPNdVbo8D5L03nciCfiippvR9aaFvS1h9mdA9nL2AF83qbzP5A9094pht
+dg8blI5RClDRYglNkyskrt+N1ojsTTZFwkAiNE2HO4hg9KAvICLaL5MgSQ8WCTLF
+LXh64eKvbFMH2VbhDtktRjn70UqpnmfK8GYR1yMxqTBWX2RinSkiXXBkrS6ZmkNT
+pBfDsKd9kzIXKsaOkQ9PtiIfO50LncS1UA13xckRdIsG+aSSHxLHrjpfc86p7ty6
+RbxJmuw6tid6MrhY8YI2
+=Nkao
+-----END PGP SIGNATURE-----
+
+--=-uk7FI3rQl89orTL/0qFc--
 
