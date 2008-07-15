@@ -1,77 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49783 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752468AbYGETh1 (ORCPT
+Received: from smtp.wellnetcz.com ([212.24.148.102]:59196 "EHLO
+	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750809AbYGOPqf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jul 2008 15:37:27 -0400
-Subject: Re: [Rt2400-devel] [PATCH] rt2x00: Fix NULL pointer error
-	in	adhoc/master mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Bryan Batten <BryanBatten@sbcglobal.net>, linville@tuxdriver.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200807052137.59412.IvDoorn@gmail.com> (sfid-20080705_213128_827852_921377F3)
-References: <200807051511.57995.IvDoorn@gmail.com>
-	 <200807052126.16913.IvDoorn@gmail.com>
-	 <1215285776.6848.21.camel@johannes.berg>
-	 <200807052137.59412.IvDoorn@gmail.com>
-	 (sfid-20080705_213128_827852_921377F3)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-t/8x4GohT/agGFo936By"
-Date: Sat, 05 Jul 2008 21:37:09 +0200
-Message-Id: <1215286630.6848.24.camel@johannes.berg> (sfid-20080705_213730_267938_B9102F48)
-Mime-Version: 1.0
+	Tue, 15 Jul 2008 11:46:35 -0400
+From: Jiri Slaby <jirislaby@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: [PATCH 2/5] Ath5k: kill tasklets on shutdown
+Date: Tue, 15 Jul 2008 17:44:19 +0200
+Message-Id: <1216136661-10930-2-git-send-email-jirislaby@gmail.com> (sfid-20080715_174640_072155_BC4E2859)
+In-Reply-To: <1216136661-10930-1-git-send-email-jirislaby@gmail.com>
+References: <1216136661-10930-1-git-send-email-jirislaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Don't forget to kill tasklets on stop to not panic if they
+fire after freeing some structures.
 
---=-t/8x4GohT/agGFo936By
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+---
+ drivers/net/wireless/ath5k/base.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-
-> That problem is only in rt2400pci and rt2500pci who raise the beacon inte=
-rrupt,
-> all other drivers have the template and auto sequence numbers.
-
-Ok.
-
-> But no sequence numbers for the beacons, I think that will definately cau=
-se
-> problems for those 2 drivers.
->=20
-> But the function ieee80211_include_sequence() is being called from within=
- the
-> ieee80211_beacon_get() function. Only for the Mesh it doesn't seem to be =
-called.
-
-Well it's not called from where the IBSS beacon is set either, and the
-IBSS beacon isn't generated every time anyway. So I'm confused now. Do
-rt2{4,5}00pci not support IBSS?
-
-johannes
-
---=-t/8x4GohT/agGFo936By
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIb81iAAoJEKVg1VMiehFYoz0QAK8n/coXkBwP8X+tCbtitkt/
-7bLNNBhm4TJ8mJYXedyi5txloZwOgwRKxgjcfpR4vMpx2A84WWnc/ihzE/d8DBly
-BRf9TqM2SKimbgNmkjZURkQdplXUS7ts0z2sRbgquug5XTX+X3mU1CQaehSl6MHg
-LMtQFu6233A44097puZvNZvBoTQryWtO+OvW46+JMbb1x+WOWiePslKn+/44rzyk
-IaepkL1qUjFxwudiZoA9hJPePogFsuNPrkS0EjtWC+B7azuq/0J/A8ytibhrxiBP
-aJgCOF+cVhqwCwmy9fSYNPb4ki0sqGgLrsY1homBI7oeinhgbPEyET/cgOznXBLe
-bLTh2O7RaQQSIvmTgR+O00rvDosHiyDNF4IETWGW2D/Y7W59nEoMm8jRkQC3OA6Q
-3HBHQMdHerc6cck13v2AHGweTfo4k55EJklpeIvzs/UPpNrEd1EkEfzguyUi8IWI
-7GAOs8fw6k5H9O2cMbFKbuSXSv+AZqtNZweGGAl0z6so16R+Zk+98mi4sMhlYZp6
-mTu6KUZkkWdhf3Ji6vUE6PcZ8wYp50fxvzRR43Csq1ZtAe4nXcdA5qn0bOaQKsWW
-mXU3HU9/sGVTOV+qwGWnO5l9D3fRYS8cEA7kDwnLFl+T6Rc88G9OxqG40aaqsbgw
-/Egf2VyiSNk9pSHB6N5g
-=33t8
------END PGP SIGNATURE-----
-
---=-t/8x4GohT/agGFo936By--
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index e9ec284..4d9ff97 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -2343,6 +2343,9 @@ ath5k_stop_hw(struct ath5k_softc *sc)
+ 	mutex_unlock(&sc->lock);
+ 
+ 	del_timer_sync(&sc->calib_tim);
++	tasklet_kill(&sc->rxtq);
++	tasklet_kill(&sc->txtq);
++	tasklet_kill(&sc->restq);
+ 
+ 	return ret;
+ }
+-- 
+1.5.6.2
 
