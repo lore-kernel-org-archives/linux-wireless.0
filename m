@@ -1,47 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:65385 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752621AbYGCR0K (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49757 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756872AbYGOIMd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 13:26:10 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so300739yxm.1
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Jul 2008 10:26:05 -0700 (PDT)
-Message-ID: <1ba2fa240807031026k1763f64bu66fd03d0c1b254dc@mail.gmail.com> (sfid-20080703_192617_918907_449786D1)
-Date: Thu, 3 Jul 2008 20:26:04 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/1] mac80211: move netif_carrier_on to after ieee80211_bss_info_change_notify
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org, "Guy Cohen" <guy.cohen@intel.com>
-In-Reply-To: <1215104870.9975.17.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1215104173-8918-1-git-send-email-tomas.winkler@intel.com>
-	 <1215104870.9975.17.camel@johannes.berg>
+	Tue, 15 Jul 2008 04:12:33 -0400
+Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by
+	low level driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: Tomas Winkler <tomasw@gmail.com>, linville@tuxdriver.com,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <87fxqcoaue.fsf@nokia.com>
+References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
+	 <1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
+	 <1216039127.11189.15.camel@johannes.berg>
+	 <1ba2fa240807140546w4f08e32l59ed88dfa1b86403@mail.gmail.com>
+	 <87fxqcoaue.fsf@nokia.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XhKPSZR/yVaNh/j5VDay"
+Date: Tue, 15 Jul 2008 10:12:23 +0200
+Message-Id: <1216109543.23746.21.camel@johannes.berg> (sfid-20080715_101253_271661_EB8B966B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 3, 2008 at 8:07 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
->> -             netif_carrier_on(dev);
->>               ifsta->flags |= IEEE80211_STA_PREV_BSSID_SET;
->>               memcpy(ifsta->prev_bssid, sdata->u.sta.bssid, ETH_ALEN);
->>               memcpy(wrqu.ap_addr.sa_data, sdata->u.sta.bssid, ETH_ALEN);
->>               ieee80211_sta_send_associnfo(dev, ifsta);
->>       } else {
->> +             netif_carrier_off(dev);
->>               ieee80211_sta_tear_down_BA_sessions(dev, ifsta->bssid);
->>               ifsta->flags &= ~IEEE80211_STA_ASSOCIATED;
->> -             netif_carrier_off(dev);
->
-> Maybe it should then be symmetric so that callers of the function have
-> to do it in both cases? Other than that, looks good.
 
-The sequence now is
-  configure association in the driver  -> carrier_on ..... carrier_off
--> configure disassociation in the driver
+--=-XhKPSZR/yVaNh/j5VDay
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-So this is already symmetric or I don't understand what  you mean.
 
-Thanks
-Tomas
+> This stuff is very much hardware dependent, I don't deny that, but
+> still I would assume that the basic principles are almost the same. We
+> just need to come up with a good interface for the drivers. Sure, it's
+> more work now, but if we don't do it, PSM support will eventually get
+> really messy because all drivers do it somehow differently.
+
+I agree.
+
+> > I really don't know what other vendors do and user should not guess
+> > this.
+>=20
+> Yes, for the user this is too difficult, but I think the driver
+> shouldn't be making the decision either. So mac80211 stack would be
+> the most logical choice, and it could be make the decisions based on
+> user input (or something like that).
+
+Well, the user may want to make a choice based on the latency. Or,
+ideally, we would detect that they're using voice and want lower
+latency. Or something like that.
+
+johannes
+
+--=-XhKPSZR/yVaNh/j5VDay
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIfFvjAAoJEKVg1VMiehFY9n0P/jrTr45BCmoUzggtBYCBfPsC
+ill9wPpMI1mqAB4HAqcpvR1kP2axXE26isgMcvByECW5lJ/fNkdFiA4KnnoFNpt3
+acWZFTRlX/FMS0/Uj+CB23mUlxYyHYmxtyt5Vng669DmvklsJVhDISxtLxsTX8lB
+6hIi8ngk4DZhft/hXAD6b2FzJecPWJcI8wAuWaBVhvVr6QQcgSs04viG0ZCau3Mh
++DYFkzNOtSeLRtuhxctZ6StxNdkO1LaP7vYpHIxnTPX5aLSRhIHtvWS+Iz4rc69u
+lkbc1jsrNYcW3mcAi6fW8u/dxrz5kxSpLqtXKDq62Fg+EvWUXduwBu61fVePmDIk
+29r5OVhkBe2pXBbaMRnwO6XXsELsLKLlR8I5XIhdrhEhbCZKS5yX2y++xqhUGM9o
+kmcJZ9JFtRh5MaMV8RwAaYrWgi+B0VSx0FeisT9ZzL/LZvIGurpYSF8bLv0r1yl/
+4+B1DMWBmfpHGo6tqIQBC26FMD83/jYrgdKQeVy5u8pfyFFghX+13OfME41pXeZR
+qvVLPMzzesHms9wr9eWGhL3yLDwl+fPFeCK/G9LXD7MgqgANv3CTLLpfTBy/5w0N
+QD295bKnCw2Fn8bUJaVUIW6jzCQOsG8AcCcJiVKpPhLBdlPuU0W4e0MYfdJnIQes
+Zp5TdynrMtBgaYJ2nzDg
+=0rOB
+-----END PGP SIGNATURE-----
+
+--=-XhKPSZR/yVaNh/j5VDay--
+
