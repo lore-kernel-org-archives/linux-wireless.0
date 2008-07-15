@@ -1,59 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:26186 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753592AbYGTXkX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2008 19:40:23 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/3] iwlwifi: rename iwl4965-base.c to iwl-agn.c
-Date: Mon, 21 Jul 2008 02:40:13 +0300
-Message-Id: <1216597215-19708-2-git-send-email-tomas.winkler@intel.com> (sfid-20080721_014026_950444_6BDB437B)
-In-Reply-To: <1216597215-19708-1-git-send-email-tomas.winkler@intel.com>
-References: <1216597215-19708-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from xc.sipsolutions.net ([83.246.72.84]:60656 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754504AbYGOJtK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jul 2008 05:49:10 -0400
+Subject: Re: TXQ real_num_tx_queues comments/questions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20080715.023954.234208581.davem@davemloft.net>
+References: <1216113923.3535.14.camel@johannes.berg>
+	 <20080715.022854.55875400.davem@davemloft.net>
+	 <1216114621.3535.18.camel@johannes.berg>
+	 <20080715.023954.234208581.davem@davemloft.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0c/p5HOpQIOIvObg05Yr"
+Date: Tue, 15 Jul 2008 11:49:09 +0200
+Message-Id: <1216115349.3535.20.camel@johannes.berg> (sfid-20080715_114915_784343_BB6EDEBB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames iwl4965-base.c to iwl-agn.c
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/Makefile              |    6 ++----
- .../wireless/iwlwifi/{iwl4965-base.c => iwl-agn.c} |    0 
- 2 files changed, 2 insertions(+), 4 deletions(-)
- rename drivers/net/wireless/iwlwifi/{iwl4965-base.c => iwl-agn.c} (100%)
+--=-0c/p5HOpQIOIvObg05Yr
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
-index f50d2f8..6bf3998 100644
---- a/drivers/net/wireless/iwlwifi/Makefile
-+++ b/drivers/net/wireless/iwlwifi/Makefile
-@@ -11,10 +11,8 @@ iwl3945-objs		:= iwl3945-base.o iwl-3945.o iwl-3945-rs.o
- iwl3945-$(CONFIG_IWL3945_LEDS) += iwl-3945-led.o
- 
- obj-$(CONFIG_IWL4965)	+= iwl4965.o
--iwl4965-objs		:= iwl4965-base.o iwl-4965.o iwl-agn-rs.o
-+iwl4965-objs		:= iwl-agn.o iwl-4965.o iwl-agn-rs.o
- 
--ifeq ($(CONFIG_IWL5000),y)
--	iwl4965-objs += iwl-5000.o
--endif
-+iwl4965-$(CONFIG_IWL5000) += iwl-5000.o
- 
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-similarity index 100%
-rename from drivers/net/wireless/iwlwifi/iwl4965-base.c
-rename to drivers/net/wireless/iwlwifi/iwl-agn.c
--- 
-1.5.4.1
+On Tue, 2008-07-15 at 02:39 -0700, David Miller wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Tue, 15 Jul 2008 11:37:01 +0200
+>=20
+> > From mac80211's POV it's just that select_queue must have known
+> > about the removed queue when the requeue is done. And we can defer
+> > the requeue to a workqueue.
+>=20
+> Ok.
+>=20
+> So you're proposing the requeue be deferred to a workqueue
+> and what else?  RCU protection around real_num_tx_queues
+> access?
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Yes, I think we can fix it by deferring the requeue to a workqueue,
+using synchronize_net() and putting RCU protection against the
+select_queue call.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+johannes
+
+--=-0c/p5HOpQIOIvObg05Yr
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIfHKPAAoJEKVg1VMiehFYvdoP/RZM5q5Z87/irZxHZNrVKZwD
+nOin2ydnuqDOPwIKmOppX+4CaAZO+KwiB/7UbPYWSQLKNnd9Q8+96VWRmOmivPpl
+JAYJemfaIiDX+JERduKOT4nqI+1PoDFdnBeahhUfAgXmFWjoanhbR0LddD498Lc3
+PAPqW7MGci7TlLi3E0q7H2RYSPFdccwSGjMJYCEp2m9NsUgfP4fYT1iIt/ZY4mRi
+rzrKxO0MSd0s16e5ByC/RbVrxkq7Ut1Jh1TAjkHgwEZh5FtbM4oJWL5eLQg/vpRl
+5+AOtUxA/dLapULo7VNqXypbGbOZd+vrwNQ/WqqX9GWgtS0fgtypkTJ9ss4bCooG
+YIOVg+L+s5jH5mbJbvlwUCWEz8e/LEQX4N9CYRgJTQTSHrmWUXy6Rgg/z1ejmUkx
+3lacX6KfOfPv5kXPlG0aWas1YlhJic2Aar9/82qLk202SK1ZNX0rHhOuzt3pGi0Y
+xcjUBsayez7YY4UKrfCpEJYFiHq33o4ORgXJ8lyrnFWgK8O5p83B6jN7b7yiEvpI
+AUdw5K3aGj+ITVif5KObLqZkwNIvJ/z2poObpPeUMtg15e6ansGbNBSaeA5yeJn3
+/0UF8JlhWrVGLKTPxq5C2Y8adBv7lBVdJ20xU/tzMrLK7OMLcIw2xp6Srru1mEL4
+Re1LXIKyRi6HE/vRylsF
+=/VVO
+-----END PGP SIGNATURE-----
+
+--=-0c/p5HOpQIOIvObg05Yr--
 
