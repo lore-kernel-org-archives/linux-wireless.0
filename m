@@ -1,76 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:41241 "EHLO verein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752400AbYGWQza (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 12:55:30 -0400
-Date: Wed, 23 Jul 2008 18:55:18 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: [PATCH] ath9: endianess fixes
-Message-ID: <20080723165518.GB30144@lst.de> (sfid-20080723_185533_629927_2AF08066)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42434
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751513AbYGOJQg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jul 2008 05:16:36 -0400
+Date: Tue, 15 Jul 2008 02:16:37 -0700 (PDT)
+Message-Id: <20080715.021637.103260952.davem@davemloft.net> (sfid-20080715_111640_983075_310E8D2C)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: TXQ real_num_tx_queues comments/questions
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1215769627.3483.107.camel@johannes.berg>
+References: <1215769627.3483.107.camel@johannes.berg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- - in ath_beacon_alloc use a __le64 variable to store a byte swapped
-   result.  Keep printing the unshifted native variable.
- - in ath_bar_rx add a missing le16_to_cpu for bar->control
- - in ath_rx_tasklet add a missing cpu_to_be16 for skb->protocol
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 11 Jul 2008 11:47:06 +0200
 
+> One thing I just noticed that caused me to think about it a bit more is
+> that you didn't change netif_tx_{start,stop,wake}_all_queues to use
+> real_num_tx_queues instead of num_tx_queues. However, since those queues
+> don't actually get used, it doesn't actually matter whether they're
+> started or not.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Right, I don't think it matters.
 
-Index: linux-2.6/drivers/net/wireless/ath9k/beacon.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/ath9k/beacon.c	2008-07-23 18:47:37.000000000 +0200
-+++ linux-2.6/drivers/net/wireless/ath9k/beacon.c	2008-07-23 18:48:46.000000000 +0200
-@@ -440,6 +440,7 @@ int ath_beacon_alloc(struct ath_softc *s
- 	 */
- 	if (sc->sc_stagbeacons && avp->av_bslot > 0) {
- 		u_int64_t tsfadjust;
-+		__le64 val;
- 		int intval;
- 
- 		/* FIXME: Use default value for now: Sujith */
-@@ -458,7 +459,7 @@ int ath_beacon_alloc(struct ath_softc *s
- 		 * others get a timestamp aligned to the next interval.
- 		 */
- 		tsfadjust = (intval * (ATH_BCBUF - avp->av_bslot)) / ATH_BCBUF;
--		tsfadjust = cpu_to_le64(tsfadjust<<10);     /* TU->TSF */
-+		val = cpu_to_le64(tsfadjust << 10);     /* TU->TSF */
- 
- 		DPRINTF(sc, ATH_DEBUG_BEACON,
- 			"%s: %s beacons, bslot %d intval %u tsfadjust %llu\n",
-@@ -466,7 +467,7 @@ int ath_beacon_alloc(struct ath_softc *s
- 			avp->av_bslot, intval, (unsigned long long)tsfadjust);
- 
- 		wh = (struct ieee80211_hdr *)skb->data;
--		memcpy(&wh[1], &tsfadjust, sizeof(tsfadjust));
-+		memcpy(&wh[1], &val, sizeof(val));
- 	}
- 
- 	bf->bf_buf_addr = ath_skb_map_single(sc, skb, PCI_DMA_TODEVICE,
-Index: linux-2.6/drivers/net/wireless/ath9k/recv.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/ath9k/recv.c	2008-07-23 18:49:53.000000000 +0200
-+++ linux-2.6/drivers/net/wireless/ath9k/recv.c	2008-07-23 18:51:45.000000000 +0200
-@@ -80,7 +80,7 @@ static int ath_bar_rx(struct ath_softc *
- 	/* look at BAR contents	 */
- 
- 	bar = (struct ieee80211_bar *)skb->data;
--	tidno = (bar->control & IEEE80211_BAR_CTL_TID_M)
-+	tidno = (le16_to_cpu(bar->control) & IEEE80211_BAR_CTL_TID_M)
- 		>> IEEE80211_BAR_CTL_TID_S;
- 	seqno = le16_to_cpu(bar->start_seq_num) >> IEEE80211_SEQ_SEQ_SHIFT;
- 
-@@ -1026,7 +1026,7 @@ int ath_rx_tasklet(struct ath_softc *sc,
- 		 * to receive another frame.
- 		 */
- 		skb_put(skb, ds->ds_rxstat.rs_datalen);
--		skb->protocol = ETH_P_CONTROL;
-+		skb->protocol = cpu_to_be16(ETH_P_CONTROL);
- 		rx_status.tsf = ath_extend_tsf(sc, ds->ds_rxstat.rs_tstamp);
- 		rx_status.rateieee =
- 			sc->sc_hwmap[ds->ds_rxstat.rs_rate].ieeerate;
+> Also related to real_num_tx_queues, you mentioned in the email (if that
+> restriction is kept it should be explained in a comment somewhere I
+> think) that it must not be changed while the device is operating. While
+> that restriction makes it obviously safe, mac80211 is already
+> effectively violating it, although it isn't setting real_num_tx_queues
+> at all. That makes me question that restriction a bit.
+
+In the mac80211 implementation, you control everything.
+mac80211's ->select_queue() is the only thing that selects
+queue values.
+
+> The only interesting situation is when we need to remove a queue since
+> for adding it we can prepare for that before we make select_queue use
+> it. Removing it is however, I think, still buggy. You removed most of
+> the queue locking and now just lock the single txq in ieee80211_requeue,
+> which seems fine, but when you look at ieee80211_ht_agg_queue_remove it
+> seems still racy:
+ ...
+> I'm not entirely sure that my analsysis is correct because the mac80211
+> code is running in a tasklet, but dev_queue_xmit() only disables bhs
+> after using select_queue, and even that is only local bhs.
+> 
+> To fix it, I think we should move the queue selection under the rcu
+> lock. Then we can, in mac80211, instead of deferring the requeuing to
+> the tasklet, defer it to a work struct (i.e. process context) and
+> synchronize_rcu() between making select_queue no longer choose the queue
+> and requeuing from it.
+> 
+> Or we can do more complicated things with the queue_pool bits or an
+> extra spinlock for select_queue.
+> 
+> I like the RCU variant better, as it means we don't need a "central"
+> lock that is taken for all tx queues, and it also allows other drivers
+> to actually change real_num_tx_queues in a similar fashion, should that
+> ever be required.
+
+It seems to me that a simple synchronize_net() call near the end of
+agg queue removal would solve your problem as-is, wouldn't it?
