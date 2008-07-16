@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:55944 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:42434 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754227AbYGBG0t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2008 02:26:49 -0400
-Subject: Re: [PATCH] iwlwifi: remove input device from iwl3945
-From: Zhu Yi <yi.zhu@intel.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
+	id S1752116AbYGPQaA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jul 2008 12:30:00 -0400
+Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	Fabien Crespel <fcrespel@gmail.com>
-In-Reply-To: <200807011613.43501.IvDoorn@gmail.com>
-References: <8AD95083DC3E36478732061D97524415035E38AB@pdsmsx411.ccr.corp.intel.com>
-	 <1214918580-5855-1-git-send-email-linville@tuxdriver.com>
-	 <200807011613.43501.IvDoorn@gmail.com>
+	Guy Cohen <guy@cguy.net>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1216196668.3422.2.camel@johannes.berg>
+References: <20080709190915.GA8238@tuxdriver.com>
+	 <247d6d340807140805gfb6523en74384f6f47469d79@mail.gmail.com>
+	 <20080715174246.GA3117@tuxdriver.com>
+	 <1216145731.13411.25.camel@localhost.localdomain>
+	 (sfid-20080715_201731_895315_46FC8F2F)  <1216196668.3422.2.camel@johannes.berg>
 Content-Type: text/plain
-Date: Wed, 02 Jul 2008 14:25:14 +0800
-Message-Id: <1214979914.14590.453.camel@debian.sh.intel.com> (sfid-20080702_082652_985401_59A33F23)
+Date: Wed, 16 Jul 2008 12:27:59 -0400
+Message-Id: <1216225679.21973.6.camel@localhost.localdomain> (sfid-20080716_183007_476450_51F0C4E7)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-07-01 at 16:13 +0200, Ivo van Doorn wrote:
-> How is the changed rfkill state of the driver reported to rfkill?
-> I see that the patch to remove the input device doesn't remove the
-> call input_report_key() by which I assume such call was never made.
-> This would mean rfkill support in iwlwifi has always been broken and
-> the entire input device wasn't used at all.
+On Wed, 2008-07-16 at 10:24 +0200, Johannes Berg wrote:
+> > > Not sure exactly what you mean with this one.  Are you talking about
+> > > the lib80211 line item?  Or enhancements to the mac80211 component
+> > > to support full(er) MAC designs?
+> > 
+> > I hope just lib80211.  We shouldn't be extending mac80211 to fullmac or
+> > quasi-fullmac parts.  But we can certainly share a lot of stuff.
+> > lib80211 is where I see any additional fullmac effort going.
+> 
+> Just a minor point wrt. lib80211: I see little use in creating yet
+> another module since hopefully soon enough fullmac chipsets will bind
+> cfg80211 anyway so all of that stuff might as well be in there.
 
-Yes, we don't use the input device before and I believe we shouldn't.
-The patch just removes it.
+worksforme, I don't really care where that stuff goes as long as we get
+it in one place :)
 
-> From what I gather from the code itself is the function responsible
-> for changing the state iwl_rfkill_set_hw_state() but that only updates
-> the state, and doesn't report anything to the rfkill layer.
-
-Right, we will switch to use rfkill_force_state() instead.
-
-Thanks,
--yi
+Dan
 
