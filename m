@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60764 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:42274 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754797AbYGOK2o (ORCPT
+	with ESMTP id S1755574AbYGPNUp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 06:28:44 -0400
-Subject: Re: TXQ real_num_tx_queues comments/questions
+	Wed, 16 Jul 2008 09:20:45 -0400
+Subject: Re: [PATCH 1/1] mac80211: add direct probe before association
 From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20080715.030531.227856924.davem@davemloft.net>
-References: <1216114621.3535.18.camel@johannes.berg>
-	 <20080715.023954.234208581.davem@davemloft.net>
-	 <1216115349.3535.20.camel@johannes.berg>
-	 <20080715.030531.227856924.davem@davemloft.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gVWkmfCNxDFdNUoapZzi"
-Date: Tue, 15 Jul 2008 12:28:41 +0200
-Message-Id: <1216117721.3535.22.camel@johannes.berg> (sfid-20080715_122848_480723_2A59973F)
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240807160611h5d0d4ae5g68bfa2366cf514ec@mail.gmail.com> (sfid-20080716_151129_259863_E939246F)
+References: <1216076865-9826-1-git-send-email-tomas.winkler@intel.com>
+	 <1216109902.23746.27.camel@johannes.berg>
+	 <1ba2fa240807150131w4a08ae6dhae7bab8ab6adbde7@mail.gmail.com>
+	 <1216111065.3535.3.camel@johannes.berg>
+	 <1ba2fa240807160611h5d0d4ae5g68bfa2366cf514ec@mail.gmail.com>
+	 (sfid-20080716_151129_259863_E939246F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-G0WdoDs1dJdbRkgnAMLe"
+Date: Wed, 16 Jul 2008 15:20:40 +0200
+Message-Id: <1216214440.3422.25.camel@johannes.berg> (sfid-20080716_152049_315140_1ED45D46)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-gVWkmfCNxDFdNUoapZzi
+--=-G0WdoDs1dJdbRkgnAMLe
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2008-07-15 at 03:05 -0700, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Tue, 15 Jul 2008 11:49:09 +0200
->=20
-> > Yes, I think we can fix it by deferring the requeue to a workqueue,
-> > using synchronize_net() and putting RCU protection against the
-> > select_queue call.
->=20
-> I'm respinning my net-tx-2.6 tree at the moment and I'll
-> make patch 8 look like below.
 
-Looks good to me, thanks.
+> > Actually, it looks like I kept those for association because I decided
+> > that we weren't printing them too much. It might be much nicer to send
+> > them all as wireless events though, thoughts?
+>=20
+> Something like IWEVASSOCTIMEDOUT. Won't it make wpa_supplicant go nuts?
+
+No idea. Maybe just a private event with a string? Anyway, I guess we
+can keep it as-is because it doesn't add much and hopefully we won't
+print it over and over again, though I have seen a case where mac80211
+was stuck trying to associate again and again.
 
 johannes
 
---=-gVWkmfCNxDFdNUoapZzi
+--=-G0WdoDs1dJdbRkgnAMLe
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIfHvVAAoJEKVg1VMiehFYhlsP/3KgjsrUrCHtO+F6WHXap59E
-9I1jrYz32bNQPt29Ccx9TcpkgGxba9Csyy99iCqhZ4wTLWWz+FAaQekGLIsUx0fq
-0JBQ/fkkNX27UB0fsK2YhQ/0Pc+rqDjH/f+gS+uOdGqBYIhz0M+pSb6tgWIT+42D
-8k6Zsz4NfGhdvrFScUW8lRmlIYTokSDRZEJ0L8o3WgOtNjoLwhyD8PCsBghzjY64
-338aXO2lAJKAp5+88/mdLCpgWPR+VtoMecf0HIV6fDI0PCidc6iMNFg8XBVSqLIJ
-QBbKwkQqfuuq7lZ0iYWSLZbYjH6UN0beIKhcaSE7BmfRk2cFglPisxIl9bSpCMPz
-HDHd82vsfuZEJaA/QIZ95C+60ky6c0WgHziBioX6J/QLIH7dJ9Q7oISj7vKndiRx
-7gn7eFm8SnNGK8cU4eiwEz09+/vRvJhqHwDXWl7Pw3VvIWIqNBJ7tnRbTw3l9GQt
-0/InoqhHsDYcKucqrX7EeQT5V1PnUXsegSVk38QTlJLI6n33+lWjUoh4kjv8CpcN
-eGnHAfuu3CqshmgVUB8H6/6XLwlkU8u+6hfYEXHtIjygdooqlga2pAhXP5P64qFa
-AJuBhrSLmDR6NebRuVsI3I7RSkbdScgejR76+hxVYTbt/O5odwOLitFFt7RjUeYe
-ss7aDUIzLuVe4rMmxoHV
-=soc3
+iQIcBAABAgAGBQJIffWkAAoJEKVg1VMiehFYsLQP/2/o3Rh2FEY/A5RobN39s4Nq
+O3jEoUMY0+GIhLPm3BjKfLzw4akbVkjt4UpMwuakgafvliyueWSDXKdiX9uR5sQb
+uWQNaCZpmF5apMCZtvZaAJmZBIZ0T7erWviKlOfa/nf/W6iqWS0FkOIBjhfCT9Ly
+jKeubd51fJftl2h5aK4A7OEvZD0zIgrdb2yvyNIGCaRdxSswFwMI0ScR/qdxYIVR
+q+My8lE/YYm2MTtJIgDkxR+RFnwi2UFwDRSylWZIfQ4o8l7FkTj5t7DNjYB9nQd0
+lh6DtjLJtfGN285wqvDXJJ+uCKAsORSQCwdkKDAUUS3Qx1sYPquhQ9BFSH2cVaSV
++2Lc0H+EMCXbbeAQ7o34DisnJK1HfyX72HzOrF6xXEte6lhnnkKf5QwCBmmp1c31
+w7eTexz3rKGNFvMTV/oEwlXmZjk39ffBtaGfTaxt/M8v31o2jZeKfljDUBOBUasG
+YWCHYBBYtC7et9E+X6JgOJ8CBsP03p10BWYkk3Pi8J6h7h21KFK8MSu/EFp24txp
+N+/2/I3eFVdW8CdxMbmCp7HPgUqWUEN9MyEmjV09L8pPXmvpVgCri26Vg4FZpH+O
+iFlu3vRlwpNdWPRJ0fGMzIapyZA6DRc7GWljTlM1M09OUZ/aNx95LLaRMgeJDx9U
+ZE7AQSNVRdbnAmq3VMAq
+=d7LV
 -----END PGP SIGNATURE-----
 
---=-gVWkmfCNxDFdNUoapZzi--
+--=-G0WdoDs1dJdbRkgnAMLe--
 
