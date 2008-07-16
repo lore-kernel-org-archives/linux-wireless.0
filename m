@@ -1,60 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:7099 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755722AbYGRTCQ (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.186]:49475 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752956AbYGQRne (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 15:02:16 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so163116nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jul 2008 12:02:14 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 6/6] rt2x00: Fix GCC warning because aifs is now unsigned
-Date: Fri, 18 Jul 2008 21:16:24 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200807182043.08990.IvDoorn@gmail.com> <200807182045.24303.IvDoorn@gmail.com> <1216407221.27738.47.camel@johannes.berg>
-In-Reply-To: <1216407221.27738.47.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807182116.25152.IvDoorn@gmail.com> (sfid-20080718_210219_596747_82D69ECD)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 17 Jul 2008 13:43:34 -0400
+Received: by rn-out-0910.google.com with SMTP id k40so21813rnd.17
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2008 10:43:33 -0700 (PDT)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+From: Brian Cavagnolo <brian@cozybit.com>
+Date: Wed, 16 Jul 2008 12:15:26 -0700
+Subject: [PATCH 3/3] libertas: check bounds and only use decimal for sysfs persistent features.
+Message-ID: <487f84c4.1abd600a.16af.35b1@mx.google.com> (sfid-20080717_194337_043735_A4F92EB8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 18 July 2008, Johannes Berg wrote:
-> On Fri, 2008-07-18 at 20:45 +0200, Ivo van Doorn wrote:
-> > The aifs type has recently been changed to unsigned,
-> > this triggered the following gcc warning:
-> > 
-> >   CC [M]  drivers/net/wireless/rt2x00/rt2x00mac.o
-> >   drivers/net/wireless/rt2x00/rt2x00mac.c: In function 'rt2x00mac_conf_tx':
-> >   drivers/net/wireless/rt2x00/rt2x00mac.c:557: warning: comparison is always true due to limited range of data type
-> > 
-> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> > ---
-> >  drivers/net/wireless/rt2x00/rt2x00mac.c |    5 +----
-> >  1 files changed, 1 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> > index 77af1df..f1dcbaa 100644
-> > --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-> > +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> > @@ -554,10 +554,7 @@ int rt2x00mac_conf_tx(struct ieee80211_hw *hw, u16 queue_idx,
-> >  	else
-> >  		queue->cw_max = 10; /* cw_min: 2^10 = 1024. */
-> >  
-> > -	if (params->aifs >= 0)
-> > -		queue->aifs = params->aifs;
-> > -	else
-> > -		queue->aifs = 2;
-> > +	queue->aifs = params->aifs;
-> 
-> davem already took my patch doing exactly that into his tree, it just
-> hasn't arrived back yet.
+Some persistent settings were using hex and others decimal.  In some cases,
+values were set in hex but reported in decimal.  Confusing.
 
-Oh, I must have missed that patch then. :)
-I've found it in your patch directory as well now,
+Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
+---
+ drivers/net/wireless/libertas/persistcfg.c |   30 ++++++++++++++--------------
+ 1 files changed, 15 insertions(+), 15 deletions(-)
 
-John, please skip this patch
+diff --git a/drivers/net/wireless/libertas/persistcfg.c b/drivers/net/wireless/libertas/persistcfg.c
+index 1547160..1bc680e 100644
+--- a/drivers/net/wireless/libertas/persistcfg.c
++++ b/drivers/net/wireless/libertas/persistcfg.c
+@@ -51,7 +51,7 @@ static ssize_t bootflag_get(struct device *dev,
+ 	if (ret)
+ 		return ret;
+ 
+-	return snprintf(buf, 12, "0x%x\n", le32_to_cpu(defs.bootflag));
++	return snprintf(buf, 12, "%d\n", le32_to_cpu(defs.bootflag));
+ }
+ 
+ /**
+@@ -69,8 +69,8 @@ static ssize_t bootflag_set(struct device *dev, struct device_attribute *attr,
+ 		return -EOPNOTSUPP;
+ 
+ 	memset(&cmd, 0, sizeof(cmd));
+-	ret = sscanf(buf, "%x", &datum);
+-	if (ret != 1)
++	ret = sscanf(buf, "%d", &datum);
++	if ((ret != 1) || (datum > 1))
+ 		return -EINVAL;
+ 
+ 	*((__le32 *)&cmd.data[0]) = cpu_to_le32(!!datum);
+@@ -97,7 +97,7 @@ static ssize_t boottime_get(struct device *dev,
+ 	if (ret)
+ 		return ret;
+ 
+-	return snprintf(buf, 12, "0x%x\n", defs.boottime);
++	return snprintf(buf, 12, "%d\n", defs.boottime);
+ }
+ 
+ /**
+@@ -115,8 +115,8 @@ static ssize_t boottime_set(struct device *dev,
+ 		return -EOPNOTSUPP;
+ 
+ 	memset(&cmd, 0, sizeof(cmd));
+-	ret = sscanf(buf, "%x", &datum);
+-	if (ret != 1)
++	ret = sscanf(buf, "%d", &datum);
++	if ((ret != 1) || (datum > 255))
+ 		return -EINVAL;
+ 
+ 	/* A too small boot time will result in the device booting into
+@@ -152,7 +152,7 @@ static ssize_t channel_get(struct device *dev,
+ 	if (ret)
+ 		return ret;
+ 
+-	return snprintf(buf, 12, "0x%x\n", le16_to_cpu(defs.channel));
++	return snprintf(buf, 12, "%d\n", le16_to_cpu(defs.channel));
+ }
+ 
+ /**
+@@ -163,14 +163,14 @@ static ssize_t channel_set(struct device *dev, struct device_attribute *attr,
+ {
+ 	struct lbs_private *priv = to_net_dev(dev)->priv;
+ 	struct cmd_ds_mesh_config cmd;
+-	uint16_t datum;
++	uint32_t datum;
+ 	int ret;
+ 
+ 	if (!(priv->fwcapinfo & FW_CAPINFO_PERSISTENT_CONFIG))
+ 		return -EOPNOTSUPP;
+ 
+ 	memset(&cmd, 0, sizeof(cmd));
+-	ret = sscanf(buf, "%hx", &datum);
++	ret = sscanf(buf, "%d", &datum);
+ 	if (ret != 1 || datum < 1 || datum > 11)
+ 		return -EINVAL;
+ 
+@@ -292,8 +292,8 @@ static ssize_t protocol_id_set(struct device *dev,
+ 		return -EOPNOTSUPP;
+ 
+ 	memset(&cmd, 0, sizeof(cmd));
+-	ret = sscanf(buf, "%x", &datum);
+-	if (ret != 1)
++	ret = sscanf(buf, "%d", &datum);
++	if ((ret != 1) || (datum > 255))
+ 		return -EINVAL;
+ 
+ 	/* fetch all other Information Element parameters */
+@@ -349,8 +349,8 @@ static ssize_t metric_id_set(struct device *dev, struct device_attribute *attr,
+ 		return -EOPNOTSUPP;
+ 
+ 	memset(&cmd, 0, sizeof(cmd));
+-	ret = sscanf(buf, "%x", &datum);
+-	if (ret != 1)
++	ret = sscanf(buf, "%d", &datum);
++	if ((ret != 1) || (datum > 255))
+ 		return -EINVAL;
+ 
+ 	/* fetch all other Information Element parameters */
+@@ -406,8 +406,8 @@ static ssize_t capability_set(struct device *dev, struct device_attribute *attr,
+ 		return -EOPNOTSUPP;
+ 
+ 	memset(&cmd, 0, sizeof(cmd));
+-	ret = sscanf(buf, "%x", &datum);
+-	if (ret != 1)
++	ret = sscanf(buf, "%d", &datum);
++	if ((ret != 1) || (datum > 255))
+ 		return -EINVAL;
+ 
+ 	/* fetch all other Information Element parameters */
+-- 
+1.5.5.3
 
-Ivo
+
+
