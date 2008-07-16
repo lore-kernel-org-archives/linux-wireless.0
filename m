@@ -1,41 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.245]:40791 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752947AbYGZSPw (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34303 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756671AbYGPIYx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jul 2008 14:15:52 -0400
-Received: by an-out-0708.google.com with SMTP id d40so807827and.103
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Jul 2008 11:15:51 -0700 (PDT)
-Message-ID: <43e72e890807261115r767bcd9bm909769525e10a836@mail.gmail.com> (sfid-20080726_201557_863743_D06843CF)
-Date: Sat, 26 Jul 2008 11:15:51 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Alistair John Strachan" <alistair@devzero.co.uk>
-Subject: Re: ath9k working, almost
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200807261742.15693.alistair@devzero.co.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <200807261742.15693.alistair@devzero.co.uk>
+	Wed, 16 Jul 2008 04:24:53 -0400
+Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Guy Cohen <guy@cguy.net>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1216145731.13411.25.camel@localhost.localdomain> (sfid-20080715_201731_895315_46FC8F2F)
+References: <20080709190915.GA8238@tuxdriver.com>
+	 <247d6d340807140805gfb6523en74384f6f47469d79@mail.gmail.com>
+	 <20080715174246.GA3117@tuxdriver.com>
+	 <1216145731.13411.25.camel@localhost.localdomain>
+	 (sfid-20080715_201731_895315_46FC8F2F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5SrjtC43sfUzGHmunCAn"
+Date: Wed, 16 Jul 2008 10:24:28 +0200
+Message-Id: <1216196668.3422.2.camel@johannes.berg> (sfid-20080716_102512_869454_715A4B20)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 26, 2008 at 9:42 AM, Alistair John Strachan
-<alistair@devzero.co.uk> wrote:
-> Hi,
->
-> The newly announced ath9k driver works great on an AR5418 Core 2 Duo Macbook,
-> WPA2-TKIP/AES et al all work fine. It would be good to see this driver in
-> wireless-testing, it completely replaces madwifi for me. I used linux.git
-> (2.6.26) + wireless-testing.git + my-wireless-testing.git with success.
 
-Please keep in mind Linus' tree is just broken for wireless. But glad
-it is working for you after your tremendous strange changes on your
-tree...
+--=-5SrjtC43sfUzGHmunCAn
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> The only thing that I couldn't get working was the signal strength meter in
-> knetworkmanager.
 
-Its part of our TODO list. We rather get you supported with a new
-driver, part of the release and review early process.
+> > Not sure exactly what you mean with this one.  Are you talking about
+> > the lib80211 line item?  Or enhancements to the mac80211 component
+> > to support full(er) MAC designs?
+>=20
+> I hope just lib80211.  We shouldn't be extending mac80211 to fullmac or
+> quasi-fullmac parts.  But we can certainly share a lot of stuff.
+> lib80211 is where I see any additional fullmac effort going.
 
-  Luis
+Just a minor point wrt. lib80211: I see little use in creating yet
+another module since hopefully soon enough fullmac chipsets will bind
+cfg80211 anyway so all of that stuff might as well be in there.
+
+johannes
+
+--=-5SrjtC43sfUzGHmunCAn
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIfbA2AAoJEKVg1VMiehFYPUwQAIjia5olwIOp/+ZYuiQGEb4+
+o2vuoBRTd8hcVAXR7SPj3vCPSA072Sgcfy7nxL1C8Wjj3BUKDrDd4s6+bFLE3TTd
+lYbH59eh0OsMFdAZNrNwwGFsC+VpOtPGRqY0WfgeerhmbvkSXsWIcPd5c7kQ1S6v
+pzcQ0ajWroOtaSn0+Ue+45uugAIDskexqA+WWbHPC15I3b2d7uSDUdBq2C3StlPj
+IkK5g5Z/hlSGydPtutkeNsAkiml6VpfJJJLG1dRA99pcZThQwzxhFdhnKoneSnXb
+PToADdr3LfmzOMQIJPjLGcrsnDyX+hkpXPARJXcu+BpnizA7lSkXXPw/Yq/sHQLA
+g4r+nEUnPwkVUAUYJ9AfaVNAKB77sI8+yPxV0Gj8PynlkIkelc5oSYEWxC11yh49
+cSrXeTwWO+YeuNacBx2BGykTxoSzeUQB9XVMUkyr4tqqvV1c7A/he4Q5PcIoM1RU
+/Ns22DdqYHn1LRpwuCwdZkkks52ks7Cb6nsDq5cc5gd0ieFufTz3TxqfysLPDnWR
+bWSxP3LIRsahzpM6czIPaG3WUufEocozPfN4c8BDaNjh3MIeU41xMXvSsgMKBjF/
+8UQWYnjmeZNed5GlEd9+fYxVI9p/uJASoneX5WgbTQIUXEoX8rb+DaI7xJfQDeMt
+g9pPFKlCvhO7aWzxKxq0
+=BHM8
+-----END PGP SIGNATURE-----
+
+--=-5SrjtC43sfUzGHmunCAn--
+
