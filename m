@@ -1,196 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3623 "EHLO ra.tuxdriver.com"
+Received: from c60.cesmail.net ([216.154.195.49]:35576 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762094AbYF3WRR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jun 2008 18:17:17 -0400
-Date: Mon, 30 Jun 2008 17:56:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-next-2.6 2008-06-30
-Message-ID: <20080630215651.GA666@tuxdriver.com> (sfid-20080701_001736_692969_48D410DF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+	id S1751809AbYGPRfG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jul 2008 13:35:06 -0400
+Subject: Re: [PATCH 5/5] Ath5k: suspend/resume fixes
+From: Pavel Roskin <proski@gnu.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	Jiri Slaby <jirislaby@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <200807160931.11473.jbarnes@virtuousgeek.org>
+References: <1216136661-10930-1-git-send-email-jirislaby@gmail.com>
+	 <1216136661-10930-4-git-send-email-jirislaby@gmail.com>
+	 <40f31dec0807160915g8a5b083p9f21fae729839445@mail.gmail.com>
+	 <200807160931.11473.jbarnes@virtuousgeek.org>
+Content-Type: text/plain
+Date: Wed, 16 Jul 2008 13:35:03 -0400
+Message-Id: <1216229703.29744.23.camel@dv> (sfid-20080716_193512_804297_6AC2BFEA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+On Wed, 2008-07-16 at 09:31 -0700, Jesse Barnes wrote:
+> On Wednesday, July 16, 2008 9:15 am Nick Kossifidis wrote:
+> > It's ok for now, but have in mind that on my upcoming patch series i'm
+> > disabling msi (commented out) since it results no interrupts on pci-e
+> > cards (seems there is a bug in kernel's msi implementation).
+> 
+> Hm, would be good to get details here.  MSI is being used by other drivers 
+> successfully...
 
-Here is another slew of updates for 2.6.27.  The bulk of this batch is
-for iwlwifi, with some mac80211 and other bits thrown-in.
+That's true, but no driver uses the same interrupt handler with and
+without MSI.  Either it's different handlers or the handler checks if
+MSI is enabled and does something differently.
 
-Let me know if there are problems!
+Checks is any interrupts are pending are different for MSI.  It may be
+not hard to do (it's probably easier than for real interrupts), but it
+has to be figured out.  Somebody has to do it right.  Until MSI is
+supported by the interrupt handler, it should not be enabled by the
+driver, or we get a non-functioning driver for AR5006.
 
-Thanks,
+I see that MSI is enabled in wireless-testing, but I think we should try
+to avoid this mistake when the commit goes upstream.  I'm not sure what
+the procedure there, but it would be nice to keep the tree bisectable,
+i.e. avoid known regressions in any revision.  Maybe an amended commit
+should go upstream, and we'll drop the original patch when rebasing to
+the upstream branch?
 
-John
-
----
-
-Individual patches are available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2=
-=2E6/
----
-
-The following changes since commit 28f49d8fec19833672a6a813bfde0068fee5=
-0bc9:
-  David S. Miller (1):
-        Merge branch 'master' of master.kernel.org:/.../linville/wirele=
-ss-next-2.6
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-=
-2.6.git master
-
-Abhijeet Kolekar (2):
-      iwlwifi : Patch adds rfkill subsystem for 3945
-      iwlwifi: Remove unnecessary code
-
-Adel Gadllah (3):
-      iwlwifi: fix rfkill deps and remove input device usage
-      b43/b43legacy: use RFKILL_STATE_UNBLOCKED instead of RFKILL_STATE=
-_ON
-      b43/b43legacy: add RFKILL_STATE_HARD_BLOCKED support
-
-Adrian Bunk (1):
-      build algorithms into the mac80211 module
-
-Assaf Krauss (2):
-      mac80211: add beacon timestamp to beacon template in IBSS
-      iwlwifi: adjust TSF in IBSS
-
-Emmanuel Grumbach (12):
-      mac80211: add last beacon time in scan list
-      iwlwifi: better station table maintenance
-      iwlwifi: add REPLY_TX_POWER_DBM_CMD to get_cmd_string
-      iwlwifi: send ADD_STA before RXON with assoc bit
-      iwlwifi: move RX stats to core, and move temperature to handler
-      iwlwifi: don't send REPLY_REMOVE_ALL_STA upon exit
-      iwlwifi: move RX handlers to iwl-rx.c
-      iwlwifi: remove useless network and duplicate checking
-      iwlwifi: setup compressed BA handler
-      iwlwifi: don't bring up interface if RF-kill avoids radio
-      iwlwifi: blocking mac_start until uCode is complete
-      iwlwifi: clean up HW RF-kill state machine and restarts
-
-Ester Kummer (1):
-      mac80211: removing duplicated parsing of information elements
-
-Gregory Greenman (1):
-      iwlwifi: configure uCode to use open loop tx power algorithm
-
-Johannes Berg (3):
-      mac80211: get rid of function pointers in TX path
-      mac80211: get rid of function pointers in RX path
-      mac80211: rework debug settings and make debugging safer
-
-John W. Linville (1):
-      iwl-rfkill.c: correct 'recieved' typo
-
-Larry.Finger@lwfinger.net (1):
-      p54: Add quality output to iwlist and iwconfig
-
-Mohamed Abbas (1):
-      iwlwifi: keep the STATUS_EXIT_PENDING flag till the end of down f=
-low
-
-Pavel Roskin (3):
-      hostap: don't skip any headers in hostap_80211_header_parse()
-      hostap: add radiotap support in monitor mode
-      hostap: use radiotap headers by default
-
-Rick Farrington (2):
-      iwlwifi: fix incorrect 5GHz rates reported in monitor mode
-      iwlwifi: fix incorrect monitor mode operation
-
-Ron Rindjunsky (6):
-      iwlwifi: use iwl_is_associated when possible
-      iwlwifi: move rx aggregation functions to iwl-rx.c
-      iwlwifi: remove obsolete lq_ready use
-      iwlwifi: unite common settings of HW params
-      iwlwifi: control 11n capabilities through module param
-      iwlwifi: eliminate iwl4965_mac_get_tsf
-
-Stefanik G=E1bor (1):
-      iwlwifi: enable packet injection for iwl3945
-
-Tomas Winkler (5):
-      mac80211: add spectrum capabilities
-      mac80211: fix warning: unused variable invoke_tx_handlers
-      iwlwifi: Add eeprom version to the version file in sysfs
-      iwlwifi: fix IBSS association flow
-      iwlwifi: fix 4965 uCode load
-
-Yi Zhu (1):
-      mac80211: add MAC80211_VERBOSE_SPECT_MGMT_DEBUG Kconfig option
-
-Zhu Yi (3):
-      iwlwifi: drop skb silently for Tx request in monitor mode
-      iwlwifi: fix iwl4965 temperature callback calibration issue
-      iwl3945: remove RFKILL_STATE_HARD_BLOCKED warnings
-
- drivers/net/wireless/b43/rfkill.c             |   20 +-
- drivers/net/wireless/b43legacy/rfkill.c       |   20 +-
- drivers/net/wireless/hostap/hostap_80211_rx.c |   21 +
- drivers/net/wireless/hostap/hostap_hw.c       |    1 +
- drivers/net/wireless/hostap/hostap_ioctl.c    |    5 +-
- drivers/net/wireless/hostap/hostap_main.c     |   20 +-
- drivers/net/wireless/hostap/hostap_wlan.h     |   14 +-
- drivers/net/wireless/iwlwifi/Kconfig          |    1 -
- drivers/net/wireless/iwlwifi/iwl-3945.c       |    6 +-
- drivers/net/wireless/iwlwifi/iwl-3945.h       |   25 +
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c    |   22 +-
- drivers/net/wireless/iwlwifi/iwl-4965-rs.h    |    8 -
- drivers/net/wireless/iwlwifi/iwl-4965.c       |  995 +----------------=
---------
- drivers/net/wireless/iwlwifi/iwl-5000.c       |   27 +-
- drivers/net/wireless/iwlwifi/iwl-calib.c      |    4 +-
- drivers/net/wireless/iwlwifi/iwl-calib.h      |    4 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h   |   12 +-
- drivers/net/wireless/iwlwifi/iwl-core.c       |   63 ++-
- drivers/net/wireless/iwlwifi/iwl-core.h       |   17 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h        |   20 +-
- drivers/net/wireless/iwlwifi/iwl-hcmd.c       |    1 +
- drivers/net/wireless/iwlwifi/iwl-rfkill.c     |   41 +-
- drivers/net/wireless/iwlwifi/iwl-rfkill.h     |    2 -
- drivers/net/wireless/iwlwifi/iwl-rx.c         |  860 +++++++++++++++++=
-++++
- drivers/net/wireless/iwlwifi/iwl-sta.c        |  149 +++--
- drivers/net/wireless/iwlwifi/iwl-sta.h        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-tx.c         |  143 ++++
- drivers/net/wireless/iwlwifi/iwl3945-base.c   |  245 +++++--
- drivers/net/wireless/iwlwifi/iwl4965-base.c   |  442 ++++--------
- drivers/net/wireless/p54/p54common.c          |    1 +
- include/net/mac80211.h                        |    5 +
- net/mac80211/Kconfig                          |  162 +++--
- net/mac80211/Makefile                         |   18 +-
- net/mac80211/ieee80211_i.h                    |    6 +
- net/mac80211/iface.c                          |    6 +-
- net/mac80211/main.c                           |   35 +-
- net/mac80211/mesh_pathtbl.c                   |    1 -
- net/mac80211/mlme.c                           |  426 +++++------
- net/mac80211/rate.h                           |    4 +-
- net/mac80211/rc80211_pid_algo.c               |   10 -
- net/mac80211/rx.c                             |  203 ++----
- net/mac80211/sta_info.c                       |    2 +
- net/mac80211/tx.c                             |   77 +-
- net/mac80211/wep.c                            |   13 +-
- net/mac80211/wme.c                            |    1 -
- net/mac80211/wpa.c                            |   28 +-
- 46 files changed, 2053 insertions(+), 2135 deletions(-)
-
-Omnibus patch available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2=
-=2E6-2008-06-30.patch.bz2
---=20
-John W. Linville
-linville@tuxdriver.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Regards,
+Pavel Roskin
