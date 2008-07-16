@@ -1,93 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:37957 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755312AbYGGWQ3 (ORCPT
+Received: from outbound-mail-03.bluehost.com ([69.89.21.13]:41168 "HELO
+	outbound-mail-03.bluehost.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755931AbYGPTr7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2008 18:16:29 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so1053804ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2008 15:16:25 -0700 (PDT)
-Message-ID: <1ba2fa240807071516m6220a15sf02fe0b954d0d4ae@mail.gmail.com> (sfid-20080708_001639_536232_AD551966)
-Date: Tue, 8 Jul 2008 01:16:24 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Harvey Harrison" <harvey.harrison@gmail.com>
-Subject: Re: [PATCH 1/1 V2] mac80211: Fix ieee80211_rx_reorder_ampdu: ignore QoS null packets
-Cc: "Michael Buesch" <mb@bu3sch.de>, linville@tuxdriver.com,
-	johannes@sipsolutions.net, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
-In-Reply-To: <1215466987.14247.12.camel@brick>
+	Wed, 16 Jul 2008 15:47:59 -0400
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Subject: Re: [PATCH 5/5] Ath5k: suspend/resume fixes
+Date: Wed, 16 Jul 2008 12:41:02 -0700
+Cc: "Pavel Roskin" <proski@gnu.org>,
+	"Jiri Slaby" <jirislaby@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+References: <1216136661-10930-1-git-send-email-jirislaby@gmail.com> <200807161141.59385.jbarnes@virtuousgeek.org> <40f31dec0807161227n4254b8adobbbcfdde540704fd@mail.gmail.com>
+In-Reply-To: <40f31dec0807161227n4254b8adobbbcfdde540704fd@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1215434881-5410-1-git-send-email-tomas.winkler@intel.com>
-	 <1215447824.14247.2.camel@brick> <200807071902.51683.mb@bu3sch.de>
-	 <1215458792.14247.7.camel@brick>
-	 <1ba2fa240807071423n755d4e5ay81a6543be7761a92@mail.gmail.com>
-	 <1215466987.14247.12.camel@brick>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200807161241.04387.jbarnes@virtuousgeek.org> (sfid-20080716_214803_082710_D55AC797)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCBKdWwgOCwgMjAwOCBhdCAxMjo0MyBBTSwgSGFydmV5IEhhcnJpc29uCjxoYXJ2ZXku
-aGFycmlzb25AZ21haWwuY29tPiB3cm90ZToKPiBPbiBUdWUsIDIwMDgtMDctMDggYXQgMDA6MjMg
-KzAzMDAsIFRvbWFzIFdpbmtsZXIgd3JvdGU6Cj4+IE9uIE1vbiwgSnVsIDcsIDIwMDggYXQgMTA6
-MjYgUE0sIEhhcnZleSBIYXJyaXNvbgo+PiA+IE9yLCBhZnRlciBoYXZpbmcgYSBjb2ZmZWUgYW5k
-IGFjdHVhbGx5IGVuZ2FnaW5nIGJyYWluIChzaW1pbGFyIHRvCj4+ID4gaWVlZTgwMjExX2lzX2Rh
-dGFfcW9zKQo+PiA+Cj4+ID4gaW50IGllZWU4MDIxMV9pc19kYXRhX251bGxmdW5jKF9fbGUxNiBm
-YykKPj4gPiB7Cj4+ID4gICAgICAgIHJldHVybiAoZmMgJiBjcHVfdG9fbGUxNihJRUVFODAyMTFf
-RkNUTF9GVFlQRSB8IO+7v0lFRUU4MDIxMV/vu79TVFlQRV9OVUxMRlVOQykpID09Cj4+ID4gICAg
-ICAgICAgICAgICAgY3B1X3RvX2xlMTYoSUVFRTgwMjExX0ZUWVBFX0RBVEEgfCBJRUVFODAyMTFf
-U1RZUEVfTlVMTEZVTkMpOwo+PiA+IH0KPj4gPgo+PiA+IFRvbWFzLCB5b3Ugd2FudCBhIHBhdGNo
-Pwo+PiA+Cj4+ID4gSGFydmV5Cj4+Cj4+IE1heWJlIGl0J3MgdGhlIGxhdGUgaG91ciBidXQgSSdt
-IG5vdCBzdXJlIHdoYXQgaXMgd3Jvbmcgd2l0aCB0aGUKPj4gRW1tYW51ZWwncyAgcGF0Y2guIE1v
-c3RseSBpdCBmaXhlcyBiaWcgc3RhbGwgaW4gUlguCj4+IENoZWNrZWQgYW5kIHZhbGlkYXRlZC4K
-Pgo+IEJlY2F1c2UgdGhlcmUgYXJlIHR3byBjYXNlcyB0aGF0IHdhbnQgdG8gYmUgY2F1Z2h0IGhl
-cmU6Cj4KPiBDb21taXQgNTExZmUzZjNjNGJhMGI1Yjc3NDIxMzM2ZjY0YTE5YjZjZDAwZTY1ZiBj
-aGFuZ2VkOgo+Cj4gICAgICAgIC8qIG51bGwgZGF0YSBmcmFtZXMgYXJlIGV4Y2x1ZGVkICovCj4g
-LSAgICAgICBpZiAodW5saWtlbHkoZmMgJiBJRUVFODAyMTFfU1RZUEVfTlVMTEZVTkMpKQo+ICsg
-ICAgICAgaWYgKHVubGlrZWx5KGllZWU4MDIxMV9pc19udWxsZnVuYyhoZHItPmZyYW1lX2NvbnRy
-b2wpKSkKPgo+IFdoaWNoIGlzbid0IHF1aXRlIGVxdWl2YWxlbnQsIGFzIGl0IHdhbnRzIHRvIGNh
-dGNoIGp1c3QgdGhlIG9uZSBiaXQgYmVpbmcKPiBzZXQuCj4KSSBrbm93IGJ1dCwgd2hhdCB5b3Ug
-bWlzc2luZyBpcyB0aGUgY2hlY2sgYWJvdmUuIHdlIGJhaWwgb3V0IGZyb20gdGhlCmZ1bmN0aW9u
-IGlmIHRoZSBwYWNrZXQgaXMgbm90IHFvcyBkYXRhIGJlZm9yZSBzbyBpdCdzIG5vdCByZWxldmFu
-dCBmb3IKY2hlY2tpbmcKb2YgYW55IG51bGwgZGF0YSBqdXN0IHFvcyBudWxsIGRhdGEuIEkgZGlk
-bid0IHdhbnQgdG8gdG91Y2ggdGhlIFBTCmNvZGUgdGhhdCdzIHdoeSB3ZSd2ZSBjcmVhdGVkIGEg
-c3BlY2lhbCBoYW5kbGVyIGZvciB0aGlzIHBhcnRpY3VsYXIKY2FzZS4KSSB0aGluayB5b3UgcGF0
-Y2ggd29ya3MgYXMgd2VsbCAgYW5kIG1heWJlIGNhbiBiZSB1c2VkICBQUyBtb2RlIGFzCndlbGwg
-YnV0IEknbSBub3Qgc3VyZSBub3cuLiBJIHdpbGwgbG9vayBhdCB0aGlzIGFsdGVyLgpUb21hcwoK
-PiBIb3cgYWJvdXQgdGhpczoKPgo+IEZyb206IEhhcnZleSBIYXJyaXNvbiA8aGFydmV5LmhhcnJp
-c29uQGdtYWlsLmNvbT4KPiBTdWJqZWN0OiBbUEFUQ0hdIG1hYzgwMjExOiByeC5jIGZpeCBudWxs
-ZnVuYyBkYXRhIHRlc3QKPgo+IGNvbW1pdCA1MTFmZTNmM2M0YmEwYjViNzc0MjEzMzZmNjRhMTli
-NmNkMDBlNjVmIG1hYzgwMjExOiByeC5jIHVzZSBuZXcgaGVscGVycwo+IGNvbnRhaW5lZCBhbiBl
-cnJvciB3aGVuIHRlc3RpbmcgZm9yIG51bGxmdW5jIGRhdGEgZnJhbWVzLiAgSW50cm9kdWNlIGEK
-PiBuZXcgaGVscGVyIHRoYXQgdGVzdHMganVzdCB0aGUgTlVMTEZVTkMgYml0IGFzIGJlZm9yZSBy
-YXRoZXIgdGhhbiBhbiBleGFjdAo+IG1hdGNoLgo+Cj4gU2lnbmVkLW9mZi1ieTogSGFydmV5IEhh
-cnJpc29uIDxoYXJ2ZXkuaGFycmlzb25AZ21haWwuY29tPgo+IC0tLQo+ICBpbmNsdWRlL2xpbnV4
-L2llZWU4MDIxMS5oIHwgICAxNCArKysrKysrKysrKysrKwo+ICBuZXQvbWFjODAyMTEvcnguYyAg
-ICAgICAgIHwgICAgMiArLQo+ICAyIGZpbGVzIGNoYW5nZWQsIDE1IGluc2VydGlvbnMoKyksIDEg
-ZGVsZXRpb25zKC0pCj4KPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9pZWVlODAyMTEuaCBi
-L2luY2x1ZGUvbGludXgvaWVlZTgwMjExLmgKPiBpbmRleCBhMTYzMGJhLi41YmE0MDdlIDEwMDY0
-NAo+IC0tLSBhL2luY2x1ZGUvbGludXgvaWVlZTgwMjExLmgKPiArKysgYi9pbmNsdWRlL2xpbnV4
-L2llZWU4MDIxMS5oCj4gQEAgLTIzOSw2ICsyMzksMjAgQEAgc3RhdGljIGlubGluZSBpbnQgaWVl
-ZTgwMjExX2lzX2RhdGFfcW9zKF9fbGUxNiBmYykKPiAgfQo+Cj4gIC8qKgo+ICsgKiBpZWVlODAy
-MTFfaXNfZGF0YV9udWxsZnVuYyAtIGNoZWNrIGlmIHR5cGUgaXMgSUVFRTgwMjExX0ZUWVBFX0RB
-VEEgYW5kIElFRUU4MDIxMV9TVFlQRV9OVUxMRlVOQyBpcyBzZXQKPiArICogQGZjOiBmcmFtZSBj
-b250cm9sIGJ5dGVzIGluIGxpdHRsZS1lbmRpYW4gYnl0ZW9yZGVyCj4gKyAqLwo+ICtzdGF0aWMg
-aW5saW5lIGludCBpZWVlODAyMTFfaXNfZGF0YV9udWxsZnVuYyhfX2xlMTYgZmMpCj4gK3sKPiAr
-ICAgICAgIC8qCj4gKyAgICAgICAgKiBtYXNrIHdpdGggU1RZUEVfTlVMTEZVTkMgcmF0aGVyIHRo
-YW4gSUVFRTgwMjExX0ZDVExfU1RZUEUgYXMgd2UganVzdCBuZWVkCj4gKyAgICAgICAgKiB0byBj
-aGVjayB0aGUgb25lIGJpdAo+ICsgICAgICAgICovCj4gKyAgICAgICByZXR1cm4gKGZjICYgY3B1
-X3RvX2xlMTYoSUVFRTgwMjExX0ZDVExfRlRZUEUgfCBJRUVFODAyMTFfU1RZUEVfTlVMTEZVTkMp
-KSA9PQo+ICsgICAgICAgICAgICAgIGNwdV90b19sZTE2KElFRUU4MDIxMV9GVFlQRV9EQVRBIHwg
-SUVFRTgwMjExX1NUWVBFX05VTExGVU5DKTsKPiArfQo+ICsKPiArLyoqCj4gICogaWVlZTgwMjEx
-X2lzX2RhdGFfcHJlc2VudCAtIGNoZWNrIGlmIHR5cGUgaXMgSUVFRTgwMjExX0ZUWVBFX0RBVEEg
-YW5kIGhhcyBkYXRhCj4gICogQGZjOiBmcmFtZSBjb250cm9sIGJ5dGVzIGluIGxpdHRsZS1lbmRp
-YW4gYnl0ZW9yZGVyCj4gICovCj4gZGlmZiAtLWdpdCBhL25ldC9tYWM4MDIxMS9yeC5jIGIvbmV0
-L21hYzgwMjExL3J4LmMKPiBpbmRleCBmYWI0NDNkLi5jZTg3OWU3IDEwMDY0NAo+IC0tLSBhL25l
-dC9tYWM4MDIxMS9yeC5jCj4gKysrIGIvbmV0L21hYzgwMjExL3J4LmMKPiBAQCAtMjA0Nyw3ICsy
-MDQ3LDcgQEAgc3RhdGljIHU4IGllZWU4MDIxMV9yeF9yZW9yZGVyX2FtcGR1KHN0cnVjdCBpZWVl
-ODAyMTFfbG9jYWwgKmxvY2FsLAo+ICAgICAgICB0aWRfYWdnX3J4ID0gc3RhLT5hbXBkdV9tbG1l
-LnRpZF9yeFt0aWRdOwo+Cj4gICAgICAgIC8qIG51bGwgZGF0YSBmcmFtZXMgYXJlIGV4Y2x1ZGVk
-ICovCj4gLSAgICAgICBpZiAodW5saWtlbHkoaWVlZTgwMjExX2lzX251bGxmdW5jKGhkci0+ZnJh
-bWVfY29udHJvbCkpKQo+ICsgICAgICAgaWYgKHVubGlrZWx5KGllZWU4MDIxMV9pc19kYXRhX251
-bGxmdW5jKGhkci0+ZnJhbWVfY29udHJvbCkpKQo+ICAgICAgICAgICAgICAgIGdvdG8gZW5kX3Jl
-b3JkZXI7Cj4KPiAgICAgICAgLyogbmV3IHVuLW9yZGVyZWQgYW1wZHUgZnJhbWUgLSBwcm9jZXNz
-IGl0ICovCj4gLS0KPiAxLjUuNi4xLjMyMi5nZTkwNGIKPgo+Cj4KPgo=
+On Wednesday, July 16, 2008 12:27 pm Nick Kossifidis wrote:
+> 2008/7/16 Jesse Barnes <jbarnes@virtuousgeek.org>:
+> > On Wednesday, July 16, 2008 10:35 am Pavel Roskin wrote:
+> >> On Wed, 2008-07-16 at 09:31 -0700, Jesse Barnes wrote:
+> >> > On Wednesday, July 16, 2008 9:15 am Nick Kossifidis wrote:
+> >> > > It's ok for now, but have in mind that on my upcoming patch series
+> >> > > i'm disabling msi (commented out) since it results no interrupts on
+> >> > > pci-e cards (seems there is a bug in kernel's msi implementation).
+> >> >
+> >> > Hm, would be good to get details here.  MSI is being used by other
+> >> > drivers successfully...
+> >>
+> >> That's true, but no driver uses the same interrupt handler with and
+> >> without MSI.  Either it's different handlers or the handler checks if
+> >> MSI is enabled and does something differently.
+> >
+> > Yeah, using MSI on your device can mean that you have to make some
+> > changes (like on Intel graphics you have to disable regular interrupts or
+> > bad things happen), but you can still share the handler or at least most
+> > of it in some cases.
+>
+> Is there documentation for this somewhere ? Msi documentation
+> (MSI-HOWTO.txt) doesn't say anything about a different interrupt
+> handler etc.
+
+Matthew just rewrote MSI-HOWTO as part of his rework of the MSI code.  It 
+might be more helpful now (see 
+http://kerneltrap.org/mailarchive/linux-kernel/2008/7/1).
+
+>
+> >> Checks is any interrupts are pending are different for MSI.  It may be
+> >> not hard to do (it's probably easier than for real interrupts), but it
+> >> has to be figured out.  Somebody has to do it right.  Until MSI is
+> >> supported by the interrupt handler, it should not be enabled by the
+> >> driver, or we get a non-functioning driver for AR5006.
+> >
+> > Sure, that's fine.  I just wanted to make sure that there weren't some
+> > weird generic MSI problems.
+>
+> I was referring to this post...
+> http://lkml.org/lkml/2008/6/24/150
+
+Yeah, that's a real bug on x86; I don't know how widespread its effects are 
+though.  I'll ping Ingo & Thomas again.
+
+Jesse
