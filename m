@@ -1,75 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44348 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753082AbYGaNFT (ORCPT
+Received: from ti-out-0910.google.com ([209.85.142.187]:48264 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759973AbYGPQNk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 09:05:19 -0400
-Subject: Re: iwlwifi aggregation info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Friedrich.Beckmann@infineon.com, linux-wireless@vger.kernel.org,
-	j@w1.fi
-In-Reply-To: <1ba2fa240807300908x5489e3f8g54ff83e7e5912c0b@mail.gmail.com> (sfid-20080730_180806_410329_7AD6F121)
-References: <1217331138.10489.24.camel@johannes.berg>
-	 <1217341293.10489.73.camel@johannes.berg>
-	 <1ba2fa240807290855p191eebesb1ecf2314031f688@mail.gmail.com>
-	 <1217411631.10489.103.camel@johannes.berg>
-	 <8469FC7DDCBE054D9653D8506E1FF0F001F1E7B606@mucse406.eu.infineon.com>
-	 <1217423948.10489.121.camel@johannes.berg>
-	 <1ba2fa240807300645j654a82b4rb813b71681dfab71@mail.gmail.com>
-	 <1217425854.10489.125.camel@johannes.berg>
-	 <1ba2fa240807300659p4d743f31se265f550a2da0dd1@mail.gmail.com>
-	 <1217431179.10489.134.camel@johannes.berg>
-	 <1ba2fa240807300908x5489e3f8g54ff83e7e5912c0b@mail.gmail.com>
-	 (sfid-20080730_180806_410329_7AD6F121)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CXrjY71MUdKL+NeUhQ04"
-Date: Thu, 31 Jul 2008 15:05:11 +0200
-Message-Id: <1217509511.10489.140.camel@johannes.berg> (sfid-20080731_150528_968430_E3E1DF79)
-Mime-Version: 1.0
+	Wed, 16 Jul 2008 12:13:40 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so3028999tic.23
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2008 09:13:38 -0700 (PDT)
+Message-ID: <40f31dec0807160913m3f79cd5cw19d91f9aa513b505@mail.gmail.com> (sfid-20080716_181355_608760_8E49661C)
+Date: Wed, 16 Jul 2008 19:13:36 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Jiri Slaby" <jirislaby@gmail.com>
+Subject: Re: [PATCH 4/5] Ath5k: fix dma operation
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, davem@redhat.com, rth@cygnus.com,
+	jakub@redhat.com, "Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <1216136683-10955-1-git-send-email-jirislaby@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1216136661-10930-1-git-send-email-jirislaby@gmail.com>
+	 <1216136683-10955-1-git-send-email-jirislaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2008/7/15 Jiri Slaby <jirislaby@gmail.com>:
+> Don't sync
+> - coherent mapping (descriptors)
+> - before unmap, it's useless
+> - (wrongly anyway -- for_cpu) beacon skb, it's just mapped,
+>  so by the device yet
+>
+> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+> Cc: Nick Kossifidis <mickflemm@gmail.com>
+> Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+> ---
+>  drivers/net/wireless/ath5k/base.c |   11 -----------
+>  1 files changed, 0 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+> index 4874a6f..713ee99 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+> @@ -1705,10 +1705,6 @@ ath5k_tasklet_rx(unsigned long data)
+>                skb = bf->skb;
+>                ds = bf->desc;
+>
+> -               /* TODO only one segment */
+> -               pci_dma_sync_single_for_cpu(sc->pdev, sc->desc_daddr,
+> -                               sc->desc_len, PCI_DMA_FROMDEVICE);
+> -
+>                /*
+>                 * last buffer must not be freed to ensure proper hardware
+>                 * function. When the hardware finishes also a packet next to
+> @@ -1772,8 +1768,6 @@ ath5k_tasklet_rx(unsigned long data)
+>                                goto next;
+>                }
+>  accept:
+> -               pci_dma_sync_single_for_cpu(sc->pdev, bf->skbaddr,
+> -                               rs.rs_datalen, PCI_DMA_FROMDEVICE);
+>                pci_unmap_single(sc->pdev, bf->skbaddr, sc->rxbufsize,
+>                                PCI_DMA_FROMDEVICE);
+>                bf->skb = NULL;
+> @@ -1861,9 +1855,6 @@ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
+>        list_for_each_entry_safe(bf, bf0, &txq->q, list) {
+>                ds = bf->desc;
+>
+> -               /* TODO only one segment */
+> -               pci_dma_sync_single_for_cpu(sc->pdev, sc->desc_daddr,
+> -                               sc->desc_len, PCI_DMA_FROMDEVICE);
+>                ret = sc->ah->ah_proc_tx_desc(sc->ah, ds, &ts);
+>                if (unlikely(ret == -EINPROGRESS))
+>                        break;
+> @@ -2036,8 +2027,6 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+>                ATH5K_WARN(sc, "beacon queue %u didn't stop?\n", sc->bhalq);
+>                /* NB: hw still stops DMA, so proceed */
+>        }
+> -       pci_dma_sync_single_for_cpu(sc->pdev, bf->skbaddr, bf->skb->len,
+> -                       PCI_DMA_TODEVICE);
+>
+>        ath5k_hw_put_tx_buf(ah, sc->bhalq, bf->daddr);
+>        ath5k_hw_tx_start(ah, sc->bhalq);
+> --
+> 1.5.6.2
+>
+>
 
---=-CXrjY71MUdKL+NeUhQ04
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-On Wed, 2008-07-30 at 19:08 +0300, Tomas Winkler wrote:
-
-> > Can you explain how starvation happens? In what scenarios? With or
-> > without aggregation?
->=20
-> for (queue =3D 0; queue < QD_NUM(hw); queue++)
->=20
-> This always starts 0  prioritize dequeue the first frame. But what we
-> need is RR and let HW to prioritize the transmission according AC
-
-That's from the old code not having real MQ though, right? I'm totally
-not concerned about that.
-
-johannes
-
---=-CXrjY71MUdKL+NeUhQ04
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIkbiDAAoJEKVg1VMiehFYrUEP/1igRprfxQXwgJMA4MtwiKpd
-XVRoCpOl9sjzb9kHKkohSWh9FHuPCbHdJzySuIj6QBwT3ElLtM8zvsj0h3qHkVe/
-3706RZZ4DgxCNtiCsKhVLJZBjD+eqYWfMGi/9jhnT1IjilbbBL1GFUnCQb6Rj4rd
-LynBl2/JImQwrPA0IsA91WFZ6L0bwLhqxj8hBwrKUUujiviWR+KZlguUre2p6F8S
-MKuJ374g/A7ybTg6LlPDE85q1rPgUxRjJiwxS2v9HlBpy1L9j5fC1kKvlHId61J6
-VjBljkwvQ6mntpn8yxRHRa6yL9RaCbwqG4Lfn14IDNCgJIkwKtb7ka1Gx3YnBICB
-RpqX7HVirdBV/eL4eFf9uzq49nC+rWbx8OrQLWX6FkVJHbYJo+BR0+hu3vb8u/dL
-I/2DIOfbep2UR9au5QMwDy8cHTzNslookDsQSSRlLJCYdFg6HRluckt7Puq5pxgJ
-5MgAAKv7h7Rd4plvXbnp5A8L1+vfnIZoW+C6M8edRgWHXE3YwavJ8lTRT2Rkb5/x
-Rck2pLZfokCuCXdwvAx+WgVSXUz6Ct2oePf8+OBMNkErLqcpvbEOgdE8xY8YG/T4
-8Pzp2LH9Q5omXykQiEyKMv9uTb3wRZ+5QOy+1kjRhGKzNjkIQ1SsH7Z8rQQ5xO1S
-i8TxvPVLVCzXwaHGxi7P
-=Ha8+
------END PGP SIGNATURE-----
-
---=-CXrjY71MUdKL+NeUhQ04--
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
