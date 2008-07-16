@@ -1,71 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:56479 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756134AbYGXPGk convert rfc822-to-8bit (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.189]:12598 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755247AbYGPNLZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2008 11:06:40 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so3486782wfd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2008 08:06:39 -0700 (PDT)
-Message-ID: <69e28c910807240806t24a1c2f9l8814a2d98aac34d@mail.gmail.com> (sfid-20080724_170644_433177_DCA80646)
-Date: Thu, 24 Jul 2008 17:06:39 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: b43: Debugging PHY TX errors
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <200807241330.15439.mb@bu3sch.de>
+	Wed, 16 Jul 2008 09:11:25 -0400
+Received: by rn-out-0910.google.com with SMTP id k40so1755608rnd.17
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2008 06:11:25 -0700 (PDT)
+Message-ID: <1ba2fa240807160611h5d0d4ae5g68bfa2366cf514ec@mail.gmail.com> (sfid-20080716_151130_134607_C6793A22)
+Date: Wed, 16 Jul 2008 16:11:24 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/1] mac80211: add direct probe before association
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1216111065.3535.3.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <200807241330.15439.mb@bu3sch.de>
+References: <1216076865-9826-1-git-send-email-tomas.winkler@intel.com>
+	 <1216109902.23746.27.camel@johannes.berg>
+	 <1ba2fa240807150131w4a08ae6dhae7bab8ab6adbde7@mail.gmail.com>
+	 <1216111065.3535.3.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 24, 2008 at 1:30 PM, Michael Buesch <mb@bu3sch.de> wrote:
-> I hacked up some scripts for debugging of the PHY transmission
-> errors. It consists of two parts. One patch that has to be applied
-> to the kernel driver (latest wireless-testing!) and one firmware
-> binary patcher script (for latest supported firmware only!)
+On Tue, Jul 15, 2008 at 11:37 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2008-07-15 at 11:31 +0300, Tomas Winkler wrote:
+>> On Tue, Jul 15, 2008 at 11:18 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> >
+>> >> +     ifsta->direct_probe_tries++;
+>> >> +     if (ifsta->direct_probe_tries > IEEE80211_AUTH_MAX_TRIES) {
+>> >> +             printk(KERN_DEBUG "%s: direct probe to AP %s timed out\n",
+>> >> +                    dev->name, print_mac(mac, ifsta->bssid));
+>> >> +             ifsta->state = IEEE80211_DISABLED;
+>> >> +             return;
+>> >> +     }
+>> >> +
+>> >> +     printk(KERN_DEBUG "%s: direct probe to AP %s try %d\n",
+>> >> +                     dev->name, print_mac(mac, ifsta->bssid),
+>> >> +                     ifsta->direct_probe_tries);
+>> >
+>> > I just removed all the log flooding. Don't add it back please.
+>>
+>> Right, will resubmit.
 >
-> Both are included in the attached tarball. Extract the tarball.
->
-> So you first have to apply the included "b43-kernel-patch.patch" to
-> the kernel driver and recompile your kernel.
-> Then you have to patch your firmware by doing:
->
-> cd phyerr-patcher-001
-> bash ./patch-phyerr-logger.sh /lib/firmware/b43/ucode5.fw
->
-> You might have to adjust the path to your firmware.
-> On successful patching, the script will exit with a nice smilie: :)
->
->
-> So when running the modified driver with the patched firmware, it sho=
-uld
-> dump the shared memory every time a PHY error occurs.
-> More state dumps can be added to the kernel driver. The firmware is h=
-alted
-> while the phyerr logger function is running, so state should be consi=
-stent.
->
-> WARNING: This patch might kill your cat, or at least disturb your wir=
-eless
-> connectivity. Only use it for debugging the PHY transmission errors.
->
-> Note that these scripts require a complete compiler toolchain, includ=
-ing
-> flex and bison, on your machine, as it will compile the assembler and
-> disassembler tools.
->
-> --
-> Greetings Michael.
+> Actually, it looks like I kept those for association because I decided
+> that we weren't printing them too much. It might be much nicer to send
+> them all as wireless events though, thoughts?
 
-Please add this functionality to the open-source firmware too.
-
---G=E1bor
-
---=20
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Something like IWEVASSOCTIMEDOUT. Won't it make wpa_supplicant go nuts?
+Thanks
+Tomas
