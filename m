@@ -1,31 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:25953 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751654AbYGQFun (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:37686 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752452AbYGPOiR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 01:50:43 -0400
-To: "Tomas Winkler" <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] mac80211: make listen_interval be limited by low level driver
-References: <1216208814-26314-1-git-send-email-tomas.winkler@intel.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Thu, 17 Jul 2008 08:49:54 +0300
-In-Reply-To: <1216208814-26314-1-git-send-email-tomas.winkler@intel.com> (ext Tomas Winkler's message of "Wed\, 16 Jul 2008 14\:46\:54 +0300")
-Message-ID: <87sku9awl9.fsf@nokia.com> (sfid-20080717_075047_335118_386F7785)
+	Wed, 16 Jul 2008 10:38:17 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: Michael Wu <flamingice@sourmilk.net>
+Subject: [PATCH] Merge tx/rx descriptor flags of rtl818x devices
+Date: Wed, 16 Jul 2008 11:38:26 -0300
+Cc: linux-wireless@vger.kernel.org,
+	Andrea Merello <andreamrl@tiscali.it>
+References: <200807111656.40342.herton@mandriva.com.br> <200807160211.22995.flamingice@sourmilk.net>
+In-Reply-To: <200807160211.22995.flamingice@sourmilk.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200807161138.27221.herton@mandriva.com.br> (sfid-20080716_163821_635308_D95B8FD9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler <tomas.winkler@intel.com> writes:
+Em Wednesday 16 July 2008 03:11:18 Michael Wu escreveu:
+> On Friday 11 July 2008 15:56:39 Herton Ronaldo Krzesinski wrote:
+> > In rtl818x code tx/rx descriptor flags are common between all devices as
+> > far as I could check (looking at r8180 specs I found on the web recently
+> > and on vendor rtl8187b driver). Here is a proposal for merging them:
+> Go ahead and s/[RFC]/[PATCH]/ if you've made sure the numbers are the same and 
+> tested. This is a good idea.
+> 
+> -Michael Wu
+> 
 
-> This patch makes possible for a driver to specify maximal listen interval
-> The possibility for user to configure listen interval is not implemented
-> yet, currently the maximum provided by the driver or 1 is used.
-> Mac80211 uses config handler to set listen interval for to the driver.
-
-Looks good to me. Thanks for doing this.
+Ok, I'll repost the patch soon.
 
 -- 
-Kalle Valo
+[]'s
+Herton
