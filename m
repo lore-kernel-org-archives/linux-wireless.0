@@ -1,42 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57077
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750803AbYGUP01 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.180]:45003 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760844AbYGQRmd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 11:26:27 -0400
-Date: Mon, 21 Jul 2008 08:26:27 -0700 (PDT)
-Message-Id: <20080721.082627.128593651.davem@davemloft.net> (sfid-20080721_172633_385319_63215AD3)
-To: herbert@gondor.apana.org.au
-Cc: hadi@cyberus.ca, kaber@trash.net, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
- RCU.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080721152220.GA12341@gondor.apana.org.au>
-References: <20080721135846.GA11543@gondor.apana.org.au>
-	<20080721.080901.214889979.davem@davemloft.net>
-	<20080721152220.GA12341@gondor.apana.org.au>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 17 Jul 2008 13:42:33 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so10213waf.23
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2008 10:42:32 -0700 (PDT)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+From: Brian Cavagnolo <brian@cozybit.com>
+Date: Tue, 15 Jul 2008 17:45:02 -0700
+Subject: [PATCH 0/3] libertas: support for some persistent settings/features
+Message-ID: <487f8484.1498600a.5fc5.33b2@mx.google.com> (sfid-20080717_194247_750602_6810C3F4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Date: Mon, 21 Jul 2008 23:22:20 +0800
+Some Marvell USB hardware, such as the OLPC Active Antenna, have writable
+persistent settings for stand-alone use.  They also allow updates of the
+bootloader and a stand-alone firmware image.  These patches add support for
+some of these features and improve some existing support.
 
-> On Mon, Jul 21, 2008 at 08:09:01AM -0700, David Miller wrote:
-> >
-> > > Actually you've hit it on the head, as an alternative to TX hashing
-> > > on the packet content, we need to allow TX queue selection based on
-> > > the current CPU ID.
-> > 
-> > This we should avoid, it would allow reordering within a flow.
-> 
-> Not if the RX hashing is flow-based...
 
-Can you control the process scheduler and where it decides
-to run the processing running sendmsg() too?
-
-That's the problem.
-
-It is totally unwise to do CPU based TX hashing.
