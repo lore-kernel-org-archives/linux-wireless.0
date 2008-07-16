@@ -1,173 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50652
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1758069AbYGCHEm (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.173]:37996 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755984AbYGPBoY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:04:42 -0400
-Date: Thu, 03 Jul 2008 00:04:41 -0700 (PDT)
-Message-Id: <20080703.000441.02056414.davem@davemloft.net> (sfid-20080703_103232_985336_C459C34E)
-To: netdev@vger.kernel.org
-CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
-Subject: [PATCH 25/39]: netdev: Kill netdev->egress_subqueue{,_count}.
-From: David Miller <davem@davemloft.net>
+	Tue, 15 Jul 2008 21:44:24 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so5533655wfd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2008 18:44:24 -0700 (PDT)
+Subject: [PATCH 08/12] mac80211: remove ieee80211_get_hdrlen
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 15 Jul 2008 18:44:12 -0700
+Message-Id: <1216172652.6610.56.camel@brick> (sfid-20080716_034429_157821_B6E8C48C)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+All users have been moved over to the version taking a le16 frame control
+rather than a cpu-endian value.
 
-Replace with appropriate TX queue accesses.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
- drivers/net/ixgbe/ixgbe_main.c |    2 +-
- include/linux/netdevice.h      |   34 +++++++++++++++-------------------
- net/core/dev.c                 |    9 +++------
- 3 files changed, 19 insertions(+), 26 deletions(-)
+ include/net/mac80211.h |   10 ----------
+ net/mac80211/util.c    |   39 ---------------------------------------
+ 2 files changed, 0 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/net/ixgbe/ixgbe_main.c b/drivers/net/ixgbe/ixgbe_main.c
-index 10a1c8c..db50962 100644
---- a/drivers/net/ixgbe/ixgbe_main.c
-+++ b/drivers/net/ixgbe/ixgbe_main.c
-@@ -2355,7 +2355,7 @@ try_msi:
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 24a69f6..aef400f 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1568,16 +1568,6 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+ unsigned int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb);
  
- out:
- 	/* Notify the stack of the (possibly) reduced Tx Queue count. */
--	adapter->netdev->egress_subqueue_count = adapter->num_tx_queues;
-+	adapter->netdev->real_num_tx_queues = adapter->num_tx_queues;
- 
- 	return err;
+ /**
+- * ieee80211_get_hdrlen - get header length from frame control
+- *
+- * This function returns the 802.11 header length in bytes (not including
+- * encryption headers.)
+- *
+- * @fc: the frame control field (in CPU endianness)
+- */
+-int ieee80211_get_hdrlen(u16 fc);
+-
+-/**
+  * ieee80211_hdrlen - get header length in bytes from frame control
+  * @fc: frame control field in little-endian format
+  */
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 89ce4e0..60e3a17 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -91,45 +91,6 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
+ 	return NULL;
  }
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index 6bb3f8c..df44e44 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -118,14 +118,6 @@ struct wireless_dev;
  
- #endif  /*  __KERNEL__  */
- 
--struct net_device_subqueue
+-int ieee80211_get_hdrlen(u16 fc)
 -{
--	/* Give a control state for each queue.  This struct may contain
--	 * per-queue locks in the future.
--	 */
--	unsigned long   state;
--};
+-	int hdrlen = 24;
 -
- /*
-  *	Network device statistics. Akin to the 2.0 ether stats but
-  *	with byte counters.
-@@ -642,7 +634,13 @@ struct net_device
- 	struct netdev_queue	rx_queue;
- 
- 	struct netdev_queue	*_tx;
-+
-+	/* Number of TX queues allocated at alloc_netdev_mq() time  */
- 	unsigned int		num_tx_queues;
-+
-+	/* Number of TX queues currently active in device  */
-+	unsigned int		real_num_tx_queues;
-+
- 	unsigned long		tx_queue_len;	/* Max frames per queue allowed */
- 
- /*
-@@ -753,10 +751,6 @@ struct net_device
- 	/* for setting kernel sock attribute on TCP connection setup */
- #define GSO_MAX_SIZE		65536
- 	unsigned int		gso_max_size;
+-	switch (fc & IEEE80211_FCTL_FTYPE) {
+-	case IEEE80211_FTYPE_DATA:
+-		if ((fc & IEEE80211_FCTL_FROMDS) && (fc & IEEE80211_FCTL_TODS))
+-			hdrlen = 30; /* Addr4 */
+-		/*
+-		 * The QoS Control field is two bytes and its presence is
+-		 * indicated by the IEEE80211_STYPE_QOS_DATA bit. Add 2 to
+-		 * hdrlen if that bit is set.
+-		 * This works by masking out the bit and shifting it to
+-		 * bit position 1 so the result has the value 0 or 2.
+-		 */
+-		hdrlen += (fc & IEEE80211_STYPE_QOS_DATA)
+-				>> (ilog2(IEEE80211_STYPE_QOS_DATA)-1);
+-		break;
+-	case IEEE80211_FTYPE_CTL:
+-		/*
+-		 * ACK and CTS are 10 bytes, all others 16. To see how
+-		 * to get this condition consider
+-		 *   subtype mask:   0b0000000011110000 (0x00F0)
+-		 *   ACK subtype:    0b0000000011010000 (0x00D0)
+-		 *   CTS subtype:    0b0000000011000000 (0x00C0)
+-		 *   bits that matter:         ^^^      (0x00E0)
+-		 *   value of those: 0b0000000011000000 (0x00C0)
+-		 */
+-		if ((fc & 0xE0) == 0xC0)
+-			hdrlen = 10;
+-		else
+-			hdrlen = 16;
+-		break;
+-	}
 -
--	/* The TX queue control structures */
--	unsigned int			egress_subqueue_count;
--	struct net_device_subqueue	egress_subqueue[1];
- };
- #define to_net_dev(d) container_of(d, struct net_device, dev)
- 
-@@ -1088,7 +1082,8 @@ static inline int netif_running(const struct net_device *dev)
-  */
- static inline void netif_start_subqueue(struct net_device *dev, u16 queue_index)
+-	return hdrlen;
+-}
+-EXPORT_SYMBOL(ieee80211_get_hdrlen);
+-
+ unsigned int ieee80211_hdrlen(__le16 fc)
  {
--	clear_bit(__QUEUE_STATE_XOFF, &dev->egress_subqueue[queue_index].state);
-+	struct netdev_queue *txq = netdev_get_tx_queue(dev, queue_index);
-+	clear_bit(__QUEUE_STATE_XOFF, &txq->state);
- }
- 
- /**
-@@ -1100,11 +1095,12 @@ static inline void netif_start_subqueue(struct net_device *dev, u16 queue_index)
-  */
- static inline void netif_stop_subqueue(struct net_device *dev, u16 queue_index)
- {
-+	struct netdev_queue *txq = netdev_get_tx_queue(dev, queue_index);
- #ifdef CONFIG_NETPOLL_TRAP
- 	if (netpoll_trap())
- 		return;
- #endif
--	set_bit(__QUEUE_STATE_XOFF, &dev->egress_subqueue[queue_index].state);
-+	set_bit(__QUEUE_STATE_XOFF, &txq->state);
- }
- 
- /**
-@@ -1117,8 +1113,8 @@ static inline void netif_stop_subqueue(struct net_device *dev, u16 queue_index)
- static inline int __netif_subqueue_stopped(const struct net_device *dev,
- 					 u16 queue_index)
- {
--	return test_bit(__QUEUE_STATE_XOFF,
--			&dev->egress_subqueue[queue_index].state);
-+	struct netdev_queue *txq = netdev_get_tx_queue(dev, queue_index);
-+	return test_bit(__QUEUE_STATE_XOFF, &txq->state);
- }
- 
- static inline int netif_subqueue_stopped(const struct net_device *dev,
-@@ -1136,13 +1132,13 @@ static inline int netif_subqueue_stopped(const struct net_device *dev,
-  */
- static inline void netif_wake_subqueue(struct net_device *dev, u16 queue_index)
- {
-+	struct netdev_queue *txq = netdev_get_tx_queue(dev, queue_index);
- #ifdef CONFIG_NETPOLL_TRAP
- 	if (netpoll_trap())
- 		return;
- #endif
--	if (test_and_clear_bit(__QUEUE_STATE_XOFF,
--			       &dev->egress_subqueue[queue_index].state))
--		__netif_schedule(netdev_get_tx_queue(dev, 0));
-+	if (test_and_clear_bit(__QUEUE_STATE_XOFF, &txq->state))
-+		__netif_schedule(txq);
- }
- 
- /**
-diff --git a/net/core/dev.c b/net/core/dev.c
-index 4b1d39f..6bf4930 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -4132,8 +4132,7 @@ struct net_device *alloc_netdev_mq(int sizeof_priv, const char *name,
- 
- 	BUG_ON(strlen(name) >= sizeof(dev->name));
- 
--	alloc_size = sizeof(struct net_device) +
--		     sizeof(struct net_device_subqueue) * (queue_count - 1);
-+	alloc_size = sizeof(struct net_device);
- 	if (sizeof_priv) {
- 		/* ensure 32-byte alignment of private area */
- 		alloc_size = (alloc_size + NETDEV_ALIGN_CONST) & ~NETDEV_ALIGN_CONST;
-@@ -4163,16 +4162,14 @@ struct net_device *alloc_netdev_mq(int sizeof_priv, const char *name,
- 
- 	dev->_tx = tx;
- 	dev->num_tx_queues = queue_count;
-+	dev->real_num_tx_queues = queue_count;
- 
- 	if (sizeof_priv) {
- 		dev->priv = ((char *)dev +
--			     ((sizeof(struct net_device) +
--			       (sizeof(struct net_device_subqueue) *
--				(queue_count - 1)) + NETDEV_ALIGN_CONST)
-+			     ((sizeof(struct net_device) + NETDEV_ALIGN_CONST)
- 			      & ~NETDEV_ALIGN_CONST));
- 	}
- 
--	dev->egress_subqueue_count = queue_count;
- 	dev->gso_max_size = GSO_MAX_SIZE;
- 
- 	netdev_init_queues(dev);
+ 	unsigned int hdrlen = 24;
 -- 
-1.5.6
+1.5.6.3.499.geae9
+
 
