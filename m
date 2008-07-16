@@ -1,223 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2435 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755544AbYGGUKW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2008 16:10:22 -0400
-Date: Mon, 7 Jul 2008 15:58:22 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.og
-Subject: pull request: wireless-2.6 2008-07-07
-Message-ID: <20080707195822.GA30335@tuxdriver.com> (sfid-20080707_221028_367158_043F27C6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from rv-out-0506.google.com ([209.85.198.231]:2241 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755321AbYGPBoV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jul 2008 21:44:21 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so6244946rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2008 18:44:20 -0700 (PDT)
+Subject: [PATCH 06/12] mac80211: wep.c replace magic numbers in IV/ICV
+	removal
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 15 Jul 2008 18:44:10 -0700
+Message-Id: <1216172650.6610.54.camel@brick> (sfid-20080716_034424_240592_9A111163)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
-
-I have a few more fixes for 2.6.26 -- they are mostly
-practically-one-liners, nothing controversial.
-
-Let me know if there are problems!
-
-John
-
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
 ---
+ net/mac80211/wep.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-Individual patches are available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
-
----
-
-The following changes since commit 7f2d38eb7a42bea1c1df51bbdaa2ca0f0bdda07f:
-  Oliver Hartkopp (1):
-        can: add sanity checks
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
-
-Darren Jenkins (1):
-      drivers/net/wireless/iwlwifi/iwl-3945.c Fix type issue on 64bit
-
-Firat Birlik (1):
-      zd1211rw: add ID for AirTies WUS-201
-
-Guy Cohen (1):
-      mac80211: move netif_carrier_on to after ieee80211_bss_info_change_notify
-
-Ivo van Doorn (1):
-      mac80211: Only flush workqueue when last interface was removed
-
-John W. Linville (1):
-      hostap_cs: correct poor NULL checks in suspend/resume routines
-
-Michael Buesch (1):
-      ssb-pcicore: Fix IRQ-vector init on embedded devices
-
-Vladimir Koutny (1):
-      mac80211: don't report selected IBSS when not found
-
- drivers/net/wireless/hostap/hostap_cs.c |   12 ++++++++----
- drivers/net/wireless/iwlwifi/iwl-3945.c |    4 ++--
- drivers/net/wireless/zd1211rw/zd_usb.c  |    1 +
- drivers/ssb/driver_pcicore.c            |    7 +++++++
- net/mac80211/main.c                     |    4 ++--
- net/mac80211/mlme.c                     |   13 +++++++++----
- 6 files changed, 29 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/hostap/hostap_cs.c b/drivers/net/wireless/hostap/hostap_cs.c
-index 80039a0..3b4e55c 100644
---- a/drivers/net/wireless/hostap/hostap_cs.c
-+++ b/drivers/net/wireless/hostap/hostap_cs.c
-@@ -777,8 +777,10 @@ static int hostap_cs_suspend(struct pcmcia_device *link)
- 	int dev_open = 0;
- 	struct hostap_interface *iface = NULL;
+diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
+index 872d2fc..e50b421 100644
+--- a/net/mac80211/wep.c
++++ b/net/mac80211/wep.c
+@@ -228,11 +228,10 @@ int ieee80211_wep_decrypt(struct ieee80211_local *local, struct sk_buff *skb,
+ 		return -1;
  
--	if (dev)
--		iface = netdev_priv(dev);
-+	if (!dev)
-+		return -ENODEV;
-+
-+	iface = netdev_priv(dev);
- 
- 	PDEBUG(DEBUG_EXTRA, "%s: CS_EVENT_PM_SUSPEND\n", dev_info);
- 	if (iface && iface->local)
-@@ -798,8 +800,10 @@ static int hostap_cs_resume(struct pcmcia_device *link)
- 	int dev_open = 0;
- 	struct hostap_interface *iface = NULL;
- 
--	if (dev)
--		iface = netdev_priv(dev);
-+	if (!dev)
-+		return -ENODEV;
-+
-+	iface = netdev_priv(dev);
- 
- 	PDEBUG(DEBUG_EXTRA, "%s: CS_EVENT_PM_RESUME\n", dev_info);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index f5387a7..55ac850 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -449,7 +449,7 @@ static void iwl3945_dbg_report_frame(struct iwl3945_priv *priv,
- 
- 	if (print_summary) {
- 		char *title;
--		u32 rate;
-+		int rate;
- 
- 		if (hundred)
- 			title = "100Frames";
-@@ -487,7 +487,7 @@ static void iwl3945_dbg_report_frame(struct iwl3945_priv *priv,
- 		 *    but you can hack it to show more, if you'd like to. */
- 		if (dataframe)
- 			IWL_DEBUG_RX("%s: mhd=0x%04x, dst=0x%02x, "
--				     "len=%u, rssi=%d, chnl=%d, rate=%u, \n",
-+				     "len=%u, rssi=%d, chnl=%d, rate=%d, \n",
- 				     title, fc, header->addr1[5],
- 				     length, rssi, channel, rate);
- 		else {
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index 8941f5e..6cdad97 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -64,6 +64,7 @@ static struct usb_device_id usb_ids[] = {
- 	{ USB_DEVICE(0x079b, 0x0062), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x1582, 0x6003), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x050d, 0x705c), .driver_info = DEVICE_ZD1211B },
-+	{ USB_DEVICE(0x083a, 0xe506), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x083a, 0x4505), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x0471, 0x1236), .driver_info = DEVICE_ZD1211B },
- 	{ USB_DEVICE(0x13b1, 0x0024), .driver_info = DEVICE_ZD1211B },
-diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
-index d28c538..538c570 100644
---- a/drivers/ssb/driver_pcicore.c
-+++ b/drivers/ssb/driver_pcicore.c
-@@ -537,6 +537,13 @@ int ssb_pcicore_dev_irqvecs_enable(struct ssb_pcicore *pc,
- 	int err = 0;
- 	u32 tmp;
- 
-+	if (dev->bus->bustype != SSB_BUSTYPE_PCI) {
-+		/* This SSB device is not on a PCI host-bus. So the IRQs are
-+		 * not routed through the PCI core.
-+		 * So we must not enable routing through the PCI core. */
-+		goto out;
-+	}
-+
- 	if (!pdev)
- 		goto out;
- 	bus = pdev->bus;
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 98c0b5e..df0836f 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -530,8 +530,6 @@ static int ieee80211_stop(struct net_device *dev)
- 				local->sta_hw_scanning = 0;
- 		}
- 
--		flush_workqueue(local->hw.workqueue);
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
 -
- 		sdata->u.sta.flags &= ~IEEE80211_STA_PRIVACY_INVOKED;
- 		kfree(sdata->u.sta.extra_ie);
- 		sdata->u.sta.extra_ie = NULL;
-@@ -555,6 +553,8 @@ static int ieee80211_stop(struct net_device *dev)
+-	if (skb->len < 8 + hdrlen)
++	if (skb->len < hdrlen + WEP_IV_LEN + WEP_ICV_LEN)
+ 		return -1;
  
- 		ieee80211_led_radio(local, 0);
+-	len = skb->len - hdrlen - 8;
++	len = skb->len - hdrlen - WEP_IV_LEN - WEP_ICV_LEN;
  
-+		flush_workqueue(local->hw.workqueue);
-+
- 		tasklet_disable(&local->tx_pending_tasklet);
- 		tasklet_disable(&local->tasklet);
+ 	keyidx = skb->data[hdrlen + 3] >> 6;
+ 
+@@ -303,7 +302,7 @@ ieee80211_crypto_wep_decrypt(struct ieee80211_rx_data *rx)
+ 	} else if (!(rx->status->flag & RX_FLAG_IV_STRIPPED)) {
+ 		ieee80211_wep_remove_iv(rx->local, rx->skb, rx->key);
+ 		/* remove ICV */
+-		skb_trim(rx->skb, rx->skb->len - 4);
++		skb_trim(rx->skb, rx->skb->len - WEP_ICV_LEN);
  	}
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4d2b582..b404537 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -547,15 +547,14 @@ static void ieee80211_set_associated(struct net_device *dev,
- 			sdata->bss_conf.ht_bss_conf = &conf->ht_bss_conf;
- 		}
  
--		netif_carrier_on(dev);
- 		ifsta->flags |= IEEE80211_STA_PREV_BSSID_SET;
- 		memcpy(ifsta->prev_bssid, sdata->u.sta.bssid, ETH_ALEN);
- 		memcpy(wrqu.ap_addr.sa_data, sdata->u.sta.bssid, ETH_ALEN);
- 		ieee80211_sta_send_associnfo(dev, ifsta);
- 	} else {
-+		netif_carrier_off(dev);
- 		ieee80211_sta_tear_down_BA_sessions(dev, ifsta->bssid);
- 		ifsta->flags &= ~IEEE80211_STA_ASSOCIATED;
--		netif_carrier_off(dev);
- 		ieee80211_reset_erp_info(dev);
- 
- 		sdata->bss_conf.assoc_ht = 0;
-@@ -569,6 +568,10 @@ static void ieee80211_set_associated(struct net_device *dev,
- 
- 	sdata->bss_conf.assoc = assoc;
- 	ieee80211_bss_info_change_notify(sdata, changed);
-+
-+	if (assoc)
-+		netif_carrier_on(dev);
-+
- 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
- 	wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
- }
-@@ -3611,8 +3614,10 @@ static int ieee80211_sta_find_ibss(struct net_device *dev,
- 	spin_unlock_bh(&local->sta_bss_lock);
- 
- #ifdef CONFIG_MAC80211_IBSS_DEBUG
--	printk(KERN_DEBUG "   sta_find_ibss: selected %s current "
--	       "%s\n", print_mac(mac, bssid), print_mac(mac2, ifsta->bssid));
-+	if (found)
-+		printk(KERN_DEBUG "   sta_find_ibss: selected %s current "
-+		       "%s\n", print_mac(mac, bssid),
-+		       print_mac(mac2, ifsta->bssid));
- #endif /* CONFIG_MAC80211_IBSS_DEBUG */
- 	if (found && memcmp(ifsta->bssid, bssid, ETH_ALEN) != 0 &&
- 	    (bss = ieee80211_rx_bss_get(dev, bssid,
+ 	return RX_CONTINUE;
 -- 
-John W. Linville
-linville@tuxdriver.com
+1.5.6.3.499.geae9
+
+
