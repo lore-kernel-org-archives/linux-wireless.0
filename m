@@ -1,76 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.infineon.com ([217.10.60.23]:48001 "EHLO
-	smtp2.infineon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751076AbYGHKyB convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40489 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755905AbYGPIkJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 06:54:01 -0400
-From: <Friedrich.Beckmann@infineon.com>
-To: <linux-wireless@vger.kernel.org>
-Date: Tue, 8 Jul 2008 12:44:08 +0200
-Subject: RE: SDIO network card design - Packet Aggregation and Interrupt Load
-Message-ID: <8469FC7DDCBE054D9653D8506E1FF0F001D43A8C70@mucse406.eu.infineon.com> (sfid-20080708_125407_136148_2B821EE8)
-Content-Type: text/plain; charset=iso-8859-1
-MIME-Version: 1.0
+	Wed, 16 Jul 2008 04:40:09 -0400
+Subject: Re: REVISED AGENDA -- Re: Linux Wireless Mini-Summit -- Ottawa --
+	July 22, 2008
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080715182654.GA5969@tuxdriver.com> (sfid-20080715_203731_863327_623FD323)
+References: <20080709190915.GA8238@tuxdriver.com>
+	 <20080715182654.GA5969@tuxdriver.com>
+	 (sfid-20080715_203731_863327_623FD323)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9+g/nQ4iyHgvjwouy5bm"
+Date: Wed, 16 Jul 2008 10:40:07 +0200
+Message-Id: <1216197607.3422.10.camel@johannes.berg> (sfid-20080716_104014_770710_B3E90C50)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-i have a question regarding the design of a network card
-which is attached via SDIO. SDIO transfers are handled by
-a SDIO host controller in the system which can do DMA from
-the host memory to the device. The end of such a transfer
-can be indicated via an interrupt. The transfer has to be
-triggered by the cpu. So there is no DMA ring like in
-standard ethernet cards.
+--=-9+g/nQ4iyHgvjwouy5bm
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The default way of operation would be to transfer each
-packet with one DMA transfer. Such a transfer takes
-between 10=B5s and 180=B5s depending on the packet length.
-Each transfer requires cpu activity to be triggered.
-My fear is that there is a high system load due to interrupts.
+On Tue, 2008-07-15 at 14:26 -0400, John W. Linville wrote:
 
-Question 1:
-Do you have measurement data regarding the cost of
-an interrupt? I did some google search and found different
-numbers. On an ARM OMAP platform Francis David [1] claims
-cost due to interrupt of ~200=B5s/interrupt.
-Dan Tsafir [2] did measurements resulting in overheads
-of 5-15=B5s/interrupt for different intel architectures.
+> 0900	Status Reports
+>=20
+> 	Overview of where things stand today
+>=20
+> 	- 802.11n
+>=20
+> 	- QoS/Multiqueue
 
-Question 2:
-Do you think it it would be worth to have a packet
-aggregation mode, where a number of packets are transfered
-in one DMA transfer? That would reduce the number of required cpu
-interactions. As only SDIO SDMA transfers [3] are assumed,
-it would however involve packet copying.
+It might make sense to do these the other way around since 11n depends
+on the MQ stuff. I can talk about davem's recent changes that remove
+most of the code, but other than that I think we're pretty much set.
 
-Question 3:
-Regarding driver design, do you think that polling the
-DMA host controller would be an efficient way? Polling done
-in the NAPI poll routine, waiting for DMA transfers to finish?
+> 1030	Current Work
+>=20
+> 	Short presentations/discussions about work in progress
+>=20
+> 	- access point mode
+>=20
+> 	- cfg80211/nl80211
+> 		- time to push to replace WEXT?
+> 		- tool enhancements and/or userland support?
 
-Comments are welcome!
+Both of those are pretty much stalled now, apparently because I was the
+only one investing time into them and am no longer doing anything at the
+moment. I can give a five-minute overview over what we need/want for
+each of those I guess.
 
-Regards
+johannes
 
-=46riedrich
+--=-9+g/nQ4iyHgvjwouy5bm
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-References:
-[1] http://choices.cs.uiuc.edu/contextswitching.pdf
-[2] http://www.cs.huji.ac.il/~feit/exp/expcs07/papers/140.pdf
-[3] http://www.sdcard.org/about/host_controller/simple_spec
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
+iQIcBAABAgAGBQJIfbPjAAoJEKVg1VMiehFY7IUP/AwoM2qw/KAwMZg1+Tazf76z
+N/an8OSKN/yiDFYfqJ7dyQ1quAebe+W82X1riC8Hhmr7FhIRGym2vJ2vGQ67UEvs
+W2DfSSvWiVASa8nawn+FQ/rY3BUeT/JyJUD5xk8HgqIPci8S3Vx4Wu7SGFgwtvHv
+gXH3aXPvYO4chuKZEXSchf8YSq92Jv2V6thmiSn7lWdHq9PCCilNBQQmem4rTyXA
+G9zdYFYbxTTMge5kJJxiwyWEb2+ggB4rtW/lyC70K0gFCu5WPronVxRTEiaVGCFO
+LZzyjDCVoy1lL86pfqC+WnaF+iyUo2g2ka21wwf2fQdO/q3Z12IxfdF8Dpsb7PRK
+iWTyD33F1tXgY4K2h6KxVrf4dB8el8ece/ewqPBqCSRVglVdfeMEqZZ+zsBkX/F8
+fLYZgJ2vE02qfhv4iHcPGPkRZjJ0qcHTzaGTt/4F2I+jfjHZ9ZsEsFQVrU9WeuPm
+LS2hpnVCJZPTWKUx8uFc5FMbdxQB/idgXZ4Vzwr+C9V6BhsToJL997jK12Y7cULK
+8POGgSBTpAQt9MhvBnz0k3As6K+PSl07doILDigaqJPG8VLH3kobsuPf0AfrhL0P
+H8qCn3IKzVu6TzKfe89BRONQxZE50u+9DidHz/CzO6g2PoSkQeOI4QHGDvXgMiiS
+X2PjeuJroWxR37mMBBUM
+=w2zr
+-----END PGP SIGNATURE-----
 
+--=-9+g/nQ4iyHgvjwouy5bm--
 
-
-
-
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
