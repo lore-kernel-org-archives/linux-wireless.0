@@ -1,191 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:47923 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751500AbYGBQzA (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:16274 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755679AbYGPBoX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2008 12:55:00 -0400
-Message-ID: <486BB332.6000703@lwfinger.net> (sfid-20080702_185505_871837_D7351577)
-Date: Wed, 02 Jul 2008 11:56:18 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: akpm@linux-foundation.org
-CC: Adrian Bunk <bunk@kernel.org>, dhowells@redhat.com,
-	linville@tuxdriver.com, mb@bu3sch.de, stefano.brivio@polimi.it,
-	Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: + drivers-net-wireless-b43legacy-dmac-remove-the-switch-in-b43legacy_dma_init.patch
- added to -mm tree
-References: <200807020835.m628Zx2e007473@imap1.linux-foundation.org>
-In-Reply-To: <200807020835.m628Zx2e007473@imap1.linux-foundation.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 15 Jul 2008 21:44:23 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so1738137yxm.1
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2008 18:44:23 -0700 (PDT)
+Subject: [PATCH 07/12] mac80211: rx.c/tx.c remove more users of
+	tx/rx_data->fc
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 15 Jul 2008 18:44:12 -0700
+Message-Id: <1216172652.6610.55.camel@brick> (sfid-20080716_034427_375493_DB3EF1D4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-akpm@linux-foundation.org wrote:
-> The patch titled
->      drivers/net/wireless/b43legacy/dma.c: remove the switch in b43legacy_dma_init()
-> has been added to the -mm tree.  Its filename is
->      drivers-net-wireless-b43legacy-dmac-remove-the-switch-in-b43legacy_dma_init.patch
-> 
-> ------------------------------------------------------
-> Subject: drivers/net/wireless/b43legacy/dma.c: remove the switch in b43legacy_dma_init()
-> From: Adrian Bunk <bunk@stusta.de>
-> 
-> The gcc 3.4 fork used to compile the MN10300 port emits unwanted
-> __ucmpdi2() calls for this switch on a 64bit value.
-> 
-> Fix it by transforming the switch to equivalent "if ... else if ..."
-> statements.
-> 
-> Signed-off-by: Adrian Bunk <bunk@kernel.org>
-> Cc: David Howells <dhowells@redhat.com>
-> Cc: Stefano Brivio <stefano.brivio@polimi.it>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Cc: Michael Buesch <mb@bu3sch.de>
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
-> 
->  drivers/net/wireless/b43legacy/dma.c |   16 ++++++----------
->  1 file changed, 6 insertions(+), 10 deletions(-)
-> 
-> diff -puN drivers/net/wireless/b43legacy/dma.c~drivers-net-wireless-b43legacy-dmac-remove-the-switch-in-b43legacy_dma_init drivers/net/wireless/b43legacy/dma.c
-> --- a/drivers/net/wireless/b43legacy/dma.c~drivers-net-wireless-b43legacy-dmac-remove-the-switch-in-b43legacy_dma_init
-> +++ a/drivers/net/wireless/b43legacy/dma.c
-> @@ -1027,19 +1027,15 @@ int b43legacy_dma_init(struct b43legacy_
->  	enum b43legacy_dmatype type;
->  
->  	dmamask = supported_dma_mask(dev);
-> -	switch (dmamask) {
-> -	default:
-> -		B43legacy_WARN_ON(1);
-> -	case DMA_30BIT_MASK:
-> +
-> +	if (dmamask == DMA_30BIT_MASK)
->  		type = B43legacy_DMA_30BIT;
-> -		break;
-> -	case DMA_32BIT_MASK:
-> +	else if (dmamask == DMA_32BIT_MASK)
->  		type = B43legacy_DMA_32BIT;
-> -		break;
-> -	case DMA_64BIT_MASK:
-> +	else if (dmamask == DMA_64BIT_MASK)
->  		type = B43legacy_DMA_64BIT;
-> -		break;
-> -	}
-> +	else
-> +		B43legacy_WARN_ON(1);
->  
->  	err = ssb_dma_set_mask(dev->dev, dmamask);
->  	if (err) {
-> _
+Those functions that still use ieee80211_get_hdrlen are moved over
+to use the little endian frame control.
 
-Andrew,
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+---
+ net/mac80211/rx.c |   62 ++++++++++++++++++++--------------------------------
+ net/mac80211/tx.c |    2 +-
+ 2 files changed, 25 insertions(+), 39 deletions(-)
 
-When I received your E-mail, I wondered why there was not a similar
-"fix" for b43. It was then I discovered how much b43 and b43legacy had
-diverged while I wasn't looking. I have no objections to your patch;
-however, I wonder if it might be better to fix b43legacy in the same
-way that b43 was changed. I have prepared and tested such a fix (shown
-below). The only problem with this is that the patch is much more
-intrusive than Adrian's and there may be a problem getting it into
-2.6.26 before it is released, but then I do not think that you intend to
-send the -mm patch to 2.6.26.
-
-What do you think is the best route to go?
-
-Larry
-
-=================================================
-
-Index: linux-2.6/drivers/net/wireless/b43legacy/dma.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/b43legacy/dma.c
-+++ linux-2.6/drivers/net/wireless/b43legacy/dma.c
-@@ -860,6 +860,18 @@ static u64 supported_dma_mask(struct b43
-  	return DMA_30BIT_MASK;
-  }
-
-+static enum b43legacy_dmatype dma_mask_to_engine_type(u64 dmamask)
-+{
-+	if (dmamask == DMA_30BIT_MASK)
-+		return B43legacy_DMA_30BIT;
-+	if (dmamask == DMA_32BIT_MASK)
-+		return B43legacy_DMA_32BIT;
-+	if (dmamask == DMA_64BIT_MASK)
-+		return B43legacy_DMA_64BIT;
-+	B43legacy_WARN_ON(1);
-+	return B43legacy_DMA_30BIT;
-+}
-+
-  /* Main initialization function. */
-  static
-  struct b43legacy_dmaring *b43legacy_setup_dmaring(struct b43legacy_wldev *dev,
-@@ -1019,6 +1031,43 @@ void b43legacy_dma_free(struct b43legacy
-  	dma->tx_ring0 = NULL;
-  }
-
-+static int b43legacy_dma_set_mask(struct b43legacy_wldev *dev, u64 mask)
-+{
-+	u64 orig_mask = mask;
-+	bool fallback = 0;
-+	int err;
-+
-+	/* Try to set the DMA mask. If it fails, try falling back to a
-+	 * lower mask, as we can always also support a lower one. */
-+	while (1) {
-+		err = ssb_dma_set_mask(dev->dev, mask);
-+		if (!err)
-+			break;
-+		if (mask == DMA_64BIT_MASK) {
-+			mask = DMA_32BIT_MASK;
-+			fallback = 1;
-+			continue;
-+		}
-+		if (mask == DMA_32BIT_MASK) {
-+			mask = DMA_30BIT_MASK;
-+			fallback = 1;
-+			continue;
-+		}
-+		b43legacyerr(dev->wl, "The machine/kernel does not support "
-+		       "the required %u-bit DMA mask\n",
-+		       (unsigned int)dma_mask_to_engine_type(orig_mask));
-+		return -EOPNOTSUPP;
-+	}
-+	if (fallback) {
-+		b43legacyinfo(dev->wl, "DMA mask fallback from %u-bit to %u-"
-+			"bit\n",
-+			(unsigned int)dma_mask_to_engine_type(orig_mask),
-+			(unsigned int)dma_mask_to_engine_type(mask));
-+	}
-+
-+	return 0;
-+}
-+
-  int b43legacy_dma_init(struct b43legacy_wldev *dev)
-  {
-  	struct b43legacy_dma *dma = &dev->dma;
-@@ -1028,21 +1077,8 @@ int b43legacy_dma_init(struct b43legacy_
-  	enum b43legacy_dmatype type;
-
-  	dmamask = supported_dma_mask(dev);
--	switch (dmamask) {
--	default:
--		B43legacy_WARN_ON(1);
--	case DMA_30BIT_MASK:
--		type = B43legacy_DMA_30BIT;
--		break;
--	case DMA_32BIT_MASK:
--		type = B43legacy_DMA_32BIT;
--		break;
--	case DMA_64BIT_MASK:
--		type = B43legacy_DMA_64BIT;
--		break;
--	}
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 6d9ae67..cca1ed8 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -816,7 +816,7 @@ ieee80211_reassemble_add(struct ieee80211_sub_if_data *sdata,
+ 
+ static inline struct ieee80211_fragment_entry *
+ ieee80211_reassemble_find(struct ieee80211_sub_if_data *sdata,
+-			  u16 fc, unsigned int frag, unsigned int seq,
++			  unsigned int frag, unsigned int seq,
+ 			  int rx_queue, struct ieee80211_hdr *hdr)
+ {
+ 	struct ieee80211_fragment_entry *entry;
+@@ -825,7 +825,6 @@ ieee80211_reassemble_find(struct ieee80211_sub_if_data *sdata,
+ 	idx = sdata->fragment_next;
+ 	for (i = 0; i < IEEE80211_FRAGMENT_MAX; i++) {
+ 		struct ieee80211_hdr *f_hdr;
+-		u16 f_fc;
+ 
+ 		idx--;
+ 		if (idx < 0)
+@@ -837,10 +836,13 @@ ieee80211_reassemble_find(struct ieee80211_sub_if_data *sdata,
+ 		    entry->last_frag + 1 != frag)
+ 			continue;
+ 
+-		f_hdr = (struct ieee80211_hdr *) entry->skb_list.next->data;
+-		f_fc = le16_to_cpu(f_hdr->frame_control);
++		f_hdr = (struct ieee80211_hdr *)entry->skb_list.next->data;
+ 
+-		if ((fc & IEEE80211_FCTL_FTYPE) != (f_fc & IEEE80211_FCTL_FTYPE) ||
++		/*
++		 * Check ftype and addresses are equal, else check next fragment
++		 */
++		if (((hdr->frame_control ^ f_hdr->frame_control) &
++		     cpu_to_le16(IEEE80211_FCTL_FTYPE)) ||
+ 		    compare_ether_addr(hdr->addr1, f_hdr->addr1) != 0 ||
+ 		    compare_ether_addr(hdr->addr2, f_hdr->addr2) != 0)
+ 			continue;
+@@ -865,11 +867,11 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 	struct sk_buff *skb;
+ 	DECLARE_MAC_BUF(mac);
+ 
+-	hdr = (struct ieee80211_hdr *) rx->skb->data;
++	hdr = (struct ieee80211_hdr *)rx->skb->data;
+ 	sc = le16_to_cpu(hdr->seq_ctrl);
+ 	frag = sc & IEEE80211_SCTL_FRAG;
+ 
+-	if (likely((!(rx->fc & IEEE80211_FCTL_MOREFRAGS) && frag == 0) ||
++	if (likely((!ieee80211_has_morefrags(hdr->frame_control) && frag == 0) ||
+ 		   (rx->skb)->len < 24 ||
+ 		   is_multicast_ether_addr(hdr->addr1))) {
+ 		/* not fragmented */
+@@ -884,7 +886,7 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 		entry = ieee80211_reassemble_add(rx->sdata, frag, seq,
+ 						 rx->queue, &(rx->skb));
+ 		if (rx->key && rx->key->conf.alg == ALG_CCMP &&
+-		    (rx->fc & IEEE80211_FCTL_PROTECTED)) {
++		    ieee80211_has_protected(hdr->frame_control)) {
+ 			/* Store CCMP PN so that we can verify that the next
+ 			 * fragment has a sequential PN value. */
+ 			entry->ccmp = 1;
+@@ -898,8 +900,7 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 	/* This is a fragment for a frame that should already be pending in
+ 	 * fragment cache. Add this fragment to the end of the pending entry.
+ 	 */
+-	entry = ieee80211_reassemble_find(rx->sdata, rx->fc, frag, seq,
+-					  rx->queue, hdr);
++	entry = ieee80211_reassemble_find(rx->sdata, frag, seq, rx->queue, hdr);
+ 	if (!entry) {
+ 		I802_DEBUG_INC(rx->local->rx_handlers_drop_defrag);
+ 		return RX_DROP_MONITOR;
+@@ -924,7 +925,7 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 		memcpy(entry->last_pn, pn, CCMP_PN_LEN);
+ 	}
+ 
+-	skb_pull(rx->skb, ieee80211_get_hdrlen(rx->fc));
++	skb_pull(rx->skb, ieee80211_hdrlen(hdr->frame_control));
+ 	__skb_queue_tail(&entry->skb_list, rx->skb);
+ 	entry->last_frag = frag;
+ 	entry->extra_len += rx->skb->len;
+@@ -1091,7 +1092,7 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
+ {
+ 	struct net_device *dev = rx->dev;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
+-	u16 fc, hdrlen, ethertype;
++	u16 hdrlen, ethertype;
+ 	u8 *payload;
+ 	u8 dst[ETH_ALEN];
+ 	u8 src[ETH_ALEN] __aligned(2);
+@@ -1102,12 +1103,10 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
+ 	DECLARE_MAC_BUF(mac3);
+ 	DECLARE_MAC_BUF(mac4);
+ 
+-	fc = rx->fc;
 -
--	err = ssb_dma_set_mask(dev->dev, dmamask);
-+	type = dma_mask_to_engine_type(dmamask);
-+	err = b43legacy_dma_set_mask(dev, dmamask);
-  	if (err) {
-  #ifdef CONFIG_B43LEGACY_PIO
-  		b43legacywarn(dev->wl, "DMA for this device not supported. "
+-	if (unlikely(!WLAN_FC_DATA_PRESENT(fc)))
++	if (unlikely(!ieee80211_is_data_present(hdr->frame_control)))
+ 		return -1;
+ 
+-	hdrlen = ieee80211_get_hdrlen(fc);
++	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ 		int meshhdrlen = ieee80211_get_mesh_hdrlen(
+@@ -1133,41 +1132,28 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
+ 	 *   1     0   BSSID SA    DA    n/a
+ 	 *   1     1   RA    TA    DA    SA
+ 	 */
++	memcpy(dst, ieee80211_get_DA(hdr), ETH_ALEN);
++	memcpy(src, ieee80211_get_SA(hdr), ETH_ALEN);
+ 
+-	switch (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
+-	case IEEE80211_FCTL_TODS:
+-		/* BSSID SA DA */
+-		memcpy(dst, hdr->addr3, ETH_ALEN);
+-		memcpy(src, hdr->addr2, ETH_ALEN);
+-
++	switch (hdr->frame_control &
++		cpu_to_le16(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
++	case __constant_cpu_to_le16(IEEE80211_FCTL_TODS):
+ 		if (unlikely(sdata->vif.type != IEEE80211_IF_TYPE_AP &&
+ 			     sdata->vif.type != IEEE80211_IF_TYPE_VLAN))
+ 			return -1;
+ 		break;
+-	case (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS):
+-		/* RA TA DA SA */
+-		memcpy(dst, hdr->addr3, ETH_ALEN);
+-		memcpy(src, hdr->addr4, ETH_ALEN);
+-
+-		 if (unlikely(sdata->vif.type != IEEE80211_IF_TYPE_WDS &&
++	case __constant_cpu_to_le16(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS):
++		if (unlikely(sdata->vif.type != IEEE80211_IF_TYPE_WDS &&
+ 			     sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT))
+ 			return -1;
+ 		break;
+-	case IEEE80211_FCTL_FROMDS:
+-		/* DA BSSID SA */
+-		memcpy(dst, hdr->addr1, ETH_ALEN);
+-		memcpy(src, hdr->addr3, ETH_ALEN);
+-
++	case __constant_cpu_to_le16(IEEE80211_FCTL_FROMDS):
+ 		if (sdata->vif.type != IEEE80211_IF_TYPE_STA ||
+ 		    (is_multicast_ether_addr(dst) &&
+ 		     !compare_ether_addr(src, dev->dev_addr)))
+ 			return -1;
+ 		break;
+-	case 0:
+-		/* DA SA BSSID */
+-		memcpy(dst, hdr->addr1, ETH_ALEN);
+-		memcpy(src, hdr->addr2, ETH_ALEN);
+-
++	case __constant_cpu_to_le16(0):
+ 		if (sdata->vif.type != IEEE80211_IF_TYPE_IBSS)
+ 			return -1;
+ 		break;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 2b912cf..bf733ed 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1025,7 +1025,7 @@ __ieee80211_tx_prepare(struct ieee80211_tx_data *tx,
+ 	else if (test_and_clear_sta_flags(tx->sta, WLAN_STA_CLEAR_PS_FILT))
+ 		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+ 
+-	hdrlen = ieee80211_get_hdrlen(tx->fc);
++	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	if (skb->len > hdrlen + sizeof(rfc1042_header) + 2) {
+ 		u8 *pos = &skb->data[hdrlen + sizeof(rfc1042_header)];
+ 		tx->ethertype = (pos[0] << 8) | pos[1];
+-- 
+1.5.6.3.499.geae9
+
+
