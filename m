@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50686
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1758560AbYGCHFG (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.181]:13931 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754074AbYGPMtf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:05:06 -0400
-Date: Thu, 03 Jul 2008 00:05:05 -0700 (PDT)
-Message-Id: <20080703.000505.210650604.davem@davemloft.net> (sfid-20080703_103233_368601_6D387D95)
-To: netdev@vger.kernel.org
-CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
-Subject: [PATCH 29/39]: netdev: Rationalize SKB queue mapping.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 16 Jul 2008 08:49:35 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so3245060waf.23
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2008 05:49:34 -0700 (PDT)
+Message-ID: <1ba2fa240807160549u68d9ecby25e79d832d772a0a@mail.gmail.com> (sfid-20080716_144939_106039_88F2FE76)
+Date: Wed, 16 Jul 2008 15:49:34 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "David Miller" <davem@davemloft.net>
+Subject: Re: pull request: wireless-next-2.6 2008-07-14
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <20080714.204532.116542087.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080714192302.GA2541@tuxdriver.com>
+	 <20080714.204532.116542087.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jul 15, 2008 at 6:45 AM, David Miller <davem@davemloft.net> wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Mon, 14 Jul 2008 15:23:02 -0400
+>
+>> Here is one last(?) round of miscellaneous patches I hope to get into
+>> 2.6.27.  There are mostly driver updates, including a sizable iwlwifi
+>> set of changes.
+>>
+>> Please let me know if there are problems!
+>
+> Pulled into net-next-2.6, thanks John.
+>
+> If someone could fix the following wireless warnings I'd appreciate
+> it.
+>
+> Thanks!
+>
 
-Always set it in dev_pick_tx().
+> drivers/net/wireless/iwlwifi/iwl-led.c:271: warning: format '%lld' expects type 'long long int', but argument 6 has type 's64'
+> drivers/net/wireless/iwlwifi/iwl-led.c:271: warning: format '%lld' expects type 'long long int', but argument 7 has type 'u64'
 
-There are two spots that need some adjustments.  Namely
-pktgen (which has a roving queue mapping feature that is
-not currently handled correctly) and wireless which will
-need a queue mapping hook that dev_pick_tx() can invoke.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- net/core/dev.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/net/core/dev.c b/net/core/dev.c
-index cfda430..8ccf016 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -1669,7 +1669,10 @@ out_kfree_skb:
- static struct netdev_queue *dev_pick_tx(struct net_device *dev,
- 					struct sk_buff *skb)
- {
--	return netdev_get_tx_queue(dev, 0);
-+	u16 queue_index = 0;
-+
-+	skb_set_queue_mapping(skb, queue_index);
-+	return netdev_get_tx_queue(dev, queue_index);
- }
- 
- int dev_queue_xmit(struct sk_buff *skb)
-@@ -1737,8 +1740,6 @@ gso:
- 		spin_lock(&txq->lock);
- 		q = txq->qdisc;
- 		if (q->enqueue) {
--			/* reset queue_mapping to zero */
--			skb_set_queue_mapping(skb, 0);
- 			rc = q->enqueue(skb, q);
- 			qdisc_run(txq);
- 			spin_unlock(&txq->lock);
--- 
-1.5.6
-
+I cannot reproduce this. Wasn't this conversion already solved or
+still need to cast to long long int?
+Tomas
