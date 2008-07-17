@@ -1,53 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:34606 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752150AbYGAHo4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 03:44:56 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] mac80211: fix warning: unused variable ifsta
-Date: Tue,  1 Jul 2008 10:44:50 +0300
-Message-Id: <1214898291-6232-3-git-send-email-tomas.winkler@intel.com> (sfid-20080701_094501_229689_9CD6BA4D)
-In-Reply-To: <1214898291-6232-2-git-send-email-tomas.winkler@intel.com>
-References: <1214898291-6232-1-git-send-email-tomas.winkler@intel.com>
- <1214898291-6232-2-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga10.intel.com ([192.55.52.92]:63768 "EHLO
+	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750881AbYGQIOl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jul 2008 04:14:41 -0400
+Date: Thu, 17 Jul 2008 16:15:54 +0800
+From: Yingying Zhao <yingying.zhao@linux.intel.com>
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH]compat-2.6: fix compiling configurations for iwlwifi
+Message-ID: <20080717081554.GA1279@amber-desktop.bj.intel.com> (sfid-20080717_101445_658180_7DFA0568)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes warning unused variable ifsta
-when compiling without CONFIG_MAC80211_VERBOSE_DEBUG
+Latest iwlwifi in wireless-testing removed CONFIG_IWL4965_HT and
+introduced CONFIG_IWL5000 for Intel Wireless WiFi 5000AGN support
+which is built in IWL4965 module. This patch also enables IWLWIFI_LEDS,
+IWLWIFI_RFKILL,IWL3945_LEDS IWLWIFI_DEBUG for iwlwifi build by default.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhao Yingying <yingying.zhao@intel.com>
 ---
- net/mac80211/mlme.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ config.mk |   20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4fc843e..283e55f 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -366,8 +366,10 @@ static u32 ieee80211_handle_protect_preamb(struct ieee80211_sub_if_data *sdata,
- 					   bool use_short_preamble)
- {
- 	struct ieee80211_bss_conf *bss_conf = &sdata->bss_conf;
-+#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
- 	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
- 	DECLARE_MAC_BUF(mac);
-+#endif
- 	u32 changed = 0;
+diff --git a/config.mk b/config.mk
+index b1fb68e..cafadfa 100644
+--- a/config.mk
++++ b/config.mk
+@@ -15,6 +15,7 @@ endif
  
- 	if (use_protection != bss_conf->use_cts_prot) {
--- 
-1.5.4.1
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+ # Wireless subsystem stuff
+ CONFIG_MAC80211=m
++CONFIG_MAC80211_LEDS=y
+ 
+ # Enable QOS for 2.6.22, we'll do some hacks here to enable it.
+ # You will need this for HT support (802.11n) and WME (802.11e).
+@@ -77,7 +78,24 @@ CONFIG_IWLWIFI=m
+ CONFIG_IWLCORE=m
+ CONFIG_IWL3945=m
+ CONFIG_IWL4965=m
+-CONFIG_IWL4965_HT=y
++CONFIG_IWLWIFI_LEDS=y
++CONFIG_IWLWIFI_RFKILL=y
++CONFIG_IWL3945_LEDS=y
++CONFIG_IWL5000=y
++
++ifeq ($(CONFIG_IWL5000),y)
++ifeq ($(CONFIG_IWL4965),)
++$(warning "WARNING: CONFIG_IWL5000 requires CONFIG_IWL4965 is configured as m.")
++CONFIG_IWL4965=m
++endif # CONFIG_IWL4965 is empty
++endif # CONFIG_IWL5000 is y
++
++CONFIG_IWLWIFI_DEBUG=y
++
++ifeq ($(CONFIG_MAC80211_DEBUGFS),y)
++CONFIG_IWLWIFI_DEBUGFS=y
++endif
++
+ CONFIG_B43=m
+ # B43 uses PCMCIA only for Compact Flash. The Cardbus cards uses PCI
+ # Example, bcm4318:
