@@ -1,46 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:23812 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751246AbYGIToc (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51645
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1756706AbYGQMQm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 15:44:32 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so898157yxm.1
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 12:44:31 -0700 (PDT)
-Subject: [PATCH 1/4] mac80211: remove WLAN_FC_DATA_PRESENT
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 09 Jul 2008 12:44:31 -0700
-Message-Id: <1215632672.476.84.camel@brick> (sfid-20080709_214435_406932_8F620A3A)
+	Thu, 17 Jul 2008 08:16:42 -0400
+Date: Thu, 17 Jul 2008 05:16:41 -0700 (PDT)
+Message-Id: <20080717.051641.80921218.davem@davemloft.net> (sfid-20080717_141709_541429_3E78C3AA)
+To: netdev@vger.kernel.org
+CC: kaber@trash.net, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 12/31]: netdev: Convert all drivers away from
+ netif_schedule().
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All users are gone now.
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+They logically all want to trigger a schedule for all device
+TX queues.
+
+Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
-These apply on top of the three-patch series from yesterday.
+ drivers/net/au1000_eth.c           |    2 +-
+ drivers/net/bfin_mac.c             |    2 +-
+ drivers/net/fec_mpc52xx.c          |    2 +-
+ drivers/net/fs_enet/fs_enet-main.c |    2 +-
+ drivers/net/gianfar.c              |    4 ++--
+ drivers/net/macb.c                 |    2 +-
+ drivers/net/sh_eth.c               |    2 +-
+ drivers/net/tc35815.c              |    2 +-
+ drivers/net/ucc_geth.c             |    4 ++--
+ 9 files changed, 11 insertions(+), 11 deletions(-)
 
- net/mac80211/ieee80211_i.h |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 44e81cb..136b53f 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -35,8 +35,6 @@
- #define ETH_P_PAE 0x888E /* Port Access Entity (IEEE 802.1X) */
- #endif /* ETH_P_PAE */
+diff --git a/drivers/net/au1000_eth.c b/drivers/net/au1000_eth.c
+index 7023d77..3ab61e4 100644
+--- a/drivers/net/au1000_eth.c
++++ b/drivers/net/au1000_eth.c
+@@ -912,7 +912,7 @@ au1000_adjust_link(struct net_device *dev)
+ 		// link state changed
  
--#define WLAN_FC_DATA_PRESENT(fc) (((fc) & 0x4c) == 0x08)
--
- struct ieee80211_local;
+ 		if (phydev->link) // link went up
+-			netif_schedule(dev);
++			netif_tx_schedule_all(dev);
+ 		else { // link went down
+ 			aup->old_speed = 0;
+ 			aup->old_duplex = -1;
+diff --git a/drivers/net/bfin_mac.c b/drivers/net/bfin_mac.c
+index 4144343..a6a3da8 100644
+--- a/drivers/net/bfin_mac.c
++++ b/drivers/net/bfin_mac.c
+@@ -357,7 +357,7 @@ static void bfin_mac_adjust_link(struct net_device *dev)
+ 		if (!lp->old_link) {
+ 			new_state = 1;
+ 			lp->old_link = 1;
+-			netif_schedule(dev);
++			netif_tx_schedule_all(dev);
+ 		}
+ 	} else if (lp->old_link) {
+ 		new_state = 1;
+diff --git a/drivers/net/fec_mpc52xx.c b/drivers/net/fec_mpc52xx.c
+index 329edd9..ae9ecb7 100644
+--- a/drivers/net/fec_mpc52xx.c
++++ b/drivers/net/fec_mpc52xx.c
+@@ -197,7 +197,7 @@ static void mpc52xx_fec_adjust_link(struct net_device *dev)
+ 		if (priv->link == PHY_DOWN) {
+ 			new_state = 1;
+ 			priv->link = phydev->link;
+-			netif_schedule(dev);
++			netif_tx_schedule_all(dev);
+ 			netif_carrier_on(dev);
+ 			netif_start_queue(dev);
+ 		}
+diff --git a/drivers/net/fs_enet/fs_enet-main.c b/drivers/net/fs_enet/fs_enet-main.c
+index fb7c477..bdb81f5 100644
+--- a/drivers/net/fs_enet/fs_enet-main.c
++++ b/drivers/net/fs_enet/fs_enet-main.c
+@@ -738,7 +738,7 @@ static void generic_adjust_link(struct  net_device *dev)
+ 		if (!fep->oldlink) {
+ 			new_state = 1;
+ 			fep->oldlink = 1;
+-			netif_schedule(dev);
++			netif_tx_schedule_all(dev);
+ 			netif_carrier_on(dev);
+ 			netif_start_queue(dev);
+ 		}
+diff --git a/drivers/net/gianfar.c b/drivers/net/gianfar.c
+index fa78d68..45a6317 100644
+--- a/drivers/net/gianfar.c
++++ b/drivers/net/gianfar.c
+@@ -1234,7 +1234,7 @@ static void gfar_timeout(struct net_device *dev)
+ 		startup_gfar(dev);
+ 	}
  
- /* Maximum number of broadcast/multicast frames to buffer when some of the
+-	netif_schedule(dev);
++	netif_tx_schedule_all(dev);
+ }
+ 
+ /* Interrupt Handler for Transmit complete */
+@@ -1725,7 +1725,7 @@ static void adjust_link(struct net_device *dev)
+ 		if (!priv->oldlink) {
+ 			new_state = 1;
+ 			priv->oldlink = 1;
+-			netif_schedule(dev);
++			netif_tx_schedule_all(dev);
+ 		}
+ 	} else if (priv->oldlink) {
+ 		new_state = 1;
+diff --git a/drivers/net/macb.c b/drivers/net/macb.c
+index e346302..50688a5 100644
+--- a/drivers/net/macb.c
++++ b/drivers/net/macb.c
+@@ -165,7 +165,7 @@ static void macb_handle_link_change(struct net_device *dev)
+ 
+ 	if (phydev->link != bp->link) {
+ 		if (phydev->link)
+-			netif_schedule(dev);
++			netif_tx_schedule_all(dev);
+ 		else {
+ 			bp->speed = 0;
+ 			bp->duplex = -1;
+diff --git a/drivers/net/sh_eth.c b/drivers/net/sh_eth.c
+index 37f3116..a4bc812 100644
+--- a/drivers/net/sh_eth.c
++++ b/drivers/net/sh_eth.c
+@@ -642,7 +642,7 @@ static void sh_eth_adjust_link(struct net_device *ndev)
+ 					| ECMR_DM, ioaddr + ECMR);
+ 			new_state = 1;
+ 			mdp->link = phydev->link;
+-			netif_schedule(ndev);
++			netif_tx_schedule_all(ndev);
+ 			netif_carrier_on(ndev);
+ 			netif_start_queue(ndev);
+ 		}
+diff --git a/drivers/net/tc35815.c b/drivers/net/tc35815.c
+index b07b8cb..41d3ac4 100644
+--- a/drivers/net/tc35815.c
++++ b/drivers/net/tc35815.c
+@@ -672,7 +672,7 @@ static void tc_handle_link_change(struct net_device *dev)
+ 			if (dev->flags & IFF_PROMISC)
+ 				tc35815_set_multicast_list(dev);
+ #endif
+-			netif_schedule(dev);
++			netif_tx_schedule_all(dev);
+ 		} else {
+ 			lp->speed = 0;
+ 			lp->duplex = -1;
+diff --git a/drivers/net/ucc_geth.c b/drivers/net/ucc_geth.c
+index 07933f7..c1b55bc 100644
+--- a/drivers/net/ucc_geth.c
++++ b/drivers/net/ucc_geth.c
+@@ -1588,7 +1588,7 @@ static void adjust_link(struct net_device *dev)
+ 		if (!ugeth->oldlink) {
+ 			new_state = 1;
+ 			ugeth->oldlink = 1;
+-			netif_schedule(dev);
++			netif_tx_schedule_all(dev);
+ 		}
+ 	} else if (ugeth->oldlink) {
+ 			new_state = 1;
+@@ -3372,7 +3372,7 @@ static void ucc_geth_timeout(struct net_device *dev)
+ 		ucc_geth_startup(ugeth);
+ 	}
+ 
+-	netif_schedule(dev);
++	netif_tx_schedule_all(dev);
+ }
+ 
+ /* This is called by the kernel when a frame is ready for transmission. */
 -- 
-1.5.6.1.322.ge904b
-
+1.5.6.2.255.gbed62
 
