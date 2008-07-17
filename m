@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:51384 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752759AbYGWQn0 (ORCPT
+Received: from ctb-mesg4.saix.net ([196.25.240.74]:36885 "EHLO
+	ctb-mesg4.saix.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932334AbYGQXBQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 12:43:26 -0400
-Received: by an-out-0708.google.com with SMTP id d40so532509and.103
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 09:43:25 -0700 (PDT)
-Message-ID: <43e72e890807230943u1d39d70eo1b95ee4a38b9bcd8@mail.gmail.com> (sfid-20080723_184330_747652_8E9C86B5)
-Date: Wed, 23 Jul 2008 09:43:24 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Christoph Hellwig" <hch@infradead.org>
-Subject: Re: ath9k: some more yummy patches
-Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20080723162956.GA8742@infradead.org>
+	Thu, 17 Jul 2008 19:01:16 -0400
+Received: from atlantis.local.uls.co.za (dsl-146-147-234.telkomadsl.co.za [165.146.147.234])
+	by ctb-mesg4.saix.net (Postfix) with ESMTP id B6781460D
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Jul 2008 00:13:59 +0200 (SAST)
+Received: from [192.168.0.127]
+	by atlantis with esmtpa (Exim 4.69)
+	(envelope-from <jaco@kroon.co.za>)
+	id 1KJbjb-0002fK-8p
+	for linux-wireless@vger.kernel.org; Fri, 18 Jul 2008 00:13:59 +0200
+Message-ID: <487FC561.3060104@kroon.co.za> (sfid-20080718_010121_071923_F92A9855)
+Date: Fri, 18 Jul 2008 00:19:13 +0200
+From: Jaco Kroon <jaco@kroon.co.za>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890807230913v10198fbcqeecfe770490aef65@mail.gmail.com>
-	 <20080723162956.GA8742@infradead.org>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: AR242x wireless card (ath5k)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 23, 2008 at 9:29 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Wed, Jul 23, 2008 at 09:13:37AM -0700, Luis R. Rodriguez wrote:
->> Some more yummmy patches, specially if you are interested in IBSS.
->> These are committed into ath9k git as well.
->>
->> http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2008-07-23/
->
-> Btw I had a quick look over the driver, and it's quite huge..
+Hi,
 
-Tell me about it.
+I've got a Toshiba Satellite 1i4 (P200 derivative) laptop with the 
+following wireless card:
 
-> Why does
-> the driver have it's own regdomain support?
+05:00.0 Ethernet controller: Atheros Communications Inc. AR242x 
+802.11abg Wireless PCI Express Adapter (rev 01)
 
-It still needs a good scrubbing, just as well as the driver in general
-in many areas, but basically what will be kept in terms of regulatory
-is our own internal eeprom regulatory domain to support channel
-mapping. This is because we have no firmware to do magic vodoo there
-like others do. This is how we can support Linux. Also although CRDA
-(not yet merged even) can provide a thorough and updated database
-sometimes vendors want to support regulatory settings for clients
-based on SKUs. The callback for setting a regulatory domain through
-CRDA will allow us to review the central regulatory information and
-override it if necessary, this is useful for cases where customers we
-have may want to support channels 1-11 and if the regulatory domain
-allows then channel 14 we'll keep the device stuck to 1-11 as that is
-what the customer certified their devices for in terms of support or
-testing. This exactly why a callback is part of the design for CRDA --
-the central db provides the complete regulatory solution for drivers
-with none but yet it allows vendors to enhance regulatory to meet
-business and legal requirements.
+According to 
+http://linuxwireless.org/en/users/Drivers/ath5k#supportedchips the 
+module loads but there is no rx/tx - and this is in line with what I see 
+with the newly released 2.6.26 kernel (x86_64).
 
-> Also there seems to be
-> quite some useless hal style abstractions and types.  Do you plan to
-> kill those?
+What I would like to know is how I can assist?  I've got a little bit of 
+kernel coding experience and my C is at least reasonable.  I don't have 
+an abundance of time available but can probably nip in a couple of hours 
+worth of work on this.
 
-Absolutely.
-
-> And a lot of macros that want replacing by proper C code.
-
-Sure thing. We figure we get users supported first with a decent first
-patch post so we're following the 'release early, review early'
-technique. Further cleanup and enhancements can come through as we
-move along.
-
-  Luis
+Regards,
+Jaco Kroon
