@@ -1,102 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yorgi.telenet-ops.be ([195.130.133.69]:39312 "EHLO
-	yorgi.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750724AbYGBRIG (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51700
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1758972AbYGQMSH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2008 13:08:06 -0400
-Received: from zoltar.telenet-ops.be (zoltar.telenet-ops.be [195.130.132.57])
-	by yorgi.telenet-ops.be (Postfix) with ESMTP id ECAF2589062
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Jul 2008 19:08:03 +0200 (CEST)
-Received: from hoboi3bl3.telenet-ops.be (hoboi3bl3.telenet-ops.be [195.130.137.86])
-	by zoltar.telenet-ops.be (Postfix) with ESMTP id 9328540F2
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Jul 2008 19:07:32 +0200 (CEST)
-Received: from edna.telenet-ops.be (edna.telenet-ops.be [195.130.132.58])
-	by hoboi3bl3.telenet-ops.be (8.13.1/8.13.1) with ESMTP id m62H7Wgu025678
-	for <linux-wireless@vger.kernel.org>; Wed, 2 Jul 2008 19:07:32 +0200
-Received: from [192.168.2.139] (d54C6CD29.access.telenet.be [84.198.205.41])
-	by edna.telenet-ops.be (Postfix) with ESMTP id 5EDA4E4010
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Jul 2008 19:07:32 +0200 (CEST)
-Message-ID: <486BB5D4.4010701@yahoo.co.uk> (sfid-20080702_190811_023226_09113B6F)
-Date: Wed, 02 Jul 2008 19:07:32 +0200
-From: Ivo Couckuyt <iv0co@yahoo.co.uk>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: PROBLEM: p54usb doesn't work with my Philips CPWUA054 usb adapter
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 17 Jul 2008 08:18:07 -0400
+Date: Thu, 17 Jul 2008 05:18:06 -0700 (PDT)
+Message-Id: <20080717.051806.95156549.davem@davemloft.net> (sfid-20080717_141813_590756_F8246A75)
+To: netdev@vger.kernel.org
+CC: kaber@trash.net, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 27/31]: pkt_sched: Kill qdisc_lock_tree and
+ qdisc_unlock_tree.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sent this a while ago, but might be filtered due to attachment (removed 
-now):
 
-i tried the following firmwares:
-2.4.4.0.arm  2.4.6.0.arm
-2.5.11.0.arm 2.5.6.0.arm 2.5.2.0.arm 2.7.0.0.arm
-All give the same dmesg output, (HC died; cleaning up)
-except 2.5.8.0.arm which gives something else, probably not worth much, 
-but nevertheless see attachment
+No longer used.
 
-In the very beginning I used ndiswrapper without any problem (still 
-works now), but at the moment i'm using the old islsm driver together
-with kernel 2.6.9 and firmware 2.5.6.0 (only one that works), which 
-doesn't seem to be on the site you mentioned
-md5sum:
-6ff238179cf9618aac2b5d7a34e41450  2.5.6.0.arm (is included for what it 
-is worth)
-So i've been stuck at kernel 2.6.9 for some time now as islsm doesn't 
-compile with newer kernels :-) p54usb should be a relatively straight 
-port from islsm yes ? except for the control rate algorithm and some 
-cleaning up i guess.
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ include/net/sch_generic.h |    3 ---
+ net/sched/sch_generic.c   |   36 +++---------------------------------
+ 2 files changed, 3 insertions(+), 36 deletions(-)
 
-ps: thanks for the effort.
-ps2: firmware 2.5.7.0 isn't on site too:  
-09f9da7ea757173c9de1a0322a1f9782  2.7.0.0.arm
-
-kind regards,
-Ivo Couckuyt
-
-Chr wrote:
-> On Sunday 08 June 2008 13:54:14 Johannes Berg wrote:
->  
->> On Fri, 2008-06-06 at 23:06 +0200, Ivo Couckuyt wrote:
->>    
->>> Sorry for the late reply, i just thought i install kernel 2.6.25 r4 and
->>> try again.
->>>
->>> It is somewhat better and worse, when modprobing p54usb i got a small
->>> hang/hickup accompanied with the following error in dmesg
->>> ehci_hcd 0000:00:02.2: HC died; cleaning up
->>> [...]
->>>       
->> Sorry, no idea. Christian?
->>     
-> Not yet... but card is on the way, so maybe in the future. :)
->
-> I googled for "HC died; cleaning up" and yes, there "are" other people 
-> with the same issue... But noone had a solutions other than use 
-> ndiswrapper.
->
-> So, i took a look at the driver... it ships with a really old firmware 
-> 2.4.6.0 So, I know that there are atleast some (mini)PCI Cards that 
-> have big problems with anything newer than 2.4.x.y, maybe there are 
-> broken USB-Parts too...
->
-> Ivo, can you please try the older firmware? You can find a copy @
-> (http://daemonizer.de/prism54/prism54-fw/ scroll down to USB).
->
-> If this doesn't work? could you please about ndiswrapper?
->
-> Regards,
->     Christian
->
->   
-
-------------------------------------------------------------------------
-
-usb 1-1: new high speed USB device using ehci_hcd and address 5
-usb 1-1: configuration #1 chosen from 1 choice
-p54: LM86 firmware
-p54: FW rev 2.5.8.0 - Softmac protocol 3.0
-prism54usb: probe of 1-1:1.0 failed with error -110
-usbcore: registered new interface driver prism54usb
+diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
+index 60e1e9f..1eef8d0 100644
+--- a/include/net/sch_generic.h
++++ b/include/net/sch_generic.h
+@@ -180,9 +180,6 @@ static inline struct net_device *qdisc_dev(struct Qdisc *qdisc)
+ 	return qdisc->dev_queue->dev;
+ }
+ 
+-extern void qdisc_lock_tree(struct net_device *dev);
+-extern void qdisc_unlock_tree(struct net_device *dev);
+-
+ static inline void sch_tree_lock(struct Qdisc *q)
+ {
+ 	spin_lock_bh(qdisc_root_lock(q));
+diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
+index 8cdf0b4..3d53e92 100644
+--- a/net/sched/sch_generic.c
++++ b/net/sched/sch_generic.c
+@@ -29,44 +29,14 @@
+ /* Main transmission queue. */
+ 
+ /* Modifications to data participating in scheduling must be protected with
+- * queue->lock spinlock.
++ * qdisc_root_lock(qdisc) spinlock.
+  *
+  * The idea is the following:
+- * - enqueue, dequeue are serialized via top level device
+- *   spinlock queue->lock.
+- * - ingress filtering is serialized via top level device
+- *   spinlock dev->rx_queue.lock.
++ * - enqueue, dequeue are serialized via qdisc root lock
++ * - ingress filtering is also serialized via qdisc root lock
+  * - updates to tree and tree walking are only done under the rtnl mutex.
+  */
+ 
+-void qdisc_lock_tree(struct net_device *dev)
+-	__acquires(dev->rx_queue.lock)
+-{
+-	unsigned int i;
+-
+-	local_bh_disable();
+-	for (i = 0; i < dev->num_tx_queues; i++) {
+-		struct netdev_queue *txq = netdev_get_tx_queue(dev, i);
+-		spin_lock(&txq->lock);
+-	}
+-	spin_lock(&dev->rx_queue.lock);
+-}
+-EXPORT_SYMBOL(qdisc_lock_tree);
+-
+-void qdisc_unlock_tree(struct net_device *dev)
+-	__releases(dev->rx_queue.lock)
+-{
+-	unsigned int i;
+-
+-	spin_unlock(&dev->rx_queue.lock);
+-	for (i = 0; i < dev->num_tx_queues; i++) {
+-		struct netdev_queue *txq = netdev_get_tx_queue(dev, i);
+-		spin_unlock(&txq->lock);
+-	}
+-	local_bh_enable();
+-}
+-EXPORT_SYMBOL(qdisc_unlock_tree);
+-
+ static inline int qdisc_qlen(struct Qdisc *q)
+ {
+ 	return q->q.qlen;
+-- 
+1.5.6.2.255.gbed62
 
