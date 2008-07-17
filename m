@@ -1,77 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:55859 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754312AbYGSOT7 (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:55665 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756543AbYGQNDl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2008 10:19:59 -0400
-Date: Sat, 19 Jul 2008 11:19:54 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/4] rfkill: mutex fixes
-Message-ID: <20080719141954.GC11269@khazad-dum.debian.net> (sfid-20080719_162008_388807_02BAF38D)
-References: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br> <1216150327-10904-5-git-send-email-hmh@hmh.eng.br> <200807191447.25603.IvDoorn@gmail.com>
+	Thu, 17 Jul 2008 09:03:41 -0400
+Message-ID: <487F4327.1000107@trash.net> (sfid-20080717_150347_930599_65315DBD)
+Date: Thu, 17 Jul 2008 15:03:35 +0200
+From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200807191447.25603.IvDoorn@gmail.com>
+To: David Miller <davem@davemloft.net>
+CC: netdev@vger.kernel.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
+ RCU.
+References: <20080717.051726.226040470.davem@davemloft.net>
+In-Reply-To: <20080717.051726.226040470.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 19 Jul 2008, Ivo van Doorn wrote:
-> > @@ -150,7 +150,7 @@ static void update_rfkill_state(struct rfkill *rfkill)
-> >   * even if the radio is in RFKILL_STATE_HARD_BLOCKED state, so as to
-> >   * give the driver a hint that it should double-BLOCK the transmitter.
-> >   *
-> > - * Caller must have aquired rfkill_mutex.
-> > + * Caller must have acquired rfkill->mutex.
+David Miller wrote:
+> This allows less strict control of access to the qdisc attached to a
+> netdev_queue.  It is even allowed to enqueue into a qdisc which is
+> in the process of being destroyed.  The RCU handler will toss out
+> those packets.
 > 
-> Should rfkill_toggle_radio() not grab the rfkill->mutex itself?
-> At the moment every caller to rfkill_toggle_radio() does:
+> We will need this to handle sharing of a qdisc amongst multiple
+> TX queues.  In such a setup the lock has to be shared, so will
+> be inside of the qdisc itself.  At which point the netdev_queue
+> lock cannot be used to hard synchronize access to the ->qdisc
+> pointer.
 > 
-> 			mutex_lock(&rfkill->mutex);
->  			rfkill_toggle_radio(rfkill, state, 0);
-> 			mutex_unlock(&rfkill->mutex);
+> One operation we have to keep inside of qdisc_destroy() is the list
+> deletion.  It is the only piece of state visible after the RCU quiesce
+> period, so we have to undo it early and under the appropriate locking.
 > 
-> without anything in between, so perhaps the safest way would be moving
-> the locking requirement into the function.
+> The operations in the RCU handler do not need any looking because the
+> qdisc tree is no longer visible to anything at that point.
 
-sysfs attributes need to use mutex_lock_interruptible or
-mutex_lock_killable, and I also need it with external locking in some later
-patches that I haven't sent yet because I am reviewing them.
+Still working my way through the patches, but this one caught my
+eye (we had this before and it caused quite a few problems).
 
-> > @@ -521,8 +527,11 @@ static void rfkill_remove_switch(struct rfkill *rfkill)
-> >  {
-> >  	mutex_lock(&rfkill_mutex);
-> >  	list_del_init(&rfkill->node);
-> > -	rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
-> >  	mutex_unlock(&rfkill_mutex);
-> > +
-> > +	mutex_lock(&rfkill->mutex);
-> > +	rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
-> > +	mutex_unlock(&rfkill->mutex);
-> 
-> Not sure about this one, something tells me it should be something like:
-> 
-> 	mutex_lock(&rfkill_mutex);
-> 	list_del_init(&rfkill->node);
-> 
-> 	mutex_lock(&rfkill->mutex);
-> 	rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
-> 	mutex_unlock(&rfkill->mutex);
-> 
-> 	mutex_unlock(&rfkill_mutex);
+One of the problems is that only the uppermost qdisc is destroyed
+immediately, child qdiscs are still visible on qdisc_list and are
+removed without any locking from the RCU callback. There are also
+visibility issues for classifiers and actions deeper down in the
+hierarchy.
 
-We really shouldn't need the nesting, as once we have deleted something from
-the list (which is always iterated and manipulated with rfkill_mutex
-locked), nothing that would need the rfkill_mutex will access that rfkill
-struct anymore.
+The previous way to work around this was quite ugly. qdisc_destroy()
+walked the entire hierarchy to unlink inner classes immediately
+from the qdisc_list (commit 85670cc1f changed it to what we do now).
+That fixed visibility issues for everything visible only through
+qdiscs (child qdiscs and classifiers). Actions are also visible
+globally, so this might still be a problem, not sure though since
+they don't refer to their parent (haven't thought about it much yet).
 
-Nesting wouldn't hurt anything, though.  If you really feel better with
-that nesting in place, I can nest them.
+Another problem we had earlier with this was that qdiscs previously
+assumed changes (destruction) would only happen in process context
+and thus didn't disable BHs when taking a read_lock for walking the
+hierarchy (deadlocking with write_lock in BH context). This seems to
+be handled correctly in your tree by always disabling BHs.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+The remaining problem is data that was previously only used and
+modified under the RTNL (u32_list is one example). Modifications
+during destruction now need protection against concurrent use in
+process context.
+
+I still need to get a better understanding of how things work now,
+so I won't suggest a fix until then :)
+
+
