@@ -1,99 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34187 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752671AbYGALah (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51691
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1758532AbYGQMRr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 07:30:37 -0400
-Subject: Re: rt61 and TSF reporting?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200807011315.09296.IvDoorn@gmail.com> (sfid-20080701_131114_239318_0C1B911B)
-References: <1214907990.7763.40.camel@johannes.berg>
-	 <200807011305.18802.IvDoorn@gmail.com>
-	 <1214910405.29181.0.camel@johannes.berg>
-	 <200807011315.09296.IvDoorn@gmail.com>
-	 (sfid-20080701_131114_239318_0C1B911B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XyBEpQigtei1xNHtPMbL"
-Date: Tue, 01 Jul 2008 13:29:54 +0200
-Message-Id: <1214911794.29181.3.camel@johannes.berg> (sfid-20080701_133040_297306_D2EDD458)
+	Thu, 17 Jul 2008 08:17:47 -0400
+Date: Thu, 17 Jul 2008 05:17:47 -0700 (PDT)
+Message-Id: <20080717.051747.43598391.davem@davemloft.net> (sfid-20080717_141752_823856_F3B19D32)
+To: netdev@vger.kernel.org
+CC: kaber@trash.net, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 24/31]: netdevice: Move qdisc_list back into net_device
+ proper.
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-XyBEpQigtei1xNHtPMbL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+And give it it's own lock.
 
-On Tue, 2008-07-01 at 13:15 +0200, Ivo van Doorn wrote:
-> On Tuesday 01 July 2008, Johannes Berg wrote:
-> >=20
-> > > > > Note that these undocumented fields only are present in rt2500pci=
- and rt61pci.
-> > > >=20
-> > > > Ok cool, I'll play with that, I should be able to make a patch myse=
-lf,
-> > > > thanks.
-> > >=20
-> > > Oh wait, just found a reference about those RXD words:
-> > >=20
-> > >  * The following fields are for DMA block and HOST usage only.
-> > >  * Can't be touched by ASIC MAC block.
-> > >=20
-> > > In other words, they are for driver usage only. :S
-> >=20
-> > The only ones that are ever non-zero are 0, 1, 4 and 5. Guess not then.
->=20
-> 4 contains data?
-> 2 and 3 I understand since HW crypto is disabled in wireless-testing,
-> but that should mean that 4 should also be 0 unless my estimation about
-> it being the ICV field is wrong...
->=20
-> What data is in there?
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ include/linux/netdevice.h |    3 ++-
+ net/core/dev.c            |    2 ++
+ net/sched/sch_api.c       |   31 +++++++------------------------
+ net/sched/sch_generic.c   |    9 +++++++--
+ 4 files changed, 18 insertions(+), 27 deletions(-)
 
-Heh. I was connected to an encrypted AP with a different device and
-monitoring the traffic no that channel, and got the following:
-
-[139528.433872] rt61pci rx word 4: 0x60483004
-[139528.433882] rt61pci rx word 5: 0x012c30a8
-[139528.468947] rt61pci rx word 4: 0x60483004
-[139528.468956] rt61pci rx word 5: 0x01566138
-[139528.571350] rt61pci rx word 4: 0x60483004
-[139528.571361] rt61pci rx word 5: 0x1dba1048
-[139528.673744] rt61pci rx word 4: 0x60483004
-[139528.673753] rt61pci rx word 5: 0x18e02078
-[139528.776153] rt61pci rx word 4: 0x60483004
-[139528.776165] rt61pci rx word 5: 0x01568018
-[139528.878538] rt61pci rx word 4: 0x60483004
-[139528.878549] rt61pci rx word 5: 0x072a9048
-
-In fact, through the whole uptime of the card word 4 never changed, so
-maybe it's just bogus data from the disabled hwcrypto engine.
-
-johannes
-
---=-XyBEpQigtei1xNHtPMbL
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIahUvAAoJEKVg1VMiehFYJ6YP+wZYmJiEcFagram0OCxsnwmb
-tGbFXT8DZb1gWluXg0AE8HdS5oVfvvELLPP08LQP7o6P27GKdpT/kcgj1W0nYeAo
-0sh3KWiK2hiJfDVqhCrzsPXOEDmLsrnHB8vdOMoB07SVcO2GVFLXqev+1FMVNZzA
-Eqp/kgmwSby2V6LTMgf0YP68DRa1yqA9K4XO4Sv6XyLLGPzXv2DISZkJhtTMVinY
-JHzw5ltQ77y98VRly3WKMAGBEE0z4RfF//LSo3pugHE4Gvkdnvk7nZ3U8BPUmhNN
-vJSI7p2PqK6f14LdVx0xMNLVO9NRIFjFkJnij6ParlBZzVC427XtJBG/4e4vo1+d
-9szyih74kWZTeXgmlN/S8CWSDzpMXtU1NVI6Osj72wQAFXMc6BAKIrqmC7vsHHGH
-Gs2EmQ47iAwo1OxkMpQNVIsLZszPQYDvXjYEpd+gZe7SvTc0C3Mbp+7GLCyKoCU5
-SEB1KOkxcXeQOy5pld8nOHTXMPpzUM8Jue/GE1N8W0L9WmCEI2RAT8qce5en0HgJ
-hEJ8tL3oeeXekCW+lubpg4sfoYdcHUohzlM7fXXB4DU+xJJA1U1+gzojgZAk4qgK
-ukwpFLzSqbjg2X3k22eyqus37yZoUkEquorIGoD2JT0J84mWCIb/QU4S7eLzdRut
-hoiRJ64oa/iKRsiLaYNs
-=vh5s
------END PGP SIGNATURE-----
-
---=-XyBEpQigtei1xNHtPMbL--
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index 1e839fa..3170bce 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -450,7 +450,6 @@ struct netdev_queue {
+ 	spinlock_t		_xmit_lock;
+ 	int			xmit_lock_owner;
+ 	struct Qdisc		*qdisc_sleeping;
+-	struct list_head	qdisc_list;
+ } ____cacheline_aligned_in_smp;
+ 
+ /*
+@@ -638,6 +637,8 @@ struct net_device
+ 	unsigned int		real_num_tx_queues;
+ 
+ 	unsigned long		tx_queue_len;	/* Max frames per queue allowed */
++	spinlock_t		qdisc_list_lock;
++	struct list_head	qdisc_list;
+ 
+ /*
+  * One part is mostly used on xmit path (device)
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 0b909b7..6741e34 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -3886,6 +3886,8 @@ int register_netdevice(struct net_device *dev)
+ 	net = dev_net(dev);
+ 
+ 	spin_lock_init(&dev->addr_list_lock);
++	spin_lock_init(&dev->qdisc_list_lock);
++	INIT_LIST_HEAD(&dev->qdisc_list);
+ 	netdev_init_queue_locks(dev);
+ 
+ 	dev->iflink = -1;
+diff --git a/net/sched/sch_api.c b/net/sched/sch_api.c
+index 8e8c5be..6958fe7 100644
+--- a/net/sched/sch_api.c
++++ b/net/sched/sch_api.c
+@@ -183,30 +183,17 @@ EXPORT_SYMBOL(unregister_qdisc);
+    (root qdisc, all its children, children of children etc.)
+  */
+ 
+-static struct Qdisc *__qdisc_lookup(struct netdev_queue *dev_queue, u32 handle)
++struct Qdisc *qdisc_lookup(struct net_device *dev, u32 handle)
+ {
+ 	struct Qdisc *q;
+ 
+-	list_for_each_entry(q, &dev_queue->qdisc_list, list) {
++	list_for_each_entry(q, &dev->qdisc_list, list) {
+ 		if (q->handle == handle)
+ 			return q;
+ 	}
+ 	return NULL;
+ }
+ 
+-struct Qdisc *qdisc_lookup(struct net_device *dev, u32 handle)
+-{
+-	unsigned int i;
+-
+-	for (i = 0; i < dev->num_tx_queues; i++) {
+-		struct netdev_queue *txq = netdev_get_tx_queue(dev, i);
+-		struct Qdisc *q = __qdisc_lookup(txq, handle);
+-		if (q)
+-			return q;
+-	}
+-	return NULL;
+-}
+-
+ static struct Qdisc *qdisc_leaf(struct Qdisc *p, u32 classid)
+ {
+ 	unsigned long cl;
+@@ -645,9 +632,9 @@ qdisc_create(struct net_device *dev, struct netdev_queue *dev_queue,
+ 				goto err_out3;
+ 			}
+ 		}
+-		qdisc_lock_tree(dev);
+-		list_add_tail(&sch->list, &dev_queue->qdisc_list);
+-		qdisc_unlock_tree(dev);
++		spin_lock_bh(&dev->qdisc_list_lock);
++		list_add_tail(&sch->list, &dev->qdisc_list);
++		spin_unlock_bh(&dev->qdisc_list_lock);
+ 
+ 		return sch;
+ 	}
+@@ -1032,14 +1019,12 @@ static int tc_dump_qdisc(struct sk_buff *skb, struct netlink_callback *cb)
+ 	read_lock(&dev_base_lock);
+ 	idx = 0;
+ 	for_each_netdev(&init_net, dev) {
+-		struct netdev_queue *dev_queue;
+ 		if (idx < s_idx)
+ 			goto cont;
+ 		if (idx > s_idx)
+ 			s_q_idx = 0;
+ 		q_idx = 0;
+-		dev_queue = netdev_get_tx_queue(dev, 0);
+-		list_for_each_entry(q, &dev_queue->qdisc_list, list) {
++		list_for_each_entry(q, &dev->qdisc_list, list) {
+ 			if (q_idx < s_q_idx) {
+ 				q_idx++;
+ 				continue;
+@@ -1269,7 +1254,6 @@ static int qdisc_class_dump(struct Qdisc *q, unsigned long cl, struct qdisc_walk
+ static int tc_dump_tclass(struct sk_buff *skb, struct netlink_callback *cb)
+ {
+ 	struct net *net = sock_net(skb->sk);
+-	struct netdev_queue *dev_queue;
+ 	int t;
+ 	int s_t;
+ 	struct net_device *dev;
+@@ -1288,8 +1272,7 @@ static int tc_dump_tclass(struct sk_buff *skb, struct netlink_callback *cb)
+ 	s_t = cb->args[0];
+ 	t = 0;
+ 
+-	dev_queue = netdev_get_tx_queue(dev, 0);
+-	list_for_each_entry(q, &dev_queue->qdisc_list, list) {
++	list_for_each_entry(q, &dev->qdisc_list, list) {
+ 		if (t < s_t || !q->ops->cl_ops ||
+ 		    (tcm->tcm_parent &&
+ 		     TC_H_MAJ(tcm->tcm_parent) != q->handle)) {
+diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
+index efa418a..8cdf0b4 100644
+--- a/net/sched/sch_generic.c
++++ b/net/sched/sch_generic.c
+@@ -563,11 +563,15 @@ static void __qdisc_destroy(struct rcu_head *head)
+ 
+ void qdisc_destroy(struct Qdisc *qdisc)
+ {
++	struct net_device *dev = qdisc_dev(qdisc);
++
+ 	if (qdisc->flags & TCQ_F_BUILTIN ||
+ 	    !atomic_dec_and_test(&qdisc->refcnt))
+ 		return;
+ 
++	spin_lock_bh(&dev->qdisc_list_lock);
+ 	list_del(&qdisc->list);
++	spin_unlock_bh(&dev->qdisc_list_lock);
+ 
+ 	call_rcu(&qdisc->q_rcu, __qdisc_destroy);
+ }
+@@ -599,7 +603,9 @@ static void attach_one_default_qdisc(struct net_device *dev,
+ 			printk(KERN_INFO "%s: activation failed\n", dev->name);
+ 			return;
+ 		}
+-		list_add_tail(&qdisc->list, &dev_queue->qdisc_list);
++		spin_lock_bh(&dev->qdisc_list_lock);
++		list_add_tail(&qdisc->list, &dev->qdisc_list);
++		spin_unlock_bh(&dev->qdisc_list_lock);
+ 	} else {
+ 		qdisc =  &noqueue_qdisc;
+ 	}
+@@ -738,7 +744,6 @@ static void dev_init_scheduler_queue(struct net_device *dev,
+ 
+ 	dev_queue->qdisc = qdisc;
+ 	dev_queue->qdisc_sleeping = qdisc;
+-	INIT_LIST_HEAD(&dev_queue->qdisc_list);
+ }
+ 
+ void dev_init_scheduler(struct net_device *dev)
+-- 
+1.5.6.2.255.gbed62
 
