@@ -1,84 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.190]:41101 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753232AbYGDRo0 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51654
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1758077AbYGQMQ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jul 2008 13:44:26 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so242801gvc.37
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Jul 2008 10:44:24 -0700 (PDT)
-From: Milan Plzik <milan.plzik@gmail.com>
-Subject: [PATCH 4/7] Some at76-based devices don't include FCS in received
-	frames.
-To: linux-wireless@vger.kernel.org
-Date: Fri, 04 Jul 2008 19:44:20 +0200
-Message-ID: <20080704174420.4996.48372.stgit@localhost> (sfid-20080704_194428_907777_A7489550)
-In-Reply-To: <20080704174350.4996.72931.stgit@localhost>
-References: <20080704174350.4996.72931.stgit@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 17 Jul 2008 08:16:59 -0400
+Date: Thu, 17 Jul 2008 05:16:58 -0700 (PDT)
+Message-Id: <20080717.051658.129292213.davem@davemloft.net> (sfid-20080717_141711_681000_7D21B59D)
+To: netdev@vger.kernel.org
+CC: kaber@trash.net, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 15/31]: pkt_sched: Move gso_skb into Qdisc.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make at76_init_new_device to register device with hwflag
-IEEE80211_HW_RX_INCLUDES_FCS only in case when it is not proven otherwise
-(with firmware 1.103 and, according to atmelwlandriver, with rfmd, r505 and
-r505_2958 devices, the frame doesn't include FCS).
 
-Signed-off-by: Milan Plzik <milan.plzik@gmail.com>
+We liberate any dangling gso_skb during qdisc destruction.
+
+It really only matters for the root qdisc.  But when qdiscs
+can be shared by multiple netdev_queue objects, we can't
+have the gso_skb in the netdev_queue any more.
+
+Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
+ include/linux/netdevice.h |    1 -
+ include/net/sch_generic.h |    1 +
+ net/sched/sch_generic.c   |   19 +++++++++----------
+ 3 files changed, 10 insertions(+), 11 deletions(-)
 
- drivers/net/wireless/at76_usb.c |   19 ++++++++++++++++---
- 1 files changed, 16 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-index b6d06b8..43ec42c 100644
---- a/drivers/net/wireless/at76_usb.c
-+++ b/drivers/net/wireless/at76_usb.c
-@@ -106,6 +106,8 @@
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index 787fbfc..0883fcf 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -449,7 +449,6 @@ struct netdev_queue {
+ 	struct net_device	*dev;
+ 	struct Qdisc		*qdisc;
+ 	unsigned long		state;
+-	struct sk_buff		*gso_skb;
+ 	spinlock_t		_xmit_lock;
+ 	int			xmit_lock_owner;
+ 	struct Qdisc		*qdisc_sleeping;
+diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
+index b47f556..b96c3d9 100644
+--- a/include/net/sch_generic.h
++++ b/include/net/sch_generic.h
+@@ -36,6 +36,7 @@ struct Qdisc
+ 	u32			handle;
+ 	u32			parent;
+ 	atomic_t		refcnt;
++	struct sk_buff		*gso_skb;
+ 	struct sk_buff_head	q;
+ 	struct netdev_queue	*dev_queue;
+ 	struct list_head	list;
+diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
+index 2f575b9..2bd75be 100644
+--- a/net/sched/sch_generic.c
++++ b/net/sched/sch_generic.c
+@@ -77,7 +77,7 @@ static inline int dev_requeue_skb(struct sk_buff *skb,
+ 				  struct Qdisc *q)
+ {
+ 	if (unlikely(skb->next))
+-		dev_queue->gso_skb = skb;
++		q->gso_skb = skb;
+ 	else
+ 		q->ops->requeue(skb, q);
  
- static int at76_debug = DBG_DEFAULTS;
- 
-+#define FIRMWARE_IS_WPA(ver) ((ver.major == 1) && (ver.minor == 103))
-+
- /* Protect against concurrent firmware loading and parsing */
- static struct mutex fw_mutex;
- 
-@@ -306,6 +308,11 @@ static inline int at76_is_503rfmd(enum board_type board)
- 	return (board == BOARD_503 || board == BOARD_503_ACC);
+@@ -85,13 +85,12 @@ static inline int dev_requeue_skb(struct sk_buff *skb,
+ 	return 0;
  }
  
-+static inline int at76_is_505(enum board_type board)
-+{
-+	return (board == BOARD_505 || BOARD_505_2958);
-+}
-+
- static inline int at76_is_505a(enum board_type board)
+-static inline struct sk_buff *dequeue_skb(struct netdev_queue *dev_queue,
+-					  struct Qdisc *q)
++static inline struct sk_buff *dequeue_skb(struct Qdisc *q)
  {
- 	return (board == BOARD_505A || board == BOARD_505AMX);
-@@ -1597,7 +1604,7 @@ static void at76_rx_tasklet(unsigned long param)
+ 	struct sk_buff *skb;
  
- 	skb_trim(priv->rx_skb, le16_to_cpu(buf->wlength) + AT76_RX_HDRLEN);
- 	at76_dbg_dump(DBG_RX_DATA, &priv->rx_skb->data[AT76_RX_HDRLEN],
--		      priv->rx_skb->len, "RX: len=%d", priv->rx_skb->len - AT76_RX_HDRLEN);
-+		      priv->rx_skb->len, "RX: len=%d", (int)(priv->rx_skb->len - AT76_RX_HDRLEN));
+-	if ((skb = dev_queue->gso_skb))
+-		dev_queue->gso_skb = NULL;
++	if ((skb = q->gso_skb))
++		q->gso_skb = NULL;
+ 	else
+ 		skb = q->dequeue(q);
  
- 	rx_status.signal = buf->rssi;
- 	rx_status.flag |= RX_FLAG_DECRYPTED;
-@@ -2277,8 +2284,14 @@ static int at76_init_new_device(struct at76_priv *priv,
+@@ -155,10 +154,9 @@ static inline int qdisc_restart(struct netdev_queue *txq)
+ 	struct sk_buff *skb;
  
- 	/* mac80211 initialisation */
- 	priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &at76_supported_band;
--	priv->hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
--			  IEEE80211_HW_SIGNAL_UNSPEC;
+ 	/* Dequeue packet */
+-	if (unlikely((skb = dequeue_skb(txq, q)) == NULL))
++	if (unlikely((skb = dequeue_skb(q)) == NULL))
+ 		return 0;
+ 
+-
+ 	/* And release queue */
+ 	spin_unlock(&txq->lock);
+ 
+@@ -643,8 +641,8 @@ static void dev_deactivate_queue(struct net_device *dev,
+ 				 void *_qdisc_default)
+ {
+ 	struct Qdisc *qdisc_default = _qdisc_default;
++	struct sk_buff *skb = NULL;
+ 	struct Qdisc *qdisc;
+-	struct sk_buff *skb;
+ 
+ 	spin_lock_bh(&dev_queue->lock);
+ 
+@@ -652,9 +650,10 @@ static void dev_deactivate_queue(struct net_device *dev,
+ 	if (qdisc) {
+ 		dev_queue->qdisc = qdisc_default;
+ 		qdisc_reset(qdisc);
 +
-+	if (FIRMWARE_IS_WPA(priv->fw_version) && 
-+		(at76_is_503rfmd(priv->board_type) || 
-+		 at76_is_505(priv->board_type)))
-+		priv->hw->flags = IEEE80211_HW_SIGNAL_UNSPEC;
-+	else
-+		priv->hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
-+				  IEEE80211_HW_SIGNAL_UNSPEC;
++		skb = qdisc->gso_skb;
++		qdisc->gso_skb = NULL;
+ 	}
+-	skb = dev_queue->gso_skb;
+-	dev_queue->gso_skb = NULL;
  
- 	SET_IEEE80211_DEV(priv->hw, &interface->dev);
- 	SET_IEEE80211_PERM_ADDR(priv->hw, priv->mac_addr);
+ 	spin_unlock_bh(&dev_queue->lock);
+ 
+-- 
+1.5.6.2.255.gbed62
 
