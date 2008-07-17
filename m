@@ -1,35 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:43228 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758313AbYGNWCX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 18:02:23 -0400
-Date: Tue, 15 Jul 2008 01:01:38 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH 0/7] IEEE 802.11w / management frame protection
-Message-ID: <20080714220138.GD5155@jm.kir.nu> (sfid-20080715_000234_566865_87F3E3E1)
-References: <20080617154008.883383150@localhost> <1215625246.3246.40.camel@johannes.berg> <1215626936.3246.45.camel@johannes.berg>
+Received: from an-out-0708.google.com ([209.85.132.251]:31751 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754743AbYGQKF7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jul 2008 06:05:59 -0400
+Received: by an-out-0708.google.com with SMTP id d40so146669and.103
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2008 03:05:58 -0700 (PDT)
+Message-ID: <43e72e890807170305o491e598cl1b27c8d7bf820765@mail.gmail.com> (sfid-20080717_120605_287894_FBB686B5)
+Date: Thu, 17 Jul 2008 03:05:58 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: 2nd REVISED AGENDA -- Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <20080716184803.GB3232@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1215626936.3246.45.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <20080709190915.GA8238@tuxdriver.com>
+	 <20080715182654.GA5969@tuxdriver.com>
+	 <20080716184803.GB3232@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 09, 2008 at 08:08:56PM +0200, Johannes Berg wrote:
+On Wed, Jul 16, 2008 at 11:48 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
 
-> Just realised that it doesn't handle VLANs properly. Could you add a
-> static MAC/VLAN mapping to hostapd to make VLANs possible without
-> setting up radius? :)
+>        - regulatory enforcement (802.11d, CRDA)
 
-Well, I could, but this doesn't sound like a real world feature.. I
-would assume it would be relatively simple addition to the file-based
-MAC ACL (accept_mac_file) to allow optional listing of VLAN ID that
-would then be used as if it came from the authentication server.
+I'll cover this. If we can't cover this well in the time frame
+provided we can discuss this over the course of the week in impromptu
+sessions.
 
-Anyway, It shouldn't require much complexity to set up FreeRADIUS with
-two users that are assigned to different VLAN groups. hostapd.conf lists
-the needed tunnel attributes for this.. ;-)
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+  Luis
