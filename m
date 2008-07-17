@@ -1,15 +1,15 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47591
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51633
 	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1757825AbYGCHEP (ORCPT
+	by vger.kernel.org with ESMTP id S1758265AbYGQMQU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:04:15 -0400
-Date: Thu, 03 Jul 2008 00:04:13 -0700 (PDT)
-Message-Id: <20080703.000413.44636387.davem@davemloft.net> (sfid-20080703_103231_602465_9DC1B8B0)
+	Thu, 17 Jul 2008 08:16:20 -0400
+Date: Thu, 17 Jul 2008 05:16:19 -0700 (PDT)
+Message-Id: <20080717.051619.94271658.davem@davemloft.net> (sfid-20080717_141707_171325_94DAED57)
 To: netdev@vger.kernel.org
-CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
-Subject: [PATCH 19/39]: pkt_sched: Make qdisc_run take a netdev_queue.
+CC: kaber@trash.net, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 8/31]: netdev: netdev_priv() can now be sane again.
 From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -17,150 +17,71 @@ Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-This allows us to use this calling convention all the
-way down into qdisc_restart().
+The private area of a netdev is now at a fixed offset once more.
+
+Unfortunately, some assumptions that netdev_priv() == netdev->priv
+crept back into the tree.  In particular this happened in the
+loopback driver.  Make it use netdev->ml_priv.
 
 Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
- include/net/pkt_sched.h |    8 +++++---
- net/core/dev.c          |    4 ++--
- net/sched/sch_generic.c |   26 ++++++++++++++------------
- 3 files changed, 21 insertions(+), 17 deletions(-)
+ drivers/net/loopback.c    |    8 ++++----
+ include/linux/netdevice.h |    4 +++-
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/include/net/pkt_sched.h b/include/net/pkt_sched.h
-index 46fb4d8..554d6c9 100644
---- a/include/net/pkt_sched.h
-+++ b/include/net/pkt_sched.h
-@@ -80,13 +80,15 @@ extern struct qdisc_rate_table *qdisc_get_rtab(struct tc_ratespec *r,
- 		struct nlattr *tab);
- extern void qdisc_put_rtab(struct qdisc_rate_table *tab);
+diff --git a/drivers/net/loopback.c b/drivers/net/loopback.c
+index 41b774b..49f6bc0 100644
+--- a/drivers/net/loopback.c
++++ b/drivers/net/loopback.c
+@@ -153,7 +153,7 @@ static int loopback_xmit(struct sk_buff *skb, struct net_device *dev)
+ 	dev->last_rx = jiffies;
  
--extern void __qdisc_run(struct net_device *dev);
-+extern void __qdisc_run(struct netdev_queue *dev_queue);
+ 	/* it's OK to use per_cpu_ptr() because BHs are off */
+-	pcpu_lstats = netdev_priv(dev);
++	pcpu_lstats = dev->ml_priv;
+ 	lb_stats = per_cpu_ptr(pcpu_lstats, smp_processor_id());
+ 	lb_stats->bytes += skb->len;
+ 	lb_stats->packets++;
+@@ -171,7 +171,7 @@ static struct net_device_stats *get_stats(struct net_device *dev)
+ 	unsigned long packets = 0;
+ 	int i;
  
--static inline void qdisc_run(struct net_device *dev)
-+static inline void qdisc_run(struct netdev_queue *dev_queue)
- {
-+	struct net_device *dev = dev_queue->dev;
-+
- 	if (!netif_queue_stopped(dev) &&
- 	    !test_and_set_bit(__LINK_STATE_QDISC_RUNNING, &dev->state))
--		__qdisc_run(dev);
-+		__qdisc_run(dev_queue);
- }
+-	pcpu_lstats = netdev_priv(dev);
++	pcpu_lstats = dev->ml_priv;
+ 	for_each_possible_cpu(i) {
+ 		const struct pcpu_lstats *lb_stats;
  
- extern int tc_classify_compat(struct sk_buff *skb, struct tcf_proto *tp,
-diff --git a/net/core/dev.c b/net/core/dev.c
-index 1313eee..bb4a724 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -1734,7 +1734,7 @@ gso:
- 			/* reset queue_mapping to zero */
- 			skb_set_queue_mapping(skb, 0);
- 			rc = q->enqueue(skb, q);
--			qdisc_run(dev);
-+			qdisc_run(txq);
- 			spin_unlock(&txq->lock);
+@@ -207,13 +207,13 @@ static int loopback_dev_init(struct net_device *dev)
+ 	if (!lstats)
+ 		return -ENOMEM;
  
- 			rc = rc == NET_XMIT_BYPASS ? NET_XMIT_SUCCESS : rc;
-@@ -1930,7 +1930,7 @@ static void net_tx_action(struct softirq_action *h)
- 			clear_bit(__LINK_STATE_SCHED, &dev->state);
- 
- 			if (spin_trylock(&txq->lock)) {
--				qdisc_run(dev);
-+				qdisc_run(txq);
- 				spin_unlock(&txq->lock);
- 			} else {
- 				netif_schedule_queue(txq);
-diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
-index b1b7422..3f3e699 100644
---- a/net/sched/sch_generic.c
-+++ b/net/sched/sch_generic.c
-@@ -75,9 +75,8 @@ static inline int dev_requeue_skb(struct sk_buff *skb,
+-	dev->priv = lstats;
++	dev->ml_priv = lstats;
  	return 0;
  }
  
--static inline struct sk_buff *dev_dequeue_skb(struct net_device *dev,
--					      struct netdev_queue *dev_queue,
--					      struct Qdisc *q)
-+static inline struct sk_buff *dequeue_skb(struct netdev_queue *dev_queue,
-+					  struct Qdisc *q)
+ static void loopback_dev_free(struct net_device *dev)
  {
- 	struct sk_buff *skb;
+-	struct pcpu_lstats *lstats = netdev_priv(dev);
++	struct pcpu_lstats *lstats = dev->ml_priv;
  
-@@ -90,10 +89,10 @@ static inline struct sk_buff *dev_dequeue_skb(struct net_device *dev,
- }
- 
- static inline int handle_dev_cpu_collision(struct sk_buff *skb,
--					   struct net_device *dev,
- 					   struct netdev_queue *dev_queue,
- 					   struct Qdisc *q)
- {
-+	struct net_device *dev = dev_queue->dev;
- 	int ret;
- 
- 	if (unlikely(dev->xmit_lock_owner == smp_processor_id())) {
-@@ -139,21 +138,23 @@ static inline int handle_dev_cpu_collision(struct sk_buff *skb,
-  *				>0 - queue is not empty.
-  *
+ 	free_percpu(lstats);
+ 	free_netdev(dev);
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index a1c2c22..fdac115 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -808,7 +808,9 @@ void dev_net_set(struct net_device *dev, struct net *net)
   */
--static inline int qdisc_restart(struct net_device *dev)
-+static inline int qdisc_restart(struct netdev_queue *dev_queue)
+ static inline void *netdev_priv(const struct net_device *dev)
  {
--	struct netdev_queue *dev_queue = &dev->tx_queue;
- 	struct Qdisc *q = dev_queue->qdisc;
--	struct sk_buff *skb;
- 	int ret = NETDEV_TX_BUSY;
-+	struct net_device *dev;
-+	struct sk_buff *skb;
- 
- 	/* Dequeue packet */
--	if (unlikely((skb = dev_dequeue_skb(dev, dev_queue, q)) == NULL))
-+	if (unlikely((skb = dequeue_skb(dev_queue, q)) == NULL))
- 		return 0;
- 
- 
- 	/* And release queue */
- 	spin_unlock(&dev_queue->lock);
- 
-+	dev = dev_queue->dev;
-+
- 	HARD_TX_LOCK(dev, smp_processor_id());
- 	if (!netif_subqueue_stopped(dev, skb))
- 		ret = dev_hard_start_xmit(skb, dev);
-@@ -170,7 +171,7 @@ static inline int qdisc_restart(struct net_device *dev)
- 
- 	case NETDEV_TX_LOCKED:
- 		/* Driver try lock failed */
--		ret = handle_dev_cpu_collision(skb, dev, dev_queue, q);
-+		ret = handle_dev_cpu_collision(skb, dev_queue, q);
- 		break;
- 
- 	default:
-@@ -186,11 +187,12 @@ static inline int qdisc_restart(struct net_device *dev)
- 	return ret;
+-	return dev->priv;
++	return (char *)dev + ((sizeof(struct net_device)
++			       + NETDEV_ALIGN_CONST)
++			      & ~NETDEV_ALIGN_CONST);
  }
  
--void __qdisc_run(struct net_device *dev)
-+void __qdisc_run(struct netdev_queue *dev_queue)
- {
-+	struct net_device *dev = dev_queue->dev;
- 	unsigned long start_time = jiffies;
- 
--	while (qdisc_restart(dev)) {
-+	while (qdisc_restart(dev_queue)) {
- 		if (netif_queue_stopped(dev))
- 			break;
- 
-@@ -200,7 +202,7 @@ void __qdisc_run(struct net_device *dev)
- 		 * 2. we've been doing it for too long.
- 		 */
- 		if (need_resched() || jiffies != start_time) {
--			netif_schedule_queue(&dev->tx_queue);
-+			netif_schedule_queue(dev_queue);
- 			break;
- 		}
- 	}
+ /* Set the sysfs physical device reference for the network logical device
 -- 
-1.5.6
+1.5.6.2.255.gbed62
 
