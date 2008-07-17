@@ -1,84 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:46467 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751881AbYGXSDM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2008 14:03:12 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] mac80211: [old MQ] add ieee80211_queue_stopped)
-Date: Thu, 24 Jul 2008 21:02:05 +0300
-Message-Id: <1216922525-29150-2-git-send-email-tomas.winkler@intel.com> (sfid-20080724_200317_360259_5300B066)
-In-Reply-To: <1216922525-29150-1-git-send-email-tomas.winkler@intel.com>
-References: <1216922525-29150-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from stinky.trash.net ([213.144.137.162]:37215 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756092AbYGQX6G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jul 2008 19:58:06 -0400
+Message-ID: <487FDC8A.9090101@trash.net> (sfid-20080718_015812_520243_F0102E6F)
+Date: Fri, 18 Jul 2008 01:58:02 +0200
+From: Patrick McHardy <kaber@trash.net>
+MIME-Version: 1.0
+To: David Miller <davem@davemloft.net>
+CC: netdev@vger.kernel.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
+ RCU.
+References: <487F4327.1000107@trash.net>	<20080717.061239.51839567.davem@davemloft.net>	<487F4DA6.6010009@trash.net> <20080717.153609.142867331.davem@davemloft.net>
+In-Reply-To: <20080717.153609.142867331.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds ieee80211_queue_stopped that let drivers to query
-queue status
+David Miller wrote:
+> From: Patrick McHardy <kaber@trash.net>
+> Date: Thu, 17 Jul 2008 15:48:22 +0200
+> 
+>> One thought that occured to me - we could avoid all the visiblity
+>> issues wrt. dev->qdisc_list by simply getting rid of it :)
+>>
+>> If we move the qdisc list from the device to the root Qdisc itself,
+>> it would become invisible automatically as soon as we assign a new
+>> root qdisc to the netdev_queue. Iteration would become slightly
+>> more complicated since we'd have to iterate over all netdev_queues,
+>> but I think it should avoid most of the problems I mentioned
+>> (besides the u32_list thing).
+> 
+> What might make sense is to have a special Qdisc_root structure which
+> is simply:
+> 
+> struct Qdisc_root {
+> 	struct Qdisc		qd;
+> 	struct list_head	qdisc_list;
+> };
+> 
+> Everything about tree level synchronization would be type explicit.
 
-This version should support back porting by compat-wireless
+Device level grafting is also explicit, so that looks like
+a clean way.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- include/net/mac80211.h |   10 ++++++++++
- net/mac80211/util.c    |   12 ++++++++++++
- 2 files changed, 22 insertions(+), 0 deletions(-)
+> Yes, as you say, the qdisc iteration would get slightly ugly.  But
+> that doesn't seem to be a huge deal.
+> 
+> But it seems a clean solution to the child qdisc visibility problem.
+> 
+> About u32_list, that thing definitely needs some spinlock.  The
+> consultation of that list, and refcount mods, only occur during config
+> operations.  So it's not like we have to grab this lock in the data
+> paths.
+> 
+> If we really want to sweep this problem under the rug, there is another
+> way.  Have the qdisc_destroy() RCU handler kick off a workqueue, and
+> grab the RTNL semaphore there during the final destruction calls. :-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 24a69f6..f78209b 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1619,6 +1619,16 @@ void ieee80211_wake_queue(struct ieee80211_hw *hw, int queue);
- void ieee80211_stop_queue(struct ieee80211_hw *hw, int queue);
- 
- /**
-+ * ieee80211_queue_stopped - test status of the queue
-+ * @hw: pointer as obtained from ieee80211_alloc_hw().
-+ * @queue: queue number (counted from zero).
-+ *
-+ * Drivers should use this function instead of netif_stop_queue.
-+ */
-+
-+int ieee80211_queue_stopped(struct ieee80211_hw *hw, int queue);
-+
-+/**
-  * ieee80211_stop_queues - stop all queues
-  * @hw: pointer as obtained from ieee80211_alloc_hw().
-  *
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 02af3e8..ab9538e 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -396,6 +396,18 @@ void ieee80211_stop_queues(struct ieee80211_hw *hw)
- }
- EXPORT_SYMBOL(ieee80211_stop_queues);
- 
-+int ieee80211_queue_stopped(struct ieee80211_hw *hw, int queue)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	if (ieee80211_is_multiqueue(local)) {
-+		return __netif_subqueue_stopped(local->mdev, queue);
-+	} else {
-+		WARN_ON(queue != 0);
-+		return netif_queue_stopped(local->mdev);
-+	}
-+}
-+EXPORT_SYMBOL(ieee80211_queue_stopped);
-+
- void ieee80211_wake_queues(struct ieee80211_hw *hw)
- {
- 	int i;
--- 
-1.5.4.1
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+That would be the safe way. The RCU destruction used to cause us
+bugs for at least two years, but I actually believe the Qdisc_root
+thing will work :)
