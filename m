@@ -1,130 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:58327 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754788AbYGVASb (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51694
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1758642AbYGQMRz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 20:18:31 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: [PATCH 4/6] rfkill: mutex fixes
-Date: Mon, 21 Jul 2008 21:18:20 -0300
-Message-Id: <1216685902-9373-5-git-send-email-hmh@hmh.eng.br> (sfid-20080722_021836_071713_E13F5986)
-In-Reply-To: <1216685902-9373-1-git-send-email-hmh@hmh.eng.br>
-References: <1216685902-9373-1-git-send-email-hmh@hmh.eng.br>
+	Thu, 17 Jul 2008 08:17:55 -0400
+Date: Thu, 17 Jul 2008 05:17:55 -0700 (PDT)
+Message-Id: <20080717.051755.145101968.davem@davemloft.net> (sfid-20080717_141800_515040_B6E3A2A9)
+To: netdev@vger.kernel.org
+CC: kaber@trash.net, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 25/31]: pkt_sched: Make qdisc grafting locking more
+ specific.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are two mutexes in rfkill:
 
-rfkill->mutex, which protects some of the fields of a rfkill struct, and is
-also used for callback serialization.
+Lock the root of the qdisc being operated upon.
 
-rfkill_mutex, which protects the global state, the list of registered
-rfkill structs and rfkill->claim.
+All explicit references to qdisc_tree_lock() are now gone.
+The only remaining uses are via the sch_tree_{lock,unlock}()
+and tcf_tree_{lock,unlock}() macros.
 
-Make sure to use the correct mutex, and to not miss locking rfkill->mutex
-even when we already took rfkill_mutex.
-
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
- net/rfkill/rfkill.c |   29 +++++++++++++++++++----------
- 1 files changed, 19 insertions(+), 10 deletions(-)
+ net/sched/sch_api.c |   41 +++++++++++++++++++++++++++++------------
+ 1 files changed, 29 insertions(+), 12 deletions(-)
 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index fc3a4fd..ac205ec 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -150,7 +150,7 @@ static void update_rfkill_state(struct rfkill *rfkill)
-  * even if the radio is in RFKILL_STATE_HARD_BLOCKED state, so as to
-  * give the driver a hint that it should double-BLOCK the transmitter.
-  *
-- * Caller must have aquired rfkill_mutex.
-+ * Caller must have acquired rfkill->mutex.
-  */
- static int rfkill_toggle_radio(struct rfkill *rfkill,
- 				enum rfkill_state state,
-@@ -216,8 +216,11 @@ void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
- 	rfkill_states[type] = state;
- 
- 	list_for_each_entry(rfkill, &rfkill_list, node) {
--		if ((!rfkill->user_claim) && (rfkill->type == type))
-+		if ((!rfkill->user_claim) && (rfkill->type == type)) {
-+			mutex_lock(&rfkill->mutex);
- 			rfkill_toggle_radio(rfkill, state, 0);
-+			mutex_unlock(&rfkill->mutex);
-+		}
- 	}
- 
- 	mutex_unlock(&rfkill_mutex);
-@@ -228,7 +231,7 @@ EXPORT_SYMBOL(rfkill_switch_all);
-  * rfkill_epo - emergency power off all transmitters
-  *
-  * This kicks all rfkill devices to RFKILL_STATE_SOFT_BLOCKED, ignoring
-- * everything in its path but rfkill_mutex.
-+ * everything in its path but rfkill_mutex and rfkill->mutex.
-  */
- void rfkill_epo(void)
+diff --git a/net/sched/sch_api.c b/net/sched/sch_api.c
+index 6958fe7..7492489 100644
+--- a/net/sched/sch_api.c
++++ b/net/sched/sch_api.c
+@@ -441,15 +441,29 @@ static struct Qdisc *
+ dev_graft_qdisc(struct net_device *dev, struct Qdisc *qdisc)
  {
-@@ -236,7 +239,9 @@ void rfkill_epo(void)
+ 	struct netdev_queue *dev_queue;
++	spinlock_t *root_lock;
+ 	struct Qdisc *oqdisc;
++	int ingress;
  
- 	mutex_lock(&rfkill_mutex);
- 	list_for_each_entry(rfkill, &rfkill_list, node) {
-+		mutex_lock(&rfkill->mutex);
- 		rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
-+		mutex_unlock(&rfkill->mutex);
- 	}
- 	mutex_unlock(&rfkill_mutex);
- }
-@@ -372,6 +377,9 @@ static ssize_t rfkill_claim_store(struct device *dev,
- 	if (!capable(CAP_NET_ADMIN))
- 		return -EPERM;
+ 	if (dev->flags & IFF_UP)
+ 		dev_deactivate(dev);
  
-+	if (rfkill->user_claim_unsupported)
-+		return -EOPNOTSUPP;
+-	qdisc_lock_tree(dev);
+-	if (qdisc && qdisc->flags&TCQ_F_INGRESS) {
++	ingress = 0;
++	if (qdisc && qdisc->flags&TCQ_F_INGRESS)
++		ingress = 1;
 +
- 	/*
- 	 * Take the global lock to make sure the kernel is not in
- 	 * the middle of rfkill_switch_all
-@@ -380,19 +388,17 @@ static ssize_t rfkill_claim_store(struct device *dev,
- 	if (error)
- 		return error;
++	if (ingress) {
+ 		dev_queue = &dev->rx_queue;
+ 		oqdisc = dev_queue->qdisc;
++	} else {
++		dev_queue = netdev_get_tx_queue(dev, 0);
++		oqdisc = dev_queue->qdisc_sleeping;
++	}
++
++	root_lock = qdisc_root_lock(oqdisc);
++	spin_lock_bh(root_lock);
++
++	if (ingress) {
+ 		/* Prune old scheduler */
+ 		if (oqdisc && atomic_read(&oqdisc->refcnt) <= 1) {
+ 			/* delete */
+@@ -460,9 +474,6 @@ dev_graft_qdisc(struct net_device *dev, struct Qdisc *qdisc)
+ 		}
  
--	if (rfkill->user_claim_unsupported) {
--		error = -EOPNOTSUPP;
--		goto out_unlock;
--	}
- 	if (rfkill->user_claim != claim) {
--		if (!claim)
-+		if (!claim) {
-+			mutex_lock(&rfkill->mutex);
- 			rfkill_toggle_radio(rfkill,
- 					    rfkill_states[rfkill->type],
- 					    0);
-+			mutex_unlock(&rfkill->mutex);
-+		}
- 		rfkill->user_claim = claim;
+ 	} else {
+-		dev_queue = netdev_get_tx_queue(dev, 0);
+-		oqdisc = dev_queue->qdisc_sleeping;
+-
+ 		/* Prune old scheduler */
+ 		if (oqdisc && atomic_read(&oqdisc->refcnt) <= 1)
+ 			qdisc_reset(oqdisc);
+@@ -474,7 +485,7 @@ dev_graft_qdisc(struct net_device *dev, struct Qdisc *qdisc)
+ 		dev_queue->qdisc = &noop_qdisc;
  	}
  
--out_unlock:
- 	mutex_unlock(&rfkill_mutex);
+-	qdisc_unlock_tree(dev);
++	spin_unlock_bh(root_lock);
  
- 	return error ? error : count;
-@@ -521,8 +527,11 @@ static void rfkill_remove_switch(struct rfkill *rfkill)
- {
- 	mutex_lock(&rfkill_mutex);
- 	list_del_init(&rfkill->node);
--	rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
- 	mutex_unlock(&rfkill_mutex);
+ 	if (dev->flags & IFF_UP)
+ 		dev_activate(dev);
+@@ -765,10 +776,12 @@ static int tc_get_qdisc(struct sk_buff *skb, struct nlmsghdr *n, void *arg)
+ 		if ((err = qdisc_graft(dev, p, clid, NULL, &q)) != 0)
+ 			return err;
+ 		if (q) {
++			spinlock_t *root_lock = qdisc_root_lock(q);
 +
-+	mutex_lock(&rfkill->mutex);
-+	rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
-+	mutex_unlock(&rfkill->mutex);
- }
- 
- /**
+ 			qdisc_notify(skb, n, clid, q, NULL);
+-			qdisc_lock_tree(dev);
++			spin_unlock_bh(root_lock);
+ 			qdisc_destroy(q);
+-			qdisc_unlock_tree(dev);
++			spin_unlock_bh(root_lock);
+ 		}
+ 	} else {
+ 		qdisc_notify(skb, n, clid, NULL, q);
+@@ -911,20 +924,24 @@ create_n_graft:
+ graft:
+ 	if (1) {
+ 		struct Qdisc *old_q = NULL;
++		spinlock_t *root_lock;
++
+ 		err = qdisc_graft(dev, p, clid, q, &old_q);
+ 		if (err) {
+ 			if (q) {
+-				qdisc_lock_tree(dev);
++				root_lock = qdisc_root_lock(q);
++				spin_lock_bh(root_lock);
+ 				qdisc_destroy(q);
+-				qdisc_unlock_tree(dev);
++				spin_unlock_bh(root_lock);
+ 			}
+ 			return err;
+ 		}
+ 		qdisc_notify(skb, n, clid, old_q, q);
+ 		if (old_q) {
+-			qdisc_lock_tree(dev);
++			root_lock = qdisc_root_lock(old_q);
++			spin_lock_bh(root_lock);
+ 			qdisc_destroy(old_q);
+-			qdisc_unlock_tree(dev);
++			spin_unlock_bh(root_lock);
+ 		}
+ 	}
+ 	return 0;
 -- 
-1.5.6.2
+1.5.6.2.255.gbed62
 
