@@ -1,53 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59062
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51630
 	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751104AbYGXJUk (ORCPT
+	by vger.kernel.org with ESMTP id S1757402AbYGQMQP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2008 05:20:40 -0400
-Date: Thu, 24 Jul 2008 02:20:40 -0700 (PDT)
-Message-Id: <20080724.022040.23129457.davem@davemloft.net> (sfid-20080724_112046_293068_0BCF8445)
-To: peterz@infradead.org
-Cc: jarkao2@gmail.com, Larry.Finger@lwfinger.net, kaber@trash.net,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, mingo@redhat.com,
-	nickpiggin@yahoo.com.au, paulmck@linux.vnet.ibm.com
-Subject: Re: Kernel WARNING: at net/core/dev.c:1330
- __netif_schedule+0x2c/0x98()
+	Thu, 17 Jul 2008 08:16:15 -0400
+Date: Thu, 17 Jul 2008 05:16:14 -0700 (PDT)
+Message-Id: <20080717.051614.53304618.davem@davemloft.net> (sfid-20080717_141628_796797_D7AFA7D2)
+To: netdev@vger.kernel.org
+CC: kaber@trash.net, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 7/31]: netdev: Kill struct net_device_subqueue and
+ netdev->egress_subqueue*
 From: David Miller <davem@davemloft.net>
-In-Reply-To: <1216890648.7257.258.camel@twins>
-References: <20080723114914.GF4561@ff.dom.local>
-	<20080723.131607.79681752.davem@davemloft.net>
-	<1216890648.7257.258.camel@twins>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Peter Zijlstra <peterz@infradead.org>
-Date: Thu, 24 Jul 2008 11:10:48 +0200
 
-> Ok, then how about something like this, the idea is to wrap the per tx
-> lock with a read lock of the device and let the netif_tx_lock() be the
-> write side, therefore excluding all device locks, but not incure the
-> cacheline bouncing on the read side by using per-cpu counters like rcu
-> does.
-> 
-> This of course requires that netif_tx_lock() is rare, otherwise stuff
-> will go bounce anyway...
-> 
-> Probably missed a few details,.. but I think the below ought to show the
-> idea...
+No longer used.
 
-Thanks for the effort, but I don't think we can seriously consider
-this.
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ include/linux/netdevice.h |   12 ------------
+ 1 files changed, 0 insertions(+), 12 deletions(-)
 
-This lock is taken for every packet transmitted by the system, adding
-another memory reference (the RCU deref) and a counter bump is just
-not something we can just add to placate lockdep.  We going through
-all of this effort to seperate the TX locking into individual
-queues, it would be silly to go back and make it more expensive.
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index b5c1e7d..a1c2c22 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -118,14 +118,6 @@ struct wireless_dev;
+ 
+ #endif  /*  __KERNEL__  */
+ 
+-struct net_device_subqueue
+-{
+-	/* Give a control state for each queue.  This struct may contain
+-	 * per-queue locks in the future.
+-	 */
+-	unsigned long   state;
+-};
+-
+ /*
+  *	Network device statistics. Akin to the 2.0 ether stats but
+  *	with byte counters.
+@@ -761,10 +753,6 @@ struct net_device
+ 	/* for setting kernel sock attribute on TCP connection setup */
+ #define GSO_MAX_SIZE		65536
+ 	unsigned int		gso_max_size;
+-
+-	/* The TX queue control structures */
+-	unsigned int			egress_subqueue_count;
+-	struct net_device_subqueue	egress_subqueue[1];
+ };
+ #define to_net_dev(d) container_of(d, struct net_device, dev)
+ 
+-- 
+1.5.6.2.255.gbed62
 
-I have other ideas which I've expanded upon in other emails.  They
-involve creating a netif_tx_freeze() interface and getting the drivers
-to start using it.
