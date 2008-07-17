@@ -1,49 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:55108 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750878AbYGXFk7 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51642
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1758779AbYGQMQg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2008 01:40:59 -0400
-Message-ID: <488815DE.2000903@lwfinger.net> (sfid-20080724_074138_650902_04B49030)
-Date: Thu, 24 Jul 2008 00:40:46 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks
- rtl8187
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>	 <200807221613.34434.herton@mandriva.com.br>	 <3ace41890807221525r67716ea0r251068df773fe53f@mail.gmail.com>	 <200807221940.20009.herton@mandriva.com.br>	 <4886AA3B.3000406@lwfinger.net> <4886C50E.6040304@lwfinger.net>	 <1216824917.13587.9.camel@johannes.berg>	 <48874F09.7060400@lwfinger.net> <3ace41890807232028u576371a6ra944431327cac76c@mail.gmail.com>
-In-Reply-To: <3ace41890807232028u576371a6ra944431327cac76c@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 17 Jul 2008 08:16:36 -0400
+Date: Thu, 17 Jul 2008 05:16:35 -0700 (PDT)
+Message-Id: <20080717.051635.124264554.davem@davemloft.net> (sfid-20080717_141708_873014_C72B9719)
+To: netdev@vger.kernel.org
+CC: kaber@trash.net, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 11/31]: net: Implement simple sw TX hashing.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hin-Tak Leung wrote:
-> 
-> Your patch actually works here! :-). Maybe you should retest?
-> 
-> It doesn't patch cleanly against wireless-testing - just indentation
-> oddness, I think.
-> Had to apply the patch by hand. but I am using it right now, so it
-> seems to work.
 
-As I wasn't planning on it to be an official patch, I did not handle it with the
-usual care. My mailer is Thunderbird, and it does mess with the white space in
-patches.
+It just xor hashes over IPv4/IPv6 addresses and ports of transport.
 
-> If somebody else retest okay, can we have this in wireless-testing
-> prompto, please?
+The only assumption it makes is that skb_network_header() is set
+correctly.
 
-To retest, I did a 'git checkout 741b4fbc44' and then applied my patch just in
-case there was a second breakage of the driver in the tree. It worked for a
-while, then went offline, but then so did the case with 741b4fbc44 reverted. I 
-think some of my problems may have been due to overheating. I thought we had 
-that problem licked, but maybe not.
+With bug fixes from Eric Dumazet.
 
-I will be submitting the proper patch tomorrow, particularly if it works for others.
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/core/dev.c |   52 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 52 insertions(+), 0 deletions(-)
 
-Larry
-
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 7ca9564..467bfb3 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -121,6 +121,9 @@
+ #include <linux/ctype.h>
+ #include <linux/if_arp.h>
+ #include <linux/if_vlan.h>
++#include <linux/ip.h>
++#include <linux/ipv6.h>
++#include <linux/in.h>
+ 
+ #include "net-sysfs.h"
+ 
+@@ -1665,6 +1668,53 @@ out_kfree_skb:
+  *          --BLG
+  */
+ 
++static u16 simple_tx_hash(struct net_device *dev, struct sk_buff *skb)
++{
++	u32 *addr, *ports, hash, ihl;
++	u8 ip_proto;
++	int alen;
++
++	switch (skb->protocol) {
++	case __constant_htons(ETH_P_IP):
++		ip_proto = ip_hdr(skb)->protocol;
++		addr = &ip_hdr(skb)->saddr;
++		ihl = ip_hdr(skb)->ihl;
++		alen = 2;
++		break;
++	case __constant_htons(ETH_P_IPV6):
++		ip_proto = ipv6_hdr(skb)->nexthdr;
++		addr = &ipv6_hdr(skb)->saddr.s6_addr32[0];
++		ihl = (40 >> 2);
++		alen = 8;
++		break;
++	default:
++		return 0;
++	}
++
++	ports = (u32 *) (skb_network_header(skb) + (ihl * 4));
++
++	hash = 0;
++	while (alen--)
++		hash ^= *addr++;
++
++	switch (ip_proto) {
++	case IPPROTO_TCP:
++	case IPPROTO_UDP:
++	case IPPROTO_DCCP:
++	case IPPROTO_ESP:
++	case IPPROTO_AH:
++	case IPPROTO_SCTP:
++	case IPPROTO_UDPLITE:
++		hash ^= *ports;
++		break;
++
++	default:
++		break;
++	}
++
++	return hash % dev->real_num_tx_queues;
++}
++
+ static struct netdev_queue *dev_pick_tx(struct net_device *dev,
+ 					struct sk_buff *skb)
+ {
+@@ -1672,6 +1722,8 @@ static struct netdev_queue *dev_pick_tx(struct net_device *dev,
+ 
+ 	if (dev->select_queue)
+ 		queue_index = dev->select_queue(dev, skb);
++	else if (dev->real_num_tx_queues > 1)
++		queue_index = simple_tx_hash(dev, skb);
+ 
+ 	skb_set_queue_mapping(skb, queue_index);
+ 	return netdev_get_tx_queue(dev, queue_index);
+-- 
+1.5.6.2.255.gbed62
 
