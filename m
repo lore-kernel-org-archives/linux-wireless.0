@@ -1,157 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ruslug.rutgers.edu ([165.230.139.146]:47709 "EHLO
-	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755214AbYGTCrP (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51603
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1755477AbYGQMP1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2008 22:47:15 -0400
-Date: Sat, 19 Jul 2008 22:47:09 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 3/4] list.h: Add list_splice_tail() and list_splice_tail_init()
-Message-ID: <20080720024709.GT17936@ruslug.rutgers.edu> (sfid-20080720_044717_115541_E18E3E84)
-References: <20080720024341.GQ17936@ruslug.rutgers.edu> <20080720024500.GR17936@ruslug.rutgers.edu> <20080720024554.GS17936@ruslug.rutgers.edu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080720024554.GS17936@ruslug.rutgers.edu>
+	Thu, 17 Jul 2008 08:15:27 -0400
+Date: Thu, 17 Jul 2008 05:15:26 -0700 (PDT)
+Message-Id: <20080717.051526.193688049.davem@davemloft.net> (sfid-20080717_141531_507757_4CF5044D)
+To: netdev@vger.kernel.org
+CC: kaber@trash.net, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 0/31]: Final set of TX multiqueue changes.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If you are using linked lists for queus list_splice() will not do what
-you would expect even if you use the elements passed reversed. We need
-to handle these differently. We add list_splice_tail() and
-list_splice_tail_init()
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/core.h |   42 ----------------------------------
- include/linux/list.h              |   45 ++++++++++++++++++++++++++++++++++++-
- 2 files changed, 44 insertions(+), 43 deletions(-)
+I'd like to first thank Patrick McHardy for pointing out the need for
+shared qdisc handling, even though it meant that I had to essentially
+toss out the 10,000 lines of code I wrote last weekend and start all
+over again :-)
 
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index 1499f6e..807dcdf 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -52,19 +52,6 @@ struct ath_node;
- /* An attempt will be made to merge these link list helpers upstream
-  * instead */
- 
--static inline void __list_splice_tail(const struct list_head *list,
--				 struct list_head *head)
--{
--	struct list_head *first = list->next;
--	struct list_head *last = list->prev;
--	struct list_head *current_tail = head->prev;
--
--	current_tail->next = first;
--	last->next = head;
--	head->prev = last;
--	first->prev = current_tail;
--}
--
- static inline void __list_cut_position(struct list_head *list,
- 		struct list_head *head, struct list_head *entry)
- {
-@@ -79,35 +66,6 @@ static inline void __list_cut_position(struct list_head *list,
- }
- 
- /**
-- * list_splice_tail - join two lists, each list being a queue
-- * @list: the new list to add.
-- * @head: the place to add it in the first list.
-- */
--static inline void list_splice_tail(const struct list_head *list,
--				struct list_head *head)
--{
--	if (!list_empty(list))
--		__list_splice_tail(list, head);
--}
--
--/**
-- * list_splice_tail_init - join two lists, each list being a queue, and
-- * 	reinitialise the emptied list.
-- * @list: the new list to add.
-- * @head: the place to add it in the first list.
-- *
-- * The list at @list is reinitialised
-- */
--static inline void list_splice_tail_init(struct list_head *list,
--				    struct list_head *head)
--{
--	if (!list_empty(list)) {
--		__list_splice_tail(list, head);
--		INIT_LIST_HEAD(list);
--	}
--}
--
--/**
-  * list_cut_position - cut a list into two
-  * @list: a new list to add all removed entries
-  * @head: a list with entries
-diff --git a/include/linux/list.h b/include/linux/list.h
-index 08cf4f6..fc7b700 100644
---- a/include/linux/list.h
-+++ b/include/linux/list.h
-@@ -341,7 +341,7 @@ static inline void __list_splice(const struct list_head *list,
- }
- 
- /**
-- * list_splice - join two lists
-+ * list_splice - join two lists, this is designed for stacks
-  * @list: the new list to add.
-  * @head: the place to add it in the first list.
-  */
-@@ -368,6 +368,49 @@ static inline void list_splice_init(struct list_head *list,
- 	}
- }
- 
-+static inline void __list_splice_tail(const struct list_head *list,
-+				 struct list_head *head)
-+{
-+	struct list_head *first = list->next;
-+	struct list_head *last = list->prev;
-+	struct list_head *current_tail = head->prev;
-+
-+	current_tail->next = first;
-+	last->next = head;
-+	head->prev = last;
-+	first->prev = current_tail;
-+}
-+
-+/**
-+ * list_splice_tail - join two lists, each list being a queue
-+ * @list: the new list to add.
-+ * @head: the place to add it in the first list.
-+ */
-+static inline void list_splice_tail(const struct list_head *list,
-+				struct list_head *head)
-+{
-+	if (!list_empty(list))
-+		__list_splice_tail(list, head);
-+}
-+
-+/**
-+ * list_splice_tail_init - join two lists, each list being a queue, and
-+ * 	reinitialise the emptied list.
-+ * @list: the new list to add.
-+ * @head: the place to add it in the first list.
-+ *
-+ * The list at @list is reinitialised
-+ */
-+static inline void list_splice_tail_init(struct list_head *list,
-+				    struct list_head *head)
-+{
-+	if (!list_empty(list)) {
-+		__list_splice_tail(list, head);
-+		INIT_LIST_HEAD(list);
-+	}
-+}
-+
-+
- /**
-  * list_splice_init_rcu - splice an RCU-protected list into an existing list.
-  * @list:	the RCU-protected list to splice
--- 
-1.5.4.3
+I'd also like to thank Johannes for help he has provided on the
+wireless front.
 
+Johannes, I did everything except move the wireless mac80211 requeue
+work into a workqueue and then add the synchronize_net() call.  If you
+could hack up that patch and test it I'd really appreciate it.
+
+Next, I'd like to thank Eric Dumazet for his great feedback as well.
+I still have to think about how I want to make the hash modulus
+cheaper.
+
+And finally I'd like to thank Jeff Kirsher for sending me the IGB
+multiqueue patches.  He's the only person who sent me any driver work
+for this new infrastructure.
+
+With these changesets, a single qdisc shared as the root of several TX
+queues is implemented.  It is all refreshed and present in:
+
+	kernel.org:/pub/scm/linux/kernel/git/davem/net-tx-2.6.git
+
+which is a clone of current net-next-2.6 as usual.
+
+The default qdisc has changed to one that is simple enough to not
+require sharing.  It's a completely dumb fifo, and pfifo_fast is gone.
+We can look at borrowing the sch_fifo.c code for this, but that would
+require a few changes, for example we'd need to build it in even when
+NET_SCHED is not set.
+
+The locking is now completely refreshed.  This was the largest hurdle
+in the new work of allowing shared qdiscs.  It basically comes down to
+three things:
+
+1) RCU is used more aggressively for qdisc destruction.  We can queue
+   into a qdisc after qdisc_destroy() is called, up until the RCU
+   handler is invoked.
+
+   This allows us to relax several things tremendously.  It means that
+   dev_queue->qdisc can be accessed purely with RCU locking and then
+   we continue to use that sampled qdisc pointer as long as preemption
+   is disabled (via BH's etc.) or when we have some other reason to
+   know the qdisc isn't going away.
+
+   As a result, and the intended main consequence, is that the we are
+   divorced from having to spinlock in order to synchronize with root
+   qdisc changes in the packet processing paths.
+
+2) qdisc_lock_tree() and all of that crap is now gone.
+
+   Instead, we lock qdisc roots of the tree we wish to operate on.
+
+   Someone anticipated this kind of change, which is why we had these
+   sch_tree_lock and tbf_tree_lock macros already.  This allowed these
+   changes to be smaller than they otherwise would have been.
+
+3) We schedule qdiscs, not netdev_queues.  So when a TX queue wakes
+   up, we signal it's attached qdisc.  The qdisc we sample is used
+   consistently all the way down into qdisc_restart() so all of that
+   "resample the qdisc after grabbing lock" code is no longer
+   necessary.
+
+Initially all TX queues get the simple FIFO qdisc.
+
+But once any qdisc root change operation is performed, we use one
+shared qdisc amongst the queues until the root qdisc is deleted, at
+which point we go back to the default.
+
+Note that this new setup means that we can add funky things like have
+qdiscs, classifiers, meta match, and tc actions that modify the SKB TX
+queue mapping.
+
+Unless I hear a huge objection, I intend to pull this work into
+net-next-2.6 tomorrow so I can toss it all to Linus this coming
+Sunday.
