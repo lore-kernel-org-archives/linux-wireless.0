@@ -1,60 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:34192 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758925AbYGUCUl (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.183]:30869 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751202AbYGQLd3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2008 22:20:41 -0400
-Received: by py-out-1112.google.com with SMTP id p76so909305pyb.10
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2008 19:20:41 -0700 (PDT)
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
-	RCU.
-From: jamal <hadi@cyberus.ca>
-Reply-To: hadi@cyberus.ca
-To: David Miller <davem@davemloft.net>
-Cc: kaber@trash.net, netdev@vger.kernel.org, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080720.165911.86437240.davem@davemloft.net>
-References: <1216566963.4847.81.camel@localhost>
-	 <20080720.102534.246150854.davem@davemloft.net>
-	 <1216593170.4847.137.camel@localhost>
-	 <20080720.165911.86437240.davem@davemloft.net>
-Content-Type: text/plain
-Date: Sun, 20 Jul 2008 22:20:38 -0400
-Message-Id: <1216606839.4847.159.camel@localhost> (sfid-20080721_042051_700590_AEF6D089)
-Mime-Version: 1.0
+	Thu, 17 Jul 2008 07:33:29 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so2863509ika.5
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2008 04:33:27 -0700 (PDT)
+Message-ID: <f6ca9fed0807170433m5199b66bl7e8bafd1002c566e@mail.gmail.com> (sfid-20080717_133334_299673_2586B8D7)
+Date: Thu, 17 Jul 2008 13:33:27 +0200
+From: drago01 <drago01@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: [PATCH 4/4] rfkill: mutex fixes
+Cc: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, "Ivo van Doorn" <ivdoorn@gmail.com>
+In-Reply-To: <200807170656.37190.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br>
+	 <1216150327-10904-5-git-send-email-hmh@hmh.eng.br>
+	 <200807170656.37190.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2008-20-07 at 16:59 -0700, David Miller wrote:
+On Thu, Jul 17, 2008 at 6:56 AM, Michael Buesch <mb@bu3sch.de> wrote:
+> On Tuesday 15 July 2008, Henrique de Moraes Holschuh wrote:
+>> There are two mutexes in rfkill:
+>>
+>> rfkill->mutex, which protects some of the fields of a rfkill struct, and is
+>> also used for callback serialization.
+>>
+>> rfkill_mutex, which protects the global state, the list of registered
+>> rfkill structs and rfkill->claim.
+>>
+>> Make sure to use the correct mutex, and to not miss locking rfkill->mutex
+>> even when we already took rfkill_mutex.
 
-> Every time this topic comes up, you insist on them having to match.
-> And I have no idea why.
-
-I dont insist on them matching, just on correctness. i.e if you say you
-have RR, then the scheduling needs to meet those requirements not an
-estimate - thats all.
-
-> The problem is that the bottleneck is the qdisc itself since all those
-> cpus synchonize on it's lock.  We can't have a shared qdisc for the
-> device and get full parallelization.
-> 
-> That's why we're having one qdisc per TX queue, so that they all don't
-> bunch up on the qdisc lock.
-
-That last sentence i have no issues with - it is what i thought wasnt
-happening;-> i misunderstood it to be a single fifo shared by all
-hardware tx queues from the begining (otherwise i wouldnt be posting).
-We are in sync i think, a single pfifo per TX queue is the way to go. I
-was suggesting it goes in the driver, but this is cleaner: In the
-future, one could could actually replace the pfifo with another qdisc
-since the single virtual wire becomes equivalent to a single virtual
-netdevice
-
-> Otherwise, there is zero point in all of these TX multiqueue features
-> in the hardware if we can't parallelize things fully.
-
-parallelization is achieveable in the ideal case.
-
-cheers,
-jamal
-
+rfkill_state_mutex ?
