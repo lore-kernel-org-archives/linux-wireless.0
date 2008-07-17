@@ -1,59 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35801 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755739AbYG2LcV (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49370
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1759126AbYGQMSZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 07:32:21 -0400
-Subject: iwlwifi aggregation info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: tomasw <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PS7vx1HHqYxxB8/JBr/z"
-Date: Tue, 29 Jul 2008 13:32:18 +0200
-Message-Id: <1217331138.10489.24.camel@johannes.berg> (sfid-20080729_133224_832207_85DF1976)
+	Thu, 17 Jul 2008 08:18:25 -0400
+Date: Thu, 17 Jul 2008 05:18:25 -0700 (PDT)
+Message-Id: <20080717.051825.179223431.davem@davemloft.net> (sfid-20080717_141833_915540_BF680900)
+To: netdev@vger.kernel.org
+CC: kaber@trash.net, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 29/31]: pkt_sched: Add multiqueue handling to qdisc_graft().
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-PS7vx1HHqYxxB8/JBr/z
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Move the destruction of the old queue into qdisc_graft().
 
-Hey,
+When operating on a root qdisc (ie. "parent == NULL"), apply
+the operation to all queues.  The caller has grabbed a single
+implicit reference for this graft, therefore when we apply the
+change to more than one queue we must grab additional qdisc
+references.
 
-Can you tell me how aggregation works on hw? It seems to me that there's
-a problem:
+Otherwise, we are operating on a class of a specific parent qdisc, and
+therefore no multiqueue handling is necessary.
 
-Say a station enables aggregation on a low-priority TID, manages to fill
-the hw queue because high-prio frames are eating up all the airtime and
-then disables aggregation again. Now another station enables aggregation
-on a high-priority TID, and gets assigned to the same hw queue. Now
-frames for that station will be stalled, no? Seems like a bug to me.
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/sched/sch_api.c |  101 ++++++++++++++++++++++++++++++---------------------
+ 1 files changed, 59 insertions(+), 42 deletions(-)
 
-johannes
-
---=-PS7vx1HHqYxxB8/JBr/z
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIjv+/AAoJEKVg1VMiehFYltcQAJpH+c75g1bHsceDcokRw5rt
-KaN2DZFG19a/sSCDS6tSCx3EmET7Kg2bfWhg9T88neC78Y+uh8IHXzrO3TwWi4pe
-TazKtznbWBTyfzhjv1OAfyBoRVD3yYFMtpmdaAVSz1kBT7Okm+af0l+cQ7qHCUC4
-8U3GcKp8KbwnwTJfqlyKAC5wGpUC4XpGLJgvgVvnxcXtjFcvtQSu7EgpZv2MAWev
-H6xG0VpWkwe/0CIJWwPKRX+0bbg83Xn/yRK6rO7LSorW8v48ZUga4wjaAwJyW07U
-TBuDz1l9TbYasDn1pXF1jfCIhoqksOPpK1y3HtQM3MpxrPXdmzAiKpP1ZegHWK2V
-Wsfm4LG0ZzU43KyoXTi4dwYd9TBpgEo7kR91UBocMhvfUcJO7eyzlQgSo0y+Zzm6
-u1AaOrs3UpTc7KXh0/s1H+tboifhfhhIXbfO/e/TLg8xo+dT1traN8odQ7o4Mc8M
-5Hn3JpdzUvpFSZTRCTz4kQzbQrUgh89wTM/2eXF7EgSWVGy1isuUmSkMPoSiy8Gp
-uNIztjMQHuRXOEIvij3ffEsPnOJtfa/td2xcoIk/Pr2tIrs5Pov5iahrgs2BBcrO
-uEiv0j2LfHudOyBi95a2fidgQvDc2/OQ/PTXU/+FthF0BbYBSw4YiIR2wemYcnqM
-+FyH/O9zey49jNz+qdqA
-=KYKU
------END PGP SIGNATURE-----
-
---=-PS7vx1HHqYxxB8/JBr/z--
+diff --git a/net/sched/sch_api.c b/net/sched/sch_api.c
+index 7492489..b3ef830 100644
+--- a/net/sched/sch_api.c
++++ b/net/sched/sch_api.c
+@@ -435,28 +435,22 @@ static u32 qdisc_alloc_handle(struct net_device *dev)
+ 	return i>0 ? autohandle : 0;
+ }
+ 
+-/* Attach toplevel qdisc to device dev */
++/* Attach toplevel qdisc to device queue. */
+ 
+-static struct Qdisc *
+-dev_graft_qdisc(struct net_device *dev, struct Qdisc *qdisc)
++static struct Qdisc *dev_graft_qdisc(struct netdev_queue *dev_queue,
++				     struct Qdisc *qdisc)
+ {
+-	struct netdev_queue *dev_queue;
+ 	spinlock_t *root_lock;
+ 	struct Qdisc *oqdisc;
+ 	int ingress;
+ 
+-	if (dev->flags & IFF_UP)
+-		dev_deactivate(dev);
+-
+ 	ingress = 0;
+ 	if (qdisc && qdisc->flags&TCQ_F_INGRESS)
+ 		ingress = 1;
+ 
+ 	if (ingress) {
+-		dev_queue = &dev->rx_queue;
+ 		oqdisc = dev_queue->qdisc;
+ 	} else {
+-		dev_queue = netdev_get_tx_queue(dev, 0);
+ 		oqdisc = dev_queue->qdisc_sleeping;
+ 	}
+ 
+@@ -487,9 +481,6 @@ dev_graft_qdisc(struct net_device *dev, struct Qdisc *qdisc)
+ 
+ 	spin_unlock_bh(root_lock);
+ 
+-	if (dev->flags & IFF_UP)
+-		dev_activate(dev);
+-
+ 	return oqdisc;
+ }
+ 
+@@ -521,26 +512,66 @@ void qdisc_tree_decrease_qlen(struct Qdisc *sch, unsigned int n)
+ }
+ EXPORT_SYMBOL(qdisc_tree_decrease_qlen);
+ 
+-/* Graft qdisc "new" to class "classid" of qdisc "parent" or
+-   to device "dev".
++static void notify_and_destroy(struct sk_buff *skb, struct nlmsghdr *n, u32 clid,
++			       struct Qdisc *old, struct Qdisc *new)
++{
++	if (new || old)
++		qdisc_notify(skb, n, clid, old, new);
+ 
+-   Old qdisc is not destroyed but returned in *old.
++	if (old) {
++		spin_lock_bh(&old->q.lock);
++		qdisc_destroy(old);
++		spin_unlock_bh(&old->q.lock);
++	}
++}
++
++/* Graft qdisc "new" to class "classid" of qdisc "parent" or
++ * to device "dev".
++ *
++ * When appropriate send a netlink notification using 'skb'
++ * and "n".
++ *
++ * On success, destroy old qdisc.
+  */
+ 
+ static int qdisc_graft(struct net_device *dev, struct Qdisc *parent,
+-		       u32 classid,
+-		       struct Qdisc *new, struct Qdisc **old)
++		       struct sk_buff *skb, struct nlmsghdr *n, u32 classid,
++		       struct Qdisc *new, struct Qdisc *old)
+ {
++	struct Qdisc *q = old;
+ 	int err = 0;
+-	struct Qdisc *q = *old;
+-
+ 
+ 	if (parent == NULL) {
+-		if (q && q->flags&TCQ_F_INGRESS) {
+-			*old = dev_graft_qdisc(dev, q);
+-		} else {
+-			*old = dev_graft_qdisc(dev, new);
++		unsigned int i, num_q, ingress;
++
++		ingress = 0;
++		num_q = dev->num_tx_queues;
++		if (q && q->flags & TCQ_F_INGRESS) {
++			num_q = 1;
++			ingress = 1;
+ 		}
++
++		if (dev->flags & IFF_UP)
++			dev_deactivate(dev);
++
++		for (i = 0; i < num_q; i++) {
++			struct netdev_queue *dev_queue = &dev->rx_queue;
++
++			if (!ingress)
++				dev_queue = netdev_get_tx_queue(dev, i);
++
++			if (ingress) {
++				old = dev_graft_qdisc(dev_queue, q);
++			} else {
++				old = dev_graft_qdisc(dev_queue, new);
++				if (new && i > 0)
++					atomic_inc(&new->refcnt);
++			}
++			notify_and_destroy(skb, n, classid, old, new);
++		}
++
++		if (dev->flags & IFF_UP)
++			dev_activate(dev);
+ 	} else {
+ 		const struct Qdisc_class_ops *cops = parent->ops->cl_ops;
+ 
+@@ -549,10 +580,12 @@ static int qdisc_graft(struct net_device *dev, struct Qdisc *parent,
+ 		if (cops) {
+ 			unsigned long cl = cops->get(parent, classid);
+ 			if (cl) {
+-				err = cops->graft(parent, cl, new, old);
++				err = cops->graft(parent, cl, new, &old);
+ 				cops->put(parent, cl);
+ 			}
+ 		}
++		if (!err)
++			notify_and_destroy(skb, n, classid, old, new);
+ 	}
+ 	return err;
+ }
+@@ -773,16 +806,8 @@ static int tc_get_qdisc(struct sk_buff *skb, struct nlmsghdr *n, void *arg)
+ 			return -EINVAL;
+ 		if (q->handle == 0)
+ 			return -ENOENT;
+-		if ((err = qdisc_graft(dev, p, clid, NULL, &q)) != 0)
++		if ((err = qdisc_graft(dev, p, skb, n, clid, NULL, q)) != 0)
+ 			return err;
+-		if (q) {
+-			spinlock_t *root_lock = qdisc_root_lock(q);
+-
+-			qdisc_notify(skb, n, clid, q, NULL);
+-			spin_unlock_bh(root_lock);
+-			qdisc_destroy(q);
+-			spin_unlock_bh(root_lock);
+-		}
+ 	} else {
+ 		qdisc_notify(skb, n, clid, NULL, q);
+ 	}
+@@ -923,10 +948,9 @@ create_n_graft:
+ 
+ graft:
+ 	if (1) {
+-		struct Qdisc *old_q = NULL;
+ 		spinlock_t *root_lock;
+ 
+-		err = qdisc_graft(dev, p, clid, q, &old_q);
++		err = qdisc_graft(dev, p, skb, n, clid, q, NULL);
+ 		if (err) {
+ 			if (q) {
+ 				root_lock = qdisc_root_lock(q);
+@@ -936,13 +960,6 @@ graft:
+ 			}
+ 			return err;
+ 		}
+-		qdisc_notify(skb, n, clid, old_q, q);
+-		if (old_q) {
+-			root_lock = qdisc_root_lock(old_q);
+-			spin_lock_bh(root_lock);
+-			qdisc_destroy(old_q);
+-			spin_unlock_bh(root_lock);
+-		}
+ 	}
+ 	return 0;
+ }
+-- 
+1.5.6.2.255.gbed62
 
