@@ -1,45 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:40415 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752177AbYGUOZv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 10:25:51 -0400
-Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
-From: Dan Williams <dcbw@redhat.com>
-To: Nicolas Pitre <nico@cam.org>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	lkml <linux-kernel@vger.kernel.org>
-In-Reply-To: <alpine.LFD.1.10.0807151404530.12484@xanadu.home>
-References: <20080709190915.GA8238@tuxdriver.com>
-	 <69e28c910807100912h30fcb57fpb4fb48b95c640f77@mail.gmail.com>
-	 <200807101815.27204.mb@bu3sch.de>
-	 <1216142191.6039.113.camel@localhost.localdomain>
-	 <alpine.LFD.1.10.0807151323570.12484@xanadu.home>
-	 <1216144711.13411.18.camel@localhost.localdomain>
-	 <alpine.LFD.1.10.0807151404530.12484@xanadu.home>
-Content-Type: text/plain
-Date: Mon, 21 Jul 2008 10:23:44 -0400
-Message-Id: <1216650224.22055.7.camel@localhost.localdomain> (sfid-20080721_162555_498471_768150C7)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51673
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1757430AbYGQMR0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jul 2008 08:17:26 -0400
+Date: Thu, 17 Jul 2008 05:17:26 -0700 (PDT)
+Message-Id: <20080717.051726.226040470.davem@davemloft.net> (sfid-20080717_141733_891257_35243809)
+To: netdev@vger.kernel.org
+CC: kaber@trash.net, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in RCU.
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-07-15 at 14:14 -0400, Nicolas Pitre wrote:
-> On Tue, 15 Jul 2008, Dan Williams wrote:
-> 
-> > Some of the issues with the current Marvell 83xx GPL drivers that have
-> > gotten out are (a) code style, (b) lots of commented out stuff that's
-> > never used, (c) OS abstraction that's unnecessary on Linux, (d) doesn't
-> > use mac80211, and (e) uses private ioctls.  So hopefully you're writing
-> > a new 83xx driver from scratch :)
-> 
-> Yes, this is all from scratch.  The objective for this work is to be 
-> "mainlinable".
 
-BTW, any chance on putting up a git repo somewhere so others can poke
-around with it?  I'm quite interested in hacking on it.
+This allows less strict control of access to the qdisc attached to a
+netdev_queue.  It is even allowed to enqueue into a qdisc which is
+in the process of being destroyed.  The RCU handler will toss out
+those packets.
 
-Dan
+We will need this to handle sharing of a qdisc amongst multiple
+TX queues.  In such a setup the lock has to be shared, so will
+be inside of the qdisc itself.  At which point the netdev_queue
+lock cannot be used to hard synchronize access to the ->qdisc
+pointer.
+
+One operation we have to keep inside of qdisc_destroy() is the list
+deletion.  It is the only piece of state visible after the RCU quiesce
+period, so we have to undo it early and under the appropriate locking.
+
+The operations in the RCU handler do not need any looking because the
+qdisc tree is no longer visible to anything at that point.
+
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/sched/sch_generic.c |   20 +++++++++++---------
+ 1 files changed, 11 insertions(+), 9 deletions(-)
+
+diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
+index 7e078c5..082db8a 100644
+--- a/net/sched/sch_generic.c
++++ b/net/sched/sch_generic.c
+@@ -545,6 +545,17 @@ EXPORT_SYMBOL(qdisc_reset);
+ static void __qdisc_destroy(struct rcu_head *head)
+ {
+ 	struct Qdisc *qdisc = container_of(head, struct Qdisc, q_rcu);
++	const struct Qdisc_ops  *ops = qdisc->ops;
++
++	gen_kill_estimator(&qdisc->bstats, &qdisc->rate_est);
++	if (ops->reset)
++		ops->reset(qdisc);
++	if (ops->destroy)
++		ops->destroy(qdisc);
++
++	module_put(ops->owner);
++	dev_put(qdisc_dev(qdisc));
++
+ 	kfree((char *) qdisc - qdisc->padded);
+ }
+ 
+@@ -552,21 +563,12 @@ static void __qdisc_destroy(struct rcu_head *head)
+ 
+ void qdisc_destroy(struct Qdisc *qdisc)
+ {
+-	const struct Qdisc_ops  *ops = qdisc->ops;
+-
+ 	if (qdisc->flags & TCQ_F_BUILTIN ||
+ 	    !atomic_dec_and_test(&qdisc->refcnt))
+ 		return;
+ 
+ 	list_del(&qdisc->list);
+-	gen_kill_estimator(&qdisc->bstats, &qdisc->rate_est);
+-	if (ops->reset)
+-		ops->reset(qdisc);
+-	if (ops->destroy)
+-		ops->destroy(qdisc);
+ 
+-	module_put(ops->owner);
+-	dev_put(qdisc_dev(qdisc));
+ 	call_rcu(&qdisc->q_rcu, __qdisc_destroy);
+ }
+ EXPORT_SYMBOL(qdisc_destroy);
+-- 
+1.5.6.2.255.gbed62
 
