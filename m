@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:3388 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751426AbYGXKRs (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.244]:41049 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753398AbYGQNVr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2008 06:17:48 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so1646829waf.23
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2008 03:17:47 -0700 (PDT)
-Message-ID: <1ba2fa240807240317g15f6ba84h91b513cce75975e9@mail.gmail.com> (sfid-20080724_121752_356372_EBAD8CF6)
-Date: Thu, 24 Jul 2008 13:17:46 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Patrick McHardy" <kaber@trash.net>
-Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
-Cc: "David Miller" <davem@davemloft.net>,
-	francois.valenduc@tvcablenet.be, akpm@linux-foundation.org,
-	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, netdev@vger.kernel.org,
-	jussi.kivilinna@mbnet.fi
-In-Reply-To: <48884451.1090703@trash.net>
+	Thu, 17 Jul 2008 09:21:47 -0400
+Received: by an-out-0708.google.com with SMTP id d40so157090and.103
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2008 06:21:46 -0700 (PDT)
+Message-ID: <43e72e890807170621r25616966w1d542e4e235f9a3f@mail.gmail.com> (sfid-20080717_152151_329550_740C4C7B)
+Date: Thu, 17 Jul 2008 06:21:46 -0700
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+To: "Yingying Zhao" <yingying.zhao@linux.intel.com>
+Subject: Re: [PATCH]compat-2.6: fix compiling configurations for iwlwifi
+Cc: "Tomas Winkler" <tomasw@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890807170307g3310ffcbv51f89c93dfbc64a0@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <4887550B.2070704@tvcablenet.be> <4887555A.30605@trash.net>
-	 <48875B8C.2090800@trash.net>
-	 <20080723.142147.61941255.davem@davemloft.net>
-	 <48884451.1090703@trash.net>
+Content-Type: text/plain; charset=UTF-8
+References: <20080717081554.GA1279@amber-desktop.bj.intel.com>
+	 <1ba2fa240807170129w251a95f3i8eab918d50a77f97@mail.gmail.com>
+	 <43e72e890807170248v7a873c15oc3aea315a59e9f19@mail.gmail.com>
+	 <20080717100449.GB1279@amber-desktop.bj.intel.com>
+	 <43e72e890807170307g3310ffcbv51f89c93dfbc64a0@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 24, 2008 at 11:58 AM, Patrick McHardy <kaber@trash.net> wrote:
-> David Miller wrote:
->>
->> From: Patrick McHardy <kaber@trash.net>
->> Date: Wed, 23 Jul 2008 18:25:48 +0200
->>
->>> We can't fit them into the cb together, I don't see a way to
->>> shrink ieee80211_tx_info.
+On Thu, Jul 17, 2008 at 3:07 AM, Luis R. Rodriguez
+<mcgrof@winlab.rutgers.edu> wrote:
+> On Thu, Jul 17, 2008 at 3:04 AM, Yingying Zhao
+> <yingying.zhao@linux.intel.com> wrote:
+>
+>>> Also, was this tested with 2.6.22?
 >>>
->>> Maybe one of the wireless folks can suggest something? Is it
->>> really necessary to pass the full struct ieee80211_tx_info
->>> through the qdisc layer, or could the struct be split? It
->>> needs to find a way to co-exist peacefully with qdiscs'
->>> skb->cb usage.
->>
->> This is another area that got mangled up in the ->select_queue()
->> conversion of the WME bits, but in another aspect this problem
->> existed beforehand as well.
->>
->> Specifically, when RX packets get requeued out to transmit in
->> the code in net/mac80211/rx.c that resends packets back out the
->> wireless device by setting a bit in the SKB CB then calling
->> dev_queue_xmit().
->>
->> That's completely illegal :-)
+>>>   Luis
+>> No. I just tested on 2.6.24.
+>> I'll wait for iwlwifi Kconfig is finalized by Tomas and retest this on
+>> 2.6.22.
 >
-> It seems its doing even more illegal things that were also
-> present previously. The ieee80211_master_start_xmit function
-> expects to get a valid IEEE80211_SKB_CB, which means it
-> expects it to survive through the entire qdisc layer. I'm
-> not sure how packets get to the master device from the
-> subifs though, so I might be wrong.
->
-Isn't this time to make 802.11 native?
-Tomas.
+> OK cool -- just a heads up then, I hadn't enabled LEDs or RFKILL
+> options for drivers as the framework needs backporting. Once
+> backported I expect it will compile well for older kernels.
+
+compat-wireless wasn't actually compiling for 2.6.22 anymore. I just
+fixed that. It loads mac80211. Either I did a mistake or we get an
+oops now when loading a driver on 2.6.22.
+
+  Luis
