@@ -1,37 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:60737 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751390AbYGWBEP (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51678
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1758545AbYGQMRd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 21:04:15 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: [GIT PATCH] RFC: next batch of rfkill changes
-Date: Tue, 22 Jul 2008 22:04:00 -0300
-Message-Id: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br> (sfid-20080723_030419_906860_3A021648)
+	Thu, 17 Jul 2008 08:17:33 -0400
+Date: Thu, 17 Jul 2008 05:17:32 -0700 (PDT)
+Message-Id: <20080717.051732.252374750.davem@davemloft.net> (sfid-20080717_141738_001144_FF2F9C78)
+To: netdev@vger.kernel.org
+CC: kaber@trash.net, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 21/31]: pkt_sched: Use per-queue locking in
+ shutdown_scheduler_queue.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-This is my next batch of rfkill changes.  They add features and address
-some shortcomings of rfkill-input, mostly.
+This eliminates another qdisc_lock_tree user.
 
-Please comment.  One thing that is bothering me in the last patch is
-what happens during suspend/resume to pending delayed rfkill state
-changes.  Are pending scheduled jobs executed, cancelled, or frozen to
-fire up when the system resumes itself?
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/sched/sch_generic.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-Henrique de Moraes Holschuh (6):
-      rfkill: detect bogus double-registering
-      rfkill: add default global states
-      rfkill: add master_switch_mode functionality
-      rfkill: add EPO lock to rfkill-input
-      rfkill: rename rfkill_mutex to rfkill_global_mutex
-      rfkill: rate-limit rfkill-input workqueue usage
-
+diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
+index 082db8a..efa418a 100644
+--- a/net/sched/sch_generic.c
++++ b/net/sched/sch_generic.c
+@@ -757,18 +757,20 @@ static void shutdown_scheduler_queue(struct net_device *dev,
+ 	struct Qdisc *qdisc_default = _qdisc_default;
+ 
+ 	if (qdisc) {
++		spinlock_t *root_lock = qdisc_root_lock(qdisc);
++
+ 		dev_queue->qdisc = qdisc_default;
+ 		dev_queue->qdisc_sleeping = qdisc_default;
+ 
++		spin_lock(root_lock);
+ 		qdisc_destroy(qdisc);
++		spin_unlock(root_lock);
+ 	}
+ }
+ 
+ void dev_shutdown(struct net_device *dev)
+ {
+-	qdisc_lock_tree(dev);
+ 	netdev_for_each_tx_queue(dev, shutdown_scheduler_queue, &noop_qdisc);
+ 	shutdown_scheduler_queue(dev, &dev->rx_queue, NULL);
+ 	BUG_TRAP(!timer_pending(&dev->watchdog_timer));
+-	qdisc_unlock_tree(dev);
+ }
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+1.5.6.2.255.gbed62
+
