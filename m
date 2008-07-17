@@ -1,71 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:19095 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753458AbYGOH12 (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:25953 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751654AbYGQFun (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 03:27:28 -0400
-To: "Tomas Winkler" <tomasw@gmail.com>
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by low level driver
-References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
-	<1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
-	<1216039127.11189.15.camel@johannes.berg>
-	<1ba2fa240807140546w4f08e32l59ed88dfa1b86403@mail.gmail.com>
-	<87fxqcoaue.fsf@nokia.com>
-	<1ba2fa240807141434k5260e6b9q6468b450fccba3e7@mail.gmail.com>
+	Thu, 17 Jul 2008 01:50:43 -0400
+To: "Tomas Winkler" <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] mac80211: make listen_interval be limited by low level driver
+References: <1216208814-26314-1-git-send-email-tomas.winkler@intel.com>
 From: Kalle Valo <kalle.valo@nokia.com>
-Date: Tue, 15 Jul 2008 10:21:16 +0300
-In-Reply-To: <1ba2fa240807141434k5260e6b9q6468b450fccba3e7@mail.gmail.com> (ext Tomas Winkler's message of "Tue\, 15 Jul 2008 00\:34\:24 +0300")
-Message-ID: <87od4zd34j.fsf@nokia.com> (sfid-20080715_092732_589800_50479196)
+Date: Thu, 17 Jul 2008 08:49:54 +0300
+In-Reply-To: <1216208814-26314-1-git-send-email-tomas.winkler@intel.com> (ext Tomas Winkler's message of "Wed\, 16 Jul 2008 14\:46\:54 +0300")
+Message-ID: <87sku9awl9.fsf@nokia.com> (sfid-20080717_075047_335118_386F7785)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas Winkler <tomasw@gmail.com> writes:
+Tomas Winkler <tomas.winkler@intel.com> writes:
 
->>
->> This stuff is very much hardware dependent, I don't deny that, but
->> still I would assume that the basic principles are almost the same. We
->> just need to come up with a good interface for the drivers. Sure, it's
->> more work now, but if we don't do it, PSM support will eventually get
->> really messy because all drivers do it somehow differently.
->>
-> This patch only sets value of listen interval from the driver I just
-> think this is exactly what you are suggesting.
+> This patch makes possible for a driver to specify maximal listen interval
+> The possibility for user to configure listen interval is not implemented
+> yet, currently the maximum provided by the driver or 1 is used.
+> Mac80211 uses config handler to set listen interval for to the driver.
 
-No, I don't suggest that. I understood that for setting the
-listen_interval you are after something like this:
-
-         sysfs?                 register_hw()
-user   ---------->   driver    -------------->  mac80211
-
-(Please correct me if I misunderstood this.)
-
-But I think that the flow should be like this:
-
-       WE/cfg80211                config()
-user   ---------->   mac80211  -------------->  driver
-
-So that mac80211 would be one making the choice for the listen value
-based on user input. But what the user input would be, that's an
-another question.
-
-> This is only required for sending correct value of listen interval
-> to AP in association. Anything else is handled in the driver or
-> firmware anyway.
-
-Yes, driver will pass the information to the firmware. But I still
-think mac80211 should make the decision, and the driver should be only
-forwarding mac80211 decisions to the firmware.
-
-> This patch should go in and we can reconsider it when other HW
-> driver will implement PS so we can see the bigger picture.
-
-I guess it's a good compromise for now, but as long as we change it
-later.
+Looks good to me. Thanks for doing this.
 
 -- 
 Kalle Valo
