@@ -1,58 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.suse.de ([195.135.220.2]:54332 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751340AbYG2TD0 convert rfc822-to-8bit (ORCPT
+Received: from mga10.intel.com ([192.55.52.92]:37903 "EHLO
+	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755424AbYGQKD3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 15:03:26 -0400
-From: Andreas Schwab <schwab@suse.de>
-To: linux-wireless@vger.kernel.org
-Subject: Fix iwlwifi compilation without CONFIG_IWLWIFI_DEBUG
-Cc: ipw3945-devel@lists.sourceforge.net
-Date: Tue, 29 Jul 2008 21:03:24 +0200
-Message-ID: <jebq0g8qdf.fsf@sykes.suse.de> (sfid-20080729_210330_222534_8E97F484)
+	Thu, 17 Jul 2008 06:03:29 -0400
+Date: Thu, 17 Jul 2008 18:04:49 +0800
+From: Yingying Zhao <yingying.zhao@linux.intel.com>
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	Yingying Zhao <yingying.zhao@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH]compat-2.6: fix compiling configurations for iwlwifi
+Message-ID: <20080717100449.GB1279@amber-desktop.bj.intel.com> (sfid-20080717_120334_394846_08FEEFE9)
+References: <20080717081554.GA1279@amber-desktop.bj.intel.com> <1ba2fa240807170129w251a95f3i8eab918d50a77f97@mail.gmail.com> <43e72e890807170248v7a873c15oc3aea315a59e9f19@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890807170248v7a873c15oc3aea315a59e9f19@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/wireless/iwlwifi/iwl-led.c: In function =E2=80=98iwl_led_br=
-ightness_set=E2=80=99:
-drivers/net/wireless/iwlwifi/iwl-led.c:198: error: =E2=80=98led_type_st=
-r=E2=80=99 undeclared (first use in this function)
-drivers/net/wireless/iwlwifi/iwl-led.c:198: error: (Each undeclared ide=
-ntifier is reported only once
-drivers/net/wireless/iwlwifi/iwl-led.c:198: error: for each function it=
- appears in.)
+On Thu, Jul 17, 2008 at 02:48:53AM -0700, Luis R. Rodriguez wrote:
+> On Thu, Jul 17, 2008 at 1:29 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+> > On Thu, Jul 17, 2008 at 11:15 AM, Yingying Zhao
+> > <yingying.zhao@linux.intel.com> wrote:
+> >> Latest iwlwifi in wireless-testing removed CONFIG_IWL4965_HT and
+> >> introduced CONFIG_IWL5000 for Intel Wireless WiFi 5000AGN support
+> >> which is built in IWL4965 module. This patch also enables IWLWIFI_LEDS,
+> >> IWLWIFI_RFKILL,IWL3945_LEDS IWLWIFI_DEBUG for iwlwifi build by default.
+> >>
+> >> Signed-off-by: Zhao Yingying <yingying.zhao@intel.com>
+> >> ---
+> >>  config.mk |   20 +++++++++++++++++++-
+> >>  1 file changed, 19 insertions(+), 1 deletion(-)
+> >>
+> >> diff --git a/config.mk b/config.mk
+> >> index b1fb68e..cafadfa 100644
+> >> --- a/config.mk
+> >> +++ b/config.mk
+> >> @@ -15,6 +15,7 @@ endif
+> >>
+> >>  # Wireless subsystem stuff
+> >>  CONFIG_MAC80211=m
+> >> +CONFIG_MAC80211_LEDS=y
+> >>
+> >>  # Enable QOS for 2.6.22, we'll do some hacks here to enable it.
+> >>  # You will need this for HT support (802.11n) and WME (802.11e).
+> >> @@ -77,7 +78,24 @@ CONFIG_IWLWIFI=m
+> >>  CONFIG_IWLCORE=m
+> >>  CONFIG_IWL3945=m
+> >>  CONFIG_IWL4965=m
+> >> -CONFIG_IWL4965_HT=y
+> >> +CONFIG_IWLWIFI_LEDS=y
+> >> +CONFIG_IWLWIFI_RFKILL=y
+> >> +CONFIG_IWL3945_LEDS=y
+> >> +CONFIG_IWL5000=y
+> >> +
+> >> +ifeq ($(CONFIG_IWL5000),y)
+> >> +ifeq ($(CONFIG_IWL4965),)
+> >> +$(warning "WARNING: CONFIG_IWL5000 requires CONFIG_IWL4965 is configured as m.")
+> >> +CONFIG_IWL4965=m
+> >> +endif # CONFIG_IWL4965 is empty
+> >> +endif # CONFIG_IWL5000 is y
+> >> +
+> >> +CONFIG_IWLWIFI_DEBUG=y
+> >> +
+> >> +ifeq ($(CONFIG_MAC80211_DEBUGFS),y)
+> >> +CONFIG_IWLWIFI_DEBUGFS=y
+> >> +endif
+> >> +
+> >>  CONFIG_B43=m
+> >>  # B43 uses PCMCIA only for Compact Flash. The Cardbus cards uses PCI
+> >>  # Example, bcm4318:
+> >
+> > I'm changing iwlwifi Kconfig so please hold this patch.
+> 
+> Also, was this tested with 2.6.22?
+> 
+>   Luis
+No. I just tested on 2.6.24. 
+I'll wait for iwlwifi Kconfig is finalized by Tomas and retest this on
+2.6.22.
 
-Signed-off-by: Andreas Schwab <schwab@suse.de>
----
-diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wirel=
-ess/iwlwifi/iwl-led.c
-index 899d7a2..a58571c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-led.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-led.c
-@@ -195,8 +195,10 @@ static void iwl_led_brightness_set(struct led_clas=
-sdev *led_cdev,
- 		return;
-=20
-=20
-+#ifdef CONFIG_IWLWIFI_DEBUG
- 	IWL_DEBUG_LED("Led type =3D %s brightness =3D %d\n",
- 			led_type_str[led->type], brightness);
-+#endif
- 	switch (brightness) {
- 	case LED_FULL:
- 		if (led->type =3D=3D IWL_LED_TRG_ASSOC)
-
---=20
-Andreas Schwab, SuSE Labs, schwab@suse.de
-SuSE Linux Products GmbH, Maxfeldstra=C3=9Fe 5, 90409 N=C3=BCrnberg, Ge=
-rmany
-PGP key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4=
-ED5
-"And now for something completely different."
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yingying
