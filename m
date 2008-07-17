@@ -1,67 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bromo.msbb.uc.edu ([129.137.3.146]:60729 "HELO
-	bromo.msbb.uc.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752662AbYG3Ckh (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51657
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1756411AbYGQMRF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 22:40:37 -0400
-Received: from bromo.msbb.uc.edu (localhost.localdomain [127.0.0.1])
-	by bromo.msbb.uc.edu (Postfix) with ESMTP id 0F5DCB006D
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 22:40:36 -0400 (EDT)
-Received: (from howarth@localhost)
-	by bromo.msbb.uc.edu (8.14.2/8.14.2/Submit) id m6U2eZn6003001
-	for linux-wireless@vger.kernel.org; Tue, 29 Jul 2008 22:40:35 -0400
-Date: Tue, 29 Jul 2008 22:40:35 -0400
-From: Jack Howarth <howarth@bromo.msbb.uc.edu>
-To: linux-wireless@vger.kernel.org
-Subject: ath9k and signal level
-Message-ID: <20080730024035.GA2976@bromo.msbb.uc.edu> (sfid-20080730_044041_049374_65090123)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 17 Jul 2008 08:17:05 -0400
+Date: Thu, 17 Jul 2008 05:17:04 -0700 (PDT)
+Message-Id: <20080717.051704.146865283.davem@davemloft.net> (sfid-20080717_141712_356184_B160AA10)
+To: netdev@vger.kernel.org
+CC: kaber@trash.net, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 16/31]: pkt_sched: Make QDISC_RUNNING a qdisc state.
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-    I was finally able to get the ath9k drivers to work
-under 2.6.26-rc1 by using the previous ath9k git patch,
-the 16 new ath9k patches, the Berg's proposed skb->cb
-patch and the following patch I constructed for ath9k
-to mimic the skb->cb changes...
 
---- linux-2.6.26.x86_64/drivers/net/wireless/ath9k/xmit.c.orig	2008-07-29 19:32
-:26.000000000 -0400
-+++ linux-2.6.26.x86_64/drivers/net/wireless/ath9k/xmit.c	2008-07-29 20:04
-:09.000000000 -0400
-@@ -37,6 +37,10 @@
+Currently it is associated with a netdev_queue, but when we have
+qdisc sharing that no longer makes any sense.
+
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ include/linux/netdevice.h |    1 -
+ include/net/pkt_sched.h   |    4 +++-
+ include/net/sch_generic.h |    6 ++++++
+ net/sched/sch_generic.c   |   18 ++++++++++--------
+ 4 files changed, 19 insertions(+), 10 deletions(-)
+
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index 0883fcf..9240a95 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -441,7 +441,6 @@ static inline void napi_synchronize(const struct napi_struct *n)
+ enum netdev_queue_state_t
+ {
+ 	__QUEUE_STATE_XOFF,
+-	__QUEUE_STATE_QDISC_RUNNING,
+ };
  
- #define OFDM_SIFS_TIME    	    16
+ struct netdev_queue {
+diff --git a/include/net/pkt_sched.h b/include/net/pkt_sched.h
+index cb95278..06a442d 100644
+--- a/include/net/pkt_sched.h
++++ b/include/net/pkt_sched.h
+@@ -88,8 +88,10 @@ extern void __qdisc_run(struct netdev_queue *txq);
  
-+#ifndef ETH_P_PAE
-+#define ETH_P_PAE 0x888E /* Port Access Entity (IEEE 802.1X) */
-+#endif /* ETH_P_PAE */
+ static inline void qdisc_run(struct netdev_queue *txq)
+ {
++	struct Qdisc *q = txq->qdisc;
 +
- static u_int32_t bits_per_symbol[][2] = {
- 	/* 20MHz 40MHz */
- 	{    26,   54 },     /*  0: BPSK */
-@@ -248,7 +252,7 @@
- 		txctl->min_rate = tx_info_priv->min_rate;
- 	} else if (ieee80211_is_data(fc)) {
- 		if (ieee80211_is_nullfunc(fc) ||
--		    (tx_info->flags & IEEE80211_TX_CTL_EAPOL_FRAME)) {
-+		    (skb->protocol == cpu_to_be16(ETH_P_PAE)))  {
- 			txctl->use_minrate = 1;
- 			txctl->min_rate = tx_info_priv->min_rate;
- 		}
-@@ -310,7 +314,7 @@
- 	txctl->keytype = HAL_KEY_TYPE_CLEAR;
- 	txctl->keyix = HAL_TXKEYIX_INVALID;
+ 	if (!netif_tx_queue_stopped(txq) &&
+-	    !test_and_set_bit(__QUEUE_STATE_QDISC_RUNNING, &txq->state))
++	    !test_and_set_bit(__QDISC_STATE_RUNNING, &q->state))
+ 		__qdisc_run(txq);
+ }
  
--	if (!(tx_info->flags & IEEE80211_TX_CTL_DO_NOT_ENCRYPT)) {
-+	if (tx_info->control.hw_key) {
- 		txctl->keyix = tx_info->control.hw_key->hw_key_idx;
- 		txctl->frmlen += tx_info->control.icv_len;
+diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
+index b96c3d9..bc2a09d 100644
+--- a/include/net/sch_generic.h
++++ b/include/net/sch_generic.h
+@@ -23,6 +23,11 @@ struct qdisc_rate_table
+ 	int		refcnt;
+ };
+ 
++enum qdisc_state_t
++{
++	__QDISC_STATE_RUNNING,
++};
++
+ struct Qdisc
+ {
+ 	int 			(*enqueue)(struct sk_buff *skb, struct Qdisc *dev);
+@@ -36,6 +41,7 @@ struct Qdisc
+ 	u32			handle;
+ 	u32			parent;
+ 	atomic_t		refcnt;
++	unsigned long		state;
+ 	struct sk_buff		*gso_skb;
+ 	struct sk_buff_head	q;
+ 	struct netdev_queue	*dev_queue;
+diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
+index 2bd75be..ac208c2 100644
+--- a/net/sched/sch_generic.c
++++ b/net/sched/sch_generic.c
+@@ -130,8 +130,8 @@ static inline int handle_dev_cpu_collision(struct sk_buff *skb,
+ /*
+  * NOTE: Called under queue->lock with locally disabled BH.
+  *
+- * __QUEUE_STATE_QDISC_RUNNING guarantees only one CPU can process
+- * this queue at a time. queue->lock serializes queue accesses for
++ * __QDISC_STATE_RUNNING guarantees only one CPU can process
++ * this qdisc at a time. queue->lock serializes queue accesses for
+  * this queue AND txq->qdisc pointer itself.
+  *
+  *  netif_tx_lock serializes accesses to device driver.
+@@ -146,9 +146,9 @@ static inline int handle_dev_cpu_collision(struct sk_buff *skb,
+  *				>0 - queue is not empty.
+  *
+  */
+-static inline int qdisc_restart(struct netdev_queue *txq)
++static inline int qdisc_restart(struct netdev_queue *txq,
++				struct Qdisc *q)
+ {
+-	struct Qdisc *q = txq->qdisc;
+ 	int ret = NETDEV_TX_BUSY;
+ 	struct net_device *dev;
+ 	struct sk_buff *skb;
+@@ -168,7 +168,6 @@ static inline int qdisc_restart(struct netdev_queue *txq)
+ 	HARD_TX_UNLOCK(dev, txq);
+ 
+ 	spin_lock(&txq->lock);
+-	q = txq->qdisc;
+ 
+ 	switch (ret) {
+ 	case NETDEV_TX_OK:
+@@ -197,8 +196,9 @@ static inline int qdisc_restart(struct netdev_queue *txq)
+ void __qdisc_run(struct netdev_queue *txq)
+ {
+ 	unsigned long start_time = jiffies;
++	struct Qdisc *q = txq->qdisc;
+ 
+-	while (qdisc_restart(txq)) {
++	while (qdisc_restart(txq, q)) {
+ 		if (netif_tx_queue_stopped(txq))
+ 			break;
+ 
+@@ -213,7 +213,7 @@ void __qdisc_run(struct netdev_queue *txq)
+ 		}
+ 	}
+ 
+-	clear_bit(__QUEUE_STATE_QDISC_RUNNING, &txq->state);
++	clear_bit(__QDISC_STATE_RUNNING, &q->state);
+ }
+ 
+ static void dev_watchdog(unsigned long arg)
+@@ -666,14 +666,16 @@ static bool some_qdisc_is_running(struct net_device *dev, int lock)
+ 
+ 	for (i = 0; i < dev->num_tx_queues; i++) {
+ 		struct netdev_queue *dev_queue;
++		struct Qdisc *q;
+ 		int val;
+ 
+ 		dev_queue = netdev_get_tx_queue(dev, i);
++		q = dev_queue->qdisc;
+ 
+ 		if (lock)
+ 			spin_lock_bh(&dev_queue->lock);
+ 
+-		val = test_bit(__QUEUE_STATE_QDISC_RUNNING, &dev_queue->state);
++		val = test_bit(__QDISC_STATE_RUNNING, &q->state);
+ 
+ 		if (lock)
+ 			spin_unlock_bh(&dev_queue->lock);
+-- 
+1.5.6.2.255.gbed62
 
-So far the ath9k driver seems to be working well with one oddity.
-I find that the gnome menu applet (using the NetworkManager in Fedora 9)
-shows a signal level of zero (even though it recognizes that the connection
-exists to the wireless network). Is this a known issue?
-                          Jack
-ps Are all 16 patches now applied to the ath9k git?
