@@ -1,88 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:47141 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751817AbYGWJuN (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:10074 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756824AbYGQUM0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 05:50:13 -0400
-Subject: Re: Kernel WARNING: at net/core/dev.c:1330
-	__netif_schedule+0x2c/0x98()
-From: Peter Zijlstra <peterz@infradead.org>
-To: Jarek Poplawski <jarkao2@gmail.com>
-Cc: David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
-	kaber@trash.net, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	mingo@redhat.com
-In-Reply-To: <20080723093459.GC4561@ff.dom.local>
-References: <20080722.160409.216536011.davem@davemloft.net>
-	 <20080723062036.GA4561@ff.dom.local>
-	 <20080723.005921.113868915.davem@davemloft.net>
-	 <20080723085452.GB4561@ff.dom.local> <1216803786.7257.146.camel@twins>
-	 <20080723093459.GC4561@ff.dom.local>
-Content-Type: text/plain
-Date: Wed, 23 Jul 2008 11:50:14 +0200
-Message-Id: <1216806614.7257.152.camel@twins> (sfid-20080723_115018_436419_88E4025D)
-Mime-Version: 1.0
+	Thu, 17 Jul 2008 16:12:26 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so14993yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2008 13:12:26 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: ath5k-devel@lists.ath5k.org
+From: Andrey Yurovsky <andrey@cozybit.com>
+Subject: [PATCH] ath5k: add Mesh Point support
+Date: Thu, 17 Jul 2008 13:12:24 -0700 (PDT)
+Message-ID: <487fa7a8.14da600a.1aae.48b1@mx.google.com> (sfid-20080717_221239_627791_55EAFBA7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-07-23 at 09:35 +0000, Jarek Poplawski wrote:
-> On Wed, Jul 23, 2008 at 11:03:06AM +0200, Peter Zijlstra wrote:
-> > On Wed, 2008-07-23 at 08:54 +0000, Jarek Poplawski wrote:
-> > > On Wed, Jul 23, 2008 at 12:59:21AM -0700, David Miller wrote:
-> > > > From: Jarek Poplawski <jarkao2@gmail.com>
-> > > > Date: Wed, 23 Jul 2008 06:20:36 +0000
-> > > > 
-> > > > > PS: if there is nothing new in lockdep the classical method would
-> > > > > be to change this static array:
-> > > > > 
-> > > > > static struct lock_class_key
-> > > > > netdev_xmit_lock_key[ARRAY_SIZE(netdev_lock_type)];
-> > > > > 
-> > > > > to
-> > > > > 
-> > > > > static struct lock_class_key
-> > > > > netdev_xmit_lock_key[ARRAY_SIZE(netdev_lock_type)][MAX_NUM_TX_QUEUES];
-> > > > > 
-> > > > > and set lockdep classes per queue as well. (If we are sure we don't
-> > > > > need lockdep subclasses anywhere this could be optimized by using
-> > > > > one lock_class_key per 8 queues and spin_lock_nested()).
-> > > > 
-> > > > Unfortunately MAX_NUM_TX_QUEUES is USHORT_MAX, so this isn't really
-> > > > a feasible approach.
-> > > 
-> > > Is it used by real devices already? Maybe for the beginning we could
-> > > start with something less?
-> > > 
-> > > > spin_lock_nested() isn't all that viable either, as the subclass
-> > > > limit is something like 8.
-> > > 
-> > > This method would need to do some additional counting: depending of
-> > > a queue number each 8 subsequent queues share (are set to) the same
-> > > class and their number mod 8 gives the subqueue number for
-> > > spin_lock_nested().
-> > > 
-> > > I'll try to find if there is something new around this in lockdep.
-> > > (lockdep people added to CC.)
-> > 
-> > There isn't.
-> > 
-> > Is there a static data structure that the driver needs to instantiate to
-> > 'create' a queue? Something like:
-> > 
-> > /* this imaginary e1000 hardware has 16 hardware queues */
-> > static struct net_tx_queue e1000e_tx_queues[16]; 
-> 
-> I guess, not.
-> 
-> Then, IMHO, we could be practical and simply skip lockdep validation
-> for "some" range of locks: e.g. to set the table for the first 256
-> queues only, and to do e.g. __raw_spin_lock() for bigger numbers. (If
-> there are any bad locking patterns this should be enough for checking.)
+This enables draft-802.11s Mesh Point operation.  For that we need mesh
+beaconing.  Tested with AR5212/AR5213 PCI card against Zydas and b43 mesh 
+nodes.
 
-definite NAK on using raw spinlock ops...
-
-I'll go look at this multiqueue stuff to see if there is anything to be
-done.. David, what would be a good commit to start reading?
+Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+---
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 217d506..6d9f4e1 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1425,7 +1425,8 @@ ath5k_beaconq_config(struct ath5k_softc *sc)
+ 	ret = ath5k_hw_get_tx_queueprops(ah, sc->bhalq, &qi);
+ 	if (ret)
+ 		return ret;
+-	if (sc->opmode == IEEE80211_IF_TYPE_AP) {
++	if (sc->opmode == IEEE80211_IF_TYPE_AP ||
++		sc->opmode == IEEE80211_IF_TYPE_MESH_POINT) {
+ 		/*
+ 		 * Always burst out beacon and CAB traffic
+ 		 * (aifs = cwmin = cwmax = 0)
+@@ -2911,6 +2912,7 @@ static void ath5k_configure_filter(struct ieee80211_hw *hw,
+ 	if (sc->opmode != IEEE80211_IF_TYPE_STA)
+ 		rfilt |= AR5K_RX_FILTER_PROBEREQ;
+ 	if (sc->opmode != IEEE80211_IF_TYPE_AP &&
++		sc->opmode != IEEE80211_IF_TYPE_MESH_POINT &&
+ 		test_bit(ATH_STAT_PROMISC, sc->status))
+ 		rfilt |= AR5K_RX_FILTER_PROM;
+ 	if (sc->opmode == IEEE80211_IF_TYPE_STA ||
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index c6d12c5..8854820 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -2326,6 +2326,7 @@ int ath5k_hw_set_opmode(struct ath5k_hw *ah)
+ 		break;
+ 
+ 	case IEEE80211_IF_TYPE_AP:
++	case IEEE80211_IF_TYPE_MESH_POINT:
+ 		pcu_reg |= AR5K_STA_ID1_AP | AR5K_STA_ID1_RTS_DEF_ANTENNA |
+ 			(ah->ah_version == AR5K_AR5210 ?
+ 				AR5K_STA_ID1_NO_PSPOLL : 0);
 
 
