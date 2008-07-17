@@ -1,151 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:53216 "EHLO venema.h4ckr.net"
+Received: from mx1.redhat.com ([66.187.233.31]:58468 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755452AbYGTDwF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2008 23:52:05 -0400
-Date: Sun, 20 Jul 2008 06:34:39 +0300
-From: Nick Kossifidis <mick@madwifi.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
-Subject: [PATCH 3/12] ath5k: Misc hw_attach fixes
-Message-ID: <20080720033439.GC7440@makis> (sfid-20080720_061543_367240_135ED0C6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1753543AbYGQR4m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jul 2008 13:56:42 -0400
+Subject: Re: [PATCH 2/3] libertas: add sysfs hooks to update boot2 and
+	persistent firmware
+From: Dan Williams <dcbw@redhat.com>
+To: Brian Cavagnolo <brian@cozybit.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <487f84b8.29578c0a.46a7.5cef@mx.google.com>
+References: <487f84b8.29578c0a.46a7.5cef@mx.google.com>
+Content-Type: text/plain
+Date: Thu, 17 Jul 2008 13:54:45 -0400
+Message-Id: <1216317285.23645.18.camel@localhost.localdomain> (sfid-20080717_195646_125523_ED4C2215)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Correctly attach RF2425
- * Update SREV values for Radio chips
- * Update hw_attach to use new SPENDING values
- * Write a bit after POST for some chips
+On Wed, 2008-07-16 at 10:28 -0700, Brian Cavagnolo wrote:
+> To use these features, copy the boot2 and firmware images to /lib/firmware and:
+> 
+> echo <boot2_image_name> > /sys/class/net/ethX/lbs_boot2
+> echo <firmware_image_name> > /sys/class/net/ethX/lbs_fw
 
- Changes-licensed-under: ISC
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+Perhaps "lbs_flash_boot2" and "lbs_flash_fw" would be better names here?
+Otherwise it looks like one of the drivers that you can choose alternate
+firmware for (atmel.c for example) and doesn't give any indication that
+it'll permanently change what's on the dongle.
 
----
-diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
-index ba35c30..9102eea 100644
---- a/drivers/net/wireless/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath5k/ath5k.h
-@@ -186,11 +186,13 @@ struct ath5k_srev_name {
- #define AR5K_SREV_RAD_2111	0x20
- #define AR5K_SREV_RAD_5112	0x30
- #define AR5K_SREV_RAD_5112A	0x35
-+#define	AR5K_SREV_RAD_5112B	0x36
- #define AR5K_SREV_RAD_2112	0x40
- #define AR5K_SREV_RAD_2112A	0x45
--#define AR5K_SREV_RAD_SC0	0x56	/* Found on 2413/2414 */
--#define AR5K_SREV_RAD_SC1	0x63	/* Found on 5413/5414 */
--#define AR5K_SREV_RAD_SC2	0xa2	/* Found on 2424-5/5424 */
-+#define	AR5K_SREV_RAD_2112B	0x46
-+#define AR5K_SREV_RAD_SC0	0x50	/* Found on 2413/2414 */
-+#define AR5K_SREV_RAD_SC1	0x60	/* Found on 5413/5414 */
-+#define AR5K_SREV_RAD_SC2	0xa0	/* Found on 2424-5/5424 */
- #define AR5K_SREV_RAD_5133	0xc0	/* MIMO found on 5418 */
- 
- /* IEEE defs */
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 3e889f1..322bce6 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -293,67 +293,42 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
- 	/* Identify the radio chip*/
- 	if (ah->ah_version == AR5K_AR5210) {
- 		ah->ah_radio = AR5K_RF5110;
-+	/*
-+	 * Register returns 0x0/0x04 for radio revision
-+	 * so ath5k_hw_radio_revision doesn't parse the value
-+	 * correctly. For now we are based on mac's srev to
-+	 * identify RF2425 radio.
-+	 */
-+	} else if (srev == AR5K_SREV_VER_AR2425) {
-+		ah->ah_radio = AR5K_RF2425;
-+		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF2425;
- 	} else if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_5112) {
- 		ah->ah_radio = AR5K_RF5111;
- 		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5111;
- 	} else if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_SC0) {
--
- 		ah->ah_radio = AR5K_RF5112;
--
--		if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_5112A) {
--			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112;
--		} else {
--			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112A;
--		}
--
-+		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112;
- 	} else if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_SC1) {
- 		ah->ah_radio = AR5K_RF2413;
--		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112A;
-+		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF2413;
- 	} else if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_SC2) {
- 		ah->ah_radio = AR5K_RF5413;
--		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112A;
-+		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5413;
- 	} else if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_5133) {
--
- 		/* AR5424 */
- 		if (srev >= AR5K_SREV_VER_AR5424) {
- 			ah->ah_radio = AR5K_RF5413;
--			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5424;
-+			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5413;
- 		/* AR2424 */
- 		} else {
- 			ah->ah_radio = AR5K_RF2413; /* For testing */
--			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112A;
-+			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF2413;
- 		}
--
--	/*
--	 * Register returns 0x4 for radio revision
--	 * so ath5k_hw_radio_revision doesn't parse the value
--	 * correctly. For now we are based on mac's srev to
--	 * identify RF2425 radio.
--	 */
--	} else if (srev == AR5K_SREV_VER_AR2425) {
--		ah->ah_radio = AR5K_RF2425;
--		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112;
- 	}
--
- 	ah->ah_phy = AR5K_PHY(0);
- 
- 	/*
--	 * Identify AR5212-based PCI-E cards
--	 * And write some initial settings.
--	 *
--	 * (doing a "strings" on ndis driver
--	 * -ar5211.sys- reveals the following
--	 * pci-e related functions:
--	 *
--	 * pcieClockReq
--	 * pcieRxErrNotify
--	 * pcieL1SKPEnable
--	 * pcieAspm
--	 * pcieDisableAspmOnRfWake
--	 * pciePowerSaveEnable
--	 *
--	 * I guess these point to ClockReq but
--	 * i'm not sure.)
-+	 * Write PCI-E power save settings
- 	 */
- 	if ((ah->ah_version == AR5K_AR5212) && (pdev->is_pcie)) {
- 		ath5k_hw_reg_write(ah, 0x9248fc00, 0x4080);
-@@ -375,10 +350,15 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
- 	if (ret)
- 		goto err_free;
- 
-+	/* Write AR5K_PCICFG_UNK on 2112B and later chips */
-+	if (ah->ah_radio_5ghz_revision > AR5K_SREV_RAD_2112B ||
-+	srev > AR5K_SREV_VER_AR2413) {
-+		ath5k_hw_reg_write(ah, AR5K_PCICFG_UNK, AR5K_PCICFG);
-+	}
-+
- 	/*
- 	 * Get card capabilities, values, ...
- 	 */
--
- 	ret = ath5k_eeprom_init(ah);
- 	if (ret) {
- 		ATH5K_ERR(sc, "unable to init EEPROM\n");
+Dan
+
+> Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
+> ---
+>  drivers/net/wireless/libertas/if_usb.c |   71 ++++++++++++++++++++++++++++++++
+>  1 files changed, 71 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+> index e83a4c2..c89785c 100644
+> --- a/drivers/net/wireless/libertas/if_usb.c
+> +++ b/drivers/net/wireless/libertas/if_usb.c
+> @@ -51,6 +51,68 @@ static void if_usb_free(struct if_usb_card *cardp);
+>  static int if_usb_submit_rx_urb(struct if_usb_card *cardp);
+>  static int if_usb_reset_device(struct if_usb_card *cardp);
+>  
+> +/* sysfs hooks */
+> +
+> +/**
+> + *  Set function to write firmware to device's persistent memory
+> + */
+> +static ssize_t if_usb_firmware_set(struct device *dev,
+> +		struct device_attribute *attr, const char *buf, size_t count)
+> +{
+> +	struct lbs_private *priv = to_net_dev(dev)->priv;
+> +	struct if_usb_card *cardp = priv->card;
+> +	char fwname[FIRMWARE_NAME_MAX];
+> +	int ret;
+> +
+> +	if (!(priv->fwcapinfo & FW_CAPINFO_FIRMWARE_UPGRADE))
+> +		return -EOPNOTSUPP;
+> +
+> +	sscanf(buf, "%29s", fwname); /* FIRMWARE_NAME_MAX - 1 = 29 */
+> +	ret = if_usb_prog_firmware(cardp, fwname, BOOT_CMD_UPDATE_FW);
+> +	if (ret == 0)
+> +		return count;
+> +
+> +	return ret;
+> +}
+> +
+> +/**
+> + * lbs_fw attribute to be exported per ethX interface through sysfs
+> + * (/sys/class/net/ethX/lbs_fw).  Use this like so to write firmware to the
+> + * device's persistent memory:
+> + * echo usb8388-5.126.0.p5.bin > /sys/class/net/ethX/lbs_fw
+> + */
+> +static DEVICE_ATTR(lbs_fw, 0200, NULL, if_usb_firmware_set);
+> +
+> +/**
+> + *  Set function to write firmware to device's persistent memory
+> + */
+> +static ssize_t if_usb_boot2_set(struct device *dev,
+> +		struct device_attribute *attr, const char *buf, size_t count)
+> +{
+> +	struct lbs_private *priv = to_net_dev(dev)->priv;
+> +	struct if_usb_card *cardp = priv->card;
+> +	char fwname[FIRMWARE_NAME_MAX];
+> +	int ret;
+> +
+> +	if (!(priv->fwcapinfo & FW_CAPINFO_BOOT2_UPGRADE))
+> +		return -EOPNOTSUPP;
+> +
+> +	sscanf(buf, "%29s", fwname); /* FIRMWARE_NAME_MAX - 1 = 29 */
+> +	ret = if_usb_prog_firmware(cardp, fwname, BOOT_CMD_UPDATE_BOOT2);
+> +	if (ret == 0)
+> +		return count;
+> +
+> +	return ret;
+> +}
+> +
+> +/**
+> + * lbs_boot2 attribute to be exported per ethX interface through sysfs
+> + * (/sys/class/net/ethX/lbs_boot2).  Use this like so to write firmware to the
+> + * device's persistent memory:
+> + * echo usb8388-5.126.0.p5.bin > /sys/class/net/ethX/lbs_boot2
+> + */
+> +static DEVICE_ATTR(lbs_boot2, 0200, NULL, if_usb_boot2_set);
+> +
+>  /**
+>   *  @brief  call back function to handle the status of the URB
+>   *  @param urb 		pointer to urb structure
+> @@ -263,6 +325,12 @@ static int if_usb_probe(struct usb_interface *intf,
+>  	usb_get_dev(udev);
+>  	usb_set_intfdata(intf, cardp);
+>  
+> +	if (device_create_file(&priv->dev->dev, &dev_attr_lbs_fw))
+> +		lbs_pr_err("cannot register lbs_fw attribute\n");
+> +
+> +	if (device_create_file(&priv->dev->dev, &dev_attr_lbs_boot2))
+> +		lbs_pr_err("cannot register lbs_boot2 attribute\n");
+> +
+>  	return 0;
+>  
+>  err_start_card:
+> @@ -288,6 +356,9 @@ static void if_usb_disconnect(struct usb_interface *intf)
+>  
+>  	lbs_deb_enter(LBS_DEB_MAIN);
+>  
+> +	device_remove_file(&priv->dev->dev, &dev_attr_lbs_boot2);
+> +	device_remove_file(&priv->dev->dev, &dev_attr_lbs_fw);
+> +
+>  	cardp->surprise_removed = 1;
+>  
+>  	if (priv) {
 
