@@ -1,648 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:3505 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752450AbYGJQ1q (ORCPT
+Received: from ti-out-0910.google.com ([209.85.142.184]:27451 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759231AbYGQSjS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 12:27:46 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so1123929yxm.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2008 09:27:45 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Date: Thu, 10 Jul 2008 17:11:03 +0200
-Subject: [PATCH 3/6] libertastf: main.c, data paths and mac80211 handlers
-Message-ID: <48763861.34062c0a.38e5.1fca@mx.google.com> (sfid-20080710_182749_128200_56A423CF)
+	Thu, 17 Jul 2008 14:39:18 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so43738tic.23
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2008 11:39:17 -0700 (PDT)
+Message-ID: <68d6c8db0807171139g56032878l862b45928e42f093@mail.gmail.com> (sfid-20080717_203922_959084_4F39CCA3)
+Date: Thu, 17 Jul 2008 11:39:15 -0700
+From: "Brian Cavagnolo" <brian@cozybit.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: [PATCH 2/3] libertas: add sysfs hooks to update boot2 and persistent firmware
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <1216317285.23645.18.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <487f84b8.29578c0a.46a7.5cef@mx.google.com>
+	 <1216317285.23645.18.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch contains most of the libertastf driver, just lacking command helper
-functions and usb specific functions. Currently, monitor, managed, ap and mesh
-interfaces are supported. Even though this driver supports the same hardware as
-the "libertas" driver, it uses a different (thin) firmware, that makes it
-suitable for a mac80211 driver.
+On Thu, Jul 17, 2008 at 10:54 AM, Dan Williams <dcbw@redhat.com> wrote:
+> On Wed, 2008-07-16 at 10:28 -0700, Brian Cavagnolo wrote:
+>> To use these features, copy the boot2 and firmware images to /lib/firmware and:
+>>
+>> echo <boot2_image_name> > /sys/class/net/ethX/lbs_boot2
+>> echo <firmware_image_name> > /sys/class/net/ethX/lbs_fw
+>
+> Perhaps "lbs_flash_boot2" and "lbs_flash_fw" would be better names here?
+> Otherwise it looks like one of the drivers that you can choose alternate
+> firmware for (atmel.c for example) and doesn't give any indication that
+> it'll permanently change what's on the dongle.
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
-Tested-by: Javier Cardona <javier@cozybit.com>
----
- drivers/net/wireless/libertastf/main.c |  607 ++++++++++++++++++++++++++++++++
- 1 files changed, 607 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/libertastf/main.c
+Sounds good.  I'll fix that and resubmit.
 
-diff --git a/drivers/net/wireless/libertastf/main.c b/drivers/net/wireless/libertastf/main.c
-new file mode 100644
-index 0000000..7e780f1
---- /dev/null
-+++ b/drivers/net/wireless/libertastf/main.c
-@@ -0,0 +1,607 @@
-+/*
-+ *  Copyright (C) 2008, cozybit Inc.
-+ *  Copyright (C) 2003-2006, Marvell International Ltd.
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2 of the License
-+ */
-+#include "libertastf.h"
-+
-+#define DRIVER_RELEASE_VERSION "004.p0"
-+/* thinfirm version: 5.132.X.pX */
-+#define LBTF_FW_VER_MASK	0xffff0000
-+#define LBTF_FW_VER		0x05840000
-+#define QOS_CONTROL_LEN		2
-+
-+static const char lbtf_driver_version[] = "THINFIRM-USB8388-" DRIVER_RELEASE_VERSION;
-+struct workqueue_struct *lbtf_wq;
-+
-+static const struct ieee80211_channel lbtf_channels[] = {
-+	{ .center_freq = 2412, .hw_value = 1 },
-+	{ .center_freq = 2417, .hw_value = 2 },
-+	{ .center_freq = 2422, .hw_value = 3 },
-+	{ .center_freq = 2427, .hw_value = 4 },
-+	{ .center_freq = 2432, .hw_value = 5 },
-+	{ .center_freq = 2437, .hw_value = 6 },
-+	{ .center_freq = 2442, .hw_value = 7 },
-+	{ .center_freq = 2447, .hw_value = 8 },
-+	{ .center_freq = 2452, .hw_value = 9 },
-+	{ .center_freq = 2457, .hw_value = 10 },
-+	{ .center_freq = 2462, .hw_value = 11 },
-+	{ .center_freq = 2467, .hw_value = 12 },
-+	{ .center_freq = 2472, .hw_value = 13 },
-+	{ .center_freq = 2484, .hw_value = 14 },
-+};
-+
-+/* This table contains the hardware specific values for the modulation rates. */
-+static const struct ieee80211_rate lbtf_rates[] = {
-+	{ .bitrate = 10,
-+	  .hw_value = 0, },
-+	{ .bitrate = 20,
-+	  .hw_value = 1,
-+	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 55,
-+	  .hw_value = 2,
-+	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 110,
-+	  .hw_value = 3,
-+	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 60,
-+	  .hw_value = 5,
-+	  .flags = 0 },
-+	{ .bitrate = 90,
-+	  .hw_value = 6,
-+	  .flags = 0 },
-+	{ .bitrate = 120,
-+	  .hw_value = 7,
-+	  .flags = 0 },
-+	{ .bitrate = 180,
-+	  .hw_value = 8,
-+	  .flags = 0 },
-+	{ .bitrate = 240,
-+	  .hw_value = 9,
-+	  .flags = 0 },
-+	{ .bitrate = 360,
-+	  .hw_value = 10,
-+	  .flags = 0 },
-+	{ .bitrate = 480,
-+	  .hw_value = 11,
-+	  .flags = 0 },
-+	{ .bitrate = 540,
-+	  .hw_value = 12,
-+	  .flags = 0 },
-+};
-+
-+
-+static void lbtf_cmd_work(struct work_struct *work)
-+{
-+	struct lbtf_private *priv = container_of(work, struct lbtf_private,
-+					 cmd_work);
-+	spin_lock_irq(&priv->driver_lock);
-+	/* command response? */
-+	if (priv->cmd_response_rxed) {
-+		priv->cmd_response_rxed = 0;
-+		spin_unlock_irq(&priv->driver_lock);
-+		lbtf_process_rx_command(priv);
-+		spin_lock_irq(&priv->driver_lock);
-+	}
-+
-+	if (priv->cmd_timed_out && priv->cur_cmd) {
-+		struct cmd_ctrl_node *cmdnode = priv->cur_cmd;
-+
-+		if (++priv->nr_retries > 10) {
-+			lbtf_complete_command(priv, cmdnode,
-+					      -ETIMEDOUT);
-+			priv->nr_retries = 0;
-+		} else {
-+			priv->cur_cmd = NULL;
-+
-+			/* Stick it back at the _top_ of the pending
-+			 * queue for immediate resubmission */
-+			list_add(&cmdnode->list, &priv->cmdpendingq);
-+		}
-+	}
-+	priv->cmd_timed_out = 0;
-+	spin_unlock_irq(&priv->driver_lock);
-+
-+	if (!priv->fw_ready)
-+		return;
-+	/* Execute the next command */
-+	if (!priv->cur_cmd)
-+		lbtf_execute_next_command(priv);
-+}
-+
-+/**
-+ *  lbtf_setup_firmware: initialize firmware.
-+ *
-+ *  @priv    A pointer to struct lbtf_private structure
-+ *
-+ *  Returns: 0 on success.
-+ */
-+static int lbtf_setup_firmware(struct lbtf_private *priv)
-+{
-+	int ret = -1;
-+
-+	/*
-+	 * Read priv address from HW
-+	 */
-+	memset(priv->current_addr, 0xff, ETH_ALEN);
-+	ret = lbtf_update_hw_spec(priv);
-+	if (ret) {
-+		ret = -1;
-+		goto done;
-+	}
-+
-+	lbtf_set_mac_control(priv);
-+	lbtf_set_radio_control(priv);
-+
-+	ret = 0;
-+done:
-+	return ret;
-+}
-+
-+/**
-+ *  This function handles the timeout of command sending.
-+ *  It will re-send the same command again.
-+ */
-+static void command_timer_fn(unsigned long data)
-+{
-+	struct lbtf_private *priv = (struct lbtf_private *)data;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&priv->driver_lock, flags);
-+
-+	if (!priv->cur_cmd) {
-+		printk(KERN_DEBUG "libertastf: command timer expired; "
-+				  "no pending command\n");
-+		goto out;
-+	}
-+
-+	printk(KERN_DEBUG "libertas: command %x timed out\n",
-+		le16_to_cpu(priv->cur_cmd->cmdbuf->command));
-+
-+	priv->cmd_timed_out = 1;
-+	queue_work(lbtf_wq, &priv->cmd_work);
-+out:
-+	spin_unlock_irqrestore(&priv->driver_lock, flags);
-+}
-+
-+static int lbtf_init_adapter(struct lbtf_private *priv)
-+{
-+	memset(priv->current_addr, 0xff, ETH_ALEN);
-+	mutex_init(&priv->lock);
-+
-+	priv->vif = NULL;
-+	setup_timer(&priv->command_timer, command_timer_fn,
-+		(unsigned long)priv);
-+
-+	INIT_LIST_HEAD(&priv->cmdfreeq);
-+	INIT_LIST_HEAD(&priv->cmdpendingq);
-+
-+	spin_lock_init(&priv->driver_lock);
-+
-+	/* Allocate the command buffers */
-+	if (lbtf_allocate_cmd_buffer(priv))
-+		return -1;
-+
-+	return 0;
-+}
-+
-+static void lbtf_free_adapter(struct lbtf_private *priv)
-+{
-+	lbtf_free_cmd_buffer(priv);
-+	del_timer(&priv->command_timer);
-+}
-+
-+static int lbtf_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
-+{
-+	int len = skb->len;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct lbtf_private *priv = hw->priv;
-+	struct txpd *txpd = (struct txpd *)
-+		skb_push(skb, sizeof(struct txpd));
-+	int ret;
-+
-+	if (priv->surpriseremoved) {
-+		dev_kfree_skb_any(skb);
-+		return -1;
-+	}
-+
-+	memset(txpd, 0, sizeof(struct txpd));
-+	/* Activate per-packet rate selection */
-+	txpd->tx_control |= cpu_to_le32(MRVL_PER_PACKET_RATE |
-+				ieee80211_get_tx_rate(hw, info)->hw_value);
-+
-+	/* copy destination address from 802.11 header */
-+	memcpy(txpd->tx_dest_addr_high, skb->data + sizeof(struct txpd) + 4,
-+		ETH_ALEN);
-+	txpd->tx_packet_length = cpu_to_le16(len);
-+	txpd->tx_packet_location = cpu_to_le32(sizeof(struct txpd));
-+
-+	/* queue will be restarted when we receive transmission feedback */
-+	ieee80211_stop_queues(hw);
-+	BUG_ON(priv->tx_skb);
-+	spin_lock_irq(&priv->driver_lock);
-+	priv->tx_skb = skb;
-+	ret = priv->hw_host_to_card(priv, MVMS_DAT, skb->data, skb->len);
-+	spin_unlock_irq(&priv->driver_lock);
-+	if (ret) {
-+		dev_kfree_skb_any(skb);
-+		priv->tx_skb = NULL;
-+		return ret;
-+	}
-+
-+	return ret;
-+}
-+
-+static int lbtf_op_start(struct ieee80211_hw *hw)
-+{
-+	struct lbtf_private *priv = hw->priv;
-+	void *card = priv->card;
-+	int ret = -1;
-+
-+	if (!priv->fw_ready)
-+		/* Upload firmware */
-+		if (priv->hw_prog_firmware(card))
-+			goto err_prog_firmware;
-+
-+	/* poke the firmware */
-+	priv->capability = WLAN_CAPABILITY_SHORT_PREAMBLE;
-+	priv->radioon = RADIO_ON;
-+	priv->mac_control = CMD_ACT_MAC_RX_ON | CMD_ACT_MAC_TX_ON;
-+	ret = lbtf_setup_firmware(priv);
-+	if (ret)
-+		goto err_prog_firmware;
-+
-+	if ((priv->fwrelease & LBTF_FW_VER_MASK) != LBTF_FW_VER) {
-+		ret = -1;
-+		goto err_prog_firmware;
-+	}
-+
-+	printk(KERN_INFO "libertastf: Marvell WLAN 802.11 thinfirm adapter\n");
-+	return 0;
-+
-+err_prog_firmware:
-+	priv->hw_reset_device(card);
-+	return ret;
-+}
-+
-+static void lbtf_op_stop(struct ieee80211_hw *hw)
-+{
-+	struct lbtf_private *priv = hw->priv;
-+	int flags;
-+
-+	struct cmd_ctrl_node *cmdnode;
-+	/* Flush pending command nodes */
-+	spin_lock_irqsave(&priv->driver_lock, flags);
-+	list_for_each_entry(cmdnode, &priv->cmdpendingq, list) {
-+		cmdnode->result = -ENOENT;
-+		cmdnode->cmdwaitqwoken = 1;
-+		wake_up_interruptible(&cmdnode->cmdwait_q);
-+	}
-+
-+	spin_unlock_irqrestore(&priv->driver_lock, flags);
-+	cancel_work_sync(&priv->cmd_work);
-+	priv->radioon = RADIO_OFF;
-+	lbtf_set_radio_control(priv);
-+
-+	return;
-+}
-+
-+static int lbtf_op_add_interface(struct ieee80211_hw *hw,
-+			struct ieee80211_if_init_conf *conf)
-+{
-+	struct lbtf_private *priv = hw->priv;
-+	if (priv->vif != NULL)
-+		return -EOPNOTSUPP;
-+
-+	priv->vif = conf->vif;
-+	switch (conf->type) {
-+	case IEEE80211_IF_TYPE_MESH_POINT:
-+	case IEEE80211_IF_TYPE_AP:
-+		lbtf_set_mode(priv, LBTF_AP_MODE);
-+		break;
-+	case IEEE80211_IF_TYPE_STA:
-+		lbtf_set_mode(priv, LBTF_STA_MODE);
-+		break;
-+	default:
-+		priv->vif = NULL;
-+		return -EOPNOTSUPP;
-+	}
-+	lbtf_set_mac_address(priv, (u8 *) conf->mac_addr);
-+	return 0;
-+}
-+
-+static void lbtf_op_remove_interface(struct ieee80211_hw *hw,
-+			struct ieee80211_if_init_conf *conf)
-+{
-+	struct lbtf_private *priv = hw->priv;
-+
-+	if (priv->vif->type == IEEE80211_IF_TYPE_AP ||
-+	    priv->vif->type == IEEE80211_IF_TYPE_MESH_POINT)
-+		lbtf_beacon_ctrl(priv, 0, 0);
-+	lbtf_set_mode(priv, LBTF_PASSIVE_MODE);
-+	lbtf_set_bssid(priv, 0, NULL);
-+	priv->vif = NULL;
-+}
-+
-+static int lbtf_op_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
-+{
-+	struct lbtf_private *priv = hw->priv;
-+	if (conf->channel->center_freq != priv->cur_freq) {
-+		priv->cur_freq = conf->channel->center_freq;
-+		lbtf_set_channel(priv, conf->channel->hw_value);
-+	}
-+	return 0;
-+}
-+
-+static int lbtf_op_config_interface(struct ieee80211_hw *hw,
-+			struct ieee80211_vif *vif,
-+			struct ieee80211_if_conf *conf)
-+{
-+	struct lbtf_private *priv = hw->priv;
-+
-+	switch (priv->vif->type) {
-+	case IEEE80211_IF_TYPE_AP:
-+	case IEEE80211_IF_TYPE_MESH_POINT:
-+		if (conf->beacon) {
-+			lbtf_beacon_set(priv, conf->beacon);
-+			kfree_skb(conf->beacon);
-+			lbtf_beacon_ctrl(priv, 1, hw->conf.beacon_int);
-+		}
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	if (conf->bssid)
-+		lbtf_set_bssid(priv, 1, conf->bssid);
-+
-+	return 0;
-+}
-+
-+#define SUPPORTED_FIF_FLAGS  (FIF_PROMISC_IN_BSS | FIF_ALLMULTI)
-+static void lbtf_op_configure_filter(struct ieee80211_hw *hw,
-+			unsigned int changed_flags,
-+			unsigned int *new_flags,
-+			int mc_count, struct dev_mc_list *mclist)
-+{
-+	struct lbtf_private *priv = hw->priv;
-+	int old_mac_control = priv->mac_control;
-+	int i;
-+	changed_flags &= SUPPORTED_FIF_FLAGS;
-+	*new_flags &= SUPPORTED_FIF_FLAGS;
-+
-+	if (!changed_flags)
-+		return;
-+
-+	if (*new_flags & (FIF_PROMISC_IN_BSS))
-+		priv->mac_control |= CMD_ACT_MAC_PROMISCUOUS_ENABLE;
-+	else
-+		priv->mac_control &= ~CMD_ACT_MAC_PROMISCUOUS_ENABLE;
-+	if (*new_flags & (FIF_ALLMULTI) ||
-+	    mc_count > MRVDRV_MAX_MULTICAST_LIST_SIZE) {
-+		priv->mac_control |= CMD_ACT_MAC_ALL_MULTICAST_ENABLE;
-+		priv->mac_control &= ~CMD_ACT_MAC_MULTICAST_ENABLE;
-+	} else if (mc_count) {
-+		priv->mac_control |= CMD_ACT_MAC_MULTICAST_ENABLE;
-+		priv->mac_control &= ~CMD_ACT_MAC_ALL_MULTICAST_ENABLE;
-+		priv->nr_of_multicastmacaddr = mc_count;
-+		for (i = 0; i < mc_count; i++) {
-+			if (!mclist)
-+				break;
-+			memcpy(&priv->multicastlist[i], mclist->da_addr,
-+					ETH_ALEN);
-+			mclist = mclist->next;
-+		}
-+		lbtf_cmd_set_mac_multicast_addr(priv);
-+	} else
-+		priv->mac_control &= ~(CMD_ACT_MAC_MULTICAST_ENABLE |
-+				       CMD_ACT_MAC_ALL_MULTICAST_ENABLE);
-+
-+	if (priv->mac_control != old_mac_control)
-+		lbtf_set_mac_control(priv);
-+}
-+
-+static void lbtf_op_bss_info_changed(struct ieee80211_hw *hw,
-+			struct ieee80211_vif *vif,
-+			struct ieee80211_bss_conf *bss_conf,
-+			u32 changes)
-+{
-+	struct lbtf_private *priv = hw->priv;
-+
-+	if (changes & BSS_CHANGED_ERP_PREAMBLE) {
-+		if (bss_conf->use_short_preamble)
-+			priv->preamble = CMD_TYPE_SHORT_PREAMBLE;
-+		else
-+			priv->preamble = CMD_TYPE_LONG_PREAMBLE;
-+		lbtf_set_radio_control(priv);
-+	}
-+
-+	return;
-+}
-+
-+static int lbtf_op_set_tim(struct ieee80211_hw *hw, int aid, int set)
-+{
-+	struct lbtf_private *priv = hw->priv;
-+	struct sk_buff *beacon;
-+
-+	beacon = ieee80211_beacon_get(hw, priv->vif);
-+	if (unlikely(!beacon))
-+		return -ENOMEM;
-+	lbtf_beacon_set(priv, beacon);
-+	kfree_skb(beacon);
-+
-+	return 0;
-+}
-+
-+static const struct ieee80211_ops lbtf_ops = {
-+	.tx			= lbtf_op_tx,
-+	.start			= lbtf_op_start,
-+	.stop			= lbtf_op_stop,
-+	.add_interface		= lbtf_op_add_interface,
-+	.remove_interface	= lbtf_op_remove_interface,
-+	.config			= lbtf_op_config,
-+	.config_interface	= lbtf_op_config_interface,
-+	.configure_filter	= lbtf_op_configure_filter,
-+	.bss_info_changed	= lbtf_op_bss_info_changed,
-+	.set_tim		= lbtf_op_set_tim,
-+};
-+
-+int lbtf_rx(struct lbtf_private *priv, struct sk_buff *skb)
-+{
-+	struct ieee80211_rx_status stats;
-+	struct rxpd *prxpd;
-+	bool is_qos, is_4addr, is_amsdu, need_padding;
-+	unsigned int flags;
-+	u16 fc;
-+
-+	prxpd = (struct rxpd *) skb->data;
-+
-+	stats.flag = 0;
-+	if (!(prxpd->status & cpu_to_le16(MRVDRV_RXPD_STATUS_OK)))
-+		stats.flag |= RX_FLAG_FAILED_FCS_CRC;
-+	stats.freq = priv->cur_freq;
-+	stats.band = IEEE80211_BAND_2GHZ;
-+	stats.signal = prxpd->snr;
-+	stats.noise = prxpd->nf;
-+	stats.qual = prxpd->snr - prxpd->nf;
-+	/* Marvell rate index has a hole at value 4 */
-+	if (prxpd->rx_rate > 4)
-+		--prxpd->rx_rate;
-+	stats.rate_idx = prxpd->rx_rate;
-+	skb_pull(skb, sizeof(struct rxpd));
-+
-+	fc = le16_to_cpu(*((__le16 *) skb->data));
-+	flags = le32_to_cpu(*(__le32 *)(skb->data + 4));
-+
-+	is_qos = ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA) &&
-+		 (fc & IEEE80211_STYPE_QOS_DATA);
-+	is_4addr = (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) ==
-+		   (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS);
-+	is_amsdu =  ((fc & 0x8C) == 0x88) &&
-+		    (*(skb->data + ieee80211_get_hdrlen(fc) - QOS_CONTROL_LEN)
-+		     & IEEE80211_QOS_CONTROL_A_MSDU_PRESENT);
-+
-+	need_padding = is_qos ^ is_4addr ^ is_amsdu;
-+	if (need_padding) {
-+		memmove(skb->data + 2, skb->data, skb->len);
-+		skb_reserve(skb, 2);
-+	}
-+
-+	ieee80211_rx_irqsafe(priv->hw, skb, &stats);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(lbtf_rx);
-+
-+/**
-+ * lbtf_add_card: Add and initialize the card, no fw upload yet.
-+ *
-+ *  @card    A pointer to card
-+ *
-+ *  Returns: pointer to struct lbtf_priv.
-+ */
-+struct lbtf_private *lbtf_add_card(void *card, struct device *dmdev)
-+{
-+	struct ieee80211_hw *hw;
-+	struct lbtf_private *priv = NULL;
-+
-+	hw = ieee80211_alloc_hw(sizeof(struct lbtf_private), &lbtf_ops);
-+	if (!hw)
-+		goto done;
-+
-+	priv = hw->priv;
-+	if (lbtf_init_adapter(priv))
-+		goto err_init_adapter;
-+
-+	priv->hw = hw;
-+	priv->card = card;
-+	priv->tx_skb = NULL;
-+
-+	hw->queues = 1;
-+	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE;
-+	hw->extra_tx_headroom = sizeof(struct txpd);
-+	memcpy(priv->channels, lbtf_channels, sizeof(lbtf_channels));
-+	memcpy(priv->rates, lbtf_rates, sizeof(lbtf_rates));
-+	priv->band.n_bitrates = ARRAY_SIZE(lbtf_rates);
-+	priv->band.bitrates = priv->rates;
-+	priv->band.n_channels = ARRAY_SIZE(lbtf_channels);
-+	priv->band.channels = priv->channels;
-+	hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &priv->band;
-+
-+	SET_IEEE80211_DEV(hw, dmdev);
-+
-+	INIT_WORK(&priv->cmd_work, lbtf_cmd_work);
-+	if (ieee80211_register_hw(hw))
-+		goto err_init_adapter;
-+
-+	goto done;
-+
-+err_init_adapter:
-+	lbtf_free_adapter(priv);
-+	ieee80211_free_hw(hw);
-+	priv = NULL;
-+
-+done:
-+	return priv;
-+}
-+EXPORT_SYMBOL_GPL(lbtf_add_card);
-+
-+
-+int lbtf_remove_card(struct lbtf_private *priv)
-+{
-+	struct ieee80211_hw *hw = priv->hw;
-+
-+	priv->surpriseremoved = 1;
-+	del_timer(&priv->command_timer);
-+	lbtf_free_adapter(priv);
-+	priv->hw = NULL;
-+	ieee80211_unregister_hw(hw);
-+	ieee80211_free_hw(hw);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(lbtf_remove_card);
-+
-+void lbtf_send_tx_feedback(struct lbtf_private *priv, u8 retrycnt, u8 fail)
-+{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(priv->tx_skb);
-+	memset(&info->status, 0, sizeof(info->status));
-+	/*
-+	 * Commented out, otherwise we never go beyond 1Mbit/s using mac80211
-+	 * default pid rc algorithm.
-+	 *
-+	 * info->status.retry_count = MRVL_DEFAULT_RETRIES - retrycnt;
-+	 */
-+	info->status.excessive_retries = fail ? 1 : 0;
-+	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) && !fail)
-+		info->flags |= IEEE80211_TX_STAT_ACK;
-+	skb_pull(priv->tx_skb, sizeof(struct txpd));
-+	ieee80211_tx_status_irqsafe(priv->hw, priv->tx_skb);
-+	priv->tx_skb = NULL;
-+	ieee80211_wake_queues(priv->hw);
-+}
-+EXPORT_SYMBOL_GPL(lbtf_send_tx_feedback);
-+
-+static int __init lbtf_init_module(void)
-+{
-+	lbtf_wq = create_workqueue("libertastf");
-+	if (lbtf_wq == NULL) {
-+		 printk(KERN_ERR "libertastf: couldn't create workqueue\n");
-+		 return -ENOMEM;
-+	}
-+	return 0;
-+}
-+
-+static void __exit lbtf_exit_module(void)
-+{
-+	destroy_workqueue(lbtf_wq);
-+}
-+
-+module_init(lbtf_init_module);
-+module_exit(lbtf_exit_module);
-+
-+MODULE_DESCRIPTION("Libertas WLAN Thinfirm Driver Library");
-+MODULE_AUTHOR("Cozybit Inc.");
-+MODULE_LICENSE("GPL");
--- 
-1.5.4.3
+Ciao,
+Brian
 
-
-
+>> Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
+>> ---
+>>  drivers/net/wireless/libertas/if_usb.c |   71 ++++++++++++++++++++++++++++++++
+>>  1 files changed, 71 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+>> index e83a4c2..c89785c 100644
+>> --- a/drivers/net/wireless/libertas/if_usb.c
+>> +++ b/drivers/net/wireless/libertas/if_usb.c
+>> @@ -51,6 +51,68 @@ static void if_usb_free(struct if_usb_card *cardp);
+>>  static int if_usb_submit_rx_urb(struct if_usb_card *cardp);
+>>  static int if_usb_reset_device(struct if_usb_card *cardp);
+>>
+>> +/* sysfs hooks */
+>> +
+>> +/**
+>> + *  Set function to write firmware to device's persistent memory
+>> + */
+>> +static ssize_t if_usb_firmware_set(struct device *dev,
+>> +             struct device_attribute *attr, const char *buf, size_t count)
+>> +{
+>> +     struct lbs_private *priv = to_net_dev(dev)->priv;
+>> +     struct if_usb_card *cardp = priv->card;
+>> +     char fwname[FIRMWARE_NAME_MAX];
+>> +     int ret;
+>> +
+>> +     if (!(priv->fwcapinfo & FW_CAPINFO_FIRMWARE_UPGRADE))
+>> +             return -EOPNOTSUPP;
+>> +
+>> +     sscanf(buf, "%29s", fwname); /* FIRMWARE_NAME_MAX - 1 = 29 */
+>> +     ret = if_usb_prog_firmware(cardp, fwname, BOOT_CMD_UPDATE_FW);
+>> +     if (ret == 0)
+>> +             return count;
+>> +
+>> +     return ret;
+>> +}
+>> +
+>> +/**
+>> + * lbs_fw attribute to be exported per ethX interface through sysfs
+>> + * (/sys/class/net/ethX/lbs_fw).  Use this like so to write firmware to the
+>> + * device's persistent memory:
+>> + * echo usb8388-5.126.0.p5.bin > /sys/class/net/ethX/lbs_fw
+>> + */
+>> +static DEVICE_ATTR(lbs_fw, 0200, NULL, if_usb_firmware_set);
+>> +
+>> +/**
+>> + *  Set function to write firmware to device's persistent memory
+>> + */
+>> +static ssize_t if_usb_boot2_set(struct device *dev,
+>> +             struct device_attribute *attr, const char *buf, size_t count)
+>> +{
+>> +     struct lbs_private *priv = to_net_dev(dev)->priv;
+>> +     struct if_usb_card *cardp = priv->card;
+>> +     char fwname[FIRMWARE_NAME_MAX];
+>> +     int ret;
+>> +
+>> +     if (!(priv->fwcapinfo & FW_CAPINFO_BOOT2_UPGRADE))
+>> +             return -EOPNOTSUPP;
+>> +
+>> +     sscanf(buf, "%29s", fwname); /* FIRMWARE_NAME_MAX - 1 = 29 */
+>> +     ret = if_usb_prog_firmware(cardp, fwname, BOOT_CMD_UPDATE_BOOT2);
+>> +     if (ret == 0)
+>> +             return count;
+>> +
+>> +     return ret;
+>> +}
+>> +
+>> +/**
+>> + * lbs_boot2 attribute to be exported per ethX interface through sysfs
+>> + * (/sys/class/net/ethX/lbs_boot2).  Use this like so to write firmware to the
+>> + * device's persistent memory:
+>> + * echo usb8388-5.126.0.p5.bin > /sys/class/net/ethX/lbs_boot2
+>> + */
+>> +static DEVICE_ATTR(lbs_boot2, 0200, NULL, if_usb_boot2_set);
+>> +
+>>  /**
+>>   *  @brief  call back function to handle the status of the URB
+>>   *  @param urb               pointer to urb structure
+>> @@ -263,6 +325,12 @@ static int if_usb_probe(struct usb_interface *intf,
+>>       usb_get_dev(udev);
+>>       usb_set_intfdata(intf, cardp);
+>>
+>> +     if (device_create_file(&priv->dev->dev, &dev_attr_lbs_fw))
+>> +             lbs_pr_err("cannot register lbs_fw attribute\n");
+>> +
+>> +     if (device_create_file(&priv->dev->dev, &dev_attr_lbs_boot2))
+>> +             lbs_pr_err("cannot register lbs_boot2 attribute\n");
+>> +
+>>       return 0;
+>>
+>>  err_start_card:
+>> @@ -288,6 +356,9 @@ static void if_usb_disconnect(struct usb_interface *intf)
+>>
+>>       lbs_deb_enter(LBS_DEB_MAIN);
+>>
+>> +     device_remove_file(&priv->dev->dev, &dev_attr_lbs_boot2);
+>> +     device_remove_file(&priv->dev->dev, &dev_attr_lbs_fw);
+>> +
+>>       cardp->surprise_removed = 1;
+>>
+>>       if (priv) {
+>
+>
