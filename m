@@ -1,57 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:20154 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751132AbYG3N7I (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:37018 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756666AbYGQXtA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 09:59:08 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so44159wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 06:59:08 -0700 (PDT)
-Message-ID: <1ba2fa240807300659p4d743f31se265f550a2da0dd1@mail.gmail.com> (sfid-20080730_155914_409245_6E769BBB)
-Date: Wed, 30 Jul 2008 16:59:08 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: iwlwifi aggregation info
-Cc: Friedrich.Beckmann@infineon.com, linux-wireless@vger.kernel.org,
-	j@w1.fi
-In-Reply-To: <1217425854.10489.125.camel@johannes.berg>
+	Thu, 17 Jul 2008 19:49:00 -0400
+Message-ID: <487FDA67.30902@trash.net> (sfid-20080718_014905_307741_8F24DD8A)
+Date: Fri, 18 Jul 2008 01:48:55 +0200
+From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1217331138.10489.24.camel@johannes.berg>
-	 <1217339170.10489.62.camel@johannes.berg>
-	 <1ba2fa240807290706h70f89f68xf8fe7e672c0275ad@mail.gmail.com>
-	 <1217341293.10489.73.camel@johannes.berg>
-	 <1ba2fa240807290855p191eebesb1ecf2314031f688@mail.gmail.com>
-	 <1217411631.10489.103.camel@johannes.berg>
-	 <8469FC7DDCBE054D9653D8506E1FF0F001F1E7B606@mucse406.eu.infineon.com>
-	 <1217423948.10489.121.camel@johannes.berg>
-	 <1ba2fa240807300645j654a82b4rb813b71681dfab71@mail.gmail.com>
-	 <1217425854.10489.125.camel@johannes.berg>
+To: David Miller <davem@davemloft.net>
+CC: hadi@cyberus.ca, netdev@vger.kernel.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
+ RCU.
+References: <487F4327.1000107@trash.net>	<1216301732.4726.26.camel@localhost>	<487F50EC.80008@trash.net> <20080717.152447.89672084.davem@davemloft.net>
+In-Reply-To: <20080717.152447.89672084.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 30, 2008 at 4:50 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2008-07-30 at 16:45 +0300, Tomas Winkler wrote:
->> > Do you not agree that giving an aggregation flow
->> > a separate qdisc is unfair within that AC?
->>
->> I'm think your miss understanding is that HW FIFO != HW QUEUE.
->> HW FIFO takes gives fairness in level of AC.. HW QUEUE just piles up
->> packets for HW scheduler.
->
-> I know, but I cannot make out how the hw queue is pulled into the hw
-> fifo fairly. I'm not talking about fair media access, I'm talking about
-> fair number of frames in congestion.
->
->> qdisc should be just provide simple buffering
->
-> Well qdiscs don't just do that, depending on the configuration, so we
-> shouldn't rely on them doing just that.
+David Miller wrote:
+> From: Patrick McHardy <kaber@trash.net>
+> Date: Thu, 17 Jul 2008 16:02:20 +0200
+> 
+>> jamal wrote:
+>>> prioritization based on TOS/DSCP (setsockopt) would no longer work, some
+>>> user space code may suffer (routing daemons likely). One suggestion to
+>>> fix it is to load pfifo qdisc (which does what fifo_fast is attempting)
+>>> for drivers that are h/ware multiq capable.
+>> That would perform priorization within each qdisc, the individual
+>> qdiscs would still be transmitted using seperate HW queues though.
+> 
+> I think from certain perspectives it frankly doesn't matter.
+> 
+> It's not like the skb->priority field lets the SKB bypass the packets
+> already in the TX ring of the chip with a lower priority.
+> 
+> It is true that, once the TX ring is full, the skb->priority thus
+> begins to have an influence on which packets are moved from the
+> qdisc to the TX ring of the device.
+> 
+> However, I wonder if we're so sure that we want to give normal users
+> that kind of powers.  Let's say for example that you set the highest
+> priority possible in the TOS socket option, and you do this for a ton
+> of UDP sockets, and you just blast packets out as fast as possible.
+> This backlogs the device TX ring, and if done effectively enough could
+> keep other sockets blocked out of the device completely.
+> 
+> Are we really really sure it's OK to let users do this?  :)
+> 
+> To me, as a default, I think TOS and DSCP really means just on-wire
+> priority.
+> 
+> If we absolutely want to, we can keep the old pfifo_fast around and use
+> it (shared on multiq) if a certain sysctl knob is set.
 
-I know but this was the primary purpose of MQ to push the scheduling
-decision to HW if I'm not mistaken.
-We really don't need anything else just queueing. For example what the
-prioritization which is done in current wme.c
-is wrong and it won't pass certification and creates starvation.
-Tested and proved.
-Tomas
+No, I fully agree that this is too much detail :) Its highly
+unlikely that this default behaviour is important on a per
+packet level :) I just meant to point out that using a pfifo
+is not going to be the same behaviour as previously.
+
