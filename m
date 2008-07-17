@@ -1,70 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:48071 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752648AbYGNVpq (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:34714 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754506AbYGQV47 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 17:45:46 -0400
-Received: by py-out-1112.google.com with SMTP id p76so2869582pyb.10
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2008 14:45:44 -0700 (PDT)
-Message-ID: <1ba2fa240807141445y327c0ce7t5f160ee66344d10b@mail.gmail.com> (sfid-20080714_234550_226276_E6FE47E2)
-Date: Tue, 15 Jul 2008 00:45:44 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [PATCH] Add new regulatory framework for Linux wireless
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	"Rindjunsky, Ron" <ron.rindjunsky@intel.com>,
-	"Tim Gardner" <tim.gardner@canonical.com>,
-	"Jouni Malinen" <j@w1.fi>
-In-Reply-To: <43e72e890807141339g5abbcf8cj78622e438087a659@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080711123039.GP17936@ruslug.rutgers.edu>
-	 <1ba2fa240807140321m2c111de1x38affda7de4f6f2d@mail.gmail.com>
-	 <43e72e890807141339g5abbcf8cj78622e438087a659@mail.gmail.com>
+	Thu, 17 Jul 2008 17:56:59 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Dmitry Torokhov <dtor@mail.ru>
+Subject: [PATCH 5/4] rfkill: query EV_SW states when rfkill-input connects to a input device
+Date: Thu, 17 Jul 2008 18:56:54 -0300
+Message-Id: <1216331814-31802-1-git-send-email-hmh@hmh.eng.br> (sfid-20080717_235707_915418_1F637472)
+In-Reply-To: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br>
+References: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 14, 2008 at 11:39 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Mon, Jul 14, 2008 at 3:21 AM, Tomas Winkler <tomasw@gmail.com> wrote:
->> I've submitted RFC patch for Country IE parsing in mac80211 as part of
->> the work on 802.11h.  (TGh)
->
-> I saw, I have to review it now with this in mind.
->
->> Q. How do you plan to merge CRDA and Country IE
->
-> When a Country IE is received and parsed in mac80211 its up to
-> mac80211 then to decide what to do. As per the specification you
-> should use what the AP sends in the country IE but from what I am
-> seeing vendors tend to do different things with the Country IE. Some
-> considerations against parsing the Country IE and trusting it
-> completely is concerns about "rogue" APs. So as a compromise I was
-> thinking that initially we can simply call CRDA with the alpha2 passed
-> in the Country IE. Then later we can have it actually get the
-> intersection between what the AP provides and what CRDA has. The
-> driver will *always* have the ultimate say though through the callback
-> if it is registered. The callback will usually be used by vendor
-> drivers who have more stringent requirements on their regulatory
-> considerations. In the end though if trust is built around the data
-> CRDA provides it should be more than enough.
+Every time a new input device that is capable of one of the rfkill EV_SW
+events (currently only SW_RFKILL_ALL) is connected to rfkill-input, we must
+check the switch state and take action.
 
-If you use encryption u should probably trust the AP unless it's buggy.
+Otherwise, we will ignore the initial switch state.
 
-> Now these are just my observations so far. Please feel free to chime
-> in if there are better alternatives. We probably should take some time
-> to talk about this at OLS but for now that's what I'm aiming for.
->
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Dmitry Torokhov <dtor@mail.ru>
+---
+ Sorry, I forgot to send in this one as well.  It is the last of the fixes
+ I have for 2.6.27, so far.
 
->> where you will keep
->> Country IE info cfg80211 or mac80211?
->
-> That belongs in mac80211. You only need to tell cfg80211 the alpha2 so
-> it can query CRDA for you.
+ net/rfkill/rfkill-input.c |   45 ++++++++++++++++++++++++++++++---------------
+ 1 files changed, 30 insertions(+), 15 deletions(-)
 
-I mean in case we use all the data from IE elements, should we have
-the placeholder for this in
-struct ieee80211_regdomain?
+diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
+index 8aa8227..9203124 100644
+--- a/net/rfkill/rfkill-input.c
++++ b/net/rfkill/rfkill-input.c
+@@ -109,6 +109,25 @@ static DEFINE_RFKILL_TASK(rfkill_uwb, RFKILL_TYPE_UWB);
+ static DEFINE_RFKILL_TASK(rfkill_wimax, RFKILL_TYPE_WIMAX);
+ static DEFINE_RFKILL_TASK(rfkill_wwan, RFKILL_TYPE_WWAN);
+ 
++static void rfkill_schedule_evsw_rfkillall(int state)
++{
++	/* EVERY radio type. data != 0 means radios ON */
++	/* handle EPO (emergency power off) through shortcut */
++	if (state) {
++		rfkill_schedule_set(&rfkill_wwan,
++				    RFKILL_STATE_UNBLOCKED);
++		rfkill_schedule_set(&rfkill_wimax,
++				    RFKILL_STATE_UNBLOCKED);
++		rfkill_schedule_set(&rfkill_uwb,
++				    RFKILL_STATE_UNBLOCKED);
++		rfkill_schedule_set(&rfkill_bt,
++				    RFKILL_STATE_UNBLOCKED);
++		rfkill_schedule_set(&rfkill_wlan,
++				    RFKILL_STATE_UNBLOCKED);
++	} else
++		rfkill_schedule_epo();
++}
++
+ static void rfkill_event(struct input_handle *handle, unsigned int type,
+ 			unsigned int code, int data)
+ {
+@@ -132,21 +151,7 @@ static void rfkill_event(struct input_handle *handle, unsigned int type,
+ 	} else if (type == EV_SW) {
+ 		switch (code) {
+ 		case SW_RFKILL_ALL:
+-			/* EVERY radio type. data != 0 means radios ON */
+-			/* handle EPO (emergency power off) through shortcut */
+-			if (data) {
+-				rfkill_schedule_set(&rfkill_wwan,
+-						    RFKILL_STATE_UNBLOCKED);
+-				rfkill_schedule_set(&rfkill_wimax,
+-						    RFKILL_STATE_UNBLOCKED);
+-				rfkill_schedule_set(&rfkill_uwb,
+-						    RFKILL_STATE_UNBLOCKED);
+-				rfkill_schedule_set(&rfkill_bt,
+-						    RFKILL_STATE_UNBLOCKED);
+-				rfkill_schedule_set(&rfkill_wlan,
+-						    RFKILL_STATE_UNBLOCKED);
+-			} else
+-				rfkill_schedule_epo();
++			rfkill_schedule_evsw_rfkillall(data);
+ 			break;
+ 		default:
+ 			break;
+@@ -154,6 +159,13 @@ static void rfkill_event(struct input_handle *handle, unsigned int type,
+ 	}
+ }
+ 
++static void rfkill_handle_evsw(const unsigned long *swbit,
++				const unsigned long *sw)
++{
++	if (test_bit(SW_RFKILL_ALL, swbit))
++		rfkill_schedule_evsw_rfkillall(test_bit(SW_RFKILL_ALL, sw));
++}
++
+ static int rfkill_connect(struct input_handler *handler, struct input_dev *dev,
+ 			  const struct input_device_id *id)
+ {
+@@ -176,6 +188,9 @@ static int rfkill_connect(struct input_handler *handler, struct input_dev *dev,
+ 	if (error)
+ 		goto err_unregister_handle;
+ 
++	if (test_bit(EV_SW, &dev->evbit))
++		rfkill_handle_evsw(&dev->swbit[0], &dev->sw[0]);
++
+ 	return 0;
+ 
+  err_unregister_handle:
+-- 
+1.5.6.2
 
-Tomas
