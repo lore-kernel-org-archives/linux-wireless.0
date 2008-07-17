@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:33417 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752250AbYG2MyG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 08:54:06 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH RFC/RFT] b43: Rewrite TX power adjustment
-Date: Tue, 29 Jul 2008 14:53:35 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <200807261726.53279.mb@bu3sch.de> <200807282017.04979.mb@bu3sch.de> <488E4D7E.6010003@lwfinger.net>
-In-Reply-To: <488E4D7E.6010003@lwfinger.net>
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:60359 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755834AbYGQMKO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jul 2008 08:10:14 -0400
+Date: Thu, 17 Jul 2008 09:10:09 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: drago01 <drago01@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 4/4] rfkill: mutex fixes
+Message-ID: <20080717121009.GE31732@khazad-dum.debian.net> (sfid-20080717_141018_586994_0DFA793A)
+References: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br> <1216150327-10904-5-git-send-email-hmh@hmh.eng.br> <200807170656.37190.mb@bu3sch.de> <f6ca9fed0807170433m5199b66bl7e8bafd1002c566e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200807291453.36132.mb@bu3sch.de> (sfid-20080729_145409_358998_030692D8)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f6ca9fed0807170433m5199b66bl7e8bafd1002c566e@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 29 July 2008 00:51:42 Larry Finger wrote:
-> Michael Buesch wrote:
-> > On Saturday 26 July 2008 17:26:52 Michael Buesch wrote:
-> >> This is an experimental attempt for fixing the currently-not-so-good
-> >> TX power adjustment.
-> > 
-> > Hm, is anybody going to test this, or are there really no transmission
-> > problems left? :)
+On Thu, 17 Jul 2008, drago01 wrote:
+> On Thu, Jul 17, 2008 at 6:56 AM, Michael Buesch <mb@bu3sch.de> wrote:
+> > On Tuesday 15 July 2008, Henrique de Moraes Holschuh wrote:
+> >> There are two mutexes in rfkill:
+> >>
+> >> rfkill->mutex, which protects some of the fields of a rfkill struct, and is
+> >> also used for callback serialization.
+> >>
+> >> rfkill_mutex, which protects the global state, the list of registered
+> >> rfkill structs and rfkill->claim.
+> >>
+> >> Make sure to use the correct mutex, and to not miss locking rfkill->mutex
+> >> even when we already took rfkill_mutex.
 > 
-> It seems to work here. The dmesg output for my BCM4312 is:
+> rfkill_state_mutex ?
 
-Thanks.
+rfkill_mutex protects a lot of stuff, and does general serialization inside
+rfkill.c.  rfkill_global_mutex is a good name for it, yes.
 
-> Is this sufficient,
-
-No.
-
-> or is there other output that you want to see? 
-
-Please do
-        echo 1 >/debug/b43/phy*/debug_xmitpower
-to enable verbose xmitpower debugging.
-
-> > But please note that current wireless-testing tree seems to have some
-> > unrelated TX issues in mac80211 (see the discussions about the qdisc
-> > and skb->cb stuff.)
-> 
-> AFAIK, this particular bug is limited to mainline. At least wireless still works 
-> in wireless-testing, but fails completely in Linus's tree.
-
-Yeah, I noticed. So please ignore this.
+rfkill->mutex protects more than the state, better leave that one alone.  If
+I find a way to do it without LONG periods under spinlock_irqsave, I'd make
+it a spinlock to let drivers call some stuff in interrupt/atomic context...
 
 -- 
-Greetings Michael.
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
