@@ -1,91 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.249]:13929 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750868AbYGWMNo (ORCPT
+Received: from ti-out-0910.google.com ([209.85.142.191]:44824 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751175AbYGQFeD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 08:13:44 -0400
-Received: by an-out-0708.google.com with SMTP id d40so512569and.103
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 05:13:43 -0700 (PDT)
-Message-ID: <43e72e890807230513u81e68aaj443110d734161368@mail.gmail.com> (sfid-20080723_141350_879238_FED60943)
-Date: Wed, 23 Jul 2008 05:13:43 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Davide Pesavento" <davidepesa@gmail.com>
-Subject: Re: AR5418 works with ath9k
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	ath9k-devel@lists.ath9k.org
-In-Reply-To: <2da21fe50807221453m5275f59dj7369da5e667815d7@mail.gmail.com>
+	Thu, 17 Jul 2008 01:34:03 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so3207546tic.23
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2008 22:34:02 -0700 (PDT)
+Reply-To: <cs010101@gmail.com>
+From: =?ks_c_5601-1987?B?sei/tciv?= <cs010101@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: Q) What's different MadWiFi driver and Compat Driver?
+Date: Thu, 17 Jul 2008 14:33:51 +0900
+Message-ID: <001c01c8e7ce$b4178a60$3b0aa8c0@39fb6b6b6f434b3> (sfid-20080717_073410_400868_E97F225F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <2da21fe50807221453m5275f59dj7369da5e667815d7@mail.gmail.com>
+Content-Type: text/plain;
+	charset="ks_c_5601-1987"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 22, 2008 at 2:53 PM, Davide Pesavento <davidepesa@gmail.com> wrote:
-> Great news!
->
-> Today I applied ath9k patches on top of linux-wireless git tree on a
-> MacBookPro2,2 and I found that it works! (after a little bit of
-> hacking...)
->
-> First of all, my hardware is the following:
->
-> # lspci -v
-> 03:00.0 Network controller: Atheros Communications Inc. AR5418
-> 802.11abgn Wireless PCI Express Adapter (rev 01)
->        Flags: bus master, fast devsel, latency 0, IRQ 17
->        Memory at 98100000 (64-bit, non-prefetchable) [size=64K]
->        Capabilities: [40] Power Management version 2
->        Capabilities: [50] Message Signalled Interrupts: Mask- 64bit-
-> Queue=0/0 Enable-
->        Capabilities: [60] Express Legacy Endpoint, MSI 00
->        Capabilities: [90] MSI-X: Enable- Mask- TabSize=1
->        Kernel driver in use: ath9k
->        Kernel modules: ath9k
->
-> # dmesg
-> [    7.760727] ath9k: 0.1
-> [    7.760727] ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level,
-> low) -> IRQ 17
-> [    7.760727] PCI: Setting latency timer of device 0000:03:00.0 to 64
-> [    7.892753] Bad EEPROM checksum 0x866 or revision 0x000e
-> [    7.894551] phy0: Selected rate control algorithm 'ath9k_rate_control'
-> [    8.167891] phy0: Atheros 5416: mem=0xffffc20000500000, irq=17
->
-> The "bad eeprom checksum" message is printed (but the failure is
-> ignored) because I made a small change to ath9k/hw.c:
->
-> --------------------
-> diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-> index 5ebf35e..aa0a3d9 100644
-> --- a/drivers/net/wireless/ath9k/hw.c
-> +++ b/drivers/net/wireless/ath9k/hw.c
-> @@ -911,10 +911,10 @@ static inline enum hal_status
-> ath9k_hw_check_eeprom(struct ath_hal *ah)
->
->        if (sum != 0xffff || ar5416_get_eep_ver(ahp) != AR5416_EEP_VER ||
->            ar5416_get_eep_rev(ahp) < AR5416_EEP_NO_BACK_VER) {
-> -               HDPRINTF(ah, HAL_DBG_EEPROM,
-> +               printk(KERN_DEBUG
->                         "Bad EEPROM checksum 0x%x or revision 0x%04x\n",
->                         sum, ar5416_get_eep_ver(ahp));
-> -               return HAL_EEBADSUM;
-> +               //return HAL_EEBADSUM;
->        }
->
->        return HAL_OK;
-> --------------------
->
-> Without the above patch, the module would fail with the following error:
-> "ath_init: unable to attach hardware; HAL status 7"
-> Status code 7 is HAL_EEBADSUM indeed.
->
-> Maybe MacBook Pro's card has different eeprom's contents? Anyway the
-> card now works fine, and it also appears quite stable! ;-)
-> Thank you very much for your work!
+-.-;; too short ?
 
-I believe your last patch may have been "Use skb_end_pointer() ..." if
-so then this is why you had this issue. Give the git tree a shot:
+I really want to know the difference.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/ath9k.git
+thanks.
 
-  Luis
