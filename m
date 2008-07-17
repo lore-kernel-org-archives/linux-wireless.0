@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ctb-mesg8.saix.net ([196.25.240.78]:56561 "EHLO
-	ctb-mesg8.saix.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752751AbYGJKDZ convert rfc822-to-8bit (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:57027 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755336AbYGQOCY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 06:03:25 -0400
-Received: from atlantis.local.uls.co.za (dsl-146-147-234.telkomadsl.co.za [165.146.147.234])
-	by ctb-mesg8.saix.net (Postfix) with ESMTP id 44F7518FF
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2008 10:58:02 +0200 (SAST)
-Received: from [192.168.42.123]
-	by atlantis with esmtp (Exim 4.69)
-	(envelope-from <chris@sabest.co.za>)
-	id 1KGryU-0007VM-HK
-	for linux-wireless@vger.kernel.org; Thu, 10 Jul 2008 10:58:02 +0200
-From: Chris Calitz <chris@sabest.co.za>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 10 Jul 2008 10:58:02 +0200
-Message-Id: <1215680282.6376.5.camel@chris-laptop> (sfid-20080710_120329_387954_007A8DBC)
-Mime-Version: 1.0
-Subject: Compilation Problem
+	Thu, 17 Jul 2008 10:02:24 -0400
+Message-ID: <487F50EC.80008@trash.net> (sfid-20080717_160229_343561_3F3D5D43)
+Date: Thu, 17 Jul 2008 16:02:20 +0200
+From: Patrick McHardy <kaber@trash.net>
+MIME-Version: 1.0
+To: hadi@cyberus.ca
+CC: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
+ RCU.
+References: <20080717.051726.226040470.davem@davemloft.net>	 <487F4327.1000107@trash.net> <1216301732.4726.26.camel@localhost>
+In-Reply-To: <1216301732.4726.26.camel@localhost>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Everyone
+jamal wrote:
+> On Thu, 2008-17-07 at 15:03 +0200, Patrick McHardy wrote:
+> 
+>> Actions are also visible
+>> globally, so this might still be a problem, not sure though since
+>> they don't refer to their parent (haven't thought about it much yet).
+> 
+> Actions are fine because they are intended to be globaly shared.
+> [i.e A classifier on ethx with qdiscA:Y (in/egress) can share an action
+> with  classifer on  ethy with qdiscB:Z (eg/ingress)].
 
-I'm currently running ubuntu hardy 8.04 and struggling with default
-iwl3945 driver dropping connection randomly and needing me to disable
-and enable before it comes back up.=20
+Yes, in that case its not a problem. The case where it behaves
+differently than now is when only a single reference exists.
 
-I have found that the compact-wireless driver apparently fixes this
-issue but when I try to build this driver I get the following errors.
+> Like you i need to digest the patches to understand the impact on the
+> rest but one thing i did notice was the last patch (replacement of
+> pfifo_fast):
+> prioritization based on TOS/DSCP (setsockopt) would no longer work, some
+> user space code may suffer (routing daemons likely). One suggestion to
+> fix it is to load pfifo qdisc (which does what fifo_fast is attempting)
+> for drivers that are h/ware multiq capable.
 
-=20
+That would perform priorization within each qdisc, the individual
+qdiscs would still be transmitted using seperate HW queues though.
 
-/home/chris/wireless/compat-wireless-2008-07-10/drivers/net/wireless/ma=
-c80211_hwsim.c: In function =E2=80=98init_mac80211_hwsim=E2=80=99:
-/home/chris/wireless/compat-wireless-2008-07-10/drivers/net/wireless/ma=
-c80211_hwsim.c:433: error: implicit declaration of function =E2=80=98de=
-vice_create_drvdata=E2=80=99
-/home/chris/wireless/compat-wireless-2008-07-10/drivers/net/wireless/ma=
-c80211_hwsim.c:434: warning: assignment makes pointer from integer with=
-out a cast
-make[3]: ***
-[/home/chris/wireless/compat-wireless-2008-07-10/drivers/net/wireless/m=
-ac80211_hwsim.o] Error 1
-make[2]: ***
-[/home/chris/wireless/compat-wireless-2008-07-10/drivers/net/wireless]
-Error 2
-make[1]: *** [_module_/home/chris/wireless/compat-wireless-2008-07-10]
-Error 2
-make[1]: Leaving directory `/usr/src/linux-headers-2.6.24-19-generic'
-make: *** [modules] Error 2
-
-
-Can anybody help met to get this working?
-
-Thanks
-Chris
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
