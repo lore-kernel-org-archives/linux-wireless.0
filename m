@@ -1,66 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38543 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753243AbYGKSIK (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51615
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754707AbYGQMPu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jul 2008 14:08:10 -0400
-Subject: Re: removing STAs while aggregation is in effect?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <c85cb4470807111028w19f62abel31704deb18c73f6d@mail.gmail.com> (sfid-20080711_192850_305767_D979E950)
-References: <1215770111.3483.112.camel@johannes.berg>
-	 <c85cb4470807111028w19f62abel31704deb18c73f6d@mail.gmail.com>
-	 (sfid-20080711_192850_305767_D979E950)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-t1+4BLlZI9mHnVO55IRA"
-Date: Fri, 11 Jul 2008 20:06:53 +0200
-Message-Id: <1215799613.27426.0.camel@johannes.berg> (sfid-20080711_200815_298498_AA13E731)
+	Thu, 17 Jul 2008 08:15:50 -0400
+Date: Thu, 17 Jul 2008 05:15:50 -0700 (PDT)
+Message-Id: <20080717.051550.125083717.davem@davemloft.net> (sfid-20080717_141558_976926_315634E8)
+To: netdev@vger.kernel.org
+CC: kaber@trash.net, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 3/31]: netdev: Kill NETIF_F_MULTI_QUEUE.
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-t1+4BLlZI9mHnVO55IRA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+There is no need for a feature bit for something that
+can be tested by simply checking the TX queue count.
 
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ Documentation/networking/multiqueue.txt |   11 -----------
+ drivers/net/cpmac.c                     |    1 -
+ drivers/net/igb/igb_main.c              |    2 --
+ drivers/net/ixgbe/ixgbe_main.c          |    2 --
+ drivers/net/s2io.c                      |    2 --
+ include/linux/netdevice.h               |    4 +---
+ net/mac80211/main.c                     |    3 ---
+ 7 files changed, 1 insertions(+), 24 deletions(-)
 
-> funny, but by chance this is a flow i am dealing with right now in STA
-> mode as part of patch meant to clean a bit the dissassoc flow. as to
-> AP mode - i did not look at the rework as well and i will have to
-> check this part, but IMHO this is more to do with the general flow of
-> assoc/dissassoc. if the MLME decides to remove an STA - by all means
-> it has to free its resources first - aggregation queues is one if them
-> of course.
-
-True, but it's actually quite different in AP mode since there we just
-get the request by userspace to remove the STA and never know what's
-happening until we do. Whereas in STA mode, I'm not even sure we
-completely remove the sta_info entry for the AP when we disassociate.
-
-johannes
-
---=-t1+4BLlZI9mHnVO55IRA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJId6E5AAoJEKVg1VMiehFYMLAQALb152Tipzd1LJsg1I6n0EhW
-H/muT8xflKQAgdxOgerlD9L5wx4U9RoYSbmp3qj+CfKvswoDt5AzWy9EmobmOMmV
-jUJYW88qkPrUU9k6ndVAFxLwJBIU6Sgdcwfy2Yp2aoJ19D1f2wAu4iUHFwvgckL3
-1VK3x4mlDF2JqjaE3L3X+9Fz6I5qAZUzMf2zWaLMS2WRZOca16FwNCqvKsG8Ce5u
-IPh19ZkLyGF3HhxdnFkgUz5/9tjgkJchUAAFIy/xW+RpOTHWfpROaQmmKTxge2W6
-DbXerI1NffDxVxspNgtYXb8GtEXiGspmG4fwraujH0RdV4/TXbIIGG9eIvEdWWuC
-v9Dw5iEMRtAQtcCfXWq/rCwuV+NCw5lEVSKCW1OMBIZ1jHRRUC4aCME4KU6ntc9v
-9pT/Gto0RMcZbc8Wsl8iazSplh7Qo8IFrBNX1h86zg2Y2z+vksg43llzt5W+sSzX
-Cqa7lLli0avZZv4a672b4BFu3BuSUX742/ymdd4M+i2D1kDghfXX/9D/VMTYg06q
-mRlewnf83AwSuKUpFInFnSH6yiF2QVIlcLliOiU6JTHNoXA1S0tmVwqlLQ9X5GoA
-bAhx4+/G8JUuqqKqAwo9MjkY1e3hflzMiK1hEQPTJtwkVZo2prwkwMXjR1yC3IS2
-/GS3qyGzHhfo0KC5yJw/
-=VhJb
------END PGP SIGNATURE-----
-
---=-t1+4BLlZI9mHnVO55IRA--
+diff --git a/Documentation/networking/multiqueue.txt b/Documentation/networking/multiqueue.txt
+index e6dc1ee..d391ea6 100644
+--- a/Documentation/networking/multiqueue.txt
++++ b/Documentation/networking/multiqueue.txt
+@@ -24,15 +24,4 @@ netif_{start|stop|wake}_subqueue() functions to manage each queue while the
+ device is still operational.  netdev->queue_lock is still used when the device
+ comes online or when it's completely shut down (unregister_netdev(), etc.).
+ 
+-Finally, the base driver should indicate that it is a multiqueue device.  The
+-feature flag NETIF_F_MULTI_QUEUE should be added to the netdev->features
+-bitmap on device initialization.  Below is an example from e1000:
+-
+-#ifdef CONFIG_E1000_MQ
+-	if ( (adapter->hw.mac.type == e1000_82571) ||
+-	     (adapter->hw.mac.type == e1000_82572) ||
+-	     (adapter->hw.mac.type == e1000_80003es2lan))
+-		netdev->features |= NETIF_F_MULTI_QUEUE;
+-#endif
+-
+ Author: Peter P. Waskiewicz Jr. <peter.p.waskiewicz.jr@intel.com>
+diff --git a/drivers/net/cpmac.c b/drivers/net/cpmac.c
+index d630e2a..7c7b54e 100644
+--- a/drivers/net/cpmac.c
++++ b/drivers/net/cpmac.c
+@@ -1165,7 +1165,6 @@ static int __devinit cpmac_probe(struct platform_device *pdev)
+ 	dev->set_multicast_list = cpmac_set_multicast_list;
+ 	dev->tx_timeout         = cpmac_tx_timeout;
+ 	dev->ethtool_ops        = &cpmac_ethtool_ops;
+-	dev->features |= NETIF_F_MULTI_QUEUE;
+ 
+ 	netif_napi_add(dev, &priv->napi, cpmac_poll, 64);
+ 
+diff --git a/drivers/net/igb/igb_main.c b/drivers/net/igb/igb_main.c
+index 64a150a..471c194 100644
+--- a/drivers/net/igb/igb_main.c
++++ b/drivers/net/igb/igb_main.c
+@@ -1155,8 +1155,6 @@ static int __devinit igb_probe(struct pci_dev *pdev,
+ 	if (pci_using_dac)
+ 		netdev->features |= NETIF_F_HIGHDMA;
+ 
+-	netdev->features |= NETIF_F_MULTI_QUEUE;
+-
+ 	netdev->features |= NETIF_F_LLTX;
+ 	adapter->en_mng_pt = igb_enable_mng_pass_thru(&adapter->hw);
+ 
+diff --git a/drivers/net/ixgbe/ixgbe_main.c b/drivers/net/ixgbe/ixgbe_main.c
+index 7d8bf94..e6df923 100644
+--- a/drivers/net/ixgbe/ixgbe_main.c
++++ b/drivers/net/ixgbe/ixgbe_main.c
+@@ -3566,8 +3566,6 @@ static int __devinit ixgbe_probe(struct pci_dev *pdev,
+ 	if (pci_using_dac)
+ 		netdev->features |= NETIF_F_HIGHDMA;
+ 
+-	netdev->features |= NETIF_F_MULTI_QUEUE;
+-
+ 	/* make sure the EEPROM is good */
+ 	if (ixgbe_validate_eeprom_checksum(hw, NULL) < 0) {
+ 		dev_err(&pdev->dev, "The EEPROM Checksum Is Not Valid\n");
+diff --git a/drivers/net/s2io.c b/drivers/net/s2io.c
+index 517425d..5f0fcb0 100644
+--- a/drivers/net/s2io.c
++++ b/drivers/net/s2io.c
+@@ -7966,8 +7966,6 @@ s2io_init_nic(struct pci_dev *pdev, const struct pci_device_id *pre)
+ 		dev->features |= NETIF_F_UFO;
+ 		dev->features |= NETIF_F_HW_CSUM;
+ 	}
+-	if (config->multiq)
+-		dev->features |= NETIF_F_MULTI_QUEUE;
+ 	dev->tx_timeout = &s2io_tx_watchdog;
+ 	dev->watchdog_timeo = WATCH_DOG_TIMEOUT;
+ 	INIT_WORK(&sp->rst_timer_task, s2io_restart_nic);
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index f25d4f5..c02227b 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -533,7 +533,6 @@ struct net_device
+ #define NETIF_F_LLTX		4096	/* LockLess TX - deprecated. Please */
+ 					/* do not use LLTX in new drivers */
+ #define NETIF_F_NETNS_LOCAL	8192	/* Does not change network namespaces */
+-#define NETIF_F_MULTI_QUEUE	16384	/* Has multiple TX/RX queues */
+ #define NETIF_F_LRO		32768	/* large receive offload */
+ 
+ 	/* Segmentation offload features */
+@@ -1163,11 +1162,10 @@ static inline void netif_wake_subqueue(struct net_device *dev, u16 queue_index)
+  *	@dev: network device
+  *
+  * Check if device has multiple transmit queues
+- * Always falls if NETDEVICE_MULTIQUEUE is not configured
+  */
+ static inline int netif_is_multiqueue(const struct net_device *dev)
+ {
+-	return (!!(NETIF_F_MULTI_QUEUE & dev->features));
++	return (dev->num_tx_queues > 1);
+ }
+ 
+ /* Use this variant when it is known for sure that it
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index b486e63..c74607e 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1678,9 +1678,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if (!mdev)
+ 		goto fail_mdev_alloc;
+ 
+-	if (ieee80211_num_queues(hw) > 1)
+-		mdev->features |= NETIF_F_MULTI_QUEUE;
+-
+ 	mwdev = netdev_priv(mdev);
+ 	mdev->ieee80211_ptr = mwdev;
+ 	mwdev->wiphy = local->hw.wiphy;
+-- 
+1.5.6.2.255.gbed62
 
