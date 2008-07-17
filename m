@@ -1,51 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.244]:52580 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706AbYGZTgX (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.171]:54784 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751285AbYGQFvj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jul 2008 15:36:23 -0400
-Received: by an-out-0708.google.com with SMTP id d40so811317and.103
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Jul 2008 12:36:22 -0700 (PDT)
-Message-ID: <43e72e890807261236j6ae4a28fuf8eaf423cce91edf@mail.gmail.com> (sfid-20080726_213643_668461_432AEA7D)
-Date: Sat, 26 Jul 2008 12:36:22 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Alistair John Strachan" <alistair@devzero.co.uk>
-Subject: Re: ath9k working, almost
+	Thu, 17 Jul 2008 01:51:39 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so5895583wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2008 22:51:39 -0700 (PDT)
+Message-ID: <45e8e6c40807162251w140127d5o3efc64b734c98e1b@mail.gmail.com> (sfid-20080717_075141_955525_33538190)
+Date: Wed, 16 Jul 2008 22:51:38 -0700
+From: "Andrey Yurovsky" <andrey@cozybit.com>
+To: cs010101@gmail.com
+Subject: Re: Q) What's different MadWiFi driver and Compat Driver?
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200807262030.39724.alistair@devzero.co.uk>
+In-Reply-To: <001c01c8e7ce$b4178a60$3b0aa8c0@39fb6b6b6f434b3>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <200807261742.15693.alistair@devzero.co.uk>
-	 <43e72e890807261115r767bcd9bm909769525e10a836@mail.gmail.com>
-	 <200807262030.39724.alistair@devzero.co.uk>
+Content-Type: text/plain; charset=EUC-KR
+References: <AcjnzrGrk7Qf6EoxQkmMGnPgqoVQwA==>
+	 <001c01c8e7ce$b4178a60$3b0aa8c0@39fb6b6b6f434b3>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 26, 2008 at 12:30 PM, Alistair John Strachan
-<alistair@devzero.co.uk> wrote:
-> On Saturday 26 July 2008 19:15:51 Luis R. Rodriguez wrote:
->> On Sat, Jul 26, 2008 at 9:42 AM, Alistair John Strachan
->>
->> <alistair@devzero.co.uk> wrote:
->> > Hi,
->> >
->> > The newly announced ath9k driver works great on an AR5418 Core 2 Duo
->> > Macbook, WPA2-TKIP/AES et al all work fine. It would be good to see this
->> > driver in wireless-testing, it completely replaces madwifi for me. I used
->> > linux.git (2.6.26) + wireless-testing.git + my-wireless-testing.git with
->> > success.
->>
->> Please keep in mind Linus' tree is just broken for wireless. But glad
->> it is working for you after your tremendous strange changes on your
->> tree...
->
-> I explicitly said I was not using Linus' tree. Perhaps it is a
-> misunderstanding on your part. If you use git pull inside a tree that another
-> tree was originally forked from, it is much smaller and faster to check out.
-> This is the process I was describing. I am pretty sure there are
-> no "tremendous strange changes". :-)
-
-Well my concern was I believe Linus' tree has the new MQ stuff and
-wireless-testing doesn't. How did you handle that?
-
-  Luis
+TWFkd2lmaSBpcyB0aGUgY3VycmVudC9vbGRlciBkcml2ZXIgZm9yIG1vc3QgQXRoZXJvcyBjaGlw
+c2V0cywgaXQKcmVsaWVzIG9uIGEgYmluYXJ5IEhBTCBjb21wb25lbnQ6Cmh0dHA6Ly9tYWR3aWZp
+Lm9yZy93aWtpL0Fib3V0L01hZFdpZmk/cmVkaXJlY3RlZGZyb209TWFkV2lmaQoKYXRoNWsgKGZv
+dW5kIGluIGNvbXBhdC13aXJlbGVzcykgaXMgYSByZXBsYWNlbWVudCBmb3IgdGhhdCBkcml2ZXIu
+ICBJdAppcyBmdWxseSBvcGVuIHNvdXJjZSBhbmQgdXNlcyBtYWM4MDIxMS4gIFRoaXMgcGFnZSBl
+eHBsYWlucyBpdDoKaHR0cDovL21hZHdpZmkub3JnL3dpa2kvQWJvdXQvYXRoNWsKCiAgLUFuZHJl
+eQoKT24gV2VkLCBKdWwgMTYsIDIwMDggYXQgMTA6MzMgUE0sILHov7XIryA8Y3MwMTAxMDFAZ21h
+aWwuY29tPiB3cm90ZToKPiAtLi07OyB0b28gc2hvcnQgPwo+Cj4gSSByZWFsbHkgd2FudCB0byBr
+bm93IHRoZSBkaWZmZXJlbmNlLgo+Cj4gdGhhbmtzLgo+Cj4gLS0KPiBUbyB1bnN1YnNjcmliZSBm
+cm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtd2lyZWxlc3Mi
+IGluCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcK
+PiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9t
+by1pbmZvLmh0bWwKPgo=
