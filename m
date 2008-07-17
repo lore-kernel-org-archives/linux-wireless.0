@@ -1,46 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:12421 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752113AbYGALLO (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:42276 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757009AbYGQPC7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 07:11:14 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so572113nfc.21
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Jul 2008 04:11:13 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: rt61 and TSF reporting?
-Date: Tue, 1 Jul 2008 13:15:09 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1214907990.7763.40.camel@johannes.berg> <200807011305.18802.IvDoorn@gmail.com> <1214910405.29181.0.camel@johannes.berg>
-In-Reply-To: <1214910405.29181.0.camel@johannes.berg>
+	Thu, 17 Jul 2008 11:02:59 -0400
+Date: Thu, 17 Jul 2008 10:02:56 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Hin-Tak Leung <hintak.leung@gmail.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC/RFT] rtl8187: Improve wireless statistics for RTL8187B
+Message-ID: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net> (sfid-20080717_170305_743920_4552708F)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807011315.09296.IvDoorn@gmail.com> (sfid-20080701_131117_060737_561C9415)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 01 July 2008, Johannes Berg wrote:
-> 
-> > > > Note that these undocumented fields only are present in rt2500pci and rt61pci.
-> > > 
-> > > Ok cool, I'll play with that, I should be able to make a patch myself,
-> > > thanks.
-> > 
-> > Oh wait, just found a reference about those RXD words:
-> > 
-> >  * The following fields are for DMA block and HOST usage only.
-> >  * Can't be touched by ASIC MAC block.
-> > 
-> > In other words, they are for driver usage only. :S
-> 
-> The only ones that are ever non-zero are 0, 1, 4 and 5. Guess not then.
+Wireless statistics produced by the RTL8187B driver are not particularly
+informative about the strength of the received signal. From the data sheet
+provided by Realtek, I discovered that certain parts of the RX header
+should have the information necessary to calculate signal quality and
+strength. With testing, it became clear that most of these quantities were
+very jittery - only the AGC correlated with the signals expected from nearby
+AP's. As a result, the quality and strength are derived from the agc value.
+The scaling has been determined so that the numbers are close to those
+obtained by b43 under the same conditions. The results are qualitatively
+correct.
 
-4 contains data?
-2 and 3 I understand since HW crypto is disabled in wireless-testing,
-but that should mean that 4 should also be 0 unless my estimation about
-it being the ICV field is wrong...
+Statistics derived for the RTL8187 have not been changed.
 
-What data is in there?
+The RX header variables have been renamed to match the quantites described
+in the Realtek data sheet.
 
-Ivo
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+Pavel,
+
+Please check that this patch does not break the RTL8187 statistics. Perhaps,
+similar changes should be made there, but I don't have the hardware.
+
+Larry
+
+
+Index: wireless-testing/drivers/net/wireless/rtl8187.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl8187.h
++++ wireless-testing/drivers/net/wireless/rtl8187.h
+@@ -47,11 +47,13 @@ struct rtl8187_rx_hdr {
+ struct rtl8187b_rx_hdr {
+ 	__le32 flags;
+ 	__le64 mac_time;
+-	u8 noise;
+-	u8 signal;
++	u8 sq;
++	u8 rssi;
+ 	u8 agc;
+-	u8 reserved;
+-	__le32 unused;
++	u8 flags2;
++	__le16 snr_long2end;
++	s8 pwdb_g12;
++	u8 fot;
+ } __attribute__((packed));
+ 
+ /* {rtl8187,rtl8187b}_tx_info is in skb */
+Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
++++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
+@@ -257,6 +257,7 @@ static void rtl8187_rx_cb(struct urb *ur
+ 	struct ieee80211_rx_status rx_status = { 0 };
+ 	int rate, signal;
+ 	u32 flags;
++	u32 quality;
+ 
+ 	spin_lock(&priv->rx_queue.lock);
+ 	if (skb->next)
+@@ -280,44 +281,57 @@ static void rtl8187_rx_cb(struct urb *ur
+ 		flags = le32_to_cpu(hdr->flags);
+ 		signal = hdr->signal & 0x7f;
+ 		rx_status.antenna = (hdr->signal >> 7) & 1;
+-		rx_status.signal = signal;
+ 		rx_status.noise = hdr->noise;
+ 		rx_status.mactime = le64_to_cpu(hdr->mac_time);
+-		priv->signal = signal;
+ 		priv->quality = signal;
++		rx_status.qual = priv->quality;
+ 		priv->noise = hdr->noise;
++		rate = (flags >> 20) & 0xF;
++		if (rate > 3) {	/* OFDM rate */
++			if (signal > 90)
++				signal = 90;
++			else if (signal < 25)
++				signal = 25;
++			signal = 90 - signal;
++		} else {	/* CCK rate */
++			if (signal > 95)
++				signal = 95;
++			else if (signal < 30)
++				signal = 30;
++			signal = 95 - signal;
++		}
++		rx_status.signal = signal;
++		priv->signal = signal;
+ 	} else {
+ 		struct rtl8187b_rx_hdr *hdr =
+ 			(typeof(hdr))(skb_tail_pointer(skb) - sizeof(*hdr));
++		/* The Realtek datasheet for the RTL8187B shows that the RX
++		 * header contains the following quantities: signal quality,
++		 * RSSI, AGC, the received power in dB, and the measured SNR.
++		 * In testing, none of these quantities show qualitative
++		 * agreement with AP signal strength, except for the AGC,
++		 * which is inversely proportional to the strength of the
++		 * signal. In the following, the quality and signal strength
++		 * are derived from the AGC. The arbitrary scaling constants
++		 * are chosen to make the results close to the values obtained
++		 * for a BCM4312 using b43 as the driver. The noise is ignored
++		 * for now.
++		 */
+ 		flags = le32_to_cpu(hdr->flags);
+-		signal = hdr->agc >> 1;
+-		rx_status.antenna = (hdr->signal >> 7) & 1;
+-		rx_status.signal = 64 - min(hdr->noise, (u8)64);
+-		rx_status.noise = hdr->noise;
++		quality = 170 - hdr->agc;
++		if (quality > 100)
++			quality = 100;
++		signal = 14 - hdr->agc / 2;
++		rx_status.qual = quality;
++		priv->quality = quality;
++		rx_status.signal = signal;
++		priv->signal = signal;
++		rx_status.antenna = (hdr->rssi >> 7) & 1;
+ 		rx_status.mactime = le64_to_cpu(hdr->mac_time);
+-		priv->signal = hdr->signal;
+-		priv->quality = hdr->agc >> 1;
+-		priv->noise = hdr->noise;
++		rate = (flags >> 20) & 0xF;
+ 	}
+ 
+ 	skb_trim(skb, flags & 0x0FFF);
+-	rate = (flags >> 20) & 0xF;
+-	if (rate > 3) {	/* OFDM rate */
+-		if (signal > 90)
+-			signal = 90;
+-		else if (signal < 25)
+-			signal = 25;
+-		signal = 90 - signal;
+-	} else {	/* CCK rate */
+-		if (signal > 95)
+-			signal = 95;
+-		else if (signal < 30)
+-			signal = 30;
+-		signal = 95 - signal;
+-	}
+-
+-	rx_status.qual = priv->quality;
+-	rx_status.signal = signal;
+ 	rx_status.rate_idx = rate;
+ 	rx_status.freq = dev->conf.channel->center_freq;
+ 	rx_status.band = dev->conf.channel->band;
+@@ -1015,9 +1029,7 @@ static int __devinit rtl8187_probe(struc
+ 
+ 	priv->mode = IEEE80211_IF_TYPE_MNTR;
+ 	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+-		     IEEE80211_HW_RX_INCLUDES_FCS |
+-		     IEEE80211_HW_SIGNAL_UNSPEC;
+-	dev->max_signal = 65;
++		     IEEE80211_HW_RX_INCLUDES_FCS;
+ 
+ 	eeprom.data = dev;
+ 	eeprom.register_read = rtl8187_eeprom_register_read;
+@@ -1132,10 +1144,16 @@ static int __devinit rtl8187_probe(struc
+ 		(*channel++).hw_value = txpwr >> 8;
+ 	}
+ 
+-	if (priv->is_rtl8187b)
++	if (priv->is_rtl8187b) {
+ 		printk(KERN_WARNING "rtl8187: 8187B chip detected. Support "
+ 			"is EXPERIMENTAL, and could damage your\n"
+ 			"         hardware, use at your own risk\n");
++		dev->flags |= IEEE80211_HW_SIGNAL_DBM;
++	} else {
++		dev->flags |= IEEE80211_HW_SIGNAL_UNSPEC;
++		dev->max_signal = 65;
++	}
++
+ 	if ((id->driver_info == DEVICE_RTL8187) && priv->is_rtl8187b)
+ 		printk(KERN_INFO "rtl8187: inconsistency between id with OEM"
+ 		       " info!\n");
