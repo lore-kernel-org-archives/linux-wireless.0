@@ -1,35 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:26186 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753589AbYGTXkW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2008 19:40:22 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/3] Introducing IWLAGN
-Date: Mon, 21 Jul 2008 02:40:12 +0300
-Message-Id: <1216597215-19708-1-git-send-email-tomas.winkler@intel.com> (sfid-20080721_014026_319733_E49BCEB0)
-Content-Type: text/plain; charset="us-ascii"
+Received: from wr-out-0506.google.com ([64.233.184.228]:5749 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757971AbYGRNK2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jul 2008 09:10:28 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so210549wri.5
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Jul 2008 06:10:26 -0700 (PDT)
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
+	RCU.
+From: jamal <hadi@cyberus.ca>
+Reply-To: hadi@cyberus.ca
+To: Patrick McHardy <kaber@trash.net>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+In-Reply-To: <487FDA67.30902@trash.net>
+References: <487F4327.1000107@trash.net>
+	 <1216301732.4726.26.camel@localhost>	<487F50EC.80008@trash.net>
+	 <20080717.152447.89672084.davem@davemloft.net>  <487FDA67.30902@trash.net>
+Content-Type: text/plain
+Date: Fri, 18 Jul 2008 09:10:24 -0400
+Message-Id: <1216386624.4833.94.camel@localhost> (sfid-20080718_151043_653953_BDB17E92)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series of patches renames iwl4965 driver to iwlagn driver
-The driver supports both 4965AGN NIC and 5000AGN NICs family
- 
-The driver binary module meanwhile retains its original iwl4965.ko name
-for not breaking the old stuff but it will be eventually renamed
-for the upcoming linux stable version to iwlagn.ko.
-Any suggestions on timing this are welcome.
+On Fri, 2008-18-07 at 01:48 +0200, Patrick McHardy wrote:
+> David Miller wrote:
 
-Thanks
-Tomas
+> > I think from certain perspectives it frankly doesn't matter.
+> > 
+> > It's not like the skb->priority field lets the SKB bypass the packets
+> > already in the TX ring of the chip with a lower priority.
+> > 
+> > It is true that, once the TX ring is full, the skb->priority thus
+> > begins to have an influence on which packets are moved from the
+> > qdisc to the TX ring of the device.
+> > 
 
+Indeed QoS is irrelevant unless there is congestion. 
+The question is whether the packets sitting on the fifo qdisc are being
+sorted fairly when congestion kicks in. Remember there is still a single
+wire still even on multiple rings;->
+If Woz (really) showed up at 9am and the Broussards at 3 am[1] on that
+single (congestion-buffering) FIFO waiting for the shop/wire to open up,
+then Woz should jump the queue (if he deserves it) when shop opens at
+10am.
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+If queues are building up, then by definition you have congestion
+somewehere - IOW some resource (wire bandwidth, code-efficiency/cpu,
+bus, remote being slow etc) is not keeping up.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+I am sorry havent read the patches sufficiently to answer that question
+but i suspect that stashing the packets into different hardware queues
+already solves this since the hardware does whatever scheduling it needs
+to on the rings. 
+
+> > However, I wonder if we're so sure that we want to give normal users
+> > that kind of powers.  Let's say for example that you set the highest
+> > priority possible in the TOS socket option, and you do this for a ton
+> > of UDP sockets, and you just blast packets out as fast as possible.
+> > This backlogs the device TX ring, and if done effectively enough could
+> > keep other sockets blocked out of the device completely.
+> > 
+> > Are we really really sure it's OK to let users do this?  :)
+
+We do today - if it is a concern, one could make the setsock opts
+preferential (example via selinux or setting caps in the kernel etc).
+
+> > To me, as a default, I think TOS and DSCP really means just on-wire
+> > priority.
+
+Agreed - with the caveat above on congestion. i.e it is still a single
+wire even with multi rings.
+
+> > If we absolutely want to, we can keep the old pfifo_fast around and use
+> > it (shared on multiq) if a certain sysctl knob is set.
+> 
+> No, I fully agree that this is too much detail :) Its highly
+> unlikely that this default behaviour is important on a per
+> packet level :) I just meant to point out that using a pfifo
+> is not going to be the same behaviour as previously.
+
+IMO, if non-multiq drivers continue to work as before with the prios,
+then nice. multiq could be tuned over a period of time.
+
+cheers,
+jamal
 
