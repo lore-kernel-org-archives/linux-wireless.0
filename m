@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:10517 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751630AbYGDK4q (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.236]:6265 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753893AbYGRN11 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jul 2008 06:56:46 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so355981nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Jul 2008 03:56:44 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: rt61 and TSF reporting?
-Date: Fri, 4 Jul 2008 13:02:44 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1214907990.7763.40.camel@johannes.berg>
-In-Reply-To: <1214907990.7763.40.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807041302.44288.IvDoorn@gmail.com> (sfid-20080704_125649_829692_27873090)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 18 Jul 2008 09:27:27 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so215185wri.5
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Jul 2008 06:27:24 -0700 (PDT)
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
+	RCU.
+From: jamal <hadi@cyberus.ca>
+Reply-To: hadi@cyberus.ca
+To: Patrick McHardy <kaber@trash.net>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+In-Reply-To: <1216386624.4833.94.camel@localhost>
+References: <487F4327.1000107@trash.net>
+	 <1216301732.4726.26.camel@localhost>	<487F50EC.80008@trash.net>
+	 <20080717.152447.89672084.davem@davemloft.net>  <487FDA67.30902@trash.net>
+	 <1216386624.4833.94.camel@localhost>
+Content-Type: text/plain
+Date: Fri, 18 Jul 2008 09:27:21 -0400
+Message-Id: <1216387641.4833.96.camel@localhost> (sfid-20080718_152732_216585_72DF60C9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, 2008-18-07 at 09:10 -0400, jamal wrote:
 
-> Is there any way to get rt61 to report the receive timestamp? That would
-> be very useful for monitor mode and good for IBSS.
+> wire still even on multiple rings;->
+> If Woz (really) showed up at 9am and the Broussards at 3 am[1] on that
+> single (congestion-buffering) FIFO waiting for the shop/wire to open up,
+> then Woz should jump the queue (if he deserves it) when shop opens at
+> 10am.
 
-I just received an answer from Ralink about this issue,
+Sorry, the url of Woz allegedly jumping the queue:
+http://news.cnet.com/8301-1023_3-9989823-93.html?hhTest=1%C3%A2%C2%88%
+C2%82=rss&subj=news&tag=2547-1_3-0-20
 
----
-1.       For 11b/g based chips rt2500, rt2570, rt61, rt73 doesn't implement this.
+cheers,
+jamal
 
-2.       For 11n based chips, there is one MAC register have to enable to have this feature.
-	  But, Word 2 of RXWI will put the timestamp and the RSSI will put to Word 3.
-	 The original Word 3 SNR will disappear and replace by RSSI.
----
-
-As for the timestamps in 2400 and rt2800, they are both in 32bits, so I am not sure how
-reliable they will be for IBSS.
-
-Ivo
