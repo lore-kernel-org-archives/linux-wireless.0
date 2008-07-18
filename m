@@ -1,36 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:51579 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751954AbYGEHiL (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.186]:7770 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755314AbYGRSlV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jul 2008 03:38:11 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so556021fgg.17
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Jul 2008 00:38:10 -0700 (PDT)
-Message-ID: <486F24D3.1030403@gmail.com> (sfid-20080705_093818_430405_04DC0116)
-Date: Sat, 05 Jul 2008 09:37:55 +0200
-From: Jarek Poplawski <jarkao2@gmail.com>
+	Fri, 18 Jul 2008 14:41:21 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so160308nfc.21
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Jul 2008 11:41:21 -0700 (PDT)
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 4/6] rt2x00: Large vendor requests for rt73usb firmware upload and
+Date: Fri, 18 Jul 2008 20:44:44 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200807182043.08990.IvDoorn@gmail.com> <200807182043.52015.IvDoorn@gmail.com> <200807182044.23079.IvDoorn@gmail.com>
+In-Reply-To: <200807182044.23079.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: =?ISO-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>,
-	David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@sun.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/39]: New multiqueue TX implementation.
-References: <20080703.000146.168093325.davem@davemloft.net>	 <69e28c910807030754j36d0bff0lf6dbb237d1130d44@mail.gmail.com>	 (sfid-20080703_165442_727981_F55C5327) <1215097009.9975.11.camel@johannes.berg>
-In-Reply-To: <1215097009.9975.11.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200807182044.45140.IvDoorn@gmail.com> (sfid-20080718_204124_218467_E00C8B85)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote, On 07/03/2008 04:56 PM:
+From: Iwo Mergler <iwo@call-direct.com.au>
 
-> Can you please quote less?
-> 
->> Patch 15/39 appears to be missing from the series.
-> 
-> I have it. If you don't you can look at it in the git tree.
+Switches rt73usb to use large vendor requests for firmware
+and beacons. This also fixes the garbled beacon bug.
 
-...or at the patch 14/39, which looks almost the same?!
+Signed-off-by: Iwo Mergler <Iwo@call-direct.com.au>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00usb.h |    1 -
+ drivers/net/wireless/rt2x00/rt73usb.c   |   36 ++++++-------------------------
+ 2 files changed, 7 insertions(+), 30 deletions(-)
 
-Regards,
-Jarek P.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.h b/drivers/net/wireless/rt2x00/rt2x00usb.h
+index 68229d5..4c49e52 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.h
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
+@@ -71,7 +71,6 @@
+  * Cache size
+  */
+ #define CSR_CACHE_SIZE			64
+-#define CSR_CACHE_SIZE_FIRMWARE		64
+ 
+ /*
+  * USB request types.
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 34c6ff2..cb73a93 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -890,9 +890,6 @@ static int rt73usb_load_firmware(struct rt2x00_dev *rt2x00dev, void *data,
+ 	unsigned int i;
+ 	int status;
+ 	u32 reg;
+-	char *ptr = data;
+-	char *cache;
+-	int buflen;
+ 
+ 	/*
+ 	 * Wait for stable hardware.
+@@ -911,31 +908,12 @@ static int rt73usb_load_firmware(struct rt2x00_dev *rt2x00dev, void *data,
+ 
+ 	/*
+ 	 * Write firmware to device.
+-	 * We setup a seperate cache for this action,
+-	 * since we are going to write larger chunks of data
+-	 * then normally used cache size.
+ 	 */
+-	cache = kmalloc(CSR_CACHE_SIZE_FIRMWARE, GFP_KERNEL);
+-	if (!cache) {
+-		ERROR(rt2x00dev, "Failed to allocate firmware cache.\n");
+-		return -ENOMEM;
+-	}
+-
+-	for (i = 0; i < len; i += CSR_CACHE_SIZE_FIRMWARE) {
+-		buflen = min_t(int, len - i, CSR_CACHE_SIZE_FIRMWARE);
+-
+-		memcpy(cache, ptr, buflen);
+-
+-		rt2x00usb_vendor_request(rt2x00dev, USB_MULTI_WRITE,
+-					 USB_VENDOR_REQUEST_OUT,
+-					 FIRMWARE_IMAGE_BASE + i, 0,
+-					 cache, buflen,
+-					 REGISTER_TIMEOUT32(buflen));
+-
+-		ptr += buflen;
+-	}
+-
+-	kfree(cache);
++	rt2x00usb_vendor_request_larg_buff(rt2x00dev, USB_MULTI_WRITE,
++				USB_VENDOR_REQUEST_OUT,
++				FIRMWARE_IMAGE_BASE,
++				data, len,
++				REGISTER_TIMEOUT32(len));
+ 
+ 	/*
+ 	 * Send firmware request to device to load firmware,
+@@ -1374,8 +1352,8 @@ static void rt73usb_write_beacon(struct queue_entry *entry)
+ 	 * Write entire beacon with descriptor to register.
+ 	 */
+ 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
+-	rt2x00usb_vendor_request(rt2x00dev, USB_MULTI_WRITE,
+-				 USB_VENDOR_REQUEST_OUT, beacon_base, 0,
++	rt2x00usb_vendor_request_larg_buff(rt2x00dev, USB_MULTI_WRITE,
++				 USB_VENDOR_REQUEST_OUT, beacon_base,
+ 				 entry->skb->data, entry->skb->len,
+ 				 REGISTER_TIMEOUT32(entry->skb->len));
+ 
+-- 
+1.5.6.1
+
