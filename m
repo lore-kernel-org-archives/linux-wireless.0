@@ -1,75 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39177 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750987AbYGaKIM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 06:08:12 -0400
-Subject: Re: Vendor support stickers for devices supported under Linux
-	wireless
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: drago01 <drago01@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890807301358r6d8cadc1j4f40b501319fb7dc@mail.gmail.com> (sfid-20080730_225903_471467_84258072)
-References: <43e72e890807301327j54be2453r836964c708d75458@mail.gmail.com>
-	 <f6ca9fed0807301357k3c096c37q906ecd68a0219f7f@mail.gmail.com>
-	 <43e72e890807301358r6d8cadc1j4f40b501319fb7dc@mail.gmail.com>
-	 (sfid-20080730_225903_471467_84258072)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-d0GX7wUnPjMYJzKLMbP1"
-Date: Thu, 31 Jul 2008 12:08:07 +0200
-Message-Id: <1217498887.10489.138.camel@johannes.berg> (sfid-20080731_120815_908825_97045D15)
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:12191 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752099AbYGRF4g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jul 2008 01:56:36 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 12/13] mac80211: remove unused variable agg_queue
+Date: Fri, 18 Jul 2008 13:53:08 +0800
+Message-Id: <1216360389-5352-13-git-send-email-yi.zhu@intel.com> (sfid-20080718_081543_416327_CDA6F72E)
+In-Reply-To: <1216360389-5352-12-git-send-email-yi.zhu@intel.com>
+References: <1216360389-5352-1-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-2-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-3-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-4-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-5-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-6-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-7-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-8-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-9-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-10-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-11-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-12-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
---=-d0GX7wUnPjMYJzKLMbP1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch removes unused variable agg_queue from ieee80211_stop_tx_ba_cb.
 
-On Wed, 2008-07-30 at 13:58 -0700, Luis R. Rodriguez wrote:
-> >> We could even put the name of the driver on
-> >> the sticker/logo. Thoughts?
-> >
-> > I would rather do s/driver name/kernel version/ ... its easier for
-> > users that way.
->=20
-> True, do you mean since a specific kernel version?
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ net/mac80211/main.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-Down that road lies madness. Distros backport, you (in compat) backport,
-kernel versions sound old very quickly and in a year, when linux is
-called 2.9.06 you may not even want to sell a card that says "2.6.25" on
-it because it sounds ancient.
-
-Just leave it out, make it depend on the driver being merged into
-Linus's tree, leave it up to the distros to actually ship the code.
-
-I would also add to the contract a requirement to offer Linux support
-for, say, the next five years.
-
-johannes
-
---=-d0GX7wUnPjMYJzKLMbP1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIkY8DAAoJEKVg1VMiehFYSDQP/jNqX1HFoT32u448SnlR538Z
-zmEhuf4+WXMsM+JS9iKK5ZraO/4L+9UWYxlbIcltgNjZclZ99AHpp+KMJus00fZF
-dMTMlqxlKdazjmDXU9o2bHQb3GcR0mOjxTU1cEXBgvIiuGLAcu2HJhSdj1lhPPaS
-JQ8PaRiMg1XT6P2MbbEY5jhmnrgOK53FRDMad5gfh23CHPkIO1gWfJbibnXW2n9m
-J1+7hnb2gjISLlsgLoMylm/dsFTzwWK+7tQqJmv2Dlgj9MIJJfPx7b/H6P2LnFQk
-II4sC4bmbXygIKYtm3MYzcgHA1aooVS+5fv32LBMxWBwcHlEZMGI/MWuqVkB2mth
-F9Blry1UGK4eTaXhLQxUjK2+ezBbAup8LL/H9mVUGFQ7uPC1M5At85ECxbvyU6tP
-zmd1Lxgs3eeFmsrnqwtn3wbLtFQv6STTJmc/k2ZykP1UjOWyMaF4p3PqZdeMspOs
-ClehHC/+D+eYA6ixD/aRHHApidZ5/lxp8PgXjsue/Tf3iWEfSaZDpEacK+z1O4Qu
-02aDMQRkt1nQaliOLD5dpFRkN6h6HspFpkIIQXeMkIWvyf7I4HybvI3lS81sreqa
-CTP2uWTujamo2CamRllvHxHAVeLZIHOQSIXct625MdIdYRzqNGTHhmYJz+SvrNEU
-3tb1/7Xn7VLfK4kkK0nT
-=zAqk
------END PGP SIGNATURE-----
-
---=-d0GX7wUnPjMYJzKLMbP1--
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 6fa2336..ff3a514 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -812,7 +812,6 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw, u8 *ra, u8 tid)
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct sta_info *sta;
+ 	u8 *state;
+-	int agg_queue;
+ 	DECLARE_MAC_BUF(mac);
+ 
+ 	if (tid >= STA_TID_NUM) {
+@@ -855,8 +854,6 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_hw *hw, u8 *ra, u8 tid)
+ 		ieee80211_send_delba(sta->sdata->dev, ra, tid,
+ 			WLAN_BACK_INITIATOR, WLAN_REASON_QSTA_NOT_USE);
+ 
+-	agg_queue = sta->tid_to_tx_q[tid];
+-
+ 	/* avoid ordering issues: we are the only one that can modify
+ 	 * the content of the qdiscs */
+ 	spin_lock_bh(&local->mdev->queue_lock);
+-- 
+1.5.3.6
 
