@@ -1,46 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from stinky.trash.net ([213.144.137.162]:57027 "EHLO
-	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755336AbYGQOCY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 10:02:24 -0400
-Message-ID: <487F50EC.80008@trash.net> (sfid-20080717_160229_343561_3F3D5D43)
-Date: Thu, 17 Jul 2008 16:02:20 +0200
-From: Patrick McHardy <kaber@trash.net>
-MIME-Version: 1.0
-To: hadi@cyberus.ca
-CC: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
- RCU.
-References: <20080717.051726.226040470.davem@davemloft.net>	 <487F4327.1000107@trash.net> <1216301732.4726.26.camel@localhost>
-In-Reply-To: <1216301732.4726.26.camel@localhost>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Received: from mga14.intel.com ([143.182.124.37]:12191 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752155AbYGRF4h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jul 2008 01:56:37 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 13/13] iwlwifi: bug fix in AGG flow - cast const to ULL
+Date: Fri, 18 Jul 2008 13:53:09 +0800
+Message-Id: <1216360389-5352-14-git-send-email-yi.zhu@intel.com> (sfid-20080718_081543_543089_56F3D806)
+In-Reply-To: <1216360389-5352-13-git-send-email-yi.zhu@intel.com>
+References: <1216360389-5352-1-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-2-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-3-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-4-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-5-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-6-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-7-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-8-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-9-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-10-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-11-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-12-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-13-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-jamal wrote:
-> On Thu, 2008-17-07 at 15:03 +0200, Patrick McHardy wrote:
-> 
->> Actions are also visible
->> globally, so this might still be a problem, not sure though since
->> they don't refer to their parent (haven't thought about it much yet).
-> 
-> Actions are fine because they are intended to be globaly shared.
-> [i.e A classifier on ethx with qdiscA:Y (in/egress) can share an action
-> with  classifer on  ethy with qdiscB:Z (eg/ingress)].
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Yes, in that case its not a problem. The case where it behaves
-differently than now is when only a single reference exists.
+This patch fixes a bug in AGG flow:
+u64 bitmap = 0;
+bitmap |= 1 << 32 results to be 0xffffffff80000000.
 
-> Like you i need to digest the patches to understand the impact on the
-> rest but one thing i did notice was the last patch (replacement of
-> pfifo_fast):
-> prioritization based on TOS/DSCP (setsockopt) would no longer work, some
-> user space code may suffer (routing daemons likely). One suggestion to
-> fix it is to load pfifo qdisc (which does what fifo_fast is attempting)
-> for drivers that are h/ware multiq capable.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-tx.c   |    2 +-
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-That would perform priorization within each qdisc, the individual
-qdiscs would still be transmitted using seperate HW queues though.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 1463421..ee31c24 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2130,9 +2130,9 @@ static int iwl4965_tx_status_reply_tx(struct iwl_priv *priv,
+ 				bitmap = bitmap << sh;
+ 				sh = 0;
+ 			}
+-			bitmap |= (1 << sh);
+-			IWL_DEBUG_TX_REPLY("start=%d bitmap=0x%x\n",
+-					   start, (u32)(bitmap & 0xFFFFFFFF));
++			bitmap |= 1ULL << sh;
++			IWL_DEBUG_TX_REPLY("start=%d bitmap=0x%llx\n",
++					   start, (unsigned long long)bitmap);
+ 		}
+ 
+ 		agg->bitmap = bitmap;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index f91c54b..076d356 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -1228,9 +1228,9 @@ static int iwl5000_tx_status_reply_tx(struct iwl_priv *priv,
+ 				bitmap = bitmap << sh;
+ 				sh = 0;
+ 			}
+-			bitmap |= (1 << sh);
+-			IWL_DEBUG_TX_REPLY("start=%d bitmap=0x%x\n",
+-					   start, (u32)(bitmap & 0xFFFFFFFF));
++			bitmap |= 1ULL << sh;
++			IWL_DEBUG_TX_REPLY("start=%d bitmap=0x%llx\n",
++					   start, (unsigned long long)bitmap);
+ 		}
+ 
+ 		agg->bitmap = bitmap;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 9b50b10..9796884 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -1391,7 +1391,7 @@ static int iwl_tx_status_reply_compressed_ba(struct iwl_priv *priv,
+ 	/* For each frame attempted in aggregation,
+ 	 * update driver's record of tx frame's status. */
+ 	for (i = 0; i < agg->frame_count ; i++) {
+-		ack = bitmap & (1 << i);
++		ack = bitmap & (1ULL << i);
+ 		successes += !!ack;
+ 		IWL_DEBUG_TX_REPLY("%s ON i=%d idx=%d raw=%d\n",
+ 			ack? "ACK":"NACK", i, (agg->start_idx + i) & 0xff,
+-- 
+1.5.3.6
 
