@@ -1,47 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:31021 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758394AbYGOTcz (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51263 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756067AbYGRSxq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 15:32:55 -0400
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: Tomas Winkler <tomasw@gmail.com>, linville@tuxdriver.com,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by low level driver
-References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
-	<1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
-	<1216039127.11189.15.camel@johannes.berg>
-	<1ba2fa240807140546w4f08e32l59ed88dfa1b86403@mail.gmail.com>
-	<87fxqcoaue.fsf@nokia.com> <1216109543.23746.21.camel@johannes.berg>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Tue, 15 Jul 2008 22:30:52 +0300
-In-Reply-To: <1216109543.23746.21.camel@johannes.berg> (ext Johannes Berg's message of "Tue\, 15 Jul 2008 10\:12\:23 +0200")
-Message-ID: <87skub9c7n.fsf@nokia.com> (sfid-20080715_213258_338190_5569F22B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 18 Jul 2008 14:53:46 -0400
+Subject: Re: [PATCH 6/6] rt2x00: Fix GCC warning because aifs is now
+	unsigned
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+In-Reply-To: <200807182045.24303.IvDoorn@gmail.com> (sfid-20080718_204131_622021_F7D810A6)
+References: <200807182043.08990.IvDoorn@gmail.com>
+	 <200807182044.45140.IvDoorn@gmail.com>
+	 <200807182045.04530.IvDoorn@gmail.com>
+	 <200807182045.24303.IvDoorn@gmail.com>
+	 (sfid-20080718_204131_622021_F7D810A6)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5xA0B3/iz8/HD5BHhcst"
+Date: Fri, 18 Jul 2008 20:53:41 +0200
+Message-Id: <1216407221.27738.47.camel@johannes.berg> (sfid-20080718_205356_465373_746C3C07)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
 
->> Yes, for the user this is too difficult, but I think the driver
->> shouldn't be making the decision either. So mac80211 stack would be
->> the most logical choice, and it could be make the decisions based on
->> user input (or something like that).
->
-> Well, the user may want to make a choice based on the latency.
+--=-5xA0B3/iz8/HD5BHhcst
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Yeah, latency might be a good choise for the user. Also it would be
-nice to be able to say if packet loss is acceptable. For example, I
-have heard cases where DTIMs are skipped just to save power in the
-expense of loosing some of the broadcast and multicast frames.
+On Fri, 2008-07-18 at 20:45 +0200, Ivo van Doorn wrote:
+> The aifs type has recently been changed to unsigned,
+> this triggered the following gcc warning:
+>=20
+>   CC [M]  drivers/net/wireless/rt2x00/rt2x00mac.o
+>   drivers/net/wireless/rt2x00/rt2x00mac.c: In function 'rt2x00mac_conf_tx=
+':
+>   drivers/net/wireless/rt2x00/rt2x00mac.c:557: warning: comparison is alw=
+ays true due to limited range of data type
+>=20
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00mac.c |    5 +----
+>  1 files changed, 1 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wirele=
+ss/rt2x00/rt2x00mac.c
+> index 77af1df..f1dcbaa 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+> @@ -554,10 +554,7 @@ int rt2x00mac_conf_tx(struct ieee80211_hw *hw, u16 q=
+ueue_idx,
+>  	else
+>  		queue->cw_max =3D 10; /* cw_min: 2^10 =3D 1024. */
+> =20
+> -	if (params->aifs >=3D 0)
+> -		queue->aifs =3D params->aifs;
+> -	else
+> -		queue->aifs =3D 2;
+> +	queue->aifs =3D params->aifs;
 
-> Or, ideally, we would detect that they're using voice and want lower
-> latency. Or something like that.
+davem already took my patch doing exactly that into his tree, it just
+hasn't arrived back yet.
 
-In that case U-APSD needs to be considered as well.
+johannes
 
-This PSM stuff will be challenging...
+--=-5xA0B3/iz8/HD5BHhcst
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--- 
-Kalle Valo
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIgOaxAAoJEKVg1VMiehFYwMQQAL9zFEMwUUSuZMFNguzatzSa
+38U7ri5jkKm0mG97Ck/Onzpcy/frs7CfgvaxQuQlPYX1wCyTvQvnwx7EPTLkwk5V
+D64iwUpSrq0JWPe3pRHF43mSUxMHBsruXWioS6uy1HAYzpw/bNpx79O36nN+FdwE
+oF+E5RtLemU8qVAna1hzfn1HIdsiAfQ/JHvPigl6UYehlVcaEf+DCqa82CiU8IvR
+D0Xxi6Ao6itQE+s+hEN70uVwfCKuinm4HUbav//yhMw9yOvUpiRmRXv5ZAvCxKr4
+Jz03D+tXQacM7NfIrSLGuPCBbfvZJVsq9WPyVoKWuEFrwNaaPymJkwAk0MDlCf+5
+8uLIdviv18MVDYMX74CVyxkoIypdMBTOPrHbGkiBiVJAWiiCWSPi7DFYReTbbXSl
+JXjjUfyE/5pnO9+G9+twLrU/HZ8rvhW/QFfsW23Dw/jX86etfjpfLhn+9y/aTKW6
+SOVLbt6oCjK1jMmu90YC1wZLDAhrp14fick1LCzwRtz7YfkNrz5evLizs0Zb4ZbC
+OPQh0yP51Uk/a8311SpOUMf8wJsDQiiABgmGF32v//zFENDxGnmr87cjnJmAN7Nh
+k12k2pjfk3CXr7jO9A72Y73cfyaAii68JzLTxgsFN9+S7ktAJMWS0OW1P90EVr3D
+2EwZUW3huudISgE1VeLx
+=sTL1
+-----END PGP SIGNATURE-----
+
+--=-5xA0B3/iz8/HD5BHhcst--
+
