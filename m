@@ -1,71 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:13273 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752623AbYGALhV (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45236 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753799AbYGRIXg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 07:37:21 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so574725nfc.21
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Jul 2008 04:37:20 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: rt61 and TSF reporting?
-Date: Tue, 1 Jul 2008 13:41:38 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <1214907990.7763.40.camel@johannes.berg> <200807011315.09296.IvDoorn@gmail.com> <1214911794.29181.3.camel@johannes.berg>
-In-Reply-To: <1214911794.29181.3.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807011341.38815.IvDoorn@gmail.com> (sfid-20080701_133725_094323_FFBD7CD7)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 18 Jul 2008 04:23:36 -0400
+Subject: Re: [PATCH 05/13] iwlwifi: use dtim_period from association, and
+	set listen_interval
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+In-Reply-To: <1216360389-5352-6-git-send-email-yi.zhu@intel.com> (sfid-20080718_075628_051473_4159CBEC)
+References: <1216360389-5352-1-git-send-email-yi.zhu@intel.com>
+	 <1216360389-5352-2-git-send-email-yi.zhu@intel.com>
+	 <1216360389-5352-3-git-send-email-yi.zhu@intel.com>
+	 <1216360389-5352-4-git-send-email-yi.zhu@intel.com>
+	 <1216360389-5352-5-git-send-email-yi.zhu@intel.com>
+	 <1216360389-5352-6-git-send-email-yi.zhu@intel.com>
+	 (sfid-20080718_075628_051473_4159CBEC)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dIkq1XcOQzf2dq6NKdfv"
+Date: Fri, 18 Jul 2008 10:23:29 +0200
+Message-Id: <1216369409.27738.2.camel@johannes.berg> (sfid-20080718_102341_936889_94DE3078)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 01 July 2008, Johannes Berg wrote:
-> On Tue, 2008-07-01 at 13:15 +0200, Ivo van Doorn wrote:
-> > On Tuesday 01 July 2008, Johannes Berg wrote:
-> > > 
-> > > > > > Note that these undocumented fields only are present in rt2500pci and rt61pci.
-> > > > > 
-> > > > > Ok cool, I'll play with that, I should be able to make a patch myself,
-> > > > > thanks.
-> > > > 
-> > > > Oh wait, just found a reference about those RXD words:
-> > > > 
-> > > >  * The following fields are for DMA block and HOST usage only.
-> > > >  * Can't be touched by ASIC MAC block.
-> > > > 
-> > > > In other words, they are for driver usage only. :S
-> > > 
-> > > The only ones that are ever non-zero are 0, 1, 4 and 5. Guess not then.
-> > 
-> > 4 contains data?
-> > 2 and 3 I understand since HW crypto is disabled in wireless-testing,
-> > but that should mean that 4 should also be 0 unless my estimation about
-> > it being the ICV field is wrong...
-> > 
-> > What data is in there?
-> 
-> Heh. I was connected to an encrypted AP with a different device and
-> monitoring the traffic no that channel, and got the following:
-> 
-> [139528.433872] rt61pci rx word 4: 0x60483004
-> [139528.433882] rt61pci rx word 5: 0x012c30a8
-> [139528.468947] rt61pci rx word 4: 0x60483004
-> [139528.468956] rt61pci rx word 5: 0x01566138
-> [139528.571350] rt61pci rx word 4: 0x60483004
-> [139528.571361] rt61pci rx word 5: 0x1dba1048
-> [139528.673744] rt61pci rx word 4: 0x60483004
-> [139528.673753] rt61pci rx word 5: 0x18e02078
-> [139528.776153] rt61pci rx word 4: 0x60483004
-> [139528.776165] rt61pci rx word 5: 0x01568018
-> [139528.878538] rt61pci rx word 4: 0x60483004
-> [139528.878549] rt61pci rx word 5: 0x072a9048
-> 
-> In fact, through the whole uptime of the card word 4 never changed, so
-> maybe it's just bogus data from the disabled hwcrypto engine.
 
-Ok, I'll run some experiments with HW crypto enabled and see if the value
-is different for each frame in there.
+--=-dIkq1XcOQzf2dq6NKdfv
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Ivo
+
+> --- a/drivers/net/wireless/iwlwifi/iwl-core.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+> @@ -828,6 +828,7 @@ int iwl_setup_mac(struct iwl_priv *priv)
+>  		hw->ampdu_queues =3D priv->cfg->mod_params->num_of_ampdu_queues;
+> =20
+>  	hw->conf.beacon_int =3D 100;
+> +	hw->conf.listen_interval =3D IWL_CONN_LISTEN_INTERVAL;
+> =20
+
+No way. How did those get in there? mac80211 is supposed to control the
+config, and you're supposed to use them. That was the whole point of the
+discussion we had. Please remove the beacon_int line as well and use the
+setting you get instead.
+
+johannes
+
+--=-dIkq1XcOQzf2dq6NKdfv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIgFL9AAoJEKVg1VMiehFYlr0QAMPc+65XFAt36rfkE5d/5zua
+fdbAXgRXnvyAPNzgVezT0pJ7p7NGfLUMuizHjFsX0r3V//ZawUlTsmxOrwB7Oifi
+Qngp+aUcOJIJbduK4a1CHzOrqQwm/eGHR1Dxl4TU/r6MPCU8chqc6f21piY+vXVT
+ELdUW7aqT8jpC67ODs0QlMt/w3i9Mze/Hw2EgdBTKVQLydRUwCzP+xZiTF128kGc
+T0pxiBa6wE+5gSY7PyKGi7W/fEqKBt2C5u0uAPmzv6jAC6ItAlLxJxLtDmNYZUVv
+Bg0Xd3EVSTcIu8gi1ENaRBaeuI5vu12IdyFdntJrytb3euQOsn8u1jJbvpOcsBrQ
+c+BBnpriExLP5wbv5nU9pNjnHTDA3aQQkmX7wN0jAU3GuvKH2I6h37uH45DLcXad
+fGSDrEGizmi62BI2TIdN3Khfh92fCwydjokKbtlfFzP/sosaH/sSR9UZABrGSiNz
+MKqreks2r0W4fZCUyFzzPe0CPvnLnew06DHaqy8wdz5s35CoQBJTA4yfXE5eTF4i
+4V6EQ1q1+A9CcMNWjv7X2b7x4tghCCCjAOP7RZ7JdAuTvWYQGeCjln70YQMqmjMX
++Lx5nRcK8ZsUwMOu24a3XZW8spohl7ms6RlLYOWF94aYWoECMQBZsbHVjm6P3m87
+vuDzMzj9SDCBtL48Lb94
+=UqAa
+-----END PGP SIGNATURE-----
+
+--=-dIkq1XcOQzf2dq6NKdfv--
 
