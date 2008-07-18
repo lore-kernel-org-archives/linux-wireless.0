@@ -1,72 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from stinky.trash.net ([213.144.137.162]:55665 "EHLO
-	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756543AbYGQNDl (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.183]:37642 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755680AbYGRSl3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 09:03:41 -0400
-Message-ID: <487F4327.1000107@trash.net> (sfid-20080717_150347_930599_65315DBD)
-Date: Thu, 17 Jul 2008 15:03:35 +0200
-From: Patrick McHardy <kaber@trash.net>
+	Fri, 18 Jul 2008 14:41:29 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so232715ika.5
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Jul 2008 11:41:25 -0700 (PDT)
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 6/6] rt2x00: Fix GCC warning because aifs is now unsigned
+Date: Fri, 18 Jul 2008 20:45:24 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200807182043.08990.IvDoorn@gmail.com> <200807182044.45140.IvDoorn@gmail.com> <200807182045.04530.IvDoorn@gmail.com>
+In-Reply-To: <200807182045.04530.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>
-CC: netdev@vger.kernel.org, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
- RCU.
-References: <20080717.051726.226040470.davem@davemloft.net>
-In-Reply-To: <20080717.051726.226040470.davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200807182045.24303.IvDoorn@gmail.com> (sfid-20080718_204131_622021_F7D810A6)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller wrote:
-> This allows less strict control of access to the qdisc attached to a
-> netdev_queue.  It is even allowed to enqueue into a qdisc which is
-> in the process of being destroyed.  The RCU handler will toss out
-> those packets.
-> 
-> We will need this to handle sharing of a qdisc amongst multiple
-> TX queues.  In such a setup the lock has to be shared, so will
-> be inside of the qdisc itself.  At which point the netdev_queue
-> lock cannot be used to hard synchronize access to the ->qdisc
-> pointer.
-> 
-> One operation we have to keep inside of qdisc_destroy() is the list
-> deletion.  It is the only piece of state visible after the RCU quiesce
-> period, so we have to undo it early and under the appropriate locking.
-> 
-> The operations in the RCU handler do not need any looking because the
-> qdisc tree is no longer visible to anything at that point.
+The aifs type has recently been changed to unsigned,
+this triggered the following gcc warning:
 
-Still working my way through the patches, but this one caught my
-eye (we had this before and it caused quite a few problems).
+  CC [M]  drivers/net/wireless/rt2x00/rt2x00mac.o
+  drivers/net/wireless/rt2x00/rt2x00mac.c: In function 'rt2x00mac_conf_tx':
+  drivers/net/wireless/rt2x00/rt2x00mac.c:557: warning: comparison is always true due to limited range of data type
 
-One of the problems is that only the uppermost qdisc is destroyed
-immediately, child qdiscs are still visible on qdisc_list and are
-removed without any locking from the RCU callback. There are also
-visibility issues for classifiers and actions deeper down in the
-hierarchy.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00mac.c |    5 +----
+ 1 files changed, 1 insertions(+), 4 deletions(-)
 
-The previous way to work around this was quite ugly. qdisc_destroy()
-walked the entire hierarchy to unlink inner classes immediately
-from the qdisc_list (commit 85670cc1f changed it to what we do now).
-That fixed visibility issues for everything visible only through
-qdiscs (child qdiscs and classifiers). Actions are also visible
-globally, so this might still be a problem, not sure though since
-they don't refer to their parent (haven't thought about it much yet).
-
-Another problem we had earlier with this was that qdiscs previously
-assumed changes (destruction) would only happen in process context
-and thus didn't disable BHs when taking a read_lock for walking the
-hierarchy (deadlocking with write_lock in BH context). This seems to
-be handled correctly in your tree by always disabling BHs.
-
-The remaining problem is data that was previously only used and
-modified under the RTNL (u32_list is one example). Modifications
-during destruction now need protection against concurrent use in
-process context.
-
-I still need to get a better understanding of how things work now,
-so I won't suggest a fix until then :)
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 77af1df..f1dcbaa 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -554,10 +554,7 @@ int rt2x00mac_conf_tx(struct ieee80211_hw *hw, u16 queue_idx,
+ 	else
+ 		queue->cw_max = 10; /* cw_min: 2^10 = 1024. */
+ 
+-	if (params->aifs >= 0)
+-		queue->aifs = params->aifs;
+-	else
+-		queue->aifs = 2;
++	queue->aifs = params->aifs;
+ 
+ 	INFO(rt2x00dev,
+ 	     "Configured TX queue %d - CWmin: %d, CWmax: %d, Aifs: %d.\n",
+-- 
+1.5.6.1
 
