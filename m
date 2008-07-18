@@ -1,63 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:33562 "EHLO vs166246.vserver.de"
+Received: from mailhub.sw.ru ([195.214.232.25]:26216 "EHLO relay.sw.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752153AbYGINid (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 09:38:33 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 1/3] mac80211: Include sequence number in IBSS and Mesh beacons
-Date: Wed, 9 Jul 2008 15:38:09 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <200807091511.14288.IvDoorn@gmail.com> <200807091511.45779.IvDoorn@gmail.com>
-In-Reply-To: <200807091511.45779.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200807091538.09387.mb@bu3sch.de> (sfid-20080709_153835_854973_9C06F76F)
+	id S1752855AbYGRGzK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jul 2008 02:55:10 -0400
+From: "Denis V. Lunev" <den@openvz.org>
+To: davem@davemloft.net
+Cc: tomasw@gmail.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, "Denis V. Lunev" <den@openvz.org>
+Subject: [PATCH net-next 2/2][v2] iwlwifi: small compile warnings without CONFIG_IWLWIFI_DEBUG
+Date: Fri, 18 Jul 2008 10:56:12 +0400
+Message-Id: <1216364172-19922-1-git-send-email-den@openvz.org> (sfid-20080718_085516_056516_2D7DC841)
+In-Reply-To: <1216286365-11703-1-git-send-email-den@openvz.org>
+References: <1216286365-11703-1-git-send-email-den@openvz.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 09 July 2008 15:11:45 Ivo van Doorn wrote:
-> Currently only beacons generated in AP mode have the software
-> sequence number inserted. This means IBSS and Mesh mode are broken
-> for all hardware that require software sequence numbers.
+CC [M]  drivers/net/wireless/iwlwifi/iwl-scan.o
+drivers/net/wireless/iwlwifi/iwl-scan.c: In function 'iwl_rx_scan_complete_notif':
+drivers/net/wireless/iwlwifi/iwl-scan.c:274: warning: unused variable 'scan_notif'
 
-Does software seq numbering even work at all?
-What about packets that get sent between the driver requested the
-beacon and the driver does actually queue it?
+Signed-off-by: Denis V. Lunev <den@openvz.org>
+Acked-by: Tomas Winkler <tomasw@gmail.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> ---
->  net/mac80211/tx.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
-> 
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 359cb36..0e7e1f3 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -1876,6 +1876,8 @@ struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
->  		hdr->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
->  						  IEEE80211_STYPE_BEACON);
->  
-> +		ieee80211_include_sequence(sdata, hdr);
-> +
->  		num_beacons = &ifsta->num_beacons;
->  	} else if (ieee80211_vif_is_mesh(&sdata->vif)) {
->  		/* headroom, head length, tail length and maximum TIM length */
-> @@ -1896,6 +1898,9 @@ struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
->  			cpu_to_le16(local->hw.conf.beacon_int);
->  		mgmt->u.beacon.capab_info = 0x0; /* 0x0 for MPs */
->  
-> +		ieee80211_include_sequence(sdata,
-> +					   (struct ieee80211_hdr *)skb->data);
-> +
->  		pos = skb_put(skb, 2);
->  		*pos++ = WLAN_EID_SSID;
->  		*pos++ = 0x0;
-
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index efc750d..5a00ac2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -270,6 +270,7 @@ static void iwl_rx_scan_results_notif(struct iwl_priv *priv,
+ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+ 				       struct iwl_rx_mem_buffer *rxb)
+ {
++#ifdef CONFIG_IWLWIFI_DEBUG
+ 	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
+ 	struct iwl_scancomplete_notification *scan_notif = (void *)pkt->u.raw;
+ 
+@@ -277,6 +278,7 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+ 		       scan_notif->scanned_channels,
+ 		       scan_notif->tsf_low,
+ 		       scan_notif->tsf_high, scan_notif->status);
++#endif
+ 
+ 	/* The HW is no longer scanning */
+ 	clear_bit(STATUS_SCAN_HW, &priv->status);
 -- 
-Greetings Michael.
+1.5.4.5
+
