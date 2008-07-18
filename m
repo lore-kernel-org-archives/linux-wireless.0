@@ -1,84 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:52528 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751879AbYG3OxG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 10:53:06 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: Michael Buesch <mb@bu3sch.de>
-Subject: Re: [RFC/RFT] rtl8187: Protect the config callback from mac80211 with a mutex
-Date: Wed, 30 Jul 2008 11:53:13 -0300
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"Hin-Tak Leung" <hintak.leung@gmail.com>,
-	Pavel Roskin <proski@gnu.org>,
-	wireless <linux-wireless@vger.kernel.org>
-References: <48900654.7030100@lwfinger.net> <200807301524.40411.mb@bu3sch.de> <200807301527.26432.mb@bu3sch.de>
-In-Reply-To: <200807301527.26432.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200807301153.13947.herton@mandriva.com.br> (sfid-20080730_165312_074576_34D78764)
+Received: from mga14.intel.com ([143.182.124.37]:54091 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752040AbYGRF42 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jul 2008 01:56:28 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 08/13] iwlwifi: move iwl4965_set_pwr_src to iwl4965-base.c
+Date: Fri, 18 Jul 2008 13:53:04 +0800
+Message-Id: <1216360389-5352-9-git-send-email-yi.zhu@intel.com> (sfid-20080718_075631_927997_7259E736)
+In-Reply-To: <1216360389-5352-8-git-send-email-yi.zhu@intel.com>
+References: <1216360389-5352-1-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-2-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-3-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-4-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-5-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-6-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-7-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-8-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Wednesday 30 July 2008 10:27:26 Michael Buesch escreveu:
-> On Wednesday 30 July 2008 15:24:40 Michael Buesch wrote:
-> > On Wednesday 30 July 2008 08:12:36 Larry Finger wrote:
-> > > Herton,
-> > >
-> > > Does this patch help your problem? I haven't done much testing, but
-> > > things seem to be better with it here.
-> > >
-> > > Larry
-> > >
-> > > ==================
-> > >
-> > > Some users of the RTL8187B have experienced difficulties since commit
-> > > 8f87dd7e540d455f8e7f11478133b85edc969c67 that introduced the power
-> > > management wext hooks. This difficulty has not made much sense until
-> > > it was realized that it was possible for mac80211 to make a call to the
-> > > config routine while that routine was already being executed. This
-> > > patch protects the critical section with a mutex.
-> > >
-> > > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> > > ---
-> > >
-> > > Index: wireless-testing/drivers/net/wireless/rtl8187.h
-> > > ===================================================================
-> > > --- wireless-testing.orig/drivers/net/wireless/rtl8187.h
-> > > +++ wireless-testing/drivers/net/wireless/rtl8187.h
-> > > @@ -94,6 +94,7 @@ struct rtl8187_priv {
-> > >   	const struct rtl818x_rf_ops *rf;
-> > >   	struct ieee80211_vif *vif;
-> > >   	int mode;
-> > > +	struct mutex mutex;	/* used to lock config callback */
-> >
-> > Well, hm.
-> > Using locks to protect code is a bad idea, most of the time.
-> > So that comment makes no sense.
-> >
-> > What that lock _probably_ does it to protect the configuration
-> > data in struct rtl8187_priv. So you'd better find out which data
-> > that is and clarify the comment.
->
-> and the mutex name, of course.
->
-> 	/* Mutex to protect the device configuration data,
-> 	 * which is foobar and bizzbaz */
-> 	struct mutex conf_mutex;
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Yes, it's better this way. About the lock, the problem here is you can't set 
-the channel while transmitting data on 8187 (the card stops working util 
-reset like the comment on the code), so we must enable tx loopback while 
-setting channels, but you can't run rtl8187_config concurrently because one 
-instance may be disabling tx loopback while other is still setting channel, 
-or like the code is today there is a possibility that you set tx loopback 
-forever. The lock could be only in that section.
+This patch moves iwl4965_set_pwr_src to iwl4965-base.c.
 
-The comment could be:
-/* Mutex to protect the device configuration data,
- * we can't set channels concurrently */
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |   33 ---------------------------
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |   31 +++++++++++++++++++++++++
+ 2 files changed, 31 insertions(+), 33 deletions(-)
 
---
-[]'s
-Herton
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 32baeb2..1463421 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -341,39 +341,6 @@ err:
+ 	return -EINVAL;
+ 
+ }
+-int iwl4965_set_pwr_src(struct iwl_priv *priv, enum iwl_pwr_src src)
+-{
+-	int ret;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&priv->lock, flags);
+-	ret = iwl_grab_nic_access(priv);
+-	if (ret) {
+-		spin_unlock_irqrestore(&priv->lock, flags);
+-		return ret;
+-	}
+-
+-	if (src == IWL_PWR_SRC_VAUX) {
+-		u32 val;
+-		ret = pci_read_config_dword(priv->pci_dev, PCI_POWER_SOURCE,
+-					    &val);
+-
+-		if (val & PCI_CFG_PMC_PME_FROM_D3COLD_SUPPORT) {
+-			iwl_set_bits_mask_prph(priv, APMG_PS_CTRL_REG,
+-					       APMG_PS_CTRL_VAL_PWR_SRC_VAUX,
+-					       ~APMG_PS_CTRL_MSK_PWR_SRC);
+-		}
+-	} else {
+-		iwl_set_bits_mask_prph(priv, APMG_PS_CTRL_REG,
+-				       APMG_PS_CTRL_VAL_PWR_SRC_VMAIN,
+-				       ~APMG_PS_CTRL_MSK_PWR_SRC);
+-	}
+-
+-	iwl_release_nic_access(priv);
+-	spin_unlock_irqrestore(&priv->lock, flags);
+-
+-	return ret;
+-}
+ 
+ /*
+  * Activate/Deactivat Tx DMA/FIFO channels according tx fifos mask
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index e468936..2798ab7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -1262,6 +1262,37 @@ static void iwl4965_rx_card_state_notif(struct iwl_priv *priv,
+ 		wake_up_interruptible(&priv->wait_command_queue);
+ }
+ 
++int iwl4965_set_pwr_src(struct iwl_priv *priv, enum iwl_pwr_src src)
++{
++	int ret;
++	unsigned long flags;
++
++	spin_lock_irqsave(&priv->lock, flags);
++	ret = iwl_grab_nic_access(priv);
++	if (ret)
++		goto err;
++
++	if (src == IWL_PWR_SRC_VAUX) {
++		u32 val;
++		ret = pci_read_config_dword(priv->pci_dev, PCI_POWER_SOURCE,
++					    &val);
++
++		if (val & PCI_CFG_PMC_PME_FROM_D3COLD_SUPPORT)
++			iwl_set_bits_mask_prph(priv, APMG_PS_CTRL_REG,
++					       APMG_PS_CTRL_VAL_PWR_SRC_VAUX,
++					       ~APMG_PS_CTRL_MSK_PWR_SRC);
++	} else {
++		iwl_set_bits_mask_prph(priv, APMG_PS_CTRL_REG,
++				       APMG_PS_CTRL_VAL_PWR_SRC_VMAIN,
++				       ~APMG_PS_CTRL_MSK_PWR_SRC);
++	}
++
++	iwl_release_nic_access(priv);
++err:
++	spin_unlock_irqrestore(&priv->lock, flags);
++	return ret;
++}
++
+ /**
+  * iwl4965_setup_rx_handlers - Initialize Rx handler callbacks
+  *
+-- 
+1.5.3.6
+
