@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44801
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751430AbYGUQZ4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 12:25:56 -0400
-Date: Mon, 21 Jul 2008 09:25:56 -0700 (PDT)
-Message-Id: <20080721.092556.227421936.davem@davemloft.net> (sfid-20080721_182600_521788_CFBA6A43)
-To: herbert@gondor.apana.org.au
-Cc: hadi@cyberus.ca, kaber@trash.net, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
- RCU.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080721161616.GA12938@gondor.apana.org.au>
-References: <20080721152220.GA12341@gondor.apana.org.au>
-	<20080721.082627.128593651.davem@davemloft.net>
-	<20080721161616.GA12938@gondor.apana.org.au>
+Received: from c60.cesmail.net ([216.154.195.49]:12169 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756099AbYGRQ5B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jul 2008 12:57:01 -0400
+Subject: [PATCH v2] ath5k: don't enable MSI, we cannot handle it yet
+From: Pavel Roskin <proski@gnu.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, Nick Kossifidis <mickflemm@gmail.com>
+In-Reply-To: <200807181849.25320.mb@bu3sch.de>
+References: <20080718162855.22182.97573.stgit@dv.roinet.com>
+	 <1216399487.18320.16.camel@dv>  <200807181849.25320.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Fri, 18 Jul 2008 12:56:59 -0400
+Message-Id: <1216400219.18320.26.camel@dv> (sfid-20080718_185705_905493_2716CC5F)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Date: Tue, 22 Jul 2008 00:16:16 +0800
+MSI is a nice thing, but we cannot enable it without changing the
+interrupt handler.  If we do it, we break MSI capable hardware,
+specifically AR5006 chipset.
 
-> On Mon, Jul 21, 2008 at 08:26:27AM -0700, David Miller wrote:
-> >
-> > It is totally unwise to do CPU based TX hashing.
-> 
-> Right I'm not suggesting having this as a default.  However,
-> if you have a finely tuned system (e.g., a router) where you've
-> pinned all you RX queues to specific CPUs and your local apps
-> as well then it would make sense to provide this as an alternative.
-> 
-> If this alternative doesn't exist, then unless the RX hash happens
-> to match the TX hash, for routing at least the packets are going
-> to jump all over the place which isn't nice.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-Where are these places they are going to "jump all over"? :-)
+ drivers/net/wireless/ath5k/base.c |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
 
-You can view the RX and TX queues as roughly independent namespaces.
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 635b9ac..e57905c 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -487,9 +487,6 @@ ath5k_pci_probe(struct pci_dev *pdev,
+ 	/* Set private data */
+ 	pci_set_drvdata(pdev, hw);
+ 
+-	/* Enable msi for devices that support it */
+-	pci_enable_msi(pdev);
+-
+ 	/* Setup interrupt handler */
+ 	ret = request_irq(pdev->irq, ath5k_intr, IRQF_SHARED, "ath", sc);
+ 	if (ret) {
+@@ -567,7 +564,6 @@ err_ah:
+ err_irq:
+ 	free_irq(pdev->irq, sc);
+ err_free:
+-	pci_disable_msi(pdev);
+ 	ieee80211_free_hw(hw);
+ err_map:
+ 	pci_iounmap(pdev, mem);
+@@ -589,7 +585,6 @@ ath5k_pci_remove(struct pci_dev *pdev)
+ 	ath5k_detach(pdev, hw);
+ 	ath5k_hw_detach(sc->ah);
+ 	free_irq(pdev->irq, sc);
+-	pci_disable_msi(pdev);
+ 	pci_iounmap(pdev, sc->iobase);
+ 	pci_release_region(pdev, 0);
+ 	pci_disable_device(pdev);
 
-If the TX hash is good enough (current one certainly isn't and I will
-work on fixing that), it is likely to spread the accesses enough that
-there won't be many collisions to matter.
 
-If you really think about it, this is even pointless.  Packets that
-hit RX queue A will always hit TX queue B, and so on and so forth.
-Therefore there will be no new level of separation afforded by using
-some kind of strict RX to TX mapping.
-
-We could provide the option, but it is so dangerous and I also see no
-real tangible benfit from it.
+-- 
+Regards,
+Pavel Roskin
