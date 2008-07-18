@@ -1,71 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:39830 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755556AbYGGTsc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2008 15:48:32 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1KFwhK-0000us-So
-	for linux-wireless@vger.kernel.org; Mon, 07 Jul 2008 19:48:30 +0000
-Received: from alille-153-1-39-218.w83-198.abo.wanadoo.fr ([83.198.118.218])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2008 19:48:30 +0000
-Received: from fabien by alille-153-1-39-218.w83-198.abo.wanadoo.fr with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2008 19:48:30 +0000
+Received: from an-out-0708.google.com ([209.85.132.243]:38007 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753272AbYGRKfn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jul 2008 06:35:43 -0400
+Received: by an-out-0708.google.com with SMTP id d40so222654and.103
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Jul 2008 03:35:43 -0700 (PDT)
+Message-ID: <2b4fb6bd0807180335q1b185fc2mf490c492d2724c59@mail.gmail.com> (sfid-20080718_123549_574663_FA824FDC)
+Date: Fri, 18 Jul 2008 12:35:42 +0200
+From: "Brian Crowley" <brian@abtrafco.com>
 To: linux-wireless@vger.kernel.org
-From: Fabien Crespel <fabien@crespel.net>
-Subject: Re: Question on rfkill double block
-Date: Mon, 07 Jul 2008 21:48:23 +0200
-Message-ID: <48727307.6070507@crespel.net> (sfid-20080707_214838_507453_A5A757F1)
-References: <1214982208.14590.473.camel@debian.sh.intel.com>	 <1215018189.29117.32.camel@localhost.localdomain>	 <20080704195543.GB27898@khazad-dum.debian.net> <1215450664.17128.64.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Cc: Henrique de Moraes Holschuh
-	<public-hmh-N3TV7GIv+o9fyO9Q7EP/yw@ciao.gmane.org>,
-	Zhu Yi <public-yi.zhu-ral2JQCrhuEAvxtiuMwx3w@ciao.gmane.org>
-In-Reply-To: <1215450664.17128.64.camel@localhost.localdomain>
+Subject: Build bug with 2.6.26-4
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> But if the HW block is on, NM doesn't care about softblock because you
-> can't use the radio anyway.  If the HW switch is unblocked, NM will
-> un-SW-block the radio anyway, since HW-unblock is definitely a
-> user-initiated option and signals user intent to unblock the radio
-> irregardless of SW block state from something else.
+Have been usng compat for months now with no problems.
 
-Removing the SW switch after the user unblocks the HW switch seems wrong to me: 
-HW-unblock doesn't necessarily mean the user wants to unblock WLAN if it was 
-SW-blocked before (which is most likely the user's choice).
+1. upgraded ubuntu hardy to intrepid alpha with new kernel (previous
+2.6.24-19 generic)
 
-Consider the following situation:
-- the computer has a WLAN device and Bluetooth device
-- both devices can be HW-blocked with a single physical switch
-- each device can be toggled with a key
+2. wireless 3945 worked out of the box, even 3945 led blinking (but
+slowly instead of fast like used to with network traffic)
 
-With the following scenario:
-- I (the user) don't want to use WLAN for whatever reason (like using a wired 
-network, or to save energy)
-- I want to have Bluetooth enabled for my wireless mouse
-- I temporarily enable the HW switch (because I don't need the mouse anymore, or 
-to let someone else use it on his/her own computer)
-- A bit later, I want to use Bluetooth again and disable the HW switch
-- Both Bluetooth and WLAN would now be enabled
+compat-wireless-2008-07-18
 
-This can be annoying, especially if NM connects to a wireless network 
-automatically. It would consume energy needlessly, or break the network config if 
-both the wired and wireless connections are configured for the same IP.
+Following err's:
 
-So generally, I would say that assuming to know what the user wants is dangerous, 
-as it can result in doing something against his will. If the user wants to enable 
-WLAN, there is a key for it.
+make:
+/home/brian/Desktop/Downloads/compat-wireless-2008-07-18/drivers/net/wireless/iwlwifi/iwl-led.c:
+In function 'iwl_led_brightness_set':
+/home/brian/Desktop/Downloads/compat-wireless-2008-07-18/drivers/net/wireless/iwlwifi/iwl-led.c:198:
+error: 'led_type_str' undeclared (first use in this function)
+/home/brian/Desktop/Downloads/compat-wireless-2008-07-18/drivers/net/wireless/iwlwifi/iwl-led.c:198:
+error: (Each undeclared identifier is reported only once
+/home/brian/Desktop/Downloads/compat-wireless-2008-07-18/drivers/net/wireless/iwlwifi/iwl-led.c:198:
+error: for each function it appears in.)
+make[4]: *** [/home/brian/Desktop/Downloads/compat-wireless-2008-07-18/drivers/net/wireless/iwlwifi/iwl-led.o]
+Error 1
+make[3]: *** [/home/brian/Desktop/Downloads/compat-wireless-2008-07-18/drivers/net/wireless/iwlwifi]
+Error 2
+make[2]: *** [/home/brian/Desktop/Downloads/compat-wireless-2008-07-18/drivers/net/wireless]
+Error 2
+make[1]: *** [_module_/home/brian/Desktop/Downloads/compat-wireless-2008-07-18]
+Error 2
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.26-4-generic'
+make: *** [modules] Error 2
 
-Also note that this would still happen without NM but with rfkill-input, since 
-currently it doesn't restore the previous state when the HW switch is disabled. 
-It just unblocks the device (Andy posted about it half an hour ago).
-Any news on this, Henrique? I think you talked about it some time ago, and with 
-the new double block enum, it should be easier to know the previous state.
+sudo make install:
 
-- Fabien.
+make -C /lib/modules/2.6.26-4-generic/build
+M=/home/brian/Desktop/Downloads/compat-wireless-2008-07-18 modules
+make[1]: Entering directory `/usr/src/linux-headers-2.6.26-4-generic'
+  CC [M]  /home/brian/Desktop/Downloads/compat-wireless-2008-07-18/drivers/net/wireless/iwlwifi/iwl-led.o
+/home/brian/Desktop/Downloads/compat-wireless-2008-07-18/drivers/net/wireless/iwlwifi/iwl-led.c:
+In function 'iwl_led_brightness_set':
+/home/brian/Desktop/Downloads/compat-wireless-2008-07-18/drivers/net/wireless/iwlwifi/iwl-led.c:198:
+error: 'led_type_str' undeclared (first use in this function)
+/home/brian/Desktop/Downloads/compat-wireless-2008-07-18/drivers/net/wireless/iwlwifi/iwl-led.c:198:
+error: (Each undeclared identifier is reported only once
+/home/brian/Desktop/Downloads/compat-wireless-2008-07-18/drivers/net/wireless/iwlwifi/iwl-led.c:198:
+error: for each function it appears in.)
+make[4]: *** [/home/brian/Desktop/Downloads/compat-wireless-2008-07-18/drivers/net/wireless/iwlwifi/iwl-led.o]
+Error 1
+make[3]: *** [/home/brian/Desktop/Downloads/compat-wireless-2008-07-18/drivers/net/wireless/iwlwifi]
+Error 2
+make[2]: *** [/home/brian/Desktop/Downloads/compat-wireless-2008-07-18/drivers/net/wireless]
+Error 2
+make[1]: *** [_module_/home/brian/Desktop/Downloads/compat-wireless-2008-07-18]
+Error 2
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.26-4-generic'
+make: *** [modules] Error 2
+brian@brian-laptop:~/Desktop/Downloads/compat-wireless-2008-07-18$
 
+did not see the normal message telling me to use unload / load so
+think the process just stopped so I did not proceed with these steps.
+
+Thanks,
+Brian (linux user 1 year-yeah noob)
