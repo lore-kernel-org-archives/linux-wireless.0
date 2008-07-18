@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:35576 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751809AbYGPRfG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2008 13:35:06 -0400
-Subject: Re: [PATCH 5/5] Ath5k: suspend/resume fixes
-From: Pavel Roskin <proski@gnu.org>
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	Jiri Slaby <jirislaby@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <200807160931.11473.jbarnes@virtuousgeek.org>
-References: <1216136661-10930-1-git-send-email-jirislaby@gmail.com>
-	 <1216136661-10930-4-git-send-email-jirislaby@gmail.com>
-	 <40f31dec0807160915g8a5b083p9f21fae729839445@mail.gmail.com>
-	 <200807160931.11473.jbarnes@virtuousgeek.org>
-Content-Type: text/plain
-Date: Wed, 16 Jul 2008 13:35:03 -0400
-Message-Id: <1216229703.29744.23.camel@dv> (sfid-20080716_193512_804297_6AC2BFEA)
-Mime-Version: 1.0
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:41618 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754698AbYGRS3g (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jul 2008 14:29:36 -0400
+Date: Fri, 18 Jul 2008 15:29:30 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Pavel Roskin <proski@gnu.org>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH v2] ath5k: don't enable MSI, we cannot handle it yet
+Message-ID: <20080718182930.GA30077@khazad-dum.debian.net> (sfid-20080718_202940_023832_71D88B60)
+References: <20080718162855.22182.97573.stgit@dv.roinet.com> <1216399487.18320.16.camel@dv> <200807181849.25320.mb@bu3sch.de> <1216400219.18320.26.camel@dv> <40f31dec0807181057y65738617m8bcfa9c6c9f71671@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0807181057y65738617m8bcfa9c6c9f71671@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-07-16 at 09:31 -0700, Jesse Barnes wrote:
-> On Wednesday, July 16, 2008 9:15 am Nick Kossifidis wrote:
-> > It's ok for now, but have in mind that on my upcoming patch series i'm
-> > disabling msi (commented out) since it results no interrupts on pci-e
-> > cards (seems there is a bug in kernel's msi implementation).
-> 
-> Hm, would be good to get details here.  MSI is being used by other drivers 
-> successfully...
+On Fri, 18 Jul 2008, Nick Kossifidis wrote:
+> 2008/7/18 Pavel Roskin <proski@gnu.org>:
+> > MSI is a nice thing, but we cannot enable it without changing the
+> > interrupt handler.  If we do it, we break MSI capable hardware,
+> > specifically AR5006 chipset.
+> >
+> > Signed-off-by: Pavel Roskin <proski@gnu.org>
+[...]
+> Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Cc: stable@kernel.org
 
-That's true, but no driver uses the same interrupt handler with and
-without MSI.  Either it's different handlers or the handler checks if
-MSI is enabled and does something differently.
-
-Checks is any interrupts are pending are different for MSI.  It may be
-not hard to do (it's probably easier than for real interrupts), but it
-has to be figured out.  Somebody has to do it right.  Until MSI is
-supported by the interrupt handler, it should not be enabled by the
-driver, or we get a non-functioning driver for AR5006.
-
-I see that MSI is enabled in wireless-testing, but I think we should try
-to avoid this mistake when the commit goes upstream.  I'm not sure what
-the procedure there, but it would be nice to keep the tree bisectable,
-i.e. avoid known regressions in any revision.  Maybe an amended commit
-should go upstream, and we'll drop the original patch when rebasing to
-the upstream branch?
+So that they will pick it up automatically when it hits mainline, and it
+also serves as an in-band documentation that it is something that needs to
+go/went to -stable.
 
 -- 
-Regards,
-Pavel Roskin
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
