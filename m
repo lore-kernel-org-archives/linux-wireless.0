@@ -1,53 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outbound-mail-102.bluehost.com ([69.89.22.12]:45492 "HELO
-	outbound-mail-102.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753885AbYGPSsv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2008 14:48:51 -0400
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: [PATCH 5/5] Ath5k: suspend/resume fixes
-Date: Wed, 16 Jul 2008 11:41:59 -0700
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	Jiri Slaby <jirislaby@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-References: <1216136661-10930-1-git-send-email-jirislaby@gmail.com> <200807160931.11473.jbarnes@virtuousgeek.org> <1216229703.29744.23.camel@dv>
-In-Reply-To: <1216229703.29744.23.camel@dv>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200807161141.59385.jbarnes@virtuousgeek.org> (sfid-20080716_204859_187558_014AC909)
+Received: from mga14.intel.com ([143.182.124.37]:54091 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751571AbYGRF4Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jul 2008 01:56:25 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 05/13] iwlwifi: use dtim_period from association, and set listen_interval
+Date: Fri, 18 Jul 2008 13:53:01 +0800
+Message-Id: <1216360389-5352-6-git-send-email-yi.zhu@intel.com> (sfid-20080718_075628_051473_4159CBEC)
+In-Reply-To: <1216360389-5352-5-git-send-email-yi.zhu@intel.com>
+References: <1216360389-5352-1-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-2-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-3-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-4-git-send-email-yi.zhu@intel.com>
+ <1216360389-5352-5-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, July 16, 2008 10:35 am Pavel Roskin wrote:
-> On Wed, 2008-07-16 at 09:31 -0700, Jesse Barnes wrote:
-> > On Wednesday, July 16, 2008 9:15 am Nick Kossifidis wrote:
-> > > It's ok for now, but have in mind that on my upcoming patch series i'm
-> > > disabling msi (commented out) since it results no interrupts on pci-e
-> > > cards (seems there is a bug in kernel's msi implementation).
-> >
-> > Hm, would be good to get details here.  MSI is being used by other
-> > drivers successfully...
->
-> That's true, but no driver uses the same interrupt handler with and
-> without MSI.  Either it's different handlers or the handler checks if
-> MSI is enabled and does something differently.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Yeah, using MSI on your device can mean that you have to make some changes 
-(like on Intel graphics you have to disable regular interrupts or bad things 
-happen), but you can still share the handler or at least most of it in some 
-cases.
+This patch uses dtim_period from association, and sets the listen_interval.
 
-> Checks is any interrupts are pending are different for MSI.  It may be
-> not hard to do (it's probably easier than for real interrupts), but it
-> has to be figured out.  Somebody has to do it right.  Until MSI is
-> supported by the interrupt handler, it should not be enabled by the
-> driver, or we get a non-functioning driver for AR5006.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    3 +--
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    1 +
+ drivers/net/wireless/iwlwifi/iwl4965-base.c |    5 +++--
+ 3 files changed, 5 insertions(+), 4 deletions(-)
 
-Sure, that's fine.  I just wanted to make sure that there weren't some weird 
-generic MSI problems.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 6f3555f..74a8397 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -666,8 +666,7 @@ struct iwl4965_rxon_assoc_cmd {
+ 	__le16 reserved;
+ } __attribute__ ((packed));
+ 
+-
+-
++#define IWL_CONN_LISTEN_INTERVAL	(0xA)
+ 
+ /*
+  * REPLY_RXON_TIMING = 0x14 (command, has simple generic response)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index a44188b..b03b9cb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -828,6 +828,7 @@ int iwl_setup_mac(struct iwl_priv *priv)
+ 		hw->ampdu_queues = priv->cfg->mod_params->num_of_ampdu_queues;
+ 
+ 	hw->conf.beacon_int = 100;
++	hw->conf.listen_interval = IWL_CONN_LISTEN_INTERVAL;
+ 
+ 	if (priv->bands[IEEE80211_BAND_2GHZ].n_channels)
+ 		priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+index 2001b09..217d6c7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -608,7 +608,6 @@ static void iwl_activate_qos(struct iwl_priv *priv, u8 force)
+ }
+ 
+ #define MAX_UCODE_BEACON_INTERVAL	4096
+-#define INTEL_CONN_LISTEN_INTERVAL	__constant_cpu_to_le16(0xA)
+ 
+ static __le16 iwl4965_adjust_beacon_interval(u16 beacon_val)
+ {
+@@ -638,7 +637,8 @@ static void iwl4965_setup_rxon_timing(struct iwl_priv *priv)
+ 	priv->rxon_timing.timestamp.dw[0] =
+ 				cpu_to_le32(priv->timestamp & 0xFFFFFFFF);
+ 
+-	priv->rxon_timing.listen_interval = INTEL_CONN_LISTEN_INTERVAL;
++	priv->rxon_timing.listen_interval =
++		cpu_to_le16(priv->hw->conf.listen_interval);
+ 
+ 	tsf = priv->timestamp;
+ 
+@@ -3102,6 +3102,7 @@ static void iwl4965_bss_info_changed(struct ieee80211_hw *hw,
+ 		if (bss_conf->assoc) {
+ 			priv->assoc_id = bss_conf->aid;
+ 			priv->beacon_int = bss_conf->beacon_int;
++			priv->power_data.dtim_period = bss_conf->dtim_period;
+ 			priv->timestamp = bss_conf->timestamp;
+ 			priv->assoc_capability = bss_conf->assoc_capability;
+ 			priv->next_scan_jiffies = jiffies +
+-- 
+1.5.3.6
 
-Thanks,
-Jesse
