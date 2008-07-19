@@ -1,38 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.238]:2002 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750836AbYGUV6I (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:37807 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754469AbYGSNnx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 17:58:08 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1558888rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 14:58:08 -0700 (PDT)
-Message-ID: <b6c5339f0807211458r5e9856a1l9f7e495168830d96@mail.gmail.com> (sfid-20080721_235816_038545_672550C7)
-Date: Mon, 21 Jul 2008 17:58:08 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Helge Deller" <deller@gmx.de>
-Subject: Re: [PATCH] ath5k: use positive logic for HP laptop LEDs
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <g62vt2$akl$1@ger.gmane.org>
+	Sat, 19 Jul 2008 09:43:53 -0400
+Date: Sat, 19 Jul 2008 10:43:49 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/4] rfkill: document the rfkill struct locking
+Message-ID: <20080719134349.GB11269@khazad-dum.debian.net> (sfid-20080719_154357_117049_36170EF1)
+References: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br> <1216150327-10904-4-git-send-email-hmh@hmh.eng.br> <200807191439.02853.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080715170716.GA5785@hash.localnet> <g62vt2$akl$1@ger.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200807191439.02853.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 21, 2008 at 5:42 PM, Helge Deller <deller@gmx.de> wrote:
-> Bob, I think your patch below somehow got truncated and you wanted to send
-> this patch ?
-> http://marc.info/?l=linux-wireless&m=121557127930799&w=2
->
-[...]
->>
->> -     sc->led_on = 0;  /* active low */
+On Sat, 19 Jul 2008, Ivo van Doorn wrote:
+> On Tuesday 15 July 2008, Henrique de Moraes Holschuh wrote:
+> > Reorder fields in struct rfkill and add comments to make it clear
+> > which fields are protected by rfkill->mutex.
+> > 
+> > Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> > Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> > ---
+> >  include/linux/rfkill.h |    7 ++++---
+> >  1 files changed, 4 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+> > index c5f6e54..630b573 100644
+> > --- a/include/linux/rfkill.h
+> > +++ b/include/linux/rfkill.h
+> > @@ -89,13 +89,14 @@ struct rfkill {
+> >  	const char *name;
+> >  	enum rfkill_type type;
+> >  
+> > -	enum rfkill_state state;
+> > +	void *data;
+> >  	bool user_claim_unsupported;
+> >  	bool user_claim;
+> >  
+> > +	/* the mutex serializes callbacks and also protects
+> > +	 * the state */
+> 
+> Please move/copy the comment into the kerneldoc above the
+> structure declaration as well.
 
-Hmm, well it definitely didn't end there, but the version from this
-thread on marc's archive wasn't truncated.  Maybe my mailer hiccuped
-when CCing you?
+Done.
 
-Anyway, yep, the patch is unchanged from the earlier posting.
+> >  	struct mutex mutex;
+> > -
+> > -	void *data;
+> 
+> Not a real problem, but the data pointer doesn't need to be moved,
+> since it is only used for the callback functions. So technically it is
+> under the protection of the mutex as well.
+
+Ok, I won't move it then, since it means any changes (not that anyone
+should BE changing that field) would need to be under the mutex.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
