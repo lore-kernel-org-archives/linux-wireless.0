@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:47106 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758001AbYGPQMX (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:44894 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754348AbYGSNmf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2008 12:12:23 -0400
-Received: by qw-out-2122.google.com with SMTP id 3so329856qwe.37
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2008 09:12:22 -0700 (PDT)
-Message-ID: <40f31dec0807160912t54316c26nedfff2d756f16b5a@mail.gmail.com> (sfid-20080716_181251_515256_ECC16651)
-Date: Wed, 16 Jul 2008 19:12:21 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [PATCH 2/5] Ath5k: kill tasklets on shutdown
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <1216136661-10930-2-git-send-email-jirislaby@gmail.com>
+	Sat, 19 Jul 2008 09:42:35 -0400
+Date: Sat, 19 Jul 2008 10:42:30 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/4] rfkill: document rfkill_force_state as required
+Message-ID: <20080719134230.GA11269@khazad-dum.debian.net> (sfid-20080719_154240_314023_CF2EB096)
+References: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br> <1216150327-10904-2-git-send-email-hmh@hmh.eng.br> <200807191434.30815.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1216136661-10930-1-git-send-email-jirislaby@gmail.com>
-	 <1216136661-10930-2-git-send-email-jirislaby@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200807191434.30815.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/7/15 Jiri Slaby <jirislaby@gmail.com>:
-> Don't forget to kill tasklets on stop to not panic if they
-> fire after freeing some structures.
->
-> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-> Cc: Nick Kossifidis <mickflemm@gmail.com>
-> Cc: Luis R. Rodriguez <mcgrof@gmail.com>
-> ---
->  drivers/net/wireless/ath5k/base.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> index e9ec284..4d9ff97 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -2343,6 +2343,9 @@ ath5k_stop_hw(struct ath5k_softc *sc)
->        mutex_unlock(&sc->lock);
->
->        del_timer_sync(&sc->calib_tim);
-> +       tasklet_kill(&sc->rxtq);
-> +       tasklet_kill(&sc->txtq);
-> +       tasklet_kill(&sc->restq);
->
->        return ret;
->  }
-> --
-> 1.5.6.2
->
->
+On Sat, 19 Jul 2008, Ivo van Doorn wrote:
+> >  Every time the driver gets a notification from the card that one of its rfkill
+> >  lines changed state (polling might be needed on badly designed cards that don't
+> > @@ -422,13 +423,24 @@ of the hardware is unknown), or read-write (where the hardware can be queried
+> >  about its current state).
+> >  
+> >  The rfkill class will call the get_state hook of a device every time it needs
+> > -to know the *real* current state of the hardware.  This can happen often.
+> > +to know the *real* current state of the hardware.  This can happen often, but
+> > +it does not do any pooling, so it is not enough on hardware that is subject
+> > +to state changes outside of the rfkill subsystem.
+> 
+> pooling -> polling
+> 
+> With that typo fixed, you can add my:
+> 
+> Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Done, will send v2 soon.
 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
