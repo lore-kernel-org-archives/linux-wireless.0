@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:38338 "EHLO ds10.mine.nu"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1757015AbYGTNyM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2008 09:54:12 -0400
-Message-ID: <48833EAE.6000803@openwrt.org> (sfid-20080720_155415_103789_C8C7AAD4)
-Date: Sun, 20 Jul 2008 15:33:34 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from ik-out-1112.google.com ([66.249.90.183]:22145 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752440AbYGSMTu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Jul 2008 08:19:50 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so421733ika.5
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2008 05:19:49 -0700 (PDT)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH 1/4] rfkill: document rfkill_force_state as required
+Date: Sat, 19 Jul 2008 14:34:30 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br> <1216150327-10904-2-git-send-email-hmh@hmh.eng.br>
+In-Reply-To: <1216150327-10904-2-git-send-email-hmh@hmh.eng.br>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: ath5k-devel@lists.ath5k.org
-Subject: [PATCH 3/5] ath9k: add missing device ID for AR9160 MiniPCI cards
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200807191434.30815.IvDoorn@gmail.com> (sfid-20080719_141955_041211_A8769183)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>  Every time the driver gets a notification from the card that one of its rfkill
+>  lines changed state (polling might be needed on badly designed cards that don't
+> @@ -422,13 +423,24 @@ of the hardware is unknown), or read-write (where the hardware can be queried
+>  about its current state).
+>  
+>  The rfkill class will call the get_state hook of a device every time it needs
+> -to know the *real* current state of the hardware.  This can happen often.
+> +to know the *real* current state of the hardware.  This can happen often, but
+> +it does not do any pooling, so it is not enough on hardware that is subject
+> +to state changes outside of the rfkill subsystem.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -8329,6 +8329,8 @@
-  	case AR5416_DEVID_PCI:
-  	case AR5416_DEVID_PCIE:
-  		return "Atheros 5416";
-+	case AR9160_DEVID_PCI:
-+		return "Atheros 9160";
-  	case AR9280_DEVID_PCI:
-  	case AR9280_DEVID_PCIE:
-  		return "Atheros 9280";
-@@ -8350,6 +8352,7 @@
-  	switch (devid) {
-  	case AR5416_DEVID_PCI:
-  	case AR5416_DEVID_PCIE:
-+	case AR9160_DEVID_PCI:
-  	case AR9280_DEVID_PCI:
-  	case AR9280_DEVID_PCIE:
-  		ah = ath9k_hw_do_attach(devid, sc, mem, error);
+pooling -> polling
+
+With that typo fixed, you can add my:
+
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+
+Ivo
