@@ -1,72 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out-41.synserver.de ([217.119.50.41]:1029 "HELO
-	smtp-out-41.synserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750877AbYGWFxv (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53561 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751427AbYGSApx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 01:53:51 -0400
-Date: Wed, 23 Jul 2008 07:40:39 +0200
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-To: Alessandro Guido <ag@alessandroguido.name>
-Cc: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: WARNING: at net/core/dev.c:1328!
-Message-ID: <20080723054039.GA2272@gentoox2.trippelsdorf.de> (sfid-20080723_075359_004185_FD4EA547)
-References: <d4b984a30807210914nd4d0db5yb7b93ca5143ff0d5@mail.gmail.com> <20080721.092027.14394005.davem@davemloft.net> <d4b984a30807220254t1aaf6ac4q874329966511b0c5@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <d4b984a30807220254t1aaf6ac4q874329966511b0c5@mail.gmail.com>
+	Fri, 18 Jul 2008 20:45:53 -0400
+Message-Id: <20080719004517.436644000@sipsolutions.net> (sfid-20080719_024556_447872_7D42A4A4)
+References: <20080719004147.795661000@sipsolutions.net>
+Date: Sat, 19 Jul 2008 02:41:48 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: David Miller <davem@davemloft.net>,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [RFC 1/3] mac80211: sane arguments to ieee80211_ht_agg_queue_remove
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 22, 2008 at 11:54:26AM +0200, Alessandro Guido wrote:
-> Got a WARNING this morning (2.6.26-05752-g93ded9b) and I think it's related.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/main.c |    8 +++++---
+ net/mac80211/wme.c  |    7 +------
+ net/mac80211/wme.h  |    3 +--
+ 3 files changed, 7 insertions(+), 11 deletions(-)
 
-Same thing here (latest git):
-
-skge eth1: enabling interface
-skge eth1: disabling interface
-------------[ cut here ]------------
-WARNING: at net/core/dev.c:1344 __netif_schedule+0x24/0x6d()
-Pid: 1904, comm: ip Not tainted 2.6.26-06077-gc010b2f #33
-
-Call Trace:
- [<ffffffff8022e5f4>] warn_on_slowpath+0x4c/0x87
- [<ffffffff802fc5cb>] delay_tsc+0x0/0x55
- [<ffffffff802fc5cb>] delay_tsc+0x0/0x55
- [<ffffffff802fc5e7>] delay_tsc+0x1c/0x55
- [<ffffffff8037e2ee>] gm_phy_write+0x50/0x90
- [<ffffffff8037e2f8>] gm_phy_write+0x5a/0x90
- [<ffffffff8037f03f>] skge_led+0x1fb/0x20b
- [<ffffffff804202e8>] __netif_schedule+0x24/0x6d
- [<ffffffff80381298>] skge_down+0x440/0x4cf
- [<ffffffff803814be>] skge_change_mtu+0x3d/0x61
- [<ffffffff80420775>] dev_set_mtu+0x46/0x79
- [<ffffffff80427a51>] do_setlink+0x1c5/0x31f
- [<ffffffff804287d3>] rtnl_newlink+0x2b9/0x3e3
- [<ffffffff804285a8>] rtnl_newlink+0x8e/0x3e3
- [<ffffffff80428d69>] rtnetlink_rcv_msg+0x5a/0x1ea
- [<ffffffff80428d0f>] rtnetlink_rcv_msg+0x0/0x1ea
- [<ffffffff8042efde>] netlink_rcv_skb+0x34/0x7e
- [<ffffffff80428d09>] rtnetlink_rcv+0x1f/0x25
- [<ffffffff8042eb97>] netlink_unicast+0x119/0x17f
- [<ffffffff8041b35d>] __alloc_skb+0x61/0x123
- [<ffffffff8042ee37>] netlink_sendmsg+0x23a/0x24d
- [<ffffffff804152e4>] sock_sendmsg+0xcb/0xe3
- [<ffffffff8023f670>] autoremove_wake_function+0x0/0x2e
- [<ffffffff80225643>] need_resched+0x1e/0x28
- [<ffffffff804147d8>] move_addr_to_kernel+0x25/0x36
- [<ffffffff8041c090>] verify_iovec+0x46/0x82
- [<ffffffff80415513>] sys_sendmsg+0x217/0x28a
- [<ffffffff8042e01e>] netlink_insert+0xfe/0x121
- [<ffffffff80414b40>] sockfd_lookup_light+0x1a/0x52
- [<ffffffff80261fe5>] __vma_link+0x58/0x61
- [<ffffffff80262062>] vma_link+0x74/0x99
- [<ffffffff802630ce>] do_brk+0x2c1/0x319
- [<ffffffff8020b3eb>] system_call_after_swapgs+0x7b/0x80
-
----[ end trace 92936ef183e09876 ]---
-skge eth1: enabling interface
-skge eth1: Link is up at 100 Mbps, full duplex, flow control both
+--- everything.orig/net/mac80211/main.c	2008-07-18 23:52:25.000000000 +0200
++++ everything/net/mac80211/main.c	2008-07-19 00:14:30.000000000 +0200
+@@ -644,7 +644,8 @@ int ieee80211_start_tx_ba_session(struct
+ 		/* No need to requeue the packets in the agg queue, since we
+ 		 * held the tx lock: no packet could be enqueued to the newly
+ 		 * allocated queue */
+-		ieee80211_ht_agg_queue_remove(local, sta, tid, 0);
++		ieee80211_ht_agg_queue_remove(local, sta->tid_to_tx_q[tid], false);
++		sta->tid_to_tx_q[tid] = ieee80211_num_queues(hw);
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 		printk(KERN_DEBUG "BA request denied - HW unavailable for"
+ 					" tid %d\n", tid);
+@@ -740,7 +741,7 @@ int ieee80211_stop_tx_ba_session(struct 
+ 		goto stop_BA_exit;
+ 	}
+ 
+-stop_BA_exit:
++ stop_BA_exit:
+ 	spin_unlock_bh(&sta->lock);
+ 	rcu_read_unlock();
+ 	return ret;
+@@ -852,7 +853,8 @@ void ieee80211_stop_tx_ba_cb(struct ieee
+ 
+ 	agg_queue = sta->tid_to_tx_q[tid];
+ 
+-	ieee80211_ht_agg_queue_remove(local, sta, tid, 1);
++	ieee80211_ht_agg_queue_remove(local, agg_queue, true);
++	sta->tid_to_tx_q[tid] = ieee80211_num_queues(hw);
+ 
+ 	/* We just requeued the all the frames that were in the
+ 	 * removed queue, and since we might miss a softirq we do
+--- everything.orig/net/mac80211/wme.c	2008-07-19 00:07:24.000000000 +0200
++++ everything/net/mac80211/wme.c	2008-07-19 00:14:57.000000000 +0200
+@@ -223,15 +223,10 @@ int ieee80211_ht_agg_queue_add(struct ie
+  * the caller needs to hold netdev_get_tx_queue(local->mdev, X)->lock
+  */
+ void ieee80211_ht_agg_queue_remove(struct ieee80211_local *local,
+-				   struct sta_info *sta, u16 tid,
+-				   u8 requeue)
++				   u16 agg_queue, bool requeue)
+ {
+-	int agg_queue = sta->tid_to_tx_q[tid];
+-	struct ieee80211_hw *hw = &local->hw;
+-
+ 	/* return the qdisc to the pool */
+ 	clear_bit(agg_queue, local->queue_pool);
+-	sta->tid_to_tx_q[tid] = ieee80211_num_queues(hw);
+ 
+ 	if (requeue) {
+ 		ieee80211_requeue(local, agg_queue);
+--- everything.orig/net/mac80211/wme.h	2008-07-19 00:08:04.000000000 +0200
++++ everything/net/mac80211/wme.h	2008-07-19 00:08:28.000000000 +0200
+@@ -27,8 +27,7 @@ u16 ieee80211_select_queue(struct net_de
+ int ieee80211_ht_agg_queue_add(struct ieee80211_local *local,
+ 			       struct sta_info *sta, u16 tid);
+ void ieee80211_ht_agg_queue_remove(struct ieee80211_local *local,
+-				   struct sta_info *sta, u16 tid,
+-				   u8 requeue);
++				   u16 agg_queue, bool requeue);
+ void ieee80211_requeue(struct ieee80211_local *local, int queue);
+ 
+ #endif /* _WME_H */
 
 -- 
-Markus
+
