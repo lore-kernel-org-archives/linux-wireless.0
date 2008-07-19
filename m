@@ -1,38 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:56259 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752684AbYG3P0r (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:8746 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752956AbYGSMU7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 11:26:47 -0400
-Message-ID: <48908836.8020609@lwfinger.net> (sfid-20080730_172650_601596_154F1490)
-Date: Wed, 30 Jul 2008 10:26:46 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 19 Jul 2008 08:20:59 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so241273nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2008 05:20:57 -0700 (PDT)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH 2/4] rfkill: fix led-trigger unregister order in error unwind
+Date: Sat, 19 Jul 2008 14:35:39 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	Dmitry Baryshkov <dbaryshkov@gmail.com>
+References: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br> <1216150327-10904-3-git-send-email-hmh@hmh.eng.br>
+In-Reply-To: <1216150327-10904-3-git-send-email-hmh@hmh.eng.br>
 MIME-Version: 1.0
-To: rschneiderman@yahoo.com
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: broadcom 4306 rev. 3 uses b43 instead of b43legacy
-References: <30761.30943.qm@web52411.mail.re2.yahoo.com>
-In-Reply-To: <30761.30943.qm@web52411.mail.re2.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200807191435.39305.IvDoorn@gmail.com> (sfid-20080719_142101_728822_2D375E8B)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Richard Schneiderman wrote:
-> Larry,
-> Thanks for the reply. Ok, I read the documentation again. It does say that the b43 driver is for my chipset
+On Tuesday 15 July 2008, Henrique de Moraes Holschuh wrote:
+> rfkill needs to unregister the led trigger AFTER a call to
+> rfkill_remove_switch(), otherwise it will not update the LED state,
+> possibly leaving it ON when it should be OFF.
 > 
-> The problem I'm having is that that while I can see my wireless connection (using iwlist wlan0 scan), I can't connect to it.  In iwconfig with Suse, it doesn't show the access point. In iwconfig in Ubuntu, I get the AP shown but still can't get a dhcp connection.
+> To make led-trigger unregistering safer, guard against unregistering a
+> trigger twice, and also against issuing trigger events to a led trigger
+> that was unregistered.  This makes the error unwind paths more resilient.
 > 
-> This card worked fine in Suse 10.2, 10.3 and Ubuntu 7.10.  What do you think my step in resolving this may be?
+> Refer to commit 8a8f1c0437a77cce29c1cb6089f01f22a6d9ca6e,
+> "rfkill: Register LED triggers before registering switch".
 > 
-> If this needs to into the listserv, i'll resend it there.
+> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> Cc: Michael Buesch <mb@bu3sch.de>
+> Cc: Dmitry Baryshkov <dbaryshkov@gmail.com>
 
-In general, this type of mail should be sent to linux-wireless.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Are you trying to use the traditional method with ifup, or are you using 
-NetworkManager?
+> ---
+>  net/rfkill/rfkill.c |    6 ++++--
+>  1 files changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+> index 022fe50..fc3a4fd 100644
+> --- a/net/rfkill/rfkill.c
+> +++ b/net/rfkill/rfkill.c
+> @@ -590,8 +590,10 @@ static void rfkill_led_trigger_register(struct rfkill *rfkill)
+>  static void rfkill_led_trigger_unregister(struct rfkill *rfkill)
+>  {
+>  #ifdef CONFIG_RFKILL_LEDS
+> -	if (rfkill->led_trigger.name)
+> +	if (rfkill->led_trigger.name) {
+>  		led_trigger_unregister(&rfkill->led_trigger);
+> +		rfkill->led_trigger.name = NULL;
+> +	}
+>  #endif
+>  }
+>  
+> @@ -627,8 +629,8 @@ int rfkill_register(struct rfkill *rfkill)
+>  
+>  	error = device_add(dev);
+>  	if (error) {
+> -		rfkill_led_trigger_unregister(rfkill);
+>  		rfkill_remove_switch(rfkill);
+> +		rfkill_led_trigger_unregister(rfkill);
+>  		return error;
+>  	}
+>  
 
-Have you configured the card with YaST?
-
-Larry
 
