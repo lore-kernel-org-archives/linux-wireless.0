@@ -1,47 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:8584 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016AbYGYQBR (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:14299 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754581AbYGSODP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2008 12:01:17 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so2100581waf.23
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2008 09:01:16 -0700 (PDT)
-Message-ID: <69e28c910807250901q1f5924ambeb30a15e785b05a@mail.gmail.com> (sfid-20080725_180120_784072_FE5A9055)
-Date: Fri, 25 Jul 2008 18:01:16 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: Re: WLAN regression before this morning
-Cc: free_beer_for_all@yahoo.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4889F7D6.4010706@lwfinger.net>
+	Sat, 19 Jul 2008 10:03:15 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so250599nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2008 07:03:13 -0700 (PDT)
+To: John Linville <linville@tuxdriver.com>
+Subject: Please pull 'upstream' branch of rt2x00
+Date: Sat, 19 Jul 2008 16:15:22 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <761713.15647.qm@web46115.mail.sp1.yahoo.com>
-	 <4889F7D6.4010706@lwfinger.net>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200807191615.22752.IvDoorn@gmail.com> (sfid-20080719_160319_381709_D23C90C4)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 25, 2008 at 5:57 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> I too have a problem with wireless in the current 2.6.26-gitX kernels. If
-> you have done the git pull, you can try bisecting to find the problem. Use
-> 'git bisect good v2.6.26' to mark a known good point. If you don't wish to
-> take the time bisecting, then issue a 'git checkout v2.6.26'. That should
-> give you a kernel that works.
->
-> Larry
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Hi John,
 
-I am also seeing problems - although I can connect to networks (with
-zd1211rw, ath5k & sometimes with b43), it disconnects after about 2
-minutes with a sudden "Removed STA"/"Destroyed STA" pair (no "assume
-out of range" or anything). However, if I use wpa_supplicant to
-connect to wepped networks (rather than just "iwconfig wlan0 essid
-<ESSID> key s:<ASCII key>"), the problem goes away, and the connection
-is stable for hours.
+Here is the updated patch series,
+I have dropped the compile warning patch because Johannes has
+already send it before, the EIFS patch has been updated to use the
+correct definition instead of hardcoding the value, and some
+coding style fixes went into Iwo's patches.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Patches are still intended for 2.6.27
+
+Ivo
+
+---
+The following changes since commit a520bdbe7d344296482f9355e29b0018ea58760f:
+  John W. Linville (1):
+        iwl-scan.c: fixup merge damage in wireless-testing#master
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git/ upstream
+
+Ivo van Doorn (2):
+      rt2x00: Remove duplicate declaration
+      rt2x00: Fix EIFS timing value
+
+Iwo Mergler (3):
+      rt2x00: Support for large vendor requests
+      rt2x00: Large vendor requests for rt73usb firmware upload and beacons
+      rt2x00: Fix the beacon length bug
+
+ drivers/net/wireless/rt2x00/rt2500usb.c    |   12 ++++++
+ drivers/net/wireless/rt2x00/rt2x00.h       |    5 ++-
+ drivers/net/wireless/rt2x00/rt2x00config.c |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00lib.h    |    7 ----
+ drivers/net/wireless/rt2x00/rt2x00usb.c    |   32 +++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2x00usb.h    |   22 +++++++++++-
+ drivers/net/wireless/rt2x00/rt73usb.c      |   52 +++++++++++----------------
+ 7 files changed, 90 insertions(+), 42 deletions(-)
