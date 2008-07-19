@@ -1,59 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:4497 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757898AbYGUBNa (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58536 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751720AbYGSAwF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2008 21:13:30 -0400
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1212415137.21075.10.camel@localhost.localdomain>
-References: <1212354884.4722.26.camel@deadeye.i.decadent.org.uk>
-	 <1212415137.21075.10.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Nql5g9kDPDusgJPxInES"
-Date: Mon, 21 Jul 2008 02:12:00 +0100
-Message-Id: <1216602720.5858.33.camel@deadeye.i.decadent.org.uk> (sfid-20080721_031353_599397_D8497B57)
+	Fri, 18 Jul 2008 20:52:05 -0400
+Subject: Re: [RFC 3/3] mac80211: fix requeue race
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: David Miller <davem@davemloft.net>,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <20080719004518.846156000@sipsolutions.net> (sfid-20080719_024555_879060_770F8C6B)
+References: <20080719004147.795661000@sipsolutions.net>
+	 <20080719004518.846156000@sipsolutions.net>
+	 (sfid-20080719_024555_879060_770F8C6B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UOu6zb0TdA07RCEb3gol"
+Date: Sat, 19 Jul 2008 02:52:00 +0200
+Message-Id: <1216428721.27738.67.camel@johannes.berg> (sfid-20080719_025209_394099_D0D8A251)
 Mime-Version: 1.0
-Subject: Re: IW_SCAN_CAPA_ESSID vs hidden ESSID
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-Nql5g9kDPDusgJPxInES
+--=-UOu6zb0TdA07RCEb3gol
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2008-06-02 at 09:58 -0400, Dan Williams wrote:
-<snip>
-> One issue with ipw2200 specifically is that it does aggressive
-> background scans, and those background scans will supercede a scan
-> request for a direct SSID scan.  I posted a patch for that issue to
-> linux-wireless@ but need to rework some bits of it.  That made the issue
-> significantly better.
->=20
-> If possible, can you apply the attached patch and rebuild and see if
-> that helps it?
 
-Somehow I never got round to doing this.  But I see that a similar patch
-from you made it into v2.6.26, so I applied that and it did fix the
-problem.  Thanks a lot!
+> +	/*
+> +	 * We just requeued the all the frames that were in the
+> +	 * removed queue, and since we might miss a softirq we do
+> +	 * netif_schedule_queue.  ieee80211_wake_queue is not used
+> +	 * here as this queue is not necessarily stopped
+> +	 */
+> +	netif_schedule_queue(netdev_get_tx_queue(local->mdev, agg_queue));
 
-Ben.
+Come to think of it, we should probably do
 
---=20
-Ben Hutchings
-Once a job is fouled up, anything done to improve it makes it worse.
+netif_schedule_queue(netdev_get_tx_queue(local->mdev, ieee802_1d_to_ac[tid]=
+));
 
---=-Nql5g9kDPDusgJPxInES
+since we just drained that agg_queue in favour of the tid one.
+
+instead
+
+--=-UOu6zb0TdA07RCEb3gol
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iD8DBQBIg+Jb79ZNCRIGYgcRApwzAJ4hzFKxPh+PbQDBkTo0SQsogq//BgCfYvfs
-80Rfnzn9L4f4oCWwacFA2wU=
-=vC+V
+iQIcBAABAgAGBQJIgTqtAAoJEKVg1VMiehFYX3QP/Alp1fbh3DyCsThVhbgUG6Fv
+o4kgG4KMN/SSMpgxabsZHozmwzRgdQuGi8f9QdS3n6UkPTbnaNoavSyTAuFc94+F
+GIpa14SQGb4PLGsYXiQL0x5n7kS4hAKVc7jCSO48CHsl2zCwgzEdRbmwR1REq3kt
+/cCWXzqpJjrMp4arhtV2pYV5CVJ9J1Jo5YZiWP97IejB4aKGsk7om5rKdM6Mg/dB
+btoNZVMkA91Oq/OsdSfmGdBvjDX/FXhdkmQu8yRraL/YNUzMt3EoIreI2oy7/pLb
+xUfouo8ehG3f5shWEklEpApQVK7iuOKJBOhrwWjOjS6JiTz7jLDP4baExWpxSkjD
+uQ4RY3LLC//QWiidUOVmjmcPey8QCEoB5PEGDRskT+D6Fc/zxJ5qnyrubHaqefmV
+iFSBG9WaLEzQz5K/iL4qN+jWgOzAeCUh0uZpiO/PvqLUo4C5o7m6R6H2J0U/BYMf
+93pH/7MW/3CDTN/OYJahGEWDqay28Vx6cfH5oex4WulGHxjinnOxcKP+Z8aMTJJS
+ELma67Ll01ydamp0hWfjyLKvG8Qr1PTbZilK8A1nCTGaPx1nkYua8SaSKyoHaYBZ
+ghilQ+ZjKMEk178Zs3k8dD9VnzBp07rAfdtVEazPmmtTkH6i1xPPbvNMetXZS79A
+RMsUkXxtXPbL2r6aKBzr
+=IXtc
 -----END PGP SIGNATURE-----
 
---=-Nql5g9kDPDusgJPxInES--
+--=-UOu6zb0TdA07RCEb3gol--
+
