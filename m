@@ -1,62 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n11b.bullet.mail.mud.yahoo.com ([209.191.125.178]:35396 "HELO
-	n11b.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756384AbYGBObQ (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51774
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750736AbYGSD7E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2008 10:31:16 -0400
-Message-ID: <486B8FCF.8080201@yahoo.it> (sfid-20080702_163120_395468_EB5E0E34)
-Date: Wed, 02 Jul 2008 16:25:19 +0200
-From: Filippo Zangheri <filippo.zangheri@yahoo.it>
-MIME-Version: 1.0
-To: Darren Jenkins <darrenrjenkins@gmail.com>
-CC: kernel Janitors <kernel-janitors@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	ipw2100-admin@linux.intel.com, yi.zhu@intel.com,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH]  drivers/net/wireless/iwlwifi/iwl-3945.c
-References: <1214962647.18261.15.camel@localhost.localdomain>
-In-Reply-To: <1214962647.18261.15.camel@localhost.localdomain>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 18 Jul 2008 23:59:04 -0400
+Date: Fri, 18 Jul 2008 20:59:02 -0700 (PDT)
+Message-Id: <20080718.205902.180487935.davem@davemloft.net> (sfid-20080719_055939_015787_D005FBE4)
+To: kaber@trash.net
+Cc: netdev@vger.kernel.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
+ RCU.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <487F4327.1000107@trash.net>
+References: <20080717.051726.226040470.davem@davemloft.net>
+	<487F4327.1000107@trash.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Cc'ing linux-wireless)
+From: Patrick McHardy <kaber@trash.net>
+Date: Thu, 17 Jul 2008 15:03:35 +0200
 
-On 02/07/2008 03:37, Darren Jenkins\ wrote:
-> G'day people
->=20
-> Coverity CID: 2265 NEGATIVE_RETURNS
->=20
-> "rate" is of an unsigned type, and the code requires a signed type.
-> The following patch makes it so.
->=20
-> Only compile tested.
->=20
-> =EF=BB=BFSigned-off-by: Darren Jenkins <darrenrjenkins@gmailcom>
->=20
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wi=
-reless/iwlwifi/iwl-3945.c
-> index 62a3d8f..31d38cd 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-> @@ -449,7 +449,7 @@ static void iwl3945_dbg_report_frame(struct iwl39=
-45_priv *priv,
-> =20
->  	if (print_summary) {
->  		char *title;
-> -		u32 rate;
-> +		int rate;
-> =20
->  		if (hundred)
->  			title =3D "100Frames";
+> The remaining problem is data that was previously only used and
+> modified under the RTNL (u32_list is one example). Modifications
+> during destruction now need protection against concurrent use in
+> process context.
 
---=20
-=46ilippo Zangheri
+I took a closer look at u32_list.
 
-GPG key ID: 0x6C1F2F2F
+It's members seem to be keyed by qdisc :-)
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+All this thing is doing is making up for the lack of a classifier
+private pointer in the Qdisc.
+
+It's tough because classifiers of different types can be queued
+up to a qdisc, so it's not like we can add one traffic classifier
+private pointer to struct Qdisc and be done with it.
+
+However, I could not find anything other than u32 that seems to need
+some global state that works like this.
+
+So what I've done is checked in the following change for now to make
+u32 delete operation safe entirely within a qdisc tree's namespace.
+
+pkt_sched: Get rid of u32_list.
+
+The u32_list is just an indirect way of maintaining a reference
+to a U32 node on a per-qdisc basis.
+
+Just add an explicit node pointer for u32 to struct Qdisc an do
+away with this global list.
+
+Signed-off-by: David S. Miller <davem@davemloft.net>
+
+diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
+index 0a158ff..8a44386 100644
+--- a/include/net/sch_generic.h
++++ b/include/net/sch_generic.h
+@@ -56,6 +56,8 @@ struct Qdisc
+ 	int			(*reshape_fail)(struct sk_buff *skb,
+ 					struct Qdisc *q);
+ 
++	void			*u32_node;
++
+ 	/* This field is deprecated, but it is still used by CBQ
+ 	 * and it will live until better solution will be invented.
+ 	 */
+diff --git a/net/sched/cls_u32.c b/net/sched/cls_u32.c
+index 4d75544..527db25 100644
+--- a/net/sched/cls_u32.c
++++ b/net/sched/cls_u32.c
+@@ -75,7 +75,6 @@ struct tc_u_hnode
+ 
+ struct tc_u_common
+ {
+-	struct tc_u_common	*next;
+ 	struct tc_u_hnode	*hlist;
+ 	struct Qdisc		*q;
+ 	int			refcnt;
+@@ -87,8 +86,6 @@ static const struct tcf_ext_map u32_ext_map = {
+ 	.police = TCA_U32_POLICE
+ };
+ 
+-static struct tc_u_common *u32_list;
+-
+ static __inline__ unsigned u32_hash_fold(__be32 key, struct tc_u32_sel *sel, u8 fshift)
+ {
+ 	unsigned h = ntohl(key & sel->hmask)>>fshift;
+@@ -287,9 +284,7 @@ static int u32_init(struct tcf_proto *tp)
+ 	struct tc_u_hnode *root_ht;
+ 	struct tc_u_common *tp_c;
+ 
+-	for (tp_c = u32_list; tp_c; tp_c = tp_c->next)
+-		if (tp_c->q == tp->q)
+-			break;
++	tp_c = tp->q->u32_node;
+ 
+ 	root_ht = kzalloc(sizeof(*root_ht), GFP_KERNEL);
+ 	if (root_ht == NULL)
+@@ -307,8 +302,7 @@ static int u32_init(struct tcf_proto *tp)
+ 			return -ENOBUFS;
+ 		}
+ 		tp_c->q = tp->q;
+-		tp_c->next = u32_list;
+-		u32_list = tp_c;
++		tp->q->u32_node = tp_c;
+ 	}
+ 
+ 	tp_c->refcnt++;
+@@ -402,14 +396,8 @@ static void u32_destroy(struct tcf_proto *tp)
+ 
+ 	if (--tp_c->refcnt == 0) {
+ 		struct tc_u_hnode *ht;
+-		struct tc_u_common **tp_cp;
+ 
+-		for (tp_cp = &u32_list; *tp_cp; tp_cp = &(*tp_cp)->next) {
+-			if (*tp_cp == tp_c) {
+-				*tp_cp = tp_c->next;
+-				break;
+-			}
+-		}
++		tp->q->u32_node = NULL;
+ 
+ 		for (ht = tp_c->hlist; ht; ht = ht->next) {
+ 			ht->refcnt--;
