@@ -1,60 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:48655 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754888AbYGOKmJ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51549 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750989AbYGSRm3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 06:42:09 -0400
-Received: by py-out-1112.google.com with SMTP id p76so3026489pyb.10
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2008 03:42:08 -0700 (PDT)
-Message-ID: <1ba2fa240807150342p626f0c24pf1a5551a5782550@mail.gmail.com> (sfid-20080715_124214_702949_C73C8AF0)
-Date: Tue, 15 Jul 2008 13:42:07 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by low level driver
-Cc: "Kalle Valo" <kalle.valo@nokia.com>, linville@tuxdriver.com,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1216111261.3535.7.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
-	 <1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
-	 <1216039127.11189.15.camel@johannes.berg>
-	 <1ba2fa240807140546w4f08e32l59ed88dfa1b86403@mail.gmail.com>
-	 <87fxqcoaue.fsf@nokia.com> <1216109543.23746.21.camel@johannes.berg>
-	 <1ba2fa240807150129v4906b7bcyba66ab62b57c5d71@mail.gmail.com>
-	 <1216111261.3535.7.camel@johannes.berg>
+	Sat, 19 Jul 2008 13:42:29 -0400
+Subject: Re: mac80211 deadlock detection triggering with rt61pci
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <200807191647.13517.IvDoorn@gmail.com> (sfid-20080719_163233_686652_A73747AF)
+References: <1216197369.3422.5.camel@johannes.berg>
+	 <200807182120.47252.IvDoorn@gmail.com>
+	 <200807191647.13517.IvDoorn@gmail.com>
+	 (sfid-20080719_163233_686652_A73747AF)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QdRSIYQXEE0cBodtpR3I"
+Date: Sat, 19 Jul 2008 19:42:22 +0200
+Message-Id: <1216489342.29432.5.camel@johannes.berg> (sfid-20080719_194253_064149_145BEE8D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 15, 2008 at 11:41 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2008-07-15 at 11:29 +0300, Tomas Winkler wrote:
->
->> We are providing power save user interface reach enough to specify all
->> the above requirements.
->> I think you are both misinterpreting listen interval meaning.
->> Listen interval merely says to AP for how many beacons save direct
->> packets for this STA. It doesn't mean
->> it's can be shorter and it  does say it's won't be longer.
->
-> Right, but it does make sense to advertise what we're using, and this
-> patch just adds a strict "driver tells mac80211 what it's using" flow.
-> That's mostly what I'm objecting to. If you were calling the variable
-> "max_listen_interval" and having mac80211 send it back to the driver in
-> the BSS config as bssconf->listen_interval, and, for now, simply use the
-> max, I wouldn't have a problem with it.
 
-Okay will work for me, although I think it's just overhead in this
-stage and  I doubt it will ever be utilized.
-Will submit V2
+--=-QdRSIYQXEE0cBodtpR3I
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->> It's
->> doesn't affect power save dynamics it's just sets upper limit.
->> This value for iwlwifi hw is derived from maximal supported  beacon
->> interval and size of the internal HW timers.
->> This value is hard coded in the driver.
->
-> Shouldn't it depend on the beacon interval then?
+On Sat, 2008-07-19 at 16:47 +0200, Ivo van Doorn wrote:
+> On Friday 18 July 2008, Ivo van Doorn wrote:
 
-Yes, but why to complicate things if not needed.
-Tomas
+> It might be me, but looking at those traces, aren't they triggered by:
+>=20
+> static int ieee80211_tx(struct net_device *dev, struct sk_buff *skb)
+> {
+> ...
+> 		if (WARN_ON(queue >=3D ieee80211_num_regular_queues(&local->hw)))
+> 			goto drop;
+> ...
+> }
+>=20
+> Which would suggest that when MAC80211_QOS is disabled, the skb_queue_map=
+ping
+> still returns something higher then 1.
+
+Oh, interesting, could be, I'll check it out.
+
+johannes
+
+--=-QdRSIYQXEE0cBodtpR3I
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIgid6AAoJEKVg1VMiehFYEAwP/jX0uCFq7IpUzu8DPPLW0+Fh
+kZ1LQGT/T+6/MW4Psp6Rx5N3svEi5YPA4UaBvUoVntlwL2MZvWHBbYRq/Q49qerm
+mXShOCs2z3+/QYXs71VJwigipgmpg52ltmD5biuEFZerBhAucQrTiY6Lt+PcYzMf
+cqBiuwEst/Spt6Nmz8ufJgXEKQE9S6tWqbrD/63EPX/7WP0RxPCW9ozftxlPOzoW
+Kch9j+jlSYTq1y0PJJYET4Y8paHDi9Ht+P529c6PSj6E3sfYZl1glj9MEJWixdZn
+2qD4jExsrPfcryzXJL5nE5bLofVLC3NSjSYjmTro26hsok+Rn5UTAzepYNBvC0i1
+9Ith36TQ+O5Z7MTkE+e00koCKvzaQFq7xap5SziBVSecJQcMGqOvRl7tc0wE6x0/
+bugkxrnGrk09SfugeyXir3wgHmXpj67CacLEMY9+Nua0vuhSNk2GDa5qGQmtXObj
+vFl9DGHsC3HFyU/FlPtLhFBSJaMDzGZSVePicYVsVBFqYbLQDdUunWawtFP6TZL5
+W8xdvsIBNvKelQQxoLMrfQKDK/vmRBk5ETFp1SXMm9/U/XgGTtMQiAQehnUy/3WE
+jTpSIsqL2IaEmBJ+OGtEbaTRPKFKhjp7FohFFgG/JtT5Xu/ab/VT4uLN1p9A8+8A
+EeXfa2u9k1bPews7YCIZ
+=zvlD
+-----END PGP SIGNATURE-----
+
+--=-QdRSIYQXEE0cBodtpR3I--
+
