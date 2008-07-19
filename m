@@ -1,62 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:51488 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751414AbYGXHAZ (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:14299 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753172AbYGSODR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2008 03:00:25 -0400
-Subject: Re: Kernel WARNING: at net/core/dev.c:1330
-	__netif_schedule+0x2c/0x98()
-From: Peter Zijlstra <peterz@infradead.org>
-To: David Miller <davem@davemloft.net>
-Cc: jarkao2@gmail.com, Larry.Finger@lwfinger.net, kaber@trash.net,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, mingo@redhat.com
-In-Reply-To: <20080723.131441.200166513.davem@davemloft.net>
-References: <1216806614.7257.152.camel@twins>
-	 <20080723101352.GD4561@ff.dom.local> <1216810696.7257.175.camel@twins>
-	 <20080723.131441.200166513.davem@davemloft.net>
-Content-Type: text/plain
-Date: Thu, 24 Jul 2008 09:00:23 +0200
-Message-Id: <1216882823.7257.229.camel@twins> (sfid-20080724_090031_047086_7B7192BC)
-Mime-Version: 1.0
+	Sat, 19 Jul 2008 10:03:17 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so250599nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2008 07:03:16 -0700 (PDT)
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 2/5] rt2x00: Fix EIFS timing value
+Date: Sat, 19 Jul 2008 16:16:12 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	Olivier Cornu <o.cornu@gmail.com>
+References: <200807191615.22752.IvDoorn@gmail.com> <200807191615.42755.IvDoorn@gmail.com>
+In-Reply-To: <200807191615.42755.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200807191616.13129.IvDoorn@gmail.com> (sfid-20080719_160321_683540_E5D6E1F9)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-07-23 at 13:14 -0700, David Miller wrote:
-> From: Peter Zijlstra <peterz@infradead.org>
-> Date: Wed, 23 Jul 2008 12:58:16 +0200
-> 
-> > So I guess my question is, is netif_tx_lock() here to stay, or is the
-> > right fix to convert all those drivers to use __netif_tx_lock() which
-> > locks only a single queue?
-> 
-> It's staying.
-> 
-> It's trying to block all potential calls into the ->hard_start_xmit()
-> method of the driver, and the only reliable way to do that is to take
-> all the TX queue locks.  And in one form or another, we're going to
-> have this "grab/release all the TX queue locks" construct.
-> 
-> I find it interesting that this cannot be simply described to lockdep
-> :-)
+Olivier reported a difference between the EIFS
+values used in the legacy driver and the one in
+the rt2x00 drivers.
 
-If you think its OK to take USHORT_MAX locks at once, I'm afraid we'll
-have to agree to disagree :-/
+In rt2x00 the value was
+	( SIFS + (8 * (IEEE80211_HEADER + ACK_SIZE)) )
+which comes down to 314us while the legacy driver uses the value 364us
 
-Thing is, lockdep wants to be able to describe the locking hierarchy
-with classes, and each class needs to be in static storage for various
-reasons.
+This was caused because EIFS is: SIFS + DIFS + AckTime
+This patch will fix this by adding the DIFS by the above value,
+and creating a SHORT_EIFS define which uses the SHORT_DIFS.
 
-So if you make a locking hierarchy that is USHORT_MAX deep, you need at
-least that amount of static classes.
+Reported-by: Olivier Cornu <o.cornu@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h       |    5 ++++-
+ drivers/net/wireless/rt2x00/rt2x00config.c |    2 +-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-Also, you'll run into the fact that lockdep will only track like 48 held
-locks, after that it self terminates.
-
-I'm aware of only 2 sites in the kernel that break this limit. The
-down-side of stretching this limit is that deep lock chains come with
-costs (esp so on -rt), so I'm not particularly eager to grow this - it
-might give the impresssion its a good idea to have very long lock
-chains.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 9fab0df..fe5ee8a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -108,7 +108,10 @@
+ #define SHORT_PIFS		( SIFS + SHORT_SLOT_TIME )
+ #define DIFS			( PIFS + SLOT_TIME )
+ #define SHORT_DIFS		( SHORT_PIFS + SHORT_SLOT_TIME )
+-#define EIFS			( SIFS + (8 * (IEEE80211_HEADER + ACK_SIZE)) )
++#define EIFS			( SIFS + DIFS + \
++				  (8 * (IEEE80211_HEADER + ACK_SIZE)) )
++#define SHORT_EIFS		( SIFS + SHORT_DIFS + \
++				  (8 * (IEEE80211_HEADER + ACK_SIZE)) )
+ 
+ /*
+  * Chipset identification
+diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+index f20ca71..3f89516 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+@@ -271,7 +271,7 @@ config:
+ 		libconf.sifs = SIFS;
+ 		libconf.pifs = short_slot_time ? SHORT_PIFS : PIFS;
+ 		libconf.difs = short_slot_time ? SHORT_DIFS : DIFS;
+-		libconf.eifs = EIFS;
++		libconf.eifs = short_slot_time ? SHORT_EIFS : EIFS;
+ 	}
+ 
+ 	libconf.conf = conf;
+-- 
+1.5.6.1
 
