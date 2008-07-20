@@ -1,33 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:51826 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756545AbYGGVKK (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37099
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1757864AbYGTRfq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2008 17:10:10 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so517214yxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2008 14:10:09 -0700 (PDT)
-Message-ID: <69e28c910807071410h17cd6815jd6577673f73dc092@mail.gmail.com> (sfid-20080707_231014_750400_F0F78358)
-Date: Mon, 7 Jul 2008 23:10:08 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Subject: Re: [Rt2400-devel] rt2500pci: Failed to initialize hw. But works with ancient rt2500-1.1.0
-Cc: rt2400-devel@lists.sourceforge.net,
-	"Stefan Bauer" <stefan.bauer@cs.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <200807072308.57529.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200807072253.46295.stefan.bauer@cs.tu-chemnitz.de>
-	 <200807072308.57529.IvDoorn@gmail.com>
+	Sun, 20 Jul 2008 13:35:46 -0400
+Date: Sun, 20 Jul 2008 10:35:46 -0700 (PDT)
+Message-Id: <20080720.103546.238638632.davem@davemloft.net> (sfid-20080720_193550_041348_6313D2BC)
+To: tomasw@gmail.com
+Cc: hadi@cyberus.ca, kaber@trash.net, netdev@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
+ RCU.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1ba2fa240807201034u1fbe3343tdcc858f7772d2b39@mail.gmail.com>
+References: <1216566963.4847.81.camel@localhost>
+	<20080720.102534.246150854.davem@davemloft.net>
+	<1ba2fa240807201034u1fbe3343tdcc858f7772d2b39@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 7, 2008 at 11:08 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> Check if the arc4 and ecb modules are loaded before loading mac80211 & rt2500pci.
->
-> Ivo
+From: "Tomas Winkler" <tomasw@gmail.com>
+Date: Sun, 20 Jul 2008 20:34:18 +0300
 
-Shouldn't we make mac80211 depend on arc4 and ecb?
+> On Sun, Jul 20, 2008 at 8:25 PM, David Miller <davem@davemloft.net> wrote:
+> > From: jamal <hadi@cyberus.ca>
+> > Date: Sun, 20 Jul 2008 11:16:03 -0400
+> >
+> >> IMO, in the case of multiple hardware queues per physical wire,
+> >> and such a netdevice already has a built-in hardware scheduler (they all
+> >> seem to have this feature) then if we can feed the hardware queues
+> >> directly, theres no need for any intermediate buffer(s).
+> >> In such a case, to compare with qdisc arch, its like the root qdisc is
+> >> in hardware.
+> >
+> > They tend to implement round-robin or some similar fairness algorithm
+> > amongst the queues, with zero concern about packet priorities.
+> >
+> > It really is just like a bunch of queues to the phsyical layer,
+> > fairly shared.
+> >
+> > These things are built for parallelization, not prioritization.
+> 
+> Except wireless where HW has prioritizing scheduler per physical non-wire.
+> Tomas
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+I know that.  We're talking about multiqueue ethernet NICs.
