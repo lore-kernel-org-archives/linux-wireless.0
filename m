@@ -1,58 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:51707 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758813AbYGUDR1 (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.176]:28832 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757938AbYGTPQH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2008 23:17:27 -0400
-Date: Mon, 21 Jul 2008 11:17:16 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: jamal <hadi@cyberus.ca>
-Cc: kaber@trash.net, davem@davemloft.net, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in	RCU.
-Message-ID: <20080721031716.GA7535@gondor.apana.org.au> (sfid-20080721_051733_774871_A79863BA)
-References: <E1KKZmE-0000ty-00@gondolin.me.apana.org.au> <1216568119.4847.101.camel@localhost> <20080721001119.GA6515@gondor.apana.org.au> <1216607637.4847.172.camel@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1216607637.4847.172.camel@localhost>
+	Sun, 20 Jul 2008 11:16:07 -0400
+Received: by py-out-1112.google.com with SMTP id p76so815846pyb.10
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2008 08:16:06 -0700 (PDT)
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
+	RCU.
+From: jamal <hadi@cyberus.ca>
+Reply-To: hadi@cyberus.ca
+To: David Miller <davem@davemloft.net>
+Cc: kaber@trash.net, netdev@vger.kernel.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080718.140539.122169028.davem@davemloft.net>
+References: <487FDA67.30902@trash.net> <1216386624.4833.94.camel@localhost>
+	 <1216387641.4833.96.camel@localhost>
+	 <20080718.140539.122169028.davem@davemloft.net>
+Content-Type: text/plain
+Date: Sun, 20 Jul 2008 11:16:03 -0400
+Message-Id: <1216566963.4847.81.camel@localhost> (sfid-20080720_171617_817493_710F61EF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 20, 2008 at 10:33:57PM -0400, jamal wrote:
+On Fri, 2008-18-07 at 14:05 -0700, David Miller wrote:
+
+> The fundamental issue is what we believe qdiscs schedule, do they
+> schedule a device, or do they schedule what their namesake implies,
+> "queues"?
+
+In the simple case of a single hardware queue/ring, the mapping between
+a hardware queue and "physical wire" is one-to-one.
+So in that case one could argue the root qdiscs are scheduling a device.
+
+> Logically once we have multiple queues, we schedule queues.
+> Therefore what probably makes sense is that for mostly stateless
+> priority queueing such as pfifo_fast, doing prioritization at the
+> queue level is OK.
+
+IMO, in the case of multiple hardware queues per physical wire,
+and such a netdevice already has a built-in hardware scheduler (they all
+seem to have this feature) then if we can feed the hardware queues
+directly, theres no need for any intermediate buffer(s).
+In such a case, to compare with qdisc arch, its like the root qdisc is
+in hardware.
+
+The only need for intermediate s/ware queues is for cases of congestion.
+If you could have a single software queue for each hardware queue, then
+you still have the obligation of correctness to make sure higher prio
+hardware rings get fed with packets first (depending on the hardwares
+scheduling capability).
+
+> But where non-trivial classification occurs, we have to either:
 > 
-> True. 
-> But note: this is only during rule creation - once you create the
-> rule (user space to kernel path), then no more hash table reference.
-> Fast path has already a filter with actions attached, and is a mere
-> pointer dereference.
-
-Unfortunately the scenario that I wrote this for requires frequent
-addition/removal.
-
-> > We could do a dynamic table but so far I'm not convinced that
-> > it's worth anybody's effort to implement :)
+> 1) Make the queue selection match what the classifiers would do
+>    exactly.
 > 
-> If user<->kernel performance insertion/deletion is important, it is
-> worth it.
+> OR
+> 
+> 2) Point all the queues at a single device global qdisc.
+> 
+> What we have now implements #2.  Later on we can try to do something
+> as sophisticated as #1.
 
-Only if you also want to share it :) In the end I patched it to
-not share it which is much easier.
+sure; i think you could achieve the goals by using the single queue with
+a software pfifo_fast which maps skb->prio to hardware queues. such a
+pfifo_fast may even sit in the driver. This queue will always be empty
+unless you have congestion. The other thing is to make sure there is an
+upper bound to the size of this queue; otherwise a remote bug could
+cause it to grow infinitely and consume all memory.
 
-> For example:
-> Dave implemented dynamic hash tables on xfrm (voip setup time with ipsec
-> is a metric used in the industry in that case) . The only operational
-> problem i had with xfrm was lack of an upper bound of how large a table
-> can grow; i would rather user space be told ENOMEM than continuing to
-> grow in some cases (I actually implemented a patch which put a stop
-> after a certain number of sad/spd - but i dont expect hugs if i was to
-> post it;->).
+cheers,
+jamal
 
-Of course if you're volunteering to write the dynamic hash table
-for actions then I'd happily switch back to sharing :)
 
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+
+
