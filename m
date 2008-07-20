@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:6863 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752969AbYGNMqm (ORCPT
+Received: from ruslug.rutgers.edu ([165.230.139.146]:44122 "EHLO
+	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755079AbYGTCnr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 08:46:42 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so2385624ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2008 05:46:41 -0700 (PDT)
-Message-ID: <1ba2fa240807140546w4f08e32l59ed88dfa1b86403@mail.gmail.com> (sfid-20080714_144648_163524_E6E0D429)
-Date: Mon, 14 Jul 2008 15:46:41 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by low level driver
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1216039127.11189.15.camel@johannes.berg>
+	Sat, 19 Jul 2008 22:43:47 -0400
+Date: Sat, 19 Jul 2008 22:43:41 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 0/4] Atheros IEEE 802.11n ath9k driver
+Message-ID: <20080720024341.GQ17936@ruslug.rutgers.edu> (sfid-20080720_044359_648096_BFA4A85A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
-	 <1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
-	 <1216039127.11189.15.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 14, 2008 at 3:38 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-07-14 at 15:31 +0300, Tomas Winkler wrote:
->> This patch makes listen_interval configurable by low level driver.
->
-> I'm not sure we we really want that.
->
-> With this, you're again putting more features and more decision making
-> processes with the driver, I would much prefer this to be worked out in
-> mac80211 so we can do it across all drivers.
->
-> If this is a knob that should be adjusted then we want to enable users
-> to do it, and if it isn't then we can put a value into mac80211 and fix
-> it. Having drivers make these kinds of decisions is very bad for uniform
-> wireless behaviour.
+This series of patches adds the ath9k driver, which adds support
+for all Atheors IEEE 802.11n chipsets along some new linked list
+helpers. We are hosting this driver temporarily in a git tree until
+it is merged into wireless-testing.
 
-The same story as with beacon interval. This is for the power
-management. It's really hw dependent for how many beacons we can stay
-dormant. I really don't know what other vendors do and user should not
-guess this.
-Thanks
-Tomas
+More information about this driver is available at:
 
-> johannes
->
+http://wireless.kernel.org/en/users/Drivers/ath9k
+
+Our mailing list for this driver is:
+
+https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+
+The temporary git URL to build this driver separately is:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/ath9k.git
+
+If you would like to wget these patches individually you can
+get them here:
+
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/
+
+We realize there is a lot of work ahead and look forward to
+any comments on the driver. As it stands this has been mainly tested
+only on STA mode. We have a few known issues but are working hard
+on resolving them.
+
+We are eager to talk to others about this driver further at the
+Wireless summit.
+
+Note: kernel.org is rsyncing right now, so in the meantime you can
+fetch the patches and source from the git tree from:
+
+git://w1.fi/srv/git/ath9k.git
+
+http://w1.fi/ath9k/
+
+  Luis
