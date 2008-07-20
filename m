@@ -1,60 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46542
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753101AbYGRVFj (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:41230 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755201AbYGTCzS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 17:05:39 -0400
-Date: Fri, 18 Jul 2008 14:05:39 -0700 (PDT)
-Message-Id: <20080718.140539.122169028.davem@davemloft.net> (sfid-20080718_230544_760140_7F5D2CF3)
-To: hadi@cyberus.ca
-Cc: kaber@trash.net, netdev@vger.kernel.org, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
- RCU.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1216387641.4833.96.camel@localhost>
-References: <487FDA67.30902@trash.net>
-	<1216386624.4833.94.camel@localhost>
-	<1216387641.4833.96.camel@localhost>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 19 Jul 2008 22:55:18 -0400
+Message-ID: <4882A910.4040408@lwfinger.net> (sfid-20080720_045530_211672_F10C57B7)
+Date: Sat, 19 Jul 2008 21:55:12 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+Subject: Re: [RFC/RFT] rtl8187: Improve wireless statistics for RTL8187B
+References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>	 <200807182142.59921.herton@mandriva.com.br>	 <48816A43.1050903@lwfinger.net> <3ace41890807191739t5969f38au170e4b73a3d0b7de@mail.gmail.com>
+In-Reply-To: <3ace41890807191739t5969f38au170e4b73a3d0b7de@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: jamal <hadi@cyberus.ca>
-Date: Fri, 18 Jul 2008 09:27:21 -0400
-
-> On Fri, 2008-18-07 at 09:10 -0400, jamal wrote:
+Hin-Tak Leung wrote:
 > 
-> > wire still even on multiple rings;->
-> > If Woz (really) showed up at 9am and the Broussards at 3 am[1] on that
-> > single (congestion-buffering) FIFO waiting for the shop/wire to open up,
-> > then Woz should jump the queue (if he deserves it) when shop opens at
-> > 10am.
+> I am on x86_64 and I am on a similar situation - I am using the
+> rawhide kernels from:
+> http://koji.fedoraproject.org/koji/packageinfo?packageID=8
+> and the last one that worked for me is kernel-2.6.25.11-92.fc9 - something in
+> kernel-2.6.25.11-93.fc9 broke connectivity. Apparently the difference
+> is this set of changes:
+> http://marc.info/?l=linux-wireless&m=121606436000705&w=2
 > 
-> Sorry, the url of Woz allegedly jumping the queue:
-> http://news.cnet.com/8301-1023_3-9989823-93.html?hhTest=1%C3%A2%C2%88%
-> C2%82=rss&subj=news&tag=2547-1_3-0-20
+> I just don't feel like mentioning it earlier because I had mistakenly
+> complained about Herton's
+> last patch and I don't want to make the same mistake - and I did test
+> it. Beside Herton's
+>  ANAPARAM*_OFF patch (which I don't think is the source of the
+> problem), there is
+> only one other "rtl8187: Fixed section mismatch in rtl8187_dev.c"
+> change - but that's is also
+> obviously right, and besides, its nature shouldn't affect association
+> anyway; but there is
+> a lot of mac80211 changes elsewhere, and I wonder.
+> 
+> My symptom is that I can authenticate and associate (apparently,
+> according to dmesg)
+> but cannot get an ip address via dhcp. I have tried and just alternate
+> between the two kernels,
+> identical steps, etc and one works and the other doesn't.
+> 
 
-The fundamental issue is what we believe qdiscs schedule, do they
-schedule a device, or do they schedule what their namesake implies,
-"queues"?
+Curious. According to the git log, my copy of the wireless-testing tree has all 
+those patches installed. There must be some really obscure configuration 
+difference, or the rawhide kernel has some unexpected difference with the wl 
+kernels.
 
-Logically once we have multiple queues, we schedule queues.
-
-Therefore what probably makes sense is that for mostly stateless
-priority queueing such as pfifo_fast, doing prioritization at the
-queue level is OK.
-
-But where non-trivial classification occurs, we have to either:
-
-1) Make the queue selection match what the classifiers would do
-   exactly.
-
-OR
-
-2) Point all the queues at a single device global qdisc.
-
-What we have now implements #2.  Later on we can try to do something
-as sophisticated as #1.
+Larry
 
