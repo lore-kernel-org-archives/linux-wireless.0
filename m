@@ -1,63 +1,273 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:49601 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757743AbYGZVmN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jul 2008 17:42:13 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so4897720wfd.4
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Jul 2008 14:42:12 -0700 (PDT)
-Message-ID: <1ba2fa240807261442n1d8c08fcv9384957e3325cecc@mail.gmail.com> (sfid-20080726_234218_728674_417C27A0)
-Date: Sun, 27 Jul 2008 00:42:12 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Junty Mesmon" <jmesmon@gmail.com>
-Subject: Re: [ipw3945-devel] [PATCH] iwlwifi: Enable packet injection for iwl4965
-Cc: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>,
-	"Zhu Yi" <yi.zhu@intel.com>,
-	"=?ISO-8859-1?Q?St=E9phane_Jourdois?=" <stephane@jourdois.fr>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <f2efd86c0807252030t1d73f4ffu8b23d6221f8f3212@mail.gmail.com>
+Received: from venema.h4ckr.net ([217.24.1.135]:42158 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755344AbYGTDru (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Jul 2008 23:47:50 -0400
+Date: Sun, 20 Jul 2008 06:48:29 +0300
+From: Nick Kossifidis <mick@madwifi.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
+Subject: [PATCH 10/12] ath5k: Minor cleanup of phy functions
+Message-ID: <20080720034829.GJ7440@makis> (sfid-20080720_054752_764731_9C7065DA)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <69e28c910807181205m6dd0cdcek83f9717bf1ac9dcc@mail.gmail.com>
-	 <69e28c910807220454q7c8371e1m11b1015ed8398758@mail.gmail.com>
-	 <4885DDC4.2060609@googlemail.com> <4886235F.6010407@jourdois.fr>
-	 <1216951133.2705.227.camel@debian.sh.intel.com>
-	 <69e28c910807251449h6e389cd2n72de63c558338335@mail.gmail.com>
-	 <f2efd86c0807252030t1d73f4ffu8b23d6221f8f3212@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 26, 2008 at 6:30 AM, Junty Mesmon <jmesmon@gmail.com> wrote=
-:
-> If this is the right place to do it, i would like to confirm that i
-> have had success injecting data packets with the stated patchto the
-> iwl4965 driver.
->
-> On Fri, Jul 25, 2008 at 5:49 PM, Stefanik G=E1bor <netrolller.3d@gmai=
-l.com> wrote:
->> 2008/7/25 Zhu Yi <yi.zhu@intel.com>:
->>> On Tue, 2008-07-22 at 20:13 +0200, St=E9phane Jourdois wrote:
->>>> but this commit is for iwl3945, not iwl4965.
->>>> The patch for iwl4965 is currently not in any git tree.
->>>
->>> We are waiting for more "confirmed success" response before merging=
- it.
->>>
->>> Thanks,
->>> -yi
->>
->> I think we now have a lot of "confirmed success", as aircrack-ng use=
-rs
->> are now using this card with aireplay-ng - injecting association
->> frames is unstable, but injecting data packets works.
+ * Reorder functions to separate 5111/5112-specific gain optimization functions from rfregs functions
+ * Add some documentation on gain optimization for 5111/5112
 
-That I don't have doubt the question whether it didn't break normal ope=
-ration.
-Tomas
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ Changes-licensed-under: ISC
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+
+---
+diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
+index dc05f98..5a9619b 100644
+--- a/drivers/net/wireless/ath5k/phy.c
++++ b/drivers/net/wireless/ath5k/phy.c
+@@ -1104,7 +1104,7 @@ static const struct ath5k_gain_opt rfgain_opt_5112 = {
+ };
+ 
+ /*
+- * Used to modify RF Banks before writing them to AR5K_RF_BUFFER
++ * Helper function used to read/modify RF Banks
+  */
+ static unsigned int ath5k_hw_rfregs_op(u32 *rf, u32 offset, u32 reg, u32 bits,
+ 		u32 first, u32 col, bool set)
+@@ -1152,6 +1152,47 @@ static unsigned int ath5k_hw_rfregs_op(u32 *rf, u32 offset, u32 reg, u32 bits,
+ 	return data;
+ }
+ 
++/*****************************\
++  Gain optimization functions
++\*****************************/
++
++/*
++ * These functions are only for RF5111/5112 chips -check out bank 7-
++ */
++
++/*
++ * Initialize rfgain optimization values
++ */
++int ath5k_hw_set_rfgain_opt(struct ath5k_hw *ah)
++{
++	/* Initialize the gain optimization values */
++	switch (ah->ah_radio) {
++	case AR5K_RF5111:
++		ah->ah_gain.g_step_idx = rfgain_opt_5111.go_default;
++		ah->ah_gain.g_step =
++		    &rfgain_opt_5111.go_step[ah->ah_gain.g_step_idx];
++		ah->ah_gain.g_low = 20;
++		ah->ah_gain.g_high = 35;
++		ah->ah_gain.g_active = 1;
++		break;
++	case AR5K_RF5112:
++		ah->ah_gain.g_step_idx = rfgain_opt_5112.go_default;
++		ah->ah_gain.g_step =
++		    &rfgain_opt_5112.go_step[ah->ah_gain.g_step_idx];
++		ah->ah_gain.g_low = 20;
++		ah->ah_gain.g_high = 85;
++		ah->ah_gain.g_active = 1;
++		break;
++	default:
++		return 0;
++	}
++
++	return 0;
++}
++
++/*
++ * Get gain correction for RF5112
++ */
+ static u32 ath5k_hw_rfregs_gainf_corr(struct ath5k_hw *ah)
+ {
+ 	u32 mix, step;
+@@ -1187,6 +1228,9 @@ static u32 ath5k_hw_rfregs_gainf_corr(struct ath5k_hw *ah)
+ 	return ah->ah_gain.g_f_corr;
+ }
+ 
++/*
++ * Read gain boundaries from rf banks
++ */
+ static bool ath5k_hw_rfregs_gain_readback(struct ath5k_hw *ah)
+ {
+ 	u32 step, mix, level[4];
+@@ -1197,7 +1241,18 @@ static bool ath5k_hw_rfregs_gain_readback(struct ath5k_hw *ah)
+ 
+ 	rf = ah->ah_rf_banks;
+ 
+-	if (ah->ah_radio == AR5K_RF5111) {
++	if (ah->ah_radio == AR5K_RF5112) {
++		mix = ath5k_hw_rfregs_op(rf, ah->ah_offset[7], 0, 1, 36, 0,
++				false);
++		level[0] = level[2] = 0;
++
++		if (mix == 1) {
++			level[1] = level[3] = 83;
++		} else {
++			level[1] = level[3] = 107;
++			ah->ah_gain.g_high = 55;
++		}
++	} else {
+ 		step = ath5k_hw_rfregs_op(rf, ah->ah_offset[7], 0, 6, 37, 0,
+ 				false);
+ 		level[0] = 0;
+@@ -1209,17 +1264,6 @@ static bool ath5k_hw_rfregs_gain_readback(struct ath5k_hw *ah)
+ 			(step == 0x3f ? AR5K_GAIN_DYN_ADJUST_HI_MARGIN : -5);
+ 		ah->ah_gain.g_low = level[0] +
+ 			(step == 0x3f ? AR5K_GAIN_DYN_ADJUST_LO_MARGIN : 0);
+-	} else {
+-		mix = ath5k_hw_rfregs_op(rf, ah->ah_offset[7], 0, 1, 36, 0,
+-				false);
+-		level[0] = level[2] = 0;
+-
+-		if (mix == 1) {
+-			level[1] = level[3] = 83;
+-		} else {
+-			level[1] = level[3] = 107;
+-			ah->ah_gain.g_high = 55;
+-		}
+ 	}
+ 
+ 	return (ah->ah_gain.g_current >= level[0] &&
+@@ -1228,6 +1272,9 @@ static bool ath5k_hw_rfregs_gain_readback(struct ath5k_hw *ah)
+ 			ah->ah_gain.g_current <= level[3]);
+ }
+ 
++/*
++ * Optimize gain values using gain optimization values
++ */
+ static s32 ath5k_hw_rfregs_gain_adjust(struct ath5k_hw *ah)
+ {
+ 	const struct ath5k_gain_opt *go;
+@@ -1288,6 +1335,55 @@ done:
+ }
+ 
+ /*
++ * This is the main function called during reset to update gain parameters
++ * so that we write them on the next call to rfregs function during reset.
++ */
++enum ath5k_rfgain ath5k_hw_get_rf_gain(struct ath5k_hw *ah)
++{
++	u32 data, type;
++
++	ATH5K_TRACE(ah->ah_sc);
++
++	if (ah->ah_rf_banks == NULL || !ah->ah_gain.g_active ||
++			ah->ah_version <= AR5K_AR5211)
++		return AR5K_RFGAIN_INACTIVE;
++
++	if (ah->ah_rf_gain != AR5K_RFGAIN_READ_REQUESTED)
++		goto done;
++
++	data = ath5k_hw_reg_read(ah, AR5K_PHY_PAPD_PROBE);
++
++	if (!(data & AR5K_PHY_PAPD_PROBE_TX_NEXT)) {
++		ah->ah_gain.g_current = data >> AR5K_PHY_PAPD_PROBE_GAINF_S;
++		type = AR5K_REG_MS(data, AR5K_PHY_PAPD_PROBE_TYPE);
++
++		if (type == AR5K_PHY_PAPD_PROBE_TYPE_CCK)
++			ah->ah_gain.g_current += AR5K_GAIN_CCK_PROBE_CORR;
++
++		if (ah->ah_radio >= AR5K_RF5112) {
++			ath5k_hw_rfregs_gainf_corr(ah);
++			ah->ah_gain.g_current =
++				ah->ah_gain.g_current>=ah->ah_gain.g_f_corr ?
++				(ah->ah_gain.g_current-ah->ah_gain.g_f_corr) :
++				0;
++		}
++
++		if (ath5k_hw_rfregs_gain_readback(ah) &&
++				AR5K_GAIN_CHECK_ADJUST(&ah->ah_gain) &&
++				ath5k_hw_rfregs_gain_adjust(ah))
++			ah->ah_rf_gain = AR5K_RFGAIN_NEED_CHANGE;
++			/* TODO */
++	}
++
++done:
++	return ah->ah_rf_gain;
++}
++
++/***********************\
++  PHY/RF initialization
++\***********************/
++
++/*
+  * Read EEPROM Calibration data, modify RF Banks and Initialize RF5111
+  */
+ static int ath5k_hw_rf5111_rfregs(struct ath5k_hw *ah,
+@@ -1681,73 +1777,6 @@ int ath5k_hw_rfgain(struct ath5k_hw *ah, unsigned int freq)
+ 	return 0;
+ }
+ 
+-enum ath5k_rfgain ath5k_hw_get_rf_gain(struct ath5k_hw *ah)
+-{
+-	u32 data, type;
+-
+-	ATH5K_TRACE(ah->ah_sc);
+-
+-	if (ah->ah_rf_banks == NULL || !ah->ah_gain.g_active ||
+-			ah->ah_version <= AR5K_AR5211)
+-		return AR5K_RFGAIN_INACTIVE;
+-
+-	if (ah->ah_rf_gain != AR5K_RFGAIN_READ_REQUESTED)
+-		goto done;
+-
+-	data = ath5k_hw_reg_read(ah, AR5K_PHY_PAPD_PROBE);
+-
+-	if (!(data & AR5K_PHY_PAPD_PROBE_TX_NEXT)) {
+-		ah->ah_gain.g_current = data >> AR5K_PHY_PAPD_PROBE_GAINF_S;
+-		type = AR5K_REG_MS(data, AR5K_PHY_PAPD_PROBE_TYPE);
+-
+-		if (type == AR5K_PHY_PAPD_PROBE_TYPE_CCK)
+-			ah->ah_gain.g_current += AR5K_GAIN_CCK_PROBE_CORR;
+-
+-		if (ah->ah_radio >= AR5K_RF5112) {
+-			ath5k_hw_rfregs_gainf_corr(ah);
+-			ah->ah_gain.g_current =
+-				ah->ah_gain.g_current>=ah->ah_gain.g_f_corr ?
+-				(ah->ah_gain.g_current-ah->ah_gain.g_f_corr) :
+-				0;
+-		}
+-
+-		if (ath5k_hw_rfregs_gain_readback(ah) &&
+-				AR5K_GAIN_CHECK_ADJUST(&ah->ah_gain) &&
+-				ath5k_hw_rfregs_gain_adjust(ah))
+-			ah->ah_rf_gain = AR5K_RFGAIN_NEED_CHANGE;
+-	}
+-
+-done:
+-	return ah->ah_rf_gain;
+-}
+-
+-int ath5k_hw_set_rfgain_opt(struct ath5k_hw *ah)
+-{
+-	/* Initialize the gain optimization values */
+-	switch (ah->ah_radio) {
+-	case AR5K_RF5111:
+-		ah->ah_gain.g_step_idx = rfgain_opt_5111.go_default;
+-		ah->ah_gain.g_step =
+-		    &rfgain_opt_5111.go_step[ah->ah_gain.g_step_idx];
+-		ah->ah_gain.g_low = 20;
+-		ah->ah_gain.g_high = 35;
+-		ah->ah_gain.g_active = 1;
+-		break;
+-	case AR5K_RF5112:
+-		ah->ah_gain.g_step_idx = rfgain_opt_5112.go_default;
+-		ah->ah_gain.g_step =
+-		    &rfgain_opt_5112.go_step[ah->ah_gain.g_step_idx];
+-		ah->ah_gain.g_low = 20;
+-		ah->ah_gain.g_high = 85;
+-		ah->ah_gain.g_active = 1;
+-		break;
+-	default:
+-		return -EINVAL;
+-	}
+-
+-	return 0;
+-}
+-
+ /**************************\
+   PHY/RF channel functions
+ \**************************/
+
