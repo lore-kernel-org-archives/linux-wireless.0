@@ -1,65 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60376 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752500AbYGHWG5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 18:06:57 -0400
-Subject: Re: [PATCH 5/6] mac80211: rx.c/tx.c remove more users of
-	tx/rx_data->fc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-In-Reply-To: <1215553540.476.49.camel@brick> (sfid-20080708_234544_948979_2D1B0842)
-References: <1215550044.476.43.camel@brick>
-	 (sfid-20080708_224734_565441_65F98FD9)  <1215552534.3670.20.camel@johannes.berg>
-	 <1215553540.476.49.camel@brick> (sfid-20080708_234544_948979_2D1B0842)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1vrgRYEzffxvitQNx4KF"
-Date: Wed, 09 Jul 2008 00:06:08 +0200
-Message-Id: <1215554768.3670.22.camel@johannes.berg> (sfid-20080709_000703_570030_AA9257F0)
-Mime-Version: 1.0
+Received: from venema.h4ckr.net ([217.24.1.135]:39740 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754947AbYGTDkr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Jul 2008 23:40:47 -0400
+Date: Sun, 20 Jul 2008 06:41:26 +0300
+From: Nick Kossifidis <mick@madwifi.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
+Subject: [PATCH 6/12] ath5k: Reorder calibration calls during reset and
+	update hw_set_power
+Message-ID: <20080720034126.GF7440@makis> (sfid-20080720_054050_183403_A2A31D59)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+ * Update ath5k_hw_reset and add some more documentation about PHY calibration
+ * Fix ath5k_hw_set_power to use AR5K_SLEEP_CTL_SLE_ALLOW for Network sleep
+ * Preserve sleep duration field while setting AR5K_SLEEP_CTL and reduce delays & checks for register's status (got this from decompiling & dumps, it works for me but it needs testing)
 
---=-1vrgRYEzffxvitQNx4KF
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+ Changes-licensed-under: ISC
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 
-On Tue, 2008-07-08 at 14:45 -0700, Harvey Harrison wrote:
-
-> Well, I suppose I can also take another crack at getting my updated byteo=
-rder
-> patches in that allows cpu_to_le16, etc to be in a case statement, then t=
-he
-> switch could be preserved  and the byteswaps can be done at compile time.
-
-I thought we had __constant_cpu_to_le16 or something like that for that?
-
-johannes
-
---=-1vrgRYEzffxvitQNx4KF
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIc+TNAAoJEKVg1VMiehFYZtsP/RhwYHpa9oVqes19AJKVDrgo
-9ENPQBCvhSgytHJPPZeiDOhQ2RCH8HaSjmscGzbMFRtkTbanhNbxYBe00Lg7FUpL
-hoVBpLhK8PCls0i9/Op3OEDNn3gwvk0TJWUMndf76iFkP9Ikceo4wzrIzMuNweEo
-3LPjHo/8GYqmSrbez3OjrtJ5PVfBo6LcklFb99T52yf+69eaAkRxpSkpRHzBPZW5
-Bff6toPol6i5bfk4++MjaIbd0l2+jwPFDkMZqpIgde79SFmwOOYfvtOHSkwSOFyy
-PESrEbTUhGJFY19cd351bCIeQjRCRHX9uvSabI7FEe+LcvcBbx9sRuVEu3/VaMpc
-5gv4K3TH/dbsg5Hu+dvnEKcKU0DlZYLHtHuR9CV+YCf9rVkEt5QbyDaJ8G1+DZcS
-rVsSjpaWEfv2IxOhbq893r6FvIouC3LRH1RleKIC8GvKHmYHXUbeX6r6b39Zpa1v
-SYgENKVIVbPfm1LpMpyVQ9Mbq9Ix+6iu+WGxEjufunvs5sg4jFUfW+vv5TEYIk0q
-WGqF9FXBvVJ1JN17TJmkBvHaMh+49Kqsfy6uxO5R3ZvfObfW/C8Qn3Y9936vZ6AH
-MCnYA2/bmySpReMyH+GjmAVkIF8rVV0d58iyRTBOrJsHala4LJIn5kh+kPm43fwi
-Q6z6mdI3ygC1U75+qu3m
-=UikK
------END PGP SIGNATURE-----
-
---=-1vrgRYEzffxvitQNx4KF--
+---
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index cab1a8a..4fb048c 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -1092,34 +1092,57 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+ 	data = 0;
+ 
+ 	/*
+-	 * Enable calibration and wait until completion
++	 * Start automatic gain calibration
++	 *
++	 * During AGC calibration RX path is re-routed to
++	 * a signal detector so we don't receive anything.
++	 *
++	 * This method is used to calibrate some static offsets
++	 * used together with on-the fly I/Q calibration (the
++	 * one performed via ath5k_hw_phy_calibrate), that doesn't
++	 * interrupt rx path.
++	 *
++	 * If we are in a noisy environment AGC calibration may time
++	 * out.
+ 	 */
+ 	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL,
+ 				AR5K_PHY_AGCCTL_CAL);
+ 
++	/* At the same time start I/Q calibration for QAM constellation 
++	 * -no need for CCK- */
++	ah->ah_calibration = false;
++	if (!(mode == AR5K_MODE_11B)) {
++		ah->ah_calibration = true;
++		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ,
++				AR5K_PHY_IQ_CAL_NUM_LOG_MAX, 15);
++		AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ,
++				AR5K_PHY_IQ_RUN);
++	}
++
++	/* Wait for gain calibration to finish (we check for I/Q calibration
++	 * during ath5k_phy_calibrate) */
+ 	if (ath5k_hw_register_timeout(ah, AR5K_PHY_AGCCTL,
+ 			AR5K_PHY_AGCCTL_CAL, 0, false)) {
+-		ATH5K_ERR(ah->ah_sc, "calibration timeout (%uMHz)\n",
++		ATH5K_ERR(ah->ah_sc, "gain calibration timeout (%uMHz)\n",
+ 			channel->center_freq);
+ 		return -EAGAIN;
+ 	}
+ 
++	/*
++	 * Start noise floor calibration
++	 *
++	 * If we run NF calibration before AGC, it always times out.
++	 * Binary HAL starts NF and AGC calibration at the same time
++	 * and only waits for AGC to finish. I believe that's wrong because
++	 * during NF calibration, rx path is also routed to a detector, so if
++	 * it doesn't finish we won't have RX.
++	 *
++	 * XXX: Find an interval that's OK for all cards...
++	 */
+ 	ret = ath5k_hw_noise_floor_calibration(ah, channel->center_freq);
+ 	if (ret)
+ 		return ret;
+ 
+-	ah->ah_calibration = false;
+-
+-	/* A and G modes can use QAM modulation which requires enabling
+-	 * I and Q calibration. Don't bother in B mode. */
+-	if (!(mode == AR5K_MODE_11B)) {
+-		ah->ah_calibration = true;
+-		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ,
+-				AR5K_PHY_IQ_CAL_NUM_LOG_MAX, 15);
+-		AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ,
+-				AR5K_PHY_IQ_RUN);
+-	}
+-
+ 	/*
+ 	 * Reset queues and start beacon timers at the end of the reset routine
+ 	 */
+@@ -1247,7 +1270,7 @@ int ath5k_hw_set_power(struct ath5k_hw *ah, enum ath5k_power_mode mode,
+ 		bool set_chip, u16 sleep_duration)
+ {
+ 	unsigned int i;
+-	u32 staid;
++	u32 staid, data;
+ 
+ 	ATH5K_TRACE(ah->ah_sc);
+ 	staid = ath5k_hw_reg_read(ah, AR5K_STA_ID1);
+@@ -1259,7 +1282,8 @@ int ath5k_hw_set_power(struct ath5k_hw *ah, enum ath5k_power_mode mode,
+ 	case AR5K_PM_NETWORK_SLEEP:
+ 		if (set_chip)
+ 			ath5k_hw_reg_write(ah,
+-				AR5K_SLEEP_CTL_SLE | sleep_duration,
++				AR5K_SLEEP_CTL_SLE_ALLOW |
++				sleep_duration,
+ 				AR5K_SLEEP_CTL);
+ 
+ 		staid |= AR5K_STA_ID1_PWR_SV;
+@@ -1274,13 +1298,24 @@ int ath5k_hw_set_power(struct ath5k_hw *ah, enum ath5k_power_mode mode,
+ 		break;
+ 
+ 	case AR5K_PM_AWAKE:
++
++		staid &= ~AR5K_STA_ID1_PWR_SV;
++
+ 		if (!set_chip)
+ 			goto commit;
+ 
+-		ath5k_hw_reg_write(ah, AR5K_SLEEP_CTL_SLE_WAKE,
+-				AR5K_SLEEP_CTL);
++		/* Preserve sleep duration */
++		data = ath5k_hw_reg_read(ah, AR5K_SLEEP_CTL);
++		if( data & 0xffc00000 ){
++			data = 0;
++		} else {
++			data = data & 0xfffcffff;
++		}
+ 
+-		for (i = 5000; i > 0; i--) {
++		ath5k_hw_reg_write(ah, data, AR5K_SLEEP_CTL);
++		udelay(15);
++
++		for (i = 50; i > 0; i--) {
+ 			/* Check if the chip did wake up */
+ 			if ((ath5k_hw_reg_read(ah, AR5K_PCICFG) &
+ 					AR5K_PCICFG_SPWR_DN) == 0)
+@@ -1288,15 +1323,13 @@ int ath5k_hw_set_power(struct ath5k_hw *ah, enum ath5k_power_mode mode,
+ 
+ 			/* Wait a bit and retry */
+ 			udelay(200);
+-			ath5k_hw_reg_write(ah, AR5K_SLEEP_CTL_SLE_WAKE,
+-				AR5K_SLEEP_CTL);
++			ath5k_hw_reg_write(ah, data, AR5K_SLEEP_CTL);
+ 		}
+ 
+ 		/* Fail if the chip didn't wake up */
+ 		if (i <= 0)
+ 			return -EIO;
+ 
+-		staid &= ~AR5K_STA_ID1_PWR_SV;
+ 		break;
+ 
+ 	default:
+@@ -1325,6 +1358,7 @@ void ath5k_hw_start_rx(struct ath5k_hw *ah)
+ {
+ 	ATH5K_TRACE(ah->ah_sc);
+ 	ath5k_hw_reg_write(ah, AR5K_CR_RXE, AR5K_CR);
++	ath5k_hw_reg_read(ah, AR5K_CR);
+ }
+ 
+ /*
+@@ -1411,6 +1445,7 @@ int ath5k_hw_tx_start(struct ath5k_hw *ah, unsigned int queue)
+ 		}
+ 		/* Start queue */
+ 		ath5k_hw_reg_write(ah, tx_queue, AR5K_CR);
++		ath5k_hw_reg_read(ah, AR5K_CR);
+ 	} else {
+ 		/* Return if queue is disabled */
+ 		if (AR5K_REG_READ_Q(ah, AR5K_QCU_TXD, queue))
+@@ -1461,6 +1496,7 @@ int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue)
+ 
+ 		/* Stop queue */
+ 		ath5k_hw_reg_write(ah, tx_queue, AR5K_CR);
++		ath5k_hw_reg_read(ah, AR5K_CR);
+ 	} else {
+ 		/*
+ 		 * Schedule TX disable and wait until queue is empty
+@@ -1705,6 +1741,7 @@ enum ath5k_int ath5k_hw_set_intr(struct ath5k_hw *ah, enum ath5k_int new_mask)
+ 	 * (they will be re-enabled afterwards).
+ 	 */
+ 	ath5k_hw_reg_write(ah, AR5K_IER_DISABLE, AR5K_IER);
++	ath5k_hw_reg_read(ah, AR5K_IER);
+ 
+ 	old_mask = ah->ah_imr;
+ 
+@@ -1737,6 +1774,7 @@ enum ath5k_int ath5k_hw_set_intr(struct ath5k_hw *ah, enum ath5k_int new_mask)
+ 
+ 	/* ..re-enable interrupts */
+ 	ath5k_hw_reg_write(ah, AR5K_IER_ENABLE, AR5K_IER);
++	ath5k_hw_reg_read(ah, AR5K_IER);
+ 
+ 	return old_mask;
+ }
+@@ -3507,7 +3545,7 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
+ 			if (tq->tqi_flags & AR5K_TXQ_FLAG_RDYTIME_EXP_POLICY_ENABLE)
+ 				AR5K_REG_ENABLE_BITS(ah,
+ 					AR5K_QUEUE_MISC(queue),
+-					AR5K_QCU_MISC_TXE);
++					AR5K_QCU_MISC_RDY_VEOL_POLICY);
+ 		}
+ 
+ 		if (tq->tqi_flags & AR5K_TXQ_FLAG_BACKOFF_DISABLE)
 
