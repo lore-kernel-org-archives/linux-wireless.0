@@ -1,109 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50720
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1758871AbYGCHF3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:05:29 -0400
-Date: Thu, 03 Jul 2008 00:05:29 -0700 (PDT)
-Message-Id: <20080703.000529.13298106.davem@davemloft.net> (sfid-20080703_103233_561645_2E7099D0)
-To: netdev@vger.kernel.org
-CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
-Subject: [PATCH 33/39]: net: Implement simple sw TX hashing.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from venema.h4ckr.net ([217.24.1.135]:33746 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755338AbYGTDhh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Jul 2008 23:37:37 -0400
+Date: Sun, 20 Jul 2008 06:38:16 +0300
+From: Nick Kossifidis <mick@madwifi.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
+Subject: [PATCH 5/12] ath5k: Do ADC test during reset
+Message-ID: <20080720033816.GE7440@makis> (sfid-20080720_053739_122135_716FAF93)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+ * Do an ADC test during reset to match recent regdumps
 
-It just xor hashes over IPv4/IPv6 addresses and ports of transport.
+ Changes-licensed-under: ISC
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 
-The only assumption it makes is that skb_network_header() is set
-correctly.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
- net/core/dev.c |   52 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 52 insertions(+), 0 deletions(-)
-
-diff --git a/net/core/dev.c b/net/core/dev.c
-index 21f3cc5..461c57e 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -121,6 +121,9 @@
- #include <linux/ctype.h>
- #include <linux/if_arp.h>
- #include <linux/if_vlan.h>
-+#include <linux/ip.h>
-+#include <linux/ipv6.h>
-+#include <linux/in.h>
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index 82b4ff8..cab1a8a 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -1079,6 +1079,19 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
+ 	}
  
- #include "net-sysfs.h"
- 
-@@ -1666,6 +1669,53 @@ out_kfree_skb:
-  *          --BLG
-  */
- 
-+static u16 simple_tx_hash(struct net_device *dev, struct sk_buff *skb)
-+{
-+	u32 *addr, *ports, hash, ihl;
-+	u8 ip_proto;
-+	int alen;
-+
-+	switch (skb->protocol) {
-+	case __constant_htons(ETH_P_IP):
-+		ip_proto = ip_hdr(skb)->protocol;
-+		addr = &ip_hdr(skb)->saddr;
-+		ihl = ip_hdr(skb)->ihl;
-+		alen = 2;
-+		break;
-+	case __constant_htons(ETH_P_IPV6):
-+		ip_proto = ipv6_hdr(skb)->nexthdr;
-+		addr = &ipv6_hdr(skb)->saddr.s6_addr32[0];
-+		ihl = (40 >> 2);
-+		alen = 8;
-+		break;
-+	default:
-+		return 0;
+ 	/*
++	 * Perform ADC test (?)
++	 */
++	data = ath5k_hw_reg_read(ah, AR5K_PHY_TST1);
++	ath5k_hw_reg_write(ah, AR5K_PHY_TST1_TXHOLD, AR5K_PHY_TST1);
++	for (i = 0; i <= 20; i++) {
++		if (!(ath5k_hw_reg_read(ah, AR5K_PHY_ADC_TEST) & 0x10))
++			break;
++		udelay(200);
 +	}
++	ath5k_hw_reg_write(ah, data, AR5K_PHY_TST1);
++	data = 0;
 +
-+	ports = (u32 *) (skb_network_header(skb) + (ihl * 4));
-+
-+	hash = 0;
-+	while (alen--)
-+		hash ^= *addr++;
-+
-+	switch (ip_proto) {
-+	case IPPROTO_TCP:
-+	case IPPROTO_UDP:
-+	case IPPROTO_DCCP:
-+	case IPPROTO_ESP:
-+	case IPPROTO_AH:
-+	case IPPROTO_SCTP:
-+	case IPPROTO_UDPLITE:
-+		hash ^= *ports;
-+		break;
-+
-+	default:
-+		break;
-+	}
-+
-+	return hash % dev->real_num_tx_queues;
-+}
-+
- static struct netdev_queue *dev_pick_tx(struct net_device *dev,
- 					struct sk_buff *skb)
- {
-@@ -1673,6 +1723,8 @@ static struct netdev_queue *dev_pick_tx(struct net_device *dev,
- 
- 	if (dev->select_queue)
- 		queue_index = dev->select_queue(dev, skb);
-+	else if (dev->real_num_tx_queues)
-+		queue_index = simple_tx_hash(dev, skb);
- 
- 	skb_set_queue_mapping(skb, queue_index);
- 	return netdev_get_tx_queue(dev, queue_index);
--- 
-1.5.6
++	/*
+ 	 * Enable calibration and wait until completion
+ 	 */
+ 	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL,
 
