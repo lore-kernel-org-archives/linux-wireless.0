@@ -1,79 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:53864 "EHLO vs166246.vserver.de"
+Received: from mga02.intel.com ([134.134.136.20]:26186 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753427AbYGNOPq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 10:15:46 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Dave Young <hidave.darkstar@gmail.com>
-Subject: Re: mac80211 : WARN at net/mac80211/rate.h:153
-Date: Mon, 14 Jul 2008 16:14:51 +0200
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Mattias Nissler <mattias.nissler@gmx.de>
-References: <20080714075010.GA3559@darkstar>
-In-Reply-To: <20080714075010.GA3559@darkstar>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200807141614.51628.mb@bu3sch.de> (sfid-20080714_161550_987981_60984DD1)
+	id S1753592AbYGTXkX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Jul 2008 19:40:23 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 1/3] iwlwifi: rename iwl4965-base.c to iwl-agn.c
+Date: Mon, 21 Jul 2008 02:40:13 +0300
+Message-Id: <1216597215-19708-2-git-send-email-tomas.winkler@intel.com> (sfid-20080721_014026_950444_6BDB437B)
+In-Reply-To: <1216597215-19708-1-git-send-email-tomas.winkler@intel.com>
+References: <1216597215-19708-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CCing PID guys.
-I've seen several people hitting this. What's the meaning of this warning?
+This patch renames iwl4965-base.c to iwl-agn.c
 
-On Monday 14 July 2008 09:50:10 Dave Young wrote:
-> Hi,
-> I get warnings when I run
-> dhcpcd wlan0
-> The driver using is ath5k
-> 
-> warnings like following:
-> 
-> ------------[ cut here ]------------
-> WARNING: at net/mac80211/rate.h:153 rate_control_pid_rate_init+0x7a/0xa0 [mac80211]()
-> Modules linked in: radeon drm snd_seq_dummy snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss snd_mixer_oss rfcomm l2cap bluetooth vfat fuse snd_hda_intel ath5k mac80211 rtc_cmos rtc_core rtc_lib psmouse snd_pcm snd_timer snd_page_alloc snd_hwdep 3c59x intel_agp snd e100 cfg80211 i2c_i801 serio_raw mii soundcore agpgart thermal processor button thermal_sys evdev sg
-> Pid: 0, comm: swapper Tainted: G        W 2.6.26-smp #1
->  [<c0127954>] warn_on_slowpath+0x54/0x70
->  [<c0177000>] ? print_trailer+0xa0/0xf0
->  [<c0177071>] ? check_bytes_and_report+0x21/0xc0
->  [<c0177452>] ? check_object+0xe2/0x1e0
->  [<c0178117>] ? __slab_alloc+0x3a7/0x4c0
->  [<f8d6a196>] ? rate_control_pid_alloc_sta+0x16/0x50 [mac80211]
->  [<f8d6a2ba>] rate_control_pid_rate_init+0x7a/0xa0 [mac80211]
->  [<f8d4fcf7>] ieee80211_ibss_add_sta+0xc7/0x110 [mac80211]
->  [<f8d5a377>] __ieee80211_rx_handle_packet+0x417/0x7b0 [mac80211]
->  [<c0177071>] ? check_bytes_and_report+0x21/0xc0
->  [<f8d5c845>] __ieee80211_rx+0x185/0x560 [mac80211]
->  [<c0109769>] ? read_tsc+0x9/0x30
->  [<f89199dc>] ? ath5k_hw_get_tsf64+0x4c/0x90 [ath5k]
->  [<f89161e3>] ath5k_tasklet_rx+0xf3/0x710 [ath5k]
->  [<c0141f1d>] ? clocksource_get_next+0x3d/0x50
->  [<c01408ad>] ? update_wall_time+0x28d/0x800
->  [<f8919712>] ? ath5k_hw_is_intr_pending+0x22/0x50 [ath5k]
->  [<c012d019>] tasklet_action+0x49/0xb0
->  [<c012cae6>] __do_softirq+0x76/0xf0
->  [<c012cb9b>] do_softirq+0x3b/0x50
->  [<c012cf5c>] irq_exit+0x5c/0x70
->  [<c0106995>] do_IRQ+0x45/0x80
->  [<c012cf55>] ? irq_exit+0x55/0x70
->  [<c011288b>] ? smp_apic_timer_interrupt+0x5b/0x90
->  [<c010a220>] ? mwait_idle+0x0/0x40
->  [<c0104623>] common_interrupt+0x23/0x28
->  [<c010a220>] ? mwait_idle+0x0/0x40
->  [<c010a252>] ? mwait_idle+0x32/0x40
->  [<c01026db>] cpu_idle+0x5b/0xc0
->  [<c042054e>] rest_init+0x4e/0x60
->  =======================
-> ---[ end trace de545485c8f84982 ]---
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwlwifi/Makefile              |    6 ++----
+ .../wireless/iwlwifi/{iwl4965-base.c => iwl-agn.c} |    0 
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+ rename drivers/net/wireless/iwlwifi/{iwl4965-base.c => iwl-agn.c} (100%)
 
-
-
+diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
+index f50d2f8..6bf3998 100644
+--- a/drivers/net/wireless/iwlwifi/Makefile
++++ b/drivers/net/wireless/iwlwifi/Makefile
+@@ -11,10 +11,8 @@ iwl3945-objs		:= iwl3945-base.o iwl-3945.o iwl-3945-rs.o
+ iwl3945-$(CONFIG_IWL3945_LEDS) += iwl-3945-led.o
+ 
+ obj-$(CONFIG_IWL4965)	+= iwl4965.o
+-iwl4965-objs		:= iwl4965-base.o iwl-4965.o iwl-agn-rs.o
++iwl4965-objs		:= iwl-agn.o iwl-4965.o iwl-agn-rs.o
+ 
+-ifeq ($(CONFIG_IWL5000),y)
+-	iwl4965-objs += iwl-5000.o
+-endif
++iwl4965-$(CONFIG_IWL5000) += iwl-5000.o
+ 
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+similarity index 100%
+rename from drivers/net/wireless/iwlwifi/iwl4965-base.c
+rename to drivers/net/wireless/iwlwifi/iwl-agn.c
 -- 
-Greetings Michael.
+1.5.4.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
