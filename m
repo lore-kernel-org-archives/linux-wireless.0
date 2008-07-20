@@ -1,273 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:42158 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755344AbYGTDru (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2008 23:47:50 -0400
-Date: Sun, 20 Jul 2008 06:48:29 +0300
-From: Nick Kossifidis <mick@madwifi.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
-Subject: [PATCH 10/12] ath5k: Minor cleanup of phy functions
-Message-ID: <20080720034829.GJ7440@makis> (sfid-20080720_054752_764731_9C7065DA)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from py-out-1112.google.com ([64.233.166.176]:50842 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752351AbYGTPfW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Jul 2008 11:35:22 -0400
+Received: by py-out-1112.google.com with SMTP id p76so818578pyb.10
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2008 08:35:21 -0700 (PDT)
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction
+	in	RCU.
+From: jamal <hadi@cyberus.ca>
+Reply-To: hadi@cyberus.ca
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: kaber@trash.net, davem@davemloft.net, netdev@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+In-Reply-To: <E1KKZmE-0000ty-00@gondolin.me.apana.org.au>
+References: <E1KKZmE-0000ty-00@gondolin.me.apana.org.au>
+Content-Type: text/plain
+Date: Sun, 20 Jul 2008 11:35:19 -0400
+Message-Id: <1216568119.4847.101.camel@localhost> (sfid-20080720_173528_960902_9528397B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Reorder functions to separate 5111/5112-specific gain optimization functions from rfregs functions
- * Add some documentation on gain optimization for 5111/5112
+On Sun, 2008-20-07 at 22:20 +0800, Herbert Xu wrote:
 
- Changes-licensed-under: ISC
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+> Not all actions :) That nat action for example wasn't intended to
+> be shared at all.  In fact I still need to submit a patch to make
+> it skip the shared hash as otherwise it simply won't scale as the
+> number of nat actions increases (e.g., to 256K).
 
----
-diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
-index dc05f98..5a9619b 100644
---- a/drivers/net/wireless/ath5k/phy.c
-+++ b/drivers/net/wireless/ath5k/phy.c
-@@ -1104,7 +1104,7 @@ static const struct ath5k_gain_opt rfgain_opt_5112 = {
- };
- 
- /*
-- * Used to modify RF Banks before writing them to AR5K_RF_BUFFER
-+ * Helper function used to read/modify RF Banks
-  */
- static unsigned int ath5k_hw_rfregs_op(u32 *rf, u32 offset, u32 reg, u32 bits,
- 		u32 first, u32 col, bool set)
-@@ -1152,6 +1152,47 @@ static unsigned int ath5k_hw_rfregs_op(u32 *rf, u32 offset, u32 reg, u32 bits,
- 	return data;
- }
- 
-+/*****************************\
-+  Gain optimization functions
-+\*****************************/
-+
-+/*
-+ * These functions are only for RF5111/5112 chips -check out bank 7-
-+ */
-+
-+/*
-+ * Initialize rfgain optimization values
-+ */
-+int ath5k_hw_set_rfgain_opt(struct ath5k_hw *ah)
-+{
-+	/* Initialize the gain optimization values */
-+	switch (ah->ah_radio) {
-+	case AR5K_RF5111:
-+		ah->ah_gain.g_step_idx = rfgain_opt_5111.go_default;
-+		ah->ah_gain.g_step =
-+		    &rfgain_opt_5111.go_step[ah->ah_gain.g_step_idx];
-+		ah->ah_gain.g_low = 20;
-+		ah->ah_gain.g_high = 35;
-+		ah->ah_gain.g_active = 1;
-+		break;
-+	case AR5K_RF5112:
-+		ah->ah_gain.g_step_idx = rfgain_opt_5112.go_default;
-+		ah->ah_gain.g_step =
-+		    &rfgain_opt_5112.go_step[ah->ah_gain.g_step_idx];
-+		ah->ah_gain.g_low = 20;
-+		ah->ah_gain.g_high = 85;
-+		ah->ah_gain.g_active = 1;
-+		break;
-+	default:
-+		return 0;
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Get gain correction for RF5112
-+ */
- static u32 ath5k_hw_rfregs_gainf_corr(struct ath5k_hw *ah)
- {
- 	u32 mix, step;
-@@ -1187,6 +1228,9 @@ static u32 ath5k_hw_rfregs_gainf_corr(struct ath5k_hw *ah)
- 	return ah->ah_gain.g_f_corr;
- }
- 
-+/*
-+ * Read gain boundaries from rf banks
-+ */
- static bool ath5k_hw_rfregs_gain_readback(struct ath5k_hw *ah)
- {
- 	u32 step, mix, level[4];
-@@ -1197,7 +1241,18 @@ static bool ath5k_hw_rfregs_gain_readback(struct ath5k_hw *ah)
- 
- 	rf = ah->ah_rf_banks;
- 
--	if (ah->ah_radio == AR5K_RF5111) {
-+	if (ah->ah_radio == AR5K_RF5112) {
-+		mix = ath5k_hw_rfregs_op(rf, ah->ah_offset[7], 0, 1, 36, 0,
-+				false);
-+		level[0] = level[2] = 0;
-+
-+		if (mix == 1) {
-+			level[1] = level[3] = 83;
-+		} else {
-+			level[1] = level[3] = 107;
-+			ah->ah_gain.g_high = 55;
-+		}
-+	} else {
- 		step = ath5k_hw_rfregs_op(rf, ah->ah_offset[7], 0, 6, 37, 0,
- 				false);
- 		level[0] = 0;
-@@ -1209,17 +1264,6 @@ static bool ath5k_hw_rfregs_gain_readback(struct ath5k_hw *ah)
- 			(step == 0x3f ? AR5K_GAIN_DYN_ADJUST_HI_MARGIN : -5);
- 		ah->ah_gain.g_low = level[0] +
- 			(step == 0x3f ? AR5K_GAIN_DYN_ADJUST_LO_MARGIN : 0);
--	} else {
--		mix = ath5k_hw_rfregs_op(rf, ah->ah_offset[7], 0, 1, 36, 0,
--				false);
--		level[0] = level[2] = 0;
--
--		if (mix == 1) {
--			level[1] = level[3] = 83;
--		} else {
--			level[1] = level[3] = 107;
--			ah->ah_gain.g_high = 55;
--		}
- 	}
- 
- 	return (ah->ah_gain.g_current >= level[0] &&
-@@ -1228,6 +1272,9 @@ static bool ath5k_hw_rfregs_gain_readback(struct ath5k_hw *ah)
- 			ah->ah_gain.g_current <= level[3]);
- }
- 
-+/*
-+ * Optimize gain values using gain optimization values
-+ */
- static s32 ath5k_hw_rfregs_gain_adjust(struct ath5k_hw *ah)
- {
- 	const struct ath5k_gain_opt *go;
-@@ -1288,6 +1335,55 @@ done:
- }
- 
- /*
-+ * This is the main function called during reset to update gain parameters
-+ * so that we write them on the next call to rfregs function during reset.
-+ */
-+enum ath5k_rfgain ath5k_hw_get_rf_gain(struct ath5k_hw *ah)
-+{
-+	u32 data, type;
-+
-+	ATH5K_TRACE(ah->ah_sc);
-+
-+	if (ah->ah_rf_banks == NULL || !ah->ah_gain.g_active ||
-+			ah->ah_version <= AR5K_AR5211)
-+		return AR5K_RFGAIN_INACTIVE;
-+
-+	if (ah->ah_rf_gain != AR5K_RFGAIN_READ_REQUESTED)
-+		goto done;
-+
-+	data = ath5k_hw_reg_read(ah, AR5K_PHY_PAPD_PROBE);
-+
-+	if (!(data & AR5K_PHY_PAPD_PROBE_TX_NEXT)) {
-+		ah->ah_gain.g_current = data >> AR5K_PHY_PAPD_PROBE_GAINF_S;
-+		type = AR5K_REG_MS(data, AR5K_PHY_PAPD_PROBE_TYPE);
-+
-+		if (type == AR5K_PHY_PAPD_PROBE_TYPE_CCK)
-+			ah->ah_gain.g_current += AR5K_GAIN_CCK_PROBE_CORR;
-+
-+		if (ah->ah_radio >= AR5K_RF5112) {
-+			ath5k_hw_rfregs_gainf_corr(ah);
-+			ah->ah_gain.g_current =
-+				ah->ah_gain.g_current>=ah->ah_gain.g_f_corr ?
-+				(ah->ah_gain.g_current-ah->ah_gain.g_f_corr) :
-+				0;
-+		}
-+
-+		if (ath5k_hw_rfregs_gain_readback(ah) &&
-+				AR5K_GAIN_CHECK_ADJUST(&ah->ah_gain) &&
-+				ath5k_hw_rfregs_gain_adjust(ah))
-+			ah->ah_rf_gain = AR5K_RFGAIN_NEED_CHANGE;
-+			/* TODO */
-+	}
-+
-+done:
-+	return ah->ah_rf_gain;
-+}
-+
-+/***********************\
-+  PHY/RF initialization
-+\***********************/
-+
-+/*
-  * Read EEPROM Calibration data, modify RF Banks and Initialize RF5111
-  */
- static int ath5k_hw_rf5111_rfregs(struct ath5k_hw *ah,
-@@ -1681,73 +1777,6 @@ int ath5k_hw_rfgain(struct ath5k_hw *ah, unsigned int freq)
- 	return 0;
- }
- 
--enum ath5k_rfgain ath5k_hw_get_rf_gain(struct ath5k_hw *ah)
--{
--	u32 data, type;
--
--	ATH5K_TRACE(ah->ah_sc);
--
--	if (ah->ah_rf_banks == NULL || !ah->ah_gain.g_active ||
--			ah->ah_version <= AR5K_AR5211)
--		return AR5K_RFGAIN_INACTIVE;
--
--	if (ah->ah_rf_gain != AR5K_RFGAIN_READ_REQUESTED)
--		goto done;
--
--	data = ath5k_hw_reg_read(ah, AR5K_PHY_PAPD_PROBE);
--
--	if (!(data & AR5K_PHY_PAPD_PROBE_TX_NEXT)) {
--		ah->ah_gain.g_current = data >> AR5K_PHY_PAPD_PROBE_GAINF_S;
--		type = AR5K_REG_MS(data, AR5K_PHY_PAPD_PROBE_TYPE);
--
--		if (type == AR5K_PHY_PAPD_PROBE_TYPE_CCK)
--			ah->ah_gain.g_current += AR5K_GAIN_CCK_PROBE_CORR;
--
--		if (ah->ah_radio >= AR5K_RF5112) {
--			ath5k_hw_rfregs_gainf_corr(ah);
--			ah->ah_gain.g_current =
--				ah->ah_gain.g_current>=ah->ah_gain.g_f_corr ?
--				(ah->ah_gain.g_current-ah->ah_gain.g_f_corr) :
--				0;
--		}
--
--		if (ath5k_hw_rfregs_gain_readback(ah) &&
--				AR5K_GAIN_CHECK_ADJUST(&ah->ah_gain) &&
--				ath5k_hw_rfregs_gain_adjust(ah))
--			ah->ah_rf_gain = AR5K_RFGAIN_NEED_CHANGE;
--	}
--
--done:
--	return ah->ah_rf_gain;
--}
--
--int ath5k_hw_set_rfgain_opt(struct ath5k_hw *ah)
--{
--	/* Initialize the gain optimization values */
--	switch (ah->ah_radio) {
--	case AR5K_RF5111:
--		ah->ah_gain.g_step_idx = rfgain_opt_5111.go_default;
--		ah->ah_gain.g_step =
--		    &rfgain_opt_5111.go_step[ah->ah_gain.g_step_idx];
--		ah->ah_gain.g_low = 20;
--		ah->ah_gain.g_high = 35;
--		ah->ah_gain.g_active = 1;
--		break;
--	case AR5K_RF5112:
--		ah->ah_gain.g_step_idx = rfgain_opt_5112.go_default;
--		ah->ah_gain.g_step =
--		    &rfgain_opt_5112.go_step[ah->ah_gain.g_step_idx];
--		ah->ah_gain.g_low = 20;
--		ah->ah_gain.g_high = 85;
--		ah->ah_gain.g_active = 1;
--		break;
--	default:
--		return -EINVAL;
--	}
--
--	return 0;
--}
--
- /**************************\
-   PHY/RF channel functions
- \**************************/
+True, sharing in the case of nat will cause scaling challenges because
+there is a per-action locking. So you dont want to share in that case.
+Let me clarify the global "sharedness" of actions, because i dont think
+there is an issue:
+
+All actions (on a per-type hash table basis) have an index.
+You create filter rule X and specify action nat.
+You may specify the index of the action when you create the filter X. 
+If you then create another filter rule Y, also using the same action
+index, then that nat action is shared between rule X and rule Y[1].
+
+If you dont specify the index a new nat action is created.
+So in essence, if you create 256K rules each with an action and
+as long as you dont specify the action index, you should be fine
+because none will be shared.
+The only scaling thing i can think of is to try and make the nat action
+hash table large to reduce the init lookup. Other than that, once the
+action is bound to a filter lookup cost is zero.
+
+cheers,
+jamal
+
+[1]This is useful for tow reasons:
+a) memory saving purposes: If you dont care that much about performance
+or on a uniprocessor machine, one action would just be sufficient for
+many rules.
+b) accounting purposes; as you know qdiscs/filters/actions are
+per-device. Over the years, a need has arosen from some users to have a
+"per system" accounting (refer to the IMQ/IFB approach). Eg, if i wanted
+the policer action to account for ingress eth0 and egress eth1 for a
+user, i couldnt do it without some acrobatics.
 
