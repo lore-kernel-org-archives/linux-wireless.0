@@ -1,22 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.vyatta.com ([216.93.170.194]:38617 "EHLO mail.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760873AbYGRTFp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 15:05:45 -0400
-Date: Fri, 18 Jul 2008 12:05:43 -0700
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, kaber@trash.net, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/31]: netdev: Allocate multiple queues for TX.
-Message-ID: <20080718120543.17ccf177@extreme> (sfid-20080718_210612_224923_6A169256)
-In-Reply-To: <20080717.051545.150785763.davem@davemloft.net>
-References: <20080717.051545.150785763.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from nbd.name ([88.198.39.176]:47987 "EHLO ds10.mine.nu"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1757367AbYGTQbq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Jul 2008 12:31:46 -0400
+Message-ID: <48836863.7090008@openwrt.org> (sfid-20080720_183150_594225_A47F4EB0)
+Date: Sun, 20 Jul 2008 18:31:31 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH] ath9k: fix another endianness issue
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The new multi-queue stuff confuses sparses lock annotation.
-It thinks any usage of netif_tx_lock/netif_tx_unlock is commiting
-lock imbalance. Maybe some magic annotation will fix it?
+DMA descriptors must always be accessed in native endianness.
+With this patch and my previous series, Atheros AR9160 now
+works for me in STA mode (tested on an IXP4xx board, big-endian)
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+--- a/drivers/net/wireless/ath9k/xmit.c
++++ b/drivers/net/wireless/ath9k/xmit.c
+@@ -168,7 +168,7 @@
+  			__func__, txq->axq_qnum,
+  			ito64(bf->bf_daddr), bf->bf_desc);
+  	} else {
+-		*txq->axq_link = cpu_to_le32(bf->bf_daddr);
++		*txq->axq_link = bf->bf_daddr;
+  		DPRINTF(sc, ATH_DEBUG_XMIT, "%s: link[%u] (%p)=%llx (%p)\n",
+  			__func__,
+  			txq->axq_qnum, txq->axq_link,
+
