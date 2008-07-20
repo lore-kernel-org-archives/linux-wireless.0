@@ -1,34 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ruslug.rutgers.edu ([165.230.139.146]:47687 "EHLO
-	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755236AbYGTCpH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2008 22:45:07 -0400
-Date: Sat, 19 Jul 2008 22:45:00 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 1/4] Add new Atheros IEEE 802.11n ath9k driver
-Message-ID: <20080720024500.GR17936@ruslug.rutgers.edu> (sfid-20080720_044515_228476_FA83BA3F)
-References: <20080720024341.GQ17936@ruslug.rutgers.edu>
+Received: from nbd.name ([88.198.39.176]:38338 "EHLO ds10.mine.nu"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1757015AbYGTNyM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Jul 2008 09:54:12 -0400
+Message-ID: <48833EAE.6000803@openwrt.org> (sfid-20080720_155415_103789_C8C7AAD4)
+Date: Sun, 20 Jul 2008 15:33:34 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080720024341.GQ17936@ruslug.rutgers.edu>
+To: linux-wireless@vger.kernel.org
+CC: ath5k-devel@lists.ath5k.org
+Subject: [PATCH 3/5] ath9k: add missing device ID for AR9160 MiniPCI cards
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds the new mac80211 ath9k Atheros driver. Only STA support is
-currently enabled and tested. This patch is close to 1 MB so please
-download from:
 
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/add-ath9k-01/0001-Add-new-Atheros-IEEE-802.11n-ath9k-driver.patch
-
-Note: for now kernel.org is rsyncing so until this is done you can get this from:
-
-http://w1.fi/ath9k/0001-Add-new-Atheros-IEEE-802.11n-ath9k-driver.patch
-
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -8329,6 +8329,8 @@
+  	case AR5416_DEVID_PCI:
+  	case AR5416_DEVID_PCIE:
+  		return "Atheros 5416";
++	case AR9160_DEVID_PCI:
++		return "Atheros 9160";
+  	case AR9280_DEVID_PCI:
+  	case AR9280_DEVID_PCIE:
+  		return "Atheros 9280";
+@@ -8350,6 +8352,7 @@
+  	switch (devid) {
+  	case AR5416_DEVID_PCI:
+  	case AR5416_DEVID_PCIE:
++	case AR9160_DEVID_PCI:
+  	case AR9280_DEVID_PCI:
+  	case AR9280_DEVID_PCIE:
+  		ah = ath9k_hw_do_attach(devid, sc, mem, error);
