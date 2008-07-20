@@ -1,235 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:37996 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757512AbYGPBo0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 21:44:26 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so5533655wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2008 18:44:25 -0700 (PDT)
-Subject: [PATCH 09/12] mac80211: remove IEEE80211_FC helper
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 15 Jul 2008 18:44:13 -0700
-Message-Id: <1216172653.6610.57.camel@brick> (sfid-20080716_034430_693962_3AAF1731)
-Mime-Version: 1.0
+Received: from venema.h4ckr.net ([217.24.1.135]:53216 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755452AbYGTDwF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Jul 2008 23:52:05 -0400
+Date: Sun, 20 Jul 2008 06:34:39 +0300
+From: Nick Kossifidis <mick@madwifi.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
+Subject: [PATCH 3/12] ath5k: Misc hw_attach fixes
+Message-ID: <20080720033439.GC7440@makis> (sfid-20080720_061543_367240_135ED0C6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+ * Correctly attach RF2425
+ * Update SREV values for Radio chips
+ * Update hw_attach to use new SPENDING values
+ * Write a bit after POST for some chips
+
+ Changes-licensed-under: ISC
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+
 ---
- net/mac80211/ieee80211_i.h |    2 -
- net/mac80211/mesh_hwmp.c   |    8 +++---
- net/mac80211/mesh_plink.c  |    4 +-
- net/mac80211/mlme.c        |   46 ++++++++++++++++++++++----------------------
- net/mac80211/tx.c          |    4 +-
- 5 files changed, 31 insertions(+), 33 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 3ac23b8..0a235cd 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -37,8 +37,6 @@
+diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
+index ba35c30..9102eea 100644
+--- a/drivers/net/wireless/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath5k/ath5k.h
+@@ -186,11 +186,13 @@ struct ath5k_srev_name {
+ #define AR5K_SREV_RAD_2111	0x20
+ #define AR5K_SREV_RAD_5112	0x30
+ #define AR5K_SREV_RAD_5112A	0x35
++#define	AR5K_SREV_RAD_5112B	0x36
+ #define AR5K_SREV_RAD_2112	0x40
+ #define AR5K_SREV_RAD_2112A	0x45
+-#define AR5K_SREV_RAD_SC0	0x56	/* Found on 2413/2414 */
+-#define AR5K_SREV_RAD_SC1	0x63	/* Found on 5413/5414 */
+-#define AR5K_SREV_RAD_SC2	0xa2	/* Found on 2424-5/5424 */
++#define	AR5K_SREV_RAD_2112B	0x46
++#define AR5K_SREV_RAD_SC0	0x50	/* Found on 2413/2414 */
++#define AR5K_SREV_RAD_SC1	0x60	/* Found on 5413/5414 */
++#define AR5K_SREV_RAD_SC2	0xa0	/* Found on 2424-5/5424 */
+ #define AR5K_SREV_RAD_5133	0xc0	/* MIMO found on 5418 */
  
- #define WLAN_FC_DATA_PRESENT(fc) (((fc) & 0x4c) == 0x08)
- 
--#define IEEE80211_FC(type, subtype) cpu_to_le16(type | subtype)
+ /* IEEE defs */
+diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
+index 3e889f1..322bce6 100644
+--- a/drivers/net/wireless/ath5k/hw.c
++++ b/drivers/net/wireless/ath5k/hw.c
+@@ -293,67 +293,42 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+ 	/* Identify the radio chip*/
+ 	if (ah->ah_version == AR5K_AR5210) {
+ 		ah->ah_radio = AR5K_RF5110;
++	/*
++	 * Register returns 0x0/0x04 for radio revision
++	 * so ath5k_hw_radio_revision doesn't parse the value
++	 * correctly. For now we are based on mac's srev to
++	 * identify RF2425 radio.
++	 */
++	} else if (srev == AR5K_SREV_VER_AR2425) {
++		ah->ah_radio = AR5K_RF2425;
++		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF2425;
+ 	} else if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_5112) {
+ 		ah->ah_radio = AR5K_RF5111;
+ 		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5111;
+ 	} else if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_SC0) {
 -
- struct ieee80211_local;
- 
- /* Maximum number of broadcast/multicast frames to buffer when some of the
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 7fa149e..bd5d518 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -99,8 +99,8 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
- 	mgmt = (struct ieee80211_mgmt *)
- 		skb_put(skb, 25 + sizeof(mgmt->u.action.u.mesh_action));
- 	memset(mgmt, 0, 25 + sizeof(mgmt->u.action.u.mesh_action));
--	mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
--					   IEEE80211_STYPE_ACTION);
-+	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					  IEEE80211_STYPE_ACTION);
- 
- 	memcpy(mgmt->da, da, ETH_ALEN);
- 	memcpy(mgmt->sa, dev->dev_addr, ETH_ALEN);
-@@ -178,8 +178,8 @@ int mesh_path_error_tx(u8 *dst, __le32 dst_dsn, u8 *ra,
- 	mgmt = (struct ieee80211_mgmt *)
- 		skb_put(skb, 25 + sizeof(mgmt->u.action.u.mesh_action));
- 	memset(mgmt, 0, 25 + sizeof(mgmt->u.action.u.mesh_action));
--	mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
--					   IEEE80211_STYPE_ACTION);
-+	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					  IEEE80211_STYPE_ACTION);
- 
- 	memcpy(mgmt->da, ra, ETH_ALEN);
- 	memcpy(mgmt->sa, dev->dev_addr, ETH_ALEN);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 9efeb1f..4a7e6d0 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -163,8 +163,8 @@ static int mesh_plink_frame_tx(struct net_device *dev,
- 	mgmt = (struct ieee80211_mgmt *)
- 		skb_put(skb, 25 + sizeof(mgmt->u.action.u.plink_action));
- 	memset(mgmt, 0, 25 + sizeof(mgmt->u.action.u.plink_action));
--	mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
--					   IEEE80211_STYPE_ACTION);
-+	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					  IEEE80211_STYPE_ACTION);
- 	memcpy(mgmt->da, da, ETH_ALEN);
- 	memcpy(mgmt->sa, dev->dev_addr, ETH_ALEN);
- 	/* BSSID is left zeroed, wildcard value */
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 8f51375..61f2fa3 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -644,8 +644,8 @@ static void ieee80211_send_auth(struct net_device *dev,
- 
- 	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24 + 6);
- 	memset(mgmt, 0, 24 + 6);
--	mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
--					   IEEE80211_STYPE_AUTH);
-+	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					  IEEE80211_STYPE_AUTH);
- 	if (encrypt)
- 		mgmt->frame_control |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
- 	memcpy(mgmt->da, ifsta->bssid, ETH_ALEN);
-@@ -774,16 +774,16 @@ static void ieee80211_send_assoc(struct net_device *dev,
- 
- 	if (ifsta->flags & IEEE80211_STA_PREV_BSSID_SET) {
- 		skb_put(skb, 10);
--		mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
--						   IEEE80211_STYPE_REASSOC_REQ);
-+		mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+						  IEEE80211_STYPE_REASSOC_REQ);
- 		mgmt->u.reassoc_req.capab_info = cpu_to_le16(capab);
- 		mgmt->u.reassoc_req.listen_interval = cpu_to_le16(1);
- 		memcpy(mgmt->u.reassoc_req.current_ap, ifsta->prev_bssid,
- 		       ETH_ALEN);
- 	} else {
- 		skb_put(skb, 4);
--		mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
--						   IEEE80211_STYPE_ASSOC_REQ);
-+		mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+						  IEEE80211_STYPE_ASSOC_REQ);
- 		mgmt->u.assoc_req.capab_info = cpu_to_le16(capab);
- 		mgmt->u.assoc_req.listen_interval = cpu_to_le16(1);
+ 		ah->ah_radio = AR5K_RF5112;
+-
+-		if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_5112A) {
+-			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112;
+-		} else {
+-			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112A;
+-		}
+-
++		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112;
+ 	} else if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_SC1) {
+ 		ah->ah_radio = AR5K_RF2413;
+-		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112A;
++		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF2413;
+ 	} else if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_SC2) {
+ 		ah->ah_radio = AR5K_RF5413;
+-		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112A;
++		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5413;
+ 	} else if (ah->ah_radio_5ghz_revision < AR5K_SREV_RAD_5133) {
+-
+ 		/* AR5424 */
+ 		if (srev >= AR5K_SREV_VER_AR5424) {
+ 			ah->ah_radio = AR5K_RF5413;
+-			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5424;
++			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5413;
+ 		/* AR2424 */
+ 		} else {
+ 			ah->ah_radio = AR5K_RF2413; /* For testing */
+-			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112A;
++			ah->ah_phy_spending = AR5K_PHY_SPENDING_RF2413;
+ 		}
+-
+-	/*
+-	 * Register returns 0x4 for radio revision
+-	 * so ath5k_hw_radio_revision doesn't parse the value
+-	 * correctly. For now we are based on mac's srev to
+-	 * identify RF2425 radio.
+-	 */
+-	} else if (srev == AR5K_SREV_VER_AR2425) {
+-		ah->ah_radio = AR5K_RF2425;
+-		ah->ah_phy_spending = AR5K_PHY_SPENDING_RF5112;
  	}
-@@ -932,8 +932,8 @@ static void ieee80211_send_deauth(struct net_device *dev,
- 	memcpy(mgmt->da, ifsta->bssid, ETH_ALEN);
- 	memcpy(mgmt->sa, dev->dev_addr, ETH_ALEN);
- 	memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
--	mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
--					   IEEE80211_STYPE_DEAUTH);
-+	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					  IEEE80211_STYPE_DEAUTH);
- 	skb_put(skb, 2);
- 	mgmt->u.deauth.reason_code = cpu_to_le16(reason);
+-
+ 	ah->ah_phy = AR5K_PHY(0);
  
-@@ -961,8 +961,8 @@ static void ieee80211_send_disassoc(struct net_device *dev,
- 	memcpy(mgmt->da, ifsta->bssid, ETH_ALEN);
- 	memcpy(mgmt->sa, dev->dev_addr, ETH_ALEN);
- 	memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
--	mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
--					   IEEE80211_STYPE_DISASSOC);
-+	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					  IEEE80211_STYPE_DISASSOC);
- 	skb_put(skb, 2);
- 	mgmt->u.disassoc.reason_code = cpu_to_le16(reason);
+ 	/*
+-	 * Identify AR5212-based PCI-E cards
+-	 * And write some initial settings.
+-	 *
+-	 * (doing a "strings" on ndis driver
+-	 * -ar5211.sys- reveals the following
+-	 * pci-e related functions:
+-	 *
+-	 * pcieClockReq
+-	 * pcieRxErrNotify
+-	 * pcieL1SKPEnable
+-	 * pcieAspm
+-	 * pcieDisableAspmOnRfWake
+-	 * pciePowerSaveEnable
+-	 *
+-	 * I guess these point to ClockReq but
+-	 * i'm not sure.)
++	 * Write PCI-E power save settings
+ 	 */
+ 	if ((ah->ah_version == AR5K_AR5212) && (pdev->is_pcie)) {
+ 		ath5k_hw_reg_write(ah, 0x9248fc00, 0x4080);
+@@ -375,10 +350,15 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+ 	if (ret)
+ 		goto err_free;
  
-@@ -1116,8 +1116,8 @@ static void ieee80211_send_probe_req(struct net_device *dev, u8 *dst,
- 
- 	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
- 	memset(mgmt, 0, 24);
--	mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
--					   IEEE80211_STYPE_PROBE_REQ);
-+	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					  IEEE80211_STYPE_PROBE_REQ);
- 	memcpy(mgmt->sa, dev->dev_addr, ETH_ALEN);
- 	if (dst) {
- 		memcpy(mgmt->da, dst, ETH_ALEN);
-@@ -1220,8 +1220,8 @@ static void ieee80211_send_addba_resp(struct net_device *dev, u8 *da, u16 tid,
- 		memcpy(mgmt->bssid, dev->dev_addr, ETH_ALEN);
- 	else
- 		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
--	mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
--					   IEEE80211_STYPE_ACTION);
-+	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					  IEEE80211_STYPE_ACTION);
- 
- 	skb_put(skb, 1 + sizeof(mgmt->u.action.u.addba_resp));
- 	mgmt->u.action.category = WLAN_CATEGORY_BACK;
-@@ -1269,8 +1269,8 @@ void ieee80211_send_addba_request(struct net_device *dev, const u8 *da,
- 	else
- 		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
- 
--	mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
--					IEEE80211_STYPE_ACTION);
-+	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					  IEEE80211_STYPE_ACTION);
- 
- 	skb_put(skb, 1 + sizeof(mgmt->u.action.u.addba_req));
- 
-@@ -1525,8 +1525,8 @@ void ieee80211_send_delba(struct net_device *dev, const u8 *da, u16 tid,
- 		memcpy(mgmt->bssid, dev->dev_addr, ETH_ALEN);
- 	else
- 		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
--	mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
--					IEEE80211_STYPE_ACTION);
-+	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					  IEEE80211_STYPE_ACTION);
- 
- 	skb_put(skb, 1 + sizeof(mgmt->u.action.u.delba));
- 
-@@ -1557,8 +1557,8 @@ void ieee80211_send_bar(struct net_device *dev, u8 *ra, u16 tid, u16 ssn)
- 	skb_reserve(skb, local->hw.extra_tx_headroom);
- 	bar = (struct ieee80211_bar *)skb_put(skb, sizeof(*bar));
- 	memset(bar, 0, sizeof(*bar));
--	bar->frame_control = IEEE80211_FC(IEEE80211_FTYPE_CTL,
--					IEEE80211_STYPE_BACK_REQ);
-+	bar->frame_control = cpu_to_le16(IEEE80211_FTYPE_CTL |
-+					 IEEE80211_STYPE_BACK_REQ);
- 	memcpy(bar->ra, ra, ETH_ALEN);
- 	memcpy(bar->ta, dev->dev_addr, ETH_ALEN);
- 	bar_control |= (u16)IEEE80211_BAR_CTRL_ACK_POLICY_NORMAL;
-@@ -1802,7 +1802,7 @@ static void ieee80211_send_refuse_measurement_request(struct net_device *dev,
- 	memcpy(msr_report->da, da, ETH_ALEN);
- 	memcpy(msr_report->sa, dev->dev_addr, ETH_ALEN);
- 	memcpy(msr_report->bssid, bssid, ETH_ALEN);
--	msr_report->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
-+	msr_report->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
- 						IEEE80211_STYPE_ACTION);
- 
- 	skb_put(skb, 1 + sizeof(msr_report->u.action.u.measurement));
-@@ -2445,8 +2445,8 @@ static int ieee80211_sta_join_ibss(struct net_device *dev,
- 		mgmt = (struct ieee80211_mgmt *)
- 			skb_put(skb, 24 + sizeof(mgmt->u.beacon));
- 		memset(mgmt, 0, 24 + sizeof(mgmt->u.beacon));
--		mgmt->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
--						   IEEE80211_STYPE_PROBE_RESP);
-+		mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+						  IEEE80211_STYPE_PROBE_RESP);
- 		memset(mgmt->da, 0xff, ETH_ALEN);
- 		memcpy(mgmt->sa, dev->dev_addr, ETH_ALEN);
- 		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index bf733ed..1cb44f6 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1892,8 +1892,8 @@ struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
- 			goto out;
- 
- 		hdr = (struct ieee80211_hdr *) skb->data;
--		hdr->frame_control = IEEE80211_FC(IEEE80211_FTYPE_MGMT,
--						  IEEE80211_STYPE_BEACON);
-+		hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+						 IEEE80211_STYPE_BEACON);
- 
- 		num_beacons = &ifsta->num_beacons;
- 	} else if (ieee80211_vif_is_mesh(&sdata->vif)) {
--- 
-1.5.6.3.499.geae9
-
++	/* Write AR5K_PCICFG_UNK on 2112B and later chips */
++	if (ah->ah_radio_5ghz_revision > AR5K_SREV_RAD_2112B ||
++	srev > AR5K_SREV_VER_AR2413) {
++		ath5k_hw_reg_write(ah, AR5K_PCICFG_UNK, AR5K_PCICFG);
++	}
++
+ 	/*
+ 	 * Get card capabilities, values, ...
+ 	 */
+-
+ 	ret = ath5k_eeprom_init(ah);
+ 	if (ret) {
+ 		ATH5K_ERR(sc, "unable to init EEPROM\n");
 
