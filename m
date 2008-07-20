@@ -1,67 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:37207 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753003AbYGRNul (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40177
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754000AbYGTX7L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 09:50:41 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: ath5k-devel@lists.ath5k.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath5k: fix recursive locking in ath5k_beacon_update
-Date: Fri, 18 Jul 2008 09:50:08 -0400
-Message-Id: <20080718134345.M6916@bobcopeland.com> (sfid-20080718_155046_103932_29EBD59D)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=utf-8
+	Sun, 20 Jul 2008 19:59:11 -0400
+Date: Sun, 20 Jul 2008 16:59:11 -0700 (PDT)
+Message-Id: <20080720.165911.86437240.davem@davemloft.net> (sfid-20080721_015923_706486_9C2743B7)
+To: hadi@cyberus.ca
+Cc: kaber@trash.net, netdev@vger.kernel.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
+ RCU.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1216593170.4847.137.camel@localhost>
+References: <1216566963.4847.81.camel@localhost>
+	<20080720.102534.246150854.davem@davemloft.net>
+	<1216593170.4847.137.camel@localhost>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all, 
+From: jamal <hadi@cyberus.ca>
+Date: Sun, 20 Jul 2008 18:32:50 -0400
 
-I found a lockdep error while playing with AP mode on ath5k.  I think
-this is triggerable today in ad-hoc mode.
+> pfifo_fast would be a bad choice in that case, but even a pfifo cannot
+> guarantee proper RR because it would present packets in a FIFO order
+> (and example the first 10 could go to hardware queue1 and the next to
+> hardware queue2).
 
-From: Bob Copeland <me@bobcopeland.com>
-Date: Fri, 18 Jul 2008 11:11:21 -0400
-Subject: [PATCH] ath5k: fix recursive locking in ath5k_beacon_update
+Jamal, I have to wonder why are you so hung up on matching our
+software qdiscs with whatever fairness algorithm the hardware happens
+to implement internally for the TX queues?
 
-ath5k_beacon_update takes sc->lock upon entry.  However, it is only
-called from within ath5k_config_interface, which already holds the lock.
-Remove the unnecessary locking from ath5k_beacon_update.
+Every time this topic comes up, you insist on them having to match.
+And I have no idea why.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath5k/base.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+It's largely irrelevant and the TX queue can be viewed purely as a
+buffer between us and the device, nearly a black hole we stick packets
+into.
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 217d506..235cba8 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -3032,8 +3032,6 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct
-sk_buff *skb)
- 
- 	ath5k_debug_dump_skb(sc, skb, "BC  ", 1);
- 
--	mutex_lock(&sc->lock);
--
- 	if (sc->opmode != IEEE80211_IF_TYPE_IBSS) {
- 		ret = -EIO;
- 		goto end;
-@@ -3048,7 +3046,6 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct
-sk_buff *skb)
- 		ath5k_beacon_config(sc);
- 
- end:
--	mutex_unlock(&sc->lock);
- 	return ret;
- }
- 
--- 
-1.5.4.2.182.gb3092
+> > These things are built for parallelization, not prioritization.
+> 
+> Total parallelization happens in the ideal case. If X cpus classify
+> packets going to X different hardware queueus each CPU grabs only locks
+> for that hardware queue.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+The problem is that the bottleneck is the qdisc itself since all those
+cpus synchonize on it's lock.  We can't have a shared qdisc for the
+device and get full parallelization.
 
+That's why we're having one qdisc per TX queue, so that they all don't
+bunch up on the qdisc lock.
+
+Otherwise, there is zero point in all of these TX multiqueue features
+in the hardware if we can't parallelize things fully.
 
