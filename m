@@ -1,203 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yergi.telenet-ops.be ([195.130.132.36]:60627 "EHLO
-	yergi.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751903AbYGWH76 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51439
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750836AbYGUVBV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 03:59:58 -0400
-Message-ID: <4886E4DC.9030002@tvcablenet.be> (sfid-20080723_100004_850285_47B584FE)
-Date: Wed, 23 Jul 2008 09:59:24 +0200
-From: =?ISO-8859-1?Q?Fran=E7ois_Valenduc?=
-	<francois.valenduc@tvcablenet.be>
-MIME-Version: 1.0
-To: Andrew Morton <akpm@linux-foundation.org>
-CC: bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	netdev@vger.kernel.org, Patrick McHardy <kaber@trash.net>
-Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
-References: <bug-11144-10286@http.bugzilla.kernel.org/> <20080722034850.dbbc5566.akpm@linux-foundation.org> <4886E49D.6010700@tvcablenet.be>
-In-Reply-To: <4886E49D.6010700@tvcablenet.be>
-Content-Type: multipart/mixed;
- boundary="------------040100060002080903040409"
+	Mon, 21 Jul 2008 17:01:21 -0400
+Date: Mon, 21 Jul 2008 14:01:20 -0700 (PDT)
+Message-Id: <20080721.140120.135667045.davem@davemloft.net> (sfid-20080721_230125_836333_0DC8B294)
+To: kaber@trash.net
+Cc: Larry.Finger@lwfinger.net, mingo@elte.hu, ischram@telenet.be,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, j@w1.fi
+Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
+ at 0000000000000370
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <4884F6E9.6090809@trash.net>
+References: <4884F3D7.4070604@lwfinger.net>
+	<20080721.134608.75595942.davem@davemloft.net>
+	<4884F6E9.6090809@trash.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------040100060002080903040409
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
+From: Patrick McHardy <kaber@trash.net>
+Date: Mon, 21 Jul 2008 22:51:53 +0200
 
-François Valenduc a écrit :
-> Andrew Morton a écrit :
->> (switched to email.  Please respond via emailed reply-to-all, not via 
->> the
->> bugzilla web interface).
->>
->> On Tue, 22 Jul 2008 03:21:33 -0700 (PDT) 
->> bugme-daemon@bugzilla.kernel.org wrote:
->>
->>  
->>> http://bugzilla.kernel.org/show_bug.cgi?id=11144
->>>
->>>            Summary: dhcp doesn't work with iwl4965
->>>            Product: Networking
->>>            Version: 2.5
->>>      KernelVersion: 2.6.26-git7
->>>           Platform: All
->>>         OS/Version: Linux
->>>               Tree: Mainline
->>>             Status: NEW
->>>           Severity: normal
->>>           Priority: P1
->>>          Component: Wireless
->>>         AssignedTo: networking_wireless@kernel-bugs.osdl.org
->>>         ReportedBy: francois.valenduc@tvcablenet.be
->>>
->>>
->>> Latest working kernel version: 2.6.26-git6
->>> Earliest failing kernel version: 2.6.26-git7
->>>     
->>
->> A very fresh regression.
->>
->>  
->>> Distribution: Gentoo
->>> Hardware Environment: Packard Bell MB86, iwl4965
->>> Software Environment: dhcpcd
->>> Problem Description: I can't get an IP address via DHCP with my 
->>> wireless connection. I have an Intel
->>> Wireless 4965 card and I use WPA personal with AES encryption. After a
->>> git-bisect run, it seems the first bad commit is the following:
->>>
->>> commit 175f9c1bba9b825d22b142d183c9e175488b260c
->>> Author: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
->>> Date:   Sun Jul 20 00:08:47 2008 -0700
->>>
->>>     net_sched: Add size table for qdiscs
->>>
->>>     Add size table functions for qdiscs and calculate packet size in
->>>     qdisc_enqueue().
->>>
->>>     Based on patch by Patrick McHardy
->>>      http://marc.info/?l=linux-netdev&m=115201979221729&w=2
->>>
->>>
->>>     
->>
->> A whole pile of networking patches went into mainline about 12 hours
->> ago, one of which might have fixed this.  Can you please test
->> 2.6.26-git10 once it has appeared and let us know the result?
->>
->>
->> Thanks.
->>
->>
->>   
->
-> The problem still occurs with 2.6.26-git-10. But if I use a static 
-> address instead of DHCP, the connection work. DHCP also work with my 
-> ethernet card (a Marvell yukon which use the sky2 driver). But DHCP 
-> doesn't work with my wireless connection using the iwl4965 driver. As 
-> I said, my router offer several time a correct IP adress but it is not 
-> accepted by my computer. I don't use traffic shaping (see my iptables 
-> rules). Furthermore, the problem still occurs if I disable iptables.
-> Does anybody have an idea to solve the problem ?
->
-> Thanks for your help,
-> François
->
-> P.S: why don't you want to use the bugzilla interface ?
->
-I forgot to add the rules for iptables.
+> David Miller wrote:
+> > From: Larry Finger <Larry.Finger@lwfinger.net>
+> > Date: Mon, 21 Jul 2008 15:38:47 -0500
+> > 
+> >> David Miller wrote:
+> >>> No further backtrace?  That will tell us what driver is causing
+> >>> this.
+> >> Yes, I have a full backtrace.
+> >>
+> >> It starts with possible recursive locking in NetworkManager, and goes directly 
+> >> into the Warning - this came from a later pull of Linus's tree.
+> > 
+> > That helps a lot, I'm looking at this now.
+> 
+> I'm guessing this needs similar lockdep class initializations
+> to _xmit_lock since it essentially has the same nesting rules.
 
+Yes, I figured that out just now :-)
 
---------------040100060002080903040409
-Content-Type: text/plain;
- name="iptables"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="iptables"
+Maybe something like the following should do it?
 
-# Generated by iptables-save v1.3.8 on Sun May  4 17:48:03 2008
-*filter
-:INPUT ACCEPT [5:952]
-:FORWARD ACCEPT [0:0]
-:OUTPUT ACCEPT [1192099:595387635]
-
-# accept all from localhost
--A INPUT -s 127.0.0.1 -j ACCEPT
-
-# accept all previously established connections
--A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
-
-# ssh
--A INPUT -p tcp -m state --state NEW -m tcp --dport 22 -j ACCEPT
-
-#web
--A INPUT -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT
-
-# ftp
--A INPUT -p tcp -m state --state NEW -m tcp --dport 20:21 -j ACCEPT
--A INPUT -p tcp -m state --state NEW -m tcp --dport 30000 -j ACCEPT
-
-# Windows / Samba
--A INPUT -p tcp -m state --state NEW -m tcp --dport 137:139 -j ACCEPT
--A INPUT -p udp -m state --state NEW -m udp --dport 137:139 -j ACCEPT
--A INPUT -p tcp -m state --state NEW -m tcp --dport 426 -j ACCEPT
--A INPUT -p tcp -m state --state NEW -m tcp --dport 445 -j ACCEPT
-#swat
--A INPUT -p tcp -m state --state NEW -m tcp --dport 902 -j ACCEPT
-
-#aMule
--A INPUT -p tcp -m state --state NEW -m tcp --dport 4662 -j ACCEPT
--A INPUT -p udp -m state --state NEW -m udp --dport 4672 -j ACCEPT
-
-#XDMCP
--A INPUT -p udp -m state --state NEW -m udp --dport 177 -j ACCEPT
--A INPUT -p tcp -m state --state NEW -m tcp --dport 6000 -j ACCEPT
--A INPUT -p udp -m state --state NEW -m udp --dport 41272 -j ACCEPT
-
-#NFS server
--A INPUT -p tcp -m state --state NEW -m tcp --dport 111 -j ACCEPT
--A INPUT -p udp -m state --state NEW -m udp --dport 111 -j ACCEPT
--A INPUT -p tcp -m state --state NEW -m tcp --dport 2049 -j ACCEPT
--A INPUT -p udp -m state --state NEW -m udp --dport 2049 -j ACCEPT
--A INPUT -p tcp -m state --state NEW -m tcp --dport 4001 -j ACCEPT
--A INPUT -p udp -m state --state NEW -m udp --dport 4001 -j ACCEPT
--A INPUT -p tcp -m state --state NEW -m tcp --dport 4002 -j ACCEPT
--A INPUT -p udp -m state --state NEW -m udp --dport 4002 -j ACCEPT
-
-#VNC server
--A INPUT -p tcp -m state --state NEW -m tcp --dport 5900:5901 -j ACCEPT
-
-#CUPS server
--A INPUT -p tcp -m state --state NEW -m tcp --dport 631 -j ACCEPT
-
-#distcc
--A INPUT -p tcp -m state --state NEW -m tcp --dport 3632 -j ACCEPT
-
-#rsync
--A INPUT -p tcp -m state --state NEW -m tcp --dport 873 -j ACCEPT
-
-#git
--A INPUT -p tcp -m state --state NEW -m tcp --dport 9418 -j ACCEPT
-
-#ping
--A INPUT -p icmp -j ACCEPT
-
-#IPSec
--A INPUT -p udp --dport 500 -m state --state NEW -j ACCEPT
--A OUTPUT -p udp --dport 500 -m state --state NEW -j ACCEPT
-
--A INPUT -p esp -j ACCEPT
--A OUTPUT -p esp -j ACCEPT
-
--A INPUT -p ah -j ACCEPT
--A OUTPUT -p ah -j ACCEPT
-
-#reject everything else
--A INPUT -j REJECT --reject-with icmp-port-unreachable
-
-COMMIT
-
-
---------------040100060002080903040409--
+diff --git a/drivers/net/bonding/bond_main.c b/drivers/net/bonding/bond_main.c
+index 9737c06..a641eea 100644
+--- a/drivers/net/bonding/bond_main.c
++++ b/drivers/net/bonding/bond_main.c
+@@ -5041,6 +5041,7 @@ static int bond_check_params(struct bond_params *params)
+ }
+ 
+ static struct lock_class_key bonding_netdev_xmit_lock_key;
++static struct lock_class_key bonding_netdev_addr_lock_key;
+ 
+ static void bond_set_lockdep_class_one(struct net_device *dev,
+ 				       struct netdev_queue *txq,
+@@ -5052,6 +5053,8 @@ static void bond_set_lockdep_class_one(struct net_device *dev,
+ 
+ static void bond_set_lockdep_class(struct net_device *dev)
+ {
++	lockdep_set_class(&dev->addr_list_lock,
++			  &bonding_netdev_addr_lock_key);
+ 	netdev_for_each_tx_queue(dev, bond_set_lockdep_class_one, NULL);
+ }
+ 
+diff --git a/drivers/net/hamradio/bpqether.c b/drivers/net/hamradio/bpqether.c
+index b6500b2..58f4b1d 100644
+--- a/drivers/net/hamradio/bpqether.c
++++ b/drivers/net/hamradio/bpqether.c
+@@ -123,6 +123,7 @@ static LIST_HEAD(bpq_devices);
+  * off into a separate class since they always nest.
+  */
+ static struct lock_class_key bpq_netdev_xmit_lock_key;
++static struct lock_class_key bpq_netdev_addr_lock_key;
+ 
+ static void bpq_set_lockdep_class_one(struct net_device *dev,
+ 				      struct netdev_queue *txq,
+@@ -133,6 +134,7 @@ static void bpq_set_lockdep_class_one(struct net_device *dev,
+ 
+ static void bpq_set_lockdep_class(struct net_device *dev)
+ {
++	lockdep_set_class(&dev->addr_list_lock, &bpq_netdev_addr_lock_key);
+ 	netdev_for_each_tx_queue(dev, bpq_set_lockdep_class_one, NULL);
+ }
+ 
+diff --git a/drivers/net/macvlan.c b/drivers/net/macvlan.c
+index efbc155..4239450 100644
+--- a/drivers/net/macvlan.c
++++ b/drivers/net/macvlan.c
+@@ -276,6 +276,7 @@ static int macvlan_change_mtu(struct net_device *dev, int new_mtu)
+  * separate class since they always nest.
+  */
+ static struct lock_class_key macvlan_netdev_xmit_lock_key;
++static struct lock_class_key macvlan_netdev_addr_lock_key;
+ 
+ #define MACVLAN_FEATURES \
+ 	(NETIF_F_SG | NETIF_F_ALL_CSUM | NETIF_F_HIGHDMA | NETIF_F_FRAGLIST | \
+@@ -295,6 +296,8 @@ static void macvlan_set_lockdep_class_one(struct net_device *dev,
+ 
+ static void macvlan_set_lockdep_class(struct net_device *dev)
+ {
++	lockdep_set_class(&dev->addr_list_lock,
++			  &macvlan_netdev_addr_lock_key);
+ 	netdev_for_each_tx_queue(dev, macvlan_set_lockdep_class_one, NULL);
+ }
+ 
+diff --git a/drivers/net/wireless/hostap/hostap_hw.c b/drivers/net/wireless/hostap/hostap_hw.c
+index 13d5882..3153fe9 100644
+--- a/drivers/net/wireless/hostap/hostap_hw.c
++++ b/drivers/net/wireless/hostap/hostap_hw.c
+@@ -3101,6 +3101,7 @@ static void prism2_clear_set_tim_queue(local_info_t *local)
+  * This is a natural nesting, which needs a split lock type.
+  */
+ static struct lock_class_key hostap_netdev_xmit_lock_key;
++static struct lock_class_key hostap_netdev_addr_lock_key;
+ 
+ static void prism2_set_lockdep_class_one(struct net_device *dev,
+ 					 struct netdev_queue *txq,
+@@ -3112,6 +3113,8 @@ static void prism2_set_lockdep_class_one(struct net_device *dev,
+ 
+ static void prism2_set_lockdep_class(struct net_device *dev)
+ {
++	lockdep_set_class(&dev->addr_list_lock,
++			  &hostap_netdev_addr_lock_key);
+ 	netdev_for_each_tx_queue(dev, prism2_set_lockdep_class_one, NULL);
+ }
+ 
+diff --git a/net/8021q/vlan_dev.c b/net/8021q/vlan_dev.c
+index f42bc2b..4bf014e 100644
+--- a/net/8021q/vlan_dev.c
++++ b/net/8021q/vlan_dev.c
+@@ -569,6 +569,7 @@ static void vlan_dev_set_rx_mode(struct net_device *vlan_dev)
+  * separate class since they always nest.
+  */
+ static struct lock_class_key vlan_netdev_xmit_lock_key;
++static struct lock_class_key vlan_netdev_addr_lock_key;
+ 
+ static void vlan_dev_set_lockdep_one(struct net_device *dev,
+ 				     struct netdev_queue *txq,
+@@ -581,6 +582,9 @@ static void vlan_dev_set_lockdep_one(struct net_device *dev,
+ 
+ static void vlan_dev_set_lockdep_class(struct net_device *dev, int subclass)
+ {
++	lockdep_set_class_and_subclass(&dev->addr_list_lock,
++				       &vlan_netdev_addr_lock_key,
++				       subclass);
+ 	netdev_for_each_tx_queue(dev, vlan_dev_set_lockdep_one, &subclass);
+ }
+ 
+diff --git a/net/netrom/af_netrom.c b/net/netrom/af_netrom.c
+index fccc250..532e4fa 100644
+--- a/net/netrom/af_netrom.c
++++ b/net/netrom/af_netrom.c
+@@ -73,6 +73,7 @@ static const struct proto_ops nr_proto_ops;
+  * separate class since they always nest.
+  */
+ static struct lock_class_key nr_netdev_xmit_lock_key;
++static struct lock_class_key nr_netdev_addr_lock_key;
+ 
+ static void nr_set_lockdep_one(struct net_device *dev,
+ 			       struct netdev_queue *txq,
+@@ -83,6 +84,7 @@ static void nr_set_lockdep_one(struct net_device *dev,
+ 
+ static void nr_set_lockdep_key(struct net_device *dev)
+ {
++	lockdep_set_class(&dev->addr_list_lock, &nr_netdev_addr_lock_key);
+ 	netdev_for_each_tx_queue(dev, nr_set_lockdep_one, NULL);
+ }
+ 
+diff --git a/net/rose/af_rose.c b/net/rose/af_rose.c
+index dbc963b..a7f1ce1 100644
+--- a/net/rose/af_rose.c
++++ b/net/rose/af_rose.c
+@@ -74,6 +74,7 @@ ax25_address rose_callsign;
+  * separate class since they always nest.
+  */
+ static struct lock_class_key rose_netdev_xmit_lock_key;
++static struct lock_class_key rose_netdev_addr_lock_key;
+ 
+ static void rose_set_lockdep_one(struct net_device *dev,
+ 				 struct netdev_queue *txq,
+@@ -84,6 +85,7 @@ static void rose_set_lockdep_one(struct net_device *dev,
+ 
+ static void rose_set_lockdep_key(struct net_device *dev)
+ {
++	lockdep_set_class(&dev->addr_list_lock, &rose_netdev_addr_lock_key);
+ 	netdev_for_each_tx_queue(dev, rose_set_lockdep_one, NULL);
+ }
+ 
