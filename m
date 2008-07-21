@@ -1,41 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:43760 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752320AbYGOHb0 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57073
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752782AbYGUPYU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 03:31:26 -0400
-To: "Tomas Winkler" <tomasw@gmail.com>
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linville@tuxdriver.com, yi.zhu@intel.com,
+	Mon, 21 Jul 2008 11:24:20 -0400
+Date: Mon, 21 Jul 2008 08:24:19 -0700 (PDT)
+Message-Id: <20080721.082419.70392960.davem@davemloft.net> (sfid-20080721_172423_988623_C71A9CBF)
+To: mingo@elte.hu
+Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by low level driver
-References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
-	<1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
-	<1216039127.11189.15.camel@johannes.berg>
-	<1ba2fa240807140546w4f08e32l59ed88dfa1b86403@mail.gmail.com>
-	<87fxqcoaue.fsf@nokia.com>
-	<1ba2fa240807141434k5260e6b9q6468b450fccba3e7@mail.gmail.com>
-	<87od4zd34j.fsf@nokia.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Tue, 15 Jul 2008 10:30:43 +0300
-In-Reply-To: <87od4zd34j.fsf@nokia.com> (ext Kalle Valo's message of "Tue\, 15 Jul 2008 10\:21\:16 +0300")
-Message-ID: <87k5fnd2os.fsf@nokia.com> (sfid-20080715_093129_861914_0DE5CAE8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
+ at 0000000000000370
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080721150446.GA17746@elte.hu>
+References: <20080721134506.GA27598@elte.hu>
+	<20080721143023.GA32451@elte.hu>
+	<20080721150446.GA17746@elte.hu>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kalle.valo@nokia.com> writes:
+From: Ingo Molnar <mingo@elte.hu>
+Date: Mon, 21 Jul 2008 17:04:48 +0200
 
->> This patch should go in and we can reconsider it when other HW
->> driver will implement PS so we can see the bigger picture.
->
-> I guess it's a good compromise for now, but as long as we change it
-> later.
+[ Adding linux-wireless CC, again, Ingo please retain it for
+  followups, thanks! ]
 
-Sorry, meant to say:
-
-"but as long as we can change it later"
-
--- 
-Kalle Valo
+> * Ingo Molnar <mingo@elte.hu> wrote:
+> 
+> > > Pid: 1, comm: swapper Not tainted 2.6.26-tip-00013-g6de15c6-dirty #21290
+> > 
+> > some more information: find below the same crash with vanilla 
+> > linus/master and no extra patches. The crash site is:
+> 
+> a 32-bit testbox just triggered the same crash too:
+> 
+>  calling  init_mac80211_hwsim+0x0/0x310
+>  mac80211_hwsim: Initializing radio 0
+>  phy0: Failed to select rate control algorithm
+>  phy0: Failed to initialize rate control algorithm
+>  mac80211_hwsim: ieee80211_register_hw failed (-2)
+>  BUG: unable to handle kernel NULL pointer dereference at 00000298
+>  IP: [<c06efb98>] rollback_registered+0x28/0x120
+>  *pdpt = 0000000000bc9001 *pde = 0000000000000000
+>  Oops: 0000 [#1] PREEMPT SMP
+> 
+> and that system has no wireless so i guess it's just some unregister 
+> inbalance kind of init/deinit buglet.
+> 
+> 	Ingo
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
