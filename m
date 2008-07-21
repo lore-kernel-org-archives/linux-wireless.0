@@ -1,61 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:44422 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753201AbYGaSvu (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45455
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751345AbYGURfx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 14:51:50 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so420022ywe.1
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Jul 2008 11:51:49 -0700 (PDT)
-Message-ID: <40f31dec0807311151m13bc2c5ah65b477d2d0ae3fd1@mail.gmail.com> (sfid-20080731_205153_475277_3190D10B)
-Date: Thu, 31 Jul 2008 21:51:48 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ath5k-devel] [PATCH 1/12] ath5k: Update register list
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	jirislaby@gmail.com, mcgrof@gmail.com
-In-Reply-To: <20080729204054.GA10188@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080720033041.GA7440@makis>
-	 <20080729204054.GA10188@tuxdriver.com>
+	Mon, 21 Jul 2008 13:35:53 -0400
+Date: Mon, 21 Jul 2008 10:35:53 -0700 (PDT)
+Message-Id: <20080721.103553.121723118.davem@davemloft.net> (sfid-20080721_193557_755761_4EF7744D)
+To: herbert@gondor.apana.org.au
+Cc: hadi@cyberus.ca, kaber@trash.net, netdev@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
+ RCU.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <E1KKu2D-0002kd-00@gondolin.me.apana.org.au>
+References: <1216606839.4847.159.camel@localhost>
+	<E1KKu2D-0002kd-00@gondolin.me.apana.org.au>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/7/29 John W. Linville <linville@tuxdriver.com>:
-> On Sun, Jul 20, 2008 at 06:30:41AM +0300, Nick Kossifidis wrote:
->>  * Update list of registers
->>  * Use updated register macros inside hw.c and initvals.c
->>
->>  Changes-licensed-under: ISC
->>  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
->
-> Nick,
->
-> Some of the changes in this patch break the build unless the rest
-> of the series is applied, and those patches can't be applied before
-> applying this one.  This breaks git-bisect.  Could I trouble you
-> to include the pieces of this patch that break the build into those
-> later patches that fix the build?  Or perhaps you can simply split
-> this into a patch that adds new definitions and one that deletes
-> older definitions?  The latter could then be applied at the end of
-> the series.
->
-> Thanks,
->
-> John
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Date: Mon, 21 Jul 2008 19:58:33 +0800
 
-Hello John ;-)
+> I think I get you now.  You're suggesting that we essentially
+> do what Dave has right now in the non-contending case, i.e.,
+> bypassing the qdisc so we get fully parallel processing until
+> one of the hardware queues seizes up.
+> 
+> At that point you'd stop all queues and make every packet go
+> through the software qdisc to ensure ordering.  This continues
+> until all queues have vacancies again.
+> 
+> If this is what you're suggesting, then I think that will offer
+> pretty much the same behaviour as what we've got, while still
+> offering at least some (perhaps even most, but that is debatable)
+> of the benefits of multi-queue.
+> 
+> At this point I don't think this is something that we need right
+> now, but it would be good to make sure that the architecture
+> allows such a thing to be implemented in future.
 
-Now that i resent the 1st patch that was broken can you please commit
-the series ? We really need to add RF2425 support in kernel, it'll
-also help me work easier on ath5k (i won't have to work on top of
-those patches).
+Doing something like the noqueue_qdisc (bypassing the qdisc entirely)
+is very attractive because it eliminates the qdisc lock.  We're only
+left with the TX lock.
 
-All other patches should be O.K.
+This whole idea of doing an optimized send to the device when the
+TX queue has space is indeed tempting.
 
+But we can't do it for qdiscs that measure rates, enforce limits, etc.
 
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+And if the device kicks back at us with an error, we have to
+perform the normal ->enqueue() path.
