@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.243]:17968 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752641AbYGaQv5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 12:51:57 -0400
-Received: by an-out-0708.google.com with SMTP id d40so102007and.103
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Jul 2008 09:51:56 -0700 (PDT)
-Message-ID: <43e72e890807310951l754d3b96m212062d7a5759b8f@mail.gmail.com> (sfid-20080731_185201_721195_635706CA)
-Date: Thu, 31 Jul 2008 09:51:56 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Nick Kossifidis" <mickflemm@gmail.com>
-Subject: Re: Vendor support stickers for devices supported under Linux wireless
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <40f31dec0807310657l36b052bfu510415d50c14718d@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <43e72e890807301327j54be2453r836964c708d75458@mail.gmail.com>
-	 <40f31dec0807310657l36b052bfu510415d50c14718d@mail.gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:40203 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752139AbYGUOXn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2008 10:23:43 -0400
+Subject: Re: [PATCH 0/3] Introducing IWLAGN
+From: Dan Williams <dcbw@redhat.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: drago01 <drago01@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	linville@tuxdriver.com, johannes@sipsolutions.net,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240807210629x56ed2f33o7c0a45daddfbc6bf@mail.gmail.com>
+References: <1216597215-19708-1-git-send-email-tomas.winkler@intel.com>
+	 <20080721012528.GA6623@khazad-dum.debian.net>
+	 <1ba2fa240807210018gbd31c18g59fc08f4a8b2a3ce@mail.gmail.com>
+	 <1ba2fa240807210537p66e55407l33662a43e39c106e@mail.gmail.com>
+	 <f6ca9fed0807210604j5ccb7f1cwb9aaf55132c8ed5c@mail.gmail.com>
+	 <1ba2fa240807210629x56ed2f33o7c0a45daddfbc6bf@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 21 Jul 2008 10:21:27 -0400
+Message-Id: <1216650087.22055.5.camel@localhost.localdomain> (sfid-20080721_162347_236988_8CC80C6E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 31, 2008 at 6:57 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> 2008/7/30 Luis R. Rodriguez <mcgrof@gmail.com>:
->> A while back during our second Linux wireless summit we thought about
->> the possibility of letting vendors choose a sticker depending upon the
->> type of support they had for Linux:
->>
->> http://wireless.kernel.org/CertificationIdeas
->>
->> I propose we consolidate to just stick to one logo/sticker: You
->> properly support Linux.
->>
->> What this means is your driver is in the kernel and if you have
->> firmware this would mean you also provide a friendly redistributable
->> license for the firmware. We could even put the name of the driver on
->> the sticker/logo. Thoughts?
->>
->>  Luis
->
-> We need a way to let users know what cards are supported in the linux
-> kernel so -as John said in his presentation- that they can "vote with
-> their money". I think we should start a wiki page ourselves assigning
-> vendors and chipsets on the mentioned categories (best choice/ home
-> user/ geek user).
+On Mon, 2008-07-21 at 16:29 +0300, Tomas Winkler wrote:
+> On Mon, Jul 21, 2008 at 4:04 PM, drago01 <drago01@gmail.com> wrote:
+> > On Mon, Jul 21, 2008 at 2:37 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+> >> On Mon, Jul 21, 2008 at 10:18 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+> >>> On Mon, Jul 21, 2008 at 4:25 AM, Henrique de Moraes Holschuh
+> >>> <hmh@hmh.eng.br> wrote:
+> >>>> On Mon, 21 Jul 2008, Tomas Winkler wrote:
+> >>>>> This series of patches renames iwl4965 driver to iwlagn driver
+> >>>>
+> >>>> Maybe MODULE_ALIAS with the old name would be a good idea?
+> >>>
+> >>> I wasn't aware of this one I'll give it a try. Thanks
+> >>
+> >> It doesn't work much
+> >> if I rename the module name to iwlagn.ko and just add
+> >> MODULE_ALIAS("iwl4965")  or alias line in  /etc/modprobe.conf.  I've
+> >> checked modules.alias it's updated.
+> >> Still modprobe iwl4965 cannot catch it.
+> >> So it's still will create mess when switching between to version of the kernel.
+> >
+> > thats odd ...  just tested it with a webcam driver (m5602 added
+> > MODULE_ALIAS("bisoncam") and it worked)
+> > does modinfo iwlagn list the alias?
+> 
+> yes it does show the alias but modprobe fails with Module iwl4965 not
+> found. I did strace it's really reads the modules.alias but found
+> nothing
+> Hope I'm wasting my time on some stupid typo...just cannot find it :)
 
-That's the thing I'm saying forget about all the other categories and
-just promote proper support. Otherwise your support is simply
-handicapped for Linux.
+You did re-run depmod, right?  Just a quick thought.
 
-  Luis
+Dan
+
+
