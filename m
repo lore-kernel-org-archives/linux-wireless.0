@@ -1,56 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:24925 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752428AbYGAKEG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 06:04:06 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so1439780waf.23
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Jul 2008 03:04:05 -0700 (PDT)
-Message-ID: <1ba2fa240807010304q2a30aae7v888d3be54eaeb47b@mail.gmail.com> (sfid-20080701_120417_571800_BEDC4CEA)
-Date: Tue, 1 Jul 2008 13:04:05 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: compat-wireless high packet loss.
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Guy Cohen" <guy.cohen@intel.com>,
-	"David Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Linux Wireless" <linux-wireless@vger.kernel.org>,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>,
-	"Patrick McHardy" <kaber@trash.net>
-In-Reply-To: <43e72e890807010229m12b7382ft8675924cac923c7b@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1ba2fa240806261603g30c3e757y9166c2f9e05f7666@mail.gmail.com>
-	 <247d6d340806282323v3192ead8v149359e482375991@mail.gmail.com>
-	 <1214824149.5507.36.camel@johannes.berg>
-	 <1ba2fa240806300429l679f1568k584143b448455594@mail.gmail.com>
-	 <43e72e890807010229m12b7382ft8675924cac923c7b@mail.gmail.com>
+Received: from main.gmane.org ([80.91.229.2]:41594 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754836AbYGUVnL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2008 17:43:11 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1KL39t-0000rx-Gz
+	for linux-wireless@vger.kernel.org; Mon, 21 Jul 2008 21:43:05 +0000
+Received: from mnhm-590f7fe9.pool.einsundeins.de ([89.15.127.233])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 21:43:05 +0000
+Received: from deller by mnhm-590f7fe9.pool.einsundeins.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 21:43:05 +0000
+To: linux-wireless@vger.kernel.org
+From: Helge Deller <deller@gmx.de>
+Subject: Re: [PATCH] ath5k: use positive logic for HP laptop LEDs
+Date: Mon, 21 Jul 2008 23:42:58 +0200
+Message-ID: <g62vt2$akl$1@ger.gmane.org> (sfid-20080721_234316_143940_4253C84E)
+References: <20080715170716.GA5785@hash.localnet>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 1, 2008 at 12:29 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Mon, Jun 30, 2008 at 4:29 AM, Tomas Winkler <tomasw@gmail.com> wrote:
->> On Mon, Jun 30, 2008 at 2:09 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->>> On Sun, 2008-06-29 at 09:23 +0300, Guy Cohen wrote:
->>>> More info on the issue.. The problem is with TX of unrestrained UDP
->>>> stream, when the traffic generated at the application layer is larger
->>>> than the link can pass. With kernel 2.6.26-* the traffic is restrained
->>>> when the TX FIFOs gets full while in 2.6.25.* frames are dropped at
->>>> some layer. It seems that the drop happens after the IP fragmentation
->>>> step at the stack.
->>>
->>> does compat use multiqueue now? if not, look in the mac80211 fake mq
->>> code.
->>
->> 2.6.25 has a real mq
->
-> We only use fake mq support for kernels <= 2.6.22 as 2.6.23 added
-> support for MQ. Also if your 2.6.23 doesn't have MQ it will warn you.
+Bob, I think your patch below somehow got truncated and you wanted to send
+this patch ?
+http://marc.info/?l=linux-wireless&m=121557127930799&w=2
 
-We did some more black box testing and this is happening only in UDP
-streaming. TCP is okay.
-Again this bug is not present in 2.6.26-rc3 and up.
-Thanks
-Tomas
+Bob Copeland wrote:
+> Helge Deller reports that HP laptops (NC4010 and NC6000) use active-
+> high signals to turn on the LEDs.  Previous code used active-low for
+> all devices.
+> 
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
+> Other ath5k devs, any issues with this patch?  Thread here for
+> reference:
+> 
+> http://marc.info/?l=linux-wireless&m=121555862316630&w=2
+> 
+>  drivers/net/wireless/ath5k/base.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath5k/base.c
+> b/drivers/net/wireless/ath5k/base.c index 217d506..3394b35 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+> @@ -2550,8 +2550,6 @@ ath5k_init_leds(struct ath5k_softc *sc)
+>  struct pci_dev *pdev = sc->pdev;
+>  char name[ATH5K_LED_MAX_NAME_LEN + 1];
+>  
+> -     sc->led_on = 0;  /* active low */
+
+
