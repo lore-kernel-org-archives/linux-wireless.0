@@ -1,52 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:41729 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755500AbYG1Swj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2008 14:52:39 -0400
-Date: Mon, 28 Jul 2008 15:52:33 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Philip Langdale <philipl@overt.org>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	toshiba_acpi@memebeam.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
-	through rfkill
-Message-ID: <20080728185233.GB26564@khazad-dum.debian.net> (sfid-20080728_205305_906856_C1D1820D)
-References: <488CBBAB.6010508@overt.org> <200807272259.44364.IvDoorn@gmail.com> <488CF6D8.6000700@overt.org> <20080728030437.GC10672@khazad-dum.debian.net> <1217243863.24609.6.camel@localhost.localdomain>
+Received: from venema.h4ckr.net ([217.24.1.135]:54982 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760391AbYGUFM7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2008 01:12:59 -0400
+Message-ID: <1542.217.24.1.226.1216617177.squirrel@webmail.madwifi.org> (sfid-20080721_071304_721873_32A8D0F1)
+In-Reply-To: <20080720024554.GS17936@ruslug.rutgers.edu>
+References: <20080720024341.GQ17936@ruslug.rutgers.edu>
+    <20080720024500.GR17936@ruslug.rutgers.edu>
+    <20080720024554.GS17936@ruslug.rutgers.edu>
+Date: Mon, 21 Jul 2008 07:12:57 +0200 (CEST)
+Subject: Re: [PATCH] [PATCH 2/4] Remove Atheros 11n devices from ath5k
+From: "Michael Renzmann" <mrenzmann@madwifi.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, ath5k-devel@lists.ath5k.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1217243863.24609.6.camel@localhost.localdomain>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 28 Jul 2008, Dan Williams wrote:
-> On Mon, 2008-07-28 at 00:04 -0300, Henrique de Moraes Holschuh wrote:
-> > On Sun, 27 Jul 2008, Philip Langdale wrote:
-> > > Ivo van Doorn wrote:
-> > >> You don't seem to be using rfkill_force_state() which is required to inform the rfkill
-> > >> layer about the state changes.
-> > >
-> > > Hmm? According to rfkill.txt, one can either use force_state() or implement the
-> > > get_state() hook, and I have done the later. If this is not the correct method,
-> > > can you please explain when I should be using force_state?
-> > 
-> > There is a bunch of rfkill bug fix patches that was not merged in
-> > wireless-testing yet (which is a pity, it would be really good if they could
-> > go into 2.6.27).  One of those patches fixes the docs to make it clear that
-> 
-> Lots of wireless people (including John) were at OLS this past week, so
-> it's not entirely surprising that patch merging might have been slow.
+Hi.
 
-That would explain it, yes...  Well, I sure hope this means the patches
-still have a non-zero chance of being sent to mainline for 2.6.27 :-)  I am
-not up to date on how merges are usually handled in the wireless and net
-subsystems.
+Luis R. Rodriguez wrote:
+> Remove Atheros 11n devices from being claimed by ath5k as its
+> now handled by ath9k.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+I must admit that I can't tell it myself due to a lack of in-depth
+knowledge about both drivers, hence the question: why a new driver, rather
+than adding 11n support to ath5k and have a single driver for all Atheros
+chipsets?
+
+Bye, Mike
