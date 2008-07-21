@@ -1,65 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:39934 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752743AbYG2VOZ (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:53933 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750803AbYGUMtm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 17:14:25 -0400
-To: "Herton Ronaldo Krzesinski" <herton@mandriva.com.br>
-Cc: "Hin-Tak Leung" <hintak.leung@gmail.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
-Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks rtl8187
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
-	<48874F09.7060400@lwfinger.net>
-	<3ace41890807281939y462c9b91n5fa952e167b6ff8c@mail.gmail.com>
-	<200807290021.45400.herton@mandriva.com.br>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Wed, 30 Jul 2008 00:12:58 +0300
-In-Reply-To: <200807290021.45400.herton@mandriva.com.br> (ext Herton Ronaldo Krzesinski's message of "Tue\, 29 Jul 2008 00\:21\:45 -0300")
-Message-ID: <87d4kwl7hh.fsf@nokia.com> (sfid-20080729_231429_001740_8DFB5840)
+	Mon, 21 Jul 2008 08:49:42 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so456412nfc.21
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 05:49:39 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: mac80211 deadlock detection triggering with rt61pci
+Date: Mon, 21 Jul 2008 15:05:31 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+References: <1216197369.3422.5.camel@johannes.berg> <200807191647.13517.IvDoorn@gmail.com> <1216489342.29432.5.camel@johannes.berg>
+In-Reply-To: <1216489342.29432.5.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200807211505.31571.IvDoorn@gmail.com> (sfid-20080721_144946_135716_7ED599AE)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Herton Ronaldo Krzesinski <herton@mandriva.com.br> writes:
+On Saturday 19 July 2008, Johannes Berg wrote:
+> On Sat, 2008-07-19 at 16:47 +0200, Ivo van Doorn wrote:
+> > On Friday 18 July 2008, Ivo van Doorn wrote:
+> 
+> > It might be me, but looking at those traces, aren't they triggered by:
+> > 
+> > static int ieee80211_tx(struct net_device *dev, struct sk_buff *skb)
+> > {
+> > ...
+> > 		if (WARN_ON(queue >= ieee80211_num_regular_queues(&local->hw)))
+> > 			goto drop;
+> > ...
+> > }
+> > 
+> > Which would suggest that when MAC80211_QOS is disabled, the skb_queue_mapping
+> > still returns something higher then 1.
+> 
+> Oh, interesting, could be, I'll check it out.
 
->> I also wonder how Herton encountered the problem :-). Older
->> wireless-testing simply say "unimplemented" or something if one
->> tries to set power-saving. Maybe Herton has a few devices which he
->> routinely tries out every part of iwconfig?
->
-> The original sequence of commands:
-> [1] /sbin/ip link set dev wlan0 down
-> [2] /sbin/ip link set dev wlan0 up
-> [3] /sbin/iwconfig wlan0 power on
-> [4] /sbin/iwconfig wlan0 essid any
-> [5] /sbin/iwconfig wlan0 power on
-> [6] /sbin/iwconfig wlan0 essid <my AP>
-> [7] /sbin/iwconfig wlan0 key open <my key>
->
-> That show the issue on rtl8187b I have to test just is near on what Mandriva 
-> 2008.0 ifup-wireless script does, so that's what first made me catch the bug. 
-> the '... power on' after '... essid any' is what causes later the association 
-> or any scan attempt to fail, if I place a sleep between [4] and [5] I don't 
-> get the problem too.
+I think I was wrong, just received a report which indeed marked the line:
+	if (WARN_ON_ONCE(retries > 5))
 
-Thanks for the clarification, this kind of information is important
-when reporting a bug.
+recent mac80211 patches had moved the WARN_ON line more then I thought. ;)
 
-> The problem is, I couldn't see yet how a power on after essid any
-> could cause this.
+In any case, I am still not sure why this bug is being triggered, but I am following a lead
+with the rt2x00 errors that come directly before the WARN_ON is being triggered.
 
-I'm guessing that it has something to do ieee80211_ioctl_siwpower()
-calling ieee80211_hw_config(local) which ends up as an extra call to
-rtl8187_config(). I do not know why this is a problem for rtl8187b.
-
-It would help if you, or someone else seeing the same problem, could
-provide more information by enabling MAC80211_VERBOSE_DEBUG and
-MAC80211_LOWTX_FRAME_DUMP config options, and sending the kernel log
-output here. I don't have a rtl8187b card myself so I cannot test
-this.
-
--- 
-Kalle Valo
+Ivo
