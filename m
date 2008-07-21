@@ -1,59 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49784 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752964AbYGJHYg (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.241]:19400 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754955AbYGUAtK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 03:24:36 -0400
-Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <200807100921.44079.hs4233@mail.mn-solutions.de> (sfid-20080710_092210_133981_D90374F8)
-References: <20080709190915.GA8238@tuxdriver.com>
-	 <200807100921.44079.hs4233@mail.mn-solutions.de>
-	 (sfid-20080710_092210_133981_D90374F8)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4L9oSr/OnXLD6PXi3wMs"
-Date: Thu, 10 Jul 2008 09:23:42 +0200
-Message-Id: <1215674622.3932.0.camel@johannes.berg> (sfid-20080710_092449_056171_199353C6)
-Mime-Version: 1.0
+	Sun, 20 Jul 2008 20:49:10 -0400
+Received: by an-out-0708.google.com with SMTP id d40so337776and.103
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2008 17:49:09 -0700 (PDT)
+Message-ID: <43e72e890807201749r6da43948m198355fabc8e81b@mail.gmail.com> (sfid-20080721_024914_454440_61D60618)
+Date: Sun, 20 Jul 2008 17:49:09 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Linux Wireless" <linux-wireless@vger.kernel.org>
+Subject: ath9k-devel list and git tree
+Cc: "Michael Renzmann" <mrenzmann@madwifi.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+ath9k-devel is having some issues, for now please post patches to
+linux-wireless, and also please apply all other pending patches first.
+Also please ensure you are now using this git tree:
 
---=-4L9oSr/OnXLD6PXi3wMs
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/ath9k.git
 
-On Thu, 2008-07-10 at 09:21 +0200, Holger Schurig wrote:
-> Suspend/Resume?
+If you'd rather work on wireless-testing git you can use these pending patches;
 
-Umm? It's on his list.
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/
 
-johannes
-
---=-4L9oSr/OnXLD6PXi3wMs
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIdbj7AAoJEKVg1VMiehFYidgQAKR0A709xCShp5Wu9+N5GX8V
-dggsa52L88pL7YSr7xIPHzX4myCiPJZmAPaux5nmWymEkUzccKkNwHWhhpVHr/0k
-Fg+w3kFFHVN39iZAlZOQdAo7IAyvBPC2QyKNsC4uleRYwlMHMxz51+1M+qMDlIAl
-myQTnCPtZEmqS1hoMC0/Ka78mQMSvzj3I/ht3PRrpshoE6iqp088pFYb1VCJuOdU
-9YOFI0/m3oBg/JsAsyA5cUXKi3J2nsHQh9KVjBwTw4J5Ut5f69wepGsjPHkiUnvg
-KF/0H9y8I3Ai/1XE6jGv0G4qDwfc7Ent7LuaaNHveMn+hlcgYZ+4YybNBS6u1EWL
-DvG908RfqSQ/Pj7Nk0urRze+uy8ttqeNiFZY4R3e0nAhbJRv9WMHgdoB42+PIDAL
-GB4qGoRSJ5cU1OOCnjr1lJsotl+T2NZBJbMphBoEFFGwWYZuUX8XJ8mOOrR+2SuV
-ezpqwHNOV5zP1dd62PhmF3EAIwn9IVrByVeessIMvZIWsLRyCktKa4ihyegpaDke
-fT0TwCF+N6R/MfkrlCtC5ldCea5+uNZOadp/Jx5CpeBytbtS1hc5m1KjxcKNR/Ah
-bwbPlw0VErsbhsY8/TyqCuFJx1/4gQou1HHQaSnL17Eys6gHR5EVlSOeiPZ/a5Mh
-AQJKVf+/j/vE+swrorrH
-=bOQT
------END PGP SIGNATURE-----
-
---=-4L9oSr/OnXLD6PXi3wMs--
-
+ Luis
