@@ -1,39 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:45762 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750718AbYGWDtU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 23:49:20 -0400
-Message-ID: <4886AA3B.3000406@lwfinger.net> (sfid-20080723_054925_441813_D5AD83E5)
-Date: Tue, 22 Jul 2008 22:49:15 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-CC: Hin-Tak Leung <hintak.leung@gmail.com>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-Subject: Re: [RFC/RFT] rtl8187: Improve wireless statistics for RTL8187B
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net> <200807221613.34434.herton@mandriva.com.br> <3ace41890807221525r67716ea0r251068df773fe53f@mail.gmail.com> <200807221940.20009.herton@mandriva.com.br>
-In-Reply-To: <200807221940.20009.herton@mandriva.com.br>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from c60.cesmail.net ([216.154.195.49]:40845 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755967AbYGUWom (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2008 18:44:42 -0400
+Subject: Re: [PATCH] ath9k: fix build errors and warnings on 64-bit systems
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890807211539p358fa0cbw2c9868ed8f9c9b4e@mail.gmail.com>
+References: <20080721000313.24845.10866.stgit@dv.roinet.com>
+	 <15B47C78534E094AA9A41F58FB8D74F3D6EF4A7EEE@SC1EXMB-MBCL.global.atheros.com>
+	 <43e72e890807211539p358fa0cbw2c9868ed8f9c9b4e@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 21 Jul 2008 18:44:39 -0400
+Message-Id: <1216680279.11291.45.camel@dv> (sfid-20080722_004445_755192_0810AFC4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Herton Ronaldo Krzesinski wrote:
-> Em Tuesday 22 July 2008 19:25:20 Hin-Tak Leung escreveu:
->> Disabling power management doesn't improve the situation with latest
->> wireless testing
->> for me. I had a look at the change and it seems simple enough.
+On Mon, 2008-07-21 at 15:39 -0700, Luis R. Rodriguez wrote:
+> > diff --git a/ksrc/hw.c b/ksrc/hw.c
+> > index b8a9321..5a24cbe 100644
+> > --- a/ksrc/hw.c
+> > +++ b/ksrc/hw.c
+> > @@ -852,9 +852,11 @@ static inline enum hal_status ath9k_hw_check_eeprom(struct ath_hal *ah)
+> >        else
+> >                el = ahp->ah_eeprom.baseEepHeader.length;
+> >
+> > +       if (el < sizeof(struct ar5416_eeprom) / sizeof(u_int16_t))
+> > +               el = sizeof(struct ar5416_eeprom) / sizeof(u_int16_t);
+> > +
+> >        eepdata = (u_int16_t *) (&ahp->ah_eeprom);
+> > -       for (i = 0; i <
+> > -               min(el, sizeof(struct ar5416_eeprom)) / sizeof(u_int16_t); i++)
+> > +       for (i = 0; i < el; i++)
+> >                sum ^= *eepdata++;
+> >
+> >        if (need_swap) {
 > 
-> Yes, I also looked at the commit, it's simple and I can't see how it's 
-> affecting transmission in my case. It's bizarre and I must be doing something 
-> wrong.
+> Its a good thing indeed I split this into two patches, as your first
+> hunk breaks the check. Had you tested this??? Anyway I've fixed this
+> now.
 
-I just found that my RTL8187B doesn't work with the current wireless-testing 
-either. I don't know why I thought otherwise earlier. If I do a 'git checkout 
-d61f20889de4978ed8', which is my patch to change the detection of early 8187B, 
-then it works fine. I'll do a bisection to see if my system agrees that the wext 
-power patch is the problem.
+Sorry, I only compile tested it.  Indeed, the first comparison should be
+inverted, or we get maximum, not minimum.  I didn't want to change the
+code so much, but I wanted to avoid breaking the 80 character limit with
+casts.
 
-I'll let you know what I find.
-
-Larry
+-- 
+Regards,
+Pavel Roskin
