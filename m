@@ -1,137 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3900 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753624AbYGSAAV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 20:00:21 -0400
-Date: Fri, 18 Jul 2008 19:23:21 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: 3rd REVISED AGENDA -- Re: Linux Wireless Mini-Summit -- Ottawa --
-	July 22, 2008
-Message-ID: <20080718232321.GA12961@tuxdriver.com> (sfid-20080719_020025_828656_97A2B242)
-References: <20080709190915.GA8238@tuxdriver.com> <20080715182654.GA5969@tuxdriver.com> <20080716184803.GB3232@tuxdriver.com>
+Received: from rhun.apana.org.au ([64.62.148.172]:33495 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751685AbYGUQnS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2008 12:43:18 -0400
+Date: Tue, 22 Jul 2008 00:43:06 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: David Miller <davem@davemloft.net>
+Cc: hadi@cyberus.ca, kaber@trash.net, netdev@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in RCU.
+Message-ID: <20080721164306.GA13131@gondor.apana.org.au> (sfid-20080721_184323_153639_0D8F2440)
+References: <20080721152220.GA12341@gondor.apana.org.au> <20080721.082627.128593651.davem@davemloft.net> <20080721161616.GA12938@gondor.apana.org.au> <20080721.092556.227421936.davem@davemloft.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080716184803.GB3232@tuxdriver.com>
+In-Reply-To: <20080721.092556.227421936.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-One more adjustment to account for change in the lunch schedule.
+On Mon, Jul 21, 2008 at 09:25:56AM -0700, David Miller wrote:
+>
+> Where are these places they are going to "jump all over"? :-)
 
-John
+Well consider the case where you have 4 queues, but a large number
+of flows per second (>= 1000).  No matter how good your hash is,
+there is just no way of squeezing 1000 flows into 4 queues without
+getting loads of collisions :)
 
----
+So let's assume that these flows have been distributed uniformly
+by both the RX hash and the TX hash such that each queue is handling
+~250 flows.  If the TX hash does not match the result produced by
+the RX hash, you're going to get a hell lot of contention once you
+get into the NIC driver on the TX side.
 
-3rd Linux Wireless Summit
-Les Suites Hotel, Byward Suite
-Ottawa, Canada
-22 July 2008
+This is because for NICs like the ones from Intel ones you have to
+protect the TX queue accesses so that only one CPU touches a given
+queue at any point in time.
 
-Proposed Agenda
+The end result is either the driver being bogged down by lock or
+TX queue contention, or the mid-layer will have to redistribute
+skb's to the right CPUs in which case the synchronisation cost is
+simply moved over there.
 
-0830	Meet & Greet
+> If the TX hash is good enough (current one certainly isn't and I will
+> work on fixing that), it is likely to spread the accesses enough that
+> there won't be many collisions to matter.
 
-	Introductions and opening remarks
+I agree that what you've got here makes total sense for a host.
+But I think there is room for something different for routers.
+ 
+> We could provide the option, but it is so dangerous and I also see no
+> real tangible benfit from it.
 
-0900	Status Reports
+The benefit as far as I can see is that this would allow a packet's
+entire journey through Linux to stay on exactly one CPU.  There will
+be zero memory written by multiple CPUs as far as that packet is
+concerned.
 
-	Overview of where things stand today
-
-	- QoS/Multiqueue
-
-	- 802.11n
-
-	- spectrum management
-
-	- Mesh mode (802.11s)
-
-	- RF kill
-
-	- driver status reports
-
-1000	Break
-
-1030	Current Work
-
-	Short presentations/discussions about work in progress
-
-	- access point mode
-
-	- cfg80211/nl80211
-		- time to push to replace WEXT?
-		- tool enhancements and/or userland support?
-
-	- regulatory enforcement (802.11d, CRDA)
-
-	- encrypted management frames (802.11w)
-
-	- virtual hardware (mac80211_hwsim)
-
-	- WiMAX
-
-1200	Vendor/Distro Round Table
-
-	Representatives from hardware vendors and Linux distributions
-	discuss issues around cooperation between themselves and the
-	development community, what we are doing well, and what problems we
-	are causing for each other.
-
-1230	Lunch/Break (provided)
-
-1400	Future work
-
-	Short presentations/discussions about work that has previously
-	been suggested or requested
-
-	- power management 
-		- suspend/resume
-		- power savings
-
-	- lib80211 (code sharing w/ full MAC drivers)
-
-	- rate scaling algorithms
-		- minstrel
-		- others?
-
-	- userland MLME
-
-	- userland driver implementation
-
-	- organized testing (anyone have a proposal?)
-
-1530	BoF/Break-out/BarCamp Session Proposals
-
-1600	Break
-
-1630	BoF/Break-out/BarCamp Sessions
-
-	Impromptu and/or unscheduled discussions as desired by group
-	participants
-
-1800	BoF/Break-out/BarCamp Session Reports
-
-1830	Maintainence Issues
-
-	Round table discussion of issues related to maintenance of
-	the wireless trees
-
-	- trivial/cleanup patches
-		- testing or other requirements?
-		- should they have lower priority?
-		- should they require ACKs from primary author?
-
-	- submissions to -stable
-		- who should drive it?
-		- what policies?
-
-	- rate scaling algs
-		- driver-specific ok?  what limitations?
-		- build policies (part of mac80211.ko?)
-
-	- questions/suggestions/complaints
-
-1900	Adjourn
+Cheers,
 -- 
-John W. Linville
-linville@tuxdriver.com
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
