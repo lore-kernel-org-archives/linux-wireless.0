@@ -1,34 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:53662 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750733AbYGSEPC (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47630
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750917AbYGUQpZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2008 00:15:02 -0400
-Message-ID: <48816A43.1050903@lwfinger.net> (sfid-20080719_061507_706267_D28CDDF2)
-Date: Fri, 18 Jul 2008 23:14:59 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-CC: Hin-Tak Leung <hintak.leung@gmail.com>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-Subject: Re: [RFC/RFT] rtl8187: Improve wireless statistics for RTL8187B
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net> <200807182142.59921.herton@mandriva.com.br>
-In-Reply-To: <200807182142.59921.herton@mandriva.com.br>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 21 Jul 2008 12:45:25 -0400
+Date: Mon, 21 Jul 2008 09:45:24 -0700 (PDT)
+Message-Id: <20080721.094524.152820749.davem@davemloft.net> (sfid-20080721_184528_722848_5A026ED4)
+To: hadi@cyberus.ca
+Cc: kaber@trash.net, netdev@vger.kernel.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
+ RCU.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1216639201.4847.217.camel@localhost>
+References: <20080720.165911.86437240.davem@davemloft.net>
+	<1216606839.4847.159.camel@localhost>
+	<1216639201.4847.217.camel@localhost>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Herton Ronaldo Krzesinski wrote:
-> 
-> I did some tests here and statistics are better now. I only couldn't use 
-> latest wireless-testing because something of latest changes broke 
-> communication, I couldn't scan/associate anymore, but using wireless-testing 
-> head at d61f20889de4978ed87d2a37d6f27147faec22d1 plus later anaparam*off 
-> change, with your patch I can confirm the better statistics, later I'll try 
-> to find what in wireless-testing broke here, I didn't have time to look into 
-> this today.
+From: jamal <hadi@cyberus.ca>
+Date: Mon, 21 Jul 2008 07:20:01 -0400
 
-What platform are you using? I'm on x86_64 and the latest one works for me. At 
-least you won't have that many commits to bisect.
+> Actually, can i modify that thought and go back to my initial contention
+> now that things are making more sense?;->
+> A single s/ware queue per hardware transmit queue is good - but that
+> being pfifo_fast would be a lot better. It would, in the minimal, keep
+> things as they were for non-multiq and is a sane choice for any virtual
+> wire.
 
-Larry
+Ok, I'll revert the change that changed pfifo_fast into plain fifo_fast.
+
+Thanks.
