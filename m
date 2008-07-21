@@ -1,44 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.177]:25031 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753677AbYGULje (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 07:39:34 -0400
-Received: by py-out-1112.google.com with SMTP id p76so1000535pyb.10
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 04:39:34 -0700 (PDT)
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
-	RCU.
-From: jamal <hadi@cyberus.ca>
-Reply-To: hadi@cyberus.ca
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: kaber@trash.net, davem@davemloft.net, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-In-Reply-To: <20080721113600.GA10322@gondor.apana.org.au>
-References: <E1KKZmE-0000ty-00@gondolin.me.apana.org.au>
-	 <1216568119.4847.101.camel@localhost>
-	 <20080721001119.GA6515@gondor.apana.org.au>
-	 <1216607637.4847.172.camel@localhost>
-	 <20080721031716.GA7535@gondor.apana.org.au>
-	 <1216638879.4847.210.camel@localhost>
-	 <20080721113600.GA10322@gondor.apana.org.au>
-Content-Type: text/plain
-Date: Mon, 21 Jul 2008 07:39:31 -0400
-Message-Id: <1216640371.4847.230.camel@localhost> (sfid-20080721_133945_994004_690A8983)
-Mime-Version: 1.0
+Received: from mgw2.diku.dk ([130.225.96.92]:60144 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757897AbYGUH6N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2008 03:58:13 -0400
+Date: Mon, 21 Jul 2008 09:58:11 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: yi.zhu@intel.com, jketreno@linux.intel.com,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
+	ipw2100-devel@lists.sourceforge.net, jgarzik@pobox.com,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH 4/7] drivers/net/wireless/ipw2100.c: Release mutex in error
+ handling code
+Message-ID: <Pine.LNX.4.64.0807210957490.24625@ask.diku.dk> (sfid-20080721_095828_786525_AD73C1F3)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-21-07 at 19:36 +0800, Herbert Xu wrote:
+From: Julia Lawall <julia@diku.dk>
 
-> Sorry, I think I'll have to poke my eyes out :)
+The mutex is released on a successful return, so it would seem that it
+should be released on an error return as well.
 
-But i still need your eyes to poke at my code Herbert;-> 
+The semantic patch finds this problem is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
 
-> But yeah if we ever get a generic dynamic hash table implmenetation
-> then I'd be happy for act_nat to use that.
+// <smpl>
+@@
+expression l;
+@@
 
-Ok, i have added it to my todo.
+mutex_lock(l);
+... when != mutex_unlock(l)
+    when any
+    when strict
+(
+if (...) { ... when != mutex_unlock(l)
++   mutex_unlock(l);
+    return ...;
+}
+|
+mutex_unlock(l);
+)
+// </smpl>
 
-cheers,
-jamal
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
+---
+diff -u -p a/drivers/net/wireless/ipw2100.c b/drivers/net/wireless/ipw2100.c
+--- a/drivers/net/wireless/ipw2100.c
++++ b/drivers/net/wireless/ipw2100.c
+@@ -6442,6 +6442,7 @@ static int ipw2100_resume(struct pci_dev
+ 	if (err) {
+ 		printk(KERN_ERR "%s: pci_enable_device failed on resume\n",
+ 		       dev->name);
++		mutex_unlock(&priv->action_mutex);
+ 		return err;
+ 	}
+ 	pci_restore_state(pci_dev);
+@@ -7146,7 +7147,7 @@ static int ipw2100_wx_get_rate(struct ne
+ 	err = ipw2100_get_ordinal(priv, IPW_ORD_CURRENT_TX_RATE, &val, &len);
+ 	if (err) {
+ 		IPW_DEBUG_WX("failed querying ordinals.\n");
+-		return err;
++		goto done;
+ 	}
+ 
+ 	switch (val & TX_RATE_MASK) {
