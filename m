@@ -1,47 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:43954 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751861AbYGJGwm (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:15161 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751827AbYGUNxG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 02:52:42 -0400
-Received: by py-out-1112.google.com with SMTP id p76so1743167pyb.10
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 23:52:41 -0700 (PDT)
-Message-ID: <c85cb4470807092352m455667c3jf77fd2599b433c89@mail.gmail.com> (sfid-20080710_085254_299664_38D46AF3)
-Date: Thu, 10 Jul 2008 09:52:41 +0300
-From: "Ron Rindjunsky" <rindjon@googlemail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
-Cc: "Tomas Winkler" <tomasw@gmail.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <1ba2fa240807091713t1158c1ddp81c92ae26a002e46@mail.gmail.com>
+	Mon, 21 Jul 2008 09:53:06 -0400
+Received: from mail.atheros.com ([192.168.11.2])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 06:53:06 -0700
+From: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+To: Pavel Roskin <proski@gnu.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 21 Jul 2008 06:53:04 -0700
+Subject: RE: [PATCH] ath9k: fix build errors and warnings on 64-bit systems
+Message-ID: <15B47C78534E094AA9A41F58FB8D74F3D6EF4A7EEE@SC1EXMB-MBCL.global.atheros.com> (sfid-20080721_155314_058589_A95ED77B)
+References: <20080721000313.24845.10866.stgit@dv.roinet.com>
+In-Reply-To: <20080721000313.24845.10866.stgit@dv.roinet.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080709190915.GA8238@tuxdriver.com>
-	 <1ba2fa240807091713t1158c1ddp81c92ae26a002e46@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> > The third Linux Wireless mini-summit will occur on Tuesday July 22,
-> > 2008 in Ottawa, just before the Ottawa Linux Symposium.  OLS is
-> > generously supporting Linux mini-summits by providing the room and
-> > projector (http://www.linuxsymposium.org/2008/minisummits.php).
-> > Several vendors are supporting the event by sponsoring their own
-> > employees to attend, and Canonical and Intel have both helped with
-> > travel funds for key community participants as well.
-> >
-> > Although it is already a bit late, I would like to re-open discussions
-> > on our agenda for the meeting.  Based on current upstream topics and
-> > those persons whom I expect to be attending, I have cobbled together
-> > an agenda proposal below.  Please review it and feel free to suggest
-> > amendments or alterations, or to elaborate or ask questions about my
-> > proposed schedule of topics.
-> >
-> > I look forward to seeing many of you in Ottawa!
->
-> One more topic would be probably
-> power management/power save - connection to system power/power supply
-> (Battery/AC)
 
-brief discussion about AP mode current and future plans would be
-appreciated, maybe as part of the MLME topic.
+Thanks, I split this into two patches. I've updated the patch series for wireless-testing as well:
+
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/
+
+  Luis
+________________________________________
+From: Pavel Roskin [proski@gnu.org]
+Sent: Monday, July 21, 2008 5:33 AM
+To: ath9k-devel@lists.ath9k.org; Luis Rodriguez
+Subject: [PATCH] ath9k: fix build errors and warnings on 64-bit systems
+
+Use skb_end_pointer(skb), not skb->end.  The later is not portable.
+Avoid comparison of incompatible types.
+
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+
+ ksrc/hw.c   |    6 ++++--
+ ksrc/recv.c |    5 +++--
+ 2 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/ksrc/hw.c b/ksrc/hw.c
+index b8a9321..5a24cbe 100644
+--- a/ksrc/hw.c
++++ b/ksrc/hw.c
+@@ -852,9 +852,11 @@ static inline enum hal_status ath9k_hw_check_eeprom(struct ath_hal *ah)
+        else
+                el = ahp->ah_eeprom.baseEepHeader.length;
+
++       if (el < sizeof(struct ar5416_eeprom) / sizeof(u_int16_t))
++               el = sizeof(struct ar5416_eeprom) / sizeof(u_int16_t);
++
+        eepdata = (u_int16_t *) (&ahp->ah_eeprom);
+-       for (i = 0; i <
+-               min(el, sizeof(struct ar5416_eeprom)) / sizeof(u_int16_t); i++)
++       for (i = 0; i < el; i++)
+                sum ^= *eepdata++;
+
+        if (need_swap) {
+diff --git a/ksrc/recv.c b/ksrc/recv.c
+index a48c9e9..e111e9d 100644
+--- a/ksrc/recv.c
++++ b/ksrc/recv.c
+@@ -1380,7 +1380,7 @@ dma_addr_t ath_skb_map_single(struct ath_softc *sc,
+         * Use skb's entire data area instead.
+         */
+        *pa = pci_map_single(sc->pdev, skb->data,
+-               skb->end - skb->head, direction);
++               skb_end_pointer(skb) - skb->head, direction);
+        return *pa;
+ }
+
+@@ -1390,5 +1390,6 @@ void ath_skb_unmap_single(struct ath_softc *sc,
+                          dma_addr_t *pa)
+ {
+        /* Unmap skb's entire data area */
+-       pci_unmap_single(sc->pdev, *pa, skb->end - skb->head, direction);
++       pci_unmap_single(sc->pdev, *pa,
++                        skb_end_pointer(skb) - skb->head, direction);
+ }
