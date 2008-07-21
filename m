@@ -1,69 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:6121 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751833AbYGGNCm convert rfc822-to-8bit (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.179]:48159 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753944AbYGULOm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2008 09:02:42 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so1002989ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2008 06:02:34 -0700 (PDT)
-Message-ID: <1ba2fa240807070602jec0e924t9928ac9ffabb68a@mail.gmail.com> (sfid-20080707_150245_727587_18B959C6)
-Date: Mon, 7 Jul 2008 16:02:28 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: [PATCH 1/1] mac80211: Fix ieee80211_rx_reorder_ampdu: ignore QoS null packets
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
-In-Reply-To: <69e28c910807070537u194703a0i26d210c53436d6c2@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1215433936-5241-1-git-send-email-tomas.winkler@intel.com>
-	 <69e28c910807070537u194703a0i26d210c53436d6c2@mail.gmail.com>
+	Mon, 21 Jul 2008 07:14:42 -0400
+Received: by py-out-1112.google.com with SMTP id p76so992762pyb.10
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 04:14:42 -0700 (PDT)
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
+	RCU.
+From: jamal <hadi@cyberus.ca>
+Reply-To: hadi@cyberus.ca
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: kaber@trash.net, davem@davemloft.net, netdev@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+In-Reply-To: <20080721031716.GA7535@gondor.apana.org.au>
+References: <E1KKZmE-0000ty-00@gondolin.me.apana.org.au>
+	 <1216568119.4847.101.camel@localhost>
+	 <20080721001119.GA6515@gondor.apana.org.au>
+	 <1216607637.4847.172.camel@localhost>
+	 <20080721031716.GA7535@gondor.apana.org.au>
+Content-Type: text/plain
+Date: Mon, 21 Jul 2008 07:14:39 -0400
+Message-Id: <1216638879.4847.210.camel@localhost> (sfid-20080721_131512_708196_C4140F35)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 7, 2008 at 3:37 PM, Stefanik G=E1bor <netrolller.3d@gmail.c=
-om> wrote:
-> On Mon, Jul 7, 2008 at 2:32 PM, Tomas Winkler <tomas.winkler@intel.co=
-m> wrote:
->> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->>
->> This patch fixes the check at the entrance to ieee80211_rx_reorder_a=
-mpdu.
->> This check has been broken by 511fe3f3c4ba0b5b77421336f64a19b6cd00e6=
-5f
->> 'mac80211: rx.c use new helpers'
->>
->> Letting QoS NULL packet in ieee80211_rx_reorder_ampdu led to packet =
-loss in
->> RX.
->>
->> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
->> ---
->>  include/linux/ieee80211.h |   11 +++++++++++
->>  net/mac80211/rx.c         |    2 +-
->>  2 files changed, 12 insertions(+), 1 deletions(-)
->>
->> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
->> index aa603c3..3865d4c 100644
->> --- a/include/linux/ieee80211.h
->> +++ b/include/linux/ieee80211.h
->> @@ -460,6 +460,17 @@ static inline int ieee80211_is_nullfunc(__le16 =
-fc)
->>               cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_NUL=
-LFUNC);
->>  }
->>
->> +/**
->> + * ieee80211_is_nullfunc - check if FTYPE=3DIEEE80211_FTYPE_DATA an=
-d
->
-> Was this intended to be "ieee80211_is_qos_nullfunc - check..."?
-Thanks. V2 was posted.
-Tomas
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Mon, 2008-21-07 at 11:17 +0800, Herbert Xu wrote:
+
+> Unfortunately the scenario that I wrote this for requires frequent
+> addition/removal.
+
+Aha - makes absolute sense then;->
+
+> Only if you also want to share it :) In the end I patched it to
+> not share it which is much easier.
+
+I am trying to visualize: if you dont share, you must have 256K copies
+then? Assuming also you have a fast lookup since that was design intent.
+
+> Of course if you're volunteering to write the dynamic hash table
+> for actions then I'd happily switch back to sharing :)
+
+It is a unique need like you said earlier (and would require a
+medium-size surgery).
+How about this: if a second user shows up with such a need I could do
+it.
+
+If you knew you had a 256K entry, then you could make
+NAT_TAB_MASK to be (256K-1) and you are guaranteed to get O(1) lookup if
+you dont specify indices.
+I know youve patched it already -havent quiet understood how and your
+current solution may be better- but one other way is to have a Kconfig
+option which lets the user type the size of the nat hash table size at
+kernel compile time. So then a change
+of the sort:
+#ifdef CONFIG_HASH_SIZE
+#define NAT_TAB_MASK CONFIGURED_HASH_SIZE
+#else
+#define NAT_TAB_MASK 15
+#endif
+
+What do you think?
+
+cheers,
+jamal
+
