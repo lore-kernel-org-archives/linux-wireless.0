@@ -1,89 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57680 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751961AbYGIPRT (ORCPT
+Received: from ro.mikronika.com.pl ([213.17.224.85]:50529 "EHLO
+	cluster1.mikronika.com.pl" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751916AbYGUNll (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 11:17:19 -0400
-Subject: Re: [PATCH 1/3] mac80211: Include sequence number in IBSS and Mesh
-	beacons
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200807091708.04870.IvDoorn@gmail.com> (sfid-20080709_165916_536085_4E7EB629)
-References: <200807091511.14288.IvDoorn@gmail.com>
-	 <200807091637.02090.IvDoorn@gmail.com>
-	 <1215614895.3246.17.camel@johannes.berg>
-	 <200807091708.04870.IvDoorn@gmail.com>
-	 (sfid-20080709_165916_536085_4E7EB629)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EP3JKRdGfYjDsbNlHDVV"
-Date: Wed, 09 Jul 2008 17:16:32 +0200
-Message-Id: <1215616592.3246.24.camel@johannes.berg> (sfid-20080709_171721_889912_11E8A503)
-Mime-Version: 1.0
+	Mon, 21 Jul 2008 09:41:41 -0400
+Received: from [192.168.3.203] (szkudlarekk-lap.mikronika.com.pl [192.168.3.203])
+	(authenticated bits=0)
+	by cluster1.mikronika.com.pl (8.13.4/8.13.4) with ESMTP id m6LDTx5O000741
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 15:29:59 +0200
+Message-ID: <48848F55.4060404@mikronika.com.pl> (sfid-20080721_154145_849082_1D240B38)
+Date: Mon, 21 Jul 2008 15:29:57 +0200
+From: Karol Szkudlarek <karol@mikronika.com.pl>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: iwl3945
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello!
 
---=-EP3JKRdGfYjDsbNlHDVV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I hope that report I'm sending to the right mailing list. During boot I=
+=20
+have a following crash in
+mac80211 module. I'm using iwl3945 driver on my hp6710b laptop.
 
-On Wed, 2008-07-09 at 17:08 +0200, Ivo van Doorn wrote:
+Jul 21 15:20:10 lap audio[5670]: Registered manager path:/org/bluez/aud=
+io
+Jul 21 15:20:10 lap kernel: [ 34.000991] WARNING: at=20
+/home/karol/tmp/downloads/compat-wireless-2008-07-21/net/mac80211/util.=
+c:385=20
+ieee80211_wake_queue()
+Jul 21 15:20:10 lap kernel: [ 34.001002] Pid: 3438, comm: iwl3945/0 Not=
+=20
+tainted 2.6.24-19-generic #1
+Jul 21 15:20:10 lap kernel: [ 34.001025] [<f8c24ce7>]=20
+ieee80211_wake_queue+0x87/0x90 [mac80211]
+Jul 21 15:20:10 lap kernel: [ 34.001087] [<f8c24d0b>]=20
+ieee80211_wake_queues+0x1b/0x30 [mac80211]
+Jul 21 15:20:10 lap kernel: [ 34.001130] [<f8c4b0bc>]=20
+iwl3945_bg_alive_start+0x1bc/0x340 [iwl3945]
+Jul 21 15:20:10 lap kernel: [ 34.001158] [<f8c4af00>]=20
+iwl3945_bg_alive_start+0x0/0x340 [iwl3945]
+Jul 21 15:20:10 lap kernel: [ 34.001175] [run_workqueue+0xbf/0x160]=20
+run_workqueue+0xbf/0x160
+Jul 21 15:20:10 lap kernel: [ 34.001194] [worker_thread+0x0/0xe0]=20
+worker_thread+0x0/0xe0
+Jul 21 15:20:10 lap kernel: [ 34.001204] [worker_thread+0x84/0xe0]=20
+worker_thread+0x84/0xe0
+Jul 21 15:20:10 lap kernel: [ 34.001214] [<c0140c40>]=20
+autoremove_wake_function+0x0/0x40
+Jul 21 15:20:10 lap kernel: [ 34.001226] [worker_thread+0x0/0xe0]=20
+worker_thread+0x0/0xe0
+Jul 21 15:20:10 lap kernel: [ 34.001235] [kthread+0x42/0x70]=20
+kthread+0x42/0x70
+Jul 21 15:20:10 lap kernel: [ 34.001240] [kthread+0x0/0x70] kthread+0x0=
+/0x70
+Jul 21 15:20:10 lap kernel: [ 34.001249] [kernel_thread_helper+0x7/0x10=
+]=20
+kernel_thread_helper+0x7/0x10
+Jul 21 15:20:10 lap kernel: [ 34.001265] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+Jul 21 15:20:10 lap kernel: [ 34.001269] WARNING: at=20
+/home/karol/tmp/downloads/compat-wireless-2008-07-21/net/mac80211/util.=
+c:385=20
+ieee80211_wake_queue()
+Jul 21 15:20:10 lap kernel: [ 34.001276] Pid: 3438, comm: iwl3945/0 Not=
+=20
+tainted 2.6.24-19-generic #1
+Jul 21 15:20:10 lap kernel: [ 34.001283] [<f8c24ce7>]=20
+ieee80211_wake_queue+0x87/0x90 [mac80211]
+Jul 21 15:20:10 lap kernel: [ 34.001329] [<f8c24d0b>]=20
+ieee80211_wake_queues+0x1b/0x30 [mac80211]
+Jul 21 15:20:10 lap kernel: [ 34.001371] [<f8c4b0bc>]=20
+iwl3945_bg_alive_start+0x1bc/0x340 [iwl3945]
+Jul 21 15:20:10 lap kernel: [ 34.001397] [<f8c4af00>]=20
+iwl3945_bg_alive_start+0x0/0x340 [iwl3945]
+Jul 21 15:20:10 lap kernel: [ 34.001414] [run_workqueue+0xbf/0x160]=20
+run_workqueue+0xbf/0x160
+Jul 21 15:20:10 lap kernel: [ 34.001430] [worker_thread+0x0/0xe0]=20
+worker_thread+0x0/0xe0
+Jul 21 15:20:10 lap kernel: [ 34.001438] [worker_thread+0x84/0xe0]=20
+worker_thread+0x84/0xe0
+Jul 21 15:20:10 lap kernel: [ 34.001448] [<c0140c40>]=20
+autoremove_wake_function+0x0/0x40
+Jul 21 15:20:10 lap kernel: [ 34.001460] [worker_thread+0x0/0xe0]=20
+worker_thread+0x0/0xe0
+Jul 21 15:20:10 lap kernel: [ 34.001468] [kthread+0x42/0x70]=20
+kthread+0x42/0x70
+Jul 21 15:20:10 lap kernel: [ 34.001474] [kthread+0x0/0x70] kthread+0x0=
+/0x70
+Jul 21 15:20:10 lap kernel: [ 34.001483] [kernel_thread_helper+0x7/0x10=
+]=20
+kernel_thread_helper+0x7/0x10
+Jul 21 15:20:10 lap kernel: [ 34.001496] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+Jul 21 15:20:10 lap kernel: [ 34.001500] WARNING: at=20
+/home/karol/tmp/downloads/compat-wireless-2008-07-21/net/mac80211/util.=
+c:385=20
+ieee80211_wake_queue()
+Jul 21 15:20:10 lap kernel: [ 34.001507] Pid: 3438, comm: iwl3945/0 Not=
+=20
+tainted 2.6.24-19-generic #1
+Jul 21 15:20:10 lap kernel: [ 34.001514] [<f8c24ce7>]=20
+ieee80211_wake_queue+0x87/0x90 [mac80211]
+Jul 21 15:20:10 lap kernel: [ 34.001560] [<f8c24d0b>]=20
+ieee80211_wake_queues+0x1b/0x30 [mac80211]
+Jul 21 15:20:10 lap kernel: [ 34.001601] [<f8c4b0bc>]=20
+iwl3945_bg_alive_start+0x1bc/0x340 [iwl3945]
+Jul 21 15:20:10 lap kernel: [ 34.001626] [<f8c4af00>]=20
+iwl3945_bg_alive_start+0x0/0x340 [iwl3945]
+Jul 21 15:20:10 lap kernel: [ 34.001643] [run_workqueue+0xbf/0x160]=20
+run_workqueue+0xbf/0x160
+Jul 21 15:20:10 lap kernel: [ 34.001658] [worker_thread+0x0/0xe0]=20
+worker_thread+0x0/0xe0
+Jul 21 15:20:10 lap kernel: [ 34.001667] [worker_thread+0x84/0xe0]=20
+worker_thread+0x84/0xe0
+Jul 21 15:20:10 lap kernel: [ 34.001676] [<c0140c40>]=20
+autoremove_wake_function+0x0/0x40
+Jul 21 15:20:10 lap kernel: [ 34.001688] [worker_thread+0x0/0xe0]=20
+worker_thread+0x0/0xe0
+Jul 21 15:20:10 lap kernel: [ 34.001696] [kthread+0x42/0x70]=20
+kthread+0x42/0x70
+Jul 21 15:20:10 lap kernel: [ 34.001702] [kthread+0x0/0x70] kthread+0x0=
+/0x70
+Jul 21 15:20:10 lap kernel: [ 34.001710] [kernel_thread_helper+0x7/0x10=
+]=20
+kernel_thread_helper+0x7/0x10
+Jul 21 15:20:10 lap kernel: [ 34.001724] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+Jul 21 15:20:10 lap NetworkManager: <info> wlan0: Device is=20
+fully-supported using driver 'iwl3945'.
+Jul 21 15:20:10 lap NetworkManager: <info> wlan0: driver supports SSID=20
+scans (scan_capa 0x01).
+Jul 21 15:20:10 lap NetworkManager: <info> nm_device_init(): waiting fo=
+r=20
+device's worker thread to start
+Jul 21 15:20:10 lap NetworkManager: <info> nm_device_init(): device's=20
+worker thread started, continuing.
+Jul 21 15:20:10 lap NetworkManager: <info> Now managing wireless=20
+(802.11) device 'wlan0'.
+Jul 21 15:20:10 lap NetworkManager: <info> Deactivating device wlan0.
+Jul 21 15:20:10 lap NetworkManager: <info> Will activate wired=20
+connection 'eth0' because it now has a link.
+Jul 21 15:20:10 lap NetworkManager: <debug> [1216646410.600448]=20
+nm_hal_device_added(): New device added (hal udi is=20
+'/org/freedesktop/Hal/devices/storage_model_DVDRAM_GSA_T10N').
+Jul 21 15:20:10 lap NetworkManager: <debug> [1216646410.601408]=20
+nm_hal_device_added(): New device added (hal udi is=20
+'/org/freedesktop/Hal/devices/platform_bluetooth').
+Jul 21 15:20:10 lap NetworkManager: <info> Error getting killswitch=20
+power: org.freedesktop.Hal.Device.KillSwitch.NotSupported -=20
+hal-ipw-killswitch-linux returned 255
+Jul 21 15:20:10 lap NetworkManager: <info> Wireless now enabled by radi=
+o=20
+killswitch
+Jul 21 15:20:12 lap kernel: [ 34.619783] tg3: eth0: Link is up at 100=20
+Mbps, full duplex.
+Jul 21 15:20:12 lap kernel: [ 34.619791] tg3: eth0: Flow control is on=20
+for TX and on for RX.
+Jul 21 15:20:12 lap NetworkManager: <info> Will activate wired=20
+connection 'eth0' because it now has a link.
+Jul 21 15:20:12 lap NetworkManager: <info> SWITCH: no current=20
+connection, found better connection 'eth0'.
+Jul 21 15:20:12 lap dhcdbd: message_handler: message handler not found=20
+under /com/redhat/dhcp/eth0 for sub-path eth0.dbus.get.reason
+Jul 21 15:20:12 lap NetworkManager: <info> Will activate connection 'et=
+h0'.
+Jul 21 15:20:12 lap NetworkManager: <info> Device eth0 activation=20
+scheduled...
 
-> > That just widens the window. And if you have multiple queues then you
-> > can't do sw sequence numbers anyway because the hardware might reorder
-> > the frames.
->=20
-> That doesn't seem to be a problem in the legacy drivers, so I guess the h=
-ardware
-> does *something* to prevent problems.
 
-Actually, looking at 7.1.3.4.1 (Sequence Number field) this all seems to
-be wrong anyway, we should be keeping a sequence number counter
-_per_TID_ and one for non-QoS data/mgmt frames.
+Linux lap 2.6.24-19-generic #1 SMP Fri Jul 11 23:41:49 UTC 2008 i686=20
+GNU/Linux
 
-> > > As far as rt2x00 is concerned, all hardware that supports multi-bss a=
-lso
-> > > support HW sequence counters. rt2400pci and rt2500pci are the only on=
-es
-> > > requiring SW sequence counters, and they can't do multi-bss.
-> >=20
-> > Do they keep per-BSS counters?
->=20
-> Not sure what you mean, but rt2400pci and rt2500pci don't support multi-b=
-ss,
-> so they wouldn't have per-BSS counters.
-> rt61pci and rt73usb do support multi-bss and keep the sequence counting
-> completely in firmware/hardware and I am not sure how they can be read
-> by the driver. So I don't know how those are stored either.
+Modules are built today from package:
+http://wireless.kernel.org/download/compat-wireless-2.6/compat-wireless=
+-2.6.tar.bz2
 
-Ok. Since the hw is capable of mBSS I'd guess it has sequence numbers
-for each BSS.
+--=20
+Karol Szkudlarek
+Mikronika
+ul. Wykopy 2/4
+60-001 POZNA=C3=91
+tel. +48 61 6655600
+fax +48 61 6655602
+e-mail karol@mikronika.com.pl
 
-johannes
-
---=-EP3JKRdGfYjDsbNlHDVV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIdNZKAAoJEKVg1VMiehFYw/AP/0pyW36FquLh4pOgRB9qwvZq
-IGegSVpWYR88GOZvbgrVbPMEpj+8emKZY+ofYmjK4BtYpqTUqDdK0yJi0e+6f8aY
-6MR8ggQVt7nLsvEnRgvnuF80XDEIl81NwuHoo5XMgffov59MvomKWcOBu1NJL0W8
-e4YBfix5IPAb6uQByQ9zKmlBGbjMIZtBVL4nuGxteBgGfpetZU1XpdnnLTfiDWjh
-mrgkZ//jYcT1TLGZ2f/uxtcZ47Ru+m3fqqKrgfIMc8hR50NKHIAb7EGCr/NNwnbw
-DVXkoywAohXZuvn/BMNl83lzMwM3cBZp7MlcziwFymLss6YCCCx+VAPtN40IniR6
-cAgdIWT1AET4TwVqG5ppgc4KLiy+ErH4z3DOTwfU/tRWK7wBUXF/V9Qdi6BVT2yc
-v94AUAddLI0JxkKr2nSFXb4MzAryP3C68zJvYKk9U7rPsQzNmNcOtxhMhh8HKzts
-/+W4lKYFQh9mKBhkYYXlalL75d1Vm+qpwOZ1d6d7V3s+A/tU8cs5d3MAdFz0uFNI
-KNvacKuRBaUTOeQpM1+HYEruWVziAM+qNhD9E/g383G8zOzyOVXBXzdIAPea97NR
-TiIKM0A6v/N/E6YKAxEQVBWATsWxAW6BS2dSLDgHWNkprJRqRiUk3VIJQkG5URhx
-CFpGSS7Q0Bnmvr23fzxn
-=HXrC
------END PGP SIGNATURE-----
-
---=-EP3JKRdGfYjDsbNlHDVV--
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
