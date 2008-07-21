@@ -1,37 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:26339 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752840AbYGYCDT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2008 22:03:19 -0400
-Subject: Re: [ipw3945-devel] [PATCH] iwlwifi: Enable packet injection for
-	iwl4965
-From: Zhu Yi <yi.zhu@intel.com>
-To: =?ISO-8859-1?Q?St=E9phane?= Jourdois <stephane@jourdois.fr>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <4886235F.6010407@jourdois.fr>
-References: <69e28c910807181205m6dd0cdcek83f9717bf1ac9dcc@mail.gmail.com>
-	 <69e28c910807220454q7c8371e1m11b1015ed8398758@mail.gmail.com>
-	 <4885DDC4.2060609@googlemail.com>  <4886235F.6010407@jourdois.fr>
-Content-Type: text/plain; charset=GB2312
-Date: Fri, 25 Jul 2008 09:58:53 +0800
-Message-Id: <1216951133.2705.227.camel@debian.sh.intel.com> (sfid-20080725_040324_098680_3AAB6087)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:32860
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753157AbYGUUVA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2008 16:21:00 -0400
+Date: Mon, 21 Jul 2008 13:21:00 -0700 (PDT)
+Message-Id: <20080721.132100.128525904.davem@davemloft.net> (sfid-20080721_222105_346783_91C9ADBE)
+To: Larry.Finger@lwfinger.net
+Cc: mingo@elte.hu, ischram@telenet.be, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	j@w1.fi
+Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
+ at 0000000000000370
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <4884E6E6.7010800@lwfinger.net>
+References: <4884DFEE.4060003@lwfinger.net>
+	<20080721193425.GA29287@elte.hu>
+	<4884E6E6.7010800@lwfinger.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-07-22 at 20:13 +0200, St=A8=A6phane Jourdois wrote:
-> but this commit is for iwl3945, not iwl4965.
-> The patch for iwl4965 is currently not in any git tree.
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Date: Mon, 21 Jul 2008 14:43:34 -0500
 
-We are waiting for more "confirmed success" response before merging it.
+> Jul 21 12:19:37 larrylap kernel: kernel BUG at net/core/dev.c:1328!
+> Jul 21 12:19:37 larrylap kernel: invalid opcode: 0000 [1] SMP
+> Jul 21 12:19:37 larrylap kernel: CPU 0
+> Jul 21 12:19:37 larrylap kernel: Modules linked in: af_packet rfkill_input nfs 
+> lockd nfs_acl sunrpc cpufreq_conservative cpu
+> freq_userspace cpufreq_powersave powernow_k8 fuse loop dm_mod arc4 ecb 
+> crypto_blkcipher b43 firmware_class rfkill mac80211 c
+> fg80211 snd_hda_intel snd_pcm snd_timer led_class snd k8temp input_polldev 
+> sr_mod soundcore button battery hwmon cdrom force
+> deth ac serio_raw ssb snd_page_alloc sg ehci_hcd sd_mod ohci_hcd usbcore edd fan 
+> thermal processor ext3 mbcache jbd pata_amd
+>   ahci libata scsi_mod dock
+> Jul 21 12:19:37 larrylap kernel: Pid: 2057, comm: b43 Not tainted 
+> 2.6.26-Linus-git-05253-g14b395e #1
+> Jul 21 12:19:37 larrylap kernel: RIP: 0010:[<ffffffff8039ec4d>] 
+> [<ffffffff8039ec4d>] __netif_schedule+0x12/0x75
+> Jul 21 12:19:37 larrylap kernel: RSP: 0000:ffff8800b9ae1de0  EFLAGS: 00010246
+> 
+> With an invalid opcode, mine is likely due to stack corruption.
 
-Thanks,
--yi
+No further backtrace?  That will tell us what driver is causing
+this.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
