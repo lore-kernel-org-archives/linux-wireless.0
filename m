@@ -1,81 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40149 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753621AbYG2KKF (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.177]:29888 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752079AbYGUSsH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 06:10:05 -0400
-Subject: Re: 2.6.27-rc1: zd1211rw association fails
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alistair John Strachan <alistair@devzero.co.uk>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	dsd@gentoo.org, kune@deine-taler.de, linux-wireless@vger.kernel.org
-In-Reply-To: <200807291049.47342.alistair@devzero.co.uk> (sfid-20080729_115008_505138_9BF9DEAA)
-References: <alpine.LFD.1.10.0807281956030.3334@nehalem.linux-foundation.org>
-	 <200807291049.47342.alistair@devzero.co.uk>
-	 (sfid-20080729_115008_505138_9BF9DEAA)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gDkbE49qw4JxY77sVrtp"
-Date: Tue, 29 Jul 2008 12:09:55 +0200
-Message-Id: <1217326195.10489.10.camel@johannes.berg> (sfid-20080729_121010_449731_5F9A9955)
-Mime-Version: 1.0
+	Mon, 21 Jul 2008 14:48:07 -0400
+Received: by py-out-1112.google.com with SMTP id p76so1163582pyb.10
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 11:48:05 -0700 (PDT)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+From: Brian Cavagnolo <brian@cozybit.com>
+Date: Mon, 21 Jul 2008 11:03:16 -0700
+Subject: [PATCH 2/3 RESEND] libertas: add sysfs hooks to update boot2 and persistent firmware
+Message-ID: <4884d9e3.1997600a.51e2.fffff1b6@mx.google.com> (sfid-20080721_204810_442381_5DF4FCC1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+To use these features, copy the boot2 and firmware images to /lib/firmware and:
 
---=-gDkbE49qw4JxY77sVrtp
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+echo <boot2_image_name> > /sys/class/net/ethX/lbs_flash_boot2
+echo <firmware_image_name> > /sys/class/net/ethX/lbs_flash_fw
+
+Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
+---
+ drivers/net/wireless/libertas/if_usb.c |   65 ++++++++++++++++++++++++++++++++
+ 1 files changed, 65 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index 764b285..13c6ec2 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -51,6 +51,62 @@ static void if_usb_free(struct if_usb_card *cardp);
+ static int if_usb_submit_rx_urb(struct if_usb_card *cardp);
+ static int if_usb_reset_device(struct if_usb_card *cardp);
+ 
++/* sysfs hooks */
++
++/**
++ *  Set function to write firmware to device's persistent memory
++ */
++static ssize_t if_usb_firmware_set(struct device *dev,
++		struct device_attribute *attr, const char *buf, size_t count)
++{
++	struct lbs_private *priv = to_net_dev(dev)->priv;
++	struct if_usb_card *cardp = priv->card;
++	char fwname[FIRMWARE_NAME_MAX];
++	int ret;
++
++	sscanf(buf, "%29s", fwname); /* FIRMWARE_NAME_MAX - 1 = 29 */
++	ret = if_usb_prog_firmware(cardp, fwname, BOOT_CMD_UPDATE_FW);
++	if (ret == 0)
++		return count;
++
++	return ret;
++}
++
++/**
++ * lbs_flash_fw attribute to be exported per ethX interface through sysfs
++ * (/sys/class/net/ethX/lbs_flash_fw).  Use this like so to write firmware to
++ * the device's persistent memory:
++ * echo usb8388-5.126.0.p5.bin > /sys/class/net/ethX/lbs_flash_fw
++ */
++static DEVICE_ATTR(lbs_flash_fw, 0200, NULL, if_usb_firmware_set);
++
++/**
++ *  Set function to write firmware to device's persistent memory
++ */
++static ssize_t if_usb_boot2_set(struct device *dev,
++		struct device_attribute *attr, const char *buf, size_t count)
++{
++	struct lbs_private *priv = to_net_dev(dev)->priv;
++	struct if_usb_card *cardp = priv->card;
++	char fwname[FIRMWARE_NAME_MAX];
++	int ret;
++
++	sscanf(buf, "%29s", fwname); /* FIRMWARE_NAME_MAX - 1 = 29 */
++	ret = if_usb_prog_firmware(cardp, fwname, BOOT_CMD_UPDATE_BOOT2);
++	if (ret == 0)
++		return count;
++
++	return ret;
++}
++
++/**
++ * lbs_flash_boot2 attribute to be exported per ethX interface through sysfs
++ * (/sys/class/net/ethX/lbs_flash_boot2).  Use this like so to write firmware
++ * to the device's persistent memory:
++ * echo usb8388-5.126.0.p5.bin > /sys/class/net/ethX/lbs_flash_boot2
++ */
++static DEVICE_ATTR(lbs_flash_boot2, 0200, NULL, if_usb_boot2_set);
++
+ /**
+  *  @brief  call back function to handle the status of the URB
+  *  @param urb 		pointer to urb structure
+@@ -263,6 +319,12 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	usb_get_dev(udev);
+ 	usb_set_intfdata(intf, cardp);
+ 
++	if (device_create_file(&priv->dev->dev, &dev_attr_lbs_flash_fw))
++		lbs_pr_err("cannot register lbs_flash_fw attribute\n");
++
++	if (device_create_file(&priv->dev->dev, &dev_attr_lbs_flash_boot2))
++		lbs_pr_err("cannot register lbs_flash_boot2 attribute\n");
++
+ 	return 0;
+ 
+ err_start_card:
+@@ -288,6 +350,9 @@ static void if_usb_disconnect(struct usb_interface *intf)
+ 
+ 	lbs_deb_enter(LBS_DEB_MAIN);
+ 
++	device_remove_file(&priv->dev->dev, &dev_attr_lbs_flash_boot2);
++	device_remove_file(&priv->dev->dev, &dev_attr_lbs_flash_fw);
++
+ 	cardp->surprise_removed = 1;
+ 
+ 	if (priv) {
+-- 
+1.5.5.3
 
 
-> However, on 2.6.27-rc1 I see the following instead:
->=20
-> [   12.120189] firmware: requesting zd1211/zd1211b_ub
-> [   12.166388] firmware: requesting zd1211/zd1211b_uphr
-> [   12.218877] zd1211rw 4-2:1.0: firmware version 4725
-> [   12.258877] zd1211rw 4-2:1.0: zd1211b chip 050d:705c v4810 high 00-17-=
-3f AL2230_RF pa0 g--NS
-> [   13.097289] wlan0: authenticate with AP 00:17:3f:a4:d6:9d
-> [   13.296890] wlan0: authenticate with AP 00:17:3f:a4:d6:9d
-> [   13.496890] wlan0: authenticate with AP 00:17:3f:a4:d6:9d
-> [   13.696886] wlan0: authentication with AP 00:17:3f:a4:d6:9d timed out
->=20
-> And Debian's networking script fails to obtain an IP address. I notice th=
-e line:
->=20
-> [   18.613540] wlan0: Initial auth_alg=3D0
->=20
-> Is missing from the 2.6.27-rc1 dmesg, however my config should not have b=
-een
-> altered (I simply make oldconfig'ed it). Find attached anyway.
->=20
-> I'll start a bisection if nobody has any immediate ideas.
-
-This is about the 100 millionth time this is reported. Please try the
-patch I just posted.
-
-johannes
-
---=-gDkbE49qw4JxY77sVrtp
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIjuxvAAoJEKVg1VMiehFYTfsQAIijYb1B7JUcbYZ+Wvmut5se
-4oa+NEu9E7NlFHDdRoI0OzH6q0THdxLvby1B0Ulxmf6NYIyDzdY+ON30rz8hjrdC
-i4j+ZjTf8HVpYgXNJt+aiR305jr954EZQcGO7u4u3/oze6UWDhrtGb9FjryxaL/o
-qrSxJTLc4J5Vd3qmY6Co8FaNPhwHzEplzts79qGgV5xHKaBPHyS0iDkXJcKH4miP
-YEIzczVT5HQp3e+Rls5dMf50tjGIsFwzvu9ULRR7b9JJzYwRnWCIUwEnJt0vvGVl
-zxcbc8M8E56iru4ord+1U+/mHrqYCYDLoemWv/teVryQuZK74Z1a7RtI3s5pmpht
-2i4wk8PGZhGEC9p/r9HJ3Y+z3SNqe510qrYpUbm6LoZ1+k/ZhiQktU+q0QnoBpmI
-nxgtS3xu4KMcV7JmouapFjhrAMeDGshA+oxiQ8dq6+5t6zgMZPMbClWqFMU7Mwdq
-qp2H3D7fhJNINRpfBqFbXMB65hZcl/PPv/IqfGDHFXsJHXs9g7AnwBsiBzdiAuCH
-W/4BdNqgbnagmseDQaT4z66mPB+pXMe2CMfzjC/YuTAZ+xBOaEIzSeXkCKJhH6PK
-mRNNEEY4HDpzhRiP5pr8pG0AEZv1bKZiNp7J2ub1fdojd9JW6jRexUgxO6wocMmP
-/I75EyH5qV3eTJ9zQauR
-=D0b7
------END PGP SIGNATURE-----
-
---=-gDkbE49qw4JxY77sVrtp--
 
