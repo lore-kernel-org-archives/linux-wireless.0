@@ -1,71 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33512 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753342AbYG2NXn (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.190]:17967 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753626AbYGUQuL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 09:23:43 -0400
-Subject: Re: iwlwifi aggregation info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240807290618j67db294w524f3885f0e94c7b@mail.gmail.com> (sfid-20080729_151827_983097_67E7956D)
-References: <1217331138.10489.24.camel@johannes.berg>
-	 <1217331408.10489.26.camel@johannes.berg>
-	 <1ba2fa240807290525o41832ccei92ff554bef876b37@mail.gmail.com>
-	 <1217334452.10489.42.camel@johannes.berg>
-	 <1ba2fa240807290535h3ebd4121h399b8a8cd1d8b276@mail.gmail.com>
-	 <1217336023.10489.51.camel@johannes.berg>
-	 <1ba2fa240807290604y47edafe1k7cf93831c31b6112@mail.gmail.com>
-	 <1217336870.10489.55.camel@johannes.berg>
-	 <1ba2fa240807290618j67db294w524f3885f0e94c7b@mail.gmail.com>
-	 (sfid-20080729_151827_983097_67E7956D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gTutBhme3iB3pJRcPsUy"
-Date: Tue, 29 Jul 2008 15:23:39 +0200
-Message-Id: <1217337819.10489.57.camel@johannes.berg> (sfid-20080729_152346_507427_BDE96943)
-Mime-Version: 1.0
+	Mon, 21 Jul 2008 12:50:11 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so503150nfc.21
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 09:50:09 -0700 (PDT)
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: Clear queue entry flags during initialization
+Date: Mon, 21 Jul 2008 19:06:02 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200807211906.02409.IvDoorn@gmail.com> (sfid-20080721_185034_764507_D7B65D0C)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When the queues are being initialized the entry flags fields must be
+reset to 0. When this does not happen some entries might still be
+marked as "occupied" after an ifdown & ifup cycle which would trigger
+errors when the entry is being accessed:
 
---=-gTutBhme3iB3pJRcPsUy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+	phy0 -> rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 0.
+	Please file bug report to http://rt2x00.serialmonkey.com.
 
-On Tue, 2008-07-29 at 16:18 +0300, Tomas Winkler wrote:
+This also fixes the mac80211 warning:
 
-> This will require another queueing under what we already have. You
-> still need ability to stop and start the packet stream.
-> At that time it seems to be stupid not to reuse queueing.
+	------------[ cut here ]------------
+	WARNING: at net/mac80211/tx.c:1238 ieee80211_master_start_xmit+0x30a/0x350 [mac80211]()
 
-That's where you're actually wrong. If the aggregation queue is full,
-since they both go to the same FIFO, we should actually stop the queue
-that corresponds to the AC the aggregation goes into, otherwise we
-favour stations that enable aggregation over those who don't and they
-unfairly get more downstream throughput (if we are the AP).
+which was triggered by the queue error.
 
-johannes
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+John, please queue for 2.6.27, this one is quite important to reenable
+the queues after an ifdown & ifup cycle.
 
---=-gTutBhme3iB3pJRcPsUy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIjxnYAAoJEKVg1VMiehFYtrQP/0d35UrzlwSSOWjsX4t4ezAo
-NDSeKdjP29CfH2/UEdm845LHwF5QsyMJIqYlxKuQB6BClXnyV1MHcgxi68Wq2jWT
-e6jmpx5i8v8+ly2XbWD7RDB3otrnhxwtzdvDxI+U2Cb/CHkT2RAWy/a/GpOu32K3
-TTB+lXcndFR83BbDzojQXIXGWWGUa399dT/ypmVVTnIPe47mlVlKstT3qS6GLWgd
-Iv1/Y8rdoRtMrfe1FU9fzbBxlQ78HTNmUKeBZo/Dc9yOHafv6JJDDN4mMkYPFEJ0
-Z4GB0hPYgTqRgkSjlWf6rP3vNF5ErsbLpaQuGFG34ntio/xJy9cxdS7Hbbj7BP3L
-8hprLke9++BQGzT3wwmPMkv6W7DAAqSrcHJLolIEOKfUqeeKOQetkAckCa0nOND7
-zitXnAOTYkh52GdunwkigETtiiDmC4jJivcCvXapm9w4Myq/Yo7MGfrrTHweB4s6
-l/4+Aw5HbY5ZOTeejOIqKzsbdEOcfAgI+p0ZI98hpvgZpaogtgwOfZPGj6o/Ilxs
-B+PiDCZdlrFe/KIA8Yc6AorjAl3QANqIQi2FOna0ZkwOT5vWQVD2MPx0MBp8QTvQ
-FVjvN0T3JfrkV/T36LQ9DVkwCCxBIp8abgVhFzx2W7zJlzi3lU2WuXE++i4GMxzw
-ltRPlhytZGoAqSwpilrg
-=8wKV
------END PGP SIGNATURE-----
-
---=-gTutBhme3iB3pJRcPsUy--
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index 7b581a3..3b27f6a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -492,9 +492,12 @@ void rt2x00queue_init_rx(struct rt2x00_dev *rt2x00dev)
+ 	if (!rt2x00dev->ops->lib->init_rxentry)
+ 		return;
+ 
+-	for (i = 0; i < queue->limit; i++)
++	for (i = 0; i < queue->limit; i++) {
++		queue->entries[i].flags = 0;
++
+ 		rt2x00dev->ops->lib->init_rxentry(rt2x00dev,
+ 						  &queue->entries[i]);
++	}
+ }
+ 
+ void rt2x00queue_init_tx(struct rt2x00_dev *rt2x00dev)
+@@ -508,9 +511,12 @@ void rt2x00queue_init_tx(struct rt2x00_dev *rt2x00dev)
+ 		if (!rt2x00dev->ops->lib->init_txentry)
+ 			continue;
+ 
+-		for (i = 0; i < queue->limit; i++)
++		for (i = 0; i < queue->limit; i++) {
++			queue->entries[i].flags = 0;
++
+ 			rt2x00dev->ops->lib->init_txentry(rt2x00dev,
+ 							  &queue->entries[i]);
++		}
+ 	}
+ }
+ 
