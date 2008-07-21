@@ -1,30 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43656
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751539AbYGFG3e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jul 2008 02:29:34 -0400
-Date: Sat, 05 Jul 2008 23:29:34 -0700 (PDT)
-Message-Id: <20080705.232934.206751454.davem@davemloft.net> (sfid-20080706_082938_733939_3771FA39)
-To: proski@gnu.org
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: hostap: don't compile prism2_suspend() for hostap_pci without
- CONFIG_PM
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080706012247.q2kmw3zig4owswg8-cebfxv@webmail.spamcop.net>
-References: <20080702202653.GA10719@tuxdriver.com>
-	<20080705.214752.85024966.davem@davemloft.net>
-	<20080706012247.q2kmw3zig4owswg8-cebfxv@webmail.spamcop.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mgw2.diku.dk ([130.225.96.92]:60131 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757456AbYGUH5t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2008 03:57:49 -0400
+Date: Mon, 21 Jul 2008 09:57:47 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: Larry.Finger@lwfinger.net, stefano.brivio@polimi.it,
+	linux-wireless@vger.kernel.org, jgarzik@pobox.com,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH 3/7] drivers/net/wireless/b43legacy/main.c: Release mutex in
+ error handling code
+Message-ID: <Pine.LNX.4.64.0807210957270.24625@ask.diku.dk> (sfid-20080721_095827_121251_FE304C9E)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pavel Roskin <proski@gnu.org>
-Date: Sun, 06 Jul 2008 01:22:47 -0400
+From: Julia Lawall <julia@diku.dk>
 
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
+The mutex is released on a successful return, so it would seem that it
+should be released on an error return as well.
 
-Your email client has line-wrapped the patch, corrupting it.
+The semantic patch finds this problem is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
 
-Please fix this, and resubmit, thanks!
+// <smpl>
+@@
+expression l;
+@@
+
+mutex_lock(l);
+... when != mutex_unlock(l)
+    when any
+    when strict
+(
+if (...) { ... when != mutex_unlock(l)
++   mutex_unlock(l);
+    return ...;
+}
+|
+mutex_unlock(l);
+)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+diff -u -p a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
+--- a/drivers/net/wireless/b43legacy/main.c
++++ b/drivers/net/wireless/b43legacy/main.c
+@@ -3862,10 +3862,10 @@ static int b43legacy_resume(struct ssb_d
+ 			goto out;
+ 		}
+ 	}
+-	mutex_unlock(&wl->mutex);
+ 
+ 	b43legacydbg(wl, "Device resumed.\n");
+ out:
++	mutex_unlock(&wl->mutex);
+ 	return err;
+ }
+ 
