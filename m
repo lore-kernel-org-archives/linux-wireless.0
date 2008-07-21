@@ -1,53 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:20598 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752545AbYGISDZ (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58335
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752219AbYGUPJB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 14:03:25 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so104121ugf.16
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 11:03:21 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/3] mac80211: Include sequence number in IBSS and Mesh beacons
-Date: Wed, 9 Jul 2008 20:12:11 +0200
-Cc: Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200807091511.14288.IvDoorn@gmail.com> <200807091812.55271.IvDoorn@gmail.com> <1215625355.3246.41.camel@johannes.berg>
-In-Reply-To: <1215625355.3246.41.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807092012.11234.IvDoorn@gmail.com> (sfid-20080709_200347_864387_F892135E)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Mon, 21 Jul 2008 11:09:01 -0400
+Date: Mon, 21 Jul 2008 08:09:01 -0700 (PDT)
+Message-Id: <20080721.080901.214889979.davem@davemloft.net> (sfid-20080721_170907_232358_377E8BCB)
+To: herbert@gondor.apana.org.au
+Cc: hadi@cyberus.ca, kaber@trash.net, netdev@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
+ RCU.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080721135846.GA11543@gondor.apana.org.au>
+References: <20080721131918.GA11114@gondor.apana.org.au>
+	<1216648585.4847.303.camel@localhost>
+	<20080721135846.GA11543@gondor.apana.org.au>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 09 July 2008, Johannes Berg wrote:
-> On Wed, 2008-07-09 at 18:12 +0200, Ivo van Doorn wrote:
-> 
-> > > I'll put off the fix until after davem's TX MQ rework though.
-> 
-> Actually, I don't have to.
-> 
-> > Ok, that would allow some time for rt2x00 to come up with the
-> > implementation for the rt2400pci and rt2500pci drivers.
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Date: Mon, 21 Jul 2008 21:58:46 +0800
+
+> On Mon, Jul 21, 2008 at 09:56:25AM -0400, jamal wrote:
 > > 
-> > And this is extra motivation for a volunteer to look into this,
-> > because when mac80211 removes the seq counting, it is not
-> > just adhoc and master mode that are broken. ;)
+> > Ok - You may be able to pull it if you have the exact same hashing on
+> > hardware rx as it is on transmit stateless filtering.
+> > I can see a traffic pattern that could be cooked to give some good
+> > numbers in such a scenario;->
 > 
-> Here's a patch to try it out:
-> 
-> http://johannes.sipsolutions.net/patches/kernel/all/2008-07-09-17%3a38/022-mac80211-fix-hwseq.patch
+> Actually you've hit it on the head, as an alternative to TX hashing
+> on the packet content, we need to allow TX queue selection based on
+> the current CPU ID.
 
-Personally I have my doubts about the meaningfullness of the flag
-	IEEE80211_TX_CTL_QOS_FRAME
-since drivers will probably use ieee80211_is_data_qos() instead.
-Perhaps it is better to have the flag named something like:
-	IEEE80211_TX_CTS_SW_SEQUENCE
-or
-	IEEE80211_TX_CTS_HAS_SEQUENCE
-
-That way it is a bit clearer what the intention of the flag is.
-
-Ivo
+This we should avoid, it would allow reordering within a flow.
