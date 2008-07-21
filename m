@@ -1,44 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from stinky.trash.net ([213.144.137.162]:33192 "EHLO
+Received: from stinky.trash.net ([213.144.137.162]:49337 "EHLO
 	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751416AbYGWMvz (ORCPT
+	with ESMTP id S1750836AbYGUWFZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 08:51:55 -0400
-Message-ID: <48872968.9000103@trash.net> (sfid-20080723_145159_042134_2DEFA50E)
-Date: Wed, 23 Jul 2008 14:51:52 +0200
+	Mon, 21 Jul 2008 18:05:25 -0400
+Message-ID: <488507FB.9050101@trash.net> (sfid-20080722_000530_291817_D49ADB8E)
+Date: Tue, 22 Jul 2008 00:04:43 +0200
 From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-To: =?ISO-8859-15?Q?Fran=E7ois_Valenduc?=
-	<francois.valenduc@tvcablenet.be>
-CC: Andrew Morton <akpm@linux-foundation.org>,
-	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>, netdev@vger.kernel.org
-Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
-References: <bug-11144-10286@http.bugzilla.kernel.org/>	<20080722034850.dbbc5566.akpm@linux-foundation.org>	<4886E49D.6010700@tvcablenet.be> <20080723010522.389a948f.akpm@linux-foundation.org> <4886F727.6010301@tvcablenet.be> <48870425.50908@trash.net> <48871632.3010205@tvcablenet.be> <4887169B.6090102@trash.net> <488725D5.8030900@tvcablenet.be> <488727B3.7040007@trash.net>
-In-Reply-To: <488727B3.7040007@trash.net>
-Content-Type: text/plain; charset=ISO-8859-15;
-	format=flowed
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: David Miller <davem@davemloft.net>, mingo@elte.hu,
+	ischram@telenet.be, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	j@w1.fi
+Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
+ at 0000000000000370
+References: <4884F3D7.4070604@lwfinger.net>	<20080721.134608.75595942.davem@davemloft.net>	<4884F6E9.6090809@trash.net> <20080721.140120.135667045.davem@davemloft.net> <4884FA3F.70109@trash.net> <48850121.9090106@trash.net> <488504D9.5090100@lwfinger.net>
+In-Reply-To: <488504D9.5090100@lwfinger.net>
+Content-Type: multipart/mixed;
+ boundary="------------080609000902030105010805"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patrick McHardy wrote:
-> Fran=E7ois Valenduc wrote:
->> Patrick McHardy a =E9crit :
->>> Interesting. Could you post straces of both commands please?
->>>
->> I also send the output of strace for dhcpd under kernel 2.6.26 (wher=
-e=20
->> it works correctly).
->=20
-> Thanks, I couldn't spot anything in these traces. I'll try to
-> reproduce this with iwl3945.
+This is a multi-part message in MIME format.
+--------------080609000902030105010805
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Larry Finger wrote:
+> Patrick McHardy wrote:
+>>
+>> This is what I was missing, we're setting a lockdep class
+>> by default depending on dev->type. This patch combined
+>> with yours should fix all addr_list_lock warnings.
+>
+> No cigar yet. I tried davem's patch first, then yours on top of his. I 
+> still get both the recursive locking and the kernel warning.
+
+Does this one earn me my cigar? :)
 
 
-Well, no luck, the current -git kernel doesn't boot on my notebook
-and I don't have time for a bisection currently. Could someone
-else try to verify/debug this?
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--------------080609000902030105010805
+Content-Type: text/plain;
+ name="x"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="x"
+
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 2eed17b..371b1a0 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -259,7 +259,7 @@ static RAW_NOTIFIER_HEAD(netdev_chain);
+ 
+ DEFINE_PER_CPU(struct softnet_data, softnet_data);
+ 
+-#ifdef CONFIG_DEBUG_LOCK_ALLOC
++#ifdef CONFIG_LOCKDEP
+ /*
+  * register_netdevice() inits txq->_xmit_lock and sets lockdep class
+  * according to dev->type
+
+--------------080609000902030105010805--
