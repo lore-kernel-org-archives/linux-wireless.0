@@ -1,111 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47485
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1756778AbYGCHDP (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.179]:13467 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752022AbYGUN43 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:03:15 -0400
-Date: Thu, 03 Jul 2008 00:03:14 -0700 (PDT)
-Message-Id: <20080703.000314.213545851.davem@davemloft.net> (sfid-20080703_103231_935995_9DABB5D6)
-To: netdev@vger.kernel.org
-CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
-Subject: [PATCH 08/39]: netdev: Kill qdisc_ingress, use
- netdev->rx_queue.qdisc instead.
-From: David Miller <davem@davemloft.net>
+	Mon, 21 Jul 2008 09:56:29 -0400
+Received: by py-out-1112.google.com with SMTP id p76so1050805pyb.10
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 06:56:28 -0700 (PDT)
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction
+	in	RCU.
+From: jamal <hadi@cyberus.ca>
+Reply-To: hadi@cyberus.ca
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: davem@davemloft.net, kaber@trash.net, netdev@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+In-Reply-To: <20080721131918.GA11114@gondor.apana.org.au>
+References: <E1KKu2D-0002kd-00@gondolin.me.apana.org.au>
+	 <1216645724.4847.275.camel@localhost>
+	 <20080721131918.GA11114@gondor.apana.org.au>
+Content-Type: text/plain
+Date: Mon, 21 Jul 2008 09:56:25 -0400
+Message-Id: <1216648585.4847.303.camel@localhost> (sfid-20080721_155637_514456_7C286807)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2008-21-07 at 21:19 +0800, Herbert Xu wrote:
 
-Now that our qdisc management is bi-directional, per-queue, and fully
-orthogonal, there is no reason to have a special ingress qdisc
-pointer in struct net_device.
+> It should work just fine for routing assuming your card does
+> multi-queue RX.
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- include/linux/netdevice.h |    3 ---
- net/core/dev.c            |    4 ++--
- net/sched/sch_api.c       |   11 ++++++-----
- 3 files changed, 8 insertions(+), 10 deletions(-)
+Ok - You may be able to pull it if you have the exact same hashing on
+hardware rx as it is on transmit stateless filtering.
+I can see a traffic pattern that could be cooked to give some good
+numbers in such a scenario;->
 
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index e1e033b..1151d17 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -634,9 +634,6 @@ struct net_device
- 
- 	struct netdev_queue	rx_queue;
- 	struct netdev_queue	tx_queue;
--
--	struct Qdisc		*qdisc_ingress;
--
- 	unsigned long		tx_queue_len;	/* Max frames per queue allowed */
- 
- 	/* Partially transmitted GSO packet. */
-diff --git a/net/core/dev.c b/net/core/dev.c
-index 3ccb6da..8e38948 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -2033,7 +2033,7 @@ static int ing_filter(struct sk_buff *skb)
- 	rxq = &dev->rx_queue;
- 
- 	spin_lock(&rxq->lock);
--	if ((q = dev->qdisc_ingress) != NULL)
-+	if ((q = rxq->qdisc) != NULL)
- 		result = q->enqueue(skb, q);
- 	spin_unlock(&rxq->lock);
- 
-@@ -2044,7 +2044,7 @@ static inline struct sk_buff *handle_ing(struct sk_buff *skb,
- 					 struct packet_type **pt_prev,
- 					 int *ret, struct net_device *orig_dev)
- {
--	if (!skb->dev->qdisc_ingress)
-+	if (!skb->dev->rx_queue.qdisc)
- 		goto out;
- 
- 	if (*pt_prev) {
-diff --git a/net/sched/sch_api.c b/net/sched/sch_api.c
-index 4a51729..a2e62b3 100644
---- a/net/sched/sch_api.c
-+++ b/net/sched/sch_api.c
-@@ -346,14 +346,15 @@ dev_graft_qdisc(struct net_device *dev, struct Qdisc *qdisc)
- 
- 	qdisc_lock_tree(dev);
- 	if (qdisc && qdisc->flags&TCQ_F_INGRESS) {
--		oqdisc = dev->qdisc_ingress;
-+		dev_queue = &dev->rx_queue;
-+		oqdisc = dev_queue->qdisc;
- 		/* Prune old scheduler */
- 		if (oqdisc && atomic_read(&oqdisc->refcnt) <= 1) {
- 			/* delete */
- 			qdisc_reset(oqdisc);
--			dev->qdisc_ingress = NULL;
-+			dev_queue->qdisc = NULL;
- 		} else {  /* new */
--			dev->qdisc_ingress = qdisc;
-+			dev_queue->qdisc = qdisc;
- 		}
- 
- 	} else {
-@@ -635,7 +636,7 @@ static int tc_get_qdisc(struct sk_buff *skb, struct nlmsghdr *n, void *arg)
- 					return -ENOENT;
- 				q = qdisc_leaf(p, clid);
- 			} else { /* ingress */
--				q = dev->qdisc_ingress;
-+				q = dev->rx_queue.qdisc;
- 			}
- 		} else {
- 			struct netdev_queue *dev_queue = &dev->tx_queue;
-@@ -710,7 +711,7 @@ replay:
- 					return -ENOENT;
- 				q = qdisc_leaf(p, clid);
- 			} else { /*ingress */
--				q = dev->qdisc_ingress;
-+				q = dev->rx_queue.qdisc;
- 			}
- 		} else {
- 			struct netdev_queue *dev_queue = &dev->tx_queue;
--- 
-1.5.6
+cheers,
+jamal
 
