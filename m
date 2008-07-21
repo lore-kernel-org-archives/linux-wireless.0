@@ -1,78 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:20610 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753199AbYGGMsH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2008 08:48:07 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 1/1 V2] mac80211: Fix ieee80211_rx_reorder_ampdu: ignore QoS null packets
-Date: Mon,  7 Jul 2008 15:48:01 +0300
-Message-Id: <1215434881-5410-1-git-send-email-tomas.winkler@intel.com> (sfid-20080707_144811_486824_8928DE6F)
-Content-Type: text/plain; charset="us-ascii"
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44801
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751430AbYGUQZ4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2008 12:25:56 -0400
+Date: Mon, 21 Jul 2008 09:25:56 -0700 (PDT)
+Message-Id: <20080721.092556.227421936.davem@davemloft.net> (sfid-20080721_182600_521788_CFBA6A43)
+To: herbert@gondor.apana.org.au
+Cc: hadi@cyberus.ca, kaber@trash.net, netdev@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
+ RCU.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080721161616.GA12938@gondor.apana.org.au>
+References: <20080721152220.GA12341@gondor.apana.org.au>
+	<20080721.082627.128593651.davem@davemloft.net>
+	<20080721161616.GA12938@gondor.apana.org.au>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Date: Tue, 22 Jul 2008 00:16:16 +0800
 
-This patch fixes the check at the entrance to ieee80211_rx_reorder_ampdu.
-This check has been broken by 511fe3f3c4ba0b5b77421336f64a19b6cd00e65f
-'mac80211: rx.c use new helpers'
+> On Mon, Jul 21, 2008 at 08:26:27AM -0700, David Miller wrote:
+> >
+> > It is totally unwise to do CPU based TX hashing.
+> 
+> Right I'm not suggesting having this as a default.  However,
+> if you have a finely tuned system (e.g., a router) where you've
+> pinned all you RX queues to specific CPUs and your local apps
+> as well then it would make sense to provide this as an alternative.
+> 
+> If this alternative doesn't exist, then unless the RX hash happens
+> to match the TX hash, for routing at least the packets are going
+> to jump all over the place which isn't nice.
 
-Letting QoS NULL packet in ieee80211_rx_reorder_ampdu led to packet loss in
-RX.
+Where are these places they are going to "jump all over"? :-)
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- include/linux/ieee80211.h |   11 +++++++++++
- net/mac80211/rx.c         |    2 +-
- 2 files changed, 12 insertions(+), 1 deletions(-)
+You can view the RX and TX queues as roughly independent namespaces.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index aa603c3..1ab2480 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -460,6 +460,17 @@ static inline int ieee80211_is_nullfunc(__le16 fc)
- 	       cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_NULLFUNC);
- }
- 
-+/**
-+ * ieee80211_is_qos_nullfunc - check if FTYPE=IEEE80211_FTYPE_DATA and
-+ * STYPE=IEEE80211_STYPE_QOS_NULLFUNC
-+ * @fc: frame control bytes in little-endian byteorder
-+ */
-+static inline int ieee80211_is_qos_nullfunc(__le16 fc)
-+{
-+	return (fc & cpu_to_le16(IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE)) ==
-+	       cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_QOS_NULLFUNC);
-+}
-+
- struct ieee80211s_hdr {
- 	u8 flags;
- 	u8 ttl;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 6a88e8f..a6e8214 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2052,7 +2052,7 @@ static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
- 	tid_agg_rx = sta->ampdu_mlme.tid_rx[tid];
- 
- 	/* null data frames are excluded */
--	if (unlikely(ieee80211_is_nullfunc(hdr->frame_control)))
-+	if (unlikely(ieee80211_is_qos_nullfunc(hdr->frame_control)))
- 		goto end_reorder;
- 
- 	/* new un-ordered ampdu frame - process it */
--- 
-1.5.4.1
+If the TX hash is good enough (current one certainly isn't and I will
+work on fixing that), it is likely to spread the accesses enough that
+there won't be many collisions to matter.
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+If you really think about it, this is even pointless.  Packets that
+hit RX queue A will always hit TX queue B, and so on and so forth.
+Therefore there will be no new level of separation afforded by using
+some kind of strict RX to TX mapping.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+We could provide the option, but it is so dangerous and I also see no
+real tangible benfit from it.
