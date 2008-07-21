@@ -1,139 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3149 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750985AbYGITiD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 15:38:03 -0400
-Date: Wed, 9 Jul 2008 15:09:15 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
-Message-ID: <20080709190915.GA8238@tuxdriver.com> (sfid-20080709_213808_434368_5FE083A0)
+Received: from rhun.apana.org.au ([64.62.148.172]:35406 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754342AbYGUALa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Jul 2008 20:11:30 -0400
+Date: Mon, 21 Jul 2008 08:11:20 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: jamal <hadi@cyberus.ca>
+Cc: kaber@trash.net, davem@davemloft.net, netdev@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in	RCU.
+Message-ID: <20080721001119.GA6515@gondor.apana.org.au> (sfid-20080721_021139_662506_1B4491F0)
+References: <E1KKZmE-0000ty-00@gondolin.me.apana.org.au> <1216568119.4847.101.camel@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1216568119.4847.101.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The third Linux Wireless mini-summit will occur on Tuesday July 22,
-2008 in Ottawa, just before the Ottawa Linux Symposium.  OLS is
-generously supporting Linux mini-summits by providing the room and
-projector (http://www.linuxsymposium.org/2008/minisummits.php).
-Several vendors are supporting the event by sponsoring their own
-employees to attend, and Canonical and Intel have both helped with
-travel funds for key community participants as well.
+On Sun, Jul 20, 2008 at 11:35:19AM -0400, jamal wrote:
+>
+> All actions (on a per-type hash table basis) have an index.
+> You create filter rule X and specify action nat.
+> You may specify the index of the action when you create the filter X. 
+> If you then create another filter rule Y, also using the same action
+> index, then that nat action is shared between rule X and rule Y[1].
 
-Although it is already a bit late, I would like to re-open discussions
-on our agenda for the meeting.  Based on current upstream topics and
-those persons whom I expect to be attending, I have cobbled together
-an agenda proposal below.  Please review it and feel free to suggest
-amendments or alterations, or to elaborate or ask questions about my
-proposed schedule of topics.
+This is exactly what I want to get rid of because otherwise even
+if no index was specified we'll still do a hash insertion which
+simply falls apart with a small hash table.  Using a large hash
+table on the other is bad for people who only have a few rules.
 
-I look forward to seeing many of you in Ottawa!
+> [1]This is useful for tow reasons:
+> a) memory saving purposes: If you dont care that much about performance
+> or on a uniprocessor machine, one action would just be sufficient for
+> many rules.
+> b) accounting purposes; as you know qdiscs/filters/actions are
+> per-device. Over the years, a need has arosen from some users to have a
+> "per system" accounting (refer to the IMQ/IFB approach). Eg, if i wanted
+> the policer action to account for ingress eth0 and egress eth1 for a
+> user, i couldnt do it without some acrobatics.
 
-John
+We could do a dynamic table but so far I'm not convinced that
+it's worth anybody's effort to implement :)
 
-P.S.  If you intend to attend the event in Ottawa, please send me a
-private reply to this note -- even if you believe that I already know
-that you are coming! :-)
-
----
-
-3rd Linux Wireless Summit
-Ottawa, Canada
-22 July 2008
-
-Proposed Agenda
-
-0830	Meet & Greet
-
-	Introductions and opening remarks
-
-0900	Status Reports
-
-	Overview of where things stand today
-
-	- 802.11n
-
-	- QoS/Multiqueue
-
-	- Mesh mode (802.11s)
-
-	- RF kill
-
-1015	Break
-
-1100	Vendor/Distro Round Table
-
-	Representatives from hardware vendors and Linux distributions
-	discuss issues around cooperation between themselves and the
-	development community, what we are doing well, and what problems we
-	are causing for each other.
-
-1200	Lunch/Break (sorry, no funding)
-
-1300	Current Work
-
-	Short presentations/discussions about work in progress
-
-	- encrypted management frames (802.11w)
-
-	- regulatory enforcement (802.11d, CRDA)
-
-	- virtual hardware (mac80211_hwsim)
-
-1445	Break
-
-1500	Future work
-
-	Short presentations/discussions about work that has previously
-	been suggested or requested
-
-	- cfg80211/nl80211
-		- time to push to replace WEXT?
-		- tool enhancements and/or userland support?
-
-	- power management (suspend/resume)
-
-	- lib80211 (code sharing w/ full MAC drivers)
-
-	- rate scaling algorithms
-		- minstrel
-		- others?
-
-	- userland MLME
-
-	- userland driver implementation
-
-1645	Break
-
-1700	Maintainence Issues
-
-	Round table discussion of issues related to maintenance of
-	the wireless trees
-
-	- trivial/cleanup patches
-		- testing or other requirements?
-		- should they have lower priority?
-		- should they require ACKs from primary author?
-
-	- submissions to -stable
-		- who should drive it?
-		- what policies?
-
-	- rate scaling algs
-		- driver-specific ok?  what limitations?
-		- build policies (part of mac80211.ko?)
-
-	- questions/suggestions/complaints
-
-1800	Dinner/Break (sorry, no funding)
-
-2000	BoF/Break-out Sessions
-
-	Impromptu and/or unscheduled discussions as desired by group
-	participants
-
+Cheers,
 -- 
-John W. Linville
-linville@tuxdriver.com
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
