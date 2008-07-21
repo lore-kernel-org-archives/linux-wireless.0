@@ -1,50 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailhub.sw.ru ([195.214.232.25]:26216 "EHLO relay.sw.ru"
+Received: from bu3sch.de ([62.75.166.246]:51194 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752855AbYGRGzK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 02:55:10 -0400
-From: "Denis V. Lunev" <den@openvz.org>
-To: davem@davemloft.net
-Cc: tomasw@gmail.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, "Denis V. Lunev" <den@openvz.org>
-Subject: [PATCH net-next 2/2][v2] iwlwifi: small compile warnings without CONFIG_IWLWIFI_DEBUG
-Date: Fri, 18 Jul 2008 10:56:12 +0400
-Message-Id: <1216364172-19922-1-git-send-email-den@openvz.org> (sfid-20080718_085516_056516_2D7DC841)
-In-Reply-To: <1216286365-11703-1-git-send-email-den@openvz.org>
-References: <1216286365-11703-1-git-send-email-den@openvz.org>
+	id S1755499AbYGUJaS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2008 05:30:18 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43legacy: Release mutex in error handling code
+Date: Mon, 21 Jul 2008 11:29:34 +0200
+Cc: Larry.Finger@lwfinger.net, stefano.brivio@polimi.it,
+	linux-wireless@vger.kernel.org, jgarzik@pobox.com,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia@diku.dk>
+MIME-Version: 1.0
+Message-Id: <200807211129.34610.mb@bu3sch.de> (sfid-20080721_113023_533475_7CF035CF)
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CC [M]  drivers/net/wireless/iwlwifi/iwl-scan.o
-drivers/net/wireless/iwlwifi/iwl-scan.c: In function 'iwl_rx_scan_complete_notif':
-drivers/net/wireless/iwlwifi/iwl-scan.c:274: warning: unused variable 'scan_notif'
+From: Julia Lawall <julia@diku.dk>
 
-Signed-off-by: Denis V. Lunev <den@openvz.org>
-Acked-by: Tomas Winkler <tomasw@gmail.com>
+The mutex is released on a successful return, so it would seem that it
+should be released on an error return as well.
+
+The semantic patch finds this problem is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
+
+// <smpl>
+@@
+expression l;
+@@
+
+mutex_lock(l);
+... when != mutex_unlock(l)
+    when any
+    when strict
+(
+if (...) { ... when != mutex_unlock(l)
++   mutex_unlock(l);
+    return ...;
+}
+|
+mutex_unlock(l);
+)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Cc: stable <stable@kernel.org>
+
 ---
- drivers/net/wireless/iwlwifi/iwl-scan.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index efc750d..5a00ac2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -270,6 +270,7 @@ static void iwl_rx_scan_results_notif(struct iwl_priv *priv,
- static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
- 				       struct iwl_rx_mem_buffer *rxb)
- {
-+#ifdef CONFIG_IWLWIFI_DEBUG
- 	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
- 	struct iwl_scancomplete_notification *scan_notif = (void *)pkt->u.raw;
+John, please apply this bugfix to the next bugfix release.
+
+diff -u -p a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
+--- a/drivers/net/wireless/b43legacy/main.c
++++ b/drivers/net/wireless/b43legacy/main.c
+@@ -3862,10 +3862,10 @@ static int b43legacy_resume(struct ssb_d
+ 			goto out;
+ 		}
+ 	}
+-	mutex_unlock(&wl->mutex);
  
-@@ -277,6 +278,7 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
- 		       scan_notif->scanned_channels,
- 		       scan_notif->tsf_low,
- 		       scan_notif->tsf_high, scan_notif->status);
-+#endif
+ 	b43legacydbg(wl, "Device resumed.\n");
+ out:
++	mutex_unlock(&wl->mutex);
+ 	return err;
+ }
  
- 	/* The HW is no longer scanning */
- 	clear_bit(STATUS_SCAN_HW, &priv->status);
 -- 
-1.5.4.5
-
+Greetings Michael.
