@@ -1,63 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.249]:20800 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751994AbYGVLdG (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:60443 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751014AbYGUVv0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 07:33:06 -0400
-Received: by an-out-0708.google.com with SMTP id d40so434097and.103
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2008 04:33:05 -0700 (PDT)
-Message-ID: <bc64b4640807220433i3cfbefbfjac6570c55852c59c@mail.gmail.com> (sfid-20080722_133311_440081_97C9DF25)
-Date: Tue, 22 Jul 2008 15:33:05 +0400
-From: Dmitry <dbaryshkov@gmail.com>
-To: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
-Subject: Re: [PATCH 2/2] RFKILL: set the status of the leds on activation.
-Cc: linux-wireless@vger.kernel.org,
-	"Ivo van Doorn" <IvDoorn@gmail.com>, akpm@linux-foundation.org,
-	"Richard Purdie" <rpurdie@rpsys.net>
-In-Reply-To: <20080722112245.GC15136@khazad-dum.debian.net>
+	Mon, 21 Jul 2008 17:51:26 -0400
+Message-ID: <488504D9.5090100@lwfinger.net> (sfid-20080721_235133_271794_35DD7CC7)
+Date: Mon, 21 Jul 2008 16:51:21 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080722102159.GA32682@doriath.ww600.siemens.net>
-	 <20080722112245.GC15136@khazad-dum.debian.net>
+To: Patrick McHardy <kaber@trash.net>
+CC: David Miller <davem@davemloft.net>, mingo@elte.hu,
+	ischram@telenet.be, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	j@w1.fi
+Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
+ at 0000000000000370
+References: <4884F3D7.4070604@lwfinger.net>	<20080721.134608.75595942.davem@davemloft.net>	<4884F6E9.6090809@trash.net> <20080721.140120.135667045.davem@davemloft.net> <4884FA3F.70109@trash.net> <48850121.9090106@trash.net>
+In-Reply-To: <48850121.9090106@trash.net>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Patrick McHardy wrote:
+> Patrick McHardy wrote:
+>> David Miller wrote:
+>>> Maybe something like the following should do it?
+>>
+>>
+>> It looks correct in any case. I'm not sure whether it fixes
+>> this lockdep warning though, according to the backtrace and
+>> module list its b43 and dev_mc_sync in net/mac80211/main.c
+>> that are causing the error, which don't seem to be included
+>> in your patch. I'm unable to find where it previously
+>> initialized the xmit_lock lockdep class though, so I must
+>> be missing something :)
+> 
+> This is what I was missing, we're setting a lockdep class
+> by default depending on dev->type. This patch combined
+> with yours should fix all addr_list_lock warnings.
 
-2008/7/22 Henrique de Moraes Holschuh <hmh@hmh.eng.br>:
-> On Tue, 22 Jul 2008, Dmitry Baryshkov wrote:
->> Provide default activate function to set the state of the led
->> when the led becomes bound to the trigger
->
-> I think I understand what this is for, but I better ask to be sure...
-> What does it do, what is the use case?
+No cigar yet. I tried davem's patch first, then yours on top of his. I still get 
+both the recursive locking and the kernel warning.
 
-Register rfkill-> registers led trigger
-Register led with rfkill trigger.
+BTW, wireless doesn't work but if I plug in the wire, then networking is OK. It 
+seems to be in mac80211, which is strange because I routinely run the latest 
+wireless-testing kernel, and all the wireless bits should be there already.
 
-However as rfkill doesn't provide the led_trigger->activate callback,
-the led won't be in the proper state till the next rfkill state change.
-With this patch, when led_trigger_set calls led_trigger->activate,
-leds is set up with correct brightness.
+I'm still plugging away at the bisection. I think I got away from the kernel 
+that won't build.
 
->>  This patch depends on the patch "leds: make sure led->trigger is set
->>  earlier" which was staged in -mm for some time and recently got merged
->>  into leds tree.
->
-> Will it get in mainline for 2.6.27-rc?
-
-I hope so. It actually depends on Richard Purdie (cc'ed)
-
->
-> --
->  "One disk to rule them all, One disk to find them. One disk to bring
->  them all and in the darkness grind them. In the Land of Redmond
->  where the shadows lie." -- The Silicon Valley Tarot
->  Henrique Holschuh
->
-
-
-
--- 
-With best wishes
-Dmitry
+Larry
