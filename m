@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:44850 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755644AbYGJKus (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:47681 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752720AbYGUUv4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 06:50:48 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so1551068ywe.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jul 2008 03:50:38 -0700 (PDT)
-Message-ID: <1ba2fa240807100350n57e6121en46cc0febf12b6e50@mail.gmail.com> (sfid-20080710_125052_733705_D4CDC0FD)
-Date: Thu, 10 Jul 2008 13:50:37 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <1215685335.3483.5.camel@johannes.berg>
+	Mon, 21 Jul 2008 16:51:56 -0400
+Message-ID: <4884F6E9.6090809@trash.net> (sfid-20080721_225200_273469_C8A8A9A2)
+Date: Mon, 21 Jul 2008 22:51:53 +0200
+From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080709190915.GA8238@tuxdriver.com>
-	 <1215685335.3483.5.camel@johannes.berg>
+To: David Miller <davem@davemloft.net>
+CC: Larry.Finger@lwfinger.net, mingo@elte.hu, ischram@telenet.be,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, j@w1.fi
+Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
+ at 0000000000000370
+References: <4884E6E6.7010800@lwfinger.net>	<20080721.132100.128525904.davem@davemloft.net>	<4884F3D7.4070604@lwfinger.net> <20080721.134608.75595942.davem@davemloft.net>
+In-Reply-To: <20080721.134608.75595942.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 10, 2008 at 1:22 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->> 0900  Status Reports
->>       Overview of where things stand today
->>       - 802.11n
->>       - QoS/Multiqueue
->>       - Mesh mode (802.11s)
->>       - RF kill
->
-> And spectrum management (Tomas) please.
+David Miller wrote:
+> From: Larry Finger <Larry.Finger@lwfinger.net>
+> Date: Mon, 21 Jul 2008 15:38:47 -0500
+> 
+>> David Miller wrote:
+>>> No further backtrace?  That will tell us what driver is causing
+>>> this.
+>> Yes, I have a full backtrace.
+>>
+>> It starts with possible recursive locking in NetworkManager, and goes directly 
+>> into the Warning - this came from a later pull of Linus's tree.
+> 
+> That helps a lot, I'm looking at this now.
 
+I'm guessing this needs similar lockdep class initializations
+to _xmit_lock since it essentially has the same nesting rules.
 
-
->
-> We've seen initial patches that add a bit of infrastructure, but aren't
-> using these things yet.
-
-Hope to submit all the patches before symposium.
-The whole package is already visible in iwl5000 branch of
-iwlwifi-2.6.git Need to clean it up and submit.
-
-Thanks
-Tomas
