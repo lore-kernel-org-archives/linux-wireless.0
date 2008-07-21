@@ -1,27 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37279
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40831
 	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755775AbYGHXkT (ORCPT
+	by vger.kernel.org with ESMTP id S1752853AbYGUUqI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 19:40:19 -0400
-Date: Tue, 08 Jul 2008 16:40:19 -0700 (PDT)
-Message-Id: <20080708.164019.147997133.davem@davemloft.net> (sfid-20080709_014025_153454_DEB4D955)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2008-07-08
+	Mon, 21 Jul 2008 16:46:08 -0400
+Date: Mon, 21 Jul 2008 13:46:08 -0700 (PDT)
+Message-Id: <20080721.134608.75595942.davem@davemloft.net> (sfid-20080721_224615_718668_7866A0DD)
+To: Larry.Finger@lwfinger.net
+Cc: mingo@elte.hu, ischram@telenet.be, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	j@w1.fi
+Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
+ at 0000000000000370
 From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080708.161746.19053390.davem@davemloft.net>
-References: <20080708185146.GA30833@tuxdriver.com>
-	<20080708.161746.19053390.davem@davemloft.net>
+In-Reply-To: <4884F3D7.4070604@lwfinger.net>
+References: <4884E6E6.7010800@lwfinger.net>
+	<20080721.132100.128525904.davem@davemloft.net>
+	<4884F3D7.4070604@lwfinger.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Miller <davem@davemloft.net>
-Date: Tue, 08 Jul 2008 16:17:46 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Date: Mon, 21 Jul 2008 15:38:47 -0500
 
-> I'll try to sort out the merge issues next.
+> David Miller wrote:
+> > 
+> > No further backtrace?  That will tell us what driver is causing
+> > this.
+> 
+> Yes, I have a full backtrace.
+> 
+> It starts with possible recursive locking in NetworkManager, and goes directly 
+> into the Warning - this came from a later pull of Linus's tree.
 
-I've just pushed out a merge of net-2.6 into net-next-2.6
-so this should all be sorted.
+That helps a lot, I'm looking at this now.
+
+Thanks.
