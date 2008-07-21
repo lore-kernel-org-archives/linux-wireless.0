@@ -1,62 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.250]:22649 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750762AbYGWNPG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 09:15:06 -0400
-Received: by an-out-0708.google.com with SMTP id d40so516647and.103
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 06:15:04 -0700 (PDT)
-Message-ID: <43e72e890807230615n1923b507me579c6a0be9929d7@mail.gmail.com> (sfid-20080723_151520_468525_72E703D1)
-Date: Wed, 23 Jul 2008 06:15:04 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [RFC PATCH 1/2] mac80211: 11d Handling - Country Information Element
-Cc: "David Miller" <davem@davemloft.net>, johannes@sipsolutions.net,
-	linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org, assaf.krauss@intel.com
-In-Reply-To: <1ba2fa240806191532uf762d8avddfbe24aab05caf4@mail.gmail.com>
+Received: from venema.h4ckr.net ([217.24.1.135]:42800 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932224AbYGUFRN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2008 01:17:13 -0400
+Message-ID: <1348.217.24.1.226.1216615794.squirrel@webmail.madwifi.org> (sfid-20080721_071716_868649_501ADAC3)
+In-Reply-To: <43e72e890807201749r6da43948m198355fabc8e81b@mail.gmail.com>
+References: <43e72e890807201749r6da43948m198355fabc8e81b@mail.gmail.com>
+Date: Mon, 21 Jul 2008 06:49:54 +0200 (CEST)
+Subject: Re: ath9k-devel list and git tree
+From: "Michael Renzmann" <mrenzmann@madwifi.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Linux Wireless" <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1ba2fa240806191316h3ca2044o407d094415fa5bf2@mail.gmail.com>
-	 <1213906688.8967.112.camel@johannes.berg>
-	 <1ba2fa240806191329w7aef4ccaq587915d41d999edd@mail.gmail.com>
-	 <20080619.150448.24028711.davem@davemloft.net>
-	 <1ba2fa240806191532uf762d8avddfbe24aab05caf4@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 19, 2008 at 3:32 PM, Tomas Winkler <tomasw@gmail.com> wrote:
-> On Fri, Jun 20, 2008 at 1:04 AM, David Miller <davem@davemloft.net> wrote:
->> From: "Tomas Winkler" <tomasw@gmail.com>
->> Date: Thu, 19 Jun 2008 23:29:55 +0300
->>
->>> On Thu, Jun 19, 2008 at 11:18 PM, Johannes Berg
->>> <johannes@sipsolutions.net> wrote:
->>> >
->>> >> >> +     if (country_ie_len < 6) {
->>> >> >> +             printk(KERN_ERR "%s: country information element shorter (%d)"
->>> >> >> +                     " than expected.\n", __func__, country_ie_len);
->>> >> >
->>> >> > Remotely exploitable security bug.
->>> >
->>> >> Please explain,
->>> >
->>> > Sending broken frames will fill the disk.
->>>
->>> I see thanks (yeah, distors doesn't make separate log partitions as default)
->>
->> How distros do their partitioning is neither here not there.  And even
->> if they make a seperate log partition, that means it's still exploitable
->> in that you will no longer get the other non-spam log messages that might
->> be important to know about.
->>
->> Any kernel log message triggerable remotely without any kind of rate
->> limiting is a bug.
->
-> Will keep in mind
+Hi.
 
-Hey Tomas,
+Luis R. Rodriguez wrote:
+> ath9k-devel is having some issues,
 
-Just wondering if you have some second version of these patches we can review?
+Those I found should be fixed now.
+mailman decided to fail sometimes yesterday, which also affected ath5k
+mailing lists.
 
-  Luus
+If you see any other issue with the ath9k-devel list, please let me know.
+
+Bye, Mike
