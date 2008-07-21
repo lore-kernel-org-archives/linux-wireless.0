@@ -1,85 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:17160 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754344AbYGSOfu (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:47989 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752307AbYGUVGK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2008 10:35:50 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so253791nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2008 07:35:48 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH 4/4] rfkill: mutex fixes
-Date: Sat, 19 Jul 2008 16:50:30 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br> <200807191447.25603.IvDoorn@gmail.com> <20080719141954.GC11269@khazad-dum.debian.net>
-In-Reply-To: <20080719141954.GC11269@khazad-dum.debian.net>
+	Mon, 21 Jul 2008 17:06:10 -0400
+Message-ID: <4884FA3F.70109@trash.net> (sfid-20080721_230615_663654_C1E817D1)
+Date: Mon, 21 Jul 2008 23:06:07 +0200
+From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200807191650.30337.IvDoorn@gmail.com> (sfid-20080719_163556_429946_236BA360)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: David Miller <davem@davemloft.net>
+CC: Larry.Finger@lwfinger.net, mingo@elte.hu, ischram@telenet.be,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, j@w1.fi
+Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
+ at 0000000000000370
+References: <4884F3D7.4070604@lwfinger.net>	<20080721.134608.75595942.davem@davemloft.net>	<4884F6E9.6090809@trash.net> <20080721.140120.135667045.davem@davemloft.net>
+In-Reply-To: <20080721.140120.135667045.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 19 July 2008, Henrique de Moraes Holschuh wrote:
-> On Sat, 19 Jul 2008, Ivo van Doorn wrote:
-> > > @@ -150,7 +150,7 @@ static void update_rfkill_state(struct rfkill *rfkill)
-> > >   * even if the radio is in RFKILL_STATE_HARD_BLOCKED state, so as to
-> > >   * give the driver a hint that it should double-BLOCK the transmitter.
-> > >   *
-> > > - * Caller must have aquired rfkill_mutex.
-> > > + * Caller must have acquired rfkill->mutex.
-> > 
-> > Should rfkill_toggle_radio() not grab the rfkill->mutex itself?
-> > At the moment every caller to rfkill_toggle_radio() does:
-> > 
-> > 			mutex_lock(&rfkill->mutex);
-> >  			rfkill_toggle_radio(rfkill, state, 0);
-> > 			mutex_unlock(&rfkill->mutex);
-> > 
-> > without anything in between, so perhaps the safest way would be moving
-> > the locking requirement into the function.
+David Miller wrote:
+> From: Patrick McHardy <kaber@trash.net>
+> Date: Mon, 21 Jul 2008 22:51:53 +0200
 > 
-> sysfs attributes need to use mutex_lock_interruptible or
-> mutex_lock_killable, and I also need it with external locking in some later
-> patches that I haven't sent yet because I am reviewing them.
-
-Ok, in that case it can be kept externally.
-
-I believe there is a patch for sparse soon which adds __requires annotation
-which we can use to make sparse check for the correct locking. ;)
-
-> > > @@ -521,8 +527,11 @@ static void rfkill_remove_switch(struct rfkill *rfkill)
-> > >  {
-> > >  	mutex_lock(&rfkill_mutex);
-> > >  	list_del_init(&rfkill->node);
-> > > -	rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
-> > >  	mutex_unlock(&rfkill_mutex);
-> > > +
-> > > +	mutex_lock(&rfkill->mutex);
-> > > +	rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
-> > > +	mutex_unlock(&rfkill->mutex);
-> > 
-> > Not sure about this one, something tells me it should be something like:
-> > 
-> > 	mutex_lock(&rfkill_mutex);
-> > 	list_del_init(&rfkill->node);
-> > 
-> > 	mutex_lock(&rfkill->mutex);
-> > 	rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
-> > 	mutex_unlock(&rfkill->mutex);
-> > 
-> > 	mutex_unlock(&rfkill_mutex);
+>> David Miller wrote:
+>>> From: Larry Finger <Larry.Finger@lwfinger.net>
+>>> Date: Mon, 21 Jul 2008 15:38:47 -0500
+>>>
+>>>> David Miller wrote:
+>>>>> No further backtrace?  That will tell us what driver is causing
+>>>>> this.
+>>>> Yes, I have a full backtrace.
+>>>>
+>>>> It starts with possible recursive locking in NetworkManager, and goes directly 
+>>>> into the Warning - this came from a later pull of Linus's tree.
+>>> That helps a lot, I'm looking at this now.
+>> I'm guessing this needs similar lockdep class initializations
+>> to _xmit_lock since it essentially has the same nesting rules.
 > 
-> We really shouldn't need the nesting, as once we have deleted something from
-> the list (which is always iterated and manipulated with rfkill_mutex
-> locked), nothing that would need the rfkill_mutex will access that rfkill
-> struct anymore.
+> Yes, I figured that out just now :-)
 > 
-> Nesting wouldn't hurt anything, though.  If you really feel better with
-> that nesting in place, I can nest them.
+> Maybe something like the following should do it?
 
-Ok, I now have looked long at this piece of code, and I think your version is
-correct. No need to nest it.
 
-Ivo
+It looks correct in any case. I'm not sure whether it fixes
+this lockdep warning though, according to the backtrace and
+module list its b43 and dev_mc_sync in net/mac80211/main.c
+that are causing the error, which don't seem to be included
+in your patch. I'm unable to find where it previously
+initialized the xmit_lock lockdep class though, so I must
+be missing something :)
+
+
