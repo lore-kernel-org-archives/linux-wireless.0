@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:37795 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754475AbYGSOrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2008 10:47:24 -0400
-Message-ID: <4881F971.6060100@hauke-m.de> (sfid-20080719_164737_216917_7384D3A1)
-Date: Sat, 19 Jul 2008 16:25:53 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from rhun.apana.org.au ([64.62.148.172]:60495 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750881AbYGURCo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2008 13:02:44 -0400
+Date: Tue, 22 Jul 2008 01:02:33 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: David Miller <davem@davemloft.net>
+Cc: hadi@cyberus.ca, kaber@trash.net, netdev@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in RCU.
+Message-ID: <20080721170233.GA13417@gondor.apana.org.au> (sfid-20080721_190248_765411_3FE939E9)
+References: <20080721161616.GA12938@gondor.apana.org.au> <20080721.092556.227421936.davem@davemloft.net> <20080721164306.GA13131@gondor.apana.org.au> <20080721.095124.89249903.davem@davemloft.net>
 MIME-Version: 1.0
-To: tomas.winkler@intel.com
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: wireless testing doesn't build without CONFIG_IWLWIFI_DEBUG
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigD6C7732F8FFF7E2585CE4CAB"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080721.095124.89249903.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigD6C7732F8FFF7E2585CE4CAB
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Mon, Jul 21, 2008 at 09:51:24AM -0700, David Miller wrote:
+>
+> How so?  If the TX hash is well distributed, which it should be,
+> it is at least going to approximate the distribution provided by
+> the RX hash.
 
-While compiling wireless-testing I get the following error message:
+This is a matter of probabilities :) In general, if the TX hash
+and the RX hash are completely unrelated, then the end result of
+the hash distribution should be independent of each other (independent
+in the probablistic sense).  That is, for the flows which have
+been RX hashed into one queue, they should be hashed on average
+across all queues by the TX hash.  Conversely, those that have
+been hashed into one TX queue would be distributed across all
+RX queues.
 
-drivers/net/wireless/iwlwifi/iwl-led.c: In function
-'iwl_led_brightness_set':
-drivers/net/wireless/iwlwifi/iwl-led.c:198: error: 'led_type_str'
-undeclared (first use in this function)
-drivers/net/wireless/iwlwifi/iwl-led.c:198: error: (Each undeclared
-identifier is reported only once
-drivers/net/wireless/iwlwifi/iwl-led.c:198: error: for each function it
-appears in.)
+Now if you've bound each RX queue to a specific CPU, then this
+means for a given TX queue, its packets are going to come from
+all the CPUs (well all those involved in network reception anyway).
 
-It seams that commit b345fdd0551d986f4f8038b449932a0e610dc251 introduced
-this error.
+As each TX queue is designed to be accessed by only one CPU at
+a time, somebody somewhere has to pay for all this synchronisation :)
 
-I turned of all debugging.
-
--- Hauke Mehrtens
-
-
---------------enigD6C7732F8FFF7E2585CE4CAB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iQIVAwUBSIH5eoZ0px9YPRMyAQJ/iw/+OlOJHmruI6fgtZu8il2pKHvLm3DKFBEG
-OHYSxp++GDYFIwnhs7g+E2RsIbF3XItev/89Zv6WhbdClkZhXCFJKEB/+zJm0N/G
-AYdSbNWFduOMVzTx4gS6eAC1uxGLGdjNySJUKcYT9v8yKikptr9fu1uBB2Yvwlyq
-K6Q/0CnsCPtUzZ0eltSMUPjjQfloKK+rCJ/X2hJDfXfHwz0VX8rX8ajX/zw1U9Av
-CkgeKV/kEuPxGmdsiCsBpME0eUrq4HD0vZ0dUyMo/Jzefpto7CXoyaDUiFBQxV91
-LghZhXHduBLg2Sq7BfVhudOplldlu7ShtNRb8x6HF9bN5F0ukyqk5xSHs5izncyM
-e6/AjxftDp8laQitzFEI1WBjJwCNqL9azwpaFA0nz28emgi0XACsyy6d2tbyKVXx
-bO/kDCzOUw9JQGMXLOk+8XgpmWvnVoRtS3zbPua6FoSpvq1vPB4OxGi3U4pGGrwp
-tC7UuZ/sHTdwve2/rmut9wzRBy66BlS72E6UyNEZnVhN+Ea7VA/iVllCR/uXvKEE
-EnWyu3IpC9Y62CMdMdmpXOHbM+yY5nhH615biypoYLypiHlmXpXILSm7hCHVk9ny
-sBGSiXaXPkNIyzdI2SID3csJ+qAQC4avCC1QjAteS14c/9V+wVXHpqw6PncKoO73
-MVsRuVJn868=
-=gfOZ
------END PGP SIGNATURE-----
-
---------------enigD6C7732F8FFF7E2585CE4CAB--
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
