@@ -1,85 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47795 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760472AbYGBHWZ (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.183]:34192 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758925AbYGUCUl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2008 03:22:25 -0400
-Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
-	Larry Finger <larry.finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>
-In-Reply-To: <20080701235747.GG4292@khazad-dum.debian.net>
-References: <20080701225207.GB4292@khazad-dum.debian.net>
-	 <1214952993.3462.14.camel@johannes.berg>
-	 <20080701235747.GG4292@khazad-dum.debian.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OQzkYq0+0j+p1tbr+20n"
-Date: Wed, 02 Jul 2008 09:21:10 +0200
-Message-Id: <1214983270.3462.18.camel@johannes.berg> (sfid-20080702_092228_787103_E5D67975)
+	Sun, 20 Jul 2008 22:20:41 -0400
+Received: by py-out-1112.google.com with SMTP id p76so909305pyb.10
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2008 19:20:41 -0700 (PDT)
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
+	RCU.
+From: jamal <hadi@cyberus.ca>
+Reply-To: hadi@cyberus.ca
+To: David Miller <davem@davemloft.net>
+Cc: kaber@trash.net, netdev@vger.kernel.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080720.165911.86437240.davem@davemloft.net>
+References: <1216566963.4847.81.camel@localhost>
+	 <20080720.102534.246150854.davem@davemloft.net>
+	 <1216593170.4847.137.camel@localhost>
+	 <20080720.165911.86437240.davem@davemloft.net>
+Content-Type: text/plain
+Date: Sun, 20 Jul 2008 22:20:38 -0400
+Message-Id: <1216606839.4847.159.camel@localhost> (sfid-20080721_042051_700590_AEF6D089)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, 2008-20-07 at 16:59 -0700, David Miller wrote:
 
---=-OQzkYq0+0j+p1tbr+20n
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Every time this topic comes up, you insist on them having to match.
+> And I have no idea why.
 
+I dont insist on them matching, just on correctness. i.e if you say you
+have RR, then the scheduling needs to meet those requirements not an
+estimate - thats all.
 
-> So, please accept my appologies on the tone of the last email.  Please
-> reconsider reading that email in full, and please try to ignore the rantn=
-ess
-> smell in it.  I did try to explain the technical reasons why some changes
-> would be needed in b43.
+> The problem is that the bottleneck is the qdisc itself since all those
+> cpus synchonize on it's lock.  We can't have a shared qdisc for the
+> device and get full parallelization.
+> 
+> That's why we're having one qdisc per TX queue, so that they all don't
+> bunch up on the qdisc lock.
 
-Ok. I actually did read it but decided not to reply to most things. I
-don't think it's that everybody needs to be educated on the input layer
-(I've written real input drivers before) but rather that nobody really
-knows how userspace/kernel interaction wrt. rfkill should work.
+That last sentence i have no issues with - it is what i thought wasnt
+happening;-> i misunderstood it to be a single fifo shared by all
+hardware tx queues from the begining (otherwise i wouldnt be posting).
+We are in sync i think, a single pfifo per TX queue is the way to go. I
+was suggesting it goes in the driver, but this is cleaner: In the
+future, one could could actually replace the pfifo with another qdisc
+since the single virtual wire becomes equivalent to a single virtual
+netdevice
 
-> > To address one point though: userspace does want a notification when th=
-e
-> > hw-rfkill is activated so it (e.g. network manager) can ask people to
-> > un-rfkill their device.
->=20
-> I tried to add such notifications directly to the rfkill class.  rfkill n=
-ow
-> issues uevents and calls a notification chain for any state changes.  It =
-has
-> been modified to differentiate hw-rfkill from sw-rfkill, and export that
-> information to userspace for network-manager and other applications to us=
-e.
+> Otherwise, there is zero point in all of these TX multiqueue features
+> in the hardware if we can't parallelize things fully.
 
-Sounds good.
+parallelization is achieveable in the ideal case.
 
-johannes
-
---=-OQzkYq0+0j+p1tbr+20n
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIayxiAAoJEKVg1VMiehFYJ/YQAL2meZds8kRNXKwp3Z+tTb6l
-2iIR4eHd7obl9jm0rmfIJJ1Z64rrz5bYLLo+B9dploPoI/T52q2GJY0yXdlhK4Te
-abxt3KlNPMUMebaXDzebuY1b0M5dy1hY5w4QJzbfz5EdCLkhPe2SswDbBvBn10Vd
-3ftSGfDS3yn7UUdp2TSybkbyiUqoPF/wJC11ty+H5rbcTxOg3kQZOPH4OWHHSLo6
-6ddVYumt00e36GXvdmcQurPCyiFioiUvQq4LxG1DjR1HDY1DST6grC8Q6epsMjr+
-igbOBSJfy/q1AQm1YqGExg2KHFKB+5gijtx8UWr7FIHE8OzbdBsiL9w/5GEF/s1T
-UpTm1gnP5TZyZoMrhPzjxXAvtndiGyHUKpK5c9tvjGYk0Kg5iXCwp0r7Ahmgqxm6
-vEXSN5pIq5fL2zZ+g6FaWVW8+vtqyzcp/Nt+CuqXU7rJ/9BlF5kfFjJeK2yhLV+H
-ykQ/+QCAGLZ/TVx6QQigKDOlg9qSQ3ufNQAExu/Ogz2Rtn10qJHSX4cO/RKDT4j7
-JINfZuIv986lTZQFmusC2WN6RgM0PL6qPI5aCtTplZGxBHHLMqcb59U2rGi9PqB+
-MZafS4bMetW1A6HDYjfcCULq8i7d4eKxagrrQ7dsd7eAK4ftG9SlCZJedFwg4SjN
-XxjVjt/EHJrI9B/vphjT
-=KbkW
------END PGP SIGNATURE-----
-
---=-OQzkYq0+0j+p1tbr+20n--
+cheers,
+jamal
 
