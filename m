@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:52503 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754161AbYGGW0H convert rfc822-to-8bit (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.251]:59376 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755480AbYGUWjK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2008 18:26:07 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so1054850ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2008 15:26:00 -0700 (PDT)
-Message-ID: <1ba2fa240807071525m222efa91uf2ed009eb7b039b5@mail.gmail.com> (sfid-20080708_002612_572710_E45278A7)
-Date: Tue, 8 Jul 2008 01:25:59 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Subject: Re: [Rt2400-devel] rt2500pci: Failed to initialize hw. But works with ancient rt2500-1.1.0
-Cc: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>,
-	rt2400-devel@lists.sourceforge.net,
-	"Stefan Bauer" <stefan.bauer@cs.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <200807072319.44733.IvDoorn@gmail.com>
+	Mon, 21 Jul 2008 18:39:10 -0400
+Received: by an-out-0708.google.com with SMTP id d40so402483and.103
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 15:39:09 -0700 (PDT)
+Message-ID: <43e72e890807211539p358fa0cbw2c9868ed8f9c9b4e@mail.gmail.com> (sfid-20080722_003915_545319_5608313E)
+Date: Mon, 21 Jul 2008 15:39:09 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Luis Rodriguez" <Luis.Rodriguez@atheros.com>
+Subject: Re: [PATCH] ath9k: fix build errors and warnings on 64-bit systems
+Cc: "Pavel Roskin" <proski@gnu.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <15B47C78534E094AA9A41F58FB8D74F3D6EF4A7EEE@SC1EXMB-MBCL.global.atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200807072253.46295.stefan.bauer@cs.tu-chemnitz.de>
-	 <200807072308.57529.IvDoorn@gmail.com>
-	 <69e28c910807071410h17cd6815jd6577673f73dc092@mail.gmail.com>
-	 <200807072319.44733.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <20080721000313.24845.10866.stgit@dv.roinet.com>
+	 <15B47C78534E094AA9A41F58FB8D74F3D6EF4A7EEE@SC1EXMB-MBCL.global.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 8, 2008 at 12:19 AM, Ivo van Doorn <ivdoorn@gmail.com> wrot=
-e:
-> On Monday 07 July 2008, Stefanik G=E1bor wrote:
->> On Mon, Jul 7, 2008 at 11:08 PM, Ivo van Doorn <ivdoorn@gmail.com> w=
-rote:
->> > Check if the arc4 and ecb modules are loaded before loading mac802=
-11 & rt2500pci.
->> >
->> > Ivo
->>
->> Shouldn't we make mac80211 depend on arc4 and ecb?
+> diff --git a/ksrc/hw.c b/ksrc/hw.c
+> index b8a9321..5a24cbe 100644
+> --- a/ksrc/hw.c
+> +++ b/ksrc/hw.c
+> @@ -852,9 +852,11 @@ static inline enum hal_status ath9k_hw_check_eeprom(struct ath_hal *ah)
+>        else
+>                el = ahp->ah_eeprom.baseEepHeader.length;
 >
-> They do depend on those modules, but for some reason they
-> are not always automatically loaded when the mac80211 module is loade=
-d.
+> +       if (el < sizeof(struct ar5416_eeprom) / sizeof(u_int16_t))
+> +               el = sizeof(struct ar5416_eeprom) / sizeof(u_int16_t);
+> +
+>        eepdata = (u_int16_t *) (&ahp->ah_eeprom);
+> -       for (i = 0; i <
+> -               min(el, sizeof(struct ar5416_eeprom)) / sizeof(u_int16_t); i++)
+> +       for (i = 0; i < el; i++)
+>                sum ^= *eepdata++;
+>
+>        if (need_swap) {
 
-This is bug is reported very often mostly on ubuntu based distoros.
-There is no linkage dependency so it doesn't produce entry in the
-depmod.
-mac should somehow request these modules dynamically. If I understand
-correctly is not so straight forward since there might be alternative
-hw acceleration modules for  these modules.
+Its a good thing indeed I split this into two patches, as your first
+hunk breaks the check. Had you tested this??? Anyway I've fixed this
+now.
 
-Thanks
-Tomas
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Luis
