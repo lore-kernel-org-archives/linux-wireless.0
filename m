@@ -1,65 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:37485 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752146AbYGYDmr (ORCPT
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:40134 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751427AbYGUM76 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2008 23:42:47 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so3844173wfd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2008 20:42:47 -0700 (PDT)
-Message-ID: <3ace41890807242042h1420b4dby2a00a99691a4bb85@mail.gmail.com> (sfid-20080725_054253_893983_D7B5D577)
-Date: Fri, 25 Jul 2008 04:42:47 +0100
-From: "Hin-Tak Leung" <hintak.leung@gmail.com>
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks rtl8187
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Herton Ronaldo Krzesinski" <herton@mandriva.com.br>,
-	"Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <3ace41890807240105k5626c793if9cb9a2e3f62835b@mail.gmail.com>
+	Mon, 21 Jul 2008 08:59:58 -0400
+Date: Mon, 21 Jul 2008 09:59:53 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/3] Introducing IWLAGN
+Message-ID: <20080721125952.GB12972@khazad-dum.debian.net> (sfid-20080721_150001_974975_EEBBD1F5)
+References: <1216597215-19708-1-git-send-email-tomas.winkler@intel.com> <20080721012528.GA6623@khazad-dum.debian.net> <1ba2fa240807210018gbd31c18g59fc08f4a8b2a3ce@mail.gmail.com> <1ba2fa240807210537p66e55407l33662a43e39c106e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
-	 <3ace41890807221525r67716ea0r251068df773fe53f@mail.gmail.com>
-	 <200807221940.20009.herton@mandriva.com.br>
-	 <4886AA3B.3000406@lwfinger.net> <4886C50E.6040304@lwfinger.net>
-	 <1216824917.13587.9.camel@johannes.berg>
-	 <48874F09.7060400@lwfinger.net>
-	 <3ace41890807232028u576371a6ra944431327cac76c@mail.gmail.com>
-	 <488815DE.2000903@lwfinger.net>
-	 <3ace41890807240105k5626c793if9cb9a2e3f62835b@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240807210537p66e55407l33662a43e39c106e@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 24, 2008 at 9:05 AM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
-> On Thu, Jul 24, 2008 at 6:40 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> <snipped>
->> I will be submitting the proper patch tomorrow, particularly if it works for
->> others.
->
-> I was being over-optimistic... it worked for me for a good while but
-> doesn't after a reboot/what-not.
-> So it probably needs to be done but there may be more missing.
-> Do we need to start the seq number from some where?
+On Mon, 21 Jul 2008, Tomas Winkler wrote:
+> On Mon, Jul 21, 2008 at 10:18 AM, Tomas Winkler <tomasw@gmail.com> wrote:
+> > On Mon, Jul 21, 2008 at 4:25 AM, Henrique de Moraes Holschuh
+> > <hmh@hmh.eng.br> wrote:
+> >> On Mon, 21 Jul 2008, Tomas Winkler wrote:
+> >>> This series of patches renames iwl4965 driver to iwlagn driver
+> >>
+> >> Maybe MODULE_ALIAS with the old name would be a good idea?
+> >
+> > I wasn't aware of this one I'll give it a try. Thanks
+> 
+> It doesn't work much
+> if I rename the module name to iwlagn.ko and just add
+> MODULE_ALIAS("iwl4965")  or alias line in  /etc/modprobe.conf.  I've
+> checked modules.alias it's updated.
+> Still modprobe iwl4965 cannot catch it.
 
-I put the patch on top of
-a520bdbe7d344296482f9355e29b0018ea58760f
-(current wireless-testing master head), and did
-make -C /lib/modules/`uname -r`/build M=`pwd` rtl8187.ko and replaced
-the one shipped in kernel-2.6.25.12-100.fc9 (that should be essentially also
-wireless testing head), depmod -a , and it works. Wierd. The as
-shipped module has the problem
-Larry described earlier - I could get an ip address, and leaving a ping running
-it fails after about the 7th ping packets, quite soon.
+Weird, it certainly worked for thinkpad-acpi when I added a
+MODULE_ALIAS("ibm_acpi") to it, sometime ago.  Might be userspace breakage.
+Note that I did rename everything in the filesystem to thinkpad_acpi.*, and
+the only ibm_acpi left was the one in MODULE_ALIAS.
 
-So my problem seems to be largely due to the tx seq no change.
-(maybe with some other issues thrown in occasionally).
+> If someone have more insight into this networks scripting  I will be greatfull
 
-Is adding the couple of lines likely to cause problems? it
-is an improvement in my case although so far it seems to work say, maybe
-2/3 or 3/4 of the time (i.e. I patch a few new kernel rpms, it either
-work or it
-doesn't and if it doesn't I go back to the trust-worthy one before
-July 14), and the code seems to be
-a sensible (for the time being). Maybe Larry is affected by more than one
-problem, like possibly the power management issue Herton mentioned.
+I am curious as to why it failed, as well.
 
-Hin-Tak
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
