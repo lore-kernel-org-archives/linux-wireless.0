@@ -1,59 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54424 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754765AbYGPIgK (ORCPT
+Received: from rhun.apana.org.au ([64.62.148.172]:52325 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752282AbYGUN65 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2008 04:36:10 -0400
-Subject: mac80211 deadlock detection triggering with rt61pci
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ryN2NMMnc/INb2w+E/la"
-Date: Wed, 16 Jul 2008 10:36:09 +0200
-Message-Id: <1216197369.3422.5.camel@johannes.berg> (sfid-20080716_103615_477571_1BDB52F5)
-Mime-Version: 1.0
+	Mon, 21 Jul 2008 09:58:57 -0400
+Date: Mon, 21 Jul 2008 21:58:46 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: jamal <hadi@cyberus.ca>
+Cc: davem@davemloft.net, kaber@trash.net, netdev@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in	RCU.
+Message-ID: <20080721135846.GA11543@gondor.apana.org.au> (sfid-20080721_155900_846370_B046A8BC)
+References: <E1KKu2D-0002kd-00@gondolin.me.apana.org.au> <1216645724.4847.275.camel@localhost> <20080721131918.GA11114@gondor.apana.org.au> <1216648585.4847.303.camel@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1216648585.4847.303.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Jul 21, 2008 at 09:56:25AM -0400, jamal wrote:
+> 
+> Ok - You may be able to pull it if you have the exact same hashing on
+> hardware rx as it is on transmit stateless filtering.
+> I can see a traffic pattern that could be cooked to give some good
+> numbers in such a scenario;->
 
---=-ryN2NMMnc/INb2w+E/la
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Actually you've hit it on the head, as an alternative to TX hashing
+on the packet content, we need to allow TX queue selection based on
+the current CPU ID.
 
-Hi Ivo,
-
-I'm not sure whether this still happens in current versions or not, but
-kerneloops is reporting a number of mac80211 warnings due to the TX
-deadlock detection:
-http://www.kerneloops.org/searchweek.php?search=3Dieee80211_master_start_xm=
-it
-
-The rt2x00 mac code seems fine, did it change recently which could
-explain this warning triggering?
-
-johannes
-
---=-ryN2NMMnc/INb2w+E/la
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIfbL1AAoJEKVg1VMiehFYhF8P/2YTtaNpZ0+w9AP4I+l2gQw8
-GObjghbsbRuKiOKSw5UozCPEL5Bpr19577B2i/PddP136s72tA4LEsNZZNzVHPd2
-lZ2Jgg01VFqcRe1GsRjYto3hhKYRLQqu3XFZbYp3E06KnkLFD6MEOdMw1FFnMz4+
-aFf2jbo2JwfkdgcDDUEhQzmISnBhuFUL7qViazglaCWiYEcNdKMI5Qail9Z+N7rG
-bTJd7/gsFq7uenB8BZ1hP+/nN3PGpw8KSCSgwhMN4AmNmwr7plCceOPruZNdinKJ
-uLzb1VfReU5nMYqbmwIT99xgxIVgHGVk8PHk9NJDHy5A4+yqk12ydhltvCT2uWG+
-5ivBrn9tEeZXOogFh008Y5uWOAhnd53mQa1BJ1DbYD1YZc7Uz+XGjZRCFlEQyH1A
-P3fTja/v/2fks5XDKjUm/fTdjDpXrHoRSqbaruBLSjVIHhqYtIkgaO9Pql9QEc0b
-PSuW3xvTpnT5irqJEnTssAxjZrH9ME1Iob0A6htefrM/zUWI75luNO0DUR4DHU68
-14K0Av8hPKI9nRaatUrgAzem0niLmfJrm0w/haxzfpx9iRaGuv3qwbOlQGbsIwGU
-0/81ylqhmLIwmRD/7ZB6VMeoIfY5uw0qekL2CTWgcZdAPp5K7+DerHKO2nbkh4il
-Dfv6kFI1Yx2//yuSsqxe
-=M3YK
------END PGP SIGNATURE-----
-
---=-ryN2NMMnc/INb2w+E/la--
-
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
