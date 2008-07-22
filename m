@@ -1,81 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40953 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754680AbYGAIFe (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60027
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753196AbYGVXEJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 04:05:34 -0400
-Subject: Re: [PATCH 1/1] mac80211: fix warning: unused variable ifsta
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1214898291-6232-3-git-send-email-tomas.winkler@intel.com>
-References: <1214898291-6232-1-git-send-email-tomas.winkler@intel.com>
-	 <1214898291-6232-2-git-send-email-tomas.winkler@intel.com>
-	 <1214898291-6232-3-git-send-email-tomas.winkler@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MrT4c4ihii9HTIimrlh+"
-Date: Tue, 01 Jul 2008 10:04:50 +0200
-Message-Id: <1214899490.7763.11.camel@johannes.berg> (sfid-20080701_100540_278813_42140A12)
+	Tue, 22 Jul 2008 19:04:09 -0400
+Date: Tue, 22 Jul 2008 16:04:09 -0700 (PDT)
+Message-Id: <20080722.160409.216536011.davem@davemloft.net> (sfid-20080723_010413_967549_999608A4)
+To: Larry.Finger@lwfinger.net
+Cc: kaber@trash.net, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+ __netif_schedule+0x2c/0x98()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <4886294C.4060905@lwfinger.net>
+References: <48860D4B.8070003@lwfinger.net>
+	<488616C0.8070505@trash.net>
+	<4886294C.4060905@lwfinger.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Date: Tue, 22 Jul 2008 13:39:08 -0500
 
---=-MrT4c4ihii9HTIimrlh+
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> =============================================
+> [ INFO: possible recursive locking detected ]
+> 2.6.26-Linus-05752-g93ded9b-dirty #53
+> ---------------------------------------------
+> b43/1997 is trying to acquire lock:
+>   (_xmit_IEEE80211#2){-...}, at: [<ffffffffa028f322>] 
+> ieee80211_scan_completed+0x130/0x2e1 [mac80211]
+> 
+> but task is already holding lock:
+>   (_xmit_IEEE80211#2){-...}, at: [<ffffffffa028f322>] 
+> ieee80211_scan_completed+0x130/0x2e1 [mac80211]
+> 
+> other info that might help us debug this:
+> 3 locks held by b43/1997:
+>   #0:  ((name)){--..}, at: [<ffffffff80245185>] run_workqueue+0xa7/0x1f2
+>   #1:  (&(&local->scan_work)->work){--..}, at: [<ffffffff80245185>] 
+> run_workqueue+0xa7/0x1f2
+>   #2:  (_xmit_IEEE80211#2){-...}, at: [<ffffffffa028f322>] 
+> ieee80211_scan_completed+0x130/0x2e1 [mac80211]
+> 
+> stack backtrace:
+> Pid: 1997, comm: b43 Not tainted 2.6.26-Linus-05752-g93ded9b-dirty #53
+> 
+> Call Trace:
+>   [<ffffffff80255616>] __lock_acquire+0xb7b/0xecc
+>   [<ffffffff8040c9a0>] __mutex_unlock_slowpath+0x100/0x10b
+>   [<ffffffff802559b8>] lock_acquire+0x51/0x6a
+>   [<ffffffffa028f322>] ieee80211_scan_completed+0x130/0x2e1 [mac80211]
+>   [<ffffffff8040dc08>] _spin_lock+0x1e/0x27
+>   [<ffffffffa028f322>] ieee80211_scan_completed+0x130/0x2e1 [mac80211]
+>   [<ffffffffa028f6ce>] ieee80211_sta_scan_work+0x0/0x1b8 [mac80211]
+>   [<ffffffff802451ce>] run_workqueue+0xf0/0x1f2
+>   [<ffffffff802453ab>] worker_thread+0xdb/0xea
+>   [<ffffffff80248a5f>] autoremove_wake_function+0x0/0x2e
+>   [<ffffffff802452d0>] worker_thread+0x0/0xea
+>   [<ffffffff80248731>] kthread+0x47/0x73
+>   [<ffffffff8040d7b1>] trace_hardirqs_on_thunk+0x3a/0x3f
+>   [<ffffffff8020ceb9>] child_rip+0xa/0x11
+>   [<ffffffff8020c4ef>] restore_args+0x0/0x30
+>   [<ffffffff802486c5>] kthreadd+0x19a/0x1bf
+>   [<ffffffff802486ea>] kthread+0x0/0x73
+>   [<ffffffff8020ceaf>] child_rip+0x0/0x11
 
-On Tue, 2008-07-01 at 10:44 +0300, Tomas Winkler wrote:
-> This patch fixes warning unused variable ifsta
-> when compiling without CONFIG_MAC80211_VERBOSE_DEBUG
+Lockdep doesn't like that we have an array of objects (the TX queues)
+and we're iterating over them grabbing all of their locks.
 
-Thanks.
-
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-> ---
->  net/mac80211/mlme.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
->=20
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 4fc843e..283e55f 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -366,8 +366,10 @@ static u32 ieee80211_handle_protect_preamb(struct ie=
-ee80211_sub_if_data *sdata,
->  					   bool use_short_preamble)
->  {
->  	struct ieee80211_bss_conf *bss_conf =3D &sdata->bss_conf;
-> +#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
->  	struct ieee80211_if_sta *ifsta =3D &sdata->u.sta;
->  	DECLARE_MAC_BUF(mac);
-> +#endif
->  	u32 changed =3D 0;
-> =20
->  	if (use_protection !=3D bss_conf->use_cts_prot) {
-
---=-MrT4c4ihii9HTIimrlh+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIaeUeAAoJEKVg1VMiehFY8MQQAMCT21fH9TWnKVA1luusSAhq
-WlX6F/G6BkoCjfo6ST2sQxbO53xwnMOLya61F22xA8EMFUsaaZATwvzpuChnYBeP
-zDCP9gFmRsSMKcjgxpN4MNj5fnOxbmFvRT/G2tpaFC5V7eDdIuEDKNDS2f/TnMgB
-Ts9FCXk33B3ouLDRFpckRNecePYYMeNr6YpjVWB3mq/snPYSe2VK+5B/Ra1FT/zj
-9JNxM2ne0n7g+s8P8Hg1LujPbBWlsXil1V+sYjlQD39y8ZQKp9V2A0STwvMzwXmU
-CEQeA2gp22egQWMWazNNQrrtF5EKYeso94bTwK3n7ExiwrEDsT6NF8rRNa33mfpf
-OIVHCMsH/T0HnVxk2pH9nhLe896ieG4bra2oXvPFyeHs8pyclvQscqa9ya45m7s/
-nB1ZbSsyAjg12jqiUZ1YRNI00xeMd2NbJ5O86iF83hiJdH8uYtKtF8iLgExbRmvs
-9OZDfbOEypTT1sJumM0xRlxjrV9uELWoyjFpDlwFIO7vmdbiHrHGLLkgfdzF699t
-BSHR4jv6oAcnvqVpey4lu9XN5uo7NKS88d69yT8PNztmHGMD4SXluMTirt4Tjh1w
-ASFtxMHhs9jK/ufCm7Jnf/wEb3a2itKu3jdn95fc/q7Kmt95cEGK2JLdCgXMpF5J
-Uo6cs+HpFGhZvKCfauIc
-=LtN2
------END PGP SIGNATURE-----
-
---=-MrT4c4ihii9HTIimrlh+--
-
+Does anyone know how to teach lockdep that this is OK?
