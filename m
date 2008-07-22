@@ -1,1221 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ruslug.rutgers.edu ([165.230.139.146]:34108 "EHLO
-	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750729AbYGYEZc (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.238]:39499 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754282AbYGVJy1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2008 00:25:32 -0400
-Date: Fri, 25 Jul 2008 00:25:31 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2] Add new regulatory infrastructure for wireless
-Message-ID: <20080725042531.GW17936@ruslug.rutgers.edu> (sfid-20080725_062559_016849_6CB53FDD)
+	Tue, 22 Jul 2008 05:54:27 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1805922rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2008 02:54:27 -0700 (PDT)
+Message-ID: <d4b984a30807220254t1aaf6ac4q874329966511b0c5@mail.gmail.com> (sfid-20080722_115443_345635_8F5EDAD6)
+Date: Tue, 22 Jul 2008 11:54:26 +0200
+From: "Alessandro Guido" <ag@alessandroguido.name>
+To: "David Miller" <davem@davemloft.net>
+Subject: Re: [BUG] kernel BUG at net/core/dev.c:1328!
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <20080721.092027.14394005.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+	boundary="----=_Part_55152_19659233.1216720467046"
+References: <d4b984a30807210914nd4d0db5yb7b93ca5143ff0d5@mail.gmail.com>
+	 <20080721.092027.14394005.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+------=_Part_55152_19659233.1216720467046
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Here is a revised version after some good feedback.
+Got a WARNING this morning (2.6.26-05752-g93ded9b) and I think it's related.
 
- include/linux/nl80211.h |   91 +++++++++-
- include/net/cfg80211.h  |   48 +++++
- include/net/mac80211.h  |    2 +
- include/net/wireless.h  |    8 +
- net/mac80211/cfg.c      |    7 +
- net/wireless/core.c     |   63 ++++++-
- net/wireless/core.h     |    2 +-
- net/wireless/nl80211.c  |  128 ++++++++++++
- net/wireless/reg.c      |  495 ++++++++++++++++++++++++++++++++++++-----------
- net/wireless/reg.h      |   40 ++++
- 10 files changed, 765 insertions(+), 119 deletions(-)
- create mode 100644 net/wireless/reg.h
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 2be7c63..825fcc6 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -90,6 +90,17 @@
-  *	or, if no MAC address given, all mesh paths, on the interface identified
-  *	by %NL80211_ATTR_IFINDEX.
-  *
-+ * @NL80211_CMD_SET_REG: Set current regulatory domain. CRDA sends this command
-+ *	after being queried by the kernel. CRDA replies by sending a regulatory
-+ *	domain structure which consists of %NL80211_ATTR_REG_ALPHA set to our
-+ *	current alpha2 if it found a match. It also provides
-+ * 	NL80211_ATTR_REG_RULE_FLAGS, and a set of regulatory rules. Each
-+ * 	regulatory rule is a nested set of attributes  given by
-+ * 	%NL80211_ATTR_REG_RULE_FREQ_[START|END] and
-+ * 	%NL80211_ATTR_FREQ_RANGE_MAX_BW with an attached power rule given by
-+ * 	%NL80211_ATTR_REG_RULE_POWER_MAX_ANT_GAIN and
-+ * 	%NL80211_ATTR_REG_RULE_POWER_MAX_EIRP.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -129,6 +140,8 @@ enum nl80211_commands {
- 
- 	/* add commands here */
- 
-+	NL80211_CMD_SET_REG,
-+
- 	/* used to define NL80211_CMD_MAX below */
- 	__NL80211_CMD_AFTER_LAST,
- 	NL80211_CMD_MAX = __NL80211_CMD_AFTER_LAST - 1
-@@ -188,10 +201,19 @@ enum nl80211_commands {
-  * 	info given for %NL80211_CMD_GET_MPATH, nested attribute described at
-  *	&enum nl80211_mpath_info.
-  *
-- *
-  * @NL80211_ATTR_MNTR_FLAGS: flags, nested element with NLA_FLAG attributes of
-  *      &enum nl80211_mntr_flags.
-  *
-+ * @NL80211_ATTR_REG_ALPHA2: an ISO-3166-alpha2 country code for which the
-+ * 	current regulatory domain should be set to or is already set to.
-+ * 	For example, 'CR', for Costa Rica. This attribute is used by the kernel
-+ * 	to query the CRDA to retrieve one regulatory domain. This attribute can
-+ * 	also be used by userspace to query the kernel for the currently set
-+ * 	regulatory domain. We chose an alpha2 as that is also used by the
-+ * 	IEEE-802.11d country information element to identify a country.
-+ * @NL80211_ATTR_REG_RULES: a nested array of regulatory domain regulatory
-+ *	rules.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -235,6 +257,9 @@ enum nl80211_attrs {
- 	NL80211_ATTR_MPATH_NEXT_HOP,
- 	NL80211_ATTR_MPATH_INFO,
- 
-+	NL80211_ATTR_REG_ALPHA2,
-+	NL80211_ATTR_REG_RULES,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -242,6 +267,7 @@ enum nl80211_attrs {
- };
- 
- #define NL80211_MAX_SUPP_RATES			32
-+#define NL80211_MAX_SUPP_REG_RULES		32
- #define NL80211_TKIP_DATA_OFFSET_ENCR_KEY	0
- #define NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY	16
- #define NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY	24
-@@ -436,6 +462,69 @@ enum nl80211_bitrate_attr {
- };
- 
- /**
-+ * enum nl80211_reg_rule_attr - regulatory rule attributes
-+ * @NL80211_ATTR_REG_RULE_FLAGS: a set of flags which specify additional
-+ * 	considerations for a given frequency range. These are the
-+ * 	&enum nl80211_reg_rule_flags.
-+ * @NL80211_ATTR_FREQ_RANGE_START: starting frequencry for the regulatory
-+ * 	rule in KHz. This is not a center of frequency but an actual regulatory
-+ * 	band edge.
-+ * @NL80211_ATTR_FREQ_RANGE_END: ending frequency for the regulatory rule
-+ * 	in KHz. This is not a center a frequency but an actual regulatory
-+ * 	band edge.
-+ * @NL80211_ATTR_FREQ_RANGE_MAX_BW: maximum allowed bandwidth for this
-+ * 	frequency range, in KHz.
-+ * @NL80211_ATTR_POWER_RULE_MAX_ANT_GAIN: the maximum allowed antenna gain
-+ * 	for a given frequency range. The value is in mBi (100 * dBi).
-+ * 	If you don't have one then don't send this.
-+ * @NL80211_ATTR_POWER_RULE_MAX_EIRP: the maximum allowed EIRP for
-+ * 	a given frequency range. The value is in mBm (100 * dBm).
-+ */
-+enum nl80211_reg_rule_attr {
-+	__NL80211_REG_RULE_ATTR_INVALID,
-+	NL80211_ATTR_REG_RULE_FLAGS,
-+
-+	NL80211_ATTR_FREQ_RANGE_START,
-+	NL80211_ATTR_FREQ_RANGE_END,
-+	NL80211_ATTR_FREQ_RANGE_MAX_BW,
-+
-+	NL80211_ATTR_POWER_RULE_MAX_ANT_GAIN,
-+	NL80211_ATTR_POWER_RULE_MAX_EIRP,
-+
-+	/* keep last */
-+	__NL80211_REG_RULE_ATTR_AFTER_LAST,
-+	NL80211_REG_RULE_ATTR_MAX = __NL80211_REG_RULE_ATTR_AFTER_LAST - 1
-+};
-+
-+/**
-+ * enum nl80211_reg_rule_flags - regulatory rule flags
-+ *
-+ * @NL80211_RRF_NO_OFDM: OFDM modulation not allowed
-+ * @NL80211_RRF_NO_CCK: CCK modulation not allowed
-+ * @NL80211_RRF_NO_INDOOR: indoor operation not allowed
-+ * @NL80211_RRF_NO_OUTDOOR: outdoor operation not allowed
-+ * @NL80211_RRF_DFS: DFS support is required to be used
-+ * @NL80211_RRF_PTP_ONLY: this is only for Point To Point links
-+ * @NL80211_RRF_PTMP_ONLY: this is only for Point To Multi Point links
-+ * @NL80211_RRF_PASSIVE_SCAN: passive scan is required
-+ * @NL80211_RRF_NO_IBSS: no IBSS is allowed
-+ * @NL80211_RRF_NO_HT40: HT40 is not allowed
-+ */
-+enum nl80211_reg_rule_flags {
-+	NL80211_RRF_NO_OFDM		= 1<<0,
-+	NL80211_RRF_NO_CCK		= 1<<1,
-+	NL80211_RRF_NO_INDOOR		= 1<<2,
-+	NL80211_RRF_NO_OUTDOOR		= 1<<3,
-+	NL80211_RRF_DFS			= 1<<4,
-+	NL80211_RRF_PTP_ONLY		= 1<<4,
-+	NL80211_RRF_PTMP_ONLY		= 1<<4,
-+	NL80211_RRF_PASSIVE_SCAN	= 1<<4,
-+	NL80211_RRF_NO_IBSS		= 1<<8,
-+	/* hole at 9, used to be NO_HT20  */
-+	NL80211_RRF_NO_HT40		= 1<<10,
-+};
-+
-+/**
-  * enum nl80211_mntr_flags - monitor configuration flags
-  *
-  * Monitor configuration flags.
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e007508..2652f16 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -268,6 +268,54 @@ struct mpath_info {
- 	u8 flags;
- };
- 
-+/**
-+ * enum reg_set_by - Indicates who is trying to set the regulatory domain
-+ * @REGDOM_SET_BY_INIT: regulatory domain was set by initialization. We will be
-+ * 	using a static world regulatory domain by default.
-+ * @REGDOM_SET_BY_CORE: Core queried CRDA for a dynamic world regulatory domain.
-+ * @REGDOM_SET_BY_DRIVER: a wireless drivers has hinted to the wireless core
-+ *	it thinks its knows the regulatory domain we should be in.
-+ * @REGDOM_SET_BY_80211D: the wireless core has received an 802.11 country
-+ *	information element with regulatory information it thinks we
-+ *	should consider.
-+ */
-+enum reg_set_by {
-+	REGDOM_SET_BY_INIT,
-+	REGDOM_SET_BY_CORE,
-+	REGDOM_SET_BY_DRIVER,
-+	REGDOM_SET_BY_80211D,
-+};
-+
-+
-+struct ieee80211_freq_range {
-+	u32 start_freq;
-+	u32 end_freq;
-+	u32 max_bandwidth;
-+};
-+
-+struct ieee80211_power_rule {
-+	u32 max_antenna_gain;
-+	u32 max_eirp;
-+};
-+
-+struct ieee80211_reg_rule {
-+	struct ieee80211_freq_range freq_range;
-+	struct ieee80211_power_rule power_rule;
-+	u32 flags;
-+};
-+
-+struct ieee80211_regdomain {
-+	u32 n_reg_rules;
-+	char alpha2[2];
-+	struct ieee80211_reg_rule *reg_rules;
-+};
-+
-+#define MHZ_TO_KHZ(freq) freq * 1000
-+#define KHZ_TO_MHZ(freq) freq / 1000
-+#define DBI_TO_MBI(gain) gain * 100
-+#define MBI_TO_DBI(gain) gain / 100
-+#define DBM_TO_MBM(gain) gain * 100
-+#define MBM_TO_DBM(gain) gain / 100
- 
- /* from net/wireless.h */
- struct wiphy;
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 24a69f6..b220177 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -823,6 +823,8 @@ struct ieee80211_hw {
- 	s8 max_signal;
- };
- 
-+struct ieee80211_hw *wiphy_to_hw(struct wiphy *wiphy);
-+
- /**
-  * SET_IEEE80211_DEV - set device for 802.11 hardware
-  *
-diff --git a/include/net/wireless.h b/include/net/wireless.h
-index 9324f8d..8fde6ec 100644
---- a/include/net/wireless.h
-+++ b/include/net/wireless.h
-@@ -60,6 +60,7 @@ enum ieee80211_channel_flags {
-  * with cfg80211.
-  *
-  * @center_freq: center frequency in MHz
-+ * @max_bandwidth: maximum allowed bandwidth for this channel, in MHz
-  * @hw_value: hardware-specific value for the channel
-  * @flags: channel flags from &enum ieee80211_channel_flags.
-  * @orig_flags: channel flags at registration time, used by regulatory
-@@ -73,6 +74,7 @@ enum ieee80211_channel_flags {
- struct ieee80211_channel {
- 	enum ieee80211_band band;
- 	u16 center_freq;
-+	u8 max_bandwidth;
- 	u16 hw_value;
- 	u32 flags;
- 	int max_antenna_gain;
-@@ -178,6 +180,7 @@ struct ieee80211_supported_band {
-  * struct wiphy - wireless hardware description
-  * @idx: the wiphy index assigned to this item
-  * @class_dev: the class device representing /sys/class/ieee80211/<wiphy-name>
-+ * @reg_notifier: the driver's regulatory notification callback
-  */
- struct wiphy {
- 	/* assign these fields before you register the wiphy */
-@@ -194,6 +197,9 @@ struct wiphy {
- 
- 	struct ieee80211_supported_band *bands[IEEE80211_NUM_BANDS];
- 
-+	/* Lets us get back the wiphy on the callback */
-+	int (*reg_notifier)(struct wiphy *wiphy, enum reg_set_by setby);
-+
- 	/* fields below are read-only, assigned by cfg80211 */
- 
- 	/* the item in /sys/class/ieee80211/ points to this,
-@@ -320,6 +326,8 @@ extern int ieee80211_frequency_to_channel(int freq);
- extern struct ieee80211_channel *__ieee80211_get_channel(struct wiphy *wiphy,
- 							 int freq);
- 
-+extern int regulatory_hint(struct wiphy *wiphy, const char *alpha2);
-+
- /**
-  * ieee80211_get_channel - get channel struct from wiphy for specified frequency
-  */
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 8e7ba0e..e8ea929 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -17,6 +17,13 @@
- #include "rate.h"
- #include "mesh.h"
- 
-+struct ieee80211_hw *wiphy_to_hw(struct wiphy *wiphy)
-+{
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	return &local->hw;
-+}
-+EXPORT_SYMBOL(wiphy_to_hw);
-+
- static enum ieee80211_if_types
- nl80211_type_to_mac80211_type(enum nl80211_iftype type)
- {
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index f1da0b9..a07887d 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -13,12 +13,14 @@
- #include <linux/debugfs.h>
- #include <linux/notifier.h>
- #include <linux/device.h>
-+#include <linux/list.h>
- #include <net/genetlink.h>
- #include <net/cfg80211.h>
- #include <net/wireless.h>
- #include "nl80211.h"
- #include "core.h"
- #include "sysfs.h"
-+#include "reg.h"
- 
- /* name for sysfs, %d is appended */
- #define PHY_NAME "phy"
-@@ -27,6 +29,33 @@ MODULE_AUTHOR("Johannes Berg");
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("wireless configuration support");
- 
-+struct list_head regulatory_requests;
-+
-+/* Central wireless core regulatory domains, we only need two,
-+ * the current one and a world regulatory domain in case we have no
-+ * information to give us an alpha2 */
-+struct ieee80211_regdomain *cfg80211_regdomain;
-+
-+/* We keep a static world regulatory domain in case of the absence of CRDA */
-+struct ieee80211_reg_rule world_reg_rules[] = {
-+		REG_RULE(2402, 2472, 40, 6, 20,
-+			NL80211_RRF_PASSIVE_SCAN |
-+			NL80211_RRF_NO_IBSS |
-+			NL80211_RRF_NO_HT40),
-+};
-+
-+const struct ieee80211_regdomain world_regdom = {
-+	.n_reg_rules = ARRAY_SIZE(world_reg_rules),
-+	.alpha2 =  "00",
-+	.reg_rules = (struct ieee80211_reg_rule *) &world_reg_rules,
-+};
-+
-+struct ieee80211_regdomain *cfg80211_world_regdom =
-+	(struct ieee80211_regdomain *) &world_regdom;
-+
-+LIST_HEAD(regulatory_requests);
-+DEFINE_MUTEX(cfg80211_reg_mutex);
-+
- /* RCU might be appropriate here since we usually
-  * only read the list, and that can happen quite
-  * often because we need to do it for each command */
-@@ -295,7 +324,9 @@ int wiphy_register(struct wiphy *wiphy)
- 	ieee80211_set_bitrate_flags(wiphy);
- 
- 	/* set up regulatory info */
--	wiphy_update_regulatory(wiphy);
-+	mutex_lock(&cfg80211_reg_mutex);
-+	wiphy_update_regulatory(wiphy, REGDOM_SET_BY_CORE);
-+	mutex_unlock(&cfg80211_reg_mutex);
- 
- 	mutex_lock(&cfg80211_drv_mutex);
- 
-@@ -402,9 +433,14 @@ static struct notifier_block cfg80211_netdev_notifier = {
- 	.notifier_call = cfg80211_netdev_notifier_call,
- };
- 
-+
- static int cfg80211_init(void)
- {
--	int err = wiphy_sysfs_init();
-+	int err;
-+
-+	cfg80211_regdomain = (struct ieee80211_regdomain *) cfg80211_world_regdom;
-+
-+	err = wiphy_sysfs_init();
- 	if (err)
- 		goto out_fail_sysfs;
- 
-@@ -418,6 +454,11 @@ static int cfg80211_init(void)
- 
- 	ieee80211_debugfs_dir = debugfs_create_dir("ieee80211", NULL);
- 
-+	err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE, "00");
-+	if (err)
-+		printk("cfg80211: calling CRDA failed - unable to update "
-+			"world regulatory domain, using static definition\n");
-+
- 	return 0;
- 
- out_fail_nl80211:
-@@ -427,12 +468,30 @@ out_fail_notifier:
- out_fail_sysfs:
- 	return err;
- }
-+
- subsys_initcall(cfg80211_init);
- 
- static void cfg80211_exit(void)
- {
-+	struct regulatory_request *req, *req_tmp;
- 	debugfs_remove(ieee80211_debugfs_dir);
- 	nl80211_exit();
-+	if (cfg80211_world_regdom != &world_regdom) {
-+		if (cfg80211_world_regdom == cfg80211_regdomain) {
-+			kfree(cfg80211_regdomain->reg_rules);
-+			kfree(cfg80211_regdomain);
-+		}
-+		else {
-+			kfree(cfg80211_world_regdom->reg_rules);
-+			kfree(cfg80211_world_regdom);
-+			kfree(cfg80211_regdomain->reg_rules);
-+			kfree(cfg80211_regdomain);
-+		}
-+	}
-+	list_for_each_entry_safe(req, req_tmp, &regulatory_requests, list) {
-+		list_del(&req->list);
-+		kfree(req);
-+	}
- 	unregister_netdevice_notifier(&cfg80211_netdev_notifier);
- 	wiphy_sysfs_exit();
- }
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 7a02c35..771cc5c 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -79,6 +79,6 @@ extern int cfg80211_dev_rename(struct cfg80211_registered_device *drv,
- 			       char *newname);
- 
- void ieee80211_set_bitrate_flags(struct wiphy *wiphy);
--void wiphy_update_regulatory(struct wiphy *wiphy);
-+void wiphy_update_regulatory(struct wiphy *wiphy, enum reg_set_by setby);
- 
- #endif /* __NET_WIRELESS_CORE_H */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b7fefff..f16ee00 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -18,6 +18,7 @@
- #include <net/cfg80211.h>
- #include "core.h"
- #include "nl80211.h"
-+#include "reg.h"
- 
- /* the netlink family */
- static struct genl_family nl80211_fam = {
-@@ -87,6 +88,9 @@ static struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] __read_mostly = {
- 	[NL80211_ATTR_MESH_ID] = { .type = NLA_BINARY,
- 				.len = IEEE80211_MAX_MESH_ID_LEN },
- 	[NL80211_ATTR_MPATH_NEXT_HOP] = { .type = NLA_U32 },
-+
-+	[NL80211_ATTR_REG_ALPHA2] = { .type = NLA_STRING, .len = 2 },
-+	[NL80211_ATTR_REG_RULES] = { .type = NLA_NESTED },
- };
- 
- /* message building helper */
-@@ -1494,6 +1498,124 @@ static int nl80211_del_mpath(struct sk_buff *skb, struct genl_info *info)
- 	return err;
- }
- 
-+static const struct nla_policy
-+	reg_rule_policy[NL80211_REG_RULE_ATTR_MAX + 1] = {
-+	[NL80211_ATTR_REG_RULE_FLAGS]		= { .type = NLA_U32 },
-+	[NL80211_ATTR_FREQ_RANGE_START]		= { .type = NLA_U32 },
-+	[NL80211_ATTR_FREQ_RANGE_END]		= { .type = NLA_U32 },
-+	[NL80211_ATTR_FREQ_RANGE_MAX_BW]	= { .type = NLA_U32 },
-+	[NL80211_ATTR_POWER_RULE_MAX_ANT_GAIN]	= { .type = NLA_U32 },
-+	[NL80211_ATTR_POWER_RULE_MAX_EIRP]	= { .type = NLA_U32 },
-+};
-+
-+static int parse_reg_rule(struct nlattr *tb[], struct ieee80211_reg_rule *reg_rule)
-+{
-+	struct ieee80211_freq_range *freq_range = &reg_rule->freq_range;
-+	struct ieee80211_power_rule *power_rule = &reg_rule->power_rule;
-+
-+	if (!tb[NL80211_ATTR_REG_RULE_FLAGS])
-+		return -EINVAL;
-+	if (!tb[NL80211_ATTR_FREQ_RANGE_START])
-+		return -EINVAL;
-+	if (!tb[NL80211_ATTR_FREQ_RANGE_END])
-+		return -EINVAL;
-+	if (!tb[NL80211_ATTR_FREQ_RANGE_MAX_BW])
-+		return -EINVAL;
-+	if (!tb[NL80211_ATTR_POWER_RULE_MAX_EIRP])
-+		return -EINVAL;
-+
-+	reg_rule->flags = nla_get_u32(tb[NL80211_ATTR_REG_RULE_FLAGS]);
-+
-+	freq_range->start_freq	=
-+		nla_get_u32(tb[NL80211_ATTR_FREQ_RANGE_START]);
-+	freq_range->end_freq =
-+		nla_get_u32(tb[NL80211_ATTR_FREQ_RANGE_END]);
-+	freq_range->max_bandwidth =
-+		nla_get_u32(tb[NL80211_ATTR_FREQ_RANGE_MAX_BW]);
-+
-+	power_rule->max_eirp =
-+		nla_get_u32(tb[NL80211_ATTR_POWER_RULE_MAX_EIRP]);
-+
-+	if (tb[NL80211_ATTR_POWER_RULE_MAX_ANT_GAIN])
-+		power_rule->max_antenna_gain =
-+			nla_get_u32(tb[NL80211_ATTR_POWER_RULE_MAX_ANT_GAIN]);
-+
-+	return 0;
-+}
-+
-+static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct nlattr *tb[NL80211_REG_RULE_ATTR_MAX + 1];
-+	struct nlattr *nl_reg_rule;
-+	char *alpha2 = NULL;
-+	int rem_reg_rules = 0, r = 0;
-+	u32 num_rules = 0, rule_idx = 0;
-+	struct ieee80211_regdomain *rd = NULL;
-+	struct ieee80211_reg_rule *reg_rules = NULL;
-+
-+	if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
-+		return -EINVAL;
-+
-+	if (!info->attrs[NL80211_ATTR_REG_RULES])
-+		return -EINVAL;
-+
-+	alpha2 = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
-+
-+	nla_for_each_nested(nl_reg_rule, info->attrs[NL80211_ATTR_REG_RULES],
-+			rem_reg_rules) {
-+		num_rules++;
-+		if (num_rules > NL80211_MAX_SUPP_REG_RULES)
-+			goto bad_reg;
-+	}
-+
-+	if (!reg_is_valid_request(alpha2))
-+		return -EINVAL;
-+
-+	rd = kzalloc(sizeof(struct ieee80211_regdomain), GFP_KERNEL);
-+	if (!rd)
-+		return -ENOMEM;
-+
-+	reg_rules = kzalloc(sizeof(struct ieee80211_reg_rule) * num_rules,
-+		GFP_KERNEL);
-+	if (!reg_rules) {
-+		kfree(rd);
-+		return -ENOMEM;
-+	}
-+
-+	rd->reg_rules = reg_rules;
-+	rd->n_reg_rules = num_rules;
-+	rd->alpha2[0] = alpha2[0];
-+	rd->alpha2[1] = alpha2[1];
-+
-+	nla_for_each_nested(nl_reg_rule, info->attrs[NL80211_ATTR_REG_RULES],
-+			rem_reg_rules) {
-+		nla_parse(tb, NL80211_REG_RULE_ATTR_MAX,
-+			nla_data(nl_reg_rule), nla_len(nl_reg_rule),
-+			reg_rule_policy);
-+		r = parse_reg_rule(tb, &rd->reg_rules[rule_idx]);
-+		if (r)
-+			goto bad_reg;
-+
-+		rule_idx++;
-+
-+		if (rule_idx > NL80211_MAX_SUPP_REG_RULES)
-+			goto bad_reg;
-+	}
-+
-+	BUG_ON(rule_idx != num_rules);
-+
-+	r = set_regdom(rd);
-+	if (r)
-+		goto bad_reg;
-+
-+	return r;
-+
-+bad_reg:
-+	kfree(rd);
-+	kfree(reg_rules);
-+	return -EINVAL;
-+}
-+
- static struct genl_ops nl80211_ops[] = {
- 	{
- 		.cmd = NL80211_CMD_GET_WIPHY,
-@@ -1625,6 +1747,12 @@ static struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_ADMIN_PERM,
- 	},
-+	{
-+		.cmd = NL80211_CMD_SET_REG,
-+		.doit = nl80211_set_reg,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+	},
- };
- 
- /* multicast groups */
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 855bff4..6521e98 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2,6 +2,7 @@
-  * Copyright 2002-2005, Instant802 Networks, Inc.
-  * Copyright 2005-2006, Devicescape Software, Inc.
-  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2008	Luis R. Rodriguez <lrodriguz@atheros.com>
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -9,172 +10,436 @@
-  */
- 
- /*
-- * This regulatory domain control implementation is highly incomplete, it
-- * only exists for the purpose of not regressing mac80211.
-- *
-- * For now, drivers can restrict the set of allowed channels by either
-- * not registering those channels or setting the IEEE80211_CHAN_DISABLED
-- * flag; that flag will only be *set* by this code, never *cleared.
-- *
-  * The usual implementation is for a driver to read a device EEPROM to
-  * determine which regulatory domain it should be operating under, then
-  * looking up the allowable channels in a driver-local table and finally
-  * registering those channels in the wiphy structure.
-  *
-- * Alternatively, drivers that trust the regulatory domain control here
-- * will register a complete set of capabilities and the control code
-- * will restrict the set by setting the IEEE80211_CHAN_* flags.
-+ * Another set of compliance enforcement is for drivers to use their
-+ * own compliance limits which can be stored on the EEPROM. The host
-+ * driver or firmware may ensure these are used.
-+ *
-+ * In addition to all this we provide an extra layer of regulatory
-+ * For some drivers which do not have any regulatory information CRDA
-+ * provides the complete regulatory solution.
-+ *
-+ * Note: When number of rules --> infinity we will not be able to
-+ * index on alpha2 any more, instead we'll probably have to
-+ * rely on some SHA1 checksum of the regdomain for example.
-+ *
-  */
- #include <linux/kernel.h>
-+#include <linux/list.h>
-+#include <linux/random.h>
-+#include <linux/nl80211.h>
- #include <net/wireless.h>
-+#include <net/cfg80211.h>
- #include "core.h"
-+#include "reg.h"
- 
--static char *ieee80211_regdom = "US";
--module_param(ieee80211_regdom, charp, 0444);
--MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
--
--struct ieee80211_channel_range {
--	short start_freq;
--	short end_freq;
--	int max_power;
--	int max_antenna_gain;
--	u32 flags;
-+/* Keep the ordering from small to large */
-+static u32 supported_bandwidths[] = {
-+	MHZ_TO_KHZ(20),
-+	MHZ_TO_KHZ(40),
- };
- 
--struct ieee80211_regdomain {
--	const char *code;
--	const struct ieee80211_channel_range *ranges;
--	int n_ranges;
--};
-+static int is_world_regdom(char *alpha2)
-+{
-+	/* ASCII 0 */
-+	if (alpha2[0] == 48 && alpha2[1] == 48)
-+		return 1;
-+	return 0;
-+}
- 
--#define RANGE_PWR(_start, _end, _pwr, _ag, _flags)	\
--	{ _start, _end, _pwr, _ag, _flags }
-+/* This lets us keep regulatory code, which is updated on a regulatory
-+ * basis to userspace. */
-+static int call_crda(const char *alpha2)
-+{
-+	static char * crda_path = "/sbin/crda";
-+	char *argv[] = { crda_path, (char *) alpha2, NULL };
-+	char *envp[] = {
-+		"HOME=/",
-+		"TERM=linux",
-+		"PATH=/sbin:/usr/sbin:/bin:/usr/bin",
-+		NULL
-+	};
-+	if (likely(!is_world_regdom((char *) alpha2)))
-+		printk(KERN_INFO "cfg80211: Calling CRDA for country: %c%c\n",
-+			alpha2[0], alpha2[1]);
-+	else
-+		printk(KERN_INFO "cfg80211: Calling CRDA to update world "
-+			"regulatory domain\n");
-+	return call_usermodehelper(crda_path,
-+		argv, envp, UMH_WAIT_EXEC);
-+}
- 
-+int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
-+		      const char *alpha2)
-+{
-+	struct regulatory_request *request;
-+	int r = 0;
- 
--/*
-- * Ideally, in the future, these definitions will be loaded from a
-- * userspace table via some daemon.
-- */
--static const struct ieee80211_channel_range ieee80211_US_channels[] = {
--	/* IEEE 802.11b/g, channels 1..11 */
--	RANGE_PWR(2412, 2462, 27, 6, 0),
--	/* IEEE 802.11a, channel 36*/
--	RANGE_PWR(5180, 5180, 23, 6, 0),
--	/* IEEE 802.11a, channel 40*/
--	RANGE_PWR(5200, 5200, 23, 6, 0),
--	/* IEEE 802.11a, channel 44*/
--	RANGE_PWR(5220, 5220, 23, 6, 0),
--	/* IEEE 802.11a, channels 48..64 */
--	RANGE_PWR(5240, 5320, 23, 6, 0),
--	/* IEEE 802.11a, channels 149..165, outdoor */
--	RANGE_PWR(5745, 5825, 30, 6, 0),
--};
-+	switch (set_by) {
-+	case REGDOM_SET_BY_CORE:
-+	case REGDOM_SET_BY_DRIVER:
-+	/* we may do this differently eventually */
-+	case REGDOM_SET_BY_80211D:
-+		/* XXX: Do basic sanity checks against alpha2 */
- 
--static const struct ieee80211_channel_range ieee80211_JP_channels[] = {
--	/* IEEE 802.11b/g, channels 1..14 */
--	RANGE_PWR(2412, 2484, 20, 6, 0),
--	/* IEEE 802.11a, channels 34..48 */
--	RANGE_PWR(5170, 5240, 20, 6, IEEE80211_CHAN_PASSIVE_SCAN),
--	/* IEEE 802.11a, channels 52..64 */
--	RANGE_PWR(5260, 5320, 20, 6, IEEE80211_CHAN_NO_IBSS |
--				     IEEE80211_CHAN_RADAR),
--};
-+		request = kzalloc(sizeof(struct regulatory_request),
-+			GFP_KERNEL);
-+		if (!request)
-+			return -ENOMEM;
- 
--static const struct ieee80211_channel_range ieee80211_EU_channels[] = {
--	/* IEEE 802.11b/g, channels 1..13 */
--	RANGE_PWR(2412, 2472, 20, 6, 0),
--	/* IEEE 802.11a, channel 36*/
--	RANGE_PWR(5180, 5180, 23, 6, IEEE80211_CHAN_PASSIVE_SCAN),
--	/* IEEE 802.11a, channel 40*/
--	RANGE_PWR(5200, 5200, 23, 6, IEEE80211_CHAN_PASSIVE_SCAN),
--	/* IEEE 802.11a, channel 44*/
--	RANGE_PWR(5220, 5220, 23, 6, IEEE80211_CHAN_PASSIVE_SCAN),
--	/* IEEE 802.11a, channels 48..64 */
--	RANGE_PWR(5240, 5320, 23, 6, IEEE80211_CHAN_NO_IBSS |
--				     IEEE80211_CHAN_RADAR),
--	/* IEEE 802.11a, channels 100..140 */
--	RANGE_PWR(5500, 5700, 30, 6, IEEE80211_CHAN_NO_IBSS |
--				     IEEE80211_CHAN_RADAR),
--};
-+		request->alpha2[0] = alpha2[0];
-+		request->alpha2[1] = alpha2[1];
-+		request->initiator = set_by;
-+		request->wiphy = wiphy;
- 
--#define REGDOM(_code)							\
--	{								\
--		.code = __stringify(_code),				\
--		.ranges = ieee80211_ ##_code## _channels,		\
--		.n_ranges = ARRAY_SIZE(ieee80211_ ##_code## _channels),	\
-+		mutex_lock(&cfg80211_reg_mutex);
-+		list_add_tail(&request->list, &regulatory_requests);
-+		mutex_unlock(&cfg80211_reg_mutex);
-+		r = call_crda(alpha2);
-+		if (r)
-+			printk(KERN_ERR "cfg80211: Failed calling CRDA\n");
-+		return r;
-+	default:
-+		return -ENOTSUPP;
- 	}
-+}
- 
--static const struct ieee80211_regdomain ieee80211_regdoms[] = {
--	REGDOM(US),
--	REGDOM(JP),
--	REGDOM(EU),
--};
-+/**
-+ * regulatory_hint - hint to the wireless core a regulatory domain
-+ * @alpha2: the ISO-3166 alpha2 the driver thinks we're on
-+ * @wiphy: the driver's very own &struct wiphy
-+ *
-+ * Wireless drivers can use this function to hint to the wireless core
-+ * what it believes should be the current regulatory domain by
-+ * giving it an ISO-3166 alpha2 country code. If drivers have
-+ * EEPROM values for a set regulatory domain it should provide
-+ * mappings to a respective alpha2.
-+ */
-+int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
-+{
-+	return __regulatory_hint(wiphy, REGDOM_SET_BY_DRIVER, alpha2);
-+}
-+EXPORT_SYMBOL(regulatory_hint);
- 
-+static int is_alpha2_set(char *alpha2)
-+{
-+	if (alpha2[0] != 0 && alpha2[1] != 0)
-+		return 1;
-+	return 0;
-+}
- 
--static const struct ieee80211_regdomain *get_regdom(void)
-+static int is_alpha_upper(char letter)
- {
--	static const struct ieee80211_channel_range
--	ieee80211_world_channels[] = {
--		/* IEEE 802.11b/g, channels 1..11 */
--		RANGE_PWR(2412, 2462, 27, 6, 0),
--	};
--	static const struct ieee80211_regdomain regdom_world = REGDOM(world);
--	int i;
-+	/* ASCII A - Z */
-+	if (letter >= 65 && letter <= 90)
-+		return 1;
-+	return 0;
-+}
-+
-+static int is_an_alpha2(char *alpha2)
-+{
-+	if (is_alpha_upper(alpha2[0]) && is_alpha_upper(alpha2[1]))
-+		return 1;
-+	return 0;
-+}
-+
-+static int alpha2_equal(char *alpha2_x, char *alpha2_y)
-+{
-+	if (alpha2_x[0] == alpha2_y[0] &&
-+		alpha2_x[1] == alpha2_y[1])
-+		return 1;
-+	return 0;
-+}
-+
-+static int regdom_changed(char *alpha2)
-+{
-+	if (alpha2_equal(cfg80211_regdomain->alpha2, alpha2))
-+		return 0;
-+	return 1;
-+}
-+
-+/* caller must lock cfg80211_reg_mutex */
-+int __reg_is_valid_request(char *alpha2,
-+	struct regulatory_request **request)
-+{
-+	struct regulatory_request *req;
-+	if (list_empty(&regulatory_requests))
-+		return 0;
-+	list_for_each_entry(req, &regulatory_requests, list) {
-+		if (alpha2_equal(req->alpha2, alpha2)) {
-+			*request = req;
-+			return 1;
-+		}
-+		/* XXX: remove this else clause once we support handling
-+		 * multiple requests, this is currenlty only respecting the
-+		 * first request */
-+		else
-+			return 0;
-+	}
-+	return 0;
-+}
- 
--	for (i = 0; i < ARRAY_SIZE(ieee80211_regdoms); i++)
--		if (strcmp(ieee80211_regdom, ieee80211_regdoms[i].code) == 0)
--			return &ieee80211_regdoms[i];
-+/* Used by nl80211 before kmalloc'ing our regulatory domain */
-+int reg_is_valid_request(char *alpha2) {
-+	struct regulatory_request *request = NULL;
-+	int r;
-+	mutex_lock(&cfg80211_reg_mutex);
-+	r = __reg_is_valid_request(alpha2, &request);
-+	mutex_unlock(&cfg80211_reg_mutex);
-+	return r;
-+}
- 
--	return &regdom_world;
-+static u32 freq_max_bandwidth(const struct ieee80211_freq_range *freq_range,
-+	u32 freq)
-+{
-+	unsigned int i;
-+	for (i=0; i<ARRAY_SIZE(supported_bandwidths); i++) {
-+		u32 start_freq = freq - supported_bandwidths[i]/2;
-+		u32 end_freq = freq + supported_bandwidths[i]/2;
-+		if (start_freq >= freq_range->start_freq &&
-+			end_freq <= freq_range->end_freq)
-+			return supported_bandwidths[i];
-+	}
-+	return 0;
- }
- 
-+/* XXX: add support for the rest of enum nl80211_reg_rule_flags, we may
-+ * want to just have the channel structure use these */
-+static u32 map_regdom_flags(u32 rd_flags) {
-+	u32 channel_flags = 0;
-+	if (rd_flags & NL80211_RRF_PASSIVE_SCAN)
-+		channel_flags |= IEEE80211_CHAN_PASSIVE_SCAN;
-+	if (rd_flags & NL80211_RRF_NO_IBSS)
-+		channel_flags |= IEEE80211_CHAN_NO_IBSS;
-+	if (rd_flags & NL80211_RRF_DFS)
-+		channel_flags |= IEEE80211_CHAN_RADAR;
-+	return channel_flags;
-+}
- 
--static void handle_channel(struct ieee80211_channel *chan,
--			   const struct ieee80211_regdomain *rd)
-+/**
-+ * freq_reg_info - get regulatory information for the given frequency
-+ * @center_freq: Frequency in KHz for which we want regulatory information for
-+ * @bandwidth: the bandwidth requirement you have in KHz, if you do not have one
-+ * 	you can set this to 0. If this frequency is allowed we then set
-+ * 	this value to the maximum allowed bandwidth.
-+ * @reg_rule: the regulatory rule which we have for this frequency
-+ *
-+ * Use this function to get the regulatory rule for a specific frequency.
-+ */
-+static int freq_reg_info(u32 center_freq, u32 *bandwidth,
-+			 const struct ieee80211_reg_rule **reg_rule)
- {
- 	int i;
--	u32 flags = chan->orig_flags;
--	const struct ieee80211_channel_range *rg = NULL;
-+	u32 max_bandwidth = 0;
-+
-+	for (i = 0; i < cfg80211_regdomain->n_reg_rules; i++) {
-+		const struct ieee80211_reg_rule *rr;
-+		const struct ieee80211_freq_range *fr = NULL;
-+		const struct ieee80211_power_rule *pr = NULL;
- 
--	for (i = 0; i < rd->n_ranges; i++) {
--		if (rd->ranges[i].start_freq <= chan->center_freq &&
--		    chan->center_freq <= rd->ranges[i].end_freq) {
--			rg = &rd->ranges[i];
-+		rr = &cfg80211_regdomain->reg_rules[i];
-+		fr = &rr->freq_range;
-+		pr = &rr->power_rule;
-+		max_bandwidth = freq_max_bandwidth(fr, center_freq);
-+		if (max_bandwidth && *bandwidth <= max_bandwidth) {
-+			*reg_rule = rr;
-+			*bandwidth = max_bandwidth;
- 			break;
- 		}
- 	}
- 
--	if (!rg) {
--		/* not found */
-+	return !max_bandwidth;
-+}
-+
-+static void handle_channel(struct ieee80211_channel *chan)
-+{
-+	int r;
-+	u32 flags = chan->orig_flags;
-+	u32 max_bandwidth = 0;
-+	const struct ieee80211_reg_rule *reg_rule = NULL;
-+	const struct ieee80211_power_rule *power_rule = NULL;
-+
-+	r = freq_reg_info(MHZ_TO_KHZ(chan->center_freq),
-+		&max_bandwidth, &reg_rule);
-+
-+	if (r) {
- 		flags |= IEEE80211_CHAN_DISABLED;
- 		chan->flags = flags;
- 		return;
- 	}
- 
--	chan->flags = flags;
-+	power_rule = &reg_rule->power_rule;
-+
-+	chan->flags = flags | map_regdom_flags(reg_rule->flags);
- 	chan->max_antenna_gain = min(chan->orig_mag,
--					 rg->max_antenna_gain);
-+		(int) MBI_TO_DBI(power_rule->max_antenna_gain));
-+	chan->max_bandwidth = KHZ_TO_MHZ(max_bandwidth);
- 	if (chan->orig_mpwr)
--		chan->max_power = min(chan->orig_mpwr, rg->max_power);
-+		chan->max_power = min(chan->orig_mpwr,
-+			(int) MBM_TO_DBM(power_rule->max_eirp));
- 	else
--		chan->max_power = rg->max_power;
-+		chan->max_power = (int) MBM_TO_DBM(power_rule->max_eirp);
- }
- 
--static void handle_band(struct ieee80211_supported_band *sband,
--			const struct ieee80211_regdomain *rd)
--{
-+static void handle_band(struct ieee80211_supported_band *sband) {
- 	int i;
- 
- 	for (i = 0; i < sband->n_channels; i++)
--		handle_channel(&sband->channels[i], rd);
-+		handle_channel(&sband->channels[i]);
- }
- 
--void wiphy_update_regulatory(struct wiphy *wiphy)
-+/* requires cfg80211_drv_mutex *and* cfg80211_reg_mutex to be held */
-+static void update_all_wiphy_regulatory(enum reg_set_by setby)
- {
--	enum ieee80211_band band;
--	const struct ieee80211_regdomain *rd = get_regdom();
-+	struct cfg80211_registered_device *drv;
-+
-+	list_for_each_entry(drv, &cfg80211_drv_list, list)
-+		wiphy_update_regulatory(&drv->wiphy, setby);
-+}
- 
--	for (band = 0; band < IEEE80211_NUM_BANDS; band++)
-+/* requires cfg80211_reg_mutex lock */
-+void wiphy_update_regulatory(struct wiphy *wiphy, enum reg_set_by setby)
-+{
-+	enum ieee80211_band band;
-+	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
- 		if (wiphy->bands[band])
--			handle_band(wiphy->bands[band], rd);
-+			handle_band(wiphy->bands[band]);
-+		if (wiphy->reg_notifier)
-+			wiphy->reg_notifier(wiphy, setby);
-+	}
-+}
-+
-+static void print_regdomain(struct ieee80211_regdomain *rd)
-+{
-+	unsigned int i;
-+	struct ieee80211_reg_rule *reg_rule = NULL;
-+	struct ieee80211_freq_range *freq_range = NULL;
-+	struct ieee80211_power_rule *power_rule = NULL;
-+
-+	if (is_world_regdom(rd->alpha2))
-+		printk(KERN_INFO "cfg80211: World regulatory "
-+			"domain updated:\n");
-+	else
-+		printk(KERN_INFO "cfg80211: Regulatory domain changed to "
-+			"country: %c%c\n", rd->alpha2[0], rd->alpha2[1]);
-+
-+	for (i=0; i<rd->n_reg_rules; i++) {
-+		reg_rule = &rd->reg_rules[i];
-+		freq_range = &reg_rule->freq_range;
-+		power_rule = &reg_rule->power_rule;
-+
-+		printk(KERN_INFO "\t(%d KHz - %d KHz @ %d KHz), "
-+			"(%d mBi, %d mBm)\n",
-+			freq_range->start_freq,
-+			freq_range->end_freq,
-+			freq_range->max_bandwidth,
-+			power_rule->max_antenna_gain,
-+			power_rule->max_eirp);
-+	}
-+}
-+
-+/* Dynamic world regulatory domain requested by the wireless
-+ * core upon initialization */
-+static void update_world_regdomain(struct ieee80211_regdomain *rd)
-+{
-+	BUG_ON(list_empty(&regulatory_requests));
-+
-+	cfg80211_world_regdom = rd;
-+	cfg80211_regdomain = rd;
-+
-+	print_regdomain(rd);
-+
-+	mutex_lock(&cfg80211_drv_mutex);
-+	update_all_wiphy_regulatory(REGDOM_SET_BY_INIT);
-+	mutex_unlock(&cfg80211_drv_mutex);
- }
-+
-+/* caller must hold cfg80211_reg_mutex
-+ *
-+ * nl80211 uses this call to set the current regulatory
-+ * domain. For now we only consider the first request. Conflicts with multiple
-+ * drivers can be ironed out later.  Caller must've already kmalloc'd
-+ * the rd structure */
-+int set_regdom(struct ieee80211_regdomain *rd)
-+{
-+	struct regulatory_request *request = NULL;
-+	int r = 0;
-+
-+	/* Some basic sanity checks first */
-+
-+	if (is_world_regdom(rd->alpha2)) {
-+		mutex_lock(&cfg80211_reg_mutex);
-+		if (WARN_ON(!__reg_is_valid_request(rd->alpha2, &request))) {
-+			mutex_unlock(&cfg80211_reg_mutex);
-+		}
-+		update_world_regdomain(rd);
-+		list_del(&request->list);
-+		mutex_unlock(&cfg80211_reg_mutex);
-+		return r;
-+	}
-+
-+	if (!is_alpha2_set(rd->alpha2) || !is_an_alpha2(rd->alpha2))
-+		return -EINVAL;
-+
-+	mutex_lock(&cfg80211_reg_mutex);
-+
-+	if (list_empty(&regulatory_requests)) {
-+		r = -EINVAL;
-+		goto unlock_and_exit;
-+	}
-+
-+	if (!regdom_changed(rd->alpha2)) {
-+		r = -EINVAL;
-+		goto unlock_and_exit;
-+	}
-+
-+	/* _For_now_ we only respect the first request */
-+	if (!list_is_singular(&regulatory_requests)) {
-+		printk(KERN_ERR "cfg80211: multiple requests to "
-+			"change regulatory domain are in our queue, "
-+			"for now we'll only respect the first request");
-+		goto unlock_and_exit;
-+	}
-+
-+	/* Now lets set the regulatory domain, update all driver channels
-+	 * and finally inform them of what we have done, in case they want
-+	 * to review or adjust their own settings based on their own
-+	 * internal EEPROM data */
-+
-+	if (WARN_ON(!__reg_is_valid_request(rd->alpha2, &request))) {
-+		r = -EINVAL;
-+		goto unlock_and_exit;
-+	}
-+
-+	/* We only support the setting the regulatory domain by the driver or
-+	 * core for a dynamic world regualtory domain right now. Country IE
-+	 * parsing coming soon */
-+	switch (request->initiator) {
-+	case REGDOM_SET_BY_CORE:
-+	case REGDOM_SET_BY_DRIVER:
-+		break;
-+	case REGDOM_SET_BY_80211D:
-+	default:
-+		r = -EOPNOTSUPP;
-+		goto unlock_and_exit;
-+	}
-+
-+	cfg80211_regdomain = rd;
-+	print_regdomain(rd);
-+
-+	request->granted = 1;
-+
-+	/* update all wiphys first */
-+	mutex_lock(&cfg80211_drv_mutex);
-+	update_all_wiphy_regulatory(request->initiator);
-+	mutex_unlock(&cfg80211_drv_mutex);
-+
-+unlock_and_exit:
-+	mutex_unlock(&cfg80211_reg_mutex);
-+	return r;
-+}
-+
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-new file mode 100644
-index 0000000..82b89c9
---- /dev/null
-+++ b/net/wireless/reg.h
-@@ -0,0 +1,40 @@
-+#ifndef __NET_WIRELESS_REG_H
-+#define __NET_WIRELESS_REG_H
-+
-+extern struct ieee80211_regdomain *cfg80211_regdomain;
-+extern struct ieee80211_regdomain *cfg80211_world_regdom;
-+extern struct mutex cfg80211_reg_mutex;
-+extern struct list_head regulatory_requests;
-+
-+struct regdom_last_setby {
-+	struct wiphy *wiphy;
-+	u8 initiator;
-+};
-+
-+/* wiphy is set if this request's initiator is REGDOM_SET_BY_DRIVER */
-+struct regulatory_request {
-+	struct list_head list;
-+	struct wiphy *wiphy;
-+	int granted;
-+	enum reg_set_by initiator;
-+	char alpha2[2];
-+};
-+
-+int reg_is_valid_request(char *alpha2);
-+int set_regdom(struct ieee80211_regdomain *rd);
-+int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
-+		      const char *alpha2);
-+
-+#define REG_RULE(start, end, bw, gain, eirp, reg_flags) { \
-+	.freq_range.start_freq = start * 100, \
-+	.freq_range.end_freq = end * 100, \
-+	.freq_range.max_bandwidth = bw * 100, \
-+	.power_rule.max_antenna_gain = gain * 100, \
-+	.power_rule.max_eirp = eirp * 100, \
-+	.flags = reg_flags, \
-+	}
-+
-+/* If a char is A-Z */
-+#define IS_ALPHA(letter) (letter >= 65 && letter <= 90)
-+
-+#endif  /* __NET_WIRELESS_REG_H */
--- 
-1.5.4.3
+WARNING: at net/core/dev.c:1330 __netif_schedule+0x53/0x60()
+Modules linked in:
+Pid: 5, comm: events/0 Not tainted 2.6.26-05752-g93ded9b #1
+ [<c011bc64>] warn_on_slowpath+0x54/0xa0
+ [<c0135483>] ? getnstimeofday+0x53/0x100
+ [<c0132d1c>] ? ktime_get_ts+0x4c/0x50
+ [<c012ba67>] ? insert_work+0x57/0x70
+ [<c012c129>] ? queue_work+0x39/0x60
+ [<c012c1e5>] ? queue_delayed_work+0x25/0x30
+ [<c012c201>] ? schedule_delayed_work+0x11/0x20
+ [<c030398a>] ? linkwatch_schedule_work+0x3a/0xb0
+ [<c02f78d3>] __netif_schedule+0x53/0x60
+ [<c0262a80>] ipw_bg_link_up+0x160/0x1f0
+ [<c035ae4e>] ? schedule+0x1de/0x3f0
+ [<c012bdef>] run_workqueue+0x6f/0x160
+ [<c0262920>] ? ipw_bg_link_up+0x0/0x1f0
+ [<c012c08f>] worker_thread+0x7f/0xe0
+ [<c012f5d0>] ? autoremove_wake_function+0x0/0x50
+ [<c012c010>] ? worker_thread+0x0/0xe0
+ [<c012f15a>] kthread+0x3a/0x70
+ [<c012f120>] ? kthread+0x0/0x70
+ [<c0103d77>] kernel_thread_helper+0x7/0x10
+ =======================
 
+------=_Part_55152_19659233.1216720467046
+Content-Type: application/x-gzip; name=congig2.gz
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fiybxyys0
+Content-Disposition: attachment; filename=congig2.gz
+
+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
+2opnFRDx/wEVgrELgJIAAA==
+------=_Part_55152_19659233.1216720467046--
