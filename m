@@ -1,133 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.186]:49475 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752956AbYGQRne (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33329 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754112AbYGVKtR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 13:43:34 -0400
-Received: by rn-out-0910.google.com with SMTP id k40so21813rnd.17
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2008 10:43:33 -0700 (PDT)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-From: Brian Cavagnolo <brian@cozybit.com>
-Date: Wed, 16 Jul 2008 12:15:26 -0700
-Subject: [PATCH 3/3] libertas: check bounds and only use decimal for sysfs persistent features.
-Message-ID: <487f84c4.1abd600a.16af.35b1@mx.google.com> (sfid-20080717_194337_043735_A4F92EB8)
+	Tue, 22 Jul 2008 06:49:17 -0400
+Date: Tue, 22 Jul 2008 03:48:50 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: francois.valenduc@tvcablenet.be
+Cc: bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	netdev@vger.kernel.org, Patrick McHardy <kaber@trash.net>
+Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
+Message-Id: <20080722034850.dbbc5566.akpm@linux-foundation.org> (sfid-20080722_124921_303532_5828E316)
+In-Reply-To: <bug-11144-10286@http.bugzilla.kernel.org/>
+References: <bug-11144-10286@http.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some persistent settings were using hex and others decimal.  In some cases,
-values were set in hex but reported in decimal.  Confusing.
 
-Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
----
- drivers/net/wireless/libertas/persistcfg.c |   30 ++++++++++++++--------------
- 1 files changed, 15 insertions(+), 15 deletions(-)
+(switched to email.  Please respond via emailed reply-to-all, not via the
+bugzilla web interface).
 
-diff --git a/drivers/net/wireless/libertas/persistcfg.c b/drivers/net/wireless/libertas/persistcfg.c
-index 1547160..1bc680e 100644
---- a/drivers/net/wireless/libertas/persistcfg.c
-+++ b/drivers/net/wireless/libertas/persistcfg.c
-@@ -51,7 +51,7 @@ static ssize_t bootflag_get(struct device *dev,
- 	if (ret)
- 		return ret;
- 
--	return snprintf(buf, 12, "0x%x\n", le32_to_cpu(defs.bootflag));
-+	return snprintf(buf, 12, "%d\n", le32_to_cpu(defs.bootflag));
- }
- 
- /**
-@@ -69,8 +69,8 @@ static ssize_t bootflag_set(struct device *dev, struct device_attribute *attr,
- 		return -EOPNOTSUPP;
- 
- 	memset(&cmd, 0, sizeof(cmd));
--	ret = sscanf(buf, "%x", &datum);
--	if (ret != 1)
-+	ret = sscanf(buf, "%d", &datum);
-+	if ((ret != 1) || (datum > 1))
- 		return -EINVAL;
- 
- 	*((__le32 *)&cmd.data[0]) = cpu_to_le32(!!datum);
-@@ -97,7 +97,7 @@ static ssize_t boottime_get(struct device *dev,
- 	if (ret)
- 		return ret;
- 
--	return snprintf(buf, 12, "0x%x\n", defs.boottime);
-+	return snprintf(buf, 12, "%d\n", defs.boottime);
- }
- 
- /**
-@@ -115,8 +115,8 @@ static ssize_t boottime_set(struct device *dev,
- 		return -EOPNOTSUPP;
- 
- 	memset(&cmd, 0, sizeof(cmd));
--	ret = sscanf(buf, "%x", &datum);
--	if (ret != 1)
-+	ret = sscanf(buf, "%d", &datum);
-+	if ((ret != 1) || (datum > 255))
- 		return -EINVAL;
- 
- 	/* A too small boot time will result in the device booting into
-@@ -152,7 +152,7 @@ static ssize_t channel_get(struct device *dev,
- 	if (ret)
- 		return ret;
- 
--	return snprintf(buf, 12, "0x%x\n", le16_to_cpu(defs.channel));
-+	return snprintf(buf, 12, "%d\n", le16_to_cpu(defs.channel));
- }
- 
- /**
-@@ -163,14 +163,14 @@ static ssize_t channel_set(struct device *dev, struct device_attribute *attr,
- {
- 	struct lbs_private *priv = to_net_dev(dev)->priv;
- 	struct cmd_ds_mesh_config cmd;
--	uint16_t datum;
-+	uint32_t datum;
- 	int ret;
- 
- 	if (!(priv->fwcapinfo & FW_CAPINFO_PERSISTENT_CONFIG))
- 		return -EOPNOTSUPP;
- 
- 	memset(&cmd, 0, sizeof(cmd));
--	ret = sscanf(buf, "%hx", &datum);
-+	ret = sscanf(buf, "%d", &datum);
- 	if (ret != 1 || datum < 1 || datum > 11)
- 		return -EINVAL;
- 
-@@ -292,8 +292,8 @@ static ssize_t protocol_id_set(struct device *dev,
- 		return -EOPNOTSUPP;
- 
- 	memset(&cmd, 0, sizeof(cmd));
--	ret = sscanf(buf, "%x", &datum);
--	if (ret != 1)
-+	ret = sscanf(buf, "%d", &datum);
-+	if ((ret != 1) || (datum > 255))
- 		return -EINVAL;
- 
- 	/* fetch all other Information Element parameters */
-@@ -349,8 +349,8 @@ static ssize_t metric_id_set(struct device *dev, struct device_attribute *attr,
- 		return -EOPNOTSUPP;
- 
- 	memset(&cmd, 0, sizeof(cmd));
--	ret = sscanf(buf, "%x", &datum);
--	if (ret != 1)
-+	ret = sscanf(buf, "%d", &datum);
-+	if ((ret != 1) || (datum > 255))
- 		return -EINVAL;
- 
- 	/* fetch all other Information Element parameters */
-@@ -406,8 +406,8 @@ static ssize_t capability_set(struct device *dev, struct device_attribute *attr,
- 		return -EOPNOTSUPP;
- 
- 	memset(&cmd, 0, sizeof(cmd));
--	ret = sscanf(buf, "%x", &datum);
--	if (ret != 1)
-+	ret = sscanf(buf, "%d", &datum);
-+	if ((ret != 1) || (datum > 255))
- 		return -EINVAL;
- 
- 	/* fetch all other Information Element parameters */
--- 
-1.5.5.3
+On Tue, 22 Jul 2008 03:21:33 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=11144
+> 
+>            Summary: dhcp doesn't work with iwl4965
+>            Product: Networking
+>            Version: 2.5
+>      KernelVersion: 2.6.26-git7
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: Wireless
+>         AssignedTo: networking_wireless@kernel-bugs.osdl.org
+>         ReportedBy: francois.valenduc@tvcablenet.be
+> 
+> 
+> Latest working kernel version: 2.6.26-git6
+> Earliest failing kernel version: 2.6.26-git7
+
+A very fresh regression.
+
+> Distribution: Gentoo
+> Hardware Environment: Packard Bell MB86, iwl4965
+> Software Environment: dhcpcd
+> Problem Description: 
+> I can't get an IP address via DHCP with my wireless connection. I have an Intel
+> Wireless 4965 card and I use WPA personal with AES encryption. After a
+> git-bisect run, it seems the first bad commit is the following:
+> 
+> commit 175f9c1bba9b825d22b142d183c9e175488b260c
+> Author: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+> Date:   Sun Jul 20 00:08:47 2008 -0700
+> 
+>     net_sched: Add size table for qdiscs
+> 
+>     Add size table functions for qdiscs and calculate packet size in
+>     qdisc_enqueue().
+> 
+>     Based on patch by Patrick McHardy
+>      http://marc.info/?l=linux-netdev&m=115201979221729&w=2
+> 
+> 
+
+A whole pile of networking patches went into mainline about 12 hours
+ago, one of which might have fixed this.  Can you please test
+2.6.26-git10 once it has appeared and let us know the result?
 
 
-
+Thanks.
