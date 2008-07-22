@@ -1,44 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ruslug.rutgers.edu ([165.230.139.146]:48616 "EHLO
-	ruslug.rutgers.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751841AbYGJTiw (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:34801 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753160AbYGVKqx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 15:38:52 -0400
-Date: Thu, 10 Jul 2008 15:38:48 -0400
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Sam Leffler <sam@errno.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] Add new regulatory framework for Linux wireless
-Message-ID: <20080710193848.GM17936@ruslug.rutgers.edu> (sfid-20080710_213855_757392_54CCFBA9)
-References: <20080710152415.GK17936@ruslug.rutgers.edu> <4876304E.9070508@errno.com>
+	Tue, 22 Jul 2008 06:46:53 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so835035fgg.17
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2008 03:46:52 -0700 (PDT)
+Date: Tue, 22 Jul 2008 10:51:58 +0000
+From: Jarek Poplawski <jarkao2@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: David Miller <davem@davemloft.net>, kaber@trash.net, mingo@elte.hu,
+	ischram@telenet.be, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	j@w1.fi
+Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
+	at 0000000000000370
+Message-ID: <20080722105158.GA6024@ff.dom.local> (sfid-20080722_124658_654768_0D42D216)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4876304E.9070508@errno.com>
+In-Reply-To: <48857F74.2040406@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 10, 2008 at 08:52:46AM -0700, Sam Leffler wrote:
-> Luis R. Rodriguez wrote:
-> >The industry currently has different techniques for parsing and using
-> >Country IEs. What I currently propose is to take the common denominator
-> >between what the AP provides, what CRDA has and what the driver can
-> >provide privately through its callback. So the wireless core can keep
-> >as the common denominator between the AP's Country IE and what CRDA
-> >has for the alpha2 provided by the Country IE. Drivers themselves can
-> >further enhance regulatory enforcement by relying on private driver
-> >data if they wish so.
-> >
-> >  
-> Can you elaborate on the first sentence?  Are you just saying that some 
-> software blindly trusts the contents of the country IE and doesn't 
-> constrain it's use (as you describe)?  Or are you saying drivers 
-> interpret the contents of the country IE in ways different than spec'd?
+On 22-07-2008 08:34, Larry Finger wrote:
+...
+>>> I used the davem patch, the second version of your first one, and 
+>>> your second one. Both problems persist.
 
-I'm saying drivers and software stacks used tend to vary on how they
-use the country IE. I believe most vendor drivers *never* simply
-use what the AP provides due to considerations about "rogue" APs.
-I can see why too though -- but it just means the spec didn't
-account for these considerations. Hence my suggestion.
+Could you send lockdep info after Patrick's "set lockdep classes"
+patch?
 
-  Luis
+Jarek P.
