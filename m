@@ -1,76 +1,266 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55580 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752427AbYGAIst (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38622
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1757383AbYGVVRs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 04:48:49 -0400
-Subject: Re: [PATCH] mac80211: Don't request encryption for proble response
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200807011045.13870.IvDoorn@gmail.com> (sfid-20080701_104125_115903_99BF2B9C)
-References: <200807011045.13870.IvDoorn@gmail.com>
-	 (sfid-20080701_104125_115903_99BF2B9C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0YtHrfnhQqT53KIRiPYG"
-Date: Tue, 01 Jul 2008 10:48:06 +0200
-Message-Id: <1214902086.7763.13.camel@johannes.berg> (sfid-20080701_104852_871789_4EA6BD89)
+	Tue, 22 Jul 2008 17:17:48 -0400
+Date: Tue, 22 Jul 2008 14:17:48 -0700 (PDT)
+Message-Id: <20080722.141748.192185957.davem@davemloft.net> (sfid-20080722_231840_553274_D3669124)
+To: kaber@trash.net
+Cc: Larry.Finger@lwfinger.net, mingo@elte.hu, ischram@telenet.be,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, j@w1.fi
+Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
+ at 0000000000000370
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <4885F46A.30309@trash.net>
+References: <20080722.043220.247312412.davem@davemloft.net>
+	<4885DA49.50703@lwfinger.net>
+	<4885F46A.30309@trash.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Patrick McHardy <kaber@trash.net>
+Date: Tue, 22 Jul 2008 16:53:30 +0200
 
---=-0YtHrfnhQqT53KIRiPYG
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Could you please retry with the three patches attached to this
+> mail? If the lockdep warning still triggers, please post it again.
 
-On Tue, 2008-07-01 at 10:45 +0200, Ivo van Doorn wrote:
-> Probe responses shouldn't be encrypted, and mac80211 doesn't
-> set the crypto key accordingly. However it didn't set the
-> IEEE80211_TX_CTL_DO_NOT_ENCRYPT flag which means drivers
-> could make an attempt to encrypt it, and causing a NULL
-> pointer dereference when accessing the provided hw_key field.
->=20
-> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Since I'm convinced the original lockdep spurious warning
+issue is cured, and we're looking at something different
+now, I've integrated all of these fixes together as one
+commit as below.
 
-> ---
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 7b4d4d4..fd28cd8 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -2531,6 +2531,7 @@ static int ieee80211_sta_join_ibss(struct net_devic=
-e *dev,
->  			control->flags |=3D IEEE80211_TX_CTL_SHORT_PREAMBLE;
->  		control->antenna_sel_tx =3D local->hw.conf.antenna_sel_tx;
->  		control->flags |=3D IEEE80211_TX_CTL_NO_ACK;
-> +		control->flags |=3D IEEE80211_TX_CTL_DO_NOT_ENCRYPT;
->  		control->control.retry_limit =3D 1;
-> =20
->  		ifsta->probe_resp =3D skb_copy(skb, GFP_ATOMIC);
->=20
+Thanks a lot Patrick.
 
---=-0YtHrfnhQqT53KIRiPYG
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+netdev: Handle ->addr_list_lock just like ->_xmit_lock for lockdep.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+The new address list lock needs to handle the same device layering
+issues that the _xmit_lock one does.
 
-iQIcBAABAgAGBQJIae9CAAoJEKVg1VMiehFY8JYQAJzPA0n8gFuqTicqOH6YOvzT
-x6fJIPPq64TzeZHMi9Wqc8rmDq2weKyoVoHueDcASQ6Yt7qQ/DLsEAV9V+3TdkoR
-1dtwoTfCRqntl1G566dGNsYIyixUQAONcIx16oHwVXMbZdd1sHGZM+h5PiTglVxF
-k5k7mLyOO5gvAkk4+wl0Frz5kI2GIcEYq25ptKFJ3oezGDGV6ojPsCNi8HJBbAfW
-96zjQI0r+QI/vSNczxmrW9pPNJdh/Up0UOZ9/o8Jw80TWbIcKYMBff94iGlsSZqh
-Pu1YEsGxINteL9NZyZJJ9SS6O0lTXanAZjZ/kl/IVaon5ulixusePszR/NXsfnoZ
-ifyw1fj3C9gr/PHRUQi87Ayu6ExQZErMjOhw3z5LgM1NHctiGuXJkU0UXnbtPNGi
-gXijR8INJLTAVoqiJTRVHjlAX7zCgk5SElipO6jpbxkj+Ps1/xsZKflXVnjdpa89
-hOVNhnBqzcVb9a2XtWmYqU/p3/z21uQDokmVtsSzt7elnvGOd2W8giFIS8XUW1rr
-cYIGInuNBO4vbcsVqx59QpePE8IzcXSvM6uKs7yTd5iULhYpHoHEU/nt+L2QLbQP
-hGZ18QRN1hpEAS8CO5OfmXG3enoXE5H/LeCGPJsocx2+kl6DiWDN8qC5ofkt6SiM
-OKVEs8nMYzzsbbPCHS7F
-=RUyR
------END PGP SIGNATURE-----
+This integrates work done by Patrick McHardy.
 
---=-0YtHrfnhQqT53KIRiPYG--
+Signed-off-by: David S. Miller <davem@davemloft.net>
 
+diff --git a/drivers/net/bonding/bond_main.c b/drivers/net/bonding/bond_main.c
+index 9737c06..a641eea 100644
+--- a/drivers/net/bonding/bond_main.c
++++ b/drivers/net/bonding/bond_main.c
+@@ -5041,6 +5041,7 @@ static int bond_check_params(struct bond_params *params)
+ }
+ 
+ static struct lock_class_key bonding_netdev_xmit_lock_key;
++static struct lock_class_key bonding_netdev_addr_lock_key;
+ 
+ static void bond_set_lockdep_class_one(struct net_device *dev,
+ 				       struct netdev_queue *txq,
+@@ -5052,6 +5053,8 @@ static void bond_set_lockdep_class_one(struct net_device *dev,
+ 
+ static void bond_set_lockdep_class(struct net_device *dev)
+ {
++	lockdep_set_class(&dev->addr_list_lock,
++			  &bonding_netdev_addr_lock_key);
+ 	netdev_for_each_tx_queue(dev, bond_set_lockdep_class_one, NULL);
+ }
+ 
+diff --git a/drivers/net/hamradio/bpqether.c b/drivers/net/hamradio/bpqether.c
+index b6500b2..58f4b1d 100644
+--- a/drivers/net/hamradio/bpqether.c
++++ b/drivers/net/hamradio/bpqether.c
+@@ -123,6 +123,7 @@ static LIST_HEAD(bpq_devices);
+  * off into a separate class since they always nest.
+  */
+ static struct lock_class_key bpq_netdev_xmit_lock_key;
++static struct lock_class_key bpq_netdev_addr_lock_key;
+ 
+ static void bpq_set_lockdep_class_one(struct net_device *dev,
+ 				      struct netdev_queue *txq,
+@@ -133,6 +134,7 @@ static void bpq_set_lockdep_class_one(struct net_device *dev,
+ 
+ static void bpq_set_lockdep_class(struct net_device *dev)
+ {
++	lockdep_set_class(&dev->addr_list_lock, &bpq_netdev_addr_lock_key);
+ 	netdev_for_each_tx_queue(dev, bpq_set_lockdep_class_one, NULL);
+ }
+ 
+diff --git a/drivers/net/macvlan.c b/drivers/net/macvlan.c
+index efbc155..4239450 100644
+--- a/drivers/net/macvlan.c
++++ b/drivers/net/macvlan.c
+@@ -276,6 +276,7 @@ static int macvlan_change_mtu(struct net_device *dev, int new_mtu)
+  * separate class since they always nest.
+  */
+ static struct lock_class_key macvlan_netdev_xmit_lock_key;
++static struct lock_class_key macvlan_netdev_addr_lock_key;
+ 
+ #define MACVLAN_FEATURES \
+ 	(NETIF_F_SG | NETIF_F_ALL_CSUM | NETIF_F_HIGHDMA | NETIF_F_FRAGLIST | \
+@@ -295,6 +296,8 @@ static void macvlan_set_lockdep_class_one(struct net_device *dev,
+ 
+ static void macvlan_set_lockdep_class(struct net_device *dev)
+ {
++	lockdep_set_class(&dev->addr_list_lock,
++			  &macvlan_netdev_addr_lock_key);
+ 	netdev_for_each_tx_queue(dev, macvlan_set_lockdep_class_one, NULL);
+ }
+ 
+diff --git a/drivers/net/wireless/hostap/hostap_hw.c b/drivers/net/wireless/hostap/hostap_hw.c
+index 13d5882..3153fe9 100644
+--- a/drivers/net/wireless/hostap/hostap_hw.c
++++ b/drivers/net/wireless/hostap/hostap_hw.c
+@@ -3101,6 +3101,7 @@ static void prism2_clear_set_tim_queue(local_info_t *local)
+  * This is a natural nesting, which needs a split lock type.
+  */
+ static struct lock_class_key hostap_netdev_xmit_lock_key;
++static struct lock_class_key hostap_netdev_addr_lock_key;
+ 
+ static void prism2_set_lockdep_class_one(struct net_device *dev,
+ 					 struct netdev_queue *txq,
+@@ -3112,6 +3113,8 @@ static void prism2_set_lockdep_class_one(struct net_device *dev,
+ 
+ static void prism2_set_lockdep_class(struct net_device *dev)
+ {
++	lockdep_set_class(&dev->addr_list_lock,
++			  &hostap_netdev_addr_lock_key);
+ 	netdev_for_each_tx_queue(dev, prism2_set_lockdep_class_one, NULL);
+ }
+ 
+diff --git a/net/8021q/vlan_dev.c b/net/8021q/vlan_dev.c
+index f42bc2b..4bf014e 100644
+--- a/net/8021q/vlan_dev.c
++++ b/net/8021q/vlan_dev.c
+@@ -569,6 +569,7 @@ static void vlan_dev_set_rx_mode(struct net_device *vlan_dev)
+  * separate class since they always nest.
+  */
+ static struct lock_class_key vlan_netdev_xmit_lock_key;
++static struct lock_class_key vlan_netdev_addr_lock_key;
+ 
+ static void vlan_dev_set_lockdep_one(struct net_device *dev,
+ 				     struct netdev_queue *txq,
+@@ -581,6 +582,9 @@ static void vlan_dev_set_lockdep_one(struct net_device *dev,
+ 
+ static void vlan_dev_set_lockdep_class(struct net_device *dev, int subclass)
+ {
++	lockdep_set_class_and_subclass(&dev->addr_list_lock,
++				       &vlan_netdev_addr_lock_key,
++				       subclass);
+ 	netdev_for_each_tx_queue(dev, vlan_dev_set_lockdep_one, &subclass);
+ }
+ 
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 65eea83..6bf217d 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -261,7 +261,7 @@ static RAW_NOTIFIER_HEAD(netdev_chain);
+ 
+ DEFINE_PER_CPU(struct softnet_data, softnet_data);
+ 
+-#ifdef CONFIG_DEBUG_LOCK_ALLOC
++#ifdef CONFIG_LOCKDEP
+ /*
+  * register_netdevice() inits txq->_xmit_lock and sets lockdep class
+  * according to dev->type
+@@ -301,6 +301,7 @@ static const char *netdev_lock_name[] =
+ 	 "_xmit_NONE"};
+ 
+ static struct lock_class_key netdev_xmit_lock_key[ARRAY_SIZE(netdev_lock_type)];
++static struct lock_class_key netdev_addr_lock_key[ARRAY_SIZE(netdev_lock_type)];
+ 
+ static inline unsigned short netdev_lock_pos(unsigned short dev_type)
+ {
+@@ -313,8 +314,8 @@ static inline unsigned short netdev_lock_pos(unsigned short dev_type)
+ 	return ARRAY_SIZE(netdev_lock_type) - 1;
+ }
+ 
+-static inline void netdev_set_lockdep_class(spinlock_t *lock,
+-					    unsigned short dev_type)
++static inline void netdev_set_xmit_lockdep_class(spinlock_t *lock,
++						 unsigned short dev_type)
+ {
+ 	int i;
+ 
+@@ -322,9 +323,22 @@ static inline void netdev_set_lockdep_class(spinlock_t *lock,
+ 	lockdep_set_class_and_name(lock, &netdev_xmit_lock_key[i],
+ 				   netdev_lock_name[i]);
+ }
++
++static inline void netdev_set_addr_lockdep_class(struct net_device *dev)
++{
++	int i;
++
++	i = netdev_lock_pos(dev->type);
++	lockdep_set_class_and_name(&dev->addr_list_lock,
++				   &netdev_addr_lock_key[i],
++				   netdev_lock_name[i]);
++}
+ #else
+-static inline void netdev_set_lockdep_class(spinlock_t *lock,
+-					    unsigned short dev_type)
++static inline void netdev_set_xmit_lockdep_class(spinlock_t *lock,
++						 unsigned short dev_type)
++{
++}
++static inline void netdev_set_addr_lockdep_class(struct net_device *dev)
+ {
+ }
+ #endif
+@@ -3851,7 +3865,7 @@ static void __netdev_init_queue_locks_one(struct net_device *dev,
+ 					  void *_unused)
+ {
+ 	spin_lock_init(&dev_queue->_xmit_lock);
+-	netdev_set_lockdep_class(&dev_queue->_xmit_lock, dev->type);
++	netdev_set_xmit_lockdep_class(&dev_queue->_xmit_lock, dev->type);
+ 	dev_queue->xmit_lock_owner = -1;
+ }
+ 
+@@ -3896,6 +3910,7 @@ int register_netdevice(struct net_device *dev)
+ 	net = dev_net(dev);
+ 
+ 	spin_lock_init(&dev->addr_list_lock);
++	netdev_set_addr_lockdep_class(dev);
+ 	netdev_init_queue_locks(dev);
+ 
+ 	dev->iflink = -1;
+diff --git a/net/netrom/af_netrom.c b/net/netrom/af_netrom.c
+index fccc250..532e4fa 100644
+--- a/net/netrom/af_netrom.c
++++ b/net/netrom/af_netrom.c
+@@ -73,6 +73,7 @@ static const struct proto_ops nr_proto_ops;
+  * separate class since they always nest.
+  */
+ static struct lock_class_key nr_netdev_xmit_lock_key;
++static struct lock_class_key nr_netdev_addr_lock_key;
+ 
+ static void nr_set_lockdep_one(struct net_device *dev,
+ 			       struct netdev_queue *txq,
+@@ -83,6 +84,7 @@ static void nr_set_lockdep_one(struct net_device *dev,
+ 
+ static void nr_set_lockdep_key(struct net_device *dev)
+ {
++	lockdep_set_class(&dev->addr_list_lock, &nr_netdev_addr_lock_key);
+ 	netdev_for_each_tx_queue(dev, nr_set_lockdep_one, NULL);
+ }
+ 
+diff --git a/net/rose/af_rose.c b/net/rose/af_rose.c
+index dbc963b..a7f1ce1 100644
+--- a/net/rose/af_rose.c
++++ b/net/rose/af_rose.c
+@@ -74,6 +74,7 @@ ax25_address rose_callsign;
+  * separate class since they always nest.
+  */
+ static struct lock_class_key rose_netdev_xmit_lock_key;
++static struct lock_class_key rose_netdev_addr_lock_key;
+ 
+ static void rose_set_lockdep_one(struct net_device *dev,
+ 				 struct netdev_queue *txq,
+@@ -84,6 +85,7 @@ static void rose_set_lockdep_one(struct net_device *dev,
+ 
+ static void rose_set_lockdep_key(struct net_device *dev)
+ {
++	lockdep_set_class(&dev->addr_list_lock, &rose_netdev_addr_lock_key);
+ 	netdev_for_each_tx_queue(dev, rose_set_lockdep_one, NULL);
+ }
+ 
