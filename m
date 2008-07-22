@@ -1,36 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb.errno.com ([69.12.149.25]:4950 "EHLO ebb.errno.com"
+Received: from tim.rpsys.net ([194.106.48.114]:42586 "EHLO tim.rpsys.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750963AbYGJQMI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 12:12:08 -0400
-Message-ID: <4876304E.9070508@errno.com> (sfid-20080710_181215_567825_155BAA48)
-Date: Thu, 10 Jul 2008 08:52:46 -0700
-From: Sam Leffler <sam@errno.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] Add new regulatory framework for Linux wireless
-References: <20080710152415.GK17936@ruslug.rutgers.edu>
-In-Reply-To: <20080710152415.GK17936@ruslug.rutgers.edu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1752372AbYGVMJx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jul 2008 08:09:53 -0400
+Subject: Re: [PATCH 2/2] RFKILL: set the status of the leds on activation.
+From: Richard Purdie <rpurdie@rpsys.net>
+To: Dmitry <dbaryshkov@gmail.com>
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
+	akpm@linux-foundation.org
+In-Reply-To: <bc64b4640807220433i3cfbefbfjac6570c55852c59c@mail.gmail.com>
+References: <20080722102159.GA32682@doriath.ww600.siemens.net>
+	 <20080722112245.GC15136@khazad-dum.debian.net>
+	 <bc64b4640807220433i3cfbefbfjac6570c55852c59c@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 22 Jul 2008 13:09:22 +0100
+Message-Id: <1216728562.5421.12.camel@dax.rpnet.com> (sfid-20080722_141003_634558_DE745C32)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> The industry currently has different techniques for parsing and using
-> Country IEs. What I currently propose is to take the common denominator
-> between what the AP provides, what CRDA has and what the driver can
-> provide privately through its callback. So the wireless core can keep
-> as the common denominator between the AP's Country IE and what CRDA
-> has for the alpha2 provided by the Country IE. Drivers themselves can
-> further enhance regulatory enforcement by relying on private driver
-> data if they wish so.
->
->   
-Can you elaborate on the first sentence?  Are you just saying that some 
-software blindly trusts the contents of the country IE and doesn't 
-constrain it's use (as you describe)?  Or are you saying drivers 
-interpret the contents of the country IE in ways different than spec'd?
+On Tue, 2008-07-22 at 15:33 +0400, Dmitry wrote:
+> 2008/7/22 Henrique de Moraes Holschuh <hmh@hmh.eng.br>:
+> >>  This patch depends on the patch "leds: make sure led->trigger is set
+> >>  earlier" which was staged in -mm for some time and recently got merged
+> >>  into leds tree.
+> >
+> > Will it get in mainline for 2.6.27-rc?
+> 
+> I hope so. It actually depends on Richard Purdie (cc'ed)
 
-    Sam
+That patch is queued and I'll be sending a pull request for the leds and
+backlight trees shortly.
+
+Cheers,
+
+Richard
 
