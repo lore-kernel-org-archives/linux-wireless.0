@@ -1,63 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43407 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:38036 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751701AbYG1Rgw (ORCPT
+	with ESMTP id S1752609AbYGVMec (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2008 13:36:52 -0400
-Subject: Re: AP association timeout bugzilla PR?
+	Tue, 22 Jul 2008 08:34:32 -0400
+Subject: Re: [PATCH] iwlwifi: Enable packet injection for iwl4965
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jack Howarth <howarth@bromo.msbb.uc.edu>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080728172722.GA26893@bromo.msbb.uc.edu> (sfid-20080728_193533_368899_C68AA6E3)
-References: <20080728172722.GA26893@bromo.msbb.uc.edu>
-	 (sfid-20080728_193533_368899_C68AA6E3)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tIfIuFYFMzkv7Sc+Kce4"
-Date: Mon, 28 Jul 2008 19:36:49 +0200
-Message-Id: <1217266609.15381.4.camel@johannes.berg> (sfid-20080728_193655_473832_E3B7A05C)
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: Zhu Yi <yi.zhu@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Marco Schuster <marco@harddisk.is-a-geek.org>
+In-Reply-To: <69e28c910807220454q7c8371e1m11b1015ed8398758@mail.gmail.com> (sfid-20080722_135431_738411_383A0B3C)
+References: <69e28c910807181205m6dd0cdcek83f9717bf1ac9dcc@mail.gmail.com>
+	 <69e28c910807220454q7c8371e1m11b1015ed8398758@mail.gmail.com>
+	 (sfid-20080722_135431_738411_383A0B3C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+Gs8kXzWfK2x+DNoMHEG"
+Date: Tue, 22 Jul 2008 14:33:28 +0200
+Message-Id: <1216730008.3222.0.camel@johannes.berg> (sfid-20080722_143437_032539_31B0089B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-tIfIuFYFMzkv7Sc+Kce4
-Content-Type: text/plain
+--=-+Gs8kXzWfK2x+DNoMHEG
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2008-07-28 at 13:27 -0400, Jack Howarth wrote:
-> Is there an existing bugzilla PR for the problems
-> with AP association timeouts due to the changes in
-> the kernel tip (and 2.6.26 gits)? I would like to test
-> the fix for this against the current 2.6.26-git with
-> the ath9k git patch but am uncertain where to expect
-> the proposed patches to show up at (linux-wireless,
-> linux-kernel or in a bugzilla attachment)?=20
+On Tue, 2008-07-22 at 13:54 +0200, Stefanik G=C3=A1bor wrote:
 
-Here. But I don't have any fixes yet. Maybe tonight, if I don't fall
-asleep...
+> What is the status of this patch? Did it get lost? Was it rejected? I
+> didn't get any answer on it, and I can't see it in iwlwifi-2.6.git or
+> wireless-testing.git.
+
+It's OLS. Wait a week :)
 
 johannes
 
---=-tIfIuFYFMzkv7Sc+Kce4
+--=-+Gs8kXzWfK2x+DNoMHEG
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIjgOtAAoJEKVg1VMiehFYKOcQALs01+h2y8vi30bPDCfP3of+
-QKquPIPPYlrfKXvFHQpCTZhojW25PWgKYlT/DP2K6OHtxXuFtwtd+P+4Hau5OtSP
-5ZTunLxSaxwxpi/KtVVGVH/iyp3sR1Nl3s2P48zkcnno9CP9swg3hE6DAJaWtqGv
-xR178zJGF3v4mhDOZHGg7Cf0OkiwJ7o7IV5ml1fF3Yyp873KTzEVJfGKRQsCRITj
-JaP8HuL9v2ohgjEOIADgGT/bR/+ixs1wOU2i2AUSRTAyi1eq36WicHmHo0qG1srd
-uhop7SyCv5BfhfPjpURC0d+M/a3E6HqqhzA9PoB3qh1bXAammnVvwi3mVGbSg3FF
-/LKmVbEGVYGCWU7hWbHUNbQ+JaR4tUPT1KAZYOAqEJz2EF4jqo31D3cljewj1IPj
-1IW+DUJqQArPUUMfVtSb/H9ctrBWPxfxXuuVUvC9YWSmbjEW9mjsH6BUAmUNuPmZ
-FQVSLtKRVQSGir8UzGs/9SAmNLmgjupjzlNGxBI8mFVgKOpV2ch0x32ycp+6GPWQ
-tKh/64t0g7rJMBV7YTIEMk9uqBhAGwja46eRj4mGqUKs7TPXoVcaSYNJly1h+qkp
-al0JUD/uMtgRoPmeGmvNAnAWLU+bDkchpfm4LKU3qFIP7URcZ6IPvrIj39ABLCNp
-1JAj7+fw2w7TOnr3lxeF
-=YT/9
+iQIcBAABAgAGBQJIhdOVAAoJEKVg1VMiehFYcOgP/0a/xjjGfIh77YL/qdHeeHiU
+4f8Cxd+zWjz5ZOzHAOJkI0k6j7uF3cxVAnLmh/K/dxIzCuBtv05slImZC0NDYazF
+h+jHX2RKgYf32fJ1m3aXqlRFIV+glHq8mhJE61In1hwliJpp6U5fno+9ooxplP96
+GrVytYXHSGj333sSqkEf1MyLp/3Jp8dAqizWrSkKY4zZH/8uZkGDkyJOkVk0eVId
+Jpk1ajRBaWqjeXK0O4E5kwOS+4U91JjKRiOC0owdMBQBPPTFiQA3zkrYUPUvCPmh
+a1NtVU14o9NCoeJpzUTHMqLzrbRT8/lwSrqQbWGBHJOGVTw2ist9vkFV3dypQjZh
+V22yZo4yHMVEj1DSnaIPa0LtTSkH2w7L7ggm/XWRstbxw5B6fd7pP4HEDp60LYji
+vqDfS5/LZXzFkXgAqvvUzCkMxcxtpYKWAUkALrJZEykdvXZwN1DJhkEMmEBySyZM
+MhQh6hSprxvwyIpeOZDkL7cldZ+qYikwm6JrtqpVEFm3/ZguIN/QX3d9RNCLsscB
+4ae9Qemo2NtJKybnvCO9oVRaBsJu1zBidQtQBcEpNnhjOFXVj8XhUazuMar0NcTV
+pbFDEfFD9b90jPpylmDkAkU4MCsOwiRVQAfho/1BvhD2ideO+7Vu5pqZ000w3pvw
++kT47R4xsFvv1wxBwmMm
+=iIK7
 -----END PGP SIGNATURE-----
 
---=-tIfIuFYFMzkv7Sc+Kce4--
+--=-+Gs8kXzWfK2x+DNoMHEG--
 
