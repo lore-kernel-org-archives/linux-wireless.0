@@ -1,48 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:46134 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751466AbYGAL30 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 07:29:26 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] mac80211: remove usless tid assignment for managment and control frames
-Date: Tue,  1 Jul 2008 14:29:21 +0300
-Message-Id: <1214911761-8291-2-git-send-email-tomas.winkler@intel.com> (sfid-20080701_132931_541476_E94D7698)
-In-Reply-To: <1214911761-8291-1-git-send-email-tomas.winkler@intel.com>
-References: <1214911761-8291-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:33477 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754170AbYGVAS3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jul 2008 20:18:29 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: [PATCH 1/6] rfkill: document rfkill_force_state as required (v2)
+Date: Mon, 21 Jul 2008 21:18:17 -0300
+Message-Id: <1216685902-9373-2-git-send-email-hmh@hmh.eng.br> (sfid-20080722_021835_943448_D4D56186)
+In-Reply-To: <1216685902-9373-1-git-send-email-hmh@hmh.eng.br>
+References: <1216685902-9373-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes useless tid assignment for management and control frames
+While the rfkill class does work with just get_state(), it doesn't work
+well on devices that are subject to external events that cause rfkill state
+changes.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Document that rfkill_force_state() is required in those cases.
+
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- net/mac80211/wme.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ Documentation/rfkill.txt |   20 ++++++++++++++++----
+ net/rfkill/rfkill.c      |    7 ++++++-
+ 2 files changed, 22 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index f23b5a4..30d3b5b 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -210,7 +210,6 @@ static int wme_qdiscop_enqueue(struct sk_buff *skb, struct Qdisc* qd)
- 			kfree_skb(skb);
- 			err = NET_XMIT_DROP;
- 	} else {
--		tid = skb->priority & QOS_CONTROL_TAG1D_MASK;
- 		skb_set_queue_mapping(skb, queue);
- 		qdisc = q->queues[queue];
- 		err = qdisc->enqueue(skb, qdisc);
+diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
+index 0843ed0..28b6ec8 100644
+--- a/Documentation/rfkill.txt
++++ b/Documentation/rfkill.txt
+@@ -390,9 +390,10 @@ rfkill lines are inactive, it must return RFKILL_STATE_SOFT_BLOCKED if its soft
+ rfkill input line is active.  Only if none of the rfkill input lines are
+ active, will it return RFKILL_STATE_UNBLOCKED.
+ 
+-If it doesn't implement the get_state() hook, it must make sure that its calls
+-to rfkill_force_state() are enough to keep the status always up-to-date, and it
+-must do a rfkill_force_state() on resume from sleep.
++Since the device has a hardware rfkill line, it IS subject to state changes
++external to rfkill.  Therefore, the driver must make sure that it calls
++rfkill_force_state() to keep the status always up-to-date, and it must do a
++rfkill_force_state() on resume from sleep.
+ 
+ Every time the driver gets a notification from the card that one of its rfkill
+ lines changed state (polling might be needed on badly designed cards that don't
+@@ -422,13 +423,24 @@ of the hardware is unknown), or read-write (where the hardware can be queried
+ about its current state).
+ 
+ The rfkill class will call the get_state hook of a device every time it needs
+-to know the *real* current state of the hardware.  This can happen often.
++to know the *real* current state of the hardware.  This can happen often, but
++it does not do any polling, so it is not enough on hardware that is subject
++to state changes outside of the rfkill subsystem.
++
++Therefore, calling rfkill_force_state() when a state change happens is
++mandatory when the device has a hardware rfkill line, or when something else
++like the firmware could cause its state to be changed without going through the
++rfkill class.
+ 
+ Some hardware provides events when its status changes.  In these cases, it is
+ best for the driver to not provide a get_state hook, and instead register the
+ rfkill class *already* with the correct status, and keep it updated using
+ rfkill_force_state() when it gets an event from the hardware.
+ 
++rfkill_force_state() must be used on the device resume handlers to update the
++rfkill status, should there be any chance of the device status changing during
++the sleep.
++
+ There is no provision for a statically-allocated rfkill struct.  You must
+ use rfkill_allocate() to allocate one.
+ 
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index 7a560b7..022fe50 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -252,7 +252,12 @@ EXPORT_SYMBOL_GPL(rfkill_epo);
+  * a notification by the firmware/hardware of the current *real*
+  * state of the radio rfkill switch.
+  *
+- * It may not be called from an atomic context.
++ * Devices which are subject to external changes on their rfkill
++ * state (such as those caused by a hardware rfkill line) MUST
++ * have their driver arrange to call rfkill_force_state() as soon
++ * as possible after such a change.
++ *
++ * This function may not be called from an atomic context.
+  */
+ int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state)
+ {
 -- 
-1.5.4.1
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+1.5.6.2
 
