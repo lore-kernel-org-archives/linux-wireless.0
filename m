@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:28106 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752705AbYG3IzP (ORCPT
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:53994 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751629AbYGVLUn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 04:55:15 -0400
-To: "Herton Ronaldo Krzesinski" <herton@mandriva.com.br>
-Cc: "Hin-Tak Leung" <hintak.leung@gmail.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
-Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks rtl8187
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
-	<200807290021.45400.herton@mandriva.com.br> <87d4kwl7hh.fsf@nokia.com>
-	<200807300037.50088.herton@mandriva.com.br>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Wed, 30 Jul 2008 11:54:37 +0300
-In-Reply-To: <200807300037.50088.herton@mandriva.com.br> (ext Herton Ronaldo Krzesinski's message of "Wed\, 30 Jul 2008 00\:37\:49 -0300")
-Message-ID: <87fxprvjjm.fsf@nokia.com> (sfid-20080730_105522_372906_656A0D59)
+	Tue, 22 Jul 2008 07:20:43 -0400
+Date: Tue, 22 Jul 2008 08:20:37 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Dmitry Baryshkov <dbaryshkov@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>
+Subject: Re: [PATCH 1/2] RFKILL: allow one to specify led trigger name
+Message-ID: <20080722112037.GB15136@khazad-dum.debian.net> (sfid-20080722_132046_521781_50D04B53)
+References: <20080722101737.GA32672@doriath.ww600.siemens.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080722101737.GA32672@doriath.ww600.siemens.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Herton Ronaldo Krzesinski <herton@mandriva.com.br> writes:
-
-> You are right, I was looking at wrong place, indeed the issue is on rtl8187. 
-> The problem here is that mac80211 can call rtl8187_config while another 
-> instance of it is still running, and on rtl8187_config this is a critical 
-> section:
->
-
-[...]
-
-> My sequence of commands trigger this, so there are cases where it disables TX 
-> loopback while there are another instance that can be still 
-> inside ->set_chan, that's explain also why card stops to work. This section 
-> should be lock protected or mac80211 ensure to not call local->ops->config 
-> while another call is still running.
-
-To tell you the truth, I don't know if ops->config() calls should be
-serialized or not, but I have always used locking on the driver as a
-precaution.
-
-Johannes, can you comment on this, please?
+On Tue, 22 Jul 2008, Dmitry Baryshkov wrote:
+> Allow the rfkill driver to specify led trigger name.
+> By default it still defaults to the name of rfkill switch.
+> 
+> Signed-off-by: Dmitry Baryshkov <dbaryshkov@gmail.com>
+Acked-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> ---
+>  net/rfkill/rfkill.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+> index 4e10a95..b247677 100644
+> --- a/net/rfkill/rfkill.c
+> +++ b/net/rfkill/rfkill.c
+> @@ -355,7 +355,8 @@ static void rfkill_led_trigger_register(struct rfkill *rfkill)
+>  #ifdef CONFIG_RFKILL_LEDS
+>  	int error;
+>  
+> -	rfkill->led_trigger.name = rfkill->dev.bus_id;
+> +	if (!rfkill->led_trigger.name)
+> +		rfkill->led_trigger.name = rfkill->dev.bus_id;
+>  	error = led_trigger_register(&rfkill->led_trigger);
+>  	if (error)
+>  		rfkill->led_trigger.name = NULL;
+> -- 
+> 1.5.6.2
+> 
+> 
 
 -- 
-Kalle Valo
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
