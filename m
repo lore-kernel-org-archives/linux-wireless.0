@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:45079 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751237AbYGYTdU (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:40099 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752682AbYGVSoz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2008 15:33:20 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so27245ugf.16
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2008 12:33:19 -0700 (PDT)
-Date: Fri, 25 Jul 2008 21:34:16 +0200
-From: Jarek Poplawski <jarkao2@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ingo Oeser <netdev@axxeo.de>, David Miller <davem@davemloft.net>,
-	peterz@infradead.org, Larry.Finger@lwfinger.net, kaber@trash.net,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, mingo@redhat.com
-Subject: Re: Kernel WARNING: at net/core/dev.c:1330
-	__netif_schedule+0x2c/0x98()
-Message-ID: <20080725193416.GB3107@ami.dom.local> (sfid-20080725_213325_377743_66B76470)
-References: <1216806614.7257.152.camel@twins> <1216810696.7257.175.camel@twins> <20080723.131441.200166513.davem@davemloft.net> <200807251904.37302.netdev@axxeo.de> <20080725183622.GA3107@ami.dom.local> <1217013384.4758.5.camel@johannes.berg>
+	Tue, 22 Jul 2008 14:44:55 -0400
+Message-ID: <48862A76.8030307@trash.net> (sfid-20080722_204505_222866_C266A633)
+Date: Tue, 22 Jul 2008 20:44:06 +0200
+From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1217013384.4758.5.camel@johannes.berg>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: David Miller <davem@davemloft.net>, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330 __netif_schedule+0x2c/0x98()
+References: <4885104A.2070201@lwfinger.net>	<20080721.161517.27161039.davem@davemloft.net>	<48857F74.2040406@lwfinger.net> <20080722.043220.247312412.davem@davemloft.net> <4885DA49.50703@lwfinger.net> <48860D4B.8070003@lwfinger.net> <488616C0.8070505@trash.net> <4886294C.4060905@lwfinger.net>
+In-Reply-To: <4886294C.4060905@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 25, 2008 at 09:16:24PM +0200, Johannes Berg wrote:
-> On Fri, 2008-07-25 at 20:36 +0200, Jarek Poplawski wrote:
-> > On Fri, Jul 25, 2008 at 07:04:36PM +0200, Ingo Oeser wrote:
-> > ...
-> > > I'm sure as hell, I miss sth. but can't it be done by this pseudo-code:
-> > 
-> > ...And I really doubt it can't be done like this.
-> 
-> Umm, of course it cannot, because then we'd have to take the mutex in
-> the TX path, which we cannot. We cannot have another lock in the TX
-> path, what's so hard to understand about? We need to be able to lock all
-> queues to lock out multiple tx paths at once in some (really) slow paths
-> but not have any extra lock overhead for the tx path, especially not a
-> single lock.
+Larry Finger wrote:
+> Patrick McHardy wrote:
+>> Larry Finger wrote:
+>>>
+>>> =============================================
+>>> [ INFO: possible recursive locking detected ]
+>>> 2.6.26-Linus-git-05752-g93ded9b #49
+>>
+>>                    ^^^^^^^^^^^^^^ dirty?
+>>
+>> This kernel is not using the patches we sent.
+>
+> No, but they didn't make any difference. I tried with all 3 applied, 
+> then backed them out one by one. That was the state when I posted before.
 
-But this mutex doesn't have to be mutex. And it's not for the tx path,
-only for "service" just like netif_tx_lock(). The fast path needs only
-queue->tx_lock.
+Well, this is a completely different warning.
 
-Jarek P.
+>
+> Here are the dumps with all 3 patches applied:
+>
+> =============================================
+> [ INFO: possible recursive locking detected ]
+> 2.6.26-Linus-05752-g93ded9b-dirty #53
+> ---------------------------------------------
+> b43/1997 is trying to acquire lock:
+>  (_xmit_IEEE80211#2){-...}, at: [<ffffffffa028f322>] 
+> ieee80211_scan_completed+0x130/0x2e1 [mac80211]
+>
+> but task is already holding lock:
+>  (_xmit_IEEE80211#2){-...}, at: [<ffffffffa028f322>] 
+> ieee80211_scan_completed+0x130/0x2e1 [mac80211] 
+
