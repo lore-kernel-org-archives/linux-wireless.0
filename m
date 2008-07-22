@@ -1,67 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45006 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755943AbYGAW5T (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:37899 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752000AbYGVWkC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 18:57:19 -0400
-Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
-	Larry Finger <larry.finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>
-In-Reply-To: <20080701225207.GB4292@khazad-dum.debian.net>
-References: <20080701225207.GB4292@khazad-dum.debian.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-O7yd0BvOfXjaX77yYQgo"
-Date: Wed, 02 Jul 2008 00:56:33 +0200
-Message-Id: <1214952993.3462.14.camel@johannes.berg> (sfid-20080702_005722_516953_D2574020)
-Mime-Version: 1.0
+	Tue, 22 Jul 2008 18:40:02 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: "Hin-Tak Leung" <hintak.leung@gmail.com>
+Subject: Re: [RFC/RFT] rtl8187: Improve wireless statistics for RTL8187B
+Date: Tue, 22 Jul 2008 19:40:18 -0300
+Cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
+References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net> <200807221613.34434.herton@mandriva.com.br> <3ace41890807221525r67716ea0r251068df773fe53f@mail.gmail.com>
+In-Reply-To: <3ace41890807221525r67716ea0r251068df773fe53f@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200807221940.20009.herton@mandriva.com.br> (sfid-20080723_004007_519668_E2F93831)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Em Tuesday 22 July 2008 19:25:20 Hin-Tak Leung escreveu:
+> On Tue, Jul 22, 2008 at 8:13 PM, Herton Ronaldo Krzesinski
+> <herton@mandriva.com.br> wrote:
+> <snipped>
+>
+> > I got some time to take at a look at it again, I did the bisect and found
+> > commit 8f87dd7e540d455f8e7f11478133b85edc969c67 ("mac80211: power
+> > management wext hooks") to cause the issue here (non working interface).
+> > But with it, making "iwconfig wlan* power off" and making interface go up
+> > again, it starts to work. May be something related to the power
+> > management needs to be implemented in driver now? or keep it disabled
+> > with rtl8187...
+>
+> Disabling power management doesn't improve the situation with latest
+> wireless testing
+> for me. I had a look at the change and it seems simple enough.
 
---=-O7yd0BvOfXjaX77yYQgo
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yes, I also looked at the commit, it's simple and I can't see how it's 
+affecting transmission in my case. It's bizarre and I must be doing something 
+wrong.
 
-On Tue, 2008-07-01 at 19:52 -0300, Henrique de Moraes Holschuh wrote:
-> Dmitry (input layer maintainer) added to CC.  This is a [gross misuse of
-> the] input layer issue.
+>
+> The latest vendor driver has a lot of suspend/resume code in it. I
+> have had a go at
+> trying to get it running against a current kernel. modprobe works but
+> ifconfig up results in a lot
+>
+> rtl8187: EE:cannot submit RX command. URB_STATUS 0
+>
+> Hin-Tak
 
-FWIW, to me half of that mail reads like a rant and I'm ignoring it. If
-you know so much better, why don't you continue working on fixing it?
-
-To address one point though: userspace does want a notification when the
-hw-rfkill is activated so it (e.g. network manager) can ask people to
-un-rfkill their device.
-
-johannes
-
---=-O7yd0BvOfXjaX77yYQgo
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIarYZAAoJEKVg1VMiehFYrkUQALwYXwJXkDlPBFm22y4z3yMe
-VM5WUgglbuD8olnqLkZSOICdJtgkWKkHiC3TXLTxvmoH9BOU9/bBJ8eBKynEhTQG
-DACVngv3YRlZ4Dvca7MaLB+GU30aqEZIjHbg1Xj3rnOkarSFBzmuOIOUS/dxsVSi
-DHfEe60vScvh4zJMlqRdaj6hiP+3+Ho43LZ9KkGJGz297FZHWcSK/kRKrJO1smN3
-EVbAX+ZhWL9qDSzTp5Inq1bp+ULCEH5H8m7ivAyE3nEzLMAebYurYq+Q/gbbW7Fy
-nN7xuYhQ41oV0Sx1E9YOF7NffNh2dSOuiL4QnYSGMNOHIS0AAf0xtCYDe5n2VTS7
-FqPZMrZf/rPMhLQWnNkj7bfVHQ/V7greH6O3hX4FMwv7CGMCey7HAx6qEuotgaZV
-d7OKOe8AVpsPsSCeUYL2+aJQWiJjjbGWU2pusFiK9mcThWFVxvZxw4hYoL4ByMDk
-YuINZwMJ8M254S/9wjJDcVThiskIUYdwCLHm80RqrOKm3h2E6bxWg7xR9vBlFkef
-cPo99fu3CY6GE0diMOUXA3WSl/TG4d+m4wHTY1kMWTdoTC9YwUWAG6v0FGNn9R/N
-82kWUAujkf95FHYlqutGHjNlv/SCvq6BmcNKHBUSeHHhtQYD0t19XegVAe0aZAxI
-lE+DW4BbWvKibU9LCCME
-=GEfv
------END PGP SIGNATURE-----
-
---=-O7yd0BvOfXjaX77yYQgo--
-
+-- 
+[]'s
+Herton
