@@ -1,52 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.188]:32139 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751774AbYGVKRv (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40657
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751865AbYGVLcV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 06:17:51 -0400
-Received: by mu-out-0910.google.com with SMTP id w8so1128121mue.1
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2008 03:17:50 -0700 (PDT)
-Date: Tue, 22 Jul 2008 14:17:37 +0400
-From: Dmitry Baryshkov <dbaryshkov@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: [PATCH 1/2] RFKILL: allow one to specify led trigger name
-Message-ID: <20080722101737.GA32672@doriath.ww600.siemens.net> (sfid-20080722_121755_223481_1FB58808)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 22 Jul 2008 07:32:21 -0400
+Date: Tue, 22 Jul 2008 04:32:20 -0700 (PDT)
+Message-Id: <20080722.043220.247312412.davem@davemloft.net> (sfid-20080722_133227_242035_9842ACFA)
+To: Larry.Finger@lwfinger.net
+Cc: kaber@trash.net, mingo@elte.hu, ischram@telenet.be,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, j@w1.fi
+Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
+ at 0000000000000370
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <48857F74.2040406@lwfinger.net>
+References: <4885104A.2070201@lwfinger.net>
+	<20080721.161517.27161039.davem@davemloft.net>
+	<48857F74.2040406@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow the rfkill driver to specify led trigger name.
-By default it still defaults to the name of rfkill switch.
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Date: Tue, 22 Jul 2008 01:34:28 -0500
 
-Signed-off-by: Dmitry Baryshkov <dbaryshkov@gmail.com>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
----
- net/rfkill/rfkill.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+> David Miller wrote:
+> > From: Larry Finger <Larry.Finger@lwfinger.net>
+> > Date: Mon, 21 Jul 2008 17:40:10 -0500
+> > 
+> >> Sorry :(
+> >>
+> >> I used the davem patch, the second version of your first one, and your second 
+> >> one. Both problems persist.
+> >>
+> >> Still plugging away on bisection.
+> > 
+> > GIT bisecting the lockdep problem is surely going the land you on:
+> > 
+> > commit e308a5d806c852f56590ffdd3834d0df0cbed8d7
+> 
+> No. It landed on this one.
 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 4e10a95..b247677 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -355,7 +355,8 @@ static void rfkill_led_trigger_register(struct rfkill *rfkill)
- #ifdef CONFIG_RFKILL_LEDS
- 	int error;
- 
--	rfkill->led_trigger.name = rfkill->dev.bus_id;
-+	if (!rfkill->led_trigger.name)
-+		rfkill->led_trigger.name = rfkill->dev.bus_id;
- 	error = led_trigger_register(&rfkill->led_trigger);
- 	if (error)
- 		rfkill->led_trigger.name = NULL;
--- 
-1.5.6.2
-
-
--- 
-With best wishes
-Dmitry
-
+For the lockdep warnings?
