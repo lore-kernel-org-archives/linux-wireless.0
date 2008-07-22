@@ -1,58 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.168]:40572 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751382AbYGITog (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 15:44:36 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so3007816wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 12:44:36 -0700 (PDT)
-Subject: [PATCH 3/4] ath5k: explicitly check skb->len
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 09 Jul 2008 12:44:32 -0700
-Message-Id: <1215632672.476.86.camel@brick> (sfid-20080709_214438_751531_10B97091)
-Mime-Version: 1.0
+Received: from 81-66-111-23.rev.numericable.fr ([81.66.111.23]:55681 "EHLO
+	rubis.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750961AbYGVSVa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jul 2008 14:21:30 -0400
+Message-ID: <4886235F.6010407@jourdois.fr> (sfid-20080722_202135_006962_5DDAD2A1)
+Date: Tue, 22 Jul 2008 20:13:51 +0200
+From: =?UTF-8?B?U3TDqXBoYW5lIEpvdXJkb2lz?= <stephane@jourdois.fr>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
+Subject: Re: [ipw3945-devel] [PATCH] iwlwifi: Enable packet injection for
+ iwl4965
+References: <69e28c910807181205m6dd0cdcek83f9717bf1ac9dcc@mail.gmail.com> <69e28c910807220454q7c8371e1m11b1015ed8398758@mail.gmail.com> <4885DDC4.2060609@googlemail.com>
+In-Reply-To: <4885DDC4.2060609@googlemail.com>
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_get_hdrlen_from_skb internally checks that the skb is long
-enough to hold the full header, or it returns 0 if not.  The check in
-ath5k does not check this case and assumes it always got the actual
-header length which it then checks against the skb->len plus some headroom.
+Johannes Engel a =C3=A9crit :
+> Stefanik G=C3=A1bor wrote:
+>> What is the status of this patch? Did it get lost? Was it rejected? =
+I
+>> didn't get any answer on it, and I can't see it in iwlwifi-2.6.git o=
+r
+>> wireless-testing.git.
+>=20
+> Actually it is at least in linux-next since 30th of June as of commit=
+=20
+> 914233d68f07d5d9c22630cd5a84fdfd98f39da2.
 
-Change to ieee80211_hdrlen which always returns the hdrlen and keep the
-existing headroom check.
+I beg your pardon, but this commit is for iwl3945, not iwl4965.
+The patch for iwl4965 is currently not in any git tree.
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- drivers/net/wireless/ath5k/base.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Stephane.
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index a43e9b2..ae10ee0 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1596,7 +1596,7 @@ ath5k_rx_decrypted(struct ath5k_softc *sc, struct ath5k_desc *ds,
- 		struct sk_buff *skb, struct ath5k_rx_status *rs)
- {
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
--	unsigned int keyix, hlen = ieee80211_get_hdrlen_from_skb(skb);
-+	unsigned int keyix, hlen;
- 
- 	if (!(rs->rs_status & AR5K_RXERR_DECRYPT) &&
- 			rs->rs_keyix != AR5K_RXKEYIX_INVALID)
-@@ -1605,6 +1605,7 @@ ath5k_rx_decrypted(struct ath5k_softc *sc, struct ath5k_desc *ds,
- 	/* Apparently when a default key is used to decrypt the packet
- 	   the hw does not set the index used to decrypt.  In such cases
- 	   get the index from the packet. */
-+	hlen = ieee80211_hdrlen(hdr->frame_control);
- 	if (ieee80211_has_protected(hdr->frame_control) &&
- 	    !(rs->rs_status & AR5K_RXERR_DECRYPT) &&
- 	    skb->len >= hlen + 4) {
--- 
-1.5.6.1.322.ge904b
-
-
+--=20
+  ///  Stephane Jourdois     /"\  ASCII RIBBON CAMPAIGN \\\
+(((    Consultant securite  \ /    AGAINST HTML MAIL    )))
+  \\\   157 Bd Davout         X                         ///
+   \\\  75020  Paris         / \    +33 6 8643 3085    ///
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
