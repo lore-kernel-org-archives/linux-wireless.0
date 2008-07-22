@@ -1,72 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37651 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751948AbYGXOWU (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.188]:32139 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751774AbYGVKRv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2008 10:22:20 -0400
-Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks
-	rtl8187
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <69e28c910807230555s2040f507oe6c9e516ef8c0685@mail.gmail.com> (sfid-20080723_145507_239503_2FC0E55E)
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
-	 <200807221613.34434.herton@mandriva.com.br>
-	 <3ace41890807221525r67716ea0r251068df773fe53f@mail.gmail.com>
-	 <200807221940.20009.herton@mandriva.com.br> <4886AA3B.3000406@lwfinger.net>
-	 <4886C50E.6040304@lwfinger.net>
-	 <69e28c910807230555s2040f507oe6c9e516ef8c0685@mail.gmail.com>
-	 (sfid-20080723_145507_239503_2FC0E55E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gQeCat1dP+0k2O3h0Mo2"
-Date: Thu, 24 Jul 2008 16:22:08 +0200
-Message-Id: <1216909328.13587.67.camel@johannes.berg> (sfid-20080724_162227_941006_11E9D404)
-Mime-Version: 1.0
+	Tue, 22 Jul 2008 06:17:51 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so1128121mue.1
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2008 03:17:50 -0700 (PDT)
+Date: Tue, 22 Jul 2008 14:17:37 +0400
+From: Dmitry Baryshkov <dbaryshkov@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Ivo van Doorn <IvDoorn@gmail.com>
+Subject: [PATCH 1/2] RFKILL: allow one to specify led trigger name
+Message-ID: <20080722101737.GA32672@doriath.ww600.siemens.net> (sfid-20080722_121755_223481_1FB58808)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Allow the rfkill driver to specify led trigger name.
+By default it still defaults to the name of rfkill switch.
 
---=-gQeCat1dP+0k2O3h0Mo2
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Dmitry Baryshkov <dbaryshkov@gmail.com>
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ net/rfkill/rfkill.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-On Wed, 2008-07-23 at 14:55 +0200, Stefanik G=C3=A1bor wrote:
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index 4e10a95..b247677 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -355,7 +355,8 @@ static void rfkill_led_trigger_register(struct rfkill *rfkill)
+ #ifdef CONFIG_RFKILL_LEDS
+ 	int error;
+ 
+-	rfkill->led_trigger.name = rfkill->dev.bus_id;
++	if (!rfkill->led_trigger.name)
++		rfkill->led_trigger.name = rfkill->dev.bus_id;
+ 	error = led_trigger_register(&rfkill->led_trigger);
+ 	if (error)
+ 		rfkill->led_trigger.name = NULL;
+-- 
+1.5.6.2
 
-> Zd1211rw also appears to be affected, though not as seriously as with
-> rtl8187: it scans, associates and gets DHCP, but it consistently
-> disconnects after about 2~5 minutes, either with "No ProbeResp" in
-> dmesg, or sometimes with no error message, just "Removed STA" and
-> "Destroyed STA". I don't know if this is the same bug, as I haven't
-> bisected, but it appeared when I switched from a 2.6.26-rc8-wl kernel
-> to a 2.6.26-wl one that contained the above patch.
 
-zd1211rw works fine here, been connected for about 15 minutes now.
-
-johannes
-
---=-gQeCat1dP+0k2O3h0Mo2
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIiJAMAAoJEKVg1VMiehFYAyQQAJFeX1Xm/+/G5HSi3sLGcxgh
-o+xobBIF4noTpeinu2fW0B37Fbim1dxNJKhHUzAc8uCOjsSzVfq/k01kpXaskDn+
-HMKYA7mwZLvAV8bzA0vccCFa34oIPkQdTYpurOq6cI0vWJCB//ujNH7Gq9VkUYHR
-ciVbdA1xn3CoLJRf9Z6zrqERKGydaxrYd6SPvYbaskO8aBxx0Iog9qLj9XT+MM3h
-hxq4+IgIUqIGsO815kjsMMoAPQbzwf/S98dH8TmFCJatAHFHdsAvhXWOuvXAf74v
-adNJABWew/U5sUGuheJhpg8/ASVX4Rq37yFxYyBUGsVNRMdSmuryQKWIotwWHR28
-uWyHJC2F+aNKtjWR/0awEuCKAZeGaPzQ4FVBMABiH0/8U6SeovqV0ZUTyrsomXqS
-7lm/WTnxf+LEj/1KumevJZO5L9U/LeuDusBba5+CGaSPjfTDBw2ff4Pr0W7M7psT
-heTRdofyOc6nLR7rvR2YzFdqF5mT4nN0yAe7KRmdLsdMEWBe3v0FZa8ljgnRRP5l
-4RFmTMp6YL5BmYNWn9FWT3CwNRv1zPU+eDJ+BcCZJQqP0brE86BC6ps9aZW6IGvh
-MzlL8OdT/Gmhvm8dccqCVoY1WB9wpzCrWoyY3s5RrQe6Ul9Sp2HUFARbIdonA11H
-FZPaMjHDKOvQsAdG1ADe
-=iX/Q
------END PGP SIGNATURE-----
-
---=-gQeCat1dP+0k2O3h0Mo2--
+-- 
+With best wishes
+Dmitry
 
