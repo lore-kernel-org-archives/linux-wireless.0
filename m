@@ -1,59 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from stinky.trash.net ([213.144.137.162]:38649 "EHLO
-	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751541AbYGWQBP (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.248]:38813 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750845AbYGVNlt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 12:01:15 -0400
-Message-ID: <4887555A.30605@trash.net> (sfid-20080723_180118_916792_7DBEC6BC)
-Date: Wed, 23 Jul 2008 17:59:22 +0200
-From: Patrick McHardy <kaber@trash.net>
+	Tue, 22 Jul 2008 09:41:49 -0400
+Received: by an-out-0708.google.com with SMTP id d40so442280and.103
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2008 06:41:48 -0700 (PDT)
+Message-ID: <43e72e890807220641y7368f818h20f2410ce449a76b@mail.gmail.com> (sfid-20080722_154153_127419_3F3BC7CC)
+Date: Tue, 22 Jul 2008 06:41:48 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Maarten Wisse" <WisseAanen@gmx.de>
+Subject: Re: No led with compat-20080721 and iwl3945
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200807220833.54383.WisseAanen@gmx.de>
 MIME-Version: 1.0
-To: =?UTF-8?B?RnJhbsOnb2lzIFZhbGVuZHVj?=
-	<francois.valenduc@tvcablenet.be>
-CC: Andrew Morton <akpm@linux-foundation.org>,
-	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Linux Netdev List <netdev@vger.kernel.org>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
-References: <bug-11144-10286@http.bugzilla.kernel.org/>	<20080722034850.dbbc5566.akpm@linux-foundation.org>	<4886E49D.6010700@tvcablenet.be> <20080723010522.389a948f.akpm@linux-foundation.org> <4886F727.6010301@tvcablenet.be> <48870425.50908@trash.net> <48871632.3010205@tvcablenet.be> <4887169B.6090102@trash.net> <488725D5.8030900@tvcablenet.be> <488727B3.7040007@trash.net> <48872968.9000103@trash.net> <488746DF.1050501@tvcablenet.be> <48874BD8.60600@trash.net> <48874C12.10606@trash.net> <4887514C.6080903@tvcablenet.be> <488753C6.2090807@trash.net> <4887550B.2070704@tvcablenet.be>
-In-Reply-To: <4887550B.2070704@tvcablenet.be>
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Content-Type: text/plain; charset=UTF-8
+References: <200807220833.54383.WisseAanen@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-=46ran=C3=A7ois Valenduc wrote:
-> Patrick McHardy a =C3=A9crit :
->>> In file included from net/mac80211/main.c:11:
->>> include/net/mac80211.h: In function =E2=80=98IEEE80211_SKB_CB=E2=80=
-=99:
->>> include/net/mac80211.h:347: erreur: size of array =E2=80=98type nam=
-e=E2=80=99 is=20
->>> negative
->>
->>
->> I was afraid that might happen. This means skb->cb is not large
->> enough to hold both the qdisc and the ieee80211 structs.
->>
->> Just for testing, changing (include/net/mac80211.h):
->>
->> #define IEEE80211_TX_INFO_DRIVER_DATA_SIZE \
->>         (sizeof(((struct sk_buff *)0)->cb) - 8)
->>
->> to
->>
->> #define IEEE80211_TX_INFO_DRIVER_DATA_SIZE \
->>         (sizeof(((struct sk_buff *)0)->cb) - 12)
->>
->> might help to get it to compile. If that doesn't work, try -16.
->>
->>
-> That didn't work, neither with -12 or -16.
+On Mon, Jul 21, 2008 at 11:33 PM, Maarten Wisse <WisseAanen@gmx.de> wrote:
+> Dear wireless developers,
+>
+> You might know it already, but the led doesn't blink anymore in iwl3945, on a
+> dell D620 with a gentoo 2.6.25-tuxonice-r6 kernel with compat-20080721
+> installed. The connection seems quite stable though. Thanks for that!
 
-I'll give it a try myself, please wait a few minutes.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The goal of compat-wireless was to support everything we can from
+wireless-testing on older kernels. Because of this we need to backport
+all supported work down to older kernels. Led and RFKILL particularly
+were not as critical to backport as basic driver functionality.
+Consider it a todo list item and those interested can work on it.
+
+  Luis
