@@ -1,172 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:11652 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753992AbYGHS1e (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:50736 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752022AbYGVMw1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 14:27:34 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so658804yxm.1
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2008 11:27:34 -0700 (PDT)
-Subject: [PATCH 7/8] mac80211: pass scratch buffer directly, remove
-	additional pointers
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 08 Jul 2008 11:00:28 -0700
-Message-Id: <1215540028.476.21.camel@brick> (sfid-20080708_202737_199537_FC3EAA24)
-Mime-Version: 1.0
+	Tue, 22 Jul 2008 08:52:27 -0400
+Message-ID: <4885D808.9060203@lwfinger.net> (sfid-20080722_145237_576350_9DE39C13)
+Date: Tue, 22 Jul 2008 07:52:24 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: David Miller <davem@davemloft.net>
+CC: kaber@trash.net, mingo@elte.hu, ischram@telenet.be,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, j@w1.fi
+Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
+ at 0000000000000370
+References: <4885104A.2070201@lwfinger.net>	<20080721.161517.27161039.davem@davemloft.net>	<48857F74.2040406@lwfinger.net> <20080722.043220.247312412.davem@davemloft.net>
+In-Reply-To: <20080722.043220.247312412.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Recalculate the offset pointers in the ccmp calculations rather than
-in the callers.
+David Miller wrote:
+> From: Larry Finger <Larry.Finger@lwfinger.net>
+> Date: Tue, 22 Jul 2008 01:34:28 -0500
+> 
+>> David Miller wrote:
+>>> From: Larry Finger <Larry.Finger@lwfinger.net>
+>>> Date: Mon, 21 Jul 2008 17:40:10 -0500
+>>>
+>>>> Sorry :(
+>>>>
+>>>> I used the davem patch, the second version of your first one, and your second 
+>>>> one. Both problems persist.
+>>>>
+>>>> Still plugging away on bisection.
+>>> GIT bisecting the lockdep problem is surely going the land you on:
+>>>
+>>> commit e308a5d806c852f56590ffdd3834d0df0cbed8d7
+>> No. It landed on this one.
+> 
+> For the lockdep warnings?
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/aes_ccm.c |   13 ++++++++-----
- net/mac80211/aes_ccm.h |    4 ++--
- net/mac80211/wpa.c     |   26 ++++++++++----------------
- 3 files changed, 20 insertions(+), 23 deletions(-)
+No - this one triggers the kernel BUG as follows:
 
-diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
-index 4d4c2df..e756ed9 100644
---- a/net/mac80211/aes_ccm.c
-+++ b/net/mac80211/aes_ccm.c
-@@ -53,15 +53,17 @@ static inline void aes_ccm_prepare(struct crypto_cipher *tfm, u8 *b_0, u8 *aad,
- 
+------------[ cut here ]------------
+kernel BUG at net/core/dev.c:1328!
+invalid opcode: 0000 [1] SMP
+CPU 0
+Modules linked in: af_packet rfkill_input nfs lockd nfs_acl sunrpc 
+cpufreq_conservative cpufreq_userspace cpufreq_powersave powernow_k8 fuse loop 
+dm_mod arc4 ecb crypto_blkcipher b43 firmware_class rfkill mac80211 cfg80211 
+led_class input_polldev k8temp sr_mod battery ac ssb button hwmon forcedeth 
+cdrom serio_raw sg ohci_hcd ehci_hcd sd_mod usbcore edd fan thermal processor 
+ext3 mbcache jbd pata_amd ahci libata scsi_mod dock
+Pid: 2003, comm: b43 Not tainted 2.6.26-rc8-Linus-git-01424-g37437bb #43
+RIP: 0010:[<ffffffff803958c6>]  [<ffffffff803958c6>] __netif_schedule+0x12/0x75
+RSP: 0018:ffff8100b9e33de0  EFLAGS: 00010246
+RAX: ffff8100b63819c0 RBX: ffffffff80545300 RCX: ffff8100b6381980
+RDX: 00000000ffffffff RSI: 0000000000000001 RDI: ffffffff80545300
+RBP: ffff8100b7b45158 R08: ffff8100b89d8000 R09: ffff8100b9d26000
+R10: ffff8100b7b44480 R11: ffffffffa01239ef R12: ffff8100b7b44480
+R13: ffff8100b9d26000 R14: ffff8100b89d8000 R15: 0000000000000000
+FS:  00007f494406a6f0(0000) GS:ffffffff8055e000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+CR2: 00007f49440933dc CR3: 0000000000201000 CR4: 00000000000006e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process b43 (pid: 2003, threadinfo ffff8100b9e32000, task ffff8100b4a3e480)
+Stack:  ffff8100b7b45158 ffff8100b89d8900 ffff8100b7b45158 ffffffffa0158455
+  ffff8100ba3287c0 0000000000000246 0000000000000000 0000000000000000
+  ffff8100b9e33e70 ffff8100b7b451b8 ffff8100ba3287c0 ffff8100b7b451b0
+Call Trace:
+  [<ffffffffa0158455>] ? :mac80211:ieee80211_scan_completed+0x25b/0x2e1
+  [<ffffffffa01586d6>] ? :mac80211:ieee80211_sta_scan_work+0x0/0x1b8
+  [<ffffffff8023f7d7>] ? run_workqueue+0xf1/0x1f3
+  [<ffffffff8023f9b4>] ? worker_thread+0xdb/0xea
+  [<ffffffff80243017>] ? autoremove_wake_function+0x0/0x2e
+  [<ffffffff8023f8d9>] ? worker_thread+0x0/0xea
+  [<ffffffff80242cff>] ? kthread+0x47/0x73
+  [<ffffffff80402845>] ? trace_hardirqs_on_thunk+0x35/0x3a
+  [<ffffffff8020cd48>] ? child_rip+0xa/0x12
+  [<ffffffff8020c45f>] ? restore_args+0x0/0x30
+  [<ffffffff8021d3b6>] ? flat_send_IPI_mask+0x0/0x67
+  [<ffffffff80242c93>] ? kthreadd+0x188/0x1ad
+  [<ffffffff80242c93>] ? kthreadd+0x188/0x1ad
+  [<ffffffff80242cb8>] ? kthread+0x0/0x73
+  [<ffffffff8020cd3e>] ? child_rip+0x0/0x12
 
- void ieee80211_aes_ccm_encrypt(struct crypto_cipher *tfm, u8 *scratch,
--			       u8 *b_0, u8 *aad, u8 *data, size_t data_len,
-+			       u8 *data, size_t data_len,
- 			       u8 *cdata, u8 *mic)
- {
- 	int i, j, last_len, num_blocks;
--	u8 *pos, *cpos, *b, *s_0, *e;
-+	u8 *pos, *cpos, *b, *s_0, *e, *b_0, *aad;
- 
- 	b = scratch;
- 	s_0 = scratch + AES_BLOCK_LEN;
- 	e = scratch + 2 * AES_BLOCK_LEN;
-+	b_0 = scratch + 3 * AES_BLOCK_LEN;
-+	aad = scratch + 4 * AES_BLOCK_LEN;
- 
- 	num_blocks = DIV_ROUND_UP(data_len, AES_BLOCK_LEN);
- 	last_len = data_len % AES_BLOCK_LEN;
-@@ -92,15 +94,16 @@ void ieee80211_aes_ccm_encrypt(struct crypto_cipher *tfm, u8 *scratch,
- 
 
- int ieee80211_aes_ccm_decrypt(struct crypto_cipher *tfm, u8 *scratch,
--			      u8 *b_0, u8 *aad, u8 *cdata, size_t data_len,
--			      u8 *mic, u8 *data)
-+			      u8 *cdata, size_t data_len, u8 *mic, u8 *data)
- {
- 	int i, j, last_len, num_blocks;
--	u8 *pos, *cpos, *b, *s_0, *a;
-+	u8 *pos, *cpos, *b, *s_0, *a, *b_0, *aad;
- 
- 	b = scratch;
- 	s_0 = scratch + AES_BLOCK_LEN;
- 	a = scratch + 2 * AES_BLOCK_LEN;
-+	b_0 = scratch + 3 * AES_BLOCK_LEN;
-+	aad = scratch + 4 * AES_BLOCK_LEN;
- 
- 	num_blocks = DIV_ROUND_UP(data_len, AES_BLOCK_LEN);
- 	last_len = data_len % AES_BLOCK_LEN;
-diff --git a/net/mac80211/aes_ccm.h b/net/mac80211/aes_ccm.h
-index 8cd0f14..6e7820e 100644
---- a/net/mac80211/aes_ccm.h
-+++ b/net/mac80211/aes_ccm.h
-@@ -16,10 +16,10 @@
- 
- struct crypto_cipher *ieee80211_aes_key_setup_encrypt(const u8 key[]);
- void ieee80211_aes_ccm_encrypt(struct crypto_cipher *tfm, u8 *scratch,
--			       u8 *b_0, u8 *aad, u8 *data, size_t data_len,
-+			       u8 *data, size_t data_len,
- 			       u8 *cdata, u8 *mic);
- int ieee80211_aes_ccm_decrypt(struct crypto_cipher *tfm, u8 *scratch,
--			      u8 *b_0, u8 *aad, u8 *cdata, size_t data_len,
-+			      u8 *cdata, size_t data_len,
- 			      u8 *mic, u8 *data);
- void ieee80211_aes_key_free(struct crypto_cipher *tfm);
- 
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index ec2ae86..2f33df0 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -274,16 +274,20 @@ ieee80211_crypto_tkip_decrypt(struct ieee80211_rx_data *rx)
- }
- 
+Code: 00 00 75 0a 55 9d 5e 5b 5d e9 32 64 eb ff e8 21 73 eb ff 55 9d 59 5b 5d c3 
+55 53 48 89 fb 48 83 ec 08 48 81 ff 00 53 54 80 75 04 <0f> 0b eb fe 48 8d 47 30 
+f0 0f ba 28 01 19 d2 85 d2 75 4c 9c 5d
+RIP  [<ffffffff803958c6>] __netif_schedule+0x12/0x75
+  RSP <ffff8100b9e33de0>
+---[ end trace 396dc6bdf73da468 ]---
 
--static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad,
-+static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *scratch,
- 				int encrypted)
- {
- 	__le16 mask_fc;
- 	int a4_included;
- 	u8 qos_tid;
-+	u8 *b_0, *aad;
- 	u16 data_len, len_a;
- 	unsigned int hdrlen;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 
-+	b_0 = scratch + 3 * AES_BLOCK_LEN;
-+	aad = scratch + 4 * AES_BLOCK_LEN;
-+
- 	/*
- 	 * Mask FC: zero subtype b4 b5 b6
- 	 * Retry, PwrMgt, MoreData; set Protected
-@@ -367,7 +371,7 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 	struct ieee80211_key *key = tx->key;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	int hdrlen, len, tail;
--	u8 *pos, *pn, *b_0, *aad, *scratch;
-+	u8 *pos, *pn;
- 	int i;
- 
- 	info->control.icv_len = CCMP_MIC_LEN;
-@@ -381,10 +385,6 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 		return 0;
- 	}
- 
--	scratch = key->u.ccmp.tx_crypto_buf;
--	b_0 = scratch + 3 * AES_BLOCK_LEN;
--	aad = scratch + 4 * AES_BLOCK_LEN;
--
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	len = skb->len - hdrlen;
- 
-@@ -420,8 +420,8 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 	}
- 
- 	pos += CCMP_HDR_LEN;
--	ccmp_special_blocks(skb, pn, b_0, aad, 0);
--	ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, scratch, b_0, aad, pos, len,
-+	ccmp_special_blocks(skb, pn, key->u.ccmp.tx_crypto_buf, 0);
-+	ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, key->u.ccmp.tx_crypto_buf, pos, len,
- 				  pos, skb_put(skb, CCMP_MIC_LEN));
- 
- 	return 0;
-@@ -483,16 +483,10 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
- 
- 	if (!(rx->status->flag & RX_FLAG_DECRYPTED)) {
- 		/* hardware didn't decrypt/verify MIC */
--		u8 *scratch, *b_0, *aad;
--
--		scratch = key->u.ccmp.rx_crypto_buf;
--		b_0 = scratch + 3 * AES_BLOCK_LEN;
--		aad = scratch + 4 * AES_BLOCK_LEN;
--
--		ccmp_special_blocks(skb, pn, b_0, aad, 1);
-+		ccmp_special_blocks(skb, pn, key->u.ccmp.rx_crypto_buf, 1);
- 
- 		if (ieee80211_aes_ccm_decrypt(
--			    key->u.ccmp.tfm, scratch, b_0, aad,
-+			    key->u.ccmp.tfm, key->u.ccmp.rx_crypto_buf,
- 			    skb->data + hdrlen + CCMP_HDR_LEN, data_len,
- 			    skb->data + skb->len - CCMP_MIC_LEN,
- 			    skb->data + hdrlen + CCMP_HDR_LEN)) {
--- 
-1.5.6.1.322.ge904b
+I'll have to trace back to see which of the bisections produced both the lockdep 
+and the kernel bug.
+
+Larry
 
 
