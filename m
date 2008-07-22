@@ -1,40 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from promwad.com ([83.149.69.23]:52537 "EHLO promwad.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751381AbYGIATO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 20:19:14 -0400
-Date: Wed, 9 Jul 2008 03:18:50 +0300
-From: Ihar Hrachyshka <ihar.hrachyshka@promwad.com>
-To: libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] libertas: fix memory alignment problems on the blackfin
-Message-ID: <20080709031850.2e7bf50f@promwad.com> (sfid-20080709_021917_725502_2E867518)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60993
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751629AbYGVUnl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jul 2008 16:43:41 -0400
+Date: Tue, 22 Jul 2008 13:43:41 -0700 (PDT)
+Message-Id: <20080722.134341.143920039.davem@davemloft.net> (sfid-20080722_224345_244974_0949700C)
+To: Larry.Finger@lwfinger.net
+Cc: kaber@trash.net, mingo@elte.hu, ischram@telenet.be,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, j@w1.fi
+Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
+ at 0000000000000370
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <4885D808.9060203@lwfinger.net>
+References: <48857F74.2040406@lwfinger.net>
+	<20080722.043220.247312412.davem@davemloft.net>
+	<4885D808.9060203@lwfinger.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixing unaligned memory access on the blackfin architecture (maybe on the ARM also).
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Date: Tue, 22 Jul 2008 07:52:24 -0500
 
-Signed-off-by: Ihar Hrachyshka <ihar.hrachyshka@promwad.com>
+> David Miller wrote:
+> > From: Larry Finger <Larry.Finger@lwfinger.net>
+> > Date: Tue, 22 Jul 2008 01:34:28 -0500
+> > 
+> >> David Miller wrote:
+> >>> From: Larry Finger <Larry.Finger@lwfinger.net>
+> >>> Date: Mon, 21 Jul 2008 17:40:10 -0500
+> >>>
+> >>>> Sorry :(
+> >>>>
+> >>>> I used the davem patch, the second version of your first one, and your second 
+> >>>> one. Both problems persist.
+> >>>>
+> >>>> Still plugging away on bisection.
+> >>> GIT bisecting the lockdep problem is surely going the land you on:
+> >>>
+> >>> commit e308a5d806c852f56590ffdd3834d0df0cbed8d7
+> >> No. It landed on this one.
+> > 
+> > For the lockdep warnings?
+> 
+> No - this one triggers the kernel BUG as follows:
 
----
+Well, we were trying to fix the lockdep warnings.  One
+thing at a time :-)
 
-diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
-index 343ed38..9dbfad3 100644
---- a/drivers/net/wireless/libertas/scan.c
-+++ b/drivers/net/wireless/libertas/scan.c
-@@ -567,11 +567,11 @@ static int lbs_process_bss(struct bss_descriptor *bss,
-	pos += 8;
-
-	/* beacon interval is 2 bytes long */
--	bss->beaconperiod = le16_to_cpup((void *) pos);
-+	bss->beaconperiod = le16_to_cpu(get_unaligned((__le16 *)pos));
-	pos += 2;
-
-	/* capability information is 2 bytes long */
--	bss->capability = le16_to_cpup((void *) pos);
-+	bss->capability = le16_to_cpu(get_unaligned((__le16 *)pos));
-	lbs_deb_scan("process_bss: capabilities 0x%04x\n", bss->capability);
-	pos += 2;
-
+And that BUG is now just a WARN in Linus's tree, so if
+you update you should get further along.
