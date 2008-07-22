@@ -1,37 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:57039 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751632AbYG2Dkb (ORCPT
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:58327 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754788AbYGVASb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2008 23:40:31 -0400
-Message-ID: <488E912A.8000202@lwfinger.net> (sfid-20080729_054035_177044_B40E9C9A)
-Date: Mon, 28 Jul 2008 22:40:26 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-CC: Hin-Tak Leung <hintak.leung@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks
- rtl8187
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net> <3ace41890807281939y462c9b91n5fa952e167b6ff8c@mail.gmail.com> <488E8B68.6000004@lwfinger.net> <200807290029.09114.herton@mandriva.com.br>
-In-Reply-To: <200807290029.09114.herton@mandriva.com.br>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 21 Jul 2008 20:18:31 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: [PATCH 4/6] rfkill: mutex fixes
+Date: Mon, 21 Jul 2008 21:18:20 -0300
+Message-Id: <1216685902-9373-5-git-send-email-hmh@hmh.eng.br> (sfid-20080722_021836_071713_E13F5986)
+In-Reply-To: <1216685902-9373-1-git-send-email-hmh@hmh.eng.br>
+References: <1216685902-9373-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Herton Ronaldo Krzesinski wrote:
-> 
-> You mean that you couldn't reproduce the bug, ie. with the steps I gave you 
-> still could connect and scan for wireless networks? I ask because the failure 
-> is the actual bug, for example if you place let's say a sleep for 5 seconds 
-> between '... essid any' and '... power on' it doesn't fail.
-> 
-> The bug is that with that sequence, any attemps to associate or scan fail, 
-> where it shouldn't, at least it's what is expected.
+There are two mutexes in rfkill:
 
-I'll try again, but I couldn't make a connection at all using anything other 
-than NetworkManager.
+rfkill->mutex, which protects some of the fields of a rfkill struct, and is
+also used for callback serialization.
 
-Larry
+rfkill_mutex, which protects the global state, the list of registered
+rfkill structs and rfkill->claim.
+
+Make sure to use the correct mutex, and to not miss locking rfkill->mutex
+even when we already took rfkill_mutex.
+
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ net/rfkill/rfkill.c |   29 +++++++++++++++++++----------
+ 1 files changed, 19 insertions(+), 10 deletions(-)
+
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index fc3a4fd..ac205ec 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -150,7 +150,7 @@ static void update_rfkill_state(struct rfkill *rfkill)
+  * even if the radio is in RFKILL_STATE_HARD_BLOCKED state, so as to
+  * give the driver a hint that it should double-BLOCK the transmitter.
+  *
+- * Caller must have aquired rfkill_mutex.
++ * Caller must have acquired rfkill->mutex.
+  */
+ static int rfkill_toggle_radio(struct rfkill *rfkill,
+ 				enum rfkill_state state,
+@@ -216,8 +216,11 @@ void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
+ 	rfkill_states[type] = state;
+ 
+ 	list_for_each_entry(rfkill, &rfkill_list, node) {
+-		if ((!rfkill->user_claim) && (rfkill->type == type))
++		if ((!rfkill->user_claim) && (rfkill->type == type)) {
++			mutex_lock(&rfkill->mutex);
+ 			rfkill_toggle_radio(rfkill, state, 0);
++			mutex_unlock(&rfkill->mutex);
++		}
+ 	}
+ 
+ 	mutex_unlock(&rfkill_mutex);
+@@ -228,7 +231,7 @@ EXPORT_SYMBOL(rfkill_switch_all);
+  * rfkill_epo - emergency power off all transmitters
+  *
+  * This kicks all rfkill devices to RFKILL_STATE_SOFT_BLOCKED, ignoring
+- * everything in its path but rfkill_mutex.
++ * everything in its path but rfkill_mutex and rfkill->mutex.
+  */
+ void rfkill_epo(void)
+ {
+@@ -236,7 +239,9 @@ void rfkill_epo(void)
+ 
+ 	mutex_lock(&rfkill_mutex);
+ 	list_for_each_entry(rfkill, &rfkill_list, node) {
++		mutex_lock(&rfkill->mutex);
+ 		rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
++		mutex_unlock(&rfkill->mutex);
+ 	}
+ 	mutex_unlock(&rfkill_mutex);
+ }
+@@ -372,6 +377,9 @@ static ssize_t rfkill_claim_store(struct device *dev,
+ 	if (!capable(CAP_NET_ADMIN))
+ 		return -EPERM;
+ 
++	if (rfkill->user_claim_unsupported)
++		return -EOPNOTSUPP;
++
+ 	/*
+ 	 * Take the global lock to make sure the kernel is not in
+ 	 * the middle of rfkill_switch_all
+@@ -380,19 +388,17 @@ static ssize_t rfkill_claim_store(struct device *dev,
+ 	if (error)
+ 		return error;
+ 
+-	if (rfkill->user_claim_unsupported) {
+-		error = -EOPNOTSUPP;
+-		goto out_unlock;
+-	}
+ 	if (rfkill->user_claim != claim) {
+-		if (!claim)
++		if (!claim) {
++			mutex_lock(&rfkill->mutex);
+ 			rfkill_toggle_radio(rfkill,
+ 					    rfkill_states[rfkill->type],
+ 					    0);
++			mutex_unlock(&rfkill->mutex);
++		}
+ 		rfkill->user_claim = claim;
+ 	}
+ 
+-out_unlock:
+ 	mutex_unlock(&rfkill_mutex);
+ 
+ 	return error ? error : count;
+@@ -521,8 +527,11 @@ static void rfkill_remove_switch(struct rfkill *rfkill)
+ {
+ 	mutex_lock(&rfkill_mutex);
+ 	list_del_init(&rfkill->node);
+-	rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
+ 	mutex_unlock(&rfkill_mutex);
++
++	mutex_lock(&rfkill->mutex);
++	rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
++	mutex_unlock(&rfkill->mutex);
+ }
+ 
+ /**
+-- 
+1.5.6.2
 
