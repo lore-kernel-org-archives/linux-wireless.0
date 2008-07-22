@@ -1,92 +1,334 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.191]:56573 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763383AbYGaDBH (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:65324 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752108AbYGVOxf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 23:01:07 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so71685tic.23
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 20:01:05 -0700 (PDT)
-Message-ID: <a8e1da0807302001g647a613bpcca4b4bdc2b27987@mail.gmail.com> (sfid-20080731_050115_891500_D9809423)
-Date: Thu, 31 Jul 2008 11:01:05 +0800
-From: "Dave Young" <hidave.darkstar@gmail.com>
-To: "Andrew Morton" <akpm@linux-foundation.org>
-Subject: Re: [BUG] wireless : cpu stuck for 61s
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"Pekka Enberg" <penberg@cs.helsinki.fi>
-In-Reply-To: <20080730195637.2197a82d.akpm@linux-foundation.org>
+	Tue, 22 Jul 2008 10:53:35 -0400
+Message-ID: <4885F46A.30309@trash.net> (sfid-20080722_165347_342367_E8E4123D)
+Date: Tue, 22 Jul 2008 16:53:30 +0200
+From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080729055731.GA3265@darkstar>
-	 <1217334724.10489.47.camel@johannes.berg>
-	 <20080730020820.8bcc00e2.akpm@linux-foundation.org>
-	 <a8e1da0807300302m35a0a7c0q2ff2e0ab92a69239@mail.gmail.com>
-	 <20080730031047.54e13e2d.akpm@linux-foundation.org>
-	 <a8e1da0807301906j6438e5d8y64105fe8a2e3dffe@mail.gmail.com>
-	 <20080730195637.2197a82d.akpm@linux-foundation.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: David Miller <davem@davemloft.net>, mingo@elte.hu,
+	ischram@telenet.be, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	j@w1.fi
+Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
+ at 0000000000000370
+References: <4885104A.2070201@lwfinger.net>	<20080721.161517.27161039.davem@davemloft.net>	<48857F74.2040406@lwfinger.net> <20080722.043220.247312412.davem@davemloft.net> <4885DA49.50703@lwfinger.net>
+In-Reply-To: <4885DA49.50703@lwfinger.net>
+Content-Type: multipart/mixed;
+ boundary="------------080305020000010003000304"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCBKdWwgMzEsIDIwMDggYXQgMTA6NTYgQU0sIEFuZHJldyBNb3J0b24KPGFrcG1AbGlu
-dXgtZm91bmRhdGlvbi5vcmc+IHdyb3RlOgo+IE9uIFRodSwgMzEgSnVsIDIwMDggMTA6MDY6MzEg
-KzA4MDAgIkRhdmUgWW91bmciIDxoaWRhdmUuZGFya3N0YXJAZ21haWwuY29tPiB3cm90ZToKPgo+
-Pgo+PiBPayBoZXJlIGl0IGlzLgo+PiBCVFcsIEkgcnVuICJrbG9nZCAtYyA3IiBhZnRlciBib290
-Cj4KPiBUaGUgc3lzcnEgb3V0cHV0IGlzIHN0aWxsIG1pc3NpbmcgbG90cyBvZiBzdHVmZi4gIEkg
-Z3Vlc3Mgd2UgYnJva2UgaXQuCj4KPj4KPj4gVGhpcyB0aW1lIEkgZ2V0IGEga21hbGxvYyBwb2lz
-b24gb3ZlcndyaXR0ZW46Cj4+Cj4KPiA8Zml4ZXMgd29yZHdyYXBwaW5nLCBjbGVhbnMgc3R1ZmYg
-dXA+CgpUaGFua3MsIHNvcnJ5IGZvciB0aGF0IGNhdXNlZCBieSB3ZWJtYWlsLgoKPgo+ID09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09Cj4gQlVHIGttYWxsb2MtNDA5NjogUG9pc29uIG92ZXJ3cml0dGVuCj4g
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0KPgo+IElORk86IDB4ZjZmM2EwODAtMHhmNmYzYTBlZi4gRmly
-c3QgYnl0ZSAweDgwIGluc3RlYWQgb2YgMHg2Ygo+IElORk86IEFsbG9jYXRlZCBpbiBkZXZfYWxs
-b2Nfc2tiKzB4MWMvMHgzMCBhZ2U9MzY0MiBjcHU9MCBwaWQ9MAo+IElORk86IEZyZWVkIGluIHNr
-Yl9yZWxlYXNlX2RhdGErMHg1Ny8weDgwIGFnZT0zMTQ2IGNwdT0wIHBpZD0yMzk4Cj4gSU5GTzog
-U2xhYiAweGMxYzA1NDQwIG9iamVjdHM9NyB1c2VkPTMgZnA9MHhmNmYzYTA2MCBmbGFncz0weDQw
-MDAyMGMzCj4gSU5GTzogT2JqZWN0IDB4ZjZmM2EwNjAgQG9mZnNldD04Mjg4IGZwPTB4ZjZmMzkw
-MzAKPgo+IEJ5dGVzIGI0IDB4ZjZmM2EwNTA6ICA1ZSAwOSAwMCAwMCA1NyBjOSAwNSAwMCA1YSA1
-YSA1YSA1YSA1YSA1YSA1YSA1YSBeLi4uV8OJLi5aWlpaWlpaWgo+IE9iamVjdCAweGY2ZjNhMDYw
-OiAgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIga2tra2tr
-a2tra2tra2trawo+IE9iamVjdCAweGY2ZjNhMDcwOiAgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIg
-NmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIga2tra2tra2tra2tra2trawo+IE9iamVjdCAweGY2ZjNh
-MDgwOiAgODAgMDAgMDAgMDAgZmYgZmYgZmYgZmYgZmYgZmYgMDAgMTcgN2IgMDAgNDYgNDAgLi4u
-LsO/w7/Dv8O/w7/Dvy4uey5GQAo+IE9iamVjdCAweGY2ZjNhMDkwOiAgMDAgMTcgN2IgMDAgNDYg
-NDAgMzAgMDkgODEgMjEgMDggN2EgMjEgMDAgMDAgMDAgLi57LkZAMC4uIS56IS4uLgo+IE9iamVj
-dCAweGY2ZjNhMGEwOiAgNjQgMDAgMjEgMDQgMDAgMDcgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDEg
-MDggODIgZC4hLi4uLi4uLi4uLi4uLgo+IE9iamVjdCAweGY2ZjNhMGIwOiAgODQgOGIgMGMgMTIg
-OTYgMTggMjQgMDMgMDEgMDEgMDUgMDQgMDAgMDIgMDAgMDAgLi4uLi4uJC4uLi4uLi4uLgo+IE9i
-amVjdCAweGY2ZjNhMGMwOiAgMDcgMDYgNDMgNGUgMjAgMDEgMGQgMTQgMmEgMDEgMDAgMzIgMDQg
-MzAgNDggNjAgLi5DTi4uLi4qLi4yLjBIYAo+IE9iamVjdCAweGY2ZjNhMGQwOiAgNmMgZGQgMTgg
-MDAgMTcgN2IgMDEgMDQgMDAgMDAgMDAgMDEgMDAgMDAgMDAgMTAgbMOdLi4uey4uLi4uLi4uLi4K
-PiBSZWR6b25lIDB4ZjZmM2IwNjA6ICBiYiBiYiBiYiBiYiAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICDCu8K7wrvCuwo+IFBhZGRpbmcgMHhmNmYzYjA4ODogIDVhIDVhIDVhIDVh
-IDVhIDVhIDVhIDVhICAgICAgICAgICAgICAgICAgICAgICAgIFpaWlpaWlpaCj4gUGlkOiAwLCBj
-b21tOiBzd2FwcGVyIFRhaW50ZWQ6IEcgICAgICAgIFcgMi42LjI2LXNtcCAjMgo+IFs8YzAxODBm
-NWQ+XSBwcmludF90cmFpbGVyKzB4YWQvMHhmMAo+IFs8YzAxODEwM2I+XSBjaGVja19ieXRlc19h
-bmRfcmVwb3J0KzB4OWIvMHhjMAo+IFs8YzAxODE0NWU+XSBjaGVja19vYmplY3QrMHgxOWUvMHgx
-ZTAKPiBbPGMwMTgyMWE0Pl0gX19zbGFiX2FsbG9jKzB4NDU0LzB4NGYwCj4gWzxjMDE4MzRkNj5d
-IF9fa21hbGxvY190cmFja19jYWxsZXIrMHhlNi8weGYwCj4gWzxjMDNkZDFlYz5dID8gZGV2X2Fs
-bG9jX3NrYisweDFjLzB4MzAKPiBbPGMwM2RkMWVjPl0gPyBkZXZfYWxsb2Nfc2tiKzB4MWMvMHgz
-MAo+IFs8YzAzZGNlNzk+XSBfX2FsbG9jX3NrYisweDQ5LzB4MTAwCj4gWzxjMDNkZDFlYz5dIGRl
-dl9hbGxvY19za2IrMHgxYy8weDMwCj4gWzxmOGE1ODU5OT5dIGF0aDVrX3J4YnVmX3NldHVwKzB4
-MzkvMHgyMDAgW2F0aDVrXQo+IFs8ZjhhNWE2OTc+XSBhdGg1a190YXNrbGV0X3J4KzB4MTI3LzB4
-NWMwIFthdGg1a10KPiBbPGMwMTQ5NjlhPl0gPyBwcmludF9sb2NrX2NvbnRlbnRpb25fYnVnKzB4
-MWEvMHhlMAo+IFs8YzAxMmVhZmM+XSB0YXNrbGV0X2FjdGlvbisweDRjLzB4YzAKPiBbPGMwMTJl
-NDYzPl0gX19kb19zb2Z0aXJxKzB4OTMvMHgxMjAKPiBbPGMwMTJlNTQ3Pl0gZG9fc29mdGlycSsw
-eDU3LzB4NjAKPiBbPGMwMTJlYTI5Pl0gaXJxX2V4aXQrMHg2OS8weDgwCj4gWzxjMDEwNmI1NT5d
-IGRvX0lSUSsweDQ1LzB4ODAKPiBbPGMwMTBhNWQwPl0gPyBtd2FpdF9pZGxlKzB4MC8weDUwCj4g
-WzxjMDEwNDc1Mj5dIGNvbW1vbl9pbnRlcnJ1cHQrMHgyZS8weDM0Cj4gWzxjMDEwYTVkMD5dID8g
-bXdhaXRfaWRsZSsweDAvMHg1MAo+IFs8YzAxMGE2MDk+XSA/IG13YWl0X2lkbGUrMHgzOS8weDUw
-Cj4gWzxjMDEwMjZlMD5dIGNwdV9pZGxlKzB4NjAvMHhkMAo+IFs8YzA0M2M4Y2U+XSByZXN0X2lu
-aXQrMHg0ZS8weDYwCj4gPT09PT09PT09PT09PT09PT09PT09PT0KPiBGSVgga21hbGxvYy00MDk2
-OiBSZXN0b3JpbmcgMHhmNmYzYTA4MC0weGY2ZjNhMGVmPTB4NmIKPgo+IEZJWCBrbWFsbG9jLTQw
-OTY6IE1hcmtpbmcgYWxsIG9iamVjdHMgdXNlZAo+IFs8YzAyNDNiNGY+XSA/IHNlY3VyaXR5X2Zp
-bGVfcGVybWlzc2lvbisweGYvMHgyMAo+IFs8YzAxOTQzNmY+XSBzeXNfc2VsZWN0KzB4M2YvMHgx
-OTAKPiBbPGMwMTg3OGU5Pl0gPyBmcHV0KzB4MTkvMHgyMAo+IFs8YzAxMDNkYmY+XSA/IHJlc3Rv
-cmVfbm9jaGVjaysweDEyLzB4MTUKPiBbPGMwMTRiMDZkPl0gPyB0cmFjZV9oYXJkaXJxc19vbisw
-eGJkLzB4MTQwCj4gWzxjMDEwM2Q1ZT5dIHN5c2NhbGxfY2FsbCsweDcvMHhiCj4gPT09PT09PT09
-PT09PT09PT09PT09PT0KPgo+IGFyZ2gsIHRoYXQgc3R1ZmYgaHVydHMgbXkgYnJhaW4uICBOb25l
-IG9mIHRoZSBudW1iZXJzIHNlZW0gdG8gbWFrZSBhbnkKPiBzZW5zZSBmb3IgYSA0ayBhbGxvY2F0
-aW9uIDooIFBla2thLCBkbyB5b3UgaGF2ZSB0aW1lIHRvIGRlY3J5cHQgdGhpcz8KPgo+IERhdmUs
-IGNvdWxkIHlvdSBwbGVhc2UgcmVtaW5kIHVzIHdoaWNoIG5ldCBkcml2ZXIgd2FzIGluIHVzZSBo
-ZXJlPwo+Cj4KCkl0J3MgdGhlIGF0aDVrCgotLSAKUmVnYXJkcwpkYXZlCg==
+This is a multi-part message in MIME format.
+--------------080305020000010003000304
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Larry Finger wrote:
+> David Miller wrote:
+>> From: Larry Finger <Larry.Finger@lwfinger.net>
+>> Date: Tue, 22 Jul 2008 01:34:28 -0500
+>>
+>>>> GIT bisecting the lockdep problem is surely going the land you on:
+>>>>
+>>>> commit e308a5d806c852f56590ffdd3834d0df0cbed8d7
+>>> No. It landed on this one.
+>>
+>> For the lockdep warnings?
+> 
+> When I was just one commit later, I got both the lockdep warning and the 
+> BUG. This is the commit in question.
+
+I actually don't see how you could still get the warning with
+Dave's patch and the two I sent applied.
+
+The warning is triggered by the dev_mc_sync call in
+ieee80211_set_multicast_list:
+
+         dev_mc_sync(local->mdev, dev); 
+
+
+local->mdev is the wmaster device, which has its type set to
+ARPHRD_IEEE80211. dev is regular wireless device with type set
+to ARPHRD_ETHER. So they have distinct lockdep classes set
+by register_netdevice.
+
+The warning is:
+
+Jul 21 15:11:07 larrylap kernel: NetworkManager/2661 is trying to 
+acquire lock:
+Jul 21 15:11:07 larrylap kernel:  (&dev->addr_list_lock){-...}, at: 
+[<ffffffff803a2961>] dev_mc_sync+0x19/0x57
+Jul 21 15:11:07 larrylap kernel:
+Jul 21 15:11:07 larrylap kernel: but task is already holding lock:
+Jul 21 15:11:07 larrylap kernel:  (&dev->addr_list_lock){-...}, at: 
+[<ffffffff8039e7c5>] dev_set_rx_mode+0x19/0x2e
+Jul 21 15:11:07 larrylap kernel:
+
+The only already held is dev->addr_list_lock, the one taken
+by dev_mc_sync is local->mdev->addr_list_lock. And this shouldn't
+cause any warnings because of the distinct lockdep classes.
+
+Could you please retry with the three patches attached to this
+mail? If the lockdep warning still triggers, please post it again.
+
+
+--------------080305020000010003000304
+Content-Type: text/x-diff;
+ name="01.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="01.diff"
+
+diff --git a/drivers/net/bonding/bond_main.c b/drivers/net/bonding/bond_main.c
+index 9737c06..a641eea 100644
+--- a/drivers/net/bonding/bond_main.c
++++ b/drivers/net/bonding/bond_main.c
+@@ -5041,6 +5041,7 @@ static int bond_check_params(struct bond_params *params)
+ }
+ 
+ static struct lock_class_key bonding_netdev_xmit_lock_key;
++static struct lock_class_key bonding_netdev_addr_lock_key;
+ 
+ static void bond_set_lockdep_class_one(struct net_device *dev,
+ 				       struct netdev_queue *txq,
+@@ -5052,6 +5053,8 @@ static void bond_set_lockdep_class_one(struct net_device *dev,
+ 
+ static void bond_set_lockdep_class(struct net_device *dev)
+ {
++	lockdep_set_class(&dev->addr_list_lock,
++			  &bonding_netdev_addr_lock_key);
+ 	netdev_for_each_tx_queue(dev, bond_set_lockdep_class_one, NULL);
+ }
+ 
+diff --git a/drivers/net/hamradio/bpqether.c b/drivers/net/hamradio/bpqether.c
+index b6500b2..58f4b1d 100644
+--- a/drivers/net/hamradio/bpqether.c
++++ b/drivers/net/hamradio/bpqether.c
+@@ -123,6 +123,7 @@ static LIST_HEAD(bpq_devices);
+  * off into a separate class since they always nest.
+  */
+ static struct lock_class_key bpq_netdev_xmit_lock_key;
++static struct lock_class_key bpq_netdev_addr_lock_key;
+ 
+ static void bpq_set_lockdep_class_one(struct net_device *dev,
+ 				      struct netdev_queue *txq,
+@@ -133,6 +134,7 @@ static void bpq_set_lockdep_class_one(struct net_device *dev,
+ 
+ static void bpq_set_lockdep_class(struct net_device *dev)
+ {
++	lockdep_set_class(&dev->addr_list_lock, &bpq_netdev_addr_lock_key);
+ 	netdev_for_each_tx_queue(dev, bpq_set_lockdep_class_one, NULL);
+ }
+ 
+diff --git a/drivers/net/macvlan.c b/drivers/net/macvlan.c
+index efbc155..4239450 100644
+--- a/drivers/net/macvlan.c
++++ b/drivers/net/macvlan.c
+@@ -276,6 +276,7 @@ static int macvlan_change_mtu(struct net_device *dev, int new_mtu)
+  * separate class since they always nest.
+  */
+ static struct lock_class_key macvlan_netdev_xmit_lock_key;
++static struct lock_class_key macvlan_netdev_addr_lock_key;
+ 
+ #define MACVLAN_FEATURES \
+ 	(NETIF_F_SG | NETIF_F_ALL_CSUM | NETIF_F_HIGHDMA | NETIF_F_FRAGLIST | \
+@@ -295,6 +296,8 @@ static void macvlan_set_lockdep_class_one(struct net_device *dev,
+ 
+ static void macvlan_set_lockdep_class(struct net_device *dev)
+ {
++	lockdep_set_class(&dev->addr_list_lock,
++			  &macvlan_netdev_addr_lock_key);
+ 	netdev_for_each_tx_queue(dev, macvlan_set_lockdep_class_one, NULL);
+ }
+ 
+diff --git a/drivers/net/wireless/hostap/hostap_hw.c b/drivers/net/wireless/hostap/hostap_hw.c
+index 13d5882..3153fe9 100644
+--- a/drivers/net/wireless/hostap/hostap_hw.c
++++ b/drivers/net/wireless/hostap/hostap_hw.c
+@@ -3101,6 +3101,7 @@ static void prism2_clear_set_tim_queue(local_info_t *local)
+  * This is a natural nesting, which needs a split lock type.
+  */
+ static struct lock_class_key hostap_netdev_xmit_lock_key;
++static struct lock_class_key hostap_netdev_addr_lock_key;
+ 
+ static void prism2_set_lockdep_class_one(struct net_device *dev,
+ 					 struct netdev_queue *txq,
+@@ -3112,6 +3113,8 @@ static void prism2_set_lockdep_class_one(struct net_device *dev,
+ 
+ static void prism2_set_lockdep_class(struct net_device *dev)
+ {
++	lockdep_set_class(&dev->addr_list_lock,
++			  &hostap_netdev_addr_lock_key);
+ 	netdev_for_each_tx_queue(dev, prism2_set_lockdep_class_one, NULL);
+ }
+ 
+diff --git a/net/8021q/vlan_dev.c b/net/8021q/vlan_dev.c
+index f42bc2b..4bf014e 100644
+--- a/net/8021q/vlan_dev.c
++++ b/net/8021q/vlan_dev.c
+@@ -569,6 +569,7 @@ static void vlan_dev_set_rx_mode(struct net_device *vlan_dev)
+  * separate class since they always nest.
+  */
+ static struct lock_class_key vlan_netdev_xmit_lock_key;
++static struct lock_class_key vlan_netdev_addr_lock_key;
+ 
+ static void vlan_dev_set_lockdep_one(struct net_device *dev,
+ 				     struct netdev_queue *txq,
+@@ -581,6 +582,9 @@ static void vlan_dev_set_lockdep_one(struct net_device *dev,
+ 
+ static void vlan_dev_set_lockdep_class(struct net_device *dev, int subclass)
+ {
++	lockdep_set_class_and_subclass(&dev->addr_list_lock,
++				       &vlan_netdev_addr_lock_key,
++				       subclass);
+ 	netdev_for_each_tx_queue(dev, vlan_dev_set_lockdep_one, &subclass);
+ }
+ 
+diff --git a/net/netrom/af_netrom.c b/net/netrom/af_netrom.c
+index fccc250..532e4fa 100644
+--- a/net/netrom/af_netrom.c
++++ b/net/netrom/af_netrom.c
+@@ -73,6 +73,7 @@ static const struct proto_ops nr_proto_ops;
+  * separate class since they always nest.
+  */
+ static struct lock_class_key nr_netdev_xmit_lock_key;
++static struct lock_class_key nr_netdev_addr_lock_key;
+ 
+ static void nr_set_lockdep_one(struct net_device *dev,
+ 			       struct netdev_queue *txq,
+@@ -83,6 +84,7 @@ static void nr_set_lockdep_one(struct net_device *dev,
+ 
+ static void nr_set_lockdep_key(struct net_device *dev)
+ {
++	lockdep_set_class(&dev->addr_list_lock, &nr_netdev_addr_lock_key);
+ 	netdev_for_each_tx_queue(dev, nr_set_lockdep_one, NULL);
+ }
+ 
+diff --git a/net/rose/af_rose.c b/net/rose/af_rose.c
+index dbc963b..a7f1ce1 100644
+--- a/net/rose/af_rose.c
++++ b/net/rose/af_rose.c
+@@ -74,6 +74,7 @@ ax25_address rose_callsign;
+  * separate class since they always nest.
+  */
+ static struct lock_class_key rose_netdev_xmit_lock_key;
++static struct lock_class_key rose_netdev_addr_lock_key;
+ 
+ static void rose_set_lockdep_one(struct net_device *dev,
+ 				 struct netdev_queue *txq,
+@@ -84,6 +85,7 @@ static void rose_set_lockdep_one(struct net_device *dev,
+ 
+ static void rose_set_lockdep_key(struct net_device *dev)
+ {
++	lockdep_set_class(&dev->addr_list_lock, &rose_netdev_addr_lock_key);
+ 	netdev_for_each_tx_queue(dev, rose_set_lockdep_one, NULL);
+ }
+ 
+
+
+--------------080305020000010003000304
+Content-Type: text/x-diff;
+ name="02.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="02.diff"
+
+net: set lockdep class for dev->addr_list_lock
+
+Initialize dev->addr_list_lock lockdep classes equally to dev->_xmit_lock.
+
+Signed-off-by: Patrick McHardy <kaber@trash.net>
+
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 2eed17b..6f8b6c5 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -299,6 +299,7 @@ static const char *netdev_lock_name[] =
+ 	 "_xmit_NONE"};
+ 
+ static struct lock_class_key netdev_xmit_lock_key[ARRAY_SIZE(netdev_lock_type)];
++static struct lock_class_key netdev_addr_lock_key[ARRAY_SIZE(netdev_lock_type)];
+ 
+ static inline unsigned short netdev_lock_pos(unsigned short dev_type)
+ {
+@@ -311,8 +312,8 @@ static inline unsigned short netdev_lock_pos(unsigned short dev_type)
+ 	return ARRAY_SIZE(netdev_lock_type) - 1;
+ }
+ 
+-static inline void netdev_set_lockdep_class(spinlock_t *lock,
+-					    unsigned short dev_type)
++static inline void netdev_set_xmit_lockdep_class(spinlock_t *lock,
++						 unsigned short dev_type)
+ {
+ 	int i;
+ 
+@@ -320,9 +321,22 @@ static inline void netdev_set_lockdep_class(spinlock_t *lock,
+ 	lockdep_set_class_and_name(lock, &netdev_xmit_lock_key[i],
+ 				   netdev_lock_name[i]);
+ }
++
++static inline void netdev_set_addr_lockdep_class(struct net_device *dev)
++{
++	int i;
++
++	i = netdev_lock_pos(dev->type);
++	lockdep_set_class_and_name(&dev->addr_list_lock,
++				   &netdev_addr_lock_key[i],
++				   netdev_lock_name[i]);
++}
+ #else
+-static inline void netdev_set_lockdep_class(spinlock_t *lock,
+-					    unsigned short dev_type)
++static inline void netdev_set_xmit_lockdep_class(spinlock_t *lock,
++						 unsigned short dev_type)
++{
++}
++static inline void netdev_set_addr_lockdep_class(struct net_device *dev)
+ {
+ }
+ #endif
+@@ -3843,7 +3857,7 @@ static void __netdev_init_queue_locks_one(struct net_device *dev,
+ 					  void *_unused)
+ {
+ 	spin_lock_init(&dev_queue->_xmit_lock);
+-	netdev_set_lockdep_class(&dev_queue->_xmit_lock, dev->type);
++	netdev_set_xmit_lockdep_class(&dev_queue->_xmit_lock, dev->type);
+ 	dev_queue->xmit_lock_owner = -1;
+ }
+ 
+@@ -3888,6 +3902,7 @@ int register_netdevice(struct net_device *dev)
+ 	net = dev_net(dev);
+ 
+ 	spin_lock_init(&dev->addr_list_lock);
++	netdev_set_addr_lockdep_class(dev);
+ 	netdev_init_queue_locks(dev);
+ 
+ 	dev->iflink = -1;
+
+--------------080305020000010003000304
+Content-Type: text/x-diff;
+ name="03.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="03.diff"
+
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 2eed17b..371b1a0 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -259,7 +259,7 @@ static RAW_NOTIFIER_HEAD(netdev_chain);
+ 
+ DEFINE_PER_CPU(struct softnet_data, softnet_data);
+ 
+-#ifdef CONFIG_DEBUG_LOCK_ALLOC
++#ifdef CONFIG_LOCKDEP
+ /*
+  * register_netdevice() inits txq->_xmit_lock and sets lockdep class
+  * according to dev->type
+
+--------------080305020000010003000304--
