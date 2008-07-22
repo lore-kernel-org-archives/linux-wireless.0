@@ -1,124 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51654
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50063
 	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1758077AbYGQMQ7 (ORCPT
+	by vger.kernel.org with ESMTP id S1753260AbYGVW4L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 08:16:59 -0400
-Date: Thu, 17 Jul 2008 05:16:58 -0700 (PDT)
-Message-Id: <20080717.051658.129292213.davem@davemloft.net> (sfid-20080717_141711_681000_7D21B59D)
-To: netdev@vger.kernel.org
-CC: kaber@trash.net, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 15/31]: pkt_sched: Move gso_skb into Qdisc.
+	Tue, 22 Jul 2008 18:56:11 -0400
+Date: Tue, 22 Jul 2008 15:56:11 -0700 (PDT)
+Message-Id: <20080722.155611.176476925.davem@davemloft.net> (sfid-20080723_005616_603753_239ADA48)
+To: ag@alessandroguido.name
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [BUG] kernel BUG at net/core/dev.c:1328!
 From: David Miller <davem@davemloft.net>
+In-Reply-To: <d4b984a30807220254t1aaf6ac4q874329966511b0c5@mail.gmail.com>
+References: <d4b984a30807210914nd4d0db5yb7b93ca5143ff0d5@mail.gmail.com>
+	<20080721.092027.14394005.davem@davemloft.net>
+	<d4b984a30807220254t1aaf6ac4q874329966511b0c5@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "Alessandro Guido" <ag@alessandroguido.name>
+Date: Tue, 22 Jul 2008 11:54:26 +0200
 
-We liberate any dangling gso_skb during qdisc destruction.
+> Got a WARNING this morning (2.6.26-05752-g93ded9b) and I think it's related.
 
-It really only matters for the root qdisc.  But when qdiscs
-can be shared by multiple netdev_queue objects, we can't
-have the gso_skb in the netdev_queue any more.
+Please try this patch:
+
+ipw2200: Call netif_*_queue() interfaces properly.
+
+netif_carrier_{on,off}() handles starting and stopping packet
+flow into the driver.  So there is no reason to invoke netif_stop_queue()
+and netif_wake_queue() in response to link status events.
 
 Signed-off-by: David S. Miller <davem@davemloft.net>
----
- include/linux/netdevice.h |    1 -
- include/net/sch_generic.h |    1 +
- net/sched/sch_generic.c   |   19 +++++++++----------
- 3 files changed, 10 insertions(+), 11 deletions(-)
 
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index 787fbfc..0883fcf 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -449,7 +449,6 @@ struct netdev_queue {
- 	struct net_device	*dev;
- 	struct Qdisc		*qdisc;
- 	unsigned long		state;
--	struct sk_buff		*gso_skb;
- 	spinlock_t		_xmit_lock;
- 	int			xmit_lock_owner;
- 	struct Qdisc		*qdisc_sleeping;
-diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
-index b47f556..b96c3d9 100644
---- a/include/net/sch_generic.h
-+++ b/include/net/sch_generic.h
-@@ -36,6 +36,7 @@ struct Qdisc
- 	u32			handle;
- 	u32			parent;
- 	atomic_t		refcnt;
-+	struct sk_buff		*gso_skb;
- 	struct sk_buff_head	q;
- 	struct netdev_queue	*dev_queue;
- 	struct list_head	list;
-diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
-index 2f575b9..2bd75be 100644
---- a/net/sched/sch_generic.c
-+++ b/net/sched/sch_generic.c
-@@ -77,7 +77,7 @@ static inline int dev_requeue_skb(struct sk_buff *skb,
- 				  struct Qdisc *q)
- {
- 	if (unlikely(skb->next))
--		dev_queue->gso_skb = skb;
-+		q->gso_skb = skb;
- 	else
- 		q->ops->requeue(skb, q);
+diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
+index 6e70460..1acfbcd 100644
+--- a/drivers/net/wireless/ipw2200.c
++++ b/drivers/net/wireless/ipw2200.c
+@@ -4972,8 +4972,7 @@ static int ipw_queue_tx_reclaim(struct ipw_priv *priv,
+ 	}
+       done:
+ 	if ((ipw_tx_queue_space(q) > q->low_mark) &&
+-	    (qindex >= 0) &&
+-	    (priv->status & STATUS_ASSOCIATED) && netif_running(priv->net_dev))
++	    (qindex >= 0))
+ 		netif_wake_queue(priv->net_dev);
+ 	used = q->first_empty - q->last_used;
+ 	if (used < 0)
+@@ -10154,14 +10153,8 @@ static  void init_sys_config(struct ipw_sys_config *sys_config)
  
-@@ -85,13 +85,12 @@ static inline int dev_requeue_skb(struct sk_buff *skb,
+ static int ipw_net_open(struct net_device *dev)
+ {
+-	struct ipw_priv *priv = ieee80211_priv(dev);
+ 	IPW_DEBUG_INFO("dev->open\n");
+-	/* we should be verifying the device is ready to be opened */
+-	mutex_lock(&priv->mutex);
+-	if (!(priv->status & STATUS_RF_KILL_MASK) &&
+-	    (priv->status & STATUS_ASSOCIATED))
+-		netif_start_queue(dev);
+-	mutex_unlock(&priv->mutex);
++	netif_start_queue(dev);
  	return 0;
  }
  
--static inline struct sk_buff *dequeue_skb(struct netdev_queue *dev_queue,
--					  struct Qdisc *q)
-+static inline struct sk_buff *dequeue_skb(struct Qdisc *q)
- {
- 	struct sk_buff *skb;
+@@ -10481,13 +10474,6 @@ static int ipw_net_hard_start_xmit(struct ieee80211_txb *txb,
+ 	IPW_DEBUG_TX("dev->xmit(%d bytes)\n", txb->payload_size);
+ 	spin_lock_irqsave(&priv->lock, flags);
  
--	if ((skb = dev_queue->gso_skb))
--		dev_queue->gso_skb = NULL;
-+	if ((skb = q->gso_skb))
-+		q->gso_skb = NULL;
- 	else
- 		skb = q->dequeue(q);
- 
-@@ -155,10 +154,9 @@ static inline int qdisc_restart(struct netdev_queue *txq)
- 	struct sk_buff *skb;
- 
- 	/* Dequeue packet */
--	if (unlikely((skb = dequeue_skb(txq, q)) == NULL))
-+	if (unlikely((skb = dequeue_skb(q)) == NULL))
- 		return 0;
- 
+-	if (!(priv->status & STATUS_ASSOCIATED)) {
+-		IPW_DEBUG_INFO("Tx attempt while not associated.\n");
+-		priv->ieee->stats.tx_carrier_errors++;
+-		netif_stop_queue(dev);
+-		goto fail_unlock;
+-	}
 -
- 	/* And release queue */
- 	spin_unlock(&txq->lock);
+ #ifdef CONFIG_IPW2200_PROMISCUOUS
+ 	if (rtap_iface && netif_running(priv->prom_net_dev))
+ 		ipw_handle_promiscuous_tx(priv, txb);
+@@ -10499,10 +10485,6 @@ static int ipw_net_hard_start_xmit(struct ieee80211_txb *txb,
+ 	spin_unlock_irqrestore(&priv->lock, flags);
  
-@@ -643,8 +641,8 @@ static void dev_deactivate_queue(struct net_device *dev,
- 				 void *_qdisc_default)
+ 	return ret;
+-
+-      fail_unlock:
+-	spin_unlock_irqrestore(&priv->lock, flags);
+-	return 1;
+ }
+ 
+ static struct net_device_stats *ipw_net_get_stats(struct net_device *dev)
+@@ -10703,13 +10685,6 @@ static void ipw_link_up(struct ipw_priv *priv)
+ 	priv->last_packet_time = 0;
+ 
+ 	netif_carrier_on(priv->net_dev);
+-	if (netif_queue_stopped(priv->net_dev)) {
+-		IPW_DEBUG_NOTIF("waking queue\n");
+-		netif_wake_queue(priv->net_dev);
+-	} else {
+-		IPW_DEBUG_NOTIF("starting queue\n");
+-		netif_start_queue(priv->net_dev);
+-	}
+ 
+ 	cancel_delayed_work(&priv->request_scan);
+ 	cancel_delayed_work(&priv->request_direct_scan);
+@@ -10739,7 +10714,6 @@ static void ipw_link_down(struct ipw_priv *priv)
  {
- 	struct Qdisc *qdisc_default = _qdisc_default;
-+	struct sk_buff *skb = NULL;
- 	struct Qdisc *qdisc;
--	struct sk_buff *skb;
+ 	ipw_led_link_down(priv);
+ 	netif_carrier_off(priv->net_dev);
+-	netif_stop_queue(priv->net_dev);
+ 	notify_wx_assoc_event(priv);
  
- 	spin_lock_bh(&dev_queue->lock);
+ 	/* Cancel any queued work ... */
+@@ -11419,7 +11393,6 @@ static void ipw_down(struct ipw_priv *priv)
+ 	/* Clear all bits but the RF Kill */
+ 	priv->status &= STATUS_RF_KILL_MASK | STATUS_EXIT_PENDING;
+ 	netif_carrier_off(priv->net_dev);
+-	netif_stop_queue(priv->net_dev);
  
-@@ -652,9 +650,10 @@ static void dev_deactivate_queue(struct net_device *dev,
- 	if (qdisc) {
- 		dev_queue->qdisc = qdisc_default;
- 		qdisc_reset(qdisc);
-+
-+		skb = qdisc->gso_skb;
-+		qdisc->gso_skb = NULL;
- 	}
--	skb = dev_queue->gso_skb;
--	dev_queue->gso_skb = NULL;
+ 	ipw_stop_nic(priv);
  
- 	spin_unlock_bh(&dev_queue->lock);
+@@ -11522,7 +11495,6 @@ static int ipw_prom_open(struct net_device *dev)
  
--- 
-1.5.6.2.255.gbed62
-
+ 	IPW_DEBUG_INFO("prom dev->open\n");
+ 	netif_carrier_off(dev);
+-	netif_stop_queue(dev);
+ 
+ 	if (priv->ieee->iw_mode != IW_MODE_MONITOR) {
+ 		priv->sys_config.accept_all_data_frames = 1;
+@@ -11558,7 +11530,6 @@ static int ipw_prom_stop(struct net_device *dev)
+ static int ipw_prom_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+ {
+ 	IPW_DEBUG_INFO("prom dev->xmit\n");
+-	netif_stop_queue(dev);
+ 	return -EOPNOTSUPP;
+ }
+ 
