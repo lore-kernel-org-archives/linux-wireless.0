@@ -1,95 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms13.Sony.CO.JP ([211.125.136.230]:58889 "EHLO ms13.sony.co.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752742AbYG1H0H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2008 03:26:07 -0400
-Received: from ms5.sony.co.jp (ms5.Sony.CO.JP [211.125.136.201])
- by ms13.sony.co.jp (R8/Sony) with ESMTP id m6S6GEkP026692
- for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 15:16:14 +0900 (JST)
-Received: from mta6.sony.co.jp (mta6.Sony.CO.JP [137.153.71.9])
- by ms5.sony.co.jp (R8/Sony) with ESMTP id m6S6EvqD000677
- for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 15:14:57 +0900 (JST)
-Received: from mta6.sony.co.jp (localhost [127.0.0.1])
- by mta6.sony.co.jp (R8/Sony) with ESMTP id m6S6EvYO016012
- for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 15:14:57 +0900 (JST)
-Received: from smail1.sm.sony.co.jp (smail1.sm.sony.co.jp [43.11.253.1])
- by mta6.sony.co.jp (R8/Sony) with ESMTP id m6S6Ev24016009
- for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 15:14:57 +0900 (JST)
-Date: Mon, 28 Jul 2008 15:14:55 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] PS3: gelic: Fix typecheck warnings
-Cc: Geoff Levand <geoffrey.levand@am.sony.com>
-Message-Id: <20080728150546.714D.40F06B3A@sm.sony.co.jp> (sfid-20080728_092613_997253_5164E736)
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:61893 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751802AbYGVQjl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jul 2008 12:39:41 -0400
+Message-ID: <48860D4B.8070003@lwfinger.net> (sfid-20080722_183946_891925_923356E8)
+Date: Tue, 22 Jul 2008 11:39:39 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+To: David Miller <davem@davemloft.net>,
+	Patrick McHardy <kaber@trash.net>
+CC: torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Kernel WARNING: at net/core/dev.c:1330 __netif_schedule+0x2c/0x98()
+References: <4885104A.2070201@lwfinger.net>	<20080721.161517.27161039.davem@davemloft.net>	<48857F74.2040406@lwfinger.net> <20080722.043220.247312412.davem@davemloft.net> <4885DA49.50703@lwfinger.net>
+In-Reply-To: <4885DA49.50703@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The flag variable of spin_lock_irqsave() should be 'unsigned long'.
+David and Patrick,
 
-Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
----
- drivers/net/ps3_gelic_wireless.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+Here is the latest on this problem.
 
---- a/drivers/net/ps3_gelic_wireless.c
-+++ b/drivers/net/ps3_gelic_wireless.c
-@@ -1024,7 +1024,7 @@ static int gelic_wl_set_encode(struct ne
- 	struct gelic_wl_info *wl = port_wl(netdev_priv(netdev));
- 	struct iw_point *enc = &data->encoding;
- 	__u16 flags;
--	unsigned int irqflag;
-+	unsigned long irqflag;
- 	int key_index, index_specified;
- 	int ret = 0;
- 
-@@ -1097,7 +1097,7 @@ static int gelic_wl_get_encode(struct ne
- {
- 	struct gelic_wl_info *wl = port_wl(netdev_priv(netdev));
- 	struct iw_point *enc = &data->encoding;
--	unsigned int irqflag;
-+	unsigned long irqflag;
- 	unsigned int key_index, index_specified;
- 	int ret = 0;
- 
-@@ -1215,7 +1215,7 @@ static int gelic_wl_set_encodeext(struct
- 	struct iw_encode_ext *ext = (struct iw_encode_ext *)extra;
- 	__u16 alg;
- 	__u16 flags;
--	unsigned int irqflag;
-+	unsigned long irqflag;
- 	int key_index;
- 	int ret = 0;
- 
-@@ -1303,7 +1303,7 @@ static int gelic_wl_get_encodeext(struct
- 	struct gelic_wl_info *wl = port_wl(netdev_priv(netdev));
- 	struct iw_point *enc = &data->encoding;
- 	struct iw_encode_ext *ext = (struct iw_encode_ext *)extra;
--	unsigned int irqflag;
-+	unsigned long irqflag;
- 	int key_index;
- 	int ret = 0;
- 	int max_key_len;
-@@ -1426,7 +1426,7 @@ static int gelic_wl_priv_set_psk(struct 
- {
- 	struct gelic_wl_info *wl = port_wl(netdev_priv(net_dev));
- 	unsigned int len;
--	unsigned int irqflag;
-+	unsigned long irqflag;
- 	int ret = 0;
- 
- 	pr_debug("%s:<- len=%d\n", __func__, data->data.length);
-@@ -1467,7 +1467,7 @@ static int gelic_wl_priv_get_psk(struct 
- {
- 	struct gelic_wl_info *wl = port_wl(netdev_priv(net_dev));
- 	char *p;
--	unsigned int irqflag;
-+	unsigned long irqflag;
- 	unsigned int i;
- 
- 	pr_debug("%s:<-\n", __func__);
+I pulled from Linus's tree this morning and now have git-05752-g93ded9b. The 
+kernel WARNING from __netif_schedule and the lockdep warning are present with or 
+without the patches from yesterday.
 
--- 
-Masakazu Mokuno
+As I stated earlier, the kernel WARNING (it was a BUG then) was introduced in 
+commit 37437bb2 when the BUG statement was entered.
 
+The lockdep warning started with the next commit (16361127).
+
+I am not using any network traffic shaping. Is it correct that the faulty 
+condition is not that q == &noop_qdisc, but that __netif_schedule was called 
+when that condition exists?
+
+
+The lockdep warning is:
+
+=============================================
+[ INFO: possible recursive locking detected ]
+2.6.26-Linus-git-05752-g93ded9b #49
+---------------------------------------------
+NetworkManager/2611 is trying to acquire lock:
+  (&dev->addr_list_lock){-...}, at: [<ffffffff803a2ad1>] dev_mc_sync+0x19/0x57
+
+but task is already holding lock:
+  (&dev->addr_list_lock){-...}, at: [<ffffffff8039e909>] dev_set_rx_mode+0x19/0x2e
+
+other info that might help us debug this:
+2 locks held by NetworkManager/2611:
+  #0:  (rtnl_mutex){--..}, at: [<ffffffff803a8488>] rtnetlink_rcv+0x12/0x27
+  #1:  (&dev->addr_list_lock){-...}, at: [<ffffffff8039e909>] 
+dev_set_rx_mode+0x19/0x2e
+
+stack backtrace:
+Pid: 2611, comm: NetworkManager Not tainted 2.6.26-Linus-git-05752-g93ded9b #49
+
+Call Trace:
+  [<ffffffff80251b02>] __lock_acquire+0xb7b/0xecc
+  [<ffffffff80251ea4>] lock_acquire+0x51/0x6a
+  [<ffffffff803a2ad1>] dev_mc_sync+0x19/0x57
+  [<ffffffff8040b3fc>] _spin_lock_bh+0x23/0x2c
+  [<ffffffff803a2ad1>] dev_mc_sync+0x19/0x57
+  [<ffffffff8039e911>] dev_set_rx_mode+0x21/0x2e
+  [<ffffffff803a04da>] dev_open+0x8e/0xb0
+  [<ffffffff8039fe84>] dev_change_flags+0xa6/0x163
+  [<ffffffff803a7591>] do_setlink+0x286/0x349
+  [<ffffffff803a849d>] rtnetlink_rcv_msg+0x0/0x1ec
+  [<ffffffff803a849d>] rtnetlink_rcv_msg+0x0/0x1ec
+  [<ffffffff803a849d>] rtnetlink_rcv_msg+0x0/0x1ec
+  [<ffffffff803a77de>] rtnl_setlink+0x10b/0x10d
+  [<ffffffff803a849d>] rtnetlink_rcv_msg+0x0/0x1ec
+  [<ffffffff803b416f>] netlink_rcv_skb+0x34/0x7d
+  [<ffffffff803a8497>] rtnetlink_rcv+0x21/0x27
+  [<ffffffff803b3c6f>] netlink_unicast+0x1f0/0x261
+  [<ffffffff8039a58d>] __alloc_skb+0x66/0x12a
+  [<ffffffff803b3f48>] netlink_sendmsg+0x268/0x27b
+  [<ffffffff80393cb9>] sock_sendmsg+0xcb/0xe3
+  [<ffffffff80246aab>] autoremove_wake_function+0x0/0x2e
+  [<ffffffff8039b2d8>] verify_iovec+0x46/0x82
+  [<ffffffff80393ee8>] sys_sendmsg+0x217/0x28a
+  [<ffffffff80393642>] sockfd_lookup_light+0x1a/0x52
+  [<ffffffff80250990>] trace_hardirqs_on_caller+0xef/0x113
+  [<ffffffff8040af74>] trace_hardirqs_on_thunk+0x3a/0x3f
+  [<ffffffff8020be9b>] system_call_after_swapgs+0x7b/0x80
+========================================================
+
+
+The logged data for the WARNING is as follows:
+
+------------[ cut here ]------------
+WARNING: at net/core/dev.c:1330 __netif_schedule+0x2c/0x98()
+Modules linked in: af_packet nfs lockd nfs_acl rfkill_input sunrpc 
+cpufreq_conservative cpufreq_userspace cpufreq_powersave powernow_k8 fuse loop 
+dm_mod arc4 ecb crypto_blkcipher b43 firmware_class rfkill mac80211 cfg80211 
+led_class input_polldev battery ac button ssb serio_raw forcedeth sr_mod cdrom 
+k8temp hwmon sg sd_mod ehci_hcd ohci_hcd usbcore edd fan thermal processor ext3 
+mbcache jbd pata_amd ahci libata scsi_mod dock
+Pid: 1990, comm: b43 Not tainted 2.6.26-Linus-git-05752-g93ded9b #49
+
+Call Trace:
+  [<ffffffff80233f6d>] warn_on_slowpath+0x51/0x8c
+  [<ffffffff8039d937>] __netif_schedule+0x2c/0x98
+  [<ffffffffa015445d>] ieee80211_scan_completed+0x26b/0x2f1 [mac80211]
+  [<ffffffffa01546de>] ieee80211_sta_scan_work+0x0/0x1b8 [mac80211]
+  [<ffffffff8024325e>] run_workqueue+0xf0/0x1f2
+  [<ffffffff8024343b>] worker_thread+0xdb/0xea
+  [<ffffffff80246aab>] autoremove_wake_function+0x0/0x2e
+  [<ffffffff80243360>] worker_thread+0x0/0xea
+  [<ffffffff8024678b>] kthread+0x47/0x73
+  [<ffffffff8040af74>] trace_hardirqs_on_thunk+0x3a/0x3f
+  [<ffffffff8020cea9>] child_rip+0xa/0x11
+  [<ffffffff8020c4df>] restore_args+0x0/0x30
+  [<ffffffff8024671f>] kthreadd+0x188/0x1ad
+  [<ffffffff80246744>] kthread+0x0/0x73
+  [<ffffffff8020ce9f>] child_rip+0x0/0x11
+
+---[ end trace 42d234b678daea7a ]---
+
+Other info I have found. The call to __netif_schedule from 
+ieee80211_scan_completed is through the following code from 
+include/linux/netdevice.h:
+
+/**
+  *      netif_wake_queue - restart transmit
+  *      @dev: network device
+  *
+  *      Allow upper layers to call the device hard_start_xmit routine.
+  *      Used for flow control when transmit resources are available.
+  */
+static inline void netif_tx_wake_queue(struct netdev_queue *dev_queue)
+{
+#ifdef CONFIG_NETPOLL_TRAP
+         if (netpoll_trap()) {
+                 clear_bit(__QUEUE_STATE_XOFF, &dev_queue->state);
+                 return;
+         }
+#endif
+         if (test_and_clear_bit(__QUEUE_STATE_XOFF, &dev_queue->state))
+                 __netif_schedule(dev_queue->qdisc);
+}
+
+It doesn't make any difference if CONFIG_NETPOLL_TRAP is defined or not.
+
+Please let me know if I can provide any further information,
+
+Larry
