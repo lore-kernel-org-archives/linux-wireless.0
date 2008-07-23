@@ -1,104 +1,252 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:50736 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752022AbYGVMw1 (ORCPT
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:55087 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750951AbYGWBEQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 08:52:27 -0400
-Message-ID: <4885D808.9060203@lwfinger.net> (sfid-20080722_145237_576350_9DE39C13)
-Date: Tue, 22 Jul 2008 07:52:24 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>
-CC: kaber@trash.net, mingo@elte.hu, ischram@telenet.be,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, j@w1.fi
-Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
- at 0000000000000370
-References: <4885104A.2070201@lwfinger.net>	<20080721.161517.27161039.davem@davemloft.net>	<48857F74.2040406@lwfinger.net> <20080722.043220.247312412.davem@davemloft.net>
-In-Reply-To: <20080722.043220.247312412.davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 22 Jul 2008 21:04:16 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Ivo van Doorn <IvDoorn@gmail.com>
+Subject: [PATCH] rfkill: add default global states
+Date: Tue, 22 Jul 2008 22:04:02 -0300
+Message-Id: <1216775046-9506-3-git-send-email-hmh@hmh.eng.br> (sfid-20080723_030421_163257_BB2FCE6D)
+In-Reply-To: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br>
+References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller wrote:
-> From: Larry Finger <Larry.Finger@lwfinger.net>
-> Date: Tue, 22 Jul 2008 01:34:28 -0500
-> 
->> David Miller wrote:
->>> From: Larry Finger <Larry.Finger@lwfinger.net>
->>> Date: Mon, 21 Jul 2008 17:40:10 -0500
->>>
->>>> Sorry :(
->>>>
->>>> I used the davem patch, the second version of your first one, and your second 
->>>> one. Both problems persist.
->>>>
->>>> Still plugging away on bisection.
->>> GIT bisecting the lockdep problem is surely going the land you on:
->>>
->>> commit e308a5d806c852f56590ffdd3834d0df0cbed8d7
->> No. It landed on this one.
-> 
-> For the lockdep warnings?
+Add a second set of global states, "rfkill_default_states", to track the
+state that will be used when the first rfkill class of a given type is
+registered, and also to save "undo" information when rfkill_epo is called.
 
-No - this one triggers the kernel BUG as follows:
+Add a new exported function, rfkill_set_default(), which can be used by
+platform drivers to restore radio state saved by the platform across
+reboots or shutdown.
 
-------------[ cut here ]------------
-kernel BUG at net/core/dev.c:1328!
-invalid opcode: 0000 [1] SMP
-CPU 0
-Modules linked in: af_packet rfkill_input nfs lockd nfs_acl sunrpc 
-cpufreq_conservative cpufreq_userspace cpufreq_powersave powernow_k8 fuse loop 
-dm_mod arc4 ecb crypto_blkcipher b43 firmware_class rfkill mac80211 cfg80211 
-led_class input_polldev k8temp sr_mod battery ac ssb button hwmon forcedeth 
-cdrom serio_raw sg ohci_hcd ehci_hcd sd_mod usbcore edd fan thermal processor 
-ext3 mbcache jbd pata_amd ahci libata scsi_mod dock
-Pid: 2003, comm: b43 Not tainted 2.6.26-rc8-Linus-git-01424-g37437bb #43
-RIP: 0010:[<ffffffff803958c6>]  [<ffffffff803958c6>] __netif_schedule+0x12/0x75
-RSP: 0018:ffff8100b9e33de0  EFLAGS: 00010246
-RAX: ffff8100b63819c0 RBX: ffffffff80545300 RCX: ffff8100b6381980
-RDX: 00000000ffffffff RSI: 0000000000000001 RDI: ffffffff80545300
-RBP: ffff8100b7b45158 R08: ffff8100b89d8000 R09: ffff8100b9d26000
-R10: ffff8100b7b44480 R11: ffffffffa01239ef R12: ffff8100b7b44480
-R13: ffff8100b9d26000 R14: ffff8100b89d8000 R15: 0000000000000000
-FS:  00007f494406a6f0(0000) GS:ffffffff8055e000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-CR2: 00007f49440933dc CR3: 0000000000201000 CR4: 00000000000006e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Process b43 (pid: 2003, threadinfo ffff8100b9e32000, task ffff8100b4a3e480)
-Stack:  ffff8100b7b45158 ffff8100b89d8900 ffff8100b7b45158 ffffffffa0158455
-  ffff8100ba3287c0 0000000000000246 0000000000000000 0000000000000000
-  ffff8100b9e33e70 ffff8100b7b451b8 ffff8100ba3287c0 ffff8100b7b451b0
-Call Trace:
-  [<ffffffffa0158455>] ? :mac80211:ieee80211_scan_completed+0x25b/0x2e1
-  [<ffffffffa01586d6>] ? :mac80211:ieee80211_sta_scan_work+0x0/0x1b8
-  [<ffffffff8023f7d7>] ? run_workqueue+0xf1/0x1f3
-  [<ffffffff8023f9b4>] ? worker_thread+0xdb/0xea
-  [<ffffffff80243017>] ? autoremove_wake_function+0x0/0x2e
-  [<ffffffff8023f8d9>] ? worker_thread+0x0/0xea
-  [<ffffffff80242cff>] ? kthread+0x47/0x73
-  [<ffffffff80402845>] ? trace_hardirqs_on_thunk+0x35/0x3a
-  [<ffffffff8020cd48>] ? child_rip+0xa/0x12
-  [<ffffffff8020c45f>] ? restore_args+0x0/0x30
-  [<ffffffff8021d3b6>] ? flat_send_IPI_mask+0x0/0x67
-  [<ffffffff80242c93>] ? kthreadd+0x188/0x1ad
-  [<ffffffff80242c93>] ? kthreadd+0x188/0x1ad
-  [<ffffffff80242cb8>] ? kthread+0x0/0x73
-  [<ffffffff8020cd3e>] ? child_rip+0x0/0x12
+Also, fix rfkill_epo to properly update rfkill_states, but still preserve a
+copy of the state so that we can undo the effect of rfkill_epo later if we
+want to.  Add rfkill_restore_states() to restore rfkill_states from the
+copy.
 
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ include/linux/rfkill.h    |    1 +
+ net/rfkill/rfkill-input.h |    1 +
+ net/rfkill/rfkill.c       |  105 ++++++++++++++++++++++++++++++++++++++++++---
+ 3 files changed, 100 insertions(+), 7 deletions(-)
 
-Code: 00 00 75 0a 55 9d 5e 5b 5d e9 32 64 eb ff e8 21 73 eb ff 55 9d 59 5b 5d c3 
-55 53 48 89 fb 48 83 ec 08 48 81 ff 00 53 54 80 75 04 <0f> 0b eb fe 48 8d 47 30 
-f0 0f ba 28 01 19 d2 85 d2 75 4c 9c 5d
-RIP  [<ffffffff803958c6>] __netif_schedule+0x12/0x75
-  RSP <ffff8100b9e33de0>
----[ end trace 396dc6bdf73da468 ]---
-
-I'll have to trace back to see which of the bisections produced both the lockdep 
-and the kernel bug.
-
-Larry
-
+diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+index 741d1a6..aa3c7d5 100644
+--- a/include/linux/rfkill.h
++++ b/include/linux/rfkill.h
+@@ -116,6 +116,7 @@ int rfkill_register(struct rfkill *rfkill);
+ void rfkill_unregister(struct rfkill *rfkill);
+ 
+ int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state);
++int rfkill_set_default(enum rfkill_type type, enum rfkill_state state);
+ 
+ /**
+  * rfkill_state_complement - return complementar state
+diff --git a/net/rfkill/rfkill-input.h b/net/rfkill/rfkill-input.h
+index f63d050..bbfa646 100644
+--- a/net/rfkill/rfkill-input.h
++++ b/net/rfkill/rfkill-input.h
+@@ -13,5 +13,6 @@
+ 
+ void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state);
+ void rfkill_epo(void);
++void rfkill_restore_states(void);
+ 
+ #endif /* __RFKILL_INPUT_H */
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index 0a78e32..eaaabbd 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -45,6 +45,8 @@ MODULE_PARM_DESC(default_state,
+ 		 "Default initial state for all radio types, 0 = radio off");
+ 
+ static enum rfkill_state rfkill_states[RFKILL_TYPE_MAX];
++static enum rfkill_state rfkill_default_states[RFKILL_TYPE_MAX];
++static unsigned long rfkill_states_lockdflt[BITS_TO_LONGS(RFKILL_TYPE_MAX)];
+ 
+ static BLOCKING_NOTIFIER_HEAD(rfkill_notifier_list);
+ 
+@@ -198,22 +200,22 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
+ }
+ 
+ /**
+- * rfkill_switch_all - Toggle state of all switches of given type
++ * __rfkill_switch_all - Toggle state of all switches of given type
+  * @type: type of interfaces to be affected
+  * @state: the new state
+  *
+  * This function toggles the state of all switches of given type,
+  * unless a specific switch is claimed by userspace (in which case,
+  * that switch is left alone).
++ *
++ * Caller must have acquired rfkill_mutex.
+  */
+-void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
++static void __rfkill_switch_all(const enum rfkill_type type,
++				const enum rfkill_state state)
+ {
+ 	struct rfkill *rfkill;
+ 
+-	mutex_lock(&rfkill_mutex);
+-
+ 	rfkill_states[type] = state;
+-
+ 	list_for_each_entry(rfkill, &rfkill_list, node) {
+ 		if ((!rfkill->user_claim) && (rfkill->type == type)) {
+ 			mutex_lock(&rfkill->mutex);
+@@ -221,7 +223,20 @@ void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
+ 			mutex_unlock(&rfkill->mutex);
+ 		}
+ 	}
++}
+ 
++/**
++ * rfkill_switch_all - Toggle state of all switches of given type
++ * @type: type of interfaces to be affected
++ * @state: the new state
++ *
++ * Acquires rfkill_mutex and calls __rfkill_switch_all(@type, @state).
++ * Please refer to __rfkill_switch_all() for details.
++ */
++void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
++{
++	mutex_lock(&rfkill_mutex);
++	__rfkill_switch_all(type, state);
+ 	mutex_unlock(&rfkill_mutex);
+ }
+ EXPORT_SYMBOL(rfkill_switch_all);
+@@ -231,10 +246,14 @@ EXPORT_SYMBOL(rfkill_switch_all);
+  *
+  * This kicks all rfkill devices to RFKILL_STATE_SOFT_BLOCKED, ignoring
+  * everything in its path but rfkill_mutex and rfkill->mutex.
++ *
++ * The global state before the EPO is saved and can be restored later
++ * using rfkill_restore_states().
+  */
+ void rfkill_epo(void)
+ {
+ 	struct rfkill *rfkill;
++	int i;
+ 
+ 	mutex_lock(&rfkill_mutex);
+ 	list_for_each_entry(rfkill, &rfkill_list, node) {
+@@ -242,11 +261,33 @@ void rfkill_epo(void)
+ 		rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
+ 		mutex_unlock(&rfkill->mutex);
+ 	}
++	for (i = 0; i < RFKILL_TYPE_MAX; i++) {
++		rfkill_default_states[i] = rfkill_states[i];
++		rfkill_states[i] = RFKILL_STATE_SOFT_BLOCKED;
++	}
+ 	mutex_unlock(&rfkill_mutex);
+ }
+ EXPORT_SYMBOL_GPL(rfkill_epo);
+ 
+ /**
++ * rfkill_restore_states - restore global states
++ *
++ * Restore (and sync switches to) the global state from the
++ * states in rfkill_default_states.  This can undo the effects of
++ * a call to rfkill_epo().
++ */
++void rfkill_restore_states(void)
++{
++	int i;
++
++	mutex_lock(&rfkill_mutex);
++	for (i = 0; i < RFKILL_TYPE_MAX; i++)
++		__rfkill_switch_all(i, rfkill_default_states[i]);
++	mutex_unlock(&rfkill_mutex);
++}
++EXPORT_SYMBOL_GPL(rfkill_restore_states);
++
++/**
+  * rfkill_force_state - Force the internal rfkill radio state
+  * @rfkill: pointer to the rfkill class to modify.
+  * @state: the current radio state the class should be forced to.
+@@ -536,6 +577,13 @@ static int rfkill_add_switch(struct rfkill *rfkill)
+ 	if (error < 0)
+ 		goto unlock_out;
+ 
++	if (!error) {
++		/* lock default after first use */
++		set_bit(rfkill->type, &rfkill_states_lockdflt);
++		rfkill_states[rfkill->type] =
++				rfkill_default_states[rfkill->type];
++	}
++
+ 	rfkill_toggle_radio(rfkill, rfkill_states[rfkill->type], 0);
+ 
+ 	list_add_tail(&rfkill->node, &rfkill_list);
+@@ -689,6 +737,49 @@ void rfkill_unregister(struct rfkill *rfkill)
+ }
+ EXPORT_SYMBOL(rfkill_unregister);
+ 
++/**
++ * rfkill_set_default - set initial value for a switch type
++ * @type - the type of switch to set the default state of
++ * @state - the new default state for that group of switches
++ *
++ * Sets the initial state rfkill should use for a given type.  Only "soft"
++ * states are allowed, i.e. RFKILL_STATE_SOFT_BLOCKED and
++ * RFKILL_STATE_UNBLOCKED.
++ *
++ * This function is meant to be used by platform drivers for platforms that
++ * can save switch state across power down/reboot.
++ *
++ * The default state for each switch type can be changed exactly once.
++ * After a switch of that type is registered, the default state cannot be
++ * changed anymore.
++ *
++ * Returns -EPERM if the state has already been set once or is in use,
++ * so drivers likely want to ignore -EPERM returns from this function.
++ *
++ * Returns 0 if the state was set, or another error if it was not set.
++ */
++int rfkill_set_default(enum rfkill_type type, enum rfkill_state state)
++{
++	int error;
++
++	if (type >= RFKILL_TYPE_MAX ||
++	    (state != RFKILL_STATE_SOFT_BLOCKED &&
++	     state != RFKILL_STATE_UNBLOCKED))
++		return -EINVAL;
++
++	mutex_lock(&rfkill_mutex);
++
++	if (!test_and_set_bit(type, &rfkill_states_lockdflt)) {
++		rfkill_default_states[type] = state;
++		error = 0;
++	} else
++		error = -EPERM;
++
++	mutex_unlock(&rfkill_mutex);
++	return error;
++}
++EXPORT_SYMBOL_GPL(rfkill_set_default);
++
+ /*
+  * Rfkill module initialization/deinitialization.
+  */
+@@ -702,8 +793,8 @@ static int __init rfkill_init(void)
+ 	    rfkill_default_state != RFKILL_STATE_UNBLOCKED)
+ 		return -EINVAL;
+ 
+-	for (i = 0; i < ARRAY_SIZE(rfkill_states); i++)
+-		rfkill_states[i] = rfkill_default_state;
++	for (i = 0; i < ARRAY_SIZE(rfkill_default_states); i++)
++		rfkill_default_states[i] = rfkill_default_state;
+ 
+ 	error = class_register(&rfkill_class);
+ 	if (error) {
+-- 
+1.5.6.2
 
