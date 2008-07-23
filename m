@@ -1,171 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4184 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752350AbYGHTH5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 15:07:57 -0400
-Date: Tue, 8 Jul 2008 14:51:46 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless-next-2.6 2008-07-08
-Message-ID: <20080708185146.GA30833@tuxdriver.com> (sfid-20080708_210801_819237_771D16DE)
+Received: from nf-out-0910.google.com ([64.233.182.184]:1076 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753083AbYGWSLg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 14:11:36 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so929008nfc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 11:11:34 -0700 (PDT)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH] rfkill: add default global states
+Date: Wed, 23 Jul 2008 20:28:49 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br> <1216775046-9506-3-git-send-email-hmh@hmh.eng.br>
+In-Reply-To: <1216775046-9506-3-git-send-email-hmh@hmh.eng.br>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200807232028.49239.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+>  #endif /* __RFKILL_INPUT_H */
+> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+> index 0a78e32..eaaabbd 100644
+> --- a/net/rfkill/rfkill.c
+> +++ b/net/rfkill/rfkill.c
+> @@ -45,6 +45,8 @@ MODULE_PARM_DESC(default_state,
+>  		 "Default initial state for all radio types, 0 = radio off");
+>  
+>  static enum rfkill_state rfkill_states[RFKILL_TYPE_MAX];
+> +static enum rfkill_state rfkill_default_states[RFKILL_TYPE_MAX];
+> +static unsigned long rfkill_states_lockdflt[BITS_TO_LONGS(RFKILL_TYPE_MAX)];
 
-Yet another round of patches intended for 2.6.27.  Included a few random
-fixes for stuff already in -next, several rt2x00 updates, some mac80211
-cleanups from Harvey Harrison, and a patch series to add rtl8187b
-support to the rtl8187 driver.
+I have a slight distaste for using multiple arrays where each variable is a different
+variable for the same object. Perhaps it is time to move it into a structure:
 
-Please let me know if there are problems!
+struct .. {
+	enum rfkill_state current
+	enum rfkill_state default
+};
 
-Thanks,
+static struct .. rfkill_states[RFKILL_TYPE_MAX];
 
-John
+It probably won't optimize anything, but I think it looks a bit nicer.
 
----
+Just a suggestion, if it easier to keep it as multiple arrays I would still ack it. ;)
 
-Individual patches are available here:
+>  	list_add_tail(&rfkill->node, &rfkill_list);
+> @@ -689,6 +737,49 @@ void rfkill_unregister(struct rfkill *rfkill)
+>  }
+>  EXPORT_SYMBOL(rfkill_unregister);
+>  
+> +/**
+> + * rfkill_set_default - set initial value for a switch type
+> + * @type - the type of switch to set the default state of
+> + * @state - the new default state for that group of switches
+> + *
+> + * Sets the initial state rfkill should use for a given type.  Only "soft"
+> + * states are allowed, i.e. RFKILL_STATE_SOFT_BLOCKED and
+> + * RFKILL_STATE_UNBLOCKED.
+> + *
+> + * This function is meant to be used by platform drivers for platforms that
+> + * can save switch state across power down/reboot.
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
+As sideinfo: I found a hardware bug in a broadcom rfkill key a few days ago
+which would not work well with this function:
 
----
+* laptop was powered on, HW rfkill was set to allow WiFi
+* laptop halted, something about a missing power supply and a battery which was drained
+	without any userspace tool checking the battery status. ;)
+* laptop was powered on and booted,  HW rkfill decided to block WiFi.
 
-The following changes since commit 9bb8582efb555521c7eec595ebd34e835ddc34b8:
-  Patrick McHardy (1):
-        vlan: TCI related type and naming cleanups
+In any case not really important for this patch, but just for information. ;)
 
-are available in the git repository at:
+>   * Rfkill module initialization/deinitialization.
+>   */
+> @@ -702,8 +793,8 @@ static int __init rfkill_init(void)
+>  	    rfkill_default_state != RFKILL_STATE_UNBLOCKED)
+>  		return -EINVAL;
+>  
+> -	for (i = 0; i < ARRAY_SIZE(rfkill_states); i++)
+> -		rfkill_states[i] = rfkill_default_state;
+> +	for (i = 0; i < ARRAY_SIZE(rfkill_default_states); i++)
+> +		rfkill_default_states[i] = rfkill_default_state;
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
+rfkill_states[] is now no longer initialized, I guess that is a bad thing ;)
 
-Adel Gadllah (1):
-      iwlwifi: remove input device and fix rfkill state
+The rest of the patch looks good.
 
-Daniel Drake (1):
-      zd1211rw: beacon config error checking
-
-Emmanuel Grumbach (1):
-      mac80211: add support for iwconfig wlanX frag auto
-
-Harvey Harrison (8):
-      mac80211: move QOS control helpers into ieee80211.h
-      mac80211: use symbolic defines in wpa.c
-      mac80211: remove one user of ieee80211_get_hdr_info
-      mac80211: remove ieee80211_get_hdr_info
-      mac80211: remove trivial rx_data->fc users
-      mac80211: wpa.c remove rx/tx_data ->fc users
-      mac80211: pass scratch buffer directly, remove additional pointers
-      mac80211: aes_ccm.c remove crypto wrapper and extra args
-
-Helmut Schaa (1):
-      iwlwifi: fix typo which caused iwl_get_tx_fail_reason to ever return an empty string
-
-Henrique de Moraes Holschuh (2):
-      rfkill: some minor kernel-doc changes for rfkill_toggle_radio
-      rfkill: ignore errors from rfkill_toggle_radio in rfkill_add_switch
-
-Hin-Tak Leung (6):
-      rtl8187: updating rtl8187.h to support RTL8187B
-      rtl8187: updating rtl818x.h to support RTL8187B
-      rtl8187: updating rtl8187_rtl8225.c to support RTL8187B
-      rtl8187: change rtl8187_dev.c to support RTL8187B (part 1)
-      rtl8187: change rtl8187_dev.c to support RTL8187B (part 2)
-      rtl8187: updating Kconfig to support RTL8187B
-
-Ivo van Doorn (6):
-      mac80211: Don't request encryption for probe response
-      rt2x00: Remove input_polldev requirements for rfkill
-      rt2x00: Decrease alignment headroom
-      rt2x00: Use ieee80211_hw->workqueue again
-      rt2x00: Report RX end time for rt2400pci
-      rt2x00: Fix register comments
-
-Julius Volz (1):
-      net/wireless/nl80211.c: fix endless Netlink callback loop.
-
-Larry Finger (2):
-      b43legacy: Remove switch statement with 64-bit index
-      rtl8187: Change detection of RTL8187B with USB ID of 8187
-
-Pavel Roskin (1):
-      hostap: don't compile prism2_suspend() for hostap_pci without CONFIG_PM
-
-Rami Rosen (1):
-      mac80211: remove MAC80211_DEBUG from net/mac80211/Kconfig.
-
-Randy Dunlap (1):
-      mac80211: fix lots of kernel-doc
-
-Ron Rindjunsky (2):
-      mac80211: add block ack request capability
-      iwlwifi: request Tx of block ack request if necessary
-
-Tomas Winkler (4):
-      iwlwifi: fix error path of iwl_rfkill_init
-      mac80211: remove useless tid assignment for management and control frames
-      mac80211: fix warning: unused variable ifsta
-      mac80211: call bss_info_change only once upon disassociation
-
- drivers/net/wireless/Kconfig                |   12 +-
- drivers/net/wireless/b43legacy/dma.c        |   66 +++-
- drivers/net/wireless/hostap/hostap_hw.c     |    4 +-
- drivers/net/wireless/iwlwifi/Kconfig        |    5 +
- drivers/net/wireless/iwlwifi/iwl-3945.h     |   11 +-
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    6 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c     |    6 +-
- drivers/net/wireless/iwlwifi/iwl-core.h     |   13 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    4 +-
- drivers/net/wireless/iwlwifi/iwl-rfkill.c   |   65 ++--
- drivers/net/wireless/iwlwifi/iwl-rfkill.h   |    3 -
- drivers/net/wireless/iwlwifi/iwl-tx.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |  117 +++----
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    8 +-
- drivers/net/wireless/rt2x00/Kconfig         |    8 +-
- drivers/net/wireless/rt2x00/rt2400pci.c     |   23 ++
- drivers/net/wireless/rt2x00/rt2500pci.h     |    4 +-
- drivers/net/wireless/rt2x00/rt2500usb.h     |   40 ++-
- drivers/net/wireless/rt2x00/rt2x00.h        |    6 +-
- drivers/net/wireless/rt2x00/rt2x00dev.c     |   20 +-
- drivers/net/wireless/rt2x00/rt2x00lib.h     |   12 +-
- drivers/net/wireless/rt2x00/rt2x00mac.c     |    4 +-
- drivers/net/wireless/rt2x00/rt2x00queue.c   |    7 +-
- drivers/net/wireless/rt2x00/rt2x00queue.h   |    2 +
- drivers/net/wireless/rt2x00/rt2x00rfkill.c  |  107 ++----
- drivers/net/wireless/rtl8187.h              |  113 ++++++-
- drivers/net/wireless/rtl8187_dev.c          |  490 +++++++++++++++++++++++----
- drivers/net/wireless/rtl8187_rtl8225.c      |  229 ++++++++++++-
- drivers/net/wireless/rtl818x.h              |   36 ++-
- drivers/net/wireless/zd1211rw/zd_mac.c      |   62 +++-
- include/linux/ieee80211.h                   |    6 +
- include/net/mac80211.h                      |   43 ++-
- net/mac80211/Kconfig                        |    3 +-
- net/mac80211/aes_ccm.c                      |   51 ++--
- net/mac80211/aes_ccm.h                      |    4 +-
- net/mac80211/ieee80211_i.h                  |    3 +-
- net/mac80211/main.c                         |   33 ++-
- net/mac80211/michael.c                      |   20 +-
- net/mac80211/michael.h                      |    2 +-
- net/mac80211/mlme.c                         |   34 ++-
- net/mac80211/rx.c                           |  135 ++++----
- net/mac80211/sta_info.c                     |    1 +
- net/mac80211/sta_info.h                     |   81 ++++--
- net/mac80211/wext.c                         |    2 +
- net/mac80211/wme.c                          |    5 +-
- net/mac80211/wme.h                          |    8 -
- net/mac80211/wpa.c                          |  183 ++++------
- net/rfkill/rfkill.c                         |   22 +-
- net/wireless/nl80211.c                      |    6 +-
- 49 files changed, 1449 insertions(+), 678 deletions(-)
-
-Omnibus patch is available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2008-07-08.patch.bz2
-
--- 
-John W. Linville
-linville@tuxdriver.com
+Ivo
