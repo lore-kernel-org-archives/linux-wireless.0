@@ -1,151 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36299 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757626AbYGQSyL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 14:54:11 -0400
-Subject: Re: [PATCH 2/3] libertas: add sysfs hooks to update boot2 and
-	persistent firmware
-From: Dan Williams <dcbw@redhat.com>
-To: Brian Cavagnolo <brian@cozybit.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <68d6c8db0807171139g56032878l862b45928e42f093@mail.gmail.com>
-References: <487f84b8.29578c0a.46a7.5cef@mx.google.com>
-	 <1216317285.23645.18.camel@localhost.localdomain>
-	 <68d6c8db0807171139g56032878l862b45928e42f093@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 17 Jul 2008 14:52:16 -0400
-Message-Id: <1216320736.23645.43.camel@localhost.localdomain> (sfid-20080717_205415_398017_8F357FF5)
-Mime-Version: 1.0
+Received: from ug-out-1314.google.com ([66.249.92.169]:6880 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750873AbYGWItq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 04:49:46 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so469316ugf.16
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 01:49:44 -0700 (PDT)
+Date: Wed, 23 Jul 2008 08:54:52 +0000
+From: Jarek Poplawski <jarkao2@gmail.com>
+To: David Miller <davem@davemloft.net>
+Cc: Larry.Finger@lwfinger.net, kaber@trash.net,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, peterz@infradead.org,
+	mingo@redhat.com
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+	__netif_schedule+0x2c/0x98()
+Message-ID: <20080723085452.GB4561@ff.dom.local> (sfid-20080723_104951_177551_4E21B83D)
+References: <20080722.160409.216536011.davem@davemloft.net> <20080723062036.GA4561@ff.dom.local> <20080723.005921.113868915.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080723.005921.113868915.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-07-17 at 11:39 -0700, Brian Cavagnolo wrote:
-> On Thu, Jul 17, 2008 at 10:54 AM, Dan Williams <dcbw@redhat.com> wrote:
-> > On Wed, 2008-07-16 at 10:28 -0700, Brian Cavagnolo wrote:
-> >> To use these features, copy the boot2 and firmware images to /lib/firmware and:
-> >>
-> >> echo <boot2_image_name> > /sys/class/net/ethX/lbs_boot2
-> >> echo <firmware_image_name> > /sys/class/net/ethX/lbs_fw
-> >
-> > Perhaps "lbs_flash_boot2" and "lbs_flash_fw" would be better names here?
-> > Otherwise it looks like one of the drivers that you can choose alternate
-> > firmware for (atmel.c for example) and doesn't give any indication that
-> > it'll permanently change what's on the dongle.
+On Wed, Jul 23, 2008 at 12:59:21AM -0700, David Miller wrote:
+> From: Jarek Poplawski <jarkao2@gmail.com>
+> Date: Wed, 23 Jul 2008 06:20:36 +0000
 > 
-> Sounds good.  I'll fix that and resubmit.
-
-Just looked again and found the usb8xxx's "lbs_firmware" parameter which
-allows you to change the default firmware name on modprobe, which means
-it's even more important to change the names of these two new
-attributes.  Thanks!
-
-Dan
-
-> Ciao,
-> Brian
+> > PS: if there is nothing new in lockdep the classical method would
+> > be to change this static array:
+> > 
+> > static struct lock_class_key
+> > netdev_xmit_lock_key[ARRAY_SIZE(netdev_lock_type)];
+> > 
+> > to
+> > 
+> > static struct lock_class_key
+> > netdev_xmit_lock_key[ARRAY_SIZE(netdev_lock_type)][MAX_NUM_TX_QUEUES];
+> > 
+> > and set lockdep classes per queue as well. (If we are sure we don't
+> > need lockdep subclasses anywhere this could be optimized by using
+> > one lock_class_key per 8 queues and spin_lock_nested()).
 > 
-> >> Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
-> >> ---
-> >>  drivers/net/wireless/libertas/if_usb.c |   71 ++++++++++++++++++++++++++++++++
-> >>  1 files changed, 71 insertions(+), 0 deletions(-)
-> >>
-> >> diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-> >> index e83a4c2..c89785c 100644
-> >> --- a/drivers/net/wireless/libertas/if_usb.c
-> >> +++ b/drivers/net/wireless/libertas/if_usb.c
-> >> @@ -51,6 +51,68 @@ static void if_usb_free(struct if_usb_card *cardp);
-> >>  static int if_usb_submit_rx_urb(struct if_usb_card *cardp);
-> >>  static int if_usb_reset_device(struct if_usb_card *cardp);
-> >>
-> >> +/* sysfs hooks */
-> >> +
-> >> +/**
-> >> + *  Set function to write firmware to device's persistent memory
-> >> + */
-> >> +static ssize_t if_usb_firmware_set(struct device *dev,
-> >> +             struct device_attribute *attr, const char *buf, size_t count)
-> >> +{
-> >> +     struct lbs_private *priv = to_net_dev(dev)->priv;
-> >> +     struct if_usb_card *cardp = priv->card;
-> >> +     char fwname[FIRMWARE_NAME_MAX];
-> >> +     int ret;
-> >> +
-> >> +     if (!(priv->fwcapinfo & FW_CAPINFO_FIRMWARE_UPGRADE))
-> >> +             return -EOPNOTSUPP;
-> >> +
-> >> +     sscanf(buf, "%29s", fwname); /* FIRMWARE_NAME_MAX - 1 = 29 */
-> >> +     ret = if_usb_prog_firmware(cardp, fwname, BOOT_CMD_UPDATE_FW);
-> >> +     if (ret == 0)
-> >> +             return count;
-> >> +
-> >> +     return ret;
-> >> +}
-> >> +
-> >> +/**
-> >> + * lbs_fw attribute to be exported per ethX interface through sysfs
-> >> + * (/sys/class/net/ethX/lbs_fw).  Use this like so to write firmware to the
-> >> + * device's persistent memory:
-> >> + * echo usb8388-5.126.0.p5.bin > /sys/class/net/ethX/lbs_fw
-> >> + */
-> >> +static DEVICE_ATTR(lbs_fw, 0200, NULL, if_usb_firmware_set);
-> >> +
-> >> +/**
-> >> + *  Set function to write firmware to device's persistent memory
-> >> + */
-> >> +static ssize_t if_usb_boot2_set(struct device *dev,
-> >> +             struct device_attribute *attr, const char *buf, size_t count)
-> >> +{
-> >> +     struct lbs_private *priv = to_net_dev(dev)->priv;
-> >> +     struct if_usb_card *cardp = priv->card;
-> >> +     char fwname[FIRMWARE_NAME_MAX];
-> >> +     int ret;
-> >> +
-> >> +     if (!(priv->fwcapinfo & FW_CAPINFO_BOOT2_UPGRADE))
-> >> +             return -EOPNOTSUPP;
-> >> +
-> >> +     sscanf(buf, "%29s", fwname); /* FIRMWARE_NAME_MAX - 1 = 29 */
-> >> +     ret = if_usb_prog_firmware(cardp, fwname, BOOT_CMD_UPDATE_BOOT2);
-> >> +     if (ret == 0)
-> >> +             return count;
-> >> +
-> >> +     return ret;
-> >> +}
-> >> +
-> >> +/**
-> >> + * lbs_boot2 attribute to be exported per ethX interface through sysfs
-> >> + * (/sys/class/net/ethX/lbs_boot2).  Use this like so to write firmware to the
-> >> + * device's persistent memory:
-> >> + * echo usb8388-5.126.0.p5.bin > /sys/class/net/ethX/lbs_boot2
-> >> + */
-> >> +static DEVICE_ATTR(lbs_boot2, 0200, NULL, if_usb_boot2_set);
-> >> +
-> >>  /**
-> >>   *  @brief  call back function to handle the status of the URB
-> >>   *  @param urb               pointer to urb structure
-> >> @@ -263,6 +325,12 @@ static int if_usb_probe(struct usb_interface *intf,
-> >>       usb_get_dev(udev);
-> >>       usb_set_intfdata(intf, cardp);
-> >>
-> >> +     if (device_create_file(&priv->dev->dev, &dev_attr_lbs_fw))
-> >> +             lbs_pr_err("cannot register lbs_fw attribute\n");
-> >> +
-> >> +     if (device_create_file(&priv->dev->dev, &dev_attr_lbs_boot2))
-> >> +             lbs_pr_err("cannot register lbs_boot2 attribute\n");
-> >> +
-> >>       return 0;
-> >>
-> >>  err_start_card:
-> >> @@ -288,6 +356,9 @@ static void if_usb_disconnect(struct usb_interface *intf)
-> >>
-> >>       lbs_deb_enter(LBS_DEB_MAIN);
-> >>
-> >> +     device_remove_file(&priv->dev->dev, &dev_attr_lbs_boot2);
-> >> +     device_remove_file(&priv->dev->dev, &dev_attr_lbs_fw);
-> >> +
-> >>       cardp->surprise_removed = 1;
-> >>
-> >>       if (priv) {
-> >
-> >
+> Unfortunately MAX_NUM_TX_QUEUES is USHORT_MAX, so this isn't really
+> a feasible approach.
 
+Is it used by real devices already? Maybe for the beginning we could
+start with something less?
+
+> spin_lock_nested() isn't all that viable either, as the subclass
+> limit is something like 8.
+
+This method would need to do some additional counting: depending of
+a queue number each 8 subsequent queues share (are set to) the same
+class and their number mod 8 gives the subqueue number for
+spin_lock_nested().
+
+I'll try to find if there is something new around this in lockdep.
+(lockdep people added to CC.)
+
+Jarek P.
