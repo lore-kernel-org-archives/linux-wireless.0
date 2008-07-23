@@ -1,64 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:32838 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751125AbYG2GyG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 02:54:06 -0400
-Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks
-	rtl8187
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <200807290021.45400.herton@mandriva.com.br>
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
-	 <48874F09.7060400@lwfinger.net>
-	 <3ace41890807281939y462c9b91n5fa952e167b6ff8c@mail.gmail.com>
-	 <200807290021.45400.herton@mandriva.com.br>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZGsNBkNdOLzKjYvAHh6d"
-Date: Tue, 29 Jul 2008 08:53:50 +0200
-Message-Id: <1217314430.15381.11.camel@johannes.berg> (sfid-20080729_085412_024014_173D17E4)
-Mime-Version: 1.0
+Received: from ns2.suse.de ([195.135.220.15]:53679 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750799AbYGWR37 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 13:29:59 -0400
+From: Andreas Schwab <schwab@suse.de>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k: use correct type for test_bit/set_bit
+References: <20080723165314.GA30144@lst.de>
+Date: Wed, 23 Jul 2008 19:29:57 +0200
+In-Reply-To: <20080723165314.GA30144@lst.de> (Christoph Hellwig's message of
+	"Wed, 23 Jul 2008 18:53:14 +0200")
+Message-ID: <jeod4oecfe.fsf@sykes.suse.de> (sfid-20080723_193004_371296_9E4651ED)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Christoph Hellwig <hch@lst.de> writes:
 
---=-ZGsNBkNdOLzKjYvAHh6d
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> The test_bit/set_bit/etc family of routines operates on arrays of
+> unsigned long, so declare sc_keymap as such using the DECLARE_BITMAP
+> helper.
+>
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>
+> Index: linux-2.6/drivers/net/wireless/ath9k/core.h
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- linux-2.6.orig/drivers/net/wireless/ath9k/core.h	2008-07-23 18:36=
+:39.000000000 +0200
+> +++ linux-2.6/drivers/net/wireless/ath9k/core.h	2008-07-23 18:37:28.0=
+00000000 +0200
+> @@ -1042,7 +1042,7 @@ struct ath_softc {
+> =20
+>  	/* Crypto */
+>  	u_int                   sc_keymax;      /* size of key cache */
+> -	u_int8_t                sc_keymap[ATH_KEYBYTES];/* key use bit map =
+*/
+> +	DECLARE_BITMAP		(sc_keymap, ATH_KEYBYTES);/* key use bit map */
 
-On Tue, 2008-07-29 at 00:21 -0300, Herton Ronaldo Krzesinski wrote:
+DECLARE_BITMAP expects the number of bits, not bytes.
 
-> [3] /sbin/iwconfig wlan0 power on
+Andreas.
 
-I don't think turning on power management (yes, this command is
-completely misnamed, it turns on power _management_ not the power, you
-may want "txpower auto") does anything on this chip, does it?
-
-johannes
-
---=-ZGsNBkNdOLzKjYvAHh6d
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIjr56AAoJEKVg1VMiehFYiLYQAJlEHZIZ/ErIK2tQRNAdEVWY
-hINdW8XJ6oR+2sHOD/w3pFlGDI4Nr391asDVLHQJRFUIqS6fbFYyHJIorz/uoW93
-CiT3QBJ0c5NxVQwxLeKRQqM2wz3wkyX0R4uxv8DQK3ULh+v49peiQ1SISf/VDuT8
-tBpilzj1Ew5VbhMr6m/THaa72vfLKQF7fAqNo7f/kPJON57EjaExWlT56K0cHBxP
-6x6FQlFEL1Zj1ePCFqHoVdTwOg9mNELibwhM//tHHl4y1PVwyIEf4HTWQoS4jQBQ
-imTN/5ebfH7dN5/l4X8TS+Ac3uN6Lb2+AxW2ZcEAlbUG55N613ow0zeyZ9kRBP5U
-vghG+UvnylYn+4/zgDduyjkMXpyePqJGy/mIWvspY0TuBQ1e7xAML1Q4C7D2dpH5
-BSpjm1nIq5Ka64QikNrk7JDVJoWfUeXTS+vK3iZMgcvay1H8+QeZ9iMT5SLC/0SM
-++xPfSQEF94euemyewI6x82HiDsHu12I1tdGU2IGBTIWa69bf+kJjgw0A1PuuTzH
-eR7TDm28Q2mF5+BnXoGXRX+VRjlwWCNmzU8ugz5KgLF5uMIXPhSmp/n1yY3jd2yU
-1T9EeTuSpEsRDb3sjqHpFcMucFT8q/ZPgEFnuOO22QdWaK+6x5SQp7zHR+0AUj3+
-VuUKmrKi4YwHnaTQhE2w
-=MgkA
------END PGP SIGNATURE-----
-
---=-ZGsNBkNdOLzKjYvAHh6d--
-
+--=20
+Andreas Schwab, SuSE Labs, schwab@suse.de
+SuSE Linux Products GmbH, Maxfeldstra=DFe 5, 90409 N=FCrnberg, Germany
+PGP key fingerprint =3D 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4=
+ED5
+"And now for something completely different."
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
