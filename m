@@ -1,51 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.237]:9730 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750870AbYG1LVD (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.172]:44847 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754068AbYGWUmw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2008 07:21:03 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so4377484rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 04:21:02 -0700 (PDT)
-Message-ID: <1ba2fa240807280421s48b26b58n8db03f75bfa4c206@mail.gmail.com> (sfid-20080728_132107_447954_83ABC14B)
-Date: Mon, 28 Jul 2008 14:21:02 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Angel Mieres" <mieres.angel@gmail.com>
-Subject: Re: IWL5000
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <5f68ea7b0807280351u4f6b6a59v8304a7a3b53436be@mail.gmail.com>
+	Wed, 23 Jul 2008 16:42:52 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so543203ugf.16
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 13:42:49 -0700 (PDT)
+Date: Wed, 23 Jul 2008 22:43:35 +0200
+From: Jarek Poplawski <jarkao2@gmail.com>
+To: David Miller <davem@davemloft.net>
+Cc: peterz@infradead.org, Larry.Finger@lwfinger.net, kaber@trash.net,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, mingo@redhat.com
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+	__netif_schedule+0x2c/0x98()
+Message-ID: <20080723204335.GA14788@ami.dom.local> (sfid-20080723_224324_464090_562B0E1A)
+References: <1216810696.7257.175.camel@twins> <20080723113519.GE4561@ff.dom.local> <20080723114914.GF4561@ff.dom.local> <20080723.131607.79681752.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <5f68ea7b0807280351u4f6b6a59v8304a7a3b53436be@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080723.131607.79681752.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 28, 2008 at 1:51 PM, Angel Mieres <mieres.angel@gmail.com> wrote:
-> Hi all,
->
-> Im trying to get working intel wifi link 5100 on ubuntu 8.0.4, but i
-> have some problems; the procedure that i follow was:
->    1.- I try to get working with ndiswrapper, i get the lastest
-> drivers availables for windowz, load the inf file,
->     check that device was recognize by ndiswrapper(installed & device
-> present), but when i load the ndiswrapper module, it appears:
->     "unknown symbol: ntoskrnl.exe:'KeBugCheck'; couldn't prepare
-> driver 'netw5x32'"
->      So, i decide to take a look of compat-wireless project that
-> support this driver(right?).
->    2.- I get the firmware of iwl5000, copy the firmware on
-> /lib/firmware, i get the latest compat-wireless-2.6 tar file, after
-> this,
->       I compile the drivers(make && make install), i try load the
-> driver; at dmesg it appears that ipw4965 loads perfectly but the led
-> of the wifi, it doesn't work and
->       no one devices appear to be installed.
->
-> So, someone have this NIC working? Please help me a bit. All
-> suggestions are welcome.
-> Thanks guys
+On Wed, Jul 23, 2008 at 01:16:07PM -0700, David Miller wrote:
+...
+> There will always be a need for a "stop all the TX queues" operation.
 
-Use iwlwif-2.6.git master branch. Merging into wireless-testing.git is
-rather stalled right now.
-If your devices is not recognized please send me the devices ids of your card.
-Thanks
-Tomas
+The question is if the current way is "all correct". As a matter of
+fact I think Peter's doubts could be justified: taking "USHORT_MAX"
+locks looks really dubious (so maybe it's not so strange lockdep
+didn't get used to this).
+
+Jarek P.
