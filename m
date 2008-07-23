@@ -1,62 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:24571 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752736AbYGOI3v (ORCPT
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:52870 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751856AbYGWBEU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 04:29:51 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so3008059waf.23
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2008 01:29:50 -0700 (PDT)
-Message-ID: <1ba2fa240807150129v4906b7bcyba66ab62b57c5d71@mail.gmail.com> (sfid-20080715_102957_031204_D072D0D8)
-Date: Tue, 15 Jul 2008 11:29:50 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by low level driver
-Cc: "Kalle Valo" <kalle.valo@nokia.com>, linville@tuxdriver.com,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1216109543.23746.21.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
-	 <1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
-	 <1216039127.11189.15.camel@johannes.berg>
-	 <1ba2fa240807140546w4f08e32l59ed88dfa1b86403@mail.gmail.com>
-	 <87fxqcoaue.fsf@nokia.com> <1216109543.23746.21.camel@johannes.berg>
+	Tue, 22 Jul 2008 21:04:20 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: [PATCH] rfkill: rename rfkill_mutex to rfkill_global_mutex
+Date: Tue, 22 Jul 2008 22:04:05 -0300
+Message-Id: <1216775046-9506-6-git-send-email-hmh@hmh.eng.br> (sfid-20080723_030424_889093_57567AAB)
+In-Reply-To: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br>
+References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 15, 2008 at 11:12 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->> This stuff is very much hardware dependent, I don't deny that, but
->> still I would assume that the basic principles are almost the same. We
->> just need to come up with a good interface for the drivers. Sure, it's
->> more work now, but if we don't do it, PSM support will eventually get
->> really messy because all drivers do it somehow differently.
->
-> I agree.
->
->> > I really don't know what other vendors do and user should not guess
->> > this.
->>
->> Yes, for the user this is too difficult, but I think the driver
->> shouldn't be making the decision either. So mac80211 stack would be
->> the most logical choice, and it could be make the decisions based on
->> user input (or something like that).
->
-> Well, the user may want to make a choice based on the latency. Or,
-> ideally, we would detect that they're using voice and want lower
-> latency. Or something like that.
+rfkill_mutex and rfkill->mutex are too easy to confuse with each other.
 
+Rename rfkill_mutex to rfkill_global_mutex, so that they are easier to tell
+apart with just one glance.
 
-We are providing power save user interface reach enough to specify all
-the above requirements.
-I think you are both misinterpreting listen interval meaning.
-Listen interval merely says to AP for how many beacons save direct
-packets for this STA. It doesn't mean
-it's can be shorter and it  does say it's won't be longer. It's
-doesn't affect power save dynamics it's just sets upper limit.
-This value for iwlwifi hw is derived from maximal supported  beacon
-interval and size of the internal HW timers.
-This value is hard coded in the driver.
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>
+---
+ net/rfkill/rfkill.c |   40 ++++++++++++++++++++--------------------
+ 1 files changed, 20 insertions(+), 20 deletions(-)
 
-Tomas
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index 2265bc5..d6e16e1 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -37,7 +37,7 @@ MODULE_DESCRIPTION("RF switch support");
+ MODULE_LICENSE("GPL");
+ 
+ static LIST_HEAD(rfkill_list);	/* list of registered rf switches */
+-static DEFINE_MUTEX(rfkill_mutex);
++static DEFINE_MUTEX(rfkill_global_mutex);
+ 
+ static unsigned int rfkill_default_state = RFKILL_STATE_UNBLOCKED;
+ module_param_named(default_state, rfkill_default_state, uint, 0444);
+@@ -209,7 +209,7 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
+  * unless a specific switch is claimed by userspace (in which case,
+  * that switch is left alone).
+  *
+- * Caller must have acquired rfkill_mutex.
++ * Caller must have acquired rfkill_global_mutex.
+  */
+ static void __rfkill_switch_all(const enum rfkill_type type,
+ 				const enum rfkill_state state)
+@@ -231,7 +231,7 @@ static void __rfkill_switch_all(const enum rfkill_type type,
+  * @type: type of interfaces to be affected
+  * @state: the new state
+  *
+- * Acquires rfkill_mutex and calls __rfkill_switch_all(@type, @state).
++ * Acquires rfkill_global_mutex and calls __rfkill_switch_all(@type, @state).
+  * Please refer to __rfkill_switch_all() for details.
+  *
+  * Does nothing if rfkill_set_state_lock() was used to lock state
+@@ -239,10 +239,10 @@ static void __rfkill_switch_all(const enum rfkill_type type,
+  */
+ void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
+ {
+-	mutex_lock(&rfkill_mutex);
++	mutex_lock(&rfkill_global_mutex);
+ 	if (!rfkill_state_lock)
+ 		__rfkill_switch_all(type, state);
+-	mutex_unlock(&rfkill_mutex);
++	mutex_unlock(&rfkill_global_mutex);
+ }
+ EXPORT_SYMBOL(rfkill_switch_all);
+ 
+@@ -250,7 +250,7 @@ EXPORT_SYMBOL(rfkill_switch_all);
+  * rfkill_epo - emergency power off all transmitters
+  *
+  * This kicks all rfkill devices to RFKILL_STATE_SOFT_BLOCKED, ignoring
+- * everything in its path but rfkill_mutex and rfkill->mutex.
++ * everything in its path but rfkill_global_mutex and rfkill->mutex.
+  *
+  * The global state before the EPO is saved and can be restored later
+  * using rfkill_restore_states().
+@@ -260,7 +260,7 @@ void rfkill_epo(void)
+ 	struct rfkill *rfkill;
+ 	int i;
+ 
+-	mutex_lock(&rfkill_mutex);
++	mutex_lock(&rfkill_global_mutex);
+ 
+ 	rfkill_state_lock = 1;
+ 	list_for_each_entry(rfkill, &rfkill_list, node) {
+@@ -272,7 +272,7 @@ void rfkill_epo(void)
+ 		rfkill_default_states[i] = rfkill_states[i];
+ 		rfkill_states[i] = RFKILL_STATE_SOFT_BLOCKED;
+ 	}
+-	mutex_unlock(&rfkill_mutex);
++	mutex_unlock(&rfkill_global_mutex);
+ }
+ EXPORT_SYMBOL_GPL(rfkill_epo);
+ 
+@@ -287,12 +287,12 @@ void rfkill_restore_states(void)
+ {
+ 	int i;
+ 
+-	mutex_lock(&rfkill_mutex);
++	mutex_lock(&rfkill_global_mutex);
+ 
+ 	rfkill_state_lock = 0;
+ 	for (i = 0; i < RFKILL_TYPE_MAX; i++)
+ 		__rfkill_switch_all(i, rfkill_default_states[i]);
+-	mutex_unlock(&rfkill_mutex);
++	mutex_unlock(&rfkill_global_mutex);
+ }
+ EXPORT_SYMBOL_GPL(rfkill_restore_states);
+ 
+@@ -306,9 +306,9 @@ EXPORT_SYMBOL_GPL(rfkill_restore_states);
+  */
+ void rfkill_set_state_lock(int lock)
+ {
+-	mutex_lock(&rfkill_mutex);
++	mutex_lock(&rfkill_global_mutex);
+ 	rfkill_state_lock = !!lock;
+-	mutex_unlock(&rfkill_mutex);
++	mutex_unlock(&rfkill_global_mutex);
+ }
+ EXPORT_SYMBOL_GPL(rfkill_set_state_lock);
+ 
+@@ -454,7 +454,7 @@ static ssize_t rfkill_claim_store(struct device *dev,
+ 	 * Take the global lock to make sure the kernel is not in
+ 	 * the middle of rfkill_switch_all
+ 	 */
+-	error = mutex_lock_interruptible(&rfkill_mutex);
++	error = mutex_lock_interruptible(&rfkill_global_mutex);
+ 	if (error)
+ 		return error;
+ 
+@@ -469,7 +469,7 @@ static ssize_t rfkill_claim_store(struct device *dev,
+ 		rfkill->user_claim = claim;
+ 	}
+ 
+-	mutex_unlock(&rfkill_mutex);
++	mutex_unlock(&rfkill_global_mutex);
+ 
+ 	return error ? error : count;
+ }
+@@ -601,7 +601,7 @@ static int rfkill_add_switch(struct rfkill *rfkill)
+ {
+ 	int error;
+ 
+-	mutex_lock(&rfkill_mutex);
++	mutex_lock(&rfkill_global_mutex);
+ 
+ 	error = rfkill_check_duplicity(rfkill);
+ 	if (error < 0)
+@@ -620,16 +620,16 @@ static int rfkill_add_switch(struct rfkill *rfkill)
+ 
+ 	error = 0;
+ unlock_out:
+-	mutex_unlock(&rfkill_mutex);
++	mutex_unlock(&rfkill_global_mutex);
+ 
+ 	return error;
+ }
+ 
+ static void rfkill_remove_switch(struct rfkill *rfkill)
+ {
+-	mutex_lock(&rfkill_mutex);
++	mutex_lock(&rfkill_global_mutex);
+ 	list_del_init(&rfkill->node);
+-	mutex_unlock(&rfkill_mutex);
++	mutex_unlock(&rfkill_global_mutex);
+ 
+ 	mutex_lock(&rfkill->mutex);
+ 	rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
+@@ -797,7 +797,7 @@ int rfkill_set_default(enum rfkill_type type, enum rfkill_state state)
+ 	     state != RFKILL_STATE_UNBLOCKED))
+ 		return -EINVAL;
+ 
+-	mutex_lock(&rfkill_mutex);
++	mutex_lock(&rfkill_global_mutex);
+ 
+ 	if (!test_and_set_bit(type, &rfkill_states_lockdflt)) {
+ 		rfkill_default_states[type] = state;
+@@ -805,7 +805,7 @@ int rfkill_set_default(enum rfkill_type type, enum rfkill_state state)
+ 	} else
+ 		error = -EPERM;
+ 
+-	mutex_unlock(&rfkill_mutex);
++	mutex_unlock(&rfkill_global_mutex);
+ 	return error;
+ }
+ EXPORT_SYMBOL_GPL(rfkill_set_default);
+-- 
+1.5.6.2
+
