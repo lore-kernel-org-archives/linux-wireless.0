@@ -1,97 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:48335 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750971AbYGWPc2 (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:38649 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751541AbYGWQBP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 11:32:28 -0400
-Message-ID: <48874F09.7060400@lwfinger.net> (sfid-20080723_173231_370872_A4F565A7)
-Date: Wed, 23 Jul 2008 10:32:25 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 23 Jul 2008 12:01:15 -0400
+Message-ID: <4887555A.30605@trash.net> (sfid-20080723_180118_916792_7DBEC6BC)
+Date: Wed, 23 Jul 2008 17:59:22 +0200
+From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks
- rtl8187
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>	 <200807221613.34434.herton@mandriva.com.br>	 <3ace41890807221525r67716ea0r251068df773fe53f@mail.gmail.com>	 <200807221940.20009.herton@mandriva.com.br> <4886AA3B.3000406@lwfinger.net>	 <4886C50E.6040304@lwfinger.net> <1216824917.13587.9.camel@johannes.berg>
-In-Reply-To: <1216824917.13587.9.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: =?UTF-8?B?RnJhbsOnb2lzIFZhbGVuZHVj?=
+	<francois.valenduc@tvcablenet.be>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linux Netdev List <netdev@vger.kernel.org>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
+References: <bug-11144-10286@http.bugzilla.kernel.org/>	<20080722034850.dbbc5566.akpm@linux-foundation.org>	<4886E49D.6010700@tvcablenet.be> <20080723010522.389a948f.akpm@linux-foundation.org> <4886F727.6010301@tvcablenet.be> <48870425.50908@trash.net> <48871632.3010205@tvcablenet.be> <4887169B.6090102@trash.net> <488725D5.8030900@tvcablenet.be> <488727B3.7040007@trash.net> <48872968.9000103@trash.net> <488746DF.1050501@tvcablenet.be> <48874BD8.60600@trash.net> <48874C12.10606@trash.net> <4887514C.6080903@tvcablenet.be> <488753C6.2090807@trash.net> <4887550B.2070704@tvcablenet.be>
+In-Reply-To: <4887550B.2070704@tvcablenet.be>
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Wed, 2008-07-23 at 00:43 -0500, Larry Finger wrote:
->> Johannes,
+=46ran=C3=A7ois Valenduc wrote:
+> Patrick McHardy a =C3=A9crit :
+>>> In file included from net/mac80211/main.c:11:
+>>> include/net/mac80211.h: In function =E2=80=98IEEE80211_SKB_CB=E2=80=
+=99:
+>>> include/net/mac80211.h:347: erreur: size of array =E2=80=98type nam=
+e=E2=80=99 is=20
+>>> negative
 >>
->> In the current wireless-testing (v2.6.26-rc9-14207-ga520bdb), rtl8187 is broken. 
->> In most cases, it is unable to complete a connection. Occasionally, it will 
->> authenticate and even get an IP using DHCP; however, only a few pings get 
->> through to the AP before the connection fails completely.
 >>
->> Using bisection, this problem was traced to:
+>> I was afraid that might happen. This means skb->cb is not large
+>> enough to hold both the qdisc and the ieee80211 structs.
 >>
->> ==================================================
->> commit 741b4fbc441dba885cc8f97a10e87f2acd04c5f2
->> Author: Johannes Berg <johannes@sipsolutions.net>
->> Date:   Thu Jul 10 11:21:26 2008 +0200
+>> Just for testing, changing (include/net/mac80211.h):
 >>
->>      mac80211: fix TX sequence numbers
-> 
->> The validity of the bisection was confirmed by reverse application of the patch. 
->> The resulting driver worked.
+>> #define IEEE80211_TX_INFO_DRIVER_DATA_SIZE \
+>>         (sizeof(((struct sk_buff *)0)->cb) - 8)
 >>
->> The appears that rtl8187 needs some kind of modification such as b43, b43legacy, 
->> and rt2x00 got in the original patch. I'll be studying the changes to the other 
->> drivers to see if I can find the problem, but I will appreciate your help when 
->> you get a chance. Perhaps after your trip to Canada is over.
-> 
-> Oh, crap. If you look at the patch, it removes the sequence numbers for
-> non-TID frames, and puts them back into rt2x00 because I thought rt2x00
-> was the only driver that needed software sequence numbering. It looks
-> like rtl8187 and zd1211 might need that too, so we need to copy the
-> rt2x00 code that I put into that particular patch to those drivers.
+>> to
+>>
+>> #define IEEE80211_TX_INFO_DRIVER_DATA_SIZE \
+>>         (sizeof(((struct sk_buff *)0)->cb) - 12)
+>>
+>> might help to get it to compile. If that doesn't work, try -16.
+>>
+>>
+> That didn't work, neither with -12 or -16.
 
-I tried something like that, but it didn't work. Maybe you can see what is wrong 
-here:
-
-
-Index: wireless-testing/drivers/net/wireless/rtl8187.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl8187.h
-+++ wireless-testing/drivers/net/wireless/rtl8187.h
-@@ -100,6 +100,7 @@ struct rtl8187_priv {
-  	struct usb_device *udev;
-  	u32 rx_conf;
-  	u16 txpwr_base;
-+	u16 seqno;
-  	u8 asic_rev;
-  	u8 is_rtl8187b;
-  	enum {
-Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
-@@ -169,6 +169,7 @@ static int rtl8187_tx(struct ieee80211_h
-  {
-  	struct rtl8187_priv *priv = dev->priv;
-  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_hdr *ieee80211hdr = (struct ieee80211_hdr *)skb->data;
-  	unsigned int ep;
-  	void *buf;
-  	struct urb *urb;
-@@ -198,6 +199,14 @@ static int rtl8187_tx(struct ieee80211_h
-  		flags |= ieee80211_get_rts_cts_rate(dev, info)->hw_value << 19;
-  	}
-
-+	/* XXX: This sequence is an attempt to match what happens in r2x00. */
-+	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
-+		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
-+			priv->seqno += 0x10;
-+		ieee80211hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-+		ieee80211hdr->seq_ctrl |= cpu_to_le16(priv->seqno);
-+	}
-+
-  	if (!priv->is_rtl8187b) {
-  		struct rtl8187_tx_hdr *hdr =
-  			(struct rtl8187_tx_hdr *)skb_push(skb, sizeof(*hdr));
+I'll give it a try myself, please wait a few minutes.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
