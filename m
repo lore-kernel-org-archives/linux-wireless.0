@@ -1,82 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:37658 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750951AbYGWBEP (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:62826 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752768AbYGWRzB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 21:04:15 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: [PATCH] rfkill: detect bogus double-registering
-Date: Tue, 22 Jul 2008 22:04:01 -0300
-Message-Id: <1216775046-9506-2-git-send-email-hmh@hmh.eng.br> (sfid-20080723_030420_536317_B0B0AFE0)
-In-Reply-To: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br>
-References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br>
+	Wed, 23 Jul 2008 13:55:01 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so924760nfc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 10:54:59 -0700 (PDT)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH] rfkill: detect bogus double-registering
+Date: Wed, 23 Jul 2008 20:12:13 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br> <1216830607.13587.20.camel@johannes.berg> <20080723174129.GB11009@khazad-dum.debian.net>
+In-Reply-To: <20080723174129.GB11009@khazad-dum.debian.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200807232012.13985.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Detect and abort with -EEXIST if rfkill_register is called twice on the
-same rfkill struct.
+On Wednesday 23 July 2008, Henrique de Moraes Holschuh wrote:
+> On Wed, 23 Jul 2008, Johannes Berg wrote:
+> > On Wed, 2008-07-23 at 12:27 -0300, Henrique de Moraes Holschuh wrote:
+> > > On Wed, 23 Jul 2008, Johannes Berg wrote:
+> > > > > +	list_for_each_entry(p, &rfkill_list, node) {
+> > > > > +		if (p == rfkill)
+> > > > > +			return -EEXIST;
+> > > > > +		set_bit(p->type, &seen);
+> > > > 
+> > > > You should WARN_ON so it can get fixed.
+> > > 
+> > > I'd rather make rfkill_register __must_check, actually.  With or without
+> > > WARN_ON.
+> > > 
+> > > In fact, lots of stuff in rfkill should be __must_check.  Ivo, what do you
+> > > think?  Add __must_check?  Add WARN_ON?  Add both?
+> > 
+> > Do both then. __must_check annotations get ignored regularly, or
+> > "handled" like this:
+> > 
+> > if (...)
+> > 	// nothing we can do.
+> 
+> Ah, that gives you heavy spiked LART rights to the head of whomever does it
+> if he is wrong about it.  You should fail to load the module or something
+> like that if you are going to run half-broken without rfkill support.
+> 
+> I will add the WARN_ON.  __must_check will wait for Ivo's reply, as you
+> said, it is often ignored.
 
-While at it, flag when we are adding the first switch of a type, we will
-need that information later.
+I usually dislike WARN_ON, but like Johannes said, this one is a bug in the driver
+which must be fixed. When you submit the final version of the patch having
+the WARN_ON would be best.
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
----
- net/rfkill/rfkill.c |   27 ++++++++++++++++++++++++++-
- 1 files changed, 26 insertions(+), 1 deletions(-)
+I am however a fan on sparse annotation and using __must_check, but since you
+already stated that more functions might need it, it doesn't have to be in this patch
+and could wait for a later patch. (But it is fine if you want to add it in this patch as well,
+off course. ;) )
 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index c6f2f38..0a78e32 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -509,17 +509,42 @@ static struct class rfkill_class = {
- 	.dev_uevent	= rfkill_dev_uevent,
- };
- 
-+static int rfkill_check_duplicity(const struct rfkill *rfkill)
-+{
-+	struct rfkill *p;
-+	unsigned long seen[BITS_TO_LONGS(RFKILL_TYPE_MAX)];
-+
-+	memset(&seen, 0, sizeof(seen));
-+
-+	list_for_each_entry(p, &rfkill_list, node) {
-+		if (p == rfkill)
-+			return -EEXIST;
-+		set_bit(p->type, &seen);
-+	}
-+
-+	/* 0: first switch of its kind */
-+	return test_bit(rfkill->type, &seen);
-+}
-+
- static int rfkill_add_switch(struct rfkill *rfkill)
- {
-+	int error;
-+
- 	mutex_lock(&rfkill_mutex);
- 
-+	error = rfkill_check_duplicity(rfkill);
-+	if (error < 0)
-+		goto unlock_out;
-+
- 	rfkill_toggle_radio(rfkill, rfkill_states[rfkill->type], 0);
- 
- 	list_add_tail(&rfkill->node, &rfkill_list);
- 
-+	error = 0;
-+unlock_out:
- 	mutex_unlock(&rfkill_mutex);
- 
--	return 0;
-+	return error;
- }
- 
- static void rfkill_remove_switch(struct rfkill *rfkill)
--- 
-1.5.6.2
-
+Ivo
