@@ -1,61 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from agave.telenet-ops.be ([195.130.137.77]:41038 "EHLO
-	agave.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751819AbYG3SEg (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:46420 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750799AbYGWRlf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 14:04:36 -0400
-Message-ID: <4890AD2F.8030502@tvcablenet.be> (sfid-20080730_200440_233528_F84DA521)
-Date: Wed, 30 Jul 2008 20:04:31 +0200
-From: =?ISO-8859-1?Q?Fran=E7ois_Valenduc?=
-	<francois.valenduc@tvcablenet.be>
-MIME-Version: 1.0
+	Wed, 23 Jul 2008 13:41:35 -0400
+Date: Wed, 23 Jul 2008 14:41:29 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: Tomas Winkler <tomasw@gmail.com>,
-	Patrick McHardy <kaber@trash.net>,
-	David Miller <davem@davemloft.net>, akpm@linux-foundation.org,
-	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, netdev@vger.kernel.org,
-	jussi.kivilinna@mbnet.fi
-Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
-References: <4887550B.2070704@tvcablenet.be> <4887555A.30605@trash.net>	 <48875B8C.2090800@trash.net> <20080723.142147.61941255.davem@davemloft.net>	 <48884451.1090703@trash.net>	 <1ba2fa240807240317g15f6ba84h91b513cce75975e9@mail.gmail.com>	 <48885743.8030505@trash.net>	 <1ba2fa240807240435g36daa80at254144afffc39c32@mail.gmail.com>	 (sfid-20080724_133550_701095_354A4111) <1216899926.13587.51.camel@johannes.berg>
-In-Reply-To: <1216899926.13587.51.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH] rfkill: detect bogus double-registering
+Message-ID: <20080723174129.GB11009@khazad-dum.debian.net>
+References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br> <1216775046-9506-2-git-send-email-hmh@hmh.eng.br> <1216784519.13587.4.camel@johannes.berg> <20080723152759.GC4684@khazad-dum.debian.net> <1216830607.13587.20.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1216830607.13587.20.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg a =E9crit :
-> On Thu, 2008-07-24 at 14:35 +0300, Tomas Winkler wrote:
->
->  =20
->>>> Isn't this time to make 802.11 native?
->>>>        =20
->>> You mean by making these things real skb members? I hope you're
->>> not talking about the entire 48 bytes? :)
->>>      =20
->> I mean elevating 802.11 header to 802.3 level. Not doing 802.3 ->
->> 802.11 translation where not needed.
->>    =20
->
->
-> We've discussed that over and over and over and over again, and it's =
-not
-> going to fly since 802.11 throughout assumes that you have a two-addr=
-ess
-> data service to the upper layers.
->
-> Besides, making it 802.11 native doesn't help with the control
-> information at all.
->
-> johannes
->  =20
-It seems the patch you made an available at=20
-http://lkml.org/lkml/2008/7/29/153 solves my problem. DHCP works again=20
-if I apply it on kernel 2.6.27-rc1.
+On Wed, 23 Jul 2008, Johannes Berg wrote:
+> On Wed, 2008-07-23 at 12:27 -0300, Henrique de Moraes Holschuh wrote:
+> > On Wed, 23 Jul 2008, Johannes Berg wrote:
+> > > > +	list_for_each_entry(p, &rfkill_list, node) {
+> > > > +		if (p == rfkill)
+> > > > +			return -EEXIST;
+> > > > +		set_bit(p->type, &seen);
+> > > 
+> > > You should WARN_ON so it can get fixed.
+> > 
+> > I'd rather make rfkill_register __must_check, actually.  With or without
+> > WARN_ON.
+> > 
+> > In fact, lots of stuff in rfkill should be __must_check.  Ivo, what do you
+> > think?  Add __must_check?  Add WARN_ON?  Add both?
+> 
+> Do both then. __must_check annotations get ignored regularly, or
+> "handled" like this:
+> 
+> if (...)
+> 	// nothing we can do.
 
-=46ran=E7ois
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ah, that gives you heavy spiked LART rights to the head of whomever does it
+if he is wrong about it.  You should fail to load the module or something
+like that if you are going to run half-broken without rfkill support.
+
+I will add the WARN_ON.  __must_check will wait for Ivo's reply, as you
+said, it is often ignored.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
