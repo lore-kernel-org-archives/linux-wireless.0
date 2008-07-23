@@ -1,103 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47493
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1756857AbYGCHDW (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.190]:5106 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751187AbYGWS1L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:03:22 -0400
-Date: Thu, 03 Jul 2008 00:03:21 -0700 (PDT)
-Message-Id: <20080703.000321.262930039.davem@davemloft.net> (sfid-20080703_103229_659471_DB50C401)
-To: netdev@vger.kernel.org
-CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
-Subject: [PATCH 09/39]: pkt_sched: Kill stats_lock member of struct Qdisc.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 23 Jul 2008 14:27:11 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so932985nfc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 11:27:09 -0700 (PDT)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH] rfkill: add EPO lock to rfkill-input
+Date: Wed, 23 Jul 2008 20:44:24 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br> <1216775046-9506-5-git-send-email-hmh@hmh.eng.br>
+In-Reply-To: <1216775046-9506-5-git-send-email-hmh@hmh.eng.br>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200807232044.24531.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 23 July 2008, Henrique de Moraes Holschuh wrote:
+> Add software-based sanity to rfkill-input so that it can reproduce what
+> hardware-based EPO switches do, and lock down any further attempts to
+> UNBLOCK radios until the switch is deactivated.
+> 
+> This makes rfkill and rfkill-input extend the operation of an existing
+> wireless master kill switch that issues EV_SW SW_RFKILL_ALL OFF events to
+> all wireless devices in the system, even those that are not under hardware
+> or firmware control.
+> 
+> Since this is the expected operational behaviour for the master switch, the
+> EPO lock functionality is not optional.
+> 
+> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> ---
+>  net/rfkill/rfkill-input.c |   46 +++++++++++++-------------------------------
+>  net/rfkill/rfkill-input.h |    1 +
+>  net/rfkill/rfkill.c       |   36 ++++++++++++++++++++++++++++++++--
+>  3 files changed, 48 insertions(+), 35 deletions(-)
+> 
+> diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
+> index 273fb38..8e6781d 100644
+> --- a/net/rfkill/rfkill-input.c
+> +++ b/net/rfkill/rfkill-input.c
+> @@ -47,6 +47,8 @@ struct rfkill_task {
+>  enum rfkill_global_sched_op {
+>  	RFKILL_GLOBAL_OP_EPO = 0,
+>  	RFKILL_GLOBAL_OP_RESTORE,
+> +	RFKILL_GLOBAL_OP_UNLOCK,
+> +	RFKILL_GLOBAL_OP_UNBLOCK,
+>  };
 
-It is always equal to qdisc->dev_queue->lock
+As mentioned in the previous patch "rfkill: add master_switch_mode functionality"
+the above 2 new enums aren't allowed because they are blocked in the module
+init function.
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- include/net/sch_generic.h |    1 -
- net/sched/sch_api.c       |    9 ++++-----
- net/sched/sch_generic.c   |    1 -
- 3 files changed, 4 insertions(+), 7 deletions(-)
+>  static void rfkill_schedule_toggle(struct rfkill_task *task)
+>  {
+>  	unsigned long flags;
+> @@ -169,30 +161,19 @@ static DEFINE_RFKILL_TASK(rfkill_wlan, RFKILL_TYPE_WLAN);
+>  static DEFINE_RFKILL_TASK(rfkill_bt, RFKILL_TYPE_BLUETOOTH);
+>  static DEFINE_RFKILL_TASK(rfkill_uwb, RFKILL_TYPE_UWB);
+>  static DEFINE_RFKILL_TASK(rfkill_wimax, RFKILL_TYPE_WIMAX);
+> -static DEFINE_RFKILL_TASK(rfkill_wwan, RFKILL_TYPE_WWAN);
 
-diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
-index 1dce549..6bf63d9 100644
---- a/include/net/sch_generic.h
-+++ b/include/net/sch_generic.h
-@@ -43,7 +43,6 @@ struct Qdisc
- 	struct gnet_stats_basic	bstats;
- 	struct gnet_stats_queue	qstats;
- 	struct gnet_stats_rate_est	rate_est;
--	spinlock_t		*stats_lock;
- 	struct rcu_head 	q_rcu;
- 	int			(*reshape_fail)(struct sk_buff *skb,
- 					struct Qdisc *q);
-diff --git a/net/sched/sch_api.c b/net/sched/sch_api.c
-index a2e62b3..da3e1c8 100644
---- a/net/sched/sch_api.c
-+++ b/net/sched/sch_api.c
-@@ -500,7 +500,6 @@ qdisc_create(struct net_device *dev, struct netdev_queue *dev_queue,
- 
- 	sch->parent = parent;
- 
--	sch->stats_lock = &dev_queue->lock;
- 	if (handle == TC_H_INGRESS) {
- 		sch->flags |= TCQ_F_INGRESS;
- 		handle = TC_H_MAKE(TC_H_INGRESS, 0);
-@@ -518,7 +517,7 @@ qdisc_create(struct net_device *dev, struct netdev_queue *dev_queue,
- 	if (!ops->init || (err = ops->init(sch, tca[TCA_OPTIONS])) == 0) {
- 		if (tca[TCA_RATE]) {
- 			err = gen_new_estimator(&sch->bstats, &sch->rate_est,
--						sch->stats_lock,
-+						&sch->dev_queue->lock,
- 						tca[TCA_RATE]);
- 			if (err) {
- 				/*
-@@ -560,7 +559,7 @@ static int qdisc_change(struct Qdisc *sch, struct nlattr **tca)
- 	}
- 	if (tca[TCA_RATE])
- 		gen_replace_estimator(&sch->bstats, &sch->rate_est,
--			sch->stats_lock, tca[TCA_RATE]);
-+				      &sch->dev_queue->lock, tca[TCA_RATE]);
- 	return 0;
- }
- 
-@@ -850,7 +849,7 @@ static int tc_fill_qdisc(struct sk_buff *skb, struct Qdisc *q, u32 clid,
- 	q->qstats.qlen = q->q.qlen;
- 
- 	if (gnet_stats_start_copy_compat(skb, TCA_STATS2, TCA_STATS,
--			TCA_XSTATS, q->stats_lock, &d) < 0)
-+					 TCA_XSTATS, &q->dev_queue->lock, &d) < 0)
- 		goto nla_put_failure;
- 
- 	if (q->ops->dump_stats && q->ops->dump_stats(q, &d) < 0)
-@@ -1099,7 +1098,7 @@ static int tc_fill_tclass(struct sk_buff *skb, struct Qdisc *q,
- 		goto nla_put_failure;
- 
- 	if (gnet_stats_start_copy_compat(skb, TCA_STATS2, TCA_STATS,
--			TCA_XSTATS, q->stats_lock, &d) < 0)
-+					 TCA_XSTATS, &q->dev_queue->lock, &d) < 0)
- 		goto nla_put_failure;
- 
- 	if (cl_ops->dump_stats && cl_ops->dump_stats(q, cl, &d) < 0)
-diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
-index da709d1..6e7068c 100644
---- a/net/sched/sch_generic.c
-+++ b/net/sched/sch_generic.c
-@@ -484,7 +484,6 @@ struct Qdisc * qdisc_create_dflt(struct net_device *dev,
- 	sch = qdisc_alloc(dev_queue, ops);
- 	if (IS_ERR(sch))
- 		goto errout;
--	sch->stats_lock = &dev_queue->lock;
- 	sch->parent = parentid;
- 
- 	if (!ops->init || ops->init(sch, NULL) == 0)
--- 
-1.5.6
+Are all RFKILL_TYPE_WWAN users gone?
+In that case the define should disappear completely.
 
+Ivo
