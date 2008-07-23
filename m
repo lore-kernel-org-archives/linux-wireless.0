@@ -1,37 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:52713 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755310AbYGRQuA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 12:50:00 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: [PATCH] ath5k: don't enable MSI, we cannot handle it yet
-Date: Fri, 18 Jul 2008 18:49:24 +0200
-Cc: stable@kernel.org, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mickflemm@gmail.com
-References: <20080718162855.22182.97573.stgit@dv.roinet.com> <1216399487.18320.16.camel@dv>
-In-Reply-To: <1216399487.18320.16.camel@dv>
+Received: from nf-out-0910.google.com ([64.233.182.188]:62880 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750799AbYGWRrx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 13:47:53 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so922906nfc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 10:47:51 -0700 (PDT)
+To: Daniel Wagner <wagi@monom.org>
+Subject: Re: [PATCH v2] rt2x00mac: In error case stop netdev queue, free skb and return NETDEV_TX_OK
+Date: Wed, 23 Jul 2008 20:05:05 +0200
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <1216833421-29186-1-git-send-email-wagi@monom.org>
+In-Reply-To: <1216833421-29186-1-git-send-email-wagi@monom.org>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-15"
-Message-Id: <200807181849.25320.mb@bu3sch.de> (sfid-20080718_185005_980068_87E6D6D5)
+Message-Id: <200807232005.05656.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 18 July 2008 18:44:47 Pavel Roskin wrote:
-> On Fri, 2008-07-18 at 12:28 -0400, Pavel Roskin wrote:
-> > This fixes support for AR5006 chipset, which supports MSI
+On Wednesday 23 July 2008, Daniel Wagner wrote:
+> It is not allowed to use NETDEV_TX_BUSY in tx path anymore.
 > 
-> Sorry, I found Documentation/stable_kernel_rules.txt minutes after
-> sending the patch.  We need to get it to the Linus' tree first, then to
-> the stable tree.  I hope it won't take long.
+> Signed-off-by: Daniel Wagner <wagi@monom.org>
+> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+
+Thanks.
+
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+
+> ---
+> v2: - Return non fishy error values.
+>     - Use a exit_fail goto for the error path.
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00mac.c |   44 ++++++++++++++-----------------
+>  1 files changed, 20 insertions(+), 24 deletions(-)
 > 
-> To preempt possible questions: MSI is a nice thing, but we cannot enable
-> it without changing the interrupt handler.  If we do it, we break MSI
-> capable hardware.
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+> index 77af1df..bb0ce51 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+> @@ -37,6 +37,7 @@ static int rt2x00mac_tx_rts_cts(struct rt2x00_dev *rt2x00dev,
+>  	struct ieee80211_tx_info *rts_info;
+>  	struct sk_buff *skb;
+>  	int size;
+> +	int retval = 0;
+>  
+>  	if (tx_info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)
+>  		size = sizeof(struct ieee80211_cts);
+> @@ -44,9 +45,9 @@ static int rt2x00mac_tx_rts_cts(struct rt2x00_dev *rt2x00dev,
+>  		size = sizeof(struct ieee80211_rts);
+>  
+>  	skb = dev_alloc_skb(size + rt2x00dev->hw->extra_tx_headroom);
+> -	if (!skb) {
+> +	if (unlikely(!skb)) {
+>  		WARNING(rt2x00dev, "Failed to create RTS/CTS frame.\n");
+> -		return NETDEV_TX_BUSY;
+> +		return -ENOMEM;
+>  	}
+>  
+>  	skb_reserve(skb, rt2x00dev->hw->extra_tx_headroom);
+> @@ -82,12 +83,11 @@ static int rt2x00mac_tx_rts_cts(struct rt2x00_dev *rt2x00dev,
+>  				  frag_skb->data, size, tx_info,
+>  				  (struct ieee80211_rts *)(skb->data));
+>  
+> -	if (rt2x00queue_write_tx_frame(queue, skb)) {
+> +	retval = rt2x00queue_write_tx_frame(queue, skb);
+> +	if (retval)
+>  		WARNING(rt2x00dev, "Failed to send RTS/CTS frame.\n");
+> -		return NETDEV_TX_BUSY;
+> -	}
+>  
+> -	return NETDEV_TX_OK;
+> +	return retval;
+>  }
+>  
+>  int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+> @@ -106,11 +106,8 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>  	 * Note that we can only stop the TX queues inside the TX path
+>  	 * due to possible race conditions in mac80211.
+>  	 */
+> -	if (!test_bit(DEVICE_PRESENT, &rt2x00dev->flags)) {
+> -		ieee80211_stop_queues(hw);
+> -		dev_kfree_skb_any(skb);
+> -		return NETDEV_TX_OK;
+> -	}
+> +	if (!test_bit(DEVICE_PRESENT, &rt2x00dev->flags))
+> +		goto exit_fail;
+>  
+>  	/*
+>  	 * Determine which queue to put packet on.
+> @@ -141,15 +138,11 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>  	if ((tx_info->flags & (IEEE80211_TX_CTL_USE_RTS_CTS |
+>  			       IEEE80211_TX_CTL_USE_CTS_PROTECT)) &&
+>  	    !rt2x00dev->ops->hw->set_rts_threshold) {
+> -		if (rt2x00queue_available(queue) <= 1) {
+> -			ieee80211_stop_queue(rt2x00dev->hw, qid);
+> -			return NETDEV_TX_BUSY;
+> -		}
+> -
+> -		if (rt2x00mac_tx_rts_cts(rt2x00dev, queue, skb)) {
+> -			ieee80211_stop_queue(rt2x00dev->hw, qid);
+> -			return NETDEV_TX_BUSY;
+> -		}
+> +		if (rt2x00queue_available(queue) <= 1)
+> +			goto exit_fail;
+> +
+> +		if (rt2x00mac_tx_rts_cts(rt2x00dev, queue, skb))
+> +			goto exit_fail;
+>  	}
+>  
+>  	/*
+> @@ -164,15 +157,18 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>  		ieee80211hdr->seq_ctrl |= cpu_to_le16(intf->seqno);
+>  	}
+>  
+> -	if (rt2x00queue_write_tx_frame(queue, skb)) {
+> -		ieee80211_stop_queue(rt2x00dev->hw, qid);
+> -		return NETDEV_TX_BUSY;
+> -	}
+> +	if (rt2x00queue_write_tx_frame(queue, skb))
+> +		goto exit_fail;
+>  
+>  	if (rt2x00queue_threshold(queue))
+>  		ieee80211_stop_queue(rt2x00dev->hw, qid);
+>  
+>  	return NETDEV_TX_OK;
+> +
+> + exit_fail:
+> +	ieee80211_stop_queue(rt2x00dev->hw, qid);
+> +	dev_kfree_skb_any(skb);
+> +	return NETDEV_TX_OK;
+>  }
+>  EXPORT_SYMBOL_GPL(rt2x00mac_tx);
+>  
 
-Please include this into the patch changelog. It's highly confusing otherwise ;)
 
--- 
-Greetings Michael.
