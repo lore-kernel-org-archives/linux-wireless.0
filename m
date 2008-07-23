@@ -1,68 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:59946 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751011AbYGUNpU (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:48335 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750971AbYGWPc2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 09:45:20 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so509537ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 06:45:18 -0700 (PDT)
-Message-ID: <1ba2fa240807210645g6a18bc86p1f4323dbf7517d1f@mail.gmail.com> (sfid-20080721_154523_437914_6FE509D7)
-Date: Mon, 21 Jul 2008 16:45:17 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: drago01 <drago01@gmail.com>
-Subject: Re: [PATCH 0/3] Introducing IWLAGN
-Cc: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
-	linville@tuxdriver.com, johannes@sipsolutions.net,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240807210629x56ed2f33o7c0a45daddfbc6bf@mail.gmail.com>
+	Wed, 23 Jul 2008 11:32:28 -0400
+Message-ID: <48874F09.7060400@lwfinger.net> (sfid-20080723_173231_370872_A4F565A7)
+Date: Wed, 23 Jul 2008 10:32:25 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1216597215-19708-1-git-send-email-tomas.winkler@intel.com>
-	 <20080721012528.GA6623@khazad-dum.debian.net>
-	 <1ba2fa240807210018gbd31c18g59fc08f4a8b2a3ce@mail.gmail.com>
-	 <1ba2fa240807210537p66e55407l33662a43e39c106e@mail.gmail.com>
-	 <f6ca9fed0807210604j5ccb7f1cwb9aaf55132c8ed5c@mail.gmail.com>
-	 <1ba2fa240807210629x56ed2f33o7c0a45daddfbc6bf@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks
+ rtl8187
+References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>	 <200807221613.34434.herton@mandriva.com.br>	 <3ace41890807221525r67716ea0r251068df773fe53f@mail.gmail.com>	 <200807221940.20009.herton@mandriva.com.br> <4886AA3B.3000406@lwfinger.net>	 <4886C50E.6040304@lwfinger.net> <1216824917.13587.9.camel@johannes.berg>
+In-Reply-To: <1216824917.13587.9.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 21, 2008 at 4:29 PM, Tomas Winkler <tomasw@gmail.com> wrote:
-> On Mon, Jul 21, 2008 at 4:04 PM, drago01 <drago01@gmail.com> wrote:
->> On Mon, Jul 21, 2008 at 2:37 PM, Tomas Winkler <tomasw@gmail.com> wrote:
->>> On Mon, Jul 21, 2008 at 10:18 AM, Tomas Winkler <tomasw@gmail.com> wrote:
->>>> On Mon, Jul 21, 2008 at 4:25 AM, Henrique de Moraes Holschuh
->>>> <hmh@hmh.eng.br> wrote:
->>>>> On Mon, 21 Jul 2008, Tomas Winkler wrote:
->>>>>> This series of patches renames iwl4965 driver to iwlagn driver
->>>>>
->>>>> Maybe MODULE_ALIAS with the old name would be a good idea?
->>>>
->>>> I wasn't aware of this one I'll give it a try. Thanks
->>>
->>> It doesn't work much
->>> if I rename the module name to iwlagn.ko and just add
->>> MODULE_ALIAS("iwl4965")  or alias line in  /etc/modprobe.conf.  I've
->>> checked modules.alias it's updated.
->>> Still modprobe iwl4965 cannot catch it.
->>> So it's still will create mess when switching between to version of the kernel.
+Johannes Berg wrote:
+> On Wed, 2008-07-23 at 00:43 -0500, Larry Finger wrote:
+>> Johannes,
 >>
->> thats odd ...  just tested it with a webcam driver (m5602 added
->> MODULE_ALIAS("bisoncam") and it worked)
->> does modinfo iwlagn list the alias?
->
-> yes it does show the alias but modprobe fails with Module iwl4965 not
-> found. I did strace it's really reads the modules.alias but found
-> nothing
-> Hope I'm wasting my time on some stupid typo...just cannot find it :)
->
-> Tomas
+>> In the current wireless-testing (v2.6.26-rc9-14207-ga520bdb), rtl8187 is broken. 
+>> In most cases, it is unable to complete a connection. Occasionally, it will 
+>> authenticate and even get an IP using DHCP; however, only a few pings get 
+>> through to the AP before the connection fails completely.
+>>
+>> Using bisection, this problem was traced to:
+>>
+>> ==================================================
+>> commit 741b4fbc441dba885cc8f97a10e87f2acd04c5f2
+>> Author: Johannes Berg <johannes@sipsolutions.net>
+>> Date:   Thu Jul 10 11:21:26 2008 +0200
+>>
+>>      mac80211: fix TX sequence numbers
+> 
+>> The validity of the bisection was confirmed by reverse application of the patch. 
+>> The resulting driver worked.
+>>
+>> The appears that rtl8187 needs some kind of modification such as b43, b43legacy, 
+>> and rt2x00 got in the original patch. I'll be studying the changes to the other 
+>> drivers to see if I can find the problem, but I will appreciate your help when 
+>> you get a chance. Perhaps after your trip to Canada is over.
+> 
+> Oh, crap. If you look at the patch, it removes the sequence numbers for
+> non-TID frames, and puts them back into rt2x00 because I thought rt2x00
+> was the only driver that needed software sequence numbering. It looks
+> like rtl8187 and zd1211 might need that too, so we need to copy the
+> rt2x00 code that I put into that particular patch to those drivers.
 
-Okay I resolved the problem. I put iwlagn to blacklist as a little
-hack for development so it won't be loaded during boot. While for not
-aliases modprobe works even if the modules is in blacklist this is not
-the case for aliases.
+I tried something like that, but it didn't work. Maybe you can see what is wrong 
+here:
 
-Thanks  for the help. Now I can release the 3rd patch with rename.
-Tomas
 
->
+Index: wireless-testing/drivers/net/wireless/rtl8187.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl8187.h
++++ wireless-testing/drivers/net/wireless/rtl8187.h
+@@ -100,6 +100,7 @@ struct rtl8187_priv {
+  	struct usb_device *udev;
+  	u32 rx_conf;
+  	u16 txpwr_base;
++	u16 seqno;
+  	u8 asic_rev;
+  	u8 is_rtl8187b;
+  	enum {
+Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
++++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
+@@ -169,6 +169,7 @@ static int rtl8187_tx(struct ieee80211_h
+  {
+  	struct rtl8187_priv *priv = dev->priv;
+  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_hdr *ieee80211hdr = (struct ieee80211_hdr *)skb->data;
+  	unsigned int ep;
+  	void *buf;
+  	struct urb *urb;
+@@ -198,6 +199,14 @@ static int rtl8187_tx(struct ieee80211_h
+  		flags |= ieee80211_get_rts_cts_rate(dev, info)->hw_value << 19;
+  	}
+
++	/* XXX: This sequence is an attempt to match what happens in r2x00. */
++	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
++		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
++			priv->seqno += 0x10;
++		ieee80211hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
++		ieee80211hdr->seq_ctrl |= cpu_to_le16(priv->seqno);
++	}
++
+  	if (!priv->is_rtl8187b) {
+  		struct rtl8187_tx_hdr *hdr =
+  			(struct rtl8187_tx_hdr *)skb_push(skb, sizeof(*hdr));
