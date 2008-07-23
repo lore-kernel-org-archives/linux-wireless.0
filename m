@@ -1,112 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:43340 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753217AbYGORGS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 13:06:18 -0400
-Subject: Re: Some questions about missing rfkill details
-From: Dan Williams <dcbw@redhat.com>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <20080713122247.GA6963@khazad-dum.debian.net>
-References: <20080713122247.GA6963@khazad-dum.debian.net>
-Content-Type: text/plain
-Date: Tue, 15 Jul 2008 13:04:34 -0400
-Message-Id: <1216141474.6039.108.camel@localhost.localdomain> (sfid-20080715_190622_435067_EE7690F4)
-Mime-Version: 1.0
+Received: from yw-out-2324.google.com ([74.125.46.29]:35993 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753407AbYGWWCQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 18:02:16 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so1156810ywe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 15:02:15 -0700 (PDT)
+Message-ID: <1ba2fa240807231502t1c4ce7d5k9b8acbcaed4d166a@mail.gmail.com> (sfid-20080724_000221_248296_BD9E52A9)
+Date: Thu, 24 Jul 2008 01:02:15 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Theodore Tso" <tytso@mit.edu>, yi.zhu@intel.com,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: Potential iwlwifi locking problem in 2.6.26-git9
+In-Reply-To: <20080723214938.GA8034@mit.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <E1KLm0c-0002O6-RO@closure.thunk.org>
+	 <20080723214938.GA8034@mit.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2008-07-13 at 09:22 -0300, Henrique de Moraes Holschuh wrote:
-> I was a little burned out from rfkill work, and started looking at a certain
-> non-mac80211 wireless driver to see how it could be converted to use rfkill
-> (we already have many examples for mac80211).
-> 
-> The following doubts sprang to mind, I feel the answers to them should be
-> documented, but I am not sure I have the right answers, so I am asking the
-> wireless network experts ;-)
-> 
-> 1. For wireless network devices, the rfkill class should have as its parent
->    the main struct net_device for that wireless network device.  For
->    platform device drivers, it should have the platform device as its
->    parent.
-> 
->    Correct? Incorrect?
+On Thu, Jul 24, 2008 at 12:49 AM, Theodore Tso <tytso@mit.edu> wrote:
+> On Wed, Jul 23, 2008 at 05:36:30PM -0400, Theodore Ts'o wrote:
+>>
+>> Is this a new one?  I don't think I've seen this on LKML....
+>
+> The context of this was I had just booted to 2.6.26-git9, noted with
+> annoyance that that the iwl4965 driver needed a new microcode file, so
+> I popped in my EVDO card, downloaded the firmware, moved the firmware
+> into place, and then got the above error message.
+>
+> I've since noted that it seems to be utterly refusing to associate
+> with my wireless access point.  This was working just fine with
+> 2.6.26-git6 kernel, so it looks like a recent regression?  I just
+> noticed someone else had recently complained about a similar "refusal
+> to associate" with the iwl3945 driver.
 
-I _think_ so, yes.  Whatever driver actually handles the operation or
-notices the events should be the one that "owns" the rfkill device.  So
-for ipw2200 laptops where the GPIO pins are toggled (i.e.
-IPW_INTA_BIT_RF_KILL_DONE event in ipw_irq_tasklet()) the rfkill object
-should be owned by the ipw2200 device.  But the hp-wmi driver's rfkill
-object would be owned by it's platform device since the hp-wmi driver is
-what handles events from BIOS.
-
-> 2. We will probably benefit long-term from a guideline for naming the rfkill
->    switches.  Currently it is supposed to be a system-wide name, but that's
->    about all of it.
->    
->    Thus, what we have may not result on very user-friendly (or useful) names
->    at all.
-> 
->    It really needs a local part so that drivers that have more than one
->    rfkill class attached to them (typically, multi-radio devices or platform
->    devices) can differentiate them.  But that means names like "<platform
->    device name>_bluetooth_sw", "<platform_device_name>_wwan_sw" for platform
->    drivers, and something else for wireless network devices.
-> 
->    Any ideas of what we should be using, that will actually be useful for
->    userspace?
-
-Sounds like a good idea to at least add the type to the name for human
-readability.
-   
->    Userspace IS supposed to be able to use sysfs to find out what the parent
->    device is, regardless of the rfkill class name.  If it cannot, that
->    pretty much would make sysfs useless for device configuration through
->    classes.
-
-Right, since sysfs uses directory hierarchies, as long as the right
-sysfs links are set up then userspace should be able to determine the
-parent quite easily.
-
->    If we use the EEPROM MAC, should we document that userspace is to mostly
->    ignore the name and use the sysfs hierarchy to tie switches to their
->    parent devices?  And MACs can be changed, what should we do, then?
-
-I wouldn't use the EEPROM MAC at all.  I think adding the type to the
-name would be fine, but isn't strictly necessary.
-
->    Could we, instead of the MAC, use the main network interface name (and
->    rename the rfkill class if that name changes? How?), appending to it an
->    (optional?) small suffix for network devices with more than one
->    transmitter?  What should we use as the suffix?
-
-Ugh, I wouldn't use the interface name either.  I just don't think it's
-useful to get that specific with the name.
-
->    IMHO, we should also write down if we are to use names like "Mango Bango
->    Wireless Switch" or "mangobango_sw", etc.  I.e. a full naming guideline.
-
-If there's a name that includes spaces or whatnot, then that should be
-some sort of "description" property of the device in sysfs, not the
-actual device name.  The actual rfkill device name should be fairly
-simple but there's no requirement that it really be human-readable.
-
-I don't think we really need to expose additional properties like a
-description or location or anything yet.
-
->    I am not the right person to come up with answers and guidelines for the
->    above, so I am asking for comments and help.
-
-I would say something like "<type>_sw<X>":
-
-wwan_sw0
-wwan_sw1
-bluetooth_sw0
-wlan_sw0
-
-etc.  I just don't think we really need to be more specific than that,
-since sysfs provides all the hierarchy details automatically as long as
-the switch is parented to the right device in the driver.
-
-Dan
-
+I'm not sure but this can be connected to what is described in thread:
+'New: dhcp doesn't work with iwl4965'
+Tomas
