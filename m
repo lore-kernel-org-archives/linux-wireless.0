@@ -1,29 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34769
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752282AbYGBVcq (ORCPT
+Received: from smtp-out-41.synserver.de ([217.119.50.41]:1056 "HELO
+	smtp-out-41.synserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752439AbYGWKSc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2008 17:32:46 -0400
-Date: Wed, 02 Jul 2008 14:32:46 -0700 (PDT)
-Message-Id: <20080702.143246.54559924.davem@davemloft.net> (sfid-20080702_233252_075684_6DE2E748)
-To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-07-02
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080702201851.GA10272@tuxdriver.com>
-References: <20080702201851.GA10272@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 23 Jul 2008 06:18:32 -0400
+Date: Wed, 23 Jul 2008 12:18:27 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+To: Wang Chen <wangchen@cn.fujitsu.com>
+Cc: Alessandro Guido <ag@alessandroguido.name>,
+	David Miller <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] skge: resolve tx multiqueue bug
+Message-ID: <20080723101827.GA2236@gentoox2.trippelsdorf.de> (sfid-20080723_121838_214339_76F16D2E)
+References: <d4b984a30807210914nd4d0db5yb7b93ca5143ff0d5@mail.gmail.com> <20080721.092027.14394005.davem@davemloft.net> <d4b984a30807220254t1aaf6ac4q874329966511b0c5@mail.gmail.com> <20080723054039.GA2272@gentoox2.trippelsdorf.de> <4886F0C5.7040605@cn.fujitsu.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4886F0C5.7040605@cn.fujitsu.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 2 Jul 2008 16:18:51 -0400
-
-> A few stragglers for 2.6.26...
+On Wed, Jul 23, 2008 at 04:50:13PM +0800, Wang Chen wrote:
+> Markus Trippelsdorf said the following on 2008-7-23 13:40:
+> > On Tue, Jul 22, 2008 at 11:54:26AM +0200, Alessandro Guido wrote:
+> >> Got a WARNING this morning (2.6.26-05752-g93ded9b) and I think it's related.
+> > 
+> > Same thing here (latest git):
+> > 
+> > skge eth1: enabling interface
+> > skge eth1: disabling interface
+> > ------------[ cut here ]------------
+> > WARNING: at net/core/dev.c:1344 __netif_schedule+0x24/0x6d()
+> > Pid: 1904, comm: ip Not tainted 2.6.26-06077-gc010b2f #33
+> >  [<ffffffff8020b3eb>] system_call_after_swapgs+0x7b/0x80
+...
+> > ---[ end trace 92936ef183e09876 ]---
+> > skge eth1: enabling interface
+> > skge eth1: Link is up at 100 Mbps, full duplex, flow control both
+> > 
 > 
-> Let me know if there are problems!
+> Markus, please try this.
+> 
+> - Add netif_start_queue() in ->open()
+> - netif_carrier_*() is enough, remove netif_*_queue()
 
-Thanks John.  I'll pull this in as soon as Linus takes
-in the pull request I sent him yesterday.
+Unfortunately, your patch does not fix this. I still get the same warning.
+
+-- 
+Markus
