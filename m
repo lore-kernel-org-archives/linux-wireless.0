@@ -1,173 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3044 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755291AbYGNTiF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 15:38:05 -0400
-Date: Mon, 14 Jul 2008 15:23:02 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless-next-2.6 2008-07-14
-Message-ID: <20080714192302.GA2541@tuxdriver.com> (sfid-20080714_213816_040924_BD18F469)
+Received: from nf-out-0910.google.com ([64.233.182.191]:15970 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750959AbYGWMbE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 08:31:04 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so847530nfc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 05:31:03 -0700 (PDT)
+Message-ID: <488723FF.8070707@gmail.com> (sfid-20080723_143109_764460_67938113)
+Date: Wed, 23 Jul 2008 14:28:47 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "David S. Miller" <davem@davemloft.net>,
+	netdev <netdev@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: q == &noop_qdisc warning from 802.11 code
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+Hi,
 
-Here is one last(?) round of miscellaneous patches I hope to get into
-2.6.27.  There are mostly driver updates, including a sizable iwlwifi
-set of changes.
+I hit the warning from __netif_schedule:
 
-Please let me know if there are problems!
+wlan0: Trigger new scan to find an IBSS to join
+------------[ cut here ]------------
+WARNING: at net/core/dev.c:1334 __netif_schedule+0x6f/0x80()
+Modules linked in: ath5k arc4 ecb crypto_blkcipher cryptomgr crypto_algapi 
+mac80211 led_class usbhid cfg80211 ohci1394 hid ff_memless ieee1394 evdev 
+rtc_cmos floppy [last unloaded: ath5k]
+Pid: 4342, comm: ath5k_pci Not tainted 2.6.26-mm1_64 #429
 
-Thanks,
+Call Trace:
+  [<ffffffff8023b3ff>] warn_on_slowpath+0x5f/0x90
+  [<ffffffff802ac545>] ? check_object+0x235/0x270
+  [<ffffffff802aae00>] ? init_object+0x50/0x90
+  [<ffffffff802ad98d>] ? __slab_free+0x28d/0x360
+  [<ffffffff8054bea3>] ? wireless_send_event+0x173/0x310
+  [<ffffffffa009a843>] ? ath5k_hw_set_rx_filter+0x103/0x110 [ath5k]
+  [<ffffffffa009a9e0>] ? ath5k_hw_set_mcast_filter+0x50/0x60 [ath5k]
+  [<ffffffffa0098c23>] ? ath5k_configure_filter+0x1a3/0x200 [ath5k]
+  [<ffffffff804bcb1f>] __netif_schedule+0x6f/0x80
+  [<ffffffffa007b703>] ieee80211_scan_completed+0x243/0x300 [mac80211]
+  [<ffffffffa007b84f>] ieee80211_sta_scan_work+0x8f/0x210 [mac80211]
+  [<ffffffffa007b7c0>] ? ieee80211_sta_scan_work+0x0/0x210 [mac80211]
+  [<ffffffff8024dc90>] run_workqueue+0x70/0x120
+  [<ffffffff8024df47>] worker_thread+0xa7/0x120
+  [<ffffffff802521b0>] ? autoremove_wake_function+0x0/0x40
+  [<ffffffff8024dea0>] ? worker_thread+0x0/0x120
+  [<ffffffff80251df9>] kthread+0x49/0x90
+  [<ffffffff8020d549>] child_rip+0xa/0x11
+  [<ffffffff80251db0>] ? kthread+0x0/0x90
+  [<ffffffff8020d53f>] ? child_rip+0x0/0x11
 
-John
+---[ end trace bfbab62b1ce8da42 ]---
 
----
+What causes it? I did:
+# insmod  ath5k.ko
+# iwconfig wlan0 mode ad-hoc
+# iwconfig wlan0 channel 2 essid bubak
 
-Individual patches are available here:
+No link up, the link is still down:
+6: wmaster0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop qlen 1000
+     link/ieee802.11 00:0b:6b:80:f0:5d brd ff:ff:ff:ff:ff:ff
+7: wlan0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop qlen 1000
+     link/ether 00:0b:6b:80:f0:5d brd ff:ff:ff:ff:ff:ff
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
-
----
-
-The following changes since commit 79d16385c7f287a33ea771c4dbe60ae43f791b49:
-  David S. Miller (1):
-        netdev: Move atomic queue state bits into netdev_queue.
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
-
-Abhijeet Kolekar (2):
-      iwlwifi: Fix LEDs for 3945
-      iwlwifi: make index unsigned int for iwl_send_led_cmd
-
-Adel Gadllah (1):
-      iwl3965: remove useless network and duplicate checking
-
-Emmanuel Grumbach (4):
-      mac80211: Fix ieee80211_rx_reorder_ampdu: ignore QoS null packets
-      mac80211: dont add a STA which is not in the same IBSS
-      iwlwifi: fixes RTS / CTS support
-      iwlwifi: make iwl4965_mac_conf_tx in atomic context
-
-Esti Kummer (1):
-      iwlwifi: adding pci device ids to iwl_hw_card_ids
-
-Herton Ronaldo Krzesinski (1):
-      rtl8187: use different ANAPARAM*_OFF values for 8187B
-
-Ihar Hrachyshka (1):
-      rtl8187: Fixed section mismatch in rtl8187_dev.c
-
-Ivo van Doorn (4):
-      rt2x00: Fix NULL pointer error in adhoc/master mode
-      rt2x00: Add support for CTS protection in rt2x00lib
-      rt2x00: Reorganize beacon handling
-      rt2x00: Reset LED assoc status after firmware update
-
-Johannes Berg (9):
-      mac80211: make master netdev handling sane
-      mac80211: revamp virtual interface handling
-      mac80211: push interface checks down
-      mac80211: revamp beacon configuration
-      mac80211: fix RX sequence number check
-      wext: make sysfs bits optional and deprecate them
-      mac80211: fix TX sequence numbers
-      mac80211: fix struct ieee80211_tx_queue_params
-      mac80211 hwsim: fix endianness bug
-
-Michael Buesch (1):
-      ssb: Include dma-mapping.h
-
-Samuel Ortiz (1):
-      mac80211: power management wext hooks
-
-Tomas Winkler (8):
-      iwlwif: remove compilation warnings iwl_add_radiotap
-      iwlwifi: remove post associate work
-      iwlwifi: rs always set lq_sta->priv
-      iwlwifi: differentiate 4965 and 5000 hw ampdu queues number
-      iwlwifi: fix LED stall
-      iwlwifi: LED use correctly blink table
-      iwlwifi: unify 4965 and 5000 scanning code
-      iwlwifi: enable active scanning
-
-Zhu Yi (1):
-      iwlwifi: send TXPOWER command after a new RXON command
-
- Documentation/feature-removal-schedule.txt   |   10 +
- drivers/net/wireless/ath5k/base.c            |   13 +-
- drivers/net/wireless/b43/main.c              |   48 ++--
- drivers/net/wireless/b43/xmit.c              |    3 +-
- drivers/net/wireless/b43legacy/main.c        |   45 ++--
- drivers/net/wireless/b43legacy/xmit.c        |    3 +-
- drivers/net/wireless/iwlwifi/iwl-3945-led.c  |  146 ++++------
- drivers/net/wireless/iwlwifi/iwl-3945-led.h  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945.c      |   50 ++--
- drivers/net/wireless/iwlwifi/iwl-3945.h      |   20 +--
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h   |    1 +
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c   |    2 -
- drivers/net/wireless/iwlwifi/iwl-4965.c      |   42 +++-
- drivers/net/wireless/iwlwifi/iwl-5000-hw.h   |    1 +
- drivers/net/wireless/iwlwifi/iwl-5000.c      |   48 +++-
- drivers/net/wireless/iwlwifi/iwl-commands.h  |   30 ++-
- drivers/net/wireless/iwlwifi/iwl-core.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.h      |    5 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h       |   27 +--
- drivers/net/wireless/iwlwifi/iwl-led.c       |  207 ++++++--------
- drivers/net/wireless/iwlwifi/iwl-led.h       |    5 +-
- drivers/net/wireless/iwlwifi/iwl-rx.c        |   37 ++--
- drivers/net/wireless/iwlwifi/iwl-scan.c      |  103 ++++----
- drivers/net/wireless/iwlwifi/iwl-tx.c        |    8 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c  |  145 +---------
- drivers/net/wireless/iwlwifi/iwl4965-base.c  |  108 ++++----
- drivers/net/wireless/mac80211_hwsim.c        |    2 +-
- drivers/net/wireless/rt2x00/rt2400pci.c      |   89 +++----
- drivers/net/wireless/rt2x00/rt2500pci.c      |   90 +++----
- drivers/net/wireless/rt2x00/rt2500usb.c      |  154 ++++------
- drivers/net/wireless/rt2x00/rt2x00.h         |   37 +---
- drivers/net/wireless/rt2x00/rt2x00config.c   |    2 +
- drivers/net/wireless/rt2x00/rt2x00dev.c      |    9 +-
- drivers/net/wireless/rt2x00/rt2x00firmware.c |    8 +
- drivers/net/wireless/rt2x00/rt2x00lib.h      |    8 +
- drivers/net/wireless/rt2x00/rt2x00mac.c      |   40 ++-
- drivers/net/wireless/rt2x00/rt2x00queue.c    |   67 ++++-
- drivers/net/wireless/rt2x00/rt61pci.c        |  103 +++-----
- drivers/net/wireless/rt2x00/rt73usb.c        |  115 +++-----
- drivers/net/wireless/rtl8187_dev.c           |   23 +-
- drivers/net/wireless/rtl8187_rtl8225.c       |   21 ++-
- drivers/net/wireless/rtl8187_rtl8225.h       |   15 +-
- drivers/net/wireless/zd1211rw/zd_mac.c       |   22 +-
- include/linux/ssb/ssb.h                      |    1 +
- include/net/mac80211.h                       |   73 +++---
- net/core/net-sysfs.c                         |    4 +-
- net/mac80211/cfg.c                           |   36 +--
- net/mac80211/debugfs.c                       |   15 +-
- net/mac80211/debugfs_netdev.c                |   48 ++--
- net/mac80211/debugfs_netdev.h                |    5 -
- net/mac80211/ieee80211_i.h                   |   67 ++---
- net/mac80211/iface.c                         |  392 +++++++++++---------------
- net/mac80211/main.c                          |  171 ++++--------
- net/mac80211/mlme.c                          |  172 +++++-------
- net/mac80211/rc80211_pid_algo.c              |    8 +-
- net/mac80211/rx.c                            |   38 ++--
- net/mac80211/sta_info.c                      |   29 ++-
- net/mac80211/sta_info.h                      |    1 +
- net/mac80211/tx.c                            |  126 +++++---
- net/mac80211/util.c                          |    4 -
- net/mac80211/wext.c                          |   65 +++--
- net/wireless/Kconfig                         |   11 +
- 62 files changed, 1458 insertions(+), 1724 deletions(-)
-
-Omnibus patch available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2008-07-14.patch.bz2
-
--- 
-John W. Linville
-linville@tuxdriver.com
+Is this a mac80211 issue?
