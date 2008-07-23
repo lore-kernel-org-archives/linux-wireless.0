@@ -1,41 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.182]:34880 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752953AbYGDWcs (ORCPT
+Received: from agave.telenet-ops.be ([195.130.137.77]:43988 "EHLO
+	agave.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751385AbYGWJRa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jul 2008 18:32:48 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so648254ika.5
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Jul 2008 15:32:46 -0700 (PDT)
-To: linville@tuxdriver.com
-Subject: Re: Oops/Warning report of the week of July 4th 2008
-Date: Sat, 5 Jul 2008 00:38:49 +0200
-Cc: Arjan van de Ven <arjan@linux.intel.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <486EA0D6.2040504@linux.intel.com>
-In-Reply-To: <486EA0D6.2040504@linux.intel.com>
+	Wed, 23 Jul 2008 05:17:30 -0400
+Message-ID: <4886F727.6010301@tvcablenet.be> (sfid-20080723_111737_061390_64CD382D)
+Date: Wed, 23 Jul 2008 11:17:27 +0200
+From: =?ISO-8859-1?Q?Fran=E7ois_Valenduc?=
+	<francois.valenduc@tvcablenet.be>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200807050038.49712.IvDoorn@gmail.com> (sfid-20080705_003252_292958_550E5B15)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+CC: bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	netdev@vger.kernel.org, Patrick McHardy <kaber@trash.net>
+Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
+References: <bug-11144-10286@http.bugzilla.kernel.org/>	<20080722034850.dbbc5566.akpm@linux-foundation.org>	<4886E49D.6010700@tvcablenet.be> <20080723010522.389a948f.akpm@linux-foundation.org>
+In-Reply-To: <20080723010522.389a948f.akpm@linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-> Rank 12: flush_workqueue (oops)
-> 	Reported 39 times
-> 	Bug in the rt25xx driver passing NULL to the flush_workqueue() function
-> 	This oops was last seen in version 2.6.25.9, and first seen in 2.6.25.9.
-> 	More info: http://www.kerneloops.org/searchweek.php?search=flush_workqueue
-
-Hmm, interesting I hadn't received such reports yet..
-I am afraid this was caused by a patch which was send to 2.6.26 to fix a lockdep problem. :(
-
-John, earlier today I released the patch:
-	rt2x00: Use ieee80211_hw->workqueue again
-	http://article.gmane.org/gmane.linux.kernel.wireless.general/17305
-actually intended for 2.6.27, but if this bug means 2.6.26 might be crashing, it might
-be wiser to push it to 2.6.26.
-
-Ivo
+Andrew Morton a =E9crit :
+> On Wed, 23 Jul 2008 09:58:21 +0200 Fran__ois Valenduc <francois.valen=
+duc@tvcablenet.be> wrote:
+>
+>  =20
+>> P.S: why don't you want to use the bugzilla interface ?
+>>    =20
+>
+> Depends on the subsystem.  ACPI is 100% bugzilla-based, net people=20
+> prefer email, others are in-between.
+>
+> Plus for recently-occurring bugs it's best to knock them over via ema=
+il
+> without getting into bugzilla bureaucracy.  bugzilla is more
+> appropriate to longer-term bugs.
+>
+> And when the bug affects multiple subsystems, multiple
+> developers and we don't even know which subsystem introduced it, it i=
+s
+> much better to perform the diagnosis and repair via email.
+>
+>
+> I make a judgement call on each report.  Been doing it for a while,
+> don't get too many complaints ;)
+>
+>
+>  =20
+OK, thanks for the explanation. But do you have more ideas about the=20
+problem ?
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
