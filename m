@@ -1,61 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51697
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45238
 	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1758810AbYGQMSB (ORCPT
+	by vger.kernel.org with ESMTP id S1755187AbYGWUQH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 08:18:01 -0400
-Date: Thu, 17 Jul 2008 05:18:00 -0700 (PDT)
-Message-Id: <20080717.051800.100673230.davem@davemloft.net> (sfid-20080717_141807_402004_AF976035)
-To: netdev@vger.kernel.org
-CC: kaber@trash.net, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 26/31]: pkt_sched: Rework {sch,tbf}_tree_lock().
+	Wed, 23 Jul 2008 16:16:07 -0400
+Date: Wed, 23 Jul 2008 13:16:07 -0700 (PDT)
+Message-Id: <20080723.131607.79681752.davem@davemloft.net> (sfid-20080723_221612_258009_860821BE)
+To: jarkao2@gmail.com
+Cc: peterz@infradead.org, Larry.Finger@lwfinger.net, kaber@trash.net,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, mingo@redhat.com
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+ __netif_schedule+0x2c/0x98()
 From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080723114914.GF4561@ff.dom.local>
+References: <1216810696.7257.175.camel@twins>
+	<20080723113519.GE4561@ff.dom.local>
+	<20080723114914.GF4561@ff.dom.local>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Jarek Poplawski <jarkao2@gmail.com>
+Date: Wed, 23 Jul 2008 11:49:14 +0000
 
-Make sch_tree_lock() lock the qdisc's root.  All of the
-users hold the RTNL semaphore and the root qdisc is not
-changing.
+> On Wed, Jul 23, 2008 at 11:35:19AM +0000, Jarek Poplawski wrote:
+> > On Wed, Jul 23, 2008 at 12:58:16PM +0200, Peter Zijlstra wrote:
+> ...
+> > > When I look at the mac802.11 code in ieee80211_tx_pending() it looks
+> > > like it can do with just one lock at a time, instead of all - but I
+> > > might be missing some obvious details.
+> > > 
+> > > So I guess my question is, is netif_tx_lock() here to stay, or is the
+> > > right fix to convert all those drivers to use __netif_tx_lock() which
+> > > locks only a single queue?
+> > > 
+> > 
+> > It's a new thing mainly for new hardware/drivers, and just after
+> > conversion (older drivers effectively use __netif_tx_lock()), so it'll
+> > probably stay for some time until something better is found. David,
+> > will tell the rest, I hope.
+> 
+> ...And, of course, these new drivers should also lock a single queue
+> where possible.
 
-Implement tbf_tree_{lock,unlock}() simply in terms of
-sch_tree_{lock,unlock}().
+It isn't going away.
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- include/net/sch_generic.h |   16 ++++++++++++----
- 1 files changed, 12 insertions(+), 4 deletions(-)
-
-diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
-index 3cc4b5c..60e1e9f 100644
---- a/include/net/sch_generic.h
-+++ b/include/net/sch_generic.h
-@@ -183,10 +183,18 @@ static inline struct net_device *qdisc_dev(struct Qdisc *qdisc)
- extern void qdisc_lock_tree(struct net_device *dev);
- extern void qdisc_unlock_tree(struct net_device *dev);
- 
--#define sch_tree_lock(q)	qdisc_lock_tree(qdisc_dev(q))
--#define sch_tree_unlock(q)	qdisc_unlock_tree(qdisc_dev(q))
--#define tcf_tree_lock(tp)	qdisc_lock_tree(qdisc_dev((tp)->q))
--#define tcf_tree_unlock(tp)	qdisc_unlock_tree(qdisc_dev((tp)->q))
-+static inline void sch_tree_lock(struct Qdisc *q)
-+{
-+	spin_lock_bh(qdisc_root_lock(q));
-+}
-+
-+static inline void sch_tree_unlock(struct Qdisc *q)
-+{
-+	spin_unlock_bh(qdisc_root_lock(q));
-+}
-+
-+#define tcf_tree_lock(tp)	sch_tree_lock((tp)->q)
-+#define tcf_tree_unlock(tp)	sch_tree_unlock((tp)->q)
- 
- extern struct Qdisc noop_qdisc;
- extern struct Qdisc_ops noop_qdisc_ops;
--- 
-1.5.6.2.255.gbed62
-
+There will always be a need for a "stop all the TX queues" operation.
