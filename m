@@ -1,209 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4459 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754435AbYGBUrH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2008 16:47:07 -0400
-Date: Wed, 2 Jul 2008 16:26:53 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-next-2.6 2008-07-02
-Message-ID: <20080702202653.GA10719@tuxdriver.com> (sfid-20080702_224716_912337_86F5F84A)
-References: <20080630215651.GA666@tuxdriver.com> <20080702193710.GA4682@tuxdriver.com>
+Received: from yw-out-2324.google.com ([74.125.46.29]:61527 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751840AbYGWJ3x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 05:29:53 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so984580ywe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 02:29:52 -0700 (PDT)
+Date: Wed, 23 Jul 2008 09:35:00 +0000
+From: Jarek Poplawski <jarkao2@gmail.com>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
+	kaber@trash.net, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	mingo@redhat.com
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+	__netif_schedule+0x2c/0x98()
+Message-ID: <20080723093459.GC4561@ff.dom.local> (sfid-20080723_113002_243487_9A4C7FBA)
+References: <20080722.160409.216536011.davem@davemloft.net> <20080723062036.GA4561@ff.dom.local> <20080723.005921.113868915.davem@davemloft.net> <20080723085452.GB4561@ff.dom.local> <1216803786.7257.146.camel@twins>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20080702193710.GA4682@tuxdriver.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1216803786.7257.146.camel@twins>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 02, 2008 at 03:37:10PM -0400, John W. Linville wrote:
-> On Mon, Jun 30, 2008 at 05:56:51PM -0400, John W. Linville wrote:
->=20
-> >       iwlwifi: fix incorrect 5GHz rates reported in monitor mode
->=20
-> >       iwlwifi: drop skb silently for Tx request in monitor mode
->=20
-> It looks like these two are appropriate for 2.6.26.  Since you
-> haven't pulled this yet, I'll push them that way, drop them from
-> wireless-next-2.6, and send a new pull request.
+On Wed, Jul 23, 2008 at 11:03:06AM +0200, Peter Zijlstra wrote:
+> On Wed, 2008-07-23 at 08:54 +0000, Jarek Poplawski wrote:
+> > On Wed, Jul 23, 2008 at 12:59:21AM -0700, David Miller wrote:
+> > > From: Jarek Poplawski <jarkao2@gmail.com>
+> > > Date: Wed, 23 Jul 2008 06:20:36 +0000
+> > > 
+> > > > PS: if there is nothing new in lockdep the classical method would
+> > > > be to change this static array:
+> > > > 
+> > > > static struct lock_class_key
+> > > > netdev_xmit_lock_key[ARRAY_SIZE(netdev_lock_type)];
+> > > > 
+> > > > to
+> > > > 
+> > > > static struct lock_class_key
+> > > > netdev_xmit_lock_key[ARRAY_SIZE(netdev_lock_type)][MAX_NUM_TX_QUEUES];
+> > > > 
+> > > > and set lockdep classes per queue as well. (If we are sure we don't
+> > > > need lockdep subclasses anywhere this could be optimized by using
+> > > > one lock_class_key per 8 queues and spin_lock_nested()).
+> > > 
+> > > Unfortunately MAX_NUM_TX_QUEUES is USHORT_MAX, so this isn't really
+> > > a feasible approach.
+> > 
+> > Is it used by real devices already? Maybe for the beginning we could
+> > start with something less?
+> > 
+> > > spin_lock_nested() isn't all that viable either, as the subclass
+> > > limit is something like 8.
+> > 
+> > This method would need to do some additional counting: depending of
+> > a queue number each 8 subsequent queues share (are set to) the same
+> > class and their number mod 8 gives the subqueue number for
+> > spin_lock_nested().
+> > 
+> > I'll try to find if there is something new around this in lockdep.
+> > (lockdep people added to CC.)
+> 
+> There isn't.
+> 
+> Is there a static data structure that the driver needs to instantiate to
+> 'create' a queue? Something like:
+> 
+> /* this imaginary e1000 hardware has 16 hardware queues */
+> static struct net_tx_queue e1000e_tx_queues[16]; 
 
-NOTE: This is the same as the request posted on 2008-06-30 except for
-dropping two iwlwifi patches that were sent for 2.6.26 instead.
+I guess, not.
 
-Dave,
+Then, IMHO, we could be practical and simply skip lockdep validation
+for "some" range of locks: e.g. to set the table for the first 256
+queues only, and to do e.g. __raw_spin_lock() for bigger numbers. (If
+there are any bad locking patterns this should be enough for checking.)
 
-Here is another slew of updates for 2.6.27.  The bulk of this batch is
-for iwlwifi, with some mac80211 and other bits thrown-in.
-
-Let me know if there are problems!
-
-Thanks,
-
-John
-
----
-
-Individual patches are available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2=
-=2E6/
----
-
-The following changes since commit 28f49d8fec19833672a6a813bfde0068fee5=
-0bc9:
-  David S. Miller (1):
-        Merge branch 'master' of master.kernel.org:/.../linville/wirele=
-ss-next-2.6
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-=
-2.6.git master
-
-Abhijeet Kolekar (2):
-      iwlwifi : Patch adds rfkill subsystem for 3945
-      iwlwifi: Remove unnecessary code
-
-Adel Gadllah (3):
-      iwlwifi: fix rfkill deps and remove input device usage
-      b43/b43legacy: use RFKILL_STATE_UNBLOCKED instead of RFKILL_STATE=
-_ON
-      b43/b43legacy: add RFKILL_STATE_HARD_BLOCKED support
-
-Adrian Bunk (1):
-      build algorithms into the mac80211 module
-
-Assaf Krauss (2):
-      mac80211: add beacon timestamp to beacon template in IBSS
-      iwlwifi: adjust TSF in IBSS
-
-Emmanuel Grumbach (12):
-      mac80211: add last beacon time in scan list
-      iwlwifi: better station table maintenance
-      iwlwifi: add REPLY_TX_POWER_DBM_CMD to get_cmd_string
-      iwlwifi: send ADD_STA before RXON with assoc bit
-      iwlwifi: move RX stats to core, and move temperature to handler
-      iwlwifi: don't send REPLY_REMOVE_ALL_STA upon exit
-      iwlwifi: move RX handlers to iwl-rx.c
-      iwlwifi: remove useless network and duplicate checking
-      iwlwifi: setup compressed BA handler
-      iwlwifi: don't bring up interface if RF-kill avoids radio
-      iwlwifi: blocking mac_start until uCode is complete
-      iwlwifi: clean up HW RF-kill state machine and restarts
-
-Ester Kummer (1):
-      mac80211: removing duplicated parsing of information elements
-
-Gregory Greenman (1):
-      iwlwifi: configure uCode to use open loop tx power algorithm
-
-Johannes Berg (3):
-      mac80211: get rid of function pointers in TX path
-      mac80211: get rid of function pointers in RX path
-      mac80211: rework debug settings and make debugging safer
-
-John W. Linville (1):
-      iwl-rfkill.c: correct 'recieved' typo
-
-Larry.Finger@lwfinger.net (1):
-      p54: Add quality output to iwlist and iwconfig
-
-Mohamed Abbas (1):
-      iwlwifi: keep the STATUS_EXIT_PENDING flag till the end of down f=
-low
-
-Pavel Roskin (3):
-      hostap: don't skip any headers in hostap_80211_header_parse()
-      hostap: add radiotap support in monitor mode
-      hostap: use radiotap headers by default
-
-Rick Farrington (1):
-      iwlwifi: fix incorrect monitor mode operation
-
-Ron Rindjunsky (6):
-      iwlwifi: use iwl_is_associated when possible
-      iwlwifi: move rx aggregation functions to iwl-rx.c
-      iwlwifi: remove obsolete lq_ready use
-      iwlwifi: unite common settings of HW params
-      iwlwifi: control 11n capabilities through module param
-      iwlwifi: eliminate iwl4965_mac_get_tsf
-
-Stefanik G=E1bor (1):
-      iwlwifi: enable packet injection for iwl3945
-
-Tomas Winkler (5):
-      mac80211: add spectrum capabilities
-      mac80211: fix warning: unused variable invoke_tx_handlers
-      iwlwifi: Add eeprom version to the version file in sysfs
-      iwlwifi: fix IBSS association flow
-      iwlwifi: fix 4965 uCode load
-
-Yi Zhu (1):
-      mac80211: add MAC80211_VERBOSE_SPECT_MGMT_DEBUG Kconfig option
-
-Zhu Yi (2):
-      iwlwifi: fix iwl4965 temperature callback calibration issue
-      iwl3945: remove RFKILL_STATE_HARD_BLOCKED warnings
-
- drivers/net/wireless/b43/rfkill.c             |   20 +-
- drivers/net/wireless/b43legacy/rfkill.c       |   20 +-
- drivers/net/wireless/hostap/hostap_80211_rx.c |   21 +
- drivers/net/wireless/hostap/hostap_hw.c       |    1 +
- drivers/net/wireless/hostap/hostap_ioctl.c    |    5 +-
- drivers/net/wireless/hostap/hostap_main.c     |   20 +-
- drivers/net/wireless/hostap/hostap_wlan.h     |   14 +-
- drivers/net/wireless/iwlwifi/Kconfig          |    1 -
- drivers/net/wireless/iwlwifi/iwl-3945.h       |   25 +
- drivers/net/wireless/iwlwifi/iwl-4965-rs.c    |   22 +-
- drivers/net/wireless/iwlwifi/iwl-4965-rs.h    |    8 -
- drivers/net/wireless/iwlwifi/iwl-4965.c       |  995 +----------------=
---------
- drivers/net/wireless/iwlwifi/iwl-5000.c       |   27 +-
- drivers/net/wireless/iwlwifi/iwl-calib.c      |    4 +-
- drivers/net/wireless/iwlwifi/iwl-calib.h      |    4 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h   |   12 +-
- drivers/net/wireless/iwlwifi/iwl-core.c       |   63 ++-
- drivers/net/wireless/iwlwifi/iwl-core.h       |   17 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h        |   20 +-
- drivers/net/wireless/iwlwifi/iwl-hcmd.c       |    1 +
- drivers/net/wireless/iwlwifi/iwl-rfkill.c     |   41 +-
- drivers/net/wireless/iwlwifi/iwl-rfkill.h     |    2 -
- drivers/net/wireless/iwlwifi/iwl-rx.c         |  856 +++++++++++++++++=
-++++
- drivers/net/wireless/iwlwifi/iwl-sta.c        |  149 +++--
- drivers/net/wireless/iwlwifi/iwl-sta.h        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-tx.c         |  143 ++++
- drivers/net/wireless/iwlwifi/iwl3945-base.c   |  245 +++++--
- drivers/net/wireless/iwlwifi/iwl4965-base.c   |  439 ++++--------
- drivers/net/wireless/p54/p54common.c          |    1 +
- include/net/mac80211.h                        |    5 +
- net/mac80211/Kconfig                          |  162 +++--
- net/mac80211/Makefile                         |   18 +-
- net/mac80211/ieee80211_i.h                    |    6 +
- net/mac80211/iface.c                          |    6 +-
- net/mac80211/main.c                           |   35 +-
- net/mac80211/mesh_pathtbl.c                   |    1 -
- net/mac80211/mlme.c                           |  426 +++++------
- net/mac80211/rate.h                           |    4 +-
- net/mac80211/rc80211_pid_algo.c               |   10 -
- net/mac80211/rx.c                             |  203 ++----
- net/mac80211/sta_info.c                       |    2 +
- net/mac80211/tx.c                             |   77 +-
- net/mac80211/wep.c                            |   13 +-
- net/mac80211/wme.c                            |    1 -
- net/mac80211/wpa.c                            |   28 +-
- 45 files changed, 2042 insertions(+), 2133 deletions(-)
-
-Omnibus patch available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2=
-=2E6-2008-07-02.patch.bz2
---=20
-John W. Linville
-linville@tuxdriver.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Jarek P.
