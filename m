@@ -1,39 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23678 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750860AbYGKD4s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 23:56:48 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 00/14] iwlwifi driver 07/11 updates
-Date: Fri, 11 Jul 2008 11:53:28 +0800
-Message-Id: <1215748422-12672-1-git-send-email-yi.zhu@intel.com> (sfid-20080711_055652_394900_DA6E20F5)
+Received: from nf-out-0910.google.com ([64.233.182.188]:53553 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752029AbYGWQpf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 12:45:35 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so906189nfc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 09:45:33 -0700 (PDT)
+To: Daniel Wagner <wagi@monom.org>
+Subject: Re: [PATCH] rt2x00mac: In error case stop netdev queue, free skb and return NETDEV_TX_OK
+Date: Wed, 23 Jul 2008 19:02:46 +0200
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <1216805279-19149-1-git-send-email-wagi@monom.org> <200807231822.04895.IvDoorn@gmail.com> <48875EE5.3060303@monom.org>
+In-Reply-To: <48875EE5.3060303@monom.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200807231902.47026.IvDoorn@gmail.com> (sfid-20080723_184538_767681_1E371855)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Wednesday 23 July 2008, Daniel Wagner wrote:
+> Ivo van Doorn wrote:
+> > On Wednesday 23 July 2008, Daniel Wagner wrote:
+> >> It is not allowed to use NETDEV_TX_BUSY in tx path anymore.
+> > 
+> > If not, then why is mac80211 checking and handling the return value
+> > and is tx() still a function returning an int. mac80211 is actually requeueing
+> > the frame when the hardware fails to send it, so why should that be completely blocked?
+> 
+> Well, I might be completely wrong here. I got this idea from following mail on netdev:
+> http://marc.info/?l=linux-wireless&m=121025252321824&w=2
 
-This patch series of iwlwifi driver includes some LED fix and cleanup.
-It also increased the iwlwifi version number to 1.3.27. After it is
-applied, users need to download and use the new 4965 firmware
-iwlwifi-4965-ucode-228.57.2.21.tgz we just released at
-http://intellinuxwireless.org/?n=Downloads
+Hmm, well Johannes just indicated that the code I mentioned earlier will be removed,
+in that case I am fine with a patch like this, however with a few adjustments. ;)
+
+> >> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
+> >> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+> >> @@ -46,7 +46,7 @@ static int rt2x00mac_tx_rts_cts(struct rt2x00_dev *rt2x00dev,
+> >>  	skb = dev_alloc_skb(size + rt2x00dev->hw->extra_tx_headroom);
+> >>  	if (!skb) {
+> >>  		WARNING(rt2x00dev, "Failed to create RTS/CTS frame.\n");
+> >> -		return NETDEV_TX_BUSY;
+> >> +		return -1;
+> > 
+> > I am kind of missing the point here, this patch seems to come down to:
+> > 	We can't return TX_BUSY so we return a random other value
+> 
+> Unfortunately yes. The last return in this function is still NETDEV_TX_OK. My idea
+> was to return 0 on success in error -1. Is this not the expected normal
+> 'typeless' return behavior of a function, no? 
+
+Please make it a decent -E... error code then. Looks far less obscure then -1.
+
+Also could you make the exit code with
+
+	ieee80211_stop_queue(rt2x00dev->hw, qid);
+	dev_kfree_skb_any(skb);
+	return NETDEV_TX_OK;
+
+and exit_fail goto?
+
+Saves a lot of duplicate code. ;)
 
 Thanks,
--yi
 
-[PATCH 01/14] iwl3965: remove useless network and duplicate checking
-[PATCH 02/14] iwlwifi: adding pci device ids to iwl_hw_card_ids
-[PATCH 03/14] iwlwifi: fixes RTS / CTS support
-[PATCH 04/14] iwlwifi: remove post associate work
-[PATCH 05/14] iwlwifi: rs always set lq_sta->priv
-[PATCH 06/14] iwlwifi: make iwl4965_mac_conf_tx in atomic context
-[PATCH 07/14] iwlwifi: differentiate 4965 and 5000 hw ampdu queues number
-[PATCH 08/14] iwlwifi: fix LED stall
-[PATCH 09/14] iwlwifi: LED use correctly blink table
-[PATCH 10/14] iwlwifi: unify 4965 and 5000 scanning code
-[PATCH 11/14] iwlwifi: enable active scanning
-[PATCH 12/14] iwlwifi: send TXPOWER command after a new RXON command
-[PATCH 13/14] iwlwifi: Fix LEDs for 3945
-[PATCH 14/14] iwlwifi: make index unsigned int for iwl_send_led_cmd
+Ivo
