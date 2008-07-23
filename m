@@ -1,45 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:61714 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751881AbYGASUk (ORCPT
+Received: from smtp.wellnetcz.com ([212.24.148.102]:45053 "EHLO
+	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752486AbYGWLUa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 14:20:40 -0400
-Message-ID: <486A75C0.3010306@lwfinger.net> (sfid-20080701_202044_414320_C1C99C30)
-Date: Tue, 01 Jul 2008 13:21:52 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Buesch <mb@bu3sch.de>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
-References: <6cf6b73e0807010255x1f2d8a21m8ed3e712012ea757@mail.gmail.com> <200807011227.15805.mb@bu3sch.de> <20080701143439.GA6962@khazad-dum.debian.net> <1214923097.3462.0.camel@johannes.berg> <20080701165036.GB6962@khazad-dum.debian.net> <1214931676.3462.5.camel@johannes.berg> <486A65F5.5030909@lwfinger.net> <20080701173502.GB24605@khazad-dum.debian.net>
-In-Reply-To: <20080701173502.GB24605@khazad-dum.debian.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 23 Jul 2008 07:20:30 -0400
+From: Jiri Slaby <jirislaby@gmail.com>
+To: linville@tuxdriver.com
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net, Jiri Slaby <jirislaby@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: [PATCH 1/3] Ath5k: fix beacon-update deadlock
+Date: Wed, 23 Jul 2008 13:17:33 +0200
+Message-Id: <1216811855-9387-1-git-send-email-jirislaby@gmail.com> (sfid-20080723_132034_536620_680EA458)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Henrique de Moraes Holschuh wrote:
-> On Tue, 01 Jul 2008, Larry Finger wrote:
->> On my HP laptop using the RFKILL code currently in wireless-testing,  
->> sliding the "Wireless switch" results in b43_rfkill_poll being called.  
-> 
-> Can you confirm (remove rfkill-input, hp-wmi, and anything else that could
-> mess with the results) that the HP laptop wireless switch is wired directly
-> to that b43 input pin?
-> 
-> Is it wired to anything else? e.g. can hp-wmi see that switch?
+Commit 9d139c810a2aa17365cc548d0cd2a189d8433c65 introduced
+AA deadlock -- ath5k_config_interface(); holds sc->lock
+and it calls ath5k_beacon_update(); which tries to grab the
+lock again.
 
-I removed rfkill_input and toggled the switch off - b43 reported that 
-the hardware switch was set to DISABLED, but the light remained on. 
-When the switch was turned on, b43 reported that it was ENABLED. It 
-certainly seems that the switch is wired to some pin on the PCIe 
-connector used by my BCM4312.
+Don't grab the lock in beacon update, since only caller is
+config iface for now.
 
- From what I know, hp-wmi is a Windows process - when I need to use 
-Windows, I go to a different computer.
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+---
+ drivers/net/wireless/ath5k/base.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 7273e9f..898a969 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -3065,8 +3065,6 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 
+ 	ath5k_debug_dump_skb(sc, skb, "BC  ", 1);
+ 
+-	mutex_lock(&sc->lock);
+-
+ 	if (sc->opmode != IEEE80211_IF_TYPE_IBSS) {
+ 		ret = -EIO;
+ 		goto end;
+@@ -3081,9 +3079,7 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		ath5k_beacon_config(sc);
+ 		mmiowb();
+ 	}
+-
+ end:
+-	mutex_unlock(&sc->lock);
+ 	return ret;
+ }
+ 
+-- 
+1.5.6.2
+
