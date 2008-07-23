@@ -1,103 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:38668 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751050AbYGHUrf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 16:47:35 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so1676401waf.23
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2008 13:47:35 -0700 (PDT)
-Subject: [PATCH 6/6] mac80211: remove ieee80211_get_hdrlen
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 08 Jul 2008 13:47:24 -0700
-Message-Id: <1215550044.476.44.camel@brick> (sfid-20080708_224738_278729_BE0656B6)
-Mime-Version: 1.0
+Received: from cn.fujitsu.com ([222.73.24.84]:62350 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1750721AbYGWIvz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 04:51:55 -0400
+Message-ID: <4886F0C5.7040605@cn.fujitsu.com> (sfid-20080723_105200_492188_52EE8D45)
+Date: Wed, 23 Jul 2008 16:50:13 +0800
+From: Wang Chen <wangchen@cn.fujitsu.com>
+MIME-Version: 1.0
+To: Markus Trippelsdorf <markus@trippelsdorf.de>
+CC: Alessandro Guido <ag@alessandroguido.name>,
+	David Miller <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [PATCH] skge: resolve tx multiqueue bug
+References: <d4b984a30807210914nd4d0db5yb7b93ca5143ff0d5@mail.gmail.com> <20080721.092027.14394005.davem@davemloft.net> <d4b984a30807220254t1aaf6ac4q874329966511b0c5@mail.gmail.com> <20080723054039.GA2272@gentoox2.trippelsdorf.de>
+In-Reply-To: <20080723054039.GA2272@gentoox2.trippelsdorf.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All users have been moved over to the version taking a le16 frame control
-rather than a cpu-endian value.
+Markus Trippelsdorf said the following on 2008-7-23 13:40:
+> On Tue, Jul 22, 2008 at 11:54:26AM +0200, Alessandro Guido wrote:
+>> Got a WARNING this morning (2.6.26-05752-g93ded9b) and I think it's related.
+> 
+> Same thing here (latest git):
+> 
+> skge eth1: enabling interface
+> skge eth1: disabling interface
+> ------------[ cut here ]------------
+> WARNING: at net/core/dev.c:1344 __netif_schedule+0x24/0x6d()
+> Pid: 1904, comm: ip Not tainted 2.6.26-06077-gc010b2f #33
+> 
+> Call Trace:
+>  [<ffffffff8022e5f4>] warn_on_slowpath+0x4c/0x87
+>  [<ffffffff802fc5cb>] delay_tsc+0x0/0x55
+>  [<ffffffff802fc5cb>] delay_tsc+0x0/0x55
+>  [<ffffffff802fc5e7>] delay_tsc+0x1c/0x55
+>  [<ffffffff8037e2ee>] gm_phy_write+0x50/0x90
+>  [<ffffffff8037e2f8>] gm_phy_write+0x5a/0x90
+>  [<ffffffff8037f03f>] skge_led+0x1fb/0x20b
+>  [<ffffffff804202e8>] __netif_schedule+0x24/0x6d
+>  [<ffffffff80381298>] skge_down+0x440/0x4cf
+>  [<ffffffff803814be>] skge_change_mtu+0x3d/0x61
+>  [<ffffffff80420775>] dev_set_mtu+0x46/0x79
+>  [<ffffffff80427a51>] do_setlink+0x1c5/0x31f
+>  [<ffffffff804287d3>] rtnl_newlink+0x2b9/0x3e3
+>  [<ffffffff804285a8>] rtnl_newlink+0x8e/0x3e3
+>  [<ffffffff80428d69>] rtnetlink_rcv_msg+0x5a/0x1ea
+>  [<ffffffff80428d0f>] rtnetlink_rcv_msg+0x0/0x1ea
+>  [<ffffffff8042efde>] netlink_rcv_skb+0x34/0x7e
+>  [<ffffffff80428d09>] rtnetlink_rcv+0x1f/0x25
+>  [<ffffffff8042eb97>] netlink_unicast+0x119/0x17f
+>  [<ffffffff8041b35d>] __alloc_skb+0x61/0x123
+>  [<ffffffff8042ee37>] netlink_sendmsg+0x23a/0x24d
+>  [<ffffffff804152e4>] sock_sendmsg+0xcb/0xe3
+>  [<ffffffff8023f670>] autoremove_wake_function+0x0/0x2e
+>  [<ffffffff80225643>] need_resched+0x1e/0x28
+>  [<ffffffff804147d8>] move_addr_to_kernel+0x25/0x36
+>  [<ffffffff8041c090>] verify_iovec+0x46/0x82
+>  [<ffffffff80415513>] sys_sendmsg+0x217/0x28a
+>  [<ffffffff8042e01e>] netlink_insert+0xfe/0x121
+>  [<ffffffff80414b40>] sockfd_lookup_light+0x1a/0x52
+>  [<ffffffff80261fe5>] __vma_link+0x58/0x61
+>  [<ffffffff80262062>] vma_link+0x74/0x99
+>  [<ffffffff802630ce>] do_brk+0x2c1/0x319
+>  [<ffffffff8020b3eb>] system_call_after_swapgs+0x7b/0x80
+> 
+> ---[ end trace 92936ef183e09876 ]---
+> skge eth1: enabling interface
+> skge eth1: Link is up at 100 Mbps, full duplex, flow control both
+> 
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Markus, please try this.
+
+- Add netif_start_queue() in ->open()
+- netif_carrier_*() is enough, remove netif_*_queue()
+
+Signed-off-by: Wang Chen <wangchen@cn.fujitsu.com>
 ---
- include/net/mac80211.h |   10 ----------
- net/mac80211/util.c    |   39 ---------------------------------------
- 2 files changed, 0 insertions(+), 49 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 0a5de3e..6b7c792 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1563,16 +1563,6 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
- unsigned int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb);
+diff --git a/drivers/net/skge.c b/drivers/net/skge.c
+index 2e26dce..7507585 100644
+--- a/drivers/net/skge.c
++++ b/drivers/net/skge.c
+@@ -1069,7 +1069,6 @@ static void skge_link_up(struct skge_port *skge)
+ 		    LED_BLK_OFF|LED_SYNC_OFF|LED_ON);
  
- /**
-- * ieee80211_get_hdrlen - get header length from frame control
-- *
-- * This function returns the 802.11 header length in bytes (not including
-- * encryption headers.)
-- *
-- * @fc: the frame control field (in CPU endianness)
-- */
--int ieee80211_get_hdrlen(u16 fc);
--
--/**
-  * ieee80211_hdrlen - get header length in bytes from frame control
-  * @fc: frame control field in little-endian format
-  */
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index ce62b16..7614932 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -91,45 +91,6 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
- 	return NULL;
- }
+ 	netif_carrier_on(skge->netdev);
+-	netif_wake_queue(skge->netdev);
  
--int ieee80211_get_hdrlen(u16 fc)
--{
--	int hdrlen = 24;
--
--	switch (fc & IEEE80211_FCTL_FTYPE) {
--	case IEEE80211_FTYPE_DATA:
--		if ((fc & IEEE80211_FCTL_FROMDS) && (fc & IEEE80211_FCTL_TODS))
--			hdrlen = 30; /* Addr4 */
--		/*
--		 * The QoS Control field is two bytes and its presence is
--		 * indicated by the IEEE80211_STYPE_QOS_DATA bit. Add 2 to
--		 * hdrlen if that bit is set.
--		 * This works by masking out the bit and shifting it to
--		 * bit position 1 so the result has the value 0 or 2.
--		 */
--		hdrlen += (fc & IEEE80211_STYPE_QOS_DATA)
--				>> (ilog2(IEEE80211_STYPE_QOS_DATA)-1);
--		break;
--	case IEEE80211_FTYPE_CTL:
--		/*
--		 * ACK and CTS are 10 bytes, all others 16. To see how
--		 * to get this condition consider
--		 *   subtype mask:   0b0000000011110000 (0x00F0)
--		 *   ACK subtype:    0b0000000011010000 (0x00D0)
--		 *   CTS subtype:    0b0000000011000000 (0x00C0)
--		 *   bits that matter:         ^^^      (0x00E0)
--		 *   value of those: 0b0000000011000000 (0x00C0)
--		 */
--		if ((fc & 0xE0) == 0xC0)
--			hdrlen = 10;
--		else
--			hdrlen = 16;
--		break;
--	}
--
--	return hdrlen;
--}
--EXPORT_SYMBOL(ieee80211_get_hdrlen);
--
- unsigned int ieee80211_hdrlen(__le16 fc)
+ 	if (netif_msg_link(skge)) {
+ 		printk(KERN_INFO PFX
+@@ -1084,7 +1083,6 @@ static void skge_link_down(struct skge_port *skge)
  {
- 	unsigned int hdrlen = 24;
--- 
-1.5.6.1.322.ge904b
+ 	skge_write8(skge->hw, SK_REG(skge->port, LNK_LED_REG), LED_OFF);
+ 	netif_carrier_off(skge->netdev);
+-	netif_stop_queue(skge->netdev);
+ 
+ 	if (netif_msg_link(skge))
+ 		printk(KERN_INFO PFX "%s: Link is down.\n", skge->netdev->name);
+@@ -2450,7 +2448,6 @@ static void skge_phy_reset(struct skge_port *skge)
+ 	int port = skge->port;
+ 	struct net_device *dev = hw->dev[port];
+ 
+-	netif_stop_queue(skge->netdev);
+ 	netif_carrier_off(skge->netdev);
+ 
+ 	spin_lock_bh(&hw->phy_lock);
+@@ -2640,6 +2637,7 @@ static int skge_up(struct net_device *dev)
+ 	spin_unlock_irq(&hw->hw_lock);
+ 
+ 	napi_enable(&skge->napi);
++	netif_start_queue(dev);
+ 	return 0;
+ 
+  free_rx_ring:
+@@ -3863,7 +3861,6 @@ static struct net_device *skge_devinit(struct skge_hw *hw, int port,
+ 
+ 	/* device is off until link detection */
+ 	netif_carrier_off(dev);
+-	netif_stop_queue(dev);
+ 
+ 	return dev;
+ }
 
