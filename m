@@ -1,54 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb.errno.com ([69.12.149.25]:1474 "EHLO ebb.errno.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752923AbYGJUfI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 16:35:08 -0400
-Message-ID: <48767258.3020400@errno.com> (sfid-20080710_223512_580785_2B3000E8)
-Date: Thu, 10 Jul 2008 13:34:32 -0700
-From: Sam Leffler <sam@errno.com>
+Received: from ananke.telenet-ops.be ([195.130.137.78]:45454 "EHLO
+	ananke.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753010AbYGWPmH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 11:42:07 -0400
+Message-ID: <4887514C.6080903@tvcablenet.be> (sfid-20080723_174216_647661_0C2847B8)
+Date: Wed, 23 Jul 2008 17:42:04 +0200
+From: =?windows-1252?Q?Fran=E7ois_Valenduc?=
+	<francois.valenduc@tvcablenet.be>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] Add new regulatory framework for Linux wireless
-References: <20080710152415.GK17936@ruslug.rutgers.edu> <4876304E.9070508@errno.com> <20080710193848.GM17936@ruslug.rutgers.edu>
-In-Reply-To: <20080710193848.GM17936@ruslug.rutgers.edu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Patrick McHardy <kaber@trash.net>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linux Netdev List <netdev@vger.kernel.org>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
+References: <bug-11144-10286@http.bugzilla.kernel.org/>	<20080722034850.dbbc5566.akpm@linux-foundation.org>	<4886E49D.6010700@tvcablenet.be> <20080723010522.389a948f.akpm@linux-foundation.org> <4886F727.6010301@tvcablenet.be> <48870425.50908@trash.net> <48871632.3010205@tvcablenet.be> <4887169B.6090102@trash.net> <488725D5.8030900@tvcablenet.be> <488727B3.7040007@trash.net> <48872968.9000103@trash.net> <488746DF.1050501@tvcablenet.be> <48874BD8.60600@trash.net> <48874C12.10606@trash.net>
+In-Reply-To: <48874C12.10606@trash.net>
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Thu, Jul 10, 2008 at 08:52:46AM -0700, Sam Leffler wrote:
->   
->> Luis R. Rodriguez wrote:
->>     
->>> The industry currently has different techniques for parsing and using
->>> Country IEs. What I currently propose is to take the common denominator
->>> between what the AP provides, what CRDA has and what the driver can
->>> provide privately through its callback. So the wireless core can keep
->>> as the common denominator between the AP's Country IE and what CRDA
->>> has for the alpha2 provided by the Country IE. Drivers themselves can
->>> further enhance regulatory enforcement by relying on private driver
->>> data if they wish so.
+Patrick McHardy a =E9crit :
+> Patrick McHardy wrote:
+>> Fran=E7ois Valenduc wrote:
+>>> I did the bisection again, this time on the whole tree and the firs=
+t=20
+>>> bad commit is again the one I mentioned previously:
 >>>
->>>  
->>>       
->> Can you elaborate on the first sentence?  Are you just saying that some 
->> software blindly trusts the contents of the country IE and doesn't 
->> constrain it's use (as you describe)?  Or are you saying drivers 
->> interpret the contents of the country IE in ways different than spec'd?
->>     
+>>> 175f9c1bba9b825d22b142d183c9e175488b260c is first bad commit
+>>> commit 175f9c1bba9b825d22b142d183c9e175488b260c
+>>> Author: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+>>> Date: Sun Jul 20 00:08:47 2008 -0700
+>>>
+>>> net_sched: Add size table for qdiscs
+>>>
+>>> Add size table functions for qdiscs and calculate packet size in
+>>> qdisc_enqueue().
+>>>
+>>> Based on patch by Patrick McHardy
+>>> http://marc.info/?l=3Dlinux-netdev&m=3D115201979221729&w=3D2
+>>>
+>>> This time, I didn't encounter kernels which didn't compile. So, I=20
+>>> didn't use git-reset or git-bisect skip.
+>>
+>>
+>> I think I know whats happening (Jussi CCed). That commit introduced
+>> a qdisc_skb_cb, which conflicts with the mac80211 usage of skb->cb.
+>> mac80211 seems to expect the CB to survive the qdisc layer, which
+>> is wrong. One possibility to fix this (or just test my theory)
+>> would be to make sure they don't clash by adding the struct
+>> ieee80211_tx_info to qdisc_skb_cb->data. Something like this patch.
+>>
 >
-> I'm saying drivers and software stacks used tend to vary on how they
-> use the country IE. I believe most vendor drivers *never* simply
-> use what the AP provides due to considerations about "rogue" APs.
-> I can see why too though -- but it just means the spec didn't
-> account for these considerations. Hence my suggestion.
+> > +#include <net/sched_generic.h>
 >
->   
+> That should be sch_generic.h.
+>
+I tested your last patch. Unfortunately, I get the following compile er=
+ror:
 
-Can you elaborate on the differences you see in the drivers and software 
-stacks?  I haven't encountered significant differences.
+In file included from net/mac80211/main.c:11:
+include/net/mac80211.h: In function =91IEEE80211_SKB_CB=92:
+include/net/mac80211.h:347: erreur: size of array =91type name=92 is ne=
+gative
 
-    Sam
 
+=46ran=E7ois
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
