@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.224]:21464 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752276AbYGHOLV (ORCPT
+Received: from toronto053.server4you.de ([62.75.220.53]:38021 "EHLO
+	toronto053.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750893AbYGWQkI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 10:11:21 -0400
-Received: by qb-out-0506.google.com with SMTP id d8so5682248qbc.37
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2008 07:11:20 -0700 (PDT)
-Message-ID: <3ace41890807080711n4bbb9f99y5ddcf8f672f760ee@mail.gmail.com> (sfid-20080708_161124_963645_7B14921C)
-Date: Tue, 8 Jul 2008 15:11:19 +0100
-From: "Hin-Tak Leung" <hintak.leung@gmail.com>
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 0/6] rtl8187: Adding Realtek rtl8187B support
-Cc: herton@mandriva.com.br, proski@gnu.org,
-	"John Linville" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <48736E18.5060708@lwfinger.net>
+	Wed, 23 Jul 2008 12:40:08 -0400
+Message-ID: <48875EE5.3060303@monom.org> (sfid-20080723_184015_621731_5BBEC84A)
+Date: Wed, 23 Jul 2008 18:40:05 +0200
+From: Daniel Wagner <wagi@monom.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <3ace41890807080412w3f24a8c1wa2665d8d6de785c9@mail.gmail.com>
-	 <48736E18.5060708@lwfinger.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2x00mac: In error case stop netdev queue, free skb
+ and return NETDEV_TX_OK
+References: <1216805279-19149-1-git-send-email-wagi@monom.org> <200807231822.04895.IvDoorn@gmail.com>
+In-Reply-To: <200807231822.04895.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=iso-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 8, 2008 at 2:39 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Hin-Tak,
->
-> Good job getting these posted. For the first time in a long time, my unit
-> was able to connect and authenticate. It certainly looks as if you solved
-> the ep12 problem. I'm using the device to write this E-mail.
+Ivo van Doorn wrote:
+> On Wednesday 23 July 2008, Daniel Wagner wrote:
+>> It is not allowed to use NETDEV_TX_BUSY in tx path anymore.
+> 
+> If not, then why is mac80211 checking and handling the return value
+> and is tx() still a function returning an int. mac80211 is actually requeueing
+> the frame when the hardware fails to send it, so why should that be completely blocked?
 
-Very good! I am wondering about whether Pavel's negative experience came
-from the accidental brokenness after tidy up. The clean version is so
-obviously cleaner,
-except it moved the management frame decision after skb_pull() which
-munched skb.
-That's so *unobvious* - I don't expect any structs with ->data, etc to
-be mutate.
+Well, I might be completely wrong here. I got this idea from following mail on netdev:
+http://marc.info/?l=linux-wireless&m=121025252321824&w=2
 
-I only spotted the difference when I load the two modules one
-after the other and I wasn't getting the same connectivity -
-and looked at the diffs from usbmon in debugfs. (obviously
-if I am sending in the patches I need to "eat-my-own-dog-food").
+>> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+>> @@ -46,7 +46,7 @@ static int rt2x00mac_tx_rts_cts(struct rt2x00_dev *rt2x00dev,
+>>  	skb = dev_alloc_skb(size + rt2x00dev->hw->extra_tx_headroom);
+>>  	if (!skb) {
+>>  		WARNING(rt2x00dev, "Failed to create RTS/CTS frame.\n");
+>> -		return NETDEV_TX_BUSY;
+>> +		return -1;
+> 
+> I am kind of missing the point here, this patch seems to come down to:
+> 	We can't return TX_BUSY so we return a random other value
 
-> Unfortunately, your mailer still wrapped some lines in the patches. It
-> wasn't difficult to repair them, but it still is a bother. For the next
-> round, we can work out a procedure that uses the mail utility to send the
-> patches. I've used this method since Linville was unable to process my
-> patches that were sent from Thunderbird.
+Unfortunately yes. The last return in this function is still NETDEV_TX_OK. My idea
+was to return 0 on success in error -1. Is this not the expected normal
+'typeless' return behavior of a function, no? 
 
-Damn... Yes, I just looked at my gmail Sent folder and saw that.
-What do people do to send in-line patches? I guess I have to learn to use
-git-send-email properly. This is too hard :-).
+daniel
 
-> The patch to revise the detection of B units with an 8187 ID is ready. I can
-> send it at any time.
-
-Only you have the right hardware to test, so go ahead and post if you
-are happy with the change.
-
-Hin-Tak
