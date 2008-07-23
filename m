@@ -1,46 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:39591 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751499AbYGaO0h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 10:26:37 -0400
-Subject: Re: Driver for the FullMAC card
-From: Dan Williams <dcbw@redhat.com>
-To: Dmitry <dbaryshkov@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <bc64b4640807310715j41bb0029i5c8be73a311ed52@mail.gmail.com>
-References: <g6qr98$q28$2@ger.gmane.org>
-	 <1217512488.12016.8.camel@localhost.localdomain>
-	 <bc64b4640807310715j41bb0029i5c8be73a311ed52@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 31 Jul 2008 10:24:01 -0400
-Message-Id: <1217514241.12016.13.camel@localhost.localdomain> (sfid-20080731_162640_362386_AF9C4083)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40657
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753047AbYGWXLA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 19:11:00 -0400
+Date: Wed, 23 Jul 2008 16:11:00 -0700 (PDT)
+Message-Id: <20080723.161100.219406395.davem@davemloft.net> (sfid-20080724_011109_144039_5555FDE7)
+To: crmafra2@gmail.com
+Cc: tomasw@gmail.com, tytso@mit.edu, yi.zhu@intel.com,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: Potential iwlwifi locking problem in 2.6.26-git9
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080723225820.GA4099@localhost>
+References: <20080723214938.GA8034@mit.edu>
+	<1ba2fa240807231502t1c4ce7d5k9b8acbcaed4d166a@mail.gmail.com>
+	<20080723225820.GA4099@localhost>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-07-31 at 18:15 +0400, Dmitry wrote:
-> 2008/7/31 Dan Williams <dcbw@redhat.com>:
-> > On Wed, 2008-07-30 at 22:51 +0000, Dmitry Baryshkov wrote:
-> >> Hi,
-> >>
-> >> I'd like to work on the Prism2 USB driver (currently maintained as a part of
-> >> wlan-ng project) to be able to push it into mainline. The card itself is
-> >> a FullMAC card. Where should I start? What parts of 802.11 stacks/API
-> >> should I use? There is plenty of information regarding SoftMAC drivers,
-> >> but no clear pointers for developing drivers for the FullMAC cards.
-> >
-> > If you're talking about the same hardware that linux-wlan-ng supported
-> > (ie, what Ubuntu ships as prism2_usb) then that hardware can be softmac,
-> > actually.  We discussed this a while ago and agreed that a completely
-> > new mac80211-based driver for this hardware was the best way to go,
-> > rather than trying to stuff USB support into hostap.
-> 
-> Yes, I was talking about prism2_usb cards. I'll explore how to switch it to
-> the softmac.
+From: "Carlos R. Mafra" <crmafra2@gmail.com>
+Date: Wed, 23 Jul 2008 17:59:06 -0500
 
-prism2_usb already uses p80211, which is a softmac stack.  So the cards
-are already being driven in softmac mode.  You basically just have to
-write a mac80211 driver for the hardware and ignore p80211 completely.
+> I am trying to bisect it, but I am facing some difficulties with compilation
+> problems and non-booting kernels.
 
-Dan
-
+We know what the problem is and are discussing it on netdev
+and linux-wireless already.
