@@ -1,79 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:16115 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754693AbYGBW0L (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:37687 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751394AbYGWPTt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2008 18:26:11 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so189996nfc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Jul 2008 15:26:09 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH] iwlwifi: remove input device and fix rfkill state
-Date: Thu, 3 Jul 2008 00:31:19 +0200
-Cc: Zhu Yi <yi.zhu@intel.com>, Adel Gadllah <adel.gadllah@gmail.com>,
-	linux-wireless@vger.kernel.org, randy.dunlap@oracle.com,
-	"John W. Linville" <linville@tuxdriver.com>, fcrespel@gmail.com
-References: <6cf6b73e0807010849t42de3f3fn68085daca8d8009e@mail.gmail.com> <200807021800.25894.IvDoorn@gmail.com> <20080702184153.GA19949@khazad-dum.debian.net>
-In-Reply-To: <20080702184153.GA19949@khazad-dum.debian.net>
+	Wed, 23 Jul 2008 11:19:49 -0400
+Message-ID: <48874C12.10606@trash.net> (sfid-20080723_171953_222432_238716B8)
+Date: Wed, 23 Jul 2008 17:19:46 +0200
+From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200807030031.20202.IvDoorn@gmail.com> (sfid-20080703_002616_000389_806DD1B9)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: =?ISO-8859-15?Q?Fran=E7ois_Valenduc?=
+	<francois.valenduc@tvcablenet.be>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linux Netdev List <netdev@vger.kernel.org>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
+References: <bug-11144-10286@http.bugzilla.kernel.org/>	<20080722034850.dbbc5566.akpm@linux-foundation.org>	<4886E49D.6010700@tvcablenet.be> <20080723010522.389a948f.akpm@linux-foundation.org> <4886F727.6010301@tvcablenet.be> <48870425.50908@trash.net> <48871632.3010205@tvcablenet.be> <4887169B.6090102@trash.net> <488725D5.8030900@tvcablenet.be> <488727B3.7040007@trash.net> <48872968.9000103@trash.net> <488746DF.1050501@tvcablenet.be> <48874BD8.60600@trash.net>
+In-Reply-To: <48874BD8.60600@trash.net>
+Content-Type: multipart/mixed;
+ boundary="------------060809030809080308010209"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 02 July 2008, Henrique de Moraes Holschuh wrote:
-> On Wed, 02 Jul 2008, Ivo van Doorn wrote:
-> > Well actually it isn't that easy, the lock would also be used for the state change
-> > callback function toward the driver. And if that is done under a spinlock, USB
-> > drivers will start complaining since they can't access the hardware under atomic
-> > context...
+This is a multi-part message in MIME format.
+--------------060809030809080308010209
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 8bit
+
+Patrick McHardy wrote:
+> François Valenduc wrote:
+>> I did the bisection again, this time on the whole tree and the first 
+>> bad commit is again the one I mentioned previously:
+>>
+>> 175f9c1bba9b825d22b142d183c9e175488b260c is first bad commit
+>> commit 175f9c1bba9b825d22b142d183c9e175488b260c
+>> Author: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+>> Date:   Sun Jul 20 00:08:47 2008 -0700
+>>
+>>    net_sched: Add size table for qdiscs
+>>
+>>    Add size table functions for qdiscs and calculate packet size in
+>>    qdisc_enqueue().
+>>
+>>    Based on patch by Patrick McHardy
+>>     http://marc.info/?l=linux-netdev&m=115201979221729&w=2
+>>
+>> This time, I didn't encounter kernels which didn't compile. So, I 
+>> didn't use git-reset or git-bisect skip.
 > 
-> Would it be worth it to use a hybrid scheme?
+> 
+> I think I know whats happening (Jussi CCed). That commit introduced
+> a qdisc_skb_cb, which conflicts with the mac80211 usage of skb->cb.
+> mac80211 seems to expect the CB to survive the qdisc layer, which
+> is wrong. One possibility to fix this (or just test my theory)
+> would be to make sure they don't clash by adding the struct
+> ieee80211_tx_info to qdisc_skb_cb->data. Something like this patch.
+> 
 
-That would be nice if it could be done cleanly.
+ > +#include <net/sched_generic.h>
 
-> Callbacks and the notify chain would remain in task context, while the
-> locking is changed to spinlocks so that it can also work in interrupt
-> context when needed.   We document better (in the text documentation,
-> include files and kernel-doc) the contextes so that people don't get
-> confused by the code and think that a spinlock means atomic context is OK
-> for these handlers.
+That should be sch_generic.h.
 
-The mutex in the rfkill structure could become a spinlock, but the notifiers
-should probably be switched to the atomic versions as well so they could still
-be used at the current locations.
 
-The global rfkill_mutex could remain a mutex to protect the rfkill list and all
-callback functions.
+--------------060809030809080308010209
+Content-Type: text/plain;
+ name="x"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="x"
 
-Now that I rechecked the code the current approach doesn't seem to protect the
-rfkill_toggle_radio callback function with consistent locking either.
-Sometimes it is called under the rfkill->mutex protection and at other times
-under the global rfkill_mutex.
-Both rfkill_state_store() and rfkill_resume() use the rfkill->mutex while most
-other functions use the global rfkill_mutex. Those 2 will have to switch over to
-the global mutex to prevent problems.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 4dd3d93..e19815e 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -19,6 +19,7 @@
+ #include <linux/wireless.h>
+ #include <linux/device.h>
+ #include <linux/ieee80211.h>
++#include <net/sch_generic.h>
+ #include <net/wireless.h>
+ #include <net/cfg80211.h>
+ 
+@@ -343,7 +344,10 @@ struct ieee80211_tx_info {
+ 
+ static inline struct ieee80211_tx_info *IEEE80211_SKB_CB(struct sk_buff *skb)
+ {
+-	return (struct ieee80211_tx_info *)skb->cb;
++	BUILD_BUG_ON(sizeof(skb->cb) <
++		     sizeof(struct qdisc_skb_cb) +
++		     sizeof(struct ieee80211_tx_info));
++	return (struct ieee80211_tx_info *)qdisc_skb_cb(skb)->data;
+ }
+ 
+ 
 
-> For rfkill_force_state(), we'd either add a flags parameter that can take,
-> e.g., GFP_ATOMIC, to tell us whether it is being called from an interrupt
-> handler or a task context, or we could simply add rfkill_force_state_atomic().
-
-Neither sound like a good idea, because that would require 2 approaches to lock
-the rfkill structure which could be good cause for race conditions under certain
-situations.
-
-> This would be safer (because the state would still be updated synchronously
-> when one calls rfkill_force_state(_atomic)?) than adding a
-> rfkill_schedule_force_state() for drivers to call in interrupt context.
-
-Couldn't this cause race conditions in toggle_radio updates when 1 driver uses atomic
-context and the other in scheduled context.
-
-> So far, the only function I can see that would have to work in
-> interrupt/atomic context would be rfkill_force_state_atomic.
-
-Thats correct.
-
-Ivo
-
+--------------060809030809080308010209--
