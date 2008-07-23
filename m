@@ -1,65 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.178]:5197 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752583AbYGWGPa (ORCPT
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:60737 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751390AbYGWBEP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 02:15:30 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so1707555ika.5
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2008 23:15:28 -0700 (PDT)
-Date: Wed, 23 Jul 2008 06:20:36 +0000
-From: Jarek Poplawski <jarkao2@gmail.com>
-To: David Miller <davem@davemloft.net>
-Cc: Larry.Finger@lwfinger.net, kaber@trash.net,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Kernel WARNING: at net/core/dev.c:1330
-	__netif_schedule+0x2c/0x98()
-Message-ID: <20080723062036.GA4561@ff.dom.local> (sfid-20080723_081539_486094_BAEE0DE0)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080722.160409.216536011.davem@davemloft.net>
+	Tue, 22 Jul 2008 21:04:15 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: [GIT PATCH] RFC: next batch of rfkill changes
+Date: Tue, 22 Jul 2008 22:04:00 -0300
+Message-Id: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br> (sfid-20080723_030419_906860_3A021648)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23-07-2008 01:04, David Miller wrote:
-> From: Larry Finger <Larry.Finger@lwfinger.net>
-> Date: Tue, 22 Jul 2008 13:39:08 -0500
-> 
->> =============================================
->> [ INFO: possible recursive locking detected ]
->> 2.6.26-Linus-05752-g93ded9b-dirty #53
->> ---------------------------------------------
->> b43/1997 is trying to acquire lock:
->>   (_xmit_IEEE80211#2){-...}, at: [<ffffffffa028f322>] 
->> ieee80211_scan_completed+0x130/0x2e1 [mac80211]
->>
->> but task is already holding lock:
->>   (_xmit_IEEE80211#2){-...}, at: [<ffffffffa028f322>] 
->> ieee80211_scan_completed+0x130/0x2e1 [mac80211]
-...
-> Lockdep doesn't like that we have an array of objects (the TX queues)
-> and we're iterating over them grabbing all of their locks.
-> 
-> Does anyone know how to teach lockdep that this is OK?
 
-I guess, David Miller knows...:
+This is my next batch of rfkill changes.  They add features and address
+some shortcomings of rfkill-input, mostly.
 
-http://permalink.gmane.org/gmane.linux.network/99784
+Please comment.  One thing that is bothering me in the last patch is
+what happens during suspend/resume to pending delayed rfkill state
+changes.  Are pending scheduled jobs executed, cancelled, or frozen to
+fire up when the system resumes itself?
 
-Jarek P.
+Henrique de Moraes Holschuh (6):
+      rfkill: detect bogus double-registering
+      rfkill: add default global states
+      rfkill: add master_switch_mode functionality
+      rfkill: add EPO lock to rfkill-input
+      rfkill: rename rfkill_mutex to rfkill_global_mutex
+      rfkill: rate-limit rfkill-input workqueue usage
 
-PS: if there is nothing new in lockdep the classical method would
-be to change this static array:
-
-static struct lock_class_key
-netdev_xmit_lock_key[ARRAY_SIZE(netdev_lock_type)];
-
-to
-
-static struct lock_class_key
-netdev_xmit_lock_key[ARRAY_SIZE(netdev_lock_type)][MAX_NUM_TX_QUEUES];
-
-and set lockdep classes per queue as well. (If we are sure we don't
-need lockdep subclasses anywhere this could be optimized by using
-one lock_class_key per 8 queues and spin_lock_nested()).
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
