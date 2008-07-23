@@ -1,65 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.239]:58043 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751431AbYG3QIA (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59338
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754363AbYGWUza (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 12:08:00 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so82883rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 09:08:00 -0700 (PDT)
-Message-ID: <1ba2fa240807300908x5489e3f8g54ff83e7e5912c0b@mail.gmail.com> (sfid-20080730_180804_419423_0968FCB3)
-Date: Wed, 30 Jul 2008 19:08:00 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: iwlwifi aggregation info
-Cc: Friedrich.Beckmann@infineon.com, linux-wireless@vger.kernel.org,
-	j@w1.fi
-In-Reply-To: <1217431179.10489.134.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1217331138.10489.24.camel@johannes.berg>
-	 <1217341293.10489.73.camel@johannes.berg>
-	 <1ba2fa240807290855p191eebesb1ecf2314031f688@mail.gmail.com>
-	 <1217411631.10489.103.camel@johannes.berg>
-	 <8469FC7DDCBE054D9653D8506E1FF0F001F1E7B606@mucse406.eu.infineon.com>
-	 <1217423948.10489.121.camel@johannes.berg>
-	 <1ba2fa240807300645j654a82b4rb813b71681dfab71@mail.gmail.com>
-	 <1217425854.10489.125.camel@johannes.berg>
-	 <1ba2fa240807300659p4d743f31se265f550a2da0dd1@mail.gmail.com>
-	 <1217431179.10489.134.camel@johannes.berg>
+	Wed, 23 Jul 2008 16:55:30 -0400
+Date: Wed, 23 Jul 2008 13:55:30 -0700 (PDT)
+Message-Id: <20080723.135530.63039342.davem@davemloft.net> (sfid-20080723_225534_324707_1666A25D)
+To: jarkao2@gmail.com
+Cc: peterz@infradead.org, Larry.Finger@lwfinger.net, kaber@trash.net,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, mingo@redhat.com
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+ __netif_schedule+0x2c/0x98()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080723204335.GA14788@ami.dom.local>
+References: <20080723114914.GF4561@ff.dom.local>
+	<20080723.131607.79681752.davem@davemloft.net>
+	<20080723204335.GA14788@ami.dom.local>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 30, 2008 at 6:19 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2008-07-30 at 16:59 +0300, Tomas Winkler wrote:
->
->> > Well qdiscs don't just do that, depending on the configuration, so we
->> > shouldn't rely on them doing just that.
->>
->> I know but this was the primary purpose of MQ to push the scheduling
->> decision to HW if I'm not mistaken.
->
-> I thought it was more about the upper level locking, ethernet hw really
-> just round-robins most of the time. Although it will, of course, be used
-> for scheduling decisions.
->
-> Is aggregation really a scheduling decision though?
->
->> We really don't need anything else just queueing.
->
-> Exactly, but qdiscs do most definitely not provide just queueing, and we
-> should not deprive the user of the ability to use qdiscs on wireless.
->
->>  For example what the
->> prioritization which is done in current wme.c
->> is wrong and it won't pass certification and creates starvation.
->> Tested and proved.
->
-> Can you explain how starvation happens? In what scenarios? With or
-> without aggregation?
+From: Jarek Poplawski <jarkao2@gmail.com>
+Date: Wed, 23 Jul 2008 22:43:35 +0200
 
-for (queue = 0; queue < QD_NUM(hw); queue++)
+> On Wed, Jul 23, 2008 at 01:16:07PM -0700, David Miller wrote:
+> ...
+> > There will always be a need for a "stop all the TX queues" operation.
+> 
+> The question is if the current way is "all correct". As a matter of
+> fact I think Peter's doubts could be justified: taking "USHORT_MAX"
+> locks looks really dubious (so maybe it's not so strange lockdep
+> didn't get used to this).
 
-This always starts 0  prioritize dequeue the first frame. But what we
-need is RR and let HW to prioritize the transmission according AC
-Tomas
+There are, of course, potentially other ways to achieve the objective.
+
+And for non-multiqueue aware devices (which is the vast majority of
+the 400 or so networking drivers we have) there is only one queue and
+thus one lock taken.
