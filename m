@@ -1,34 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58527
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754013AbYGOJJX (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51733 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751012AbYGWOxj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 05:09:23 -0400
-Date: Tue, 15 Jul 2008 02:09:23 -0700 (PDT)
-Message-Id: <20080715.020923.213382355.davem@davemloft.net> (sfid-20080715_110929_601774_EBD247E3)
-To: johannes@sipsolutions.net
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] wireless: fix warnings from QoS patch
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1216109364.23746.17.camel@johannes.berg>
-References: <20080714.204532.116542087.davem@davemloft.net>
-	<1216107805.23746.14.camel@johannes.berg>
-	<1216109364.23746.17.camel@johannes.berg>
+	Wed, 23 Jul 2008 10:53:39 -0400
+Subject: Re: [PATCH] rfkill: detect bogus double-registering
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <1216775046-9506-2-git-send-email-hmh@hmh.eng.br> (sfid-20080723_030420_536317_B0B0AFE0)
+References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br>
+	 <1216775046-9506-2-git-send-email-hmh@hmh.eng.br>
+	 (sfid-20080723_030420_536317_B0B0AFE0)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-e2Wy80cCesW9cmZZevRs"
+Date: Wed, 23 Jul 2008 05:41:59 +0200
+Message-Id: <1216784519.13587.4.camel@johannes.berg> (sfid-20080723_165345_327186_E54D9BB9)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 15 Jul 2008 10:09:24 +0200
 
-> When I removed the special "default" meaning from the QoS
-> parameters, I forgot to update drivers and this lead to
-> warnings because some drivers were checking for the special
-> values and putting in defaults. This fixes that by removing
-> the default special-casing completely.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+--=-e2Wy80cCesW9cmZZevRs
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Applied, thanks for fixing this so fast Johannes.
+
+> +	list_for_each_entry(p, &rfkill_list, node) {
+> +		if (p =3D=3D rfkill)
+> +			return -EEXIST;
+> +		set_bit(p->type, &seen);
+
+You should WARN_ON so it can get fixed.
+
+johannes
+
+--=-e2Wy80cCesW9cmZZevRs
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIhqiEAAoJEKVg1VMiehFYxnwP/RIXDooSJ+zrYEW2R/AWbbnj
+plbRhckvLFlSPZSH8N4/v867qS9zo3e/fV0KcZUjQSsCaeWwFZ4ttRD5LZ7KjMYo
+WssdSW9QAnGGKIGdY+hlDz0D4GpwGmJz/d4UOH/TmkJGKvJ03b0qho78DM+0FunX
+cLARUiojTf0Bi+kslEGOOnQWxjrFUPZm3VDiL8yhg2nkF0xX0qimsWLfWqylKBQq
+grEftS5H01LTbsME2gpRFeBpEWXhLuw6PMch46BvXnBBf1mLUrhbozGwoTwt17jY
+YSxEzcQYnyD8GC9wssRN9n90iMCTlINJ5KczCV8pvN8dK1CgsEkfCazGKoo6L8EJ
+tY0uP93tJvGIXiSvCEp//v4q0eu04ukNW/RMajJzjeQQnklM7lS5AFELXgOHypnl
+fj43OEXkaxuQtNQNVOXOT8TMGzmFeAggc/UEI5SbW8EQpDo5D40krmeEycl5wV+/
+Kj7SoluLVStVeVxGrjUiVD3nNMuiTlTyS6ORuUxvzDavjyNpwXh++aOW8gmjdbLG
+D/pZ4z5yq49/c7U499M4tQHlDynKDMbOt0kYlwyFAsdm/90hEJNd7ra9Qlj+2M7c
+PpW1kUZVS5BVydG4DQiFpzatUaKjRN3sXOGjcMQn/of7g+fA4sI1cDegcsIkzQz4
+Qf85N9srhSHLnTPO5W2q
+=3bSv
+-----END PGP SIGNATURE-----
+
+--=-e2Wy80cCesW9cmZZevRs--
+
