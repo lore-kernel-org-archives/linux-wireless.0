@@ -1,41 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:60554 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755194AbYGUTNu (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45299
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753928AbYGWWaA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 15:13:50 -0400
-Message-ID: <4884DFEE.4060003@lwfinger.net> (sfid-20080721_211405_684253_A24DECC1)
-Date: Mon, 21 Jul 2008 14:13:50 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Ingo Molnar <mingo@elte.hu>
-CC: Ian Schram <ischram@telenet.be>,
-	David Miller <davem@davemloft.net>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	wireless <linux-wireless@vger.kernel.org>, j@w1.fi
-Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
- at 0000000000000370
-References: <20080721134506.GA27598@elte.hu> <20080721143023.GA32451@elte.hu> <20080721150446.GA17746@elte.hu> <20080721.082419.70392960.davem@davemloft.net> <4884D2F1.2030704@telenet.be> <20080721190646.GA19044@elte.hu>
-In-Reply-To: <20080721190646.GA19044@elte.hu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 23 Jul 2008 18:30:00 -0400
+Date: Wed, 23 Jul 2008 15:30:00 -0700 (PDT)
+Message-Id: <20080723.153000.172383135.davem@davemloft.net> (sfid-20080724_003008_440081_DED1ED3A)
+To: wangchen@cn.fujitsu.com
+Cc: markus@trippelsdorf.de, ag@alessandroguido.name,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] skge: resolve tx multiqueue bug
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <48874C6A.1020604@cn.fujitsu.com>
+References: <20080723101827.GA2236@gentoox2.trippelsdorf.de>
+	<20080723140347.GA2245@gentoox2.trippelsdorf.de>
+	<48874C6A.1020604@cn.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ingo Molnar wrote:
-> * Ian Schram <ischram@telenet.be> wrote:
-> 
->> I was looking at this out of interest, but I'm in no way familiar with 
->> the code.
-> 
-> thanks Ian for the patch, i'll test it.
-> 
-> Note that it was whitespace damaged, find below a tidied up version of 
-> the patch that i've applied to tip/out-of-tree.
-> 
-> 	Ingo
+From: Wang Chen <wangchen@cn.fujitsu.com>
+Date: Wed, 23 Jul 2008 23:21:14 +0800
 
-This patch may be needed to fix error handling in the hw_sim code, but I get the 
-crash even with that code disabled. I'm currently bisecting to find the culprit.
+> Markus Trippelsdorf said the following on 2008-7-23 22:03:
+> > On Wed, Jul 23, 2008 at 12:18:27PM +0200, Markus Trippelsdorf wrote:
+> >> On Wed, Jul 23, 2008 at 04:50:13PM +0800, Wang Chen wrote:
+> >>> Markus Trippelsdorf said the following on 2008-7-23 13:40:
+> >>>> On Tue, Jul 22, 2008 at 11:54:26AM +0200, Alessandro Guido wrote:
+> >>>>> Got a WARNING this morning (2.6.26-05752-g93ded9b) and I think it's related.
+> >>>> Same thing here (latest git):
+> >>>>
+> >>>> skge eth1: enabling interface
+> >>>> skge eth1: disabling interface
+> >>>> ------------[ cut here ]------------
+> >>>> WARNING: at net/core/dev.c:1344 __netif_schedule+0x24/0x6d()
+> >>>> Pid: 1904, comm: ip Not tainted 2.6.26-06077-gc010b2f #33
+> >>>>  [<ffffffff8020b3eb>] system_call_after_swapgs+0x7b/0x80
+> >> ...
+> >>>> ---[ end trace 92936ef183e09876 ]---
+> >>>> skge eth1: enabling interface
+> >>>> skge eth1: Link is up at 100 Mbps, full duplex, flow control both
+> >>>>
+> >>> Markus, please try this.
+> >>>
+> >>> - Add netif_start_queue() in ->open()
+> >>> - netif_carrier_*() is enough, remove netif_*_queue()
+> >> Unfortunately, your patch does not fix this. I still get the same warning.
+> >>
+> > 
+> > This patch works for me:
+> 
+> Your patch works for me too. So I think it's better than mine. :)
+> 
+> Tested-by: Wang Chen <wangchen@cn.fujitsu.com>
+> 
+> Dave, since Markus and me tested this patch, would you please apply it?
 
-Larry
+I can't, it's whitespace damaged.  All the tabs are turned into spaces,
+also there is no signoff from Markus.
+
