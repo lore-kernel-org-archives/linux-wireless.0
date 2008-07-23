@@ -1,56 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:7770 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755390AbYGRSlR (ORCPT
+Received: from relay2.globalproof.net ([194.146.153.25]:50779 "EHLO
+	relay2.globalproof.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753958AbYGWWRe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 14:41:17 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so160308nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jul 2008 11:41:17 -0700 (PDT)
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 2/6] rt2x00: Fix EIFS timing value
-Date: Fri, 18 Jul 2008 20:43:51 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200807182043.08990.IvDoorn@gmail.com> <200807182043.34057.IvDoorn@gmail.com>
-In-Reply-To: <200807182043.34057.IvDoorn@gmail.com>
+	Wed, 23 Jul 2008 18:17:34 -0400
+From: denys@visp.net.lb
+To: linux-wireless@vger.kernel.org
+Subject: 2.6.26-git10 compile error, iwl-led.c
+Date: Thu, 24 Jul 2008 00:49:28 +0300
+Cc: linux-kernel@vger.kernel.org
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200807182043.52015.IvDoorn@gmail.com> (sfid-20080718_204120_604514_0A4487CA)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="us-ascii"
+Message-Id: <200807240049.29021.denys@visp.net.lb> (sfid-20080724_001745_718029_7AEE4C0D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Olivier reported a difference between the EIFS
-values used in the legacy driver and the one in
-the rt2x00 drivers.
-
-In rt2x00 the value was
-	( SIFS + (8 * (IEEE80211_HEADER + ACK_SIZE)) )
-	which comes down to 314us
-
-while the legacy driver uses the value 364us
-
-This patch will hardcode the EIFS to the correct value.
-
-Reported-by: Olivier Cornu <o.cornu@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 9fab0df..ec57da9 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -108,7 +108,7 @@
- #define SHORT_PIFS		( SIFS + SHORT_SLOT_TIME )
- #define DIFS			( PIFS + SLOT_TIME )
- #define SHORT_DIFS		( SHORT_PIFS + SHORT_SLOT_TIME )
--#define EIFS			( SIFS + (8 * (IEEE80211_HEADER + ACK_SIZE)) )
-+#define EIFS			364
- 
- /*
-  * Chipset identification
--- 
-1.5.6.1
-
+sunfire-1 linux-2.6.26 # sunfire-1 globalosii # cp globalfs1 globalfs
+sunfire-1 linux-2.6.26 # make
+  CHK     include/linux/version.h
+  CHK     include/linux/utsrelease.h
+  CALL    scripts/checksyscalls.sh
+  CHK     include/linux/compile.h
+dnsdomainname: Unknown host
+  GEN     usr/initramfs_data.cpio.gz
+  AS      usr/initramfs_data.o
+  LD      usr/built-in.o
+  LD [M]  drivers/net/wireless/rtl8187.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-led.o
+drivers/net/wireless/iwlwifi/iwl-led.c: In function 'iwl_led_brightness_set':
+drivers/net/wireless/iwlwifi/iwl-led.c:198: error: 'led_type_str' undeclared (first use in this function)
+drivers/net/wireless/iwlwifi/iwl-led.c:198: error: (Each undeclared identifier is reported only once
+drivers/net/wireless/iwlwifi/iwl-led.c:198: error: for each function it appears in.)
+make[4]: *** [drivers/net/wireless/iwlwifi/iwl-led.o] Error 1
+make[3]: *** [drivers/net/wireless/iwlwifi] Error 2
+make[2]: *** [drivers/net/wireless] Error 2
+make[1]: *** [drivers/net] Error 2
+make: *** [drivers] Error 2
