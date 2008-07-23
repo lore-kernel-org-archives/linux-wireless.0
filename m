@@ -1,94 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:8248 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752640AbYG2Pzd (ORCPT
+Received: from ananke.telenet-ops.be ([195.130.137.78]:46434 "EHLO
+	ananke.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751089AbYGWP6H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 11:55:33 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so1545489ywe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 08:55:32 -0700 (PDT)
-Message-ID: <1ba2fa240807290855p191eebesb1ecf2314031f688@mail.gmail.com> (sfid-20080729_175537_352647_BCDB3EFB)
-Date: Tue, 29 Jul 2008 18:55:31 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: iwlwifi aggregation info
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1217341293.10489.73.camel@johannes.berg>
+	Wed, 23 Jul 2008 11:58:07 -0400
+Message-ID: <4887550B.2070704@tvcablenet.be> (sfid-20080723_175814_197235_670C568B)
+Date: Wed, 23 Jul 2008 17:58:03 +0200
+From: =?UTF-8?B?RnJhbsOnb2lzIFZhbGVuZHVj?=
+	<francois.valenduc@tvcablenet.be>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1217331138.10489.24.camel@johannes.berg>
-	 <1217336023.10489.51.camel@johannes.berg>
-	 <1ba2fa240807290604y47edafe1k7cf93831c31b6112@mail.gmail.com>
-	 <1217336870.10489.55.camel@johannes.berg>
-	 <1ba2fa240807290618j67db294w524f3885f0e94c7b@mail.gmail.com>
-	 <1217337819.10489.57.camel@johannes.berg>
-	 <1ba2fa240807290643l4192ca62ia4db9966501caf0b@mail.gmail.com>
-	 <1217339170.10489.62.camel@johannes.berg>
-	 <1ba2fa240807290706h70f89f68xf8fe7e672c0275ad@mail.gmail.com>
-	 <1217341293.10489.73.camel@johannes.berg>
+To: Patrick McHardy <kaber@trash.net>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linux Netdev List <netdev@vger.kernel.org>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
+References: <bug-11144-10286@http.bugzilla.kernel.org/>	<20080722034850.dbbc5566.akpm@linux-foundation.org>	<4886E49D.6010700@tvcablenet.be> <20080723010522.389a948f.akpm@linux-foundation.org> <4886F727.6010301@tvcablenet.be> <48870425.50908@trash.net> <48871632.3010205@tvcablenet.be> <4887169B.6090102@trash.net> <488725D5.8030900@tvcablenet.be> <488727B3.7040007@trash.net> <48872968.9000103@trash.net> <488746DF.1050501@tvcablenet.be> <48874BD8.60600@trash.net> <48874C12.10606@trash.net> <4887514C.6080903@tvcablenet.be> <488753C6.2090807@trash.net>
+In-Reply-To: <488753C6.2090807@trash.net>
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 29, 2008 at 5:21 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2008-07-29 at 17:06 +0300, Tomas Winkler wrote:
+Patrick McHardy a =C3=A9crit :
+> Fran=C3=A7ois Valenduc wrote:
+>> Patrick McHardy a =C3=A9crit :
+>>>> I think I know whats happening (Jussi CCed). That commit introduce=
+d
+>>>> a qdisc_skb_cb, which conflicts with the mac80211 usage of skb->cb=
+=2E
+>>>> mac80211 seems to expect the CB to survive the qdisc layer, which
+>>>> is wrong. One possibility to fix this (or just test my theory)
+>>>> would be to make sure they don't clash by adding the struct
+>>>> ieee80211_tx_info to qdisc_skb_cb->data. Something like this patch=
+=2E
+>>>>
+>>>
+>> I tested your last patch. Unfortunately, I get the following compile=
+=20
+>> error:
+>>
+>> In file included from net/mac80211/main.c:11:
+>> include/net/mac80211.h: In function =E2=80=98IEEE80211_SKB_CB=E2=80=99=
+:
+>> include/net/mac80211.h:347: erreur: size of array =E2=80=98type name=
+=E2=80=99 is=20
+>> negative
 >
->> Please put some reasoning behind this 'wrong'?  Different doesn't mean
->> wrong and 'only one' certainly doesn't mean wrong.
->> And it also doesn't mean that this hw should not operates correctly
->> under Linux. I also cannot publish any performance comparison but it
->> doesn't look wrong at all.
 >
-> Well I read that that you said one needs hardware queues for
-> correctness, which clearly cannot be the case since neither Atheros nor
-> Broadcom have hardware queues used for this.
+> I was afraid that might happen. This means skb->cb is not large
+> enough to hold both the qdisc and the ieee80211 structs.
 >
->> If Intel is the only vendor implements this that way that we may push
->> the extra queuing into driver
->> but so far I've seen only athk9 with 11n.
+> Just for testing, changing (include/net/mac80211.h):
 >
-> I think we need a terminology update and a bit of a big picture thing
-> here.
+> #define IEEE80211_TX_INFO_DRIVER_DATA_SIZE \
+>         (sizeof(((struct sk_buff *)0)->cb) - 8)
 >
-> First of all, let me ask a question: Why should stations that enable
-> aggregation be treated preferentially by giving them an extra qdisc?
+> to
 >
-
-> As far as I'm concerned, they should _not_ be, and thus their packets
-> should flow through the qdisc for the same AC that packets from non-agg
-> stations go through. If this AC queue gets full because it's background
-> and video is hogging the air, then for fairness reasons we really should
-> stop the whole AC and not let aggregation frames continue to flow.
+> #define IEEE80211_TX_INFO_DRIVER_DATA_SIZE \
+>         (sizeof(((struct sk_buff *)0)->cb) - 12)
 >
+> might help to get it to compile. If that doesn't work, try -16.
+>
+>
+That didn't work, neither with -12 or -16.
 
-So why do you need 4 HW queues for QoS, every vendor now implements it
-that way today. There is only one medium, you don't put 4 packets on
-the air at the same time.  Now imaging that withing single queue you
-have another priority level why it is wrong to add another queue for
-it?
-
-In aggregation a bunch of packets need to be transmitted as a single
-entity.  Aggregation on the air is not interleaved by other packets
-There is a strict timing between packets. While there no such
-distinction in application level and packets arriving interleaved to
-the driver. So aggregation is definitely stream of its own rate and
-from obvious reasons we need buffering for it.
-Even if you don't have HW queue you still you need something that
-selects bunch of packets for <sta,tid> pair put them on the air. It's
-much easier if they are already queued in a single queue, maybe other
-vendors have or other way to do it. This is very legitimate way.
-
-I would say that not add HW queue might be the question of silicon
-real estate for low cost products I also would handle it in SW.
-You must count number of packets you are able to put in one
-aggregation according TXOP etc. I guess just that HW do it faster and
-more accurate and therefore can utilize medium better then sw which
-has unknown delay in computation.
-
-ipw2100 has QoS implemented in sw and it works in general but it's
-headache and it's not accurate.
-
-> I think we're talking about two different queue stopping issues here
-> maybe?
-
-Maybe
-Tomas
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
