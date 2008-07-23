@@ -1,51 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.177]:49183 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750857AbYGVQys (ORCPT
+Received: from stinky.trash.net ([213.144.137.162]:32957 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751223AbYGWMok (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 12:54:48 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so1468326ika.5
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jul 2008 09:54:46 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [GIT PATCH] rfkill fixes, set 2, v2
-Date: Tue, 22 Jul 2008 19:11:26 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <1216685902-9373-1-git-send-email-hmh@hmh.eng.br>
-In-Reply-To: <1216685902-9373-1-git-send-email-hmh@hmh.eng.br>
+	Wed, 23 Jul 2008 08:44:40 -0400
+Message-ID: <488727B3.7040007@trash.net> (sfid-20080723_144445_008817_5A0FDEB5)
+Date: Wed, 23 Jul 2008 14:44:35 +0200
+From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807221911.26708.IvDoorn@gmail.com> (sfid-20080722_185452_196336_E04B8800)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: =?ISO-8859-15?Q?Fran=E7ois_Valenduc?=
+	<francois.valenduc@tvcablenet.be>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>, netdev@vger.kernel.org
+Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
+References: <bug-11144-10286@http.bugzilla.kernel.org/>	<20080722034850.dbbc5566.akpm@linux-foundation.org>	<4886E49D.6010700@tvcablenet.be> <20080723010522.389a948f.akpm@linux-foundation.org> <4886F727.6010301@tvcablenet.be> <48870425.50908@trash.net> <48871632.3010205@tvcablenet.be> <4887169B.6090102@trash.net> <488725D5.8030900@tvcablenet.be>
+In-Reply-To: <488725D5.8030900@tvcablenet.be>
+Content-Type: text/plain; charset=ISO-8859-15;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 22 July 2008, Henrique de Moraes Holschuh wrote:
-> 
-> Here is the updated version, with all requested corrections.
-> 
-> Ivo, please check if they're as you wanted in the patches still missing
-> your acked-by (patches 3, 5).
+=46ran=E7ois Valenduc wrote:
+> Patrick McHardy a =E9crit :
+>> Interesting. Could you post straces of both commands please?
+>>
+> I also send the output of strace for dhcpd under kernel 2.6.26 (where=
+ it=20
+> works correctly).
 
-They look good. Thanks for the update. :)
-
-> There is one extra minor doc-fix patch, patch 6.  I found I somehow sent
-> an older version for merge (d3d682041a15f69cd335172041a8393e878521e9
-> "rfkill: some minor kernel-doc changes for rfkill_toggle_radio"), and
-> since I had the fix lying around...
-> 
-> Henrique de Moraes Holschuh (6):
->       rfkill: document rfkill_force_state as required (v2)
->       rfkill: fix led-trigger unregister order in error unwind
->       rfkill: document the rfkill struct locking (v2)
->       rfkill: mutex fixes
->       rfkill: query EV_SW states when rfkill-input (re)?connects to a input device
->       rfkill: yet more minor kernel-doc fixes
-> 
-> Please consider for merging for 2.6.27-rc1, as they are fixes and not
-> enhancements.
-> 
-> Patches based on wireless-testing master.                                                                                                            
-
-Ivo
+Thanks, I couldn't spot anything in these traces. I'll try to
+reproduce this with iwl3945.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
