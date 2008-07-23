@@ -1,52 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:34352 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752477AbYGBSl7 (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.249]:13929 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750868AbYGWMNo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2008 14:41:59 -0400
-Date: Wed, 2 Jul 2008 15:41:53 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Zhu Yi <yi.zhu@intel.com>, Adel Gadllah <adel.gadllah@gmail.com>,
-	linux-wireless@vger.kernel.org, randy.dunlap@oracle.com,
-	"John W. Linville" <linville@tuxdriver.com>, fcrespel@gmail.com
-Subject: Re: [PATCH] iwlwifi: remove input device and fix rfkill state
-Message-ID: <20080702184153.GA19949@khazad-dum.debian.net> (sfid-20080702_204209_962131_62C00753)
-References: <6cf6b73e0807010849t42de3f3fn68085daca8d8009e@mail.gmail.com> <1214987135.14590.496.camel@debian.sh.intel.com> <20080702154327.GA11309@khazad-dum.debian.net> <200807021800.25894.IvDoorn@gmail.com>
+	Wed, 23 Jul 2008 08:13:44 -0400
+Received: by an-out-0708.google.com with SMTP id d40so512569and.103
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 05:13:43 -0700 (PDT)
+Message-ID: <43e72e890807230513u81e68aaj443110d734161368@mail.gmail.com> (sfid-20080723_141350_879238_FED60943)
+Date: Wed, 23 Jul 2008 05:13:43 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Davide Pesavento" <davidepesa@gmail.com>
+Subject: Re: AR5418 works with ath9k
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	ath9k-devel@lists.ath9k.org
+In-Reply-To: <2da21fe50807221453m5275f59dj7369da5e667815d7@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200807021800.25894.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <2da21fe50807221453m5275f59dj7369da5e667815d7@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 02 Jul 2008, Ivo van Doorn wrote:
-> Well actually it isn't that easy, the lock would also be used for the state change
-> callback function toward the driver. And if that is done under a spinlock, USB
-> drivers will start complaining since they can't access the hardware under atomic
-> context...
+On Tue, Jul 22, 2008 at 2:53 PM, Davide Pesavento <davidepesa@gmail.com> wrote:
+> Great news!
+>
+> Today I applied ath9k patches on top of linux-wireless git tree on a
+> MacBookPro2,2 and I found that it works! (after a little bit of
+> hacking...)
+>
+> First of all, my hardware is the following:
+>
+> # lspci -v
+> 03:00.0 Network controller: Atheros Communications Inc. AR5418
+> 802.11abgn Wireless PCI Express Adapter (rev 01)
+>        Flags: bus master, fast devsel, latency 0, IRQ 17
+>        Memory at 98100000 (64-bit, non-prefetchable) [size=64K]
+>        Capabilities: [40] Power Management version 2
+>        Capabilities: [50] Message Signalled Interrupts: Mask- 64bit-
+> Queue=0/0 Enable-
+>        Capabilities: [60] Express Legacy Endpoint, MSI 00
+>        Capabilities: [90] MSI-X: Enable- Mask- TabSize=1
+>        Kernel driver in use: ath9k
+>        Kernel modules: ath9k
+>
+> # dmesg
+> [    7.760727] ath9k: 0.1
+> [    7.760727] ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 17 (level,
+> low) -> IRQ 17
+> [    7.760727] PCI: Setting latency timer of device 0000:03:00.0 to 64
+> [    7.892753] Bad EEPROM checksum 0x866 or revision 0x000e
+> [    7.894551] phy0: Selected rate control algorithm 'ath9k_rate_control'
+> [    8.167891] phy0: Atheros 5416: mem=0xffffc20000500000, irq=17
+>
+> The "bad eeprom checksum" message is printed (but the failure is
+> ignored) because I made a small change to ath9k/hw.c:
+>
+> --------------------
+> diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+> index 5ebf35e..aa0a3d9 100644
+> --- a/drivers/net/wireless/ath9k/hw.c
+> +++ b/drivers/net/wireless/ath9k/hw.c
+> @@ -911,10 +911,10 @@ static inline enum hal_status
+> ath9k_hw_check_eeprom(struct ath_hal *ah)
+>
+>        if (sum != 0xffff || ar5416_get_eep_ver(ahp) != AR5416_EEP_VER ||
+>            ar5416_get_eep_rev(ahp) < AR5416_EEP_NO_BACK_VER) {
+> -               HDPRINTF(ah, HAL_DBG_EEPROM,
+> +               printk(KERN_DEBUG
+>                         "Bad EEPROM checksum 0x%x or revision 0x%04x\n",
+>                         sum, ar5416_get_eep_ver(ahp));
+> -               return HAL_EEBADSUM;
+> +               //return HAL_EEBADSUM;
+>        }
+>
+>        return HAL_OK;
+> --------------------
+>
+> Without the above patch, the module would fail with the following error:
+> "ath_init: unable to attach hardware; HAL status 7"
+> Status code 7 is HAL_EEBADSUM indeed.
+>
+> Maybe MacBook Pro's card has different eeprom's contents? Anyway the
+> card now works fine, and it also appears quite stable! ;-)
+> Thank you very much for your work!
 
-Would it be worth it to use a hybrid scheme?
+I believe your last patch may have been "Use skb_end_pointer() ..." if
+so then this is why you had this issue. Give the git tree a shot:
 
-Callbacks and the notify chain would remain in task context, while the
-locking is changed to spinlocks so that it can also work in interrupt
-context when needed.   We document better (in the text documentation,
-include files and kernel-doc) the contextes so that people don't get
-confused by the code and think that a spinlock means atomic context is OK
-for these handlers.
+git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/ath9k.git
 
-For rfkill_force_state(), we'd either add a flags parameter that can take,
-e.g., GFP_ATOMIC, to tell us whether it is being called from an interrupt
-handler or a task context, or we could simply add rfkill_force_state_atomic().
-
-This would be safer (because the state would still be updated synchronously
-when one calls rfkill_force_state(_atomic)?) than adding a
-rfkill_schedule_force_state() for drivers to call in interrupt context.
-
-So far, the only function I can see that would have to work in
-interrupt/atomic context would be rfkill_force_state_atomic.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+  Luis
