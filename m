@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:45961 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750722AbYGETTp (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58266
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1756241AbYGWVWl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jul 2008 15:19:45 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so482540nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Jul 2008 12:19:44 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [Rt2400-devel] [PATCH] rt2x00: Fix NULL pointer error =?iso-8859-15?q?in=09adhoc/master?= mode
-Date: Sat, 5 Jul 2008 21:26:16 +0200
-Cc: Bryan Batten <BryanBatten@sbcglobal.net>, linville@tuxdriver.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
-References: <200807051511.57995.IvDoorn@gmail.com> <200807052042.47008.IvDoorn@gmail.com> <1215283415.6848.14.camel@johannes.berg>
-In-Reply-To: <1215283415.6848.14.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807052126.16913.IvDoorn@gmail.com> (sfid-20080705_211949_061307_77AA8FE5)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Wed, 23 Jul 2008 17:22:41 -0400
+Date: Wed, 23 Jul 2008 14:22:41 -0700 (PDT)
+Message-Id: <20080723.142241.41151635.davem@davemloft.net> (sfid-20080723_232303_224071_FEA4DC22)
+To: johannes@sipsolutions.net
+Cc: leitao@linux.vnet.ibm.com, jirislaby@gmail.com,
+	netdev@vger.kernel.org, flamingice@sourmilk.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: q == &noop_qdisc warning from 802.11 code
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1216824786.13587.6.camel@johannes.berg>
+References: <488723FF.8070707@gmail.com>
+	<48873502.1030106@linux.vnet.ibm.com>
+	<1216824786.13587.6.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 05 July 2008, Johannes Berg wrote:
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Wed, 23 Jul 2008 16:53:05 +0200
+
 > 
-> > Hmm, in that case I have to fix something in the beacondone handler
-> > to prevent it requesting a beacon when mac80211 hasn't supplied anything
-> > yet..
+> > I also hit a bug related to noop_qdisc running the net-next kernel. 
+> > I hit this bug every time I run "ifconfig eth0 mtu 9000; ifconfg eth0 1500" for any
+> > interface (tested against s2io and e1000) that is up, otherwise the bug isn't
+> > reproducible.
+> > 
+> > The bug dumps the following calltrace: 
+> > 
+> > [root@io-dolphins net-next-2.6]# ifconfig eth0  mtu 9000; ifconfig eth0 mtu 1500
+> > ------------[ cut here ]------------
+> > kernel BUG at net/core/dev.c:1328!
 > 
-> I was working in this area... Can you take a quick look at this patch
-> and let me know what you think?
-> http://johannes.sipsolutions.net/patches/kernel/all/2008-07-05-18%3a42/mac80211-beacon-revamp.patch
+> > void __netif_schedule(struct Qdisc *q)
+> > {
+> >         BUG_ON(q == &noop_qdisc);
+> > 
+> > So, somehow we're reaching __netif_schedule() using a noop_qdisc. 
+> 
+> Yeah, I'm looking into it. Just removing the netif_wake calls in mlme.c
+> might work.
 
-Patch looks good to me, it wouldn't change anything about the above since t2x00 would still
-call ieee80211_beacon_get() when the beacon wasn't provided by mac80211 yet.
+Don't work too hard on this now, I'm removing the warning as I mentioned
+in a recent posting.
 
-But the flags that mark what has changed is definately a good idea,
-that will prevent some redundant register writes. :)
+Most important is the bug where wireless expects the SKB control block
+to be untouched across the qdisc layer, which was never true :-)
 
-Ivo
