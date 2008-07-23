@@ -1,51 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:53933 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803AbYGUMtm (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50864 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750893AbYGWQaO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 08:49:42 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so456412nfc.21
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 05:49:39 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: mac80211 deadlock detection triggering with rt61pci
-Date: Mon, 21 Jul 2008 15:05:31 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-References: <1216197369.3422.5.camel@johannes.berg> <200807191647.13517.IvDoorn@gmail.com> <1216489342.29432.5.camel@johannes.berg>
-In-Reply-To: <1216489342.29432.5.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807211505.31571.IvDoorn@gmail.com> (sfid-20080721_144946_135716_7ED599AE)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Wed, 23 Jul 2008 12:30:14 -0400
+Subject: Re: [PATCH] rfkill: detect bogus double-registering
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <20080723152759.GC4684@khazad-dum.debian.net>
+References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br>
+	 <1216775046-9506-2-git-send-email-hmh@hmh.eng.br>
+	 <1216784519.13587.4.camel@johannes.berg>
+	 <20080723152759.GC4684@khazad-dum.debian.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yTUaYlXe0Qcm3Cv2IrcA"
+Date: Wed, 23 Jul 2008 18:30:07 +0200
+Message-Id: <1216830607.13587.20.camel@johannes.berg> (sfid-20080723_183017_554077_9A48D560)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 19 July 2008, Johannes Berg wrote:
-> On Sat, 2008-07-19 at 16:47 +0200, Ivo van Doorn wrote:
-> > On Friday 18 July 2008, Ivo van Doorn wrote:
-> 
-> > It might be me, but looking at those traces, aren't they triggered by:
-> > 
-> > static int ieee80211_tx(struct net_device *dev, struct sk_buff *skb)
-> > {
-> > ...
-> > 		if (WARN_ON(queue >= ieee80211_num_regular_queues(&local->hw)))
-> > 			goto drop;
-> > ...
-> > }
-> > 
-> > Which would suggest that when MAC80211_QOS is disabled, the skb_queue_mapping
-> > still returns something higher then 1.
-> 
-> Oh, interesting, could be, I'll check it out.
 
-I think I was wrong, just received a report which indeed marked the line:
-	if (WARN_ON_ONCE(retries > 5))
+--=-yTUaYlXe0Qcm3Cv2IrcA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-recent mac80211 patches had moved the WARN_ON line more then I thought. ;)
+On Wed, 2008-07-23 at 12:27 -0300, Henrique de Moraes Holschuh wrote:
+> On Wed, 23 Jul 2008, Johannes Berg wrote:
+> > > +	list_for_each_entry(p, &rfkill_list, node) {
+> > > +		if (p =3D=3D rfkill)
+> > > +			return -EEXIST;
+> > > +		set_bit(p->type, &seen);
+> >=20
+> > You should WARN_ON so it can get fixed.
+>=20
+> I'd rather make rfkill_register __must_check, actually.  With or without
+> WARN_ON.
+>=20
+> In fact, lots of stuff in rfkill should be __must_check.  Ivo, what do yo=
+u
+> think?  Add __must_check?  Add WARN_ON?  Add both?
 
-In any case, I am still not sure why this bug is being triggered, but I am following a lead
-with the rt2x00 errors that come directly before the WARN_ON is being triggered.
+Do both then. __must_check annotations get ignored regularly, or
+"handled" like this:
 
-Ivo
+if (...)
+	// nothing we can do.
+
+johannes
+
+--=-yTUaYlXe0Qcm3Cv2IrcA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIh1yMAAoJEKVg1VMiehFYbMQQAMKKebSx2L/Ru6WVtJ4aXbMc
+sMrp4EdfbX6hubxbq5Ir1HapZKH8tR2wn3C6YmeNBjnjK/+FqHFZnYp/rP5+zv+C
+pmbcBUB25V2TLBuDkSjNfRqkkYyI0eetv0WCXvFtNmplUQ1XGitMCXQiZcf0/ah4
+97WHx4+jt7u63JK3FoJ+Zk56K2MUuOQ7f8HtkT0e4J8v829pdDDfSpE8TaJrXXGg
+UdZ8+On7kdXi4exFetrXoB5aExDjmi43lukKDFi10QDixqjh3ai/8KwhS79o3W/K
+vLTEMj6oge0uf8W621zujz2/4is6DWzmvC83tjp6CvUOAPiofzoYaAPkk8FprYXX
+oMID0TK736b0EJL4xtE7QZEzuBObPxAkgi+u8QKQUezTPlT2q8C+f6XpKh8hP3ND
+5N9VnrPP3rsET5t4maoEb9uLEUksuSZ30rQetIdZN/JPR4NuClPO9wI7rcMxXsd0
+iKAFdQsc+V8VZNgkBeJdzIwY5Cse25Ovqsd8y/Qrc+nfw/C8em1QP/VCBg7kF+d9
+v6L6fq0brnR0iCxzdfDJzPCSXRXNnQH1muP4FXujnKHb5V9g165UdixGvfFqlc3z
+8SLviYxWoYGZ7BXOy7tUrFBY607l+5+Sy3LY+XQLYDxPnC4hQzK6FmzB5uvS8/xE
+3MwKFaC9+AqshfrtJMlC
+=kpcH
+-----END PGP SIGNATURE-----
+
+--=-yTUaYlXe0Qcm3Cv2IrcA--
+
