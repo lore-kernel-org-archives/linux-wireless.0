@@ -1,37 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:9567 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755504AbYGVA34 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58260
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754462AbYGWVVr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 20:29:56 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so320048ugf.16
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 17:29:56 -0700 (PDT)
-Message-ID: <48852A00.5050306@gmail.com> (sfid-20080722_023014_641284_51E4B550)
-Date: Mon, 21 Jul 2008 20:29:52 -0400
-From: roel kluin <roel.kluin@gmail.com>
-MIME-Version: 1.0
-To: ipw2100-admin@linux.intel.com, linux-wireless@vger.kernel.org,
-	ipw2100-devel@lists.sourceforge.net
-CC: linux-kernel@vger.kernel.org
-Subject: [PATCH 9/9] iwl-4965: test below 0 on unsigned num_tbs
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 23 Jul 2008 17:21:47 -0400
+Date: Wed, 23 Jul 2008 14:21:47 -0700 (PDT)
+Message-Id: <20080723.142147.61941255.davem@davemloft.net> (sfid-20080723_232152_705877_F97B0F78)
+To: kaber@trash.net
+Cc: francois.valenduc@tvcablenet.be, akpm@linux-foundation.org,
+	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, netdev@vger.kernel.org,
+	jussi.kivilinna@mbnet.fi
+Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <48875B8C.2090800@trash.net>
+References: <4887550B.2070704@tvcablenet.be>
+	<4887555A.30605@trash.net>
+	<48875B8C.2090800@trash.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-num_tbs is unsigned so the test doesn't work.
+From: Patrick McHardy <kaber@trash.net>
+Date: Wed, 23 Jul 2008 18:25:48 +0200
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
----
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index de330ae..9e957a4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -3121,7 +3121,7 @@ int iwl4965_hw_txq_attach_buf_to_tfd(struct iwl_priv *priv, void *ptr,
- 	u32 num_tbs = IWL_GET_BITS(*tfd, num_tbs);
- 
- 	/* Each TFD can point to a maximum 20 Tx buffers */
--	if ((num_tbs >= MAX_NUM_OF_TBS) || (num_tbs < 0)) {
-+	if (num_tbs >= MAX_NUM_OF_TBS) {
- 		IWL_ERROR("Error can not send more than %d chunks\n",
- 			  MAX_NUM_OF_TBS);
- 		return -EINVAL;
+> We can't fit them into the cb together, I don't see a way to
+> shrink ieee80211_tx_info.
+> 
+> Maybe one of the wireless folks can suggest something? Is it
+> really necessary to pass the full struct ieee80211_tx_info
+> through the qdisc layer, or could the struct be split? It
+> needs to find a way to co-exist peacefully with qdiscs'
+> skb->cb usage.
+
+This is another area that got mangled up in the ->select_queue()
+conversion of the WME bits, but in another aspect this problem
+existed beforehand as well.
+
+Specifically, when RX packets get requeued out to transmit in
+the code in net/mac80211/rx.c that resends packets back out the
+wireless device by setting a bit in the SKB CB then calling
+dev_queue_xmit().
+
+That's completely illegal :-)
+
+There's a ton of stuff in that structure, I can't see how to
+make it smaller either.  Maybe some bits only matter through
+the layers of the TX mac80211 stack and thus can be passed
+as parameters during such processing?
+
