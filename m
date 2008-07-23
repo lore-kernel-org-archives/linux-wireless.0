@@ -1,52 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:42486 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753818AbYGIPoD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 11:44:03 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1KGbpl-0004Ct-Vs
-	for linux-wireless@vger.kernel.org; Wed, 09 Jul 2008 15:43:57 +0000
-Received: from 206-248-135-194.dsl.teksavvy.com ([206.248.135.194])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 15:43:57 +0000
-Received: from monnier by 206-248-135-194.dsl.teksavvy.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 15:43:57 +0000
-To: linux-wireless@vger.kernel.org
-From: Stefan Monnier <monnier@iro.umontreal.ca>
-Subject: Re: Slow b43 with 2.6.25.9 on an asus wl-700ge home-router
-Date: Wed, 09 Jul 2008 11:43:49 -0400
-Message-ID: <jwviqvfqd95.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org> (sfid-20080709_174407_032235_D307D477)
-References: <jwvlk0bsjk7.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
-	<200807091542.13732.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from an-out-0708.google.com ([209.85.132.240]:56790 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755029AbYGWRTH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 13:19:07 -0400
+Received: by an-out-0708.google.com with SMTP id d40so535053and.103
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 10:19:05 -0700 (PDT)
+Message-ID: <43e72e890807231019h53134879uff2982985c0756a6@mail.gmail.com> (sfid-20080723_191912_972846_C61BC01C)
+Date: Wed, 23 Jul 2008 10:19:05 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Christoph Hellwig" <hch@infradead.org>
+Subject: Re: ath9k: some more yummy patches
+Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20080723171550.GA693@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890807230913v10198fbcqeecfe770490aef65@mail.gmail.com>
+	 <20080723162956.GA8742@infradead.org>
+	 <43e72e890807230943u1d39d70eo1b95ee4a38b9bcd8@mail.gmail.com>
+	 <20080723164640.GA24445@infradead.org>
+	 <43e72e890807230957p5140446dqd156aaa72d584893@mail.gmail.com>
+	 <20080723170004.GA8266@infradead.org>
+	 <43e72e890807231001y13568b36j18d3ac0f97714994@mail.gmail.com>
+	 <20080723171550.GA693@infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> Any idea what might be going on?
-> Yeah well.  It's a bug somewhere.
+On Wed, Jul 23, 2008 at 10:15 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Wed, Jul 23, 2008 at 10:01:37AM -0700, Luis R. Rodriguez wrote:
+>> On Wed, Jul 23, 2008 at 10:00 AM, Christoph Hellwig <hch@infradead.org> wrote:
+>> > On Wed, Jul 23, 2008 at 09:57:31AM -0700, Luis R. Rodriguez wrote:
+>> >> I take it we made it too late for .27?
+>> >
+>> > Well, we decided to put driver in anytime in the process, so if the
+>> > driver is cleaned up enough in the next month or so it should be able
+>> > to make it.
+>>
+>> Great! We are committed so let me know if you find other critical
+>> areas of cleanups you'd like to see.
+>
+> Let's start with some easy ones that might not be critical by itself
+> but help making the driver look like a normal Linux driver:
+>
+>  - replace enum hal_bool with the normal bool type
+>  - replace A_MAX usage with the normal max/max_t macros
+>  - just use ASSERT instead of assert
+>  - think about doing the same for KASSERT
+>  - kill memzero
+>  - kill get_dma_mem_context and copy_dma_mem_context
+>  - replace the various debug message print helpers with standard
+>   Linux infrastructure
 
-The scary part is that there's only Free Software involved, AFAICT.
-That *should* be bug-free, shouldn't it?
+We'll get cracking on this.
 
-> I didn't have time to track it down, yet.
-
-Does that mean that you know about the problem and can reproduce it?
-
-> I have no idea where it is and what kind of bug it is. Pretty time
-> consuming job. So if you can do a patch that fixes it, I will take it. ;)
-
-Having too much time on my hand, and being naturally brilliant, I just
-came up with the obvious fix, see attached patch.
-
-More seriously: I am not familiar with any part of the kernel code, so
-it's very unlikely that I'll find the time and motivation to delve into
-it and come up with a patch.  But if you could use some other kind of
-help (e.g. some things to test, some printks to add to the code to
-collect various kinds of data, ...), please holler,
-
-
-        Stefan
-
+  Luis
