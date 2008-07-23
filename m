@@ -1,95 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:53600 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752018AbYGCQpu (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:59695 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752936AbYGWFny (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 12:45:50 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so290146yxm.1
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Jul 2008 09:45:47 -0700 (PDT)
-Message-ID: <1ba2fa240807030945k1eb81286sd9560c067e0c12ff@mail.gmail.com> (sfid-20080703_184622_499157_AE1F12CC)
-Date: Thu, 3 Jul 2008 19:45:45 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Subject: Re: [PATCH 2/2] rfkill: ignore errors from rfkill_toggle_radio in rfkill_add_switch
-Cc: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kionez <kionez@anche.no>
-In-Reply-To: <200807031847.13748.IvDoorn@gmail.com>
+	Wed, 23 Jul 2008 01:43:54 -0400
+Message-ID: <4886C50E.6040304@lwfinger.net> (sfid-20080723_074433_332139_B395299C)
+Date: Wed, 23 Jul 2008 00:43:42 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1215101697-30576-1-git-send-email-hmh@hmh.eng.br>
-	 <1215101697-30576-3-git-send-email-hmh@hmh.eng.br>
-	 <1ba2fa240807030937q1fe14a9i53b2f192eeb3e7c3@mail.gmail.com>
-	 <200807031847.13748.IvDoorn@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+Subject: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks rtl8187
+References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net> <200807221613.34434.herton@mandriva.com.br> <3ace41890807221525r67716ea0r251068df773fe53f@mail.gmail.com> <200807221940.20009.herton@mandriva.com.br> <4886AA3B.3000406@lwfinger.net>
+In-Reply-To: <4886AA3B.3000406@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 3, 2008 at 7:47 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> On Thursday 03 July 2008, Tomas Winkler wrote:
->> On Thu, Jul 3, 2008 at 7:14 PM, Henrique de Moraes Holschuh
->> <hmh@hmh.eng.br> wrote:
->> > rfkill_add_switch() calls rfkill_toggle_radio() to set the state of a
->> > recently registered rfkill class to the current global state [for that
->> > rfkill->type].
->> >
->> > The rfkill_toggle_radio() call is going to error out if the hardware is
->> > RFKILL_STATE_HARD_BLOCKED, and the global state is RFKILL_STATE_UNBLOCKED.
->> >
->> > That is a quite normal situation which I missed to account for.  As things
->> > stand, the error return from rfkill_toggle_radio ends up causing
->> > rfkill_register to bail out with an error (de-registering the new switch in
->> > the process), which is Not Nice.
->> >
->> > Change rfkill_add_switch() to not return errors because of a failed call to
->> > rfkill_toggle_radio().  We can go back to returning errors again (if that's
->> > indeed the right thing to do) if we define the exact error codes the
->> > rfkill->toggle_radio callbacks are to return in each situation, so that we
->> > can ignore the right ones only.
->> >
->> > Bug reported by "kionez <kionez@anche.no>".
->> >
->> > Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
->> > Cc: Ivo van Doorn <IvDoorn@gmail.com>
->> > Cc: kionez <kionez@anche.no>
->> > ---
->> >  net/rfkill/rfkill.c |   10 ++++------
->> >  1 files changed, 4 insertions(+), 6 deletions(-)
->> >
->> > diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
->> > index aa7039d..7a560b7 100644
->> > --- a/net/rfkill/rfkill.c
->> > +++ b/net/rfkill/rfkill.c
->> > @@ -501,17 +501,15 @@ static struct class rfkill_class = {
->> >
->> >  static int rfkill_add_switch(struct rfkill *rfkill)
->> >  {
->> > -       int error;
->> > -
->> >        mutex_lock(&rfkill_mutex);
->> >
->> > -       error = rfkill_toggle_radio(rfkill, rfkill_states[rfkill->type], 0);
->> > -       if (!error)
->> > -               list_add_tail(&rfkill->node, &rfkill_list);
->> > +       rfkill_toggle_radio(rfkill, rfkill_states[rfkill->type], 0);
->> > +
->> > +       list_add_tail(&rfkill->node, &rfkill_list);
->> >
->> >        mutex_unlock(&rfkill_mutex);
->> >
->> > -       return error;
->> > +       return 0;
->> >  }
->>
->> So why this is not a void function
->
-> Well as Henrique suggested we might add a correct return value later when
-> we figured out which error codes should be returned. If the interface now goes
-> to a void function, we need to fix all drivers only later to revert those changes
-> again when it returns an int again.
-> And this way drivers will at least keep it mind that the function might fail,
-> perhaps not now, but perhaps later, when for example we are sane-checking
-> the filled in fields of the rfkill structure, or do some other fancy things which
-> might fail.
+Johannes,
 
-Fair enough
-Tomas
+In the current wireless-testing (v2.6.26-rc9-14207-ga520bdb), rtl8187 is broken. 
+In most cases, it is unable to complete a connection. Occasionally, it will 
+authenticate and even get an IP using DHCP; however, only a few pings get 
+through to the AP before the connection fails completely.
+
+Using bisection, this problem was traced to:
+
+==================================================
+commit 741b4fbc441dba885cc8f97a10e87f2acd04c5f2
+Author: Johannes Berg <johannes@sipsolutions.net>
+Date:   Thu Jul 10 11:21:26 2008 +0200
+
+     mac80211: fix TX sequence numbers
+
+     This patch makes mac80211 assign proper sequence numbers to
+     QoS-data frames. It also removes the old sequence number code
+     because we noticed that only the driver or hardware can assign
+     sequence numbers to non-QoS-data and especially management
+     frames in a race-free manner because beacons aren't passed
+     through mac80211's TX path.
+===============================================================
+
+The validity of the bisection was confirmed by reverse application of the patch. 
+The resulting driver worked.
+
+The appears that rtl8187 needs some kind of modification such as b43, b43legacy, 
+and rt2x00 got in the original patch. I'll be studying the changes to the other 
+drivers to see if I can find the problem, but I will appreciate your help when 
+you get a chance. Perhaps after your trip to Canada is over.
+
+Thanks,
+
+Larry
