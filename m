@@ -1,57 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:37370 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751944AbYGIRAx (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.250]:51384 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752759AbYGWQn0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 13:00:53 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2961937wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 10:00:52 -0700 (PDT)
-Subject: Re: [PATCH 2/3] mac80211: use ieee80211 frame control directly
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1215618659.3246.32.camel@johannes.berg>
-References: <1215568845.476.67.camel@brick>
-	 (sfid-20080709_040049_850302_67F9F0D2)  <1215589460.3670.30.camel@johannes.berg>
-	 <1215618572.476.70.camel@brick>
-	 (sfid-20080709_174958_675805_8C01ADF0)  <1215618659.3246.32.camel@johannes.berg>
-Content-Type: text/plain
-Date: Wed, 09 Jul 2008 10:00:48 -0700
-Message-Id: <1215622848.476.72.camel@brick> (sfid-20080709_190101_993028_0F791BD5)
-Mime-Version: 1.0
+	Wed, 23 Jul 2008 12:43:26 -0400
+Received: by an-out-0708.google.com with SMTP id d40so532509and.103
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 09:43:25 -0700 (PDT)
+Message-ID: <43e72e890807230943u1d39d70eo1b95ee4a38b9bcd8@mail.gmail.com> (sfid-20080723_184330_747652_8E9C86B5)
+Date: Wed, 23 Jul 2008 09:43:24 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Christoph Hellwig" <hch@infradead.org>
+Subject: Re: ath9k: some more yummy patches
+Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20080723162956.GA8742@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890807230913v10198fbcqeecfe770490aef65@mail.gmail.com>
+	 <20080723162956.GA8742@infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-07-09 at 17:50 +0200, Johannes Berg wrote:
-> On Wed, 2008-07-09 at 08:49 -0700, Harvey Harrison wrote:
-> > On Wed, 2008-07-09 at 09:44 +0200, Johannes Berg wrote:
-> > > > --- a/net/mac80211/wep.c
-> > > > +++ b/net/mac80211/wep.c
-> > > > @@ -291,9 +291,10 @@ u8 * ieee80211_wep_is_weak_iv(struct sk_buff *skb, struct ieee80211_key *key)
-> > > >  ieee80211_rx_result
-> > > >  ieee80211_crypto_wep_decrypt(struct ieee80211_rx_data *rx)
-> > > >  {
-> > > > -	if ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA &&
-> > > > -	    ((rx->fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT ||
-> > > > -	     (rx->fc & IEEE80211_FCTL_STYPE) != IEEE80211_STYPE_AUTH))
-> > > > +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
-> > > > +
-> > > > +	if (ieee80211_is_data(hdr->frame_control) &&
-> > > > +	    ieee80211_is_auth(hdr->frame_control))
-> > > >  		return RX_CONTINUE;
-> > > 
-> > > That one seems impossible to hit now and should be !is_data && !is_auth
-> > > I think.
-> > 
-> > Yep.  I'll have another look over this to see if I made any others.
-> 
-> You can also set up the mac80211_hwsim driver to test things without any
-> hardware. :) It even comes with examples in
-> Documentation/networking/mac80211_hwsim/.
+On Wed, Jul 23, 2008 at 9:29 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Wed, Jul 23, 2008 at 09:13:37AM -0700, Luis R. Rodriguez wrote:
+>> Some more yummmy patches, specially if you are interested in IBSS.
+>> These are committed into ath9k git as well.
+>>
+>> http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2008-07-23/
+>
+> Btw I had a quick look over the driver, and it's quite huge..
 
-I had, but I retyped this bit and another when chopping the series up
-a bit, should have rechecked :(
+Tell me about it.
 
-Harvey
+> Why does
+> the driver have it's own regdomain support?
 
+It still needs a good scrubbing, just as well as the driver in general
+in many areas, but basically what will be kept in terms of regulatory
+is our own internal eeprom regulatory domain to support channel
+mapping. This is because we have no firmware to do magic vodoo there
+like others do. This is how we can support Linux. Also although CRDA
+(not yet merged even) can provide a thorough and updated database
+sometimes vendors want to support regulatory settings for clients
+based on SKUs. The callback for setting a regulatory domain through
+CRDA will allow us to review the central regulatory information and
+override it if necessary, this is useful for cases where customers we
+have may want to support channels 1-11 and if the regulatory domain
+allows then channel 14 we'll keep the device stuck to 1-11 as that is
+what the customer certified their devices for in terms of support or
+testing. This exactly why a callback is part of the design for CRDA --
+the central db provides the complete regulatory solution for drivers
+with none but yet it allows vendors to enhance regulatory to meet
+business and legal requirements.
+
+> Also there seems to be
+> quite some useless hal style abstractions and types.  Do you plan to
+> kill those?
+
+Absolutely.
+
+> And a lot of macros that want replacing by proper C code.
+
+Sure thing. We figure we get users supported first with a decent first
+patch post so we're following the 'release early, review early'
+technique. Further cleanup and enhancements can come through as we
+move along.
+
+  Luis
