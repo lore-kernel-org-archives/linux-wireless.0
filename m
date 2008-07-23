@@ -1,146 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51615
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754707AbYGQMPu (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.232]:50375 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751025AbYGWW5t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 08:15:50 -0400
-Date: Thu, 17 Jul 2008 05:15:50 -0700 (PDT)
-Message-Id: <20080717.051550.125083717.davem@davemloft.net> (sfid-20080717_141558_976926_315634E8)
-To: netdev@vger.kernel.org
-CC: kaber@trash.net, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 3/31]: netdev: Kill NETIF_F_MULTI_QUEUE.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 23 Jul 2008 18:57:49 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so1469952wri.5
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 15:57:48 -0700 (PDT)
+Date: Wed, 23 Jul 2008 17:59:06 -0500
+From: "Carlos R. Mafra" <crmafra2@gmail.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Theodore Tso <tytso@mit.edu>, yi.zhu@intel.com,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: Potential iwlwifi locking problem in 2.6.26-git9
+Message-ID: <20080723225820.GA4099@localhost> (sfid-20080724_005756_628755_E18AE5DE)
+References: <E1KLm0c-0002O6-RO@closure.thunk.org> <20080723214938.GA8034@mit.edu> <1ba2fa240807231502t1c4ce7d5k9b8acbcaed4d166a@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240807231502t1c4ce7d5k9b8acbcaed4d166a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu 24.Jul'08 at  1:02:15 +0300, Tomas Winkler wrote:
+> On Thu, Jul 24, 2008 at 12:49 AM, Theodore Tso <tytso@mit.edu> wrote:
+> > On Wed, Jul 23, 2008 at 05:36:30PM -0400, Theodore Ts'o wrote:
+> >>
+> >> Is this a new one?  I don't think I've seen this on LKML....
+> >
+> > The context of this was I had just booted to 2.6.26-git9, noted with
+> > annoyance that that the iwl4965 driver needed a new microcode file, so
+> > I popped in my EVDO card, downloaded the firmware, moved the firmware
+> > into place, and then got the above error message.
+> >
+> > I've since noted that it seems to be utterly refusing to associate
+> > with my wireless access point.  This was working just fine with
+> > 2.6.26-git6 kernel, so it looks like a recent regression?  I just
+> > noticed someone else had recently complained about a similar "refusal
+> > to associate" with the iwl3945 driver.
+> 
+> I'm not sure but this can be connected to what is described in thread:
+> 'New: dhcp doesn't work with iwl4965'
+> Tomas
 
-There is no need for a feature bit for something that
-can be tested by simply checking the TX queue count.
+I can't associate with the access point anymore, and it is a very
+recent regression for me too (two or three days ago).
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- Documentation/networking/multiqueue.txt |   11 -----------
- drivers/net/cpmac.c                     |    1 -
- drivers/net/igb/igb_main.c              |    2 --
- drivers/net/ixgbe/ixgbe_main.c          |    2 --
- drivers/net/s2io.c                      |    2 --
- include/linux/netdevice.h               |    4 +---
- net/mac80211/main.c                     |    3 ---
- 7 files changed, 1 insertions(+), 24 deletions(-)
+I have the new firmware iwlwifi-4965-2.ucode inside /lib/firmware
+and when I try to connect (using the connect button in drakroam from
+Mandriva) I get this (digged from the syslog):
 
-diff --git a/Documentation/networking/multiqueue.txt b/Documentation/networking/multiqueue.txt
-index e6dc1ee..d391ea6 100644
---- a/Documentation/networking/multiqueue.txt
-+++ b/Documentation/networking/multiqueue.txt
-@@ -24,15 +24,4 @@ netif_{start|stop|wake}_subqueue() functions to manage each queue while the
- device is still operational.  netdev->queue_lock is still used when the device
- comes online or when it's completely shut down (unregister_netdev(), etc.).
- 
--Finally, the base driver should indicate that it is a multiqueue device.  The
--feature flag NETIF_F_MULTI_QUEUE should be added to the netdev->features
--bitmap on device initialization.  Below is an example from e1000:
--
--#ifdef CONFIG_E1000_MQ
--	if ( (adapter->hw.mac.type == e1000_82571) ||
--	     (adapter->hw.mac.type == e1000_82572) ||
--	     (adapter->hw.mac.type == e1000_80003es2lan))
--		netdev->features |= NETIF_F_MULTI_QUEUE;
--#endif
--
- Author: Peter P. Waskiewicz Jr. <peter.p.waskiewicz.jr@intel.com>
-diff --git a/drivers/net/cpmac.c b/drivers/net/cpmac.c
-index d630e2a..7c7b54e 100644
---- a/drivers/net/cpmac.c
-+++ b/drivers/net/cpmac.c
-@@ -1165,7 +1165,6 @@ static int __devinit cpmac_probe(struct platform_device *pdev)
- 	dev->set_multicast_list = cpmac_set_multicast_list;
- 	dev->tx_timeout         = cpmac_tx_timeout;
- 	dev->ethtool_ops        = &cpmac_ethtool_ops;
--	dev->features |= NETIF_F_MULTI_QUEUE;
- 
- 	netif_napi_add(dev, &priv->napi, cpmac_poll, 64);
- 
-diff --git a/drivers/net/igb/igb_main.c b/drivers/net/igb/igb_main.c
-index 64a150a..471c194 100644
---- a/drivers/net/igb/igb_main.c
-+++ b/drivers/net/igb/igb_main.c
-@@ -1155,8 +1155,6 @@ static int __devinit igb_probe(struct pci_dev *pdev,
- 	if (pci_using_dac)
- 		netdev->features |= NETIF_F_HIGHDMA;
- 
--	netdev->features |= NETIF_F_MULTI_QUEUE;
--
- 	netdev->features |= NETIF_F_LLTX;
- 	adapter->en_mng_pt = igb_enable_mng_pass_thru(&adapter->hw);
- 
-diff --git a/drivers/net/ixgbe/ixgbe_main.c b/drivers/net/ixgbe/ixgbe_main.c
-index 7d8bf94..e6df923 100644
---- a/drivers/net/ixgbe/ixgbe_main.c
-+++ b/drivers/net/ixgbe/ixgbe_main.c
-@@ -3566,8 +3566,6 @@ static int __devinit ixgbe_probe(struct pci_dev *pdev,
- 	if (pci_using_dac)
- 		netdev->features |= NETIF_F_HIGHDMA;
- 
--	netdev->features |= NETIF_F_MULTI_QUEUE;
--
- 	/* make sure the EEPROM is good */
- 	if (ixgbe_validate_eeprom_checksum(hw, NULL) < 0) {
- 		dev_err(&pdev->dev, "The EEPROM Checksum Is Not Valid\n");
-diff --git a/drivers/net/s2io.c b/drivers/net/s2io.c
-index 517425d..5f0fcb0 100644
---- a/drivers/net/s2io.c
-+++ b/drivers/net/s2io.c
-@@ -7966,8 +7966,6 @@ s2io_init_nic(struct pci_dev *pdev, const struct pci_device_id *pre)
- 		dev->features |= NETIF_F_UFO;
- 		dev->features |= NETIF_F_HW_CSUM;
- 	}
--	if (config->multiq)
--		dev->features |= NETIF_F_MULTI_QUEUE;
- 	dev->tx_timeout = &s2io_tx_watchdog;
- 	dev->watchdog_timeo = WATCH_DOG_TIMEOUT;
- 	INIT_WORK(&sp->rst_timer_task, s2io_restart_nic);
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index f25d4f5..c02227b 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -533,7 +533,6 @@ struct net_device
- #define NETIF_F_LLTX		4096	/* LockLess TX - deprecated. Please */
- 					/* do not use LLTX in new drivers */
- #define NETIF_F_NETNS_LOCAL	8192	/* Does not change network namespaces */
--#define NETIF_F_MULTI_QUEUE	16384	/* Has multiple TX/RX queues */
- #define NETIF_F_LRO		32768	/* large receive offload */
- 
- 	/* Segmentation offload features */
-@@ -1163,11 +1162,10 @@ static inline void netif_wake_subqueue(struct net_device *dev, u16 queue_index)
-  *	@dev: network device
-  *
-  * Check if device has multiple transmit queues
-- * Always falls if NETDEVICE_MULTIQUEUE is not configured
-  */
- static inline int netif_is_multiqueue(const struct net_device *dev)
- {
--	return (!!(NETIF_F_MULTI_QUEUE & dev->features));
-+	return (dev->num_tx_queues > 1);
- }
- 
- /* Use this variant when it is known for sure that it
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index b486e63..c74607e 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1678,9 +1678,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	if (!mdev)
- 		goto fail_mdev_alloc;
- 
--	if (ieee80211_num_queues(hw) > 1)
--		mdev->features |= NETIF_F_MULTI_QUEUE;
--
- 	mwdev = netdev_priv(mdev);
- 	mdev->ieee80211_ptr = mwdev;
- 	mwdev->wiphy = local->hw.wiphy;
--- 
-1.5.6.2.255.gbed62
+Jul 23 13:46:01 localhost drakroam[3801]: running: /sbin/ifdown wlan0 daemon
+Jul 23 13:46:01 localhost kernel: wlan0: associate with AP 00:1b:11:3c:f6:db
+Jul 23 13:46:01 localhost ifplugd(wlan0)[3170]: Exiting.
+Jul 23 13:46:04 localhost kernel: iwl4965 0000:06:00.0: PCI INT A disabled
+Jul 23 13:46:04 localhost drakroam[3801]: running: /sbin/ifup wlan0 daemon
+Jul 23 13:46:04 localhost kernel: iwl4965 0000:06:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+Jul 23 13:46:04 localhost kernel: iwl4965 0000:06:00.0: restoring config space at offset 0x1 (was 0x100102, writing 0x100106)
+Jul 23 13:46:04 localhost kernel: ------------[ cut here ]------------
+Jul 23 13:46:04 localhost kernel: WARNING: at net/core/dev.c:1344 __netif_schedule+0x6f/0x80()
+Jul 23 13:46:04 localhost kernel: Modules linked in: snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss snd_mixer_oss loop nvram snd_hda_intel snd_pcm snd_timer ohci1394 sg snd_page_alloc ieee1394 sky2 iwl4965 snd_hwdep sr_mod i2c_i801 evdev ide_disk ide_core ata_piix ahci libata dock sd_mod scsi_mod uhci_hcd ohci_hcd ehci_hcd usbcore [last unloaded: scsi_wait_scan]
+Jul 23 13:46:04 localhost kernel: Pid: 1613, comm: iwl4965/0 Not tainted 2.6.26-06077-gc010b2f #147
+Jul 23 13:46:04 localhost kernel:
+Jul 23 13:46:04 localhost kernel: Call Trace:
+Jul 23 13:46:04 localhost kernel:  [<ffffffff80237caf>] warn_on_slowpath+0x5f/0x80
+Jul 23 13:46:04 localhost kernel:  [<ffffffff8042109f>] __netif_schedule+0x6f/0x80
+Jul 23 13:46:04 localhost kernel:  [<ffffffff804a040a>] ieee80211_wake_queue+0x5a/0x70
+Jul 23 13:46:04 localhost kernel:  [<ffffffff804a044f>] ieee80211_wake_queues+0x2f/0x50
+Jul 23 13:46:04 localhost kernel:  [<ffffffffa00d2506>] iwl_bg_alive_start+0x216/0x4b0 [iwl4965]
+Jul 23 13:46:04 localhost kernel:  [<ffffffffa00d22f0>] ? iwl_bg_alive_start+0x0/0x4b0 [iwl4965]
+Jul 23 13:46:04 localhost kernel:  [<ffffffff802498d8>] run_workqueue+0x98/0x140
+Jul 23 13:46:04 localhost kernel:  [<ffffffff8024a3e3>] worker_thread+0xa3/0x110
+Jul 23 13:46:04 localhost kernel:  [<ffffffff8024d850>] ? autoremove_wake_function+0x0/0x40
+Jul 23 13:46:04 localhost kernel:  [<ffffffff8024a340>] ? worker_thread+0x0/0x110
+Jul 23 13:46:04 localhost kernel:  [<ffffffff8024d41d>] kthread+0x4d/0x80
+Jul 23 13:46:04 localhost kernel:  [<ffffffff8020d249>] child_rip+0xa/0x11
+Jul 23 13:46:04 localhost kernel:  [<ffffffff8024d3d0>] ? kthread+0x0/0x80
+Jul 23 13:46:04 localhost kernel:  [<ffffffff8020d23f>] ? child_rip+0x0/0x11
+Jul 23 13:46:04 localhost kernel:
+Jul 23 13:46:04 localhost kernel: ---[ end trace 9c04ce6cf2b007a2 ]---
+Jul 23 13:46:04 localhost kernel: Registered led device: iwl-phy0:radio
+Jul 23 13:46:04 localhost kernel: Registered led device: iwl-phy0:assoc
+Jul 23 13:46:04 localhost kernel: Registered led device: iwl-phy0:RX
+Jul 23 13:46:04 localhost kernel: Registered led device: iwl-phy0:TX
+Jul 23 13:46:04 localhost kernel: iwl4965: TX Power requested while scanning!
+
+I am trying to bisect it, but I am facing some difficulties with compilation
+problems and non-booting kernels.
+
+In the thread Thomas Winkler pointed out the reporter says that using dhclient instead
+of dhcp makes it work. However Mandriva uses dhclient and it does not work here.
+
 
