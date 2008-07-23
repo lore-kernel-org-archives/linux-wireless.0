@@ -1,92 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.187]:48264 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759973AbYGPQNk (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33416 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751266AbYGWIGM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2008 12:13:40 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so3028999tic.23
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2008 09:13:38 -0700 (PDT)
-Message-ID: <40f31dec0807160913m3f79cd5cw19d91f9aa513b505@mail.gmail.com> (sfid-20080716_181355_608760_8E49661C)
-Date: Wed, 16 Jul 2008 19:13:36 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [PATCH 4/5] Ath5k: fix dma operation
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, davem@redhat.com, rth@cygnus.com,
-	jakub@redhat.com, "Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <1216136683-10955-1-git-send-email-jirislaby@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1216136661-10930-1-git-send-email-jirislaby@gmail.com>
-	 <1216136683-10955-1-git-send-email-jirislaby@gmail.com>
+	Wed, 23 Jul 2008 04:06:12 -0400
+Date: Wed, 23 Jul 2008 01:05:22 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: =?ISO-8859-1?Q?Fran=E7ois?= Valenduc
+	<francois.valenduc@tvcablenet.be>
+Cc: bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	netdev@vger.kernel.org, Patrick McHardy <kaber@trash.net>
+Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
+Message-Id: <20080723010522.389a948f.akpm@linux-foundation.org> (sfid-20080723_100618_835381_FDAFF708)
+In-Reply-To: <4886E49D.6010700@tvcablenet.be>
+References: <bug-11144-10286@http.bugzilla.kernel.org/>
+	<20080722034850.dbbc5566.akpm@linux-foundation.org>
+	<4886E49D.6010700@tvcablenet.be>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/7/15 Jiri Slaby <jirislaby@gmail.com>:
-> Don't sync
-> - coherent mapping (descriptors)
-> - before unmap, it's useless
-> - (wrongly anyway -- for_cpu) beacon skb, it's just mapped,
->  so by the device yet
->
-> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-> Cc: Nick Kossifidis <mickflemm@gmail.com>
-> Cc: Luis R. Rodriguez <mcgrof@gmail.com>
-> ---
->  drivers/net/wireless/ath5k/base.c |   11 -----------
->  1 files changed, 0 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> index 4874a6f..713ee99 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -1705,10 +1705,6 @@ ath5k_tasklet_rx(unsigned long data)
->                skb = bf->skb;
->                ds = bf->desc;
->
-> -               /* TODO only one segment */
-> -               pci_dma_sync_single_for_cpu(sc->pdev, sc->desc_daddr,
-> -                               sc->desc_len, PCI_DMA_FROMDEVICE);
-> -
->                /*
->                 * last buffer must not be freed to ensure proper hardware
->                 * function. When the hardware finishes also a packet next to
-> @@ -1772,8 +1768,6 @@ ath5k_tasklet_rx(unsigned long data)
->                                goto next;
->                }
->  accept:
-> -               pci_dma_sync_single_for_cpu(sc->pdev, bf->skbaddr,
-> -                               rs.rs_datalen, PCI_DMA_FROMDEVICE);
->                pci_unmap_single(sc->pdev, bf->skbaddr, sc->rxbufsize,
->                                PCI_DMA_FROMDEVICE);
->                bf->skb = NULL;
-> @@ -1861,9 +1855,6 @@ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
->        list_for_each_entry_safe(bf, bf0, &txq->q, list) {
->                ds = bf->desc;
->
-> -               /* TODO only one segment */
-> -               pci_dma_sync_single_for_cpu(sc->pdev, sc->desc_daddr,
-> -                               sc->desc_len, PCI_DMA_FROMDEVICE);
->                ret = sc->ah->ah_proc_tx_desc(sc->ah, ds, &ts);
->                if (unlikely(ret == -EINPROGRESS))
->                        break;
-> @@ -2036,8 +2027,6 @@ ath5k_beacon_send(struct ath5k_softc *sc)
->                ATH5K_WARN(sc, "beacon queue %u didn't stop?\n", sc->bhalq);
->                /* NB: hw still stops DMA, so proceed */
->        }
-> -       pci_dma_sync_single_for_cpu(sc->pdev, bf->skbaddr, bf->skb->len,
-> -                       PCI_DMA_TODEVICE);
->
->        ath5k_hw_put_tx_buf(ah, sc->bhalq, bf->daddr);
->        ath5k_hw_tx_start(ah, sc->bhalq);
-> --
-> 1.5.6.2
->
->
+On Wed, 23 Jul 2008 09:58:21 +0200 Fran__ois Valenduc <francois.valenduc@tvcablenet.be> wrote:
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+> P.S: why don't you want to use the bugzilla interface ?
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Depends on the subsystem.  ACPI is 100% bugzilla-based, net people 
+prefer email, others are in-between.
+
+Plus for recently-occurring bugs it's best to knock them over via email
+without getting into bugzilla bureaucracy.  bugzilla is more
+appropriate to longer-term bugs.
+
+And when the bug affects multiple subsystems, multiple
+developers and we don't even know which subsystem introduced it, it is
+much better to perform the diagnosis and repair via email.
+
+
+I make a judgement call on each report.  Been doing it for a while,
+don't get too many complaints ;)
