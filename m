@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plexity.net ([206.123.115.38]:40790 "EHLO plexity.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757050AbYGAVDx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 17:03:53 -0400
-Date: Tue, 1 Jul 2008 12:52:59 -0700
-From: Deepak Saxena <dsaxena@plexity.net>
-To: andrey@cozybit.com
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Subject: Re: [PATCH] libertas: support USB persistence on suspend/resume (resend)
-Message-ID: <20080701195259.GA6109@plexity.net> (sfid-20080701_230359_449002_7E6B0F24)
-Reply-To: dsaxena@plexity.net
-References: <486a7ae9.14be600a.11a8.ffffa94a@mx.google.com>
+Received: from agave.telenet-ops.be ([195.130.137.77]:50901 "EHLO
+	agave.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750868AbYGWL35 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 07:29:57 -0400
+Message-ID: <48871632.3010205@tvcablenet.be> (sfid-20080723_133001_713055_C86444A0)
+Date: Wed, 23 Jul 2008 13:29:54 +0200
+From: =?ISO-8859-15?Q?Fran=E7ois_Valenduc?=
+	<francois.valenduc@tvcablenet.be>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <486a7ae9.14be600a.11a8.ffffa94a@mx.google.com>
+To: Patrick McHardy <kaber@trash.net>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>, netdev@vger.kernel.org
+Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
+References: <bug-11144-10286@http.bugzilla.kernel.org/>	<20080722034850.dbbc5566.akpm@linux-foundation.org>	<4886E49D.6010700@tvcablenet.be> <20080723010522.389a948f.akpm@linux-foundation.org> <4886F727.6010301@tvcablenet.be> <48870425.50908@trash.net>
+In-Reply-To: <48870425.50908@trash.net>
+Content-Type: text/plain; charset=ISO-8859-15;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Patrick McHardy a =E9crit :
+> Fran=E7ois Valenduc wrote:
+>> OK, thanks for the explanation. But do you have more ideas about the=
+=20
+>> problem ?
+>
+> I tested myself using dhcpcd 3.2.3 on an ethernet device and it
+> works fine, so this appears to be driver related.
+>
+>
 
-We need this on the OLPC XO to ensure that we don't loose connectivity to 
-the mesh and/or AP during our aggressive suspend/resume cycling that we 
-are doing (suspend after 30s of inactivity and working towards even more
-agressive s/r cycles).
+I also noticed that DHCP works without problem with my ethernet card=20
+(using the sky2 driver), so there seems to be a problem or conflict wit=
+h=20
+the iwl4965 driver. However, if I use dhclient instead of dhcpcd, I can=
+=20
+get an IP adress with DHCP and the DNS servers are correctly written in=
+=20
+/etc/resolv.conf. Unfortunately, name resolution doesn't work, even if =
+I=20
+can ping the DNS server.
 
-Signed-off-by: Deepak Saxena <dsaxena@laptop.org>
-
-On Jul 01 2008, at 11:43, andrey@cozybit.com was caught saying:
-> Handle .reset_resume() so that libertas can survive suspend/resume without 
-> reloading the firmware.
-> 
-> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
-> ---
-> diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-> index 39b8fbb..aa3a4ff 100644
-> --- a/drivers/net/wireless/libertas/if_usb.c
-> +++ b/drivers/net/wireless/libertas/if_usb.c
-> @@ -962,6 +962,7 @@ static struct usb_driver if_usb_driver = {
->  	.id_table = if_usb_table,
->  	.suspend = if_usb_suspend,
->  	.resume = if_usb_resume,
-> +	.reset_resume = if_usb_resume,
->  };
->  
->  static int __init if_usb_init_module(void)
-> 
-> 
-> 
-> _______________________________________________
-> libertas-dev mailing list
-> libertas-dev@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/libertas-dev
-
--- 
-   _____   __o  Deepak Saxena - Living CarFree and CareFree          (o>
-------    -\<,  "When I see an adult on a bicycle, I do not despair  //\
- ----- ( )/ ( )  for the future of the human race." -H.G Wells       V_/_
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
