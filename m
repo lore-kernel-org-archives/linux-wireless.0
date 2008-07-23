@@ -1,34 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:60952 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750902AbYGKBmN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 21:42:13 -0400
-Date: Fri, 11 Jul 2008 04:41:13 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
-Message-ID: <20080711014113.GE7284@jm.kir.nu> (sfid-20080711_034217_095291_45DBDCD5)
-References: <20080709190915.GA8238@tuxdriver.com> <1ba2fa240807091713t1158c1ddp81c92ae26a002e46@mail.gmail.com> <87iqvd3j6w.fsf@nokia.com>
+Received: from wf-out-1314.google.com ([209.85.200.170]:3023 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751415AbYGWH5Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 03:57:25 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2660471wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 00:57:24 -0700 (PDT)
+Message-ID: <d4b984a30807230057t319eca71g32262305bdb07582@mail.gmail.com> (sfid-20080723_095742_684635_BC6D3593)
+Date: Wed, 23 Jul 2008 09:57:24 +0200
+From: "Alessandro Guido" <ag@alessandroguido.name>
+To: "David Miller" <davem@davemloft.net>
+Subject: Re: [BUG] kernel BUG at net/core/dev.c:1328!
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <20080722.155611.176476925.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87iqvd3j6w.fsf@nokia.com>
+Content-Type: text/plain; charset=UTF-8
+References: <d4b984a30807210914nd4d0db5yb7b93ca5143ff0d5@mail.gmail.com>
+	 <20080721.092027.14394005.davem@davemloft.net>
+	 <d4b984a30807220254t1aaf6ac4q874329966511b0c5@mail.gmail.com>
+	 <20080722.155611.176476925.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 10, 2008 at 05:30:47PM +0300, Kalle Valo wrote:
+I'm testing the latest Linus' git which includes your patch
+(2.6.26-06077-gc010b2f) and the problem is fixed.
 
-> I'm just worried if one day is enough for us. The agenda is getting
-> quite long already.
-
-There should be plenty of time to continue discussions after (or even
-before) the mini-summit since I would assume most people stay for OLS.
-For example, I will be in Ottawa for the full week (July 18-27) and
-will be available for discussions related to wireless topics both
-before and after the mini-summit itself.
- 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Thank you!
