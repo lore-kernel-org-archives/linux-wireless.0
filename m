@@ -1,57 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:4123 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752308AbYGaBov (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 21:44:51 -0400
-Subject: Re: [PATCH 11/16] ath9k: Remove "OS_" prefixes in macros.
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, Jouni.Malinen@atheros.com,
-	Sujith Manoharan <smanoharan@atheros.com>
-In-Reply-To: <43e72e890807301823w3b800ebcwa12317e0a45d0dcb@mail.gmail.com>
-References: <4800d552efce6350888c68b859f66767196d720b.1217309551.git.lrodriguez@atheros.com>
-	 <f716bd4495bedc5987c6fd1283a09843e3c9331e.1217309552.git.lrodriguez@atheros.com>
-	 <1217467009.3616.9.camel@dv>
-	 <43e72e890807301823w3b800ebcwa12317e0a45d0dcb@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 30 Jul 2008 21:44:49 -0400
-Message-Id: <1217468689.17029.7.camel@dv> (sfid-20080731_034455_698277_BD58EC60)
-Mime-Version: 1.0
+Received: from smtp-out-41.synserver.de ([217.119.50.41]:1054 "HELO
+	smtp-out-41.synserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752949AbYGWODz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 10:03:55 -0400
+Date: Wed, 23 Jul 2008 16:03:47 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+To: Wang Chen <wangchen@cn.fujitsu.com>
+Cc: Alessandro Guido <ag@alessandroguido.name>,
+	David Miller <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] skge: resolve tx multiqueue bug
+Message-ID: <20080723140347.GA2245@gentoox2.trippelsdorf.de> (sfid-20080723_160404_909023_06A814AC)
+References: <d4b984a30807210914nd4d0db5yb7b93ca5143ff0d5@mail.gmail.com> <20080721.092027.14394005.davem@davemloft.net> <d4b984a30807220254t1aaf6ac4q874329966511b0c5@mail.gmail.com> <20080723054039.GA2272@gentoox2.trippelsdorf.de> <4886F0C5.7040605@cn.fujitsu.com> <20080723101827.GA2236@gentoox2.trippelsdorf.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080723101827.GA2236@gentoox2.trippelsdorf.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-07-30 at 18:23 -0700, Luis R. Rodriguez wrote:
-> On Wed, Jul 30, 2008 at 6:16 PM, Pavel Roskin <proski@gnu.org> wrote:
-> > On Mon, 2008-07-28 at 22:47 -0700, lrodriguez@atheros.com wrote:
-> >> From: Sujith Manoharan <smanoharan@atheros.com>
-> >>
-> >> diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
-> >> index 6fa1eb6..c3294c0 100644
-> >> --- a/drivers/net/wireless/ath9k/ath9k.h
-> >> +++ b/drivers/net/wireless/ath9k/ath9k.h
-> >> @@ -622,17 +622,15 @@ struct hal_country_entry {
-> >>
-> >>  #define SM(_v, _f)  (((_v) << _f##_S) & _f)
-> >>  #define MS(_v, _f)  (((_v) & _f) >> _f##_S)
-> >> -#define OS_REG_RMW(_a, _r, _set, _clr)    \
-> >> +#define REG_RMW(_a, _r, _set, _clr)    \
-> >>       REG_WRITE(_a, _r, (REG_READ(_a, _r) & ~(_clr)) | (_set))
-> >
-> > I think these are pretty good candidates for inline functions.  I'm not
-> > sure removing "OS_" is a useful intermediate step.  It's better to keep
-> > such massive changes to the minimum to avoid potential conflicts with
-> > other patches.
+On Wed, Jul 23, 2008 at 12:18:27PM +0200, Markus Trippelsdorf wrote:
+> On Wed, Jul 23, 2008 at 04:50:13PM +0800, Wang Chen wrote:
+> > Markus Trippelsdorf said the following on 2008-7-23 13:40:
+> > > On Tue, Jul 22, 2008 at 11:54:26AM +0200, Alessandro Guido wrote:
+> > >> Got a WARNING this morning (2.6.26-05752-g93ded9b) and I think it's related.
+> > > 
+> > > Same thing here (latest git):
+> > > 
+> > > skge eth1: enabling interface
+> > > skge eth1: disabling interface
+> > > ------------[ cut here ]------------
+> > > WARNING: at net/core/dev.c:1344 __netif_schedule+0x24/0x6d()
+> > > Pid: 1904, comm: ip Not tainted 2.6.26-06077-gc010b2f #33
+> > >  [<ffffffff8020b3eb>] system_call_after_swapgs+0x7b/0x80
+> ...
+> > > ---[ end trace 92936ef183e09876 ]---
+> > > skge eth1: enabling interface
+> > > skge eth1: Link is up at 100 Mbps, full duplex, flow control both
+> > > 
+> > 
+> > Markus, please try this.
+> > 
+> > - Add netif_start_queue() in ->open()
+> > - netif_carrier_*() is enough, remove netif_*_queue()
 > 
-> This was done in response to Johannes comments. This can be moved to
-> inline though.
+> Unfortunately, your patch does not fix this. I still get the same warning.
+> 
 
-It would be really nice.  Explicit return types tend to unmask some
-issues in the calling code, if there are any.
+This patch works for me:
 
-I don't care if you are going to change the macros/functions themselves
-in many steps, but let's avoid the need to rename all callers again.
+diff --git a/drivers/net/skge.c b/drivers/net/skge.c
+index 2e26dce..d761296 100644
+--- a/drivers/net/skge.c
++++ b/drivers/net/skge.c
+@@ -1069,7 +1069,6 @@ static void skge_link_up(struct skge_port *skge)
+                    LED_BLK_OFF|LED_SYNC_OFF|LED_ON);
+
+        netif_carrier_on(skge->netdev);
+-       netif_wake_queue(skge->netdev);
+
+        if (netif_msg_link(skge)) {
+                printk(KERN_INFO PFX
+@@ -1084,7 +1083,6 @@ static void skge_link_down(struct skge_port *skge)
+ {
+        skge_write8(skge->hw, SK_REG(skge->port, LNK_LED_REG), LED_OFF);
+        netif_carrier_off(skge->netdev);
+-       netif_stop_queue(skge->netdev);
+
+        if (netif_msg_link(skge))
+                printk(KERN_INFO PFX "%s: Link is down.\n", skge->netdev->name);
+@@ -2450,7 +2448,6 @@ static void skge_phy_reset(struct skge_port *skge)
+        int port = skge->port;
+        struct net_device *dev = hw->dev[port];
+
+-       netif_stop_queue(skge->netdev);
+        netif_carrier_off(skge->netdev);
+
+        spin_lock_bh(&hw->phy_lock);
+@@ -2640,6 +2637,7 @@ static int skge_up(struct net_device *dev)
+        spin_unlock_irq(&hw->hw_lock);
+
+        napi_enable(&skge->napi);
++       netif_start_queue(dev);
+        return 0;
+
+  free_rx_ring:
+@@ -2673,8 +2671,6 @@ static int skge_down(struct net_device *dev)
+        if (netif_msg_ifdown(skge))
+                printk(KERN_INFO PFX "%s: disabling interface\n", dev->name);
+
+-       netif_stop_queue(dev);
+-
+        if (hw->chip_id == CHIP_ID_GENESIS && hw->phy_type == SK_PHY_XMAC)
+                del_timer_sync(&skge->link_timer);
+
+@@ -3863,7 +3859,6 @@ static struct net_device *skge_devinit(struct skge_hw *hw, int port,
+
+        /* device is off until link detection */
+        netif_carrier_off(dev);
+-       netif_stop_queue(dev);
+
+        return dev;
+ }
+
 
 -- 
-Regards,
-Pavel Roskin
+Markus
