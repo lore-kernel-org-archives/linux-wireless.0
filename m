@@ -1,80 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.229]:40187 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752884AbYGRR5k (ORCPT
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:37658 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750951AbYGWBEP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 13:57:40 -0400
-Received: by wx-out-0506.google.com with SMTP id h29so570839wxd.4
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jul 2008 10:57:39 -0700 (PDT)
-Message-ID: <40f31dec0807181057y65738617m8bcfa9c6c9f71671@mail.gmail.com> (sfid-20080718_195745_978506_DCADC42F)
-Date: Fri, 18 Jul 2008 20:57:39 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: [PATCH v2] ath5k: don't enable MSI, we cannot handle it yet
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-In-Reply-To: <1216400219.18320.26.camel@dv>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080718162855.22182.97573.stgit@dv.roinet.com>
-	 <1216399487.18320.16.camel@dv> <200807181849.25320.mb@bu3sch.de>
-	 <1216400219.18320.26.camel@dv>
+	Tue, 22 Jul 2008 21:04:15 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Ivo van Doorn <IvDoorn@gmail.com>
+Subject: [PATCH] rfkill: detect bogus double-registering
+Date: Tue, 22 Jul 2008 22:04:01 -0300
+Message-Id: <1216775046-9506-2-git-send-email-hmh@hmh.eng.br> (sfid-20080723_030420_536317_B0B0AFE0)
+In-Reply-To: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br>
+References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/7/18 Pavel Roskin <proski@gnu.org>:
-> MSI is a nice thing, but we cannot enable it without changing the
-> interrupt handler.  If we do it, we break MSI capable hardware,
-> specifically AR5006 chipset.
->
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
-> ---
->
->  drivers/net/wireless/ath5k/base.c |    5 -----
->  1 files changed, 0 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> index 635b9ac..e57905c 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -487,9 +487,6 @@ ath5k_pci_probe(struct pci_dev *pdev,
->        /* Set private data */
->        pci_set_drvdata(pdev, hw);
->
-> -       /* Enable msi for devices that support it */
-> -       pci_enable_msi(pdev);
-> -
->        /* Setup interrupt handler */
->        ret = request_irq(pdev->irq, ath5k_intr, IRQF_SHARED, "ath", sc);
->        if (ret) {
-> @@ -567,7 +564,6 @@ err_ah:
->  err_irq:
->        free_irq(pdev->irq, sc);
->  err_free:
-> -       pci_disable_msi(pdev);
->        ieee80211_free_hw(hw);
->  err_map:
->        pci_iounmap(pdev, mem);
-> @@ -589,7 +585,6 @@ ath5k_pci_remove(struct pci_dev *pdev)
->        ath5k_detach(pdev, hw);
->        ath5k_hw_detach(sc->ah);
->        free_irq(pdev->irq, sc);
-> -       pci_disable_msi(pdev);
->        pci_iounmap(pdev, sc->iobase);
->        pci_release_region(pdev, 0);
->        pci_disable_device(pdev);
->
->
-> --
-> Regards,
-> Pavel Roskin
->
+Detect and abort with -EEXIST if rfkill_register is called twice on the
+same rfkill struct.
 
-This is needed for all pci-e devices since enabling msi results no interrupts...
+While at it, flag when we are adding the first switch of a type, we will
+need that information later.
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ net/rfkill/rfkill.c |   27 ++++++++++++++++++++++++++-
+ 1 files changed, 26 insertions(+), 1 deletions(-)
 
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index c6f2f38..0a78e32 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -509,17 +509,42 @@ static struct class rfkill_class = {
+ 	.dev_uevent	= rfkill_dev_uevent,
+ };
+ 
++static int rfkill_check_duplicity(const struct rfkill *rfkill)
++{
++	struct rfkill *p;
++	unsigned long seen[BITS_TO_LONGS(RFKILL_TYPE_MAX)];
++
++	memset(&seen, 0, sizeof(seen));
++
++	list_for_each_entry(p, &rfkill_list, node) {
++		if (p == rfkill)
++			return -EEXIST;
++		set_bit(p->type, &seen);
++	}
++
++	/* 0: first switch of its kind */
++	return test_bit(rfkill->type, &seen);
++}
++
+ static int rfkill_add_switch(struct rfkill *rfkill)
+ {
++	int error;
++
+ 	mutex_lock(&rfkill_mutex);
+ 
++	error = rfkill_check_duplicity(rfkill);
++	if (error < 0)
++		goto unlock_out;
++
+ 	rfkill_toggle_radio(rfkill, rfkill_states[rfkill->type], 0);
+ 
+ 	list_add_tail(&rfkill->node, &rfkill_list);
+ 
++	error = 0;
++unlock_out:
+ 	mutex_unlock(&rfkill_mutex);
+ 
+-	return 0;
++	return error;
+ }
+ 
+ static void rfkill_remove_switch(struct rfkill *rfkill)
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.5.6.2
+
