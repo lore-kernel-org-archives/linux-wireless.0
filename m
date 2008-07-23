@@ -1,37 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:52463 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751098AbYGYFcR (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39686 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750971AbYGWQch (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2008 01:32:17 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so3889110wfd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2008 22:32:16 -0700 (PDT)
-Message-ID: <1197ff4c0807242232i7eb8539esef335134b2fcbe63@mail.gmail.com> (sfid-20080725_073221_358922_A64D0B44)
-Date: Fri, 25 Jul 2008 13:32:15 +0800
-From: YanBo <dreamfly281@gmail.com>
-To: "=?UTF-8?B?7J6E7JiB67mI?=" <ybim@mmlab.snu.ac.kr>
-Subject: Re: question about open11s installation
-Cc: wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <da2e1ddd0807242211n33473f06p74d6acdf75add678@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <da2e1ddd0807170905j5121737bia15429aee0f7ffd6@mail.gmail.com>
-	 <1216313740.3422.44.camel@johannes.berg>
-	 <da2e1ddd0807180151k707c77eeyf31b6ea2948c6ec3@mail.gmail.com>
-	 <da2e1ddd0807242211n33473f06p74d6acdf75add678@mail.gmail.com>
+	Wed, 23 Jul 2008 12:32:37 -0400
+Subject: Re: [PATCH] rt2x00mac: In error case stop netdev queue, free skb
+	and return NETDEV_TX_OK
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Daniel Wagner <wagi@monom.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <200807231822.04895.IvDoorn@gmail.com> (sfid-20080723_180457_288184_B4DD3DAF)
+References: <1216805279-19149-1-git-send-email-wagi@monom.org>
+	 <200807231822.04895.IvDoorn@gmail.com>
+	 (sfid-20080723_180457_288184_B4DD3DAF)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bHsiW0/9rUbypr49XV+G"
+Date: Wed, 23 Jul 2008 18:32:30 +0200
+Message-Id: <1216830750.13587.25.camel@johannes.berg> (sfid-20080723_183239_583752_E5C805BA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MjAwOC83LzI1IOyehOyYgeu5iCA8eWJpbUBtbWxhYi5zbnUuYWMua3I+Ogo+IFRvIGZpbmQgdGhl
-IGNhdXNlIEkgdGVzdGVkIHdoZXRoZXIgdGhlIG1lc2ggbm9kZXMgc2VuZCBiZWFjb25zIGNvcnJl
-Y3RseS4KPiBJIHB1dCBhIG5vZGUgbmVhciBtZXNoIG5vZGVzLCBzZXQgdG8gdGhlIHNhbWUgY2hh
-bm5lbCB3aXRoIG1lc2ggbm9kZXMuCj4gVGhlbiBJIGV4ZWN1dGVkIHdsYW5jdGwodGhpcyBub2Rl
-J3MgT1MgaXMgbmV0YnNkKS4KPiBCdXQgSSBjb3VsZG4ndCBkaXNjb3ZlciBtZXNoIG5vZGVzJ3Mg
-YWRkcmVzc2VzLgo+IEknbSBub3Qgc3VyZSwgYnV0IEkgdGhpbmsgdGhhdCBpZiB0aGUgbWVzaCBu
-b2RlcyBzZW5kIGJlYWNvbnMgY29ycmVjdGx5Cj4gdGhlIG5vZGUgd2lsbCByZWNvZ25pemUgbWVz
-aCBub2RlcywgYW5kIHB1dCB0aGVtIGluIHRoZSBsaXN0LCBpc24ndCBpdD8KPiBTbyB0aGVyZSdz
-IHNvbWUgcHJvYmxlbSB3aXRoIG1lc2ggYmVhY29uaW5nIHdpdGggYjQzIGRyaXZlci4KPgoKSSBh
-bHNvICB0ZXN0IGEgQVI1NDEzIGFuZCBhIEFSMjQxMyBjYXJkLiB3YW50IG1ha2UgdGhlbSB3b3Jr
-ZWQgaW4gbWVzaAptb2RlLCBhZnRlciB3YWtlIHRoZW0gdXAgZm9sbG93IHRoZSBwcm9jZXNzCmh0
-dHA6Ly93d3cub3BlbjgwMjExcy5vcmcvdHJhYy93aWtpL0hPV1RPLTAuMi4xLiBidXQgY2FuJ3Qg
-ZGV0ZWN0ZWQKYW55IGJlYWNvbiBmcm9tIHRoZW0gdG9vLgoKQlIKeWFuYm8K
+
+--=-bHsiW0/9rUbypr49XV+G
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, 2008-07-23 at 18:22 +0200, Ivo van Doorn wrote:
+> On Wednesday 23 July 2008, Daniel Wagner wrote:
+> > It is not allowed to use NETDEV_TX_BUSY in tx path anymore.
+>=20
+> If not, then why is mac80211 checking and handling the return value
+> and is tx() still a function returning an int. mac80211 is actually reque=
+ueing
+> the frame when the hardware fails to send it, so why should that be compl=
+etely blocked?
+
+Well, we want to remove that code from mac80211 because it's horribly
+ugly. But yes, if you stop queues it _should_ work.
+
+> >  		WARNING(rt2x00dev, "Failed to create RTS/CTS frame.\n");
+> > -		return NETDEV_TX_BUSY;
+> > +		return -1;
+>=20
+> I am kind of missing the point here, this patch seems to come down to:
+> 	We can't return TX_BUSY so we return a random other value
+
+Yeah that's fishy. But I think this error code is just in this rts/cts
+function and getting handled in ->tx()
+
+johannes
+
+--=-bHsiW0/9rUbypr49XV+G
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIh10bAAoJEKVg1VMiehFYTacP/iwqFqTcPF5smd/0vAm9jh23
+a6GwGICU7SOaO04IrqJzmxTIL5jl0MK9POAXAqtDbNH4G/kU9yPv29DPVUEeHtAj
+7ia1z5E3CREPKdqNjPzB8pNGOINy2t+z3MFpU5vLiXIyGqbI8PhvuihllMGOZp7N
+c/cN/xkltWG2BXvFlKYGH7y+LJCh4ZS4yA7Mjr4SvphHOx9Pdyp3sUzUgEgok8hT
+u0JkMR3sj7foa74kkQVw7dnnemDNRLkp/86bE285jsb14f5a0q9ZOWviWEOEzcPB
+5FaO46aYvQvqgnaZ4qrQT0q2a8f3AurmybzXlqjSLd3On0A1E0w4XJpL2/fmW0t3
+0rYBeT7zF+JOZLzeJ6G/K/CQkCaZUQTxK66DXft1+2gEDj79GjcxBl4CDGPpjpda
+IGgQmfLhCWYys2jRD7IQa0kzSkRE2CWJ9b7GcElbbXRqAw9xVtMsTBdth41IH3H7
+RfVV3TMLeQFO7qstjdh/EK1kQTxpy48b8b+KJoLcMLCN8A4BSBsUYkY6CEOwRUZn
+OcnDnxsZbqTtyKX42tX/egBs+wsqy6XbFTRb3g9XHf936/AhpmZ6im3MsWNQNH+9
+CMOfHSNvNMuWCHZngOWhHvlw7+LXPdp9KTeHdqLUn9Mlkj4KkII/c0EuPPrLqkFx
+lcQO73m8fL+xpx/7f7kT
+=iLOa
+-----END PGP SIGNATURE-----
+
+--=-bHsiW0/9rUbypr49XV+G--
+
