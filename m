@@ -1,70 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:17332 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751938AbYGCQ4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 12:56:20 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org, Guy Cohen <guy.cohen@intel.com>
-Subject: [PATCH 1/1] mac80211: move netif_carrier_on to after ieee80211_bss_info_change_notify
-Date: Thu,  3 Jul 2008 19:56:13 +0300
-Message-Id: <1215104173-8918-1-git-send-email-tomas.winkler@intel.com> (sfid-20080703_185624_218376_9C0B3658)
-Content-Type: text/plain; charset="us-ascii"
+Received: from xc.sipsolutions.net ([83.246.72.84]:51747 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751772AbYGWOxx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 10:53:53 -0400
+Subject: Re: q == &noop_qdisc warning from 802.11 code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Breno Leitao <leitao@linux.vnet.ibm.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	netdev <netdev@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <48873502.1030106@linux.vnet.ibm.com>
+References: <488723FF.8070707@gmail.com>
+	 <48873502.1030106@linux.vnet.ibm.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kZWZg+XRbptxpsYasww1"
+Date: Wed, 23 Jul 2008 16:53:05 +0200
+Message-Id: <1216824786.13587.6.camel@johannes.berg> (sfid-20080723_165357_798339_A33454F6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Guy Cohen <guy.cohen@intel.com>
 
-Putting netif_carrier_on before configuring the driver/device with the
-new association state may cause a race (tx frames may be sent before
-configuration is done)
+--=-kZWZg+XRbptxpsYasww1
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Guy Cohen <guy.cohen@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/mlme.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 37ea04f..cb414de 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -564,15 +564,14 @@ static void ieee80211_set_associated(struct net_device *dev,
- 			sdata->bss_conf.ht_bss_conf = &conf->ht_bss_conf;
- 		}
- 
--		netif_carrier_on(dev);
- 		ifsta->flags |= IEEE80211_STA_PREV_BSSID_SET;
- 		memcpy(ifsta->prev_bssid, sdata->u.sta.bssid, ETH_ALEN);
- 		memcpy(wrqu.ap_addr.sa_data, sdata->u.sta.bssid, ETH_ALEN);
- 		ieee80211_sta_send_associnfo(dev, ifsta);
- 	} else {
-+		netif_carrier_off(dev);
- 		ieee80211_sta_tear_down_BA_sessions(dev, ifsta->bssid);
- 		ifsta->flags &= ~IEEE80211_STA_ASSOCIATED;
--		netif_carrier_off(dev);
- 		changed |= ieee80211_reset_erp_info(dev);
- 
- 		sdata->bss_conf.assoc_ht = 0;
-@@ -586,6 +585,10 @@ static void ieee80211_set_associated(struct net_device *dev,
- 
- 	sdata->bss_conf.assoc = assoc;
- 	ieee80211_bss_info_change_notify(sdata, changed);
-+
-+	if (assoc)
-+		netif_carrier_on(dev);
-+
- 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
- 	wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
- }
--- 
-1.5.4.1
+> I also hit a bug related to noop_qdisc running the net-next kernel.=20
+> I hit this bug every time I run "ifconfig eth0 mtu 9000; ifconfg eth0 150=
+0" for any
+> interface (tested against s2io and e1000) that is up, otherwise the bug i=
+sn't
+> reproducible.
+>=20
+> The bug dumps the following calltrace:=20
+>=20
+> [root@io-dolphins net-next-2.6]# ifconfig eth0  mtu 9000; ifconfig eth0 m=
+tu 1500
+> ------------[ cut here ]------------
+> kernel BUG at net/core/dev.c:1328!
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+> void __netif_schedule(struct Qdisc *q)
+> {
+>         BUG_ON(q =3D=3D &noop_qdisc);
+>=20
+> So, somehow we're reaching __netif_schedule() using a noop_qdisc.=20
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+Yeah, I'm looking into it. Just removing the netif_wake calls in mlme.c
+might work.
+
+johannes
+
+--=-kZWZg+XRbptxpsYasww1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIh0XOAAoJEKVg1VMiehFYcN8QAL54wgOVKSi9Cc0Ud2DT43Hb
+uk4aPPnbJd5YoQWRxD5HswVG616SDd6Bfd8jmbljgBoT/QUvOabaKTrUKN5dHICZ
+HG5CmqArK290WX0Fewj6bwBm2ctGeItRx4Baj7AUE1x2q+dHtYOT1R0gTZWg5p7P
+myrw15Ch4joAxj5JUIbbHnQFs34YSLNRj3TTJ0/BgT14rbQzrVLhjrvNNO2iDwKY
+1pFgcvKrZrEq1DcjOA4No3rp4DoocH3mZUjQJFFjPP/zsBlcu3g/HngnLr8pox47
+JPx+wVqY9GBXPqhpZ28YRglWaYdW9SA7Cc0d8jKxx06IvcVyJ+z/9WQ9+Yex6QlY
+7Il/962BI7gbvg7MQh1GHAzHNvqFsmMms+tMTFk1M3IY2yxtH3YwR7K+JQynFA/+
+7taeoKlJ4GQA2sgtup91yrPmbkEXhoDzIXVgPYh2FrQluMxuvtxztIdSY7TZ5ZW3
+mpWdhQ3B7EViclV9RclCa4AteEN7awgtM6xnQhRaNRyjXE4X3o6al7OLkvDG+zhR
+gReIQWQ1pyP8xsaolGTyL3dOz3Mpfn/4oFdYjFPgZdyR+aGvrPcNUR+Wr5sCajbD
+zdwdJ4fg/37kR+7sE686zfVE9O49s1lpR1NcWDGJqkX1MCK3/gLdqFSV0mzvTTgL
+gIkqp3/78OyJ93zXF3iv
+=s/3a
+-----END PGP SIGNATURE-----
+
+--=-kZWZg+XRbptxpsYasww1--
 
