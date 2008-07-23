@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:13931 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754074AbYGPMtf (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:58453 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753640AbYGWTh5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2008 08:49:35 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so3245060waf.23
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2008 05:49:34 -0700 (PDT)
-Message-ID: <1ba2fa240807160549u68d9ecby25e79d832d772a0a@mail.gmail.com> (sfid-20080716_144939_106039_88F2FE76)
-Date: Wed, 16 Jul 2008 15:49:34 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "David Miller" <davem@davemloft.net>
-Subject: Re: pull request: wireless-next-2.6 2008-07-14
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <20080714.204532.116542087.davem@davemloft.net>
+	Wed, 23 Jul 2008 15:37:57 -0400
+Date: Wed, 23 Jul 2008 16:37:52 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rfkill: add master_switch_mode functionality
+Message-ID: <20080723193752.GG11009@khazad-dum.debian.net> (sfid-20080723_213800_220330_CDE3396E)
+References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br> <1216775046-9506-4-git-send-email-hmh@hmh.eng.br> <200807232039.39602.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080714192302.GA2541@tuxdriver.com>
-	 <20080714.204532.116542087.davem@davemloft.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200807232039.39602.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 15, 2008 at 6:45 AM, David Miller <davem@davemloft.net> wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Mon, 14 Jul 2008 15:23:02 -0400
->
->> Here is one last(?) round of miscellaneous patches I hope to get into
->> 2.6.27.  There are mostly driver updates, including a sizable iwlwifi
->> set of changes.
->>
->> Please let me know if there are problems!
->
-> Pulled into net-next-2.6, thanks John.
->
-> If someone could fix the following wireless warnings I'd appreciate
-> it.
->
-> Thanks!
->
+On Wed, 23 Jul 2008, Ivo van Doorn wrote:
+> > +enum rfkill_input_master_mode {
+> > +	RFKILL_INPUT_MASTER_DONOTHING = 0,
+> > +	RFKILL_INPUT_MASTER_RESTORE = 1,
+> > +	RFKILL_INPUT_MASTER_UNBLOCKALL = 2,
+> 
+> RFKILL_INPUT_MASTER_LAST, /* Internal */
+> 
+> See below for reason. :)
 
-> drivers/net/wireless/iwlwifi/iwl-led.c:271: warning: format '%lld' expects type 'long long int', but argument 6 has type 's64'
-> drivers/net/wireless/iwlwifi/iwl-led.c:271: warning: format '%lld' expects type 'long long int', but argument 7 has type 'u64'
+[...]
 
-I cannot reproduce this. Wasn't this conversion already solved or
-still need to cast to long long int?
-Tomas
+> >  static int __init rfkill_handler_init(void)
+> >  {
+> > +	switch (rfkill_master_switch_mode) {
+> > +	case RFKILL_INPUT_MASTER_DONOTHING:
+> > +	case RFKILL_INPUT_MASTER_RESTORE:
+> > +	case RFKILL_INPUT_MASTER_UNBLOCKALL:
+> > +		break;
+> > +	default:
+> > +		return -EINVAL;
+> > +	}
+> 
+> if (rfkill_master_switch_mode >= RFKILL_INPUT_MASTER_LAST)
+> 	return -EINVAL
+
+It will generate the same code :-)  I can certainly do it that way, but if I
+do, every switch() statement will HAVE to handle either default or
+RFKILL_INPUT_MASTER_LAST...  which is bad, as you don't get the warning that
+you forgot to handle something in other code paths that don't need default:
+handling.
+
+That reminds me that I should kill the default: clause in
+rfkill_schedule_evsw_rfkillall().  It is there because an earlier version of
+the patch would let userspace modify the module paramenter.  That didn't
+play out well (if we want to do that, we should do it in some other way),
+and I forgot to remove the default handling when I made the attribute
+read-only.
+
+> This will make sure new entries in the enum are automatically handled.
+> Note that your next patch doesn't update the above switch statement,
+
+My next patch doesn't deal with RFKILL_INPUT_MASTER_* :-) I guess you
+misread.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
