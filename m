@@ -1,51 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:31476 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753174AbYGWV4k (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:37054 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751229AbYGWJDJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 17:56:40 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so3076914wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 14:56:40 -0700 (PDT)
-Message-ID: <1ba2fa240807231456y2fce119ek1bd03ad9d250fee5@mail.gmail.com> (sfid-20080723_235643_632085_E9DEF284)
-Date: Thu, 24 Jul 2008 00:56:39 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: denys@visp.net.lb
-Subject: Re: 2.6.26-git10 compile error, iwl-led.c
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <200807240049.29021.denys@visp.net.lb>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200807240049.29021.denys@visp.net.lb>
+	Wed, 23 Jul 2008 05:03:09 -0400
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+	__netif_schedule+0x2c/0x98()
+From: Peter Zijlstra <peterz@infradead.org>
+To: Jarek Poplawski <jarkao2@gmail.com>
+Cc: David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
+	kaber@trash.net, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	mingo@redhat.com
+In-Reply-To: <20080723085452.GB4561@ff.dom.local>
+References: <20080722.160409.216536011.davem@davemloft.net>
+	 <20080723062036.GA4561@ff.dom.local>
+	 <20080723.005921.113868915.davem@davemloft.net>
+	 <20080723085452.GB4561@ff.dom.local>
+Content-Type: text/plain
+Date: Wed, 23 Jul 2008 11:03:06 +0200
+Message-Id: <1216803786.7257.146.camel@twins> (sfid-20080723_110316_657968_E532C872)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 24, 2008 at 12:49 AM,  <denys@visp.net.lb> wrote:
-> sunfire-1 linux-2.6.26 # sunfire-1 globalosii # cp globalfs1 globalfs
-> sunfire-1 linux-2.6.26 # make
->  CHK     include/linux/version.h
->  CHK     include/linux/utsrelease.h
->  CALL    scripts/checksyscalls.sh
->  CHK     include/linux/compile.h
-> dnsdomainname: Unknown host
->  GEN     usr/initramfs_data.cpio.gz
->  AS      usr/initramfs_data.o
->  LD      usr/built-in.o
->  LD [M]  drivers/net/wireless/rtl8187.o
->  CC [M]  drivers/net/wireless/iwlwifi/iwl-led.o
-> drivers/net/wireless/iwlwifi/iwl-led.c: In function 'iwl_led_brightness_set':
-> drivers/net/wireless/iwlwifi/iwl-led.c:198: error: 'led_type_str' undeclared (first use in this function)
-> drivers/net/wireless/iwlwifi/iwl-led.c:198: error: (Each undeclared identifier is reported only once
-> drivers/net/wireless/iwlwifi/iwl-led.c:198: error: for each function it appears in.)
-> make[4]: *** [drivers/net/wireless/iwlwifi/iwl-led.o] Error 1
-> make[3]: *** [drivers/net/wireless/iwlwifi] Error 2
-> make[2]: *** [drivers/net/wireless] Error 2
-> make[1]: *** [drivers/net] Error 2
-> make: *** [drivers] Error 2
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+On Wed, 2008-07-23 at 08:54 +0000, Jarek Poplawski wrote:
+> On Wed, Jul 23, 2008 at 12:59:21AM -0700, David Miller wrote:
+> > From: Jarek Poplawski <jarkao2@gmail.com>
+> > Date: Wed, 23 Jul 2008 06:20:36 +0000
+> > 
+> > > PS: if there is nothing new in lockdep the classical method would
+> > > be to change this static array:
+> > > 
+> > > static struct lock_class_key
+> > > netdev_xmit_lock_key[ARRAY_SIZE(netdev_lock_type)];
+> > > 
+> > > to
+> > > 
+> > > static struct lock_class_key
+> > > netdev_xmit_lock_key[ARRAY_SIZE(netdev_lock_type)][MAX_NUM_TX_QUEUES];
+> > > 
+> > > and set lockdep classes per queue as well. (If we are sure we don't
+> > > need lockdep subclasses anywhere this could be optimized by using
+> > > one lock_class_key per 8 queues and spin_lock_nested()).
+> > 
+> > Unfortunately MAX_NUM_TX_QUEUES is USHORT_MAX, so this isn't really
+> > a feasible approach.
+> 
+> Is it used by real devices already? Maybe for the beginning we could
+> start with something less?
+> 
+> > spin_lock_nested() isn't all that viable either, as the subclass
+> > limit is something like 8.
+> 
+> This method would need to do some additional counting: depending of
+> a queue number each 8 subsequent queues share (are set to) the same
+> class and their number mod 8 gives the subqueue number for
+> spin_lock_nested().
+> 
+> I'll try to find if there is something new around this in lockdep.
+> (lockdep people added to CC.)
 
-Patches were posted twice already
-Tomas
+There isn't.
+
+Is there a static data structure that the driver needs to instantiate to
+'create' a queue? Something like:
+
+/* this imaginary e1000 hardware has 16 hardware queues */
+static struct net_tx_queue e1000e_tx_queues[16]; 
+
+In that case you can stick the key in there and do:
+
+int e1000e_init_tx_queue(struct net_tx_queue *txq)
+{
+	...
+
+	spin_lock_init(&txq->tx_lock);
+	lockdep_set_class(&txq->tx_lock, &txq->tx_lock_key);
+
+	...
+}
+
+( This is what the scheduler runqueues also do )
+
