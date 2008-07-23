@@ -1,54 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:46115 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755030AbYGaVyw (ORCPT
+Received: from toronto053.server4you.de ([62.75.220.53]:33977 "EHLO
+	toronto053.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751394AbYGWRRF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 17:54:52 -0400
-Date: Thu, 31 Jul 2008 14:50:55 -0700
-From: Greg KH <greg@kroah.com>
-To: Tilman Schmidt <tilman@imap.cc>
-Cc: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Q: support for AVM Fritz! WLAN USB in kernel 2.6.25+
-Message-ID: <20080731215055.GB4817@kroah.com> (sfid-20080731_235457_055782_67E2567C)
-References: <4891D1B9.70703@imap.cc> <20080731163843.GB9606@kroah.com> <48922FE2.70705@imap.cc>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <48922FE2.70705@imap.cc>
+	Wed, 23 Jul 2008 13:17:05 -0400
+From: Daniel Wagner <wagi@monom.org>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <IvDoorn@gmail.com>, Daniel Wagner <wagi@monom.org>
+Subject: [PATCH v2] rt2x00mac: In error case stop netdev queue, free skb and return NETDEV_TX_OK
+Date: Wed, 23 Jul 2008 19:17:01 +0200
+Message-Id: <1216833421-29186-1-git-send-email-wagi@monom.org> (sfid-20080723_191708_211721_48267172)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 31, 2008 at 11:34:26PM +0200, Tilman Schmidt wrote:
-> On Thu, 31 Jul 2008 09:38:43 -0700, Greg KH wrote:
-> > On Thu, Jul 31, 2008 at 04:52:41PM +0200, Tilman Schmidt wrote:
-> >> Commit 782e70c6fc2290a0395850e8e02583b8b62264d8, which went into
-> >> 2.6.25, broke AVM's closed-source driver for this device:
-> >>
-> >> ID 057c:62ff AVM GmbH WLAN USB v1.1 (cdrom mode)
-> >> ID 057c:6201 AVM GmbH WLAN USB v1.1
-> >>
-> >> Is there an open source alternative for that driver, or do systems
-> >> with that device have to stay with kernel 2.6.24?
-> > 
-> > Please ask AVM, they have known about this for over 2 years now.
-> 
-> Please let's keep the politics out of this. I know who wrote that
-> patch, I know the agenda behind it and the discussion accompanying it.
-> Conversely, I'm sure you know fully well that I have no way of putting
-> that question to any relevant person at AVM, and even if I had, it would
-> achieve exactly nothing at all. I am not interested in such fruitless
-> political discussions. I have a simple question, to which I would like
-> a simple answer.
+It is not allowed to use NETDEV_TX_BUSY in tx path anymore.
 
-There's no "politics" here at all.
+Signed-off-by: Daniel Wagner <wagi@monom.org>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
 
-And why wouldn't you go ask AVM, they are the ones producing the driver
-for this hardware, how could it be our responsibility to get their code
-to work properly, when we have absolutely no way to do so?
+---
+v2: - Return non fishy error values.
+    - Use a exit_fail goto for the error path.
+---
+ drivers/net/wireless/rt2x00/rt2x00mac.c |   44 ++++++++++++++-----------------
+ 1 files changed, 20 insertions(+), 24 deletions(-)
 
-This is between you and AVM.  I really suggest contacting the company.
-I have talked to them in the past and they seem willing to help out
-where they can.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 77af1df..bb0ce51 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -37,6 +37,7 @@ static int rt2x00mac_tx_rts_cts(struct rt2x00_dev *rt2x00dev,
+ 	struct ieee80211_tx_info *rts_info;
+ 	struct sk_buff *skb;
+ 	int size;
++	int retval = 0;
+ 
+ 	if (tx_info->flags & IEEE80211_TX_CTL_USE_CTS_PROTECT)
+ 		size = sizeof(struct ieee80211_cts);
+@@ -44,9 +45,9 @@ static int rt2x00mac_tx_rts_cts(struct rt2x00_dev *rt2x00dev,
+ 		size = sizeof(struct ieee80211_rts);
+ 
+ 	skb = dev_alloc_skb(size + rt2x00dev->hw->extra_tx_headroom);
+-	if (!skb) {
++	if (unlikely(!skb)) {
+ 		WARNING(rt2x00dev, "Failed to create RTS/CTS frame.\n");
+-		return NETDEV_TX_BUSY;
++		return -ENOMEM;
+ 	}
+ 
+ 	skb_reserve(skb, rt2x00dev->hw->extra_tx_headroom);
+@@ -82,12 +83,11 @@ static int rt2x00mac_tx_rts_cts(struct rt2x00_dev *rt2x00dev,
+ 				  frag_skb->data, size, tx_info,
+ 				  (struct ieee80211_rts *)(skb->data));
+ 
+-	if (rt2x00queue_write_tx_frame(queue, skb)) {
++	retval = rt2x00queue_write_tx_frame(queue, skb);
++	if (retval)
+ 		WARNING(rt2x00dev, "Failed to send RTS/CTS frame.\n");
+-		return NETDEV_TX_BUSY;
+-	}
+ 
+-	return NETDEV_TX_OK;
++	return retval;
+ }
+ 
+ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+@@ -106,11 +106,8 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	 * Note that we can only stop the TX queues inside the TX path
+ 	 * due to possible race conditions in mac80211.
+ 	 */
+-	if (!test_bit(DEVICE_PRESENT, &rt2x00dev->flags)) {
+-		ieee80211_stop_queues(hw);
+-		dev_kfree_skb_any(skb);
+-		return NETDEV_TX_OK;
+-	}
++	if (!test_bit(DEVICE_PRESENT, &rt2x00dev->flags))
++		goto exit_fail;
+ 
+ 	/*
+ 	 * Determine which queue to put packet on.
+@@ -141,15 +138,11 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	if ((tx_info->flags & (IEEE80211_TX_CTL_USE_RTS_CTS |
+ 			       IEEE80211_TX_CTL_USE_CTS_PROTECT)) &&
+ 	    !rt2x00dev->ops->hw->set_rts_threshold) {
+-		if (rt2x00queue_available(queue) <= 1) {
+-			ieee80211_stop_queue(rt2x00dev->hw, qid);
+-			return NETDEV_TX_BUSY;
+-		}
+-
+-		if (rt2x00mac_tx_rts_cts(rt2x00dev, queue, skb)) {
+-			ieee80211_stop_queue(rt2x00dev->hw, qid);
+-			return NETDEV_TX_BUSY;
+-		}
++		if (rt2x00queue_available(queue) <= 1)
++			goto exit_fail;
++
++		if (rt2x00mac_tx_rts_cts(rt2x00dev, queue, skb))
++			goto exit_fail;
+ 	}
+ 
+ 	/*
+@@ -164,15 +157,18 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		ieee80211hdr->seq_ctrl |= cpu_to_le16(intf->seqno);
+ 	}
+ 
+-	if (rt2x00queue_write_tx_frame(queue, skb)) {
+-		ieee80211_stop_queue(rt2x00dev->hw, qid);
+-		return NETDEV_TX_BUSY;
+-	}
++	if (rt2x00queue_write_tx_frame(queue, skb))
++		goto exit_fail;
+ 
+ 	if (rt2x00queue_threshold(queue))
+ 		ieee80211_stop_queue(rt2x00dev->hw, qid);
+ 
+ 	return NETDEV_TX_OK;
++
++ exit_fail:
++	ieee80211_stop_queue(rt2x00dev->hw, qid);
++	dev_kfree_skb_any(skb);
++	return NETDEV_TX_OK;
+ }
+ EXPORT_SYMBOL_GPL(rt2x00mac_tx);
+ 
+-- 
+1.5.6.2
 
-thanks,
-
-greg k-h
