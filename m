@@ -1,143 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.184]:27451 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759231AbYGQSjS (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.190]:5106 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752469AbYGWS1c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 14:39:18 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so43738tic.23
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2008 11:39:17 -0700 (PDT)
-Message-ID: <68d6c8db0807171139g56032878l862b45928e42f093@mail.gmail.com> (sfid-20080717_203922_959084_4F39CCA3)
-Date: Thu, 17 Jul 2008 11:39:15 -0700
-From: "Brian Cavagnolo" <brian@cozybit.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: [PATCH 2/3] libertas: add sysfs hooks to update boot2 and persistent firmware
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <1216317285.23645.18.camel@localhost.localdomain>
+	Wed, 23 Jul 2008 14:27:32 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so932985nfc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 11:27:32 -0700 (PDT)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH] rfkill: rename rfkill_mutex to rfkill_global_mutex
+Date: Wed, 23 Jul 2008 20:44:46 +0200
+Cc: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>
+References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br> <1216775046-9506-6-git-send-email-hmh@hmh.eng.br>
+In-Reply-To: <1216775046-9506-6-git-send-email-hmh@hmh.eng.br>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <487f84b8.29578c0a.46a7.5cef@mx.google.com>
-	 <1216317285.23645.18.camel@localhost.localdomain>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200807232044.47129.IvDoorn@gmail.com>
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 17, 2008 at 10:54 AM, Dan Williams <dcbw@redhat.com> wrote:
-> On Wed, 2008-07-16 at 10:28 -0700, Brian Cavagnolo wrote:
->> To use these features, copy the boot2 and firmware images to /lib/firmware and:
->>
->> echo <boot2_image_name> > /sys/class/net/ethX/lbs_boot2
->> echo <firmware_image_name> > /sys/class/net/ethX/lbs_fw
->
-> Perhaps "lbs_flash_boot2" and "lbs_flash_fw" would be better names here?
-> Otherwise it looks like one of the drivers that you can choose alternate
-> firmware for (atmel.c for example) and doesn't give any indication that
-> it'll permanently change what's on the dongle.
+On Wednesday 23 July 2008, Henrique de Moraes Holschuh wrote:
+> rfkill_mutex and rfkill->mutex are too easy to confuse with each other.
+> 
+> Rename rfkill_mutex to rfkill_global_mutex, so that they are easier to tell
+> apart with just one glance.
+> 
+> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> Cc: Michael Buesch <mb@bu3sch.de>
 
-Sounds good.  I'll fix that and resubmit.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Ciao,
-Brian
+> ---
+>  net/rfkill/rfkill.c |   40 ++++++++++++++++++++--------------------
+>  1 files changed, 20 insertions(+), 20 deletions(-)
+> 
+> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+> index 2265bc5..d6e16e1 100644
+> --- a/net/rfkill/rfkill.c
+> +++ b/net/rfkill/rfkill.c
+> @@ -37,7 +37,7 @@ MODULE_DESCRIPTION("RF switch support");
+>  MODULE_LICENSE("GPL");
+>  
+>  static LIST_HEAD(rfkill_list);	/* list of registered rf switches */
+> -static DEFINE_MUTEX(rfkill_mutex);
+> +static DEFINE_MUTEX(rfkill_global_mutex);
+>  
+>  static unsigned int rfkill_default_state = RFKILL_STATE_UNBLOCKED;
+>  module_param_named(default_state, rfkill_default_state, uint, 0444);
+> @@ -209,7 +209,7 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
+>   * unless a specific switch is claimed by userspace (in which case,
+>   * that switch is left alone).
+>   *
+> - * Caller must have acquired rfkill_mutex.
+> + * Caller must have acquired rfkill_global_mutex.
+>   */
+>  static void __rfkill_switch_all(const enum rfkill_type type,
+>  				const enum rfkill_state state)
+> @@ -231,7 +231,7 @@ static void __rfkill_switch_all(const enum rfkill_type type,
+>   * @type: type of interfaces to be affected
+>   * @state: the new state
+>   *
+> - * Acquires rfkill_mutex and calls __rfkill_switch_all(@type, @state).
+> + * Acquires rfkill_global_mutex and calls __rfkill_switch_all(@type, @state).
+>   * Please refer to __rfkill_switch_all() for details.
+>   *
+>   * Does nothing if rfkill_set_state_lock() was used to lock state
+> @@ -239,10 +239,10 @@ static void __rfkill_switch_all(const enum rfkill_type type,
+>   */
+>  void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
+>  {
+> -	mutex_lock(&rfkill_mutex);
+> +	mutex_lock(&rfkill_global_mutex);
+>  	if (!rfkill_state_lock)
+>  		__rfkill_switch_all(type, state);
+> -	mutex_unlock(&rfkill_mutex);
+> +	mutex_unlock(&rfkill_global_mutex);
+>  }
+>  EXPORT_SYMBOL(rfkill_switch_all);
+>  
+> @@ -250,7 +250,7 @@ EXPORT_SYMBOL(rfkill_switch_all);
+>   * rfkill_epo - emergency power off all transmitters
+>   *
+>   * This kicks all rfkill devices to RFKILL_STATE_SOFT_BLOCKED, ignoring
+> - * everything in its path but rfkill_mutex and rfkill->mutex.
+> + * everything in its path but rfkill_global_mutex and rfkill->mutex.
+>   *
+>   * The global state before the EPO is saved and can be restored later
+>   * using rfkill_restore_states().
+> @@ -260,7 +260,7 @@ void rfkill_epo(void)
+>  	struct rfkill *rfkill;
+>  	int i;
+>  
+> -	mutex_lock(&rfkill_mutex);
+> +	mutex_lock(&rfkill_global_mutex);
+>  
+>  	rfkill_state_lock = 1;
+>  	list_for_each_entry(rfkill, &rfkill_list, node) {
+> @@ -272,7 +272,7 @@ void rfkill_epo(void)
+>  		rfkill_default_states[i] = rfkill_states[i];
+>  		rfkill_states[i] = RFKILL_STATE_SOFT_BLOCKED;
+>  	}
+> -	mutex_unlock(&rfkill_mutex);
+> +	mutex_unlock(&rfkill_global_mutex);
+>  }
+>  EXPORT_SYMBOL_GPL(rfkill_epo);
+>  
+> @@ -287,12 +287,12 @@ void rfkill_restore_states(void)
+>  {
+>  	int i;
+>  
+> -	mutex_lock(&rfkill_mutex);
+> +	mutex_lock(&rfkill_global_mutex);
+>  
+>  	rfkill_state_lock = 0;
+>  	for (i = 0; i < RFKILL_TYPE_MAX; i++)
+>  		__rfkill_switch_all(i, rfkill_default_states[i]);
+> -	mutex_unlock(&rfkill_mutex);
+> +	mutex_unlock(&rfkill_global_mutex);
+>  }
+>  EXPORT_SYMBOL_GPL(rfkill_restore_states);
+>  
+> @@ -306,9 +306,9 @@ EXPORT_SYMBOL_GPL(rfkill_restore_states);
+>   */
+>  void rfkill_set_state_lock(int lock)
+>  {
+> -	mutex_lock(&rfkill_mutex);
+> +	mutex_lock(&rfkill_global_mutex);
+>  	rfkill_state_lock = !!lock;
+> -	mutex_unlock(&rfkill_mutex);
+> +	mutex_unlock(&rfkill_global_mutex);
+>  }
+>  EXPORT_SYMBOL_GPL(rfkill_set_state_lock);
+>  
+> @@ -454,7 +454,7 @@ static ssize_t rfkill_claim_store(struct device *dev,
+>  	 * Take the global lock to make sure the kernel is not in
+>  	 * the middle of rfkill_switch_all
+>  	 */
+> -	error = mutex_lock_interruptible(&rfkill_mutex);
+> +	error = mutex_lock_interruptible(&rfkill_global_mutex);
+>  	if (error)
+>  		return error;
+>  
+> @@ -469,7 +469,7 @@ static ssize_t rfkill_claim_store(struct device *dev,
+>  		rfkill->user_claim = claim;
+>  	}
+>  
+> -	mutex_unlock(&rfkill_mutex);
+> +	mutex_unlock(&rfkill_global_mutex);
+>  
+>  	return error ? error : count;
+>  }
+> @@ -601,7 +601,7 @@ static int rfkill_add_switch(struct rfkill *rfkill)
+>  {
+>  	int error;
+>  
+> -	mutex_lock(&rfkill_mutex);
+> +	mutex_lock(&rfkill_global_mutex);
+>  
+>  	error = rfkill_check_duplicity(rfkill);
+>  	if (error < 0)
+> @@ -620,16 +620,16 @@ static int rfkill_add_switch(struct rfkill *rfkill)
+>  
+>  	error = 0;
+>  unlock_out:
+> -	mutex_unlock(&rfkill_mutex);
+> +	mutex_unlock(&rfkill_global_mutex);
+>  
+>  	return error;
+>  }
+>  
+>  static void rfkill_remove_switch(struct rfkill *rfkill)
+>  {
+> -	mutex_lock(&rfkill_mutex);
+> +	mutex_lock(&rfkill_global_mutex);
+>  	list_del_init(&rfkill->node);
+> -	mutex_unlock(&rfkill_mutex);
+> +	mutex_unlock(&rfkill_global_mutex);
+>  
+>  	mutex_lock(&rfkill->mutex);
+>  	rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
+> @@ -797,7 +797,7 @@ int rfkill_set_default(enum rfkill_type type, enum rfkill_state state)
+>  	     state != RFKILL_STATE_UNBLOCKED))
+>  		return -EINVAL;
+>  
+> -	mutex_lock(&rfkill_mutex);
+> +	mutex_lock(&rfkill_global_mutex);
+>  
+>  	if (!test_and_set_bit(type, &rfkill_states_lockdflt)) {
+>  		rfkill_default_states[type] = state;
+> @@ -805,7 +805,7 @@ int rfkill_set_default(enum rfkill_type type, enum rfkill_state state)
+>  	} else
+>  		error = -EPERM;
+>  
+> -	mutex_unlock(&rfkill_mutex);
+> +	mutex_unlock(&rfkill_global_mutex);
+>  	return error;
+>  }
+>  EXPORT_SYMBOL_GPL(rfkill_set_default);
 
->> Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
->> ---
->>  drivers/net/wireless/libertas/if_usb.c |   71 ++++++++++++++++++++++++++++++++
->>  1 files changed, 71 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
->> index e83a4c2..c89785c 100644
->> --- a/drivers/net/wireless/libertas/if_usb.c
->> +++ b/drivers/net/wireless/libertas/if_usb.c
->> @@ -51,6 +51,68 @@ static void if_usb_free(struct if_usb_card *cardp);
->>  static int if_usb_submit_rx_urb(struct if_usb_card *cardp);
->>  static int if_usb_reset_device(struct if_usb_card *cardp);
->>
->> +/* sysfs hooks */
->> +
->> +/**
->> + *  Set function to write firmware to device's persistent memory
->> + */
->> +static ssize_t if_usb_firmware_set(struct device *dev,
->> +             struct device_attribute *attr, const char *buf, size_t count)
->> +{
->> +     struct lbs_private *priv = to_net_dev(dev)->priv;
->> +     struct if_usb_card *cardp = priv->card;
->> +     char fwname[FIRMWARE_NAME_MAX];
->> +     int ret;
->> +
->> +     if (!(priv->fwcapinfo & FW_CAPINFO_FIRMWARE_UPGRADE))
->> +             return -EOPNOTSUPP;
->> +
->> +     sscanf(buf, "%29s", fwname); /* FIRMWARE_NAME_MAX - 1 = 29 */
->> +     ret = if_usb_prog_firmware(cardp, fwname, BOOT_CMD_UPDATE_FW);
->> +     if (ret == 0)
->> +             return count;
->> +
->> +     return ret;
->> +}
->> +
->> +/**
->> + * lbs_fw attribute to be exported per ethX interface through sysfs
->> + * (/sys/class/net/ethX/lbs_fw).  Use this like so to write firmware to the
->> + * device's persistent memory:
->> + * echo usb8388-5.126.0.p5.bin > /sys/class/net/ethX/lbs_fw
->> + */
->> +static DEVICE_ATTR(lbs_fw, 0200, NULL, if_usb_firmware_set);
->> +
->> +/**
->> + *  Set function to write firmware to device's persistent memory
->> + */
->> +static ssize_t if_usb_boot2_set(struct device *dev,
->> +             struct device_attribute *attr, const char *buf, size_t count)
->> +{
->> +     struct lbs_private *priv = to_net_dev(dev)->priv;
->> +     struct if_usb_card *cardp = priv->card;
->> +     char fwname[FIRMWARE_NAME_MAX];
->> +     int ret;
->> +
->> +     if (!(priv->fwcapinfo & FW_CAPINFO_BOOT2_UPGRADE))
->> +             return -EOPNOTSUPP;
->> +
->> +     sscanf(buf, "%29s", fwname); /* FIRMWARE_NAME_MAX - 1 = 29 */
->> +     ret = if_usb_prog_firmware(cardp, fwname, BOOT_CMD_UPDATE_BOOT2);
->> +     if (ret == 0)
->> +             return count;
->> +
->> +     return ret;
->> +}
->> +
->> +/**
->> + * lbs_boot2 attribute to be exported per ethX interface through sysfs
->> + * (/sys/class/net/ethX/lbs_boot2).  Use this like so to write firmware to the
->> + * device's persistent memory:
->> + * echo usb8388-5.126.0.p5.bin > /sys/class/net/ethX/lbs_boot2
->> + */
->> +static DEVICE_ATTR(lbs_boot2, 0200, NULL, if_usb_boot2_set);
->> +
->>  /**
->>   *  @brief  call back function to handle the status of the URB
->>   *  @param urb               pointer to urb structure
->> @@ -263,6 +325,12 @@ static int if_usb_probe(struct usb_interface *intf,
->>       usb_get_dev(udev);
->>       usb_set_intfdata(intf, cardp);
->>
->> +     if (device_create_file(&priv->dev->dev, &dev_attr_lbs_fw))
->> +             lbs_pr_err("cannot register lbs_fw attribute\n");
->> +
->> +     if (device_create_file(&priv->dev->dev, &dev_attr_lbs_boot2))
->> +             lbs_pr_err("cannot register lbs_boot2 attribute\n");
->> +
->>       return 0;
->>
->>  err_start_card:
->> @@ -288,6 +356,9 @@ static void if_usb_disconnect(struct usb_interface *intf)
->>
->>       lbs_deb_enter(LBS_DEB_MAIN);
->>
->> +     device_remove_file(&priv->dev->dev, &dev_attr_lbs_boot2);
->> +     device_remove_file(&priv->dev->dev, &dev_attr_lbs_fw);
->> +
->>       cardp->surprise_removed = 1;
->>
->>       if (priv) {
->
->
+
