@@ -1,136 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:40927 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755181AbYGJVvZ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51810 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751916AbYGWOze (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 17:51:25 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC] Try to improve RTL8187B initialization time
-Date: Thu, 10 Jul 2008 18:51:31 -0300
-Cc: "Hin-Tak Leung" <htl10@users.sourceforge.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>, proski@gnu.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200807101851.31985.herton@mandriva.com.br> (sfid-20080710_235209_994396_6A54BAE1)
+	Wed, 23 Jul 2008 10:55:34 -0400
+Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks
+	rtl8187
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <4886C50E.6040304@lwfinger.net>
+References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
+	 <200807221613.34434.herton@mandriva.com.br>
+	 <3ace41890807221525r67716ea0r251068df773fe53f@mail.gmail.com>
+	 <200807221940.20009.herton@mandriva.com.br> <4886AA3B.3000406@lwfinger.net>
+	 <4886C50E.6040304@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JMKJ5UdLSoJqilbugeqU"
+Date: Wed, 23 Jul 2008 16:55:17 +0200
+Message-Id: <1216824917.13587.9.camel@johannes.berg> (sfid-20080723_165555_146417_BAD2F5E0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As reported before, we know that the initialization of rtl8187b interfaces is
-slow. There were some strange sleeps from vendor driver that were imported too
-just to be sure, but they don't seem to be needed. After looking at r8180 code,
-I think they really aren't needed, and using it as reference, I did a similar
-initialization now for rtl8187b, on quick tests seems to work well.
 
-Another thing I got is a RTL818X_CONFIG3_ANAPARAM_WRITE being enabled without
-writing any ANAPARAM value (this came from vendor driver also), I changed it to
-write ANAPARAM_ON like on other places and disable config3 write, but in my
-tests didn't seem to make any noticeable difference.
+--=-JMKJ5UdLSoJqilbugeqU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
-index f981fdb..25d9a0e 100644
---- a/drivers/net/wireless/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl8187_dev.c
-@@ -634,8 +634,6 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
- 	rtl818x_iowrite32_idx(priv, (__le32 *)0xFFF4, 0, 1);
- 	rtl818x_iowrite8_idx(priv, (u8 *)0xFFF8, 0, 1);
- 
--	rtl818x_iowrite32(priv, &priv->map->RF_TIMING, 0x00004001);
--
- 	rtl818x_iowrite16_idx(priv, (__le16 *)0xFF72, 0x569A, 2);
- 
- 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
-@@ -643,14 +641,13 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
- 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
- 	reg |= RTL818X_CONFIG3_ANAPARAM_WRITE;
- 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg);
-+	rtl818x_iowrite32(priv, &priv->map->ANAPARAM,
-+			  RTL8187B_RTL8225_ANAPARAM_ON);
-+	reg &= ~RTL818X_CONFIG3_ANAPARAM_WRITE;
-+	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg);
- 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
- 			 RTL818X_EEPROM_CMD_NORMAL);
- 
--	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, 0x0480);
--	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, 0x2488);
--	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x1FFF);
--	msleep(1100);
--
- 	priv->rf->init(dev);
- 
- 	reg = RTL818X_CMD_TX_ENABLE | RTL818X_CMD_RX_ENABLE;
-diff --git a/drivers/net/wireless/rtl8187_rtl8225.c b/drivers/net/wireless/rtl8187_rtl8225.c
-index 1bae899..9549e33 100644
---- a/drivers/net/wireless/rtl8187_rtl8225.c
-+++ b/drivers/net/wireless/rtl8187_rtl8225.c
-@@ -835,6 +835,15 @@ static void rtl8225z2_b_rf_init(struct ieee80211_hw *dev)
- 	struct rtl8187_priv *priv = dev->priv;
- 	int i;
- 
-+	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, 0x0480);
-+	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, 0x2488);
-+	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x1FFF);
-+	msleep(200);
-+	rtl818x_iowrite32(priv, &priv->map->RF_TIMING, 0x00004001);
-+	rtl818x_iowrite32(priv, &priv->map->RF_PARA, 0x00100044);
-+
-+	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x1FFF);
-+
- 	rtl8225_write(dev, 0x0, 0x0B7); msleep(1);
- 	rtl8225_write(dev, 0x1, 0xEE0); msleep(1);
- 	rtl8225_write(dev, 0x2, 0x44D); msleep(1);
-@@ -850,25 +859,36 @@ static void rtl8225z2_b_rf_init(struct ieee80211_hw *dev)
- 	rtl8225_write(dev, 0xc, 0x850); msleep(1);
- 	rtl8225_write(dev, 0xd, 0xCDF); msleep(1);
- 	rtl8225_write(dev, 0xe, 0x02B); msleep(1);
--	rtl8225_write(dev, 0xf, 0x114); msleep(1);
-+	rtl8225_write(dev, 0xf, 0x114); msleep(100);
- 
--	rtl8225_write(dev, 0x0, 0x1B7); msleep(1);
-+	if (!(rtl8225_read(dev, 6) & (1 << 7))) {
-+		rtl8225_write(dev, 0x02, 0x0C4D);
-+		msleep(200);
-+		rtl8225_write(dev, 0x02, 0x044D);
-+		msleep(100);
-+		/* TODO: detect calibration failure? */
-+	}
-+
-+	rtl8225_write(dev, 0x0, 0x1B7);
-+	rtl8225_write(dev, 0x3, 0x002);
-+	rtl8225_write(dev, 0x5, 0x004);
- 
- 	for (i = 0; i < ARRAY_SIZE(rtl8225z2_rxgain); i++) {
--		rtl8225_write(dev, 0x1, i + 1); msleep(1);
--		rtl8225_write(dev, 0x2, rtl8225z2_rxgain[i]); msleep(1);
-+		rtl8225_write(dev, 0x1, i + 1);
-+		rtl8225_write(dev, 0x2, rtl8225z2_rxgain[i]);
- 	}
- 
--	rtl8225_write(dev, 0x3, 0x080); msleep(1);
--	rtl8225_write(dev, 0x5, 0x004); msleep(1);
--	rtl8225_write(dev, 0x0, 0x0B7); msleep(1);
--	msleep(3000);
-+	rtl8225_write(dev, 0x0, 0x0B7);
-+	msleep(100);
-+	rtl8225_write(dev, 0x2, 0xC4D);
-+	msleep(200);
-+	rtl8225_write(dev, 0x2, 0x44D);
-+	msleep(100);
- 
--	rtl8225_write(dev, 0x2, 0xC4D); msleep(1);
--	msleep(2000);
-+	rtl8225_write(dev, 0x00, 0x2BF);
-+	rtl8225_write(dev, 0xFF, 0xFFFF);
- 
--	rtl8225_write(dev, 0x2, 0x44D); msleep(1);
--	rtl8225_write(dev, 0x0, 0x2BF); msleep(1);
-+	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x1FFF);
- 
- 	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_CCK, 0x03);
- 	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_OFDM, 0x07);
+On Wed, 2008-07-23 at 00:43 -0500, Larry Finger wrote:
+> Johannes,
+>=20
+> In the current wireless-testing (v2.6.26-rc9-14207-ga520bdb), rtl8187 is =
+broken.=20
+> In most cases, it is unable to complete a connection. Occasionally, it wi=
+ll=20
+> authenticate and even get an IP using DHCP; however, only a few pings get=
+=20
+> through to the AP before the connection fails completely.
+>=20
+> Using bisection, this problem was traced to:
+>=20
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D
+> commit 741b4fbc441dba885cc8f97a10e87f2acd04c5f2
+> Author: Johannes Berg <johannes@sipsolutions.net>
+> Date:   Thu Jul 10 11:21:26 2008 +0200
+>=20
+>      mac80211: fix TX sequence numbers
 
+> The validity of the bisection was confirmed by reverse application of the=
+ patch.=20
+> The resulting driver worked.
+>=20
+> The appears that rtl8187 needs some kind of modification such as b43, b43=
+legacy,=20
+> and rt2x00 got in the original patch. I'll be studying the changes to the=
+ other=20
+> drivers to see if I can find the problem, but I will appreciate your help=
+ when=20
+> you get a chance. Perhaps after your trip to Canada is over.
 
--- 
-[]'s
-Herton
+Oh, crap. If you look at the patch, it removes the sequence numbers for
+non-TID frames, and puts them back into rt2x00 because I thought rt2x00
+was the only driver that needed software sequence numbering. It looks
+like rtl8187 and zd1211 might need that too, so we need to copy the
+rt2x00 code that I put into that particular patch to those drivers.
+
+johannes
+
+--=-JMKJ5UdLSoJqilbugeqU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIh0ZSAAoJEKVg1VMiehFY9msP/A9Z7ReGn6jxayqRzK+ljpcG
+9xkyAmteMk5gRfhmMhvF/Z9MpcNnDUu1EIkFoa09Y5UIbh+LEZNw4bCAJO7jIA/D
+vHlcbRnb3qZwliOYNCzpvLEGmucfc2SQXk8IzpqjPIjUsvdh6SAqYKLrI2xBSzm6
+to+9lswYSXWD4FvzPQvMlqs5ezxF14Q38EOlCYR4JJo2EXKggFG4phTrCNzj3wzr
+mTk+iJU5y8C8+uiFNWcVcsxiErU1wBCujJa/0gz83+f45NTfA0AInDUJyEhdImhn
+IjuPf+fLZ7+TwFy7qedzLcfCawv1aLyR3cZ//osk0YHC9v7Y42MgL26cR+k2YkWo
+Y5abtcYFF7z/wJE4R67voh11HiZ2SceM8D7ueU8nGUkFSkySFJFOTwbFtJDs3Jhy
+JWLdJOxYcz+s/40xy2l9KSQZTwuriI4zH6n8IUh/SQ7VKWCYyrS3hS2MH4fzrZtm
+13+QAtDvBhDKgkPEEwGOeIiqsWcaHg5AyQ4jDpeAdZJb7lGvDZHtqKxTKjs7asyu
+e2oEUwZ49XYgsE1Q8McvS2xwqF6ggMlhNzNkWPRx4bb4X7w2j+8vzgETea1Udy3r
+IV0WPovqnnvoijJmhok9VW9xpNsFTpxabWUhglSbNLtlPn+0Vb8WBzwNb/HZNUn8
+tdnBMLaVWX2n/BWb6nX3
+=BTlO
+-----END PGP SIGNATURE-----
+
+--=-JMKJ5UdLSoJqilbugeqU--
+
