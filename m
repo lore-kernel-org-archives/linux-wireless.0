@@ -1,75 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48622 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751924AbYGIQHt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 12:07:49 -0400
-Subject: Re: [PATCH 1/3] mac80211: Include sequence number in IBSS and Mesh
-	beacons
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200807091808.18664.IvDoorn@gmail.com> (sfid-20080709_175930_612304_B9C46F05)
-References: <200807091511.14288.IvDoorn@gmail.com>
-	 <200807091748.49796.IvDoorn@gmail.com>
-	 <1215618570.3246.30.camel@johannes.berg>
-	 <200807091808.18664.IvDoorn@gmail.com>
-	 (sfid-20080709_175930_612304_B9C46F05)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0f0wrUuDFtNC3pgzKTpc"
-Date: Wed, 09 Jul 2008 18:07:01 +0200
-Message-Id: <1215619621.3246.37.camel@johannes.berg> (sfid-20080709_180754_956454_C41060B9)
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:5419 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751439AbYGXPtG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jul 2008 11:49:06 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 1/1] mac80211: fix-fragmentation-kludge.patch
+Date: Thu, 24 Jul 2008 18:46:44 +0300
+Message-Id: <1216914404-29029-1-git-send-email-tomas.winkler@intel.com> (sfid-20080724_174911_374365_3897EECE)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch make mac80211 transmit correctly fragmented packet after
+queue was stopped
 
---=-0f0wrUuDFtNC3pgzKTpc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/tx.c          |   17 +++++++++++++----
+ net/mac80211/util.c        |    1 +
+ 3 files changed, 15 insertions(+), 4 deletions(-)
 
-On Wed, 2008-07-09 at 18:08 +0200, Ivo van Doorn wrote:
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 3ac23b8..98e0283 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -580,6 +580,7 @@ struct ieee80211_local {
+ 	struct timer_list sta_cleanup;
+ 
+ 	unsigned long queues_pending[BITS_TO_LONGS(IEEE80211_MAX_QUEUES)];
++	unsigned long queues_pending_run[BITS_TO_LONGS(IEEE80211_MAX_QUEUES)];
+ 	struct ieee80211_tx_stored_packet pending_packet[IEEE80211_MAX_QUEUES];
+ 	struct tasklet_struct tx_pending_tasklet;
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 2b912cf..4d9f9cb 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1061,13 +1061,15 @@ static int ieee80211_tx_prepare(struct ieee80211_tx_data *tx,
+ static int __ieee80211_tx(struct ieee80211_local *local, struct sk_buff *skb,
+ 			  struct ieee80211_tx_data *tx)
+ {
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_tx_info *info;
+ 	int ret, i;
+ 
+-	if (netif_subqueue_stopped(local->mdev, skb))
+-		return IEEE80211_TX_AGAIN;
+ 
+ 	if (skb) {
++		if (netif_subqueue_stopped(local->mdev, skb))
++			return IEEE80211_TX_AGAIN;
++		info =  IEEE80211_SKB_CB(skb);
++
+ 		ieee80211_dump_frame(wiphy_name(local->hw.wiphy),
+ 				     "TX to low-level driver", skb);
+ 		ret = local->ops->tx(local_to_hw(local), skb);
+@@ -1216,6 +1218,7 @@ retry:
+ 
+ 		if (ret == IEEE80211_TX_FRAG_AGAIN)
+ 			skb = NULL;
++
+ 		set_bit(queue, local->queues_pending);
+ 		smp_mb();
+ 		/*
+@@ -1246,6 +1249,7 @@ retry:
+ 		store->last_frag_rate_idx = tx.last_frag_rate_idx;
+ 		store->last_frag_rate_ctrl_probe =
+ 			!!(tx.flags & IEEE80211_TX_PROBE_LAST_FRAG);
++
+ 	}
+  out:
+ 	rcu_read_unlock();
+@@ -1721,14 +1725,19 @@ void ieee80211_tx_pending(unsigned long data)
+ 	netif_tx_lock_bh(dev);
+ 	for (i = 0; i < ieee80211_num_regular_queues(&local->hw); i++) {
+ 		/* Check that this queue is ok */
+-		if (__netif_subqueue_stopped(local->mdev, i))
++		if (__netif_subqueue_stopped(local->mdev, i) &&
++		    !test_bit(i, local->queues_pending_run))
+ 			continue;
+ 
+ 		if (!test_bit(i, local->queues_pending)) {
++			clear_bit(i, local->queues_pending_run);
+ 			ieee80211_wake_queue(&local->hw, i);
+ 			continue;
+ 		}
+ 
++		clear_bit(i, local->queues_pending_run);
++		netif_start_subqueue(local->mdev, i);
++
+ 		store = &local->pending_packet[i];
+ 		tx.extra_frag = store->extra_frag;
+ 		tx.num_extra_frag = store->num_extra_frag;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 89ce4e0..02af3e8 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -361,6 +361,7 @@ void ieee80211_wake_queue(struct ieee80211_hw *hw, int queue)
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 
+ 	if (test_bit(queue, local->queues_pending)) {
++		set_bit(queue, local->queues_pending_run);
+ 		tasklet_schedule(&local->tx_pending_tasklet);
+ 	} else {
+ 		if (ieee80211_is_multiqueue(local)) {
+-- 
+1.5.4.1
 
-> rt2500usb: Not per-frame, it can only be disabled globally
-> rt61pci: Both per-frame as well as globally
-> rt73usb: Both per-frame as well as globally
-> rt2800pci: Not per-frame, not sure about globally
-> rt2800usb: Not per-frame, not sure about globally
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-Interesting. The reason that broadcom firmware allows to disable
-per-frame is actually to implement the per-TID counters in software.
-
-> Note that I don't know if these devices handle the TID and the not QOS se=
-quence
-> counting in the hardware. I'll have to consult the specsheets for that.
-
-Not much we can do about it either way unless you want to always disable
-globally.
-
-johannes
-
---=-0f0wrUuDFtNC3pgzKTpc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIdOIiAAoJEKVg1VMiehFYecEP/1u36PL/IBdGQWoxrutwguLo
-BHVBv/BoM3H86siv6o8mEAsG7mEUY5YkFhkxHYMsjnnfy11/Eh7ZOQlkLqpR/Zqu
-NqA9Edk9NlT+m5XAk6gdyT5uFwXKvy9VpUaeKFM8Or6ZxQ8p5i96dojj2tw6Qgh9
-y1AjGi6EUIUUn/O3sfxqhb6TY8NCJbu3mlqZ8bpzSGFDWTn007uuZDDuZB2x1rve
-69m3xTmoOEIFe2kbxiDXuPXGRdt/yTFJ0jJXidLt7aqjLz9KraLPyjofUJ/tb10y
-RxWkYIS3tur57T4CvJkhQrBGMFyvSXys7HGvNjWC3K5sCioVmFAz49NKbVAlVV8r
-XzjTJKhQKeTZ0iwkkd3xQIvbei4jaVzTUQQtOILJFC8ANqteXibqlSHH0EgVAoTZ
-e3Ah7E2kFWPJ+teouJRfCG6jHsPEG9YvI8ouipBLOOTp2AyrXeZsBDmauZqlgVk7
-JiyLBSZzXaQYtNehZLUWQQ52dxR7ehJFkHswBDmeug9B6XInYjlFGXnHdRZKV3bk
-6IUsmA2FqJtdQneQ/7psVdB42pOXpZBuQSNHpX6P3O7A6BPAWKY1mN/Su8VQIBBM
-sDO5gX4I5RfADrUgQnQAGAFDWjQftTryW0o8KwI8M4wkFWh/YSeNO42k23f8SXPS
-YRWHz3uLP+WIIB1aXiKD
-=/vti
------END PGP SIGNATURE-----
-
---=-0f0wrUuDFtNC3pgzKTpc--
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
