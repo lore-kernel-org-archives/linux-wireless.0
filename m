@@ -1,50 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2627 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751436AbYGYUAb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2008 16:00:31 -0400
-Received: from ra.tuxdriver.com (ra.tuxdriver.com [127.0.0.1])
-	by ra.tuxdriver.com (8.14.0/8.14.0) with ESMTP id m6PK0HT3007075
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2008 16:00:27 -0400
-Received: (from uucp@localhost)
-	by ra.tuxdriver.com (8.14.0/8.14.0/Submit) with UUCP id m6PJkACf006899
-	for linux-wireless@vger.kernel.org; Fri, 25 Jul 2008 15:46:10 -0400
-Received: from linville-t43.local (localhost.localdomain [127.0.0.1])
-	by linville-t43.local (8.14.2/8.13.8) with ESMTP id m6PJj0fn006242
-	for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2008 15:45:00 -0400
-Received: (from linville@localhost)
-	by linville-t43.local (8.14.2/8.14.2/Submit) id m6PJj0a7006240
-	for linux-wireless@vger.kernel.org; Fri, 25 Jul 2008 15:45:00 -0400
-Date: Fri, 25 Jul 2008 15:44:59 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: OLS2008 wireless presentation slides available
-Message-ID: <20080725194459.GB5809@tuxdriver.com> (sfid-20080725_220039_025257_AB225BBD)
+Received: from yx-out-2324.google.com ([74.125.44.30]:4069 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751586AbYGXQNU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jul 2008 12:13:20 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so506273yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2008 09:13:19 -0700 (PDT)
+Message-ID: <69e28c910807240913t4430fc73yd89da535f3698ee2@mail.gmail.com> (sfid-20080724_181323_537464_7E7C72C3)
+Date: Thu, 24 Jul 2008 18:13:18 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Robert P. J. Day" <rpjday@crashcourse.ca>
+Subject: Re: [PATCH] WIRELESS: Make wireless immediately deselectable.
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <alpine.LFD.1.10.0807241201230.3685@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+References: <alpine.LFD.1.10.0807241201230.3685@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several have asked about the slides from my OLS presentation.  I have
-made a version of my slides available here:
+On Thu, Jul 24, 2008 at 6:03 PM, Robert P. J. Day <rpjday@crashcourse.ca> wrote:
+>
+> Use a "menuconfig" Kconfig directive to allow wireless support to be
+> one-click deselectable.
+>
+> Signed-off-by: Robert P. J. Day <rpjday@crashcourse.ca>
+>
+> ---
+>
+>  this *looks* like it's a safe enhancement.
+>
+> diff --git a/net/Kconfig b/net/Kconfig
+> index b986687..4e01cec 100644
+> --- a/net/Kconfig
+> +++ b/net/Kconfig
+> @@ -239,14 +239,17 @@ source "net/rxrpc/Kconfig"
+>  config FIB_RULES
+>        bool
+>
+> -menu "Wireless"
+> +menuconfig WIRELESS
+> +       bool "Wireless"
+>        depends on !S390
+>
+> +if WIRELESS
+> +
+>  source "net/wireless/Kconfig"
+>  source "net/mac80211/Kconfig"
+>  source "net/ieee80211/Kconfig"
+>
+> -endmenu
+> +endif # WIRELESS
+>
+>  source "net/rfkill/Kconfig"
+>  source "net/9p/Kconfig"
+>
+> ========================================================================
+> Robert P. J. Day
+> Linux Consulting, Training and Annoying Kernel Pedantry:
+>    Have classroom, will lecture.
+>
+> http://crashcourse.ca                          Waterloo, Ontario, CANADA
+> ========================================================================
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/ols2008/presentation.pdf
+This should default to Enabled.
 
-This version has each slide collapsed onto a single page in the
-pdf -- the version I used in the presentation used several pdf pages
-in sequence in order to simulate revealing individual bullets on the
-slides and such.  If someone really wants that then send me a note
-asking for it.
-
-Some have asked what tool was used to produce the slides.  They were
-produced with the Beamer class for LaTeX.  I highly recommend it.
-
-	http://en.wikipedia.org/wiki/Beamer_(LaTeX)
-
-Thanks,
-
-John
 -- 
-John W. Linville
-linville@tuxdriver.com
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
