@@ -1,26 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.224]:63372 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751306AbYGUSrw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 14:47:52 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1484497rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 11:47:51 -0700 (PDT)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-From: Brian Cavagnolo <brian@cozybit.com>
-Date: Mon, 21 Jul 2008 11:05:43 -0700
-Subject: [PATCH 0/3 RESEND] libertas: support for some persistent settings/features
-Message-ID: <4884d9d6.02578c0a.49dd.fffffa11@mx.google.com> (sfid-20080721_204755_820284_86200B0F)
+Received: from cn.fujitsu.com ([222.73.24.84]:64331 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1750836AbYGXBDI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 21:03:08 -0400
+Message-ID: <4887D46C.80304@cn.fujitsu.com> (sfid-20080724_030313_570030_E340A570)
+Date: Thu, 24 Jul 2008 09:01:32 +0800
+From: Wang Chen <wangchen@cn.fujitsu.com>
+MIME-Version: 1.0
+To: David Miller <davem@davemloft.net>
+CC: markus@trippelsdorf.de, ag@alessandroguido.name,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] skge: resolve tx multiqueue bug
+References: <20080723101827.GA2236@gentoox2.trippelsdorf.de>	<20080723140347.GA2245@gentoox2.trippelsdorf.de>	<48874C6A.1020604@cn.fujitsu.com> <20080723.153000.172383135.davem@davemloft.net>
+In-Reply-To: <20080723.153000.172383135.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some Marvell USB hardware, such as the OLPC Active Antenna, have writable
-persistent settings for stand-alone use.  They also allow updates of the
-bootloader and a stand-alone firmware image.  These patches add support for
-some of these features and improve some existing support.
+David Miller said the following on 2008-7-24 6:30:
+> From: Wang Chen <wangchen@cn.fujitsu.com>
+> Date: Wed, 23 Jul 2008 23:21:14 +0800
+> 
+>> Markus Trippelsdorf said the following on 2008-7-23 22:03:
+>>> On Wed, Jul 23, 2008 at 12:18:27PM +0200, Markus Trippelsdorf wrote:
+>>>> On Wed, Jul 23, 2008 at 04:50:13PM +0800, Wang Chen wrote:
+>>>>> Markus Trippelsdorf said the following on 2008-7-23 13:40:
+>>>>>> On Tue, Jul 22, 2008 at 11:54:26AM +0200, Alessandro Guido wrote:
+>>>>>>> Got a WARNING this morning (2.6.26-05752-g93ded9b) and I think it's related.
+>>>>>> Same thing here (latest git):
+>>>>>>
+>>>>>> skge eth1: enabling interface
+>>>>>> skge eth1: disabling interface
+>>>>>> ------------[ cut here ]------------
+>>>>>> WARNING: at net/core/dev.c:1344 __netif_schedule+0x24/0x6d()
+>>>>>> Pid: 1904, comm: ip Not tainted 2.6.26-06077-gc010b2f #33
+>>>>>>  [<ffffffff8020b3eb>] system_call_after_swapgs+0x7b/0x80
+>>>> ...
+>>>>>> ---[ end trace 92936ef183e09876 ]---
+>>>>>> skge eth1: enabling interface
+>>>>>> skge eth1: Link is up at 100 Mbps, full duplex, flow control both
+>>>>>>
+>>>>> Markus, please try this.
+>>>>>
+>>>>> - Add netif_start_queue() in ->open()
+>>>>> - netif_carrier_*() is enough, remove netif_*_queue()
+>>>> Unfortunately, your patch does not fix this. I still get the same warning.
+>>>>
+>>> This patch works for me:
+>> Your patch works for me too. So I think it's better than mine. :)
+>>
+>> Tested-by: Wang Chen <wangchen@cn.fujitsu.com>
+>>
+>> Dave, since Markus and me tested this patch, would you please apply it?
+> 
+> I can't, it's whitespace damaged.  All the tabs are turned into spaces,
+> also there is no signoff from Markus.
+> 
 
-
-Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
-
+OK. So let it be, since you removed the warning from __netif_schedule().
+I will wait for your netif_tx_{free,unfreeze}() :)
 
