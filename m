@@ -1,85 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:51631 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750962AbYG3QHg (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40711 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757867AbYGXOqa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 12:07:36 -0400
-Message-ID: <489091C6.9070805@lwfinger.net> (sfid-20080730_180740_024487_6FFF2C12)
-Date: Wed, 30 Jul 2008 11:07:34 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: Hin-Tak Leung <hintak_leung@yahoo.co.uk>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] rtl8187: Fix lockups due to concurrent access to config routine
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 24 Jul 2008 10:46:30 -0400
+Subject: Re: Another fragmentation multiqueue kludge
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: David Miller <davem@davemloft.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Guy Cohen <guy.cohen@intel.com>,
+	"Rindjunsky, Ron" <ron.rindjunsky@intel.com>
+In-Reply-To: <1ba2fa240807240737lf649fc8m3c4236329e02288@mail.gmail.com> (sfid-20080724_163702_761474_58DA06D5)
+References: <1ba2fa240807231441u7b870a15rb525771e364f65f3@mail.gmail.com>
+	 <1ba2fa240807240601o2c083347rf5f1b6507e0abe7c@mail.gmail.com>
+	 <1216908973.13587.65.camel@johannes.berg>
+	 <1ba2fa240807240737lf649fc8m3c4236329e02288@mail.gmail.com>
+	 (sfid-20080724_163702_761474_58DA06D5)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gVoMbukZoBmgskCWIApa"
+Date: Thu, 24 Jul 2008 16:46:16 +0200
+Message-Id: <1216910776.13587.74.camel@johannes.berg> (sfid-20080724_164652_585829_48DF9110)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some users of the RTL8187B have experienced difficulties since commit
-8f87dd7e540d455f8e7f11478133b85edc969c67 that introduced the power
-management wext hooks. This difficulty has not made much sense until
-it was realized that it was possible for mac80211 to make a call to the
-config routine while that routine was already being executed. This patch
-protects the critical section with a mutex.
 
-The problem was found by Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-who also suggested this type of fix.
+--=-gVoMbukZoBmgskCWIApa
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Acked-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
----
+On Thu, 2008-07-24 at 17:37 +0300, Tomas Winkler wrote:
 
-John,
+> >> -       struct ieee80211_tx_info *info =3D IEEE80211_SKB_CB(skb);
+> >> +       struct ieee80211_tx_info *info;
+> >>         int ret, i;
+> >>
+> >> -       if (netif_subqueue_stopped(local->mdev, skb))
+> >> -               return IEEE80211_TX_AGAIN;
+> >>
+> >>         if (skb) {
+> >> +               if (netif_subqueue_stopped(local->mdev, skb))
+> >> +                       return IEEE80211_TX_AGAIN;
+> >> +               info =3D IEEE80211_SKB_CB(skb);
+> >> +
+> >
+> > This isn't right. It means that if you have a stopped queue and pending
+> > fragments, you still transmit them, which is not something the driver
+> > should have to expect.
+>=20
+> This logic was wrong you cannot access skb and then ask if'ts not
+> NULL. (it actually creates nice panic in fragmentation)
 
-This is 2.6.27 material as it fixes a bug.
+Oh, indeed, and since the same check is actually in the if
+(tx->extra_frag) part, this is fine.
 
-Larry
----
+> >>         if (test_bit(queue, local->queues_pending)) {
+> >> +               /* don't call scheduler just open the queue */
+> >> +               if (ieee80211_is_multiqueue(local)) {
+> >> +                       netif_start_subqueue(local->mdev, queue);
+> >> +               } else {
+> >> +                       WARN_ON(queue !=3D 0);
+> >> +                       netif_start_queue(local->mdev);
+> >> +               }
+> >>                 tasklet_schedule(&local->tx_pending_tasklet);
+> >>         } else {
+> >>                 if (ieee80211_is_multiqueue(local)) {
+> >
+> > That's not right either, if you have pending fragments/packets then you
+> > cannot start the queue.
+>=20
+> Exactly this what I wrote are my concern on the other hand
+> that's the kludge because the __ieee80211_tx checks whether the queue
+> is started so there is no way
+> the pending packet is transmitted if you don't start the queue. I have
+> new version of the patch that starts
+> the queue only in the tasklet. Tasklet is locks tx so the next packet
+> will come only after the pending packet is transmitted.
 
+What happens if you just invert the
+                if (__netif_subqueue_stopped(local->mdev, i))
+                        continue;
 
-Index: wireless-testing/drivers/net/wireless/rtl8187.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl8187.h
-+++ wireless-testing/drivers/net/wireless/rtl8187.h
-@@ -94,6 +94,10 @@ struct rtl8187_priv {
-  	const struct rtl818x_rf_ops *rf;
-  	struct ieee80211_vif *vif;
-  	int mode;
-+	/* The mutex protects the TX loopback state.
-+	 * Any attempt to set channels concurrently locks the device.
-+	 */
-+	struct mutex conf_mutex;
+check in ieee80211_tx_pending to read
+                if (!__netif_subqueue_stopped(local->mdev, i))
+                        continue;
 
-  	/* rtl8187 specific */
-  	struct ieee80211_channel channels[14];
-Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
-@@ -864,6 +864,7 @@ static int rtl8187_config(struct ieee802
-  	struct rtl8187_priv *priv = dev->priv;
-  	u32 reg;
+as I suggested yesterday?
 
-+	mutex_lock(&priv->conf_mutex);
-  	reg = rtl818x_ioread32(priv, &priv->map->TX_CONF);
-  	/* Enable TX loopback on MAC level to avoid TX during channel
-  	 * changes, as this has be seen to causes problems and the
-@@ -896,6 +897,7 @@ static int rtl8187_config(struct ieee802
-  	rtl818x_iowrite16(priv, &priv->map->ATIMTR_INTERVAL, 100);
-  	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL, 100);
-  	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL_TIME, 100);
-+	mutex_unlock(&priv->conf_mutex);
-  	return 0;
-  }
+> I actually can do. I can leave extra 16 TFDs (4 bits for frag num)  in
+> the queue that wouldn't be a problem, I'm just not sure that iwlwifi
+> is the only driers that does it.  I didn't encountered such scenario
+> but this code looks like also non fragments can be put to pending. Am
+> I wrong?
 
-@@ -1187,6 +1189,7 @@ static int __devinit rtl8187_probe(struc
-  		printk(KERN_ERR "rtl8187: Cannot register device\n");
-  		goto err_free_dev;
-  	}
-+	mutex_init(&priv->conf_mutex);
+non-fragments can only be put in there if your driver is buggy, because
+if you don't have fragmentation turned on then you should know when your
+queue is filling up and be able to stop it before you get another frame.
 
-  	printk(KERN_INFO "%s: hwaddr %s, %s V%d + %s\n",
-  	       wiphy_name(dev->wiphy), print_mac(mac, dev->wiphy->perm_addr),
+The problem with fragmentation is that mac80211 creates multiple frames
+from a single one, while if you don't have fragmentation that doesn't
+happen since once you stop the queue there are no pending packets.
+
+If we require drivers to always keep space for 8 or 9 fragments then we
+can remove all this requeuing stuff, the only trouble with that may be
+in adm8211 since that has to send frames one by one, but we can fix it
+in that driver, it only has a single queue so it's much easier.
+
+johannes
+
+--=-gVoMbukZoBmgskCWIApa
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIiJW1AAoJEKVg1VMiehFY828P/Rbme8zWd+EO/AetALlJn2Gv
+WAyV5yhn7L/6KbUApme8yWeG+51rTcGvBWW0whPgNm4EgG2dKZe5e5WSn+AAkNnj
+QdKAxMnGC4kzkWdL7eF6NRD66f/v1ceOD/iGpDYAJLaXrocivD57HSwoRRJgrrii
+BSIThsjMVisx/XTQxmyRz4MkvkIeR38lbBnCY6IZmIFv2A2p3gIhOWxm3HPknwIW
+UV7tOwW6niIf8PW/7w+L86bD9KSK/ULrWy8cld5qRF7FI5NFX9xF0SaHowHMULGY
+2CHAJWwmHSfFCjMc+wZoc/u2N3FlYt/jFekc6TY+Vao7evR7en6UnxoCqLDluAPV
+xQ82xdaY3HkNtgX0cApcq0QFIsTXuyhWHajCoAI6XOQrPKYAL3oadhfBQakM3CDz
+w6U+GT/sI0hOBczTY+LJS29EZay/71pvN2+smOP4/hoIQrqRNte01KGNwHyCEU6+
+9nFZnu26BwNUfXolQlI4yzdXasTc7P6rgCRf8vSGsbwDseb7XPU7d7uqqlD98HRc
+nA98nQLgiBnGiOiWwTn5j1gaiiS6ZG312XxyI6q1lWWHE8+gxzyd0Z0g0QPDFnEt
+KGxI+29c6MBa32eK5+cYAWJ64wrKDLlSUnoYzpg/MGM292l2URKWTRtfACbfpF1Q
+8VSdi+pPqiNlCR1PF7IB
+=rUla
+-----END PGP SIGNATURE-----
+
+--=-gVoMbukZoBmgskCWIApa--
 
