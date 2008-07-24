@@ -1,72 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:51194 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755499AbYGUJaS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 05:30:18 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43legacy: Release mutex in error handling code
-Date: Mon, 21 Jul 2008 11:29:34 +0200
-Cc: Larry.Finger@lwfinger.net, stefano.brivio@polimi.it,
-	linux-wireless@vger.kernel.org, jgarzik@pobox.com,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia@diku.dk>
+Received: from astoria.ccjclearline.com ([64.235.106.9]:35919 "EHLO
+	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751529AbYGXQOj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jul 2008 12:14:39 -0400
+Date: Thu, 24 Jul 2008 12:13:27 -0400 (EDT)
+From: "Robert P. J. Day" <rpjday@crashcourse.ca>
+To: =?ISO-8859-15?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] WIRELESS: Make wireless immediately deselectable.
+In-Reply-To: <69e28c910807240913t4430fc73yd89da535f3698ee2@mail.gmail.com>
+Message-ID: <alpine.LFD.1.10.0807241212570.4836@localhost.localdomain> (sfid-20080724_181441_466831_4CFDCA43)
+References: <alpine.LFD.1.10.0807241201230.3685@localhost.localdomain> <69e28c910807240913t4430fc73yd89da535f3698ee2@mail.gmail.com>
 MIME-Version: 1.0
-Message-Id: <200807211129.34610.mb@bu3sch.de> (sfid-20080721_113023_533475_7CF035CF)
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-277805547-1216916011=:4836"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-The mutex is released on a successful return, so it would seem that it
-should be released on an error return as well.
+--8323328-277805547-1216916011=:4836
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-The semantic patch finds this problem is as follows:
-(http://www.emn.fr/x-info/coccinelle/)
+On Thu, 24 Jul 2008, Stefanik G=E1bor wrote:
 
-// <smpl>
-@@
-expression l;
-@@
+=2E..
 
-mutex_lock(l);
-... when != mutex_unlock(l)
-    when any
-    when strict
-(
-if (...) { ... when != mutex_unlock(l)
-+   mutex_unlock(l);
-    return ...;
-}
-|
-mutex_unlock(l);
-)
-// </smpl>
+> This should default to Enabled.
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Cc: stable <stable@kernel.org>
+good point, fix coming shortly.
 
----
+rday
+--
 
-John, please apply this bugfix to the next bugfix release.
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+Robert P. J. Day
+Linux Consulting, Training and Annoying Kernel Pedantry:
+    Have classroom, will lecture.
 
-diff -u -p a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -3862,10 +3862,10 @@ static int b43legacy_resume(struct ssb_d
- 			goto out;
- 		}
- 	}
--	mutex_unlock(&wl->mutex);
- 
- 	b43legacydbg(wl, "Device resumed.\n");
- out:
-+	mutex_unlock(&wl->mutex);
- 	return err;
- }
- 
--- 
-Greetings Michael.
+http://crashcourse.ca                          Waterloo, Ontario, CANADA
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--8323328-277805547-1216916011=:4836--
