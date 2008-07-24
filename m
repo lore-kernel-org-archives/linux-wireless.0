@@ -1,371 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n43.bullet.mail.ukl.yahoo.com ([87.248.110.176]:45010 "HELO
-	n43.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751482AbYGHGq4 (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.237]:50777 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751788AbYGXLfq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 02:46:56 -0400
-Message-ID: <48730F3D.3090909@yahoo.co.uk> (sfid-20080708_084700_867500_0111458A)
-Date: Tue, 08 Jul 2008 07:54:53 +0100
-From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+	Thu, 24 Jul 2008 07:35:46 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2831568rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2008 04:35:46 -0700 (PDT)
+Message-ID: <1ba2fa240807240435g36daa80at254144afffc39c32@mail.gmail.com> (sfid-20080724_133550_701095_354A4111)
+Date: Thu, 24 Jul 2008 14:35:46 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Patrick McHardy" <kaber@trash.net>
+Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
+Cc: "David Miller" <davem@davemloft.net>,
+	francois.valenduc@tvcablenet.be, akpm@linux-foundation.org,
+	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, netdev@vger.kernel.org,
+	jussi.kivilinna@mbnet.fi
+In-Reply-To: <48885743.8030505@trash.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@redhat.com>, flamingice@sourmilk.net,
-	Andrea Merello <andreamrl@tiscali.it>
-CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Pavel Roskin <proski@gnu.org>
-Subject: Re: [PATCH 5/6] rtl8187: change part 2 of rtl8187_dev.c to support
- RTL8187B
-References: <4873088C.2090603@yahoo.co.uk>
-In-Reply-To: <4873088C.2090603@yahoo.co.uk>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <4887550B.2070704@tvcablenet.be> <4887555A.30605@trash.net>
+	 <48875B8C.2090800@trash.net>
+	 <20080723.142147.61941255.davem@davemloft.net>
+	 <48884451.1090703@trash.net>
+	 <1ba2fa240807240317g15f6ba84h91b513cce75975e9@mail.gmail.com>
+	 <48885743.8030505@trash.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rtl8187: change part 2 of rtl8187_dev.c to support RTL8187B
+On Thu, Jul 24, 2008 at 1:19 PM, Patrick McHardy <kaber@trash.net> wrote:
+> Tomas Winkler wrote:
+>>
+>> On Thu, Jul 24, 2008 at 11:58 AM, Patrick McHardy <kaber@trash.net> wrote:
+>>>
+>>> David Miller wrote:
+>>>>
+>>>> From: Patrick McHardy <kaber@trash.net>
+>>>> Date: Wed, 23 Jul 2008 18:25:48 +0200
+>>>>
+>>>>> We can't fit them into the cb together, I don't see a way to
+>>>>> shrink ieee80211_tx_info.
+>>>>>
+>>>>> Maybe one of the wireless folks can suggest something? Is it
+>>>>> really necessary to pass the full struct ieee80211_tx_info
+>>>>> through the qdisc layer, or could the struct be split? It
+>>>>> needs to find a way to co-exist peacefully with qdiscs'
+>>>>> skb->cb usage.
+>>>>
+>>>> This is another area that got mangled up in the ->select_queue()
+>>>> conversion of the WME bits, but in another aspect this problem
+>>>> existed beforehand as well.
+>>>>
+>>>> Specifically, when RX packets get requeued out to transmit in
+>>>> the code in net/mac80211/rx.c that resends packets back out the
+>>>> wireless device by setting a bit in the SKB CB then calling
+>>>> dev_queue_xmit().
+>>>>
+>>>> That's completely illegal :-)
+>>>
+>>> It seems its doing even more illegal things that were also
+>>> present previously. The ieee80211_master_start_xmit function
+>>> expects to get a valid IEEE80211_SKB_CB, which means it
+>>> expects it to survive through the entire qdisc layer. I'm
+>>> not sure how packets get to the master device from the
+>>> subifs though, so I might be wrong.
+>>>
+>> Isn't this time to make 802.11 native?
+>
+>
+> You mean by making these things real skb members? I hope you're
+> not talking about the entire 48 bytes? :)
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
-diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
-index b17f237..e013eee 100644
---- a/drivers/net/wireless/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl8187_dev.c
-@@ -155,9 +155,11 @@ static void rtl8187_tx_cb(struct urb *urb)
-  	struct sk_buff *skb = (struct sk_buff *)urb->context;
-  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-  	struct ieee80211_hw *hw = info->driver_data[0];
-+	struct rtl8187_priv *priv = hw->priv;
-
-  	usb_free_urb(info->driver_data[1]);
--	skb_pull(skb, sizeof(struct rtl8187_tx_hdr));
-+	skb_pull(skb, priv->is_rtl8187b ? sizeof(struct rtl8187b_tx_hdr) :
-+					  sizeof(struct rtl8187_tx_hdr));
-  	memset(&info->status, 0, sizeof(info->status));
-  	info->flags |= IEEE80211_TX_STAT_ACK;
-  	ieee80211_tx_status_irqsafe(hw, skb);
-@@ -167,7 +169,8 @@ static int rtl8187_tx(struct ieee80211_hw *dev, struct 
-sk_buff *skb)
-  {
-  	struct rtl8187_priv *priv = dev->priv;
-  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	struct rtl8187_tx_hdr *hdr;
-+	unsigned int ep;
-+	void *buf;
-  	struct urb *urb;
-  	__le16 rts_dur = 0;
-  	u32 flags;
-@@ -195,16 +198,47 @@ static int rtl8187_tx(struct ieee80211_hw *dev, struct 
-sk_buff *skb)
-  		flags |= ieee80211_get_rts_cts_rate(dev, info)->hw_value << 19;
-  	}
-
--	hdr = (struct rtl8187_tx_hdr *)skb_push(skb, sizeof(*hdr));
--	hdr->flags = cpu_to_le32(flags);
--	hdr->len = 0;
--	hdr->rts_duration = rts_dur;
--	hdr->retry = cpu_to_le32(info->control.retry_limit << 8);
-+	if (!priv->is_rtl8187b) {
-+		struct rtl8187_tx_hdr *hdr =
-+			(struct rtl8187_tx_hdr *)skb_push(skb, sizeof(*hdr));
-+		hdr->flags = cpu_to_le32(flags);
-+		hdr->len = 0;
-+		hdr->rts_duration = rts_dur;
-+		hdr->retry = cpu_to_le32(info->control.retry_limit << 8);
-+		buf = hdr;
-+
-+		ep = 2;
-+	} else {
-+		/* fc needs to be calculated before skb_push() */
-+		unsigned int epmap[4] = { 6, 7, 5, 4 };
-+		struct ieee80211_hdr *tx_hdr =
-+			(struct ieee80211_hdr *)(skb->data);
-+		u16 fc = le16_to_cpu(tx_hdr->frame_control);
-+
-+		struct rtl8187b_tx_hdr *hdr =
-+			(struct rtl8187b_tx_hdr *)skb_push(skb, sizeof(*hdr));
-+		struct ieee80211_rate *txrate =
-+			ieee80211_get_tx_rate(dev, info);
-+		memset(hdr, 0, sizeof(*hdr));
-+		hdr->flags = cpu_to_le32(flags);
-+		hdr->rts_duration = rts_dur;
-+		hdr->retry = cpu_to_le32(info->control.retry_limit << 8);
-+		hdr->tx_duration =
-+			ieee80211_generic_frame_duration(dev, priv->vif,
-+							 skb->len, txrate);
-+		buf = hdr;
-+
-+		if ((fc & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT)
-+			ep = 12;
-+		else
-+			ep = epmap[skb_get_queue_mapping(skb)];
-+	}
-
-  	info->driver_data[0] = dev;
-  	info->driver_data[1] = urb;
--	usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev, 2),
--			  hdr, skb->len, rtl8187_tx_cb, skb);
-+
-+	usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev, ep),
-+			  buf, skb->len, rtl8187_tx_cb, skb);
-  	rc = usb_submit_urb(urb, GFP_ATOMIC);
-  	if (rc < 0) {
-  		usb_free_urb(urb);
-@@ -220,7 +254,6 @@ static void rtl8187_rx_cb(struct urb *urb)
-  	struct rtl8187_rx_info *info = (struct rtl8187_rx_info *)skb->cb;
-  	struct ieee80211_hw *dev = info->dev;
-  	struct rtl8187_priv *priv = dev->priv;
--	struct rtl8187_rx_hdr *hdr;
-  	struct ieee80211_rx_status rx_status = { 0 };
-  	int rate, signal;
-  	u32 flags;
-@@ -241,11 +274,33 @@ static void rtl8187_rx_cb(struct urb *urb)
-  	}
-
-  	skb_put(skb, urb->actual_length);
--	hdr = (struct rtl8187_rx_hdr *)(skb_tail_pointer(skb) - sizeof(*hdr));
--	flags = le32_to_cpu(hdr->flags);
--	skb_trim(skb, flags & 0x0FFF);
-+	if (!priv->is_rtl8187b) {
-+		struct rtl8187_rx_hdr *hdr =
-+			(typeof(hdr))(skb_tail_pointer(skb) - sizeof(*hdr));
-+		flags = le32_to_cpu(hdr->flags);
-+		signal = hdr->signal & 0x7f;
-+		rx_status.antenna = (hdr->signal >> 7) & 1;
-+		rx_status.signal = signal;
-+		rx_status.noise = hdr->noise;
-+		rx_status.mactime = le64_to_cpu(hdr->mac_time);
-+		priv->signal = signal;
-+		priv->quality = signal;
-+		priv->noise = hdr->noise;
-+	} else {
-+		struct rtl8187b_rx_hdr *hdr =
-+			(typeof(hdr))(skb_tail_pointer(skb) - sizeof(*hdr));
-+		flags = le32_to_cpu(hdr->flags);
-+		signal = hdr->agc >> 1;
-+		rx_status.antenna = (hdr->signal >> 7) & 1;
-+		rx_status.signal = 64 - min(hdr->noise, (u8)64);
-+		rx_status.noise = hdr->noise;
-+		rx_status.mactime = le64_to_cpu(hdr->mac_time);
-+		priv->signal = hdr->signal;
-+		priv->quality = hdr->agc >> 1;
-+		priv->noise = hdr->noise;
-+	}
-
--	signal = hdr->agc >> 1;
-+	skb_trim(skb, flags & 0x0FFF);
-  	rate = (flags >> 20) & 0xF;
-  	if (rate > 3) {	/* OFDM rate */
-  		if (signal > 90)
-@@ -261,13 +316,11 @@ static void rtl8187_rx_cb(struct urb *urb)
-  		signal = 95 - signal;
-  	}
-
--	rx_status.antenna = (hdr->signal >> 7) & 1;
--	rx_status.qual = 64 - min(hdr->noise, (u8)64);
-+	rx_status.qual = priv->quality;
-  	rx_status.signal = signal;
-  	rx_status.rate_idx = rate;
-  	rx_status.freq = dev->conf.channel->center_freq;
-  	rx_status.band = dev->conf.channel->band;
--	rx_status.mactime = le64_to_cpu(hdr->mac_time);
-  	rx_status.flag |= RX_FLAG_TSFT;
-  	if (flags & (1 << 13))
-  		rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
-@@ -307,7 +360,8 @@ static int rtl8187_init_urbs(struct ieee80211_hw *dev)
-  			break;
-  		}
-  		usb_fill_bulk_urb(entry, priv->udev,
--				  usb_rcvbulkpipe(priv->udev, 1),
-+				  usb_rcvbulkpipe(priv->udev,
-+				  priv->is_rtl8187b ? 3 : 1),
-  				  skb_tail_pointer(skb),
-  				  RTL8187_MAX_RX, rtl8187_rx_cb, skb);
-  		info = (struct rtl8187_rx_info *)skb->cb;
-@@ -786,18 +840,20 @@ static int rtl8187_config(struct ieee80211_hw *dev, struct 
-ieee80211_conf *conf)
-  	msleep(10);
-  	rtl818x_iowrite32(priv, &priv->map->TX_CONF, reg);
-
--	rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
--
--	if (conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME) {
--		rtl818x_iowrite8(priv, &priv->map->SLOT, 0x9);
--		rtl818x_iowrite8(priv, &priv->map->DIFS, 0x14);
--		rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x14);
--		rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0x73);
--	} else {
--		rtl818x_iowrite8(priv, &priv->map->SLOT, 0x14);
--		rtl818x_iowrite8(priv, &priv->map->DIFS, 0x24);
--		rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x24);
--		rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0xa5);
-+	if (!priv->is_rtl8187b) {
-+		rtl818x_iowrite8(priv, &priv->map->SIFS, 0x22);
-+
-+		if (conf->flags & IEEE80211_CONF_SHORT_SLOT_TIME) {
-+			rtl818x_iowrite8(priv, &priv->map->SLOT, 0x9);
-+			rtl818x_iowrite8(priv, &priv->map->DIFS, 0x14);
-+			rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x14);
-+			rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0x73);
-+		} else {
-+			rtl818x_iowrite8(priv, &priv->map->SLOT, 0x14);
-+			rtl818x_iowrite8(priv, &priv->map->DIFS, 0x24);
-+			rtl818x_iowrite8(priv, &priv->map->EIFS, 91 - 0x24);
-+			rtl818x_iowrite8(priv, &priv->map->CW_VAL, 0xa5);
-+		}
-  	}
-
-  	rtl818x_iowrite16(priv, &priv->map->ATIM_WND, 2);
-@@ -813,14 +869,20 @@ static int rtl8187_config_interface(struct ieee80211_hw *dev,
-  {
-  	struct rtl8187_priv *priv = dev->priv;
-  	int i;
-+	u8 reg;
-
-  	for (i = 0; i < ETH_ALEN; i++)
-  		rtl818x_iowrite8(priv, &priv->map->BSSID[i], conf->bssid[i]);
-
--	if (is_valid_ether_addr(conf->bssid))
--		rtl818x_iowrite8(priv, &priv->map->MSR, RTL818X_MSR_INFRA);
--	else
--		rtl818x_iowrite8(priv, &priv->map->MSR, RTL818X_MSR_NO_LINK);
-+	if (is_valid_ether_addr(conf->bssid)) {
-+		reg = RTL818X_MSR_INFRA;
-+		if (priv->is_rtl8187b)
-+			reg |= RTL818X_MSR_ENEDCA;
-+		rtl818x_iowrite8(priv, &priv->map->MSR, reg);
-+	} else {
-+		reg = RTL818X_MSR_NO_LINK;
-+		rtl818x_iowrite8(priv, &priv->map->MSR, reg);
-+	}
-
-  	return 0;
-  }
-@@ -907,6 +969,7 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
-  	struct rtl8187_priv *priv;
-  	struct eeprom_93cx6 eeprom;
-  	struct ieee80211_channel *channel;
-+	const char *chip_name;
-  	u16 txpwr, reg;
-  	int err, i;
-  	DECLARE_MAC_BUF(mac);
-@@ -918,6 +981,8 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
-  	}
-
-  	priv = dev->priv;
-+	priv->is_rtl8187b = (id->driver_info == DEVICE_RTL8187B) ||
-+			    !memcmp(udev->product, "RTL8187B", 8);
-
-  	SET_IEEE80211_DEV(dev, &intf->dev);
-  	usb_set_intfdata(intf, dev);
-@@ -946,8 +1011,13 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
-  	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
-  		     IEEE80211_HW_RX_INCLUDES_FCS |
-  		     IEEE80211_HW_SIGNAL_UNSPEC;
--	dev->extra_tx_headroom = sizeof(struct rtl8187_tx_hdr);
--	dev->queues = 1;
-+	dev->extra_tx_headroom = (!priv->is_rtl8187b) ?
-+				  sizeof(struct rtl8187_tx_hdr) :
-+				  sizeof(struct rtl8187b_tx_hdr);
-+	if (!priv->is_rtl8187b)
-+		dev->queues = 1;
-+	else
-+		dev->queues = 4;
-  	dev->max_signal = 65;
-
-  	eeprom.data = dev;
-@@ -982,10 +1052,24 @@ static int __devinit rtl8187_probe(struct usb_interface 
-*intf,
-  		(*channel++).hw_value = txpwr & 0xFF;
-  		(*channel++).hw_value = txpwr >> 8;
-  	}
--	for (i = 0; i < 2; i++) {
--		eeprom_93cx6_read(&eeprom, RTL8187_EEPROM_TXPWR_CHAN_6 + i,
-+	if (!priv->is_rtl8187b) {
-+		for (i = 0; i < 2; i++) {
-+			eeprom_93cx6_read(&eeprom,
-+					  RTL8187_EEPROM_TXPWR_CHAN_6 + i,
-+					  &txpwr);
-+			(*channel++).hw_value = txpwr & 0xFF;
-+			(*channel++).hw_value = txpwr >> 8;
-+		}
-+	} else {
-+		eeprom_93cx6_read(&eeprom, RTL8187_EEPROM_TXPWR_CHAN_6,
-  				  &txpwr);
-  		(*channel++).hw_value = txpwr & 0xFF;
-+
-+		eeprom_93cx6_read(&eeprom, 0x0A, &txpwr);
-+		(*channel++).hw_value = txpwr & 0xFF;
-+
-+		eeprom_93cx6_read(&eeprom, 0x1C, &txpwr);
-+		(*channel++).hw_value = txpwr & 0xFF;
-  		(*channel++).hw_value = txpwr >> 8;
-  	}
-
-@@ -1001,6 +1085,50 @@ static int __devinit rtl8187_probe(struct usb_interface 
-*intf,
-  	rtl818x_iowrite8(priv, &priv->map->PGSELECT, reg);
-  	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
-
-+	if (!priv->is_rtl8187b) {
-+		u32 reg32;
-+		reg32 = rtl818x_ioread32(priv, &priv->map->TX_CONF);
-+		reg32 &= RTL818X_TX_CONF_HWVER_MASK;
-+		switch (reg32) {
-+		case RTL818X_TX_CONF_R8187vD_1:
-+		case RTL818X_TX_CONF_R8187vD_2:
-+			chip_name = "RTL8187vD";
-+			break;
-+		default:
-+			chip_name = "RTL8187vB (default)";
-+		}
-+       } else {
-+		printk(KERN_WARNING "rtl8187: 8187B chip detected. Support "
-+			"is EXPERIMENTAL, and could damage your\n"
-+			"         hardware, use at your own risk\n");
-+		/*
-+		 * Force USB request to write radio registers for 8187B, Realtek
-+		 * only uses it in their sources
-+		 */
-+		/*if (priv->asic_rev == 0) {
-+			printk(KERN_WARNING "rtl8187: Forcing use of USB "
-+			       "requests to write to radio registers\n");
-+			priv->asic_rev = 1;
-+		}*/
-+		switch (rtl818x_ioread8(priv, (u8 *)0xFFE1)) {
-+		case RTL818X_R8187B_B:
-+			chip_name = "RTL8187BvB";
-+			priv->hw_rev = RTL8187BvB;
-+			break;
-+		case RTL818X_R8187B_D:
-+			chip_name = "RTL8187BvD";
-+			priv->hw_rev = RTL8187BvD;
-+			break;
-+		case RTL818X_R8187B_E:
-+			chip_name = "RTL8187BvE";
-+			priv->hw_rev = RTL8187BvE;
-+			break;
-+		default:
-+			chip_name = "RTL8187BvB (default)";
-+			priv->hw_rev = RTL8187BvB;
-+		}
-+	}
-+
-  	priv->rf = rtl8187_detect_rf(dev);
-
-  	err = ieee80211_register_hw(dev);
-@@ -1009,9 +1137,9 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
-  		goto err_free_dev;
-  	}
-
--	printk(KERN_INFO "%s: hwaddr %s, rtl8187 V%d + %s\n",
-+	printk(KERN_INFO "%s: hwaddr %s, %s V%d + %s\n",
-  	       wiphy_name(dev->wiphy), print_mac(mac, dev->wiphy->perm_addr),
--	       priv->asic_rev, priv->rf->name);
-+	       chip_name, priv->asic_rev, priv->rf->name);
-
-  	return 0;
-
-
+I mean elevating 802.11 header to 802.3 level. Not doing 802.3 ->
+802.11 translation where not needed.
+Tomas
