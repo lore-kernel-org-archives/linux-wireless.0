@@ -1,66 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:35189 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752074AbYGNLhl (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:51488 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751414AbYGXHAZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 07:37:41 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so1484782nfc.21
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2008 04:37:39 -0700 (PDT)
-Message-ID: <f6ca9fed0807140437i2563cfa1ge68a06ef1040d0f8@mail.gmail.com> (sfid-20080714_133744_850260_52B1BB2F)
-Date: Mon, 14 Jul 2008 13:37:39 +0200
-From: drago01 <drago01@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-Subject: iwl3945 random firmware crashes
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 24 Jul 2008 03:00:25 -0400
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+	__netif_schedule+0x2c/0x98()
+From: Peter Zijlstra <peterz@infradead.org>
+To: David Miller <davem@davemloft.net>
+Cc: jarkao2@gmail.com, Larry.Finger@lwfinger.net, kaber@trash.net,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, mingo@redhat.com
+In-Reply-To: <20080723.131441.200166513.davem@davemloft.net>
+References: <1216806614.7257.152.camel@twins>
+	 <20080723101352.GD4561@ff.dom.local> <1216810696.7257.175.camel@twins>
+	 <20080723.131441.200166513.davem@davemloft.net>
+Content-Type: text/plain
+Date: Thu, 24 Jul 2008 09:00:23 +0200
+Message-Id: <1216882823.7257.229.camel@twins> (sfid-20080724_090031_047086_7B7192BC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-I noticed some weird firmware restarts with iwl3945 lately.
------------------
-iwl3945: Microcode SW error detected.  Restarting 0x82000008.
-iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq
-0x4419 ser 0x0000004B
-iwl3945: Can't stop Rx DMA.
-Registered led device: iwl-phy0:radio
-Registered led device: iwl-phy0:assoc
-Registered led device: iwl-phy0:RX
-Registered led device: iwl-phy0:TX
-iwl3945: Microcode SW error detected.  Restarting 0x82000008.
-iwl3945: Error Reply type 0x00000005 cmd REPLY_LEDS_CMD (0x48) seq
-0x0408 ser 0x0000004B
-iwl3945: Can't stop Rx DMA.
-Registered led device: iwl-phy0:radio
-Registered led device: iwl-phy0:assoc
-Registered led device: iwl-phy0:RX
-Registered led device: iwl-phy0:TX
-iwl3945: Microcode SW error detected.  Restarting 0x82000008.
-iwl3945: Error Reply type 0x00000005 cmd REPLY_LEDS_CMD (0x48) seq
-0x0408 ser 0x0000004B
-iwl3945: Can't stop Rx DMA.
-Registered led device: iwl-phy0:radio
-Registered led device: iwl-phy0:assoc
-Registered led device: iwl-phy0:RX
-Registered led device: iwl-phy0:TX
-iwl3945: Microcode SW error detected.  Restarting 0x82000008.
-iwl3945: Error Reply type 0x00000005 cmd REPLY_LEDS_CMD (0x48) seq
-0x0407 ser 0x0000004B
-iwl3945: Can't stop Rx DMA.
----------------
-There seem to be random (can not reproduce them always) but the only
-way to get the wireless working is to
-1) unload the module
-2) go to another room
-3) load module
-4) connect to AP
-5) go back to the room and it works
+On Wed, 2008-07-23 at 13:14 -0700, David Miller wrote:
+> From: Peter Zijlstra <peterz@infradead.org>
+> Date: Wed, 23 Jul 2008 12:58:16 +0200
+> 
+> > So I guess my question is, is netif_tx_lock() here to stay, or is the
+> > right fix to convert all those drivers to use __netif_tx_lock() which
+> > locks only a single queue?
+> 
+> It's staying.
+> 
+> It's trying to block all potential calls into the ->hard_start_xmit()
+> method of the driver, and the only reliable way to do that is to take
+> all the TX queue locks.  And in one form or another, we're going to
+> have this "grab/release all the TX queue locks" construct.
+> 
+> I find it interesting that this cannot be simply described to lockdep
+> :-)
 
-If I stay in the same room after reloading the module the firmware
-crashes happen again.
+If you think its OK to take USHORT_MAX locks at once, I'm afraid we'll
+have to agree to disagree :-/
 
-I have no output with the event log because they happen randomly and I
-cannot reproduce them.
+Thing is, lockdep wants to be able to describe the locking hierarchy
+with classes, and each class needs to be in static storage for various
+reasons.
 
-Any ideas?
+So if you make a locking hierarchy that is USHORT_MAX deep, you need at
+least that amount of static classes.
+
+Also, you'll run into the fact that lockdep will only track like 48 held
+locks, after that it self terminates.
+
+I'm aware of only 2 sites in the kernel that break this limit. The
+down-side of stretching this limit is that deep lock chains come with
+costs (esp so on -rt), so I'm not particularly eager to grow this - it
+might give the impresssion its a good idea to have very long lock
+chains.
+
