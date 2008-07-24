@@ -1,133 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:43105 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752181AbYG0PMq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jul 2008 11:12:46 -0400
-Subject: Re: [PATCH 3/3 RESEND] libertas: check bounds and only use decimal
-	for sysfs persistent features.
-From: Dan Williams <dcbw@redhat.com>
-To: Brian Cavagnolo <brian@cozybit.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <4884d9ea.01f6600a.4611.ffffe84f@mx.google.com>
-References: <4884d9ea.01f6600a.4611.ffffe84f@mx.google.com>
-Content-Type: text/plain
-Date: Sun, 27 Jul 2008 11:10:28 -0400
-Message-Id: <1217171428.2700.19.camel@localhost.localdomain> (sfid-20080727_171248_291865_97164CE0)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59062
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751104AbYGXJUk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jul 2008 05:20:40 -0400
+Date: Thu, 24 Jul 2008 02:20:40 -0700 (PDT)
+Message-Id: <20080724.022040.23129457.davem@davemloft.net> (sfid-20080724_112046_293068_0BCF8445)
+To: peterz@infradead.org
+Cc: jarkao2@gmail.com, Larry.Finger@lwfinger.net, kaber@trash.net,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, mingo@redhat.com,
+	nickpiggin@yahoo.com.au, paulmck@linux.vnet.ibm.com
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+ __netif_schedule+0x2c/0x98()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1216890648.7257.258.camel@twins>
+References: <20080723114914.GF4561@ff.dom.local>
+	<20080723.131607.79681752.davem@davemloft.net>
+	<1216890648.7257.258.camel@twins>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-07-21 at 11:04 -0700, Brian Cavagnolo wrote:
-> Some persistent settings were using hex and others decimal.  In some cases,
-> values were set in hex but reported in decimal.  Confusing.
+From: Peter Zijlstra <peterz@infradead.org>
+Date: Thu, 24 Jul 2008 11:10:48 +0200
+
+> Ok, then how about something like this, the idea is to wrap the per tx
+> lock with a read lock of the device and let the netif_tx_lock() be the
+> write side, therefore excluding all device locks, but not incure the
+> cacheline bouncing on the read side by using per-cpu counters like rcu
+> does.
 > 
-> Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
-
-Acked-by: Dan Williams <dcbw@redhat.com>
-
-> ---
->  drivers/net/wireless/libertas/persistcfg.c |   30 ++++++++++++++--------------
->  1 files changed, 15 insertions(+), 15 deletions(-)
+> This of course requires that netif_tx_lock() is rare, otherwise stuff
+> will go bounce anyway...
 > 
-> diff --git a/drivers/net/wireless/libertas/persistcfg.c b/drivers/net/wireless/libertas/persistcfg.c
-> index 6d0ff8d..3309a9c 100644
-> --- a/drivers/net/wireless/libertas/persistcfg.c
-> +++ b/drivers/net/wireless/libertas/persistcfg.c
-> @@ -48,7 +48,7 @@ static ssize_t bootflag_get(struct device *dev,
->  	if (ret)
->  		return ret;
->  
-> -	return snprintf(buf, 12, "0x%x\n", le32_to_cpu(defs.bootflag));
-> +	return snprintf(buf, 12, "%d\n", le32_to_cpu(defs.bootflag));
->  }
->  
->  /**
-> @@ -63,8 +63,8 @@ static ssize_t bootflag_set(struct device *dev, struct device_attribute *attr,
->  	int ret;
->  
->  	memset(&cmd, 0, sizeof(cmd));
-> -	ret = sscanf(buf, "%x", &datum);
-> -	if (ret != 1)
-> +	ret = sscanf(buf, "%d", &datum);
-> +	if ((ret != 1) || (datum > 1))
->  		return -EINVAL;
->  
->  	*((__le32 *)&cmd.data[0]) = cpu_to_le32(!!datum);
-> @@ -91,7 +91,7 @@ static ssize_t boottime_get(struct device *dev,
->  	if (ret)
->  		return ret;
->  
-> -	return snprintf(buf, 12, "0x%x\n", defs.boottime);
-> +	return snprintf(buf, 12, "%d\n", defs.boottime);
->  }
->  
->  /**
-> @@ -106,8 +106,8 @@ static ssize_t boottime_set(struct device *dev,
->  	int ret;
->  
->  	memset(&cmd, 0, sizeof(cmd));
-> -	ret = sscanf(buf, "%x", &datum);
-> -	if (ret != 1)
-> +	ret = sscanf(buf, "%d", &datum);
-> +	if ((ret != 1) || (datum > 255))
->  		return -EINVAL;
->  
->  	/* A too small boot time will result in the device booting into
-> @@ -143,7 +143,7 @@ static ssize_t channel_get(struct device *dev,
->  	if (ret)
->  		return ret;
->  
-> -	return snprintf(buf, 12, "0x%x\n", le16_to_cpu(defs.channel));
-> +	return snprintf(buf, 12, "%d\n", le16_to_cpu(defs.channel));
->  }
->  
->  /**
-> @@ -154,11 +154,11 @@ static ssize_t channel_set(struct device *dev, struct device_attribute *attr,
->  {
->  	struct lbs_private *priv = to_net_dev(dev)->priv;
->  	struct cmd_ds_mesh_config cmd;
-> -	uint16_t datum;
-> +	uint32_t datum;
->  	int ret;
->  
->  	memset(&cmd, 0, sizeof(cmd));
-> -	ret = sscanf(buf, "%hx", &datum);
-> +	ret = sscanf(buf, "%d", &datum);
->  	if (ret != 1 || datum < 1 || datum > 11)
->  		return -EINVAL;
->  
-> @@ -274,8 +274,8 @@ static ssize_t protocol_id_set(struct device *dev,
->  	int ret;
->  
->  	memset(&cmd, 0, sizeof(cmd));
-> -	ret = sscanf(buf, "%x", &datum);
-> -	if (ret != 1)
-> +	ret = sscanf(buf, "%d", &datum);
-> +	if ((ret != 1) || (datum > 255))
->  		return -EINVAL;
->  
->  	/* fetch all other Information Element parameters */
-> @@ -328,8 +328,8 @@ static ssize_t metric_id_set(struct device *dev, struct device_attribute *attr,
->  	int ret;
->  
->  	memset(&cmd, 0, sizeof(cmd));
-> -	ret = sscanf(buf, "%x", &datum);
-> -	if (ret != 1)
-> +	ret = sscanf(buf, "%d", &datum);
-> +	if ((ret != 1) || (datum > 255))
->  		return -EINVAL;
->  
->  	/* fetch all other Information Element parameters */
-> @@ -382,8 +382,8 @@ static ssize_t capability_set(struct device *dev, struct device_attribute *attr,
->  	int ret;
->  
->  	memset(&cmd, 0, sizeof(cmd));
-> -	ret = sscanf(buf, "%x", &datum);
-> -	if (ret != 1)
-> +	ret = sscanf(buf, "%d", &datum);
-> +	if ((ret != 1) || (datum > 255))
->  		return -EINVAL;
->  
->  	/* fetch all other Information Element parameters */
+> Probably missed a few details,.. but I think the below ought to show the
+> idea...
 
+Thanks for the effort, but I don't think we can seriously consider
+this.
+
+This lock is taken for every packet transmitted by the system, adding
+another memory reference (the RCU deref) and a counter bump is just
+not something we can just add to placate lockdep.  We going through
+all of this effort to seperate the TX locking into individual
+queues, it would be silly to go back and make it more expensive.
+
+I have other ideas which I've expanded upon in other emails.  They
+involve creating a netif_tx_freeze() interface and getting the drivers
+to start using it.
