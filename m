@@ -1,34 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.251]:31751 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754743AbYGQKF7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 06:05:59 -0400
-Received: by an-out-0708.google.com with SMTP id d40so146669and.103
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2008 03:05:58 -0700 (PDT)
-Message-ID: <43e72e890807170305o491e598cl1b27c8d7bf820765@mail.gmail.com> (sfid-20080717_120605_287894_FBB686B5)
-Date: Thu, 17 Jul 2008 03:05:58 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: 2nd REVISED AGENDA -- Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <20080716184803.GB3232@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080709190915.GA8238@tuxdriver.com>
-	 <20080715182654.GA5969@tuxdriver.com>
-	 <20080716184803.GB3232@tuxdriver.com>
+Received: from c60.cesmail.net ([216.154.195.49]:53417 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751835AbYGXVkH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jul 2008 17:40:07 -0400
+Subject: Re: [PATCH 2/12] ath5k: Restore saved initval after POST
+From: Pavel Roskin <proski@gnu.org>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Nick Kossifidis <mick@madwifi.org>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	jirislaby@gmail.com, mcgrof@gmail.com
+In-Reply-To: <40f31dec0807241436v4d3c217bne359a5230143d1a3@mail.gmail.com>
+References: <20080720033232.GB7440@makis> <1216934788.3094.8.camel@dv>
+	 <40f31dec0807241436v4d3c217bne359a5230143d1a3@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 24 Jul 2008 17:40:05 -0400
+Message-Id: <1216935605.3094.18.camel@dv> (sfid-20080724_234010_343491_CB64E958)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 16, 2008 at 11:48 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
+On Fri, 2008-07-25 at 00:36 +0300, Nick Kossifidis wrote:
+> 2008/7/25 Pavel Roskin <proski@gnu.org>:
+> > On Sun, 2008-07-20 at 06:32 +0300, Nick Kossifidis wrote:
+> >> * Restore saved initial value after POST
+> > ...
+> >> @@ -170,6 +172,10 @@ static int ath5k_hw_post(struct ath5k_hw *ah)
+> >>                       var_pattern = 0x003b080f;
+> >>                       ath5k_hw_reg_write(ah, var_pattern, cur_reg);
+> >>               }
+> >> +
+> >> +             /* Restore previous value */
+> >> +             ath5k_hw_reg_write(ah, init_val, cur_reg);
+> >> +
+> >>       }
+> >
+> > Perhaps "at the end of POST"?  Anyway, the code looks good to me.
+> >
+> 
+> We are not restoring at the end of POST but after we end with each of
+> the two registers, so i guess it's ok this way
 
->        - regulatory enforcement (802.11d, CRDA)
+OK, fine with me.
 
-I'll cover this. If we can't cover this well in the time frame
-provided we can discuss this over the course of the week in impromptu
-sessions.
-
-  Luis
+-- 
+Regards,
+Pavel Roskin
