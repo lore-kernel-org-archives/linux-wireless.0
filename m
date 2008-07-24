@@ -1,80 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51071 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752116AbYGARCB (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.249]:33409 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750838AbYGXHFn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 13:02:01 -0400
-Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
-	Larry Finger <larry.finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <20080701165036.GB6962@khazad-dum.debian.net>
-References: <6cf6b73e0807010255x1f2d8a21m8ed3e712012ea757@mail.gmail.com>
-	 <200807011227.15805.mb@bu3sch.de>
-	 <20080701143439.GA6962@khazad-dum.debian.net>
-	 <1214923097.3462.0.camel@johannes.berg>
-	 <20080701165036.GB6962@khazad-dum.debian.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NDwgUgDlWZFPvmZkAHWk"
-Date: Tue, 01 Jul 2008 19:01:16 +0200
-Message-Id: <1214931676.3462.5.camel@johannes.berg> (sfid-20080701_190206_599994_15B198F9)
-Mime-Version: 1.0
+	Thu, 24 Jul 2008 03:05:43 -0400
+Received: by an-out-0708.google.com with SMTP id d40so608346and.103
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2008 00:05:42 -0700 (PDT)
+Message-ID: <43e72e890807240005j5d37d7eat73f571288ea7a00b@mail.gmail.com> (sfid-20080724_090547_584889_6FE35D41)
+Date: Thu, 24 Jul 2008 00:05:42 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: [ath5k-devel] AR5418 works with ath9k
+Cc: "Davide Pesavento" <davidepesa@gmail.com>,
+	ath9k-devel@lists.ath9k.org, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1216870929.30436.34.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <2da21fe50807221453m5275f59dj7369da5e667815d7@mail.gmail.com>
+	 <43e72e890807230513u81e68aaj443110d734161368@mail.gmail.com>
+	 <1216870929.30436.34.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Jul 23, 2008 at 8:42 PM, Pavel Roskin <proski@gnu.org> wrote:
+> On Wed, 2008-07-23 at 05:13 -0700, Luis R. Rodriguez wrote:
+>> > Maybe MacBook Pro's card has different eeprom's contents? Anyway the
+>> > card now works fine, and it also appears quite stable! ;-)
+>> > Thank you very much for your work!
+>>
+>> I believe your last patch may have been "Use skb_end_pointer() ..." if
+>> so then this is why you had this issue. Give the git tree a shot:
+>>
+>> git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/ath9k.git
+>
+> Luis, I'm afraid that code is still wrong.  It used to be min(), but now
+> it's essentially max().  You wrote that there was an error in my patch
+> and I agreed, but we were talking of different errors, I'm afraid.
+>
+> Since you have touched the code after me and you know more about the
+> hardware, I would prefer that you fix it and recheck everything once
+> again.
+>
+> Here's the patch.  I don't feel comfortable about describing things I
+> don't fully understand.
 
---=-NDwgUgDlWZFPvmZkAHWk
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Pavel, you are correct, thanks for the new fix. I'll arrange so that
+the patch that goes in only fixes this once on wireless-testing.
 
-On Tue, 2008-07-01 at 13:50 -0300, Henrique de Moraes Holschuh wrote:
-> On Tue, 01 Jul 2008, Johannes Berg wrote:
-> > > 1. It has an input pin that sometimes people connect buttons/switches
-> > > to.
-> > >=20
-> > > Does that input pin act as an input for a FLIP-FLOP (and that flip-fl=
-op
-> > > output is the hardware rfkill line), or is it the hardware rfkill lin=
-e
-> > > itself?
-> >=20
-> > Neither. It's not hw kill, but it's not just edge detect either, it doe=
-s
-> > have 'kill' and 'not kill' states.
->=20
-> What exactly the input pin does?  what exactly the hardware does when
-> the input pin state changes?
-
-The hardware does nothing, it just sets a bit high or low depending on
-the input pin.
-
-johannes
-
---=-NDwgUgDlWZFPvmZkAHWk
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIamLZAAoJEKVg1VMiehFYbhIP/R1QfWfukNOPhAdZP/T5cvCE
-KbcrFNI06DSuxjKbRh6Ab/yXUwdDCil3yA8gBc9MBtuuwJac/LD3zBWnX9mIoKGS
-VA6cGx1pDkwjiye8QGqUiScBi0CZWg2Yek/1XSHd2fuxwTz060UBMGqMomrmORLU
-QQxzdN3im88jp2z5tJwB5/vKK8nv3mbDTcJd/diN94R5IDcE3XYy2HgUP1jzxK3I
-gsR5Qg81v6JwVmrDiQ7fsT89x8gy5lGV3nI5qL/1F8K9FnZzjdaF8e/4RnRp3WT2
-gErGhL8VwzstWadAVrU1lmFVqZDvfc5TunkNsKqyHc5AhNwPoOoMX7lVizaop6sl
-BmJFdAK15Dlgc8+PI6jw8fofy9FkMQmOep3mtN6tkEH5zW1Xo5JVbrwYD1Q6AbJR
-S0vbzFNyLeY+0NWjniScs5Qn2IV/+jYA1pu6FcWovHsGw2WxlXB+kdQLDmCTy36S
-p4TlyDmUq0jXyxELTLBdUzwBd+s8WSZOjFnBbF5ZV8EhMVLrtFdBa9tzdhXMJdF+
-xvB9Aym0bxHHV5t12RS/BRYjX3BvsvzmzNHQtbdyk38UYXUZYkWeFWIJHDf0H0Gl
-wOuF+s4vbVZE/6/6BjiZjiWD5RFJSgayh+yaeH4TG7Om3XDLoXIypIOZN6+baWui
-lHCpY0nXWls5x3VRR/i+
-=Q5Tg
------END PGP SIGNATURE-----
-
---=-NDwgUgDlWZFPvmZkAHWk--
-
+  Luis
