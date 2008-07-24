@@ -1,69 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:34002 "EHLO ds10.mine.nu"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1750702AbYGTSmf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2008 14:42:35 -0400
-Message-ID: <48838707.5050309@openwrt.org> (sfid-20080720_204253_098638_460734EF)
-Date: Sun, 20 Jul 2008 20:42:15 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from wf-out-1314.google.com ([209.85.200.171]:14521 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751025AbYGXD2Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 23:28:24 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so3174280wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 20:28:23 -0700 (PDT)
+Message-ID: <3ace41890807232028u576371a6ra944431327cac76c@mail.gmail.com> (sfid-20080724_052827_548054_C4255995)
+Date: Thu, 24 Jul 2008 04:28:23 +0100
+From: "Hin-Tak Leung" <hintak.leung@gmail.com>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks rtl8187
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Herton Ronaldo Krzesinski" <herton@mandriva.com.br>,
+	"Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <48874F09.7060400@lwfinger.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH v2] ath9k: fix another endianness issue
-References: <48836863.7090008@openwrt.org>
-In-Reply-To: <48836863.7090008@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
+	 <200807221613.34434.herton@mandriva.com.br>
+	 <3ace41890807221525r67716ea0r251068df773fe53f@mail.gmail.com>
+	 <200807221940.20009.herton@mandriva.com.br>
+	 <4886AA3B.3000406@lwfinger.net> <4886C50E.6040304@lwfinger.net>
+	 <1216824917.13587.9.camel@johannes.berg>
+	 <48874F09.7060400@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DMA descriptors must always be accessed in native endianness.
-With this patch and my previous series, Atheros AR9160 now
-works for me in STA mode (tested on an IXP4xx board, big-endian)
+On Wed, Jul 23, 2008 at 4:32 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+<snipped>
+>
+> I tried something like that, but it didn't work. Maybe you can see what is
+> wrong here:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
-updated version, found some more instances of the same thing
+Your patch actually works here! :-). Maybe you should retest?
 
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -121,7 +121,7 @@
-  	DPRINTF(sc, ATH_DEBUG_TX_PROC,
-  		"%s: txq depth = %d\n", __func__, txq->axq_depth);
-  	if (txq->axq_link != NULL) {
--		*txq->axq_link = cpu_to_le32(bf->bf_daddr);
-+		*txq->axq_link = bf->bf_daddr;
-  		DPRINTF(sc, ATH_DEBUG_XMIT,
-  			"%s: link[%u](%p)=%llx (%p)\n",
-  			__func__,
-@@ -168,7 +168,7 @@
-  			__func__, txq->axq_qnum,
-  			ito64(bf->bf_daddr), bf->bf_desc);
-  	} else {
--		*txq->axq_link = cpu_to_le32(bf->bf_daddr);
-+		*txq->axq_link = bf->bf_daddr;
-  		DPRINTF(sc, ATH_DEBUG_XMIT, "%s: link[%u] (%p)=%llx (%p)\n",
-  			__func__,
-  			txq->axq_qnum, txq->axq_link,
---- a/drivers/net/wireless/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath9k/beacon.c
-@@ -159,7 +159,7 @@
-  	if (!cabq->axq_link)
-  		ath9k_hw_puttxbuf(ah, cabq->axq_qnum, bfmcast->bf_daddr);
-  	else
--		*cabq->axq_link = cpu_to_le32(bfmcast->bf_daddr);
-+		*cabq->axq_link = bfmcast->bf_daddr;
+It doesn't patch cleanly against wireless-testing - just indentation
+oddness, I think.
+Had to apply the patch by hand. but I am using it right now, so it
+seems to work.
 
-  	/* append the private vap mcast list to  the cabq */
+If somebody else retest okay, can we have this in wireless-testing
+prompto, please?
 
-@@ -688,11 +688,7 @@
-  			if (if_id != ATH_IF_ID_ANY) {
-  				bf = ath_beacon_generate(sc, if_id);
-  				if (bf != NULL) {
--					if (bflink != &bfaddr)
--						*bflink = cpu_to_le32(
--							bf->bf_daddr);
--					else
--						*bflink = bf->bf_daddr;
-+					*bflink = bf->bf_daddr;
-  					bflink = &bf->bf_desc->ds_link;
-  					bc++;
-  				}
+Hin-Tak
