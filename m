@@ -1,68 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42434
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751513AbYGOJQg (ORCPT
+Received: from smtp117.mail.mud.yahoo.com ([209.191.84.166]:43537 "HELO
+	smtp117.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751704AbYGXLHJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 05:16:36 -0400
-Date: Tue, 15 Jul 2008 02:16:37 -0700 (PDT)
-Message-Id: <20080715.021637.103260952.davem@davemloft.net> (sfid-20080715_111640_983075_310E8D2C)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: TXQ real_num_tx_queues comments/questions
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1215769627.3483.107.camel@johannes.berg>
-References: <1215769627.3483.107.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 24 Jul 2008 07:07:09 -0400
+From: Nick Piggin <nickpiggin@yahoo.com.au>
+To: Miklos Szeredi <miklos@szeredi.hu>
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330 __netif_schedule+0x2c/0x98()
+Date: Thu, 24 Jul 2008 21:06:51 +1000
+Cc: peterz@infradead.org, davem@davemloft.net, jarkao2@gmail.com,
+	Larry.Finger@lwfinger.net, kaber@trash.net,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, mingo@redhat.com,
+	paulmck@linux.vnet.ibm.com
+References: <1216890648.7257.258.camel@twins> <200807242038.36693.nickpiggin@yahoo.com.au> <E1KLyUI-0006ZS-Cg@pomaz-ex.szeredi.hu>
+In-Reply-To: <E1KLyUI-0006ZS-Cg@pomaz-ex.szeredi.hu>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200807242106.52672.nickpiggin@yahoo.com.au> (sfid-20080724_130722_512184_33B0E1F1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Fri, 11 Jul 2008 11:47:06 +0200
+On Thursday 24 July 2008 20:55, Miklos Szeredi wrote:
+> On Thu, 24 Jul 2008, Nick Piggin wrote:
+> > Hey, something kind of cool (and OT) I've just thought of that we can
+> > do with ticket locks is to take tickets for 2 (or 64K) nested locks,
+> > and then wait for them both (all), so the cost is N*lock + longest spin,
+> > rather than N*lock + N*avg spin.
+>
+> Isn't this deadlocky?
+>
+> E.g. one task takes ticket x=1, then other task comes in and takes x=2
+> and y=1, then first task takes y=2.  Then neither can actually
+> complete both locks.
 
-> One thing I just noticed that caused me to think about it a bit more is
-> that you didn't change netif_tx_{start,stop,wake}_all_queues to use
-> real_num_tx_queues instead of num_tx_queues. However, since those queues
-> don't actually get used, it doesn't actually matter whether they're
-> started or not.
+Oh duh of course you still need mutual exclusion from the first lock
+to order the subsequent :P
 
-Right, I don't think it matters.
-
-> Also related to real_num_tx_queues, you mentioned in the email (if that
-> restriction is kept it should be explained in a comment somewhere I
-> think) that it must not be changed while the device is operating. While
-> that restriction makes it obviously safe, mac80211 is already
-> effectively violating it, although it isn't setting real_num_tx_queues
-> at all. That makes me question that restriction a bit.
-
-In the mac80211 implementation, you control everything.
-mac80211's ->select_queue() is the only thing that selects
-queue values.
-
-> The only interesting situation is when we need to remove a queue since
-> for adding it we can prepare for that before we make select_queue use
-> it. Removing it is however, I think, still buggy. You removed most of
-> the queue locking and now just lock the single txq in ieee80211_requeue,
-> which seems fine, but when you look at ieee80211_ht_agg_queue_remove it
-> seems still racy:
- ...
-> I'm not entirely sure that my analsysis is correct because the mac80211
-> code is running in a tasklet, but dev_queue_xmit() only disables bhs
-> after using select_queue, and even that is only local bhs.
-> 
-> To fix it, I think we should move the queue selection under the rcu
-> lock. Then we can, in mac80211, instead of deferring the requeuing to
-> the tasklet, defer it to a work struct (i.e. process context) and
-> synchronize_rcu() between making select_queue no longer choose the queue
-> and requeuing from it.
-> 
-> Or we can do more complicated things with the queue_pool bits or an
-> extra spinlock for select_queue.
-> 
-> I like the RCU variant better, as it means we don't need a "central"
-> lock that is taken for all tx queues, and it also allows other drivers
-> to actually change real_num_tx_queues in a similar fashion, should that
-> ever be required.
-
-It seems to me that a simple synchronize_net() call near the end of
-agg queue removal would solve your problem as-is, wouldn't it?
+So yeah it only works for N > 2 locks, and you have to spin_lock the
+first one... so unsuitable for scheduler.
