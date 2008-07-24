@@ -1,50 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:49378 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752029AbYGWQEw (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37651 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751948AbYGXOWU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 12:04:52 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so896361nfc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 09:04:51 -0700 (PDT)
-To: Daniel Wagner <wagi@monom.org>
-Subject: Re: [PATCH] rt2x00mac: In error case stop netdev queue, free skb and return NETDEV_TX_OK
-Date: Wed, 23 Jul 2008 18:22:04 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <1216805279-19149-1-git-send-email-wagi@monom.org>
-In-Reply-To: <1216805279-19149-1-git-send-email-wagi@monom.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807231822.04895.IvDoorn@gmail.com> (sfid-20080723_180457_288184_B4DD3DAF)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 24 Jul 2008 10:22:20 -0400
+Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks
+	rtl8187
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <69e28c910807230555s2040f507oe6c9e516ef8c0685@mail.gmail.com> (sfid-20080723_145507_239503_2FC0E55E)
+References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
+	 <200807221613.34434.herton@mandriva.com.br>
+	 <3ace41890807221525r67716ea0r251068df773fe53f@mail.gmail.com>
+	 <200807221940.20009.herton@mandriva.com.br> <4886AA3B.3000406@lwfinger.net>
+	 <4886C50E.6040304@lwfinger.net>
+	 <69e28c910807230555s2040f507oe6c9e516ef8c0685@mail.gmail.com>
+	 (sfid-20080723_145507_239503_2FC0E55E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gQeCat1dP+0k2O3h0Mo2"
+Date: Thu, 24 Jul 2008 16:22:08 +0200
+Message-Id: <1216909328.13587.67.camel@johannes.berg> (sfid-20080724_162227_941006_11E9D404)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 23 July 2008, Daniel Wagner wrote:
-> It is not allowed to use NETDEV_TX_BUSY in tx path anymore.
 
-If not, then why is mac80211 checking and handling the return value
-and is tx() still a function returning an int. mac80211 is actually requeueing
-the frame when the hardware fails to send it, so why should that be completely blocked?
+--=-gQeCat1dP+0k2O3h0Mo2
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-> Signed-off-by: Daniel Wagner <wagi@monom.org>
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> ---
->  drivers/net/wireless/rt2x00/rt2x00mac.c |   13 ++++++++-----
->  1 files changed, 8 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> index 77af1df..64a70c6 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> @@ -46,7 +46,7 @@ static int rt2x00mac_tx_rts_cts(struct rt2x00_dev *rt2x00dev,
->  	skb = dev_alloc_skb(size + rt2x00dev->hw->extra_tx_headroom);
->  	if (!skb) {
->  		WARNING(rt2x00dev, "Failed to create RTS/CTS frame.\n");
-> -		return NETDEV_TX_BUSY;
-> +		return -1;
+On Wed, 2008-07-23 at 14:55 +0200, Stefanik G=C3=A1bor wrote:
 
-I am kind of missing the point here, this patch seems to come down to:
-	We can't return TX_BUSY so we return a random other value
+> Zd1211rw also appears to be affected, though not as seriously as with
+> rtl8187: it scans, associates and gets DHCP, but it consistently
+> disconnects after about 2~5 minutes, either with "No ProbeResp" in
+> dmesg, or sometimes with no error message, just "Removed STA" and
+> "Destroyed STA". I don't know if this is the same bug, as I haven't
+> bisected, but it appeared when I switched from a 2.6.26-rc8-wl kernel
+> to a 2.6.26-wl one that contained the above patch.
 
-Ivo
+zd1211rw works fine here, been connected for about 15 minutes now.
+
+johannes
+
+--=-gQeCat1dP+0k2O3h0Mo2
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIiJAMAAoJEKVg1VMiehFYAyQQAJFeX1Xm/+/G5HSi3sLGcxgh
+o+xobBIF4noTpeinu2fW0B37Fbim1dxNJKhHUzAc8uCOjsSzVfq/k01kpXaskDn+
+HMKYA7mwZLvAV8bzA0vccCFa34oIPkQdTYpurOq6cI0vWJCB//ujNH7Gq9VkUYHR
+ciVbdA1xn3CoLJRf9Z6zrqERKGydaxrYd6SPvYbaskO8aBxx0Iog9qLj9XT+MM3h
+hxq4+IgIUqIGsO815kjsMMoAPQbzwf/S98dH8TmFCJatAHFHdsAvhXWOuvXAf74v
+adNJABWew/U5sUGuheJhpg8/ASVX4Rq37yFxYyBUGsVNRMdSmuryQKWIotwWHR28
+uWyHJC2F+aNKtjWR/0awEuCKAZeGaPzQ4FVBMABiH0/8U6SeovqV0ZUTyrsomXqS
+7lm/WTnxf+LEj/1KumevJZO5L9U/LeuDusBba5+CGaSPjfTDBw2ff4Pr0W7M7psT
+heTRdofyOc6nLR7rvR2YzFdqF5mT4nN0yAe7KRmdLsdMEWBe3v0FZa8ljgnRRP5l
+4RFmTMp6YL5BmYNWn9FWT3CwNRv1zPU+eDJ+BcCZJQqP0brE86BC6ps9aZW6IGvh
+MzlL8OdT/Gmhvm8dccqCVoY1WB9wpzCrWoyY3s5RrQe6Ul9Sp2HUFARbIdonA11H
+FZPaMjHDKOvQsAdG1ADe
+=iX/Q
+-----END PGP SIGNATURE-----
+
+--=-gQeCat1dP+0k2O3h0Mo2--
+
