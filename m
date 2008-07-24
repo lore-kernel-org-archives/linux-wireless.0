@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:18592 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753389AbYG2IIt (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:47589 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751623AbYGXVOG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 04:08:49 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so3302292waf.23
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 01:08:49 -0700 (PDT)
-Message-ID: <1ba2fa240807290108y5bdfce9co4b69b8e626199209@mail.gmail.com> (sfid-20080729_100857_234880_77D8C59A)
-Date: Tue, 29 Jul 2008 11:08:49 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Harvey Harrison" <harvey.harrison@gmail.com>
-Subject: Re: [PATCH 3/8] wireless: replace __FUNCTION__ with __func__
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	"Linus Torvalds" <torvalds@linux-foundation.org>,
-	LKML <linux-kernel@vger.kernel.org>, "Zhu Yi" <yi.zhu@intel.com>
-In-Reply-To: <1217311294.23389.26.camel@brick>
+	Thu, 24 Jul 2008 17:14:06 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
+Subject: Re: b43: Debugging PHY TX errors
+Date: Thu, 24 Jul 2008 23:13:19 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <200807241330.15439.mb@bu3sch.de> <69e28c910807240806t24a1c2f9l8814a2d98aac34d@mail.gmail.com>
+In-Reply-To: <69e28c910807240806t24a1c2f9l8814a2d98aac34d@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1217311294.23389.26.camel@brick>
+Message-Id: <200807242313.19808.mb@bu3sch.de> (sfid-20080724_231413_342319_485918B7)
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 29, 2008 at 9:01 AM, Harvey Harrison
-<harvey.harrison@gmail.com> wrote:
-> __FUNCTION__ is gcc-specific, use __func__
->
-> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
-> ---
->  drivers/net/wireless/airo.c                   |   16 ++++++++--------
->  drivers/net/wireless/hermes.c                 |    2 +-
->  drivers/net/wireless/ipw2100.c                |    2 +-
->  drivers/net/wireless/ipw2200.h                |    4 ++--
->  drivers/net/wireless/iwlwifi/iwl-3945-debug.h |    4 ++--
->  drivers/net/wireless/iwlwifi/iwl-debug.h      |    4 ++--
->  drivers/net/wireless/iwlwifi/iwl3945-base.c   |    4 ++--
->  drivers/net/wireless/iwlwifi/iwl4965-base.c   |    4 ++--
->  drivers/net/wireless/libertas/if_cs.c         |    2 +-
->  drivers/net/wireless/prism54/isl_ioctl.c      |    8 ++++----
->  drivers/net/wireless/rt2x00/rt2x00.h          |    4 ++--
->  drivers/net/wireless/wl3501_cs.c              |    8 ++++----
->  12 files changed, 31 insertions(+), 31 deletions(-)
->
-I've already sumbitted patch for iwlwifi that also contains this fix.
-I'm also the file iwl4965-base was renamed.  The updates to
-wireless-testing are laginging  due to OLS for almost 2 weeks.
+On Thursday 24 July 2008 17:06:39 Stefanik G=E1bor wrote:
+> Please add this functionality to the open-source firmware too.
 
-Tomas
+No this is very intrusive.
+The hacked firmware restarts itself on a PHY error. We don't want this =
+in
+a production environment, because as I said it will disturb your
+connectivity (a PHY error every few minutes with vanilla firmware will =
+not).
+
+I also forgot to say that the patcher currently only works for ucode5.f=
+w.
+So if your device uses another firmware and you really want to debug
+a PHY error, I can port the patcher to your version. Just poke me.
+
+--=20
+Greetings Michael.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
