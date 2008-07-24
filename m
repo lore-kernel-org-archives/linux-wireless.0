@@ -1,42 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:65446 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751171AbYG3Owc (ORCPT
+Received: from astoria.ccjclearline.com ([64.235.106.9]:37064 "EHLO
+	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751155AbYGXQVY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 10:52:32 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so27523nfc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 07:52:30 -0700 (PDT)
-Subject: Re: [PATCH 1/6] mac80211: allow no mac address until firmware load
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, Tomas Winkler <tomasw@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-In-Reply-To: <20080730143003.GB19408@tuxdriver.com>
-References: <200807281544.33509.mb@bu3sch.de>
-	 <1217253397.6364.2.camel@localhost> <200807281600.39103.mb@bu3sch.de>
-	 <1217257174.28198.27.camel@localhost.localdomain>
-	 <1217257628.15381.2.camel@johannes.berg>
-	 <1217258040.28198.40.camel@localhost.localdomain>
-	 <1ba2fa240807280858o4020fec8k4c287567dff177ca@mail.gmail.com>
-	 <1217262158.28198.44.camel@localhost.localdomain>
-	 <1217416640.6379.144.camel@localhost>
-	 <1217417721.11432.21.camel@localhost.localdomain>
-	 <20080730143003.GB19408@tuxdriver.com>
-Content-Type: text/plain
-Date: Wed, 30 Jul 2008 16:52:22 +0200
-Message-Id: <1217429542.6379.161.camel@localhost> (sfid-20080730_165238_949121_50F37583)
-Mime-Version: 1.0
+	Thu, 24 Jul 2008 12:21:24 -0400
+Received: from [205.233.55.237] (helo=crashcourse.ca)
+	by astoria.ccjclearline.com with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.69)
+	(envelope-from <rpjday@crashcourse.ca>)
+	id 1KM3ZB-0006Su-Dd
+	for linux-wireless@vger.kernel.org; Thu, 24 Jul 2008 12:21:21 -0400
+Date: Thu, 24 Jul 2008 12:20:09 -0400 (EDT)
+From: "Robert P. J. Day" <rpjday@crashcourse.ca>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] WIRELESS: Make wireless one-click selectable.
+Message-ID: <alpine.LFD.1.10.0807241218170.7169@localhost.localdomain> (sfid-20080724_182129_448833_6C68C072)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-07-30 at 10:30 -0400, John W. Linville wrote:
-> I'm with Dan -- use all zeroes.
 
-It looks like most people prefer all zeroes, I'll go for that.
+Use "menuconfig" to make wireless support one-click selectable.
 
--- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
+Signed-off-by: Robert P. J. Day <rpjday@crashcourse.ca>
 
+---
 
+  revised from earlier patch so that wireless defaults to "y".
+
+diff --git a/net/Kconfig b/net/Kconfig
+index b986687..d05029b 100644
+--- a/net/Kconfig
++++ b/net/Kconfig
+@@ -239,14 +239,18 @@ source "net/rxrpc/Kconfig"
+ config FIB_RULES
+ 	bool
+
+-menu "Wireless"
++menuconfig WIRELESS
++	bool "Wireless"
+ 	depends on !S390
++	default y
++
++if WIRELESS
+
+ source "net/wireless/Kconfig"
+ source "net/mac80211/Kconfig"
+ source "net/ieee80211/Kconfig"
+
+-endmenu
++endif # WIRELESS
+
+ source "net/rfkill/Kconfig"
+ source "net/9p/Kconfig"
+
+========================================================================
+Robert P. J. Day
+Linux Consulting, Training and Annoying Kernel Pedantry:
+    Have classroom, will lecture.
+
+http://crashcourse.ca                          Waterloo, Ontario, CANADA
+========================================================================
