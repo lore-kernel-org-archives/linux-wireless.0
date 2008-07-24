@@ -1,116 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:37081 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753805AbYGGRFv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2008 13:05:51 -0400
-Subject: Re: Question on rfkill double block
-From: Dan Williams <dcbw@redhat.com>
-To: Andy Lutomirski <luto@myrealbox.com>
-Cc: hmh@hmh.eng.br, thomasw@gmail.com, zhu.yi@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <48719F2F.5060301@myrealbox.com>
-References: <1214982208.14590.473.camel@debian.sh.intel.com>
-	 <20080702193202.GA20410@khazad-dum.debian.net>
-	 <1ba2fa240807051428i3f49f621i7b583bec58a02869@mail.gmail.com>
-	 <20080706002037.GD21973@khazad-dum.debian.net>
-	 <48719F2F.5060301@myrealbox.com>
-Content-Type: text/plain
-Date: Mon, 07 Jul 2008 13:02:20 -0400
-Message-Id: <1215450140.17128.54.camel@localhost.localdomain> (sfid-20080707_190554_781966_5780D137)
+Received: from xc.sipsolutions.net ([83.246.72.84]:58568 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752354AbYGXLec (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jul 2008 07:34:32 -0400
+Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks
+	rtl8187
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <3ace41890807240105k5626c793if9cb9a2e3f62835b@mail.gmail.com> (sfid-20080724_100527_979344_6084D9DB)
+References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
+	 <200807221613.34434.herton@mandriva.com.br>
+	 <3ace41890807221525r67716ea0r251068df773fe53f@mail.gmail.com>
+	 <200807221940.20009.herton@mandriva.com.br> <4886AA3B.3000406@lwfinger.net>
+	 <4886C50E.6040304@lwfinger.net> <1216824917.13587.9.camel@johannes.berg>
+	 <48874F09.7060400@lwfinger.net>
+	 <3ace41890807232028u576371a6ra944431327cac76c@mail.gmail.com>
+	 <488815DE.2000903@lwfinger.net>
+	 <3ace41890807240105k5626c793if9cb9a2e3f62835b@mail.gmail.com>
+	 (sfid-20080724_100527_979344_6084D9DB)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-irNXop6TUVVC9MFL3I0K"
+Date: Thu, 24 Jul 2008 13:34:01 +0200
+Message-Id: <1216899241.13587.47.camel@johannes.berg> (sfid-20080724_133436_013740_1E2C3EFE)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-07-07 at 00:44 -0400, Andy Lutomirski wrote:
-> Henrique de Moraes Holschuh wrote:
-> > On Sun, 06 Jul 2008, Tomas Winkler wrote:
-> >> From my experience from other OS the states of SW and HW RF KILL
-> >> switches should be independent and visible to user space
-> >> otherwise it's very hard to make something coherent out of it. It
-> >> should be visible to user himself so he/she knows what switch actually
-> >> press. And also to let say unmanned application, most important in
-> >> preserving SW switch state across reboots and resume/suspend events.
-> >> Radio state is just simple AND function of all the switches in the
-> >> game anything else just leads to confusion.
-> >> Currently we have rkill switch from sysfs, hw rfkill, iwconfig txpower
-> >> off, the last one is better to eliminate but still we have TRIPLE
-> >> BLOCKING
-> > 
-> > I am not convinced it is the best way to go, but I thought on it, and that
-> > fourth state will at least help on sleep-to-ram resume, so you guys will get
-> > four states.  
-> > 
-> > But I can't give you a bitmap.  Sorry, there is a stablished sysfs ABI in
-> > mainline that says this:
-> > 
-> > 00 - BLOCK ("off")
-> > 01 - UNBLOCK ("on")
-> > 
-> > I hate it, but I can't change it.  We can *extend* it, but that's it.
-> 
-> Perhaps it's time to throw out the userspace interface and start over, 
-> or at least replace it and emulate the old one, too.
-> 
-> I'm not even kidding.  I have an iwl4965, and I've tried 2.6.25.10's 
-> built-in driver and wireless-compat from a couple days ago.  The rfkill 
-> switch *works* but the userspace interface does nothing.  (2.6.25.10's 
-> module at least causes network-manager to notice that the interface went 
-> down and gets a ton of "Requesting MAC access during RFKILL wakes up 
-> NIC."  Wireless-compat's driver just confuses network-manager.)  The 
 
-NM talks to HAL for rfkill information as an abstraction over all the
-random rfkill implementations that came before the kernel one, so you'll
-have to see if the HAL rfkill callouts correctly determine state for
-your driver.
+--=-irNXop6TUVVC9MFL3I0K
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Note that the HAL killswitch interface does not yet support soft-block,
-which as something that I was going to poke at after this patch landed
-if nobody fixed up HAL first.
+On Thu, 2008-07-24 at 09:05 +0100, Hin-Tak Leung wrote:
+> On Thu, Jul 24, 2008 at 6:40 AM, Larry Finger <Larry.Finger@lwfinger.net>=
+ wrote:
+> <snipped>
+> > I will be submitting the proper patch tomorrow, particularly if it work=
+s for
+> > others.
+>=20
+> I was being over-optimistic... it worked for me for a good while but
+> doesn't after a reboot/what-not.
+> So it probably needs to be done but there may be more missing.
+> Do we need to start the seq number from some where?
 
-Dan
+You shouldn't have to, but if you ever want to support multiple virtual
+interfaces you should put it into the vif state instead of the hw state.
+Not that it should matter when you have just a single virtual interface.
 
-> rfkill module seems to have no effect, and 'find /sys -name *rfkill*' 
-> shows nothing (other than the rfkill class and module).  Rfkill doesn't 
-> work on my ath5k system either (no rfkill file).  This is Ubuntu Hardy, 
-> which has nm 0.6, but I once tried nm 0.7 from svn and I don't recall it 
-> working any better.
-> 
-> Not to mention the fact that I have both an rfkill switch and an rfkill 
-> button.  Pressing the button turns WLAN off (same RFKILL messages 
-> spammed to dmesg) and Bluetooth *on*.  Maybe it's thinkpad_acpi's fault, 
-> but I don't really see how it's supposed to work right.
-> 
-> So it seems to me that the status quo is:
->   - If there's a sysfs file called rfkill, it has such and such 
-> semantics, and you probably can't change it by writing to it.
->   - There probably isn't an rfkill file.
->   - Userspace, at least on my laptops, doesn't currently use the rfkill 
-> ABI in any meaningful manner.
->   - Software rfkill control can easily do the wrong thing and there's no 
-> obvious way to make it do the right thing from userspace, .config, or sysfs.
-> 
-> Maybe the new semantics should be something sensible with a read-only 
-> file called "rfkill" that's backwards-compatible and shows the overall 
-> state.  Then we could do gnarly things like making *every* mac80211 
-> driver have software rfkill control, add inotify or something to the 
-> rfkill file, and generally have good and easily comprehensible control 
-> over all radios.  Hardware switches (and momentary swtiches and buttons 
-> and whatnot) could all be exposed directly to userspace.  Who knows -- 
-> there could even be files like "hard_rf_enable" (read-only, only there 
-> if there's a readable switch, like on iwl4965) and "soft_rf_enable" 
-> (read-write, unconditionally present), and a mechanism for userspace to 
-> control the software part (i.e. userspace could tell rfkill-input to 
-> stop doing anything and take control itself).
-> 
-> I'd suggest that nothing visible to userspace on the rfkill side go into 
-> 2.6.27 until it can be done right and it's clear what this whole 
-> mechanism is supposed to do.  I might even be talked into writing some 
-> patches, because it would be kind of nice for all this stuff to work 
-> right on my laptops.
-> 
-> If I'm missing something I need to make rfkill suddenly work on my 
-> machine, please give me some hints, too :)
-> 
-> --Andy
-> 
+johannes
+
+--=-irNXop6TUVVC9MFL3I0K
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIiGilAAoJEKVg1VMiehFYDcQP/1RFQabVOxXyzjjP4bZJ/6pZ
+PTcTymGGwAUpFJy0LeH+jNBqX/s/V03N5Hp9ppTbs5XIF+Hjto6bFXtUQsjBnGzY
+kNn+85PrXwnGOJimdgOROshRpEMw8bd/X7/LeYNmLkNJm+B+iV2QrkrIE5EZeS/0
+Hte0yu0CnaScFYwXdz9lS4iC+u8LQCgbkUVU/9HM8mOHnvrrMmIcEkBNTuVdQAKO
+dgoWZ3KVxWI4DSVA7nJlWnywyoxf8OQizWQf2lPQqWPi6hXaMJxzq9jUEcs6awDG
+XkvRxzETUn5VYszO2mlua+VD6MsIzmFUn++NTogfK0Nr/0SExRc+qxVOuWMoUZ3d
+bMdWf1O4a0fno8vb/16iDF05pylOqYQylTb3C6cTwL9Y8KHCW4hJeP1czsjt/Npt
+xLdPUtc9/eTk5dZRID7vT3PGOXuvKcaVwXpMUHpLIWFCF4x8UZgAQhJavTGEFK+f
+YHvc6lEh6cvFyE+NrL6QdjrtO1bTJNfGuU5W9pj0GlwrSGpBseCDK4ktMca+6RvY
+WY98XHQKpB5PIUFWvQCBp1DD4n3zRhxfNZuRFGQtd9BusGbK/EjtNYhU67FB4kwN
+Nl4cbwnCcNK0F4+/PTiDYOTc01h9d1ZhmyNOh573fD10M1dNCl1Jsf0UhPAOZdo4
+7G+hahWM0uvy7z1mx9CH
+=6fDa
+-----END PGP SIGNATURE-----
+
+--=-irNXop6TUVVC9MFL3I0K--
 
