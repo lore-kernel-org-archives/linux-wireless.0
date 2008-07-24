@@ -1,202 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:16274 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755679AbYGPBoX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 21:44:23 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so1738137yxm.1
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2008 18:44:23 -0700 (PDT)
-Subject: [PATCH 07/12] mac80211: rx.c/tx.c remove more users of
-	tx/rx_data->fc
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+Received: from c60.cesmail.net ([216.154.195.49]:30208 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750894AbYGXDmM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jul 2008 23:42:12 -0400
+Subject: Re: [ath5k-devel] AR5418 works with ath9k
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Davide Pesavento <davidepesa@gmail.com>,
+	ath9k-devel@lists.ath9k.org, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890807230513u81e68aaj443110d734161368@mail.gmail.com>
+References: <2da21fe50807221453m5275f59dj7369da5e667815d7@mail.gmail.com>
+	 <43e72e890807230513u81e68aaj443110d734161368@mail.gmail.com>
 Content-Type: text/plain
-Date: Tue, 15 Jul 2008 18:44:12 -0700
-Message-Id: <1216172652.6610.55.camel@brick> (sfid-20080716_034427_375493_DB3EF1D4)
+Date: Wed, 23 Jul 2008 23:42:09 -0400
+Message-Id: <1216870929.30436.34.camel@dv> (sfid-20080724_054218_895175_B223F552)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Those functions that still use ieee80211_get_hdrlen are moved over
-to use the little endian frame control.
+On Wed, 2008-07-23 at 05:13 -0700, Luis R. Rodriguez wrote:
+> > Maybe MacBook Pro's card has different eeprom's contents? Anyway the
+> > card now works fine, and it also appears quite stable! ;-)
+> > Thank you very much for your work!
+> 
+> I believe your last patch may have been "Use skb_end_pointer() ..." if
+> so then this is why you had this issue. Give the git tree a shot:
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/ath9k.git
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- net/mac80211/rx.c |   62 ++++++++++++++++++++--------------------------------
- net/mac80211/tx.c |    2 +-
- 2 files changed, 25 insertions(+), 39 deletions(-)
+Luis, I'm afraid that code is still wrong.  It used to be min(), but now
+it's essentially max().  You wrote that there was an error in my patch
+and I agreed, but we were talking of different errors, I'm afraid.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 6d9ae67..cca1ed8 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -816,7 +816,7 @@ ieee80211_reassemble_add(struct ieee80211_sub_if_data *sdata,
+Since you have touched the code after me and you know more about the
+hardware, I would prefer that you fix it and recheck everything once
+again.
+
+Here's the patch.  I don't feel comfortable about describing things I
+don't fully understand.
+
+diff --git a/ksrc/hw.c b/ksrc/hw.c
+index 5c8127e..e0a5464 100644
+--- a/ksrc/hw.c
++++ b/ksrc/hw.c
+@@ -852,7 +852,7 @@ static inline enum hal_status ath9k_hw_check_eeprom(struct ath_hal *ah)
+ 	else
+ 		el = ahp->ah_eeprom.baseEepHeader.length;
  
- static inline struct ieee80211_fragment_entry *
- ieee80211_reassemble_find(struct ieee80211_sub_if_data *sdata,
--			  u16 fc, unsigned int frag, unsigned int seq,
-+			  unsigned int frag, unsigned int seq,
- 			  int rx_queue, struct ieee80211_hdr *hdr)
- {
- 	struct ieee80211_fragment_entry *entry;
-@@ -825,7 +825,6 @@ ieee80211_reassemble_find(struct ieee80211_sub_if_data *sdata,
- 	idx = sdata->fragment_next;
- 	for (i = 0; i < IEEE80211_FRAGMENT_MAX; i++) {
- 		struct ieee80211_hdr *f_hdr;
--		u16 f_fc;
- 
- 		idx--;
- 		if (idx < 0)
-@@ -837,10 +836,13 @@ ieee80211_reassemble_find(struct ieee80211_sub_if_data *sdata,
- 		    entry->last_frag + 1 != frag)
- 			continue;
- 
--		f_hdr = (struct ieee80211_hdr *) entry->skb_list.next->data;
--		f_fc = le16_to_cpu(f_hdr->frame_control);
-+		f_hdr = (struct ieee80211_hdr *)entry->skb_list.next->data;
- 
--		if ((fc & IEEE80211_FCTL_FTYPE) != (f_fc & IEEE80211_FCTL_FTYPE) ||
-+		/*
-+		 * Check ftype and addresses are equal, else check next fragment
-+		 */
-+		if (((hdr->frame_control ^ f_hdr->frame_control) &
-+		     cpu_to_le16(IEEE80211_FCTL_FTYPE)) ||
- 		    compare_ether_addr(hdr->addr1, f_hdr->addr1) != 0 ||
- 		    compare_ether_addr(hdr->addr2, f_hdr->addr2) != 0)
- 			continue;
-@@ -865,11 +867,11 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
- 	struct sk_buff *skb;
- 	DECLARE_MAC_BUF(mac);
- 
--	hdr = (struct ieee80211_hdr *) rx->skb->data;
-+	hdr = (struct ieee80211_hdr *)rx->skb->data;
- 	sc = le16_to_cpu(hdr->seq_ctrl);
- 	frag = sc & IEEE80211_SCTL_FRAG;
- 
--	if (likely((!(rx->fc & IEEE80211_FCTL_MOREFRAGS) && frag == 0) ||
-+	if (likely((!ieee80211_has_morefrags(hdr->frame_control) && frag == 0) ||
- 		   (rx->skb)->len < 24 ||
- 		   is_multicast_ether_addr(hdr->addr1))) {
- 		/* not fragmented */
-@@ -884,7 +886,7 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
- 		entry = ieee80211_reassemble_add(rx->sdata, frag, seq,
- 						 rx->queue, &(rx->skb));
- 		if (rx->key && rx->key->conf.alg == ALG_CCMP &&
--		    (rx->fc & IEEE80211_FCTL_PROTECTED)) {
-+		    ieee80211_has_protected(hdr->frame_control)) {
- 			/* Store CCMP PN so that we can verify that the next
- 			 * fragment has a sequential PN value. */
- 			entry->ccmp = 1;
-@@ -898,8 +900,7 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
- 	/* This is a fragment for a frame that should already be pending in
- 	 * fragment cache. Add this fragment to the end of the pending entry.
- 	 */
--	entry = ieee80211_reassemble_find(rx->sdata, rx->fc, frag, seq,
--					  rx->queue, hdr);
-+	entry = ieee80211_reassemble_find(rx->sdata, frag, seq, rx->queue, hdr);
- 	if (!entry) {
- 		I802_DEBUG_INC(rx->local->rx_handlers_drop_defrag);
- 		return RX_DROP_MONITOR;
-@@ -924,7 +925,7 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
- 		memcpy(entry->last_pn, pn, CCMP_PN_LEN);
- 	}
- 
--	skb_pull(rx->skb, ieee80211_get_hdrlen(rx->fc));
-+	skb_pull(rx->skb, ieee80211_hdrlen(hdr->frame_control));
- 	__skb_queue_tail(&entry->skb_list, rx->skb);
- 	entry->last_frag = frag;
- 	entry->extra_len += rx->skb->len;
-@@ -1091,7 +1092,7 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
- {
- 	struct net_device *dev = rx->dev;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) rx->skb->data;
--	u16 fc, hdrlen, ethertype;
-+	u16 hdrlen, ethertype;
- 	u8 *payload;
- 	u8 dst[ETH_ALEN];
- 	u8 src[ETH_ALEN] __aligned(2);
-@@ -1102,12 +1103,10 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
- 	DECLARE_MAC_BUF(mac3);
- 	DECLARE_MAC_BUF(mac4);
- 
--	fc = rx->fc;
--
--	if (unlikely(!WLAN_FC_DATA_PRESENT(fc)))
-+	if (unlikely(!ieee80211_is_data_present(hdr->frame_control)))
- 		return -1;
- 
--	hdrlen = ieee80211_get_hdrlen(fc);
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 
- 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- 		int meshhdrlen = ieee80211_get_mesh_hdrlen(
-@@ -1133,41 +1132,28 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
- 	 *   1     0   BSSID SA    DA    n/a
- 	 *   1     1   RA    TA    DA    SA
- 	 */
-+	memcpy(dst, ieee80211_get_DA(hdr), ETH_ALEN);
-+	memcpy(src, ieee80211_get_SA(hdr), ETH_ALEN);
- 
--	switch (fc & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
--	case IEEE80211_FCTL_TODS:
--		/* BSSID SA DA */
--		memcpy(dst, hdr->addr3, ETH_ALEN);
--		memcpy(src, hdr->addr2, ETH_ALEN);
--
-+	switch (hdr->frame_control &
-+		cpu_to_le16(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
-+	case __constant_cpu_to_le16(IEEE80211_FCTL_TODS):
- 		if (unlikely(sdata->vif.type != IEEE80211_IF_TYPE_AP &&
- 			     sdata->vif.type != IEEE80211_IF_TYPE_VLAN))
- 			return -1;
- 		break;
--	case (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS):
--		/* RA TA DA SA */
--		memcpy(dst, hdr->addr3, ETH_ALEN);
--		memcpy(src, hdr->addr4, ETH_ALEN);
--
--		 if (unlikely(sdata->vif.type != IEEE80211_IF_TYPE_WDS &&
-+	case __constant_cpu_to_le16(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS):
-+		if (unlikely(sdata->vif.type != IEEE80211_IF_TYPE_WDS &&
- 			     sdata->vif.type != IEEE80211_IF_TYPE_MESH_POINT))
- 			return -1;
- 		break;
--	case IEEE80211_FCTL_FROMDS:
--		/* DA BSSID SA */
--		memcpy(dst, hdr->addr1, ETH_ALEN);
--		memcpy(src, hdr->addr3, ETH_ALEN);
--
-+	case __constant_cpu_to_le16(IEEE80211_FCTL_FROMDS):
- 		if (sdata->vif.type != IEEE80211_IF_TYPE_STA ||
- 		    (is_multicast_ether_addr(dst) &&
- 		     !compare_ether_addr(src, dev->dev_addr)))
- 			return -1;
- 		break;
--	case 0:
--		/* DA SA BSSID */
--		memcpy(dst, hdr->addr1, ETH_ALEN);
--		memcpy(src, hdr->addr2, ETH_ALEN);
--
-+	case __constant_cpu_to_le16(0):
- 		if (sdata->vif.type != IEEE80211_IF_TYPE_IBSS)
- 			return -1;
- 		break;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 2b912cf..bf733ed 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1025,7 +1025,7 @@ __ieee80211_tx_prepare(struct ieee80211_tx_data *tx,
- 	else if (test_and_clear_sta_flags(tx->sta, WLAN_STA_CLEAR_PS_FILT))
- 		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
- 
--	hdrlen = ieee80211_get_hdrlen(tx->fc);
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	if (skb->len > hdrlen + sizeof(rfc1042_header) + 2) {
- 		u8 *pos = &skb->data[hdrlen + sizeof(rfc1042_header)];
- 		tx->ethertype = (pos[0] << 8) | pos[1];
+-	if (el < sizeof(struct ar5416_eeprom))
++	if (el > sizeof(struct ar5416_eeprom))
+ 		el = sizeof(struct ar5416_eeprom) / sizeof(u_int16_t);
+ 	else
+ 		el = el / sizeof(u_int16_t);
+
+
 -- 
-1.5.6.3.499.geae9
-
-
+Regards,
+Pavel Roskin
