@@ -1,52 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:41675
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751084AbYG3EsT (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:57149 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750974AbYGYP5Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 00:48:19 -0400
-Date: Tue, 29 Jul 2008 21:48:15 -0700 (PDT)
-Message-Id: <20080729.214815.17075710.davem@davemloft.net> (sfid-20080730_064822_076248_72D902BC)
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, tytso@MIT.EDU, alistair@devzero.co.uk,
-	torvalds@linux-foundation.org, linux-kernel@vger.kernel.org,
-	dsd@gentoo.org, kune@deine-taler.de, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.27-rc1: zd1211rw association fails
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080729175206.GB4923@tuxdriver.com>
-References: <1217333359.10489.38.camel@johannes.berg>
-	<1217333706.10489.40.camel@johannes.berg>
-	<20080729175206.GB4923@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 25 Jul 2008 11:57:16 -0400
+Message-ID: <4889F7D6.4010706@lwfinger.net> (sfid-20080725_175720_633909_B3B23E18)
+Date: Fri, 25 Jul 2008 10:57:10 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: free_beer_for_all@yahoo.com
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: WLAN regression before this morning
+References: <761713.15647.qm@web46115.mail.sp1.yahoo.com>
+In-Reply-To: <761713.15647.qm@web46115.mail.sp1.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 29 Jul 2008 13:52:06 -0400
-
-> On Tue, Jul 29, 2008 at 02:15:06PM +0200, Johannes Berg wrote:
-> > 
-> > > > Yeah, it's really too bad -rc1 got released just before you were able
-> > > > to post the fix to this, since if there were 100 million people who
-> > > > were trying out kernels starting with -git7 that use wireless, there
-> > > > will probably be 200 million people trying out -rc1.  :-)
-> > > > 
-> > > > Thanks for finding and fixing it, though.  I stopped trying out
-> > > > kernels after -git6 since I was travelling at OSCON, and not having
-> > > > wireless was a show-stopper for me....
-> > > 
-> > > If everybody's going to decide now to hit on _me_, I'll point out that
-> > > davem's MQ TX changes broke it
-> > 
-> > Of course that's not strictly true, it had been broken forever, it just
-> > happened to never show up before. And I mean forever, the original
-> > devicescape code that got in was already broken.
+barry bouwsma wrote:
+> Servus,
 > 
-> FWIW, I think the MQ stuff didn't spend much (or any) time in -next...
+> Last successfully built and used kernel was 2.6.26-rc8, about
+> the start of 29.Jun UTC or so.
+> 
+> Present build of GIT 2.6.26 during the merge window, updated
+> just before 06h UTC, today, 25.Jul.
+> 
+> With today's kernel, I am not even able to associate with a
+> WLAN less than two metres away from my ZD1211rw type USB
+> adapter, to say nothing of more distant WLANs with which I
+> could authenticate with the earlier code without problems --
+> I don't even come near the associate stage.
+> 
+> The networks all show up as expected in `iwlist wlan1 scan'
+> with decent strengths; while all I get from dmesg is
+> [ 1016.829827] wlan1: authenticate with AP 00:1X:YZ:AB:23:45
+> [ 1017.032769] wlan1: authenticate with AP 00:1X:YZ:AB:23:45
+> [ 1017.234213] wlan1: authenticate with AP 00:1X:YZ:AB:23:45
+> [ 1017.435402] wlan1: authentication with AP 00:1X:YZ:AB:23:45 timed out
+> 
+> 
+> If I've hosed myself with a new .config option, I'll be kicking
+> meself where it hurts most.  Else, back to -rc8 to both send
+> this message and to regain 'net access to do other needed so-
+> called `work', so sorry I haven't narrowed this down further...
+> 
+> And I'll feel me a fool if the failure is because I went from
+> a different (BSD) OS into 2.6.26-merge, while going from that
+> into -rc8 I promptly associate as desired.
 
-It did in a few formats, but then Patrick McHardy pointed out something
-that required my rewriting large swaths of it in the days leading up to
-the merge window.
+I too have a problem with wireless in the current 2.6.26-gitX kernels. If you 
+have done the git pull, you can try bisecting to find the problem. Use 'git 
+bisect good v2.6.26' to mark a known good point. If you don't wish to take the 
+time bisecting, then issue a 'git checkout v2.6.26'. That should give you a 
+kernel that works.
 
-And the problem this showed up was a bug that existed in mac80211 long
-before I made any TX multiqueue changes :-)
+Larry
