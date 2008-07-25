@@ -1,60 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51630
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1757402AbYGQMQP (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:52463 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751098AbYGYFcR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 08:16:15 -0400
-Date: Thu, 17 Jul 2008 05:16:14 -0700 (PDT)
-Message-Id: <20080717.051614.53304618.davem@davemloft.net> (sfid-20080717_141628_796797_D7AFA7D2)
-To: netdev@vger.kernel.org
-CC: kaber@trash.net, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 7/31]: netdev: Kill struct net_device_subqueue and
- netdev->egress_subqueue*
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 25 Jul 2008 01:32:17 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so3889110wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2008 22:32:16 -0700 (PDT)
+Message-ID: <1197ff4c0807242232i7eb8539esef335134b2fcbe63@mail.gmail.com> (sfid-20080725_073221_358922_A64D0B44)
+Date: Fri, 25 Jul 2008 13:32:15 +0800
+From: YanBo <dreamfly281@gmail.com>
+To: "=?UTF-8?B?7J6E7JiB67mI?=" <ybim@mmlab.snu.ac.kr>
+Subject: Re: question about open11s installation
+Cc: wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <da2e1ddd0807242211n33473f06p74d6acdf75add678@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <da2e1ddd0807170905j5121737bia15429aee0f7ffd6@mail.gmail.com>
+	 <1216313740.3422.44.camel@johannes.berg>
+	 <da2e1ddd0807180151k707c77eeyf31b6ea2948c6ec3@mail.gmail.com>
+	 <da2e1ddd0807242211n33473f06p74d6acdf75add678@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-No longer used.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- include/linux/netdevice.h |   12 ------------
- 1 files changed, 0 insertions(+), 12 deletions(-)
-
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index b5c1e7d..a1c2c22 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -118,14 +118,6 @@ struct wireless_dev;
- 
- #endif  /*  __KERNEL__  */
- 
--struct net_device_subqueue
--{
--	/* Give a control state for each queue.  This struct may contain
--	 * per-queue locks in the future.
--	 */
--	unsigned long   state;
--};
--
- /*
-  *	Network device statistics. Akin to the 2.0 ether stats but
-  *	with byte counters.
-@@ -761,10 +753,6 @@ struct net_device
- 	/* for setting kernel sock attribute on TCP connection setup */
- #define GSO_MAX_SIZE		65536
- 	unsigned int		gso_max_size;
--
--	/* The TX queue control structures */
--	unsigned int			egress_subqueue_count;
--	struct net_device_subqueue	egress_subqueue[1];
- };
- #define to_net_dev(d) container_of(d, struct net_device, dev)
- 
--- 
-1.5.6.2.255.gbed62
-
+MjAwOC83LzI1IOyehOyYgeu5iCA8eWJpbUBtbWxhYi5zbnUuYWMua3I+Ogo+IFRvIGZpbmQgdGhl
+IGNhdXNlIEkgdGVzdGVkIHdoZXRoZXIgdGhlIG1lc2ggbm9kZXMgc2VuZCBiZWFjb25zIGNvcnJl
+Y3RseS4KPiBJIHB1dCBhIG5vZGUgbmVhciBtZXNoIG5vZGVzLCBzZXQgdG8gdGhlIHNhbWUgY2hh
+bm5lbCB3aXRoIG1lc2ggbm9kZXMuCj4gVGhlbiBJIGV4ZWN1dGVkIHdsYW5jdGwodGhpcyBub2Rl
+J3MgT1MgaXMgbmV0YnNkKS4KPiBCdXQgSSBjb3VsZG4ndCBkaXNjb3ZlciBtZXNoIG5vZGVzJ3Mg
+YWRkcmVzc2VzLgo+IEknbSBub3Qgc3VyZSwgYnV0IEkgdGhpbmsgdGhhdCBpZiB0aGUgbWVzaCBu
+b2RlcyBzZW5kIGJlYWNvbnMgY29ycmVjdGx5Cj4gdGhlIG5vZGUgd2lsbCByZWNvZ25pemUgbWVz
+aCBub2RlcywgYW5kIHB1dCB0aGVtIGluIHRoZSBsaXN0LCBpc24ndCBpdD8KPiBTbyB0aGVyZSdz
+IHNvbWUgcHJvYmxlbSB3aXRoIG1lc2ggYmVhY29uaW5nIHdpdGggYjQzIGRyaXZlci4KPgoKSSBh
+bHNvICB0ZXN0IGEgQVI1NDEzIGFuZCBhIEFSMjQxMyBjYXJkLiB3YW50IG1ha2UgdGhlbSB3b3Jr
+ZWQgaW4gbWVzaAptb2RlLCBhZnRlciB3YWtlIHRoZW0gdXAgZm9sbG93IHRoZSBwcm9jZXNzCmh0
+dHA6Ly93d3cub3BlbjgwMjExcy5vcmcvdHJhYy93aWtpL0hPV1RPLTAuMi4xLiBidXQgY2FuJ3Qg
+ZGV0ZWN0ZWQKYW55IGJlYWNvbiBmcm9tIHRoZW0gdG9vLgoKQlIKeWFuYm8K
