@@ -1,133 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47718 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751310AbYGEKJb (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.171]:53412 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751237AbYGYTpZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jul 2008 06:09:31 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1KF4hu-0003Em-3D
-	for linux-wireless@vger.kernel.org; Sat, 05 Jul 2008 12:09:30 +0200
-Message-Id: <20080705100826.860226000@sipsolutions.net> (sfid-20080705_120935_523968_9F223499)
-References: <20080705100655.419906000@sipsolutions.net>
-Date: Sat, 05 Jul 2008 12:06:57 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH/RFT 2/2] mac80211: push interface checks down
-Mime-Version: 1.0
+	Fri, 25 Jul 2008 15:45:25 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so4292913wfd.4
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2008 12:45:24 -0700 (PDT)
+Message-ID: <40f31dec0807251245h40ef042lbb40a5f2a8ad7b29@mail.gmail.com> (sfid-20080725_214528_581917_9D256115)
+Date: Fri, 25 Jul 2008 22:45:24 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: [ath5k-devel] [PATCH 1/12] ath5k: Update register list
+Cc: "Pavel Roskin" <proski@gnu.org>, jirislaby@gmail.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, "Nick Kossifidis" <mick@madwifi.org>
+In-Reply-To: <b6c5339f0807241455s31697c8ctfcb9e78a486a28ea@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080720033041.GA7440@makis> <1216934605.3094.5.camel@dv>
+	 <40f31dec0807241435x2e9f6ae1x1d136c1b0d20c874@mail.gmail.com>
+	 <b6c5339f0807241455s31697c8ctfcb9e78a486a28ea@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch pushes the "netif_running()" and "same type as before"
-checks down into ieee80211_if_change_type() to centralise the
-logic instead of duplicating it for cfg80211 and wext.
+2008/7/25 Bob Copeland <me@bobcopeland.com>:
+> On Thu, Jul 24, 2008 at 5:35 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+>>>> -                     ath5k_hw_reg_write(ah, 0x0002a002, AR5K_PHY(11));
+>>>> +                     ath5k_hw_reg_write(ah, 0x0002a002, 0x982c);
+>>>
+>>> You are replacing macros with numbers in several places.  Maybe you
+>>> could introduce another macro?  Or is it the case when you had
+>>> interpretation of the registers, but now realize that it was wrong?
+>>>
+>>
+>> Helps me with rev. engineering, i'll hopefully introduce a macro for
+>> these registers soon...
+>
+> Probably stating the obvious, but ath9k demystifies some of these registers
+> perhaps?  I'm not sure how much the phy register location changes each
+> revision, but the bit pattern looks like 0x982c could easily be
+> AR_PHY_ADC_CTL...
+>
+> --
+> Bob Copeland %% www.bobcopeland.com
+>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/cfg.c         |    8 ++++----
- net/mac80211/ieee80211_i.h |    4 ++--
- net/mac80211/iface.c       |   20 ++++++++++++++++++--
- net/mac80211/wext.c        |    9 +--------
- 4 files changed, 25 insertions(+), 16 deletions(-)
-
---- everything.orig/net/mac80211/cfg.c	2008-07-05 11:35:09.000000000 +0200
-+++ everything/net/mac80211/cfg.c	2008-07-05 12:04:14.000000000 +0200
-@@ -84,22 +84,22 @@ static int ieee80211_change_iface(struct
- 	struct net_device *dev;
- 	enum ieee80211_if_types itype;
- 	struct ieee80211_sub_if_data *sdata;
-+	int ret;
- 
- 	/* we're under RTNL */
- 	dev = __dev_get_by_index(&init_net, ifindex);
- 	if (!dev)
- 		return -ENODEV;
- 
--	if (netif_running(dev))
--		return -EBUSY;
--
- 	itype = nl80211_type_to_mac80211_type(type);
- 	if (itype == IEEE80211_IF_TYPE_INVALID)
- 		return -EINVAL;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	ieee80211_if_change_type(sdata, itype);
-+	ret = ieee80211_if_change_type(sdata, itype);
-+	if (ret)
-+		return ret;
- 
- 	if (ieee80211_vif_is_mesh(&sdata->vif) && params->mesh_id_len)
- 		ieee80211_if_sta_set_mesh_id(&sdata->u.sta,
---- everything.orig/net/mac80211/ieee80211_i.h	2008-07-05 11:35:09.000000000 +0200
-+++ everything/net/mac80211/ieee80211_i.h	2008-07-05 12:04:14.000000000 +0200
-@@ -929,8 +929,8 @@ void ieee80211_if_setup(struct net_devic
- int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 		     struct net_device **new_dev, enum ieee80211_if_types type,
- 		     struct vif_params *params);
--void ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
--			      enum ieee80211_if_types type);
-+int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
-+			     enum ieee80211_if_types type);
- void ieee80211_if_remove(struct net_device *dev);
- void ieee80211_remove_interfaces(struct ieee80211_local *local);
- 
---- everything.orig/net/mac80211/iface.c	2008-07-05 12:02:21.000000000 +0200
-+++ everything/net/mac80211/iface.c	2008-07-05 12:04:14.000000000 +0200
-@@ -138,9 +138,23 @@ static void ieee80211_setup_sdata(struct
- 	ieee80211_debugfs_add_netdev(sdata);
- }
- 
--void ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
--			      enum ieee80211_if_types type)
-+int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
-+			     enum ieee80211_if_types type)
- {
-+	ASSERT_RTNL();
-+
-+	if (type == sdata->vif.type)
-+		return 0;
-+
-+	/*
-+	 * We could, here, on changes between IBSS/STA/MESH modes,
-+	 * invoke an MLME function instead that disassociates etc.
-+	 * and goes into the requested mode.
-+	 */
-+
-+	if (netif_running(sdata->dev))
-+		return -EBUSY;
-+
- 	/* Purge and reset type-dependent state. */
- 	ieee80211_teardown_sdata(sdata->dev);
- 	ieee80211_setup_sdata(sdata, type);
-@@ -149,6 +163,8 @@ void ieee80211_if_change_type(struct iee
- 	sdata->basic_rates = 0;
- 	sdata->drop_unencrypted = 0;
- 	sdata->sequence = 0;
-+
-+	return 0;
- }
- 
- int ieee80211_if_add(struct ieee80211_local *local, const char *name,
---- everything.orig/net/mac80211/wext.c	2008-07-05 11:35:09.000000000 +0200
-+++ everything/net/mac80211/wext.c	2008-07-05 12:04:14.000000000 +0200
-@@ -296,14 +296,7 @@ static int ieee80211_ioctl_siwmode(struc
- 		return -EINVAL;
- 	}
- 
--	if (type == sdata->vif.type)
--		return 0;
--	if (netif_running(dev))
--		return -EBUSY;
--
--	ieee80211_if_change_type(sdata, type);
--
--	return 0;
-+	return ieee80211_if_change_type(sdata, type);
- }
- 
- 
+Give me some time on this, I think this patch is ok for now, we can
+update it in the future...
 
 -- 
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
