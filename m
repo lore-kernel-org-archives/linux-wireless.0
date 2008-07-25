@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.251]:59376 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755480AbYGUWjK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 18:39:10 -0400
-Received: by an-out-0708.google.com with SMTP id d40so402483and.103
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 15:39:09 -0700 (PDT)
-Message-ID: <43e72e890807211539p358fa0cbw2c9868ed8f9c9b4e@mail.gmail.com> (sfid-20080722_003915_545319_5608313E)
-Date: Mon, 21 Jul 2008 15:39:09 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Luis Rodriguez" <Luis.Rodriguez@atheros.com>
-Subject: Re: [PATCH] ath9k: fix build errors and warnings on 64-bit systems
-Cc: "Pavel Roskin" <proski@gnu.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <15B47C78534E094AA9A41F58FB8D74F3D6EF4A7EEE@SC1EXMB-MBCL.global.atheros.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:2627 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751436AbYGYUAb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jul 2008 16:00:31 -0400
+Received: from ra.tuxdriver.com (ra.tuxdriver.com [127.0.0.1])
+	by ra.tuxdriver.com (8.14.0/8.14.0) with ESMTP id m6PK0HT3007075
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2008 16:00:27 -0400
+Received: (from uucp@localhost)
+	by ra.tuxdriver.com (8.14.0/8.14.0/Submit) with UUCP id m6PJkACf006899
+	for linux-wireless@vger.kernel.org; Fri, 25 Jul 2008 15:46:10 -0400
+Received: from linville-t43.local (localhost.localdomain [127.0.0.1])
+	by linville-t43.local (8.14.2/8.13.8) with ESMTP id m6PJj0fn006242
+	for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2008 15:45:00 -0400
+Received: (from linville@localhost)
+	by linville-t43.local (8.14.2/8.14.2/Submit) id m6PJj0a7006240
+	for linux-wireless@vger.kernel.org; Fri, 25 Jul 2008 15:45:00 -0400
+Date: Fri, 25 Jul 2008 15:44:59 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: OLS2008 wireless presentation slides available
+Message-ID: <20080725194459.GB5809@tuxdriver.com> (sfid-20080725_220039_025257_AB225BBD)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080721000313.24845.10866.stgit@dv.roinet.com>
-	 <15B47C78534E094AA9A41F58FB8D74F3D6EF4A7EEE@SC1EXMB-MBCL.global.atheros.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> diff --git a/ksrc/hw.c b/ksrc/hw.c
-> index b8a9321..5a24cbe 100644
-> --- a/ksrc/hw.c
-> +++ b/ksrc/hw.c
-> @@ -852,9 +852,11 @@ static inline enum hal_status ath9k_hw_check_eeprom(struct ath_hal *ah)
->        else
->                el = ahp->ah_eeprom.baseEepHeader.length;
->
-> +       if (el < sizeof(struct ar5416_eeprom) / sizeof(u_int16_t))
-> +               el = sizeof(struct ar5416_eeprom) / sizeof(u_int16_t);
-> +
->        eepdata = (u_int16_t *) (&ahp->ah_eeprom);
-> -       for (i = 0; i <
-> -               min(el, sizeof(struct ar5416_eeprom)) / sizeof(u_int16_t); i++)
-> +       for (i = 0; i < el; i++)
->                sum ^= *eepdata++;
->
->        if (need_swap) {
+Several have asked about the slides from my OLS presentation.  I have
+made a version of my slides available here:
 
-Its a good thing indeed I split this into two patches, as your first
-hunk breaks the check. Had you tested this??? Anyway I've fixed this
-now.
+	http://www.kernel.org/pub/linux/kernel/people/linville/ols2008/presentation.pdf
 
-  Luis
+This version has each slide collapsed onto a single page in the
+pdf -- the version I used in the presentation used several pdf pages
+in sequence in order to simulate revealing individual bullets on the
+slides and such.  If someone really wants that then send me a note
+asking for it.
+
+Some have asked what tool was used to produce the slides.  They were
+produced with the Beamer class for LaTeX.  I highly recommend it.
+
+	http://en.wikipedia.org/wiki/Beamer_(LaTeX)
+
+Thanks,
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
