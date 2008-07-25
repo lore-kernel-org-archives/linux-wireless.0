@@ -1,87 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50662
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1758149AbYGCHEr (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.176]:10866 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750878AbYGYSfx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:04:47 -0400
-Date: Thu, 03 Jul 2008 00:04:46 -0700 (PDT)
-Message-Id: <20080703.000446.125029084.davem@davemloft.net> (sfid-20080703_103231_823643_2EDED2E1)
-To: netdev@vger.kernel.org
-CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
-Subject: [PATCH 26/39]: netdev: netdev_priv() can now be sane again.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 25 Jul 2008 14:35:53 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so2798930ika.5
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jul 2008 11:35:51 -0700 (PDT)
+Date: Fri, 25 Jul 2008 20:36:22 +0200
+From: Jarek Poplawski <jarkao2@gmail.com>
+To: Ingo Oeser <netdev@axxeo.de>
+Cc: David Miller <davem@davemloft.net>, peterz@infradead.org,
+	Larry.Finger@lwfinger.net, kaber@trash.net,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, mingo@redhat.com
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+	__netif_schedule+0x2c/0x98()
+Message-ID: <20080725183622.GA3107@ami.dom.local> (sfid-20080725_203602_626786_F66C7AF2)
+References: <1216806614.7257.152.camel@twins> <1216810696.7257.175.camel@twins> <20080723.131441.200166513.davem@davemloft.net> <200807251904.37302.netdev@axxeo.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200807251904.37302.netdev@axxeo.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Jul 25, 2008 at 07:04:36PM +0200, Ingo Oeser wrote:
+...
+> I'm sure as hell, I miss sth. but can't it be done by this pseudo-code:
 
-The private area of a netdev is now at a fixed offset once more.
+...And I really doubt it can't be done like this.
 
-Unfortunately, some assumptions that netdev_priv() == netdev->priv
-crept back into the tree.  In particular this happened in the
-loopback driver.  Make it use netdev->ml_priv.
+Jarek P.
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- drivers/net/loopback.c    |    8 ++++----
- include/linux/netdevice.h |    4 +++-
- 2 files changed, 7 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/loopback.c b/drivers/net/loopback.c
-index 41b774b..49f6bc0 100644
---- a/drivers/net/loopback.c
-+++ b/drivers/net/loopback.c
-@@ -153,7 +153,7 @@ static int loopback_xmit(struct sk_buff *skb, struct net_device *dev)
- 	dev->last_rx = jiffies;
- 
- 	/* it's OK to use per_cpu_ptr() because BHs are off */
--	pcpu_lstats = netdev_priv(dev);
-+	pcpu_lstats = dev->ml_priv;
- 	lb_stats = per_cpu_ptr(pcpu_lstats, smp_processor_id());
- 	lb_stats->bytes += skb->len;
- 	lb_stats->packets++;
-@@ -171,7 +171,7 @@ static struct net_device_stats *get_stats(struct net_device *dev)
- 	unsigned long packets = 0;
- 	int i;
- 
--	pcpu_lstats = netdev_priv(dev);
-+	pcpu_lstats = dev->ml_priv;
- 	for_each_possible_cpu(i) {
- 		const struct pcpu_lstats *lb_stats;
- 
-@@ -207,13 +207,13 @@ static int loopback_dev_init(struct net_device *dev)
- 	if (!lstats)
- 		return -ENOMEM;
- 
--	dev->priv = lstats;
-+	dev->ml_priv = lstats;
- 	return 0;
- }
- 
- static void loopback_dev_free(struct net_device *dev)
- {
--	struct pcpu_lstats *lstats = netdev_priv(dev);
-+	struct pcpu_lstats *lstats = dev->ml_priv;
- 
- 	free_percpu(lstats);
- 	free_netdev(dev);
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index df44e44..8558046 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -809,7 +809,9 @@ void dev_net_set(struct net_device *dev, struct net *net)
-  */
- static inline void *netdev_priv(const struct net_device *dev)
- {
--	return dev->priv;
-+	return (char *)dev + ((sizeof(struct net_device)
-+			       + NETDEV_ALIGN_CONST)
-+			      & ~NETDEV_ALIGN_CONST);
- }
- 
- /* Set the sysfs physical device reference for the network logical device
--- 
-1.5.6
-
+> 
+> netif_tx_lock(device)
+> {
+> 	mutex_lock(device->queue_entry_mutex);
+> 	foreach_queue_entries(queue, device->queues)
+> 	{
+> 		spin_lock(queue->tx_lock);
+> 		set_noop_tx_handler(queue);
+> 		spin_unlock(queue->tx_lock);
+> 	}
+> 	mutex_unlock(device->queue_entry_mutex);
+> }
+> 
+> netif_tx_unlock(device)
+> {
+> 	mutex_lock(device->queue_entry_mutex);
+> 	foreach_queue_entries(queue, device->queues)
+> 	{
+> 		spin_lock(queue->tx_lock);
+> 		set_useful_tx_handler(queue);
+> 		spin_unlock(queue->tx_lock);
+> 	}
+> 	mutex_unlock(device->queue_entry_mutex);
+> }
+> 
+> Then protect use of the queues by queue->tx_lock in transmit path.
+> The first setup of the queue doesn't need to be protected, since no-one
+> knows the device. The final cleanup of the device doesn't need to be
+> protected either, because netif_tx_lock() and netif_tx_unlock() should
+> not be called after entering the final cleanup.
+> 
+> Some VM locking works this way...
+> 
+> 
+> Best Regards
+> 
+> Ingo Oeser
