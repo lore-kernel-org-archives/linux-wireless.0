@@ -1,69 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:56802 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754341AbYG3N1y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 09:27:54 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC/RFT] rtl8187: Protect the config callback from mac80211 with a mutex
-Date: Wed, 30 Jul 2008 15:27:26 +0200
-Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
-	herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Pavel Roskin <proski@gnu.org>,
-	wireless <linux-wireless@vger.kernel.org>
-References: <48900654.7030100@lwfinger.net> <200807301524.40411.mb@bu3sch.de>
-In-Reply-To: <200807301524.40411.mb@bu3sch.de>
+Received: from ik-out-1112.google.com ([66.249.90.179]:10624 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751600AbYGZNRn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Jul 2008 09:17:43 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so3157518ika.5
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Jul 2008 06:17:41 -0700 (PDT)
+Date: Sat, 26 Jul 2008 15:18:38 +0200
+From: Jarek Poplawski <jarkao2@gmail.com>
+To: David Miller <davem@davemloft.net>
+Cc: johannes@sipsolutions.net, netdev@axxeo.de, peterz@infradead.org,
+	Larry.Finger@lwfinger.net, kaber@trash.net,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, mingo@redhat.com
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+	__netif_schedule+0x2c/0x98()
+Message-ID: <20080726131838.GA2873@ami.dom.local> (sfid-20080726_151749_854708_2AD8ECCE)
+References: <20080725193416.GB3107@ami.dom.local> <1217014575.4758.7.camel@johannes.berg> <20080725200137.GC3107@ami.dom.local> <20080726.021846.236624483.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200807301527.26432.mb@bu3sch.de> (sfid-20080730_152757_774951_930A5D6B)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080726.021846.236624483.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 30 July 2008 15:24:40 Michael Buesch wrote:
-> On Wednesday 30 July 2008 08:12:36 Larry Finger wrote:
-> > Herton,
-> > 
-> > Does this patch help your problem? I haven't done much testing, but things seem 
-> > to be better with it here.
-> > 
-> > Larry
-> > 
-> > ==================
-> > 
-> > Some users of the RTL8187B have experienced difficulties since commit
-> > 8f87dd7e540d455f8e7f11478133b85edc969c67 that introduced the power
-> > management wext hooks. This difficulty has not made much sense until
-> > it was realized that it was possible for mac80211 to make a call to the
-> > config routine while that routine was already being executed. This patch
-> > protects the critical section with a mutex.
-> > 
-> > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> > ---
-> > 
-> > Index: wireless-testing/drivers/net/wireless/rtl8187.h
-> > ===================================================================
-> > --- wireless-testing.orig/drivers/net/wireless/rtl8187.h
-> > +++ wireless-testing/drivers/net/wireless/rtl8187.h
-> > @@ -94,6 +94,7 @@ struct rtl8187_priv {
-> >   	const struct rtl818x_rf_ops *rf;
-> >   	struct ieee80211_vif *vif;
-> >   	int mode;
-> > +	struct mutex mutex;	/* used to lock config callback */
+On Sat, Jul 26, 2008 at 02:18:46AM -0700, David Miller wrote:
+...
+> I think there might be an easier way, but we may have
+> to modify the state bits a little.
 > 
-> Well, hm.
-> Using locks to protect code is a bad idea, most of the time.
-> So that comment makes no sense.
+> Every call into ->hard_start_xmit() is made like this:
 > 
-> What that lock _probably_ does it to protect the configuration
-> data in struct rtl8187_priv. So you'd better find out which data
-> that is and clarify the comment.
+> 1. lock TX queue
+> 2. check TX queue stopped
+> 3. call ->hard_start_xmit() if not stopped
+> 
+> This means that we can in fact do something like:
+> 
+> 	unsigned int i;
+> 
+> 	for (i = 0; i < dev->num_tx_queues; i++) {
+> 		struct netdev_queue *txq;
+> 
+> 		txq = netdev_get_tx_queue(dev, i);
+> 		spin_lock_bh(&txq->_xmit_lock);
+> 		netif_tx_freeze_queue(txq);
+> 		spin_unlock_bh(&txq->_xmit_lock);
+> 	}
+> 
+> netif_tx_freeze_queue() just sets a new bit we add.
+> 
+> Then we go to the ->hard_start_xmit() call sites and check this new
+> "frozen" bit as well as the existing "stopped" bit.
+> 
+> When we unfreeze each queue later, we see if it is stopped, and if not
+> we schedule it's qdisc for packet processing.
 
-and the mutex name, of course.
+I guess some additional synchronization will be added yet to prevent
+parallel freeze and especially unfreeze.
 
-	/* Mutex to protect the device configuration data,
-	 * which is foobar and bizzbaz */
-	struct mutex conf_mutex;
-
--- 
-Greetings Michael.
+Jarek P.
