@@ -1,73 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:59014 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752812AbYGMMWz (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:58005 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751866AbYGZPyx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jul 2008 08:22:55 -0400
-Date: Sun, 13 Jul 2008 09:22:48 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Some questions about missing rfkill details
-Message-ID: <20080713122247.GA6963@khazad-dum.debian.net> (sfid-20080713_142322_768802_8FAC085E)
+	Sat, 26 Jul 2008 11:54:53 -0400
+Message-ID: <488B48C1.6090506@lwfinger.net> (sfid-20080726_175456_991253_69591B25)
+Date: Sat, 26 Jul 2008 10:54:41 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Felix Fietkau <nbd@openwrt.org>
+CC: =?ISO-8859-1?Q?C=E9dric_Auger?= <cedric@grisbi.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 slow for downloading
+References: <20080726161140.59041730@grisbi.org> <488B3969.4050405@openwrt.org>
+In-Reply-To: <488B3969.4050405@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I was a little burned out from rfkill work, and started looking at a certain
-non-mac80211 wireless driver to see how it could be converted to use rfkill
-(we already have many examples for mac80211).
+Felix Fietkau wrote:
+> I don't know if it helps with debugging this issue, but I've seen the same
+> on a laptop from a friend of mine (same card).
+> 
+> After some searching I found that setting the AP to g-only mode instead of
+> b+g mixed made it work at decent speeds. Another symptom of this slowdown is
+> that there is typically an unnaturally high number of retransmissions on the
+> air, which eats up a lot of airtime.
+> 
+> I've spent some time looking through the code to find the reason for this
+> but couldn't find anything yet (maybe somebody from Intel could help).
 
-The following doubts sprang to mind, I feel the answers to them should be
-documented, but I am not sure I have the right answers, so I am asking the
-wireless network experts ;-)
+Just for comparison, my BCM4312 running b43 from the latest wireless-testing 
+gets the following tcpperf throughput:
 
-1. For wireless network devices, the rfkill class should have as its parent
-   the main struct net_device for that wireless network device.  For
-   platform device drivers, it should have the platform device as its
-   parent.
+AP Mode          TX          RX
 
-   Correct? Incorrect?
+Mixed b/g    19.8 MB/s   23.0 MB/s
+g-only       20.5 MB/s   23.1 MB/s
 
-2. We will probably benefit long-term from a guideline for naming the rfkill
-   switches.  Currently it is supposed to be a system-wide name, but that's
-   about all of it.
-   
-   Thus, what we have may not result on very user-friendly (or useful) names
-   at all.
+For these tests, the connecting end was wired to the router. The difference in 
+TX speeds was about what I expected - the small difference in RX speeds was not. 
+In any case, if you see a large difference with iwl3945, that would be useful 
+information.
 
-   It really needs a local part so that drivers that have more than one
-   rfkill class attached to them (typically, multi-radio devices or platform
-   devices) can differentiate them.  But that means names like "<platform
-   device name>_bluetooth_sw", "<platform_device_name>_wwan_sw" for platform
-   drivers, and something else for wireless network devices.
+You can obtain tcpperf from http://wand.cs.waikato.ac.nz/~stj2/nsc/software.html
 
-   Any ideas of what we should be using, that will actually be useful for
-   userspace?
-   
-   Userspace IS supposed to be able to use sysfs to find out what the parent
-   device is, regardless of the rfkill class name.  If it cannot, that
-   pretty much would make sysfs useless for device configuration through
-   classes.
+Larry
 
-   If we use the EEPROM MAC, should we document that userspace is to mostly
-   ignore the name and use the sysfs hierarchy to tie switches to their
-   parent devices?  And MACs can be changed, what should we do, then?
-
-   Could we, instead of the MAC, use the main network interface name (and
-   rename the rfkill class if that name changes? How?), appending to it an
-   (optional?) small suffix for network devices with more than one
-   transmitter?  What should we use as the suffix?
-
-   IMHO, we should also write down if we are to use names like "Mango Bango
-   Wireless Switch" or "mangobango_sw", etc.  I.e. a full naming guideline.
-
-   I am not the right person to come up with answers and guidelines for the
-   above, so I am asking for comments and help.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
