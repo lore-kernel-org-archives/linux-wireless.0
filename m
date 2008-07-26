@@ -1,121 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp28.orange.fr ([80.12.242.100]:57359 "EHLO smtp28.orange.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752607AbYGDIsF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jul 2008 04:48:05 -0400
-Date: Fri, 4 Jul 2008 10:49:31 +0200
-From: Samuel Ortiz <samuel@sortiz.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Miguel =?iso-8859-1?Q?Bot=F3n?= <mboton.lkml@gmail.com>,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com
-Subject: [PATCH] mac80211: power management wext hooks (was [PATCH 1/2]
-	mac80211: add power management support)
-Message-ID: <20080704084930.GA3061@sortiz.org> (sfid-20080704_104814_996713_85E1E3C3)
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-References: <200711161929.36283.mboton.lkml@gmail.com> <200711161953.26801.mboton.lkml@gmail.com> <20080626174058.GA3063@sortiz.org> <20080626175507.GA23142@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080626175507.GA23142@tuxdriver.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:36097
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751486AbYGZJSs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Jul 2008 05:18:48 -0400
+Date: Sat, 26 Jul 2008 02:18:46 -0700 (PDT)
+Message-Id: <20080726.021846.236624483.davem@davemloft.net> (sfid-20080726_111853_569710_79630C29)
+To: jarkao2@gmail.com
+Cc: johannes@sipsolutions.net, netdev@axxeo.de, peterz@infradead.org,
+	Larry.Finger@lwfinger.net, kaber@trash.net,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, mingo@redhat.com
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+ __netif_schedule+0x2c/0x98()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080725200137.GC3107@ami.dom.local>
+References: <20080725193416.GB3107@ami.dom.local>
+	<1217014575.4758.7.camel@johannes.berg>
+	<20080725200137.GC3107@ami.dom.local>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: Jarek Poplawski <jarkao2@gmail.com>
+Date: Fri, 25 Jul 2008 22:01:37 +0200
 
-On Thu, Jun 26, 2008 at 01:55:07PM -0400, John W. Linville wrote:
-> > > This patch adds power management support in mac80211.
-> > Sorry for being late to the game, but would a similar patch against your
-> > -next-2.6 tree be considered for inclusion ?
+> On Fri, Jul 25, 2008 at 09:36:15PM +0200, Johannes Berg wrote:
+> > On Fri, 2008-07-25 at 21:34 +0200, Jarek Poplawski wrote:
+> > 
+> > No, we need to be able to lock out multiple TX paths at once.
 > 
-> It seems like a reasonable start to me.  Anyone else have comments?
-Here is my version then, against your wireless-next tree:
+> IMHO, it can do the same. We could e.g. insert a locked spinlock into
+> this noop_tx_handler(), to give everyone some waiting.
 
-This patch implements the power management routines wireless extensions
-for mac80211.
-For now we only support switching PS mode between on and off.
+I think there might be an easier way, but we may have
+to modify the state bits a little.
 
-Signed-off-by: Samuel Ortiz <sameo@openedhand.com>
----
- include/net/mac80211.h |    2 ++
- net/mac80211/wext.c    |   43 +++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 43 insertions(+), 2 deletions(-)
+Every call into ->hard_start_xmit() is made like this:
 
-Index: wireless-next-2.6/net/mac80211/wext.c
-===================================================================
---- wireless-next-2.6.orig/net/mac80211/wext.c	2008-07-04 10:05:46.000000000 +0200
-+++ wireless-next-2.6/net/mac80211/wext.c	2008-07-04 10:42:03.000000000 +0200
-@@ -1000,6 +1000,45 @@ static int ieee80211_ioctl_giwencode(str
- 	return 0;
- }
- 
-+static int ieee80211_ioctl_siwpower(struct net_device *dev,
-+				    struct iw_request_info *info,
-+				    struct iw_param *wrq,
-+				    char *extra)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_conf *conf = &local->hw.conf;
-+
-+	if (wrq->disabled) {
-+		conf->flags &= ~IEEE80211_CONF_PS;
-+		return ieee80211_hw_config(local);
-+	}
-+
-+	switch (wrq->flags & IW_POWER_MODE) {
-+	case IW_POWER_ON:       /* If not specified */
-+	case IW_POWER_MODE:     /* If set all mask */
-+	case IW_POWER_ALL_R:    /* If explicitely state all */
-+		conf->flags |= IEEE80211_CONF_PS;
-+		break;
-+	default:                /* Otherwise we don't support it */
-+		return -EINVAL;
-+	}
-+
-+	return ieee80211_hw_config(local);
-+}
-+
-+static int ieee80211_ioctl_giwpower(struct net_device *dev,
-+				    struct iw_request_info *info,
-+				    union iwreq_data *wrqu,
-+				    char *extra)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_conf *conf = &local->hw.conf;
-+
-+	wrqu->power.disabled = !(conf->flags & IEEE80211_CONF_PS);
-+
-+	return 0;
-+}
-+
- static int ieee80211_ioctl_siwauth(struct net_device *dev,
- 				   struct iw_request_info *info,
- 				   struct iw_param *data, char *extra)
-@@ -1202,8 +1241,8 @@ static const iw_handler ieee80211_handle
- 	(iw_handler) ieee80211_ioctl_giwretry,		/* SIOCGIWRETRY */
- 	(iw_handler) ieee80211_ioctl_siwencode,		/* SIOCSIWENCODE */
- 	(iw_handler) ieee80211_ioctl_giwencode,		/* SIOCGIWENCODE */
--	(iw_handler) NULL,				/* SIOCSIWPOWER */
--	(iw_handler) NULL,				/* SIOCGIWPOWER */
-+	(iw_handler) ieee80211_ioctl_siwpower,		/* SIOCSIWPOWER */
-+	(iw_handler) ieee80211_ioctl_giwpower,		/* SIOCGIWPOWER */
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) NULL,				/* -- hole -- */
- 	(iw_handler) ieee80211_ioctl_siwgenie,		/* SIOCSIWGENIE */
-Index: wireless-next-2.6/include/net/mac80211.h
-===================================================================
---- wireless-next-2.6.orig/include/net/mac80211.h	2008-07-04 10:05:45.000000000 +0200
-+++ wireless-next-2.6/include/net/mac80211.h	2008-07-04 10:42:03.000000000 +0200
-@@ -396,11 +396,13 @@ struct ieee80211_rx_status {
-  * @IEEE80211_CONF_SHORT_SLOT_TIME: use 802.11g short slot time
-  * @IEEE80211_CONF_RADIOTAP: add radiotap header at receive time (if supported)
-  * @IEEE80211_CONF_SUPPORT_HT_MODE: use 802.11n HT capabilities (if supported)
-+ * @IEEE80211_CONF_PS: Enable 802.11 power save mode
-  */
- enum ieee80211_conf_flags {
- 	IEEE80211_CONF_SHORT_SLOT_TIME	= (1<<0),
- 	IEEE80211_CONF_RADIOTAP		= (1<<1),
- 	IEEE80211_CONF_SUPPORT_HT_MODE	= (1<<2),
-+	IEEE80211_CONF_PS		= (1<<3),
+1. lock TX queue
+2. check TX queue stopped
+3. call ->hard_start_xmit() if not stopped
+
+This means that we can in fact do something like:
+
+	unsigned int i;
+
+	for (i = 0; i < dev->num_tx_queues; i++) {
+		struct netdev_queue *txq;
+
+		txq = netdev_get_tx_queue(dev, i);
+		spin_lock_bh(&txq->_xmit_lock);
+		netif_tx_freeze_queue(txq);
+		spin_unlock_bh(&txq->_xmit_lock);
+	}
+
+netif_tx_freeze_queue() just sets a new bit we add.
+
+Then we go to the ->hard_start_xmit() call sites and check this new
+"frozen" bit as well as the existing "stopped" bit.
+
+When we unfreeze each queue later, we see if it is stopped, and if not
+we schedule it's qdisc for packet processing.
+
+A patch below shows how the guarding would work.  It doesn't implement
+the actual freeze/unfreeze.
+
+We need to use a side-state bit to do this because we don't
+want this operation to get all mixed up with the queue waking
+operations that the driver TX reclaim code will be doing
+asynchronously.
+
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index b4d056c..cba98fb 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -440,6 +440,7 @@ static inline void napi_synchronize(const struct napi_struct *n)
+ enum netdev_queue_state_t
+ {
+ 	__QUEUE_STATE_XOFF,
++	__QUEUE_STATE_FROZEN,
  };
  
+ struct netdev_queue {
+@@ -1099,6 +1100,11 @@ static inline int netif_queue_stopped(const struct net_device *dev)
+ 	return netif_tx_queue_stopped(netdev_get_tx_queue(dev, 0));
+ }
+ 
++static inline int netif_tx_queue_frozen(const struct netdev_queue *dev_queue)
++{
++	return test_bit(__QUEUE_STATE_FROZEN, &dev_queue->state);
++}
++
  /**
-
+  *	netif_running - test if up
+  *	@dev: network device
+diff --git a/net/core/netpoll.c b/net/core/netpoll.c
+index c127208..6c7af39 100644
+--- a/net/core/netpoll.c
++++ b/net/core/netpoll.c
+@@ -70,6 +70,7 @@ static void queue_process(struct work_struct *work)
+ 		local_irq_save(flags);
+ 		__netif_tx_lock(txq, smp_processor_id());
+ 		if (netif_tx_queue_stopped(txq) ||
++		    netif_tx_queue_frozen(txq) ||
+ 		    dev->hard_start_xmit(skb, dev) != NETDEV_TX_OK) {
+ 			skb_queue_head(&npinfo->txq, skb);
+ 			__netif_tx_unlock(txq);
+diff --git a/net/core/pktgen.c b/net/core/pktgen.c
+index c7d484f..3284605 100644
+--- a/net/core/pktgen.c
++++ b/net/core/pktgen.c
+@@ -3305,6 +3305,7 @@ static __inline__ void pktgen_xmit(struct pktgen_dev *pkt_dev)
+ 
+ 	txq = netdev_get_tx_queue(odev, queue_map);
+ 	if (netif_tx_queue_stopped(txq) ||
++	    netif_tx_queue_frozen(txq) ||
+ 	    need_resched()) {
+ 		idle_start = getCurUs();
+ 
+@@ -3320,7 +3321,8 @@ static __inline__ void pktgen_xmit(struct pktgen_dev *pkt_dev)
+ 
+ 		pkt_dev->idle_acc += getCurUs() - idle_start;
+ 
+-		if (netif_tx_queue_stopped(txq)) {
++		if (netif_tx_queue_stopped(txq) ||
++		    netif_tx_queue_frozen(txq)) {
+ 			pkt_dev->next_tx_us = getCurUs();	/* TODO */
+ 			pkt_dev->next_tx_ns = 0;
+ 			goto out;	/* Try the next interface */
+@@ -3352,7 +3354,8 @@ static __inline__ void pktgen_xmit(struct pktgen_dev *pkt_dev)
+ 	txq = netdev_get_tx_queue(odev, queue_map);
+ 
+ 	__netif_tx_lock_bh(txq);
+-	if (!netif_tx_queue_stopped(txq)) {
++	if (!netif_tx_queue_stopped(txq) &&
++	    !netif_tx_queue_frozen(txq)) {
+ 
+ 		atomic_inc(&(pkt_dev->skb->users));
+ 	      retry_now:
+diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
+index fd2a6ca..f17551a 100644
+--- a/net/sched/sch_generic.c
++++ b/net/sched/sch_generic.c
+@@ -135,7 +135,8 @@ static inline int qdisc_restart(struct Qdisc *q)
+ 	txq = netdev_get_tx_queue(dev, skb_get_queue_mapping(skb));
+ 
+ 	HARD_TX_LOCK(dev, txq, smp_processor_id());
+-	if (!netif_subqueue_stopped(dev, skb))
++	if (!netif_tx_queue_stopped(txq) &&
++	    !netif_tx_queue_frozen(txq))
+ 		ret = dev_hard_start_xmit(skb, dev, txq);
+ 	HARD_TX_UNLOCK(dev, txq);
+ 
+@@ -162,7 +163,8 @@ static inline int qdisc_restart(struct Qdisc *q)
+ 		break;
+ 	}
+ 
+-	if (ret && netif_tx_queue_stopped(txq))
++	if (ret && (netif_tx_queue_stopped(txq) ||
++		    netif_tx_queue_frozen(txq)))
+ 		ret = 0;
+ 
+ 	return ret;
