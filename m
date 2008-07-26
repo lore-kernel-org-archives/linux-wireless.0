@@ -1,48 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 81-66-111-23.rev.numericable.fr ([81.66.111.23]:55681 "EHLO
-	rubis.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750961AbYGVSVa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 14:21:30 -0400
-Message-ID: <4886235F.6010407@jourdois.fr> (sfid-20080722_202135_006962_5DDAD2A1)
-Date: Tue, 22 Jul 2008 20:13:51 +0200
-From: =?UTF-8?B?U3TDqXBoYW5lIEpvdXJkb2lz?= <stephane@jourdois.fr>
+Received: from mk-outboundfilter-5.mail.uk.tiscali.com ([212.74.114.1]:58024
+	"EHLO mk-outboundfilter-5.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750936AbYGZTzE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Jul 2008 15:55:04 -0400
+From: Alistair John Strachan <alistair@devzero.co.uk>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: ath9k working, almost
+Date: Sat, 26 Jul 2008 20:55:01 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <200807261742.15693.alistair@devzero.co.uk> <200807262030.39724.alistair@devzero.co.uk> <43e72e890807261236j6ae4a28fuf8eaf423cce91edf@mail.gmail.com>
+In-Reply-To: <43e72e890807261236j6ae4a28fuf8eaf423cce91edf@mail.gmail.com>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-Subject: Re: [ipw3945-devel] [PATCH] iwlwifi: Enable packet injection for
- iwl4965
-References: <69e28c910807181205m6dd0cdcek83f9717bf1ac9dcc@mail.gmail.com> <69e28c910807220454q7c8371e1m11b1015ed8398758@mail.gmail.com> <4885DDC4.2060609@googlemail.com>
-In-Reply-To: <4885DDC4.2060609@googlemail.com>
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200807262055.01388.alistair@devzero.co.uk> (sfid-20080726_215508_339281_1122463B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Engel a =C3=A9crit :
-> Stefanik G=C3=A1bor wrote:
->> What is the status of this patch? Did it get lost? Was it rejected? =
-I
->> didn't get any answer on it, and I can't see it in iwlwifi-2.6.git o=
-r
->> wireless-testing.git.
->=20
-> Actually it is at least in linux-next since 30th of June as of commit=
-=20
-> 914233d68f07d5d9c22630cd5a84fdfd98f39da2.
+On Saturday 26 July 2008 20:36:22 Luis R. Rodriguez wrote:
+> On Sat, Jul 26, 2008 at 12:30 PM, Alistair John Strachan
+>
+> <alistair@devzero.co.uk> wrote:
+> > On Saturday 26 July 2008 19:15:51 Luis R. Rodriguez wrote:
+> >> On Sat, Jul 26, 2008 at 9:42 AM, Alistair John Strachan
+> >>
+> >> <alistair@devzero.co.uk> wrote:
+> >> > Hi,
+> >> >
+> >> > The newly announced ath9k driver works great on an AR5418 Core 2 Duo
+> >> > Macbook, WPA2-TKIP/AES et al all work fine. It would be good to see
+> >> > this driver in wireless-testing, it completely replaces madwifi for
+> >> > me. I used linux.git (2.6.26) + wireless-testing.git +
+> >> > my-wireless-testing.git with success.
+> >>
+> >> Please keep in mind Linus' tree is just broken for wireless. But glad
+> >> it is working for you after your tremendous strange changes on your
+> >> tree...
+> >
+> > I explicitly said I was not using Linus' tree. Perhaps it is a
+> > misunderstanding on your part. If you use git pull inside a tree that
+> > another tree was originally forked from, it is much smaller and faster to
+> > check out. This is the process I was describing. I am pretty sure there
+> > are no "tremendous strange changes". :-)
+>
+> Well my concern was I believe Linus' tree has the new MQ stuff and
+> wireless-testing doesn't. How did you handle that?
 
-I beg your pardon, but this commit is for iwl3945, not iwl4965.
-The patch for iwl4965 is currently not in any git tree.
+git pull will happily merge into a non-HEAD checkout. If you do something
+like this (inside your linux-2.6 checkout):
 
-Stephane.
+git reset --hard v2.6.26
+git pull git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+git pull git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/my-wireless-testing.git ath9k
 
---=20
-  ///  Stephane Jourdois     /"\  ASCII RIBBON CAMPAIGN \\\
-(((    Consultant securite  \ /    AGAINST HTML MAIL    )))
-  \\\   157 Bd Davout         X                         ///
-   \\\  75020  Paris         / \    +33 6 8643 3085    ///
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Then you get a minimal, incremental set of changes based on 2.6.26 (which is
+what most wireless-testing users will want). There are some drawbacks but it
+sure beats wasting several hundred megs on two git repos.
+
+If you want to go back to Linus you just do:
+
+git reset --hard v2.6.26
+
+And it'll blow away all the merges (since you were never tracking those trees).
+
+-- 
+Cheers,
+Alistair.
