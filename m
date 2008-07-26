@@ -1,93 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.232]:50375 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751025AbYGWW5t (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:53488 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752230AbYGZW0r convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 18:57:49 -0400
-Received: by wr-out-0506.google.com with SMTP id 69so1469952wri.5
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 15:57:48 -0700 (PDT)
-Date: Wed, 23 Jul 2008 17:59:06 -0500
-From: "Carlos R. Mafra" <crmafra2@gmail.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Theodore Tso <tytso@mit.edu>, yi.zhu@intel.com,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Potential iwlwifi locking problem in 2.6.26-git9
-Message-ID: <20080723225820.GA4099@localhost> (sfid-20080724_005756_628755_E18AE5DE)
-References: <E1KLm0c-0002O6-RO@closure.thunk.org> <20080723214938.GA8034@mit.edu> <1ba2fa240807231502t1c4ce7d5k9b8acbcaed4d166a@mail.gmail.com>
+	Sat, 26 Jul 2008 18:26:47 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so4911524wfd.4
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Jul 2008 15:26:47 -0700 (PDT)
+Message-ID: <69e28c910807261526g17d1aeb1m7427b257cf61fc5e@mail.gmail.com> (sfid-20080727_002654_974823_69F494CA)
+Date: Sun, 27 Jul 2008 00:26:47 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Zhu Yi" <yi.zhu@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] iwlwifi: Enable packet injection for iwl4965
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	"Tomas Winkler" <tomasw@gmail.com>,
+	"Tomas Winkler" <tomas.winkler@intel.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Marco Schuster" <marco@harddisk.is-a-geek.org>
+In-Reply-To: <69e28c910807181205m6dd0cdcek83f9717bf1ac9dcc@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240807231502t1c4ce7d5k9b8acbcaed4d166a@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <69e28c910807181205m6dd0cdcek83f9717bf1ac9dcc@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu 24.Jul'08 at  1:02:15 +0300, Tomas Winkler wrote:
-> On Thu, Jul 24, 2008 at 12:49 AM, Theodore Tso <tytso@mit.edu> wrote:
-> > On Wed, Jul 23, 2008 at 05:36:30PM -0400, Theodore Ts'o wrote:
-> >>
-> >> Is this a new one?  I don't think I've seen this on LKML....
-> >
-> > The context of this was I had just booted to 2.6.26-git9, noted with
-> > annoyance that that the iwl4965 driver needed a new microcode file, so
-> > I popped in my EVDO card, downloaded the firmware, moved the firmware
-> > into place, and then got the above error message.
-> >
-> > I've since noted that it seems to be utterly refusing to associate
-> > with my wireless access point.  This was working just fine with
-> > 2.6.26-git6 kernel, so it looks like a recent regression?  I just
-> > noticed someone else had recently complained about a similar "refusal
-> > to associate" with the iwl3945 driver.
-> 
-> I'm not sure but this can be connected to what is described in thread:
-> 'New: dhcp doesn't work with iwl4965'
-> Tomas
+On Fri, Jul 18, 2008 at 9:05 PM, Stefanik G=E1bor <netrolller.3d@gmail.=
+com> wrote:
+> @@ -822,7 +819,10 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_=
+buff *skb)
+>        hdr_len =3D ieee80211_get_hdrlen(le16_to_cpu(fc));
+>
+>        /* Find (or create) index into station table for destination s=
+tation */
+> -       sta_id =3D iwl_get_sta_id(priv, hdr);
+> +       if (info->flags & IEEE80211_TX_CTL_INJECTED)
+> +               sta_id =3D priv->hw_params.bcast_sta_id;
+> +       else
+> +               sta_id =3D iwl_get_sta_id(priv, hdr);
+>        if (sta_id =3D=3D IWL_INVALID_STATION) {
+>                DECLARE_MAC_BUF(mac);
 
-I can't associate with the access point anymore, and it is a very
-recent regression for me too (two or three days ago).
+Oops... this hunk (last hunk in iwl-tx.c) is unneeded, just ignore it
+(it's a leftover from another patch I have in my tree).
 
-I have the new firmware iwlwifi-4965-2.ucode inside /lib/firmware
-and when I try to connect (using the connect button in drakroam from
-Mandriva) I get this (digged from the syslog):
-
-Jul 23 13:46:01 localhost drakroam[3801]: running: /sbin/ifdown wlan0 daemon
-Jul 23 13:46:01 localhost kernel: wlan0: associate with AP 00:1b:11:3c:f6:db
-Jul 23 13:46:01 localhost ifplugd(wlan0)[3170]: Exiting.
-Jul 23 13:46:04 localhost kernel: iwl4965 0000:06:00.0: PCI INT A disabled
-Jul 23 13:46:04 localhost drakroam[3801]: running: /sbin/ifup wlan0 daemon
-Jul 23 13:46:04 localhost kernel: iwl4965 0000:06:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-Jul 23 13:46:04 localhost kernel: iwl4965 0000:06:00.0: restoring config space at offset 0x1 (was 0x100102, writing 0x100106)
-Jul 23 13:46:04 localhost kernel: ------------[ cut here ]------------
-Jul 23 13:46:04 localhost kernel: WARNING: at net/core/dev.c:1344 __netif_schedule+0x6f/0x80()
-Jul 23 13:46:04 localhost kernel: Modules linked in: snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss snd_mixer_oss loop nvram snd_hda_intel snd_pcm snd_timer ohci1394 sg snd_page_alloc ieee1394 sky2 iwl4965 snd_hwdep sr_mod i2c_i801 evdev ide_disk ide_core ata_piix ahci libata dock sd_mod scsi_mod uhci_hcd ohci_hcd ehci_hcd usbcore [last unloaded: scsi_wait_scan]
-Jul 23 13:46:04 localhost kernel: Pid: 1613, comm: iwl4965/0 Not tainted 2.6.26-06077-gc010b2f #147
-Jul 23 13:46:04 localhost kernel:
-Jul 23 13:46:04 localhost kernel: Call Trace:
-Jul 23 13:46:04 localhost kernel:  [<ffffffff80237caf>] warn_on_slowpath+0x5f/0x80
-Jul 23 13:46:04 localhost kernel:  [<ffffffff8042109f>] __netif_schedule+0x6f/0x80
-Jul 23 13:46:04 localhost kernel:  [<ffffffff804a040a>] ieee80211_wake_queue+0x5a/0x70
-Jul 23 13:46:04 localhost kernel:  [<ffffffff804a044f>] ieee80211_wake_queues+0x2f/0x50
-Jul 23 13:46:04 localhost kernel:  [<ffffffffa00d2506>] iwl_bg_alive_start+0x216/0x4b0 [iwl4965]
-Jul 23 13:46:04 localhost kernel:  [<ffffffffa00d22f0>] ? iwl_bg_alive_start+0x0/0x4b0 [iwl4965]
-Jul 23 13:46:04 localhost kernel:  [<ffffffff802498d8>] run_workqueue+0x98/0x140
-Jul 23 13:46:04 localhost kernel:  [<ffffffff8024a3e3>] worker_thread+0xa3/0x110
-Jul 23 13:46:04 localhost kernel:  [<ffffffff8024d850>] ? autoremove_wake_function+0x0/0x40
-Jul 23 13:46:04 localhost kernel:  [<ffffffff8024a340>] ? worker_thread+0x0/0x110
-Jul 23 13:46:04 localhost kernel:  [<ffffffff8024d41d>] kthread+0x4d/0x80
-Jul 23 13:46:04 localhost kernel:  [<ffffffff8020d249>] child_rip+0xa/0x11
-Jul 23 13:46:04 localhost kernel:  [<ffffffff8024d3d0>] ? kthread+0x0/0x80
-Jul 23 13:46:04 localhost kernel:  [<ffffffff8020d23f>] ? child_rip+0x0/0x11
-Jul 23 13:46:04 localhost kernel:
-Jul 23 13:46:04 localhost kernel: ---[ end trace 9c04ce6cf2b007a2 ]---
-Jul 23 13:46:04 localhost kernel: Registered led device: iwl-phy0:radio
-Jul 23 13:46:04 localhost kernel: Registered led device: iwl-phy0:assoc
-Jul 23 13:46:04 localhost kernel: Registered led device: iwl-phy0:RX
-Jul 23 13:46:04 localhost kernel: Registered led device: iwl-phy0:TX
-Jul 23 13:46:04 localhost kernel: iwl4965: TX Power requested while scanning!
-
-I am trying to bisect it, but I am facing some difficulties with compilation
-problems and non-booting kernels.
-
-In the thread Thomas Winkler pointed out the reporter says that using dhclient instead
-of dhcp makes it work. However Mandriva uses dhclient and it does not work here.
-
-
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
