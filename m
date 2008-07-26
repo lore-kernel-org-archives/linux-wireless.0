@@ -1,39 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:38722 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752547AbYGaN52 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 09:57:28 -0400
-Subject: Re: Driver for the FullMAC card
-From: Dan Williams <dcbw@redhat.com>
-To: Dmitry Baryshkov <dbaryshkov@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <g6qr98$q28$2@ger.gmane.org>
-References: <g6qr98$q28$2@ger.gmane.org>
-Content-Type: text/plain
-Date: Thu, 31 Jul 2008 09:54:48 -0400
-Message-Id: <1217512488.12016.8.camel@localhost.localdomain> (sfid-20080731_155730_374440_BC9E0167)
-Mime-Version: 1.0
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:55554 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751634AbYGZFPi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Jul 2008 01:15:38 -0400
+Message-ID: <488AB2F4.7060806@lwfinger.net> (sfid-20080726_071542_629933_79803D8C)
+Date: Sat, 26 Jul 2008 00:15:32 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	Patrick McHardy <kaber@trash.net>,
+	"David S. Miller" <davem@davemloft.net>
+CC: LKML <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	barry bouwsma <free_beer_for_all@yahoo.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Regression in 2.6.26-gitX: failure of wireless due to commit 175f9c1bba9b825d22b142
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-07-30 at 22:51 +0000, Dmitry Baryshkov wrote:
-> Hi,
-> 
-> I'd like to work on the Prism2 USB driver (currently maintained as a part of
-> wlan-ng project) to be able to push it into mainline. The card itself is
-> a FullMAC card. Where should I start? What parts of 802.11 stacks/API
-> should I use? There is plenty of information regarding SoftMAC drivers,
-> but no clear pointers for developing drivers for the FullMAC cards.
+Wireless communication has failed for recent 2.6.26-gitX kernels - a definite 
+regression. The logs show sequences such as:
 
-If you're talking about the same hardware that linux-wlan-ng supported
-(ie, what Ubuntu ships as prism2_usb) then that hardware can be softmac,
-actually.  We discussed this a while ago and agreed that a completely
-new mac80211-based driver for this hardware was the best way to go,
-rather than trying to stuff USB support into hostap.
+eth1: authenticate with AP 00:1a:70:46:ba:b1
+eth1: authenticate with AP 00:1a:70:46:ba:b1
+eth1: authenticated
+eth1: associate with AP 00:1a:70:46:ba:b1
+eth1: associate with AP 00:1a:70:46:ba:b1
+eth1: associate with AP 00:1a:70:46:ba:b1
+eth1: association with AP 00:1a:70:46:ba:b1 timed out
 
-If that's not the hardware we're talking about, can you give me some
-examples of the brand and model of devices this would drive?  Are we
-talking about stuff like the Netgear MA111 (FCC ID PY3MA111) here?
+I have this problem with b43 and p54usb, and there is at least one report of the 
+same problem with zd1211rw. In my case, the encryption method is WPA-PSK/TKIP. I 
+have not tested with WEP or unencrypted networks.
 
-Dan
+Bisection yields the following:
 
+175f9c1bba9b825d22b142d183c9e175488b260c is first bad commit
+commit 175f9c1bba9b825d22b142d183c9e175488b260c
+Author: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Date:   Sun Jul 20 00:08:47 2008 -0700
+
+     net_sched: Add size table for qdiscs
+
+     Add size table functions for qdiscs and calculate packet size in
+     qdisc_enqueue().
+
+     Based on patch by Patrick McHardy
+      http://marc.info/?l=linux-netdev&m=115201979221729&w=2
+
+     Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+     Signed-off-by: David S. Miller <davem@davemloft.net>
+
+========================================================
+
+I tried to reverse apply the patch; however, that does not happen cleanly, but I 
+am confident that the problem arises here. I don't understand enough about this 
+qdisc stuff to even guess at what might be wrong.
+
+As always, I am willing to test any trial patches, etc.
+
+Thanks,
+
+Larry
