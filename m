@@ -1,62 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52188 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752040AbYG3Gqb (ORCPT
+Received: from smtp5-g19.free.fr ([212.27.42.35]:33964 "EHLO smtp5-g19.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752707AbYGZQcj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 02:46:31 -0400
-Subject: Re: [PATCH] mac80211: fix more kernel-doc warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <20080729205916.c4c6c363.randy.dunlap@oracle.com>
-References: <20080729205916.c4c6c363.randy.dunlap@oracle.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-f0w6IBGuIB3mJfHmTNHK"
-Date: Wed, 30 Jul 2008 08:46:17 +0200
-Message-Id: <1217400377.10489.79.camel@johannes.berg> (sfid-20080730_084636_108500_B74FC83D)
+	Sat, 26 Jul 2008 12:32:39 -0400
+Received: from smtp5-g19.free.fr (localhost.localdomain [127.0.0.1])
+	by smtp5-g19.free.fr (Postfix) with ESMTP id 3D4793F6236
+	for <linux-wireless@vger.kernel.org>; Sat, 26 Jul 2008 18:32:38 +0200 (CEST)
+Received: from localhost (ble59-5-82-233-204-229.fbx.proxad.net [82.233.204.229])
+	by smtp5-g19.free.fr (Postfix) with ESMTP id EE0903F6226
+	for <linux-wireless@vger.kernel.org>; Sat, 26 Jul 2008 18:32:37 +0200 (CEST)
+Date: Sat, 26 Jul 2008 18:32:37 +0200
+From: =?UTF-8?B?Q8OpZHJpYw==?= Auger <cedric@grisbi.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 slow for downloading
+Message-ID: <20080726183237.02a1e28e@grisbi.org> (sfid-20080726_183258_392670_CB4D6FB4)
+In-Reply-To: <488B48C1.6090506@lwfinger.net>
+References: <20080726161140.59041730@grisbi.org>
+	<488B3969.4050405@openwrt.org>
+	<488B48C1.6090506@lwfinger.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Le Sat, 26 Jul 2008 10:54:41 -0500,
+Larry Finger <Larry.Finger@lwfinger.net> a =C3=A9crit :
 
---=-f0w6IBGuIB3mJfHmTNHK
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2008-07-29 at 20:59 -0700, Randy Dunlap wrote:
-> From: Randy Dunlap <randy.dunlap@oracle.com>
+> Felix Fietkau wrote:
+> > I don't know if it helps with debugging this issue, but I've seen
+> > the same on a laptop from a friend of mine (same card).
+> >=20
+> > After some searching I found that setting the AP to g-only mode
+> > instead of b+g mixed made it work at decent speeds. Another symptom
+> > of this slowdown is that there is typically an unnaturally high
+> > number of retransmissions on the air, which eats up a lot of
+> > airtime.
+> >=20
+> > I've spent some time looking through the code to find the reason
+> > for this but couldn't find anything yet (maybe somebody from Intel
+> > could help).
 >=20
-> Fix several kernel-doc warnings in mac80211 header files:
+> Just for comparison, my BCM4312 running b43 from the latest
+> wireless-testing gets the following tcpperf throughput:
 >=20
-> Warning(linux-2.6.27-rc1//include/net/mac80211.h:759): Enum value
-> 'IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE' not described in enum
-> 'ieee80211_hw_flags'
+> AP Mode          TX          RX
+>=20
+> Mixed b/g    19.8 MB/s   23.0 MB/s
+> g-only       20.5 MB/s   23.1 MB/s
+>=20
+> For these tests, the connecting end was wired to the router. The
+> difference in TX speeds was about what I expected - the small
+> difference in RX speeds was not. In any case, if you see a large
+> difference with iwl3945, that would be useful information.
+>=20
+> You can obtain tcpperf from
+> http://wand.cs.waikato.ac.nz/~stj2/nsc/software.html
 
-Thanks. That one, however, is already gone now, I had merely forgotten
-to remove the flag completely.
+hello
+thanks for your answers.
+i tried to set my ap to g-only, but i cannot :-( the wifi box is given
+by my provider and it seems cannot be changed...
+so i tried tcpperf, this is the result :
 
-johannes
+cedric:/home/grisbi/tcpperf-1.754# ./tcpperf -c 192.168.0.4 -t 30
+Duration: 30 9482usec
+Bytes sent: 5481472 (5353 kB 5 MB 0 GB)
+Bandwidth: 1461264 b/s (1461.26 kb/s 1.46 Mb/s)
+Close duration: 0s 22usec
 
---=-f0w6IBGuIB3mJfHmTNHK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+then i tried to download an image of ubuntu and i had about 900kb/s,
+so very good and i don't understand...  then i tried to send a big file
+with scp to the other computer, as user and as root, it begins at
+2,2MB/s and decrease untill 150kb/s and stays between 130-200kb/s
+i did again a tcpperf with -t 300 to check if it's not with the time,
+but i have 1,30MB/s, seems correct.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+second test :
+i stop the wifi and plug a cable. the second computer is still in wifi.
+tcpperf gives me 17Mb/s and the same file with scp is sent with about
+2,2MB/s...
+so now i really don't understand, from internet, loading work untill
+900kb/s (ok for me), but beween 2 computers on my network i have max
+200kb/s...
+hopes this can be usefull
+thanks
+cedric
 
-iQIcBAABAgAGBQJIkA41AAoJEKVg1VMiehFYQCIQAJZJkERfbOaTo3/5Of9aZtiL
-SPQwRn1LRBk5KQ55qIcy8Y8L0FfoshqBoZJiY1kmEJOVsLRZ9ANCSOGxJN0mKQaj
-cTtbgVRGD269DpAt7LI24RV9rC7xp1BF3LbsJeyEKJl6IQHfdpck9QZyOtvvsIwW
-qR77GlXHVfeaPsKM6VzvybpyULMHvU3Y14V0FVJaUYFWBz8YzCw/ivGpPjmWAwfC
-Qu+kCpwpiv/4tI47wjrTiykJY5QFtGV7+3MHAWEDGlQtnR7oWeEqLPkWqorOQ9HA
-DJiXIePsBCS/hPw+LaZ3N17T+CfVlglTvmcqVT0LBGX5p+cQ/ZlOXENyCP5N0UpM
-OhnlWQKvXLpD3+ypJZ5qFdXd2IX5guinnCypocq2/2jQtAviJ8jNP8A9yTWt8w4F
-atDg74RoavYs38eyQFCeY5CtIx9cBo3WKmUhTLKaw0y36livNMMtaqEbkzpi629z
-c3v2MaYY6hATDICJaJzwo8XWH4TWdVidLALquLFAaiPRKZuxW271JADBYdN/Cggl
-/DOGGYJhr5n2ZqbNeqiFwaetzT+GH4JzgapmtnV+pewnZLNDS5JvaTWtdOE74BCU
-vATyzK3NhWLQOB4ebq31GXGrvEo1fAt2UOWoPQ2pXQufa4SS98XUGcnMsM0g3/Rw
-X3lJb6vQ6QgntUUabKt+
-=NbeQ
------END PGP SIGNATURE-----
 
---=-f0w6IBGuIB3mJfHmTNHK--
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
