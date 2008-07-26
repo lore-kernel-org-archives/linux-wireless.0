@@ -1,52 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58260
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754462AbYGWVVr (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.250]:14601 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751990AbYGZOoM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 17:21:47 -0400
-Date: Wed, 23 Jul 2008 14:21:47 -0700 (PDT)
-Message-Id: <20080723.142147.61941255.davem@davemloft.net> (sfid-20080723_232152_705877_F97B0F78)
-To: kaber@trash.net
-Cc: francois.valenduc@tvcablenet.be, akpm@linux-foundation.org,
-	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, netdev@vger.kernel.org,
-	jussi.kivilinna@mbnet.fi
-Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <48875B8C.2090800@trash.net>
-References: <4887550B.2070704@tvcablenet.be>
-	<4887555A.30605@trash.net>
-	<48875B8C.2090800@trash.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 26 Jul 2008 10:44:12 -0400
+Received: by an-out-0708.google.com with SMTP id d40so795481and.103
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Jul 2008 07:44:10 -0700 (PDT)
+Message-ID: <43e72e890807260744j5473d723qba9d30f29e87abee@mail.gmail.com> (sfid-20080726_164415_678415_7E0B97CD)
+Date: Sat, 26 Jul 2008 07:44:10 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Reporting the right Linux wireless bug
+Cc: "Dan Williams" <dcbw@redhat.com>, "Jouni Malinen" <j@w1.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Patrick McHardy <kaber@trash.net>
-Date: Wed, 23 Jul 2008 18:25:48 +0200
+To help users report bugs correctly I've set up this page:
 
-> We can't fit them into the cb together, I don't see a way to
-> shrink ieee80211_tx_info.
-> 
-> Maybe one of the wireless folks can suggest something? Is it
-> really necessary to pass the full struct ieee80211_tx_info
-> through the qdisc layer, or could the struct be split? It
-> needs to find a way to co-exist peacefully with qdiscs'
-> skb->cb usage.
+http://wireless.kernel.org/en/users/Reporting_bugs
 
-This is another area that got mangled up in the ->select_queue()
-conversion of the WME bits, but in another aspect this problem
-existed beforehand as well.
+Please help review/edit/expand accordingly.
 
-Specifically, when RX packets get requeued out to transmit in
-the code in net/mac80211/rx.c that resends packets back out the
-wireless device by setting a bit in the SKB CB then calling
-dev_queue_xmit().
-
-That's completely illegal :-)
-
-There's a ton of stuff in that structure, I can't see how to
-make it smaller either.  Maybe some bits only matter through
-the layers of the TX mac80211 stack and thus can be passed
-as parameters during such processing?
-
+  Luis
