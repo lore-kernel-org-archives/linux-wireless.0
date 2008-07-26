@@ -1,84 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:37996 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754637AbYGPBoA (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.180]:59351 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750726AbYGZKxU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 21:44:00 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so5533655wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jul 2008 18:44:00 -0700 (PDT)
-Subject: [PATCH 02/12] iwlwifi: use le16 frame control directly, use QOS
-	symbolic constant mask
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 15 Jul 2008 18:43:59 -0700
-Message-Id: <1216172639.6610.49.camel@brick> (sfid-20080716_034406_148598_4B55F06F)
-Mime-Version: 1.0
+	Sat, 26 Jul 2008 06:53:20 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so3112760ika.5
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Jul 2008 03:53:17 -0700 (PDT)
+Date: Sat, 26 Jul 2008 12:53:08 +0200
+From: Jarek Poplawski <jarkao2@gmail.com>
+To: David Miller <davem@davemloft.net>
+Cc: johannes@sipsolutions.net, netdev@axxeo.de, peterz@infradead.org,
+	Larry.Finger@lwfinger.net, kaber@trash.net,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, mingo@redhat.com
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+	__netif_schedule+0x2c/0x98()
+Message-ID: <20080726105308.GA2524@ami.dom.local> (sfid-20080726_125340_856166_8A6D3D3B)
+References: <20080725193416.GB3107@ami.dom.local> <1217014575.4758.7.camel@johannes.berg> <20080725200137.GC3107@ami.dom.local> <20080726.021846.236624483.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080726.021846.236624483.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
----
- drivers/net/wireless/iwlwifi/iwl-tx.c       |    4 ++--
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 +++---
- 2 files changed, 5 insertions(+), 5 deletions(-)
+On Sat, Jul 26, 2008 at 02:18:46AM -0700, David Miller wrote:
+> From: Jarek Poplawski <jarkao2@gmail.com>
+> Date: Fri, 25 Jul 2008 22:01:37 +0200
+> 
+> > On Fri, Jul 25, 2008 at 09:36:15PM +0200, Johannes Berg wrote:
+> > > On Fri, 2008-07-25 at 21:34 +0200, Jarek Poplawski wrote:
+> > > 
+> > > No, we need to be able to lock out multiple TX paths at once.
+> > 
+> > IMHO, it can do the same. We could e.g. insert a locked spinlock into
+> > this noop_tx_handler(), to give everyone some waiting.
+> 
+> I think there might be an easier way, but we may have
+> to modify the state bits a little.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 9b50b10..b9e1677 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -813,7 +813,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
--	hdr_len = ieee80211_get_hdrlen(le16_to_cpu(fc));
-+	hdr_len = ieee80211_hdrlen(fc);
- 
- 	/* Find (or create) index into station table for destination station */
- 	sta_id = iwl_get_sta_id(priv, hdr);
-@@ -829,7 +829,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 
- 	if (ieee80211_is_data_qos(fc)) {
- 		qc = ieee80211_get_qos_ctl(hdr);
--		tid = qc[0] & 0xf;
-+		tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
- 		seq_number = priv->stations[sta_id].tid[tid].seq_number &
- 				IEEE80211_SCTL_SEQ;
- 		hdr->seq_ctrl = cpu_to_le16(seq_number) |
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 35d41e2..86ea29e 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2579,7 +2579,7 @@ static int iwl3945_tx_skb(struct iwl3945_priv *priv, struct sk_buff *skb)
- 
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
--	hdr_len = ieee80211_get_hdrlen(le16_to_cpu(fc));
-+	hdr_len = ieee80211_hdrlen(fc);
- 
- 	/* Find (or create) index into station table for destination station */
- 	sta_id = iwl3945_get_sta_id(priv, hdr);
-@@ -2595,7 +2595,7 @@ static int iwl3945_tx_skb(struct iwl3945_priv *priv, struct sk_buff *skb)
- 
- 	if (ieee80211_is_data_qos(fc)) {
- 		qc = ieee80211_get_qos_ctl(hdr);
--		tid = qc[0] & 0xf;
-+		tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
- 		seq_number = priv->stations[sta_id].tid[tid].seq_number &
- 				IEEE80211_SCTL_SEQ;
- 		hdr->seq_ctrl = cpu_to_le16(seq_number) |
-@@ -2715,7 +2715,7 @@ static int iwl3945_tx_skb(struct iwl3945_priv *priv, struct sk_buff *skb)
- 			   sizeof(out_cmd->cmd.tx));
- 
- 	iwl3945_print_hex_dump(IWL_DL_TX, (u8 *)out_cmd->cmd.tx.hdr,
--			   ieee80211_get_hdrlen(le16_to_cpu(fc)));
-+			   ieee80211_hdrlen(fc));
- 
- 	/* Tell device the write index *just past* this latest filled TFD */
- 	q->write_ptr = iwl_queue_inc_wrap(q->write_ptr, q->n_bd);
--- 
-1.5.6.3.499.geae9
+Yes, this looks definitely easier, but here is this one little bit
+more, plus additional code to handle this in various places. Ingo's
+proposal needs a (one?!) bit more thinking in one place, but it
+shouldn't add even a bit to tx path (and it looks really cool!). Of
+course, it could be re-considered in some other time too.
 
+BTW, it seems with "Ingo's method" this netif_queue_stopped() check
+could be removed too - the change of handlers could be done with
+single qdiscs as well.
 
+Jarek P.
