@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:35993 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753407AbYGWWCQ (ORCPT
+Received: from mk-outboundfilter-5.mail.uk.tiscali.com ([212.74.114.1]:50014
+	"EHLO mk-outboundfilter-5.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752046AbYG0QVe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 18:02:16 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so1156810ywe.1
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 15:02:15 -0700 (PDT)
-Message-ID: <1ba2fa240807231502t1c4ce7d5k9b8acbcaed4d166a@mail.gmail.com> (sfid-20080724_000221_248296_BD9E52A9)
-Date: Thu, 24 Jul 2008 01:02:15 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Theodore Tso" <tytso@mit.edu>, yi.zhu@intel.com,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Potential iwlwifi locking problem in 2.6.26-git9
-In-Reply-To: <20080723214938.GA8034@mit.edu>
+	Sun, 27 Jul 2008 12:21:34 -0400
+From: Alistair John Strachan <alistair@devzero.co.uk>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: ath9k working, almost
+Date: Sun, 27 Jul 2008 17:20:34 +0100
+Cc: "Dan Williams" <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+References: <200807261742.15693.alistair@devzero.co.uk> <1217170761.2700.12.camel@localhost.localdomain> <43e72e890807270807k1a5967bfs1adf74f1a4d1e864@mail.gmail.com>
+In-Reply-To: <43e72e890807270807k1a5967bfs1adf74f1a4d1e864@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <E1KLm0c-0002O6-RO@closure.thunk.org>
-	 <20080723214938.GA8034@mit.edu>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200807271720.34696.alistair@devzero.co.uk> (sfid-20080727_182138_305108_96AE8C88)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 24, 2008 at 12:49 AM, Theodore Tso <tytso@mit.edu> wrote:
-> On Wed, Jul 23, 2008 at 05:36:30PM -0400, Theodore Ts'o wrote:
->>
->> Is this a new one?  I don't think I've seen this on LKML....
+On Sunday 27 July 2008 16:07:05 Luis R. Rodriguez wrote:
+> On Sun, Jul 27, 2008 at 7:59 AM, Dan Williams <dcbw@redhat.com> wrote:
+> > On Sat, 2008-07-26 at 17:42 +0100, Alistair John Strachan wrote:
+> >> Hi,
+> >>
+> >> The newly announced ath9k driver works great on an AR5418 Core 2 Duo
+> >> Macbook, WPA2-TKIP/AES et al all work fine. It would be good to see this
+> >> driver in wireless-testing, it completely replaces madwifi for me. I
+> >> used linux.git (2.6.26) + wireless-testing.git + my-wireless-testing.git
+> >> with success.
+> >>
+> >> The only thing that I couldn't get working was the signal strength meter
+> >> in knetworkmanager. The AP signal strength shows up in iwlist ath0
+> >> scanning, but whatever NM uses doesn't seem to work. All is good with
+> >> madwifi, by comparison.
+> >>
+> >> Any ideas? NM issue?
+> >
+> > The signal strength code in NM hasn't changed for quite a long time.
+> > Chances are it's the driver not reporting correctly.  What's the
+> > iwconfig output for while you're connected to your AP?
+> >
+> >  Link Quality=92/100  Signal level=-36 dBm  Noise level=-91 dBm
+> >
+> > That's the line I care about.
 >
-> The context of this was I had just booted to 2.6.26-git9, noted with
-> annoyance that that the iwl4965 driver needed a new microcode file, so
-> I popped in my EVDO card, downloaded the firmware, moved the firmware
-> into place, and then got the above error message.
->
-> I've since noted that it seems to be utterly refusing to associate
-> with my wireless access point.  This was working just fine with
-> 2.6.26-git6 kernel, so it looks like a recent regression?  I just
-> noticed someone else had recently complained about a similar "refusal
-> to associate" with the iwl3945 driver.
+> Its definitely borked, we just have to fix it. Its on our TODO list,
+> unless someone gets to it first.
 
-I'm not sure but this can be connected to what is described in thread:
-'New: dhcp doesn't work with iwl4965'
-Tomas
+This is probably an issue of not RTFM'ing (sorry), but are there documents 
+enabling Joe User to contribute this kind of thing?
+
+How much of the XXX fixups are you planning on doing yourself, and how many 
+would you like help with?
+
+-- 
+Cheers,
+Alistair.
