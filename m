@@ -1,47 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44959
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754878AbYGHXof (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.190]:3032 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751355AbYG0Mri (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 19:44:35 -0400
-Date: Tue, 08 Jul 2008 16:44:35 -0700 (PDT)
-Message-Id: <20080708.164435.141370914.davem@davemloft.net> (sfid-20080709_014438_476068_EC1A9CBA)
-To: sfr@canb.auug.org.au
-Cc: linville@tuxdriver.com, linux-next@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: linux-next: pending wireless/wireless-current merge conflict
- 2008-07-08
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080709094037.8e3050d9.sfr@canb.auug.org.au>
-References: <20080702220212.GA31582@tuxdriver.com>
-	<20080708203044.GA6381@tuxdriver.com>
-	<20080709094037.8e3050d9.sfr@canb.auug.org.au>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sun, 27 Jul 2008 08:47:38 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so1392033nfc.21
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Jul 2008 05:47:37 -0700 (PDT)
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 2/3] rt2x00: Fix partial antenna configuration
+Date: Sun, 27 Jul 2008 15:06:21 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200807271505.38116.IvDoorn@gmail.com> <200807271506.05316.IvDoorn@gmail.com>
+In-Reply-To: <200807271506.05316.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200807271506.21999.IvDoorn@gmail.com> (sfid-20080727_144747_236078_A8650C86)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Date: Wed, 9 Jul 2008 09:40:37 +1000
+The if-statement to determine the new TX/RX antenna
+configuration was incomplete. It lacks the general
+else-clause when the antenna wasn't changed.
 
-> Hi John,
-> 
-> On Tue, 8 Jul 2008 16:30:44 -0400 "John W. Linville" <linville@tuxdriver.com> wrote:
-> >
-> > I just sent a pull request for Dave that will result in a merge
-> > conflict in linux-next.  I have a sample merge available here:
-> > 
-> > 	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6 merge-test
-> > 
-> > Just a heads-up... :-)
-> > 
-> > John
-> > 
-> > P.S.  These are one-liners (including the one from yesterday).
-> > Nevertheless, it can't hurt to provide a reference "just in
-> > case"... :-)
-> 
-> Appreciated, thanks.
+This is a correct event, since it can occur when only
+one of the antenna's has been changed or when the new
+configuration is being forced (like when the interface
+has just been added).
 
-I just merged net-2.6 into net-next-2.6 and sorted all of the
-merge issues out, so I hope you won't bump into anything :)
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00config.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+index 3f89516..d134c3b 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+@@ -254,6 +254,8 @@ config:
+ 			libconf.ant.rx = default_ant->rx;
+ 		else if (active_ant->rx == ANTENNA_SW_DIVERSITY)
+ 			libconf.ant.rx = ANTENNA_B;
++		else
++			libconf.ant.rx = active_ant->rx;
+ 
+ 		if (conf->antenna_sel_tx)
+ 			libconf.ant.tx = conf->antenna_sel_tx;
+@@ -261,6 +263,8 @@ config:
+ 			libconf.ant.tx = default_ant->tx;
+ 		else if (active_ant->tx == ANTENNA_SW_DIVERSITY)
+ 			libconf.ant.tx = ANTENNA_B;
++		else
++			libconf.ant.tx = active_ant->tx;
+ 	}
+ 
+ 	if (flags & CONFIG_UPDATE_SLOT_TIME) {
+-- 
+1.5.6.1
+
