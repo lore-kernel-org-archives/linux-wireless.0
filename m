@@ -1,71 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54144 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752509AbYGHTaO (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.247]:54428 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752611AbYG0Qaa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 15:30:14 -0400
-Subject: Re: Linux capable PDA with WLAN NIC that supports access point
-	mode?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: pommnitz@yahoo.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <573701.63380.qm@web51408.mail.re2.yahoo.com>
-References: <573701.63380.qm@web51408.mail.re2.yahoo.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6MjY4BONuEpmLIyeGXcu"
-Date: Tue, 08 Jul 2008 21:29:26 +0200
-Message-Id: <1215545366.3670.9.camel@johannes.berg> (sfid-20080708_213018_000806_DE3822F3)
-Mime-Version: 1.0
+	Sun, 27 Jul 2008 12:30:30 -0400
+Received: by an-out-0708.google.com with SMTP id d40so846202and.103
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Jul 2008 09:30:29 -0700 (PDT)
+Message-ID: <43e72e890807270930o43a75071i9415445d4110b069@mail.gmail.com> (sfid-20080727_183033_474367_E67314D9)
+Date: Sun, 27 Jul 2008 09:30:28 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Alistair John Strachan" <alistair@devzero.co.uk>
+Subject: Re: ath9k working, almost
+Cc: "Dan Williams" <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <200807271720.34696.alistair@devzero.co.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <200807261742.15693.alistair@devzero.co.uk>
+	 <1217170761.2700.12.camel@localhost.localdomain>
+	 <43e72e890807270807k1a5967bfs1adf74f1a4d1e864@mail.gmail.com>
+	 <200807271720.34696.alistair@devzero.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Jul 27, 2008 at 9:20 AM, Alistair John Strachan
+<alistair@devzero.co.uk> wrote:
+> On Sunday 27 July 2008 16:07:05 Luis R. Rodriguez wrote:
+>> On Sun, Jul 27, 2008 at 7:59 AM, Dan Williams <dcbw@redhat.com> wrote:
+>> > On Sat, 2008-07-26 at 17:42 +0100, Alistair John Strachan wrote:
+>> >> Hi,
+>> >>
+>> >> The newly announced ath9k driver works great on an AR5418 Core 2 Duo
+>> >> Macbook, WPA2-TKIP/AES et al all work fine. It would be good to see this
+>> >> driver in wireless-testing, it completely replaces madwifi for me. I
+>> >> used linux.git (2.6.26) + wireless-testing.git + my-wireless-testing.git
+>> >> with success.
+>> >>
+>> >> The only thing that I couldn't get working was the signal strength meter
+>> >> in knetworkmanager. The AP signal strength shows up in iwlist ath0
+>> >> scanning, but whatever NM uses doesn't seem to work. All is good with
+>> >> madwifi, by comparison.
+>> >>
+>> >> Any ideas? NM issue?
+>> >
+>> > The signal strength code in NM hasn't changed for quite a long time.
+>> > Chances are it's the driver not reporting correctly.  What's the
+>> > iwconfig output for while you're connected to your AP?
+>> >
+>> >  Link Quality=92/100  Signal level=-36 dBm  Noise level=-91 dBm
+>> >
+>> > That's the line I care about.
+>>
+>> Its definitely borked, we just have to fix it. Its on our TODO list,
+>> unless someone gets to it first.
+>
+> This is probably an issue of not RTFM'ing (sorry), but are there documents
+> enabling Joe User to contribute this kind of thing?
 
---=-6MjY4BONuEpmLIyeGXcu
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+No documents, just the source.
 
+> How much of the XXX fixups are you planning on doing yourself, and how many
+> would you like help with?
 
-> > There's a Broadcom CF card. I have one, but it's
-> > not DMA capable in
-> > Linux because of the PCMCIA subsystem (IIRC).
->=20
-> What driver?
+We plan on doing a lot, I'll post a new series in a few minutes with
+about 15 patches from us. If you'd like to work on the link quality
+that would be greatly welcomed. What you can expect from us soon is
+more enhancements to STA, enabling IBSS, and AP. If it helps we can
+try to come up with a list of elements we can take care of and a few
+others we can use community help with. But in general patches from the
+community are greatly welcomed and encouraged. We all just want the
+best driver possible. We can also coordinate if you want to work on
+something in particular.
 
-b43 of course.
-
-> > If you're willing to invest some work, it should be
-> > possible to get the
-> > the N810 working with mac80211/p54spi but it's not
-> > there yet and I don't
-> > have time to work on it.
->=20
-> I thought that the Connexant chip in the N810 resembles a FullMAC
-> card. Can this one support AP mode with the standard firmware?
-
-It's not fullmac.
-
-johannes
-
---=-6MjY4BONuEpmLIyeGXcu
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIc8ASAAoJEKVg1VMiehFYVqYQAMaNVWPnV72mzEZVIhB4Y5Gd
-eNsTCxQSC9w1Ingxkt17OEwQHeKUrdS/6SzE5PhD6V+yxn9uqV5G0uTt+bsfxYhS
-ED4W1899t+LHLQ5aOCwAHp5iknuVwgtuSAIKFb3IKrmDNfbFMWEEMpdzMGo84arW
-BI3HUM1Db/w56b8O+3q9oqWZdf4rmDvKZfaF3ZLpig3Kb76TY9w+XSOAxgo8tzAD
-ccaKs/wYlbJKH/Oe5slJ37c2/1/2JfMVn3QAN7gZqC6X+80pOtQkktSobWIwub0T
-Kaxe36QuBgqCEGaGxojila2mpsOfALn/lABzgz1Shm9eWTZWjMOicv5PYxVATjhI
-FKMqWQ0PblUwgPHZMTtPfqQv35rhd9WRZ3Ti1CgWCUVKiPjfksGUYbAaCVY47Vgc
-CMsRk3g9zwvSn0tahaw4WGyOKzBCcKEInSuI1VPJ7XRnTfwq10R/NCiGamwPvjoj
-2tQ/rmVREpz26ITXEYK+KjEiwgfGfEq8poxqgog69EjgcNB/c5VTmzsYbLOWdMZ7
-niRn93pAExqKpF2QsqauYRrdWfxXHKEBIlD4sfyeKCumm+x7S7/OySiMCYMwuU77
-jihO5Jw9g8qHgX352IPA/4h4r3RGwvodt2eH2CtmM0pgbJvtoE9iJ0VztgTh7txR
-OlbyQUriZ4ctGFVMttIq
-=CsJp
------END PGP SIGNATURE-----
-
---=-6MjY4BONuEpmLIyeGXcu--
-
+  Luis
