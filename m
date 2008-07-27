@@ -1,167 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:4304 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753293AbYGWS3p (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 14:29:45 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so933660nfc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 11:29:44 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH] rfkill: rate-limit rfkill-input workqueue usage
-Date: Wed, 23 Jul 2008 20:46:58 +0200
-Cc: linux-wireless@vger.kernel.org, Dmitry Torokhov <dtor@mail.ru>
-References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br> <1216775046-9506-7-git-send-email-hmh@hmh.eng.br>
-In-Reply-To: <1216775046-9506-7-git-send-email-hmh@hmh.eng.br>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807232046.59110.IvDoorn@gmail.com>
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:47716 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752046AbYG0PY3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Jul 2008 11:24:29 -0400
+Subject: Re: [PATCH 1/6] mac80211: allow no mac address until firmware load
+From: Dan Williams <dcbw@redhat.com>
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+In-Reply-To: <48763814.27052c0a.1794.2095@mx.google.com>
+References: <48763814.27052c0a.1794.2095@mx.google.com>
+Content-Type: text/plain
+Date: Sun, 27 Jul 2008 11:22:16 -0400
+Message-Id: <1217172136.2700.21.camel@localhost.localdomain> (sfid-20080727_172531_956014_33A97D2B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 23 July 2008, Henrique de Moraes Holschuh wrote:
-> Limit the number of rfkill-input global operations per second.  It lacked
-> the limiter that non-global operations (state changes) had.  This way, a
-> rogue input event generator cannot force rfkill-input to hog the workqueue
-> too much.
-> 
-> Rework the limiter code so that newer state change requests (rfkill input
-> events) will override older ones that haven't been acted upon yet.  It used
-> to ignore new ones that were past the rate limit.
-> 
-> The hardcoded limit is to process requests only once every 200ms.  Limits
-> are separate for each switch type and for the global operations (used by
-> the master switch).
-> 
-> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> Cc: Dmitry Torokhov <dtor@mail.ru>
+On Thu, 2008-07-10 at 16:57 +0200, Luis Carlos Cobo wrote:
+> Originally by Johannes Berg. This patch adds support for devices that do not
+> report their MAC address until the firmware is loaded. While the address is not
+> known, a multicast on is used.
 
-Good idea. :)
+Johannes, thoughts on this?  Is there a better way to do it for devices
+that don't know their MAC address until firmware load?
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Dan
 
+> Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+> Tested-by: Javier Cardona <javier@cozybit.com>
 > ---
->  net/rfkill/rfkill-input.c |   43 ++++++++++++++++++++++++++++---------------
->  1 files changed, 28 insertions(+), 15 deletions(-)
+>  net/mac80211/ieee80211_i.h |    1 +
+>  net/mac80211/main.c        |   61 ++++++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 62 insertions(+), 0 deletions(-)
 > 
-> diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
-> index 8e6781d..be3edda 100644
-> --- a/net/rfkill/rfkill-input.c
-> +++ b/net/rfkill/rfkill-input.c
-> @@ -23,6 +23,9 @@ MODULE_AUTHOR("Dmitry Torokhov <dtor@mail.ru>");
->  MODULE_DESCRIPTION("Input layer to RF switch connector");
->  MODULE_LICENSE("GPL");
+> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+> index c916c2f..8e8c0eb 100644
+> --- a/net/mac80211/ieee80211_i.h
+> +++ b/net/mac80211/ieee80211_i.h
+> @@ -551,6 +551,7 @@ struct ieee80211_local {
+>  	const struct ieee80211_ops *ops;
 >  
-> +/* Delay (in ms) between consecutive switch ops */
-> +#define	RFKILL_OPS_DELAY 200UL
-> +
->  enum rfkill_input_master_mode {
->  	RFKILL_INPUT_MASTER_DONOTHING = 0,
->  	RFKILL_INPUT_MASTER_RESTORE = 1,
-> @@ -36,7 +39,7 @@ MODULE_PARM_DESC(master_switch_mode,
->  	"SW_RFKILL_ALL ON should: 0=do nothing; 1=restore; 2=unblock all");
->  
->  struct rfkill_task {
-> -	struct work_struct work;
-> +	struct delayed_work dwork;
->  	enum rfkill_type type;
->  	struct mutex mutex; /* ensures that task is serialized */
->  	spinlock_t lock; /* for accessing last and desired state */
-> @@ -52,17 +55,18 @@ enum rfkill_global_sched_op {
->  };
->  
->  struct rfkill_global_task {
-> -	struct work_struct work;
-> +	struct delayed_work dwork;
->  	struct mutex mutex; /* ensures that task is serialized */
->  	spinlock_t lock;
-> +	unsigned long last; /* last schedule */
->  	enum rfkill_global_sched_op op;
->  	int op_count; /* avoid race window */
->  };
->  
->  static void rfkill_global_task_handler(struct work_struct *work)
->  {
-> -	struct rfkill_global_task *task =
-> -			container_of(work, struct rfkill_global_task, work);
-> +	struct rfkill_global_task *task = container_of(work,
-> +			struct rfkill_global_task, dwork.work);
->  	enum rfkill_global_sched_op op;
->  	unsigned int i;
->  
-> @@ -100,12 +104,18 @@ static void rfkill_global_task_handler(struct work_struct *work)
+>  	struct net_device *mdev; /* wmaster# - "master" 802.11 device */
+> +	unsigned int hwid;
+>  	int open_count;
+>  	int monitors, cooked_mntrs;
+>  	/* number of interfaces with corresponding FIF_ flags */
+> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> index cf477ad..2204aa5 100644
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -178,6 +178,20 @@ static inline int identical_mac_addr_allowed(int type1, int type2)
+>  		  type2 == IEEE80211_IF_TYPE_VLAN)));
 >  }
 >  
->  static struct rfkill_global_task rfkill_global_task = {
-> -	.work = __WORK_INITIALIZER(rfkill_global_task.work,
-> +	.dwork = __DELAYED_WORK_INITIALIZER(rfkill_global_task.dwork,
->  				rfkill_global_task_handler),
->  	.mutex =  __MUTEX_INITIALIZER(rfkill_global_task.mutex),
->  	.lock = __SPIN_LOCK_UNLOCKED(rfkill_global_task.lock),
->  };
->  
-> +static unsigned long rfkill_ratelimit(const unsigned long last)
+> +static void calculate_invalid_mac(u8 *addr, unsigned int hwid)
 > +{
-> +	const unsigned long delay = msecs_to_jiffies(RFKILL_OPS_DELAY);
-> +	return (time_after(jiffies, last + delay)) ? 0 : delay;
-> +};
+> +	/*
+> +	 * Random multicast, private use address with hwid mixed in.
+> +	 * Must be multicast to let is_valid_ether_addr() fail on it.
+> +	 */
+> +	addr[0] = 0xe7;
+> +	addr[1] = 0xc4;
+> +	addr[2] = 0x2e ^ ((hwid >> 24) & 0xFF);
+> +	addr[3] = 0xdd ^ ((hwid >> 16) & 0xFF);
+> +	addr[4] = 0xcb ^ ((hwid >>  8) & 0xFF);
+> +	addr[5] = 0x8c ^ ((hwid >>  0) & 0xFF);
+> +}
 > +
->  static void rfkill_schedule_global_op(enum rfkill_global_sched_op op)
+>  static int ieee80211_open(struct net_device *dev)
 >  {
->  	unsigned long flags;
-> @@ -113,13 +123,18 @@ static void rfkill_schedule_global_op(enum rfkill_global_sched_op op)
->  	spin_lock_irqsave(&rfkill_global_task.lock, flags);
->  	rfkill_global_task.op = op;
->  	rfkill_global_task.op_count = 1;
-> -	schedule_work(&rfkill_global_task.work);
-> +	if (likely(!delayed_work_pending(&rfkill_global_task.dwork))) {
-> +		schedule_delayed_work(&rfkill_global_task.dwork,
-> +				rfkill_ratelimit(rfkill_global_task.last));
-> +		rfkill_global_task.last = jiffies;
-> +	}
->  	spin_unlock_irqrestore(&rfkill_global_task.lock, flags);
->  }
+>  	struct ieee80211_sub_if_data *sdata, *nsdata;
+> @@ -187,9 +201,17 @@ static int ieee80211_open(struct net_device *dev)
+>  	u32 changed = 0;
+>  	int res;
+>  	bool need_hw_reconfig = 0;
+> +	u8 inval_addr[ETH_ALEN];
 >  
->  static void rfkill_task_handler(struct work_struct *work)
->  {
-> -	struct rfkill_task *task = container_of(work, struct rfkill_task, work);
-> +	struct rfkill_task *task = container_of(work,
-> +					struct rfkill_task, dwork.work);
+>  	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
 >  
->  	mutex_lock(&task->mutex);
->  
-> @@ -132,24 +147,22 @@ static void rfkill_schedule_toggle(struct rfkill_task *task)
->  {
->  	unsigned long flags;
->  
-> -	if (unlikely(work_pending(&rfkill_global_task.work)))
-> +	if (unlikely(delayed_work_pending(&rfkill_global_task.dwork)))
->  		return;
->  
->  	spin_lock_irqsave(&task->lock, flags);
-> -
-> -	if (time_after(jiffies, task->last + msecs_to_jiffies(200))) {
-> -		task->desired_state =
-> -				rfkill_state_complement(task->desired_state);
-> +	task->desired_state = rfkill_state_complement(task->desired_state);
-> +	if (likely(!delayed_work_pending(&task->dwork))) {
-> +		schedule_delayed_work(&task->dwork,
-> +					rfkill_ratelimit(task->last));
->  		task->last = jiffies;
-> -		schedule_work(&task->work);
+> +	calculate_invalid_mac(inval_addr, local->hwid);
+> +
+> +	/* fail early if user set an invalid address */
+> +	if (compare_ether_addr(dev->dev_addr, inval_addr) &&
+> +	    !is_valid_ether_addr(dev->dev_addr))
+> +		return -EADDRNOTAVAIL;
+> +
+>  	/* we hold the RTNL here so can safely walk the list */
+>  	list_for_each_entry(nsdata, &local->interfaces, list) {
+>  		struct net_device *ndev = nsdata->dev;
+> @@ -288,6 +310,32 @@ static int ieee80211_open(struct net_device *dev)
+>  		ieee80211_led_radio(local, local->hw.conf.radio_enabled);
 >  	}
-> -
->  	spin_unlock_irqrestore(&task->lock, flags);
+>  
+> +	/*
+> +	 * Check all interfaces and copy the hopefully now-present
+> +	 * MAC address to those that have the special invalid one.
+> +	 */
+> +	list_for_each_entry(nsdata, &local->interfaces, list) {
+> +		struct net_device *ndev = nsdata->dev;
+> +
+> +		/*
+> +		 * No need to check netif_running since we do not allow
+> +		 * it to start up with this invalid address.
+> +		 */
+> +		if (compare_ether_addr(inval_addr, ndev->dev_addr) == 0)
+> +			memcpy(ndev->dev_addr,
+> +			       local->hw.wiphy->perm_addr,
+> +			       ETH_ALEN);
+> +	}
+> +
+> +	/*
+> +	 * Validate the MAC address for this device.
+> +	 */
+> +	if (!is_valid_ether_addr(dev->dev_addr)) {
+> +		if (!local->open_count && local->ops->stop)
+> +			local->ops->stop(local_to_hw(local));
+> +		return -EADDRNOTAVAIL;
+> +	}
+> +
+>  	switch (sdata->vif.type) {
+>  	case IEEE80211_IF_TYPE_VLAN:
+>  		list_add(&sdata->u.vlan.list, &sdata->u.vlan.ap->u.ap.vlans);
+> @@ -995,6 +1043,8 @@ void ieee80211_if_setup(struct net_device *dev)
+>  	dev->open = ieee80211_open;
+>  	dev->stop = ieee80211_stop;
+>  	dev->destructor = ieee80211_if_free;
+> +	/* we will validate the address ourselves in ->open */
+> +	dev->validate_addr = NULL;
 >  }
 >  
->  #define DEFINE_RFKILL_TASK(n, t)				\
->  	struct rfkill_task n = {				\
-> -		.work = __WORK_INITIALIZER(n.work,		\
-> +		.dwork = __DELAYED_WORK_INITIALIZER(n.dwork,	\
->  				rfkill_task_handler),		\
->  		.type = t,					\
->  		.mutex = __MUTEX_INITIALIZER(n.mutex),		\
-
+>  /* everything else */
+> @@ -1571,6 +1621,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+>  	struct ieee80211_local *local;
+>  	int priv_size;
+>  	struct wiphy *wiphy;
+> +	static atomic_t hw_counter = ATOMIC_INIT(0);
+> +	u8 inval_addr[ETH_ALEN];
+>  
+>  	/* Ensure 32-byte alignment of our private data and hw private data.
+>  	 * We use the wiphy priv data for both our ieee80211_local and for
+> @@ -1601,6 +1653,15 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+>  	local = wiphy_priv(wiphy);
+>  	local->hw.wiphy = wiphy;
+>  
+> +	/*
+> +	 * Hack for devices that cannot read the mac address until they are
+> +	 * started... keep an invalid multicast address as the device MAC...
+> +	 * Read on in ieee80211_open().
+> +	 */
+> +	local->hwid = atomic_inc_return(&hw_counter);
+> +	calculate_invalid_mac(inval_addr, local->hwid);
+> +	memcpy(local->hw.wiphy->perm_addr, inval_addr, ETH_ALEN);
+> +
+>  	local->hw.priv = (char *)local +
+>  			 ((sizeof(struct ieee80211_local) +
+>  			   NETDEV_ALIGN_CONST) & ~NETDEV_ALIGN_CONST);
 
