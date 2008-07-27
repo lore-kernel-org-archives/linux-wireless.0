@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.183]:22639 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751220AbYG3LRc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 07:17:32 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so379599ika.5
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 04:17:31 -0700 (PDT)
-Subject: Re: [PATCH 1/6] mac80211: allow no mac address until firmware load
-From: Luis Carlos Cobo <luisca@cozybit.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-In-Reply-To: <1217262158.28198.44.camel@localhost.localdomain>
-References: <48763814.27052c0a.1794.2095@mx.google.com>
-	 <200807281544.33509.mb@bu3sch.de> <1217253397.6364.2.camel@localhost>
-	 <200807281600.39103.mb@bu3sch.de>
-	 <1217257174.28198.27.camel@localhost.localdomain>
-	 <1217257628.15381.2.camel@johannes.berg>
-	 <1217258040.28198.40.camel@localhost.localdomain>
-	 <1ba2fa240807280858o4020fec8k4c287567dff177ca@mail.gmail.com>
-	 <1217262158.28198.44.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Wed, 30 Jul 2008 13:17:20 +0200
-Message-Id: <1217416640.6379.144.camel@localhost> (sfid-20080730_131735_922054_8DB0F8EA)
-Mime-Version: 1.0
+Received: from [66.209.47.173] ([66.209.47.173]:43066 "EHLO mythtv.ewol.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1758297AbYG0VyS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Jul 2008 17:54:18 -0400
+Message-ID: <488CEDD1.1000901@cortland.com> (sfid-20080727_235421_454487_EA7F9B3D)
+Date: Sun, 27 Jul 2008 17:51:13 -0400
+From: Steve Brown <sbrown@cortland.com>
+Reply-To: sbrown@cortland.com
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Luis Carlos Cobo <luisca@cozybit.com>
+Subject: Re: [PATCH 4/4] mac80211: revamp beacon configuration
+References: <20080709124033.781606000@sipsolutions.net> <20080709124255.193524000@sipsolutions.net> <200807091529.20656.mb@bu3sch.de>
+In-Reply-To: <200807091529.20656.mb@bu3sch.de>
+Content-Type: text/plain; charset=iso-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So I see three options:
+Michael Buesch wrote:
+> On Wednesday 09 July 2008 14:40:37 Johannes Berg wrote:
+>   
+>> This patch changes mac80211's beacon configuration handling
+>> to never pass skbs to the driver directly but rather always
+>> require the driver to use ieee80211_beacon_get(). Additionally,
+>> it introduces "change flags" on the config_interface() call
+>> to enable drivers to figure out what is changing. Finally, it
+>> removes the beacon_update() driver callback in favour of
+>> having IBSS beacon delivered by ieee80211_beacon_get() as well.
+>>
+>> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>> ---
+>>
+>>     
+I tested using the current wireless-testing and beacons are gone.
 
-1) Use 00:... and be happy. No problem with udev, we use an address that
-is actually valid.
+If I revert this patch they reappear.
 
-2) Use 01:00... and fix udev so it ignores it.
+I'm using the zd1211rw driver on an x86. I also confirmed the missing 
+beacons using b43, although I haven't tried the reverted patch on that 
+machine.
 
-3) Use 44:44..., because it is what orinoco used and fix udev so it
-ignores it.
+I'm not sure what other info to provide. Let me know if anything else is 
+needed and I'll send post it.
 
-I would go for solution 2, 00:00:00:00:00:00 is a valid address for a
-device and multicast addresses are not, and that should be reflected on
-udev's policy.
-
-About persistent names, can we get a persistent name after the device
-gets its MAC address? Before that, the device is not being used and it
-does not matter much.
-
--- 
-Luis Carlos Cobo Rus       GnuPG ID: 44019B60
-cozybit Inc.
-
+Steve
 
