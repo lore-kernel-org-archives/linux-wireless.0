@@ -1,74 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.233]:7395 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753400AbYGLVe1 (ORCPT
+Received: from smtp1-g19.free.fr ([212.27.42.27]:41294 "EHLO smtp1-g19.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759200AbYG0GlA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jul 2008 17:34:27 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so4945943rvb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Jul 2008 14:34:24 -0700 (PDT)
-Message-ID: <1ba2fa240807121434l21756164h685ac48825b48f1d@mail.gmail.com> (sfid-20080712_233431_556534_15CA94EE)
-Date: Sun, 13 Jul 2008 00:34:24 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Bruno Randolf" <br1@einfach.org>
-Subject: Re: [PATCH 1/1] iwlwif: remove compilation warnings iwl_add_radiotap
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200807121457.06795.br1@einfach.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1215689322-25017-1-git-send-email-tomas.winkler@intel.com>
-	 <1215697922.3483.18.camel@johannes.berg>
-	 <1ba2fa240807100747g285b5ff0of81bf619ad9ee3b9@mail.gmail.com>
-	 <200807121457.06795.br1@einfach.org>
+	Sun, 27 Jul 2008 02:41:00 -0400
+Received: from smtp1-g19.free.fr (localhost.localdomain [127.0.0.1])
+	by smtp1-g19.free.fr (Postfix) with ESMTP id F06311AB2CC
+	for <linux-wireless@vger.kernel.org>; Sun, 27 Jul 2008 08:40:58 +0200 (CEST)
+Received: from localhost (ble59-5-82-233-204-229.fbx.proxad.net [82.233.204.229])
+	by smtp1-g19.free.fr (Postfix) with ESMTP id BA3261AB2AC
+	for <linux-wireless@vger.kernel.org>; Sun, 27 Jul 2008 08:40:58 +0200 (CEST)
+Date: Sun, 27 Jul 2008 08:40:58 +0200
+From: =?UTF-8?B?Q8OpZHJpYw==?= Auger <cedric@grisbi.org>
+To: linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 slow for downloading
+Message-ID: <20080727084058.78b57f53@grisbi.org> (sfid-20080727_084118_416285_0F872381)
+In-Reply-To: <488B5736.1080401@openwrt.org>
+References: <20080726161140.59041730@grisbi.org>
+	<488B3969.4050405@openwrt.org>
+	<488B48C1.6090506@lwfinger.net>
+	<488B5736.1080401@openwrt.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 12, 2008 at 3:57 PM, Bruno Randolf <br1@einfach.org> wrote:
-> On Thursday 10 July 2008 16:47:57 Tomas Winkler wrote:
->> On Thu, Jul 10, 2008 at 4:52 PM, Johannes Berg
->>
->> <johannes@sipsolutions.net> wrote:
->> > On Thu, 2008-07-10 at 15:25 +0300, Tomas Winkler wrote:
->> >> > what about using the generic function to add the radiotap header from
->> >> > mac80211? it should be flexible enough to handle all devices by now.
->> >>
->> >> Why not go ahead.
->> >
->> > I always thought you were adding 11n stuff, but if that's not the case
->> > (and we may make mac80211 do that at some point) then that'd be a nice
->> > code removal.
->>
->> I have never really looked into radio tap so I don't want to make any
->> statements here. If the 11n part can be done in mac80211 why not.
->
-> hi!
->
-> i'm currently working on a patch removing iwl's own radiotap header. while
-> doing that i noticed, that we currently don't have a field in
-> ieee80211_rx_status for the modulation used. for example iwl knows if the
-> frame was demodulated using CCK (RX_RES_PHY_FLAGS_MOD_CCK_MSK), thus it's
-> able to differentiate between B and G modes. in mac80211 we can't do that
-> right now.
->
-> i guess we could deduct the modulation from the rate
->
-> 1, 2, 5.5, 11   -> CCK
-> everything else -> OFDM
->
-> but i'm not sure if this is always true. is there any hardware that also does
-> PBCC? also what about CCK-OFDM modes (b/g interoperability), do we have any
-> way to identify these?
->
-> what do you think, should we explicitly make a modulation field in rx_status
-> or should we implicitly deduct the modulation from the rates?
+Le Sat, 26 Jul 2008 18:56:22 +0200,
+=46elix Fietkau <nbd@openwrt.org> a =C3=A9crit :
 
-I believe you can safely assume  CCK from rate in WiFi. Both PBCC and
-CCK/OFDM are optional by the spec meaning nobody really going to
-implement. I suggest to focus on the main pass and deal with the
-corner cases only if needed.
-Tomas
+> Larry Finger wrote:
+> > Just for comparison, my BCM4312 running b43 from the latest
+> > wireless-testing gets the following tcpperf throughput:
+> >=20
+> > AP Mode          TX          RX
+> >=20
+> > Mixed b/g    19.8 MB/s   23.0 MB/s
+> > g-only       20.5 MB/s   23.1 MB/s
+> >=20
+> > For these tests, the connecting end was wired to the router. The
+> > difference in TX speeds was about what I expected - the small
+> > difference in RX speeds was not. In any case, if you see a large
+> > difference with iwl3945, that would be useful information.
 
->
-> bruno
->
+> On the laptop that I mentioned, this problem was only happening
+> sometimes. I did not figure out what actually triggered it.
+> Most of the time the throughput was similar to what you posted here,
+> but when it went down, it went down right to 100-120 KB/s
+
+i'm happy that it happened sometimes too because i was begining to feel
+crazy ;-) all the last tests seem to show an upload problem, but at the
+begining, i was thinking i had a download problem (from internet), but
+from yesterday, i cannot reproduce that, only upload...
+=20
+> Could it be that this is triggered by the use b/g protection mode due
+> to reception of foreign beacons of B devices by the AP? Has anybody
+> tested RTS/CTS in detail?
+
+for that i think it goes beyond my abilities...
+i forgot to say about the AP, i think it's not g wifi, it's MIMO.
+perhaps it could change something.
+and for information, the second computer i use to do the tests is also
+a 3945ABG intel wireless, but installed with ubuntu and iwl3945 too
+(but the default installation), with a 2.6.24 kernel.
+the difference with me, except the computer itself, is debian, kernel
+2.6.26 compiled by myself, and before i used ipw3945, but remove it
+completely
+thanks
+cedric
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
