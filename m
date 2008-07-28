@@ -1,31 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:15366 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753255AbYGDMSA (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38461 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757249AbYG1PHW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jul 2008 08:18:00 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so362606nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Jul 2008 05:17:58 -0700 (PDT)
-Message-ID: <f6ca9fed0807040517o708c5e4ap4e5e9d9d0d61ee83@mail.gmail.com> (sfid-20080704_141806_507236_F41091C0)
-Date: Fri, 4 Jul 2008 14:17:58 +0200
-From: drago01 <drago01@gmail.com>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Subject: Re: [PATCH 1/4] rt2x00: Remove input_polldev requirements for rfkill
-Cc: linville@tuxdriver.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200807041341.26003.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200807041341.26003.IvDoorn@gmail.com>
+	Mon, 28 Jul 2008 11:07:22 -0400
+Subject: Re: [PATCH 1/6] mac80211: allow no mac address until firmware load
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Luis Carlos Cobo <luisca@cozybit.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1217257174.28198.27.camel@localhost.localdomain>
+References: <48763814.27052c0a.1794.2095@mx.google.com>
+	 <200807281544.33509.mb@bu3sch.de> <1217253397.6364.2.camel@localhost>
+	 <200807281600.39103.mb@bu3sch.de>
+	 <1217257174.28198.27.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GdmhWOLE7dlP6iPW9++A"
+Date: Mon, 28 Jul 2008 17:07:08 +0200
+Message-Id: <1217257628.15381.2.camel@johannes.berg> (sfid-20080728_170752_212468_041C3DAA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 4, 2008 at 1:41 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> With the new rfkill interface there is no longer a need
-> for the input_polldev. Create a delayed_work structure
-> which we can put on the mac80211 workqueue and poll the
-> hardware every 100ms.
 
-Isn't 100ms not a bit "to often" ... this would add 10 wakeups/sec ..
-Shouldn't 500 or 1000ms be enough for user space to deal with the event?
+--=-GdmhWOLE7dlP6iPW9++A
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2008-07-28 at 10:59 -0400, Dan Williams wrote:
+
+> > If that's really a problem, yes. 01:00:00:00:00:00 is still better
+> > than a pseudo random MAC, IMO. It's immediately obvious to the user
+> > that the MAC currently is not set.
+>=20
+> How about 44:44:44:44:44:44 like orinoco uses for bogus BSSID?  If we
+> can, let's not keep creating yet more bogus MAC addresses.
+
+Either way, the problem is that these will confuse udev if you have two
+at the same time, no?
+
+johannes
+
+--=-GdmhWOLE7dlP6iPW9++A
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIjeCYAAoJEKVg1VMiehFYJ4QP/3fCdcES51uNpf4ZM4i9Aofn
+Rni95jrFumZ732Oyc1xTh657/LhGhnj5Yogaxv+rI7UoaiotriwALzHQ543bHN3z
+bdSg7wv7VcCyRwsrwvhv9UwFbqloW0fza1uj7/XxREIN+CvwdQPtEDTkGV1mBCak
+XCKqRxYioOzXqCS8eKJTjveAN2WU+NLiYUU1Z4uU4dX8aMpYa5/tFaNrD776yb4D
+rIh5WyDfY7I2BivFimf0nvvVuaqpBjoCDB6S6k1kyvpBS+8BqEF4TBwUYDnTcmTr
+O1+/7a1cVI8f3iMwhpZqr4XzmFpW3ZURurpYQTiphFOHEVxZgPxgUgAmSRHbgd+B
+GEVMju9eAiC4hNKJBDVGi8y9d44vBSPNszgcC/rIBVVqA8brmyruWwBwJNFge4VC
+4f+Zx15Z0XgFau4P9fHURIHXUPZPDpGAFp4lQezbo7DB6TpUU2NVgx+MVWTkWXlX
+3JGb8YKiPzlMRMmq/Xz+K1ponbifVi7xSxT9mF623Im+sJwVZZIR2xT7sZ87iU/G
+UJrR7SwxesrIz1SJ6oCpNmSkhZ5ZeZJoEWJL7D7zv1vqIusw8cGg+GO9IgNohnJS
+Rbfj+anStzHwLbexABMs2rPEjycExK4uxCqGoXjwDfl6CC/CpQ8qHp9Bjy5nrMxd
+ajArlQwusdyvPDDCgdsO
+=6fVx
+-----END PGP SIGNATURE-----
+
+--=-GdmhWOLE7dlP6iPW9++A--
+
