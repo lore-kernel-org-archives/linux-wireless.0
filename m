@@ -1,78 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51119 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753194AbYG2J3W (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.173]:18825 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751480AbYG1N4n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 05:29:22 -0400
-Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks
-	rtl8187
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240807290226n19ab0944u8e27f40cb688cfcc@mail.gmail.com> (sfid-20080729_112701_171733_66AFF6A4)
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
-	 <48874F09.7060400@lwfinger.net>
-	 <3ace41890807281939y462c9b91n5fa952e167b6ff8c@mail.gmail.com>
-	 <200807290021.45400.herton@mandriva.com.br>
-	 <1217314430.15381.11.camel@johannes.berg>
-	 <1ba2fa240807290123n7673dbb9m7121c1e76fe57e94@mail.gmail.com>
-	 <1217320089.15381.25.camel@johannes.berg>
-	 <1ba2fa240807290138h7deced1cob0836ae3e3c1e71a@mail.gmail.com>
-	 <1217322974.10489.0.camel@johannes.berg>
-	 <1ba2fa240807290226n19ab0944u8e27f40cb688cfcc@mail.gmail.com>
-	 (sfid-20080729_112701_171733_66AFF6A4)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fkK+W2tFd30i3p30583g"
-Date: Tue, 29 Jul 2008 11:29:09 +0200
-Message-Id: <1217323749.10489.7.camel@johannes.berg> (sfid-20080729_112925_744936_66A51068)
+	Mon, 28 Jul 2008 09:56:43 -0400
+Received: by ug-out-1314.google.com with SMTP id h2so31768ugf.16
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 06:56:41 -0700 (PDT)
+Subject: Re: [PATCH 1/6] mac80211: allow no mac address until firmware load
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <200807281544.33509.mb@bu3sch.de>
+References: <48763814.27052c0a.1794.2095@mx.google.com>
+	 <1217172136.2700.21.camel@localhost.localdomain>
+	 <1217251433.12662.5.camel@johannes.berg>  <200807281544.33509.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Mon, 28 Jul 2008 15:56:37 +0200
+Message-Id: <1217253397.6364.2.camel@localhost> (sfid-20080728_155646_607452_FCBC45C2)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2008-07-28 at 15:44 +0200, Michael Buesch wrote:
+> Well, I think that really is pretty weird and it is confusing to the
+> user to see that pseudo random MAC that changes suddenly when the device is
+> initialized. For the human user (so everybody but me), it would be better
+> to have the MAC all-zeros until the firmware loaded. So it would be obvious
+> that the MAC is not set, yet. I think userspace
 
---=-fkK+W2tFd30i3p30583g
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The problem is that all-zeroes is actually a valid mac address, owned by
+Xerox (http://standards.ieee.org/regauth/oui/oui.txt) Not that it will
+probably cause us any problem, but a multicast address is afaik an
+invalid mac for a device. Should we go for 01:allzeros?
 
 
-> PS setting is rather global NIC state and should be set as user
-> preference rather then per application ... socket. If I understand
-> correctly what you mean by application.
-> What user actually selects is performance/power consumption trade off.
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
 
-yes, but what we also pointed out was that the user isn't able to make a
-good trade-off, and PS isn't necessarily linear anyway. Therefore,
-making the default be based on letting applications set what sort of
-latency/quality guarantees they set makes sense for a good user
-experience with maximum power saving that doesn't affect applications,
-if the user wants to go higher maybe we can later allow that in some
-way, but the default should be based on what performance apps expect.
-
-johannes
-
---=-fkK+W2tFd30i3p30583g
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIjuLhAAoJEKVg1VMiehFYeTIP/2dn9ImB5m2fJADzwRf0SSOh
-lzKsmvpuJdzuNCdij+OKG6gnw8iOsljv7dNfjjQvTMabyY/GD9f6umFUjEJDzqMw
-XaJpyHTYwgu0o7963XE0L9KaDlpxhdy5GwDzkhmMARSsdGUaLG2E44MoTjobPF+f
-Q5gz3fazY4f5C2NvT9Nzooy8D+IBxzXvNXoDATkRcB85W55Qfv16jTz4L2WcxtqZ
-emc0tlVNdxWw4NlM90vxfMdn3qu+SYObTIIRtl+Rml1nR4ZT3U9fIg/96I9BPE+6
-YdpqgpR9UtyGH4UKlVSwrFskJS1tpUdaQftIw3PoKDZqE6i9dM/KHZuxvY3i/LG4
-TrFYFC2Hl8mo+FZjf5UyPceVzKHvtkASx75QerZlUbIofKoyTnphsJ9KU3/wM6Cy
-ccZqJWuM5XMjFOufGIr7yX2gL9WqWOtnRSzBPtfPuoketj3G+ms8iEmTb2xB4kYT
-tKUTXyUxmplrvbGcSudaECO8ltRKH+x1P3spNrh5ZxcrZqub5doApahuoeg7lhNN
-x49oIzBtzilx3/SkkVQprT4oUCBpGKLpmQKa0m5+a/Q5Pib3nyCyRgGOlWYt17od
-hh8wyAkKan2OrmWQKYp9MUPWKMvaOoLWXm7nZEhslvjhhk2irylrea/jImfDf9Ki
-oyllGPx+BjPwROJnL7fV
-=OxbR
------END PGP SIGNATURE-----
-
---=-fkK+W2tFd30i3p30583g--
 
