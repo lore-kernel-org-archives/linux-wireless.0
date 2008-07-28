@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:60495 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750881AbYGURCo (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.237]:9730 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750870AbYG1LVD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 13:02:44 -0400
-Date: Tue, 22 Jul 2008 01:02:33 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: David Miller <davem@davemloft.net>
-Cc: hadi@cyberus.ca, kaber@trash.net, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in RCU.
-Message-ID: <20080721170233.GA13417@gondor.apana.org.au> (sfid-20080721_190248_765411_3FE939E9)
-References: <20080721161616.GA12938@gondor.apana.org.au> <20080721.092556.227421936.davem@davemloft.net> <20080721164306.GA13131@gondor.apana.org.au> <20080721.095124.89249903.davem@davemloft.net>
+	Mon, 28 Jul 2008 07:21:03 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so4377484rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 04:21:02 -0700 (PDT)
+Message-ID: <1ba2fa240807280421s48b26b58n8db03f75bfa4c206@mail.gmail.com> (sfid-20080728_132107_447954_83ABC14B)
+Date: Mon, 28 Jul 2008 14:21:02 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Angel Mieres" <mieres.angel@gmail.com>
+Subject: Re: IWL5000
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <5f68ea7b0807280351u4f6b6a59v8304a7a3b53436be@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080721.095124.89249903.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <5f68ea7b0807280351u4f6b6a59v8304a7a3b53436be@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 21, 2008 at 09:51:24AM -0700, David Miller wrote:
+On Mon, Jul 28, 2008 at 1:51 PM, Angel Mieres <mieres.angel@gmail.com> wrote:
+> Hi all,
 >
-> How so?  If the TX hash is well distributed, which it should be,
-> it is at least going to approximate the distribution provided by
-> the RX hash.
+> Im trying to get working intel wifi link 5100 on ubuntu 8.0.4, but i
+> have some problems; the procedure that i follow was:
+>    1.- I try to get working with ndiswrapper, i get the lastest
+> drivers availables for windowz, load the inf file,
+>     check that device was recognize by ndiswrapper(installed & device
+> present), but when i load the ndiswrapper module, it appears:
+>     "unknown symbol: ntoskrnl.exe:'KeBugCheck'; couldn't prepare
+> driver 'netw5x32'"
+>      So, i decide to take a look of compat-wireless project that
+> support this driver(right?).
+>    2.- I get the firmware of iwl5000, copy the firmware on
+> /lib/firmware, i get the latest compat-wireless-2.6 tar file, after
+> this,
+>       I compile the drivers(make && make install), i try load the
+> driver; at dmesg it appears that ipw4965 loads perfectly but the led
+> of the wifi, it doesn't work and
+>       no one devices appear to be installed.
+>
+> So, someone have this NIC working? Please help me a bit. All
+> suggestions are welcome.
+> Thanks guys
 
-This is a matter of probabilities :) In general, if the TX hash
-and the RX hash are completely unrelated, then the end result of
-the hash distribution should be independent of each other (independent
-in the probablistic sense).  That is, for the flows which have
-been RX hashed into one queue, they should be hashed on average
-across all queues by the TX hash.  Conversely, those that have
-been hashed into one TX queue would be distributed across all
-RX queues.
-
-Now if you've bound each RX queue to a specific CPU, then this
-means for a given TX queue, its packets are going to come from
-all the CPUs (well all those involved in network reception anyway).
-
-As each TX queue is designed to be accessed by only one CPU at
-a time, somebody somewhere has to pay for all this synchronisation :)
-
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Use iwlwif-2.6.git master branch. Merging into wireless-testing.git is
+rather stalled right now.
+If your devices is not recognized please send me the devices ids of your card.
+Thanks
+Tomas
