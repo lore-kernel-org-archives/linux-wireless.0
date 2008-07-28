@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay2.globalproof.net ([194.146.153.25]:50779 "EHLO
-	relay2.globalproof.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753958AbYGWWRe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 18:17:34 -0400
-From: denys@visp.net.lb
-To: linux-wireless@vger.kernel.org
-Subject: 2.6.26-git10 compile error, iwl-led.c
-Date: Thu, 24 Jul 2008 00:49:28 +0300
-Cc: linux-kernel@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200807240049.29021.denys@visp.net.lb> (sfid-20080724_001745_718029_7AEE4C0D)
+Received: from c60.cesmail.net ([216.154.195.49]:32145 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751223AbYG1NKD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jul 2008 09:10:03 -0400
+Subject: Re: [ath5k-devel] [PATCH 12/12] ath5k: Fix a compilation error
+	after reg list update
+From: Pavel Roskin <proski@gnu.org>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@gmail.com
+In-Reply-To: <40f31dec0807280604m19a8c511nf2568bb7aa357b90@mail.gmail.com>
+References: <20080720035221.GL7440@makis> <4885F055.8000304@gmail.com>
+	 <40f31dec0807280604m19a8c511nf2568bb7aa357b90@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 28 Jul 2008 09:10:01 -0400
+Message-Id: <1217250601.2441.20.camel@dv> (sfid-20080728_151008_549811_00493746)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sunfire-1 linux-2.6.26 # sunfire-1 globalosii # cp globalfs1 globalfs
-sunfire-1 linux-2.6.26 # make
-  CHK     include/linux/version.h
-  CHK     include/linux/utsrelease.h
-  CALL    scripts/checksyscalls.sh
-  CHK     include/linux/compile.h
-dnsdomainname: Unknown host
-  GEN     usr/initramfs_data.cpio.gz
-  AS      usr/initramfs_data.o
-  LD      usr/built-in.o
-  LD [M]  drivers/net/wireless/rtl8187.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-led.o
-drivers/net/wireless/iwlwifi/iwl-led.c: In function 'iwl_led_brightness_set':
-drivers/net/wireless/iwlwifi/iwl-led.c:198: error: 'led_type_str' undeclared (first use in this function)
-drivers/net/wireless/iwlwifi/iwl-led.c:198: error: (Each undeclared identifier is reported only once
-drivers/net/wireless/iwlwifi/iwl-led.c:198: error: for each function it appears in.)
-make[4]: *** [drivers/net/wireless/iwlwifi/iwl-led.o] Error 1
-make[3]: *** [drivers/net/wireless/iwlwifi] Error 2
-make[2]: *** [drivers/net/wireless] Error 2
-make[1]: *** [drivers/net] Error 2
-make: *** [drivers] Error 2
+On Mon, 2008-07-28 at 16:04 +0300, Nick Kossifidis wrote:
+
+> > Please amend this to the patch 1 to not break bisectability.
+> 
+> I see your point but this series is meant to be applied as a whole, i
+> didn't notice this bug until i tested the code with debugging enabled
+> (which is off by default), that's why it's "last minute fix". Is it
+> really that much needed to repost the first patch ? I mean the patch
+> series works and doesn't introduce any problems...
+
+The reason is that git-bisect divides the number of commits in half and
+checks out the middle commit.  That commit make be a broken one.
+Hitting one bug while hunting another is not nice.
+
+Besides, nobody wants to apply a known bad patch.
+
+It would be great if you repost fixed patches.  If you are not using
+stgit, please try it.  I would make it easy to return to older patches
+and change them.  "stg edit -d" even allows editing the patch.
+
+-- 
+Regards,
+Pavel Roskin
