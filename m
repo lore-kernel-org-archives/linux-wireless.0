@@ -1,58 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:57149 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750974AbYGYP5Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2008 11:57:16 -0400
-Message-ID: <4889F7D6.4010706@lwfinger.net> (sfid-20080725_175720_633909_B3B23E18)
-Date: Fri, 25 Jul 2008 10:57:10 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from bu3sch.de ([62.75.166.246]:38144 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752979AbYG1SR2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jul 2008 14:17:28 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH RFC/RFT] b43: Rewrite TX power adjustment
+Date: Mon, 28 Jul 2008 20:17:04 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <200807261726.53279.mb@bu3sch.de>
+In-Reply-To: <200807261726.53279.mb@bu3sch.de>
 MIME-Version: 1.0
-To: free_beer_for_all@yahoo.com
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: WLAN regression before this morning
-References: <761713.15647.qm@web46115.mail.sp1.yahoo.com>
-In-Reply-To: <761713.15647.qm@web46115.mail.sp1.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200807282017.04979.mb@bu3sch.de> (sfid-20080728_201732_182985_D6C030CC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-barry bouwsma wrote:
-> Servus,
-> 
-> Last successfully built and used kernel was 2.6.26-rc8, about
-> the start of 29.Jun UTC or so.
-> 
-> Present build of GIT 2.6.26 during the merge window, updated
-> just before 06h UTC, today, 25.Jul.
-> 
-> With today's kernel, I am not even able to associate with a
-> WLAN less than two metres away from my ZD1211rw type USB
-> adapter, to say nothing of more distant WLANs with which I
-> could authenticate with the earlier code without problems --
-> I don't even come near the associate stage.
-> 
-> The networks all show up as expected in `iwlist wlan1 scan'
-> with decent strengths; while all I get from dmesg is
-> [ 1016.829827] wlan1: authenticate with AP 00:1X:YZ:AB:23:45
-> [ 1017.032769] wlan1: authenticate with AP 00:1X:YZ:AB:23:45
-> [ 1017.234213] wlan1: authenticate with AP 00:1X:YZ:AB:23:45
-> [ 1017.435402] wlan1: authentication with AP 00:1X:YZ:AB:23:45 timed out
-> 
-> 
-> If I've hosed myself with a new .config option, I'll be kicking
-> meself where it hurts most.  Else, back to -rc8 to both send
-> this message and to regain 'net access to do other needed so-
-> called `work', so sorry I haven't narrowed this down further...
-> 
-> And I'll feel me a fool if the failure is because I went from
-> a different (BSD) OS into 2.6.26-merge, while going from that
-> into -rc8 I promptly associate as desired.
+On Saturday 26 July 2008 17:26:52 Michael Buesch wrote:
+> This is an experimental attempt for fixing the currently-not-so-good
+> TX power adjustment.
 
-I too have a problem with wireless in the current 2.6.26-gitX kernels. If you 
-have done the git pull, you can try bisecting to find the problem. Use 'git 
-bisect good v2.6.26' to mark a known good point. If you don't wish to take the 
-time bisecting, then issue a 'git checkout v2.6.26'. That should give you a 
-kernel that works.
+Hm, is anybody going to test this, or are there really no transmission
+problems left? :)
 
-Larry
+But please note that current wireless-testing tree seems to have some
+unrelated TX issues in mac80211 (see the discussions about the qdisc
+and skb->cb stuff.)
+
+In any case, I'd like to have some initial testing of this patch? :)
+I think it really is a good step forward, once all bugs in it are fixed.
+
+-- 
+Greetings Michael.
