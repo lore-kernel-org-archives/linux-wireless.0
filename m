@@ -1,99 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:51708 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753097AbYG3Jry (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 05:47:54 -0400
-Date: Wed, 30 Jul 2008 02:47:24 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: "Zdenek Kabelac" <zdenek.kabelac@gmail.com>
-Cc: "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: INFO: possible recursive locking detected dev_deactivate
-Message-Id: <20080730024724.519f0662.akpm@linux-foundation.org> (sfid-20080730_114802_356719_ABA04A7F)
-In-Reply-To: <c4e36d110807290453h7381adb8l8b8785f434e968ac@mail.gmail.com>
-References: <c4e36d110807290453h7381adb8l8b8785f434e968ac@mail.gmail.com>
+Received: from mx1.redhat.com ([66.187.233.31]:37230 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756686AbYG1PB4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jul 2008 11:01:56 -0400
+Subject: Re: [PATCH 1/6] mac80211: allow no mac address until firmware load
+From: Dan Williams <dcbw@redhat.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Luis Carlos Cobo <luisca@cozybit.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200807281600.39103.mb@bu3sch.de>
+References: <48763814.27052c0a.1794.2095@mx.google.com>
+	 <200807281544.33509.mb@bu3sch.de> <1217253397.6364.2.camel@localhost>
+	 <200807281600.39103.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Mon, 28 Jul 2008 10:59:34 -0400
+Message-Id: <1217257174.28198.27.camel@localhost.localdomain> (sfid-20080728_170201_708567_9D9743F7)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2008-07-28 at 16:00 +0200, Michael Buesch wrote:
+> On Monday 28 July 2008 15:56:37 Luis Carlos Cobo wrote:
+> > On Mon, 2008-07-28 at 15:44 +0200, Michael Buesch wrote:
+> > > Well, I think that really is pretty weird and it is confusing to the
+> > > user to see that pseudo random MAC that changes suddenly when the device is
+> > > initialized. For the human user (so everybody but me), it would be better
+> > > to have the MAC all-zeros until the firmware loaded. So it would be obvious
+> > > that the MAC is not set, yet. I think userspace
+> > 
+> > The problem is that all-zeroes is actually a valid mac address, owned by
+> > Xerox (http://standards.ieee.org/regauth/oui/oui.txt) Not that it will
+> > probably cause us any problem, but a multicast address is afaik an
+> > invalid mac for a device. Should we go for 01:allzeros?
+> 
+> If that's really a problem, yes. 01:00:00:00:00:00 is still better
+> than a pseudo random MAC, IMO. It's immediately obvious to the user
+> that the MAC currently is not set.
 
-(cc's added)
+How about 44:44:44:44:44:44 like orinoco uses for bogus BSSID?  If we
+can, let's not keep creating yet more bogus MAC addresses.
 
-On Tue, 29 Jul 2008 13:53:39 +0200 "Zdenek Kabelac" <zdenek.kabelac@gmail.com> wrote:
+Dan
 
-> Hi
-> 
-> With kernel from yesterdays' git (08/07/28) (sorry I've already
-> deleted any traces for more precise commit number) - I've just found
-> the bactrace in the log running already today's 2.6.27-rc1.
-> 
-> Happened during the reboot of 2.6.26
-> As usually T61, 2GB, C2D
-> 
-> (wlan0): now unmanaged
-> (wlan0): device state change: 3 -> 1
-> (wlan0): cleaning up...
-> (wlan0): taking down device.
-> 
-> =============================================
-> [ INFO: possible recursive locking detected ]
-> 2.6.26 #47
-> ---------------------------------------------
-> NetworkManager/2623 is trying to acquire lock:
->  (_xmit_IEEE80211#2){-...}, at: [<ffffffff812a3cd2>] dev_deactivate+0x82/0x150
-> 
-> but task is already holding lock:
->  (_xmit_IEEE80211#2){-...}, at: [<ffffffff812a3cd2>] dev_deactivate+0x82/0x150
-> 
-> other info that might help us debug this:
-> 2 locks held by NetworkManager/2623:
->  #0:  (rtnl_mutex){--..}, at: [<ffffffff8129ca0a>] rtnetlink_rcv+0x1a/0x40
->  #1:  (_xmit_IEEE80211#2){-...}, at: [<ffffffff812a3cd2>]
-> dev_deactivate+0x82/0x150
-> 
-> stack backtrace:
-> Pid: 2623, comm: NetworkManager Not tainted 2.6.26 #47
-> 
-> Call Trace:
->  [<ffffffff81068b4a>] __lock_acquire+0xcea/0x13b0
->  [<ffffffff810674fd>] ? mark_held_locks+0x4d/0x90
->  [<ffffffff810657a4>] ? get_lock_stats+0x34/0x70
->  [<ffffffff812a3cd2>] ? dev_deactivate+0x82/0x150
->  [<ffffffff810692a6>] lock_acquire+0x96/0xe0
->  [<ffffffff812a3cd2>] ? dev_deactivate+0x82/0x150
->  [<ffffffff81315161>] _spin_lock+0x31/0x60
->  [<ffffffff812a3cd2>] dev_deactivate+0x82/0x150
->  [<ffffffff81292885>] dev_close+0x65/0xc0
->  [<ffffffffa013a9d9>] ieee80211_stop+0x339/0x4e0 [mac80211]
->  [<ffffffff81292896>] dev_close+0x76/0xc0
->  [<ffffffff81292461>] dev_change_flags+0xa1/0x1e0
->  [<ffffffff8129b774>] do_setlink+0x214/0x3a0
->  [<ffffffff81318c60>] ? sub_preempt_count+0x80/0x120
->  [<ffffffff81314e40>] ? _read_unlock+0x30/0x60
->  [<ffffffff8129bacd>] rtnl_setlink+0x10d/0x150
->  [<ffffffff8129cbbd>] rtnetlink_rcv_msg+0x18d/0x240
->  [<ffffffff8129ca30>] ? rtnetlink_rcv_msg+0x0/0x240
->  [<ffffffff812a77e9>] netlink_rcv_skb+0x89/0xb0
->  [<ffffffff8129ca19>] rtnetlink_rcv+0x29/0x40
->  [<ffffffff812a720d>] netlink_unicast+0x2cd/0x2e0
->  [<ffffffff8128b01e>] ? __alloc_skb+0x6e/0x150
->  [<ffffffff812a7424>] netlink_sendmsg+0x204/0x300
->  [<ffffffff81314e5e>] ? _read_unlock+0x4e/0x60
->  [<ffffffff812827d7>] sock_sendmsg+0x127/0x140
->  [<ffffffff81057120>] ? autoremove_wake_function+0x0/0x40
->  [<ffffffff810677ad>] ? trace_hardirqs_on+0xd/0x10
->  [<ffffffff8106773b>] ? trace_hardirqs_on_caller+0x14b/0x1b0
->  [<ffffffff812835f7>] ? move_addr_to_kernel+0x57/0x60
->  [<ffffffff8128c04f>] ? verify_iovec+0x3f/0xe0
->  [<ffffffff81282979>] sys_sendmsg+0x189/0x320
->  [<ffffffff812836fd>] ? sys_sendto+0xfd/0x120
->  [<ffffffff810e1a8c>] ? d_free+0x6c/0x80
->  [<ffffffff810cec01>] ? __fput+0x171/0x1c0
->  [<ffffffff8106773b>] ? trace_hardirqs_on_caller+0x14b/0x1b0
->  [<ffffffff813148d6>] ? trace_hardirqs_on_thunk+0x3a/0x3f
->  [<ffffffff8100c5bb>] system_call_fastpath+0x16/0x1b
-> 
-> iwl3945 0000:03:00.0: PCI INT A disabled
 
