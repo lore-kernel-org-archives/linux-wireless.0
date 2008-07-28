@@ -1,90 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53561 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751427AbYGSApx (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.237]:9730 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751380AbYG1LVX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 20:45:53 -0400
-Message-Id: <20080719004517.436644000@sipsolutions.net> (sfid-20080719_024556_447872_7D42A4A4)
-References: <20080719004147.795661000@sipsolutions.net>
-Date: Sat, 19 Jul 2008 02:41:48 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: David Miller <davem@davemloft.net>,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [RFC 1/3] mac80211: sane arguments to ieee80211_ht_agg_queue_remove
-Mime-Version: 1.0
+	Mon, 28 Jul 2008 07:21:23 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so4377484rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 04:21:23 -0700 (PDT)
+Message-ID: <1ba2fa240807280421x58b72273x7b148e796e4f2c87@mail.gmail.com> (sfid-20080728_132126_267022_4787E4E0)
+Date: Mon, 28 Jul 2008 14:21:23 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Angel Mieres" <mieres.angel@gmail.com>
+Subject: Re: IWL5000
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240807280421s48b26b58n8db03f75bfa4c206@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <5f68ea7b0807280351u4f6b6a59v8304a7a3b53436be@mail.gmail.com>
+	 <1ba2fa240807280421s48b26b58n8db03f75bfa4c206@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/main.c |    8 +++++---
- net/mac80211/wme.c  |    7 +------
- net/mac80211/wme.h  |    3 +--
- 3 files changed, 7 insertions(+), 11 deletions(-)
+On Mon, Jul 28, 2008 at 2:21 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+> On Mon, Jul 28, 2008 at 1:51 PM, Angel Mieres <mieres.angel@gmail.com> wrote:
+>> Hi all,
+>>
+>> Im trying to get working intel wifi link 5100 on ubuntu 8.0.4, but i
+>> have some problems; the procedure that i follow was:
+>>    1.- I try to get working with ndiswrapper, i get the lastest
+>> drivers availables for windowz, load the inf file,
+>>     check that device was recognize by ndiswrapper(installed & device
+>> present), but when i load the ndiswrapper module, it appears:
+>>     "unknown symbol: ntoskrnl.exe:'KeBugCheck'; couldn't prepare
+>> driver 'netw5x32'"
+>>      So, i decide to take a look of compat-wireless project that
+>> support this driver(right?).
+>>    2.- I get the firmware of iwl5000, copy the firmware on
+>> /lib/firmware, i get the latest compat-wireless-2.6 tar file, after
+>> this,
+>>       I compile the drivers(make && make install), i try load the
+>> driver; at dmesg it appears that ipw4965 loads perfectly but the led
+>> of the wifi, it doesn't work and
+>>       no one devices appear to be installed.
+>>
+>> So, someone have this NIC working? Please help me a bit. All
+>> suggestions are welcome.
+>> Thanks guys
+>
+> Use iwlwif-2.6.git master branch. Merging into wireless-testing.git is
+> rather stalled right now.
+> If your devices is not recognized please send me the devices ids of your card.
+> Thanks
+> Tomas
 
---- everything.orig/net/mac80211/main.c	2008-07-18 23:52:25.000000000 +0200
-+++ everything/net/mac80211/main.c	2008-07-19 00:14:30.000000000 +0200
-@@ -644,7 +644,8 @@ int ieee80211_start_tx_ba_session(struct
- 		/* No need to requeue the packets in the agg queue, since we
- 		 * held the tx lock: no packet could be enqueued to the newly
- 		 * allocated queue */
--		ieee80211_ht_agg_queue_remove(local, sta, tid, 0);
-+		ieee80211_ht_agg_queue_remove(local, sta->tid_to_tx_q[tid], false);
-+		sta->tid_to_tx_q[tid] = ieee80211_num_queues(hw);
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 		printk(KERN_DEBUG "BA request denied - HW unavailable for"
- 					" tid %d\n", tid);
-@@ -740,7 +741,7 @@ int ieee80211_stop_tx_ba_session(struct 
- 		goto stop_BA_exit;
- 	}
- 
--stop_BA_exit:
-+ stop_BA_exit:
- 	spin_unlock_bh(&sta->lock);
- 	rcu_read_unlock();
- 	return ret;
-@@ -852,7 +853,8 @@ void ieee80211_stop_tx_ba_cb(struct ieee
- 
- 	agg_queue = sta->tid_to_tx_q[tid];
- 
--	ieee80211_ht_agg_queue_remove(local, sta, tid, 1);
-+	ieee80211_ht_agg_queue_remove(local, agg_queue, true);
-+	sta->tid_to_tx_q[tid] = ieee80211_num_queues(hw);
- 
- 	/* We just requeued the all the frames that were in the
- 	 * removed queue, and since we might miss a softirq we do
---- everything.orig/net/mac80211/wme.c	2008-07-19 00:07:24.000000000 +0200
-+++ everything/net/mac80211/wme.c	2008-07-19 00:14:57.000000000 +0200
-@@ -223,15 +223,10 @@ int ieee80211_ht_agg_queue_add(struct ie
-  * the caller needs to hold netdev_get_tx_queue(local->mdev, X)->lock
-  */
- void ieee80211_ht_agg_queue_remove(struct ieee80211_local *local,
--				   struct sta_info *sta, u16 tid,
--				   u8 requeue)
-+				   u16 agg_queue, bool requeue)
- {
--	int agg_queue = sta->tid_to_tx_q[tid];
--	struct ieee80211_hw *hw = &local->hw;
--
- 	/* return the qdisc to the pool */
- 	clear_bit(agg_queue, local->queue_pool);
--	sta->tid_to_tx_q[tid] = ieee80211_num_queues(hw);
- 
- 	if (requeue) {
- 		ieee80211_requeue(local, agg_queue);
---- everything.orig/net/mac80211/wme.h	2008-07-19 00:08:04.000000000 +0200
-+++ everything/net/mac80211/wme.h	2008-07-19 00:08:28.000000000 +0200
-@@ -27,8 +27,7 @@ u16 ieee80211_select_queue(struct net_de
- int ieee80211_ht_agg_queue_add(struct ieee80211_local *local,
- 			       struct sta_info *sta, u16 tid);
- void ieee80211_ht_agg_queue_remove(struct ieee80211_local *local,
--				   struct sta_info *sta, u16 tid,
--				   u8 requeue);
-+				   u16 agg_queue, bool requeue);
- void ieee80211_requeue(struct ieee80211_local *local, int queue);
- 
- #endif /* _WME_H */
-
--- 
-
+Fix: iwlwifi-2.6.git
