@@ -1,74 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:40644 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753474AbYG2RxX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 13:53:23 -0400
-Subject: [PATCH] libertas: only enable rtap with mesh firmware
-From: Dan Williams <dcbw@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luis Carlos Cobo <luisca@cozybit.com>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	libertas-dev@lists.infradead.org
-Content-Type: text/plain
-Date: Tue, 29 Jul 2008 13:50:39 -0400
-Message-Id: <1217353839.25221.10.camel@localhost.localdomain> (sfid-20080729_195327_363514_356D0522)
-Mime-Version: 1.0
+Received: from wf-out-1314.google.com ([209.85.200.168]:32944 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751816AbYG1Ooj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jul 2008 10:44:39 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so5774694wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 07:44:38 -0700 (PDT)
+Message-ID: <40f31dec0807280744r22d9d279n3c6713f16ba29ac1@mail.gmail.com> (sfid-20080728_164441_832943_598E3E62)
+Date: Mon, 28 Jul 2008 17:44:38 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: [ath5k-devel] [PATCH 12/12] ath5k: Fix a compilation error after reg list update
+Cc: "Jiri Slaby" <jirislaby@gmail.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@gmail.com
+In-Reply-To: <1217250601.2441.20.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080720035221.GL7440@makis> <4885F055.8000304@gmail.com>
+	 <40f31dec0807280604m19a8c511nf2568bb7aa357b90@mail.gmail.com>
+	 <1217250601.2441.20.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since only mesh-enabled firmware has the CMD_802_11_MONITOR_MODE on
-which the rtap functionality depends, only expose the rtap functionality
-when mesh is also available.
+2008/7/28 Pavel Roskin <proski@gnu.org>:
+> On Mon, 2008-07-28 at 16:04 +0300, Nick Kossifidis wrote:
+>
+>> > Please amend this to the patch 1 to not break bisectability.
+>>
+>> I see your point but this series is meant to be applied as a whole, i
+>> didn't notice this bug until i tested the code with debugging enabled
+>> (which is off by default), that's why it's "last minute fix". Is it
+>> really that much needed to repost the first patch ? I mean the patch
+>> series works and doesn't introduce any problems...
+>
+> The reason is that git-bisect divides the number of commits in half and
+> checks out the middle commit.  That commit make be a broken one.
+> Hitting one bug while hunting another is not nice.
+>
+> Besides, nobody wants to apply a known bad patch.
+>
+> It would be great if you repost fixed patches.  If you are not using
+> stgit, please try it.  I would make it easy to return to older patches
+> and change them.  "stg edit -d" even allows editing the patch.
+>
+> --
+> Regards,
+> Pavel Roskin
+>
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+O.K. then i'll repost the first patch asap (i'm still in Ottawa :P)...
 
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index abd6d9e..3e29ed7 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -297,9 +297,7 @@ static ssize_t lbs_rtap_set(struct device *dev,
- 			lbs_add_rtap(priv);
- 		}
- 		priv->monitormode = monitor_mode;
--	}
--
--	else {
-+	} else {
- 		if (!priv->monitormode)
- 			return strlen(buf);
- 		priv->monitormode = 0;
-@@ -1242,8 +1240,6 @@ int lbs_start_card(struct lbs_private *priv)
- 		lbs_pr_err("cannot register ethX device\n");
- 		goto done;
- 	}
--	if (device_create_file(&dev->dev, &dev_attr_lbs_rtap))
--		lbs_pr_err("cannot register lbs_rtap attribute\n");
- 
- 	lbs_update_channel(priv);
- 
-@@ -1275,6 +1271,13 @@ int lbs_start_card(struct lbs_private *priv)
- 
- 			if (device_create_file(&dev->dev, &dev_attr_lbs_mesh))
- 				lbs_pr_err("cannot register lbs_mesh attribute\n");
-+
-+			/* While rtap isn't related to mesh, only mesh-enabled
-+			 * firmware implements the rtap functionality via
-+			 * CMD_802_11_MONITOR_MODE.
-+			 */
-+			if (device_create_file(&dev->dev, &dev_attr_lbs_rtap))
-+				lbs_pr_err("cannot register lbs_rtap attribute\n");
- 		}
- 	}
- 
-@@ -1306,9 +1309,9 @@ void lbs_stop_card(struct lbs_private *priv)
- 	netif_carrier_off(priv->dev);
- 
- 	lbs_debugfs_remove_one(priv);
--	device_remove_file(&dev->dev, &dev_attr_lbs_rtap);
- 	if (priv->mesh_tlv) {
- 		device_remove_file(&dev->dev, &dev_attr_lbs_mesh);
-+		device_remove_file(&dev->dev, &dev_attr_lbs_rtap);
- 	}
- 
- 	/* Flush pending command nodes */
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
