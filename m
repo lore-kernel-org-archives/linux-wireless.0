@@ -1,63 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45299
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753928AbYGWWaA (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.177]:9642 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750870AbYG1NEj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 18:30:00 -0400
-Date: Wed, 23 Jul 2008 15:30:00 -0700 (PDT)
-Message-Id: <20080723.153000.172383135.davem@davemloft.net> (sfid-20080724_003008_440081_DED1ED3A)
-To: wangchen@cn.fujitsu.com
-Cc: markus@trippelsdorf.de, ag@alessandroguido.name,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] skge: resolve tx multiqueue bug
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <48874C6A.1020604@cn.fujitsu.com>
-References: <20080723101827.GA2236@gentoox2.trippelsdorf.de>
-	<20080723140347.GA2245@gentoox2.trippelsdorf.de>
-	<48874C6A.1020604@cn.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 28 Jul 2008 09:04:39 -0400
+Received: by py-out-1112.google.com with SMTP id p76so3281101pyb.10
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 06:04:38 -0700 (PDT)
+Message-ID: <40f31dec0807280604m19a8c511nf2568bb7aa357b90@mail.gmail.com> (sfid-20080728_150442_645761_53D448BD)
+Date: Mon, 28 Jul 2008 16:04:37 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Jiri Slaby" <jirislaby@gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 12/12] ath5k: Fix a compilation error after reg list update
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mcgrof@gmail.com
+In-Reply-To: <4885F055.8000304@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080720035221.GL7440@makis> <4885F055.8000304@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wang Chen <wangchen@cn.fujitsu.com>
-Date: Wed, 23 Jul 2008 23:21:14 +0800
+2008/7/22 Jiri Slaby <jirislaby@gmail.com>:
+> On 07/20/2008 05:52 AM, Nick Kossifidis wrote:
+>>  Last minute fix...
+>>
+>>  AR5K_CPCORN is changed to AR5K_CPCOVF in reg list update so we have to update debug.c in order to compile
+>>
+>>  Changes-licensed-under: ISC
+>>  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+>>
+>> ---
+>> diff --git a/drivers/net/wireless/ath5k/debug.c b/drivers/net/wireless/ath5k/debug.c
+>> index 41d5fa3..6fa6c8e 100644
+>> --- a/drivers/net/wireless/ath5k/debug.c
+>> +++ b/drivers/net/wireless/ath5k/debug.c
+>> @@ -129,7 +129,7 @@ static struct reg regs[] = {
+>>       REG_STRUCT_INIT(AR5K_CPC1),
+>>       REG_STRUCT_INIT(AR5K_CPC2),
+>>       REG_STRUCT_INIT(AR5K_CPC3),
+>> -     REG_STRUCT_INIT(AR5K_CPCORN),
+>> +     REG_STRUCT_INIT(AR5K_CPCOVF),
+>>       REG_STRUCT_INIT(AR5K_RESET_CTL),
+>>       REG_STRUCT_INIT(AR5K_SLEEP_CTL),
+>>       REG_STRUCT_INIT(AR5K_INTPEND),
+>
+> Please amend this to the patch 1 to not break bisectability.
 
-> Markus Trippelsdorf said the following on 2008-7-23 22:03:
-> > On Wed, Jul 23, 2008 at 12:18:27PM +0200, Markus Trippelsdorf wrote:
-> >> On Wed, Jul 23, 2008 at 04:50:13PM +0800, Wang Chen wrote:
-> >>> Markus Trippelsdorf said the following on 2008-7-23 13:40:
-> >>>> On Tue, Jul 22, 2008 at 11:54:26AM +0200, Alessandro Guido wrote:
-> >>>>> Got a WARNING this morning (2.6.26-05752-g93ded9b) and I think it's related.
-> >>>> Same thing here (latest git):
-> >>>>
-> >>>> skge eth1: enabling interface
-> >>>> skge eth1: disabling interface
-> >>>> ------------[ cut here ]------------
-> >>>> WARNING: at net/core/dev.c:1344 __netif_schedule+0x24/0x6d()
-> >>>> Pid: 1904, comm: ip Not tainted 2.6.26-06077-gc010b2f #33
-> >>>>  [<ffffffff8020b3eb>] system_call_after_swapgs+0x7b/0x80
-> >> ...
-> >>>> ---[ end trace 92936ef183e09876 ]---
-> >>>> skge eth1: enabling interface
-> >>>> skge eth1: Link is up at 100 Mbps, full duplex, flow control both
-> >>>>
-> >>> Markus, please try this.
-> >>>
-> >>> - Add netif_start_queue() in ->open()
-> >>> - netif_carrier_*() is enough, remove netif_*_queue()
-> >> Unfortunately, your patch does not fix this. I still get the same warning.
-> >>
-> > 
-> > This patch works for me:
-> 
-> Your patch works for me too. So I think it's better than mine. :)
-> 
-> Tested-by: Wang Chen <wangchen@cn.fujitsu.com>
-> 
-> Dave, since Markus and me tested this patch, would you please apply it?
+I see your point but this series is meant to be applied as a whole, i
+didn't notice this bug until i tested the code with debugging enabled
+(which is off by default), that's why it's "last minute fix". Is it
+really that much needed to repost the first patch ? I mean the patch
+series works and doesn't introduce any problems...
 
-I can't, it's whitespace damaged.  All the tabs are turned into spaces,
-also there is no signoff from Markus.
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
