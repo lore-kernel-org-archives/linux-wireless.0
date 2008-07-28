@@ -1,35 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.179]:30248 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751025AbYGWXeJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 19:34:09 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so1882620ika.5
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 16:34:06 -0700 (PDT)
-Date: Wed, 23 Jul 2008 18:35:34 -0500
-From: "Carlos R. Mafra" <crmafra2@gmail.com>
-To: David Miller <davem@davemloft.net>
-Cc: tomasw@gmail.com, tytso@mit.edu, yi.zhu@intel.com,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Potential iwlwifi locking problem in 2.6.26-git9
-Message-ID: <20080723233534.GA9975@localhost> (sfid-20080724_013414_709927_380FCE2D)
-References: <20080723214938.GA8034@mit.edu> <1ba2fa240807231502t1c4ce7d5k9b8acbcaed4d166a@mail.gmail.com> <20080723225820.GA4099@localhost> <20080723.161100.219406395.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080723.161100.219406395.davem@davemloft.net>
+Received: from mx1.redhat.com ([66.187.233.31]:40457 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750740AbYG1LUE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jul 2008 07:20:04 -0400
+Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
+	through rfkill
+From: Dan Williams <dcbw@redhat.com>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Philip Langdale <philipl@overt.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	toshiba_acpi@memebeam.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20080728030437.GC10672@khazad-dum.debian.net>
+References: <488CBBAB.6010508@overt.org>
+	 <200807272259.44364.IvDoorn@gmail.com> <488CF6D8.6000700@overt.org>
+	 <20080728030437.GC10672@khazad-dum.debian.net>
+Content-Type: text/plain
+Date: Mon, 28 Jul 2008 07:17:43 -0400
+Message-Id: <1217243863.24609.6.camel@localhost.localdomain> (sfid-20080728_132008_852164_0400B837)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed 23.Jul'08 at 16:11:00 -0700, David Miller wrote:
-> From: "Carlos R. Mafra" <crmafra2@gmail.com>
-> Date: Wed, 23 Jul 2008 17:59:06 -0500
+On Mon, 2008-07-28 at 00:04 -0300, Henrique de Moraes Holschuh wrote:
+> On Sun, 27 Jul 2008, Philip Langdale wrote:
+> > Ivo van Doorn wrote:
+> >>
+> >> You don't seem to be using rfkill_force_state() which is required to inform the rfkill
+> >> layer about the state changes.
+> >
+> > Hmm? According to rfkill.txt, one can either use force_state() or implement the
+> > get_state() hook, and I have done the later. If this is not the correct method,
+> > can you please explain when I should be using force_state?
 > 
-> > I am trying to bisect it, but I am facing some difficulties with compilation
-> > problems and non-booting kernels.
-> 
-> We know what the problem is and are discussing it on netdev
-> and linux-wireless already.
+> There is a bunch of rfkill bug fix patches that was not merged in
+> wireless-testing yet (which is a pity, it would be really good if they could
+> go into 2.6.27).  One of those patches fixes the docs to make it clear that
 
-Thank you for letting me know, David!
-I appreciate that deeply.
+Lots of wireless people (including John) were at OLS this past week, so
+it's not entirely surprising that patch merging might have been slow.
+
+Dan
+
+> rfkill_force_state() is the way to go if you have events of any sort.
+> 
+> The big difference from get_state() is that rfkill_force_state() propagates
+> state changes as soon as your driver notices them and sends them to rfkill
+> through rfkill_force_state()... while get_state() can only do that when
+> someone asks rfkill about the current state.
+> 
+
