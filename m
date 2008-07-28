@@ -1,61 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:38137 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751512AbYGPL34 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2008 07:29:56 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so1786913yxm.1
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jul 2008 04:29:55 -0700 (PDT)
-Message-ID: <1ba2fa240807160429n22eed2cer17c88119bf50ac84@mail.gmail.com> (sfid-20080716_133000_730953_96401949)
-Date: Wed, 16 Jul 2008 14:29:54 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: REVISED AGENDA -- Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+Received: from mx1.redhat.com ([66.187.233.31]:36777 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751138AbYG1OAQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jul 2008 10:00:16 -0400
+Subject: Re: [PATCH 1/6] mac80211: allow no mac address until firmware load
+From: Dan Williams <dcbw@redhat.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Luis Carlos Cobo <luisca@cozybit.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <1216197607.3422.10.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080709190915.GA8238@tuxdriver.com>
-	 <20080715182654.GA5969@tuxdriver.com>
-	 <1216197607.3422.10.camel@johannes.berg>
+In-Reply-To: <200807281544.33509.mb@bu3sch.de>
+References: <48763814.27052c0a.1794.2095@mx.google.com>
+	 <1217172136.2700.21.camel@localhost.localdomain>
+	 <1217251433.12662.5.camel@johannes.berg>  <200807281544.33509.mb@bu3sch.de>
+Content-Type: multipart/mixed; boundary="=-MZP/RP5NocfgB01VjIc1"
+Date: Mon, 28 Jul 2008 09:57:45 -0400
+Message-Id: <1217253465.28198.20.camel@localhost.localdomain> (sfid-20080728_160021_108673_65E7236F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 16, 2008 at 11:40 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2008-07-15 at 14:26 -0400, John W. Linville wrote:
->
->> 0900  Status Reports
->>
->>       Overview of where things stand today
->>
->>       - 802.11n
->>
->>       - QoS/Multiqueue
->
-> It might make sense to do these the other way around since 11n depends
-> on the MQ stuff. I can talk about davem's recent changes that remove
-> most of the code, but other than that I think we're pretty much set.
->
->> 1030  Current Work
->>
->>       Short presentations/discussions about work in progress
->>
->>       - access point mode
->>
->>       - cfg80211/nl80211
->>               - time to push to replace WEXT?
->>               - tool enhancements and/or userland support?
->
-> Both of those are pretty much stalled now, apparently because I was the
-> only one investing time into them and am no longer doing anything at the
-> moment. I can give a five-minute overview over what we need/want for
-> each of those I guess.
 
-I believe as WEXT limitations are more visible mainly in the context
-of fullmac chips.
-A discussion that defining new interface or it course will be very
-important. cfg80211 came a bit ahead of it's time and I  believe
-actually now we can spin it again.
-Tomas
+--=-MZP/RP5NocfgB01VjIc1
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+
+On Mon, 2008-07-28 at 15:44 +0200, Michael Buesch wrote:
+> On Monday 28 July 2008 15:23:53 Johannes Berg wrote:
+> > On Sun, 2008-07-27 at 11:22 -0400, Dan Williams wrote:
+> > > On Thu, 2008-07-10 at 16:57 +0200, Luis Carlos Cobo wrote:
+> > > > Originally by Johannes Berg. This patch adds support for devices that do not
+> > > > report their MAC address until the firmware is loaded. While the address is not
+> > > > known, a multicast on is used.
+> > > 
+> > > Johannes, thoughts on this?  Is there a better way to do it for devices
+> > > that don't know their MAC address until firmware load?
+> > 
+> > I actually wrote this patch, but largely I don't care. It seemed that
+> > having unique MAC addresses would screw up less with udev, but maybe we
+> > can just leave it zeroed until we know?
+> 
+> Well, I think that really is pretty weird and it is confusing to the
+> user to see that pseudo random MAC that changes suddenly when the device is
+> initialized. For the human user (so everybody but me), it would be better
+> to have the MAC all-zeros until the firmware loaded. So it would be obvious
+> that the MAC is not set, yet. I think userspace
+> tools should just be fixed, if they have problems with that.
+
+Agreed.
+
+> (What are the udev problems, btw?)
+
+People seem to want persistent device names.  Since the kernel doesn't
+provide stable device/bus enumeration, there are udev hacks (see
+attached from Fedora 9) that read the MAC address of the card on
+hot-plug and then assign it to a cached device name so that every time I
+plug in my Netgear MA401 it gets "eth2".
+
+Same thing as putting UUIDs on partitions and in /etc/fstab to make sure
+your internal SATA drive is always sda no matter what USB stuff you plug
+in.
+
+The question is, when the MAC address gets updated, whether udev will
+recognize that change and re-name the device to the cached value.
+
+Dan
+
+--=-MZP/RP5NocfgB01VjIc1
+Content-Disposition: attachment; filename=75-persistent-net-generator.rules
+Content-Type: text/plain; name=75-persistent-net-generator.rules; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+# do not edit this file, it will be overwritten on update
+
+# these rules generate rules for persistent network device naming
+#
+# variables used to communicate:
+#   MATCHADDR             MAC address used for the match
+#   MATCHID               bus_id used for the match
+#   MATCHDRV              driver name used for the match
+#   MATCHIFTYPE           interface type match
+#   COMMENT               comment to add to the generated rule
+#   INTERFACE_NAME        requested name supplied by external tool
+#   INTERFACE_NEW         new interface name returned by rule writer
+
+ACTION!="add", GOTO="persistent_net_generator_end"
+SUBSYSTEM!="net", GOTO="persistent_net_generator_end"
+
+# ignore the interface if a name has already been set
+NAME=="?*", GOTO="persistent_net_generator_end"
+
+# device name whitelist
+KERNEL!="eth*|ath*|wlan*[0-9]|msh*|ra*|sta*|ctc*|lcs*|hsi*", GOTO="persistent_net_generator_end"
+
+# ignore Xen virtual interfaces
+SUBSYSTEMS=="xen", GOTO="persistent_net_generator_end"
+
+# read MAC address
+ENV{MATCHADDR}="$attr{address}"
+
+# match interface type
+ENV{MATCHIFTYPE}="$attr{type}"
+
+# do not use "locally administered" MAC address
+ENV{MATCHADDR}=="?[2367abef]:*", ENV{MATCHADDR}=""
+
+# do not use empty address
+ENV{MATCHADDR}=="00:00:00:00:00:00", ENV{MATCHADDR}=""
+
+# build comment line for generated rule:
+SUBSYSTEMS=="pci", ENV{COMMENT}="PCI device $attr{vendor}:$attr{device} ($driver)"
+SUBSYSTEMS=="usb", ENV{COMMENT}="USB device 0x$attr{idVendor}:0x$attr{idProduct} ($driver)"
+SUBSYSTEMS=="pcmcia", ENV{COMMENT}="PCMCIA device $attr{card_id}:$attr{manf_id} ($driver)"
+SUBSYSTEMS=="ieee1394", ENV{COMMENT}="Firewire device $attr{host_id})"
+
+# ibmveth likes to use "locally administered" MAC addresses
+DRIVERS=="ibmveth", ENV{MATCHADDR}="$attr{address}", ENV{COMMENT}="ibmveth ($id)"
+
+# S/390 uses id matches only, do not use MAC address match
+SUBSYSTEMS=="ccwgroup", ENV{COMMENT}="S/390 $driver device at $id", ENV{MATCHID}="$id", ENV{MATCHDRV}="$driver", ENV{MATCHADDR}=""
+
+# see if we got enough data to create a rule
+ENV{MATCHADDR}=="", ENV{MATCHID}=="", ENV{INTERFACE_NAME}=="", GOTO="persistent_net_generator_end"
+
+# default comment
+ENV{COMMENT}=="", ENV{COMMENT}="net device ($attr{driver})"
+
+# write rule
+DRIVERS=="?*", IMPORT{program}="write_net_rules"
+
+# rename interface if needed
+ENV{INTERFACE_NEW}=="?*", NAME="$env{INTERFACE_NEW}"
+
+LABEL="persistent_net_generator_end"
+
+
+--=-MZP/RP5NocfgB01VjIc1--
+
