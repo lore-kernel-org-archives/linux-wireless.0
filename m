@@ -1,167 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50774
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1759709AbYGCHF7 (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:48924 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751991AbYG1Wvy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:05:59 -0400
-Date: Thu, 03 Jul 2008 00:05:58 -0700 (PDT)
-Message-Id: <20080703.000558.10591431.davem@davemloft.net> (sfid-20080703_103231_037444_69E539FC)
-To: netdev@vger.kernel.org
-CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
-Subject: [PATCH 39/39]: niu: Add TX multiqueue support.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 28 Jul 2008 18:51:54 -0400
+Message-ID: <488E4D7E.6010003@lwfinger.net> (sfid-20080729_005158_605957_FCED97E0)
+Date: Mon, 28 Jul 2008 17:51:42 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH RFC/RFT] b43: Rewrite TX power adjustment
+References: <200807261726.53279.mb@bu3sch.de> <200807282017.04979.mb@bu3sch.de>
+In-Reply-To: <200807282017.04979.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michael Buesch wrote:
+> On Saturday 26 July 2008 17:26:52 Michael Buesch wrote:
+>> This is an experimental attempt for fixing the currently-not-so-good
+>> TX power adjustment.
+> 
+> Hm, is anybody going to test this, or are there really no transmission
+> problems left? :)
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- drivers/net/niu.c |   45 +++++++++++++++++++++++++--------------------
- 1 files changed, 25 insertions(+), 20 deletions(-)
+It seems to work here. The dmesg output for my BCM4312 is:
 
-diff --git a/drivers/net/niu.c b/drivers/net/niu.c
-index de2a8a3..8ee7d7b 100644
---- a/drivers/net/niu.c
-+++ b/drivers/net/niu.c
-@@ -3236,10 +3236,14 @@ static int release_tx_packet(struct niu *np, struct tx_ring_info *rp, int idx)
- 
- static void niu_tx_work(struct niu *np, struct tx_ring_info *rp)
- {
-+	struct netdev_queue *txq;
- 	u16 pkt_cnt, tmp;
--	int cons;
-+	int cons, index;
- 	u64 cs;
- 
-+	index = (rp - np->tx_rings);
-+	txq = netdev_get_tx_queue(np->dev, index);
-+
- 	cs = rp->tx_cs;
- 	if (unlikely(!(cs & (TX_CS_MK | TX_CS_MMK))))
- 		goto out;
-@@ -3262,13 +3266,13 @@ static void niu_tx_work(struct niu *np, struct tx_ring_info *rp)
- 	smp_mb();
- 
- out:
--	if (unlikely(netif_queue_stopped(np->dev) &&
-+	if (unlikely(netif_tx_queue_stopped(txq) &&
- 		     (niu_tx_avail(rp) > NIU_TX_WAKEUP_THRESH(rp)))) {
--		netif_tx_lock(np->dev);
--		if (netif_queue_stopped(np->dev) &&
-+		__netif_tx_lock(txq, smp_processor_id());
-+		if (netif_tx_queue_stopped(txq) &&
- 		    (niu_tx_avail(rp) > NIU_TX_WAKEUP_THRESH(rp)))
--			netif_wake_queue(np->dev);
--		netif_tx_unlock(np->dev);
-+			netif_tx_wake_queue(txq);
-+		__netif_tx_unlock(txq);
- 	}
- }
- 
-@@ -4061,6 +4065,8 @@ static int niu_alloc_channels(struct niu *np)
- 	np->num_rx_rings = parent->rxchan_per_port[port];
- 	np->num_tx_rings = parent->txchan_per_port[port];
- 
-+	np->dev->real_num_tx_queues = np->num_tx_rings;
-+
- 	np->rx_rings = kzalloc(np->num_rx_rings * sizeof(struct rx_ring_info),
- 			       GFP_KERNEL);
- 	err = -ENOMEM;
-@@ -5686,7 +5692,7 @@ static int niu_open(struct net_device *dev)
- 		goto out_free_irq;
- 	}
- 
--	netif_start_queue(dev);
-+	netif_tx_start_all_queues(dev);
- 
- 	if (np->link_config.loopback_mode != LOOPBACK_DISABLED)
- 		netif_carrier_on(dev);
-@@ -5710,7 +5716,7 @@ static void niu_full_shutdown(struct niu *np, struct net_device *dev)
- 	cancel_work_sync(&np->reset_task);
- 
- 	niu_disable_napi(np);
--	netif_stop_queue(dev);
-+	netif_tx_stop_all_queues(dev);
- 
- 	del_timer_sync(&np->timer);
- 
-@@ -5971,7 +5977,7 @@ static void niu_netif_start(struct niu *np)
- 	 * so long as all callers are assured to have free tx slots
- 	 * (such as after niu_init_hw).
- 	 */
--	netif_wake_queue(np->dev);
-+	netif_tx_wake_all_queues(np->dev);
- 
- 	niu_enable_napi(np);
- 
-@@ -6097,15 +6103,11 @@ static u64 niu_compute_tx_flags(struct sk_buff *skb, struct ethhdr *ehdr,
- 	return ret;
- }
- 
--static struct tx_ring_info *tx_ring_select(struct niu *np, struct sk_buff *skb)
--{
--	return &np->tx_rings[0];
--}
--
- static int niu_start_xmit(struct sk_buff *skb, struct net_device *dev)
- {
- 	struct niu *np = netdev_priv(dev);
- 	unsigned long align, headroom;
-+	struct netdev_queue *txq;
- 	struct tx_ring_info *rp;
- 	struct tx_pkt_hdr *tp;
- 	unsigned int len, nfg;
-@@ -6113,10 +6115,12 @@ static int niu_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 	int prod, i, tlen;
- 	u64 mapping, mrk;
- 
--	rp = tx_ring_select(np, skb);
-+	i = skb_get_queue_mapping(skb);
-+	rp = &np->tx_rings[i];
-+	txq = netdev_get_tx_queue(dev, i);
- 
- 	if (niu_tx_avail(rp) <= (skb_shinfo(skb)->nr_frags + 1)) {
--		netif_stop_queue(dev);
-+		netif_tx_stop_queue(txq);
- 		dev_err(np->device, PFX "%s: BUG! Tx ring full when "
- 			"queue awake!\n", dev->name);
- 		rp->tx_errors++;
-@@ -6215,9 +6219,9 @@ static int niu_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 	nw64(TX_RING_KICK(rp->tx_channel), rp->wrap_bit | (prod << 3));
- 
- 	if (unlikely(niu_tx_avail(rp) <= (MAX_SKB_FRAGS + 1))) {
--		netif_stop_queue(dev);
-+		netif_tx_stop_queue(txq);
- 		if (niu_tx_avail(rp) > NIU_TX_WAKEUP_THRESH(rp))
--			netif_wake_queue(dev);
-+			netif_tx_wake_queue(txq);
- 	}
- 
- 	dev->trans_start = jiffies;
-@@ -6275,7 +6279,7 @@ static int niu_change_mtu(struct net_device *dev, int new_mtu)
- 	spin_unlock_irq(&np->lock);
- 
- 	if (!err) {
--		netif_start_queue(dev);
-+		netif_tx_start_all_queues(dev);
- 		if (np->link_config.loopback_mode != LOOPBACK_DISABLED)
- 			netif_carrier_on(dev);
- 
-@@ -8532,9 +8536,10 @@ static struct net_device * __devinit niu_alloc_and_init(
- 	struct of_device *op, const struct niu_ops *ops,
- 	u8 port)
- {
--	struct net_device *dev = alloc_etherdev(sizeof(struct niu));
-+	struct net_device *dev;
- 	struct niu *np;
- 
-+	dev = alloc_etherdev_mq(sizeof(struct niu), NIU_NUM_TXCHAN);
- 	if (!dev) {
- 		dev_err(gen_dev, PFX "Etherdev alloc failed, aborting.\n");
- 		return NULL;
--- 
-1.5.6
+ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x11, vendor 0x4243)
+ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0A, vendor 0x4243)
+ssb: Core 2 found: USB 1.1 Host (cc 0x817, rev 0x03, vendor 0x4243)
+ssb: Core 3 found: PCI-E (cc 0x820, rev 0x01, vendor 0x4243)
+ssb: SPROM revision 2 detected.
+ssb: Sonics Silicon Backplane found on PCI device 0000:04:00.0
+b43-phy0: Broadcom 4311 WLAN found
+b43-phy0 debug: Found PHY: Analog 4, Type 2, Revision 8
+b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2
+phy0: Selected rate control algorithm 'pid'
+Broadcom 43xx driver loaded [ Features: PLR, Firmware-ID: FW13 ]
+udev: renamed network interface wlan0 to wlan1
+input: b43-phy0 as /class/input/input9
+firmware: requesting b43/ucode5.fw
+firmware: requesting b43/pcm5.fw
+firmware: requesting b43/b0g0initvals5.fw
+firmware: requesting b43/b0g0bsinitvals5.fw
+b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
+b43-phy0 debug: Chip initialized
+b43-phy0 debug: 32-bit DMA initialized
+Registered led device: b43-phy0::tx
+Registered led device: b43-phy0::rx
+Registered led device: b43-phy0::radio
+b43-phy0 debug: Wireless interface started
+b43-phy0 debug: Adding Interface type 2
+Adjusted power
+wlan1: authenticate with AP 00:1a:70:46:ba:b1
+wlan1: authenticated
+wlan1: associate with AP 00:1a:70:46:ba:b1
+wlan1: RX AssocResp from 00:1a:70:46:ba:b1 (capab=0x431 status=0 aid=3)
+wlan1: associated
+Average is 39
+Adjusted power
+Average is 17
+Average is 18
+Adjusted power
+Average is 4
+Adjusted power
+Average is 4
+Average is 4
+Adjusted power
+Average is 8
+Adjusted power
+Average is 6
+Average is 12
+Average is 11
+Average is 12
+Average is 11
+Average is 12
+Average is 10
+Average is 12
+Average is 11
+Average is 12
+Average is 12
+Average is 11
+Average is 12
+Average is 11
+Average is 12
+Average is 12
+Average is 11
+Average is 13
+Average is 13
+Adjusted power
+Average is 13
+Adjusted power
+Average is 11
+Average is 13
+Adjusted power
+Average is 12
+Average is 13
+Adjusted power
+Average is 13
+Adjusted power
+Average is 11
+Average is 13
+Adjusted power
+Average is 11
+Average is 13
+Adjusted power
+Average is 13
+Adjusted power
+Average is 8
+Average is 9
+Average is 13
+Average is 12
+Average is 13
+Adjusted power
+Average is 13
+Adjusted power
+Average is 12
+Average is 13
+Adjusted power
+Average is 12
+Average is 13
+Adjusted power
+Average is 12
+Average is 13
+Adjusted power
+Average is 7
+Average is 9
+Average is 12
+Average is 10
+Average is 7
+Average is 7
+Adjusted power
+Average is 9
+Average is 13
+Average is 13
+Average is 13
+Adjusted power
+Average is 13
+Adjusted power
+Average is 8
+Average is 8
+Average is 13
+Average is 12
+
+Is this sufficient, or is there other output that you want to see?
+
+
+> But please note that current wireless-testing tree seems to have some
+> unrelated TX issues in mac80211 (see the discussions about the qdisc
+> and skb->cb stuff.)
+
+AFAIK, this particular bug is limited to mainline. At least wireless still works 
+in wireless-testing, but fails completely in Linus's tree.
+
+Larry
 
