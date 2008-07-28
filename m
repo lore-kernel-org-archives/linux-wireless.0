@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:53994 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751629AbYGVLUn (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38170 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750823AbYG1NX4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 07:20:43 -0400
-Date: Tue, 22 Jul 2008 08:20:37 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Dmitry Baryshkov <dbaryshkov@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>
-Subject: Re: [PATCH 1/2] RFKILL: allow one to specify led trigger name
-Message-ID: <20080722112037.GB15136@khazad-dum.debian.net> (sfid-20080722_132046_521781_50D04B53)
-References: <20080722101737.GA32672@doriath.ww600.siemens.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080722101737.GA32672@doriath.ww600.siemens.net>
+	Mon, 28 Jul 2008 09:23:56 -0400
+Subject: Re: [PATCH 1/6] mac80211: allow no mac address until firmware load
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Luis Carlos Cobo <luisca@cozybit.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1217172136.2700.21.camel@localhost.localdomain>
+References: <48763814.27052c0a.1794.2095@mx.google.com>
+	 <1217172136.2700.21.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-G9iWzfDjI2Xp+ovnVC5Z"
+Date: Mon, 28 Jul 2008 15:23:53 +0200
+Message-Id: <1217251433.12662.5.camel@johannes.berg> (sfid-20080728_152359_549169_9CA1CC73)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 22 Jul 2008, Dmitry Baryshkov wrote:
-> Allow the rfkill driver to specify led trigger name.
-> By default it still defaults to the name of rfkill switch.
-> 
-> Signed-off-by: Dmitry Baryshkov <dbaryshkov@gmail.com>
-Acked-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> ---
->  net/rfkill/rfkill.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-> index 4e10a95..b247677 100644
-> --- a/net/rfkill/rfkill.c
-> +++ b/net/rfkill/rfkill.c
-> @@ -355,7 +355,8 @@ static void rfkill_led_trigger_register(struct rfkill *rfkill)
->  #ifdef CONFIG_RFKILL_LEDS
->  	int error;
->  
-> -	rfkill->led_trigger.name = rfkill->dev.bus_id;
-> +	if (!rfkill->led_trigger.name)
-> +		rfkill->led_trigger.name = rfkill->dev.bus_id;
->  	error = led_trigger_register(&rfkill->led_trigger);
->  	if (error)
->  		rfkill->led_trigger.name = NULL;
-> -- 
-> 1.5.6.2
-> 
-> 
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+--=-G9iWzfDjI2Xp+ovnVC5Z
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Sun, 2008-07-27 at 11:22 -0400, Dan Williams wrote:
+> On Thu, 2008-07-10 at 16:57 +0200, Luis Carlos Cobo wrote:
+> > Originally by Johannes Berg. This patch adds support for devices that d=
+o not
+> > report their MAC address until the firmware is loaded. While the addres=
+s is not
+> > known, a multicast on is used.
+>=20
+> Johannes, thoughts on this?  Is there a better way to do it for devices
+> that don't know their MAC address until firmware load?
+
+I actually wrote this patch, but largely I don't care. It seemed that
+having unique MAC addresses would screw up less with udev, but maybe we
+can just leave it zeroed until we know?
+
+johannes
+
+--=-G9iWzfDjI2Xp+ovnVC5Z
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIjchlAAoJEKVg1VMiehFYDlMP/0g8gYF4mLiUzOCGS9iRl/9r
+2CtctWuS0lbVaDH50zEl+fMU6Z1O9iHIiAHWPK0rCTuknXRsv4QApipBYitBUp+P
+5LvqNu6jtaZhnyqujoWr1GLSlTKCMAQqR5UEe439su0YV1wQZ9tguQCz+wfN7xZw
+tYnwZA9QIZ683HBhI2f8Lj+CHQXR6wV1wiZhGCI8SzygTm1moQf5pTOeq1GB4Yed
+OV7neWQHCipSJDvZ1ilcKwFccrvRKhVgAsr5N2E4pLOTHqUrOI9ncizzqde1o1YT
+DOzBRGcKquQ7pri57OzG8vHuehFPBoMjcVceG/CYkzdRGXhqrXphsZL0FwCC8t9Y
+3Zs2Ma+tGIBK7JT0D6IcVOeE9lqRLH4y0MyXISf6AOqUUIRLidlm8Omu+A5xptq2
+0vt9kTCbLxXOe2m87uGSk0G77fhh/0GHyugR4at0WujQc170UroGwwvkVfooe17w
+ldpLiFgMzMnUNk70MKms1xVIjbIjwDoHoqHANa3+e5fwofJiT2elkWoMTfkZN4GN
+znM6NiaSgarT2/buXegoMSqFn9LJWl9iDCx3DGdqOOO7/ShCZb6Jrw6pkoo+5Ae5
+Tw62SLpk4z0019/O83UvIXz8wX26f00XR8WzXB0qQ3c2x/eL/6L96dmyV7VqDrAR
+fZEwJ9P3DbYqfNUN/4hs
+=fdQ0
+-----END PGP SIGNATURE-----
+
+--=-G9iWzfDjI2Xp+ovnVC5Z--
+
