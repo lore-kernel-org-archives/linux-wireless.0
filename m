@@ -1,51 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:57659 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754080AbYGDVpn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jul 2008 17:45:43 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] ssb-pcicore: Fix IRQ-vector init on embedded devices
-Date: Fri, 4 Jul 2008 23:44:37 +0200
-Cc: Steve Brown <sbrown@cortland.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Received: from [66.209.47.173] ([66.209.47.173]:58885 "EHLO mythtv.ewol.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752068AbYG2M1U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jul 2008 08:27:20 -0400
+Message-ID: <488F0C13.6050803@cortland.com> (sfid-20080729_142722_191284_7E917B5F)
+Date: Tue, 29 Jul 2008 08:24:51 -0400
+From: Steve Brown <sbrown@cortland.com>
+Reply-To: sbrown@cortland.com
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200807042344.38034.mb@bu3sch.de> (sfid-20080704_234556_710104_58A79824)
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: oops in cfg80211 doing mesh mpath dump
+References: <488EF6E0.7050209@cortland.com>	 (sfid-20080729_125437_639538_96B3F8BB) <1217329761.10489.15.camel@johannes.berg>
+In-Reply-To: <1217329761.10489.15.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On embedded devices we must not route the interrupts through
-the PCI core, if our host-bus is not PCI.
+Johannes Berg wrote:
+> On Tue, 2008-07-29 at 06:54 -0400, Steve Brown wrote:
+>   
+>> I added line numbers to the recursion path. If more are needed, let me know.
+>>     
+>
+> Thanks, I have a fix already somewhere
+>
+> johannes
+>   
+Your patch set "[PATCH 0/3] mac80211 fixes" did the trick.
 
-Reported-by: Steve Brown <sbrown@cortland.com>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+root@OpenWrt:/# iw dev mesh mpath dump
+00:16:01:2e:0c:4c 00:16:01:2e:0c:4c mesh        3       4294967295      
+0       208     100     0       0x4
 
----
+Thanks,
+Steve
 
-John, If still possible, please queue for 2.6.26.
-
-
-Index: wireless-testing/drivers/ssb/driver_pcicore.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/driver_pcicore.c	2008-06-10 13:58:23.000000000 +0200
-+++ wireless-testing/drivers/ssb/driver_pcicore.c	2008-07-04 23:16:02.000000000 +0200
-@@ -537,6 +537,13 @@ int ssb_pcicore_dev_irqvecs_enable(struc
- 	int err = 0;
- 	u32 tmp;
- 
-+	if (dev->bus->bustype != SSB_BUSTYPE_PCI) {
-+		/* This SSB device is not on a PCI host-bus. So the IRQs are
-+		 * not routed through the PCI core.
-+		 * So we must not enable routing through the PCI core. */
-+		goto out;
-+	}
-+
- 	if (!pdev)
- 		goto out;
- 	bus = pdev->bus;
-
--- 
-Greetings Michael.
