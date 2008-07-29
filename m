@@ -1,92 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:40574 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751043AbYG3PDK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 11:03:10 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: [RFC/RFT] rtl8187: Protect the config callback from mac80211 with a mutex
-Date: Wed, 30 Jul 2008 17:02:30 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"Hin-Tak Leung" <hintak.leung@gmail.com>,
-	Pavel Roskin <proski@gnu.org>,
-	wireless <linux-wireless@vger.kernel.org>
-References: <48900654.7030100@lwfinger.net> <200807301527.26432.mb@bu3sch.de> <200807301153.13947.herton@mandriva.com.br>
-In-Reply-To: <200807301153.13947.herton@mandriva.com.br>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200807301702.31281.mb@bu3sch.de> (sfid-20080730_170314_245582_8E9354C7)
+Received: from xc.sipsolutions.net ([83.246.72.84]:51115 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755749AbYG2L0Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jul 2008 07:26:25 -0400
+Subject: Re: 2.6.27-rc1: zd1211rw association fails
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alistair John Strachan <alistair@devzero.co.uk>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	dsd@gentoo.org, kune@deine-taler.de, linux-wireless@vger.kernel.org
+In-Reply-To: <200807291225.00679.alistair@devzero.co.uk>
+References: <alpine.LFD.1.10.0807281956030.3334@nehalem.linux-foundation.org>
+	 <200807291049.47342.alistair@devzero.co.uk>
+	 <1217326195.10489.10.camel@johannes.berg>
+	 <200807291225.00679.alistair@devzero.co.uk>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YoFHl5kl+Z5ZgKZZFGG6"
+Date: Tue, 29 Jul 2008 13:26:17 +0200
+Message-Id: <1217330777.10489.21.camel@johannes.berg> (sfid-20080729_132629_021365_5722E730)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 30 July 2008 16:53:13 Herton Ronaldo Krzesinski wrote:
-> Em Wednesday 30 July 2008 10:27:26 Michael Buesch escreveu:
-> > On Wednesday 30 July 2008 15:24:40 Michael Buesch wrote:
-> > > On Wednesday 30 July 2008 08:12:36 Larry Finger wrote:
-> > > > Herton,
-> > > >
-> > > > Does this patch help your problem? I haven't done much testing, but
-> > > > things seem to be better with it here.
-> > > >
-> > > > Larry
-> > > >
-> > > > ==================
-> > > >
-> > > > Some users of the RTL8187B have experienced difficulties since commit
-> > > > 8f87dd7e540d455f8e7f11478133b85edc969c67 that introduced the power
-> > > > management wext hooks. This difficulty has not made much sense until
-> > > > it was realized that it was possible for mac80211 to make a call to the
-> > > > config routine while that routine was already being executed. This
-> > > > patch protects the critical section with a mutex.
-> > > >
-> > > > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> > > > ---
-> > > >
-> > > > Index: wireless-testing/drivers/net/wireless/rtl8187.h
-> > > > ===================================================================
-> > > > --- wireless-testing.orig/drivers/net/wireless/rtl8187.h
-> > > > +++ wireless-testing/drivers/net/wireless/rtl8187.h
-> > > > @@ -94,6 +94,7 @@ struct rtl8187_priv {
-> > > >   	const struct rtl818x_rf_ops *rf;
-> > > >   	struct ieee80211_vif *vif;
-> > > >   	int mode;
-> > > > +	struct mutex mutex;	/* used to lock config callback */
-> > >
-> > > Well, hm.
-> > > Using locks to protect code is a bad idea, most of the time.
-> > > So that comment makes no sense.
-> > >
-> > > What that lock _probably_ does it to protect the configuration
-> > > data in struct rtl8187_priv. So you'd better find out which data
-> > > that is and clarify the comment.
-> >
-> > and the mutex name, of course.
-> >
-> > 	/* Mutex to protect the device configuration data,
-> > 	 * which is foobar and bizzbaz */
-> > 	struct mutex conf_mutex;
-> 
-> Yes, it's better this way. About the lock, the problem here is you can't set 
-> the channel while transmitting data on 8187 (the card stops working util 
-> reset like the comment on the code), so we must enable tx loopback while 
-> setting channels, but you can't run rtl8187_config concurrently because one 
-> instance may be disabling tx loopback while other is still setting channel, 
-> or like the code is today there is a possibility that you set tx loopback 
-> forever. The lock could be only in that section.
-> 
-> The comment could be:
-> /* Mutex to protect the device configuration data,
->  * we can't set channels concurrently */
 
-I think you probably want to protect the tx-loopback (enabled or disabled) state.
-That's what you're actually doing implicitely. The problem is not any channel
-concurrency or something like that, but that the tx-loopback-enable/disable is not
-recursive is the real thing we want to lock here, probably.
+--=-YoFHl5kl+Z5ZgKZZFGG6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Note that I didn't read the code.
-But in general you get the idea. Don't lock code, but lock state data. (like
-the loopback-state data).
 
--- 
-Greetings Michael.
+> If it doesn't strain you too much more, could you actually tell me where =
+this=20
+> is? Your last 5 posts to LKML don't seem to contain such a patch, and I'm=
+ not=20
+> subscribed to linux-wireless.
+
+Well, the latter has archives.
+
+johannes
+
+--=-YoFHl5kl+Z5ZgKZZFGG6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIjv5VAAoJEKVg1VMiehFYSakP/0cKisClmeEBiH9Tziil3/+V
+++MXA/IfExkw4CpadkUoupjyqFez/49apV93Jab3q4ffXZU09KTEb8QYd8Tqvu/W
+X/DkUCWMqYvhv5hOAcdKItzmHFvvev8oY2xicmJFeua5kzczKhQbIJDje53/Kkgy
+Sk6oLPVP9pxenMmV/l0RoB2JM6ehtgTcBEAv/KXpG8xTT7iTT/YU++TBswdgXhZz
+j5//xW5YrKZFEE+0tLZFKt7/SFyTlAO92KS2CFMESjag4s/E1ufS1+FvoFIj/ilu
+Tiy3YwdviQ9wctl3urV/pWV7q5NCYLLVIPpykyf8mCOSK9WvzVvdNofdWzn0U3H/
+LgrMhZ319jo54DfBAJZ/K6XYvVCMBEMuOJ649LQalSd5QieS8wt2narHutjOWgAh
+N9+x078BH7vXNB07N9ASL5qJ8L76drUp/8aW4eEsHzlQ0FbJiVoHipMoO+DOGtKG
+r8xVfFbPZ1HDT8ZYdW4wCMUasBXhiV02YN4YLW/tGZQucn+sec7X783zVUeXTySc
+xdStPaKe2NXDnObDyTuCY/GjwNfnOpXTRx9dEUsfFYgHwykezXZrDpXp0O+B5KOV
+NsEBv2IjV5pLb4FNi57dZUG9EWOY82NEEY3QXbFT9/qNdLMiu5qRRl/QVfXZ/NUI
+YGYoGJ0jOwU+X7Gm0lCm
+=+126
+-----END PGP SIGNATURE-----
+
+--=-YoFHl5kl+Z5ZgKZZFGG6--
+
