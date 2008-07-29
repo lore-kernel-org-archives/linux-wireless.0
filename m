@@ -1,73 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35595 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:45596 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753499AbYGAL46 (ORCPT
+	with ESMTP id S1754569AbYG2Lgu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 07:56:58 -0400
-Subject: Re: [PATCH 1/1] mac80211: remove usless tid assignment for
-	managment and control frames
+	Tue, 29 Jul 2008 07:36:50 -0400
+Subject: Re: iwlwifi aggregation info
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240807010452w1ad01c30g9e50ac0f2264f6c6@mail.gmail.com> (sfid-20080701_135300_196879_5B0B5C6F)
-References: <1214911761-8291-1-git-send-email-tomas.winkler@intel.com>
-	 <1214911761-8291-2-git-send-email-tomas.winkler@intel.com>
-	 <1214911935.29181.7.camel@johannes.berg>
-	 <1ba2fa240807010452w1ad01c30g9e50ac0f2264f6c6@mail.gmail.com>
-	 (sfid-20080701_135300_196879_5B0B5C6F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-h8b2SIujpLSKKlWz/m3p"
-Date: Tue, 01 Jul 2008 13:55:32 +0200
-Message-Id: <1214913332.29181.11.camel@johannes.berg> (sfid-20080701_135710_593085_2E282AC7)
+To: tomasw <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1217331138.10489.24.camel@johannes.berg> (sfid-20080729_133224_832207_85DF1976)
+References: <1217331138.10489.24.camel@johannes.berg>
+	 (sfid-20080729_133224_832207_85DF1976)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ktde1t4MOOSzsCG/2Z5+"
+Date: Tue, 29 Jul 2008 13:36:48 +0200
+Message-Id: <1217331408.10489.26.camel@johannes.berg> (sfid-20080729_133653_598683_754D9EC1)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-h8b2SIujpLSKKlWz/m3p
+--=-ktde1t4MOOSzsCG/2Z5+
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2008-07-01 at 14:52 +0300, Tomas Winkler wrote:
-> On Tue, Jul 1, 2008 at 2:32 PM, Johannes Berg <johannes@sipsolutions.net>=
- wrote:
-> > On Tue, 2008-07-01 at 14:29 +0300, Tomas Winkler wrote:
-> >> This patch removes useless tid assignment for management and control f=
-rames
-> >>
-> >> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> >
-> > Acked-by: Johannes Berg <johannes@sipsolutions.net>
->=20
-> I would prefer you ack the version without spelling errors :).
 
-Oh! I looked for the difference but didn't find it and so figured you
-just sent it out twice accidentally. Feel free to transfer that line to
-the other patch.
+> Say a station enables aggregation on a low-priority TID, manages to fill
+> the hw queue because high-prio frames are eating up all the airtime and
+> then disables aggregation again. Now another station enables aggregation
+> on a high-priority TID, and gets assigned to the same hw queue. Now
+> frames for that station will be stalled, no? Seems like a bug to me.
+
+Never mind, the queue won't get reassigned. I was just confused by a
+bunch of superfluous code in iwl-tx.c. You cannot ever run into having
+IWL_EMPTYING_HW_QUEUE_ADDBA set because you wait for the queue to drain
+before fully disabling it.
 
 johannes
 
---=-h8b2SIujpLSKKlWz/m3p
+--=-ktde1t4MOOSzsCG/2Z5+
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIahsxAAoJEKVg1VMiehFYcWYP/jlFFEtmXEs56hnMGgm54die
-yZHijBwif6ibSzYe5VNjOs7lE4YiGdIw+kZN89yzzpolFVYMmKPI1FKvXYiwzdvN
-FDoc+WbRYTZyxdFyKh24ta3ja/ZJr59gFxjxWaBLtsLHUi3cIzFolXyi1kvx9CVU
-hO9028xH+rzLkvMbVkvw3CbcRruHbrQXrwQ45950d3nboyo0tP9o/0hS7LEPcprQ
-FiGa9w12B5TmhNl/BkOBA3lX39imTIYmnOXokF/eQdyeww5ykTz4vwJGF3yF74CJ
-zVp3fVuSQnMOivRyuXEp2Fnj1dIfTsCYeAYeHRrMScSp72Rq3DzmayEUFJG4ZXf3
-7JOUglu75d3usMnxs9Rwy+EXeMtov4jYICYq/N/VctTrBhXV51cUNNMmw0/U9IgB
-74uJJaCZWY4qYXDeu/vvzINNGcleRHd3JZLpI+CYOex6Wko3M03RDBFVF/4T+89n
-WaA4o4oNCSGKhA5or8HnLYxJ1BqYKQ/QCSkI3qq4s5ycFcImRttDqZABeHLY+Yb8
-Az9CsjPyziL8va+as0ySltN9wvqQlD7ZttJp1cWPJnxDEbUpFuotkitJdnoLeO+/
-Cf/IOfTMespXDXw8wakfGtKSW5yNChFRmbdiZDGKgP6fEaWs/Wszi2tJJ215kolg
-ih7HupjPIJixt0P4IBVV
-=YvxR
+iQIcBAABAgAGBQJIjwDMAAoJEKVg1VMiehFYZOMQALmMyGLwwYOb/HZ0HMCT5xtu
+zUadJIJ1zfxP7v+/R+RtxlDB1X9M4+/5LL9hOdZjNDnfJbqSeTDUD65qRdHbOGdt
+gHHgBVEonpn2mJ5p+J/X8sgS8t/E3ikMXF+Q5DHUKn9oxmUsvMb+9whMFjwMKPql
+8039sL2FO0/Dj8oiJqnzv6lOhFCOhYPiHRo/ESTbUqAQCcJI8M1csvMXDVQsEc/k
+HLjgPo2K+8uZREl7aYfgzKmIPgJrTEotLRmeMPhEBcFl4bQCFhsj8zXJk2XgEuy8
+knFmLAmG8zeM7dTYN/zSma802Vid1D2W8l3wTnndAMZ0xpoAejfFwDPX/JLhvd+G
+pV0Z4YJPVxATBpAufj7cMXmA7wfehYy02aR3lyu6RvCVNR/p3aIXvmoaXK9f1a9n
+qb/i5e1W2PIpZRXHH1NiHxk1yRO82IRNk38spCFxV/qXdEa3PUeD5SGMSedV+EMy
++6NOGmhDvOZcKHztm4ec+2z3kvxqqCeCL7aYXU56BKRzty9Dln+o5Cn4fCjdDUzX
+mqywIJxq/Abdi0yh5WvfonvMcmAjVk2q5R+nZ9DfwDo81qdqFELoKboaBJ8Ejbpw
+hox7DAkYJzzlx7pnuyJfUU6/unzQMVL7mmz/OGtHAv0tehXqMr9jQksnb/k6U1gZ
+AkSrg2S4ZD1YWzJ98Tn+
+=P3kb
 -----END PGP SIGNATURE-----
 
---=-h8b2SIujpLSKKlWz/m3p--
+--=-ktde1t4MOOSzsCG/2Z5+--
 
