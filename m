@@ -1,172 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:58159 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753660AbYGJGl6 (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:22019 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752141AbYG2JnW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jul 2008 02:41:58 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so1508659ywe.1
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 23:41:45 -0700 (PDT)
-Message-ID: <dac45060807092341u948e468r97fb652653ddb200@mail.gmail.com> (sfid-20080710_084201_692957_06161C42)
-Date: Thu, 10 Jul 2008 09:41:45 +0300
-From: "Mark Ryden" <markryde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <20080709190915.GA8238@tuxdriver.com>
+	Tue, 29 Jul 2008 05:43:22 -0400
+To: "ext Hin-Tak Leung" <hintak.leung@gmail.com>
+Cc: "Herton Ronaldo Krzesinski" <herton@mandriva.com.br>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Pavel Roskin" <proski@gnu.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Samuel Ortiz <sameo@openedhand.com>
+Subject: Re: mac80211 power management breakage?(was Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks rtl8187)
+References: <3ace41890807260626x925b6b8h90f85dd91b24b4d5@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Tue, 29 Jul 2008 12:42:13 +0300
+In-Reply-To: <3ace41890807260626x925b6b8h90f85dd91b24b4d5@mail.gmail.com> (ext Hin-Tak Leung's message of "Sat\, 26 Jul 2008 14\:26\:48 +0100")
+Message-ID: <874p69m3gq.fsf@nokia.com> (sfid-20080729_114325_890956_0B1C195B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080709190915.GA8238@tuxdriver.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
- Linux wireless is, without any doubt, a very important subject.
-Many people show interest in it.
+"ext Hin-Tak Leung" <hintak.leung@gmail.com> writes:
 
-It is good to hear that the third Linux Wireless mini-summit will
-occur at OLS, which will give opportunity to  many people (which some
-of them don't know much about linux wireless) to attend it (whereas
-the two last wireless mini-summits were not part of OLS, as far as I
-know).
+> On Fri, Jul 25, 2008 at 5:36 PM, Herton Ronaldo Krzesinski
+>
+>> So it seems there is a bug when trying to do a "power on" after "essid <key>"
+>> command, are you able to reproduce this too?
+>
+> - I have added linux-wireless back to CC:, since I have reproduced
+> the problem you saw, exactly as you described. (you mean "power on
+> after essid <any>" is problematic, I think)
+>
+> I have also had a look at the code and while I don't understand most
+> of it, I thought maybe I have a guess of how adding power management
+> wext hooks can break association.
 
-I want to add that It would be great if part of it (or hopefully, all
-of it) will be videoed and put on the web. I am sure that many
-(including me) will be glad to watch it. I am sure that making an
-effort like this is important and is of interest for the linux
-wireless community.
+Do you mean this patch from Samuel which is in wireless-testing:
 
-Regards,
-Mark Ryden
+commit 8f87dd7e540d455f8e7f11478133b85edc969c67
+Author: Samuel Ortiz <samuel@sortiz.org>
+Date:   Fri Jul 4 10:49:31 2008 +0200
 
+    mac80211: power management wext hooks
+    
+    This patch implements the power management routines wireless extensions
+    for mac80211.
+    For now we only support switching PS mode between on and off.
 
-On Wed, Jul 9, 2008 at 10:09 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> The third Linux Wireless mini-summit will occur on Tuesday July 22,
-> 2008 in Ottawa, just before the Ottawa Linux Symposium.  OLS is
-> generously supporting Linux mini-summits by providing the room and
-> projector (http://www.linuxsymposium.org/2008/minisummits.php).
-> Several vendors are supporting the event by sponsoring their own
-> employees to attend, and Canonical and Intel have both helped with
-> travel funds for key community participants as well.
+> What the power management hooks + enabling power management does, is
+> to buffer for up to STA_MAX_TX_BUFFER frames of certain types; also,
+> if a iwconfig essid <any> is issued before iwconfig essid <some_ap>,
+> the <any> result is cached for look-up, I think.
+
+No, the only thing Samuel's patch adds is support for SIOCSIWPOWER and
+SIOCGIWPOWER ioctls. It also adds IEEE80211_CONF_PS flag which
+mac80211 driver's can use to check if Power Save Mode is enabled by
+the user. But currently there are no drivers using it.
+
+Of course this patch may very well break something, but it's related
+to something else than Power Save Mode itself. It's not obvious how
+this patch can break rtl18187. For me iwl3945 has worked perfectly,
+with which patch included.
+
+The only thing which might break it is an extra call to
+ieee80211_hw_config() when issueing 'iwconfig wlan0 power on', but
+that might be a bit far fetched. If you have the time, please try to
+debug this more. For example you could try reverting the patch with
+'git revert --no-commit 8f87dd7e54' and see if it really makes a
+difference.
+
+> so the 3 situations you out-lined are this:
 >
-> Although it is already a bit late, I would like to re-open discussions
-> on our agenda for the meeting.  Based on current upstream topics and
-> those persons whom I expect to be attending, I have cobbled together
-> an agenda proposal below.  Please review it and feel free to suggest
-> amendments or alterations, or to elaborate or ask questions about my
-> proposed schedule of topics.
+> -use a lot of frames to find any APs, (power saving on, start
+> buffering)  send a small number of frames to
+> associate with one among the known APs but these frames are buffered,
+> so no association
 >
-> I look forward to seeing many of you in Ottawa!
+> - (power saving on, start buffering), use a lot of frames to find any
+> APs, a few more to associate to one.
 >
-> John
+> - (power saving on, start buffering), doesn't know any APs, so use a
+> lot of frames to find a particular one.
 >
-> P.S.  If you intend to attend the event in Ottawa, please send me a
-> private reply to this note -- even if you believe that I already know
-> that you are coming! :-)
->
-> ---
->
-> 3rd Linux Wireless Summit
-> Ottawa, Canada
-> 22 July 2008
->
-> Proposed Agenda
->
-> 0830    Meet & Greet
->
->        Introductions and opening remarks
->
-> 0900    Status Reports
->
->        Overview of where things stand today
->
->        - 802.11n
->
->        - QoS/Multiqueue
->
->        - Mesh mode (802.11s)
->
->        - RF kill
->
-> 1015    Break
->
-> 1100    Vendor/Distro Round Table
->
->        Representatives from hardware vendors and Linux distributions
->        discuss issues around cooperation between themselves and the
->        development community, what we are doing well, and what problems we
->        are causing for each other.
->
-> 1200    Lunch/Break (sorry, no funding)
->
-> 1300    Current Work
->
->        Short presentations/discussions about work in progress
->
->        - encrypted management frames (802.11w)
->
->        - regulatory enforcement (802.11d, CRDA)
->
->        - virtual hardware (mac80211_hwsim)
->
-> 1445    Break
->
-> 1500    Future work
->
->        Short presentations/discussions about work that has previously
->        been suggested or requested
->
->        - cfg80211/nl80211
->                - time to push to replace WEXT?
->                - tool enhancements and/or userland support?
->
->        - power management (suspend/resume)
->
->        - lib80211 (code sharing w/ full MAC drivers)
->
->        - rate scaling algorithms
->                - minstrel
->                - others?
->
->        - userland MLME
->
->        - userland driver implementation
->
-> 1645    Break
->
-> 1700    Maintainence Issues
->
->        Round table discussion of issues related to maintenance of
->        the wireless trees
->
->        - trivial/cleanup patches
->                - testing or other requirements?
->                - should they have lower priority?
->                - should they require ACKs from primary author?
->
->        - submissions to -stable
->                - who should drive it?
->                - what policies?
->
->        - rate scaling algs
->                - driver-specific ok?  what limitations?
->                - build policies (part of mac80211.ko?)
->
->        - questions/suggestions/complaints
->
-> 1800    Dinner/Break (sorry, no funding)
->
-> 2000    BoF/Break-out Sessions
->
->        Impromptu and/or unscheduled discussions as desired by group
->        participants
->
-> --
-> John W. Linville
-> linville@tuxdriver.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> Does this make sense, or am I talking nonsense? In any case, there is
+> a MAC80211_VERBOSE_PS_DEBUG
+> in net/mac80211/tx.c,  which should be relevant.
+
+You are confusing AP and client mode PSM here,
+MAC80211_VERBOSE_PS_DEBUG is used for debugging PSM support in AP
+mode. Client mode PSM support is usually implemented in the driver or
+the firmware. We are planning to add some PSM support to mac80211, but
+it's still in the works.
+
+-- 
+Kalle Valo
