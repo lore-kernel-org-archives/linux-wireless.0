@@ -1,82 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49893 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754867AbYGOIlI (ORCPT
+Received: from mk-outboundfilter-4.mail.uk.tiscali.com ([212.74.114.32]:28402
+	"EHLO mk-outboundfilter-4.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754444AbYG2LZE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 04:41:08 -0400
-Subject: Re: [PATCH 2/2] mac80211: make listen_interval be configurable by
-	low level driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Kalle Valo <kalle.valo@nokia.com>, linville@tuxdriver.com,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240807150129v4906b7bcyba66ab62b57c5d71@mail.gmail.com> (sfid-20080715_102953_982307_5BF8D17D)
-References: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com>
-	 <1216038684-29725-2-git-send-email-tomas.winkler@intel.com>
-	 <1216039127.11189.15.camel@johannes.berg>
-	 <1ba2fa240807140546w4f08e32l59ed88dfa1b86403@mail.gmail.com>
-	 <87fxqcoaue.fsf@nokia.com> <1216109543.23746.21.camel@johannes.berg>
-	 <1ba2fa240807150129v4906b7bcyba66ab62b57c5d71@mail.gmail.com>
-	 (sfid-20080715_102953_982307_5BF8D17D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Pxi/pStDFwjHtQVlsfR7"
-Date: Tue, 15 Jul 2008 10:41:01 +0200
-Message-Id: <1216111261.3535.7.camel@johannes.berg> (sfid-20080715_104113_162448_2594C528)
-Mime-Version: 1.0
+	Tue, 29 Jul 2008 07:25:04 -0400
+From: Alistair John Strachan <alistair@devzero.co.uk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: 2.6.27-rc1: zd1211rw association fails
+Date: Tue, 29 Jul 2008 12:25:00 +0100
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	dsd@gentoo.org, kune@deine-taler.de, linux-wireless@vger.kernel.org
+References: <alpine.LFD.1.10.0807281956030.3334@nehalem.linux-foundation.org> <200807291049.47342.alistair@devzero.co.uk> <1217326195.10489.10.camel@johannes.berg>
+In-Reply-To: <1217326195.10489.10.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200807291225.00679.alistair@devzero.co.uk> (sfid-20080729_132507_573523_536E6F35)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday 29 July 2008 11:09:55 Johannes Berg wrote:
+> > However, on 2.6.27-rc1 I see the following instead:
+> >
+> > [   12.120189] firmware: requesting zd1211/zd1211b_ub
+> > [   12.166388] firmware: requesting zd1211/zd1211b_uphr
+> > [   12.218877] zd1211rw 4-2:1.0: firmware version 4725
+> > [   12.258877] zd1211rw 4-2:1.0: zd1211b chip 050d:705c v4810 high
+> > 00-17-3f AL2230_RF pa0 g--NS [   13.097289] wlan0: authenticate with AP
+> > 00:17:3f:a4:d6:9d
+> > [   13.296890] wlan0: authenticate with AP 00:17:3f:a4:d6:9d
+> > [   13.496890] wlan0: authenticate with AP 00:17:3f:a4:d6:9d
+> > [   13.696886] wlan0: authentication with AP 00:17:3f:a4:d6:9d timed out
+> >
+> > And Debian's networking script fails to obtain an IP address. I notice
+> > the line:
+> >
+> > [   18.613540] wlan0: Initial auth_alg=0
+> >
+> > Is missing from the 2.6.27-rc1 dmesg, however my config should not have
+> > been altered (I simply make oldconfig'ed it). Find attached anyway.
+> >
+> > I'll start a bisection if nobody has any immediate ideas.
+>
+> This is about the 100 millionth time this is reported. Please try the
+> patch I just posted.
 
---=-Pxi/pStDFwjHtQVlsfR7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+If it doesn't strain you too much more, could you actually tell me where this 
+is? Your last 5 posts to LKML don't seem to contain such a patch, and I'm not 
+subscribed to linux-wireless.
 
-On Tue, 2008-07-15 at 11:29 +0300, Tomas Winkler wrote:
-
-> We are providing power save user interface reach enough to specify all
-> the above requirements.
-> I think you are both misinterpreting listen interval meaning.
-> Listen interval merely says to AP for how many beacons save direct
-> packets for this STA. It doesn't mean
-> it's can be shorter and it  does say it's won't be longer.=20
-
-Right, but it does make sense to advertise what we're using, and this
-patch just adds a strict "driver tells mac80211 what it's using" flow.
-That's mostly what I'm objecting to. If you were calling the variable
-"max_listen_interval" and having mac80211 send it back to the driver in
-the BSS config as bssconf->listen_interval, and, for now, simply use the
-max, I wouldn't have a problem with it.
-
-> It's
-> doesn't affect power save dynamics it's just sets upper limit.
-> This value for iwlwifi hw is derived from maximal supported  beacon
-> interval and size of the internal HW timers.
-> This value is hard coded in the driver.
-
-Shouldn't it depend on the beacon interval then?
-
-johannes
-
---=-Pxi/pStDFwjHtQVlsfR7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIfGKZAAoJEKVg1VMiehFYV9oP/3yhlvw/9Nj9SiIbAy40rBT3
-FsB4ZCfYIBd5By0YZcVgDpfqes6SXWY6vbG9YcY0q1Fc1fniTlv2DCem7GIUZIyh
-dafGnNNM6omziYWM3qTa5gjzGu8Qlfabzkd/H7oVlCLrLNX7IKv0kW3A6Vb4SVg5
-LYFfUlA/8/hqrpi5osIR6rEe4ZkuL8PimbeMh5BgDZoVc+au+sTAKGZz9lcmCCCO
-sF7FAIf6SqriDd5OEVSAQ6xjShreTZ5RTBuLbfTMvcbGdghCqKMX7U7CYzAC8V4H
-PLgLiUh2Srw9km/Mzt87O5/k+p8kzXV6iJoLBRdgNDlsGEjeCgdy1aTDGxGA87cG
-9EyuOqAZyOxgBQhOP4AavfjDAHv1mYaEFDr19a4nTlLfyGH66naM3rSLpcRYLfmB
-d8vdCx+7OOXCLaIa+cJWOb+27BdeTRWTtUAmnkipAcwa+2F8DLIrxAj1N/aa4Xx2
-tilG91MC2V8ay8G47ypN3Ens7sGOMmGvUjWNdz7FtKYrcmYBnbOu3b1dwglYkqlI
-/NnXlQk11n7+mTP+LOpdtkkCGV81+52EQxk2pgk4AiBhPZIiyfzqq/Lr6atU3Qv2
-whhDRSynMBky9sqw33cb+ibxFF+Rlq/UYcMOsuX/XjHuqJTop9Ma3LGh4gk9FYzQ
-nyteq3A7X141N7wyLyly
-=9rzO
------END PGP SIGNATURE-----
-
---=-Pxi/pStDFwjHtQVlsfR7--
-
+-- 
+Cheers,
+Alistair.
