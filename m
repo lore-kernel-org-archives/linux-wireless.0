@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:60359 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755834AbYGQMKO (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:53875 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752703AbYG2DPz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 08:10:14 -0400
-Date: Thu, 17 Jul 2008 09:10:09 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: drago01 <drago01@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 4/4] rfkill: mutex fixes
-Message-ID: <20080717121009.GE31732@khazad-dum.debian.net> (sfid-20080717_141018_586994_0DFA793A)
-References: <1216150327-10904-1-git-send-email-hmh@hmh.eng.br> <1216150327-10904-5-git-send-email-hmh@hmh.eng.br> <200807170656.37190.mb@bu3sch.de> <f6ca9fed0807170433m5199b66bl7e8bafd1002c566e@mail.gmail.com>
+	Mon, 28 Jul 2008 23:15:55 -0400
+Message-ID: <488E8B68.6000004@lwfinger.net> (sfid-20080729_051558_312799_D78645BF)
+Date: Mon, 28 Jul 2008 22:15:52 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f6ca9fed0807170433m5199b66bl7e8bafd1002c566e@mail.gmail.com>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks
+ rtl8187
+References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>	 <200807221613.34434.herton@mandriva.com.br>	 <3ace41890807221525r67716ea0r251068df773fe53f@mail.gmail.com>	 <200807221940.20009.herton@mandriva.com.br>	 <4886AA3B.3000406@lwfinger.net> <4886C50E.6040304@lwfinger.net>	 <1216824917.13587.9.camel@johannes.berg>	 <48874F09.7060400@lwfinger.net> <3ace41890807281939y462c9b91n5fa952e167b6ff8c@mail.gmail.com>
+In-Reply-To: <3ace41890807281939y462c9b91n5fa952e167b6ff8c@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 17 Jul 2008, drago01 wrote:
-> On Thu, Jul 17, 2008 at 6:56 AM, Michael Buesch <mb@bu3sch.de> wrote:
-> > On Tuesday 15 July 2008, Henrique de Moraes Holschuh wrote:
-> >> There are two mutexes in rfkill:
-> >>
-> >> rfkill->mutex, which protects some of the fields of a rfkill struct, and is
-> >> also used for callback serialization.
-> >>
-> >> rfkill_mutex, which protects the global state, the list of registered
-> >> rfkill structs and rfkill->claim.
-> >>
-> >> Make sure to use the correct mutex, and to not miss locking rfkill->mutex
-> >> even when we already took rfkill_mutex.
+Hin-Tak Leung wrote:
+> Hi Larry, please tidy the tx seq no patch up and submit to wireless-testing..
+> I think it is more appropriate to copy the actual comments in rt2000
+> from Johannes?
+> instead of or in addtion to: "XXX: This sequence is an attempt to
+> match what happens in r2x00"
 > 
-> rfkill_state_mutex ?
+> ... and feel free to add ack-by/tested-by me.
+> 
+> I am wondering about Herton's problem with power saving (which I had
+> reproduced).
+> I think one way to move forward is to enable MAC80211_PS_DEBUG(?) and
+> see what happens
+> to the tx queues, now that we have a reliable way of reproducing the problem.
+> 
+> I also wonder how Herton encountered the problem :-). Older
+> wireless-testing simply
+> say "unimplemented" or something if one tries to set power-saving.
+> Maybe Herton has
+> a few devices which he routinely tries out every part of iwconfig?
 
-rfkill_mutex protects a lot of stuff, and does general serialization inside
-rfkill.c.  rfkill_global_mutex is a good name for it, yes.
+I sent that patch on July 24, or at least I thought I did. I was quite surprised 
+to not find it in the wireless archives. In any case, I have sent it again tonight.
 
-rfkill->mutex protects more than the state, better leave that one alone.  If
-I find a way to do it without LONG periods under spinlock_irqsave, I'd make
-it a spinlock to let drivers call some stuff in interrupt/atomic context...
+I tried Herton's sequence of steps for cennecting and it failed no matter what I 
+did. In my case, only NetworkManager can get a connection.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+I'm not sure how to proceed; however, if you can produce the problem reliably, 
+then you have an edge.
+
+Larry
