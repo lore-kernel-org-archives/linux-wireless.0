@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relais.videotron.ca ([24.201.245.36]:17685 "EHLO
-	relais.videotron.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752076AbYGUQqd (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:18592 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753389AbYG2IIt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 12:46:33 -0400
-MIME-version: 1.0
-Content-type: TEXT/PLAIN; charset=US-ASCII
-Date: Mon, 21 Jul 2008 12:46:31 -0400 (EDT)
-From: Nicolas Pitre <nico@cam.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	=?ISO-8859-15?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	lkml <linux-kernel@vger.kernel.org>
-Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
-In-reply-to: <1216650224.22055.7.camel@localhost.localdomain>
-Message-id: <alpine.LFD.1.10.0807211245020.3213@xanadu.home> (sfid-20080721_184637_843502_132082D5)
-References: <20080709190915.GA8238@tuxdriver.com>
- <69e28c910807100912h30fcb57fpb4fb48b95c640f77@mail.gmail.com>
- <200807101815.27204.mb@bu3sch.de>
- <1216142191.6039.113.camel@localhost.localdomain>
- <alpine.LFD.1.10.0807151323570.12484@xanadu.home>
- <1216144711.13411.18.camel@localhost.localdomain>
- <alpine.LFD.1.10.0807151404530.12484@xanadu.home>
- <1216650224.22055.7.camel@localhost.localdomain>
+	Tue, 29 Jul 2008 04:08:49 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so3302292waf.23
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 01:08:49 -0700 (PDT)
+Message-ID: <1ba2fa240807290108y5bdfce9co4b69b8e626199209@mail.gmail.com> (sfid-20080729_100857_234880_77D8C59A)
+Date: Tue, 29 Jul 2008 11:08:49 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Harvey Harrison" <harvey.harrison@gmail.com>
+Subject: Re: [PATCH 3/8] wireless: replace __FUNCTION__ with __func__
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Andrew Morton" <akpm@linux-foundation.org>,
+	"Linus Torvalds" <torvalds@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>, "Zhu Yi" <yi.zhu@intel.com>
+In-Reply-To: <1217311294.23389.26.camel@brick>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1217311294.23389.26.camel@brick>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 21 Jul 2008, Dan Williams wrote:
+On Tue, Jul 29, 2008 at 9:01 AM, Harvey Harrison
+<harvey.harrison@gmail.com> wrote:
+> __FUNCTION__ is gcc-specific, use __func__
+>
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> ---
+>  drivers/net/wireless/airo.c                   |   16 ++++++++--------
+>  drivers/net/wireless/hermes.c                 |    2 +-
+>  drivers/net/wireless/ipw2100.c                |    2 +-
+>  drivers/net/wireless/ipw2200.h                |    4 ++--
+>  drivers/net/wireless/iwlwifi/iwl-3945-debug.h |    4 ++--
+>  drivers/net/wireless/iwlwifi/iwl-debug.h      |    4 ++--
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c   |    4 ++--
+>  drivers/net/wireless/iwlwifi/iwl4965-base.c   |    4 ++--
+>  drivers/net/wireless/libertas/if_cs.c         |    2 +-
+>  drivers/net/wireless/prism54/isl_ioctl.c      |    8 ++++----
+>  drivers/net/wireless/rt2x00/rt2x00.h          |    4 ++--
+>  drivers/net/wireless/wl3501_cs.c              |    8 ++++----
+>  12 files changed, 31 insertions(+), 31 deletions(-)
+>
+I've already sumbitted patch for iwlwifi that also contains this fix.
+I'm also the file iwl4965-base was renamed.  The updates to
+wireless-testing are laginging  due to OLS for almost 2 weeks.
 
-> On Tue, 2008-07-15 at 14:14 -0400, Nicolas Pitre wrote:
-> > On Tue, 15 Jul 2008, Dan Williams wrote:
-> > 
-> > > Some of the issues with the current Marvell 83xx GPL drivers that have
-> > > gotten out are (a) code style, (b) lots of commented out stuff that's
-> > > never used, (c) OS abstraction that's unnecessary on Linux, (d) doesn't
-> > > use mac80211, and (e) uses private ioctls.  So hopefully you're writing
-> > > a new 83xx driver from scratch :)
-> > 
-> > Yes, this is all from scratch.  The objective for this work is to be 
-> > "mainlinable".
-> 
-> BTW, any chance on putting up a git repo somewhere so others can poke
-> around with it?  I'm quite interested in hacking on it.
-
-Eventually, of course.  Let's discuss f2f tomorrow.
-
-
-Nicolas
+Tomas
