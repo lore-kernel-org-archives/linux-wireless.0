@@ -1,100 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34305 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:46179 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754028AbYGHQQE (ORCPT
+	with ESMTP id S1756145AbYG2MJi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 12:16:04 -0400
-Subject: Re: [PATCH] CONFIG_KMOD needs to be default y
+	Tue, 29 Jul 2008 08:09:38 -0400
+Subject: Re: 2.6.27-rc1: zd1211rw association fails
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Linux Kernel list <linux-kernel@vger.kernel.org>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Tomas Winkler <tomasw@gmail.com>
-In-Reply-To: <1215533175.9610.51.camel@johannes.berg> (sfid-20080708_180716_966611_589BAABD)
-References: <1215517771.9610.28.camel@johannes.berg>
-	 <20080708124208.GA6704@infradead.org>
-	 <200807082303.26194.rusty@rustcorp.com.au>
-	 <1215533175.9610.51.camel@johannes.berg>
-	 (sfid-20080708_180716_966611_589BAABD)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SF2LsJFEizsG6pWfs1Em"
-Date: Tue, 08 Jul 2008 18:15:14 +0200
-Message-Id: <1215533714.9610.55.camel@johannes.berg> (sfid-20080708_181609_737681_F089BF1B)
+To: Theodore Tso <tytso@MIT.EDU>
+Cc: Alistair John Strachan <alistair@devzero.co.uk>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	dsd@gentoo.org, kune@deine-taler.de, linux-wireless@vger.kernel.org
+In-Reply-To: <20080729120442.GE9378@mit.edu>
+References: <alpine.LFD.1.10.0807281956030.3334@nehalem.linux-foundation.org>
+	 <200807291049.47342.alistair@devzero.co.uk>
+	 <1217326195.10489.10.camel@johannes.berg>  <20080729120442.GE9378@mit.edu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dqFTqhpDYuxtj2ErFIQS"
+Date: Tue, 29 Jul 2008 14:09:19 +0200
+Message-Id: <1217333359.10489.38.camel@johannes.berg> (sfid-20080729_140943_166070_07F28935)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-SF2LsJFEizsG6pWfs1Em
+--=-dqFTqhpDYuxtj2ErFIQS
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2008-07-08 at 18:06 +0200, Johannes Berg wrote:
-> On Tue, 2008-07-08 at 23:03 +1000, Rusty Russell wrote:
+On Tue, 2008-07-29 at 08:04 -0400, Theodore Tso wrote:
+> On Tue, Jul 29, 2008 at 12:09:55PM +0200, Johannes Berg wrote:
+> > This is about the 100 millionth time this is reported. Please try the
+> > patch I just posted.
 >=20
-> > > What about just killing the config option entirely?  It' basically
-> > > guarding a ~50 lines function + a sysctl variable.  I think having
-> > > modules but not CONFIG_KMOD is entirely unreasonable.
-> >=20
-> > I agree with Christoph here.
+> Yeah, it's really too bad -rc1 got released just before you were able
+> to post the fix to this, since if there were 100 million people who
+> were trying out kernels starting with -git7 that use wireless, there
+> will probably be 200 million people trying out -rc1.  :-)
 >=20
-> Yeah, like I said, I wasn't sure why it's there anyway.
->=20
-> > But as a patch series please: it's spread pretty wide.  eg. first make =
-it a=20
-> > non-prompting CONFIG option, then remove the users, then finally kill i=
-t.
->=20
-> Sure.
->=20
-> > Some existing request_module users might be able to use=20
-> > try_then_request_module, too...
->=20
-> try_then_request_module seems buggy though. Or at least, doing something
-> unexpected. Here's the macro, for reference:
->=20
-> #define try_then_request_module(x, mod...) ((x) ?: (request_module(mod), =
-(x)))
->=20
-> I think it should be
-> #define try_then_request_module(x, mod...) \
-> 	((x) ?: ({request_module(mod); (x)}))
->=20
-> the difference being that it returns the result of the second "x" when
-> the first "x" fails.
+> Thanks for finding and fixing it, though.  I stopped trying out
+> kernels after -git6 since I was travelling at OSCON, and not having
+> wireless was a show-stopper for me....
 
-Never mind, it's not actually different, I just didn't understand that
-syntax correctly.
+If everybody's going to decide now to hit on _me_, I'll point out that
+davem's MQ TX changes broke it, I only heard about the problem once that
+was out because nobody had found it earlier, and I was also travelling
+at OLS.
 
-The rest still stands though, do we really want to evaluate x twice when
-CONFIG_MODULES is not set? Then, theoretically, the result shouldn't
-change.
+Maybe the lesson we could learn from this is to not release an rc1 while
+a bunch of important people are at various conferences.
 
 johannes
 
---=-SF2LsJFEizsG6pWfs1Em
+--=-dqFTqhpDYuxtj2ErFIQS
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIc5KOAAoJEKVg1VMiehFY24cP/iSWsZhJiK9kvRA2BiC3TvOK
-BBp4DlVuuIXwWCGP0QG2F7ANnqbhszmSzQ8bJ8NTGBOcCXdfgY4DG6O58UGZn5Hz
-edhygGouCUOUCCDz/u/oDn1oFDGiIbsxBEIu+QeT5/CE0IToO4XqXY3ggKWcir26
-OokhUKiy0kGcjHjNuHIQg6KMVlQC5SIJvQ5WOJ3xVtv0rbWPvmFxBf7sU9XUeR6R
-4j17oMFAdHm0B/VEsXy2g6sCBp/86nkK8E6FmR8z4iTz722wHEkNVFfF58kuU3Kn
-GCOBCGebkXAa79rFGb2seg55y3JYFDG+Ch+bp+i0zlaZlhagfgc/dsvgGR1DLJF9
-m8F9rDgDnTyzpmahx7Pm2GT8s3mEgRt6sBxqLgv/ukFqSAYmq+rr6PuROD01Ekg9
-7X2Ipu7LU4yvE4QXZsYto1D6WAucoHkgm802Y1DTeZzQRtK963Lgq3Cc+tGfJlW/
-rpii4YLsNKlvegST46TH/ktolovPojfQwxb4kbjDFjlYnwJA2p1LSGJmKa1tMEBZ
-/VyZOwzlORbksOovVnKKctoAJDk/7RVg/XO5TN+ALu5kGXBG68LTEW6FyadSvE/K
-VBN5ksPN536ZrYjsejr39f9NrzYQNe15zwdZwIr+aITthnoDFLzq1OL2JQxq5QRC
-48n1H0FriDoMgUxsrayI
-=LjAs
+iQIcBAABAgAGBQJIjwhrAAoJEKVg1VMiehFY6dEP/2lg8SaEuRNLLFo2T8H9863W
+5n88QtaULrVamQV4F9TCvuWsshGqzWes6DABsONyY426SyvmUwzitUIYRQjV8DHt
+HxdfTy0PuK9kEO542koJZEsBPSMLz84biAXOiV6aIVQnl1wbZk/N3MLl/+RM1MJe
+QW3cwzWZQUz7PpId/EqkVM3AngMQ5jl/IiuxrR1aRNdGN+yIMr+nquZB4m9LnGlL
+CIHZnCZc27FsNY45YSpUIcKqPGN7ptLQsOQfx3u2zDuuaJOvhwdqKlbsVdyYMZIF
+wPbMQNOCiphfzp1zNyaa/Gj3plbQJYN4+lTMSCGk4JuXZSZQA62xQlbaEY5E1gjp
+vQ/4TI+dRk6xrLH1nG1SZ6OJybyBC316+lt6ocXonNZCqMRqC+u+zArWnYlE8RuE
+4jan/bBa/e9AnjF/sAyPzAMfXNQqMFjsLaZxap+QdY1WGXZCeIGlwmUH1UeHGDJ6
+hFLz/frZSLn+BhR9iOde//Mni9aAnNHTWDVHW6ZKmUcn2sfeNZEZ3uaIPb6Q3lrv
+/AETQ9FBjJNiLm5ApSjrMwQp2vLFIy0iDsGuixRL48vGRXQwZzMvx9Mv7HbvDGHO
+fjbFvCPtVVfG+7GXuJ7Cm3FMxX+IwHY8zUdWMDZl+rSe4EUXIaX76UFK7wwSkPhT
+lb91bhvsuuCajFtgqLjh
+=K2l+
 -----END PGP SIGNATURE-----
 
---=-SF2LsJFEizsG6pWfs1Em--
+--=-dqFTqhpDYuxtj2ErFIQS--
 
