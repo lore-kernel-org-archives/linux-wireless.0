@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:52723 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752752AbYGASl3 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.179]:21652 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753363AbYG2IiB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 14:41:29 -0400
-Date: Tue, 1 Jul 2008 15:41:24 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
-	Larry Finger <larry.finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
-Message-ID: <20080701184124.GE24605@khazad-dum.debian.net> (sfid-20080701_204141_375824_37C9768E)
-References: <6cf6b73e0807010255x1f2d8a21m8ed3e712012ea757@mail.gmail.com> <200807011227.15805.mb@bu3sch.de> <20080701143439.GA6962@khazad-dum.debian.net> <1214923097.3462.0.camel@johannes.berg> <20080701165036.GB6962@khazad-dum.debian.net> <1214931676.3462.5.camel@johannes.berg> <20080701173345.GA24605@khazad-dum.debian.net> <1214935291.3462.7.camel@johannes.berg>
+	Tue, 29 Jul 2008 04:38:01 -0400
+Received: by wa-out-1112.google.com with SMTP id j37so3311666waf.23
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 01:38:00 -0700 (PDT)
+Message-ID: <1ba2fa240807290138h7deced1cob0836ae3e3c1e71a@mail.gmail.com> (sfid-20080729_103808_739612_964A20D3)
+Date: Tue, 29 Jul 2008 11:38:00 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks rtl8187
+Cc: "Herton Ronaldo Krzesinski" <herton@mandriva.com.br>,
+	"Hin-Tak Leung" <hintak.leung@gmail.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <1217320089.15381.25.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1214935291.3462.7.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
+	 <48874F09.7060400@lwfinger.net>
+	 <3ace41890807281939y462c9b91n5fa952e167b6ff8c@mail.gmail.com>
+	 <200807290021.45400.herton@mandriva.com.br>
+	 <1217314430.15381.11.camel@johannes.berg>
+	 <1ba2fa240807290123n7673dbb9m7121c1e76fe57e94@mail.gmail.com>
+	 <1217320089.15381.25.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 01 Jul 2008, Johannes Berg wrote:
-> > THIS is very interesting alright...  and it is *extremely* important, so
-> > let's triple verify it, shall we?
-> > 
-> > Please hack the driver to try to transmit data with that bit set to high, and
-> > also with that bit set to low.  The best way to go about it is probably to
-> > disable the rfkill support (so that it doesn't get in the way), hack the
-> > check-the-bit function to just printk its state, and see if the radio can
-> > effectively transmit and communicate no matter what state the input pin is
-> > at.
-> > 
-> > This is very important.  It will caracterize that input pin as either an
-> > hardware rfkill line, or as an input device (in which case I would be wrong
-> > when I asked to remove the input support from b43, but one step at a time).
-> 
-> Sorry, no, I think I got confused, it should be a hardware rfkill line.
+On Tue, Jul 29, 2008 at 11:28 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2008-07-29 at 11:23 +0300, Tomas Winkler wrote:
+>> On Tue, Jul 29, 2008 at 9:53 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > On Tue, 2008-07-29 at 00:21 -0300, Herton Ronaldo Krzesinski wrote:
+>> >
+>> >> [3] /sbin/iwconfig wlan0 power on
+>> >
+>> > I don't think turning on power management (yes, this command is
+>> > completely misnamed, it turns on power _management_ not the power, you
+>> > may want "txpower auto") does anything on this chip, does it?
+>> >
+>> iwconfig power on is not implemented by mac80211 yet. There was one
+>> patch posted that implements it.
+>> I wanted to expand it but  wireless_tools 29 has a bug in parsing this
+>> command. It is fixed only in 30.pre6 which is usually not in distros.
+>
+> Heh, fun. Time for putting that into cfg80211 instead if nobody can use
+> it with wext anyway?
 
-I'd like to have a certain response for this.  Can you test, and assert
-whether it is a rfkill line or not?
-
-And, if it IS a rfkill line, I still need to know if it is flip-flop-like or
-not...  I am not certain I got the right idea (I understood it was NOT
-flip-flop-like).
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+I've planned to but I waited for some API design suggestions  you guys
+will come from OLS but I didn't get much input.
+Tomas
