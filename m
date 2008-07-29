@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:32061 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753579AbYG3BGJ (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.179]:46506 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755188AbYG2MDq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 21:06:09 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so197111wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 18:06:08 -0700 (PDT)
-Message-ID: <3ace41890807291806h6e72ad2ub11d89d910831ae9@mail.gmail.com> (sfid-20080730_030614_260430_C373D826)
-Date: Wed, 30 Jul 2008 02:06:08 +0100
-From: "Hin-Tak Leung" <hintak.leung@gmail.com>
-To: "Kalle Valo" <kalle.valo@nokia.com>
-Subject: Re: mac80211 power management breakage?(was Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks rtl8187)
-Cc: "Herton Ronaldo Krzesinski" <herton@mandriva.com.br>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Pavel Roskin" <proski@gnu.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	"Samuel Ortiz" <sameo@openedhand.com>
-In-Reply-To: <874p69m3gq.fsf@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <3ace41890807260626x925b6b8h90f85dd91b24b4d5@mail.gmail.com>
-	 <874p69m3gq.fsf@nokia.com>
+	Tue, 29 Jul 2008 08:03:46 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so4683308ika.5
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 05:03:45 -0700 (PDT)
+Subject: Re: [PATCH] mac80211: partially fix skb->cb use
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1217332288.10489.33.camel@johannes.berg>
+References: <1217323927.10489.9.camel@johannes.berg>
+	 <1217330604.6379.12.camel@localhost>
+	 (sfid-20080729_132329_995714_6D2C9701)  <1217330667.10489.19.camel@johannes.berg>
+	 <1217331773.6379.25.camel@localhost>
+	 (sfid-20080729_134300_214751_172329C5)  <1217332288.10489.33.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 29 Jul 2008 14:03:40 +0200
+Message-Id: <1217333020.6379.31.camel@localhost> (sfid-20080729_140349_649719_4EA25C8B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 29, 2008 at 10:42 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
-<snipped>
-> Do you mean this patch from Samuel which is in wireless-testing:
->
-> commit 8f87dd7e540d455f8e7f11478133b85edc969c67
-> Author: Samuel Ortiz <samuel@sortiz.org>
-> Date:   Fri Jul 4 10:49:31 2008 +0200
->
->    mac80211: power management wext hooks
+On Tue, 2008-07-29 at 13:51 +0200, Johannes Berg wrote:
+> That sounds sane to me, then you don't need the cb at all, do you? Can
+> just send it to the master dev with skb->do_not_encrypt set, right?
 
-Yes.
+Right.
 
-<snipped>
-> You are confusing AP and client mode PSM here,
-> MAC80211_VERBOSE_PS_DEBUG is used for debugging PSM support in AP
-> mode. Client mode PSM support is usually implemented in the driver or
-> the firmware. We are planning to add some PSM support to mac80211, but
-> it's still in the works.
+> In fact, looking at the code, there seems to be a bug with promisc, are
+> you sure it's allowed to netif_rx/dev_queue_xmit the same frame?
 
-Yes, I realised I was talking rubbish :-). But as you said, enabling
-PS should have no effect whatsoever.
-The other possibility is IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING, but that
-also seems to be AP mode -specific.
+I see, not doing a copy on that case. Yeah, that needs to be fixed, I'll
+take care of it.
+
+
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
+
+
