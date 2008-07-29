@@ -1,100 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:52826 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754428AbYGWUJ5 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58318 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756816AbYG2OVh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 16:09:57 -0400
-Received: by py-out-1112.google.com with SMTP id p76so1858746pyb.10
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2008 13:09:56 -0700 (PDT)
-Subject: Re: [PATCH 1/4] Add new Atheros IEEE 802.11n ath9k driver
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Jouni Malinen <jouni.malinen@atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-In-Reply-To: <1216842238.13587.31.camel@johannes.berg>
-References: <20080720024341.GQ17936@ruslug.rutgers.edu>
-	 <20080720024500.GR17936@ruslug.rutgers.edu>
-	 (sfid-20080720_044515_228476_FA83BA3F)  <1216842238.13587.31.camel@johannes.berg>
-Content-Type: text/plain
-Date: Wed, 23 Jul 2008 13:09:56 -0700
-Message-Id: <1216843796.30386.13.camel@brick> (sfid-20080723_221001_954843_1556F33A)
+	Tue, 29 Jul 2008 10:21:37 -0400
+Subject: Re: iwlwifi aggregation info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240807290706h70f89f68xf8fe7e672c0275ad@mail.gmail.com> (sfid-20080729_160613_116490_52110707)
+References: <1217331138.10489.24.camel@johannes.berg>
+	 <1217334452.10489.42.camel@johannes.berg>
+	 <1ba2fa240807290535h3ebd4121h399b8a8cd1d8b276@mail.gmail.com>
+	 <1217336023.10489.51.camel@johannes.berg>
+	 <1ba2fa240807290604y47edafe1k7cf93831c31b6112@mail.gmail.com>
+	 <1217336870.10489.55.camel@johannes.berg>
+	 <1ba2fa240807290618j67db294w524f3885f0e94c7b@mail.gmail.com>
+	 <1217337819.10489.57.camel@johannes.berg>
+	 <1ba2fa240807290643l4192ca62ia4db9966501caf0b@mail.gmail.com>
+	 <1217339170.10489.62.camel@johannes.berg>
+	 <1ba2fa240807290706h70f89f68xf8fe7e672c0275ad@mail.gmail.com>
+	 (sfid-20080729_160613_116490_52110707)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aLgcQZVF6OBvvE8e7lbW"
+Date: Tue, 29 Jul 2008 16:21:33 +0200
+Message-Id: <1217341293.10489.73.camel@johannes.berg> (sfid-20080729_162140_500137_989AE2E0)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-07-23 at 21:43 +0200, Johannes Berg wrote:
-> Only STA support is currently enabled
-> +#ifndef howmany
-> +#define howmany(x, y)   (((x)+((y)-1))/(y))
-> +#endif
 
-It's called DIV_ROUND_UP in kernel.h
+--=-aLgcQZVF6OBvvE8e7lbW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> +#define REG_WRITE(_ah, _reg, _val) iowrite32(_val, _ah->ah_sh + _reg)
-> +#define REG_READ(_ah, _reg) ioread32(_ah->ah_sh + _reg)
-> 
-> Do you really need macros for this? Static inlines that do
-> type-checking are so much nicer.
+On Tue, 2008-07-29 at 17:06 +0300, Tomas Winkler wrote:
 
-Or just open-code the ioread/writes
+> Please put some reasoning behind this 'wrong'?  Different doesn't mean
+> wrong and 'only one' certainly doesn't mean wrong.
+> And it also doesn't mean that this hw should not operates correctly
+> under Linux. I also cannot publish any performance comparison but it
+> doesn't look wrong at all.
 
-> +#define LE_READ_2(p)							\
-> +	((u_int16_t)							\
-> +	 ((((const u_int8_t *)(p))[0]) | \
-> +		(((const u_int8_t *)(p))[1] << 8)))
-> +
+Well I read that that you said one needs hardware queues for
+correctness, which clearly cannot be the case since neither Atheros nor
+Broadcom have hardware queues used for this.
 
-get_unaligned_le16()
+> If Intel is the only vendor implements this that way that we may push
+> the extra queuing into driver
+> but so far I've seen only athk9 with 11n.
 
-> +#define LE_READ_4(p)							\
-> +	((u_int32_t)							\
-> +	 ((((const u_int8_t *)(p))[0]) | \
-> +		(((const u_int8_t *)(p))[1] << 8) | \
-> +		(((const u_int8_t *)(p))[2] << 16) | \
-> +			(((const u_int8_t *)(p))[3] << 24)))
-> 
+I think we need a terminology update and a bit of a big picture thing
+here.
 
-get_unaligned_le32()
+First of all, let me ask a question: Why should stations that enable
+aggregation be treated preferentially by giving them an extra qdisc?
 
-> Harvey will flame you for that. Rightfully.
+As far as I'm concerned, they should _not_ be, and thus their packets
+should flow through the qdisc for the same AC that packets from non-agg
+stations go through. If this AC queue gets full because it's background
+and video is hogging the air, then for fairness reasons we really should
+stop the whole AC and not let aggregation frames continue to flow.
 
-;-)
+I think we're talking about two different queue stopping issues here
+maybe?
 
-> +	/* XXX: spin_lock_bh should not be used here, but sparse bitches
-> +	 * otherwise. We should fix sparse :) */
-> +	spin_lock_bh(&mcastq->axq_lock);
-> 
-> First and foremost you should write correct code regardless of whether
-> sparse complains about it or not. Then let others review it and possibly
-> submit a bug report to sparse. This is the wrong way around.
-> 
+johannes
 
-Indeed.
+--=-aLgcQZVF6OBvvE8e7lbW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> +/* Macro to expand scalars to 64-bit objects */
-> +
-> +#define	ito64(x) (sizeof(x) == 8) ? \
-> +	(((unsigned long long int)(x)) & (0xff)) : \
-> +	(sizeof(x) == 16) ? \
-> +	(((unsigned long long int)(x)) & 0xffff) : \
-> +	((sizeof(x) == 32) ?			\
-> +	 (((unsigned long long int)(x)) & 0xffffffff) : \
-> +	(unsigned long long int)(x))
-> 
-> Eww.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Consider using s64/u64 if you really need 64-bits.
+iQIcBAABAgAGBQJIjydpAAoJEKVg1VMiehFYDd4P/1/KA0Uy28YmkZSze1y8yUPZ
+Hj7HzgkDHyDhtW0k+BSpO9ORskqlq7rnuF0VnL7w0MGRQS1C3I1lvMscWOOlwObT
+pHoh6wkl8B40eSLo1vN+1GvgUEZoJZLZzdsqv/MpJSO4aZJG43ZcYqA8Idb6Esv8
+T92nuV8snbdrwK9Rz6JA4SYrgtrrki9qw0WwhNxn/Ui6TGOpWfjCGnSWdR5yCOI/
+qM29cfPDyexNF+0ZZGTa646do9WH3lITv3rbPhvykeE5kwyFwl3OlMqgVjOjwUzj
+qq2ggJplAfKBJ6IetVCt3QzbrpWPnRglMv5dBoNdR+xuxdQ27ogHGLJpxkTDn4HO
+WL7J0yCQdfJbXWD37cLWdbqNKDWelo94YeLwcS+9XK6ZmFFblQwH4eT5dGrIQsC5
+1i699SDGh30u3xcA+KuIrgy+UnTrbSzb9gbRK/ScCvBPirRl7tGoTlJIzTFvmFn/
+OFc6Ma9PKgDBd2+TqHHl/OnLMoJyr9g2cCMklJbRcaYBvc/a4GxT8pyazlRiqaad
+I9lPqs6+pu7ojyH/PjlPgruPxZbccLhVZ0vFn4Ee7s+4xxzHHHlyPzuQXVBaE0g8
+1uGvGGq9q7Z433bI8/+STBIRklryOLpWBRZ6EnyYdnLyYR+HbDubqgGPWpKSFteK
+6jjwKbMnNGD7VtPZQ5L+
+=fHdF
+-----END PGP SIGNATURE-----
 
-Also, for anything shared with the hardware in a fixed endianness,
-le16/32/64 and be16/32/64 are your friends.  To reiterate what
-Johannes mentioned elsewhere.
-
-Cheers,
-
-Harvey
+--=-aLgcQZVF6OBvvE8e7lbW--
 
