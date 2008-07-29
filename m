@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:1927 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752699AbYGAIlZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 04:41:25 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so557532nfc.21
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Jul 2008 01:41:23 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: Don't request encryption for proble response
-Date: Tue, 1 Jul 2008 10:45:13 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
+Received: from ra.tuxdriver.com ([70.61.120.52]:3287 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750818AbYG3Enj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jul 2008 00:43:39 -0400
+Date: Tue, 29 Jul 2008 13:52:06 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Theodore Tso <tytso@MIT.EDU>,
+	Alistair John Strachan <alistair@devzero.co.uk>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	dsd@gentoo.org, kune@deine-taler.de, linux-wireless@vger.kernel.org
+Subject: Re: 2.6.27-rc1: zd1211rw association fails
+Message-ID: <20080729175206.GB4923@tuxdriver.com> (sfid-20080730_064344_152244_5E6DE80B)
+References: <alpine.LFD.1.10.0807281956030.3334@nehalem.linux-foundation.org> <200807291049.47342.alistair@devzero.co.uk> <1217326195.10489.10.camel@johannes.berg> <20080729120442.GE9378@mit.edu> <1217333359.10489.38.camel@johannes.berg> <1217333706.10489.40.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200807011045.13870.IvDoorn@gmail.com> (sfid-20080701_104129_232583_452DD447)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1217333706.10489.40.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Probe responses shouldn't be encrypted, and mac80211 doesn't
-set the crypto key accordingly. However it didn't set the
-IEEE80211_TX_CTL_DO_NOT_ENCRYPT flag which means drivers
-could make an attempt to encrypt it, and causing a NULL
-pointer dereference when accessing the provided hw_key field.
+On Tue, Jul 29, 2008 at 02:15:06PM +0200, Johannes Berg wrote:
+> 
+> > > Yeah, it's really too bad -rc1 got released just before you were able
+> > > to post the fix to this, since if there were 100 million people who
+> > > were trying out kernels starting with -git7 that use wireless, there
+> > > will probably be 200 million people trying out -rc1.  :-)
+> > > 
+> > > Thanks for finding and fixing it, though.  I stopped trying out
+> > > kernels after -git6 since I was travelling at OSCON, and not having
+> > > wireless was a show-stopper for me....
+> > 
+> > If everybody's going to decide now to hit on _me_, I'll point out that
+> > davem's MQ TX changes broke it
+> 
+> Of course that's not strictly true, it had been broken forever, it just
+> happened to never show up before. And I mean forever, the original
+> devicescape code that got in was already broken.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7b4d4d4..fd28cd8 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2531,6 +2531,7 @@ static int ieee80211_sta_join_ibss(struct net_device *dev,
- 			control->flags |= IEEE80211_TX_CTL_SHORT_PREAMBLE;
- 		control->antenna_sel_tx = local->hw.conf.antenna_sel_tx;
- 		control->flags |= IEEE80211_TX_CTL_NO_ACK;
-+		control->flags |= IEEE80211_TX_CTL_DO_NOT_ENCRYPT;
- 		control->control.retry_limit = 1;
- 
- 		ifsta->probe_resp = skb_copy(skb, GFP_ATOMIC);
+FWIW, I think the MQ stuff didn't spend much (or any) time in -next...
+
+-- 
+John W. Linville
+linville@tuxdriver.com
