@@ -1,73 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:17967 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753626AbYGUQuL (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55096 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751158AbYG2JQj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 12:50:11 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so503150nfc.21
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2008 09:50:09 -0700 (PDT)
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Clear queue entry flags during initialization
-Date: Mon, 21 Jul 2008 19:06:02 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	rt2400-devel@lists.sourceforge.net
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200807211906.02409.IvDoorn@gmail.com> (sfid-20080721_185034_764507_D7B65D0C)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Tue, 29 Jul 2008 05:16:39 -0400
+Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks
+	rtl8187
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240807290138h7deced1cob0836ae3e3c1e71a@mail.gmail.com> (sfid-20080729_103802_642936_02CAC6A2)
+References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
+	 <48874F09.7060400@lwfinger.net>
+	 <3ace41890807281939y462c9b91n5fa952e167b6ff8c@mail.gmail.com>
+	 <200807290021.45400.herton@mandriva.com.br>
+	 <1217314430.15381.11.camel@johannes.berg>
+	 <1ba2fa240807290123n7673dbb9m7121c1e76fe57e94@mail.gmail.com>
+	 <1217320089.15381.25.camel@johannes.berg>
+	 <1ba2fa240807290138h7deced1cob0836ae3e3c1e71a@mail.gmail.com>
+	 (sfid-20080729_103802_642936_02CAC6A2)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+rlq4M9WXdsNl7gTkUi7"
+Date: Tue, 29 Jul 2008 11:16:14 +0200
+Message-Id: <1217322974.10489.0.camel@johannes.berg> (sfid-20080729_111643_208782_8B10FA2D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the queues are being initialized the entry flags fields must be
-reset to 0. When this does not happen some entries might still be
-marked as "occupied" after an ifdown & ifup cycle which would trigger
-errors when the entry is being accessed:
 
-	phy0 -> rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 0.
-	Please file bug report to http://rt2x00.serialmonkey.com.
+--=-+rlq4M9WXdsNl7gTkUi7
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-This also fixes the mac80211 warning:
+On Tue, 2008-07-29 at 11:38 +0300, Tomas Winkler wrote:
 
-	------------[ cut here ]------------
-	WARNING: at net/mac80211/tx.c:1238 ieee80211_master_start_xmit+0x30a/0x350 [mac80211]()
+> >> iwconfig power on is not implemented by mac80211 yet. There was one
+> >> patch posted that implements it.
+> >> I wanted to expand it but  wireless_tools 29 has a bug in parsing this
+> >> command. It is fixed only in 30.pre6 which is usually not in distros.
+> >
+> > Heh, fun. Time for putting that into cfg80211 instead if nobody can use
+> > it with wext anyway?
+>=20
+> I've planned to but I waited for some API design suggestions  you guys
+> will come from OLS but I didn't get much input.
 
-which was triggered by the queue error.
+This particular thing I don't remember talking about except that we
+want, when powersave is on, be able to select the powersaving level
+based on information applications attach to their sockets, rather than
+requiring the user to make a guess.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
-John, please queue for 2.6.27, this one is quite important to reenable
-the queues after an ifdown & ifup cycle.
+johannes
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 7b581a3..3b27f6a 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -492,9 +492,12 @@ void rt2x00queue_init_rx(struct rt2x00_dev *rt2x00dev)
- 	if (!rt2x00dev->ops->lib->init_rxentry)
- 		return;
- 
--	for (i = 0; i < queue->limit; i++)
-+	for (i = 0; i < queue->limit; i++) {
-+		queue->entries[i].flags = 0;
-+
- 		rt2x00dev->ops->lib->init_rxentry(rt2x00dev,
- 						  &queue->entries[i]);
-+	}
- }
- 
- void rt2x00queue_init_tx(struct rt2x00_dev *rt2x00dev)
-@@ -508,9 +511,12 @@ void rt2x00queue_init_tx(struct rt2x00_dev *rt2x00dev)
- 		if (!rt2x00dev->ops->lib->init_txentry)
- 			continue;
- 
--		for (i = 0; i < queue->limit; i++)
-+		for (i = 0; i < queue->limit; i++) {
-+			queue->entries[i].flags = 0;
-+
- 			rt2x00dev->ops->lib->init_txentry(rt2x00dev,
- 							  &queue->entries[i]);
-+		}
- 	}
- }
- 
+--=-+rlq4M9WXdsNl7gTkUi7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIjt/aAAoJEKVg1VMiehFYBPYQAKrnpOQtavFNNRUbCNQ+5Pon
+AkR/g2wfsyWoZxzVyXsxDCWg+PqiVBdGVWKQOPoN9HO0tKXChKiLKE7Q59pmFJHb
+zNfvFPVotaZOylqomVCBYSprc0p+7A9KKhBAWjKHa5Hs5ERAiwDJrlFCyrw0daiG
+aDdmspraWiAVInwO36VA2jYKsKA3feN8/o6571BAOnsFa3HQ4yE4skcjsB1Xmx1s
+HLBYXxT9XOQKSSp6OwIE13Dre2k8UxG4l9xhIfQtc++VwuOt+CsNpsqUYVXT9kkN
+L+kPlVqmN9YiuWGWn74bdmLONkKxh1CDkn/90vi+bjaW2jtnpYuINMr3ix+R3zLf
+xqjdutTPFvKs2ipyXDmPEnWmSdCqLKr0NnuFZsg5mVoA7vpIBGFJqOFIiluGdDTl
+d497Mpke9bstNp/pw71e+bDEOtbbE4gzTHPYVqnsFS7gW0lNeEdipBwW95kjugXf
+pQMWI4L+v/YHsMLlvEy2cgUogehX2H3zefYeq7Z4FCnmba+EQDcMNbpgY817oiCx
+zMh0ty83Mqq6LTPVf53bJVA3xmAuStkhiidHCfPn8x2McaH0DRY0D12aeVSrbiQc
+SHMsPNsmX5Ch4fT1wnZlj0ET9uJjEJAfc0/l8wZKdHcCC5Yn3CURWlOCjCGg/bS/
+xB1P3EoFJDZJTWHQUmfv
+=boE/
+-----END PGP SIGNATURE-----
+
+--=-+rlq4M9WXdsNl7gTkUi7--
+
