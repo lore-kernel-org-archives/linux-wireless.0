@@ -1,57 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:46298 "EHLO mx1.redhat.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:2123 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754815AbYGORSW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jul 2008 13:18:22 -0400
-Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
-From: Dan Williams <dcbw@redhat.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <200807101815.27204.mb@bu3sch.de>
-References: <20080709190915.GA8238@tuxdriver.com>
-	 <69e28c910807100912h30fcb57fpb4fb48b95c640f77@mail.gmail.com>
-	 <200807101815.27204.mb@bu3sch.de>
-Content-Type: text/plain; charset=utf-8
-Date: Tue, 15 Jul 2008 13:16:31 -0400
-Message-Id: <1216142191.6039.113.camel@localhost.localdomain> (sfid-20080715_191837_630080_302C802F)
-Mime-Version: 1.0
+	id S1750933AbYG3E1X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jul 2008 00:27:23 -0400
+Date: Tue, 29 Jul 2008 13:46:23 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Please do not pull 2.6.27-rc1 into wireless-testing
+Message-ID: <20080729174623.GA4923@tuxdriver.com> (sfid-20080730_062726_108435_187BC920)
+References: <488E9FB8.3080804@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <488E9FB8.3080804@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-07-10 at 18:15 +0200, Michael Buesch wrote:
-> On Thursday 10 July 2008 18:12:32 Stefanik G=C3=A1bor wrote:
-> > Some other topics which might be of interest/good to include:
-> > - New chipsets needing drivers (SiS 16x, Marvell, etc.)
->=20
-> I have no idea what to discuss about non-existing drivers, really.
-> Something like: "Do we need that driver? Everyone votes YES and is ha=
-ppy"?
+On Mon, Jul 28, 2008 at 11:42:32PM -0500, Larry Finger wrote:
 
-Maybe during the week we could organize some hackfests to work on the
-Marvell/SiS/etc mac80211 drivers?  Everyone bring their favorite
-non-working Marvell 88w83xx card and we make mrv8k our bitch or
-something like that.
+> As stated in the subject, please do not update wireless-testing with 
+> 2.6.27-rc1, at least for a while. In the thread that starts at  
+> http://thread.gmane.org/gmane.linux.kernel.wireless.general/18423, I 
+> found that commit 175f9c1bba9b825d2 breaks wireless, at least for b43. 
+> Until that is fixed, I think wireless-testing should remain at 2.6.26.
 
-Dan
+Have you tried the patches Johannes sent today?  Do they help the
+situation?
 
-> > - Radiotap enhancements
->=20
-> What radiotap enhancements specifically? If it's just a field or a bi=
-t
-> to add, just mail the radiotap people. I think there's no need to dis=
-cuss that
-> (except for with the radiotap people on their mailinglist).
->=20
-> > - Userspace MLME: Plans and status
->=20
-> Already on the list.
->=20
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
