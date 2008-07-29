@@ -1,66 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from stinky.trash.net ([213.144.137.162]:49337 "EHLO
-	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750836AbYGUWFZ (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:24624 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755599AbYG2LsB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 18:05:25 -0400
-Message-ID: <488507FB.9050101@trash.net> (sfid-20080722_000530_291817_D49ADB8E)
-Date: Tue, 22 Jul 2008 00:04:43 +0200
-From: Patrick McHardy <kaber@trash.net>
+	Tue, 29 Jul 2008 07:48:01 -0400
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: Alistair John Strachan <alistair@devzero.co.uk>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	dsd@gentoo.org, kune@deine-taler.de, linux-wireless@vger.kernel.org
+Subject: Re: 2.6.27-rc1: zd1211rw association fails
+References: <alpine.LFD.1.10.0807281956030.3334@nehalem.linux-foundation.org>
+	<200807291049.47342.alistair@devzero.co.uk>
+	<1217326195.10489.10.camel@johannes.berg>
+	<200807291225.00679.alistair@devzero.co.uk>
+	<1217330777.10489.21.camel@johannes.berg>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Tue, 29 Jul 2008 14:46:16 +0300
+In-Reply-To: <1217330777.10489.21.camel@johannes.berg> (ext Johannes Berg's message of "Tue\, 29 Jul 2008 13\:26\:17 +0200")
+Message-ID: <87ljzklxpz.fsf@nokia.com> (sfid-20080729_134806_595900_F1683A11)
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: David Miller <davem@davemloft.net>, mingo@elte.hu,
-	ischram@telenet.be, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	j@w1.fi
-Subject: Re: [crash] BUG: unable to handle kernel NULL pointer dereference
- at 0000000000000370
-References: <4884F3D7.4070604@lwfinger.net>	<20080721.134608.75595942.davem@davemloft.net>	<4884F6E9.6090809@trash.net> <20080721.140120.135667045.davem@davemloft.net> <4884FA3F.70109@trash.net> <48850121.9090106@trash.net> <488504D9.5090100@lwfinger.net>
-In-Reply-To: <488504D9.5090100@lwfinger.net>
-Content-Type: multipart/mixed;
- boundary="------------080609000902030105010805"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------080609000902030105010805
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Larry Finger wrote:
-> Patrick McHardy wrote:
->>
->> This is what I was missing, we're setting a lockdep class
->> by default depending on dev->type. This patch combined
->> with yours should fix all addr_list_lock warnings.
+>> If it doesn't strain you too much more, could you actually tell me
+>> where this is? Your last 5 posts to LKML don't seem to contain such
+>> a patch, and I'm not subscribed to linux-wireless.
 >
-> No cigar yet. I tried davem's patch first, then yours on top of his. I 
-> still get both the recursive locking and the kernel warning.
+> Well, the latter has archives.
 
-Does this one earn me my cigar? :)
+Here's a link to the patch:
 
+http://marc.info/?l=linux-wireless&m=121732394028001&w=2
 
-
---------------080609000902030105010805
-Content-Type: text/plain;
- name="x"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="x"
-
-diff --git a/net/core/dev.c b/net/core/dev.c
-index 2eed17b..371b1a0 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -259,7 +259,7 @@ static RAW_NOTIFIER_HEAD(netdev_chain);
- 
- DEFINE_PER_CPU(struct softnet_data, softnet_data);
- 
--#ifdef CONFIG_DEBUG_LOCK_ALLOC
-+#ifdef CONFIG_LOCKDEP
- /*
-  * register_netdevice() inits txq->_xmit_lock and sets lockdep class
-  * according to dev->type
-
---------------080609000902030105010805--
+-- 
+Kalle Valo
