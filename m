@@ -1,57 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.phnxsoft.com ([195.227.45.4]:2249 "EHLO
-	posthamster.phnxsoft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751933AbYGaPWw (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.180]:18666 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750885AbYG2QdU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 11:22:52 -0400
-Message-ID: <4891D1B9.70703@imap.cc> (sfid-20080731_172256_192283_E18D72B2)
-Date: Thu, 31 Jul 2008 16:52:41 +0200
-From: Tilman Schmidt <tilman@imap.cc>
-MIME-Version: 1.0
-To: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Q: support for AVM Fritz! WLAN USB in kernel 2.6.25+
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig991F19F8A4B76AFBF9E2AF1D"
+	Tue, 29 Jul 2008 12:33:20 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so4785982ika.5
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 09:33:19 -0700 (PDT)
+Subject: Re: [PATCH 4/6] libertastf: command helper functions for libertastf
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1217173925.2700.33.camel@localhost.localdomain>
+References: <48763883.2d352c0a.1af5.2270@mx.google.com>
+	 <1217173925.2700.33.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Tue, 29 Jul 2008 18:33:09 +0200
+Message-Id: <1217349189.6379.78.camel@localhost> (sfid-20080729_183323_290504_987B68E2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig991F19F8A4B76AFBF9E2AF1D
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: quoted-printable
+On Sun, 2008-07-27 at 11:52 -0400, Dan Williams wrote:
+> Other than that, looks good.  I know I and Woodhouse (and maybe Holger)
 
-Commit 782e70c6fc2290a0395850e8e02583b8b62264d8, which went into
-2.6.25, broke AVM's closed-source driver for this device:
+There was no mention to Holger in the licenses when I started this. 
 
-ID 057c:62ff AVM GmbH WLAN USB v1.1 (cdrom mode)
-ID 057c:6201 AVM GmbH WLAN USB v1.1
+About David and you, there is a Red Hat license comment on two files,
+assoc.[ch] from which I took nothing, and cmd.h from where I took two
+macros and two function definitions. 
 
-Is there an open source alternative for that driver, or do systems
-with that device have to stay with kernel 2.6.24?
+I know modifications by the three of you extend beyond what was noted by
+the license comments but I thought I shouldn't add you if you were not
+there already. I wouldn't mind doing so though.
 
-Thanks,
-Tilman
-
---=20
-Tilman Schmidt                    E-Mail: tilman@imap.cc
-Bonn, Germany
-Diese Nachricht besteht zu 100% aus wiederverwerteten Bits.
-Unge=F6ffnet mindestens haltbar bis: (siehe R=FCckseite)
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
 
 
---------------enig991F19F8A4B76AFBF9E2AF1D
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.4 (MingW32)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFIkdHCQ3+did9BuFsRAk9BAJ9EAfT2Y7wPD8uGV05C9OerG/RtNwCfeScu
-6gDS58uOeRykWODwpBfmrb8=
-=nbf7
------END PGP SIGNATURE-----
-
---------------enig991F19F8A4B76AFBF9E2AF1D--
