@@ -1,233 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n26.bullet.mail.mud.yahoo.com ([68.142.206.221]:24048 "HELO
-	n26.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751146AbYGDPQn (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59196 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756886AbYG2NHw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jul 2008 11:16:43 -0400
-Date: Fri, 4 Jul 2008 08:10:27 -0700 (PDT)
-From: barry bouwsma <free_beer_for_all@yahoo.com>
-Reply-To: free_beer_for_all@yahoo.com
-Subject: mac80211 No ProbeResp drives me bonkers
-To: linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <828653.94358.qm@web46113.mail.sp1.yahoo.com> (sfid-20080704_171648_083975_3C8BB7E5)
+	Tue, 29 Jul 2008 09:07:52 -0400
+Subject: Re: iwlwifi aggregation info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240807290604y47edafe1k7cf93831c31b6112@mail.gmail.com> (sfid-20080729_150435_076308_D72E08C4)
+References: <1217331138.10489.24.camel@johannes.berg>
+	 <1217331408.10489.26.camel@johannes.berg>
+	 <1ba2fa240807290525o41832ccei92ff554bef876b37@mail.gmail.com>
+	 <1217334452.10489.42.camel@johannes.berg>
+	 <1ba2fa240807290535h3ebd4121h399b8a8cd1d8b276@mail.gmail.com>
+	 <1217336023.10489.51.camel@johannes.berg>
+	 <1ba2fa240807290604y47edafe1k7cf93831c31b6112@mail.gmail.com>
+	 (sfid-20080729_150435_076308_D72E08C4)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DAsXsh80z+twR+e1lyPu"
+Date: Tue, 29 Jul 2008 15:07:49 +0200
+Message-Id: <1217336870.10489.55.camel@johannes.berg> (sfid-20080729_150756_832700_B2E1C312)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Moin moin!
 
-The newer mac80211 code has caused me grief in my attempts to use
-post-2.6.24 kernels, accessing a somewhat remote AP, for which the
-old softmac code (plus at least one hack) worked ``reliably'' or
-``well'', or ``kinda worked'' and ``maybe''.
+--=-DAsXsh80z+twR+e1lyPu
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The most annoying problem is that the following section of code is
-triggered far too often -- anywhere from hourly intervals to less
-than a minute, depending on something -- what, I don't know.
+On Tue, 2008-07-29 at 16:04 +0300, Tomas Winkler wrote:
 
-Code, with hack that has let me remain online overnight, even during
-a bit of what must suffice for ``sleep'':
-as last seen in net/mac80211/mlme.c ...
+> Correct.
 
+Ok. That means it can go away with the stuff I'm doing right now.
 
-    992                 if (time_after(jiffies,
-    993                                sta->last_rx + IEEE80211_MONITORING_INTER    993 VAL)) {
-    994                         if (ifsta->flags & IEEE80211_STA_PROBEREQ_POLL)
-    994 {
-    995                                 printk(KERN_DEBUG "%s: No ProbeResp from    995  "
-    996                                        "current AP %s - assume out of "
-    997                                        "range\n",
-    998                                        dev->name, print_mac(mac, ifsta->    998 bssid));
-    999 #if 0 /* XXX  AAAGH this seems to kick me off too much, KILL  */
-   1000                                 disassoc = 1;
-   1001                                 sta_info_unlink(&sta);
-   1002                         } else
-   1003 #endif /* XXX  cause of high blood pressure */
-   1004 } /* XXX HACK */
-   1005                                 ieee80211_send_probe_req(dev, ifsta->bss   1005 id,
-   1006                                                          local->scan_ssi   1006 d,
+> Other thing is you probably not seeing the latest code as well. Yi is
+> not publish new code before John is merging what we've already sent
+> out. I also have something still in the drawer.
 
+Heh ok, then instead of fixing iwlwifi I'll just fix up mac80211 and
+give you the patches to look at aggregation, seeing that Ron is on
+vacation for another week.
 
-This from a recent (week-old-ish) 2.6.26-rc8 kernel.
+What I discussed with Ron (and Jouni) is that we should not use extra
+software queues for aggregation, because
+ - doing it requires requeue which is not possible with tx info intact
+ - doing it breaks access semantics in the case where not just hw but
+   also sw queues start filling up
 
-I've added no further debuggery to see exactly what's going on.
-A hypothesis I have is that this sometimes-weak (but not since I
-added the above XXX-pr0n hack, all hail Murphy, too bad I didn't
-*need* uninterrupted 'net access during this time) AP sends some
-data that gets lost due to one or more of the following:
+johannes
 
-*  rapid fluctuations in signal strength, related to the fact that
-   at times the Beacons sent are sometimes not receivable for hours
+--=-DAsXsh80z+twR+e1lyPu
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-*  the fact this is not an isolated network, with many APs sending
-   Beacons on this channel, as well as even more operating on nearby
-   channels (overlap), so collisions are inevitable.  Since I was
-   repeatedly kicked off at intervals of a minute or so when I was
-   trying to take care of ``important'' ``work'' one afternoon, I
-   suspect that was due to corrupted packets.  Maybe other ``people''
-   were online and interfering with me packets.  I could reassociate
-   immediately at signal levels which qualify as ``never seen better''
-   from that AP, so it wasn't signal fade.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-*  something else blindingly obvious that I'm not seeing.
+iQIcBAABAgAGBQJIjxYiAAoJEKVg1VMiehFYg4kP/Rq77pj/QeDFm6KwIVWVMgnc
+B97IkHiem/vjF0AjB9nTCuJtwqUwPfPOF09NuLII/vRv3l4T/jvV8DIyBgIzzkvH
+tjcB/5K4UldtBYgDmXz8CW9FQgz4b9A9an3fecvDh7iQEsEN66Ir/Eda/701SzTo
+lwObr3ZxJVaVkgtL8hXYNGE19IjnilkIDhckJSNqWuZGzPV7/JD5fZUJYl+q37iz
+TDHdruDT1w/rvXFND0iqnT2asso76lWP5zsam0LN+Vw/fZnxXH2LvnqMeU/epx1y
+b+ujlYfhX9pFRLslsGhTFtXyPcNNK/iJPHKHadgHs0sLnLv1LsbjgLsfEWp4WHE9
+fThtCEV4yRGcPnAT2MWxwT1C5IziGXV+Ke8F5BRHfLvQG1wdZMQd4aPafHTO/CIb
+BuT9qmERFm5GagB+MlGPji8GNrXrHwLxLwLWuyTg23WfPC7+y0lVZYYTkuGt3FMR
+p1JHolZb+WFhqeSyDAEZqXHtM+zwZqxnj8p0X82XBBBO2UbpRYwviBxdJGDBbZiF
+hZg7cXY8w0bAxQgc12Q0iNPn3JIA+nWvbCBIOn6u9T+6jvIg3+lUa8yFLqa6WqKp
+DYceIKUXJ9rlu/Pc91FhMthJR8NA/5l/5T0Covnrf/lxC8oI/Z+9bEYiy0RicMMn
+uA0NnXpfx6AhTATU2PJP
+=1r/t
+-----END PGP SIGNATURE-----
 
-
-I'm guessing there's no retries in the code (haven't worked up the
-courage and awakeness to actually check) or that the retries are in
-too-short a time interval to make a difference -- which is another
-Issue I have with mac80211 compared with softmac with this particular
-AP (more later about that, maybe)
-
-
-With the above hack, I've been online for longer than would be
-possible without, as I've logged the times I would have been kicked
-off.  My fear, apparently unfounded, was that I'd be syslog-bombed
-by these messages, but so far they appear occasionally, yet enough
-to be annoying because they forcibly threw me off.  Still waiting to
-see how it handles signal dropping below the point of communication.
-
-
-[193012.201642] wlan1: RX deauthentication from 00:...
-                [normal reassociation...]
-[193013.206729] wlan1: associated
-[208709.210335] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[210407.210307] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[214612.381539] wlan1: RX deauthentication from 00:...
-[214613.386331] wlan1: associated
-[215812.391525] wlan1: RX deauthentication from 00:...
-[215813.398349] wlan1: associated
-[217012.401289] wlan1: RX deauthentication from 00:...
-[217013.409378] wlan1: associated
-[218212.412629] wlan1: RX deauthentication from 00:...
-[218213.419281] wlan1: associated
-[219089.410133] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[219141.410157] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[219153.410152] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[219229.410140] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[219412.421206] wlan1: RX deauthentication from 00:...
-[219413.427770] wlan1: associated
-[219427.420189] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[219445.420157] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[219531.420166] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[219621.420130] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[219631.420146] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[219991.420157] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[221212.437209] wlan1: RX deauthentication from 00:...
-[221213.435806] wlan1: associated
-[222412.448670] wlan1: RX deauthentication from 00:...
-[222413.447710] wlan1: associated
-[223612.458562] wlan1: RX deauthentication from 00:...
-[223613.457670] wlan1: associated
-[224812.468496] wlan1: RX deauthentication from 00:...
-[224813.471239] wlan1: associated
-[226012.478078] wlan1: RX deauthentication from 00:...
-[226013.480571] wlan1: associated
-[227212.487556] wlan1: RX deauthentication from 00:...
-[227213.489715] wlan1: associated
-[228412.497499] wlan1: RX deauthentication from 00:...
-[228413.496655] wlan1: associated
-[229101.490133] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[229165.490136] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[229191.490159] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[229612.508539] wlan1: RX deauthentication from 00:...
-[229613.506668] wlan1: associated
-[232289.500159] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[238241.500151] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[238413.500163] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-
-That brings us up-to-date and I'm still online and I've needed to
-do nothing to remain that way.
-
-In the worst case so far, this occurred twice within ten seconds.
-There's no obvious predictability as to when the ProbeResp fails.
-
-Ignoring it, as I've done, is not the right way to proceed, but
-unless I either read the code or add further debugging, I can't
-say whether a few retries would help me, or if I should simply
-await the inevitable timeouts which I assume happen later.
-
-
-This probably isn't a problem with a strong local net, or perhaps
-an isolated net without other potentially-interfering APs, but I
-know too little about wireless networking protocols and modulation
-techniques to speak authoritatively.
-
-
-*update*
-Ah, now we have a weak signal: seems to be 4 to 6 second intervals
-between syslog messages, and again I'm back in business...  aaaand,
-I'm out of range, but still see signal levels -- no syslog-bombing
-as feared; signal unusable, syslog has stopped, awaiting usual kernel
-panic, nothing yet, ...
-
-Yay!  Third complaint about mac80211 is identified (an ``unusable''
-signal would disappear from /proc/net/wireless so I was no longer
-able to monitor it easily to determine when it was safe to attempt
-to reassociate and continue...)
-
-And in spite of all this, I've automagically reassociated and
-can ping the AP, even after tens of minutes of weak signal
-
-
-I conclude that the above code might be useful or necessary for
-wardriving, where a fading AP might be replaced by something better,
-but for war-settin'-on-me-arse it introduces obstacles; even for
-war-I-have-an-AP-and-I-ain't-afraid-to-use-it there may well be
-problems through reinforced concrete walls or in large cities/
-housing concentrations with lotsa WLANs all on the same channel.
-
-
-[much time passes]
-
-And some hours later, I've lost my association but nevertheless the
-signal quality remains available through /proc/net/wireless, which
-hints that I can successfully reassociate, and indeed that is the
-case, after a few hours of sleep and heavy rain.  Joy oh joy.
-
-Further dmesg scraps:
-[252413.906181] wlan1: associated
-[252437.900171] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[252473.900150] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[252489.900164] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[252507.900156] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[252767.900142] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[252771.900155] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[...]
-[253999.900163] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[254003.900221] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[254007.900151] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[254011.900322] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[254015.900224] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[254019.900163] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[254023.900146] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[time passes, I sleep, with open window, kitchen flooded, etc. etc.]
-[I wake up, ping fails, I manually reassociate to do further ``work''...]
-[266211.365705] wlan1: Initial auth_alg=0
-[266211.365705] wlan1: authenticate with AP 00:...
-[266211.370105] wlan1: associated
-[further messages as I'm writing this:]
-[268233.380152] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[268239.380144] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[268443.380153] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-[268525.380158] wlan1: No ProbeResp from current AP 00:[CENSORED] - assume out of range
-
-Connection still works and all so far.  Draw your own conclusions.
-
-At worst this message is logged every four seconds, the time when I'm
-asleep and presumably the remote AP is indeed unreachable.  After this,
-some sort of natural decay takes place and the connection becomes stale,
-yet with my hack, I'm still able to readily monitor signal quality.
-
-Had I been wanting to download pr0n^W^W work this last hour since
-waking (not a typo), I would have been kicked off some six times
-and I might have decided to mop up the kitchen instead.
-
-
-thanks,
-barry bouwsma
-
-
-      
+--=-DAsXsh80z+twR+e1lyPu--
 
