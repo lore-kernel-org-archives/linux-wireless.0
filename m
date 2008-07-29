@@ -1,56 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:37890 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753781AbYGGRD0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2008 13:03:26 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: Re: [PATCH 1/1 V2] mac80211: Fix ieee80211_rx_reorder_ampdu: ignore QoS null packets
-Date: Mon, 7 Jul 2008 19:02:51 +0200
-Cc: Tomas Winkler <tomas.winkler@intel.com>, linville@tuxdriver.com,
-	johannes@sipsolutions.net, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-References: <1215434881-5410-1-git-send-email-tomas.winkler@intel.com> <1215447824.14247.2.camel@brick>
-In-Reply-To: <1215447824.14247.2.camel@brick>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807071902.51683.mb@bu3sch.de> (sfid-20080707_190329_073001_4BB30CAF)
+Received: from xc.sipsolutions.net ([83.246.72.84]:48840 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756490AbYG2M21 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jul 2008 08:28:27 -0400
+Subject: Re: oops in cfg80211 doing mesh mpath dump
+From: Johannes Berg <johannes@sipsolutions.net>
+To: sbrown@cortland.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <488F0C13.6050803@cortland.com> (sfid-20080729_142722_191284_7E917B5F)
+References: <488EF6E0.7050209@cortland.com>
+	 (sfid-20080729_125437_639538_96B3F8BB) <1217329761.10489.15.camel@johannes.berg>
+	 <488F0C13.6050803@cortland.com> (sfid-20080729_142722_191284_7E917B5F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-I8vdTwYKG3V2EV2eOoV2"
+Date: Tue, 29 Jul 2008 14:28:24 +0200
+Message-Id: <1217334504.10489.44.camel@johannes.berg> (sfid-20080729_142830_143666_06B98767)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 07 July 2008 18:23:44 Harvey Harrison wrote:
-> On Mon, 2008-07-07 at 15:48 +0300, Tomas Winkler wrote:
-> > From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> > 
-> > This patch fixes the check at the entrance to ieee80211_rx_reorder_ampdu.
-> > This check has been broken by 511fe3f3c4ba0b5b77421336f64a19b6cd00e65f
-> > 'mac80211: rx.c use new helpers'
-> > 
-> Actually, do we want something like this instead:
-> 
-> > diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> > index 6a88e8f..a6e8214 100644
-> > --- a/net/mac80211/rx.c
-> > +++ b/net/mac80211/rx.c
-> > @@ -2052,7 +2052,7 @@ static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
-> >  	tid_agg_rx = sta->ampdu_mlme.tid_rx[tid];
-> >  
-> >  	/* null data frames are excluded */
-> > -	if (unlikely(ieee80211_is_nullfunc(hdr->frame_control)))
-> > +	if (unlikely(ieee80211_is_qos_nullfunc(hdr->frame_control)))
-> >  		goto end_reorder;
-> >  
-> >  	/* new un-ordered ampdu frame - process it */
-> 
-> 	if (unlikely(ieee80211_is_data(hdr->frame_control) && (hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC))))
-> 
-> Or wrap the above in a ieee80211_is_data_has_nullfunc() helper?
 
-I think this helper naming is becoming a bit weird and obfuscating.
-I'd say just opencode it, if it's only used in a few places.
+--=-I8vdTwYKG3V2EV2eOoV2
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, 2008-07-29 at 08:24 -0400, Steve Brown wrote:
+> Johannes Berg wrote:
+> > On Tue, 2008-07-29 at 06:54 -0400, Steve Brown wrote:
+> >  =20
+> >> I added line numbers to the recursion path. If more are needed, let me=
+ know.
+> >>    =20
+> >
+> > Thanks, I have a fix already somewhere
+> >
+> > johannes
+> >  =20
+> Your patch set "[PATCH 0/3] mac80211 fixes" did the trick.
 
--- 
-Greetings Michael.
+Thanks, good to know. That was the patch I was thinking about, I just
+couldn't find it again on the list and decided to just send it out
+again.
+
+johannes
+
+--=-I8vdTwYKG3V2EV2eOoV2
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIjwzlAAoJEKVg1VMiehFYj/QP/0nKxwdm5uHvdy3mVNC7sD9j
+0YVZdnRZT4frWHYao/MVDFnLmoA5CcqL8wkokHrt2F3OcepqOgBhxM/lgnX+sWTV
+3fmZpnNsMuFwmPI8hTAe82oIajABNNr3rq2Uf2etg/XvhVnz////tBGYuGQgBU4L
+lKl9yM63so27lXyVlMzryOn03Y27Op1EQXwRV3TLqDavulldqGehPLGMh3w6ycaa
+2IRPy3DzZn3tJLNbkbeAgR+Ke4BYOuWKyUrp+iHfbzGMZCdXTZJODjAhCwS5UqKS
+WBNojnXIHXffR+Cnz7E4sdkj7Z1OD3egFIYphjkcS7rCBhcpbIaegsgLdOWjGEtk
+XHsYs5QbmvUhP3p/+mfI4RwFDxp2HgkWQNZJYbXtklQBz4MjwaC/dukgSuYpNVsJ
+7rTM2QLxo1eNkcVq0RZLU2XmmZoE5eXs/ao2jPTXTSSHn+Zb8VojVGSS0/ak9bg4
+ehRXvnKb9yJN5wTaAyVvXipSg+5Bk4t152PlnLSrU7NRpbffaClQ5Q53t6uAaZrV
+t503uMGiubcdkM9m9f5eolTKLp5GD3L7StIzRgbNR1a9OQfuge6DVHH4FV/E/PRm
+vzak8lHApGao/7/lc9SqnP1PFNb5LySHbQf4lHGqXdaafKQG3B1AS6qcqleQHRaL
+Clz8H40IHCaRf7NQ5zTf
+=hl7Y
+-----END PGP SIGNATURE-----
+
+--=-I8vdTwYKG3V2EV2eOoV2--
+
