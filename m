@@ -1,80 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.248]:14901 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758532AbYGQJsy (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53149 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754305AbYG2LYa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 05:48:54 -0400
-Received: by an-out-0708.google.com with SMTP id d40so145849and.103
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2008 02:48:53 -0700 (PDT)
-Message-ID: <43e72e890807170248v7a873c15oc3aea315a59e9f19@mail.gmail.com> (sfid-20080717_114910_006798_651D5A60)
-Date: Thu, 17 Jul 2008 02:48:53 -0700
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: [PATCH]compat-2.6: fix compiling configurations for iwlwifi
-Cc: "Yingying Zhao" <yingying.zhao@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240807170129w251a95f3i8eab918d50a77f97@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080717081554.GA1279@amber-desktop.bj.intel.com>
-	 <1ba2fa240807170129w251a95f3i8eab918d50a77f97@mail.gmail.com>
+	Tue, 29 Jul 2008 07:24:30 -0400
+Subject: Re: [PATCH] mac80211: partially fix skb->cb use
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1217330604.6379.12.camel@localhost> (sfid-20080729_132329_995714_6D2C9701)
+References: <1217323927.10489.9.camel@johannes.berg>
+	 <1217330604.6379.12.camel@localhost> (sfid-20080729_132329_995714_6D2C9701)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yw7EZwJ0krI7YEmZTAaV"
+Date: Tue, 29 Jul 2008 13:24:27 +0200
+Message-Id: <1217330667.10489.19.camel@johannes.berg> (sfid-20080729_132432_220148_BB868C8A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 17, 2008 at 1:29 AM, Tomas Winkler <tomasw@gmail.com> wrote:
-> On Thu, Jul 17, 2008 at 11:15 AM, Yingying Zhao
-> <yingying.zhao@linux.intel.com> wrote:
->> Latest iwlwifi in wireless-testing removed CONFIG_IWL4965_HT and
->> introduced CONFIG_IWL5000 for Intel Wireless WiFi 5000AGN support
->> which is built in IWL4965 module. This patch also enables IWLWIFI_LEDS,
->> IWLWIFI_RFKILL,IWL3945_LEDS IWLWIFI_DEBUG for iwlwifi build by default.
->>
->> Signed-off-by: Zhao Yingying <yingying.zhao@intel.com>
->> ---
->>  config.mk |   20 +++++++++++++++++++-
->>  1 file changed, 19 insertions(+), 1 deletion(-)
->>
->> diff --git a/config.mk b/config.mk
->> index b1fb68e..cafadfa 100644
->> --- a/config.mk
->> +++ b/config.mk
->> @@ -15,6 +15,7 @@ endif
->>
->>  # Wireless subsystem stuff
->>  CONFIG_MAC80211=m
->> +CONFIG_MAC80211_LEDS=y
->>
->>  # Enable QOS for 2.6.22, we'll do some hacks here to enable it.
->>  # You will need this for HT support (802.11n) and WME (802.11e).
->> @@ -77,7 +78,24 @@ CONFIG_IWLWIFI=m
->>  CONFIG_IWLCORE=m
->>  CONFIG_IWL3945=m
->>  CONFIG_IWL4965=m
->> -CONFIG_IWL4965_HT=y
->> +CONFIG_IWLWIFI_LEDS=y
->> +CONFIG_IWLWIFI_RFKILL=y
->> +CONFIG_IWL3945_LEDS=y
->> +CONFIG_IWL5000=y
->> +
->> +ifeq ($(CONFIG_IWL5000),y)
->> +ifeq ($(CONFIG_IWL4965),)
->> +$(warning "WARNING: CONFIG_IWL5000 requires CONFIG_IWL4965 is configured as m.")
->> +CONFIG_IWL4965=m
->> +endif # CONFIG_IWL4965 is empty
->> +endif # CONFIG_IWL5000 is y
->> +
->> +CONFIG_IWLWIFI_DEBUG=y
->> +
->> +ifeq ($(CONFIG_MAC80211_DEBUGFS),y)
->> +CONFIG_IWLWIFI_DEBUGFS=y
->> +endif
->> +
->>  CONFIG_B43=m
->>  # B43 uses PCMCIA only for Compact Flash. The Cardbus cards uses PCI
->>  # Example, bcm4318:
->
-> I'm changing iwlwifi Kconfig so please hold this patch.
 
-Also, was this tested with 2.6.22?
+--=-yw7EZwJ0krI7YEmZTAaV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Tue, 2008-07-29 at 13:23 +0200, Luis Carlos Cobo wrote:
+> On Tue, 2008-07-29 at 11:32 +0200, Johannes Berg wrote:
+> > This patch fixes mac80211 to not use the skb->cb over the queue step
+> > from virtual interfaces to the master. The patch also, for now,
+> > disables aggregation because that would still require requeuing,
+> > will fix that in a separate patch. There are two other places (software
+> > requeue and powersaving stations) where requeue can happen, but that is
+> > not currently used by any drivers/not possible to use respectively.
+>=20
+> On net/mac80211/rx.c:ieee80211_data_to_8023() cb is used for mesh frames
+> to save the original mesh header. Then if the frame has to be forwarded,
+> the frame is queued on the virtual interface and
+> net/mac80211/tx.c:ieee80211_subif_start_xmit() expects the mesh header
+> to remain in the cb if the frame is not originally from the local host.
+> It's a different step from the one you mention, but as I understand it
+> it may suffer the same problem right?
+
+Indeed, that cannot be done. Good point, I'd thought that case was
+different.
+
+johannes
+
+--=-yw7EZwJ0krI7YEmZTAaV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIjv3nAAoJEKVg1VMiehFYLLoP/1mVjSzmjvXjGXdFG/3hPZsv
+wDWEzEwQROSSBpJvAy+L49jGbpKmAJcCfZR3SMsrAzYb8JDMZd1WZ3MTnR4FWAP5
+oM9P4csvUGqoZSl3oEWViCiG06lHtOtmE4ng/rnSXKIUqywVMau0eUBQRc2ovvzW
+PzBzRbmNpduZyJdNWfYYWWRU56hUn/Lv7AKlRrFKQgnMet5F+o6bK6426CKTClRz
+1Yq+Vc7tPMtXkAtjNyrzGC2th1VwezKZEgzT8buMyaJU3GVGuaAiH/R3TXlc07xP
+LLobJMHH7Niobps6lCPHtQjk7Hg/FsJjyHgT6yUBQuN83jg3fZhNbgw9Au6pj/T0
+5TC9N3ZnRTam6HoSwPGy4sLyr8bh297WzchZdNVDlcgDClS+XwHht585tcfafrxH
+q+upM2dA+yiklaRtLSb+D2WdQt+YRh/XvDgN3Hog6D9GoSOLcRJjhqbXV2UaR7IG
+Kp1nVzVSuTY/9updaEuiVvDBInFEjn92p/jQuzrYY0wYsi9hxgfMYsIOSN26AF4+
+422hZhGwURLp6NYlgULWpoH5UCww1k2ZU4odC+u4o/QBs3ewiVQmVGQLdloTp1cn
+CyrgIa/VwJS3Gme6NrQ0QF/A1lry45NutksJzw0lAXDaZhJ0CJZjvE/fpuQrc/3F
+QCzilOicCT8fBqvJBgNz
+=Iz1W
+-----END PGP SIGNATURE-----
+
+--=-yw7EZwJ0krI7YEmZTAaV--
+
