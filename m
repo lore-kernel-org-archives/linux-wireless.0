@@ -1,56 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:41230 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755201AbYGTCzS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2008 22:55:18 -0400
-Message-ID: <4882A910.4040408@lwfinger.net> (sfid-20080720_045530_211672_F10C57B7)
-Date: Sat, 19 Jul 2008 21:55:12 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4039 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753981AbYG3AQL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jul 2008 20:16:11 -0400
+Date: Tue, 29 Jul 2008 17:21:35 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Randy Dunlap <rdunlap@xenotime.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Andreas Schwab <schwab@suse.de>,
+	linux-wireless@vger.kernel.org,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
+Subject: Re: Fix iwlwifi compilation without CONFIG_IWLWIFI_DEBUG
+Message-ID: <20080729212135.GA7443@tuxdriver.com> (sfid-20080730_021614_319632_2233D159)
+References: <jebq0g8qdf.fsf@sykes.suse.de> <1ba2fa240807291350m4d698713k7c3ea21d25ee105f@mail.gmail.com> <20080729135509.6db7c9b4.rdunlap@xenotime.net> <1ba2fa240807291411j14e0db0etc7d0d56def66104e@mail.gmail.com>
 MIME-Version: 1.0
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-Subject: Re: [RFC/RFT] rtl8187: Improve wireless statistics for RTL8187B
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>	 <200807182142.59921.herton@mandriva.com.br>	 <48816A43.1050903@lwfinger.net> <3ace41890807191739t5969f38au170e4b73a3d0b7de@mail.gmail.com>
-In-Reply-To: <3ace41890807191739t5969f38au170e4b73a3d0b7de@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240807291411j14e0db0etc7d0d56def66104e@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hin-Tak Leung wrote:
-> 
-> I am on x86_64 and I am on a similar situation - I am using the
-> rawhide kernels from:
-> http://koji.fedoraproject.org/koji/packageinfo?packageID=8
-> and the last one that worked for me is kernel-2.6.25.11-92.fc9 - something in
-> kernel-2.6.25.11-93.fc9 broke connectivity. Apparently the difference
-> is this set of changes:
-> http://marc.info/?l=linux-wireless&m=121606436000705&w=2
-> 
-> I just don't feel like mentioning it earlier because I had mistakenly
-> complained about Herton's
-> last patch and I don't want to make the same mistake - and I did test
-> it. Beside Herton's
->  ANAPARAM*_OFF patch (which I don't think is the source of the
-> problem), there is
-> only one other "rtl8187: Fixed section mismatch in rtl8187_dev.c"
-> change - but that's is also
-> obviously right, and besides, its nature shouldn't affect association
-> anyway; but there is
-> a lot of mac80211 changes elsewhere, and I wonder.
-> 
-> My symptom is that I can authenticate and associate (apparently,
-> according to dmesg)
-> but cannot get an ip address via dhcp. I have tried and just alternate
-> between the two kernels,
-> identical steps, etc and one works and the other doesn't.
-> 
+On Wed, Jul 30, 2008 at 12:11:47AM +0300, Tomas Winkler wrote:
 
-Curious. According to the git log, my copy of the wireless-testing tree has all 
-those patches installed. There must be some really obscure configuration 
-difference, or the rawhide kernel has some unexpected difference with the wl 
-kernels.
+> Definitely. John Linville was also on OLS I guess that's the reason
+> for delay in merge.  I've even reposed this patches to LKML IRCC to
+> Andrew Morton's request
+> What more can I do.  Maybe David Miller can somehow speed up the
+> process not sure.
+> But this is like 5th patch I've received to fix this starting to be a
+> bit annoying.
+> 
+> BTW 'Denis V. Lunev' is the author of the 3 patches that fixes this
+> http://marc.info/?l=linux-wireless&m=121642949226032&w=2
+> http://marc.info/?l=linux-wireless&m=121636411821968&w=2
+> http://marc.info/?l=linux-wireless&m=121629329109400&w=2
 
-Larry
+Hold your wedgie, the patches are in flight...
 
+-- 
+John W. Linville
+linville@tuxdriver.com
