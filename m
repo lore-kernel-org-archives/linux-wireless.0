@@ -1,158 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:48924 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751991AbYG1Wvy (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.233]:39062 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753109AbYG2IXa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jul 2008 18:51:54 -0400
-Message-ID: <488E4D7E.6010003@lwfinger.net> (sfid-20080729_005158_605957_FCED97E0)
-Date: Mon, 28 Jul 2008 17:51:42 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 29 Jul 2008 04:23:30 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so4902418rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 01:23:30 -0700 (PDT)
+Message-ID: <1ba2fa240807290123n7673dbb9m7121c1e76fe57e94@mail.gmail.com> (sfid-20080729_102334_767028_27D9A024)
+Date: Tue, 29 Jul 2008 11:23:30 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks rtl8187
+Cc: "Herton Ronaldo Krzesinski" <herton@mandriva.com.br>,
+	"Hin-Tak Leung" <hintak.leung@gmail.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <1217314430.15381.11.camel@johannes.berg>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH RFC/RFT] b43: Rewrite TX power adjustment
-References: <200807261726.53279.mb@bu3sch.de> <200807282017.04979.mb@bu3sch.de>
-In-Reply-To: <200807282017.04979.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
+	 <48874F09.7060400@lwfinger.net>
+	 <3ace41890807281939y462c9b91n5fa952e167b6ff8c@mail.gmail.com>
+	 <200807290021.45400.herton@mandriva.com.br>
+	 <1217314430.15381.11.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Saturday 26 July 2008 17:26:52 Michael Buesch wrote:
->> This is an experimental attempt for fixing the currently-not-so-good
->> TX power adjustment.
-> 
-> Hm, is anybody going to test this, or are there really no transmission
-> problems left? :)
+On Tue, Jul 29, 2008 at 9:53 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2008-07-29 at 00:21 -0300, Herton Ronaldo Krzesinski wrote:
+>
+>> [3] /sbin/iwconfig wlan0 power on
+>
+> I don't think turning on power management (yes, this command is
+> completely misnamed, it turns on power _management_ not the power, you
+> may want "txpower auto") does anything on this chip, does it?
+>
+iwconfig power on is not implemented by mac80211 yet. There was one
+patch posted that implements it.
+I wanted to expand it but  wireless_tools 29 has a bug in parsing this
+command. It is fixed only in 30.pre6 which is usually not in distros.
 
-It seems to work here. The dmesg output for my BCM4312 is:
-
-ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x11, vendor 0x4243)
-ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0A, vendor 0x4243)
-ssb: Core 2 found: USB 1.1 Host (cc 0x817, rev 0x03, vendor 0x4243)
-ssb: Core 3 found: PCI-E (cc 0x820, rev 0x01, vendor 0x4243)
-ssb: SPROM revision 2 detected.
-ssb: Sonics Silicon Backplane found on PCI device 0000:04:00.0
-b43-phy0: Broadcom 4311 WLAN found
-b43-phy0 debug: Found PHY: Analog 4, Type 2, Revision 8
-b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2
-phy0: Selected rate control algorithm 'pid'
-Broadcom 43xx driver loaded [ Features: PLR, Firmware-ID: FW13 ]
-udev: renamed network interface wlan0 to wlan1
-input: b43-phy0 as /class/input/input9
-firmware: requesting b43/ucode5.fw
-firmware: requesting b43/pcm5.fw
-firmware: requesting b43/b0g0initvals5.fw
-firmware: requesting b43/b0g0bsinitvals5.fw
-b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
-b43-phy0 debug: Chip initialized
-b43-phy0 debug: 32-bit DMA initialized
-Registered led device: b43-phy0::tx
-Registered led device: b43-phy0::rx
-Registered led device: b43-phy0::radio
-b43-phy0 debug: Wireless interface started
-b43-phy0 debug: Adding Interface type 2
-Adjusted power
-wlan1: authenticate with AP 00:1a:70:46:ba:b1
-wlan1: authenticated
-wlan1: associate with AP 00:1a:70:46:ba:b1
-wlan1: RX AssocResp from 00:1a:70:46:ba:b1 (capab=0x431 status=0 aid=3)
-wlan1: associated
-Average is 39
-Adjusted power
-Average is 17
-Average is 18
-Adjusted power
-Average is 4
-Adjusted power
-Average is 4
-Average is 4
-Adjusted power
-Average is 8
-Adjusted power
-Average is 6
-Average is 12
-Average is 11
-Average is 12
-Average is 11
-Average is 12
-Average is 10
-Average is 12
-Average is 11
-Average is 12
-Average is 12
-Average is 11
-Average is 12
-Average is 11
-Average is 12
-Average is 12
-Average is 11
-Average is 13
-Average is 13
-Adjusted power
-Average is 13
-Adjusted power
-Average is 11
-Average is 13
-Adjusted power
-Average is 12
-Average is 13
-Adjusted power
-Average is 13
-Adjusted power
-Average is 11
-Average is 13
-Adjusted power
-Average is 11
-Average is 13
-Adjusted power
-Average is 13
-Adjusted power
-Average is 8
-Average is 9
-Average is 13
-Average is 12
-Average is 13
-Adjusted power
-Average is 13
-Adjusted power
-Average is 12
-Average is 13
-Adjusted power
-Average is 12
-Average is 13
-Adjusted power
-Average is 12
-Average is 13
-Adjusted power
-Average is 7
-Average is 9
-Average is 12
-Average is 10
-Average is 7
-Average is 7
-Adjusted power
-Average is 9
-Average is 13
-Average is 13
-Average is 13
-Adjusted power
-Average is 13
-Adjusted power
-Average is 8
-Average is 8
-Average is 13
-Average is 12
-
-Is this sufficient, or is there other output that you want to see?
-
-
-> But please note that current wireless-testing tree seems to have some
-> unrelated TX issues in mac80211 (see the discussions about the qdisc
-> and skb->cb stuff.)
-
-AFAIK, this particular bug is limited to mainline. At least wireless still works 
-in wireless-testing, but fails completely in Linus's tree.
-
-Larry
-
+Tomas
