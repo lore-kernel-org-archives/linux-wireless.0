@@ -1,69 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:60144 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757897AbYGUH6N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 03:58:13 -0400
-Date: Mon, 21 Jul 2008 09:58:11 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: yi.zhu@intel.com, jketreno@linux.intel.com,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
-	ipw2100-devel@lists.sourceforge.net, jgarzik@pobox.com,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH 4/7] drivers/net/wireless/ipw2100.c: Release mutex in error
- handling code
-Message-ID: <Pine.LNX.4.64.0807210957490.24625@ask.diku.dk> (sfid-20080721_095828_786525_AD73C1F3)
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from ik-out-1112.google.com ([66.249.90.176]:43468 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754157AbYG2Lm7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jul 2008 07:42:59 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so4676088ika.5
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 04:42:57 -0700 (PDT)
+Subject: Re: [PATCH] mac80211: partially fix skb->cb use
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1217330667.10489.19.camel@johannes.berg>
+References: <1217323927.10489.9.camel@johannes.berg>
+	 <1217330604.6379.12.camel@localhost>
+	 (sfid-20080729_132329_995714_6D2C9701)  <1217330667.10489.19.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 29 Jul 2008 13:42:53 +0200
+Message-Id: <1217331773.6379.25.camel@localhost> (sfid-20080729_134302_208539_C5344B6E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+On Tue, 2008-07-29 at 13:24 +0200, Johannes Berg wrote:
+> On Tue, 2008-07-29 at 13:23 +0200, Luis Carlos Cobo wrote:
+> > On Tue, 2008-07-29 at 11:32 +0200, Johannes Berg wrote:
+> > > This patch fixes mac80211 to not use the skb->cb over the queue step
+> > > from virtual interfaces to the master. The patch also, for now,
+> > > disables aggregation because that would still require requeuing,
+> > > will fix that in a separate patch. There are two other places (software
+> > > requeue and powersaving stations) where requeue can happen, but that is
+> > > not currently used by any drivers/not possible to use respectively.
+> > 
+> > On net/mac80211/rx.c:ieee80211_data_to_8023() cb is used for mesh frames
+> > to save the original mesh header. Then if the frame has to be forwarded,
+> > the frame is queued on the virtual interface and
+> > net/mac80211/tx.c:ieee80211_subif_start_xmit() expects the mesh header
+> > to remain in the cb if the frame is not originally from the local host.
+> > It's a different step from the one you mention, but as I understand it
+> > it may suffer the same problem right?
+> 
+> Indeed, that cannot be done. Good point, I'd thought that case was
+> different.
 
-The mutex is released on a successful return, so it would seem that it
-should be released on an error return as well.
+One of the options I was thinking about when implemented that was to do
+the forwarding in what was once equivalent to ieee80211_data_to_8023()
+function. Then we do not have to do 802.11->802.3->802.11 series of
+conversions, and we would send the frames to be forwarded directly to
+the master device, speeding up things a bit.
 
-The semantic patch finds this problem is as follows:
-(http://www.emn.fr/x-info/coccinelle/)
+I think the most elegant solution would be to add a rx handler to be run
+before ieee80211_data_to_8023() dealing with forwarding and sending
+frames directly to the master device. Would it make sense to deal there
+too with the forwarding for APs and VLAN interfaces done in
+ieee80211_deliver_skb?
 
-// <smpl>
-@@
-expression l;
-@@
+-- 
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
 
-mutex_lock(l);
-... when != mutex_unlock(l)
-    when any
-    when strict
-(
-if (...) { ... when != mutex_unlock(l)
-+   mutex_unlock(l);
-    return ...;
-}
-|
-mutex_unlock(l);
-)
-// </smpl>
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
-diff -u -p a/drivers/net/wireless/ipw2100.c b/drivers/net/wireless/ipw2100.c
---- a/drivers/net/wireless/ipw2100.c
-+++ b/drivers/net/wireless/ipw2100.c
-@@ -6442,6 +6442,7 @@ static int ipw2100_resume(struct pci_dev
- 	if (err) {
- 		printk(KERN_ERR "%s: pci_enable_device failed on resume\n",
- 		       dev->name);
-+		mutex_unlock(&priv->action_mutex);
- 		return err;
- 	}
- 	pci_restore_state(pci_dev);
-@@ -7146,7 +7147,7 @@ static int ipw2100_wx_get_rate(struct ne
- 	err = ipw2100_get_ordinal(priv, IPW_ORD_CURRENT_TX_RATE, &val, &len);
- 	if (err) {
- 		IPW_DEBUG_WX("failed querying ordinals.\n");
--		return err;
-+		goto done;
- 	}
- 
- 	switch (val & TX_RATE_MASK) {
