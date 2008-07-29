@@ -1,57 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hs-out-0708.google.com ([64.233.178.243]:39614 "EHLO
-	hs-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750940AbYGIQZ6 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44711 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753342AbYG2NqO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 12:25:58 -0400
-Received: by hs-out-0708.google.com with SMTP id 4so675386hsl.5
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 09:25:57 -0700 (PDT)
-Message-ID: <4874E68F.7090106@gmail.com> (sfid-20080709_182602_610356_C23620B6)
-Date: Wed, 09 Jul 2008 19:25:51 +0300
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-CC: ipw3945-devel@lists.sourceforge.net,
-	=?ISO-8859-1?Q?Stefanik_G=E1bo?= =?ISO-8859-1?Q?r?=
-	<netrolller.3d@gmail.com>
-Subject: Re: [BUG] Two bugs in monitor mode, iwl3945
-References: <485F687C.1050407@gmail.com>
-In-Reply-To: <485F687C.1050407@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+	Tue, 29 Jul 2008 09:46:14 -0400
+Subject: Re: iwlwifi aggregation info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240807290643l4192ca62ia4db9966501caf0b@mail.gmail.com> (sfid-20080729_154316_855359_4C222F99)
+References: <1217331138.10489.24.camel@johannes.berg>
+	 <1217331408.10489.26.camel@johannes.berg>
+	 <1ba2fa240807290525o41832ccei92ff554bef876b37@mail.gmail.com>
+	 <1217334452.10489.42.camel@johannes.berg>
+	 <1ba2fa240807290535h3ebd4121h399b8a8cd1d8b276@mail.gmail.com>
+	 <1217336023.10489.51.camel@johannes.berg>
+	 <1ba2fa240807290604y47edafe1k7cf93831c31b6112@mail.gmail.com>
+	 <1217336870.10489.55.camel@johannes.berg>
+	 <1ba2fa240807290618j67db294w524f3885f0e94c7b@mail.gmail.com>
+	 <1217337819.10489.57.camel@johannes.berg>
+	 <1ba2fa240807290643l4192ca62ia4db9966501caf0b@mail.gmail.com>
+	 (sfid-20080729_154316_855359_4C222F99)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dBKy0le3eLoPpKpns2Sj"
+Date: Tue, 29 Jul 2008 15:46:10 +0200
+Message-Id: <1217339170.10489.62.camel@johannes.berg> (sfid-20080729_154617_605768_057D3635)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maxim Levitsky wrote:
-> I noticed two bugs:
->=20
-> 1) Monitor mode hangs the system randomly, and what is interesting th=
-at=20
-> this
-> bug disappears if I patch the driver with packet injection patch from=
-=20
-> G=E1bor Stefanik.
-> I noticed this bug, after I removed his patch to see if it caused som=
-e=20
-> problems.
-> Always reproducible, usually hangs just after airodump launch.
->=20
-> 2) If I enable monitor mode regardless of injection patch, the scanni=
-ng=20
-> results got garbaged,
-> iwlist scan reports > 100 quality on most APs, or 0% quality on my=20
-> router, shows extremely low and hi power levels, like
-> -127dBm or 160 dBm, and those levels change rapidly.
-> This why I removed the injection patch, I suspected it, but this bug=20
-> appears to be not related to it.
-I noticed that exactly same bug happens if I enable promisc mode on the=
-=20
-wlan0. Does this give any additional clue why this bug happens?
 
-Best regards,
-	Maxim levitsky
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-dBKy0le3eLoPpKpns2Sj
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2008-07-29 at 16:43 +0300, Tomas Winkler wrote:
+
+> No the mistake is on your side. FIFO is not relevant here. What is
+> important is whether HW queue is full or not.
+> Except the AC Back off scheduling done by FIFO there is BA protocol
+> which my stall HW queue. It doesn't mean that other packets with the
+> same FIFO should be stalled. You need additional SW queue that can be
+> stopped.
+
+HW queues are irrelevant, you're the only vendor that implements it with
+HW queues. If you think they're required for correct operation, clearly
+you're wrong.
+
+I'm just trying to fix the bugs and find a way to do this with hardware
+that doesn't have extra HW queues.
+
+johannes
+
+--=-dBKy0le3eLoPpKpns2Sj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIjx8fAAoJEKVg1VMiehFYqm4P/1MbU5VUg+EFD0AOnMcKL96t
+mEKKa/SXYgUg/u2G6q7JHnuXjX88r46gbrVpUvU4GZVICOtgrHl0DSJUN5BoKq/H
+3fu7lGKAKTTy+HYM8a6XMWlDMz/ILA+/+DbQtE5YdKIW6T7Vb1ZwbXaucnIylRzo
+s30ybBop8MyEMjOAzxRXi8tpA7AAvPCF6HiaUwMuZxapGFlGg/ox+79/FtxRzFXe
+kWJr9GF1llcQue6DBKpZ1P4wAPekBJNexOMqs5Mu3cEFRjdD3Z8w+hdkPCLtyv78
+AwsPJ3IHeMTXD1ArsPwqBh4lHWiY5TzbyqTCwgsKkkLlIvFgQCMNDrajUwRPNxed
+h9c6+YE13lJk4stuZ5yJRcPW9IMkZ6tH9kMJzngjITiFz4Dy7Yy9KOxXWps8TYuI
+9Tz6WNNSPzVkS7D94b6mjhqPxVBg462/DNJcTHBY+JIu8EdYWDnfs8yqLYR7Pc0p
+uPdLCXOpvCVZLG83gMDlX2EihW12VBTX97KU4mn+1lx+vuFlL1/E9lhvfqRsNXq6
+irFXKHj+2XDHUxjWiG4g7J39/SbO4vDzDFbI403MemYxFbiJzp2PkOEGuRO5NVEA
+we/Mk12n3cbJmNZkA0eYV+/Bp6kVzybTczWbRBzGQWaD/njLDR69ZPxs/EwMC5LR
+U2+LZAsVkMoeylu2a/x4
+=ai6Y
+-----END PGP SIGNATURE-----
+
+--=-dBKy0le3eLoPpKpns2Sj--
+
