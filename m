@@ -1,41 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n6.bullet.ukl.yahoo.com ([217.146.182.183]:28088 "HELO
-	n6.bullet.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753664AbYGKQvc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jul 2008 12:51:32 -0400
-Message-ID: <48779150.10001@yahoo.co.uk> (sfid-20080711_185136_581227_F0E55AFB)
-Date: Fri, 11 Jul 2008 17:58:56 +0100
-From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
-MIME-Version: 1.0
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-CC: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>, proski@gnu.org
-Subject: Re: [RFC] Try to improve RTL8187B initialization time
-References: <200807101851.31985.herton@mandriva.com.br> <48769266.4090407@yahoo.co.uk> <200807102058.32220.herton@mandriva.com.br>
-In-Reply-To: <200807102058.32220.herton@mandriva.com.br>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from xenotime.net ([66.160.160.81]:36779 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752555AbYG2UzL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jul 2008 16:55:11 -0400
+Received: from chimera.site ([96.225.228.12]) by xenotime.net for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 13:55:09 -0700
+Date: Tue, 29 Jul 2008 13:55:09 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Cc: "Andreas Schwab" <schwab@suse.de>, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: Fix iwlwifi compilation without CONFIG_IWLWIFI_DEBUG
+Message-Id: <20080729135509.6db7c9b4.rdunlap@xenotime.net> (sfid-20080729_225516_192899_84AFBD71)
+In-Reply-To: <1ba2fa240807291350m4d698713k7c3ea21d25ee105f@mail.gmail.com>
+References: <jebq0g8qdf.fsf@sykes.suse.de>
+	<1ba2fa240807291350m4d698713k7c3ea21d25ee105f@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Herton Ronaldo Krzesinski wrote:
-> Em Thursday 10 July 2008 19:51:18 Hin-Tak Leung escreveu:
-<snipped>
->> BTW, ndiswrapper won't even build with 2.6.26-rc9.
+On Tue, 29 Jul 2008 23:50:25 +0300 Tomas Winkler wrote:
+
+> On Tue, Jul 29, 2008 at 10:03 PM, Andreas Schwab <schwab@suse.de> wrote:
+> > drivers/net/wireless/iwlwifi/iwl-led.c: In function 'iwl_led_brightness_set':
+> > drivers/net/wireless/iwlwifi/iwl-led.c:198: error: 'led_type_str' undeclared (first use in this function)
+> > drivers/net/wireless/iwlwifi/iwl-led.c:198: error: (Each undeclared identifier is reported only once
+> > drivers/net/wireless/iwlwifi/iwl-led.c:198: error: for each function it appears in.)
+> >
+> > Signed-off-by: Andreas Schwab <schwab@suse.de>
+> > ---
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
+> > index 899d7a2..a58571c 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl-led.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-led.c
+> > @@ -195,8 +195,10 @@ static void iwl_led_brightness_set(struct led_classdev *led_cdev,
+> >                return;
+> >
+> >
+> > +#ifdef CONFIG_IWLWIFI_DEBUG
+> >        IWL_DEBUG_LED("Led type = %s brightness = %d\n",
+> >                        led_type_str[led->type], brightness);
+> > +#endif
+> >        switch (brightness) {
+> >        case LED_FULL:
+> >                if (led->type == IWL_LED_TRG_ASSOC)
+> >
 > 
-> On a 2.6.26-rc9 builds ok here (i386), I don't remember to have any extra patch
-> needed.
+> Thanks for your patch
+> But the fixes were already sent out  a week ago or You can find them
+> on this mailing list.
 
-I was looking for more developer-oriented info for ndiswrapper to see if I can
-fix the XP 64-bit realtek driver on x86_64 linux to see how it compares with the
-new native driver, and found two other places Pavel spends his time on (broadcom
-firmware cutter and ndiswrapper). He just committed a patch within the last day
-or two to ndiswrapper trunk to fix the build problem I saw - apparently it is
-WEXT change scheduled for 2.6.27. I saw it sooner than I should because I
-was testing John's new redhat rawhide 2.6.26-rc9 kernel with the new rtl8187b
-driver.
-
-If ndiswrapper trunk doesn't work with 64-bit realtek, I am probably going to
-dig in to see what's wrong with it. Wish me luck!
+But the reason that we are seeing this (third IIRC) patch for this problem
+is that the patch needs to be merged somewhere..... :(
+other than the mailing list.
 
 
+---
+~Randy
+Linux Plumbers Conference, 17-19 September 2008, Portland, Oregon USA
+http://linuxplumbersconf.org/
