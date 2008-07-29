@@ -1,41 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:15120 "EHLO mga11.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:17150 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750729AbYGGIAE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2008 04:00:04 -0400
-Subject: Re: 2.6.26: iwl4965 problems changing interface mode
-From: Zhu Yi <yi.zhu@intel.com>
-To: Daniel Drake <dsd@gentoo.org>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <486EAD93.5060109@gentoo.org>
-References: <486EAD93.5060109@gentoo.org>
+	id S1753895AbYG2Frs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jul 2008 01:47:48 -0400
+Received: from mail.atheros.com ([192.168.11.2])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 22:47:48 -0700
+From: <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	<Jouni.Malinen@Atheros.com>,
+	Sujith Manoharan <smanoharan@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 15/16] ath9k: Don't set the channel in ath_rate_init().
+Date: Mon, 28 Jul 2008 22:47:24 -0700
+Message-ID: <9ef806c861e93ddde2fc0797e1845d9343567799.1217309552.git.lrodriguez@atheros.com> (sfid-20080729_081546_892049_C3F65C44)
+In-Reply-To: <4800d552efce6350888c68b859f66767196d720b.1217309551.git.lrodriguez@atheros.com>
+References: <4800d552efce6350888c68b859f66767196d720b.1217309551.git.lrodriguez@atheros.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Mon, 07 Jul 2008 15:58:02 +0800
-Message-Id: <1215417482.14590.747.camel@debian.sh.intel.com> (sfid-20080707_100010_277831_66EDC0B5)
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-07-04 at 18:09 -0500, Daniel Drake wrote:
-> # ifconfig wlan0 up
-> 
-> iwl4965: U iwl4965_mac_start enter
-> ACPI: PCI Interrupt 0000:03:00.0[A] -> GSI 18 (level, low) -> IRQ 18
-> PM: Writing back config space on device 0000:03:00.0 at offset 1 (was 
-> 100102, writing 100106)
-> iwl4965: Radio disabled by SW RF kill (module parameter)
-> ACPI: PCI interrupt for device 0000:03:00.0 disabled
-> iwl4965: U iwl4965_mac_start leave - failed
-> 
-> It's interesting how RF kill plays into it. I definitely didn't press 
-> the RF kill switch.
+From: Sujith Manoharan <smanoharan@atheros.com>
 
-I don't see this problem from my side. Do you have some wireless scripts
-hook the interface event and issues a `iwconfig wlan0 txpower off` in
-turn? Please see if it is the case with the iwconfig Tx-power entry
-result.
-
-Thanks,
--yi
+diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
+index 996b54c..22b6550 100644
+--- a/drivers/net/wireless/ath9k/rc.c
++++ b/drivers/net/wireless/ath9k/rc.c
+@@ -2034,21 +2034,15 @@ static void ath_rate_init(void *priv, void *priv_sta,
+ 	struct ieee80211_hw *hw = local_to_hw(local);
+ 	struct ieee80211_conf *conf = &local->hw.conf;
+ 	struct ath_softc *sc = hw->priv;
+-	struct hal_channel hchan;
+ 	int i, j = 0;
+ 
+-	DPRINTF(sc, ATH_DBG_RATE, "%s", __func__);
++	DPRINTF(sc, ATH_DBG_RATE, "%s\n", __func__);
+ 
+ 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+ 	sta->txrate_idx = rate_lowest_index(local, sband, sta);
+ 
+-	hchan.channel = conf->channel->center_freq;
+-	hchan.channelFlags = ath_chan2flags(conf->channel, sc);
+-	if (ath_set_channel(sc, &hchan) < 0)
+-		DPRINTF(sc, ATH_DBG_FATAL, "%s: Unable to set channel\n",
+-			__func__);
+ 	ath_setup_rates(local, sta);
+-	if (conf->flags&IEEE80211_CONF_SUPPORT_HT_MODE) {
++	if (conf->flags & IEEE80211_CONF_SUPPORT_HT_MODE) {
+ 		for (i = 0; i < MCS_SET_SIZE; i++) {
+ 			if (conf->ht_conf.supp_mcs_set[i/8] & (1<<(i%8)))
+ 				((struct ath_rate_node *)
+-- 
+1.5.4.3
 
