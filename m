@@ -1,65 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:36846 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754045AbYGAX5y (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.31]:33160 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752961AbYG2NEe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 19:57:54 -0400
-Date: Tue, 1 Jul 2008 20:57:48 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
-	Larry Finger <larry.finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
-Message-ID: <20080701235747.GG4292@khazad-dum.debian.net> (sfid-20080702_015758_415920_20E5D204)
-References: <20080701225207.GB4292@khazad-dum.debian.net> <1214952993.3462.14.camel@johannes.berg>
+	Tue, 29 Jul 2008 09:04:34 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so1496221ywe.1
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 06:04:33 -0700 (PDT)
+Message-ID: <1ba2fa240807290604y47edafe1k7cf93831c31b6112@mail.gmail.com> (sfid-20080729_150443_989981_B03BBC58)
+Date: Tue, 29 Jul 2008 16:04:32 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: iwlwifi aggregation info
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1217336023.10489.51.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1214952993.3462.14.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1217331138.10489.24.camel@johannes.berg>
+	 <1217331408.10489.26.camel@johannes.berg>
+	 <1ba2fa240807290525o41832ccei92ff554bef876b37@mail.gmail.com>
+	 <1217334452.10489.42.camel@johannes.berg>
+	 <1ba2fa240807290535h3ebd4121h399b8a8cd1d8b276@mail.gmail.com>
+	 <1217336023.10489.51.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 02 Jul 2008, Johannes Berg wrote:
-> On Tue, 2008-07-01 at 19:52 -0300, Henrique de Moraes Holschuh wrote:
-> > Dmitry (input layer maintainer) added to CC.  This is a [gross misuse of
-> > the] input layer issue.
-> 
-> FWIW, to me half of that mail reads like a rant and I'm ignoring it. If
-> you know so much better, why don't you continue working on fixing it?
+On Tue, Jul 29, 2008 at 3:53 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2008-07-29 at 15:35 +0300, Tomas Winkler wrote:
+>
+>> Sorry for misleading I'm not in focus today :). You cannot remove this
+>> code. This is form
+>> This is required for emptying packets from legacy queue before
+>> starting aggregation queue.
+>> You cannot transmit from both queues for the same tid  Aggregation is
+>> sensitive on ordering.
+>
+> I see, it's required because mac80211 would otherwise start putting
+> packets into the new agg queue and then that could be used by the hw
+> before all frames from that sta/tid in the regular queue were sent,
+> right?
 
-I apologise.  Re-reading it, it does look like a rant, indeed.  It wasn't
-supposed to be, but the tone came up nasty and quite defensive.  I didn't
-intend it to.
+Correct.
+Other thing is you probably not seeing the latest code as well. Yi is
+not publish new code before John is merging what we've already sent
+out. I also have something still in the drawer.
+This quite bad position still have to fix bugs on old MQ because the
+new one cannot be ported at all to old kernels and already face the
+breakage in the new one.
+I'm starting to be frustrated about this development model it looks
+like there is no single stable point of this code base.
 
-The sheer ammount of explanations I have had to type over the whole rfkill
-business is, apparently, getting to me a lot more than expected, and I guess
-that put me in the defensive.  There is no excuse for that.
-
-So, please accept my appologies on the tone of the last email.  Please
-reconsider reading that email in full, and please try to ignore the rantness
-smell in it.  I did try to explain the technical reasons why some changes
-would be needed in b43.
-
-I am sorry I didn't send you any patches.  I don't have any access to a b43
-device, and as a rule, I try to avoid modifying code I will not be able to
-test, especially when I don't know the code to begin with and the changes
-are not going to be small, obvious ones.
-
-> To address one point though: userspace does want a notification when the
-> hw-rfkill is activated so it (e.g. network manager) can ask people to
-> un-rfkill their device.
-
-I tried to add such notifications directly to the rfkill class.  rfkill now
-issues uevents and calls a notification chain for any state changes.  It has
-been modified to differentiate hw-rfkill from sw-rfkill, and export that
-information to userspace for network-manager and other applications to use.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Tomas
