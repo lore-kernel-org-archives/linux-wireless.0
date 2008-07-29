@@ -1,79 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hs-out-0708.google.com ([64.233.178.246]:65386 "EHLO
-	hs-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755540AbYGQI3I (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.28]:48234 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755430AbYG2OGG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 04:29:08 -0400
-Received: by hs-out-0708.google.com with SMTP id 4so1622038hsl.5
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2008 01:29:06 -0700 (PDT)
-Message-ID: <1ba2fa240807170129w251a95f3i8eab918d50a77f97@mail.gmail.com> (sfid-20080717_102920_597942_44D47584)
-Date: Thu, 17 Jul 2008 11:29:05 +0300
+	Tue, 29 Jul 2008 10:06:06 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so1514030ywe.1
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 07:06:05 -0700 (PDT)
+Message-ID: <1ba2fa240807290706h70f89f68xf8fe7e672c0275ad@mail.gmail.com> (sfid-20080729_160610_624604_63C2CFFA)
+Date: Tue, 29 Jul 2008 17:06:04 +0300
 From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Yingying Zhao" <yingying.zhao@linux.intel.com>
-Subject: Re: [PATCH]compat-2.6: fix compiling configurations for iwlwifi
-Cc: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080717081554.GA1279@amber-desktop.bj.intel.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: iwlwifi aggregation info
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1217339170.10489.62.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <20080717081554.GA1279@amber-desktop.bj.intel.com>
+References: <1217331138.10489.24.camel@johannes.berg>
+	 <1217334452.10489.42.camel@johannes.berg>
+	 <1ba2fa240807290535h3ebd4121h399b8a8cd1d8b276@mail.gmail.com>
+	 <1217336023.10489.51.camel@johannes.berg>
+	 <1ba2fa240807290604y47edafe1k7cf93831c31b6112@mail.gmail.com>
+	 <1217336870.10489.55.camel@johannes.berg>
+	 <1ba2fa240807290618j67db294w524f3885f0e94c7b@mail.gmail.com>
+	 <1217337819.10489.57.camel@johannes.berg>
+	 <1ba2fa240807290643l4192ca62ia4db9966501caf0b@mail.gmail.com>
+	 <1217339170.10489.62.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 17, 2008 at 11:15 AM, Yingying Zhao
-<yingying.zhao@linux.intel.com> wrote:
-> Latest iwlwifi in wireless-testing removed CONFIG_IWL4965_HT and
-> introduced CONFIG_IWL5000 for Intel Wireless WiFi 5000AGN support
-> which is built in IWL4965 module. This patch also enables IWLWIFI_LEDS,
-> IWLWIFI_RFKILL,IWL3945_LEDS IWLWIFI_DEBUG for iwlwifi build by default.
+On Tue, Jul 29, 2008 at 4:46 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2008-07-29 at 16:43 +0300, Tomas Winkler wrote:
 >
-> Signed-off-by: Zhao Yingying <yingying.zhao@intel.com>
-> ---
->  config.mk |   20 +++++++++++++++++++-
->  1 file changed, 19 insertions(+), 1 deletion(-)
+>> No the mistake is on your side. FIFO is not relevant here. What is
+>> important is whether HW queue is full or not.
+>> Except the AC Back off scheduling done by FIFO there is BA protocol
+>> which my stall HW queue. It doesn't mean that other packets with the
+>> same FIFO should be stalled. You need additional SW queue that can be
+>> stopped.
 >
-> diff --git a/config.mk b/config.mk
-> index b1fb68e..cafadfa 100644
-> --- a/config.mk
-> +++ b/config.mk
-> @@ -15,6 +15,7 @@ endif
->
->  # Wireless subsystem stuff
->  CONFIG_MAC80211=m
-> +CONFIG_MAC80211_LEDS=y
->
->  # Enable QOS for 2.6.22, we'll do some hacks here to enable it.
->  # You will need this for HT support (802.11n) and WME (802.11e).
-> @@ -77,7 +78,24 @@ CONFIG_IWLWIFI=m
->  CONFIG_IWLCORE=m
->  CONFIG_IWL3945=m
->  CONFIG_IWL4965=m
-> -CONFIG_IWL4965_HT=y
-> +CONFIG_IWLWIFI_LEDS=y
-> +CONFIG_IWLWIFI_RFKILL=y
-> +CONFIG_IWL3945_LEDS=y
-> +CONFIG_IWL5000=y
-> +
-> +ifeq ($(CONFIG_IWL5000),y)
-> +ifeq ($(CONFIG_IWL4965),)
-> +$(warning "WARNING: CONFIG_IWL5000 requires CONFIG_IWL4965 is configured as m.")
-> +CONFIG_IWL4965=m
-> +endif # CONFIG_IWL4965 is empty
-> +endif # CONFIG_IWL5000 is y
-> +
-> +CONFIG_IWLWIFI_DEBUG=y
-> +
-> +ifeq ($(CONFIG_MAC80211_DEBUGFS),y)
-> +CONFIG_IWLWIFI_DEBUGFS=y
-> +endif
-> +
->  CONFIG_B43=m
->  # B43 uses PCMCIA only for Compact Flash. The Cardbus cards uses PCI
->  # Example, bcm4318:
+> HW queues are irrelevant, you're the only vendor that implements it with
+> HW queues. If you think they're required for correct operation, clearly
+> you're wrong.
 
-I'm changing iwlwifi Kconfig so please hold this patch.
+Please put some reasoning behind this 'wrong'?  Different doesn't mean
+wrong and 'only one' certainly doesn't mean wrong.
+And it also doesn't mean that this hw should not operates correctly
+under Linux. I also cannot publish any performance comparison but it
+doesn't look wrong at all.
 
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+If Intel is the only vendor implements this that way that we may push
+the extra queuing into driver
+but so far I've seen only athk9 with 11n.
+
+> I'm just trying to fix the bugs and find a way to do this with hardware
+> that doesn't have extra HW queues.
+
+I don't want to even answer to this.
+
+Tomas
