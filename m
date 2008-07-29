@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:4500 "EHLO c60.cesmail.net"
+Received: from mail.atheros.com ([12.36.123.2]:17149 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753457AbYGaBLt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 21:11:49 -0400
-Subject: Re: [PATCH 06/16] ath9k: Fix missing brace in branch on
-	ath_chainmask_sel_logic()
-From: Pavel Roskin <proski@gnu.org>
-To: lrodriguez@atheros.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, Jouni.Malinen@Atheros.com,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-In-Reply-To: <40a067eab54b9b366002257d5be8e4577b067408.1217309551.git.lrodriguez@atheros.com>
+	id S1753872AbYG2Frr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jul 2008 01:47:47 -0400
+Received: from mail.atheros.com ([192.168.11.2])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Jul 2008 22:47:47 -0700
+From: <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	<Jouni.Malinen@Atheros.com>, Sujith <Sujith.Manoharan@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 14/16] ath9k: Remove AH_DEBUG_COUNTRY
+Date: Mon, 28 Jul 2008 22:47:23 -0700
+Message-ID: <6715bf581146b1b2610ce6bbada3c7147485eec9.1217309552.git.lrodriguez@atheros.com> (sfid-20080729_081546_733887_1F9724BB)
+In-Reply-To: <4800d552efce6350888c68b859f66767196d720b.1217309551.git.lrodriguez@atheros.com>
 References: <4800d552efce6350888c68b859f66767196d720b.1217309551.git.lrodriguez@atheros.com>
-	 <40a067eab54b9b366002257d5be8e4577b067408.1217309551.git.lrodriguez@atheros.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Wed, 30 Jul 2008 21:11:47 -0400
-Message-Id: <1217466707.3616.5.camel@dv> (sfid-20080731_031153_196233_887B4C20)
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-07-28 at 22:47 -0700, lrodriguez@atheros.com wrote:
-> From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> 
-> diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
-> index 47d4891..d9c7561 100644
-> --- a/drivers/net/wireless/ath9k/core.c
-> +++ b/drivers/net/wireless/ath9k/core.c
-> @@ -508,9 +508,10 @@ int ath_chainmask_sel_logic(struct ath_softc *sc, struct ath_node *an)
->  	 * enabled/disabled setting
->  	 */
->  	if ((sc->sc_no_tx_3_chains == AH_FALSE) ||
-> -	    (sc->sc_config.chainmask_sel == AH_FALSE))
-> +	    (sc->sc_config.chainmask_sel == AH_FALSE)) {
->  		cm->cur_tx_mask = sc->sc_tx_chainmask;
->  		return cm->cur_tx_mask;
-> +	}
+From: Sujith <Sujith.Manoharan@atheros.com>
 
-I would prefer that all compile fixes are amended in the patches that
-introduced them.  We should try to pass only correct patches upstream.
-Bisection works best if one doesn't hit code that doesn't compile.
-
+diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
+index a3dee36..8a99365 100644
+--- a/drivers/net/wireless/ath9k/regd.c
++++ b/drivers/net/wireless/ath9k/regd.c
+@@ -102,10 +102,9 @@ static bool ath9k_regd_is_ccode_valid(struct ath_hal *ah,
+ 
+ 	if (cc == CTRY_DEFAULT)
+ 		return true;
+-#ifdef AH_DEBUG_COUNTRY
+ 	if (cc == CTRY_DEBUG)
+ 		return true;
+-#endif
++
+ 	rd = ath9k_regd_get_eepromRD(ah);
+ 	DPRINTF(ah->ah_sc, ATH_DBG_REGULATORY, "%s: EEPROM regdomain 0x%x\n",
+ 		 __func__, rd);
 -- 
-Regards,
-Pavel Roskin
+1.5.4.3
+
