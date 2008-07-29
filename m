@@ -1,183 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.224]:8234 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750895AbYGaJu0 convert rfc822-to-8bit (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:45156 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751792AbYG2DV4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 05:50:26 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so472560rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Jul 2008 02:50:25 -0700 (PDT)
-Message-ID: <1ba2fa240807310250kd2df7bfxa3591cf78e68f8dc@mail.gmail.com> (sfid-20080731_115034_093188_608FA3D4)
-Date: Thu, 31 Jul 2008 12:50:25 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Pekka J Enberg" <penberg@cs.helsinki.fi>
-Subject: Re: [BUG] wireless : cpu stuck for 61s
-Cc: "Andrew Morton" <akpm@linux-foundation.org>,
-	"Dave Young" <hidave.darkstar@gmail.com>,
+	Mon, 28 Jul 2008 23:21:56 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: "Hin-Tak Leung" <hintak.leung@gmail.com>
+Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks rtl8187
+Date: Tue, 29 Jul 2008 00:21:45 -0300
+Cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
 	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <Pine.LNX.4.64.0807311156050.27055@sbz-30.cs.Helsinki.FI>
+	"Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
+References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net> <48874F09.7060400@lwfinger.net> <3ace41890807281939y462c9b91n5fa952e167b6ff8c@mail.gmail.com>
+In-Reply-To: <3ace41890807281939y462c9b91n5fa952e167b6ff8c@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080729055731.GA3265@darkstar>
-	 <1217334724.10489.47.camel@johannes.berg>
-	 <20080730020820.8bcc00e2.akpm@linux-foundation.org>
-	 <a8e1da0807300302m35a0a7c0q2ff2e0ab92a69239@mail.gmail.com>
-	 <20080730031047.54e13e2d.akpm@linux-foundation.org>
-	 <a8e1da0807301906j6438e5d8y64105fe8a2e3dffe@mail.gmail.com>
-	 <20080730195637.2197a82d.akpm@linux-foundation.org>
-	 <Pine.LNX.4.64.0807311156050.27055@sbz-30.cs.Helsinki.FI>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200807290021.45400.herton@mandriva.com.br> (sfid-20080729_052159_314718_536A1FFA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 31, 2008 at 12:15 PM, Pekka J Enberg <penberg@cs.helsinki.f=
-i> wrote:
-> Hi Andrew,
+Em Monday 28 July 2008 23:39:26 Hin-Tak Leung escreveu:
+> Hi Larry, please tidy the tx seq no patch up and submit to
+> wireless-testing.. I think it is more appropriate to copy the actual
+> comments in rt2000 from Johannes?
+> instead of or in addtion to: "XXX: This sequence is an attempt to
+> match what happens in r2x00"
 >
-> On Wed, 30 Jul 2008, Andrew Morton wrote:
->> > Ok here it is.
->> > BTW, I run "klogd -c 7" after boot
->>
->> The sysrq output is still missing lots of stuff.  I guess we broke i=
-t.
->>
->> >
->> > This time I get a kmalloc poison overwritten:
->> >
->>
->> argh, that stuff hurts my brain.  None of the numbers seem to make a=
-ny
->> sense for a 4k allocation :( Pekka, do you have time to decrypt this=
-?
+> ... and feel free to add ack-by/tested-by me.
 >
-> Sure. Here goes:
->
-> On Wed, 30 Jul 2008, Andrew Morton wrote:
->> <fixes wordwrapping, cleans stuff up>
->>
->> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D
->> BUG kmalloc-4096: Poison overwritten
->> --------------------------------------------------------------------=
----------
->>
->> INFO: 0xf6f3a080-0xf6f3a0ef. First byte 0x80 instead of 0x6b
->
-> That's POISON_FREE ("0x6b") overwritten which means use-after-free fo=
-r
-> the range of 0xf6f3a080 - 0xf6f3a0ef (112 bytes). The rest of the
-> object is okay but the SLUB debugging code only dumps the first 128 b=
-ytes
-> of the object which is why we don't see the full corruption.
->
-> 2.6.27-rc1 should dump the full object so I'm assuming this is pre -r=
-c1?
->
->> INFO: Allocated in dev_alloc_skb+0x1c/0x30 age=3D3642 cpu=3D0 pid=3D=
-0
->> INFO: Freed in skb_release_data+0x57/0x80 age=3D3146 cpu=3D0 pid=3D2=
-398
->
-> So the corrupted object was free'd by skb_release_data() so we need t=
-o
-> look for a driver or the networking stack calling that function too e=
-arly.
->
->> INFO: Slab 0xc1c05440 objects=3D7 used=3D3 fp=3D0xf6f3a060 flags=3D0=
-x400020c3
->> INFO: Object 0xf6f3a060 @offset=3D8288 fp=3D0xf6f39030
->>
->> Bytes b4 0xf6f3a050:  5e 09 00 00 57 c9 05 00 5a 5a 5a 5a 5a 5a 5a 5=
-a ^...W=C9..ZZZZZZZZ
->
-> The object starts here (the poison values for first 32 bytes are okay=
-):
->
->> Object 0xf6f3a060:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b =
-kkkkkkkkkkkkkkkk
->> Object 0xf6f3a070:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b =
-kkkkkkkkkkkkkkkk
->
-> And here are the first 96 bytes of the corruption:
->
->> Object 0xf6f3a080:  80 00 00 00 ff ff ff ff ff ff 00 17 7b 00 46 40 =
-=2E...=FF=FF=FF=FF=FF=FF..{.F@
->> Object 0xf6f3a090:  00 17 7b 00 46 40 30 09 81 21 08 7a 21 00 00 00 =
-=2E.{.F@0..!.z!...
->> Object 0xf6f3a0a0:  64 00 21 04 00 07 00 00 00 00 00 00 00 01 08 82 =
-d.!.............
->> Object 0xf6f3a0b0:  84 8b 0c 12 96 18 24 03 01 01 05 04 00 02 00 00 =
-=2E.....$.........
->> Object 0xf6f3a0c0:  07 06 43 4e 20 01 0d 14 2a 01 00 32 04 30 48 60 =
-=2E.CN....*..2.0H`
->> Object 0xf6f3a0d0:  6c dd 18 00 17 7b 01 04 00 00 00 01 00 00 00 10 =
-l=DD...{..........
->
-> But I think that's just the payload of a SKB?
->
->> Redzone 0xf6f3b060:  bb bb bb bb                                    =
- =BB=BB=BB=BB
->
-> The red-zone has SLUB_RED_INACTIVE ("0xbb") which reinforces
-> use-after-free.
->
->> Padding 0xf6f3b088:  5a 5a 5a 5a 5a 5a 5a 5a                        =
- ZZZZZZZZ
->> Pid: 0, comm: swapper Tainted: G        W 2.6.26-smp #2
->> [<c0180f5d>] print_trailer+0xad/0xf0
->> [<c018103b>] check_bytes_and_report+0x9b/0xc0
->> [<c018145e>] check_object+0x19e/0x1e0
->> [<c01821a4>] __slab_alloc+0x454/0x4f0
->> [<c01834d6>] __kmalloc_track_caller+0xe6/0xf0
->> [<c03dd1ec>] ? dev_alloc_skb+0x1c/0x30
->> [<c03dd1ec>] ? dev_alloc_skb+0x1c/0x30
->> [<c03dce79>] __alloc_skb+0x49/0x100
->> [<c03dd1ec>] dev_alloc_skb+0x1c/0x30
->> [<f8a58599>] ath5k_rxbuf_setup+0x39/0x200 [ath5k]
->> [<f8a5a697>] ath5k_tasklet_rx+0x127/0x5c0 [ath5k]
->> [<c014969a>] ? print_lock_contention_bug+0x1a/0xe0
->> [<c012eafc>] tasklet_action+0x4c/0xc0
->> [<c012e463>] __do_softirq+0x93/0x120
->> [<c012e547>] do_softirq+0x57/0x60
->> [<c012ea29>] irq_exit+0x69/0x80
->> [<c0106b55>] do_IRQ+0x45/0x80
->> [<c010a5d0>] ? mwait_idle+0x0/0x50
->> [<c0104752>] common_interrupt+0x2e/0x34
->> [<c010a5d0>] ? mwait_idle+0x0/0x50
->> [<c010a609>] ? mwait_idle+0x39/0x50
->> [<c01026e0>] cpu_idle+0x60/0xd0
->> [<c043c8ce>] rest_init+0x4e/0x60
->> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->> FIX kmalloc-4096: Restoring 0xf6f3a080-0xf6f3a0ef=3D0x6b
->>
->> FIX kmalloc-4096: Marking all objects used
->> [<c0243b4f>] ? security_file_permission+0xf/0x20
->> [<c019436f>] sys_select+0x3f/0x190
->> [<c01878e9>] ? fput+0x19/0x20
->> [<c0103dbf>] ? restore_nocheck+0x12/0x15
->> [<c014b06d>] ? trace_hardirqs_on+0xbd/0x140
->> [<c0103d5e>] syscall_call+0x7/0xb
->> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->>
->> Dave, could you please remind us which net driver was in use here?
->
-> There's ath5k in the stack trace but that, of course, doesn't
-> automatically mean it's at fault here. It could have been just the po=
-or
-> bastard who was the next to allocate 4 KB with kmalloc() noticing the
-> corruption.
->
-> Hope this helps!
+> I am wondering about Herton's problem with power saving (which I had
+> reproduced).
+> I think one way to move forward is to enable MAC80211_PS_DEBUG(?) and
+> see what happens
+> to the tx queues, now that we have a reliable way of reproducing the
+> problem.
 
+I enabled here CONFIG_MAC80211_VERBOSE_PS_DEBUG but didn't got anything 
+useful. I looked at the code for some time and until now no idea on what is 
+happening.
 
-I've seen something similar with fragmentation code in iwl4965 but I
-can reproduce it only when using SLAB. With SLUB it didn't shown up.
-Does anyone know what is difference between SLAB and SLUB in this conte=
-xt.?
-Tomas
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> I also wonder how Herton encountered the problem :-). Older
+> wireless-testing simply
+> say "unimplemented" or something if one tries to set power-saving.
+> Maybe Herton has
+> a few devices which he routinely tries out every part of iwconfig?
+
+The original sequence of commands:
+[1] /sbin/ip link set dev wlan0 down
+[2] /sbin/ip link set dev wlan0 up
+[3] /sbin/iwconfig wlan0 power on
+[4] /sbin/iwconfig wlan0 essid any
+[5] /sbin/iwconfig wlan0 power on
+[6] /sbin/iwconfig wlan0 essid <my AP>
+[7] /sbin/iwconfig wlan0 key open <my key>
+That show the issue on rtl8187b I have to test just is near on what Mandriva 
+2008.0 ifup-wireless script does, so that's what first made me catch the bug. 
+the '... power on' after '... essid any' is what causes later the association 
+or any scan attempt to fail, if I place a sleep between [4] and [5] I don't 
+get the problem too. The problem is, I couldn't see yet how a power on after 
+essid any could cause this.
+
+>
+> Hin-Tak
+>
+
+-- 
+[]'s
+Herton
