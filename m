@@ -1,80 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:60747 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752069AbYG3GMi (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48812 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752332AbYG2M1f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 02:12:38 -0400
-Message-ID: <48900654.7030100@lwfinger.net> (sfid-20080730_081252_829123_A992B211)
-Date: Wed, 30 Jul 2008 01:12:36 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Hin-Tak Leung <hintak.leung@gmail.com>,
-	herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Pavel Roskin <proski@gnu.org>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: [RFC/RFT] rtl8187: Protect the config callback from mac80211 with
- a mutex
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 29 Jul 2008 08:27:35 -0400
+Subject: Re: iwlwifi aggregation info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240807290525o41832ccei92ff554bef876b37@mail.gmail.com> (sfid-20080729_142558_246289_C169E16A)
+References: <1217331138.10489.24.camel@johannes.berg>
+	 <1217331408.10489.26.camel@johannes.berg>
+	 <1ba2fa240807290525o41832ccei92ff554bef876b37@mail.gmail.com>
+	 (sfid-20080729_142558_246289_C169E16A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BbhWi/GR12B9MpZoBkOE"
+Date: Tue, 29 Jul 2008 14:27:32 +0200
+Message-Id: <1217334452.10489.42.camel@johannes.berg> (sfid-20080729_142736_875110_ED00708A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Herton,
 
-Does this patch help your problem? I haven't done much testing, but things seem 
-to be better with it here.
+--=-BbhWi/GR12B9MpZoBkOE
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Larry
+On Tue, 2008-07-29 at 15:25 +0300, Tomas Winkler wrote:
 
-==================
+> > Never mind, the queue won't get reassigned. I was just confused by a
+> > bunch of superfluous code in iwl-tx.c. You cannot ever run into having
+> > IWL_EMPTYING_HW_QUEUE_ADDBA set because you wait for the queue to drain
+> > before fully disabling it.
+>=20
+> Correct.
 
-Some users of the RTL8187B have experienced difficulties since commit
-8f87dd7e540d455f8e7f11478133b85edc969c67 that introduced the power
-management wext hooks. This difficulty has not made much sense until
-it was realized that it was possible for mac80211 to make a call to the
-config routine while that routine was already being executed. This patch
-protects the critical section with a mutex.
+I suppose you won't mind me removing that particular code then? I'm
+working on the agg refactoring right now.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+johannes
 
-Index: wireless-testing/drivers/net/wireless/rtl8187.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl8187.h
-+++ wireless-testing/drivers/net/wireless/rtl8187.h
-@@ -94,6 +94,7 @@ struct rtl8187_priv {
-  	const struct rtl818x_rf_ops *rf;
-  	struct ieee80211_vif *vif;
-  	int mode;
-+	struct mutex mutex;	/* used to lock config callback */
+--=-BbhWi/GR12B9MpZoBkOE
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-  	/* rtl8187 specific */
-  	struct ieee80211_channel channels[14];
-Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
-@@ -864,6 +864,7 @@ static int rtl8187_config(struct ieee802
-  	struct rtl8187_priv *priv = dev->priv;
-  	u32 reg;
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-+	mutex_lock(&priv->mutex);
-  	reg = rtl818x_ioread32(priv, &priv->map->TX_CONF);
-  	/* Enable TX loopback on MAC level to avoid TX during channel
-  	 * changes, as this has be seen to causes problems and the
-@@ -896,6 +897,7 @@ static int rtl8187_config(struct ieee802
-  	rtl818x_iowrite16(priv, &priv->map->ATIMTR_INTERVAL, 100);
-  	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL, 100);
-  	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL_TIME, 100);
-+	mutex_unlock(&priv->mutex);
-  	return 0;
-  }
+iQIcBAABAgAGBQJIjwywAAoJEKVg1VMiehFYkXwP+gM1gfBLhOpglkD0KAaRtsmq
+f/vZChebphSVfLEA9rDziTht9FhW7dXEWuOlT9TN0qyb6qLl5v5Lu9sAOMqFzLds
+UMv/O17Rjq+WNDRLIK0uxQ2yXJ9GUPKrsLqByiw0j20Q9W24eLXYFzpoRTkNpx3n
+3hHDysrE6SoNlnA1eDIVDNoFm637f5qXQb7lpL4HzyM1QLlMIzEwtexBeZkx6bhw
+za5WgYgeTfIMT2oGD92+rjeBlp10bv0zXv3VunsKmYzxBgT+QJy1kIx8fdUetFPl
+GkdYQHiOPg5wF54ZvVaMp4Oj87A66AiZJTxdLaWz5FkUTH2luIDziztt0gkXwTyV
+t2owrhpqEAAwOGOcvu04VAzfNtz8W2LSQywngWMrSlFa3rPag1Ms1pj/Ns5INgJ4
+O+cj22Gv+5icRLz1QTInoZivDpjOAphVGxcKlCaA6xM1dNBc9lYwcr1wku8q62CA
+bo4Agd5O9Tn4KkoDHG/Hh8kjQyu/tY4yozc+9AuRKXkSXhklBpRCUMvrxjXonOIH
+eoqSBA14LDPLxKlej1p7teL/px5r5zNxRGU4/0nhWWe+UN7aMRArgZBiS6FKC8Pl
+cyGpbQRMxY9CKQDS3cNf2GXOwBR1xkKxQ0e5WOIfgG6qHOfs+4JH9ADVxyxC8xs5
+RUtrmll0IHtEKxKDbAWC
+=Sf5n
+-----END PGP SIGNATURE-----
 
-@@ -1187,6 +1189,7 @@ static int __devinit rtl8187_probe(struc
-  		printk(KERN_ERR "rtl8187: Cannot register device\n");
-  		goto err_free_dev;
-  	}
-+	mutex_init(&priv->mutex);
-
-  	printk(KERN_INFO "%s: hwaddr %s, %s V%d + %s\n",
-  	       wiphy_name(dev->wiphy), print_mac(mac, dev->wiphy->perm_addr),
+--=-BbhWi/GR12B9MpZoBkOE--
 
