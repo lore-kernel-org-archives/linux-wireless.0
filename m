@@ -1,48 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:43158 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757651AbYGAOen (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 10:34:43 -0400
-Date: Tue, 1 Jul 2008 11:34:39 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Adel Gadllah <adel.gadllah@gmail.com>,
-	linux-wireless@vger.kernel.org, stefano.brivio@polimi.it,
-	Larry Finger <larry.finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH/RFC] b43: remove input device usage for rfkill
-Message-ID: <20080701143439.GA6962@khazad-dum.debian.net> (sfid-20080701_163519_434021_0B584900)
-References: <6cf6b73e0807010255x1f2d8a21m8ed3e712012ea757@mail.gmail.com> <200807011227.15805.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200807011227.15805.mb@bu3sch.de>
+Received: from mx1.redhat.com ([66.187.233.31]:40644 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753474AbYG2RxX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jul 2008 13:53:23 -0400
+Subject: [PATCH] libertas: only enable rtap with mesh firmware
+From: Dan Williams <dcbw@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luis Carlos Cobo <luisca@cozybit.com>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	libertas-dev@lists.infradead.org
+Content-Type: text/plain
+Date: Tue, 29 Jul 2008 13:50:39 -0400
+Message-Id: <1217353839.25221.10.camel@localhost.localdomain> (sfid-20080729_195327_363514_356D0522)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ok, let's take it slow and one question/answer at a time, then.
+Since only mesh-enabled firmware has the CMD_802_11_MONITOR_MODE on
+which the rtap functionality depends, only expose the rtap functionality
+when mesh is also available.
 
-First, I need to know some details about the B43 hardware, to help with
-this.
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-1. It has an input pin that sometimes people connect buttons/switches
-to.
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index abd6d9e..3e29ed7 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -297,9 +297,7 @@ static ssize_t lbs_rtap_set(struct device *dev,
+ 			lbs_add_rtap(priv);
+ 		}
+ 		priv->monitormode = monitor_mode;
+-	}
+-
+-	else {
++	} else {
+ 		if (!priv->monitormode)
+ 			return strlen(buf);
+ 		priv->monitormode = 0;
+@@ -1242,8 +1240,6 @@ int lbs_start_card(struct lbs_private *priv)
+ 		lbs_pr_err("cannot register ethX device\n");
+ 		goto done;
+ 	}
+-	if (device_create_file(&dev->dev, &dev_attr_lbs_rtap))
+-		lbs_pr_err("cannot register lbs_rtap attribute\n");
+ 
+ 	lbs_update_channel(priv);
+ 
+@@ -1275,6 +1271,13 @@ int lbs_start_card(struct lbs_private *priv)
+ 
+ 			if (device_create_file(&dev->dev, &dev_attr_lbs_mesh))
+ 				lbs_pr_err("cannot register lbs_mesh attribute\n");
++
++			/* While rtap isn't related to mesh, only mesh-enabled
++			 * firmware implements the rtap functionality via
++			 * CMD_802_11_MONITOR_MODE.
++			 */
++			if (device_create_file(&dev->dev, &dev_attr_lbs_rtap))
++				lbs_pr_err("cannot register lbs_rtap attribute\n");
+ 		}
+ 	}
+ 
+@@ -1306,9 +1309,9 @@ void lbs_stop_card(struct lbs_private *priv)
+ 	netif_carrier_off(priv->dev);
+ 
+ 	lbs_debugfs_remove_one(priv);
+-	device_remove_file(&dev->dev, &dev_attr_lbs_rtap);
+ 	if (priv->mesh_tlv) {
+ 		device_remove_file(&dev->dev, &dev_attr_lbs_mesh);
++		device_remove_file(&dev->dev, &dev_attr_lbs_rtap);
+ 	}
+ 
+ 	/* Flush pending command nodes */
 
-Does that input pin act as an input for a FLIP-FLOP (and that flip-flop
-output is the hardware rfkill line), or is it the hardware rfkill line
-itself?
-
-input for a flip-flop means it toggles the kill/unkill behaviour when
-the input pin detects an edge (press/release of a button).
-
-direct hardware rfkill line means you need a SWITCH in that pin, because
-it directly sets the state.  If the pin is active, the hardware rfkill
-line is active.  If the pin is inactive, the hardware rfkill line is
-inactive.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
