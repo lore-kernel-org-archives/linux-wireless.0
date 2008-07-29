@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:12107 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754798AbYGHLpi (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:30047 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753053AbYG2VU5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 07:45:38 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so759504nfc.21
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2008 04:45:36 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFT 0/4] mac80211 improvements
-Date: Tue, 8 Jul 2008 13:53:53 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <20080705234735.210585000@sipsolutions.net>
-In-Reply-To: <20080705234735.210585000@sipsolutions.net>
+	Tue, 29 Jul 2008 17:20:57 -0400
+To: "Tomas Winkler" <tomasw@gmail.com>
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Herton Ronaldo Krzesinski" <herton@mandriva.com.br>,
+	"Hin-Tak Leung" <hintak.leung@gmail.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
+Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks rtl8187
+References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
+	<48874F09.7060400@lwfinger.net>
+	<3ace41890807281939y462c9b91n5fa952e167b6ff8c@mail.gmail.com>
+	<200807290021.45400.herton@mandriva.com.br>
+	<1217314430.15381.11.camel@johannes.berg>
+	<1ba2fa240807290123n7673dbb9m7121c1e76fe57e94@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Wed, 30 Jul 2008 00:19:54 +0300
+In-Reply-To: <1ba2fa240807290123n7673dbb9m7121c1e76fe57e94@mail.gmail.com> (ext Tomas Winkler's message of "Tue\, 29 Jul 2008 11\:23\:30 +0300")
+Message-ID: <874p68l75x.fsf@nokia.com> (sfid-20080729_232101_081283_DBFD451C)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807081353.53559.IvDoorn@gmail.com> (sfid-20080708_134543_522806_3561B89D)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 06 July 2008, Johannes Berg wrote:
-> Here are a number of improvements for mac80211's virtual interface
-> handling (master netdev, cleanups) and driver API (beaconing).
-> 
-> I have tested these patches on b43 in AP, STA and IBSS modes
-> (communicating with my N810 or an AP) and have not seen any issues.
-> 
-> I would appreciate testing on other hardware (I can probably cover
-> iwl4965, rt61pci and zd1211 next week), but I don't expect much
-> trouble.
+Tomas Winkler <tomasw@gmail.com> writes:
 
-I have added these patches to rt2x00.git for testing purposes.
+> On Tue, Jul 29, 2008 at 9:53 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Tue, 2008-07-29 at 00:21 -0300, Herton Ronaldo Krzesinski wrote:
+>>
+>>> [3] /sbin/iwconfig wlan0 power on
+>>
+>> I don't think turning on power management (yes, this command is
+>> completely misnamed, it turns on power _management_ not the power, you
+>> may want "txpower auto") does anything on this chip, does it?
+>
+> iwconfig power on is not implemented by mac80211 yet. There was one
+> patch posted that implements it.
 
-And to be more precise, the following patches have been added:
+John has already applied Samuel's patch to wireless-testing:
 
-004-mac80211-master-not-ap.patch
-005-mac80211-iface-cleanups.patch
-006-mac80211-push-alive-check-down.patch
-007-mac80211-beacon-revamp.patch
-008-deprecate-sys-wireless.patch
-009-local-bh-enable-consolidate.patch
-010-linux-radiotap-rxflags.patch
-011-allow-ap-vlan-modes.patch
+http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commitdiff;h=8f87dd7e540d455f8e7f11478133b85edc969c67
 
-Ivo
+> I wanted to expand it but wireless_tools 29 has a bug in parsing
+> this command. It is fixed only in 30.pre6 which is usually not in
+> distros.
+
+Could you be more specific, please? We have been using it for few
+years now.
+
+-- 
+Kalle Valo
