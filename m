@@ -1,67 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:52705 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754552AbYGVXRg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 19:17:36 -0400
-Date: Tue, 22 Jul 2008 16:14:14 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>, Willy Tarreau <w@1wt.eu>,
-	Rodrigo Rubira Branco <rbranco@la.checkpoint.com>,
-	Jake Edge <jake@lwn.net>, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>
-Subject: [patch 03/47] b43: Fix possible MMIO access while device is down
-Message-ID: <20080722231414.GD8282@suse.de> (sfid-20080723_011739_511518_42C74647)
-References: <20080722230208.148102983@mini.kroah.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080722231342.GA8282@suse.de>
+Received: from xc.sipsolutions.net ([83.246.72.84]:35801 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755739AbYG2LcV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jul 2008 07:32:21 -0400
+Subject: iwlwifi aggregation info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: tomasw <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PS7vx1HHqYxxB8/JBr/z"
+Date: Tue, 29 Jul 2008 13:32:18 +0200
+Message-Id: <1217331138.10489.24.camel@johannes.berg> (sfid-20080729_133224_832207_85DF1976)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.25-stable review patch.  If anyone has any objections, please let us
-know.
 
-------------------
-From: Michael Buesch <mb@bu3sch.de>
+--=-PS7vx1HHqYxxB8/JBr/z
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-This fixes a possible MMIO access while the device is still down
-from a suspend cycle. MMIO accesses with the device powered down
-may cause crashes on certain devices.
+Hey,
 
-Upstream commit is
-33598cf261e393f2b3349cb55509e358014bfd1f
+Can you tell me how aggregation works on hw? It seems to me that there's
+a problem:
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+Say a station enables aggregation on a low-priority TID, manages to fill
+the hw queue because high-prio frames are eating up all the airtime and
+then disables aggregation again. Now another station enables aggregation
+on a high-priority TID, and gets assigned to the same hw queue. Now
+frames for that station will be stalled, no? Seems like a bug to me.
 
----
- drivers/net/wireless/b43/leds.c |    3 +++
- 1 file changed, 3 insertions(+)
+johannes
 
---- a/drivers/net/wireless/b43/leds.c
-+++ b/drivers/net/wireless/b43/leds.c
-@@ -72,6 +72,9 @@ static void b43_led_brightness_set(struc
- 	struct b43_wldev *dev = led->dev;
- 	bool radio_enabled;
- 
-+	if (unlikely(b43_status(dev) < B43_STAT_INITIALIZED))
-+		return;
-+
- 	/* Checking the radio-enabled status here is slightly racy,
- 	 * but we want to avoid the locking overhead and we don't care
- 	 * whether the LED has the wrong state for a second. */
+--=-PS7vx1HHqYxxB8/JBr/z
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--- 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIjv+/AAoJEKVg1VMiehFYltcQAJpH+c75g1bHsceDcokRw5rt
+KaN2DZFG19a/sSCDS6tSCx3EmET7Kg2bfWhg9T88neC78Y+uh8IHXzrO3TwWi4pe
+TazKtznbWBTyfzhjv1OAfyBoRVD3yYFMtpmdaAVSz1kBT7Okm+af0l+cQ7qHCUC4
+8U3GcKp8KbwnwTJfqlyKAC5wGpUC4XpGLJgvgVvnxcXtjFcvtQSu7EgpZv2MAWev
+H6xG0VpWkwe/0CIJWwPKRX+0bbg83Xn/yRK6rO7LSorW8v48ZUga4wjaAwJyW07U
+TBuDz1l9TbYasDn1pXF1jfCIhoqksOPpK1y3HtQM3MpxrPXdmzAiKpP1ZegHWK2V
+Wsfm4LG0ZzU43KyoXTi4dwYd9TBpgEo7kR91UBocMhvfUcJO7eyzlQgSo0y+Zzm6
+u1AaOrs3UpTc7KXh0/s1H+tboifhfhhIXbfO/e/TLg8xo+dT1traN8odQ7o4Mc8M
+5Hn3JpdzUvpFSZTRCTz4kQzbQrUgh89wTM/2eXF7EgSWVGy1isuUmSkMPoSiy8Gp
+uNIztjMQHuRXOEIvij3ffEsPnOJtfa/td2xcoIk/Pr2tIrs5Pov5iahrgs2BBcrO
+uEiv0j2LfHudOyBi95a2fidgQvDc2/OQ/PTXU/+FthF0BbYBSw4YiIR2wemYcnqM
++FyH/O9zey49jNz+qdqA
+=KYKU
+-----END PGP SIGNATURE-----
+
+--=-PS7vx1HHqYxxB8/JBr/z--
+
