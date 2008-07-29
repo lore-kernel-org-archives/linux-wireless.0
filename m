@@ -1,95 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:54091 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751571AbYGRF4Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 01:56:25 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 05/13] iwlwifi: use dtim_period from association, and set listen_interval
-Date: Fri, 18 Jul 2008 13:53:01 +0800
-Message-Id: <1216360389-5352-6-git-send-email-yi.zhu@intel.com> (sfid-20080718_075628_051473_4159CBEC)
-In-Reply-To: <1216360389-5352-5-git-send-email-yi.zhu@intel.com>
-References: <1216360389-5352-1-git-send-email-yi.zhu@intel.com>
- <1216360389-5352-2-git-send-email-yi.zhu@intel.com>
- <1216360389-5352-3-git-send-email-yi.zhu@intel.com>
- <1216360389-5352-4-git-send-email-yi.zhu@intel.com>
- <1216360389-5352-5-git-send-email-yi.zhu@intel.com>
+Received: from nf-out-0910.google.com ([64.233.182.186]:65339 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751561AbYG2P6R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jul 2008 11:58:17 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so1708933nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 08:58:15 -0700 (PDT)
+Subject: Re: [PATCH] mac80211: partially fix skb->cb use
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1217333247.10489.35.camel@johannes.berg>
+References: <1217323927.10489.9.camel@johannes.berg>
+	 <1217330604.6379.12.camel@localhost>
+	 (sfid-20080729_132329_995714_6D2C9701)  <1217330667.10489.19.camel@johannes.berg>
+	 <1217331773.6379.25.camel@localhost>
+	 (sfid-20080729_134300_214751_172329C5)  <1217332288.10489.33.camel@johannes.berg>
+	 <1217333020.6379.31.camel@localhost>
+	 (sfid-20080729_140346_036234_85BD2AA9)  <1217333247.10489.35.camel@johannes.berg>
+Content-Type: text/plain
+Date: Tue, 29 Jul 2008 17:58:11 +0200
+Message-Id: <1217347091.6379.57.camel@localhost> (sfid-20080729_175820_206680_EEE13FDE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Tue, 2008-07-29 at 14:07 +0200, Johannes Berg wrote:
+> Ok. How is that supposed to work with crypto? Do each two peers
+> negotiate a key and forwarding just doesn't change anything so crypto is
+> effectively end-to-end?
 
-This patch uses dtim_period from association, and sets the listen_interval.
+Actually not, crypto is per link (per hop). We don't have a schedule to
+support that but anyway, where do you suggest to save the mesh header in
+this case?
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-commands.h |    3 +--
- drivers/net/wireless/iwlwifi/iwl-core.c     |    1 +
- drivers/net/wireless/iwlwifi/iwl4965-base.c |    5 +++--
- 3 files changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 6f3555f..74a8397 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -666,8 +666,7 @@ struct iwl4965_rxon_assoc_cmd {
- 	__le16 reserved;
- } __attribute__ ((packed));
- 
--
--
-+#define IWL_CONN_LISTEN_INTERVAL	(0xA)
- 
- /*
-  * REPLY_RXON_TIMING = 0x14 (command, has simple generic response)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index a44188b..b03b9cb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -828,6 +828,7 @@ int iwl_setup_mac(struct iwl_priv *priv)
- 		hw->ampdu_queues = priv->cfg->mod_params->num_of_ampdu_queues;
- 
- 	hw->conf.beacon_int = 100;
-+	hw->conf.listen_interval = IWL_CONN_LISTEN_INTERVAL;
- 
- 	if (priv->bands[IEEE80211_BAND_2GHZ].n_channels)
- 		priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
-diff --git a/drivers/net/wireless/iwlwifi/iwl4965-base.c b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-index 2001b09..217d6c7 100644
---- a/drivers/net/wireless/iwlwifi/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl4965-base.c
-@@ -608,7 +608,6 @@ static void iwl_activate_qos(struct iwl_priv *priv, u8 force)
- }
- 
- #define MAX_UCODE_BEACON_INTERVAL	4096
--#define INTEL_CONN_LISTEN_INTERVAL	__constant_cpu_to_le16(0xA)
- 
- static __le16 iwl4965_adjust_beacon_interval(u16 beacon_val)
- {
-@@ -638,7 +637,8 @@ static void iwl4965_setup_rxon_timing(struct iwl_priv *priv)
- 	priv->rxon_timing.timestamp.dw[0] =
- 				cpu_to_le32(priv->timestamp & 0xFFFFFFFF);
- 
--	priv->rxon_timing.listen_interval = INTEL_CONN_LISTEN_INTERVAL;
-+	priv->rxon_timing.listen_interval =
-+		cpu_to_le16(priv->hw->conf.listen_interval);
- 
- 	tsf = priv->timestamp;
- 
-@@ -3102,6 +3102,7 @@ static void iwl4965_bss_info_changed(struct ieee80211_hw *hw,
- 		if (bss_conf->assoc) {
- 			priv->assoc_id = bss_conf->aid;
- 			priv->beacon_int = bss_conf->beacon_int;
-+			priv->power_data.dtim_period = bss_conf->dtim_period;
- 			priv->timestamp = bss_conf->timestamp;
- 			priv->assoc_capability = bss_conf->assoc_capability;
- 			priv->next_scan_jiffies = jiffies +
 -- 
-1.5.3.6
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
+
 
