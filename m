@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50667
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1758255AbYGCHEx (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:44599 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758435AbYG2OrJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 03:04:53 -0400
-Date: Thu, 03 Jul 2008 00:04:52 -0700 (PDT)
-Message-Id: <20080703.000452.10956036.davem@davemloft.net> (sfid-20080703_103233_465509_DFC55CBE)
-To: netdev@vger.kernel.org
-CC: vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@Sun.COM, linux-wireless@vger.kernel.org
-Subject: [PATCH 27/39]: netdev: netif_tx_disable() needs to operate on all
- TX queues.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 29 Jul 2008 10:47:09 -0400
+Message-ID: <488F2D64.902@lwfinger.net> (sfid-20080729_164714_214443_6385C747)
+Date: Tue, 29 Jul 2008 09:47:00 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH] mac80211: partially fix skb->cb use
+References: <1217323927.10489.9.camel@johannes.berg>
+In-Reply-To: <1217323927.10489.9.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg wrote:
+> This patch fixes mac80211 to not use the skb->cb over the queue step
+> from virtual interfaces to the master. The patch also, for now,
+> disables aggregation because that would still require requeuing,
+> will fix that in a separate patch. There are two other places (software
+> requeue and powersaving stations) where requeue can happen, but that is
+> not currently used by any drivers/not possible to use respectively.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> This fixes wireless. At least it works on my WPA network, I haven't
+> actually tested a broken kernel.
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- include/linux/netdevice.h |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+This patch fixes my broken 2.6.27-rc1 kernel using b43, which had not worked 
+since the new networking stuff was merged.
 
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index 8558046..510a420 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -1513,8 +1513,13 @@ static inline void netif_tx_unlock_bh(struct net_device *dev)
- 
- static inline void netif_tx_disable(struct net_device *dev)
- {
-+	unsigned int i;
-+
- 	netif_tx_lock_bh(dev);
--	netif_stop_queue(dev);
-+	for (i = 0; i < dev->num_tx_queues; i++) {
-+		struct netdev_queue *txq = netdev_get_tx_queue(dev, i);
-+		netif_tx_stop_queue(txq);
-+	}
- 	netif_tx_unlock_bh(dev);
- }
- 
--- 
-1.5.6
+I'm pretty discouraged that a change that has such an impact on wireless never 
+made it to wireless-testing, where this kind of defect should have been found 
+and fixed long before it ever got into mainline.
 
+Larry
