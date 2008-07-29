@@ -1,81 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36948 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:44550 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753522AbYGIN7j (ORCPT
+	with ESMTP id S1750767AbYG2Oui (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 09:59:39 -0400
-Subject: Re: [PATCH 1/3] mac80211: Include sequence number in IBSS and Mesh
-	beacons
+	Tue, 29 Jul 2008 10:50:38 -0400
+Subject: Re: [PATCH] mac80211: partially fix skb->cb use
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200807091604.50199.IvDoorn@gmail.com> (sfid-20080709_155602_061102_EFE27B91)
-References: <200807091511.14288.IvDoorn@gmail.com>
-	 <200807091511.45779.IvDoorn@gmail.com> <200807091538.09387.mb@bu3sch.de>
-	 <200807091604.50199.IvDoorn@gmail.com>
-	 (sfid-20080709_155602_061102_EFE27B91)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ngurhD+aE89nVH7aBrsr"
-Date: Wed, 09 Jul 2008 15:58:51 +0200
-Message-Id: <1215611931.3246.8.camel@johannes.berg> (sfid-20080709_155943_030466_82676368)
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+In-Reply-To: <488F2D64.902@lwfinger.net>
+References: <1217323927.10489.9.camel@johannes.berg>
+	 <488F2D64.902@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YctAB83Y4MNxvQCRe/t3"
+Date: Tue, 29 Jul 2008 16:50:28 +0200
+Message-Id: <1217343029.10489.77.camel@johannes.berg> (sfid-20080729_165041_684487_E75EFAEE)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-ngurhD+aE89nVH7aBrsr
+--=-YctAB83Y4MNxvQCRe/t3
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2008-07-09 at 16:04 +0200, Ivo van Doorn wrote:
-> On Wednesday 09 July 2008, Michael Buesch wrote:
-> > On Wednesday 09 July 2008 15:11:45 Ivo van Doorn wrote:
-> > > Currently only beacons generated in AP mode have the software
-> > > sequence number inserted. This means IBSS and Mesh mode are broken
-> > > for all hardware that require software sequence numbers.
-> >=20
-> > Does software seq numbering even work at all?
-> > What about packets that get sent between the driver requested the
-> > beacon and the driver does actually queue it?
+
+> > This fixes wireless. At least it works on my WPA network, I haven't
+> > actually tested a broken kernel.
 >=20
-> For rt2x00 the beacon is requested and queued within interrupt context
-> or during resume when it doesn't allow mac80211 to send any frames yet.
+> This patch fixes my broken 2.6.27-rc1 kernel using b43, which had not wor=
+ked=20
+> since the new networking stuff was merged.
 
-Ok, in interrupt context definitely works.
+Thanks for the heads-up.
 
-> The problem would be when the config_interface() is called, if during tha=
-t
-> call mac80211 also sends out TX frames, then you get problems in the
-> sequence counting.
+> I'm pretty discouraged that a change that has such an impact on wireless =
+never=20
+> made it to wireless-testing, where this kind of defect should have been f=
+ound=20
+> and fixed long before it ever got into mainline.
 
-Well, if you care about the beacon in config_interface() you're
-implementing hwseq since otherwise you'd only request it when you need
-it, no?
+I had tested earlier versions of davem's patches, and those worked fine.
+and I guess that since he was not aware that mac80211 had always been
+using skb->cb in illegal ways, he couldn't realise how it would break
+wireless.
 
 johannes
 
---=-ngurhD+aE89nVH7aBrsr
+--=-YctAB83Y4MNxvQCRe/t3
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIdMQYAAoJEKVg1VMiehFYJz8QAKY+TAq9DPG29Snw1p/4y8qg
-LE8W1yokBQGu6P7YIORwlqEG2MsWpZklWt8e5tlCJiNMKqZykObcSlKTErtLHCIq
-+TCCIZC75eHHqZyFd1lreskrGfmGWhQiqotKgLVuKm5mZCXB2MikqC8Qib1gLf+m
-XBZ+J7Xrn4vOSLYVoN/WQ16hrzOeQaQSZhg8Kor6pzlsNC4jgDgEJZ6Y3rwQJW7e
-NQ3BuFp/7MBoU9zcYG2RWvPtn0GiAELqF12W4TLddemrM+zccdTIx8oJAR0VJhqm
-ZkXPH9Q23ZPZhon0mGzKRblHmtKtfsh1Ga2ysgRhIPeVZ67v84Ueshyv2IUE2Kjx
-1HANF9TQIHZqmp89bIiR8lV3uZYg/sNQKHs8qyAVfyjHVsopblXsqa2pr7V0rPhH
-DANVePflx/XnWWNuYgqfn76EHt3qJY547I0s5HoxO8k9oH2KU3WGjB26pkubvCY9
-QNQMc0hH8a7ds3jCDI1iSCFtmJ68juOc4I69DReiRMc8EpK8K+nlNgJVyJlGaWmG
-rTRp/O9OG3zzcYBySSSOsPgn27cuFTqRaQ0PSWf9zEqD84t6rj4LgziP04+VcUBW
-rSczcKePnVdzVcqjU0LRkzIy/0pKr32TMhnU+ELkw+/fpJ9lHAIf+alqRgf1xbTu
-cm15914sFs5lzw+flxdA
-=wJht
+iQIcBAABAgAGBQJIjy4xAAoJEKVg1VMiehFYylQP/jaE3X3caKASDzKIy9IQYWU8
+qX0JFwGG5bej6Rxtu7sG5pP1WSALs3GLXwRNUFeuGko+Ck1gpHMQ24TeRZmVJ9xi
+zk9SAlD3pwigEIfOBPTSutll3ycK7BRlYwBZPfC1dWQBTmaz23VHMu4+wJGi9LfM
++i1MItdYv3m8VvshtkGjKyuRHxFOLo34fepVSgkqrbBy5e5mWdGdHuRZi4xQtuab
+wqAn9NFMxPf0BaSnxxINgh1hGTGi6wqLcVjwJdAAtHKmI8JCVDlCd6cq5SAc5fOa
+SxkYyUjo85X6X8eFx6K6HEj+V63kQIrcbOkBmOro4PT3D3mmi55NBRIpgfnCH1+u
+5fwT1+BmUliNY6ErO0ruPB/xdp7Xd2y4AEtNqm9yC82kpwsoK64P3JegGjaDxJOt
+CXcqzUlheMGpbmmOKd2m3+OnYCfqkfwQcPaJmLs0danfv1i87XDuYULWHO5+aL8Z
+qwk+12DKRZR5lmydHhlPH7R89dCwNgdlbwK6AOmb9hHKaDTB+BoRvtT2VyPcPLwr
+GCs0iPcNC3mHJNtRBIIaZ6UnKkWjpiwZL/gg4u3ijX101g+jqMmFfa7zGxb1UScI
+TM3itAhvLMR8J1SFXlQNiAugasrHpcZSSlHmN7nJAeo8wG9wO1OTSn61nzLlrOwF
+nCVXZTkFXU7hTOfWAKBW
+=d1a3
 -----END PGP SIGNATURE-----
 
---=-ngurhD+aE89nVH7aBrsr--
+--=-YctAB83Y4MNxvQCRe/t3--
 
