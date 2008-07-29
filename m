@@ -1,92 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49612 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751930AbYGINPl (ORCPT
+Received: from py-out-1112.google.com ([64.233.166.181]:12169 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755385AbYG2LBD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 09:15:41 -0400
-Subject: Re: [PATCH 1/3] mac80211: Include sequence number in IBSS and Mesh
-	beacons
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200807091511.45779.IvDoorn@gmail.com> (sfid-20080709_150408_274977_B8FEC980)
-References: <200807091511.14288.IvDoorn@gmail.com>
-	 <200807091511.45779.IvDoorn@gmail.com>
-	 (sfid-20080709_150408_274977_B8FEC980)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NkKlfSJnCMUUmgQqLUMQ"
-Date: Wed, 09 Jul 2008 15:14:55 +0200
-Message-Id: <1215609295.3246.0.camel@johannes.berg> (sfid-20080709_151545_256290_A6C813E6)
-Mime-Version: 1.0
+	Tue, 29 Jul 2008 07:01:03 -0400
+Received: by py-out-1112.google.com with SMTP id p76so3629733pyb.10
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 04:01:02 -0700 (PDT)
+Message-ID: <1ba2fa240807290401w3bf88e61lbcbc2a78f97f4833@mail.gmail.com> (sfid-20080729_130107_659795_BC9FAA46)
+Date: Tue, 29 Jul 2008 14:01:01 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: partially fix skb->cb use
+Cc: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1217328563.10489.12.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1217323927.10489.9.camel@johannes.berg>
+	 <1ba2fa240807290348y58026caag341a7115c0d78083@mail.gmail.com>
+	 <1217328563.10489.12.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jul 29, 2008 at 1:49 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2008-07-29 at 13:48 +0300, Tomas Winkler wrote:
+>> On Tue, Jul 29, 2008 at 12:32 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > This patch fixes mac80211 to not use the skb->cb over the queue step
+>> > from virtual interfaces to the master. The patch also, for now,
+>> > disables aggregation because that would still require requeuing,
+>> > will fix that in a separate patch. There are two other places (software
+>> > requeue and powersaving stations) where requeue can happen, but that is
+>> > not currently used by any drivers/not possible to use respectively.
+>>
+>> What about about ieee80211_get_rate(hw, const struct ieee80211_tx_info *c).
+>> It's used in tx path in the drivers and info is fetched from cb
+>
+> So what about it? mac80211 builds the info in skb->cb just fine before
+> it passes the frame to the driver.
 
---=-NkKlfSJnCMUUmgQqLUMQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2008-07-09 at 15:11 +0200, Ivo van Doorn wrote:
-> Currently only beacons generated in AP mode have the software
-> sequence number inserted. This means IBSS and Mesh mode are broken
-> for all hardware that require software sequence numbers.
->=20
-> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-
-> ---
->  net/mac80211/tx.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
->=20
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 359cb36..0e7e1f3 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -1876,6 +1876,8 @@ struct sk_buff *ieee80211_beacon_get(struct ieee802=
-11_hw *hw,
->  		hdr->frame_control =3D IEEE80211_FC(IEEE80211_FTYPE_MGMT,
->  						  IEEE80211_STYPE_BEACON);
-> =20
-> +		ieee80211_include_sequence(sdata, hdr);
-> +
->  		num_beacons =3D &ifsta->num_beacons;
->  	} else if (ieee80211_vif_is_mesh(&sdata->vif)) {
->  		/* headroom, head length, tail length and maximum TIM length */
-> @@ -1896,6 +1898,9 @@ struct sk_buff *ieee80211_beacon_get(struct ieee802=
-11_hw *hw,
->  			cpu_to_le16(local->hw.conf.beacon_int);
->  		mgmt->u.beacon.capab_info =3D 0x0; /* 0x0 for MPs */
-> =20
-> +		ieee80211_include_sequence(sdata,
-> +					   (struct ieee80211_hdr *)skb->data);
-> +
->  		pos =3D skb_put(skb, 2);
->  		*pos++ =3D WLAN_EID_SSID;
->  		*pos++ =3D 0x0;
-
---=-NkKlfSJnCMUUmgQqLUMQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIdLnLAAoJEKVg1VMiehFYG6UQAJHUC7IoJIe6/MKfcJe3c3C+
-QArv+u9Zk8ALyin0uWB06shgEs/bptgYLIefAT00amFBsyIl4DaW3HeqVkHEGE4B
-3+k9KvM/NYjljJXcyVOlafMZggkAguHUzqlwdkpchk7nLzit7vtc5nNo8uACzvH/
-bwXvKQG9e+opW6viWTwntwU4fVrKirVgRIi0U7KmlROE5yXrjnrjCmmWlCy4Erb5
-PrLQW2owFIQlOQW3bIGNDalTUB1WOeCRyVEjE/7UX7J2bef5M+PeZVlgf7OR4BcP
-p1HwdSw3tPMdfSjlZZH/oC+ePYfeYkBIbUqG9lx7rjj8rhJku8BAgFNtBc4RUQ9/
-VH6dl7bIZm0JSB/wrOAq5PB/EyY3vtV4sBmKAGK2oVZgN0R/0hIEUA1VMUkiwPnJ
-TqtgwxtPms2+PRuDz7isbF60cua+ni2aO4d92WCJ5uu+DmWe6d5pRUtndWBBC8fk
-zM82iMBUO5LbBcTpM98nu3Oezleaajbpi8iGcYE2QVx3MDr0kr2q96HItceIpM3T
-2AnKsWAxPtVJIMQHlmoenaINmXAUsYWsPA6swtRzYxIm1OMB5Ik9eaj4wjdKnQJH
-0D4V+O2tCeq1s5XQ0DTIfXN/t0TomjOHNSh1qOA3ZHcU+MEkRmpAw60j4fsIIMpZ
-XHvXDEPh3L9pY+ed+wr6
-=D+vl
------END PGP SIGNATURE-----
-
---=-NkKlfSJnCMUUmgQqLUMQ--
-
+Sorry my mistake. This is built after the packet get to  master xmit
+Tomas
