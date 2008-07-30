@@ -1,70 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35662 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754145AbYGCMP0 (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:33800 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751349AbYG3QHv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 08:15:26 -0400
-Subject: Re: [PATCH 32/39]: mac80211: Reimplement WME using
-	->select_queue().
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	vinay@linux.vnet.ibm.com, krkumar2@in.ibm.com, mchan@broadcom.com,
-	Matheos.Worku@sun.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240807030427x19a2ea4fn50be1d2dbd587248@mail.gmail.com> (sfid-20080703_135524_229112_2995C829)
-References: <20080703.000521.13130101.davem@davemloft.net>
-	 <1ba2fa240807030427x19a2ea4fn50be1d2dbd587248@mail.gmail.com>
-	 (sfid-20080703_135524_229112_2995C829)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JalESuTI1pO+lH2pfHZG"
-Date: Thu, 03 Jul 2008 14:12:58 +0200
-Message-Id: <1215087178.9975.6.camel@johannes.berg> (sfid-20080703_141654_245746_0BD38FE0)
-Mime-Version: 1.0
+	Wed, 30 Jul 2008 12:07:51 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: [RFC/RFT] rtl8187: Protect the config callback from mac80211 with a mutex
+Date: Wed, 30 Jul 2008 13:08:01 -0300
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"Hin-Tak Leung" <hintak.leung@gmail.com>,
+	Pavel Roskin <proski@gnu.org>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <48900654.7030100@lwfinger.net> <200807301153.13947.herton@mandriva.com.br> <200807301702.31281.mb@bu3sch.de>
+In-Reply-To: <200807301702.31281.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200807301308.01631.herton@mandriva.com.br> (sfid-20080730_180753_830801_2AB7FA7B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-JalESuTI1pO+lH2pfHZG
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2008-07-03 at 14:27 +0300, Tomas Winkler wrote:
-> On Thu, Jul 3, 2008 at 10:05 AM, David Miller <davem@davemloft.net> wrote=
-:
+Em Wednesday 30 July 2008 12:02:30 Michael Buesch escreveu:
+> On Wednesday 30 July 2008 16:53:13 Herton Ronaldo Krzesinski wrote:
+> > Em Wednesday 30 July 2008 10:27:26 Michael Buesch escreveu:
+> > > On Wednesday 30 July 2008 15:24:40 Michael Buesch wrote:
+<snip>
+> > > and the mutex name, of course.
+> > >
+> > > 	/* Mutex to protect the device configuration data,
+> > > 	 * which is foobar and bizzbaz */
+> > > 	struct mutex conf_mutex;
 > >
-> > Unfortunately it temporarily loses some features, such
-> > as packet dropping (easy to add) and requeueing (harder).
->=20
-> Requeueing is must. This effectively kills HT. We must be able to
-> requeu packets from the legacy queue into apmdu queue.
+> > Yes, it's better this way. About the lock, the problem here is you can't
+> > set the channel while transmitting data on 8187 (the card stops working
+> > util reset like the comment on the code), so we must enable tx loopback
+> > while setting channels, but you can't run rtl8187_config concurrently
+> > because one instance may be disabling tx loopback while other is still
+> > setting channel, or like the code is today there is a possibility that
+> > you set tx loopback forever. The lock could be only in that section.
+> >
+> > The comment could be:
+> > /* Mutex to protect the device configuration data,
+> >  * we can't set channels concurrently */
+>
+> I think you probably want to protect the tx-loopback (enabled or disabled)
+> state. That's what you're actually doing implicitely. The problem is not
+> any channel concurrency or something like that, but that the
+> tx-loopback-enable/disable is not recursive is the real thing we want to
+> lock here, probably.
 
-I think the other direction is much more important (and also far
-easier), and you could help put it back :)
+No, the issue is that I must enter in tx-loopback mode to set the channels 
+inside rtl8187_config, to avoid transmission of packets, so the hardware 
+doesn't halt. So that's why the lock, it must cover the entire section 
+of "enable loopback"->"set_chan"->"disable loopback", not only the state of 
+TX_CONF register.
 
-Right now though, it still just hangs.
+>
+> Note that I didn't read the code.
+> But in general you get the idea. Don't lock code, but lock state data.
+> (like the loopback-state data).
 
-johannes
-
---=-JalESuTI1pO+lH2pfHZG
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIbMJGAAoJEKVg1VMiehFYpyUQAIMdRlhSm56u1lCLp6ppugTN
-uVP7TkdwhejBDBSS//2Crn0AIABY4QolEdgtVxA08u0vi+0+SJRZLXX3thsaWjcn
-+GdaboY8RJzrwKvVTVP2TyAZoR6LBbewCXPLWyX9NmV7SwrBwckykRaGvKUEY+3p
-Ai7p528jxVZav/RP2h/K36C33wHC3dOCTINh3kMgesBR9USmIdnodSuVgiVwQhpn
-HzL5h1BS1fXrGDSY41FdNUVAwUtRsYFd/SbWf5sgjKrEvza7syaIXqwb/Oc+3w7g
-OUQfYCdcOlG12Rd4gVRQBEduFg4UP8bVwqhPBcImRety4l6DhK7scXERpYZA9xJp
-MvS+SHcRDHWExYJ1l5Dg8NLeI6+CciK2llcbux/s/lSRjBG1wf1ZW4baFq0AR0+U
-KWVBmWOphDnZGoMs3we0QVNCG/NmUPwaCThCvHreE+3+XTdzaP/Li6IFP+qAWRGF
-pFKgyGFqOF1iD2GiUHghFB53P2zXLHZScHezwxKz/gjHOEvGSWh1ri192UfbsgKP
-y2ZY6FdLYYtW4mct/EKuFB5wOi4gfNuqAbo24pA0En91mxQSYPF+lF8ssqi0th0l
-niWrpwvwMKTQjxsC2p08mWXLAWcT6xinhVN9spoLu7RzX+eQFeM7j5cizvyddZBX
-BYwVHkqZb3ux13G7kW8/
-=nBxx
------END PGP SIGNATURE-----
-
---=-JalESuTI1pO+lH2pfHZG--
-
+--
+[]'s
+Herton
