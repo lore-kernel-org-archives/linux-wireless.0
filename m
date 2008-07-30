@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:31395 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752728AbYGKR2q (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:39233 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752354AbYG3T1n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jul 2008 13:28:46 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so2356577waf.23
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Jul 2008 10:28:46 -0700 (PDT)
-Message-ID: <c85cb4470807111028w19f62abel31704deb18c73f6d@mail.gmail.com> (sfid-20080711_192854_547221_3315BC87)
-Date: Fri, 11 Jul 2008 19:28:45 +0200
-From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: removing STAs while aggregation is in effect?
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1215770111.3483.112.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1215770111.3483.112.camel@johannes.berg>
+	Wed, 30 Jul 2008 15:27:43 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so98142nfc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 12:27:42 -0700 (PDT)
+Subject: Re: [ath5k-devel] [PATCH] ath5k: add Mesh Point support
+From: Luis Carlos Cobo <luisca@cozybit.com>
+To: sbrown@cortland.com
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	YanBo <dreamfly281@gmail.com>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
+In-Reply-To: <488DBF6E.10606@cortland.com>
+References: <487fa7a8.14da600a.1aae.48b1@mx.google.com>
+	 <1197ff4c0807280209x754f3a15j9dca3e60e99c69cb@mail.gmail.com>
+	 <488D9E79.8050408@cortland.com>
+	 (sfid-20080728_122546_840137_51FD7C0F) <1217247004.12662.3.camel@johannes.berg>
+	 <488DBF6E.10606@cortland.com>
+Content-Type: text/plain; charset=utf-8
+Date: Wed, 30 Jul 2008 21:27:31 +0200
+Message-Id: <1217446051.6379.231.camel@localhost> (sfid-20080730_212748_092544_09A53F9F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Quick question: I was looking through the new tx queue rework davem did
-> and couldn't immediately tell whether or not the right thing happens
-> when a STA is removed while aggregation is in effect. Say mac80211 is
-> operating as an AP and a STA disassociates in the middle of an
-> aggregation session, I can see nothing that guarantees the aggregation
-> queue will be drained and returned to the pool etc.
->
-> Am I missing something?
+On Mon, 2008-07-28 at 08:45 -0400, Steve Brown wrote:
+> Although mesh path timeout seems to default to 5000ms, in my testing =
+it=20
+> takes about 50 min. Is this really the timeout that removes a node wh=
+en=20
+> it's beacon is off for this period?
 
-funny, but by chance this is a flow i am dealing with right now in STA
-mode as part of patch meant to clean a bit the dissassoc flow. as to
-AP mode - i did not look at the rework as well and i will have to
-check this part, but IMHO this is more to do with the general flow of
-assoc/dissassoc. if the MLME decides to remove an STA - by all means
-it has to free its resources first - aggregation queues is one if them
-of course.
+=EF=BB=BF
+When a mesh path timeouts it is marked accordingly and it is no longer
+valid for routing. In a continuous traffic scenario this means that
+every five seconds, the route are refreshed. Actually we start
+refreshing one second before the route expires, so that we have a fresh
+path before the current one times out.
 
-Ron
+Mesh path timeout does not _remove_ the path from the mesh path table,
+so you will see it for a while, the table cleanup function which remove=
+s
+from the table paths that have expired long ago has a separate timing.
+
+--=20
+Luis Carlos Cobo Rus       GnuPG ID: 44019B60
+cozybit Inc.
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
