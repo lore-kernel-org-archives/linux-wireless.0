@@ -1,87 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:32684 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760821AbYG3BBI (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.190]:35041 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751616AbYG3Sok (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 21:01:08 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so194864wfd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 18:01:07 -0700 (PDT)
-Message-ID: <3ace41890807291801p38a0c432mfc16eec5a8cca96c@mail.gmail.com> (sfid-20080730_030118_223898_C595D345)
-Date: Wed, 30 Jul 2008 02:01:07 +0100
-From: "Hin-Tak Leung" <hintak.leung@gmail.com>
-To: "Kalle Valo" <kalle.valo@nokia.com>,
-	"Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks rtl8187
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Herton Ronaldo Krzesinski" <herton@mandriva.com.br>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <874p68l75x.fsf@nokia.com>
+	Wed, 30 Jul 2008 14:44:40 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so87448nfc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 11:44:38 -0700 (PDT)
+To: Peter Chubb <peterc@gelato.unsw.edu.au>
+Subject: Re: Fixing rt2500pci
+Date: Wed, 30 Jul 2008 21:05:56 +0200
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <87tze8vu18.wl%peterc@chubb.wattle.id.au>
+In-Reply-To: <87tze8vu18.wl%peterc@chubb.wattle.id.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
-	 <48874F09.7060400@lwfinger.net>
-	 <3ace41890807281939y462c9b91n5fa952e167b6ff8c@mail.gmail.com>
-	 <200807290021.45400.herton@mandriva.com.br>
-	 <1217314430.15381.11.camel@johannes.berg>
-	 <1ba2fa240807290123n7673dbb9m7121c1e76fe57e94@mail.gmail.com>
-	 <874p68l75x.fsf@nokia.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200807302105.56909.IvDoorn@gmail.com> (sfid-20080730_204443_255950_3CC64BF5)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 29, 2008 at 10:19 PM, Kalle Valo <kalle.valo@nokia.com> wrote:
-> Tomas Winkler <tomasw@gmail.com> writes:
->
->> On Tue, Jul 29, 2008 at 9:53 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->>> On Tue, 2008-07-29 at 00:21 -0300, Herton Ronaldo Krzesinski wrote:
->>>
->>>> [3] /sbin/iwconfig wlan0 power on
->>>
->>> I don't think turning on power management (yes, this command is
->>> completely misnamed, it turns on power _management_ not the power, you
->>> may want "txpower auto") does anything on this chip, does it?
+On Wednesday 30 July 2008, Peter Chubb wrote:
+> 
+> In kernel version 2.6.26-rc9 my wireless LAN card worked; but in the
+> released 2.6.26, my RaLink rt2500 card wouldn't associate.
+> 
+> Git-bisect led me to this patch:
+> 
+> 	61486e0f68d1f8966c09b734566a187d42d65c54
+> 	rt2x00: Remove ieee80211_tx_control argument from write_tx_desc()
+> 
+> I believe that there are two problems with that patch.  Setting the Tx
+> Length has been removed inadvertently, and one of the conditions for
+> when to set ifs to IFS_SIFS has also been removed.
+> 
+> This patch fixes those things, and with it my card works again.
+> 
+> Signed-off-by: Peter Chubb <peterc@gelato.unsw.edu.au>
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+> index 1724ce9..4ba2165 100644
+> --- a/drivers/net/wireless/rt2x00/rt2500pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+> @@ -1198,6 +1198,7 @@ static void rt2500pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+>  	rt2x00_set_field32(&word, TXD_W0_IFS, txdesc->ifs);
+>  	rt2x00_set_field32(&word, TXD_W0_RETRY_MODE,
+>  			   test_bit(ENTRY_TXD_RETRY_MODE, &txdesc->flags));
+> +	rt2x00_set_field32(&word, TXD_W0_DATABYTE_COUNT, skbdesc->data_len);
+>  	rt2x00_set_field32(&word, TXD_W0_CIPHER_ALG, CIPHER_NONE);
+>  	rt2x00_desc_write(txd, 0, word);
+>  }
 
-I had look through the code - mac80211 itself, the rtl8187b driver,
-and the client tool
-(iwconfig 29). The thing is, there is absolutely nothing in rtl8187b
-other than one reference
-to IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING, and in mac80211, as far
-as I understand,
-power saving should only has effect for driver in AP mode (as is
-IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING)?
+How could that have disappeared? good catch.
+The above change is:
 
-In any case, I tried removing IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING
-in the driver code,
-and also enabling CONFIG_MAC80211_VERBOSE_PS_DEBUG in net/mac80211/*.c
-- the former does not improve
-the situation, the latter seems to have no effect (i.e. none of the
-code with PS_DEBUG is invoked when using
-the driver in STA mode) - is that correct?
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
+But:
 
->>
->> iwconfig power on is not implemented by mac80211 yet. There was one
->> patch posted that implements it.
->
-> John has already applied Samuel's patch to wireless-testing:
->
-> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commitdiff;h=8f87dd7e540d455f8e7f11478133b85edc969c67
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> index e1368f7..a11d6ff 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> @@ -691,7 +691,8 @@ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+>  	 * Set ifs to IFS_SIFS when the this is not the first fragment,
+>  	 * or this fragment came after RTS/CTS.
+>  	 */
+> -	if (test_bit(ENTRY_TXD_RTS_FRAME, &txdesc.flags)) {
+> +	if ((seq_ctrl & IEEE80211_SCTL_FRAG)  ||
+> +		test_bit(ENTRY_TXD_RTS_FRAME, &txdesc.flags)) {
+>  		txdesc.ifs = IFS_SIFS;
+>  	} else if (control->flags & IEEE80211_TXCTL_FIRST_FRAGMENT) {
+>  		__set_bit(ENTRY_TXD_FIRST_FRAGMENT, &txdesc.flags);
 
-This is one of the two patches we have been talking about which breaks
-the rt8187b driver. (the other being the tx seq no one).
+The above does not correspond with legacy driver, so I am hesitant in accepting this change.
+Unless you are _absolutely_ sure this change does fix the issue, and the databate count
+initialization is not sufficient on its own. If that is not the case, please resend the patch with the
+rt2x00dev.c change ommitted and my ack added. (Please add John Linville to the CC list as well,
+so it can be merged faster :) )
 
->
->> I wanted to expand it but wireless_tools 29 has a bug in parsing
->> this command. It is fixed only in 30.pre6 which is usually not in
->> distros.
->
-> Could you be more specific, please? We have been using it for few
-> years now.
-
-Yes, I like to know what's the bug referring to also. I have looked at
-iwconfig 29
-and it seems to be doing the right thing ("off" sets disable, "on"
-sets the value).
-
-Hin-Tak
+Ivo
