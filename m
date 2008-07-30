@@ -1,86 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.236]:65226 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755151AbYGaVvd (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:44506 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752047AbYG3Dj7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 17:51:33 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so764435rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Jul 2008 14:51:33 -0700 (PDT)
-Message-ID: <489233E1.8080800@gmail.com> (sfid-20080731_235138_602057_F61801F7)
-Date: Thu, 31 Jul 2008 14:51:29 -0700
-From: John Daiker <daikerjohn@gmail.com>
+	Tue, 29 Jul 2008 23:39:59 -0400
+Date: Wed, 30 Jul 2008 00:39:52 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 5/6] rfkill: query EV_SW states when rfkill-input
+	(re)?connects to a input device
+Message-ID: <20080730033952.GA19961@khazad-dum.debian.net> (sfid-20080730_054023_922979_0ABD0FA8)
+References: <1216685902-9373-1-git-send-email-hmh@hmh.eng.br> <1216685902-9373-6-git-send-email-hmh@hmh.eng.br> <20080729205315.GB10188@tuxdriver.com> <20080730013024.GB22649@anvil.corenet.prv>
 MIME-Version: 1.0
-To: Peter Chubb <peterc@chubb.wattle.id.au>
-CC: Peter Chubb <peterc@gelato.unsw.edu.au>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: Fixing rt2500pci [PATCH]
-References: <87tze8vu18.wl%peterc@chubb.wattle.id.au>	<200807302105.56909.IvDoorn@gmail.com>	<200807302115.03865.IvDoorn@gmail.com>	<87vdym6fct.wl%peterc@chubb.wattle.id.au> <87wsj2246r.wl%peterc@chubb.wattle.id.au>
-In-Reply-To: <87wsj2246r.wl%peterc@chubb.wattle.id.au>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080730013024.GB22649@anvil.corenet.prv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Chubb wrote:
-> In kernel version 2.6.26-rc9 my wireless LAN card worked; but in the
-> released 2.6.26, my RaLink rt2500 card wouldn't associate.
->
-> Git-bisect led me to this patch:
->
-> 	61486e0f68d1f8966c09b734566a187d42d65c54
-> 	rt2x00: Remove ieee80211_tx_control argument from write_tx_desc()
->
-> I believe that there is a problem with that patch --- it
-> (inadvertantly) removes an extra line of code, that used to set the
-> DATABYTE_COUNT field.
+On Tue, 29 Jul 2008, Dmitry Torokhov wrote:
+> On Tue, Jul 29, 2008 at 04:53:15PM -0400, John W. Linville wrote:
+> > On Mon, Jul 21, 2008 at 09:18:21PM -0300, Henrique de Moraes Holschuh wrote:
+> > > Every time a new input device that is capable of one of the rfkill EV_SW events
+> > > (currently only SW_RFKILL_ALL) is connected to rfkill-input, we must check the
+> > > states of the input EV_SW switches and take action.  Otherwise, we will ignore
+> > > the initial switch state.
+> > > 
+> > > We also need to re-check the states of the EV_SW switches after a device that
+> > > was under an exclusive grab is released back to us, since we got no input
+> > > events from that device while it was grabbed.
+> > > 
+> > > Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> > > Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> > > Cc: Dmitry Torokhov <dtor@mail.ru>
+> > 
+> >   CC [M]  net/rfkill/rfkill-input.o
+> > net/rfkill/rfkill-input.c: In function ???rfkill_start???:
+> > net/rfkill/rfkill-input.c:201: warning: passing argument 2 of ???constant_test_bit??? from incompatible pointer type
+> > net/rfkill/rfkill-input.c:201: warning: passing argument 2 of ???variable_test_bit??? from incompatible pointer type
+> > net/rfkill/rfkill-input.c:202: warning: passing argument 2 of ???constant_test_bit??? from incompatible pointer type
+> > net/rfkill/rfkill-input.c:202: warning: passing argument 2 of ???variable_test_bit??? from incompatible pointer type
+> > net/rfkill/rfkill-input.c:203: warning: passing argument 2 of ???constant_test_bit??? from incompatible pointer type
+> > net/rfkill/rfkill-input.c:203: warning: passing argument 2 of ???variable_test_bit??? from incompatible pointer type
+> > 
+> > Don't you need an index for those evbit, swbit, and sw arrays?
+> 
+> No, we just need to drop the &:
+> 
+> diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
+> index 827f178..e5b6955 100644
+> --- a/net/rfkill/rfkill-input.c
+> +++ b/net/rfkill/rfkill-input.c
+> @@ -198,10 +198,10 @@ static void rfkill_start(struct input_handle *handle)
+>  	 * just fine (which event_lock will also avoid). */
+>  	spin_lock_irq(&handle->dev->event_lock);
 >  
-> This patch reinstates that line, and with it my card works again.
->
-> The original version I sent still used the skbdesc->data_len which has
-> been removed; this version of the patch applies on top of 2.6.27-rc1.
->  
-> Signed-off-by: Peter Chubb <peterc@gelato.unsw.edu.au>
-> Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
->
->
-> Index: linux-2.6-git/drivers/net/wireless/rt2x00/rt2500pci.c
-> ===================================================================
-> --- linux-2.6-git.orig/drivers/net/wireless/rt2x00/rt2500pci.c	2008-07-31 10:58:43.000000000 +1000
-> +++ linux-2.6-git/drivers/net/wireless/rt2x00/rt2500pci.c	2008-07-31 11:40:44.000000000 +1000
-> @@ -1213,20 +1213,21 @@ static void rt2500pci_write_tx_desc(stru
->  	rt2x00_set_field32(&word, TXD_W0_ACK,
->  			   test_bit(ENTRY_TXD_ACK, &txdesc->flags));
->  	rt2x00_set_field32(&word, TXD_W0_TIMESTAMP,
->  			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &txdesc->flags));
->  	rt2x00_set_field32(&word, TXD_W0_OFDM,
->  			   test_bit(ENTRY_TXD_OFDM_RATE, &txdesc->flags));
->  	rt2x00_set_field32(&word, TXD_W0_CIPHER_OWNER, 1);
->  	rt2x00_set_field32(&word, TXD_W0_IFS, txdesc->ifs);
->  	rt2x00_set_field32(&word, TXD_W0_RETRY_MODE,
->  			   test_bit(ENTRY_TXD_RETRY_MODE, &txdesc->flags));
-> +	rt2x00_set_field32(&word, TXD_W0_DATABYTE_COUNT, skb->len);
->  	rt2x00_set_field32(&word, TXD_W0_CIPHER_ALG, CIPHER_NONE);
->  	rt2x00_desc_write(txd, 0, word);
->  }
->  
->  /*
->   * TX data initialization
->   */
->  static void rt2500pci_write_beacon(struct queue_entry *entry)
->  {
->  	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
->
-> --
-> Dr Peter Chubb  http://www.gelato.unsw.edu.au  peterc AT gelato.unsw.edu.au
-> http://www.ertos.nicta.com.au           ERTOS within National ICT Australia
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->   
-I can confirm that this is working on top of 
-2.6.27-rc1-94ad374a0751f40d25e22e036c37f7263569d24c
+> -	if (test_bit(EV_SW, &handle->dev->evbit)) {
+> -		if (test_bit(SW_RFKILL_ALL, &handle->dev->swbit))
+> +	if (test_bit(EV_SW, handle->dev->evbit)) {
+[...]
 
-Acked-by: John Daiker <daikerjohn@gmail.com>
+Acked-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+
+John, do you want me to fix the patch and resend it, instead of Dmitry's
+incremental fix?
+
+Anyway, gcc 4.3 and 4.2 don't complain about the &array here, and
+unfortunately my C-spec-fu is not strong enough to know what is wrong with
+"&array" instead of just "array", or "&array[0]".  They are all equivalent
+to gcc 4.2 and 4.3.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
