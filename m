@@ -1,98 +1,337 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from THAUM.MIT.EDU ([18.95.3.27]:51500 "EHLO luto.stanford.edu"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750807AbYGGEz5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2008 00:55:57 -0400
-Message-ID: <48719F2F.5060301@myrealbox.com> (sfid-20080707_065601_369752_A67B96D1)
-Date: Mon, 07 Jul 2008 00:44:31 -0400
-From: Andy Lutomirski <luto@myrealbox.com>
-MIME-Version: 1.0
-To: hmh@hmh.eng.br
-CC: thomasw@gmail.com, zhu.yi@intel.com,
-	linux-wireless@vger.kernel.org, dcbw@redhat.com
-Subject: Re: Question on rfkill double block
-References: <1214982208.14590.473.camel@debian.sh.intel.com> <20080702193202.GA20410@khazad-dum.debian.net> <1ba2fa240807051428i3f49f621i7b583bec58a02869@mail.gmail.com> <20080706002037.GD21973@khazad-dum.debian.net>
-In-Reply-To: <20080706002037.GD21973@khazad-dum.debian.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41679 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753905AbYG3TxP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jul 2008 15:53:15 -0400
+Message-Id: <200807301946.m6UJkMGK012997@imap1.linux-foundation.org> (sfid-20080730_215326_079692_3E888F6A)
+Subject: [patch 4/4] wireless: replace __FUNCTION__ with __func__
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	harvey.harrison@gmail.com
+From: akpm@linux-foundation.org
+Date: Wed, 30 Jul 2008 12:46:22 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Henrique de Moraes Holschuh wrote:
-> On Sun, 06 Jul 2008, Tomas Winkler wrote:
->> From my experience from other OS the states of SW and HW RF KILL
->> switches should be independent and visible to user space
->> otherwise it's very hard to make something coherent out of it. It
->> should be visible to user himself so he/she knows what switch actually
->> press. And also to let say unmanned application, most important in
->> preserving SW switch state across reboots and resume/suspend events.
->> Radio state is just simple AND function of all the switches in the
->> game anything else just leads to confusion.
->> Currently we have rkill switch from sysfs, hw rfkill, iwconfig txpower
->> off, the last one is better to eliminate but still we have TRIPLE
->> BLOCKING
-> 
-> I am not convinced it is the best way to go, but I thought on it, and that
-> fourth state will at least help on sleep-to-ram resume, so you guys will get
-> four states.  
-> 
-> But I can't give you a bitmap.  Sorry, there is a stablished sysfs ABI in
-> mainline that says this:
-> 
-> 00 - BLOCK ("off")
-> 01 - UNBLOCK ("on")
-> 
-> I hate it, but I can't change it.  We can *extend* it, but that's it.
+From: Harvey Harrison <harvey.harrison@gmail.com>
 
-Perhaps it's time to throw out the userspace interface and start over, 
-or at least replace it and emulate the old one, too.
+__FUNCTION__ is gcc-specific, use __func__
 
-I'm not even kidding.  I have an iwl4965, and I've tried 2.6.25.10's 
-built-in driver and wireless-compat from a couple days ago.  The rfkill 
-switch *works* but the userspace interface does nothing.  (2.6.25.10's 
-module at least causes network-manager to notice that the interface went 
-down and gets a ton of "Requesting MAC access during RFKILL wakes up 
-NIC."  Wireless-compat's driver just confuses network-manager.)  The 
-rfkill module seems to have no effect, and 'find /sys -name *rfkill*' 
-shows nothing (other than the rfkill class and module).  Rfkill doesn't 
-work on my ath5k system either (no rfkill file).  This is Ubuntu Hardy, 
-which has nm 0.6, but I once tried nm 0.7 from svn and I don't recall it 
-working any better.
+Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-Not to mention the fact that I have both an rfkill switch and an rfkill 
-button.  Pressing the button turns WLAN off (same RFKILL messages 
-spammed to dmesg) and Bluetooth *on*.  Maybe it's thinkpad_acpi's fault, 
-but I don't really see how it's supposed to work right.
+ drivers/net/wireless/airo.c                   |   16 ++++++++--------
+ drivers/net/wireless/hermes.c                 |    2 +-
+ drivers/net/wireless/ipw2100.c                |    2 +-
+ drivers/net/wireless/ipw2200.h                |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-3945-debug.h |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-debug.h      |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl3945-base.c   |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl4965-base.c   |    4 ++--
+ drivers/net/wireless/libertas/if_cs.c         |    2 +-
+ drivers/net/wireless/prism54/isl_ioctl.c      |    8 ++++----
+ drivers/net/wireless/rt2x00/rt2x00.h          |    4 ++--
+ drivers/net/wireless/wl3501_cs.c              |    8 ++++----
+ 12 files changed, 31 insertions(+), 31 deletions(-)
 
-So it seems to me that the status quo is:
-  - If there's a sysfs file called rfkill, it has such and such 
-semantics, and you probably can't change it by writing to it.
-  - There probably isn't an rfkill file.
-  - Userspace, at least on my laptops, doesn't currently use the rfkill 
-ABI in any meaningful manner.
-  - Software rfkill control can easily do the wrong thing and there's no 
-obvious way to make it do the right thing from userspace, .config, or sysfs.
-
-Maybe the new semantics should be something sensible with a read-only 
-file called "rfkill" that's backwards-compatible and shows the overall 
-state.  Then we could do gnarly things like making *every* mac80211 
-driver have software rfkill control, add inotify or something to the 
-rfkill file, and generally have good and easily comprehensible control 
-over all radios.  Hardware switches (and momentary swtiches and buttons 
-and whatnot) could all be exposed directly to userspace.  Who knows -- 
-there could even be files like "hard_rf_enable" (read-only, only there 
-if there's a readable switch, like on iwl4965) and "soft_rf_enable" 
-(read-write, unconditionally present), and a mechanism for userspace to 
-control the software part (i.e. userspace could tell rfkill-input to 
-stop doing anything and take control itself).
-
-I'd suggest that nothing visible to userspace on the rfkill side go into 
-2.6.27 until it can be done right and it's clear what this whole 
-mechanism is supposed to do.  I might even be talked into writing some 
-patches, because it would be kind of nice for all this stuff to work 
-right on my laptops.
-
-If I'm missing something I need to make rfkill suddenly work on my 
-machine, please give me some hints, too :)
-
---Andy
-
+diff -puN drivers/net/wireless/airo.c~wireless-replace-__function__-with-__func__ drivers/net/wireless/airo.c
+--- a/drivers/net/wireless/airo.c~wireless-replace-__function__-with-__func__
++++ a/drivers/net/wireless/airo.c
+@@ -1915,7 +1915,7 @@ static int mpi_start_xmit(struct sk_buff
+ 	struct airo_info *ai = dev->priv;
+ 
+ 	if (!skb) {
+-		airo_print_err(dev->name, "%s: skb == NULL!",__FUNCTION__);
++		airo_print_err(dev->name, "%s: skb == NULL!",__func__);
+ 		return 0;
+ 	}
+ 	npacks = skb_queue_len (&ai->txq);
+@@ -1964,7 +1964,7 @@ static int mpi_send_packet (struct net_d
+ 	if ((skb = skb_dequeue(&ai->txq)) == NULL) {
+ 		airo_print_err(dev->name,
+ 			"%s: Dequeue'd zero in send_packet()",
+-			__FUNCTION__);
++			__func__);
+ 		return 0;
+ 	}
+ 
+@@ -2115,7 +2115,7 @@ static int airo_start_xmit(struct sk_buf
+ 	u32 *fids = priv->fids;
+ 
+ 	if ( skb == NULL ) {
+-		airo_print_err(dev->name, "%s: skb == NULL!", __FUNCTION__);
++		airo_print_err(dev->name, "%s: skb == NULL!", __func__);
+ 		return 0;
+ 	}
+ 
+@@ -2186,7 +2186,7 @@ static int airo_start_xmit11(struct sk_b
+ 	}
+ 
+ 	if ( skb == NULL ) {
+-		airo_print_err(dev->name, "%s: skb == NULL!", __FUNCTION__);
++		airo_print_err(dev->name, "%s: skb == NULL!", __func__);
+ 		return 0;
+ 	}
+ 
+@@ -4127,7 +4127,7 @@ static int PC4500_writerid(struct airo_i
+ 		if (test_bit(FLAG_ENABLED, &ai->flags) && (RID_WEP_TEMP != rid))
+ 			airo_print_err(ai->dev->name,
+ 				"%s: MAC should be disabled (rid=%04x)",
+-				__FUNCTION__, rid);
++				__func__, rid);
+ 		memset(&cmd, 0, sizeof(cmd));
+ 		memset(&rsp, 0, sizeof(rsp));
+ 
+@@ -4142,7 +4142,7 @@ static int PC4500_writerid(struct airo_i
+ 			&ai->config_desc.rid_desc, sizeof(Rid));
+ 
+ 		if (len < 4 || len > 2047) {
+-			airo_print_err(ai->dev->name, "%s: len=%d", __FUNCTION__, len);
++			airo_print_err(ai->dev->name, "%s: len=%d", __func__, len);
+ 			rc = -1;
+ 		} else {
+ 			memcpy((char *)ai->config_desc.virtual_host_addr,
+@@ -4151,9 +4151,9 @@ static int PC4500_writerid(struct airo_i
+ 			rc = issuecommand(ai, &cmd, &rsp);
+ 			if ((rc & 0xff00) != 0) {
+ 				airo_print_err(ai->dev->name, "%s: Write rid Error %d",
+-						__FUNCTION__, rc);
++						__func__, rc);
+ 				airo_print_err(ai->dev->name, "%s: Cmd=%04x",
+-						__FUNCTION__, cmd.cmd);
++						__func__, cmd.cmd);
+ 			}
+ 
+ 			if ((rsp.status & 0x7f00))
+diff -puN drivers/net/wireless/hermes.c~wireless-replace-__function__-with-__func__ drivers/net/wireless/hermes.c
+--- a/drivers/net/wireless/hermes.c~wireless-replace-__function__-with-__func__
++++ a/drivers/net/wireless/hermes.c
+@@ -463,7 +463,7 @@ int hermes_read_ltv(hermes_t *hw, int ba
+ 	if (rtype != rid)
+ 		printk(KERN_WARNING "hermes @ %p: %s(): "
+ 		       "rid (0x%04x) does not match type (0x%04x)\n",
+-		       hw->iobase, __FUNCTION__, rid, rtype);
++		       hw->iobase, __func__, rid, rtype);
+ 	if (HERMES_RECLEN_TO_BYTES(rlength) > bufsize)
+ 		printk(KERN_WARNING "hermes @ %p: "
+ 		       "Truncating LTV record from %d to %d bytes. "
+diff -puN drivers/net/wireless/ipw2100.c~wireless-replace-__function__-with-__func__ drivers/net/wireless/ipw2100.c
+--- a/drivers/net/wireless/ipw2100.c~wireless-replace-__function__-with-__func__
++++ a/drivers/net/wireless/ipw2100.c
+@@ -212,7 +212,7 @@ static u32 ipw2100_debug_level = IPW_DL_
+ do { \
+ 	if (ipw2100_debug_level & (level)) { \
+ 		printk(KERN_DEBUG "ipw2100: %c %s ", \
+-                       in_interrupt() ? 'I' : 'U',  __FUNCTION__); \
++                       in_interrupt() ? 'I' : 'U',  __func__); \
+ 		printk(message); \
+ 	} \
+ } while (0)
+diff -puN drivers/net/wireless/ipw2200.h~wireless-replace-__function__-with-__func__ drivers/net/wireless/ipw2200.h
+--- a/drivers/net/wireless/ipw2200.h~wireless-replace-__function__-with-__func__
++++ a/drivers/net/wireless/ipw2200.h
+@@ -1394,13 +1394,13 @@ BIT_ARG16(x)
+ #define IPW_DEBUG(level, fmt, args...) \
+ do { if (ipw_debug_level & (level)) \
+   printk(KERN_DEBUG DRV_NAME": %c %s " fmt, \
+-         in_interrupt() ? 'I' : 'U', __FUNCTION__ , ## args); } while (0)
++         in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
+ 
+ #ifdef CONFIG_IPW2200_DEBUG
+ #define IPW_LL_DEBUG(level, fmt, args...) \
+ do { if (ipw_debug_level & (level)) \
+   printk(KERN_DEBUG DRV_NAME": %c %s " fmt, \
+-         in_interrupt() ? 'I' : 'U', __FUNCTION__ , ## args); } while (0)
++         in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
+ #else
+ #define IPW_LL_DEBUG(level, fmt, args...) do {} while (0)
+ #endif				/* CONFIG_IPW2200_DEBUG */
+diff -puN drivers/net/wireless/iwlwifi/iwl-3945-debug.h~wireless-replace-__function__-with-__func__ drivers/net/wireless/iwlwifi/iwl-3945-debug.h
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-debug.h~wireless-replace-__function__-with-__func__
++++ a/drivers/net/wireless/iwlwifi/iwl-3945-debug.h
+@@ -34,12 +34,12 @@ extern u32 iwl3945_debug_level;
+ #define IWL_DEBUG(level, fmt, args...) \
+ do { if (iwl3945_debug_level & (level)) \
+   printk(KERN_ERR DRV_NAME": %c %s " fmt, \
+-	 in_interrupt() ? 'I' : 'U', __FUNCTION__ , ## args); } while (0)
++	 in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
+ 
+ #define IWL_DEBUG_LIMIT(level, fmt, args...) \
+ do { if ((iwl3945_debug_level & (level)) && net_ratelimit()) \
+   printk(KERN_ERR DRV_NAME": %c %s " fmt, \
+-	 in_interrupt() ? 'I' : 'U', __FUNCTION__ , ## args); } while (0)
++	 in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
+ 
+ static inline void iwl3945_print_hex_dump(int level, void *p, u32 len)
+ {
+diff -puN drivers/net/wireless/iwlwifi/iwl-debug.h~wireless-replace-__function__-with-__func__ drivers/net/wireless/iwlwifi/iwl-debug.h
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h~wireless-replace-__function__-with-__func__
++++ a/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -33,12 +33,12 @@
+ #define IWL_DEBUG(level, fmt, args...) \
+ do { if (priv->debug_level & (level)) \
+   dev_printk(KERN_ERR, &(priv->hw->wiphy->dev), "%c %s " fmt, \
+-	 in_interrupt() ? 'I' : 'U', __FUNCTION__ , ## args); } while (0)
++	 in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
+ 
+ #define IWL_DEBUG_LIMIT(level, fmt, args...) \
+ do { if ((priv->debug_level & (level)) && net_ratelimit()) \
+   dev_printk(KERN_ERR, &(priv->hw->wiphy->dev), "%c %s " fmt, \
+-	 in_interrupt() ? 'I' : 'U', __FUNCTION__ , ## args); } while (0)
++	 in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ struct iwl_debugfs {
+diff -puN drivers/net/wireless/iwlwifi/iwl3945-base.c~wireless-replace-__function__-with-__func__ drivers/net/wireless/iwlwifi/iwl3945-base.c
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c~wireless-replace-__function__-with-__func__
++++ a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -6336,7 +6336,7 @@ static void iwl3945_bg_post_associate(st
+ 	DECLARE_MAC_BUF(mac);
+ 
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_AP) {
+-		IWL_ERROR("%s Should not be called in AP mode\n", __FUNCTION__);
++		IWL_ERROR("%s Should not be called in AP mode\n", __func__);
+ 		return;
+ 	}
+ 
+@@ -6417,7 +6417,7 @@ static void iwl3945_bg_post_associate(st
+ 
+ 	default:
+ 		 IWL_ERROR("%s Should not be called in %d mode\n",
+-			   __FUNCTION__, priv->iw_mode);
++			   __func__, priv->iw_mode);
+ 		break;
+ 	}
+ 
+diff -puN drivers/net/wireless/iwlwifi/iwl4965-base.c~wireless-replace-__function__-with-__func__ drivers/net/wireless/iwlwifi/iwl4965-base.c
+--- a/drivers/net/wireless/iwlwifi/iwl4965-base.c~wireless-replace-__function__-with-__func__
++++ a/drivers/net/wireless/iwlwifi/iwl4965-base.c
+@@ -2415,7 +2415,7 @@ static void iwl4965_post_associate(struc
+ 	unsigned long flags;
+ 
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_AP) {
+-		IWL_ERROR("%s Should not be called in AP mode\n", __FUNCTION__);
++		IWL_ERROR("%s Should not be called in AP mode\n", __func__);
+ 		return;
+ 	}
+ 
+@@ -2491,7 +2491,7 @@ static void iwl4965_post_associate(struc
+ 
+ 	default:
+ 		IWL_ERROR("%s Should not be called in %d mode\n",
+-				__FUNCTION__, priv->iw_mode);
++				__func__, priv->iw_mode);
+ 		break;
+ 	}
+ 
+diff -puN drivers/net/wireless/libertas/if_cs.c~wireless-replace-__function__-with-__func__ drivers/net/wireless/libertas/if_cs.c
+--- a/drivers/net/wireless/libertas/if_cs.c~wireless-replace-__function__-with-__func__
++++ a/drivers/net/wireless/libertas/if_cs.c
+@@ -720,7 +720,7 @@ static int if_cs_host_to_card(struct lbs
+ 		ret = if_cs_send_cmd(priv, buf, nb);
+ 		break;
+ 	default:
+-		lbs_pr_err("%s: unsupported type %d\n", __FUNCTION__, type);
++		lbs_pr_err("%s: unsupported type %d\n", __func__, type);
+ 	}
+ 
+ 	lbs_deb_leave_args(LBS_DEB_CS, "ret %d", ret);
+diff -puN drivers/net/wireless/prism54/isl_ioctl.c~wireless-replace-__function__-with-__func__ drivers/net/wireless/prism54/isl_ioctl.c
+--- a/drivers/net/wireless/prism54/isl_ioctl.c~wireless-replace-__function__-with-__func__
++++ a/drivers/net/wireless/prism54/isl_ioctl.c
+@@ -71,7 +71,7 @@ prism54_mib_mode_helper(islpci_private *
+ 	if (iw_mode == IW_MODE_REPEAT || iw_mode == IW_MODE_SECOND) {
+ 		printk(KERN_DEBUG
+ 		       "%s(): Sorry, Repeater mode and Secondary mode "
+-		       "are not yet supported by this driver.\n", __FUNCTION__);
++		       "are not yet supported by this driver.\n", __func__);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -333,7 +333,7 @@ prism54_set_mode(struct net_device *ndev
+ 	if (*uwrq > IW_MODE_MONITOR || *uwrq < IW_MODE_AUTO) {
+ 		printk(KERN_DEBUG
+ 		       "%s: %s() You passed a non-valid init_mode.\n",
+-		       priv->ndev->name, __FUNCTION__);
++		       priv->ndev->name, __func__);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -1234,7 +1234,7 @@ prism54_set_txpower(struct net_device *n
+ 		/* don't know how to disable radio */
+ 		printk(KERN_DEBUG
+ 		       "%s: %s() disabling radio is not yet supported.\n",
+-		       priv->ndev->name, __FUNCTION__);
++		       priv->ndev->name, __func__);
+ 		return -ENOTSUPP;
+ 	} else if (vwrq->fixed)
+ 		/* currently only fixed value is supported */
+@@ -1242,7 +1242,7 @@ prism54_set_txpower(struct net_device *n
+ 	else {
+ 		printk(KERN_DEBUG
+ 		       "%s: %s() auto power will be implemented later.\n",
+-		       priv->ndev->name, __FUNCTION__);
++		       priv->ndev->name, __func__);
+ 		return -ENOTSUPP;
+ 	}
+ }
+diff -puN drivers/net/wireless/rt2x00/rt2x00.h~wireless-replace-__function__-with-__func__ drivers/net/wireless/rt2x00/rt2x00.h
+--- a/drivers/net/wireless/rt2x00/rt2x00.h~wireless-replace-__function__-with-__func__
++++ a/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -53,11 +53,11 @@
+  */
+ #define DEBUG_PRINTK_MSG(__dev, __kernlvl, __lvl, __msg, __args...)	\
+ 	printk(__kernlvl "%s -> %s: %s - " __msg,			\
+-	       wiphy_name((__dev)->hw->wiphy), __FUNCTION__, __lvl, ##__args)
++	       wiphy_name((__dev)->hw->wiphy), __func__, __lvl, ##__args)
+ 
+ #define DEBUG_PRINTK_PROBE(__kernlvl, __lvl, __msg, __args...)	\
+ 	printk(__kernlvl "%s -> %s: %s - " __msg,		\
+-	       KBUILD_MODNAME, __FUNCTION__, __lvl, ##__args)
++	       KBUILD_MODNAME, __func__, __lvl, ##__args)
+ 
+ #ifdef CONFIG_RT2X00_DEBUG
+ #define DEBUG_PRINTK(__dev, __kernlvl, __lvl, __msg, __args...)	\
+diff -puN drivers/net/wireless/wl3501_cs.c~wireless-replace-__function__-with-__func__ drivers/net/wireless/wl3501_cs.c
+--- a/drivers/net/wireless/wl3501_cs.c~wireless-replace-__function__-with-__func__
++++ a/drivers/net/wireless/wl3501_cs.c
+@@ -79,7 +79,7 @@ static int pc_debug = PCMCIA_DEBUG;
+ module_param(pc_debug, int, 0);
+ #define dprintk(n, format, args...) \
+ 	{ if (pc_debug > (n)) \
+-		printk(KERN_INFO "%s: " format "\n", __FUNCTION__ , ##args); }
++		printk(KERN_INFO "%s: " format "\n", __func__ , ##args); }
+ #else
+ #define dprintk(n, format, args...)
+ #endif
+@@ -470,7 +470,7 @@ static int wl3501_pwr_mgmt(struct wl3501
+ 			spin_unlock_irqrestore(&this->lock, flags);
+ 			rc = wait_event_interruptible(this->wait,
+ 				this->sig_pwr_mgmt_confirm.status != 255);
+-			printk(KERN_INFO "%s: %s status=%d\n", __FUNCTION__,
++			printk(KERN_INFO "%s: %s status=%d\n", __func__,
+ 			       suspend ? "suspend" : "resume",
+ 			       this->sig_pwr_mgmt_confirm.status);
+ 			goto out;
+@@ -1199,7 +1199,7 @@ static int wl3501_reset_board(struct wl3
+ 		}
+ 		WL3501_NOPLOOP(10);
+ 	}
+-	printk(KERN_WARNING "%s: failed to reset the board!\n", __FUNCTION__);
++	printk(KERN_WARNING "%s: failed to reset the board!\n", __func__);
+ 	rc = -ENODEV;
+ out:
+ 	return rc;
+@@ -1250,7 +1250,7 @@ static int wl3501_init_firmware(struct w
+ out:
+ 	return rc;
+ fail:
+-	printk(KERN_WARNING "%s: failed!\n", __FUNCTION__);
++	printk(KERN_WARNING "%s: failed!\n", __func__);
+ 	goto out;
+ }
+ 
+_
