@@ -1,120 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.237]:3924 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753731AbYGHQUM (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:52528 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751879AbYG3OxG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 12:20:12 -0400
-Received: by qb-out-0506.google.com with SMTP id d8so5878690qbc.37
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2008 09:20:11 -0700 (PDT)
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: Hin-Tak Leung <HinTak.Leung@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 2/6] rtl8187: updating rtl818x.h to support RTL8187B
-Date: Tue,  8 Jul 2008 17:18:09 +0100
-Message-Id: <1215533893-8598-2-git-send-email-HinTak.Leung@gmail.com> (sfid-20080708_182016_337488_32547D5E)
-In-Reply-To: <1215533893-8598-1-git-send-email-HinTak.Leung@gmail.com>
-References: <1215533893-8598-1-git-send-email-HinTak.Leung@gmail.com>
-From: Hin-Tak Leung <hintak.leung@gmail.com>
+	Wed, 30 Jul 2008 10:53:06 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: [RFC/RFT] rtl8187: Protect the config callback from mac80211 with a mutex
+Date: Wed, 30 Jul 2008 11:53:13 -0300
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"Hin-Tak Leung" <hintak.leung@gmail.com>,
+	Pavel Roskin <proski@gnu.org>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <48900654.7030100@lwfinger.net> <200807301524.40411.mb@bu3sch.de> <200807301527.26432.mb@bu3sch.de>
+In-Reply-To: <200807301527.26432.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200807301153.13947.herton@mandriva.com.br> (sfid-20080730_165312_074576_34D78764)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- drivers/net/wireless/rtl818x.h |   36 +++++++++++++++++++++++++++---------
- 1 files changed, 27 insertions(+), 9 deletions(-)
+Em Wednesday 30 July 2008 10:27:26 Michael Buesch escreveu:
+> On Wednesday 30 July 2008 15:24:40 Michael Buesch wrote:
+> > On Wednesday 30 July 2008 08:12:36 Larry Finger wrote:
+> > > Herton,
+> > >
+> > > Does this patch help your problem? I haven't done much testing, but
+> > > things seem to be better with it here.
+> > >
+> > > Larry
+> > >
+> > > ==================
+> > >
+> > > Some users of the RTL8187B have experienced difficulties since commit
+> > > 8f87dd7e540d455f8e7f11478133b85edc969c67 that introduced the power
+> > > management wext hooks. This difficulty has not made much sense until
+> > > it was realized that it was possible for mac80211 to make a call to the
+> > > config routine while that routine was already being executed. This
+> > > patch protects the critical section with a mutex.
+> > >
+> > > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> > > ---
+> > >
+> > > Index: wireless-testing/drivers/net/wireless/rtl8187.h
+> > > ===================================================================
+> > > --- wireless-testing.orig/drivers/net/wireless/rtl8187.h
+> > > +++ wireless-testing/drivers/net/wireless/rtl8187.h
+> > > @@ -94,6 +94,7 @@ struct rtl8187_priv {
+> > >   	const struct rtl818x_rf_ops *rf;
+> > >   	struct ieee80211_vif *vif;
+> > >   	int mode;
+> > > +	struct mutex mutex;	/* used to lock config callback */
+> >
+> > Well, hm.
+> > Using locks to protect code is a bad idea, most of the time.
+> > So that comment makes no sense.
+> >
+> > What that lock _probably_ does it to protect the configuration
+> > data in struct rtl8187_priv. So you'd better find out which data
+> > that is and clarify the comment.
+>
+> and the mutex name, of course.
+>
+> 	/* Mutex to protect the device configuration data,
+> 	 * which is foobar and bizzbaz */
+> 	struct mutex conf_mutex;
 
-diff --git a/drivers/net/wireless/rtl818x.h b/drivers/net/wireless/rtl818x.h
-index 4f7d38f..85a6394 100644
---- a/drivers/net/wireless/rtl818x.h
-+++ b/drivers/net/wireless/rtl818x.h
-@@ -66,7 +66,10 @@ struct rtl818x_csr {
- #define RTL818X_TX_CONF_R8180_F		(3 << 25)
- #define RTL818X_TX_CONF_R8185_ABC	(4 << 25)
- #define RTL818X_TX_CONF_R8185_D		(5 << 25)
-+#define RTL818X_TX_CONF_R8187vD_1	(5 << 25)
-+#define RTL818X_TX_CONF_R8187vD_2	(6 << 25)
- #define RTL818X_TX_CONF_HWVER_MASK	(7 << 25)
-+#define RTL818X_TX_CONF_DISREQQSIZE	(1 << 28)
- #define RTL818X_TX_CONF_PROBE_DTS	(1 << 29)
- #define RTL818X_TX_CONF_HW_SEQNUM	(1 << 30)
- #define RTL818X_TX_CONF_CW_MIN		(1 << 31)
-@@ -106,8 +109,11 @@ struct rtl818x_csr {
- #define RTL818X_MSR_NO_LINK		(0 << 2)
- #define RTL818X_MSR_ADHOC		(1 << 2)
- #define RTL818X_MSR_INFRA		(2 << 2)
-+#define RTL818X_MSR_MASTER		(3 << 2)
-+#define RTL818X_MSR_ENEDCA		(4 << 2)
- 	u8	CONFIG3;
- #define RTL818X_CONFIG3_ANAPARAM_WRITE	(1 << 6)
-+#define RTL818X_CONFIG3_GNT_SELECT	(1 << 7)
- 	u8	CONFIG4;
- #define RTL818X_CONFIG4_POWEROFF	(1 << 6)
- #define RTL818X_CONFIG4_VCOOFF		(1 << 7)
-@@ -133,7 +139,9 @@ struct rtl818x_csr {
- 	__le32	RF_TIMING;
- 	u8	GP_ENABLE;
- 	u8	GPIO;
--	u8	reserved_12[10];
-+	u8	reserved_12[2];
-+	__le32	HSSI_PARA;
-+	u8	reserved_13[4];
- 	u8	TX_AGC_CTL;
- #define RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT		(1 << 0)
- #define RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT	(1 << 1)
-@@ -141,29 +149,39 @@ struct rtl818x_csr {
- 	u8	TX_GAIN_CCK;
- 	u8	TX_GAIN_OFDM;
- 	u8	TX_ANTENNA;
--	u8	reserved_13[16];
-+	u8	reserved_14[16];
- 	u8	WPA_CONF;
--	u8	reserved_14[3];
-+	u8	reserved_15[3];
- 	u8	SIFS;
- 	u8	DIFS;
- 	u8	SLOT;
--	u8	reserved_15[5];
-+	u8	reserved_16[5];
- 	u8	CW_CONF;
- #define RTL818X_CW_CONF_PERPACKET_CW_SHIFT	(1 << 0)
- #define RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT	(1 << 1)
- 	u8	CW_VAL;
- 	u8	RATE_FALLBACK;
--	u8	reserved_16[25];
-+#define RTL818X_RATE_FALLBACK_ENABLE	(1 << 7)
-+	u8	ACM_CONTROL;
-+	u8	reserved_17[24];
- 	u8	CONFIG5;
- 	u8	TX_DMA_POLLING;
--	u8	reserved_17[2];
-+	u8	reserved_18[2];
- 	__le16	CWR;
- 	u8	RETRY_CTR;
--	u8	reserved_18[5];
-+	u8	reserved_19[3];
-+	__le16	INT_MIG;
-+/* RTL818X_R8187B_*: magic numbers from ioregisters */
-+#define RTL818X_R8187B_B	0
-+#define RTL818X_R8187B_D	1
-+#define RTL818X_R8187B_E	2
- 	__le32	RDSAR;
--	u8	reserved_19[12];
--	__le16	FEMR;
-+	__le16	TID_AC_MAP;
- 	u8	reserved_20[4];
-+	u8	ANAPARAM3;
-+	u8	reserved_21[5];
-+	__le16	FEMR;
-+	u8	reserved_22[4];
- 	__le16	TALLY_CNT;
- 	u8	TALLY_SEL;
- } __attribute__((packed));
--- 
-1.5.5.1
+Yes, it's better this way. About the lock, the problem here is you can't set 
+the channel while transmitting data on 8187 (the card stops working util 
+reset like the comment on the code), so we must enable tx loopback while 
+setting channels, but you can't run rtl8187_config concurrently because one 
+instance may be disabling tx loopback while other is still setting channel, 
+or like the code is today there is a possibility that you set tx loopback 
+forever. The lock could be only in that section.
 
+The comment could be:
+/* Mutex to protect the device configuration data,
+ * we can't set channels concurrently */
+
+--
+[]'s
+Herton
