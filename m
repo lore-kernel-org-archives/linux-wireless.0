@@ -1,133 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51694
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1758642AbYGQMRz (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:51631 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750962AbYG3QHg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 08:17:55 -0400
-Date: Thu, 17 Jul 2008 05:17:55 -0700 (PDT)
-Message-Id: <20080717.051755.145101968.davem@davemloft.net> (sfid-20080717_141800_515040_B6E3A2A9)
-To: netdev@vger.kernel.org
-CC: kaber@trash.net, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 25/31]: pkt_sched: Make qdisc grafting locking more
- specific.
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 30 Jul 2008 12:07:36 -0400
+Message-ID: <489091C6.9070805@lwfinger.net> (sfid-20080730_180740_024487_6FFF2C12)
+Date: Wed, 30 Jul 2008 11:07:34 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>
+CC: Hin-Tak Leung <hintak_leung@yahoo.co.uk>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] rtl8187: Fix lockups due to concurrent access to config routine
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Some users of the RTL8187B have experienced difficulties since commit
+8f87dd7e540d455f8e7f11478133b85edc969c67 that introduced the power
+management wext hooks. This difficulty has not made much sense until
+it was realized that it was possible for mac80211 to make a call to the
+config routine while that routine was already being executed. This patch
+protects the critical section with a mutex.
 
-Lock the root of the qdisc being operated upon.
+The problem was found by Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+who also suggested this type of fix.
 
-All explicit references to qdisc_tree_lock() are now gone.
-The only remaining uses are via the sch_tree_{lock,unlock}()
-and tcf_tree_{lock,unlock}() macros.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Acked-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
 ---
- net/sched/sch_api.c |   41 +++++++++++++++++++++++++++++------------
- 1 files changed, 29 insertions(+), 12 deletions(-)
 
-diff --git a/net/sched/sch_api.c b/net/sched/sch_api.c
-index 6958fe7..7492489 100644
---- a/net/sched/sch_api.c
-+++ b/net/sched/sch_api.c
-@@ -441,15 +441,29 @@ static struct Qdisc *
- dev_graft_qdisc(struct net_device *dev, struct Qdisc *qdisc)
- {
- 	struct netdev_queue *dev_queue;
-+	spinlock_t *root_lock;
- 	struct Qdisc *oqdisc;
-+	int ingress;
- 
- 	if (dev->flags & IFF_UP)
- 		dev_deactivate(dev);
- 
--	qdisc_lock_tree(dev);
--	if (qdisc && qdisc->flags&TCQ_F_INGRESS) {
-+	ingress = 0;
-+	if (qdisc && qdisc->flags&TCQ_F_INGRESS)
-+		ingress = 1;
-+
-+	if (ingress) {
- 		dev_queue = &dev->rx_queue;
- 		oqdisc = dev_queue->qdisc;
-+	} else {
-+		dev_queue = netdev_get_tx_queue(dev, 0);
-+		oqdisc = dev_queue->qdisc_sleeping;
-+	}
-+
-+	root_lock = qdisc_root_lock(oqdisc);
-+	spin_lock_bh(root_lock);
-+
-+	if (ingress) {
- 		/* Prune old scheduler */
- 		if (oqdisc && atomic_read(&oqdisc->refcnt) <= 1) {
- 			/* delete */
-@@ -460,9 +474,6 @@ dev_graft_qdisc(struct net_device *dev, struct Qdisc *qdisc)
- 		}
- 
- 	} else {
--		dev_queue = netdev_get_tx_queue(dev, 0);
--		oqdisc = dev_queue->qdisc_sleeping;
--
- 		/* Prune old scheduler */
- 		if (oqdisc && atomic_read(&oqdisc->refcnt) <= 1)
- 			qdisc_reset(oqdisc);
-@@ -474,7 +485,7 @@ dev_graft_qdisc(struct net_device *dev, struct Qdisc *qdisc)
- 		dev_queue->qdisc = &noop_qdisc;
- 	}
- 
--	qdisc_unlock_tree(dev);
-+	spin_unlock_bh(root_lock);
- 
- 	if (dev->flags & IFF_UP)
- 		dev_activate(dev);
-@@ -765,10 +776,12 @@ static int tc_get_qdisc(struct sk_buff *skb, struct nlmsghdr *n, void *arg)
- 		if ((err = qdisc_graft(dev, p, clid, NULL, &q)) != 0)
- 			return err;
- 		if (q) {
-+			spinlock_t *root_lock = qdisc_root_lock(q);
-+
- 			qdisc_notify(skb, n, clid, q, NULL);
--			qdisc_lock_tree(dev);
-+			spin_unlock_bh(root_lock);
- 			qdisc_destroy(q);
--			qdisc_unlock_tree(dev);
-+			spin_unlock_bh(root_lock);
- 		}
- 	} else {
- 		qdisc_notify(skb, n, clid, NULL, q);
-@@ -911,20 +924,24 @@ create_n_graft:
- graft:
- 	if (1) {
- 		struct Qdisc *old_q = NULL;
-+		spinlock_t *root_lock;
-+
- 		err = qdisc_graft(dev, p, clid, q, &old_q);
- 		if (err) {
- 			if (q) {
--				qdisc_lock_tree(dev);
-+				root_lock = qdisc_root_lock(q);
-+				spin_lock_bh(root_lock);
- 				qdisc_destroy(q);
--				qdisc_unlock_tree(dev);
-+				spin_unlock_bh(root_lock);
- 			}
- 			return err;
- 		}
- 		qdisc_notify(skb, n, clid, old_q, q);
- 		if (old_q) {
--			qdisc_lock_tree(dev);
-+			root_lock = qdisc_root_lock(old_q);
-+			spin_lock_bh(root_lock);
- 			qdisc_destroy(old_q);
--			qdisc_unlock_tree(dev);
-+			spin_unlock_bh(root_lock);
- 		}
- 	}
- 	return 0;
--- 
-1.5.6.2.255.gbed62
+John,
+
+This is 2.6.27 material as it fixes a bug.
+
+Larry
+---
+
+
+Index: wireless-testing/drivers/net/wireless/rtl8187.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl8187.h
++++ wireless-testing/drivers/net/wireless/rtl8187.h
+@@ -94,6 +94,10 @@ struct rtl8187_priv {
+  	const struct rtl818x_rf_ops *rf;
+  	struct ieee80211_vif *vif;
+  	int mode;
++	/* The mutex protects the TX loopback state.
++	 * Any attempt to set channels concurrently locks the device.
++	 */
++	struct mutex conf_mutex;
+
+  	/* rtl8187 specific */
+  	struct ieee80211_channel channels[14];
+Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
++++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
+@@ -864,6 +864,7 @@ static int rtl8187_config(struct ieee802
+  	struct rtl8187_priv *priv = dev->priv;
+  	u32 reg;
+
++	mutex_lock(&priv->conf_mutex);
+  	reg = rtl818x_ioread32(priv, &priv->map->TX_CONF);
+  	/* Enable TX loopback on MAC level to avoid TX during channel
+  	 * changes, as this has be seen to causes problems and the
+@@ -896,6 +897,7 @@ static int rtl8187_config(struct ieee802
+  	rtl818x_iowrite16(priv, &priv->map->ATIMTR_INTERVAL, 100);
+  	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL, 100);
+  	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL_TIME, 100);
++	mutex_unlock(&priv->conf_mutex);
+  	return 0;
+  }
+
+@@ -1187,6 +1189,7 @@ static int __devinit rtl8187_probe(struc
+  		printk(KERN_ERR "rtl8187: Cannot register device\n");
+  		goto err_free_dev;
+  	}
++	mutex_init(&priv->conf_mutex);
+
+  	printk(KERN_INFO "%s: hwaddr %s, %s V%d + %s\n",
+  	       wiphy_name(dev->wiphy), print_mac(mac, dev->wiphy->perm_addr),
 
