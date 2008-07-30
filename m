@@ -1,74 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1-g19.free.fr ([212.27.42.27]:41294 "EHLO smtp1-g19.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759200AbYG0GlA convert rfc822-to-8bit (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:43047 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752601AbYG3X2X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jul 2008 02:41:00 -0400
-Received: from smtp1-g19.free.fr (localhost.localdomain [127.0.0.1])
-	by smtp1-g19.free.fr (Postfix) with ESMTP id F06311AB2CC
-	for <linux-wireless@vger.kernel.org>; Sun, 27 Jul 2008 08:40:58 +0200 (CEST)
-Received: from localhost (ble59-5-82-233-204-229.fbx.proxad.net [82.233.204.229])
-	by smtp1-g19.free.fr (Postfix) with ESMTP id BA3261AB2AC
-	for <linux-wireless@vger.kernel.org>; Sun, 27 Jul 2008 08:40:58 +0200 (CEST)
-Date: Sun, 27 Jul 2008 08:40:58 +0200
-From: =?UTF-8?B?Q8OpZHJpYw==?= Auger <cedric@grisbi.org>
-To: linux-wireless@vger.kernel.org
-Subject: Re: iwl3945 slow for downloading
-Message-ID: <20080727084058.78b57f53@grisbi.org> (sfid-20080727_084118_416285_0F872381)
-In-Reply-To: <488B5736.1080401@openwrt.org>
-References: <20080726161140.59041730@grisbi.org>
-	<488B3969.4050405@openwrt.org>
-	<488B48C1.6090506@lwfinger.net>
-	<488B5736.1080401@openwrt.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Wed, 30 Jul 2008 19:28:23 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so363303wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 16:28:22 -0700 (PDT)
+Message-ID: <3ace41890807301628i266a0b84p1620e19a4890c108@mail.gmail.com> (sfid-20080731_012827_645641_E7CEF151)
+Date: Thu, 31 Jul 2008 00:28:22 +0100
+From: "Hin-Tak Leung" <hintak.leung@gmail.com>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH V2] rtl8187: Fix lockups due to concurrent access to config routine
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Herton Ronaldo Krzesinski" <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4890ebe1.V0mFuwprQdb+lXy5%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <4890ebe1.V0mFuwprQdb+lXy5%Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le Sat, 26 Jul 2008 18:56:22 +0200,
-=46elix Fietkau <nbd@openwrt.org> a =C3=A9crit :
+On 7/30/08, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Some users of the RTL8187B have experienced difficulties since commit
+>  8f87dd7e540d455f8e7f11478133b85edc969c67 that introduced the power
+>  management wext hooks. This difficulty has not made much sense until
+>  it was realized that it was possible for mac80211 to make a call to the
+>  config routine while that routine was already being executed. This patch
+>  protects the critical section with a mutex.
+>
+>  The problem was found by Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+>  who also suggested this type of fix.
+>
+>  Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>  Acked-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
 
-> Larry Finger wrote:
-> > Just for comparison, my BCM4312 running b43 from the latest
-> > wireless-testing gets the following tcpperf throughput:
-> >=20
-> > AP Mode          TX          RX
-> >=20
-> > Mixed b/g    19.8 MB/s   23.0 MB/s
-> > g-only       20.5 MB/s   23.1 MB/s
-> >=20
-> > For these tests, the connecting end was wired to the router. The
-> > difference in TX speeds was about what I expected - the small
-> > difference in RX speeds was not. In any case, if you see a large
-> > difference with iwl3945, that would be useful information.
-
-> On the laptop that I mentioned, this problem was only happening
-> sometimes. I did not figure out what actually triggered it.
-> Most of the time the throughput was similar to what you posted here,
-> but when it went down, it went down right to 100-120 KB/s
-
-i'm happy that it happened sometimes too because i was begining to feel
-crazy ;-) all the last tests seem to show an upload problem, but at the
-begining, i was thinking i had a download problem (from internet), but
-from yesterday, i cannot reproduce that, only upload...
-=20
-> Could it be that this is triggered by the use b/g protection mode due
-> to reception of foreign beacons of B devices by the AP? Has anybody
-> tested RTS/CTS in detail?
-
-for that i think it goes beyond my abilities...
-i forgot to say about the AP, i think it's not g wifi, it's MIMO.
-perhaps it could change something.
-and for information, the second computer i use to do the tests is also
-a 3945ABG intel wireless, but installed with ubuntu and iwl3945 too
-(but the default installation), with a 2.6.24 kernel.
-the difference with me, except the computer itself, is debian, kernel
-2.6.26 compiled by myself, and before i used ipw3945, but remove it
-completely
-thanks
-cedric
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The mutex patch seems to also improve interaction with
+NetworkManager/wpa_supplicant (possibly duo core issues as well?).
