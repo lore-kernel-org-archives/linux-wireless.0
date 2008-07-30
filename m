@@ -1,69 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48536 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751500AbYGYLQ0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jul 2008 07:16:26 -0400
-Subject: Re: question about open11s installation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?=EC=9E=84=EC=98=81=EB=B9=88?= <ybim@mmlab.snu.ac.kr>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <da2e1ddd0807242211n33473f06p74d6acdf75add678@mail.gmail.com> (sfid-20080725_071110_391035_0D41264D)
-References: <da2e1ddd0807170905j5121737bia15429aee0f7ffd6@mail.gmail.com>
-	 <1216313740.3422.44.camel@johannes.berg>
-	 <da2e1ddd0807180151k707c77eeyf31b6ea2948c6ec3@mail.gmail.com>
-	 <da2e1ddd0807242211n33473f06p74d6acdf75add678@mail.gmail.com>
-	 (sfid-20080725_071110_391035_0D41264D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bz/aivJ0iWDmLdv7YreI"
-Date: Fri, 25 Jul 2008 13:16:04 +0200
-Message-Id: <1216984564.4758.2.camel@johannes.berg> (sfid-20080725_131629_244831_097AB1C0)
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:55684 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750902AbYG3NZU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jul 2008 09:25:20 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC/RFT] rtl8187: Protect the config callback from mac80211 with a mutex
+Date: Wed, 30 Jul 2008 15:24:40 +0200
+Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
+	herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Pavel Roskin <proski@gnu.org>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <48900654.7030100@lwfinger.net>
+In-Reply-To: <48900654.7030100@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200807301524.40411.mb@bu3sch.de> (sfid-20080730_152524_045942_06E058ED)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 30 July 2008 08:12:36 Larry Finger wrote:
+> Herton,
+> 
+> Does this patch help your problem? I haven't done much testing, but things seem 
+> to be better with it here.
+> 
+> Larry
+> 
+> ==================
+> 
+> Some users of the RTL8187B have experienced difficulties since commit
+> 8f87dd7e540d455f8e7f11478133b85edc969c67 that introduced the power
+> management wext hooks. This difficulty has not made much sense until
+> it was realized that it was possible for mac80211 to make a call to the
+> config routine while that routine was already being executed. This patch
+> protects the critical section with a mutex.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> 
+> Index: wireless-testing/drivers/net/wireless/rtl8187.h
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/rtl8187.h
+> +++ wireless-testing/drivers/net/wireless/rtl8187.h
+> @@ -94,6 +94,7 @@ struct rtl8187_priv {
+>   	const struct rtl818x_rf_ops *rf;
+>   	struct ieee80211_vif *vif;
+>   	int mode;
+> +	struct mutex mutex;	/* used to lock config callback */
 
---=-bz/aivJ0iWDmLdv7YreI
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Well, hm.
+Using locks to protect code is a bad idea, most of the time.
+So that comment makes no sense.
 
-On Fri, 2008-07-25 at 14:11 +0900, =EC=9E=84=EC=98=81=EB=B9=88 wrote:
-> To find the cause I tested whether the mesh nodes send beacons correctly.
-> I put a node near mesh nodes, set to the same channel with mesh nodes.
-> Then I executed wlanctl(this node's OS is netbsd).
-> But I couldn't discover mesh nodes's addresses.
-> I'm not sure, but I think that if the mesh nodes send beacons correctly
-> the node will recognize mesh nodes, and put them in the list, isn't it?
+What that lock _probably_ does it to protect the configuration
+data in struct rtl8187_priv. So you'd better find out which data
+that is and clarify the comment.
 
-Have you implemented mesh for netbsd? If not, what makes you think so?
+> 
+>   	/* rtl8187 specific */
+>   	struct ieee80211_channel channels[14];
+> Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
+> +++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
+> @@ -864,6 +864,7 @@ static int rtl8187_config(struct ieee802
+>   	struct rtl8187_priv *priv = dev->priv;
+>   	u32 reg;
+> 
+> +	mutex_lock(&priv->mutex);
+>   	reg = rtl818x_ioread32(priv, &priv->map->TX_CONF);
+>   	/* Enable TX loopback on MAC level to avoid TX during channel
+>   	 * changes, as this has be seen to causes problems and the
+> @@ -896,6 +897,7 @@ static int rtl8187_config(struct ieee802
+>   	rtl818x_iowrite16(priv, &priv->map->ATIMTR_INTERVAL, 100);
+>   	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL, 100);
+>   	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL_TIME, 100);
+> +	mutex_unlock(&priv->mutex);
+>   	return 0;
+>   }
+> 
+> @@ -1187,6 +1189,7 @@ static int __devinit rtl8187_probe(struc
+>   		printk(KERN_ERR "rtl8187: Cannot register device\n");
+>   		goto err_free_dev;
+>   	}
+> +	mutex_init(&priv->mutex);
+> 
+>   	printk(KERN_INFO "%s: hwaddr %s, %s V%d + %s\n",
+>   	       wiphy_name(dev->wiphy), print_mac(mac, dev->wiphy->perm_addr),
 
-> So there's some problem with mesh beaconing with b43 driver.
-
-Last I tried, it was working fine, and since then pretty much nothing
-changed.
-
-johannes
-
---=-bz/aivJ0iWDmLdv7YreI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIibXvAAoJEKVg1VMiehFY5kEP/iUVvLOGOos9ooMHE6JWEnA2
-++31r11wpkPHO/N+AIk1GpVScdFdw4AAwdqurB30hd4RvBh1gqX+f1LEldaSHzu/
-MmuBhHd7+1e4y0Yr0dZn0aiu91h+Gnd2BTmQ+XMHRWAZp/oq5ywzPMDlyME58+ET
-RRMcN0iGMjSDYgGkP6FQWPaYgTyQvc0AdZdt74c2j739a+joHJ3t6rhY/LHYk+Oh
-w4rxbLJrrnCb1SXt2BaUm1HUaNxWlT0N4isYUOdpWy1gAJpahPJrJeNQXaDGpr8A
-TPkQxBohAmvIyjbBH1qBzfWgmE0JEMSyOjbFHJoX0fVBQB7PrDQqlckJb9F/21Ab
-15Fg52Xo6UfF1IyoPBiWBH6AclSNBLPOdUzloe663x6csTzVMlkelhCZAX4uSfPs
-W1Z6IIOFEoHVAjKq737SHJMpFg4heBWRt9F7eT9oS/bE3FkhyHQmQ4Tiu5q5ypxs
-d6virf+H7j+B+vniPR5JlHY8WopbTR8CnHMPTMAUHCr2x0qAT0fqdHGJmLpiYTCT
-xcqhkItbucdTCbOHY/LnJgUI6rV4WN6ama3bzFT+YNL/Qck75wLtlpX4J+k5eFuK
-Nrh93sfAqFiWxZorDjUHueLC7pgWUFf4EW9hm8R4iH8XP3zZqEp0lBAifRF6EDIO
-0lLtiQcZFsbaEdiA3g4n
-=Lxof
------END PGP SIGNATURE-----
-
---=-bz/aivJ0iWDmLdv7YreI--
-
+-- 
+Greetings Michael.
