@@ -1,79 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.182]:36108 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753884AbYGSNlJ (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.239]:58043 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751431AbYG3QIA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2008 09:41:09 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so434408ika.5
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Jul 2008 06:41:07 -0700 (PDT)
-To: John Linville <linville@tuxdriver.com>
-Subject: Re: Please pull 'upstream' branch of rt2x00
-Date: Sat, 19 Jul 2008 15:55:46 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200807182043.08990.IvDoorn@gmail.com>
-In-Reply-To: <200807182043.08990.IvDoorn@gmail.com>
+	Wed, 30 Jul 2008 12:08:00 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so82883rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 09:08:00 -0700 (PDT)
+Message-ID: <1ba2fa240807300908x5489e3f8g54ff83e7e5912c0b@mail.gmail.com> (sfid-20080730_180804_419423_0968FCB3)
+Date: Wed, 30 Jul 2008 19:08:00 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: iwlwifi aggregation info
+Cc: Friedrich.Beckmann@infineon.com, linux-wireless@vger.kernel.org,
+	j@w1.fi
+In-Reply-To: <1217431179.10489.134.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200807191555.46700.IvDoorn@gmail.com> (sfid-20080719_154123_975411_19506E00)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1217331138.10489.24.camel@johannes.berg>
+	 <1217341293.10489.73.camel@johannes.berg>
+	 <1ba2fa240807290855p191eebesb1ecf2314031f688@mail.gmail.com>
+	 <1217411631.10489.103.camel@johannes.berg>
+	 <8469FC7DDCBE054D9653D8506E1FF0F001F1E7B606@mucse406.eu.infineon.com>
+	 <1217423948.10489.121.camel@johannes.berg>
+	 <1ba2fa240807300645j654a82b4rb813b71681dfab71@mail.gmail.com>
+	 <1217425854.10489.125.camel@johannes.berg>
+	 <1ba2fa240807300659p4d743f31se265f550a2da0dd1@mail.gmail.com>
+	 <1217431179.10489.134.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Wed, Jul 30, 2008 at 6:19 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2008-07-30 at 16:59 +0300, Tomas Winkler wrote:
+>
+>> > Well qdiscs don't just do that, depending on the configuration, so we
+>> > shouldn't rely on them doing just that.
+>>
+>> I know but this was the primary purpose of MQ to push the scheduling
+>> decision to HW if I'm not mistaken.
+>
+> I thought it was more about the upper level locking, ethernet hw really
+> just round-robins most of the time. Although it will, of course, be used
+> for scheduling decisions.
+>
+> Is aggregation really a scheduling decision though?
+>
+>> We really don't need anything else just queueing.
+>
+> Exactly, but qdiscs do most definitely not provide just queueing, and we
+> should not deprive the user of the ability to use qdiscs on wireless.
+>
+>>  For example what the
+>> prioritization which is done in current wme.c
+>> is wrong and it won't pass certification and creates starvation.
+>> Tested and proved.
+>
+> Can you explain how starvation happens? In what scenarios? With or
+> without aggregation?
 
-Please wait with pulling from rt2x00.git,
-updated patches are coming in a few moments,
-I just noticed some cleanups which should be made
-in several patches, and I'll incorporate the suggestion
-from Johannes regarding the EIFS.
+for (queue = 0; queue < QD_NUM(hw); queue++)
 
-Sorry for the noise. ;)
-
-Ivo
-
-> Here is the latest update for rt2x00
-> 
-> I think all patches qualify for 2.6.27, 
-> with the exception for first 2 patches:
->       rt2x00: Remove duplicate declaration
->       rt2x00: Fix EIFS timing value
-> but those are one-liners and have little impact.
-> 
-> The 3 patches from Iwo are the most important ones,
-> since that fixes a major bug in the beacon handling for the
-> USB drivers. The 3 patches are a bit big, but without them
-> beaconing simply won't work.
-> 
-> Ivo
-> 
-> ---
-> The following changes since commit a520bdbe7d344296482f9355e29b0018ea58760f:
->   John W. Linville (1):
->         iwl-scan.c: fixup merge damage in wireless-testing#master
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git/ ..BRANCH.NOT.VERIFIED..
-> 
-> Ivo van Doorn (3):
->       rt2x00: Remove duplicate declaration
->       rt2x00: Fix EIFS timing value
->       rt2x00: Fix GCC warning because aifs is now unsigned
-> 
-> Iwo Mergler (3):
->       rt2x00: Support for large vendor requests
->       rt2x00: Large vendor requests for rt73usb firmware upload and beacons
->       rt2x00: Fix the beacon length bug
-> 
->  drivers/net/wireless/rt2x00/rt2500usb.c |   12 +++++++
->  drivers/net/wireless/rt2x00/rt2x00.h    |    2 +-
->  drivers/net/wireless/rt2x00/rt2x00lib.h |    7 ----
->  drivers/net/wireless/rt2x00/rt2x00mac.c |    5 +--
->  drivers/net/wireless/rt2x00/rt2x00usb.c |   33 ++++++++++++++++++++
->  drivers/net/wireless/rt2x00/rt2x00usb.h |   22 ++++++++++++-
->  drivers/net/wireless/rt2x00/rt73usb.c   |   50 ++++++++++++------------------
->  7 files changed, 87 insertions(+), 44 deletions(-)
-> 
-
-
+This always starts 0  prioritize dequeue the first frame. But what we
+need is RR and let HW to prioritize the transmission according AC
+Tomas
