@@ -1,80 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57303 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753170AbYGXLq7 (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.24]:63355 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751860AbYG3Ba3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jul 2008 07:46:59 -0400
-Subject: Re: [Bugme-new] [Bug 11144] New: dhcp doesn't work with iwl4965
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Patrick McHardy <kaber@trash.net>,
-	David Miller <davem@davemloft.net>,
-	francois.valenduc@tvcablenet.be, akpm@linux-foundation.org,
-	bugme-daemon@bugzilla.kernel.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, netdev@vger.kernel.org,
-	jussi.kivilinna@mbnet.fi
-In-Reply-To: <1ba2fa240807240435g36daa80at254144afffc39c32@mail.gmail.com> (sfid-20080724_133550_701095_354A4111)
-References: <4887550B.2070704@tvcablenet.be> <4887555A.30605@trash.net>
-	 <48875B8C.2090800@trash.net> <20080723.142147.61941255.davem@davemloft.net>
-	 <48884451.1090703@trash.net>
-	 <1ba2fa240807240317g15f6ba84h91b513cce75975e9@mail.gmail.com>
-	 <48885743.8030505@trash.net>
-	 <1ba2fa240807240435g36daa80at254144afffc39c32@mail.gmail.com>
-	 (sfid-20080724_133550_701095_354A4111)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FQSmg9yf1gLJUgJ+FKQ6"
-Date: Thu, 24 Jul 2008 13:45:26 +0200
-Message-Id: <1216899926.13587.51.camel@johannes.berg> (sfid-20080724_134718_398078_AC17950C)
-Mime-Version: 1.0
+	Tue, 29 Jul 2008 21:30:29 -0400
+Received: by qw-out-2122.google.com with SMTP id 3so56140qwe.37
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 18:30:27 -0700 (PDT)
+Date: Tue, 29 Jul 2008 21:30:25 -0400
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 5/6] rfkill: query EV_SW states when rfkill-input
+	(re)?connects to a input device
+Message-ID: <20080730013024.GB22649@anvil.corenet.prv> (sfid-20080730_033034_752815_A41B4958)
+References: <1216685902-9373-1-git-send-email-hmh@hmh.eng.br> <1216685902-9373-6-git-send-email-hmh@hmh.eng.br> <20080729205315.GB10188@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20080729205315.GB10188@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-FQSmg9yf1gLJUgJ+FKQ6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2008-07-24 at 14:35 +0300, Tomas Winkler wrote:
-
-> >> Isn't this time to make 802.11 native?
-> >
-> >
-> > You mean by making these things real skb members? I hope you're
-> > not talking about the entire 48 bytes? :)
+On Tue, Jul 29, 2008 at 04:53:15PM -0400, John W. Linville wrote:
+> On Mon, Jul 21, 2008 at 09:18:21PM -0300, Henrique de Moraes Holschuh=
+ wrote:
+> > Every time a new input device that is capable of one of the rfkill =
+EV_SW events
+> > (currently only SW_RFKILL_ALL) is connected to rfkill-input, we mus=
+t check the
+> > states of the input EV_SW switches and take action.  Otherwise, we =
+will ignore
+> > the initial switch state.
+> >=20
+> > We also need to re-check the states of the EV_SW switches after a d=
+evice that
+> > was under an exclusive grab is released back to us, since we got no=
+ input
+> > events from that device while it was grabbed.
+> >=20
+> > Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> > Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> > Cc: Dmitry Torokhov <dtor@mail.ru>
 >=20
-> I mean elevating 802.11 header to 802.3 level. Not doing 802.3 ->
-> 802.11 translation where not needed.
+>   CC [M]  net/rfkill/rfkill-input.o
+> net/rfkill/rfkill-input.c: In function =E2=80=98rfkill_start=E2=80=99=
+:
+> net/rfkill/rfkill-input.c:201: warning: passing argument 2 of =E2=80=98=
+constant_test_bit=E2=80=99 from incompatible pointer type
+> net/rfkill/rfkill-input.c:201: warning: passing argument 2 of =E2=80=98=
+variable_test_bit=E2=80=99 from incompatible pointer type
+> net/rfkill/rfkill-input.c:202: warning: passing argument 2 of =E2=80=98=
+constant_test_bit=E2=80=99 from incompatible pointer type
+> net/rfkill/rfkill-input.c:202: warning: passing argument 2 of =E2=80=98=
+variable_test_bit=E2=80=99 from incompatible pointer type
+> net/rfkill/rfkill-input.c:203: warning: passing argument 2 of =E2=80=98=
+constant_test_bit=E2=80=99 from incompatible pointer type
+> net/rfkill/rfkill-input.c:203: warning: passing argument 2 of =E2=80=98=
+variable_test_bit=E2=80=99 from incompatible pointer type
+>=20
+> Don't you need an index for those evbit, swbit, and sw arrays?
 
+No, we just need to drop the &:
 
-We've discussed that over and over and over and over again, and it's not
-going to fly since 802.11 throughout assumes that you have a two-address
-data service to the upper layers.
+diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
+index 827f178..e5b6955 100644
+--- a/net/rfkill/rfkill-input.c
++++ b/net/rfkill/rfkill-input.c
+@@ -198,10 +198,10 @@ static void rfkill_start(struct input_handle *han=
+dle)
+ 	 * just fine (which event_lock will also avoid). */
+ 	spin_lock_irq(&handle->dev->event_lock);
+=20
+-	if (test_bit(EV_SW, &handle->dev->evbit)) {
+-		if (test_bit(SW_RFKILL_ALL, &handle->dev->swbit))
++	if (test_bit(EV_SW, handle->dev->evbit)) {
++		if (test_bit(SW_RFKILL_ALL, handle->dev->swbit))
+ 			rfkill_schedule_evsw_rfkillall(test_bit(SW_RFKILL_ALL,
+-							&handle->dev->sw));
++							handle->dev->sw));
+ 		/* add resync for further EV_SW events here */
+ 	}
+=20
 
-Besides, making it 802.11 native doesn't help with the control
-information at all.
-
-johannes
-
---=-FQSmg9yf1gLJUgJ+FKQ6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIiGtSAAoJEKVg1VMiehFYa/oP/3ADaXW8UwWpUa0U/+QH6Alc
-zU2L+SbsVs5UcsN+yDHpkiIFlnljzm1iqqJCZR2QeonvrSWeLAJUrFBP3I0/SZjm
-Vpx0czcVFjkUkpWt6ORmYXDAMaHk5w2pvsmCNno/7+l8jQCBr0TSTbiPjFIakUQ1
-98JkAJMdrunZtze3HO8vWa0sRWvNlnJSe0SwIFAlgHBtf09OjQduvN3r05g767C+
-GUZQEG1x2nLEql2yh6emwtZ4ukkMnQZ1gMbJsg7WOt/K498vYR4rvaxEh7QCVKqd
-xNPm9Op62jQZJkY7sauHaMZXHjlpzSzy+MfOE3pgxtzaaWVvJbEFxVYfSNEPPkHF
-FqDIYqO+9xJb+xxpyGB4wk5pgw/Wze1lD8e3gFv4ZT+JYX9QbYNiVpWfYhX18tlX
-EU56karZokORizYj2LNc/iVeLeSohewuUIp1rqWLg74llAL1Zfp37cBKhw1Kgfms
-6HnmyzBnemQVttbDHR4N7FwTt7qzBl56aeSDcqONymOWWrNu4F3Lk+P0SPwLQcni
-ssPG7ralumgjnILy4QxL31dWbmrwMM8U2MATK0+IVvyh30yr1+578w5J1PBgrFkF
-n4l5o6xzY2b56PFHdtM70yHcHuK5e4M3WA+SEsrQ/h4EmEFBL/Xf2l6AUunyNykW
-TnMo90kdFEH2PE0wgqmY
-=di0n
------END PGP SIGNATURE-----
-
---=-FQSmg9yf1gLJUgJ+FKQ6--
-
+--=20
+Dmitry
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
