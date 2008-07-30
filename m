@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47630
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750917AbYGUQpZ (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.176]:27344 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751772AbYG3U5M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 12:45:25 -0400
-Date: Mon, 21 Jul 2008 09:45:24 -0700 (PDT)
-Message-Id: <20080721.094524.152820749.davem@davemloft.net> (sfid-20080721_184528_722848_5A026ED4)
-To: hadi@cyberus.ca
-Cc: kaber@trash.net, netdev@vger.kernel.org, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
- RCU.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1216639201.4847.217.camel@localhost>
-References: <20080720.165911.86437240.davem@davemloft.net>
-	<1216606839.4847.159.camel@localhost>
-	<1216639201.4847.217.camel@localhost>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 30 Jul 2008 16:57:12 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so184769ika.5
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 13:57:10 -0700 (PDT)
+Message-ID: <f6ca9fed0807301357k3c096c37q906ecd68a0219f7f@mail.gmail.com> (sfid-20080730_225716_799796_99B85AB9)
+Date: Wed, 30 Jul 2008 22:57:09 +0200
+From: drago01 <drago01@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: Vendor support stickers for devices supported under Linux wireless
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890807301327j54be2453r836964c708d75458@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <43e72e890807301327j54be2453r836964c708d75458@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: jamal <hadi@cyberus.ca>
-Date: Mon, 21 Jul 2008 07:20:01 -0400
+On Wed, Jul 30, 2008 at 10:27 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> A while back during our second Linux wireless summit we thought about
+> the possibility of letting vendors choose a sticker depending upon the
+> type of support they had for Linux:
+>
+> http://wireless.kernel.org/CertificationIdeas
+>
+> I propose we consolidate to just stick to one logo/sticker: You
+> properly support Linux.
+>
+> What this means is your driver is in the kernel and if you have
+> firmware this would mean you also provide a friendly redistributable
+> license for the firmware. We could even put the name of the driver on
+> the sticker/logo. Thoughts?
 
-> Actually, can i modify that thought and go back to my initial contention
-> now that things are making more sense?;->
-> A single s/ware queue per hardware transmit queue is good - but that
-> being pfifo_fast would be a lot better. It would, in the minimal, keep
-> things as they were for non-multiq and is a sane choice for any virtual
-> wire.
-
-Ok, I'll revert the change that changed pfifo_fast into plain fifo_fast.
-
-Thanks.
+I would rather do s/driver name/kernel version/ ... its easier for
+users that way.
