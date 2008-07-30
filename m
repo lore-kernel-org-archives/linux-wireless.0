@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:46134 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751071AbYGAL30 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 07:29:26 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] mac80211: remove useless tid assignment for management and control frames
-Date: Tue,  1 Jul 2008 14:29:20 +0300
-Message-Id: <1214911761-8291-1-git-send-email-tomas.winkler@intel.com> (sfid-20080701_132930_164996_B1D4BDBF)
-Content-Type: text/plain; charset="us-ascii"
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:44019 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757425AbYG3Tre (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jul 2008 15:47:34 -0400
+Message-Id: <200807301946.m6UJkKPm012986@imap1.linux-foundation.org> (sfid-20080730_214756_484541_AB175929)
+Subject: [patch 1/4] ath5k: mask out unneeded interrupts
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	jirislaby@gmail.com, mcgrof@gmail.com, me@bobcopeland.com,
+	mickflemm@gmail.com
+From: akpm@linux-foundation.org
+Date: Wed, 30 Jul 2008 12:46:20 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes useless tid assignment for management and control frames
+From: Jiri Slaby <jirislaby@gmail.com>
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Mask out previously demanded interrupt flags because we set new ones. 
+Don't allow mixing them after switch from sta to ibss and vice versa.
+
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+Cc: "Bob Copeland" <me@bobcopeland.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
- net/mac80211/wme.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index f23b5a4..30d3b5b 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -210,7 +210,6 @@ static int wme_qdiscop_enqueue(struct sk_buff *skb, struct Qdisc* qd)
- 			kfree_skb(skb);
- 			err = NET_XMIT_DROP;
- 	} else {
--		tid = skb->priority & QOS_CONTROL_TAG1D_MASK;
- 		skb_set_queue_mapping(skb, queue);
- 		qdisc = q->queues[queue];
- 		err = qdisc->enqueue(skb, qdisc);
--- 
-1.5.4.1
+ drivers/net/wireless/ath5k/base.c |    1 +
+ 1 file changed, 1 insertion(+)
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+diff -puN drivers/net/wireless/ath5k/base.c~ath5k-mask-out-unneeded-interrupts drivers/net/wireless/ath5k/base.c
+--- a/drivers/net/wireless/ath5k/base.c~ath5k-mask-out-unneeded-interrupts
++++ a/drivers/net/wireless/ath5k/base.c
+@@ -2170,6 +2170,7 @@ ath5k_beacon_config(struct ath5k_softc *
+ 
+ 	ath5k_hw_set_intr(ah, 0);
+ 	sc->bmisscount = 0;
++	sc->imask &= ~(AR5K_INT_BMISS | AR5K_INT_SWBA);
+ 
+ 	if (sc->opmode == IEEE80211_IF_TYPE_STA) {
+ 		sc->imask |= AR5K_INT_BMISS;
+_
