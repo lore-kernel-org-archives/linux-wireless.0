@@ -1,96 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:58634 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757300AbYGZVLF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jul 2008 17:11:05 -0400
-Message-ID: <488B92E3.6050200@lwfinger.net> (sfid-20080726_231109_579067_2E010AEA)
-Date: Sat, 26 Jul 2008 16:10:59 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?Q8OpZHJpYyBBdWdlcg==?= <cedric@grisbi.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: iwl3945 slow for downloading
-References: <20080726161140.59041730@grisbi.org>	<488B3969.4050405@openwrt.org>	<488B48C1.6090506@lwfinger.net> <20080726183237.02a1e28e@grisbi.org>
-In-Reply-To: <20080726183237.02a1e28e@grisbi.org>
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Received: from mx1.redhat.com ([66.187.233.31]:59240 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752104AbYG3Lh6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jul 2008 07:37:58 -0400
+Subject: Re: [PATCH 1/6] mac80211: allow no mac address until firmware load
+From: Dan Williams <dcbw@redhat.com>
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+In-Reply-To: <1217416640.6379.144.camel@localhost>
+References: <48763814.27052c0a.1794.2095@mx.google.com>
+	 <200807281544.33509.mb@bu3sch.de> <1217253397.6364.2.camel@localhost>
+	 <200807281600.39103.mb@bu3sch.de>
+	 <1217257174.28198.27.camel@localhost.localdomain>
+	 <1217257628.15381.2.camel@johannes.berg>
+	 <1217258040.28198.40.camel@localhost.localdomain>
+	 <1ba2fa240807280858o4020fec8k4c287567dff177ca@mail.gmail.com>
+	 <1217262158.28198.44.camel@localhost.localdomain>
+	 <1217416640.6379.144.camel@localhost>
+Content-Type: text/plain
+Date: Wed, 30 Jul 2008 07:35:21 -0400
+Message-Id: <1217417721.11432.21.camel@localhost.localdomain> (sfid-20080730_133802_319921_33B5BD97)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-C=C3=A9dric Auger wrote:
-> Le Sat, 26 Jul 2008 10:54:41 -0500,
-> Larry Finger <Larry.Finger@lwfinger.net> a =C3=A9crit :
->=20
->> Felix Fietkau wrote:
->>> I don't know if it helps with debugging this issue, but I've seen
->>> the same on a laptop from a friend of mine (same card).
->>>
->>> After some searching I found that setting the AP to g-only mode
->>> instead of b+g mixed made it work at decent speeds. Another symptom
->>> of this slowdown is that there is typically an unnaturally high
->>> number of retransmissions on the air, which eats up a lot of
->>> airtime.
->>>
->>> I've spent some time looking through the code to find the reason
->>> for this but couldn't find anything yet (maybe somebody from Intel
->>> could help).
->> Just for comparison, my BCM4312 running b43 from the latest
->> wireless-testing gets the following tcpperf throughput:
->>
->> AP Mode          TX          RX
->>
->> Mixed b/g    19.8 MB/s   23.0 MB/s
->> g-only       20.5 MB/s   23.1 MB/s
->>
->> For these tests, the connecting end was wired to the router. The
->> difference in TX speeds was about what I expected - the small
->> difference in RX speeds was not. In any case, if you see a large
->> difference with iwl3945, that would be useful information.
->>
->> You can obtain tcpperf from
->> http://wand.cs.waikato.ac.nz/~stj2/nsc/software.html
->=20
-> hello
-> thanks for your answers.
-> i tried to set my ap to g-only, but i cannot :-( the wifi box is give=
-n
-> by my provider and it seems cannot be changed...
-> so i tried tcpperf, this is the result :
->=20
-> cedric:/home/grisbi/tcpperf-1.754# ./tcpperf -c 192.168.0.4 -t 30
-> Duration: 30 9482usec
-> Bytes sent: 5481472 (5353 kB 5 MB 0 GB)
-> Bandwidth: 1461264 b/s (1461.26 kb/s 1.46 Mb/s)
-> Close duration: 0s 22usec
->=20
-> then i tried to download an image of ubuntu and i had about 900kb/s,
-> so very good and i don't understand...  then i tried to send a big fi=
-le
-> with scp to the other computer, as user and as root, it begins at
-> 2,2MB/s and decrease untill 150kb/s and stays between 130-200kb/s
-> i did again a tcpperf with -t 300 to check if it's not with the time,
-> but i have 1,30MB/s, seems correct.
->=20
-> second test :
-> i stop the wifi and plug a cable. the second computer is still in wif=
-i.
-> tcpperf gives me 17Mb/s and the same file with scp is sent with about
-> 2,2MB/s...
-> so now i really don't understand, from internet, loading work untill
-> 900kb/s (ok for me), but beween 2 computers on my network i have max
-> 200kb/s...
-> hopes this can be usefull
+On Wed, 2008-07-30 at 13:17 +0200, Luis Carlos Cobo wrote:
+> So I see three options:
+> 
+> 1) Use 00:... and be happy. No problem with udev, we use an address that
+> is actually valid.
+> 
+> 2) Use 01:00... and fix udev so it ignores it.
+> 
+> 3) Use 44:44..., because it is what orinoco used and fix udev so it
+> ignores it.
+> 
+> I would go for solution 2, 00:00:00:00:00:00 is a valid address for a
+> device and multicast addresses are not, and that should be reflected on
+> udev's policy.
 
-It looks as if your receive rate is a lot higher than the transmit rate=
-=2E You can=20
-check that by using the computer with the iwl3945 as the server and ini=
-tiate=20
-tcpperf from the other end.
+I guess, but having a zero MAC seems more logical to me, and it's also
+the failure case if something doesn't get properly initialized.  WEXT
+uses it for "disassociated".  We already check for the zero MAC in a
+number of places.
 
-Larry
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+But in the end, doesn't really matter to me.
+
+> About persistent names, can we get a persistent name after the device
+> gets its MAC address? Before that, the device is not being used and it
+> does not matter much.
+
+Yes, if the udev bits are good enough.  Just need something unique, and
+for net devices, the MAC is supposed to be unique, of course.
+
+Dan
+
+
