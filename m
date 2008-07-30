@@ -1,54 +1,248 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.232]:51917 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848AbYGICWK (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:44747 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754329AbYG3Txm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 22:22:10 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so3387442rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2008 19:22:09 -0700 (PDT)
-Message-ID: <b6c5339f0807081922q2941a597m6e135fc7fb907fb@mail.gmail.com> (sfid-20080709_042229_864639_D7475156)
-Date: Tue, 8 Jul 2008 22:22:09 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Helge Deller" <deller@gmx.de>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: convert LED code to use mac80211 triggers
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-In-Reply-To: <g50s14$8n1$1@ger.gmane.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080622181134.GA26571@hash.localnet>
-	 <20080626023528.GA16068@hash.localnet> <g50s14$8n1$1@ger.gmane.org>
+	Wed, 30 Jul 2008 15:53:42 -0400
+Message-Id: <200807301946.m6UJkLiI012989@imap1.linux-foundation.org> (sfid-20080730_215345_972879_377EF446)
+Subject: [patch 2/4] ath5k: unify resets
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	jirislaby@gmail.com, mcgrof@gmail.com, me@bobcopeland.com,
+	mickflemm@gmail.com
+From: akpm@linux-foundation.org
+Date: Wed, 30 Jul 2008 12:46:20 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 8, 2008 at 7:08 PM, Helge Deller <deller@gmx.de> wrote:
-> I tested it against Linus' head version (it applied with minor
-> modifications) on my HP NC6000 laptop with this built-in Atheros card:
-[...]
->
-> Basically it works, but I think the sc->led_on in:
->> +     sc->led_on = 0;  /* active low */
->
-> needs to be:
->> +     sc->led_on = 1;  /* active high */
-> for the AR5212 in the HP laptop.
+From: Jiri Slaby <jirislaby@gmail.com>
 
-Thanks for the test!
+There were 3 code copy and pastes of reset.  Unify the resets and place in
+separate function.
 
-> See also the changes to if_ath_pci.c in:
->  http://madwifi.org/attachment/ticket/1018/led.patch
-> and
->  http://madwifi.org/ticket/1018
-> for an old discussion about madwifi for LEDs in the HP box.
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+Cc: "Bob Copeland" <me@bobcopeland.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-So current madwifi doesn't have this change unless I missed something?
- It appears to use active-low leds in the current version regardless
-of the vendor.
+ drivers/net/wireless/ath5k/base.c |  124 +++++++++-------------------
+ 1 file changed, 42 insertions(+), 82 deletions(-)
 
-> Without this change the LED stays on after a "rmmod ath5k" as well.
-
-Yeah, that would definitely happen if the logic was backwards.  I
-guess the conservative approach is to just use sc->led_on = 1 in the
-VENDOR_ID_COMPAQ branch.
-
--- 
-Bob Copeland %% www.bobcopeland.com
+diff -puN drivers/net/wireless/ath5k/base.c~ath5k-unify-resets drivers/net/wireless/ath5k/base.c
+--- a/drivers/net/wireless/ath5k/base.c~ath5k-unify-resets
++++ a/drivers/net/wireless/ath5k/base.c
+@@ -165,7 +165,8 @@ static struct pci_driver ath5k_pci_drive
+  * Prototypes - MAC 802.11 stack related functions
+  */
+ static int ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb);
+-static int ath5k_reset(struct ieee80211_hw *hw);
++static int ath5k_reset(struct ath5k_softc *sc, bool stop, bool change_channel);
++static int ath5k_reset_wake(struct ath5k_softc *sc);
+ static int ath5k_start(struct ieee80211_hw *hw);
+ static void ath5k_stop(struct ieee80211_hw *hw);
+ static int ath5k_add_interface(struct ieee80211_hw *hw,
+@@ -984,9 +985,6 @@ ath5k_getchannels(struct ieee80211_hw *h
+ static int
+ ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+ {
+-	struct ath5k_hw *ah = sc->ah;
+-	int ret;
+-
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "(%u MHz) -> (%u MHz)\n",
+ 		sc->curchan->center_freq, chan->center_freq);
+ 
+@@ -1002,41 +1000,7 @@ ath5k_chan_set(struct ath5k_softc *sc, s
+ 		 * hardware at the new frequency, and then re-enable
+ 		 * the relevant bits of the h/w.
+ 		 */
+-		ath5k_hw_set_intr(ah, 0);	/* disable interrupts */
+-		ath5k_txq_cleanup(sc);		/* clear pending tx frames */
+-		ath5k_rx_stop(sc);		/* turn off frame recv */
+-		ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, true);
+-		if (ret) {
+-			ATH5K_ERR(sc, "%s: unable to reset channel "
+-				"(%u Mhz)\n", __func__, chan->center_freq);
+-			return ret;
+-		}
+-
+-		ath5k_hw_set_txpower_limit(sc->ah, 0);
+-
+-		/*
+-		 * Re-enable rx framework.
+-		 */
+-		ret = ath5k_rx_start(sc);
+-		if (ret) {
+-			ATH5K_ERR(sc, "%s: unable to restart recv logic\n",
+-					__func__);
+-			return ret;
+-		}
+-
+-		/*
+-		 * Change channels and update the h/w rate map
+-		 * if we're switching; e.g. 11a to 11b/g.
+-		 *
+-		 * XXX needed?
+-		 */
+-/*		ath5k_chan_change(sc, chan); */
+-
+-		ath5k_beacon_config(sc);
+-		/*
+-		 * Re-enable interrupts.
+-		 */
+-		ath5k_hw_set_intr(ah, sc->imask);
++		return ath5k_reset(sc, true, true);
+ 	}
+ 
+ 	return 0;
+@@ -2223,36 +2187,13 @@ ath5k_init(struct ath5k_softc *sc)
+ 	 */
+ 	sc->curchan = sc->hw->conf.channel;
+ 	sc->curband = &sc->sbands[sc->curchan->band];
+-	ret = ath5k_hw_reset(sc->ah, sc->opmode, sc->curchan, false);
+-	if (ret) {
+-		ATH5K_ERR(sc, "unable to reset hardware: %d\n", ret);
+-		goto done;
+-	}
+-	/*
+-	 * This is needed only to setup initial state
+-	 * but it's best done after a reset.
+-	 */
+-	ath5k_hw_set_txpower_limit(sc->ah, 0);
+-
+-	/*
+-	 * Setup the hardware after reset: the key cache
+-	 * is filled as needed and the receive engine is
+-	 * set going.  Frame transmit is handled entirely
+-	 * in the frame output path; there's nothing to do
+-	 * here except setup the interrupt mask.
+-	 */
+-	ret = ath5k_rx_start(sc);
+-	if (ret)
+-		goto done;
+-
+-	/*
+-	 * Enable interrupts.
+-	 */
+ 	sc->imask = AR5K_INT_RX | AR5K_INT_TX | AR5K_INT_RXEOL |
+ 		AR5K_INT_RXORN | AR5K_INT_FATAL | AR5K_INT_GLOBAL |
+ 		AR5K_INT_MIB;
++	ret = ath5k_reset(sc, false, false);
++	if (ret)
++		goto done;
+ 
+-	ath5k_hw_set_intr(sc->ah, sc->imask);
+ 	/* Set ack to be sent at low bit-rates */
+ 	ath5k_hw_set_ack_bitrate_high(sc->ah, false);
+ 
+@@ -2452,7 +2393,7 @@ ath5k_tasklet_reset(unsigned long data)
+ {
+ 	struct ath5k_softc *sc = (void *)data;
+ 
+-	ath5k_reset(sc->hw);
++	ath5k_reset_wake(sc);
+ }
+ 
+ /*
+@@ -2475,7 +2416,7 @@ ath5k_calibrate(unsigned long data)
+ 		 * to load new gain values.
+ 		 */
+ 		ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "calibration, resetting\n");
+-		ath5k_reset(sc->hw);
++		ath5k_reset_wake(sc);
+ 	}
+ 	if (ath5k_hw_phy_calibrate(ah, sc->curchan))
+ 		ATH5K_ERR(sc, "calibration of channel %u failed\n",
+@@ -2676,48 +2617,67 @@ ath5k_tx(struct ieee80211_hw *hw, struct
+ }
+ 
+ static int
+-ath5k_reset(struct ieee80211_hw *hw)
++ath5k_reset(struct ath5k_softc *sc, bool stop, bool change_channel)
+ {
+-	struct ath5k_softc *sc = hw->priv;
+ 	struct ath5k_hw *ah = sc->ah;
+ 	int ret;
+ 
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "resetting\n");
+ 
+-	ath5k_hw_set_intr(ah, 0);
+-	ath5k_txq_cleanup(sc);
+-	ath5k_rx_stop(sc);
+-
++	if (stop) {
++		ath5k_hw_set_intr(ah, 0);
++		ath5k_txq_cleanup(sc);
++		ath5k_rx_stop(sc);
++	}
+ 	ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, true);
+-	if (unlikely(ret)) {
++	if (ret) {
+ 		ATH5K_ERR(sc, "can't reset hardware (%d)\n", ret);
+ 		goto err;
+ 	}
++
++	/*
++	 * This is needed only to setup initial state
++	 * but it's best done after a reset.
++	 */
+ 	ath5k_hw_set_txpower_limit(sc->ah, 0);
+ 
+ 	ret = ath5k_rx_start(sc);
+-	if (unlikely(ret)) {
++	if (ret) {
+ 		ATH5K_ERR(sc, "can't start recv logic\n");
+ 		goto err;
+ 	}
++
+ 	/*
+-	 * We may be doing a reset in response to an ioctl
+-	 * that changes the channel so update any state that
+-	 * might change as a result.
++	 * Change channels and update the h/w rate map if we're switching;
++	 * e.g. 11a to 11b/g.
++	 *
++	 * We may be doing a reset in response to an ioctl that changes the
++	 * channel so update any state that might change as a result.
+ 	 *
+ 	 * XXX needed?
+ 	 */
+ /*	ath5k_chan_change(sc, c); */
+-	ath5k_beacon_config(sc);
+-	/* intrs are started by ath5k_beacon_config */
+ 
+-	ieee80211_wake_queues(hw);
++	ath5k_beacon_config(sc);
++	/* intrs are enabled by ath5k_beacon_config */
+ 
+ 	return 0;
+ err:
+ 	return ret;
+ }
+ 
++static int
++ath5k_reset_wake(struct ath5k_softc *sc)
++{
++	int ret;
++
++	ret = ath5k_reset(sc, true, true);
++	if (!ret)
++		ieee80211_wake_queues(sc->hw);
++
++	return ret;
++}
++
+ static int ath5k_start(struct ieee80211_hw *hw)
+ {
+ 	return ath5k_init(hw->priv);
+@@ -2826,7 +2786,7 @@ ath5k_config_interface(struct ieee80211_
+ 
+ 	mutex_unlock(&sc->lock);
+ 
+-	return ath5k_reset(hw);
++	return ath5k_reset_wake(sc);
+ unlock:
+ 	mutex_unlock(&sc->lock);
+ 	return ret;
+_
