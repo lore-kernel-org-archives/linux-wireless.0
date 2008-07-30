@@ -1,23 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:45003 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760844AbYGQRmd (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:55102 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755755AbYG3MR3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 13:42:33 -0400
-Received: by wa-out-1112.google.com with SMTP id j37so10213waf.23
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2008 10:42:32 -0700 (PDT)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-From: Brian Cavagnolo <brian@cozybit.com>
-Date: Tue, 15 Jul 2008 17:45:02 -0700
-Subject: [PATCH 0/3] libertas: support for some persistent settings/features
-Message-ID: <487f8484.1498600a.5fc5.33b2@mx.google.com> (sfid-20080717_194247_750602_6810C3F4)
+	Wed, 30 Jul 2008 08:17:29 -0400
+Message-ID: <48905BD8.3030100@lwfinger.net> (sfid-20080730_141733_182665_6CE27FF9)
+Date: Wed, 30 Jul 2008 07:17:28 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: johan henriksson <jhn98032@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: RTL8187: RTL8187B with id 0bda:8198
+References: <489037EC.4020306@gmail.com>
+In-Reply-To: <489037EC.4020306@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some Marvell USB hardware, such as the OLPC Active Antenna, have writable
-persistent settings for stand-alone use.  They also allow updates of the
-bootloader and a stand-alone firmware image.  These patches add support for
-some of these features and improve some existing support.
+johan henriksson wrote:
+> Hi!
+> 
+> I am trying to get the wireless card on a Toshiba Satellite L350
+> to work. The laptop uses a RTL8187b chip but unfortunately with an id of 
+> 0bda:8198.
+> I have tried the RTL8187 driver in the 2.6.27-rc1 release.
+> To make the driver accept the card I had to add the productid 8198 to 
+> the driver.
+> Now the card is detected and seems to work. I can ping another computer 
+> on the network
+> but for some reason the network just stops working after about 6 seconds.
+> There are no errors in the kernel log and if I reconnect with "iwconfig 
+> wlan0 essid myNet" the card works again for another 6 seconds.
+> I am starting to suspect that the RTL8187b has a watchdog timer like the 
+> RTL8181 that times out?
+> Does anybody have the datasheet for the RTL8187b?
 
+To quote the RealTek engineers, "The rtl8187B card with VID 8198 is only for 
+Toshiba. But It is regrettable that we can't provide open source of that, 
+because we have some agreements with Toshiba." All that they will say is that 
+the part is different.
+
+We have the data sheet for the RTL8187B, but I have seen nothing about a 
+watchdog timer. I would send you the data sheet, but it is not clear that I have 
+the right to do so. I'll explore that aspect separately.
+
+Have you run this card with ndiswrapper? If so, you should be able to use usbmon 
+to dump the traffic and find what is being sent to the chip by the Windows 
+driver that the native driver does not. Perhaps a timer reset will be found that 
+way.
+
+The open-source RTL8187 driver is still very much a work in progress. We have a 
+couple of patches on their way to mainline that you should try before you do 
+much further work. I'll be sending them to you separately.
+
+Larry
 
