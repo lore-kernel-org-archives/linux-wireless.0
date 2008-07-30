@@ -1,55 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.168]:24168 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754030AbYGGWos (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jul 2008 18:44:48 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2295151wfd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2008 15:44:47 -0700 (PDT)
-Subject: Re: [PATCH 1/1 V2] mac80211: Fix ieee80211_rx_reorder_ampdu:
-	ignore QoS null packets
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>, linville@tuxdriver.com,
-	johannes@sipsolutions.net, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-In-Reply-To: <1ba2fa240807071516m6220a15sf02fe0b954d0d4ae@mail.gmail.com>
-References: <1215434881-5410-1-git-send-email-tomas.winkler@intel.com>
-	 <1215447824.14247.2.camel@brick> <200807071902.51683.mb@bu3sch.de>
-	 <1215458792.14247.7.camel@brick>
-	 <1ba2fa240807071423n755d4e5ay81a6543be7761a92@mail.gmail.com>
-	 <1215466987.14247.12.camel@brick>
-	 <1ba2fa240807071516m6220a15sf02fe0b954d0d4ae@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 07 Jul 2008 15:44:45 -0700
-Message-Id: <1215470685.14247.15.camel@brick> (sfid-20080708_004451_805370_EC0C0F0A)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:3379 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750887AbYG3OdX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jul 2008 10:33:23 -0400
+Date: Wed, 30 Jul 2008 10:30:03 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Luis Carlos Cobo <luisca@cozybit.com>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/6] mac80211: allow no mac address until firmware load
+Message-ID: <20080730143003.GB19408@tuxdriver.com> (sfid-20080730_163327_490908_B54AE61D)
+References: <200807281544.33509.mb@bu3sch.de> <1217253397.6364.2.camel@localhost> <200807281600.39103.mb@bu3sch.de> <1217257174.28198.27.camel@localhost.localdomain> <1217257628.15381.2.camel@johannes.berg> <1217258040.28198.40.camel@localhost.localdomain> <1ba2fa240807280858o4020fec8k4c287567dff177ca@mail.gmail.com> <1217262158.28198.44.camel@localhost.localdomain> <1217416640.6379.144.camel@localhost> <1217417721.11432.21.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1217417721.11432.21.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-07-08 at 01:16 +0300, Tomas Winkler wrote:
-> On Tue, Jul 8, 2008 at 12:43 AM, Harvey Harrison
-> > set.
-> >
-> I know but, what you missing is the check above. we bail out from the
-> function if the packet is not qos data before so it's not relevant for
-> checking
-> of any null data just qos null data. I didn't want to touch the PS
-> code that's why we've created a special handler for this particular
-> case.
-> I think you patch works as well  and maybe can be used  PS mode as
-> well but I'm not sure now.. I will look at this alter.
-> Tomas
+On Wed, Jul 30, 2008 at 07:35:21AM -0400, Dan Williams wrote:
+> On Wed, 2008-07-30 at 13:17 +0200, Luis Carlos Cobo wrote:
+> > So I see three options:
+> > 
+> > 1) Use 00:... and be happy. No problem with udev, we use an address that
+> > is actually valid.
+> > 
+> > 2) Use 01:00... and fix udev so it ignores it.
+> > 
+> > 3) Use 44:44..., because it is what orinoco used and fix udev so it
+> > ignores it.
+> > 
+> > I would go for solution 2, 00:00:00:00:00:00 is a valid address for a
+> > device and multicast addresses are not, and that should be reflected on
+> > udev's policy.
 > 
+> I guess, but having a zero MAC seems more logical to me, and it's also
+> the failure case if something doesn't get properly initialized.  WEXT
+> uses it for "disassociated".  We already check for the zero MAC in a
+> number of places.
 
-Good point, a helper probably isn't right for this as it's already been
-checked that it's a data packet with qos, so opencoding the nullfunc
-test is probably the right thing (as it was before my change).
+I'm with Dan -- use all zeroes.
 
-if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
-
-Cheers,
-
-Harvey
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
