@@ -1,75 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:44794 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752950AbYGCQPD (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.228]:35384 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751633AbYG3U7A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 12:15:03 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <IvDoorn@gmail.com>, kionez <kionez@anche.no>
-Subject: [PATCH 2/2] rfkill: ignore errors from rfkill_toggle_radio in rfkill_add_switch
-Date: Thu,  3 Jul 2008 13:14:57 -0300
-Message-Id: <1215101697-30576-3-git-send-email-hmh@hmh.eng.br> (sfid-20080703_181508_853406_99742206)
-In-Reply-To: <1215101697-30576-1-git-send-email-hmh@hmh.eng.br>
-References: <1215101697-30576-1-git-send-email-hmh@hmh.eng.br>
+	Wed, 30 Jul 2008 16:59:00 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so200037wri.5
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 13:58:58 -0700 (PDT)
+Message-ID: <43e72e890807301358r6d8cadc1j4f40b501319fb7dc@mail.gmail.com> (sfid-20080730_225903_471467_84258072)
+Date: Wed, 30 Jul 2008 13:58:44 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: drago01 <drago01@gmail.com>
+Subject: Re: Vendor support stickers for devices supported under Linux wireless
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <f6ca9fed0807301357k3c096c37q906ecd68a0219f7f@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890807301327j54be2453r836964c708d75458@mail.gmail.com>
+	 <f6ca9fed0807301357k3c096c37q906ecd68a0219f7f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rfkill_add_switch() calls rfkill_toggle_radio() to set the state of a
-recently registered rfkill class to the current global state [for that
-rfkill->type].
+On Wed, Jul 30, 2008 at 1:57 PM, drago01 <drago01@gmail.com> wrote:
+> On Wed, Jul 30, 2008 at 10:27 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> A while back during our second Linux wireless summit we thought about
+>> the possibility of letting vendors choose a sticker depending upon the
+>> type of support they had for Linux:
+>>
+>> http://wireless.kernel.org/CertificationIdeas
+>>
+>> I propose we consolidate to just stick to one logo/sticker: You
+>> properly support Linux.
+>>
+>> What this means is your driver is in the kernel and if you have
+>> firmware this would mean you also provide a friendly redistributable
+>> license for the firmware. We could even put the name of the driver on
+>> the sticker/logo. Thoughts?
+>
+> I would rather do s/driver name/kernel version/ ... its easier for
+> users that way.
 
-The rfkill_toggle_radio() call is going to error out if the hardware is
-RFKILL_STATE_HARD_BLOCKED, and the global state is RFKILL_STATE_UNBLOCKED.
+True, do you mean since a specific kernel version?
 
-That is a quite normal situation which I missed to account for.  As things
-stand, the error return from rfkill_toggle_radio ends up causing
-rfkill_register to bail out with an error (de-registering the new switch in
-the process), which is Not Nice.
-
-Change rfkill_add_switch() to not return errors because of a failed call to
-rfkill_toggle_radio().  We can go back to returning errors again (if that's
-indeed the right thing to do) if we define the exact error codes the
-rfkill->toggle_radio callbacks are to return in each situation, so that we
-can ignore the right ones only.
-
-Bug reported by "kionez <kionez@anche.no>".
-
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: kionez <kionez@anche.no>
----
- net/rfkill/rfkill.c |   10 ++++------
- 1 files changed, 4 insertions(+), 6 deletions(-)
-
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index aa7039d..7a560b7 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -501,17 +501,15 @@ static struct class rfkill_class = {
- 
- static int rfkill_add_switch(struct rfkill *rfkill)
- {
--	int error;
--
- 	mutex_lock(&rfkill_mutex);
- 
--	error = rfkill_toggle_radio(rfkill, rfkill_states[rfkill->type], 0);
--	if (!error)
--		list_add_tail(&rfkill->node, &rfkill_list);
-+	rfkill_toggle_radio(rfkill, rfkill_states[rfkill->type], 0);
-+
-+	list_add_tail(&rfkill->node, &rfkill_list);
- 
- 	mutex_unlock(&rfkill_mutex);
- 
--	return error;
-+	return 0;
- }
- 
- static void rfkill_remove_switch(struct rfkill *rfkill)
--- 
-1.5.5.4
-
+  Luis
