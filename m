@@ -1,108 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:47662 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750882AbYGIQMz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 12:12:55 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1KGcHf-0005W1-Tb
-	for linux-wireless@vger.kernel.org; Wed, 09 Jul 2008 16:12:48 +0000
-Received: from 206-248-135-194.dsl.teksavvy.com ([206.248.135.194])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 16:12:47 +0000
-Received: from monnier by 206-248-135-194.dsl.teksavvy.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 16:12:47 +0000
-To: linux-wireless@vger.kernel.org
-From: Stefan Monnier <monnier@iro.umontreal.ca>
-Subject: Re: Slow b43 with 2.6.25.9 on an asus wl-700ge home-router
-Date: Wed, 09 Jul 2008 12:12:34 -0400
-Message-ID: <jwv7ibvqci3.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org> (sfid-20080709_181259_644875_67AF0700)
-References: <jwvlk0bsjk7.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
-	<4874D8DD.3020803@lwfinger.net>
+Received: from xc.sipsolutions.net ([83.246.72.84]:39802 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750767AbYG3NvA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jul 2008 09:51:00 -0400
+Subject: Re: iwlwifi aggregation info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Friedrich.Beckmann@infineon.com, linux-wireless@vger.kernel.org,
+	j@w1.fi
+In-Reply-To: <1ba2fa240807300645j654a82b4rb813b71681dfab71@mail.gmail.com> (sfid-20080730_154505_046031_C61B9B55)
+References: <1217331138.10489.24.camel@johannes.berg>
+	 <1217337819.10489.57.camel@johannes.berg>
+	 <1ba2fa240807290643l4192ca62ia4db9966501caf0b@mail.gmail.com>
+	 <1217339170.10489.62.camel@johannes.berg>
+	 <1ba2fa240807290706h70f89f68xf8fe7e672c0275ad@mail.gmail.com>
+	 <1217341293.10489.73.camel@johannes.berg>
+	 <1ba2fa240807290855p191eebesb1ecf2314031f688@mail.gmail.com>
+	 <1217411631.10489.103.camel@johannes.berg>
+	 <8469FC7DDCBE054D9653D8506E1FF0F001F1E7B606@mucse406.eu.infineon.com>
+	 <1217423948.10489.121.camel@johannes.berg>
+	 <1ba2fa240807300645j654a82b4rb813b71681dfab71@mail.gmail.com>
+	 (sfid-20080730_154505_046031_C61B9B55)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KD1ri/3eM52L9JNiMxUt"
+Date: Wed, 30 Jul 2008 15:50:54 +0200
+Message-Id: <1217425854.10489.125.camel@johannes.berg> (sfid-20080730_155112_441238_C9293CBE)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> What model is your card? Please post the output of 'dmesg | grep b43'.
 
-   b43-phy0: Broadcom 4318 WLAN found
-   b43-phy0 debug: Found PHY: Analog 3, Type 2, Revision 7
-   b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 8
-   b43-phy0 debug: DebugFS (CONFIG_DEBUG_FS) not enabled in kernel config
-   input: b43-phy0 as /devices/virtual/input/input0
-   b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
-   b43-phy0 debug: Chip initialized
-   b43-phy0 debug: 32-bit DMA initialized
-   Registered led device: b43-phy0::radio
-   b43-phy0 debug: Wireless interface started
-   b43-phy0 debug: Adding Interface type 2
-   b43-phy0 debug: Removing Interface type 2
-   b43-phy0 debug: Wireless interface stopped
-   b43-phy0 debug: DMA-32 rx_ring: Used slots 0/64, Failed frames 0/0 = 0.0%, Average tries 0.00
-   b43-phy0 debug: DMA-32 tx_ring_AC_BK: Used slots 0/128, Failed frames 0/0 = 0.0%, Average tries 0.00
-   b43-phy0 debug: DMA-32 tx_ring_AC_BE: Used slots 0/128, Failed frames 0/0 = 0.0%, Average tries 0.00
-   b43-phy0 debug: DMA-32 tx_ring_AC_VI: Used slots 0/128, Failed frames 0/0 = 0.0%, Average tries 0.00
-   b43-phy0 debug: DMA-32 tx_ring_AC_VO: Used slots 0/128, Failed frames 0/0 = 0.0%, Average tries 0.00
-   b43-phy0 debug: DMA-32 tx_ring_mcast: Used slots 0/128, Failed frames 0/0 = 0.0%, Average tries 0.00
-   input: b43-phy0 as /devices/virtual/input/input1
-   b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
-   b43-phy0 debug: Chip initialized
-   b43-phy0 debug: 32-bit DMA initialized
-   Registered led device: b43-phy0::radio
-   b43-phy0 debug: Wireless interface started
-   b43-phy0 debug: Adding Interface type 2
+--=-KD1ri/3eM52L9JNiMxUt
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> With the current versions of mac80211, the rate-setting mechanism is very
-> good. If you force a high rate, i.e. with 'iwconfig ... 54M', you run the
-> risk of increasing your error rate causing many more retransmits, and might
-> reduce the throughput.
+On Wed, 2008-07-30 at 16:45 +0300, Tomas Winkler wrote:
+> > Do you not agree that giving an aggregation flow
+> > a separate qdisc is unfair within that AC?
+>=20
+> I'm think your miss understanding is that HW FIFO !=3D HW QUEUE.
+> HW FIFO takes gives fairness in level of AC.. HW QUEUE just piles up
+> packets for HW scheduler.
 
-Yes, that's what I'd expect.  I only did it to see if it made any
-difference, and as a matter of fact, it makes no difference: I get the
-same 90-92 KB/s on average (averaged over a 3.6MB http transfer).
+I know, but I cannot make out how the hw queue is pulled into the hw
+fifo fairly. I'm not talking about fair media access, I'm talking about
+fair number of frames in congestion.
 
-> That may not be happening here, but I wonder why the
-> rate capped at 2M. Incidentally, the quality numbers for my BCM4312 located
-> about 2m from the AP are "Link Quality=93/100  Signal level:-37 dBm  Noise
-> level=-71 dBm". My Link Quality is lower than yours, but S/N is much
-> better - not that any of those numbers have much validity.
+> qdisc should be just provide simple buffering
 
-I've moved the machine to get a better signal, it now says:
+Well qdiscs don't just do that, depending on the configuration, so we
+shouldn't rely on them doing just that.
 
-wlan0     IEEE 802.11  ESSID:"MM"  
-          Mode:Managed  Frequency:2.457 GHz  Access Point: 00:18:3F:CB:5A:59   
-          Bit Rate=2 Mb/s   Tx-Power=27 dBm   
-          Retry min limit:7   RTS thr:off   Fragment thr=2352 B   
-          Encryption key:ADAD-D31C-F6E7-1781-F165-21F0-A155-44C2-03C4-0D43-167C-05E8-C6EE-B111-1125-F1CD [2]
-          Link Quality=114/100  Signal level:-41 dBm  Noise level=-64 dBm
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+johannes
 
-I.e. it's not just better: it's more than perfect ;-)
-But the bandwidth is still the same 90-92KB/s.
+--=-KD1ri/3eM52L9JNiMxUt
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> My transmit throughput is consistently over 2 Mbs,
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-All the other wireless clients I've used around here (other
-broadcomm-based home routers, rt73usb dongles, and iwl3945, hostap,
-madwifi laptops), I basically always get pretty much the same bandwidth,
-of around 10Mb/s, so there's definitely something odd going on here.
+iQIcBAABAgAGBQJIkHG7AAoJEKVg1VMiehFYiqMP/0vFxBE7Alf+zGbUBSI1S+HL
+veRuLRVWNVsLi5Ape6ZyOJSkyW25fOGlanJQh33Ho5ius4BZOvNnAFmfmVvtOffR
+UZgHm3V1qVa4Rn1EHGP5AJaWFle908jtNyFwfsrv2hce+zlw+mMo6/h83wb2inlB
+LJ3mfMOIgzDHFyBgDXmB2d2+EBOGRd9kvw+gflQBo7nSqu2wZhD1SDqG/hqI3fKb
+z+9qzR3+YajXRjwgoVfty7yyh9lBZ84ihPVFf8FYE4saMfWhC/Kn0To5Lnku4gzu
+jyWZK2oLTEcV6Oue0tT9EOz4XFv6MjeDGmTsIAUCk4OdT18vmIxwJlvIu0uIGpjd
+Dl8nOk/bWTpxTi3hHlBE1w1jP7SroJG8Vxm7dtxfy8ae5ka33R2SMSh4f9Gk5hZV
+CuwzVWuF7qw1cOQnXo/zJPn8KGzmVsugFEikUszakDagUut1aU9uXVXGWq/M65zr
+IpNJsT8S/huMnShijfZW9fSLvbdR4Q+Ry6WxmF2AfvEvTcEacmWbWNiuVmjf2WDa
+7q2tz6lNfe1+lvNlPT7ag+KMLJ5LvL6GamXxlm8K6n+whf6qVntOTCiMkNk//MWt
+jNjbcD846tamEosFxcwHem2iAruPBzjNgqO0j6eJ+QwqqEyCHp2npV+RaSq45oAJ
+6B7wtQa61l8rHT4YIDff
+=LGdD
+-----END PGP SIGNATURE-----
 
-> but I'm not bridging.  Roughly 6 months ago, I did set up routing, but
-> that was using iptables, not a formal bridge device. That
-> configuration had full speed.
-
-As mentioned, I get the same result without bridging.
-
-> If you shut down the bridge, what speed do you get?
-
-Same old 90-92KB/s.
-
-
-        Stefan
-
-
-PS: The code I use is the one from the OpenWRT svn repository.
+--=-KD1ri/3eM52L9JNiMxUt--
 
