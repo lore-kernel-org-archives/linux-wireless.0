@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:59695 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752936AbYGWFny (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.170]:46467 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752985AbYG3Jrn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jul 2008 01:43:54 -0400
-Message-ID: <4886C50E.6040304@lwfinger.net> (sfid-20080723_074433_332139_B395299C)
-Date: Wed, 23 Jul 2008 00:43:42 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 30 Jul 2008 05:47:43 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so424089wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 02:47:43 -0700 (PDT)
+Message-ID: <40f31dec0807300247y4e92e5bfn6e55bffec5556356@mail.gmail.com> (sfid-20080730_114747_740125_63D5AE51)
+Date: Wed, 30 Jul 2008 12:47:43 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ath5k-devel] [PATCH 1/12] ath5k: Update register list
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	jirislaby@gmail.com, mcgrof@gmail.com
+In-Reply-To: <20080729204054.GA10188@tuxdriver.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-Subject: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks rtl8187
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net> <200807221613.34434.herton@mandriva.com.br> <3ace41890807221525r67716ea0r251068df773fe53f@mail.gmail.com> <200807221940.20009.herton@mandriva.com.br> <4886AA3B.3000406@lwfinger.net>
-In-Reply-To: <4886AA3B.3000406@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
+References: <20080720033041.GA7440@makis>
+	 <20080729204054.GA10188@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+2008/7/29 John W. Linville <linville@tuxdriver.com>:
+> On Sun, Jul 20, 2008 at 06:30:41AM +0300, Nick Kossifidis wrote:
+>>  * Update list of registers
+>>  * Use updated register macros inside hw.c and initvals.c
+>>
+>>  Changes-licensed-under: ISC
+>>  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+>
+> Nick,
+>
+> Some of the changes in this patch break the build unless the rest
+> of the series is applied, and those patches can't be applied before
+> applying this one.  This breaks git-bisect.  Could I trouble you
+> to include the pieces of this patch that break the build into those
+> later patches that fix the build?  Or perhaps you can simply split
+> this into a patch that adds new definitions and one that deletes
+> older definitions?  The latter could then be applied at the end of
+> the series.
+>
+> Thanks,
+>
+> John
 
-In the current wireless-testing (v2.6.26-rc9-14207-ga520bdb), rtl8187 is broken. 
-In most cases, it is unable to complete a connection. Occasionally, it will 
-authenticate and even get an IP using DHCP; however, only a few pings get 
-through to the AP before the connection fails completely.
+I'll repost this patch with the changes included in patch 12, then it
+won't break build ;-)
 
-Using bisection, this problem was traced to:
 
-==================================================
-commit 741b4fbc441dba885cc8f97a10e87f2acd04c5f2
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Thu Jul 10 11:21:26 2008 +0200
 
-     mac80211: fix TX sequence numbers
-
-     This patch makes mac80211 assign proper sequence numbers to
-     QoS-data frames. It also removes the old sequence number code
-     because we noticed that only the driver or hardware can assign
-     sequence numbers to non-QoS-data and especially management
-     frames in a race-free manner because beacons aren't passed
-     through mac80211's TX path.
-===============================================================
-
-The validity of the bisection was confirmed by reverse application of the patch. 
-The resulting driver worked.
-
-The appears that rtl8187 needs some kind of modification such as b43, b43legacy, 
-and rt2x00 got in the original patch. I'll be studying the changes to the other 
-drivers to see if I can find the problem, but I will appreciate your help when 
-you get a chance. Perhaps after your trip to Canada is over.
-
-Thanks,
-
-Larry
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
