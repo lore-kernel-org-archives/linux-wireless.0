@@ -1,64 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:7770 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754415AbYGRSlN (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:33648 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753118AbYG3SLF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 14:41:13 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so160308nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jul 2008 11:41:11 -0700 (PDT)
-To: John Linville <linville@tuxdriver.com>
-Subject: Please pull 'upstream' branch of rt2x00
-Date: Fri, 18 Jul 2008 20:43:08 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+	Wed, 30 Jul 2008 14:11:05 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: [RFC/RFT] rtl8187: Protect the config callback from mac80211 with a mutex
+Date: Wed, 30 Jul 2008 15:11:11 -0300
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"Hin-Tak Leung" <hintak.leung@gmail.com>,
+	Pavel Roskin <proski@gnu.org>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <48900654.7030100@lwfinger.net> <200807301413.53059.herton@mandriva.com.br> <200807301946.41182.mb@bu3sch.de>
+In-Reply-To: <200807301946.41182.mb@bu3sch.de>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200807182043.08990.IvDoorn@gmail.com> (sfid-20080718_204116_545037_146C18BD)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+  charset="iso-8859-1"
+Message-Id: <200807301511.12267.herton@mandriva.com.br> (sfid-20080730_201111_110254_5E826663)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Em Wednesday 30 July 2008 14:46:40 Michael Buesch escreveu:
+> On Wednesday 30 July 2008 19:13:52 Herton Ronaldo Krzesinski wrote:
+> > > Yeah, I said exactly that.
+> > > You protect the loopback stuff. Not any config callback or anything else.
+> > 
+> > Ah ok, only protect the section, like this?
+> 
+> Yeah, well. In theory, yes. In practice: Aren't there other races possible, too?
+> I mean even races with other parts of the driver.
+> b43 needs to take the global driver mutex in the conf callback to make
+> sure nothing changes (device init state probably is the most important one.
+> Device going down while configuring would be a fatal crash).
 
-Here is the latest update for rt2x00
+In practice I don't get other problems, but better to stick to the patch posted
+by Larry, like he said to avoid config data from one call mixed to the other.
+rtl8187 is more simpler, besides this issue with configuration it all depends
+on how mac80211 calls another functions, I have yet to see but doesn't look like
+a general lock is needed.
 
-I think all patches qualify for 2.6.27, 
-with the exception for first 2 patches:
-      rt2x00: Remove duplicate declaration
-      rt2x00: Fix EIFS timing value
-but those are one-liners and have little impact.
+> 
+> So in b43 we have a global mutex which protects everything (all data
+> and all device state), except the data and state that's accessed in the IRQ paths.
+> (We have more locks for shared device memory and so on... But these are nested
+> inside of the mutex or the IRQ state lock)
+> 
 
-The 3 patches from Iwo are the most important ones,
-since that fixes a major bug in the beacon handling for the
-USB drivers. The 3 patches are a bit big, but without them
-beaconing simply won't work.
-
-Ivo
-
----
-The following changes since commit a520bdbe7d344296482f9355e29b0018ea58760f:
-  John W. Linville (1):
-        iwl-scan.c: fixup merge damage in wireless-testing#master
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git/ ..BRANCH.NOT.VERIFIED..
-
-Ivo van Doorn (3):
-      rt2x00: Remove duplicate declaration
-      rt2x00: Fix EIFS timing value
-      rt2x00: Fix GCC warning because aifs is now unsigned
-
-Iwo Mergler (3):
-      rt2x00: Support for large vendor requests
-      rt2x00: Large vendor requests for rt73usb firmware upload and beacons
-      rt2x00: Fix the beacon length bug
-
- drivers/net/wireless/rt2x00/rt2500usb.c |   12 +++++++
- drivers/net/wireless/rt2x00/rt2x00.h    |    2 +-
- drivers/net/wireless/rt2x00/rt2x00lib.h |    7 ----
- drivers/net/wireless/rt2x00/rt2x00mac.c |    5 +--
- drivers/net/wireless/rt2x00/rt2x00usb.c |   33 ++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2x00usb.h |   22 ++++++++++++-
- drivers/net/wireless/rt2x00/rt73usb.c   |   50 ++++++++++++------------------
- 7 files changed, 87 insertions(+), 44 deletions(-)
+-- 
+[]'s
+Herton
