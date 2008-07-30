@@ -1,48 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:43338 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753113AbYGCAF2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2008 20:05:28 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: stable@kernel.org
-Subject: [PATCH stable] b43: Fix possible MMIO access while device is down
-Date: Thu, 3 Jul 2008 02:04:33 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Received: from nf-out-0910.google.com ([64.233.182.185]:35723 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752628AbYG3Sxp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jul 2008 14:53:45 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so89622nfc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 11:53:43 -0700 (PDT)
+To: Peter Chubb <peterc@gelato.unsw.edu.au>
+Subject: Re: Fixing rt2500pci
+Date: Wed, 30 Jul 2008 21:15:03 +0200
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <87tze8vu18.wl%peterc@chubb.wattle.id.au> <200807302105.56909.IvDoorn@gmail.com>
+In-Reply-To: <200807302105.56909.IvDoorn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200807030204.33987.mb@bu3sch.de> (sfid-20080703_020548_979783_EA792F7B)
+  charset="iso-8859-1"
+Message-Id: <200807302115.03865.IvDoorn@gmail.com> (sfid-20080730_205349_682696_044C0074)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a possible MMIO access while the device is still down
-from a suspend cycle. MMIO accesses with the device powered down
-may cause crashes on certain devices.
+On Wednesday 30 July 2008, Ivo van Doorn wrote:
+> On Wednesday 30 July 2008, Peter Chubb wrote:
+> > 
+> > In kernel version 2.6.26-rc9 my wireless LAN card worked; but in the
+> > released 2.6.26, my RaLink rt2500 card wouldn't associate.
+> > 
+> > Git-bisect led me to this patch:
+> > 
+> > 	61486e0f68d1f8966c09b734566a187d42d65c54
+> > 	rt2x00: Remove ieee80211_tx_control argument from write_tx_desc()
+> > 
+> > I believe that there are two problems with that patch.  Setting the Tx
+> > Length has been removed inadvertently, and one of the conditions for
+> > when to set ifs to IFS_SIFS has also been removed.
+> > 
+> > This patch fixes those things, and with it my card works again.
+> > 
+> > Signed-off-by: Peter Chubb <peterc@gelato.unsw.edu.au>
+> > 
+> > diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+> > index 1724ce9..4ba2165 100644
+> > --- a/drivers/net/wireless/rt2x00/rt2500pci.c
+> > +++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+> > @@ -1198,6 +1198,7 @@ static void rt2500pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+> >  	rt2x00_set_field32(&word, TXD_W0_IFS, txdesc->ifs);
+> >  	rt2x00_set_field32(&word, TXD_W0_RETRY_MODE,
+> >  			   test_bit(ENTRY_TXD_RETRY_MODE, &txdesc->flags));
+> > +	rt2x00_set_field32(&word, TXD_W0_DATABYTE_COUNT, skbdesc->data_len);
+> >  	rt2x00_set_field32(&word, TXD_W0_CIPHER_ALG, CIPHER_NONE);
+> >  	rt2x00_desc_write(txd, 0, word);
+> >  }
+> 
+> How could that have disappeared? good catch.
+> The above change is:
+> 
+> Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+> 
+> But:
+> 
+> > diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> > index e1368f7..a11d6ff 100644
+> > --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> > +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> > @@ -691,7 +691,8 @@ void rt2x00lib_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+> >  	 * Set ifs to IFS_SIFS when the this is not the first fragment,
+> >  	 * or this fragment came after RTS/CTS.
+> >  	 */
+> > -	if (test_bit(ENTRY_TXD_RTS_FRAME, &txdesc.flags)) {
+> > +	if ((seq_ctrl & IEEE80211_SCTL_FRAG)  ||
+> > +		test_bit(ENTRY_TXD_RTS_FRAME, &txdesc.flags)) {
+> >  		txdesc.ifs = IFS_SIFS;
+> >  	} else if (control->flags & IEEE80211_TXCTL_FIRST_FRAGMENT) {
+> >  		__set_bit(ENTRY_TXD_FIRST_FRAGMENT, &txdesc.flags);
+> 
+> The above does not correspond with legacy driver, so I am hesitant in accepting this change.
+> Unless you are _absolutely_ sure this change does fix the issue, and the databate count
+> initialization is not sufficient on its own. If that is not the case, please resend the patch with the
+> rt2x00dev.c change ommitted and my ack added. (Please add John Linville to the CC list as well,
+> so it can be merged faster :) )
 
-Upstream commit is
-33598cf261e393f2b3349cb55509e358014bfd1f
+Correction, the code does correspond with the legacy driver, but the codechange in:
+61486e0f68d1f8966c09b734566a187d42d65c54 was correct since it still applies IFS_SIFS to
+frames with fragments (excluding the first fragment).
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+So please resend the patch with only the rt2500pci change.
 
-
-Index: linux-2.6.25.9/drivers/net/wireless/b43/leds.c
-===================================================================
---- linux-2.6.25.9.orig/drivers/net/wireless/b43/leds.c	2008-07-03 01:12:00.000000000 +0200
-+++ linux-2.6.25.9/drivers/net/wireless/b43/leds.c	2008-07-03 01:15:01.000000000 +0200
-@@ -69,12 +69,15 @@ static void b43_led_brightness_set(struc
- 				   enum led_brightness brightness)
- {
- 	struct b43_led *led = container_of(led_dev, struct b43_led, led_dev);
- 	struct b43_wldev *dev = led->dev;
- 	bool radio_enabled;
- 
-+	if (unlikely(b43_status(dev) < B43_STAT_INITIALIZED))
-+		return;
-+
- 	/* Checking the radio-enabled status here is slightly racy,
- 	 * but we want to avoid the locking overhead and we don't care
- 	 * whether the LED has the wrong state for a second. */
- 	radio_enabled = (dev->phy.radio_on && dev->radio_hw_enable);
- 
- 	if (brightness == LED_OFF || !radio_enabled)
+Ivo
