@@ -1,62 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.179]:10624 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751600AbYGZNRn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jul 2008 09:17:43 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so3157518ika.5
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Jul 2008 06:17:41 -0700 (PDT)
-Date: Sat, 26 Jul 2008 15:18:38 +0200
-From: Jarek Poplawski <jarkao2@gmail.com>
-To: David Miller <davem@davemloft.net>
-Cc: johannes@sipsolutions.net, netdev@axxeo.de, peterz@infradead.org,
-	Larry.Finger@lwfinger.net, kaber@trash.net,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, mingo@redhat.com
-Subject: Re: Kernel WARNING: at net/core/dev.c:1330
-	__netif_schedule+0x2c/0x98()
-Message-ID: <20080726131838.GA2873@ami.dom.local> (sfid-20080726_151749_854708_2AD8ECCE)
-References: <20080725193416.GB3107@ami.dom.local> <1217014575.4758.7.camel@johannes.berg> <20080725200137.GC3107@ami.dom.local> <20080726.021846.236624483.davem@davemloft.net>
+Received: from bu3sch.de ([62.75.166.246]:45627 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752082AbYG3QRR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jul 2008 12:17:17 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Subject: Re: [RFC/RFT] rtl8187: Protect the config callback from mac80211 with a mutex
+Date: Wed, 30 Jul 2008 18:16:37 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"Hin-Tak Leung" <hintak.leung@gmail.com>,
+	Pavel Roskin <proski@gnu.org>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <48900654.7030100@lwfinger.net> <200807301702.31281.mb@bu3sch.de> <200807301308.01631.herton@mandriva.com.br>
+In-Reply-To: <200807301308.01631.herton@mandriva.com.br>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080726.021846.236624483.davem@davemloft.net>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200807301816.37570.mb@bu3sch.de> (sfid-20080730_181721_840449_75861141)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 26, 2008 at 02:18:46AM -0700, David Miller wrote:
-...
-> I think there might be an easier way, but we may have
-> to modify the state bits a little.
+On Wednesday 30 July 2008 18:08:01 Herton Ronaldo Krzesinski wrote:
+> Em Wednesday 30 July 2008 12:02:30 Michael Buesch escreveu:
+> > On Wednesday 30 July 2008 16:53:13 Herton Ronaldo Krzesinski wrote:
+> > > Em Wednesday 30 July 2008 10:27:26 Michael Buesch escreveu:
+> > > > On Wednesday 30 July 2008 15:24:40 Michael Buesch wrote:
+> <snip>
+> > > > and the mutex name, of course.
+> > > >
+> > > > 	/* Mutex to protect the device configuration data,
+> > > > 	 * which is foobar and bizzbaz */
+> > > > 	struct mutex conf_mutex;
+> > >
+> > > Yes, it's better this way. About the lock, the problem here is you can't
+> > > set the channel while transmitting data on 8187 (the card stops working
+> > > util reset like the comment on the code), so we must enable tx loopback
+> > > while setting channels, but you can't run rtl8187_config concurrently
+> > > because one instance may be disabling tx loopback while other is still
+> > > setting channel, or like the code is today there is a possibility that
+> > > you set tx loopback forever. The lock could be only in that section.
+> > >
+> > > The comment could be:
+> > > /* Mutex to protect the device configuration data,
+> > >  * we can't set channels concurrently */
+> >
+> > I think you probably want to protect the tx-loopback (enabled or disabled)
+> > state. That's what you're actually doing implicitely. The problem is not
+> > any channel concurrency or something like that, but that the
+> > tx-loopback-enable/disable is not recursive is the real thing we want to
+> > lock here, probably.
 > 
-> Every call into ->hard_start_xmit() is made like this:
-> 
-> 1. lock TX queue
-> 2. check TX queue stopped
-> 3. call ->hard_start_xmit() if not stopped
-> 
-> This means that we can in fact do something like:
-> 
-> 	unsigned int i;
-> 
-> 	for (i = 0; i < dev->num_tx_queues; i++) {
-> 		struct netdev_queue *txq;
-> 
-> 		txq = netdev_get_tx_queue(dev, i);
-> 		spin_lock_bh(&txq->_xmit_lock);
-> 		netif_tx_freeze_queue(txq);
-> 		spin_unlock_bh(&txq->_xmit_lock);
-> 	}
-> 
-> netif_tx_freeze_queue() just sets a new bit we add.
-> 
-> Then we go to the ->hard_start_xmit() call sites and check this new
-> "frozen" bit as well as the existing "stopped" bit.
-> 
-> When we unfreeze each queue later, we see if it is stopped, and if not
-> we schedule it's qdisc for packet processing.
+> No, the issue is that I must enter in tx-loopback mode to set the channels 
+> inside rtl8187_config, to avoid transmission of packets, so the hardware 
+> doesn't halt. So that's why the lock, it must cover the entire section 
+> of "enable loopback"->"set_chan"->"disable loopback", not only the state of 
+> TX_CONF register.
 
-I guess some additional synchronization will be added yet to prevent
-parallel freeze and especially unfreeze.
+Yeah, I said exactly that.
+You protect the loopback stuff. Not any config callback or anything else.
 
-Jarek P.
+-- 
+Greetings Michael.
