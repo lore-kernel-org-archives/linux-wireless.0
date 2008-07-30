@@ -1,128 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51774
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750736AbYGSD7E (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:17025 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751608AbYG3PUV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 23:59:04 -0400
-Date: Fri, 18 Jul 2008 20:59:02 -0700 (PDT)
-Message-Id: <20080718.205902.180487935.davem@davemloft.net> (sfid-20080719_055939_015787_D005FBE4)
-To: kaber@trash.net
-Cc: netdev@vger.kernel.org, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
- RCU.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <487F4327.1000107@trash.net>
-References: <20080717.051726.226040470.davem@davemloft.net>
-	<487F4327.1000107@trash.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 30 Jul 2008 11:20:21 -0400
+From: Bruno Randolf <br1@einfach.org>
+Subject: [PATCH 2/3] mac80211: radiotap: assume modulation from rates
+To: tomas.winkler@intel.com
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Date: Wed, 30 Jul 2008 17:20:06 +0200
+Message-ID: <20080730152006.24487.6932.stgit@void> (sfid-20080730_172023_298536_FB39687D)
+In-Reply-To: <20080730151955.24487.76871.stgit@void>
+References: <20080730151955.24487.76871.stgit@void>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Patrick McHardy <kaber@trash.net>
-Date: Thu, 17 Jul 2008 15:03:35 +0200
+use the rates ERP flag to derive CCK or OFDM modulation for the radiotap
+header.
 
-> The remaining problem is data that was previously only used and
-> modified under the RTNL (u32_list is one example). Modifications
-> during destruction now need protection against concurrent use in
-> process context.
+(it might be more correct to get this information from the hardware itself, but it
+seems safe to assume this in most practical cases.)
 
-I took a closer look at u32_list.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
 
-It's members seem to be keyed by qdisc :-)
+ net/mac80211/rx.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-All this thing is doing is making up for the lack of a classifier
-private pointer in the Qdisc.
-
-It's tough because classifiers of different types can be queued
-up to a qdisc, so it's not like we can add one traffic classifier
-private pointer to struct Qdisc and be done with it.
-
-However, I could not find anything other than u32 that seems to need
-some global state that works like this.
-
-So what I've done is checked in the following change for now to make
-u32 delete operation safe entirely within a qdisc tree's namespace.
-
-pkt_sched: Get rid of u32_list.
-
-The u32_list is just an indirect way of maintaining a reference
-to a U32 node on a per-qdisc basis.
-
-Just add an explicit node pointer for u32 to struct Qdisc an do
-away with this global list.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
-
-diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
-index 0a158ff..8a44386 100644
---- a/include/net/sch_generic.h
-+++ b/include/net/sch_generic.h
-@@ -56,6 +56,8 @@ struct Qdisc
- 	int			(*reshape_fail)(struct sk_buff *skb,
- 					struct Qdisc *q);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 254462f..a67ded3 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -157,8 +157,11 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 	if (status->band == IEEE80211_BAND_5GHZ)
+ 		*(__le16 *)pos = cpu_to_le16(IEEE80211_CHAN_OFDM |
+ 					     IEEE80211_CHAN_5GHZ);
++	else if (rate->flags & IEEE80211_RATE_ERP_G)
++		*(__le16 *)pos = cpu_to_le16(IEEE80211_CHAN_OFDM |
++					     IEEE80211_CHAN_2GHZ);
+ 	else
+-		*(__le16 *)pos = cpu_to_le16(IEEE80211_CHAN_DYN |
++		*(__le16 *)pos = cpu_to_le16(IEEE80211_CHAN_CCK |
+ 					     IEEE80211_CHAN_2GHZ);
+ 	pos += 2;
  
-+	void			*u32_node;
-+
- 	/* This field is deprecated, but it is still used by CBQ
- 	 * and it will live until better solution will be invented.
- 	 */
-diff --git a/net/sched/cls_u32.c b/net/sched/cls_u32.c
-index 4d75544..527db25 100644
---- a/net/sched/cls_u32.c
-+++ b/net/sched/cls_u32.c
-@@ -75,7 +75,6 @@ struct tc_u_hnode
- 
- struct tc_u_common
- {
--	struct tc_u_common	*next;
- 	struct tc_u_hnode	*hlist;
- 	struct Qdisc		*q;
- 	int			refcnt;
-@@ -87,8 +86,6 @@ static const struct tcf_ext_map u32_ext_map = {
- 	.police = TCA_U32_POLICE
- };
- 
--static struct tc_u_common *u32_list;
--
- static __inline__ unsigned u32_hash_fold(__be32 key, struct tc_u32_sel *sel, u8 fshift)
- {
- 	unsigned h = ntohl(key & sel->hmask)>>fshift;
-@@ -287,9 +284,7 @@ static int u32_init(struct tcf_proto *tp)
- 	struct tc_u_hnode *root_ht;
- 	struct tc_u_common *tp_c;
- 
--	for (tp_c = u32_list; tp_c; tp_c = tp_c->next)
--		if (tp_c->q == tp->q)
--			break;
-+	tp_c = tp->q->u32_node;
- 
- 	root_ht = kzalloc(sizeof(*root_ht), GFP_KERNEL);
- 	if (root_ht == NULL)
-@@ -307,8 +302,7 @@ static int u32_init(struct tcf_proto *tp)
- 			return -ENOBUFS;
- 		}
- 		tp_c->q = tp->q;
--		tp_c->next = u32_list;
--		u32_list = tp_c;
-+		tp->q->u32_node = tp_c;
- 	}
- 
- 	tp_c->refcnt++;
-@@ -402,14 +396,8 @@ static void u32_destroy(struct tcf_proto *tp)
- 
- 	if (--tp_c->refcnt == 0) {
- 		struct tc_u_hnode *ht;
--		struct tc_u_common **tp_cp;
- 
--		for (tp_cp = &u32_list; *tp_cp; tp_cp = &(*tp_cp)->next) {
--			if (*tp_cp == tp_c) {
--				*tp_cp = tp_c->next;
--				break;
--			}
--		}
-+		tp->q->u32_node = NULL;
- 
- 		for (ht = tp_c->hlist; ht; ht = ht->next) {
- 			ht->refcnt--;
+
