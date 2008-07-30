@@ -1,161 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2063 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754999AbYGANr0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jul 2008 09:47:26 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Fabien Crespel <fcrespel@gmail.com>, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH] iwlwifi: remove input device from iwl3945
-Date: Tue,  1 Jul 2008 09:23:00 -0400
-Message-Id: <1214918580-5855-1-git-send-email-linville@tuxdriver.com> (sfid-20080701_154730_083638_3FCC1E62)
-In-Reply-To: <8AD95083DC3E36478732061D97524415035E38AB@pdsmsx411.ccr.corp.intel.com>
-References: <8AD95083DC3E36478732061D97524415035E38AB@pdsmsx411.ccr.corp.intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:52617 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755962AbYG3NwS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jul 2008 09:52:18 -0400
+Subject: Re: AP association timeout bugzilla PR?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jack Howarth <howarth@bromo.msbb.uc.edu>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <20080730132846.GA10959@bromo.msbb.uc.edu>
+References: <20080728172722.GA26893@bromo.msbb.uc.edu>
+	 <1217266609.15381.4.camel@johannes.berg>
+	 <20080730001012.GA2046@bromo.msbb.uc.edu>
+	 <1217402210.10489.81.camel@johannes.berg>
+	 <20080730132846.GA10959@bromo.msbb.uc.edu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TH2C9U+BQzmcsBSySeKI"
+Date: Wed, 30 Jul 2008 15:52:14 +0200
+Message-Id: <1217425934.10489.128.camel@johannes.berg> (sfid-20080730_155228_630578_32E53A24)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I merged an early version of a patch and missed some bits included in a
-later version.
 
-	http://marc.info/?l=linux-wireless&m=121481826531792&w=2
+--=-TH2C9U+BQzmcsBSySeKI
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I have replicated the missing bits here.
+On Wed, 2008-07-30 at 09:28 -0400, Jack Howarth wrote:
 
-Cc: Adel Gadllah <adel.gadllah@gmail.com>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Fabien Crespel <fcrespel@gmail.com>
-Cc: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/iwlwifi/Kconfig        |    5 +++
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    4 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   38 +-------------------------
- 3 files changed, 9 insertions(+), 38 deletions(-)
+> Jul 30 08:19:39 localhost kernel: =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D
+> Jul 30 08:19:39 localhost kernel: [ INFO: possible recursive locking dete=
+cted ]
+> Jul 30 08:19:39 localhost kernel: 2.6.27-0.186.rc1.fc9.x86_64 #1
+> Jul 30 08:19:39 localhost kernel: ---------------------------------------=
+------
+> Jul 30 08:19:39 localhost kernel: ath9k/1379 is trying to acquire lock:
+> Jul 30 08:19:39 localhost kernel: (_xmit_IEEE80211#2){-...}, at: [<ffffff=
+ffa00f5
+> c46>] ieee80211_scan_completed+0x142/0x2e2 [mac80211]
+> Jul 30 08:19:39 localhost kernel:
+> Jul 30 08:19:39 localhost kernel: but task is already holding lock:
+> Jul 30 08:19:39 localhost kernel: (_xmit_IEEE80211#2){-...}, at: [<ffffff=
+ffa00f5
+> c46>] ieee80211_scan_completed+0x142/0x2e2 [mac80211]
 
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
-index b628a44..82b66a3 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -104,6 +104,7 @@ config IWL3945
- 	select IWLWIFI
- 	select MAC80211_LEDS if IWL3945_LEDS
- 	select LEDS_CLASS if IWL3945_LEDS
-+	select RFKILL if IWL3945_RFKILL
- 	---help---
- 	  Select to build the driver supporting the:
- 
-@@ -126,6 +127,10 @@ config IWL3945
- 	  say M here and read <file:Documentation/kbuild/modules.txt>.  The
- 	  module will be called iwl3945.ko.
- 
-+config IWL3945_RFKILL
-+	bool "Enable RF kill support in iwl3945 drivers"
-+	depends on IWL3945
-+
- config IWL3945_SPECTRUM_MEASUREMENT
- 	bool "Enable Spectrum Measurement in iwl3945 drivers"
- 	depends on IWL3945
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index a774978..4df42ad 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -690,7 +690,7 @@ enum {
- 
- #endif
- 
--#ifdef CONFIG_IWLWIFI_RFKILL
-+#ifdef CONFIG_IWL3945_RFKILL
- struct iwl3945_priv;
- 
- struct iwl3945_rfkill_mngr {
-@@ -800,7 +800,7 @@ struct iwl3945_priv {
- 	struct iwl3945_init_alive_resp card_alive_init;
- 	struct iwl3945_alive_resp card_alive;
- 
--#ifdef CONFIG_IWLWIFI_RFKILL
-+#ifdef CONFIG_IWL3945_RFKILL
- 	struct iwl3945_rfkill_mngr rfkill_mngr;
- #endif
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 3bc2644..a604a29 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -8270,7 +8270,7 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
- #endif /* CONFIG_PM */
- 
- /*************** RFKILL FUNCTIONS **********/
--#ifdef CONFIG_IWLWIFI_RFKILL
-+#ifdef CONFIG_IWL3945_RFKILL
- /* software rf-kill from user */
- static int iwl3945_rfkill_soft_rf_kill(void *data, enum rfkill_state state)
- {
-@@ -8331,44 +8331,15 @@ int iwl3945_rfkill_init(struct iwl3945_priv *priv)
- 	priv->rfkill_mngr.rfkill->dev.class->suspend = NULL;
- 	priv->rfkill_mngr.rfkill->dev.class->resume = NULL;
- 
--	priv->rfkill_mngr.input_dev = input_allocate_device();
--	if (!priv->rfkill_mngr.input_dev) {
--		IWL_ERROR("Unable to allocate rfkill input device.\n");
--		ret = -ENOMEM;
--		goto freed_rfkill;
--	}
--
--	priv->rfkill_mngr.input_dev->name = priv->cfg->name;
--	priv->rfkill_mngr.input_dev->phys = wiphy_name(priv->hw->wiphy);
--	priv->rfkill_mngr.input_dev->id.bustype = BUS_HOST;
--	priv->rfkill_mngr.input_dev->id.vendor = priv->pci_dev->vendor;
--	priv->rfkill_mngr.input_dev->dev.parent = device;
--	priv->rfkill_mngr.input_dev->evbit[0] = BIT(EV_KEY);
--	set_bit(KEY_WLAN, priv->rfkill_mngr.input_dev->keybit);
--
- 	ret = rfkill_register(priv->rfkill_mngr.rfkill);
- 	if (ret) {
- 		IWL_ERROR("Unable to register rfkill: %d\n", ret);
--		goto free_input_dev;
--	}
--
--	ret = input_register_device(priv->rfkill_mngr.input_dev);
--	if (ret) {
--		IWL_ERROR("Unable to register rfkill input device: %d\n", ret);
--		goto unregister_rfkill;
-+		goto freed_rfkill;
- 	}
- 
- 	IWL_DEBUG_RF_KILL("RFKILL initialization complete.\n");
- 	return ret;
- 
--unregister_rfkill:
--	rfkill_unregister(priv->rfkill_mngr.rfkill);
--	priv->rfkill_mngr.rfkill = NULL;
--
--free_input_dev:
--	input_free_device(priv->rfkill_mngr.input_dev);
--	priv->rfkill_mngr.input_dev = NULL;
--
- freed_rfkill:
- 	if (priv->rfkill_mngr.rfkill != NULL)
- 		rfkill_free(priv->rfkill_mngr.rfkill);
-@@ -8381,14 +8352,9 @@ error:
- 
- void iwl3945_rfkill_unregister(struct iwl3945_priv *priv)
- {
--
--	if (priv->rfkill_mngr.input_dev)
--		input_unregister_device(priv->rfkill_mngr.input_dev);
--
- 	if (priv->rfkill_mngr.rfkill)
- 		rfkill_unregister(priv->rfkill_mngr.rfkill);
- 
--	priv->rfkill_mngr.input_dev = NULL;
- 	priv->rfkill_mngr.rfkill = NULL;
- }
- 
--- 
-1.5.5.1
+I think that's the false positive due to the tx mq changes that people
+were talking about all the time. Please ignore.
+
+> Is this a known issue or perhaps due to may skb->cb patch for ath9k?
+
+Yeah it's a known issue, nothing with your patch, except for the PAE
+placement your patch is fine. And I don't understand that part of ath9k,
+it shouldn't need to look at that but rather ask the RC algorithm to do
+that job.
+
+johannes
+
+--=-TH2C9U+BQzmcsBSySeKI
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIkHIJAAoJEKVg1VMiehFYuUoP/2Bo89FSlAtPdc+0kc2Ahd23
+hzzIxsy3L8oI0qAmDBaQhmlmWv6t0aPLzKGFmq5cguky7McO3w5cWECI7+PJNwBI
+j1THEpDPFiq7z9ETYf5Xr6aC9nFt/ELBsbl6SiZaODmxL9F2i4oxdIPPyMECyTeL
+CwkPRF9GVs3fVc0+L6D90LSpUoioZPGzXkZ89XcQFOAgKSTcA0aFD227KxoJsyPX
++ucs6bF6Lp87+GFQa8AaQOsOUkep9HwSnpfgWiFbAWj2xVBYG4966peOtd0r3tjM
+2I6yo2zwneEvYNYt/v7Eq2kow9uyajzMD6L7C8vc0yOTsf+3z1NtJKtcVq2413yS
+H57bR8w4mpJDieOjJkzmX7lRZD720137JvHf7tlzHXb7TpvtCVf5VwSOAhoR8A0b
+vENDiGSzjJg8xwOADZeFaIqn1Zx1q0ZkG2VABXjjmu1fdtBffYOXHcv702KD4t2W
+HRRzKETtdYgvbzPjUQthnRH7LWblWinKA2M4kitkC9UJJIHbXNv+6PsaUYKOE0XW
+CQ8tZWg5gtliZfGJcalacTXKYfTNo3fIhBwjreabYRE3Zw8B1NzSBHpQFIh2fJYD
+xy7Iy23pH5IGKf3aO44NlMsSJMEuXOQ69/o7jwn8YI+a0Vv2DgFJu2c5GY6ZJM4p
+ST+PxUF21WF7iNVEq1EX
+=LKYe
+-----END PGP SIGNATURE-----
+
+--=-TH2C9U+BQzmcsBSySeKI--
 
