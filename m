@@ -1,46 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.244]:41049 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753398AbYGQNVr (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:60747 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752069AbYG3GMi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jul 2008 09:21:47 -0400
-Received: by an-out-0708.google.com with SMTP id d40so157090and.103
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2008 06:21:46 -0700 (PDT)
-Message-ID: <43e72e890807170621r25616966w1d542e4e235f9a3f@mail.gmail.com> (sfid-20080717_152151_329550_740C4C7B)
-Date: Thu, 17 Jul 2008 06:21:46 -0700
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-To: "Yingying Zhao" <yingying.zhao@linux.intel.com>
-Subject: Re: [PATCH]compat-2.6: fix compiling configurations for iwlwifi
-Cc: "Tomas Winkler" <tomasw@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890807170307g3310ffcbv51f89c93dfbc64a0@mail.gmail.com>
+	Wed, 30 Jul 2008 02:12:38 -0400
+Message-ID: <48900654.7030100@lwfinger.net> (sfid-20080730_081252_829123_A992B211)
+Date: Wed, 30 Jul 2008 01:12:36 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080717081554.GA1279@amber-desktop.bj.intel.com>
-	 <1ba2fa240807170129w251a95f3i8eab918d50a77f97@mail.gmail.com>
-	 <43e72e890807170248v7a873c15oc3aea315a59e9f19@mail.gmail.com>
-	 <20080717100449.GB1279@amber-desktop.bj.intel.com>
-	 <43e72e890807170307g3310ffcbv51f89c93dfbc64a0@mail.gmail.com>
+To: Hin-Tak Leung <hintak.leung@gmail.com>,
+	herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Pavel Roskin <proski@gnu.org>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: [RFC/RFT] rtl8187: Protect the config callback from mac80211 with
+ a mutex
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 17, 2008 at 3:07 AM, Luis R. Rodriguez
-<mcgrof@winlab.rutgers.edu> wrote:
-> On Thu, Jul 17, 2008 at 3:04 AM, Yingying Zhao
-> <yingying.zhao@linux.intel.com> wrote:
->
->>> Also, was this tested with 2.6.22?
->>>
->>>   Luis
->> No. I just tested on 2.6.24.
->> I'll wait for iwlwifi Kconfig is finalized by Tomas and retest this on
->> 2.6.22.
->
-> OK cool -- just a heads up then, I hadn't enabled LEDs or RFKILL
-> options for drivers as the framework needs backporting. Once
-> backported I expect it will compile well for older kernels.
+Herton,
 
-compat-wireless wasn't actually compiling for 2.6.22 anymore. I just
-fixed that. It loads mac80211. Either I did a mistake or we get an
-oops now when loading a driver on 2.6.22.
+Does this patch help your problem? I haven't done much testing, but things seem 
+to be better with it here.
 
-  Luis
+Larry
+
+==================
+
+Some users of the RTL8187B have experienced difficulties since commit
+8f87dd7e540d455f8e7f11478133b85edc969c67 that introduced the power
+management wext hooks. This difficulty has not made much sense until
+it was realized that it was possible for mac80211 to make a call to the
+config routine while that routine was already being executed. This patch
+protects the critical section with a mutex.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+Index: wireless-testing/drivers/net/wireless/rtl8187.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl8187.h
++++ wireless-testing/drivers/net/wireless/rtl8187.h
+@@ -94,6 +94,7 @@ struct rtl8187_priv {
+  	const struct rtl818x_rf_ops *rf;
+  	struct ieee80211_vif *vif;
+  	int mode;
++	struct mutex mutex;	/* used to lock config callback */
+
+  	/* rtl8187 specific */
+  	struct ieee80211_channel channels[14];
+Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
++++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
+@@ -864,6 +864,7 @@ static int rtl8187_config(struct ieee802
+  	struct rtl8187_priv *priv = dev->priv;
+  	u32 reg;
+
++	mutex_lock(&priv->mutex);
+  	reg = rtl818x_ioread32(priv, &priv->map->TX_CONF);
+  	/* Enable TX loopback on MAC level to avoid TX during channel
+  	 * changes, as this has be seen to causes problems and the
+@@ -896,6 +897,7 @@ static int rtl8187_config(struct ieee802
+  	rtl818x_iowrite16(priv, &priv->map->ATIMTR_INTERVAL, 100);
+  	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL, 100);
+  	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL_TIME, 100);
++	mutex_unlock(&priv->mutex);
+  	return 0;
+  }
+
+@@ -1187,6 +1189,7 @@ static int __devinit rtl8187_probe(struc
+  		printk(KERN_ERR "rtl8187: Cannot register device\n");
+  		goto err_free_dev;
+  	}
++	mutex_init(&priv->mutex);
+
+  	printk(KERN_INFO "%s: hwaddr %s, %s V%d + %s\n",
+  	       wiphy_name(dev->wiphy), print_mac(mac, dev->wiphy->perm_addr),
+
