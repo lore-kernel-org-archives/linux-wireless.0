@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mk-outboundfilter-4.mail.uk.tiscali.com ([212.74.114.32]:48777
-	"EHLO mk-outboundfilter-4.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755935AbYG2Lzh (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:32061 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753579AbYG3BGJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 07:55:37 -0400
-From: Alistair John Strachan <alistair@devzero.co.uk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: 2.6.27-rc1: zd1211rw association fails
-Date: Tue, 29 Jul 2008 12:55:33 +0100
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	dsd@gentoo.org, kune@deine-taler.de, linux-wireless@vger.kernel.org
-References: <alpine.LFD.1.10.0807281956030.3334@nehalem.linux-foundation.org> <200807291225.00679.alistair@devzero.co.uk> <1217330777.10489.21.camel@johannes.berg>
-In-Reply-To: <1217330777.10489.21.camel@johannes.berg>
+	Tue, 29 Jul 2008 21:06:09 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so197111wfd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jul 2008 18:06:08 -0700 (PDT)
+Message-ID: <3ace41890807291806h6e72ad2ub11d89d910831ae9@mail.gmail.com> (sfid-20080730_030614_260430_C373D826)
+Date: Wed, 30 Jul 2008 02:06:08 +0100
+From: "Hin-Tak Leung" <hintak.leung@gmail.com>
+To: "Kalle Valo" <kalle.valo@nokia.com>
+Subject: Re: mac80211 power management breakage?(was Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks rtl8187)
+Cc: "Herton Ronaldo Krzesinski" <herton@mandriva.com.br>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Pavel Roskin" <proski@gnu.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	"Samuel Ortiz" <sameo@openedhand.com>
+In-Reply-To: <874p69m3gq.fsf@nokia.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200807291255.33648.alistair@devzero.co.uk> (sfid-20080729_135541_892127_B602F22C)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <3ace41890807260626x925b6b8h90f85dd91b24b4d5@mail.gmail.com>
+	 <874p69m3gq.fsf@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 29 July 2008 12:26:17 Johannes Berg wrote:
-> > If it doesn't strain you too much more, could you actually tell me where
-> > this is? Your last 5 posts to LKML don't seem to contain such a patch,
-> > and I'm not subscribed to linux-wireless.
+On Tue, Jul 29, 2008 at 10:42 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
+<snipped>
+> Do you mean this patch from Samuel which is in wireless-testing:
 >
-> Well, the latter has archives.
+> commit 8f87dd7e540d455f8e7f11478133b85edc969c67
+> Author: Samuel Ortiz <samuel@sortiz.org>
+> Date:   Fri Jul 4 10:49:31 2008 +0200
+>
+>    mac80211: power management wext hooks
 
-Thanks for the patch, it fixes the issue for me with my zd1211rw. I hope 
-the "100 million" rabid users that reported this can piss off happily with 
-their working wireless. ;-)
+Yes.
 
-(BTW thanks Hugh/Holger for the patch posting/link.)
+<snipped>
+> You are confusing AP and client mode PSM here,
+> MAC80211_VERBOSE_PS_DEBUG is used for debugging PSM support in AP
+> mode. Client mode PSM support is usually implemented in the driver or
+> the firmware. We are planning to add some PSM support to mac80211, but
+> it's still in the works.
 
--- 
-Cheers,
-Alistair.
+Yes, I realised I was talking rubbish :-). But as you said, enabling
+PS should have no effect whatsoever.
+The other possibility is IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING, but that
+also seems to be AP mode -specific.
