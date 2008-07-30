@@ -1,99 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43962 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750763AbYGNSFt convert rfc822-to-8bit (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.236]:20777 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760079AbYG3WEH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 14:05:49 -0400
+	Wed, 30 Jul 2008 18:04:07 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so232356rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 15:04:07 -0700 (PDT)
+Message-ID: <1ba2fa240807301504j7fb86406hcbf85dceb645ad6@mail.gmail.com> (sfid-20080731_000419_022635_B593A9DA)
+Date: Thu, 31 Jul 2008 01:04:06 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: akpm@linux-foundation.org
+Subject: Re: [patch 4/4] wireless: replace __FUNCTION__ with __func__
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	harvey.harrison@gmail.com
+In-Reply-To: <200807301946.m6UJkMGK012997@imap1.linux-foundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [ipw3945-devel] iwl3945 random firmware crashes
-Date: Mon, 14 Jul 2008 11:05:40 -0700
-Message-ID: <4220499A1B034C4FA93B547BA01E1FF0017469B4@orsmsx413.amr.corp.intel.com> (sfid-20080714_200553_697427_3E61D4AC)
-In-reply-to: <f6ca9fed0807140437i2563cfa1ge68a06ef1040d0f8@mail.gmail.com>
-References: <f6ca9fed0807140437i2563cfa1ge68a06ef1040d0f8@mail.gmail.com>
-From: "Cahill, Ben M" <ben.m.cahill@intel.com>
-To: "drago01" <drago01@gmail.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel" <ipw3945-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200807301946.m6UJkMGK012997@imap1.linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Try loading driver using module param:
+On Wed, Jul 30, 2008 at 10:46 PM,  <akpm@linux-foundation.org> wrote:
+> From: Harvey Harrison <harvey.harrison@gmail.com>
+>
+> __FUNCTION__ is gcc-specific, use __func__
+>
+> Signed-off-by: Harvey Harrison <harvey.harrison@gmail.com>
+> Cc: "John W. Linville" <linville@tuxdriver.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 
-debug=0x43fff
-
-This will provide more information in the log, including an event log
-(where you see "Microcode SW Error detected" in your log, you would have
-captured Event Log if you had the debug=0x43fff setting).
-
--- Ben --
-
-> -----Original Message-----
-> From: ipw3945-devel-bounces@lists.sourceforge.net 
-> [mailto:ipw3945-devel-bounces@lists.sourceforge.net] On 
-> Behalf Of drago01
-> Sent: Monday, July 14, 2008 7:38 AM
-> To: linux-wireless; ipw3945-devel
-> Subject: [ipw3945-devel] iwl3945 random firmware crashes
-> 
-> Hi,
-> I noticed some weird firmware restarts with iwl3945 lately.
-> -----------------
-> iwl3945: Microcode SW error detected.  Restarting 0x82000008.
-> iwl3945: Error Reply type 0x00000005 cmd REPLY_SCAN_CMD (0x80) seq
-> 0x4419 ser 0x0000004B
-> iwl3945: Can't stop Rx DMA.
-> Registered led device: iwl-phy0:radio
-> Registered led device: iwl-phy0:assoc
-> Registered led device: iwl-phy0:RX
-> Registered led device: iwl-phy0:TX
-> iwl3945: Microcode SW error detected.  Restarting 0x82000008.
-> iwl3945: Error Reply type 0x00000005 cmd REPLY_LEDS_CMD (0x48) seq
-> 0x0408 ser 0x0000004B
-> iwl3945: Can't stop Rx DMA.
-> Registered led device: iwl-phy0:radio
-> Registered led device: iwl-phy0:assoc
-> Registered led device: iwl-phy0:RX
-> Registered led device: iwl-phy0:TX
-> iwl3945: Microcode SW error detected.  Restarting 0x82000008.
-> iwl3945: Error Reply type 0x00000005 cmd REPLY_LEDS_CMD (0x48) seq
-> 0x0408 ser 0x0000004B
-> iwl3945: Can't stop Rx DMA.
-> Registered led device: iwl-phy0:radio
-> Registered led device: iwl-phy0:assoc
-> Registered led device: iwl-phy0:RX
-> Registered led device: iwl-phy0:TX
-> iwl3945: Microcode SW error detected.  Restarting 0x82000008.
-> iwl3945: Error Reply type 0x00000005 cmd REPLY_LEDS_CMD (0x48) seq
-> 0x0407 ser 0x0000004B
-> iwl3945: Can't stop Rx DMA.
-> ---------------
-> There seem to be random (can not reproduce them always) but 
-> the only way to get the wireless working is to
-> 1) unload the module
-> 2) go to another room
-> 3) load module
-> 4) connect to AP
-> 5) go back to the room and it works
-> 
-> If I stay in the same room after reloading the module the 
-> firmware crashes happen again.
-> 
-> I have no output with the event log because they happen 
-> randomly and I cannot reproduce them.
-> 
-> Any ideas?
-> 
-> --------------------------------------------------------------
-> -----------
-> Sponsored by: SourceForge.net Community Choice Awards: VOTE NOW!
-> Studies have shown that voting for your favorite open source 
-> project, along with a healthy diet, reduces your potential 
-> for chronic lameness and boredom. Vote Now at 
-> http://www.sourceforge.net/community/cca08
-> _______________________________________________
-> Ipw3945-devel mailing list
-> Ipw3945-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
-> 
+This patch conflicts (doing the same)  with the patch I've posted
+chronologically before
+http://marc.info/?l=linux-wireless&m=121659723529274&w=2
+Tomas
