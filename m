@@ -1,66 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:46596 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751149AbYGCQTq (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53830 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754369AbYG3Tx1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 12:19:46 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so372161ywe.1
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Jul 2008 09:19:45 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH 1/2] rfkill: some minor kernel-doc changes for rfkill_toggle_radio
-Date: Thu, 3 Jul 2008 18:24:51 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <1215101697-30576-1-git-send-email-hmh@hmh.eng.br> <1215101697-30576-2-git-send-email-hmh@hmh.eng.br>
-In-Reply-To: <1215101697-30576-2-git-send-email-hmh@hmh.eng.br>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200807031824.51204.IvDoorn@gmail.com> (sfid-20080703_181949_689476_8C9CEA6D)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Wed, 30 Jul 2008 15:53:27 -0400
+Message-Id: <200807301946.m6UJkMcF012994@imap1.linux-foundation.org> (sfid-20080730_215345_371337_AAA29B28)
+Subject: [patch 3/4] net/ieee80211: adjust error handling
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	julia@diku.dk, Larry.Finger@lwfinger.net, jbenc@suse.cz,
+	jketreno@linux.intel.com, yi.zhu@intel.com
+From: akpm@linux-foundation.org
+Date: Wed, 30 Jul 2008 12:46:22 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 03 July 2008, Henrique de Moraes Holschuh wrote:
-> Improve rfkill_toggle_radio's kernel-doc header a bit.
-> 
-> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+From: Julia Lawall <julia@diku.dk>
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Converts a test in error handling code to a sequence of labels.
 
-> ---
->  net/rfkill/rfkill.c |   12 +++++++-----
->  1 files changed, 7 insertions(+), 5 deletions(-)
-> 
-> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-> index ce0e231..aa7039d 100644
-> --- a/net/rfkill/rfkill.c
-> +++ b/net/rfkill/rfkill.c
-> @@ -130,17 +130,19 @@ static void update_rfkill_state(struct rfkill *rfkill)
->  
->  /**
->   * rfkill_toggle_radio - wrapper for toggle_radio hook
-> - * calls toggle_radio taking into account a lot of "small"
-> - * details.
-> + *
->   * @rfkill: the rfkill struct to use
->   * @force: calls toggle_radio even if cache says it is not needed,
->   *	and also makes sure notifications of the state will be
->   *	sent even if it didn't change
->   * @state: the new state to call toggle_radio() with
->   *
-> - * This wrappen protects and enforces the API for toggle_radio
-> - * calls.  Note that @force cannot override a (possibly cached)
-> - * state of RFKILL_STATE_HARD_BLOCKED.  Any device making use of
-> + * Calls rfkill->toggle_radio, enforcing the API for toggle_radio
-> + * calls and handling all the red tape such as issuing notifications
-> + * if the call is successful.
-> + *
-> + * Note that @force cannot override a (possibly cached) state of
-> + * RFKILL_STATE_HARD_BLOCKED.  Any device making use of
->   * RFKILL_STATE_HARD_BLOCKED implements either get_state() or
->   * rfkill_force_state(), so the cache either is bypassed or valid.
->   *
+The semantic match that found the problem is:
+(http://www.emn.fr/x-info/coccinelle/)
 
+// <smpl>
+@@
+expression E,E1,E2;
+@@
 
+E = alloc_etherdev(...)
+... when != E = E1
+if (...) { ... free_netdev(E); ... return ...; }
+... when != E = E2
+(
+  if (...)
+   {
+   ... when != free_netdev(E);
+   return dev; }
+|
+* if (...)
+   {
+   ... when != free_netdev(E);
+   return ...; }
+|
+register_netdev(E)
+)
+
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+Cc: James Ketrenos <jketreno@linux.intel.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Jiri Benc <jbenc@suse.cz>
+Cc: Zhu Yi <yi.zhu@intel.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ net/ieee80211/ieee80211_module.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff -puN net/ieee80211/ieee80211_module.c~net-ieee80211-adjust-error-handling net/ieee80211/ieee80211_module.c
+--- a/net/ieee80211/ieee80211_module.c~net-ieee80211-adjust-error-handling
++++ a/net/ieee80211/ieee80211_module.c
+@@ -157,7 +157,7 @@ struct net_device *alloc_ieee80211(int s
+ 	err = ieee80211_networks_allocate(ieee);
+ 	if (err) {
+ 		IEEE80211_ERROR("Unable to allocate beacon storage: %d\n", err);
+-		goto failed;
++		goto failed_free_netdev;
+ 	}
+ 	ieee80211_networks_initialize(ieee);
+ 
+@@ -193,9 +193,9 @@ struct net_device *alloc_ieee80211(int s
+ 
+ 	return dev;
+ 
+-      failed:
+-	if (dev)
+-		free_netdev(dev);
++failed_free_netdev:
++	free_netdev(dev);
++failed:
+ 	return NULL;
+ }
+ 
+_
