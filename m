@@ -1,114 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:38767 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752106AbYGNMbd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 08:31:33 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 1/2] mac80211: pass dtim_period to low level driver
-Date: Mon, 14 Jul 2008 15:31:23 +0300
-Message-Id: <1216038684-29725-1-git-send-email-tomas.winkler@intel.com> (sfid-20080714_143139_120325_4AAF40A3)
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:16990 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751260AbYG3PUN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jul 2008 11:20:13 -0400
+From: Bruno Randolf <br1@einfach.org>
+Subject: [PATCH 1/3] mac80211: add rx status flag for short preamble
+To: tomas.winkler@intel.com
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Date: Wed, 30 Jul 2008 17:19:55 +0200
+Message-ID: <20080730151955.24487.76871.stgit@void> (sfid-20080730_172016_998736_9B4D4AF5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+and use it for the radiotap header
 
-This patch adds the dtim_period in ieee80211_bss_conf, this allows the low
-level driver to know the dtim_period, and to plan power save accordingly.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- include/linux/ieee80211.h  |   13 +++++++++++++
- include/net/mac80211.h     |    1 +
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |    7 +++++++
- 4 files changed, 22 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index a1630ba..7f4df7c 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -506,6 +506,19 @@ struct ieee80211_channel_sw_ie {
- 	u8 count;
- } __attribute__ ((packed));
- 
-+/**
-+ * struct ieee80211_tim
-+ *
-+ * This structure refers to "Traffic Indication Map information element"
-+ */
-+struct ieee80211_tim_ie {
-+	u8 dtim_count;
-+	u8 dtim_period;
-+	u8 bitmap_ctrl;
-+	/* variable size: 1 - 251 bytes */
-+	u8 virtual_map[0];
-+} __attribute__ ((packed));
-+
- struct ieee80211_mgmt {
- 	__le16 frame_control;
- 	__le16 duration;
+ include/net/mac80211.h |    2 ++
+ net/mac80211/rx.c      |    2 ++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
+
 diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 656442c..f249820 100644
+index 24a69f6..2d01a75 100644
 --- a/include/net/mac80211.h
 +++ b/include/net/mac80211.h
-@@ -191,6 +191,7 @@ struct ieee80211_bss_conf {
- 	/* erp related data */
- 	bool use_cts_prot;
- 	bool use_short_preamble;
-+	u8 dtim_period;
- 	u16 beacon_int;
- 	u16 assoc_capability;
- 	u64 timestamp;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index c916c2f..c36e1e3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -81,6 +81,7 @@ struct ieee80211_sta_bss {
+@@ -367,6 +367,7 @@ static inline struct ieee80211_tx_info *IEEE80211_SKB_CB(struct sk_buff *skb)
+  * @RX_FLAG_TSFT: The timestamp passed in the RX status (@mactime field)
+  *	is valid. This is useful in monitor mode and necessary for beacon frames
+  *	to enable IBSS merging.
++ * @RX_FLAG_SHORTPRE: Short preamble was used for this frame
+  */
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR	= 1<<0,
+@@ -377,6 +378,7 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_FAILED_FCS_CRC	= 1<<5,
+ 	RX_FLAG_FAILED_PLCP_CRC = 1<<6,
+ 	RX_FLAG_TSFT		= 1<<7,
++	RX_FLAG_SHORTPRE	= 1<<8
+ };
  
- 	u8 bssid[ETH_ALEN];
- 	u8 ssid[IEEE80211_MAX_SSID_LEN];
-+	u8 dtim_period;
- 	u16 capability; /* host byte order */
- 	enum ieee80211_band band;
- 	int freq;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 00b7186..22eaf86 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -551,6 +551,7 @@ static void ieee80211_set_associated(struct net_device *dev,
- 			/* set timing information */
- 			sdata->bss_conf.beacon_int = bss->beacon_int;
- 			sdata->bss_conf.timestamp = bss->timestamp;
-+			sdata->bss_conf.dtim_period = bss->dtim_period;
+ /**
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 6d9ae67..254462f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -143,6 +143,8 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 	/* IEEE80211_RADIOTAP_FLAGS */
+ 	if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS)
+ 		*pos |= IEEE80211_RADIOTAP_F_FCS;
++	if (status->flag & RX_FLAG_SHORTPRE)
++		*pos |= IEEE80211_RADIOTAP_F_SHORTPRE;
+ 	pos++;
  
- 			changed |= ieee80211_handle_bss_capability(sdata, bss);
- 
-@@ -2741,6 +2742,12 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
- 	bss->beacon_int = le16_to_cpu(mgmt->u.beacon.beacon_int);
- 	bss->capability = le16_to_cpu(mgmt->u.beacon.capab_info);
- 
-+	if (elems->tim) {
-+		struct ieee80211_tim_ie *tim_ie =
-+			(struct ieee80211_tim_ie *)elems->tim;
-+		bss->dtim_period = tim_ie->dtim_period;
-+	}
-+
- 	bss->supp_rates_len = 0;
- 	if (elems->supp_rates) {
- 		clen = IEEE80211_MAX_SUPP_RATES - bss->supp_rates_len;
--- 
-1.5.4.1
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+ 	/* IEEE80211_RADIOTAP_RATE */
 
