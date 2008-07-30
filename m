@@ -1,72 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:31561 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753224AbYGINvj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jul 2008 09:51:39 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so823683yxm.1
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2008 06:51:36 -0700 (PDT)
-Message-ID: <69e28c910807090651xc253bcawf3900c53d1a3e046@mail.gmail.com> (sfid-20080709_155143_510928_33AEC887)
-Date: Wed, 9 Jul 2008 15:51:35 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Stefan Monnier" <monnier@iro.umontreal.ca>
-Subject: Re: Slow b43 with 2.6.25.9 on an asus wl-700ge home-router
-Cc: linux-wireless@vger.kernel.org,
-	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>,
-	"Michael Buesch" <mb@bu3sch.de>
-In-Reply-To: <jwvlk0bsjk7.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <jwvlk0bsjk7.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
+Received: from c60.cesmail.net ([216.154.195.49]:49532 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751996AbYG3Tgp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jul 2008 15:36:45 -0400
+Subject: Re: Issue: iwlist scanning sees the network; dhclient can't connect
+From: Pavel Roskin <proski@gnu.org>
+To: "Thiago F. Tavares" <ttavares@halogica.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1127857B97C63B4285A9B02BEF67AEE601627648@afrodite.halogica.com.br>
+References: <1127857B97C63B4285A9B02BEF67AEE601627648@afrodite.halogica.com.br>
+Content-Type: text/plain
+Date: Wed, 30 Jul 2008 15:36:42 -0400
+Message-Id: <1217446602.25919.5.camel@dv> (sfid-20080730_213649_064470_02C4DCDD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 9, 2008 at 7:50 AM, Stefan Monnier <monnier@iro.umontreal.ca> wrote:
-> I finally started to use the b43 driver on my home-router and am happy
-> to have it working at all (with WPA), but I notice that the speed is
-> pretty terrible: I cannot seem to get more than 100KB/s out of it (I
-> use it as a personal web proxy, so it ends up slowing down my
-> web-surfing :-( ).
->
-> Originally "iwconfig" told me that the bit rate was 2Mb/s (and even
-> that should allow me to get a bit more than 100KB/s).
-> After "iwconfig wlan0 rate 54M", the result is the same (except that
-> "iwconfig" tells me the bit rate is 54Mb/s).
->
-> More specifically, iwconfig tells me things like:
->
-> wlan0     IEEE 802.11  ESSID:"test"
->          Mode:Managed  Frequency:2.457 GHz  Access Point: 00:10:30:C0:50:50
->          Bit Rate=54 Mb/s   Tx-Power=27 dBm
->          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
->          Link Quality=95/100  Signal level:-54 dBm  Noise level=-63 dBm
->          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
->
-> which seems to indicate that the reception is indeed good.
-> Any idea what I might want to check?
->
-> I did notice that my dmesg says things like
-> "received packet with  own address as source address".  This seems
-> related to my use of bridging, but:
-> 1 - I have no bridging loop (actually I unplugged all ethernet cables,
->    so the only active network interface in the bridge is wlan0).
-> 2 - taking wlan0 out of the bridge eliminates those messages, but
->    doesn't improve the bandwidth.
->
-> Any idea what might be going on?
->
->
->        Stefan
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+On Wed, 2008-07-30 at 16:13 -0300, Thiago F. Tavares wrote:
+> Hello,
+>  
+> I have a problem with the broadcom wireless card (BCM4306 using b43).
+> I'm can list the wireless ESSIDs with "iwlist scanning" command, but I'm
+> can't connect in the LAN. My dhclient or dhcpcd can't receive an IP.
+> When I set a static IP, I can't ping the gateway.
 
-Can you see "PHY transmission error" messages in dmesg? If you get
-those, then that's a known bug.
+dhclient is not suitable for wireless networking because it brings the
+interface down briefly and breaks the connection.  So I suggest that you
+use static addresses or a DHCP client that doesn't bring the interface
+down.
+
+Please check iwconfig output.  In particular, please see "access point"
+and "link quality".  If the later is 0, there is no association.  If
+there is no association, no IP packets can go through.  Try
+reestablishing the association by setting ESSID with iwconfig while the
+interface is up.
+
+Also please see the kernel log for possible signs of trouble.  It's
+shown by the "dmesg" command.
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Regards,
+Pavel Roskin
