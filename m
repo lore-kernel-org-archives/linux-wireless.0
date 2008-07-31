@@ -1,313 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:62883 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750815AbYGUPyv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jul 2008 11:54:51 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 3/3 V2] iwlwifi: rename 4965 to AGN
-Date: Mon, 21 Jul 2008 18:54:42 +0300
-Message-Id: <1216655682-1325-1-git-send-email-tomas.winkler@intel.com> (sfid-20080721_175455_427083_E46541EE)
-Content-Type: text/plain; charset="us-ascii"
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:53397 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752009AbYGaNyD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jul 2008 09:54:03 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Dmitry Torokhov <dtor@mail.ru>
+Subject: [PATCH] rfkill: query EV_SW states when rfkill-input (re)?connects to a input device
+Date: Thu, 31 Jul 2008 10:53:57 -0300
+Message-Id: <1217512437-20890-1-git-send-email-hmh@hmh.eng.br> (sfid-20080731_155408_235915_10D531C7)
+In-Reply-To: <20080730013024.GB22649@anvil.corenet.prv>
+References: <20080730013024.GB22649@anvil.corenet.prv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames driver name from 4965 to AGN
-The driver supports both 4965AGN and 5000AGN family
+Every time a new input device that is capable of one of the rfkill EV_SW events
+(currently only SW_RFKILL_ALL) is connected to rfkill-input, we must check the
+states of the input EV_SW switches and take action.  Otherwise, we will ignore
+the initial switch state.
 
-The driver's original module name iwl4965.ko remains as an alias
+We also need to re-check the states of the EV_SW switches after a device that
+was under an exclusive grab is released back to us, since we got no input
+events from that device while it was grabbed.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Dmitry Torokhov <dtor@mail.ru>
 ---
- drivers/net/wireless/iwlwifi/Kconfig   |   98 ++++++++++++++++---------------
- drivers/net/wireless/iwlwifi/Makefile  |   11 ++--
- drivers/net/wireless/iwlwifi/iwl-agn.c |   15 +++--
- drivers/net/wireless/iwlwifi/iwl-dev.h |    7 +--
- 4 files changed, 68 insertions(+), 63 deletions(-)
+ net/rfkill/rfkill-input.c |   54 ++++++++++++++++++++++++++++++++------------
+ 1 files changed, 39 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
-index 82b66a3..b0ac0ce 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -14,18 +14,49 @@ config IWLWIFI_LEDS
- 	default n
+diff --git a/net/rfkill/rfkill-input.c b/net/rfkill/rfkill-input.c
+index 8aa8227..e5b6955 100644
+--- a/net/rfkill/rfkill-input.c
++++ b/net/rfkill/rfkill-input.c
+@@ -109,6 +109,25 @@ static DEFINE_RFKILL_TASK(rfkill_uwb, RFKILL_TYPE_UWB);
+ static DEFINE_RFKILL_TASK(rfkill_wimax, RFKILL_TYPE_WIMAX);
+ static DEFINE_RFKILL_TASK(rfkill_wwan, RFKILL_TYPE_WWAN);
  
- config IWLWIFI_RFKILL
--	boolean "IWLWIFI RF kill support"
-+	boolean "Iwlwifi RF kill support"
- 	depends on IWLCORE
- 
--config IWL4965
--	tristate "Intel Wireless WiFi 4965AGN"
-+config IWLWIFI_DEBUG
-+	bool "Enable full debugging output in iwlagn driver"
-+	depends on IWLCORE
-+	---help---
-+	  This option will enable debug tracing output for the iwlwifi drivers
++static void rfkill_schedule_evsw_rfkillall(int state)
++{
++	/* EVERY radio type. state != 0 means radios ON */
++	/* handle EPO (emergency power off) through shortcut */
++	if (state) {
++		rfkill_schedule_set(&rfkill_wwan,
++				    RFKILL_STATE_UNBLOCKED);
++		rfkill_schedule_set(&rfkill_wimax,
++				    RFKILL_STATE_UNBLOCKED);
++		rfkill_schedule_set(&rfkill_uwb,
++				    RFKILL_STATE_UNBLOCKED);
++		rfkill_schedule_set(&rfkill_bt,
++				    RFKILL_STATE_UNBLOCKED);
++		rfkill_schedule_set(&rfkill_wlan,
++				    RFKILL_STATE_UNBLOCKED);
++	} else
++		rfkill_schedule_epo();
++}
 +
-+	  This will result in the kernel module being ~100k larger.  You can
-+	  control which debug output is sent to the kernel log by setting the
-+	  value in
-+
-+		/sys/class/net/wlan0/device/debug_level
-+
-+	  This entry will only exist if this option is enabled.
-+
-+	  To set a value, simply echo an 8-byte hex value to the same file:
-+
-+		  % echo 0x43fff > /sys/class/net/wlan0/device/debug_level
-+
-+	  You can find the list of debug mask values in:
-+		  drivers/net/wireless/iwlwifi/iwl-debug.h
-+
-+	  If this is your first time using this driver, you should say Y here
-+	  as the debug information can assist others in helping you resolve
-+	  any problems you may encounter.
-+
-+config IWLWIFI_DEBUGFS
-+        bool "Iwlwifi debugfs support"
-+        depends on IWLCORE && IWLWIFI_DEBUG && MAC80211_DEBUGFS
-+        ---help---
-+	  Enable creation of debugfs files for the iwlwifi drivers.
-+
-+config IWLAGN
-+	tristate "Intel Wireless WiFi Next Gen AGN"
- 	depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
- 	select FW_LOADER
- 	select IWLCORE
- 	---help---
- 	  Select to build the driver supporting the:
+ static void rfkill_event(struct input_handle *handle, unsigned int type,
+ 			unsigned int code, int data)
+ {
+@@ -132,21 +151,7 @@ static void rfkill_event(struct input_handle *handle, unsigned int type,
+ 	} else if (type == EV_SW) {
+ 		switch (code) {
+ 		case SW_RFKILL_ALL:
+-			/* EVERY radio type. data != 0 means radios ON */
+-			/* handle EPO (emergency power off) through shortcut */
+-			if (data) {
+-				rfkill_schedule_set(&rfkill_wwan,
+-						    RFKILL_STATE_UNBLOCKED);
+-				rfkill_schedule_set(&rfkill_wimax,
+-						    RFKILL_STATE_UNBLOCKED);
+-				rfkill_schedule_set(&rfkill_uwb,
+-						    RFKILL_STATE_UNBLOCKED);
+-				rfkill_schedule_set(&rfkill_bt,
+-						    RFKILL_STATE_UNBLOCKED);
+-				rfkill_schedule_set(&rfkill_wlan,
+-						    RFKILL_STATE_UNBLOCKED);
+-			} else
+-				rfkill_schedule_epo();
++			rfkill_schedule_evsw_rfkillall(data);
+ 			break;
+ 		default:
+ 			break;
+@@ -168,6 +173,7 @@ static int rfkill_connect(struct input_handler *handler, struct input_dev *dev,
+ 	handle->handler = handler;
+ 	handle->name = "rfkill";
  
--	  Intel Wireless WiFi Link 4965AGN
-+	  Intel Wireless WiFi Link Next-Gen AGN
- 
- 	  This driver uses the kernel's mac80211 subsystem.
- 
-@@ -42,60 +73,33 @@ config IWL4965
- 	  If you want to compile the driver as a module ( = code which can be
- 	  inserted in and removed from the running kernel whenever you want),
- 	  say M here and read <file:Documentation/kbuild/modules.txt>.  The
--	  module will be called iwl4965.ko.
--
--config IWL4965_LEDS
--	bool "Enable LEDS features in iwl4965 driver"
--	depends on IWL4965
--	select IWLWIFI_LEDS
--	---help---
--	  This option enables LEDS for the iwlwifi drivers
-+	  module will be called iwlagn.ko.
- 
--
--config IWL4965_SPECTRUM_MEASUREMENT
--	bool "Enable Spectrum Measurement in iwl4965 driver"
--	depends on IWL4965
-+config IWLAGN_SPECTRUM_MEASUREMENT
-+	bool "Enable Spectrum Measurement in iwlagn driver"
-+	depends on IWLAGN
- 	---help---
--	  This option will enable spectrum measurement for the iwl4965 driver.
-+	  This option will enable spectrum measurement for the iwlagn driver.
- 
--config IWLWIFI_DEBUG
--	bool "Enable full debugging output in iwl4965 driver"
--	depends on IWL4965
-+config IWLAGN_LEDS
-+	bool "Enable LEDS features in iwlagn driver"
-+	depends on IWLAGN
-+	select IWLWIFI_LEDS
- 	---help---
--	  This option will enable debug tracing output for the iwl4965
--	  driver.
--
--	  This will result in the kernel module being ~100k larger.  You can
--	  control which debug output is sent to the kernel log by setting the
--	  value in
--
--		/sys/class/net/wlan0/device/debug_level
--
--	  This entry will only exist if this option is enabled.
--
--	  To set a value, simply echo an 8-byte hex value to the same file:
--
--		  % echo 0x43fff > /sys/class/net/wlan0/device/debug_level
-+	  This option enables LEDS for the iwlagn drivers
- 
--	  You can find the list of debug mask values in:
--		  drivers/net/wireless/iwlwifi/iwl-4965-debug.h
- 
--	  If this is your first time using this driver, you should say Y here
--	  as the debug information can assist others in helping you resolve
--	  any problems you may encounter.
-+config IWL4965
-+	bool "Intel Wireless WiFi 4965AGN"
-+	depends on IWLAGN
-+	---help---
-+	  This option enables support for Intel Wireless WiFi Link 4965AGN
- 
- config IWL5000
- 	bool "Intel Wireless WiFi 5000AGN"
--	depends on IWL4965
-+	depends on IWLAGN
- 	---help---
- 	  This option enables support for Intel Wireless WiFi Link 5000AGN Family
--	  Dependency on 4965 is temporary
--
--config IWLWIFI_DEBUGFS
--        bool "Iwlwifi debugfs support"
--        depends on IWLCORE && IWLWIFI_DEBUG && MAC80211_DEBUGFS
--        ---help---
--	  Enable creation of debugfs files for the iwlwifi drivers.
- 
- config IWL3945
- 	tristate "Intel PRO/Wireless 3945ABG/BG Network Connection"
-diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
-index 6bf3998..47aa28f 100644
---- a/drivers/net/wireless/iwlwifi/Makefile
-+++ b/drivers/net/wireless/iwlwifi/Makefile
-@@ -6,13 +6,14 @@ iwlcore-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-debugfs.o
- iwlcore-$(CONFIG_IWLWIFI_LEDS) += iwl-led.o
- iwlcore-$(CONFIG_IWLWIFI_RFKILL) += iwl-rfkill.o
- 
-+obj-$(CONFIG_IWLAGN)	+= iwlagn.o
-+iwlagn-objs		:= iwl-agn.o iwl-agn-rs.o
-+
-+iwlagn-$(CONFIG_IWL4965) += iwl-4965.o
-+iwlagn-$(CONFIG_IWL5000) += iwl-5000.o
-+
- obj-$(CONFIG_IWL3945)	+= iwl3945.o
- iwl3945-objs		:= iwl3945-base.o iwl-3945.o iwl-3945-rs.o
- iwl3945-$(CONFIG_IWL3945_LEDS) += iwl-3945-led.o
- 
--obj-$(CONFIG_IWL4965)	+= iwl4965.o
--iwl4965-objs		:= iwl-agn.o iwl-4965.o iwl-agn-rs.o
--
--iwl4965-$(CONFIG_IWL5000) += iwl-5000.o
--
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 3639607..884cde4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -73,7 +73,7 @@
- #define VD
- #endif
- 
--#ifdef CONFIG_IWL4965_SPECTRUM_MEASUREMENT
-+#ifdef CONFIG_IWLAGN_SPECTRUM_MEASUREMENT
- #define VS "s"
- #else
- #define VS
-@@ -86,6 +86,7 @@ MODULE_DESCRIPTION(DRV_DESCRIPTION);
- MODULE_VERSION(DRV_VERSION);
- MODULE_AUTHOR(DRV_COPYRIGHT);
- MODULE_LICENSE("GPL");
-+MODULE_ALIAS("iwl4965");
- 
- /*************** STATION TABLE MANAGEMENT ****
-  * mac80211 should be examined to determine if sta_info is duplicating
-@@ -884,7 +885,7 @@ static void iwl4965_set_rate(struct iwl_priv *priv)
- 		   (IWL_OFDM_BASIC_RATES_MASK >> IWL_FIRST_OFDM_RATE) & 0xFF;
++	/* causes rfkill_start() to be called */
+ 	error = input_register_handle(handle);
+ 	if (error)
+ 		goto err_free_handle;
+@@ -185,6 +191,23 @@ static int rfkill_connect(struct input_handler *handler, struct input_dev *dev,
+ 	return error;
  }
  
--#ifdef CONFIG_IWL4965_SPECTRUM_MEASUREMENT
-+#ifdef CONFIG_IWLAGN_SPECTRUM_MEASUREMENT
- 
- #include "iwl-spectrum.h"
- 
-@@ -1088,7 +1089,7 @@ static void iwl4965_rx_csa(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
- static void iwl4965_rx_spectrum_measure_notif(struct iwl_priv *priv,
- 					  struct iwl_rx_mem_buffer *rxb)
++static void rfkill_start(struct input_handle *handle)
++{
++	/* Take event_lock to guard against configuration changes, we
++	 * should be able to deal with concurrency with rfkill_event()
++	 * just fine (which event_lock will also avoid). */
++	spin_lock_irq(&handle->dev->event_lock);
++
++	if (test_bit(EV_SW, handle->dev->evbit)) {
++		if (test_bit(SW_RFKILL_ALL, handle->dev->swbit))
++			rfkill_schedule_evsw_rfkillall(test_bit(SW_RFKILL_ALL,
++							handle->dev->sw));
++		/* add resync for further EV_SW events here */
++	}
++
++	spin_unlock_irq(&handle->dev->event_lock);
++}
++
+ static void rfkill_disconnect(struct input_handle *handle)
  {
--#ifdef CONFIG_IWL4965_SPECTRUM_MEASUREMENT
-+#ifdef CONFIG_IWLAGN_SPECTRUM_MEASUREMENT
- 	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
- 	struct iwl4965_spectrum_notification *report = &(pkt->u.spectrum_notif);
- 
-@@ -3773,7 +3774,7 @@ static ssize_t store_filter_flags(struct device *d,
- static DEVICE_ATTR(filter_flags, S_IWUSR | S_IRUGO, show_filter_flags,
- 		   store_filter_flags);
- 
--#ifdef CONFIG_IWL4965_SPECTRUM_MEASUREMENT
-+#ifdef CONFIG_IWLAGN_SPECTRUM_MEASUREMENT
- 
- static ssize_t show_measurement(struct device *d,
- 				struct device_attribute *attr, char *buf)
-@@ -3844,7 +3845,7 @@ static ssize_t store_measurement(struct device *d,
- 
- static DEVICE_ATTR(measurement, S_IRUSR | S_IWUSR,
- 		   show_measurement, store_measurement);
--#endif /* CONFIG_IWL4965_SPECTRUM_MEASUREMENT */
-+#endif /* CONFIG_IWLAGN_SPECTRUM_MEASUREMENT */
- 
- static ssize_t store_retry_rate(struct device *d,
- 				struct device_attribute *attr,
-@@ -4092,7 +4093,7 @@ static struct attribute *iwl4965_sysfs_entries[] = {
- 	&dev_attr_channels.attr,
- 	&dev_attr_flags.attr,
- 	&dev_attr_filter_flags.attr,
--#ifdef CONFIG_IWL4965_SPECTRUM_MEASUREMENT
-+#ifdef CONFIG_IWLAGN_SPECTRUM_MEASUREMENT
- 	&dev_attr_measurement.attr,
- #endif
- 	&dev_attr_power_level.attr,
-@@ -4445,8 +4446,10 @@ static int iwl4965_pci_resume(struct pci_dev *pdev)
- 
- /* Hardware specific file defines the PCI IDs table for that hardware module */
- static struct pci_device_id iwl_hw_card_ids[] = {
-+#ifdef CONFIG_IWL4965
- 	{IWL_PCI_DEVICE(0x4229, PCI_ANY_ID, iwl4965_agn_cfg)},
- 	{IWL_PCI_DEVICE(0x4230, PCI_ANY_ID, iwl4965_agn_cfg)},
-+#endif /* CONFIG_IWL4965 */
- #ifdef CONFIG_IWL5000
- 	{IWL_PCI_DEVICE(0x4232, 0x1205, iwl5100_bg_cfg)},
- 	{IWL_PCI_DEVICE(0x4232, 0x1305, iwl5100_bg_cfg)},
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 7ac56b1..848786a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -36,7 +36,7 @@
- #include <linux/kernel.h>
- #include <net/ieee80211_radiotap.h>
- 
--#define DRV_NAME        "iwl4965"
-+#define DRV_NAME        "iwlagn"
- #include "iwl-rfkill.h"
- #include "iwl-eeprom.h"
- #include "iwl-4965-hw.h"
-@@ -808,14 +808,11 @@ struct iwl_chain_noise_data {
- #define EEPROM_SEM_RETRY_LIMIT 1000	/* number of attempts (not time) */
- 
- 
--#ifdef CONFIG_IWL4965_SPECTRUM_MEASUREMENT
--
- enum {
- 	MEASUREMENT_READY = (1 << 0),
- 	MEASUREMENT_ACTIVE = (1 << 1),
+ 	input_close_device(handle);
+@@ -225,6 +248,7 @@ static struct input_handler rfkill_handler = {
+ 	.event =	rfkill_event,
+ 	.connect =	rfkill_connect,
+ 	.disconnect =	rfkill_disconnect,
++	.start =	rfkill_start,
+ 	.name =		"rfkill",
+ 	.id_table =	rfkill_ids,
  };
- 
--#endif
- 
- #define IWL_MAX_NUM_QUEUES	20 /* FIXME: do dynamic allocation */
- 
-@@ -840,7 +837,7 @@ struct iwl_priv {
- 
- 	struct ieee80211_supported_band bands[IEEE80211_NUM_BANDS];
- 
--#ifdef CONFIG_IWL4965_SPECTRUM_MEASUREMENT
-+#ifdef CONFIG_IWLAGN_SPECTRUM_MEASUREMENT
- 	/* spectrum measurement report caching */
- 	struct iwl4965_spectrum_notification measure_report;
- 	u8 measurement_status;
 -- 
-1.5.4.1
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+1.5.6.3
 
