@@ -1,34 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:54091 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751553AbYGRF4Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 01:56:16 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 00/13] iwlwifi driver 07/18 updates
-Date: Fri, 18 Jul 2008 13:52:56 +0800
-Message-Id: <1216360389-5352-1-git-send-email-yi.zhu@intel.com> (sfid-20080718_075624_538420_6F289A85)
+Received: from lax-green-bigip-5.dreamhost.com ([208.113.200.5]:34605 "EHLO
+	swarthymail-a7.g.dreamhost.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752831AbYGaRnF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jul 2008 13:43:05 -0400
+Received: from on6jc.ampr.org (host120.201-252-129.telecom.net.ar [201.252.129.120])
+	by swarthymail-a7.g.dreamhost.com (Postfix) with ESMTP id 4E5A6DE58F
+	for <linux-wireless@vger.kernel.org>; Thu, 31 Jul 2008 10:42:42 -0700 (PDT)
+Date: Thu, 31 Jul 2008 14:42:09 -0300
+From: John Coppens <john@jcoppens.com>
+To: linux-wireless@vger.kernel.org
+Subject: regdomain setting
+Message-Id: <20080731144209.58c53424.john@jcoppens.com> (sfid-20080731_194309_641138_2D392E7D)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Hi guys...
 
-This patch series adds power save for 5000 hardware and misc cleanup.
+I've tried to check the regdomain in my Toshiba, which has an
+AR5212-based WiFi card installed, using the ar5k utility. It reports
+EEPROM timeout when trying to read.
 
-Thanks,
--yi
+I checked the baseaddress to be 0xcfee0000 with lspci -v, and executed
+the command  ./ar5k 0xcfee0000
 
-[PATCH 01/13] iwlwifi: add power save to 5000 HW
-[PATCH 02/13] iwlwifi: corrects power_level in sysfs
-[PATCH 03/13] mac80211: pass dtim_period to low level driver
-[PATCH 04/13] mac80211: make listen_interval be limited by low level driver
-[PATCH 05/13] iwlwifi: use dtim_period from association, and set listen_interval
-[PATCH 06/13] iwlwifi: move iwl4965_mac_ampdu_action to iwl4965-base.c
-[PATCH 07/13] iwlwifi: move beacon handling to iwl4965-base.c
-[PATCH 08/13] iwlwifi: move iwl4965_set_pwr_src to iwl4965-base.c
-[PATCH 09/13] iwlwifi: rename iwl-4695-rs to iwl-agn-rs
-[PATCH 10/13] iwlwifi: kill iwl4965_fill_rs_info
-[PATCH 11/13] iwlwifi: set led register in disassociation
-[PATCH 12/13] mac80211: remove unused variable agg_queue
-[PATCH 13/13] iwlwifi: bug fix in AGG flow - cast const to ULL
+I tried with and without the ath5k kernel module loaded. Kernel is 2.6.26
+
+Am I doing something wrong here?
+
+John
