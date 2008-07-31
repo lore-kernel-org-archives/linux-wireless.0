@@ -1,77 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41448 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751760AbYGDLDq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jul 2008 07:03:46 -0400
-Subject: Re: rt61 and TSF reporting?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200807041302.44288.IvDoorn@gmail.com> (sfid-20080704_125645_560925_85131DEE)
-References: <1214907990.7763.40.camel@johannes.berg>
-	 <200807041302.44288.IvDoorn@gmail.com>
-	 (sfid-20080704_125645_560925_85131DEE)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-poQs5n91C2GrDGDcNmYA"
-Date: Fri, 04 Jul 2008 13:02:42 +0200
-Message-Id: <1215169362.19862.2.camel@johannes.berg> (sfid-20080704_130351_545531_7C69BFB1)
+Received: from c60.cesmail.net ([216.154.195.49]:31159 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751542AbYGaPBm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jul 2008 11:01:42 -0400
+Subject: Re: Issue: iwlist scanning sees the network; dhclient can't connect
+From: Pavel Roskin <proski@gnu.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Thiago F. Tavares" <ttavares@halogica.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1217512159.12016.1.camel@localhost.localdomain>
+References: <1127857B97C63B4285A9B02BEF67AEE601627648@afrodite.halogica.com.br>
+	 <1217447463.25919.10.camel@dv>
+	 <1217493665.3392.0.camel@Friederike-PC.hoffi>
+	 <200807311531.54665.mb@bu3sch.de>
+	 <1217512159.12016.1.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Thu, 31 Jul 2008 11:01:40 -0400
+Message-Id: <1217516500.22143.3.camel@dv> (sfid-20080731_170147_326743_230CF7D6)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2008-07-31 at 09:49 -0400, Dan Williams wrote:
+> We all agreed at the OLS Wireless Summit that the up/down behavior of
+> dhclient was just f**king stupid and should be patched out.  Upstream
+> doesn't seem to be very responsive.
 
---=-poQs5n91C2GrDGDcNmYA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Sorry for going offtopic, but somebody picked up dhcpcd, and it's in a
+pretty good shape now, preparing for 4.0 release.  It supports dhclient
+scripts, works with NetworkManager, and doesn't bring the interface
+down.  It even have a git repository, with the latest commit 79 made
+minutes ago.
 
-
-> I just received an answer from Ralink about this issue,
-
-Cool.
-
-> 1.       For 11b/g based chips rt2500, rt2570, rt61, rt73 doesn't impleme=
-nt this.
-
-Oh, too bad.
-
-> 2.       For 11n based chips, there is one MAC register have to enable to=
- have this feature.
-> 	  But, Word 2 of RXWI will put the timestamp and the RSSI will put to Wo=
-rd 3.
-> 	 The original Word 3 SNR will disappear and replace by RSSI.
-
-Nice.
-
-> As for the timestamps in 2400 and rt2800, they are both in 32bits, so I a=
-m not sure how
-> reliable they will be for IBSS.
-
-Well 32-bits is plenty if you can also read the TSF to extend it to 64,
-b43 only gets 16 by the firmware and we just extend it on packet RX.
-
-johannes
-
---=-poQs5n91C2GrDGDcNmYA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIbgNNAAoJEKVg1VMiehFYeaYP/iC2SGwxKvjRhdfl9UMY5Dtu
-0v1bh0jVRexz0KVwbHTNvKgcdUlGmCZj9q2YpQcuuNrn4b2qkQILcI+q9a3dMaTW
-yKMZyay/8dKehNBZ81VNWbgxrhm+FWH1c5FUHqs77oti9Q4osOD7EQhK2ijWUeyR
-7Vg3FipJ0HuCtYCmoh78Y6eAmnHMR676SPGOPl8lFCZErpiHKxgy2dGurEMzEblo
-qv2plnSJ2xaoCwhtdsj8Azhv9/BBVl5ok+Ihs+vlbx/hsBp61m3EsKGDUKfGKG/E
-MrnmJiWciR80F3XgpoOxL2BGlA1N6ldCIuv/UvlhKOnvYvnoYbZKMGs/vgqUcYa0
-sRpep5CfFXSHtKmtBUHjJ4J4APk/NaRSaljOtz9nhJXUThaf81j/Ui+RNCcKNttT
-K8vFNN5PBxY5WNuy7y73WgXd8dKLlb6fwE6IbZjJDw0RQAjK/4c7p6t2wD2M9kbv
-/v1SBZWhg3sSVSLZAqqEX8mXxy82DTi0erfzRJ9ignRaI/0AaOwncVE4KH04RhEp
-U0JH9bbKLtJd8ezntwHrs+RrBQB6Y4fVcy471euFezUtb7iLBDzmMZVhQeXSkI5O
-s63TGNL997n4dlcwp4OamEiGKiK1hd2RXIKG5kGTu+X6KlKDuF70qYCuO2O7q2R2
-hCDAhjqtc5ZO1lCSKfok
-=bJgr
------END PGP SIGNATURE-----
-
---=-poQs5n91C2GrDGDcNmYA--
-
+-- 
+Regards,
+Pavel Roskin
