@@ -1,49 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:17025 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751608AbYG3PUV (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43202 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752592AbYGaGmD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 11:20:21 -0400
-From: Bruno Randolf <br1@einfach.org>
-Subject: [PATCH 2/3] mac80211: radiotap: assume modulation from rates
-To: tomas.winkler@intel.com
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Date: Wed, 30 Jul 2008 17:20:06 +0200
-Message-ID: <20080730152006.24487.6932.stgit@void> (sfid-20080730_172023_298536_FB39687D)
-In-Reply-To: <20080730151955.24487.76871.stgit@void>
-References: <20080730151955.24487.76871.stgit@void>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 31 Jul 2008 02:42:03 -0400
+Subject: Re: Issue: iwlist scanning sees the network; dhclient can't connect
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	"Thiago F. Tavares" <ttavares@halogica.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1217447463.25919.10.camel@dv> (sfid-20080730_215124_120619_94F43935)
+References: <1127857B97C63B4285A9B02BEF67AEE601627648@afrodite.halogica.com.br>
+	 <1217446602.25919.5.camel@dv>  <200807302141.07738.mb@bu3sch.de>
+	 <1217447463.25919.10.camel@dv> (sfid-20080730_215124_120619_94F43935)
+Content-Type: text/plain
+Date: Thu, 31 Jul 2008 09:41:05 +0100
+Message-Id: <1217493665.3392.0.camel@Friederike-PC.hoffi> (sfid-20080731_084209_611359_C5D21713)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-use the rates ERP flag to derive CCK or OFDM modulation for the radiotap
-header.
+On Wed, 2008-07-30 at 15:51 -0400, Pavel Roskin wrote:
+> On Wed, 2008-07-30 at 21:41 +0200, Michael Buesch wrote:
+> 
+> > dhclient works fine for me. Although it's true that it sometimes
+> > messes with up/down state. But you _can_ use it, if you take some care.
+> 
+> True.  But b43 has the lowest dhclient survival rate of all drivers I
+> know.  That's an empirical observation, of course.
 
-(it might be more correct to get this information from the hardware itself, but it
-seems safe to assume this in most practical cases.)
+I think debian patches out the down/up behaviour. We may be seeing that.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
-
- net/mac80211/rx.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 254462f..a67ded3 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -157,8 +157,11 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 	if (status->band == IEEE80211_BAND_5GHZ)
- 		*(__le16 *)pos = cpu_to_le16(IEEE80211_CHAN_OFDM |
- 					     IEEE80211_CHAN_5GHZ);
-+	else if (rate->flags & IEEE80211_RATE_ERP_G)
-+		*(__le16 *)pos = cpu_to_le16(IEEE80211_CHAN_OFDM |
-+					     IEEE80211_CHAN_2GHZ);
- 	else
--		*(__le16 *)pos = cpu_to_le16(IEEE80211_CHAN_DYN |
-+		*(__le16 *)pos = cpu_to_le16(IEEE80211_CHAN_CCK |
- 					     IEEE80211_CHAN_2GHZ);
- 	pos += 2;
- 
+johannes
 
