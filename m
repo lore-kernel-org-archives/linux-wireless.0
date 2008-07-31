@@ -1,134 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53119 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755385AbYG2LXt (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:40644 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754183AbYGaBYD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 07:23:49 -0400
-Message-Id: <20080729112306.014768000@sipsolutions.net> (sfid-20080729_132353_041796_BAA9D3BD)
-References: <20080729112249.877813000@sipsolutions.net>
-Date: Tue, 29 Jul 2008 13:22:50 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+	Wed, 30 Jul 2008 21:24:03 -0400
+Date: Wed, 30 Jul 2008 20:24:01 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] mac80211: remove IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE
-	flag
-Mime-Version: 1.0
+Subject: [PATCH V2] rtl8187: Fix lockups due to concurrent access to
+ config routine
+Message-ID: <48911431.MXO/4WEWNQ+yQUFB%Larry.Finger@lwfinger.net> (sfid-20080731_032406_475565_5B343A71)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I forgot this in the previous patch that made it unused.
+Some users of the RTL8187B have experienced difficulties since commit
+8f87dd7e540d455f8e7f11478133b85edc969c67 that introduced the power
+management wext hooks. This difficulty has not made much sense until
+it was realized that it was possible for mac80211 to make a call to the
+config routine while that routine was already being executed. This patch
+protects the critical section with a mutex.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+The problem was found by Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+who also suggested this type of fix.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Acked-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
 ---
- drivers/net/wireless/b43/main.c             |    3 +--
- drivers/net/wireless/b43legacy/main.c       |    3 +--
- drivers/net/wireless/iwlwifi/iwl-core.c     |    3 +--
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 +--
- drivers/net/wireless/rt2x00/rt2500usb.c     |    1 -
- drivers/net/wireless/rt2x00/rt61pci.c       |    1 -
- drivers/net/wireless/rt2x00/rt73usb.c       |    1 -
- drivers/net/wireless/zd1211rw/zd_mac.c      |    1 -
- include/net/mac80211.h                      |    1 -
- 9 files changed, 4 insertions(+), 13 deletions(-)
 
---- everything.orig/include/net/mac80211.h	2008-07-29 13:16:01.000000000 +0200
-+++ everything/include/net/mac80211.h	2008-07-29 13:16:02.000000000 +0200
-@@ -740,7 +740,6 @@ enum ieee80211_tkip_key_type {
-  * 	Measurement, Channel Switch, Quieting, TPC
-  */
- enum ieee80211_hw_flags {
--	IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE		= 1<<0,
- 	IEEE80211_HW_RX_INCLUDES_FCS			= 1<<1,
- 	IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING	= 1<<2,
- 	IEEE80211_HW_2GHZ_SHORT_SLOT_INCAPABLE		= 1<<3,
---- everything.orig/drivers/net/wireless/b43/main.c	2008-07-29 13:15:45.000000000 +0200
-+++ everything/drivers/net/wireless/b43/main.c	2008-07-29 13:16:02.000000000 +0200
-@@ -4645,8 +4645,7 @@ static int b43_wireless_init(struct ssb_
+John,
+
+This is 2.6.27 material. V2 is the same as V1 - I resubmitted as my mailer
+seems to have bungled the white space.
+
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/rtl8187.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl8187.h
++++ wireless-testing/drivers/net/wireless/rtl8187.h
+@@ -94,6 +94,10 @@ struct rtl8187_priv {
+ 	const struct rtl818x_rf_ops *rf;
+ 	struct ieee80211_vif *vif;
+ 	int mode;
++	/* The mutex protects the TX loopback state.
++	 * Any attempt to set channels concurrently locks the device.
++	 */
++	struct mutex conf_mutex;
+ 
+ 	/* rtl8187 specific */
+ 	struct ieee80211_channel channels[14];
+Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
++++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
+@@ -864,6 +864,7 @@ static int rtl8187_config(struct ieee802
+ 	struct rtl8187_priv *priv = dev->priv;
+ 	u32 reg;
+ 
++	mutex_lock(&priv->conf_mutex);
+ 	reg = rtl818x_ioread32(priv, &priv->map->TX_CONF);
+ 	/* Enable TX loopback on MAC level to avoid TX during channel
+ 	 * changes, as this has be seen to causes problems and the
+@@ -896,6 +897,7 @@ static int rtl8187_config(struct ieee802
+ 	rtl818x_iowrite16(priv, &priv->map->ATIMTR_INTERVAL, 100);
+ 	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL, 100);
+ 	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL_TIME, 100);
++	mutex_unlock(&priv->conf_mutex);
+ 	return 0;
+ }
+ 
+@@ -1187,6 +1189,7 @@ static int __devinit rtl8187_probe(struc
+ 		printk(KERN_ERR "rtl8187: Cannot register device\n");
+ 		goto err_free_dev;
  	}
++	mutex_init(&priv->conf_mutex);
  
- 	/* fill hw info */
--	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE |
--		    IEEE80211_HW_RX_INCLUDES_FCS |
-+	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
- 		    IEEE80211_HW_SIGNAL_DBM |
- 		    IEEE80211_HW_NOISE_DBM;
- 
---- everything.orig/drivers/net/wireless/b43legacy/main.c	2008-07-29 13:15:45.000000000 +0200
-+++ everything/drivers/net/wireless/b43legacy/main.c	2008-07-29 13:16:02.000000000 +0200
-@@ -3702,8 +3702,7 @@ static int b43legacy_wireless_init(struc
- 	}
- 
- 	/* fill hw info */
--	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE |
--		    IEEE80211_HW_RX_INCLUDES_FCS |
-+	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
- 		    IEEE80211_HW_SIGNAL_DBM |
- 		    IEEE80211_HW_NOISE_DBM;
- 	hw->queues = 1; /* FIXME: hardware has more queues */
---- everything.orig/drivers/net/wireless/iwlwifi/iwl-core.c	2008-07-29 13:15:45.000000000 +0200
-+++ everything/drivers/net/wireless/iwlwifi/iwl-core.c	2008-07-29 13:16:02.000000000 +0200
-@@ -818,8 +818,7 @@ int iwl_setup_mac(struct iwl_priv *priv)
- 	hw->rate_control_algorithm = "iwl-4965-rs";
- 
- 	/* Tell mac80211 our characteristics */
--	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE |
--		    IEEE80211_HW_SIGNAL_DBM |
-+	hw->flags = IEEE80211_HW_SIGNAL_DBM |
- 		    IEEE80211_HW_NOISE_DBM;
- 	/* Default value; 4 EDCA QOS priorities */
- 	hw->queues = 4;
---- everything.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-07-29 13:16:01.000000000 +0200
-+++ everything/drivers/net/wireless/iwlwifi/iwl3945-base.c	2008-07-29 13:16:02.000000000 +0200
-@@ -7899,8 +7899,7 @@ static int iwl3945_pci_probe(struct pci_
- 	priv->ibss_beacon = NULL;
- 
- 	/* Tell mac80211 our characteristics */
--	hw->flags = IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE |
--		    IEEE80211_HW_SIGNAL_DBM |
-+	hw->flags = IEEE80211_HW_SIGNAL_DBM |
- 		    IEEE80211_HW_NOISE_DBM;
- 
- 	/* 4 EDCA QOS priorities */
---- everything.orig/drivers/net/wireless/rt2x00/rt2500usb.c	2008-07-29 13:15:45.000000000 +0200
-+++ everything/drivers/net/wireless/rt2x00/rt2500usb.c	2008-07-29 13:16:02.000000000 +0200
-@@ -1650,7 +1650,6 @@ static void rt2500usb_probe_hw_mode(stru
- 	 * Initialize all hw fields.
- 	 */
- 	rt2x00dev->hw->flags =
--	    IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE |
- 	    IEEE80211_HW_RX_INCLUDES_FCS |
- 	    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
- 	    IEEE80211_HW_SIGNAL_DBM;
---- everything.orig/drivers/net/wireless/rt2x00/rt61pci.c	2008-07-29 13:15:45.000000000 +0200
-+++ everything/drivers/net/wireless/rt2x00/rt61pci.c	2008-07-29 13:16:02.000000000 +0200
-@@ -2278,7 +2278,6 @@ static void rt61pci_probe_hw_mode(struct
- 	 * Initialize all hw fields.
- 	 */
- 	rt2x00dev->hw->flags =
--	    IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE |
- 	    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
- 	    IEEE80211_HW_SIGNAL_DBM;
- 	rt2x00dev->hw->extra_tx_headroom = 0;
---- everything.orig/drivers/net/wireless/rt2x00/rt73usb.c	2008-07-29 13:15:45.000000000 +0200
-+++ everything/drivers/net/wireless/rt2x00/rt73usb.c	2008-07-29 13:16:02.000000000 +0200
-@@ -1871,7 +1871,6 @@ static void rt73usb_probe_hw_mode(struct
- 	 * Initialize all hw fields.
- 	 */
- 	rt2x00dev->hw->flags =
--	    IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE |
- 	    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
- 	    IEEE80211_HW_SIGNAL_DBM;
- 	rt2x00dev->hw->extra_tx_headroom = TXD_DESC_SIZE;
---- everything.orig/drivers/net/wireless/zd1211rw/zd_mac.c	2008-07-29 13:15:45.000000000 +0200
-+++ everything/drivers/net/wireless/zd1211rw/zd_mac.c	2008-07-29 13:16:02.000000000 +0200
-@@ -935,7 +935,6 @@ struct ieee80211_hw *zd_mac_alloc_hw(str
- 	hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &mac->band;
- 
- 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
--		    IEEE80211_HW_HOST_GEN_BEACON_TEMPLATE |
- 		    IEEE80211_HW_SIGNAL_DB;
- 
- 	hw->max_signal = 100;
-
--- 
-
+ 	printk(KERN_INFO "%s: hwaddr %s, %s V%d + %s\n",
+ 	       wiphy_name(dev->wiphy), print_mac(mac, dev->wiphy->perm_addr),
