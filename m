@@ -1,106 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from element.ksp.sk ([158.195.16.154]:52610 "EHLO element.ksp.sk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752630AbYGCNvE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jul 2008 09:51:04 -0400
-Message-ID: <486CD93B.90503@work.ksp.sk> (sfid-20080703_155151_271493_A8BED51A)
-Date: Thu, 03 Jul 2008 15:50:51 +0200
-From: Vladimir Koutny <vlado@work.ksp.sk>
+Received: from rv-out-0506.google.com ([209.85.198.236]:65226 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755151AbYGaVvd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jul 2008 17:51:33 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so764435rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Jul 2008 14:51:33 -0700 (PDT)
+Message-ID: <489233E1.8080800@gmail.com> (sfid-20080731_235138_602057_F61801F7)
+Date: Thu, 31 Jul 2008 14:51:29 -0700
+From: John Daiker <daikerjohn@gmail.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	bruno randolf <bruno@thinktube.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jiri Benc <jbenc@suse.cz>
-Subject: Re: [PATCH] mac80211: fix alternating-BSSID issue in IBSS
-References: <486A43D0.8020507@work.ksp.sk> <20080702190059.GA31288@tuxdriver.com>
-In-Reply-To: <20080702190059.GA31288@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigB2143141FBA987B07EE0B6AC"
+To: Peter Chubb <peterc@chubb.wattle.id.au>
+CC: Peter Chubb <peterc@gelato.unsw.edu.au>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: Fixing rt2500pci [PATCH]
+References: <87tze8vu18.wl%peterc@chubb.wattle.id.au>	<200807302105.56909.IvDoorn@gmail.com>	<200807302115.03865.IvDoorn@gmail.com>	<87vdym6fct.wl%peterc@chubb.wattle.id.au> <87wsj2246r.wl%peterc@chubb.wattle.id.au>
+In-Reply-To: <87wsj2246r.wl%peterc@chubb.wattle.id.au>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigB2143141FBA987B07EE0B6AC
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Peter Chubb wrote:
+> In kernel version 2.6.26-rc9 my wireless LAN card worked; but in the
+> released 2.6.26, my RaLink rt2500 card wouldn't associate.
+>
+> Git-bisect led me to this patch:
+>
+> 	61486e0f68d1f8966c09b734566a187d42d65c54
+> 	rt2x00: Remove ieee80211_tx_control argument from write_tx_desc()
+>
+> I believe that there is a problem with that patch --- it
+> (inadvertantly) removes an extra line of code, that used to set the
+> DATABYTE_COUNT field.
+>  
+> This patch reinstates that line, and with it my card works again.
+>
+> The original version I sent still used the skbdesc->data_len which has
+> been removed; this version of the patch applies on top of 2.6.27-rc1.
+>  
+> Signed-off-by: Peter Chubb <peterc@gelato.unsw.edu.au>
+> Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+>
+>
+> Index: linux-2.6-git/drivers/net/wireless/rt2x00/rt2500pci.c
+> ===================================================================
+> --- linux-2.6-git.orig/drivers/net/wireless/rt2x00/rt2500pci.c	2008-07-31 10:58:43.000000000 +1000
+> +++ linux-2.6-git/drivers/net/wireless/rt2x00/rt2500pci.c	2008-07-31 11:40:44.000000000 +1000
+> @@ -1213,20 +1213,21 @@ static void rt2500pci_write_tx_desc(stru
+>  	rt2x00_set_field32(&word, TXD_W0_ACK,
+>  			   test_bit(ENTRY_TXD_ACK, &txdesc->flags));
+>  	rt2x00_set_field32(&word, TXD_W0_TIMESTAMP,
+>  			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &txdesc->flags));
+>  	rt2x00_set_field32(&word, TXD_W0_OFDM,
+>  			   test_bit(ENTRY_TXD_OFDM_RATE, &txdesc->flags));
+>  	rt2x00_set_field32(&word, TXD_W0_CIPHER_OWNER, 1);
+>  	rt2x00_set_field32(&word, TXD_W0_IFS, txdesc->ifs);
+>  	rt2x00_set_field32(&word, TXD_W0_RETRY_MODE,
+>  			   test_bit(ENTRY_TXD_RETRY_MODE, &txdesc->flags));
+> +	rt2x00_set_field32(&word, TXD_W0_DATABYTE_COUNT, skb->len);
+>  	rt2x00_set_field32(&word, TXD_W0_CIPHER_ALG, CIPHER_NONE);
+>  	rt2x00_desc_write(txd, 0, word);
+>  }
+>  
+>  /*
+>   * TX data initialization
+>   */
+>  static void rt2500pci_write_beacon(struct queue_entry *entry)
+>  {
+>  	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+>
+> --
+> Dr Peter Chubb  http://www.gelato.unsw.edu.au  peterc AT gelato.unsw.edu.au
+> http://www.ertos.nicta.com.au           ERTOS within National ICT Australia
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>   
+I can confirm that this is working on top of 
+2.6.27-rc1-94ad374a0751f40d25e22e036c37f7263569d24c
 
-John W. Linville wrote:
-> On Tue, Jul 01, 2008 at 04:48:48PM +0200, Vladimir Koutny wrote:
->> Due to the fact that we (still) keep old BSS information, we can end
->> up switching between 2 or more BSSIDs when in IBSS (these are the
->> BSSIDs of networks with the same name we've seen before, even if they
->> are not around anymore). This switching happens in 30sec intervals
->> (IBSS merge attempt when no active STAs are around).
->>
->> This patch expires old BSS entries after IEEE80211_SCAN_RESULT_EXPIRE
->> seconds (the same time after it will not be reported in scan results)
->> when trying to merge.
->>
->> Signed-off-by: Vladimir Koutny <vlado@ksp.sk>
->=20
-> This seems like a good thing to do, but the sta_bss_list is used in STA=
-
-> mode too.  Perhaps we should find a time to run ieee80211_bss_expire
-> in STA mode as well?
-
-Yes, probably. Any suggestions for a suitable place? (I'm not that
-familiar with the code..) It should probably be done on some timer (and
-probably also right before we try to associate?)..
-
-
->> +static void ieee80211_bss_expire(struct net_device *dev, unsigned lon=
-g exp_time)
->=20
-> You probably want this positioned before (or
-> after?) ieee80211_rx_bss_free, and change the name to match.
-
-OK, moved and renamed to ieee80211_rx_bss_expire.
-
-
->> @@ -3662,8 +3662,10 @@ static int ieee80211_sta_find_ibss(struct net_d=
-evice *dev,
->>  	spin_unlock_bh(&local->sta_bss_lock);
->>
->>  #ifdef CONFIG_MAC80211_IBSS_DEBUG
->> -	printk(KERN_DEBUG "   sta_find_ibss: selected %s current "
->> -	       "%s\n", print_mac(mac, bssid), print_mac(mac2, ifsta->bssid))=
-;
->> +	if (found)
->> +		printk(KERN_DEBUG "   sta_find_ibss: selected %s current "
->> +		       "%s\n", print_mac(mac, bssid),
->> +		       print_mac(mac2, ifsta->bssid));
->>  #endif /* CONFIG_MAC80211_IBSS_DEBUG */
->>  	if (found && memcmp(ifsta->bssid, bssid, ETH_ALEN) !=3D 0 &&
->>  	    (bss =3D ieee80211_rx_bss_get(dev, bssid,
->=20
-> Should the last hunk be a different patch?
-
-Oops - I've found this out at the same time I was doing the rest and
-I kept it in the same patch.. I'll split this.
-
-Vladimir
-
->=20
-> John
-
-
-
---------------enigB2143141FBA987B07EE0B6AC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iJwEAQECAAYFAkhs2UMACgkQutgEj9ZLuzTKZgP8C8y+kO/LNydto3y3ZoddERrg
-utFjl+2ueYxrMV96zRP68CH4zT0tESuMQW5enB+MORVArPlY6Le/YK8DuuNkJPWG
-Kdy9XAo5ejJwzv1xmvgL5pq5VlicRH9t/l0kRhic4F+hqsqF0ewyXy5PAElFE31/
-ryl5GA6xxLYNc0OLxrk=
-=l0+Q
------END PGP SIGNATURE-----
-
---------------enigB2143141FBA987B07EE0B6AC--
+Acked-by: John Daiker <daikerjohn@gmail.com>
