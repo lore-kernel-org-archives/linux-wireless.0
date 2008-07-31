@@ -1,101 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:33607 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755287AbYGTDgN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jul 2008 23:36:13 -0400
-Date: Sun, 20 Jul 2008 06:36:52 +0300
-From: Nick Kossifidis <mick@madwifi.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
-Subject: [PATCH 4/12] ath5k: Misc hw_reset updates
-Message-ID: <20080720033652.GD7440@makis> (sfid-20080720_053616_722100_93D552A5)
+Received: from xenotime.net ([66.160.160.81]:45929 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751529AbYGaUQi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jul 2008 16:16:38 -0400
+Received: from shark.he.net ([66.160.160.2]) by xenotime.net for <linux-wireless@vger.kernel.org>; Thu, 31 Jul 2008 13:16:30 -0700
+Date: Thu, 31 Jul 2008 13:16:30 -0700 (PDT)
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+To: linux-wireless@vger.kernel.org
+cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH] mac80211: add missing kernel-doc
+Message-ID: <Pine.LNX.4.64.0807311315100.3067@shark.he.net> (sfid-20080731_221642_032582_97BC9A50)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Update hw_reset to calculate some of the values we were using as static
- * Increase activation to rx delay
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
- Changes-licensed-under: ISC
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+Fix mac80211 kernel-doc missing struct field:
 
+Warning(linux-2.6.27-rc1-git2//net/mac80211/sta_info.h:329): No description found for parameter 'tid_seq[IEEE80211_QOS_CTL_TID_MASK + 1]'
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 ---
-diff --git a/drivers/net/wireless/ath5k/hw.c b/drivers/net/wireless/ath5k/hw.c
-index 322bce6..82b4ff8 100644
---- a/drivers/net/wireless/ath5k/hw.c
-+++ b/drivers/net/wireless/ath5k/hw.c
-@@ -847,7 +847,22 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 			else
- 				ath5k_hw_reg_write(ah, 0x00000000, 0x994c);
- 
--			ath5k_hw_reg_write(ah, 0x000009b5, 0xa228);
-+			/* Some bits are disabled here, we know nothing about
-+			 * register 0xa228 yet, most of the times this ends up
-+			 * with a value 0x9b5 -haven't seen any dump with
-+			 * a different value- */
-+			/* Got this from decompiling binary HAL */
-+			data = ath5k_hw_reg_read(ah, 0xa228);
-+			data &= 0xfffffdff;
-+			ath5k_hw_reg_write(ah, data, 0xa228);
-+
-+			data = ath5k_hw_reg_read(ah, 0xa228);
-+			data &= 0xfffe03ff;
-+			ath5k_hw_reg_write(ah, data, 0xa228);
-+			data = 0;
-+
-+			/* Just write 0x9b5 ? */
-+			/* ath5k_hw_reg_write(ah, 0x000009b5, 0xa228); */
- 			ath5k_hw_reg_write(ah, 0x0000000f, AR5K_SEQ_MASK);
- 			ath5k_hw_reg_write(ah, 0x00000000, 0xa254);
- 			ath5k_hw_reg_write(ah, 0x0000000e, AR5K_PHY_SCAL);
-@@ -864,6 +879,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 			else
- 				data = 0xffb80d20;
- 			ath5k_hw_reg_write(ah, data, AR5K_PHY_FRAME_CTL);
-+			data = 0;
- 		}
- 
- 		/*
-@@ -883,7 +899,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 
- 		/*
- 		 * Write RF registers
--		 * TODO:Does this work on 5211 (5111) ?
- 		 */
- 		ret = ath5k_hw_rfregs(ah, channel, mode);
- 		if (ret)
-@@ -1048,7 +1063,8 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 	ath5k_hw_reg_write(ah, AR5K_PHY_ACT_ENABLE, AR5K_PHY_ACT);
- 
- 	/*
--	 * 5111/5112 Specific
-+	 * On 5211+ read activation -> rx delay
-+	 * and use it.
- 	 */
- 	if (ah->ah_version != AR5K_AR5210) {
- 		data = ath5k_hw_reg_read(ah, AR5K_PHY_RX_DELAY) &
-@@ -1056,7 +1072,8 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 		data = (channel->hw_value & CHANNEL_CCK) ?
- 			((data << 2) / 22) : (data / 10);
- 
--		udelay(100 + data);
-+		udelay(100 + (2 * data));
-+		data = 0;
- 	} else {
- 		mdelay(1);
- 	}
-@@ -1139,6 +1156,12 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum ieee80211_if_types op_mode,
- 		ath5k_hw_reg_write(ah, AR5K_PHY_SCLOCK_32MHZ, AR5K_PHY_SCLOCK);
- 		ath5k_hw_reg_write(ah, AR5K_PHY_SDELAY_32MHZ, AR5K_PHY_SDELAY);
- 		ath5k_hw_reg_write(ah, ah->ah_phy_spending, AR5K_PHY_SPENDING);
-+
-+		data = ath5k_hw_reg_read(ah, AR5K_USEC_5211) & 0xffffc07f ;
-+		data |= (ah->ah_phy_spending == AR5K_PHY_SPENDING_18) ?
-+						0x00000f80 : 0x00001380 ;
-+		ath5k_hw_reg_write(ah, data, AR5K_USEC_5211);
-+		data = 0;
- 	}
- 
- 	if (ah->ah_version == AR5K_AR5212) {
+ net/mac80211/sta_info.h |    1 +
+ 1 file changed, 1 insertion(+)
 
+--- linux-2.6.27-rc1-git2.orig/net/mac80211/sta_info.h
++++ linux-2.6.27-rc1-git2/net/mac80211/sta_info.h
+@@ -204,6 +204,7 @@ struct sta_ampdu_mlme {
+  * @tx_fragments: number of transmitted MPDUs
+  * @txrate_idx: TBD
+  * @last_txrate_idx: TBD
++ * @tdi_seq: TBD
+  * @wme_tx_queue: TBD
+  * @ampdu_mlme: TBD
+  * @timer_to_tid: identity mapping to ID timers
