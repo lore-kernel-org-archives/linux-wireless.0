@@ -1,87 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:53830 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754369AbYG3Tx1 (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:46064 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751012AbYGaOWr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jul 2008 15:53:27 -0400
-Message-Id: <200807301946.m6UJkMcF012994@imap1.linux-foundation.org> (sfid-20080730_215345_371337_AAA29B28)
-Subject: [patch 3/4] net/ieee80211: adjust error handling
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	julia@diku.dk, Larry.Finger@lwfinger.net, jbenc@suse.cz,
-	jketreno@linux.intel.com, yi.zhu@intel.com
-From: akpm@linux-foundation.org
-Date: Wed, 30 Jul 2008 12:46:22 -0700
+	Thu, 31 Jul 2008 10:22:47 -0400
+Date: Thu, 31 Jul 2008 11:22:42 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	linux-wireless@vger.kernel.org, Dmitry Torokhov <dtor@mail.ru>
+Subject: Re: [PATCH] rfkill: query EV_SW states when rfkill-input
+	(re)?connects to a input device
+Message-ID: <20080731142242.GE19665@khazad-dum.debian.net> (sfid-20080731_162250_213207_AFF22797)
+References: <20080730013024.GB22649@anvil.corenet.prv> <1217512437-20890-1-git-send-email-hmh@hmh.eng.br> <200807311638.10270.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200807311638.10270.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+On Thu, 31 Jul 2008, Ivo van Doorn wrote:
+> On Thursday 31 July 2008, Henrique de Moraes Holschuh wrote:
+> > Every time a new input device that is capable of one of the rfkill EV_SW events
+> > (currently only SW_RFKILL_ALL) is connected to rfkill-input, we must check the
+> > states of the input EV_SW switches and take action.  Otherwise, we will ignore
+> > the initial switch state.
+> > 
+> > We also need to re-check the states of the EV_SW switches after a device that
+> > was under an exclusive grab is released back to us, since we got no input
+> > events from that device while it was grabbed.
+> > 
+> > Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> > Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> > Cc: Dmitry Torokhov <dtor@mail.ru>
+> 
+> Sounds sane enough for me.
+> 
+> Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Converts a test in error handling code to a sequence of labels.
+Thanks. For reference, this is the same old patch, but with Dmitry's fix to
+my &array error that John's gcc complained about.
 
-The semantic match that found the problem is:
-(http://www.emn.fr/x-info/coccinelle/)
+Not that I have found how to get gcc to give me these warnings yet. Maybe I
+haven't tried hard enough :(
 
-// <smpl>
-@@
-expression E,E1,E2;
-@@
-
-E = alloc_etherdev(...)
-... when != E = E1
-if (...) { ... free_netdev(E); ... return ...; }
-... when != E = E2
-(
-  if (...)
-   {
-   ... when != free_netdev(E);
-   return dev; }
-|
-* if (...)
-   {
-   ... when != free_netdev(E);
-   return ...; }
-|
-register_netdev(E)
-)
-
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-Cc: James Ketrenos <jketreno@linux.intel.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: Jiri Benc <jbenc@suse.cz>
-Cc: Zhu Yi <yi.zhu@intel.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- net/ieee80211/ieee80211_module.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff -puN net/ieee80211/ieee80211_module.c~net-ieee80211-adjust-error-handling net/ieee80211/ieee80211_module.c
---- a/net/ieee80211/ieee80211_module.c~net-ieee80211-adjust-error-handling
-+++ a/net/ieee80211/ieee80211_module.c
-@@ -157,7 +157,7 @@ struct net_device *alloc_ieee80211(int s
- 	err = ieee80211_networks_allocate(ieee);
- 	if (err) {
- 		IEEE80211_ERROR("Unable to allocate beacon storage: %d\n", err);
--		goto failed;
-+		goto failed_free_netdev;
- 	}
- 	ieee80211_networks_initialize(ieee);
- 
-@@ -193,9 +193,9 @@ struct net_device *alloc_ieee80211(int s
- 
- 	return dev;
- 
--      failed:
--	if (dev)
--		free_netdev(dev);
-+failed_free_netdev:
-+	free_netdev(dev);
-+failed:
- 	return NULL;
- }
- 
-_
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
