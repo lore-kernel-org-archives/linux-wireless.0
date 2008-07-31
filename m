@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.182]:3270 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750748AbYG0HoK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jul 2008 03:44:10 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so3490047ika.5
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Jul 2008 00:44:09 -0700 (PDT)
+Received: from mx1.redhat.com ([66.187.233.31]:38722 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752547AbYGaN52 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jul 2008 09:57:28 -0400
+Subject: Re: Driver for the FullMAC card
+From: Dan Williams <dcbw@redhat.com>
 To: Dmitry Baryshkov <dbaryshkov@gmail.com>
-Subject: Re: [PATCH 2/2] RFKILL: set the status of the leds on activation.
-Date: Sun, 27 Jul 2008 10:03:31 +0200
-Cc: linux-wireless@vger.kernel.org,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	akpm@linux-foundation.org
-References: <20080722102159.GA32682@doriath.ww600.siemens.net> <200807221911.35975.IvDoorn@gmail.com> <20080727073725.GA20755@doriath.ww600.siemens.net>
-In-Reply-To: <20080727073725.GA20755@doriath.ww600.siemens.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200807271003.31610.IvDoorn@gmail.com> (sfid-20080727_094425_405679_F7994F60)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <g6qr98$q28$2@ger.gmane.org>
+References: <g6qr98$q28$2@ger.gmane.org>
+Content-Type: text/plain
+Date: Thu, 31 Jul 2008 09:54:48 -0400
+Message-Id: <1217512488.12016.8.camel@localhost.localdomain> (sfid-20080731_155730_374440_BC9E0167)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 27 July 2008, Dmitry Baryshkov wrote:
-> On Tue, Jul 22, 2008 at 07:11:35PM +0200, Ivo van Doorn wrote:
-> > On Tuesday 22 July 2008, Dmitry Baryshkov wrote:
-> > > Provide default activate function to set the state of the led
-> > > when the led becomes bound to the trigger
-> > > 
-> > > Signed-off-by: Dmitry Baryshkov <dbaryshkov@gmail.com>
-> > > Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> > > Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> > 
-> > Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+On Wed, 2008-07-30 at 22:51 +0000, Dmitry Baryshkov wrote:
+> Hi,
 > 
-> Sorry to bother you, but can I expect these patches to be merged
-> before 2.6.27, or should I wait for 2.6.28 window?
+> I'd like to work on the Prism2 USB driver (currently maintained as a part of
+> wlan-ng project) to be able to push it into mainline. The card itself is
+> a FullMAC card. Where should I start? What parts of 802.11 stacks/API
+> should I use? There is plenty of information regarding SoftMAC drivers,
+> but no clear pointers for developing drivers for the FullMAC cards.
 
-Well they are not really bugfixes, but I'll let John decide to which tree
-they should be merged.
+If you're talking about the same hardware that linux-wlan-ng supported
+(ie, what Ubuntu ships as prism2_usb) then that hardware can be softmac,
+actually.  We discussed this a while ago and agreed that a completely
+new mac80211-based driver for this hardware was the best way to go,
+rather than trying to stuff USB support into hostap.
 
-Ivo
+If that's not the hardware we're talking about, can you give me some
+examples of the brand and model of devices this would drive?  Are we
+talking about stuff like the Netgear MA111 (FCC ID PY3MA111) here?
+
+Dan
+
