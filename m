@@ -1,79 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35693 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752800AbYG2I2X (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:46115 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755030AbYGaVyw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jul 2008 04:28:23 -0400
-Subject: Re: Commit 741b4fbc44 (mac80211: fix TX sequence numbers) breaks
-	rtl8187
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240807290123n7673dbb9m7121c1e76fe57e94@mail.gmail.com> (sfid-20080729_102332_148538_ADA964EA)
-References: <487f5f20.2lT57D3i0q99wrfY%Larry.Finger@lwfinger.net>
-	 <48874F09.7060400@lwfinger.net>
-	 <3ace41890807281939y462c9b91n5fa952e167b6ff8c@mail.gmail.com>
-	 <200807290021.45400.herton@mandriva.com.br>
-	 <1217314430.15381.11.camel@johannes.berg>
-	 <1ba2fa240807290123n7673dbb9m7121c1e76fe57e94@mail.gmail.com>
-	 (sfid-20080729_102332_148538_ADA964EA)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aXFR9dJxdrPDPKRYg4zL"
-Date: Tue, 29 Jul 2008 10:28:09 +0200
-Message-Id: <1217320089.15381.25.camel@johannes.berg> (sfid-20080729_102827_806204_8924A498)
-Mime-Version: 1.0
+	Thu, 31 Jul 2008 17:54:52 -0400
+Date: Thu, 31 Jul 2008 14:50:55 -0700
+From: Greg KH <greg@kroah.com>
+To: Tilman Schmidt <tilman@imap.cc>
+Cc: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Q: support for AVM Fritz! WLAN USB in kernel 2.6.25+
+Message-ID: <20080731215055.GB4817@kroah.com> (sfid-20080731_235457_055782_67E2567C)
+References: <4891D1B9.70703@imap.cc> <20080731163843.GB9606@kroah.com> <48922FE2.70705@imap.cc>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <48922FE2.70705@imap.cc>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jul 31, 2008 at 11:34:26PM +0200, Tilman Schmidt wrote:
+> On Thu, 31 Jul 2008 09:38:43 -0700, Greg KH wrote:
+> > On Thu, Jul 31, 2008 at 04:52:41PM +0200, Tilman Schmidt wrote:
+> >> Commit 782e70c6fc2290a0395850e8e02583b8b62264d8, which went into
+> >> 2.6.25, broke AVM's closed-source driver for this device:
+> >>
+> >> ID 057c:62ff AVM GmbH WLAN USB v1.1 (cdrom mode)
+> >> ID 057c:6201 AVM GmbH WLAN USB v1.1
+> >>
+> >> Is there an open source alternative for that driver, or do systems
+> >> with that device have to stay with kernel 2.6.24?
+> > 
+> > Please ask AVM, they have known about this for over 2 years now.
+> 
+> Please let's keep the politics out of this. I know who wrote that
+> patch, I know the agenda behind it and the discussion accompanying it.
+> Conversely, I'm sure you know fully well that I have no way of putting
+> that question to any relevant person at AVM, and even if I had, it would
+> achieve exactly nothing at all. I am not interested in such fruitless
+> political discussions. I have a simple question, to which I would like
+> a simple answer.
 
---=-aXFR9dJxdrPDPKRYg4zL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+There's no "politics" here at all.
 
-On Tue, 2008-07-29 at 11:23 +0300, Tomas Winkler wrote:
-> On Tue, Jul 29, 2008 at 9:53 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Tue, 2008-07-29 at 00:21 -0300, Herton Ronaldo Krzesinski wrote:
-> >
-> >> [3] /sbin/iwconfig wlan0 power on
-> >
-> > I don't think turning on power management (yes, this command is
-> > completely misnamed, it turns on power _management_ not the power, you
-> > may want "txpower auto") does anything on this chip, does it?
-> >
-> iwconfig power on is not implemented by mac80211 yet. There was one
-> patch posted that implements it.
-> I wanted to expand it but  wireless_tools 29 has a bug in parsing this
-> command. It is fixed only in 30.pre6 which is usually not in distros.
+And why wouldn't you go ask AVM, they are the ones producing the driver
+for this hardware, how could it be our responsibility to get their code
+to work properly, when we have absolutely no way to do so?
 
-Heh, fun. Time for putting that into cfg80211 instead if nobody can use
-it with wext anyway?
+This is between you and AVM.  I really suggest contacting the company.
+I have talked to them in the past and they seem willing to help out
+where they can.
 
-johannes
+thanks,
 
---=-aXFR9dJxdrPDPKRYg4zL
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIjtSVAAoJEKVg1VMiehFYrA4QAKI3j8yZS5SIgAxVsrrvkjIV
-tmLiVUzCSSzzo13M1LylASi6s1og4p+Lb0l2IcHHrZOTu9vMYFQ0uR1GmesH3OQ8
-3afTXyP0cya7vOKr5GDFVrUt7eqO3sv7HQn/K3Ipzpy5bQveca+MSM3xKiTE9VAo
-FA9KXa0k+5v/iXDQdI1UTdhJJ2lKCgi7L5JSk/8ca/A9g9m64jEV2qmSvQNyOCMb
-8ns0SkzDuwVomaHd/xMITt4bquVHLxaanejc2a1KVLYKUbVvrXbHvN17BhdpvG5X
-nIBq8VTRD6ojK/I5tVmOQNSYfFN5UlTVRRbav97YoU4SSohwv495TJVmoPUr7dWl
-8cRknJuPutOVWODJJL5nEcr2w9pSNUZ+qRy8npgwrQO06+CjmuK1QjJkuCUJNsU6
-XlFBMza3LYWbGsNiJSSXazALbHg2AivTuHIwuyyhTnOvTfzpbX1WzfDszxRKf2LT
-kLOUCGGYzjsDomL/zIzrso6CORPv52ohGnORsMGh6poQczZZ7vLG5NRlXKlJ2tYK
-BD1YMaeTR+PIkUoFDpFaptsR+2K6QjyuNPjEE8nfrURHahoK4L0riM66seV27BFI
-t8DasDxvoEjSUZbvGTK7xZ48R5MGuy8vmbygLNzWriIQLjnOb4wwTjv3sgPIrD6u
-vxEGnVAtMNTLbebJ2ILq
-=TBQf
------END PGP SIGNATURE-----
-
---=-aXFR9dJxdrPDPKRYg4zL--
-
+greg k-h
