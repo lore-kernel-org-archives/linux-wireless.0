@@ -1,79 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:28832 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757938AbYGTPQH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jul 2008 11:16:07 -0400
-Received: by py-out-1112.google.com with SMTP id p76so815846pyb.10
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2008 08:16:06 -0700 (PDT)
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
-	RCU.
-From: jamal <hadi@cyberus.ca>
-Reply-To: hadi@cyberus.ca
-To: David Miller <davem@davemloft.net>
-Cc: kaber@trash.net, netdev@vger.kernel.org, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080718.140539.122169028.davem@davemloft.net>
-References: <487FDA67.30902@trash.net> <1216386624.4833.94.camel@localhost>
-	 <1216387641.4833.96.camel@localhost>
-	 <20080718.140539.122169028.davem@davemloft.net>
+Received: from c60.cesmail.net ([216.154.195.49]:4500 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753457AbYGaBLt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jul 2008 21:11:49 -0400
+Subject: Re: [PATCH 06/16] ath9k: Fix missing brace in branch on
+	ath_chainmask_sel_logic()
+From: Pavel Roskin <proski@gnu.org>
+To: lrodriguez@atheros.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, Jouni.Malinen@Atheros.com,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+In-Reply-To: <40a067eab54b9b366002257d5be8e4577b067408.1217309551.git.lrodriguez@atheros.com>
+References: <4800d552efce6350888c68b859f66767196d720b.1217309551.git.lrodriguez@atheros.com>
+	 <40a067eab54b9b366002257d5be8e4577b067408.1217309551.git.lrodriguez@atheros.com>
 Content-Type: text/plain
-Date: Sun, 20 Jul 2008 11:16:03 -0400
-Message-Id: <1216566963.4847.81.camel@localhost> (sfid-20080720_171617_817493_710F61EF)
+Date: Wed, 30 Jul 2008 21:11:47 -0400
+Message-Id: <1217466707.3616.5.camel@dv> (sfid-20080731_031153_196233_887B4C20)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-18-07 at 14:05 -0700, David Miller wrote:
-
-> The fundamental issue is what we believe qdiscs schedule, do they
-> schedule a device, or do they schedule what their namesake implies,
-> "queues"?
-
-In the simple case of a single hardware queue/ring, the mapping between
-a hardware queue and "physical wire" is one-to-one.
-So in that case one could argue the root qdiscs are scheduling a device.
-
-> Logically once we have multiple queues, we schedule queues.
-> Therefore what probably makes sense is that for mostly stateless
-> priority queueing such as pfifo_fast, doing prioritization at the
-> queue level is OK.
-
-IMO, in the case of multiple hardware queues per physical wire,
-and such a netdevice already has a built-in hardware scheduler (they all
-seem to have this feature) then if we can feed the hardware queues
-directly, theres no need for any intermediate buffer(s).
-In such a case, to compare with qdisc arch, its like the root qdisc is
-in hardware.
-
-The only need for intermediate s/ware queues is for cases of congestion.
-If you could have a single software queue for each hardware queue, then
-you still have the obligation of correctness to make sure higher prio
-hardware rings get fed with packets first (depending on the hardwares
-scheduling capability).
-
-> But where non-trivial classification occurs, we have to either:
+On Mon, 2008-07-28 at 22:47 -0700, lrodriguez@atheros.com wrote:
+> From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 > 
-> 1) Make the queue selection match what the classifiers would do
->    exactly.
-> 
-> OR
-> 
-> 2) Point all the queues at a single device global qdisc.
-> 
-> What we have now implements #2.  Later on we can try to do something
-> as sophisticated as #1.
+> diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
+> index 47d4891..d9c7561 100644
+> --- a/drivers/net/wireless/ath9k/core.c
+> +++ b/drivers/net/wireless/ath9k/core.c
+> @@ -508,9 +508,10 @@ int ath_chainmask_sel_logic(struct ath_softc *sc, struct ath_node *an)
+>  	 * enabled/disabled setting
+>  	 */
+>  	if ((sc->sc_no_tx_3_chains == AH_FALSE) ||
+> -	    (sc->sc_config.chainmask_sel == AH_FALSE))
+> +	    (sc->sc_config.chainmask_sel == AH_FALSE)) {
+>  		cm->cur_tx_mask = sc->sc_tx_chainmask;
+>  		return cm->cur_tx_mask;
+> +	}
 
-sure; i think you could achieve the goals by using the single queue with
-a software pfifo_fast which maps skb->prio to hardware queues. such a
-pfifo_fast may even sit in the driver. This queue will always be empty
-unless you have congestion. The other thing is to make sure there is an
-upper bound to the size of this queue; otherwise a remote bug could
-cause it to grow infinitely and consume all memory.
+I would prefer that all compile fixes are amended in the patches that
+introduced them.  We should try to pass only correct patches upstream.
+Bisection works best if one doesn't hit code that doesn't compile.
 
-cheers,
-jamal
-
-
-
-
+-- 
+Regards,
+Pavel Roskin
