@@ -1,49 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from THAUM.MIT.EDU ([18.95.3.27]:47024 "EHLO luto.stanford.edu"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750717AbYGHFMd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 01:12:33 -0400
-Message-ID: <4872F740.50608@myrealbox.com> (sfid-20080708_071247_522131_B33CE808)
-Date: Tue, 08 Jul 2008 01:12:32 -0400
-From: Andy Lutomirski <luto@myrealbox.com>
-MIME-Version: 1.0
-To: hmh@hmh.eng.br
-CC: dcbw@redhat.com, zhu.yi@intel.com, linux-wireless@vger.kernel.org
-Subject: Re: Question on rfkill double block
-References: <1214982208.14590.473.camel@debian.sh.intel.com> <1215018189.29117.32.camel@localhost.localdomain> <20080704195543.GB27898@khazad-dum.debian.net> <1215450664.17128.64.camel@localhost.localdomain> <20080707204708.GA3166@khazad-dum.debian.net>
-In-Reply-To: <20080707204708.GA3166@khazad-dum.debian.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from xc.sipsolutions.net ([83.246.72.84]:32895 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752997AbYGaSXY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jul 2008 14:23:24 -0400
+Subject: Re: iwlwifi aggregation info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Friedrich.Beckmann@infineon.com, linux-wireless@vger.kernel.org,
+	j@w1.fi
+In-Reply-To: <1ba2fa240807311114t3e1b4fb3oe6643fbe28f2c2ac@mail.gmail.com> (sfid-20080731_201501_253355_AC4EB569)
+References: <1217331138.10489.24.camel@johannes.berg>
+	 <1217411631.10489.103.camel@johannes.berg>
+	 <8469FC7DDCBE054D9653D8506E1FF0F001F1E7B606@mucse406.eu.infineon.com>
+	 <1217423948.10489.121.camel@johannes.berg>
+	 <1ba2fa240807300645j654a82b4rb813b71681dfab71@mail.gmail.com>
+	 <1217425854.10489.125.camel@johannes.berg>
+	 <1ba2fa240807300659p4d743f31se265f550a2da0dd1@mail.gmail.com>
+	 <1217431179.10489.134.camel@johannes.berg>
+	 <1ba2fa240807300908x5489e3f8g54ff83e7e5912c0b@mail.gmail.com>
+	 <1217509511.10489.140.camel@johannes.berg>
+	 <1ba2fa240807311114t3e1b4fb3oe6643fbe28f2c2ac@mail.gmail.com>
+	 (sfid-20080731_201501_253355_AC4EB569)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aqKPmXkVvgTtyBkfQh1o"
+Date: Thu, 31 Jul 2008 20:23:17 +0200
+Message-Id: <1217528597.10489.150.camel@johannes.berg> (sfid-20080731_202327_361703_968C1EA2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Henrique de Moraes Holschuh wrote:
-> On Mon, 07 Jul 2008, Dan Williams wrote:
->> On Fri, 2008-07-04 at 16:55 -0300, Henrique de Moraes Holschuh wrote:
->>> On Wed, 02 Jul 2008, Dan Williams wrote:
->>>> That would be more useful than the current enum, yes.
->>> Dan, you do have a strong user case for "just software rfkilled", "just
->>> hardware rfkilled" and "soft+hard rfkilled" as opposed to simply "software
->>> rfkilled" and "hardware rfkilled, maybe software rfkilled as well" ?
->> No, I don't have a _NetworkManager_ usecase for being able to
->> distinguish between HW and HW+SW.  Just an observation that stuff other
->> than NM might want to figure that out for UI or something.
-> 
-> Ok.  I will still *try* to implement the fourth state, but I will post the
-> patch as a RFC.  If it is too messy or complex, I will recommend that we
-> drop it.
 
-I'm still a bit confused.
+--=-aqKPmXkVvgTtyBkfQh1o
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Suppose I have a laptop with a physical switch marked "radio" which 
-tells the OS which position it's in *and does nothing else* (via ACPI or 
-whatever) and a radio which has a (pure) software rfkill controller. 
-Suppose further that this laptop has a radio button as well.
+On Thu, 2008-07-31 at 21:14 +0300, Tomas Winkler wrote:
+> On Thu, Jul 31, 2008 at 4:05 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2008-07-30 at 19:08 +0300, Tomas Winkler wrote:
+> >
+> >> > Can you explain how starvation happens? In what scenarios? With or
+> >> > without aggregation?
+> >>
+> >> for (queue =3D 0; queue < QD_NUM(hw); queue++)
+> >>
+> >> This always starts 0  prioritize dequeue the first frame. But what we
+> >> need is RR and let HW to prioritize the transmission according AC
+> >
+> > That's from the old code not having real MQ though, right? I'm totally
+> > not concerned about that.
+>=20
+> Correct. The bottom line is that correct behavior MQ would be shift
+> scheduling decision to the HW.
 
-This would look exactly like my Thinkpad X61s, except that the rfkill 
-switch would be connected to the rfkill controller in software, not 
-hardware.
+Right. Which brings us back to the original point, why does the hw need
+to make the scheduling decision between agg and non-agg?
 
-I think it would have the exact same problem and the fourth state 
-wouldn't help because it would never be any variety of HARD_BLOCKED.
+johannes
 
---Andy
+--=-aqKPmXkVvgTtyBkfQh1o
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIkgMSAAoJEKVg1VMiehFY6mYP/2Na8bPxdm+rVpNjqdPA3Qk7
+QL6So2nuZJIDBF3Wx71R0ucUKBmRdX2cr3dYzzKpt6cUxChIIg65FXGZSRUxVodw
+YXoQP1w0gLIGQb8+9oCKWpj8FZmnsMRlqDGOAbIUo0FqTs6rrVOPanS7bQvT9nbA
+sT5x4jhjnEWLGWoRgUo+trs8rHtPKKs7ayQI7uhWQEV/t3aFmvB1pODtX1Y3XhZx
+rjeNg6teu2YWgoYGEWGPEhU5pUapIq2xgpHe6b78FgS0fb8io8D0W/s4gaZdg0Zy
+TUiCfuesDJzzt1Hht0012fpks1l8MkmHEk9Zt2oE97DFeHYoAQfR/kLtckAAjg3g
+68hmDO9nN3UIWtSRryhth27CkFZbVg5uDfI9JVozTSJv/m3yowJ8PHGME/ktBWqk
+7Mipm2flo8by1+T9mPNuxj8M6T4+4uEBX0dur7b1tyDbpXwNjN7Qa89Qq41pkaQj
+NYICL+FVz9Ex4EMOtVBOQdwPKskZb8iuq3fgxtpXlrqvftnJCXGP76LnUgoU9B+b
+55FWVuieq4iCcagBe/HIf+wD4D6JIIArYmlpeRekZUKTLcpnnsEFfNgNxf59ei0d
+dhbMoEowe2hrQAYAK1XYSs0n7op1pCLqX0IBhWLPnCKXujtJzc+Z0AU9fTQArxiI
+0P4lxS2JlAmDRadz587y
+=VpRF
+-----END PGP SIGNATURE-----
+
+--=-aqKPmXkVvgTtyBkfQh1o--
+
