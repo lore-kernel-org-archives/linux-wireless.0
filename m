@@ -1,88 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:32455 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752761AbYGNLoU (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39177 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750987AbYGaKIM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jul 2008 07:44:20 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so2834382fkq.5
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jul 2008 04:44:19 -0700 (PDT)
-Date: Mon, 14 Jul 2008 11:49:13 +0000
-From: Jarek Poplawski <jarkao2@gmail.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, vinay@linux.vnet.ibm.com,
-	krkumar2@in.ibm.com, mchan@broadcom.com, Matheos.Worku@Sun.COM,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 11/39]: netdev: Move next_sched into struct
-	netdev_queue.
-Message-ID: <20080714114913.GA4504@ff.dom.local> (sfid-20080714_134425_033452_E445713F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080703.000333.199735542.davem@davemloft.net>
+	Thu, 31 Jul 2008 06:08:12 -0400
+Subject: Re: Vendor support stickers for devices supported under Linux
+	wireless
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: drago01 <drago01@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890807301358r6d8cadc1j4f40b501319fb7dc@mail.gmail.com> (sfid-20080730_225903_471467_84258072)
+References: <43e72e890807301327j54be2453r836964c708d75458@mail.gmail.com>
+	 <f6ca9fed0807301357k3c096c37q906ecd68a0219f7f@mail.gmail.com>
+	 <43e72e890807301358r6d8cadc1j4f40b501319fb7dc@mail.gmail.com>
+	 (sfid-20080730_225903_471467_84258072)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-d0GX7wUnPjMYJzKLMbP1"
+Date: Thu, 31 Jul 2008 12:08:07 +0200
+Message-Id: <1217498887.10489.138.camel@johannes.berg> (sfid-20080731_120815_908825_97045D15)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03-07-2008 09:03, David Miller wrote:
-> We schedule queues, not the device, for output queue
-> processing in BH.
-> 
-...
-> diff --git a/net/core/dev.c b/net/core/dev.c
-> index 8e38948..c5e3532 100644
-> --- a/net/core/dev.c
-> +++ b/net/core/dev.c
-> @@ -1323,13 +1323,14 @@ static void dev_queue_xmit_nit(struct sk_buff *skb, struct net_device *dev)
->  void __netif_schedule(struct net_device *dev)
->  {
->  	if (!test_and_set_bit(__LINK_STATE_SCHED, &dev->state)) {
 
-Isn't this bit supposed to be set/tested per queue as well, or do I
-miss something?
+--=-d0GX7wUnPjMYJzKLMbP1
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Jarek P.
+On Wed, 2008-07-30 at 13:58 -0700, Luis R. Rodriguez wrote:
+> >> We could even put the name of the driver on
+> >> the sticker/logo. Thoughts?
+> >
+> > I would rather do s/driver name/kernel version/ ... its easier for
+> > users that way.
+>=20
+> True, do you mean since a specific kernel version?
 
-> +		struct netdev_queue *txq = &dev->tx_queue;
->  		unsigned long flags;
->  		struct softnet_data *sd;
->  
->  		local_irq_save(flags);
->  		sd = &__get_cpu_var(softnet_data);
-> -		dev->next_sched = sd->output_queue;
-> -		sd->output_queue = dev;
-> +		txq->next_sched = sd->output_queue;
-> +		sd->output_queue = txq;
->  		raise_softirq_irqoff(NET_TX_SOFTIRQ);
->  		local_irq_restore(flags);
->  	}
-> @@ -1912,7 +1913,7 @@ static void net_tx_action(struct softirq_action *h)
->  	}
->  
->  	if (sd->output_queue) {
-> -		struct net_device *head;
-> +		struct netdev_queue *head;
->  
->  		local_irq_disable();
->  		head = sd->output_queue;
-> @@ -1920,12 +1921,10 @@ static void net_tx_action(struct softirq_action *h)
->  		local_irq_enable();
->  
->  		while (head) {
-> -			struct net_device *dev = head;
-> -			struct netdev_queue *txq;
-> +			struct netdev_queue *txq = head;
-> +			struct net_device *dev = txq->dev;
->  			head = head->next_sched;
->  
-> -			txq = &dev->tx_queue;
-> -
->  			smp_mb__before_clear_bit();
->  			clear_bit(__LINK_STATE_SCHED, &dev->state);
->  
-> @@ -4346,7 +4345,7 @@ static int dev_cpu_callback(struct notifier_block *nfb,
->  			    void *ocpu)
->  {
->  	struct sk_buff **list_skb;
-> -	struct net_device **list_net;
-> +	struct netdev_queue **list_net;
->  	struct sk_buff *skb;
->  	unsigned int cpu, oldcpu = (unsigned long)ocpu;
->  	struct softnet_data *sd, *oldsd;
+Down that road lies madness. Distros backport, you (in compat) backport,
+kernel versions sound old very quickly and in a year, when linux is
+called 2.9.06 you may not even want to sell a card that says "2.6.25" on
+it because it sounds ancient.
+
+Just leave it out, make it depend on the driver being merged into
+Linus's tree, leave it up to the distros to actually ship the code.
+
+I would also add to the contract a requirement to offer Linux support
+for, say, the next five years.
+
+johannes
+
+--=-d0GX7wUnPjMYJzKLMbP1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIkY8DAAoJEKVg1VMiehFYSDQP/jNqX1HFoT32u448SnlR538Z
+zmEhuf4+WXMsM+JS9iKK5ZraO/4L+9UWYxlbIcltgNjZclZ99AHpp+KMJus00fZF
+dMTMlqxlKdazjmDXU9o2bHQb3GcR0mOjxTU1cEXBgvIiuGLAcu2HJhSdj1lhPPaS
+JQ8PaRiMg1XT6P2MbbEY5jhmnrgOK53FRDMad5gfh23CHPkIO1gWfJbibnXW2n9m
+J1+7hnb2gjISLlsgLoMylm/dsFTzwWK+7tQqJmv2Dlgj9MIJJfPx7b/H6P2LnFQk
+II4sC4bmbXygIKYtm3MYzcgHA1aooVS+5fv32LBMxWBwcHlEZMGI/MWuqVkB2mth
+F9Blry1UGK4eTaXhLQxUjK2+ezBbAup8LL/H9mVUGFQ7uPC1M5At85ECxbvyU6tP
+zmd1Lxgs3eeFmsrnqwtn3wbLtFQv6STTJmc/k2ZykP1UjOWyMaF4p3PqZdeMspOs
+ClehHC/+D+eYA6ixD/aRHHApidZ5/lxp8PgXjsue/Tf3iWEfSaZDpEacK+z1O4Qu
+02aDMQRkt1nQaliOLD5dpFRkN6h6HspFpkIIQXeMkIWvyf7I4HybvI3lS81sreqa
+CTP2uWTujamo2CamRllvHxHAVeLZIHOQSIXct625MdIdYRzqNGTHhmYJz+SvrNEU
+3tb1/7Xn7VLfK4kkK0nT
+=zAqk
+-----END PGP SIGNATURE-----
+
+--=-d0GX7wUnPjMYJzKLMbP1--
+
