@@ -1,71 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ctb-mesg4.saix.net ([196.25.240.74]:33604 "EHLO
-	ctb-mesg4.saix.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751382AbYGRTZo (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39916 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752438AbYGaPZV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jul 2008 15:25:44 -0400
-Message-ID: <4880EF70.508@kroon.co.za> (sfid-20080718_212547_470085_A98BB169)
-Date: Fri, 18 Jul 2008 21:30:56 +0200
-From: Jaco Kroon <jaco@kroon.co.za>
-MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: linux-wireless@vger.kernel.org
-References: <487FC561.3060104@kroon.co.za> <20080717191425.1vfvithrk0okcg84-cebfxv@webmail.spamcop.net>
-In-Reply-To: <20080717191425.1vfvithrk0okcg84-cebfxv@webmail.spamcop.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Subject: Re: AR242x wireless card (ath5k)
+	Thu, 31 Jul 2008 11:25:21 -0400
+Subject: Re: Q: support for AVM Fritz! WLAN USB in kernel 2.6.25+
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tilman Schmidt <tilman@imap.cc>
+Cc: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <4891D1B9.70703@imap.cc> (sfid-20080731_172256_192283_E18D72B2)
+References: <4891D1B9.70703@imap.cc> (sfid-20080731_172256_192283_E18D72B2)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GrAc4zX79p9WEGFcUbmW"
+Date: Thu, 31 Jul 2008 17:25:15 +0200
+Message-Id: <1217517915.10489.143.camel@johannes.berg> (sfid-20080731_172526_304827_D3F90408)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Roskin wrote:
-> Quoting Jaco Kroon <jaco@kroon.co.za>:
-> 
->> Hi,
->>
->> I've got a Toshiba Satellite 1i4 (P200 derivative) laptop with the
->> following wireless card:
->>
->> 05:00.0 Ethernet controller: Atheros Communications Inc. AR242x
->> 802.11abg Wireless PCI Express Adapter (rev 01)
-> 
-> That's not sufficient to identify your card.  ath5k should print more 
-> detailed information to the kernel log, which is shown by the dmesg 
-> command.  If it's AR5006 (MAC revision less than 14.2), the card should 
-> work with MSI turned off.  Just add "pci=nomsi" to the kernel command 
-> line in the bootloader.  Alternatively, disable CONFIG_PCI_MSI in 
-> .config and recompile the kernel.
 
-pci=nomsi doesn't work.
+--=-GrAc4zX79p9WEGFcUbmW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-dijkstra ~ # dmesg | grep ath5k
-ath5k_pci 0000:05:00.0: registered as 'phy0'
-ath5k phy0: Support for RF2425 is under development.
-ath5k phy0: Atheros AR2425 chip found (MAC: 0xe2, PHY: 0x70)
+On Thu, 2008-07-31 at 16:52 +0200, Tilman Schmidt wrote:
+> Commit 782e70c6fc2290a0395850e8e02583b8b62264d8, which went into
+> 2.6.25, broke AVM's closed-source driver for this device:
+>=20
+> ID 057c:62ff AVM GmbH WLAN USB v1.1 (cdrom mode)
+> ID 057c:6201 AVM GmbH WLAN USB v1.1
+>=20
+> Is there an open source alternative for that driver, or do systems
+> with that device have to stay with kernel 2.6.24?
 
-> If it's AR5007, the experimental code is being tested now:
-> http://www.kernel.org/pub/linux/kernel/people/mickflemm/
-> 
-> Look for the latest compat-wireless.  Some people report build problems 
-> due to unrelated code in compat-wireless.  It's a known problem, which 
-> has nothing to do with the driver itself.
+Never heard of any such driver, what chip does it contain?
 
-This does work for me against 2.6.26 kernel.  Time to remove the 
-wireless support for the kernel and use this instead.  Thanks for the 
-pointers.
+johannes
 
->> What I would like to know is how I can assist?  I've got a little bit
->> of kernel coding experience and my C is at least reasonable.  I don't
->> have an abundance of time available but can probably nip in a couple of
->> hours worth of work on this.
-> 
-> I suggest that you subscribe to ath5k-devel, read the mailing list and 
-> try dealing with the problems that are reported to the list.  You may 
-> also want to see how to adapt madwifi tracing infrastructure to the new 
-> mmiotrace code due to appear in Linux 2.6.27.
+--=-GrAc4zX79p9WEGFcUbmW
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Subscribed.  Will see what I can do about the mmiotrace stuff ... time 
-to go find some documentation.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Thanks for all the good work that you guys do.
+iQIcBAABAgAGBQJIkdlXAAoJEKVg1VMiehFYO7kP/Ro09thiqXFN+6pP6mp2EQq+
+3qNMkXVNOwx24SSclwjgoP5unCWgvBLyApxbG0gAZ16+ysEO8bcAXvz50hQuq23X
+jY6F4NnzloTeDdyK1ZShKk5Yo2znp43J8U7H0zzAz7QMkR/CgloDLiU1hsXz4TCp
+ORbFmFX/haP37/ATZYi5hru9UNk813FYglo62jvzXAfChbR5xNNiia1+/qDwle8V
+5kPWdd0hGZ33s6hnjgz+zKObxFee5ahoDyuQf3t5Eaz0FNhd//HhE+Aw3X8Id+gE
+t8Kt2Db2C76eoF7f5Xzo9C2otmRuLCA5V15/fbwDxvSrd5XidutBT6cYsnM4w6q+
+P4Vkrn8LKwp/MjZAM3wtMHYSIX0AwW1IWtyI/adXyLxeaE0oMbMet0JOUUp3ZbH1
+bK0XjBa/1/akEsdkWRqOe5EZ6GcxCn40c+XQFe1rNKNPV/SrrY8Ci+Xr7VmAyv6q
+21LrPVcs2ZLc+qHuZYdt9jD9kA53S8GnXCKzB+qyMOJSLrjN+sta/N+HQtCQ5+Ib
+jvPXJQhz/pY+bnOrVj/UMauG37Sb0SaLBwD7glsDgb3/5iHDySRdrq2pBy6EKcqF
+gpeN4ierRCBdfbkFS63bOC+ceCl+Qk8GFm4y+GLVlTkBTuYiCMzbmv4B6uHqARUg
+Rrq/diMiS9/x3ovI+zdU
+=35ic
+-----END PGP SIGNATURE-----
 
-Jaco
+--=-GrAc4zX79p9WEGFcUbmW--
+
