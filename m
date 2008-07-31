@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:42434 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:33473 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752116AbYGPQaA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jul 2008 12:30:00 -0400
-Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
+	id S1751933AbYGaNwq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jul 2008 09:52:46 -0400
+Subject: Re: Issue: iwlist scanning sees the network; dhclient can't connect
 From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Guy Cohen <guy@cguy.net>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <1216196668.3422.2.camel@johannes.berg>
-References: <20080709190915.GA8238@tuxdriver.com>
-	 <247d6d340807140805gfb6523en74384f6f47469d79@mail.gmail.com>
-	 <20080715174246.GA3117@tuxdriver.com>
-	 <1216145731.13411.25.camel@localhost.localdomain>
-	 (sfid-20080715_201731_895315_46FC8F2F)  <1216196668.3422.2.camel@johannes.berg>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Pavel Roskin <proski@gnu.org>,
+	"Thiago F. Tavares" <ttavares@halogica.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200807311531.54665.mb@bu3sch.de>
+References: <1127857B97C63B4285A9B02BEF67AEE601627648@afrodite.halogica.com.br>
+	 <1217447463.25919.10.camel@dv>
+	 <1217493665.3392.0.camel@Friederike-PC.hoffi>
+	 <200807311531.54665.mb@bu3sch.de>
 Content-Type: text/plain
-Date: Wed, 16 Jul 2008 12:27:59 -0400
-Message-Id: <1216225679.21973.6.camel@localhost.localdomain> (sfid-20080716_183007_476450_51F0C4E7)
+Date: Thu, 31 Jul 2008 09:49:19 -0400
+Message-Id: <1217512159.12016.1.camel@localhost.localdomain> (sfid-20080731_155250_111229_7EAB64AB)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-07-16 at 10:24 +0200, Johannes Berg wrote:
-> > > Not sure exactly what you mean with this one.  Are you talking about
-> > > the lib80211 line item?  Or enhancements to the mac80211 component
-> > > to support full(er) MAC designs?
+On Thu, 2008-07-31 at 15:31 +0200, Michael Buesch wrote:
+> On Thursday 31 July 2008 10:41:05 Johannes Berg wrote:
+> > On Wed, 2008-07-30 at 15:51 -0400, Pavel Roskin wrote:
+> > > On Wed, 2008-07-30 at 21:41 +0200, Michael Buesch wrote:
+> > > 
+> > > > dhclient works fine for me. Although it's true that it sometimes
+> > > > messes with up/down state. But you _can_ use it, if you take some care.
+> > > 
+> > > True.  But b43 has the lowest dhclient survival rate of all drivers I
+> > > know.  That's an empirical observation, of course.
 > > 
-> > I hope just lib80211.  We shouldn't be extending mac80211 to fullmac or
-> > quasi-fullmac parts.  But we can certainly share a lot of stuff.
-> > lib80211 is where I see any additional fullmac effort going.
+> > I think debian patches out the down/up behaviour. We may be seeing that.
 > 
-> Just a minor point wrt. lib80211: I see little use in creating yet
-> another module since hopefully soon enough fullmac chipsets will bind
-> cfg80211 anyway so all of that stuff might as well be in there.
+> Oh, that might explain why I don't see this behaviour.
 
-worksforme, I don't really care where that stuff goes as long as we get
-it in one place :)
+We all agreed at the OLS Wireless Summit that the up/down behavior of
+dhclient was just f**king stupid and should be patched out.  Upstream
+doesn't seem to be very responsive.
+
+It just kills mac80211-based drivers, and drivers that do firmware
+upload on dev->open() because all settings get lost and the driver would
+have to re-load everything, which is ton of code in the driver that
+shouldn't have to be there.  It's bad for Intel WiMAX devices too
+because they do firmware upload in dev->open().
 
 Dan
+
 
