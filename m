@@ -1,46 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:36887 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750853AbYGKErX (ORCPT
+Received: from ti-out-0910.google.com ([209.85.142.191]:56573 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763383AbYGaDBH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jul 2008 00:47:23 -0400
-To: "Jouni Malinen" <j@w1.fi>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Linux Wireless Mini-Summit -- Ottawa -- July 22, 2008
-References: <20080709190915.GA8238@tuxdriver.com>
-	<1ba2fa240807091713t1158c1ddp81c92ae26a002e46@mail.gmail.com>
-	<87iqvd3j6w.fsf@nokia.com> <20080711014113.GE7284@jm.kir.nu>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Fri, 11 Jul 2008 07:46:39 +0300
-In-Reply-To: <20080711014113.GE7284@jm.kir.nu> (ext Jouni Malinen's message of "Fri\, 11 Jul 2008 04\:41\:13 +0300")
-Message-ID: <877ibtc9jk.fsf@nokia.com> (sfid-20080711_064730_967266_65A7B2F4)
+	Wed, 30 Jul 2008 23:01:07 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so71685tic.23
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 20:01:05 -0700 (PDT)
+Message-ID: <a8e1da0807302001g647a613bpcca4b4bdc2b27987@mail.gmail.com> (sfid-20080731_050115_891500_D9809423)
+Date: Thu, 31 Jul 2008 11:01:05 +0800
+From: "Dave Young" <hidave.darkstar@gmail.com>
+To: "Andrew Morton" <akpm@linux-foundation.org>
+Subject: Re: [BUG] wireless : cpu stuck for 61s
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"Pekka Enberg" <penberg@cs.helsinki.fi>
+In-Reply-To: <20080730195637.2197a82d.akpm@linux-foundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+References: <20080729055731.GA3265@darkstar>
+	 <1217334724.10489.47.camel@johannes.berg>
+	 <20080730020820.8bcc00e2.akpm@linux-foundation.org>
+	 <a8e1da0807300302m35a0a7c0q2ff2e0ab92a69239@mail.gmail.com>
+	 <20080730031047.54e13e2d.akpm@linux-foundation.org>
+	 <a8e1da0807301906j6438e5d8y64105fe8a2e3dffe@mail.gmail.com>
+	 <20080730195637.2197a82d.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jouni Malinen <j@w1.fi> writes:
-
-> On Thu, Jul 10, 2008 at 05:30:47PM +0300, Kalle Valo wrote:
->
->> I'm just worried if one day is enough for us. The agenda is getting
->> quite long already.
->
-> There should be plenty of time to continue discussions after (or even
-> before) the mini-summit since I would assume most people stay for OLS.
-
-Yes, you are right. I guess there are vacant rooms during the OLS
-which we can use, if needed.
-
-> For example, I will be in Ottawa for the full week (July 18-27) and
-> will be available for discussions related to wireless topics both
-> before and after the mini-summit itself.
-
-I'm also very interested in any discussions. I will be arriving on the
-20th and leaving on the 27th of July.
-
--- 
-Kalle Valo
+T24gVGh1LCBKdWwgMzEsIDIwMDggYXQgMTA6NTYgQU0sIEFuZHJldyBNb3J0b24KPGFrcG1AbGlu
+dXgtZm91bmRhdGlvbi5vcmc+IHdyb3RlOgo+IE9uIFRodSwgMzEgSnVsIDIwMDggMTA6MDY6MzEg
+KzA4MDAgIkRhdmUgWW91bmciIDxoaWRhdmUuZGFya3N0YXJAZ21haWwuY29tPiB3cm90ZToKPgo+
+Pgo+PiBPayBoZXJlIGl0IGlzLgo+PiBCVFcsIEkgcnVuICJrbG9nZCAtYyA3IiBhZnRlciBib290
+Cj4KPiBUaGUgc3lzcnEgb3V0cHV0IGlzIHN0aWxsIG1pc3NpbmcgbG90cyBvZiBzdHVmZi4gIEkg
+Z3Vlc3Mgd2UgYnJva2UgaXQuCj4KPj4KPj4gVGhpcyB0aW1lIEkgZ2V0IGEga21hbGxvYyBwb2lz
+b24gb3ZlcndyaXR0ZW46Cj4+Cj4KPiA8Zml4ZXMgd29yZHdyYXBwaW5nLCBjbGVhbnMgc3R1ZmYg
+dXA+CgpUaGFua3MsIHNvcnJ5IGZvciB0aGF0IGNhdXNlZCBieSB3ZWJtYWlsLgoKPgo+ID09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09Cj4gQlVHIGttYWxsb2MtNDA5NjogUG9pc29uIG92ZXJ3cml0dGVuCj4g
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0KPgo+IElORk86IDB4ZjZmM2EwODAtMHhmNmYzYTBlZi4gRmly
+c3QgYnl0ZSAweDgwIGluc3RlYWQgb2YgMHg2Ygo+IElORk86IEFsbG9jYXRlZCBpbiBkZXZfYWxs
+b2Nfc2tiKzB4MWMvMHgzMCBhZ2U9MzY0MiBjcHU9MCBwaWQ9MAo+IElORk86IEZyZWVkIGluIHNr
+Yl9yZWxlYXNlX2RhdGErMHg1Ny8weDgwIGFnZT0zMTQ2IGNwdT0wIHBpZD0yMzk4Cj4gSU5GTzog
+U2xhYiAweGMxYzA1NDQwIG9iamVjdHM9NyB1c2VkPTMgZnA9MHhmNmYzYTA2MCBmbGFncz0weDQw
+MDAyMGMzCj4gSU5GTzogT2JqZWN0IDB4ZjZmM2EwNjAgQG9mZnNldD04Mjg4IGZwPTB4ZjZmMzkw
+MzAKPgo+IEJ5dGVzIGI0IDB4ZjZmM2EwNTA6ICA1ZSAwOSAwMCAwMCA1NyBjOSAwNSAwMCA1YSA1
+YSA1YSA1YSA1YSA1YSA1YSA1YSBeLi4uV8OJLi5aWlpaWlpaWgo+IE9iamVjdCAweGY2ZjNhMDYw
+OiAgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIga2tra2tr
+a2tra2tra2trawo+IE9iamVjdCAweGY2ZjNhMDcwOiAgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIg
+NmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIga2tra2tra2tra2tra2trawo+IE9iamVjdCAweGY2ZjNh
+MDgwOiAgODAgMDAgMDAgMDAgZmYgZmYgZmYgZmYgZmYgZmYgMDAgMTcgN2IgMDAgNDYgNDAgLi4u
+LsO/w7/Dv8O/w7/Dvy4uey5GQAo+IE9iamVjdCAweGY2ZjNhMDkwOiAgMDAgMTcgN2IgMDAgNDYg
+NDAgMzAgMDkgODEgMjEgMDggN2EgMjEgMDAgMDAgMDAgLi57LkZAMC4uIS56IS4uLgo+IE9iamVj
+dCAweGY2ZjNhMGEwOiAgNjQgMDAgMjEgMDQgMDAgMDcgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDEg
+MDggODIgZC4hLi4uLi4uLi4uLi4uLgo+IE9iamVjdCAweGY2ZjNhMGIwOiAgODQgOGIgMGMgMTIg
+OTYgMTggMjQgMDMgMDEgMDEgMDUgMDQgMDAgMDIgMDAgMDAgLi4uLi4uJC4uLi4uLi4uLgo+IE9i
+amVjdCAweGY2ZjNhMGMwOiAgMDcgMDYgNDMgNGUgMjAgMDEgMGQgMTQgMmEgMDEgMDAgMzIgMDQg
+MzAgNDggNjAgLi5DTi4uLi4qLi4yLjBIYAo+IE9iamVjdCAweGY2ZjNhMGQwOiAgNmMgZGQgMTgg
+MDAgMTcgN2IgMDEgMDQgMDAgMDAgMDAgMDEgMDAgMDAgMDAgMTAgbMOdLi4uey4uLi4uLi4uLi4K
+PiBSZWR6b25lIDB4ZjZmM2IwNjA6ICBiYiBiYiBiYiBiYiAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICDCu8K7wrvCuwo+IFBhZGRpbmcgMHhmNmYzYjA4ODogIDVhIDVhIDVhIDVh
+IDVhIDVhIDVhIDVhICAgICAgICAgICAgICAgICAgICAgICAgIFpaWlpaWlpaCj4gUGlkOiAwLCBj
+b21tOiBzd2FwcGVyIFRhaW50ZWQ6IEcgICAgICAgIFcgMi42LjI2LXNtcCAjMgo+IFs8YzAxODBm
+NWQ+XSBwcmludF90cmFpbGVyKzB4YWQvMHhmMAo+IFs8YzAxODEwM2I+XSBjaGVja19ieXRlc19h
+bmRfcmVwb3J0KzB4OWIvMHhjMAo+IFs8YzAxODE0NWU+XSBjaGVja19vYmplY3QrMHgxOWUvMHgx
+ZTAKPiBbPGMwMTgyMWE0Pl0gX19zbGFiX2FsbG9jKzB4NDU0LzB4NGYwCj4gWzxjMDE4MzRkNj5d
+IF9fa21hbGxvY190cmFja19jYWxsZXIrMHhlNi8weGYwCj4gWzxjMDNkZDFlYz5dID8gZGV2X2Fs
+bG9jX3NrYisweDFjLzB4MzAKPiBbPGMwM2RkMWVjPl0gPyBkZXZfYWxsb2Nfc2tiKzB4MWMvMHgz
+MAo+IFs8YzAzZGNlNzk+XSBfX2FsbG9jX3NrYisweDQ5LzB4MTAwCj4gWzxjMDNkZDFlYz5dIGRl
+dl9hbGxvY19za2IrMHgxYy8weDMwCj4gWzxmOGE1ODU5OT5dIGF0aDVrX3J4YnVmX3NldHVwKzB4
+MzkvMHgyMDAgW2F0aDVrXQo+IFs8ZjhhNWE2OTc+XSBhdGg1a190YXNrbGV0X3J4KzB4MTI3LzB4
+NWMwIFthdGg1a10KPiBbPGMwMTQ5NjlhPl0gPyBwcmludF9sb2NrX2NvbnRlbnRpb25fYnVnKzB4
+MWEvMHhlMAo+IFs8YzAxMmVhZmM+XSB0YXNrbGV0X2FjdGlvbisweDRjLzB4YzAKPiBbPGMwMTJl
+NDYzPl0gX19kb19zb2Z0aXJxKzB4OTMvMHgxMjAKPiBbPGMwMTJlNTQ3Pl0gZG9fc29mdGlycSsw
+eDU3LzB4NjAKPiBbPGMwMTJlYTI5Pl0gaXJxX2V4aXQrMHg2OS8weDgwCj4gWzxjMDEwNmI1NT5d
+IGRvX0lSUSsweDQ1LzB4ODAKPiBbPGMwMTBhNWQwPl0gPyBtd2FpdF9pZGxlKzB4MC8weDUwCj4g
+WzxjMDEwNDc1Mj5dIGNvbW1vbl9pbnRlcnJ1cHQrMHgyZS8weDM0Cj4gWzxjMDEwYTVkMD5dID8g
+bXdhaXRfaWRsZSsweDAvMHg1MAo+IFs8YzAxMGE2MDk+XSA/IG13YWl0X2lkbGUrMHgzOS8weDUw
+Cj4gWzxjMDEwMjZlMD5dIGNwdV9pZGxlKzB4NjAvMHhkMAo+IFs8YzA0M2M4Y2U+XSByZXN0X2lu
+aXQrMHg0ZS8weDYwCj4gPT09PT09PT09PT09PT09PT09PT09PT0KPiBGSVgga21hbGxvYy00MDk2
+OiBSZXN0b3JpbmcgMHhmNmYzYTA4MC0weGY2ZjNhMGVmPTB4NmIKPgo+IEZJWCBrbWFsbG9jLTQw
+OTY6IE1hcmtpbmcgYWxsIG9iamVjdHMgdXNlZAo+IFs8YzAyNDNiNGY+XSA/IHNlY3VyaXR5X2Zp
+bGVfcGVybWlzc2lvbisweGYvMHgyMAo+IFs8YzAxOTQzNmY+XSBzeXNfc2VsZWN0KzB4M2YvMHgx
+OTAKPiBbPGMwMTg3OGU5Pl0gPyBmcHV0KzB4MTkvMHgyMAo+IFs8YzAxMDNkYmY+XSA/IHJlc3Rv
+cmVfbm9jaGVjaysweDEyLzB4MTUKPiBbPGMwMTRiMDZkPl0gPyB0cmFjZV9oYXJkaXJxc19vbisw
+eGJkLzB4MTQwCj4gWzxjMDEwM2Q1ZT5dIHN5c2NhbGxfY2FsbCsweDcvMHhiCj4gPT09PT09PT09
+PT09PT09PT09PT09PT0KPgo+IGFyZ2gsIHRoYXQgc3R1ZmYgaHVydHMgbXkgYnJhaW4uICBOb25l
+IG9mIHRoZSBudW1iZXJzIHNlZW0gdG8gbWFrZSBhbnkKPiBzZW5zZSBmb3IgYSA0ayBhbGxvY2F0
+aW9uIDooIFBla2thLCBkbyB5b3UgaGF2ZSB0aW1lIHRvIGRlY3J5cHQgdGhpcz8KPgo+IERhdmUs
+IGNvdWxkIHlvdSBwbGVhc2UgcmVtaW5kIHVzIHdoaWNoIG5ldCBkcml2ZXIgd2FzIGluIHVzZSBo
+ZXJlPwo+Cj4KCkl0J3MgdGhlIGF0aDVrCgotLSAKUmVnYXJkcwpkYXZlCg==
