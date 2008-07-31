@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:31159 "EHLO c60.cesmail.net"
+Received: from c60.cesmail.net ([216.154.195.49]:57813 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751542AbYGaPBm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 11:01:42 -0400
-Subject: Re: Issue: iwlist scanning sees the network; dhclient can't connect
+	id S1751319AbYGaUSv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jul 2008 16:18:51 -0400
+Subject: Re: Driver for the FullMAC card
 From: Pavel Roskin <proski@gnu.org>
 To: Dan Williams <dcbw@redhat.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Thiago F. Tavares" <ttavares@halogica.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1217512159.12016.1.camel@localhost.localdomain>
-References: <1127857B97C63B4285A9B02BEF67AEE601627648@afrodite.halogica.com.br>
-	 <1217447463.25919.10.camel@dv>
-	 <1217493665.3392.0.camel@Friederike-PC.hoffi>
-	 <200807311531.54665.mb@bu3sch.de>
-	 <1217512159.12016.1.camel@localhost.localdomain>
+Cc: Dmitry <dbaryshkov@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <1217534415.9377.12.camel@localhost.localdomain>
+References: <g6qr98$q28$2@ger.gmane.org>
+	 <1217512488.12016.8.camel@localhost.localdomain>
+	 <bc64b4640807310715j41bb0029i5c8be73a311ed52@mail.gmail.com>
+	 <1217514241.12016.13.camel@localhost.localdomain>
+	 <1217517571.22143.17.camel@dv>
+	 <1217534415.9377.12.camel@localhost.localdomain>
 Content-Type: text/plain
-Date: Thu, 31 Jul 2008 11:01:40 -0400
-Message-Id: <1217516500.22143.3.camel@dv> (sfid-20080731_170147_326743_230CF7D6)
+Date: Thu, 31 Jul 2008 16:18:49 -0400
+Message-Id: <1217535529.15900.4.camel@dv> (sfid-20080731_221854_394191_7A9882E3)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-07-31 at 09:49 -0400, Dan Williams wrote:
-> We all agreed at the OLS Wireless Summit that the up/down behavior of
-> dhclient was just f**king stupid and should be patched out.  Upstream
-> doesn't seem to be very responsive.
+On Thu, 2008-07-31 at 16:00 -0400, Dan Williams wrote:
 
-Sorry for going offtopic, but somebody picked up dhcpcd, and it's in a
-pretty good shape now, preparing for 4.0 release.  It supports dhclient
-scripts, works with NetworkManager, and doesn't bring the interface
-down.  It even have a git repository, with the latest commit 79 made
-minutes ago.
+> Guess I misunderstood the scope of p80211 then.  So the prism2 usb stuff
+> really is fullmac then?  Or at least quasi-mac like the ipw2x00 cards?
+
+It's as FullMAC as it can get.  It's the same Prism chipset, just
+connected to the host system in a different way.  I don't think it's
+doing anything differently on the wireless side.
+
+Sure enough, there are some knobs to dumb it down, but probably not to
+the SoftMAC level.  I don't think it was tried, and I don't think it's
+worth trying.
 
 -- 
 Regards,
