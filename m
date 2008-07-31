@@ -1,138 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50063
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753260AbYGVW4L (ORCPT
+Received: from courier.cs.helsinki.fi ([128.214.9.1]:48162 "EHLO
+	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751293AbYGaJxJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jul 2008 18:56:11 -0400
-Date: Tue, 22 Jul 2008 15:56:11 -0700 (PDT)
-Message-Id: <20080722.155611.176476925.davem@davemloft.net> (sfid-20080723_005616_603753_239ADA48)
-To: ag@alessandroguido.name
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [BUG] kernel BUG at net/core/dev.c:1328!
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <d4b984a30807220254t1aaf6ac4q874329966511b0c5@mail.gmail.com>
-References: <d4b984a30807210914nd4d0db5yb7b93ca5143ff0d5@mail.gmail.com>
-	<20080721.092027.14394005.davem@davemloft.net>
-	<d4b984a30807220254t1aaf6ac4q874329966511b0c5@mail.gmail.com>
+	Thu, 31 Jul 2008 05:53:09 -0400
+Subject: Re: [BUG] wireless : cpu stuck for 61s
+From: Pekka Enberg <penberg@cs.helsinki.fi>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Dave Young <hidave.darkstar@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240807310250kd2df7bfxa3591cf78e68f8dc@mail.gmail.com>
+References: <20080729055731.GA3265@darkstar>
+	 <1217334724.10489.47.camel@johannes.berg>
+	 <20080730020820.8bcc00e2.akpm@linux-foundation.org>
+	 <a8e1da0807300302m35a0a7c0q2ff2e0ab92a69239@mail.gmail.com>
+	 <20080730031047.54e13e2d.akpm@linux-foundation.org>
+	 <a8e1da0807301906j6438e5d8y64105fe8a2e3dffe@mail.gmail.com>
+	 <20080730195637.2197a82d.akpm@linux-foundation.org>
+	 <Pine.LNX.4.64.0807311156050.27055@sbz-30.cs.Helsinki.FI>
+	 <1ba2fa240807310250kd2df7bfxa3591cf78e68f8dc@mail.gmail.com>
+Date: Thu, 31 Jul 2008 12:53:14 +0300
+Message-Id: <1217497994.7813.184.camel@penberg-laptop> (sfid-20080731_115313_780208_F0AEA507)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Alessandro Guido" <ag@alessandroguido.name>
-Date: Tue, 22 Jul 2008 11:54:26 +0200
+On Thu, 2008-07-31 at 12:50 +0300, Tomas Winkler wrote:
+> > There's ath5k in the stack trace but that, of course, doesn't
+> > automatically mean it's at fault here. It could have been just the poor
+> > bastard who was the next to allocate 4 KB with kmalloc() noticing the
+> > corruption.
+> >
+> > Hope this helps!
+> 
+> I've seen something similar with fragmentation code in iwl4965 but I
+> can reproduce it only when using SLAB. With SLUB it didn't shown up.
+> Does anyone know what is difference between SLAB and SLUB in this context.?
 
-> Got a WARNING this morning (2.6.26-05752-g93ded9b) and I think it's related.
+Do you have CONFIG_SLUB_DEBUG_ON enabled? (Note: if you only have
+CONFIG_SLUB_DEBUG enabled, then you need to enable debugging at run-time
+by passing slub_debug to kernel command line.)
 
-Please try this patch:
-
-ipw2200: Call netif_*_queue() interfaces properly.
-
-netif_carrier_{on,off}() handles starting and stopping packet
-flow into the driver.  So there is no reason to invoke netif_stop_queue()
-and netif_wake_queue() in response to link status events.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
-
-diff --git a/drivers/net/wireless/ipw2200.c b/drivers/net/wireless/ipw2200.c
-index 6e70460..1acfbcd 100644
---- a/drivers/net/wireless/ipw2200.c
-+++ b/drivers/net/wireless/ipw2200.c
-@@ -4972,8 +4972,7 @@ static int ipw_queue_tx_reclaim(struct ipw_priv *priv,
- 	}
-       done:
- 	if ((ipw_tx_queue_space(q) > q->low_mark) &&
--	    (qindex >= 0) &&
--	    (priv->status & STATUS_ASSOCIATED) && netif_running(priv->net_dev))
-+	    (qindex >= 0))
- 		netif_wake_queue(priv->net_dev);
- 	used = q->first_empty - q->last_used;
- 	if (used < 0)
-@@ -10154,14 +10153,8 @@ static  void init_sys_config(struct ipw_sys_config *sys_config)
- 
- static int ipw_net_open(struct net_device *dev)
- {
--	struct ipw_priv *priv = ieee80211_priv(dev);
- 	IPW_DEBUG_INFO("dev->open\n");
--	/* we should be verifying the device is ready to be opened */
--	mutex_lock(&priv->mutex);
--	if (!(priv->status & STATUS_RF_KILL_MASK) &&
--	    (priv->status & STATUS_ASSOCIATED))
--		netif_start_queue(dev);
--	mutex_unlock(&priv->mutex);
-+	netif_start_queue(dev);
- 	return 0;
- }
- 
-@@ -10481,13 +10474,6 @@ static int ipw_net_hard_start_xmit(struct ieee80211_txb *txb,
- 	IPW_DEBUG_TX("dev->xmit(%d bytes)\n", txb->payload_size);
- 	spin_lock_irqsave(&priv->lock, flags);
- 
--	if (!(priv->status & STATUS_ASSOCIATED)) {
--		IPW_DEBUG_INFO("Tx attempt while not associated.\n");
--		priv->ieee->stats.tx_carrier_errors++;
--		netif_stop_queue(dev);
--		goto fail_unlock;
--	}
--
- #ifdef CONFIG_IPW2200_PROMISCUOUS
- 	if (rtap_iface && netif_running(priv->prom_net_dev))
- 		ipw_handle_promiscuous_tx(priv, txb);
-@@ -10499,10 +10485,6 @@ static int ipw_net_hard_start_xmit(struct ieee80211_txb *txb,
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
- 	return ret;
--
--      fail_unlock:
--	spin_unlock_irqrestore(&priv->lock, flags);
--	return 1;
- }
- 
- static struct net_device_stats *ipw_net_get_stats(struct net_device *dev)
-@@ -10703,13 +10685,6 @@ static void ipw_link_up(struct ipw_priv *priv)
- 	priv->last_packet_time = 0;
- 
- 	netif_carrier_on(priv->net_dev);
--	if (netif_queue_stopped(priv->net_dev)) {
--		IPW_DEBUG_NOTIF("waking queue\n");
--		netif_wake_queue(priv->net_dev);
--	} else {
--		IPW_DEBUG_NOTIF("starting queue\n");
--		netif_start_queue(priv->net_dev);
--	}
- 
- 	cancel_delayed_work(&priv->request_scan);
- 	cancel_delayed_work(&priv->request_direct_scan);
-@@ -10739,7 +10714,6 @@ static void ipw_link_down(struct ipw_priv *priv)
- {
- 	ipw_led_link_down(priv);
- 	netif_carrier_off(priv->net_dev);
--	netif_stop_queue(priv->net_dev);
- 	notify_wx_assoc_event(priv);
- 
- 	/* Cancel any queued work ... */
-@@ -11419,7 +11393,6 @@ static void ipw_down(struct ipw_priv *priv)
- 	/* Clear all bits but the RF Kill */
- 	priv->status &= STATUS_RF_KILL_MASK | STATUS_EXIT_PENDING;
- 	netif_carrier_off(priv->net_dev);
--	netif_stop_queue(priv->net_dev);
- 
- 	ipw_stop_nic(priv);
- 
-@@ -11522,7 +11495,6 @@ static int ipw_prom_open(struct net_device *dev)
- 
- 	IPW_DEBUG_INFO("prom dev->open\n");
- 	netif_carrier_off(dev);
--	netif_stop_queue(dev);
- 
- 	if (priv->ieee->iw_mode != IW_MODE_MONITOR) {
- 		priv->sys_config.accept_all_data_frames = 1;
-@@ -11558,7 +11530,6 @@ static int ipw_prom_stop(struct net_device *dev)
- static int ipw_prom_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
- {
- 	IPW_DEBUG_INFO("prom dev->xmit\n");
--	netif_stop_queue(dev);
- 	return -EOPNOTSUPP;
- }
- 
