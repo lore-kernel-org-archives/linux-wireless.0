@@ -1,417 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from usul.saidi.cx ([204.11.33.34]:48563 "EHLO usul.overt.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751014AbYHPTVk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Aug 2008 15:21:40 -0400
-Message-ID: <48A728B0.8030206@overt.org> (sfid-20080816_212146_863208_00B69765)
-Date: Sat, 16 Aug 2008 12:21:20 -0700
-From: Philip Langdale <philipl@overt.org>
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:35140 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755645AbYGaWz2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Jul 2008 18:55:28 -0400
+Message-ID: <489242CF.2000100@imap.cc> (sfid-20080801_005539_875388_6DB5388B)
+Date: Fri, 01 Aug 2008 00:55:11 +0200
+From: Tilman Schmidt <tilman@imap.cc>
 MIME-Version: 1.0
-To: LKML <linux-kernel@vger.kernel.org>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-CC: Matthew Garrett <mjg59@srcf.ucam.org>, toshiba_acpi@memebeam.org,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling through
- rfkill (v5)
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Greg KH <greg@kroah.com>
+CC: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Q: support for AVM Fritz! WLAN USB in kernel 2.6.25+
+References: <4891D1B9.70703@imap.cc> <20080731163843.GB9606@kroah.com> <48922FE2.70705@imap.cc> <20080731215055.GB4817@kroah.com>
+In-Reply-To: <20080731215055.GB4817@kroah.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig20EB5BC271993523A77F46F9"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's been a patch floating around for toshiba_acpi that exports an ad-hoc
-/proc interface to toggle the bluetooth adapter in a large number of Toshiba
-laptops. I'm not sure if it's still relevant for the latest models, but it is
-still required for older models such as my Tecra M3.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig20EB5BC271993523A77F46F9
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-This change pulls in the low level Toshiba-specific code from the old patch and
-sets up an rfkill device and a polled input device to track the state of the
-hardware kill-switch.
+On Thu, 31 Jul 2008 14:50:55 -0700, Greg KH wrote:
+> On Thu, Jul 31, 2008 at 11:34:26PM +0200, Tilman Schmidt wrote:
 
-Signed-off-by: Philip Langdale <philipl@overt.org>
----
-  Kconfig        |    1
-  toshiba_acpi.c |  264 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
-  2 files changed, 257 insertions(+), 8 deletions(-)
+>> Please let's keep the politics out of this. I know who wrote that
+>> patch, I know the agenda behind it and the discussion accompanying it.=
 
-diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-index 735f5ea..047829c 100644
---- a/drivers/acpi/Kconfig
-+++ b/drivers/acpi/Kconfig
-@@ -260,6 +260,7 @@ config ACPI_ASUS
-  config ACPI_TOSHIBA
-  	tristate "Toshiba Laptop Extras"
-  	depends on X86
-+	select INPUT_POLLDEV
-  	select BACKLIGHT_CLASS_DEVICE
-  	---help---
-  	  This driver adds support for access to certain system settings
-diff --git a/drivers/acpi/toshiba_acpi.c b/drivers/acpi/toshiba_acpi.c
-index 0a43c8e..0effbcc 100644
---- a/drivers/acpi/toshiba_acpi.c
-+++ b/drivers/acpi/toshiba_acpi.c
-@@ -3,6 +3,7 @@
-   *
-   *
-   *  Copyright (C) 2002-2004 John Belmonte
-+ *  Copyright (C) 2008 Philip Langdale
-   *
-   *  This program is free software; you can redistribute it and/or modify
-   *  it under the terms of the GNU General Public License as published by
-@@ -33,7 +34,7 @@
-   *
-   */
+>> Conversely, I'm sure you know fully well that I have no way of putting=
 
--#define TOSHIBA_ACPI_VERSION	"0.18"
-+#define TOSHIBA_ACPI_VERSION	"0.19"
-  #define PROC_INTERFACE_VERSION	1
+>> that question to any relevant person at AVM, and even if I had, it wou=
+ld
+>> achieve exactly nothing at all. I am not interested in such fruitless
+>> political discussions. I have a simple question, to which I would like=
 
-  #include <linux/kernel.h>
-@@ -42,6 +43,9 @@
-  #include <linux/types.h>
-  #include <linux/proc_fs.h>
-  #include <linux/backlight.h>
-+#include <linux/platform_device.h>
-+#include <linux/rfkill.h>
-+#include <linux/input-polldev.h>
+>> a simple answer.
+>=20
+> There's no "politics" here at all.
 
-  #include <asm/uaccess.h>
+Oh, please ... You aren't seriously trying to tell me there's a *technica=
+l*
+reason for changing EXPORT_SYMBOL to EXPORT_SYMBOL_GPL, are you?
 
-@@ -90,6 +94,7 @@ MODULE_LICENSE("GPL");
-  #define HCI_VIDEO_OUT			0x001c
-  #define HCI_HOTKEY_EVENT		0x001e
-  #define HCI_LCD_BRIGHTNESS		0x002a
-+#define HCI_WIRELESS			0x0056
+Again, I am not interested in discussing that decision. It's been taken,
+and I accept it. But let's call a spade a spade.
 
-  /* field definitions */
-  #define HCI_LCD_BRIGHTNESS_BITS		3
-@@ -98,9 +103,14 @@ MODULE_LICENSE("GPL");
-  #define HCI_VIDEO_OUT_LCD		0x1
-  #define HCI_VIDEO_OUT_CRT		0x2
-  #define HCI_VIDEO_OUT_TV		0x4
-+#define HCI_WIRELESS_KILL_SWITCH	0x01
-+#define HCI_WIRELESS_BT_PRESENT		0x0f
-+#define HCI_WIRELESS_BT_ATTACH		0x40
-+#define HCI_WIRELESS_BT_POWER		0x80
+> And why wouldn't you go ask AVM, they are the ones producing the driver=
 
-  static const struct acpi_device_id toshiba_device_ids[] = {
-  	{"TOS6200", 0},
-+	{"TOS6208", 0},
-  	{"TOS1900", 0},
-  	{"", 0},
-  };
-@@ -193,7 +203,7 @@ static acpi_status hci_raw(const u32 in[HCI_WORDS], u32 out[HCI_WORDS])
-  	return status;
-  }
+> for this hardware, how could it be our responsibility to get their code=
 
--/* common hci tasks (get or set one value)
-+/* common hci tasks (get or set one or two value)
-   *
-   * In addition to the ACPI status, the HCI system returns a result which
-   * may be useful (such as "not supported").
-@@ -218,6 +228,154 @@ static acpi_status hci_read1(u32 reg, u32 * out1, u32 * result)
-  	return status;
-  }
+> to work properly, when we have absolutely no way to do so?
 
-+static acpi_status hci_write2(u32 reg, u32 in1, u32 in2, u32* result)
-+{
-+        u32 in[HCI_WORDS] = { HCI_SET, reg, in1, in2, 0, 0 };
-+        u32 out[HCI_WORDS];
-+        acpi_status status = hci_raw(in, out);
-+        *result = (status == AE_OK) ? out[0] : HCI_FAILURE;
-+        return status;
-+}
-+
-+static acpi_status hci_read2(u32 reg, u32* out1, u32* out2, u32* result)
-+{
-+        u32 in[HCI_WORDS] = { HCI_GET, reg, *out1, *out2, 0, 0 };
-+        u32 out[HCI_WORDS];
-+        acpi_status status = hci_raw(in, out);
-+        *out1 = out[2];
-+        *out2 = out[3];
-+        *result = (status == AE_OK) ? out[0] : HCI_FAILURE;
-+        return status;
-+}
-+
-+struct toshiba_acpi_dev {
-+	struct platform_device *p_dev;
-+	struct rfkill *rfk_dev;
-+	struct input_polled_dev *poll_dev;
-+
-+	const char *bt_name;
-+	const char *rfk_name;
-+
-+	bool last_rfk_state;
-+
-+	struct mutex mutex;
-+};
-+
-+static struct toshiba_acpi_dev toshiba_acpi = {
-+	.bt_name = "Toshiba Bluetooth",
-+	.rfk_name = "Toshiba RFKill Switch",
-+	.last_rfk_state = FALSE,
-+};
-+
-+/* Bluetooth rfkill handlers */
-+
-+static u32 hci_get_bt_present(bool *present)
-+{
-+	u32 hci_result;
-+	u32 value, value2;
-+	value = 0;
-+	value2 = 0;
-+	hci_read2(HCI_WIRELESS, &value, &value2, &hci_result);
-+	if (hci_result == HCI_SUCCESS) {
-+		*present = (value & HCI_WIRELESS_BT_PRESENT) ? TRUE : FALSE;
-+	}
-+	return hci_result;
-+}
-+
-+static u32 hci_get_bt_on(bool *on)
-+{
-+	u32 hci_result;
-+	u32 value, value2;
-+	value = 0;
-+	value2 = 0x0001;
-+	hci_read2(HCI_WIRELESS, &value, &value2, &hci_result);
-+	if (hci_result == HCI_SUCCESS) {
-+		*on = (value & HCI_WIRELESS_BT_POWER) &&
-+		      (value & HCI_WIRELESS_BT_ATTACH);
-+	}
-+	return hci_result;
-+}
-+
-+static u32 hci_get_radio_state(bool *radio_state)
-+{
-+	u32 hci_result;
-+	u32 value, value2;
-+
-+	value = 0;
-+	value2 = 0x0001;
-+	hci_read2(HCI_WIRELESS, &value, &value2, &hci_result);
-+
-+	*radio_state = value & HCI_WIRELESS_KILL_SWITCH;
-+	return hci_result;
-+}
-+
-+static int bt_rfkill_toggle_radio(void *data, enum rfkill_state state)
-+{
-+	u32 result1, result2;
-+	u32 value;
-+	bool radio_state;
-+
-+	struct toshiba_acpi_dev *dev = data;
-+
-+	value = (state == RFKILL_STATE_UNBLOCKED);
-+
-+	if (hci_get_radio_state(&radio_state) != HCI_SUCCESS) {
-+		return -EFAULT;
-+	}
-+
-+	switch (state) {
-+	case RFKILL_STATE_UNBLOCKED:
-+		if (!radio_state) {
-+		    return -EPERM;
-+		}
-+		break;
-+	case RFKILL_STATE_SOFT_BLOCKED:
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	mutex_lock(&dev->mutex);
-+	hci_write2(HCI_WIRELESS, value, HCI_WIRELESS_BT_POWER, &result1);
-+	hci_write2(HCI_WIRELESS, value, HCI_WIRELESS_BT_ATTACH, &result2);
-+	mutex_unlock(&dev->mutex);
-+
-+	if (result1 != HCI_SUCCESS || result2 != HCI_SUCCESS) {
-+		return -EFAULT;
-+	}
-+
-+	return 0;
-+}
-+
-+static void bt_poll_rfkill(struct input_polled_dev *poll_dev)
-+{
-+	bool state_changed;
-+	bool new_rfk_state;
-+	bool value;
-+	u32 hci_result;
-+
-+	struct toshiba_acpi_dev *dev = poll_dev->private;
-+
-+	hci_result = hci_get_radio_state(&value);
-+	if (hci_result != HCI_SUCCESS) {
-+		return; /* Can't do anything useful */
-+	}
-+	new_rfk_state = value;
-+
-+	mutex_lock(&dev->mutex);
-+	state_changed = new_rfk_state != dev->last_rfk_state;
-+	dev->last_rfk_state = new_rfk_state;
-+	mutex_unlock(&dev->mutex);
-+
-+	if (unlikely(state_changed)) {
-+		rfkill_force_state(dev->rfk_dev,
-+				   new_rfk_state ?
-+				   RFKILL_STATE_SOFT_BLOCKED :
-+				   RFKILL_STATE_HARD_BLOCKED);
-+		input_report_switch(poll_dev->input, SW_RFKILL_ALL, new_rfk_state);
-+	}
-+}
-+
-  static struct proc_dir_entry *toshiba_proc_dir /*= 0*/ ;
-  static struct backlight_device *toshiba_backlight_device;
-  static int force_fan;
-@@ -547,6 +705,15 @@ static struct backlight_ops toshiba_backlight_data = {
+That's not true. Reverting commit 782e70c6fc2290a0395850e8e02583b8b62264d=
+8
+would be enough. But again, I am not asking for that. My question isn't
+about getting AVM's closed source driver to work with kernel 2.6.25+.
+I just want to know whether there is an open source alternative, nothing
+more.
 
-  static void toshiba_acpi_exit(void)
-  {
-+	if (toshiba_acpi.poll_dev) {
-+		input_unregister_polled_device(toshiba_acpi.poll_dev);
-+		input_free_polled_device(toshiba_acpi.poll_dev);
-+	}
-+
-+	if (toshiba_acpi.rfk_dev) {
-+		rfkill_unregister(toshiba_acpi.rfk_dev);
-+	}
-+
-  	if (toshiba_backlight_device)
-  		backlight_device_unregister(toshiba_backlight_device);
+> This is between you and AVM.  I really suggest contacting the company.
+> I have talked to them in the past and they seem willing to help out
+> where they can.
 
-@@ -555,6 +722,8 @@ static void toshiba_acpi_exit(void)
-  	if (toshiba_proc_dir)
-  		remove_proc_entry(PROC_TOSHIBA, acpi_root_dir);
+Obviously even you weren't able to convince them to convert their driver
+for this device to something compatible with post 2.6.24 kernels. How
+then could I possibly hope to achieve anything? I have no contractual
+relationship with AVM. I don't know anybody in that company. I don't work=
 
-+	platform_device_unregister(toshiba_acpi.p_dev);
-+
-  	return;
-  }
+for anyone they would recognize. All I can do is contact the regular
+consumer support people who don't even know what I am talking about and
+keep asking me to boot Windows, where the device obviously works, so all
+is well, no? After all, it does say "System requirements: Windows" on the=
 
-@@ -562,6 +731,10 @@ static int __init toshiba_acpi_init(void)
-  {
-  	acpi_status status = AE_OK;
-  	u32 hci_result;
-+	bool bt_present;
-+	bool bt_on;
-+	bool radio_on;
-+	int ret = 0;
+box.
 
-  	if (acpi_disabled)
-  		return -ENODEV;
-@@ -578,6 +751,18 @@ static int __init toshiba_acpi_init(void)
-  	       TOSHIBA_ACPI_VERSION);
-  	printk(MY_INFO "    HCI method: %s\n", method_hci);
+But all this is just the fruitless discussion I wanted to avoid. With
+your kind permission I'll stop this here and concentrate instead on the
+subthread which actually deals with my question.
 
-+	mutex_init(&toshiba_acpi.mutex);
-+
-+	toshiba_acpi.p_dev = platform_device_register_simple("toshiba_acpi",
-+							      -1, NULL, 0);
-+	if (IS_ERR(toshiba_acpi.p_dev)) {
-+		ret = PTR_ERR(toshiba_acpi.p_dev);
-+		printk(MY_ERR "unable to register platform device\n");
-+		toshiba_acpi.p_dev= NULL;
-+		toshiba_acpi_exit();
-+		return ret;
-+	}
-+
-  	force_fan = 0;
-  	key_event_valid = 0;
+Thanks,
+Tilman
 
-@@ -586,19 +771,23 @@ static int __init toshiba_acpi_init(void)
 
-  	toshiba_proc_dir = proc_mkdir(PROC_TOSHIBA, acpi_root_dir);
-  	if (!toshiba_proc_dir) {
--		status = AE_ERROR;
-+		toshiba_acpi_exit();
-+		return -ENODEV;
-  	} else {
-  		toshiba_proc_dir->owner = THIS_MODULE;
-  		status = add_device();
--		if (ACPI_FAILURE(status))
--			remove_proc_entry(PROC_TOSHIBA, acpi_root_dir);
-+		if (ACPI_FAILURE(status)) {
-+			toshiba_acpi_exit();
-+			return -ENODEV;
-+		}
-  	}
+--------------enig20EB5BC271993523A77F46F9
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
--	toshiba_backlight_device = backlight_device_register("toshiba",NULL,
-+	toshiba_backlight_device = backlight_device_register("toshiba",
-+						&toshiba_acpi.p_dev->dev,
-  						NULL,
-  						&toshiba_backlight_data);
-          if (IS_ERR(toshiba_backlight_device)) {
--		int ret = PTR_ERR(toshiba_backlight_device);
-+		ret = PTR_ERR(toshiba_backlight_device);
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
 
-  		printk(KERN_ERR "Could not register toshiba backlight device\n");
-  		toshiba_backlight_device = NULL;
-@@ -607,7 +796,66 @@ static int __init toshiba_acpi_init(void)
-  	}
-          toshiba_backlight_device->props.max_brightness = HCI_LCD_BRIGHTNESS_LEVELS - 1;
+iD8DBQFIkkLbQ3+did9BuFsRAhl5AJ0YesA/ctLupGk/VoLjvra+pYxIHQCeM/mO
+bkkCCFoF85r7L7Kcys4vq38=
+=/zYk
+-----END PGP SIGNATURE-----
 
--	return (ACPI_SUCCESS(status)) ? 0 : -ENODEV;
-+	/* Register rfkill switch for Bluetooth */
-+	if (hci_get_bt_present(&bt_present) == HCI_SUCCESS && bt_present) {
-+		toshiba_acpi.rfk_dev = rfkill_allocate(&toshiba_acpi.p_dev->dev,
-+							RFKILL_TYPE_BLUETOOTH);
-+		if (!toshiba_acpi.rfk_dev) {
-+			printk(MY_ERR "unable to allocate rfkill device\n");
-+			toshiba_acpi_exit();
-+			return -ENOMEM;
-+		}
-+
-+		toshiba_acpi.rfk_dev->name = toshiba_acpi.bt_name;
-+		toshiba_acpi.rfk_dev->state = RFKILL_STATE_OFF;
-+		toshiba_acpi.rfk_dev->toggle_radio = bt_rfkill_toggle_radio;
-+		toshiba_acpi.rfk_dev->user_claim_unsupported = 1;
-+		toshiba_acpi.rfk_dev->data = &toshiba_acpi;
-+
-+		if (hci_get_bt_on(&bt_on) == HCI_SUCCESS && bt_on) {
-+			toshiba_acpi.rfk_dev->state = RFKILL_STATE_UNBLOCKED;
-+		} else if (hci_get_radio_state(&radio_on) == HCI_SUCCESS && radio_on) {
-+			toshiba_acpi.rfk_dev->state = RFKILL_STATE_SOFT_BLOCKED;
-+		} else {
-+			toshiba_acpi.rfk_dev->state = RFKILL_STATE_HARD_BLOCKED;
-+		}
-+
-+		ret = rfkill_register(toshiba_acpi.rfk_dev);
-+		if (ret) {
-+			printk(MY_ERR "unable to register rfkill device\n");
-+			toshiba_acpi_exit();
-+			return -ENOMEM;
-+		}
-+	}
-+
-+	/* Register input device for kill switch */
-+	toshiba_acpi.poll_dev = input_allocate_polled_device();
-+	if (!toshiba_acpi.poll_dev) {
-+		printk(MY_ERR "unable to allocate kill-switch input device\n");
-+		toshiba_acpi_exit();
-+		return -ENOMEM;
-+	}
-+	toshiba_acpi.poll_dev->private = &toshiba_acpi;
-+	toshiba_acpi.poll_dev->poll = bt_poll_rfkill;
-+	toshiba_acpi.poll_dev->poll_interval = 1000; /* msecs */
-+
-+	toshiba_acpi.poll_dev->input->name = toshiba_acpi.rfk_name;
-+	toshiba_acpi.poll_dev->input->id.bustype = BUS_HOST;
-+	toshiba_acpi.poll_dev->input->id.vendor = 0x0930; /* Toshiba USB Vendor ID */
-+	set_bit(EV_SW, toshiba_acpi.poll_dev->input->evbit);
-+	set_bit(SW_RFKILL_ALL, toshiba_acpi.poll_dev->input->swbit);
-+	input_report_switch(toshiba_acpi.poll_dev->input, SW_RFKILL_ALL, TRUE);
-+
-+	ret = input_register_polled_device(toshiba_acpi.poll_dev);
-+	if (ret) {
-+		printk(MY_ERR "unable to register kill-switch input device\n");
-+		rfkill_free(toshiba_acpi.rfk_dev);
-+		toshiba_acpi.rfk_dev = NULL;
-+		toshiba_acpi_exit();
-+		return ret;
-+	}
-+
-+	return 0;
-  }
-
-  module_init(toshiba_acpi_init);
+--------------enig20EB5BC271993523A77F46F9--
