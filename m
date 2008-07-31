@@ -1,81 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51408.mail.re2.yahoo.com ([206.190.38.187]:25286 "HELO
-	web51408.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750804AbYGHT2K convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jul 2008 15:28:10 -0400
-Date: Tue, 8 Jul 2008 12:28:08 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Reply-To: pommnitz@yahoo.com
-Subject: Re: Linux capable PDA with WLAN NIC that supports access point mode?
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1215544570.3670.7.camel@johannes.berg>
+Received: from mail.atheros.com ([12.36.123.2]:35859 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759439AbYGaBVa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jul 2008 21:21:30 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Jul 2008 18:21:30 -0700
+Date: Wed, 30 Jul 2008 18:21:28 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Pavel Roskin <proski@gnu.org>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
+Subject: Re: [PATCH 06/16] ath9k: Fix missing brace in branch on
+	ath_chainmask_sel_logic()
+Message-ID: <20080731012128.GI7625@tesla> (sfid-20080731_032147_095683_41D69934)
+References: <4800d552efce6350888c68b859f66767196d720b.1217309551.git.lrodriguez@atheros.com> <40a067eab54b9b366002257d5be8e4577b067408.1217309551.git.lrodriguez@atheros.com> <1217466707.3616.5.camel@dv>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-ID: <573701.63380.qm@web51408.mail.re2.yahoo.com> (sfid-20080708_212813_851110_D1BACCBD)
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1217466707.3616.5.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- Johannes Berg <johannes@sipsolutions.net> schrieb am Di, 8.7.2008:
-
-> Von: Johannes Berg <johannes@sipsolutions.net>
-> Betreff: Re: Linux capable PDA with WLAN NIC that supports access point mode?
-> An: pommnitz@yahoo.com
-> CC: linux-wireless@vger.kernel.org
-> Datum: Dienstag, 8. Juli 2008, 21:16
-> > I know that mac80211 is not there yet, but on the other
-> hand
-> > OpenWRT seems to run on a lot of hardware with very
-> different NICs. How
-> > does OpenWRT implement the AP functionality? 
+On Wed, Jul 30, 2008 at 06:11:47PM -0700, Pavel Roskin wrote:
+> On Mon, 2008-07-28 at 22:47 -0700, lrodriguez@atheros.com wrote:
+> > From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> >
+> > diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
+> > index 47d4891..d9c7561 100644
+> > --- a/drivers/net/wireless/ath9k/core.c
+> > +++ b/drivers/net/wireless/ath9k/core.c
+> > @@ -508,9 +508,10 @@ int ath_chainmask_sel_logic(struct ath_softc *sc, struct ath_node *an)
+> >        * enabled/disabled setting
+> >        */
+> >       if ((sc->sc_no_tx_3_chains == AH_FALSE) ||
+> > -         (sc->sc_config.chainmask_sel == AH_FALSE))
+> > +         (sc->sc_config.chainmask_sel == AH_FALSE)) {
+> >               cm->cur_tx_mask = sc->sc_tx_chainmask;
+> >               return cm->cur_tx_mask;
+> > +     }
 > 
-> Either with hostapd or the broadcom proprietary driver.
+> I would prefer that all compile fixes are amended in the patches that
+> introduced them.  We should try to pass only correct patches upstream.
+> Bisection works best if one doesn't hit code that doesn't compile.
 
-This is what I suspected, but according to 
-http://hostap.epitest.fi/hostapd/ only the following drivers
-are supported:
+The patch that caused this was not *one* patch but the introduction
+patch. This is why I put this in a separate patch. If we want to start
+out fresh that's another thing and I can just submit a shiny new driver
+introduction patch. But I don't think that is required at this point
+since this driver hasn't been merged yet. At this point users are
+using this from ath9k.git and from patches posted on the lists. At
+this point though I would like to keep the patches separated as we
+did receive a good number of contributions from the community. It also
+shows the changes we've made so far since our initial release.
 
-Supported wireless cards/drivers
-
-    * Host AP driver for Prism2/2.5/3
-    * madwifi (Atheros ar521x)
-    * Prism54.org (Prism GT/Duette/Indigo)
-    * BSD net80211 layer (e.g., Atheros driver) (FreeBSD 6-CURRENT)
-
-Looking at the OpenWRT supported hardware list I see a lot of
-other NICs. Is the hostapd list incomplete?
-
-> > I'm considering a PCCard based NIC with something
-> like the old Compaq iPAQ
-> > PC Card Expansion Pack. In this case an Atheros card
-> with Madwifi might
-> > work. Does this work? Is there a NIC (Broadcom maybe)
-> that is better
-> > suited?
-> > 
-> > Is there a CompactFlash based WLAN NIC with an AP
-> capable Linux driver?
-> 
-> There's a Broadcom CF card. I have one, but it's
-> not DMA capable in
-> Linux because of the PCMCIA subsystem (IIRC).
-
-What driver?
-
-> If you're willing to invest some work, it should be
-> possible to get the
-> the N810 working with mac80211/p54spi but it's not
-> there yet and I don't
-> have time to work on it.
-
-I thought that the Connexant chip in the N810 resembles a FullMAC
-card. Can this one support AP mode with the standard firmware?
-
-> johannes
-
-
-      __________________________________________________________
-Gesendet von Yahoo! Mail.
-Dem pfiffigeren Posteingang.
-http://de.overview.mail.yahoo.com
+  Luis
