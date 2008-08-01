@@ -1,60 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46578 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751682AbYHGOZp (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:46149 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753091AbYHAC6Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 10:25:45 -0400
-Subject: Re: [RFC] mac80211/cfg80211: Add BSS configuration options for AP
-	mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080807134043.GA5138@jm.kir.nu>
-References: <20080807134043.GA5138@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WsDKxmObMOPb98t2XMTL"
-Date: Thu, 07 Aug 2008 16:25:10 +0200
-Message-Id: <1218119110.23048.185.camel@johannes.berg> (sfid-20080807_162548_736967_59DB3D04)
-Mime-Version: 1.0
+	Thu, 31 Jul 2008 22:58:16 -0400
+Message-ID: <48927BCA.1030805@lwfinger.net> (sfid-20080801_045822_620074_0A13DF4D)
+Date: Thu, 31 Jul 2008 21:58:18 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+CC: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Subject: Re: [PATCH V3] rtl8187: Fix lockups due to concurrent access to config
+ routine
+References: <48925938.27Ki5NWyw4NzKtNf%Larry.Finger@lwfinger.net> <3ace41890807311929w464c41femf30efc5441830d13@mail.gmail.com>
+In-Reply-To: <3ace41890807311929w464c41femf30efc5441830d13@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hin-Tak Leung wrote:
+> 
+> Thanks for the work. I think we need a few more mutex locks.
 
---=-WsDKxmObMOPb98t2XMTL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I tried two other places: rtl8187_tx() and rtl8187_configure_filter. Both 
+generated warnings as mac80211 had already had a lock in place. So far, I 
+haven't seen any candidates, but the code surely needs a thorough audit.
 
+> The one-line message/explanation is a bit mis-worded though. There isn't a
+> "lockup" though. I would describe the problem as the driver's internal
+> state getting garbbaged. It is probably a performance "feature" that
+> routines in either the mac80211 layer or the usb layer returns before
+> they are done. (i.e. actions are simply
+> queued for near-future to act on). Maybe somebody else can explain this better?
 
-> +	NL80211_ATTR_BSS_CTS_PROT,
-> +	NL80211_ATTR_BSS_SHORT_PREAMBLE,
-> +	NL80211_ATTR_BSS_SHORT_SLOT_TIME,
+The comment in the code that "the card will stop work until next reset" sounds 
+as though it locks up. That was why I chose the wording that I did.
 
-Oh another idea I just had, I suspect we should use these to indicate
-support for the features too, on the wiphy info query result or
-something. Only tangentially related to this patch though.
-
-johannes
-
---=-WsDKxmObMOPb98t2XMTL
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJImwXDAAoJEKVg1VMiehFYiz4QAKD4m9/rNG9cJhr2xq/hr1Me
-wZIFvjHQngfvKP9Xxc9/mXbCav8oyK5ev6Ia5Z4scvbFphRyeQXuntA2lumzleZx
-vKHGPS7DhjxUOmsKQKM8pcjwtkRksk+S5JBEN2muIfx1UpgQOaLtYaUbQgNFfERx
-C6C5oim9UnRYp6Z/NHEJPlbUc2jKf5uaiIzLp+yRkbZfWf9htdvgB1YzwSXo2veQ
-GIN+U1fV9/Nb8T3VyipW0q4KBcgOLD/BnSgfCyDcZVRN2oCB649cWlbp41j54VUp
-0iiCa2YXuzklfI/BoxhmvfL2DaCaD9RocnXPrXxeOteMI09N0gSmSjhVkSmkCX9u
-ljOGpLwh9mwh2zrfTICw3iZYdl8C5We7NdNgkJwb9HQU0Idw732pU4N+Wx5xvOxN
-lJvDEfJGQNDgFFnotuEYDgwFaI53uvZ8sq3P3WCsxfZic2o21yR0+5qzOm3X4WRO
-+R1OBOI9E42gWEKuuj0FKo5ZGu8GJDPSzz2atxZcexr/zOAWBJ+EZKKZAsIT9FDr
-dh92rlzyHJ0tz5nmGYvB32GDPs+4CBpiVO0qw2CBP/FTG1fqw5130g+/LiXXuwm5
-jVGduxvqlBZ2flFRKsjwSU6UvEXkCJO9bU/t8KTTNqpAzT6hYe3sWKo42k+FlZZO
-nOUsm3JYJQQ1AQWV6r7D
-=ViyX
------END PGP SIGNATURE-----
-
---=-WsDKxmObMOPb98t2XMTL--
+Larry
 
