@@ -1,80 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:35532 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750897AbYHASaU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 14:30:20 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1KOzOI-0004HO-IL
-	for linux-wireless@vger.kernel.org; Fri, 01 Aug 2008 18:30:14 +0000
-Received: from gimpelevich.san-francisco.ca.us ([66.218.54.163])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 18:30:14 +0000
-Received: from daniel by gimpelevich.san-francisco.ca.us with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 18:30:14 +0000
-To: linux-wireless@vger.kernel.org
-From: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
-Subject: Re: Vendor support stickers for devices supported under Linux
-	wireless
-Date: Fri, 1 Aug 2008 18:30:02 +0000 (UTC)
-Message-ID: <g6vkn3$3lc$1@ger.gmane.org> (sfid-20080801_203024_512387_BECBB8EE)
-References: <43e72e890807301327j54be2453r836964c708d75458@mail.gmail.com>
-	<40f31dec0807310657l36b052bfu510415d50c14718d@mail.gmail.com>
-	<3659.194.45.26.221.1217581093.squirrel@webmail.madwifi.org>
-	<1217610561.13107.28.camel@dv>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from fg-out-1718.google.com ([72.14.220.159]:23028 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751110AbYHAPCT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Aug 2008 11:02:19 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so541502fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 08:02:17 -0700 (PDT)
+Message-ID: <4893257C.1020907@gmail.com> (sfid-20080801_170223_661923_E14B165A)
+Date: Fri, 01 Aug 2008 17:02:20 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	Dave Young <hidave.darkstar@gmail.com>,
+	johannes@sipsolutions.net, tomasw@gmail.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net, linville@tuxdriver.com,
+	stable@kernel.org
+Subject: Re: [PATCH] ath5k : ath5k_config_interface deadlock fix
+References: <20080801074014.GA3341@darkstar> <4892C2CA.7010003@gmail.com>	 <4892C359.9000304@cs.helsinki.fi>	 <20080801011415.ff4821a3.akpm@linux-foundation.org> <b6c5339f0808010643i58dbb2a7jf459359451061ae4@mail.gmail.com>
+In-Reply-To: <b6c5339f0808010643i58dbb2a7jf459359451061ae4@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 01 Aug 2008 13:09:21 -0400, Pavel Roskin wrote:
+Bob Copeland napsal(a):
+> On Fri, Aug 1, 2008 at 4:14 AM, Andrew Morton <akpm@linux-foundation.org> wrote:
+>> On Fri, 01 Aug 2008 11:03:37 +0300 Pekka Enberg <penberg@cs.helsinki.fi> wrote:
+>>
+>>> Jiri Slaby wrote:
+>>>> Dave Young napsal(a):
+>>>>> In the drivers/net/wireless/ath5k/base.c, there's recursive locking of
+>>>>> sc->lock
+>>>> Should be fixed already:
+>>>> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-2.6.git;a=commitdiff_plain;h=bc05116ab33d30342e2b4b1bcc6d6e1184e9df97
+>>> I guess that didn't make it to -stable?
+>> (cc stable!)
+> 
+> Not to worry, the commit that introduced it was
+> 9d139c810a2aa17365cc548d0cd2a189d8433c65, which as far as I can tell
+> came in after 2.6.26.
 
-> On Fri, 2008-08-01 at 10:58 +0200, Michael Renzmann wrote:
->=20
->> How about a "Linux Wireless Foundation"? Some kind of official entit=
-y
->> that wireless vendors could talk to for Linux support, certification
->> process for getting the logo, and so on.
->=20
-> My concern is that giving any certification would imply that we promi=
-se
-> to keep the driver in the Linux sources.  However, I don't think we c=
-an
-> accept legal obligations on behalf of the developers.
+git-describe 9d139c810a2aa17365cc548d0cd2a189d8433c65
+v2.6.26-rc8-1219-g9d139c8
 
-Pardon me for butting in, but any vendor reading this thread would like=
-ly=20
-read "support" to mean user support, rather than exclusively developer=20
-support. An often overlooked-by-vendors advantage of fully GPLing a=20
-driver is that they can legitimately disclaim any and all end-user=20
-support in favor of the community. If they don't fully GPL, they still=20
-bear a user-support burden, regardless of whether they meet that burden=
-=2E
-
-A formal WiFi Foundation specific to the Linux kernel would be quite=20
-excessive. There already is The Linux Foundation, which could potential=
-ly=20
-take care of any formal vendor liaison with the informal=20
-linuxwireless.org group.
-
-If certification is done, the most manageable way to do it would be for=
-=20
-vendors not to be able to choose what they can say about compatibility,=
-=20
-but just plaster on a logo with whatever number of "Tux"es shaded the=20
-linuxwireless.org assigns them. This, of course, has the disadvantage o=
-f=20
-requiring retailers to replace compatibility stickers on retail boxes i=
-f=20
-and when the compatibility status of a device changes, but that would, =
-of=20
-course, be at vendor discretion.
-
-Come to think of it, the above could apply to *any* hardware=E2=80=A6
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
