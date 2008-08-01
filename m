@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:54258 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752570AbYHGFd1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 01:33:27 -0400
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 06 Aug 2008 22:33:27 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from fg-out-1718.google.com ([72.14.220.154]:40118 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753651AbYHAMit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Aug 2008 08:38:49 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so507621fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 05:38:48 -0700 (PDT)
+Message-ID: <f6ca9fed0808010538s76fc9373sc6d0d7411976d907@mail.gmail.com> (sfid-20080801_143852_814837_CAAD42E7)
+Date: Fri, 1 Aug 2008 14:38:47 +0200
+From: drago01 <drago01@gmail.com>
+To: "Cahill, Ben M" <ben.m.cahill@intel.com>
+Subject: Re: [ipw3945-devel] iwl3945 random firmware crashes
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <4220499A1B034C4FA93B547BA01E1FF0017469F4@orsmsx413.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18586.34419.33602.930102@localhost.localdomain> (sfid-20080807_073339_074409_F5BA5E91)
-Date: Thu, 7 Aug 2008 10:51:55 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	<Jouni.Malinen@Atheros.com>, <Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 0/6] ath9k: Cleanup series
+Content-Type: text/plain; charset=ISO-8859-1
+References: <f6ca9fed0807140437i2563cfa1ge68a06ef1040d0f8@mail.gmail.com>
+	 <4220499A1B034C4FA93B547BA01E1FF0017469B4@orsmsx413.amr.corp.intel.com>
+	 <f6ca9fed0807170423x7f7bd534x5ab63f985564f92@mail.gmail.com>
+	 <f6ca9fed0807170428i4b386e46sb030316343f4bd4a@mail.gmail.com>
+	 <f6ca9fed0807181235i33125343qab4804b675bafdf9@mail.gmail.com>
+	 <f6ca9fed0807240617n47180bb6t8691723e10d6fd9a@mail.gmail.com>
+	 <4220499A1B034C4FA93B547BA01E1FF0017469F4@orsmsx413.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+On Thu, Jul 24, 2008 at 3:56 PM, Cahill, Ben M <ben.m.cahill@intel.com> wrote:
+> Oops, sorry about that, some of your emails slipped by me unnoticed!
+> :-(
+>
+> Event and Error Logs need to be analyzed here ... It looks like an
+> internal error, timing out while waiting for something.  I'll need to
+> check to see if any updates to Windows uCode have helped this situation.
 
-A bunch of cleanups, removal of duplicate data structures and
-unused macros.
-
-Sujith
-
-Sujith Manoharan (6):
-  ath9k: Cleanup data structures related to HW capabilities
-  ath9k: Remove redundant data structure ath9k_txq_info
-  ath9k: Use mac80211's band macros and remove enum hal_freq_band
-  ath9k: Remove a few unused macros and fix indentation
-  ath9k: More unused macros
-  ath9k: Revamp wireless mode usage
-
- drivers/net/wireless/ath9k/ath9k.h       |  275 ++++++---------
- drivers/net/wireless/ath9k/beacon.c      |   20 +-
- drivers/net/wireless/ath9k/core.c        |  208 +++++-------
- drivers/net/wireless/ath9k/core.h        |  479 ++++++++++++--------------
- drivers/net/wireless/ath9k/hw.c          |  558 +++++++++++++++---------------
- drivers/net/wireless/ath9k/main.c        |   85 +----
- drivers/net/wireless/ath9k/rc.c          |   32 +-
- drivers/net/wireless/ath9k/rc.h          |    2 +-
- drivers/net/wireless/ath9k/recv.c        |    4 +-
- drivers/net/wireless/ath9k/regd.c        |  117 +++----
- drivers/net/wireless/ath9k/regd.h        |   10 +-
- drivers/net/wireless/ath9k/regd_common.h |   18 +-
- drivers/net/wireless/ath9k/xmit.c        |   35 +-
- 13 files changed, 837 insertions(+), 1006 deletions(-)
-
+any progress / news?
