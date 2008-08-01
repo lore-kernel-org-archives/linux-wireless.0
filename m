@@ -1,107 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:59768 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752261AbYHXBMP (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.226]:62794 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752576AbYHAMkF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2008 21:12:15 -0400
-From: Chr <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] p54: redo queue numbering
-Date: Sun, 24 Aug 2008 03:15:16 +0200
-Cc: John W Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 1 Aug 2008 08:40:05 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1037906rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 05:40:05 -0700 (PDT)
+Message-ID: <1ba2fa240808010540g660cdaa9p1158a27061e3fcd@mail.gmail.com> (sfid-20080801_144008_958774_0CBAFB27)
+Date: Fri, 1 Aug 2008 15:40:04 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: iwlwifi aggregation info
+Cc: Friedrich.Beckmann@infineon.com, linux-wireless@vger.kernel.org,
+	j@w1.fi
+In-Reply-To: <1217592554.8621.23.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200808240315.16474.chunkeey@web.de> (sfid-20080824_031217_362246_B67F33B7)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1217331138.10489.24.camel@johannes.berg>
+	 <1217425854.10489.125.camel@johannes.berg>
+	 <1ba2fa240807300659p4d743f31se265f550a2da0dd1@mail.gmail.com>
+	 <1217431179.10489.134.camel@johannes.berg>
+	 <1ba2fa240807300908x5489e3f8g54ff83e7e5912c0b@mail.gmail.com>
+	 <1217509511.10489.140.camel@johannes.berg>
+	 <1ba2fa240807311114t3e1b4fb3oe6643fbe28f2c2ac@mail.gmail.com>
+	 <1217528597.10489.150.camel@johannes.berg>
+	 <1ba2fa240807311216u1a45cf22j219046ab357b0910@mail.gmail.com>
+	 <1217592554.8621.23.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware supports 8 different queues and not only 4. 
-So, let's make some room for further tasks (ap/adhoc support)
-in this area.
+On Fri, Aug 1, 2008 at 3:09 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> Had to think about this for a bit...
+>
+>> > Right. Which brings us back to the original point, why does the hw need
+>> > to make the scheduling decision between agg and non-agg?
+>>
+>> There is no scheduling between aag and legacy queue in the sense of
+>> qdisc .
+>
+> Right. So why are you saying we should have a separate qdisc for it?
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-that's definitely linux-next material.
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-08-24 02:11:35.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54common.c	2008-08-24 02:20:55.000000000 +0200
-@@ -146,10 +146,10 @@ void p54_parse_firmware(struct ieee80211
- 
- 	if (priv->fw_var >= 0x300) {
- 		/* Firmware supports QoS, use it! */
--		priv->tx_stats[0].limit = 3;
--		priv->tx_stats[1].limit = 4;
--		priv->tx_stats[2].limit = 3;
--		priv->tx_stats[3].limit = 1;
-+		priv->tx_stats[4].limit = 3;
-+		priv->tx_stats[5].limit = 4;
-+		priv->tx_stats[6].limit = 3;
-+		priv->tx_stats[7].limit = 1;
- 		dev->queues = 4;
- 	}
- }
-@@ -418,7 +418,7 @@ static void inline p54_wake_free_queues(
- 	int i;
- 
- 	for (i = 0; i < dev->queues; i++)
--		if (priv->tx_stats[i].len < priv->tx_stats[i].limit)
-+		if (priv->tx_stats[i + 4].len < priv->tx_stats[i + 4].limit)
- 			ieee80211_wake_queue(dev, i);
- }
- 
-@@ -463,7 +463,7 @@ static void p54_rx_frame_sent(struct iee
- 			if ((entry_hdr->magic1 & cpu_to_le16(0x4000)) != 0)
- 				pad = entry_data->align[0];
- 
--			priv->tx_stats[entry_data->hw_queue - 4].len--;
-+			priv->tx_stats[entry_data->hw_queue].len--;
- 			if (!(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
- 				if (!(payload->status & 0x01))
- 					info->flags |= IEEE80211_TX_STAT_ACK;
-@@ -606,7 +606,7 @@ static int p54_tx(struct ieee80211_hw *d
- 	u8 rate;
- 	u8 cts_rate = 0x20;
- 
--	current_queue = &priv->tx_stats[skb_get_queue_mapping(skb)];
-+	current_queue = &priv->tx_stats[skb_get_queue_mapping(skb) + 4];
- 	if (unlikely(current_queue->len > current_queue->limit))
- 		return NETDEV_TX_BUSY;
- 	current_queue->len++;
-@@ -1037,7 +1037,7 @@ static int p54_get_tx_stats(struct ieee8
- {
- 	struct p54_common *priv = dev->priv;
- 
--	memcpy(stats, &priv->tx_stats, sizeof(stats[0]) * dev->queues);
-+	memcpy(stats, &priv->tx_stats[4], sizeof(stats[0]) * dev->queues);
- 
- 	return 0;
- }
-@@ -1075,7 +1075,11 @@ struct ieee80211_hw *p54_init_common(siz
- 	dev->channel_change_time = 1000;	/* TODO: find actual value */
- 	dev->max_signal = 127;
- 
--	priv->tx_stats[0].limit = 5;
-+	priv->tx_stats[0].limit = 1;
-+	priv->tx_stats[1].limit = 1;
-+	priv->tx_stats[2].limit = 1;
-+	priv->tx_stats[3].limit = 1;
-+	priv->tx_stats[4].limit = 5;
- 	dev->queues = 1;
- 
- 	dev->extra_tx_headroom = sizeof(struct p54_control_hdr) + 4 +
-diff -Nurp a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
---- a/drivers/net/wireless/p54/p54.h	2008-08-24 02:02:48.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54.h	2008-08-24 02:13:57.000000000 +0200
-@@ -66,7 +66,7 @@ struct p54_common {
- 	unsigned int tx_hdr_len;
- 	void *cached_vdcf;
- 	unsigned int fw_var;
--	struct ieee80211_tx_queue_stats tx_stats[4];
-+	struct ieee80211_tx_queue_stats tx_stats[8];
- };
- 
- int p54_rx(struct ieee80211_hw *dev, struct sk_buff *skb);
+I need a sw queue for it.
 
+>> The aggregation need to be taken from single stream as
+>> explained before,
+>
+> I think we simply agree on that. Which brings me back to my original
+> point: to provide fairness within that stream we shouldn't have separate
+> qdiscs for agg/non-agg parts of the stream.
+
+You agree on the fact that it's a seperate stream but you still
+doesn't want separate queue for it....
+
+>> Iwlwifi has HW support for it that that's the whole story we just need
+>> queueing support from the software buffering stopping and starting
+>> queue and last but not least there is a classification just an
+>> extension of the regular AC scheduling.  The fairness between legacy
+>> and agg queue must be provided by actually 'not scheduling'
+>
+> I don't understand what you mean by "not scheduling".
+
+Not scheduling mean not string to prioritize streams in SW. I guess it means RR.
+
+ AIUI from the
+> specs, there is no scheduling between aggregation/non-aggregation
+> queues, or "within an AC" as I would say it.
+>
+> Therefore, I think we should remove the extra software queues and split
+> up the single-AC stream into the different hardware queues in the
+> driver, to be reunited in the FIFOs.
+
+Aggregation is a separate stream even on the air it has it's own
+rhythm.  For example
+from AP perspective you an have 3 streams for the same TID for 3
+stations. Each station
+has it's own rate of processing aggregation stream.  It may vary on
+number of packets and size of the aggregation
+this is determine in association time.
+So shell I stop the whole AC queue just because on station is slower?
+Tomas
