@@ -1,66 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56591 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750964AbYH2TiJ (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42968
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753325AbYHAHBq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2008 15:38:09 -0400
-Subject: Re: [PATCH] rt2x00: Need to set wiphy->interface_modes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	rt2400-devel <rt2400-devel@lists.sourceforge.net>,
-	Stephen Blackheath <tramp.enshrine.stephen@blacksapphire.com>
-In-Reply-To: <200808292025.16870.IvDoorn@gmail.com> (sfid-20080829_202530_235829_903564FC)
-References: <200808292025.16870.IvDoorn@gmail.com>
-	 (sfid-20080829_202530_235829_903564FC)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Fh95w/bzPrrOycsu235L"
-Date: Fri, 29 Aug 2008 21:37:56 +0200
-Message-Id: <1220038676.25321.37.camel@johannes.berg> (sfid-20080829_213820_005020_F80D7908)
+	Fri, 1 Aug 2008 03:01:46 -0400
+Date: Fri, 01 Aug 2008 00:01:46 -0700 (PDT)
+Message-Id: <20080801.000146.246099981.davem@davemloft.net> (sfid-20080801_090149_858130_1046C934)
+To: jarkao2@gmail.com
+Cc: johannes@sipsolutions.net, netdev@axxeo.de, peterz@infradead.org,
+	Larry.Finger@lwfinger.net, kaber@trash.net,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, mingo@redhat.com
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+ __netif_schedule+0x2c/0x98()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080801070150.GB4435@ff.dom.local>
+References: <20080731.052932.110299354.davem@davemloft.net>
+	<20080801064810.GA4435@ff.dom.local>
+	<20080801070150.GB4435@ff.dom.local>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Jarek Poplawski <jarkao2@gmail.com>
+Date: Fri, 1 Aug 2008 07:01:50 +0000
 
---=-Fh95w/bzPrrOycsu235L
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> On Fri, Aug 01, 2008 at 06:48:10AM +0000, Jarek Poplawski wrote:
+> > On Thu, Jul 31, 2008 at 05:29:32AM -0700, David Miller wrote:
+> ...
+> > > diff --git a/net/core/dev.c b/net/core/dev.c
+> > > index 63d6bcd..69320a5 100644
+> > > --- a/net/core/dev.c
+> > > +++ b/net/core/dev.c
+> > > @@ -4200,6 +4200,7 @@ static void netdev_init_queues(struct net_device *dev)
+> > >  {
+> > >  	netdev_init_one_queue(dev, &dev->rx_queue, NULL);
+> > >  	netdev_for_each_tx_queue(dev, netdev_init_one_queue, NULL);
+> > > +	spin_lock_init(&dev->tx_global_lock);
+> > 
+> > This will probably need some lockdep annotations similar to
+> > _xmit_lock.
+> 
+> ...BTW, we probably could also consider some optimization here: the
+> xmit_lock of the first queue could be treated as special, and only
+> the owner could do such a freezing. This would save changes of
+> functionality to non mq devices. On the other hand, it would need
+> remembering about this special treatment (so, eg. a separate lockdep
+> initialization than all the others).
 
-On Fri, 2008-08-29 at 20:25 +0200, Ivo van Doorn wrote:
-> Hi Johannes,
->=20
-> Below patch was created by Stephen Blackheath.
->=20
-> Could you merge this patch with your patch: 008-cfg80211-interface-types.=
-patch
-> This is the required rt2x00 change for registering the supported interfac=
-e types.
-
-Thanks, I'd hoped somebody else would pick it up, but if not I'll do it
-in a week.
-
-johannes
-
---=-Fh95w/bzPrrOycsu235L
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIuFAQAAoJEKVg1VMiehFYeWgP+weplpJAKug9jeExvb49pjJI
-QNkoWbynyF1iVsLvy1EeDmmou1zrkjEqrPxCb/rxzkghw9flv4vBwngW1qvff7HH
-+L9YG/iLa4AiVeewfiBVoJcetl645xaTup7thxMahDjbo/g8mAjFZajDpp6cBI97
-xfNR+bUOyd2M/3mOIa0WK9gFM3p6BSjQrDTv8O2Dhne0BeOU/FyOslbh0MewG9IS
-Rft5C9C9QrHCRmaWIIh8+TkrhECuBBToDPZQBYmSK0TCLFFX16k3m/OP79EUgBda
-BQABJ9776b1uYVYXziDwT5UdGIFZvwZLF3/JDCiXHYnuFIukAo5thhtKMtJV4SkO
-n2bC36OClLmN2t/5KIucblKudiyDIp4QGn+FohpMKSKOsvIwX4daIKrz8NXwBBe5
-W6kCfEukA+ilbrL2t0n30H61l0SEt5i+6qnBMNax8neDy6Jcqo21QRagVI9a+MxF
-/kfPTY2I+J798uCkR5R7hpBrPu/tyZqkaIKhe+XLJ63Bil3DUl8BDRetJKNfDdTE
-Pa8Tlw3N7o6rxo3Z8qPeynfONNqyJ8Cm2VRwuSLv5Wq2vhku3ueP/dxSAcGZipgj
-Co4RTSVTPFoc+iiFwVFofFv/X23fCwre735RGh5q2NKN6W4vZ3tjxxEWdPHMV2aK
-1nxvO5TKgyObxt62t/dL
-=bQtq
------END PGP SIGNATURE-----
-
---=-Fh95w/bzPrrOycsu235L--
-
+I think special casing the zero's queue's lock is a bad idea.
+Having a real top-level synchronizer is a powerful tool and
+we could use it for other things.
