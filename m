@@ -1,35 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39334 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753922AbYH1VZp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 17:25:45 -0400
-Date: Thu, 28 Aug 2008 14:25:42 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Howard Chu <hyc@symas.com>
-CC: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] compat-2.6: enable ath9k
-Message-ID: <20080828212542.GA9430@tesla> (sfid-20080828_232549_365409_EA848046)
-References: <48AF209A.4080805@symas.com> <48B655C8.9020500@symas.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <48B655C8.9020500@symas.com>
+Received: from casper.infradead.org ([85.118.1.10]:39525 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752465AbYHAHJc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Aug 2008 03:09:32 -0400
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+	__netif_schedule+0x2c/0x98()
+From: Peter Zijlstra <peterz@infradead.org>
+To: David Miller <davem@davemloft.net>
+Cc: jarkao2@gmail.com, johannes@sipsolutions.net, netdev@axxeo.de,
+	Larry.Finger@lwfinger.net, kaber@trash.net,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, mingo@redhat.com
+In-Reply-To: <20080731.212729.138736823.davem@davemloft.net>
+References: <20080726.173434.48036095.davem@davemloft.net>
+	 <20080727203757.GA2527@ami.dom.local>
+	 <20080731.052932.110299354.davem@davemloft.net>
+	 <20080731.212729.138736823.davem@davemloft.net>
+Content-Type: text/plain
+Date: Fri, 01 Aug 2008 09:09:24 +0200
+Message-Id: <1217574564.8157.111.camel@twins> (sfid-20080801_090936_795081_37E8D423)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 28, 2008 at 12:37:44AM -0700, Howard Chu wrote:
-> This patch enables building the wireless-testing ath9k driver with the
-> compat-wireless tarball at
-> http://www.orbit-lab.org/kernel/compat-wireless-2.6/2008/08/compat-wireless-2008-08-06.tar.bz2
+On Thu, 2008-07-31 at 21:27 -0700, David Miller wrote:
+> From: David Miller <davem@davemloft.net>
+> Date: Thu, 31 Jul 2008 05:29:32 -0700 (PDT)
+> 
+> > It's late here, but I'll start testing the following patch on my
+> > multiqueue capable cards after some sleep.
+> 
+> As a quick followup, I tested this on a machine where I had
+> a multiqueue interface and could reproduce the lockdep warnings,
+> and the patch makes them go away.
+> 
+> So I've pushed the patch into net-2.6 and will send it to Linus.
 
-Thanks. We can fork wireless-testing for old kernels based on this for
-compat-wireless. Problem is updates. I suppose each driver maintainer
-can supply updates when they want. For that please use compat-masters
-list.
+Thanks david!
 
-I'll create a new tree for this when I get a chance. The list.h changes
-should have what we have in the kernel. Although list_splice2() is
-functionally equivalent I rather use what the kernel is using the name
-will be different though of course.
-
-  Luis
