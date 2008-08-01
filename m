@@ -1,98 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:51771 "EHLO mga03.intel.com"
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:42013 "EHLO e2.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752576AbYHGWuw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 18:50:52 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 1/2] mac80211: change number of pre-assoc scans
-Date: Fri,  8 Aug 2008 01:50:46 +0300
-Message-Id: <1218149447-28968-1-git-send-email-tomas.winkler@intel.com> (sfid-20080808_005057_722245_9F2BC0CF)
-Content-Type: text/plain; charset="us-ascii"
+	id S1760693AbYHAVKp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Aug 2008 17:10:45 -0400
+Date: Fri, 1 Aug 2008 14:10:43 -0700
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+To: Nick Piggin <nickpiggin@yahoo.com.au>
+Cc: Miklos Szeredi <miklos@szeredi.hu>, peterz@infradead.org,
+	davem@davemloft.net, jarkao2@gmail.com, Larry.Finger@lwfinger.net,
+	kaber@trash.net, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	mingo@redhat.com
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+	__netif_schedule+0x2c/0x98()
+Message-ID: <20080801211043.GW14851@linux.vnet.ibm.com> (sfid-20080801_231106_921319_32D84A61)
+Reply-To: paulmck@linux.vnet.ibm.com
+References: <1216890648.7257.258.camel@twins> <200807242038.36693.nickpiggin@yahoo.com.au> <E1KLyUI-0006ZS-Cg@pomaz-ex.szeredi.hu> <200807242106.52672.nickpiggin@yahoo.com.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200807242106.52672.nickpiggin@yahoo.com.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+On Thu, Jul 24, 2008 at 09:06:51PM +1000, Nick Piggin wrote:
+> On Thursday 24 July 2008 20:55, Miklos Szeredi wrote:
+> > On Thu, 24 Jul 2008, Nick Piggin wrote:
+> > > Hey, something kind of cool (and OT) I've just thought of that we can
+> > > do with ticket locks is to take tickets for 2 (or 64K) nested locks,
+> > > and then wait for them both (all), so the cost is N*lock + longest spin,
+> > > rather than N*lock + N*avg spin.
+> >
+> > Isn't this deadlocky?
+> >
+> > E.g. one task takes ticket x=1, then other task comes in and takes x=2
+> > and y=1, then first task takes y=2.  Then neither can actually
+> > complete both locks.
+> 
+> Oh duh of course you still need mutual exclusion from the first lock
+> to order the subsequent :P
+> 
+> So yeah it only works for N > 2 locks, and you have to spin_lock the
+> first one... so unsuitable for scheduler.
 
-This patch fixes noticed problem in noisy environments of 50+ APs
-that scan fails to find the requested AP on first try, which
-leads to connection refusal. second scan has empirically proven to fix
-this problem in almost all cases.
+Or sort the locks by address or some such.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Esti Kummer <ester.kummer@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/ieee80211_i.h |    4 +++-
- net/mac80211/mlme.c        |    9 +++++++--
- 2 files changed, 10 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index d19f67e..f71785e 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -369,7 +369,9 @@ struct ieee80211_if_sta {
- 
- 	struct sk_buff_head skb_queue;
- 
--	int auth_tries, assoc_tries;
-+	int assoc_scan_tries; /* number of scans done pre-association */
-+	int auth_tries; /* retries for auth req */
-+	int assoc_tries; /* retries for assoc req */
- 
- 	unsigned long request;
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 5426df1..5276c73 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -34,6 +34,7 @@
- #include "led.h"
- #include "mesh.h"
- 
-+#define IEEE80211_ASSOC_SCANS_MAX_TRIES 2
- #define IEEE80211_AUTH_TIMEOUT (HZ / 5)
- #define IEEE80211_AUTH_MAX_TRIES 3
- #define IEEE80211_ASSOC_TIMEOUT (HZ / 5)
-@@ -599,6 +600,7 @@ static void ieee80211_set_disassoc(struct net_device *dev,
- {
- 	if (deauth)
- 		ifsta->auth_tries = 0;
-+	ifsta->assoc_scan_tries = 0;
- 	ifsta->assoc_tries = 0;
- 	ieee80211_set_associated(dev, ifsta, 0);
- }
-@@ -3437,7 +3439,9 @@ static void ieee80211_sta_reset_auth(struct net_device *dev,
- 		ifsta->auth_alg = WLAN_AUTH_OPEN;
- 	ifsta->auth_transaction = -1;
- 	ifsta->flags &= ~IEEE80211_STA_ASSOCIATED;
--	ifsta->auth_tries = ifsta->assoc_tries = 0;
-+	ifsta->assoc_scan_tries = 0;
-+	ifsta->auth_tries = 0;
-+	ifsta->assoc_tries = 0;
- 	netif_carrier_off(dev);
- }
- 
-@@ -3544,7 +3548,8 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
- 		ieee80211_sta_reset_auth(dev, ifsta);
- 		return 0;
- 	} else {
--		if (ifsta->state != IEEE80211_STA_MLME_AUTHENTICATE) {
-+		if (ifsta->assoc_scan_tries < IEEE80211_ASSOC_SCANS_MAX_TRIES) {
-+			ifsta->assoc_scan_tries++;
- 			if (ifsta->flags & IEEE80211_STA_AUTO_SSID_SEL)
- 				ieee80211_sta_start_scan(dev, NULL, 0);
- 			else
--- 
-1.5.4.1
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+							Thanx, Paul
