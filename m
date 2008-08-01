@@ -1,32 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from usul.saidi.cx ([204.11.33.34]:48572 "EHLO usul.overt.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754101AbYHPTWy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Aug 2008 15:22:54 -0400
-Message-ID: <48A728FF.7040306@overt.org> (sfid-20080816_212312_316157_D18DF7E1)
-Date: Sat, 16 Aug 2008 12:22:39 -0700
-From: Philip Langdale <philipl@overt.org>
+Received: from venema.h4ckr.net ([217.24.1.135]:46598 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753875AbYHAI6P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Aug 2008 04:58:15 -0400
+Message-ID: <3659.194.45.26.221.1217581093.squirrel@webmail.madwifi.org> (sfid-20080801_105820_199944_49CFE8F6)
+In-Reply-To: <40f31dec0807310657l36b052bfu510415d50c14718d@mail.gmail.com>
+References: <43e72e890807301327j54be2453r836964c708d75458@mail.gmail.com>
+    <40f31dec0807310657l36b052bfu510415d50c14718d@mail.gmail.com>
+Date: Fri, 1 Aug 2008 10:58:13 +0200 (CEST)
+Subject: Re: Vendor support stickers for devices supported under Linux
+     wireless
+From: "Michael Renzmann" <mrenzmann@madwifi.org>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-CC: LKML <linux-kernel@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	toshiba_acpi@memebeam.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
- through rfkill (v2)
-References: <4894B1B4.6050003@overt.org> <20080803042613.GC6053@khazad-dum.debian.net> <48965716.6020508@overt.org> <20080805212416.GB21738@khazad-dum.debian.net> <489A7CCF.1090407@overt.org> <20080807134530.GB17062@khazad-dum.debian.net> <48A06BBC.7060007@overt.org> <20080813092908.GA6806@khazad-dum.debian.net> <48A3D7A0.7010704@overt.org>
-In-Reply-To: <48A3D7A0.7010704@overt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Philip Langdale wrote:
-> 
-> Now, when I release the kill switch, rfkill-input does indeed turn the
-> radio on. Great. The remaining problem is that rfkill-input is setting
-> it to soft-blocked when the switch is registered. I'm not sure why it's
-> deciding to do that. Anyway, I'm almost there. Thanks.
+Hi.
 
-Finally sorted it out. Updated diff is posted as v5.
+Nick Kossifidis wrote:
+> users. That's why the whole process must include some kind of
+> certification from our side. I guess a centralized wiki page should
+> work, or if vendors want a more formal certification, we can have
+> developers of the corresponding driver, sign of a text declaring that
+> this card is "linux best choice" or something like that.
 
---phil
+Which reminds me of a topic that has been some time ago:
+
+How about a "Linux Wireless Foundation"? Some kind of official entity that
+wireless vendors could talk to for Linux support, certification process
+for getting the logo, and so on.
+It could either be a simple contact for vendors (something they can talk
+to in order to get in contact with the Linux Wireless folks), or could be
+something like a round-table where the Linux wireless community and
+interested vendors are represented to coordinate with each other.
+
+A testbed run by this entity also comes to my mind. It could be used for
+compatibility tests in terms of the certification process, and to support
+driver developers by granting access to the testbed for development
+purposes.
+
+Bye, Mike
