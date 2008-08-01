@@ -1,71 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33864 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753489AbYHTVXD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Aug 2008 17:23:03 -0400
-Subject: Re: [PATCH 00/19] orinoco: WPA for Agere based cards
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dave <kilroyd@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, proski@gnu.org
-In-Reply-To: <1219266476.3502.19.camel@johannes.berg> (sfid-20080820_230839_000050_1BDBB04E)
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
-	 <20080820192812.GA1746@tuxdriver.com>  <48AC836B.2020207@gmail.com>
-	 (sfid-20080820_225002_112959_7EFB2137)  <1219266476.3502.19.camel@johannes.berg>
-	 (sfid-20080820_230839_000050_1BDBB04E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-H3XX7QbupK3Y9cmrmvWS"
-Date: Wed, 20 Aug 2008 23:22:26 +0200
-Message-Id: <1219267346.3502.20.camel@johannes.berg> (sfid-20080820_232309_462281_E7131D64)
+Received: from main.gmane.org ([80.91.229.2]:35532 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750897AbYHASaU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Aug 2008 14:30:20 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1KOzOI-0004HO-IL
+	for linux-wireless@vger.kernel.org; Fri, 01 Aug 2008 18:30:14 +0000
+Received: from gimpelevich.san-francisco.ca.us ([66.218.54.163])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 18:30:14 +0000
+Received: from daniel by gimpelevich.san-francisco.ca.us with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 18:30:14 +0000
+To: linux-wireless@vger.kernel.org
+From: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
+Subject: Re: Vendor support stickers for devices supported under Linux
+	wireless
+Date: Fri, 1 Aug 2008 18:30:02 +0000 (UTC)
+Message-ID: <g6vkn3$3lc$1@ger.gmane.org> (sfid-20080801_203024_512387_BECBB8EE)
+References: <43e72e890807301327j54be2453r836964c708d75458@mail.gmail.com>
+	<40f31dec0807310657l36b052bfu510415d50c14718d@mail.gmail.com>
+	<3659.194.45.26.221.1217581093.squirrel@webmail.madwifi.org>
+	<1217610561.13107.28.camel@dv>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 01 Aug 2008 13:09:21 -0400, Pavel Roskin wrote:
 
---=-H3XX7QbupK3Y9cmrmvWS
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2008-08-20 at 23:07 +0200, Johannes Berg wrote:
-> > At the moment this is only documented in email threads (on
-> > orinoco-devel) - I lack access to any web/file hosting to put
-> > something more permanent up. This obviously ought to be corrected.
+> On Fri, 2008-08-01 at 10:58 +0200, Michael Renzmann wrote:
 >=20
-> *points to wireless.kernel.org*
+>> How about a "Linux Wireless Foundation"? Some kind of official entit=
+y
+>> that wireless vendors could talk to for Linux support, certification
+>> process for getting the logo, and so on.
 >=20
-> feel free to create a driver page (though I'd prefer to not host
-> firmware of unclear origin and would probably just delete such files if
-> you upload them, talk to the firmware tree if you can redistribute it
-> legally)
+> My concern is that giving any certification would imply that we promi=
+se
+> to keep the driver in the Linux sources.  However, I don't think we c=
+an
+> accept legal obligations on behalf of the developers.
 
-Oh and if you go create a new driver page, say
-http://wireless.kernel.org/en/users/Drivers/orinoco, it gives you a
-template in the left column that you can use (the DriverPageTemplate) to
-get a page that looks similar to all the other ones.
+Pardon me for butting in, but any vendor reading this thread would like=
+ly=20
+read "support" to mean user support, rather than exclusively developer=20
+support. An often overlooked-by-vendors advantage of fully GPLing a=20
+driver is that they can legitimately disclaim any and all end-user=20
+support in favor of the community. If they don't fully GPL, they still=20
+bear a user-support burden, regardless of whether they meet that burden=
+=2E
 
-johannes
+A formal WiFi Foundation specific to the Linux kernel would be quite=20
+excessive. There already is The Linux Foundation, which could potential=
+ly=20
+take care of any formal vendor liaison with the informal=20
+linuxwireless.org group.
 
---=-H3XX7QbupK3Y9cmrmvWS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+If certification is done, the most manageable way to do it would be for=
+=20
+vendors not to be able to choose what they can say about compatibility,=
+=20
+but just plaster on a logo with whatever number of "Tux"es shaded the=20
+linuxwireless.org assigns them. This, of course, has the disadvantage o=
+f=20
+requiring retailers to replace compatibility stickers on retail boxes i=
+f=20
+and when the compatibility status of a device changes, but that would, =
+of=20
+course, be at vendor discretion.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Come to think of it, the above could apply to *any* hardware=E2=80=A6
 
-iQIcBAABAgAGBQJIrIsOAAoJEKVg1VMiehFY0KYP/1mTLn7hDsJQ06mUtNxsRB2z
-Us4myUMA5ACu6Q9kjGe4cf8BM5pTx8Zr+I08pJlShPgL4mI8hItv4lyZ5rYjdCH0
-Xx6hXVEJrNAKdMAEqUi30yUKUV9Cv6nHrEWIP8icEZp3IbQEXdI5c9QLHN4WOSLV
-AUMXAESiLGPkH8y2iRTyOiTESxpCuC712SfwA1jZADHD1tdZ99QXS8Tb9rJc3/ZV
-Xcqa9DQfZ8gvmcmoDM8D0OD00GLoY9HZJrSur+7VQRiSC5f3uevH44hcH8kUCJRx
-g8m5d8km7wG6y0TP2D8UC7B42CC0L37lcHIk06LD9Y32UyeYcf5ErEAFpnMRsZ/L
-wIYUyrDHikFWLBoaNH7fS5AKkctSHuU5yuwX3JhL0zJt+qKrFm/789IKjiNehpxR
-zZhN4ORV+jVg2uzpcTiLm+Hgi7uTd/uU2OlICqCV+i3eD72LuuqZSr60RwGzvPpC
-198KpxxrgR5jHqs7GbV70rlWcO7UwZ64gEeMHZIsv3cOZD9ck1BdSoorbTkzADbZ
-nKEqR6h2KAmWzKDa+SChrMsBtg/Y60eNVtqS1TEG3baQb+hFN0WOL2vtLrQl7hcP
-yTgONYnRneyBc4SXrj4vAXp7gPARear1y1++nUzbI+FHxpu1O7p+KHlF+YzYT9Le
-T6QCBdIg4I43fV9TJBof
-=DWfl
------END PGP SIGNATURE-----
-
---=-H3XX7QbupK3Y9cmrmvWS--
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
