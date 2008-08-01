@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:40710 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752577AbYHVKrk (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58743
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751494AbYHAE13 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2008 06:47:40 -0400
-Date: Fri, 22 Aug 2008 20:47:30 +1000
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: David Miller <davem@davemloft.net>
-Cc: hadi@cyberus.ca, kaber@trash.net, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in RCU.
-Message-ID: <20080822104730.GA19742@gondor.apana.org.au> (sfid-20080822_124744_158684_62CF9B8A)
-References: <20080822065655.GA18471@gondor.apana.org.au> <20080822.001620.141235108.davem@davemloft.net> <20080822074115.GB25615@gondor.apana.org.au> <20080822.034217.135152551.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080822.034217.135152551.davem@davemloft.net>
+	Fri, 1 Aug 2008 00:27:29 -0400
+Date: Thu, 31 Jul 2008 21:27:29 -0700 (PDT)
+Message-Id: <20080731.212729.138736823.davem@davemloft.net> (sfid-20080801_062737_753082_C2955B3F)
+To: jarkao2@gmail.com
+Cc: johannes@sipsolutions.net, netdev@axxeo.de, peterz@infradead.org,
+	Larry.Finger@lwfinger.net, kaber@trash.net,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, mingo@redhat.com
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+ __netif_schedule+0x2c/0x98()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080731.052932.110299354.davem@davemloft.net>
+References: <20080726.173434.48036095.davem@davemloft.net>
+	<20080727203757.GA2527@ami.dom.local>
+	<20080731.052932.110299354.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 22, 2008 at 03:42:17AM -0700, David Miller wrote:
-> 
-> I had another idea in the back of my head that I wanted to mention.
-> 
-> The SKB has a hash, and sources set the hash.  It doesn't matter
-> where in the stack it comes from.
+From: David Miller <davem@davemloft.net>
+Date: Thu, 31 Jul 2008 05:29:32 -0700 (PDT)
 
-Yes this sounds great!
- 
-> So in the simplest case for forwarding, the RX side puts the RSS
-> hash or whatever into this SKB hash location.
+> It's late here, but I'll start testing the following patch on my
+> multiqueue capable cards after some sleep.
 
-This works on all the routers.
+As a quick followup, I tested this on a machine where I had
+a multiqueue interface and could reproduce the lockdep warnings,
+and the patch makes them go away.
 
-> Then, taking things to the next level, protocols set hashes for
-> locally created packets.  And this leads to being able to delete
-> the simple_tx_hash() code entirely and also we won't have to add
-> support for every protocol on the planet to that function. :)
-
-And this takes care of the hosts.
-
-Best of all it's per flow and we don't even need to add any new
-infrastructure :)
-
-Thanks,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+So I've pushed the patch into net-2.6 and will send it to Linus.
