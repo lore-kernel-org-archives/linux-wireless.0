@@ -1,77 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:3175 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751601AbYHTCFM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2008 22:05:12 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 6/7] iwlwifi: void full rxon on rx chain changes
-Date: Wed, 20 Aug 2008 10:01:32 +0800
-Message-Id: <1219197693-21407-7-git-send-email-yi.zhu@intel.com> (sfid-20080820_040517_927606_836B392C)
-In-Reply-To: <1219197693-21407-6-git-send-email-yi.zhu@intel.com>
-References: <1219197693-21407-1-git-send-email-yi.zhu@intel.com>
- <1219197693-21407-2-git-send-email-yi.zhu@intel.com>
- <1219197693-21407-3-git-send-email-yi.zhu@intel.com>
- <1219197693-21407-4-git-send-email-yi.zhu@intel.com>
- <1219197693-21407-5-git-send-email-yi.zhu@intel.com>
- <1219197693-21407-6-git-send-email-yi.zhu@intel.com>
+Received: from qb-out-0506.google.com ([72.14.204.229]:2013 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751559AbYHAQnA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Aug 2008 12:43:00 -0400
+Received: by qb-out-0506.google.com with SMTP id a16so1115495qbd.17
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 09:42:59 -0700 (PDT)
+Message-ID: <4893399E.8080503@tuffmail.co.uk> (sfid-20080801_184303_698404_31314DA7)
+Date: Fri, 01 Aug 2008 17:28:14 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: Jiri Slaby <jirislaby@gmail.com>, tomasw@gmail.com,
+	Dave Young <hidave.darkstar@gmail.com>, stable@kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linville@tuxdriver.com, Pekka Enberg <penberg@cs.helsinki.fi>,
+	ath5k-devel@venema.h4ckr.net, johannes@sipsolutions.net,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [ath5k-devel] [PATCH] ath5k : ath5k_config_interface deadlock
+ fix
+References: <20080801074014.GA3341@darkstar> <4892C2CA.7010003@gmail.com>	<4892C359.9000304@cs.helsinki.fi>	<20080801011415.ff4821a3.akpm@linux-foundation.org>	<b6c5339f0808010643i58dbb2a7jf459359451061ae4@mail.gmail.com>	<4893257C.1020907@gmail.com> <b6c5339f0808010823o434298ecn7b274c46fe857aba@mail.gmail.com>
+In-Reply-To: <b6c5339f0808010823o434298ecn7b274c46fe857aba@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohamed Abbas <mohamed.abbas@intel.com>
+Bob Copeland wrote:
+> On Fri, Aug 1, 2008 at 11:02 AM, Jiri Slaby <jirislaby@gmail.com> wrote:
+>   
+>>> Not to worry, the commit that introduced it was
+>>> 9d139c810a2aa17365cc548d0cd2a189d8433c65, which as far as I can tell
+>>> came in after 2.6.26.
+>>>       
+>> git-describe 9d139c810a2aa17365cc548d0cd2a189d8433c65
+>> v2.6.26-rc8-1219-g9d139c8
+>>     
+>
+> I'm not that expert in git, what does that mean?  Some other commits
+> for 2.6.27 also show a 2.6.26-rc from git-describe (e.g. my
+> 3a078876caee).
+>
+> For my own investigation, I did a 'git-checkout v2.6.26' and looked at
+> the code to see the patch had not been applied yet.  Is there an
+> easier way to definitively say commit X is/is not in tagged release Y?
+>
+>   
 
-Rx chain might change during power save transitions but it doesn't
-requires full rxon.
+Aha!  I think we want git-describe --contains.
 
-Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+$ git-describe --contains 2b142900784c6e38c8d39fa57d5f95ef08e735d8
+v2.6.27-rc1~55^2~1
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index b6e4546..9c18b2f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -182,14 +182,14 @@ static int iwl4965_check_rxon_cmd(struct iwl_rxon_cmd *rxon)
- }
- 
- /**
-- * iwl4965_full_rxon_required - check if full RXON (vs RXON_ASSOC) cmd is needed
-+ * iwl_full_rxon_required - check if full RXON (vs RXON_ASSOC) cmd is needed
-  * @priv: staging_rxon is compared to active_rxon
-  *
-  * If the RXON structure is changing enough to require a new tune,
-  * or is clearing the RXON_FILTER_ASSOC_MSK, then return 1 to indicate that
-  * a new tune (full RXON command, rather than RXON_ASSOC cmd) is required.
-  */
--static int iwl4965_full_rxon_required(struct iwl_priv *priv)
-+static int iwl_full_rxon_required(struct iwl_priv *priv)
- {
- 
- 	/* These items are only settable from the full RXON command */
-@@ -208,7 +208,6 @@ static int iwl4965_full_rxon_required(struct iwl_priv *priv)
- 	     priv->active_rxon.ofdm_ht_single_stream_basic_rates) ||
- 	    (priv->staging_rxon.ofdm_ht_dual_stream_basic_rates !=
- 	     priv->active_rxon.ofdm_ht_dual_stream_basic_rates) ||
--	    (priv->staging_rxon.rx_chain != priv->active_rxon.rx_chain) ||
- 	    (priv->staging_rxon.assoc_id != priv->active_rxon.assoc_id))
- 		return 1;
- 
-@@ -264,7 +263,7 @@ static int iwl4965_commit_rxon(struct iwl_priv *priv)
- 	/* If we don't need to send a full RXON, we can use
- 	 * iwl4965_rxon_assoc_cmd which is used to reconfigure filter
- 	 * and other flags for the current radio configuration. */
--	if (!iwl4965_full_rxon_required(priv)) {
-+	if (!iwl_full_rxon_required(priv)) {
- 		ret = iwl_send_rxon_assoc(priv);
- 		if (ret) {
- 			IWL_ERROR("Error setting RXON_ASSOC (%d)\n", ret);
--- 
-1.5.3.6
+Alan
 
