@@ -1,87 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:42728 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752522AbYHCHmR (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54606 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752378AbYHAMyp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 03:42:17 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so587970nfc.21
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2008 00:42:14 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH 3/8] rfkill: add __must_check annotations
-Date: Sun, 3 Aug 2008 10:05:37 +0200
-Cc: linux-wireless@vger.kernel.org, Matthew Garrett <mjg@redhat.com>
-References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br> <1217700664-20792-4-git-send-email-hmh@hmh.eng.br>
-In-Reply-To: <1217700664-20792-4-git-send-email-hmh@hmh.eng.br>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200808031005.37299.IvDoorn@gmail.com> (sfid-20080803_094219_561615_30E01F03)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 1 Aug 2008 08:54:45 -0400
+Subject: Re: iwlwifi aggregation info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Friedrich.Beckmann@infineon.com, linux-wireless@vger.kernel.org,
+	j@w1.fi
+In-Reply-To: <1ba2fa240808010540g660cdaa9p1158a27061e3fcd@mail.gmail.com> (sfid-20080801_144007_421549_BFCC209F)
+References: <1217331138.10489.24.camel@johannes.berg>
+	 <1217425854.10489.125.camel@johannes.berg>
+	 <1ba2fa240807300659p4d743f31se265f550a2da0dd1@mail.gmail.com>
+	 <1217431179.10489.134.camel@johannes.berg>
+	 <1ba2fa240807300908x5489e3f8g54ff83e7e5912c0b@mail.gmail.com>
+	 <1217509511.10489.140.camel@johannes.berg>
+	 <1ba2fa240807311114t3e1b4fb3oe6643fbe28f2c2ac@mail.gmail.com>
+	 <1217528597.10489.150.camel@johannes.berg>
+	 <1ba2fa240807311216u1a45cf22j219046ab357b0910@mail.gmail.com>
+	 <1217592554.8621.23.camel@johannes.berg>
+	 <1ba2fa240808010540g660cdaa9p1158a27061e3fcd@mail.gmail.com>
+	 (sfid-20080801_144007_421549_BFCC209F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JY5oLm3UPAeoJHOp3Bmr"
+Date: Fri, 01 Aug 2008 14:54:39 +0200
+Message-Id: <1217595279.8621.38.camel@johannes.berg> (sfid-20080801_145449_897169_666FF62E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 02 August 2008, Henrique de Moraes Holschuh wrote:
-> rfkill is not a small, mere detail in wireless support.  Once it starts
-> supporting rfkill and users start counting on that support, a wireless
-> device is at risk of operating in dangerous conditions should rfkill
-> support fail to properly activate.
-> 
-> Therefore, add the required __must_check annotations on some key functions
-> of the rfkill API, for which the wireless drivers absolutely MUST handle
-> the failure mode safely in order to avoid a potentially dangerous situation
-> where the wireless transmitter is left enabled when the user don't want it
-> to.
-> 
-> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> Cc: Matthew Garrett <mjg@redhat.com>
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+--=-JY5oLm3UPAeoJHOp3Bmr
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> ---
->  include/linux/rfkill.h |    5 +++--
->  net/rfkill/rfkill.c    |    5 +++--
->  2 files changed, 6 insertions(+), 4 deletions(-)
-> 
-> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-> index aa3c7d5..e92d8e9 100644
-> --- a/include/linux/rfkill.h
-> +++ b/include/linux/rfkill.h
-> @@ -110,9 +110,10 @@ struct rfkill {
->  };
->  #define to_rfkill(d)	container_of(d, struct rfkill, dev)
->  
-> -struct rfkill *rfkill_allocate(struct device *parent, enum rfkill_type type);
-> +struct rfkill * __must_check rfkill_allocate(struct device *parent,
-> +					     enum rfkill_type type);
->  void rfkill_free(struct rfkill *rfkill);
-> -int rfkill_register(struct rfkill *rfkill);
-> +int __must_check rfkill_register(struct rfkill *rfkill);
->  void rfkill_unregister(struct rfkill *rfkill);
->  
->  int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state);
-> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-> index c1901fb..5320210 100644
-> --- a/net/rfkill/rfkill.c
-> +++ b/net/rfkill/rfkill.c
-> @@ -653,7 +653,8 @@ static void rfkill_remove_switch(struct rfkill *rfkill)
->   * NOTE: If registration fails the structure shoudl be freed by calling
->   * rfkill_free() otherwise rfkill_unregister() should be used.
->   */
-> -struct rfkill *rfkill_allocate(struct device *parent, enum rfkill_type type)
-> +struct rfkill * __must_check rfkill_allocate(struct device *parent,
-> +					     enum rfkill_type type)
->  {
->  	struct rfkill *rfkill;
->  	struct device *dev;
-> @@ -724,7 +725,7 @@ static void rfkill_led_trigger_unregister(struct rfkill *rfkill)
->   * structure needs to be registered. Immediately from registration the
->   * switch driver should be able to service calls to toggle_radio.
->   */
-> -int rfkill_register(struct rfkill *rfkill)
-> +int __must_check rfkill_register(struct rfkill *rfkill)
->  {
->  	static atomic_t rfkill_no = ATOMIC_INIT(0);
->  	struct device *dev = &rfkill->dev;
+On Fri, 2008-08-01 at 15:40 +0300, Tomas Winkler wrote:
 
+> >> > Right. Which brings us back to the original point, why does the hw n=
+eed
+> >> > to make the scheduling decision between agg and non-agg?
+> >>
+> >> There is no scheduling between aag and legacy queue in the sense of
+> >> qdisc .
+> >
+> > Right. So why are you saying we should have a separate qdisc for it?
+>=20
+> I need a sw queue for it.
+
+Sure, you need to buffer packets, but that's a whole different beast.
+
+> >> The aggregation need to be taken from single stream as
+> >> explained before,
+> >
+> > I think we simply agree on that. Which brings me back to my original
+> > point: to provide fairness within that stream we shouldn't have separat=
+e
+> > qdiscs for agg/non-agg parts of the stream.
+>=20
+> You agree on the fact that it's a seperate stream but you still
+> doesn't want separate queue for it....
+
+Actually, no, I don't think it's a separate stream, I think aggregation
+frames are taken from the AC stream. I thought you meant that.
+
+> >> Iwlwifi has HW support for it that that's the whole story we just need
+> >> queueing support from the software buffering stopping and starting
+> >> queue and last but not least there is a classification just an
+> >> extension of the regular AC scheduling.  The fairness between legacy
+> >> and agg queue must be provided by actually 'not scheduling'
+> >
+> > I don't understand what you mean by "not scheduling".
+>=20
+> Not scheduling mean not string to prioritize streams in SW. I guess it me=
+ans RR.
+
+But that's entirely user dependent if we allow actual qdiscs.
+
+>  AIUI from the
+> > specs, there is no scheduling between aggregation/non-aggregation
+> > queues, or "within an AC" as I would say it.
+> >
+> > Therefore, I think we should remove the extra software queues and split
+> > up the single-AC stream into the different hardware queues in the
+> > driver, to be reunited in the FIFOs.
+>=20
+> Aggregation is a separate stream even on the air it has it's own
+> rhythm.  For example
+> from AP perspective you an have 3 streams for the same TID for 3
+> stations. Each station
+> has it's own rate of processing aggregation stream.  It may vary on
+> number of packets and size of the aggregation
+> this is determine in association time.
+> So shell I stop the whole AC queue just because on station is slower?
+
+If you want to draw up scenarios here, how about this one:
+
+=46rom an AP perspective, assume three streams for the same TID for three
+stations. No aggregation involved. Say they all receive a fixed bitrate
+video stream. Assume you need all the airtime to transmit the three
+video streams when all stations are fairly close. Now one of them is
+further away and is a bit slower than the others. This will lead to
+contention, right? So now, frames will queue up in the AC queue for this
+TID, penalising all three stations. Do you agree so far?
+
+Now, enter aggregation. The way I think of it (and Jouni seems to agree)
+is that the spec intended for aggregation to be a mechanism to reduce
+the required airtime by making the transmission more efficient with less
+space.
+
+On the other hand, you seem to think of aggregation as a QoS mechanism,
+and I think that's wrong.
+
+Ideally, for the first two fast stations would allow enough airtime to
+be freed up so that the third station can still receive the video
+stream.
+
+When that is not the case, however, we disagree. I think that because
+aggregation isn't a QoS mechanism, it should behave the same way as in
+the case where no stations have aggregation enabled, and stall the whole
+queue. On the other hand, you think it is a QoS mechanism, and let
+streams for the fast stations be interleaved with the slow station,
+leaving only frames for the slow station piling up.
+
+Is my analysis of what you are saying correct? If so, I think we cannot
+solve the fundamental disagreement here without actually going and
+asking for other people's opinion on the 11n draft.
+
+johannes
+
+--=-JY5oLm3UPAeoJHOp3Bmr
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIkweLAAoJEKVg1VMiehFYRbcP/32p7qThyOqFZ7cpyn5PKVfV
+6k55zC1hZRbWtL6PLdgyEet12rLAddjGzi5iwDuBmqPssYch36FHItZ0uBu4hRVi
+33lp63mbrrlLUrTnUNN9Rd3j4/c75dXSmwnFQaBAwGR7AYl99jjCxbKNvcBhttBJ
+gtsrMXJ3R9gJ21iI7K9XBlLQmNSg/cUaK7sy1Eq2D8hH0rmv7i1XZ/CCBNwRjjJe
+/5RZVkcAVFYoVHkMfvI2MwtiwdqLb8PmXi+4HDCOWUCNcgSVyUbQpCt/XMr5jlH8
+ytgisyh0IKt1wQAGgiOtm+nVVNKNcTWl9yXOvUjJ8hdGCZeQL4WGFaPSYW0KNhc/
+lTx6KG6wY/UR5rSGGdBO6rwEJm9UEQls6x1TL/fCq6jlyviXsna1Rg0KGl6kGh3x
+9YHzshvKpZ5ya8FatWQTy5bp4fIzKMNFy0e3vUBFXMEzFQfuvHKBixEJZN1CLYfA
+iGgS2WwamFf/MTk6z2TeTHq2AAtmsGH9Nwtcwi2LDkxmYXh3wWdCbrp9QUqMo30b
+dC5giBN99FVvEcUTubeM+FOKaMFB6p8V0FICLXzT4anFz9O9dI2fpwJ1B2FENQOo
+7qH7uCDchuq1uMHy4RftYYTb8TDEOFU8wrH1ZFB7dX47BgDWhLaV2wzAgn1UIP7m
+ov/yb+VBABsYL33NUn8g
+=gx0A
+-----END PGP SIGNATURE-----
+
+--=-JY5oLm3UPAeoJHOp3Bmr--
 
