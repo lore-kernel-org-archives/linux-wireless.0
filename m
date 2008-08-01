@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.237]:17367 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753451AbYHFWih (ORCPT
+Received: from qb-out-0506.google.com ([72.14.204.236]:64118 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751367AbYHAQLn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2008 18:38:37 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so145877rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Aug 2008 15:38:37 -0700 (PDT)
-Message-ID: <1ba2fa240808061538l1e1d7a70x11ef7143ec9d2ea5@mail.gmail.com> (sfid-20080807_003840_852353_3CD52EE0)
-Date: Thu, 7 Aug 2008 01:38:37 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: split out aggregation code
-Cc: "John Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1218051603.23048.63.camel@johannes.berg>
+	Fri, 1 Aug 2008 12:11:43 -0400
+Received: by qb-out-0506.google.com with SMTP id a16so1106875qbd.17
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 09:11:42 -0700 (PDT)
+Message-ID: <489335CA.9000204@tuffmail.co.uk> (sfid-20080801_181147_760690_163E5430)
+Date: Fri, 01 Aug 2008 17:11:54 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1218051603.23048.63.camel@johannes.berg>
+To: Jiri Slaby <jirislaby@gmail.com>
+CC: Bob Copeland <me@bobcopeland.com>, tomasw@gmail.com,
+	Dave Young <hidave.darkstar@gmail.com>, stable@kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linville@tuxdriver.com, Pekka Enberg <penberg@cs.helsinki.fi>,
+	ath5k-devel@venema.h4ckr.net, johannes@sipsolutions.net,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: git-describe [Was: ath5k_config_interface deadlock fix]
+References: <20080801074014.GA3341@darkstar> <4892C2CA.7010003@gmail.com>		<4892C359.9000304@cs.helsinki.fi>		<20080801011415.ff4821a3.akpm@linux-foundation.org>	<b6c5339f0808010643i58dbb2a7jf459359451061ae4@mail.gmail.com> <4893257C.1020907@gmail.com> <48932A10.8080004@tuffmail.co.uk> <48932AFA.5020903@gmail.com>
+In-Reply-To: <48932AFA.5020903@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 6, 2008 at 10:40 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> It's more manageable that way. Also move some constants to
-> include/linux/ieee80211.h.
+Jiri Slaby wrote:
+> Alan Jenkins napsal(a):
+>> There must be a better way (for efficient merges, right?).  But all I
+>> can think of is comparing the files in question against the diff.  I
+>> checked myself and the changes don't appear to have been included in
+>> v2.6.26.
+>
+> Ah, I see. Is this a git-describe bug or my misunderstanding of the tool?
 
-I'm not sure this is good point of time to do that. Aggregation is not
-working on 2.6.27 and we want to fix it there.
-Splitting now will just complicate the effort.
+It's not an implementation bug.  It's just very easy to misunderstand.
 
-> + *
-> + * Copyright 2002-2005, Instant802 Networks, Inc.
- > + * Copyright 2005-2006, Devicescape Software, Inc.
-> + * Copyright 2006-2007  Jiri Benc <jbenc@suse.cz>
+git-describe only looks _back_ in time to what the current commit is
+based on.  In this case the commit was based on v2.6.26-rc8 - but it
+_wasn't_ merged into 2.6.26.  It was presumably merged in for
+v2.6.27-rc1.  This is a perfectly legal history in GIT.
 
-If you separating this file then remove these 3 above
+It's probably most often encountered during git-bisect.  If you bisect
+e.g. between v2.6.26 and v.2.6.27-rc1, you're likely to see commits
+which were based on v2.6.26-rc8.
 
-> + * Copyright 2008       Ron Rindjunsky <ron.rindjunsky@intel.com>
-You would probably want to add this one as the major copyright.
-> + * Copyright 2008       Johannes Berg <johannes@sipsolutions.net>
-Thanks
-Tomas
+If that doesn't help, try finding an introduction to GIT with some good
+pictures.  I think it's easier to understand it visually.
+
+Alan
