@@ -1,94 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from usul.saidi.cx ([204.11.33.34]:37298 "EHLO usul.overt.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753537AbYHDBLA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 21:11:00 -0400
-Message-ID: <48965716.6020508@overt.org> (sfid-20080804_031105_784110_B758394F)
-Date: Sun, 03 Aug 2008 18:10:46 -0700
-From: Philip Langdale <philipl@overt.org>
+Received: from ik-out-1112.google.com ([66.249.90.183]:8521 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751964AbYHAGmy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Aug 2008 02:42:54 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so926465ika.5
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Jul 2008 23:42:52 -0700 (PDT)
+Date: Fri, 1 Aug 2008 06:48:10 +0000
+From: Jarek Poplawski <jarkao2@gmail.com>
+To: David Miller <davem@davemloft.net>
+Cc: johannes@sipsolutions.net, netdev@axxeo.de, peterz@infradead.org,
+	Larry.Finger@lwfinger.net, kaber@trash.net,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, mingo@redhat.com
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+	__netif_schedule+0x2c/0x98()
+Message-ID: <20080801064810.GA4435@ff.dom.local> (sfid-20080801_084310_938926_1BD88A5B)
+References: <20080726131838.GA2873@ami.dom.local> <20080726.173434.48036095.davem@davemloft.net> <20080727203757.GA2527@ami.dom.local> <20080731.052932.110299354.davem@davemloft.net>
 MIME-Version: 1.0
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-CC: LKML <linux-kernel@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	toshiba_acpi@memebeam.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
- through rfkill (v2)
-References: <4894B1B4.6050003@overt.org> <20080803042613.GC6053@khazad-dum.debian.net>
-In-Reply-To: <20080803042613.GC6053@khazad-dum.debian.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080731.052932.110299354.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Henrique de Moraes Holschuh wrote:
->> +	value = state == RFKILL_STATE_UNBLOCKED;
+On Thu, Jul 31, 2008 at 05:29:32AM -0700, David Miller wrote:
+> From: Jarek Poplawski <jarkao2@gmail.com>
+> Date: Sun, 27 Jul 2008 22:37:57 +0200
 > 
-> value = (state == RFKILL_STATE_UNBLOCKED);
-> 
-> It is a lot easier to read without confusing the == for a =.
+> > Looks like enough to me. (Probably it could even share space with
+> > the state.)
 
-Fixed.
+Alas I've some doubts here...
 
-> 
-> You don't really need the above, rfkill won't ever call your toggle_radio
-> callback like that.
-> 
-> If you want paranoid checking, do this instead:
-> 
-> default:
-> 	/* maybe WARN(), WARN_ON() or printk here */
-> 	return -EINVAL;
+...
+>  static inline void netif_tx_unlock(struct net_device *dev)
+>  {
+>  	unsigned int i;
+>  
+>  	for (i = 0; i < dev->num_tx_queues; i++) {
+>  		struct netdev_queue *txq = netdev_get_tx_queue(dev, i);
+> -		__netif_tx_unlock(txq);
+> -	}
+>  
+> +		/* No need to grab the _xmit_lock here.  If the
+> +		 * queue is not stopped for another reason, we
+> +		 * force a schedule.
+> +		 */
+> +		clear_bit(__QUEUE_STATE_FROZEN, &txq->state);
 
-Fixed.
+The comments in asm-x86/bitops.h to set_bit/clear_bit are rather queer
+about reordering on non x86: isn't eg. smp_mb_before_clear_bit()
+useful  here?
 
->> +static void bt_acpi_notify(acpi_handle handle, u32 event, void *data)
->> +{
->> +	struct toshiba_acpi_dev *dev = data;
->> +
->> +	switch (event) {
->> +	case BT_ACPI_SOFT_UNBLOCKED_EVENT:
->> +		if (!dev->ignore_next_bt_event) {
->> +			bt_rfkill_toggle_radio(data, RFKILL_STATE_UNBLOCKED);
->> +			rfkill_force_state(dev->rfk_dev,
->> +					   RFKILL_STATE_UNBLOCKED);
-> 
-> This one got me confused.  Why do you need that bt_rfkill_toggle_radio call
-> here?
+> +		if (!test_bit(__QUEUE_STATE_XOFF, &txq->state))
+> +			__netif_schedule(txq->qdisc);
+> +	}
+> +	spin_unlock(&dev->tx_global_lock);
+>  }
+...
 
-When you turn off the hardware kill switch, the hardware will not reactivate
-the bluetooth device. it just returns to the SOFT_UNBLOCKED state. I put that
-in so that it would turn the device back on - a generally more desirable
-behaviour - otherwise the user has to dig around for a software way to turn
-it back. All the other hardware I've ever seen (including the wifi device on
-this laptop) turns it back on, so it seemed sensible to try and make it work
-as people would expect.
+> diff --git a/net/core/dev.c b/net/core/dev.c
+> index 63d6bcd..69320a5 100644
+> --- a/net/core/dev.c
+> +++ b/net/core/dev.c
+> @@ -4200,6 +4200,7 @@ static void netdev_init_queues(struct net_device *dev)
+>  {
+>  	netdev_init_one_queue(dev, &dev->rx_queue, NULL);
+>  	netdev_for_each_tx_queue(dev, netdev_init_one_queue, NULL);
+> +	spin_lock_init(&dev->tx_global_lock);
 
-> 
-> Read the kernel-doc headers of every rfkill function you call at least
-> once...  Never rfkill_free() something you rfkill_unregister()'ed.
-> 
-> rfkill_free() is just for the error unwind of a failure between
-> rfkill_allocate() and rfkill_register().
+This will probably need some lockdep annotations similar to
+_xmit_lock.
 
-Fair enough, but it doesn't help that rfkill and input-polldev work in
-exactly opposite ways; polldev requires you to unregister and then free;
-some consistency wouldn't hurt.
+> diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
+> index 345838a..9c9cd4d 100644
+> --- a/net/sched/sch_generic.c
+> +++ b/net/sched/sch_generic.c
+> @@ -135,7 +135,8 @@ static inline int qdisc_restart(struct Qdisc *q)
+>  	txq = netdev_get_tx_queue(dev, skb_get_queue_mapping(skb));
+>  
+>  	HARD_TX_LOCK(dev, txq, smp_processor_id());
+> -	if (!netif_subqueue_stopped(dev, skb))
+> +	if (!netif_tx_queue_stopped(txq) &&
+> +	    !netif_tx_queue_frozen(txq))
+>  		ret = dev_hard_start_xmit(skb, dev, txq);
+>  	HARD_TX_UNLOCK(dev, txq);
 
->> +		toshiba_acpi.rfk_dev->dev.class->suspend = NULL;
->> +		toshiba_acpi.rfk_dev->dev.class->resume = NULL;
-> 
-> Why?
+This thing is the most doubtful to me: before this patch callers would
+wait on this lock. Now they take the lock without problems, check the
+flags, and let to take this lock again, doing some re-queing in the
+meantime.
 
-Good question. Gone.
+So, it seems HARD_TX_LOCK should rather do some busy looping now with
+a trylock, and re-checking the _FROZEN flag. Maybe even this should
+be done in __netif_tx_lock(). On the other hand, this shouldn't block
+too much the owner of tx_global_lock() with taking such a lock.
 
-> 
-> Do the above between rfkill_allocate() and rfkill_register().
-> 
-
-Moved.
-
-Diff is updated and resent as v3.
-
-Thanks,
-
---phil
+Jarek P.
