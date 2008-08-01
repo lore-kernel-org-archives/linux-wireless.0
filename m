@@ -1,49 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:4949 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752668AbYHMLyZ (ORCPT
+Received: from posthamster.phnxsoft.com ([195.227.45.4]:2893 "EHLO
+	posthamster.phnxsoft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750834AbYHAJ0I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Aug 2008 07:54:25 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so1060358nfc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Aug 2008 04:54:24 -0700 (PDT)
-Subject: Re: Resignation from orinoco and at76_usb
-From: Milan Plzik <milan.plzik@gmail.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <87bq099npy.fsf@nokia.com>
-References: <1217634358.2731.8.camel@dv>  <87bq099npy.fsf@nokia.com>
-Content-Type: text/plain
-Date: Wed, 13 Aug 2008 13:54:18 +0200
-Message-Id: <1218628458.4304.19.camel@localhost> (sfid-20080813_135429_996987_ED62BD99)
-Mime-Version: 1.0
+	Fri, 1 Aug 2008 05:26:08 -0400
+Message-ID: <4892D6A2.5030701@imap.cc> (sfid-20080801_112616_561056_D953C12A)
+Date: Fri, 01 Aug 2008 11:25:54 +0200
+From: Tilman Schmidt <tilman@imap.cc>
+MIME-Version: 1.0
+To: felipe.balbi@nokia.com
+CC: me@felipebalbi.com, Greg KH <greg@kroah.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Q: support for AVM Fritz! WLAN USB in kernel 2.6.25+
+References: <4891D1B9.70703@imap.cc> <20080731163843.GB9606@kroah.com> <48922FE2.70705@imap.cc> <20080731215055.GB4817@kroah.com> <489242CF.2000100@imap.cc> <20080731232640.GB10436@frodo> <4892CD0C.7040403@imap.cc> <20080801085022.GD23009@gandalf.research.nokia.com> <4892D029.6070609@imap.cc> <20080801090515.GE23009@gandalf.research.nokia.com>
+In-Reply-To: <20080801090515.GE23009@gandalf.research.nokia.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigA4C64D62D746C071B4DCBF75"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  Sorry for replying to more than week dead thread, I just overlooked
-it... .
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigA4C64D62D746C071B4DCBF75
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-On Po, 2008-08-04 at 11:41 +0300, Kalle Valo wrote:
-> Pavel Roskin <proski@gnu.org> writes:
-> 
-> > I would like to resign as maintainer of orinoco and at76_usb drivers.  I
-> > was genuinely interested in getting most of the hardware supported by
-> > those drivers, but as it stands now, I simple cannot find time for
-> > either of them.  I believe it is harmful for both projects to have an
-> > unresponsive maintainer who does not have time to review patches and
-> > answer questions about the project.  Perhaps it's better not to have any
-> > maintainer, so that an interested person could step in.
-> 
-> I would be very interested to maintain at76_usb. I broke it, so I
-> should (and will) fix it as well. But due to real life issues, I can
-> start actively working on it only at the end of September. I hope
-> that's not a problem.
-> 
+I'm sorry if I came across as arrogant or ironic. I thought
+I was playing along with the tone you had set, but obviously
+I got it wrong. Please accept my apologies.
 
-  I can help here and there at least with testing, as I have access to
-some devices equipped with at76-based hardware, although I won't have
-time to be maintainer.
+Again, I did not and do not ask for help with the closed source
+driver. I just want to know if there is an open source one I
+can use.
 
-	Milan
+EOD? Please?
 
-P.S.: Good luck, Kalle :)
+Thanks,
+TIlman
 
+--=20
+Tilman Schmidt                    E-Mail: tilman@imap.cc
+Bonn, Germany
+Diese Nachricht besteht zu 100% aus wiederverwerteten Bits.
+Unge=F6ffnet mindestens haltbar bis: (siehe R=FCckseite)
+
+
+--------------enigA4C64D62D746C071B4DCBF75
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.4 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFIktaiQ3+did9BuFsRAkfpAJ9plC2pMVliIGAku8ssl+48dMevEgCfctxr
+OR+YTdB6Vhrp9rYOLlDMqCE=
+=/ZZ0
+-----END PGP SIGNATURE-----
+
+--------------enigA4C64D62D746C071B4DCBF75--
