@@ -1,96 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:61799 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754963AbYH2TIF (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.243]:18072 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752048AbYHARpH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2008 15:08:05 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so320107eyi.37
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Aug 2008 12:08:04 -0700 (PDT)
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 6/7] rt2x00: skb->data pointer should not include TX descriptor
-Date: Fri, 29 Aug 2008 21:07:20 +0200
-Cc: "rt2400-devel" <rt2400-devel@lists.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-References: <200808292103.53179.IvDoorn@gmail.com> <200808292105.45380.IvDoorn@gmail.com> <200808292106.01403.IvDoorn@gmail.com>
-In-Reply-To: <200808292106.01403.IvDoorn@gmail.com>
+	Fri, 1 Aug 2008 13:45:07 -0400
+Received: by an-out-0708.google.com with SMTP id d40so183963and.103
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 10:45:06 -0700 (PDT)
+Message-ID: <43e72e890808011045o57ba1aecwb14b5f3dce049a1@mail.gmail.com> (sfid-20080801_194521_595015_A97C3C3E)
+Date: Fri, 1 Aug 2008 10:45:06 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: Vendor support stickers for devices supported under Linux wireless
+Cc: "Michael Renzmann" <mrenzmann@madwifi.org>,
+	"Nick Kossifidis" <mickflemm@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1217610561.13107.28.camel@dv>
 MIME-Version: 1.0
-Message-Id: <200808292107.20211.IvDoorn@gmail.com> (sfid-20080829_210811_294154_331A577D)
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890807301327j54be2453r836964c708d75458@mail.gmail.com>
+	 <40f31dec0807310657l36b052bfu510415d50c14718d@mail.gmail.com>
+	 <3659.194.45.26.221.1217581093.squirrel@webmail.madwifi.org>
+	 <1217610561.13107.28.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mattias Nissler <mattias.nissler@gmx.de>
+On Fri, Aug 1, 2008 at 10:09 AM, Pavel Roskin <proski@gnu.org> wrote:
+> On Fri, 2008-08-01 at 10:58 +0200, Michael Renzmann wrote:
+>
+>> How about a "Linux Wireless Foundation"? Some kind of official entity that
+>> wireless vendors could talk to for Linux support, certification process
+>> for getting the logo, and so on.
+>
+> My concern is that giving any certification would imply that we promise
+> to keep the driver in the Linux sources.  However, I don't think we can
+> accept legal obligations on behalf of the developers.
+>
+> Linus can remove any driver at any time.  We can hope that he will act
+> rationally, but even then, the driver may be found to have fundamental
+> problems after the certification.  If Linus removes a driver for a
+> certified device, will "Linux Wireless Foundation" fork the kernel?
 
-Make sure the skb->data pointer points to the frame data, not the TX
-descriptor. The frame dumping code relies on that.
+I'm not really concerned about that, I think we're side tracking a bit
+from the original intention behind this thing which is to help users
+get stuff that works on Linux and is supported. For now it seems
+reasonable to get the driver in Linus' tree and to have support for
+it.
 
-Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2500usb.c |    3 +--
- drivers/net/wireless/rt2x00/rt2x00usb.c |   11 ++++++-----
- drivers/net/wireless/rt2x00/rt73usb.c   |    3 +--
- 3 files changed, 8 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index c5f49e3..0e008b6 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1114,8 +1114,7 @@ static void rt2500usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field32(&word, TXD_W0_NEW_SEQ,
- 			   test_bit(ENTRY_TXD_FIRST_FRAGMENT, &txdesc->flags));
- 	rt2x00_set_field32(&word, TXD_W0_IFS, txdesc->ifs);
--	rt2x00_set_field32(&word, TXD_W0_DATABYTE_COUNT,
--			   skb->len - skbdesc->desc_len);
-+	rt2x00_set_field32(&word, TXD_W0_DATABYTE_COUNT, skb->len);
- 	rt2x00_set_field32(&word, TXD_W0_CIPHER, CIPHER_NONE);
- 	rt2x00_desc_write(txd, 0, word);
- }
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 2dd7c83..b73a7e0 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -168,11 +168,6 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
- 		return;
- 
- 	/*
--	 * Remove the descriptor data from the buffer.
--	 */
--	skb_pull(entry->skb, entry->queue->desc_size);
--
--	/*
- 	 * Obtain the status about this packet.
- 	 * Note that when the status is 0 it does not mean the
- 	 * frame was send out correctly. It only means the frame
-@@ -224,6 +219,12 @@ int rt2x00usb_write_tx_data(struct queue_entry *entry)
- 			  entry->skb->data, length,
- 			  rt2x00usb_interrupt_txdone, entry);
- 
-+	/*
-+	 * Make sure the skb->data pointer points to the frame, not the
-+	 * descriptor.
-+	 */
-+	skb_pull(entry->skb, entry->queue->desc_size);
-+
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(rt2x00usb_write_tx_data);
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index cf236ec..e698ae0 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1556,8 +1556,7 @@ static void rt73usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field32(&word, TXD_W0_KEY_TABLE,
- 			   test_bit(ENTRY_TXD_ENCRYPT_PAIRWISE, &txdesc->flags));
- 	rt2x00_set_field32(&word, TXD_W0_KEY_INDEX, txdesc->key_idx);
--	rt2x00_set_field32(&word, TXD_W0_DATABYTE_COUNT,
--			   skb->len - skbdesc->desc_len);
-+	rt2x00_set_field32(&word, TXD_W0_DATABYTE_COUNT, skb->len);
- 	rt2x00_set_field32(&word, TXD_W0_BURST2,
- 			   test_bit(ENTRY_TXD_BURST, &txdesc->flags));
- 	rt2x00_set_field32(&word, TXD_W0_CIPHER_ALG, txdesc->cipher);
--- 
-1.5.6.1
-
+  Luis
