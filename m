@@ -1,282 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:2625 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754370AbYHWACo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2008 20:02:44 -0400
-Date: Fri, 22 Aug 2008 19:46:32 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless-next-2.6 2008-08-22
-Message-ID: <20080822234632.GA12922@tuxdriver.com> (sfid-20080823_020252_639150_673282B6)
+Received: from posthamster.phnxsoft.com ([195.227.45.4]:2540 "EHLO
+	posthamster.phnxsoft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752463AbYHAI6a (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Aug 2008 04:58:30 -0400
+Message-ID: <4892D029.6070609@imap.cc> (sfid-20080801_105833_929231_7AA2A754)
+Date: Fri, 01 Aug 2008 10:58:17 +0200
+From: Tilman Schmidt <tilman@imap.cc>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: felipe.balbi@nokia.com
+CC: me@felipebalbi.com, Greg KH <greg@kroah.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Q: support for AVM Fritz! WLAN USB in kernel 2.6.25+
+References: <4891D1B9.70703@imap.cc> <20080731163843.GB9606@kroah.com> <48922FE2.70705@imap.cc> <20080731215055.GB4817@kroah.com> <489242CF.2000100@imap.cc> <20080731232640.GB10436@frodo> <4892CD0C.7040403@imap.cc> <20080801085022.GD23009@gandalf.research.nokia.com>
+In-Reply-To: <20080801085022.GD23009@gandalf.research.nokia.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigE60292ACAF9D1F290B4FF329"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigE60292ACAF9D1F290B4FF329
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-Here is my current stack of updates for 2.6.28 -- included is an
-orinoco update to support WPA on certain firmware, the new libertas_tf
-driver, a number of cleanups, and a variety of other driver updates.
-Still more to come, but I think it is better to get these out rather
-than wait for the rest...
+On Fri, 1 Aug 2008 11:50:22 +0300, Felipe Balbi wrote:
+> On Fri, Aug 01, 2008 at 10:45:00AM +0200, ext Tilman Schmidt wrote:
+>> -MODULE_LICENSE ("Proprietary");
+>> +MODULE_LICENSE ("GPL");
+[...]
+>> I guess you can spot the problematic part.
+>=20
+> You can't change the module_license and publish it, dude :-p
 
-Please let me know of there are problems!
+Well done, dude. You spotted it first try. Just as I expected. :-p
 
-Thanks,
+--=20
+Tilman Schmidt                    E-Mail: tilman@imap.cc
+Bonn, Germany
+Diese Nachricht besteht zu 100% aus wiederverwerteten Bits.
+Unge=F6ffnet mindestens haltbar bis: (siehe R=FCckseite)
 
-John
 
----
+--------------enigE60292ACAF9D1F290B4FF329
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-Individual patches are available here:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.4 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
+iD8DBQFIktAqQ3+did9BuFsRAjOPAJ9ly0dX5xkVZ00SOOGgkaH8ElAdgwCgj4Er
+IN10FCjeU5sEbHQcMOB7fLM=
+=IrPw
+-----END PGP SIGNATURE-----
 
----
-
-The following changes since commit 2540e0511ea17e25831be543cdf9381e6209950d:
-  Jarek Poplawski (1):
-        pkt_sched: Fix qdisc_watchdog() vs. dev_deactivate() race
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
-
-Andrey Yurovsky (1):
-      ath5k: add Mesh Point support
-
-Brian Cavagnolo (2):
-      libertas: support boot commands to write persistent firmware and bootloader
-      libertas: add sysfs hooks to update boot2 and persistent firmware
-
-Bruno Randolf (5):
-      ath5k: rates cleanup
-      mac80211: add rx status flag for short preamble
-      mac80211: radiotap: assume modulation from rates
-      iwlwifi: use generic mac80211 radiotap headers
-      ath5k: set short preamble flag for rx
-
-Christian Lamparter (1):
-      p54: rename prism54xyz -> p54xyz
-
-Daniel Wagner (1):
-      rt2x00mac: In error case stop netdev queue, free skb and return NETDEV_TX_OK
-
-David Kilroy (19):
-      orinoco: Add ESSID specific scanning for Agere fw
-      orinoco: Update scan translation
-      orinoco: Specify all three parameters to every Hermes command.
-      orinoco: Move EXPORT_SYMBOL declarations next to exported function
-      orinoco: Add function to execute Hermes initialisation commands synchronously
-      orinoco: Move firmware download functionality into new module
-      orinoco: Make firmware download logic more generic
-      orinoco: Extend hermes_dld routines for Agere firmware
-      orinoco: Invoke firmware download in main driver
-      orinoco: Fix transmit for Agere/Lucent with fw 9.x
-      orinoco: address checkpatch typedef warning
-      orinoco: Use extended Agere scans available on 9.x series firmwares
-      orinoco: Don't use boolean parameter to record encoding type
-      orinoco: Split wevent work thread from wevent sending
-      orinoco: Use a macro to define wireless handlers
-      orinoco: Add WE-18 ioctls for WPA
-      orinoco: Send association events to userspace
-      orinoco: Process bulk of receive interrupt in a tasklet
-      orinoco: Add MIC on TX and check on RX
-
-Esti Kummer (1):
-      iwlwifi: add level for debugging host command
-
-Harvey Harrison (13):
-      b43legacy: use le16 frame control directly, avoid byteswapping
-      iwlwifi: use le16 frame control directly, use QOS symbolic constant mask
-      ath5k: explicitly check skb->len
-      mac80211: explicitly check skb->len
-      mac80211: wme.h remove unused QOS_CONTROL_LEN
-      mac80211: wep.c replace magic numbers in IV/ICV removal
-      mac80211: rx.c/tx.c remove more users of tx/rx_data->fc
-      mac80211: remove ieee80211_get_hdrlen
-      mac80211: remove IEEE80211_FC helper
-      mac80211: use ieee80211 frame control directly
-      mac80211: remove rx/tx_data->fc member
-      mac80211: remove WLAN_FC_DATA_PRESENT
-      wireless: replace __FUNCTION__ with __func__
-
-Henrique de Moraes Holschuh (4):
-      rfkill: detect bogus double-registering (v2)
-      rfkill: add default global states (v2)
-      rfkill: add __must_check annotations
-      rfkill: introduce RFKILL_STATE_MAX
-
-Herton Ronaldo Krzesinski (1):
-      rtl818x: merge tx/rx descriptor flags
-
-Ivo van Doorn (7):
-      rt2x00: Implement HW encryption
-      rt2x00: Implement HW encryption (rt61pci)
-      rt2x00: Implement HW encryption (rt73usb)
-      rt2x00: Gather channel information in structure
-      rt2x00: Release rt2x00 2.2.0
-      rt2x00: Move lna_gain calculation to config() callback
-      rt2x00: Add module parameter to disable HW crypto
-
-Jasper Bryant-Greene (2):
-      move ETH_P_PAE from ieee80211_i.h to if_ether.h
-      replace net_device arguments with ieee80211_{local,sub_if_data} as appropriate
-
-Jiri Slaby (1):
-      Ath5k: unify resets
-
-Julia Lawall (1):
-      net/ieee80211: adjust error handling
-
-Luis Carlos Cobo (6):
-      mac80211: allow no mac address until firmware load
-      libertas_tf: header file
-      libertas_tf: main.c, data paths and mac80211 handlers
-      libertas_tf: command helper functions for libertas_tf
-      libertas_tf: usb specific functions
-      libertas_tf: config and makefile
-
-Robert P. J. Day (1):
-      WIRELESS: Make wireless one-click selectable.
-
-Ron Rindjunsky (2):
-      mac80211: change number of pre-assoc scans
-      mac80211: add direct probe before association
-
-Tomas Winkler (4):
-      mac80211: add ieee80211_queue_stopped)
-      iwlwifi: kill struct iwl4965_lq_mngr
-      mac80211: filter probes in ieee80211_rx_mgmt_probe_resp
-      mac80211: cleanup mlme state namespace
-
-roel kluin (1):
-      iwl-4965: test below 0 on unsigned num_tbs
-
- drivers/net/wireless/Kconfig                   |   17 +-
- drivers/net/wireless/Makefile                  |    4 +-
- drivers/net/wireless/airo.c                    |   16 +-
- drivers/net/wireless/airport.c                 |    3 +-
- drivers/net/wireless/ath5k/ath5k.h             |  162 +--
- drivers/net/wireless/ath5k/base.c              |  383 ++---
- drivers/net/wireless/ath5k/base.h              |    8 +-
- drivers/net/wireless/ath5k/hw.c                |   77 +-
- drivers/net/wireless/b43legacy/xmit.c          |    4 +-
- drivers/net/wireless/hermes.c                  |  124 +-
- drivers/net/wireless/hermes.h                  |   45 +
- drivers/net/wireless/hermes_dld.c              |  730 +++++++++
- drivers/net/wireless/hermes_dld.h              |   48 +
- drivers/net/wireless/hermes_rid.h              |   17 +
- drivers/net/wireless/ipw2100.c                 |    2 +-
- drivers/net/wireless/ipw2200.h                 |    4 +-
- drivers/net/wireless/iwlwifi/iwl-3945-debug.h  |    4 +-
- drivers/net/wireless/iwlwifi/iwl-3945.c        |  104 +--
- drivers/net/wireless/iwlwifi/iwl-3945.h        |    1 -
- drivers/net/wireless/iwlwifi/iwl-agn.c         |    2 -
- drivers/net/wireless/iwlwifi/iwl-core.c        |    1 -
- drivers/net/wireless/iwlwifi/iwl-debug.h       |   12 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h         |   16 -
- drivers/net/wireless/iwlwifi/iwl-hcmd.c        |   14 +-
- drivers/net/wireless/iwlwifi/iwl-rx.c          |  125 +--
- drivers/net/wireless/iwlwifi/iwl-tx.c          |   32 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c    |    8 +-
- drivers/net/wireless/libertas/cmd.c            |   21 +-
- drivers/net/wireless/libertas/defs.h           |    6 +-
- drivers/net/wireless/libertas/if_cs.c          |    2 +-
- drivers/net/wireless/libertas/if_usb.c         |  177 ++-
- drivers/net/wireless/libertas/if_usb.h         |    5 +
- drivers/net/wireless/libertas_tf/Makefile      |    6 +
- drivers/net/wireless/libertas_tf/cmd.c         |  669 ++++++++
- drivers/net/wireless/libertas_tf/if_usb.c      |  766 ++++++++++
- drivers/net/wireless/libertas_tf/if_usb.h      |   98 ++
- drivers/net/wireless/libertas_tf/libertas_tf.h |  514 +++++++
- drivers/net/wireless/libertas_tf/main.c        |  666 ++++++++
- drivers/net/wireless/orinoco.c                 | 1949 +++++++++++++++++++++---
- drivers/net/wireless/orinoco.h                 |   61 +-
- drivers/net/wireless/orinoco_cs.c              |    3 +-
- drivers/net/wireless/orinoco_nortel.c          |    3 +-
- drivers/net/wireless/orinoco_pci.c             |    3 +-
- drivers/net/wireless/orinoco_plx.c             |    3 +-
- drivers/net/wireless/orinoco_tmd.c             |    3 +-
- drivers/net/wireless/p54/p54.h                 |    6 +-
- drivers/net/wireless/p54/p54common.h           |    6 +-
- drivers/net/wireless/p54/p54pci.c              |   34 +-
- drivers/net/wireless/p54/p54pci.h              |   10 +-
- drivers/net/wireless/p54/p54usb.c              |   32 +-
- drivers/net/wireless/p54/p54usb.h              |    6 +-
- drivers/net/wireless/prism54/isl_ioctl.c       |    8 +-
- drivers/net/wireless/rt2x00/Kconfig            |    6 +
- drivers/net/wireless/rt2x00/Makefile           |    1 +
- drivers/net/wireless/rt2x00/rt2400pci.c        |   40 +-
- drivers/net/wireless/rt2x00/rt2400pci.h        |   22 +-
- drivers/net/wireless/rt2x00/rt2500pci.c        |   39 +-
- drivers/net/wireless/rt2x00/rt2500pci.h        |   17 +-
- drivers/net/wireless/rt2x00/rt2500usb.c        |   39 +-
- drivers/net/wireless/rt2x00/rt2500usb.h        |   17 +-
- drivers/net/wireless/rt2x00/rt2x00.h           |   73 +-
- drivers/net/wireless/rt2x00/rt2x00config.c     |    4 +
- drivers/net/wireless/rt2x00/rt2x00crypto.c     |  215 +++
- drivers/net/wireless/rt2x00/rt2x00debug.c      |   97 ++
- drivers/net/wireless/rt2x00/rt2x00dev.c        |   48 +-
- drivers/net/wireless/rt2x00/rt2x00lib.h        |   47 +
- drivers/net/wireless/rt2x00/rt2x00mac.c        |  153 ++-
- drivers/net/wireless/rt2x00/rt2x00queue.c      |   81 +-
- drivers/net/wireless/rt2x00/rt2x00queue.h      |   73 +-
- drivers/net/wireless/rt2x00/rt2x00reg.h        |   19 +-
- drivers/net/wireless/rt2x00/rt61pci.c          |  354 ++++-
- drivers/net/wireless/rt2x00/rt61pci.h          |   38 +-
- drivers/net/wireless/rt2x00/rt73usb.c          |  363 ++++-
- drivers/net/wireless/rt2x00/rt73usb.h          |   38 +-
- drivers/net/wireless/rtl8180.h                 |   31 -
- drivers/net/wireless/rtl8180_dev.c             |   34 +-
- drivers/net/wireless/rtl8187.h                 |    6 -
- drivers/net/wireless/rtl8187_dev.c             |   10 +-
- drivers/net/wireless/rtl818x.h                 |   35 +
- drivers/net/wireless/spectrum_cs.c             |  426 +-----
- drivers/net/wireless/wl3501_cs.c               |    8 +-
- include/linux/if_ether.h                       |    1 +
- include/linux/rfkill.h                         |    7 +-
- include/net/mac80211.h                         |   22 +-
- net/Kconfig                                    |    8 +-
- net/ieee80211/ieee80211_module.c               |    8 +-
- net/mac80211/cfg.c                             |   21 +-
- net/mac80211/debugfs_sta.c                     |    2 +-
- net/mac80211/event.c                           |    5 +-
- net/mac80211/ieee80211_i.h                     |  103 +-
- net/mac80211/iface.c                           |    8 +-
- net/mac80211/main.c                            |   81 +-
- net/mac80211/mesh.c                            |   29 +-
- net/mac80211/mesh.h                            |   61 +-
- net/mac80211/mesh_hwmp.c                       |  120 +-
- net/mac80211/mesh_pathtbl.c                    |   76 +-
- net/mac80211/mesh_plink.c                      |   56 +-
- net/mac80211/mlme.c                            |  850 ++++++-----
- net/mac80211/rx.c                              |  140 +-
- net/mac80211/tx.c                              |   46 +-
- net/mac80211/util.c                            |   46 +-
- net/mac80211/wep.c                             |   14 +-
- net/mac80211/wext.c                            |   53 +-
- net/mac80211/wme.h                             |    2 -
- net/mac80211/wpa.c                             |    2 +-
- net/rfkill/rfkill-input.h                      |    1 +
- net/rfkill/rfkill.c                            |  170 ++-
- 107 files changed, 8652 insertions(+), 2634 deletions(-)
- create mode 100644 drivers/net/wireless/hermes_dld.c
- create mode 100644 drivers/net/wireless/hermes_dld.h
- create mode 100644 drivers/net/wireless/libertas_tf/Makefile
- create mode 100644 drivers/net/wireless/libertas_tf/cmd.c
- create mode 100644 drivers/net/wireless/libertas_tf/if_usb.c
- create mode 100644 drivers/net/wireless/libertas_tf/if_usb.h
- create mode 100644 drivers/net/wireless/libertas_tf/libertas_tf.h
- create mode 100644 drivers/net/wireless/libertas_tf/main.c
- create mode 100644 drivers/net/wireless/rt2x00/rt2x00crypto.c
-
-Omnibus patch available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2008-08-22.patch.bz2
-
--- 
-John W. Linville
-linville@tuxdriver.com
+--------------enigE60292ACAF9D1F290B4FF329--
