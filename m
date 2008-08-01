@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:55726 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752746AbYH1OwI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 10:52:08 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so71355nfc.21
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2008 07:52:06 -0700 (PDT)
-Message-ID: <1ba2fa240808280752t4b41996au43bf4cb1a61b7967@mail.gmail.com> (sfid-20080828_165213_459928_7A4B3CE9)
-Date: Thu, 28 Aug 2008 17:52:06 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: iwl5000 oopses (was: iwl5000 oopses with Linus's tree)
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1219925859.25321.10.camel@johannes.berg>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3395 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759912AbYHAShO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Aug 2008 14:37:14 -0400
+Date: Fri, 1 Aug 2008 14:11:35 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [GIT PATCH] RFC: next batch of rfkill changes
+Message-ID: <20080801181135.GC14974@tuxdriver.com> (sfid-20080801_203735_374833_08672FE1)
+References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1217937364.3603.37.camel@johannes.berg>
-	 <1217938927.3603.40.camel@johannes.berg>
-	 <1ba2fa240808050820j1aa0ae7cj11f2758caa5ba4df@mail.gmail.com>
-	 <1219919760.8434.5.camel@johannes.berg>
-	 <1ba2fa240808280439m3524d17cm63deebdfc0d5b9dd@mail.gmail.com>
-	 <1219925859.25321.10.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 28, 2008 at 3:17 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2008-08-28 at 14:39 +0300, Tomas Winkler wrote:
->> On Thu, Aug 28, 2008 at 1:36 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Tue, 2008-08-05 at 18:20 +0300, Tomas Winkler wrote:
->> >> On Tue, Aug 5, 2008 at 3:22 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> >> >
->> >> >> This is kernel 2.6.27-rc1-00504-g2b12a4c-dirty
->> >
->> >> > [  126.826663] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27kds
->> >> > [  126.826947] iwlagn: Copyright(c) 2003-2008 Intel Corporation
->> >> > [  126.828369] iwlagn: Detected Intel Wireless WiFi Link 5350AGN REV=0x24
->> >> > [  126.848680] iwlagn: Tunable channels: 13 802.11bg, 24 802.11a channels
->> >> > [  127.014564] firmware: requesting iwlwifi-5000-1.ucode
->> >> > [  127.170640] iwlagn: Error wrong command queue 43 command id 0x6B
->> >> > [  127.170832] ------------[ cut here ]------------
->> >> > [  127.170884] kernel BUG at drivers/net/wireless/iwlwifi/iwl-tx.c:1163!
->> >> > [  127.170941] Oops: Exception in kernel mode, sig: 5 [#1]
->> >
->> > This is still happening with -rc4.
->>
->> I know, at least one regression.
->
-> Well, I guess for me the addition of the 5000 series code to the kernel
-> is the regression, without it I can use the machine just fine, just have
-> no wireless ;)
+On Tue, Jul 22, 2008 at 10:04:00PM -0300, Henrique de Moraes Holschuh wrote:
+> 
+> This is my next batch of rfkill changes.  They add features and address
+> some shortcomings of rfkill-input, mostly.
+> 
+> Please comment.  One thing that is bothering me in the last patch is
+> what happens during suspend/resume to pending delayed rfkill state
+> changes.  Are pending scheduled jobs executed, cancelled, or frozen to
+> fire up when the system resumes itself?
+> 
+> Henrique de Moraes Holschuh (6):
+>       rfkill: detect bogus double-registering
+>       rfkill: add default global states
+>       rfkill: add master_switch_mode functionality
+>       rfkill: add EPO lock to rfkill-input
+>       rfkill: rename rfkill_mutex to rfkill_global_mutex
+>       rfkill: rate-limit rfkill-input workqueue usage
 
-And when I say that driver is half backed because I'm not done
-cleaning bugs it's somehow not understood
-Instead of chasing bugs I have to spend time to fitght the system.
-Tomas
+FYI...because you included RFC in the subject I won't be merging
+these until I hear otherwise from you.
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
