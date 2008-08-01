@@ -1,297 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:17362 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750708AbYHGCpZ (ORCPT
+Received: from e35.co.us.ibm.com ([32.97.110.153]:42625 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760948AbYHAVKm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2008 22:45:25 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so390878wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Aug 2008 19:45:24 -0700 (PDT)
-Message-ID: <1197ff4c0808061945s1ccc5a97r24263e816cc597ec@mail.gmail.com> (sfid-20080807_044533_922344_5DE214A3)
-Date: Thu, 7 Aug 2008 10:45:24 +0800
-From: YanBo <dreamfly281@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [ath5k-devel] ath5k hang up in mesh mode
-Cc: "Bob Copeland" <me@bobcopeland.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	"Luis Carlos Cobo" <luisca@cozybit.com>
-In-Reply-To: <1218031218.23048.4.camel@johannes.berg>
+	Fri, 1 Aug 2008 17:10:42 -0400
+Date: Fri, 1 Aug 2008 14:10:40 -0700
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+To: Nick Piggin <nickpiggin@yahoo.com.au>
+Cc: Peter Zijlstra <peterz@infradead.org>,
+	David Miller <davem@davemloft.net>, jarkao2@gmail.com,
+	Larry.Finger@lwfinger.net, kaber@trash.net,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, mingo@redhat.com
+Subject: Re: Kernel WARNING: at net/core/dev.c:1330
+	__netif_schedule+0x2c/0x98()
+Message-ID: <20080801211040.GV14851@linux.vnet.ibm.com> (sfid-20080801_231106_437307_AD8371CA)
+Reply-To: paulmck@linux.vnet.ibm.com
+References: <1216890648.7257.258.camel@twins> <20080724.023210.229338550.davem@davemloft.net> <1216894136.7257.266.camel@twins> <200807242038.36693.nickpiggin@yahoo.com.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1197ff4c0808060056q7e10e39cl41a5ea5a26b7cdd6@mail.gmail.com>
-	 <b6c5339f0808060656v771a00dar51054236bc4ec50b@mail.gmail.com>
-	 <1218031218.23048.4.camel@johannes.berg>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200807242038.36693.nickpiggin@yahoo.com.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 6, 2008 at 10:00 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->> > [  577.639420] Mesh plink with 00:19:e0:86:0f:2f ESTABLISHED
->> > [  602.864544] BUG: sleeping function called from invalid context at
->> > mm/slab.c:3043
->> > [  602.869975] in_atomic():1, irqs_disabled():0
->> > [  602.874241] INFO: lockdep is turned off.
->> > [  602.878162] Pid: 5160, comm: ath5k_pci Not tainted
->> > 2.6.27-rc1-wl-14922-gb73da91 #4
->> > [  602.885719]  [<c0172e5f>] kmem_cache_alloc+0xef/0x110
->> > [  602.890794]  [<c04e9908>] mesh_path_add+0xb8/0x2f0
->> > [  602.895610]  [<c04e9908>] mesh_path_add+0xb8/0x2f0
->> > [  602.900468]  [<c04eb8c6>] hwmp_route_info_get+0x406/0x4c0
->> > [  602.905886]  [<c04eb4e5>] hwmp_route_info_get+0x25/0x4c0
->> > [  602.911927]  [<c04eb9f4>] mesh_rx_path_sel_frame+0x74/0x870
->> > [  602.917257]  [<c04d76dd>] ieee80211_rx_bss_info+0x67d/0xe80
->> > [  602.922846]  [<c04d70dc>] ieee80211_rx_bss_info+0x7c/0xe80
->> > [  602.928353]  [<c04d9d40>] ieee80211_rx_mgmt_action+0x180/0x8a0
->>
->> I guess mesh_path_add should be using GFP_ATOMIC instead of GFP_KERNEL, since
->> it's called under rcu_read_lock?  CCed Johannes.
->
-> Looks like it, but I don't really know. OTOH, we really could make all
-> that RX business non-atomic. Oh well, not now.
->
-Above bug disappeared after change the GFP_KERNEL to GFP_ATOMIC, but
-the PC still will hang up after send some packets, and the dmesg show
-below message, IMHO this should be the root cause of the problem, it
-is still a  "cpu stuck for 61s" Bug after insert ath5k module:
+On Thu, Jul 24, 2008 at 08:38:35PM +1000, Nick Piggin wrote:
+> On Thursday 24 July 2008 20:08, Peter Zijlstra wrote:
+> > On Thu, 2008-07-24 at 02:32 -0700, David Miller wrote:
+> > > From: Peter Zijlstra <peterz@infradead.org>
+> > > Date: Thu, 24 Jul 2008 11:27:05 +0200
+> > >
+> > > > Well, not only lockdep, taking a very large number of locks is
+> > > > expensive as well.
+> > >
+> > > Right now it would be on the order of 16 or 32 for
+> > > real hardware.
+> > >
+> > > Much less than the scheduler currently takes on some
+> > > of my systems, so currently you are the pot calling the
+> > > kettle black. :-)
+> >
+> > One nit, and then I'll let this issue rest :-)
+> >
+> > The scheduler has a long lock dependancy chain (nr_cpu_ids rq locks),
+> > but it never takes all of them at the same time. Any one code path will
+> > at most hold two rq locks.
+> 
+> Aside from lockdep, is there a particular problem with taking 64k locks
+> at once? (in a very slow path, of course) I don't think it causes a
+> problem with preempt_count, does it cause issues with -rt kernel?
+> 
+> Hey, something kind of cool (and OT) I've just thought of that we can
+> do with ticket locks is to take tickets for 2 (or 64K) nested locks,
+> and then wait for them both (all), so the cost is N*lock + longest spin,
+> rather than N*lock + N*avg spin.
+> 
+> That would mean even at the worst case of a huge amount of contention
+> on all 64K locks, it should only take a couple of ms to take all of
+> them (assuming max spin time isn't ridiculous).
+> 
+> Probably not the kind of feature we want to expose widely, but for
+> really special things like the scheduler, it might be a neat hack to
+> save a few cycles ;) Traditional implementations would just have
+> #define spin_lock_async	      spin_lock
+> #define spin_lock_async_wait  do {} while (0)
+> 
+> Sorry it's offtopic, but if I didn't post it, I'd forget to. Might be
+> a fun quick hack for someone.
 
-[   84.824343] mesh: no IPv6 routers present
-[  133.610997] Mesh plink (peer, state, llid, plid, event):
-00:19:e0:86:0f:2f 0 0 0 1
-[  133.618982] Mesh plink (peer, state, llid, plid, event):
-00:19:e0:86:0f:2f 2 23523 50820 4
-[  133.626851] Mesh plink with 00:19:e0:86:0f:2f ESTABLISHED
-[  253.403937] BUG: soft lockup - CPU#0 stuck for 61s! [swapper:0]
-[  253.405266] Modules linked in: ath5k
-[  253.405266] irq event stamp: 706218
-[  253.405266] hardirqs last  enabled at (706217): [<c02dc49f>]
-acpi_processor_idle+0x2a6/0x3ff
-[  253.405266] hardirqs last disabled at (706218): [<c050267d>]
-schedule+0x6d/0x340
-[  253.405266] softirqs last  enabled at (706166): [<c01267e5>]
-do_softirq+0x45/0x50
-[  253.405266] softirqs last disabled at (706159): [<c01267e5>]
-do_softirq+0x45/0x50
-[  253.405266]
-[  253.405266] Pid: 0, comm: swapper Not tainted
-(2.6.27-rc1-wl-14922-gb73da91-dirty #6)
-[  253.405266] EIP: 0060:[<c0281502>] EFLAGS: 00000202 CPU: 0
-[  253.405266] EIP is at delay_tsc+0x92/0x9c
-[  253.405266] EAX: c06f6000 EBX: 000000a0 ECX: c06f6000 EDX: 00000309
-[  253.405266] ESI: 00000001 EDI: 03518402 EBP: 00000000 ESP: c06f7c4c
-[  253.405266]  DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
-[  253.405266] CR0: 8005003b CR2: b7f6fa7c CR3: 35047000 CR4: 000006d0
-[  253.405266] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
-[  253.405266] DR6: ffff0ff0 DR7: 00000400
-[  253.405266]  [<c0281406>] __delay+0x6/0x10
-[  253.405266]  [<c02857dc>] _raw_spin_lock+0xbc/0x140
-[  253.405266]  [<c02854b8>] spin_bug+0x18/0x100
-[  253.405266]  [<c0504a08>] _spin_lock_bh+0x58/0x70
-[  253.405266]  [<f885a3d5>] ath5k_tx+0x335/0x490 [ath5k]
-[  253.405266]  [<f885a3d5>] ath5k_tx+0x335/0x490 [ath5k]
-[  253.405266]  [<f885d150>] ath5k_hw_setup_4word_tx_desc+0x0/0x2a0 [ath5k]
-[  253.405266]  [<c04e577e>] __ieee80211_tx+0x3e/0x160
-[  253.405266]  [<c04e5bf7>] ieee80211_master_start_xmit+0x247/0x3e0
-[  253.405266]  [<c04e5b27>] ieee80211_master_start_xmit+0x177/0x3e0
-[  253.405266]  [<c042a35d>] dev_hard_start_xmit+0x27d/0x310
-[  253.405266]  [<c0438a41>] __qdisc_run+0x141/0x1e0
-[  253.405266]  [<c042cbc2>] dev_queue_xmit+0xb2/0x500
-[  253.405266]  [<c042cdc7>] dev_queue_xmit+0x2b7/0x500
-[  253.405266]  [<c042cb49>] dev_queue_xmit+0x39/0x500
-[  253.405266]  [<c04eb2d6>] mesh_path_error_tx+0xe6/0x100
-[  253.405266]  [<c04e9728>] mesh_plink_broken+0xc8/0x130
-[  253.405266]  [<c04e9660>] mesh_plink_broken+0x0/0x130
-[  253.405266]  [<c04ecf32>] rate_control_pid_tx_status+0x582/0x5a0
-[  253.405266]  [<c04ec9d5>] rate_control_pid_tx_status+0x25/0x5a0
-[  253.405266]  [<c04cfd60>] ieee80211_tx_status+0x240/0x4f0
-[  253.405266]  [<c04cfbd5>] ieee80211_tx_status+0xb5/0x4f0
-[  253.405266]  [<c04cfb20>] ieee80211_tx_status+0x0/0x4f0
-[  253.405266]  [<f8858f36>] ath5k_tasklet_tx+0x126/0x250 [ath5k]
-[  253.405266]  [<c0505035>] _spin_unlock+0x25/0x40
-[  253.405266]  [<c0126a76>] irq_exit+0x16/0x50
-[  253.405266]  [<c0126903>] tasklet_action+0x43/0x90
-[  253.405266]  [<c0126742>] __do_softirq+0x62/0xc0
-[  253.405266]  [<c01267e5>] do_softirq+0x45/0x50
-[  253.405266]  [<c0126aa4>] irq_exit+0x44/0x50
-[  253.405266]  [<c0105de6>] do_IRQ+0x46/0x90
-[  253.405266]  [<c02818c4>] trace_hardirqs_off_thunk+0xc/0x18
-[  253.405266]  [<c0103df8>] common_interrupt+0x28/0x30
-[  253.405266]  [<c02dc47c>] acpi_processor_idle+0x283/0x3ff
-[  253.405266]  [<c0101dff>] cpu_idle+0x2f/0x80
-[  253.405266]  =======================
-[  318.901891] BUG: soft lockup - CPU#0 stuck for 61s! [swapper:0]
-[  318.904266] Modules linked in: ath5k
-[  318.904266] irq event stamp: 706218
-[  318.904266] hardirqs last  enabled at (706217): [<c02dc49f>]
-acpi_processor_idle+0x2a6/0x3ff
-[  318.904266] hardirqs last disabled at (706218): [<c050267d>]
-schedule+0x6d/0x340
-[  318.904266] softirqs last  enabled at (706166): [<c01267e5>]
-do_softirq+0x45/0x50
-[  318.904266] softirqs last disabled at (706159): [<c01267e5>]
-do_softirq+0x45/0x50
-[  318.904266]
-[  318.904266] Pid: 0, comm: swapper Not tainted
-(2.6.27-rc1-wl-14922-gb73da91-dirty #6)
-[  318.904266] EIP: 0060:[<c0108e96>] EFLAGS: 00000286 CPU: 0
-[  318.904266] EIP is at native_read_tsc+0x6/0x10
-[  318.904266] EAX: 00000000 EBX: f507fd14 ECX: 00000001 EDX: c06f6000
-[  318.904266] ESI: 00000001 EDI: 00000000 EBP: 00000000 ESP: c06f7c48
-[  318.904266]  DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
-[  318.904266] CR0: 8005003b CR2: b7f6fa7c CR3: 35047000 CR4: 000006d0
-[  318.904266] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
-[  318.904266] DR6: ffff0ff0 DR7: 00000400
-[  318.904266]  [<c028148c>] delay_tsc+0x1c/0x9c
-[  318.904266]  [<c0281406>] __delay+0x6/0x10
-[  318.904266]  [<c02857dc>] _raw_spin_lock+0xbc/0x140
-[  318.904266]  [<c02854b8>] spin_bug+0x18/0x100
-[  318.904266]  [<c0504a08>] _spin_lock_bh+0x58/0x70
-[  318.904266]  [<f885a3d5>] ath5k_tx+0x335/0x490 [ath5k]
-[  318.904266]  [<f885a3d5>] ath5k_tx+0x335/0x490 [ath5k]
-[  318.904266]  [<f885d150>] ath5k_hw_setup_4word_tx_desc+0x0/0x2a0 [ath5k]
-[  318.904266]  [<c04e577e>] __ieee80211_tx+0x3e/0x160
-[  318.904266]  [<c04e5bf7>] ieee80211_master_start_xmit+0x247/0x3e0
-[  318.904266]  [<c04e5b27>] ieee80211_master_start_xmit+0x177/0x3e0
-[  318.904266]  [<c042a35d>] dev_hard_start_xmit+0x27d/0x310
-[  318.904266]  [<c0438a41>] __qdisc_run+0x141/0x1e0
-[  318.904266]  [<c042cbc2>] dev_queue_xmit+0xb2/0x500
-[  318.904266]  [<c042cdc7>] dev_queue_xmit+0x2b7/0x500
-[  318.904266]  [<c042cb49>] dev_queue_xmit+0x39/0x500
-[  318.904266]  [<c04eb2d6>] mesh_path_error_tx+0xe6/0x100
-[  318.904266]  [<c04e9728>] mesh_plink_broken+0xc8/0x130
-[  318.904266]  [<c04e9660>] mesh_plink_broken+0x0/0x130
-[  318.904266]  [<c04ecf32>] rate_control_pid_tx_status+0x582/0x5a0
-[  318.904266]  [<c04ec9d5>] rate_control_pid_tx_status+0x25/0x5a0
-[  318.904266]  [<c04cfd60>] ieee80211_tx_status+0x240/0x4f0
-[  318.904266]  [<c04cfbd5>] ieee80211_tx_status+0xb5/0x4f0
-[  318.904266]  [<c04cfb20>] ieee80211_tx_status+0x0/0x4f0
-[  318.904266]  [<f8858f36>] ath5k_tasklet_tx+0x126/0x250 [ath5k]
-[  318.904266]  [<c0505035>] _spin_unlock+0x25/0x40
-[  318.904266]  [<c0126a76>] irq_exit+0x16/0x50
-[  318.904266]  [<c0126903>] tasklet_action+0x43/0x90
-[  318.904266]  [<c0126742>] __do_softirq+0x62/0xc0
-[  318.904266]  [<c01267e5>] do_softirq+0x45/0x50
-[  318.904266]  [<c0126aa4>] irq_exit+0x44/0x50
-[  318.904266]  [<c0105de6>] do_IRQ+0x46/0x90
-[  318.904266]  [<c02818c4>] trace_hardirqs_off_thunk+0xc/0x18
-[  318.904266]  [<c0103df8>] common_interrupt+0x28/0x30
-[  318.904266]  [<c02dc47c>] acpi_processor_idle+0x283/0x3ff
-[  318.904266]  [<c0101dff>] cpu_idle+0x2f/0x80
-[  318.904266]  =======================
-[  384.399862] BUG: soft lockup - CPU#0 stuck for 61s! [swapper:0]
-[  384.402266] Modules linked in: ath5k
-[  384.402266] irq event stamp: 706218
-[  384.402266] hardirqs last  enabled at (706217): [<c02dc49f>]
-acpi_processor_idle+0x2a6/0x3ff
-[  384.402266] hardirqs last disabled at (706218): [<c050267d>]
-schedule+0x6d/0x340
-[  384.402266] softirqs last  enabled at (706166): [<c01267e5>]
-do_softirq+0x45/0x50
-[  384.402266] softirqs last disabled at (706159): [<c01267e5>]
-do_softirq+0x45/0x50
-[  384.402266]
-[  384.402266] Pid: 0, comm: swapper Not tainted
-(2.6.27-rc1-wl-14922-gb73da91-dirty #6)
-[  384.402266] EIP: 0060:[<c0108e96>] EFLAGS: 00000286 CPU: 0
-[  384.402266] EIP is at native_read_tsc+0x6/0x10
-[  384.402266] EAX: 00000000 EBX: f507fd14 ECX: 00000001 EDX: c06f6000
-[  384.402266] ESI: 00000001 EDI: 00000000 EBP: 00000000 ESP: c06f7c48
-[  384.402266]  DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
-[  384.402266] CR0: 8005003b CR2: b7f6fa7c CR3: 35047000 CR4: 000006d0
-[  384.402266] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
-[  384.402266] DR6: ffff0ff0 DR7: 00000400
-[  384.402266]  [<c028148c>] delay_tsc+0x1c/0x9c
-[  384.402266]  [<c0281406>] __delay+0x6/0x10
-[  384.402266]  [<c02857dc>] _raw_spin_lock+0xbc/0x140
-[  384.402266]  [<c02854b8>] spin_bug+0x18/0x100
-[  384.402266]  [<c0504a08>] _spin_lock_bh+0x58/0x70
-[  384.402266]  [<f885a3d5>] ath5k_tx+0x335/0x490 [ath5k]
-[  384.402266]  [<f885a3d5>] ath5k_tx+0x335/0x490 [ath5k]
-[  384.402266]  [<f885d150>] ath5k_hw_setup_4word_tx_desc+0x0/0x2a0 [ath5k]
-[  384.402266]  [<c04e577e>] __ieee80211_tx+0x3e/0x160
-[  384.402266]  [<c04e5bf7>] ieee80211_master_start_xmit+0x247/0x3e0
-[  384.402266]  [<c04e5b27>] ieee80211_master_start_xmit+0x177/0x3e0
-[  384.402266]  [<c042a35d>] dev_hard_start_xmit+0x27d/0x310
-[  384.402266]  [<c0438a41>] __qdisc_run+0x141/0x1e0
-[  384.402266]  [<c042cbc2>] dev_queue_xmit+0xb2/0x500
-[  384.402266]  [<c042cdc7>] dev_queue_xmit+0x2b7/0x500
-[  384.402266]  [<c042cb49>] dev_queue_xmit+0x39/0x500
-[  384.402266]  [<c04eb2d6>] mesh_path_error_tx+0xe6/0x100
-[  384.402266]  [<c04e9728>] mesh_plink_broken+0xc8/0x130
-[  384.402266]  [<c04e9660>] mesh_plink_broken+0x0/0x130
-[  384.402266]  [<c04ecf32>] rate_control_pid_tx_status+0x582/0x5a0
-[  384.402266]  [<c04ec9d5>] rate_control_pid_tx_status+0x25/0x5a0
-[  384.402266]  [<c04cfd60>] ieee80211_tx_status+0x240/0x4f0
-[  384.402266]  [<c04cfbd5>] ieee80211_tx_status+0xb5/0x4f0
-[  384.402266]  [<c04cfb20>] ieee80211_tx_status+0x0/0x4f0
-[  384.402266]  [<f8858f36>] ath5k_tasklet_tx+0x126/0x250 [ath5k]
-[  384.402266]  [<c0505035>] _spin_unlock+0x25/0x40
-[  384.402266]  [<c0126a76>] irq_exit+0x16/0x50
-[  384.402266]  [<c0126903>] tasklet_action+0x43/0x90
-[  384.402266]  [<c0126742>] __do_softirq+0x62/0xc0
-[  384.402266]  [<c01267e5>] do_softirq+0x45/0x50
-[  384.402266]  [<c0126aa4>] irq_exit+0x44/0x50
-[  384.402266]  [<c0105de6>] do_IRQ+0x46/0x90
-[  384.402266]  [<c02818c4>] trace_hardirqs_off_thunk+0xc/0x18
-[  384.402266]  [<c0103df8>] common_interrupt+0x28/0x30
-[  384.402266]  [<c02dc47c>] acpi_processor_idle+0x283/0x3ff
-[  384.402266]  [<c0101dff>] cpu_idle+0x2f/0x80
-[  384.402266]  =======================
-[  449.897902] BUG: soft lockup - CPU#0 stuck for 61s! [swapper:0]
-[  449.900266] Modules linked in: ath5k
-[  449.900266] irq event stamp: 706218
-[  449.900266] hardirqs last  enabled at (706217): [<c02dc49f>]
-acpi_processor_idle+0x2a6/0x3ff
-[  449.900266] hardirqs last disabled at (706218): [<c050267d>]
-schedule+0x6d/0x340
-[  449.900266] softirqs last  enabled at (706166): [<c01267e5>]
-do_softirq+0x45/0x50
-[  449.900266] softirqs last disabled at (706159): [<c01267e5>]
-do_softirq+0x45/0x50
-[  449.900266]
-[  449.900266] Pid: 0, comm: swapper Not tainted
-(2.6.27-rc1-wl-14922-gb73da91-dirty #6)
-[  449.900266] EIP: 0060:[<c0108e9e>] EFLAGS: 00000286 CPU: 0
-[  449.900266] EIP is at native_read_tsc+0xe/0x10
-[  449.900266] EAX: 487db22a EBX: f507fd14 ECX: 00000001 EDX: 0000008f
-[  449.900266] ESI: 00000001 EDI: 487db194 EBP: 00000000 ESP: c06f7c48
-[  449.900266]  DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
-[  449.900266] CR0: 8005003b CR2: b7f6fa7c CR3: 35047000 CR4: 000006d0
-[  449.900266] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
-[  449.900266] DR6: ffff0ff0 DR7: 00000400
-[  449.900266]  [<c02814c1>] delay_tsc+0x51/0x9c
-[  449.900266]  [<c0281406>] __delay+0x6/0x10
-[  449.900266]  [<c02857dc>] _raw_spin_lock+0xbc/0x140
-[  449.900266]  [<c02854b8>] spin_bug+0x18/0x100
-[  449.900266]  [<c0504a08>] _spin_lock_bh+0x58/0x70
-[  449.900266]  [<f885a3d5>] ath5k_tx+0x335/0x490 [ath5k]
-[  449.900266]  [<f885a3d5>] ath5k_tx+0x335/0x490 [ath5k]
-[  449.900266]  [<f885d150>] ath5k_hw_setup_4word_tx_desc+0x0/0x2a0 [ath5k]
-[  449.900266]  [<c04e577e>] __ieee80211_tx+0x3e/0x160
-[  449.900266]  [<c04e5bf7>] ieee80211_master_start_xmit+0x247/0x3e0
-[  449.900266]  [<c04e5b27>] ieee80211_master_start_xmit+0x177/0x3e0
-[  449.900266]  [<c042a35d>] dev_hard_start_xmit+0x27d/0x310
-[  449.900266]  [<c0438a41>] __qdisc_run+0x141/0x1e0
-[  449.900266]  [<c042cbc2>] dev_queue_xmit+0xb2/0x500
-[  449.900266]  [<c042cdc7>] dev_queue_xmit+0x2b7/0x500
-[  449.900266]  [<c042cb49>] dev_queue_xmit+0x39/0x500
-[  449.900266]  [<c04eb2d6>] mesh_path_error_tx+0xe6/0x100
-[  449.900266]  [<c04e9728>] mesh_plink_broken+0xc8/0x130
-[  449.900266]  [<c04e9660>] mesh_plink_broken+0x0/0x130
-[  449.900266]  [<c04ecf32>] rate_control_pid_tx_status+0x582/0x5a0
-[  449.900266]  [<c04ec9d5>] rate_control_pid_tx_status+0x25/0x5a0
-[  449.900266]  [<c04cfd60>] ieee80211_tx_status+0x240/0x4f0
-[  449.900266]  [<c04cfbd5>] ieee80211_tx_status+0xb5/0x4f0
-[  449.900266]  [<c04cfb20>] ieee80211_tx_status+0x0/0x4f0
-[  449.900266]  [<f8858f36>] ath5k_tasklet_tx+0x126/0x250 [ath5k]
-[  449.900266]  [<c0505035>] _spin_unlock+0x25/0x40
-[  449.900266]  [<c0126a76>] irq_exit+0x16/0x50
-[  449.900266]  [<c0126903>] tasklet_action+0x43/0x90
-[  449.900266]  [<c0126742>] __do_softirq+0x62/0xc0
-[  449.900266]  [<c01267e5>] do_softirq+0x45/0x50
-[  449.900266]  [<c0126aa4>] irq_exit+0x44/0x50
-[  449.900266]  [<c0105de6>] do_IRQ+0x46/0x90
-[  449.900266]  [<c02818c4>] trace_hardirqs_off_thunk+0xc/0x18
-[  449.900266]  [<c0103df8>] common_interrupt+0x28/0x30
-[  449.900266]  [<c02dc47c>] acpi_processor_idle+0x283/0x3ff
-[  449.900266]  [<c0101dff>] cpu_idle+0x2f/0x80
-[  449.900266]  =======================
+FWIW, I did something similar in a previous life for the write-side of
+a brlock-like locking mechanism.  This was especially helpful if the
+read-side critical sections were long.
+
+							Thanx, Paul
