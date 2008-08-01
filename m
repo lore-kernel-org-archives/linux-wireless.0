@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42968
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753325AbYHAHBq (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.175]:32171 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752502AbYHAC37 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 03:01:46 -0400
-Date: Fri, 01 Aug 2008 00:01:46 -0700 (PDT)
-Message-Id: <20080801.000146.246099981.davem@davemloft.net> (sfid-20080801_090149_858130_1046C934)
-To: jarkao2@gmail.com
-Cc: johannes@sipsolutions.net, netdev@axxeo.de, peterz@infradead.org,
-	Larry.Finger@lwfinger.net, kaber@trash.net,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, mingo@redhat.com
-Subject: Re: Kernel WARNING: at net/core/dev.c:1330
- __netif_schedule+0x2c/0x98()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080801070150.GB4435@ff.dom.local>
-References: <20080731.052932.110299354.davem@davemloft.net>
-	<20080801064810.GA4435@ff.dom.local>
-	<20080801070150.GB4435@ff.dom.local>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 31 Jul 2008 22:29:59 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1131765wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Jul 2008 19:29:58 -0700 (PDT)
+Message-ID: <3ace41890807311929w464c41femf30efc5441830d13@mail.gmail.com> (sfid-20080801_043012_773020_018F9422)
+Date: Fri, 1 Aug 2008 03:29:57 +0100
+From: "Hin-Tak Leung" <hintak.leung@gmail.com>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH V3] rtl8187: Fix lockups due to concurrent access to config routine
+Cc: "John W Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Herton Ronaldo Krzesinski" <herton@mandriva.com.br>
+In-Reply-To: <48925938.27Ki5NWyw4NzKtNf%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <48925938.27Ki5NWyw4NzKtNf%Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jarek Poplawski <jarkao2@gmail.com>
-Date: Fri, 1 Aug 2008 07:01:50 +0000
+On 8/1/08, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Some users of the RTL8187B have experienced difficulties since commit
+>  8f87dd7e540d455f8e7f11478133b85edc969c67 that introduced the power
+>  management wext hooks. This difficulty has not made much sense until
+>  it was realized that it was possible for mac80211 to make a call to the
+>  config routine while that routine was already being executed. On this
+>  device, it is necessary to loopback the TX when changing channels. Unless
+>  this is properly restored, the device will lockup. A mutex now protects
+>  the device state, and the private data in several places.
+>
+>  The problem was found by Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+>  who also suggested this type of fix.
 
-> On Fri, Aug 01, 2008 at 06:48:10AM +0000, Jarek Poplawski wrote:
-> > On Thu, Jul 31, 2008 at 05:29:32AM -0700, David Miller wrote:
-> ...
-> > > diff --git a/net/core/dev.c b/net/core/dev.c
-> > > index 63d6bcd..69320a5 100644
-> > > --- a/net/core/dev.c
-> > > +++ b/net/core/dev.c
-> > > @@ -4200,6 +4200,7 @@ static void netdev_init_queues(struct net_device *dev)
-> > >  {
-> > >  	netdev_init_one_queue(dev, &dev->rx_queue, NULL);
-> > >  	netdev_for_each_tx_queue(dev, netdev_init_one_queue, NULL);
-> > > +	spin_lock_init(&dev->tx_global_lock);
-> > 
-> > This will probably need some lockdep annotations similar to
-> > _xmit_lock.
-> 
-> ...BTW, we probably could also consider some optimization here: the
-> xmit_lock of the first queue could be treated as special, and only
-> the owner could do such a freezing. This would save changes of
-> functionality to non mq devices. On the other hand, it would need
-> remembering about this special treatment (so, eg. a separate lockdep
-> initialization than all the others).
+Thanks for the work. I think we need a few more mutex locks.
 
-I think special casing the zero's queue's lock is a bad idea.
-Having a real top-level synchronizer is a powerful tool and
-we could use it for other things.
+The one-line message/explanation is a bit mis-worded though. There isn't a
+"lockup" though. I would describe the problem as the driver's internal
+state getting garbbaged. It is probably a performance "feature" that
+routines in either the mac80211 layer or the usb layer returns before
+they are done. (i.e. actions are simply
+queued for near-future to act on). Maybe somebody else can explain this better?
+
+Hin-Tak
