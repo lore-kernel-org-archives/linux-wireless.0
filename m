@@ -1,75 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.227]:54020 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756061AbYHCPtB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 11:49:01 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1773726rvb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2008 08:49:00 -0700 (PDT)
-Message-ID: <1ba2fa240808030849g3110cfefo3de65d3ae3000273@mail.gmail.com> (sfid-20080803_174907_074235_102C0903)
-Date: Sun, 3 Aug 2008 18:49:00 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
-Subject: Re: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, "Ivo van Doorn" <ivdoorn@gmail.com>
-In-Reply-To: <20080803135229.GG12118@khazad-dum.debian.net>
+Received: from usul.saidi.cx ([204.11.33.34]:35175 "EHLO usul.overt.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751293AbYHBTPM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Aug 2008 15:15:12 -0400
+Message-ID: <4894B22F.2070400@overt.org> (sfid-20080802_211516_459037_A957B332)
+Date: Sat, 02 Aug 2008 12:14:55 -0700
+From: Philip Langdale <philipl@overt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
-	 <1217700664-20792-9-git-send-email-hmh@hmh.eng.br>
-	 <1217703723.8621.50.camel@johannes.berg>
-	 <20080802192704.GB24253@khazad-dum.debian.net>
-	 <1ba2fa240808021421h421fc362ib92660f7be4727f8@mail.gmail.com>
-	 <20080803035559.GB6053@khazad-dum.debian.net>
-	 <1ba2fa240808022303i4d330023i74f3cbb7e08083eb@mail.gmail.com>
-	 <20080803135229.GG12118@khazad-dum.debian.net>
+To: LKML <linux-kernel@vger.kernel.org>
+CC: Matthew Garrett <mjg59@srcf.ucam.org>, toshiba_acpi@memebeam.org,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/1] toshiba_acpi: Add support for bluetooth toggling
+ through rfkill (v2)
+References: <488CBBA0.2050106@overt.org>
+In-Reply-To: <488CBBA0.2050106@overt.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 3, 2008 at 4:52 PM, Henrique de Moraes Holschuh
-<hmh@hmh.eng.br> wrote:
-> On Sun, 03 Aug 2008, Tomas Winkler wrote:
->> At least from iwlwifi perspective killing radio is not the same
->> operation as shutting down the card.
->
-> It almost never is.  Which is why I said we should not bother if nobody
-> needs that.
->
->> The intention is different if nothing it's really redundant operation
->
-> On proper drivers that do proper power management? Certainly :-)
->
->> > RFKILL is not about tracking, it is about *controlling*.
->>
->>  I think driver controls the radio why need to add another entity for
->> that. I don't like this definition, But that's just wording I hope.
->
-> All the radio-is-allowed-to-transmit decisions are rfkill's.  The driver is
-> not allowed to override those.  This is done to present a uniform behaviour
-> and interface to the system's user (and any instance of rfkill doing
-> something the user wouldn't expect to the radio is to be considered a major
-> bug).  rfkill is supposed to represend the will of the system's user
-> regarding permission to transmit energy out of wireless transmitters.
+Philip Langdale wrote:
+> As requested by Henrique, I have reworked this patch against 
+> wireless-testing
+> and it uses the new-style rfkill API and to report the input device as a 
+> switch.
+> 
+> I did some digging to try and find a usable gpe event but had only limited
+> success. From another look through the AML, it uses GPE08 for almost 
+> everything
+> - inspecting a bunch of state for each event and then sending 
+> notifications on
+> different objects. I couldn't find one for the hardware kill switch 
+> itself but I
+> did manage to find one that's emitted when the bluetooth device enters the
+> equivalent of the SOFT_BLOCKED state. This is useful for noticing that the
+> hardware switch has been released, but it also fires on transitions from 
+> UNBLOCKED
+> to SOFT_BLOCKED - so I had to try and avoid turning around and 
+> unblocking the
+> device! I'm not particularly happy with how I did it 
+> (ignore-the-next-event)
+> but I can't think of a better way.
 
-May point is that there are radio event out of scope rfkill so the
-driver although obey rfkill system
-requests but rfkill switch doesn't control the radio, the driver does.
- But it's really just point of view.
+I've updated the diff to use force_state instead of get_state. I'm a little
+unhappy in that it requires poking the rfkill state from the input poll
+function but that's the only way we know anything changed.
 
->
-> Not even WoWL is an exception, if your radio is blocked before suspend, you
-> are not allowed to enable the transmitter [to get WoWL to work -- I sure
-> hope this is not necessary, but it could be].  I'd expect a printk
-> complaining about it, though :-)
->
->> I rather remove it, If the driver has D3 operation it should move card
->> to operation
->
-> Sure.  I was wondering about drivers that *don't* have it, if any, out of
-> the potential set of drivers that should be using rfkill (it is not a matter
-> of those who are using rfkill right now).
+The event handling is still the same as before because I realised that there's
+no fundamental state I can use to distinguish the two transitions - at the time
+the event fires, the kill switch is inactive and the bluetooth device is
+disconnected but we simply don't know where we came from (hard killed or on),
+so we have to maintain some form of state in the driver and the current mechanism
+is as good (or bad) as any other.
 
-I think we are aligned in general.
-Thanks
-Tomas
+--phil
