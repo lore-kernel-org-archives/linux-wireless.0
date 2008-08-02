@@ -1,58 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:52158 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751469AbYHGOPx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 10:15:53 -0400
-Date: Thu, 7 Aug 2008 17:15:08 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211/cfg80211: Add BSS configuration options for AP
-	mode
-Message-ID: <20080807141508.GB5138@jm.kir.nu> (sfid-20080807_161557_895127_C122021C)
-References: <20080807134043.GA5138@jm.kir.nu> <1218116906.23048.179.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1218116906.23048.179.camel@johannes.berg>
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:55578 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753821AbYHBSLN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Aug 2008 14:11:13 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Ivo van Doorn <IvDoorn@gmail.com>
+Subject: [PATCH 6/8] rfkill: use the new WARN()
+Date: Sat,  2 Aug 2008 15:11:02 -0300
+Message-Id: <1217700664-20792-7-git-send-email-hmh@hmh.eng.br> (sfid-20080802_201119_084163_4C71F8D4)
+In-Reply-To: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
+References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 07, 2008 at 03:48:26PM +0200, Johannes Berg wrote:
+Switch use of WARN_ON(1) to the new WARN() macro.  Do this on a separate
+patch to make rfkill backports easier on trees like wireless-compat.
 
-> I used to have a patch to move the short-slot stuff in mac80211 to the
-> BSS info struct so that drivers that support different slot timing for
-> each frame can use it for different virtual BSSes. It no longer applies
-> though:
-> 
-> http://johannes.sipsolutions.net/patches/kernel/all/2008-08-04-12%3a26/013-BROKEN-mac80211-bss-slot-time.patch
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ net/rfkill/rfkill.c |   28 +++++++++++++++++++++-------
+ 1 files changed, 21 insertions(+), 7 deletions(-)
 
-I'll take a look at this. I hoped I would not need to go through all
-drivers to update the API ;-), but let's see.
-
-> I think you may need to handle the case where dev is a VLAN? Or do we
-> want to have these settings per VLAN too? And should we reject them for
-> other modes than AP where the AP controls the settings?
-
-I was thinking about this a bit, but since ieee80211_sub_if_data had
-them shared for all types on interfaces and there might be some testing
-uses for these even outside AP mode, I did not bother adding extra
-validation here. At least the three parameters added here won't be
-per-VLAN since they are advertised in Beacon frames. Though, maybe the
-easiest option would be to limit this for IEEE80211_IF_TYPE_AP for now..
-
-> > + * @NL80211_CMD_SET_BSS: Set BSS attributes for BSS identified by
-> > + *	%NL80211_ATTR_IFINDEX.
-> 
-> Maybe we should have a way to retrieve the settings as well, and that
-> could even work in STA mode to see what the AP asked us to do.
-
-I did not see any normal use case for this, i.e., this would be more
-like debug information. CTS protection is already exported via debugfs
-and the other parameters could fit in there better, too.
-
-> Other than that, looks good to me.
-
-Thanks!
-
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index d5f95cb..88368c4 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -204,7 +204,9 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
+ 		 * RFKILL_STATE_HARD_BLOCKED */
+ 		break;
+ 	default:
+-		WARN_ON(1);
++		WARN(1, KERN_WARNING
++			"rfkill: illegal state %d passed as parameter "
++			"to rfkill_toggle_radio\n", state);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -240,7 +242,9 @@ static void __rfkill_switch_all(const enum rfkill_type type,
+ 	struct rfkill *rfkill;
+ 
+ 	if (unlikely(state >= RFKILL_STATE_MAX || type >= RFKILL_TYPE_MAX)) {
+-		WARN_ON(1);
++		WARN(1, KERN_WARNING
++			"rfkill: illegal state %d or type %d passed as "
++			"parameter to __rfkill_switch_all\n", state, type);
+ 		return;
+ 	}
+ 
+@@ -341,7 +345,9 @@ int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state)
+ 
+ 	BUG_ON(!rfkill);
+ 	if (unlikely(state >= RFKILL_STATE_MAX)) {
+-		WARN_ON(1);
++		WARN(1, KERN_WARNING
++			"rfkill: illegal state %d passed as parameter "
++			"to rfkill_force_state\n", state);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -600,7 +606,9 @@ static int rfkill_check_duplicity(const struct rfkill *rfkill)
+ 
+ 	list_for_each_entry(p, &rfkill_list, node) {
+ 		if (p == rfkill) {
+-			WARN_ON(1);
++			WARN(1, KERN_WARNING
++				"rfkill: illegal attempt to register "
++				"an already registered rfkill struct\n");
+ 			return -EEXIST;
+ 		}
+ 		set_bit(p->type, seen);
+@@ -671,7 +679,9 @@ struct rfkill * __must_check rfkill_allocate(struct device *parent,
+ 	struct device *dev;
+ 
+ 	if (type >= RFKILL_TYPE_MAX) {
+-		WARN_ON(1);
++		WARN(1, KERN_WARNING
++			"rfkill: illegal type %d passed as parameter "
++			"to rfkill_allocate\n", type);
+ 		return NULL;
+ 	}
+ 
+@@ -751,7 +761,9 @@ int __must_check rfkill_register(struct rfkill *rfkill)
+ 		     !rfkill->toggle_radio ||
+ 		     rfkill->type >= RFKILL_TYPE_MAX ||
+ 		     rfkill->state >= RFKILL_STATE_MAX)) {
+-		WARN_ON(1);
++		WARN(1, KERN_WARNING
++			"rfkill: attempt to register a "
++			"badly initialized rfkill struct\n");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -827,7 +839,9 @@ int rfkill_set_default(enum rfkill_type type, enum rfkill_state state)
+ 	if (type >= RFKILL_TYPE_MAX ||
+ 	    (state != RFKILL_STATE_SOFT_BLOCKED &&
+ 	     state != RFKILL_STATE_UNBLOCKED)) {
+-		WARN_ON(1);
++		WARN(1, KERN_WARNING
++			"rfkill: illegal state %d or type %d passed as "
++			"parameter to rfkill_set_default\n", state, type);
+ 		return -EINVAL;
+ 	}
+ 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.5.6.3
+
