@@ -1,42 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:23620 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752099AbYHRN0V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2008 09:26:21 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1645187fgg.17
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Aug 2008 06:26:20 -0700 (PDT)
-To: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: [rt2x00] rt2800 progress update
-Date: Mon, 18 Aug 2008 15:26:16 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200808181526.16974.IvDoorn@gmail.com> (sfid-20080818_152626_371030_96D89B18)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from main.gmane.org ([80.91.229.2]:38144 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752355AbYHBTXU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Aug 2008 15:23:20 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1KPMh3-0001Iu-FR
+	for linux-wireless@vger.kernel.org; Sat, 02 Aug 2008 19:23:09 +0000
+Received: from gimpelevich.san-francisco.ca.us ([66.218.54.163])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 19:23:09 +0000
+Received: from daniel by gimpelevich.san-francisco.ca.us with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 19:23:09 +0000
+To: linux-wireless@vger.kernel.org
+From: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
+Subject: Re: wireless USB adapters recommendations?
+Date: Sat, 2 Aug 2008 19:22:59 +0000 (UTC)
+Message-ID: <g72c6j$gpf$2@ger.gmane.org> (sfid-20080802_212323_017303_1D14830B)
+References: <4894AC77.5060801@wpkg.org> <g72be3$gpf$1@ger.gmane.org>
+	<1217704653.8621.54.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sat, 02 Aug 2008 21:17:33 +0200, Johannes Berg wrote:
 
-Just a small information mail regarding the current status of the rt2800 drivers,
-The initial schedule was that last week or at the latest this week, the initial
-version of the rt2800 drivers would be released.
+> I wouldn't be too sure the FSF is a good source of information regarding
+> wireless on Linux (or of anything about Linux for that matter). And the
+> list is, indeed, rather incomplete and gives a very skewed picture.
 
-But as you might have noticed, this has not happened, which means the project
-is behind schedule. The current status is that rt2800usb is capable of
-receiving frames (only when using the legacy driver first), and rt2800pci isn't
-capable of anything yet.
+I wasn't saying otherwise; I clearly qualified it as what *they* say.
 
-I am currently putting all focus on rt2800usb because the queue management
-is the easiest for that driver, and having that driver working will help in debugging
-rt2800pci later.
+> On the other hand, I don't think there are any USB devices that support
+> AP mode.
 
-The fact that rt2800usb is capable of receiving frames after the legacy driver
-has been loaded first, means that I am missing one or two instructions which
-must be send to the hardware before it will kick in. Unfortunately I have made
-little progress in tracking that required instruction. :(
+With nl80211 they will, at least on rt73usb and rtl8187.
 
-As soon as I have more news, I'll post an update.
-
-Ivo
