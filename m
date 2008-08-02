@@ -1,45 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53872
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754593AbYHEI2O (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:44895 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753726AbYHBSLN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 04:28:14 -0400
-Date: Tue, 05 Aug 2008 01:28:14 -0700 (PDT)
-Message-Id: <20080805.012814.215633850.davem@davemloft.net> (sfid-20080805_102825_770162_6E655548)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-08-04
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080805021710.GA21731@tuxdriver.com>
-References: <20080804193753.GA30345@tuxdriver.com>
-	<20080804.150147.78586437.davem@davemloft.net>
-	<20080805021710.GA21731@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 2 Aug 2008 14:11:13 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Matthew Garrett <mjg@redhat.com>
+Subject: [PATCH 3/8] rfkill: add __must_check annotations
+Date: Sat,  2 Aug 2008 15:10:59 -0300
+Message-Id: <1217700664-20792-4-git-send-email-hmh@hmh.eng.br> (sfid-20080802_201118_176443_1DAB9605)
+In-Reply-To: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
+References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 4 Aug 2008 22:17:10 -0400
+rfkill is not a small, mere detail in wireless support.  Once it starts
+supporting rfkill and users start counting on that support, a wireless
+device is at risk of operating in dangerous conditions should rfkill
+support fail to properly activate.
 
-> On Mon, Aug 04, 2008 at 03:01:47PM -0700, David Miller wrote:
-> > I'm holding off on this pull until the list.h changes get so me lkml
-> > ACKs.
-> 
-> Sure, np.  I created a "no-ath9k" branch in case you are feeling
-> frisky -- it is the same except for omitting the list.h changes,
-> the ath5k pci table change, and the new ath9k driver.
-> 
-> 	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git no-ath9k
-> 
-> Hth!
+Therefore, add the required __must_check annotations on some key functions
+of the rfkill API, for which the wireless drivers absolutely MUST handle
+the failure mode safely in order to avoid a potentially dangerous situation
+where the wireless transmitter is left enabled when the user don't want it
+to.
 
-Thanks John.
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Matthew Garrett <mjg@redhat.com>
+---
+ include/linux/rfkill.h |    5 +++--
+ net/rfkill/rfkill.c    |    5 +++--
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-Due to the powerpc build failures the list.h stuff causes, I'm going
-to pull this so I can do a push to Linus tonight.
+diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+index aa3c7d5..e92d8e9 100644
+--- a/include/linux/rfkill.h
++++ b/include/linux/rfkill.h
+@@ -110,9 +110,10 @@ struct rfkill {
+ };
+ #define to_rfkill(d)	container_of(d, struct rfkill, dev)
+ 
+-struct rfkill *rfkill_allocate(struct device *parent, enum rfkill_type type);
++struct rfkill * __must_check rfkill_allocate(struct device *parent,
++					     enum rfkill_type type);
+ void rfkill_free(struct rfkill *rfkill);
+-int rfkill_register(struct rfkill *rfkill);
++int __must_check rfkill_register(struct rfkill *rfkill);
+ void rfkill_unregister(struct rfkill *rfkill);
+ 
+ int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state);
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index c1901fb..5320210 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -653,7 +653,8 @@ static void rfkill_remove_switch(struct rfkill *rfkill)
+  * NOTE: If registration fails the structure shoudl be freed by calling
+  * rfkill_free() otherwise rfkill_unregister() should be used.
+  */
+-struct rfkill *rfkill_allocate(struct device *parent, enum rfkill_type type)
++struct rfkill * __must_check rfkill_allocate(struct device *parent,
++					     enum rfkill_type type)
+ {
+ 	struct rfkill *rfkill;
+ 	struct device *dev;
+@@ -724,7 +725,7 @@ static void rfkill_led_trigger_unregister(struct rfkill *rfkill)
+  * structure needs to be registered. Immediately from registration the
+  * switch driver should be able to service calls to toggle_radio.
+  */
+-int rfkill_register(struct rfkill *rfkill)
++int __must_check rfkill_register(struct rfkill *rfkill)
+ {
+ 	static atomic_t rfkill_no = ATOMIC_INIT(0);
+ 	struct device *dev = &rfkill->dev;
+-- 
+1.5.6.3
 
-Although I highly encourare you to get that list.h stuff sorted out
-because I'd really like to see ath9k get merged in as that's a useful
-device to support for a lot of users.
