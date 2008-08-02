@@ -1,65 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:45044 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751652AbYHAIQw (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.180]:40276 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751586AbYHBF0Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 04:16:52 -0400
-Date: Fri, 1 Aug 2008 01:14:15 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Pekka Enberg <penberg@cs.helsinki.fi>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Dave Young <hidave.darkstar@gmail.com>,
-	johannes@sipsolutions.net, tomasw@gmail.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net, me@bobcopeland.com,
-	linville@tuxdriver.com, stable@kernel.org
-Subject: Re: [PATCH] ath5k : ath5k_config_interface deadlock fix
-Message-Id: <20080801011415.ff4821a3.akpm@linux-foundation.org> (sfid-20080801_101657_526200_4AA96F8C)
-In-Reply-To: <4892C359.9000304@cs.helsinki.fi>
-References: <20080801074014.GA3341@darkstar>
-	<4892C2CA.7010003@gmail.com>
-	<4892C359.9000304@cs.helsinki.fi>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Sat, 2 Aug 2008 01:26:24 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so1466365ika.5
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 22:26:23 -0700 (PDT)
+To: David Miller <davem@davemloft.net>
+Subject: [PATCH] rt2x00: Fix compile warning
+Date: Sat, 2 Aug 2008 07:49:08 +0200
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	rt2400-devel@lists.sourceforge.net
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200808020749.08431.IvDoorn@gmail.com> (sfid-20080802_072628_873802_7FB3BB97)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 01 Aug 2008 11:03:37 +0300 Pekka Enberg <penberg@cs.helsinki.fi> wrote:
+rt2x00usb_vendor_request_large_buff is write-only, so it is
+safe to make the argument a const.
 
-> Jiri Slaby wrote:
-> > Dave Young napsal(a):
-> >> In the drivers/net/wireless/ath5k/base.c, there's recursive locking of 
-> >> sc->lock
-> >> This casue the kernel stuck
-> >>
-> >> Bug report please see:
-> >> http://lkml.org/lkml/2008/7/29/32
-> >>
-> >> Fixed it by remove the lock in sub routine "ath5k_beacon_update",
-> >> The ath5k_config_interface is the only caller to it.
-> >>
-> >> [  171.430207] =============================================
-> >> [  171.432140] [ INFO: possible recursive locking detected ]
-> >> [  171.433113] 2.6.27-rc1-smp #4
-> >> [  171.434079] ---------------------------------------------
-> >> [  171.435039] ath5k_pci/2447 is trying to acquire lock:
-> >> [  171.435990]  (&sc->lock){--..}, at: [<f89ee9b5>] 
-> >> ath5k_config_interface+0xd5/0x340 [ath5k]
-> >> [  171.437046] [  171.437048] but task is already holding lock:
-> >> [  171.438903]  (&sc->lock){--..}, at: [<f89ee91d>] 
-> >> ath5k_config_interface+0x3d/0x340 [ath5k]
-> >> [  171.439953] [  171.439954] other info that might help us debug this:
-> >> [  171.441795] 3 locks held by ath5k_pci/2447:
-> >> [  171.442729]  #0:  ((name)){--..}, at: [<c013a122>] 
-> >> run_workqueue+0x102/0x1d0
-> >> [  171.443800]  #1:  (&(&local->scan_work)->work){--..}, at: 
-> >> [<c013a122>] run_workqueue+0x102/0x1d0
-> >> [  171.444859]  #2:  (&sc->lock){--..}, at: [<f89ee91d>] 
-> >> ath5k_config_interface+0x3d/0x340 [ath5k]
-> > 
-> > Should be fixed already:
-> > http://git.kernel.org/?p=linux/kernel/git/linville/wireless-2.6.git;a=commitdiff_plain;h=bc05116ab33d30342e2b4b1bcc6d6e1184e9df97 
-> 
-> I guess that didn't make it to -stable?
+Fixes compile warning:
+drivers/net/wireless/rt2x00/rt73usb.c: In function 'rt73usb_load_firmware':
+drivers/net/wireless/rt2x00/rt73usb.c:916: warning: passing argument 5 of 'rt2x00usb_vendor_request_large_buff' discards qualifiers from pointer target typ
 
-(cc stable!)
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00usb.c |    4 ++--
+ drivers/net/wireless/rt2x00/rt2x00usb.h |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 933e6cc..8d76bb2 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -124,7 +124,7 @@ EXPORT_SYMBOL_GPL(rt2x00usb_vendor_request_buff);
+ 
+ int rt2x00usb_vendor_request_large_buff(struct rt2x00_dev *rt2x00dev,
+ 					const u8 request, const u8 requesttype,
+-					const u16 offset, void *buffer,
++					const u16 offset, const void *buffer,
+ 					const u16 buffer_length,
+ 					const int timeout)
+ {
+@@ -134,7 +134,7 @@ int rt2x00usb_vendor_request_large_buff(struct rt2x00_dev *rt2x00dev,
+ 
+ 	mutex_lock(&rt2x00dev->usb_cache_mutex);
+ 
+-	tb  = buffer;
++	tb  = (char *)buffer;
+ 	off = offset;
+ 	len = buffer_length;
+ 	while (len && !status) {
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.h b/drivers/net/wireless/rt2x00/rt2x00usb.h
+index ee3875f..3b4a674 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.h
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
+@@ -185,7 +185,7 @@ int rt2x00usb_vendor_req_buff_lock(struct rt2x00_dev *rt2x00dev,
+  */
+ int rt2x00usb_vendor_request_large_buff(struct rt2x00_dev *rt2x00dev,
+ 					const u8 request, const u8 requesttype,
+-					const u16 offset, void *buffer,
++					const u16 offset, const void *buffer,
+ 					const u16 buffer_length,
+ 					const int timeout);
+ 
+-- 
+1.5.6.1
+
