@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:42759 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752866AbYHBDGi (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.188]:64619 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751586AbYHBFTy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 23:06:38 -0400
-Message-ID: <4893CF3D.1070504@lwfinger.net> (sfid-20080802_050642_208535_9B73129E)
-Date: Fri, 01 Aug 2008 22:06:37 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 2 Aug 2008 01:19:54 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so528115nfc.21
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 22:19:52 -0700 (PDT)
+To: David Miller <davem@davemloft.net>
+Subject: Re: pull request: wireless-2.6 2008-08-01
+Date: Sat, 2 Aug 2008 07:42:37 +0200
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20080801205830.GA10071@tuxdriver.com> <20080801.221604.149076257.davem@davemloft.net>
+In-Reply-To: <20080801.221604.149076257.davem@davemloft.net>
 MIME-Version: 1.0
-To: "David S. Miller" <davem@davemloft.net>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: p54usb broken by commit b19fa1f
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200808020742.37575.IvDoorn@gmail.com> (sfid-20080802_072005_077343_5C1E5485)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In testing 2.6.27-rc1, I found that p54usb caused my machine to freeze. A few
-times, I was able to use the KDE system status applet to see that the system was
-using essentially 100% of the CPU's. One other time, the system responded a 
-little - enough for me to see tha wpa_supplicant was consuming 100% of the my 
-AMD Turion 64 X2 running an x86_64 kernel. From bisection, the problem is due to
+On Saturday 02 August 2008, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Fri, 1 Aug 2008 16:58:30 -0400
+> 
+> > Another big batch of wireless fixes for 2.6.27.  The ath5k series is
+> > more than fixes, but I included it because it enables new ath5k
+> > hardware.  (The ath5k.h changes in particular are documentation cleanups
+> > for registers based on info gleaned from the newly posted ath9k driver.)
+> > The others patches are fixes, some more obvious than others. :-)
+> > 
+> > Let me know if there are any problems!
+> 
+> Pulled and pushed out to net-2.6 on kernel.org
+> 
+> If someone could fix up this warning I'd appreciate it:
+> 
+> drivers/net/wireless/rt2x00/rt73usb.c: In function 'rt73usb_load_firmware':
+> drivers/net/wireless/rt2x00/rt73usb.c:916: warning: passing argument 5 of 'rt2x00usb_vendor_request_large_buff' discards qualifiers from pointer target type
 
-commit b19fa1fa91845234961c64dbd564671aa7c0fd27
-Author: David S. Miller <davem@davemloft.net>
-Date:   Tue Jul 8 23:14:24 2008 -0700
+Patch coming up in a few minutes. :)
 
-     net: Delete NETDEVICES_MULTIQUEUE kconfig option.
-
-     Multiple TX queue support is a core networking feature.
-
-     Signed-off-by: David S. Miller <davem@davemloft.net>
-
-Obviously, something in the driver cannot handle multiqueues, but I
-have not found anything, and I have not been able to get any logged events that
-show what is going wrong.
-
-Thanks,
-
-Larry
-
+Ivo
