@@ -1,60 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:46263 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751058AbYHIQky (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58116
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751496AbYHBFas (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Aug 2008 12:40:54 -0400
-From: Chr <chunkeey@web.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] p54: Fix for TX sequence number problem that resulted from commit 741b4fbc44
-Date: Sat, 9 Aug 2008 18:43:41 +0200
-Cc: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <48987e74.ct5+sLOpTbiTPPHq%Larry.Finger@lwfinger.net> <200808082038.48840.chunkeey@web.de> <489DBFA9.80608@lwfinger.net>
-In-Reply-To: <489DBFA9.80608@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200808091843.41985.chunkeey@web.de> (sfid-20080809_184109_209459_D424F7F4)
+	Sat, 2 Aug 2008 01:30:48 -0400
+Date: Fri, 01 Aug 2008 22:30:48 -0700 (PDT)
+Message-Id: <20080801.223048.129067423.davem@davemloft.net> (sfid-20080802_073050_882459_437DE62C)
+To: ivdoorn@gmail.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	rt2400-devel@lists.sourceforge.net
+Subject: Re: [PATCH] rt2x00: Fix compile warning
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <200808020749.08431.IvDoorn@gmail.com>
+References: <200808020749.08431.IvDoorn@gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 09 August 2008 18:02:49 Larry Finger wrote:
->
-> Mine also crashes with a ping of length 1400, but 1390 and 1410 work
-> just fine. I also tested with tcpperf and I am pretty sure that this
-> is a transmit problem. When I set the MTU to 1300, then a ping of
-> length 1400 works fine. Is this a firmware bug? Which firmware are you
-> using? Mine is isl3887usb_bare.
-hmm? there are lots of new & old firmwares. 
-what chip do you have? a ISL3886 + net2280 or a ISL3887?
-you can get the firmware version from dmesg, just load the
-driver and grep for "p54: FW rev"
+From: Ivo van Doorn <ivdoorn@gmail.com>
+Date: Sat, 2 Aug 2008 07:49:08 +0200
 
-my devices: 
-isl3880 minipci: 2.7.0.0 (best supported) & 2.13.1.0 (unstable)
-isl3887 usb: 2.5.8.0(bugs), 2.6.16.0(DELL bugs) and 2.13.2.0 (WIP) 
+> rt2x00usb_vendor_request_large_buff is write-only, so it is
+> safe to make the argument a const.
+> 
+> Fixes compile warning:
+> drivers/net/wireless/rt2x00/rt73usb.c: In function 'rt73usb_load_firmware':
+> drivers/net/wireless/rt2x00/rt73usb.c:916: warning: passing argument 5 of 'rt2x00usb_vendor_request_large_buff' discards qualifiers from pointer target typ
+> 
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
->
-> > on-topic: I digged a bit in the logs:
-> >
-> > http://jbnote.free.fr/prism54usb/data/usbsnoop-logs/
-> > and there "usbsnoop_old_drv_ver1.log.bz2"
-> > [...]
-> > So the problem must be somewhere else! what happens when:
-> > if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
-> > 	if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
-> > 		priv->seqno += 0x10;
-> >
-> > 	ieee80211hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-> > 	ieee80211hdr->seq_ctrl |= cpu_to_le16(priv->seqno);
-> > 	ieee80211hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-> > }
-> > (yeah a new definition for idiotic! but it's about the same amount of of
-> > clock cycles).
->
-> This didn't help the "ping -s 1400" problem.
-Of course not, but maybe it could help with this 2-3 hour disconnect problem.
+Are you sure?
 
-Regards, 
-	Chr.
+This buffer pointer, via 'tb', eventually gets passed down
+to rt2x00usb_vendor_req_buff_lock which conditionally copies
+into the buffer.
