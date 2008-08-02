@@ -1,73 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.251]:23535 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751804AbYHCASN (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.176]:42494 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751596AbYHBFsw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 20:18:13 -0400
-Received: by an-out-0708.google.com with SMTP id d40so244808and.103
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 17:18:12 -0700 (PDT)
-Message-ID: <43e72e890808021718j5012e602j6d3f570ad8fc4377@mail.gmail.com> (sfid-20080803_021817_401500_A13B67EB)
-Date: Sat, 2 Aug 2008 17:18:12 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Subject: Re: [PATCH 00/12] ath9k: more cleanups for 2.6.27
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	jouni.malinen@atheros.com,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-In-Reply-To: <1217720944-23234-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 2 Aug 2008 01:48:52 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so1474692ika.5
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 22:48:50 -0700 (PDT)
+To: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] rt2x00: Fix compile warning
+Date: Sat, 2 Aug 2008 08:11:35 +0200
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	rt2400-devel@lists.sourceforge.net
+References: <200808020749.08431.IvDoorn@gmail.com> <20080801.223048.129067423.davem@davemloft.net>
+In-Reply-To: <20080801.223048.129067423.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1217720944-23234-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200808020811.35701.IvDoorn@gmail.com> (sfid-20080802_074855_451699_5C5AE9CB)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 2, 2008 at 4:48 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> Here's another round of cleanups a few fixes for 2.6.27.
+On Saturday 02 August 2008, David Miller wrote:
+> From: Ivo van Doorn <ivdoorn@gmail.com>
+> Date: Sat, 2 Aug 2008 07:49:08 +0200
+> 
+> > rt2x00usb_vendor_request_large_buff is write-only, so it is
+> > safe to make the argument a const.
+> > 
+> > Fixes compile warning:
+> > drivers/net/wireless/rt2x00/rt73usb.c: In function 'rt73usb_load_firmware':
+> > drivers/net/wireless/rt2x00/rt73usb.c:916: warning: passing argument 5 of 'rt2x00usb_vendor_request_large_buff' discards qualifiers from pointer target typ
+> > 
+> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> 
+> Are you sure?
+> 
+> This buffer pointer, via 'tb', eventually gets passed down
+> to rt2x00usb_vendor_req_buff_lock which conditionally copies
+> into the buffer.
 
-And here's the pull request if its easier:
+Yes but rt2x00usb_vendor_req_buff_lock() can't use the const buffer since
+it calls:
+	memcpy(buffer, rt2x00dev->csr.cache, buffer_length);
+and rt2x00usb_vendor_req_buff_lock() is valid for read commands.
 
-The following changes since commit f870390ee6e15ce60ebfcef886b6b55e5f0157a7:
-  Sujith Manoharan (1):
-        Remove some unused macros
+Only rt2x00usb_vendor_request_large_buff() is write only, so that sounds like
+the most sane place to convert the const pointer to the normal pointer.
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/my-wireless-testing.git
-ath9k-2008-08-02
-
-Luis R. Rodriguez (3):
-      ath9k: Port to new skb->cb mac80211 changes
-      ath9k: Add initial link quality reporting
-      ath9k: Use u8/u16/u32
-
-Sujith Manoharan (9):
-      ath9k: Fix whitespace damage
-      ath9k: Update rate control after association
-      ath9k: Channel cleanup
-      ath9k: Fix channel registration
-      ath9k: Consolidate channel list
-      ath9k: Pass channel mode when setting a channel
-      ath9k: Channel structure cleanup
-      ath9k: We don't have a HAL anymore :)
-      ath9k: Use standard error codes
-
- drivers/net/wireless/ath9k/ath9k.h    | 1087 +++++++++++------------
- drivers/net/wireless/ath9k/beacon.c   |  104 ++--
- drivers/net/wireless/ath9k/core.c     |  382 ++++----
- drivers/net/wireless/ath9k/core.h     |  311 +++----
- drivers/net/wireless/ath9k/hw.c       | 1633 ++++++++++++++++-----------------
- drivers/net/wireless/ath9k/hw.h       |  438 +++++-----
- drivers/net/wireless/ath9k/initvals.h |   82 +-
- drivers/net/wireless/ath9k/main.c     |  327 +++-----
- drivers/net/wireless/ath9k/phy.c      |   97 +--
- drivers/net/wireless/ath9k/phy.h      |   16 +-
- drivers/net/wireless/ath9k/rc.c       |  316 ++++----
- drivers/net/wireless/ath9k/rc.h       |   99 +-
- drivers/net/wireless/ath9k/recv.c     |   64 +-
- drivers/net/wireless/ath9k/regd.c     |  253 +++---
- drivers/net/wireless/ath9k/regd.h     |  132 ++--
- drivers/net/wireless/ath9k/xmit.c     |  221 +++---
- 16 files changed, 2714 insertions(+), 2848 deletions(-)
-
-  Luis
+Ivo
