@@ -1,38 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from usul.saidi.cx ([204.11.33.34]:59756 "EHLO usul.overt.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752240AbYHTDCj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2008 23:02:39 -0400
-Message-ID: <48AB8941.4080209@overt.org> (sfid-20080820_050243_100169_8FAF0F30)
-Date: Tue, 19 Aug 2008 20:02:25 -0700
-From: Philip Langdale <philipl@overt.org>
+Received: from mx03.syneticon.net ([87.79.32.166]:2834 "EHLO
+	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753861AbYHBSug (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Aug 2008 14:50:36 -0400
+Received: from localhost (filter1.syneticon.net [192.168.113.3])
+	by mx03.syneticon.net (Postfix) with ESMTP id 1EF12932A
+	for <linux-wireless@vger.kernel.org>; Sat,  2 Aug 2008 20:50:35 +0200 (CEST)
+Received: from mx03.syneticon.net ([192.168.113.4])
+	by localhost (mx03.syneticon.net [192.168.113.3]) (amavisd-new, port 10025)
+	with ESMTP id dT7KOBFEd0Ll for <linux-wireless@vger.kernel.org>;
+	Sat,  2 Aug 2008 20:50:32 +0200 (CEST)
+Received: from [192.168.10.145] (koln-4db4093a.pool.einsundeins.de [77.180.9.58])
+	by mx03.syneticon.net (Postfix) with ESMTP
+	for <linux-wireless@vger.kernel.org>; Sat,  2 Aug 2008 20:50:32 +0200 (CEST)
+Message-ID: <4894AC77.5060801@wpkg.org> (sfid-20080802_205039_831097_4B33BB73)
+Date: Sat, 02 Aug 2008 20:50:31 +0200
+From: Tomasz Chmielewski <mangoo@wpkg.org>
 MIME-Version: 1.0
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-CC: LKML <linux-kernel@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	toshiba_acpi@memebeam.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
- through rfkill (v5)
-References: <48A728B0.8030206@overt.org> <20080820012936.GE29336@khazad-dum.debian.net>
-In-Reply-To: <20080820012936.GE29336@khazad-dum.debian.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: linux-wireless@vger.kernel.org
+Subject: wireless USB adapters recommendations?
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Henrique de Moraes Holschuh wrote:
->> +		toshiba_acpi.rfk_dev->state = RFKILL_STATE_OFF;
-> 
-> Where did that RFKILL_STATE_OFF came from ? :-)  Just get rid of it, you
-> override it four statements later anyway...
+I'm looking for a USB wireless adapter which is well supported under Linux.
 
-Left over from the first iteration. Now removed and diff updated.
+Requirements:
 
-> 
-> Other than that, the rfkill bits look fine to me.
-> 
+- WPA2
+- should support ad-hoc and access point modes
+- should work under mipsel (I had once a prism54 mini-PCI card which 
+didn't work under mipsel)
 
-Thanks. Anyone else care to voice an opinion? Should this go in through
-wireless-testing then?
+It would be also nice to to get the hardware from a producer which 
+cooperates with Linux community.
 
---phil
+Do you guys have any recommendations?
+
+
+-- 
+Tomasz Chmielewski
+http://wpkg.org
