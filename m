@@ -1,75 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:47791 "EHLO smtps.tip.net.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750991AbYHSE1x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2008 00:27:53 -0400
-Date: Tue, 19 Aug 2008 14:27:39 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: David Miller <davem@davemloft.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-08-18
-Message-Id: <20080819142739.aee40461.sfr@canb.auug.org.au> (sfid-20080819_062805_919499_E94213B8)
-In-Reply-To: <20080818.211632.251536898.davem@davemloft.net>
-References: <20080817185605.GC30679@tuxdriver.com>
-	<20080817.151251.204370966.davem@davemloft.net>
-	<20080818151551.GA5524@tuxdriver.com>
-	<20080818.211632.251536898.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Tue__19_Aug_2008_14_27_39_+1000_TomPPdzDZIhuXn4u"
+Received: from nf-out-0910.google.com ([64.233.182.189]:17943 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752497AbYHBKPE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Aug 2008 06:15:04 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so537527nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 03:15:03 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: proski@gnu.org, orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>
+Subject: [PATCH 04/19] orinoco: Move EXPORT_SYMBOL declarations next to exported function
+Date: Sat,  2 Aug 2008 11:14:18 +0100
+Message-Id: <1217672073-7094-5-git-send-email-kilroyd@gmail.com> (sfid-20080802_121507_829911_1548CCE0)
+In-Reply-To: <1217672073-7094-4-git-send-email-kilroyd@gmail.com>
+References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
+ <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
+ <1217672073-7094-3-git-send-email-kilroyd@gmail.com>
+ <1217672073-7094-4-git-send-email-kilroyd@gmail.com>
+From: kilroyd@googlemail.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Signature=_Tue__19_Aug_2008_14_27_39_+1000_TomPPdzDZIhuXn4u
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: David Kilroy <kilroyd@gmail.com>
+---
+ drivers/net/wireless/hermes.c |   17 +++++++----------
+ 1 files changed, 7 insertions(+), 10 deletions(-)
 
-Hi Dave,
+diff --git a/drivers/net/wireless/hermes.c b/drivers/net/wireless/hermes.c
+index 5504155..aa95349 100644
+--- a/drivers/net/wireless/hermes.c
++++ b/drivers/net/wireless/hermes.c
+@@ -122,6 +122,7 @@ void hermes_struct_init(hermes_t *hw, void __iomem *address, int reg_spacing)
+ 	hw->reg_spacing = reg_spacing;
+ 	hw->inten = 0x0;
+ }
++EXPORT_SYMBOL(hermes_struct_init);
+ 
+ int hermes_init(hermes_t *hw)
+ {
+@@ -202,6 +203,7 @@ int hermes_init(hermes_t *hw)
+  out:
+ 	return err;
+ }
++EXPORT_SYMBOL(hermes_init);
+ 
+ /* Issue a command to the chip, and (busy!) wait for it to
+  * complete.
+@@ -272,6 +274,7 @@ int hermes_docmd_wait(hermes_t *hw, u16 cmd, u16 parm0,
+  out:
+ 	return err;
+ }
++EXPORT_SYMBOL(hermes_docmd_wait);
+ 
+ int hermes_allocate(hermes_t *hw, u16 size, u16 *fid)
+ {
+@@ -314,7 +317,7 @@ int hermes_allocate(hermes_t *hw, u16 size, u16 *fid)
+ 	
+ 	return 0;
+ }
+-
++EXPORT_SYMBOL(hermes_allocate);
+ 
+ /* Set up a BAP to read a particular chunk of data from card's internal buffer.
+  *
+@@ -398,6 +401,7 @@ int hermes_bap_pread(hermes_t *hw, int bap, void *buf, int len,
+  out:
+ 	return err;
+ }
++EXPORT_SYMBOL(hermes_bap_pread);
+ 
+ /* Write a block of data to the chip's buffer, via the
+  * BAP. Synchronization/serialization is the caller's problem.
+@@ -423,6 +427,7 @@ int hermes_bap_pwrite(hermes_t *hw, int bap, const void *buf, int len,
+  out:	
+ 	return err;
+ }
++EXPORT_SYMBOL(hermes_bap_pwrite);
+ 
+ /* Read a Length-Type-Value record from the card.
+  *
+@@ -476,6 +481,7 @@ int hermes_read_ltv(hermes_t *hw, int bap, u16 rid, unsigned bufsize,
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL(hermes_read_ltv);
+ 
+ int hermes_write_ltv(hermes_t *hw, int bap, u16 rid, 
+ 		     u16 length, const void *value)
+@@ -503,15 +509,6 @@ int hermes_write_ltv(hermes_t *hw, int bap, u16 rid,
+ 
+ 	return err;
+ }
+-
+-EXPORT_SYMBOL(hermes_struct_init);
+-EXPORT_SYMBOL(hermes_init);
+-EXPORT_SYMBOL(hermes_docmd_wait);
+-EXPORT_SYMBOL(hermes_allocate);
+-
+-EXPORT_SYMBOL(hermes_bap_pread);
+-EXPORT_SYMBOL(hermes_bap_pwrite);
+-EXPORT_SYMBOL(hermes_read_ltv);
+ EXPORT_SYMBOL(hermes_write_ltv);
+ 
+ static int __init init_hermes(void)
+-- 
+1.5.4.5
 
-On Mon, 18 Aug 2008 21:16:32 -0700 (PDT) David Miller <davem@davemloft.net>=
- wrote:
->
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Mon, 18 Aug 2008 11:15:51 -0400
->=20
-> > (Revision 2, commit references in changelogs augmented w/ subject text.)
-> >=20
-> > Here is the latest round of wireless fixes for 2.6.27.  The silliest one
-> > is the one from Adrian Bunk, which applies the gcc-related fix to ath9k
-> > again because there were two identical pieces of code to fix -- I guess
-> > I didn't get the joke *facepalm*...
-> >=20
-> > I don't think there is anything else remarkable, although I think we fix
-> > a couple of the current regressions on LKML.
->=20
-> Pulled thanks John.
->=20
-> Assuming nothing shows up in my build testing I'll push this out
-> to kernel.org shortly.
-
-Just as an extra datapoint, this has already merged into linux-next and
-built fine for a powerpc ppc64_defconfig and x86_64 allmodconfig this
-morning.  And yesterday's linux-next had the previous version of these
-patches (only commit comment differences as far as I am aware) and the
-build logs are at http://kisskb.ellerman.id.au/linux-next .
-
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Tue__19_Aug_2008_14_27_39_+1000_TomPPdzDZIhuXn4u
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkiqS7sACgkQjjKRsyhoI8zOiACdGJnVh2E+UkQOhHwYCqwdwjTv
-R4UAoICe1FKj5b0I4N133k2IYqT/0feV
-=qC4V
------END PGP SIGNATURE-----
-
---Signature=_Tue__19_Aug_2008_14_27_39_+1000_TomPPdzDZIhuXn4u--
