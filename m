@@ -1,62 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:43060 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751815AbYH1Kwi (ORCPT
+Received: from mx03.syneticon.net ([87.79.32.166]:3779 "EHLO
+	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758741AbYHBTaF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 06:52:38 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so95212eyi.37
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2008 03:52:36 -0700 (PDT)
-Message-ID: <1ba2fa240808280352q4a913c1cv33a6bc0998cdbcb9@mail.gmail.com> (sfid-20080828_125242_280408_B851F226)
-Date: Thu, 28 Aug 2008 13:52:36 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Bruno Randolf" <bruno@thinktube.com>
-Subject: Re: pull request: wireless-2.6 2008-08-26
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"Michael Buesch" <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <200808281235.35449.bruno@thinktube.com>
+	Sat, 2 Aug 2008 15:30:05 -0400
+Message-ID: <4894B5B8.10504@wpkg.org> (sfid-20080802_213017_844900_8F42F790)
+Date: Sat, 02 Aug 2008 21:30:00 +0200
+From: Tomasz Chmielewski <mangoo@wpkg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080827013009.GA15781@tuxdriver.com>
-	 <1ba2fa240808271611v382631ecn2a24e2816562d434@mail.gmail.com>
-	 <20080827233103.GE5927@tesla> <200808281235.35449.bruno@thinktube.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>,
+	linux-wireless@vger.kernel.org
+Subject: Re: wireless USB adapters recommendations?
+References: <4894AC77.5060801@wpkg.org>  <g72be3$gpf$1@ger.gmane.org>	 (sfid-20080802_211017_111832_D6ADD2A8) <1217704653.8621.54.camel@johannes.berg>
+In-Reply-To: <1217704653.8621.54.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 28, 2008 at 1:35 PM, Bruno Randolf <bruno@thinktube.com> wrote:
-> On Wed, Aug 27, 2008 at 04:11:15PM -0700, Tomas Winkler wrote:
->> Last solution would be to remove this merging all together but then
->> I'm not sure if Bruno added this code just implement the spec or
->> really tested it with any hardware.
->
-> of course i tested IBSS merge with atheros hardware when i sent in the patch
-> and it worked. this is about 6 month ago.
-recently i briefly tested IBSS,
+Johannes Berg schrieb:
+> On Sat, 2008-08-02 at 19:09 +0000, Daniel Gimpelevich wrote:
+> 
+>>> I'm looking for a USB wireless adapter which is well supported under
+>>> Linux.
+> 
+>>> - WPA2
+>>> - should support ad-hoc and access point modes - should work under
+>>> mipsel (I had once a prism54 mini-PCI card which didn't work under
+>>> mipsel)
+> 
+> Didn't work under mipsel seems fixable, should be a driver issue.
 
-Do you know how the  TSF is actually synchronized from the HW perspective?
+Yeah, I tested it with 2.6.19 some time ago.
 
-> with the same HW but it did not work any more - i didn't have the time to
-> investigate this issue...
+Maybe the things are better now with the current kernel - I'll check it 
+next week - and if it works, I won't need a USB device ;)
 
-There is another IBSS bug that was introduced connected to rates maybe
-this is also your problem.. we have something in the pipe that should
-solve this.
 
-> please remember that there was a lengthy discussion about the standard
-> compliance and the reasons behind the need for IBSS merge before my patch was
-> accepted. i believe i had convincing arguments why IBSS mode does not
-> reliably work at all in practice if we don't support IBSS merge.
-
-Sure but if TSF is not adopted correctly and that's the case probably
-of most of the drivers under mac80211 then it makes
-worth.  Just need to be aware of this.
-
-> you might want to re-read this thread:
-> http://thread.gmane.org/gmane.linux.kernel.wireless.general/10278
->
-Thanks
-Tomas
+-- 
+Tomasz Chmielewski
+http://wpkg.org
