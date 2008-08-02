@@ -1,95 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.231]:10345 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757269AbYHCWdD (ORCPT
+Received: from ns1.siteground211.com ([209.62.36.12]:48586 "EHLO
+	serv01.siteground211.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752173AbYHBI3A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 18:33:03 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1858941rvb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2008 15:33:03 -0700 (PDT)
-Message-ID: <1ba2fa240808031533pb2cce5dnb63b76088cb37ba5@mail.gmail.com> (sfid-20080804_003319_459295_E8F9E517)
-Date: Mon, 4 Aug 2008 01:33:02 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Maxim Levitsky" <maximlevitsky@gmail.com>
-Subject: Re: [ipw3945-devel] [BUG] IWL3945: Led doesn't blink in monitor mode
-Cc: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-In-Reply-To: <48962982.1000000@gmail.com>
+	Sat, 2 Aug 2008 04:29:00 -0400
+Date: Sat, 2 Aug 2008 11:28:52 +0300
+From: Felipe Balbi <me@felipebalbi.com>
+To: Tilman Schmidt <tilman@imap.cc>
+Cc: Eugeniy Meshcheryakov <eugen@debian.org>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Q: support for AVM Fritz! WLAN USB in kernel 2.6.25+
+Message-ID: <20080802082851.GB8213@frodo> (sfid-20080802_102907_520330_994AD5EC)
+Reply-To: me@felipebalbi.com
+References: <4891D1B9.70703@imap.cc> <1217517915.10489.143.camel@johannes.berg> <4891E97C.1060302@imap.cc> <20080731165054.GA14485@tuxdriver.com> <4892391D.2010305@imap.cc> <20080731224357.GA9741@localhost.localdomain> <48939C97.5030608@imap.cc>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <48942C35.6020400@gmail.com> <48962982.1000000@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <48939C97.5030608@imap.cc>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 4, 2008 at 12:56 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> Maxim Levitsky wrote:
->> After fixing super annoying bug about garbage scan results,
->> I noticed smaller bug:
->>
->> My wireless leds stop blinking if I enable monitor mode
->> (Note that this time this doesn't happen if I enable promisc mode)
->
-> Ok, now I understand how its leds work.
->
-> the STATISTICS_NOTIFICATION reply from microcode drives all the led
-> blinking code. on each such notification the handler decides based on
-> traffic whenever to turn led solid or blink it.
->
-> the handler for 3945 actually counts recieved and transmitted packets!:
->
->> static inline u8 get_blink_rate(struct iwl3945_priv *priv)
->> {
->>       int index;
->>       u64 current_tpt = priv->rxtxpackets;
->>       s64 tpt = current_tpt - priv->led_tpt;
->>
->>       if (tpt < 0)
->>               tpt = -tpt;
->>       priv->led_tpt = current_tpt;
->
->
-> in iwl3945-led.c
+On Sat, Aug 02, 2008 at 01:30:31AM +0200, Tilman Schmidt wrote:
+> The acx module also loads all by itself, but complains about missing
+> firmware and throws two backtraces:
 
+<snip>
 
-Right I forgot I didn't change this in 3945.
+> Ok, next step I guess is trying to find that firmware image 'tiacx111usbc1B' on
+> the temporarily appearing pseudo CD-ROM drive or on the real CD-ROM that came
+> with the device. Trouble is I don't really know what I am looking for. The
+> real CD-ROM contains several instances of a file named Fwusb1b.bin, could that
+> be it? And if so, where should I copy it so that the acx driver will find it?
 
+Try with that one, copy to /lib/firmware, if it doesn't work try with
+the one from [1].
 
-> priv->rxtxpackets is updated each time a packet is recieved/transmitted
-> by iwl3945_pass_packet_to_mac80211:
->
->> #ifdef CONFIG_IWL3945_LEDS
->>       if (ieee80211_is_data(hdr->frame_control))
->>               priv->rxtxpackets += len;
->> #endif
->
->
-> and iwl3945_build_tx_cmd_basic:
->
->> #ifdef CONFIG_IWL3945_LEDS
->>               priv->rxtxpackets += le16_to_cpu(cmd->cmd.tx.len);
->> #endif
->
->
->
->
-> now the problem is that as soon as the firmware enters the monitor mode
-> it stops sending STATISTICS_NOTIFICATION.
+[1] http://www.cmartin.tk/acx/fw.tar.bz2
 
-
-> So ether I need a way to tell firmware to continue sending this message,
-> or use a timer instead in monitor mode.
->
-> How I can tell the firmware to send STATISTICS_NOTIFICATION in monitor mode?
-> Intel developers, can you comment on this?
->
-
-Statistic notification is just used as a point where NIC is woken up.
-We don't wan to wake up NIC just for LED command.
-But in monitor mode  nic have to be run in CAM mode anyway so you can
-send the command out from the led timer directly.
-
->
-
-> Btw, the led code really should be shared between 3945/4965.
-Oh, more then LED code :) But that's a lot of infrastructure code that
-need to be done. I still have hard heard on guys who split the code at
-the first place but that's already a history..
-Tomas
+-- 
+balbi
