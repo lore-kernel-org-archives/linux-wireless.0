@@ -1,62 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:4482 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751112AbYH1J3I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 05:29:08 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 05/11] iwlwifi: workaround interrupt handling no some platforms
-Date: Thu, 28 Aug 2008 17:25:04 +0800
-Message-Id: <1219915510-3647-6-git-send-email-yi.zhu@intel.com> (sfid-20080828_112917_000593_E9415FD1)
-In-Reply-To: <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
+Received: from wf-out-1314.google.com ([209.85.200.175]:44441 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760705AbYHBTd1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Aug 2008 15:33:27 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so2243999wfd.4
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 12:33:26 -0700 (PDT)
+Message-ID: <40f31dec0808021233s249aa5f2r845b5beb33c72177@mail.gmail.com> (sfid-20080802_213335_876548_059AF186)
+Date: Sat, 2 Aug 2008 22:33:26 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ath5k-devel] [PATCH 1/12] ath5k: Update register list
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	jirislaby@gmail.com, mcgrof@gmail.com
+In-Reply-To: <40f31dec0807311151m13bc2c5ah65b477d2d0ae3fd1@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080720033041.GA7440@makis>
+	 <20080729204054.GA10188@tuxdriver.com>
+	 <40f31dec0807311151m13bc2c5ah65b477d2d0ae3fd1@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+2008/7/31 Nick Kossifidis <mickflemm@gmail.com>:
+> 2008/7/29 John W. Linville <linville@tuxdriver.com>:
+>> On Sun, Jul 20, 2008 at 06:30:41AM +0300, Nick Kossifidis wrote:
+>>>  * Update list of registers
+>>>  * Use updated register macros inside hw.c and initvals.c
+>>>
+>>>  Changes-licensed-under: ISC
+>>>  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+>>
+>> Nick,
+>>
+>> Some of the changes in this patch break the build unless the rest
+>> of the series is applied, and those patches can't be applied before
+>> applying this one.  This breaks git-bisect.  Could I trouble you
+>> to include the pieces of this patch that break the build into those
+>> later patches that fix the build?  Or perhaps you can simply split
+>> this into a patch that adds new definitions and one that deletes
+>> older definitions?  The latter could then be applied at the end of
+>> the series.
+>>
+>> Thanks,
+>>
+>> John
+>
+> Hello John ;-)
+>
+> Now that i resent the 1st patch that was broken can you please commit
+> the series ? We really need to add RF2425 support in kernel, it'll
+> also help me work easier on ath5k (i won't have to work on top of
+> those patches).
+>
+> All other patches should be O.K.
+>
 
-This patch adds workaround for an interrupt related hardware bug on
-some platforms.
+Thanx a lot ;-)
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index e35db85..4986137 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2601,6 +2601,7 @@ static int iwl4965_mac_start(struct ieee80211_hw *hw)
- {
- 	struct iwl_priv *priv = hw->priv;
- 	int ret;
-+	u16 pci_cmd;
- 
- 	IWL_DEBUG_MAC80211("enter\n");
- 
-@@ -2611,6 +2612,13 @@ static int iwl4965_mac_start(struct ieee80211_hw *hw)
- 	pci_restore_state(priv->pci_dev);
- 	pci_enable_msi(priv->pci_dev);
- 
-+	/* enable interrupts if needed: hw bug w/a */
-+	pci_read_config_word(priv->pci_dev, PCI_COMMAND, &pci_cmd);
-+	if (pci_cmd & PCI_COMMAND_INTX_DISABLE) {
-+		pci_cmd &= ~PCI_COMMAND_INTX_DISABLE;
-+		pci_write_config_word(priv->pci_dev, PCI_COMMAND, pci_cmd);
-+	}
-+
- 	ret = request_irq(priv->pci_dev->irq, iwl4965_isr, IRQF_SHARED,
- 			  DRV_NAME, priv);
- 	if (ret) {
+
 -- 
-1.5.3.6
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
