@@ -1,58 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:33836 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751432AbYH0E4a (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.178]:8775 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752527AbYHBKPr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2008 00:56:30 -0400
-Date: Wed, 27 Aug 2008 01:56:24 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Greg KH <gregkh@suse.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Andrew Bird <ajb@spheresystems.co.uk>,
-	Cezary Jackiewicz <cezary.jackiewicz@gmail.com>,
-	Philip Langdale <philipl@overt.org>
-Subject: Re: [PATCH 5/5] rfkill: remove transmitter blocking on suspend
-Message-ID: <20080827045624.GA21804@khazad-dum.debian.net> (sfid-20080827_065634_727886_46047144)
-References: <1219762681-26911-1-git-send-email-hmh@hmh.eng.br> <1219762681-26911-6-git-send-email-hmh@hmh.eng.br> <20080826153948.GA18563@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080826153948.GA18563@suse.de>
+	Sat, 2 Aug 2008 06:15:47 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so1578395ika.5
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 03:15:47 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: proski@gnu.org, orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>
+Subject: [PATCH 14/19] orinoco: Split wevent work thread from wevent sending
+Date: Sat,  2 Aug 2008 11:14:28 +0100
+Message-Id: <1217672073-7094-15-git-send-email-kilroyd@gmail.com> (sfid-20080802_124544_221355_39BE7817)
+In-Reply-To: <1217672073-7094-14-git-send-email-kilroyd@gmail.com>
+References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
+ <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
+ <1217672073-7094-3-git-send-email-kilroyd@gmail.com>
+ <1217672073-7094-4-git-send-email-kilroyd@gmail.com>
+ <1217672073-7094-5-git-send-email-kilroyd@gmail.com>
+ <1217672073-7094-6-git-send-email-kilroyd@gmail.com>
+ <1217672073-7094-7-git-send-email-kilroyd@gmail.com>
+ <1217672073-7094-8-git-send-email-kilroyd@gmail.com>
+ <1217672073-7094-9-git-send-email-kilroyd@gmail.com>
+ <1217672073-7094-10-git-send-email-kilroyd@gmail.com>
+ <1217672073-7094-11-git-send-email-kilroyd@gmail.com>
+ <1217672073-7094-12-git-send-email-kilroyd@gmail.com>
+ <1217672073-7094-13-git-send-email-kilroyd@gmail.com>
+ <1217672073-7094-14-git-send-email-kilroyd@gmail.com>
+From: kilroyd@googlemail.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 26 Aug 2008, Greg KH wrote:
-> > Drivers that need rfkill's older behaviour will have to implement it by
-> > themselves in their own suspend handling.
-[...]
+This allows us to send more wevents from the work thread. We will need
+to do this to support WPA.
 
-> > The following drivers need to check if they need to explicitly block
-> > their transmitters in their own suspend handlers (maintainers Cc'd):
-> 
-> Normally when you change a kernel-api to operate differently, you also
-> fix up the relevant parts of the kernel as well.  Have you looked into
+Signed-off-by: David Kilroy <kilroyd@gmail.com>
+---
+ drivers/net/wireless/orinoco.c |   24 ++++++++++++++----------
+ 1 files changed, 14 insertions(+), 10 deletions(-)
 
-That requires one to actually KNOW the details of the relevant parts of the
-kernel.  In this case, the particular needs of several devices and their
-device drivers.
-
-Which I don't, for many of them.
-
-> these drivers to see if they do have this problem or not?
-
-Those I know enough to be 100% certain that do not need it (or actually
-REQUIRE it not to happen, like libertas) have not been added to the CC.
-There were none I could be 100% certain that would need the toggle_radio
-call (if there were, they would have been fixed by the patch as well).
-
-For all the others that I am not sure of, I CC'd the maintainers.  If any of
-them reply indicating that they need the explicit toggle_radio() call, we
-can add such changes to the patch (or in a future patch).  I consider this
-equivalent to emailing everyone and asking about it.
-
+diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
+index 013af6e..b91b6cb 100644
+--- a/drivers/net/wireless/orinoco.c
++++ b/drivers/net/wireless/orinoco.c
+@@ -1424,34 +1424,38 @@ static void orinoco_join_ap(struct work_struct *work)
+ }
+ 
+ /* Send new BSSID to userspace */
+-static void orinoco_send_wevents(struct work_struct *work)
++static void orinoco_send_bssid_wevent(struct orinoco_private *priv)
+ {
+-	struct orinoco_private *priv =
+-		container_of(work, struct orinoco_private, wevent_work);
+ 	struct net_device *dev = priv->ndev;
+ 	struct hermes *hw = &priv->hw;
+ 	union iwreq_data wrqu;
+ 	int err;
+-	unsigned long flags;
+-
+-	if (orinoco_lock(priv, &flags) != 0)
+-		return;
+ 
+ 	err = hermes_read_ltv(hw, IRQ_BAP, HERMES_RID_CURRENTBSSID,
+ 			      ETH_ALEN, NULL, wrqu.ap_addr.sa_data);
+ 	if (err != 0)
+-		goto out;
++		return;
+ 
+ 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+ 
+ 	/* Send event to user space */
+ 	wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
++}
++
++static void orinoco_send_wevents(struct work_struct *work)
++{
++	struct orinoco_private *priv =
++		container_of(work, struct orinoco_private, wevent_work);
++	unsigned long flags;
++
++	if (orinoco_lock(priv, &flags) != 0)
++		return;
++
++	orinoco_send_bssid_wevent(priv);
+ 
+- out:
+ 	orinoco_unlock(priv, &flags);
+ }
+ 
+-
+ static inline void orinoco_clear_scan_results(struct orinoco_private *priv,
+ 					      unsigned long scan_age)
+ {
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+1.5.4.5
+
