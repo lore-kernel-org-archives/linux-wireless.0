@@ -1,42 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:46149 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753091AbYHAC6Q (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45984 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752355AbYHBTCM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Jul 2008 22:58:16 -0400
-Message-ID: <48927BCA.1030805@lwfinger.net> (sfid-20080801_045822_620074_0A13DF4D)
-Date: Thu, 31 Jul 2008 21:58:18 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-CC: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: [PATCH V3] rtl8187: Fix lockups due to concurrent access to config
- routine
-References: <48925938.27Ki5NWyw4NzKtNf%Larry.Finger@lwfinger.net> <3ace41890807311929w464c41femf30efc5441830d13@mail.gmail.com>
-In-Reply-To: <3ace41890807311929w464c41femf30efc5441830d13@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sat, 2 Aug 2008 15:02:12 -0400
+Subject: Re: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <1217700664-20792-9-git-send-email-hmh@hmh.eng.br> (sfid-20080802_201122_064360_071330B0)
+References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
+	 <1217700664-20792-9-git-send-email-hmh@hmh.eng.br>
+	 (sfid-20080802_201122_064360_071330B0)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-J8HP+PhwPlqjWCJiVFeB"
+Date: Sat, 02 Aug 2008 21:02:03 +0200
+Message-Id: <1217703723.8621.50.camel@johannes.berg> (sfid-20080802_210215_767836_A455F2A1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hin-Tak Leung wrote:
-> 
-> Thanks for the work. I think we need a few more mutex locks.
 
-I tried two other places: rtl8187_tx() and rtl8187_configure_filter. Both 
-generated warnings as mac80211 had already had a lock in place. So far, I 
-haven't seen any candidates, but the code surely needs a thorough audit.
+--=-J8HP+PhwPlqjWCJiVFeB
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> The one-line message/explanation is a bit mis-worded though. There isn't a
-> "lockup" though. I would describe the problem as the driver's internal
-> state getting garbbaged. It is probably a performance "feature" that
-> routines in either the mac80211 layer or the usb layer returns before
-> they are done. (i.e. actions are simply
-> queued for near-future to act on). Maybe somebody else can explain this better?
+On Sat, 2008-08-02 at 15:11 -0300, Henrique de Moraes Holschuh wrote:
+> Currently, rfkill would stand in the way of properly supporting wireless
+> devices that are capable of waking the system up from sleep or hibernatio=
+n
+> when they receive a special wireless message.
+>=20
+> Since rfkill attempts to soft-block any transmitters during class suspend=
+,
 
-The comment in the code that "the card will stop work until next reset" sounds 
-as though it locks up. That was why I chose the wording that I did.
+why does it interfere with suspend anyway?
 
-Larry
+johannes
+
+--=-J8HP+PhwPlqjWCJiVFeB
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIlK8mAAoJEKVg1VMiehFYVUwP/1yOTvKT7zE8Ok2NSIgVr958
+K+pvloZc9T+CirqSBaiYu1Text6c8pYU/k4tdgrP8aoedFtZ79gouXhJbbghS9qq
+pJDKf9FQwyS3MlTILLREpw1F3Yi8kCPLtyKk660T8t7u9yvL5HI+TRxPXt4P/tWj
+GhpoGMP90MbCZ4EetQy2e1+Hl1DfblKvQT1WFgI0tFppnmRSmFlwfr4aZAJdo9+F
+9gdmyicX4/rHePccHdnLwP5Zd1AoBp6NZjOWxkn+TojrW/OQNgkeMnrIs+T1Qp2C
+F4EM2bHaCKbud++PUf1MeQ3tIfti9Xs9O/6j8tGoj+A16QAYa7Omkf1dO6m6GugL
+uFxujqD7aYNZflVtvyXOdDnHfSR7cDv36t6WII6GVLMYExUOqm/qvTpbuiZnMQUz
+zeEAUCvqPvqQPd1sFW2NY68VFuC8XAkllkgBxFZgF1rXgk34tl/n3Otlg0/PROC+
++3qqf4rt1rkuJ9w71Umn1GXMt4pRWe08Sm4IIc0XTdEmRlypDPzclMvLvAvyw9IL
+tCF10Mbt23oAgGfOPP99PAAWfVTO+og5014fGJHHv19A3wJf36QVW+TthWqqCB8F
+mvauWmVBK2I/u8R4xhGqUU8F5Na0lOPyJqxgklPrgouPnqy3b32ASCYFgof6me9N
+1JRzbiHK86fMcrLj6PEb
+=jdeo
+-----END PGP SIGNATURE-----
+
+--=-J8HP+PhwPlqjWCJiVFeB--
 
