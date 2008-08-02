@@ -1,49 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:47520 "EHLO hostap.isc.org"
+Received: from c60.cesmail.net ([216.154.195.49]:12916 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752882AbYH2Iie (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2008 04:38:34 -0400
-Date: Fri, 29 Aug 2008 11:37:41 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
+	id S1751476AbYHBFDS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Aug 2008 01:03:18 -0400
+Message-ID: <20080802010317.7q5vloyt1wsscc4w-cebfxv@webmail.spamcop.net> (sfid-20080802_070334_372632_15A58877)
+Date: Sat, 02 Aug 2008 01:03:17 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Marcel Holtmann <marcel@holtmann.org>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: VLAN testing (and mac80211_hwsim test cases in general)
-Message-ID: <20080829083740.GA6083@jm.kir.nu> (sfid-20080829_103839_221085_9826A602)
-References: <20080617154008.883383150@localhost> <1215625246.3246.40.camel@johannes.berg> <1215626936.3246.45.camel@johannes.berg> <20080828160401.GG4863@jm.kir.nu> <1219995211.25321.24.camel@johannes.berg>
+Subject: Re: Resignation from orinoco and at76_usb
+References: <1217634358.2731.8.camel@dv>
+	<B9DE28E5-3777-4FB2-8521-CA128614BC21@holtmann.org>
+In-Reply-To: <B9DE28E5-3777-4FB2-8521-CA128614BC21@holtmann.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1219995211.25321.24.camel@johannes.berg>
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 29, 2008 at 09:33:31AM +0200, Johannes Berg wrote:
+Quoting Marcel Holtmann <marcel@holtmann.org>:
 
-> Awesome, thanks. I'll look at the code, it seems to me that I actually
-> want to be able to configure to not reject unknown stations but put them
-> into their own VLAN, or something, then this feature could actually be
-> useful in production.
+> do you have any pending patches that are not in wireless-testing? I at
+> least remember that I have seen some Orinoco WPA stuff going on. It
+> would be good to get at least these things sorted out before you resign
+> from both drivers.
 
-That would require a bit more code to have the default VLAN ID for
-unknown STAs stored somewhere, but that should be relatively small
-change to hostapd with all the other VLAN ID processing available.
-
-> The validation is a bit harder, you can listen for wext events, but you
-> can't even try pinging between the interfaces... Maybe the validation
-> should check what's going on on the "air".
-
-debugfs provides some help for things like VLAN (or well, would provide,
-if we actually showed that information there ;-), but that can be easily
-added). As far as data packets are concerned, we could implement a
-simple "ping" program that uses packet sockets to send some data (and
-reply to specific messages). This can then by-pass the issues with IP
-and local interface.
-
-It would be useful to have a tool that processes hwsim0 dump, though,
-and provides a language for writing "expect scripts" for 802.11
-(+radiotap) frames.. For example, something like "EXPECT ProbeReq CHAN=1
-SRC=<mac> DST=<bcast>; EXPECT ProbeResp CHAN=1 SRC=<bssid> DST=<mac>"
-and so on.. That tool would then write a report on what happened and
-provided pass/fail result based on requirements in the script.
+I asked the authors of those patches to post everything here.  I see  
+that some at76_usb stuff got applied recently, but the driver appears  
+to be very unstable.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Regards,
+Pavel Roskin
