@@ -1,95 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.225]:33453 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753331AbYHWSDh (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:44001 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752573AbYHBV6S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2008 14:03:37 -0400
-Received: by qb-out-0506.google.com with SMTP id a16so1344483qbd.17
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Aug 2008 11:03:37 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-Subject: [PATCH] orinoco: Multicast to the specified addresses
-Date: Sat, 23 Aug 2008 19:03:34 +0100
-Message-Id: <1219514614-19800-1-git-send-email-kilroyd@gmail.com> (sfid-20080823_200343_619070_EAE31CF5)
-From: kilroyd@googlemail.com
+	Sat, 2 Aug 2008 17:58:18 -0400
+Message-ID: <4894D86A.6030108@imap.cc> (sfid-20080802_235824_118024_13C62FF2)
+Date: Sat, 02 Aug 2008 23:58:02 +0200
+From: Tilman Schmidt <tilman@imap.cc>
+MIME-Version: 1.0
+To: me@felipebalbi.com
+CC: Eugeniy Meshcheryakov <eugen@debian.org>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Q: support for AVM Fritz! WLAN USB in kernel 2.6.25+
+References: <4891D1B9.70703@imap.cc> <1217517915.10489.143.camel@johannes.berg> <4891E97C.1060302@imap.cc> <20080731165054.GA14485@tuxdriver.com> <4892391D.2010305@imap.cc> <20080731224357.GA9741@localhost.localdomain> <48939C97.5030608@imap.cc> <20080802082851.GB8213@frodo>
+In-Reply-To: <20080802082851.GB8213@frodo>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig7E2D9A8B06029E440F6C3EBE"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When multicasting the driver sets the number of group addresses using
-the count from the previous set multicast command. In general this means
-you have to set the multicast addresses twice to get the behaviour you
-want.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig7E2D9A8B06029E440F6C3EBE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-If we were multicasting, and reduce the number of addresses we are
-multicasting to, then the driver would write uninitialised data from the
-stack into the group addresses to multicast to.
+On Sat, 2 Aug 2008 11:28:52 +0300, Felipe Balbi wrote:
+> On Sat, Aug 02, 2008 at 01:30:31AM +0200, Tilman Schmidt wrote:
+>> The acx module also loads all by itself, but complains about missing
+>> firmware and throws two backtraces:
+[...]
+>> real CD-ROM contains several instances of a file named Fwusb1b.bin, co=
+uld that
+>> be it? And if so, where should I copy it so that the acx driver will f=
+ind it?
+>=20
+> Try with that one, copy to /lib/firmware,
 
-Only write the multicast addresses we have specifically set.
+The first attempt with that firmware failed with the messages:
 
-Signed-off-by: David Kilroy <kilroyd@gmail.com>
----
+Aug  2 19:01:35 compaq kernel: read firmware upload result
+Aug  2 19:01:40 compaq kernel: acx: issue_cmd(cmd:ACX1xx_CMD_WAKE) FAILED=
 
-I came across this while attempting to refactor orinoco.c. I haven't
-tried to trigger it (I don't multicast, and don't know how to...).
-This code has been untouched since before v2.6.12 but I can't find any
-reports of problems. Appreciated if someone can confirm this.
+Aug  2 19:01:40 compaq kernel: initializing max packet templates
+Aug  2 19:01:46 compaq kernel: acx: issue_cmd(cmd:cmd) FAILED
+Aug  2 19:01:46 compaq kernel: wlan%d: acx_s_init_packet_templates() FAIL=
+ED
+Aug  2 19:01:46 compaq kernel: acx: init_mac() FAILED
+Aug  2 19:01:46 compaq kernel: acx_usb: probe of 2-2:1.0 failed with erro=
+r 1
 
----
-diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
-index 6a196c3..ec0451c 100644
---- a/drivers/net/wireless/orinoco.c
-+++ b/drivers/net/wireless/orinoco.c
-@@ -2826,42 +2826,46 @@ __orinoco_set_multicast_list(struct net_device *dev)
- 		err = hermes_write_wordrec(hw, USER_BAP,
- 					   HERMES_RID_CNFPROMISCUOUSMODE,
- 					   promisc);
- 		if (err) {
- 			printk(KERN_ERR "%s: Error %d setting PROMISCUOUSMODE to 1.\n",
- 			       dev->name, err);
- 		} else 
- 			priv->promiscuous = promisc;
- 	}
- 
-+	/* If we're not in promiscuous mode, then we need to set the
-+	 * group address if either we want to multicast, or if we were
-+	 * multicasting and want to stop */
- 	if (! promisc && (mc_count || priv->mc_count) ) {
- 		struct dev_mc_list *p = dev->mc_list;
- 		struct hermes_multicast mclist;
- 		int i;
- 
- 		for (i = 0; i < mc_count; i++) {
- 			/* paranoia: is list shorter than mc_count? */
- 			BUG_ON(! p);
- 			/* paranoia: bad address size in list? */
- 			BUG_ON(p->dmi_addrlen != ETH_ALEN);
- 			
- 			memcpy(mclist.addr[i], p->dmi_addr, ETH_ALEN);
- 			p = p->next;
- 		}
- 		
- 		if (p)
- 			printk(KERN_WARNING "%s: Multicast list is "
- 			       "longer than mc_count\n", dev->name);
- 
--		err = hermes_write_ltv(hw, USER_BAP, HERMES_RID_CNFGROUPADDRESSES,
--				       HERMES_BYTES_TO_RECLEN(priv->mc_count * ETH_ALEN),
--				       &mclist);
-+		err = hermes_write_ltv(hw, USER_BAP,
-+				   HERMES_RID_CNFGROUPADDRESSES,
-+				   HERMES_BYTES_TO_RECLEN(mc_count * ETH_ALEN),
-+				   &mclist);
- 		if (err)
- 			printk(KERN_ERR "%s: Error %d setting multicast list.\n",
- 			       dev->name, err);
- 		else
- 			priv->mc_count = mc_count;
- 	}
- }
- 
- /* This must be called from user context, without locks held - use
-  * schedule_work() */
--- 
-1.5.6.4
+I guess that fits in with the messages the ACX module would emit when loa=
+ded:
 
+Aug  2 19:01:35 compaq kernel: acx: this driver is still EXPERIMENTAL
+Aug  2 19:01:35 compaq kernel: acx: reading README file and/or Craig's HO=
+WTO is recommended, visit http://acx100.sf.net in case of further questio=
+ns/discussion
+Aug  2 19:01:35 compaq kernel: acx: compiled to use 32bit I/O access. I/O=
+ timing issues might occur, such as non-working firmware upload. Report t=
+hem
+
+On the second attempt, the firmware upload succeeded, but more errors
+followed:
+
+Aug  2 19:06:16 compaq kernel: read firmware upload result
+Aug  2 19:06:16 compaq kernel: TNETW1450 firmware upload successful!
+Aug  2 19:06:16 compaq kernel: initializing max packet templates
+Aug  2 19:06:16 compaq kernel: acx: issue_cmd(): USB read error -75
+Aug  2 19:06:16 compaq kernel: acx: issue_cmd(cmd:ACX1xx_CMD_INTERROGATE)=
+ FAILED
+Aug  2 19:06:16 compaq kernel: wlan%d: interrogate(type:ACX1xx_IE_MEMORY_=
+CONFIG_OPTIONS) FAILED
+Aug  2 19:06:16 compaq kernel: dump queue head (from card):
+Aug  2 19:06:16 compaq kernel: len: 20
+Aug  2 19:06:16 compaq kernel: tx_memory_block_address: 80000B80
+Aug  2 19:06:16 compaq kernel: rx_memory_block_address: DF313D34
+Aug  2 19:06:16 compaq kernel: tx1_queue address: 10
+Aug  2 19:06:16 compaq kernel: rx1_queue address: E080FBBD
+Aug  2 19:06:16 compaq kernel: get_mask 0x00004182, set_mask 0x00000000
+Aug  2 19:06:16 compaq kernel: don't know how to get sensitivity for radi=
+o type 0x1B
+Aug  2 19:06:16 compaq kernel: got sensitivity value 0
+Aug  2 19:06:16 compaq kernel: got antenna value 0x4A
+Aug  2 19:06:16 compaq kernel: got regulatory domain 0x30
+Aug  2 19:06:16 compaq kernel: get_mask 0x00000000, set_mask 0x00000000 -=
+ after update
+Aug  2 19:06:16 compaq kernel: new ratevector: 82 84 0B 0C 12 16 18 24 2C=
+ 30 48 60 6C
+Aug  2 19:06:16 compaq kernel: setting RXconfig to 2010:0FDD
+Aug  2 19:06:16 compaq kernel: acx: =3D=3D=3D chipset TNETW1450, radio ty=
+pe 0x1B (An unknown radio used by TNETW1450 USB adapters), form factor 0x=
+00 (unspecified), EEPROM version 0x05: uploaded firmware 'Rev 2.4.0.72' =3D=
+=3D=3D
+Aug  2 19:06:16 compaq kernel: registering network device
+Aug  2 19:06:16 compaq kernel: creating /proc entry driver/acx_wlan0
+Aug  2 19:06:16 compaq kernel: creating /proc entry driver/acx_wlan0_diag=
+
+Aug  2 19:06:16 compaq kernel: creating /proc entry driver/acx_wlan0_eepr=
+om
+Aug  2 19:06:16 compaq kernel: creating /proc entry driver/acx_wlan0_phy
+Aug  2 19:06:16 compaq kernel: acx: USB module v0.3.37 loaded successfull=
+y
+Aug  2 19:06:16 compaq kernel: usb 2-2: New USB device found, idVendor=3D=
+057c, idProduct=3D6201
+Aug  2 19:06:16 compaq kernel: usb 2-2: New USB device strings: Mfr=3D3, =
+Product=3D2, SerialNumber=3D1
+Aug  2 19:06:16 compaq kernel: usb 2-2: Product: WLAN USB Device
+Aug  2 19:06:16 compaq kernel: usb 2-2: Manufacturer: AVM GmbH
+Aug  2 19:06:16 compaq kernel: usb 2-2: SerialNumber: 001C4AF1E469
+Aug  2 19:06:16 compaq ifup:     wlan0    =20
+Aug  2 19:06:16 compaq ifup:               No configuration found for wla=
+n0
+
+The device was reported in iwconfig as:
+
+wlan0     IEEE 802.11b+/g+  ESSID:"STAF1E469"  Nickname:"acx v0.3.37"
+          Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated=
+  =20
+          Bit Rate:54 Mb/s   Tx-Power=3D15 dBm  =20
+          Retry min limit:7   RTS thr:off  =20
+          Encryption key:off
+          Power Management:off
+          Link Quality:0  Signal level:0  Noise level:0
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+but didn't work. In particular "iwlist wlan0 scan" failed with the messag=
+e:
+
+wlan0     Interface doesn't support scanning : Resource temporarily unava=
+ilable
+
+(No accompanying kernel message.)
+
+> if it doesn't work try with the one from [1].
+>=20
+> [1] http://www.cmartin.tk/acx/fw.tar.bz2
+
+That archive contains several firmware images but none that seems to fit
+the device. Specifically, the module asks for tiacx111usbc1B, but the
+archive only has tiacx100usb, no tiacx111usb*, and the radio module IDs
+(last two characters) for ACX111 include 16, 17 and 19, but not 1B.
+Also, http://acx100.sourceforge.net/wiki/Firmware has this not very
+encouraging note:
+*  The new TNETW1450 (USB 2.0 capable chipset) isn't fully supported by o=
+ur driver yet (useful support probably available soon).=20
+   [This is as of Feb. 2006 - still not supported?]
+
+Btw, about two times out of three, after plugging it in, the device even
+fails to activate in Mass Storage mode, endlessly reporting:
+
+Aug  2 20:14:05 compaq kernel: usb 2-2: reset high speed USB device using=
+ ehci_hcd and address 12
+Aug  2 20:14:20 compaq kernel: usb 2-2: device descriptor read/64, error =
+-110
+
+(ie. ETIMEDOUT) and never switching to WLAN mode. Unplugging and plugging=
+
+back in a couple of times succeeds eventually.
+
+Anything else I should test?
+
+Thanks,
+Tilman
+
+
+--------------enig7E2D9A8B06029E440F6C3EBE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.4-svn0 (GNU/Linux)
+Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
+
+iD8DBQFIlNh0Q3+did9BuFsRAoeBAJ9NJv7SM33BnT4nOrNDiBWWzmr5zwCfa4M1
+aAtUa1ada9fxOSRzXmTdW0I=
+=NjXN
+-----END PGP SIGNATURE-----
+
+--------------enig7E2D9A8B06029E440F6C3EBE--
