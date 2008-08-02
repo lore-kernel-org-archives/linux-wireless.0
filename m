@@ -1,62 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp5.freeserve.com ([193.252.22.159]:53527 "EHLO
-	smtp5.freeserve.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755484AbYHUWca (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.178]:9580 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752777AbYHBKWO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Aug 2008 18:32:30 -0400
-Received: from smtp5.freeserve.com (mwinf3423 [10.232.11.123])
-	by mwinf3405.me.freeserve.com (SMTP Server) with ESMTP id 5DBE31C00AEC
-	for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2008 00:16:08 +0200 (CEST)
-Subject: Re: [PATCH RFT] b43: Rewrite PHY API for N-PHY/LP-PHY
-From: Sean Hodges <seanhodges@bluebottle.com>
-Reply-To: seanhodges@bluebottle.com
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-In-Reply-To: <200808211858.51899.mb@bu3sch.de>
-References: <200808160029.56876.mb@bu3sch.de>
-	 <200808211643.m7LGhuaq002925@mi0.bluebottle.com>
-	 <200808211858.51899.mb@bu3sch.de>
-Content-Type: text/plain
-Date: Thu, 21 Aug 2008 21:27:45 +0100
-Message-Id: <1219350465.8914.2.camel@SEAN-PC> (sfid-20080822_005044_801674_FD4D2489)
-Mime-Version: 1.0
+	Sat, 2 Aug 2008 06:22:14 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so1581143ika.5
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 03:22:13 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: proski@gnu.org, orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>
+Subject: [PATCH 15/19] orinoco: Use a macro to define wireless handlers
+Date: Sat,  2 Aug 2008 11:22:09 +0100
+Message-Id: <1217672529-7196-1-git-send-email-kilroyd@gmail.com> (sfid-20080802_122233_469494_AD751751)
+In-Reply-To: <1217672073-7094-16-git-send-email-kilroyd@gmail.com>
+References: <1217672073-7094-16-git-send-email-kilroyd@gmail.com>
+From: kilroyd@googlemail.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for the repeated explanation, the offer remains when it might be
-needed.
+The macro identifiers for the various ioctls required for WPA support
+are longer than those currently used by the driver. This makes it messy
+to keep line length below 80 character.
 
-Sean
+By defining a macro to initialise the handler table, we recover the
+common text.
 
+Signed-off-by: David Kilroy <kilroyd@gmail.com>
+---
+Just fixing the signed-off-by.
 
-On Thu, 2008-08-21 at 18:58 +0200, Michael Buesch wrote:
-> On Thursday 21 August 2008 18:16:23 Sean Hodges wrote:
-> > On Sat, 2008-08-16 at 00:29 +0200, Michael Buesch wrote:
-> > > This is the first part for the rewrite of the b43 PHY API.
-> > > This is needed in order to make development of N and LP code possible.
-> > > 
-> > > PLEASE TEST TEST TEST TEST TEST
-> > > 
-> > > Lots of testing on lots of different devices is needed to ensure this
-> > > doesn't introduce regressions due to typos.
-> > > 95% of the patch just moves large parts of the PHY code from one file
-> > > to another. More move-patches will follow.
-> > > 5% of the patch introduces an "ops" based PHY API.
-> > > 
-> > > Please test on all of your devices.
-> > > 
-> > > http://bu3sch.de/patches/wireless-testing/20080816-0023/patches/002-b43-phy-ops.patch
-> > > Apply against wireless-testing.git
-> > 
-> > As a novice to driver development, is there some way I can help with
-> > testing this?
-> > 
-> > I have no experience of driver development/testing, but have an N-PHY
-> 
-> To say it once again:
-> Despite the fact that the subject of this email mentiones N and LP PHYs, it
-> implements _nothing_ N and LP related. It just _prepares_ the code for the
-> future when we will add N and LP stuff (and other PHY stuff. Also A/B/G related).
-> 
+ drivers/net/wireless/orinoco.c |   66 ++++++++++++++++++++-------------------
+ 1 files changed, 34 insertions(+), 32 deletions(-)
 
+diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
+index b91b6cb..59720f9 100644
+--- a/drivers/net/wireless/orinoco.c
++++ b/drivers/net/wireless/orinoco.c
+@@ -5050,39 +5050,41 @@ static const struct iw_priv_args orinoco_privtab[] = {
+  * Structures to export the Wireless Handlers
+  */
+ 
++#define STD_IW_HANDLER(id, func) \
++	[IW_IOCTL_IDX(id)] = (iw_handler) func
+ static const iw_handler	orinoco_handler[] = {
+-	[SIOCSIWCOMMIT-SIOCIWFIRST] = (iw_handler) orinoco_ioctl_commit,
+-	[SIOCGIWNAME  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getname,
+-	[SIOCSIWFREQ  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setfreq,
+-	[SIOCGIWFREQ  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getfreq,
+-	[SIOCSIWMODE  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setmode,
+-	[SIOCGIWMODE  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getmode,
+-	[SIOCSIWSENS  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setsens,
+-	[SIOCGIWSENS  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getsens,
+-	[SIOCGIWRANGE -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getiwrange,
+-	[SIOCSIWSPY   -SIOCIWFIRST] = (iw_handler) iw_handler_set_spy,
+-	[SIOCGIWSPY   -SIOCIWFIRST] = (iw_handler) iw_handler_get_spy,
+-	[SIOCSIWTHRSPY-SIOCIWFIRST] = (iw_handler) iw_handler_set_thrspy,
+-	[SIOCGIWTHRSPY-SIOCIWFIRST] = (iw_handler) iw_handler_get_thrspy,
+-	[SIOCSIWAP    -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setwap,
+-	[SIOCGIWAP    -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getwap,
+-	[SIOCSIWSCAN  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setscan,
+-	[SIOCGIWSCAN  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getscan,
+-	[SIOCSIWESSID -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setessid,
+-	[SIOCGIWESSID -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getessid,
+-	[SIOCSIWNICKN -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setnick,
+-	[SIOCGIWNICKN -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getnick,
+-	[SIOCSIWRATE  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setrate,
+-	[SIOCGIWRATE  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getrate,
+-	[SIOCSIWRTS   -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setrts,
+-	[SIOCGIWRTS   -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getrts,
+-	[SIOCSIWFRAG  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setfrag,
+-	[SIOCGIWFRAG  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getfrag,
+-	[SIOCGIWRETRY -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getretry,
+-	[SIOCSIWENCODE-SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setiwencode,
+-	[SIOCGIWENCODE-SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getiwencode,
+-	[SIOCSIWPOWER -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setpower,
+-	[SIOCGIWPOWER -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getpower,
++	STD_IW_HANDLER(SIOCSIWCOMMIT,	orinoco_ioctl_commit),
++	STD_IW_HANDLER(SIOCGIWNAME,	orinoco_ioctl_getname),
++	STD_IW_HANDLER(SIOCSIWFREQ,	orinoco_ioctl_setfreq),
++	STD_IW_HANDLER(SIOCGIWFREQ,	orinoco_ioctl_getfreq),
++	STD_IW_HANDLER(SIOCSIWMODE,	orinoco_ioctl_setmode),
++	STD_IW_HANDLER(SIOCGIWMODE,	orinoco_ioctl_getmode),
++	STD_IW_HANDLER(SIOCSIWSENS,	orinoco_ioctl_setsens),
++	STD_IW_HANDLER(SIOCGIWSENS,	orinoco_ioctl_getsens),
++	STD_IW_HANDLER(SIOCGIWRANGE,	orinoco_ioctl_getiwrange),
++	STD_IW_HANDLER(SIOCSIWSPY,	iw_handler_set_spy),
++	STD_IW_HANDLER(SIOCGIWSPY,	iw_handler_get_spy),
++	STD_IW_HANDLER(SIOCSIWTHRSPY,	iw_handler_set_thrspy),
++	STD_IW_HANDLER(SIOCGIWTHRSPY,	iw_handler_get_thrspy),
++	STD_IW_HANDLER(SIOCSIWAP,	orinoco_ioctl_setwap),
++	STD_IW_HANDLER(SIOCGIWAP,	orinoco_ioctl_getwap),
++	STD_IW_HANDLER(SIOCSIWSCAN,	orinoco_ioctl_setscan),
++	STD_IW_HANDLER(SIOCGIWSCAN,	orinoco_ioctl_getscan),
++	STD_IW_HANDLER(SIOCSIWESSID,	orinoco_ioctl_setessid),
++	STD_IW_HANDLER(SIOCGIWESSID,	orinoco_ioctl_getessid),
++	STD_IW_HANDLER(SIOCSIWNICKN,	orinoco_ioctl_setnick),
++	STD_IW_HANDLER(SIOCGIWNICKN,	orinoco_ioctl_getnick),
++	STD_IW_HANDLER(SIOCSIWRATE,	orinoco_ioctl_setrate),
++	STD_IW_HANDLER(SIOCGIWRATE,	orinoco_ioctl_getrate),
++	STD_IW_HANDLER(SIOCSIWRTS,	orinoco_ioctl_setrts),
++	STD_IW_HANDLER(SIOCGIWRTS,	orinoco_ioctl_getrts),
++	STD_IW_HANDLER(SIOCSIWFRAG,	orinoco_ioctl_setfrag),
++	STD_IW_HANDLER(SIOCGIWFRAG,	orinoco_ioctl_getfrag),
++	STD_IW_HANDLER(SIOCGIWRETRY,	orinoco_ioctl_getretry),
++	STD_IW_HANDLER(SIOCSIWENCODE,	orinoco_ioctl_setiwencode),
++	STD_IW_HANDLER(SIOCGIWENCODE,	orinoco_ioctl_getiwencode),
++	STD_IW_HANDLER(SIOCSIWPOWER,	orinoco_ioctl_setpower),
++	STD_IW_HANDLER(SIOCGIWPOWER,	orinoco_ioctl_getpower),
+ };
+ 
+ 
+-- 
+1.5.4.5
 
