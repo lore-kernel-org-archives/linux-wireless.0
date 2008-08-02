@@ -1,43 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:40758 "EHLO vs166246.vserver.de"
+Received: from mail.atheros.com ([12.36.123.2]:25755 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752744AbYHPTgy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Aug 2008 15:36:54 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH RFT] b43: Rewrite PHY API for N-PHY/LP-PHY
-Date: Sat, 16 Aug 2008 21:36:19 +0200
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <200808160029.56876.mb@bu3sch.de> <48A65100.9050407@lwfinger.net> <48A717C0.6020705@lwfinger.net>
-In-Reply-To: <48A717C0.6020705@lwfinger.net>
+	id S1751052AbYHBXtJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Aug 2008 19:49:09 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 16:49:09 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	<jouni.malinen@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 00/12] ath9k: more cleanups for 2.6.27
+Date: Sat, 2 Aug 2008 16:48:52 -0700
+Message-ID: <1217720944-23234-1-git-send-email-lrodriguez@atheros.com> (sfid-20080803_014912_937597_CAB526C8)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200808162136.19680.mb@bu3sch.de> (sfid-20080816_213658_969026_6C3DCCA3)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 16 August 2008, Larry Finger wrote:
-> Larry Finger wrote:
-> > 
-> > The patch works fine on the 802.11g portion of my BCM4312/1, which seems 
-> > to be the same as a BCM4311/1. This card has a PCIe format. I also 
-> > tested on my PCMCIA version of a BCM4318. That card works, but the 
-> > maximum transmit rate is only about 1/2 of what I get without it. The 
-> > card has a rev 09 802.11 core, a rev 7 PHY, and a rev 3 analog part. I 
-> > still have to test on a PCI format BCM4306/3 card, but I suspect that 
-> > you have already tested the 4306.
-> 
-> Forget what I said about the loss of transmit rate. Once I did a 
-> proper test, it is the same with or without the patch. For the 
-> BCM4318, the b43 rate is slightly reduced from using bcm43xx. The 
-> difference is not really great, but a reproducible reduction from 16.6 
-> to 14.2 Mbs with the iwconfig rate set at 54 Mbs. By comparison, the 
-> BCM4312 is over 20 Mbs.
+Here's another round of cleanups a few fixes for 2.6.27.
 
-Thanks a lot for retesting.
-Loss of TX rate would be the worst thing that can happen with this patch, as
-it's very very hard to debug due to the size.
-
-I didn't test it on all of my devices, yet. I just tried a 4306, where it
-doesn't cause any regression.
+  Luis
