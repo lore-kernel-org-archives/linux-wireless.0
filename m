@@ -1,55 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Viola.Opus1.COM ([192.245.12.8]:3592 "EHLO Viola.Opus1.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751378AbYHQUh7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Aug 2008 16:37:59 -0400
-Received: from [10.1.1.5] ([204.17.34.178]) by Opus1.COM (PMDF V6.2-X27 #9830)
- with ESMTPSA id <01MYGR7OTYU28Y6HPO@Opus1.COM> for
- linux-wireless@vger.kernel.org; Sun, 17 Aug 2008 12:26:22 -0700 (MST)
-Date: Sun, 17 Aug 2008 12:26:21 -0700
-From: Ehud Gavron <gavron@wetwork.net>
-Subject: Re: [PATCH RFT] b43: Rewrite PHY API for N-PHY/LP-PHY  -- good on 4311
-In-reply-to: <200808160029.56876.mb@bu3sch.de>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Message-id: <48A87B5D.7010402@wetwork.net> (sfid-20080817_223803_317166_0498341B)
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
-References: <200808160029.56876.mb@bu3sch.de>
+Received: from rv-out-0506.google.com ([209.85.198.232]:27773 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752806AbYHBM5W (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Aug 2008 08:57:22 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1460208rvb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 05:57:21 -0700 (PDT)
+Message-ID: <1ba2fa240808020557k15a2ba49n5d3ff2d70dcd26b4@mail.gmail.com> (sfid-20080802_145726_404640_92811E45)
+Date: Sat, 2 Aug 2008 15:57:21 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Maxim Levitsky" <maximlevitsky@gmail.com>
+Subject: Re: [ipw3945-devel] [BUG] IWL3945: Led doesn't blink in monitor mode
+Cc: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <48942C35.6020400@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <48942C35.6020400@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Works fine here.  iperf same results as prior to patch. 
+On Sat, Aug 2, 2008 at 12:43 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> After fixing super annoying bug about garbage scan results,
+> I noticed smaller bug:
+>
+> My wireless leds stop blinking if I enable monitor mode
+> (Note that this time this doesn't happen if I enable promisc mode)
+>
+> Only module reload or recreation of wlan0 using iw  helps.
+> This is due to the fact that once card is put in monitor mode it stays
+> there always.
+> (I will fix this bug when I have time)
 
-b43-phy0: Broadcom 4311 WLAN found
-b43-phy0 debug: Found PHY: Analog 4, Type 2, Revision 8
-b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2
+Great.
 
-2.6.27-rc2-wl on Ubuntu 8.04 (don't even ask how long it takes to build 
-a new kernel and create a debian package and install it...)
+>
+> But leds should work even in monitor mode.
+>
+> Btw, do leds indicate RX activity or TX or both?
+>
+I've excluded RX for now. Since the filtering of the RX packets was
+removed for favor or mac80211 filtering there was  a lot of false
+blinking.
 
-Ehud
+<snip>
+static int iwl_get_blink_rate(struct iwl_priv *priv)
+{
+	int i;
+	u64 current_tpt = priv->tx_stats[2].bytes;
+	/* FIXME: + priv->rx_stats[2].bytes; */
 
-Michael Buesch wrote:
-> This is the first part for the rewrite of the b43 PHY API.
-> This is needed in order to make development of N and LP code possible.
+</snip>
+
+I'm pretty sure I won't have time to look at now
+
+> PS:
 >
-> PLEASE TEST TEST TEST TEST TEST
->
-> Lots of testing on lots of different devices is needed to ensure this
-> doesn't introduce regressions due to typos.
-> 95% of the patch just moves large parts of the PHY code from one file
-> to another. More move-patches will follow.
-> 5% of the patch introduces an "ops" based PHY API.
->
-> Please test on all of your devices.
->
-> http://bu3sch.de/patches/wireless-testing/20080816-0023/patches/002-b43-phy-ops.patch
-> Apply against wireless-testing.git
->
-> (Not attached to the mail, as it is really big)
-> _______________________________________________
-> Bcm43xx-dev mailing list
-> Bcm43xx-dev@lists.berlios.de
-> https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
->   
+> I will soon buy a standalone wireless card (pci express)
+> Are iwlwifi based cards aviable?
+
+Not sure if the cards are available stand alone.
+Thanks
+Tomas
