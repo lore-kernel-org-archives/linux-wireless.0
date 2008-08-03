@@ -1,83 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40718 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751682AbYHCI5f (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.230]:9675 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757409AbYHCWgf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 04:57:35 -0400
-Subject: Re: [PATCH 5/8] rfkill: add WARN_ON and BUG_ON paranoia
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200808031007.48877.IvDoorn@gmail.com> (sfid-20080803_094427_981847_2C6CB62D)
+	Sun, 3 Aug 2008 18:36:35 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1859485rvb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2008 15:36:35 -0700 (PDT)
+Message-ID: <1ba2fa240808031536n3c2d6171l191d5ec1c9321c7c@mail.gmail.com> (sfid-20080804_003640_789892_F115A7B3)
+Date: Mon, 4 Aug 2008 01:36:35 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
+Subject: Re: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, "Ivo van Doorn" <ivdoorn@gmail.com>
+In-Reply-To: <20080803182521.GA23180@khazad-dum.debian.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
-	 <1217700664-20792-6-git-send-email-hmh@hmh.eng.br>
-	 <200808031007.48877.IvDoorn@gmail.com>
-	 (sfid-20080803_094427_981847_2C6CB62D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PW+l+rUluuP8qusQitan"
-Date: Sun, 03 Aug 2008 10:57:25 +0200
-Message-Id: <1217753845.4721.1.camel@johannes.berg> (sfid-20080803_105741_544158_E93821F8)
-Mime-Version: 1.0
+	 <1217700664-20792-9-git-send-email-hmh@hmh.eng.br>
+	 <1217703723.8621.50.camel@johannes.berg>
+	 <20080802192704.GB24253@khazad-dum.debian.net>
+	 <1ba2fa240808021421h421fc362ib92660f7be4727f8@mail.gmail.com>
+	 <20080803035559.GB6053@khazad-dum.debian.net>
+	 <1ba2fa240808022303i4d330023i74f3cbb7e08083eb@mail.gmail.com>
+	 <20080803135229.GG12118@khazad-dum.debian.net>
+	 <1ba2fa240808030849g3110cfefo3de65d3ae3000273@mail.gmail.com>
+	 <20080803182521.GA23180@khazad-dum.debian.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Aug 3, 2008 at 9:25 PM, Henrique de Moraes Holschuh
+<hmh@hmh.eng.br> wrote:
+> On Sun, 03 Aug 2008, Tomas Winkler wrote:
+>> > All the radio-is-allowed-to-transmit decisions are rfkill's.  The driver is
+>> > not allowed to override those.  This is done to present a uniform behaviour
+>> > and interface to the system's user (and any instance of rfkill doing
+>> > something the user wouldn't expect to the radio is to be considered a major
+>> > bug).  rfkill is supposed to represend the will of the system's user
+>> > regarding permission to transmit energy out of wireless transmitters.
+>>
+>> May point is that there are radio event out of scope rfkill so the
+>> driver although obey rfkill system
+>
+> Err, no.  If it involves energy emission, if rfkill forbade it [which is to
+> be taken as the user forbade it], the driver must not, EVER, cause it to
+> happen.  There are no exceptions.
 
---=-PW+l+rUluuP8qusQitan
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I didn't mean those kind of events :)  iwlwifi driver has proper FCC
+certification.
+>
+> This is a safety thing, not a convenience thing.
+>
+>> > Sure.  I was wondering about drivers that *don't* have it, if any, out of
+>> > the potential set of drivers that should be using rfkill (it is not a matter
+>> > of those who are using rfkill right now).
+>>
+>> I think we are aligned in general.
+>
+> I may still have it as optional, but I will switch the default behaviour
+> around.  It will likely be useful for someone, and it is less than 10 LOC.
 
-On Sun, 2008-08-03 at 10:07 +0200, Ivo van Doorn wrote:
-
-> > diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-> > index ea872e5..d5f95cb 100644
-> > --- a/net/rfkill/rfkill.c
-> > +++ b/net/rfkill/rfkill.c
-> > @@ -76,6 +76,7 @@ static BLOCKING_NOTIFIER_HEAD(rfkill_notifier_list);
-> >   */
-> >  int register_rfkill_notifier(struct notifier_block *nb)
-> >  {
-> > +	BUG_ON(!nb);
->=20
-> Probably better:
->=20
-> 	if (unlikely(!nb) {
-> 		BUG()
-> 		return -EINVAL;
-> 	}
-
-Heh, not really, in fact, it will most likely not even compile to any
-different code. Did you mean
-
-if (WARN_ON(!nb))
-	return -EINVAL;
-
-maybe?
-
-BUG() never returns. Same for all the other places you pointed out.
-
-johannes
-
---=-PW+l+rUluuP8qusQitan
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIlXLxAAoJEKVg1VMiehFYlo8P/Ao4bmh2aPcjKVOXNKHHK8pi
-zNcy3irdV8tk/kHsiL99wF22Ti0pvtOkVTPay9XvHfmJeUde/WSHkNk/gtdFrAlL
-u4amViPGZ8E5BOHo9jNNvzb8MZqVmznf22AONsDLmA4OgmCr8LRXKEbMSjXheTSs
-lcUD8pgfbPi5diVOyMGPy8iWr0id/yL0/Isyf3fsk4968TV/B+pOGX19eVSaHKR0
-JjuAR2vlA3aAuxvB1syXKNYN284wQaUuWFdopZkmKkqUjR2PdYh+rgtpEj5sJje6
-tDs46a6KpQiGE+85J2wcrmCWsxNwZGFIYaRTIl3xrfbRwKnuWDh3c9gFnp+w4mab
-KgZiCcTM9OkboSo+oO6DZi4PvU6CF90FOFXkPGtXe9STRNCb+U3DF8/fruZKHW59
-Ern17tzSYXDYJl1hRKN6Ew1fr50RjKqMIq9akwUx8Pyn5SfvwmQ1b9IEDIPrdfFX
-mKDzUBGLTV+N+FIs4epLwAE+vRphtrdl81o6xBZfK4seYAH3x1Gdrn55eTaiqPbs
-ZfUAfpwLl0xaq/tL8V+ZY7KBCeOaB/yqculyZQTIqcvLddRXfFlzfKk25CYiEHfA
-AzBqIsUpMMngwiSob4+RdeGCBR8UFGzywifsY47HL+kRJAcCzYHBt2ZoZHYB7+xd
-8w8V8+ybn+xt2RZXl5cD
-=Kgju
------END PGP SIGNATURE-----
-
---=-PW+l+rUluuP8qusQitan--
-
+I make an effort to remove  it's a mess.
+Tomas
