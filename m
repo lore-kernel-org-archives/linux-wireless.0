@@ -1,60 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:50381 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751287AbYH1Liq (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.237]:27176 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752623AbYHCIHL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 07:38:46 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so99785eyi.37
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2008 04:38:44 -0700 (PDT)
-Message-ID: <1ba2fa240808280438o7c5c9b38y7b2572fbe222ed5f@mail.gmail.com> (sfid-20080828_133850_251524_042D4BA0)
-Date: Thu, 28 Aug 2008 14:38:44 +0300
+	Sun, 3 Aug 2008 04:07:11 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1680991rvb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2008 01:07:10 -0700 (PDT)
+Message-ID: <1ba2fa240808030107m64b1bc6dxc639665a2a7cc4af@mail.gmail.com> (sfid-20080803_100718_815228_108D233B)
+Date: Sun, 3 Aug 2008 11:07:10 +0300
 From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Marcel Holtmann" <holtmann@linux.intel.com>
-Subject: Re: [PATCH 03/11] iwlwifi: fix hidden ssid discovery in passive channels
-Cc: "Zhu Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>,
-	"Cahill Ben" <ben.m.cahill@intel.com>
-In-Reply-To: <1219927771.6064.39.camel@californication>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Subject: Re: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
+Cc: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200808031012.06554.IvDoorn@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
-	 <1219926558.6064.11.camel@californication>
-	 <1ba2fa240808280340o216da98dwbf84541aa7bfd2e6@mail.gmail.com>
-	 <1219927771.6064.39.camel@californication>
+References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
+	 <1217703723.8621.50.camel@johannes.berg>
+	 <20080802192704.GB24253@khazad-dum.debian.net>
+	 <200808031012.06554.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 28, 2008 at 3:49 PM, Marcel Holtmann
-<holtmann@linux.intel.com> wrote:
-> Hi Thomas,
->
->> >> This patch gives the HW the possibility to send direct probes in passive
->> >> channels (as long as traffic was detected in that channel) if such ssid
->> >> was requested, so hidden ssid can be found now in those channels as well.
+On Sun, Aug 3, 2008 at 11:12 AM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> On Saturday 02 August 2008, Henrique de Moraes Holschuh wrote:
+>> Hi Johannes!
+>>
+>> On Sat, 02 Aug 2008, Johannes Berg wrote:
+>>
+>> > On Sat, 2008-08-02 at 15:11 -0300, Henrique de Moraes Holschuh wrote:
+>> > > Currently, rfkill would stand in the way of properly supporting wireless
+>> > > devices that are capable of waking the system up from sleep or hibernation
+>> > > when they receive a special wireless message.
+>> > >
+>> > > Since rfkill attempts to soft-block any transmitters during class suspend,
 >> >
->> > this also doesn't sound like a regression to me. Nice to have for sure,
->> > but not acceptable according to the merge window rules.
+>> > why does it interfere with suspend anyway?
 >>
->> If you cannot scan your AP you also not able to connect to it, drawing
->> your card useless.
->>
->> > Question here is was the driver supporting this before and we broke it
->> > in the 2.6.27 phase or not.
->>
->> Irrelevant, this is fixing show stopper bug.
+>> The class makes sure that all transmitters are blocked on suspend.  You'd
+>> have to ask Ivo for the reason, but AFAIK, it is for both safety and to help
+>> conserve power.
 >
-> it is relevant. So I read this commit message as, that now we can also
-> find hidden SSIDs in passive channels. Question that you should ask then
-> is if that was supported before. Yes or no. If yes, then it is a
-> regression, no then it is a feature. And regression fixes go in features
-> wait for the next merge window.
->
-> The term show stopper bug is irrelevant when it comes to merge window
-> rules.
->
-I don't know if it worked before or not I didn't check. This is new code.
+> I think that handler was added by Dmitry, but I see no real reason for
+> issuing the BLOCK event during suspend. However the handlers should
+> be used to prevent state changes to drivers after they have been suspended.
+
+Sounds reasonable.
+Thanks
 Tomas
