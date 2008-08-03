@@ -1,57 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bromo.msbb.uc.edu ([129.137.3.146]:38338 "HELO
-	bromo.msbb.uc.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751505AbYHHRdN (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:52933 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751017AbYHCD4H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Aug 2008 13:33:13 -0400
-Date: Fri, 8 Aug 2008 13:33:11 -0400
-From: Jack Howarth <howarth@bromo.msbb.uc.edu>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: N protocol on 802.11a freq signal strength
-Message-ID: <20080808173311.GA29952@bromo.msbb.uc.edu> (sfid-20080808_193316_586247_0338BA3F)
-References: <20080808141616.GA26224@bromo.msbb.uc.edu> <43e72e890808080949l1ee7a392m784fe06a3611e9ba@mail.gmail.com>
+	Sat, 2 Aug 2008 23:56:07 -0400
+Date: Sun, 3 Aug 2008 00:55:59 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
+Message-ID: <20080803035559.GB6053@khazad-dum.debian.net> (sfid-20080803_055611_001663_ED868DCF)
+References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br> <1217700664-20792-9-git-send-email-hmh@hmh.eng.br> <1217703723.8621.50.camel@johannes.berg> <20080802192704.GB24253@khazad-dum.debian.net> <1ba2fa240808021421h421fc362ib92660f7be4727f8@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890808080949l1ee7a392m784fe06a3611e9ba@mail.gmail.com>
+In-Reply-To: <1ba2fa240808021421h421fc362ib92660f7be4727f8@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis,
-   Is there a wiki explanation of aggregation somewhere? As for the
-option key trick, when you hold down the option key while clicking
-on the Airport menu bar icon in the Finder, the dropdown menu that
-displays the available wireless networks is expanded to show detailed
-information for the current wireless connection (speed, SN in dB,
-channel, etc).
-                    Jack
+On Sun, 03 Aug 2008, Tomas Winkler wrote:
+> >> why does it interfere with suspend anyway?
+> >
+> > The class makes sure that all transmitters are blocked on suspend.  You'd
+> > have to ask Ivo for the reason, but AFAIK, it is for both safety and to help
+> > conserve power.
+> 
+> This one is also on my list to remove. Suspend/Hibernate Resume
+> definitelly doesn't mean to rfkill radio on and off.. Driver should
 
-On Fri, Aug 08, 2008 at 09:49:15AM -0700, Luis R. Rodriguez wrote:
-> On Fri, Aug 8, 2008 at 7:16 AM, Jack Howarth <howarth@bromo.msbb.uc.edu> wrote:
-> >    After replacing my Linksys WRT150N wireless router with an
-> > Apple Airport Extreme Gigabit ethernet wireless router, configured
-> > for using the N protocols on the 802.11a wireless frequencies, I
-> > can confirm that the ath9k git from last week connects to this
-> > configuration. I have noticed one oddity though. The reported
-> > signal strength (in the NetworkManager menu bar icon) is significantly
-> > lower than that shown under Mac OS X 10.5.
-> 
-> The link quality we report right now should be lower than the real
-> one. We will enhance this later but rest assured its the same.
-> 
-> > Also, I notice under Mac OS X
-> > 10.5, by holding the option key on the Finder's Airport icon, that the
-> > transmit speed is 300 Mbps when the MacBook Pro is in the same room as
-> > the wireless router but only 108 Mbps when a couple rooms away. Should
-> > the ath9k report such dynamic changes in transmit speed? Under Mac OS X
-> > that transmit speed changes as I move the portable back and forth
-> > between the two locations. Thanks in advance for any information.
-> 
-> Keep in mind 2.6.27 has aggregation disabled right now due to the new
-> TX MQ changes so you won't be able to get aggregation going for any
-> 11n wireless device. That said, I am not familiar with the Mac OS X
-> option key thingy to compute throughput. If you can provide technical
-> details as to how it computes it or where it does this (AP or STA) it
-> can help.
-> 
->   Luis
+I *certainly* don't want the chip active during S3 or S4 unless I want WoWL
+active, so I do agree that just killing the radio is not enough.
+
+> This only creates conflicts as both driver and rfkill system are
+> trying to bring radio down
+
+No conflicts.  The wireless driver gets the request to shut the radio down
+BEFORE its suspend method is called (the class suspends first).  It will
+also get the request to enable/disable (whatever state it was in before the
+suspend) the radio AFTER its resume method is called (the class resumes
+after).
+
+> RFKILL  IMHO shell track rfkill switches states and not to invent
+
+RFKILL is not about tracking, it is about *controlling*.
+
+> them. If the radio was SW switched  off before NIC was suspend it
+> shell be switched off also in resume. That's should be role of rfkill
+> system, probably with some help from user space.
+
+Without the patch, rfkill always disables radios on suspend.  If they were
+enabled before the suspend, it will try to enable them on resume.  If they
+were disabled before the suspend, it will try to disable them on resume.
+
+That's well part of rfkill's role.  It might not be *needed* at all though,
+and if it is not, it is best to stop doing it.  If it is needed just in a
+few situations, we need to make it configurable (that's what my patch does).
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
