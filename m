@@ -1,90 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47042 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751874AbYHCSO2 (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:41300 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756956AbYHCSZ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 14:14:28 -0400
-Subject: Re: [PATCH 1/1] mac80211: filter probes in
-	ieee80211_rx_mgmt_probe_resp
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1217763121-9057-1-git-send-email-tomas.winkler@intel.com>
-References: <1217763121-9057-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NL998EU53tLijWLUbKt9"
-Date: Sun, 03 Aug 2008 20:14:19 +0200
-Message-Id: <1217787259.4721.18.camel@johannes.berg> (sfid-20080803_201431_293341_3A562717)
-Mime-Version: 1.0
+	Sun, 3 Aug 2008 14:25:28 -0400
+Date: Sun, 3 Aug 2008 15:25:22 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
+Message-ID: <20080803182521.GA23180@khazad-dum.debian.net> (sfid-20080803_202551_049076_256AD75F)
+References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br> <1217700664-20792-9-git-send-email-hmh@hmh.eng.br> <1217703723.8621.50.camel@johannes.berg> <20080802192704.GB24253@khazad-dum.debian.net> <1ba2fa240808021421h421fc362ib92660f7be4727f8@mail.gmail.com> <20080803035559.GB6053@khazad-dum.debian.net> <1ba2fa240808022303i4d330023i74f3cbb7e08083eb@mail.gmail.com> <20080803135229.GG12118@khazad-dum.debian.net> <1ba2fa240808030849g3110cfefo3de65d3ae3000273@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240808030849g3110cfefo3de65d3ae3000273@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, 03 Aug 2008, Tomas Winkler wrote:
+> > All the radio-is-allowed-to-transmit decisions are rfkill's.  The driver is
+> > not allowed to override those.  This is done to present a uniform behaviour
+> > and interface to the system's user (and any instance of rfkill doing
+> > something the user wouldn't expect to the radio is to be considered a major
+> > bug).  rfkill is supposed to represend the will of the system's user
+> > regarding permission to transmit energy out of wireless transmitters.
+> 
+> May point is that there are radio event out of scope rfkill so the
+> driver although obey rfkill system
 
---=-NL998EU53tLijWLUbKt9
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Err, no.  If it involves energy emission, if rfkill forbade it [which is to
+be taken as the user forbade it], the driver must not, EVER, cause it to
+happen.  There are no exceptions.
 
-On Sun, 2008-08-03 at 14:32 +0300, Tomas Winkler wrote:
-> This patch moves filtering statement from ieee80211_rx_bss_info
-> which is called for both beacon and probe to ieee80211_rx_mgmt_probe_resp
-> and save few cycles in beacon parsing.
+This is a safety thing, not a convenience thing.
 
-Sounds alright to me, but maybe we should then document that
-rx_bss_info() only expects data for the right BSSID?
+> > Sure.  I was wondering about drivers that *don't* have it, if any, out of
+> > the potential set of drivers that should be using rfkill (it is not a matter
+> > of those who are using rfkill right now).
+> 
+> I think we are aligned in general.
 
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> ---
->  net/mac80211/mlme.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
->=20
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 5358420..0800385 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -2570,9 +2570,6 @@ static void ieee80211_rx_bss_info(struct net_device=
- *dev,
->  	DECLARE_MAC_BUF(mac);
->  	DECLARE_MAC_BUF(mac2);
-> =20
-> -	if (!beacon && memcmp(mgmt->da, dev->dev_addr, ETH_ALEN))
-> -		return; /* ignore ProbeResp to foreign address */
-> -
->  	beacon_timestamp =3D le64_to_cpu(mgmt->u.beacon.timestamp);
-> =20
->  	if (ieee80211_vif_is_mesh(&sdata->vif) && elems->mesh_id &&
-> @@ -2890,6 +2887,9 @@ static void ieee80211_rx_mgmt_probe_resp(struct net=
-_device *dev,
->  	size_t baselen;
->  	struct ieee802_11_elems elems;
-> =20
-> +	if (memcmp(mgmt->da, dev->dev_addr, ETH_ALEN))
-> +		return; /* ignore ProbeResp to foreign address */
-> +
->  	baselen =3D (u8 *) mgmt->u.probe_resp.variable - (u8 *) mgmt;
->  	if (baselen > len)
->  		return;
+I may still have it as optional, but I will switch the default behaviour
+around.  It will likely be useful for someone, and it is less than 10 LOC.
 
---=-NL998EU53tLijWLUbKt9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIlfV4AAoJEKVg1VMiehFY4x8QAJ2Sc2s+8kvKgowjNCNQv54I
-pCrxFoWa7fpbySs79SDGRMnJX7+9rOMgA+c5kkr8tCzmd91KaQZELIhbwkHcpSkN
-8UyzyPLFL25YosAjOzximqj3fv3hFtzS0OFwc6cTD3z8gWKPWXKCiw54cLbxvQYw
-FZ+7h+/rnclyDNLFgerzUH01u9SPsfZfFHjU0HaGVvQYYY5bk7PR8WxeWeujIZPc
-3AVxjqeO5WX3rP21SFu5/FW4SDuNz7vX3zek5PEzK8cmzkDuD6FHRJCPIKVW3MGg
-7Wu96wlwdhmCCbTsWmFDR9vZWSCpIHrUJnNatmMryON21LGdSwgfPlKpVvL3GWIG
-cE8NuWzT9CMfaIBOukFp2BfSNkYFmnCy7/n86k60B03tVTTkiddoxkWOPv15ZBAS
-j+gRM5+KyNvAJSu7zsHX8Ea+nWNEZpkECtAULJhH16mVzYnSJ8cO+cUGsw1E94Wd
-QqzcOMFwXZ7L+G76aTblvRKgog+DFmv+Oa34h9FdCu3Qwn7jiY6QUvOuQEM1PJvc
-Y85sPEQx/Qf+CatE52QGrNPgJH+bE7itmffEdNoz7fHjxckQH6028p7si1K3qLS+
-rTtdWoMIOnUAlmQBjq5Qs5SOR0jkD893Ab07wAKELshfYV8HTH18igRW81i/8L0X
-5N0B3EvcczEci53iSrFN
-=Da6+
------END PGP SIGNATURE-----
-
---=-NL998EU53tLijWLUbKt9--
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
