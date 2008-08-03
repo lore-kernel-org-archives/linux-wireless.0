@@ -1,66 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from usul.saidi.cx ([204.11.33.34]:49002 "EHLO usul.overt.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751456AbYHGFFS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 01:05:18 -0400
-Message-ID: <489A7CCF.1090407@overt.org> (sfid-20080807_070524_068103_0F5C8BAE)
-Date: Wed, 06 Aug 2008 21:40:47 -0700
-From: Philip Langdale <philipl@overt.org>
+Received: from rv-out-0506.google.com ([209.85.198.231]:10345 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757269AbYHCWdD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Aug 2008 18:33:03 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1858941rvb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2008 15:33:03 -0700 (PDT)
+Message-ID: <1ba2fa240808031533pb2cce5dnb63b76088cb37ba5@mail.gmail.com> (sfid-20080804_003319_459295_E8F9E517)
+Date: Mon, 4 Aug 2008 01:33:02 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Maxim Levitsky" <maximlevitsky@gmail.com>
+Subject: Re: [ipw3945-devel] [BUG] IWL3945: Led doesn't blink in monitor mode
+Cc: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <48962982.1000000@gmail.com>
 MIME-Version: 1.0
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-CC: LKML <linux-kernel@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	toshiba_acpi@memebeam.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
- through rfkill (v2)
-References: <4894B1B4.6050003@overt.org> <20080803042613.GC6053@khazad-dum.debian.net> <48965716.6020508@overt.org> <20080805212416.GB21738@khazad-dum.debian.net>
-In-Reply-To: <20080805212416.GB21738@khazad-dum.debian.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <48942C35.6020400@gmail.com> <48962982.1000000@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Henrique de Moraes Holschuh wrote:
-> 
-> Well, the textbook way to connect that to rfkill is something like this,
-> please check if it makes sense:
-> 
-> Export (1) as a input device (you have events to hook to when it changes
-> state) or polled input device (you don't have said events).  Do NOT register
-> (1) with a struct rfkill at all.  It is purely an input device.
-> 
-> DO NOT expose (2) as an input device at all.  Instead, register it to a
-> rfkill struct, of type bluetooth.
-> 
-> On the event handler for (1), you issue the EV_SW SW_RFKILL_ALL input event.
-> Since you *do* know events from (1) are likely to also have messed with the
-> state of (2), you also check (2)'s state at this time and update it through
-> rfkill_force_state().
-> 
-> Due to the interaction of 1 and 2, you need to implement and deal with
-> RFKILL_STATE_HARD_BLOCKED.  Since you do know the firmware will be
-> hard-blocking (2) when (1) is active, you return RFKILL_STATE_HARD_BLOCKED
-> for (2)'s state every time (1) is active.  Otherwise, you return
-> RFKILL_STATE_SOFT_BLOCKED when (2) is blocked, and RFKILL_STATE_UNBLOCKED
-> otherwise.
-> 
-> This will cause the state of (2) to go to either RFKILL_STATE_HARD_BLOCKED
-> or RFKILL_STATE_SOFT_BLOCKED when (1) changes state.
-> 
-> [Note: the above does assume (1) blocks (2) in some way you cannot override,
-> and that trying to unblock (2) while (1) is blocking it is futile].
-> 
-> rfkill-input (now) or userspace (someday) will take care of kicking the
-> radio to RFKILL_STATE_UNBLOCKED when (1) issues an event that signals that
-> radios don't have to remain blocked.  Maybe this is why you see the WLAN
-> going on when you deactivate the radio kill switch?
-> 
-> And rfkill-input will soon be enhanced to let the user configure it to do
-> something different if he wants.  Your driver doesn't (and shouldn't)
-> hardcode policy about it.
+On Mon, Aug 4, 2008 at 12:56 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> Maxim Levitsky wrote:
+>> After fixing super annoying bug about garbage scan results,
+>> I noticed smaller bug:
+>>
+>> My wireless leds stop blinking if I enable monitor mode
+>> (Note that this time this doesn't happen if I enable promisc mode)
+>
+> Ok, now I understand how its leds work.
+>
+> the STATISTICS_NOTIFICATION reply from microcode drives all the led
+> blinking code. on each such notification the handler decides based on
+> traffic whenever to turn led solid or blink it.
+>
+> the handler for 3945 actually counts recieved and transmitted packets!:
+>
+>> static inline u8 get_blink_rate(struct iwl3945_priv *priv)
+>> {
+>>       int index;
+>>       u64 current_tpt = priv->rxtxpackets;
+>>       s64 tpt = current_tpt - priv->led_tpt;
+>>
+>>       if (tpt < 0)
+>>               tpt = -tpt;
+>>       priv->led_tpt = current_tpt;
+>
+>
+> in iwl3945-led.c
 
-Hmm. So, I've updated the diff to do this, but rfkill-input is not kicking
-the bluetooth device back on after I release the kill switch. it just returns
-to SOFT_UNBLOCKED and stays there.
 
---phil
+Right I forgot I didn't change this in 3945.
+
+
+> priv->rxtxpackets is updated each time a packet is recieved/transmitted
+> by iwl3945_pass_packet_to_mac80211:
+>
+>> #ifdef CONFIG_IWL3945_LEDS
+>>       if (ieee80211_is_data(hdr->frame_control))
+>>               priv->rxtxpackets += len;
+>> #endif
+>
+>
+> and iwl3945_build_tx_cmd_basic:
+>
+>> #ifdef CONFIG_IWL3945_LEDS
+>>               priv->rxtxpackets += le16_to_cpu(cmd->cmd.tx.len);
+>> #endif
+>
+>
+>
+>
+> now the problem is that as soon as the firmware enters the monitor mode
+> it stops sending STATISTICS_NOTIFICATION.
+
+
+> So ether I need a way to tell firmware to continue sending this message,
+> or use a timer instead in monitor mode.
+>
+> How I can tell the firmware to send STATISTICS_NOTIFICATION in monitor mode?
+> Intel developers, can you comment on this?
+>
+
+Statistic notification is just used as a point where NIC is woken up.
+We don't wan to wake up NIC just for LED command.
+But in monitor mode  nic have to be run in CAM mode anyway so you can
+send the command out from the led timer directly.
+
+>
+
+> Btw, the led code really should be shared between 3945/4965.
+Oh, more then LED code :) But that's a lot of infrastructure code that
+need to be done. I still have hard heard on guys who split the code at
+the first place but that's already a history..
+Tomas
