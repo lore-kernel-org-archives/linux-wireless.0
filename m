@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:57810 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753016AbYH1Oii (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 10:38:38 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so69457nfc.21
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2008 07:38:37 -0700 (PDT)
-Message-ID: <1ba2fa240808280738v17024954wcd4b77be0e2c1238@mail.gmail.com> (sfid-20080828_163841_123832_B4D3EFDC)
-Date: Thu, 28 Aug 2008 17:38:37 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Marcel Holtmann" <holtmann@linux.intel.com>
-Subject: Re: [PATCH 09/11] iwlwifi: fix station mimo power save values
-Cc: "Zhu Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org,
-	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
-In-Reply-To: <1219932128.6064.57.camel@californication>
+Received: from smtp8-g19.free.fr ([212.27.42.65]:39553 "EHLO smtp8-g19.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754009AbYHCMfv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Aug 2008 08:35:51 -0400
+Message-ID: <4895A622.4080104@labri.fr> (sfid-20080803_143555_528470_7D650DA1)
+Date: Sun, 03 Aug 2008 14:35:46 +0200
+From: Brice Goglin <brice.goglin@labri.fr>
 MIME-Version: 1.0
+To: David Miller <davem@davemloft.net>
+CC: netdev@vger.kernel.org, kaber@trash.net, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 11/31]: net: Implement simple sw TX hashing.
+References: <20080717.051635.124264554.davem@davemloft.net> <4895A19B.5090307@inria.fr>
+In-Reply-To: <4895A19B.5090307@inria.fr>
 Content-Type: text/plain; charset=ISO-8859-1
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-8-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-9-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-10-git-send-email-yi.zhu@intel.com>
-	 <1219927236.6064.27.camel@californication>
-	 <1ba2fa240808280411l4b229cfdnbcb24b3ad5cae1cd@mail.gmail.com>
-	 <1219932128.6064.57.camel@californication>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 28, 2008 at 5:02 PM, Marcel Holtmann
-<holtmann@linux.intel.com> wrote:
-> Hi Tomas,
->
->> >> This patch fixes the wrong use of self mimo power save values instead of
->> >> peer's mimo power save values.
->> >
->> > please state the impact of not fixing this. When does this matter. Does
->> > the both sides have to enable this feature and things like this.
->>
->> Okay, we might not be able to do any traffic to the [peer station
->> because by mistake we configured TX to according our RX capability not
->> RX capability of the peer station.
->
-> that would have been a good addition to the commit message. That the
-> result of this issue is no TX, belongs in it.
+Brice Goglin wrote:
+> So I wonder if we shouldn't change all this into:
+> 1) simple_tx_hash(skb) returns a big protocol-independent integer (like
+> a concatenation or basic xor of IP proto/addr/...). It basically just
+> converts the skb header in something flat and proto-independent.
+> 2.a) if the device provides select_queue(), we pass this integer to it.
+> select_queue() either uses the skb headers if it really wants to hash IP
+> or IPv6 precisely, or uses our protocol-independent integer and just
+> hash it in a dumb way without caring about the protocol hidden behind it.
+> 2.b) if there's no select_queue(), we hash the big integer depending on
+> the number of tx queues
+>   
 
-But isn't it stating obvious.
-Tomas
->
+Or (easier) just export simple_tx_hash() to modules so that drivers can
+rely on it to hash protocols that they have no clue about?
+
+Brice
+
