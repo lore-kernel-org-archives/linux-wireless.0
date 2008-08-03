@@ -1,41 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:45192 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751828AbYH1LG0 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47299
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751845AbYHCGyu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 07:06:26 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so96486eyi.37
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2008 04:06:25 -0700 (PDT)
-Message-ID: <1ba2fa240808280406y4056a8bfufcd09f9b976e1074@mail.gmail.com> (sfid-20080828_130629_762003_AB2358C4)
-Date: Thu, 28 Aug 2008 14:06:24 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Marcel Holtmann" <holtmann@linux.intel.com>
-Subject: Re: [PATCH 04/11] iwlwifi: remove false rxon if rx chain changes
-Cc: "Zhu Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org,
-	"Mohamed Abbas" <mohamed.abbas@intel.com>
-In-Reply-To: <1219926653.6064.13.camel@californication>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
-	 <1219926653.6064.13.camel@californication>
+	Sun, 3 Aug 2008 02:54:50 -0400
+Date: Sat, 02 Aug 2008 23:54:50 -0700 (PDT)
+Message-Id: <20080802.235450.193701541.davem@davemloft.net> (sfid-20080803_085459_726241_1309F370)
+To: netdev@vger.kernel.org
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH]: wme qdisc locking tweak...
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 28, 2008 at 3:30 PM, Marcel Holtmann
-<holtmann@linux.intel.com> wrote:
-> Hi Yi,
->
->> Rx chain might change during power save transitions but it doesn't
->> requires full rxon. The patch avoids the rxon by removing the rx_chain
->> check.
->
-> and again. Is this a regression. What is the down side or impact from
-> not doing this. Did we used to do it different in 2.6.26?
 
-Yes this one is regression this is new code and causes disconnection.
-Tomas
+This is as a result of what was discovered while fixing:
+
+http://marc.info/?l=linux-netdev&m=121763401922311&w=2
+
+I've checked this into net-2.6
+
+--------------------
+
+mac80211: Use queue_lock() in ieee80211_ht_agg_queue_remove().
+
+qdisc_root_lock() is only %100 safe to use when the RTNL
+semaphore is held.
+
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/mac80211/wme.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 28437f0..4310e2f 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -241,12 +241,14 @@ void ieee80211_ht_agg_queue_remove(struct ieee80211_local *local,
+ 	} else {
+ 		struct netdev_queue *txq;
+ 		spinlock_t *root_lock;
++		struct Qdisc *q;
+ 
+ 		txq = netdev_get_tx_queue(local->mdev, agg_queue);
+-		root_lock = qdisc_root_lock(txq->qdisc);
++		q = rcu_dereference(txq->qdisc);
++		root_lock = qdisc_lock(q);
+ 
+ 		spin_lock_bh(root_lock);
+-		qdisc_reset(txq->qdisc);
++		qdisc_reset(q);
+ 		spin_unlock_bh(root_lock);
+ 	}
+ }
+-- 
+1.5.6.GIT
+
