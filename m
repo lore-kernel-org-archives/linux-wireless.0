@@ -1,82 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:43442 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752007AbYHXRzf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Aug 2008 13:55:35 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 1/2] p54: take tx_queue's lock in rx_frame_sent
-Date: Sun, 24 Aug 2008 19:55:05 +0200
-Cc: Chr <chunkeey@web.de>, linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>
-References: <200808240315.07032.chunkeey@web.de> <48B1874F.2050005@lwfinger.net>
-In-Reply-To: <48B1874F.2050005@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200808241955.05666.mb@bu3sch.de> (sfid-20080824_195538_834104_2342176E)
+Received: from xc.sipsolutions.net ([83.246.72.84]:47042 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751874AbYHCSO2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Aug 2008 14:14:28 -0400
+Subject: Re: [PATCH 1/1] mac80211: filter probes in
+	ieee80211_rx_mgmt_probe_resp
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1217763121-9057-1-git-send-email-tomas.winkler@intel.com>
+References: <1217763121-9057-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-NL998EU53tLijWLUbKt9"
+Date: Sun, 03 Aug 2008 20:14:19 +0200
+Message-Id: <1217787259.4721.18.camel@johannes.berg> (sfid-20080803_201431_293341_3A562717)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 24 August 2008 18:07:43 Larry Finger wrote:
-> Chr wrote:
-> > p54_rx_frame_sent will alter the tx_queue. Therefore we should hold
-> > the lock to protect against concurrent p54_assign_address calls.
-> > 
-> > Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> > ---
-> > hmm,
-> > 
-> > (looking at [GIT]: Networking debate)
-> > linux-next. since there is no known regression that this patch could possibly fix...
-> > ---
-> > diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-> > --- a/drivers/net/wireless/p54/p54common.c	2008-08-23 21:13:37.000000000 +0200
-> > +++ b/drivers/net/wireless/p54/p54common.c	2008-08-24 02:11:35.000000000 +0200
-> > @@ -432,7 +432,9 @@ static void p54_rx_frame_sent(struct iee
-> >  	struct memrecord *range = NULL;
-> >  	u32 freed = 0;
-> >  	u32 last_addr = priv->rx_start;
-> > +	unsigned long flags;
-> >  
-> > +	spin_lock_irqsave(&priv->tx_queue.lock, flags);
-> >  	while (entry != (struct sk_buff *)&priv->tx_queue) {
-> >  		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(entry);
-> >  		range = (void *)info->driver_data;
-> > @@ -453,6 +455,8 @@ static void p54_rx_frame_sent(struct iee
-> >  
-> >  			last_addr = range->end_addr;
-> >  			__skb_unlink(entry, &priv->tx_queue);
-> > +			spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
-> > +
-> >  			memset(&info->status, 0, sizeof(info->status));
-> >  			entry_hdr = (struct p54_control_hdr *) entry->data;
-> >  			entry_data = (struct p54_tx_control_allocdata *) entry_hdr->data;
-> > @@ -470,12 +474,14 @@ static void p54_rx_frame_sent(struct iee
-> >  			info->status.ack_signal = le16_to_cpu(payload->ack_rssi);
-> >  			skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
-> >  			ieee80211_tx_status_irqsafe(dev, entry);
-> > -			break;
-> > +			goto out;
-> >  		} else
-> >  			last_addr = range->end_addr;
-> >  		entry = entry->next;
-> >  	}
-> > +	spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
-> >  
-> > +out:
-> >  	if (freed >= IEEE80211_MAX_RTS_THRESHOLD + 0x170 +
-> >  	    sizeof(struct p54_control_hdr))
-> >  		p54_wake_free_queues(dev);
-> 
-> I have a question about this. The code is OK, but I wonder if it might 
-> not be clearer if the spin_unlock_irqrestore() in the second hunk were 
-> deleted, and the label for "out" in the third hunk were moved up one 
-> statement. That way the matching lock/unlock pair would be more obvious.
 
-Well, that way a lot more code is inside of the critical section.
-I'd say it's worth the "obfuscation", as this is a hotpath.
+--=-NL998EU53tLijWLUbKt9
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Sun, 2008-08-03 at 14:32 +0300, Tomas Winkler wrote:
+> This patch moves filtering statement from ieee80211_rx_bss_info
+> which is called for both beacon and probe to ieee80211_rx_mgmt_probe_resp
+> and save few cycles in beacon parsing.
 
--- 
-Greetings Michael.
+Sounds alright to me, but maybe we should then document that
+rx_bss_info() only expects data for the right BSSID?
+
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> ---
+>  net/mac80211/mlme.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 5358420..0800385 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -2570,9 +2570,6 @@ static void ieee80211_rx_bss_info(struct net_device=
+ *dev,
+>  	DECLARE_MAC_BUF(mac);
+>  	DECLARE_MAC_BUF(mac2);
+> =20
+> -	if (!beacon && memcmp(mgmt->da, dev->dev_addr, ETH_ALEN))
+> -		return; /* ignore ProbeResp to foreign address */
+> -
+>  	beacon_timestamp =3D le64_to_cpu(mgmt->u.beacon.timestamp);
+> =20
+>  	if (ieee80211_vif_is_mesh(&sdata->vif) && elems->mesh_id &&
+> @@ -2890,6 +2887,9 @@ static void ieee80211_rx_mgmt_probe_resp(struct net=
+_device *dev,
+>  	size_t baselen;
+>  	struct ieee802_11_elems elems;
+> =20
+> +	if (memcmp(mgmt->da, dev->dev_addr, ETH_ALEN))
+> +		return; /* ignore ProbeResp to foreign address */
+> +
+>  	baselen =3D (u8 *) mgmt->u.probe_resp.variable - (u8 *) mgmt;
+>  	if (baselen > len)
+>  		return;
+
+--=-NL998EU53tLijWLUbKt9
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIlfV4AAoJEKVg1VMiehFY4x8QAJ2Sc2s+8kvKgowjNCNQv54I
+pCrxFoWa7fpbySs79SDGRMnJX7+9rOMgA+c5kkr8tCzmd91KaQZELIhbwkHcpSkN
+8UyzyPLFL25YosAjOzximqj3fv3hFtzS0OFwc6cTD3z8gWKPWXKCiw54cLbxvQYw
+FZ+7h+/rnclyDNLFgerzUH01u9SPsfZfFHjU0HaGVvQYYY5bk7PR8WxeWeujIZPc
+3AVxjqeO5WX3rP21SFu5/FW4SDuNz7vX3zek5PEzK8cmzkDuD6FHRJCPIKVW3MGg
+7Wu96wlwdhmCCbTsWmFDR9vZWSCpIHrUJnNatmMryON21LGdSwgfPlKpVvL3GWIG
+cE8NuWzT9CMfaIBOukFp2BfSNkYFmnCy7/n86k60B03tVTTkiddoxkWOPv15ZBAS
+j+gRM5+KyNvAJSu7zsHX8Ea+nWNEZpkECtAULJhH16mVzYnSJ8cO+cUGsw1E94Wd
+QqzcOMFwXZ7L+G76aTblvRKgog+DFmv+Oa34h9FdCu3Qwn7jiY6QUvOuQEM1PJvc
+Y85sPEQx/Qf+CatE52QGrNPgJH+bE7itmffEdNoz7fHjxckQH6028p7si1K3qLS+
+rTtdWoMIOnUAlmQBjq5Qs5SOR0jkD893Ab07wAKELshfYV8HTH18igRW81i/8L0X
+5N0B3EvcczEci53iSrFN
+=Da6+
+-----END PGP SIGNATURE-----
+
+--=-NL998EU53tLijWLUbKt9--
+
