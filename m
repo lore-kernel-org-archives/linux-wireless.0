@@ -1,79 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:46683 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751815AbYHDIDv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 04:03:51 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 03/10] iwlwifi: kill struct iwl4965_lq_mngr
-Date: Mon,  4 Aug 2008 16:00:41 +0800
-Message-Id: <1217836848-24288-4-git-send-email-yi.zhu@intel.com> (sfid-20080804_100355_992617_629161C3)
-In-Reply-To: <1217836848-24288-3-git-send-email-yi.zhu@intel.com>
-References: <1217836848-24288-1-git-send-email-yi.zhu@intel.com>
- <1217836848-24288-2-git-send-email-yi.zhu@intel.com>
- <1217836848-24288-3-git-send-email-yi.zhu@intel.com>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:39467 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757845AbYHCW6n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Aug 2008 18:58:43 -0400
+Date: Sun, 03 Aug 2008 17:58:36 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] p54: Fix potential concurrent access to private data
+Message-ID: <4896381c.abQmtcnBFB3TpLyf%Larry.Finger@lwfinger.net> (sfid-20080804_005910_996009_08816071)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+Experience with the rtl8187 driver has shown that mac80211 can make
+calls to the config callback routine in rapid succession. This patch
+creates a mutex that protects the private data in several of the routines
+called by mac80211.
 
-This patch removes struct iwl4965_lq_mngr it is not used.
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |    1 -
- drivers/net/wireless/iwlwifi/iwl-dev.h  |   15 ---------------
- 2 files changed, 0 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 9bd6180..f3dd622 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -877,7 +877,6 @@ int iwl_init_drv(struct iwl_priv *priv)
- 	spin_lock_init(&priv->power_data.lock);
- 	spin_lock_init(&priv->sta_lock);
- 	spin_lock_init(&priv->hcmd_lock);
--	spin_lock_init(&priv->lq_mngr.lock);
- 
- 	INIT_LIST_HEAD(&priv->free_frames);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 7920308..f46e9cd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -672,18 +672,6 @@ struct iwl_kw {
- 
- #define TX_POWER_IWL_ILLEGAL_VOLTAGE -10000
- 
--struct iwl4965_lq_mngr {
--	spinlock_t lock;
--	s32 max_window_size;
--	s32 *expected_tpt;
--	u8 *next_higher_rate;
--	u8 *next_lower_rate;
--	unsigned long stamp;
--	unsigned long stamp_last;
--	u32 flush_time;
--	u32 tx_packets;
--};
--
- /* Sensitivity and chain noise calibration */
- #define INTERFERENCE_DATA_AVAILABLE	__constant_cpu_to_le32(1)
- #define INITIALIZATION_VALUE		0xFFFF
-@@ -939,9 +927,6 @@ struct iwl_priv {
- 	u8 last_phy_res[100];
- 
- 	/* Rate scaling data */
--	struct iwl4965_lq_mngr lq_mngr;
--
--	/* Rate scaling data */
- 	s8 data_retry_limit;
- 	u8 retry_rate;
- 
--- 
-1.5.3.6
+John,
 
+I think this is 2.6.27 material. It is a definite bug, but I cannot point
+to a single bug report implicating this lack of protection as the cause.
+Your call.
+
+Larry
+---
+
+Index: linux-2.6/drivers/net/wireless/p54/p54.h
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/p54/p54.h
++++ linux-2.6/drivers/net/wireless/p54/p54.h
+@@ -52,6 +52,7 @@ struct p54_common {
+ 	int (*open)(struct ieee80211_hw *dev);
+ 	void (*stop)(struct ieee80211_hw *dev);
+ 	int mode;
++	struct mutex conf_mutex;
+ 	u8 mac_addr[ETH_ALEN];
+ 	u8 bssid[ETH_ALEN];
+ 	struct pda_iq_autocal_entry *iq_autocal;
+Index: linux-2.6/drivers/net/wireless/p54/p54common.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/p54/p54common.c
++++ linux-2.6/drivers/net/wireless/p54/p54common.c
+@@ -886,9 +886,12 @@ static void p54_remove_interface(struct
+ static int p54_config(struct ieee80211_hw *dev, struct ieee80211_conf *conf)
+ {
+ 	int ret;
++	struct p54_common *priv = dev->priv;
+ 
++	mutex_lock(&priv->conf_mutex);
+ 	ret = p54_set_freq(dev, cpu_to_le16(conf->channel->center_freq));
+ 	p54_set_vdcf(dev);
++	mutex_unlock(&priv->conf_mutex);
+ 	return ret;
+ }
+ 
+@@ -898,10 +901,12 @@ static int p54_config_interface(struct i
+ {
+ 	struct p54_common *priv = dev->priv;
+ 
++	mutex_lock(&priv->conf_mutex);
+ 	p54_set_filter(dev, 0, priv->mac_addr, conf->bssid, 0, 1, 0, 0xF642);
+ 	p54_set_filter(dev, 0, priv->mac_addr, conf->bssid, 2, 0, 0, 0);
+ 	p54_set_leds(dev, 1, !is_multicast_ether_addr(conf->bssid), 0);
+ 	memcpy(priv->bssid, conf->bssid, ETH_ALEN);
++	mutex_unlock(&priv->conf_mutex);
+ 	return 0;
+ }
+ 
+@@ -1009,6 +1014,7 @@ struct ieee80211_hw *p54_init_common(siz
+ 	}
+ 
+ 	p54_init_vdcf(dev);
++	mutex_init(&priv->conf_mutex);
+ 
+ 	return dev;
+ }
