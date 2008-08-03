@@ -1,86 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:41396 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753626AbYHBSLK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 14:11:10 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 1/8] rfkill: detect bogus double-registering (v2)
-Date: Sat,  2 Aug 2008 15:10:57 -0300
-Message-Id: <1217700664-20792-2-git-send-email-hmh@hmh.eng.br> (sfid-20080802_201115_307591_9B847D6F)
-In-Reply-To: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
-References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
+Received: from smtp5-g19.free.fr ([212.27.42.35]:55889 "EHLO smtp5-g19.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753531AbYHCMQc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Aug 2008 08:16:32 -0400
+Message-ID: <4895A19B.5090307@inria.fr> (sfid-20080803_141637_707016_C8611957)
+Date: Sun, 03 Aug 2008 14:16:27 +0200
+From: Brice Goglin <Brice.Goglin@inria.fr>
+MIME-Version: 1.0
+To: David Miller <davem@davemloft.net>
+CC: netdev@vger.kernel.org, kaber@trash.net, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 11/31]: net: Implement simple sw TX hashing.
+References: <20080717.051635.124264554.davem@davemloft.net>
+In-Reply-To: <20080717.051635.124264554.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Detect and abort with -EEXIST if rfkill_register is called twice on the
-same rfkill struct.  And WARN_ON(it) for good measure.
+David Miller wrote:
+> It just xor hashes over IPv4/IPv6 addresses and ports of transport.
+>
+> The only assumption it makes is that skb_network_header() is set
+> correctly.
+>   
 
-While at it, flag when we are adding the first switch of a type, we will
-need that information later.
+Hey David,
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
----
- net/rfkill/rfkill.c |   29 ++++++++++++++++++++++++++++-
- 1 files changed, 28 insertions(+), 1 deletions(-)
+Sorry for the late reply, I didn't have time to look at multiqueue tx
+details before. I have some curiosity-questions about your hashing.
 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 2ec6312..297bfd5 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -533,17 +533,44 @@ static struct class rfkill_class = {
- 	.dev_uevent	= rfkill_dev_uevent,
- };
- 
-+static int rfkill_check_duplicity(const struct rfkill *rfkill)
-+{
-+	struct rfkill *p;
-+	unsigned long seen[BITS_TO_LONGS(RFKILL_TYPE_MAX)];
-+
-+	memset(seen, 0, sizeof(seen));
-+
-+	list_for_each_entry(p, &rfkill_list, node) {
-+		if (p == rfkill) {
-+			WARN_ON(1);
-+			return -EEXIST;
-+		}
-+		set_bit(p->type, seen);
-+	}
-+
-+	/* 0: first switch of its kind */
-+	return test_bit(rfkill->type, seen);
-+}
-+
- static int rfkill_add_switch(struct rfkill *rfkill)
- {
-+	int error;
-+
- 	mutex_lock(&rfkill_mutex);
- 
-+	error = rfkill_check_duplicity(rfkill);
-+	if (error < 0)
-+		goto unlock_out;
-+
- 	rfkill_toggle_radio(rfkill, rfkill_states[rfkill->type], 0);
- 
- 	list_add_tail(&rfkill->node, &rfkill_list);
- 
-+	error = 0;
-+unlock_out:
- 	mutex_unlock(&rfkill_mutex);
- 
--	return 0;
-+	return error;
- }
- 
- static void rfkill_remove_switch(struct rfkill *rfkill)
--- 
-1.5.6.3
+> +static u16 simple_tx_hash(struct net_device *dev, struct sk_buff *skb)
+> +{
+> +	u32 *addr, *ports, hash, ihl;
+> +	u8 ip_proto;
+> +	int alen;
+> +
+> +	switch (skb->protocol) {
+> +	case __constant_htons(ETH_P_IP):
+> +		ip_proto = ip_hdr(skb)->protocol;
+> +		addr = &ip_hdr(skb)->saddr;
+> +		ihl = ip_hdr(skb)->ihl;
+> +		alen = 2;
+> +		break;
+> +	case __constant_htons(ETH_P_IPV6):
+> +		ip_proto = ipv6_hdr(skb)->nexthdr;
+> +		addr = &ipv6_hdr(skb)->saddr.s6_addr32[0];
+> +		ihl = (40 >> 2);
+> +		alen = 8;
+> +		break;
+> +	default:
+> +		return 0;
+> +	}
+>   
+
+What's your plan for other protocols here? Should we add an optional
+tx_hash() method in struct packet_type?
+
+> @@ -1672,6 +1722,8 @@ static struct netdev_queue *dev_pick_tx(struct net_device *dev,
+>  
+>  	if (dev->select_queue)
+>  		queue_index = dev->select_queue(dev, skb);
+> +	else if (dev->real_num_tx_queues > 1)
+> +		queue_index = simple_tx_hash(dev, skb);
+>   
+
+Some devices might will add some protocol specific hashing (IP and IPv6)
+that could look like what simple_tx_hash() does above, right? But if we
+add some new protocols in sample_tx_hash(), it will be ignored by these
+devices, and we might have to update the hashing in all select_queue()
+methods as well.
+
+So I wonder if we shouldn't change all this into:
+1) simple_tx_hash(skb) returns a big protocol-independent integer (like
+a concatenation or basic xor of IP proto/addr/...). It basically just
+converts the skb header in something flat and proto-independent.
+2.a) if the device provides select_queue(), we pass this integer to it.
+select_queue() either uses the skb headers if it really wants to hash IP
+or IPv6 precisely, or uses our protocol-independent integer and just
+hash it in a dumb way without caring about the protocol hidden behind it.
+2.b) if there's no select_queue(), we hash the big integer depending on
+the number of tx queues
+
+This way, we can easily add some protocol specific hashing to all
+drivers without having to modify select_queue() everywhere. Of course,
+if we don't care about hashing anything but IP/IPv6, it doesn't matter :)
+
+Brice
 
