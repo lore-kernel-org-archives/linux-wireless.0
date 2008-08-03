@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:39621 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752723AbYHTXIU (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58796
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753072AbYHCJzH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Aug 2008 19:08:20 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so333158nfc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Aug 2008 16:08:18 -0700 (PDT)
-Message-ID: <48ACA3CB.1070106@gmail.com> (sfid-20080821_010825_155480_CFD9644B)
-Date: Thu, 21 Aug 2008 00:07:55 +0100
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Larry.Finger@lwfinger.net,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, proski@gnu.org
-Subject: Re: [PATCH 00/19] orinoco: WPA for Agere based cards
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>	 <20080820192812.GA1746@tuxdriver.com>  <48AC836B.2020207@gmail.com>	 (sfid-20080820_225002_112959_7EFB2137)  <1219266476.3502.19.camel@johannes.berg>	 (sfid-20080820_230839_000050_1BDBB04E) <1219267346.3502.20.camel@johannes.berg>
-In-Reply-To: <1219267346.3502.20.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-From: Dave <kilroyd@googlemail.com>
+	Sun, 3 Aug 2008 05:55:07 -0400
+Date: Sun, 03 Aug 2008 02:55:07 -0700 (PDT)
+Message-Id: <20080803.025507.213173770.davem@davemloft.net> (sfid-20080803_115511_885253_3D5C2B5D)
+To: johannes@sipsolutions.net
+Cc: jasper@amiton.co.nz, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] move ETH_P_PAE from ieee80211_i.h to if_ether.h
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1217755343.4721.11.camel@johannes.berg>
+References: <1217719855.14226.5.camel@luna.unix.geek.nz>
+	<1217755343.4721.11.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Wed, 2008-08-20 at 23:07 +0200, Johannes Berg wrote:
->>> At the moment this is only documented in email threads (on
->>> orinoco-devel) - I lack access to any web/file hosting to put
->>> something more permanent up. This obviously ought to be corrected.
->> *points to wireless.kernel.org*
->>
->> feel free to create a driver page (though I'd prefer to not host
->> firmware of unclear origin and would probably just delete such files if
->> you upload them, talk to the firmware tree if you can redistribute it
->> legally)
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Sun, 03 Aug 2008 11:22:23 +0200
+
+> On Sun, 2008-08-03 at 11:30 +1200, Jasper Bryant-Greene wrote:
+> > ETH_P_PAE belongs in if_ether.h with the other ETH_P_* definitions. This
+> > patch moves it there.
 > 
-> Oh and if you go create a new driver page, say
-> http://wireless.kernel.org/en/users/Drivers/orinoco, it gives you a
-> template in the left column that you can use (the DriverPageTemplate) to
-> get a page that looks similar to all the other ones.
+> 
+> This needs to cross netdev, but other than that
+> 
+> > Signed-off-by: Jasper Bryant-Greene <jasper@amiton.co.nz>
+> 
+> Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-Thanks Larry/Johannes. I thought that might be where it should go, but it looks quite mac80211 oriented at the moment.
+I'm fine with it, John can add it to his wireless tree and I'll
+snag it from there next time he pushes to me.
 
-Anyway, I've added an initial orinoco page <http://wireless.kernel.org/en/users/Drivers/orinoco> and linked to it on <http://wireless.kernel.org/en/users/Drivers>.
-
-I have avoided attaching anything for now.
-
-
-Regards,
-
-Dave.
