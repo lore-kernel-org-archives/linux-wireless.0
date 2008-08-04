@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:22752 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761270AbYHESMo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 14:12:44 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so971791nfc.21
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Aug 2008 11:12:42 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
-Date: Tue, 5 Aug 2008 20:37:20 +0200
-Cc: Dan Williams <dcbw@redhat.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br> <1217941409.26251.3.camel@localhost.localdomain> <20080805140005.GA5925@tuxdriver.com>
-In-Reply-To: <20080805140005.GA5925@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200808052037.20508.IvDoorn@gmail.com> (sfid-20080805_201247_657757_4B23985B)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from verein.lst.de ([213.95.11.210]:45589 "EHLO verein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753382AbYHDOYM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Aug 2008 10:24:12 -0400
+Date: Mon, 4 Aug 2008 16:23:21 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@venema.h4ckr.net,
+	Senthil Balasubramanian <senthilkumar@Atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@lst.de>,
+	Jack Howarth <howarth@bromo.msbb.uc.edu>,
+	Jouni Malinen <jouni.malinen@Atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
+	Pavel Roskin <proski@gnu.org>,
+	Vasanthakumar Thiagarajan <vasanth@Atheros.com>
+Subject: Re: [PATCH 4/4] ath9k: Add new Atheros IEEE 802.11n driver
+Message-ID: <20080804142321.GB9892@lst.de> (sfid-20080804_162415_634649_40358F86)
+References: <1217834201-14680-1-git-send-email-lrodriguez@atheros.com> <1217834201-14680-2-git-send-email-lrodriguez@atheros.com> <1217834201-14680-3-git-send-email-lrodriguez@atheros.com> <1217834201-14680-4-git-send-email-lrodriguez@atheros.com> <1217834201-14680-5-git-send-email-lrodriguez@atheros.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1217834201-14680-5-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 05 August 2008, John W. Linville wrote:
-> On Tue, Aug 05, 2008 at 09:03:29AM -0400, Dan Williams wrote:
-> > On Mon, 2008-08-04 at 20:35 -0300, Henrique de Moraes Holschuh wrote:
+On Mon, Aug 04, 2008 at 12:16:41AM -0700, Luis R. Rodriguez wrote:
+> This adds the new mac80211 11n ath9k Atheros driver. Only STA support
+> is currently enabled and tested.
 > 
-> > > And it is already damn clear that what we currently have (rfkill always
-> > > blocks on suspend) is not the correct way to go about it.  WHAT I want to
-> > > know now is whether there are any drivers out there which need the current
-> > > behaviour.
-> > 
-> > Ah!  I seem to have misunderstood you.  If some drivers _do_ need the
-> > current block-on-suspend behavior, I feel like that should be an
-> > internal driver decision that rfkill shouldn't need to be aware of.
-> > Drivers know how to suspend themselves; we shouldn't expect rfkill to
-> > know how certain hardware needs to suspend.
-> 
-> I agree with Dan.  Blocking and suspending should be separate operations.
+> Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Like I said earlier, the main thing rfkill should do is to prevent the callback
-function being used while the device is suspended. And I definately agree
-on the statement that drivers are in charge to do what should be done for
-suspend.
+No signed off yet, I haven't even read in detail through the whole
+driver.  Same is probably true for most other people on this
+list.
 
-Ivo
+That beeing said I'm not really in a position to sign off either as
+I'm not the mainter nor a major contributor to the patch.
