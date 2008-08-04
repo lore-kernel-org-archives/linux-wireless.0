@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sorrow.cyrius.com ([65.19.161.204]:3489 "EHLO sorrow.cyrius.com"
+Received: from mga11.intel.com ([192.55.52.93]:34813 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753218AbYHJMUP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Aug 2008 08:20:15 -0400
-Date: Sun, 10 Aug 2008 15:16:56 +0300
-From: Martin Michlmayr <tbm@cyrius.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Rewrite SSB DMA API breaks compilation on ARM
-Message-ID: <20080810121656.GF2486@deprecation.cyrius.com> (sfid-20080810_142021_753315_346DC565)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	id S1751914AbYHDID6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Aug 2008 04:03:58 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 09/10] iwlwifi: grap nic access before accessing periphery registers
+Date: Mon,  4 Aug 2008 16:00:47 +0800
+Message-Id: <1217836848-24288-10-git-send-email-yi.zhu@intel.com> (sfid-20080804_100406_257426_B99E9615)
+In-Reply-To: <1217836848-24288-9-git-send-email-yi.zhu@intel.com>
+References: <1217836848-24288-1-git-send-email-yi.zhu@intel.com>
+ <1217836848-24288-2-git-send-email-yi.zhu@intel.com>
+ <1217836848-24288-3-git-send-email-yi.zhu@intel.com>
+ <1217836848-24288-4-git-send-email-yi.zhu@intel.com>
+ <1217836848-24288-5-git-send-email-yi.zhu@intel.com>
+ <1217836848-24288-6-git-send-email-yi.zhu@intel.com>
+ <1217836848-24288-7-git-send-email-yi.zhu@intel.com>
+ <1217836848-24288-8-git-send-email-yi.zhu@intel.com>
+ <1217836848-24288-9-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Michael,
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Your recent change "ssb, b43, b43legacy, b44: Rewrite SSB DMA API"
-http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3D=
-commitdiff;h=3Df225763a7d6c92c4932dbd528437997078496fcc
-breaks compilation on ARM in the following way:
+We need to grap nic access before accessing periphery registers.
 
-  CC [M]  drivers/net/wireless/b43/main.o
-In file included from drivers/net/wireless/b43/b43.h:8,
-                 from drivers/net/wireless/b43/main.c:45:
-include/linux/ssb/ssb.h: In function =E2=80=98ssb_dma_sync_single_range=
-_for_cpu=E2=80=99:
-include/linux/ssb/ssb.h:517: error: implicit declaration of function =E2=
-=80=98dma_sync_single_range_for_cpu=E2=80=99
-include/linux/ssb/ssb.h: In function =E2=80=98ssb_dma_sync_single_range=
-_for_device=E2=80=99:
-include/linux/ssb/ssb.h:538: error: implicit declaration of function =E2=
-=80=98dma_sync_single_range_for_device=E2=80=99
-make[4]: *** [drivers/net/wireless/b43/main.o] Error 1
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
---=20
-Martin Michlmayr
-http://www.cyrius.com/
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index c5b104f..f3d139b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -241,9 +241,11 @@ static void iwl5000_nic_config(struct iwl_priv *priv)
+ 	 * (PCIe power is lost before PERST# is asserted),
+ 	 * causing ME FW to lose ownership and not being able to obtain it back.
+ 	 */
+-	 iwl_set_bits_mask_prph(priv, APMG_PS_CTRL_REG,
++	iwl_grab_nic_access(priv);
++	iwl_set_bits_mask_prph(priv, APMG_PS_CTRL_REG,
+ 				APMG_PS_CTRL_EARLY_PWR_OFF_RESET_DIS,
+ 				~APMG_PS_CTRL_EARLY_PWR_OFF_RESET_DIS);
++	iwl_release_nic_access(priv);
+ 
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ }
+-- 
+1.5.3.6
+
