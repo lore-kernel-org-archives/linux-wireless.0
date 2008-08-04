@@ -1,106 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59795 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751201AbYHDMek (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42843
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751608AbYHDV65 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 08:34:40 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1KPzGo-0000cO-RJ
-	for linux-wireless@vger.kernel.org; Mon, 04 Aug 2008 14:34:39 +0200
-Subject: [RFC] cfg80211: add PM hooks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 04 Aug 2008 14:33:56 +0200
-Message-Id: <1217853236.4721.32.camel@johannes.berg> (sfid-20080804_143447_007277_5390AB33)
+	Mon, 4 Aug 2008 17:58:57 -0400
+Date: Mon, 04 Aug 2008 14:58:55 -0700 (PDT)
+Message-Id: <20080804.145855.230579810.davem@davemloft.net> (sfid-20080804_235914_289686_B3D48E44)
+To: marcel@holtmann.org
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-08-04
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1217886123.7819.23.camel@californication>
+References: <1217882288.7819.19.camel@californication>
+	<20080804204558.GA5866@tuxdriver.com>
+	<1217886123.7819.23.camel@californication>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This should help implement suspend/resume in mac80211, these
-hooks will be run before the device is suspended and after it
-resumes. Therefore, they can touch the hardware as much as
-they want to.
+From: Marcel Holtmann <marcel@holtmann.org>
+Date: Mon, 04 Aug 2008 23:42:03 +0200
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-This should help whoever wants to implement suspend/resume for mac80211.
-I don't intend to, at the moment, but I think these hooks should be
-used.
+> Hi John,
+> 
+> > > > Luis R. Rodriguez (4):
+> > > >       list.h: Add list_splice_tail() and list_splice_tail_init()
+> > > >       list.h: add list_cut_position()
+> > > 
+> > > have these two changes got reviewed on LKML? I don't see any ACKs for it
+> > > in the commit message.
+> > 
+> > Hmmm...no.  I thought the original patches had been copied to
+> > linux-kernel, but it looks like that is not the case.
+> > 
+> > The original patches are archived here:
+> > 
+> > 	http://marc.info/?l=linux-wireless&m=121783421908441&w=2
+> > 
+> > 	http://marc.info/?l=linux-wireless&m=121783422008445&w=2
+> > 
+> > What problems do you see with them?
+> 
+> I don't see a problem with these patches, but they should at least be
+> reviewed on LKML once. Changes to core kernel infrastructure should not
+> be merged silently via subsystem trees without any kind of ACKs.
 
- include/net/cfg80211.h |    6 ++++++
- net/wireless/sysfs.c   |   30 ++++++++++++++++++++++++++++++
- 2 files changed, 36 insertions(+)
-
---- everything.orig/include/net/cfg80211.h	2008-08-04 14:22:39.000000000 +0200
-+++ everything/include/net/cfg80211.h	2008-08-04 14:26:31.000000000 +0200
-@@ -285,6 +285,9 @@ struct wiphy;
-  * wireless extensions but this is subject to reevaluation as soon as this
-  * code is used more widely and we have a first user without wext.
-  *
-+ * @suspend: wiphy device needs to be suspended
-+ * @resume: wiphy device needs to be resumed
-+ *
-  * @add_virtual_intf: create a new virtual interface with the given name
-  *
-  * @del_virtual_intf: remove the virtual interface determined by ifindex.
-@@ -320,6 +323,9 @@ struct wiphy;
-  * @set_mesh_cfg: set mesh parameters (by now, just mesh id)
-  */
- struct cfg80211_ops {
-+	int	(*suspend)(struct wiphy *wiphy);
-+	int	(*resume)(struct wiphy *wiphy);
-+
- 	int	(*add_virtual_intf)(struct wiphy *wiphy, char *name,
- 				    enum nl80211_iftype type, u32 *flags,
- 				    struct vif_params *params);
---- everything.orig/net/wireless/sysfs.c	2008-08-04 14:22:39.000000000 +0200
-+++ everything/net/wireless/sysfs.c	2008-08-04 14:31:58.000000000 +0200
-@@ -60,6 +60,34 @@ static int wiphy_uevent(struct device *d
- }
- #endif
- 
-+static int wiphy_suspend(struct device *dev, pm_message_t state)
-+{
-+	struct cfg80211_registered_device *rdev = dev_to_rdev(dev);
-+	int ret = 0;
-+
-+	if (rdev->ops->suspend) {
-+		rtnl_lock();
-+		ret = rdev->ops->suspend(&rdev->wiphy);
-+		rtnl_unlock();
-+	}
-+
-+	return ret;
-+}
-+
-+static int wiphy_resume(struct device *dev)
-+{
-+	struct cfg80211_registered_device *rdev = dev_to_rdev(dev);
-+	int ret = 0;
-+
-+	if (rdev->ops->resume) {
-+		rtnl_lock();
-+		ret = rdev->ops->suspend(&rdev->wiphy);
-+		rtnl_unlock();
-+	}
-+
-+	return ret;
-+}
-+
- struct class ieee80211_class = {
- 	.name = "ieee80211",
- 	.owner = THIS_MODULE,
-@@ -68,6 +96,8 @@ struct class ieee80211_class = {
- #ifdef CONFIG_HOTPLUG
- 	.dev_uevent = wiphy_uevent,
- #endif
-+	.suspend = wiphy_suspend,
-+	.resume = wiphy_resume,
- };
- 
- int wiphy_sysfs_init(void)
-
-
+Right.
