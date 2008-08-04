@@ -1,63 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55478 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752122AbYHGGg3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 02:36:29 -0400
-Subject: Re: [PATCH] p54: Fix regression due to commit b19fa1f
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chr <chunkeey@web.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, davem@davemloft.net,
-	John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200808070057.01952.chunkeey@web.de>
-References: <4897714b.z7H23Rca9Z4lOo4Q%Larry.Finger@lwfinger.net>
-	 <200808070057.01952.chunkeey@web.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XWKi3SWPkZSvs0SPb8kd"
-Date: Thu, 07 Aug 2008 08:35:50 +0200
-Message-Id: <1218090950.23048.88.camel@johannes.berg> (sfid-20080807_083632_845829_AC63C54E)
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:6330 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751633AbYHDIDs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Aug 2008 04:03:48 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 01/10] iwlwifi: HW bug fixes
+Date: Mon,  4 Aug 2008 16:00:39 +0800
+Message-Id: <1217836848-24288-2-git-send-email-yi.zhu@intel.com> (sfid-20080804_100351_890636_CA86D5E4)
+In-Reply-To: <1217836848-24288-1-git-send-email-yi.zhu@intel.com>
+References: <1217836848-24288-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Tomas Winkler <tomas.winkler@intel.com>
 
---=-XWKi3SWPkZSvs0SPb8kd
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch adds few HW bug fixes.
 
-On Thu, 2008-08-07 at 00:57 +0200, Chr wrote:
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   15 +++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-csr.h  |   10 +++++++++-
+ drivers/net/wireless/iwlwifi/iwl-prph.h |   12 +++++++-----
+ net/mac80211/mlme.c                     |    2 +-
+ 4 files changed, 32 insertions(+), 7 deletions(-)
 
-> The real problem seems to be that skb_get_queue_mapping doesn't
-> work the way it should when we process the firmwares callback. It's
-> always "0" and unfortunately also when it should be something else like
-> queue 1, 2 or 3..... problem solved?=20
-
-Oh, eh, sorry about that, of course it cannot return the right thing on
-a _received_ frame. Thanks for finding.
-
-johannes
-
---=-XWKi3SWPkZSvs0SPb8kd
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJImpfCAAoJEKVg1VMiehFYhXgP/iHlNtEfcKPaXh28/xROFqjt
-XvCdy0uHGqItlt/WkVldQ3tpfVuYh1s3I48MGjtPccMis3vTEFqQ909fBosY6+bL
-MGMzmkrnRvnEJ2R0i18M3lf0G2FKdjsrWyE88ytoOfLESgfVTmOtPqbEyYx18k3U
-++IvuJGVgFcK94aFxV4N1ph6rjDHw0p5yDVFQZP1UeJo95N2QcuSedTZ+tIVyx//
-GHjWFysjtDX6jXKXYF53dYNeMnlCN3NP1dJAa9EIUQtwgyYGs1YrS7bsYo9seaKc
-hZijr5KyW4XHM+v952+kQ8xFliG2V8J0HBc44wBvUvASTdJah+GnJkMA2Xm/Cj4m
-Izj+fxVsCyiEnnaWoe3yCW/I2R1JbqAHiNIpaS8JZ9GVjvCB/HTM79nUJHyJNLEc
-r9wY5owWDU8DUTI8eH1bbEJW3bUgp2t5iHVeKdL6eSALjH2p+M6ZZK8VbofXMKFv
-d69DNFnL+TKDK/gb+HvcM2pEI/cUvP+dFjW9uri9wF91t9MUxyCsKFa79qsSWB7v
-4PtovL+x3oxvCrKhHho+rwdj9U4kpZv3wUF4xtXkCi7t+4PnCeZAqxoHqah81PUp
-pyZaknN/vOzzxYcoC2mbqG/IEoXqWm/a2vSBcrISha+DK1X015A+gvntZJ4YejmG
-ZKxinUwYXFmsCCvHc927
-=jMlt
------END PGP SIGNATURE-----
-
---=-XWKi3SWPkZSvs0SPb8kd--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index f7bbd12..1d793c0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -93,6 +93,13 @@ static int iwl5000_apm_init(struct iwl_priv *priv)
+ 	iwl_set_bit(priv, CSR_GIO_CHICKEN_BITS,
+ 		    CSR_GIO_CHICKEN_BITS_REG_BIT_L1A_NO_L0S_RX);
+ 
++	/* Set FH wait treshold to maximum (HW error during stress W/A) */
++	iwl_set_bit(priv, CSR_DBG_HPET_MEM_REG, CSR_DBG_HPET_MEM_REG_VAL);
++
++	/* enable HAP INTA to move device L1a -> L0s */
++	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
++		    CSR_HW_IF_CONFIG_REG_BIT_HAP_WAKE_L1A);
++
+ 	iwl_set_bit(priv, CSR_ANA_PLL_CFG, CSR50_ANA_PLL_CFG_VAL);
+ 
+ 	/* set "initialization complete" bit to move adapter
+@@ -230,6 +237,14 @@ static void iwl5000_nic_config(struct iwl_priv *priv)
+ 		    CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI |
+ 		    CSR_HW_IF_CONFIG_REG_BIT_MAC_SI);
+ 
++	/* W/A : NIC is stuck in a reset state after Early PCIe power off
++	 * (PCIe power is lost before PERST# is asserted),
++	 * causing ME FW to lose ownership and not being able to obtain it back.
++	 */
++	 iwl_set_bits_mask_prph(priv, APMG_PS_CTRL_REG,
++				APMG_PS_CTRL_EARLY_PWR_OFF_RESET_DIS,
++				~APMG_PS_CTRL_EARLY_PWR_OFF_RESET_DIS);
++
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
+index 545ed69..52629fb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
+@@ -104,6 +104,7 @@
+  *  3-2:  0 = A, 1 = B, 2 = C, 3 = D step
+  */
+ #define CSR_HW_REV_WA_REG	(CSR_BASE+0x22C)
++#define CSR_DBG_HPET_MEM_REG	(CSR_BASE+0x240)
+ 
+ /* Bits for CSR_HW_IF_CONFIG_REG */
+ #define CSR49_HW_IF_CONFIG_REG_BIT_4965_R	(0x00000010)
+@@ -118,7 +119,12 @@
+ #define CSR39_HW_IF_CONFIG_REG_BITS_SILICON_TYPE_A    (0x00000000)
+ #define CSR39_HW_IF_CONFIG_REG_BITS_SILICON_TYPE_B    (0x00001000)
+ 
+-#define CSR_HW_IF_CONFIG_REG_BIT_EEPROM_OWN_SEM     (0x00200000)
++#define CSR_HW_IF_CONFIG_REG_BIT_HAP_WAKE_L1A		(0x00080000)
++#define CSR_HW_IF_CONFIG_REG_BIT_EEPROM_OWN_SEM		(0x00200000)
++#define CSR_HW_IF_CONFIG_REG_BIT_PCI_OWN_SEM		(0x00400000)
++#define CSR_HW_IF_CONFIG_REG_BIT_ME_OWN			(0x02000000)
++#define CSR_HW_IF_CONFIG_REG_BIT_WAKE_ME		(0x08000000)
++
+ 
+ /* interrupt flags in INTA, set by uCode or hardware (e.g. dma),
+  * acknowledged (reset) by host writing "1" to flagged bits. */
+@@ -236,6 +242,8 @@
+ #define CSR39_ANA_PLL_CFG_VAL        (0x01000000)
+ #define CSR50_ANA_PLL_CFG_VAL        (0x00880300)
+ 
++/* HPET MEM debug */
++#define CSR_DBG_HPET_MEM_REG_VAL	(0xFFFF0000)
+ /*=== HBUS (Host-side Bus) ===*/
+ #define HBUS_BASE	(0x400)
+ /*
+diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
+index 70d9c75..ee5afd4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
+@@ -84,14 +84,16 @@
+ #define APMG_CLK_VAL_DMA_CLK_RQT	(0x00000200)
+ #define APMG_CLK_VAL_BSM_CLK_RQT	(0x00000800)
+ 
+-#define APMG_PS_CTRL_VAL_RESET_REQ	(0x04000000)
+ 
+-#define APMG_PCIDEV_STT_VAL_L1_ACT_DIS	(0x00000800)
++#define APMG_PS_CTRL_EARLY_PWR_OFF_RESET_DIS	(0x00400000)
++#define APMG_PS_CTRL_VAL_RESET_REQ		(0x04000000)
++#define APMG_PS_CTRL_MSK_PWR_SRC		(0x03000000)
++#define APMG_PS_CTRL_VAL_PWR_SRC_VMAIN		(0x00000000)
++#define APMG_PS_CTRL_VAL_PWR_SRC_MAX		(0x01000000) /* 3945 only */
++#define APMG_PS_CTRL_VAL_PWR_SRC_VAUX		(0x02000000)
+ 
+-#define APMG_PS_CTRL_MSK_PWR_SRC              (0x03000000)
+-#define APMG_PS_CTRL_VAL_PWR_SRC_VMAIN        (0x00000000)
+-#define APMG_PS_CTRL_VAL_PWR_SRC_VAUX         (0x01000000)
+ 
++#define APMG_PCIDEV_STT_VAL_L1_ACT_DIS		(0x00000800)
+ 
+ /**
+  * BSM (Bootstrap State Machine)
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 5358420..e1d11c9 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3920,7 +3920,7 @@ done:
+ 	if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS) {
+ 		struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+ 		if (!(ifsta->flags & IEEE80211_STA_BSSID_SET) ||
+-		    (!ifsta->state == IEEE80211_IBSS_JOINED &&
++		    (!(ifsta->state == IEEE80211_IBSS_JOINED) &&
+ 		    !ieee80211_sta_active_ibss(dev)))
+ 			ieee80211_sta_find_ibss(dev, ifsta);
+ 	}
+-- 
+1.5.3.6
 
