@@ -1,40 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from usul.saidi.cx ([204.11.33.34]:60875 "EHLO usul.overt.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753498AbYH2VZh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2008 17:25:37 -0400
-To: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/1] =?UTF-8?Q?toshiba=5Facpi=3A=20Add=20support=20for=20bluet?=
- =?UTF-8?Q?ooth=20togglingthrough=20rfkill=20=28v=37=29?=
-MIME-Version: 1.0
-Date: Fri, 29 Aug 2008 17:26:05 -0400
-From: Philip Langdale <philipl@overt.org>
-Cc: linux-kernel@vger.kernel.org, mjg59@srcf.ucam.org,
-	toshiba_acpi@memebeam.org, ivdoorn@gmail.com,
-	linux-wireless@vger.kernel.org, hmh@hmh.eng.br
-In-Reply-To: <20080829141216.f0d69ae4.akpm@linux-foundation.org>
-References: <20080829141216.f0d69ae4.akpm@linux-foundation.org>
-Message-ID: <f86c32a17907fdacd870e853761f0382@localhost> (sfid-20080829_232540_831491_166CDC07)
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx1.redhat.com ([66.187.233.31]:37708 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751626AbYHDPlT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Aug 2008 11:41:19 -0400
+Subject: Re: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
+From: Dan Williams <dcbw@redhat.com>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <20080802192704.GB24253@khazad-dum.debian.net>
+References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
+	 <1217700664-20792-9-git-send-email-hmh@hmh.eng.br>
+	 <1217703723.8621.50.camel@johannes.berg>
+	 <20080802192704.GB24253@khazad-dum.debian.net>
+Content-Type: text/plain
+Date: Mon, 04 Aug 2008 11:42:45 -0400
+Message-Id: <1217864565.3139.17.camel@localhost.localdomain> (sfid-20080804_174122_252106_93B87F3B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On Fri, 29 Aug 2008 14:12:16 -0700, Andrew Morton
-<akpm@linux-foundation.org> wrote:
+On Sat, 2008-08-02 at 16:27 -0300, Henrique de Moraes Holschuh wrote:
+> Hi Johannes!
 > 
-> ERROR: "rfkill_force_state" [drivers/acpi/toshiba_acpi.ko] undefined!
-> ERROR: "rfkill_free" [drivers/acpi/toshiba_acpi.ko] undefined!
-> ERROR: "rfkill_register" [drivers/acpi/toshiba_acpi.ko] undefined!
-> ERROR: "rfkill_allocate" [drivers/acpi/toshiba_acpi.ko] undefined!
-> ERROR: "rfkill_unregister" [drivers/acpi/toshiba_acpi.ko] undefined!
+> On Sat, 02 Aug 2008, Johannes Berg wrote:
 > 
-> I'll stick a `select RFKILL' in there, but it'll probably blow up
-> in other ways.  select usually does.
+> > On Sat, 2008-08-02 at 15:11 -0300, Henrique de Moraes Holschuh wrote:
+> > > Currently, rfkill would stand in the way of properly supporting wireless
+> > > devices that are capable of waking the system up from sleep or hibernation
+> > > when they receive a special wireless message.
+> > > 
+> > > Since rfkill attempts to soft-block any transmitters during class suspend,
+> > 
+> > why does it interfere with suspend anyway?
+> 
+> The class makes sure that all transmitters are blocked on suspend.  You'd
+> have to ask Ivo for the reason, but AFAIK, it is for both safety and to help
+> conserve power.
 
-Sorry, thanks for catching that. thinkpad_acpi also just does 'select
-RFKILL',
-so hopefully it'll be ok.
+rfkill shouldn't be touching stuff during suspend.
 
---phil
+In the OLPC libertas case, the radio may remain _ON_ during suspend,
+because the OLPC machines are expected to suspend/resume many times per
+second, and the radio must continue to participate in the mesh during
+that time.  The only case where the radio gets blocked is when the user
+requests it or when regulations require it.
+
+Suspend != block, and tying suspend and rfkill together really is a
+policy decision.  Thus, I don't agree that rfkill should block radios on
+suspend.
+
+Dan
 
