@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46722
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753321AbYH0Kcm (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:59438 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752054AbYHDIG6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2008 06:32:42 -0400
-Date: Wed, 27 Aug 2008 03:32:37 -0700 (PDT)
-Message-Id: <20080827.033237.236091327.davem@davemloft.net> (sfid-20080827_123247_965578_EC00495A)
-To: tomasw@gmail.com
-Cc: holtmann@linux.intel.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-08-26
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1ba2fa240808270305m7f505efak9fd0d36d5db09a1e@mail.gmail.com>
-References: <20080827.014041.230100807.davem@davemloft.net>
-	<1219835410.5359.24.camel@californication>
-	<1ba2fa240808270305m7f505efak9fd0d36d5db09a1e@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 4 Aug 2008 04:06:58 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so932386fgg.17
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Aug 2008 01:06:56 -0700 (PDT)
+Message-ID: <4896B89C.9060901@gmail.com> (sfid-20080804_100702_748400_32C8520D)
+Date: Mon, 04 Aug 2008 10:06:52 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: Dave Young <hidave.darkstar@gmail.com>
+CC: Bob Copeland <me@bobcopeland.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	johannes@sipsolutions.net, tomasw@gmail.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net, linville@tuxdriver.com,
+	stable@kernel.org
+Subject: Re: [PATCH] ath5k : ath5k_config_interface deadlock fix
+References: <20080801074014.GA3341@darkstar> <4892C2CA.7010003@gmail.com>	 <4892C359.9000304@cs.helsinki.fi>	 <20080801011415.ff4821a3.akpm@linux-foundation.org>	 <b6c5339f0808010643i58dbb2a7jf459359451061ae4@mail.gmail.com> <a8e1da0808032002u6ba000f8j8b56991985d65b94@mail.gmail.com>
+In-Reply-To: <a8e1da0808032002u6ba000f8j8b56991985d65b94@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Tomas Winkler" <tomasw@gmail.com>
-Date: Wed, 27 Aug 2008 13:05:23 +0300
+Dave Young napsal(a):
+> On Fri, Aug 1, 2008 at 9:43 PM, Bob Copeland <me@bobcopeland.com> wrote:
+>> On Fri, Aug 1, 2008 at 4:14 AM, Andrew Morton <akpm@linux-foundation.org> wrote:
+>>> On Fri, 01 Aug 2008 11:03:37 +0300 Pekka Enberg <penberg@cs.helsinki.fi> wrote:
+>>>
+>>>> Jiri Slaby wrote:
+>>>>> Dave Young napsal(a):
+>>>>>> In the drivers/net/wireless/ath5k/base.c, there's recursive locking of
+>>>>>> sc->lock
+>>>>> Should be fixed already:
+>>>>> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-2.6.git;a=commitdiff_plain;h=bc05116ab33d30342e2b4b1bcc6d6e1184e9df97
+>>>> I guess that didn't make it to -stable?
+>>> (cc stable!)
+>> Not to worry, the commit that introduced it was
+>> 9d139c810a2aa17365cc548d0cd2a189d8433c65, which as far as I can tell
+>> came in after 2.6.26.
+> 
+> Strange, I get system stuck in 2.6.26 as well, so there might be other bugs.
 
-> There is a central problem here, since I cannot really adjust driver
-> development progress from obvious reason with Linux merging window.
-
-Indeed, that's exactly what your core problem is.
-
-You think it's OK to contaminate upstream just because of the
-way you have choosen to maintain your driver.
-
-Well guess what, it's not OK to do that, and it's absolutely not our
-problem that you choose to do your development in the most anti-social
-way possible wrt. upstream.
-
-Anyways, keep defending yourself.
-
-If you persist, I can certainly make things _really_ easy, such that
-if there isn't a regression list entry for the bug you are fixing and
-it isn't mentioned explicitly in your commit message, I simply will
-refuse to take your changes outside of the merge window.
-
-It's that simple.
-
-Would you like things to work that way, where I'm a hard ass, or would
-you like to stop defending yourself endlessly, and instead start to be
-reasonable?
-
-Thanks.
+Could you provide any logs regarding this, please?
