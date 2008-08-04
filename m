@@ -1,76 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:54269 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:47245 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752103AbYHGFfH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 01:35:07 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 06 Aug 2008 22:35:07 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+	id S1751012AbYHDXNX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Aug 2008 19:13:23 -0400
+Date: Mon, 4 Aug 2008 16:13:21 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [PATCH 2/4] list.h: add list_cut_position()
+Message-ID: <20080804231320.GG6447@tesla> (sfid-20080805_011327_749035_015E4A6C)
+References: <1217890089-12100-1-git-send-email-lrodriguez@atheros.com> <20080804160011.ec964f1f.randy.dunlap@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18586.34523.289642.210458@localhost.localdomain> (sfid-20080807_073511_346128_DAB2DB5B)
-Date: Thu, 7 Aug 2008 10:53:39 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	<Jouni.Malinen@Atheros.com>, <Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 3/6] ath9k: Use mac80211's band macros and remove enum hal_freq_band
+In-Reply-To: <20080804160011.ec964f1f.randy.dunlap@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Aug 04, 2008 at 04:00:11PM -0700, Randy Dunlap wrote:
+> On Mon, 4 Aug 2008 15:48:09 -0700 Luis R. Rodriguez wrote:
+> 
+> > This adds list_cut_position() which lets you cut a list into
+> > two lists given a pivot in the list.
+> >
+> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > ---
+> >  include/linux/list.h |   32 ++++++++++++++++++++++++++++++++
+> >  1 files changed, 32 insertions(+), 0 deletions(-)
+> >
+> > diff --git a/include/linux/list.h b/include/linux/list.h
+> > index 594f67c..2999b0f 100644
+> > --- a/include/linux/list.h
+> > +++ b/include/linux/list.h
+> > @@ -214,6 +214,38 @@ static inline int list_is_singular(const struct list_head *head)
+> >       return !list_empty(head) && (head->next == head->prev);
+> >  }
+> >
+> > +static inline void __list_cut_position(struct list_head *list,
+> > +             struct list_head *head, struct list_head *entry)
+> > +{
+> > +     struct list_head *new_first =
+> > +             (entry->next != head) ? entry->next : head;
+> > +     list->next = head->next;
+> > +     list->next->prev = list;
+> > +     list->prev = entry;
+> > +     entry->next = list;
+> > +     head->next = new_first;
+> > +     new_first->prev = head;
+> > +}
+> > +
+> > +/**
+> > + * list_cut_position - cut a list into two
+> > + * @list: a new list to add all removed entries
+> > + * @head: a list with entries
+> > + * @entry: an entry within head, could be the head itself
+> > + *   and if so we won't won't cut the list
+> 
+> drop one "won't"
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Thanks.
+
 ---
- drivers/net/wireless/ath9k/ath9k.h |    5 -----
- drivers/net/wireless/ath9k/hw.c    |    8 ++++----
- 2 files changed, 4 insertions(+), 9 deletions(-)
+ include/linux/list.h |   32 ++++++++++++++++++++++++++++++++
+ 1 files changed, 32 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
-index 587c0fe..9976406 100644
---- a/drivers/net/wireless/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath9k/ath9k.h
-@@ -679,11 +679,6 @@ struct ath9k_ht_cwm {
- 	enum ath9k_ht_extprotspacing ht_extprotspacing;
- };
- 
--enum hal_freq_band {
--	HAL_FREQ_BAND_5GHZ = 0,
--	HAL_FREQ_BAND_2GHZ = 1,
--};
--
- enum ath9k_ani_cmd {
- 	ATH9K_ANI_PRESENT = 0x1,
- 	ATH9K_ANI_NOISE_IMMUNITY_LEVEL = 0x2,
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index cf1800a..8c6165c 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -465,11 +465,11 @@ static void ath9k_hw_analog_shift_rmw(struct ath_hal *ah,
+diff --git a/include/linux/list.h b/include/linux/list.h
+index 594f67c..2999b0f 100644
+--- a/include/linux/list.h
++++ b/include/linux/list.h
+@@ -214,6 +214,38 @@ static inline int list_is_singular(const struct list_head *head)
+ 	return !list_empty(head) && (head->next == head->prev);
  }
  
- static u8 ath9k_hw_get_num_ant_config(struct ath_hal_5416 *ahp,
--					    enum hal_freq_band freq_band)
-+				      enum ieee80211_band freq_band)
++static inline void __list_cut_position(struct list_head *list,
++		struct list_head *head, struct list_head *entry)
++{
++	struct list_head *new_first =
++		(entry->next != head) ? entry->next : head;
++	list->next = head->next;
++	list->next->prev = list;
++	list->prev = entry;
++	entry->next = list;
++	head->next = new_first;
++	new_first->prev = head;
++}
++
++/**
++ * list_cut_position - cut a list into two
++ * @list: a new list to add all removed entries
++ * @head: a list with entries
++ * @entry: an entry within head, could be the head itself
++ *	and if so we won't cut the list
++ */
++static inline void list_cut_position(struct list_head *list,
++		struct list_head *head, struct list_head *entry)
++{
++	BUG_ON(list_empty(head));
++	if (list_is_singular(head))
++		BUG_ON(head->next != entry && head != entry);
++	if (entry == head)
++		INIT_LIST_HEAD(list);
++	else
++		__list_cut_position(list, head, entry);
++}
++
+ static inline void __list_splice(const struct list_head *list,
+ 				 struct list_head *head)
  {
- 	struct ar5416_eeprom *eep = &ahp->ah_eeprom;
- 	struct modal_eep_header *pModal =
--		&(eep->modalHeader[HAL_FREQ_BAND_2GHZ == freq_band]);
-+		&(eep->modalHeader[IEEE80211_BAND_5GHZ == freq_band]);
- 	struct base_eep_header *pBase = &eep->baseEepHeader;
- 	u8 num_ant_config;
- 
-@@ -3111,9 +3111,9 @@ static bool ath9k_hw_fill_cap_info(struct ath_hal *ah)
- 	pCap->reg_cap |= AR_EEPROM_EEREGCAP_EN_FCC_MIDBAND;
- 
- 	pCap->num_antcfg_5ghz =
--		ath9k_hw_get_num_ant_config(ahp, HAL_FREQ_BAND_5GHZ);
-+		ath9k_hw_get_num_ant_config(ahp, IEEE80211_BAND_5GHZ);
- 	pCap->num_antcfg_2ghz =
--		ath9k_hw_get_num_ant_config(ahp, HAL_FREQ_BAND_2GHZ);
-+		ath9k_hw_get_num_ant_config(ahp, IEEE80211_BAND_2GHZ);
- 
- 	return true;
- }
 -- 
-1.5.6.5
+1.5.6.rc2.15.g457bb.dirty
 
