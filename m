@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50109 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750984AbYH2TjG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2008 15:39:06 -0400
-Subject: Re: [PATCH] iw: Add support to send a request to set the
-	regulatory domain
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1220032919-6821-1-git-send-email-lrodriguez@atheros.com>
-References: <1220032919-6821-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/VdSYqkRE6wDiDwHF4a0"
-Date: Fri, 29 Aug 2008 21:39:00 +0200
-Message-Id: <1220038740.25321.39.camel@johannes.berg> (sfid-20080829_213913_077881_803B7C82)
+Received: from c60.cesmail.net ([216.154.195.49]:61399 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1770952AbYHDVmh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Aug 2008 17:42:37 -0400
+Subject: Re: The tiacx driver situation
+From: Pavel Roskin <proski@gnu.org>
+To: David Planella <david.planella@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net, acx100-devel@lists.sourceforge.net,
+	gregkh@suse.de, greg@kroah.com, xazz.xazz@googlemail.com,
+	Andreas Mohr <andi@lisas.de>, andim2@users.sourceforge.net
+In-Reply-To: <1d9d9b240808041147n5032160v252e1bc956c97902@mail.gmail.com>
+References: <1d9d9b240808041147n5032160v252e1bc956c97902@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 04 Aug 2008 17:42:34 -0400
+Message-Id: <1217886154.9182.8.camel@dv> (sfid-20080804_234243_876959_16506E97)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2008-08-04 at 20:47 +0200, David Planella wrote:
 
---=-/VdSYqkRE6wDiDwHF4a0
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> 3) Remove all public sources and start development from scratch,
+> following clean-room procedures.
+> This is the view I got from a short conversation with Johannes Berg on
+> IRC, and would basically mean removing all sources and references to
+> the current acx driver from the public domain and start completely
+> from scratch, with two isolated development teams: one writing the
+> specs and the other one doing the development separately. Most of you
+> probably know this method from [5].
 
+As I understand, the reverse engineering team should be able to use the
+existing sources.  But the new coding team should not.  What matters is
+that the new code is not derived from any proprietary code, but only
+from the specification.
 
-> +	genlmsg_put(msg, 0, 0, genl_family_get_id(state->nl80211), 0,
-> +		    0, NL80211_CMD_ASK_SET_REG, 0);
+> I must say I find this the cleanest solution from an engineering and
+> legal point of view, but I cannot help but feeling a bit unoptimistic
+> about this taking off with the acx driver. There is not much of a
+> community left, and all the people currently involved, although not
+> many, would also have to leave the project, as they would have been
+> "tainted" with the old sources.
 
-ASK_SET?
+That would be the reverse engineering team.  But you'll need to find a
+"virgin" coder :-)
 
-johannes
-
---=-/VdSYqkRE6wDiDwHF4a0
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIuFBRAAoJEKVg1VMiehFYS/4P/25MHvFQqCs3z3sjLjtaYt/j
-TtWMigDHChLJIZt5F20y0kG/LCVpXqLrKDgu3eFeU8vznAjoO2AKZTNMGIXR03zg
-iJ8fPPOOKsiENHdWnc6Wl4YvjlR3pRet3QLvH6Ajd4u+tNuoGWyrKOWfqsXl0l4+
-LzdICWyKkP7TBJV4clONv+QB6yluO2SOwbnt40+q8LC4SWHsSxSCypQQoGVjHE49
-CHCvcveE4ZD3xFXqgV+GPPC3lEI1N18wahvWSYUCGmKZj1gNQvU4b6qI+E/P8b1K
-jLDPxrkHnZJbUAbO5lGFqB54yOBwq4N8hATJBXAeEh7WLRCVDdv0YPw6LukOaucs
-ztmru6xizJJKL6eERuiQnk/yCnWTmM3Z0yJpuXtd9Dos9cJvfbODtU8JTSTusmuw
-vgqhPYTojwEvODKndQpHlbTCygOwXATzCqruHwv+EGeYYrk1gPLloiyaZJLbLrHs
-/5qH5hCY0a8avX6fqQ1S6Thlh19OECXsQs9HETY5d293mTF5F2ObeTJDkTtiZwkt
-JRfbBBDN+z76d83rh2JryOZDEuRdNXD/PYAd2m46L6JduClMQk4d+YBSpk8ZQITL
-SjUnx2WAqcj+KUAGCVoqe7kr+kfTx09bnuWTczFIZX8J4AY0AlazTuS9Ct88q9u4
-w1scdyFFANkEOrbqS2Gj
-=KTEo
------END PGP SIGNATURE-----
-
---=-/VdSYqkRE6wDiDwHF4a0--
-
+-- 
+Regards,
+Pavel Roskin
