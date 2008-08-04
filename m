@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:60777 "EHLO mga03.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3344 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752982AbYHLBXL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2008 21:23:11 -0400
-Subject: Re: [ipw3945-devel] [PATCH 1/1] iwlwifi: fix printk newlines
-From: Zhu Yi <yi.zhu@intel.com>
+	id S1763631AbYHDVCV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Aug 2008 17:02:21 -0400
+Date: Mon, 4 Aug 2008 16:45:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	ipw3945-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-In-Reply-To: <1218502555.25524.22.camel@californication>
-References: <1218491381-1313-1-git-send-email-jirislaby@gmail.com>
-	 <1218502555.25524.22.camel@californication>
-Content-Type: text/plain
-Date: Tue, 12 Aug 2008 09:22:17 +0800
-Message-Id: <1218504137.3107.201.camel@debian.sh.intel.com> (sfid-20080812_032314_824460_5B7BF8BB)
-Mime-Version: 1.0
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-08-04
+Message-ID: <20080804204558.GA5866@tuxdriver.com> (sfid-20080804_230251_300053_C792396C)
+References: <20080804193753.GA30345@tuxdriver.com> <1217882288.7819.19.camel@californication>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1217882288.7819.19.camel@californication>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-08-12 at 02:55 +0200, Marcel Holtmann wrote:
-> >       s = iwl4965_get_sub_band(priv, channel);
-> >       if (s >= EEPROM_TX_POWER_BANDS) {
-> > -             IWL_ERROR("Tx Power can not find channel %d ",
-> channel);
-> > +             IWL_ERROR("Tx Power can not find channel %d\n",
-> channel);
-> >               return -1;
-> >       }
+On Mon, Aug 04, 2008 at 10:38:08PM +0200, Marcel Holtmann wrote:
+> Hi John,
 > 
-> can we not just fix IWL_ERROR to always append the newline?
+> > Luis R. Rodriguez (4):
+> >       list.h: Add list_splice_tail() and list_splice_tail_init()
+> >       list.h: add list_cut_position()
+> 
+> have these two changes got reviewed on LKML? I don't see any ACKs for it
+> in the commit message.
 
-We should give the users more control to the style I think.
+Hmmm...no.  I thought the original patches had been copied to
+linux-kernel, but it looks like that is not the case.
 
-Thanks,
--yi
+The original patches are archived here:
 
+	http://marc.info/?l=linux-wireless&m=121783421908441&w=2
+
+	http://marc.info/?l=linux-wireless&m=121783422008445&w=2
+
+What problems do you see with them?
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
