@@ -1,79 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52530 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753904AbYH0KKs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2008 06:10:48 -0400
-Subject: Re: pull request: wireless-2.6 2008-08-26
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Marcel Holtmann <holtmann@linux.intel.com>,
-	David Miller <davem@davemloft.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <1ba2fa240808270305m7f505efak9fd0d36d5db09a1e@mail.gmail.com> (sfid-20080827_120532_961620_59DBABFA)
-References: <20080827013009.GA15781@tuxdriver.com>
-	 <1ba2fa240808270038r24d5eeb9l36fd70ef5ae904f5@mail.gmail.com>
-	 <20080827.014041.230100807.davem@davemloft.net>
-	 <1219835410.5359.24.camel@californication>
-	 <1ba2fa240808270305m7f505efak9fd0d36d5db09a1e@mail.gmail.com>
-	 (sfid-20080827_120532_961620_59DBABFA)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LLjGWuXI6+0CCO3/QRhf"
-Date: Wed, 27 Aug 2008 12:10:28 +0200
-Message-Id: <1219831828.3891.3.camel@johannes.berg> (sfid-20080827_121055_543196_FE132D8E)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:43172 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755319AbYHDHQq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Aug 2008 03:16:46 -0400
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 04 Aug 2008 00:16:46 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>,
+	<torvalds@linux-foundation.org>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 2/4] list.h: add list_cut_position()
+Date: Mon, 4 Aug 2008 00:16:39 -0700
+Message-ID: <1217834201-14680-3-git-send-email-lrodriguez@atheros.com> (sfid-20080804_091651_222172_7EC8D4D4)
+In-Reply-To: <1217834201-14680-2-git-send-email-lrodriguez@atheros.com>
+References: <1217834201-14680-1-git-send-email-lrodriguez@atheros.com>
+ <1217834201-14680-2-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This adds list_cut_position() which lets you cut a list into
+two lists given a pivot in the list.
 
---=-LLjGWuXI6+0CCO3/QRhf
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ include/linux/list.h |   32 ++++++++++++++++++++++++++++++++
+ 1 files changed, 32 insertions(+), 0 deletions(-)
 
-On Wed, 2008-08-27 at 13:05 +0300, Tomas Winkler wrote:
-
-> There is a central problem here, since I cannot really adjust driver
-> development progress from obvious reason with Linux merging window.
-> Upstream kernel is unfortunately not the only customer I report to. So
-> actually stable versions got half backed drivers depending on some
-> arbitrary time cut from my (selfish) development point of view.
-
-FWIW, many people including myself think you should work the other way
-around, that is develop things in the mainline/wireless-testing tree
-rather than developing a stable version internally and then dumping a
-big pile of patches whenever it's convenient for you. IOW, we think you
-should use Linux upstream as your development tree and then branch off
-of that for the internal stabilisation trees you need for other
-customers, rather than having some sort of internal development tree and
-branching out Linux upstream as you appear to work.
-
-That would also avoid the nasty surprises you've gotten a few times
-where other people managed to get patches to iwlwifi drivers into the
-Linux tree without you noticing.
-
-johannes
-
---=-LLjGWuXI6+0CCO3/QRhf
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJItSgQAAoJEKVg1VMiehFYuJYP/1ItS9+xEGT6O7Dgm2eathlO
-K/SaRUm7J1fTS1b1WS5ti5onPGur0p5XwsSKetIkV7buncabtes9vyEQTPBabxya
-5tIVTqimnVjw+PacbAER0kKTNcwynYu3hF+50N4EaytisR37rq1SOGLxJUH8KduJ
-E2rHcaosXtZe/ZuO5X3GVfpd8z5uyanMKqPbDt050iACqknXaz2i/tKNt4Lrc7Pz
-eoDlz7O8gj3/SlXmDL5iq1l9Mtr/k1RuM4dxVN26KfbBgmdg9laf6dgsPCa29Dnj
-NM5BbDnnP79Wt1f61NZ530MJJeQd3JFJHdCjtMmC1V+7wM06IqrjeM9pi4wV2CKw
-6qnGIqLnZ4pd2w11RWVdPmOyRm7p8a4Gn5ryPvAxpNzD6oikPaqaB8W5JAUbu6PQ
-4vAIdDnmZIS1EvtSr3UzYIRNOFeAGCZj8hBmnSfj4m11DWN8jWZYYmh+4tAlm6Jq
-KwSAHfOHJksexa6g6/KnCSFshP7Y2ZwGcPo613peVqCjahVun11MERi/zpk7c1rS
-QGjpMf6lYCIClJgH3m0dEdB7tRqowRMwqacn+vvm/w4oQoZkOHwqSPZy8mSWva2v
-1iMD97VFbgDhqmjZ5VzRIZtOByn5rbeh12Y0PLkRdipHp8MVCcaDv9Z8qw9nrDuq
-Zc+aIMh34yfLOJa4EhiH
-=KkbX
------END PGP SIGNATURE-----
-
---=-LLjGWuXI6+0CCO3/QRhf--
+diff --git a/include/linux/list.h b/include/linux/list.h
+index 594f67c..2999b0f 100644
+--- a/include/linux/list.h
++++ b/include/linux/list.h
+@@ -214,6 +214,38 @@ static inline int list_is_singular(const struct list_head *head)
+ 	return !list_empty(head) && (head->next == head->prev);
+ }
+ 
++static inline void __list_cut_position(struct list_head *list,
++		struct list_head *head, struct list_head *entry)
++{
++	struct list_head *new_first =
++		(entry->next != head) ? entry->next : head;
++	list->next = head->next;
++	list->next->prev = list;
++	list->prev = entry;
++	entry->next = list;
++	head->next = new_first;
++	new_first->prev = head;
++}
++
++/**
++ * list_cut_position - cut a list into two
++ * @list: a new list to add all removed entries
++ * @head: a list with entries
++ * @entry: an entry within head, could be the head itself
++ *	and if so we won't won't cut the list
++ */
++static inline void list_cut_position(struct list_head *list,
++		struct list_head *head, struct list_head *entry)
++{
++	BUG_ON(list_empty(head));
++	if (list_is_singular(head))
++		BUG_ON(head->next != entry && head != entry);
++	if (entry == head)
++		INIT_LIST_HEAD(list);
++	else
++		__list_cut_position(list, head, entry);
++}
++
+ static inline void __list_splice(const struct list_head *list,
+ 				 struct list_head *head)
+ {
+-- 
+1.5.6.rc2.15.g457bb.dirty
 
