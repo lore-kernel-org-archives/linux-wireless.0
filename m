@@ -1,75 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52133 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752757AbYHCJbU (ORCPT
+Received: from yergi.telenet-ops.be ([195.130.132.36]:59549 "EHLO
+	yergi.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757249AbYHDOtP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 05:31:20 -0400
-Subject: Re: [PATCH] replace net_device arguments with
-	ieee80211_{local,sub_if_data} as appropriate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jasper Bryant-Greene <jasper@amiton.co.nz>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1217721877.14226.12.camel@luna.unix.geek.nz> (sfid-20080803_020445_938315_49AA8B69)
-References: <1217721877.14226.12.camel@luna.unix.geek.nz>
-	 (sfid-20080803_020445_938315_49AA8B69)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-f4jAjCAiP+W2ZvoK4u9u"
-Date: Sun, 03 Aug 2008 11:31:15 +0200
-Message-Id: <1217755875.4721.14.camel@johannes.berg> (sfid-20080803_113124_081540_CF87A54D)
-Mime-Version: 1.0
+	Mon, 4 Aug 2008 10:49:15 -0400
+Received: from wilson.telenet-ops.be (unknown [195.130.132.42])
+	by yergi.telenet-ops.be (Postfix) with ESMTP id 7B5865CAFFE
+	for <linux-wireless@vger.kernel.org>; Mon,  4 Aug 2008 16:49:38 +0200 (CEST)
+Message-ID: <489716D3.1030101@telenet.be> (sfid-20080804_164919_470707_365BD78C)
+Date: Mon, 04 Aug 2008 16:48:51 +0200
+From: Ian Schram <ischram@telenet.be>
+MIME-Version: 1.0
+To: Zhu Yi <yi.zhu@intel.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: Re: [PATCH 08/10] iwlwifi: decrement rx skb counter in scan abort
+ handler
+References: <1217836848-24288-1-git-send-email-yi.zhu@intel.com> <1217836848-24288-2-git-send-email-yi.zhu@intel.com> <1217836848-24288-3-git-send-email-yi.zhu@intel.com> <1217836848-24288-4-git-send-email-yi.zhu@intel.com> <1217836848-24288-5-git-send-email-yi.zhu@intel.com> <1217836848-24288-6-git-send-email-yi.zhu@intel.com> <1217836848-24288-7-git-send-email-yi.zhu@intel.com> <1217836848-24288-8-git-send-email-yi.zhu@intel.com> <1217836848-24288-9-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1217836848-24288-9-git-send-email-yi.zhu@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+the exact same code is in iwl3945-base.c, looks to me as if it might require the same fix.
 
---=-f4jAjCAiP+W2ZvoK4u9u
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Sun, 2008-08-03 at 12:04 +1200, Jasper Bryant-Greene wrote:
-> This patch replaces net_device arguments to mac80211 internal functions
-> with ieee80211_{local,sub_if_data} as appropriate.
->=20
-> It also does the same for many 802.11s mesh functions, and changes the
-> mesh path table to be indexed on sub_if_data rather than net_device.
->=20
-> If the mesh part needs to be a separate patch let me know, but since
-> mesh uses a lot of mac80211 functions which were being converted anyway,
-> the changes go hand-in-hand somewhat.
->=20
-> This patch probably does not convert all the functions which could be
-> converted, but it is a large chunk and followup patches will be
-> provided.
-
-Way cool. Unfortunately, your patch seems to be word-wrapped.
-
-> -		mac80211_ev_michael_mic_failure(rx->dev, rx->key->conf.keyidx,
-> +		mac80211_ev_michael_mic_failure(rx->sdata, rx->key->conf.keyidx,
-
-I wonder if we can remove rx->dev at some point. Don't worry about it
-right now though.
-
-johannes
-
---=-f4jAjCAiP+W2ZvoK4u9u
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIlXrgAAoJEKVg1VMiehFYUG8P/2/0XWgYzokrfRzHGH9YNSHn
-ymVkdywT0CZ1+yA4YrcukccjoOimQU65KOwV4o9JW5bMrLdK4TJtyxFva3fgrAei
-0kw6OtNbVArYkZJSbqUCmZRaSXjhPwO+7ekJ8x8Ph4DFHvQDcxg4gQXvaQu7x2Je
-DvI1fYlI85ljshH6IftbByhuf/d0TGB4mrUkdfn+uYmZI0/3sePLaEzJDhxibUR4
-2Mphl01kYXzim8flgpR/Pg7JY0JeIzVuJfPmCKXjdmQzNmLsWQp76ju9fMKYxbBB
-w62FhInwSfxqhXRUnkBVzdRA9uryIaXRfsF83x3u/eGUKkjfVAUFvH1s63znpnGc
-Olx1vC7Nt1Mwp0uUWV0a0Xnw2mjFKVT6U9/v7kdem4VihsxSMBmM7ctPVn4ACQJp
-vQglBrjXVBuazOxsB0onPqVfIYLb0BuKPbs9Dprfk9jbewBMBj/J1oP2ydnUbdha
-NdYWvmj4IEG5/URtBZhcLVGGWKzQHwBKn1LO+YdL178iacLhiykHY1qvg+qGE/rl
-eyIkRaxkAM9m93aUFx0KGfcrCYOGedEe3ywEy2eY3D9fu8T7/ihuvwXLRJA4dmek
-zn2/nEaT1DxL5j2TCkov3mImJNuprnQxWDjKBVSw/gpNE7X6VkFndZm7HB4g9vb1
-nx2fqZNujVrLx6IoK+Y/
-=txx+
------END PGP SIGNATURE-----
-
---=-f4jAjCAiP+W2ZvoK4u9u--
-
+Zhu Yi wrote:
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> 
+> This patch decrements rx skb counter in scan abort handler.
+> 
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-scan.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> index 5a00ac2..9bb6adb 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> @@ -202,6 +202,7 @@ static int iwl_send_scan_abort(struct iwl_priv *priv)
+>  		clear_bit(STATUS_SCAN_HW, &priv->status);
+>  	}
+>  
+> +	priv->alloc_rxb_skb--;
+>  	dev_kfree_skb_any(cmd.meta.u.skb);
+>  
+>  	return ret;
