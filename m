@@ -1,172 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.179]:54078 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754436AbYHZP4R (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.184]:17636 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754042AbYHDJWN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Aug 2008 11:56:17 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so1787674ika.5
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Aug 2008 08:56:16 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH 3/5] rfkill: add WARN and BUG_ON paranoia (v2)
-Date: Tue, 26 Aug 2008 17:56:06 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <1219762681-26911-1-git-send-email-hmh@hmh.eng.br> <1219762681-26911-4-git-send-email-hmh@hmh.eng.br>
-In-Reply-To: <1219762681-26911-4-git-send-email-hmh@hmh.eng.br>
+	Mon, 4 Aug 2008 05:22:13 -0400
+Received: by mu-out-0910.google.com with SMTP id w8so3439771mue.1
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Aug 2008 02:22:11 -0700 (PDT)
+Message-ID: <4896CA3F.3070709@gmail.com> (sfid-20080804_112229_342019_311A6329)
+Date: Mon, 04 Aug 2008 11:22:07 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200808261756.06759.IvDoorn@gmail.com> (sfid-20080826_175622_001711_679EFC07)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Dave Young <hidave.darkstar@gmail.com>
+CC: Pekka J Enberg <penberg@cs.helsinki.fi>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [BUG] wireless : cpu stuck for 61s
+References: <20080729055731.GA3265@darkstar>  <1217334724.10489.47.camel@johannes.berg>  <20080730020820.8bcc00e2.akpm@linux-foundation.org>  <a8e1da0807300302m35a0a7c0q2ff2e0ab92a69239@mail.gmail.com>  <20080730031047.54e13e2d.akpm@linux-foundation.org>  <a8e1da080 <a8e1da0808010032h32c18054g3712466eb40f0acf@mail.gmail.com>
+In-Reply-To: <a8e1da0808010032h32c18054g3712466eb40f0acf@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 26 August 2008, Henrique de Moraes Holschuh wrote:
-> BUG_ON() and WARN() the heck out of buggy drivers calling into the rfkill
-> subsystem.
-> 
-> Also switch from WARN_ON(1) to the new descriptive WARN().
+Dave Young napsal(a):
+> On Thu, Jul 31, 2008 at 5:15 PM, Pekka J Enberg <penberg@cs.helsinki.=
+fi> wrote:
+>> On Wed, 30 Jul 2008, Andrew Morton wrote:
+>>> INFO: Allocated in dev_alloc_skb+0x1c/0x30 age=3D3642 cpu=3D0 pid=3D=
+0
+>>> INFO: Freed in skb_release_data+0x57/0x80 age=3D3146 cpu=3D0 pid=3D=
+2398
+>> So the corrupted object was free'd by skb_release_data() so we need =
+to
+>> look for a driver or the networking stack calling that function too =
+early.
+>>
+>>> INFO: Slab 0xc1c05440 objects=3D7 used=3D3 fp=3D0xf6f3a060 flags=3D=
+0x400020c3
+>>> INFO: Object 0xf6f3a060 @offset=3D8288 fp=3D0xf6f39030
+>>>
+>>> Bytes b4 0xf6f3a050:  5e 09 00 00 57 c9 05 00 5a 5a 5a 5a 5a 5a 5a =
+5a ^...W=C3=89..ZZZZZZZZ
+>> The object starts here (the poison values for first 32 bytes are oka=
+y):
+>>
+>>> Object 0xf6f3a060:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b=
+ kkkkkkkkkkkkkkkk
+>>> Object 0xf6f3a070:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b=
+ kkkkkkkkkkkkkkkk
+>> And here are the first 96 bytes of the corruption:
+>>
+>>> Object 0xf6f3a080:  80 00 00 00 ff ff ff ff ff ff 00 17 7b 00 46 40=
+ ....=C3=BF=C3=BF=C3=BF=C3=BF=C3=BF=C3=BF..{.F@
+>>> Object 0xf6f3a090:  00 17 7b 00 46 40 30 09 81 21 08 7a 21 00 00 00=
+ ..{.F@0..!.z!...
+>>> Object 0xf6f3a0a0:  64 00 21 04 00 07 00 00 00 00 00 00 00 01 08 82=
+ d.!.............
+>>> Object 0xf6f3a0b0:  84 8b 0c 12 96 18 24 03 01 01 05 04 00 02 00 00=
+ ......$.........
+>>> Object 0xf6f3a0c0:  07 06 43 4e 20 01 0d 14 2a 01 00 32 04 30 48 60=
+ ..CN....*..2.0H`
+>>> Object 0xf6f3a0d0:  6c dd 18 00 17 7b 01 04 00 00 00 01 00 00 00 10=
+ l=C3=9D...{..........
+>> But I think that's just the payload of a SKB?
 
-The below usage of WARN() were correct when used as WARN_ON(),
-(I only complained about the litteral WARN_ON(1) usage.
-But apparently the WARN arguments are now the same as WARN_ON(),
-so I have no objections against this patch.
- 
-> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> Cc: Johannes Berg <johannes@sipsolutions.net>
+It's a receive frame from ath5k, I suppose. 00:17:7b:00:46:40 is your A=
+P?
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+>>> Redzone 0xf6f3b060:  bb bb bb bb                                   =
+  =C2=BB=C2=BB=C2=BB=C2=BB
+>> The red-zone has SLUB_RED_INACTIVE ("0xbb") which reinforces
+>> use-after-free.
+>>
+>>> Padding 0xf6f3b088:  5a 5a 5a 5a 5a 5a 5a 5a                       =
+  ZZZZZZZZ
+>>> Pid: 0, comm: swapper Tainted: G        W 2.6.26-smp #2
+>>> [<c0180f5d>] print_trailer+0xad/0xf0
+>>> [<c018103b>] check_bytes_and_report+0x9b/0xc0
+>>> [<c018145e>] check_object+0x19e/0x1e0
+>>> [<c01821a4>] __slab_alloc+0x454/0x4f0
+>>> [<c01834d6>] __kmalloc_track_caller+0xe6/0xf0
+>>> [<c03dd1ec>] ? dev_alloc_skb+0x1c/0x30
+>>> [<c03dd1ec>] ? dev_alloc_skb+0x1c/0x30
+>>> [<c03dce79>] __alloc_skb+0x49/0x100
+>>> [<c03dd1ec>] dev_alloc_skb+0x1c/0x30
+>>> [<f8a58599>] ath5k_rxbuf_setup+0x39/0x200 [ath5k]
+>>> [<f8a5a697>] ath5k_tasklet_rx+0x127/0x5c0 [ath5k]
+>>> [<c014969a>] ? print_lock_contention_bug+0x1a/0xe0
+>>> [<c012eafc>] tasklet_action+0x4c/0xc0
+[...]
+>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>>> FIX kmalloc-4096: Restoring 0xf6f3a080-0xf6f3a0ef=3D0x6b
 
-> ---
->  net/rfkill/rfkill.c |   50 +++++++++++++++++++++++++++++++++++++-------------
->  1 files changed, 37 insertions(+), 13 deletions(-)
-> 
-> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-> index b630f35..910699c 100644
-> --- a/net/rfkill/rfkill.c
-> +++ b/net/rfkill/rfkill.c
-> @@ -76,6 +76,7 @@ static BLOCKING_NOTIFIER_HEAD(rfkill_notifier_list);
->   */
->  int register_rfkill_notifier(struct notifier_block *nb)
->  {
-> +	BUG_ON(!nb);
->  	return blocking_notifier_chain_register(&rfkill_notifier_list, nb);
->  }
->  EXPORT_SYMBOL_GPL(register_rfkill_notifier);
-> @@ -91,6 +92,7 @@ EXPORT_SYMBOL_GPL(register_rfkill_notifier);
->   */
->  int unregister_rfkill_notifier(struct notifier_block *nb)
->  {
-> +	BUG_ON(!nb);
->  	return blocking_notifier_chain_unregister(&rfkill_notifier_list, nb);
->  }
->  EXPORT_SYMBOL_GPL(unregister_rfkill_notifier);
-> @@ -202,6 +204,9 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
->  		 * RFKILL_STATE_HARD_BLOCKED */
->  		break;
->  	default:
-> +		WARN(1, KERN_WARNING
-> +			"rfkill: illegal state %d passed as parameter "
-> +			"to rfkill_toggle_radio\n", state);
->  		return -EINVAL;
->  	}
->  
-> @@ -236,7 +241,11 @@ static void __rfkill_switch_all(const enum rfkill_type type,
->  {
->  	struct rfkill *rfkill;
->  
-> -	if (unlikely(state >= RFKILL_STATE_MAX))
-> +	if (WARN((state >= RFKILL_STATE_MAX || type >= RFKILL_TYPE_MAX),
-> +			KERN_WARNING
-> +			"rfkill: illegal state %d or type %d "
-> +			"passed as parameter to __rfkill_switch_all\n",
-> +			state, type))
->  		return;
->  
->  	rfkill_global_states[type].current_state = state;
-> @@ -334,7 +343,11 @@ int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state)
->  {
->  	enum rfkill_state oldstate;
->  
-> -	if (unlikely(state >= RFKILL_STATE_MAX))
-> +	BUG_ON(!rfkill);
-> +	if (WARN((state >= RFKILL_STATE_MAX),
-> +			KERN_WARNING
-> +			"rfkill: illegal state %d passed as parameter "
-> +			"to rfkill_force_state\n", state))
->  		return -EINVAL;
->  
->  	mutex_lock(&rfkill->mutex);
-> @@ -593,10 +606,10 @@ static int rfkill_check_duplicity(const struct rfkill *rfkill)
->  	memset(seen, 0, sizeof(seen));
->  
->  	list_for_each_entry(p, &rfkill_list, node) {
-> -		if (p == rfkill) {
-> -			WARN_ON(1);
-> +		if (WARN((p == rfkill), KERN_WARNING
-> +				"rfkill: illegal attempt to register "
-> +				"an already registered rfkill struct\n"))
->  			return -EEXIST;
-> -		}
->  		set_bit(p->type, seen);
->  	}
->  
-> @@ -664,6 +677,12 @@ struct rfkill * __must_check rfkill_allocate(struct device *parent,
->  	struct rfkill *rfkill;
->  	struct device *dev;
->  
-> +	if (WARN((type >= RFKILL_TYPE_MAX),
-> +			KERN_WARNING
-> +			"rfkill: illegal type %d passed as parameter "
-> +			"to rfkill_allocate\n", type))
-> +		return NULL;
-> +
->  	rfkill = kzalloc(sizeof(struct rfkill), GFP_KERNEL);
->  	if (!rfkill)
->  		return NULL;
-> @@ -736,11 +755,12 @@ int __must_check rfkill_register(struct rfkill *rfkill)
->  	struct device *dev = &rfkill->dev;
->  	int error;
->  
-> -	if (!rfkill->toggle_radio)
-> -		return -EINVAL;
-> -	if (rfkill->type >= RFKILL_TYPE_MAX)
-> -		return -EINVAL;
-> -	if (rfkill->state >= RFKILL_STATE_MAX)
-> +	if (WARN((!rfkill || !rfkill->toggle_radio ||
-> +			rfkill->type >= RFKILL_TYPE_MAX ||
-> +			rfkill->state >= RFKILL_STATE_MAX),
-> +			KERN_WARNING
-> +			"rfkill: attempt to register a "
-> +			"badly initialized rfkill struct\n"))
->  		return -EINVAL;
->  
->  	snprintf(dev->bus_id, sizeof(dev->bus_id),
-> @@ -775,6 +795,7 @@ EXPORT_SYMBOL(rfkill_register);
->   */
->  void rfkill_unregister(struct rfkill *rfkill)
->  {
-> +	BUG_ON(!rfkill);
->  	device_del(&rfkill->dev);
->  	rfkill_remove_switch(rfkill);
->  	rfkill_led_trigger_unregister(rfkill);
-> @@ -811,9 +832,12 @@ int rfkill_set_default(enum rfkill_type type, enum rfkill_state state)
->  {
->  	int error;
->  
-> -	if (type >= RFKILL_TYPE_MAX ||
-> -	    (state != RFKILL_STATE_SOFT_BLOCKED &&
-> -	     state != RFKILL_STATE_UNBLOCKED))
-> +	if (WARN((type >= RFKILL_TYPE_MAX ||
-> +			(state != RFKILL_STATE_SOFT_BLOCKED &&
-> +			 state != RFKILL_STATE_UNBLOCKED)),
-> +			KERN_WARNING
-> +			"rfkill: illegal state %d or type %d passed as "
-> +			"parameter to rfkill_set_default\n", state, type))
->  		return -EINVAL;
->  
->  	mutex_lock(&rfkill_mutex);
+>>> Dave, could you please remind us which net driver was in use here?
+>> There's ath5k in the stack trace but that, of course, doesn't
+>> automatically mean it's at fault here. It could have been just the p=
+oor
+>> bastard who was the next to allocate 4 KB with kmalloc() noticing th=
+e
+>> corruption.
 
+No, unfortunately ath5k *is* likely the culprit. Next time please Cc=20
+ath5k-devel@lists.ath5k.org even if it is only a suspicion.
 
+> But I still have no idea with the poison overwritten.
+
+Could you try patch from
+http://lkml.org/lkml/2008/7/15/276
+? (I have no idea how reproducible is this by you, it often happens on =
+noisy=20
+channels and/or by lowering RX buffers, i.e. ATH_RXBUF).
+
+[It hit mainline few days ago, I'm going to fwd it to stable.]
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
