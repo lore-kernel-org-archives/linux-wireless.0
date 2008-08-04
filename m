@@ -1,89 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:55154 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755234AbYHFShW (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.177]:9187 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756222AbYHDRdW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2008 14:37:22 -0400
-Message-ID: <23052053.1218047754579.JavaMail.oracle@acsmt304.oracle.com> (sfid-20080806_203730_596258_D03C1A0A)
-Date: Wed, 6 Aug 2008 13:35:54 -0500 (CDT)
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: =?ISO-8859-1?Q?Jochen_Vo=DF?= <jochen.voss@googlemail.com>,
-	"Luis R. Rodriguez" <lrodriguez@Atheros.com>
-Subject: Re: [PATCH 2/4] list.h: add list_cut_position()
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20080806182724.GI5605@tesla>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-References: <1217890089-12100-1-git-send-email-lrodriguez@atheros.com> <20080804160011.ec964f1f.randy.dunlap@oracle.com> <20080804231320.GG6447@tesla> <ef1cd66f0808050152g1dd8b96cl2df820607d480f0f@mail.gmail.com> <20080806182724.GI5605@tesla>
+	Mon, 4 Aug 2008 13:33:22 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so2668647ika.5
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Aug 2008 10:33:12 -0700 (PDT)
+To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
+Subject: Re: [PATCH 3/5] rt2x00: Implement HW encryption (rt73usb)
+Date: Mon, 4 Aug 2008 19:57:01 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200808041636.41189.IvDoorn@gmail.com> <200808041638.24289.IvDoorn@gmail.com> <69e28c910808041022t66471abar35957b6570140819@mail.gmail.com>
+In-Reply-To: <69e28c910808041022t66471abar35957b6570140819@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200808041957.01502.IvDoorn@gmail.com> (sfid-20080804_193327_491512_63224EB5)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> This adds list_cut_position() which lets you cut a list into
-> two lists given a pivot in the list.
-> 
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> 
-> diff --git a/include/linux/list.h b/include/linux/list.h
-> index 453916b..6c02a83 100644
-> --- a/include/linux/list.h
-> +++ b/include/linux/list.h
-> @@ -214,6 +214,46 @@ static inline int list_is_singular(const
-> struct list_head *head)
->  	return !list_empty(head) && (head->next == head->prev);
->  }
->  
-> +static inline void __list_cut_position(struct list_head *list,
-> +		struct list_head *head, struct list_head *entry)
-> +{
-> +	struct list_head *new_first = entry->next;
-> +	list->next = head->next;
-> +	list->next->prev = list;
-> +	list->prev = entry;
-> +	entry->next = list;
-> +	head->next = new_first;
-> +	new_first->prev = head;
-> +}
-> +
-> +/**
-> + * list_cut_position - cut a list into two
-> + *
-> + * This helper moves the initial part of @head, up to and
-> + * including @entry, from @head to @list. You should
-> + * pass on @entry an element you know is on @head. @list
-> + * should be an empty list or a list you do not care about
-> + * losing its data.
-> + *
-> + * @list: a new list to add all removed entries
-> + * @head: a list with entries
-> + * @entry: an entry within head, could be the head itself
-> + *	and if so we won't cut the list
-> + */
+On Monday 04 August 2008, Stefanik G=E1bor wrote:
+> On Mon, Aug 4, 2008 at 4:38 PM, Ivo van Doorn <ivdoorn@gmail.com> wro=
+te:
+> > rt73usb supports hardware encryption.
+> > rt73usb supports up to 4 shared keys and up to 64 pairwise keys.
 
-For kernel-doc notation, the parameters need to follow the function name+short description.
-After that, a longer description can be added.  I.e., please move the parameters up to
-above the longer description...
+<...>
 
-> +static inline void list_cut_position(struct list_head *list,
-> +		struct list_head *head, struct list_head *entry)
-> +{
-> +	if (list_empty(head))
-> +		return;
-> +	if (list_is_singular(head) &&
-> +		(head->next != entry && head != entry))
-> +		return;
-> +	if (entry == head)
-> +		INIT_LIST_HEAD(list);
-> +	else
-> +		__list_cut_position(list, head, entry);
-> +}
-> +
->  static inline void __list_splice(const struct list_head *list,
->  				 struct list_head *head)
->  {
+> We need modparams for disabling HW crypto support if it misbehaves.
 
+Hmm, I'm not that big fan of module parameters, but perhaps there shoul=
+d
+indeed be some toggle possibility. Well, I'll add that in a few days.
+
+Ivo
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
