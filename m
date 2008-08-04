@@ -1,163 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:18520 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753562AbYHZCiO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2008 22:38:14 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 2.6.27 1/2] iwlwifi: fix rx_chain computation
-Date: Tue, 26 Aug 2008 10:34:30 +0800
-Message-Id: <1219718071-13587-1-git-send-email-yi.zhu@intel.com> (sfid-20080826_043819_937700_B4382CFD)
+Received: from nf-out-0910.google.com ([64.233.182.190]:65349 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753701AbYHDORj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Aug 2008 10:17:39 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so712078nfc.21
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Aug 2008 07:17:34 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Please pull 'upstream' branch of rt2x00
+Date: Mon, 4 Aug 2008 16:36:41 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200808041636.41189.IvDoorn@gmail.com> (sfid-20080804_161750_910639_3FBA5238)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+Hi John,
 
-This patch fixes and simplifies rx_chain computation.
+Only 5 patches, but they do bump rt2x00 to a new version: 2.2.0
+This series will add HW crypto support to rt2x00, by default it
+has been enabled for rt61pci and rt73usb.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |   77 ++++++++++++++++++------------
- 1 files changed, 46 insertions(+), 31 deletions(-)
+rt2500usb has also been created, but currently does not work
+since it requires different handling then rt61pci and rt73usb. Because
+I am focussing on different areas in rt2x00 now, it will take some
+time before I get back to rt2500usb HW crypto (if there are any volunteers
+to take a shot at rt2500usb HW crypto, they are welcome).
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index a5b5c09..91487c2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -593,12 +593,11 @@ static void iwlcore_free_geos(struct iwl_priv *priv)
- 	clear_bit(STATUS_GEO_CONFIGURED, &priv->status);
- }
- 
--static u8 is_single_rx_stream(struct iwl_priv *priv)
-+static bool is_single_rx_stream(struct iwl_priv *priv)
- {
- 	return !priv->current_ht_config.is_ht ||
- 	       ((priv->current_ht_config.supp_mcs_set[1] == 0) &&
--		(priv->current_ht_config.supp_mcs_set[2] == 0)) ||
--	       priv->ps_mode == IWL_MIMO_PS_STATIC;
-+		(priv->current_ht_config.supp_mcs_set[2] == 0));
- }
- 
- static u8 iwl_is_channel_extension(struct iwl_priv *priv,
-@@ -705,33 +704,39 @@ EXPORT_SYMBOL(iwl_set_rxon_ht);
-  * MIMO (dual stream) requires at least 2, but works better with 3.
-  * This does not determine *which* chains to use, just how many.
-  */
--static int iwlcore_get_rx_chain_counter(struct iwl_priv *priv,
--					u8 *idle_state, u8 *rx_state)
-+static int iwl_get_active_rx_chain_count(struct iwl_priv *priv)
- {
--	u8 is_single = is_single_rx_stream(priv);
--	u8 is_cam = test_bit(STATUS_POWER_PMI, &priv->status) ? 0 : 1;
-+	bool is_single = is_single_rx_stream(priv);
-+	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
- 
- 	/* # of Rx chains to use when expecting MIMO. */
- 	if (is_single || (!is_cam && (priv->ps_mode == IWL_MIMO_PS_STATIC)))
--		*rx_state = 2;
-+		return 2;
- 	else
--		*rx_state = 3;
-+		return 3;
-+}
- 
-+static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
-+{
-+	int idle_cnt;
-+	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
- 	/* # Rx chains when idling and maybe trying to save power */
- 	switch (priv->ps_mode) {
- 	case IWL_MIMO_PS_STATIC:
- 	case IWL_MIMO_PS_DYNAMIC:
--		*idle_state = (is_cam) ? 2 : 1;
-+		idle_cnt = (is_cam) ? 2 : 1;
- 		break;
- 	case IWL_MIMO_PS_NONE:
--		*idle_state = (is_cam) ? *rx_state : 1;
-+		idle_cnt = (is_cam) ? active_cnt : 1;
- 		break;
-+	case IWL_MIMO_PS_INVALID:
- 	default:
--		*idle_state = 1;
-+		IWL_ERROR("invalide mimo ps mode %d\n", priv->ps_mode);
-+		WARN_ON(1);
-+		idle_cnt = -1;
- 		break;
- 	}
--
--	return 0;
-+	return idle_cnt;
- }
- 
- /**
-@@ -742,34 +747,44 @@ static int iwlcore_get_rx_chain_counter(struct iwl_priv *priv,
-  */
- void iwl_set_rxon_chain(struct iwl_priv *priv)
- {
--	u8 is_single = is_single_rx_stream(priv);
--	u8 idle_state, rx_state;
--
--	priv->staging_rxon.rx_chain = 0;
--	rx_state = idle_state = 3;
-+	bool is_single = is_single_rx_stream(priv);
-+	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
-+	u8 idle_rx_cnt, active_rx_cnt;
-+	u16 rx_chain;
- 
- 	/* Tell uCode which antennas are actually connected.
- 	 * Before first association, we assume all antennas are connected.
- 	 * Just after first association, iwl_chain_noise_calibration()
- 	 *    checks which antennas actually *are* connected. */
--	priv->staging_rxon.rx_chain |=
--		    cpu_to_le16(priv->hw_params.valid_rx_ant <<
--						 RXON_RX_CHAIN_VALID_POS);
-+	rx_chain = priv->hw_params.valid_rx_ant << RXON_RX_CHAIN_VALID_POS;
- 
- 	/* How many receivers should we use? */
--	iwlcore_get_rx_chain_counter(priv, &idle_state, &rx_state);
--	priv->staging_rxon.rx_chain |=
--		cpu_to_le16(rx_state << RXON_RX_CHAIN_MIMO_CNT_POS);
--	priv->staging_rxon.rx_chain |=
--		cpu_to_le16(idle_state << RXON_RX_CHAIN_CNT_POS);
--
--	if (!is_single && (rx_state >= 2) &&
--	    !test_bit(STATUS_POWER_PMI, &priv->status))
-+	active_rx_cnt = iwl_get_active_rx_chain_count(priv);
-+	idle_rx_cnt = iwl_get_idle_rx_chain_count(priv, active_rx_cnt);
-+
-+	/* correct rx chain count accoridng hw settings */
-+	if (priv->hw_params.rx_chains_num < active_rx_cnt)
-+		active_rx_cnt = priv->hw_params.rx_chains_num;
-+
-+	if (priv->hw_params.rx_chains_num < idle_rx_cnt)
-+		idle_rx_cnt = priv->hw_params.rx_chains_num;
-+
-+	rx_chain |= active_rx_cnt << RXON_RX_CHAIN_MIMO_CNT_POS;
-+	rx_chain |= idle_rx_cnt  << RXON_RX_CHAIN_CNT_POS;
-+
-+	priv->staging_rxon.rx_chain = cpu_to_le16(rx_chain);
-+
-+	if (!is_single && (active_rx_cnt >= 2) && is_cam)
- 		priv->staging_rxon.rx_chain |= RXON_RX_CHAIN_MIMO_FORCE_MSK;
- 	else
- 		priv->staging_rxon.rx_chain &= ~RXON_RX_CHAIN_MIMO_FORCE_MSK;
- 
--	IWL_DEBUG_ASSOC("rx chain %X\n", priv->staging_rxon.rx_chain);
-+	IWL_DEBUG_ASSOC("rx_chain=0x%Xi active=%d idle=%d\n",
-+			priv->staging_rxon.rx_chain,
-+			active_rx_cnt, idle_rx_cnt);
-+
-+	WARN_ON(active_rx_cnt == 0 || idle_rx_cnt == 0 ||
-+		active_rx_cnt < idle_rx_cnt);
- }
- EXPORT_SYMBOL(iwl_set_rxon_chain);
- 
--- 
-1.5.3.6
+rt2500pci supports HW crypto as well, but I won't implement it due
+to the way it has to be enabled. It comes down to the fact that during
+TX the key has to be provided, and after the encryption an interupt will
+be raised after which the frame can be kicked to the air. In the RX path
+the same happens, including that after RX the key has to be provided
+as well. This will cause the number of IRQ events to double during HW
+crypto, and several changes are required in mac80211 to make it possible.
+Because of that I see no point in doing anything with it.
 
+Ivo
+
+----
+The following changes since commit 2471b779e2f93d76bd4c041e4a8f5a27c859d7ce:
+  John W. Linville (1):
+        Revert "mac80211: add direct probe before association"
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git/ upstream
+
+Ivo van Doorn (5):
+      rt2x00: Implement HW encryption
+      rt2x00: Implement HW encryption (rt61pci)
+      rt2x00: Implement HW encryption (rt73usb)
+      rt2x00: Gather channel information in structure
+      rt2x00: Release rt2x00 2.2.0
+
+ drivers/net/wireless/rt2x00/Kconfig        |    6 +
+ drivers/net/wireless/rt2x00/Makefile       |    1 +
+ drivers/net/wireless/rt2x00/rt2400pci.c    |   40 ++--
+ drivers/net/wireless/rt2x00/rt2400pci.h    |   22 +--
+ drivers/net/wireless/rt2x00/rt2500pci.c    |   39 +++--
+ drivers/net/wireless/rt2x00/rt2500pci.h    |   17 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c    |   39 +++--
+ drivers/net/wireless/rt2x00/rt2500usb.h    |   17 +-
+ drivers/net/wireless/rt2x00/rt2x00.h       |   64 +++++-
+ drivers/net/wireless/rt2x00/rt2x00config.c |    4 +
+ drivers/net/wireless/rt2x00/rt2x00crypto.c |  215 +++++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2x00debug.c  |   97 +++++++++
+ drivers/net/wireless/rt2x00/rt2x00dev.c    |   48 +++--
+ drivers/net/wireless/rt2x00/rt2x00lib.h    |   47 ++++
+ drivers/net/wireless/rt2x00/rt2x00mac.c    |  110 +++++++++-
+ drivers/net/wireless/rt2x00/rt2x00queue.c  |   81 +++++++-
+ drivers/net/wireless/rt2x00/rt2x00queue.h  |   73 ++++++-
+ drivers/net/wireless/rt2x00/rt2x00reg.h    |   19 ++-
+ drivers/net/wireless/rt2x00/rt61pci.c      |  298 ++++++++++++++++++++++++--
+ drivers/net/wireless/rt2x00/rt61pci.h      |   38 ++--
+ drivers/net/wireless/rt2x00/rt73usb.c      |  314 +++++++++++++++++++++++++---
+ drivers/net/wireless/rt2x00/rt73usb.h      |   38 ++--
+ 22 files changed, 1418 insertions(+), 209 deletions(-)
+ create mode 100644 drivers/net/wireless/rt2x00/rt2x00crypto.c
