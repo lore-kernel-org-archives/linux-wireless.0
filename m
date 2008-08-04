@@ -1,572 +1,342 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25757 "EHLO mail.atheros.com"
+Received: from mga11.intel.com ([192.55.52.93]:6330 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751308AbYHBXtN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 19:49:13 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 16:49:13 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	<jouni.malinen@atheros.com>,
-	Sujith Manoharan <smanoharan@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 03/12] ath9k: Channel cleanup
-Date: Sat, 2 Aug 2008 16:48:55 -0700
-Message-ID: <1217720944-23234-4-git-send-email-lrodriguez@atheros.com> (sfid-20080803_014917_128701_661CDE5F)
-In-Reply-To: <1217720944-23234-3-git-send-email-lrodriguez@atheros.com>
-References: <1217720944-23234-1-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-2-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-3-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751822AbYHDIDw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Aug 2008 04:03:52 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 04/10] iwlwifi: implement iwl5000_calc_rssi
+Date: Mon,  4 Aug 2008 16:00:42 +0800
+Message-Id: <1217836848-24288-5-git-send-email-yi.zhu@intel.com> (sfid-20080804_100358_461307_C48CBAEB)
+In-Reply-To: <1217836848-24288-4-git-send-email-yi.zhu@intel.com>
+References: <1217836848-24288-1-git-send-email-yi.zhu@intel.com>
+ <1217836848-24288-2-git-send-email-yi.zhu@intel.com>
+ <1217836848-24288-3-git-send-email-yi.zhu@intel.com>
+ <1217836848-24288-4-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <smanoharan@atheros.com>
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Rename hal_channel_internal as ath9k_channel and remove
-a few unused variables.
+This patch implements rssi calculation for 5000 HW.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- drivers/net/wireless/ath9k/ath9k.h |   18 +++-------
- drivers/net/wireless/ath9k/hw.c    |   70 ++++++++++++++++++------------------
- drivers/net/wireless/ath9k/phy.c   |    6 ++--
- drivers/net/wireless/ath9k/phy.h   |    6 ++--
- drivers/net/wireless/ath9k/regd.c  |   24 ++++++------
- 5 files changed, 58 insertions(+), 66 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |   35 ++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |   39 ++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-commands.h |   35 +++++++++++++----
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +
+ drivers/net/wireless/iwlwifi/iwl-rx.c       |   57 +++++++--------------------
+ 5 files changed, 118 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
-index c3294c0..de80a66 100644
---- a/drivers/net/wireless/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath9k/ath9k.h
-@@ -469,29 +469,21 @@ struct hal_channel {
- 	 CHANNEL_HT40PLUS |			\
- 	 CHANNEL_HT40MINUS)
- 
--struct hal_channel_internal {
-+struct ath9k_channel {
- 	u_int16_t channel;
- 	u_int32_t channelFlags;
- 	u_int8_t privFlags;
- 	int8_t maxRegTxPower;
- 	int8_t maxTxPower;
- 	int8_t minTxPower;
--	bool bssSendHere;
--	u_int8_t gainI;
--	bool iqCalValid;
- 	int32_t CalValid;
- 	bool oneTimeCalsDone;
- 	int8_t iCoff;
- 	int8_t qCoff;
- 	int16_t rawNoiseFloor;
--	int16_t noiseFloorAdjust;
- 	int8_t antennaMax;
- 	u_int32_t regDmnFlags;
- 	u_int32_t conformanceTestLimit;
--	u_int64_t ah_tsf_last;
--	u_int64_t ah_channel_time;
--	u_int16_t mainSpur;
--	u_int64_t dfsTsf;
- #ifdef ATH_NF_PER_CHAN
- 	struct hal_nfcal_hist nfCalHist[NUM_NF_READINGS];
- #endif
-@@ -902,9 +894,9 @@ struct ath_hal {
- 	char ah_iso[4];
- 	enum start_adhoc_option ah_adHocMode;
- 	bool ah_commonMode;
--	struct hal_channel_internal ah_channels[150];
-+	struct ath9k_channel ah_channels[150];
- 	u_int ah_nchan;
--	struct hal_channel_internal *ah_curchan;
-+	struct ath9k_channel *ah_curchan;
- 	u_int16_t ah_rfsilent;
- 	bool ah_rfkillEnabled;
- 	bool ah_isPciExpress;
-@@ -1077,7 +1069,7 @@ bool ath9k_hw_gettxqueueprops(struct ath_hal *ah, int q,
- 			      struct hal_txq_info *qInfo);
- bool ath9k_hw_settxqueueprops(struct ath_hal *ah, int q,
- 			      const struct hal_txq_info *qInfo);
--struct hal_channel_internal *ath9k_regd_check_channel(struct ath_hal *ah,
-+struct ath9k_channel *ath9k_regd_check_channel(struct ath_hal *ah,
- 					      const struct hal_channel *c);
- void ath9k_hw_set11n_txdesc(struct ath_hal *ah, struct ath_desc *ds,
- 			    u_int pktLen, enum hal_pkt_type type,
-@@ -1133,7 +1125,7 @@ const char *ath9k_hw_probe(u_int16_t vendorid, u_int16_t devid);
- bool ath9k_hw_disable(struct ath_hal *ah);
- void ath9k_hw_rfdetach(struct ath_hal *ah);
- void ath9k_hw_get_channel_centers(struct ath_hal *ah,
--				  struct hal_channel_internal *chan,
-+				  struct ath9k_channel *chan,
- 				  struct chan_centers *centers);
- bool ath9k_get_channel_edges(struct ath_hal *ah,
- 			     u_int16_t flags, u_int16_t *low,
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index a16dbfb..35b9445 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -483,7 +483,7 @@ static u_int8_t ath9k_hw_get_num_ant_config(struct ath_hal_5416 *ahp,
- 
- static enum hal_status
- ath9k_hw_get_eeprom_antenna_cfg(struct ath_hal_5416 *ahp,
--				struct hal_channel_internal *chan,
-+				struct ath9k_channel *chan,
- 				u_int8_t index,
- 				u_int16_t *config)
- {
-@@ -556,7 +556,7 @@ static inline bool ath9k_hw_fill_eeprom(struct ath_hal *ah)
- /* XXX: Clean me up, make me more legible */
- static bool
- ath9k_hw_eeprom_set_board_values(struct ath_hal *ah,
--				 struct hal_channel_internal *chan)
-+				 struct ath9k_channel *chan)
- {
- 	struct modal_eep_header *pModal;
- 	int i, regChainOffset;
-@@ -1662,7 +1662,7 @@ static bool ath9k_hw_set_reset_reg(struct ath_hal *ah,
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index e261bc9..5cd10da 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2258,6 +2258,40 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
+ 		IWL_ERROR("TODO:  Implement Tx ABORT REQUIRED!!!\n");
  }
  
--static inline struct hal_channel_internal *ath9k_hw_check_chan(
-+static inline struct ath9k_channel *ath9k_hw_check_chan(
- 			struct ath_hal *ah, struct hal_channel *chan)
- {
- 	if ((IS(chan, CHANNEL_2GHZ) ^ IS(chan, CHANNEL_5GHZ)) == 0) {
-@@ -1848,7 +1848,7 @@ static void ar5416GetNoiseFloor(struct ath_hal *ah,
++static int iwl4965_calc_rssi(struct iwl_priv *priv,
++			     struct iwl_rx_phy_res *rx_resp)
++{
++	/* data from PHY/DSP regarding signal strength, etc.,
++	 *   contents are always there, not configurable by host.  */
++	struct iwl4965_rx_non_cfg_phy *ncphy =
++	    (struct iwl4965_rx_non_cfg_phy *)rx_resp->non_cfg_phy_buf;
++	u32 agc = (le16_to_cpu(ncphy->agc_info) & IWL49_AGC_DB_MASK)
++			>> IWL49_AGC_DB_POS;
++
++	u32 valid_antennae =
++	    (le16_to_cpu(rx_resp->phy_flags) & IWL49_RX_PHY_FLAGS_ANTENNAE_MASK)
++			>> IWL49_RX_PHY_FLAGS_ANTENNAE_OFFSET;
++	u8 max_rssi = 0;
++	u32 i;
++
++	/* Find max rssi among 3 possible receivers.
++	 * These values are measured by the digital signal processor (DSP).
++	 * They should stay fairly constant even as the signal strength varies,
++	 *   if the radio's automatic gain control (AGC) is working right.
++	 * AGC value (see below) will provide the "interesting" info. */
++	for (i = 0; i < 3; i++)
++		if (valid_antennae & (1 << i))
++			max_rssi = max(ncphy->rssi_info[i << 1], max_rssi);
++
++	IWL_DEBUG_STATS("Rssi In A %d B %d C %d Max %d AGC dB %d\n",
++		ncphy->rssi_info[0], ncphy->rssi_info[2], ncphy->rssi_info[4],
++		max_rssi, agc);
++
++	/* dBm = max_rssi dB - agc dB - constant.
++	 * Higher AGC (higher radio gain) means lower signal. */
++	return max_rssi - agc - IWL_RSSI_OFFSET;
++}
++
  
- static bool
- getNoiseFloorThresh(struct ath_hal *ah,
--		    const struct hal_channel_internal *chan,
-+		    const struct ath9k_channel *chan,
- 		    int16_t *nft)
- {
- 	struct ath_hal_5416 *ahp = AH5416(ah);
-@@ -1886,7 +1886,7 @@ static void ath9k_hw_start_nfcal(struct ath_hal *ah)
+ /* Set up 4965-specific Rx frame reply handlers */
+ static void iwl4965_rx_handler_setup(struct iwl_priv *priv)
+@@ -2289,6 +2323,7 @@ static struct iwl_hcmd_utils_ops iwl4965_hcmd_utils = {
+ 	.chain_noise_reset = iwl4965_chain_noise_reset,
+ 	.gain_computation = iwl4965_gain_computation,
+ 	.rts_tx_cmd_flag = iwl4965_rts_tx_cmd_flag,
++	.calc_rssi = iwl4965_calc_rssi,
+ };
+ 
+ static struct iwl_lib_ops iwl4965_lib = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 56dbc81..c5b104f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -1459,6 +1459,44 @@ static void iwl5000_temperature(struct iwl_priv *priv)
+ 	priv->temperature = le32_to_cpu(priv->statistics.general.temperature);
  }
  
- static void
--ath9k_hw_loadnf(struct ath_hal *ah, struct hal_channel_internal *chan)
-+ath9k_hw_loadnf(struct ath_hal *ah, struct ath9k_channel *chan)
++/* Calc max signal level (dBm) among 3 possible receivers */
++static int iwl5000_calc_rssi(struct iwl_priv *priv,
++			     struct iwl_rx_phy_res *rx_resp)
++{
++	/* data from PHY/DSP regarding signal strength, etc.,
++	 *   contents are always there, not configurable by host
++	 */
++	struct iwl5000_non_cfg_phy *ncphy =
++		(struct iwl5000_non_cfg_phy *)rx_resp->non_cfg_phy_buf;
++	u32 val, rssi_a, rssi_b, rssi_c, max_rssi;
++	u8 agc;
++
++	val  = le32_to_cpu(ncphy->non_cfg_phy[IWL50_RX_RES_AGC_IDX]);
++	agc = (val & IWL50_OFDM_AGC_MSK) >> IWL50_OFDM_AGC_BIT_POS;
++
++	/* Find max rssi among 3 possible receivers.
++	 * These values are measured by the digital signal processor (DSP).
++	 * They should stay fairly constant even as the signal strength varies,
++	 *   if the radio's automatic gain control (AGC) is working right.
++	 * AGC value (see below) will provide the "interesting" info.
++	 */
++	val = le32_to_cpu(ncphy->non_cfg_phy[IWL50_RX_RES_RSSI_AB_IDX]);
++	rssi_a = (val & IWL50_OFDM_RSSI_A_MSK) >> IWL50_OFDM_RSSI_A_BIT_POS;
++	rssi_b = (val & IWL50_OFDM_RSSI_B_MSK) >> IWL50_OFDM_RSSI_B_BIT_POS;
++	val = le32_to_cpu(ncphy->non_cfg_phy[IWL50_RX_RES_RSSI_C_IDX]);
++	rssi_c = (val & IWL50_OFDM_RSSI_C_MSK) >> IWL50_OFDM_RSSI_C_BIT_POS;
++
++	max_rssi = max_t(u32, rssi_a, rssi_b);
++	max_rssi = max_t(u32, max_rssi, rssi_c);
++
++	IWL_DEBUG_STATS("Rssi In A %d B %d C %d Max %d AGC dB %d\n",
++		rssi_a, rssi_b, rssi_c, max_rssi, agc);
++
++	/* dBm = max_rssi dB - agc dB - constant.
++	 * Higher AGC (higher radio gain) means lower signal. */
++	return max_rssi - agc - IWL_RSSI_OFFSET;
++}
++
+ static struct iwl_hcmd_ops iwl5000_hcmd = {
+ 	.rxon_assoc = iwl5000_send_rxon_assoc,
+ };
+@@ -1469,6 +1507,7 @@ static struct iwl_hcmd_utils_ops iwl5000_hcmd_utils = {
+ 	.gain_computation = iwl5000_gain_computation,
+ 	.chain_noise_reset = iwl5000_chain_noise_reset,
+ 	.rts_tx_cmd_flag = iwl5000_rts_tx_cmd_flag,
++	.calc_rssi = iwl5000_calc_rssi,
+ };
+ 
+ static struct iwl_lib_ops iwl5000_lib = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 5e57f3a..28b5b09 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -1075,10 +1075,12 @@ struct iwl4965_rx_frame {
+ } __attribute__ ((packed));
+ 
+ /* Fixed (non-configurable) rx data from phy */
+-#define RX_PHY_FLAGS_ANTENNAE_OFFSET		(4)
+-#define RX_PHY_FLAGS_ANTENNAE_MASK		(0x70)
+-#define IWL_AGC_DB_MASK 	(0x3f80)	/* MASK(7,13) */
+-#define IWL_AGC_DB_POS		(7)
++
++#define IWL49_RX_RES_PHY_CNT 14
++#define IWL49_RX_PHY_FLAGS_ANTENNAE_OFFSET	(4)
++#define IWL49_RX_PHY_FLAGS_ANTENNAE_MASK	(0x70)
++#define IWL49_AGC_DB_MASK			(0x3f80)	/* MASK(7,13) */
++#define IWL49_AGC_DB_POS			(7)
+ struct iwl4965_rx_non_cfg_phy {
+ 	__le16 ant_selection;	/* ant A bit 4, ant B bit 5, ant C bit 6 */
+ 	__le16 agc_info;	/* agc code 0:6, agc dB 7:13, reserved 14:15 */
+@@ -1086,12 +1088,30 @@ struct iwl4965_rx_non_cfg_phy {
+ 	u8 pad[0];
+ } __attribute__ ((packed));
+ 
++
++#define IWL50_RX_RES_PHY_CNT 8
++#define IWL50_RX_RES_AGC_IDX     1
++#define IWL50_RX_RES_RSSI_AB_IDX 2
++#define IWL50_RX_RES_RSSI_C_IDX  3
++#define IWL50_OFDM_AGC_MSK 0xfe00
++#define IWL50_OFDM_AGC_BIT_POS 9
++#define IWL50_OFDM_RSSI_A_MSK 0x00ff
++#define IWL50_OFDM_RSSI_A_BIT_POS 0
++#define IWL50_OFDM_RSSI_B_MSK 0xff0000
++#define IWL50_OFDM_RSSI_B_BIT_POS 16
++#define IWL50_OFDM_RSSI_C_MSK 0x00ff
++#define IWL50_OFDM_RSSI_C_BIT_POS 0
++
++struct iwl5000_non_cfg_phy {
++	__le32 non_cfg_phy[IWL50_RX_RES_PHY_CNT];  /* upto 8 phy entries */
++} __attribute__ ((packed));
++
++
+ /*
+  * REPLY_RX = 0xc3 (response only, not a command)
+  * Used only for legacy (non 11n) frames.
+  */
+-#define RX_RES_PHY_CNT 14
+-struct iwl4965_rx_phy_res {
++struct iwl_rx_phy_res {
+ 	u8 non_cfg_phy_cnt;     /* non configurable DSP phy data byte count */
+ 	u8 cfg_phy_cnt;		/* configurable DSP phy data byte count */
+ 	u8 stat_id;		/* configurable DSP phy data set ID */
+@@ -1100,8 +1120,7 @@ struct iwl4965_rx_phy_res {
+ 	__le32 beacon_time_stamp; /* beacon at on-air rise */
+ 	__le16 phy_flags;	/* general phy flags: band, modulation, ... */
+ 	__le16 channel;		/* channel number */
+-	__le16 non_cfg_phy[RX_RES_PHY_CNT];	/* upto 14 phy entries */
+-	__le32 reserved2;
++	u8 non_cfg_phy_buf[32]; /* for various implementations of non_cfg_phy */
+ 	__le32 rate_n_flags;	/* RATE_MCS_* */
+ 	__le16 byte_count;	/* frame's byte-count */
+ 	__le16 reserved3;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index eaefa42..64f139e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -95,6 +95,8 @@ struct iwl_hcmd_utils_ops {
+ 	void (*chain_noise_reset)(struct iwl_priv *priv);
+ 	void (*rts_tx_cmd_flag)(struct ieee80211_tx_info *info,
+ 			__le32 *tx_flags);
++	int  (*calc_rssi)(struct iwl_priv *priv,
++			  struct iwl_rx_phy_res *rx_resp);
+ };
+ 
+ struct iwl_lib_ops {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 4b26a16..b92a580 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -909,8 +909,8 @@ static void iwl_pass_packet_to_mac80211(struct iwl_priv *priv,
+ 				       struct ieee80211_rx_status *stats)
  {
- 	struct hal_nfcal_hist *h;
- 	int i, j;
-@@ -1945,7 +1945,7 @@ ath9k_hw_loadnf(struct ath_hal *ah, struct hal_channel_internal *chan)
+ 	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
+-	struct iwl4965_rx_phy_res *rx_start = (include_phy) ?
+-	    (struct iwl4965_rx_phy_res *)&(pkt->u.raw[0]) : NULL;
++	struct iwl_rx_phy_res *rx_start = (include_phy) ?
++	    (struct iwl_rx_phy_res *)&(pkt->u.raw[0]) : NULL;
+ 	struct ieee80211_hdr *hdr;
+ 	u16 len;
+ 	__le32 *rx_end;
+@@ -919,7 +919,7 @@ static void iwl_pass_packet_to_mac80211(struct iwl_priv *priv,
+ 	u32 ampdu_status_legacy;
+ 
+ 	if (!include_phy && priv->last_phy_res[0])
+-		rx_start = (struct iwl4965_rx_phy_res *)&priv->last_phy_res[1];
++		rx_start = (struct iwl_rx_phy_res *)&priv->last_phy_res[1];
+ 
+ 	if (!rx_start) {
+ 		IWL_ERROR("MPDU frame without a PHY data\n");
+@@ -931,8 +931,8 @@ static void iwl_pass_packet_to_mac80211(struct iwl_priv *priv,
+ 
+ 		len = le16_to_cpu(rx_start->byte_count);
+ 
+-		rx_end = (__le32 *) ((u8 *) &pkt->u.raw[0] +
+-				  sizeof(struct iwl4965_rx_phy_res) +
++		rx_end = (__le32 *)((u8 *) &pkt->u.raw[0] +
++				  sizeof(struct iwl_rx_phy_res) +
+ 				  rx_start->cfg_phy_cnt + len);
+ 
+ 	} else {
+@@ -980,40 +980,13 @@ static void iwl_pass_packet_to_mac80211(struct iwl_priv *priv,
  }
  
- static int16_t ath9k_hw_getnf(struct ath_hal *ah,
--			      struct hal_channel_internal *chan)
-+			      struct ath9k_channel *chan)
+ /* Calc max signal level (dBm) among 3 possible receivers */
+-static int iwl_calc_rssi(struct iwl_priv *priv,
+-			     struct iwl4965_rx_phy_res *rx_resp)
++static inline int iwl_calc_rssi(struct iwl_priv *priv,
++				struct iwl_rx_phy_res *rx_resp)
  {
- 	int16_t nf, nfThresh;
- 	int16_t nfarray[NUM_NF_READINGS] = { 0 };
-@@ -2032,7 +2032,7 @@ static void ath9k_hw_disable_mib_counters(struct ath_hal *ah)
+-	/* data from PHY/DSP regarding signal strength, etc.,
+-	 *   contents are always there, not configurable by host.  */
+-	struct iwl4965_rx_non_cfg_phy *ncphy =
+-	    (struct iwl4965_rx_non_cfg_phy *)rx_resp->non_cfg_phy;
+-	u32 agc = (le16_to_cpu(ncphy->agc_info) & IWL_AGC_DB_MASK)
+-			>> IWL_AGC_DB_POS;
+-
+-	u32 valid_antennae =
+-	    (le16_to_cpu(rx_resp->phy_flags) & RX_PHY_FLAGS_ANTENNAE_MASK)
+-			>> RX_PHY_FLAGS_ANTENNAE_OFFSET;
+-	u8 max_rssi = 0;
+-	u32 i;
+-
+-	/* Find max rssi among 3 possible receivers.
+-	 * These values are measured by the digital signal processor (DSP).
+-	 * They should stay fairly constant even as the signal strength varies,
+-	 *   if the radio's automatic gain control (AGC) is working right.
+-	 * AGC value (see below) will provide the "interesting" info. */
+-	for (i = 0; i < 3; i++)
+-		if (valid_antennae & (1 << i))
+-			max_rssi = max(ncphy->rssi_info[i << 1], max_rssi);
+-
+-	IWL_DEBUG_STATS("Rssi In A %d B %d C %d Max %d AGC dB %d\n",
+-		ncphy->rssi_info[0], ncphy->rssi_info[2], ncphy->rssi_info[4],
+-		max_rssi, agc);
+-
+-	/* dBm = max_rssi dB - agc dB - constant.
+-	 * Higher AGC (higher radio gain) means lower signal. */
+-	return max_rssi - agc - IWL_RSSI_OFFSET;
++	return priv->cfg->ops->utils->calc_rssi(priv, rx_resp);
  }
  
- static int ath9k_hw_get_ani_channel_idx(struct ath_hal *ah,
--					struct hal_channel_internal *chan)
-+					struct ath9k_channel *chan)
++
+ static void iwl_sta_modify_ps_wake(struct iwl_priv *priv, int sta_id)
  {
- 	struct ath_hal_5416 *ahp = AH5416(ah);
- 	int i;
-@@ -2355,7 +2355,7 @@ static void ath9k_ani_restart(struct ath_hal *ah)
- static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hal *ah)
- {
- 	struct ath_hal_5416 *ahp = AH5416(ah);
--	struct hal_channel_internal *chan = ah->ah_curchan;
-+	struct ath9k_channel *chan = ah->ah_curchan;
- 	struct ar5416AniState *aniState;
- 	enum wireless_mode mode;
- 	int32_t rssi;
-@@ -2431,7 +2431,7 @@ static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hal *ah)
- static void ath9k_hw_ani_cck_err_trigger(struct ath_hal *ah)
- {
- 	struct ath_hal_5416 *ahp = AH5416(ah);
--	struct hal_channel_internal *chan = ah->ah_curchan;
-+	struct ath9k_channel *chan = ah->ah_curchan;
- 	struct ar5416AniState *aniState;
- 	enum wireless_mode mode;
- 	int32_t rssi;
-@@ -2473,7 +2473,7 @@ static void ath9k_ani_reset(struct ath_hal *ah)
- {
- 	struct ath_hal_5416 *ahp = AH5416(ah);
- 	struct ar5416AniState *aniState;
--	struct hal_channel_internal *chan = ah->ah_curchan;
-+	struct ath9k_channel *chan = ah->ah_curchan;
- 	int index;
+ 	unsigned long flags;
+@@ -1076,9 +1049,9 @@ void iwl_rx_reply_rx(struct iwl_priv *priv,
+ 	 *   this rx packet for legacy frames,
+ 	 *   or phy data cached from REPLY_RX_PHY_CMD for HT frames. */
+ 	int include_phy = (pkt->hdr.cmd == REPLY_RX);
+-	struct iwl4965_rx_phy_res *rx_start = (include_phy) ?
+-		(struct iwl4965_rx_phy_res *)&(pkt->u.raw[0]) :
+-		(struct iwl4965_rx_phy_res *)&priv->last_phy_res[1];
++	struct iwl_rx_phy_res *rx_start = (include_phy) ?
++		(struct iwl_rx_phy_res *)&(pkt->u.raw[0]) :
++		(struct iwl_rx_phy_res *)&priv->last_phy_res[1];
+ 	__le32 *rx_end;
+ 	unsigned int len = 0;
+ 	u16 fc;
+@@ -1105,7 +1078,7 @@ void iwl_rx_reply_rx(struct iwl_priv *priv,
  
- 	if (!DO_ANI(ah))
-@@ -3581,7 +3581,7 @@ static inline bool ath9k_hw_fill_vpd_table(u_int8_t pwrMin,
+ 	if (!include_phy) {
+ 		if (priv->last_phy_res[0])
+-			rx_start = (struct iwl4965_rx_phy_res *)
++			rx_start = (struct iwl_rx_phy_res *)
+ 				&priv->last_phy_res[1];
+ 		else
+ 			rx_start = NULL;
+@@ -1122,7 +1095,7 @@ void iwl_rx_reply_rx(struct iwl_priv *priv,
  
- static inline void
- ath9k_hw_get_gain_boundaries_pdadcs(struct ath_hal *ah,
--				    struct hal_channel_internal *chan,
-+				    struct ath9k_channel *chan,
- 				    struct cal_data_per_freq *pRawDataSet,
- 				    u_int8_t *bChans,
- 				    u_int16_t availPiers,
-@@ -3764,7 +3764,7 @@ ath9k_hw_get_gain_boundaries_pdadcs(struct ath_hal *ah,
- static inline bool
- ath9k_hw_set_power_cal_table(struct ath_hal *ah,
- 			     struct ar5416_eeprom *pEepData,
--			     struct hal_channel_internal *chan,
-+			     struct ath9k_channel *chan,
- 			     int16_t *pTxPowerIndexOffset)
- {
- 	struct cal_data_per_freq *pRawDataset;
-@@ -3966,7 +3966,7 @@ void ath9k_hw_configpcipowersave(struct ath_hal *ah, int restore)
- 
- static inline void
- ath9k_hw_get_legacy_target_powers(struct ath_hal *ah,
--				  struct hal_channel_internal *chan,
-+				  struct ath9k_channel *chan,
- 				  struct cal_target_power_leg *powInfo,
- 				  u_int16_t numChannels,
- 				  struct cal_target_power_leg *pNewPower,
-@@ -4032,7 +4032,7 @@ ath9k_hw_get_legacy_target_powers(struct ath_hal *ah,
- 
- static inline void
- ath9k_hw_get_target_powers(struct ath_hal *ah,
--			   struct hal_channel_internal *chan,
-+			   struct ath9k_channel *chan,
- 			   struct cal_target_power_ht *powInfo,
- 			   u_int16_t numChannels,
- 			   struct cal_target_power_ht *pNewPower,
-@@ -4130,7 +4130,7 @@ ath9k_hw_get_max_edge_power(u_int16_t freq,
- static inline bool
- ath9k_hw_set_power_per_rate_table(struct ath_hal *ah,
- 				  struct ar5416_eeprom *pEepData,
--				  struct hal_channel_internal *chan,
-+				  struct ath9k_channel *chan,
- 				  int16_t *ratesArray,
- 				  u_int16_t cfgCtl,
- 				  u_int8_t AntennaReduction,
-@@ -4458,7 +4458,7 @@ ath9k_hw_set_power_per_rate_table(struct ath_hal *ah,
- static enum hal_status
- ath9k_hw_set_txpower(struct ath_hal *ah,
- 		     struct ar5416_eeprom *pEepData,
--		     struct hal_channel_internal *chan,
-+		     struct ath9k_channel *chan,
- 		     u_int16_t cfgCtl,
- 		     u_int8_t twiceAntennaReduction,
- 		     u_int8_t twiceMaxRegulatoryPower,
-@@ -4621,7 +4621,7 @@ static inline void ath9k_hw_get_delta_slope_vals(struct ath_hal *ah,
- 
- static void
- ath9k_hw_set_delta_slope(struct ath_hal *ah,
--			 struct hal_channel_internal *chan)
-+			 struct ath9k_channel *chan)
- {
- 	u_int32_t coef_scaled, ds_coef_exp, ds_coef_man;
- 	u_int32_t clockMhzScaled = 0x64000000;
-@@ -4656,7 +4656,7 @@ ath9k_hw_set_delta_slope(struct ath_hal *ah,
- 
- static void ath9k_hw_9280_spur_mitigate(struct ath_hal *ah,
- 					struct hal_channel *chan,
--					struct hal_channel_internal *ichan)
-+					struct ath9k_channel *ichan)
- {
- 	int bb_spur = AR_NO_SPUR;
- 	int freq;
-@@ -5141,7 +5141,7 @@ static inline void ath9k_hw_init_chain_masks(struct ath_hal *ah)
+ 		len = le16_to_cpu(rx_start->byte_count);
+ 		rx_end = (__le32 *)(pkt->u.raw + rx_start->cfg_phy_cnt +
+-				  sizeof(struct iwl4965_rx_phy_res) + len);
++				  sizeof(struct iwl_rx_phy_res) + len);
+ 	} else {
+ 		struct iwl4965_rx_mpdu_res_start *amsdu =
+ 			(struct iwl4965_rx_mpdu_res_start *)pkt->u.raw;
+@@ -1231,6 +1204,6 @@ void iwl_rx_reply_rx_phy(struct iwl_priv *priv,
+ 	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
+ 	priv->last_phy_res[0] = 1;
+ 	memcpy(&priv->last_phy_res[1], &(pkt->u.raw[0]),
+-	       sizeof(struct iwl4965_rx_phy_res));
++	       sizeof(struct iwl_rx_phy_res));
  }
- 
- static void ath9k_hw_set_addac(struct ath_hal *ah,
--			       struct hal_channel_internal *chan)
-+			       struct ath9k_channel *chan)
- {
- 	struct modal_eep_header *pModal;
- 	struct ath_hal_5416 *ahp = AH5416(ah);
-@@ -5213,7 +5213,7 @@ static u_int ath9k_hw_mac_usec(struct ath_hal *ah, u_int clks)
- 
- static u_int ath9k_hw_mac_to_usec(struct ath_hal *ah, u_int clks)
- {
--	struct hal_channel_internal *chan = ah->ah_curchan;
-+	struct ath9k_channel *chan = ah->ah_curchan;
- 
- 	if (chan && IS_CHAN_HT40(chan))
- 		return ath9k_hw_mac_usec(ah, clks) / 2;
-@@ -5234,7 +5234,7 @@ static u_int ath9k_hw_mac_clks(struct ath_hal *ah, u_int usecs)
- 
- static u_int ath9k_hw_mac_to_clks(struct ath_hal *ah, u_int usecs)
- {
--	struct hal_channel_internal *chan = ah->ah_curchan;
-+	struct ath9k_channel *chan = ah->ah_curchan;
- 
- 	if (chan && IS_CHAN_HT40(chan))
- 		return ath9k_hw_mac_clks(ah, usecs) * 2;
-@@ -5330,7 +5330,7 @@ static inline void ath9k_hw_init_user_settings(struct ath_hal *ah)
- static inline enum hal_status
- ath9k_hw_process_ini(struct ath_hal *ah,
- 		     struct hal_channel *chan,
--		     struct hal_channel_internal *ichan,
-+		     struct ath9k_channel *ichan,
- 		     enum hal_ht_macmode macmode)
- {
- 	int i, regWrites = 0;
-@@ -5517,7 +5517,7 @@ static inline void ath9k_hw_reset_calibration(struct ath_hal *ah,
- 
- static inline void
- ath9k_hw_per_calibration(struct ath_hal *ah,
--			 struct hal_channel_internal *ichan,
-+			 struct ath9k_channel *ichan,
- 			 u_int8_t rxchainmask,
- 			 struct hal_cal_list *currCal,
- 			 bool *isCalDone)
-@@ -5563,7 +5563,7 @@ static inline bool ath9k_hw_run_init_cals(struct ath_hal *ah,
- 					  int init_cal_count)
- {
- 	struct ath_hal_5416 *ahp = AH5416(ah);
--	struct hal_channel_internal ichan;
-+	struct ath9k_channel ichan;
- 	bool isCalDone;
- 	struct hal_cal_list *currCal = ahp->ah_cal_list_curr;
- 	const struct hal_percal_data *calData = currCal->calData;
-@@ -5608,7 +5608,7 @@ static inline bool ath9k_hw_run_init_cals(struct ath_hal *ah,
- static inline bool
- ath9k_hw_channel_change(struct ath_hal *ah,
- 			struct hal_channel *chan,
--			struct hal_channel_internal *ichan,
-+			struct ath9k_channel *ichan,
- 			enum hal_ht_macmode macmode)
- {
- 	u_int32_t synthDelay, qnum;
-@@ -5788,7 +5788,7 @@ static inline bool ath9k_hw_init_cal(struct ath_hal *ah,
- 				     struct hal_channel *chan)
- {
- 	struct ath_hal_5416 *ahp = AH5416(ah);
--	struct hal_channel_internal *ichan =
-+	struct ath9k_channel *ichan =
- 		ath9k_regd_check_channel(ah, chan);
- 
- 	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
-@@ -5857,8 +5857,8 @@ bool ath9k_hw_reset(struct ath_hal *ah, enum hal_opmode opmode,
- #define FAIL(_code)     do { ecode = _code; goto bad; } while (0)
- 	u_int32_t saveLedState;
- 	struct ath_hal_5416 *ahp = AH5416(ah);
--	struct hal_channel_internal *ichan;
--	struct hal_channel_internal *curchan = ah->ah_curchan;
-+	struct ath9k_channel *ichan;
-+	struct ath9k_channel *curchan = ah->ah_curchan;
- 	u_int32_t saveDefAntenna;
- 	u_int32_t macStaId1;
- 	enum hal_status ecode;
-@@ -6080,7 +6080,7 @@ ath9k_hw_calibrate(struct ath_hal *ah, struct hal_channel *chan,
- {
- 	struct ath_hal_5416 *ahp = AH5416(ah);
- 	struct hal_cal_list *currCal = ahp->ah_cal_list_curr;
--	struct hal_channel_internal *ichan =
-+	struct ath9k_channel *ichan =
- 		ath9k_regd_check_channel(ah, chan);
- 
- 	*isCalDone = true;
-@@ -6396,7 +6396,7 @@ ath9k_hw_adc_dccal_calibrate(struct ath_hal *ah, u_int8_t numChains)
- bool ath9k_hw_set_txpowerlimit(struct ath_hal *ah, u_int32_t limit)
- {
- 	struct ath_hal_5416 *ahp = AH5416(ah);
--	struct hal_channel_internal *ichan = ah->ah_curchan;
-+	struct ath9k_channel *ichan = ah->ah_curchan;
- 	struct hal_channel *chan = (struct hal_channel *) ichan;
- 
- 	ah->ah_powerLimit = min(limit, (u_int32_t) MAX_RATE_POWER);
-@@ -6416,7 +6416,7 @@ bool ath9k_hw_set_txpowerlimit(struct ath_hal *ah, u_int32_t limit)
- 
- void
- ath9k_hw_get_channel_centers(struct ath_hal *ah,
--			     struct hal_channel_internal *chan,
-+			     struct ath9k_channel *chan,
- 			     struct chan_centers *centers)
- {
- 	int8_t extoff;
-@@ -6456,7 +6456,7 @@ ath9k_hw_reset_calvalid(struct ath_hal *ah, struct hal_channel *chan,
- 			bool *isCalDone)
- {
- 	struct ath_hal_5416 *ahp = AH5416(ah);
--	struct hal_channel_internal *ichan =
-+	struct ath9k_channel *ichan =
- 		ath9k_regd_check_channel(ah, chan);
- 	struct hal_cal_list *currCal = ahp->ah_cal_list_curr;
- 
-@@ -6754,7 +6754,7 @@ enum hal_status
- ath9k_hw_select_antconfig(struct ath_hal *ah, u_int32_t cfg)
- {
- 	struct ath_hal_5416 *ahp = AH5416(ah);
--	struct hal_channel_internal *chan = ah->ah_curchan;
-+	struct ath9k_channel *chan = ah->ah_curchan;
- 	const struct hal_capabilities *pCap = &ah->ah_caps;
- 	u_int16_t ant_config;
- 	u_int32_t halNumAntConfig;
-@@ -7648,7 +7648,7 @@ bool ath9k_hw_resettxqueue(struct ath_hal *ah, u_int q)
- {
- 	struct ath_hal_5416 *ahp = AH5416(ah);
- 	struct hal_capabilities *pCap = &ah->ah_caps;
--	struct hal_channel_internal *chan = ah->ah_curchan;
-+	struct ath9k_channel *chan = ah->ah_curchan;
- 	struct hal_tx_queue_info *qi;
- 	u_int32_t cwMin, chanCwMin, value;
- 
-@@ -8448,7 +8448,7 @@ u_int ath9k_hw_mhz2ieee(struct ath_hal *ah, u_int freq, u_int flags)
- int16_t
- ath9k_hw_getchan_noise(struct ath_hal *ah, struct hal_channel *chan)
- {
--	struct hal_channel_internal *ichan;
-+	struct ath9k_channel *ichan;
- 
- 	ichan = ath9k_regd_check_channel(ah, chan);
- 	if (ichan == NULL) {
-diff --git a/drivers/net/wireless/ath9k/phy.c b/drivers/net/wireless/ath9k/phy.c
-index 6751bed..0e70f47 100644
---- a/drivers/net/wireless/ath9k/phy.c
-+++ b/drivers/net/wireless/ath9k/phy.c
-@@ -29,7 +29,7 @@ ath9k_hw_write_regs(struct ath_hal *ah, u_int modesIndex, u_int freqIndex,
- }
- 
- bool
--ath9k_hw_set_channel(struct ath_hal *ah, struct hal_channel_internal *chan)
-+ath9k_hw_set_channel(struct ath_hal *ah, struct ath9k_channel *chan)
- {
- 	u_int32_t channelSel = 0;
- 	u_int32_t bModeSynth = 0;
-@@ -105,7 +105,7 @@ ath9k_hw_set_channel(struct ath_hal *ah, struct hal_channel_internal *chan)
- 
- bool
- ath9k_hw_ar9280_set_channel(struct ath_hal *ah,
--			    struct hal_channel_internal *chan)
-+			    struct ath9k_channel *chan)
- {
- 	u_int16_t bMode, fracMode, aModeRefSel = 0;
- 	u_int32_t freq, ndiv, channelSel = 0, channelFrac = 0, reg32 = 0;
-@@ -202,7 +202,7 @@ ath9k_phy_modify_rx_buffer(u_int32_t *rfBuf, u_int32_t reg32,
- }
- 
- bool
--ath9k_hw_set_rf_regs(struct ath_hal *ah, struct hal_channel_internal *chan,
-+ath9k_hw_set_rf_regs(struct ath_hal *ah, struct ath9k_channel *chan,
- 		     u_int16_t modesIndex)
- {
- 	struct ath_hal_5416 *ahp = AH5416(ah);
-diff --git a/drivers/net/wireless/ath9k/phy.h b/drivers/net/wireless/ath9k/phy.h
-index 6c05257..77dffcd 100644
---- a/drivers/net/wireless/ath9k/phy.h
-+++ b/drivers/net/wireless/ath9k/phy.h
-@@ -18,14 +18,14 @@
- #define PHY_H
- 
- bool ath9k_hw_ar9280_set_channel(struct ath_hal *ah,
--					  struct hal_channel_internal
-+					  struct ath9k_channel
- 					  *chan);
- bool ath9k_hw_set_channel(struct ath_hal *ah,
--				   struct hal_channel_internal *chan);
-+				   struct ath9k_channel *chan);
- void ath9k_hw_write_regs(struct ath_hal *ah, u_int modesIndex,
- 			 u_int freqIndex, int regWrites);
- bool ath9k_hw_set_rf_regs(struct ath_hal *ah,
--				   struct hal_channel_internal *chan,
-+				   struct ath9k_channel *chan,
- 				   u_int16_t modesIndex);
- void ath9k_hw_decrease_chain_power(struct ath_hal *ah,
- 				   struct hal_channel *chan);
-diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
-index 8a99365..425450d 100644
---- a/drivers/net/wireless/ath9k/regd.c
-+++ b/drivers/net/wireless/ath9k/regd.c
-@@ -22,8 +22,8 @@
- 
- static int ath9k_regd_chansort(const void *a, const void *b)
- {
--	const struct hal_channel_internal *ca = a;
--	const struct hal_channel_internal *cb = b;
-+	const struct ath9k_channel *ca = a;
-+	const struct ath9k_channel *cb = b;
- 
- 	return (ca->channel == cb->channel) ?
- 	    (ca->channelFlags & CHAN_FLAGS) -
-@@ -372,7 +372,7 @@ ath9k_regd_get_eeprom_reg_ext_bits(struct ath_hal *ah,
- 
- #ifdef ATH_NF_PER_CHAN
- 
--static void ath9k_regd_init_rf_buffer(struct hal_channel_internal *ichans,
-+static void ath9k_regd_init_rf_buffer(struct ath9k_channel *ichans,
- 				      int nchans)
- {
- 	int i, j, next;
-@@ -405,10 +405,10 @@ ath9k_regd_add_channel(struct ath_hal *ah,
- 		       struct RegDmnFreqBand *fband,
- 		       struct regDomain *rd,
- 		       const struct cmode *cm,
--		       struct hal_channel_internal *ichans,
-+		       struct ath9k_channel *ichans,
- 		       bool enableExtendedChannels)
- {
--	struct hal_channel_internal icv;
-+	struct ath9k_channel icv;
- 
- 	if (!(c_lo <= c && c <= c_hi)) {
- 		DPRINTF(ah->ah_sc, ATH_DBG_REGULATORY,
-@@ -539,7 +539,7 @@ ath9k_regd_add_channel(struct ath_hal *ah,
- 	}
- 
- 	memcpy(&ichans[pos], &icv,
--	       sizeof(struct hal_channel_internal));
-+	       sizeof(struct ath9k_channel));
- 
- 	return true;
- }
-@@ -586,7 +586,7 @@ ath9k_regd_init_channels(struct ath_hal *ah,
- 	struct country_code_to_enum_rd *country = NULL;
- 	struct regDomain rd5GHz, rd2GHz;
- 	const struct cmode *cm;
--	struct hal_channel_internal *ichans = &ah->ah_channels[0];
-+	struct ath9k_channel *ichans = &ah->ah_channels[0];
- 	int next = 0, b;
- 	u_int8_t ctl;
- 	int regdmn;
-@@ -843,7 +843,7 @@ done:
- 		ath9k_regd_init_rf_buffer(ichans, next);
- #endif
- 		ath9k_regd_sort(ichans, next,
--				sizeof(struct hal_channel_internal),
-+				sizeof(struct ath9k_channel),
- 				ath9k_regd_chansort);
- 		ah->ah_nchan = next;
- 
-@@ -883,11 +883,11 @@ done:
- 	return next != 0;
- }
- 
--struct hal_channel_internal*
-+struct ath9k_channel*
- ath9k_regd_check_channel(struct ath_hal *ah,
- 			 const struct hal_channel *c)
- {
--	struct hal_channel_internal *base, *cc;
-+	struct ath9k_channel *base, *cc;
- 
- 	int flags = c->channelFlags & CHAN_FLAGS;
- 	int n, lim;
-@@ -940,7 +940,7 @@ u_int
- ath9k_regd_get_antenna_allowed(struct ath_hal *ah,
- 			       struct hal_channel *chan)
- {
--	struct hal_channel_internal *ichan = NULL;
-+	struct ath9k_channel *ichan = NULL;
- 
- 	ichan = ath9k_regd_check_channel(ah, chan);
- 	if (!ichan)
-@@ -952,7 +952,7 @@ ath9k_regd_get_antenna_allowed(struct ath_hal *ah,
- u_int ath9k_regd_get_ctl(struct ath_hal *ah, struct hal_channel *chan)
- {
- 	u_int ctl = NO_CTL;
--	struct hal_channel_internal *ichan;
-+	struct ath9k_channel *ichan;
- 
- 	if (ah->ah_countryCode == CTRY_DEFAULT && isWwrSKU(ah)) {
- 		if (IS_CHAN_B(chan))
+ EXPORT_SYMBOL(iwl_rx_reply_rx_phy);
 -- 
-1.5.6.rc2.15.g457bb.dirty
+1.5.3.6
 
