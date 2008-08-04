@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:15569 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752746AbYH1O3K (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:38681 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753060AbYHDXfd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 10:29:10 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so117971eyi.37
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2008 07:29:08 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH 5/5] rfkill: remove transmitter blocking on suspend
-Date: Thu, 28 Aug 2008 16:29:00 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Matthew Garrett <mjg@redhat.com>,
-	Andrew Bird <ajb@spheresystems.co.uk>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Cezary Jackiewicz <cezary.jackiewicz@gmail.com>,
-	Philip Langdale <philipl@overt.org>
-References: <1219762681-26911-1-git-send-email-hmh@hmh.eng.br> <200808261813.56050.IvDoorn@gmail.com> <20080827230111.GA18081@khazad-dum.debian.net>
-In-Reply-To: <20080827230111.GA18081@khazad-dum.debian.net>
+	Mon, 4 Aug 2008 19:35:33 -0400
+Date: Mon, 4 Aug 2008 20:35:25 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
+Message-ID: <20080804233525.GI24927@khazad-dum.debian.net> (sfid-20080805_013536_527894_D85657B0)
+References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br> <1217700664-20792-9-git-send-email-hmh@hmh.eng.br> <1217703723.8621.50.camel@johannes.berg> <20080802192704.GB24253@khazad-dum.debian.net> <1217864565.3139.17.camel@localhost.localdomain> <20080804223052.GG24927@khazad-dum.debian.net> <1217890611.17793.17.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200808281629.01139.IvDoorn@gmail.com> (sfid-20080828_162914_573479_22C3E44C)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1217890611.17793.17.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 28 August 2008, Henrique de Moraes Holschuh wrote:
-> On Tue, 26 Aug 2008, Ivo van Doorn wrote:
-> > > 	drivers/net/wireless/rt2x00/* (USB might need it?)
-> > 
-> > rt2x00 doesn't have rfkill support for the USB drivers, only the PCI drivers,
-> > (because only those cards could have an actual rfkill switch.
+On Mon, 04 Aug 2008, Dan Williams wrote:
+> > But the OPPOSITE is not clear at all to me.  I don't know whether the other
+> > users of rfkill need a radio block on suspend or not.  Unless someone can
+> > look over *all* in-tree users of linux/rfkill.h and state that none of them
+> > need it because all of them DO shutdown their devices on suspend, I will
+> > have to ask the maintainers of every single one about it before I ask a
+> > patch to be merged.  I already looked, and I don't know enough to have a
+> > definitive answer by myself.
 > 
-> Well, rfkill support is not related only to input devices, but also to
-> transmitters.  And EVERY transmitter MUST have one (and a single one) rfkill
-> class attached to it, unless the hardware is completely and utterly unable
-> to block its transmitter(s).  I hope no rt2x00 device is like that...
+> Using rfkill to enforce suspend power policy at a kernel-level is just
+> wrong.  That's a policy decision for gnome-power-manager or
+> kde-power-manager or whatever.  At the very least, it should be an
+> option in sysfs to turn this behavior on or off.
 
-True, but at the moment the rt2x00 implementation is limited to the PCI devices
-which indicate they have the input device. Extending it to register the rfkill
-structure for all rt2x00 hardware is on my todo list.
+There is no way I am adding an interface for userspace to decide how a
+driver+rfkill stack should go in order to properly suspend a device.  The
+kernel is to get it right by itself.  It already knows whether the device
+was blocked or not before the suspend.  And, when it is suppored by the
+device, the device driver already knows if it is part of a non-stop mesh
+(libertas), or has to have WoWL enabled, etc.
 
-> > Other then that no changes are required in rt2x00 with this patch.
-> 
-> Which I will take to mean that all rt2x00 drivers, be them USB or PCI, will
-> do whatever is needed (including shutting down transmitters explicitly, when
-> the hardware doesn't do it implicitly because of something else the driver
-> is doing) on their own suspend() methods.
-> 
-> Is that correct?  Because that's all patch 5 of 5 is concerned with.
+And it is already damn clear that what we currently have (rfkill always
+blocks on suspend) is not the correct way to go about it.  WHAT I want to
+know now is whether there are any drivers out there which need the current
+behaviour.
 
-That is correct, all rt2x00 drivers (with or without rfkill) will do this correctly.
-
-Ivo
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
