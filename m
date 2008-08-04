@@ -1,62 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.191]:60396 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754162AbYHDDCw (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:42477 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751564AbYHDWa7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 23:02:52 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so452563tic.23
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2008 20:02:50 -0700 (PDT)
-Message-ID: <a8e1da0808032002u6ba000f8j8b56991985d65b94@mail.gmail.com> (sfid-20080804_050256_204273_0C26242E)
-Date: Mon, 4 Aug 2008 11:02:49 +0800
-From: "Dave Young" <hidave.darkstar@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: [PATCH] ath5k : ath5k_config_interface deadlock fix
-Cc: "Andrew Morton" <akpm@linux-foundation.org>,
-	"Pekka Enberg" <penberg@cs.helsinki.fi>,
-	"Jiri Slaby" <jirislaby@gmail.com>, johannes@sipsolutions.net,
-	tomasw@gmail.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	linville@tuxdriver.com, stable@kernel.org
-In-Reply-To: <b6c5339f0808010643i58dbb2a7jf459359451061ae4@mail.gmail.com>
+	Mon, 4 Aug 2008 18:30:59 -0400
+Date: Mon, 4 Aug 2008 19:30:52 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
+Message-ID: <20080804223052.GG24927@khazad-dum.debian.net> (sfid-20080805_003103_480045_E6999123)
+References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br> <1217700664-20792-9-git-send-email-hmh@hmh.eng.br> <1217703723.8621.50.camel@johannes.berg> <20080802192704.GB24253@khazad-dum.debian.net> <1217864565.3139.17.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080801074014.GA3341@darkstar> <4892C2CA.7010003@gmail.com>
-	 <4892C359.9000304@cs.helsinki.fi>
-	 <20080801011415.ff4821a3.akpm@linux-foundation.org>
-	 <b6c5339f0808010643i58dbb2a7jf459359451061ae4@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1217864565.3139.17.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 1, 2008 at 9:43 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Fri, Aug 1, 2008 at 4:14 AM, Andrew Morton <akpm@linux-foundation.org> wrote:
->> On Fri, 01 Aug 2008 11:03:37 +0300 Pekka Enberg <penberg@cs.helsinki.fi> wrote:
->>
->>> Jiri Slaby wrote:
->>> > Dave Young napsal(a):
->>> >> In the drivers/net/wireless/ath5k/base.c, there's recursive locking of
->>> >> sc->lock
->>> >
->>> > Should be fixed already:
->>> > http://git.kernel.org/?p=linux/kernel/git/linville/wireless-2.6.git;a=commitdiff_plain;h=bc05116ab33d30342e2b4b1bcc6d6e1184e9df97
->>>
->>> I guess that didn't make it to -stable?
->>
->> (cc stable!)
->
-> Not to worry, the commit that introduced it was
-> 9d139c810a2aa17365cc548d0cd2a189d8433c65, which as far as I can tell
-> came in after 2.6.26.
+On Mon, 04 Aug 2008, Dan Williams wrote:
+> On Sat, 2008-08-02 at 16:27 -0300, Henrique de Moraes Holschuh wrote:
+> > On Sat, 02 Aug 2008, Johannes Berg wrote:
+> > > On Sat, 2008-08-02 at 15:11 -0300, Henrique de Moraes Holschuh wrote:
+> > > > Currently, rfkill would stand in the way of properly supporting wireless
+> > > > devices that are capable of waking the system up from sleep or hibernation
+> > > > when they receive a special wireless message.
+> > > > 
+> > > > Since rfkill attempts to soft-block any transmitters during class suspend,
+> > > 
+> > > why does it interfere with suspend anyway?
+> > 
+> > The class makes sure that all transmitters are blocked on suspend.  You'd
+> > have to ask Ivo for the reason, but AFAIK, it is for both safety and to help
+> > conserve power.
+> 
+> rfkill shouldn't be touching stuff during suspend.
 
-Strange, I get system stuck in 2.6.26 as well, so there might be other bugs.
+rfkill shouldn't *need* to touch stuff during suspend.  But for that to be
+true, all drivers using rfkill need to properly suspend in the first place.
 
+And that's more than just drivers/net/wireless.
 
->
-> --
-> Bob Copeland %% www.bobcopeland.com
->
+> In the OLPC libertas case, the radio may remain _ON_ during suspend,
+> because the OLPC machines are expected to suspend/resume many times per
+> second, and the radio must continue to participate in the mesh during
+> that time.  The only case where the radio gets blocked is when the user
+> requests it or when regulations require it.
 
+Yes.  And the fact that rfkill stood in the way of doing that is a bug.
+However, even my first try of a patch would already allow libertas to
+declare it doesn't want rfkill to bother it on suspend.
 
+It is very clear some drivers don't want rfkill to block radios on suspend.
+Really.  So far, libertas and iwl* are on my list of "don't want" or "don't
+need".  From what I can see, PCI-based rt2xxx is also "don't need".  And I
+can assume everything in drivers/misc is "don't need" without too much risk
+of being wrong.
+
+But the OPPOSITE is not clear at all to me.  I don't know whether the other
+users of rfkill need a radio block on suspend or not.  Unless someone can
+look over *all* in-tree users of linux/rfkill.h and state that none of them
+need it because all of them DO shutdown their devices on suspend, I will
+have to ask the maintainers of every single one about it before I ask a
+patch to be merged.  I already looked, and I don't know enough to have a
+definitive answer by myself.
+
+> Suspend != block, and tying suspend and rfkill together really is a
+> policy decision.  Thus, I don't agree that rfkill should block radios on
+> suspend.
+
+If some drivers out there are relying on it to, we need to know that before
+we remove it completely.
 
 -- 
-Regards
-dave
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
