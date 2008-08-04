@@ -1,60 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.wellnetcz.com ([212.24.148.102]:43697 "EHLO
-	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760635AbYHRTqE (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.185]:1790 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754908AbYHDOS1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2008 15:46:04 -0400
-From: Jiri Slaby <jirislaby@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: [PATCH 2/2] Ath5k: fix bintval setup
-Date: Mon, 18 Aug 2008 21:45:28 +0200
-Message-Id: <1219088728-10363-2-git-send-email-jirislaby@gmail.com> (sfid-20080818_214612_347239_D5C6F7E9)
-In-Reply-To: <1219088728-10363-1-git-send-email-jirislaby@gmail.com>
-References: <1219088728-10363-1-git-send-email-jirislaby@gmail.com>
+	Mon, 4 Aug 2008 10:18:27 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so712212nfc.21
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Aug 2008 07:18:27 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 5/5] rt2x00: Release rt2x00 2.2.0
+Date: Mon, 4 Aug 2008 16:39:05 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200808041636.41189.IvDoorn@gmail.com> <200808041638.24289.IvDoorn@gmail.com> <200808041638.47545.IvDoorn@gmail.com>
+In-Reply-To: <200808041638.47545.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200808041639.05329.IvDoorn@gmail.com> (sfid-20080804_161835_194421_90D9BB39)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-bintval is set to the initial value at .config_interface which is too
-late, since it overwrites previously set value from .config. Move the
-initialization to the .add_interface.
 
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-Cc: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/ath5k/base.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index b8178c7..227fa4b 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -2716,6 +2716,11 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
- 		ret = -EOPNOTSUPP;
- 		goto end;
- 	}
-+
-+	/* Set to a reasonable value. Note that this will
-+	 * be set to mac80211's value at ath5k_config(). */
-+	sc->bintval = 1000;
-+
- 	ret = 0;
- end:
- 	mutex_unlock(&sc->lock);
-@@ -2760,9 +2765,6 @@ ath5k_config_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	struct ath5k_hw *ah = sc->ah;
- 	int ret;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 61f853f..7476a4e 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -44,7 +44,7 @@
+ /*
+  * Module information.
+  */
+-#define DRV_VERSION	"2.1.8"
++#define DRV_VERSION	"2.2.0"
+ #define DRV_PROJECT	"http://rt2x00.serialmonkey.com"
  
--	/* Set to a reasonable value. Note that this will
--	 * be set to mac80211's value at ath5k_config(). */
--	sc->bintval = 1000;
- 	mutex_lock(&sc->lock);
- 	if (sc->vif != vif) {
- 		ret = -EIO;
+ /*
 -- 
-1.5.6.5
+1.5.6.1
 
