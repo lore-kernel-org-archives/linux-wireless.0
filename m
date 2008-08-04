@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:39574 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753139AbYHHKEt (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:41859 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753238AbYHDQ11 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Aug 2008 06:04:49 -0400
-From: Chr <chunkeey@web.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] p54: Fix for TX sequence number problem that resulted from commit 741b4fbc44
-Date: Fri, 8 Aug 2008 10:26:48 +0200
-Cc: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <48987e74.ct5+sLOpTbiTPPHq%Larry.Finger@lwfinger.net>
-In-Reply-To: <48987e74.ct5+sLOpTbiTPPHq%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200808081026.49041.chunkeey@web.de> (sfid-20080808_120455_041638_67DE6971)
+	Mon, 4 Aug 2008 12:27:27 -0400
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Message-Id: <6064CD72-8B4A-4F23-BCFA-4D656729E60D@holtmann.org> (sfid-20080804_182735_091275_8FD40F29)
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1217866765.1299.9.camel@johannes.berg>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v928.1)
+Subject: Re: [RFC] cfg80211: add PM hooks
+Date: Mon, 4 Aug 2008 18:27:23 +0200
+References: <1217853236.4721.32.camel@johannes.berg> <99AFB2EC-AECE-419A-B014-8391E45DF6C4@holtmann.org> <1217866765.1299.9.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 05 August 2008 18:23:16 Larry Finger wrote:
->
-> +	/* FIXME: The sequence that follows is needed for this driver to
-> +	 * work with mac80211 since "mac80211: fix TX sequence numbers".
-> +	 * As with the temporary code in rt2x00, changes will be needed
-> +	 * to get proper sequence numbers on beacons. In addition, this
-> +	 * patch places the sequence number in the hardware state, which
-> +	 * limits us to a single virtual state.
-> +	 */
-> +	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
-> +		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
-> +			priv->seqno += 0x10;
-> +		ieee80211hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-> +		ieee80211hdr->seq_ctrl |= cpu_to_le16(priv->seqno);
-> +	}
-??? 
-What is this for? The firmware does the sequence number counting
-and will simply override this field without looking at it... Are you sure this
-really fixes anything?
- 
-That said: the firmware will always report the sequence number of every
-tx'ed frame as a part of p54_frame_sent_hdr in the _free_ tx callback...
+Hi Johannes,
 
-Regards,
-	Chr.
+>>> +	.suspend = wiphy_suspend,
+>>> +	.resume = wiphy_resume,
+>>> };
+>>
+>> this needs to be wrapped into CONFIG_PM, because otherwise the build
+>> will fail when CONFIG_PM is not enabled.
+>
+> I thought so too, but then I looked at include/linux/device.h
+
+when did this got changed? And more to the point, why nobody bothered  
+to remove all the CONFIG_PM and CONFIG_HOTPLUG ifdefs splattered  
+around the kernel. It must be part of Greg's changes to remove class  
+devices. I am not sure this is all the right approach since  
+potentially it blots the kernel.
+
+This would also means that the CONFIG_HOTPLUG for dev_uevent can go  
+away.
+
+Regards
+
+Marcel
+
