@@ -1,73 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41394 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750761AbYHGGdc (ORCPT
+Received: from ti-out-0910.google.com ([209.85.142.184]:37943 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752709AbYHDJCX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 02:33:32 -0400
-Subject: Re: [PATCH] mac80211: split out aggregation code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240808061538l1e1d7a70x11ef7143ec9d2ea5@mail.gmail.com> (sfid-20080807_003839_357846_1538C3E0)
-References: <1218051603.23048.63.camel@johannes.berg>
-	 <1ba2fa240808061538l1e1d7a70x11ef7143ec9d2ea5@mail.gmail.com>
-	 (sfid-20080807_003839_357846_1538C3E0)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0ab8d5E7EexQmrP7H+F4"
-Date: Thu, 07 Aug 2008 08:32:55 +0200
-Message-Id: <1218090775.23048.84.camel@johannes.berg> (sfid-20080807_083336_262339_4E68958E)
-Mime-Version: 1.0
+	Mon, 4 Aug 2008 05:02:23 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so498719tic.23
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Aug 2008 02:02:21 -0700 (PDT)
+Message-ID: <a8e1da0808040202j78548d97j9962278b70d2d7d9@mail.gmail.com> (sfid-20080804_110228_118408_6F832D4C)
+Date: Mon, 4 Aug 2008 17:02:20 +0800
+From: "Dave Young" <hidave.darkstar@gmail.com>
+To: "Jiri Slaby" <jirislaby@gmail.com>
+Subject: Re: [PATCH] ath5k : ath5k_config_interface deadlock fix
+Cc: "Bob Copeland" <me@bobcopeland.com>,
+	"Andrew Morton" <akpm@linux-foundation.org>,
+	"Pekka Enberg" <penberg@cs.helsinki.fi>, johannes@sipsolutions.net,
+	tomasw@gmail.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	linville@tuxdriver.com, stable@kernel.org
+In-Reply-To: <4896B89C.9060901@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080801074014.GA3341@darkstar> <4892C2CA.7010003@gmail.com>
+	 <4892C359.9000304@cs.helsinki.fi>
+	 <20080801011415.ff4821a3.akpm@linux-foundation.org>
+	 <b6c5339f0808010643i58dbb2a7jf459359451061ae4@mail.gmail.com>
+	 <a8e1da0808032002u6ba000f8j8b56991985d65b94@mail.gmail.com>
+	 <4896B89C.9060901@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Aug 4, 2008 at 4:06 PM, Jiri Slaby <jirislaby@gmail.com> wrote:
+> Dave Young napsal(a):
+>>
+>> On Fri, Aug 1, 2008 at 9:43 PM, Bob Copeland <me@bobcopeland.com> wrote:
+>>>
+>>> On Fri, Aug 1, 2008 at 4:14 AM, Andrew Morton <akpm@linux-foundation.org>
+>>> wrote:
+>>>>
+>>>> On Fri, 01 Aug 2008 11:03:37 +0300 Pekka Enberg <penberg@cs.helsinki.fi>
+>>>> wrote:
+>>>>
+>>>>> Jiri Slaby wrote:
+>>>>>>
+>>>>>> Dave Young napsal(a):
+>>>>>>>
+>>>>>>> In the drivers/net/wireless/ath5k/base.c, there's recursive locking
+>>>>>>> of
+>>>>>>> sc->lock
+>>>>>>
+>>>>>> Should be fixed already:
+>>>>>>
+>>>>>> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-2.6.git;a=commitdiff_plain;h=bc05116ab33d30342e2b4b1bcc6d6e1184e9df97
+>>>>>
+>>>>> I guess that didn't make it to -stable?
+>>>>
+>>>> (cc stable!)
+>>>
+>>> Not to worry, the commit that introduced it was
+>>> 9d139c810a2aa17365cc548d0cd2a189d8433c65, which as far as I can tell
+>>> came in after 2.6.26.
+>>
+>> Strange, I get system stuck in 2.6.26 as well, so there might be other
+>> bugs.
+>
+> Could you provide any logs regarding this, please?
+>
 
---=-0ab8d5E7EexQmrP7H+F4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I will generate some new logs tomorrow.
 
-On Thu, 2008-08-07 at 01:38 +0300, Tomas Winkler wrote:
-> On Wed, Aug 6, 2008 at 10:40 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > It's more manageable that way. Also move some constants to
-> > include/linux/ieee80211.h.
->=20
-> I'm not sure this is good point of time to do that. Aggregation is not
-> working on 2.6.27 and we want to fix it there.
-> Splitting now will just complicate the effort.
+There's some info in:
+http://lkml.org/lkml/2008/7/29/32
 
-Ok, true, I just had this around so figured I'd send it out.
-
-> > + * Copyright 2008       Ron Rindjunsky <ron.rindjunsky@intel.com>
-
-> You would probably want to add this one as the major copyright.
-
-Yeah, but seeing he wasn't on the file where I took the code from I
-didn't want to add it. You guys should post a patch adding it to the
-files where you have contributed.
-
-johannes
-
---=-0ab8d5E7EexQmrP7H+F4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJImpcSAAoJEKVg1VMiehFY0AgP/Aki/ajN8TnQKvYzhEDstCKm
-ZGVnyfhVMXcVGhsD+cBwwXkTmgiWJ2WALMvjppcT4EHUsOgC46NaoofxIb+n+Fv1
-aV3BOGMEIpmwQsL1BFXflQ5Xxg77sgA4jM03MjkperS4f/vDYbH1ZWc/kd4uqYVX
-hHaYqjqedjOQ9Y+iKmthmosFzoylEZRXVpaob+HhHwh5f/jmE+lZ+qEHeXQGpeyq
-wGrzk38hWjbjsfPmfcVu0MOFHHJ1wQa3i5V+A7LKXZ6KCv1pJqfSMQklVtEShAoD
-MrbMXQMDk52UaL3hmmJa/ttxXUAZeJVO1IcA9IAvSQxfziHL0vWKZWmeYRUnFMG1
-tkh6IRUPBvbsZcPyfv0sWbvPi6jwc3QEqzCguG5Dg2t/efVbvFF2tdJlzrK+1CzH
-L6sCnPso3a5fQ9W6grghDGFkrHEw+4dKLkYTNp4K2Ve55SgU8suhBx1adcFpnFEX
-fyQSQ+xDSJqiCp0RTuUYWpUhIaZ4c50rDkNX4rQZDoWyDt5DlzBRNS8nKzC4+M5Q
-UXxZfKghGj17wT8cgaomoxdZbTpt3GLmOwi3Q6QhXojaV9aP9ROD4+T3P5kp4bsm
-lyK7nxoTed8rApjuBmlRWExzhd+Uvozt25J26NncBQPCLNhJXJ+W4FPeXMFgZUEU
-zmpUoY7r+NSfiy2+8Ady
-=gI++
------END PGP SIGNATURE-----
-
---=-0ab8d5E7EexQmrP7H+F4--
-
+-- 
+Regards
+dave
