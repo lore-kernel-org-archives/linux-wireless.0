@@ -1,86 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.229]:63663 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753032AbYHXLuV (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40855 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755587AbYHEL4u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Aug 2008 07:50:21 -0400
-Received: by wr-out-0506.google.com with SMTP id 69so921143wri.5
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Aug 2008 04:50:20 -0700 (PDT)
-Message-ID: <99175ee40808240450k7423691bu3ee81cbdba60acda@mail.gmail.com> (sfid-20080824_135026_347529_F1D87E79)
-Date: Sun, 24 Aug 2008 19:50:20 +0800
-From: Chris <dchris@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: intel 4965agn 54Mbps on Linux but 130Mbps on Windows
-In-Reply-To: <99175ee40808240438o75c18f3ayd0c98db87a7c8561@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <99175ee40808240438o75c18f3ayd0c98db87a7c8561@mail.gmail.com>
+	Tue, 5 Aug 2008 07:56:50 -0400
+Subject: iwl5000 oopses with Linus's tree
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OhPtDUU8aVSek4fbN3pE"
+Date: Tue, 05 Aug 2008 13:56:04 +0200
+Message-Id: <1217937364.3603.37.camel@johannes.berg> (sfid-20080805_135654_962503_852A6EC4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Could it come from the fact that the kernel in Ubuntu Hardy does not
-have CONFIG_NETDEVICES_MULTIQUEUE enabled ?
 
-I got this warning when I installed compat-wireless but I don't know
-if it is required to get 802.11n working.
+--=-OhPtDUU8aVSek4fbN3pE
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Best regards,
-Chris.
+Regardless of whether it is enabled or not, this shouldn't happen:
 
-On 8/24/08, Chris <dchris@gmail.com> wrote:
-> Hi,
->
-> I'm using compat-wireless-2008-08-06.tar.bz2 on Ubuntu Hardy (kernel
-> 2.6.24) for my intel 4965agn card in order to connect using 802.11n to
-> my router (TL-WR841N from TP-LINK).
-> Unfortunately, I'm only able to connect in 802.11g mode under Linux :
-> $ iwconfig wlan1
-> wlan1     IEEE 802.11abgn  ESSID:"chris"
->           Mode:Managed  Frequency:2.437 GHz  Access Point: 00:1D:0F:33:7E:EC
->           Bit Rate=54 Mb/s   Tx-Power=15 dBm
->           Retry min limit:7   RTS thr:off   Fragment thr=2352 B
->           Power Management:off
->           Link Quality=100/100  Signal level:-30 dBm  Noise level=-95 dBm
->           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
->
-> $ sudo iwlist wlan1 scan
-> wlan1     Scan completed :
->           Cell 01 - Address: 00:1D:0F:33:7E:EC
->                     ESSID:"chris"
->                     Mode:Master
->                     Channel:6
->                     Frequency:2.437 GHz (Channel 6)
->                     Quality=100/100  Signal level:-30 dBm  Noise level=-94
-> dBm
->                     Encryption key:on
->                     IE: IEEE 802.11i/WPA2 Version 1
->                         Group Cipher : CCMP
->                         Pairwise Ciphers (1) : CCMP
->                         Authentication Suites (1) : PSK
->                     IE: Unknown:
-> 2D1A4C1003FFFF000000000000000000000000000000000000000000
->                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 6 Mb/s
->                               9 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s; 36 Mb/s
->                               48 Mb/s; 54 Mb/s
->                     Extra:tsf=000000003aefe580
->                     Extra: Last beacon: 12ms ago
->
-> As you can see, no bit rate greater than 54Mbps is detected. I tried
-> under Windows with latest intel driver and it connects at 130Mbps.
-> Does the Linux driver support 802.11n? If so, do you have any
-> suggestion to make this work here? I will be happy to provide any
-> information you may require.
->
-> In dmesg output, I simply get this:
-> [   95.465080] wlan1: authenticate with AP 00:1d:0f:33:7e:ec
-> [   95.467416] wlan1: authenticated
-> [   95.467421] wlan1: associate with AP 00:1d:0f:33:7e:ec
-> [   95.471491] wlan1: RX AssocResp from 00:1d:0f:33:7e:ec (capab=0x431
-> status=0 aid=1)
-> [   95.471496] wlan1: associated
-> [   95.471533] wlan1 (WE) : Wireless Event too big (314)
->
-> Best regards,
-> Chris.
->
+[  373.387834] iwl4965: uCode did not respond OK.
+[  373.387959] iwl4965: Error wrong command queue 0 command id 0x1
+[  373.388032] ------------[ cut here ]------------
+[  373.388058] kernel BUG at drivers/net/wireless/iwlwifi/iwl-tx.c:1163!
+[  373.388102] Oops: Exception in kernel mode, sig: 5 [#1]
+
+This is kernel 2.6.27-rc1-00504-g2b12a4c-dirty
+
+johannes
+
+--=-OhPtDUU8aVSek4fbN3pE
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJImD/QAAoJEKVg1VMiehFYQGAP/2OTKPbdxIPu9VBQ11cIwRuL
+Sx7U42BUE6ijL4CiNCUgZo6vg6khBsbhS6+hqiq3NlmKdR1iuMHdSqNArbpXjSCm
+EM2HomyshgVkm4SMvFT6mn6VjI+KHzFYi+fssLsabe2N+vr6NNThhFI2C1HBCFfN
+bPIMN/SVCDzeuPCTIbwqvjxuS4Mdg0Iz8EIj/AAepSq2gek1QYXmvjqdu3qA1VzJ
+bLGA7DtZUEBr5jiEjemoHyn/WBSzja8Rih7d0jizlJ4IHUD05/4qe7TLvIT2JXb8
+hd15wgG4P9QhO6bDxL6idRTNUPd5GG6PG4/gr9QgTwsTMrwfrmoIMfjs9t7tmH9L
+O3Rs1+BnJn835BBmzlw5GUKvrllY909vHmmnBIEnl71vSYxuYdqkzGB6tdZz1rDy
+R4DxiHlvg0RFZ74qMS++TZ1GIXYjSEFKP1XkO23UvsQjqYOmY6+qGan0p4akutPv
+egahB4fPCHh9PE89A17fBDcX5XJXeLu5ojmllcme9JQt5EjwMvt0vKpJcvqUWJ9i
+rx9FsRg92R/1JQSRp3XFPJMnpybVqN6g1qgnKTRLsH+OMuFZ6QXx6T3zf0fFFpvs
+uQmeyfs7Zx/WXVYv/rEk5IyU02bMuUS9X3BRAAhyXxySOggXSPsGguBSKKDi1mXq
+L9/6yveLOVrA33g1TY80
+=nWRx
+-----END PGP SIGNATURE-----
+
+--=-OhPtDUU8aVSek4fbN3pE--
+
