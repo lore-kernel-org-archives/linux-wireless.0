@@ -1,60 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:44388 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760356AbYHSVxU (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.228]:37637 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751800AbYHELik (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2008 17:53:20 -0400
-Date: Tue, 19 Aug 2008 18:53:10 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 2/2] rfkill: use strict_strtoul
-Message-ID: <20080819215310.GB29336@khazad-dum.debian.net> (sfid-20080819_235325_468799_27DEB921)
-References: <1217699786-20672-1-git-send-email-hmh@hmh.eng.br> <1217699786-20672-3-git-send-email-hmh@hmh.eng.br> <20080817181617.GA30679@tuxdriver.com>
+	Tue, 5 Aug 2008 07:38:40 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2551513rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Aug 2008 04:38:40 -0700 (PDT)
+Message-ID: <e27b78a40808050438t7b5508e1oe034842427491520@mail.gmail.com> (sfid-20080805_133854_190717_76FFD092)
+Date: Tue, 5 Aug 2008 12:38:40 +0100
+From: Keir <keirlawson@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Mesh network project, feedback wanted
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080817181617.GA30679@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 17 Aug 2008, John W. Linville wrote:
-> On Sat, Aug 02, 2008 at 02:56:26PM -0300, Henrique de Moraes Holschuh wrote:
-> > Switch sysfs parsing to something that actually works properly.
-> 
-> > @@ -402,7 +410,7 @@ static ssize_t rfkill_claim_store(struct device *dev,
-> >  	if (error)
-> >  		return error;
-> >  
-> > -	if (rfkill->user_claim != claim) {
-> > +	if (!!rfkill->user_claim != !!claim) {
-> >  		if (!claim) {
-> >  			mutex_lock(&rfkill->mutex);
-> >  			rfkill_toggle_radio(rfkill,
-> 
-> This looks a bit funny.  Is the '!!' in front of 'rfkill->user_claim'
-> really necessary?  Especially since...
+Hello,
 
-It is the safest way (read: it won't go wrong if we change user_claim and
-claim types) to do it AFAIK, and the compiled is in charge of optimizing it
-properly.
+I'm not sure if this is the right place to post this, if it's not then
+please let me know.
 
-> > @@ -410,7 +418,7 @@ static ssize_t rfkill_claim_store(struct device *dev,
-> >  					    0);
-> >  			mutex_unlock(&rfkill->mutex);
-> >  		}
-> > -		rfkill->user_claim = claim;
-> > +		rfkill->user_claim = !!claim;
-> >  	}
-> >  
-> >  	mutex_unlock(&rfkill_mutex);
-> 
-> You seem to be doing the only assignment to 'rfkill->user_claim',
-> using a '!!' to condition the input?
+I am an undergraduate student currently studying software engineering,
+and am in the process of work out what my final year
+project/dissertation is going to be.  Ideally I would like to do
+something on mesh networking as it's a subject that interests me, and
+Linux is my operating system of choice.  Though I would consider
+myself fairly proficient at C, and I've studied operating systems
+though university, I haven't written any real OS code before.  Another
+limiting factor is my access to hardware.  I should be able to get my
+hands on a couple of linksys routers that can run Linux, and a couple
+of laptops, so this will make doing proper testing very difficult.
 
-user_claim is externally accessible, I thought it best to play safe.
+With this in mind, me and my supervisor came up with the project
+proposal that I have attached, however neither of us are hugely
+familiar with Linux mesh development.  I was wondering, does this seem
+like a sensible project proposal? Is there something better I could be
+doing given my resources?
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Any feedback on this (even if it's just a "that's a rubbish project,
+find something else") is greatly appreciated as I have no ideal of the
+merit of the project proposal.
+
+Cheers
+
+Keir Lawson
+
+"Project Proposal
+
+Traditional home wireless networks use a central point, a wireless
+access point or router, to both connect to the outside world, the
+internet, and to connect devices within the home to each other.  An
+alternative scheme for interaction between such devices is to use ad
+hoc networks, where devices communicate directly with each other, or
+through a path constituted from intermediary devices, avoiding the
+need for a central point for routing.  With the traditional solution,
+the network has one fail point, if the router goes off-line due to a
+fault, the network cannot function, however with the potential
+mobility of home computer devices, for example laptops, an ad hoc
+solution may also be problematic.
+
+This project will investigate combining these two network types with
+in the context of a home environment, and more specifically, will look
+at the effect of various different user and application preferences on
+route selection.  For example, a user or application could specify
+that it prefers to use a traditional managed connection in order to
+provide a level of quality of service, or another might specify that
+it does not want to cause congestion at the router and so will always
+attempt to use an ad hoc path.  Other parameters will also be
+investigated, such as reliability of connection required or speed of
+connection.
+
+It is envisaged that the Linux implementations of routing protocols
+and the IP protocol stack will be suitably orchestrated/modified in
+order to react to user preferences over these various parameters, and
+that the resulting system will be tested using traditional home
+computing hardware, such as a wireless base station, laptops/desktops,
+and PDAs."
