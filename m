@@ -1,55 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.187]:6258 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751260AbYHSST5 (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.237]:57055 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757718AbYHEP0m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2008 14:19:57 -0400
-Received: by rn-out-0910.google.com with SMTP id k40so70540rnd.17
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Aug 2008 11:19:57 -0700 (PDT)
-Message-ID: <81b0412b0808191119y3fe473bbi43ca5524ff4d20ac@mail.gmail.com> (sfid-20080819_202002_040563_69907531)
-Date: Tue, 19 Aug 2008 20:19:56 +0200
-From: "Alex Riesen" <raa.lkml@gmail.com>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Subject: Re: rt2500pci: rt2500pci_bbp_read: Error - BBPCSR register busy. Read failed.
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <200808192003.45072.IvDoorn@gmail.com>
+	Tue, 5 Aug 2008 11:26:42 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2645223rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Aug 2008 08:26:41 -0700 (PDT)
+Message-ID: <1ba2fa240808050820j1aa0ae7cj11f2758caa5ba4df@mail.gmail.com> (sfid-20080805_172645_224949_17EFCB0D)
+Date: Tue, 5 Aug 2008 18:20:27 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: iwl5000 oopses (was: iwl5000 oopses with Linus's tree)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1217938927.3603.40.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080819173524.GA4708@steel.home>
-	 <200808192003.45072.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1217937364.3603.37.camel@johannes.berg>
+	 <1217938927.3603.40.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/8/19 Ivo van Doorn <ivdoorn@gmail.com>:
->> The rt2500 driver in 2.6.27-rc3 (v2.6.27-rc3-552-g3c3a15a) constantly
->> produces a lot of this messages in log (slowdown quite noticable):
->>
->>     kernel: phy0 -> rt2500pci_bbp_read: Error - BBPCSR register busy. Read failed.
->>     kernel: phy0 -> rt2500pci_bbp_write: Error - BBPCSR register busy. Write failed.
->>     last message repeated 40 times
->>     kernel: phy0 -> rt2500pci_rf_write: Error - RFCSR register busy. Write failed.
->>     last message repeated 7 times
->>     kernel: phy0 -> rt2500pci_bbp_write: Error - BBPCSR register busy. Write failed.
+On Tue, Aug 5, 2008 at 3:22 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
 >
-> This is a bad sign, the slowdown is expected since the driver is continuously looping
-> waiting for the registers to become available. Did this PCI card work in the past, and
-> if so with what driver?
+>> This is kernel 2.6.27-rc1-00504-g2b12a4c-dirty
+>
+> Same happens with a newer kernel, I merged together wireless-testing and
+> linux-2.6 (because powerpc won't build in -rc1) and get this:
+>
+> [  126.826663] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27kds
+> [  126.826947] iwlagn: Copyright(c) 2003-2008 Intel Corporation
+> [  126.828369] iwlagn: Detected Intel Wireless WiFi Link 5350AGN REV=0x24
+> [  126.848680] iwlagn: Tunable channels: 13 802.11bg, 24 802.11a channels
+> [  127.014564] firmware: requesting iwlwifi-5000-1.ucode
+> [  127.170640] iwlagn: Error wrong command queue 43 command id 0x6B
+> [  127.170832] ------------[ cut here ]------------
+> [  127.170884] kernel BUG at drivers/net/wireless/iwlwifi/iwl-tx.c:1163!
+> [  127.170941] Oops: Exception in kernel mode, sig: 5 [#1]
 
-It surely did, but I honestly don't remember what with. I'll try to bisect.
 
-> Does this card work on another PC, or does the windows or legacy driver work with
-> this card?
-
-No Windows here, but see below
-
-> (Yes, all suggestions above imply suspicion about the hardware itself rather then the driver)
-
-Well, it used to crash some industrial board (I believe it was some
-Boser, HS-series, with
-this card in a PCI slot of its backplane). So you're not alone in your
-suspicions (OTOH,
-that board was known to misbehave itself).
-
-I have no particular need for that card, so if someone wants it for
-testing I gladly
-part with it (and if you happen be in Germany, I'll just mail it).
+Something is messing up the queues.
+Will check
+Thanks
+Tomas
