@@ -1,64 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:12033 "EHLO mga11.intel.com"
+Received: from chilli.pcug.org.au ([203.10.76.44]:51182 "EHLO smtps.tip.net.au"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754856AbYHVB7Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Aug 2008 21:59:16 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 1/3] iwlwifi: fix apm_stop function
-Date: Fri, 22 Aug 2008 09:55:38 +0800
-Message-Id: <1219370140-21481-2-git-send-email-yi.zhu@intel.com> (sfid-20080822_035921_484418_62CAC0C1)
-In-Reply-To: <1219370140-21481-1-git-send-email-yi.zhu@intel.com>
-References: <1219370140-21481-1-git-send-email-yi.zhu@intel.com>
+	id S1757481AbYHEP4N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Aug 2008 11:56:13 -0400
+Date: Wed, 6 Aug 2008 01:30:41 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-08-04
+Message-Id: <20080806013041.c0d3845b.sfr@canb.auug.org.au>
+In-Reply-To: <20080805140517.GA7819@tuxdriver.com>
+References: <20080804193753.GA30345@tuxdriver.com>
+	<20080804.150147.78586437.davem@davemloft.net>
+	<20080805021710.GA21731@tuxdriver.com>
+	<20080805.012814.215633850.davem@davemloft.net>
+	<20080805232839.95235680.sfr@canb.auug.org.au>
+	<20080805140517.GA7819@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Wed__6_Aug_2008_01_30_41_+1000_TJM__bAHGSzDuJU="
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohamed Abbas <mohamed.abbas@intel.com>
+--Signature=_Wed__6_Aug_2008_01_30_41_+1000_TJM__bAHGSzDuJU=
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The patch fixes CSR_GP_CNTRL_REG_FLAG_INIT_DONE was set instead of
-cleared which disabled move device to D0U state.
+Hi John,
 
-Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-5000.c |    3 ++-
- 2 files changed, 4 insertions(+), 3 deletions(-)
+On Tue, 5 Aug 2008 10:05:17 -0400 "John W. Linville" <linville@tuxdriver.co=
+m> wrote:
+>
+> FWIW I fixed-up the wireless-2.6 tree to reflect what davem pulled -- a
+> noop, but at least those patches shouldn't pollute -next tomorrow. :-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index aba173d..6747850 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -475,8 +475,8 @@ static void iwl4965_apm_stop(struct iwl_priv *priv)
- 	iwl_set_bit(priv, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
- 
- 	udelay(10);
--
--	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
-+	/* clear "init complete"  move adapter D0A* --> D0U state */
-+	iwl_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
- 	spin_unlock_irqrestore(&priv->lock, flags);
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index f194447..c648638 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -146,7 +146,8 @@ static void iwl5000_apm_stop(struct iwl_priv *priv)
- 
- 	udelay(10);
- 
--	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
-+	/* clear "init complete"  move adapter D0A* --> D0U state */
-+	iwl_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
- 
- 	spin_unlock_irqrestore(&priv->lock, flags);
- }
--- 
-1.5.3.6
+Thanks.  Every bit helps.  I am hoping my toolchain guy can come up with
+a workaround for us.  And you guys can figure out the list.h thing.
 
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
+
+--Signature=_Wed__6_Aug_2008_01_30_41_+1000_TJM__bAHGSzDuJU=
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkiYciEACgkQjjKRsyhoI8xYqwCgkqX2g/MXPwqLJYXixCmbxOWK
+YvQAoJ/FHSMdLuedrmx93XFKljIJP8nH
+=a+w8
+-----END PGP SIGNATURE-----
+
+--Signature=_Wed__6_Aug_2008_01_30_41_+1000_TJM__bAHGSzDuJU=--
