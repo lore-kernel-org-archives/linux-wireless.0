@@ -1,60 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.238]:50666 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752374AbYHTUt4 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:32943 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757574AbYHEUNi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Aug 2008 16:49:56 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so627763rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Aug 2008 13:49:56 -0700 (PDT)
-Message-ID: <48AC836B.2020207@gmail.com> (sfid-20080820_225002_112959_7EFB2137)
-Date: Wed, 20 Aug 2008 21:49:47 +0100
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, proski@gnu.org,
-	orinoco-devel@lists.sourceforge.net
-Subject: Re: [PATCH 00/19] orinoco: WPA for Agere based cards
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com> <20080820192812.GA1746@tuxdriver.com>
-In-Reply-To: <20080820192812.GA1746@tuxdriver.com>
-Content-Type: text/plain; charset=us-ascii; format=flowed
-From: Dave <kilroyd@googlemail.com>
+	Tue, 5 Aug 2008 16:13:38 -0400
+Subject: Re: kernel panic on p54pci insertion on mipsel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomasz Chmielewski <mangoo@wpkg.org>
+Cc: linux-wireless@vger.kernel.org,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>
+In-Reply-To: <4898B018.5050202@wpkg.org> (sfid-20080805_220519_408842_EB7A6EEA)
+References: <4898B018.5050202@wpkg.org>
+	 (sfid-20080805_220519_408842_EB7A6EEA)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aOJDhMcInV+5JeN1D/eD"
+Date: Tue, 05 Aug 2008 22:12:57 +0200
+Message-Id: <1217967177.3603.60.camel@johannes.berg> (sfid-20080805_221341_426495_3FD57473)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Sat, Aug 02, 2008 at 11:14:14AM +0100, kilroyd@googlemail.com wrote:
->> This patch series enables WPA on Agere based orinoco devices.
->>
->> Patchset overview
->> 1-2: General scanning updates
->> 3-9: Agere firmware download to RAM
->> 10-12: Update orinoco to work with new firmware
->> 13-19: WPA functionality
->>
->> This patchset is against wireless-testing (master-2008-07-16), is
->> sparse clean (UP), and should be bisectable. It is almost checkpatch
->> clean - the single warning looks like a false positive to me.
-> 
-> Are we satisfied w/ this patch series?  If so, could I ask Dave to
-> repost them as a single series (rather than having to randomly replace
-> some of them) in the middle?
 
-I believe I have addressed all the issues that I can. The main outstanding one is why Pavel was seeing issues on his 64 bit kernel/64 bit userspace setup.
-
-I will repost the full series shortly.
- 
->> To use WPA, you will need an Agere firmware image. You can get the
->> necessary file at
->> <http://marc.info/?l=orinoco-devel&m=121078835610877>, just extract
->> and rename orinoco.fw to agere_sta_fw.bin and place it in
->> /lib/firmware (or distro equivalent). Alternatively you can try
->> extract firmware from a Windows driver using the program in
->> <http://marc.info/?l=orinoco-devel&m=120846933719051>.
-> 
-> Is the above documented anywhere other than this email thread?
-
-At the moment this is only documented in email threads (on orinoco-devel) - I lack access to any web/file hosting to put something more permanent up. This obviously ought to be corrected.
+--=-aOJDhMcInV+5JeN1D/eD
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
 
-Regards,
+> Call Trace:[<c0060000>][<c0057150>]
 
-Dave.
+My magic crystal ball says that this is not inside p54 at all, and
+indeed a problem in your kernel patches. :P
+
+johannes
+
+--=-aOJDhMcInV+5JeN1D/eD
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJImLRGAAoJEKVg1VMiehFYH+0P/0MR58pRyCIYvWnx0ymr95YE
+l8u2ia4QnOzpPTDoM8/57HCDKRyDSr1ILJPfuCCMu7hatv91sONxOmJMdRwHvhhl
+5EfiCvDF+ppLH6ILF/PC3Qu60b94M9//SsXmmyBc1ajxwqbJwww2rSLLmFYShiJe
+5ghATSq7/frmiZDej1hFwy+pHTle7tcTTCo3Nb6ohvWaVWVC+ZgJNN2ISQrXmKBc
+J+SXYBmAWIHHSiCZ1Ydmfb2rVtmz8SBYSB6aat1s4emXwCWXtAl24ioh3bNg4rIx
+bL7FFTyEMZXmaUQklnxjwQ/2GYecL6sJ2Lz3qEqLAMuG9TKVBD67m9nKedJfhSLV
+50kHmfiloq4yxcw7i0iVRIrwLd6b2ic7ey1usnC2KI681ft0NCvD9PjgNfwu/+49
+2joSLvgrEG1B6YqYh5gms+l+PTcSu/nAaTgBAo+MUXU1L87b1u6chtTJCGRtNg6A
+avxd81hhQvb0J+e2NgMT8iwSP/uILd5Cp9syTbUYCVHZ1Ey9M3ajIQhBZvGbSQdr
+Rb+0TdCEjrwrDccS6EAoeMV+y+8aJY9rQkEfSO3p5eUDhbZ2Eq2q2KSM80yCvv7T
+Yk4oRh6Twq4OtTjT4V39nFaE2def6k06xlxFYjIQhbrkQWU85IJPUsctuWFPBZAm
+BG9+skb1Kdv6drfy1VnL
+=DVdx
+-----END PGP SIGNATURE-----
+
+--=-aOJDhMcInV+5JeN1D/eD--
+
