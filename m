@@ -1,71 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53340 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756854AbYHEMvZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 08:51:25 -0400
-Subject: Re: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <20080805124814.GA32675@khazad-dum.debian.net>
-References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
-	 <1217700664-20792-9-git-send-email-hmh@hmh.eng.br>
-	 <1217703723.8621.50.camel@johannes.berg>
-	 <20080802192704.GB24253@khazad-dum.debian.net>
-	 <1217864565.3139.17.camel@localhost.localdomain>
-	 <20080804223052.GG24927@khazad-dum.debian.net>
-	 <1217890611.17793.17.camel@localhost.localdomain>
-	 <20080804233525.GI24927@khazad-dum.debian.net>
-	 <1217927541.3603.32.camel@johannes.berg>
-	 <20080805124814.GA32675@khazad-dum.debian.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9e2zCTlKR1ppJ3EpWklq"
-Date: Tue, 05 Aug 2008 14:50:34 +0200
-Message-Id: <1217940634.3603.42.camel@johannes.berg> (sfid-20080805_145128_598896_D6AEFF76)
+Received: from c60.cesmail.net ([216.154.195.49]:14791 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755373AbYHEWsN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Aug 2008 18:48:13 -0400
+Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere fw
+From: Pavel Roskin <proski@gnu.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: kilroyd@googlemail.com, linux-wireless@vger.kernel.org,
+	orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>,
+	Jean Tourrilhes <jt@hpl.hp.com>
+In-Reply-To: <1217973349.30531.1.camel@localhost.localdomain>
+References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
+	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
+	 <1217825304.10989.20.camel@dv>
+	 <1217864060.3139.10.camel@localhost.localdomain>
+	 <1217970944.2908.11.camel@dv>
+	 <1217973349.30531.1.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Tue, 05 Aug 2008 18:48:11 -0400
+Message-Id: <1217976491.2908.36.camel@dv> (sfid-20080806_004818_377674_813EB53D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2008-08-05 at 17:55 -0400, Dan Williams wrote:
+> On Tue, 2008-08-05 at 17:15 -0400, Pavel Roskin wrote:
 
---=-9e2zCTlKR1ppJ3EpWklq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > If I use 32-bit kernel with 32-bit userspace, essid filtering works, but
+> > only to a degree.  Old scan results are cached somewhere, so if I scan
+> > with essid and then without essid, I get filtered results.  Likewise, If
+> > I don't use filtering the first time, but use it the second time, I get
+> > unfiltered results.
+> 
+> Scanning for a specific SSID never has "filtered" the results, nor
+> should it.  It just probe-scans the requested SSID and return any new
+> results in with the cached ones.  You requested an SSID scan, thus you
+> must know the SSID, thus you can do the filtering yourself?
 
-On Tue, 2008-08-05 at 09:48 -0300, Henrique de Moraes Holschuh wrote:
+Perhaps I used a wrong word.  If requesting a scan, I expect to get
+results from a scan with the parameters I supplied.  If the scan results
+are from a scan with different parameters, I don't want them.  I'd
+rather see the driver return EAGAIN than results of a scan with
+different parameters.
 
-> Maybe on net/wireless, but I am really not going to trust that one for,
-> e.g., serial and USB drivers (USB being a bus that is often not shut down
-> during suspend because there are USB wake devices), unless you clearly st=
-ate
-> you DID review them all, and which ones.
+The userspace is welcome to keep a pool of all APs found by any scans,
+but I don't think drivers should do it.
 
-Look, this is _clearly_ the wrong thing to do, so unless you want your
-patches blocked over it, just rip it out.
+I believe it was discussed before.  If there was any decision how we
+want drivers to behave, let's stick with it.
 
-johannes
-
---=-9e2zCTlKR1ppJ3EpWklq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJImEyWAAoJEKVg1VMiehFYorYP/0gesJt5Zs470nXphH6UqPHj
-2vek9If3w3YLjoSh+Y/WOB+uShs7mXXiMo8nsid/PTD0Tb71wnei+GaDP7YsIRSs
-Zl3Hi1kujwsqW7Mri8qGD8hyKObnb/eQn5x8mw1/oQnp20/05QeWA4K3DkZ7kkuA
-lgsyWJXsKOz5u2I3muPog7b3sappbb3s5dZmhsoLVeH1ZB8wsskilFq+cUtRhe3n
-ExM3gNrEg6Qiod+I3+wYGOtH25mwJp5EU8qnUzC7jcPinD2eR5bjE/lq8rd035qG
-67tT/rsB7hIRQRK8pq2I6CV6btTU6WcsmPtw6OU9g+I/vWCMh3eihKUZRoD3SMfR
-lkEZlCJ3X6EikhsNLOdN7tenKbHm1bUioZSubjQ0owKpb5MrTC10uPo72YBJeUBQ
-bkM0lwVLV4LLS4u73Jhj4euMPYhmq625daBrDY+8svKnDuxatpoBzcrWLdk7yi8b
-j9mV2DKjmNwX0qDpRokdWCNvxQkgaB/blO/ePqGFKoebFJQa7Kw3XBSeodadrByh
-vUuGg2nx8v930yrssTN1Fu4qw2FlkiF+YFUwyd71o+ujnLxl0T6yJ3cl1jXFNSB9
-iFFpajk+cy694Z8h0d4TrcDUW2L/TnmuffDJ+LGlPAZY65PWfLrc8zOe7uKI06U8
-XPLiHamK/bMtXlziwVkk
-=Ki/d
------END PGP SIGNATURE-----
-
---=-9e2zCTlKR1ppJ3EpWklq--
-
+-- 
+Regards,
+Pavel Roskin
