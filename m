@@ -1,35 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:23812 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751920AbYHKRts (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:40675 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758650AbYHEBn0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2008 13:49:48 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so712009nfc.21
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2008 10:49:46 -0700 (PDT)
-To: Jan Willies <jan@willies.info>
-Subject: Re: unable to associate with WPA-AP - rt2x00-2.1.8
-Date: Mon, 11 Aug 2008 20:17:58 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <489FF6A8.9030204@willies.info>
-In-Reply-To: <489FF6A8.9030204@willies.info>
+	Mon, 4 Aug 2008 21:43:26 -0400
+Message-ID: <4897B037.5040300@lwfinger.net> (sfid-20080805_034342_803892_296F67E2)
+Date: Mon, 04 Aug 2008 20:43:19 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200808112017.58980.IvDoorn@gmail.com> (sfid-20080811_194951_877189_3328D882)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Will Dyson <will.dyson@gmail.com>
+CC: Ivo van Doorn <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+Subject: Re: [Rt2400-devel] Please pull 'upstream' branch of rt2x00
+References: <200808041636.41189.IvDoorn@gmail.com> <8e6f94720808041821q760f8596g70a8ebc4c142989a@mail.gmail.com>
+In-Reply-To: <8e6f94720808041821q760f8596g70a8ebc4c142989a@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 11 August 2008, Jan Willies wrote:
-> Hello,
+Will Dyson wrote:
+> On Mon, Aug 4, 2008 at 10:36 AM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+>> Hi John,
+>>
+>> Only 5 patches, but they do bump rt2x00 to a new version: 2.2.0
+>> This series will add HW crypto support to rt2x00, by default it
+>> has been enabled for rt61pci and rt73usb.
 > 
-> I'm using Fedore9 and since the last update I cannot associate my rt2500pci card anymore, it's running into a timeout. I'm not seeing any log entries on the AP.
+> Seems to work well on my rt61pci card!
 > 
-> rt2500pci is version 2.1.8
+> In fact, it reports a higher link quality (and maintains a higher
+> bitrate) than the version in current wireless-testing. The quality
+> report also fluctuates less than previously. This is consistent over a
+> few hours of testing with streaming PCM audio.
+> 
+> I do get a lockdep warning when bringing up the device, however.
+> 
+> =============================================
+> [ INFO: possible recursive locking detected ]
+> 2.6.27-rc1-rt2-wl #1
+> ---------------------------------------------
+> rt61pci/4405 is trying to acquire lock:
+>  (_xmit_IEEE80211#2){-...}, at: [<ffffffffa014cc52>]
+> ieee80211_scan_completed+0x172/0x320 [mac80211]
+> 
+> but task is already holding lock:
+>  (_xmit_IEEE80211#2){-...}, at: [<ffffffffa014cc52>]
+> ieee80211_scan_completed+0x172/0x320 [mac80211]
+> 
 
-I think this should have been fixed by patch:
-http://lkml.org/lkml/2008/7/31/35
+I get that same lockdep warning when using the mainline kernel with b43. It 
+doesn't seem to cause any problems.
 
-But I don't know if John has merged that patch to FC9 yet.
+Larry
 
-Ivo
