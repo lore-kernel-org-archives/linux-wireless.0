@@ -1,176 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:31714 "EHLO mail.atheros.com"
+Received: from chilli.pcug.org.au ([203.10.76.44]:50688 "EHLO smtps.tip.net.au"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753744AbYHFU0Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2008 16:26:24 -0400
-Date: Wed, 6 Aug 2008 13:26:19 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Peter Zijlstra <peterz@infradead.org>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH 1/4] list.h: Add list_splice_tail() and
-	list_splice_tail_init()
-Message-ID: <20080806202619.GN5605@tesla> (sfid-20080806_222636_479810_BD963F7B)
-References: <1217890080-12073-1-git-send-email-lrodriguez@atheros.com> <1217926995.3589.116.camel@twins>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1217926995.3589.116.camel@twins>
+	id S1755506AbYHEN2s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Aug 2008 09:28:48 -0400
+Date: Tue, 5 Aug 2008 23:28:39 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: David Miller <davem@davemloft.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-08-04
+Message-Id: <20080805232839.95235680.sfr@canb.auug.org.au> (sfid-20080805_152854_147537_E11D655C)
+In-Reply-To: <20080805.012814.215633850.davem@davemloft.net>
+References: <20080804193753.GA30345@tuxdriver.com>
+	<20080804.150147.78586437.davem@davemloft.net>
+	<20080805021710.GA21731@tuxdriver.com>
+	<20080805.012814.215633850.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Tue__5_Aug_2008_23_28_39_+1000_GoHZK0.xw2FNjiVO"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 05, 2008 at 02:03:15AM -0700, Peter Zijlstra wrote:
-> On Mon, 2008-08-04 at 15:48 -0700, Luis R. Rodriguez wrote:
-> > If you are using linked lists for queues list_splice() will not do what
-> > you would expect even if you use the elements passed reversed. We need
-> > to handle these differently. We add list_splice_tail() and
-> > list_splice_tail_init()
-> 
-> In the -rt tree we have this:
-> 
-> ---
->     rt: list_splice2
-> 
->     Introduce list_splice2{,_tail}() which will splice a sub-list denoted
->     by two list items instead of the full list.
-> 
->     Signed-off-by: Peter Zijlstra <a.p.zijlstra@chello.nl>
+--Signature=_Tue__5_Aug_2008_23_28_39_+1000_GoHZK0.xw2FNjiVO
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I like your version of list_splice_tail() and list_splice_tail_init()
-more as you re-use __list_splice() and fix it for its use instad of
-adding a new __list_splice_tail(). You also caught some users of
-__list_splice() for tail purposes. Its a good thing both versions
-are functionally equivalent :) otherwise one of us was doing something
-wrong.
+Hi David,
 
-We just need to also clarify list_splice() is for stacks and not
-queues, I can add that. You patch however fails with checkpatch and
-forgot to add kdoc. I'll correct it.
+On Tue, 05 Aug 2008 01:28:14 -0700 (PDT) David Miller
+<davem@davemloft.net> wrote:
+>
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Mon, 4 Aug 2008 22:17:10 -0400
+>=20
+> > On Mon, Aug 04, 2008 at 03:01:47PM -0700, David Miller wrote:
+> > > I'm holding off on this pull until the list.h changes get so me lkml
+> > > ACKs.
+> >=20
+> > Sure, np.  I created a "no-ath9k" branch in case you are feeling
+> > frisky -- it is the same except for omitting the list.h changes,
+> > the ath5k pci table change, and the new ath9k driver.
+> >=20
+> > 	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.gi=
+t no-ath9k
+> >=20
+> > Hth!
+>=20
+> Due to the powerpc build failures the list.h stuff causes, I'm going
+             ^^^^^^^
+It was a sparc64 defconfig that failed due to the list.h changes.  The
+powerpc build only failed when I added an include of <linux/bug.h> to
+list.h.
 
-Last, list_splice2() should go in a separate patch and could use just a
-little bit more documentation as exactly what it does. Also the last
-hunk doesn't apply as 2.6.27 doesn't have lib/lock_list.c yet. To get ath9k
-in 2.6.27 we need list_splice_tail() and list_splice_tail_init(),
-how's this for 2.6.27:
+The powerpc compiler got an internal error trying to compile the ath9k
+code - but I don't know if there is anything we can to do to the source
+to work around that.
 
---
-list.h: Add list_splice_tail() and list_splice_tail_init()
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
 
-If you are using linked lists for queues list_splice() will not do what
-you would expect even if you use the elements passed reversed. We need
-to handle these differently. We add list_splice_tail() and
-list_splice_tail_init().
+--Signature=_Tue__5_Aug_2008_23_28_39_+1000_GoHZK0.xw2FNjiVO
+Content-Type: application/pgp-signature
 
-Signed-off-by: Peter Zijlstra <a.p.zijlstra@chello.nl>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/dma/ioat_dma.c    |    2 +-
- drivers/usb/host/ehci-q.c |    2 +-
- include/linux/list.h      |   39 ++++++++++++++++++++++++++++++---------
- 3 files changed, 32 insertions(+), 11 deletions(-)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-diff --git a/drivers/dma/ioat_dma.c b/drivers/dma/ioat_dma.c
-index a52156e..bc8c6e3 100644
---- a/drivers/dma/ioat_dma.c
-+++ b/drivers/dma/ioat_dma.c
-@@ -551,7 +551,7 @@ static dma_cookie_t ioat1_tx_submit(struct dma_async_tx_descriptor *tx)
- 	/* write address into NextDescriptor field of last desc in chain */
- 	to_ioat_desc(ioat_chan->used_desc.prev)->hw->next =
- 							first->async_tx.phys;
--	__list_splice(&new_chain, ioat_chan->used_desc.prev);
-+	list_splice_tail(&new_chain, &ioat_chan->used_desc);
- 
- 	ioat_chan->dmacount += desc_count;
- 	ioat_chan->pending += desc_count;
-diff --git a/drivers/usb/host/ehci-q.c b/drivers/usb/host/ehci-q.c
-index 2622b65..3712b92 100644
---- a/drivers/usb/host/ehci-q.c
-+++ b/drivers/usb/host/ehci-q.c
-@@ -932,7 +932,7 @@ static struct ehci_qh *qh_append_tds (
- 
- 			list_del (&qtd->qtd_list);
- 			list_add (&dummy->qtd_list, qtd_list);
--			__list_splice (qtd_list, qh->qtd_list.prev);
-+			list_splice_tail(qtd_list, &qh->qtd_list);
- 
- 			ehci_qtd_init(ehci, qtd, qtd->qtd_dma);
- 			qh->dummy = qtd;
-diff --git a/include/linux/list.h b/include/linux/list.h
-index 453916b..61034a6 100644
---- a/include/linux/list.h
-+++ b/include/linux/list.h
-@@ -215,21 +215,21 @@ static inline int list_is_singular(const struct list_head *head)
- }
- 
- static inline void __list_splice(const struct list_head *list,
--				 struct list_head *head)
-+				 struct list_head *prev,
-+				 struct list_head *next)
- {
- 	struct list_head *first = list->next;
- 	struct list_head *last = list->prev;
--	struct list_head *at = head->next;
- 
--	first->prev = head;
--	head->next = first;
-+	first->prev = prev;
-+	prev->next = first;
- 
--	last->next = at;
--	at->prev = last;
-+	last->next = next;
-+	next->prev = last;
- }
- 
- /**
-- * list_splice - join two lists
-+ * list_splice - join two lists, this is designed for stacks
-  * @list: the new list to add.
-  * @head: the place to add it in the first list.
-  */
-@@ -237,7 +237,19 @@ static inline void list_splice(const struct list_head *list,
- 				struct list_head *head)
- {
- 	if (!list_empty(list))
--		__list_splice(list, head);
-+		__list_splice(list, head, head->next);
-+}
-+
-+/**
-+ * list_splice_tail - join two lists, each list being a queue
-+ * @list: the new list to add.
-+ * @head: the place to add it in the first list.
-+ */
-+static inline void list_splice_tail(struct list_head *list,
-+				struct list_head *head)
-+{
-+	if (!list_empty(list))
-+		__list_splice(list, head->prev, head);
- }
- 
- /**
-@@ -251,7 +263,16 @@ static inline void list_splice_init(struct list_head *list,
- 				    struct list_head *head)
- {
- 	if (!list_empty(list)) {
--		__list_splice(list, head);
-+		__list_splice(list, head, head->next);
-+		INIT_LIST_HEAD(list);
-+	}
-+}
-+
-+static inline void list_splice_tail_init(struct list_head *list,
-+					 struct list_head *head)
-+{
-+	if (!list_empty(list)) {
-+		__list_splice(list, head->prev, head);
- 		INIT_LIST_HEAD(list);
- 	}
- }
--- 
-1.5.6.rc2.15.g457bb.dirty
+iEYEARECAAYFAkiYVYcACgkQjjKRsyhoI8wnmgCcDp5xDwUw81MpySveKaTHWRrN
+Vj4AoJTltUPIFSTYDpV0mYSgP0pmHINU
+=b/De
+-----END PGP SIGNATURE-----
 
+--Signature=_Tue__5_Aug_2008_23_28_39_+1000_GoHZK0.xw2FNjiVO--
