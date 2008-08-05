@@ -1,47 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:55895 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751023AbYHISL4 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.169]:19806 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758598AbYHEI7k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Aug 2008 14:11:56 -0400
-Message-ID: <489DDDEA.2030604@lwfinger.net> (sfid-20080809_201212_606813_4E588D9D)
-Date: Sat, 09 Aug 2008 13:11:54 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 5 Aug 2008 04:59:40 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so3864479wfd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Aug 2008 01:59:40 -0700 (PDT)
+Message-ID: <ef1cd66f0808050152g1dd8b96cl2df820607d480f0f@mail.gmail.com> (sfid-20080805_105944_579859_60BBC306)
+Date: Tue, 5 Aug 2008 09:52:22 +0100
+From: "=?ISO-8859-1?Q?Jochen_Vo=DF?=" <jochen.voss@googlemail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [PATCH 2/4] list.h: add list_cut_position()
+Cc: "Randy Dunlap" <randy.dunlap@oracle.com>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
+In-Reply-To: <20080804231320.GG6447@tesla>
 MIME-Version: 1.0
-To: Chr <chunkeey@web.de>
-CC: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] p54: Fix for TX sequence number problem that resulted
- from commit 741b4fbc44
-References: <48987e74.ct5+sLOpTbiTPPHq%Larry.Finger@lwfinger.net> <200808082038.48840.chunkeey@web.de> <489DBFA9.80608@lwfinger.net> <200808091843.41985.chunkeey@web.de>
-In-Reply-To: <200808091843.41985.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1217890089-12100-1-git-send-email-lrodriguez@atheros.com>
+	 <20080804160011.ec964f1f.randy.dunlap@oracle.com>
+	 <20080804231320.GG6447@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chr wrote:
-> hmm? there are lots of new & old firmwares. 
-> what chip do you have? a ISL3886 + net2280 or a ISL3887?
-> you can get the firmware version from dmesg, just load the
-> driver and grep for "p54: FW rev"
-> 
-> my devices: 
-> isl3880 minipci: 2.7.0.0 (best supported) & 2.13.1.0 (unstable)
-> isl3887 usb: 2.5.8.0(bugs), 2.6.16.0(DELL bugs) and 2.13.2.0 (WIP) 
->
+Hi,
 
- From dmesg:
+2008/8/5 Luis R. Rodriguez <lrodriguez@atheros.com>:
+> +static inline void __list_cut_position(struct list_head *list,
+> +               struct list_head *head, struct list_head *entry)
+> +{
+> +       struct list_head *new_first =
+> +               (entry->next != head) ? entry->next : head;
 
-firmware: requesting isl3887usb_bare
-p54: LM86 firmware
-p54: FW rev 2.5.8.0 - Softmac protocol 3.0
+Isn't this just an over-complicated way of writing "new_first = entry->next"?
 
-I think this shows that I have an ISL3887. As further confirmation, it 
-uses routine p54u_tx_3887() to transmit.  Are the bugs in 2.5.8.0 and 
-2.6.16.0 described on the Web? My device is a Dell DW1450.
+> +       list->next = head->next;
+> +       list->next->prev = list;
+> +       list->prev = entry;
+> +       entry->next = list;
+> +       head->next = new_first;
+> +       new_first->prev = head;
+> +}
+> +
+> +/**
+> + * list_cut_position - cut a list into two
+> + * @list: a new list to add all removed entries
+> + * @head: a list with entries
+> + * @entry: an entry within head, could be the head itself
+> + *     and if so we won't cut the list
+> + */
 
-The 2-3 hour disconnect is still present with the sequence number 
-patch reverted and the MTU at 1300. Still testing.
+I think it would be helpful if the comment explained what the function
+actually does, i.e. that it moves the inital part of 'head' (up to and
+including 'entry' from 'head' to 'list'.
 
-Larry
+> +static inline void list_cut_position(struct list_head *list,
+> +               struct list_head *head, struct list_head *entry)
+> +{
+> +       BUG_ON(list_empty(head));
+> +       if (list_is_singular(head))
+> +               BUG_ON(head->next != entry && head != entry);
 
+No other list function in "list.h" has BUG_ONs.  Why this one?
+
+> +       if (entry == head)
+> +               INIT_LIST_HEAD(list);
+
+If there was data in 'list' before the call, it will be lost now.  Is
+this intended behaviour?
+
+> +       else
+> +               __list_cut_position(list, head, entry);
+> +}
+> +
+
+I hope this helps,
+Jochen
+-- 
+http://seehuhn.de/
