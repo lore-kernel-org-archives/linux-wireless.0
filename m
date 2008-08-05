@@ -1,38 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tdb.com ([216.99.214.4]:41941 "HELO mail.tdb.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750910AbYHRHcd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2008 03:32:33 -0400
-To: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: [ipw3945-devel] Few questions about the wireless stack
-References: <48A07709.80306@gmail.com> <48A206A0.6020709@gmail.com>
-	<48A224E3.90307@telenet.be>
-From: Russell Senior <seniorr@aracnet.com>
-Date: 18 Aug 2008 00:32:30 -0700
-In-Reply-To: <48A224E3.90307@telenet.be>
-Message-ID: <861w0mbwxd.fsf@coulee.tdb.com> (sfid-20080818_093251_881444_B8CBF154)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:46530 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753280AbYHEDgw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Aug 2008 23:36:52 -0400
+Subject: Re: [ipw3945-devel] [IWL3945]Fix statistics in monitor mode
+From: Zhu Yi <yi.zhu@intel.com>
+To: Junty Mesmon <jmesmon@gmail.com>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <f2efd86c0808041847n195ee40k9abe6599d60f51b2@mail.gmail.com>
+References: <4892E14A.4000203@gmail.com>
+	 <1217820737.3107.15.camel@debian.sh.intel.com>
+	 <f2efd86c0808041847n195ee40k9abe6599d60f51b2@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 05 Aug 2008 11:36:38 +0800
+Message-Id: <1217907398.3107.51.camel@debian.sh.intel.com> (sfid-20080805_053702_437293_658C48D4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>>>> "Ian" == Ian Schram <ischram@telenet.be> writes:
+On Mon, 2008-08-04 at 21:47 -0400, Junty Mesmon wrote:
+> If we can have this data, what reason is their not to have it
+> processed?
 
-Ian> Last i can remember about the subject was Tomas some months ago.
+They are not for the monitor mode. Not related frames will mess up the
+values for associated STA. This is affect the
+associated-while-in-monitor mode.
 
-Ian> iirc the statement was something similar to: - 3945 is a mini
-Ian> PCIe card, and hence not deployed in embedded? devices, therefore
-Ian> master mode support isn't planned for 3945 - patches are welcome
+Thanks,
+-yi
 
-FWIW, the PC Engines Alix.6* boards has or will include a miniPCI
-express slot.
-
-  http://pcengines.ch/alix.htm
-
-As someone building stuff from these and similar boards, I appreciate
-having options.
-
-
--- 
-Russell Senior         ``I have nine fingers; you have ten.''
-seniorr@aracnet.com
