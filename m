@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:58407 "EHLO vs166246.vserver.de"
+Received: from mx1.redhat.com ([66.187.233.31]:53569 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751223AbYH1RRZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 13:17:25 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Don't use memcpy for overlapping areas
-Date: Thu, 28 Aug 2008 19:13:51 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200808281913.52260.mb@bu3sch.de> (sfid-20080828_191732_539411_41E783F6)
+	id S1764706AbYHEUV7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Aug 2008 16:21:59 -0400
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id m75KLrZb010122
+	for <linux-wireless@vger.kernel.org>; Tue, 5 Aug 2008 16:21:53 -0400
+Received: from mail.boston.redhat.com (mail.boston.redhat.com [10.16.255.12])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id m75KLpYb002728
+	for <linux-wireless@vger.kernel.org>; Tue, 5 Aug 2008 16:21:52 -0400
+Received: from [10.16.3.195] (dhcp-100-3-195.bos.redhat.com [10.16.3.195])
+	by mail.boston.redhat.com (8.13.1/8.13.1) with ESMTP id m75KLnUl004986
+	for <linux-wireless@vger.kernel.org>; Tue, 5 Aug 2008 16:21:49 -0400
+Subject: hostap: handling device renames better
+From: Dan Williams <dcbw@redhat.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Tue, 05 Aug 2008 16:23:41 -0400
+Message-Id: <1217967821.29886.4.camel@localhost.localdomain> (sfid-20080805_222207_764541_7BCED377)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is valid to pass &gphy->rfatt and &gphy->bbatt as rfatt and bbatt
-pointer arguments to the function. So we have to use memmove for the
-possibly overlapping memory areas.
+Hi,
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+While trying to flash my Prism 2.5 card today, I ran into a problem
+that'll probably hit quite a few drivers (mostly older ones).
 
----
+udev renames the interface after probing, but anything the driver set up
+manually at probe/init time (in this case /proc/net/hostap/wifi0/pda)
+will still be using the old device name.  Thus the prism2_srec tool
+refused to work because it needs both the PDA from /proc/net/hostap/...
+as well as some ioctls on the device.  Unfortunately, the device names
+are different due to udev's renaming.
 
-John, since we have new policies for bugfixes and I can't prove that this
-will actually fix something for somebody in real life, please queue for
-the next merge window.
+How are drivers made aware that their device's name has changed so they
+could potentially update things they stick in /proc or wherever?  hostap
+and airo come to mind as current users of /proc.
 
+Dan
 
-Index: wireless-testing/drivers/net/wireless/b43/phy_g.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/phy_g.c	2008-08-28 19:03:11.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/phy_g.c	2008-08-28 19:08:13.000000000 +0200
-@@ -229,17 +229,18 @@ void b43_set_txpower_g(struct b43_wldev 
- 	rf = rfatt->att;
- 	tx_bias = lo->tx_bias;
- 	tx_magn = lo->tx_magn;
- 	if (unlikely(tx_bias == 0xFF))
- 		tx_bias = 0;
- 
--	/* Save the values for later */
-+	/* Save the values for later. Use memmove, because it's valid
-+	 * to pass &gphy->rfatt as rfatt pointer argument. Same for bbatt. */
- 	gphy->tx_control = tx_control;
--	memcpy(&gphy->rfatt, rfatt, sizeof(*rfatt));
-+	memmove(&gphy->rfatt, rfatt, sizeof(*rfatt));
- 	gphy->rfatt.with_padmix = !!(tx_control & B43_TXCTL_TXMIX);
--	memcpy(&gphy->bbatt, bbatt, sizeof(*bbatt));
-+	memmove(&gphy->bbatt, bbatt, sizeof(*bbatt));
- 
- 	if (b43_debug(dev, B43_DBG_XMITPOWER)) {
- 		b43dbg(dev->wl, "Tuning TX-power to bbatt(%u), "
- 		       "rfatt(%u), tx_control(0x%02X), "
- 		       "tx_bias(0x%02X), tx_magn(0x%02X)\n",
- 		       bb, rf, tx_control, tx_bias, tx_magn);
+(ideally this stuff should be migrated to the device's sysfs directory,
+not live in /proc/net)
+
