@@ -1,61 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx03.syneticon.net ([87.79.32.166]:1421 "EHLO
-	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755997AbYHFICY (ORCPT
+Received: from postfix1-g20.free.fr ([212.27.60.42]:35013 "EHLO
+	postfix1-g20.free.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760391AbYHESHQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2008 04:02:24 -0400
-Message-ID: <48995A7D.10003@wpkg.org> (sfid-20080806_100234_682500_DE6212C4)
-Date: Wed, 06 Aug 2008 10:02:05 +0200
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>
-Subject: Re: kernel panic on p54pci insertion on mipsel
-References: <4898B018.5050202@wpkg.org>	 <1217967177.3603.60.camel@johannes.berg> <4898CBF9.6030606@wpkg.org> <43e72e890808051619u4ed7c447wd80a866192220b84@mail.gmail.com>
-In-Reply-To: <43e72e890808051619u4ed7c447wd80a866192220b84@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 5 Aug 2008 14:07:16 -0400
+Received: from smtp7-g19.free.fr (smtp7-g19.free.fr [212.27.42.64])
+	by postfix1-g20.free.fr (Postfix) with ESMTP id 9C44729057B6
+	for <linux-wireless@vger.kernel.org>; Tue,  5 Aug 2008 20:07:14 +0200 (CEST)
+From: Gabriel de Perthuis <Gabriel.de-Perthuis@laPoste.net>
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Cc: linux-wireless@vger.kernel.org,
+	Gabriel de Perthuis <Gabriel.de-Perthuis@laPoste.net>
+Subject: [PATCH] Fix incorrect conditional nesting, that prevented inclusion of compat symbols.
+Date: Tue,  5 Aug 2008 20:05:40 +0200
+Message-Id: <1217959540-9612-1-git-send-email-Gabriel.de-Perthuis@laPoste.net> (sfid-20080805_200720_503672_CCF40A47)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez schrieb:
-> On Tue, Aug 5, 2008 at 2:54 PM, Tomasz Chmielewski <mangoo@wpkg.org> wrote:
->> Johannes Berg schrieb:
->>>> Call Trace:[<c0060000>][<c0057150>]
->>> My magic crystal ball says that this is not inside p54 at all, and
->>> indeed a problem in your kernel patches. :P
->> An amazingly advanced crystal ball you have ;)
->>
->> So, a final update: ASUS WL-500gP (v1) running with OpenWRT patches and a
->> prism54 mini-pci card:
->>
->> - panics / oopses with p54pci.ko
-> 
-> Can't help you there, and what Johannes was trying to say is the call
-> trace doesn't help us as its just hex values to us. We would need the
-> mapped culprit routines.
+Kernels 2.6.23 or above didn't get these symbols:
+device_create_vargs
+device_create_drvdata
+register_rfkill_notifier
+unregister_rfkill_notifier
+rfkill_force_state
 
-Is there a link anywhere explaining how to get these to help debugging?
+Also fix a related comment typo found checking compat/compat.h .
+---
+ compat/compat.c |    6 +++---
+ compat/compat.h |    2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-
->> - doesn't work with prism54.ko module (similar messages to
->> http://marc.info/?l=linux-wireless&m=120250829717134&w=2)
-> 
-> We need more details, or do you get *exactly* the same error messages?
-> 
-> "Out of memory, cannot handle oid" comes up after a failed kmalloc()
-> while trying to handle an interrupt and management frame (not 802.11
-> frame) from the firmware. From that archived mailing list though the
-> oid 0x080002ff is mentioned and... well prism54 doesn't know what that
-> is. I wonder if the firmware is triggering random interrupts with
-> bogus oids.
-> 
-> If you can provide a complete log it can help.
-
-I'll try to post it later today in the evening.
-
-
+diff --git a/compat/compat.c b/compat/compat.c
+index b1ec4d4..84e3ab3 100644
+--- a/compat/compat.c
++++ b/compat/compat.c
+@@ -640,6 +640,8 @@ int pci_try_set_mwi(struct pci_dev *dev)
+ EXPORT_SYMBOL(pci_try_set_mwi);
+ #endif
+ 
++#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)) */
++
+ /* All things not in 2.6.25 */
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26))
+ 
+@@ -744,7 +746,7 @@ struct device *device_create_drvdata(struct class *class,
+ 	return dev;
+ }
+ EXPORT_SYMBOL_GPL(device_create_drvdata);
+-#endif
++#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26) */
+ 
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27))
+ 
+@@ -839,5 +841,3 @@ EXPORT_SYMBOL(rfkill_force_state);
+ 
+ #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27) */
+ 
+-#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)) */
+-
+diff --git a/compat/compat.h b/compat/compat.h
+index ec50750..75a498e 100644
+--- a/compat/compat.h
++++ b/compat/compat.h
+@@ -441,7 +441,7 @@ static inline void set_freezable(void) {}
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
+ /* Added on 2.6.24 in include/linux/types.h by Al viro on commit 142956af */
+ typedef unsigned long               uintptr_t;
+-#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25)) */
++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)) */
+ 
+ 
+ 
 -- 
-Tomasz Chmielewski
-http://wpkg.org
+1.6.0.rc1.64.g61192
+
