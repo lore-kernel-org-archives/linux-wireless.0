@@ -1,34 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.240]:44578 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758861AbYHDS30 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 14:29:26 -0400
-Received: by an-out-0708.google.com with SMTP id d40so343438and.103
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Aug 2008 11:29:25 -0700 (PDT)
-Message-ID: <43e72e890808041129i66069bfbj915ae95cec892831@mail.gmail.com> (sfid-20080804_202932_838709_1241902C)
-Date: Mon, 4 Aug 2008 11:29:24 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "=?UTF-8?Q?Stefanik_G=C3=A1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: ath9k working, almost
-Cc: "Alistair John Strachan" <alistair@devzero.co.uk>,
-	"Dan Williams" <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <69e28c910807271211u18779b39v42e35e4e78dd949d@mail.gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:4128 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759823AbYHENcT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Aug 2008 09:32:19 -0400
+Date: Tue, 5 Aug 2008 09:03:20 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/10] iwlwifi driver 08/04 updates
+Message-ID: <20080805130320.GA4276@tuxdriver.com> (sfid-20080805_153223_764557_D0B8B100)
+References: <1217836848-24288-1-git-send-email-yi.zhu@intel.com> <1217918197.3107.64.camel@debian.sh.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <200807261742.15693.alistair@devzero.co.uk>
-	 <1217170761.2700.12.camel@localhost.localdomain>
-	 <43e72e890807270807k1a5967bfs1adf74f1a4d1e864@mail.gmail.com>
-	 <200807271720.34696.alistair@devzero.co.uk>
-	 <43e72e890807270930o43a75071i9415445d4110b069@mail.gmail.com>
-	 <69e28c910807271211u18779b39v42e35e4e78dd949d@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1217918197.3107.64.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gU3VuLCBKdWwgMjcsIDIwMDggYXQgMTI6MTEgUE0sIFN0ZWZhbmlrIEfDoWJvcgo8bmV0cm9s
-bGxlci4zZEBnbWFpbC5jb20+IHdyb3RlOgo+IE9uIFN1biwgSnVsIDI3LCAyMDA4IGF0IDY6MzAg
-UE0sIEx1aXMgUi4gUm9kcmlndWV6IDxtY2dyb2ZAZ21haWwuY29tPiB3cm90ZToKPj4gV2hhdCB5
-b3UgY2FuIGV4cGVjdCBmcm9tIHVzIHNvb24gaXMgbW9yZSBlbmhhbmNlbWVudHMKPj4gdG8gU1RB
-LCBlbmFibGluZyBJQlNTLCBhbmQgQVAuCj4KPiBOb3QgcmVhbGx5IHJlbGF0ZWQsIGJ1dCBpcyBt
-b25pdG9yIG1vZGUgYWxzbyBwbGFubmVkIHRvIGJlIGVuYWJsZWQ/IE9yCj4gaXMgaXQgYWxyZWFk
-eSBlbmFibGVkPwoKSXQgaXMuIE5lZWRzIHRlc3RpbmcuCgogIEx1aXMK
+On Tue, Aug 05, 2008 at 02:36:37PM +0800, Zhu Yi wrote:
+> On Mon, 2008-08-04 at 16:00 +0800, Zhu Yi wrote:
+> > Hi John,
+> > 
+> > Here is another series of iwlwifi driver update. Note, the patch 10/10 fixes
+> > a merge problem for wireless-testing GIT with upstream.
+> > 
+> > Thanks,
+> > -yi
+> > 
+> > [PATCH 01/10] iwlwifi: HW bug fixes
+> > [PATCH 02/10] iwlwifi: memory allocation optimization
+> > [PATCH 03/10] iwlwifi: kill struct iwl4965_lq_mngr
+> > [PATCH 04/10] iwlwifi: implement iwl5000_calc_rssi
+> > [PATCH 05/10] iwlwifi: fix unhandled interrupt when HW rfkill is on
+> > [PATCH 06/10] iwlwifi: cleanup iwl_tx_skb
+> > [PATCH 07/10] iwlwifi: add level for debugging host command
+> > [PATCH 08/10] iwlwifi: decrement rx skb counter in scan abort handler
+> > [PATCH 09/10] iwlwifi: grap nic access before accessing periphery registers
+> > [PATCH 10/10] iwl3945: fix merge mistake for packet injection
+> 
+> Hi John,
+> 
+> I see you merged only partial of this series. What's happen to the
+> patches 03, 06 and 07?
+
+I don't see those as fixes, only cleanups.  The merge window is closed
+for 2.6.27.  If those are in fact fixes then please explain.
+
+Thanks,
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
