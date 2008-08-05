@@ -1,60 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:15066 "EHLO mga14.intel.com"
+Received: from ra.tuxdriver.com ([70.61.120.52]:3327 "EHLO ra.tuxdriver.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753697AbYHCLcI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 07:32:08 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] mac80211: filter probes in ieee80211_rx_mgmt_probe_resp
-Date: Sun,  3 Aug 2008 14:32:01 +0300
-Message-Id: <1217763121-9057-1-git-send-email-tomas.winkler@intel.com> (sfid-20080803_133238_538135_AD2C8C3C)
-Content-Type: text/plain; charset="us-ascii"
+	id S1753537AbYHEODP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Aug 2008 10:03:15 -0400
+Date: Tue, 5 Aug 2008 10:00:05 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
+Message-ID: <20080805140005.GA5925@tuxdriver.com> (sfid-20080805_160318_992206_80806D72)
+References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br> <1217700664-20792-9-git-send-email-hmh@hmh.eng.br> <1217703723.8621.50.camel@johannes.berg> <20080802192704.GB24253@khazad-dum.debian.net> <1217864565.3139.17.camel@localhost.localdomain> <20080804223052.GG24927@khazad-dum.debian.net> <1217890611.17793.17.camel@localhost.localdomain> <20080804233525.GI24927@khazad-dum.debian.net> <1217941409.26251.3.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1217941409.26251.3.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch moves filtering statement from ieee80211_rx_bss_info
-which is called for both beacon and probe to ieee80211_rx_mgmt_probe_resp
-and save few cycles in beacon parsing.
+On Tue, Aug 05, 2008 at 09:03:29AM -0400, Dan Williams wrote:
+> On Mon, 2008-08-04 at 20:35 -0300, Henrique de Moraes Holschuh wrote:
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/mlme.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+> > And it is already damn clear that what we currently have (rfkill always
+> > blocks on suspend) is not the correct way to go about it.  WHAT I want to
+> > know now is whether there are any drivers out there which need the current
+> > behaviour.
+> 
+> Ah!  I seem to have misunderstood you.  If some drivers _do_ need the
+> current block-on-suspend behavior, I feel like that should be an
+> internal driver decision that rfkill shouldn't need to be aware of.
+> Drivers know how to suspend themselves; we shouldn't expect rfkill to
+> know how certain hardware needs to suspend.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 5358420..0800385 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2570,9 +2570,6 @@ static void ieee80211_rx_bss_info(struct net_device *dev,
- 	DECLARE_MAC_BUF(mac);
- 	DECLARE_MAC_BUF(mac2);
- 
--	if (!beacon && memcmp(mgmt->da, dev->dev_addr, ETH_ALEN))
--		return; /* ignore ProbeResp to foreign address */
--
- 	beacon_timestamp = le64_to_cpu(mgmt->u.beacon.timestamp);
- 
- 	if (ieee80211_vif_is_mesh(&sdata->vif) && elems->mesh_id &&
-@@ -2890,6 +2887,9 @@ static void ieee80211_rx_mgmt_probe_resp(struct net_device *dev,
- 	size_t baselen;
- 	struct ieee802_11_elems elems;
- 
-+	if (memcmp(mgmt->da, dev->dev_addr, ETH_ALEN))
-+		return; /* ignore ProbeResp to foreign address */
-+
- 	baselen = (u8 *) mgmt->u.probe_resp.variable - (u8 *) mgmt;
- 	if (baselen > len)
- 		return;
+I agree with Dan.  Blocking and suspending should be separate operations.
+
+John
 -- 
-1.5.4.1
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+John W. Linville
+linville@tuxdriver.com
