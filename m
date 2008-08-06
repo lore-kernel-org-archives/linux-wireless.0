@@ -1,81 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40629 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751677AbYH1Kw3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 06:52:29 -0400
-Subject: Re: [PATCH 08/11] iwlwifi: call apm stop on exit
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org,
-	Gregory Greenman <gregory.greenman@intel.com>,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-In-Reply-To: <1219927149.6064.25.camel@californication> (sfid-20080828_123916_214502_EDFC473D)
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-8-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-9-git-send-email-yi.zhu@intel.com>
-	 <1219927149.6064.25.camel@californication>
-	 (sfid-20080828_123916_214502_EDFC473D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/1FMz8QP9H3/ByaLCWA4"
-Date: Thu, 28 Aug 2008 12:52:21 +0200
-Message-Id: <1219920741.25321.4.camel@johannes.berg> (sfid-20080828_125232_441117_102A7E58)
+Received: from mx1.redhat.com ([66.187.233.31]:41428 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750806AbYHFNje (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Aug 2008 09:39:34 -0400
+Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere fw
+From: Dan Williams <dcbw@redhat.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: kilroyd@googlemail.com, linux-wireless@vger.kernel.org,
+	orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>,
+	Jean Tourrilhes <jt@hpl.hp.com>
+In-Reply-To: <1217976491.2908.36.camel@dv>
+References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
+	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
+	 <1217825304.10989.20.camel@dv>
+	 <1217864060.3139.10.camel@localhost.localdomain>
+	 <1217970944.2908.11.camel@dv>
+	 <1217973349.30531.1.camel@localhost.localdomain>
+	 <1217976491.2908.36.camel@dv>
+Content-Type: text/plain
+Date: Wed, 06 Aug 2008 09:13:34 -0400
+Message-Id: <1218028414.16977.5.camel@localhost.localdomain> (sfid-20080806_153937_214599_9108F0A4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2008-08-05 at 18:48 -0400, Pavel Roskin wrote:
+> On Tue, 2008-08-05 at 17:55 -0400, Dan Williams wrote:
+> > On Tue, 2008-08-05 at 17:15 -0400, Pavel Roskin wrote:
+> 
+> > > If I use 32-bit kernel with 32-bit userspace, essid filtering works, but
+> > > only to a degree.  Old scan results are cached somewhere, so if I scan
+> > > with essid and then without essid, I get filtered results.  Likewise, If
+> > > I don't use filtering the first time, but use it the second time, I get
+> > > unfiltered results.
+> > 
+> > Scanning for a specific SSID never has "filtered" the results, nor
+> > should it.  It just probe-scans the requested SSID and return any new
+> > results in with the cached ones.  You requested an SSID scan, thus you
+> > must know the SSID, thus you can do the filtering yourself?
+> 
+> Perhaps I used a wrong word.  If requesting a scan, I expect to get
+> results from a scan with the parameters I supplied.  If the scan results
+> are from a scan with different parameters, I don't want them.  I'd
+> rather see the driver return EAGAIN than results of a scan with
+> different parameters.
 
---=-/1FMz8QP9H3/ByaLCWA4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm not quite sure what you mean here.  You mean to say that if you
+request a specific SSID scan, and the driver does not find that SSID,
+that it should return EAGAIN?  I think that would be overloading EAGAIN
+too much, since for scans EAGAIN means "I'm not done with your scan
+request yet".
 
-On Thu, 2008-08-28 at 14:39 +0200, Marcel Holtmann wrote:
-> Hi Yi,
->=20
-> > This patch calls apm stop on exit and suspend and sets STATUS_EXIT_PEND=
-ING
-> > accordingly. Without this patch hardware consumes power even after driv=
-er
-> > is removed or suspended.
->=20
-> is this a regression to 2.6.26? That is always the important question
-> here since that will determine if the patch should go in. If the 2.6.26
-> version did this better (even if not prefect), then this patch should go
-> on, otherwise it could wait until next merge window.
+> The userspace is welcome to keep a pool of all APs found by any scans,
+> but I don't think drivers should do it.
 
-AFAIR people have been complaining about this behaviour _forever_, so
-it's hardly a regression.
+Drivers need to keep a reasonably complete list of APs internally for
+association anyway.  You don't want to have to do a full scan just to
+associate if you have results from 10 seconds ago that are still valid.
+Furthermore, drivers need to keep cached results so that two processes
+can request results of a scan after the scan is complete.  The previous
+situation where the driver would clear the scan list whenever GIWSCAN
+was called just sucked because then two processes would race for the
+results after an IWSCAN event and one would get nothing.
 
-johannes
+A scan is a global result, not a result specific to the request.  Thus,
+since any process can read the results, and since only one process is
+privy to the details of how the scan was performed with WEXT, you have
+to return a complete list of results for each call to GIWSCAN.
 
---=-/1FMz8QP9H3/ByaLCWA4
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Honestly, I don't think it's that much of a problem for the userspace
+process that actually requested the scan to keep it's scan parameters
+around and filter the results that come back using those parameters.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJItoNgAAoJEKVg1VMiehFYF7UQAJejBUpVCxfK+84/qc5DpYhr
-dmpssBFeprvKICgEZBZPfBqWFltl/EK5JUjWUBnvLosbxv6VmOeDIZhUieIUsBDj
-8AbnFNyQbYVyZlH+k8ba/IxgDxZC6B+6nAv1+bnsgGdU457gr/Dnqw97beYctnqT
-8azPyCeroq+SJ0QOAUTN7X3rRrLnSGLy1vGUxnI6EmdGo4KQVdKVteGZlnYx1KyH
-Hjpvy5QZQdAXpQVpLVZZw2KqY15yeVCi2fQHERzE5FD2RxTJF3zM90t+gJEcJ0Z8
-xZ5X0XgWuWMOBtfOk8yHfVV6+h1Og8vTxpbPSJAgBMXckpcSvbba0L9LVqVrIIyD
-LB2AuA8Io/eywIouU/MgbBnBrD3K2nMVQc9Wlln+pcapCF2Xh17f1J8VpqM5X8hC
-ZytcnEhPPLVZ8Arcd2paAjVmrG8+6NNqg/wQQrDaQDbkTnnAo+GzLB22GqhDIG7H
-o9A0JHXDzziJvBoFBfAYZmCEKFYReA7wEGIp4IsZP6RNTcCxYwQkknKaPVpUWS5T
-radKudd9BYjtiHdGvyzl6lhcm8gw8oa/vE2X13eznCbj4YhXmXSabSGHRcQ7H7+T
-nDEU5uNuGg+OTfHn8oqTRFCSE1WEb31rLQUbSTIDXcP8eNCgALeuOxWbdr3Asovm
-HNarZSAr4C82t+JLEgIK
-=HYyL
------END PGP SIGNATURE-----
-
---=-/1FMz8QP9H3/ByaLCWA4--
+Dan
 
