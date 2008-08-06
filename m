@@ -1,60 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:59047 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753656AbYHJVMN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Aug 2008 17:12:13 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] b43: Fix for SPROM coding error in Linksys WMP54G (BCM4306/3)
-Date: Sun, 10 Aug 2008 23:11:38 +0200
-Cc: John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <489f0705.cL5monvdYRxgZaoz%Larry.Finger@lwfinger.net>
-In-Reply-To: <489f0705.cL5monvdYRxgZaoz%Larry.Finger@lwfinger.net>
+Received: from nf-out-0910.google.com ([64.233.182.191]:9636 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760401AbYHFT1A (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Aug 2008 15:27:00 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so39288nfc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Aug 2008 12:26:58 -0700 (PDT)
+Message-ID: <4899FAFE.3020602@gmail.com> (sfid-20080806_212706_207444_6A6FAA9A)
+Date: Wed, 06 Aug 2008 20:26:54 +0100
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200808102311.38899.mb@bu3sch.de> (sfid-20080810_231219_223606_FD614303)
+To: Pavel Roskin <proski@gnu.org>
+CC: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	orinoco-devel@lists.sourceforge.net,
+	Jean Tourrilhes <jt@hpl.hp.com>
+Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere
+ fw
+References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>	 <1217825304.10989.20.camel@dv>	 <1217864060.3139.10.camel@localhost.localdomain>	 <1217970944.2908.11.camel@dv>	 <1217973349.30531.1.camel@localhost.localdomain>	 <1217976491.2908.36.camel@dv>	 <1218028414.16977.5.camel@localhost.localdomain> <1218030485.27785.7.camel@ct>
+In-Reply-To: <1218030485.27785.7.camel@ct>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 10 August 2008 17:19:33 Larry Finger wrote:
-> The Linksys WMP54G (BCM4306/3) card in a PCI format has an SPROM coding
-> error and needs the fix found for several other cards.
+Pavel Roskin wrote:
+> I mean, if we request a scan with some parameters, and the cached
+> results were received with different parameters, and real scanning is
+> impossible now for whatever reason, then return empty results and EAGAIN
+> code.
 > 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@kernel.org>		[2.6.25.x, 2.6.26.x]
+> Anyway, we should have a policy for all drivers, so let's stick to that
+> policy.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+I've had a look at mac80211, since that seems to be a good indicator of policy (mlme.c). It caches BSSs in dev->ieee80211_ptr->local->sta_bss_list. It accumulates BSSs, and doesn't do anything to 'pick out' specific ssid results after a specific ssid scan is initiated, or clear the list before initiating the scan.
 
-> --------
-> 
-> John,
-> 
-> This is a fix for 2.6.27.
-> 
-> Larry
-> ---
-> 
->  main.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> Index: wireless-testing/drivers/net/wireless/b43/main.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/main.c
-> +++ wireless-testing/drivers/net/wireless/b43/main.c
-> @@ -4616,6 +4616,7 @@ static void b43_sprom_fixup(struct ssb_b
->  		pdev = bus->host_pci;
->  		if (IS_PDEV(pdev, BROADCOM, 0x4318, ASUSTEK, 0x100F) ||
->  		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0015) ||
-> +		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0014) ||
->  		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0013))
->  			bus->sprom.boardflags_lo &= ~B43_BFL_BTCOEXIST;
->  	}
-> 
-> 
+Without a mac80211 (or any other) card to check, it seems that the orinoco behaviour introduced by this patch is consistent with mac80211.
 
 
+Regards,
 
--- 
-Greetings Michael.
+Dave.
