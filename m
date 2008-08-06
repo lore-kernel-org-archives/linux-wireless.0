@@ -1,97 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:42174 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751146AbYHVUwU (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.188]:33222 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753879AbYHFPDC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2008 16:52:20 -0400
-Message-ID: <48AF2709.6040707@lwfinger.net> (sfid-20080822_225224_144118_52274BE2)
-Date: Fri, 22 Aug 2008 15:52:25 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 6 Aug 2008 11:03:02 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so1150714nfc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Aug 2008 08:03:01 -0700 (PDT)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: Add module parameter to disable HW crypto
+Date: Wed, 6 Aug 2008 17:27:31 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
-To: Chr <chunkeey@web.de>
-CC: John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] p54: Fix potential concurrent access to private data
-References: <4896381c.abQmtcnBFB3TpLyf%Larry.Finger@lwfinger.net> <200808062321.53120.chunkeey@web.de> <489A4829.5080704@lwfinger.net> <200808222157.55851.chunkeey@web.de>
-In-Reply-To: <200808222157.55851.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200808061727.32096.IvDoorn@gmail.com> (sfid-20080806_170309_878399_01725CE3)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chr wrote:
-> On Thursday 07 August 2008 02:56:09 Larry Finger wrote:
->> Chr wrote:
->>> Well the reason why there isn't any bug report about it is maybe
->>> because unlike most other devices we don't program one single
->>> setting per time, but always a "group of similar ones" at once so
->>> the device should always be in a sane state in theory.
->>>
->>> So as long as mac80211 provides at least some kind of protection
->>> against it's own concurrency, we are in save waters even without
->>> any fancy kind of locking.
->>>
->>> Regards,
->>> 	Chr
->> For the config callback, mac80211 does not protect against concurrency. We
->> learned that with rtl8187, where this routine ran somewhat longer. After
->> the power setting routine was added to the wext interface in mac80211, the
->> driver broke due to concurrent calls to the config routine and was fixed by
->> just this kind of mutex, which is why I added this protection for p54.
->>
-> I just got a reply from an anonymous p54pci (2.6.27-rc4) user, with the 
-> following problem:
-> 
-> INFO: task prism54pci:10881 blocked for more than 120 seconds.
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> prism54pci    D 0000000000000001     0 10881      2
-> ffff8800780dbde0 0000000000000046 0000000000000000 ffffffff802375cb
-> ffffffff80778740 0000000000000286 ffff88007c632f38 ffff88007c5d8b40
-> ffffffff806c2330 ffff88007c5d8d70 0000000001018740 ffff88007c5d8d70
-> Call Trace:
-> [<ffffffff802375cb>] __mod_timer+0xb7/0xc5
-> [<ffffffff802297d7>] dequeue_task_fair+0x4d/0xce
-> [<ffffffff805446ff>] __mutex_lock_slowpath+0x6a/0xa0
-> [<ffffffff805445a9>] mutex_lock+0x1a/0x1e
-> [<ffffffffa01d48f0>] p54_config+0x1a/0x46 [p54common]
-> [<ffffffffa01a7e73>] ieee80211_sta_scan_work+0xf8/0x1b8 [mac80211]
-> [<ffffffffa01a7d7b>] ieee80211_sta_scan_work+0x0/0x1b8 [mac80211]
-> [<ffffffff8023d158>] run_workqueue+0x79/0xfe
-> [<ffffffff8023d42e>] worker_thread+0x96/0xa5
-> [<ffffffff8024056c>] autoremove_wake_function+0x0/0x2e
-> [<ffffffff8023d398>] worker_thread+0x0/0xa5
-> [<ffffffff8024025a>] kthread+0x47/0x73
-> [<ffffffff8022c919>] schedule_tail+0x27/0x5f
-> [<ffffffff8020c279>] child_rip+0xa/0x11
-> [<ffffffff80240213>] kthread+0x0/0x73
-> [<ffffffff8020c26f>] child_rip+0x0/0x11
-> 
-> I have no idea going on here since locking is so simple here that it
-> shouldn't misbehave at all!?!
-> 
-> Regards,
-> 	Chr
-> 
+Add a module parameter to rt61 and rt73 to disable
+HW crypto. The option should only be checked when
+determining if the SUPPORT_HW_CRYPTO flag should
+be set or not.
 
-With only one spinlock that is set in p54_assign_addresses() and one 
-mutex that is set in p54_config() and in p54_config_interface(), there 
-are not too many possibilities. I don't see any paths that miss an 
-unlock. The only explanation I can see is the following:
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt61pci.c |   10 +++++++++-
+ drivers/net/wireless/rt2x00/rt73usb.c |   10 +++++++++-
+ 2 files changed, 18 insertions(+), 2 deletions(-)
 
-There has to be an entry to p54_config() with the spinlock already 
-set. This call locks the mutex and proceeds to call p54_set_freq(), 
-which in turn calls p54_assign_addresses(). Execution would be held at 
-the spin_lock.
-
-If p54_config is called again, the mutex is already locked, which 
-would lead to the bug reported. We know that mac80211 can call the 
-config routine before completion of the previous entry. I don't 
-understand why p54_assign_addresses() does not run to completion and 
-clear the spinlock.
-
-I'm sure this explanation is wrong, so please shoot it down.
-
-Larry
-
-
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 0fcc456..23cf93d 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -38,6 +38,13 @@
+ #include "rt61pci.h"
+ 
+ /*
++ * Allow hardware encryption to be disabled.
++ */
++static int modparam_nohwcrypt = 0;
++module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
++MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
++
++/*
+  * Register access.
+  * BBP and RF register require indirect register access,
+  * and use the CSR registers PHY_CSR3 and PHY_CSR4 to achieve this.
+@@ -2617,7 +2624,8 @@ static int rt61pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	 */
+ 	__set_bit(DRIVER_REQUIRE_FIRMWARE, &rt2x00dev->flags);
+ 	__set_bit(DRIVER_REQUIRE_DMA, &rt2x00dev->flags);
+-	__set_bit(CONFIG_SUPPORT_HW_CRYPTO, &rt2x00dev->flags);
++	if (!modparam_nohwcrypt)
++		__set_bit(CONFIG_SUPPORT_HW_CRYPTO, &rt2x00dev->flags);
+ 
+ 	/*
+ 	 * Set the rssi offset.
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 4f2eb90..f58fd05 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -37,6 +37,13 @@
+ #include "rt73usb.h"
+ 
+ /*
++ * Allow hardware encryption to be disabled.
++ */
++static int modparam_nohwcrypt = 0;
++module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
++MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
++
++/*
+  * Register access.
+  * All access to the CSR registers will go through the methods
+  * rt73usb_register_read and rt73usb_register_write.
+@@ -2211,7 +2218,8 @@ static int rt73usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	 */
+ 	__set_bit(DRIVER_REQUIRE_FIRMWARE, &rt2x00dev->flags);
+ 	__set_bit(DRIVER_REQUIRE_SCHEDULED, &rt2x00dev->flags);
+-	__set_bit(CONFIG_SUPPORT_HW_CRYPTO, &rt2x00dev->flags);
++	if (!modparam_nohwcrypt)
++		__set_bit(CONFIG_SUPPORT_HW_CRYPTO, &rt2x00dev->flags);
+ 
+ 	/*
+ 	 * Set the rssi offset.
+-- 
+1.5.6.1
 
