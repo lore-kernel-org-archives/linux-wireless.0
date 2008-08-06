@@ -1,64 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39168 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753638AbYHZCmv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2008 22:42:51 -0400
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from usul.saidi.cx ([204.11.33.34]:50522 "EHLO usul.overt.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1761504AbYHFDdj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Aug 2008 23:33:39 -0400
+Message-ID: <48991B83.5030607@overt.org> (sfid-20080806_053346_187182_D41F0FD5)
+Date: Tue, 05 Aug 2008 20:33:23 -0700
+From: Philip Langdale <philipl@overt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18611.27970.733352.460238@localhost.localdomain> (sfid-20080826_044253_803762_BF8946FD)
-Date: Tue, 26 Aug 2008 08:11:06 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 3/4] ath9k: Remove sc_lastrx as we don't use it anywhere
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+CC: LKML <linux-kernel@vger.kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	toshiba_acpi@memebeam.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
+ through rfkill (v2)
+References: <4894B1B4.6050003@overt.org> <20080803042613.GC6053@khazad-dum.debian.net> <48965716.6020508@overt.org> <20080805212416.GB21738@khazad-dum.debian.net>
+In-Reply-To: <20080805212416.GB21738@khazad-dum.debian.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/core.h |    1 -
- drivers/net/wireless/ath9k/xmit.c |    7 ++-----
- 2 files changed, 2 insertions(+), 6 deletions(-)
+Henrique de Moraes Holschuh wrote:
+> 
+> rfkill-input (now) or userspace (someday) will take care of kicking the
+> radio to RFKILL_STATE_UNBLOCKED when (1) issues an event that signals that
+> radios don't have to remain blocked.  Maybe this is why you see the WLAN
+> going on when you deactivate the radio kill switch?
 
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index b6b6868..1faa1ef 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -970,7 +970,6 @@ struct ath_softc {
- 	struct ath_descdma sc_rxdma;
- 	int sc_rxbufsize;	/* rx size based on mtu */
- 	u32 *sc_rxlink;		/* link ptr in last RX desc */
--	u64 sc_lastrx;		/* tsf of last rx'd frame */
- 
- 	/* TX */
- 	struct list_head sc_txbuf;
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index 87aebf1..3fc6641 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -2309,8 +2309,7 @@ int ath_tx_start(struct ath_softc *sc, struct sk_buff *skb)
- 
- void ath_tx_tasklet(struct ath_softc *sc)
- {
--	u64 tsf = ath9k_hw_gettsf64(sc->sc_ah);
--	int i, nacked = 0;
-+	int i;
- 	u32 qcumask = ((1 << ATH9K_NUM_TX_QUEUES) - 1);
- 
- 	ath9k_hw_gettxintrtxqs(sc->sc_ah, &qcumask);
-@@ -2320,10 +2319,8 @@ void ath_tx_tasklet(struct ath_softc *sc)
- 	 */
- 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
- 		if (ATH_TXQ_SETUP(sc, i) && (qcumask & (1 << i)))
--			nacked += ath_tx_processq(sc, &sc->sc_txq[i]);
-+			ath_tx_processq(sc, &sc->sc_txq[i]);
- 	}
--	if (nacked)
--		sc->sc_lastrx = tsf;
- }
- 
- void ath_tx_draintxq(struct ath_softc *sc,
--- 
-1.6.0
+It's all done behind the scenes I think (it's an ipw2200 device). There's
+no rfkill integration from that driver.
 
+> And rfkill-input will soon be enhanced to let the user configure it to do
+> something different if he wants.  Your driver doesn't (and shouldn't)
+> hardcode policy about it.
+
+Ok, that makes things much easier for me :-) But it means that for now the
+user will have to manually kick the device.
+
+> 
+> Thanks.  Please take note that rfkill will, right now, try to BLOCK all
+> radios on suspend.  That will be changed soon (2.6.28 at the latest), and
+> your driver will have to handle blocking radios on suspend directly if it is
+> needed for toshibas.
+
+Why is this necessary? Doesn't the radio power down as part of the suspend
+process? How would I tell what the hardware is doing?
+
+I'll update the diff when I can.
+
+--phil
