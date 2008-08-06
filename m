@@ -1,88 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39172 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754460AbYH2RSF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2008 13:18:05 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/4] cfg80211: a few fixes to regulatory alpha2 helpers
-Date: Fri, 29 Aug 2008 10:17:56 -0700
-Message-ID: <1220030278-6088-3-git-send-email-lrodriguez@atheros.com> (sfid-20080829_191812_490306_C9B06054)
-In-Reply-To: <1220030278-6088-2-git-send-email-lrodriguez@atheros.com>
-References: <1220030278-6088-1-git-send-email-lrodriguez@atheros.com>
- <1220030278-6088-2-git-send-email-lrodriguez@atheros.com>
+Received: from rv-out-0506.google.com ([209.85.198.238]:15647 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751583AbYHFWFy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Aug 2008 18:05:54 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so133461rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Aug 2008 15:05:54 -0700 (PDT)
+Message-ID: <1ba2fa240808061505u37d4f300n48d0d45918b34a35@mail.gmail.com> (sfid-20080807_000601_987230_310CF7C9)
+Date: Thu, 7 Aug 2008 01:05:53 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: iwlwifi aggregation info
+Cc: Friedrich.Beckmann@infineon.com, linux-wireless@vger.kernel.org,
+	j@w1.fi
+In-Reply-To: <1218059104.23048.81.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1217331138.10489.24.camel@johannes.berg>
+	 <1ba2fa240807300908x5489e3f8g54ff83e7e5912c0b@mail.gmail.com>
+	 <1217509511.10489.140.camel@johannes.berg>
+	 <1ba2fa240807311114t3e1b4fb3oe6643fbe28f2c2ac@mail.gmail.com>
+	 <1217528597.10489.150.camel@johannes.berg>
+	 <1ba2fa240807311216u1a45cf22j219046ab357b0910@mail.gmail.com>
+	 <1217592554.8621.23.camel@johannes.berg>
+	 <1ba2fa240808010540g660cdaa9p1158a27061e3fcd@mail.gmail.com>
+	 <1217595279.8621.38.camel@johannes.berg>
+	 <1218059104.23048.81.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
+On Thu, Aug 7, 2008 at 12:45 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>> When that is not the case, however, we disagree. I think that because
+>> aggregation isn't a QoS mechanism, it should behave the same way as in
+>> the case where no stations have aggregation enabled, and stall the whole
+>> queue. On the other hand, you think it is a QoS mechanism, and let
+>> streams for the fast stations be interleaved with the slow station,
+>> leaving only frames for the slow station piling up.
+>
+> I just found IEEE 802.11-2007 subclause 9.10 which actually explains all
+> the block-ack business without aggregation, but I assume that
+> aggregation now just means that instead of sending
+>        mpdu + sifs + (mpdu + sifs)* + blockackreq
+> you send simply
+>        a-mpdu
+>
+> I see nothing in 9.10 that supports the view that aggregation/block-ack
+> should create a new traffic stream.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index f825b6d..8838a6f 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -53,6 +53,8 @@ static u32 supported_bandwidths[] = {
- 
- static int is_world_regdom(char *alpha2)
- {
-+	if (!alpha2)
-+		return 0;
- 	/* ASCII 0 */
- 	if (alpha2[0] == 48 && alpha2[1] == 48)
- 		return 1;
-@@ -61,6 +63,8 @@ static int is_world_regdom(char *alpha2)
- 
- static int is_alpha2_set(char *alpha2)
- {
-+	if (!alpha2)
-+		return 0;
- 	if (alpha2[0] != 0 && alpha2[1] != 0)
- 		return 1;
- 	return 0;
-@@ -76,6 +80,8 @@ static int is_alpha_upper(char letter)
- 
- static int is_an_alpha2(char *alpha2)
- {
-+	if (!alpha2)
-+		return 0;
- 	if (is_alpha_upper(alpha2[0]) && is_alpha_upper(alpha2[1]))
- 		return 1;
- 	return 0;
-@@ -83,6 +89,8 @@ static int is_an_alpha2(char *alpha2)
- 
- static int alpha2_equal(char *alpha2_x, char *alpha2_y)
- {
-+	if (!alpha2_x || !alpha2_y)
-+		return 0;
- 	if (alpha2_x[0] == alpha2_y[0] &&
- 		alpha2_x[1] == alpha2_y[1])
- 		return 1;
-@@ -91,6 +99,8 @@ static int alpha2_equal(char *alpha2_x, char *alpha2_y)
- 
- static int regdom_changed(char *alpha2)
- {
-+	if (!cfg80211_regdomain)
-+		return 1;
- 	if (alpha2_equal(cfg80211_regdomain->alpha2, alpha2))
- 		return 0;
- 	return 1;
-@@ -253,6 +263,9 @@ static int freq_reg_info(u32 center_freq, u32 *bandwidth,
- 	int i;
- 	u32 max_bandwidth = 0;
- 
-+	if (!cfg80211_regdomain)
-+		return -EINVAL;
-+
- 	for (i = 0; i < cfg80211_regdomain->n_reg_rules; i++) {
- 		const struct ieee80211_reg_rule *rr;
- 		const struct ieee80211_freq_range *fr = NULL;
--- 
-1.5.6.4
-
+It doesn't have to be spelled, it's clear from the fact that traffic
+is defined by <TID,RA>  pair.
+A-MPDU stuff is simplified version of what you've read there.
+Tomas
