@@ -1,187 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.178]:8775 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752475AbYHBKO4 (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:48115 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753631AbYHFM0t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 06:14:56 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so1578395ika.5
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 03:14:55 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: proski@gnu.org, orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-Subject: [PATCH 02/19] orinoco: Update scan translation
-Date: Sat,  2 Aug 2008 11:14:16 +0100
-Message-Id: <1217672073-7094-3-git-send-email-kilroyd@gmail.com> (sfid-20080802_121459_163884_6204ADD8)
-In-Reply-To: <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
-From: kilroyd@googlemail.com
+	Wed, 6 Aug 2008 08:26:49 -0400
+Date: Wed, 6 Aug 2008 09:26:42 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Philip Langdale <philipl@overt.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	toshiba_acpi@memebeam.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
+	through rfkill (v2)
+Message-ID: <20080806122642.GA12783@khazad-dum.debian.net> (sfid-20080806_142655_396670_2B0AE93B)
+References: <4894B1B4.6050003@overt.org> <20080803042613.GC6053@khazad-dum.debian.net> <48965716.6020508@overt.org> <20080805212416.GB21738@khazad-dum.debian.net> <48991B83.5030607@overt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <48991B83.5030607@overt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Report channel, beacon interval and capabilities.
-Use WEXT defines instead of magic numbers.
-State quality stats in dB.
-Also a few changes to keep line length less than 80.
+On Tue, 05 Aug 2008, Philip Langdale wrote:
+> Henrique de Moraes Holschuh wrote:
+>> rfkill-input (now) or userspace (someday) will take care of kicking the
+>> radio to RFKILL_STATE_UNBLOCKED when (1) issues an event that signals that
+>> radios don't have to remain blocked.  Maybe this is why you see the WLAN
+>> going on when you deactivate the radio kill switch?
+>
+> It's all done behind the scenes I think (it's an ipw2200 device). There's
+> no rfkill integration from that driver.
 
-Signed-off-by: David Kilroy <kilroyd@gmail.com>
----
- drivers/net/wireless/orinoco.c |   71 ++++++++++++++++++++++++++--------------
- 1 files changed, 46 insertions(+), 25 deletions(-)
+Then it is probably not turning the device on, but rather, reverting its
+state.  This is normal with hardware like the ipw2200 that has a hardware
+rfkill line.
 
-diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
-index e9dca96..655d030 100644
---- a/drivers/net/wireless/orinoco.c
-+++ b/drivers/net/wireless/orinoco.c
-@@ -3955,7 +3955,7 @@ static int orinoco_ioctl_getrid(struct net_device *dev,
- 	return err;
- }
- 
--/* Trigger a scan (look for other cells in the vicinity */
-+/* Trigger a scan (look for other cells in the vicinity) */
- static int orinoco_ioctl_setscan(struct net_device *dev,
- 				 struct iw_request_info *info,
- 				 struct iw_param *srq,
-@@ -3995,7 +3995,6 @@ static int orinoco_ioctl_setscan(struct net_device *dev,
- 	 * we access scan variables in priv is critical.
- 	 *	o scan_inprogress : not touched by irq handler
- 	 *	o scan_mode : not touched by irq handler
--	 *	o scan_len : synchronised with scan_result
- 	 * Before modifying anything on those variables, please think hard !
- 	 * Jean II */
- 
-@@ -4061,8 +4060,7 @@ static int orinoco_ioctl_setscan(struct net_device *dev,
- #define MAX_CUSTOM_LEN 64
- 
- /* Translate scan data returned from the card to a card independant
-- * format that the Wireless Tools will understand - Jean II
-- * Return message length or -errno for fatal errors */
-+ * format that the Wireless Tools will understand - Jean II */
- static inline char *orinoco_translate_scan(struct net_device *dev,
- 					   struct iw_request_info *info,
- 					   char *current_ev,
-@@ -4074,9 +4072,10 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
- 	u16			capabilities;
- 	u16			channel;
- 	struct iw_event		iwe;		/* Temporary buffer */
--	char                   *p;
- 	char custom[MAX_CUSTOM_LEN];
- 
-+	memset(&iwe, 0, sizeof(iwe));
-+
- 	/* First entry *MUST* be the AP MAC address */
- 	iwe.cmd = SIOCGIWAP;
- 	iwe.u.ap_addr.sa_family = ARPHRD_ETHER;
-@@ -4098,8 +4097,8 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
- 	/* Add mode */
- 	iwe.cmd = SIOCGIWMODE;
- 	capabilities = le16_to_cpu(bss->a.capabilities);
--	if (capabilities & 0x3) {
--		if (capabilities & 0x1)
-+	if (capabilities & (WLAN_CAPABILITY_ESS | WLAN_CAPABILITY_IBSS)) {
-+		if (capabilities & WLAN_CAPABILITY_ESS)
- 			iwe.u.mode = IW_MODE_MASTER;
- 		else
- 			iwe.u.mode = IW_MODE_ADHOC;
-@@ -4109,17 +4108,22 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
- 
- 	channel = bss->s.channel;
- 	if ((channel >= 1) && (channel <= NUM_CHANNELS)) {
--		/* Add frequency */
-+		/* Add channel and frequency */
- 		iwe.cmd = SIOCGIWFREQ;
-+		iwe.u.freq.m = channel;
-+		iwe.u.freq.e = 0;
-+		current_ev = iwe_stream_add_event(info, current_ev, end_buf,
-+						  &iwe, IW_EV_FREQ_LEN);
-+
- 		iwe.u.freq.m = channel_frequency[channel-1] * 100000;
- 		iwe.u.freq.e = 1;
- 		current_ev = iwe_stream_add_event(info, current_ev, end_buf,
- 						  &iwe, IW_EV_FREQ_LEN);
- 	}
- 
--	/* Add quality statistics */
-+	/* Add quality statistics. level and noise in dB. No link quality */
- 	iwe.cmd = IWEVQUAL;
--	iwe.u.qual.updated = 0x10;	/* no link quality */
-+	iwe.u.qual.updated = IW_QUAL_DBM | IW_QUAL_QUAL_INVALID;
- 	iwe.u.qual.level = (__u8) le16_to_cpu(bss->a.level) - 0x95;
- 	iwe.u.qual.noise = (__u8) le16_to_cpu(bss->a.noise) - 0x95;
- 	/* Wireless tools prior to 27.pre22 will show link quality
-@@ -4133,25 +4137,13 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
- 
- 	/* Add encryption capability */
- 	iwe.cmd = SIOCGIWENCODE;
--	if (capabilities & 0x10)
-+	if (capabilities & WLAN_CAPABILITY_PRIVACY)
- 		iwe.u.data.flags = IW_ENCODE_ENABLED | IW_ENCODE_NOKEY;
- 	else
- 		iwe.u.data.flags = IW_ENCODE_DISABLED;
- 	iwe.u.data.length = 0;
- 	current_ev = iwe_stream_add_point(info, current_ev, end_buf,
--					  &iwe, bss->a.essid);
--
--	/* Add EXTRA: Age to display seconds since last beacon/probe response
--	 * for given network. */
--	iwe.cmd = IWEVCUSTOM;
--	p = custom;
--	p += snprintf(p, MAX_CUSTOM_LEN - (p - custom),
--		      " Last beacon: %dms ago",
--		      jiffies_to_msecs(jiffies - last_scanned));
--	iwe.u.data.length = p - custom;
--	if (iwe.u.data.length)
--		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
--						  &iwe, custom);
-+					  &iwe, NULL);
- 
- 	/* Bit rate is not available in Lucent/Agere firmwares */
- 	if (priv->firmware_type != FIRMWARE_TYPE_AGERE) {
-@@ -4173,7 +4165,8 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
- 			if (bss->p.rates[i] == 0x0)
- 				break;
- 			/* Bit rate given in 500 kb/s units (+ 0x80) */
--			iwe.u.bitrate.value = ((bss->p.rates[i] & 0x7f) * 500000);
-+			iwe.u.bitrate.value =
-+				((bss->p.rates[i] & 0x7f) * 500000);
- 			current_val = iwe_stream_add_value(info, current_ev,
- 							   current_val,
- 							   end_buf, &iwe,
-@@ -4184,6 +4177,34 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
- 			current_ev = current_val;
- 	}
- 
-+	/* Beacon interval */
-+	iwe.cmd = IWEVCUSTOM;
-+	iwe.u.data.length = snprintf(custom, MAX_CUSTOM_LEN,
-+				     "bcn_int=%d",
-+				     le16_to_cpu(bss->a.beacon_interv));
-+	if (iwe.u.data.length)
-+		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
-+						  &iwe, custom);
-+
-+	/* Capabilites */
-+	iwe.cmd = IWEVCUSTOM;
-+	iwe.u.data.length = snprintf(custom, MAX_CUSTOM_LEN,
-+				     "capab=0x%04x",
-+				     capabilities);
-+	if (iwe.u.data.length)
-+		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
-+						  &iwe, custom);
-+
-+	/* Add EXTRA: Age to display seconds since last beacon/probe response
-+	 * for given network. */
-+	iwe.cmd = IWEVCUSTOM;
-+	iwe.u.data.length = snprintf(custom, MAX_CUSTOM_LEN,
-+				     " Last beacon: %dms ago",
-+				     jiffies_to_msecs(jiffies - last_scanned));
-+	if (iwe.u.data.length)
-+		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
-+						  &iwe, custom);
-+
- 	return current_ev;
- }
- 
+>> And rfkill-input will soon be enhanced to let the user configure it to do
+>> something different if he wants.  Your driver doesn't (and shouldn't)
+>> hardcode policy about it.
+>
+> Ok, that makes things much easier for me :-) But it means that for now the
+> user will have to manually kick the device.
+
+Actually, all the users have to do right now is to have rfkill-input loaded.
+It *already* kicks all devices online when you release the master rfkill
+switch.
+
+>> Thanks.  Please take note that rfkill will, right now, try to BLOCK all
+>> radios on suspend.  That will be changed soon (2.6.28 at the latest), and
+>> your driver will have to handle blocking radios on suspend directly if it is
+>> needed for toshibas.
+>
+> Why is this necessary? Doesn't the radio power down as part of the suspend
+> process? How would I tell what the hardware is doing?
+
+Some network drivers want to do it themselves, so now it will be the job of
+every driver to know whether it should do something or not.
+
+To test your platform to know if you will need to do something, just comment
+the rfkill->toggle_radio in rfkill_suspend, and check if your radios are
+still transmitting when you suspend.  I really doubt any laptop has that
+problem, though.
+
 -- 
-1.5.4.5
-
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
