@@ -1,384 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:17943 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752516AbYHBKPV (ORCPT
+Received: from mx03.syneticon.net ([87.79.32.166]:3232 "EHLO
+	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756580AbYHFUFI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 06:15:21 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so537527nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 03:15:20 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: proski@gnu.org, orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-Subject: [PATCH 08/19] orinoco: Extend hermes_dld routines for Agere firmware
-Date: Sat,  2 Aug 2008 11:14:22 +0100
-Message-Id: <1217672073-7094-9-git-send-email-kilroyd@gmail.com> (sfid-20080802_121526_453104_3A0BD534)
-In-Reply-To: <1217672073-7094-8-git-send-email-kilroyd@gmail.com>
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-3-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-4-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-5-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-6-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-7-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-8-git-send-email-kilroyd@gmail.com>
-From: kilroyd@googlemail.com
+	Wed, 6 Aug 2008 16:05:08 -0400
+Message-ID: <489A03E7.60800@wpkg.org> (sfid-20080806_220515_851086_2408439D)
+Date: Wed, 06 Aug 2008 22:04:55 +0200
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+MIME-Version: 1.0
+To: Chr <chunkeey@web.de>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>
+Subject: Re: kernel panic on p54pci insertion on mipsel
+References: <4898B018.5050202@wpkg.org> <43e72e890808051619u4ed7c447wd80a866192220b84@mail.gmail.com> <4899F540.8050409@wpkg.org> <200808062150.01765.chunkeey@web.de>
+In-Reply-To: <200808062150.01765.chunkeey@web.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add programming initialisation and termination functions.
-Add checks to avoid overrunning the firmware image or PDA areas.
-Extra algorithm to program PDA values using defaults where necessary.
+Chr schrieb:
+> On Wednesday 06 August 2008 21:02:24 Tomasz Chmielewski wrote:
+>> Luis R. Rodriguez schrieb:
+>>
+>> (...)
+>>
+>>>> - doesn't work with prism54.ko module (similar messages to
+>>>> http://marc.info/?l=linux-wireless&m=120250829717134&w=2)
+>>> We need more details, or do you get *exactly* the same error messages?
+>>>
+>>> "Out of memory, cannot handle oid" comes up after a failed kmalloc()
+>>> while trying to handle an interrupt and management frame (not 802.11
+>>> frame) from the firmware. From that archived mailing list though the
+>>> oid 0x080002ff is mentioned and... well prism54 doesn't know what that
+>>> is. I wonder if the firmware is triggering random interrupts with
+>>> bogus oids.
+>>>
+>>> If you can provide a complete log it can help. Also in your previous
+>>> posts I see you mentioned you were working with different firmwares.
+>>> 1.0.4.3.arm should *only* be used with prism54. You may also want to
+>>> try an older firmware version than 1.0.4.3.arm, this one came from
+>>> 3com cards.
+>> Is older firmware available anywhere online?
+> you can get lots of fullmac & softmac firmwares right here:
+> http://daemonizer.de/prism54/prism54-fw/
 
-Signed-off-by: David Kilroy <kilroyd@gmail.com>
----
- drivers/net/wireless/hermes_dld.c |  285 +++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/hermes_dld.h |    5 +
- 2 files changed, 290 insertions(+), 0 deletions(-)
+I get "Out of memory, cannot handle oid" with all 1.x.x.x firmware and 
+prism54 module.
+I was renaming 1.x.x.x to isl3890, loading module, ifconfig up, removing module - from the highest 1.x.x.x version down to 0.8.0.0, which made the kernel panic after these series of rmmods, modprobes and ifconfigs. The panic can be reproduced if you do these ifconfig up series several times in a row.
 
-diff --git a/drivers/net/wireless/hermes_dld.c b/drivers/net/wireless/hermes_dld.c
-index 454452f..4f11363 100644
---- a/drivers/net/wireless/hermes_dld.c
-+++ b/drivers/net/wireless/hermes_dld.c
-@@ -70,6 +70,12 @@ MODULE_LICENSE("Dual MPL/GPL");
- #define HERMES_AUX_PW1	0xDC23
- #define HERMES_AUX_PW2	0xBA45
- 
-+/* HERMES_CMD_DOWNLD */
-+#define HERMES_PROGRAM_DISABLE             (0x0000 | HERMES_CMD_DOWNLD)
-+#define HERMES_PROGRAM_ENABLE_VOLATILE     (0x0100 | HERMES_CMD_DOWNLD)
-+#define HERMES_PROGRAM_ENABLE_NON_VOLATILE (0x0200 | HERMES_CMD_DOWNLD)
-+#define HERMES_PROGRAM_NON_VOLATILE        (0x0300 | HERMES_CMD_DOWNLD)
-+
- /* End markers used in dblocks */
- #define PDI_END		0x00000000	/* End of PDA */
- #define BLOCK_END	0xFFFFFFFF	/* Last image block */
-@@ -247,6 +253,23 @@ hermes_find_pdr(struct pdr *first_pdr, u32 record_id)
- 	return NULL;
- }
- 
-+/* Scan production data items for a particular entry */
-+static struct pdi *
-+hermes_find_pdi(struct pdi *first_pdi, u32 record_id)
-+{
-+	struct pdi *pdi = first_pdi;
-+
-+	while (pdi_id(pdi) != PDI_END) {
-+
-+		/* If the record ID matches, we are done */
-+		if (pdi_id(pdi) == record_id)
-+			return pdi;
-+
-+		pdi = (struct pdi *) &pdi->data[pdi_len(pdi)];
-+	}
-+	return NULL;
-+}
-+
- /* Process one Plug Data Item - find corresponding PDR and plug it */
- static int
- hermes_plug_pdi(hermes_t *hw, struct pdr *first_pdr, const struct pdi *pdi)
-@@ -290,6 +313,15 @@ int hermes_read_pda(hermes_t *hw,
- 		ret = hermes_docmd_wait(hw, HERMES_CMD_READMIF, 0, NULL);
- 		if (ret)
- 			return ret;
-+	} else {
-+		/* wl_lkm does not include PDA size in the PDA area.
-+		 * We will pad the information into pda, so other routines
-+		 * don't have to be modified */
-+		pda[0] = cpu_to_le16(pda_len - 2);
-+			/* Includes CFG_PROD_DATA but not itself */
-+		pda[1] = cpu_to_le16(0x0800); /* CFG_PROD_DATA */
-+		data_len = pda_len - 4;
-+		data = pda + 2;
- 	}
- 
- 	/* Open auxiliary port */
-@@ -370,6 +402,94 @@ EXPORT_SYMBOL(hermes_blocks_length);
- 
- /*** Hermes programming ***/
- 
-+/* About to start programming data (Hermes I)
-+ * offset is the entry point
-+ *
-+ * Spectrum_cs' Symbol fw does not require this
-+ * wl_lkm Agere fw does
-+ * Don't know about intersil
-+ */
-+int hermesi_program_init(hermes_t *hw, u32 offset)
-+{
-+	int err;
-+
-+	/* Disable interrupts?*/
-+	/*hw->inten = 0x0;*/
-+	/*hermes_write_regn(hw, INTEN, 0);*/
-+	/*hermes_set_irqmask(hw, 0);*/
-+
-+	/* Acknowledge any outstanding command */
-+	hermes_write_regn(hw, EVACK, 0xFFFF);
-+
-+	/* Using doicmd_wait rather than docmd_wait */
-+	err = hermes_doicmd_wait(hw,
-+				 0x0100 | HERMES_CMD_INIT,
-+				 0, 0, 0, NULL);
-+	if (err)
-+		return err;
-+
-+	err = hermes_doicmd_wait(hw,
-+				 0x0000 | HERMES_CMD_INIT,
-+				 0, 0, 0, NULL);
-+	if (err)
-+		return err;
-+
-+	err = hermes_aux_control(hw, 1);
-+	printk(KERN_DEBUG PFX "AUX enable returned %d\n", err);
-+
-+	if (err)
-+		return err;
-+
-+	printk(KERN_DEBUG PFX "Enabling volatile, EP 0x%08x\n", offset);
-+	err = hermes_doicmd_wait(hw,
-+				 HERMES_PROGRAM_ENABLE_VOLATILE,
-+				 offset & 0xFFFFu,
-+				 offset >> 16,
-+				 0,
-+				 NULL);
-+	printk(KERN_DEBUG PFX "PROGRAM_ENABLE returned %d\n",
-+	       err);
-+
-+	return err;
-+}
-+EXPORT_SYMBOL(hermesi_program_init);
-+
-+/* Done programming data (Hermes I)
-+ *
-+ * Spectrum_cs' Symbol fw does not require this
-+ * wl_lkm Agere fw does
-+ * Don't know about intersil
-+ */
-+int hermesi_program_end(hermes_t *hw)
-+{
-+	struct hermes_response resp;
-+	int rc = 0;
-+	int err;
-+
-+	rc = hermes_docmd_wait(hw, HERMES_PROGRAM_DISABLE, 0, &resp);
-+
-+	printk(KERN_DEBUG PFX "PROGRAM_DISABLE returned %d, "
-+	       "r0 0x%04x, r1 0x%04x, r2 0x%04x\n",
-+	       rc, resp.resp0, resp.resp1, resp.resp2);
-+
-+	if ((rc == 0) &&
-+	    ((resp.status & HERMES_STATUS_CMDCODE) != HERMES_CMD_DOWNLD))
-+		rc = -EIO;
-+
-+	err = hermes_aux_control(hw, 0);
-+	printk(KERN_DEBUG PFX "AUX disable returned %d\n", err);
-+
-+	/* Acknowledge any outstanding command */
-+	hermes_write_regn(hw, EVACK, 0xFFFF);
-+
-+	/* Reinitialise, ignoring return */
-+	(void) hermes_doicmd_wait(hw, 0x0000 | HERMES_CMD_INIT,
-+				  0, 0, 0, NULL);
-+
-+	return rc ? rc : err;
-+}
-+EXPORT_SYMBOL(hermesi_program_end);
-+
- /* Program the data blocks */
- int hermes_program(hermes_t *hw, const char *first_block, const char *end)
- {
-@@ -443,3 +563,168 @@ static void __exit exit_hermes_dld(void)
- 
- module_init(init_hermes_dld);
- module_exit(exit_hermes_dld);
-+
-+/*** Default plugging data for Hermes I ***/
-+/* Values from wl_lkm_718/hcf/dhf.c */
-+
-+#define DEFINE_DEFAULT_PDR(pid, length, data)				\
-+static const struct {							\
-+	__le16 len;							\
-+	__le16 id;							\
-+	u8 val[length];							\
-+} __attribute__ ((packed)) default_pdr_data_##pid = {			\
-+	__constant_cpu_to_le16((sizeof(default_pdr_data_##pid)/		\
-+				sizeof(__le16)) - 1),			\
-+	__constant_cpu_to_le16(pid),					\
-+	data								\
-+}
-+
-+#define DEFAULT_PDR(pid) default_pdr_data_##pid
-+
-+/*  HWIF Compatiblity */
-+DEFINE_DEFAULT_PDR(0x0005, 10, "\x00\x00\x06\x00\x01\x00\x01\x00\x01\x00");
-+
-+/* PPPPSign */
-+DEFINE_DEFAULT_PDR(0x0108, 4, "\x00\x00\x00\x00");
-+
-+/* PPPPProf */
-+DEFINE_DEFAULT_PDR(0x0109, 10, "\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00");
-+
-+/* Antenna diversity */
-+DEFINE_DEFAULT_PDR(0x0150, 2, "\x00\x3F");
-+
-+/* Modem VCO band Set-up */
-+DEFINE_DEFAULT_PDR(0x0160, 28,
-+		   "\x00\x00\x00\x00\x00\x00\x00\x00"
-+		   "\x00\x00\x00\x00\x00\x00\x00\x00"
-+		   "\x00\x00\x00\x00\x00\x00\x00\x00"
-+		   "\x00\x00\x00\x00");
-+
-+/* Modem Rx Gain Table Values */
-+DEFINE_DEFAULT_PDR(0x0161, 256,
-+		   "\x3F\x01\x3F\01\x3F\x01\x3F\x01"
-+		   "\x3F\x01\x3F\01\x3F\x01\x3F\x01"
-+		   "\x3F\x01\x3F\01\x3F\x01\x3F\x01"
-+		   "\x3F\x01\x3F\01\x3F\x01\x3F\x01"
-+		   "\x3F\x01\x3E\01\x3E\x01\x3D\x01"
-+		   "\x3D\x01\x3C\01\x3C\x01\x3B\x01"
-+		   "\x3B\x01\x3A\01\x3A\x01\x39\x01"
-+		   "\x39\x01\x38\01\x38\x01\x37\x01"
-+		   "\x37\x01\x36\01\x36\x01\x35\x01"
-+		   "\x35\x01\x34\01\x34\x01\x33\x01"
-+		   "\x33\x01\x32\x01\x32\x01\x31\x01"
-+		   "\x31\x01\x30\x01\x30\x01\x7B\x01"
-+		   "\x7B\x01\x7A\x01\x7A\x01\x79\x01"
-+		   "\x79\x01\x78\x01\x78\x01\x77\x01"
-+		   "\x77\x01\x76\x01\x76\x01\x75\x01"
-+		   "\x75\x01\x74\x01\x74\x01\x73\x01"
-+		   "\x73\x01\x72\x01\x72\x01\x71\x01"
-+		   "\x71\x01\x70\x01\x70\x01\x68\x01"
-+		   "\x68\x01\x67\x01\x67\x01\x66\x01"
-+		   "\x66\x01\x65\x01\x65\x01\x57\x01"
-+		   "\x57\x01\x56\x01\x56\x01\x55\x01"
-+		   "\x55\x01\x54\x01\x54\x01\x53\x01"
-+		   "\x53\x01\x52\x01\x52\x01\x51\x01"
-+		   "\x51\x01\x50\x01\x50\x01\x48\x01"
-+		   "\x48\x01\x47\x01\x47\x01\x46\x01"
-+		   "\x46\x01\x45\x01\x45\x01\x44\x01"
-+		   "\x44\x01\x43\x01\x43\x01\x42\x01"
-+		   "\x42\x01\x41\x01\x41\x01\x40\x01"
-+		   "\x40\x01\x40\x01\x40\x01\x40\x01"
-+		   "\x40\x01\x40\x01\x40\x01\x40\x01"
-+		   "\x40\x01\x40\x01\x40\x01\x40\x01"
-+		   "\x40\x01\x40\x01\x40\x01\x40\x01");
-+
-+/* Write PDA according to certain rules.
-+ *
-+ * For every production data record, look for a previous setting in
-+ * the pda, and use that.
-+ *
-+ * For certain records, use defaults if they are not found in pda.
-+ */
-+int hermes_apply_pda_with_defaults(hermes_t *hw,
-+				   const char *first_pdr,
-+				   const __le16 *pda)
-+{
-+	const struct pdr *pdr = (const struct pdr *) first_pdr;
-+	struct pdi *first_pdi = (struct pdi *) &pda[2];
-+	struct pdi *pdi;
-+	struct pdi *default_pdi = NULL;
-+	struct pdi *outdoor_pdi;
-+	void *end = (void *)first_pdr + MAX_PDA_SIZE;
-+	int record_id;
-+
-+	while (((void *)pdr < end) &&
-+	       (pdr_id(pdr) != PDI_END)) {
-+		/*
-+		 * For spectrum_cs firmwares,
-+		 * PDR area is currently not terminated by PDI_END.
-+		 * It's followed by CRC records, which have the type
-+		 * field where PDR has length.  The type can be 0 or 1.
-+		 */
-+		if (pdr_len(pdr) < 2)
-+			break;
-+		record_id = pdr_id(pdr);
-+
-+		pdi = hermes_find_pdi(first_pdi, record_id);
-+		if (pdi)
-+			printk(KERN_DEBUG PFX "Found record 0x%04x at %p\n",
-+			       record_id, pdi);
-+
-+		switch (record_id) {
-+		case 0x110: /* Modem REFDAC values */
-+		case 0x120: /* Modem VGDAC values */
-+			outdoor_pdi = hermes_find_pdi(first_pdi, record_id + 1);
-+			default_pdi = NULL;
-+			if (outdoor_pdi) {
-+				pdi = outdoor_pdi;
-+				printk(KERN_DEBUG PFX
-+				       "Using outdoor record 0x%04x at %p\n",
-+				       record_id + 1, pdi);
-+			}
-+			break;
-+		case 0x5: /*  HWIF Compatiblity */
-+			default_pdi = (struct pdi *) &DEFAULT_PDR(0x0005);
-+			break;
-+		case 0x108: /* PPPPSign */
-+			default_pdi = (struct pdi *) &DEFAULT_PDR(0x0108);
-+			break;
-+		case 0x109: /* PPPPProf */
-+			default_pdi = (struct pdi *) &DEFAULT_PDR(0x0109);
-+			break;
-+		case 0x150: /* Antenna diversity */
-+			default_pdi = (struct pdi *) &DEFAULT_PDR(0x0150);
-+			break;
-+		case 0x160: /* Modem VCO band Set-up */
-+			default_pdi = (struct pdi *) &DEFAULT_PDR(0x0160);
-+			break;
-+		case 0x161: /* Modem Rx Gain Table Values */
-+			default_pdi = (struct pdi *) &DEFAULT_PDR(0x0161);
-+			break;
-+		default:
-+			default_pdi = NULL;
-+			break;
-+		}
-+		if (!pdi && default_pdi) {
-+			/* Use default */
-+			pdi = default_pdi;
-+			printk(KERN_DEBUG PFX
-+			       "Using default record 0x%04x at %p\n",
-+			       record_id, pdi);
-+		}
-+
-+		if (pdi) {
-+			/* Lengths of the data in PDI and PDR must match */
-+			if (pdi_len(pdi) == pdr_len(pdr)) {
-+				/* do the actual plugging */
-+				hermes_aux_setaddr(hw, pdr_addr(pdr));
-+				hermes_write_bytes(hw, HERMES_AUXDATA,
-+						   pdi->data, pdi_len(pdi));
-+			}
-+		}
-+
-+		pdr++;
-+	}
-+	return 0;
-+}
-+EXPORT_SYMBOL(hermes_apply_pda_with_defaults);
-diff --git a/drivers/net/wireless/hermes_dld.h b/drivers/net/wireless/hermes_dld.h
-index a39a482..c13a1c2 100644
---- a/drivers/net/wireless/hermes_dld.h
-+++ b/drivers/net/wireless/hermes_dld.h
-@@ -27,6 +27,8 @@
- 
- #include "hermes.h"
- 
-+int hermesi_program_init(hermes_t *hw, u32 offset);
-+int hermesi_program_end(hermes_t *hw);
- int hermes_program(hermes_t *hw, const char *first_block, const char *end);
- 
- int hermes_read_pda(hermes_t *hw,
-@@ -37,6 +39,9 @@ int hermes_read_pda(hermes_t *hw,
- int hermes_apply_pda(hermes_t *hw,
- 		     const char *first_pdr,
- 		     const __le16 *pda);
-+int hermes_apply_pda_with_defaults(hermes_t *hw,
-+				   const char *first_pdr,
-+				   const __le16 *pda);
- 
- size_t hermes_blocks_length(const char *first_block);
- 
+# ifconfig eth2 up
+Data bus error, epc == c0071834, ra == 8004cc30
+Oops[#1]:
+Cpu 0
+$ 0   : 00000000 10009800 00000001 00000001
+$ 4   : c0054000 80de8b60 ffffffff 00000000
+$ 8   : 1000d800 1000001f 802e0000 802f0000
+$12   : 802e0000 00000006 802e4588 81c3d508
+$16   : 81d69880 00000080 00000001 00000006
+$20   : 00000000 c0054078 00000001 7fc25828
+$24   : 00000001 2abb4fb0
+$28   : 80de0000 80de1c50 7fc258bc 8004cc30
+Hi    : 00020200
+Lo    : 05858000
+epc   : c0071834     Not tainted
+ra    : 8004cc30 Status: 10009803    KERNEL EXL IE
+Cause : 0080401c
+PrId  : 00029006 (Broadcom BCM3302)
+Modules linked in: prism54 [last unloaded: prism54]
+Process ifconfig (pid: 1329, threadinfo=80de0000, task=81edb998)
+Stack : 8018405c 81c02805 00000001 802e4558 00000001 8001d2bc 81d69880 00000080
+        00000001 8004cc30 802a1a90 00000006 80de8b60 80de8800 802a1a90 00000006
+        80de8b60 80de8800 8004e0dc 80002ca4 81d17e00 10009801 00000000 8001c310
+        00004000 c0054000 80001e54 1000d800 00000400 00000000 0000468c 802a0000
+        00000000 80002ca4 00000001 7fc25828 80125850 00000006 802e4df4 00000000
+        ...
+Call Trace:[<8018405c>][<8001d2bc>][<8004cc30>][<8004e0dc>][<80002ca4>][<8001c310>][<80001e54>][<80002ca4>][<80125850>][<c0070c00>][<c0070c98>][<c007118c>]
+
+Code: 8ca40150  24020001  afa20010 <8c820078> 00a08021  30420200  1440009f  8cb10160  8c820010
+Kernel panic - not syncing: Fatal exception in interrupt
+
+
 -- 
-1.5.4.5
-
+Tomasz Chmielewski
+http://wpkg.org
