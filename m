@@ -1,79 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52389 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:50437 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753499AbYHBTRj (ORCPT
+	with ESMTP id S1761713AbYHFM04 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 15:17:39 -0400
-Subject: Re: wireless USB adapters recommendations?
+	Wed, 6 Aug 2008 08:26:56 -0400
+Subject: Re: [PATCH] mac80211: keep mesh ifaces in allmulti mode
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <g72be3$gpf$1@ger.gmane.org> (sfid-20080802_211017_111832_D6ADD2A8)
-References: <4894AC77.5060801@wpkg.org>  <g72be3$gpf$1@ger.gmane.org>
-	 (sfid-20080802_211017_111832_D6ADD2A8)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Fk5gh4B454YyH5aorlP7"
-Date: Sat, 02 Aug 2008 21:17:33 +0200
-Message-Id: <1217704653.8621.54.camel@johannes.berg> (sfid-20080802_211742_513280_9258A5B8)
+To: Luis Carlos Cobo <luisca@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <4899975a.2135440a.05a6.3c34@mx.google.com> (sfid-20080806_142148_316320_D8214475)
+References: <4899975a.2135440a.05a6.3c34@mx.google.com>
+	 (sfid-20080806_142148_316320_D8214475)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hbQX4F5Rloq8tSskVnan"
+Date: Wed, 06 Aug 2008 14:26:20 +0200
+Message-Id: <1218025580.23048.2.camel@johannes.berg> (sfid-20080806_142659_674306_11012168)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-Fk5gh4B454YyH5aorlP7
+--=-hbQX4F5Rloq8tSskVnan
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2008-08-02 at 19:09 +0000, Daniel Gimpelevich wrote:
+On Wed, 2008-08-06 at 13:17 +0200, Luis Carlos Cobo wrote:
+> Currently a mesh node will not forward a multicast frame if it is not sub=
+scribed
+> to the specific multicast address. This patch addresses the issue and fix=
+es mesh
+> multicast forwarding.
+>=20
+> Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
 
-> > I'm looking for a USB wireless adapter which is well supported under
-> > Linux.
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-> > - WPA2
-> > - should support ad-hoc and access point modes - should work under
-> > mipsel (I had once a prism54 mini-PCI card which didn't work under
-> > mipsel)
+> ---
+>  net/mac80211/main.c |    8 +++++++-
+>  1 files changed, 7 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> index 0c02c47..aa5a191 100644
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -245,10 +245,13 @@ static int ieee80211_open(struct net_device *dev)
+>  	case IEEE80211_IF_TYPE_AP:
+>  		sdata->bss =3D &sdata->u.ap;
+>  		break;
+> +	case IEEE80211_IF_TYPE_MESH_POINT:
+> +		/* mesh ifaces must set allmulti to forward mcast traffic */
+> +		atomic_inc(&local->iff_allmultis);
+> +		break;
+>  	case IEEE80211_IF_TYPE_STA:
+>  	case IEEE80211_IF_TYPE_MNTR:
+>  	case IEEE80211_IF_TYPE_IBSS:
+> -	case IEEE80211_IF_TYPE_MESH_POINT:
+>  		/* no special treatment */
+>  		break;
+>  	case IEEE80211_IF_TYPE_INVALID:
+> @@ -495,6 +498,9 @@ static int ieee80211_stop(struct net_device *dev)
+>  		netif_addr_unlock_bh(local->mdev);
+>  		break;
+>  	case IEEE80211_IF_TYPE_MESH_POINT:
+> +		/* allmulti is always set on mesh ifaces */
+> +		atomic_dec(&local->iff_allmultis);
+> +		/* fall through */
+>  	case IEEE80211_IF_TYPE_STA:
+>  	case IEEE80211_IF_TYPE_IBSS:
+>  		sdata->u.sta.state =3D IEEE80211_DISABLED;
 
-Didn't work under mipsel seems fixable, should be a driver issue.
-
-> Your requirements are mutually exclusive at the moment. Here is what the=20
-> FSF says on the matter:
-> http://www.fsf.org/resources/hw/net/wireless/cards.html
-
-I wouldn't be too sure the FSF is a good source of information regarding
-wireless on Linux (or of anything about Linux for that matter). And the
-list is, indeed, rather incomplete and gives a very skewed picture.
-
-On the other hand, I don't think there are any USB devices that support
-AP mode.
-
-> Access-point mode is now dependent upon nl80211, which isn't finished yet=
-.
-
-Patience. It will be soon.
-
-johannes
-
---=-Fk5gh4B454YyH5aorlP7
+--=-hbQX4F5Rloq8tSskVnan
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJIlLLKAAoJEKVg1VMiehFYoCsQAL7jtymoXZnSPZKA0XunTaLI
-QhJcxTu0G6W3QQK6PpinXiOCE/q+9oqXW1nx9XSw68JvweOsSk+GmQEiOvIPIbOi
-Un91eVfh04p4j2pRxj4LCTbL5SUS3yTiYhQNzZC8AjQ/8DPPT/J3EtZ2hhDJqi3R
-I4A7kmqfsuZw/jN0BqnRBP1iyaZfRFQEd783GdfWchIR0Zuua5UMH1yMyycRYVkR
-mcHZr1YGLKIVG2BYKrL/Axg8UVqhA7TXn+kO0wHeuQzQG78l2hmzsoBmI4+J9HdR
-phyRNmav190Ski6LNc+Anc5nXQDRgy7tr6tqPD3AuWjchE6I05OPOreCDOxyxDY2
-3WDRnZJG2lhz670y8mh+UbuDv0jZ9PmIlpJX1jtfk94QjhUF/mA/FD7PcpfvGz2i
-RlNyTXvmQCeU8Yc5o2AgrFXi2CU5vNaOO4DCGmle8t5wf7A0Rx2VBRiT5MCSMCTs
-e5cVVYpXV8fhO08GwzS19SoBqwTg3MAU088p1JjCrtdU90sLStgwS4uOoFu/tvZq
-a/uTVVybUpRSBweBV/2JcVI7/ygMblG0m9TSYq6ie85I825aPW9ubGhnXI2NLwv3
-iZX/vsBCI17vxTI+D35cs95au1M81jUYT6Me+WPt4fbHd9GIWYSDCox5s1Rrztyd
-MtzfLQc1pp6zZs/X9f7A
-=6nUP
+iQIcBAABAgAGBQJImZhpAAoJEKVg1VMiehFYk5UP/0EunoqDTTSjtKedOsz0/Zzj
+CfHaul8vFHLNCmZKVc13zHKJR7qZ00J/TZv7Vzugs+yrNDrQ6bJUE7tuNyHcrtXv
+3ypCmhTXyc04VI1NRgkAmvoD3zKEXW6Jzxm44VdNJR7YZRtrIADIJyQdx0UDYulv
+hUPeFSPnQ82F1fKBAnXl3zUZsiXhCu9ZDMUemEQNnz91Eq28N8KlTmF9uPQoob/x
+edprOdGN4r4qBgrn9Ujfwzk1ZC0R0eQ/WPtEDalF+3L2b6ThtzhDyz+6UKCLT42j
+lOG4IfpQ+hLFIzbtrSwZftUnj0OXlFkfvYOGYBMq6uba9czoej4CRmwtE8Hsb9N6
+2syVTO5vctpIgxrFwZohsFivJShRLYjtRLqomBXyfoiwEMMqmkfp/WLPfSqnH9C4
+W1Ek9OhlwsIuJcu/evbxLfOrrMibiloDYzA8V+hltPhZf1iAQkmc1JYPYog0N4lf
+lP1IXzLnXUy3q79mSDYdFvVJPb2eoaIBIUTqIkfn4n5pJVt0jXpgszlEqW9vDDJb
+qGd/KJPZ08bwEZjYWTKwLbx+kG2efmp9qASODANerqoJyTbgd3w39T43LwWq78XA
+w16tXNTFU80TBjBfu4V+dUqtwceRgEruNloqIyaOe93pXhDVEzDVS+3+lJy1e/UF
+jwo5e0ecetG9SrDfkgFF
+=OADl
 -----END PGP SIGNATURE-----
 
---=-Fk5gh4B454YyH5aorlP7--
+--=-hbQX4F5Rloq8tSskVnan--
 
