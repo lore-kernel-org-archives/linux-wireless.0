@@ -1,130 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:25507 "EHLO mga02.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:32216 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752576AbYHOCFC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2008 22:05:02 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 14/15] iwl3945: removed bg_post_associate work
-Date: Fri, 15 Aug 2008 10:01:19 +0800
-Message-Id: <1218765680-8378-15-git-send-email-yi.zhu@intel.com> (sfid-20080815_040508_968190_CDC622B6)
-In-Reply-To: <1218765680-8378-14-git-send-email-yi.zhu@intel.com>
-References: <1218765680-8378-1-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-2-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-3-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-4-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-5-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-6-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-7-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-8-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-9-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-10-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-11-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-12-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-13-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-14-git-send-email-yi.zhu@intel.com>
+	id S1755489AbYHFUcy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Aug 2008 16:32:54 -0400
+Date: Wed, 6 Aug 2008 13:32:51 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+CC: Randy Dunlap <randy.dunlap@oracle.com>,
+	Jochen =?iso-8859-1?B?Vm/f?= <jochen.voss@googlemail.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>
+Subject: Re: [PATCH 2/4] list.h: add list_cut_position()
+Message-ID: <20080806203251.GB9519@tesla> (sfid-20080806_223258_931330_73031A98)
+References: <1217890089-12100-1-git-send-email-lrodriguez@atheros.com> <20080804160011.ec964f1f.randy.dunlap@oracle.com> <20080804231320.GG6447@tesla> <ef1cd66f0808050152g1dd8b96cl2df820607d480f0f@mail.gmail.com> <20080806182724.GI5605@tesla> <23052053.1218047754579.JavaMail.oracle@acsmt304.oracle.com> <20080806184520.GK5605@tesla> <20080806202854.GP5605@tesla>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20080806202854.GP5605@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+On Wed, Aug 06, 2008 at 01:28:54PM -0700, Luis Rodriguez wrote:
+> On Wed, Aug 06, 2008 at 11:45:20AM -0700, Luis Rodriguez wrote:
+> >
+> > OK here's the new one.
+> > --
+> >
+> > This adds list_cut_position() which lets you cut a list into
+> > two lists given a pivot in the list.
+> >
+> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> 
+> Here it is again but this time one which applies cleanly ontop of the
+> list_cut_tail() patch I just reposted.
 
-This patch removes bg_post_associate work. A direct call
-iwl3945_post_associate is made to avoid the waiting by
-userspace programs.
+I meant on top of the list_splice_tail() of course :)
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   18 +-----------------
- 2 files changed, 1 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index 4dd3f0d..9bbbc9d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -894,7 +894,6 @@ struct iwl3945_priv {
- 	struct delayed_work thermal_periodic;
- 	struct delayed_work gather_stats;
- 	struct delayed_work scan_check;
--	struct delayed_work post_associate;
- 
- #define IWL_DEFAULT_TX_POWER 0x0F
- 	s8 user_txpower_limit;
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 845e751..e5ab646 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -6416,16 +6416,6 @@ static void iwl3945_post_associate(struct iwl3945_priv *priv)
- 	priv->next_scan_jiffies = jiffies + IWL_DELAY_NEXT_SCAN;
- }
- 
--static void iwl3945_bg_post_associate(struct work_struct *data)
--{
--	struct iwl3945_priv *priv = container_of(data, struct iwl3945_priv,
--					     post_associate.work);
--
--	mutex_lock(&priv->mutex);
--	iwl3945_post_associate(priv);
--	mutex_unlock(&priv->mutex);
--}
--
- static void iwl3945_bg_abort_scan(struct work_struct *work)
- {
- 	struct iwl3945_priv *priv = container_of(work, struct iwl3945_priv, abort_scan);
-@@ -6571,7 +6561,6 @@ static void iwl3945_mac_stop(struct ieee80211_hw *hw)
- 		 */
- 		mutex_lock(&priv->mutex);
- 		iwl3945_scan_cancel_timeout(priv, 100);
--		cancel_delayed_work(&priv->post_associate);
- 		mutex_unlock(&priv->mutex);
- 	}
- 
-@@ -6937,7 +6926,6 @@ static void iwl3945_mac_remove_interface(struct ieee80211_hw *hw,
- 
- 	if (iwl3945_is_ready_rf(priv)) {
- 		iwl3945_scan_cancel_timeout(priv, 100);
--		cancel_delayed_work(&priv->post_associate);
- 		priv->staging_rxon.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
- 		iwl3945_commit_rxon(priv);
- 	}
-@@ -7241,8 +7229,6 @@ static void iwl3945_mac_reset_tsf(struct ieee80211_hw *hw)
- 
- 	iwl3945_reset_qos(priv);
- 
--	cancel_delayed_work(&priv->post_associate);
--
- 	spin_lock_irqsave(&priv->lock, flags);
- 	priv->assoc_id = 0;
- 	priv->assoc_capability = 0;
-@@ -7327,7 +7313,7 @@ static int iwl3945_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *sk
- 
- 	iwl3945_reset_qos(priv);
- 
--	queue_work(priv->workqueue, &priv->post_associate.work);
-+	iwl3945_post_associate(priv);
- 
- 	mutex_unlock(&priv->mutex);
- 
-@@ -7826,7 +7812,6 @@ static void iwl3945_setup_deferred_work(struct iwl3945_priv *priv)
- 	INIT_WORK(&priv->rf_kill, iwl3945_bg_rf_kill);
- 	INIT_WORK(&priv->beacon_update, iwl3945_bg_beacon_update);
- 	INIT_WORK(&priv->set_monitor, iwl3945_bg_set_monitor);
--	INIT_DELAYED_WORK(&priv->post_associate, iwl3945_bg_post_associate);
- 	INIT_DELAYED_WORK(&priv->init_alive_start, iwl3945_bg_init_alive_start);
- 	INIT_DELAYED_WORK(&priv->alive_start, iwl3945_bg_alive_start);
- 	INIT_DELAYED_WORK(&priv->scan_check, iwl3945_bg_scan_check);
-@@ -7844,7 +7829,6 @@ static void iwl3945_cancel_deferred_work(struct iwl3945_priv *priv)
- 	cancel_delayed_work_sync(&priv->init_alive_start);
- 	cancel_delayed_work(&priv->scan_check);
- 	cancel_delayed_work(&priv->alive_start);
--	cancel_delayed_work(&priv->post_associate);
- 	cancel_work_sync(&priv->beacon_update);
- }
- 
--- 
-1.5.3.6
-
+  Luis
