@@ -1,61 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx03.syneticon.net ([87.79.32.166]:2591 "EHLO
-	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752768AbYHFVQT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2008 17:16:19 -0400
-Message-ID: <489A149A.8030401@wpkg.org> (sfid-20080806_231622_796408_2A8611B0)
-Date: Wed, 06 Aug 2008 23:16:10 +0200
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-MIME-Version: 1.0
-To: Chr <chunkeey@web.de>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>
-Subject: Re: kernel panic on p54pci insertion on mipsel
-References: <4898B018.5050202@wpkg.org> <1218053763.23048.67.camel@johannes.berg> <489A0970.9030104@wpkg.org> <200808062250.49495.chunkeey@web.de>
-In-Reply-To: <200808062250.49495.chunkeey@web.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from c60.cesmail.net ([216.154.195.49]:50338 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751667AbYHFAlG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Aug 2008 20:41:06 -0400
+Subject: Re: [Orinoco-devel] [PATCH 00/19] orinoco: WPA for Agere based
+	cards
+From: Pavel Roskin <proski@gnu.org>
+To: Dave <kilroyd@googlemail.com>
+Cc: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <4898E668.9020604@gmail.com>
+References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
+	 <1217822232.10989.13.camel@dv> <48978C25.601@gmail.com>
+	 <1217977166.19480.2.camel@dv>  <4898E668.9020604@gmail.com>
+Content-Type: text/plain
+Date: Tue, 05 Aug 2008 20:41:04 -0400
+Message-Id: <1217983264.19480.46.camel@dv> (sfid-20080806_024109_843064_9A958B54)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chr schrieb:
+On Wed, 2008-08-06 at 00:46 +0100, Dave wrote:
+> >> +#define DEFINE_DEFAULT_PDR(pid, length, data)				\
+> >> +static const struct {							\
+> >> +	__le16 len;							\
+> >> +	__le16 id;							\
+> >> +	u8 val[length];							\
 
-(...)
+I see, the length is variable.
 
->> Code;  c0071828 <END_OF_CODE+3fd7aa58/????>
->> 00000000 <_PC>:
->> Code;  c0071828 <END_OF_CODE+3fd7aa58/????>
->>    0:   8ca40150  lw      a0,336(a1)
->> Code;  c007182c <END_OF_CODE+3fd7aa5c/????>
->>    4:   24020001  li      v0,1
->> Code;  c0071830 <END_OF_CODE+3fd7aa60/????>
->>    8:   afa20010  sw      v0,16(sp)
->> Code;  c0071834 <END_OF_CODE+3fd7aa64/????>   <=====
->>    c:   8c820078  lw      v0,120(a0)   <=====
->> Code;  c0071838 <END_OF_CODE+3fd7aa68/????>
->>   10:   00a08021  move    s0,a1
->> Code;  c007183c <END_OF_CODE+3fd7aa6c/????>
->>   14:   30420200  andi    v0,v0,0x200
->> Code;  c0071840 <END_OF_CODE+3fd7aa70/????>
->>   18:   1440009f  bnez    v0,298 <_PC+0x298>
->> Code;  c0071844 <END_OF_CODE+3fd7aa74/????>
->>   1c:   8cb10160  lw      s1,352(a1)
->> Code;  c0071848 <END_OF_CODE+3fd7aa78/????>
->>   20:   8c820010  lw      v0,16(a0)
->>
->> Kernel panic - not syncing: Fatal exception in interrupt
->>
+> The reason for defining it in this manner is to ensure the data is
+> consistent. For those that are interested, this code is at the end of
+> patch 08/19.
 > 
-> Ouch?! Are you sure your hardware isn't damaged?
-> Can you please try another wifi card in your mips,
-> or "test" the wifi card in a x86?
+> It allows (using pid 0x0005 and dummy data as an example throughout):
+> 
+> DEFINE_DEFAULT_PDR(0x0005, 7, "\x00\x01\x02\x03\x04\x05\x06");
+...
+> Please provide an example of how you think the above could be done
+> better - I've tried several things, and I still think that what is in
+> the patch is the neatest.
 
-I took it from a IXP (arm) router, where it worked.
-
-I'll verify if it works on x86, though.
-
+OK, it's a good idea.
 
 -- 
-Tomasz Chmielewski
-http://wpkg.org
+Regards,
+Pavel Roskin
