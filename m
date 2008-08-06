@@ -1,97 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:46840 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751046AbYHPAet (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:48580 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751330AbYHFUsE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Aug 2008 20:34:49 -0400
-Message-ID: <48A6209E.1020904@lwfinger.net> (sfid-20080816_023456_303837_B60D431A)
-Date: Fri, 15 Aug 2008 19:34:38 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Chr <chunkeey@web.de>
-CC: John W Linville <linville@tuxdriver.com>,
+	Wed, 6 Aug 2008 16:48:04 -0400
+From: Chr <chunkeey@web.de>
+To: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: Re: kernel panic on p54pci insertion on mipsel
+Date: Wed, 6 Aug 2008 22:50:49 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
 	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] p54: Fix for TX sequence number problem that resulted
- from commit 741b4fbc44
-References: <48987e74.ct5+sLOpTbiTPPHq%Larry.Finger@lwfinger.net> <200808082038.48840.chunkeey@web.de> <489EF8DE.5030801@lwfinger.net> <200808152034.46346.chunkeey@web.de>
-In-Reply-To: <200808152034.46346.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>
+References: <4898B018.5050202@wpkg.org> <1218053763.23048.67.camel@johannes.berg> <489A0970.9030104@wpkg.org>
+In-Reply-To: <489A0970.9030104@wpkg.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200808062250.49495.chunkeey@web.de> (sfid-20080806_224809_552562_C0DCD4B2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chr wrote:
-> Hmm, or there's something else can't count?!??
-> 
-> Anyway, the firmware will always assign (as in overwrite) the
-> sequence number for every transmitted frame... unfortunatly
-> there isn't a uniform way to disable this behaviour. 
-> 
-> So, rather than doing the sequence number (ac-)couting in the
-> driver, we can stick to the one the firmware has already generated...
-> 
-> Larry, does this patch fixes the "every two hour disconnect" problem as well, or not at all?
-> ---
-> diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-> --- a/drivers/net/wireless/p54/p54common.c	2008-08-13 20:50:03.000000000 +0200
-> +++ b/drivers/net/wireless/p54/p54common.c	2008-08-15 20:06:12.000000000 +0200
-> @@ -428,6 +428,12 @@ static void p54_rx_frame_sent(struct iee
->  			info->status.retry_count = payload->retries - 1;
->  			info->status.ack_signal = le16_to_cpu(payload->ack_rssi);
->  			skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
-> +			if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
-> +				struct ieee80211_hdr *ieee80211hdr =
-> +					(struct ieee80211_hdr *) entry->data;
-> +
-> +				ieee80211hdr->seq_ctrl |= payload->seq;
-> +			}
->  			ieee80211_tx_status_irqsafe(dev, entry);
->  			break;
->  		} else
-> @@ -553,7 +559,6 @@ static int p54_tx(struct ieee80211_hw *d
->  	struct ieee80211_tx_queue_stats *current_queue;
->  	struct p54_common *priv = dev->priv;
->  	struct p54_control_hdr *hdr;
-> -	struct ieee80211_hdr *ieee80211hdr = (struct ieee80211_hdr *)skb->data;
->  	struct p54_tx_control_allocdata *txhdr;
->  	size_t padding, len;
->  	u8 rate, cts_rate = 0x20;
-> @@ -604,19 +609,6 @@ static int p54_tx(struct ieee80211_hw *d
->  	if (padding)
->  		txhdr->align[0] = padding;
->  
-> -	/* FIXME: The sequence that follows is needed for this driver to
-> -	 * work with mac80211 since "mac80211: fix TX sequence numbers".
-> -	 * As with the temporary code in rt2x00, changes will be needed
-> -	 * to get proper sequence numbers on beacons. In addition, this
-> -	 * patch places the sequence number in the hardware state, which
-> -	 * limits us to a single virtual state.
-> -	 */
-> -	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
-> -		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
-> -			priv->seqno += 0x10;
-> -		ieee80211hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-> -		ieee80211hdr->seq_ctrl |= cpu_to_le16(priv->seqno);
-> -	}
->  	/* modifies skb->cb and with it info, so must be last! */
->  	p54_assign_address(dev, skb, hdr, skb->len);
->  
-> diff -Nurp a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
-> --- a/drivers/net/wireless/p54/p54.h	2008-08-13 20:50:30.000000000 +0200
-> +++ b/drivers/net/wireless/p54/p54.h	2008-08-15 19:38:10.000000000 +0200
-> @@ -52,7 +52,6 @@ struct p54_common {
->  	int (*open)(struct ieee80211_hw *dev);
->  	void (*stop)(struct ieee80211_hw *dev);
->  	int mode;
-> -	u16 seqno;
->  	struct mutex conf_mutex;
->  	u8 mac_addr[ETH_ALEN];
->  	u8 bssid[ETH_ALEN];
-> 
-> 
+On Wednesday 06 August 2008 22:28:32 Tomasz Chmielewski wrote:
+>
+> >>RA;  8004cc30 <handle_IRQ_event+64/d4>
+> >>$12; 802e0000 <invalid_pte_table+0/1000>
+> >>$14; 802e4588 <per_cpu__runqueues+30/410>
+> >>$31; 8004cc30 <handle_IRQ_event+64/d4>
+> >>
+> >>PC;  c0071834 <END_OF_CODE+3fd7aa64/????>   <=====
+>
+> Trace; 8018405c <usb_hcd_irq+68/150>
+> Trace; 8001d2bc <try_to_wake_up+78/c8>
+> Trace; 8004cc30 <handle_IRQ_event+64/d4>
+> Trace; 8004e0dc <handle_percpu_irq+54/ac>
+> Trace; 80002ca4 <ret_from_irq+0/4>
+> Trace; 8001c310 <__wake_up_common+54/bc>
+> Trace; 80001e54 <plat_irq_dispatch+1ac/1d8>
+> Trace; 80002ca4 <ret_from_irq+0/4>
+> Trace; 80125850 <vscnprintf+14/30>
+> Trace; c0070c00 <END_OF_CODE+3fd79e30/????>
+> Trace; c0070c98 <END_OF_CODE+3fd79ec8/????>
+> Trace; c007118c <END_OF_CODE+3fd7a3bc/????>
+>
+> Code;  c0071828 <END_OF_CODE+3fd7aa58/????>
+> 00000000 <_PC>:
+> Code;  c0071828 <END_OF_CODE+3fd7aa58/????>
+>    0:   8ca40150  lw      a0,336(a1)
+> Code;  c007182c <END_OF_CODE+3fd7aa5c/????>
+>    4:   24020001  li      v0,1
+> Code;  c0071830 <END_OF_CODE+3fd7aa60/????>
+>    8:   afa20010  sw      v0,16(sp)
+> Code;  c0071834 <END_OF_CODE+3fd7aa64/????>   <=====
+>    c:   8c820078  lw      v0,120(a0)   <=====
+> Code;  c0071838 <END_OF_CODE+3fd7aa68/????>
+>   10:   00a08021  move    s0,a1
+> Code;  c007183c <END_OF_CODE+3fd7aa6c/????>
+>   14:   30420200  andi    v0,v0,0x200
+> Code;  c0071840 <END_OF_CODE+3fd7aa70/????>
+>   18:   1440009f  bnez    v0,298 <_PC+0x298>
+> Code;  c0071844 <END_OF_CODE+3fd7aa74/????>
+>   1c:   8cb10160  lw      s1,352(a1)
+> Code;  c0071848 <END_OF_CODE+3fd7aa78/????>
+>   20:   8c820010  lw      v0,16(a0)
+>
+> Kernel panic - not syncing: Fatal exception in interrupt
+>
 
-This one lasted for 4 hours. What was worse is that it crashed my 
-computer with a 1 Hz blink of the Caps Lock light when it failed. I 
-hadn't seen that before.
+Ouch?! Are you sure your hardware isn't damaged?
+Can you please try another wifi card in your mips,
+or "test" the wifi card in a x86?
 
-Larry
+Regards,
+	Chr
