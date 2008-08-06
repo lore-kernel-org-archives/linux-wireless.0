@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:52552 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751287AbYH1K0v (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.237]:17367 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753451AbYHFWih (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 06:26:51 -0400
-Subject: Re: [PATCH 01/11] iwlwifi: W/A for the TSF correction in IBSS
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Assaf Krauss <assaf.krauss@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-In-Reply-To: <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
-Content-Type: text/plain
-Date: Thu, 28 Aug 2008 14:26:47 +0200
-Message-Id: <1219926408.6064.7.camel@californication> (sfid-20080828_122704_434588_B32C2E5B)
-Mime-Version: 1.0
+	Wed, 6 Aug 2008 18:38:37 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so145877rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Aug 2008 15:38:37 -0700 (PDT)
+Message-ID: <1ba2fa240808061538l1e1d7a70x11ef7143ec9d2ea5@mail.gmail.com> (sfid-20080807_003840_852353_3CD52EE0)
+Date: Thu, 7 Aug 2008 01:38:37 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: split out aggregation code
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1218051603.23048.63.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1218051603.23048.63.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Yi,
+On Wed, Aug 6, 2008 at 10:40 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> It's more manageable that way. Also move some constants to
+> include/linux/ieee80211.h.
 
-> This patch is a W/A for the TSF sync issue, in which the ucode's timestamp
-> is constantly a little behind incoming beacons' timestamps (in IBSS cells).
-> The W/A simply stops the driver from declaring it has a reliable TSF value.
+I'm not sure this is good point of time to do that. Aggregation is not
+working on 2.6.27 and we want to fix it there.
+Splitting now will just complicate the effort.
 
-this is not a proper commit message for something that should go in
-after the merge window. Besides the description of what the patch is
-doing and why, you also need to justify its inclusion. So add a
-paragraph that explain the impact if this patch doesn't gets merged and
-why that is a regression.
+> + *
+> + * Copyright 2002-2005, Instant802 Networks, Inc.
+ > + * Copyright 2005-2006, Devicescape Software, Inc.
+> + * Copyright 2006-2007  Jiri Benc <jbenc@suse.cz>
 
-If I would be in Dave's shoes, this looks like something that is not
-really critical.
+If you separating this file then remove these 3 above
 
-Regards
-
-Marcel
-
-
+> + * Copyright 2008       Ron Rindjunsky <ron.rindjunsky@intel.com>
+You would probably want to add this one as the major copyright.
+> + * Copyright 2008       Johannes Berg <johannes@sipsolutions.net>
+Thanks
+Tomas
