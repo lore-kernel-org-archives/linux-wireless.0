@@ -1,89 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from orca.ele.uri.edu ([131.128.51.63]:44093 "EHLO orca.ele.uri.edu"
+Received: from mx1.redhat.com ([66.187.233.31]:38208 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753225AbYHNTOI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2008 15:14:08 -0400
-Date: Thu, 14 Aug 2008 15:13:47 -0400
-From: Will Simoneau <simoneau@ele.uri.edu>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	ipw3945-devel@lists.sourceforge.net, Zhu Yi <yi.zhu@intel.com>
-Subject: Re: [ANNOUNCE] Wifi Link 5300 and 5100 Series
-Message-ID: <20080814191347.GA9662@ele.uri.edu> (sfid-20080814_211414_966928_25B3B6C4)
-References: <1ba2fa240808131411o638311f1m2e2daa6ef62057b1@mail.gmail.com> <20080814062604.GA16234@ele.uri.edu> <1ba2fa240808140515r92a3ec7i90ea6c03e2adb7ee@mail.gmail.com> <1ba2fa240808140603p3b4a47e4k4a0b98e5bf145b57@mail.gmail.com> <20080814175532.GB30317@ele.uri.edu> <1ba2fa240808141109l11d729ecjf6253e9acf5d3c7f@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="G4iJoqBmSsgzjUCe"
-In-Reply-To: <1ba2fa240808141109l11d729ecjf6253e9acf5d3c7f@mail.gmail.com>
+	id S1752349AbYHFVFn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Aug 2008 17:05:43 -0400
+Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere fw
+From: Dan Williams <dcbw@redhat.com>
+To: Dave <kilroyd@googlemail.com>
+Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
+	orinoco-devel@lists.sourceforge.net,
+	Jean Tourrilhes <jt@hpl.hp.com>
+In-Reply-To: <1218056165.12240.0.camel@localhost.localdomain>
+References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
+	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
+	 <1217825304.10989.20.camel@dv>
+	 <1217864060.3139.10.camel@localhost.localdomain>
+	 <1217970944.2908.11.camel@dv>
+	 <1217973349.30531.1.camel@localhost.localdomain>
+	 <1217976491.2908.36.camel@dv>
+	 <1218028414.16977.5.camel@localhost.localdomain>
+	 <4899FB91.8070501@gmail.com>
+	 <1218056165.12240.0.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Wed, 06 Aug 2008 17:03:21 -0400
+Message-Id: <1218056601.12240.12.camel@localhost.localdomain> (sfid-20080806_230548_454102_03CD83D0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2008-08-06 at 16:56 -0400, Dan Williams wrote:
+> On Wed, 2008-08-06 at 20:29 +0100, Dave wrote:
+> > Dan Williams wrote:
+> > > On Tue, 2008-08-05 at 18:48 -0400, Pavel Roskin wrote:
+> > >> The userspace is welcome to keep a pool of all APs found by any scans,
+> > >> but I don't think drivers should do it.
+> > > 
+> > > Drivers need to keep a reasonably complete list of APs internally for
+> > > association anyway.  You don't want to have to do a full scan just to
+> > > associate if you have results from 10 seconds ago that are still valid.
+> > 
+> > This is not an issue for orinoco cards, as the firmware selects the AP to use independently of any driver scanning. The requirement to use ap_scan=2 means that wpa_supplicant doesn't need to look at the scan results either (except maybe to verify the configuration matches).
+> 
+> Well, since the driver supports SSID scanning, we can use ap_scan=1
+> anyway.  ap_scan=2 is actually pretty evil since it depends on WEXT
+> ordering and whatnot.
 
---G4iJoqBmSsgzjUCe
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+As a follow-up, ap_scan is in practice more about hidden SSID support,
+and less about roaming.  Most firmware handles roaming internally
+anyway, even if ap_scan=2 is used.  The only way to actually disable
+firmware/driver roaming is to lock the BSSID with SIOCSIWAP.
 
-On 21:09 Thu 14 Aug     , Tomas Winkler wrote:
-> On Thu, Aug 14, 2008 at 8:55 PM, Will Simoneau <simoneau@ele.uri.edu> wro=
-te:
-> > On 16:03 Thu 14 Aug     , Tomas Winkler wrote:
-> >> On Thu, Aug 14, 2008 at 3:15 PM, Tomas Winkler <tomasw@gmail.com> wrot=
-e:
-> >> > On Thu, Aug 14, 2008 at 9:26 AM, Will Simoneau <simoneau@ele.uri.edu=
-> wrote:
-> >> >> On 00:11 Thu 14 Aug     , Tomas Winkler wrote:
-> >> >>> Intel would like to announce Linux support  for Wifi Link 5000 and
-> >> >>> 5100 Series Adapters under iwlwifi driver (iwlagn.ko)
-> >> >>>
-> >> >> ...
-> >> >>> The best known working driver can be located in iwl500 branch of
-> >> >>> iwlwifi-2.6.git
-> >> >>> git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.=
-git iwl5000
-> >> >>
-> >> >> This is great news to me - my new Sager laptop has a 5300 card. How=
-ever,
-> >> >> it doesn't seem to work:
-> >> >>
-> >>
-> >> Can you send me the exact laptop type?
-> >> Thanks
-> >
-> > It's a Sager NP5796 (Clevo M570TU).
-> >
->=20
-> >git-checkout -b iwl5000 origin/iwl5000
-> Tomas
+Dan
 
-OK, that gave me very different kernel/driver versions.
-uname -r: 2.6.26-rc6-iwl-2.3.5-wl
+> Dan
+> 
+> > > Furthermore, drivers need to keep cached results so that two processes
+> > > can request results of a scan after the scan is complete.
+> > 
+> > But this does apply to orinoco.
+> > 
+> > 
+> > Regards,
+> > 
+> > Dave.
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-dmesg:
-
-iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 2.3.5ks
-iwlagn: Copyright(c) 2003-2008 Intel Corporation
-ACPI: PCI Interrupt 0000:07:00.0[A] -> GSI 17 (level, low) -> IRQ 17
-PCI: Setting latency timer of device 0000:07:00.0 to 64
-iwlagn: Detected Intel Wireless WiFi Link 5300AGN REV=3D0x24
-iwlagn: Tunable channels: 13 802.11bg, 24 802.11a channels
-phy1: Selected rate control algorithm 'iwl-agn-rs'
-input: 5300AGN as /class/input/input7
-ACPI: PCI Interrupt 0000:07:00.0[A] -> GSI 17 (level, low) -> IRQ 17
-firmware: requesting iwlwifi-5000-1.ucode
-iwlagn: START_ALIVE timeout after 4000ms.
-
---G4iJoqBmSsgzjUCe
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEARECAAYFAkikg+sACgkQLYBaX8VDLLWfvACfax5OUR2V8dmwOwKXzvvk53ir
-2c4An1CBPzYAl+Yw584HYX+q+v8/5qLN
-=/hdj
------END PGP SIGNATURE-----
-
---G4iJoqBmSsgzjUCe--
