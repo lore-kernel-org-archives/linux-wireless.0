@@ -1,107 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:36957 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752375AbYHBR4c (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.183]:47455 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755178AbYHFSdZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 13:56:32 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: [PATCH 1/2] rfkill: protect suspended rfkill controllers
-Date: Sat,  2 Aug 2008 14:56:25 -0300
-Message-Id: <1217699786-20672-2-git-send-email-hmh@hmh.eng.br> (sfid-20080802_195636_463243_D9BDEB33)
-In-Reply-To: <1217699786-20672-1-git-send-email-hmh@hmh.eng.br>
-References: <1217699786-20672-1-git-send-email-hmh@hmh.eng.br>
+	Wed, 6 Aug 2008 14:33:25 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so53042ika.5
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Aug 2008 11:33:23 -0700 (PDT)
+Message-ID: <4899EE69.6050205@gmail.com> (sfid-20080806_203336_939033_DAF5B5AC)
+Date: Wed, 06 Aug 2008 19:33:13 +0100
+MIME-Version: 1.0
+To: Pavel Roskin <proski@gnu.org>
+CC: Dan Williams <dcbw@redhat.com>, Dave <kilroyd@googlemail.com>,
+	linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+Subject: Re: [PATCH 00/19] orinoco: WPA for Agere based cards
+References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>	 <1217822232.10989.13.camel@dv>  <48978C25.601@gmail.com>	 <1217892514.17793.39.camel@localhost.localdomain> <1217983050.19480.41.camel@dv>
+In-Reply-To: <1217983050.19480.41.camel@dv>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Guard rfkill controllers attached to a rfkill class against state changes
-after class suspend has been issued.
+Pavel Roskin wrote:
+> On Mon, 2008-08-04 at 19:28 -0400, Dan Williams wrote:
+>>> I'm not familiar with the difference between WPA/WPA2. Is that expected to work?
+>>
+>> But you might be able to get away with WPA2/RSN + TKIP if the AP allows
+>> this configuration.  In that configuration, the only difference between
+>> WPA and WPA2/RSN would be the information element IDs, really.  But if
+>> the firmware itself doesn't say it supports WPA on whatever website it
+>> came from, then likely the card won't do WPA2/RSN either.
+ 
+The firmware supports WPA, but makes no mention of WPA2.
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
----
- Documentation/rfkill.txt |    5 +++++
- net/rfkill/rfkill.c      |   14 ++++++++++----
- 2 files changed, 15 insertions(+), 4 deletions(-)
+> I tried association to hostapd with madwifi, and the only working
+> configuration is WPA1 only with TKIP.  Even enabling WPA1 and WPA2 and
+> TKIP makes the connection fail.  Forcing WPA1 and TKIP in
+> wpa_supplicant.conf doesn't help.
+> 
+> I looked at the patches.  They have references to TKIP, but not to CCMP.
+> Yet it would be nice if we could support WPA1+WPA2, as we cannot require
+> that access points stop supporting WPA2, which is the 802.11i standard.
+> It's possible that we have an issue outside the driver.
 
-diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
-index 28b6ec8..6fcb306 100644
---- a/Documentation/rfkill.txt
-+++ b/Documentation/rfkill.txt
-@@ -363,6 +363,11 @@ This rule exists because users of the rfkill subsystem expect to get (and set,
- when possible) the overall transmitter rfkill state, not of a particular rfkill
- line.
+I don't believe the firmware supports CCMP. It has support for CCX/CKIP (Cisco specific TKIP-alike), but I'm guess we don't care about that.
+
+I suggest that we leave figuring out how to associate with a WPA2+TKIP AP to another day.
  
-+5. During suspend, the rfkill class will attempt to soft-block the radio
-+through a call to rfkill->toggle_radio, and will try to restore its previous
-+state during resume.  After a rfkill class is suspended, it will *not* call
-+rfkill->toggle_radio until it is resumed.
-+
- Example of a WLAN wireless driver connected to the rfkill subsystem:
- --------------------------------------------------------------------
- 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index d2d4565..35a9994 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -150,6 +150,8 @@ static void update_rfkill_state(struct rfkill *rfkill)
-  * calls and handling all the red tape such as issuing notifications
-  * if the call is successful.
-  *
-+ * Suspended devices are not touched at all, and -EAGAIN is returned.
-+ *
-  * Note that the @force parameter cannot override a (possibly cached)
-  * state of RFKILL_STATE_HARD_BLOCKED.  Any device making use of
-  * RFKILL_STATE_HARD_BLOCKED implements either get_state() or
-@@ -168,6 +170,9 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
- 	int retval = 0;
- 	enum rfkill_state oldstate, newstate;
- 
-+	if (unlikely(rfkill->dev.power.power_state.event & PM_EVENT_SLEEP))
-+		return -EBUSY;
-+
- 	oldstate = rfkill->state;
- 
- 	if (rfkill->get_state && !force &&
-@@ -214,7 +219,7 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
-  *
-  * This function toggles the state of all switches of given type,
-  * unless a specific switch is claimed by userspace (in which case,
-- * that switch is left alone).
-+ * that switch is left alone) or suspended.
-  */
- void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
- {
-@@ -239,8 +244,8 @@ EXPORT_SYMBOL(rfkill_switch_all);
- /**
-  * rfkill_epo - emergency power off all transmitters
-  *
-- * This kicks all rfkill devices to RFKILL_STATE_SOFT_BLOCKED, ignoring
-- * everything in its path but rfkill_mutex and rfkill->mutex.
-+ * This kicks all non-suspended rfkill devices to RFKILL_STATE_SOFT_BLOCKED,
-+ * ignoring everything in its path but rfkill_mutex and rfkill->mutex.
-  */
- void rfkill_epo(void)
- {
-@@ -458,13 +463,14 @@ static int rfkill_resume(struct device *dev)
- 	if (dev->power.power_state.event != PM_EVENT_ON) {
- 		mutex_lock(&rfkill->mutex);
- 
-+		dev->power.power_state.event = PM_EVENT_ON;
-+
- 		/* restore radio state AND notify everybody */
- 		rfkill_toggle_radio(rfkill, rfkill->state, 1);
- 
- 		mutex_unlock(&rfkill->mutex);
- 	}
- 
--	dev->power.power_state = PMSG_ON;
- 	return 0;
- }
- #else
--- 
-1.5.6.3
+>>>> [185219.617236] eth1: Ext scan results too large (272 bytes).
+>> Truncating
+>>>> results to 270 bytes.
+
+> I tried increasing the "data" size from 200 to 300 in hermes.h, and the
+> message went away.  I was able to associate to D-Link DIR-615 when it
+> was set to WPA1.
+> 
+> I think it should be safe to increase the side of "data" and remove the
+> unused "flags" filed at the end.  Let's make "data" 256 bytes to make it a nice
+> round number.
+
+Thanks for checking that. I'll set data to 316 bytes. This makes the agere_ext_scan_info 384 (256+128) bytes. That copes with the worst case you saw, and gives a nice alignment to the array of scan structures (total size now a round 24k).
+
+> I'm sorry, I'm going to be offline soon, and I really cannot do any more
+> tests.
+
+Thank you for the feedback and testing, not to mention past maintainership of the driver.
+
+
+Regards,
+
+Dave.
 
