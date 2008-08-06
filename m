@@ -1,78 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:44226 "EHLO mgw1.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751286AbYHWQ1m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2008 12:27:42 -0400
-Date: Sat, 23 Aug 2008 18:27:38 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: linville@tuxdriver.com, xemul@openvz.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [PATCH] net/mac80211/mesh.c: correct the argument to __mesh_table_free
-Message-ID: <Pine.LNX.4.64.0808231826470.3162@ask.diku.dk> (sfid-20080823_182746_076429_E845BEC1)
+Received: from ti-out-0910.google.com ([209.85.142.190]:56161 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759274AbYHFBxX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Aug 2008 21:53:23 -0400
+Received: by ti-out-0910.google.com with SMTP id b6so822362tic.23
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Aug 2008 18:53:22 -0700 (PDT)
+Message-ID: <a8e1da0808051853x67b2739eh28104ac76b53486c@mail.gmail.com> (sfid-20080806_035327_796436_3B8BC7C2)
+Date: Wed, 6 Aug 2008 09:53:21 +0800
+From: "Dave Young" <hidave.darkstar@gmail.com>
+To: "Bob Copeland" <me@bobcopeland.com>
+Subject: Re: [BUG] wireless : cpu stuck for 61s
+Cc: "Jiri Slaby" <jirislaby@gmail.com>,
+	"Pekka J Enberg" <penberg@cs.helsinki.fi>,
+	"Andrew Morton" <akpm@linux-foundation.org>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <a8e1da0808051851y752b3525l98271ceca4eb189a@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+References: <20080729055731.GA3265@darkstar>
+	 <1217334724.10489.47.camel@johannes.berg>
+	 <20080730020820.8bcc00e2.akpm@linux-foundation.org>
+	 <a8e1da0807300302m35a0a7c0q2ff2e0ab92a69239@mail.gmail.com>
+	 <20080730031047.54e13e2d.akpm@linux-foundation.org>
+	 <a8e1da0808010032h32c18054g3712466eb40f0acf@mail.gmail.com>
+	 <4896D34A.1000005@gmail.com>
+	 <a8e1da0808041829sac34939yd9163b02e6b8b515@mail.gmail.com>
+	 <20080805122408.GA5000@hash.localnet>
+	 <a8e1da0808051851y752b3525l98271ceca4eb189a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+On Wed, Aug 6, 2008 at 9:51 AM, Dave Young <hidave.darkstar@gmail.com> wrote:
+> On Tue, Aug 5, 2008 at 8:24 PM, Bob Copeland <me@bobcopeland.com> wrote:
+>> On Tue, Aug 05, 2008 at 09:29:26AM +0800, Dave Young wrote:
+>>> With the patch I cann't reproduce the bug with 27-rc1 now.
+>>>
+>>> >  [<c02375a6>] ? debugfs_create_file+0x46/0x210
+>>> >  [<c02375a6>] ? debugfs_create_file+0x46/0x210
+>>> >  [<c02375a6>] debugfs_create_file+0x46/0x210
+>>> >  [<c02377f1>] debugfs_create_dir+0x21/0x30
+>>> >  [<f8901f6d>] ieee80211_sta_debugfs_add+0x2d/0x150 [mac80211]
+>>> >  [<f88eba89>] sta_info_debugfs_add_work+0x89/0x130 [mac80211]
+>>> >  [<f890a170>] ? rate_control_pid_add_sta_debugfs+0x0/0x30 [mac80211]
+>>
+>> I wonder if there were two separate problems here.  I looked into
+>> this with some detail yesterday and agree with Johannes that the above
+>> trace is on locking the parent directory's i_mutex, but I too couldn't
+>> see any problems with sta_info_debugfs_add_work.  Other stuff could also
+>> modify the directory with or without rtnl_lock, but not in a way that
+>> to my untrained eyes would lead to deadlock.
+>
+> Yes,. I think so. It's the original bug for me, while testing I found
+> the mutex deadlock problem.
+>
+> But this week I will have no time to trace it. so if I have time I
+> will keep tracing the problem
 
-In the function mesh_table_grow, it is the new table not the argument table
-that should be freed if the function fails (cf commit
-bd9b448f4c0a514559bdae4ca18ca3e8cd999c6d)
+Additional info,
 
-The semantic match that detects this problem is as follows:
-(http://www.emn.fr/x-info/coccinelle/)
+With the mutex fix patch, in 2.6.27-rc1 I seems can not reproduce the
+debugfs_add bug, (maybe need more test)
 
-// <smpl>
-@r exists@
-local idexpression x;
-expression E,f;
-position p1,p2,p3;
-identifier l;
-statement S;
-@@
+But with 2.6.26, the bug can be reproduced. (The mutex fix patch need
+not to be applied because there's no such deadlock bug)
 
-x = mesh_table_alloc@p1(...)
-...
-if (x == NULL) S
-... when != E = x
-    when != mesh_table_free(x)
-goto@p2 l;
-... when != E = x
-    when != f(...,x,...)
-    when any
-(
-return \(0\|x\);
-|
-return@p3 ...;
-)
+>
+>>
+>> Or is the trace just wrong?
+>>
+>> --
+>> Bob Copeland %% www.bobcopeland.com
+>>
+>>
+>
+>
+>
+> --
+> Regards
+> dave
+>
 
-@script:python@
-p1 << r.p1;
-p2 << r.p2;
-p3 << r.p3;
-@@
 
-print "%s: call on line %s not freed or saved before return on line %s via line %s" % (p1[0].file,p1[0].line,p3[0].line,p2[0].line)
-// </smpl>
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- net/mac80211/mesh.c           |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index b5933b2..35f2f95 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -383,7 +383,7 @@ errcopy:
- 		hlist_for_each_safe(p, q, &newtbl->hash_buckets[i])
- 			tbl->free_node(p, 0);
- 	}
--	__mesh_table_free(tbl);
-+	__mesh_table_free(newtbl);
- endgrow:
- 	return NULL;
- }
+-- 
+Regards
+dave
