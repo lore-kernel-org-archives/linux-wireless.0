@@ -1,63 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48701 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761623AbYHDTRT (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.232]:15888 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752257AbYHFWbv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 15:17:19 -0400
-Subject: Re: one remaining unused CONFIG variable under net/
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Robert P. J. Day" <rpjday@crashcourse.ca>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <alpine.LFD.1.10.0808041508070.11910@localhost.localdomain> (sfid-20080804_211117_795474_92E803F8)
-References: <alpine.LFD.1.10.0808041508070.11910@localhost.localdomain>
-	 (sfid-20080804_211117_795474_92E803F8)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/e7dBk1m3zvfSaNztmTb"
-Date: Mon, 04 Aug 2008 21:16:34 +0200
-Message-Id: <1217877394.3603.5.camel@johannes.berg> (sfid-20080804_211727_204025_E42EB4A7)
-Mime-Version: 1.0
+	Wed, 6 Aug 2008 18:31:51 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so143094rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Aug 2008 15:31:50 -0700 (PDT)
+Message-ID: <1ba2fa240808061531i9b71df5l21475455d8115f3f@mail.gmail.com> (sfid-20080807_003155_208486_E9BB9854)
+Date: Thu, 7 Aug 2008 01:31:50 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: iwlwifi aggregation info
+Cc: Friedrich.Beckmann@infineon.com, linux-wireless@vger.kernel.org,
+	j@w1.fi
+In-Reply-To: <1217595279.8621.38.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1217331138.10489.24.camel@johannes.berg>
+	 <1217431179.10489.134.camel@johannes.berg>
+	 <1ba2fa240807300908x5489e3f8g54ff83e7e5912c0b@mail.gmail.com>
+	 <1217509511.10489.140.camel@johannes.berg>
+	 <1ba2fa240807311114t3e1b4fb3oe6643fbe28f2c2ac@mail.gmail.com>
+	 <1217528597.10489.150.camel@johannes.berg>
+	 <1ba2fa240807311216u1a45cf22j219046ab357b0910@mail.gmail.com>
+	 <1217592554.8621.23.camel@johannes.berg>
+	 <1ba2fa240808010540g660cdaa9p1158a27061e3fcd@mail.gmail.com>
+	 <1217595279.8621.38.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Aug 1, 2008 at 3:54 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2008-08-01 at 15:40 +0300, Tomas Winkler wrote:
+>> > Right. So why are you saying we should have a separate qdisc for it?
+>>
+>> I need a sw queue for it.
+>
+> Sure, you need to buffer packets, but that's a whole different beast.
 
---=-/e7dBk1m3zvfSaNztmTb
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+So this is the most important point of this conversation... What do
+you call this beast!
+What I'm trying to say all the way along I don't need qdisc per se I
+need like 80% of it.
+So it was already implemented in qdisc so it was utilized.
+I'm not aware of anything else that is already implemented but you can
+always open my eyes and I'm not trying to be cynical.
 
-On Mon, 2008-08-04 at 15:09 -0400, Robert P. J. Day wrote:
-> this is the single remaining CONFIG variable under the net/
-> directory that is currently unreferenced.
->=20
-> =3D=3D=3D=3D=3D MAC80211_VERBOSE_SPECT_MGMT_DEBUG
-> net/mac80211/Kconfig:206:config MAC80211_VERBOSE_SPECT_MGMT_DEBUG
+>
+>> >> The aggregation need to be taken from single stream as
+>> >> explained before,
+>> >
+>> > I think we simply agree on that. Which brings me back to my original
+>> > point: to provide fairness within that stream we shouldn't have separate
+>> > qdiscs for agg/non-agg parts of the stream.
+>>
+>> You agree on the fact that it's a seperate stream but you still
+>> doesn't want separate queue for it....
+>
+> Actually, no, I don't think it's a separate stream, I think aggregation
+> frames are taken from the AC stream. I thought you meant that.
 
-Yeah, it'll be used though; it was added in an early patch of the
-spectrum management code, then that got delayed by some confusion over a
-requisite patch and now Tomas wants to redraw that one too... Don't
-worry about it, I'll be keeping an eye on it.
+This is really theoretical question. Wireless has defined 4 AC stream
+for simplicity
+so you map 2 TIDs out of 8 into 4 AC stream. One possible view
+of aggregation you don't map TID into AC stream but run it along to
+get more fine grained.
+Otherwise why don't we do <AC, RA> but <TID,RA> . Just a possible
+view. after all it's mapped back to AC.
 
-johannes
 
---=-/e7dBk1m3zvfSaNztmTb
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+>> Not scheduling mean not string to prioritize streams in SW. I guess it means RR.
+>
+> But that's entirely user dependent if we allow actual qdiscs.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+True but there is s always some sane default.
 
-iQIcBAABAgAGBQJIl1WOAAoJEKVg1VMiehFYVuUP/0LOPy0HeDFjHfBY01A/ilsb
-wA4esl7P3PLaYqNoz8kcOYSgCe78bta64GXFyHz3aAJ9pwoF5srWYqlYMxn0UUlX
-KSRQMShi4IMFRzx82iKp+Ffg5SISIA7zo48VCZmjWyMeLWKs1OOmj5XOByFKGPXZ
-CmJTU7OFMeZsAkigONA6xbLKn8bwEGY73vtwS/3CvGpDYyE/ahruijxB+e0+4O3+
-Tk689zoJYmofy70EUJlL/Nrygm3SwsfsIHYBTRKrq7TvyObHewXKRURUdv2QNGlJ
-9YB/atIZSqZi1HN5BIN/wCR7YIqQbGTXD26kTGdy3yyRx9+9rmKxuKi0EPlvxeZ6
-UhKJGKAua2GSYdWqPdLCcUo9w1hYEaAxOzdMFRVuN5MNI8lf5P2fpbJlsqTUHHRw
-gRTw6n6VKIcRW747FM+/GZfpJtBCrPLh/1lutLUiBg/ig7WlYzQXgFh+1c5Hjhg+
-qSa92AGlxn7kEKoNNPeDeNSjXMb13nYgADDfkhJAA1HORBwUlgD2jupzxUiX+JAA
-UrdIhIrpx/t6Kz0yT+IdTjF4jJpkUMWWTNvBj0Tx5THiyIiS/Yd27o0K55OcDHoD
-YdVjbRkVT2RmWReLKZRu+/L/Vdi6l2ITAwaC3v2sI8QicYY+V6zW9dzFYiToTdMs
-yUg978f5LJKLp8xdkexq
-=PtJ0
------END PGP SIGNATURE-----
+>
+>
+> If you want to draw up scenarios here, how about this one:
+>
+> From an AP perspective, assume three streams for the same TID for three
+> stations. No aggregation involved. Say they all receive a fixed bitrate
+> video stream. Assume you need all the airtime to transmit the three
+> video streams when all stations are fairly close. Now one of them is
+> further away and is a bit slower than the others. This will lead to
+> contention, right? So now, frames will queue up in the AC queue for this
+> TID, penalising all three stations. Do you agree so far?
 
---=-/e7dBk1m3zvfSaNztmTb--
+You are looking at the wrong point. All stations got fair amount of
+air space according AC and TXOP but then number of bytes that are
+transmitted is different. While the slow station will use this time to
+transfer packet on low rate with many retries faster station will fill
+it with many bytes at high rates.I hope it's clear that fixed rate
+video stream is not implies wireless rate.
+I believe the upper level in this case will take flow control decision
+and release packet pressure on the slow station.
 
+> Now, enter aggregation. The way I think of it (and Jouni seems to agree)
+> is that the spec intended for aggregation to be a mechanism to reduce
+> the required airtime by making the transmission more efficient with less
+> space.
+Exactly, but if you don't have mechanism to fill up the TXOP
+efficiently such as have packets ready in a separate queue it just
+won't fly.
+
+-------
+I suggest to start at some more productive point.
+So what is important is that we agree on one thing that we need sw
+queue/buffer (forget qdisc for now) for aggregation queue and the
+question is how to implement it efficiently  and how to resolve
+cleanly the lack of requeueing in the new MQ. .
+-------
+Thanks
+Tomas
