@@ -1,62 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44242 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756398AbYHaJoY (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.238]:18470 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753161AbYHFWmP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Aug 2008 05:44:24 -0400
-Subject: Re: rt2500 probe responses with wep and fragmented bit set
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eric <plukje@gmx.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <48BA50CF.9030601@gmx.net> (sfid-20080831_100555_737564_C99DA302)
-References: <48BA50CF.9030601@gmx.net>
-	 (sfid-20080831_100555_737564_C99DA302)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-r1HM6vTT9phe4/oe2WeW"
-Date: Sun, 31 Aug 2008 11:44:16 +0200
-Message-Id: <1220175856.2378.0.camel@johannes.berg> (sfid-20080831_114427_884529_8CB13020)
-Mime-Version: 1.0
+	Wed, 6 Aug 2008 18:42:15 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so147225rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Aug 2008 15:42:15 -0700 (PDT)
+Message-ID: <1ba2fa240808061542k7fd3e0dat61df0ee77710e463@mail.gmail.com> (sfid-20080807_004219_654636_9260DBB6)
+Date: Thu, 7 Aug 2008 01:42:15 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: fill start-sequence-number for BA session start
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1218051926.23048.65.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1218051926.23048.65.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Aug 6, 2008 at 10:45 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Otherwise, drivers are required to keep track of the sequence numbers
+> themselves, and they really shouldn't be since we already do it for
+> them. I'll fix the race once we figure out how this code should work
+> at all, it's currently disabled.
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
---=-r1HM6vTT9phe4/oe2WeW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Finally I know why nothing works in iwlwifi. This is most crucial
+point of correct driver behavior.
+There is direct  mapping between hw queue indexes and sequence numbers....
+This is bad.
 
-On Sun, 2008-08-31 at 10:05 +0200, Eric wrote:
-
-> When analyzing the actual responses (tcpdumping on the mon.wlan0 iface,=20
-> using wireshark to disect), I discovered that the probe responses for a=20
-> SSID broadcast
-> had the WEP bit and the Fragmentation bit set, consistently, for all=20
-> probe responses.
-
-You were looking at the wrong bit, the radiotap bit, which has little to
-do with what gets actually sent.
-
-johannes
-
---=-r1HM6vTT9phe4/oe2WeW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIumfrAAoJEKVg1VMiehFYdGcP/RJui2h12uSI4o0D6bsodVgw
-z5wsK21oZbyO3rU1thDbCknwt4HgpIFPNRxH9C/hyY9l6kxkt80k6f/4BGJSRpwL
-Po2G8TI8JpACQUgJTC4l9WzJT2zpDBBlMB5cVcb1NYGh2u6Mn8hiEcclEPTvwbIP
-IurXsI1mehQR6JTRGE6ZbiRmjNw9aSGwj9CFgq+ahqwI9yaJJwWqHgl1JnZdsz8j
-VRnLD0QAXydcBEJ+mcxHl92jfqRIRu1eNUxeWgYYhMpfN2e4ksHmFz1aS7Kz4AY2
-Jlh+dzp467px6PnrvF20ll1GGHY4buk1UaR8b8L+qVCnXhllf4J7lj2K8hStrQaR
-y/tlCR0ZaGuXkf1mwjqk48vEpoUJvoSNEGCrCT4EhPJ2olqyZpFBuZb1HL9yUGNm
-SX54HJgbz/bRORjT6ksnJeqoGHGNlQClJaWPlnc+fxprwktRWxLPl4JEQ55C8lWV
-v0zfGCiQhVYKnlzb+inRzEbNpNrPdkfnm6WA5auR5yvMFWjv3JsBP2etaP7xurqt
-C5zH84ETv5X8yDVsB7Zw//OGX0mtw/A+Zk9e2hOR47ZKSMv3o8XePVOiUokfPqvj
-9k8/7VauNJCMEJOsh3Zfsr831QhrAqN1RmxM3joygUP/fjliSmJSgRmoQwjsRw01
-zriHZs+n/R3TA1Kx+ouc
-=1o7I
------END PGP SIGNATURE-----
-
---=-r1HM6vTT9phe4/oe2WeW--
-
+> ---
+>  net/mac80211/ht.c |    5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+>
+> --- everything.orig/net/mac80211/ht.c   2008-08-06 21:40:24.000000000 +0200
+> +++ everything/net/mac80211/ht.c        2008-08-06 21:43:42.000000000 +0200
+> @@ -78,7 +78,7 @@ int ieee80211_start_tx_ba_session(struct
+>        struct ieee80211_local *local = hw_to_local(hw);
+>        struct sta_info *sta;
+>        struct ieee80211_sub_if_data *sdata;
+> -       u16 start_seq_num = 0;
+> +       u16 start_seq_num;
+>        u8 *state;
+>        int ret;
+>        DECLARE_MAC_BUF(mac);
+> @@ -158,6 +158,9 @@ int ieee80211_start_tx_ba_session(struct
+>         * call back right away, it must see that the flow has begun */
+>        *state |= HT_ADDBA_REQUESTED_MSK;
+>
+> +       /* This is slightly racy because the queue isn't stopped */
+> +       start_seq_num = sta->tid_seq[tid];
+> +
+>        if (local->ops->ampdu_action)
+>                ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_TX_START,
+>                                                ra, tid, &start_seq_num);
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
