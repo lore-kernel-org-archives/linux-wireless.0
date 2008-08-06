@@ -1,62 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43820 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752451AbYHGP1u (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:9423 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755740AbYHFT31 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 11:27:50 -0400
-Subject: Re: [PATCH] p54: Fix regression due to commit b19fa1f
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chr <chunkeey@web.de>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>
-In-Reply-To: <200808071727.19129.chunkeey@web.de>
-References: <489af6ed.hkTX0XTOTIkENssK%Larry.Finger@lwfinger.net>
-	 <1218115671.23048.174.camel@johannes.berg>
-	 <200808071727.19129.chunkeey@web.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Un2FdFImVZxle/3aoBmU"
-Date: Thu, 07 Aug 2008 17:27:14 +0200
-Message-Id: <1218122834.3630.6.camel@johannes.berg> (sfid-20080807_172752_748261_FF120A19)
-Mime-Version: 1.0
+	Wed, 6 Aug 2008 15:29:27 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so39888nfc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Aug 2008 12:29:25 -0700 (PDT)
+Message-ID: <4899FB91.8070501@gmail.com> (sfid-20080806_212931_231415_10FEFCC3)
+Date: Wed, 06 Aug 2008 20:29:21 +0100
+MIME-Version: 1.0
+To: Dan Williams <dcbw@redhat.com>
+CC: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
+	orinoco-devel@lists.sourceforge.net,
+	Jean Tourrilhes <jt@hpl.hp.com>
+Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere
+ fw
+References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>	 <1217825304.10989.20.camel@dv>	 <1217864060.3139.10.camel@localhost.localdomain>	 <1217970944.2908.11.camel@dv>	 <1217973349.30531.1.camel@localhost.localdomain>	 <1217976491.2908.36.camel@dv> <1218028414.16977.5.camel@localhost.localdomain>
+In-Reply-To: <1218028414.16977.5.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Dan Williams wrote:
+> On Tue, 2008-08-05 at 18:48 -0400, Pavel Roskin wrote:
+>> The userspace is welcome to keep a pool of all APs found by any scans,
+>> but I don't think drivers should do it.
+> 
+> Drivers need to keep a reasonably complete list of APs internally for
+> association anyway.  You don't want to have to do a full scan just to
+> associate if you have results from 10 seconds ago that are still valid.
 
---=-Un2FdFImVZxle/3aoBmU
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This is not an issue for orinoco cards, as the firmware selects the AP to use independently of any driver scanning. The requirement to use ap_scan=2 means that wpa_supplicant doesn't need to look at the scan results either (except maybe to verify the configuration matches).
 
-On Thu, 2008-08-07 at 17:27 +0200, Chr wrote:
->=20
-> +       u32:24;
-> +       u32:32;
-> +       u16:16;
+> Furthermore, drivers need to keep cached results so that two processes
+> can request results of a scan after the scan is complete.
 
-That piece looks just wrong though. Bitfields, and in a hw struct?
+But this does apply to orinoco.
 
-johannes
 
---=-Un2FdFImVZxle/3aoBmU
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Regards,
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJImxROAAoJEKVg1VMiehFYkK0P/3K5xpYSEyQjFio1YmQeStT+
-FvjWHN/BxGhvQ0/bHMD8DE08SbUYtprx/FUdHztkcSXMek8IlO4XL+WS1Nw1pW1W
-h+ac54Ha7OAIu22wXA7Rrzq5UmmMpz1OVylSBhjYQeBFbakot76+GFYsPxi361Jn
-/4gGas2juwZMYc4UKw1ZBQqzB5zNKzvd9eYiw8UrfyDAr4KfwXlEGYpgvN69J0AD
-1esvU6Fk9UGV4BWHNIIyAEpJNI6B/69/I3pnXlfY87IZmhmtoKxpL5Sp8hq0buEA
-BYnGNBfQzp1bwrKeXNslQMlWFkdQi+6uecgYziXqzDfjwK9ekBqGyGouJPoxISJB
-nbJRT8iAwBS+KVih/FBuOgDGVhjIcCWe0dC/igadZHkhy2GM9XQXE0Uct0UVvB9A
-BPo19JvdfjnIb+VUNKSeVVUpzhxwgqwnEvlUdoc/bb4fEI+q3dI4HPtB11FBDZRu
-n1l8iCSsmgq7fiP6Fmq9wrYjElWxfjM+CWBKtSpUXzR7ewWYDByGvRjj5pPDhOXA
-3daHIrVqftgAfc90SbFeaxET1cguWzxBWIhtrXTEyEY+XXfy8KjPUb5UA8YLX6IH
-3SSeYICoqtPa3jwjgmpTqz59kL6kDpEY/6BzbHdWHG/mFS2zZWOnFv5g/OPVb5Ib
-h+r0+ZgNO++WiSMOcEKZ
-=Muan
------END PGP SIGNATURE-----
-
---=-Un2FdFImVZxle/3aoBmU--
-
+Dave.
