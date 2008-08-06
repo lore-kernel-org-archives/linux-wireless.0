@@ -1,169 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:46991 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752252AbYHSRxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2008 13:53:40 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] ssb: Update for Rev. 5 SPROM
-Date: Tue, 19 Aug 2008 19:53:08 +0200
-Cc: John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <48ab07e7.X4EO+1uHeB9cIHfj%Larry.Finger@lwfinger.net>
-In-Reply-To: <48ab07e7.X4EO+1uHeB9cIHfj%Larry.Finger@lwfinger.net>
+Received: from fmmailgate01.web.de ([217.72.192.221]:32812 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755824AbYHFTrR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Aug 2008 15:47:17 -0400
+From: Chr <chunkeey@web.de>
+To: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: Re: kernel panic on p54pci insertion on mipsel
+Date: Wed, 6 Aug 2008 21:50:01 +0200
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>
+References: <4898B018.5050202@wpkg.org> <43e72e890808051619u4ed7c447wd80a866192220b84@mail.gmail.com> <4899F540.8050409@wpkg.org>
+In-Reply-To: <4899F540.8050409@wpkg.org>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200808191953.08723.mb@bu3sch.de> (sfid-20080819_195343_348529_DDC409F2)
+  charset="utf-8"
+Message-Id: <200808062150.01765.chunkeey@web.de> (sfid-20080806_214720_601401_0FD342F8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 19 August 2008 19:50:31 Larry Finger wrote:
-> Although a revision 5 SPROM has not been seen in the wild, the
-> open-source portion of the MIPS driver 4.150.10.5 describes its
-> layout, which is mostly inherited from revision 4. This patch
-> implements the differences.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+On Wednesday 06 August 2008 21:02:24 Tomasz Chmielewski wrote:
+> Luis R. Rodriguez schrieb:
+>
+> (...)
+>
+> >> - doesn't work with prism54.ko module (similar messages to
+> >> http://marc.info/?l=linux-wireless&m=120250829717134&w=2)
+> >
+> > We need more details, or do you get *exactly* the same error messages?
+> >
+> > "Out of memory, cannot handle oid" comes up after a failed kmalloc()
+> > while trying to handle an interrupt and management frame (not 802.11
+> > frame) from the firmware. From that archived mailing list though the
+> > oid 0x080002ff is mentioned and... well prism54 doesn't know what that
+> > is. I wonder if the firmware is triggering random interrupts with
+> > bogus oids.
+> >
+> > If you can provide a complete log it can help. Also in your previous
+> > posts I see you mentioned you were working with different firmwares.
+> > 1.0.4.3.arm should *only* be used with prism54. You may also want to
+> > try an older firmware version than 1.0.4.3.arm, this one came from
+> > 3com cards.
+>
+> Is older firmware available anywhere online?
+you can get lots of fullmac & softmac firmwares right here:
+http://daemonizer.de/prism54/prism54-fw/
 
-Acked-by: Michael Buesch <mb@bu3sch.de>
-
-> ---
-> 
-> John,
-> 
-> This is 2.6.28 material. As we have not yet seen a rev 5 SPROM,
-> this material has only been compile tested, but it should be
-> put into the kernel before the stuff for rev 8 that will be
-> needed for the LP PHY.
-> 
-> Larry
-> ---
-> 
-> Index: wireless-testing/drivers/ssb/pci.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/ssb/pci.c
-> +++ wireless-testing/drivers/ssb/pci.c
-> @@ -399,14 +399,19 @@ static void sprom_extract_r123(struct ss
->  	out->antenna_gain.ghz5.a3 = gain;
->  }
->  
-> -static void sprom_extract_r4(struct ssb_sprom *out, const u16 *in)
-> +static void sprom_extract_r45(struct ssb_sprom *out, const u16 *in)
->  {
->  	int i;
->  	u16 v;
-> +	u16 il0mac_offset;
->  
-> +	if (out->revision == 4)
-> +		il0mac_offset = SSB_SPROM4_IL0MAC;
-> +	else
-> +		il0mac_offset = SSB_SPROM5_IL0MAC;
->  	/* extract the equivalent of the r1 variables */
->  	for (i = 0; i < 3; i++) {
-> -		v = in[SPOFF(SSB_SPROM4_IL0MAC) + i];
-> +		v = in[SPOFF(il0mac_offset) + i];
->  		*(((__be16 *)out->il0mac) + i) = cpu_to_be16(v);
->  	}
->  	for (i = 0; i < 3; i++) {
-> @@ -420,9 +425,15 @@ static void sprom_extract_r4(struct ssb_
->  	SPEX(et0phyaddr, SSB_SPROM4_ETHPHY, SSB_SPROM4_ETHPHY_ET0A, 0);
->  	SPEX(et1phyaddr, SSB_SPROM4_ETHPHY, SSB_SPROM4_ETHPHY_ET1A,
->  	     SSB_SPROM4_ETHPHY_ET1A_SHIFT);
-> -	SPEX(country_code, SSB_SPROM4_CCODE, 0xFFFF, 0);
-> -	SPEX(boardflags_lo, SSB_SPROM4_BFLLO, 0xFFFF, 0);
-> -	SPEX(boardflags_hi, SSB_SPROM4_BFLHI, 0xFFFF, 0);
-> +	if (out->revision == 4) {
-> +		SPEX(country_code, SSB_SPROM4_CCODE, 0xFFFF, 0);
-> +		SPEX(boardflags_lo, SSB_SPROM4_BFLLO, 0xFFFF, 0);
-> +		SPEX(boardflags_hi, SSB_SPROM4_BFLHI, 0xFFFF, 0);
-> +	} else {
-> +		SPEX(country_code, SSB_SPROM5_CCODE, 0xFFFF, 0);
-> +		SPEX(boardflags_lo, SSB_SPROM5_BFLLO, 0xFFFF, 0);
-> +		SPEX(boardflags_hi, SSB_SPROM5_BFLHI, 0xFFFF, 0);
-> +	}
->  	SPEX(ant_available_a, SSB_SPROM4_ANTAVAIL, SSB_SPROM4_ANTAVAIL_A,
->  	     SSB_SPROM4_ANTAVAIL_A_SHIFT);
->  	SPEX(ant_available_bg, SSB_SPROM4_ANTAVAIL, SSB_SPROM4_ANTAVAIL_BG,
-> @@ -433,12 +444,21 @@ static void sprom_extract_r4(struct ssb_
->  	SPEX(maxpwr_a, SSB_SPROM4_MAXP_A, SSB_SPROM4_MAXP_A_MASK, 0);
->  	SPEX(itssi_a, SSB_SPROM4_MAXP_A, SSB_SPROM4_ITSSI_A,
->  	     SSB_SPROM4_ITSSI_A_SHIFT);
-> -	SPEX(gpio0, SSB_SPROM4_GPIOA, SSB_SPROM4_GPIOA_P0, 0);
-> -	SPEX(gpio1, SSB_SPROM4_GPIOA, SSB_SPROM4_GPIOA_P1,
-> -	     SSB_SPROM4_GPIOA_P1_SHIFT);
-> -	SPEX(gpio2, SSB_SPROM4_GPIOB, SSB_SPROM4_GPIOB_P2, 0);
-> -	SPEX(gpio3, SSB_SPROM4_GPIOB, SSB_SPROM4_GPIOB_P3,
-> -	     SSB_SPROM4_GPIOB_P3_SHIFT);
-> +	if (out->revision == 4) {
-> +		SPEX(gpio0, SSB_SPROM4_GPIOA, SSB_SPROM4_GPIOA_P0, 0);
-> +		SPEX(gpio1, SSB_SPROM4_GPIOA, SSB_SPROM4_GPIOA_P1,
-> +		     SSB_SPROM4_GPIOA_P1_SHIFT);
-> +		SPEX(gpio2, SSB_SPROM4_GPIOB, SSB_SPROM4_GPIOB_P2, 0);
-> +		SPEX(gpio3, SSB_SPROM4_GPIOB, SSB_SPROM4_GPIOB_P3,
-> +		     SSB_SPROM4_GPIOB_P3_SHIFT);
-> +	} else {
-> +		SPEX(gpio0, SSB_SPROM5_GPIOA, SSB_SPROM5_GPIOA_P0, 0);
-> +		SPEX(gpio1, SSB_SPROM5_GPIOA, SSB_SPROM5_GPIOA_P1,
-> +		     SSB_SPROM5_GPIOA_P1_SHIFT);
-> +		SPEX(gpio2, SSB_SPROM5_GPIOB, SSB_SPROM5_GPIOB_P2, 0);
-> +		SPEX(gpio3, SSB_SPROM5_GPIOB, SSB_SPROM5_GPIOB_P3,
-> +		     SSB_SPROM5_GPIOB_P3_SHIFT);
-> +	}
->  
->  	/* Extract the antenna gain values. */
->  	SPEX(antenna_gain.ghz24.a0, SSB_SPROM4_AGAIN01,
-> @@ -471,16 +491,16 @@ static int sprom_extract(struct ssb_bus
->  	} else if (bus->chip_id == 0x4321) {
->  		/* the BCM4328 has a chipid == 0x4321 and a rev 4 SPROM */
->  		out->revision = 4;
-> -		sprom_extract_r4(out, in);
-> +		sprom_extract_r45(out, in);
->  	} else {
->  		if (out->revision == 0)
->  			goto unsupported;
->  		if (out->revision >= 1 && out->revision <= 3) {
->  			sprom_extract_r123(out, in);
->  		}
-> -		if (out->revision == 4)
-> -			sprom_extract_r4(out, in);
-> -		if (out->revision >= 5)
-> +		if (out->revision == 4 || out->revision == 5)
-> +			sprom_extract_r45(out, in);
-> +		if (out->revision > 5)
->  			goto unsupported;
->  	}
->  
-> Index: wireless-testing/include/linux/ssb/ssb_regs.h
-> ===================================================================
-> --- wireless-testing.orig/include/linux/ssb/ssb_regs.h
-> +++ wireless-testing/include/linux/ssb/ssb_regs.h
-> @@ -316,6 +316,21 @@
->  #define SSB_SPROM4_PA1B1		0x1090
->  #define SSB_SPROM4_PA1B2		0x1092
->  
-> +/* SPROM Revision 5 (inherits most data from rev 4) */
-> +#define SSB_SPROM5_BFLLO		0x104A	/* Boardflags (low 16 bits) */
-> +#define SSB_SPROM5_BFLHI		0x104C  /* Board Flags Hi */
-> +#define SSB_SPROM5_IL0MAC		0x1052	/* 6 byte MAC address for a/b/g/n */
-> +#define SSB_SPROM5_CCODE		0x1044	/* Country Code (2 bytes) */
-> +#define SSB_SPROM5_GPIOA		0x1076	/* Gen. Purpose IO # 0 and 1 */
-> +#define  SSB_SPROM5_GPIOA_P0		0x00FF	/* Pin 0 */
-> +#define  SSB_SPROM5_GPIOA_P1		0xFF00	/* Pin 1 */
-> +#define  SSB_SPROM5_GPIOA_P1_SHIFT	8
-> +#define SSB_SPROM5_GPIOB		0x1078	/* Gen. Purpose IO # 2 and 3 */
-> +#define  SSB_SPROM5_GPIOB_P2		0x00FF	/* Pin 2 */
-> +#define  SSB_SPROM5_GPIOB_P3		0xFF00	/* Pin 3 */
-> +#define  SSB_SPROM5_GPIOB_P3_SHIFT	8
-> +
-> +
->  /* Values for SSB_SPROM1_BINF_CCODE */
->  enum {
->  	SSB_SPROM1CCODE_WORLD = 0,
-> 
-> 
-
-
-
--- 
-Greetings Michael.
+Regards,
+	Chr
