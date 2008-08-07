@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.185]:39949 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752399AbYH0T0d (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:45289 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752522AbYHGP71 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2008 15:26:33 -0400
-Received: by gv-out-0910.google.com with SMTP id e6so6775gvc.37
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Aug 2008 12:26:31 -0700 (PDT)
-Message-ID: <1ba2fa240808271226i95a7789k481a68b09dc60164@mail.gmail.com> (sfid-20080827_212645_877870_2F235D95)
-Date: Wed, 27 Aug 2008 22:26:31 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"Michael Buesch" <mb@bu3sch.de>
-Subject: Re: pull request: wireless-2.6 2008-08-26
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20080827013009.GA15781@tuxdriver.com>
+	Thu, 7 Aug 2008 11:59:27 -0400
+Message-ID: <489B1BDE.6070203@lwfinger.net> (sfid-20080807_175930_304080_CC36F676)
+Date: Thu, 07 Aug 2008 10:59:26 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080827013009.GA15781@tuxdriver.com>
+To: Chr <chunkeey@web.de>
+CC: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] p54: Fix regression due to commit b19fa1f
+References: <489af6ed.hkTX0XTOTIkENssK%Larry.Finger@lwfinger.net> <1218115671.23048.174.camel@johannes.berg> <200808071727.19129.chunkeey@web.de>
+In-Reply-To: <200808071727.19129.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> John W. Linville (1):
->      mac80211: quiet chatty IBSS merge message
+Chr wrote:
+> On Thursday 07 August 2008 15:27:51 Johannes Berg wrote:
+>>> +			priv->tx_stats[le32_to_cpu(entry_data->frame_type - 4)].len--;
+>> Sorry for not catching this earlier, but this looks wrong, the -4 surely
+>> should be outside the endian conversion?
+> 
+> likely... let's do the job properly for once and for all.
+> --
+> 
+> This patch fixes not only the regression which has sneaked in
+> with commit b19fa1f, but also provides some extra code for
+> cts rates.
+> 
+> Signed-off-by: Christian Lamparter <chunkeey@web.de>
 
-This patch is correct yet it suppresses an important warning, meaning
-that you have constant IBSS reconnection, remove all connected station
-and adding them again, This greatly degraded performance. This is
-caused by inability to adjust to TSF of the IBSS leader
+Is the extra code for cts rates a bug fix or a feature enhancement? If the 
+latter, then this patch should be in two parts. The main reason is that fixes 
+should go to stable as well as wireless-testing.
 
-<snipt>
-static int ieee80211_sta_join_ibss(struct net_device *dev,
-				   struct ieee80211_if_sta *ifsta,
-				   struct ieee80211_sta_bss *bss)
-.....
-/* Remove possible STA entries from other IBSS networks. */
-	sta_info_flush_delayed(sdata);
-</snip>
+Larry
 
-> Assaf Krauss (1):
->      iwlwifi: W/A for the TSF correction in IBSS
->
-
-This patch fixes this problem in iwlwifi
-
-We've observed same problem with the broadcom card
-
-Tomas
