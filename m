@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44151 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752099AbYHMM07 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Aug 2008 08:26:59 -0400
-From: Helmut Schaa <hschaa@suse.de>
-To: Jouni Malinen <j@w1.fi>
-Subject: Re: Pondering: how to improve mac80211 roaming ...
-Date: Wed, 13 Aug 2008 14:26:55 +0200
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-References: <200808120838.52888.hs4233@mail.mn-solutions.de> <200808121440.24098.hschaa@suse.de> <20080812154223.GE4981@jm.kir.nu>
-In-Reply-To: <20080812154223.GE4981@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200808131426.55673.hschaa@suse.de> (sfid-20080813_142703_774266_584A7E63)
+Received: from xc.sipsolutions.net ([83.246.72.84]:40483 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753892AbYHGMYA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Aug 2008 08:24:00 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1KR3a5-0003Ke-1F
+	for linux-wireless@vger.kernel.org; Thu, 07 Aug 2008 13:22:57 +0200
+Subject: away for four weeks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-uk2oHEmi8LpKYQzXpjNU"
+Date: Thu, 07 Aug 2008 13:22:08 +0200
+Message-Id: <1218108128.23048.137.camel@johannes.berg> (sfid-20080807_142747_249843_83F6B6C4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag, 12. August 2008 17:42:23 schrieb Jouni Malinen:
-> On Tue, Aug 12, 2008 at 02:40:23PM +0200, Helmut Schaa wrote:
-> > JFYI I already started to rework the existing scan code in mac80211
-> > (software scan) to do something like background scanning:
-> >
-> > 1) notify current AP about leaving the channel
-> > 2) scan one channel
->
-> It might be useful to leave this "one" as a parameter to allow easy
-> experiments with scanning more than one channel at a time to reduce
-> latency.
 
-Good point.
+--=-uk2oHEmi8LpKYQzXpjNU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Ideally, this--along the interval for background scans--could 
-> be something that is dynamically changed based on the expected traffic
-> pattern. Whenever there is lot of data traffic being (mostly
-> successfully) transmitted, it would be beneficial not to jump to other
-> channels as frequently or for as long a time. If there has not been any
-> data transmission for some time, it may be more acceptable to scan more
-> frequently and to remain away from the operational channel for longer
-> periods of time. Though, we should also keep in mind that background
-> scans are going to increase power consumption on otherwise inactive
-> situation, so setting a suitable policy for this can get quite complex.
+Hi,
 
-It might even be beneficial to cancel a currently active background scan once 
-the TX queue is filling up and report the already gathered information to the 
-user space.
+Just a note to let you all know that starting with next week, I will be
+mostly unavailable for the coming four weeks. Take good care of mac80211
+for me! :)
 
-Helmut
+johannes
+
+--=-uk2oHEmi8LpKYQzXpjNU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJImtrdAAoJEKVg1VMiehFY+SMQAKiu3xWAvA22tjZ7fh2MEq/d
+XgUD3KgUwhdxKSrLgXAXll+J+YmkVU8OGvCodoj4So4EKm2vsIWy0IufWBzUqNED
+uoru14Z0k5ud9yzzTgAhmwt+Hd8wD0wpiQFPWjI1JL2ozDRO7wkiH5uKq3W4zThz
+Rv9dj6jx+hnoqtzYwHq5+pvoYfXxEX353SXqIJnBcBsexCVIpyP0n3gKPAvBK6D9
+mPyEvUfAolBZaCPrsR11HSDMPQtelOE0Fk+3iw3pAFQVVwDlg0fbISUyZhcIviJ9
+Qnw/lOcYP3YQCgo+ZYsD8+mYg/nFQHpfrsXYKrAIX5eKkPVGCQJWAUVwUt3bcZyU
+TwZJ7tExZxbE5Yb22ibKBNWSzo5qdq7jyrGDowDp4gzULlTEOWgdBP5Zb8ddeZER
+AGKRGLQMJMp/ffMIWgGGg5Wjezv3DGqSzQM+ifC0K+4BGvTb+HbPao98MVIW0+8Y
+SOr7dLRZPYcah4m/goBBqsrc8VW72WlqxAJvJpJIqULNRBSQ0TCZhLx44Ncn1CVU
+IjhvJqG7+bEmSmm6GkNKUfXK/7RKEnqjbtZONsA5CRNBVgKeigePZaGr3P6NI9SU
+w3lvae8Ku7U4j1NFqAA+krF6FAEZ4MQ8/f0m3OFTbKjX489XM40yL4+ZTJ6aeGGm
+SCszgczQWJF5gfN7/5P+
+=uBSU
+-----END PGP SIGNATURE-----
+
+--=-uk2oHEmi8LpKYQzXpjNU--
+
