@@ -1,76 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from postfix1-g20.free.fr ([212.27.60.42]:35013 "EHLO
-	postfix1-g20.free.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760391AbYHESHQ (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.226]:53094 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751876AbYHGTtr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 14:07:16 -0400
-Received: from smtp7-g19.free.fr (smtp7-g19.free.fr [212.27.42.64])
-	by postfix1-g20.free.fr (Postfix) with ESMTP id 9C44729057B6
-	for <linux-wireless@vger.kernel.org>; Tue,  5 Aug 2008 20:07:14 +0200 (CEST)
-From: Gabriel de Perthuis <Gabriel.de-Perthuis@laPoste.net>
-To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-Cc: linux-wireless@vger.kernel.org,
-	Gabriel de Perthuis <Gabriel.de-Perthuis@laPoste.net>
-Subject: [PATCH] Fix incorrect conditional nesting, that prevented inclusion of compat symbols.
-Date: Tue,  5 Aug 2008 20:05:40 +0200
-Message-Id: <1217959540-9612-1-git-send-email-Gabriel.de-Perthuis@laPoste.net> (sfid-20080805_200720_503672_CCF40A47)
+	Thu, 7 Aug 2008 15:49:47 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so490760wri.5
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2008 12:49:46 -0700 (PDT)
+Message-ID: <43e72e890808071249h17d0006di37fa232883375c8c@mail.gmail.com> (sfid-20080807_214949_602449_82AC621B)
+Date: Thu, 7 Aug 2008 12:49:45 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] New TODO - 2008-08-04
+In-Reply-To: <43e72e890808062050w290c0691s2542cd24f453423@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080804202408.GE6447@tesla>
+	 <43e72e890808062050w290c0691s2542cd24f453423@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kernels 2.6.23 or above didn't get these symbols:
-device_create_vargs
-device_create_drvdata
-register_rfkill_notifier
-unregister_rfkill_notifier
-rfkill_force_state
+On Wed, Aug 6, 2008 at 8:50 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Mon, Aug 4, 2008 at 1:24 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>> In order to help coordination of development here is a revised
+>> TODO list based on feedback from the community and on our latest
+>> fixups/enhancements. I'd suggest we meet up in #madwifi on freenode
+>> following the tradition with MadWifi development so we can coordinate
+>> with other developers and users to help test there.
+>>
+>> If you have any particular listed item you'd like to help out with
+>> please say so.
+>>
+>> Since ath9k is now (just a few minutes ago) part of wireless-testing
+>> please send patches based on that tree.
+>
+> I've put this TODO here:
+>
+> http://wireless.kernel.org/en/users/Drivers/ath9k#TODO
+>
+> If you want to claim something just move it to the "Being worked on"
+> section. If you would like to add something just go ahead and send an
+> e-mail here.
 
-Also fix a related comment typo found checking compat/compat.h .
----
- compat/compat.c |    6 +++---
- compat/compat.h |    2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+Also I suggest you subscribe to that wiki page so when anyone updates
+it you just get an e-mail automagically.
 
-diff --git a/compat/compat.c b/compat/compat.c
-index b1ec4d4..84e3ab3 100644
---- a/compat/compat.c
-+++ b/compat/compat.c
-@@ -640,6 +640,8 @@ int pci_try_set_mwi(struct pci_dev *dev)
- EXPORT_SYMBOL(pci_try_set_mwi);
- #endif
- 
-+#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)) */
-+
- /* All things not in 2.6.25 */
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26))
- 
-@@ -744,7 +746,7 @@ struct device *device_create_drvdata(struct class *class,
- 	return dev;
- }
- EXPORT_SYMBOL_GPL(device_create_drvdata);
--#endif
-+#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26) */
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27))
- 
-@@ -839,5 +841,3 @@ EXPORT_SYMBOL(rfkill_force_state);
- 
- #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27) */
- 
--#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)) */
--
-diff --git a/compat/compat.h b/compat/compat.h
-index ec50750..75a498e 100644
---- a/compat/compat.h
-+++ b/compat/compat.h
-@@ -441,7 +441,7 @@ static inline void set_freezable(void) {}
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
- /* Added on 2.6.24 in include/linux/types.h by Al viro on commit 142956af */
- typedef unsigned long               uintptr_t;
--#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25)) */
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)) */
- 
- 
- 
--- 
-1.6.0.rc1.64.g61192
-
+  Luis
