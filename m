@@ -1,57 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:44671 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752066AbYH1K4l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 06:56:41 -0400
-Subject: Re: [PATCH 08/11] iwlwifi: call apm stop on exit
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org,
-	Gregory Greenman <gregory.greenman@intel.com>,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-In-Reply-To: <1219920741.25321.4.camel@johannes.berg>
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-8-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-9-git-send-email-yi.zhu@intel.com>
-	 <1219927149.6064.25.camel@californication>
-	 (sfid-20080828_123916_214502_EDFC473D)  <1219920741.25321.4.camel@johannes.berg>
-Content-Type: text/plain
-Date: Thu, 28 Aug 2008 14:56:35 +0200
-Message-Id: <1219928195.6064.43.camel@californication> (sfid-20080828_125652_407270_AA0950A3)
-Mime-Version: 1.0
+Received: from ra.tuxdriver.com ([70.61.120.52]:3883 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751586AbYHGPC3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Aug 2008 11:02:29 -0400
+Date: Thu, 7 Aug 2008 10:38:34 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6#ath9k 2008-08-07
+Message-ID: <20080807143834.GB27762@tuxdriver.com> (sfid-20080807_170238_841272_38E3B553)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Dave,
 
-> > > This patch calls apm stop on exit and suspend and sets STATUS_EXIT_PENDING
-> > > accordingly. Without this patch hardware consumes power even after driver
-> > > is removed or suspended.
-> > 
-> > is this a regression to 2.6.26? That is always the important question
-> > here since that will determine if the patch should go in. If the 2.6.26
-> > version did this better (even if not prefect), then this patch should go
-> > on, otherwise it could wait until next merge window.
-> 
-> AFAIR people have been complaining about this behaviour _forever_, so
-> it's hardly a regression.
+I know we all want to see ath9k merged ASAP.  Since I'll be unavailable
+this weekend, I have created a branch that includes Luis's revamped
+list.h patches, the original ath9k patches, Adrian's ath9k gcc bug
+work-around patch, and another cleanup series from Sujith on top.
 
-I think so too. However the question is still if 2.6.26 maybe did better
-and we are now doing worse because of other patches. This needs to be in
-the commit message. Otherwise this falls for me in the next merge window
-category.
+Hopefully no further problems will reveal themselves with the list.h
+stuff.  Please pull at your leisure, or if a problem arises I'll work to
+resolve it on Monday.
 
-Regards
+Thanks!
 
-Marcel
+John
 
+---
 
+Individual patches are available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/ath9k/
+
+---
+
+The following changes since commit e6fce5b916cd7f7f79b2b3e53ba74bbfc1d7cf8b:
+  Robert Olsson (1):
+        pktgen: multiqueue etc.
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git ath9k
+
+Adrian Bunk (1):
+      ath9k: work around gcc ICEs
+
+Luis R. Rodriguez (4):
+      list.h: Add list_splice_tail() and list_splice_tail_init()
+      list.h: add list_cut_position()
+      ath5k: remove Atheros 11n devices from supported list
+      ath9k: Add new Atheros IEEE 802.11n driver
+
+Sujith (6):
+      ath9k: Cleanup data structures related to HW capabilities
+      ath9k: Remove redundant data structure ath9k_txq_info
+      ath9k: Use mac80211's band macros and remove enum hal_freq_band
+      ath9k: Remove a few unused macros and fix indentation
+      ath9k: More unused macros
+      ath9k: Revamp wireless mode usage
+
+ MAINTAINERS                              |    9 +
+ drivers/dma/ioat_dma.c                   |    2 +-
+ drivers/net/wireless/Kconfig             |    1 +
+ drivers/net/wireless/Makefile            |    1 +
+ drivers/net/wireless/ath5k/base.c        |    2 -
+ drivers/net/wireless/ath9k/Kconfig       |    8 +
+ drivers/net/wireless/ath9k/Makefile      |   11 +
+ drivers/net/wireless/ath9k/ath9k.h       | 1021 ++++
+ drivers/net/wireless/ath9k/beacon.c      |  979 ++++
+ drivers/net/wireless/ath9k/core.c        | 1923 +++++++
+ drivers/net/wireless/ath9k/core.h        | 1072 ++++
+ drivers/net/wireless/ath9k/hw.c          | 8571 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath9k/hw.h          |  969 ++++
+ drivers/net/wireless/ath9k/initvals.h    | 3146 +++++++++++
+ drivers/net/wireless/ath9k/main.c        | 1470 +++++
+ drivers/net/wireless/ath9k/phy.c         |  436 ++
+ drivers/net/wireless/ath9k/phy.h         |  543 ++
+ drivers/net/wireless/ath9k/rc.c          | 2126 ++++++++
+ drivers/net/wireless/ath9k/rc.h          |  316 ++
+ drivers/net/wireless/ath9k/recv.c        | 1318 +++++
+ drivers/net/wireless/ath9k/reg.h         | 1385 +++++
+ drivers/net/wireless/ath9k/regd.c        | 1026 ++++
+ drivers/net/wireless/ath9k/regd.h        |  412 ++
+ drivers/net/wireless/ath9k/regd_common.h | 1915 +++++++
+ drivers/net/wireless/ath9k/xmit.c        | 2871 ++++++++++
+ drivers/usb/host/ehci-q.c                |    2 +-
+ include/linux/list.h                     |   87 +-
+ 27 files changed, 31609 insertions(+), 13 deletions(-)
+ create mode 100644 drivers/net/wireless/ath9k/Kconfig
+ create mode 100644 drivers/net/wireless/ath9k/Makefile
+ create mode 100644 drivers/net/wireless/ath9k/ath9k.h
+ create mode 100644 drivers/net/wireless/ath9k/beacon.c
+ create mode 100644 drivers/net/wireless/ath9k/core.c
+ create mode 100644 drivers/net/wireless/ath9k/core.h
+ create mode 100644 drivers/net/wireless/ath9k/hw.c
+ create mode 100644 drivers/net/wireless/ath9k/hw.h
+ create mode 100644 drivers/net/wireless/ath9k/initvals.h
+ create mode 100644 drivers/net/wireless/ath9k/main.c
+ create mode 100644 drivers/net/wireless/ath9k/phy.c
+ create mode 100644 drivers/net/wireless/ath9k/phy.h
+ create mode 100644 drivers/net/wireless/ath9k/rc.c
+ create mode 100644 drivers/net/wireless/ath9k/rc.h
+ create mode 100644 drivers/net/wireless/ath9k/recv.c
+ create mode 100644 drivers/net/wireless/ath9k/reg.h
+ create mode 100644 drivers/net/wireless/ath9k/regd.c
+ create mode 100644 drivers/net/wireless/ath9k/regd.h
+ create mode 100644 drivers/net/wireless/ath9k/regd_common.h
+ create mode 100644 drivers/net/wireless/ath9k/xmit.c
+
+Omnibus patch available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6-ath9k-2008-08-07.patch.bz2
+
+-- 
+John W. Linville
+linville@tuxdriver.com
