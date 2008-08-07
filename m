@@ -1,42 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:45289 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752522AbYHGP71 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 11:59:27 -0400
-Message-ID: <489B1BDE.6070203@lwfinger.net> (sfid-20080807_175930_304080_CC36F676)
-Date: Thu, 07 Aug 2008 10:59:26 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from bu3sch.de ([62.75.166.246]:38723 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751177AbYHGQPL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Aug 2008 12:15:11 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Adrian Bunk <bunk@kernel.org>
+Subject: Re: [RFC: 2.6 patch] b43: the overdue firmware < 410 removal
+Date: Thu, 7 Aug 2008 18:14:44 +0200
+Cc: stefano.brivio@polimi.it, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+References: <20080806212304.GC1702@cs181140183.pp.htv.fi>
+In-Reply-To: <20080806212304.GC1702@cs181140183.pp.htv.fi>
 MIME-Version: 1.0
-To: Chr <chunkeey@web.de>
-CC: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] p54: Fix regression due to commit b19fa1f
-References: <489af6ed.hkTX0XTOTIkENssK%Larry.Finger@lwfinger.net> <1218115671.23048.174.camel@johannes.berg> <200808071727.19129.chunkeey@web.de>
-In-Reply-To: <200808071727.19129.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200808071814.45086.mb@bu3sch.de> (sfid-20080807_181515_577461_131381B0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chr wrote:
-> On Thursday 07 August 2008 15:27:51 Johannes Berg wrote:
->>> +			priv->tx_stats[le32_to_cpu(entry_data->frame_type - 4)].len--;
->> Sorry for not catching this earlier, but this looks wrong, the -4 surely
->> should be outside the endian conversion?
-> 
-> likely... let's do the job properly for once and for all.
-> --
-> 
-> This patch fixes not only the regression which has sneaked in
-> with commit b19fa1f, but also provides some extra code for
-> cts rates.
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
+On Wednesday 06 August 2008 23:23:04 Adrian Bunk wrote:
+> This patch contains the overdue removal of support for firmware
+> revision < 410.
 
-Is the extra code for cts rates a bug fix or a feature enhancement? If the 
-latter, then this patch should be in two parts. The main reason is that fixes 
-should go to stable as well as wireless-testing.
+Well, I'm not sure if we should remove it now.
+There are currently no problems with it, yet.
+And people are still using it.
 
-Larry
+In my opinion, we should leave it in _until_ it causes me a major
+headache (Because we'll have to switch to yet another (newer) firmware
+or whatever). I will remove the old stuff then.
 
+So well. Please leave the code untouched for now, as there are
+_currently_ no problems with it and people are still using it.
+
+-- 
+Greetings Michael.
