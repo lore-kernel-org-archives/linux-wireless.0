@@ -1,77 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:50688 "EHLO smtps.tip.net.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755506AbYHEN2s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 09:28:48 -0400
-Date: Tue, 5 Aug 2008 23:28:39 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: David Miller <davem@davemloft.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-08-04
-Message-Id: <20080805232839.95235680.sfr@canb.auug.org.au> (sfid-20080805_152854_147537_E11D655C)
-In-Reply-To: <20080805.012814.215633850.davem@davemloft.net>
-References: <20080804193753.GA30345@tuxdriver.com>
-	<20080804.150147.78586437.davem@davemloft.net>
-	<20080805021710.GA21731@tuxdriver.com>
-	<20080805.012814.215633850.davem@davemloft.net>
+Received: from xc.sipsolutions.net ([83.246.72.84]:43797 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752385AbYHGP1M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Aug 2008 11:27:12 -0400
+Subject: Re: [PATCH] p54: Fix regression due to commit b19fa1f
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chr <chunkeey@web.de>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>
+In-Reply-To: <200808071727.19129.chunkeey@web.de>
+References: <489af6ed.hkTX0XTOTIkENssK%Larry.Finger@lwfinger.net>
+	 <1218115671.23048.174.camel@johannes.berg>
+	 <200808071727.19129.chunkeey@web.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Jkdop/kX943bE4fmRsCy"
+Date: Thu, 07 Aug 2008 17:26:36 +0200
+Message-Id: <1218122796.3630.4.camel@johannes.berg> (sfid-20080807_172715_743520_D0344115)
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Tue__5_Aug_2008_23_28_39_+1000_GoHZK0.xw2FNjiVO"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Signature=_Tue__5_Aug_2008_23_28_39_+1000_GoHZK0.xw2FNjiVO
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
+
+--=-Jkdop/kX943bE4fmRsCy
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Hi David,
-
-On Tue, 05 Aug 2008 01:28:14 -0700 (PDT) David Miller
-<davem@davemloft.net> wrote:
->
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Mon, 4 Aug 2008 22:17:10 -0400
+On Thu, 2008-08-07 at 17:27 +0200, Chr wrote:
+> On Thursday 07 August 2008 15:27:51 Johannes Berg wrote:
+> > > +			priv->tx_stats[le32_to_cpu(entry_data->frame_type - 4)].len--;
+> >
+> > Sorry for not catching this earlier, but this looks wrong, the -4 surel=
+y
+> > should be outside the endian conversion?
 >=20
-> > On Mon, Aug 04, 2008 at 03:01:47PM -0700, David Miller wrote:
-> > > I'm holding off on this pull until the list.h changes get so me lkml
-> > > ACKs.
-> >=20
-> > Sure, np.  I created a "no-ath9k" branch in case you are feeling
-> > frisky -- it is the same except for omitting the list.h changes,
-> > the ath5k pci table change, and the new ath9k driver.
-> >=20
-> > 	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.gi=
-t no-ath9k
-> >=20
-> > Hth!
->=20
-> Due to the powerpc build failures the list.h stuff causes, I'm going
-             ^^^^^^^
-It was a sparc64 defconfig that failed due to the list.h changes.  The
-powerpc build only failed when I added an include of <linux/bug.h> to
-list.h.
+> likely... let's do the job properly for once and for all.
+> --
 
-The powerpc compiler got an internal error trying to compile the ath9k
-code - but I don't know if there is anything we can to do to the source
-to work around that.
+> +			priv->tx_stats[entry_data->hw_queue - 4].len--;
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+> +	u8 hw_queue;
 
---Signature=_Tue__5_Aug_2008_23_28_39_+1000_GoHZK0.xw2FNjiVO
-Content-Type: application/pgp-signature
+Ah, heh, so it's not a u32 field after all?
+
+johannes
+
+--=-Jkdop/kX943bE4fmRsCy
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iEYEARECAAYFAkiYVYcACgkQjjKRsyhoI8wnmgCcDp5xDwUw81MpySveKaTHWRrN
-Vj4AoJTltUPIFSTYDpV0mYSgP0pmHINU
-=b/De
+iQIcBAABAgAGBQJImxQoAAoJEKVg1VMiehFY1+8QAIRxVLi4iGJ0ALd7INnjCF4k
+slTMbvWXYU53yoHpxpx9hOk673K0qtdjAOY/PmEck9rx7VzteAuNVO/UElQF/AYt
+On6B+2cegUgQUs3FmpvnTtdHk1DPLA1reSb2vJbNlEj7LGvfxcfYKPcou6ME0lD/
+vjPz22cSeSmVhgLGsgL0oTmaediTWpsPAgGEkywZz9rGxlFwNP0YVyBPme2lGaH/
+9VlIzERJ9PRBvGOED1AAUYlMCJdKwoUQhUCQjBS/3GDPrq/YzomBZmSJMa+IqeRe
+eM2VSJbcat/GxJmtpi9UR4I1nIiDx3qtVth95e9vuCcmR+GK7H9gmzxvSkqre0gL
+BfiWbk6tSnMfNw3zKy4mVLvG0wDLh8sW5+UT5raECTghCu7fpXXvkKKfTO65QNsR
+zQAHDe67oJ7xtcf/sff1oovEYeDddt8wc9wRpFkOKK4ilItxYyaMAtX5GRFir3pa
+geDb6P4pRrFuInGcgLbv6V3HFUCquc5KCAFXj1eQgwx7SvuYloQZ2pWyGnv501xC
+/ix2HAfhABQ5E4vFJRWJ/R72oPueXdWXvgFu3boZ9F7Un/4XomBlqwz2eN1hVSCQ
+MKbchhCUV4ioq6Eta3dTyeqlTkFHwy3XcNRST5HY2rgaZ9Fe2Ab/TApNC1a3Nwlr
+SmkWfe+mmVd9dBs160Yj
+=KOLo
 -----END PGP SIGNATURE-----
 
---Signature=_Tue__5_Aug_2008_23_28_39_+1000_GoHZK0.xw2FNjiVO--
+--=-Jkdop/kX943bE4fmRsCy--
+
