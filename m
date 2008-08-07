@@ -1,69 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:54831 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752402AbYHNIJn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2008 04:09:43 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Aug 2008 01:09:43 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mx51.mymxserver.com ([85.199.173.110]:28353 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752181AbYHGPVH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Aug 2008 11:21:07 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] ssb: allow compilation on systems without PCI
+Date: Thu, 7 Aug 2008 17:21:00 +0200
+Cc: Michael Buesch <mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18595.58762.207662.812005@localhost.localdomain> (sfid-20080814_100946_485217_607F96BE)
-Date: Thu, 14 Aug 2008 13:28:02 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 5/6] ath9k: Use definition from ieee80211.h
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200808071721.00737.hs4233@mail.mn-solutions.de> (sfid-20080807_172110_046287_876004D6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also, Max RX-ampdu and mpdu-density are ath9k specific.
-Rename appropriately.
+Makes ssb work on system without a PCI bus.
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+
 ---
- drivers/net/wireless/ath9k/main.c |   13 ++++---------
- 1 files changed, 4 insertions(+), 9 deletions(-)
+I'm not sure if I should check for CONFIG_SSB_PCIHOST (like in
+the rest of the file) or simply for CONFIG_PCI.
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 605599e..2b3b11b 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -22,8 +22,6 @@
- #define ATH_PCI_VERSION "0.1"
+--- wireless-testing.orig/drivers/ssb/main.c
++++ wireless-testing/drivers/ssb/main.c
+@@ -1165,15 +1165,19 @@ EXPORT_SYMBOL(ssb_dma_translation);
  
- #define IEEE80211_HTCAP_MAXRXAMPDU_FACTOR	13
--#define IEEE80211_ACTION_CAT_HT			7
--#define IEEE80211_ACTION_HT_TXCHWIDTH		0
- 
- static char *dev_info = "ath9k";
- 
-@@ -220,11 +218,8 @@ static void ath_key_delete(struct ath_softc *sc, struct ieee80211_key_conf *key)
- 
- static void setup_ht_cap(struct ieee80211_ht_info *ht_info)
+ int ssb_dma_set_mask(struct ssb_device *dev, u64 mask)
  {
--/* Until mac80211 includes these fields */
--
--#define IEEE80211_HT_CAP_DSSSCCK40 0x1000
--#define	IEEE80211_HT_CAP_MAXRXAMPDU_65536 0x3   /* 2 ^ 16 */
--#define	IEEE80211_HT_CAP_MPDUDENSITY_8 0x6     	/* 8 usec */
-+#define	ATH9K_HT_CAP_MAXRXAMPDU_65536 0x3	/* 2 ^ 16 */
-+#define	ATH9K_HT_CAP_MPDUDENSITY_8 0x6		/* 8 usec */
++#ifdef CONFIG_SSB_PCIHOST
+ 	int err;
++#endif
  
- 	ht_info->ht_supported = 1;
- 	ht_info->cap = (u16)IEEE80211_HT_CAP_SUP_WIDTH
-@@ -232,8 +227,8 @@ static void setup_ht_cap(struct ieee80211_ht_info *ht_info)
- 			|(u16)IEEE80211_HT_CAP_SGI_40
- 			|(u16)IEEE80211_HT_CAP_DSSSCCK40;
- 
--	ht_info->ampdu_factor = IEEE80211_HT_CAP_MAXRXAMPDU_65536;
--	ht_info->ampdu_density = IEEE80211_HT_CAP_MPDUDENSITY_8;
-+	ht_info->ampdu_factor = ATH9K_HT_CAP_MAXRXAMPDU_65536;
-+	ht_info->ampdu_density = ATH9K_HT_CAP_MPDUDENSITY_8;
- 	/* setup supported mcs set */
- 	memset(ht_info->supp_mcs_set, 0, 16);
- 	ht_info->supp_mcs_set[0] = 0xff;
--- 
-1.5.6.5
-
+ 	switch (dev->bus->bustype) {
+ 	case SSB_BUSTYPE_PCI:
++#ifdef CONFIG_SSB_PCIHOST
+ 		err = pci_set_dma_mask(dev->bus->host_pci, mask);
+ 		if (err)
+ 			return err;
+ 		err = pci_set_consistent_dma_mask(dev->bus->host_pci, mask);
+ 		return err;
++#endif
+ 	case SSB_BUSTYPE_SSB:
+ 		return dma_set_mask(dev->dev, mask);
+ 	default:
+@@ -1188,6 +1192,7 @@ void * ssb_dma_alloc_consistent(struct s
+ {
+ 	switch (dev->bus->bustype) {
+ 	case SSB_BUSTYPE_PCI:
++#ifdef CONFIG_SSB_PCIHOST
+ 		if (gfp_flags & GFP_DMA) {
+ 			/* Workaround: The PCI API does not support passing
+ 			 * a GFP flag. */
+@@ -1195,6 +1200,7 @@ void * ssb_dma_alloc_consistent(struct s
+ 						  size, dma_handle, gfp_flags);
+ 		}
+ 		return pci_alloc_consistent(dev->bus->host_pci, size, dma_handle);
++#endif
+ 	case SSB_BUSTYPE_SSB:
+ 		return dma_alloc_coherent(dev->dev, size, dma_handle, gfp_flags);
+ 	default:
+@@ -1210,6 +1216,7 @@ void ssb_dma_free_consistent(struct ssb_
+ {
+ 	switch (dev->bus->bustype) {
+ 	case SSB_BUSTYPE_PCI:
++#ifdef CONFIG_SSB_PCIHOST
+ 		if (gfp_flags & GFP_DMA) {
+ 			/* Workaround: The PCI API does not support passing
+ 			 * a GFP flag. */
+@@ -1220,6 +1227,7 @@ void ssb_dma_free_consistent(struct ssb_
+ 		pci_free_consistent(dev->bus->host_pci, size,
+ 				    vaddr, dma_handle);
+ 		return;
++#endif
+ 	case SSB_BUSTYPE_SSB:
+ 		dma_free_coherent(dev->dev, size, vaddr, dma_handle);
+ 		return;
