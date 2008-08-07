@@ -1,60 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns1.suse.de ([195.135.220.2]:56789 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752570AbYHMMxK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Aug 2008 08:53:10 -0400
-From: Helmut Schaa <hschaa@suse.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: Pondering: how to improve mac80211 roaming ...
-Date: Wed, 13 Aug 2008 14:53:05 +0200
-Cc: Jouni Malinen <j@w1.fi>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-References: <200808120838.52888.hs4233@mail.mn-solutions.de> <200808131426.55673.hschaa@suse.de> <1218631755.29370.1.camel@localhost.localdomain>
-In-Reply-To: <1218631755.29370.1.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200808131453.06226.hschaa@suse.de> (sfid-20080813_145314_200552_71927046)
+Received: from outpost1.zedat.fu-berlin.de ([130.133.4.66]:38965 "EHLO
+	outpost1.zedat.fu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751308AbYHGR6P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Aug 2008 13:58:15 -0400
+Subject: [PATCH] ath5k: Don't fiddle with MSI on suspend/resume.
+From: Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	linux-kernel@vger.kernel.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, mcgrof@gmail.com
+Content-Type: text/plain
+Date: Thu, 07 Aug 2008 19:34:01 +0200
+Message-Id: <1218130441.18466.150.camel@hermes2.karcher.local> (sfid-20080807_195820_219301_D10E3B3D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch, 13. August 2008 14:49:15 schrieb Dan Williams:
-> On Wed, 2008-08-13 at 14:26 +0200, Helmut Schaa wrote:
-> > Am Dienstag, 12. August 2008 17:42:23 schrieb Jouni Malinen:
-> > > On Tue, Aug 12, 2008 at 02:40:23PM +0200, Helmut Schaa wrote:
-> > > > JFYI I already started to rework the existing scan code in mac80211
-> > > > (software scan) to do something like background scanning:
-> > > >
-> > > > 1) notify current AP about leaving the channel
-> > > > 2) scan one channel
-> > >
-> > > It might be useful to leave this "one" as a parameter to allow easy
-> > > experiments with scanning more than one channel at a time to reduce
-> > > latency.
-> >
-> > Good point.
-> >
-> > > Ideally, this--along the interval for background scans--could
-> > > be something that is dynamically changed based on the expected traffic
-> > > pattern. Whenever there is lot of data traffic being (mostly
-> > > successfully) transmitted, it would be beneficial not to jump to other
-> > > channels as frequently or for as long a time. If there has not been any
-> > > data transmission for some time, it may be more acceptable to scan more
-> > > frequently and to remain away from the operational channel for longer
-> > > periods of time. Though, we should also keep in mind that background
-> > > scans are going to increase power consumption on otherwise inactive
-> > > situation, so setting a suitable policy for this can get quite complex.
-> >
-> > It might even be beneficial to cancel a currently active background scan
-> > once the TX queue is filling up and report the already gathered
-> > information to the user space.
->
-> If that's the case, we should also then have a response to the original
-> scan request (or broadcast netlink message with the original request's
-> cookie) that says "scan canceled" so that the requester can handle that.
+Commit 256b152b005e319f985f50f2a910a75ba0def74f has removed msi support,
+but overlooked the suspend/resume code. This patch completes msi removal.
 
-Right. Something like "The scan was canceled but here are the incomplete 
-results".
+I don't consider this patch copyrightable, and thus put it into the
+public domain. The result is of course a base.c file dual-licensed under
+3-clause-BSD and GPL.
 
-Helmut
+Signed-off-by: Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>
+
+---
+ drivers/net/wireless/ath5k/base.c |    8 ++------
+ 1 files changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index ebf19bc..d092a23 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -589,7 +589,6 @@ ath5k_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	ath5k_stop_hw(sc);
+ 
+ 	free_irq(pdev->irq, sc);
+-	pci_disable_msi(pdev);
+ 	pci_save_state(pdev);
+ 	pci_disable_device(pdev);
+ 	pci_set_power_state(pdev, PCI_D3hot);
+@@ -618,12 +617,10 @@ ath5k_pci_resume(struct pci_dev *pdev)
+ 	 */
+ 	pci_write_config_byte(pdev, 0x41, 0);
+ 
+-	pci_enable_msi(pdev);
+-
+ 	err = request_irq(pdev->irq, ath5k_intr, IRQF_SHARED, "ath", sc);
+ 	if (err) {
+ 		ATH5K_ERR(sc, "request_irq failed\n");
+-		goto err_msi;
++		goto err_no_irq;
+ 	}
+ 
+ 	err = ath5k_init(sc);
+@@ -644,8 +641,7 @@ ath5k_pci_resume(struct pci_dev *pdev)
+ 	return 0;
+ err_irq:
+ 	free_irq(pdev->irq, sc);
+-err_msi:
+-	pci_disable_msi(pdev);
++err_no_irq:
+ 	pci_disable_device(pdev);
+ 	return err;
+ }
+-- 
+1.5.5.4
+
