@@ -1,62 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39379 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751512AbYHYVq0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2008 17:46:26 -0400
-Date: Mon, 25 Aug 2008 14:46:25 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Subrata Modak <subrata@linux.vnet.ibm.com>
-CC: Luis Carlos Cobo <luisca@cozybit.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	ltp-list <ltp-list@lists.sourceforge.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	<Jouni.Malinen@atheros.com>
-Subject: Re: [TESTING] Wireless mesh networking (802.11s) draft support
-Message-ID: <20080825214625.GL6007@tesla> (sfid-20080825_234630_202184_B79D09AC)
-References: <1219698032.5434.6.camel@subratamodak.linux.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1219698032.5434.6.camel@subratamodak.linux.ibm.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:41394 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750761AbYHGGdc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Aug 2008 02:33:32 -0400
+Subject: Re: [PATCH] mac80211: split out aggregation code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240808061538l1e1d7a70x11ef7143ec9d2ea5@mail.gmail.com> (sfid-20080807_003839_357846_1538C3E0)
+References: <1218051603.23048.63.camel@johannes.berg>
+	 <1ba2fa240808061538l1e1d7a70x11ef7143ec9d2ea5@mail.gmail.com>
+	 (sfid-20080807_003839_357846_1538C3E0)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0ab8d5E7EexQmrP7H+F4"
+Date: Thu, 07 Aug 2008 08:32:55 +0200
+Message-Id: <1218090775.23048.84.camel@johannes.berg> (sfid-20080807_083336_262339_4E68958E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 25, 2008 at 02:00:31PM -0700, Subrata Modak wrote:
-> Hi Luis/Johannes/John,
-> 
-> The Wireless mesh networking (802.11s) draft support has been added to
-> Linux 2.6.26. We at LTP (http://ltp.sourceforge.net/,
-> https://sourceforge.net/projects/ltp/) are trying to expand the test
-> coverage of all the untouched areas of kernel. With this drive in mind,
-> may i know if the testing infrastructure of Wireless mesh networking can
-> be shared with LTP under GPLv2. It would be a shot-in-the-arm for Linux
-> testing community, and, we can decide on how this can be best integrated
-> into LTP.
 
-Mesh code is GPLv2 right now. What I'd recommend is to get mesh support
-added into mac80211_hwsim driver and then you can test mesh code without
-even having any wireless hardware.
+--=-0ab8d5E7EexQmrP7H+F4
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-At the third Linux wireless summit in Ottawa we briefly spoke about
-automating testing for wireless. We should try to automate this first
-with mac80211_hwsim and some scripts to do basic tests. Mesh testing can
-be added once mac8021_hwsim gets support for Mesh.
+On Thu, 2008-08-07 at 01:38 +0300, Tomas Winkler wrote:
+> On Wed, Aug 6, 2008 at 10:40 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > It's more manageable that way. Also move some constants to
+> > include/linux/ieee80211.h.
+>=20
+> I'm not sure this is good point of time to do that. Aggregation is not
+> working on 2.6.27 and we want to fix it there.
+> Splitting now will just complicate the effort.
 
-Here are two scripts which create an AP and one which creates a STA with
-the different encryption setups available.
+Ok, true, I just had this around so figured I'd send it out.
 
-http://www.winlab.rutgers.edu/~mcgrof/qa/create-ap.sh.txt
-http://www.winlab.rutgers.edu/~mcgrof/qa/create-client.sh.txt
+> > + * Copyright 2008       Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-Similar type of scripts can be used to create different topologies and
-test environments. Later on once this is polished we can test the actual
-hardware with different drivers. But this should be a roadmap to start
-IMO.
+> You would probably want to add this one as the major copyright.
 
-Let me know what you think.
+Yeah, but seeing he wasn't on the file where I took the code from I
+didn't want to add it. You guys should post a patch adding it to the
+files where you have contributed.
 
-For more information on mac80211_hwsim please see:
+johannes
 
-Documentation/networking/mac80211_hwsim/README
+--=-0ab8d5E7EexQmrP7H+F4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-  Luis
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJImpcSAAoJEKVg1VMiehFY0AgP/Aki/ajN8TnQKvYzhEDstCKm
+ZGVnyfhVMXcVGhsD+cBwwXkTmgiWJ2WALMvjppcT4EHUsOgC46NaoofxIb+n+Fv1
+aV3BOGMEIpmwQsL1BFXflQ5Xxg77sgA4jM03MjkperS4f/vDYbH1ZWc/kd4uqYVX
+hHaYqjqedjOQ9Y+iKmthmosFzoylEZRXVpaob+HhHwh5f/jmE+lZ+qEHeXQGpeyq
+wGrzk38hWjbjsfPmfcVu0MOFHHJ1wQa3i5V+A7LKXZ6KCv1pJqfSMQklVtEShAoD
+MrbMXQMDk52UaL3hmmJa/ttxXUAZeJVO1IcA9IAvSQxfziHL0vWKZWmeYRUnFMG1
+tkh6IRUPBvbsZcPyfv0sWbvPi6jwc3QEqzCguG5Dg2t/efVbvFF2tdJlzrK+1CzH
+L6sCnPso3a5fQ9W6grghDGFkrHEw+4dKLkYTNp4K2Ve55SgU8suhBx1adcFpnFEX
+fyQSQ+xDSJqiCp0RTuUYWpUhIaZ4c50rDkNX4rQZDoWyDt5DlzBRNS8nKzC4+M5Q
+UXxZfKghGj17wT8cgaomoxdZbTpt3GLmOwi3Q6QhXojaV9aP9ROD4+T3P5kp4bsm
+lyK7nxoTed8rApjuBmlRWExzhd+Uvozt25J26NncBQPCLNhJXJ+W4FPeXMFgZUEU
+zmpUoY7r+NSfiy2+8Ady
+=gI++
+-----END PGP SIGNATURE-----
+
+--=-0ab8d5E7EexQmrP7H+F4--
+
