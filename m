@@ -1,68 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:16115 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753430AbYH1H7W (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:56227 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753489AbYHGA4K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 03:59:22 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so78619eyi.37
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2008 00:59:21 -0700 (PDT)
-Message-ID: <1ba2fa240808280059i24d2ee56rd7a3c37150e1c03c@mail.gmail.com> (sfid-20080828_095927_988007_DBE40087)
-Date: Thu, 28 Aug 2008 10:59:20 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: pull request: wireless-2.6 2008-08-26
-Cc: "Michael Buesch" <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Bruno Randolf" <bruno@thinktube.com>
-In-Reply-To: <43e72e890808271830k6e0a9e65j790ee1e0d6d52d36@mail.gmail.com>
+	Wed, 6 Aug 2008 20:56:10 -0400
+Message-ID: <489A4829.5080704@lwfinger.net> (sfid-20080807_025616_650826_331DC324)
+Date: Wed, 06 Aug 2008 19:56:09 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080827013009.GA15781@tuxdriver.com>
-	 <1ba2fa240808271226i95a7789k481a68b09dc60164@mail.gmail.com>
-	 <200808272225.10557.mb@bu3sch.de>
-	 <1ba2fa240808271611v382631ecn2a24e2816562d434@mail.gmail.com>
-	 <20080827233103.GE5927@tesla>
-	 <1ba2fa240808271719o2a3617e7re0499670de785b2f@mail.gmail.com>
-	 <43e72e890808271830k6e0a9e65j790ee1e0d6d52d36@mail.gmail.com>
+To: Chr <chunkeey@web.de>
+CC: John W Linville <linville@tuxdriver.com>,
+	Michael Wu <flamingice@sourmilk.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] p54: Fix potential concurrent access to private data
+References: <4896381c.abQmtcnBFB3TpLyf%Larry.Finger@lwfinger.net> <200808062321.53120.chunkeey@web.de>
+In-Reply-To: <200808062321.53120.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 28, 2008 at 4:30 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Wed, Aug 27, 2008 at 5:19 PM, Tomas Winkler <tomasw@gmail.com> wrote:
->> This patch is marked as W/A and should have
->> probably some cleaner solution in 2.6.28
->
-> OK
->
->>>> Last solution would be to remove this merging all together
->>>
->>> Absolutely not! IBSS merge is per spec, otherwise you don't really have
->>> a real IBSS.
->>
->> I'm all for following spec and we've tried really hard to make it work.
->> Anyhow I'm not sure what you call real IBSS. nobody has checked it for
->> 1.5 year this patch  is in and now is suddenly so important...
->
-> I don't care about your work around, I was replying due to your insane
-> comments about considering removing IBSS merge support because your
-> hardware does not support it well.
+Chr wrote:
+> 
+> Well the reason why there isn't any bug report about it is maybe
+> because unlike most other devices we don't program one single
+> setting per time, but always a "group of similar ones" at once so
+> the device should always be in a sane state in theory.
+> 
+> So as long as mac80211 provides at least some kind of protection
+> against it's own concurrency, we are in save waters even without
+> any fancy kind of locking.
+> 
+> Regards,
+> 	Chr
 
-Insane?!, watch your language mister I will catch you on next year OLS
-:) This is definitely
-not any highlighted proposal in my message
+For the config callback, mac80211 does not protect against concurrency. We 
+learned that with rtl8187, where this routine ran somewhat longer. After the 
+power setting routine was added to the wext interface in mac80211, the driver 
+broke due to concurrent calls to the config routine and was fixed by just this 
+kind of mutex, which is why I added this protection for p54.
 
->> I would like to see if there is any  HW under mac80211 that actually
->> work with this.
->
-> Atheros hardware supports IBSS merge, please consider a proper work
-> around instead for hardware which does not support this.
-
-So how do set TSF from the beacon, I'm asking because there is
-currently no interface from mac80211 to driver do that.
-Thanks
-Tomas
+Larry
