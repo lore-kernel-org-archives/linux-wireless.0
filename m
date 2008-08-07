@@ -1,54 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:37047 "EHLO
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:52548 "EHLO
 	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753318AbYHATgE (ORCPT
+	by vger.kernel.org with ESMTP id S1751197AbYHGNpg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 15:36:04 -0400
-Date: Fri, 1 Aug 2008 16:35:57 -0300
+	Thu, 7 Aug 2008 09:45:36 -0400
+Date: Thu, 7 Aug 2008 10:45:30 -0300
 From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [GIT PATCH] RFC: next batch of rfkill changes
-Message-ID: <20080801193557.GG14352@khazad-dum.debian.net> (sfid-20080801_213609_379737_EE6B3E07)
-References: <1216775046-9506-1-git-send-email-hmh@hmh.eng.br> <20080801181135.GC14974@tuxdriver.com>
+To: Philip Langdale <philipl@overt.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	toshiba_acpi@memebeam.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
+	through rfkill (v2)
+Message-ID: <20080807134530.GB17062@khazad-dum.debian.net> (sfid-20080807_154540_564076_40C25A2F)
+References: <4894B1B4.6050003@overt.org> <20080803042613.GC6053@khazad-dum.debian.net> <48965716.6020508@overt.org> <20080805212416.GB21738@khazad-dum.debian.net> <489A7CCF.1090407@overt.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080801181135.GC14974@tuxdriver.com>
+In-Reply-To: <489A7CCF.1090407@overt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 01 Aug 2008, John W. Linville wrote:
-> On Tue, Jul 22, 2008 at 10:04:00PM -0300, Henrique de Moraes Holschuh wrote:
-> > This is my next batch of rfkill changes.  They add features and address
-> > some shortcomings of rfkill-input, mostly.
-> > 
-> > Please comment.  One thing that is bothering me in the last patch is
-> > what happens during suspend/resume to pending delayed rfkill state
-> > changes.  Are pending scheduled jobs executed, cancelled, or frozen to
-> > fire up when the system resumes itself?
-> > 
-> > Henrique de Moraes Holschuh (6):
-> >       rfkill: detect bogus double-registering
-> >       rfkill: add default global states
-> >       rfkill: add master_switch_mode functionality
-> >       rfkill: add EPO lock to rfkill-input
-> >       rfkill: rename rfkill_mutex to rfkill_global_mutex
-> >       rfkill: rate-limit rfkill-input workqueue usage
-> 
-> FYI...because you included RFC in the subject I won't be merging
-> these until I hear otherwise from you.
+On Wed, 06 Aug 2008, Philip Langdale wrote:
+> Henrique de Moraes Holschuh wrote:
+>> Well, the textbook way to connect that to rfkill is something like this,
+>> please check if it makes sense:
+>>
+>> Export (1) as a input device (you have events to hook to when it changes
+>> state) or polled input device (you don't have said events).  Do NOT register
+>> (1) with a struct rfkill at all.  It is purely an input device.
+>>
+>> DO NOT expose (2) as an input device at all.  Instead, register it to a
+>> rfkill struct, of type bluetooth.
+>>
+>> On the event handler for (1), you issue the EV_SW SW_RFKILL_ALL input event.
+>> Since you *do* know events from (1) are likely to also have messed with the
+>> state of (2), you also check (2)'s state at this time and update it through
+>> rfkill_force_state().
+>>
+>> Due to the interaction of 1 and 2, you need to implement and deal with
+>> RFKILL_STATE_HARD_BLOCKED.  Since you do know the firmware will be
+>> hard-blocking (2) when (1) is active, you return RFKILL_STATE_HARD_BLOCKED
+>> for (2)'s state every time (1) is active.  Otherwise, you return
+>> RFKILL_STATE_SOFT_BLOCKED when (2) is blocked, and RFKILL_STATE_UNBLOCKED
+>> otherwise.
+>>
+>> This will cause the state of (2) to go to either RFKILL_STATE_HARD_BLOCKED
+>> or RFKILL_STATE_SOFT_BLOCKED when (1) changes state.
+>>
+>> [Note: the above does assume (1) blocks (2) in some way you cannot override,
+>> and that trying to unblock (2) while (1) is blocking it is futile].
+>>
+>> rfkill-input (now) or userspace (someday) will take care of kicking the
+>> radio to RFKILL_STATE_UNBLOCKED when (1) issues an event that signals that
+>> radios don't have to remain blocked.  Maybe this is why you see the WLAN
+>> going on when you deactivate the radio kill switch?
+>>
+>> And rfkill-input will soon be enhanced to let the user configure it to do
+>> something different if he wants.  Your driver doesn't (and shouldn't)
+>> hardcode policy about it.
+>
+> Hmm. So, I've updated the diff to do this, but rfkill-input is not kicking
+> the bluetooth device back on after I release the kill switch. it just returns
+> to SOFT_UNBLOCKED and stays there.
 
-That's fine, they are not for merging yet :-)  I have modified some of them
-a lot, added others, and have not found a good way to do the last one
-(rate-limiting) properly yet. I will post another "RFC" batch sooner or
-later, probably during the weekend.
-
-This is all 2.6.28 material anyway, so there is no hurry to merge early on
-wireless-testing, it is best to merge right.  If I find anything that looks
-like a somewhat urgent fix, I will post it separately for merging in 2.6.27.
-
-When some of them patch are finally good for merging, I will send a stack
-just with those and ask for a merge explicitly.
+Hmm?  UNBLOCKED means it is not being rfkilled.  Why is not working?  Put
+some debug printks on your toggle_radio callback, that might help fix the
+issue...
 
 -- 
   "One disk to rule them all, One disk to find them. One disk to bring
