@@ -1,31 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:17571 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757694AbYHZUGY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Aug 2008 16:06:24 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so998589nfc.21
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Aug 2008 13:06:23 -0700 (PDT)
-Message-ID: <1ba2fa240808261306s58ffe82dyf8d217bfa37c06d5@mail.gmail.com> (sfid-20080826_220629_551987_9ACD6575)
-Date: Tue, 26 Aug 2008 23:06:22 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 2.6.27 2/2] iwlwifi: fix 64bit platform firmware loading
-Cc: linux-wireless@vger.kernel.org,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
-In-Reply-To: <1219718071-13587-2-git-send-email-yi.zhu@intel.com>
+Received: from mail.atheros.com ([12.36.123.2]:54258 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752570AbYHGFd1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Aug 2008 01:33:27 -0400
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 06 Aug 2008 22:33:27 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1219718071-13587-1-git-send-email-yi.zhu@intel.com>
-	 <1219718071-13587-2-git-send-email-yi.zhu@intel.com>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18586.34419.33602.930102@localhost.localdomain> (sfid-20080807_073339_074409_F5BA5E91)
+Date: Thu, 7 Aug 2008 10:51:55 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	<Jouni.Malinen@Atheros.com>, <Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 0/6] ath9k: Cleanup series
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 26, 2008 at 5:34 AM, Zhu Yi <yi.zhu@intel.com> wrote:
-> From: Tomas Winkler <tomas.winkler@intel.com>
->
-> This patch fixes loading firmware from memory above 34bit.
+John,
 
-         ^^ - John,  please fix this little typo when merging
-Thanks
-Tomas
+A bunch of cleanups, removal of duplicate data structures and
+unused macros.
+
+Sujith
+
+Sujith Manoharan (6):
+  ath9k: Cleanup data structures related to HW capabilities
+  ath9k: Remove redundant data structure ath9k_txq_info
+  ath9k: Use mac80211's band macros and remove enum hal_freq_band
+  ath9k: Remove a few unused macros and fix indentation
+  ath9k: More unused macros
+  ath9k: Revamp wireless mode usage
+
+ drivers/net/wireless/ath9k/ath9k.h       |  275 ++++++---------
+ drivers/net/wireless/ath9k/beacon.c      |   20 +-
+ drivers/net/wireless/ath9k/core.c        |  208 +++++-------
+ drivers/net/wireless/ath9k/core.h        |  479 ++++++++++++--------------
+ drivers/net/wireless/ath9k/hw.c          |  558 +++++++++++++++---------------
+ drivers/net/wireless/ath9k/main.c        |   85 +----
+ drivers/net/wireless/ath9k/rc.c          |   32 +-
+ drivers/net/wireless/ath9k/rc.h          |    2 +-
+ drivers/net/wireless/ath9k/recv.c        |    4 +-
+ drivers/net/wireless/ath9k/regd.c        |  117 +++----
+ drivers/net/wireless/ath9k/regd.h        |   10 +-
+ drivers/net/wireless/ath9k/regd_common.h |   18 +-
+ drivers/net/wireless/ath9k/xmit.c        |   35 +-
+ 13 files changed, 837 insertions(+), 1006 deletions(-)
+
