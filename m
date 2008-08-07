@@ -1,52 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:49164 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752748AbYHVLGG (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:32496 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751388AbYHGSBN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2008 07:06:06 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so33540eyi.37
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2008 04:06:05 -0700 (PDT)
-Message-ID: <14b026160808220406q51069496u98de6ed57c7f13a4@mail.gmail.com> (sfid-20080822_130611_727206_3359D6A5)
-Date: Fri, 22 Aug 2008 13:06:05 +0200
-From: "=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?=" <zajec5polish@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: [PATCH RFT] b43: Rewrite PHY API for N-PHY/LP-PHY
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-In-Reply-To: <200808160029.56876.mb@bu3sch.de>
+	Thu, 7 Aug 2008 14:01:13 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so181554yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2008 11:01:12 -0700 (PDT)
+Message-ID: <40f31dec0808071101j2e63614at44d4f9fc4bb1694e@mail.gmail.com> (sfid-20080807_200117_925833_143CD20B)
+Date: Thu, 7 Aug 2008 21:01:11 +0300
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Michael Karcher" <kernel@mkarcher.dialup.fu-berlin.de>
+Subject: Re: [PATCH] ath5k: Don't fiddle with MSI on suspend/resume.
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, linux-kernel@vger.kernel.org,
+	jirislaby@gmail.com, mcgrof@gmail.com
+In-Reply-To: <1218130441.18466.150.camel@hermes2.karcher.local>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-References: <200808160029.56876.mb@bu3sch.de>
+References: <1218130441.18466.150.camel@hermes2.karcher.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MjAwOC84LzE2IE1pY2hhZWwgQnVlc2NoIDxtYkBidTNzY2guZGU+Ogo+IFRoaXMgaXMgdGhlIGZp
-cnN0IHBhcnQgZm9yIHRoZSByZXdyaXRlIG9mIHRoZSBiNDMgUEhZIEFQSS4KPiBUaGlzIGlzIG5l
-ZWRlZCBpbiBvcmRlciB0byBtYWtlIGRldmVsb3BtZW50IG9mIE4gYW5kIExQIGNvZGUgcG9zc2li
-bGUuCj4KPiBQTEVBU0UgVEVTVCBURVNUIFRFU1QgVEVTVCBURVNUCj4KPiBMb3RzIG9mIHRlc3Rp
-bmcgb24gbG90cyBvZiBkaWZmZXJlbnQgZGV2aWNlcyBpcyBuZWVkZWQgdG8gZW5zdXJlIHRoaXMK
-PiBkb2Vzbid0IGludHJvZHVjZSByZWdyZXNzaW9ucyBkdWUgdG8gdHlwb3MuCj4gOTUlIG9mIHRo
-ZSBwYXRjaCBqdXN0IG1vdmVzIGxhcmdlIHBhcnRzIG9mIHRoZSBQSFkgY29kZSBmcm9tIG9uZSBm
-aWxlCj4gdG8gYW5vdGhlci4gTW9yZSBtb3ZlLXBhdGNoZXMgd2lsbCBmb2xsb3cuCj4gNSUgb2Yg
-dGhlIHBhdGNoIGludHJvZHVjZXMgYW4gIm9wcyIgYmFzZWQgUEhZIEFQSS4KPgo+IFBsZWFzZSB0
-ZXN0IG9uIGFsbCBvZiB5b3VyIGRldmljZXMuCj4KPiBodHRwOi8vYnUzc2NoLmRlL3BhdGNoZXMv
-d2lyZWxlc3MtdGVzdGluZy8yMDA4MDgxNi0wMDIzL3BhdGNoZXMvMDAyLWI0My1waHktb3BzLnBh
-dGNoCj4gQXBwbHkgYWdhaW5zdCB3aXJlbGVzcy10ZXN0aW5nLmdpdAoKQXBwbGllZCB0byB0b2Rh
-eSB3aXJlbGVzcy10ZXN0aW5nIGdpdC4gQ29ubmVjdGVkIHRvIG15IEFQIHdpdGhvdXQKcHJvYmxl
-bSwgY29ubmVjdGlvbiBzdGFibGUgZm9yIDkwbWluIGFuZCA2MDBNQiBvZiBkb3dubG9hZC4gSSBk
-aWRuJ3QKdGVzdCBzcGVlZCBwZXJmb3JtYW5jZSBhcyBteSBhbnRlbm5hIGluIGJyb2tlbi4gU28g
-ZXZlcnl0aGluZyBzZWVtcyB0bwp3b3JrIGZpbmUgZm9yIG1lLgoKYjQzLXBjaS1icmlkZ2UgMDAw
-MDowNjowNS4wOiBQQ0kgSU5UIEEgLT4gR1NJIDIxIChsZXZlbCwgbG93KSAtPiBJUlEgMjEKYjQz
-LXBoeTA6IEJyb2FkY29tIDQzMTggV0xBTiBmb3VuZApiNDMtcGh5MCBkZWJ1ZzogRm91bmQgUEhZ
-OiBBbmFsb2cgMywgVHlwZSAyLCBSZXZpc2lvbiA3CmI0My1waHkwIGRlYnVnOiBGb3VuZCBSYWRp
-bzogTWFudWYgMHgxN0YsIFZlcnNpb24gMHgyMDUwLCBSZXZpc2lvbiA4CmlucHV0OiBiNDMtcGh5
-MCBhcyAvZGV2aWNlcy92aXJ0dWFsL2lucHV0L2lucHV0OApmaXJtd2FyZTogcmVxdWVzdGluZyBi
-NDMvdWNvZGU1LmZ3CmZpcm13YXJlOiByZXF1ZXN0aW5nIGI0My9wY201LmZ3CmZpcm13YXJlOiBy
-ZXF1ZXN0aW5nIGI0My9iMGcwaW5pdHZhbHM1LmZ3CmZpcm13YXJlOiByZXF1ZXN0aW5nIGI0My9i
-MGcwYnNpbml0dmFsczUuZncKYjQzLXBoeTA6IExvYWRpbmcgZmlybXdhcmUgdmVyc2lvbiA0MTAu
-MjE2MCAoMjAwNy0wNS0yNiAxNTozMjoxMCkKYjQzLXBoeTAgZGVidWc6IENoaXAgaW5pdGlhbGl6
-ZWQKYjQzLXBoeTAgZGVidWc6IDMyLWJpdCBETUEgaW5pdGlhbGl6ZWQKUmVnaXN0ZXJlZCBsZWQg
-ZGV2aWNlOiBiNDMtcGh5MDo6dHgKUmVnaXN0ZXJlZCBsZWQgZGV2aWNlOiBiNDMtcGh5MDo6cngK
-UmVnaXN0ZXJlZCBsZWQgZGV2aWNlOiBiNDMtcGh5MDo6cmFkaW8KYjQzLXBoeTAgZGVidWc6IFdp
-cmVsZXNzIGludGVyZmFjZSBzdGFydGVkCmI0My1waHkwIGRlYnVnOiBBZGRpbmcgSW50ZXJmYWNl
-IHR5cGUgMgpiNDMtcGh5MDogUmFkaW8gdHVybmVkIG9uIGJ5IHNvZnR3YXJlCgotLSAKUmFmYcWC
-IE1pxYJlY2tpCg==
+2008/8/7 Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>:
+> Commit 256b152b005e319f985f50f2a910a75ba0def74f has removed msi support,
+> but overlooked the suspend/resume code. This patch completes msi removal.
+>
+> I don't consider this patch copyrightable, and thus put it into the
+> public domain. The result is of course a base.c file dual-licensed under
+> 3-clause-BSD and GPL.
+>
+> Signed-off-by: Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>
+>
+> ---
+>  drivers/net/wireless/ath5k/base.c |    8 ++------
+>  1 files changed, 2 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+> index ebf19bc..d092a23 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+> @@ -589,7 +589,6 @@ ath5k_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+>        ath5k_stop_hw(sc);
+>
+>        free_irq(pdev->irq, sc);
+> -       pci_disable_msi(pdev);
+>        pci_save_state(pdev);
+>        pci_disable_device(pdev);
+>        pci_set_power_state(pdev, PCI_D3hot);
+> @@ -618,12 +617,10 @@ ath5k_pci_resume(struct pci_dev *pdev)
+>         */
+>        pci_write_config_byte(pdev, 0x41, 0);
+>
+> -       pci_enable_msi(pdev);
+> -
+>        err = request_irq(pdev->irq, ath5k_intr, IRQF_SHARED, "ath", sc);
+>        if (err) {
+>                ATH5K_ERR(sc, "request_irq failed\n");
+> -               goto err_msi;
+> +               goto err_no_irq;
+>        }
+>
+>        err = ath5k_init(sc);
+> @@ -644,8 +641,7 @@ ath5k_pci_resume(struct pci_dev *pdev)
+>        return 0;
+>  err_irq:
+>        free_irq(pdev->irq, sc);
+> -err_msi:
+> -       pci_disable_msi(pdev);
+> +err_no_irq:
+>        pci_disable_device(pdev);
+>        return err;
+>  }
+> --
+> 1.5.5.4
+>
+>
+
+> Don't sync
+> - coherent mapping (descriptors)
+> - before unmap, it's useless
+> - (wrongly anyway -- for_cpu) beacon skb, it's just mapped,
+>  so by the device yet
+>
+> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+> Cc: Nick Kossifidis <mickflemm@gmail.com>
+> Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+> ---
+>  drivers/net/wireless/ath5k/base.c |   11 -----------
+>  1 files changed, 0 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+> index 4874a6f..713ee99 100644
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+> @@ -1705,10 +1705,6 @@ ath5k_tasklet_rx(unsigned long data)
+>                skb = bf->skb;
+>                ds = bf->desc;
+>
+> -               /* TODO only one segment */
+> -               pci_dma_sync_single_for_cpu(sc->pdev, sc->desc_daddr,
+> -                               sc->desc_len, PCI_DMA_FROMDEVICE);
+> -
+>                /*
+>                 * last buffer must not be freed to ensure proper hardware
+>                 * function. When the hardware finishes also a packet next to
+> @@ -1772,8 +1768,6 @@ ath5k_tasklet_rx(unsigned long data)
+>                                goto next;
+>                }
+>  accept:
+> -               pci_dma_sync_single_for_cpu(sc->pdev, bf->skbaddr,
+> -                               rs.rs_datalen, PCI_DMA_FROMDEVICE);
+>                pci_unmap_single(sc->pdev, bf->skbaddr, sc->rxbufsize,
+>                                PCI_DMA_FROMDEVICE);
+>                bf->skb = NULL;
+> @@ -1861,9 +1855,6 @@ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
+>        list_for_each_entry_safe(bf, bf0, &txq->q, list) {
+>                ds = bf->desc;
+>
+> -               /* TODO only one segment */
+> -               pci_dma_sync_single_for_cpu(sc->pdev, sc->desc_daddr,
+> -                               sc->desc_len, PCI_DMA_FROMDEVICE);
+>                ret = sc->ah->ah_proc_tx_desc(sc->ah, ds, &ts);
+>                if (unlikely(ret == -EINPROGRESS))
+>                        break;
+> @@ -2036,8 +2027,6 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+>                ATH5K_WARN(sc, "beacon queue %u didn't stop?\n", sc->bhalq);
+>                /* NB: hw still stops DMA, so proceed */
+>        }
+> -       pci_dma_sync_single_for_cpu(sc->pdev, bf->skbaddr, bf->skb->len,
+> -                       PCI_DMA_TODEVICE);
+>
+>        ath5k_hw_put_tx_buf(ah, sc->bhalq, bf->daddr);
+>        ath5k_hw_tx_start(ah, sc->bhalq);
+> --
+> 1.5.6.2
+>
+>
+
+Thanks ;-)
+
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
