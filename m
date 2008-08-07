@@ -1,81 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:58586 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750839AbYH3JwI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Aug 2008 05:52:08 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Add LP-PHY read/write phyops
-Date: Sat, 30 Aug 2008 11:49:45 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Received: from fmmailgate03.web.de ([217.72.192.234]:41626 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751006AbYHGIUx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Aug 2008 04:20:53 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] p54: swap short slot time dcf values
+Date: Thu, 7 Aug 2008 10:22:28 +0200
+Cc: John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200808301149.45597.mb@bu3sch.de> (sfid-20080830_115212_995610_65D82A70)
+  charset="utf-8"
+Message-Id: <200808071022.29289.chunkeey@web.de> (sfid-20080807_102058_947724_70E4499A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds read/write phyops for the LP-PHY and LP-PHY radios.
+these "magic" values must to be the other way round...
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 ---
 
-John, please queue for the next merge window.
+--- a/drivers/net/wireless/p54/p54common.c	2008-08-07 00:37:18.000000000 +0200
++++ b/drivers/net/wireless/p54/p54common.c	2008-08-07 09:01:34.000000000 +0200
+@@ -803,8 +803,8 @@ static void p54_set_vdcf(struct ieee8021
+ 
+ 	if (dev->conf.flags & IEEE80211_CONF_SHORT_SLOT_TIME) {
+ 		vdcf->slottime = 9;
+-		vdcf->magic1 = 0x00;
+-		vdcf->magic2 = 0x10;
++		vdcf->magic1 = 0x10;
++		vdcf->magic2 = 0x00;
+ 	} else {
+ 		vdcf->slottime = 20;
+ 		vdcf->magic1 = 0x0a;
 
-
-Index: wireless-testing/drivers/net/wireless/b43/phy_lp.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/phy_lp.c	2008-08-30 10:50:49.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/phy_lp.c	2008-08-30 11:33:50.000000000 +0200
-@@ -63,33 +63,44 @@ static void b43_lpphy_op_exit(struct b43
- 	kfree(lpphy);
- 	dev->phy.lp = NULL;
- }
- 
- static u16 b43_lpphy_op_read(struct b43_wldev *dev, u16 reg)
- {
--	//TODO
--	return 0;
-+	b43_write16(dev, B43_MMIO_PHY_CONTROL, reg);
-+	return b43_read16(dev, B43_MMIO_PHY_DATA);
- }
- 
- static void b43_lpphy_op_write(struct b43_wldev *dev, u16 reg, u16 value)
- {
--	//TODO
-+	b43_write16(dev, B43_MMIO_PHY_CONTROL, reg);
-+	b43_write16(dev, B43_MMIO_PHY_DATA, value);
- }
- 
- static u16 b43_lpphy_op_radio_read(struct b43_wldev *dev, u16 reg)
- {
--	//TODO
--	return 0;
-+	/* Register 1 is a 32-bit register. */
-+	B43_WARN_ON(reg == 1);
-+	/* LP-PHY needs a special bit set for read access */
-+	if (dev->phy.rev < 2) {
-+		if (reg != 0x4001)
-+			reg |= 0x100;
-+	} else
-+		reg |= 0x200;
-+
-+	b43_write16(dev, B43_MMIO_RADIO_CONTROL, reg);
-+	return b43_read16(dev, B43_MMIO_RADIO_DATA_LOW);
- }
- 
- static void b43_lpphy_op_radio_write(struct b43_wldev *dev, u16 reg, u16 value)
- {
- 	/* Register 1 is a 32-bit register. */
- 	B43_WARN_ON(reg == 1);
- 
--	//TODO
-+	b43_write16(dev, B43_MMIO_RADIO_CONTROL, reg);
-+	b43_write16(dev, B43_MMIO_RADIO_DATA_LOW, value);
- }
- 
- static void b43_lpphy_op_software_rfkill(struct b43_wldev *dev,
- 					 enum rfkill_state state)
- {
- 	//TODO
