@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:59435 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750866AbYHDMNh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 08:13:37 -0400
-To: Pavel Roskin <proski@gnu.org>
+Received: from hostap.isc.org ([149.20.54.63]:41445 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751583AbYHGOdR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Aug 2008 10:33:17 -0400
+Date: Thu, 7 Aug 2008 17:32:32 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: Resignation from orinoco and at76_usb
-References: <1217634358.2731.8.camel@dv> <87bq099npy.fsf@nokia.com>
-	<1217850574.21772.19.camel@dv>
-From: Kalle Valo <Kalle.Valo@iki.fi>
-Date: Mon, 04 Aug 2008 15:03:13 +0300
-In-Reply-To: <1217850574.21772.19.camel@dv> (Pavel Roskin's message of "Mon\, 04 Aug 2008 07\:49\:34 -0400")
-Message-ID: <87bq09rnr2.fsf@litku.valot.fi> (sfid-20080804_141350_775962_FFE2E0BD)
+Subject: Re: [RFC] mac80211/cfg80211: Add BSS configuration options for AP
+	mode
+Message-ID: <20080807143232.GD5138@jm.kir.nu> (sfid-20080807_163320_023894_2E6C3D96)
+References: <20080807134043.GA5138@jm.kir.nu> <1218119110.23048.185.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1218119110.23048.185.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Roskin <proski@gnu.org> writes:
+On Thu, Aug 07, 2008 at 04:25:10PM +0200, Johannes Berg wrote:
 
-> On Mon, 2008-08-04 at 11:41 +0300, Kalle Valo wrote:
->> Pavel Roskin <proski@gnu.org> writes:
->> 
->> > I would like to resign as maintainer of orinoco and at76_usb drivers.  I
->> > was genuinely interested in getting most of the hardware supported by
->> > those drivers, but as it stands now, I simple cannot find time for
->> > either of them.  I believe it is harmful for both projects to have an
->> > unresponsive maintainer who does not have time to review patches and
->> > answer questions about the project.  Perhaps it's better not to have any
->> > maintainer, so that an interested person could step in.
->> 
->> I would be very interested to maintain at76_usb. I broke it, so I
->> should (and will) fix it as well. But due to real life issues, I can
->> start actively working on it only at the end of September. I hope
->> that's not a problem.
->
-> That's great.  Thank you!
+> > +	NL80211_ATTR_BSS_SHORT_SLOT_TIME,
 
-No, thank you for maintaining at76_usb and cleaning it up to be ready
-for inclusion.
+> Oh another idea I just had, I suspect we should use these to indicate
+> support for the features too, on the wiphy info query result or
+> something. Only tangentially related to this patch though.
 
-> I think the best approach would be that once you have some patches
-> ready, you would add a patch that replaces my name with yours in the
-> MAINTAINERS file.
-
-Sounds good to me. Most probably I can do this only late September or
-so, I hope that's ok?
+Sounds reasonable. So far, I've mainly worked with hardware that
+supports these, so I have just assumed that everything is fine and
+haven't bothered dynamically trying to decide what to do in hostapd. Or
+well, it was possible to configure this in hostapd.conf (though, it
+looks like that was never actually merged into the open source version
+completely, so the variable is there, but not a way to enable it; have
+to fix that at some point, I guess..).
 
 -- 
-Kalle Valo
+Jouni Malinen                                            PGP id EFC895FA
