@@ -1,62 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.241]:10814 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751075AbYHEXTU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 19:19:20 -0400
-Received: by an-out-0708.google.com with SMTP id d40so459695and.103
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Aug 2008 16:19:19 -0700 (PDT)
-Message-ID: <43e72e890808051619u4ed7c447wd80a866192220b84@mail.gmail.com> (sfid-20080806_011925_636654_B6119E7A)
-Date: Tue, 5 Aug 2008 16:19:19 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Tomasz Chmielewski" <mangoo@wpkg.org>
-Subject: Re: kernel panic on p54pci insertion on mipsel
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"OpenWrt Development List" <openwrt-devel@lists.openwrt.org>
-In-Reply-To: <4898CBF9.6030606@wpkg.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <4898B018.5050202@wpkg.org>
-	 <1217967177.3603.60.camel@johannes.berg> <4898CBF9.6030606@wpkg.org>
+Received: from mga03.intel.com ([143.182.124.21]:51771 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752576AbYHGWuw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Aug 2008 18:50:52 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+Subject: [PATCH 1/2] mac80211: change number of pre-assoc scans
+Date: Fri,  8 Aug 2008 01:50:46 +0300
+Message-Id: <1218149447-28968-1-git-send-email-tomas.winkler@intel.com> (sfid-20080808_005057_722245_9F2BC0CF)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 5, 2008 at 2:54 PM, Tomasz Chmielewski <mangoo@wpkg.org> wrote:
-> Johannes Berg schrieb:
->>>
->>> Call Trace:[<c0060000>][<c0057150>]
->>
->> My magic crystal ball says that this is not inside p54 at all, and
->> indeed a problem in your kernel patches. :P
->
-> An amazingly advanced crystal ball you have ;)
->
-> So, a final update: ASUS WL-500gP (v1) running with OpenWRT patches and a
-> prism54 mini-pci card:
->
-> - panics / oopses with p54pci.ko
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-Can't help you there, and what Johannes was trying to say is the call
-trace doesn't help us as its just hex values to us. We would need the
-mapped culprit routines.
+This patch fixes noticed problem in noisy environments of 50+ APs
+that scan fails to find the requested AP on first try, which
+leads to connection refusal. second scan has empirically proven to fix
+this problem in almost all cases.
 
-> - doesn't work with prism54.ko module (similar messages to
-> http://marc.info/?l=linux-wireless&m=120250829717134&w=2)
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Esti Kummer <ester.kummer@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ net/mac80211/ieee80211_i.h |    4 +++-
+ net/mac80211/mlme.c        |    9 +++++++--
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-We need more details, or do you get *exactly* the same error messages?
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index d19f67e..f71785e 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -369,7 +369,9 @@ struct ieee80211_if_sta {
+ 
+ 	struct sk_buff_head skb_queue;
+ 
+-	int auth_tries, assoc_tries;
++	int assoc_scan_tries; /* number of scans done pre-association */
++	int auth_tries; /* retries for auth req */
++	int assoc_tries; /* retries for assoc req */
+ 
+ 	unsigned long request;
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 5426df1..5276c73 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -34,6 +34,7 @@
+ #include "led.h"
+ #include "mesh.h"
+ 
++#define IEEE80211_ASSOC_SCANS_MAX_TRIES 2
+ #define IEEE80211_AUTH_TIMEOUT (HZ / 5)
+ #define IEEE80211_AUTH_MAX_TRIES 3
+ #define IEEE80211_ASSOC_TIMEOUT (HZ / 5)
+@@ -599,6 +600,7 @@ static void ieee80211_set_disassoc(struct net_device *dev,
+ {
+ 	if (deauth)
+ 		ifsta->auth_tries = 0;
++	ifsta->assoc_scan_tries = 0;
+ 	ifsta->assoc_tries = 0;
+ 	ieee80211_set_associated(dev, ifsta, 0);
+ }
+@@ -3437,7 +3439,9 @@ static void ieee80211_sta_reset_auth(struct net_device *dev,
+ 		ifsta->auth_alg = WLAN_AUTH_OPEN;
+ 	ifsta->auth_transaction = -1;
+ 	ifsta->flags &= ~IEEE80211_STA_ASSOCIATED;
+-	ifsta->auth_tries = ifsta->assoc_tries = 0;
++	ifsta->assoc_scan_tries = 0;
++	ifsta->auth_tries = 0;
++	ifsta->assoc_tries = 0;
+ 	netif_carrier_off(dev);
+ }
+ 
+@@ -3544,7 +3548,8 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
+ 		ieee80211_sta_reset_auth(dev, ifsta);
+ 		return 0;
+ 	} else {
+-		if (ifsta->state != IEEE80211_STA_MLME_AUTHENTICATE) {
++		if (ifsta->assoc_scan_tries < IEEE80211_ASSOC_SCANS_MAX_TRIES) {
++			ifsta->assoc_scan_tries++;
+ 			if (ifsta->flags & IEEE80211_STA_AUTO_SSID_SEL)
+ 				ieee80211_sta_start_scan(dev, NULL, 0);
+ 			else
+-- 
+1.5.4.1
 
-"Out of memory, cannot handle oid" comes up after a failed kmalloc()
-while trying to handle an interrupt and management frame (not 802.11
-frame) from the firmware. From that archived mailing list though the
-oid 0x080002ff is mentioned and... well prism54 doesn't know what that
-is. I wonder if the firmware is triggering random interrupts with
-bogus oids.
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-If you can provide a complete log it can help. Also in your previous
-posts I see you mentioned you were working with different firmwares.
-1.0.4.3.arm should *only* be used with prism54. You may also want to
-try an older firmware version than 1.0.4.3.arm, this one came from
-3com cards.
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
-  Luis
