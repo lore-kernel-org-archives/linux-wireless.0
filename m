@@ -1,50 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.236]:64118 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751367AbYHAQLn (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42487 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752255AbYHGTpt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 12:11:43 -0400
-Received: by qb-out-0506.google.com with SMTP id a16so1106875qbd.17
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 09:11:42 -0700 (PDT)
-Message-ID: <489335CA.9000204@tuffmail.co.uk> (sfid-20080801_181147_760690_163E5430)
-Date: Fri, 01 Aug 2008 17:11:54 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-MIME-Version: 1.0
-To: Jiri Slaby <jirislaby@gmail.com>
-CC: Bob Copeland <me@bobcopeland.com>, tomasw@gmail.com,
-	Dave Young <hidave.darkstar@gmail.com>, stable@kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linville@tuxdriver.com, Pekka Enberg <penberg@cs.helsinki.fi>,
-	ath5k-devel@venema.h4ckr.net, johannes@sipsolutions.net,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: git-describe [Was: ath5k_config_interface deadlock fix]
-References: <20080801074014.GA3341@darkstar> <4892C2CA.7010003@gmail.com>		<4892C359.9000304@cs.helsinki.fi>		<20080801011415.ff4821a3.akpm@linux-foundation.org>	<b6c5339f0808010643i58dbb2a7jf459359451061ae4@mail.gmail.com> <4893257C.1020907@gmail.com> <48932A10.8080004@tuffmail.co.uk> <48932AFA.5020903@gmail.com>
-In-Reply-To: <48932AFA.5020903@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 7 Aug 2008 15:45:49 -0400
+Subject: Re: [RFC] cfg80211: keep track of supported interface modes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890808071102t281f3c4ctb9d1f1c5822dbc8f@mail.gmail.com> (sfid-20080807_200211_500676_B1F52107)
+References: <1218122495.3630.2.camel@johannes.berg>
+	 <43e72e890808071102t281f3c4ctb9d1f1c5822dbc8f@mail.gmail.com>
+	 (sfid-20080807_200211_500676_B1F52107)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZNjX8c87FnDegkHzeDpo"
+Date: Thu, 07 Aug 2008 21:45:23 +0200
+Message-Id: <1218138323.3630.57.camel@johannes.berg> (sfid-20080807_214552_902265_81095E0C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri Slaby wrote:
-> Alan Jenkins napsal(a):
->> There must be a better way (for efficient merges, right?).  But all I
->> can think of is comparing the files in question against the diff.  I
->> checked myself and the changes don't appear to have been included in
->> v2.6.26.
->
-> Ah, I see. Is this a git-describe bug or my misunderstanding of the tool?
 
-It's not an implementation bug.  It's just very easy to misunderstand.
+--=-ZNjX8c87FnDegkHzeDpo
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-git-describe only looks _back_ in time to what the current commit is
-based on.  In this case the commit was based on v2.6.26-rc8 - but it
-_wasn't_ merged into 2.6.26.  It was presumably merged in for
-v2.6.27-rc1.  This is a perfectly legal history in GIT.
 
-It's probably most often encountered during git-bisect.  If you bisect
-e.g. between v2.6.26 and v.2.6.27-rc1, you're likely to see commits
-which were based on v2.6.26-rc8.
+> > --- everything.orig/drivers/net/wireless/b43/main.c     2008-08-07 16:4=
+9:57.000000000 +0200
+> > +++ everything/drivers/net/wireless/b43/main.c  2008-08-07 16:57:12.000=
+000000 +0200
+> > @@ -4165,11 +4165,11 @@ static int b43_op_add_interface(struct i
+> >
+> >        /* TODO: allow WDS/AP devices to coexist */
+> >
+> > -       if (conf->type !=3D IEEE80211_IF_TYPE_AP &&
+> > -           conf->type !=3D IEEE80211_IF_TYPE_MESH_POINT &&
+> > -           conf->type !=3D IEEE80211_IF_TYPE_STA &&
+> > -           conf->type !=3D IEEE80211_IF_TYPE_WDS &&
+> > -           conf->type !=3D IEEE80211_IF_TYPE_IBSS)
+> > +       if (WARN_ON(conf->type !=3D IEEE80211_IF_TYPE_AP &&
+>=20
+> When would we hit the WARN_ON() ?
 
-If that doesn't help, try finding an introduction to GIT with some good
-pictures.  I think it's easier to understand it visually.
+When I make a mistake in mac80211 :) Might as well leave it out.
 
-Alan
+johannes
+
+--=-ZNjX8c87FnDegkHzeDpo
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIm1DPAAoJEKVg1VMiehFY5cMP/RZk9j5l1u1nQBvn3Xe8TsYQ
+7hTwgrJPZgt3y6+dx0Tosq44f6hs4YgCTfIHE3L9HMVMdh/6LvA6gasttR1dAMVZ
+oEXtx4r3NWGxEgWrEbCTvdpzpdAr9tmjaPifWgAMV+YMn5NDhCEx77XaswMvg/qZ
+qfpC7bySLBhfzRpEwxIQ8I6YFan+fcnLKaT00FfNF9+/EZNUq3/QyeIYS+q3wVmi
+NsViw0TzQzH1cC/KJnbEOAtGQ9lNM4RmhCBjQnr1UotAlVBqsXox2sE8ata8qGHd
+N4gRtZCgzaertlF0cZdmQSE6IQ5lfkkDuk68vjWfjSPi6qVhF8bXwWJ+eQK5vI25
+F3WzRirBbrKV087/NzRjyfmwQ/2lftXpW0UK/V4tDO4uHzju63Kv4bwNtaLNrHBK
+12g8CjcVZotq6MxRzilPkb9A9TKS16grDUlCa6/rm5naO/LA9DJ3gESQCXawRGxD
+t6nv8yhVJj8UKct6K5KKA70GLmgdpXvewbyTk4hw0s2qkb/SK+5xQYSjV7FDL6Iq
+GIUc3s3VNw7g/74tHYsVuTQXmkaaIprlC8ujjW4NE/6sTGbNaFimaiPdfNAEmbeI
+3VURw1KbvR2N1gYA63VWg+4v/8nqIox00HhwuTuXmVe8/C9OnH33SAuet7HXQEka
+XDsqq/0gyf02UvJLxitf
+=ibS7
+-----END PGP SIGNATURE-----
+
+--=-ZNjX8c87FnDegkHzeDpo--
+
