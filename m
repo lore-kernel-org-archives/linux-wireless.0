@@ -1,33 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:17727 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751243AbYHRHll (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:41321 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752492AbYHGP6M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2008 03:41:41 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH RFT] b43: Rewrite PHY API for N-PHY/LP-PHY  -- good on 4311
-Date: Mon, 18 Aug 2008 09:41:10 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Ehud Gavron <gavron@wetwork.net>,
-	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de
-References: <200808160029.56876.mb@bu3sch.de> <48A87B5D.7010402@wetwork.net> <48A88D4D.9050001@lwfinger.net>
-In-Reply-To: <48A88D4D.9050001@lwfinger.net>
+	Thu, 7 Aug 2008 11:58:12 -0400
+From: Chr <chunkeey@web.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] p54: Fix regression due to commit b19fa1f
+Date: Thu, 7 Aug 2008 18:00:57 +0200
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>
+References: <489af6ed.hkTX0XTOTIkENssK%Larry.Finger@lwfinger.net> <200808071727.19129.chunkeey@web.de> <1218122834.3630.6.camel@johannes.berg>
+In-Reply-To: <1218122834.3630.6.camel@johannes.berg>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200808180941.10485.hs4233@mail.mn-solutions.de> (sfid-20080818_094145_829315_FA3DBB5F)
+  charset="iso-8859-15"
+Message-Id: <200808071800.58356.chunkeey@web.de> (sfid-20080807_175816_098376_640E1C26)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I know, which is one of the reasons I don't use a Debian-based
-> distro. I want nothing to do with one whose stated goal is to
-> make it so difficult to change the kernel that the users won't
-> do it.
+On Thursday 07 August 2008 17:27:14 Johannes Berg wrote:
+> On Thu, 2008-08-07 at 17:27 +0200, Chr wrote:
+> > +       u32:24;
+> > +       u32:32;
+> > +       u16:16;
+>
+> That piece looks just wrong though. Bitfields, and in a hw struct?
+well, this is a crude way to silence gcc... without the ":32"
+it complains "warning: declaration does not declare anything".
 
-Huh?  I use "make install modules_install" from my kernel source 
-dir (which I usually get via git) and that works fine, as in 
-every distro on earth.
+Of course we/I can make lot's of u8 paddingZ[X] arrays,
+but we'll run out of Z and X in the long run ;-).
 
-Hehe, but I seldom use distro kernels, not even when I used Red 
-Hat or Mandrake in old times :-)
+Regards,
+	Chr.
