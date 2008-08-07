@@ -1,46 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:48976 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752170AbYH1LUl (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43820 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752451AbYHGP1u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 07:20:41 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so97908eyi.37
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2008 04:20:40 -0700 (PDT)
-Message-ID: <1ba2fa240808280420i21b7390bufeec5d8819e2723@mail.gmail.com> (sfid-20080828_132044_778419_DE994BDF)
-Date: Thu, 28 Aug 2008 14:20:39 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Marcel Holtmann" <holtmann@linux.intel.com>
-Subject: Re: [PATCH 07/11] iwlwifi: generic init calibrations framework
-Cc: "Zhu Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
-In-Reply-To: <1219926977.6064.21.camel@californication>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-8-git-send-email-yi.zhu@intel.com>
-	 <1219926977.6064.21.camel@californication>
+	Thu, 7 Aug 2008 11:27:50 -0400
+Subject: Re: [PATCH] p54: Fix regression due to commit b19fa1f
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chr <chunkeey@web.de>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>
+In-Reply-To: <200808071727.19129.chunkeey@web.de>
+References: <489af6ed.hkTX0XTOTIkENssK%Larry.Finger@lwfinger.net>
+	 <1218115671.23048.174.camel@johannes.berg>
+	 <200808071727.19129.chunkeey@web.de>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Un2FdFImVZxle/3aoBmU"
+Date: Thu, 07 Aug 2008 17:27:14 +0200
+Message-Id: <1218122834.3630.6.camel@johannes.berg> (sfid-20080807_172752_748261_FF120A19)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 28, 2008 at 3:36 PM, Marcel Holtmann
-<holtmann@linux.intel.com> wrote:
-> Hi Yi,
->
->> This patch fixes a critical bug that only the last calibration result
->> was applied. On reception of one calibration result all the calibration
->> was freed. The patch fixes this problem by introducing a generic init
->> calibration framework which allows variable number of init calibrations
->> and allows addition new HW.
->
-> a lot of code changes in -rc4 phase. Please give more details since the
-> patch changes a lot and even introduces a new EXPORT.
 
-The first sentence is important, the whole framework was buggy.
-Tomas
+--=-Un2FdFImVZxle/3aoBmU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, 2008-08-07 at 17:27 +0200, Chr wrote:
+>=20
+> +       u32:24;
+> +       u32:32;
+> +       u16:16;
+
+That piece looks just wrong though. Bitfields, and in a hw struct?
+
+johannes
+
+--=-Un2FdFImVZxle/3aoBmU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJImxROAAoJEKVg1VMiehFYkK0P/3K5xpYSEyQjFio1YmQeStT+
+FvjWHN/BxGhvQ0/bHMD8DE08SbUYtprx/FUdHztkcSXMek8IlO4XL+WS1Nw1pW1W
+h+ac54Ha7OAIu22wXA7Rrzq5UmmMpz1OVylSBhjYQeBFbakot76+GFYsPxi361Jn
+/4gGas2juwZMYc4UKw1ZBQqzB5zNKzvd9eYiw8UrfyDAr4KfwXlEGYpgvN69J0AD
+1esvU6Fk9UGV4BWHNIIyAEpJNI6B/69/I3pnXlfY87IZmhmtoKxpL5Sp8hq0buEA
+BYnGNBfQzp1bwrKeXNslQMlWFkdQi+6uecgYziXqzDfjwK9ekBqGyGouJPoxISJB
+nbJRT8iAwBS+KVih/FBuOgDGVhjIcCWe0dC/igadZHkhy2GM9XQXE0Uct0UVvB9A
+BPo19JvdfjnIb+VUNKSeVVUpzhxwgqwnEvlUdoc/bb4fEI+q3dI4HPtB11FBDZRu
+n1l8iCSsmgq7fiP6Fmq9wrYjElWxfjM+CWBKtSpUXzR7ewWYDByGvRjj5pPDhOXA
+3daHIrVqftgAfc90SbFeaxET1cguWzxBWIhtrXTEyEY+XXfy8KjPUb5UA8YLX6IH
+3SSeYICoqtPa3jwjgmpTqz59kL6kDpEY/6BzbHdWHG/mFS2zZWOnFv5g/OPVb5Ib
+h+r0+ZgNO++WiSMOcEKZ
+=Muan
+-----END PGP SIGNATURE-----
+
+--=-Un2FdFImVZxle/3aoBmU--
+
