@@ -1,133 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:53090 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755644AbYHEOrE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 10:47:04 -0400
-Subject: Re: Mesh network project, feedback wanted
-From: Dan Williams <dcbw@redhat.com>
-To: Keir <keirlawson@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <e27b78a40808050438t7b5508e1oe034842427491520@mail.gmail.com>
-References: <e27b78a40808050438t7b5508e1oe034842427491520@mail.gmail.com>
-Content-Type: text/plain
-Date: Tue, 05 Aug 2008 10:01:44 -0400
-Message-Id: <1217944904.26251.53.camel@localhost.localdomain> (sfid-20080805_164708_638770_30F67EC4)
-Mime-Version: 1.0
+Received: from wf-out-1314.google.com ([209.85.200.174]:39358 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750944AbYHGF0g (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Aug 2008 01:26:36 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so475704wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Aug 2008 22:26:34 -0700 (PDT)
+Message-ID: <1197ff4c0808062226i2f435122g2b611074dfd81ab6@mail.gmail.com> (sfid-20080807_072645_996806_F85CE977)
+Date: Thu, 7 Aug 2008 13:26:34 +0800
+From: YanBo <dreamfly281@gmail.com>
+To: wireless <linux-wireless@vger.kernel.org>
+Subject: Ath5k (AR2413) mesh performance test (two nodes)
+Cc: "Luis Carlos Cobo" <luisca@cozybit.com>,
+	ath5k-devel@lists.ath5k.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-08-05 at 12:38 +0100, Keir wrote:
-> Hello,
-> 
-> I'm not sure if this is the right place to post this, if it's not then
-> please let me know.
-> 
-> I am an undergraduate student currently studying software engineering,
-> and am in the process of work out what my final year
-> project/dissertation is going to be.  Ideally I would like to do
-> something on mesh networking as it's a subject that interests me, and
-> Linux is my operating system of choice.  Though I would consider
-> myself fairly proficient at C, and I've studied operating systems
-> though university, I haven't written any real OS code before.  Another
-> limiting factor is my access to hardware.  I should be able to get my
-> hands on a couple of linksys routers that can run Linux, and a couple
-> of laptops, so this will make doing proper testing very difficult.
-> 
-> With this in mind, me and my supervisor came up with the project
-> proposal that I have attached, however neither of us are hugely
-> familiar with Linux mesh development.  I was wondering, does this seem
-> like a sensible project proposal? Is there something better I could be
-> doing given my resources?
+I used two AR2413 card worked in mesh mode, and using the newest
+wireless-testing tree,  by disable the kernel debugging option to
+avoid trigger some "Lock" problem will hang up the system,  the two
+AR2413 can find each other in mesh mode and connect to each other.
+then I use iperf to test the performance between them. (the distance
+between two mesh node is less than 1 meter, in a noisy environment )
 
-Having spent a lot of time trying to get mesh networking going on the
-OLPC project, I wouldn't spend too much time trying to do technical
-stuff at layer 2 or layer 3, because that's a black hole you could
-devote lots of PhD time to, and you probably want to get some actual
-results in the next year.  There's already quite a few mesh routing
-algorithms out there, and mesh routing is still a quite active subject
-of academic research.  Just do some quick investigation of what's out
-there (AODV, BATMAN, ROBIN, others), find one that allows you to get
-your work done, and leave the rest alone.
-
-The user interface and human interactions combined with local IP routing
-enhancements could be the most interesting and academically relevant bit
-for you.  Trying to figure out how a "mesh" should be presented to the
-user, how the user "connects" to or "picks" the mesh, and how the
-user/application determines that it should use the mesh (or not) are all
-quite worthy questions.
-
-Lots of people have experimented with routing protocols, framing, air
-interface stuff, etc.  But I don't think there's been enough research on
-_how_ mesh networks would get used by normal people and how applications
-interact with the mesh itself.  We tried to push that forward with OLPC,
-but that was a very targeted, specific use-case for 5 to 12 year old
-primary school children.
-
-Since you're targeting home deployment, you get to think about your
-users:
-
-If a friend who doesn't know much about computers or networking sits
-down with your modified system, should they have to know if any
-particular application is using the mesh or the infrastructure?
-
-How will you give the user enough information to make an informed
-decision about mesh vs. infrastructure, if your modified system requires
-decisions by the user?
-
-Can I sit down at the modified system and have it "Just Work", but can I
-tweak it easily if I want/need to?  How will I know that I have to tweak
-it, and why can't the system automatically tweak itself?
-
-How will the mesh feature make my life better on a daily basis as
-opposed to only infrastructure mode?
-
-Answering some of these questions as a result of the project would make
-the proposal stronger and the result more useful.
-
-Good luck,
-Dan
-
-> Any feedback on this (even if it's just a "that's a rubbish project,
-> find something else") is greatly appreciated as I have no ideal of the
-> merit of the project proposal.
-> 
-> Cheers
-> 
-> Keir Lawson
-> 
-> "Project Proposal
-> 
-> Traditional home wireless networks use a central point, a wireless
-> access point or router, to both connect to the outside world, the
-> internet, and to connect devices within the home to each other.  An
-> alternative scheme for interaction between such devices is to use ad
-> hoc networks, where devices communicate directly with each other, or
-> through a path constituted from intermediary devices, avoiding the
-> need for a central point for routing.  With the traditional solution,
-> the network has one fail point, if the router goes off-line due to a
-> fault, the network cannot function, however with the potential
-> mobility of home computer devices, for example laptops, an ad hoc
-> solution may also be problematic.
-> 
-> This project will investigate combining these two network types with
-> in the context of a home environment, and more specifically, will look
-> at the effect of various different user and application preferences on
-> route selection.  For example, a user or application could specify
-> that it prefers to use a traditional managed connection in order to
-> provide a level of quality of service, or another might specify that
-> it does not want to cause congestion at the router and so will always
-> attempt to use an ad hoc path.  Other parameters will also be
-> investigated, such as reliability of connection required or speed of
-> connection.
-> 
-> It is envisaged that the Linux implementations of routing protocols
-> and the IP protocol stack will be suitably orchestrated/modified in
-> order to react to user preferences over these various parameters, and
-> that the resulting system will be tested using traditional home
-> computing hardware, such as a wireless base station, laptops/desktops,
-> and PDAs."
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+------------------------------------------------------------
+Server listening on TCP port 5001
+TCP window size: 85.3 KByte (default)
+------------------------------------------------------------
+[  4] local 13.1.1.2 port 5001 connected with 13.1.1.1 port 32905
+[  4]  0.0- 1.0 sec  99.4 KBytes    814 Kbits/sec
+[  4]  1.0- 2.0 sec    298 KBytes  2.44 Mbits/sec
+[  4]  2.0- 3.0 sec    102 KBytes    834 Kbits/sec
+[  4]  3.0- 4.0 sec    170 KBytes  1.39 Mbits/sec
+[  4]  4.0- 5.0 sec  0.00 Bytes  0.00 bits/sec
+[  4]  5.0- 6.0 sec    106 KBytes    869 Kbits/sec
+[  4]  6.0- 7.0 sec  0.00 Bytes  0.00 bits/sec
+[  4]  7.0- 8.0 sec  53.7 KBytes    440 Kbits/sec
+[  4]  8.0- 9.0 sec    341 KBytes  2.79 Mbits/sec
+[  4]  9.0-10.0 sec    273 KBytes  2.24 Mbits/sec
+[  4] 10.0-11.0 sec  94.7 KBytes    776 Kbits/sec
+[  4] 11.0-12.0 sec    547 KBytes  4.48 Mbits/sec
+[  4] 12.0-13.0 sec  50.9 KBytes    417 Kbits/sec
+[  4] 13.0-14.0 sec    109 KBytes    892 Kbits/sec
+[  4] 14.0-15.0 sec    505 KBytes  4.14 Mbits/sec
+[  4] 15.0-16.0 sec  46.7 KBytes    382 Kbits/sec
+[  4] 16.0-17.0 sec  0.00 Bytes  0.00 bits/sec
+[  4] 17.0-18.0 sec  59.4 KBytes    487 Kbits/sec
+[  4] 18.0-19.0 sec    474 KBytes  3.88 Mbits/sec
+[  4] 19.0-20.0 sec    124 KBytes  1.02 Mbits/sec
+[  4] 20.0-21.0 sec  22.6 KBytes    185 Kbits/sec
+[  4] 21.0-22.0 sec    410 KBytes  3.36 Mbits/sec
+[  4] 22.0-23.0 sec  99.0 KBytes    811 Kbits/sec
+[  4] 23.0-24.0 sec  26.9 KBytes    220 Kbits/sec
+[  4] 24.0-25.0 sec    296 KBytes  2.42 Mbits/sec
+[  4] 25.0-26.0 sec    160 KBytes  1.31 Mbits/sec
+[  4] 26.0-27.0 sec    148 KBytes  1.22 Mbits/sec
+[  4] 27.0-28.0 sec  0.00 Bytes  0.00 bits/sec
+[  4] 28.0-29.0 sec    238 KBytes  1.95 Mbits/sec
+[  4] 29.0-30.0 sec    100 KBytes    822 Kbits/sec
+[  4] 30.0-31.0 sec    185 KBytes  1.52 Mbits/sec
+[  4] 31.0-32.0 sec  0.00 Bytes  0.00 bits/sec
+[  4] 32.0-33.0 sec  0.00 Bytes  0.00 bits/sec
+[  4] 33.0-34.0 sec  2.83 KBytes  23.2 Kbits/sec
+[  4] 34.0-35.0 sec  0.00 Bytes  0.00 bits/sec
+[  4] 35.0-36.0 sec  49.5 KBytes    405 Kbits/sec
+[  4] 36.0-37.0 sec    358 KBytes  2.93 Mbits/sec
+[  4] 37.0-38.0 sec    311 KBytes  2.55 Mbits/sec
+[  4] 38.0-39.0 sec  1.41 KBytes  11.6 Kbits/sec
+[  4] 39.0-40.0 sec  45.2 KBytes    371 Kbits/sec
+[  4] 40.0-41.0 sec    426 KBytes  3.49 Mbits/sec
+[  4] 41.0-42.0 sec    151 KBytes  1.24 Mbits/sec
+[  4] 42.0-43.0 sec  18.4 KBytes    151 Kbits/sec
+[  4] 43.0-44.0 sec    201 KBytes  1.64 Mbits/sec
+[  4] 44.0-45.0 sec    370 KBytes  3.04 Mbits/sec
+[  4] 45.0-46.0 sec  91.9 KBytes    753 Kbits/sec
+[  4] 46.0-47.0 sec  11.3 KBytes  92.7 Kbits/sec
+[  4] 47.0-48.0 sec  59.4 KBytes    487 Kbits/sec
+[  4] 48.0-49.0 sec    380 KBytes  3.12 Mbits/sec
+[  4] 49.0-50.0 sec  97.6 KBytes    799 Kbits/sec
+[  4] 50.0-51.0 sec  15.6 KBytes    127 Kbits/sec
+[  4]  0.0-51.6 sec  7.61 MBytes  1.24 Mbits/sec
