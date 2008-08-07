@@ -1,36 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:65334 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752783AbYHDDc0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 23:32:26 -0400
-Subject: Re: [IWL3945]Fix statistics in monitor mode
-From: Zhu Yi <yi.zhu@intel.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-In-Reply-To: <4892E14A.4000203@gmail.com>
-References: <4892E14A.4000203@gmail.com>
-Content-Type: text/plain
-Date: Mon, 04 Aug 2008 11:32:17 +0800
-Message-Id: <1217820737.3107.15.camel@debian.sh.intel.com> (sfid-20080804_053229_620779_28DBD6D3)
-Mime-Version: 1.0
+Received: from mx03.syneticon.net ([87.79.32.166]:4549 "EHLO
+	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751424AbYHGIfQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Aug 2008 04:35:16 -0400
+Message-ID: <489AB3A8.1000208@wpkg.org> (sfid-20080807_103522_865340_6B8C9EC5)
+Date: Thu, 07 Aug 2008 10:34:48 +0200
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+MIME-Version: 1.0
+To: Chr <chunkeey@web.de>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>
+Subject: Re: kernel panic on p54pci insertion on mipsel
+References: <4898B018.5050202@wpkg.org> <1218053763.23048.67.camel@johannes.berg> <489A0970.9030104@wpkg.org> <200808062250.49495.chunkeey@web.de>
+In-Reply-To: <200808062250.49495.chunkeey@web.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-08-01 at 13:11 +0300, Maxim Levitsky wrote:
-> I guess it is time for me to add my .02 cents to iwlwifi driver.
-> Recently I reported a bug about crazy statistics (> 100 quality for 
-> example) when turning on the monitor interface (this bug actually is 
-> triggered when card is put in monitor mode, thus shows up when promisc
-> mode enabled as well)
+Chr schrieb:
+
+(...)
+
+>> Kernel panic - not syncing: Fatal exception in interrupt
+>>
 > 
-> It turns out that iwl3945_rx_reply_rx wasn't filling in the statistics
-> when running in monitor on, instead a garbage was passed.
+> Ouch?! Are you sure your hardware isn't damaged?
+> Can you please try another wifi card in your mips,
+> or "test" the wifi card in a x86?
 
-Good catch. I'd suggest change 3945 the same way as 4965. That is, move
-the iwl_pass_packet_to_mac80211() for MNTR before setting
-priv->last_beacon_time, et al. We don't need to update these fields in
-monitor mode anyway.
+Yes, this prism54 card works on x86 (with 2.6.24 kernel).
 
-Thanks,
--yi
+Also, this mipsel router works with another mini-pci card (Broadcom, b43), so the hardware (both the router and prism card) looks fine.
 
+
+-- 
+Tomasz Chmielewski
+http://wpkg.org
