@@ -1,39 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:64440 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753487AbYHJUwg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Aug 2008 16:52:36 -0400
-Message-ID: <489F5508.2020808@lwfinger.net> (sfid-20080810_225240_946240_02F94B51)
-Date: Sun, 10 Aug 2008 15:52:24 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Problems with Belkin F5D7010 PCMCIA 1799:701f while trying WPA
- connection
-References: <489EAA04.8070203@au-79.de> <489EF765.8050000@lwfinger.net> <489F501C.5070408@au-79.de>
-In-Reply-To: <489F501C.5070408@au-79.de>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-To: unlisted-recipients:; (no To-header on input)
+Received: from mx1.redhat.com ([66.187.233.31]:55942 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750842AbYHGCu6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Aug 2008 22:50:58 -0400
+Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere fw
+From: Dan Williams <dcbw@redhat.com>
+To: Dave <kilroyd@googlemail.com>
+Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
+	orinoco-devel@lists.sourceforge.net,
+	Jean Tourrilhes <jt@hpl.hp.com>
+In-Reply-To: <489A12E2.8060909@gmail.com>
+References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
+	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
+	 <1217825304.10989.20.camel@dv>
+	 <1217864060.3139.10.camel@localhost.localdomain>
+	 <1217970944.2908.11.camel@dv>
+	 <1217973349.30531.1.camel@localhost.localdomain>
+	 <1217976491.2908.36.camel@dv>
+	 <1218028414.16977.5.camel@localhost.localdomain>
+	 <4899FB91.8070501@gmail.com>
+	 <1218056165.12240.0.camel@localhost.localdomain>
+	 <489A12E2.8060909@gmail.com>
+Content-Type: text/plain
+Date: Wed, 06 Aug 2008 22:48:20 -0400
+Message-Id: <1218077300.30724.10.camel@localhost.localdomain> (sfid-20080807_045110_454056_97943F73)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Robert Goldner wrote:
+On Wed, 2008-08-06 at 22:08 +0100, Dave wrote:
+> Dan Williams wrote:
+> > On Wed, 2008-08-06 at 20:29 +0100, Dave wrote:
+> >> Dan Williams wrote:
+> >>> On Tue, 2008-08-05 at 18:48 -0400, Pavel Roskin wrote:
+> >>>> The userspace is welcome to keep a pool of all APs found by any scans,
+> >>>> but I don't think drivers should do it.
+> >>> Drivers need to keep a reasonably complete list of APs internally for
+> >>> association anyway.  You don't want to have to do a full scan just to
+> >>> associate if you have results from 10 seconds ago that are still valid.
 > 
-> The ifconfig output seems good (like other working wlan cards), and the 
-> interface is up. But iwlist wlan0 scan does not find any wlan-network. 
-> Very strange, because I made this test very close to the access-point 
-> (about 30 cm distance). With other wlan-cards I get signal levels of 
-> ~80% of maximum. So maybe the receiving part is broken. I can not test 
-> the hardware with the windows-driver, because I don't have a 
-> windows-installation.
+> >> This is not an issue for orinoco cards, as the firmware selects
+> >> the AP to use independently of any driver scanning. The requirement to
+> >> use ap_scan=2 means that wpa_supplicant doesn't need to look at the scan
+> >> results either (except maybe to verify the configuration matches).
+> 
+> > Well, since the driver supports SSID scanning, we can use ap_scan=1
+> > anyway.  ap_scan=2 is actually pretty evil since it depends on WEXT
+> > ordering and whatnot.
+> 
+> ap_scan=1 requires the use of SIOCSIWWAP (to set desired BSSID), which
+> the Agere firmware doesn't support. The firmware only supports setting a
+> desired SSID (via SIOCSIWESSID), so Agere based orinoco is stuck with
+> ap_scan=2 :(
+> 
+> Symbol and Intersil don't have this problem.
 
-Just for the record, you should run iwlist as root. That is the only
-way you will get an active scan. In addition, it may take several
-tries; however, wpa_supplicant did all that before without finding any
-results. A broken card is a strong possibility. Do any of your
-colleagues have Windows?
+In practice that shouldn't be a problem because drivers (at least
+ipw2200 does this) usually roam BSSIDs anyway.  Technically a bug I
+think.  But honestly, the driver needs to work with ap_scan=1 and I
+don't see why it couldn't.
 
-Larry
-
+Dan
 
