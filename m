@@ -1,75 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42559 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752450AbYHGTsC (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.186]:34984 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752898AbYHGURt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 15:48:02 -0400
-Subject: Re: [RFC] cfg80211: keep track of supported interface modes
-From: Johannes Berg <johannes@sipsolutions.net>
+	Thu, 7 Aug 2008 16:17:49 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so275102nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2008 13:17:47 -0700 (PDT)
+Message-ID: <489B5868.2010400@gmail.com> (sfid-20080807_221754_223087_FCA49C03)
+Date: Thu, 07 Aug 2008 21:17:44 +0100
+MIME-Version: 1.0
 To: Dan Williams <dcbw@redhat.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1218132788.15728.15.camel@localhost.localdomain>
-References: <1218122495.3630.2.camel@johannes.berg>
-	 <1218132788.15728.15.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zDFkscLqKODSR5rSatoy"
-Date: Thu, 07 Aug 2008 21:47:45 +0200
-Message-Id: <1218138465.3630.60.camel@johannes.berg> (sfid-20080807_214806_937269_D976A02E)
-Mime-Version: 1.0
+CC: Dave <kilroyd@googlemail.com>, Pavel Roskin <proski@gnu.org>,
+	linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere
+ fw
+References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>	 <1217825304.10989.20.camel@dv>	 <1217864060.3139.10.camel@localhost.localdomain>	 <1217970944.2908.11.camel@dv>	 <1217973349.30531.1.camel@localhost.localdomain>	 <1217976491.2908.36.camel@dv>	 <1218028414.16977.5.camel@localhost.localdomain>	 <4899FB91.8070501@gmail.com>	 <1218056165.12240.0.camel@localhost.localdomain>	 <489A12E2.8060909@gmail.com>	 <1218077300.30724.10.camel@localhost.localdomain>	 <489B425F.5060704@gmail.com> <1218138129.32083.14.camel@localhost.localdomain>
+In-Reply-To: <1218138129.32083.14.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Dan Williams wrote:
+> On Thu, 2008-08-07 at 19:43 +0100, Dave wrote:
+>> That said, what's wrong with the ap_scan=2 mode? You've stated it's
+>> not great (and I'm prepared to believe it), but what is the actual problem?
 
---=-zDFkscLqKODSR5rSatoy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+<snip explanation>
 
-On Thu, 2008-08-07 at 14:13 -0400, Dan Williams wrote:
-> On Thu, 2008-08-07 at 17:21 +0200, Johannes Berg wrote:
-> > It is obviously good for userspace to know up front which interface mod=
-es
-> > a given piece of hardware might support (even if adding such an interfa=
-ce
-> > might fail later because of concurrency issues), so let's make cfg80211
-> > aware of that. For good measure, disallow adding interfaces in all othe=
-r
-> > modes so drivers don't forget to announce support for one mode when the=
-y
-> > add it.
->=20
-> This makes me happy.
+Thanks for that.
 
-We discussed this in Ottawa, didn't we? It just slipped my mind and I
-remembered earlier today.
+>> I had a reread of <http://hostap.epitest.fi/wpa_supplicant/devel/driver_wrapper.html>. 
+>>
+>> As a FullMAC driver without support for selecting the BSSID to associate
+>> with (or frequency in Managed mode), the only way I can see to make the
+>> driver work with ap_scan=1 is to silently ignore the SIOCSIWFREQ and
+>> SIOCSIWAP. I don't think this is an approach I would want to pursue.
+> 
+> Well, the current orinoco driver returns "success" (0) for SIOCSIWAP on
+> Agere firmware.
 
-No somebody just needs to go through and add the corresponding hunks for
-all drivers. *hint* :) (it mostly consists in seeing what the
-add_interface callback will accept, which is correct for all drivers but
-iwlwifi as far as I know)
+borken dkilroy # dmesg | grep eth1
+eth1: Hardware identity 0001:0001:0004:0002
+eth1: Station identity  001f:0001:0008:0048
+eth1: Firmware determined as Lucent/Agere 8.72
+eth1: Attempting to download firmware agere_sta_fw.bin
+  <snip fw download>
+eth1: Hardware identity 0001:0001:0004:0002
+eth1: Station identity  001f:0002:0009:0030
+eth1: Firmware determined as Lucent/Agere 9.48
+  <snip capabilities>
+eth1: ready
+eth1: orinoco_cs at 0.0, irq 11, io 0x0100-0x013f
+eth1: New link status: Connected (0001)
 
-johannes
+borken dkilroy # iwlist eth1 scan essid MONTY
+eth1      Scan completed :
+          Cell 01 - Address: 00:18:4D:06:45:76
+                    ESSID:"MONTY"
+                    Mode:Master
+                    Channel:5
+         <snip detail>
 
---=-zDFkscLqKODSR5rSatoy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+borken dkilroy # iwconfig eth1 ap 00:18:4d:06:45:76
+Error for wireless request "Set AP Address" (8B14) :
+    SET failed on device eth1 ; Operation not supported.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+borken dkilroy # iwconfig eth1 ap off              
+borken dkilroy #
 
-iQIcBAABAgAGBQJIm1FbAAoJEKVg1VMiehFYw30QAMHM0M4xTVSncyvqzHsmM3Qy
-kJsy7ZX1qCpIrNsg6L6MI9SSQPiC7DJPOYWVfvTSbvQhhBC8BYpEo4qDIvkdDO5R
-WilJy8eh3RrEYJ21pOag0s74Gv0Qe6DpEDAlQ3GW3y7XSeHF+Kh577R/YLg9d8bI
-RQDc7f+purKh2G8vGQQdpZsFiDiEePqctFfUlAFuVxfhnluhKRsDL9eWnuo4Lr3y
-KRs6ff8Ki/934QE0/rgdsAkl8eYWHs6jEJLdYRqo35i4JLx1+JAksoRz69yWwvtq
-1j27PUKvXj6oYItUzUiLyg7V1sABeT29a8++kpwn5unoAcpLM9JaILNTRSMc/4Fb
-JknUqQvJt+CY4b9DRyg/SAjT1LfumpHQjpUb37TTTz9AkXxRLfFBtN0jr8qcaaJz
-GpkjgVg9qNB9BeGOkFwYdr9YXFbN2YBMjfMWym6mk1JNAHbLf1E84+ssW9MbW1j7
-OjfZvBDow9P4zwd/V8MrXyQSqrdf+6qX6o+TMbofj1ng9yy7wWGe6WlZE6QQKquT
-oqKLP7CUOpNmKBM5LigJiaTm2Xjlq/qvIgcKrlcXHLXyJPJv1UcRmULqEX4JGQ70
-aRB7edhofWq8o5KeFvkwqxdUQ14OCFls4awOpNzVg0b/QIGMHZZg3yYeUPAktY52
-C9V3aMMAxXZw4T9TDqeg
-=r5yN
------END PGP SIGNATURE-----
 
---=-zDFkscLqKODSR5rSatoy--
+The above is running with my patchset, but I haven't touched the SIOCSIWAP handler. Honest.
 
+I'll have a think.
+
+
+Dave.
