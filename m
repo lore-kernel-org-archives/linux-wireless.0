@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3344 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763631AbYHDVCV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 17:02:21 -0400
-Date: Mon, 4 Aug 2008 16:45:58 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-08-04
-Message-ID: <20080804204558.GA5866@tuxdriver.com> (sfid-20080804_230251_300053_C792396C)
-References: <20080804193753.GA30345@tuxdriver.com> <1217882288.7819.19.camel@californication>
+Received: from nf-out-0910.google.com ([64.233.182.189]:16430 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750813AbYHGSny (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Aug 2008 14:43:54 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so254699nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2008 11:43:53 -0700 (PDT)
+Message-ID: <489B425F.5060704@gmail.com> (sfid-20080807_204359_635471_22EB3AE9)
+Date: Thu, 07 Aug 2008 19:43:43 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1217882288.7819.19.camel@californication>
+To: Dan Williams <dcbw@redhat.com>
+CC: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
+	orinoco-devel@lists.sourceforge.net
+Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere
+ fw
+References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>	 <1217825304.10989.20.camel@dv>	 <1217864060.3139.10.camel@localhost.localdomain>	 <1217970944.2908.11.camel@dv>	 <1217973349.30531.1.camel@localhost.localdomain>	 <1217976491.2908.36.camel@dv>	 <1218028414.16977.5.camel@localhost.localdomain>	 <4899FB91.8070501@gmail.com>	 <1218056165.12240.0.camel@localhost.localdomain>	 <489A12E2.8060909@gmail.com> <1218077300.30724.10.camel@localhost.localdomain>
+In-Reply-To: <1218077300.30724.10.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 04, 2008 at 10:38:08PM +0200, Marcel Holtmann wrote:
-> Hi John,
+Dan Williams wrote:
+> On Wed, 2008-08-06 at 22:08 +0100, Dave wrote:
+>> Dan Williams wrote:
+>>> Well, since the driver supports SSID scanning, we can use ap_scan=1
+>>> anyway.  ap_scan=2 is actually pretty evil since it depends on WEXT
+>>> ordering and whatnot.
+>>
+>> ap_scan=1 requires the use of SIOCSIWWAP (to set desired BSSID), which
+>> the Agere firmware doesn't support. The firmware only supports setting a
+>> desired SSID (via SIOCSIWESSID), so Agere based orinoco is stuck with
+>> ap_scan=2 :(
+>>
+>> Symbol and Intersil don't have this problem.
 > 
-> > Luis R. Rodriguez (4):
-> >       list.h: Add list_splice_tail() and list_splice_tail_init()
-> >       list.h: add list_cut_position()
-> 
-> have these two changes got reviewed on LKML? I don't see any ACKs for it
-> in the commit message.
+> In practice that shouldn't be a problem because drivers (at least
+> ipw2200 does this) usually roam BSSIDs anyway.  Technically a bug I
+> think.  But honestly, the driver needs to work with ap_scan=1 and I
+> don't see why it couldn't.
 
-Hmmm...no.  I thought the original patches had been copied to
-linux-kernel, but it looks like that is not the case.
+I had a reread of <http://hostap.epitest.fi/wpa_supplicant/devel/driver_wrapper.html>. 
 
-The original patches are archived here:
+As a FullMAC driver without support for selecting the BSSID to associate with (or frequency in Managed mode), the only way I can see to make the driver work with ap_scan=1 is to silently ignore the SIOCSIWFREQ and SIOCSIWAP. I don't think this is an approach I would want to pursue.
 
-	http://marc.info/?l=linux-wireless&m=121783421908441&w=2
+That said, what's wrong with the ap_scan=2 mode? You've stated it's not great (and I'm prepared to believe it), but what is the actual problem?
 
-	http://marc.info/?l=linux-wireless&m=121783422008445&w=2
 
-What problems do you see with them?
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Dave.
