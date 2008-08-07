@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:23028 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751110AbYHAPCT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 11:02:19 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so541502fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 08:02:17 -0700 (PDT)
-Message-ID: <4893257C.1020907@gmail.com> (sfid-20080801_170223_661923_E14B165A)
-Date: Fri, 01 Aug 2008 17:02:20 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: Andrew Morton <akpm@linux-foundation.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	Dave Young <hidave.darkstar@gmail.com>,
-	johannes@sipsolutions.net, tomasw@gmail.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net, linville@tuxdriver.com,
-	stable@kernel.org
-Subject: Re: [PATCH] ath5k : ath5k_config_interface deadlock fix
-References: <20080801074014.GA3341@darkstar> <4892C2CA.7010003@gmail.com>	 <4892C359.9000304@cs.helsinki.fi>	 <20080801011415.ff4821a3.akpm@linux-foundation.org> <b6c5339f0808010643i58dbb2a7jf459359451061ae4@mail.gmail.com>
-In-Reply-To: <b6c5339f0808010643i58dbb2a7jf459359451061ae4@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mx1.redhat.com ([66.187.233.31]:60681 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752579AbYHGTyC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Aug 2008 15:54:02 -0400
+Subject: Re: [RFC] cfg80211: keep track of supported interface modes
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1218138465.3630.60.camel@johannes.berg>
+References: <1218122495.3630.2.camel@johannes.berg>
+	 <1218132788.15728.15.camel@localhost.localdomain>
+	 <1218138465.3630.60.camel@johannes.berg>
+Content-Type: text/plain
+Date: Thu, 07 Aug 2008 15:55:37 -0400
+Message-Id: <1218138937.32083.23.camel@localhost.localdomain> (sfid-20080807_215407_783505_BBE815ED)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland napsal(a):
-> On Fri, Aug 1, 2008 at 4:14 AM, Andrew Morton <akpm@linux-foundation.org> wrote:
->> On Fri, 01 Aug 2008 11:03:37 +0300 Pekka Enberg <penberg@cs.helsinki.fi> wrote:
->>
->>> Jiri Slaby wrote:
->>>> Dave Young napsal(a):
->>>>> In the drivers/net/wireless/ath5k/base.c, there's recursive locking of
->>>>> sc->lock
->>>> Should be fixed already:
->>>> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-2.6.git;a=commitdiff_plain;h=bc05116ab33d30342e2b4b1bcc6d6e1184e9df97
->>> I guess that didn't make it to -stable?
->> (cc stable!)
+On Thu, 2008-08-07 at 21:47 +0200, Johannes Berg wrote:
+> On Thu, 2008-08-07 at 14:13 -0400, Dan Williams wrote:
+> > On Thu, 2008-08-07 at 17:21 +0200, Johannes Berg wrote:
+> > > It is obviously good for userspace to know up front which interface modes
+> > > a given piece of hardware might support (even if adding such an interface
+> > > might fail later because of concurrency issues), so let's make cfg80211
+> > > aware of that. For good measure, disallow adding interfaces in all other
+> > > modes so drivers don't forget to announce support for one mode when they
+> > > add it.
+> > 
+> > This makes me happy.
 > 
-> Not to worry, the commit that introduced it was
-> 9d139c810a2aa17365cc548d0cd2a189d8433c65, which as far as I can tell
-> came in after 2.6.26.
+> We discussed this in Ottawa, didn't we? It just slipped my mind and I
+> remembered earlier today.
 
-git-describe 9d139c810a2aa17365cc548d0cd2a189d8433c65
-v2.6.26-rc8-1219-g9d139c8
+Yep, we did.
+
+Dan
+
+> No somebody just needs to go through and add the corresponding hunks for
+> all drivers. *hint* :) (it mostly consists in seeing what the
+> add_interface callback will accept, which is correct for all drivers but
+> iwlwifi as far as I know)
+> 
+> johannes
 
