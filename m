@@ -1,90 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:45603 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758668AbYHVVLe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2008 17:11:34 -0400
-Date: Fri, 22 Aug 2008 14:10:45 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Philip Langdale <philipl@overt.org>
-Cc: linux-kernel@vger.kernel.org, hmh@hmh.eng.br, mjg59@srcf.ucam.org,
-	toshiba_acpi@memebeam.org, ivdoorn@gmail.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
- through rfkill (v6)
-Message-Id: <20080822141045.488f9334.akpm@linux-foundation.org> (sfid-20080822_231146_788254_68078B26)
-In-Reply-To: <48AB8902.3010406@overt.org>
-References: <48AB8902.3010406@overt.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail0.scram.de ([78.47.204.202]:54101 "EHLO mail.scram.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752237AbYHHPox (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Aug 2008 11:44:53 -0400
+Message-ID: <489C65B7.9020305@scram.de> (sfid-20080808_174457_545112_1B447A37)
+Date: Fri, 08 Aug 2008 17:26:47 +0200
+From: Jochen Friedrich <jochen@scram.de>
+MIME-Version: 1.0
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+Subject: [PATCH] rt2x00: Fix txdone_entry_desc_flags
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+txdone_entry_desc_flags is used with __set_bit and test_bit which
+bit-shift the values, so don't bit-shift the flags in the enum.
+Also make sure flags are initialized before being used.
 
-> User-Agent: Thunderbird 2.0.0.16 (X11/20080707)
+Signed-off-by: Jochen Friedrich <jochen@scram.de>
+---
+ drivers/net/wireless/rt2x00/rt2x00queue.h |    8 ++++----
+ drivers/net/wireless/rt2x00/rt2x00usb.c   |    1 +
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-uh-oh.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+index 01a6567..37f3f98 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.h
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+@@ -191,10 +191,10 @@ struct rxdone_entry_desc {
+  *	frame transmission failed due to excessive retries.
+  */
+ enum txdone_entry_desc_flags {
+-	TXDONE_UNKNOWN = 1 << 0,
+-	TXDONE_SUCCESS = 1 << 1,
+-	TXDONE_FAILURE = 1 << 2,
+-	TXDONE_EXCESSIVE_RETRY = 1 << 3,
++	TXDONE_UNKNOWN,
++	TXDONE_SUCCESS,
++	TXDONE_FAILURE,
++	TXDONE_EXCESSIVE_RETRY,
+ };
 
-On Tue, 19 Aug 2008 20:01:22 -0700
-Philip Langdale <philipl@overt.org> wrote:
-
-> There's been a patch floating around for toshiba_acpi that exports an ad-hoc
-> /proc interface to toggle the bluetooth adapter in a large number of Toshiba
-> laptops. I'm not sure if it's still relevant for the latest models, but it is
-> still required for older models such as my Tecra M3.
-> 
-> This change pulls in the low level Toshiba-specific code from the old patch and
-> sets up an rfkill device and a polled input device to track the state of the
-> hardware kill-switch.
-> 
-> Signed-off-by: Philip Langdale <philipl@overt.org>
-> ---
->   Kconfig        |    1
->   toshiba_acpi.c |  263 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
-> 
-> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-> index 735f5ea..047829c 100644
-> --- a/drivers/acpi/Kconfig
-> +++ b/drivers/acpi/Kconfig
-> @@ -260,6 +260,7 @@ config ACPI_ASUS
->   config ACPI_TOSHIBA
->   	tristate "Toshiba Laptop Extras"
->   	depends on X86
-> +	select INPUT_POLLDEV
->   	select BACKLIGHT_CLASS_DEVICE
->   	---help---
->   	  This driver adds support for access to certain system settings
-> diff --git a/drivers/acpi/toshiba_acpi.c b/drivers/acpi/toshiba_acpi.c
-> index 0a43c8e..5723019 100644
-> --- a/drivers/acpi/toshiba_acpi.c
-> +++ b/drivers/acpi/toshiba_acpi.c
-> @@ -3,6 +3,7 @@
->    *
->    *
->    *  Copyright (C) 2002-2004 John Belmonte
-> + *  Copyright (C) 2008 Philip Langdale
-
-your email client is performing space-stuffing.  Please see
-Documentation/email-clients.txt.
-
-Please pass the patch through scripts/checkpatch.pl.  It finds a large
-number of errors.
-
-Please consistently put a single blank line between end-of-locals and
-start-of-code.  Avoid randomness like:
-
-> +static void bt_poll_rfkill(struct input_polled_dev *poll_dev)
-> +{
-> +	bool state_changed;
-> +	bool new_rfk_state;
-> +	bool value;
-> +	u32 hci_result;
-> +
-> +	struct toshiba_acpi_dev *dev = poll_dev->private;
-> +
-> +	hci_result = hci_get_radio_state(&value);
->
-
-The code uses new-style `bool' but it also adds at least one usage of
-the old-style `FALSE'.
+ /**
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 8d76bb2..2050227 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -181,6 +181,7 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
+ 	 * (Only indirectly by looking at the failed TX counters
+ 	 * in the register).
+ 	 */
++	txdesc.flags = 0;
+ 	if (!urb->status)
+ 		__set_bit(TXDONE_UNKNOWN, &txdesc.flags);
+ 	else
+-- 
+1.5.6.3
 
