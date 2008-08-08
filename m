@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout2-sn1.fre.skanova.net ([81.228.11.159]:46720 "EHLO
-	pne-smtpout2-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751471AbYH1PvG (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:39574 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753139AbYHHKEt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 11:51:06 -0400
-From: "Lars Ericsson" <Lars_Ericsson@telia.com>
-To: <linux-wireless@vger.kernel.org>,
-	<rt2400-devel@lists.sourceforge.net>
-Subject: Race problem in mac80211/mlme.c and rt2x00
-Date: Thu, 28 Aug 2008 17:51:08 +0200
-Message-ID: <017001c90925$e31d54c0$0b3ca8c0@gotws1589> (sfid-20080828_175109_886660_8E4D73FA)
+	Fri, 8 Aug 2008 06:04:49 -0400
+From: Chr <chunkeey@web.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] p54: Fix for TX sequence number problem that resulted from commit 741b4fbc44
+Date: Fri, 8 Aug 2008 10:26:48 +0200
+Cc: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <48987e74.ct5+sLOpTbiTPPHq%Larry.Finger@lwfinger.net>
+In-Reply-To: <48987e74.ct5+sLOpTbiTPPHq%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+  charset="iso-8859-1"
+Message-Id: <200808081026.49041.chunkeey@web.de> (sfid-20080808_120455_041638_67DE6971)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tuesday 05 August 2008 18:23:16 Larry Finger wrote:
+>
+> +	/* FIXME: The sequence that follows is needed for this driver to
+> +	 * work with mac80211 since "mac80211: fix TX sequence numbers".
+> +	 * As with the temporary code in rt2x00, changes will be needed
+> +	 * to get proper sequence numbers on beacons. In addition, this
+> +	 * patch places the sequence number in the hardware state, which
+> +	 * limits us to a single virtual state.
+> +	 */
+> +	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
+> +		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
+> +			priv->seqno += 0x10;
+> +		ieee80211hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
+> +		ieee80211hdr->seq_ctrl |= cpu_to_le16(priv->seqno);
+> +	}
+??? 
+What is this for? The firmware does the sequence number counting
+and will simply override this field without looking at it... Are you sure this
+really fixes anything?
+ 
+That said: the firmware will always report the sequence number of every
+tx'ed frame as a part of p54_frame_sent_hdr in the _free_ tx callback...
 
-I have found a race problem in mac80211/mlme.c and rt2x00
-
-When the wpa_supplicant trigs an AP scan, mlme saves current configuration
-and start scanning.
-When the scan is complete, a SIOCGIWSCAN is sent and the saved configuration
-is restored.
-
-Since the SIOCGIWSCAN signal is send before the restore, a wpa_supplicant
-initiated SIWFREQ may hit the restore operation.
-The result is that local->ops->config() may be called by two different
-processes at the 'same' time.
-
-In the rt2x00 driver, rt2x00mac_config() may 'optimise' (skip) the channel
-set operation.
-The ultimate result/error is that the first authentication will happen on
-wrong (old) channel.
-
-I have moved the SIOCGIWSCAN code section after the restore operation and it
-seems to work.
-There is most likely a better solution but I leave that for the experts :)
-
-
-/Lars
-
+Regards,
+	Chr.
