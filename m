@@ -1,64 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:50519 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753284AbYHFAqk (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:54575 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750785AbYHHOSu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 20:46:40 -0400
-Received: from storm (pool-64-223-124-145.burl.east.verizon.net [64.223.124.145])
-	(authenticated bits=0)
-	by mail3.webfaction.com (8.13.1/8.13.3) with ESMTP id m75GVCiW019881
-	for <linux-wireless@vger.kernel.org>; Tue, 5 Aug 2008 11:31:13 -0500
-Date: Tue, 5 Aug 2008 12:32:34 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: linux-wireless@vger.kernel.org
-Subject: Are these Ralink chips supported?
-Message-ID: <20080805163234.GA22429@storm.local.network> (sfid-20080806_024644_509473_160C8BD9)
+	Fri, 8 Aug 2008 10:18:50 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="PEIAKu/WMn1b1Hv9"
+Subject: RE: [PATCH 1/2] mac80211: change number of pre-assoc scans
+Date: Fri, 8 Aug 2008 17:18:45 +0300
+Message-ID: <1879838866982C46A9CB3D56BA49ADEB0542F64C@hasmsx411.ger.corp.intel.com> (sfid-20080808_161853_391051_E89B69ED)
+In-Reply-To: <43e72e890808071559k207a34e3we21cb2633f5e248d@mail.gmail.com>
+References: <1218149447-28968-1-git-send-email-tomas.winkler@intel.com> <43e72e890808071559k207a34e3we21cb2633f5e248d@mail.gmail.com>
+From: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Winkler, Tomas" <tomas.winkler@intel.com>
+Cc: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
+	"Zhu, Yi" <yi.zhu@intel.com>, <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---PEIAKu/WMn1b1Hv9
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+>> -       int auth_tries, assoc_tries;
+>> +       int assoc_scan_tries; /* number of scans done pre-association
+*/
+>> +       int auth_tries; /* retries for auth req */
+>> +       int assoc_tries; /* retries for assoc req */
+>
+> This last variable seems unused.
+>
 
-Hi,
+If you mean auth_tries or assoc_tries they are being used in other
+flows.
 
-I'm having a hard time figuring out if the following wireless chips are
-supported:
+>>                ieee80211_sta_reset_auth(dev, ifsta);
+>>                return 0;
+>>        } else {
+>> -               if (ifsta->state != IEEE80211_STA_MLME_AUTHENTICATE)
+{
+>> +               if (ifsta->assoc_scan_tries <
+IEEE80211_ASSOC_SCANS_MAX_TRIES) {
+>> +                       ifsta->assoc_scan_tries++;
+>>                        if (ifsta->flags &
+IEEE80211_STA_AUTO_SSID_SEL)
+>>                                ieee80211_sta_start_scan(dev, NULL,
+0);
+>>                        else
+>
+> Interesting, is there a race then?
+>
 
- * RT2770 + RT2720
- * RT2571W/RT2571WF
+Not more then before this patch :).. if you mean protecting the mlme
+states I think this should be carefully handled, for sure not under this
+patch 
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-According to http://rt2x00.serialmonkey.com/wiki/index.php/Hardware#rt2570,=
- the
-RT2570 is well supported, but I'm assuming that that doesn't necessarily im=
-ply
-that the RT2571W[F] chips work.
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
-Anybody know anything about these?
-
-Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-http://www.pytagsfs.org
-
---PEIAKu/WMn1b1Hv9
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFImICiRO4fQQdv5AwRAujzAKDCu53JlPz3ZZFBZNhMIzGkWMJwwQCgl/mg
-XAY2bKCab/qhaHRsadKK1RA=
-=HkQc
------END PGP SIGNATURE-----
-
---PEIAKu/WMn1b1Hv9--
