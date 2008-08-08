@@ -1,40 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:60337 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754122AbYHCN2V (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:51863 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752692AbYHHSgD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 09:28:21 -0400
-Date: Sun, 3 Aug 2008 10:28:16 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Fri, 8 Aug 2008 14:36:03 -0400
+From: Chr <chunkeey@web.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] p54: Fix for TX sequence number problem that resulted from commit 741b4fbc44
+Date: Fri, 8 Aug 2008 20:38:48 +0200
+Cc: John W Linville <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 5/8] rfkill: add WARN_ON and BUG_ON paranoia
-Message-ID: <20080803132816.GC12118@khazad-dum.debian.net> (sfid-20080803_152823_644922_560C74B6)
-References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br> <200808031007.48877.IvDoorn@gmail.com> <1217753845.4721.1.camel@johannes.berg> <200808031207.08446.IvDoorn@gmail.com>
+References: <48987e74.ct5+sLOpTbiTPPHq%Larry.Finger@lwfinger.net> <200808081026.49041.chunkeey@web.de> <489C5833.2080009@lwfinger.net>
+In-Reply-To: <489C5833.2080009@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200808031207.08446.IvDoorn@gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200808082038.48840.chunkeey@web.de> (sfid-20080808_203607_127922_DA9C5F80)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 03 Aug 2008, Ivo van Doorn wrote:
-> > BUG() never returns. Same for all the other places you pointed out.
-> 
-> Ah right, that doesn't sound too good. I don't think rfkill should
-> become a blocker like that. WARN_ON should be sufficient. :)
+On Friday 08 August 2008 16:29:07 Larry Finger wrote:
+> Chr wrote:
+> > ???
+> > What is this for? The firmware does the sequence number counting
+> > and will simply override this field without looking at it... Are you sure
+> > this really fixes anything?
+> >
+> > That said: the firmware will always report the sequence number of every
+> > tx'ed frame as a part of p54_frame_sent_hdr in the _free_ tx callback...
+>
+> Without this patch, my p54usb would go offline every 2-3 hours. To recover,
+> the driver had to be unloaded and reloaded. With it, the device has never
+> gone offline for as long as I have tested. I have no idea what the firmware
+> does, but it has helped my system.
 
-It would, if anyone ever tested the return from notify chain registering.
-But the core kernel doesn't do any checking when registering notifiers to
-the chains, and always either return zero or OOPS outright when it attempts
-to dereference a NULL pointer (at least on 2.6.25)...
+well, since I got the usb device I had nothing but problems with it.
+e.g: one single ping -s 1400 $AP can bring it down and a _replug_ is necessary.
+The minipci card on the other hand is very stable.
 
-So, I went with BUG().  Given the above, do you still want me to WARN() and
-return -EINVAL instead?  I can certainly do that, it would be more correct
-than what the core kernel is doing, anyway.
+I guess p54usb needs some mutexes & udelays here & there.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+on-topic: I digged a bit in the logs:
+
+http://jbnote.free.fr/prism54usb/data/usbsnoop-logs/
+and there "usbsnoop_old_drv_ver1.log.bz2"
+
+you can easily find tx' data frames by searching for
+"00000010: 10 40" string.
+
+to cut the case here is a extract (only ieee 80211 header @line 26218)
+08 01 <= frame control
+00 00 <= duration ZERO
+00 06 25 bb 9d 4b <= mac
+00 0f 66 17 46 6b <= mac
+ff ff ff ff ff ff <= mac
+00 00 <= sequence ZERO
+aa aa 03 <= 802.2 LLC header
+
+the next one is at line 27188... and so down to end of packages at line 329241.
+there isn't one single package where the sequence number is not zero!
+
+So the problem must be somewhere else! what happens when:
+if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
+	if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
+		priv->seqno += 0x10;
+
+	ieee80211hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
+	ieee80211hdr->seq_ctrl |= cpu_to_le16(priv->seqno);
+	ieee80211hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
+}
+(yeah a new definition for idiotic! but it's about the same amount of of clock cycles).
+
+Regards,
+	Chr
