@@ -1,47 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:59438 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752054AbYHDIG6 (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:62684 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752850AbYHIQCw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 04:06:58 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so932386fgg.17
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Aug 2008 01:06:56 -0700 (PDT)
-Message-ID: <4896B89C.9060901@gmail.com> (sfid-20080804_100702_748400_32C8520D)
-Date: Mon, 04 Aug 2008 10:06:52 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+	Sat, 9 Aug 2008 12:02:52 -0400
+Message-ID: <489DBFA9.80608@lwfinger.net> (sfid-20080809_180257_756031_8C23CE84)
+Date: Sat, 09 Aug 2008 11:02:49 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Dave Young <hidave.darkstar@gmail.com>
-CC: Bob Copeland <me@bobcopeland.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	johannes@sipsolutions.net, tomasw@gmail.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net, linville@tuxdriver.com,
-	stable@kernel.org
-Subject: Re: [PATCH] ath5k : ath5k_config_interface deadlock fix
-References: <20080801074014.GA3341@darkstar> <4892C2CA.7010003@gmail.com>	 <4892C359.9000304@cs.helsinki.fi>	 <20080801011415.ff4821a3.akpm@linux-foundation.org>	 <b6c5339f0808010643i58dbb2a7jf459359451061ae4@mail.gmail.com> <a8e1da0808032002u6ba000f8j8b56991985d65b94@mail.gmail.com>
-In-Reply-To: <a8e1da0808032002u6ba000f8j8b56991985d65b94@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Chr <chunkeey@web.de>
+CC: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] p54: Fix for TX sequence number problem that resulted
+ from commit 741b4fbc44
+References: <48987e74.ct5+sLOpTbiTPPHq%Larry.Finger@lwfinger.net> <200808081026.49041.chunkeey@web.de> <489C5833.2080009@lwfinger.net> <200808082038.48840.chunkeey@web.de>
+In-Reply-To: <200808082038.48840.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave Young napsal(a):
-> On Fri, Aug 1, 2008 at 9:43 PM, Bob Copeland <me@bobcopeland.com> wrote:
->> On Fri, Aug 1, 2008 at 4:14 AM, Andrew Morton <akpm@linux-foundation.org> wrote:
->>> On Fri, 01 Aug 2008 11:03:37 +0300 Pekka Enberg <penberg@cs.helsinki.fi> wrote:
->>>
->>>> Jiri Slaby wrote:
->>>>> Dave Young napsal(a):
->>>>>> In the drivers/net/wireless/ath5k/base.c, there's recursive locking of
->>>>>> sc->lock
->>>>> Should be fixed already:
->>>>> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-2.6.git;a=commitdiff_plain;h=bc05116ab33d30342e2b4b1bcc6d6e1184e9df97
->>>> I guess that didn't make it to -stable?
->>> (cc stable!)
->> Not to worry, the commit that introduced it was
->> 9d139c810a2aa17365cc548d0cd2a189d8433c65, which as far as I can tell
->> came in after 2.6.26.
+Chr wrote:
+> On Friday 08 August 2008 16:29:07 Larry Finger wrote:
 > 
-> Strange, I get system stuck in 2.6.26 as well, so there might be other bugs.
+> well, since I got the usb device I had nothing but problems with it.
+> e.g: one single ping -s 1400 $AP can bring it down and a _replug_ is necessary.
+> The minipci card on the other hand is very stable.
+> 
+> I guess p54usb needs some mutexes & udelays here & there.
 
-Could you provide any logs regarding this, please?
+Mine also crashes with a ping of length 1400, but 1390 and 1410 work 
+just fine. I also tested with tcpperf and I am pretty sure that this 
+is a transmit problem. When I set the MTU to 1300, then a ping of 
+length 1400 works fine. Is this a firmware bug? Which firmware are you 
+using? Mine is isl3887usb_bare.
+
+> on-topic: I digged a bit in the logs:
+> 
+> http://jbnote.free.fr/prism54usb/data/usbsnoop-logs/
+> and there "usbsnoop_old_drv_ver1.log.bz2"
+> 
+> you can easily find tx' data frames by searching for
+> "00000010: 10 40" string.
+> 
+> to cut the case here is a extract (only ieee 80211 header @line 26218)
+> 08 01 <= frame control
+> 00 00 <= duration ZERO
+> 00 06 25 bb 9d 4b <= mac
+> 00 0f 66 17 46 6b <= mac
+> ff ff ff ff ff ff <= mac
+> 00 00 <= sequence ZERO
+> aa aa 03 <= 802.2 LLC header
+> 
+> the next one is at line 27188... and so down to end of packages at line 329241.
+> there isn't one single package where the sequence number is not zero!
+> 
+> So the problem must be somewhere else! what happens when:
+> if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
+> 	if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
+> 		priv->seqno += 0x10;
+> 
+> 	ieee80211hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
+> 	ieee80211hdr->seq_ctrl |= cpu_to_le16(priv->seqno);
+> 	ieee80211hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
+> }
+> (yeah a new definition for idiotic! but it's about the same amount of of clock cycles).
+
+This didn't help the "ping -s 1400" problem.
+
+Larry
+
