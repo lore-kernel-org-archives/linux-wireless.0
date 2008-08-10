@@ -1,79 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:43290 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758086AbYHFWyU (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.227]:6224 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752055AbYHJHYj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2008 18:54:20 -0400
-From: Chr <chunkeey@web.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>, davem@davemloft.net
-Subject: Re: [PATCH] p54: Fix regression due to commit b19fa1f
-Date: Thu, 7 Aug 2008 00:57:00 +0200
-Cc: John W Linville <linville@tuxdriver.com>,
+	Sun, 10 Aug 2008 03:24:39 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1747282rvb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Aug 2008 00:24:38 -0700 (PDT)
+Message-ID: <c85cb4470808100024q2261332ej91bc75b16d6edf0e@mail.gmail.com> (sfid-20080810_092452_453196_BB66E01C)
+Date: Sun, 10 Aug 2008 10:24:38 +0300
+From: "Ron Rindjunsky" <ron.rindjunsky@intel.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: Driver for the FullMAC card
+Cc: "Dan Williams" <dcbw@redhat.com>, Dmitry <dbaryshkov@gmail.com>,
 	linux-wireless@vger.kernel.org
-References: <4897714b.z7H23Rca9Z4lOo4Q%Larry.Finger@lwfinger.net>
-In-Reply-To: <4897714b.z7H23Rca9Z4lOo4Q%Larry.Finger@lwfinger.net>
+In-Reply-To: <1217535529.15900.4.camel@dv>
 MIME-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_9wimIqhMolesfXm"
-Message-Id: <200808070057.01952.chunkeey@web.de> (sfid-20080807_005425_823101_752B9B72)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <g6qr98$q28$2@ger.gmane.org>
+	 <1217512488.12016.8.camel@localhost.localdomain>
+	 <bc64b4640807310715j41bb0029i5c8be73a311ed52@mail.gmail.com>
+	 <1217514241.12016.13.camel@localhost.localdomain>
+	 <1217517571.22143.17.camel@dv>
+	 <1217534415.9377.12.camel@localhost.localdomain>
+	 <1217535529.15900.4.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Boundary-00=_9wimIqhMolesfXm
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-On Monday 04 August 2008 23:14:51 Larry Finger wrote:
-> In commit b19fa1fa91845234961c64dbd564671aa7c0fd27, the configuration
-> parameter NETDEVICES_MULTIQUEUE was eliminated making multiple TX queues
-> the normal behavior. For p54usb, enabling multiple queues broke the driver.
+> On Thu, 2008-07-31 at 16:00 -0400, Dan Williams wrote:
 >
-> The real failure is not known, but a temporary hack that forces only one
-> queue is presented here.
+> > Guess I misunderstood the scope of p80211 then.  So the prism2 usb stuff
+> > really is fullmac then?  Or at least quasi-mac like the ipw2x00 cards?
+>
+> It's as FullMAC as it can get.  It's the same Prism chipset, just
+> connected to the host system in a different way.  I don't think it's
+> doing anything differently on the wireless side.
+>
+> Sure enough, there are some knobs to dumb it down, but probably not to
+> the SoftMAC level.  I don't think it was tried, and I don't think it's
+> worth trying.
 >
 
-The real problem seems to be that skb_get_queue_mapping doesn't
-work the way it should when we process the firmwares callback. It's
-always "0" and unfortunately also when it should be something else like
-queue 1, 2 or 3..... problem solved? 
+I am not familiar at all with the prism and p80211 current status, so
+taking the risk of mis-understanding Dmitry's initial mail, it does
+look like one of the topics we discussed in the OLS, concluded that
+fullMac best support would probably be handled by moving through
+cfg80211 and see what's missing there. this approach will have 2
+benefits - there is already code that can be used (and improved)
+there, and there is an initial set of actions that any fullMac HW is
+likely to support so developer can save lots of efforts redefining
+fullMac behaviour.
 
-However someone should really take a closer look at the multiqueue thing,
-especially why it has to BLOCK/SPIN (uninterruptible?) when a queue is stopped 
-and tx returns therefore NETDEV_BUSY. 
-The is assumption that "a queue is in any case going to become free again" is
-well-intentioned, but as my devices are crashing left & right on a daily basis 
-it's even dangerous for my RAID ;-).
- 
-(BTW: patch is diffed against 2.6.27-rc2)
-
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
-
---Boundary-00=_9wimIqhMolesfXm
-Content-Type: text/x-patch;
-  charset="iso-8859-1";
-  name="p54-multiscrew.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="p54-multiscrew.diff"
-
---- a/drivers/net/wireless/p54/p54common.c.orig	2008-08-07 00:27:35.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54common.c	2008-08-07 00:30:38.000000000 +0200
-@@ -413,12 +413,12 @@ static void p54_rx_frame_sent(struct iee
- 			last_addr = range->end_addr;
- 			__skb_unlink(entry, &priv->tx_queue);
- 			memset(&info->status, 0, sizeof(info->status));
--			priv->tx_stats[skb_get_queue_mapping(skb)].len--;
- 			entry_hdr = (struct p54_control_hdr *) entry->data;
- 			entry_data = (struct p54_tx_control_allocdata *) entry_hdr->data;
- 			if ((entry_hdr->magic1 & cpu_to_le16(0x4000)) != 0)
- 				pad = entry_data->align[0];
- 
-+			priv->tx_stats[le32_to_cpu(entry_data->frame_type - 4)].len--;		
- 			if (!(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
- 				if (!(payload->status & 0x01))
- 					info->flags |= IEEE80211_TX_STAT_ACK;
-
---Boundary-00=_9wimIqhMolesfXm--
+Ron
