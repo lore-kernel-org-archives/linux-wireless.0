@@ -1,74 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.236]:39823 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752429AbYHVNnr (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:47421 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753442AbYHJWZo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2008 09:43:47 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so440387rvb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2008 06:43:46 -0700 (PDT)
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
-	RCU.
-From: jamal <hadi@cyberus.ca>
-Reply-To: hadi@cyberus.ca
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: David Miller <davem@davemloft.net>, kaber@trash.net,
-	netdev@vger.kernel.org, johannes@sipsolutions.net,
+	Sun, 10 Aug 2008 18:25:44 -0400
+From: Chr <chunkeey@web.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] p54: Fix for TX sequence number problem that resulted from commit 741b4fbc44
+Date: Mon, 11 Aug 2008 00:27:59 +0200
+Cc: John W Linville <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <20080822065655.GA18471@gondor.apana.org.au>
-References: <20080721164306.GA13131@gondor.apana.org.au>
-	 <20080721.095124.89249903.davem@davemloft.net>
-	 <20080721170233.GA13417@gondor.apana.org.au>
-	 <20080721.100821.38432201.davem@davemloft.net>
-	 <20080721171141.GA13573@gondor.apana.org.au>
-	 <20080822065655.GA18471@gondor.apana.org.au>
-Content-Type: text/plain
-Date: Fri, 22 Aug 2008 09:43:42 -0400
-Message-Id: <1219412622.4672.34.camel@localhost> (sfid-20080822_154354_252031_859C5A26)
-Mime-Version: 1.0
+References: <48987e74.ct5+sLOpTbiTPPHq%Larry.Finger@lwfinger.net> <200808082038.48840.chunkeey@web.de> <489EF8DE.5030801@lwfinger.net>
+In-Reply-To: <489EF8DE.5030801@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200808110027.59918.chunkeey@web.de> (sfid-20080811_002548_220874_4486FE91)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-22-08 at 16:56 +1000, Herbert Xu wrote:
-> On Tue, Jul 22, 2008 at 01:11:41AM +0800, Herbert Xu wrote:
-> > On Mon, Jul 21, 2008 at 10:08:21AM -0700, David Miller wrote:
+On Sunday 10 August 2008 16:19:10 Larry Finger wrote:
+> Chr wrote:
+> > the next one is at line 27188... and so down to end of packages at line
+> > 329241. there isn't one single package where the sequence number is not
+> > zero!
+> >
+> > So the problem must be somewhere else! what happens when:
+> > if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
+> > 	if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
+> > 		priv->seqno += 0x10;
+> >
+> > 	ieee80211hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
+> > 	ieee80211hdr->seq_ctrl |= cpu_to_le16(priv->seqno);
+> > 	ieee80211hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
+> > }
+> > (yeah a new definition for idiotic! but it's about the same amount of of
+> > clock cycles).
+>
+> There must be some situation where the firmware fails to assign a
+> proper sequence number to some packets. With this patch in place, the
+> device failed after 2 hours. Restoring my original patch, it has been
+> up for 15 hours and still going.
+well, if you don't ping around with -s 1400 of course ;-).
 
-> I haven't had a chance to do the test yet but I've just had an
-> idea of how we can get the best of both worlds.
-> 
-> The problem with always directing traffic based on the CPU alone
-> is that processes move around and we don't want to introduce packet
-> reordering because to that.
+On the other hand, it doesn't break anything (that wasn't broken before) and 
+if real helps, why not?
 
-Assuming multi-rx queues with configurable MSI or otherwise to map
-to a receive processor, then in the case of routing/bridging or
-otherfavoriteformofforwarding:
-If you tie static filters to a specific cpu that will always work.
-So no reordering there.
-Local traffic i can see migration/reordering happening.
-
-> The problem with hashing based on packet headers alone is that
-> it doesn't take CPU affinity into account at all so we may end
-> up with a situation where one thread out of a thread pool (e.g.,
-> a web server) has n sockets which are hashed to n different
-> queues.
-
-Indeed. In the forwarding case, the problem is not reordering rather
-all flows will always end up in the same cpu. So if you may end up
-just overloading one cpu while the other 1023 stayed idle.
-My earlier statement was you could cook traffic scenarios where all
-1024 are being fully utilized (the operative term is "cook");->
-
-> So here's the idea, we determine the tx queue for a flow based
-> on the CPU on which we saw its first packet.  Once we have decided
-> on a queue we store that in a dst object (see below).  This
-> ensures that all subsequent packets of that flow ends up in
-> the same queue so there is no reordering.  It also avoids the
-> problem where traffic genreated by one CPU gets scattered across
-> queues.
-
-Wont work with static multi-rx nic; iirc, changing those filters is
-_expensive_. so you want it to stay static.
-
-cheers,
-jamal
-
+Acked-by: Christian Lamparter <chunkeey@web.de>
