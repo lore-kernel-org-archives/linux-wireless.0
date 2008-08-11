@@ -1,41 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.230]:56583 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761640AbYHEPlX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 11:41:23 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2651501rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Aug 2008 08:41:23 -0700 (PDT)
-Message-ID: <1ba2fa240808050841o76e324c1od364f6ceb06b687b@mail.gmail.com> (sfid-20080805_174138_330063_E9940B39)
-Date: Tue, 5 Aug 2008 18:41:23 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: one remaining unused CONFIG variable under net/
-Cc: "Robert P. J. Day" <rpjday@crashcourse.ca>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1217877394.3603.5.camel@johannes.berg>
+Received: from mail.atheros.com ([12.36.123.2]:16327 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751352AbYHKIpY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Aug 2008 04:45:24 -0400
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2008 01:45:24 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <alpine.LFD.1.10.0808041508070.11910@localhost.localdomain>
-	 <1217877394.3603.5.camel@johannes.berg>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18591.63857.287141.273206@localhost.localdomain> (sfid-20080811_104526_293433_48ED0A00)
+Date: Mon, 11 Aug 2008 14:03:53 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	<Jouni.Malinen@Atheros.com>, <Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 04/10] ath9k: Remove a few unnecessary macros
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 4, 2008 at 10:16 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-08-04 at 15:09 -0400, Robert P. J. Day wrote:
->> this is the single remaining CONFIG variable under the net/
->> directory that is currently unreferenced.
->>
->> ===== MAC80211_VERBOSE_SPECT_MGMT_DEBUG
->> net/mac80211/Kconfig:206:config MAC80211_VERBOSE_SPECT_MGMT_DEBUG
->
-> Yeah, it'll be used though; it was added in an early patch of the
-> spectrum management code, then that got delayed by some confusion over a
-> requisite patch and now Tomas wants to redraw that one too... Don't
-> worry about it, I'll be keeping an eye on it.
->
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/core.h |   15 +++------------
+ drivers/net/wireless/ath9k/xmit.c |    2 +-
+ 2 files changed, 4 insertions(+), 13 deletions(-)
 
-Since this won't be included in 2.6.27 we can leave it only wireless-testing.
+diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+index 9e16c6c..19399da 100644
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -396,8 +396,7 @@ int ath_rx_subframe(struct ath_node *an, struct sk_buff *skb,
+ /* TX */
+ /******/
+ 
+-#define ATH_FRAG_PER_MSDU       1
+-#define ATH_TXBUF               (512/ATH_FRAG_PER_MSDU)
++#define ATH_TXBUF               512
+ /* max number of transmit attempts (tries) */
+ #define ATH_TXMAXTRY            13
+ /* max number of 11n transmit attempts (tries) */
+@@ -551,10 +550,10 @@ void ath_tx_cleanupq(struct ath_softc *sc, struct ath_txq *txq);
+ int ath_tx_setup(struct ath_softc *sc, int haltype);
+ void ath_draintxq(struct ath_softc *sc, bool retry_tx);
+ void ath_tx_draintxq(struct ath_softc *sc,
+-	struct ath_txq *txq, bool retry_tx);
++		     struct ath_txq *txq, bool retry_tx);
+ void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an);
+ void ath_tx_node_cleanup(struct ath_softc *sc,
+-	struct ath_node *an, bool bh_flag);
++			 struct ath_node *an, bool bh_flag);
+ void ath_tx_node_free(struct ath_softc *sc, struct ath_node *an);
+ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq);
+ int ath_tx_init(struct ath_softc *sc, int nbufs);
+@@ -579,7 +578,6 @@ void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ /* indicates the node is 80211 power save */
+ #define ATH_NODE_PWRSAVE        0x2
+ 
+-#define ADDBA_TIMEOUT              200 /* 200 milliseconds */
+ #define ADDBA_EXCHANGE_ATTEMPTS    10
+ #define ATH_AGGR_DELIM_SZ          4   /* delimiter size   */
+ #define ATH_AGGR_MINPLEN           256 /* in bytes, minimum packet length */
+@@ -699,9 +697,6 @@ struct ath_node *ath_node_find(struct ath_softc *sc, u8 *addr);
+ #define	ATH_BCBUF               	4   /* number of beacon buffers */
+ #define ATH_DEFAULT_BINTVAL     	100 /* default beacon interval in TU */
+ #define ATH_DEFAULT_BMISS_LIMIT 	10
+-#define	ATH_BEACON_AIFS_DEFAULT		0  /* Default aifs for ap beacon q */
+-#define	ATH_BEACON_CWMIN_DEFAULT	0  /* Default cwmin for ap beacon q */
+-#define	ATH_BEACON_CWMAX_DEFAULT	0  /* Default cwmax for ap beacon q */
+ #define IEEE80211_MS_TO_TU(x)           (((x) * 1000) / 1024)
+ 
+ /* beacon configuration */
+@@ -838,8 +833,6 @@ void ath_setdefantenna(void *sc, u32 antenna);
+ #define ATH_PREAMBLE_SHORT	(1<<0)
+ #define ATH_PROTECT_ENABLE	(1<<1)
+ #define ATH_MAX_SW_RETRIES      10
+-/* Num farmes difference in tx to flip default recv */
+-#define	ATH_ANTENNA_DIFF	2
+ #define ATH_CHAN_MAX            255
+ #define IEEE80211_WEP_NKID      4       /* number of key ids */
+ #define IEEE80211_RATE_VAL      0x7f
+@@ -853,9 +846,7 @@ void ath_setdefantenna(void *sc, u32 antenna);
+  */
+ #define	ATH_KEYMAX	        128        /* max key cache size we handle */
+ 
+-#define RESET_RETRY_TXQ         0x00000001
+ #define ATH_IF_ID_ANY   	0xff
+-
+ #define ATH_TXPOWER_MAX         100     /* .5 dBm units */
+ 
+ #define RSSI_LPF_THRESHOLD         -20
+diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
+index 47cf9f3..a24a3a5 100644
+--- a/drivers/net/wireless/ath9k/xmit.c
++++ b/drivers/net/wireless/ath9k/xmit.c
+@@ -2174,7 +2174,7 @@ int ath_tx_init(struct ath_softc *sc, int nbufs)
+ 
+ 		/* Setup tx descriptors */
+ 		error = ath_descdma_setup(sc, &sc->sc_txdma, &sc->sc_txbuf,
+-			"tx", nbufs * ATH_FRAG_PER_MSDU, 1);
++			"tx", nbufs, 1);
+ 		if (error != 0) {
+ 			DPRINTF(sc, ATH_DBG_FATAL,
+ 				"%s: failed to allocate tx descriptors: %d\n",
+-- 
+1.5.6.5
 
-Tomas
