@@ -1,50 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:61399 "EHLO c60.cesmail.net"
+Received: from mail.atheros.com ([12.36.123.2]:16328 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1770952AbYHDVmh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 17:42:37 -0400
-Subject: Re: The tiacx driver situation
-From: Pavel Roskin <proski@gnu.org>
-To: David Planella <david.planella@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, acx100-devel@lists.sourceforge.net,
-	gregkh@suse.de, greg@kroah.com, xazz.xazz@googlemail.com,
-	Andreas Mohr <andi@lisas.de>, andim2@users.sourceforge.net
-In-Reply-To: <1d9d9b240808041147n5032160v252e1bc956c97902@mail.gmail.com>
-References: <1d9d9b240808041147n5032160v252e1bc956c97902@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 04 Aug 2008 17:42:34 -0400
-Message-Id: <1217886154.9182.8.camel@dv> (sfid-20080804_234243_876959_16506E97)
-Mime-Version: 1.0
+	id S1751386AbYHKIpo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Aug 2008 04:45:44 -0400
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2008 01:45:44 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18591.63877.567100.267045@localhost.localdomain> (sfid-20080811_104546_165487_3C6C1048)
+Date: Mon, 11 Aug 2008 14:04:13 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	<Jouni.Malinen@Atheros.com>, <Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 05/10] ath9k: Remove ar5416hal and assign default values directly
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-08-04 at 20:47 +0200, David Planella wrote:
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/hw.c |   28 +++-------------------------
+ 1 files changed, 3 insertions(+), 25 deletions(-)
 
-> 3) Remove all public sources and start development from scratch,
-> following clean-room procedures.
-> This is the view I got from a short conversation with Johannes Berg on
-> IRC, and would basically mean removing all sources and references to
-> the current acx driver from the public domain and start completely
-> from scratch, with two isolated development teams: one writing the
-> specs and the other one doing the development separately. Most of you
-> probably know this method from [5].
-
-As I understand, the reverse engineering team should be able to use the
-existing sources.  But the new coding team should not.  What matters is
-that the new code is not derived from any proprietary code, but only
-from the specification.
-
-> I must say I find this the cleanest solution from an engineering and
-> legal point of view, but I cannot help but feeling a bit unoptimistic
-> about this taking off with the acx driver. There is not much of a
-> community left, and all the people currently involved, although not
-> many, would also have to leave the project, as they would have been
-> "tainted" with the old sources.
-
-That would be the reverse engineering team.  But you'll need to find a
-"virgin" coder :-)
-
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index bde162f..b294485 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -85,29 +85,6 @@ static const struct hal_percal_data adc_init_dc_cal = {
+ 	ath9k_hw_adc_dccal_calibrate
+ };
+ 
+-static const struct ath_hal ar5416hal = {
+-	AR5416_MAGIC,
+-	0,
+-	0,
+-	NULL,
+-	NULL,
+-	CTRY_DEFAULT,
+-	0,
+-	0,
+-	0,
+-	0,
+-	0,
+-	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+-	 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+-	 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+-	 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+-	 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+-	 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+-	 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+-	 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+-	},
+-};
+-
+ static struct ath9k_rate_table ar5416_11a_table = {
+ 	8,
+ 	{0},
+@@ -1196,11 +1173,12 @@ static struct ath_hal_5416 *ath9k_hw_newstate(u16 devid,
+ 
+ 	ah = &ahp->ah;
+ 
+-	memcpy(&ahp->ah, &ar5416hal, sizeof(struct ath_hal));
+-
+ 	ah->ah_sc = sc;
+ 	ah->ah_sh = mem;
+ 
++	ah->ah_magic = AR5416_MAGIC;
++	ah->ah_countryCode = CTRY_DEFAULT;
++
+ 	ah->ah_devid = devid;
+ 	ah->ah_subvendorid = 0;
+ 
 -- 
-Regards,
-Pavel Roskin
+1.5.6.5
+
