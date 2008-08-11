@@ -1,42 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:46115 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756137AbYH2VN5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2008 17:13:57 -0400
-Date: Fri, 29 Aug 2008 14:12:16 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: philipl@overt.org
-Cc: linux-kernel@vger.kernel.org, mjg59@srcf.ucam.org,
-	toshiba_acpi@memebeam.org, ivdoorn@gmail.com,
-	linux-wireless@vger.kernel.org, hmh@hmh.eng.br
+Received: from usul.saidi.cx ([204.11.33.34]:57507 "EHLO usul.overt.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751680AbYHKQlw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Aug 2008 12:41:52 -0400
+Message-ID: <48A06BBC.7060007@overt.org> (sfid-20080811_184158_469091_98C0630E)
+Date: Mon, 11 Aug 2008 09:41:32 -0700
+From: Philip Langdale <philipl@overt.org>
+MIME-Version: 1.0
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+CC: LKML <linux-kernel@vger.kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	toshiba_acpi@memebeam.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org
 Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
- through rfkill (v7)
-Message-Id: <20080829141216.f0d69ae4.akpm@linux-foundation.org> (sfid-20080829_231401_330820_B3F3331A)
-In-Reply-To: <47479.65.113.40.1.1219443825.squirrel@overt.org>
-References: <47479.65.113.40.1.1219443825.squirrel@overt.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+ through rfkill (v2)
+References: <4894B1B4.6050003@overt.org> <20080803042613.GC6053@khazad-dum.debian.net> <48965716.6020508@overt.org> <20080805212416.GB21738@khazad-dum.debian.net> <489A7CCF.1090407@overt.org> <20080807134530.GB17062@khazad-dum.debian.net>
+In-Reply-To: <20080807134530.GB17062@khazad-dum.debian.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 22 Aug 2008 18:23:45 -0400 (EDT)
-philipl@overt.org wrote:
-
-> There's been a patch floating around for toshiba_acpi that exports an ad-hoc
-> /proc interface to toggle the bluetooth adapter in a large number of Toshiba
-> laptops. I'm not sure if it's still relevant for the latest models, but it is
-> still required for older models such as my Tecra M3.
+Henrique de Moraes Holschuh wrote:
 > 
-> This change pulls in the low level Toshiba-specific code from the old patch and
-> sets up an rfkill device and a polled input device to track the state of the
-> hardware kill-switch.
+> Hmm?  UNBLOCKED means it is not being rfkilled.  Why is not working?  Put
+> some debug printks on your toggle_radio callback, that might help fix the
+> issue...
+> 
 
-ERROR: "rfkill_force_state" [drivers/acpi/toshiba_acpi.ko] undefined!
-ERROR: "rfkill_free" [drivers/acpi/toshiba_acpi.ko] undefined!
-ERROR: "rfkill_register" [drivers/acpi/toshiba_acpi.ko] undefined!
-ERROR: "rfkill_allocate" [drivers/acpi/toshiba_acpi.ko] undefined!
-ERROR: "rfkill_unregister" [drivers/acpi/toshiba_acpi.ko] undefined!
+Well, what I see is this:
 
-I'll stick a `select RFKILL' in there, but it'll probably blow up
-in other ways.  select usually does.
+At modprobe, I get an explicit unblock request. When I modify 'state' in sysfs,
+I see appropriate requests to soft block and unblock. When I activate the hardware
+kill switch, the rfkill state goes to hard_block but no one calls toggle_radio
+and when I release the kill switch, the state goes to soft_block and no one
+calls toggle_radio.
+
+--phil
