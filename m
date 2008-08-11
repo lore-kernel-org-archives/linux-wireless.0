@@ -1,407 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:39968 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751332AbYHOXQQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Aug 2008 19:16:16 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so783852nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Aug 2008 16:16:14 -0700 (PDT)
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [RFC] cfg80211: keep track of supported interface modes
-Date: Sat, 16 Aug 2008 01:16:09 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Dan Williams <dcbw@redhat.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1218122495.3630.2.camel@johannes.berg> <20080815201618.GA13013@tesla>
-In-Reply-To: <20080815201618.GA13013@tesla>
+Received: from will39.synserver.de ([212.40.172.10]:48089 "EHLO willies.info"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751178AbYHKItx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Aug 2008 04:49:53 -0400
+Received: from dslb-088-071-247-154.pools.arcor-ip.net ([88.71.247.154] helo=[192.168.1.6])
+	by willies.info with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.63)
+	(envelope-from <jan@willies.info>)
+	id 1KSSf1-0003kv-7y
+	for linux-wireless@vger.kernel.org; Mon, 11 Aug 2008 10:21:52 +0200
+Message-ID: <489FF6A8.9030204@willies.info> (sfid-20080811_104957_213424_5F8B6254)
+Date: Mon, 11 Aug 2008 10:22:00 +0200
+From: Jan Willies <jan@willies.info>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200808160116.10134.IvDoorn@gmail.com> (sfid-20080816_011627_420861_A6424591)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: unable to associate with WPA-AP - rt2x00-2.1.8
+Content-Type: multipart/mixed;
+ boundary="------------070501010401050606000608"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 15 August 2008, Luis R. Rodriguez wrote:
-> It is obviously good for userspace to know up front which
-> interface modes a given piece of hardware might support (even
-> if adding such an interface might fail later because of
-> concurrency issues), so let's make cfg80211 aware of that.
-> For good measure, disallow adding interfaces in all other
-> modes so drivers don't forget to announce support for one mode
-> when they add it.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
-> 
-> I needed to move on with iw so I figure I'd finish this off.
-> I am not sure if where I put the stuff in rt2x00 is right. Review is
-> appreciated.
-> 
->  drivers/net/wireless/adm8211.c              |    1 +
->  drivers/net/wireless/at76_usb.c             |    2 ++
->  drivers/net/wireless/ath5k/base.c           |    5 +++++
->  drivers/net/wireless/ath9k/main.c           |    5 +++++
->  drivers/net/wireless/b43/main.c             |    7 +++++++
->  drivers/net/wireless/b43legacy/main.c       |    5 +++++
->  drivers/net/wireless/iwlwifi/iwl-core.c     |    4 ++++
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 +++++
->  drivers/net/wireless/mac80211_hwsim.c       |    3 +++
->  drivers/net/wireless/p54/p54common.c        |    3 +++
->  drivers/net/wireless/rt2x00/rt2x00dev.c     |    5 +++++
+This is a multi-part message in MIME format.
+--------------070501010401050606000608
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-I've acked and forwarded to linux-wireless a similar patch for rt2x00 from
-[PATCH 5/5] rt2x00: Need to set wiphy->interface_modes Stephen Blackheath
-earlier today.
+Hello,
 
-Ivo
+I'm using Fedore9 and since the last update I cannot associate my rt2500pci card anymore, it's running into a timeout. I'm not seeing any log entries on the AP.
 
->  drivers/net/wireless/rtl8187_dev.c          |    2 ++
->  drivers/net/wireless/zd1211rw/zd_mac.c      |    5 +++++
->  include/linux/nl80211.h                     |    6 ++++++
->  include/net/wireless.h                      |    3 +++
->  net/mac80211/main.c                         |    7 +++++++
->  net/wireless/core.c                         |    9 ++++++++-
->  net/wireless/nl80211.c                      |   22 ++++++++++++++++++++--
->  18 files changed, 96 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-> index 3333d45..c6a55cd 100644
-> --- a/drivers/net/wireless/adm8211.c
-> +++ b/drivers/net/wireless/adm8211.c
-> @@ -1884,6 +1884,7 @@ static int __devinit adm8211_probe(struct pci_dev *pdev,
->  	dev->extra_tx_headroom = sizeof(struct adm8211_tx_hdr);
->  	/* dev->flags = IEEE80211_HW_RX_INCLUDES_FCS in promisc mode */
->  	dev->flags = IEEE80211_HW_SIGNAL_UNSPEC;
-> +	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
->  
->  	dev->channel_change_time = 1000;
->  	dev->max_signal = 100;    /* FIXME: find better value */
-> diff --git a/drivers/net/wireless/at76_usb.c b/drivers/net/wireless/at76_usb.c
-> index 29ebdd2..7533fb2 100644
-> --- a/drivers/net/wireless/at76_usb.c
-> +++ b/drivers/net/wireless/at76_usb.c
-> @@ -2547,6 +2547,8 @@ static int at76_init_new_device(struct at76_priv *priv,
->  		priv->hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
->  				  IEEE80211_HW_SIGNAL_UNSPEC;
->  
-> +	priv->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
-> +
->  	SET_IEEE80211_DEV(priv->hw, &interface->dev);
->  	SET_IEEE80211_PERM_ADDR(priv->hw, priv->mac_addr);
->  
-> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> index b362c48..21b353d 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -486,6 +486,11 @@ ath5k_pci_probe(struct pci_dev *pdev,
->  	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
->  		    IEEE80211_HW_SIGNAL_DBM |
->  		    IEEE80211_HW_NOISE_DBM;
-> +
-> +	hw->wiphy->interface_modes =
-> +		BIT(NL80211_IFTYPE_STATION) |
-> +		BIT(NL80211_IFTYPE_ADHOC);
-> +
->  	hw->extra_tx_headroom = 2;
->  	hw->channel_change_time = 5000;
->  	sc = hw->priv;
-> diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-> index 2888778..1985fa9 100644
-> --- a/drivers/net/wireless/ath9k/main.c
-> +++ b/drivers/net/wireless/ath9k/main.c
-> @@ -1343,6 +1343,11 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->  	hw->flags = IEEE80211_HW_SIGNAL_DBM |
->  		IEEE80211_HW_NOISE_DBM;
->  
-> +	hw->wiphy->interface_modes =
-> +		BIT(NL80211_IFTYPE_AP) |
-> +		BIT(NL80211_IFTYPE_STATION) |
-> +		BIT(NL80211_IFTYPE_ADHOC);
-> +
->  	SET_IEEE80211_DEV(hw, &pdev->dev);
->  	pci_set_drvdata(pdev, hw);
->  
-> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-> index 3bf3a86..bb33586 100644
-> --- a/drivers/net/wireless/b43/main.c
-> +++ b/drivers/net/wireless/b43/main.c
-> @@ -4649,6 +4649,13 @@ static int b43_wireless_init(struct ssb_device *dev)
->  		    IEEE80211_HW_SIGNAL_DBM |
->  		    IEEE80211_HW_NOISE_DBM;
->  
-> +	hw->wiphy->interface_modes =
-> +		BIT(NL80211_IFTYPE_AP) |
-> +		BIT(NL80211_IFTYPE_MESH_POINT) |
-> +		BIT(NL80211_IFTYPE_STATION) |
-> +		BIT(NL80211_IFTYPE_WDS) |
-> +		BIT(NL80211_IFTYPE_ADHOC);
-> +
->  	hw->queues = b43_modparam_qos ? 4 : 1;
->  	SET_IEEE80211_DEV(hw, dev->dev);
->  	if (is_valid_ether_addr(sprom->et1mac))
-> diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
-> index 2541c81..b5a5882 100644
-> --- a/drivers/net/wireless/b43legacy/main.c
-> +++ b/drivers/net/wireless/b43legacy/main.c
-> @@ -3705,6 +3705,11 @@ static int b43legacy_wireless_init(struct ssb_device *dev)
->  	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
->  		    IEEE80211_HW_SIGNAL_DBM |
->  		    IEEE80211_HW_NOISE_DBM;
-> +	hw->wiphy->interface_modes =
-> +		BIT(NL80211_IFTYPE_AP) |
-> +		BIT(NL80211_IFTYPE_STATION) |
-> +		BIT(NL80211_IFTYPE_WDS) |
-> +		BIT(NL80211_IFTYPE_ADHOC);
->  	hw->queues = 1; /* FIXME: hardware has more queues */
->  	SET_IEEE80211_DEV(hw, dev->dev);
->  	if (is_valid_ether_addr(sprom->et1mac))
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-> index f3dd622..92cbe03 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-core.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-> @@ -820,6 +820,10 @@ int iwl_setup_mac(struct iwl_priv *priv)
->  	/* Tell mac80211 our characteristics */
->  	hw->flags = IEEE80211_HW_SIGNAL_DBM |
->  		    IEEE80211_HW_NOISE_DBM;
-> +	hw->wiphy->interface_modes =
-> +		BIT(NL80211_IFTYPE_AP) |
-> +		BIT(NL80211_IFTYPE_STATION) |
-> +		BIT(NL80211_IFTYPE_ADHOC);
->  	/* Default value; 4 EDCA QOS priorities */
->  	hw->queues = 4;
->  	/* queues to support 11n aggregation */
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> index 7095d8c..4725ead 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -7889,6 +7889,11 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
->  	hw->flags = IEEE80211_HW_SIGNAL_DBM |
->  		    IEEE80211_HW_NOISE_DBM;
->  
-> +	hw->wiphy->interface_modes =
-> +		BIT(NL80211_IFTYPE_AP) |
-> +		BIT(NL80211_IFTYPE_STATION) |
-> +		BIT(NL80211_IFTYPE_ADHOC);
-> +
->  	/* 4 EDCA QOS priorities */
->  	hw->queues = 4;
->  
-> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-> index 248d31a..6791500 100644
-> --- a/drivers/net/wireless/mac80211_hwsim.c
-> +++ b/drivers/net/wireless/mac80211_hwsim.c
-> @@ -447,6 +447,9 @@ static int __init init_mac80211_hwsim(void)
->  
->  		hw->channel_change_time = 1;
->  		hw->queues = 1;
-> +		hw->wiphy->interface_modes =
-> +			BIT(NL80211_IFTYPE_STATION) |
-> +			BIT(NL80211_IFTYPE_AP);
->  
->  		memcpy(data->channels, hwsim_channels, sizeof(hwsim_channels));
->  		memcpy(data->rates, hwsim_rates, sizeof(hwsim_rates));
-> diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-> index 83cd85e..42302e4 100644
-> --- a/drivers/net/wireless/p54/p54common.c
-> +++ b/drivers/net/wireless/p54/p54common.c
-> @@ -1010,6 +1010,9 @@ struct ieee80211_hw *p54_init_common(size_t priv_data_len)
->  	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING | /* not sure */
->  		     IEEE80211_HW_RX_INCLUDES_FCS |
->  		     IEEE80211_HW_SIGNAL_UNSPEC;
-> +
-> +	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
-> +
->  	dev->channel_change_time = 1000;	/* TODO: find actual value */
->  	dev->max_signal = 127;
->  
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> index f42283a..56330ff 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -868,6 +868,11 @@ static int rt2x00lib_probe_hw_modes(struct rt2x00_dev *rt2x00dev,
->  		    &rt2x00dev->bands[IEEE80211_BAND_5GHZ];
->  	}
->  
-> +	hw->wiphy->interface_modes =
-> +		BIT(NL80211_IFTYPE_AP) |
-> +		BIT(NL80211_IFTYPE_STATION) |
-> +		BIT(NL80211_IFTYPE_ADHOC);
-> +
->  	return 0;
->  
->   exit_free_channels:
-> diff --git a/drivers/net/wireless/rtl8187_dev.c b/drivers/net/wireless/rtl8187_dev.c
-> index 9e2f391..13e50d2 100644
-> --- a/drivers/net/wireless/rtl8187_dev.c
-> +++ b/drivers/net/wireless/rtl8187_dev.c
-> @@ -1183,6 +1183,8 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
->  		dev->max_signal = 65;
->  	}
->  
-> +	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
-> +
->  	if ((id->driver_info == DEVICE_RTL8187) && priv->is_rtl8187b)
->  		printk(KERN_INFO "rtl8187: inconsistency between id with OEM"
->  		       " info!\n");
-> diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-> index 63ee066..3005dd1 100644
-> --- a/drivers/net/wireless/zd1211rw/zd_mac.c
-> +++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-> @@ -969,6 +969,11 @@ struct ieee80211_hw *zd_mac_alloc_hw(struct usb_interface *intf)
->  	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
->  		    IEEE80211_HW_SIGNAL_DB;
->  
-> +	hw->wiphy->interface_modes =
-> +		BIT(NL80211_IFTYPE_MESH_POINT) |
-> +		BIT(NL80211_IFTYPE_STATION) |
-> +		BIT(NL80211_IFTYPE_ADHOC);
-> +
->  	hw->max_signal = 100;
->  	hw->queues = 1;
->  	hw->extra_tx_headroom = sizeof(struct zd_ctrlset);
-> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-> index 825fcc6..6bd1971 100644
-> --- a/include/linux/nl80211.h
-> +++ b/include/linux/nl80211.h
-> @@ -214,6 +214,10 @@ enum nl80211_commands {
->   * @NL80211_ATTR_REG_RULES: a nested array of regulatory domain regulatory
->   *	rules.
->   *
-> + * @NL80211_ATTR_SUPPORTED_IFTYPES: nested attribute containing all
-> + *	supported interface types, each a flag attribute with the number
-> + *	of the interface mode.
-> + *
->   * @NL80211_ATTR_MAX: highest attribute number currently defined
->   * @__NL80211_ATTR_AFTER_LAST: internal use
->   */
-> @@ -260,6 +264,8 @@ enum nl80211_attrs {
->  	NL80211_ATTR_REG_ALPHA2,
->  	NL80211_ATTR_REG_RULES,
->  
-> +	NL80211_ATTR_SUPPORTED_IFTYPES,
-> +
->  	/* add attributes here, update the policy in nl80211.c */
->  
->  	__NL80211_ATTR_AFTER_LAST,
-> diff --git a/include/net/wireless.h b/include/net/wireless.h
-> index 24afa80..f6b31d0 100644
-> --- a/include/net/wireless.h
-> +++ b/include/net/wireless.h
-> @@ -188,6 +188,9 @@ struct wiphy {
->  	/* permanent MAC address */
->  	u8 perm_addr[ETH_ALEN];
->  
-> +	/* Supported interface modes, OR together BIT(NL80211_IFTYPE_...) */
-> +	u16 interface_modes;
-> +
->  	/* If multiple wiphys are registered and you're handed e.g.
->  	 * a regular netdev with assigned ieee80211_ptr, you won't
->  	 * know whether it points to a wiphy your driver has registered
-> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> index aa5a191..3fed07c 100644
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -1639,6 +1639,13 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
->  		}
->  	}
->  
-> +	/* if low-level driver supports AP, we also support VLAN */
-> +	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_AP))
-> +		local->hw.wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
-> +
-> +	/* mac80211 always supports monitor */
-> +	local->hw.wiphy->interface_modes |= BIT(NL80211_IFTYPE_MONITOR);
-> +
->  	result = wiphy_register(local->hw.wiphy);
->  	if (result < 0)
->  		return result;
-> diff --git a/net/wireless/core.c b/net/wireless/core.c
-> index 0013307..b24e459 100644
-> --- a/net/wireless/core.c
-> +++ b/net/wireless/core.c
-> @@ -1,7 +1,7 @@
->  /*
->   * This is the linux wireless configuration interface.
->   *
-> - * Copyright 2006, 2007		Johannes Berg <johannes@sipsolutions.net>
-> + * Copyright 2006-2008		Johannes Berg <johannes@sipsolutions.net>
->   */
->  
->  #include <linux/if.h>
-> @@ -285,6 +285,13 @@ int wiphy_register(struct wiphy *wiphy)
->  	struct ieee80211_supported_band *sband;
->  	bool have_band = false;
->  	int i;
-> +	u16 ifmodes = wiphy->interface_modes;
-> +
-> +	/* sanity check ifmodes */
-> +	WARN_ON(!ifmodes);
-> +	ifmodes &= ((1 << __NL80211_IFTYPE_AFTER_LAST) - 1) & ~1;
-> +	if (WARN_ON(ifmodes != wiphy->interface_modes))
-> +		wiphy->interface_modes = ifmodes;
->  
->  	/* sanity check supported bands/channels */
->  	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 0d29364..c592f35 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -110,10 +110,12 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
->  	struct nlattr *nl_bands, *nl_band;
->  	struct nlattr *nl_freqs, *nl_freq;
->  	struct nlattr *nl_rates, *nl_rate;
-> +	struct nlattr *nl_modes;
->  	enum ieee80211_band band;
->  	struct ieee80211_channel *chan;
->  	struct ieee80211_rate *rate;
->  	int i;
-> +	u16 ifmodes = dev->wiphy.interface_modes;
->  
->  	hdr = nl80211hdr_put(msg, pid, seq, flags, NL80211_CMD_NEW_WIPHY);
->  	if (!hdr)
-> @@ -122,6 +124,20 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
->  	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, dev->idx);
->  	NLA_PUT_STRING(msg, NL80211_ATTR_WIPHY_NAME, wiphy_name(&dev->wiphy));
->  
-> +	nl_modes = nla_nest_start(msg, NL80211_ATTR_SUPPORTED_IFTYPES);
-> +	if (!nl_modes)
-> +		goto nla_put_failure;
-> +
-> +	i = 0;
-> +	while (ifmodes) {
-> +		if (ifmodes & 1)
-> +			NLA_PUT_FLAG(msg, i);
-> +		ifmodes >>= 1;
-> +		i++;
-> +	}
-> +
-> +	nla_nest_end(msg, nl_modes);
-> +
->  	nl_bands = nla_nest_start(msg, NL80211_ATTR_WIPHY_BANDS);
->  	if (!nl_bands)
->  		goto nla_put_failure;
-> @@ -412,7 +428,8 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
->  	ifindex = dev->ifindex;
->  	dev_put(dev);
->  
-> -	if (!drv->ops->change_virtual_intf) {
-> +	if (!drv->ops->change_virtual_intf ||
-> +	    !(drv->wiphy.interface_modes & (1 << type))) {
->  		err = -EOPNOTSUPP;
->  		goto unlock;
->  	}
-> @@ -459,7 +476,8 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
->  	if (IS_ERR(drv))
->  		return PTR_ERR(drv);
->  
-> -	if (!drv->ops->add_virtual_intf) {
-> +	if (!drv->ops->add_virtual_intf ||
-> +	    !(drv->wiphy.interface_modes & (1 << type))) {
->  		err = -EOPNOTSUPP;
->  		goto unlock;
->  	}
+rt2500pci is version 2.1.8
 
 
+- Jan
+
+--------------070501010401050606000608
+Content-Type: text/plain;
+ name="wpa.log"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="wpa.log"
+
+aW9jdGxbU0lPQ1NJV0FVVEhdOiBPcGVyYXRpb24gbm90IHN1cHBvcnRlZApXRVhUIGF1dGgg
+cGFyYW0gNCB2YWx1ZSAweDAgLSBJbml0aWFsaXppbmcgaW50ZXJmYWNlICd3bGFuMCcgY29u
+ZiAnL2V0Yy93cGFfc3VwcGxpY2FudC93cGFfc3VwcGxpY2FudC5jb25mJyBkcml2ZXIgJ3dl
+eHQnIGN0cmxfaW50ZXJmYWNlICdOL0EnIGJyaWRnZSAnTi9BJwpDb25maWd1cmF0aW9uIGZp
+bGUgJy9ldGMvd3BhX3N1cHBsaWNhbnQvd3BhX3N1cHBsaWNhbnQuY29uZicgLT4gJy9ldGMv
+d3BhX3N1cHBsaWNhbnQvd3BhX3N1cHBsaWNhbnQuY29uZicKUmVhZGluZyBjb25maWd1cmF0
+aW9uIGZpbGUgJy9ldGMvd3BhX3N1cHBsaWNhbnQvd3BhX3N1cHBsaWNhbnQuY29uZicKY3Ry
+bF9pbnRlcmZhY2U9Jy92YXIvcnVuL3dwYV9zdXBwbGljYW50JwpjdHJsX2ludGVyZmFjZV9n
+cm91cD0nd2hlZWwnIChERVBSRUNBVEVEKQpQcmlvcml0eSBncm91cCAwCiAgIGlkPTAgc3Np
+ZD0naGFycmliZXJ0JwpJbml0aWFsaXppbmcgaW50ZXJmYWNlICgyKSAnd2xhbjAnCkludGVy
+ZmFjZSB3bGFuMCBzZXQgVVAgLSB3YWl0aW5nIGEgc2Vjb25kIGZvciB0aGUgZHJpdmVyIHRv
+IGNvbXBsZXRlIGluaXRpYWxpemF0aW9uClNJT0NHSVdSQU5HRTogV0UoY29tcGlsZWQpPTIy
+IFdFKHNvdXJjZSk9MjEgZW5jX2NhcGE9MHhmCiAgY2FwYWJpbGl0aWVzOiBrZXlfbWdtdCAw
+eGYgZW5jIDB4ZgpXRVhUOiBPcGVyc3RhdGU6IGxpbmttb2RlPTEsIG9wZXJzdGF0ZT01Ck93
+biBNQUMgYWRkcmVzczogMDA6MTE6MDk6YmU6ZGU6NGYKd3BhX2RyaXZlcl93ZXh0X3NldF93
+cGEKd3BhX2RyaXZlcl93ZXh0X3NldF9rZXk6IGFsZz0wIGtleV9pZHg9MCBzZXRfdHg9MCBz
+ZXFfbGVuPTAga2V5X2xlbj0wCndwYV9kcml2ZXJfd2V4dF9zZXRfa2V5OiBhbGc9MCBrZXlf
+aWR4PTEgc2V0X3R4PTAgc2VxX2xlbj0wIGtleV9sZW49MAp3cGFfZHJpdmVyX3dleHRfc2V0
+X2tleTogYWxnPTAga2V5X2lkeD0yIHNldF90eD0wIHNlcV9sZW49MCBrZXlfbGVuPTAKd3Bh
+X2RyaXZlcl93ZXh0X3NldF9rZXk6IGFsZz0wIGtleV9pZHg9MyBzZXRfdHg9MCBzZXFfbGVu
+PTAga2V5X2xlbj0wCndwYV9kcml2ZXJfd2V4dF9zZXRfY291bnRlcm1lYXN1cmVzCndwYV9k
+cml2ZXJfd2V4dF9zZXRfZHJvcF91bmVuY3J5cHRlZApSU046IGZsdXNoaW5nIFBNS0lEIGxp
+c3QgaW4gdGhlIGRyaXZlcgpTZXR0aW5nIHNjYW4gcmVxdWVzdDogMCBzZWMgMTAwMDAwIHVz
+ZWMKRUFQT0w6IFNVUFBfUEFFIGVudGVyaW5nIHN0YXRlIERJU0NPTk5FQ1RFRApFQVBPTDog
+S0VZX1JYIGVudGVyaW5nIHN0YXRlIE5PX0tFWV9SRUNFSVZFCkVBUE9MOiBTVVBQX0JFIGVu
+dGVyaW5nIHN0YXRlIElOSVRJQUxJWkUKRUFQOiBFQVAgZW50ZXJpbmcgc3RhdGUgRElTQUJM
+RUQKY3RybF9pbnRlcmZhY2VfZ3JvdXA9MTAgKGZyb20gZ3JvdXAgbmFtZSAnd2hlZWwnKQpB
+ZGRlZCBpbnRlcmZhY2Ugd2xhbjAKSWdub3JlIGV2ZW50IGZvciBmb3JlaWduIGlmaW5kZXgg
+MwpSVE1fTkVXTElOSzogb3BlcnN0YXRlPTAgaWZpX2ZsYWdzPTB4MTAwMyAoW1VQXSkKUlRN
+X05FV0xJTkssIElGTEFfSUZOQU1FOiBJbnRlcmZhY2UgJ3dsYW4wJyBhZGRlZApSVE1fTkVX
+TElOSzogb3BlcnN0YXRlPTAgaWZpX2ZsYWdzPTB4MTAwMyAoW1VQXSkKV2lyZWxlc3MgZXZl
+bnQ6IGNtZD0weDhiMTkgbGVuPTgKUmVjZWl2ZWQgMjc2IGJ5dGVzIG9mIHNjYW4gcmVzdWx0
+cyAoMSBCU1NlcykKQ1RSTC1FVkVOVC1TQ0FOLVJFU1VMVFMgClNlbGVjdGluZyBCU1MgZnJv
+bSBwcmlvcml0eSBncm91cCAwClRyeSB0byBmaW5kIFdQQS1lbmFibGVkIEFQCjA6IDAwOjE4
+Ojg0OjI2OjQ0OjBkIHNzaWQ9J2hhcnJpYmVydCcgd3BhX2llX2xlbj0yMiByc25faWVfbGVu
+PTAgY2Fwcz0weDExCiAgIHNlbGVjdGVkIGJhc2VkIG9uIFdQQSBJRQogICBzZWxlY3RlZCBX
+UEEgQVAgMDA6MTg6ODQ6MjY6NDQ6MGQgc3NpZD0naGFycmliZXJ0JwpUcnkgdG8gZmluZCBu
+b24tV1BBIEFQClRyeWluZyB0byBhc3NvY2lhdGUgd2l0aCAwMDoxODo4NDoyNjo0NDowZCAo
+U1NJRD0naGFycmliZXJ0JyBmcmVxPTI0NjIgTUh6KQpDYW5jZWxsaW5nIHNjYW4gcmVxdWVz
+dApXUEE6IGNsZWFyaW5nIG93biBXUEEvUlNOIElFCkF1dG9tYXRpYyBhdXRoX2FsZyBzZWxl
+Y3Rpb246IDB4MQpXUEE6IHVzaW5nIElFRUUgODAyLjExaS9EMy4wCldQQTogU2VsZWN0ZWQg
+Y2lwaGVyIHN1aXRlczogZ3JvdXAgOCBwYWlyd2lzZSA4IGtleV9tZ210IDIgcHJvdG8gMQpX
+UEE6IHNldCBBUCBXUEEgSUUgLSBoZXhkdW1wKGxlbj0yNCk6IGRkIDE2IDAwIDUwIGYyIDAx
+IDAxIDAwIDAwIDUwIGYyIDAyIDAxIDAwIDAwIDUwIGYyIDAyIDAxIDAwIDAwIDUwIGYyIDAy
+CldQQTogY2xlYXJpbmcgQVAgUlNOIElFCldQQTogdXNpbmcgR1RLIFRLSVAKV1BBOiB1c2lu
+ZyBQVEsgVEtJUApXUEE6IHVzaW5nIEtFWV9NR01UIFdQQS1QU0sKV1BBOiBTZXQgb3duIFdQ
+QSBJRSBkZWZhdWx0IC0gaGV4ZHVtcChsZW49MjQpOiBkZCAxNiAwMCA1MCBmMiAwMSAwMSAw
+MCAwMCA1MCBmMiAwMiAwMSAwMCAwMCA1MCBmMiAwMiAwMSAwMCAwMCA1MCBmMiAwMgpObyBr
+ZXlzIGhhdmUgYmVlbiBjb25maWd1cmVkIC0gc2tpcCBrZXkgY2xlYXJpbmcKd3BhX2RyaXZl
+cl93ZXh0X3NldF9kcm9wX3VuZW5jcnlwdGVkClN0YXRlOiBESVNDT05ORUNURUQgLT4gQVNT
+T0NJQVRJTkcKd3BhX2RyaXZlcl93ZXh0X3NldF9vcGVyc3RhdGU6IG9wZXJzdGF0ZSAwLT4w
+IChET1JNQU5UKQpXRVhUOiBPcGVyc3RhdGU6IGxpbmttb2RlPS0xLCBvcGVyc3RhdGU9NQp3
+cGFfZHJpdmVyX3dleHRfYXNzb2NpYXRlClNldHRpbmcgYXV0aGVudGljYXRpb24gdGltZW91
+dDogMjAgc2VjIDAgdXNlYwpFQVBPTDogRXh0ZXJuYWwgbm90aWZpY2F0aW9uIC0gRUFQIHN1
+Y2Nlc3M9MApFQVBPTDogRXh0ZXJuYWwgbm90aWZpY2F0aW9uIC0gRUFQIGZhaWw9MApFQVBP
+TDogRXh0ZXJuYWwgbm90aWZpY2F0aW9uIC0gcG9ydENvbnRyb2w9QXV0bwpSVE1fTkVXTElO
+Szogb3BlcnN0YXRlPTAgaWZpX2ZsYWdzPTB4MTAwMyAoW1VQXSkKV2lyZWxlc3MgZXZlbnQ6
+IGNtZD0weDhiMDYgbGVuPTgKUlRNX05FV0xJTks6IG9wZXJzdGF0ZT0wIGlmaV9mbGFncz0w
+eDEwMDMgKFtVUF0pCldpcmVsZXNzIGV2ZW50OiBjbWQ9MHg4YjA2IGxlbj04ClJUTV9ORVdM
+SU5LOiBvcGVyc3RhdGU9MCBpZmlfZmxhZ3M9MHgxMDAzIChbVVBdKQpXaXJlbGVzcyBldmVu
+dDogY21kPTB4OGIwNCBsZW49MTIKRUFQT0w6IGRpc2FibGUgdGltZXIgdGljawpBdXRoZW50
+aWNhdGlvbiB3aXRoIDAwOjE4Ojg0OjI2OjQ0OjBkIHRpbWVkIG91dC4KQWRkZWQgQlNTSUQg
+MDA6MTg6ODQ6MjY6NDQ6MGQgaW50byBibGFja2xpc3QKTm8ga2V5cyBoYXZlIGJlZW4gY29u
+ZmlndXJlZCAtIHNraXAga2V5IGNsZWFyaW5nClN0YXRlOiBBU1NPQ0lBVElORyAtPiBESVND
+T05ORUNURUQKd3BhX2RyaXZlcl93ZXh0X3NldF9vcGVyc3RhdGU6IG9wZXJzdGF0ZSAwLT4w
+IChET1JNQU5UKQpXRVhUOiBPcGVyc3RhdGU6IGxpbmttb2RlPS0xLCBvcGVyc3RhdGU9NQpF
+QVBPTDogRXh0ZXJuYWwgbm90aWZpY2F0aW9uIC0gcG9ydEVuYWJsZWQ9MApFQVBPTDogRXh0
+ZXJuYWwgbm90aWZpY2F0aW9uIC0gcG9ydFZhbGlkPTAKRUFQT0w6IEV4dGVybmFsIG5vdGlm
+aWNhdGlvbiAtIEVBUCBzdWNjZXNzPTAKU2V0dGluZyBzY2FuIHJlcXVlc3Q6IDAgc2VjIDAg
+dXNlYwpTdGF0ZTogRElTQ09OTkVDVEVEIC0+IFNDQU5OSU5HClN0YXJ0aW5nIEFQIHNjYW4g
+KGJyb2FkY2FzdCBTU0lEKQpUcnlpbmcgdG8gZ2V0IGN1cnJlbnQgc2NhbiByZXN1bHRzIGZp
+cnN0IHdpdGhvdXQgcmVxdWVzdGluZyBhIG5ldyBzY2FuIHRvIHNwZWVkIHVwIGluaXRpYWwg
+YXNzb2NpYXRpb24KUmVjZWl2ZWQgMjc1IGJ5dGVzIG9mIHNjYW4gcmVzdWx0cyAoMSBCU1Nl
+cykKQ1RSTC1FVkVOVC1TQ0FOLVJFU1VMVFMgClNlbGVjdGluZyBCU1MgZnJvbSBwcmlvcml0
+eSBncm91cCAwClRyeSB0byBmaW5kIFdQQS1lbmFibGVkIEFQCjA6IDAwOjE4Ojg0OjI2OjQ0
+OjBkIHNzaWQ9J2hhcnJpYmVydCcgd3BhX2llX2xlbj0yMiByc25faWVfbGVuPTAgY2Fwcz0w
+eDExCiAgIHNlbGVjdGVkIGJhc2VkIG9uIFdQQSBJRQogICBzZWxlY3RlZCBXUEEgQVAgMDA6
+MTg6ODQ6MjY6NDQ6MGQgc3NpZD0naGFycmliZXJ0JwpUcnkgdG8gZmluZCBub24tV1BBIEFQ
+ClRyeWluZyB0byBhc3NvY2lhdGUgd2l0aCAwMDoxODo4NDoyNjo0NDowZCAoU1NJRD0naGFy
+cmliZXJ0JyBmcmVxPTI0NjIgTUh6KQpDYW5jZWxsaW5nIHNjYW4gcmVxdWVzdApXUEE6IGNs
+ZWFyaW5nIG93biBXUEEvUlNOIElFCkF1dG9tYXRpYyBhdXRoX2FsZyBzZWxlY3Rpb246IDB4
+MQpXUEE6IHVzaW5nIElFRUUgODAyLjExaS9EMy4wCldQQTogU2VsZWN0ZWQgY2lwaGVyIHN1
+aXRlczogZ3JvdXAgOCBwYWlyd2lzZSA4IGtleV9tZ210IDIgcHJvdG8gMQpXUEE6IHNldCBB
+UCBXUEEgSUUgLSBoZXhkdW1wKGxlbj0yNCk6IGRkIDE2IDAwIDUwIGYyIDAxIDAxIDAwIDAw
+IDUwIGYyIDAyIDAxIDAwIDAwIDUwIGYyIDAyIDAxIDAwIDAwIDUwIGYyIDAyCldQQTogY2xl
+YXJpbmcgQVAgUlNOIElFCldQQTogdXNpbmcgR1RLIFRLSVAKV1BBOiB1c2luZyBQVEsgVEtJ
+UApXUEE6IHVzaW5nIEtFWV9NR01UIFdQQS1QU0sKV1BBOiBTZXQgb3duIFdQQSBJRSBkZWZh
+dWx0IC0gaGV4ZHVtcChsZW49MjQpOiBkZCAxNiAwMCA1MCBmMiAwMSAwMSAwMCAwMCA1MCBm
+MiAwMiAwMSAwMCAwMCA1MCBmMiAwMiAwMSAwMCAwMCA1MCBmMiAwMgpObyBrZXlzIGhhdmUg
+YmVlbiBjb25maWd1cmVkIC0gc2tpcCBrZXkgY2xlYXJpbmcKd3BhX2RyaXZlcl93ZXh0X3Nl
+dF9kcm9wX3VuZW5jcnlwdGVkClN0YXRlOiBTQ0FOTklORyAtPiBBU1NPQ0lBVElORwp3cGFf
+ZHJpdmVyX3dleHRfc2V0X29wZXJzdGF0ZTogb3BlcnN0YXRlIDAtPjAgKERPUk1BTlQpCldF
+WFQ6IE9wZXJzdGF0ZTogbGlua21vZGU9LTEsIG9wZXJzdGF0ZT01CndwYV9kcml2ZXJfd2V4
+dF9hc3NvY2lhdGUKU2V0dGluZyBhdXRoZW50aWNhdGlvbiB0aW1lb3V0OiAyMCBzZWMgMCB1
+c2VjCkVBUE9MOiBFeHRlcm5hbCBub3RpZmljYXRpb24gLSBFQVAgc3VjY2Vzcz0wCkVBUE9M
+OiBFeHRlcm5hbCBub3RpZmljYXRpb24gLSBFQVAgZmFpbD0wCkVBUE9MOiBFeHRlcm5hbCBu
+b3RpZmljYXRpb24gLSBwb3J0Q29udHJvbD1BdXRvClJUTV9ORVdMSU5LOiBvcGVyc3RhdGU9
+MCBpZmlfZmxhZ3M9MHgxMDAzIChbVVBdKQpXaXJlbGVzcyBldmVudDogY21kPTB4OGIwNiBs
+ZW49OApSVE1fTkVXTElOSzogb3BlcnN0YXRlPTAgaWZpX2ZsYWdzPTB4MTAwMyAoW1VQXSkK
+V2lyZWxlc3MgZXZlbnQ6IGNtZD0weDhiMDQgbGVuPTEyCkF1dGhlbnRpY2F0aW9uIHdpdGgg
+MDA6MTg6ODQ6MjY6NDQ6MGQgdGltZWQgb3V0LgpCU1NJRCAwMDoxODo4NDoyNjo0NDowZCBi
+bGFja2xpc3QgY291bnQgaW5jcmVtZW50ZWQgdG8gMgpObyBrZXlzIGhhdmUgYmVlbiBjb25m
+aWd1cmVkIC0gc2tpcCBrZXkgY2xlYXJpbmcKU3RhdGU6IEFTU09DSUFUSU5HIC0+IERJU0NP
+Tk5FQ1RFRAp3cGFfZHJpdmVyX3dleHRfc2V0X29wZXJzdGF0ZTogb3BlcnN0YXRlIDAtPjAg
+KERPUk1BTlQpCldFWFQ6IE9wZXJzdGF0ZTogbGlua21vZGU9LTEsIG9wZXJzdGF0ZT01CkVB
+UE9MOiBFeHRlcm5hbCBub3RpZmljYXRpb24gLSBwb3J0RW5hYmxlZD0wCkVBUE9MOiBFeHRl
+cm5hbCBub3RpZmljYXRpb24gLSBwb3J0VmFsaWQ9MApFQVBPTDogRXh0ZXJuYWwgbm90aWZp
+Y2F0aW9uIC0gRUFQIHN1Y2Nlc3M9MApTZXR0aW5nIHNjYW4gcmVxdWVzdDogMCBzZWMgMCB1
+c2VjClN0YXRlOiBESVNDT05ORUNURUQgLT4gU0NBTk5JTkcKU3RhcnRpbmcgQVAgc2NhbiAo
+YnJvYWRjYXN0IFNTSUQpClNjYW4gcmVxdWVzdGVkIChyZXQ9MCkgLSBzY2FuIHRpbWVvdXQg
+MzAgc2Vjb25kcwpSVE1fTkVXTElOSzogb3BlcnN0YXRlPTAgaWZpX2ZsYWdzPTB4MTAwMyAo
+W1VQXSkKV2lyZWxlc3MgZXZlbnQ6IGNtZD0weDhiMTkgbGVuPTgKUmVjZWl2ZWQgMjc2IGJ5
+dGVzIG9mIHNjYW4gcmVzdWx0cyAoMSBCU1NlcykKQ1RSTC1FVkVOVC1TQ0FOLVJFU1VMVFMg
+ClNlbGVjdGluZyBCU1MgZnJvbSBwcmlvcml0eSBncm91cCAwClRyeSB0byBmaW5kIFdQQS1l
+bmFibGVkIEFQCjA6IDAwOjE4Ojg0OjI2OjQ0OjBkIHNzaWQ9J2hhcnJpYmVydCcgd3BhX2ll
+X2xlbj0yMiByc25faWVfbGVuPTAgY2Fwcz0weDExCiAgIHNraXAgLSBibGFja2xpc3RlZApU
+cnkgdG8gZmluZCBub24tV1BBIEFQCjA6IDAwOjE4Ojg0OjI2OjQ0OjBkIHNzaWQ9J2hhcnJp
+YmVydCcgd3BhX2llX2xlbj0yMiByc25faWVfbGVuPTAgY2Fwcz0weDExCiAgIHNraXAgLSBi
+bGFja2xpc3RlZApObyBBUHMgZm91bmQgLSBjbGVhciBibGFja2xpc3QgYW5kIHRyeSBhZ2Fp
+bgpSZW1vdmVkIEJTU0lEIDAwOjE4Ojg0OjI2OjQ0OjBkIGZyb20gYmxhY2tsaXN0IChjbGVh
+cikKU2VsZWN0aW5nIEJTUyBmcm9tIHByaW9yaXR5IGdyb3VwIDAKVHJ5IHRvIGZpbmQgV1BB
+LWVuYWJsZWQgQVAKMDogMDA6MTg6ODQ6MjY6NDQ6MGQgc3NpZD0naGFycmliZXJ0JyB3cGFf
+aWVfbGVuPTIyIHJzbl9pZV9sZW49MCBjYXBzPTB4MTEKICAgc2VsZWN0ZWQgYmFzZWQgb24g
+V1BBIElFCiAgIHNlbGVjdGVkIFdQQSBBUCAwMDoxODo4NDoyNjo0NDowZCBzc2lkPSdoYXJy
+aWJlcnQnClRyeSB0byBmaW5kIG5vbi1XUEEgQVAKVHJ5aW5nIHRvIGFzc29jaWF0ZSB3aXRo
+IDAwOjE4Ojg0OjI2OjQ0OjBkIChTU0lEPSdoYXJyaWJlcnQnIGZyZXE9MjQ2MiBNSHopCkNh
+bmNlbGxpbmcgc2NhbiByZXF1ZXN0CldQQTogY2xlYXJpbmcgb3duIFdQQS9SU04gSUUKQXV0
+b21hdGljIGF1dGhfYWxnIHNlbGVjdGlvbjogMHgxCldQQTogdXNpbmcgSUVFRSA4MDIuMTFp
+L0QzLjAKV1BBOiBTZWxlY3RlZCBjaXBoZXIgc3VpdGVzOiBncm91cCA4IHBhaXJ3aXNlIDgg
+a2V5X21nbXQgMiBwcm90byAxCldQQTogc2V0IEFQIFdQQSBJRSAtIGhleGR1bXAobGVuPTI0
+KTogZGQgMTYgMDAgNTAgZjIgMDEgMDEgMDAgMDAgNTAgZjIgMDIgMDEgMDAgMDAgNTAgZjIg
+MDIgMDEgMDAgMDAgNTAgZjIgMDIKV1BBOiBjbGVhcmluZyBBUCBSU04gSUUKV1BBOiB1c2lu
+ZyBHVEsgVEtJUApXUEE6IHVzaW5nIFBUSyBUS0lQCldQQTogdXNpbmcgS0VZX01HTVQgV1BB
+LVBTSwpXUEE6IFNldCBvd24gV1BBIElFIGRlZmF1bHQgLSBoZXhkdW1wKGxlbj0yNCk6IGRk
+IDE2IDAwIDUwIGYyIDAxIDAxIDAwIDAwIDUwIGYyIDAyIDAxIDAwIDAwIDUwIGYyIDAyIDAx
+IDAwIDAwIDUwIGYyIDAyCk5vIGtleXMgaGF2ZSBiZWVuIGNvbmZpZ3VyZWQgLSBza2lwIGtl
+eSBjbGVhcmluZwp3cGFfZHJpdmVyX3dleHRfc2V0X2Ryb3BfdW5lbmNyeXB0ZWQKU3RhdGU6
+IFNDQU5OSU5HIC0+IEFTU09DSUFUSU5HCndwYV9kcml2ZXJfd2V4dF9zZXRfb3BlcnN0YXRl
+OiBvcGVyc3RhdGUgMC0+MCAoRE9STUFOVCkKV0VYVDogT3BlcnN0YXRlOiBsaW5rbW9kZT0t
+MSwgb3BlcnN0YXRlPTUKd3BhX2RyaXZlcl93ZXh0X2Fzc29jaWF0ZQpTZXR0aW5nIGF1dGhl
+bnRpY2F0aW9uIHRpbWVvdXQ6IDIwIHNlYyAwIHVzZWMKRUFQT0w6IEV4dGVybmFsIG5vdGlm
+aWNhdGlvbiAtIEVBUCBzdWNjZXNzPTAKRUFQT0w6IEV4dGVybmFsIG5vdGlmaWNhdGlvbiAt
+IEVBUCBmYWlsPTAKRUFQT0w6IEV4dGVybmFsIG5vdGlmaWNhdGlvbiAtIHBvcnRDb250cm9s
+PUF1dG8KUlRNX05FV0xJTks6IG9wZXJzdGF0ZT0wIGlmaV9mbGFncz0weDEwMDMgKFtVUF0p
+CldpcmVsZXNzIGV2ZW50OiBjbWQ9MHg4YjA2IGxlbj04ClJUTV9ORVdMSU5LOiBvcGVyc3Rh
+dGU9MCBpZmlfZmxhZ3M9MHgxMDAzIChbVVBdKQpXaXJlbGVzcyBldmVudDogY21kPTB4OGIw
+NCBsZW49MTIKUlRNX05FV0xJTks6IG9wZXJzdGF0ZT0wIGlmaV9mbGFncz0weDEwMDMgKFtV
+UF0pCldpcmVsZXNzIGV2ZW50OiBjbWQ9MHg4YjE5IGxlbj04ClJlY2VpdmVkIDI3NiBieXRl
+cyBvZiBzY2FuIHJlc3VsdHMgKDEgQlNTZXMpCkNUUkwtRVZFTlQtU0NBTi1SRVNVTFRTIApT
+ZWxlY3RpbmcgQlNTIGZyb20gcHJpb3JpdHkgZ3JvdXAgMApUcnkgdG8gZmluZCBXUEEtZW5h
+YmxlZCBBUAowOiAwMDoxODo4NDoyNjo0NDowZCBzc2lkPSdoYXJyaWJlcnQnIHdwYV9pZV9s
+ZW49MjIgcnNuX2llX2xlbj0wIGNhcHM9MHgxMQogICBzZWxlY3RlZCBiYXNlZCBvbiBXUEEg
+SUUKICAgc2VsZWN0ZWQgV1BBIEFQIDAwOjE4Ojg0OjI2OjQ0OjBkIHNzaWQ9J2hhcnJpYmVy
+dCcKVHJ5IHRvIGZpbmQgbm9uLVdQQSBBUApBbHJlYWR5IGFzc29jaWF0ZWQgd2l0aCB0aGUg
+c2VsZWN0ZWQgQVAuCkF1dGhlbnRpY2F0aW9uIHdpdGggMDA6MTg6ODQ6MjY6NDQ6MGQgdGlt
+ZWQgb3V0LgpBZGRlZCBCU1NJRCAwMDoxODo4NDoyNjo0NDowZCBpbnRvIGJsYWNrbGlzdApO
+byBrZXlzIGhhdmUgYmVlbiBjb25maWd1cmVkIC0gc2tpcCBrZXkgY2xlYXJpbmcK
+--------------070501010401050606000608--
