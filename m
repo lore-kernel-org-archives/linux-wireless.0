@@ -1,181 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:56848 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754798AbYHZO6I (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.188]:13673 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042AbYHKVgM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Aug 2008 10:58:08 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: [PATCH 4/5] rfkill: rename rfkill_mutex to rfkill_global_mutex
-Date: Tue, 26 Aug 2008 11:58:00 -0300
-Message-Id: <1219762681-26911-5-git-send-email-hmh@hmh.eng.br> (sfid-20080826_165818_394751_2081C18E)
-In-Reply-To: <1219762681-26911-1-git-send-email-hmh@hmh.eng.br>
-References: <1219762681-26911-1-git-send-email-hmh@hmh.eng.br>
+	Mon, 11 Aug 2008 17:36:12 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so1952475fkq.5
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2008 14:36:09 -0700 (PDT)
+Message-ID: <22bd28110808111436j7ba8a396h77cbc20f88337029@mail.gmail.com> (sfid-20080811_233616_546509_8D48AC63)
+Date: Mon, 11 Aug 2008 23:36:08 +0200
+From: "=?ISO-8859-1?Q?matthieu_Barth=E9lemy?=" <bonsouere@gmail.com>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] rtl8187: Add USB ID for Netgear WG111V3
+Cc: "John W Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <489fbfb9.IY+WzjnFwKATbnw0%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <489fbfb9.IY+WzjnFwKATbnw0%Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rfkill_mutex and rfkill->mutex are too easy to confuse with each other.
+Thanks for your willingness to merge this patch. From what I know,
+this device is very common so a lot of new users will potentially
+benefit from the rtl8187B code.
+Any news about a possible inclusion in 2.6.27?
 
-Rename rfkill_mutex to rfkill_global_mutex, so that they are easier to tell
-apart with just one glance.
+Mathieu Barth=E9lemy
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>
----
- net/rfkill/rfkill.c |   38 ++++++++++++++++++++------------------
- 1 files changed, 20 insertions(+), 18 deletions(-)
 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 910699c..d573579 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -37,7 +37,7 @@ MODULE_DESCRIPTION("RF switch support");
- MODULE_LICENSE("GPL");
- 
- static LIST_HEAD(rfkill_list);	/* list of registered rf switches */
--static DEFINE_MUTEX(rfkill_mutex);
-+static DEFINE_MUTEX(rfkill_global_mutex);
- 
- static unsigned int rfkill_default_state = RFKILL_STATE_UNBLOCKED;
- module_param_named(default_state, rfkill_default_state, uint, 0444);
-@@ -234,7 +234,7 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
-  * unless a specific switch is claimed by userspace (in which case,
-  * that switch is left alone) or suspended.
-  *
-- * Caller must have acquired rfkill_mutex.
-+ * Caller must have acquired rfkill_global_mutex.
-  */
- static void __rfkill_switch_all(const enum rfkill_type type,
- 				const enum rfkill_state state)
-@@ -263,14 +263,14 @@ static void __rfkill_switch_all(const enum rfkill_type type,
-  * @type: type of interfaces to be affected
-  * @state: the new state
-  *
-- * Acquires rfkill_mutex and calls __rfkill_switch_all(@type, @state).
-+ * Acquires rfkill_global_mutex and calls __rfkill_switch_all(@type, @state).
-  * Please refer to __rfkill_switch_all() for details.
-  */
- void rfkill_switch_all(enum rfkill_type type, enum rfkill_state state)
- {
--	mutex_lock(&rfkill_mutex);
-+	mutex_lock(&rfkill_global_mutex);
- 	__rfkill_switch_all(type, state);
--	mutex_unlock(&rfkill_mutex);
-+	mutex_unlock(&rfkill_global_mutex);
- }
- EXPORT_SYMBOL(rfkill_switch_all);
- 
-@@ -278,7 +278,7 @@ EXPORT_SYMBOL(rfkill_switch_all);
-  * rfkill_epo - emergency power off all transmitters
-  *
-  * This kicks all non-suspended rfkill devices to RFKILL_STATE_SOFT_BLOCKED,
-- * ignoring everything in its path but rfkill_mutex and rfkill->mutex.
-+ * ignoring everything in its path but rfkill_global_mutex and rfkill->mutex.
-  *
-  * The global state before the EPO is saved and can be restored later
-  * using rfkill_restore_states().
-@@ -288,7 +288,8 @@ void rfkill_epo(void)
- 	struct rfkill *rfkill;
- 	int i;
- 
--	mutex_lock(&rfkill_mutex);
-+	mutex_lock(&rfkill_global_mutex);
-+
- 	list_for_each_entry(rfkill, &rfkill_list, node) {
- 		mutex_lock(&rfkill->mutex);
- 		rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
-@@ -300,7 +301,7 @@ void rfkill_epo(void)
- 		rfkill_global_states[i].current_state =
- 				RFKILL_STATE_SOFT_BLOCKED;
- 	}
--	mutex_unlock(&rfkill_mutex);
-+	mutex_unlock(&rfkill_global_mutex);
- }
- EXPORT_SYMBOL_GPL(rfkill_epo);
- 
-@@ -315,10 +316,11 @@ void rfkill_restore_states(void)
- {
- 	int i;
- 
--	mutex_lock(&rfkill_mutex);
-+	mutex_lock(&rfkill_global_mutex);
-+
- 	for (i = 0; i < RFKILL_TYPE_MAX; i++)
- 		__rfkill_switch_all(i, rfkill_global_states[i].default_state);
--	mutex_unlock(&rfkill_mutex);
-+	mutex_unlock(&rfkill_global_mutex);
- }
- EXPORT_SYMBOL_GPL(rfkill_restore_states);
- 
-@@ -471,7 +473,7 @@ static ssize_t rfkill_claim_store(struct device *dev,
- 	 * Take the global lock to make sure the kernel is not in
- 	 * the middle of rfkill_switch_all
- 	 */
--	error = mutex_lock_interruptible(&rfkill_mutex);
-+	error = mutex_lock_interruptible(&rfkill_global_mutex);
- 	if (error)
- 		return error;
- 
-@@ -486,7 +488,7 @@ static ssize_t rfkill_claim_store(struct device *dev,
- 		rfkill->user_claim = claim;
- 	}
- 
--	mutex_unlock(&rfkill_mutex);
-+	mutex_unlock(&rfkill_global_mutex);
- 
- 	return error ? error : count;
- }
-@@ -621,7 +623,7 @@ static int rfkill_add_switch(struct rfkill *rfkill)
- {
- 	int error;
- 
--	mutex_lock(&rfkill_mutex);
-+	mutex_lock(&rfkill_global_mutex);
- 
- 	error = rfkill_check_duplicity(rfkill);
- 	if (error < 0)
-@@ -642,16 +644,16 @@ static int rfkill_add_switch(struct rfkill *rfkill)
- 
- 	error = 0;
- unlock_out:
--	mutex_unlock(&rfkill_mutex);
-+	mutex_unlock(&rfkill_global_mutex);
- 
- 	return error;
- }
- 
- static void rfkill_remove_switch(struct rfkill *rfkill)
- {
--	mutex_lock(&rfkill_mutex);
-+	mutex_lock(&rfkill_global_mutex);
- 	list_del_init(&rfkill->node);
--	mutex_unlock(&rfkill_mutex);
-+	mutex_unlock(&rfkill_global_mutex);
- 
- 	mutex_lock(&rfkill->mutex);
- 	rfkill_toggle_radio(rfkill, RFKILL_STATE_SOFT_BLOCKED, 1);
-@@ -840,7 +842,7 @@ int rfkill_set_default(enum rfkill_type type, enum rfkill_state state)
- 			"parameter to rfkill_set_default\n", state, type))
- 		return -EINVAL;
- 
--	mutex_lock(&rfkill_mutex);
-+	mutex_lock(&rfkill_global_mutex);
- 
- 	if (!test_and_set_bit(type, rfkill_states_lockdflt)) {
- 		rfkill_global_states[type].default_state = state;
-@@ -848,7 +850,7 @@ int rfkill_set_default(enum rfkill_type type, enum rfkill_state state)
- 	} else
- 		error = -EPERM;
- 
--	mutex_unlock(&rfkill_mutex);
-+	mutex_unlock(&rfkill_global_mutex);
- 	return error;
- }
- EXPORT_SYMBOL_GPL(rfkill_set_default);
--- 
-1.5.6.3
 
+On 8/11/08, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> From: matthieu Barth=E9lemy <bonsouere@gmail.com>
+>
+> Add the USB ID for a Netgear WG111v3.
+>
+> Signed-off-by: matthieu Barth=E9lemy <bonsouere@gmail.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>
+> John,
+>
+> Technically, this is 2.6.28 material, but is it possible to push
+> it for 2.6.27?
+>
+> Larry
+> ---
+>
+> Index: wireless-testing/drivers/net/wireless/rtl8187_dev.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- wireless-testing.orig/drivers/net/wireless/rtl8187_dev.c
+> +++ wireless-testing/drivers/net/wireless/rtl8187_dev.c
+> @@ -37,6 +37,7 @@ static struct usb_device_id rtl8187_tabl
+>  	{USB_DEVICE(0x0bda, 0x8187), .driver_info =3D DEVICE_RTL8187},
+>  	{USB_DEVICE(0x0bda, 0x8189), .driver_info =3D DEVICE_RTL8187B},
+>  	{USB_DEVICE(0x0bda, 0x8197), .driver_info =3D DEVICE_RTL8187B},
+> +	{USB_DEVICE(0x0846, 0x4260), .driver_info =3D DEVICE_RTL8187B},
+>  	/* Netgear */
+>  	{USB_DEVICE(0x0846, 0x6100), .driver_info =3D DEVICE_RTL8187},
+>  	{USB_DEVICE(0x0846, 0x6a00), .driver_info =3D DEVICE_RTL8187},
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
