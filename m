@@ -1,62 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:55970 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751646AbYH0BUe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Aug 2008 21:20:34 -0400
-Subject: Re: Are these Ralink chips supported?
-From: Dan Williams <dcbw@redhat.com>
-To: Forest Bond <forest@alittletooquiet.net>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20080826191654.GB26037@storm.local.network>
-References: <20080805163234.GA22429@storm.local.network>
-	 <200808061014.10483.IvDoorn@gmail.com>
-	 <20080826191654.GB26037@storm.local.network>
-Content-Type: text/plain
-Date: Tue, 26 Aug 2008 21:21:46 -0400
-Message-Id: <1219800106.3112.4.camel@localhost.localdomain> (sfid-20080827_032053_760901_D4123C4B)
-Mime-Version: 1.0
+Received: from mx51.mymxserver.com ([85.199.173.110]:21739 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750858AbYHLJ4a (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Aug 2008 05:56:30 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Pondering: how to improve mac80211 roaming ...
+Date: Tue, 12 Aug 2008 11:56:22 +0200
+Cc: Jouni Malinen <j@w1.fi>
+References: <200808120838.52888.hs4233@mail.mn-solutions.de> <20080812082246.GD4981@jm.kir.nu>
+In-Reply-To: <20080812082246.GD4981@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200808121156.22639.hs4233@mail.mn-solutions.de> (sfid-20080812_115634_393701_6B5D01F8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-08-26 at 15:16 -0400, Forest Bond wrote:
-> Hi,
-> 
-> On Wed, Aug 06, 2008 at 10:14:10AM +0200, Ivo van Doorn wrote:
-> > On Tuesday 05 August 2008, Forest Bond wrote:
-> > > I'm having a hard time figuring out if the following wireless chips are
-> > > supported:
-> > > 
-> > >  * RT2770 + RT2720
-> > 
-> > I *think* this is the rt2870 driver. The in-kernel driver is under development
-> 
-> Okay, the RT2870 driver from Ralink works with this device, but it seems to be a
-> bit quirky:
-> 
->  * The device has to be brought up and down a few times before NetworkManager
->    sees it.  I'm not sure what NetworkManager is cueing off of.
+> > When I know the beacon period, I could setup a timer
+> > with "beacon_period + beacon_period*0.5". In the timer
+> > function I could then increase a missed beacon counter and
+> > act accordingly, e.g. search for APs, roam etc.
+>
+> Some (most?) wlan hardware designs allow this to be done in
+> firmware/hardware and that would likely be more efficient way
+> of determining missed beacons.
 
-HAL events.  If the device doesn't show up in HAL and doesn't have a
-network interface with the "net.80211" capability, NM won't see it.  A
-dump of 'lshal' when you're having the problem would be useful.  If that
-shows the device correctly, then it might be that the device isn't
-responding correctly to an SIOCSIWSCAN or SIOCGIWRANGE command in a
-manner which NM is expecting.
+Ahh, I see. E.g. in wireless-testing, ath5k/hw.c:
 
-Dan
+        AR5K_REG_WRITE_BITS(ah, AR5K_RSSI_THR, 
+AR5K_RSSI_THR_BMISS,
+                        state->bs_bmiss_threshold);
 
->  * I was unable to get the thing to associate and come up using
->    iwconfig/ifconfig.  Might have been my range on that AP, though, since I was
->    shooting for an unencrypted network that is a not the closest network in my
->    building.
-> 
->  * Usual odd bits with vendor drivers like odd build system subtleties and
->    seemingly unnecessary configuration files (does anyone really care to fiddle
->    with those, or doesn't everyone just want things to work with the standard
->    configuration mechanisms like I do?).
-> 
-> Is there an effort to move this driver in-tree?  The license is GPL.
-> 
-> Thanks,
-> Forest
+However, a grep for bs_bmiss_threshold doesn't show that it
+get's ever set. The whole section is also marked with #if 0 ...
+#endif.
 
+
+
+
+Reporting events from the driver
+--------------------------------
+How would a driver report beacon miss to mac80211?  A function,
+incrementing some variable in some structure?  How does this
+variable get decremented?
+
+Surely it would be set to zero at association time, but maybe the
+value should degrade over time (e.g. it advanced to 6 while I was
+at the edge of the AP area, but then I move back into good 
+coverage).
+
+So maybe the driver calls
+
+   void mac80211_notify_missed_beacon(struct ieee80211_hw *hw, 
+u32 count)
+
+Then mac80211 could do the increment/decrement things common for 
+all
+drivers. The other function:
+
+To report a too-low SNR/RSSI, we could re-use
+ieee80211_notify_mac(). We could also add a new parameter to
+ieee80211_notify_mac() to that we can transport some data via it,
+besides the event. This way we wouldn't need a new function
+mac80211_notify_missed_beacon().
+
+
+
+Announing capabilities
+----------------------
+Somehow mac80211 needs to send the thresshold to the drivers ---
+or do it on it's own. So we need some kind of capability bits.
+
+So maybe I need:
+
+IEEE80211_HW_BEACON_MISSED
+IEEE80211_HW_LOW_SIGNAL
+
+(ath5k supports RSSI threshold, maybe other HW supports SNR
+threshhold?  And do we have the usual dB vs. dBm problem here?).
+
+We could also forget about RSSI/SNR dB/dBm and just
+use "sensitity" from 0..n (e.g. 0..3), with:
+
+0: don't try to roam
+1: try to stay at current AP quite long
+2: middle ground
+3: roam quickly
+
+IEEE80211_HW_SENS_THRESHOLD
+
+
+
+If the driver doesn't support either of this, then mac80211
+could do that on it's own. I'd actually try to get this
+functionality working first.
+
+
+> cfg80211 lacks a command for request new scans
+
+But that is something that I currently don't want to do. A scan 
+command can be quite complicated, e.g. scan active (with probe 
+requests), scan passive etc etc etc. For me this is another 
+problem to tackle :-)
+
+> > For a WEP or non-encrypted environment a in-kernel-roaming
+> > would be possible, this would bring a similar behavior to
+> > mac80211 that common fullmac drivers exhibit. But my first
+> > goal would not be in this area.
+>
+> That should not be limited to just WEP or plaintext. If
+> mac80211 reports association even to a new BSS, wpa_supplicant
+> should be able to complete WPA/IEEE 802.1X handshake with the
+> new AP after that.
+
+Ah, good to know :-)
