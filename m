@@ -1,95 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:45853 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751376AbYHDWsE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 18:48:04 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linville@tuxdriver.com>,
-	<torvalds@linux-foundation.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 1/4] list.h: Add list_splice_tail() and list_splice_tail_init()
-Date: Mon, 4 Aug 2008 15:48:00 -0700
-Message-ID: <1217890080-12073-1-git-send-email-lrodriguez@atheros.com> (sfid-20080805_004809_490471_AFB0D0D6)
+Received: from rv-out-0506.google.com ([209.85.198.236]:53982 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752332AbYHLOGO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Aug 2008 10:06:14 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so2804293rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Aug 2008 07:06:14 -0700 (PDT)
+Message-ID: <1ba2fa240808120706s6ddd6d40vdbd9bcff8c1db5c@mail.gmail.com> (sfid-20080812_160619_268097_5FE791D6)
+Date: Tue, 12 Aug 2008 17:06:14 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Vladimir Koutny" <vlado@work.ksp.sk>
+Subject: Re: mac80211 : WARN at net/mac80211/rate.h:153
+Cc: "Dave Young" <hidave.darkstar@gmail.com>,
+	"Mattias Nissler" <mattias.nissler@gmx.de>,
+	"Michael Buesch" <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"Stefano Brivio" <stefano.brivio@polimi.it>
+In-Reply-To: <487C4050.1010006@work.ksp.sk>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080714075010.GA3559@darkstar> <200807141614.51628.mb@bu3sch.de>
+	 <1216055849.4435.7.camel@localhost>
+	 <a8e1da0807142251p14324917w62d751bed5a56b92@mail.gmail.com>
+	 <487C4050.1010006@work.ksp.sk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If you are using linked lists for queues list_splice() will not do what
-you would expect even if you use the elements passed reversed. We need
-to handle these differently. We add list_splice_tail() and
-list_splice_tail_init()
+On Tue, Jul 15, 2008 at 9:14 AM, Vladimir Koutny <vlado@work.ksp.sk> wrote:
+> Dave Young wrote:
+>> On Tue, Jul 15, 2008 at 1:17 AM, Mattias Nissler <mattias.nissler@gmx.de> wrote:
+>>> On Mon, 2008-07-14 at 16:14 +0200, Michael Buesch wrote:
+>>>> CCing PID guys.
+>>>> I've seen several people hitting this. What's the meaning of this warning?
+>>> It basically means the rate control cannot find any rate in
+>>> local->hw.wiphy->bands[local->hw.conf.channel->band] that is supported
+>>> by the sta in question. Normally this should not happen. I guess the
+>>> reason is that the supported rates bits in the sta info are all zero,
+>>> which would probably be a bug. I haven't seen this here, but I don't use
+>>> the IBSS code either. To further investigate this, you could the
+>>> following just before the WARN_ON:
+>
+>
+> This has been solved already:
+>
+> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commitdiff;h=def5e9a210235d690e79ae660972792860568421
+>
+> Vlado
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- include/linux/list.h |   45 ++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 44 insertions(+), 1 deletions(-)
+This pacth is wrong it causes that all IBSS traffic is transmitted
+rate of BEACON (1MBit) , which is pretty bad performance like. We are
+working on possible fixes.
+Tomas
 
-diff --git a/include/linux/list.h b/include/linux/list.h
-index 453916b..594f67c 100644
---- a/include/linux/list.h
-+++ b/include/linux/list.h
-@@ -229,7 +229,7 @@ static inline void __list_splice(const struct list_head *list,
- }
- 
- /**
-- * list_splice - join two lists
-+ * list_splice - join two lists, this is designed for stacks
-  * @list: the new list to add.
-  * @head: the place to add it in the first list.
-  */
-@@ -256,6 +256,49 @@ static inline void list_splice_init(struct list_head *list,
- 	}
- }
- 
-+static inline void __list_splice_tail(const struct list_head *list,
-+				 struct list_head *head)
-+{
-+	struct list_head *first = list->next;
-+	struct list_head *last = list->prev;
-+	struct list_head *current_tail = head->prev;
-+
-+	current_tail->next = first;
-+	last->next = head;
-+	head->prev = last;
-+	first->prev = current_tail;
-+}
-+
-+/**
-+ * list_splice_tail - join two lists, each list being a queue
-+ * @list: the new list to add.
-+ * @head: the place to add it in the first list.
-+ */
-+static inline void list_splice_tail(const struct list_head *list,
-+				struct list_head *head)
-+{
-+	if (!list_empty(list))
-+		__list_splice_tail(list, head);
-+}
-+
-+/**
-+ * list_splice_tail_init - join two lists, each list being a queue, and
-+ * 	reinitialise the emptied list.
-+ * @list: the new list to add.
-+ * @head: the place to add it in the first list.
-+ *
-+ * The list at @list is reinitialised
-+ */
-+static inline void list_splice_tail_init(struct list_head *list,
-+				    struct list_head *head)
-+{
-+	if (!list_empty(list)) {
-+		__list_splice_tail(list, head);
-+		INIT_LIST_HEAD(list);
-+	}
-+}
-+
-+
- /**
-  * list_entry - get the struct for this entry
-  * @ptr:	the &struct list_head pointer.
--- 
-1.5.6.rc2.15.g457bb.dirty
-
+>>
+>
+>
+>
