@@ -1,34 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:42813 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751993AbYHNHUR (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:56425 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751082AbYHLGLx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2008 03:20:17 -0400
-To: "Milan Plzik" <milan.plzik@gmail.com>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-Subject: Re: Resignation from orinoco and at76_usb
-References: <1217634358.2731.8.camel@dv> <87bq099npy.fsf@nokia.com>
-	<1218628458.4304.19.camel@localhost>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 14 Aug 2008 10:19:52 +0300
-In-Reply-To: <1218628458.4304.19.camel@localhost> (ext Milan Plzik's message of "Wed\, 13 Aug 2008 13\:54\:18 +0200")
-Message-ID: <87fxp86p2f.fsf@nokia.com> (sfid-20080814_092022_932187_11056A14)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 12 Aug 2008 02:11:53 -0400
+Subject: Re: [ipw3945-devel] [PATCH 1/1] iwlwifi: fix printk newlines
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	ipw3945-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <1218519496.3107.235.camel@debian.sh.intel.com>
+References: <1218491381-1313-1-git-send-email-jirislaby@gmail.com>
+	 <1218502555.25524.22.camel@californication>
+	 <1218504137.3107.201.camel@debian.sh.intel.com>
+	 <1218513565.25524.31.camel@californication>
+	 <1218519496.3107.235.camel@debian.sh.intel.com>
+Content-Type: text/plain
+Date: Tue, 12 Aug 2008 08:11:58 +0200
+Message-Id: <1218521518.25524.37.camel@californication> (sfid-20080812_081156_311997_AAEB6235)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Milan Plzik <milan.plzik@gmail.com> writes:
+Hi Yi,
 
->   I can help here and there at least with testing, as I have access to
-> some devices equipped with at76-based hardware, although I won't have
-> time to be maintainer.
+> > > We should give the users more control to the style I think.
+> > 
+> > what kind of control do you expect? If you need two lines of debug or
+> > error output, call IWL_ERROR twice. This will also result in the
+> > KERN_ERR is set and not forgotten since that has to follow the
+> > newline.
+> 
+> I thought sometimes we might not need a new line between two IWL_ERRORs.
+> But your KERN_ERR garbaging the output in this case is correct. I think
+> when we wrote the macro, we just follow the style of dev_info() ...
+> dev_emerg() macros. Do you know why there is not a new line for them by
+> default?
 
-Excellent, all help is appreciated.
+I have no idea. Maybe because they are close to printk. I always put the
+newline into my macros.
 
-> P.S.: Good luck, Kalle :)
+Regards
 
-Thanks :)
+Marcel
 
--- 
-Kalle Valo
+
