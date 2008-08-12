@@ -1,48 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:13695 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751423AbYHQQU4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Aug 2008 12:20:56 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1446029fgg.17
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Aug 2008 09:20:54 -0700 (PDT)
-Message-ID: <1ba2fa240808170920r67e11567h2da8b396b18729dd@mail.gmail.com> (sfid-20080817_182101_288615_9EB6A8C6)
-Date: Sun, 17 Aug 2008 19:20:54 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: CPU load after killing iwlagn with RF kill switch
-Cc: "Mirco Tischler" <mt-ml@gmx.de>,
-	"Leonid Podolny" <leonidp.lists@gmail.com>,
-	linux-kernel@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
-	IvDoorn@gmail.com
-In-Reply-To: <20080817150242.GA23926@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <48A5EC02.4070303@gmail.com>
-	 <20080817035921.4d35ae0e@mtlp.12thdimension>
-	 <1ba2fa240808170004p63b76db1l1fdfb1cf1cb41636@mail.gmail.com>
-	 <20080817150242.GA23926@tuxdriver.com>
+Received: from mga03.intel.com ([143.182.124.21]:60777 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752982AbYHLBXL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Aug 2008 21:23:11 -0400
+Subject: Re: [ipw3945-devel] [PATCH 1/1] iwlwifi: fix printk newlines
+From: Zhu Yi <yi.zhu@intel.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	ipw3945-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <1218502555.25524.22.camel@californication>
+References: <1218491381-1313-1-git-send-email-jirislaby@gmail.com>
+	 <1218502555.25524.22.camel@californication>
+Content-Type: text/plain
+Date: Tue, 12 Aug 2008 09:22:17 +0800
+Message-Id: <1218504137.3107.201.camel@debian.sh.intel.com> (sfid-20080812_032314_824460_5B7BF8BB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 17, 2008 at 6:02 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Sun, Aug 17, 2008 at 10:04:12AM +0300, Tomas Winkler wrote:
->
->> There is gap in current rfkill implementation that we didn't close
->> yet.  There were also few patches that were not signed by Intel and
->> are apparently wrong.
->
-> Can you be more specific?  Do you know which patches are wrong (even
-> if you don't know how to fix them)?
->
+On Tue, 2008-08-12 at 02:55 +0200, Marcel Holtmann wrote:
+> >       s = iwl4965_get_sub_band(priv, channel);
+> >       if (s >= EEPROM_TX_POWER_BANDS) {
+> > -             IWL_ERROR("Tx Power can not find channel %d ",
+> channel);
+> > +             IWL_ERROR("Tx Power can not find channel %d\n",
+> channel);
+> >               return -1;
+> >       }
+> 
+> can we not just fix IWL_ERROR to always append the newline?
 
-80fcc9e28cf3a209fbfb39a7bbddc313c59c7424
-This one  is wrong and there are more then are not acked even though
-they cause no problem. In general I would prefer that patches will be
-acked by Yi or me.
-I will try to rebase our rfkill fixes ASAP from iwlwifi-2.6. iwl5000 branch.
+We should give the users more control to the style I think.
 
-Thanks
-Tomas
+Thanks,
+-yi
+
