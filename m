@@ -1,31 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bromo.msbb.uc.edu ([129.137.3.146]:36269 "HELO
-	bromo.msbb.uc.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752113AbYHDSLz (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.185]:48783 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752034AbYHLUs4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 14:11:55 -0400
-Date: Mon, 4 Aug 2008 14:11:53 -0400
-From: Jack Howarth <howarth@bromo.msbb.uc.edu>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: ath9k and signal level
-Message-ID: <20080804181153.GA3331@bromo.msbb.uc.edu> (sfid-20080804_201158_233717_85CDBA3B)
-References: <20080730024035.GA2976@bromo.msbb.uc.edu> <43e72e890808041107y2c3c75fsef049eb09a4c52b7@mail.gmail.com>
+	Tue, 12 Aug 2008 16:48:56 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so945731nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Aug 2008 13:48:54 -0700 (PDT)
+Message-ID: <48A1F734.7040801@gmail.com> (sfid-20080812_224902_685901_4B33875B)
+Date: Tue, 12 Aug 2008 22:48:52 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890808041107y2c3c75fsef049eb09a4c52b7@mail.gmail.com>
+To: yi.zhu@intel.com, reinette.chatre@intel.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: iwl + iomap + readl/writel
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis,
-   I noticed. The current ath9k git when built against 2.6.27-rc1-git4
-produces a driver which diplays the signal level in the gnome menu
-bar under Fedora 9. Thanks.
-                Jack
+Hi,
 
-On Mon, Aug 04, 2008 at 11:07:24AM -0700, Luis R. Rodriguez wrote:
-> 
-> Yes and I've recently added initial patch to add link quality support.
-> 
-> 
->   Luis
+I spotted that iwl drivers use readl method on an iomap space. IIRC some archs 
+might return a tag instead of an address expected by readl/writel.
+
+I think you should either switch to ioread32/iowrite32 or to ioremap.
