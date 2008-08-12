@@ -1,99 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:49186 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754853AbYHDHQo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 03:16:44 -0400
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 04 Aug 2008 00:16:44 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>,
-	<torvalds@linux-foundation.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 1/4] list.h: Add list_splice_tail() and list_splice_tail_init()
-Date: Mon, 4 Aug 2008 00:16:38 -0700
-Message-ID: <1217834201-14680-2-git-send-email-lrodriguez@atheros.com> (sfid-20080804_091650_993674_B1994C6A)
-In-Reply-To: <1217834201-14680-1-git-send-email-lrodriguez@atheros.com>
-References: <1217834201-14680-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+Received: from senator.holtmann.net ([87.106.208.187]:36242 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752547AbYHLAzw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Aug 2008 20:55:52 -0400
+Subject: Re: [PATCH 1/1] iwlwifi: fix printk newlines
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <1218491381-1313-1-git-send-email-jirislaby@gmail.com>
+References: <1218491381-1313-1-git-send-email-jirislaby@gmail.com>
 Content-Type: text/plain
+Date: Tue, 12 Aug 2008 02:55:55 +0200
+Message-Id: <1218502555.25524.22.camel@californication> (sfid-20080812_025557_691349_3AC3B58E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If you are using linked lists for queues list_splice() will not do what
-you would expect even if you use the elements passed reversed. We need
-to handle these differently. We add list_splice_tail() and
-list_splice_tail_init()
+Hi Jiri,
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- include/linux/list.h |   45 ++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 44 insertions(+), 1 deletions(-)
+> Add newlines at printk outputs to not break dmesg.
+> 
+> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+> Cc: Zhu Yi <yi.zhu@intel.com>
+> Cc: Reinette Chatre <reinette.chatre@intel.com>
+> Cc: John W. Linville <linville@tuxdriver.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 +-
+>  drivers/net/wireless/iwlwifi/iwl-eeprom.c   |    6 +++---
+>  drivers/net/wireless/iwlwifi/iwl-sta.c      |    4 ++--
+>  drivers/net/wireless/iwlwifi/iwl-tx.c       |    4 ++--
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 +++---
+>  5 files changed, 11 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+> index 22bb269..4a0cc78 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-4965.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+> @@ -967,7 +967,7 @@ static int iwl4965_interpolate_chan(struct iwl_priv *priv, u32 channel,
+>  
+>  	s = iwl4965_get_sub_band(priv, channel);
+>  	if (s >= EEPROM_TX_POWER_BANDS) {
+> -		IWL_ERROR("Tx Power can not find channel %d ", channel);
+> +		IWL_ERROR("Tx Power can not find channel %d\n", channel);
+>  		return -1;
+>  	}
 
-diff --git a/include/linux/list.h b/include/linux/list.h
-index 453916b..594f67c 100644
---- a/include/linux/list.h
-+++ b/include/linux/list.h
-@@ -229,7 +229,7 @@ static inline void __list_splice(const struct list_head *list,
- }
- 
- /**
-- * list_splice - join two lists
-+ * list_splice - join two lists, this is designed for stacks
-  * @list: the new list to add.
-  * @head: the place to add it in the first list.
-  */
-@@ -256,6 +256,49 @@ static inline void list_splice_init(struct list_head *list,
- 	}
- }
- 
-+static inline void __list_splice_tail(const struct list_head *list,
-+				 struct list_head *head)
-+{
-+	struct list_head *first = list->next;
-+	struct list_head *last = list->prev;
-+	struct list_head *current_tail = head->prev;
-+
-+	current_tail->next = first;
-+	last->next = head;
-+	head->prev = last;
-+	first->prev = current_tail;
-+}
-+
-+/**
-+ * list_splice_tail - join two lists, each list being a queue
-+ * @list: the new list to add.
-+ * @head: the place to add it in the first list.
-+ */
-+static inline void list_splice_tail(const struct list_head *list,
-+				struct list_head *head)
-+{
-+	if (!list_empty(list))
-+		__list_splice_tail(list, head);
-+}
-+
-+/**
-+ * list_splice_tail_init - join two lists, each list being a queue, and
-+ * 	reinitialise the emptied list.
-+ * @list: the new list to add.
-+ * @head: the place to add it in the first list.
-+ *
-+ * The list at @list is reinitialised
-+ */
-+static inline void list_splice_tail_init(struct list_head *list,
-+				    struct list_head *head)
-+{
-+	if (!list_empty(list)) {
-+		__list_splice_tail(list, head);
-+		INIT_LIST_HEAD(list);
-+	}
-+}
-+
-+
- /**
-  * list_entry - get the struct for this entry
-  * @ptr:	the &struct list_head pointer.
--- 
-1.5.6.rc2.15.g457bb.dirty
+can we not just fix IWL_ERROR to always append the newline?
+
+Regards
+
+Marcel
+
 
