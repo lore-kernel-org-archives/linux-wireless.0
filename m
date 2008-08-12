@@ -1,106 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:58132 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751154AbYHQB7c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Aug 2008 21:59:32 -0400
-Date: Sun, 17 Aug 2008 03:59:21 +0200
-From: Mirco Tischler <mt-ml@gmx.de>
-To: Leonid Podolny <leonidp.lists@gmail.com>
-Cc: linux-kernel@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
-	IvDoorn@gmail.com
-Subject: Re: CPU load after killing iwlagn with RF kill switch
-Message-ID: <20080817035921.4d35ae0e@mtlp.12thdimension> (sfid-20080817_035947_883563_BA17D874)
-In-Reply-To: <48A5EC02.4070303@gmail.com>
-References: <48A5EC02.4070303@gmail.com>
+Received: from senator.holtmann.net ([87.106.208.187]:34916 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751007AbYHLVkA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Aug 2008 17:40:00 -0400
+Subject: Re: CRDA and uevent
+From: Marcel Holtmann <marcel@holtmann.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <43e72e890808111804j6ecd66c9r9907523d7f7594ed@mail.gmail.com>
+References: <43e72e890808051812y1f6b18ecpac089e45d4c18b84@mail.gmail.com>
+	 <43e72e890808111804j6ecd66c9r9907523d7f7594ed@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 12 Aug 2008 23:40:07 +0200
+Message-Id: <1218577207.25524.42.camel@californication> (sfid-20080812_234006_680524_5ED5DAEF)
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/qHOd7Y=YbGYmgOtZO=/4E=X";
- protocol="application/pgp-signature"; micalg=PGP-SHA1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/qHOd7Y=YbGYmgOtZO=/4E=X
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Luis,
 
-On Fri, 15 Aug 2008 23:50:10 +0300, Leonid Podolny wrote:
-> Hi,
-> With a new iwlagn driver and 2.6.27-rc3, if I turn off the wireless=20
-> (intel 4965ag) by RF kill switch, the CPU utilization of ksoftirqd=20
-> process raises to 100% and stays there until I rmmod the module.
-> Please let me know what further information I can provide.
+> > Marcel I know you also mentioned about using device platform for this?
+> > Is this correct or did I misunderstand? Can you elaborate a bit?
+> 
+> OK I got this to work, will send patches soon.
 
-Hi
+good, because I was running quite busy on my side. You could use a class
+like the firmware loader does btw.
 
-Same on my machine with same chip and same kernel.
-If I use the switch on the side of my laptop to turn off wlan, ksoftirqd ea=
-ts
-up one core of my cpu til I switch it on again or rmmod the iwlagn module. =
-But
-when I switch it on before the device loses connection and then off a second
-time, I now get a (the) second ksoftirqd process eating up the other core t=
-oo.
-This only happens if a connection is established, though.
-I'm not sure if this problem existed in 2.6.26 but I doubt it. (Will check =
-if I
-find the time).
+Regards
 
-My dmesg shows me this:
+Marcel
 
-[48067.257539] iwlagn: Radio Frequency Kill Switch is On:
-[48067.257539] Kill switch must be turned off for wireless networking to wo=
-rk.
-[48071.295154] wlan0: No ProbeResp from current AP 00:c0:a8:e5:e5:a5 - assu=
-me
-out of range=20
-[48072.099173] iwlagn: Error sending REPLY_ADD_STA: enqueue_hcmd failed: -5=
-=20
-[48072.099260] mac80211-phy1: failed to remove key (0, 00:c0:a8:e5:e5:a5) f=
-rom
-hardware (-5)=20
-[48072.206028] iwlagn: Error sending REPLY_ADD_STA: enqueue_hcmd failed: -5=
-=20
-[48072.206028] mac80211-phy1: failed to remove key (1, ff:ff:ff:ff:ff:ff) f=
-rom
-hardware (-5)
 
-The probably interesting parts of my config look like that:
-
-CONFIG_IWLWIFI=3Dm
-CONFIG_IWLCORE=3Dm
-CONFIG_IWLWIFI_LEDS=3Dy
-CONFIG_IWLWIFI_RFKILL=3Dy
-# CONFIG_IWLWIFI_DEBUG is not set
-CONFIG_IWLAGN=3Dm
-CONFIG_IWLAGN_SPECTRUM_MEASUREMENT=3Dy
-CONFIG_IWLAGN_LEDS=3Dy
-CONFIG_IWL4965=3Dy
-# CONFIG_IWL5000 is not set
-# CONFIG_IWL3945 is not set
-
-CONFIG_RFKILL=3Dm
-# CONFIG_RFKILL_INPUT is not set
-CONFIG_RFKILL_LEDS=3Dy
-CONFIG_IWLWIFI_RFKILL=3Dy
-
-I can recompile with debug options set if this helps. Just haven't found the
-time.
-
-Thanks
-Mirco
-
-P.S.: added some cc's for iwlwifi and rfkill.
-
---Sig_/qHOd7Y=YbGYmgOtZO=/4E=X
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEARECAAYFAkinhgEACgkQz+diZ7c2xfjaQACfb5c/stFKRA1LvjSCFsBUn02N
-/YkAn2TOIdhb6M1vjH6k/uTw5edgUIYL
-=C0io
------END PGP SIGNATURE-----
-
---Sig_/qHOd7Y=YbGYmgOtZO=/4E=X--
