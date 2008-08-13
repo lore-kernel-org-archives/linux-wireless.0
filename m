@@ -1,74 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:38208 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752349AbYHFVFn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2008 17:05:43 -0400
-Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere fw
-From: Dan Williams <dcbw@redhat.com>
-To: Dave <kilroyd@googlemail.com>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net,
-	Jean Tourrilhes <jt@hpl.hp.com>
-In-Reply-To: <1218056165.12240.0.camel@localhost.localdomain>
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
-	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
-	 <1217825304.10989.20.camel@dv>
-	 <1217864060.3139.10.camel@localhost.localdomain>
-	 <1217970944.2908.11.camel@dv>
-	 <1217973349.30531.1.camel@localhost.localdomain>
-	 <1217976491.2908.36.camel@dv>
-	 <1218028414.16977.5.camel@localhost.localdomain>
-	 <4899FB91.8070501@gmail.com>
-	 <1218056165.12240.0.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Wed, 06 Aug 2008 17:03:21 -0400
-Message-Id: <1218056601.12240.12.camel@localhost.localdomain> (sfid-20080806_230548_454102_03CD83D0)
-Mime-Version: 1.0
+Received: from ik-out-1112.google.com ([66.249.90.179]:31448 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752240AbYHMDha (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Aug 2008 23:37:30 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so3172168ika.5
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Aug 2008 20:37:28 -0700 (PDT)
+Message-ID: <48A256F4.2000506@gmail.com> (sfid-20080813_053753_768138_0D388664)
+Date: Wed, 13 Aug 2008 06:37:24 +0300
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+MIME-Version: 1.0
+To: Ian Schram <ischram@telenet.be>
+CC: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: Re: [ipw3945-devel] Few questions about the wireless stack
+References: <48A07709.80306@gmail.com> <48A206A0.6020709@gmail.com> <48A224E3.90307@telenet.be>
+In-Reply-To: <48A224E3.90307@telenet.be>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-08-06 at 16:56 -0400, Dan Williams wrote:
-> On Wed, 2008-08-06 at 20:29 +0100, Dave wrote:
-> > Dan Williams wrote:
-> > > On Tue, 2008-08-05 at 18:48 -0400, Pavel Roskin wrote:
-> > >> The userspace is welcome to keep a pool of all APs found by any scans,
-> > >> but I don't think drivers should do it.
-> > > 
-> > > Drivers need to keep a reasonably complete list of APs internally for
-> > > association anyway.  You don't want to have to do a full scan just to
-> > > associate if you have results from 10 seconds ago that are still valid.
-> > 
-> > This is not an issue for orinoco cards, as the firmware selects the AP to use independently of any driver scanning. The requirement to use ap_scan=2 means that wpa_supplicant doesn't need to look at the scan results either (except maybe to verify the configuration matches).
+Ian Schram wrote:
 > 
-> Well, since the driver supports SSID scanning, we can use ap_scan=1
-> anyway.  ap_scan=2 is actually pretty evil since it depends on WEXT
-> ordering and whatnot.
-
-As a follow-up, ap_scan is in practice more about hidden SSID support,
-and less about roaming.  Most firmware handles roaming internally
-anyway, even if ap_scan=2 is used.  The only way to actually disable
-firmware/driver roaming is to lock the BSSID with SIOCSIWAP.
-
-Dan
-
-> Dan
 > 
-> > > Furthermore, drivers need to keep cached results so that two processes
-> > > can request results of a scan after the scan is complete.
-> > 
-> > But this does apply to orinoco.
-> > 
-> > 
-> > Regards,
-> > 
-> > Dave.
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Maxim Levitsky wrote:
+>> Maxim Levitsky wrote:
+>>> Hi,
+>>>
+>>> I am trying to understand the relationship between
+>>> wireless interfaces (wlan0, mon0,..) and wireless driver.
+>>>
+>>> The most important question I am after, is what types of interfaces I 
+>>> can
+>>> run simultaneously? (I know that I can run station and monitor, but 
+>>> what are other  combinations ?)
+>>>
+>>> I noticed that in monitor mode iwl3945 appends so called 'radiotap' 
+>>> header to received packets, but
+>>> it seems that mac80211 strips this header, and appends its own,
+>>> for monitor interfaces, if so, then why to append it?
+>>>
+>>>
+>>> And lastly, when you expect AP code to be released?
+>>>
+>>
+>> I would be glad to hear about this, I have absolutely no free time to 
+>> dig that out.
+>>
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Last i can remember about the subject was Tomas
+> some months ago.
+> 
+> iirc the statement was something similar to:
+> - 3945 is a mini PCIe card, and hence not deployed in embedded? devices,
+> therefore master mode support isn't planned for 3945
+> - patches are welcome
+> 
+> http://osdir.com/ml/linux.drivers.ipw3945.devel/2007-11/threads.html#00177
+> 
+> cheers
+>>
+>> Maxim Levitsky
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe 
+>> linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
+
+
+What do we need from the hardware to enable master mode?
+
+I think that the best solution is to unite 3945 and rest of the driver code, 
+since it is all the same.
+
+You say that 4965 is pci express. does that mean I can buy a standalone version of it?
+
+
+Regards,
+	Maxim Levitsky
 
