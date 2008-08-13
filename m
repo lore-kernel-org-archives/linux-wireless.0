@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4945 "EHLO ra.tuxdriver.com"
+Received: from ns1.suse.de ([195.135.220.2]:56789 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764647AbYHDWDE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 18:03:04 -0400
-Date: Mon, 4 Aug 2008 17:54:39 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-08-04
-Message-ID: <20080804215439.GA9658@tuxdriver.com> (sfid-20080805_000312_531464_014A4AA3)
-References: <20080804193753.GA30345@tuxdriver.com> <1217882288.7819.19.camel@californication> <20080804204558.GA5866@tuxdriver.com> <1217886123.7819.23.camel@californication>
+	id S1752570AbYHMMxK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Aug 2008 08:53:10 -0400
+From: Helmut Schaa <hschaa@suse.de>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: Pondering: how to improve mac80211 roaming ...
+Date: Wed, 13 Aug 2008 14:53:05 +0200
+Cc: Jouni Malinen <j@w1.fi>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org
+References: <200808120838.52888.hs4233@mail.mn-solutions.de> <200808131426.55673.hschaa@suse.de> <1218631755.29370.1.camel@localhost.localdomain>
+In-Reply-To: <1218631755.29370.1.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1217886123.7819.23.camel@californication>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200808131453.06226.hschaa@suse.de> (sfid-20080813_145314_200552_71927046)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 04, 2008 at 11:42:03PM +0200, Marcel Holtmann wrote:
+Am Mittwoch, 13. August 2008 14:49:15 schrieb Dan Williams:
+> On Wed, 2008-08-13 at 14:26 +0200, Helmut Schaa wrote:
+> > Am Dienstag, 12. August 2008 17:42:23 schrieb Jouni Malinen:
+> > > On Tue, Aug 12, 2008 at 02:40:23PM +0200, Helmut Schaa wrote:
+> > > > JFYI I already started to rework the existing scan code in mac80211
+> > > > (software scan) to do something like background scanning:
+> > > >
+> > > > 1) notify current AP about leaving the channel
+> > > > 2) scan one channel
+> > >
+> > > It might be useful to leave this "one" as a parameter to allow easy
+> > > experiments with scanning more than one channel at a time to reduce
+> > > latency.
+> >
+> > Good point.
+> >
+> > > Ideally, this--along the interval for background scans--could
+> > > be something that is dynamically changed based on the expected traffic
+> > > pattern. Whenever there is lot of data traffic being (mostly
+> > > successfully) transmitted, it would be beneficial not to jump to other
+> > > channels as frequently or for as long a time. If there has not been any
+> > > data transmission for some time, it may be more acceptable to scan more
+> > > frequently and to remain away from the operational channel for longer
+> > > periods of time. Though, we should also keep in mind that background
+> > > scans are going to increase power consumption on otherwise inactive
+> > > situation, so setting a suitable policy for this can get quite complex.
+> >
+> > It might even be beneficial to cancel a currently active background scan
+> > once the TX queue is filling up and report the already gathered
+> > information to the user space.
+>
+> If that's the case, we should also then have a response to the original
+> scan request (or broadcast netlink message with the original request's
+> cookie) that says "scan canceled" so that the requester can handle that.
 
-> > > > Luis R. Rodriguez (4):
-> > > >       list.h: Add list_splice_tail() and list_splice_tail_init()
-> > > >       list.h: add list_cut_position()
-> > > 
-> > > have these two changes got reviewed on LKML? I don't see any ACKs for it
-> > > in the commit message.
-> > 
-> > Hmmm...no.  I thought the original patches had been copied to
-> > linux-kernel, but it looks like that is not the case.
-> > 
-> > The original patches are archived here:
-> > 
-> > 	http://marc.info/?l=linux-wireless&m=121783421908441&w=2
-> > 
-> > 	http://marc.info/?l=linux-wireless&m=121783422008445&w=2
-> > 
-> > What problems do you see with them?
-> 
-> I don't see a problem with these patches, but they should at least be
-> reviewed on LKML once. Changes to core kernel infrastructure should not
-> be merged silently via subsystem trees without any kind of ACKs.
+Right. Something like "The scan was canceled but here are the incomplete 
+results".
 
-Yes, fine.  That wasn't my intent. :-)  The patches were originally
-posted about two weeks ago, too bad that didn't actually go to
-linux-kernel. :-(
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Helmut
