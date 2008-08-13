@@ -1,73 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46756 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753815AbYHUGnY (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:44416 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751505AbYHMJ3O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Aug 2008 02:43:24 -0400
-Subject: Re: [PATCH 00/19] orinoco: WPA for Agere based cards
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dave <kilroyd@googlemail.com>
-Cc: Larry.Finger@lwfinger.net,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, proski@gnu.org
-In-Reply-To: <48ACA3CB.1070106@gmail.com> (sfid-20080821_010823_323586_913DECA7)
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
-	 <20080820192812.GA1746@tuxdriver.com>  <48AC836B.2020207@gmail.com>
-	 (sfid-20080820_225002_112959_7EFB2137)  <1219266476.3502.19.camel@johannes.berg>
-	 (sfid-20080820_230839_000050_1BDBB04E) <1219267346.3502.20.camel@johannes.berg>
-	 <48ACA3CB.1070106@gmail.com> (sfid-20080821_010823_323586_913DECA7)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IOrUHJ1ievBowVL8AjWO"
-Date: Thu, 21 Aug 2008 08:42:44 +0200
-Message-Id: <1219300964.3502.25.camel@johannes.berg> (sfid-20080821_084328_224277_00068A81)
-Mime-Version: 1.0
+	Wed, 13 Aug 2008 05:29:14 -0400
+Date: Wed, 13 Aug 2008 06:29:08 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Philip Langdale <philipl@overt.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	toshiba_acpi@memebeam.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
+	through rfkill (v2)
+Message-ID: <20080813092908.GA6806@khazad-dum.debian.net> (sfid-20080813_112919_999765_926F22E3)
+References: <4894B1B4.6050003@overt.org> <20080803042613.GC6053@khazad-dum.debian.net> <48965716.6020508@overt.org> <20080805212416.GB21738@khazad-dum.debian.net> <489A7CCF.1090407@overt.org> <20080807134530.GB17062@khazad-dum.debian.net> <48A06BBC.7060007@overt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <48A06BBC.7060007@overt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 11 Aug 2008, Philip Langdale wrote:
+> Henrique de Moraes Holschuh wrote:
+>> Hmm?  UNBLOCKED means it is not being rfkilled.  Why is not working?  Put
+>> some debug printks on your toggle_radio callback, that might help fix the
+>> issue...
+>
+> Well, what I see is this:
+>
+> At modprobe, I get an explicit unblock request. When I modify 'state' in sysfs,
+> I see appropriate requests to soft block and unblock. When I activate the hardware
+> kill switch, the rfkill state goes to hard_block but no one calls toggle_radio
+> and when I release the kill switch, the state goes to soft_block and no one
+> calls toggle_radio.
 
---=-IOrUHJ1ievBowVL8AjWO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Looks like either rfkill-input is inactive, or something is binding to the
+toshiba_acpi input device and setting it to exclusive mode (X evdev does
+this).
 
-On Thu, 2008-08-21 at 00:07 +0100, Dave wrote:
-
-> Thanks Larry/Johannes. I thought that might be where it should go, but
-> it looks quite mac80211 oriented at the moment.
-
-It is, but mostly because all the new drivers except libertas are
-mac80211 drivers, and all the old drivers used to already have
-information somewhere...
-
-> Anyway, I've added an initial orinoco page
-> <http://wireless.kernel.org/en/users/Drivers/orinoco> and linked to it
-> on <http://wireless.kernel.org/en/users/Drivers>.
-
-Great. I've just removed all the italics, I think I need to change my
-template :) If you want, you can sign up for notifications on that page
-to keep track of changes others make.
-
-johannes
-
---=-IOrUHJ1ievBowVL8AjWO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIrQ5gAAoJEKVg1VMiehFYbEwQAIFVdZe2udAdu1bnRTOflPye
-J/s135Z9FtPOTvL+9OMiWgJrlVFui1bQsMxsUC3ylPWu3jS+NJ8acks7SYcm+LvY
-16E5TbNOGMbT28fk4cz+NcdgqYGihoqv65FdXp/U1VDsO22nZdW+zr7HVbjUH5nc
-vjhBWLrCzZtlFI55NA3SB1Vp7T/q81/qekwMvYWTYPBFkaFUqF0iXCkqxzE1tZX/
-TNO95cnl8HiYq6ymazRreXzDj81ORI4CE/v5/5Om4gvc6iC6/VmZnQXvI4LxJeUR
-O6D4vzNIyKs/qlAHboEmGj+6yPKa9SX6BOu9ifLRUJkGQ8aJ2GydZmnO9dEVl3Xf
-qv8G/mJj4G+f9m1P2V3q0bPQQJVg2ACGphNPw9hLCKl7uTy2wXyh7C9sL57q0uvh
-iq5LcLTDWqA7Dd10r55quB9cIvT9dEY2tGCKscu7loER/A1yhbvYVgRwhRD2s8n4
-8KkI6lp25oQLSxv/BYyTXzj11j8hI2igC46GpoNmfuep74t2pWa8KW42w8J8aZJw
-V5FF8ecLwg6gpqdPGROic1xw4Kk74Q5UhJ0KFsafqSbiR5Yi18q+5WMfpj6UQzp3
-rJzXaHIQZV9vPZ/UDvFD5TtBFPf6FkTm4oyvoZjDTOCnYwuBJQNbpL3Yb+v0tllU
-gONpb7437xYmOxrQj81a
-=Pd09
------END PGP SIGNATURE-----
-
---=-IOrUHJ1ievBowVL8AjWO--
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
