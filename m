@@ -1,69 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:18520 "EHLO mga01.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:9165 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753640AbYHZCiR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2008 22:38:17 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 2.6.27 2/2] iwlwifi: fix 64bit platform firmware loading
-Date: Tue, 26 Aug 2008 10:34:31 +0800
-Message-Id: <1219718071-13587-2-git-send-email-yi.zhu@intel.com> (sfid-20080826_043820_676571_4D937DA1)
-In-Reply-To: <1219718071-13587-1-git-send-email-yi.zhu@intel.com>
-References: <1219718071-13587-1-git-send-email-yi.zhu@intel.com>
+	id S1750899AbYHMR3J convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Aug 2008 13:29:09 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: Ath5k missing led_classdev
+Date: Wed, 13 Aug 2008 10:28:07 -0700
+Message-ID: <BAD036B67C739F45BE062D0A03D19286036D35BB@orsmsx414.amr.corp.intel.com> (sfid-20080813_192914_685990_D27698FA)
+From: "Lupusoru, Razvan A" <razvan.a.lupusoru@intel.com>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+Hello,
 
-This patch fixes loading firmware from memory above 34bit.
+I compiled the package compat-wireless-2008-08-06 against 2.6.23 kernel.
+After it is done compiling, I get some warnings. The relevant ones are:
+WARNING: "led_classdev_register"
+[/kernel2623/compat-wireless-2008-08-06/drivers/net/wireless/ath5k/ath5k
+.ko] undefined!
+WARNING: "led_classdev_unregister"
+[/kernel2623/compat-wireless-2008-08-06/drivers/net/wireless/ath5k/ath5k
+.ko] undefined!
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-5000.c |   11 ++++-------
- drivers/net/wireless/iwlwifi/iwl-fh.h   |    1 +
- 2 files changed, 5 insertions(+), 7 deletions(-)
+What options in the kernel do I need to enable to get rid of these
+warnings? I try to "modprobe ath5k" but it tells me it is missing those
+so it cannot load.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 897652c..b011d1c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -534,14 +534,11 @@ static int iwl5000_load_section(struct iwl_priv *priv,
- 		FH_TFDIB_CTRL0_REG(FH_SRVC_CHNL),
- 		phy_addr & FH_MEM_TFDIB_DRAM_ADDR_LSB_MSK);
- 
--	/* FIME: write the MSB of the phy_addr in CTRL1
--	 * iwl_write_direct32(priv,
--		IWL_FH_TFDIB_CTRL1_REG(IWL_FH_SRVC_CHNL),
--		((phy_addr & MSB_MSK)
--			<< FH_MEM_TFDIB_REG1_ADDR_BITSHIFT) | byte_count);
--	 */
- 	iwl_write_direct32(priv,
--		FH_TFDIB_CTRL1_REG(FH_SRVC_CHNL), byte_cnt);
-+		FH_TFDIB_CTRL1_REG(FH_SRVC_CHNL),
-+		(iwl_get_dma_hi_address(phy_addr)
-+			<< FH_MEM_TFDIB_REG1_ADDR_BITSHIFT) | byte_cnt);
-+
- 	iwl_write_direct32(priv,
- 		FH_TCSR_CHNL_TX_BUF_STS_REG(FH_SRVC_CHNL),
- 		1 << FH_TCSR_CHNL_TX_BUF_STS_REG_POS_TB_NUM |
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
-index 9446424..cd11c0c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
-@@ -287,6 +287,7 @@
- 
- #define FH_RSSR_CHNL0_RX_STATUS_CHNL_IDLE	(0x01000000)
- 
-+#define FH_MEM_TFDIB_REG1_ADDR_BITSHIFT	28
- 
- /**
-  * Transmit DMA Channel Control/Status Registers (TCSR)
--- 
-1.5.3.6
+In my .config file which I use to compile the kernel, I added:
+CONFIG_NEW_LEDS=y
+CONFIG_LEDS_CLASS=y
+CONFIG_LEDS_IXP4XX=y
+CONFIG_LEDS_GPIO=y
+CONFIG_LEDS_TRIGGERS=y
+CONFIG_LEDS_TRIGGER_TIMER=y
+CONFIG_LEDS_TRIGGER_IDE_DISK=y
+CONFIG_LEDS_TRIGGER_HEARTBEAT=y
 
+Any ideas on what I am missing? Thanks.
+
+Razvan A. Lupusoru
