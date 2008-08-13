@@ -1,63 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 166-70-238-42.ip.xmission.com ([166.70.238.42]:33372 "EHLO
-	ns1.wolfmountaingroup.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751566AbYHUE7X (ORCPT
+Received: from yorgi.telenet-ops.be ([195.130.133.69]:47015 "EHLO
+	yorgi.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751411AbYHMAEU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Aug 2008 00:59:23 -0400
-Message-ID: <47238.166.70.238.46.1219292835.squirrel@webmail.wolfmountaingroup.com> (sfid-20080821_065939_487549_815358B7)
-In-Reply-To: <20080820175054.0795eecb.akpm@linux-foundation.org>
-References: <1749.69.2.248.210.1219253222.squirrel@webmail.wolfmountaingroup.com>
-    <20080820175054.0795eecb.akpm@linux-foundation.org>
-Date: Wed, 20 Aug 2008 22:27:15 -0600 (MDT)
-Subject: Re: 2.6.27-rc3-git6 iwl3945 driver drops packets with WEP  enabled
-From: jmerkey@wolfmountaingroup.com
-To: "Andrew Morton" <akpm@linux-foundation.org>
-Cc: jmerkey@wolfmountaingroup.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
+	Tue, 12 Aug 2008 20:04:20 -0400
+Received: from wilson.telenet-ops.be (wilson.telenet-ops.be [195.130.132.42])
+	by yorgi.telenet-ops.be (Postfix) with ESMTP id A258B588514
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Aug 2008 02:04:18 +0200 (CEST)
+Message-ID: <48A224E3.90307@telenet.be> (sfid-20080813_020423_478855_9B110A31)
+Date: Wed, 13 Aug 2008 02:03:47 +0200
+From: Ian Schram <ischram@telenet.be>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+CC: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: Re: [ipw3945-devel] Few questions about the wireless stack
+References: <48A07709.80306@gmail.com> <48A206A0.6020709@gmail.com>
+In-Reply-To: <48A206A0.6020709@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Wed, 20 Aug 2008 11:27:02 -0600 (MDT)
-> jmerkey@wolfmountaingroup.com wrote:
->
->>
->> On an Acer 9410 laptop with dual core processors, the iwl3945 driver has
->> intermittment receiver lockup problems (stops receiving packets) using
->> the
->> Linux iwl3945 drivers with WEP encryption enbaled.  The adapter works
->> fine
->> without WEP or WPA.   If the same system is booted to Windows Vista
->> (which
->> takes about 15 minutes to boot because Vista is a fat slow pig) the
->> wireless drivers work fine with WEP under Vista on the same system.
->>
->> If the system copies the ndis .sys drivers and I build ndiswrapper
->> (which
->> has to be really hacked up to build on 2.6.27) and use the ndis drivers
->> on
->> 2.6.27-rc3 with a modified ndiswrapper, they work fine.
->>
->> I suspect the firmware or an interaction with the firmware settings
->> since
->> when the system is booted to Vista after running 2.6.27-rc3 with the
->> iwl3945 drivers, I have to power cycle the system periodically after
->> running the iwl3945 driver to get the drivers under Vista to work again,
->> but not always.
->>
->
-> (cc linux-wireless)
->
-> Was 2.6.26 OK?
->
 
-No.  2.6.26 It was actually a little worse, and the git6 was an
-improvement since I was at least able to get past DHCP and obtain an
-address, after which is died.  The failure is the driver stops receiving
-packets, and if you rmmod/modprobe (reload) the driver , then it will work
-again and lock up immediately following 'dhclient <interface>'.   tcpdump
--n -i <if> will work hit or miss before the lockup.
 
-Jeff
+Maxim Levitsky wrote:
+> Maxim Levitsky wrote:
+>> Hi,
+>>
+>> I am trying to understand the relationship between
+>> wireless interfaces (wlan0, mon0,..) and wireless driver.
+>>
+>> The most important question I am after, is what types of interfaces I can
+>> run simultaneously? (I know that I can run station and monitor, but 
+>> what are other  combinations ?)
+>>
+>> I noticed that in monitor mode iwl3945 appends so called 'radiotap' 
+>> header to received packets, but
+>> it seems that mac80211 strips this header, and appends its own,
+>> for monitor interfaces, if so, then why to append it?
+>>
+>>
+>> And lastly, when you expect AP code to be released?
+>>
+> 
+> I would be glad to hear about this, I have absolutely no free time to 
+> dig that out.
+> 
 
+Last i can remember about the subject was Tomas
+some months ago.
+
+iirc the statement was something similar to:
+- 3945 is a mini PCIe card, and hence not deployed in embedded? devices,
+therefore master mode support isn't planned for 3945
+- patches are welcome
+
+http://osdir.com/ml/linux.drivers.ipw3945.devel/2007-11/threads.html#00177
+
+cheers
+> 
+> Maxim Levitsky
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
