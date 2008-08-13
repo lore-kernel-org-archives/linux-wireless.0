@@ -1,120 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:3175 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751758AbYHTCFG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2008 22:05:06 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 2/7] iwlwifi: clean up hw scan handler
-Date: Wed, 20 Aug 2008 10:01:28 +0800
-Message-Id: <1219197693-21407-3-git-send-email-yi.zhu@intel.com> (sfid-20080820_040512_529329_729885EA)
-In-Reply-To: <1219197693-21407-2-git-send-email-yi.zhu@intel.com>
-References: <1219197693-21407-1-git-send-email-yi.zhu@intel.com>
- <1219197693-21407-2-git-send-email-yi.zhu@intel.com>
+Received: from fmmailgate01.web.de ([217.72.192.221]:38104 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751772AbYHMSaZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Aug 2008 14:30:25 -0400
+From: Chr <chunkeey@web.de>
+To: d i <navilein@hotmail.com>
+Subject: Re: p54usb not working on DWL-G120 Spinnaker wireless card
+Date: Wed, 13 Aug 2008 20:33:15 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <BLU144-W261CF289A7CDEA2BABB0B4D1730@phx.gbl>
+In-Reply-To: <BLU144-W261CF289A7CDEA2BABB0B4D1730@phx.gbl>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200808132033.16673.chunkeey@web.de> (sfid-20080813_203031_439905_89450118)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+Hello!
 
-This patch cleans up iwl_mac_hw_scan handler.
+On Wednesday 13 August 2008 16:02:09 Daniel wrote:
+> I now have kernel 2.6.25-r7, but I kept trying to use the p54usb module
+> with my card unsuccessfully since it appeared in the kernel tree (around
+> February this year) -- it never worked. I use firmware version 2.5.6.0 from
+> the prism54.org website. I tried with other versions of firmware as well,
+> but most of them did not even load up (error -22 and error -110).
+hmm, there are about 5 different types of firmwares... 
+- TWO for minipci cards 
+	- fullmac are exclusively for prism54
+	- softmac are only for p54
+- one for isl3886 chips with a net2280 pci-usb-bridge (your card/stick)
+- one for isl3887 chips (they have a native USB-Interface)
+- one for conextant's cx3110x (spi interface) (found on some Nokia N800/N770 I think
+	Johannes did some work here, but that was long ago)
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |   35 ++++++++++++++-----------------
- 1 files changed, 16 insertions(+), 19 deletions(-)
+so stick with prism54.org recommendation 2.5.6.0 ...
+>
+> With firmware 2.5.6.0 the module loads up, but scanning for APs reveals no
+> answer, ever. If I set an ESSID of a network I KNOW is around and not
+> crypted it does not set the AP address and the "Link Quality" is always 0 
+> and  it never connects. The card can not be set in monitor mode.
+> I can set the card in ad-hoc mode ONLY if the interface is down.
+(Ad-hoc isn't supported... there was a patch but no review!)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 479fd72..b9a4440 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3182,9 +3182,9 @@ static void iwl4965_bss_info_changed(struct ieee80211_hw *hw,
- 
- }
- 
--static int iwl4965_mac_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t len)
-+static int iwl_mac_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t ssid_len)
- {
--	int rc = 0;
-+	int ret;
- 	unsigned long flags;
- 	struct iwl_priv *priv = hw->priv;
- 
-@@ -3194,41 +3194,38 @@ static int iwl4965_mac_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t len)
- 	spin_lock_irqsave(&priv->lock, flags);
- 
- 	if (!iwl_is_ready_rf(priv)) {
--		rc = -EIO;
-+		ret = -EIO;
- 		IWL_DEBUG_MAC80211("leave - not ready or exit pending\n");
- 		goto out_unlock;
- 	}
- 
- 	if (priv->iw_mode == IEEE80211_IF_TYPE_AP) {	/* APs don't scan */
--		rc = -EIO;
-+		ret = -EIO;
- 		IWL_ERROR("ERROR: APs don't scan\n");
- 		goto out_unlock;
- 	}
- 
- 	/* we don't schedule scan within next_scan_jiffies period */
- 	if (priv->next_scan_jiffies &&
--			time_after(priv->next_scan_jiffies, jiffies)) {
--		rc = -EAGAIN;
-+	    time_after(priv->next_scan_jiffies, jiffies)) {
-+		ret = -EAGAIN;
- 		goto out_unlock;
- 	}
- 	/* if we just finished scan ask for delay */
--	if (priv->last_scan_jiffies && time_after(priv->last_scan_jiffies +
--				IWL_DELAY_NEXT_SCAN, jiffies)) {
--		rc = -EAGAIN;
-+	if (priv->last_scan_jiffies &&
-+	    time_after(priv->last_scan_jiffies + IWL_DELAY_NEXT_SCAN, jiffies)) {
-+		ret = -EAGAIN;
- 		goto out_unlock;
- 	}
--	if (len) {
--		IWL_DEBUG_SCAN("direct scan for %s [%d]\n ",
--			       iwl_escape_essid(ssid, len), (int)len);
--
-+	if (ssid_len) {
- 		priv->one_direct_scan = 1;
--		priv->direct_ssid_len = (u8)
--		    min((u8) len, (u8) IW_ESSID_MAX_SIZE);
-+		priv->direct_ssid_len =  min_t(u8, ssid_len, IW_ESSID_MAX_SIZE);
- 		memcpy(priv->direct_ssid, ssid, priv->direct_ssid_len);
--	} else
-+	} else {
- 		priv->one_direct_scan = 0;
-+	}
- 
--	rc = iwl_scan_initiate(priv);
-+	ret = iwl_scan_initiate(priv);
- 
- 	IWL_DEBUG_MAC80211("leave\n");
- 
-@@ -3236,7 +3233,7 @@ out_unlock:
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 	mutex_unlock(&priv->mutex);
- 
--	return rc;
-+	return ret;
- }
- 
- static void iwl4965_mac_update_tkip_key(struct ieee80211_hw *hw,
-@@ -4143,7 +4140,7 @@ static struct ieee80211_ops iwl4965_hw_ops = {
- 	.reset_tsf = iwl4965_mac_reset_tsf,
- 	.bss_info_changed = iwl4965_bss_info_changed,
- 	.ampdu_action = iwl4965_mac_ampdu_action,
--	.hw_scan = iwl4965_mac_hw_scan
-+	.hw_scan = iwl_mac_hw_scan
- };
- 
- static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
--- 
-1.5.3.6
+And you always have to bring the interface down to change the mode
+it's more a mac80211 thing than p54's fault...
 
+> If afterwards I try to bring the interface up (with ifconfig), I get an error,
+> and the interface does not come up.
+Ad-hoc isn't supported and monitor-mode will filter out anything
+except beacons...
+
+> After a while (never fixed) the kernel Oops.
+>
+> Both the failure to work and the final unpredictable kernel Oops are always
+> reproducible, although the time it takes the kernel to Oops varies every
+> time.
+Hmm, I found 2 problems and I guess there are some more...
+(Will post them later today or tomorrow, my timezone is CEST)
+
+but you'll need:
+- wireless-dev git-tree (which can be found here:
+http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git )
+- the "patch" - utility
+- time to test & report...
+
+> I've tried this with 3 desktop computers and 1 laptop and all have the same
+> behavior. The wireless card works well in windows or in linux under
+> ndiswrapper.
+hmm, do you have usbmon enabled in your kernel? Or is there any other facility
+to "monitor" what ndiswrapper or p54 is doing? because this logs are very handy!
+
+> Did anyone manage to have this wireless card (DWL-G120) working with this
+> module (p54usb) ?
+hmm, I haven't heard of anyone with success... 
+
+Regards,
+	Chr
