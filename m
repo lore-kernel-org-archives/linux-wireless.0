@@ -1,96 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:39713 "EHLO hostap.isc.org"
+Received: from mx2.suse.de ([195.135.220.15]:44151 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751509AbYHKLDm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2008 07:03:42 -0400
-Message-Id: <20080811110257.864227088@localhost> (sfid-20080811_130345_312033_F8209100)
-References: <20080811110146.877112595@localhost>
-Date: Mon, 11 Aug 2008 14:01:50 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/5] ath9k: Assign seq# when mac80211 requests this
+	id S1752099AbYHMM07 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Aug 2008 08:26:59 -0400
+From: Helmut Schaa <hschaa@suse.de>
+To: Jouni Malinen <j@w1.fi>
+Subject: Re: Pondering: how to improve mac80211 roaming ...
+Date: Wed, 13 Aug 2008 14:26:55 +0200
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org
+References: <200808120838.52888.hs4233@mail.mn-solutions.de> <200808121440.24098.hschaa@suse.de> <20080812154223.GE4981@jm.kir.nu>
+In-Reply-To: <20080812154223.GE4981@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200808131426.55673.hschaa@suse.de> (sfid-20080813_142703_774266_584A7E63)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use TX control flag IEEE80211_TX_CTL_ASSIGN_SEQ as a request to update
-the seq# for the frames. This will likely require some further cleanup
-to get seq# correctly for Beacons vs. other frames and also potentially
-for multiple BSSes. Anyway, this is better than ending up sending out
-most frames with seq# 0.
+Am Dienstag, 12. August 2008 17:42:23 schrieb Jouni Malinen:
+> On Tue, Aug 12, 2008 at 02:40:23PM +0200, Helmut Schaa wrote:
+> > JFYI I already started to rework the existing scan code in mac80211
+> > (software scan) to do something like background scanning:
+> >
+> > 1) notify current AP about leaving the channel
+> > 2) scan one channel
+>
+> It might be useful to leave this "one" as a parameter to allow easy
+> experiments with scanning more than one channel at a time to reduce
+> latency.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+Good point.
 
+> Ideally, this--along the interval for background scans--could 
+> be something that is dynamically changed based on the expected traffic
+> pattern. Whenever there is lot of data traffic being (mostly
+> successfully) transmitted, it would be beneficial not to jump to other
+> channels as frequently or for as long a time. If there has not been any
+> data transmission for some time, it may be more acceptable to scan more
+> frequently and to remain away from the operational channel for longer
+> periods of time. Though, we should also keep in mind that background
+> scans are going to increase power consumption on otherwise inactive
+> situation, so setting a suitable policy for this can get quite complex.
 
-Index: wireless-testing/drivers/net/wireless/ath9k/beacon.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/ath9k/beacon.c
-+++ wireless-testing/drivers/net/wireless/ath9k/beacon.c
-@@ -209,6 +209,7 @@ static struct ath_buf *ath_beacon_genera
- 	int is_beacon_dtim = 0;
- 	struct ath_txq *cabq;
- 	struct ath_txq *mcastq;
-+	struct ieee80211_tx_info *info;
- 	avp = sc->sc_vaps[if_id];
- 
- 	mcastq = &avp->av_mcastq;
-@@ -233,6 +234,17 @@ static struct ath_buf *ath_beacon_genera
- 	bf->bf_mpdu = skb;
- 	if (skb == NULL)
- 		return NULL;
-+	info = IEEE80211_SKB_CB(skb);
-+	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
-+		/*
-+		 * TODO: make sure the seq# gets assigned properly (vs. other
-+		 * TX frames)
-+		 */
-+		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+		sc->seq_no += 0x10;
-+		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-+		hdr->seq_ctrl |= cpu_to_le16(sc->seq_no);
-+	}
- 	bf->bf_buf_addr = bf->bf_dmacontext =
- 		pci_map_single(sc->pdev, skb->data,
- 			       skb_end_pointer(skb) - skb->head,
-Index: wireless-testing/drivers/net/wireless/ath9k/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/ath9k/main.c
-+++ wireless-testing/drivers/net/wireless/ath9k/main.c
-@@ -368,6 +368,20 @@ static int ath9k_tx(struct ieee80211_hw 
- {
- 	struct ath_softc *sc = hw->priv;
- 	int hdrlen, padsize;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+
-+	/*
-+	 * As a temporary workaround, assign seq# here; this will likely need
-+	 * to be cleaned up to work better with Beacon transmission and virtual
-+	 * BSSes.
-+	 */
-+	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
-+		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
-+			sc->seq_no += 0x10;
-+		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-+		hdr->seq_ctrl |= cpu_to_le16(sc->seq_no);
-+	}
- 
- 	/* Add the padding after the header if this is not already done */
- 	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
-Index: wireless-testing/drivers/net/wireless/ath9k/core.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/ath9k/core.h
-+++ wireless-testing/drivers/net/wireless/ath9k/core.h
-@@ -965,6 +965,7 @@ struct ath_softc {
- 	u32 sc_txqsetup;
- 	u32 sc_txintrperiod;	/* tx interrupt batching */
- 	int sc_haltype2q[ATH9K_WME_AC_VO+1]; /* HAL WME	AC -> h/w qnum */
-+	u16 seq_no; /* TX sequence number */
- 
- 	/* Beacon */
- 	struct ath9k_tx_queue_info sc_beacon_qi;
+It might even be beneficial to cancel a currently active background scan once 
+the TX queue is filling up and report the already gathered information to the 
+user space.
 
---
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Helmut
