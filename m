@@ -1,85 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.191]:60538 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750875AbYHLETd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Aug 2008 00:19:33 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so1178944tic.23
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2008 21:19:31 -0700 (PDT)
-Message-ID: <a8e1da0808112119y3114512fj134cb916bbc6076@mail.gmail.com> (sfid-20080812_061938_068716_5D3D64FA)
-Date: Tue, 12 Aug 2008 12:19:31 +0800
-From: "Dave Young" <hidave.darkstar@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: [BUG] wireless : cpu stuck for 61s
-Cc: "Jiri Slaby" <jirislaby@gmail.com>,
-	"Pekka J Enberg" <penberg@cs.helsinki.fi>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <a8e1da0808051851y752b3525l98271ceca4eb189a@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:35186 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752483AbYHNIHp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Aug 2008 04:07:45 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Aug 2008 01:07:45 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080729055731.GA3265@darkstar>
-	 <1217334724.10489.47.camel@johannes.berg>
-	 <20080730020820.8bcc00e2.akpm@linux-foundation.org>
-	 <a8e1da0807300302m35a0a7c0q2ff2e0ab92a69239@mail.gmail.com>
-	 <20080730031047.54e13e2d.akpm@linux-foundation.org>
-	 <a8e1da0808010032h32c18054g3712466eb40f0acf@mail.gmail.com>
-	 <4896D34A.1000005@gmail.com>
-	 <a8e1da0808041829sac34939yd9163b02e6b8b515@mail.gmail.com>
-	 <20080805122408.GA5000@hash.localnet>
-	 <a8e1da0808051851y752b3525l98271ceca4eb189a@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18595.58652.840027.998584@localhost.localdomain> (sfid-20080814_100752_143304_F61A601B)
+Date: Thu, 14 Aug 2008 13:26:12 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 0/6] Another cleanup series
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 6, 2008 at 9:51 AM, Dave Young <hidave.darkstar@gmail.com> wrote:
-> On Tue, Aug 5, 2008 at 8:24 PM, Bob Copeland <me@bobcopeland.com> wrote:
->> On Tue, Aug 05, 2008 at 09:29:26AM +0800, Dave Young wrote:
->>> With the patch I cann't reproduce the bug with 27-rc1 now.
->>>
->>> >  [<c02375a6>] ? debugfs_create_file+0x46/0x210
->>> >  [<c02375a6>] ? debugfs_create_file+0x46/0x210
->>> >  [<c02375a6>] debugfs_create_file+0x46/0x210
->>> >  [<c02377f1>] debugfs_create_dir+0x21/0x30
->>> >  [<f8901f6d>] ieee80211_sta_debugfs_add+0x2d/0x150 [mac80211]
->>> >  [<f88eba89>] sta_info_debugfs_add_work+0x89/0x130 [mac80211]
->>> >  [<f890a170>] ? rate_control_pid_add_sta_debugfs+0x0/0x30 [mac80211]
->>
->> I wonder if there were two separate problems here.  I looked into
->> this with some detail yesterday and agree with Johannes that the above
->> trace is on locking the parent directory's i_mutex, but I too couldn't
->> see any problems with sta_info_debugfs_add_work.  Other stuff could also
->> modify the directory with or without rtnl_lock, but not in a way that
->> to my untrained eyes would lead to deadlock.
->
-> Yes,. I think so. It's the original bug for me, while testing I found
-> the mutex deadlock problem.
->
-> But this week I will have no time to trace it. so if I have time I
-> will keep tracing the problem
+John,
 
-Unfortunately I have no more time to do this these days.
-As I can't reproduce it with the latest git kernel I think that It
-might have been fixed already.
+More cleanup.
+This applies on top of Jouni's AP series which are
+on top of the 10 patch series I sent earlier.
 
->
->>
->> Or is the trace just wrong?
->>
->> --
->> Bob Copeland %% www.bobcopeland.com
->>
->>
->
->
->
-> --
-> Regards
-> dave
->
+Sujith
 
+Sujith Manoharan (6):
+  ath9k: Remove remaining occurences of ath_skb_map functions
+  ath9k: Random cleanup
+  ath9k: Miscellaneous fixes
+  mac80211: Add an 802.11n definition
+  ath9k: Use definition from ieee80211.h
+  ath9k: Add IEEE80211_HW_RX_INCLUDES_FCS to hw flags
 
+ drivers/net/wireless/ath9k/ath9k.h  |   13 ---
+ drivers/net/wireless/ath9k/beacon.c |   57 ++++++-------
+ drivers/net/wireless/ath9k/core.c   |  106 ++++-------------------
+ drivers/net/wireless/ath9k/core.h   |   26 ++----
+ drivers/net/wireless/ath9k/hw.c     |   81 ++++++++----------
+ drivers/net/wireless/ath9k/main.c   |   40 ++-------
+ drivers/net/wireless/ath9k/phy.h    |   12 ++--
+ drivers/net/wireless/ath9k/rc.c     |  159 ++++++++++++++++++-----------------
+ drivers/net/wireless/ath9k/recv.c   |   42 ++-------
+ drivers/net/wireless/ath9k/xmit.c   |   37 ++++-----
+ include/linux/ieee80211.h           |    1 +
+ 11 files changed, 207 insertions(+), 367 deletions(-)
 
--- 
-Regards
-dave
