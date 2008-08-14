@@ -1,40 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3327 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753537AbYHEODP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 10:03:15 -0400
-Date: Tue, 5 Aug 2008 10:00:05 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
-Message-ID: <20080805140005.GA5925@tuxdriver.com> (sfid-20080805_160318_992206_80806D72)
-References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br> <1217700664-20792-9-git-send-email-hmh@hmh.eng.br> <1217703723.8621.50.camel@johannes.berg> <20080802192704.GB24253@khazad-dum.debian.net> <1217864565.3139.17.camel@localhost.localdomain> <20080804223052.GG24927@khazad-dum.debian.net> <1217890611.17793.17.camel@localhost.localdomain> <20080804233525.GI24927@khazad-dum.debian.net> <1217941409.26251.3.camel@localhost.localdomain>
+Received: from smtp.nokia.com ([192.100.122.230]:36671 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755504AbYHNGm3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Aug 2008 02:42:29 -0400
+To: "Holger Schurig" <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Pondering: how to improve mac80211 roaming ...
+References: <200808120838.52888.hs4233@mail.mn-solutions.de>
+From: Kalle Valo <kalle.valo@nokia.com>
+In-Reply-To: <200808120838.52888.hs4233@mail.mn-solutions.de> (ext Holger Schurig's message of "Tue\, 12 Aug 2008 08\:38\:52 +0200")
+Date: Thu, 14 Aug 2008 09:42:10 +0300
+Message-ID: <877iak85dp.fsf@nokia.com> (sfid-20080814_084236_161697_82AA0999)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1217941409.26251.3.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 05, 2008 at 09:03:29AM -0400, Dan Williams wrote:
-> On Mon, 2008-08-04 at 20:35 -0300, Henrique de Moraes Holschuh wrote:
+Holger Schurig <hs4233@mail.mn-solutions.de> writes:
 
-> > And it is already damn clear that what we currently have (rfkill always
-> > blocks on suspend) is not the correct way to go about it.  WHAT I want to
-> > know now is whether there are any drivers out there which need the current
-> > behaviour.
-> 
-> Ah!  I seem to have misunderstood you.  If some drivers _do_ need the
-> current block-on-suspend behavior, I feel like that should be an
-> internal driver decision that rfkill shouldn't need to be aware of.
-> Drivers know how to suspend themselves; we shouldn't expect rfkill to
-> know how certain hardware needs to suspend.
+> Hi !
 
-I agree with Dan.  Blocking and suspending should be separate operations.
+Hello,
 
-John
+> The last days I looked a bit at mac80211 and how it works. While
+> doing this, I detected that mac80211 does virtually no roaming.
+> That is, it is very usable for a hot-spot setup (Office, Home,
+> Starbucks), but not for a place where you have 20 Access-Points
+> and move between them.
+
+Yes, the current implementation is far from perfect. I will be working
+on with roaming as well and want to improve it.
+
+[...]
+
+> How to detect missed beacons?
+> -----------------------------
+> When I know the beacon period, I could setup a timer
+> with "beacon_period + beacon_period*0.5". In the timer function I
+> could then increase a missed beacon counter and act accordingly,
+> e.g. search for APs, roam etc.
+>
+> But how would I determine the beacon period?
+
+Jouni answered this one already.
+
+> Is detection of missed beacons good enought?
+> --------------------------------------------
+> For me this approach seems like driving a car into the wall of a
+> house. Then crash-detection notifies me and I'd search for a new
+> way to drive.
+>
+> Certainly it's better to act before the accident happens, so I'd
+> rather do it differently. With a fullmac driver I looked at the
+> RSSI and, when it fell below a certain threshhold, started the
+> roaming.
+
+Yes, we definitely need background scanning which is triggered, at
+least, based on a RSSI threshold and possibly some other parameters,
+for example number of failed transmissions.
+
+> In-kernel or in-userspace?   --- or hybrid?
+> -------------------------------------------
+
+This is the question.
+
+> Some people say that in-userspace roaming is the way to go.
+
+In my opinion we should move roaming logic to the user space as much
+as possible.
+
+> Maybe. But in-kernel, I have more information.
+
+Yes, kernel has more information. But kernel can send an event to the
+user space whenever where is need to bacground scan or roam.
+
+> In the mac80211 case, the above quoted code is executed whenever I
+> receive a beacon. So I can very quickly react to declining SNR.
+
+It wouln't be that much slower to send an event to userspace and let
+userspace initiate scanning. This isn't in hotpath.
+
+> Userspace would have to issue periodically scan requests and process
+> them, quite a bit of overhead.
+
+Do you mean the overhead of creating the scan results and sending them
+to the user space? Is that really so high that we need to optimize it?
+Remember that the interval between scans is measured in seconds, so it
+doesn't happen very often.
+
+> But there is existing user-space code that does roaming, e.g. WPA
+> Supplicant and (probably, not sure) Network-Manager.
+>
+> So I think I'd opt to a hybrid approach. Userspace uses cfg80211
+> to configure some roaming threshold to mac80211. mac80211 would
+> gain AP-is-about-to-fail detection and, if it detects this, it
+> would signal via cfg80211 (is this possible?) to user-space that
+> it should now roam.
+
+I think we need to support Wireless Extensions as well, because
+cfg80211 is not widely used yet.
+
+> Userspace then could, while still associated, scan for other APs
+> (e.g. first on preferred channels, like 1,6,11, then on all
+> channels) and if it finds something, trigger association to
+> another AP.
+
+This sounds just what I have been thinking.
+
+> For a WEP or non-encrypted environment a in-kernel-roaming would
+> be possible, this would bring a similar behavior to mac80211 that
+> common fullmac drivers exhibit. But my first goal would not be in
+> this area.
+
+My view is that in kernel roaming is not worth the effort, I would
+prefer to keep the implementation simple and not complicate mac80211
+unnecessarily. If we have the scan logic in one place, ie. in user
+space, implementation and testing is a lot simpler.
+
 -- 
-John W. Linville
-linville@tuxdriver.com
+Kalle Valo
