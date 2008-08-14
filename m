@@ -1,49 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:33668 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753776AbYHEW72 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 18:59:28 -0400
-Subject: Re: [PATCH 00/19] orinoco: WPA for Agere based cards
-From: Pavel Roskin <proski@gnu.org>
-To: Dave <kilroyd@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-In-Reply-To: <48978C25.601@gmail.com>
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
-	 <1217822232.10989.13.camel@dv>  <48978C25.601@gmail.com>
-Content-Type: text/plain
-Date: Tue, 05 Aug 2008 18:59:26 -0400
-Message-Id: <1217977166.19480.2.camel@dv> (sfid-20080806_005932_078355_CE10AB98)
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:49873 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750794AbYHNFOq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Aug 2008 01:14:46 -0400
+Received: from imap1.linux-foundation.org (imap1.linux-foundation.org [140.211.169.55])
+	by smtp1.linux-foundation.org (8.14.2/8.13.5/Debian-3ubuntu1.1) with ESMTP id m7E5EiNc002086
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Aug 2008 22:14:45 -0700
+Received: from y.localdomain (localhost [127.0.0.1])
+	by imap1.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with SMTP id m7E5EiGQ024713
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Aug 2008 22:14:44 -0700
+Date: Wed, 13 Aug 2008 22:14:44 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: linux-wireless@vger.kernel.org
+Subject: bugzilla: open reports against
+ drivers_network-wireless@kernel-bugs.osdl.org
+Message-Id: <20080813221444.0ac490a1.akpm@linux-foundation.org> (sfid-20080814_071451_144570_E24B8B6C)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-08-05 at 00:09 +0100, Dave wrote:
-> Pavel Roskin wrote:
-> >> It is almost checkpatch
-> >> clean - the single warning looks like a false positive to me.
-> > 
-> > If you mean orinoco_ioctl_getnick(), that's a false positive.
-> 
-> Actually I meant the DECLARE_DEFAULT_PDA macro in hermes_dld.c:
-> 
-> dkilroy@borken /usr/src/wireless-testing $ git diff HEAD~20 | scripts/checkpatch.pl -
-> ERROR: Macros with multiple statements should be enclosed in a do - while loop
-> #933: FILE: drivers/net/wireless/hermes_dld.c:570:
-> +#define DEFINE_DEFAULT_PDR(pid, length, data)				\
-> +static const struct {							\
-> +	__le16 len;							\
-> +	__le16 id;							\
-> +	u8 val[length];							\
-> +} __attribute__ ((packed)) default_pdr_data_##pid = {			\
-> +	__constant_cpu_to_le16((sizeof(default_pdr_data_##pid)/		\
-> +				sizeof(__le16)) - 1),			\
-> +	__constant_cpu_to_le16(pid),					\
-> +	data								\
-> +}
 
-I suggest that you take the structure definition outside the macro and
-give it a reasonable name.  
+There are quite a few fairly recent ones there.
 
--- 
-Regards,
-Pavel Roskin
+http://bugzilla.kernel.org/buglist.cgi?query_format=advanced&short_desc_type=allwordssubstr&short_desc=&long_desc_type=substring&long_desc=&kernel_version_type=allwordssubstr&kernel_version=&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&emailassigned_to1=1&emailtype1=substring&email1=drivers_network-wireless%40kernel-bugs.osdl.org&emailassigned_to2=1&emailreporter2=1&emailcc2=1&emailtype2=substring&email2=&bugidtype=include&bug_id=&chfieldfrom=&chfieldto=Now&chfieldvalue=&regression=both&cmdtype=doit&order=Bug+Number&field0-0-0=noop&type0-0-0=noop&value0-0-0=
