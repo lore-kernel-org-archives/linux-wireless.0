@@ -1,74 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47088 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751655AbYHGOpt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 10:45:49 -0400
-Subject: Re: [RFC] mac80211/cfg80211: Add BSS configuration options for AP
-	mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
+Received: from hostap.isc.org ([149.20.54.63]:50740 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752951AbYHNLJu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Aug 2008 07:09:50 -0400
+Date: Thu, 14 Aug 2008 14:09:03 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080807143232.GD5138@jm.kir.nu>
-References: <20080807134043.GA5138@jm.kir.nu>
-	 <1218119110.23048.185.camel@johannes.berg>
-	 <20080807143232.GD5138@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+EJtVxAB41NbupGqBWlM"
-Date: Thu, 07 Aug 2008 16:45:13 +0200
-Message-Id: <1218120313.23048.187.camel@johannes.berg> (sfid-20080807_164552_684849_4EA58B82)
-Mime-Version: 1.0
+Subject: Re: Improvement in mac80211 to move to a proper state when channel
+	is set from user space
+Message-ID: <20080814110902.GA4864@jm.kir.nu> (sfid-20080814_130954_064034_673E9678)
+References: <20080814100501.GA5486@vasanth-lnx.users.atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080814100501.GA5486@vasanth-lnx.users.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Aug 14, 2008 at 03:35:01PM +0530, Vasanthakumar Thiagarajan wrote:
 
---=-+EJtVxAB41NbupGqBWlM
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> The problem with the current behaviour of mac80211 when setting a
+> new channel from user space while interface is in associated state
+> is, it is still maintainig the associated state even after the h/w 
+> is set to a different channel and it is sending packets destined 
+> to the connected AP/STA which is operating in a different freq/band 
+> in the new channel before detecting that the AP is no more in the 
+> channel
 
-On Thu, 2008-08-07 at 17:32 +0300, Jouni Malinen wrote:
-> On Thu, Aug 07, 2008 at 04:25:10PM +0200, Johannes Berg wrote:
->=20
-> > > +	NL80211_ATTR_BSS_SHORT_SLOT_TIME,
->=20
-> > Oh another idea I just had, I suspect we should use these to indicate
-> > support for the features too, on the wiphy info query result or
-> > something. Only tangentially related to this patch though.
->=20
-> Sounds reasonable. So far, I've mainly worked with hardware that
-> supports these, so I have just assumed that everything is fine and
-> haven't bothered dynamically trying to decide what to do in hostapd. Or
-> well, it was possible to configure this in hostapd.conf (though, it
-> looks like that was never actually merged into the open source version
-> completely, so the variable is there, but not a way to enable it; have
-> to fix that at some point, I guess..).
+Please note that AP may change channels with associated STA remaining
+associated on the new channel (see Channel Switch Announcement).
 
-Ok, I think the only hardware we currently support that doesn't have
-these doesn't support AP mode either, so it's probably not really worth
-it now...
+> Handle proper state transition in wireless handler (ieee80211_ioctl_siwfreq):
+> For STA mode, move the interface to disassociated state with the associated AP 
+> in the current channel and move it to scan state to find an appropriate 
+> AP in the new channel.
 
-johannes
+If client MLME is in user space, siwfreq could be used to handle channel
+switch announcement from the AP and in this case the STA should not be
+moved into disassociated state.
 
---=-+EJtVxAB41NbupGqBWlM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+> For IBSS, mark all the joined ibss stations as not joined in the
+> current chanel and move the inteface state to scan in the new channel.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+IBSS can also use channel switch announcement and in addition, merging
+of separate IBSSes into a single one may end up changing channels for
+some STAs. If this is managed from user space, siwfreq should not
+tricker this type of changes.
 
-iQIcBAABAgAGBQJImwp2AAoJEKVg1VMiehFYyBsP/3H2FR7XFRol90pm2HMqITbd
-74Xy1h7NT38f7Hjh3CQw5RvUR1Qw9El8SOsLp9citcNSEERy5aZlXBEQii5fBrp8
-h9AR/vu8ZgSl0QDSvKKNm7xNZ0SjQFdd3/C+EkqJ9YtMbnauBlxFjMgi6bekIVMv
-tMH6LF48JO9h17yuRvyzOqX3Wsdz9zu12yBXyAuSZK1Kpiaw3SPDvIPN75FBYK6O
-4m7kLS3OJ1jRBikmDRUPI+fGyd7UnJsUnd6R6NJmKFrAa3cMNjcL0juosbyXEXIj
-8i/RbFfkhvRwQtj/agON453OWxc0Hq+VRbIEFIJ8aY+ZGWBdCe0UHh2p9kudOFVD
-TdTr5QSJuxaSgwHQW1RpRQ0z7S1Oednca39D2JcbZbP76Dp6NuwxGzp8TL2z9xBn
-TnvbZxezR0Eg9HYPqTDX7+D8cSRWqQNoYjjs1wYPNZ+WUar8fH8lmVOIMEj7Pu6j
-FeQf9t33jAFEDCEWqltRuiTL7Xs1IU7s1UtQe9yFfgQ6ZczZwfqJZ0xSY6Ya2mT6
-eiA8BNbkB7wIunZAD23Cv/YxoRXv+otLNaI4CWrMYfj2GX24ti8WZ7H27arp5F9P
-S0WkPSeREVlEJZP234DkIRMNPRAGtt5qcgzWGxQHOACu1PNiJxFDSPQ5YmnzjzKo
-y0gF+cunpdXlDREbFfmA
-=B532
------END PGP SIGNATURE-----
+> For AP mode, move the interface to disassociated state with all
+> associated stations in current channel and start a BSS in the new
+> channel.
 
---=-+EJtVxAB41NbupGqBWlM--
+Same here and taken into account that we only support AP MLME in user
+space (i.e., hostapd), I would say it is up to userspace to do this.
+mac80211 should not start marking STAs disassociated in AP mode.
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
