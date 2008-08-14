@@ -1,61 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:50879 "EHLO hostap.isc.org"
+Received: from orca.ele.uri.edu ([131.128.51.63]:55746 "EHLO orca.ele.uri.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754635AbYHUSqo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Aug 2008 14:46:44 -0400
-Date: Thu, 21 Aug 2008 21:45:56 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: mac80211_hwsim: Add minimal IEEE 802.11n support
-Message-ID: <20080821184556.GD4846@jm.kir.nu> (sfid-20080821_204647_587985_C704CE55)
+	id S1759421AbYHNRzq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Aug 2008 13:55:46 -0400
+Date: Thu, 14 Aug 2008 13:55:32 -0400
+From: Will Simoneau <simoneau@ele.uri.edu>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	ipw3945-devel@lists.sourceforge.net, Zhu Yi <yi.zhu@intel.com>
+Subject: Re: [ANNOUNCE] Wifi Link 5300 and 5100 Series
+Message-ID: <20080814175532.GB30317@ele.uri.edu> (sfid-20080814_195553_129680_897C6828)
+References: <1ba2fa240808131411o638311f1m2e2daa6ef62057b1@mail.gmail.com> <20080814062604.GA16234@ele.uri.edu> <1ba2fa240808140515r92a3ec7i90ea6c03e2adb7ee@mail.gmail.com> <1ba2fa240808140603p3b4a47e4k4a0b98e5bf145b57@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="E/DnYTRukya0zdZ1"
+In-Reply-To: <1ba2fa240808140603p3b4a47e4k4a0b98e5bf145b57@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set some semi-random values for HT and add more queues to allow IEEE
-802.11n association to be tested with mac80211_hwsim. This with the
-latest hostapd git tree version can complete a simulated 802.11n
-association successfully (with mac80211 client MLME).
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+--E/DnYTRukya0zdZ1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On 16:03 Thu 14 Aug     , Tomas Winkler wrote:
+> On Thu, Aug 14, 2008 at 3:15 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+> > On Thu, Aug 14, 2008 at 9:26 AM, Will Simoneau <simoneau@ele.uri.edu> w=
+rote:
+> >> On 00:11 Thu 14 Aug     , Tomas Winkler wrote:
+> >>> Intel would like to announce Linux support  for Wifi Link 5000 and
+> >>> 5100 Series Adapters under iwlwifi driver (iwlagn.ko)
+> >>>
+> >> ...
+> >>> The best known working driver can be located in iwl500 branch of
+> >>> iwlwifi-2.6.git
+> >>> git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git=
+ iwl5000
+> >>
+> >> This is great news to me - my new Sager laptop has a 5300 card. Howeve=
+r,
+> >> it doesn't seem to work:
+> >>
+>=20
+> Can you send me the exact laptop type?
+> Thanks
 
-Index: wireless-testing/drivers/net/wireless/mac80211_hwsim.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c
-+++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c
-@@ -446,7 +446,8 @@ static int __init init_mac80211_hwsim(vo
- 		SET_IEEE80211_PERM_ADDR(hw, addr);
- 
- 		hw->channel_change_time = 1;
--		hw->queues = 1;
-+		hw->queues = 4;
-+		hw->ampdu_queues = 1;
- 
- 		memcpy(data->channels, hwsim_channels, sizeof(hwsim_channels));
- 		memcpy(data->rates, hwsim_rates, sizeof(hwsim_rates));
-@@ -454,6 +455,19 @@ static int __init init_mac80211_hwsim(vo
- 		data->band.n_channels = ARRAY_SIZE(hwsim_channels);
- 		data->band.bitrates = data->rates;
- 		data->band.n_bitrates = ARRAY_SIZE(hwsim_rates);
-+		data->band.ht_info.ht_supported = 1;
-+		data->band.ht_info.cap = IEEE80211_HT_CAP_SUP_WIDTH |
-+			IEEE80211_HT_CAP_GRN_FLD |
-+			IEEE80211_HT_CAP_SGI_40 |
-+			IEEE80211_HT_CAP_DSSSCCK40;
-+		data->band.ht_info.ampdu_factor = 0x3;
-+		data->band.ht_info.ampdu_density = 0x6;
-+		memset(data->band.ht_info.supp_mcs_set, 0,
-+		       sizeof(data->band.ht_info.supp_mcs_set));
-+		data->band.ht_info.supp_mcs_set[0] = 0xff;
-+		data->band.ht_info.supp_mcs_set[1] = 0xff;
-+		data->band.ht_info.supp_mcs_set[12] =
-+			IEEE80211_HT_CAP_MCS_TX_DEFINED;
- 		hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &data->band;
- 
- 		err = ieee80211_register_hw(hw);
+It's a Sager NP5796 (Clevo M570TU).
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+--E/DnYTRukya0zdZ1
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEARECAAYFAkikcZQACgkQLYBaX8VDLLVP0ACfd/yB4xwDCI4CRYn7pNrkqSYd
+i8YAn2/0Axw1PzkBfv6YkkETEvNsuKdx
+=CbyG
+-----END PGP SIGNATURE-----
+
+--E/DnYTRukya0zdZ1--
