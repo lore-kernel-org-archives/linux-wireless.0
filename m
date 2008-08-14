@@ -1,82 +1,909 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:5117 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755191AbYHCOeM (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:38321 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752740AbYHNRlI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 10:34:12 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so606658nfc.21
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2008 07:34:11 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Disable link tuning in rt2500usb
-Date: Sun, 3 Aug 2008 16:57:27 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200808031657.27710.IvDoorn@gmail.com> (sfid-20080803_163427_217562_8941B06F)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 14 Aug 2008 13:41:08 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so461794fgg.17
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Aug 2008 10:41:07 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net, dcbw@redhat.com
+From: Luis Carlos Cobo <luisca@cozybit.com>
+Subject: [PATCHv2 5/6] libertas_tf: usb specific functions
+Date: Thu, 14 Aug 2008 10:41:06 -0700 (PDT)
+Message-ID: <48a46e32.0c58560a.1c90.ffff9d0f@mx.google.com> (sfid-20080814_194112_959517_A357D941)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the legacy rt2570 driver the link tuner was never
-really called. And now the reason has finally become
-apparent: It breaks TX capabilities
+The libertas thin firmware only supports usb devices, but the usb functions have
+been kept separate to ease future support for other devices.
 
-As soon as the device has been associated all following
-TX frames will be queued in the hardware and never transmitted
-to the air. Disabling sections of the link tuner did not
-have the expected result, but completely disabling the
-link tuner did have the right result (Both of my rt2570 devices
-came back to life).
-
-This should fix Fedora bug: 411481
-
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
 ---
-John, please queue for 2.6.27 this fixes rt2500usb. :)
+ drivers/net/wireless/libertas_tf/if_usb.c |  766 +++++++++++++++++++++++++++++
+ drivers/net/wireless/libertas_tf/if_usb.h |   98 ++++
+ 2 files changed, 864 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/libertas_tf/if_usb.c
+ create mode 100644 drivers/net/wireless/libertas_tf/if_usb.h
 
- drivers/net/wireless/rt2x00/rt2500usb.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index c6f6eb6..5e6383d 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -633,6 +633,16 @@ static void rt2500usb_reset_tuner(struct rt2x00_dev *rt2x00dev)
- 	rt2x00dev->link.vgc_level = value;
- }
- 
+diff --git a/drivers/net/wireless/libertas_tf/if_usb.c b/drivers/net/wireless/libertas_tf/if_usb.c
+new file mode 100644
+index 0000000..1cc03a8
+--- /dev/null
++++ b/drivers/net/wireless/libertas_tf/if_usb.c
+@@ -0,0 +1,766 @@
 +/*
-+ * NOTE: This function is directly ported from legacy driver, but
-+ * despite it being declared it was never called. Although link tuning
-+ * sounds like a good idea, and usually works well for the other drivers,
-+ * it does _not_ work with rt2500usb. Enabling this function will result
-+ * in TX capabilities only untill association kicks in. Immediately
-+ * after the successfull association all TX frames will be kept in the
-+ * hardware queue and never transmitted.
++ *  Copyright (C) 2008, cozybit Inc.
++ *  Copyright (C) 2003-2006, Marvell International Ltd.
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2 of the License, or (at
++ *  your option) any later version.
 + */
-+#if 0
- static void rt2500usb_link_tuner(struct rt2x00_dev *rt2x00dev)
- {
- 	int rssi = rt2x00_get_link_rssi(&rt2x00dev->link);
-@@ -752,6 +762,9 @@ dynamic_cca_tune:
- 		rt2x00dev->link.vgc_level = r17;
- 	}
- }
-+#else
-+#define rt2500usb_link_tuner	NULL
-+#endif
- 
- /*
-  * Initialization functions.
-@@ -1737,6 +1750,7 @@ static int rt2500usb_probe_hw(struct rt2x00_dev *rt2x00dev)
- 	__set_bit(DRIVER_REQUIRE_ATIM_QUEUE, &rt2x00dev->flags);
- 	__set_bit(DRIVER_REQUIRE_BEACON_GUARD, &rt2x00dev->flags);
- 	__set_bit(DRIVER_REQUIRE_SCHEDULED, &rt2x00dev->flags);
-+	__set_bit(CONFIG_DISABLE_LINK_TUNING, &rt2x00dev->flags);
- 
- 	/*
- 	 * Set the rssi offset.
++#include <linux/delay.h>
++#include <linux/moduleparam.h>
++#include <linux/firmware.h>
++#include <linux/netdevice.h>
++#include <linux/usb.h>
++
++#define DRV_NAME "lbtf_usb"
++
++#include "libertas_tf.h"
++#include "if_usb.h"
++
++#define MESSAGE_HEADER_LEN	4
++
++static char *lbtf_fw_name = "lbtf_usb.bin";
++module_param_named(fw_name, lbtf_fw_name, charp, 0644);
++
++static struct usb_device_id if_usb_table[] = {
++	/* Enter the device signature inside */
++	{ USB_DEVICE(0x1286, 0x2001) },
++	{ USB_DEVICE(0x05a3, 0x8388) },
++	{}	/* Terminating entry */
++};
++
++MODULE_DEVICE_TABLE(usb, if_usb_table);
++
++static void if_usb_receive(struct urb *urb);
++static void if_usb_receive_fwload(struct urb *urb);
++static int if_usb_prog_firmware(struct if_usb_card *cardp);
++static int if_usb_host_to_card(struct lbtf_private *priv, uint8_t type,
++			       uint8_t *payload, uint16_t nb);
++static int usb_tx_block(struct if_usb_card *cardp, uint8_t *payload,
++			uint16_t nb, u8 data);
++static void if_usb_free(struct if_usb_card *cardp);
++static int if_usb_submit_rx_urb(struct if_usb_card *cardp);
++static int if_usb_reset_device(struct if_usb_card *cardp);
++
++/**
++ *  if_usb_wrike_bulk_callback -  call back to handle URB status
++ *
++ *  @param urb 		pointer to urb structure
++ */
++static void if_usb_write_bulk_callback(struct urb *urb)
++{
++	if (urb->status != 0)
++		printk(KERN_INFO "libertastf: URB in failure status: %d\n",
++		       urb->status);
++}
++
++/**
++ *  if_usb_free - free tx/rx urb, skb and rx buffer
++ *
++ *  @param cardp	pointer if_usb_card
++ */
++static void if_usb_free(struct if_usb_card *cardp)
++{
++	/* Unlink tx & rx urb */
++	usb_kill_urb(cardp->tx_urb);
++	usb_kill_urb(cardp->rx_urb);
++	usb_kill_urb(cardp->cmd_urb);
++
++	usb_free_urb(cardp->tx_urb);
++	cardp->tx_urb = NULL;
++
++	usb_free_urb(cardp->rx_urb);
++	cardp->rx_urb = NULL;
++
++	usb_free_urb(cardp->cmd_urb);
++	cardp->cmd_urb = NULL;
++
++	kfree(cardp->ep_out_buf);
++	cardp->ep_out_buf = NULL;
++}
++
++static void if_usb_setup_firmware(struct lbtf_private *priv)
++{
++	struct if_usb_card *cardp = priv->card;
++	struct cmd_ds_set_boot2_ver b2_cmd;
++
++	if_usb_submit_rx_urb(cardp);
++	b2_cmd.hdr.size = cpu_to_le16(sizeof(b2_cmd));
++	b2_cmd.action = 0;
++	b2_cmd.version = cardp->boot2_version;
++
++	if (lbtf_cmd_with_response(priv, CMD_SET_BOOT2_VER, &b2_cmd))
++		printk(KERN_INFO "libertastf: setting boot2 version failed\n");
++}
++
++static void if_usb_fw_timeo(unsigned long priv)
++{
++	struct if_usb_card *cardp = (void *)priv;
++
++	if (!cardp->fwdnldover)
++		/* Download timed out */
++		cardp->priv->surpriseremoved = 1;
++	wake_up(&cardp->fw_wq);
++}
++
++/**
++ *  if_usb_probe - sets the configuration values
++ *
++ *  @ifnum	interface number
++ *  @id		pointer to usb_device_id
++ *
++ *  Returns: 0 on success, error code on failure
++ */
++static int if_usb_probe(struct usb_interface *intf,
++			const struct usb_device_id *id)
++{
++	struct usb_device *udev;
++	struct usb_host_interface *iface_desc;
++	struct usb_endpoint_descriptor *endpoint;
++	struct lbtf_private *priv;
++	struct if_usb_card *cardp;
++	int i;
++
++	udev = interface_to_usbdev(intf);
++
++	cardp = kzalloc(sizeof(struct if_usb_card), GFP_KERNEL);
++	if (!cardp)
++		goto error;
++
++	setup_timer(&cardp->fw_timeout, if_usb_fw_timeo, (unsigned long)cardp);
++	init_waitqueue_head(&cardp->fw_wq);
++
++	cardp->udev = udev;
++	iface_desc = intf->cur_altsetting;
++
++	for (i = 0; i < iface_desc->desc.bNumEndpoints; ++i) {
++		endpoint = &iface_desc->endpoint[i].desc;
++		if (usb_endpoint_is_bulk_in(endpoint)) {
++			cardp->ep_in_size =
++				le16_to_cpu(endpoint->wMaxPacketSize);
++			cardp->ep_in = usb_endpoint_num(endpoint);
++		} else if (usb_endpoint_is_bulk_out(endpoint)) {
++			cardp->ep_out_size =
++				le16_to_cpu(endpoint->wMaxPacketSize);
++			cardp->ep_out = usb_endpoint_num(endpoint);
++		}
++	}
++	if (!cardp->ep_out_size || !cardp->ep_in_size)
++		/* Endpoints not found */
++		goto dealloc;
++
++	cardp->rx_urb = usb_alloc_urb(0, GFP_KERNEL);
++	if (!cardp->rx_urb)
++		goto dealloc;
++
++	cardp->tx_urb = usb_alloc_urb(0, GFP_KERNEL);
++	if (!cardp->tx_urb)
++		goto dealloc;
++
++	cardp->cmd_urb = usb_alloc_urb(0, GFP_KERNEL);
++	if (!cardp->cmd_urb)
++		goto dealloc;
++
++	cardp->ep_out_buf = kmalloc(MRVDRV_ETH_TX_PACKET_BUFFER_SIZE,
++				    GFP_KERNEL);
++	if (!cardp->ep_out_buf)
++		goto dealloc;
++
++	priv = lbtf_add_card(cardp, &udev->dev);
++	if (!priv)
++		goto dealloc;
++
++	cardp->priv = priv;
++
++	priv->hw_host_to_card = if_usb_host_to_card;
++	priv->hw_prog_firmware = if_usb_prog_firmware;
++	priv->hw_reset_device = if_usb_reset_device;
++	cardp->boot2_version = udev->descriptor.bcdDevice;
++
++	usb_get_dev(udev);
++	usb_set_intfdata(intf, cardp);
++
++	return 0;
++
++dealloc:
++	if_usb_free(cardp);
++error:
++	return -ENOMEM;
++}
++
++/**
++ *  if_usb_disconnect -  free resource and cleanup
++ *
++ *  @intf	USB interface structure
++ */
++static void if_usb_disconnect(struct usb_interface *intf)
++{
++	struct if_usb_card *cardp = usb_get_intfdata(intf);
++	struct lbtf_private *priv = (struct lbtf_private *) cardp->priv;
++
++	if_usb_reset_device(cardp);
++
++	if (priv)
++		lbtf_remove_card(priv);
++
++	/* Unlink and free urb */
++	if_usb_free(cardp);
++
++	usb_set_intfdata(intf, NULL);
++	usb_put_dev(interface_to_usbdev(intf));
++}
++
++/**
++ *  if_usb_send_fw_pkt -  This function downloads the FW
++ *
++ *  @priv	pointer to struct lbtf_private
++ *
++ *  Returns: 0
++ */
++static int if_usb_send_fw_pkt(struct if_usb_card *cardp)
++{
++	struct fwdata *fwdata = cardp->ep_out_buf;
++	u8 *firmware = (u8 *) cardp->fw->data;
++
++	/* If we got a CRC failure on the last block, back
++	   up and retry it */
++	if (!cardp->CRC_OK) {
++		cardp->totalbytes = cardp->fwlastblksent;
++		cardp->fwseqnum--;
++	}
++
++	/* struct fwdata (which we sent to the card) has an
++	   extra __le32 field in between the header and the data,
++	   which is not in the struct fwheader in the actual
++	   firmware binary. Insert the seqnum in the middle... */
++	memcpy(&fwdata->hdr, &firmware[cardp->totalbytes],
++	       sizeof(struct fwheader));
++
++	cardp->fwlastblksent = cardp->totalbytes;
++	cardp->totalbytes += sizeof(struct fwheader);
++
++	memcpy(fwdata->data, &firmware[cardp->totalbytes],
++	       le32_to_cpu(fwdata->hdr.datalength));
++
++	fwdata->seqnum = cpu_to_le32(++cardp->fwseqnum);
++	cardp->totalbytes += le32_to_cpu(fwdata->hdr.datalength);
++
++	usb_tx_block(cardp, cardp->ep_out_buf, sizeof(struct fwdata) +
++		     le32_to_cpu(fwdata->hdr.datalength), 0);
++
++	if (fwdata->hdr.dnldcmd == cpu_to_le32(FW_HAS_LAST_BLOCK))
++		/* Host has finished FW downloading
++		 * Donwloading FW JUMP BLOCK
++		 */
++		cardp->fwfinalblk = 1;
++
++	return 0;
++}
++
++static int if_usb_reset_device(struct if_usb_card *cardp)
++{
++	struct cmd_ds_802_11_reset *cmd = cardp->ep_out_buf + 4;
++	int ret;
++
++	*(__le32 *)cardp->ep_out_buf = cpu_to_le32(CMD_TYPE_REQUEST);
++
++	cmd->hdr.command = cpu_to_le16(CMD_802_11_RESET);
++	cmd->hdr.size = cpu_to_le16(sizeof(struct cmd_ds_802_11_reset));
++	cmd->hdr.result = cpu_to_le16(0);
++	cmd->hdr.seqnum = cpu_to_le16(0x5a5a);
++	cmd->action = cpu_to_le16(CMD_ACT_HALT);
++	usb_tx_block(cardp, cardp->ep_out_buf,
++		     4 + sizeof(struct cmd_ds_802_11_reset), 0);
++
++	msleep(100);
++	ret = usb_reset_device(cardp->udev);
++	msleep(100);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(if_usb_reset_device);
++
++/**
++ *  usb_tx_block - transfer data to the device
++ *
++ *  @priv 	pointer to struct lbtf_private
++ *  @payload	pointer to payload data
++ *  @nb		data length
++ *  @data	non-zero for data, zero for commands
++ *
++ *  Returns: 0 on success, nonzero otherwise.
++ */
++static int usb_tx_block(struct if_usb_card *cardp, uint8_t *payload,
++			uint16_t nb, u8 data)
++{
++	struct urb *urb;
++
++	/* check if device is removed */
++	if (cardp->priv->surpriseremoved)
++		return -1;
++
++	if (data)
++		urb = cardp->tx_urb;
++	else
++		urb = cardp->cmd_urb;
++
++	usb_fill_bulk_urb(urb, cardp->udev,
++			  usb_sndbulkpipe(cardp->udev,
++					  cardp->ep_out),
++			  payload, nb, if_usb_write_bulk_callback, cardp);
++
++	urb->transfer_flags |= URB_ZERO_PACKET;
++
++	if (usb_submit_urb(urb, GFP_ATOMIC))
++		return -1;
++	return 0;
++}
++
++static int __if_usb_submit_rx_urb(struct if_usb_card *cardp,
++				  void (*callbackfn)(struct urb *urb))
++{
++	struct sk_buff *skb;
++
++	skb = dev_alloc_skb(MRVDRV_ETH_RX_PACKET_BUFFER_SIZE);
++	if (!skb)
++		return -1;
++
++	cardp->rx_skb = skb;
++
++	/* Fill the receive configuration URB and initialise the Rx call back */
++	usb_fill_bulk_urb(cardp->rx_urb, cardp->udev,
++			  usb_rcvbulkpipe(cardp->udev, cardp->ep_in),
++			  (void *) (skb->tail),
++			  MRVDRV_ETH_RX_PACKET_BUFFER_SIZE, callbackfn, cardp);
++
++	cardp->rx_urb->transfer_flags |= URB_ZERO_PACKET;
++
++	if (usb_submit_urb(cardp->rx_urb, GFP_ATOMIC)) {
++		kfree_skb(skb);
++		cardp->rx_skb = NULL;
++		return -1;
++	} else
++		return 0;
++}
++
++static int if_usb_submit_rx_urb_fwload(struct if_usb_card *cardp)
++{
++	return __if_usb_submit_rx_urb(cardp, &if_usb_receive_fwload);
++}
++
++static int if_usb_submit_rx_urb(struct if_usb_card *cardp)
++{
++	return __if_usb_submit_rx_urb(cardp, &if_usb_receive);
++}
++
++static void if_usb_receive_fwload(struct urb *urb)
++{
++	struct if_usb_card *cardp = urb->context;
++	struct sk_buff *skb = cardp->rx_skb;
++	struct fwsyncheader *syncfwheader;
++	struct bootcmdresp bcmdresp;
++
++	if (urb->status) {
++		kfree_skb(skb);
++		return;
++	}
++
++	if (cardp->fwdnldover) {
++		__le32 *tmp = (__le32 *)(skb->data);
++
++		if (tmp[0] == cpu_to_le32(CMD_TYPE_INDICATION) &&
++		    tmp[1] == cpu_to_le32(MACREG_INT_CODE_FIRMWARE_READY))
++			/* Firmware ready event received */
++			wake_up(&cardp->fw_wq);
++		else
++			if_usb_submit_rx_urb_fwload(cardp);
++		kfree_skb(skb);
++		return;
++	}
++	if (cardp->bootcmdresp <= 0) {
++		memcpy(&bcmdresp, skb->data, sizeof(bcmdresp));
++
++		if (le16_to_cpu(cardp->udev->descriptor.bcdDevice) < 0x3106) {
++			kfree_skb(skb);
++			if_usb_submit_rx_urb_fwload(cardp);
++			cardp->bootcmdresp = 1;
++			/* Received valid boot command response */
++			return;
++		}
++		if (bcmdresp.magic != cpu_to_le32(BOOT_CMD_MAGIC_NUMBER)) {
++			if (bcmdresp.magic == cpu_to_le32(CMD_TYPE_REQUEST) ||
++			    bcmdresp.magic == cpu_to_le32(CMD_TYPE_DATA) ||
++			    bcmdresp.magic == cpu_to_le32(CMD_TYPE_INDICATION))
++				cardp->bootcmdresp = -1;
++		} else if (bcmdresp.cmd == BOOT_CMD_FW_BY_USB &&
++			   bcmdresp.result == BOOT_CMD_RESP_OK)
++			cardp->bootcmdresp = 1;
++
++		kfree_skb(skb);
++		if_usb_submit_rx_urb_fwload(cardp);
++		return;
++	}
++
++	syncfwheader = kmalloc(sizeof(struct fwsyncheader), GFP_ATOMIC);
++	if (!syncfwheader) {
++		kfree_skb(skb);
++		return;
++	}
++
++	memcpy(syncfwheader, skb->data, sizeof(struct fwsyncheader));
++
++	if (!syncfwheader->cmd)
++		cardp->CRC_OK = 1;
++	else
++		cardp->CRC_OK = 0;
++	kfree_skb(skb);
++
++	/* reschedule timer for 200ms hence */
++	mod_timer(&cardp->fw_timeout, jiffies + (HZ/5));
++
++	if (cardp->fwfinalblk) {
++		cardp->fwdnldover = 1;
++		goto exit;
++	}
++
++	if_usb_send_fw_pkt(cardp);
++
++ exit:
++	if_usb_submit_rx_urb_fwload(cardp);
++
++	kfree(syncfwheader);
++
++	return;
++}
++
++#define MRVDRV_MIN_PKT_LEN	30
++
++static inline void process_cmdtypedata(int recvlength, struct sk_buff *skb,
++				       struct if_usb_card *cardp,
++				       struct lbtf_private *priv)
++{
++	if (recvlength > MRVDRV_ETH_RX_PACKET_BUFFER_SIZE + MESSAGE_HEADER_LEN
++	    || recvlength < MRVDRV_MIN_PKT_LEN) {
++		kfree_skb(skb);
++		return;
++	}
++
++	skb_put(skb, recvlength);
++	skb_pull(skb, MESSAGE_HEADER_LEN);
++	lbtf_rx(priv, skb);
++}
++
++static inline void process_cmdrequest(int recvlength, uint8_t *recvbuff,
++				      struct sk_buff *skb,
++				      struct if_usb_card *cardp,
++				      struct lbtf_private *priv)
++{
++	if (recvlength > LBS_CMD_BUFFER_SIZE) {
++		kfree_skb(skb);
++		return;
++	}
++
++	if (!in_interrupt())
++		BUG();
++
++	spin_lock(&priv->driver_lock);
++	memcpy(priv->cmd_resp_buff, recvbuff + MESSAGE_HEADER_LEN,
++	       recvlength - MESSAGE_HEADER_LEN);
++	kfree_skb(skb);
++	lbtf_cmd_response_rx(priv);
++	spin_unlock(&priv->driver_lock);
++}
++
++/**
++ *  if_usb_receive - read data received from the device.
++ *
++ *  @urb		pointer to struct urb
++ */
++static void if_usb_receive(struct urb *urb)
++{
++	struct if_usb_card *cardp = urb->context;
++	struct sk_buff *skb = cardp->rx_skb;
++	struct lbtf_private *priv = cardp->priv;
++	int recvlength = urb->actual_length;
++	uint8_t *recvbuff = NULL;
++	uint32_t recvtype = 0;
++	__le32 *pkt = (__le32 *) skb->data;
++
++	if (recvlength) {
++		if (urb->status) {
++			kfree_skb(skb);
++			goto setup_for_next;
++		}
++
++		recvbuff = skb->data;
++		recvtype = le32_to_cpu(pkt[0]);
++	} else if (urb->status) {
++		kfree_skb(skb);
++		return;
++	}
++
++	switch (recvtype) {
++	case CMD_TYPE_DATA:
++		process_cmdtypedata(recvlength, skb, cardp, priv);
++		break;
++
++	case CMD_TYPE_REQUEST:
++		process_cmdrequest(recvlength, recvbuff, skb, cardp, priv);
++		break;
++
++	case CMD_TYPE_INDICATION:
++	{
++		/* Event cause handling */
++		u32 event_cause = le32_to_cpu(pkt[1]);
++
++		/* Icky undocumented magic special case */
++		if (event_cause & 0xffff0000) {
++			u16 tmp;
++			u8 retrycnt;
++			u8 failure;
++
++			tmp = event_cause >> 16;
++			retrycnt = tmp & 0x00ff;
++			failure = (tmp & 0xff00) >> 8;
++			lbtf_send_tx_feedback(priv, retrycnt, failure);
++		} else if (event_cause == LBTF_EVENT_BCN_SENT)
++			lbtf_bcn_sent(priv);
++		else
++			printk(KERN_DEBUG
++			       "Unsupported notification %d received\n",
++			       event_cause);
++		kfree_skb(skb);
++		break;
++	}
++	default:
++		printk(KERN_DEBUG "libertastf: unknown command type 0x%X\n",
++			     recvtype);
++		kfree_skb(skb);
++		break;
++	}
++
++setup_for_next:
++	if_usb_submit_rx_urb(cardp);
++}
++
++/**
++ *  if_usb_host_to_card -  Download data to the device
++ *
++ *  @priv		pointer to struct lbtf_private structure
++ *  @type		type of data
++ *  @buf		pointer to data buffer
++ *  @len		number of bytes
++ *
++ *  Returns: 0 on success, nonzero otherwise
++ */
++static int if_usb_host_to_card(struct lbtf_private *priv, uint8_t type,
++			       uint8_t *payload, uint16_t nb)
++{
++	struct if_usb_card *cardp = priv->card;
++	u8 data = 0;
++
++	if (type == MVMS_CMD) {
++		*(__le32 *)cardp->ep_out_buf = cpu_to_le32(CMD_TYPE_REQUEST);
++	} else {
++		*(__le32 *)cardp->ep_out_buf = cpu_to_le32(CMD_TYPE_DATA);
++		data = 1;
++	}
++
++	memcpy((cardp->ep_out_buf + MESSAGE_HEADER_LEN), payload, nb);
++
++	return usb_tx_block(cardp, cardp->ep_out_buf, nb + MESSAGE_HEADER_LEN,
++			    data);
++}
++
++/**
++ *  if_usb_issue_boot_command - Issue boot command to Boot2.
++ *
++ *  @ivalue   1 boots from FW by USB-Download, 2 boots from FW in EEPROM.
++ *
++ *  Returns: 0
++ */
++static int if_usb_issue_boot_command(struct if_usb_card *cardp, int ivalue)
++{
++	struct bootcmd *bootcmd = cardp->ep_out_buf;
++
++	/* Prepare command */
++	bootcmd->magic = cpu_to_le32(BOOT_CMD_MAGIC_NUMBER);
++	bootcmd->cmd = ivalue;
++	memset(bootcmd->pad, 0, sizeof(bootcmd->pad));
++
++	/* Issue command */
++	usb_tx_block(cardp, cardp->ep_out_buf, sizeof(*bootcmd), 0);
++
++	return 0;
++}
++
++
++/**
++ *  check_fwfile_format - Check the validity of Boot2/FW image.
++ *
++ *  @data	pointer to image
++ *  @totlen	image length
++ *
++ *  Returns: 0 if the image is valid, nonzero otherwise.
++ */
++static int check_fwfile_format(const u8 *data, u32 totlen)
++{
++	u32 bincmd, exit;
++	u32 blksize, offset, len;
++	int ret;
++
++	ret = 1;
++	exit = len = 0;
++
++	do {
++		struct fwheader *fwh = (void *) data;
++
++		bincmd = le32_to_cpu(fwh->dnldcmd);
++		blksize = le32_to_cpu(fwh->datalength);
++		switch (bincmd) {
++		case FW_HAS_DATA_TO_RECV:
++			offset = sizeof(struct fwheader) + blksize;
++			data += offset;
++			len += offset;
++			if (len >= totlen)
++				exit = 1;
++			break;
++		case FW_HAS_LAST_BLOCK:
++			exit = 1;
++			ret = 0;
++			break;
++		default:
++			exit = 1;
++			break;
++		}
++	} while (!exit);
++
++	if (ret)
++		printk(KERN_INFO
++		       "libertastf: firmware file format check failed\n");
++	return ret;
++}
++
++
++static int if_usb_prog_firmware(struct if_usb_card *cardp)
++{
++	int i = 0;
++	static int reset_count = 10;
++	int ret = 0;
++
++	ret = request_firmware(&cardp->fw, lbtf_fw_name, &cardp->udev->dev);
++	if (ret < 0) {
++		printk(KERN_INFO "libertastf: firmware %s not found\n",
++		       lbtf_fw_name);
++		goto done;
++	}
++
++	if (check_fwfile_format(cardp->fw->data, cardp->fw->size))
++		goto release_fw;
++
++restart:
++	if (if_usb_submit_rx_urb_fwload(cardp) < 0) {
++		ret = -1;
++		goto release_fw;
++	}
++
++	cardp->bootcmdresp = 0;
++	do {
++		int j = 0;
++		i++;
++		/* Issue Boot command = 1, Boot from Download-FW */
++		if_usb_issue_boot_command(cardp, BOOT_CMD_FW_BY_USB);
++		/* wait for command response */
++		do {
++			j++;
++			msleep_interruptible(100);
++		} while (cardp->bootcmdresp == 0 && j < 10);
++	} while (cardp->bootcmdresp == 0 && i < 5);
++
++	if (cardp->bootcmdresp <= 0) {
++		if (--reset_count >= 0) {
++			if_usb_reset_device(cardp);
++			goto restart;
++		}
++		return -1;
++	}
++
++	i = 0;
++
++	cardp->totalbytes = 0;
++	cardp->fwlastblksent = 0;
++	cardp->CRC_OK = 1;
++	cardp->fwdnldover = 0;
++	cardp->fwseqnum = -1;
++	cardp->totalbytes = 0;
++	cardp->fwfinalblk = 0;
++
++	/* Send the first firmware packet... */
++	if_usb_send_fw_pkt(cardp);
++
++	/* ... and wait for the process to complete */
++	wait_event_interruptible(cardp->fw_wq, cardp->priv->surpriseremoved ||
++					       cardp->fwdnldover);
++
++	del_timer_sync(&cardp->fw_timeout);
++	usb_kill_urb(cardp->rx_urb);
++
++	if (!cardp->fwdnldover) {
++		printk(KERN_INFO "libertastf: failed to load fw,"
++				 " resetting device!\n");
++		if (--reset_count >= 0) {
++			if_usb_reset_device(cardp);
++			goto restart;
++		}
++
++		printk(KERN_INFO "libertastf: fw download failure\n");
++		ret = -1;
++		goto release_fw;
++	}
++
++	cardp->priv->fw_ready = 1;
++
++ release_fw:
++	release_firmware(cardp->fw);
++	cardp->fw = NULL;
++
++	if_usb_setup_firmware(cardp->priv);
++
++ done:
++	return ret;
++}
++EXPORT_SYMBOL_GPL(if_usb_prog_firmware);
++
++
++#define if_usb_suspend NULL
++#define if_usb_resume NULL
++
++static struct usb_driver if_usb_driver = {
++	.name = DRV_NAME,
++	.probe = if_usb_probe,
++	.disconnect = if_usb_disconnect,
++	.id_table = if_usb_table,
++	.suspend = if_usb_suspend,
++	.resume = if_usb_resume,
++};
++
++static int __init if_usb_init_module(void)
++{
++	int ret = 0;
++
++	ret = usb_register(&if_usb_driver);
++	return ret;
++}
++
++static void __exit if_usb_exit_module(void)
++{
++	usb_deregister(&if_usb_driver);
++}
++
++module_init(if_usb_init_module);
++module_exit(if_usb_exit_module);
++
++MODULE_DESCRIPTION("8388 USB WLAN Thinfirm Driver");
++MODULE_AUTHOR("Cozybit Inc.");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/net/wireless/libertas_tf/if_usb.h b/drivers/net/wireless/libertas_tf/if_usb.h
+new file mode 100644
+index 0000000..6fa5b3f
+--- /dev/null
++++ b/drivers/net/wireless/libertas_tf/if_usb.h
+@@ -0,0 +1,98 @@
++/*
++ *  Copyright (C) 2008, cozybit Inc.
++ *  Copyright (C) 2003-2006, Marvell International Ltd.
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2 of the License, or (at
++ *  your option) any later version.
++ */
++#include <linux/wait.h>
++#include <linux/timer.h>
++
++struct lbtf_private;
++
++/**
++  * This file contains definition for USB interface.
++  */
++#define CMD_TYPE_REQUEST		0xF00DFACE
++#define CMD_TYPE_DATA			0xBEADC0DE
++#define CMD_TYPE_INDICATION		0xBEEFFACE
++
++#define BOOT_CMD_FW_BY_USB		0x01
++#define BOOT_CMD_FW_IN_EEPROM		0x02
++#define BOOT_CMD_UPDATE_BOOT2		0x03
++#define BOOT_CMD_UPDATE_FW		0x04
++#define BOOT_CMD_MAGIC_NUMBER		0x4C56524D   /* LVRM */
++
++struct bootcmd {
++	__le32	magic;
++	uint8_t	cmd;
++	uint8_t	pad[11];
++};
++
++#define BOOT_CMD_RESP_OK		0x0001
++#define BOOT_CMD_RESP_FAIL		0x0000
++
++struct bootcmdresp {
++	__le32	magic;
++	uint8_t	cmd;
++	uint8_t	result;
++	uint8_t	pad[2];
++};
++
++/** USB card description structure*/
++struct if_usb_card {
++	struct usb_device *udev;
++	struct urb *rx_urb, *tx_urb, *cmd_urb;
++	struct lbtf_private *priv;
++
++	struct sk_buff *rx_skb;
++
++	uint8_t ep_in;
++	uint8_t ep_out;
++
++	int8_t bootcmdresp;
++
++	int ep_in_size;
++
++	void *ep_out_buf;
++	int ep_out_size;
++
++	const struct firmware *fw;
++	struct timer_list fw_timeout;
++	wait_queue_head_t fw_wq;
++	uint32_t fwseqnum;
++	uint32_t totalbytes;
++	uint32_t fwlastblksent;
++	uint8_t CRC_OK;
++	uint8_t fwdnldover;
++	uint8_t fwfinalblk;
++
++	__le16 boot2_version;
++};
++
++/** fwheader */
++struct fwheader {
++	__le32 dnldcmd;
++	__le32 baseaddr;
++	__le32 datalength;
++	__le32 CRC;
++};
++
++#define FW_MAX_DATA_BLK_SIZE	600
++/** FWData */
++struct fwdata {
++	struct fwheader hdr;
++	__le32 seqnum;
++	uint8_t data[0];
++};
++
++/** fwsyncheader */
++struct fwsyncheader {
++	__le32 cmd;
++	__le32 seqnum;
++};
++
++#define FW_HAS_DATA_TO_RECV		0x00000001
++#define FW_HAS_LAST_BLOCK		0x00000004
 -- 
-1.5.6.1
+1.5.4.3
+
+
 
