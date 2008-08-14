@@ -1,97 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.178]:8775 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752527AbYHBKPr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 06:15:47 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so1578395ika.5
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 03:15:47 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: proski@gnu.org, orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-Subject: [PATCH 14/19] orinoco: Split wevent work thread from wevent sending
-Date: Sat,  2 Aug 2008 11:14:28 +0100
-Message-Id: <1217672073-7094-15-git-send-email-kilroyd@gmail.com> (sfid-20080802_124544_221355_39BE7817)
-In-Reply-To: <1217672073-7094-14-git-send-email-kilroyd@gmail.com>
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-3-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-4-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-5-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-6-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-7-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-8-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-9-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-10-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-11-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-12-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-13-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-14-git-send-email-kilroyd@gmail.com>
-From: kilroyd@googlemail.com
+Received: from orca.ele.uri.edu ([131.128.51.63]:44093 "EHLO orca.ele.uri.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753225AbYHNTOI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Aug 2008 15:14:08 -0400
+Date: Thu, 14 Aug 2008 15:13:47 -0400
+From: Will Simoneau <simoneau@ele.uri.edu>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	ipw3945-devel@lists.sourceforge.net, Zhu Yi <yi.zhu@intel.com>
+Subject: Re: [ANNOUNCE] Wifi Link 5300 and 5100 Series
+Message-ID: <20080814191347.GA9662@ele.uri.edu> (sfid-20080814_211414_966928_25B3B6C4)
+References: <1ba2fa240808131411o638311f1m2e2daa6ef62057b1@mail.gmail.com> <20080814062604.GA16234@ele.uri.edu> <1ba2fa240808140515r92a3ec7i90ea6c03e2adb7ee@mail.gmail.com> <1ba2fa240808140603p3b4a47e4k4a0b98e5bf145b57@mail.gmail.com> <20080814175532.GB30317@ele.uri.edu> <1ba2fa240808141109l11d729ecjf6253e9acf5d3c7f@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="G4iJoqBmSsgzjUCe"
+In-Reply-To: <1ba2fa240808141109l11d729ecjf6253e9acf5d3c7f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows us to send more wevents from the work thread. We will need
-to do this to support WPA.
 
-Signed-off-by: David Kilroy <kilroyd@gmail.com>
----
- drivers/net/wireless/orinoco.c |   24 ++++++++++++++----------
- 1 files changed, 14 insertions(+), 10 deletions(-)
+--G4iJoqBmSsgzjUCe
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
-index 013af6e..b91b6cb 100644
---- a/drivers/net/wireless/orinoco.c
-+++ b/drivers/net/wireless/orinoco.c
-@@ -1424,34 +1424,38 @@ static void orinoco_join_ap(struct work_struct *work)
- }
- 
- /* Send new BSSID to userspace */
--static void orinoco_send_wevents(struct work_struct *work)
-+static void orinoco_send_bssid_wevent(struct orinoco_private *priv)
- {
--	struct orinoco_private *priv =
--		container_of(work, struct orinoco_private, wevent_work);
- 	struct net_device *dev = priv->ndev;
- 	struct hermes *hw = &priv->hw;
- 	union iwreq_data wrqu;
- 	int err;
--	unsigned long flags;
--
--	if (orinoco_lock(priv, &flags) != 0)
--		return;
- 
- 	err = hermes_read_ltv(hw, IRQ_BAP, HERMES_RID_CURRENTBSSID,
- 			      ETH_ALEN, NULL, wrqu.ap_addr.sa_data);
- 	if (err != 0)
--		goto out;
-+		return;
- 
- 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
- 
- 	/* Send event to user space */
- 	wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
-+}
-+
-+static void orinoco_send_wevents(struct work_struct *work)
-+{
-+	struct orinoco_private *priv =
-+		container_of(work, struct orinoco_private, wevent_work);
-+	unsigned long flags;
-+
-+	if (orinoco_lock(priv, &flags) != 0)
-+		return;
-+
-+	orinoco_send_bssid_wevent(priv);
- 
-- out:
- 	orinoco_unlock(priv, &flags);
- }
- 
--
- static inline void orinoco_clear_scan_results(struct orinoco_private *priv,
- 					      unsigned long scan_age)
- {
--- 
-1.5.4.5
+On 21:09 Thu 14 Aug     , Tomas Winkler wrote:
+> On Thu, Aug 14, 2008 at 8:55 PM, Will Simoneau <simoneau@ele.uri.edu> wro=
+te:
+> > On 16:03 Thu 14 Aug     , Tomas Winkler wrote:
+> >> On Thu, Aug 14, 2008 at 3:15 PM, Tomas Winkler <tomasw@gmail.com> wrot=
+e:
+> >> > On Thu, Aug 14, 2008 at 9:26 AM, Will Simoneau <simoneau@ele.uri.edu=
+> wrote:
+> >> >> On 00:11 Thu 14 Aug     , Tomas Winkler wrote:
+> >> >>> Intel would like to announce Linux support  for Wifi Link 5000 and
+> >> >>> 5100 Series Adapters under iwlwifi driver (iwlagn.ko)
+> >> >>>
+> >> >> ...
+> >> >>> The best known working driver can be located in iwl500 branch of
+> >> >>> iwlwifi-2.6.git
+> >> >>> git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.=
+git iwl5000
+> >> >>
+> >> >> This is great news to me - my new Sager laptop has a 5300 card. How=
+ever,
+> >> >> it doesn't seem to work:
+> >> >>
+> >>
+> >> Can you send me the exact laptop type?
+> >> Thanks
+> >
+> > It's a Sager NP5796 (Clevo M570TU).
+> >
+>=20
+> >git-checkout -b iwl5000 origin/iwl5000
+> Tomas
 
+OK, that gave me very different kernel/driver versions.
+uname -r: 2.6.26-rc6-iwl-2.3.5-wl
+
+dmesg:
+
+iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 2.3.5ks
+iwlagn: Copyright(c) 2003-2008 Intel Corporation
+ACPI: PCI Interrupt 0000:07:00.0[A] -> GSI 17 (level, low) -> IRQ 17
+PCI: Setting latency timer of device 0000:07:00.0 to 64
+iwlagn: Detected Intel Wireless WiFi Link 5300AGN REV=3D0x24
+iwlagn: Tunable channels: 13 802.11bg, 24 802.11a channels
+phy1: Selected rate control algorithm 'iwl-agn-rs'
+input: 5300AGN as /class/input/input7
+ACPI: PCI Interrupt 0000:07:00.0[A] -> GSI 17 (level, low) -> IRQ 17
+firmware: requesting iwlwifi-5000-1.ucode
+iwlagn: START_ALIVE timeout after 4000ms.
+
+--G4iJoqBmSsgzjUCe
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEARECAAYFAkikg+sACgkQLYBaX8VDLLWfvACfax5OUR2V8dmwOwKXzvvk53ir
+2c4An1CBPzYAl+Yw584HYX+q+v8/5qLN
+=/hdj
+-----END PGP SIGNATURE-----
+
+--G4iJoqBmSsgzjUCe--
