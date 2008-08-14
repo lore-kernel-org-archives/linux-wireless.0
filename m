@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:40143 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751947AbYH1MCL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 08:02:11 -0400
-Subject: Re: [PATCH 09/11] iwlwifi: fix station mimo power save values
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-In-Reply-To: <1ba2fa240808280411l4b229cfdnbcb24b3ad5cae1cd@mail.gmail.com>
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-8-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-9-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-10-git-send-email-yi.zhu@intel.com>
-	 <1219927236.6064.27.camel@californication>
-	 <1ba2fa240808280411l4b229cfdnbcb24b3ad5cae1cd@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 28 Aug 2008 16:02:08 +0200
-Message-Id: <1219932128.6064.57.camel@californication> (sfid-20080828_140214_935660_EA612DE6)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:32644 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751780AbYHNKJx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Aug 2008 06:09:53 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Aug 2008 03:09:53 -0700
+Date: Thu, 14 Aug 2008 15:35:01 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: Improvement in mac80211 to move to a proper state when channel is
+	set from user space
+Message-ID: <20080814100501.GA5486@vasanth-lnx.users.atheros.com> (sfid-20080814_120956_481981_45C98D5D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tomas,
+The problem with the current behaviour of mac80211 when setting a
+new channel from user space while interface is in associated state
+is, it is still maintainig the associated state even after the h/w 
+is set to a different channel and it is sending packets destined 
+to the connected AP/STA which is operating in a different freq/band 
+in the new channel before detecting that the AP is no more in the 
+channel (in this case it is done by sending couple of probe req to 
+the associated AP which is obviously operating on a different channel 
+after the channel change). I think we need to put the interface into 
+a proper state instead of just relying on this tx probe req logic in 
+this case. I'm have the following proposals to improve the situation.
 
-> >> This patch fixes the wrong use of self mimo power save values instead of
-> >> peer's mimo power save values.
-> >
-> > please state the impact of not fixing this. When does this matter. Does
-> > the both sides have to enable this feature and things like this.
-> 
-> Okay, we might not be able to do any traffic to the [peer station
-> because by mistake we configured TX to according our RX capability not
-> RX capability of the peer station.
+Handle proper state transition in wireless handler (ieee80211_ioctl_siwfreq):
+For STA mode, move the interface to disassociated state with the associated AP 
+in the current channel and move it to scan state to find an appropriate 
+AP in the new channel.
+For IBSS, mark all the joined ibss stations as not joined in the
+current chanel and move the inteface state to scan in the new channel.
+For AP mode, move the interface to disassociated state with all
+associated stations in current channel and start a BSS in the new
+channel.
 
-that would have been a good addition to the commit message. That the
-result of this issue is no TX, belongs in it.
+Handle it from the diver:
+Sense the situation from the beacon miss or in config() callback
+(with some hacky check) and trigger the disassociation, for this
+ we need to add one more notification type in ieee80211_notify_mac() 
+for disassoc.
 
-Regards
+Would like to know comments on this one.
 
-Marcel
-
-
+Thanks,
+Vasanth
