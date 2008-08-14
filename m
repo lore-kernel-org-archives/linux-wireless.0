@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:40038 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753023AbYHBM5r (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:53955 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755372AbYHNX5L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 08:57:47 -0400
-From: Chr <chunkeey@web.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: p54usb broken by commit b19fa1f
-Date: Sat, 2 Aug 2008 14:57:46 +0200
-Cc: "David S. Miller" <davem@davemloft.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-References: <4893CF3D.1070504@lwfinger.net>
-In-Reply-To: <4893CF3D.1070504@lwfinger.net>
+	Thu, 14 Aug 2008 19:57:11 -0400
+Date: Thu, 14 Aug 2008 18:57:11 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: tim.gardner@canonical.com, linux-wireless@vger.kernel.org
+Subject: [PATCH] b43: Fix for another Bluetooth Coexistence SPROM
+ Programming error for BCM4306
+Message-ID: <48a4c657.3Vw2yJT7Y4Gu6f4D%Larry.Finger@lwfinger.net> (sfid-20080815_015730_473682_0210AAAD)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200808021457.46438.chunkeey@web.de> (sfid-20080802_145750_699901_A13862B1)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 02 August 2008 05:06:37 Larry Finger wrote:
-> In testing 2.6.27-rc1, I found that p54usb caused my machine to freeze. A
-> few times, I was able to use the KDE system status applet to see that the
-> system was using essentially 100% of the CPU's. One other time, the system
-> responded a little - enough for me to see tha wpa_supplicant was consuming
-> 100% of the my AMD Turion 64 X2 running an x86_64 kernel. From bisection,
-> the problem is due to
->
-> commit b19fa1fa91845234961c64dbd564671aa7c0fd27
-> Author: David S. Miller <davem@davemloft.net>
-> Date:   Tue Jul 8 23:14:24 2008 -0700
->
->      net: Delete NETDEVICES_MULTIQUEUE kconfig option.
->
->      Multiple TX queue support is a core networking feature.
->
->      Signed-off-by: David S. Miller <davem@davemloft.net>
->
-> Obviously, something in the driver cannot handle multiqueues, but I
-> have not found anything, and I have not been able to get any logged events
-> that show what is going wrong.
->
+In trying to help users on the Ubuntu Bugzilla, I discovered another
+BCM4306 with the Bluetooth Coexistence programming error in the SPROM.
 
-Hmm that's a bit odd as my p54usb-adapter seems to work usual with
-2.6.27-rc1?!... That said: it doesn't work nearly as stable as the
-minipci card that I have too. Is there anyone else who can confirm
-that this problem is specific to the p54 driver & 2.6.27-rc1?
+This patch is contingent on the one that added the Linksys device with
+subdevice code of 0x0014.
 
-Regards,
-	Chr.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@kernel.org>
+---
+
+John,
+
+This is more 2.6.27 material.
+
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c
++++ wireless-testing/drivers/net/wireless/b43/main.c
+@@ -4615,6 +4615,7 @@ static void b43_sprom_fixup(struct ssb_b
+ 	if (bus->bustype == SSB_BUSTYPE_PCI) {
+ 		pdev = bus->host_pci;
+ 		if (IS_PDEV(pdev, BROADCOM, 0x4318, ASUSTEK, 0x100F) ||
++		    IS_PDEV(pdev, BROADCOM, 0x4320,    DELL, 0x0003) ||
+ 		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0015) ||
+ 		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0014) ||
+ 		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0013))
+
+
