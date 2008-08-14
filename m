@@ -1,60 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:17686 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752576AbYHOCEs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2008 22:04:48 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Esti Kummer <ester.kummer@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 05/15] iwlwifi: allow consecutive scans in unassociated state
-Date: Fri, 15 Aug 2008 10:01:10 +0800
-Message-Id: <1218765680-8378-6-git-send-email-yi.zhu@intel.com> (sfid-20080815_040452_037211_CC7D5721)
-In-Reply-To: <1218765680-8378-5-git-send-email-yi.zhu@intel.com>
-References: <1218765680-8378-1-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-2-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-3-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-4-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-5-git-send-email-yi.zhu@intel.com>
+Received: from fg-out-1718.google.com ([72.14.220.154]:38321 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753203AbYHNRlL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Aug 2008 13:41:11 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so461794fgg.17
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Aug 2008 10:41:11 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net, dcbw@redhat.com
+From: Luis Carlos Cobo <luisca@cozybit.com>
+Subject: [PATCHv2 6/6] libertas_tf: config and makefile
+Date: Thu, 14 Aug 2008 10:41:10 -0700 (PDT)
+Message-ID: <48a46e36.1438560a.295d.ffff8e22@mx.google.com> (sfid-20080814_194115_243602_0FD587A7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-This patch allows consecutive scans requests when driver is in
-unassociated state.
-
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Esti Kummer <ester.kummer@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ drivers/net/wireless/Kconfig              |   13 +++++++++++++
+ drivers/net/wireless/Makefile             |    2 ++
+ drivers/net/wireless/libertas_tf/Makefile |    6 ++++++
+ 3 files changed, 21 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/libertas_tf/Makefile
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 9798883..bf855c8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3206,12 +3206,14 @@ static int iwl_mac_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t ssid_len)
- 	/* we don't schedule scan within next_scan_jiffies period */
- 	if (priv->next_scan_jiffies &&
- 	    time_after(priv->next_scan_jiffies, jiffies)) {
-+		IWL_DEBUG_SCAN("scan rejected: within next scan period\n");
- 		ret = -EAGAIN;
- 		goto out_unlock;
- 	}
- 	/* if we just finished scan ask for delay */
--	if (priv->last_scan_jiffies &&
-+	if (iwl_is_associated(priv) && priv->last_scan_jiffies &&
- 	    time_after(priv->last_scan_jiffies + IWL_DELAY_NEXT_SCAN, jiffies)) {
-+		IWL_DEBUG_SCAN("scan rejected: within previous scan period\n");
- 		ret = -EAGAIN;
- 		goto out_unlock;
- 	}
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index fcbd2cf..2405c54 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -300,6 +300,19 @@ config LIBERTAS_DEBUG
+ 	---help---
+ 	  Debugging support.
+ 
++config LIBERTAS_THINFIRM
++	tristate "Marvell 8xxx Libertas WLAN driver support with thin firmware"
++	depends on WLAN_80211 && MAC80211
++	select FW_LOADER
++	---help---
++	  A library for Marvell Libertas 8xxx devices using thinfirm.
++
++config LIBERTAS_THINFIRM_USB
++	tristate "Marvell Libertas 8388 USB 802.11b/g cards with thin firmware"
++	depends on LIBERTAS_THINFIRM && USB
++	---help---
++	  A driver for Marvell Libertas 8388 USB devices using thinfirm.
++
+ config AIRO
+ 	tristate "Cisco/Aironet 34X/35X/4500/4800 ISA and PCI cards"
+ 	depends on ISA_DMA_API && WLAN_80211 && (PCI || BROKEN)
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 4a53d1d..ac3faa8 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -50,6 +50,8 @@ obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
+ obj-$(CONFIG_USB_ZD1201)	+= zd1201.o
+ obj-$(CONFIG_LIBERTAS)		+= libertas/
+ 
++obj-$(CONFIG_LIBERTAS_THINFIRM)	+= libertas_tf/
++
+ rtl8180-objs		:= rtl8180_dev.o rtl8180_rtl8225.o rtl8180_sa2400.o rtl8180_max2820.o rtl8180_grf5101.o
+ rtl8187-objs		:= rtl8187_dev.o rtl8187_rtl8225.o
+ 
+diff --git a/drivers/net/wireless/libertas_tf/Makefile b/drivers/net/wireless/libertas_tf/Makefile
+new file mode 100644
+index 0000000..ff5544d
+--- /dev/null
++++ b/drivers/net/wireless/libertas_tf/Makefile
+@@ -0,0 +1,6 @@
++libertas_tf-objs := main.o cmd.o
++
++libertas_tf_usb-objs += if_usb.o
++
++obj-$(CONFIG_LIBERTAS_THINFIRM) += libertas_tf.o
++obj-$(CONFIG_LIBERTAS_THINFIRM_USB) += libertas_tf_usb.o
 -- 
-1.5.3.6
+1.5.4.3
+
+
 
