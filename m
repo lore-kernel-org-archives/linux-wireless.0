@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:53119 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751990AbYHUQ7Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Aug 2008 12:59:16 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: seanhodges@bluebottle.com
-Subject: Re: [PATCH RFT] b43: Rewrite PHY API for N-PHY/LP-PHY
-Date: Thu, 21 Aug 2008 18:58:51 +0200
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <200808160029.56876.mb@bu3sch.de> <200808211643.m7LGhuaq002925@mi0.bluebottle.com>
-In-Reply-To: <200808211643.m7LGhuaq002925@mi0.bluebottle.com>
+Received: from rv-out-0506.google.com ([209.85.198.234]:15373 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751156AbYHNSJO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Aug 2008 14:09:14 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so526034rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Aug 2008 11:09:13 -0700 (PDT)
+Message-ID: <1ba2fa240808141109l11d729ecjf6253e9acf5d3c7f@mail.gmail.com> (sfid-20080814_200919_251291_29DDD71A)
+Date: Thu, 14 Aug 2008 21:09:13 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Will Simoneau" <simoneau@ele.uri.edu>
+Subject: Re: [ANNOUNCE] Wifi Link 5300 and 5100 Series
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	ipw3945-devel@lists.sourceforge.net, "Zhu Yi" <yi.zhu@intel.com>
+In-Reply-To: <20080814175532.GB30317@ele.uri.edu>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200808211858.51899.mb@bu3sch.de> (sfid-20080821_185921_538957_0D1CA264)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1ba2fa240808131411o638311f1m2e2daa6ef62057b1@mail.gmail.com>
+	 <20080814062604.GA16234@ele.uri.edu>
+	 <1ba2fa240808140515r92a3ec7i90ea6c03e2adb7ee@mail.gmail.com>
+	 <1ba2fa240808140603p3b4a47e4k4a0b98e5bf145b57@mail.gmail.com>
+	 <20080814175532.GB30317@ele.uri.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 21 August 2008 18:16:23 Sean Hodges wrote:
-> On Sat, 2008-08-16 at 00:29 +0200, Michael Buesch wrote:
-> > This is the first part for the rewrite of the b43 PHY API.
-> > This is needed in order to make development of N and LP code possible.
-> > 
-> > PLEASE TEST TEST TEST TEST TEST
-> > 
-> > Lots of testing on lots of different devices is needed to ensure this
-> > doesn't introduce regressions due to typos.
-> > 95% of the patch just moves large parts of the PHY code from one file
-> > to another. More move-patches will follow.
-> > 5% of the patch introduces an "ops" based PHY API.
-> > 
-> > Please test on all of your devices.
-> > 
-> > http://bu3sch.de/patches/wireless-testing/20080816-0023/patches/002-b43-phy-ops.patch
-> > Apply against wireless-testing.git
-> 
-> As a novice to driver development, is there some way I can help with
-> testing this?
-> 
-> I have no experience of driver development/testing, but have an N-PHY
+On Thu, Aug 14, 2008 at 8:55 PM, Will Simoneau <simoneau@ele.uri.edu> wrote:
+> On 16:03 Thu 14 Aug     , Tomas Winkler wrote:
+>> On Thu, Aug 14, 2008 at 3:15 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+>> > On Thu, Aug 14, 2008 at 9:26 AM, Will Simoneau <simoneau@ele.uri.edu> wrote:
+>> >> On 00:11 Thu 14 Aug     , Tomas Winkler wrote:
+>> >>> Intel would like to announce Linux support  for Wifi Link 5000 and
+>> >>> 5100 Series Adapters under iwlwifi driver (iwlagn.ko)
+>> >>>
+>> >> ...
+>> >>> The best known working driver can be located in iwl500 branch of
+>> >>> iwlwifi-2.6.git
+>> >>> git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git iwl5000
+>> >>
+>> >> This is great news to me - my new Sager laptop has a 5300 card. However,
+>> >> it doesn't seem to work:
+>> >>
+>>
+>> Can you send me the exact laptop type?
+>> Thanks
+>
+> It's a Sager NP5796 (Clevo M570TU).
+>
 
-To say it once again:
-Despite the fact that the subject of this email mentiones N and LP PHYs, it
-implements _nothing_ N and LP related. It just _prepares_ the code for the
-future when we will add N and LP stuff (and other PHY stuff. Also A/B/G related).
-
--- 
-Greetings Michael.
+>git-checkout -b iwl5000 origin/iwl5000
+Tomas
