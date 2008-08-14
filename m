@@ -1,92 +1,221 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:60608 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:14034 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751944AbYHHOui (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Aug 2008 10:50:38 -0400
-Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere fw
-From: Dan Williams <dcbw@redhat.com>
-To: Dave <kilroyd@googlemail.com>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net
-In-Reply-To: <489B6458.8050206@gmail.com>
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
-	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
-	 <1217825304.10989.20.camel@dv>
-	 <1217864060.3139.10.camel@localhost.localdomain>
-	 <1217970944.2908.11.camel@dv>
-	 <1217973349.30531.1.camel@localhost.localdomain>
-	 <1217976491.2908.36.camel@dv>
-	 <1218028414.16977.5.camel@localhost.localdomain>
-	 <4899FB91.8070501@gmail.com>
-	 <1218056165.12240.0.camel@localhost.localdomain>
-	 <489A12E2.8060909@gmail.com>
-	 <1218077300.30724.10.camel@localhost.localdomain>
-	 <489B425F.5060704@gmail.com>
-	 <1218138129.32083.14.camel@localhost.localdomain>
-	 <489B6458.8050206@gmail.com>
-Content-Type: text/plain
-Date: Fri, 08 Aug 2008 10:51:58 -0400
-Message-Id: <1218207118.32033.12.camel@localhost.localdomain> (sfid-20080808_165042_996630_775FC028)
-Mime-Version: 1.0
+	id S1752609AbYHNIII (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Aug 2008 04:08:08 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Aug 2008 01:08:08 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18595.58674.928230.24611@localhost.localdomain> (sfid-20080814_100812_158655_A050DC42)
+Date: Thu, 14 Aug 2008 13:26:34 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 1/6] ath9k: Remove remaining occurences of ath_skb_map functions
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-08-07 at 22:08 +0100, Dave wrote:
-> Dan Williams wrote:
-> > On Thu, 2008-08-07 at 19:43 +0100, Dave wrote:
-> >> That said, what's wrong with the ap_scan=2 mode? You've stated it's not
-> >> great (and I'm prepared to believe it), but what is the actual problem?
-> 
-> > But the problem with ap_scan=2 is really about the failure window.
-> > ap_scan=2 basically dumps a load of options on the driver, and unless
-> > the options _exactly_ match the configuration of the AP, you won't
-> > connect.  The supplicant isn't able to make intelligent choices about
-> > which networks in its config file match the scan result, thus there's a
-> > lot more potential for failure unless you know exactly what your network
-> > is set up to do, and these capabilities aren't always exposed through
-> > beacons.  So ap_scan=2 just opens up a huge window of failure and stuff
-> > can't ever Just Work because no intelligence can be applied.
-> 
-> Wouldn't a different mode of operation in wpa_supplicant solve this (see below)? Then get rid of the mode selection via wpa_supplicant.conf by selecting mode based on drivers error responses (and/or reported capabilities).
+Use direct pci functions instead.
+Also, use sc_ht_info.tx_chan_width directly and remove ath_cwm_macmode.
 
-Maybe; as long as the modes are not actually exposed or configurable in
-any way.  However, since drivers are so horribly inconsistent and since
-WEXT doesn't promote consistency, I tend to think having automatically
-chosen modes like this would cause more problems than we have now...
+Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/core.c |   27 +++++++++++-------------
+ drivers/net/wireless/ath9k/core.h |    9 --------
+ drivers/net/wireless/ath9k/recv.c |   40 +++++++-----------------------------
+ drivers/net/wireless/ath9k/xmit.c |    8 +++---
+ 4 files changed, 24 insertions(+), 60 deletions(-)
 
-> ap_scan=3:
->     * wpa_supplicant requests scan with SIOCSIWSCAN
->     * driver reports scan complete with wireless event SIOCGIWSCAN
->     * wpa_supplicant reads scan results with SIOCGIWSCAN (multiple call if a larget buffer is needed)
->     * wpa_supplicant decides which SSID to use based on scan results
->     * wpa_supplicant configures driver to associate with an SSID (SIOCSIWMODE, SIOCSIWGENIE, SIOCSIWAUTH, SIOCSIWESSID)
-> 
-> SIOCSIWSCAN not supported? => ap_scan=2
-
-If a driver doesn't support SIOCSIWSCAN it'll get a big fat NAK for
-kernel inclusion.  Any driver that doesn't support scan shouldn't be
-used.
-
-I assume you mean "specific SSID scanning" though, right?  That's
-basically what NM does right now; if the driver doesn't support SSID
-scan capabilities, NM requests that the supplicant use ap_scan=2.
-
-Basically, I don't think any of this is really a problem any more.  The
-supplicant should probably ignore a result of EOPNOTSUPP when calling
-SIOCSIWAP during the association run.  ap_scan certainly shouldn't be
-overloaded more than it is now.  I don't think the supplicant locking in
-the BSSID and controlling roaming in the supplicant based on BSSID is
-all that useful since the firmware or stack usually does what it wants
-anyway.  Besides, it's sort of insane to specify 10 different network
-blocks with a common SSID but different everything else.  That's an
-indication of a horribly broken network for starters, and secondly you
-simply shouldn't need to lock multiple network blocks with a common SSID
-down to different BSSIDs in the first place really.
-
-If we really want to handle roaming in the supplicant, we shouldn't be
-overloading ap_scan any more.  We should be thinking about this from the
-ground up and not trying to shove a round peg into a square hole.
-ap_scan just isn't suitable for actually handling roaming.
-
-Dan
+diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
+index 9737775..a9e8ad0 100644
+--- a/drivers/net/wireless/ath9k/core.c
++++ b/drivers/net/wireless/ath9k/core.c
+@@ -314,7 +314,6 @@ int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
+ {
+ 	struct ath_hal *ah = sc->sc_ah;
+ 	bool fastcc = true, stopped;
+-	enum ath9k_ht_macmode ht_macmode;
+ 
+ 	if (sc->sc_flags & SC_OP_INVALID) /* the device is invalid or removed */
+ 		return -EIO;
+@@ -328,8 +327,6 @@ int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
+ 		ath9k_hw_mhz2ieee(ah, hchan->channel, hchan->channelFlags),
+ 		hchan->channel, hchan->channelFlags);
+ 
+-	ht_macmode = ath_cwm_macmode(sc);
+-
+ 	if (hchan->channel != sc->sc_ah->ah_curchan->channel ||
+ 	    hchan->channelFlags != sc->sc_ah->ah_curchan->channelFlags ||
+ 	    (sc->sc_flags & SC_OP_CHAINMASK_UPDATE) ||
+@@ -357,10 +354,11 @@ int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
+ 
+ 		spin_lock_bh(&sc->sc_resetlock);
+ 		if (!ath9k_hw_reset(ah, hchan,
+-					ht_macmode, sc->sc_tx_chainmask,
+-					sc->sc_rx_chainmask,
+-					sc->sc_ht_extprotspacing,
+-					fastcc, &status)) {
++				    sc->sc_ht_info.tx_chan_width,
++				    sc->sc_tx_chainmask,
++				    sc->sc_rx_chainmask,
++				    sc->sc_ht_extprotspacing,
++				    fastcc, &status)) {
+ 			DPRINTF(sc, ATH_DBG_FATAL,
+ 				"%s: unable to reset channel %u (%uMhz) "
+ 				"flags 0x%x hal status %u\n", __func__,
+@@ -682,7 +680,6 @@ int ath_open(struct ath_softc *sc, struct ath9k_channel *initial_chan)
+ 	struct ath_hal *ah = sc->sc_ah;
+ 	int status;
+ 	int error = 0;
+-	enum ath9k_ht_macmode ht_macmode = ath_cwm_macmode(sc);
+ 
+ 	DPRINTF(sc, ATH_DBG_CONFIG, "%s: mode %d\n",
+ 		__func__, sc->sc_ah->ah_opmode);
+@@ -709,9 +706,10 @@ int ath_open(struct ath_softc *sc, struct ath9k_channel *initial_chan)
+ 	 */
+ 
+ 	spin_lock_bh(&sc->sc_resetlock);
+-	if (!ath9k_hw_reset(ah, initial_chan, ht_macmode,
+-			   sc->sc_tx_chainmask, sc->sc_rx_chainmask,
+-			   sc->sc_ht_extprotspacing, false, &status)) {
++	if (!ath9k_hw_reset(ah, initial_chan,
++			    sc->sc_ht_info.tx_chan_width,
++			    sc->sc_tx_chainmask, sc->sc_rx_chainmask,
++			    sc->sc_ht_extprotspacing, false, &status)) {
+ 		DPRINTF(sc, ATH_DBG_FATAL,
+ 			"%s: unable to reset hardware; hal status %u "
+ 			"(freq %u flags 0x%x)\n", __func__, status,
+@@ -788,7 +786,6 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	struct ath_hal *ah = sc->sc_ah;
+ 	int status;
+ 	int error = 0;
+-	enum ath9k_ht_macmode ht_macmode = ath_cwm_macmode(sc);
+ 
+ 	ath9k_hw_set_interrupts(ah, 0);	/* disable interrupts */
+ 	ath_draintxq(sc, retry_tx);	/* stop xmit */
+@@ -798,9 +795,9 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	/* Reset chip */
+ 	spin_lock_bh(&sc->sc_resetlock);
+ 	if (!ath9k_hw_reset(ah, sc->sc_ah->ah_curchan,
+-			   ht_macmode,
+-			   sc->sc_tx_chainmask, sc->sc_rx_chainmask,
+-			   sc->sc_ht_extprotspacing, false, &status)) {
++			    sc->sc_ht_info.tx_chan_width,
++			    sc->sc_tx_chainmask, sc->sc_rx_chainmask,
++			    sc->sc_ht_extprotspacing, false, &status)) {
+ 		DPRINTF(sc, ATH_DBG_FATAL,
+ 			"%s: unable to reset hardware; hal status %u\n",
+ 			__func__, status);
+diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+index c242942..51bf528 100644
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -1023,14 +1023,5 @@ int ath_cabq_update(struct ath_softc *);
+ void ath_get_currentCountry(struct ath_softc *sc,
+ 	struct ath9k_country_entry *ctry);
+ u64 ath_extend_tsf(struct ath_softc *sc, u32 rstamp);
+-dma_addr_t ath_skb_map_single(struct ath_softc *sc,
+-			      struct sk_buff *skb,
+-			      int direction,
+-			      dma_addr_t *pa);
+-void ath_skb_unmap_single(struct ath_softc *sc,
+-			  struct sk_buff *skb,
+-			  int direction,
+-			  dma_addr_t *pa);
+-enum ath9k_ht_macmode ath_cwm_macmode(struct ath_softc *sc);
+ 
+ #endif /* CORE_H */
+diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
+index af2011f..91f6354 100644
+--- a/drivers/net/wireless/ath9k/recv.c
++++ b/drivers/net/wireless/ath9k/recv.c
+@@ -454,11 +454,10 @@ static int ath_rx_indicate(struct ath_softc *sc,
+ 	nskb = ath_rxbuf_alloc(sc, sc->sc_rxbufsize);
+ 	if (nskb != NULL) {
+ 		bf->bf_mpdu = nskb;
+-		bf->bf_buf_addr = ath_skb_map_single(sc,
+-			nskb,
+-			PCI_DMA_FROMDEVICE,
+-			/* XXX: Remove get_dma_mem_context() */
+-			get_dma_mem_context(bf, bf_dmacontext));
++		bf->bf_buf_addr = pci_map_single(sc->pdev, nskb->data,
++					 skb_end_pointer(nskb) - nskb->head,
++					 PCI_DMA_FROMDEVICE);
++		bf->bf_dmacontext = bf->bf_buf_addr;
+ 		ATH_RX_CONTEXT(nskb)->ctx_rxbuf = bf;
+ 
+ 		/* queue the new wbuf to H/W */
+@@ -541,9 +540,10 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
+ 			}
+ 
+ 			bf->bf_mpdu = skb;
+-			bf->bf_buf_addr =
+-				ath_skb_map_single(sc, skb, PCI_DMA_FROMDEVICE,
+-				       get_dma_mem_context(bf, bf_dmacontext));
++			bf->bf_buf_addr = pci_map_single(sc->pdev, skb->data,
++					 skb_end_pointer(skb) - skb->head,
++					 PCI_DMA_FROMDEVICE);
++			bf->bf_dmacontext = bf->bf_buf_addr;
+ 			ATH_RX_CONTEXT(skb)->ctx_rxbuf = bf;
+ 		}
+ 		sc->sc_rxlink = NULL;
+@@ -1297,27 +1297,3 @@ void ath_rx_node_free(struct ath_softc *sc, struct ath_node *an)
+ {
+ 	ath_rx_node_cleanup(sc, an);
+ }
+-
+-dma_addr_t ath_skb_map_single(struct ath_softc *sc,
+-			      struct sk_buff *skb,
+-			      int direction,
+-			      dma_addr_t *pa)
+-{
+-	/*
+-	 * NB: do NOT use skb->len, which is 0 on initialization.
+-	 * Use skb's entire data area instead.
+-	 */
+-	*pa = pci_map_single(sc->pdev, skb->data,
+-		skb_end_pointer(skb) - skb->head, direction);
+-	return *pa;
+-}
+-
+-void ath_skb_unmap_single(struct ath_softc *sc,
+-			  struct sk_buff *skb,
+-			  int direction,
+-			  dma_addr_t *pa)
+-{
+-	/* Unmap skb's entire data area */
+-	pci_unmap_single(sc->pdev, *pa,
+-		skb_end_pointer(skb) - skb->head, direction);
+-}
+diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
+index 55f3c8e..8d31ad7 100644
+--- a/drivers/net/wireless/ath9k/xmit.c
++++ b/drivers/net/wireless/ath9k/xmit.c
+@@ -1427,7 +1427,6 @@ static void ath_drain_txdataq(struct ath_softc *sc, bool retry_tx)
+ 	struct ath_hal *ah = sc->sc_ah;
+ 	int i;
+ 	int npend = 0;
+-	enum ath9k_ht_macmode ht_macmode = ath_cwm_macmode(sc);
+ 
+ 	/* XXX return value */
+ 	if (!(sc->sc_flags & SC_OP_INVALID)) {
+@@ -1452,9 +1451,10 @@ static void ath_drain_txdataq(struct ath_softc *sc, bool retry_tx)
+ 
+ 		spin_lock_bh(&sc->sc_resetlock);
+ 		if (!ath9k_hw_reset(ah,
+-			sc->sc_ah->ah_curchan, ht_macmode,
+-			sc->sc_tx_chainmask, sc->sc_rx_chainmask,
+-			sc->sc_ht_extprotspacing, true, &status)) {
++				    sc->sc_ah->ah_curchan,
++				    sc->sc_ht_info.tx_chan_width,
++				    sc->sc_tx_chainmask, sc->sc_rx_chainmask,
++				    sc->sc_ht_extprotspacing, true, &status)) {
+ 
+ 			DPRINTF(sc, ATH_DBG_FATAL,
+ 				"%s: unable to reset hardware; hal status %u\n",
+-- 
+1.5.6.5
 
