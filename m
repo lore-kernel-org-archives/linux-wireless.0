@@ -1,71 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56241 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751175AbYHGRMK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 13:12:10 -0400
-Subject: Re: mac80211/cfg80211: Add BSS configuration options for AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+Received: from bu3sch.de ([62.75.166.246]:40036 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751324AbYHOWQc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Aug 2008 18:16:32 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "linux-kernel" <linux-kernel@vger.kernel.org>
+Subject: oops in exit_mmap
+Date: Sat, 16 Aug 2008 00:14:23 +0200
+Cc: John Linville <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <20080807170701.GA21060@jm.kir.nu>
-References: <20080807170701.GA21060@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rUjrvkW5QePz0d++IcoE"
-Date: Thu, 07 Aug 2008 19:11:33 +0200
-Message-Id: <1218129093.3630.15.camel@johannes.berg> (sfid-20080807_191214_726524_C8387ED1)
-Mime-Version: 1.0
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200808160014.23922.mb@bu3sch.de> (sfid-20080816_001637_649968_C6DE915E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I just had the following oops on a wireless-testing.git kernel, which
+is based on 2.6.27-rc2.
+The oops happened while copying files.
 
---=-rUjrvkW5QePz0d++IcoE
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2008-08-07 at 20:07 +0300, Jouni Malinen wrote:
-> This change adds a new cfg80211 command, NL80211_CMD_SET_BSS, to allow
-> AP mode BSS parameters to be changed from user space (e.g., hostapd).
-> The drivers using mac80211 are expected to be modified with separate
-> changes to use the new BSS info parameter for short slot time in the
-> bss_info_changed() handler.
->=20
-> Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-> +	/*
-> +	 * TODO: IEEE80211_CONF_SHORT_SLOT_TIME will be removed once drivers
-> +	 * have been converted to use bss_info_changed() for slot time
-> +	 * configuration
-> +	 */
-
-I guess we'll also need to make the mlme code actually use it, as it
-stands it looks like we never enable short slot. Oh well, later.
-
-johannes
-
---=-rUjrvkW5QePz0d++IcoE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJImyzCAAoJEKVg1VMiehFYBVkP/j3PL0X/v/V3Xkg9EIFJVSsE
-P39uxdamFmd7zuj0L3JJCv1ckEWGbcV6Q7Bh8XWSVQ6mnMAVRtrNEvZT5SZ8CxYw
-rZfAIo0eqsPET0LOu7EdMRxw5/JDXFbUIHQkpBcbMY2KZOYwZ5lVXW1motUbYN1z
-ur256NEiiV8UBw7qKrKlv5yxWA7/NnNgYm/Zx4WdR0AialRUWR/Lm8Bqhx44vQc3
-3fdkrge+qH6BV3B3heLDYQPbz9QFuXxMXj99xpDqt+7b2WykX4jpKgDYm1PmiY+q
-GewsAU/B4mBa3oS1ab9BwL38Nx/hIhdt+xcsZn1359ptGc1AGu7zM6IKMOf2AGf+
-ofovUDwbW0msA8b5bLF2gqi6otjSqhTJbk5lLdl4YTmwy8ZmHNZ7pCEifPj09M/s
-RpM2ai3GcuHMAzW+JXPrPKAMVnyuhA8DtsD1KcZBenEUbbtgvbIb+k9t36RK0inZ
-GeAEjdJb3ZFdz2gbVgIhkOA57eloqJ1rcglJvm6TfakiV+E2KYfIcTIUxPbd8TXc
-a05NpgvSVdpQGMj26To9KhN25wULmY39oG1hY2uizJvmjefjAzLCdJFeB+olRqbL
-G2Yz+PXwRt6HkTd0aUYXsjV+HrgICKgGFc9AORaWTs1CuemxKpYYpXLHwtRdEW3M
-GkT11JfIUdzmUEoD+1qW
-=4h+Z
------END PGP SIGNATURE-----
-
---=-rUjrvkW5QePz0d++IcoE--
-
+[27931.315928] Unable to handle kernel paging request for data at address 0x00000595
+[27931.317713] Faulting instruction address: 0xc0082db0
+[27931.318841] Oops: Kernel access of bad area, sig: 11 [#1]
+[27931.319341] PREEMPT PowerMac
+[27931.319784] Modules linked in: b43 ssb mac80211 appletouch rfkill_input rfkill led_class input_polldev af_packet ohci_hcd pcmcia unix [last unloaded: mac80211]
+[27931.321217] NIP: c0082db0 LR: c0082da0 CTR: 00000000
+[27931.321787] REGS: ef32fda0 TRAP: 0300   Tainted: G        W  (2.6.27-rc2-wl-wltest)
+[27931.322449] MSR: 00009032 <EE,ME,IR,DR>  CR: 28000482  XER: 00000000
+[27931.323197] DAR: 00000595, DSISR: 40000000
+[27931.323765] TASK = ee29adf0[23865] 'cp' THREAD: ef32e000
+[27931.323942] GPR00: c0082da0 ef32fe50 ee29adf0 00000000 bbbbbbbb 00000004 ef308ed4 c0cd5100 
+[27931.324796] GPR08: 0000005a 00000000 00000000 ef32fe50 0fedaad0 10028bc8 10040000 00000002 
+[27931.325665] GPR16: 10040000 10018875 bf9fbfc8 00000000 00000000 00000000 00000000 10020000 
+[27931.326560] GPR24: 00000000 20000000 28000482 00000000 00000501 00000000 ef32e000 ef32fe50 
+[27931.328037] NIP [c0082db0] exit_mmap+0xf4/0x11c
+[27931.328737] LR [c0082da0] exit_mmap+0xe4/0x11c
+[27931.329439] Call Trace:
+[27931.330084] [ef32fe50] [c0082da0] exit_mmap+0xe4/0x11c (unreliable)
+[27931.330885] [ef32fe80] [c003390c] mmput+0x58/0xe4
+[27931.331631] [ef32fea0] [c003784c] exit_mm+0x128/0x140
+[27931.332395] [ef32fed0] [c00392a8] do_exit+0x1fc/0x720
+[27931.333168] [ef32ff10] [c0039850] do_group_exit+0x84/0xb0
+[27931.333956] [ef32ff30] [c0039898] sys_exit_group+0x1c/0x34
+[27931.334758] [ef32ff40] [c0015584] ret_from_syscall+0x0/0x38
+[27931.335574] --- Exception: c01 at 0xfec7008
+[27931.335576]     LR = 0xfec6fd8
+[27931.337066] Instruction dump:
+[27931.337813] 3929ffff 913e000c 801e0034 70090004 41a20014 483e1b31 4800000c 4bfffe7d 
+[27931.338839] 7c7d1b78 2f9d0000 7fa3eb78 409efff0 <801c0094> 3140ffff 7d2a0110 0f090000 
+[27931.359143] ---[ end trace 633dedc970f0cb02 ]---
+[27931.360589] Fixing recursive fault but reboot is needed!
