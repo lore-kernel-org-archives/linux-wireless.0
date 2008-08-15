@@ -1,62 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:64478 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751898AbYHAHgP (ORCPT
+Received: from bluegiga.fi ([194.100.31.45]:56571 "EHLO darkblue.bluegiga.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751620AbYHOSIj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 03:36:15 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so380926nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 00:36:13 -0700 (PDT)
-Date: Fri, 1 Aug 2008 07:41:32 +0000
-From: Jarek Poplawski <jarkao2@gmail.com>
-To: David Miller <davem@davemloft.net>
-Cc: johannes@sipsolutions.net, netdev@axxeo.de, peterz@infradead.org,
-	Larry.Finger@lwfinger.net, kaber@trash.net,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, mingo@redhat.com
-Subject: Re: Kernel WARNING: at net/core/dev.c:1330
-	__netif_schedule+0x2c/0x98()
-Message-ID: <20080801074132.GA5158@ff.dom.local> (sfid-20080801_093622_743055_C88341DB)
-References: <20080731.052932.110299354.davem@davemloft.net> <20080801064810.GA4435@ff.dom.local> <20080801070150.GB4435@ff.dom.local> <20080801.000146.246099981.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080801.000146.246099981.davem@davemloft.net>
+	Fri, 15 Aug 2008 14:08:39 -0400
+Subject: Re: mac80211 interprets missing TX_ACK flag as tx fail
+From: Mikko =?ISO-8859-1?Q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	Stephen Blackheath <tramp.enshrine.stephen@blacksapphire.com>
+In-Reply-To: <200808151958.46302.IvDoorn@gmail.com>
+References: <1218813764.22679.11.camel@virkkmi-linux>
+	 <200808151844.13657.IvDoorn@gmail.com>
+	 <1218822632.22679.73.camel@virkkmi-linux>
+	 <200808151958.46302.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Date: Fri, 15 Aug 2008 21:08:36 +0300
+Message-Id: <1218823716.22679.78.camel@virkkmi-linux> (sfid-20080815_200841_871622_C0DD7DCB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 01, 2008 at 12:01:46AM -0700, David Miller wrote:
-> From: Jarek Poplawski <jarkao2@gmail.com>
-> Date: Fri, 1 Aug 2008 07:01:50 +0000
-> 
-> > On Fri, Aug 01, 2008 at 06:48:10AM +0000, Jarek Poplawski wrote:
-> > > On Thu, Jul 31, 2008 at 05:29:32AM -0700, David Miller wrote:
-> > ...
-> > > > diff --git a/net/core/dev.c b/net/core/dev.c
-> > > > index 63d6bcd..69320a5 100644
-> > > > --- a/net/core/dev.c
-> > > > +++ b/net/core/dev.c
-> > > > @@ -4200,6 +4200,7 @@ static void netdev_init_queues(struct net_device *dev)
-> > > >  {
-> > > >  	netdev_init_one_queue(dev, &dev->rx_queue, NULL);
-> > > >  	netdev_for_each_tx_queue(dev, netdev_init_one_queue, NULL);
-> > > > +	spin_lock_init(&dev->tx_global_lock);
-> > > 
-> > > This will probably need some lockdep annotations similar to
-> > > _xmit_lock.
-> > 
-> > ...BTW, we probably could also consider some optimization here: the
-> > xmit_lock of the first queue could be treated as special, and only
-> > the owner could do such a freezing. This would save changes of
-> > functionality to non mq devices. On the other hand, it would need
-> > remembering about this special treatment (so, eg. a separate lockdep
-> > initialization than all the others).
-> 
-> I think special casing the zero's queue's lock is a bad idea.
-> Having a real top-level synchronizer is a powerful tool and
-> we could use it for other things.
+On Fri, 2008-08-15 at 19:58 +0200, Ivo van Doorn wrote:
+> On Friday 15 August 2008, Mikko Virkkil=C3=A4 wrote:
+> > I'm moving the conversation over from rt2400-devel to linux-wireles=
+s.
+> > The last message (as of this writing) from the earlier conversation=
+ at
+> > rt2400-devel can be found at http://tinyurl.com/6p9n7g with some mo=
+re
+> > details.
+> >=20
+> > So to summarize the situation:=20
+> >=20
+> > - the rt73usb driver (in rt2x00) doesn't set IEEE80211_TX_STAT_ACK
+> >   because "frames which are uploaded to the hardware are not guaren=
+teed
+> >   to be acked".
+>=20
+> rt2500usb suffers from the same issue.
+>=20
+> > - The mac80211 layer will set the IEEE80211_RADIOTAP_F_TX_FAIL if t=
+he=20
+> >   IEEE80211_TX_STAT_ACK flag is missing.=20
+> > - hostapd will interpret the IEEE80211_RADIOTAP_F_TX_FAIL as a fail=
+ure
+> >   to send
+> >=20
+> > This all results in hostapd reporting "MGMT (TX callback) fail" and
+> > making rt73usb not work in AP mode.=20
+> >=20
+> > I'm hoping that some decision can be reached on how to fix this so =
+that
+> > AP mode will work with the rt73.=20
+> >=20
+> > Just off the top of my head, one way of fixing this would be to mak=
+e
+> > IEEE80211_TX_CTL_NO_ACK also work the other way around: Now it is u=
+sed
+> > to tell the lower level not to wait for an ACK. Perhaps it could al=
+so be
+> > used by the lower level to tell higher levels that no ACK is ever g=
+oing
+> > to come e.g. because the hardware is incapable of supplying TX ACKs=
+=2E The
+> > mac80211 layer would be changed to check for IEEE80211_TX_CTL_NO_AC=
+K. If
+> > the flag was set it would skip setting IEEE80211_RADIOTAP_F_TX_FAIL=
+ even
+> > when the IEEE80211_TX_STAT_ACK is missing.
+>=20
+> Actually this isn't the complete picture, what you might need is a ne=
+w flag
+> IEEE80211_TX_CTL_UNKNOWN which then informs mac80211 that the
+> frame has an unknown status, and that is something that could be pass=
+ed on to
+> userspace through radiotap later.
+>=20
+> This is better then setting a global "supports ACK reporting" flag, b=
+ecause in case
+> of rt61 one every x frames also has an unknown status because the txd=
+one interrupt
+> isn't happening for that frame. So that means you definately need a p=
+er-frame flag
+> to tell if the frame was acked, not-acked or if the status was unknow=
+n.
+>=20
+> Ivo
 
-Sure, if there is really no problem with lockdep here, there is no
-need for this at all.
+>From what I understand the IEEE80211_TX_CTL_NO_ACK which is in the
+flags of the ieee80211_tx_info struct, could be set from the driver for
+each frame just as currently (not) done with the IEEE80211_TX_STAT_ACK
+flag.=20
 
-Thanks for the explanations,
-Jarek P.
+- Mikko
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
