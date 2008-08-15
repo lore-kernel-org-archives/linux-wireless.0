@@ -1,56 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:40675 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758650AbYHEBn0 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:48209 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753090AbYHOTlQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 21:43:26 -0400
-Message-ID: <4897B037.5040300@lwfinger.net> (sfid-20080805_034342_803892_296F67E2)
-Date: Mon, 04 Aug 2008 20:43:19 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 15 Aug 2008 15:41:16 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1577664wfd.4
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Aug 2008 12:41:15 -0700 (PDT)
+Message-ID: <43e72e890808151241r75a1146y525dbf6a2c441ea@mail.gmail.com> (sfid-20080815_214119_645991_A8767A3A)
+Date: Fri, 15 Aug 2008 12:41:15 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Jouni Malinen" <j@w1.fi>
+Subject: Re: [RFC] mac80211/cfg80211: Add vif configuration options
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080815193324.GH7998@jm.kir.nu>
 MIME-Version: 1.0
-To: Will Dyson <will.dyson@gmail.com>
-CC: Ivo van Doorn <ivdoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-Subject: Re: [Rt2400-devel] Please pull 'upstream' branch of rt2x00
-References: <200808041636.41189.IvDoorn@gmail.com> <8e6f94720808041821q760f8596g70a8ebc4c142989a@mail.gmail.com>
-In-Reply-To: <8e6f94720808041821q760f8596g70a8ebc4c142989a@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
+References: <20080815193324.GH7998@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Will Dyson wrote:
-> On Mon, Aug 4, 2008 at 10:36 AM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
->> Hi John,
->>
->> Only 5 patches, but they do bump rt2x00 to a new version: 2.2.0
->> This series will add HW crypto support to rt2x00, by default it
->> has been enabled for rt61pci and rt73usb.
-> 
-> Seems to work well on my rt61pci card!
-> 
-> In fact, it reports a higher link quality (and maintains a higher
-> bitrate) than the version in current wireless-testing. The quality
-> report also fluctuates less than previously. This is consistent over a
-> few hours of testing with streaming PCM audio.
-> 
-> I do get a lockdep warning when bringing up the device, however.
-> 
-> =============================================
-> [ INFO: possible recursive locking detected ]
-> 2.6.27-rc1-rt2-wl #1
-> ---------------------------------------------
-> rt61pci/4405 is trying to acquire lock:
->  (_xmit_IEEE80211#2){-...}, at: [<ffffffffa014cc52>]
-> ieee80211_scan_completed+0x172/0x320 [mac80211]
-> 
-> but task is already holding lock:
->  (_xmit_IEEE80211#2){-...}, at: [<ffffffffa014cc52>]
-> ieee80211_scan_completed+0x172/0x320 [mac80211]
-> 
+On Fri, Aug 15, 2008 at 12:33 PM, Jouni Malinen <j@w1.fi> wrote:
 
-I get that same lockdep warning when using the mainline kernel with b43. It 
-doesn't seem to cause any problems.
+> @@ -1588,6 +1591,44 @@ static int nl80211_set_bss(struct sk_buf
+>        return err;
+>  }
+>
+> +static int nl80211_set_vif(struct sk_buff *skb, struct genl_info *info)
+> +{
+> +       struct cfg80211_registered_device *drv;
+> +       int err;
+> +       struct net_device *dev;
+> +       struct vif_parameters params;
+> +
+> +       memset(&params, 0, sizeof(params));
+> +       /* default to not changing parameters */
+> +       params.drop_unencrypted = -1;
+> +       params.userspace_mlme = -1;
+> +
+> +       if (info->attrs[NL80211_ATTR_VIF_DROP_UNENCRYPTED])
+> +               params.userspace_mlme =
 
-Larry
+This should be params.drop_unencrypted instead right.
 
+> +                   nla_get_u8(info->attrs[NL80211_ATTR_VIF_DROP_UNENCRYPTED]);
+> +       if (info->attrs[NL80211_ATTR_VIF_USERSPACE_MLME])
+> +               params.userspace_mlme =
+> +                   nla_get_u8(info->attrs[NL80211_ATTR_VIF_USERSPACE_MLME]);
