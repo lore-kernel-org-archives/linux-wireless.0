@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:48565 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751708AbYHUAu4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Aug 2008 20:50:56 -0400
-Date: Wed, 20 Aug 2008 17:50:54 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: jmerkey@wolfmountaingroup.com
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.27-rc3-git6 busted-ass iwl3945 driver drops packets with
- WEP  enabled
-Message-Id: <20080820175054.0795eecb.akpm@linux-foundation.org> (sfid-20080821_025101_767447_9B5E1A7A)
-In-Reply-To: <1749.69.2.248.210.1219253222.squirrel@webmail.wolfmountaingroup.com>
-References: <1749.69.2.248.210.1219253222.squirrel@webmail.wolfmountaingroup.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga02.intel.com ([134.134.136.20]:17686 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752576AbYHOCEq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Aug 2008 22:04:46 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 04/15] iwlwifi: remove obsolete 4965 forward declarations
+Date: Fri, 15 Aug 2008 10:01:09 +0800
+Message-Id: <1218765680-8378-5-git-send-email-yi.zhu@intel.com> (sfid-20080815_040451_398341_D5167A51)
+In-Reply-To: <1218765680-8378-4-git-send-email-yi.zhu@intel.com>
+References: <1218765680-8378-1-git-send-email-yi.zhu@intel.com>
+ <1218765680-8378-2-git-send-email-yi.zhu@intel.com>
+ <1218765680-8378-3-git-send-email-yi.zhu@intel.com>
+ <1218765680-8378-4-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 20 Aug 2008 11:27:02 -0600 (MDT)
-jmerkey@wolfmountaingroup.com wrote:
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-> 
-> On an Acer 9410 laptop with dual core processors, the iwl3945 driver has
-> intermittment receiver lockup problems (stops receiving packets) using the
-> Linux iwl3945 drivers with WEP encryption enbaled.  The adapter works fine
-> without WEP or WPA.   If the same system is booted to Windows Vista (which
-> takes about 15 minutes to boot because Vista is a fat slow pig) the
-> wireless drivers work fine with WEP under Vista on the same system.
-> 
-> If the system copies the ndis .sys drivers and I build ndiswrapper (which
-> has to be really hacked up to build on 2.6.27) and use the ndis drivers on
-> 2.6.27-rc3 with a modified ndiswrapper, they work fine.
-> 
-> I suspect the firmware or an interaction with the firmware settings since
-> when the system is booted to Vista after running 2.6.27-rc3 with the
-> iwl3945 drivers, I have to power cycle the system periodically after
-> running the iwl3945 driver to get the drivers under Vista to work again,
-> but not always.
-> 
+This patch removes unused forward declarations functions.
 
-(cc linux-wireless)
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h |    6 ------
+ 1 files changed, 0 insertions(+), 6 deletions(-)
 
-Was 2.6.26 OK?
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index f46e9cd..0711b35 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -637,12 +637,6 @@ static inline u8 get_cmd_index(struct iwl_queue *q, u32 index, int is_huge)
+ 
+ struct iwl_priv;
+ 
+-/*
+- * Forward declare iwl-4965.c functions for iwl-base.c
+- */
+-extern void iwl4965_rf_kill_ct_config(struct iwl_priv *priv);
+-int iwl4965_check_empty_hw_queue(struct iwl_priv *priv, int sta_id,
+-					u8 tid, int txq_id);
+ 
+ /* Structures, enum, and defines specific to the 4965 */
+ 
+-- 
+1.5.3.6
+
