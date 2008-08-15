@@ -1,37 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:43034 "EHLO c60.cesmail.net"
+Received: from bu3sch.de ([62.75.166.246]:39094 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752533AbYHATJ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 15:09:26 -0400
-Subject: Re: Vendor support stickers for devices supported under Linux
-	wireless
-From: Pavel Roskin <proski@gnu.org>
-To: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <g6vkn3$3lc$1@ger.gmane.org>
-References: <43e72e890807301327j54be2453r836964c708d75458@mail.gmail.com>
-	 <40f31dec0807310657l36b052bfu510415d50c14718d@mail.gmail.com>
-	 <3659.194.45.26.221.1217581093.squirrel@webmail.madwifi.org>
-	 <1217610561.13107.28.camel@dv>  <g6vkn3$3lc$1@ger.gmane.org>
-Content-Type: text/plain; charset=windows-1251
-Date: Fri, 01 Aug 2008 15:09:23 -0400
-Message-Id: <1217617763.3361.1.camel@dv> (sfid-20080801_210929_436561_D71CBCF2)
-Mime-Version: 1.0
+	id S1751786AbYHOAHT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Aug 2008 20:07:19 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] b43: Fix for another Bluetooth Coexistence SPROM Programming error for BCM4306
+Date: Fri, 15 Aug 2008 02:06:42 +0200
+Cc: John W Linville <linville@tuxdriver.com>,
+	tim.gardner@canonical.com, linux-wireless@vger.kernel.org
+References: <48a4c657.3Vw2yJT7Y4Gu6f4D%Larry.Finger@lwfinger.net>
+In-Reply-To: <48a4c657.3Vw2yJT7Y4Gu6f4D%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200808150206.43088.mb@bu3sch.de> (sfid-20080815_020723_596298_F7ACC8C5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-08-01 at 18:30 +0000, Daniel Gimpelevich wrote:
-> Come to think of it, the above could apply to *any* hardware=85
+On Friday 15 August 2008 01:57:11 Larry Finger wrote:
+> In trying to help users on the Ubuntu Bugzilla, I discovered another
+> BCM4306 with the Bluetooth Coexistence programming error in the SPROM.
+> 
+> This patch is contingent on the one that added the Linksys device with
+> subdevice code of 0x0014.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@kernel.org>
+> ---
+> 
+> John,
+> 
+> This is more 2.6.27 material.
 
-That's a good point.  There is nothing specifically wireless about it,
-except the spectrum related restrictions.  The discussion should be
-happening elsewhere, I think.
+ACK
 
---=20
-Regards,
-Pavel Roskin
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Larry
+> ---
+> 
+> Index: wireless-testing/drivers/net/wireless/b43/main.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/b43/main.c
+> +++ wireless-testing/drivers/net/wireless/b43/main.c
+> @@ -4615,6 +4615,7 @@ static void b43_sprom_fixup(struct ssb_b
+>  	if (bus->bustype == SSB_BUSTYPE_PCI) {
+>  		pdev = bus->host_pci;
+>  		if (IS_PDEV(pdev, BROADCOM, 0x4318, ASUSTEK, 0x100F) ||
+> +		    IS_PDEV(pdev, BROADCOM, 0x4320,    DELL, 0x0003) ||
+>  		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0015) ||
+>  		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0014) ||
+>  		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0013))
+> 
+> 
+> 
+> 
+
+
+
+-- 
+Greetings Michael.
