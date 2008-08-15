@@ -1,99 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42955
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753241AbYHAHAG (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.175]:54541 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750870AbYHOFZW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 03:00:06 -0400
-Date: Fri, 01 Aug 2008 00:00:05 -0700 (PDT)
-Message-Id: <20080801.000005.102314582.davem@davemloft.net> (sfid-20080801_090010_797692_C34FD082)
-To: jarkao2@gmail.com
-Cc: johannes@sipsolutions.net, netdev@axxeo.de, peterz@infradead.org,
-	Larry.Finger@lwfinger.net, kaber@trash.net,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, mingo@redhat.com
-Subject: Re: Kernel WARNING: at net/core/dev.c:1330
- __netif_schedule+0x2c/0x98()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080801064810.GA4435@ff.dom.local>
-References: <20080727203757.GA2527@ami.dom.local>
-	<20080731.052932.110299354.davem@davemloft.net>
-	<20080801064810.GA4435@ff.dom.local>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 15 Aug 2008 01:25:22 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1177497wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Aug 2008 22:25:22 -0700 (PDT)
+Message-ID: <1197ff4c0808142225p1469d32na94907bbed816afe@mail.gmail.com> (sfid-20080815_072527_054267_82713CC1)
+Date: Fri, 15 Aug 2008 13:25:22 +0800
+From: YanBo <dreamfly281@gmail.com>
+To: devel@lists.open80211s.org
+Subject: Bridge the mesh interface and wired ethernet interface to construct a MPP(Mesh Portals)
+Cc: wireless <linux-wireless@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jarek Poplawski <jarkao2@gmail.com>
-Date: Fri, 1 Aug 2008 06:48:10 +0000
+Hi,
 
-> On Thu, Jul 31, 2008 at 05:29:32AM -0700, David Miller wrote:
-> > +		/* No need to grab the _xmit_lock here.  If the
-> > +		 * queue is not stopped for another reason, we
-> > +		 * force a schedule.
-> > +		 */
-> > +		clear_bit(__QUEUE_STATE_FROZEN, &txq->state);
-> 
-> The comments in asm-x86/bitops.h to set_bit/clear_bit are rather queer
-> about reordering on non x86: isn't eg. smp_mb_before_clear_bit()
-> useful  here?
+When I tried to bridge a mesh interface with another wired ethernet
+interface to construct a MPP, it seemed they can't communicate each
+other.
 
-It doesn't matter, we need no synchronization here at all.
+The test what I do is like below:
+1. Mesh node B has connected with another mesh node D
+2. Bridge a wired interface A with  mesh interface B get a bridge
+interface C (assume A's mac address value is larger than B's mac
+address value )
+3. Set interface D and C  in the same IP segment.
+When ping C with D
+B will broadcast a ARP packet which the addr4 is C's mac address
+when D received this broadcast ARP packet, D want do a ARP reply to C
+but D found C's address is not in the mesh neighbor table, and then D
+will send a path request  try to find how to reach C
+when B received this path_request, B also don't know who is C, and
+then just forward this mesh path request and don't do anything.
+then D can't reach C
 
-We unconditionally perform a __netif_schedule(), and that
-will run the TX queue on the local cpu.  We will take the
-_xmit_lock at least once time if in fact the queue was not
-stopped before the first froze it.
+As we know the bridge's mac address is the same as the the least mac
+address of all it's interfaces, so if C's mac address is the same as
+B's, then D will reach C. but this is just a coincidence.
 
-> > diff --git a/net/core/dev.c b/net/core/dev.c
-> > index 63d6bcd..69320a5 100644
-> > --- a/net/core/dev.c
-> > +++ b/net/core/dev.c
-> > @@ -4200,6 +4200,7 @@ static void netdev_init_queues(struct net_device *dev)
-> >  {
-> >  	netdev_init_one_queue(dev, &dev->rx_queue, NULL);
-> >  	netdev_for_each_tx_queue(dev, netdev_init_one_queue, NULL);
-> > +	spin_lock_init(&dev->tx_global_lock);
-> 
-> This will probably need some lockdep annotations similar to
-> _xmit_lock.
 
-I highly doubt it.  It will never be taken nested with another
-device's instance.
+so in my opinion, the solution is when the bridge pass the packet from
+C to B, B need record C's mac address,. and when D receives the ARP
+request  that from B. D also need record the path that D->B->C, then
+when D try to send ARP reply to C,  D just need send the packet to B,
+and B also know it can reach C directly and don't need forward this
+packet. so C and reach D and D also can reach C.  after rough browser
+the mesh code, it seemed it hasn't not deal with this situation,  so
+I'd want ask is there anybody meet the same problem or have better
+solution, or is it worth to do?  if so I'd like to implement this
+function, and the mesh will can be integration with Bridge without
+problem.  any comments or suggestion is welcome!
 
-It is only ->hard_start_xmit() leading to another ->hard_start_xmit()
-where this can currently happen, but tx_global_lock will not be used
-in such paths.
 
-> > @@ -135,7 +135,8 @@ static inline int qdisc_restart(struct Qdisc *q)
-> >  	txq = netdev_get_tx_queue(dev, skb_get_queue_mapping(skb));
-> >  
-> >  	HARD_TX_LOCK(dev, txq, smp_processor_id());
-> > -	if (!netif_subqueue_stopped(dev, skb))
-> > +	if (!netif_tx_queue_stopped(txq) &&
-> > +	    !netif_tx_queue_frozen(txq))
-> >  		ret = dev_hard_start_xmit(skb, dev, txq);
-> >  	HARD_TX_UNLOCK(dev, txq);
-> 
-> This thing is the most doubtful to me: before this patch callers would
-> wait on this lock. Now they take the lock without problems, check the
-> flags, and let to take this lock again, doing some re-queing in the
-> meantime.
->
-> So, it seems HARD_TX_LOCK should rather do some busy looping now with
-> a trylock, and re-checking the _FROZEN flag. Maybe even this should
-> be done in __netif_tx_lock(). On the other hand, this shouldn't block
-> too much the owner of tx_global_lock() with taking such a lock.
-
-'ret' will be NETDEV_TX_BUSY in such a case (finding the queue
-frozen), which will cause the while() loop in __qdisc_run() to
-terminate.
-
-The freezer will unconditionally schedule a new __qdisc_run()
-when it unfreezes the queue.
-
-Sure it's possible for some cpus to bang in and out of there
-a few times, but that's completely harmless.  And it can only
-happen a few times since this freeze state is only held across
-a critical section.
-
+Yanbo
