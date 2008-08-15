@@ -1,32 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:6330 "EHLO mga11.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:65003 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750900AbYHDIDr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 04:03:47 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 00/10] iwlwifi driver 08/04 updates
-Date: Mon,  4 Aug 2008 16:00:38 +0800
-Message-Id: <1217836848-24288-1-git-send-email-yi.zhu@intel.com> (sfid-20080804_100351_310209_8D72B6D0)
+	id S1751195AbYHOT61 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Aug 2008 15:58:27 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Aug 2008 12:58:27 -0700
+Date: Fri, 15 Aug 2008 12:58:25 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Pat Erley <pat@erley.org>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	<linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+Subject: Re: Marvell TopDog Driver Work
+Message-ID: <20080815195825.GD5935@tesla> (sfid-20080815_215831_790692_38CBC2C8)
+References: <48A5DBAB.9080405@erley.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <48A5DBAB.9080405@erley.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Fri, Aug 15, 2008 at 12:40:27PM -0700, Pat Erley wrote:
+> Has anyone stepped up to help in the port of this to mac80211?  I just
+> picked up a wrvs4400n router that uses it and have been working on
+> getting 2.6.XX to work with it.
 
-Here is another series of iwlwifi driver update. Note, the patch 10/10 fixes
-a merge problem for wireless-testing GIT with upstream.
+Not that I have heard of. Don't know.
 
-Thanks,
--yi
-
-[PATCH 01/10] iwlwifi: HW bug fixes
-[PATCH 02/10] iwlwifi: memory allocation optimization
-[PATCH 03/10] iwlwifi: kill struct iwl4965_lq_mngr
-[PATCH 04/10] iwlwifi: implement iwl5000_calc_rssi
-[PATCH 05/10] iwlwifi: fix unhandled interrupt when HW rfkill is on
-[PATCH 06/10] iwlwifi: cleanup iwl_tx_skb
-[PATCH 07/10] iwlwifi: add level for debugging host command
-[PATCH 08/10] iwlwifi: decrement rx skb counter in scan abort handler
-[PATCH 09/10] iwlwifi: grap nic access before accessing periphery registers
-[PATCH 10/10] iwl3945: fix merge mistake for packet injection
+  Luis
