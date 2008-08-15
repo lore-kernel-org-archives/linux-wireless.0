@@ -1,32 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.246]:45089 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753882AbYHDSQW (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:18345 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754058AbYHOMty (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 14:16:22 -0400
-Received: by an-out-0708.google.com with SMTP id d40so342446and.103
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Aug 2008 11:16:21 -0700 (PDT)
-Message-ID: <43e72e890808041116p2552b2bcy40768df864a2e0d4@mail.gmail.com> (sfid-20080804_201626_689748_22E9E2BC)
-Date: Mon, 4 Aug 2008 11:16:04 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Jack Howarth" <howarth@bromo.msbb.uc.edu>
-Subject: Re: ath9k and signal level
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080804181153.GA3331@bromo.msbb.uc.edu>
+	Fri, 15 Aug 2008 08:49:54 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so644039nfc.21
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Aug 2008 05:49:53 -0700 (PDT)
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 5/5] rt2x00: Need to set wiphy->interface_modes
+Date: Fri, 15 Aug 2008 14:49:18 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	Stephen Blackheath <tramp.enshrine.stephen@blacksapphire.com>
+References: <200808151445.07795.IvDoorn@gmail.com> <200808151446.01043.IvDoorn@gmail.com> <200808151446.34060.IvDoorn@gmail.com>
+In-Reply-To: <200808151446.34060.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080730024035.GA2976@bromo.msbb.uc.edu>
-	 <43e72e890808041107y2c3c75fsef049eb09a4c52b7@mail.gmail.com>
-	 <20080804181153.GA3331@bromo.msbb.uc.edu>
+Message-Id: <200808151449.18412.IvDoorn@gmail.com> (sfid-20080815_144958_829313_0719F23D)
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 4, 2008 at 11:11 AM, Jack Howarth <howarth@bromo.msbb.uc.edu> wrote:
-> Luis,
->   I noticed. The current ath9k git when built against 2.6.27-rc1-git4
-> produces a driver which diplays the signal level in the gnome menu
-> bar under Fedora 9. Thanks.
+From: Stephen Blackheath <tramp.enshrine.stephen@blacksapphire.com>
 
-Good to know I hadn't even tested it with a GUI :)
+One day I will understand the patching process. This patch is needed to
+meet a requirement of Linux 2.6.27 drivers. Without it, userspace fails
+to set the device to AP mode.
 
-  Luis
+Signed-off-by: Stephen Blackheath <tramp.enshrine.stephen@blacksapphire.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+John, this one is for 2.6.28
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 5278ae2..b363fad 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -1052,6 +1052,11 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 	 */
+ 	rt2x00dev->hw->vif_data_size = sizeof(struct rt2x00_intf);
+ 
++	rt2x00dev->hw->wiphy->interface_modes =
++	    BIT(NL80211_IFTYPE_AP) |
++	    BIT(NL80211_IFTYPE_STATION) |
++	    BIT(NL80211_IFTYPE_ADHOC);
++
+ 	/*
+ 	 * Let the driver probe the device to detect the capabilities.
+ 	 */
+-- 
+1.5.6.1
+
