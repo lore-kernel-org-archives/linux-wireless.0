@@ -1,89 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.190]:56161 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759274AbYHFBxX (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34838 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755290AbYHOT0Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 21:53:23 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so822362tic.23
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Aug 2008 18:53:22 -0700 (PDT)
-Message-ID: <a8e1da0808051853x67b2739eh28104ac76b53486c@mail.gmail.com> (sfid-20080806_035327_796436_3B8BC7C2)
-Date: Wed, 6 Aug 2008 09:53:21 +0800
-From: "Dave Young" <hidave.darkstar@gmail.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Subject: Re: [BUG] wireless : cpu stuck for 61s
-Cc: "Jiri Slaby" <jirislaby@gmail.com>,
-	"Pekka J Enberg" <penberg@cs.helsinki.fi>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <a8e1da0808051851y752b3525l98271ceca4eb189a@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080729055731.GA3265@darkstar>
-	 <1217334724.10489.47.camel@johannes.berg>
-	 <20080730020820.8bcc00e2.akpm@linux-foundation.org>
-	 <a8e1da0807300302m35a0a7c0q2ff2e0ab92a69239@mail.gmail.com>
-	 <20080730031047.54e13e2d.akpm@linux-foundation.org>
-	 <a8e1da0808010032h32c18054g3712466eb40f0acf@mail.gmail.com>
-	 <4896D34A.1000005@gmail.com>
-	 <a8e1da0808041829sac34939yd9163b02e6b8b515@mail.gmail.com>
-	 <20080805122408.GA5000@hash.localnet>
-	 <a8e1da0808051851y752b3525l98271ceca4eb189a@mail.gmail.com>
+	Fri, 15 Aug 2008 15:26:24 -0400
+Subject: Re: [PATCH] p54: Fix for TX sequence number problem that resulted
+	from commit 741b4fbc44
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chr <chunkeey@web.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200808152034.46346.chunkeey@web.de>
+References: <48987e74.ct5+sLOpTbiTPPHq%Larry.Finger@lwfinger.net>
+	 <200808082038.48840.chunkeey@web.de> <489EF8DE.5030801@lwfinger.net>
+	 <200808152034.46346.chunkeey@web.de>
+Content-Type: text/plain
+Date: Fri, 15 Aug 2008 21:26:15 +0200
+Message-Id: <1218828375.3197.0.camel@localhost> (sfid-20080815_212628_067802_15AFE3C0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 6, 2008 at 9:51 AM, Dave Young <hidave.darkstar@gmail.com> wrote:
-> On Tue, Aug 5, 2008 at 8:24 PM, Bob Copeland <me@bobcopeland.com> wrote:
->> On Tue, Aug 05, 2008 at 09:29:26AM +0800, Dave Young wrote:
->>> With the patch I cann't reproduce the bug with 27-rc1 now.
->>>
->>> >  [<c02375a6>] ? debugfs_create_file+0x46/0x210
->>> >  [<c02375a6>] ? debugfs_create_file+0x46/0x210
->>> >  [<c02375a6>] debugfs_create_file+0x46/0x210
->>> >  [<c02377f1>] debugfs_create_dir+0x21/0x30
->>> >  [<f8901f6d>] ieee80211_sta_debugfs_add+0x2d/0x150 [mac80211]
->>> >  [<f88eba89>] sta_info_debugfs_add_work+0x89/0x130 [mac80211]
->>> >  [<f890a170>] ? rate_control_pid_add_sta_debugfs+0x0/0x30 [mac80211]
->>
->> I wonder if there were two separate problems here.  I looked into
->> this with some detail yesterday and agree with Johannes that the above
->> trace is on locking the parent directory's i_mutex, but I too couldn't
->> see any problems with sta_info_debugfs_add_work.  Other stuff could also
->> modify the directory with or without rtnl_lock, but not in a way that
->> to my untrained eyes would lead to deadlock.
->
-> Yes,. I think so. It's the original bug for me, while testing I found
-> the mutex deadlock problem.
->
-> But this week I will have no time to trace it. so if I have time I
-> will keep tracing the problem
+On Fri, 2008-08-15 at 20:34 +0200, Chr wrote:
+> Hmm, or there's something else can't count?!??
+> 
+> Anyway, the firmware will always assign (as in overwrite) the
+> sequence number for every transmitted frame... unfortunatly
+> there isn't a uniform way to disable this behaviour. 
 
-Additional info,
+If it always does that, then it cannot be implementing QoS properly.
 
-With the mutex fix patch, in 2.6.27-rc1 I seems can not reproduce the
-debugfs_add bug, (maybe need more test)
+johannes
 
-But with 2.6.26, the bug can be reproduced. (The mutex fix patch need
-not to be applied because there's no such deadlock bug)
-
->
->>
->> Or is the trace just wrong?
->>
->> --
->> Bob Copeland %% www.bobcopeland.com
->>
->>
->
->
->
-> --
-> Regards
-> dave
->
-
-
-
--- 
-Regards
-dave
