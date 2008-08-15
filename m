@@ -1,52 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:40713 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754524AbYHZO6H (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:58326 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751062AbYHOUNA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Aug 2008 10:58:07 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: [GIT PATCH] rfkill changes for 2.6.28, set 1a
-Date: Tue, 26 Aug 2008 11:57:56 -0300
-Message-Id: <1219762681-26911-1-git-send-email-hmh@hmh.eng.br> (sfid-20080826_165814_654723_B4CD14E9)
+	Fri, 15 Aug 2008 16:13:00 -0400
+From: Chr <chunkeey@web.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] p54: Fix for TX sequence number problem that resulted from commit 741b4fbc44
+Date: Fri, 15 Aug 2008 22:15:05 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <48987e74.ct5+sLOpTbiTPPHq%Larry.Finger@lwfinger.net> <200808152034.46346.chunkeey@web.de> <1218828375.3197.0.camel@localhost>
+In-Reply-To: <1218828375.3197.0.camel@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200808152215.05761.chunkeey@web.de> (sfid-20080815_221304_514323_F90670BE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Friday 15 August 2008 21:26:15 Johannes Berg wrote:
+> On Fri, 2008-08-15 at 20:34 +0200, Chr wrote:
+> > Hmm, or there's something else can't count?!??
+> >
+> > Anyway, the firmware will always assign (as in overwrite) the
+> > sequence number for every transmitted frame... unfortunatly
+> > there isn't a uniform way to disable this behaviour.
+>
+> If it always does that, then it cannot be implementing QoS properly.
 
-This is the current set of rfkill changes that I'd like to see
-merged for submission in the next merge window (2.6.28).
+hmm? has this something to do with the per STA TID in 
+7.1.3.4.1 (802.11-2007) ?
 
-It contains revised versions of the patches from set 1 [just the ones
-that were not merged into wireless-testing yet] as per the comments
-received. 
+Well the firmware (aka: LowerMAC) has some sort station
+database so there could be some room for that... maybe.
 
-I have included Felipe Balbi's patch as well, to keep them all in one
-place.  I have removed the "net: " from Felipe's patch *title* to keep
-it in line with the prefix that is being used for rfkill (just
-"rfkill: ").
+(But yes, when I was playing with the AP/IBSS, 
+all beacon frames had a running sequence counter...
 
-If there are no problems with the patches and Ivo is okay with them, I'd
-like to see them merged into wireless-testing.
+maybe you can see this with a cx3110x in IBSS mode too?!)
 
-Shortlog:
+Regards,
+	Chr
 
-Felipe Balbi (1):
-      rfkill: add missing line break
-
-Henrique de Moraes Holschuh (3):
-      rfkill: add WARN and BUG_ON paranoia (v2)
-      rfkill: rename rfkill_mutex to rfkill_global_mutex
-      rfkill: remove transmitter blocking on suspend
-
-Also available for PULL from:
-git://repo.or.cz/linux-2.6/linux-acpi-2.6/ibm-acpi-2.6.git rfkill
-
-The patches are based on the latest wireless-testing master.
-
-Thank you.
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
