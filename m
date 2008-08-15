@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:44158 "EHLO
+Received: from fmmailgate01.web.de ([217.72.192.221]:43121 "EHLO
 	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751360AbYHGXPe (ORCPT
+	with ESMTP id S1751631AbYHOVDp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 19:15:34 -0400
+	Fri, 15 Aug 2008 17:03:45 -0400
 From: Chr <chunkeey@web.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] p54: Fix regression due to commit b19fa1f
-Date: Fri, 8 Aug 2008 01:18:19 +0200
-Cc: linux-wireless@vger.kernel.org,
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] p54: Fix for TX sequence number problem that resulted from commit 741b4fbc44
+Date: Fri, 15 Aug 2008 23:06:38 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
 	John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <489af6ed.hkTX0XTOTIkENssK%Larry.Finger@lwfinger.net> <200808071727.19129.chunkeey@web.de> <489B1BDE.6070203@lwfinger.net>
-In-Reply-To: <489B1BDE.6070203@lwfinger.net>
+	linux-wireless@vger.kernel.org
+References: <48987e74.ct5+sLOpTbiTPPHq%Larry.Finger@lwfinger.net> <200808152215.05761.chunkeey@web.de> <1218831437.3197.5.camel@localhost>
+In-Reply-To: <1218831437.3197.5.camel@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-15"
-Message-Id: <200808080118.20011.chunkeey@web.de> (sfid-20080808_011538_035931_42CF02F2)
+Message-Id: <200808152306.38450.chunkeey@web.de> (sfid-20080815_230349_180244_20BAC523)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 07 August 2008 17:59:26 Larry Finger wrote:
-> Chr wrote:
-> > On Thursday 07 August 2008 15:27:51 Johannes Berg wrote:
-> >>> +			priv->tx_stats[le32_to_cpu(entry_data->frame_type - 4)].len--;
-> >>
-> >> Sorry for not catching this earlier, but this looks wrong, the -4 surely
-> >> should be outside the endian conversion?
-> >
-> > likely... let's do the job properly for once and for all.
-> > --
-> >
-> > This patch fixes not only the regression which has sneaked in
-> > with commit b19fa1f, but also provides some extra code for
-> > cts rates.
-> >
-> > Signed-off-by: Christian Lamparter <chunkeey@web.de>
+On Friday 15 August 2008 22:17:16 Johannes Berg wrote:
+> On Fri, 2008-08-15 at 22:15 +0200, Chr wrote:
+> > hmm? has this something to do with the per STA TID in
+> > 7.1.3.4.1 (802.11-2007) ?
 >
-> Is the extra code for cts rates a bug fix or a feature enhancement? If the
-> latter, then this patch should be in two parts. The main reason is that
-> fixes should go to stable as well as wireless-testing.
+> yes
 >
-The old logic always tx'ed cts frames (if enabled) with a
-short preamble when [rate > 3]. (read: with any 802.11g rate).
-Of course this isn't that bad, but it's still wrong!
+> > Well the firmware (aka: LowerMAC) has some sort station
+> > database so there could be some room for that... maybe.
+>
+> makes little sense since we don't tell it about stations, well, I dunno.
+well, the firmware parses some parts of the ieee80211 header.
+And we are actually supposed to tell the firmware about the station aid,
+on every tx (and that's why there's a AID field in the tx_info struct now. ;-) 
+It's not used yet, but it will when Linville returns...
+
+>
+> > (But yes, when I was playing with the AP/IBSS,
+> > all beacon frames had a running sequence counter...
+>
+> Maybe only non-QoS frames?
+well, if you take a look at the cx3110x log you can see
+that the duration & sequence field is always zero...
+
+the firmware is actually ~30kb of ARM-code, but unfortunatly
+they decided to pack it...
+
+>
+> > maybe you can see this with a cx3110x in IBSS mode too?!)
+>
+> we're supposed to be getting documentation on the lmac in there...
+Really?! Well, from my POV it would be better to kickstart FreeMAC,
+rather than writing a driver for these LMAC Firmwares... seriously!
 
 Regards,
 	Chr
