@@ -1,92 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:59864 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753778AbYHBSLN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 14:11:13 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: [PATCH 4/8] rfkill: introduce RFKILL_STATE_MAX
-Date: Sat,  2 Aug 2008 15:11:00 -0300
-Message-Id: <1217700664-20792-5-git-send-email-hmh@hmh.eng.br> (sfid-20080802_201117_517492_96813577)
-In-Reply-To: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
-References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
+Received: from mga02.intel.com ([134.134.136.20]:17686 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752462AbYHOCEt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Aug 2008 22:04:49 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 06/15] iwlwifi: align set channel with mac80211
+Date: Fri, 15 Aug 2008 10:01:11 +0800
+Message-Id: <1218765680-8378-7-git-send-email-yi.zhu@intel.com> (sfid-20080815_040453_607088_B9C27DF0)
+In-Reply-To: <1218765680-8378-6-git-send-email-yi.zhu@intel.com>
+References: <1218765680-8378-1-git-send-email-yi.zhu@intel.com>
+ <1218765680-8378-2-git-send-email-yi.zhu@intel.com>
+ <1218765680-8378-3-git-send-email-yi.zhu@intel.com>
+ <1218765680-8378-4-git-send-email-yi.zhu@intel.com>
+ <1218765680-8378-5-git-send-email-yi.zhu@intel.com>
+ <1218765680-8378-6-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While it is interesting to not add last-enum-markers because it allows gcc
-to warn us of switch() statements missing a valid state, we really should
-be handling memory corruption on a rfkill state with default clauses,
-anyway.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-So add RFKILL_STATE_MAX and use it where applicable.  It makes for safer
-code in the long run.
+This patch makes use of mac80211 defaults for channel and band.
+Older code that uses G band channel 6 was removed. This patch also
+changes iwl_set_rxon_channel signature.
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- include/linux/rfkill.h |    1 +
- net/rfkill/rfkill.c    |   11 ++++++++---
- 2 files changed, 9 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c |   11 +++++------
+ drivers/net/wireless/iwlwifi/iwl-core.h |    4 +---
+ 3 files changed, 7 insertions(+), 10 deletions(-)
 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index e92d8e9..4cd64b0 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -49,6 +49,7 @@ enum rfkill_state {
- 	RFKILL_STATE_SOFT_BLOCKED = 0,	/* Radio output blocked */
- 	RFKILL_STATE_UNBLOCKED    = 1,	/* Radio output allowed */
- 	RFKILL_STATE_HARD_BLOCKED = 2,	/* Output blocked, non-overrideable */
-+	RFKILL_STATE_MAX,		/* marker for last valid state */
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index bf855c8..18764a5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2842,7 +2842,7 @@ static int iwl4965_mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *co
+ 	)
+ 		priv->staging_rxon.flags = 0;
  
- /*
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 5320210..ea872e5 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -201,6 +201,8 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
- 		 * BLOCK even a transmitter that is already in state
- 		 * RFKILL_STATE_HARD_BLOCKED */
- 		break;
-+	default:
-+		return -EINVAL;
- 	}
+-	iwl_set_rxon_channel(priv, conf->channel->band, channel);
++	iwl_set_rxon_channel(priv, conf->channel);
  
- 	if (force || state != rfkill->state) {
-@@ -234,6 +236,9 @@ static void __rfkill_switch_all(const enum rfkill_type type,
+ 	iwl_set_flags_for_band(priv, conf->channel->band);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index f3dd622..e2587b9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -774,7 +774,7 @@ void iwl_set_rxon_chain(struct iwl_priv *priv)
+ EXPORT_SYMBOL(iwl_set_rxon_chain);
+ 
+ /**
+- * iwlcore_set_rxon_channel - Set the phymode and channel values in staging RXON
++ * iwl_set_rxon_channel - Set the phymode and channel values in staging RXON
+  * @phymode: MODE_IEEE80211A sets to 5.2GHz; all else set to 2.4GHz
+  * @channel: Any channel valid for the requested phymode
+ 
+@@ -783,10 +783,11 @@ EXPORT_SYMBOL(iwl_set_rxon_chain);
+  * NOTE:  Does not commit to the hardware; it sets appropriate bit fields
+  * in the staging RXON flag structure based on the phymode
+  */
+-int iwl_set_rxon_channel(struct iwl_priv *priv,
+-				enum ieee80211_band band,
+-				u16 channel)
++int iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch)
  {
- 	struct rfkill *rfkill;
- 
-+	if (unlikely(state >= RFKILL_STATE_MAX))
-+		return;
++	enum ieee80211_band band = ch->band;
++	u16 channel = ieee80211_frequency_to_channel(ch->center_freq);
 +
- 	rfkill_global_states[type].current_state = state;
- 	list_for_each_entry(rfkill, &rfkill_list, node) {
- 		if ((!rfkill->user_claim) && (rfkill->type == type)) {
-@@ -329,9 +334,7 @@ int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state)
- {
- 	enum rfkill_state oldstate;
+ 	if (!iwl_get_channel_info(priv, band, channel)) {
+ 		IWL_DEBUG_INFO("Could not set channel to %d [%d]\n",
+ 			       channel, band);
+@@ -907,8 +908,6 @@ int iwl_init_drv(struct iwl_priv *priv)
+ 	priv->qos_data.qos_active = 0;
+ 	priv->qos_data.qos_cap.val = 0;
  
--	if (state != RFKILL_STATE_SOFT_BLOCKED &&
--	    state != RFKILL_STATE_UNBLOCKED &&
--	    state != RFKILL_STATE_HARD_BLOCKED)
-+	if (unlikely(state >= RFKILL_STATE_MAX))
- 		return -EINVAL;
- 
- 	mutex_lock(&rfkill->mutex);
-@@ -735,6 +738,8 @@ int __must_check rfkill_register(struct rfkill *rfkill)
- 		return -EINVAL;
- 	if (rfkill->type >= RFKILL_TYPE_MAX)
- 		return -EINVAL;
-+	if (rfkill->state >= RFKILL_STATE_MAX)
-+		return -EINVAL;
- 
- 	snprintf(dev->bus_id, sizeof(dev->bus_id),
- 		 "rfkill%ld", (long)atomic_inc_return(&rfkill_no) - 1);
+-	iwl_set_rxon_channel(priv, IEEE80211_BAND_2GHZ, 6);
+-
+ 	priv->rates_mask = IWL_RATES_MASK;
+ 	/* If power management is turned on, default to AC mode */
+ 	priv->power_mode = IWL_POWER_AC;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 64f139e..ff86abc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -189,9 +189,7 @@ void iwl_clear_stations_table(struct iwl_priv *priv);
+ void iwl_free_calib_results(struct iwl_priv *priv);
+ void iwl_reset_qos(struct iwl_priv *priv);
+ void iwl_set_rxon_chain(struct iwl_priv *priv);
+-int iwl_set_rxon_channel(struct iwl_priv *priv,
+-				enum ieee80211_band band,
+-				u16 channel);
++int iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch);
+ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_info *ht_info);
+ u8 iwl_is_fat_tx_allowed(struct iwl_priv *priv,
+ 			 struct ieee80211_ht_info *sta_ht_inf);
 -- 
-1.5.6.3
+1.5.3.6
 
