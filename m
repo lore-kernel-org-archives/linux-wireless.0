@@ -1,51 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yergi.telenet-ops.be ([195.130.132.36]:59549 "EHLO
-	yergi.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757249AbYHDOtP (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:18345 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754058AbYHOMtv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 10:49:15 -0400
-Received: from wilson.telenet-ops.be (unknown [195.130.132.42])
-	by yergi.telenet-ops.be (Postfix) with ESMTP id 7B5865CAFFE
-	for <linux-wireless@vger.kernel.org>; Mon,  4 Aug 2008 16:49:38 +0200 (CEST)
-Message-ID: <489716D3.1030101@telenet.be> (sfid-20080804_164919_470707_365BD78C)
-Date: Mon, 04 Aug 2008 16:48:51 +0200
-From: Ian Schram <ischram@telenet.be>
+	Fri, 15 Aug 2008 08:49:51 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so644039nfc.21
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Aug 2008 05:49:50 -0700 (PDT)
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 3/5] rt2x00: Map extra_tx_headroom to DMA
+Date: Fri, 15 Aug 2008 14:48:41 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200808151445.07795.IvDoorn@gmail.com> <200808151445.31803.IvDoorn@gmail.com>
+In-Reply-To: <200808151445.31803.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: Zhu Yi <yi.zhu@intel.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: Re: [PATCH 08/10] iwlwifi: decrement rx skb counter in scan abort
- handler
-References: <1217836848-24288-1-git-send-email-yi.zhu@intel.com> <1217836848-24288-2-git-send-email-yi.zhu@intel.com> <1217836848-24288-3-git-send-email-yi.zhu@intel.com> <1217836848-24288-4-git-send-email-yi.zhu@intel.com> <1217836848-24288-5-git-send-email-yi.zhu@intel.com> <1217836848-24288-6-git-send-email-yi.zhu@intel.com> <1217836848-24288-7-git-send-email-yi.zhu@intel.com> <1217836848-24288-8-git-send-email-yi.zhu@intel.com> <1217836848-24288-9-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <1217836848-24288-9-git-send-email-yi.zhu@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Message-Id: <200808151448.42011.IvDoorn@gmail.com> (sfid-20080815_144959_294590_997E9739)
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-the exact same code is in iwl3945-base.c, looks to me as if it might require the same fix.
+If a driver requests additional headroom it should
+be mapped to DMA as well because it will be send to
+the hardware as well (as form of extra descriptor).
 
-Zhu Yi wrote:
-> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> 
-> This patch decrements rx skb counter in scan abort handler.
-> 
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-scan.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-> index 5a00ac2..9bb6adb 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-> @@ -202,6 +202,7 @@ static int iwl_send_scan_abort(struct iwl_priv *priv)
->  		clear_bit(STATUS_SCAN_HW, &priv->status);
->  	}
->  
-> +	priv->alloc_rxb_skb--;
->  	dev_kfree_skb_any(cmd.meta.u.skb);
->  
->  	return ret;
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+John, this one is for 2.6.28
+---
+ drivers/net/wireless/rt2x00/rt2x00queue.c |   24 +++++++++++++++++++++---
+ 1 files changed, 21 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index d10a801..2822684 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -100,8 +100,21 @@ void rt2x00queue_map_txskb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb)
+ {
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
+ 
+-	skbdesc->skb_dma = dma_map_single(rt2x00dev->dev, skb->data, skb->len,
+-					  DMA_TO_DEVICE);
++	/*
++	 * If device has requested headroom, we should make sure that
++	 * is also mapped to the DMA so it can be used for transfering
++	 * additional descriptor information to the hardware.
++	 */
++	skb_push(skb, rt2x00dev->hw->extra_tx_headroom);
++
++	skbdesc->skb_dma =
++	    dma_map_single(rt2x00dev->dev, skb->data, skb->len, DMA_TO_DEVICE);
++
++	/*
++	 * Restore data pointer to original location again.
++	 */
++	skb_pull(skb, rt2x00dev->hw->extra_tx_headroom);
++
+ 	skbdesc->flags |= SKBDESC_DMA_MAPPED_TX;
+ }
+ EXPORT_SYMBOL_GPL(rt2x00queue_map_txskb);
+@@ -117,7 +130,12 @@ void rt2x00queue_unmap_skb(struct rt2x00_dev *rt2x00dev, struct sk_buff *skb)
+ 	}
+ 
+ 	if (skbdesc->flags & SKBDESC_DMA_MAPPED_TX) {
+-		dma_unmap_single(rt2x00dev->dev, skbdesc->skb_dma, skb->len,
++		/*
++		 * Add headroom to the skb length, it has been removed
++		 * by the driver, but it was actually mapped to DMA.
++		 */
++		dma_unmap_single(rt2x00dev->dev, skbdesc->skb_dma,
++				 skb->len + rt2x00dev->hw->extra_tx_headroom,
+ 				 DMA_TO_DEVICE);
+ 		skbdesc->flags &= ~SKBDESC_DMA_MAPPED_TX;
+ 	}
+-- 
+1.5.6.1
+
