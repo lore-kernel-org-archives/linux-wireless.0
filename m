@@ -1,58 +1,612 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:43121 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751631AbYHOVDp (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.188]:20144 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753555AbYHOMtu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Aug 2008 17:03:45 -0400
-From: Chr <chunkeey@web.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] p54: Fix for TX sequence number problem that resulted from commit 741b4fbc44
-Date: Fri, 15 Aug 2008 23:06:38 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <48987e74.ct5+sLOpTbiTPPHq%Larry.Finger@lwfinger.net> <200808152215.05761.chunkeey@web.de> <1218831437.3197.5.camel@localhost>
-In-Reply-To: <1218831437.3197.5.camel@localhost>
+	Fri, 15 Aug 2008 08:49:50 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so644050nfc.21
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Aug 2008 05:49:49 -0700 (PDT)
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 2/5] rt2x00: Fix race conditions in flag handling
+Date: Fri, 15 Aug 2008 14:48:16 +0200
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	Stephen Blackheath <tramp.enshrine.stephen@blacksapphire.com>
+References: <200808151445.07795.IvDoorn@gmail.com>
+In-Reply-To: <200808151445.07795.IvDoorn@gmail.com>
 MIME-Version: 1.0
+Message-Id: <200808151448.16300.IvDoorn@gmail.com> (sfid-20080815_144959_069191_4639D1F0)
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200808152306.38450.chunkeey@web.de> (sfid-20080815_230349_180244_20BAC523)
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 15 August 2008 22:17:16 Johannes Berg wrote:
-> On Fri, 2008-08-15 at 22:15 +0200, Chr wrote:
-> > hmm? has this something to do with the per STA TID in
-> > 7.1.3.4.1 (802.11-2007) ?
->
-> yes
->
-> > Well the firmware (aka: LowerMAC) has some sort station
-> > database so there could be some room for that... maybe.
->
-> makes little sense since we don't tell it about stations, well, I dunno.
-well, the firmware parses some parts of the ieee80211 header.
-And we are actually supposed to tell the firmware about the station aid,
-on every tx (and that's why there's a AID field in the tx_info struct now. ;-) 
-It's not used yet, but it will when Linville returns...
+Some of the flags should be accessed atomically to
+prevent race conditions. The flags that are most important
+are those that can change often and indicate the actual
+state of the device, queue or queue entry.
 
->
-> > (But yes, when I was playing with the AP/IBSS,
-> > all beacon frames had a running sequence counter...
->
-> Maybe only non-QoS frames?
-well, if you take a look at the cx3110x log you can see
-that the duration & sequence field is always zero...
+The big flag rename was done to move all state flags to
+the same naming type as the other rt2x00dev flags and
+made sure all places where the flags were used were changed. ;)
 
-the firmware is actually ~30kb of ARM-code, but unfortunatly
-they decided to pack it...
+Thanks to Stephen for most of the queue flags updates,
+which fixes some of the most obvious consequences of the
+race conditions. Among those the notorious:
 
->
-> > maybe you can see this with a cx3110x in IBSS mode too?!)
->
-> we're supposed to be getting documentation on the lmac in there...
-Really?! Well, from my POV it would be better to kickstart FreeMAC,
-rather than writing a driver for these LMAC Firmwares... seriously!
+rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 0.
+rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 0.
+rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 0.
 
-Regards,
-	Chr
+Signed-off-by: Stephen Blackheath <tramp.enshrine.stephen@blacksapphire.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+John, please queue for 2.6.27 and 2.6.28
+---
+ drivers/net/wireless/rt2x00/rt2400pci.c    |    2 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c    |    2 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c    |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00.h       |   16 ++++----
+ drivers/net/wireless/rt2x00/rt2x00config.c |    4 +-
+ drivers/net/wireless/rt2x00/rt2x00dev.c    |   58 ++++++++++++++-------------
+ drivers/net/wireless/rt2x00/rt2x00mac.c    |   26 ++++++------
+ drivers/net/wireless/rt2x00/rt2x00queue.c  |    6 +-
+ drivers/net/wireless/rt2x00/rt2x00rfkill.c |    6 +-
+ drivers/net/wireless/rt2x00/rt2x00usb.c    |   10 ++--
+ drivers/net/wireless/rt2x00/rt61pci.c      |    2 +-
+ 11 files changed, 68 insertions(+), 66 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index 0107cec..18b703c 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -1241,7 +1241,7 @@ static irqreturn_t rt2400pci_interrupt(int irq, void *dev_instance)
+ 	if (!reg)
+ 		return IRQ_NONE;
+ 
+-	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
++	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+ 		return IRQ_HANDLED;
+ 
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index e0ff76f..5cc706a 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -1377,7 +1377,7 @@ static irqreturn_t rt2500pci_interrupt(int irq, void *dev_instance)
+ 	if (!reg)
+ 		return IRQ_NONE;
+ 
+-	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
++	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+ 		return IRQ_HANDLED;
+ 
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 3b90ed6..c6be4dd 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1297,7 +1297,7 @@ static void rt2500usb_beacondone(struct urb *urb)
+ 	struct queue_entry *entry = (struct queue_entry *)urb->context;
+ 	struct queue_entry_priv_usb_bcn *bcn_priv = entry->priv_data;
+ 
+-	if (!test_bit(DEVICE_ENABLED_RADIO, &entry->queue->rt2x00dev->flags))
++	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &entry->queue->rt2x00dev->flags))
+ 		return;
+ 
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 7476a4e..7842524 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -629,14 +629,14 @@ enum rt2x00_flags {
+ 	/*
+ 	 * Device state flags
+ 	 */
+-	DEVICE_PRESENT,
+-	DEVICE_REGISTERED_HW,
+-	DEVICE_INITIALIZED,
+-	DEVICE_STARTED,
+-	DEVICE_STARTED_SUSPEND,
+-	DEVICE_ENABLED_RADIO,
+-	DEVICE_DISABLED_RADIO_HW,
+-	DEVICE_DIRTY_CONFIG,
++	DEVICE_STATE_PRESENT,
++	DEVICE_STATE_REGISTERED_HW,
++	DEVICE_STATE_INITIALIZED,
++	DEVICE_STATE_STARTED,
++	DEVICE_STATE_STARTED_SUSPEND,
++	DEVICE_STATE_ENABLED_RADIO,
++	DEVICE_STATE_DISABLED_RADIO_HW,
++	DEVICE_STATE_DIRTY_CONFIG,
+ 
+ 	/*
+ 	 * Driver requirements
+diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+index ea37c79..ca051f5 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+@@ -121,7 +121,7 @@ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
+ 	 * Antenna setup changes require the RX to be disabled,
+ 	 * else the changes will be ignored by the device.
+ 	 */
+-	if (test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
++	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+ 		rt2x00lib_toggle_rx(rt2x00dev, STATE_RADIO_RX_OFF_LINK);
+ 
+ 	/*
+@@ -136,7 +136,7 @@ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00dev->link.ant.active.rx = libconf.ant.rx;
+ 	rt2x00dev->link.ant.active.tx = libconf.ant.tx;
+ 
+-	if (test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
++	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+ 		rt2x00lib_toggle_rx(rt2x00dev, STATE_RADIO_RX_ON_LINK);
+ }
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 328ff8b..330ab77 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -34,7 +34,7 @@
+  */
+ void rt2x00lib_reset_link_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+-	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
++	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+ 		return;
+ 
+ 	/*
+@@ -94,8 +94,8 @@ int rt2x00lib_enable_radio(struct rt2x00_dev *rt2x00dev)
+ 	 * Don't enable the radio twice.
+ 	 * And check if the hardware button has been disabled.
+ 	 */
+-	if (test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags) ||
+-	    test_bit(DEVICE_DISABLED_RADIO_HW, &rt2x00dev->flags))
++	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags) ||
++	    test_bit(DEVICE_STATE_DISABLED_RADIO_HW, &rt2x00dev->flags))
+ 		return 0;
+ 
+ 	/*
+@@ -117,7 +117,7 @@ int rt2x00lib_enable_radio(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00leds_led_radio(rt2x00dev, true);
+ 	rt2x00led_led_activity(rt2x00dev, true);
+ 
+-	__set_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags);
++	set_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags);
+ 
+ 	/*
+ 	 * Enable RX.
+@@ -134,7 +134,7 @@ int rt2x00lib_enable_radio(struct rt2x00_dev *rt2x00dev)
+ 
+ void rt2x00lib_disable_radio(struct rt2x00_dev *rt2x00dev)
+ {
+-	if (!__test_and_clear_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
++	if (!test_and_clear_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+ 		return;
+ 
+ 	/*
+@@ -354,7 +354,7 @@ static void rt2x00lib_link_tuner(struct work_struct *work)
+ 	 * When the radio is shutting down we should
+ 	 * immediately cease all link tuning.
+ 	 */
+-	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
++	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+ 		return;
+ 
+ 	/*
+@@ -431,7 +431,7 @@ static void rt2x00lib_intf_scheduled_iter(void *data, u8 *mac,
+ 	 * note that in the spinlock protected area above the delayed_flags
+ 	 * have been cleared correctly.
+ 	 */
+-	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
++	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+ 		return;
+ 
+ 	if (delayed_flags & DELAYED_UPDATE_BEACON)
+@@ -484,7 +484,7 @@ static void rt2x00lib_beacondone_iter(void *data, u8 *mac,
+ 
+ void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev)
+ {
+-	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
++	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+ 		return;
+ 
+ 	ieee80211_iterate_active_interfaces_atomic(rt2x00dev->hw,
+@@ -572,7 +572,7 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+ 
+ 	rt2x00dev->ops->lib->init_txentry(rt2x00dev, entry);
+ 
+-	__clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags);
++	clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags);
+ 	rt2x00queue_index_inc(entry->queue, Q_INDEX_DONE);
+ 
+ 	/*
+@@ -888,7 +888,7 @@ static int rt2x00lib_probe_hw_modes(struct rt2x00_dev *rt2x00dev,
+ 
+ static void rt2x00lib_remove_hw(struct rt2x00_dev *rt2x00dev)
+ {
+-	if (test_bit(DEVICE_REGISTERED_HW, &rt2x00dev->flags))
++	if (test_bit(DEVICE_STATE_REGISTERED_HW, &rt2x00dev->flags))
+ 		ieee80211_unregister_hw(rt2x00dev->hw);
+ 
+ 	if (likely(rt2x00dev->hw->wiphy->bands[IEEE80211_BAND_2GHZ])) {
+@@ -906,6 +906,9 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	struct hw_mode_spec *spec = &rt2x00dev->spec;
+ 	int status;
+ 
++	if (test_bit(DEVICE_STATE_REGISTERED_HW, &rt2x00dev->flags))
++		return 0;
++
+ 	/*
+ 	 * Initialize HW modes.
+ 	 */
+@@ -927,7 +930,7 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 		return status;
+ 	}
+ 
+-	__set_bit(DEVICE_REGISTERED_HW, &rt2x00dev->flags);
++	set_bit(DEVICE_STATE_REGISTERED_HW, &rt2x00dev->flags);
+ 
+ 	return 0;
+ }
+@@ -937,7 +940,7 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
+  */
+ static void rt2x00lib_uninitialize(struct rt2x00_dev *rt2x00dev)
+ {
+-	if (!__test_and_clear_bit(DEVICE_INITIALIZED, &rt2x00dev->flags))
++	if (!test_and_clear_bit(DEVICE_STATE_INITIALIZED, &rt2x00dev->flags))
+ 		return;
+ 
+ 	/*
+@@ -960,7 +963,7 @@ static int rt2x00lib_initialize(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int status;
+ 
+-	if (test_bit(DEVICE_INITIALIZED, &rt2x00dev->flags))
++	if (test_bit(DEVICE_STATE_INITIALIZED, &rt2x00dev->flags))
+ 		return 0;
+ 
+ 	/*
+@@ -979,7 +982,7 @@ static int rt2x00lib_initialize(struct rt2x00_dev *rt2x00dev)
+ 		return status;
+ 	}
+ 
+-	__set_bit(DEVICE_INITIALIZED, &rt2x00dev->flags);
++	set_bit(DEVICE_STATE_INITIALIZED, &rt2x00dev->flags);
+ 
+ 	/*
+ 	 * Register the extra components.
+@@ -993,7 +996,7 @@ int rt2x00lib_start(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int retval;
+ 
+-	if (test_bit(DEVICE_STARTED, &rt2x00dev->flags))
++	if (test_bit(DEVICE_STATE_STARTED, &rt2x00dev->flags))
+ 		return 0;
+ 
+ 	/*
+@@ -1024,15 +1027,15 @@ int rt2x00lib_start(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00dev->intf_sta_count = 0;
+ 	rt2x00dev->intf_associated = 0;
+ 
+-	__set_bit(DEVICE_STARTED, &rt2x00dev->flags);
+-	__set_bit(DEVICE_DIRTY_CONFIG, &rt2x00dev->flags);
++	set_bit(DEVICE_STATE_STARTED, &rt2x00dev->flags);
++	set_bit(DEVICE_STATE_DIRTY_CONFIG, &rt2x00dev->flags);
+ 
+ 	return 0;
+ }
+ 
+ void rt2x00lib_stop(struct rt2x00_dev *rt2x00dev)
+ {
+-	if (!test_bit(DEVICE_STARTED, &rt2x00dev->flags))
++	if (!test_and_clear_bit(DEVICE_STATE_STARTED, &rt2x00dev->flags))
+ 		return;
+ 
+ 	/*
+@@ -1044,8 +1047,6 @@ void rt2x00lib_stop(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00dev->intf_ap_count = 0;
+ 	rt2x00dev->intf_sta_count = 0;
+ 	rt2x00dev->intf_associated = 0;
+-
+-	__clear_bit(DEVICE_STARTED, &rt2x00dev->flags);
+ }
+ 
+ /*
+@@ -1100,7 +1101,7 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00rfkill_allocate(rt2x00dev);
+ 	rt2x00debug_register(rt2x00dev);
+ 
+-	__set_bit(DEVICE_PRESENT, &rt2x00dev->flags);
++	set_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+ 
+ 	return 0;
+ 
+@@ -1113,7 +1114,7 @@ EXPORT_SYMBOL_GPL(rt2x00lib_probe_dev);
+ 
+ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
+ {
+-	__clear_bit(DEVICE_PRESENT, &rt2x00dev->flags);
++	clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+ 
+ 	/*
+ 	 * Disable radio.
+@@ -1158,14 +1159,15 @@ int rt2x00lib_suspend(struct rt2x00_dev *rt2x00dev, pm_message_t state)
+ 	int retval;
+ 
+ 	NOTICE(rt2x00dev, "Going to sleep.\n");
+-	__clear_bit(DEVICE_PRESENT, &rt2x00dev->flags);
+ 
+ 	/*
+ 	 * Only continue if mac80211 has open interfaces.
+ 	 */
+-	if (!test_bit(DEVICE_STARTED, &rt2x00dev->flags))
++	if (!test_and_clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) ||
++	    !test_bit(DEVICE_STATE_STARTED, &rt2x00dev->flags))
+ 		goto exit;
+-	__set_bit(DEVICE_STARTED_SUSPEND, &rt2x00dev->flags);
++
++	set_bit(DEVICE_STATE_STARTED_SUSPEND, &rt2x00dev->flags);
+ 
+ 	/*
+ 	 * Disable radio.
+@@ -1237,7 +1239,7 @@ int rt2x00lib_resume(struct rt2x00_dev *rt2x00dev)
+ 	/*
+ 	 * Only continue if mac80211 had open interfaces.
+ 	 */
+-	if (!__test_and_clear_bit(DEVICE_STARTED_SUSPEND, &rt2x00dev->flags))
++	if (!test_and_clear_bit(DEVICE_STATE_STARTED_SUSPEND, &rt2x00dev->flags))
+ 		return 0;
+ 
+ 	/*
+@@ -1264,7 +1266,7 @@ int rt2x00lib_resume(struct rt2x00_dev *rt2x00dev)
+ 	/*
+ 	 * We are ready again to receive requests from mac80211.
+ 	 */
+-	__set_bit(DEVICE_PRESENT, &rt2x00dev->flags);
++	set_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+ 
+ 	/*
+ 	 * It is possible that during that mac80211 has attempted
+@@ -1284,7 +1286,7 @@ int rt2x00lib_resume(struct rt2x00_dev *rt2x00dev)
+ 	return 0;
+ 
+ exit:
+-	rt2x00lib_disable_radio(rt2x00dev);
++	rt2x00lib_stop(rt2x00dev);
+ 	rt2x00lib_uninitialize(rt2x00dev);
+ 	rt2x00debug_deregister(rt2x00dev);
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 3af4273..11be895 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -117,7 +117,7 @@ int rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	 * Note that we can only stop the TX queues inside the TX path
+ 	 * due to possible race conditions in mac80211.
+ 	 */
+-	if (!test_bit(DEVICE_PRESENT, &rt2x00dev->flags))
++	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
+ 		goto exit_fail;
+ 
+ 	/*
+@@ -175,7 +175,7 @@ int rt2x00mac_start(struct ieee80211_hw *hw)
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+ 
+-	if (!test_bit(DEVICE_PRESENT, &rt2x00dev->flags))
++	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
+ 		return 0;
+ 
+ 	return rt2x00lib_start(rt2x00dev);
+@@ -186,7 +186,7 @@ void rt2x00mac_stop(struct ieee80211_hw *hw)
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+ 
+-	if (!test_bit(DEVICE_PRESENT, &rt2x00dev->flags))
++	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
+ 		return;
+ 
+ 	rt2x00lib_stop(rt2x00dev);
+@@ -206,8 +206,8 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
+ 	 * Don't allow interfaces to be added
+ 	 * the device has disappeared.
+ 	 */
+-	if (!test_bit(DEVICE_PRESENT, &rt2x00dev->flags) ||
+-	    !test_bit(DEVICE_STARTED, &rt2x00dev->flags))
++	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) ||
++	    !test_bit(DEVICE_STATE_STARTED, &rt2x00dev->flags))
+ 		return -ENODEV;
+ 
+ 	switch (conf->type) {
+@@ -256,7 +256,7 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
+ 	 */
+ 	for (i = 0; i < queue->limit; i++) {
+ 		entry = &queue->entries[i];
+-		if (!__test_and_set_bit(ENTRY_BCN_ASSIGNED, &entry->flags))
++		if (!test_and_set_bit(ENTRY_BCN_ASSIGNED, &entry->flags))
+ 			break;
+ 	}
+ 
+@@ -310,7 +310,7 @@ void rt2x00mac_remove_interface(struct ieee80211_hw *hw,
+ 	 * either the device has disappeared or when
+ 	 * no interface is present.
+ 	 */
+-	if (!test_bit(DEVICE_PRESENT, &rt2x00dev->flags) ||
++	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) ||
+ 	    (conf->type == IEEE80211_IF_TYPE_AP && !rt2x00dev->intf_ap_count) ||
+ 	    (conf->type != IEEE80211_IF_TYPE_AP && !rt2x00dev->intf_sta_count))
+ 		return;
+@@ -324,7 +324,7 @@ void rt2x00mac_remove_interface(struct ieee80211_hw *hw,
+ 	 * Release beacon entry so it is available for
+ 	 * new interfaces again.
+ 	 */
+-	__clear_bit(ENTRY_BCN_ASSIGNED, &intf->beacon->flags);
++	clear_bit(ENTRY_BCN_ASSIGNED, &intf->beacon->flags);
+ 
+ 	/*
+ 	 * Make sure the bssid and mac address registers
+@@ -344,14 +344,14 @@ int rt2x00mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
+ 	 * Mac80211 might be calling this function while we are trying
+ 	 * to remove the device or perhaps suspending it.
+ 	 */
+-	if (!test_bit(DEVICE_PRESENT, &rt2x00dev->flags))
++	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
+ 		return 0;
+ 
+ 	/*
+ 	 * Check if we need to disable the radio,
+ 	 * if this is not the case, at least the RX must be disabled.
+ 	 */
+-	if (test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags)) {
++	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags)) {
+ 		if (!conf->radio_enabled)
+ 			rt2x00lib_disable_radio(rt2x00dev);
+ 		else
+@@ -366,14 +366,14 @@ int rt2x00mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *conf)
+ 	 * initialized.
+ 	 */
+ 	force_reconfig =
+-	    __test_and_clear_bit(DEVICE_DIRTY_CONFIG, &rt2x00dev->flags);
++	    test_and_clear_bit(DEVICE_STATE_DIRTY_CONFIG, &rt2x00dev->flags);
+ 
+ 	rt2x00lib_config(rt2x00dev, conf, force_reconfig);
+ 
+ 	/*
+ 	 * Reenable RX only if the radio should be on.
+ 	 */
+-	if (test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
++	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+ 		rt2x00lib_toggle_rx(rt2x00dev, STATE_RADIO_RX_ON);
+ 	else if (conf->radio_enabled)
+ 		return rt2x00lib_enable_radio(rt2x00dev);
+@@ -395,7 +395,7 @@ int rt2x00mac_config_interface(struct ieee80211_hw *hw,
+ 	 * Mac80211 might be calling this function while we are trying
+ 	 * to remove the device or perhaps suspending it.
+ 	 */
+-	if (!test_bit(DEVICE_PRESENT, &rt2x00dev->flags))
++	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
+ 		return 0;
+ 
+ 	spin_lock(&intf->lock);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index c0f97c5..d10a801 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -356,7 +356,7 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
+ 	if (unlikely(rt2x00queue_full(queue)))
+ 		return -EINVAL;
+ 
+-	if (__test_and_set_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags)) {
++	if (test_and_set_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags)) {
+ 		ERROR(queue->rt2x00dev,
+ 		      "Arrived at non-free entry in the non-full queue %d.\n"
+ 		      "Please file bug report to %s.\n",
+@@ -396,7 +396,7 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
+ 	 * the frame to mac80211 because the skb->cb has now been tainted.
+ 	 */
+ 	if (unlikely(queue->rt2x00dev->ops->lib->write_tx_data(entry))) {
+-		__clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags);
++		clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags);
+ 		dev_kfree_skb_any(entry->skb);
+ 		entry->skb = NULL;
+ 		return 0;
+@@ -405,7 +405,7 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
+ 	if (test_bit(DRIVER_REQUIRE_DMA, &queue->rt2x00dev->flags))
+ 		rt2x00queue_map_txskb(queue->rt2x00dev, skb);
+ 
+-	__set_bit(ENTRY_DATA_PENDING, &entry->flags);
++	set_bit(ENTRY_DATA_PENDING, &entry->flags);
+ 
+ 	rt2x00queue_index_inc(queue, Q_INDEX);
+ 	rt2x00queue_write_tx_descriptor(entry, &txdesc);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00rfkill.c b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
+index 04b2971..8a2fefb 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00rfkill.c
++++ b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
+@@ -41,16 +41,16 @@ static int rt2x00rfkill_toggle_radio(void *data, enum rfkill_state state)
+ 	/*
+ 	 * Only continue if there are enabled interfaces.
+ 	 */
+-	if (!test_bit(DEVICE_STARTED, &rt2x00dev->flags))
++	if (!test_bit(DEVICE_STATE_STARTED, &rt2x00dev->flags))
+ 		return 0;
+ 
+ 	if (state == RFKILL_STATE_UNBLOCKED) {
+ 		INFO(rt2x00dev, "Hardware button pressed, enabling radio.\n");
+-		__clear_bit(DEVICE_DISABLED_RADIO_HW, &rt2x00dev->flags);
++		clear_bit(DEVICE_STATE_DISABLED_RADIO_HW, &rt2x00dev->flags);
+ 		retval = rt2x00lib_enable_radio(rt2x00dev);
+ 	} else if (state == RFKILL_STATE_SOFT_BLOCKED) {
+ 		INFO(rt2x00dev, "Hardware button pressed, disabling radio.\n");
+-		__set_bit(DEVICE_DISABLED_RADIO_HW, &rt2x00dev->flags);
++		set_bit(DEVICE_STATE_DISABLED_RADIO_HW, &rt2x00dev->flags);
+ 		rt2x00lib_disable_radio(rt2x00dev);
+ 	} else {
+ 		WARNING(rt2x00dev, "Received unexpected rfkill state %d.\n",
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 2050227..2dd7c83 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -163,7 +163,7 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+ 	struct txdone_entry_desc txdesc;
+ 
+-	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags) ||
++	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags) ||
+ 	    !test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
+ 		return;
+ 
+@@ -232,7 +232,7 @@ static inline void rt2x00usb_kick_tx_entry(struct queue_entry *entry)
+ {
+ 	struct queue_entry_priv_usb *entry_priv = entry->priv_data;
+ 
+-	if (__test_and_clear_bit(ENTRY_DATA_PENDING, &entry->flags))
++	if (test_and_clear_bit(ENTRY_DATA_PENDING, &entry->flags))
+ 		usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
+ }
+ 
+@@ -283,7 +283,7 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+ 	u8 rxd[32];
+ 
+-	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags) ||
++	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags) ||
+ 	    !test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
+ 		return;
+ 
+@@ -293,7 +293,7 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
+ 	 * a problem.
+ 	 */
+ 	if (urb->actual_length < entry->queue->desc_size || urb->status) {
+-		__set_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags);
++		set_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags);
+ 		usb_submit_urb(urb, GFP_ATOMIC);
+ 		return;
+ 	}
+@@ -361,7 +361,7 @@ void rt2x00usb_init_rxentry(struct rt2x00_dev *rt2x00dev,
+ 			  entry->skb->data, entry->skb->len,
+ 			  rt2x00usb_interrupt_rxdone, entry);
+ 
+-	__set_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags);
++	set_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags);
+ 	usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00usb_init_rxentry);
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 00decc7..a531704 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -2107,7 +2107,7 @@ static irqreturn_t rt61pci_interrupt(int irq, void *dev_instance)
+ 	if (!reg && !reg_mcu)
+ 		return IRQ_NONE;
+ 
+-	if (!test_bit(DEVICE_ENABLED_RADIO, &rt2x00dev->flags))
++	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+ 		return IRQ_HANDLED;
+ 
+ 	/*
+-- 
+1.5.6.1
+
