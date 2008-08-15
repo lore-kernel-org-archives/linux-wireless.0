@@ -1,45 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:9165 "EHLO mga01.intel.com"
+Received: from hostap.isc.org ([149.20.54.63]:35204 "EHLO hostap.isc.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750899AbYHMR3J convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Aug 2008 13:29:09 -0400
+	id S1751232AbYHOGcy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Aug 2008 02:32:54 -0400
+Date: Fri, 15 Aug 2008 09:32:06 +0300
+From: Jouni Malinen <j@w1.fi>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: scan result IEs in one block
+Message-ID: <20080815063206.GD7998@jm.kir.nu> (sfid-20080815_083308_650982_4EA296BC)
+References: <20080814174709.GA7998@jm.kir.nu> <20080814181335.GB7998@jm.kir.nu> <43e72e890808141136o489821bej884372b8da9d34ac@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: Ath5k missing led_classdev
-Date: Wed, 13 Aug 2008 10:28:07 -0700
-Message-ID: <BAD036B67C739F45BE062D0A03D19286036D35BB@orsmsx414.amr.corp.intel.com> (sfid-20080813_192914_685990_D27698FA)
-From: "Lupusoru, Razvan A" <razvan.a.lupusoru@intel.com>
-To: <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890808141136o489821bej884372b8da9d34ac@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Thu, Aug 14, 2008 at 11:36:16AM -0700, Luis R. Rodriguez wrote:
+> On Thu, Aug 14, 2008 at 11:13 AM, Jouni Malinen <j@w1.fi> wrote:
+> 
+> > +       if (bss->ies == NULL || bss->ies_len < elems->total_len) {
+> > +               kfree(bss->ies);
+> > +               bss->ies = kmalloc(elems->total_len, GFP_ATOMIC);
+> 
+> Typo here on check for NULL ?
 
-I compiled the package compat-wireless-2008-08-06 against 2.6.23 kernel.
-After it is done compiling, I get some warnings. The relevant ones are:
-WARNING: "led_classdev_register"
-[/kernel2623/compat-wireless-2008-08-06/drivers/net/wireless/ath5k/ath5k
-.ko] undefined!
-WARNING: "led_classdev_unregister"
-[/kernel2623/compat-wireless-2008-08-06/drivers/net/wireless/ath5k/ath5k
-.ko] undefined!
+Where? That looks correct to me.
 
-What options in the kernel do I need to enable to get rid of these
-warnings? I try to "modprobe ath5k" but it tells me it is missing those
-so it cannot load.
-
-In my .config file which I use to compile the kernel, I added:
-CONFIG_NEW_LEDS=y
-CONFIG_LEDS_CLASS=y
-CONFIG_LEDS_IXP4XX=y
-CONFIG_LEDS_GPIO=y
-CONFIG_LEDS_TRIGGERS=y
-CONFIG_LEDS_TRIGGER_TIMER=y
-CONFIG_LEDS_TRIGGER_IDE_DISK=y
-CONFIG_LEDS_TRIGGER_HEARTBEAT=y
-
-Any ideas on what I am missing? Thanks.
-
-Razvan A. Lupusoru
+-- 
+Jouni Malinen                                            PGP id EFC895FA
