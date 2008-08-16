@@ -1,187 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:41352 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756418AbYHFWV2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2008 18:21:28 -0400
-Date: Wed, 6 Aug 2008 15:21:26 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-CC: Peter Zijlstra <peterz@infradead.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH 1/4] list.h: Add list_splice_tail() and
-	list_splice_tail_init()
-Message-ID: <20080806222125.GD9519@tesla> (sfid-20080807_002142_770697_3C5DE608)
-References: <1217890080-12073-1-git-send-email-lrodriguez@atheros.com> <1217926995.3589.116.camel@twins> <20080806202619.GN5605@tesla>
+Received: from yx-out-2324.google.com ([74.125.44.28]:62106 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751062AbYHPVPV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Aug 2008 17:15:21 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so1041307yxm.1
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Aug 2008 14:15:20 -0700 (PDT)
+Message-ID: <606ccac00808161415t5623583ibccc86d7340644b0@mail.gmail.com> (sfid-20080816_231536_114823_ED8C92F4)
+Date: Sat, 16 Aug 2008 17:15:20 -0400
+From: "Fred Reimer" <srnetguru@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Lockup on load of ath5k.ko
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20080806202619.GN5605@tesla>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 06, 2008 at 01:26:19PM -0700, Luis Rodriguez wrote:
-> On Tue, Aug 05, 2008 at 02:03:15AM -0700, Peter Zijlstra wrote:
-> > On Mon, 2008-08-04 at 15:48 -0700, Luis R. Rodriguez wrote:
-> > > If you are using linked lists for queues list_splice() will not do what
-> > > you would expect even if you use the elements passed reversed. We need
-> > > to handle these differently. We add list_splice_tail() and
-> > > list_splice_tail_init()
-> >
-> > In the -rt tree we have this:
-> >
-> > ---
-> >     rt: list_splice2
-> >
-> >     Introduce list_splice2{,_tail}() which will splice a sub-list denoted
-> >     by two list items instead of the full list.
-> >
-> >     Signed-off-by: Peter Zijlstra <a.p.zijlstra@chello.nl>
-> 
-> I like your version of list_splice_tail() and list_splice_tail_init()
-> more as you re-use __list_splice() and fix it for its use instad of
-> adding a new __list_splice_tail(). You also caught some users of
-> __list_splice() for tail purposes. Its a good thing both versions
-> are functionally equivalent :) otherwise one of us was doing something
-> wrong.
-> 
-> We just need to also clarify list_splice() is for stacks and not
-> queues, I can add that. You patch however fails with checkpatch and
-> forgot to add kdoc. I'll correct it.
-> 
-> Last, list_splice2() should go in a separate patch and could use just a
-> little bit more documentation as exactly what it does. Also the last
-> hunk doesn't apply as 2.6.27 doesn't have lib/lock_list.c yet. To get ath9k
-> in 2.6.27 we need list_splice_tail() and list_splice_tail_init(),
-> how's this for 2.6.27:
+I just downloaded the latest ath5k tarball and compiled and installed
+it.  My computer locks up when I load the ath5k module.  Here's the
+output of lspci:
 
-Sorry, I forgot to add my kdoc for list_splice_tail_init(), here it is
-with it added:
---
-list.h: Add list_splice_tail() and list_splice_tail_init()
+00:00.0 Host bridge: Intel Corporation 82G33/G31/P35/P31 Express DRAM
+Controller (rev 02)
+00:01.0 PCI bridge: Intel Corporation 82G33/G31/P35/P31 Express PCI
+Express Root Port (rev 02)
+00:1a.0 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI
+Controller #4 (rev 02)
+00:1a.1 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI
+Controller #5 (rev 02)
+00:1a.2 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI
+Controller #6 (rev 02)
+00:1a.7 USB Controller: Intel Corporation 82801I (ICH9 Family) USB2 EHCI
+Controller #2 (rev 02)
+00:1b.0 Audio device: Intel Corporation 82801I (ICH9 Family) HD Audio
+Controller (rev 02)
+00:1c.0 PCI bridge: Intel Corporation 82801I (ICH9 Family) PCI Express
+Port 1 (rev 02)
+00:1c.4 PCI bridge: Intel Corporation 82801I (ICH9 Family) PCI Express
+Port 5 (rev 02)
+00:1c.5 PCI bridge: Intel Corporation 82801I (ICH9 Family) PCI Express
+Port 6 (rev 02)
+00:1d.0 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI
+Controller #1 (rev 02)
+00:1d.1 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI
+Controller #2 (rev 02)
+00:1d.2 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI
+Controller #3 (rev 02)
+00:1d.7 USB Controller: Intel Corporation 82801I (ICH9 Family) USB2 EHCI
+Controller #1 (rev 02)
+00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 92)
+00:1f.0 ISA bridge: Intel Corporation 82801IR (ICH9R) LPC Interface
+Controller (rev 02)
+00:1f.2 SATA controller: Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH) 6
+port SATA AHCI Controller (rev 02)
+00:1f.3 SMBus: Intel Corporation 82801I (ICH9 Family) SMBus Controller
+(rev 02)
+01:00.0 VGA compatible controller: nVidia Corporation Unknown device
+06e4 (rev a1)
+02:00.0 Ethernet controller: Marvell Technology Group Ltd. 88E8056 PCI-E
+Gigabit Ethernet Controller (rev 12)
+03:00.0 SATA controller: JMicron Technologies, Inc. JMicron 20360/20363
+AHCI Controller (rev 03)
+03:00.1 IDE interface: JMicron Technologies, Inc. JMicron 20360/20363
+AHCI Controller (rev 03)
+05:00.0 Ethernet controller: Intel Corporation 82557/8/9/0/1 Ethernet
+Pro 100 (rev 05)
+05:01.0 Ethernet controller: Intel Corporation 82557/8/9/0/1 Ethernet
+Pro 100 (rev 05)
+05:02.0 Ethernet controller: Atheros Communications Inc. AR5212/AR5213
+Multiprotocol MAC/baseband processor (rev 01)
+05:03.0 FireWire (IEEE 1394): Agere Systems FW323 (rev 70)
 
-If you are using linked lists for queues list_splice() will not do what
-you would expect even if you use the elements passed reversed. We need
-to handle these differently. We add list_splice_tail() and
-list_splice_tail_init().
+It's the second to the last entry, for the Atheros wireless controller,
+that of issue.  If I include this module in
+the /etc/modprobe.d/blacklist the computer boots fine.  I don't know how
+to get any more debug info out of the system, but if you can suggest
+something I'd be more than glad to try.
 
-Signed-off-by: Peter Zijlstra <a.p.zijlstra@chello.nl>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/dma/ioat_dma.c    |    2 +-
- drivers/usb/host/ehci-q.c |    2 +-
- include/linux/list.h      |   47 ++++++++++++++++++++++++++++++++++++--------
- 3 files changed, 40 insertions(+), 11 deletions(-)
+I'm running Fedora 9 x86_64 with a kernel I compiled myself.  The kernel
+doesn't have any special options, I just had to compile it to get my
+nvidia driver working.
 
-diff --git a/drivers/dma/ioat_dma.c b/drivers/dma/ioat_dma.c
-index a52156e..bc8c6e3 100644
---- a/drivers/dma/ioat_dma.c
-+++ b/drivers/dma/ioat_dma.c
-@@ -551,7 +551,7 @@ static dma_cookie_t ioat1_tx_submit(struct dma_async_tx_descriptor *tx)
- 	/* write address into NextDescriptor field of last desc in chain */
- 	to_ioat_desc(ioat_chan->used_desc.prev)->hw->next =
- 							first->async_tx.phys;
--	__list_splice(&new_chain, ioat_chan->used_desc.prev);
-+	list_splice_tail(&new_chain, &ioat_chan->used_desc);
- 
- 	ioat_chan->dmacount += desc_count;
- 	ioat_chan->pending += desc_count;
-diff --git a/drivers/usb/host/ehci-q.c b/drivers/usb/host/ehci-q.c
-index 2622b65..3712b92 100644
---- a/drivers/usb/host/ehci-q.c
-+++ b/drivers/usb/host/ehci-q.c
-@@ -932,7 +932,7 @@ static struct ehci_qh *qh_append_tds (
- 
- 			list_del (&qtd->qtd_list);
- 			list_add (&dummy->qtd_list, qtd_list);
--			__list_splice (qtd_list, qh->qtd_list.prev);
-+			list_splice_tail(qtd_list, &qh->qtd_list);
- 
- 			ehci_qtd_init(ehci, qtd, qtd->qtd_dma);
- 			qh->dummy = qtd;
-diff --git a/include/linux/list.h b/include/linux/list.h
-index 453916b..a886f27 100644
---- a/include/linux/list.h
-+++ b/include/linux/list.h
-@@ -215,21 +215,21 @@ static inline int list_is_singular(const struct list_head *head)
- }
- 
- static inline void __list_splice(const struct list_head *list,
--				 struct list_head *head)
-+				 struct list_head *prev,
-+				 struct list_head *next)
- {
- 	struct list_head *first = list->next;
- 	struct list_head *last = list->prev;
--	struct list_head *at = head->next;
- 
--	first->prev = head;
--	head->next = first;
-+	first->prev = prev;
-+	prev->next = first;
- 
--	last->next = at;
--	at->prev = last;
-+	last->next = next;
-+	next->prev = last;
- }
- 
- /**
-- * list_splice - join two lists
-+ * list_splice - join two lists, this is designed for stacks
-  * @list: the new list to add.
-  * @head: the place to add it in the first list.
-  */
-@@ -237,7 +237,19 @@ static inline void list_splice(const struct list_head *list,
- 				struct list_head *head)
- {
- 	if (!list_empty(list))
--		__list_splice(list, head);
-+		__list_splice(list, head, head->next);
-+}
-+
-+/**
-+ * list_splice_tail - join two lists, each list being a queue
-+ * @list: the new list to add.
-+ * @head: the place to add it in the first list.
-+ */
-+static inline void list_splice_tail(struct list_head *list,
-+				struct list_head *head)
-+{
-+	if (!list_empty(list))
-+		__list_splice(list, head->prev, head);
- }
- 
- /**
-@@ -251,7 +263,24 @@ static inline void list_splice_init(struct list_head *list,
- 				    struct list_head *head)
- {
- 	if (!list_empty(list)) {
--		__list_splice(list, head);
-+		__list_splice(list, head, head->next);
-+		INIT_LIST_HEAD(list);
-+	}
-+}
-+
-+/**
-+ * list_splice_tail_init - join two lists, each list being a queue, and
-+ *     reinitialise the emptied list.
-+ * @list: the new list to add.
-+ * @head: the place to add it in the first list.
-+ *
-+ * The list at @list is reinitialised
-+ */
-+static inline void list_splice_tail_init(struct list_head *list,
-+					 struct list_head *head)
-+{
-+	if (!list_empty(list)) {
-+		__list_splice(list, head->prev, head);
- 		INIT_LIST_HEAD(list);
- 	}
- }
+Linux localhost.localdomain 2.6.25.14-108.fwr1.fc9.x86_64 #1 SMP Wed Aug
+13 09:20:29 EDT 2008 x86_64 x86_64 x86_64 GNU/Linux
+
+
+Thanks,
+
+
+Fred Reimer
+
+
 -- 
-1.5.6.rc2.15.g457bb.dirty
+Fred Reimer, CISSP, CCNP, CQS-VPN, CQS-ISS
+Senior Network Engineer
+Coleman Technologies, Inc.
 
+--
+Fred Reimer, CISSP, CCNP, CQS-VPN, CQS-ISS
+Senior Network Engineer
+Coleman Technologies, Inc.
