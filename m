@@ -1,270 +1,534 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:45327 "EHLO mx1.redhat.com"
+Received: from smtp-out.neti.ee ([194.126.126.37]:52080 "EHLO smtp-out.neti.ee"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753149AbYHUVpO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Aug 2008 17:45:14 -0400
-Subject: [PATCH 1/3] libertas: convert CMD_802_11_DEAUTHENTICATE to a
-	direct command
-From: Dan Williams <dcbw@redhat.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>
-In-Reply-To: <1219173335.23157.13.camel@localhost.localdomain>
-References: <1219173335.23157.13.camel@localhost.localdomain>
+	id S1752083AbYHPIgj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Aug 2008 04:36:39 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by MXR-5.estpak.ee (Postfix) with ESMTP id 697E11DF637
+	for <linux-wireless@vger.kernel.org>; Sat, 16 Aug 2008 11:36:36 +0300 (EEST)
+Received: from smtp-out.neti.ee ([127.0.0.1])
+	by localhost (MXR-5.estpak.ee [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 3rXHUw1IP2eA for <linux-wireless@vger.kernel.org>;
+	Sat, 16 Aug 2008 11:36:34 +0300 (EEST)
+Received: from Relayhost3.neti.ee (relayhost3.estpak.ee [88.196.174.169])
+	by MXR-5.estpak.ee (Postfix) with ESMTP id 61AEE1DF71B
+	for <linux-wireless@vger.kernel.org>; Sat, 16 Aug 2008 11:36:34 +0300 (EEST)
+Subject: Bug
+From: Artjom <engine80@bk.ru>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain
-Date: Thu, 21 Aug 2008 17:46:18 -0400
-Message-Id: <1219355178.13058.4.camel@localhost.localdomain> (sfid-20080821_234520_796587_9BA6D469)
+Date: Sat, 16 Aug 2008 11:36:33 +0300
+Message-Id: <1218875793.4831.5.camel@localhost.localdomain> (sfid-20080816_103645_526010_129C2DA8)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-and remove DISASSOCIATE because it's not in any of the specs and has
-never been used.
+Unable to load compat-wireless-2.6.tar.bz2 drivers in fedora 8.
+Kernel is 2.6.26.2-3.fc8
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+                                                  Best Regards.
+                                                        Artjom.
 
-diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-index a267d6e..5072a89 100644
---- a/drivers/net/wireless/libertas/assoc.c
-+++ b/drivers/net/wireless/libertas/assoc.c
-@@ -1029,7 +1029,9 @@ void lbs_association_worker(struct work_struct *work)
- 	 */
- 	if (priv->mode == IW_MODE_INFRA) {
- 		if (should_deauth_infrastructure(priv, assoc_req)) {
--			ret = lbs_send_deauthentication(priv);
-+			ret = lbs_cmd_80211_deauthenticate(priv,
-+							   priv->curbssparams.bssid,
-+							   WLAN_REASON_DEAUTH_LEAVING);
- 			if (ret) {
- 				lbs_deb_assoc("Deauthentication due to new "
- 					"configuration request failed: %d\n",
-@@ -1290,18 +1292,6 @@ static void lbs_set_basic_rate_flags(u8 *rates, size_t len)
- }
- 
- /**
-- *  @brief Send Deauthentication Request
-- *
-- *  @param priv      A pointer to struct lbs_private structure
-- *  @return          0--success, -1--fail
-- */
--int lbs_send_deauthentication(struct lbs_private *priv)
--{
--	return lbs_prepare_and_send_command(priv, CMD_802_11_DEAUTHENTICATE,
--				     0, CMD_OPTION_WAITFORRSP, 0, NULL);
--}
--
--/**
-  *  @brief This function prepares command of authenticate.
-  *
-  *  @param priv      A pointer to struct lbs_private structure
-@@ -1353,26 +1343,37 @@ out:
- 	return ret;
- }
- 
--int lbs_cmd_80211_deauthenticate(struct lbs_private *priv,
--				   struct cmd_ds_command *cmd)
-+/**
-+ *  @brief Deauthenticate from a specific BSS
-+ *
-+ *  @param priv        A pointer to struct lbs_private structure
-+ *  @param bssid       The specific BSS to deauthenticate from
-+ *  @param reason      The 802.11 sec. 7.3.1.7 Reason Code for deauthenticating
-+ *
-+ *  @return            0 on success, error on failure
-+ */
-+int lbs_cmd_80211_deauthenticate(struct lbs_private *priv, u8 bssid[ETH_ALEN],
-+				 u16 reason)
- {
--	struct cmd_ds_802_11_deauthenticate *dauth = &cmd->params.deauth;
-+	struct cmd_ds_802_11_deauthenticate cmd;
-+	int ret;
- 
- 	lbs_deb_enter(LBS_DEB_JOIN);
- 
--	cmd->command = cpu_to_le16(CMD_802_11_DEAUTHENTICATE);
--	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_deauthenticate) +
--			     S_DS_GEN);
-+	memset(&cmd, 0, sizeof(cmd));
-+	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-+	memcpy(cmd.macaddr, &bssid[0], ETH_ALEN);
-+	cmd.reasoncode = cpu_to_le16(reason);
- 
--	/* set AP MAC address */
--	memmove(dauth->macaddr, priv->curbssparams.bssid, ETH_ALEN);
-+	ret = lbs_cmd_with_response(priv, CMD_802_11_DEAUTHENTICATE, &cmd);
- 
--	/* Reason code 3 = Station is leaving */
--#define REASON_CODE_STA_LEAVING 3
--	dauth->reasoncode = cpu_to_le16(REASON_CODE_STA_LEAVING);
-+	/* Clean up everything even if there was an error; can't assume that
-+	 * we're still authenticated to the AP after trying to deauth.
-+	 */
-+	lbs_mac_event_disconnected(priv);
- 
- 	lbs_deb_leave(LBS_DEB_JOIN);
--	return 0;
-+	return ret;
- }
- 
- int lbs_cmd_80211_associate(struct lbs_private *priv,
-@@ -1815,16 +1816,6 @@ done:
- 	return ret;
- }
- 
--int lbs_ret_80211_disassociate(struct lbs_private *priv)
--{
--	lbs_deb_enter(LBS_DEB_JOIN);
--
--	lbs_mac_event_disconnected(priv);
--
--	lbs_deb_leave(LBS_DEB_JOIN);
--	return 0;
--}
--
- int lbs_ret_80211_ad_hoc_start(struct lbs_private *priv,
- 				 struct cmd_ds_command *resp)
- {
-diff --git a/drivers/net/wireless/libertas/assoc.h b/drivers/net/wireless/libertas/assoc.h
-index c516fbe..92ba2c2 100644
---- a/drivers/net/wireless/libertas/assoc.h
-+++ b/drivers/net/wireless/libertas/assoc.h
-@@ -20,7 +20,7 @@ int lbs_cmd_80211_ad_hoc_start(struct lbs_private *priv,
- 					struct cmd_ds_command *cmd,
- 					void *pdata_buf);
- int lbs_cmd_80211_deauthenticate(struct lbs_private *priv,
--					  struct cmd_ds_command *cmd);
-+				 u8 bssid[ETH_ALEN], u16 reason);
- int lbs_cmd_80211_associate(struct lbs_private *priv,
- 				     struct cmd_ds_command *cmd,
- 				     void *pdata_buf);
-@@ -28,12 +28,9 @@ int lbs_cmd_80211_associate(struct lbs_private *priv,
- int lbs_ret_80211_ad_hoc_start(struct lbs_private *priv,
- 					struct cmd_ds_command *resp);
- int lbs_ret_80211_ad_hoc_stop(struct lbs_private *priv);
--int lbs_ret_80211_disassociate(struct lbs_private *priv);
- int lbs_ret_80211_associate(struct lbs_private *priv,
- 				     struct cmd_ds_command *resp);
- 
- int lbs_stop_adhoc_network(struct lbs_private *priv);
- 
--int lbs_send_deauthentication(struct lbs_private *priv);
--
- #endif /* _LBS_ASSOC_H */
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index c0db988..8364a2f 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1413,10 +1413,6 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
- 		ret = lbs_cmd_80211_associate(priv, cmdptr, pdata_buf);
- 		break;
- 
--	case CMD_802_11_DEAUTHENTICATE:
--		ret = lbs_cmd_80211_deauthenticate(priv, cmdptr);
--		break;
--
- 	case CMD_802_11_AD_HOC_START:
- 		ret = lbs_cmd_80211_ad_hoc_start(priv, cmdptr, pdata_buf);
- 		break;
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index dfaf03a..c94604c 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -258,11 +258,6 @@ static inline int handle_cmd_response(struct lbs_private *priv,
- 		ret = lbs_ret_80211_associate(priv, resp);
- 		break;
- 
--	case CMD_RET(CMD_802_11_DISASSOCIATE):
--	case CMD_RET(CMD_802_11_DEAUTHENTICATE):
--		ret = lbs_ret_80211_disassociate(priv);
--		break;
--
- 	case CMD_RET(CMD_802_11_AD_HOC_START):
- 	case CMD_RET(CMD_802_11_AD_HOC_JOIN):
- 		ret = lbs_ret_80211_ad_hoc_start(priv, resp);
-diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
-index 413030f..caebb9b 100644
---- a/drivers/net/wireless/libertas/host.h
-+++ b/drivers/net/wireless/libertas/host.h
-@@ -61,7 +61,6 @@
- #define CMD_RF_REG_MAP				0x0023
- #define CMD_802_11_DEAUTHENTICATE		0x0024
- #define CMD_802_11_REASSOCIATE			0x0025
--#define CMD_802_11_DISASSOCIATE			0x0026
- #define CMD_MAC_CONTROL				0x0028
- #define CMD_802_11_AD_HOC_START			0x002b
- #define CMD_802_11_AD_HOC_JOIN			0x002c
-diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
-index 7f155cd..342c2e3 100644
---- a/drivers/net/wireless/libertas/hostcmd.h
-+++ b/drivers/net/wireless/libertas/hostcmd.h
-@@ -232,7 +232,9 @@ struct cmd_ds_802_11_authenticate {
- };
- 
- struct cmd_ds_802_11_deauthenticate {
--	u8 macaddr[6];
-+	struct cmd_header hdr;
-+
-+	u8 macaddr[ETH_ALEN];
- 	__le16 reasoncode;
- };
- 
-@@ -251,11 +253,6 @@ struct cmd_ds_802_11_associate {
- #endif
- } __attribute__ ((packed));
- 
--struct cmd_ds_802_11_disassociate {
--	u8 destmacaddr[6];
--	__le16 reasoncode;
--};
--
- struct cmd_ds_802_11_associate_rsp {
- 	struct ieeetypes_assocrsp assocRsp;
- };
-@@ -697,7 +694,6 @@ struct cmd_ds_command {
- 	union {
- 		struct cmd_ds_802_11_ps_mode psmode;
- 		struct cmd_ds_802_11_associate associate;
--		struct cmd_ds_802_11_deauthenticate deauth;
- 		struct cmd_ds_802_11_ad_hoc_start ads;
- 		struct cmd_ds_802_11_reset reset;
- 		struct cmd_ds_802_11_ad_hoc_result result;
-@@ -710,7 +706,6 @@ struct cmd_ds_command {
- 		struct cmd_ds_802_11_ad_hoc_join adj;
- 		struct cmd_ds_802_11_rssi rssi;
- 		struct cmd_ds_802_11_rssi_rsp rssirsp;
--		struct cmd_ds_802_11_disassociate dassociate;
- 		struct cmd_ds_mac_reg_access macreg;
- 		struct cmd_ds_bbp_reg_access bbpreg;
- 		struct cmd_ds_rf_reg_access rfreg;
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 3c13619..5e4c4e4 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -291,7 +291,9 @@ static ssize_t lbs_rtap_set(struct device *dev,
- 			if (priv->infra_open || priv->mesh_open)
- 				return -EBUSY;
- 			if (priv->mode == IW_MODE_INFRA)
--				lbs_send_deauthentication(priv);
-+				lbs_cmd_80211_deauthenticate(priv,
-+							     priv->curbssparams.bssid,
-+							     WLAN_REASON_DEAUTH_LEAVING);
- 			else if (priv->mode == IW_MODE_ADHOC)
- 				lbs_stop_adhoc_network(priv);
- 			lbs_add_rtap(priv);
-diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-index 10a8066..38295ee 100644
---- a/drivers/net/wireless/libertas/wext.c
-+++ b/drivers/net/wireless/libertas/wext.c
-@@ -986,7 +986,9 @@ static int lbs_mesh_set_freq(struct net_device *dev,
- 	if (fwrq->m != priv->curbssparams.channel) {
- 		lbs_deb_wext("mesh channel change forces eth disconnect\n");
- 		if (priv->mode == IW_MODE_INFRA)
--			lbs_send_deauthentication(priv);
-+			lbs_cmd_80211_deauthenticate(priv,
-+						     priv->curbssparams.bssid,
-+						     WLAN_REASON_DEAUTH_LEAVING);
- 		else if (priv->mode == IW_MODE_ADHOC)
- 			lbs_stop_adhoc_network(priv);
- 	}
+Here is the output of dmesg -c:
+[root@localhost compat-wireless-2008-08-06]# dmesg -c
 
+mac80211: Unknown symbol wiphy_new
+mac80211: Unknown symbol wiphy_unregister
+mac80211: Unknown symbol ieee80211_radiotap_iterator_init
+mac80211: Unknown symbol __ieee80211_get_channel
+mac80211: Unknown symbol ieee80211_radiotap_iterator_next
+mac80211: Unknown symbol ieee80211_channel_to_frequency
+mac80211: Unknown symbol ieee80211_frequency_to_channel
+mac80211: Unknown symbol wiphy_free
+rtl8180: Unknown symbol ieee80211_free_hw
+rtl8180: Unknown symbol ieee80211_alloc_hw
+rtl8180: Unknown symbol ieee80211_register_hw
+rtl8180: Unknown symbol ieee80211_wake_queue
+rtl8180: Unknown symbol ieee80211_tx_status_irqsafe
+rtl8180: Unknown symbol ieee80211_stop_queue
+rtl8180: Unknown symbol ieee80211_unregister_hw
+rtl8180: Unknown symbol ieee80211_frequency_to_channel
+rtl8180: Unknown symbol ieee80211_rx_irqsafe
+rtl8180: Unknown symbol ieee80211_rts_duration
+cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
+mac80211: Unknown symbol wiphy_register
+mac80211: Unknown symbol wiphy_new
+mac80211: Unknown symbol wiphy_unregister
+mac80211: Unknown symbol ieee80211_radiotap_iterator_init
+mac80211: Unknown symbol __ieee80211_get_channel
+mac80211: Unknown symbol ieee80211_radiotap_iterator_next
+mac80211: Unknown symbol ieee80211_channel_to_frequency
+mac80211: Unknown symbol ieee80211_frequency_to_channel
+mac80211: Unknown symbol wiphy_free
+rtl8187: Unknown symbol ieee80211_free_hw
+rtl8187: Unknown symbol ieee80211_alloc_hw
+rtl8187: Unknown symbol ieee80211_register_hw
+rtl8187: Unknown symbol ieee80211_generic_frame_duration
+rtl8187: Unknown symbol ieee80211_tx_status_irqsafe
+rtl8187: Unknown symbol ieee80211_unregister_hw
+rtl8187: Unknown symbol ieee80211_frequency_to_channel
+rtl8187: Unknown symbol ieee80211_rx_irqsafe
+rtl8187: Unknown symbol ieee80211_rts_duration
+cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
+mac80211: Unknown symbol wiphy_register
+mac80211: Unknown symbol wiphy_new
+mac80211: Unknown symbol wiphy_unregister
+mac80211: Unknown symbol ieee80211_radiotap_iterator_init
+mac80211: Unknown symbol __ieee80211_get_channel
+mac80211: Unknown symbol ieee80211_radiotap_iterator_next
+mac80211: Unknown symbol ieee80211_channel_to_frequency
+mac80211: Unknown symbol ieee80211_frequency_to_channel
+mac80211: Unknown symbol wiphy_free
+rtl8180: Unknown symbol ieee80211_free_hw
+rtl8180: Unknown symbol ieee80211_alloc_hw
+rtl8180: Unknown symbol ieee80211_register_hw
+rtl8180: Unknown symbol ieee80211_wake_queue
+rtl8180: Unknown symbol ieee80211_tx_status_irqsafe
+rtl8180: Unknown symbol ieee80211_stop_queue
+rtl8180: Unknown symbol ieee80211_unregister_hw
+rtl8180: Unknown symbol ieee80211_frequency_to_channel
+rtl8180: Unknown symbol ieee80211_rx_irqsafe
+rtl8180: Unknown symbol ieee80211_rts_duration
+cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
+mac80211: Unknown symbol wiphy_register
+mac80211: Unknown symbol wiphy_new
+mac80211: Unknown symbol wiphy_unregister
+mac80211: Unknown symbol ieee80211_radiotap_iterator_init
+mac80211: Unknown symbol __ieee80211_get_channel
+mac80211: Unknown symbol ieee80211_radiotap_iterator_next
+mac80211: Unknown symbol ieee80211_channel_to_frequency
+mac80211: Unknown symbol ieee80211_frequency_to_channel
+mac80211: Unknown symbol wiphy_free
+rtl8187: Unknown symbol ieee80211_free_hw
+rtl8187: Unknown symbol ieee80211_alloc_hw
+rtl8187: Unknown symbol ieee80211_register_hw
+rtl8187: Unknown symbol ieee80211_generic_frame_duration
+rtl8187: Unknown symbol ieee80211_tx_status_irqsafe
+rtl8187: Unknown symbol ieee80211_unregister_hw
+rtl8187: Unknown symbol ieee80211_frequency_to_channel
+rtl8187: Unknown symbol ieee80211_rx_irqsafe
+rtl8187: Unknown symbol ieee80211_rts_duration
+cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
+mac80211: Unknown symbol wiphy_register
+mac80211: Unknown symbol wiphy_new
+mac80211: Unknown symbol wiphy_unregister
+mac80211: Unknown symbol ieee80211_radiotap_iterator_init
+mac80211: Unknown symbol __ieee80211_get_channel
+mac80211: Unknown symbol ieee80211_radiotap_iterator_next
+mac80211: Unknown symbol ieee80211_channel_to_frequency
+mac80211: Unknown symbol ieee80211_frequency_to_channel
+mac80211: Unknown symbol wiphy_free
+rt2x00lib: Unknown symbol ieee80211_register_hw
+rt2x00lib: Unknown symbol ieee80211_get_hdrlen_from_skb
+rt2x00lib: Unknown symbol ieee80211_wake_queue
+rt2x00lib: Unknown symbol ieee80211_tx_status_irqsafe
+rt2x00lib: Unknown symbol ieee80211_ctstoself_get
+rt2x00lib: Unknown symbol ieee80211_wake_queues
+rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces
+rt2x00lib: Unknown symbol ieee80211_stop_queue
+rt2x00lib: Unknown symbol ieee80211_stop_queues
+rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces_atomic
+rt2x00lib: Unknown symbol ieee80211_channel_to_frequency
+rt2x00lib: Unknown symbol ieee80211_unregister_hw
+rt2x00lib: Unknown symbol ieee80211_rts_get
+rt2x00lib: Unknown symbol ieee80211_beacon_get
+rt2x00lib: Unknown symbol ieee80211_rx_irqsafe
+rt2x00pci: Unknown symbol rt2x00lib_suspend
+rt2x00pci: Unknown symbol rt2x00lib_probe_dev
+rt2x00pci: Unknown symbol ieee80211_free_hw
+rt2x00pci: Unknown symbol ieee80211_alloc_hw
+rt2x00pci: Unknown symbol rt2x00lib_rxdone
+rt2x00pci: Unknown symbol rt2x00queue_get_entry
+rt2x00pci: Unknown symbol rt2x00lib_remove_dev
+rt2x00pci: Unknown symbol rt2x00lib_resume
+rt2400pci: Unknown symbol rt2x00mac_add_interface
+rt2400pci: Unknown symbol rt2x00queue_map_txskb
+rt2400pci: Unknown symbol rt2x00mac_get_stats
+rt2400pci: Unknown symbol rt2x00pci_initialize
+rt2400pci: Unknown symbol rt2x00pci_uninitialize
+rt2400pci: Unknown symbol rt2x00queue_get_entry
+rt2400pci: Unknown symbol rt2x00pci_suspend
+rt2400pci: Unknown symbol rt2x00mac_config_interface
+rt2400pci: Unknown symbol rt2x00pci_remove
+rt2400pci: Unknown symbol rt2x00mac_remove_interface
+rt2400pci: Unknown symbol rt2x00lib_txdone
+rt2400pci: Unknown symbol rt2x00mac_config
+rt2400pci: Unknown symbol rt2x00queue_get_queue
+rt2400pci: Unknown symbol rt2x00mac_conf_tx
+rt2400pci: Unknown symbol rt2x00mac_start
+rt2400pci: Unknown symbol rt2x00mac_stop
+rt2400pci: Unknown symbol rt2x00mac_configure_filter
+rt2400pci: Unknown symbol rt2x00mac_tx
+rt2400pci: Unknown symbol rt2x00pci_resume
+rt2400pci: Unknown symbol rt2x00pci_probe
+rt2400pci: Unknown symbol rt2x00mac_get_tx_stats
+rt2400pci: Unknown symbol rt2x00pci_rxdone
+rt2400pci: Unknown symbol rt2x00lib_beacondone
+rt2400pci: Unknown symbol rt2x00mac_bss_info_changed
+rt2400pci: Unknown symbol rt2x00pci_write_tx_data
+cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
+mac80211: Unknown symbol wiphy_register
+mac80211: Unknown symbol wiphy_new
+mac80211: Unknown symbol wiphy_unregister
+mac80211: Unknown symbol ieee80211_radiotap_iterator_init
+mac80211: Unknown symbol __ieee80211_get_channel
+mac80211: Unknown symbol ieee80211_radiotap_iterator_next
+mac80211: Unknown symbol ieee80211_channel_to_frequency
+mac80211: Unknown symbol ieee80211_frequency_to_channel
+mac80211: Unknown symbol wiphy_free
+rt2x00lib: Unknown symbol ieee80211_register_hw
+rt2x00lib: Unknown symbol ieee80211_get_hdrlen_from_skb
+rt2x00lib: Unknown symbol ieee80211_wake_queue
+rt2x00lib: Unknown symbol ieee80211_tx_status_irqsafe
+rt2x00lib: Unknown symbol ieee80211_ctstoself_get
+rt2x00lib: Unknown symbol ieee80211_wake_queues
+rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces
+rt2x00lib: Unknown symbol ieee80211_stop_queue
+rt2x00lib: Unknown symbol ieee80211_stop_queues
+rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces_atomic
+rt2x00lib: Unknown symbol ieee80211_channel_to_frequency
+rt2x00lib: Unknown symbol ieee80211_unregister_hw
+rt2x00lib: Unknown symbol ieee80211_rts_get
+rt2x00lib: Unknown symbol ieee80211_beacon_get
+rt2x00lib: Unknown symbol ieee80211_rx_irqsafe
+rt2x00pci: Unknown symbol rt2x00lib_suspend
+rt2x00pci: Unknown symbol rt2x00lib_probe_dev
+rt2x00pci: Unknown symbol ieee80211_free_hw
+rt2x00pci: Unknown symbol ieee80211_alloc_hw
+rt2x00pci: Unknown symbol rt2x00lib_rxdone
+rt2x00pci: Unknown symbol rt2x00queue_get_entry
+rt2x00pci: Unknown symbol rt2x00lib_remove_dev
+rt2x00pci: Unknown symbol rt2x00lib_resume
+rt2500pci: Unknown symbol rt2x00mac_add_interface
+rt2500pci: Unknown symbol rt2x00queue_map_txskb
+rt2500pci: Unknown symbol rt2x00mac_get_stats
+rt2500pci: Unknown symbol rt2x00pci_initialize
+rt2500pci: Unknown symbol rt2x00pci_uninitialize
+rt2500pci: Unknown symbol rt2x00queue_get_entry
+rt2500pci: Unknown symbol rt2x00pci_suspend
+rt2500pci: Unknown symbol rt2x00mac_config_interface
+rt2500pci: Unknown symbol rt2x00pci_remove
+rt2500pci: Unknown symbol rt2x00mac_remove_interface
+rt2500pci: Unknown symbol rt2x00lib_txdone
+rt2500pci: Unknown symbol rt2x00mac_config
+rt2500pci: Unknown symbol rt2x00queue_get_queue
+rt2500pci: Unknown symbol rt2x00mac_conf_tx
+rt2500pci: Unknown symbol rt2x00mac_start
+rt2500pci: Unknown symbol rt2x00mac_stop
+rt2500pci: Unknown symbol rt2x00mac_configure_filter
+rt2500pci: Unknown symbol rt2x00mac_tx
+rt2500pci: Unknown symbol rt2x00pci_resume
+rt2500pci: Unknown symbol rt2x00pci_probe
+rt2500pci: Unknown symbol rt2x00mac_get_tx_stats
+rt2500pci: Unknown symbol rt2x00pci_rxdone
+rt2500pci: Unknown symbol rt2x00lib_beacondone
+rt2500pci: Unknown symbol rt2x00mac_bss_info_changed
+rt2500pci: Unknown symbol rt2x00pci_write_tx_data
+cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
+mac80211: Unknown symbol wiphy_register
+mac80211: Unknown symbol wiphy_new
+mac80211: Unknown symbol wiphy_unregister
+mac80211: Unknown symbol ieee80211_radiotap_iterator_init
+mac80211: Unknown symbol __ieee80211_get_channel
+mac80211: Unknown symbol ieee80211_radiotap_iterator_next
+mac80211: Unknown symbol ieee80211_channel_to_frequency
+mac80211: Unknown symbol ieee80211_frequency_to_channel
+mac80211: Unknown symbol wiphy_free
+rt2x00lib: Unknown symbol ieee80211_register_hw
+rt2x00lib: Unknown symbol ieee80211_get_hdrlen_from_skb
+rt2x00lib: Unknown symbol ieee80211_wake_queue
+rt2x00lib: Unknown symbol ieee80211_tx_status_irqsafe
+rt2x00lib: Unknown symbol ieee80211_ctstoself_get
+rt2x00lib: Unknown symbol ieee80211_wake_queues
+rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces
+rt2x00lib: Unknown symbol ieee80211_stop_queue
+rt2x00lib: Unknown symbol ieee80211_stop_queues
+rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces_atomic
+rt2x00lib: Unknown symbol ieee80211_channel_to_frequency
+rt2x00lib: Unknown symbol ieee80211_unregister_hw
+rt2x00lib: Unknown symbol ieee80211_rts_get
+rt2x00lib: Unknown symbol ieee80211_beacon_get
+rt2x00lib: Unknown symbol ieee80211_rx_irqsafe
+rt2x00pci: Unknown symbol rt2x00lib_suspend
+rt2x00pci: Unknown symbol rt2x00lib_probe_dev
+rt2x00pci: Unknown symbol ieee80211_free_hw
+rt2x00pci: Unknown symbol ieee80211_alloc_hw
+rt2x00pci: Unknown symbol rt2x00lib_rxdone
+rt2x00pci: Unknown symbol rt2x00queue_get_entry
+rt2x00pci: Unknown symbol rt2x00lib_remove_dev
+rt2x00pci: Unknown symbol rt2x00lib_resume
+rt61pci: Unknown symbol rt2x00mac_add_interface
+rt61pci: Unknown symbol rt2x00mac_get_stats
+rt61pci: Unknown symbol rt2x00pci_initialize
+rt61pci: Unknown symbol rt2x00pci_uninitialize
+rt61pci: Unknown symbol rt2x00queue_get_entry
+rt61pci: Unknown symbol rt2x00pci_suspend
+rt61pci: Unknown symbol rt2x00mac_config_interface
+rt61pci: Unknown symbol rt2x00pci_remove
+rt61pci: Unknown symbol rt2x00mac_remove_interface
+rt61pci: Unknown symbol rt2x00lib_txdone
+rt61pci: Unknown symbol rt2x00mac_config
+rt61pci: Unknown symbol rt2x00queue_get_queue
+rt61pci: Unknown symbol rt2x00mac_conf_tx
+rt61pci: Unknown symbol rt2x00mac_start
+rt61pci: Unknown symbol rt2x00mac_stop
+rt61pci: Unknown symbol rt2x00mac_configure_filter
+rt61pci: Unknown symbol rt2x00mac_tx
+rt61pci: Unknown symbol rt2x00pci_resume
+rt61pci: Unknown symbol rt2x00pci_probe
+rt61pci: Unknown symbol rt2x00mac_get_tx_stats
+rt61pci: Unknown symbol rt2x00pci_rxdone
+rt61pci: Unknown symbol rt2x00mac_bss_info_changed
+rt61pci: Unknown symbol rt2x00pci_write_tx_data
+cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
+mac80211: Unknown symbol wiphy_register
+mac80211: Unknown symbol wiphy_new
+mac80211: Unknown symbol wiphy_unregister
+mac80211: Unknown symbol ieee80211_radiotap_iterator_init
+mac80211: Unknown symbol __ieee80211_get_channel
+mac80211: Unknown symbol ieee80211_radiotap_iterator_next
+mac80211: Unknown symbol ieee80211_channel_to_frequency
+mac80211: Unknown symbol ieee80211_frequency_to_channel
+mac80211: Unknown symbol wiphy_free
+rt2x00lib: Unknown symbol ieee80211_register_hw
+rt2x00lib: Unknown symbol ieee80211_get_hdrlen_from_skb
+rt2x00lib: Unknown symbol ieee80211_wake_queue
+rt2x00lib: Unknown symbol ieee80211_tx_status_irqsafe
+rt2x00lib: Unknown symbol ieee80211_ctstoself_get
+rt2x00lib: Unknown symbol ieee80211_wake_queues
+rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces
+rt2x00lib: Unknown symbol ieee80211_stop_queue
+rt2x00lib: Unknown symbol ieee80211_stop_queues
+rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces_atomic
+rt2x00lib: Unknown symbol ieee80211_channel_to_frequency
+rt2x00lib: Unknown symbol ieee80211_unregister_hw
+rt2x00lib: Unknown symbol ieee80211_rts_get
+rt2x00lib: Unknown symbol ieee80211_beacon_get
+rt2x00lib: Unknown symbol ieee80211_rx_irqsafe
+rt2x00usb: Unknown symbol rt2x00lib_suspend
+rt2x00usb: Unknown symbol rt2x00lib_probe_dev
+rt2x00usb: Unknown symbol ieee80211_free_hw
+rt2x00usb: Unknown symbol ieee80211_alloc_hw
+rt2x00usb: Unknown symbol rt2x00lib_rxdone
+rt2x00usb: Unknown symbol rt2x00lib_remove_dev
+rt2x00usb: Unknown symbol rt2x00lib_txdone
+rt2x00usb: Unknown symbol rt2x00queue_get_queue
+rt2x00usb: Unknown symbol rt2x00lib_resume
+rt2500usb: Unknown symbol rt2x00mac_add_interface
+rt2500usb: Unknown symbol rt2x00mac_get_stats
+rt2500usb: Unknown symbol rt2x00usb_init_rxentry
+rt2500usb: Unknown symbol rt2x00usb_disable_radio
+rt2500usb: Unknown symbol rt2x00usb_init_txentry
+rt2500usb: Unknown symbol rt2x00usb_vendor_request_buff
+rt2500usb: Unknown symbol rt2x00usb_kick_tx_queue
+rt2500usb: Unknown symbol rt2x00usb_write_tx_data
+rt2500usb: Unknown symbol rt2x00mac_config_interface
+rt2500usb: Unknown symbol rt2x00mac_remove_interface
+rt2500usb: Unknown symbol rt2x00usb_vendor_request
+rt2500usb: Unknown symbol rt2x00usb_probe
+rt2500usb: Unknown symbol rt2x00mac_config
+rt2500usb: Unknown symbol rt2x00usb_suspend
+rt2500usb: Unknown symbol rt2x00mac_conf_tx
+rt2500usb: Unknown symbol rt2x00mac_start
+rt2500usb: Unknown symbol rt2x00mac_stop
+rt2500usb: Unknown symbol rt2x00mac_configure_filter
+rt2500usb: Unknown symbol rt2x00usb_disconnect
+rt2500usb: Unknown symbol rt2x00mac_tx
+rt2500usb: Unknown symbol rt2x00usb_vendor_req_buff_lock
+rt2500usb: Unknown symbol rt2x00mac_get_tx_stats
+rt2500usb: Unknown symbol rt2x00usb_resume
+rt2500usb: Unknown symbol rt2x00usb_uninitialize
+rt2500usb: Unknown symbol rt2x00usb_initialize
+rt2500usb: Unknown symbol rt2x00mac_bss_info_changed
+cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
+mac80211: Unknown symbol wiphy_register
+mac80211: Unknown symbol wiphy_new
+mac80211: Unknown symbol wiphy_unregister
+mac80211: Unknown symbol ieee80211_radiotap_iterator_init
+mac80211: Unknown symbol __ieee80211_get_channel
+mac80211: Unknown symbol ieee80211_radiotap_iterator_next
+mac80211: Unknown symbol ieee80211_channel_to_frequency
+mac80211: Unknown symbol ieee80211_frequency_to_channel
+mac80211: Unknown symbol wiphy_free
+rt2x00lib: Unknown symbol ieee80211_register_hw
+rt2x00lib: Unknown symbol ieee80211_get_hdrlen_from_skb
+rt2x00lib: Unknown symbol ieee80211_wake_queue
+rt2x00lib: Unknown symbol ieee80211_tx_status_irqsafe
+rt2x00lib: Unknown symbol ieee80211_ctstoself_get
+rt2x00lib: Unknown symbol ieee80211_wake_queues
+rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces
+rt2x00lib: Unknown symbol ieee80211_stop_queue
+rt2x00lib: Unknown symbol ieee80211_stop_queues
+rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces_atomic
+rt2x00lib: Unknown symbol ieee80211_channel_to_frequency
+rt2x00lib: Unknown symbol ieee80211_unregister_hw
+rt2x00lib: Unknown symbol ieee80211_rts_get
+rt2x00lib: Unknown symbol ieee80211_beacon_get
+rt2x00lib: Unknown symbol ieee80211_rx_irqsafe
+rt2x00usb: Unknown symbol rt2x00lib_suspend
+rt2x00usb: Unknown symbol rt2x00lib_probe_dev
+rt2x00usb: Unknown symbol ieee80211_free_hw
+rt2x00usb: Unknown symbol ieee80211_alloc_hw
+rt2x00usb: Unknown symbol rt2x00lib_rxdone
+rt2x00usb: Unknown symbol rt2x00lib_remove_dev
+rt2x00usb: Unknown symbol rt2x00lib_txdone
+rt2x00usb: Unknown symbol rt2x00queue_get_queue
+rt2x00usb: Unknown symbol rt2x00lib_resume
+rt73usb: Unknown symbol rt2x00mac_add_interface
+rt73usb: Unknown symbol rt2x00mac_get_stats
+rt73usb: Unknown symbol rt2x00usb_init_rxentry
+rt73usb: Unknown symbol rt2x00usb_disable_radio
+rt73usb: Unknown symbol rt2x00usb_init_txentry
+rt73usb: Unknown symbol rt2x00usb_vendor_request_buff
+rt73usb: Unknown symbol rt2x00usb_kick_tx_queue
+rt73usb: Unknown symbol rt2x00usb_write_tx_data
+rt73usb: Unknown symbol rt2x00mac_config_interface
+rt73usb: Unknown symbol rt2x00mac_remove_interface
+rt73usb: Unknown symbol rt2x00usb_vendor_request
+rt73usb: Unknown symbol rt2x00usb_probe
+rt73usb: Unknown symbol rt2x00mac_config
+rt73usb: Unknown symbol rt2x00usb_suspend
+rt73usb: Unknown symbol rt2x00mac_conf_tx
+rt73usb: Unknown symbol rt2x00mac_start
+rt73usb: Unknown symbol rt2x00mac_stop
+rt73usb: Unknown symbol rt2x00mac_configure_filter
+rt73usb: Unknown symbol rt2x00usb_disconnect
+rt73usb: Unknown symbol rt2x00mac_tx
+rt73usb: Unknown symbol rt2x00usb_vendor_req_buff_lock
+rt73usb: Unknown symbol rt2x00mac_get_tx_stats
+rt73usb: Unknown symbol rt2x00usb_resume
+rt73usb: Unknown symbol rt2x00usb_uninitialize
+rt73usb: Unknown symbol rt2x00usb_initialize
+rt73usb: Unknown symbol rt2x00mac_bss_info_changed
+usbcore: registered new interface driver cdc_ether
+usbcore: registered new interface driver rndis_host
+usbcore: registered new interface driver rndis_wlan
+cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
+mac80211: Unknown symbol wiphy_register
+mac80211: Unknown symbol wiphy_new
+mac80211: Unknown symbol wiphy_unregister
+mac80211: Unknown symbol ieee80211_radiotap_iterator_init
+mac80211: Unknown symbol __ieee80211_get_channel
+mac80211: Unknown symbol ieee80211_radiotap_iterator_next
+mac80211: Unknown symbol ieee80211_channel_to_frequency
+mac80211: Unknown symbol ieee80211_frequency_to_channel
+mac80211: Unknown symbol wiphy_free
+at76_usb: Unknown symbol ieee80211_free_hw
+at76_usb: Unknown symbol ieee80211_alloc_hw
+at76_usb: Unknown symbol ieee80211_register_hw
+at76_usb: Unknown symbol ieee80211_tx_status_irqsafe
+at76_usb: Unknown symbol ieee80211_wake_queues
+at76_usb: Unknown symbol ieee80211_stop_queues
+at76_usb: Unknown symbol ieee80211_scan_completed
+at76_usb: Unknown symbol ieee80211_unregister_hw
+at76_usb: Unknown symbol ieee80211_rx_irqsafe
+cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
+mac80211: Unknown symbol wiphy_register
+mac80211: Unknown symbol wiphy_new
+mac80211: Unknown symbol wiphy_unregister
+mac80211: Unknown symbol ieee80211_radiotap_iterator_init
+mac80211: Unknown symbol __ieee80211_get_channel
+mac80211: Unknown symbol ieee80211_radiotap_iterator_next
+mac80211: Unknown symbol ieee80211_channel_to_frequency
+mac80211: Unknown symbol ieee80211_frequency_to_channel
+mac80211: Unknown symbol wiphy_free
+ath5k: Unknown symbol ieee80211_free_hw
+ath5k: Unknown symbol ieee80211_alloc_hw
+ath5k: Unknown symbol ieee80211_register_hw
+ath5k: Unknown symbol ieee80211_get_hdrlen_from_skb
+ath5k: Unknown symbol ieee80211_generic_frame_duration
+ath5k: Unknown symbol __ieee80211_get_tx_led_name
+ath5k: Unknown symbol __ieee80211_get_rx_led_name
+ath5k: Unknown symbol ieee80211_wake_queues
+ath5k: Unknown symbol __ieee80211_rx
+ath5k: Unknown symbol ieee80211_tx_status
+ath5k: Unknown symbol ieee80211_stop_queue
+ath5k: Unknown symbol ieee80211_stop_queues
+ath5k: Unknown symbol ieee80211_unregister_hw
+ath5k: Unknown symbol ieee80211_beacon_get
+ath5k: Unknown symbol ieee80211_frequency_to_channel
+cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
+mac80211: Unknown symbol wiphy_register
+mac80211: Unknown symbol wiphy_new
+mac80211: Unknown symbol wiphy_unregister
+mac80211: Unknown symbol ieee80211_radiotap_iterator_init
+mac80211: Unknown symbol __ieee80211_get_channel
+mac80211: Unknown symbol ieee80211_radiotap_iterator_next
+mac80211: Unknown symbol ieee80211_channel_to_frequency
+mac80211: Unknown symbol ieee80211_frequency_to_channel
+mac80211: Unknown symbol wiphy_free
+ACPI: PCI Interrupt 0000:03:00.0[A] -> Link [LK4E] -> GSI 19 (level,
+high) -> IRQ 19
+PCI: Setting latency timer of device 0000:03:00.0 to 64
+ssb: Sonics Silicon Backplane found on PCI device 0000:03:00.0
+b43: Unknown symbol ieee80211_free_hw
+b43: Unknown symbol ieee80211_alloc_hw
+b43: Unknown symbol ieee80211_register_hw
+b43: Unknown symbol ieee80211_generic_frame_duration
+b43: Unknown symbol ieee80211_wake_queue
+b43: Unknown symbol __ieee80211_get_tx_led_name
+b43: Unknown symbol ieee80211_tx_status_irqsafe
+b43: Unknown symbol __ieee80211_get_rx_led_name
+b43: Unknown symbol ieee80211_ctstoself_get
+b43: Unknown symbol ieee80211_stop_queue
+b43: Unknown symbol __ieee80211_get_assoc_led_name
+b43: Unknown symbol ieee80211_unregister_hw
+b43: Unknown symbol ieee80211_hdrlen
+b43: Unknown symbol ieee80211_rts_get
+b43: Unknown symbol ieee80211_beacon_get
+b43: Unknown symbol ieee80211_rx_irqsafe
+cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
+mac80211: Unknown symbol wiphy_register
+mac80211: Unknown symbol wiphy_new
+mac80211: Unknown symbol wiphy_unregister
+mac80211: Unknown symbol ieee80211_radiotap_iterator_init
+mac80211: Unknown symbol __ieee80211_get_channel
+mac80211: Unknown symbol ieee80211_radiotap_iterator_next
+mac80211: Unknown symbol ieee80211_channel_to_frequency
+mac80211: Unknown symbol ieee80211_frequency_to_channel
+mac80211: Unknown symbol wiphy_free
+b43legacy: Unknown symbol ieee80211_free_hw
+b43legacy: Unknown symbol ieee80211_alloc_hw
+b43legacy: Unknown symbol ieee80211_register_hw
+b43legacy: Unknown symbol ieee80211_generic_frame_duration
+b43legacy: Unknown symbol ieee80211_wake_queue
+b43legacy: Unknown symbol __ieee80211_get_tx_led_name
+b43legacy: Unknown symbol ieee80211_tx_status_irqsafe
+b43legacy: Unknown symbol __ieee80211_get_rx_led_name
+b43legacy: Unknown symbol ieee80211_ctstoself_get
+b43legacy: Unknown symbol ieee80211_stop_queue
+b43legacy: Unknown symbol ieee80211_stop_queues
+b43legacy: Unknown symbol ieee80211_get_hdrlen
+b43legacy: Unknown symbol __ieee80211_get_assoc_led_name
+b43legacy: Unknown symbol ieee80211_unregister_hw
+b43legacy: Unknown symbol ieee80211_hdrlen
+b43legacy: Unknown symbol ieee80211_rts_get
+b43legacy: Unknown symbol ieee80211_beacon_get
+b43legacy: Unknown symbol ieee80211_rx_irqsafe
+cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
+mac80211: Unknown symbol wiphy_register
+mac80211: Unknown symbol wiphy_new
+mac80211: Unknown symbol wiphy_unregister
+mac80211: Unknown symbol ieee80211_radiotap_iterator_init
+mac80211: Unknown symbol __ieee80211_get_channel
+mac80211: Unknown symbol ieee80211_radiotap_iterator_next
+mac80211: Unknown symbol ieee80211_channel_to_frequency
+mac80211: Unknown symbol ieee80211_frequency_to_channel
+mac80211: Unknown symbol wiphy_free
+b43: Unknown symbol ieee80211_free_hw
+b43: Unknown symbol ieee80211_alloc_hw
+b43: Unknown symbol ieee80211_register_hw
+b43: Unknown symbol ieee80211_generic_frame_duration
+b43: Unknown symbol ieee80211_wake_queue
+b43: Unknown symbol __ieee80211_get_tx_led_name
+b43: Unknown symbol ieee80211_tx_status_irqsafe
+b43: Unknown symbol __ieee80211_get_rx_led_name
+b43: Unknown symbol ieee80211_ctstoself_get
+b43: Unknown symbol ieee80211_stop_queue
+b43: Unknown symbol __ieee80211_get_assoc_led_name
+b43: Unknown symbol ieee80211_unregister_hw
+b43: Unknown symbol ieee80211_hdrlen
+b43: Unknown symbol ieee80211_rts_get
+b43: Unknown symbol ieee80211_beacon_get
+b43: Unknown symbol ieee80211_rx_irqsafe
 
