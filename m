@@ -1,37 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:40118 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753651AbYHAMit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 08:38:49 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so507621fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 05:38:48 -0700 (PDT)
-Message-ID: <f6ca9fed0808010538s76fc9373sc6d0d7411976d907@mail.gmail.com> (sfid-20080801_143852_814837_CAAD42E7)
-Date: Fri, 1 Aug 2008 14:38:47 +0200
-From: drago01 <drago01@gmail.com>
-To: "Cahill, Ben M" <ben.m.cahill@intel.com>
-Subject: Re: [ipw3945-devel] iwl3945 random firmware crashes
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <4220499A1B034C4FA93B547BA01E1FF0017469F4@orsmsx413.amr.corp.intel.com>
+Received: from usul.saidi.cx ([204.11.33.34]:48572 "EHLO usul.overt.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754101AbYHPTWy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Aug 2008 15:22:54 -0400
+Message-ID: <48A728FF.7040306@overt.org> (sfid-20080816_212312_316157_D18DF7E1)
+Date: Sat, 16 Aug 2008 12:22:39 -0700
+From: Philip Langdale <philipl@overt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f6ca9fed0807140437i2563cfa1ge68a06ef1040d0f8@mail.gmail.com>
-	 <4220499A1B034C4FA93B547BA01E1FF0017469B4@orsmsx413.amr.corp.intel.com>
-	 <f6ca9fed0807170423x7f7bd534x5ab63f985564f92@mail.gmail.com>
-	 <f6ca9fed0807170428i4b386e46sb030316343f4bd4a@mail.gmail.com>
-	 <f6ca9fed0807181235i33125343qab4804b675bafdf9@mail.gmail.com>
-	 <f6ca9fed0807240617n47180bb6t8691723e10d6fd9a@mail.gmail.com>
-	 <4220499A1B034C4FA93B547BA01E1FF0017469F4@orsmsx413.amr.corp.intel.com>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+CC: LKML <linux-kernel@vger.kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	toshiba_acpi@memebeam.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
+ through rfkill (v2)
+References: <4894B1B4.6050003@overt.org> <20080803042613.GC6053@khazad-dum.debian.net> <48965716.6020508@overt.org> <20080805212416.GB21738@khazad-dum.debian.net> <489A7CCF.1090407@overt.org> <20080807134530.GB17062@khazad-dum.debian.net> <48A06BBC.7060007@overt.org> <20080813092908.GA6806@khazad-dum.debian.net> <48A3D7A0.7010704@overt.org>
+In-Reply-To: <48A3D7A0.7010704@overt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 24, 2008 at 3:56 PM, Cahill, Ben M <ben.m.cahill@intel.com> wrote:
-> Oops, sorry about that, some of your emails slipped by me unnoticed!
-> :-(
->
-> Event and Error Logs need to be analyzed here ... It looks like an
-> internal error, timing out while waiting for something.  I'll need to
-> check to see if any updates to Windows uCode have helped this situation.
+Philip Langdale wrote:
+> 
+> Now, when I release the kill switch, rfkill-input does indeed turn the
+> radio on. Great. The remaining problem is that rfkill-input is setting
+> it to soft-blocked when the switch is registered. I'm not sure why it's
+> deciding to do that. Anyway, I'm almost there. Thanks.
 
-any progress / news?
+Finally sorted it out. Updated diff is posted as v5.
+
+--phil
