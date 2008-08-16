@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39649 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753577AbYHZClx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2008 22:41:53 -0400
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:36919 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752141AbYHPOA2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Aug 2008 10:00:28 -0400
+Message-ID: <48A6DD7B.4090201@lwfinger.net> (sfid-20080816_160033_358980_A618FF86)
+Date: Sat, 16 Aug 2008 09:00:27 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18611.27912.349296.322058@localhost.localdomain> (sfid-20080826_044155_900793_F3B720C5)
-Date: Tue, 26 Aug 2008 08:10:08 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 0/4] Trivial cleanups
+To: Chr <chunkeey@web.de>
+CC: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] p54: Fix for TX sequence number problem that resulted
+ from commit 741b4fbc44
+References: <48987e74.ct5+sLOpTbiTPPHq%Larry.Finger@lwfinger.net> <200808152034.46346.chunkeey@web.de> <48A6209E.1020904@lwfinger.net> <200808160421.33375.chunkeey@web.de>
+In-Reply-To: <200808160421.33375.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+Chr wrote:
+> On Saturday 16 August 2008 02:34:38 Larry Finger wrote:
+>> This one lasted for 4 hours. What was worse is that it crashed my
+>> computer with a 1 Hz blink of the Caps Lock light when it failed. I
+>> hadn't seen that before.
+> 
+> hmm,.... sounds like a bit of a old problem with the minipci card...
+> p54_rx_frame_sent walks in the tx_queue without holding the tx_queue.lock.
+> 
+> However, this problem is next to impossible to trigger in the current code.
+> So, a crash log from a serial console would be great?
 
-Smallish, trivial cleanups that were festering in my tree for a long time.
+This one locked up the machine. I don't know how long it lasted as it 
+was overnight. This time, the caps lock was not blinking, but the only 
+recovery was to power it off.
 
-Sujith
+A serial console is not possible - no hardware. In this case, 
+netconsole is no help either as it would need to use the hardware 
+whose driver has already failed.
 
-Sujith Manoharan (4):
-  ath9k: Remove more dead code
-  ath9k: Do not update frame's duration field
-  ath9k: Remove sc_lastrx as we don't use it anywhere
-  ath9k: rc.h cleanup
-
- drivers/net/wireless/ath9k/ath9k.h  |    5 -
- drivers/net/wireless/ath9k/beacon.c |   25 ----
- drivers/net/wireless/ath9k/core.h   |    2 -
- drivers/net/wireless/ath9k/hw.h     |    4 -
- drivers/net/wireless/ath9k/main.c   |    5 -
- drivers/net/wireless/ath9k/rc.c     |   18 ++--
- drivers/net/wireless/ath9k/rc.h     |  222 ++++++++++++++++++-----------------
- drivers/net/wireless/ath9k/xmit.c   |   63 ++--------
- 8 files changed, 138 insertions(+), 206 deletions(-)
+Larry
 
