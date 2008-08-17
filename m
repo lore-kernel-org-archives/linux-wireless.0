@@ -1,66 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33393 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760937AbYHBTex (ORCPT
+Received: from pne-smtpout2-sn2.hy.skanova.net ([81.228.8.164]:59601 "EHLO
+	pne-smtpout2-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751291AbYHQUmb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 15:34:53 -0400
-Subject: Re: wireless USB adapters recommendations?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomasz Chmielewski <mangoo@wpkg.org>
-Cc: Daniel Gimpelevich <daniel@gimpelevich.san-francisco.ca.us>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4894B518.1000207@wpkg.org> (sfid-20080802_212726_665120_66BC7C97)
-References: <4894AC77.5060801@wpkg.org> <g72be3$gpf$1@ger.gmane.org>
-	 <4894B518.1000207@wpkg.org> (sfid-20080802_212726_665120_66BC7C97)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xd67TIfIX5ne/btolJ9a"
-Date: Sat, 02 Aug 2008 21:34:46 +0200
-Message-Id: <1217705687.8621.56.camel@johannes.berg> (sfid-20080802_213516_066729_4A77B849)
-Mime-Version: 1.0
+	Sun, 17 Aug 2008 16:42:31 -0400
+From: "Lars Ericsson" <Lars_Ericsson@telia.com>
+To: "'Ivo van Doorn'" <ivdoorn@gmail.com>
+Cc: <hostap@lists.shmoo.com>, <linux-wireless@vger.kernel.org>,
+	<rt2400-devel@lists.sourceforge.net>
+Subject: RE: [Rt2400-devel] mac80211 / rt2x00 / rt61 and adhoc status
+Date: Sun, 17 Aug 2008 22:42:38 +0200
+Message-ID: <059801c900a9$c9eee740$0b3ca8c0@gotws1589> (sfid-20080817_224243_525733_146D8914)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+In-Reply-To: <059401c90071$d71609e0$0b3ca8c0@gotws1589>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> > > > > Two tests cases, but same behaviour:
+> > > > > 1) Linx.git: 2.6.26 and wpa_supplicant 0.5.9
+> > > > > 2) rt2x00.git: Version 2.2.0 and wpa_supplicant 0.5.9
+> > > > 
+> > > > Are any beacons going out? Is there anything in the logs which
+> > > > indicates what is happening?
+> > > > 
+> > > 
+> > > As you can se in the trace below, the configuration 
+> > proceeds and the adhoc
+> > > is created.
+> > > The warnon might give some clues.
+> > 
+> > So how about those beacons? are they getting out?
+> > 
+> 
+> After patching the wpa_suplicant (0.5.9) adhoc works.
+> When first started, as the only part in the adhoc net, the 
+> driver just scans
+> around for other adhoc members.
+> This happen in mac80211 state 4 and no beacons are sent, as 
+> far as I can
+> tell. Only probe requests are sent.
+> 
+> When an other node (N2) shows up in the same adhoc net work, N2 starts
+> sending beacons immediately.
+> The RT61 catch that and merge that ibss, switch to state 5 
+> and all is fine.
+> At this time ping works in both directions.
+> 
+> When removing the second note, leaving the RT61 alone, RT61 
+> starts sending
+> beacons, still in state 5.
 
---=-xd67TIfIX5ne/btolJ9a
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The reason for the above behaviour are timeouts.
+- Mac80211 will create an ibss after 20 seconds probing for existing ibss.
+- Wpa_supplicant will restart this timer every 5 second ....
 
-On Sat, 2008-08-02 at 21:27 +0200, Tomasz Chmielewski wrote:
+Changing the wpa timer will make the rt61 start sending beacons even if no
+other STA is available.
 
-> So, there is no wireless USB adapter working with Linux supports access=20
-> point mode now, because some parts of nl80211 are not ready yet?
->=20
-> I see nl80211 is in vanilla kernel now; what features still lack to=20
-> provide access point functionality (to wireless USB adapters)? Any time=20
-> frames (2.6.28? later?)?
+I think that wpa_supplicant 0.5.10 addresses this issue, I will check and
+come back.
 
-I'd expect .28, but cannot say for sure. It actually works right now,
-but has some non-standards-compliant behaviour wrt. basic rates and
-slot/rts/cts configuration, which is why you need a small patch to
-enable it.
-
-johannes
-
---=-xd67TIfIX5ne/btolJ9a
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIlLbTAAoJEKVg1VMiehFYvWMP/3SqBFnYW5FwX8wutTAgHwnj
-vNQTrYlumsOZkC9nZS0qL/XOJW7Q7zeHz95HFFV/ZpkI2z4uf7J2n/tuXteg/+5p
-QPUDxpN0sJBreeD0uvepXgxuSKaNi7w1PU08F6XYPlvnI8Zg3rRcU9KtzHMsdeTS
-rCp3TKRqblPWIsJWejDa7sWzZYlnKEYw/mRHVyWmhTMezG89m2d/ArXU/lN32U6a
-aOEYBkaXz8k5Q15FH/eYnxzxqoJrJmfERwP5ob0752RLrykmhrFgn+3vd+n4gW8V
-2nSRVA6u3L0J3w4tbUemmL/Rd7NtXC6DqfdFcGlNddHD6GpqmaDS5GVuhCBw31+F
-fybMxB12egG1LF2/VHOXxq7dDc2IgPvA+IieLZ/z76sJkUMK8VacWdsf+MXn3KbD
-Hw28paetkaQZJeIedZuDteQg0zKmacbZLUE/hFxN/2DO9FALzbhWwehujOrlp1Ks
-0EFCqbfvZIElJoWl491kzvNasazNo4AXHoMwa6TjeoMIgPV5OJrKqjqZQfw1yAr4
-KFJ3PTsozf/fOCH3U/hQs0IhrHFO/8KQGS/Wxrsv2LoSY/3CnRJstaEfRlbt8icI
-0Njc4ZsUw24rteUnAOLekaUoSA1MN3L2z3UXsLgByWpeobFg6lyEn3cMxx0W5BgP
-JEd3NXzvuAgCkzII3nhT
-=TYkj
------END PGP SIGNATURE-----
-
---=-xd67TIfIX5ne/btolJ9a--
+/Lars
 
