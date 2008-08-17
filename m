@@ -1,89 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp5-g19.free.fr ([212.27.42.35]:55889 "EHLO smtp5-g19.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753531AbYHCMQc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 08:16:32 -0400
-Message-ID: <4895A19B.5090307@inria.fr> (sfid-20080803_141637_707016_C8611957)
-Date: Sun, 03 Aug 2008 14:16:27 +0200
-From: Brice Goglin <Brice.Goglin@inria.fr>
+Received: from fg-out-1718.google.com ([72.14.220.155]:48038 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752187AbYHQSB1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Aug 2008 14:01:27 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1462444fgg.17
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Aug 2008 11:01:26 -0700 (PDT)
+Message-ID: <1ba2fa240808171101j8a7a94dn6be58fe1a8f46dbd@mail.gmail.com> (sfid-20080817_200132_923749_3DA03E56)
+Date: Sun, 17 Aug 2008 21:01:26 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: CPU load after killing iwlagn with RF kill switch
+Cc: "Mirco Tischler" <mt-ml@gmx.de>,
+	"Leonid Podolny" <leonidp.lists@gmail.com>,
+	linux-kernel@vger.kernel.org, yi.zhu@intel.com,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
+	IvDoorn@gmail.com
+In-Reply-To: <20080817170714.GA29938@tuxdriver.com>
 MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>
-CC: netdev@vger.kernel.org, kaber@trash.net, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 11/31]: net: Implement simple sw TX hashing.
-References: <20080717.051635.124264554.davem@davemloft.net>
-In-Reply-To: <20080717.051635.124264554.davem@davemloft.net>
 Content-Type: text/plain; charset=ISO-8859-1
+References: <48A5EC02.4070303@gmail.com>
+	 <20080817035921.4d35ae0e@mtlp.12thdimension>
+	 <1ba2fa240808170004p63b76db1l1fdfb1cf1cb41636@mail.gmail.com>
+	 <20080817150242.GA23926@tuxdriver.com>
+	 <1ba2fa240808170920r67e11567h2da8b396b18729dd@mail.gmail.com>
+	 <20080817170714.GA29938@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller wrote:
-> It just xor hashes over IPv4/IPv6 addresses and ports of transport.
+On Sun, Aug 17, 2008 at 8:07 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Sun, Aug 17, 2008 at 07:20:54PM +0300, Tomas Winkler wrote:
+>> On Sun, Aug 17, 2008 at 6:02 PM, John W. Linville
+>> <linville@tuxdriver.com> wrote:
+>> > On Sun, Aug 17, 2008 at 10:04:12AM +0300, Tomas Winkler wrote:
+>> >
+>> >> There is gap in current rfkill implementation that we didn't close
+>> >> yet.  There were also few patches that were not signed by Intel and
+>> >> are apparently wrong.
+>> >
+>> > Can you be more specific?  Do you know which patches are wrong (even
+>> > if you don't know how to fix them)?
+>> >
+>>
+>> 80fcc9e28cf3a209fbfb39a7bbddc313c59c7424
+>> This one  is wrong and there are more then are not acked even though
+>> they cause no problem. In general I would prefer that patches will be
+>> acked by Yi or me.
 >
-> The only assumption it makes is that skb_network_header() is set
-> correctly.
->   
+> And in general, they are.  In general I would prefer if you would
+> work upstream instead of working in iwlwifi-2.6 and periodically
+> dumping a dozen or more patches on me all at once.  C'est la vie...
 
-Hey David,
+We cannot because no OSV or OEM ships latest kernel and mac80211 is
+periodically broken.  There is a reason why compat-wireless was
+brought to life. The  innovation to stabilization and testing ratio is
+not good. This is of course more complex than that and I didn't find
+the golden way yet.
 
-Sorry for the late reply, I didn't have time to look at multiqueue tx
-details before. I have some curiosity-questions about your hashing.
-
-> +static u16 simple_tx_hash(struct net_device *dev, struct sk_buff *skb)
-> +{
-> +	u32 *addr, *ports, hash, ihl;
-> +	u8 ip_proto;
-> +	int alen;
-> +
-> +	switch (skb->protocol) {
-> +	case __constant_htons(ETH_P_IP):
-> +		ip_proto = ip_hdr(skb)->protocol;
-> +		addr = &ip_hdr(skb)->saddr;
-> +		ihl = ip_hdr(skb)->ihl;
-> +		alen = 2;
-> +		break;
-> +	case __constant_htons(ETH_P_IPV6):
-> +		ip_proto = ipv6_hdr(skb)->nexthdr;
-> +		addr = &ipv6_hdr(skb)->saddr.s6_addr32[0];
-> +		ihl = (40 >> 2);
-> +		alen = 8;
-> +		break;
-> +	default:
-> +		return 0;
-> +	}
->   
-
-What's your plan for other protocols here? Should we add an optional
-tx_hash() method in struct packet_type?
-
-> @@ -1672,6 +1722,8 @@ static struct netdev_queue *dev_pick_tx(struct net_device *dev,
->  
->  	if (dev->select_queue)
->  		queue_index = dev->select_queue(dev, skb);
-> +	else if (dev->real_num_tx_queues > 1)
-> +		queue_index = simple_tx_hash(dev, skb);
->   
-
-Some devices might will add some protocol specific hashing (IP and IPv6)
-that could look like what simple_tx_hash() does above, right? But if we
-add some new protocols in sample_tx_hash(), it will be ignored by these
-devices, and we might have to update the hashing in all select_queue()
-methods as well.
-
-So I wonder if we shouldn't change all this into:
-1) simple_tx_hash(skb) returns a big protocol-independent integer (like
-a concatenation or basic xor of IP proto/addr/...). It basically just
-converts the skb header in something flat and proto-independent.
-2.a) if the device provides select_queue(), we pass this integer to it.
-select_queue() either uses the skb headers if it really wants to hash IP
-or IPv6 precisely, or uses our protocol-independent integer and just
-hash it in a dumb way without caring about the protocol hidden behind it.
-2.b) if there's no select_queue(), we hash the big integer depending on
-the number of tx queues
-
-This way, we can easily add some protocol specific hashing to all
-drivers without having to modify select_queue() everywhere. Of course,
-if we don't care about hashing anything but IP/IPv6, it doesn't matter :)
-
-Brice
-
+>> I will try to rebase our rfkill fixes ASAP from iwlwifi-2.6. iwl5000 branch.
+>
+> Thanks!
+>
+> John
+> --
+> John W. Linville
+> linville@tuxdriver.com
+>
