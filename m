@@ -1,48 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.176]:15324 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758980AbYHUW2K (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:22426 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751821AbYHQXbj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Aug 2008 18:28:10 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so104766ika.5
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2008 15:28:08 -0700 (PDT)
+	Sun, 17 Aug 2008 19:31:39 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so1170931yxm.1
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Aug 2008 16:31:38 -0700 (PDT)
+Message-ID: <3074d0770808171631r5a41589ia142f2a6ae214b1e@mail.gmail.com> (sfid-20080818_013142_596556_5B0B4540)
+Date: Mon, 18 Aug 2008 01:31:37 +0200
+From: "Georg Grabler" <ggrabler@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-Subject: [PATCH v2 00/19] orinoco: WPA for Agere based cards
-Date: Thu, 21 Aug 2008 23:27:45 +0100
-Message-Id: <1219357685-24731-1-git-send-email-kilroyd@gmail.com> (sfid-20080822_002815_101452_4D25B377)
-From: kilroyd@googlemail.com
+Subject: b43 driver: 14e4:4315
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series enables WPA on Agere based orinoco devices.
+Hello List,
 
-Patchset overview
-1-2: General scanning updates
-3-9: Agere firmware download to RAM
-10-12: Update orinoco to work with new firmware
-13-19: WPA functionality
+I've just subscribed to the list, and while browsing trough the
+archives, I found that there have been attempts for the implementation
+of the device.
 
-This patchset addresses a few issues raised the last time it was
-submitted:
- * fix compile/sparse warnings on 64 bit
- * scan buffer size increased
+I couldn't find any information if this actually took place. I'm
+running a Vostro 1510 Notebook with this card, and experiencing
+troubles getting wireless to work.
 
-The patchset is against wireless-testing (master-2008-08-20), is
-sparse clean (UP), and should be bisectable. It is almost checkpatch
-clean - the single warning looks like a false positive to me.
+Do I actually have a key / activation problem, or is the card not supported yet?
 
-To use WPA, you will need an Agere firmware image. You can get the
-necessary file at
-<http://marc.info/?l=orinoco-devel&m=121078835610877>, just extract
-and rename orinoco.fw to agere_sta_fw.bin and place it in
-/lib/firmware (or distro equivalent). Alternatively you can try
-extract firmware from a Windows driver using the program in
-<http://marc.info/?l=orinoco-devel&m=120846933719051>.
-
-
-
-Regards,
-
-Dave.
+Kind regards,
+Georg
