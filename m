@@ -1,103 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:55159 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751008AbYHCE0U (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 00:26:20 -0400
-Date: Sun, 3 Aug 2008 01:26:14 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Philip Langdale <philipl@overt.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	toshiba_acpi@memebeam.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
-	through rfkill (v2)
-Message-ID: <20080803042613.GC6053@khazad-dum.debian.net> (sfid-20080803_062639_635856_A00EE496)
-References: <4894B1B4.6050003@overt.org>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3388 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752672AbYHQRci (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Aug 2008 13:32:38 -0400
+Date: Sun, 17 Aug 2008 13:07:14 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Mirco Tischler <mt-ml@gmx.de>,
+	Leonid Podolny <leonidp.lists@gmail.com>,
+	linux-kernel@vger.kernel.org, yi.zhu@intel.com,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
+	IvDoorn@gmail.com
+Subject: Re: CPU load after killing iwlagn with RF kill switch
+Message-ID: <20080817170714.GA29938@tuxdriver.com> (sfid-20080817_193242_984808_EBEF1C60)
+References: <48A5EC02.4070303@gmail.com> <20080817035921.4d35ae0e@mtlp.12thdimension> <1ba2fa240808170004p63b76db1l1fdfb1cf1cb41636@mail.gmail.com> <20080817150242.GA23926@tuxdriver.com> <1ba2fa240808170920r67e11567h2da8b396b18729dd@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4894B1B4.6050003@overt.org>
+In-Reply-To: <1ba2fa240808170920r67e11567h2da8b396b18729dd@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 02 Aug 2008, Philip Langdale wrote:
-> +static int bt_rfkill_toggle_radio(void *data, enum rfkill_state state)
-> +{
-> +	u32 result1, result2;
-> +	u32 value;
-> +	bool radio_state;
-> +
-> +	struct toshiba_acpi_dev *dev = data;
-> +
-> +	value = state == RFKILL_STATE_UNBLOCKED;
+On Sun, Aug 17, 2008 at 07:20:54PM +0300, Tomas Winkler wrote:
+> On Sun, Aug 17, 2008 at 6:02 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > On Sun, Aug 17, 2008 at 10:04:12AM +0300, Tomas Winkler wrote:
+> >
+> >> There is gap in current rfkill implementation that we didn't close
+> >> yet.  There were also few patches that were not signed by Intel and
+> >> are apparently wrong.
+> >
+> > Can you be more specific?  Do you know which patches are wrong (even
+> > if you don't know how to fix them)?
+> >
+> 
+> 80fcc9e28cf3a209fbfb39a7bbddc313c59c7424
+> This one  is wrong and there are more then are not acked even though
+> they cause no problem. In general I would prefer that patches will be
+> acked by Yi or me.
 
-value = (state == RFKILL_STATE_UNBLOCKED);
+And in general, they are.  In general I would prefer if you would
+work upstream instead of working in iwlwifi-2.6 and periodically
+dumping a dozen or more patches on me all at once.  C'est la vie...
 
-It is a lot easier to read without confusing the == for a =.
+> I will try to rebase our rfkill fixes ASAP from iwlwifi-2.6. iwl5000 branch.
 
-> +	case RFKILL_STATE_HARD_BLOCKED:
-> +		printk(MY_NOTICE "Ignored HARD_BLOCKED request by software\n");
-> +		break;
+Thanks!
 
-You don't really need the above, rfkill won't ever call your toggle_radio
-callback like that.
-
-If you want paranoid checking, do this instead:
-
-default:
-	/* maybe WARN(), WARN_ON() or printk here */
-	return -EINVAL;
-
-> +static void bt_acpi_notify(acpi_handle handle, u32 event, void *data)
-> +{
-> +	struct toshiba_acpi_dev *dev = data;
-> +
-> +	switch (event) {
-> +	case BT_ACPI_SOFT_UNBLOCKED_EVENT:
-> +		if (!dev->ignore_next_bt_event) {
-> +			bt_rfkill_toggle_radio(data, RFKILL_STATE_UNBLOCKED);
-> +			rfkill_force_state(dev->rfk_dev,
-> +					   RFKILL_STATE_UNBLOCKED);
-
-This one got me confused.  Why do you need that bt_rfkill_toggle_radio call
-here?
-
-> +	if (toshiba_acpi.rfk_dev) {
-> +		rfkill_unregister(toshiba_acpi.rfk_dev);
-> +		rfkill_free(toshiba_acpi.rfk_dev);
-> +	}
-
-Read the kernel-doc headers of every rfkill function you call at least
-once...  Never rfkill_free() something you rfkill_unregister()'ed.
-
-rfkill_free() is just for the error unwind of a failure between
-rfkill_allocate() and rfkill_register().
-
-> +		toshiba_acpi.rfk_dev->dev.class->suspend = NULL;
-> +		toshiba_acpi.rfk_dev->dev.class->resume = NULL;
-
-Why?
-
-> +		ret = rfkill_register(toshiba_acpi.rfk_dev);
-> +		if (ret) {
-> +			printk(MY_ERR "unable to register rfkill device\n");
-> +			toshiba_acpi_exit();
-> +			return -ENOMEM;
-> +		}
-> +
-> +		if (hci_get_bt_on(&bt_on) == HCI_SUCCESS && bt_on) {
-> +			toshiba_acpi.rfk_dev->state = RFKILL_STATE_UNBLOCKED;
-> +		} else if (hci_get_radio_state(&radio_on) == HCI_SUCCESS && radio_on) {
-> +			toshiba_acpi.rfk_dev->state = RFKILL_STATE_HARD_BLOCKED;
-> +		} else {
-> +			toshiba_acpi.rfk_dev->state = RFKILL_STATE_SOFT_BLOCKED;
-> +		}
-
-Do the above between rfkill_allocate() and rfkill_register().
-
+John
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+John W. Linville
+linville@tuxdriver.com
