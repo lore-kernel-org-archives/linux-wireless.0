@@ -1,41 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:45589 "EHLO verein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753382AbYHDOYM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 10:24:12 -0400
-Date: Mon, 4 Aug 2008 16:23:21 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@venema.h4ckr.net,
-	Senthil Balasubramanian <senthilkumar@Atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Christoph Hellwig <hch@lst.de>,
-	Jack Howarth <howarth@bromo.msbb.uc.edu>,
-	Jouni Malinen <jouni.malinen@Atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
-	Pavel Roskin <proski@gnu.org>,
-	Vasanthakumar Thiagarajan <vasanth@Atheros.com>
-Subject: Re: [PATCH 4/4] ath9k: Add new Atheros IEEE 802.11n driver
-Message-ID: <20080804142321.GB9892@lst.de> (sfid-20080804_162415_634649_40358F86)
-References: <1217834201-14680-1-git-send-email-lrodriguez@atheros.com> <1217834201-14680-2-git-send-email-lrodriguez@atheros.com> <1217834201-14680-3-git-send-email-lrodriguez@atheros.com> <1217834201-14680-4-git-send-email-lrodriguez@atheros.com> <1217834201-14680-5-git-send-email-lrodriguez@atheros.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1217834201-14680-5-git-send-email-lrodriguez@atheros.com>
+Received: from fk-out-0910.google.com ([209.85.128.189]:54852 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752419AbYHQW5P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Aug 2008 18:57:15 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so1958266fkq.5
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Aug 2008 15:57:13 -0700 (PDT)
+Message-ID: <1ba2fa240808171557w4eecb005s68286d9391a3f15b@mail.gmail.com> (sfid-20080818_005719_624093_A5878D33)
+Date: Mon, 18 Aug 2008 01:57:13 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Zhu Yi" <yi.zhu@intel.com>
+Subject: Re: [PATCH 00/15] iwlwifi driver 08/15 updates
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1218765680-8378-1-git-send-email-yi.zhu@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1218765680-8378-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 04, 2008 at 12:16:41AM -0700, Luis R. Rodriguez wrote:
-> This adds the new mac80211 11n ath9k Atheros driver. Only STA support
-> is currently enabled and tested.
-> 
-> Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Fri, Aug 15, 2008 at 5:01 AM, Zhu Yi <yi.zhu@intel.com> wrote:
+> Hi,
+>
+> Here are some fix and cleanup for iwlwifi and mac80211.  Note mac80211
+> patches 07~10 are already submitted by Tomas Winkler before.
+>
+> Thanks,
+> -yi
+>
+I would just merge everyting into 2.6.27 but here are important
+changes from my point of view (4965 and 5000)
 
-No signed off yet, I haven't even read in detail through the whole
-driver.  Same is probably true for most other people on this
-list.
+> [PATCH 01/15] iwlwifi: Added bss_info_changed callback to 3945
 
-That beeing said I'm not really in a position to sign off either as
-I'm not the mainter nor a major contributor to the patch.
+> [PATCH 02/15] iwlwifi: W/A for the TSF correction in IBSS
+For 2.6.27 -Fixes IBSS connectivity - constant merging
+
+> [PATCH 03/15] iwlwifi: clean up hw scan handler
+Needed for dependencies.
+
+> [PATCH 04/15] iwlwifi: remove obsolete 4965 forward declarations
+
+> [PATCH 05/15] iwlwifi: allow consecutive scans in unassociated state
+> [PATCH 06/15] iwlwifi: align set channel with mac80211
+For 2.6.27 (hidden SSID connectivity)
+
+> [PATCH 07/15] mac80211: filter probes in ieee80211_rx_mgmt_probe_resp
+> [PATCH 08/15] mac80211: cleanup mlme state namespace
+> [PATCH 09/15] mac80211: change number of pre-assoc scans
+> [PATCH 10/15] mac80211: add direct probe before association
+
+For 2.6.27 mac patches - enable hidden SSID connectivity and more
+robust connection in general
+
+> [PATCH 11/15] iwl3945: fix unbalanced mutex
+> [PATCH 12/15] iwl3945: replace association and beacon hooks with bss_info_changed cb
+
+> [PATCH 13/15] iwlwifi: fix hidden ssid discovery in passive channels
+For 2.6.27 enable hidden SSID in 5.2 Band
+
+> [PATCH 14/15] iwl3945: removed bg_post_associate work
+> [PATCH 15/15] iwl3945: avoid redundant iwl3945_get_active_dwell_time
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+Thanks
+Tomas
