@@ -1,87 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:34678 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751239AbYHDWzM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 18:55:12 -0400
-Subject: Re: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
-From: Dan Williams <dcbw@redhat.com>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <20080804223052.GG24927@khazad-dum.debian.net>
-References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
-	 <1217700664-20792-9-git-send-email-hmh@hmh.eng.br>
-	 <1217703723.8621.50.camel@johannes.berg>
-	 <20080802192704.GB24253@khazad-dum.debian.net>
-	 <1217864565.3139.17.camel@localhost.localdomain>
-	 <20080804223052.GG24927@khazad-dum.debian.net>
-Content-Type: text/plain
-Date: Mon, 04 Aug 2008 18:56:51 -0400
-Message-Id: <1217890611.17793.17.camel@localhost.localdomain> (sfid-20080805_005518_260483_A108A5B9)
-Mime-Version: 1.0
+Received: from nf-out-0910.google.com ([64.233.182.187]:30351 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751516AbYHQJ6a (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Aug 2008 05:58:30 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so1002516nfc.21
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Aug 2008 02:58:28 -0700 (PDT)
+To: "Lars Ericsson" <Lars_Ericsson@telia.com>
+Subject: Re: [Rt2400-devel] mac80211 / rt2x00 / rt61 and adhoc status
+Date: Sun, 17 Aug 2008 11:58:25 +0200
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <059201c9004f$459ccc50$0b3ca8c0@gotws1589>
+In-Reply-To: <059201c9004f$459ccc50$0b3ca8c0@gotws1589>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200808171158.25501.IvDoorn@gmail.com> (sfid-20080817_115833_707622_3A65EA1D)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-08-04 at 19:30 -0300, Henrique de Moraes Holschuh wrote:
-> On Mon, 04 Aug 2008, Dan Williams wrote:
-> > On Sat, 2008-08-02 at 16:27 -0300, Henrique de Moraes Holschuh wrote:
-> > > On Sat, 02 Aug 2008, Johannes Berg wrote:
-> > > > On Sat, 2008-08-02 at 15:11 -0300, Henrique de Moraes Holschuh wrote:
-> > > > > Currently, rfkill would stand in the way of properly supporting wireless
-> > > > > devices that are capable of waking the system up from sleep or hibernation
-> > > > > when they receive a special wireless message.
-> > > > > 
-> > > > > Since rfkill attempts to soft-block any transmitters during class suspend,
-> > > > 
-> > > > why does it interfere with suspend anyway?
+On Sunday 17 August 2008, Lars Ericsson wrote:
 > > > 
-> > > The class makes sure that all transmitters are blocked on suspend.  You'd
-> > > have to ask Ivo for the reason, but AFAIK, it is for both safety and to help
-> > > conserve power.
+> > > Have tried using the wpa_supplicant and got the -EBUSY from
+> > > ieee80211_ioctl_siwmode().
 > > 
-> > rfkill shouldn't be touching stuff during suspend.
+> > As usual: The interface must be down when changing working mode.
+> > 
 > 
-> rfkill shouldn't *need* to touch stuff during suspend.  But for that to be
-> true, all drivers using rfkill need to properly suspend in the first place.
-> 
-> And that's more than just drivers/net/wireless.
-> 
-> > In the OLPC libertas case, the radio may remain _ON_ during suspend,
-> > because the OLPC machines are expected to suspend/resume many times per
-> > second, and the radio must continue to participate in the mesh during
-> > that time.  The only case where the radio gets blocked is when the user
-> > requests it or when regulations require it.
-> 
-> Yes.  And the fact that rfkill stood in the way of doing that is a bug.
-> However, even my first try of a patch would already allow libertas to
-> declare it doesn't want rfkill to bother it on suspend.
-> 
-> It is very clear some drivers don't want rfkill to block radios on suspend.
-> Really.  So far, libertas and iwl* are on my list of "don't want" or "don't
-> need".  From what I can see, PCI-based rt2xxx is also "don't need".  And I
-> can assume everything in drivers/misc is "don't need" without too much risk
-> of being wrong.
-> 
-> But the OPPOSITE is not clear at all to me.  I don't know whether the other
-> users of rfkill need a radio block on suspend or not.  Unless someone can
-> look over *all* in-tree users of linux/rfkill.h and state that none of them
-> need it because all of them DO shutdown their devices on suspend, I will
-> have to ask the maintainers of every single one about it before I ask a
-> patch to be merged.  I already looked, and I don't know enough to have a
-> definitive answer by myself.
+> The initial mode is 2. I do not know the source of that mode, might be a
+> default.
+> <7>[   85.713782] LaE: ieee80211_ioctl_siwmode: type=2, sdata->vif.type=2 
 
-Using rfkill to enforce suspend power policy at a kernel-level is just
-wrong.  That's a policy decision for gnome-power-manager or
-kde-power-manager or whatever.  At the very least, it should be an
-option in sysfs to turn this behavior on or off.
+that is managed mode.
 
-Dan
-
-> > Suspend != block, and tying suspend and rfkill together really is a
-> > policy decision.  Thus, I don't agree that rfkill should block radios on
-> > suspend.
+> Between 85.713698 and 85.821832 device is opened (1=netif_running(dev))
+> <7>[   85.713698] LaE: ieee80211_ioctl_siwmode: 0=netif_running(dev)
+> <7>[   85.713752] LaE: ieee80211_ioctl_siwmode: mode=2 
+> <7>[   85.713782] LaE: ieee80211_ioctl_siwmode: type=2, sdata->vif.type=2 
+> <6>[   85.713938] phy0 -> rt2x00lib_request_firmware: Info - Loading
+> firmware file 'rt2561s.bin'.
+> <6>[   85.724265] firmware: requesting rt2561s.bin
+> <6>[   85.779042] phy0 -> rt2x00lib_request_firmware: Info - Firmware
+> detected - version: 0.8.
+> <7>[   85.821654] LaE: ieee80211_ioctl_giwrange: enter; 
+> <7>[   85.821832] LaE: ieee80211_ioctl_giwrange: 1=netif_running(dev)
 > 
-> If some drivers out there are relying on it to, we need to know that before
-> we remove it completely.
-> 
+> When wpa supplicant set the adhoc mode=1/type=3 the device is running and
+> fails
 
+to quota myself: "The interface must be down when changing working mode."
+
+> <7>[   85.947991] LaE: ieee80211_ioctl_siwmode: mode=1 
+> <7>[   85.948134] LaE: ieee80211_ioctl_siwmode: type=3, sdata->vif.type=2 
+> <7>[   85.948433] LaE: ieee80211_ioctl_siwmode: type=3 
+> 
+> My work around was to ignore this situation and continue the mode change.
+
+that is not correct, as I've stated already: The interface must be down when changing working mode.
+
+> > > Two tests cases, but same behaviour:
+> > > 1) Linx.git: 2.6.26 and wpa_supplicant 0.5.9
+> > > 2) rt2x00.git: Version 2.2.0 and wpa_supplicant 0.5.9
+> > 
+> > Are any beacons going out? Is there anything in the logs which
+> > indicates what is happening?
+> > 
+> 
+> As you can se in the trace below, the configuration proceeds and the adhoc
+> is created.
+> The warnon might give some clues.
+
+So how about those beacons? are they getting out?
+
+ivo
