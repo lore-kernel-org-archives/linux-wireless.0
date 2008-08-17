@@ -1,66 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:44441 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760705AbYHBTd1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 15:33:27 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2243999wfd.4
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 12:33:26 -0700 (PDT)
-Message-ID: <40f31dec0808021233s249aa5f2r845b5beb33c72177@mail.gmail.com> (sfid-20080802_213335_876548_059AF186)
-Date: Sat, 2 Aug 2008 22:33:26 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ath5k-devel] [PATCH 1/12] ath5k: Update register list
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	jirislaby@gmail.com, mcgrof@gmail.com
-In-Reply-To: <40f31dec0807311151m13bc2c5ah65b477d2d0ae3fd1@mail.gmail.com>
+Received: from ra.tuxdriver.com ([70.61.120.52]:3572 "EHLO ra.tuxdriver.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752212AbYHQScd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Aug 2008 14:32:33 -0400
+Date: Sun, 17 Aug 2008 14:16:17 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 2/2] rfkill: use strict_strtoul
+Message-ID: <20080817181617.GA30679@tuxdriver.com> (sfid-20080817_203243_575851_EA98A372)
+References: <1217699786-20672-1-git-send-email-hmh@hmh.eng.br> <1217699786-20672-3-git-send-email-hmh@hmh.eng.br>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080720033041.GA7440@makis>
-	 <20080729204054.GA10188@tuxdriver.com>
-	 <40f31dec0807311151m13bc2c5ah65b477d2d0ae3fd1@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1217699786-20672-3-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/7/31 Nick Kossifidis <mickflemm@gmail.com>:
-> 2008/7/29 John W. Linville <linville@tuxdriver.com>:
->> On Sun, Jul 20, 2008 at 06:30:41AM +0300, Nick Kossifidis wrote:
->>>  * Update list of registers
->>>  * Use updated register macros inside hw.c and initvals.c
->>>
->>>  Changes-licensed-under: ISC
->>>  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
->>
->> Nick,
->>
->> Some of the changes in this patch break the build unless the rest
->> of the series is applied, and those patches can't be applied before
->> applying this one.  This breaks git-bisect.  Could I trouble you
->> to include the pieces of this patch that break the build into those
->> later patches that fix the build?  Or perhaps you can simply split
->> this into a patch that adds new definitions and one that deletes
->> older definitions?  The latter could then be applied at the end of
->> the series.
->>
->> Thanks,
->>
->> John
->
-> Hello John ;-)
->
-> Now that i resent the 1st patch that was broken can you please commit
-> the series ? We really need to add RF2425 support in kernel, it'll
-> also help me work easier on ath5k (i won't have to work on top of
-> those patches).
->
-> All other patches should be O.K.
->
+On Sat, Aug 02, 2008 at 02:56:26PM -0300, Henrique de Moraes Holschuh wrote:
+> Switch sysfs parsing to something that actually works properly.
 
-Thanx a lot ;-)
+> @@ -402,7 +410,7 @@ static ssize_t rfkill_claim_store(struct device *dev,
+>  	if (error)
+>  		return error;
+>  
+> -	if (rfkill->user_claim != claim) {
+> +	if (!!rfkill->user_claim != !!claim) {
+>  		if (!claim) {
+>  			mutex_lock(&rfkill->mutex);
+>  			rfkill_toggle_radio(rfkill,
 
+This looks a bit funny.  Is the '!!' in front of 'rfkill->user_claim'
+really necessary?  Especially since...
 
+> @@ -410,7 +418,7 @@ static ssize_t rfkill_claim_store(struct device *dev,
+>  					    0);
+>  			mutex_unlock(&rfkill->mutex);
+>  		}
+> -		rfkill->user_claim = claim;
+> +		rfkill->user_claim = !!claim;
+>  	}
+>  
+>  	mutex_unlock(&rfkill_mutex);
 
+You seem to be doing the only assignment to 'rfkill->user_claim',
+using a '!!' to condition the input?
+
+John
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+John W. Linville
+linville@tuxdriver.com
