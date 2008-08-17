@@ -1,51 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:30526 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752017AbYHIVyi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Aug 2008 17:54:38 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>
-Subject: [PATCH 1/1] mac80211: update new sta's rx timestamp
-Date: Sun, 10 Aug 2008 00:54:34 +0300
-Message-Id: <1218318874-15168-1-git-send-email-tomas.winkler@intel.com> (sfid-20080809_235442_879855_C59B8E93)
-Content-Type: text/plain; charset="us-ascii"
+Received: from yw-out-2324.google.com ([74.125.46.30]:52870 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751493AbYHQXmR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Aug 2008 19:42:17 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so195497ywe.1
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Aug 2008 16:42:16 -0700 (PDT)
+Message-ID: <3074d0770808171642g5d24c119i154f318cedbc5d7d@mail.gmail.com> (sfid-20080818_014230_485020_967772AE)
+Date: Mon, 18 Aug 2008 01:42:16 +0200
+From: "Georg Grabler" <ggrabler@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: b43 driver: 14e4:4315
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Hello List,
 
-This patch fixes needless probe request caused by zero value in
-sta->last_rx inside ieee80211_associated flow
+I've just subscribed to the list, and while browsing trough the
+archives.I found that there have been attempts for the implementation
+of the device.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- net/mac80211/mlme.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+I couldn't find any information if this actually took place. I'm
+running a Vostro 1510 Notebook with this card, and experiencing
+troubles getting wireless to work. To be true, by loading the driver,
+the device isn't recognized. It's some Dell Mini Wireless adapter.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 541a40a..00e9a2d 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2137,6 +2137,8 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
- 			rcu_read_unlock();
- 			return;
- 		}
-+		/* update new sta with its last rx activity */
-+		sta->last_rx = jiffies;
- 	}
- 
- 	/*
--- 
-1.5.4.1
+Can anyone give a hint, or can I give a helping hand concerning this
+card? I don't think I'm able to implement anything, but debugging and
+similar should be possible (not enough clue of developing drivers for
+the linux kernel).
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+Kind regards,
+Georg
