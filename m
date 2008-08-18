@@ -1,63 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:52933 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751017AbYHCD4H (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:35196 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751758AbYHRAHV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 23:56:07 -0400
-Date: Sun, 3 Aug 2008 00:55:59 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
-Message-ID: <20080803035559.GB6053@khazad-dum.debian.net> (sfid-20080803_055611_001663_ED868DCF)
-References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br> <1217700664-20792-9-git-send-email-hmh@hmh.eng.br> <1217703723.8621.50.camel@johannes.berg> <20080802192704.GB24253@khazad-dum.debian.net> <1ba2fa240808021421h421fc362ib92660f7be4727f8@mail.gmail.com>
+	Sun, 17 Aug 2008 20:07:21 -0400
+Message-ID: <48A8BD37.7070902@lwfinger.net> (sfid-20080818_020724_670934_D67F6E10)
+Date: Sun, 17 Aug 2008 19:07:19 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240808021421h421fc362ib92660f7be4727f8@mail.gmail.com>
+To: Georg Grabler <ggrabler@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: b43 driver: 14e4:4315
+References: <3074d0770808171631r5a41589ia142f2a6ae214b1e@mail.gmail.com>
+In-Reply-To: <3074d0770808171631r5a41589ia142f2a6ae214b1e@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 03 Aug 2008, Tomas Winkler wrote:
-> >> why does it interfere with suspend anyway?
-> >
-> > The class makes sure that all transmitters are blocked on suspend.  You'd
-> > have to ask Ivo for the reason, but AFAIK, it is for both safety and to help
-> > conserve power.
+Georg Grabler wrote:
+> Hello List,
 > 
-> This one is also on my list to remove. Suspend/Hibernate Resume
-> definitelly doesn't mean to rfkill radio on and off.. Driver should
+> I've just subscribed to the list, and while browsing trough the
+> archives, I found that there have been attempts for the implementation
+> of the device.
+> 
+> I couldn't find any information if this actually took place. I'm
+> running a Vostro 1510 Notebook with this card, and experiencing
+> troubles getting wireless to work.
+> 
+> Do I actually have a key / activation problem, or is the card not supported yet?
 
-I *certainly* don't want the chip active during S3 or S4 unless I want WoWL
-active, so I do agree that just killing the radio is not enough.
+The short answer is that it is not supported.
 
-> This only creates conflicts as both driver and rfkill system are
-> trying to bring radio down
+This model has an LP PHY and is also known as a BCM4310. The reverse 
+engineering is still in process.
 
-No conflicts.  The wireless driver gets the request to shut the radio down
-BEFORE its suspend method is called (the class suspends first).  It will
-also get the request to enable/disable (whatever state it was in before the
-suspend) the radio AFTER its resume method is called (the class resumes
-after).
+Larry
 
-> RFKILL  IMHO shell track rfkill switches states and not to invent
-
-RFKILL is not about tracking, it is about *controlling*.
-
-> them. If the radio was SW switched  off before NIC was suspend it
-> shell be switched off also in resume. That's should be role of rfkill
-> system, probably with some help from user space.
-
-Without the patch, rfkill always disables radios on suspend.  If they were
-enabled before the suspend, it will try to enable them on resume.  If they
-were disabled before the suspend, it will try to disable them on resume.
-
-That's well part of rfkill's role.  It might not be *needed* at all though,
-and if it is not, it is best to stop doing it.  If it is needed just in a
-few situations, we need to make it configurable (that's what my patch does).
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
