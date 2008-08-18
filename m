@@ -1,35 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:31871 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751435AbYHAXt1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 19:49:27 -0400
-Subject: Re: [Orinoco-devel] [RFC PATCH 00/19] orinoco: WPA for Agere based
-	cards
-From: Pavel Roskin <proski@gnu.org>
-To: kilroyd@googlemail.com
-Cc: linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-In-Reply-To: <1214678305-7057-1-git-send-email-kilroyd@gmail.com>
-References: <1214678305-7057-1-git-send-email-kilroyd@gmail.com>
-Content-Type: text/plain
-Date: Fri, 01 Aug 2008 19:49:25 -0400
-Message-Id: <1217634565.2731.13.camel@dv> (sfid-20080802_014929_679637_34D10002)
-Mime-Version: 1.0
+Received: from ns1.siteground211.com ([209.62.36.12]:54860 "EHLO
+	serv01.siteground211.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753554AbYHRT5H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Aug 2008 15:57:07 -0400
+From: Felipe Balbi <me@felipebalbi.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Felipe Balbi <felipe.balbi@nokia.com>
+Subject: [PATCH] net: rfkill: add missing line break
+Date: Mon, 18 Aug 2008 22:56:53 +0300
+Message-Id: <1219089413-7884-1-git-send-email-me@felipebalbi.com> (sfid-20080818_215712_246596_41A276EC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-06-28 at 19:38 +0100, kilroyd@googlemail.com wrote:
-> This patch series enables WPA on Agere based orinoco devices. An
-> earlier version has been available on the orinoco-devel list for a
-> while. I'm looking to get more feedback and testing of these patches,
-> so hopefully they can go into the kernel.
+From: Felipe Balbi <felipe.balbi@nokia.com>
 
-I'm sorry, it have been months since I was supposed to review your
-patches.  I still could not find time for that.  Therefore, I resign
-from the maintenance of the driver.  Please send the patches directly to
-linux-wireless@vger.kernel.org and don't expect me to review them.
+Trivial patch adding a missing line break on
+rfkill_claim_show().
 
+Signed-off-by: Felipe Balbi <felipe.balbi@nokia.com>
+---
+ net/rfkill/rfkill.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index d2d4565..3bc78b0 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -372,7 +372,7 @@ static ssize_t rfkill_claim_show(struct device *dev,
+ {
+ 	struct rfkill *rfkill = to_rfkill(dev);
+ 
+-	return sprintf(buf, "%d", rfkill->user_claim);
++	return sprintf(buf, "%d\n", rfkill->user_claim);
+ }
+ 
+ static ssize_t rfkill_claim_store(struct device *dev,
 -- 
-Regards,
-Pavel Roskin
+1.6.0.rc3.10.g5a13c
+
