@@ -1,82 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:44895 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753726AbYHBSLN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 14:11:13 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Matthew Garrett <mjg@redhat.com>
-Subject: [PATCH 3/8] rfkill: add __must_check annotations
-Date: Sat,  2 Aug 2008 15:10:59 -0300
-Message-Id: <1217700664-20792-4-git-send-email-hmh@hmh.eng.br> (sfid-20080802_201118_176443_1DAB9605)
-In-Reply-To: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
-References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
+Received: from mx1.redhat.com ([66.187.233.31]:40779 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752786AbYHROcz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Aug 2008 10:32:55 -0400
+Subject: RE: [Rt2400-devel] mac80211 / rt2x00 / rt61 and adhoc status
+From: Dan Williams <dcbw@redhat.com>
+To: Lars Ericsson <Lars_Ericsson@telia.com>
+Cc: "'Ivo van Doorn'" <ivdoorn@gmail.com>, hostap@lists.shmoo.com,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+In-Reply-To: <059801c900a9$c9eee740$0b3ca8c0@gotws1589>
+References: <059801c900a9$c9eee740$0b3ca8c0@gotws1589>
+Content-Type: text/plain; charset=utf-8
+Date: Mon, 18 Aug 2008 10:34:08 -0400
+Message-Id: <1219070048.5013.40.camel@localhost.localdomain> (sfid-20080818_163259_813183_9E7C447F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rfkill is not a small, mere detail in wireless support.  Once it starts
-supporting rfkill and users start counting on that support, a wireless
-device is at risk of operating in dangerous conditions should rfkill
-support fail to properly activate.
+On Sun, 2008-08-17 at 22:42 +0200, Lars Ericsson wrote:
+> > > > > > Two tests cases, but same behaviour:
+> > > > > > 1) Linx.git: 2.6.26 and wpa_supplicant 0.5.9
+> > > > > > 2) rt2x00.git: Version 2.2.0 and wpa_supplicant 0.5.9
+> > > > >=20
+> > > > > Are any beacons going out? Is there anything in the logs whic=
+h
+> > > > > indicates what is happening?
+> > > > >=20
+> > > >=20
+> > > > As you can se in the trace below, the configuration=20
+> > > proceeds and the adhoc
+> > > > is created.
+> > > > The warnon might give some clues.
+> > >=20
+> > > So how about those beacons? are they getting out?
+> > >=20
+> >=20
+> > After patching the wpa_suplicant (0.5.9) adhoc works.
+> > When first started, as the only part in the adhoc net, the=20
+> > driver just scans
+> > around for other adhoc members.
+> > This happen in mac80211 state 4 and no beacons are sent, as=20
+> > far as I can
+> > tell. Only probe requests are sent.
+> >=20
+> > When an other node (N2) shows up in the same adhoc net work, N2 sta=
+rts
+> > sending beacons immediately.
+> > The RT61 catch that and merge that ibss, switch to state 5=20
+> > and all is fine.
+> > At this time ping works in both directions.
+> >=20
+> > When removing the second note, leaving the RT61 alone, RT61=20
+> > starts sending
+> > beacons, still in state 5.
+>=20
+> The reason for the above behaviour are timeouts.
+> - Mac80211 will create an ibss after 20 seconds probing for existing =
+ibss.
+> - Wpa_supplicant will restart this timer every 5 second ....
+>=20
+> Changing the wpa timer will make the rt61 start sending beacons even =
+if no
+> other STA is available.
+>=20
+> I think that wpa_supplicant 0.5.10 addresses this issue, I will check=
+ and
+> come back.
 
-Therefore, add the required __must_check annotations on some key functions
-of the rfkill API, for which the wireless drivers absolutely MUST handle
-the failure mode safely in order to avoid a potentially dangerous situation
-where the wireless transmitter is left enabled when the user don't want it
-to.
+If fixed your issues about a month or two ago.  Either use
+wpa_supplicant 0.6.4 and a 2.6.26 kernel, or else grab the following
+patches and apply locally:
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Matthew Garrett <mjg@redhat.com>
----
- include/linux/rfkill.h |    5 +++--
- net/rfkill/rfkill.c    |    5 +++--
- 2 files changed, 6 insertions(+), 4 deletions(-)
+wpa_supplicant (committed to 0.6.x):
+[PATCH] wpa_supplicant: give adhoc associations a bit more time
+=EF=BB=BF[PATCH v2] wext: handle mode switches correctly for mac80211
 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index aa3c7d5..e92d8e9 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -110,9 +110,10 @@ struct rfkill {
- };
- #define to_rfkill(d)	container_of(d, struct rfkill, dev)
- 
--struct rfkill *rfkill_allocate(struct device *parent, enum rfkill_type type);
-+struct rfkill * __must_check rfkill_allocate(struct device *parent,
-+					     enum rfkill_type type);
- void rfkill_free(struct rfkill *rfkill);
--int rfkill_register(struct rfkill *rfkill);
-+int __must_check rfkill_register(struct rfkill *rfkill);
- void rfkill_unregister(struct rfkill *rfkill);
- 
- int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state);
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index c1901fb..5320210 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -653,7 +653,8 @@ static void rfkill_remove_switch(struct rfkill *rfkill)
-  * NOTE: If registration fails the structure shoudl be freed by calling
-  * rfkill_free() otherwise rfkill_unregister() should be used.
-  */
--struct rfkill *rfkill_allocate(struct device *parent, enum rfkill_type type)
-+struct rfkill * __must_check rfkill_allocate(struct device *parent,
-+					     enum rfkill_type type)
- {
- 	struct rfkill *rfkill;
- 	struct device *dev;
-@@ -724,7 +725,7 @@ static void rfkill_led_trigger_unregister(struct rfkill *rfkill)
-  * structure needs to be registered. Immediately from registration the
-  * switch driver should be able to service calls to toggle_radio.
-  */
--int rfkill_register(struct rfkill *rfkill)
-+int __must_check rfkill_register(struct rfkill *rfkill)
- {
- 	static atomic_t rfkill_no = ATOMIC_INIT(0);
- 	struct device *dev = &rfkill->dev;
--- 
-1.5.6.3
+kernel (SHA1s from wireless-testing.git, both in 2.6.26):
+872ba53395b2a8be08c3ea2d39e225e5b4a8cb40 mac80211: decrease IBSS creati=
+on latency
+507b06d0622480f8026d49a94f86068bb0fd6ed6 mac80211: send association eve=
+nt on IBSS create
 
+You'd need to backport the wpa_supplicant patches to 0.5.x, or else pok=
+e
+Jouni and maybe he'll backport them for you.  I do want to get them int=
+o
+0.5.x as well.
+
+Dan
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
