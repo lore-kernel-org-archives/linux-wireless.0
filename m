@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39740 "EHLO mail.atheros.com"
+Received: from mx1.redhat.com ([66.187.233.31]:40758 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753375AbYHYTbL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2008 15:31:11 -0400
-Date: Mon, 25 Aug 2008 12:31:09 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Tomas Winkler <tomasw@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Mirco Tischler <mt-ml@gmx.de>,
-	Leonid Podolny <leonidp.lists@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"yi.zhu@intel.com" <yi.zhu@intel.com>,
-	"reinette.chatre@intel.com" <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"IvDoorn@gmail.com" <IvDoorn@gmail.com>
-Subject: Re: CPU load after killing iwlagn with RF kill switch
-Message-ID: <20080825193109.GE6007@tesla> (sfid-20080825_213115_766155_6C4EB1F8)
-References: <48A5EC02.4070303@gmail.com> <20080817035921.4d35ae0e@mtlp.12thdimension> <1ba2fa240808170004p63b76db1l1fdfb1cf1cb41636@mail.gmail.com> <20080817150242.GA23926@tuxdriver.com> <1ba2fa240808170920r67e11567h2da8b396b18729dd@mail.gmail.com> <20080817170714.GA29938@tuxdriver.com> <1ba2fa240808171101j8a7a94dn6be58fe1a8f46dbd@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1ba2fa240808171101j8a7a94dn6be58fe1a8f46dbd@mail.gmail.com>
+	id S933230AbYHRTbe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Aug 2008 15:31:34 -0400
+Subject: [PATCH] atmel: try open system authentication too
+From: Dan Williams <dcbw@redhat.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	simon@thekelleys.org.uk
+Content-Type: text/plain
+Date: Mon, 18 Aug 2008 15:32:41 -0400
+Message-Id: <1219087961.2154.7.camel@localhost.localdomain> (sfid-20080818_213143_416373_4D27CC98)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 17, 2008 at 11:01:26AM -0700, Tomas Winkler wrote:
-> On Sun, Aug 17, 2008 at 8:07 PM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > On Sun, Aug 17, 2008 at 07:20:54PM +0300, Tomas Winkler wrote:
-> >> On Sun, Aug 17, 2008 at 6:02 PM, John W. Linville
-> >> <linville@tuxdriver.com> wrote:
-> >> > On Sun, Aug 17, 2008 at 10:04:12AM +0300, Tomas Winkler wrote:
-> >> >
-> >> >> There is gap in current rfkill implementation that we didn't close
-> >> >> yet.  There were also few patches that were not signed by Intel and
-> >> >> are apparently wrong.
-> >> >
-> >> > Can you be more specific?  Do you know which patches are wrong (even
-> >> > if you don't know how to fix them)?
-> >> >
-> >>
-> >> 80fcc9e28cf3a209fbfb39a7bbddc313c59c7424
-> >> This one  is wrong and there are more then are not acked even though
-> >> they cause no problem. In general I would prefer that patches will be
-> >> acked by Yi or me.
-> >
-> > And in general, they are.  In general I would prefer if you would
-> > work upstream instead of working in iwlwifi-2.6 and periodically
-> > dumping a dozen or more patches on me all at once.  C'est la vie...
-> 
-> We cannot because no OSV or OEM ships latest kernel and mac80211 is
-> periodically broken.  There is a reason why compat-wireless was
-> brought to life. The  innovation to stabilization and testing ratio is
-> not good. This is of course more complex than that and I didn't find
-> the golden way yet.
+When the AP rejects a Shared Key authentication request, try Open System
+auth too.
 
-compat-wireless came to life to prevent alternative tree solutions, to
-prevent patch hogging in separate trees and to try to help with backward
-compatibility. That was my main motivation. If mac80211 is broken I see
-no one but ourselves to blame.
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-OEMs should rely on stock kernels distributions pick. If patches are needed
-on top of that then patch *fixes* should be supplied on top of the stable
-kernel. Development work (cleanups, etc) can go onto wireless-testing
-then.
+diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
+index 28b6ff3..e4cc37d 100644
+--- a/drivers/net/wireless/atmel.c
++++ b/drivers/net/wireless/atmel.c
+@@ -3061,12 +3062,20 @@ static void authenticate(struct atmel_private *priv, u16 frame_len)
+ 	}
+ 
+ 	if (status == WLAN_STATUS_NOT_SUPPORTED_AUTH_ALG) {
+-		/* Do opensystem first, then try sharedkey */
++		/* Flip back and forth between WEP auth modes until the max
++		 * authentication tries has been exceeded.
++		 */
+ 		if (system == WLAN_AUTH_OPEN) {
+ 			priv->CurrentAuthentTransactionSeqNum = 0x001;
+ 			priv->exclude_unencrypted = 1;
+ 			send_authentication_request(priv, WLAN_AUTH_SHARED_KEY, NULL, 0);
+ 			return;
++		} else if (   system == WLAN_AUTH_SHARED_KEY
++		           && priv->wep_is_on) {
++			priv->CurrentAuthentTransactionSeqNum = 0x001;
++			priv->exclude_unencrypted = 0;
++			send_authentication_request(priv, WLAN_AUTH_OPEN, NULL, 0);
++			return;
+ 		} else if (priv->connect_to_any_BSS) {
+ 			int bss_index;
+ 
 
-  Luis
+
