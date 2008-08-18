@@ -1,76 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:57673 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751666AbYHXQHn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Aug 2008 12:07:43 -0400
-Message-ID: <48B1874F.2050005@lwfinger.net> (sfid-20080824_180748_057215_C30E668C)
-Date: Sun, 24 Aug 2008 11:07:43 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from hostap.isc.org ([149.20.54.63]:47924 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756523AbYHRQs1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Aug 2008 12:48:27 -0400
+Received: from a88-112-108-69.elisa-laajakaista.fi ([88.112.108.69] helo=jm)
+	by hostap.isc.org with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.63)
+	(envelope-from <j@w1.fi>)
+	id 1KV7rp-0002wp-TC
+	for linux-wireless@vger.kernel.org; Mon, 18 Aug 2008 09:46:08 -0700
+Date: Mon, 18 Aug 2008 19:47:42 +0300
+From: Jouni Malinen <j@w1.fi>
+To: linux-wireless@vger.kernel.org
+Subject: Userspace client MLME and BSSID-mismatch filtering for scans
+Message-ID: <20080818164741.GA4809@jm.kir.nu> (sfid-20080818_184834_494434_721ABD0D)
 MIME-Version: 1.0
-To: Chr <chunkeey@web.de>
-CC: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH 1/2] p54: take tx_queue's lock in rx_frame_sent
-References: <200808240315.07032.chunkeey@web.de>
-In-Reply-To: <200808240315.07032.chunkeey@web.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chr wrote:
-> p54_rx_frame_sent will alter the tx_queue. Therefore we should hold
-> the lock to protect against concurrent p54_assign_address calls.
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> ---
-> hmm,
-> 
-> (looking at [GIT]: Networking debate)
-> linux-next. since there is no known regression that this patch could possibly fix...
-> ---
-> diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-> --- a/drivers/net/wireless/p54/p54common.c	2008-08-23 21:13:37.000000000 +0200
-> +++ b/drivers/net/wireless/p54/p54common.c	2008-08-24 02:11:35.000000000 +0200
-> @@ -432,7 +432,9 @@ static void p54_rx_frame_sent(struct iee
->  	struct memrecord *range = NULL;
->  	u32 freed = 0;
->  	u32 last_addr = priv->rx_start;
-> +	unsigned long flags;
->  
-> +	spin_lock_irqsave(&priv->tx_queue.lock, flags);
->  	while (entry != (struct sk_buff *)&priv->tx_queue) {
->  		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(entry);
->  		range = (void *)info->driver_data;
-> @@ -453,6 +455,8 @@ static void p54_rx_frame_sent(struct iee
->  
->  			last_addr = range->end_addr;
->  			__skb_unlink(entry, &priv->tx_queue);
-> +			spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
-> +
->  			memset(&info->status, 0, sizeof(info->status));
->  			entry_hdr = (struct p54_control_hdr *) entry->data;
->  			entry_data = (struct p54_tx_control_allocdata *) entry_hdr->data;
-> @@ -470,12 +474,14 @@ static void p54_rx_frame_sent(struct iee
->  			info->status.ack_signal = le16_to_cpu(payload->ack_rssi);
->  			skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
->  			ieee80211_tx_status_irqsafe(dev, entry);
-> -			break;
-> +			goto out;
->  		} else
->  			last_addr = range->end_addr;
->  		entry = entry->next;
->  	}
-> +	spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
->  
-> +out:
->  	if (freed >= IEEE80211_MAX_RTS_THRESHOLD + 0x170 +
->  	    sizeof(struct p54_control_hdr))
->  		p54_wake_free_queues(dev);
+I'm trying to get userspace client MLME working again and the next
+blocker seems to be in Probe Response frames being dropped during
+scanning (prepare_for_handlers() rejects frame due to BSSID mismatch
+when "not in scan" (which is currently defined as kernel MLME or hw
+scan).
 
-I have a question about this. The code is OK, but I wonder if it might 
-not be clearer if the spin_unlock_irqrestore() in the second hunk were 
-deleted, and the label for "out" in the third hunk were moved up one 
-statement. That way the matching lock/unlock pair would be more obvious.
+I can workaround this with the patch below, but I would assume there are
+some consequences in doing this (at least as far as CPU use is
+concerned). Would there be a better way of doing this? Should I add yet
+another parameter (like sdata->flags IEEE80211_SDATA_USERSPACE_MLME) for
+indicating another type of scan (userspace MLME scanning) and get
+wpa_supplicant setting that around scan operations? That would get
+rx->flags IEEE80211_RX_IN_SCAN set in __ieee80211_rx_handle_packet and
+consequently, would likely allow the ProbeResp frames to be received in
+this case.
 
-Larry
+Any preferences or comments on this?
+
+
+
+Index: wireless-testing/net/mac80211/rx.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/rx.c
++++ wireless-testing/net/mac80211/rx.c
+@@ -1828,7 +1828,8 @@ static int prepare_for_handlers(struct i
+ 		if (!bssid)
+ 			return 0;
+ 		if (!ieee80211_bssid_match(bssid, sdata->u.sta.bssid)) {
+-			if (!(rx->flags & IEEE80211_RX_IN_SCAN))
++			if (!(rx->flags & IEEE80211_RX_IN_SCAN) &&
++			    !(sdata->flags & IEEE80211_SDATA_USERSPACE_MLME))
+ 				return 0;
+ 			rx->flags &= ~IEEE80211_RX_RA_MATCH;
+ 		} else if (!multicast &&
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
