@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:37395 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751815AbYH1KgT (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:52357 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751758AbYHRAXI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 06:36:19 -0400
-Subject: Re: [PATCH 07/11] iwlwifi: generic init calibrations framework
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-In-Reply-To: <1219915510-3647-8-git-send-email-yi.zhu@intel.com>
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-8-git-send-email-yi.zhu@intel.com>
-Content-Type: text/plain
-Date: Thu, 28 Aug 2008 14:36:17 +0200
-Message-Id: <1219926977.6064.21.camel@californication> (sfid-20080828_123622_664754_988FC89C)
-Mime-Version: 1.0
+	Sun, 17 Aug 2008 20:23:08 -0400
+Message-ID: <48A8C0E9.6030300@lwfinger.net> (sfid-20080818_022313_097663_63BA8E3D)
+Date: Sun, 17 Aug 2008 19:23:05 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: linville@tuxdriver.com
+CC: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-08-17
+References: <20080817185605.GC30679@tuxdriver.com> <20080817.151251.204370966.davem@davemloft.net>
+In-Reply-To: <20080817.151251.204370966.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Yi,
+David Miller wrote:
+> Their commit messages reference SHA IDs but do not give a commit
+> header line text reference as well.
+> 
+>       p54: Fix regression due to commit b19fa1f
 
-> This patch fixes a critical bug that only the last calibration result
-> was applied. On reception of one calibration result all the calibration
-> was freed. The patch fixes this problem by introducing a generic init
-> calibration framework which allows variable number of init calibrations
-> and allows addition new HW.
+John,
 
-a lot of code changes in -rc4 phase. Please give more details since the
-patch changes a lot and even introduces a new EXPORT.
+This commit message should fix the above patch:
+=============
 
-Regards
+From: Christian Lamparter <chunkeey@web.de>
 
-Marcel
+Commit b19fa1f, entitled "net: Delete NETDEVICES_MULTIQUEUE kconfig
+option" breaks p54pci and p54usb.
 
+Additionally, the old logic always tx'ed cts frames (if enabled)
+with a short preamble when [rate > 3]. (i.e. with any 802.11g rate).
+Of course this isn't that bad, but it's still wrong!
 
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: <stable@kernel.org>         [2.6.25.x, 2.6.26.x]
+---
+
+Larry
