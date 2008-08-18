@@ -1,87 +1,240 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48390 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757005AbYHEM7y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 08:59:54 -0400
-Subject: Re: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <1217940634.3603.42.camel@johannes.berg> (sfid-20080805_145128_598896_D6AEFF76)
-References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
-	 <1217700664-20792-9-git-send-email-hmh@hmh.eng.br>
-	 <1217703723.8621.50.camel@johannes.berg>
-	 <20080802192704.GB24253@khazad-dum.debian.net>
-	 <1217864565.3139.17.camel@localhost.localdomain>
-	 <20080804223052.GG24927@khazad-dum.debian.net>
-	 <1217890611.17793.17.camel@localhost.localdomain>
-	 <20080804233525.GI24927@khazad-dum.debian.net>
-	 <1217927541.3603.32.camel@johannes.berg>
-	 <20080805124814.GA32675@khazad-dum.debian.net>
-	 <1217940634.3603.42.camel@johannes.berg>
-	 (sfid-20080805_145128_598896_D6AEFF76)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nTo6sSN0QU7RpGtENk3z"
-Date: Tue, 05 Aug 2008 14:59:08 +0200
-Message-Id: <1217941148.3603.46.camel@johannes.berg> (sfid-20080805_145957_649049_058E265B)
-Mime-Version: 1.0
+Received: from hostap.isc.org ([149.20.54.63]:41235 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763760AbYHRTLu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Aug 2008 15:11:50 -0400
+Date: Mon, 18 Aug 2008 22:10:36 +0300
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211/cfg80211: Add vif configuration options
+Message-ID: <20080818191036.GC4809@jm.kir.nu> (sfid-20080818_211219_046656_71C29905)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This change adds a new cfg80211 command, NL80211_CMD_SET_VIF, to allow
+vif parameters to be changed from user space (e.g., wpa_supplicant).
 
---=-nTo6sSN0QU7RpGtENk3z
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-On Tue, 2008-08-05 at 14:50 +0200, Johannes Berg wrote:
-> On Tue, 2008-08-05 at 09:48 -0300, Henrique de Moraes Holschuh wrote:
->=20
-> > Maybe on net/wireless, but I am really not going to trust that one for,
-> > e.g., serial and USB drivers (USB being a bus that is often not shut do=
-wn
-> > during suspend because there are USB wake devices), unless you clearly =
-state
-> > you DID review them all, and which ones.
->=20
-> Look, this is _clearly_ the wrong thing to do, so unless you want your
-> patches blocked over it, just rip it out.
 
-You can of course keep the current _wrong_ behaviour of blocking the
-radio when suspending, but instead of adding extra API for the
-wake-on-wlan case you should work on fixing that.
+Index: wireless-testing/include/net/cfg80211.h
+===================================================================
+--- wireless-testing.orig/include/net/cfg80211.h
++++ wireless-testing/include/net/cfg80211.h
+@@ -286,6 +286,21 @@ struct bss_parameters {
+ 	int use_short_slot_time;
+ };
+ 
++/**
++ * struct vif_parameters - Virtual interface parameters
++ *
++ * Used to change virtual interface parameters.
++ *
++ * @drop_unencrypted: Whether to drop unencrypted frames
++ *	(0 = no, 1 = yes, -1 = do not change)
++ * @userspace_mlme: Whether to use userspace MLME
++ *	(0 = no, 1 = yes, -1 = do not change)
++ */
++struct vif_parameters {
++	int drop_unencrypted;
++	int userspace_mlme;
++};
++
+ /* from net/wireless.h */
+ struct wiphy;
+ 
+@@ -337,6 +352,8 @@ struct wiphy;
+  * @set_mesh_cfg: set mesh parameters (by now, just mesh id)
+  *
+  * @change_bss: Modify parameters for a given BSS.
++ *
++ * @change_vif: Modify parameters for a given virtual interface.
+  */
+ struct cfg80211_ops {
+ 	int	(*add_virtual_intf)(struct wiphy *wiphy, char *name,
+@@ -392,6 +409,9 @@ struct cfg80211_ops {
+ 
+ 	int	(*change_bss)(struct wiphy *wiphy, struct net_device *dev,
+ 			      struct bss_parameters *params);
++
++	int	(*change_vif)(struct wiphy *wiphy, struct net_device *dev,
++			      struct vif_parameters *params);
+ };
+ 
+ #endif /* __NET_CFG80211_H */
+Index: wireless-testing/net/mac80211/cfg.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/cfg.c
++++ wireless-testing/net/mac80211/cfg.c
+@@ -1041,6 +1041,33 @@ static int ieee80211_change_bss(struct w
+ 	return 0;
+ }
+ 
++static int ieee80211_change_vif(struct wiphy *wiphy,
++				struct net_device *dev,
++				struct vif_parameters *params)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++	struct ieee80211_sub_if_data *sdata;
++
++	if (dev == local->mdev)
++		return -EOPNOTSUPP;
++
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++
++	if (params->drop_unencrypted >= 0)
++		sdata->drop_unencrypted = params->drop_unencrypted;
++	if (params->userspace_mlme == 0) {
++		sdata->flags &= ~IEEE80211_SDATA_USERSPACE_MLME;
++		if (sdata->vif.type == IEEE80211_IF_TYPE_STA)
++			netif_carrier_off(dev);
++	} else if (params->userspace_mlme >= 0) {
++		sdata->flags |= IEEE80211_SDATA_USERSPACE_MLME;
++		if (sdata->vif.type == IEEE80211_IF_TYPE_STA)
++			netif_carrier_on(dev);
++	}
++
++	return 0;
++}
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -1065,4 +1092,5 @@ struct cfg80211_ops mac80211_config_ops 
+ 	.dump_mpath = ieee80211_dump_mpath,
+ #endif
+ 	.change_bss = ieee80211_change_bss,
++	.change_vif = ieee80211_change_vif,
+ };
+Index: wireless-testing/include/linux/nl80211.h
+===================================================================
+--- wireless-testing.orig/include/linux/nl80211.h
++++ wireless-testing/include/linux/nl80211.h
+@@ -91,6 +91,8 @@
+  *	by %NL80211_ATTR_IFINDEX.
+  * @NL80211_CMD_SET_BSS: Set BSS attributes for BSS identified by
+  *	%NL80211_ATTR_IFINDEX.
++ * @NL80211_CMD_SET_VIF: Set virtual interface attributes for vif identified by
++ *	%NL80211_ATTR_IFINDEX.
+  *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+@@ -131,6 +133,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_SET_BSS,
+ 
++	NL80211_CMD_SET_VIF,
++
+ 	/* add commands here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -143,6 +147,7 @@ enum nl80211_commands {
+  * here
+  */
+ #define NL80211_CMD_SET_BSS NL80211_CMD_SET_BSS
++#define NL80211_CMD_SET_VIF NL80211_CMD_SET_VIF
+ 
+ /**
+  * enum nl80211_attrs - nl80211 netlink attributes
+@@ -207,6 +212,11 @@ enum nl80211_commands {
+  * @NL80211_ATTR_BSS_SHORT_SLOT_TIME: whether short slot time enabled
+  *	(u8, 0 or 1)
+  *
++ * @NL80211_ATTR_VIF_DROP_UNENCRYPTED: whether unencrypted frames will be
++ *	dropped (u8, 0 or 1)
++ * @NL80211_ATTR_VIF_USERSPACE_MLME: whether userspace MLME is used
++ *	(u8, 0 or 1)
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -254,6 +264,9 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_BSS_SHORT_PREAMBLE,
+ 	NL80211_ATTR_BSS_SHORT_SLOT_TIME,
+ 
++	NL80211_ATTR_VIF_DROP_UNENCRYPTED,
++	NL80211_ATTR_VIF_USERSPACE_MLME,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+Index: wireless-testing/net/wireless/nl80211.c
+===================================================================
+--- wireless-testing.orig/net/wireless/nl80211.c
++++ wireless-testing/net/wireless/nl80211.c
+@@ -91,6 +91,9 @@ static struct nla_policy nl80211_policy[
+ 	[NL80211_ATTR_BSS_CTS_PROT] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_BSS_SHORT_PREAMBLE] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_BSS_SHORT_SLOT_TIME] = { .type = NLA_U8 },
++
++	[NL80211_ATTR_VIF_DROP_UNENCRYPTED] = { .type = NLA_U8 },
++	[NL80211_ATTR_VIF_USERSPACE_MLME] = { .type = NLA_U8 },
+ };
+ 
+ /* message building helper */
+@@ -1571,6 +1574,44 @@ static int nl80211_set_bss(struct sk_buf
+ 	return err;
+ }
+ 
++static int nl80211_set_vif(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *drv;
++	int err;
++	struct net_device *dev;
++	struct vif_parameters params;
++
++	memset(&params, 0, sizeof(params));
++	/* default to not changing parameters */
++	params.drop_unencrypted = -1;
++	params.userspace_mlme = -1;
++
++	if (info->attrs[NL80211_ATTR_VIF_DROP_UNENCRYPTED])
++		params.drop_unencrypted =
++		    nla_get_u8(info->attrs[NL80211_ATTR_VIF_DROP_UNENCRYPTED]);
++	if (info->attrs[NL80211_ATTR_VIF_USERSPACE_MLME])
++		params.userspace_mlme =
++		    nla_get_u8(info->attrs[NL80211_ATTR_VIF_USERSPACE_MLME]);
++
++	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
++	if (err)
++		return err;
++
++	if (!drv->ops->change_vif) {
++		err = -EOPNOTSUPP;
++		goto out;
++	}
++
++	rtnl_lock();
++	err = drv->ops->change_vif(&drv->wiphy, dev, &params);
++	rtnl_unlock();
++
++ out:
++	cfg80211_put_dev(drv);
++	dev_put(dev);
++	return err;
++}
++
+ static struct genl_ops nl80211_ops[] = {
+ 	{
+ 		.cmd = NL80211_CMD_GET_WIPHY,
+@@ -1708,6 +1749,12 @@ static struct genl_ops nl80211_ops[] = {
+ 		.policy = nl80211_policy,
+ 		.flags = GENL_ADMIN_PERM,
+ 	},
++	{
++		.cmd = NL80211_CMD_SET_VIF,
++		.doit = nl80211_set_vif,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++	},
+ };
+ 
+ /* multicast groups */
 
-If you think that you then need to review all drivers, so be it. I don't
-think it makes sense because keeping the device alive requires
-additional code nobody in their right mind would write unless they knew
-they needed it, like libertas.
 
-As it stands, rfkill also does the wrong thing for rfkill. You don't
-have to fix it, of course, but don't add workarounds.
-
-johannes
-
---=-nTo6sSN0QU7RpGtENk3z
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJImE6ZAAoJEKVg1VMiehFY1+sQAJDUt9TfEXMHLfg8CifLfpWR
-2Q0SDmDW1/sHyib4nmdsPtZ7U1wMXJ9Nx/G4RThLJA8jjU7es1CSeU8+MF/r7bys
-gvIUjDavC12TWFzwv6l+3Ftjk3vKXpf0Y3mTSqmPwlSEgBDbde64yyURqpy8UfBU
-rocnNVun+dZwzyGb0YrVedmM/GS5gjXFMcDFyrz02kQREtqNNut0s4++KWOA9ySx
-uDVm2v185gh1VUorjGzefSNiLCJak6wPgsTedD8T5jEQ/Xum/ZDl9ecOcUPiZc3j
-gI4/+6wCJ5BPN7h1hsvrj4jMCqhHT5QW00esUSCLftyRByilLFSdEEhEKoaqfeed
-H2f8aAcIr2TGaQIwh9rr17j7tl9LrLFjYElgWSxPea6jMj3i55YGQQRGEKv+LJc2
-JIGeJ2ma16T5j5gm62UjQkVBt/xXzN0JipdDReTqIwMB2EdIyjHRibqx1iWvFGgv
-PLQOKkg1uyxbskwSOzF3hBJUxv3dQ7E5YAfUYUSItbZIKFuT0+WV0cS/Om6ZT8Xo
-KQT0fjDdC4vCLfdwHCtqP1/b+DD8E0WgrAJsF/XIjtLWaabVvZ0XR3Mt3gopS91t
-iN+R2hKCsLDiopvJQM1Fq8JZUGVHf9PDXsS7/trj2duj7hgjWD5JywmsbJGE93JK
-68jaOe4CRmVRWqeFS1Qw
-=w3o+
------END PGP SIGNATURE-----
-
---=-nTo6sSN0QU7RpGtENk3z--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
