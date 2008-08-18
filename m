@@ -1,51 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:21691 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751812AbYHFVIz (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:36322 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750829AbYHRHAi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2008 17:08:55 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so63525nfc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Aug 2008 14:08:53 -0700 (PDT)
-Message-ID: <489A12E2.8060909@gmail.com> (sfid-20080806_230859_543138_25FA6071)
-Date: Wed, 06 Aug 2008 22:08:50 +0100
+	Mon, 18 Aug 2008 03:00:38 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1570285fgg.17
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Aug 2008 00:00:37 -0700 (PDT)
+Message-ID: <48A91E12.1060901@gmail.com> (sfid-20080818_090049_528167_37BDA130)
+Date: Mon, 18 Aug 2008 09:00:34 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net,
-	Jean Tourrilhes <jt@hpl.hp.com>
-Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere
- fw
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>	 <1217825304.10989.20.camel@dv>	 <1217864060.3139.10.camel@localhost.localdomain>	 <1217970944.2908.11.camel@dv>	 <1217973349.30531.1.camel@localhost.localdomain>	 <1217976491.2908.36.camel@dv>	 <1218028414.16977.5.camel@localhost.localdomain>	 <4899FB91.8070501@gmail.com> <1218056165.12240.0.camel@localhost.localdomain>
-In-Reply-To: <1218056165.12240.0.camel@localhost.localdomain>
+To: David Miller <davem@davemloft.net>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>
+Subject: ath5k text [Was: pull request: wireless-2.6 2008-08-17]
+References: <20080817185605.GC30679@tuxdriver.com> <20080817.151251.204370966.davem@davemloft.net>
+In-Reply-To: <20080817.151251.204370966.davem@davemloft.net>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> On Wed, 2008-08-06 at 20:29 +0100, Dave wrote:
->> Dan Williams wrote:
->>> On Tue, 2008-08-05 at 18:48 -0400, Pavel Roskin wrote:
->>>> The userspace is welcome to keep a pool of all APs found by any scans,
->>>> but I don't think drivers should do it.
->>> Drivers need to keep a reasonably complete list of APs internally for
->>> association anyway.  You don't want to have to do a full scan just to
->>> associate if you have results from 10 seconds ago that are still valid.
+On 08/18/2008 12:12 AM, David Miller wrote:
+> Their commit messages reference SHA IDs but do not give a commit
+> header line text reference as well.
+> 
+>       ath5k: Don't fiddle with MSI on suspend/resume.
 
->> This is not an issue for orinoco cards, as the firmware selects
->> the AP to use independently of any driver scanning. The requirement to
->> use ap_scan=2 means that wpa_supplicant doesn't need to look at the scan
->> results either (except maybe to verify the configuration matches).
+John, this is it (even if I don't understand the purpose):
 
-> Well, since the driver supports SSID scanning, we can use ap_scan=1
-> anyway.  ap_scan=2 is actually pretty evil since it depends on WEXT
-> ordering and whatnot.
+ath5k: Don't fiddle with MSI on suspend/resume.
 
-ap_scan=1 requires the use of SIOCSIWWAP (to set desired BSSID), which
-the Agere firmware doesn't support. The firmware only supports setting a
-desired SSID (via SIOCSIWESSID), so Agere based orinoco is stuck with
-ap_scan=2 :(
+Commit 256b152b005e319f985f50f2a910a75ba0def74f (ath5k: don't enable
+MSI, we cannot handle it yet) has removed msi support, but overlooked
+the suspend/resume code. This patch completes msi removal.
 
-Symbol and Intersil don't have this problem.
-
-Dave.
+I don't consider this patch copyrightable, and thus put it into the
+public domain. The result is of course a base.c file dual-licensed under
+3-clause-BSD and GPL.
