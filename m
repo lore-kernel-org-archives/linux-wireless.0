@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:31575 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.184]:50160 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756008AbYHCVLO convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1751943AbYHRVMC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 17:11:14 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so631393nfc.21
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2008 14:11:12 -0700 (PDT)
-To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: [PATCH] rt2x00: Disable link tuning in rt2500usb
-Date: Sun, 3 Aug 2008 23:34:50 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <200808031657.27710.IvDoorn@gmail.com> <69e28c910808031113u2f5ff20dq672e8a801224e35c@mail.gmail.com>
-In-Reply-To: <69e28c910808031113u2f5ff20dq672e8a801224e35c@mail.gmail.com>
+	Mon, 18 Aug 2008 17:12:02 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so1268491nfc.21
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Aug 2008 14:12:01 -0700 (PDT)
+To: Felipe Balbi <me@felipebalbi.com>,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH] net: rfkill: add missing line break
+Date: Mon, 18 Aug 2008 23:11:55 +0200
+Cc: linux-wireless@vger.kernel.org,
+	Felipe Balbi <felipe.balbi@nokia.com>
+References: <1219089413-7884-1-git-send-email-me@felipebalbi.com>
+In-Reply-To: <1219089413-7884-1-git-send-email-me@felipebalbi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200808032334.50251.IvDoorn@gmail.com> (sfid-20080803_231118_544665_A0B5B5F6)
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200808182311.56070.IvDoorn@gmail.com> (sfid-20080818_231208_274400_7C7563A1)
 From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 03 August 2008, Stefanik G=E1bor wrote:
-> On Sun, Aug 3, 2008 at 4:57 PM, Ivo van Doorn <ivdoorn@gmail.com> wro=
-te:
-> > + * in TX capabilities only untill association kicks in. Immediatel=
-y
->=20
-> typo - until
->=20
-> > + * after the successfull association all TX frames will be kept in=
- the
->=20
-> typo - successful
+On Monday 18 August 2008, Felipe Balbi wrote:
+> From: Felipe Balbi <felipe.balbi@nokia.com>
+> 
+> Trivial patch adding a missing line break on
+> rfkill_claim_show().
+> 
+> Signed-off-by: Felipe Balbi <felipe.balbi@nokia.com>
 
-Thanks, v2 coming up. :)
+Thanks.
 
-Ivo
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Acked-by: Ivo van Doorn <IvDoorn@gmail.co>
+
+> ---
+>  net/rfkill/rfkill.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+> index d2d4565..3bc78b0 100644
+> --- a/net/rfkill/rfkill.c
+> +++ b/net/rfkill/rfkill.c
+> @@ -372,7 +372,7 @@ static ssize_t rfkill_claim_show(struct device *dev,
+>  {
+>  	struct rfkill *rfkill = to_rfkill(dev);
+>  
+> -	return sprintf(buf, "%d", rfkill->user_claim);
+> +	return sprintf(buf, "%d\n", rfkill->user_claim);
+>  }
+>  
+>  static ssize_t rfkill_claim_store(struct device *dev,
+
+
