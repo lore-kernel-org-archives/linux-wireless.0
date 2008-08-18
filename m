@@ -1,32 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:43471 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751112AbYH1J3H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 05:29:07 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 00/11] iwlwifi driver fixes for 2.6.27
-Date: Thu, 28 Aug 2008 17:24:59 +0800
-Message-Id: <1219915510-3647-1-git-send-email-yi.zhu@intel.com> (sfid-20080828_112911_951937_5D111D19)
+Received: from mail.tdb.com ([216.99.214.4]:41941 "HELO mail.tdb.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750910AbYHRHcd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Aug 2008 03:32:33 -0400
+To: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: Re: [ipw3945-devel] Few questions about the wireless stack
+References: <48A07709.80306@gmail.com> <48A206A0.6020709@gmail.com>
+	<48A224E3.90307@telenet.be>
+From: Russell Senior <seniorr@aracnet.com>
+Date: 18 Aug 2008 00:32:30 -0700
+In-Reply-To: <48A224E3.90307@telenet.be>
+Message-ID: <861w0mbwxd.fsf@coulee.tdb.com> (sfid-20080818_093251_881444_B8CBF154)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+>>>>> "Ian" == Ian Schram <ischram@telenet.be> writes:
 
-Here are the iwlwifi patches vital for 2.6.27. Please apply.
+Ian> Last i can remember about the subject was Tomas some months ago.
 
-Thanks,
--yi
+Ian> iirc the statement was something similar to: - 3945 is a mini
+Ian> PCIe card, and hence not deployed in embedded? devices, therefore
+Ian> master mode support isn't planned for 3945 - patches are welcome
 
-[PATCH 01/11] iwlwifi: W/A for the TSF correction in IBSS
-[PATCH 02/11] iwlwifi: use mac80211 band and channel settings
-[PATCH 03/11] iwlwifi: fix hidden ssid discovery in passive channels
-[PATCH 04/11] iwlwifi: remove false rxon if rx chain changes
-[PATCH 05/11] iwlwifi: workaround interrupt handling no some platforms
-[PATCH 06/11] iwlwifi: fix apm_stop
-[PATCH 07/11] iwlwifi: generic init calibrations framework
-[PATCH 08/11] iwlwifi: call apm stop on exit
-[PATCH 09/11] iwlwifi: fix station mimo power save values
-[PATCH 10/11] iwlwifi: fix rx_chain computation
-[PATCH 11/11] iwlwifi: fix 64bit platform firmware loading
+FWIW, the PC Engines Alix.6* boards has or will include a miniPCI
+express slot.
+
+  http://pcengines.ch/alix.htm
+
+As someone building stuff from these and similar boards, I appreciate
+having options.
+
+
+-- 
+Russell Senior         ``I have nine fingers; you have ten.''
+seniorr@aracnet.com
