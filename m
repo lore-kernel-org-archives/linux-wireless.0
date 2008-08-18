@@ -1,534 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.neti.ee ([194.126.126.37]:52080 "EHLO smtp-out.neti.ee"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752083AbYHPIgj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Aug 2008 04:36:39 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by MXR-5.estpak.ee (Postfix) with ESMTP id 697E11DF637
-	for <linux-wireless@vger.kernel.org>; Sat, 16 Aug 2008 11:36:36 +0300 (EEST)
-Received: from smtp-out.neti.ee ([127.0.0.1])
-	by localhost (MXR-5.estpak.ee [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 3rXHUw1IP2eA for <linux-wireless@vger.kernel.org>;
-	Sat, 16 Aug 2008 11:36:34 +0300 (EEST)
-Received: from Relayhost3.neti.ee (relayhost3.estpak.ee [88.196.174.169])
-	by MXR-5.estpak.ee (Postfix) with ESMTP id 61AEE1DF71B
-	for <linux-wireless@vger.kernel.org>; Sat, 16 Aug 2008 11:36:34 +0300 (EEST)
-Subject: Bug
-From: Artjom <engine80@bk.ru>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Sat, 16 Aug 2008 11:36:33 +0300
-Message-Id: <1218875793.4831.5.camel@localhost.localdomain> (sfid-20080816_103645_526010_129C2DA8)
-Mime-Version: 1.0
+Received: from smtp.wellnetcz.com ([212.24.148.102]:43697 "EHLO
+	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760635AbYHRTqE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Aug 2008 15:46:04 -0400
+From: Jiri Slaby <jirislaby@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: [PATCH 2/2] Ath5k: fix bintval setup
+Date: Mon, 18 Aug 2008 21:45:28 +0200
+Message-Id: <1219088728-10363-2-git-send-email-jirislaby@gmail.com> (sfid-20080818_214612_347239_D5C6F7E9)
+In-Reply-To: <1219088728-10363-1-git-send-email-jirislaby@gmail.com>
+References: <1219088728-10363-1-git-send-email-jirislaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Unable to load compat-wireless-2.6.tar.bz2 drivers in fedora 8.
-Kernel is 2.6.26.2-3.fc8
+bintval is set to the initial value at .config_interface which is too
+late, since it overwrites previously set value from .config. Move the
+initialization to the .add_interface.
 
-                                                  Best Regards.
-                                                        Artjom.
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+---
+ drivers/net/wireless/ath5k/base.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
-Here is the output of dmesg -c:
-[root@localhost compat-wireless-2008-08-06]# dmesg -c
-
-mac80211: Unknown symbol wiphy_new
-mac80211: Unknown symbol wiphy_unregister
-mac80211: Unknown symbol ieee80211_radiotap_iterator_init
-mac80211: Unknown symbol __ieee80211_get_channel
-mac80211: Unknown symbol ieee80211_radiotap_iterator_next
-mac80211: Unknown symbol ieee80211_channel_to_frequency
-mac80211: Unknown symbol ieee80211_frequency_to_channel
-mac80211: Unknown symbol wiphy_free
-rtl8180: Unknown symbol ieee80211_free_hw
-rtl8180: Unknown symbol ieee80211_alloc_hw
-rtl8180: Unknown symbol ieee80211_register_hw
-rtl8180: Unknown symbol ieee80211_wake_queue
-rtl8180: Unknown symbol ieee80211_tx_status_irqsafe
-rtl8180: Unknown symbol ieee80211_stop_queue
-rtl8180: Unknown symbol ieee80211_unregister_hw
-rtl8180: Unknown symbol ieee80211_frequency_to_channel
-rtl8180: Unknown symbol ieee80211_rx_irqsafe
-rtl8180: Unknown symbol ieee80211_rts_duration
-cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
-mac80211: Unknown symbol wiphy_register
-mac80211: Unknown symbol wiphy_new
-mac80211: Unknown symbol wiphy_unregister
-mac80211: Unknown symbol ieee80211_radiotap_iterator_init
-mac80211: Unknown symbol __ieee80211_get_channel
-mac80211: Unknown symbol ieee80211_radiotap_iterator_next
-mac80211: Unknown symbol ieee80211_channel_to_frequency
-mac80211: Unknown symbol ieee80211_frequency_to_channel
-mac80211: Unknown symbol wiphy_free
-rtl8187: Unknown symbol ieee80211_free_hw
-rtl8187: Unknown symbol ieee80211_alloc_hw
-rtl8187: Unknown symbol ieee80211_register_hw
-rtl8187: Unknown symbol ieee80211_generic_frame_duration
-rtl8187: Unknown symbol ieee80211_tx_status_irqsafe
-rtl8187: Unknown symbol ieee80211_unregister_hw
-rtl8187: Unknown symbol ieee80211_frequency_to_channel
-rtl8187: Unknown symbol ieee80211_rx_irqsafe
-rtl8187: Unknown symbol ieee80211_rts_duration
-cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
-mac80211: Unknown symbol wiphy_register
-mac80211: Unknown symbol wiphy_new
-mac80211: Unknown symbol wiphy_unregister
-mac80211: Unknown symbol ieee80211_radiotap_iterator_init
-mac80211: Unknown symbol __ieee80211_get_channel
-mac80211: Unknown symbol ieee80211_radiotap_iterator_next
-mac80211: Unknown symbol ieee80211_channel_to_frequency
-mac80211: Unknown symbol ieee80211_frequency_to_channel
-mac80211: Unknown symbol wiphy_free
-rtl8180: Unknown symbol ieee80211_free_hw
-rtl8180: Unknown symbol ieee80211_alloc_hw
-rtl8180: Unknown symbol ieee80211_register_hw
-rtl8180: Unknown symbol ieee80211_wake_queue
-rtl8180: Unknown symbol ieee80211_tx_status_irqsafe
-rtl8180: Unknown symbol ieee80211_stop_queue
-rtl8180: Unknown symbol ieee80211_unregister_hw
-rtl8180: Unknown symbol ieee80211_frequency_to_channel
-rtl8180: Unknown symbol ieee80211_rx_irqsafe
-rtl8180: Unknown symbol ieee80211_rts_duration
-cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
-mac80211: Unknown symbol wiphy_register
-mac80211: Unknown symbol wiphy_new
-mac80211: Unknown symbol wiphy_unregister
-mac80211: Unknown symbol ieee80211_radiotap_iterator_init
-mac80211: Unknown symbol __ieee80211_get_channel
-mac80211: Unknown symbol ieee80211_radiotap_iterator_next
-mac80211: Unknown symbol ieee80211_channel_to_frequency
-mac80211: Unknown symbol ieee80211_frequency_to_channel
-mac80211: Unknown symbol wiphy_free
-rtl8187: Unknown symbol ieee80211_free_hw
-rtl8187: Unknown symbol ieee80211_alloc_hw
-rtl8187: Unknown symbol ieee80211_register_hw
-rtl8187: Unknown symbol ieee80211_generic_frame_duration
-rtl8187: Unknown symbol ieee80211_tx_status_irqsafe
-rtl8187: Unknown symbol ieee80211_unregister_hw
-rtl8187: Unknown symbol ieee80211_frequency_to_channel
-rtl8187: Unknown symbol ieee80211_rx_irqsafe
-rtl8187: Unknown symbol ieee80211_rts_duration
-cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
-mac80211: Unknown symbol wiphy_register
-mac80211: Unknown symbol wiphy_new
-mac80211: Unknown symbol wiphy_unregister
-mac80211: Unknown symbol ieee80211_radiotap_iterator_init
-mac80211: Unknown symbol __ieee80211_get_channel
-mac80211: Unknown symbol ieee80211_radiotap_iterator_next
-mac80211: Unknown symbol ieee80211_channel_to_frequency
-mac80211: Unknown symbol ieee80211_frequency_to_channel
-mac80211: Unknown symbol wiphy_free
-rt2x00lib: Unknown symbol ieee80211_register_hw
-rt2x00lib: Unknown symbol ieee80211_get_hdrlen_from_skb
-rt2x00lib: Unknown symbol ieee80211_wake_queue
-rt2x00lib: Unknown symbol ieee80211_tx_status_irqsafe
-rt2x00lib: Unknown symbol ieee80211_ctstoself_get
-rt2x00lib: Unknown symbol ieee80211_wake_queues
-rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces
-rt2x00lib: Unknown symbol ieee80211_stop_queue
-rt2x00lib: Unknown symbol ieee80211_stop_queues
-rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces_atomic
-rt2x00lib: Unknown symbol ieee80211_channel_to_frequency
-rt2x00lib: Unknown symbol ieee80211_unregister_hw
-rt2x00lib: Unknown symbol ieee80211_rts_get
-rt2x00lib: Unknown symbol ieee80211_beacon_get
-rt2x00lib: Unknown symbol ieee80211_rx_irqsafe
-rt2x00pci: Unknown symbol rt2x00lib_suspend
-rt2x00pci: Unknown symbol rt2x00lib_probe_dev
-rt2x00pci: Unknown symbol ieee80211_free_hw
-rt2x00pci: Unknown symbol ieee80211_alloc_hw
-rt2x00pci: Unknown symbol rt2x00lib_rxdone
-rt2x00pci: Unknown symbol rt2x00queue_get_entry
-rt2x00pci: Unknown symbol rt2x00lib_remove_dev
-rt2x00pci: Unknown symbol rt2x00lib_resume
-rt2400pci: Unknown symbol rt2x00mac_add_interface
-rt2400pci: Unknown symbol rt2x00queue_map_txskb
-rt2400pci: Unknown symbol rt2x00mac_get_stats
-rt2400pci: Unknown symbol rt2x00pci_initialize
-rt2400pci: Unknown symbol rt2x00pci_uninitialize
-rt2400pci: Unknown symbol rt2x00queue_get_entry
-rt2400pci: Unknown symbol rt2x00pci_suspend
-rt2400pci: Unknown symbol rt2x00mac_config_interface
-rt2400pci: Unknown symbol rt2x00pci_remove
-rt2400pci: Unknown symbol rt2x00mac_remove_interface
-rt2400pci: Unknown symbol rt2x00lib_txdone
-rt2400pci: Unknown symbol rt2x00mac_config
-rt2400pci: Unknown symbol rt2x00queue_get_queue
-rt2400pci: Unknown symbol rt2x00mac_conf_tx
-rt2400pci: Unknown symbol rt2x00mac_start
-rt2400pci: Unknown symbol rt2x00mac_stop
-rt2400pci: Unknown symbol rt2x00mac_configure_filter
-rt2400pci: Unknown symbol rt2x00mac_tx
-rt2400pci: Unknown symbol rt2x00pci_resume
-rt2400pci: Unknown symbol rt2x00pci_probe
-rt2400pci: Unknown symbol rt2x00mac_get_tx_stats
-rt2400pci: Unknown symbol rt2x00pci_rxdone
-rt2400pci: Unknown symbol rt2x00lib_beacondone
-rt2400pci: Unknown symbol rt2x00mac_bss_info_changed
-rt2400pci: Unknown symbol rt2x00pci_write_tx_data
-cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
-mac80211: Unknown symbol wiphy_register
-mac80211: Unknown symbol wiphy_new
-mac80211: Unknown symbol wiphy_unregister
-mac80211: Unknown symbol ieee80211_radiotap_iterator_init
-mac80211: Unknown symbol __ieee80211_get_channel
-mac80211: Unknown symbol ieee80211_radiotap_iterator_next
-mac80211: Unknown symbol ieee80211_channel_to_frequency
-mac80211: Unknown symbol ieee80211_frequency_to_channel
-mac80211: Unknown symbol wiphy_free
-rt2x00lib: Unknown symbol ieee80211_register_hw
-rt2x00lib: Unknown symbol ieee80211_get_hdrlen_from_skb
-rt2x00lib: Unknown symbol ieee80211_wake_queue
-rt2x00lib: Unknown symbol ieee80211_tx_status_irqsafe
-rt2x00lib: Unknown symbol ieee80211_ctstoself_get
-rt2x00lib: Unknown symbol ieee80211_wake_queues
-rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces
-rt2x00lib: Unknown symbol ieee80211_stop_queue
-rt2x00lib: Unknown symbol ieee80211_stop_queues
-rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces_atomic
-rt2x00lib: Unknown symbol ieee80211_channel_to_frequency
-rt2x00lib: Unknown symbol ieee80211_unregister_hw
-rt2x00lib: Unknown symbol ieee80211_rts_get
-rt2x00lib: Unknown symbol ieee80211_beacon_get
-rt2x00lib: Unknown symbol ieee80211_rx_irqsafe
-rt2x00pci: Unknown symbol rt2x00lib_suspend
-rt2x00pci: Unknown symbol rt2x00lib_probe_dev
-rt2x00pci: Unknown symbol ieee80211_free_hw
-rt2x00pci: Unknown symbol ieee80211_alloc_hw
-rt2x00pci: Unknown symbol rt2x00lib_rxdone
-rt2x00pci: Unknown symbol rt2x00queue_get_entry
-rt2x00pci: Unknown symbol rt2x00lib_remove_dev
-rt2x00pci: Unknown symbol rt2x00lib_resume
-rt2500pci: Unknown symbol rt2x00mac_add_interface
-rt2500pci: Unknown symbol rt2x00queue_map_txskb
-rt2500pci: Unknown symbol rt2x00mac_get_stats
-rt2500pci: Unknown symbol rt2x00pci_initialize
-rt2500pci: Unknown symbol rt2x00pci_uninitialize
-rt2500pci: Unknown symbol rt2x00queue_get_entry
-rt2500pci: Unknown symbol rt2x00pci_suspend
-rt2500pci: Unknown symbol rt2x00mac_config_interface
-rt2500pci: Unknown symbol rt2x00pci_remove
-rt2500pci: Unknown symbol rt2x00mac_remove_interface
-rt2500pci: Unknown symbol rt2x00lib_txdone
-rt2500pci: Unknown symbol rt2x00mac_config
-rt2500pci: Unknown symbol rt2x00queue_get_queue
-rt2500pci: Unknown symbol rt2x00mac_conf_tx
-rt2500pci: Unknown symbol rt2x00mac_start
-rt2500pci: Unknown symbol rt2x00mac_stop
-rt2500pci: Unknown symbol rt2x00mac_configure_filter
-rt2500pci: Unknown symbol rt2x00mac_tx
-rt2500pci: Unknown symbol rt2x00pci_resume
-rt2500pci: Unknown symbol rt2x00pci_probe
-rt2500pci: Unknown symbol rt2x00mac_get_tx_stats
-rt2500pci: Unknown symbol rt2x00pci_rxdone
-rt2500pci: Unknown symbol rt2x00lib_beacondone
-rt2500pci: Unknown symbol rt2x00mac_bss_info_changed
-rt2500pci: Unknown symbol rt2x00pci_write_tx_data
-cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
-mac80211: Unknown symbol wiphy_register
-mac80211: Unknown symbol wiphy_new
-mac80211: Unknown symbol wiphy_unregister
-mac80211: Unknown symbol ieee80211_radiotap_iterator_init
-mac80211: Unknown symbol __ieee80211_get_channel
-mac80211: Unknown symbol ieee80211_radiotap_iterator_next
-mac80211: Unknown symbol ieee80211_channel_to_frequency
-mac80211: Unknown symbol ieee80211_frequency_to_channel
-mac80211: Unknown symbol wiphy_free
-rt2x00lib: Unknown symbol ieee80211_register_hw
-rt2x00lib: Unknown symbol ieee80211_get_hdrlen_from_skb
-rt2x00lib: Unknown symbol ieee80211_wake_queue
-rt2x00lib: Unknown symbol ieee80211_tx_status_irqsafe
-rt2x00lib: Unknown symbol ieee80211_ctstoself_get
-rt2x00lib: Unknown symbol ieee80211_wake_queues
-rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces
-rt2x00lib: Unknown symbol ieee80211_stop_queue
-rt2x00lib: Unknown symbol ieee80211_stop_queues
-rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces_atomic
-rt2x00lib: Unknown symbol ieee80211_channel_to_frequency
-rt2x00lib: Unknown symbol ieee80211_unregister_hw
-rt2x00lib: Unknown symbol ieee80211_rts_get
-rt2x00lib: Unknown symbol ieee80211_beacon_get
-rt2x00lib: Unknown symbol ieee80211_rx_irqsafe
-rt2x00pci: Unknown symbol rt2x00lib_suspend
-rt2x00pci: Unknown symbol rt2x00lib_probe_dev
-rt2x00pci: Unknown symbol ieee80211_free_hw
-rt2x00pci: Unknown symbol ieee80211_alloc_hw
-rt2x00pci: Unknown symbol rt2x00lib_rxdone
-rt2x00pci: Unknown symbol rt2x00queue_get_entry
-rt2x00pci: Unknown symbol rt2x00lib_remove_dev
-rt2x00pci: Unknown symbol rt2x00lib_resume
-rt61pci: Unknown symbol rt2x00mac_add_interface
-rt61pci: Unknown symbol rt2x00mac_get_stats
-rt61pci: Unknown symbol rt2x00pci_initialize
-rt61pci: Unknown symbol rt2x00pci_uninitialize
-rt61pci: Unknown symbol rt2x00queue_get_entry
-rt61pci: Unknown symbol rt2x00pci_suspend
-rt61pci: Unknown symbol rt2x00mac_config_interface
-rt61pci: Unknown symbol rt2x00pci_remove
-rt61pci: Unknown symbol rt2x00mac_remove_interface
-rt61pci: Unknown symbol rt2x00lib_txdone
-rt61pci: Unknown symbol rt2x00mac_config
-rt61pci: Unknown symbol rt2x00queue_get_queue
-rt61pci: Unknown symbol rt2x00mac_conf_tx
-rt61pci: Unknown symbol rt2x00mac_start
-rt61pci: Unknown symbol rt2x00mac_stop
-rt61pci: Unknown symbol rt2x00mac_configure_filter
-rt61pci: Unknown symbol rt2x00mac_tx
-rt61pci: Unknown symbol rt2x00pci_resume
-rt61pci: Unknown symbol rt2x00pci_probe
-rt61pci: Unknown symbol rt2x00mac_get_tx_stats
-rt61pci: Unknown symbol rt2x00pci_rxdone
-rt61pci: Unknown symbol rt2x00mac_bss_info_changed
-rt61pci: Unknown symbol rt2x00pci_write_tx_data
-cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
-mac80211: Unknown symbol wiphy_register
-mac80211: Unknown symbol wiphy_new
-mac80211: Unknown symbol wiphy_unregister
-mac80211: Unknown symbol ieee80211_radiotap_iterator_init
-mac80211: Unknown symbol __ieee80211_get_channel
-mac80211: Unknown symbol ieee80211_radiotap_iterator_next
-mac80211: Unknown symbol ieee80211_channel_to_frequency
-mac80211: Unknown symbol ieee80211_frequency_to_channel
-mac80211: Unknown symbol wiphy_free
-rt2x00lib: Unknown symbol ieee80211_register_hw
-rt2x00lib: Unknown symbol ieee80211_get_hdrlen_from_skb
-rt2x00lib: Unknown symbol ieee80211_wake_queue
-rt2x00lib: Unknown symbol ieee80211_tx_status_irqsafe
-rt2x00lib: Unknown symbol ieee80211_ctstoself_get
-rt2x00lib: Unknown symbol ieee80211_wake_queues
-rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces
-rt2x00lib: Unknown symbol ieee80211_stop_queue
-rt2x00lib: Unknown symbol ieee80211_stop_queues
-rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces_atomic
-rt2x00lib: Unknown symbol ieee80211_channel_to_frequency
-rt2x00lib: Unknown symbol ieee80211_unregister_hw
-rt2x00lib: Unknown symbol ieee80211_rts_get
-rt2x00lib: Unknown symbol ieee80211_beacon_get
-rt2x00lib: Unknown symbol ieee80211_rx_irqsafe
-rt2x00usb: Unknown symbol rt2x00lib_suspend
-rt2x00usb: Unknown symbol rt2x00lib_probe_dev
-rt2x00usb: Unknown symbol ieee80211_free_hw
-rt2x00usb: Unknown symbol ieee80211_alloc_hw
-rt2x00usb: Unknown symbol rt2x00lib_rxdone
-rt2x00usb: Unknown symbol rt2x00lib_remove_dev
-rt2x00usb: Unknown symbol rt2x00lib_txdone
-rt2x00usb: Unknown symbol rt2x00queue_get_queue
-rt2x00usb: Unknown symbol rt2x00lib_resume
-rt2500usb: Unknown symbol rt2x00mac_add_interface
-rt2500usb: Unknown symbol rt2x00mac_get_stats
-rt2500usb: Unknown symbol rt2x00usb_init_rxentry
-rt2500usb: Unknown symbol rt2x00usb_disable_radio
-rt2500usb: Unknown symbol rt2x00usb_init_txentry
-rt2500usb: Unknown symbol rt2x00usb_vendor_request_buff
-rt2500usb: Unknown symbol rt2x00usb_kick_tx_queue
-rt2500usb: Unknown symbol rt2x00usb_write_tx_data
-rt2500usb: Unknown symbol rt2x00mac_config_interface
-rt2500usb: Unknown symbol rt2x00mac_remove_interface
-rt2500usb: Unknown symbol rt2x00usb_vendor_request
-rt2500usb: Unknown symbol rt2x00usb_probe
-rt2500usb: Unknown symbol rt2x00mac_config
-rt2500usb: Unknown symbol rt2x00usb_suspend
-rt2500usb: Unknown symbol rt2x00mac_conf_tx
-rt2500usb: Unknown symbol rt2x00mac_start
-rt2500usb: Unknown symbol rt2x00mac_stop
-rt2500usb: Unknown symbol rt2x00mac_configure_filter
-rt2500usb: Unknown symbol rt2x00usb_disconnect
-rt2500usb: Unknown symbol rt2x00mac_tx
-rt2500usb: Unknown symbol rt2x00usb_vendor_req_buff_lock
-rt2500usb: Unknown symbol rt2x00mac_get_tx_stats
-rt2500usb: Unknown symbol rt2x00usb_resume
-rt2500usb: Unknown symbol rt2x00usb_uninitialize
-rt2500usb: Unknown symbol rt2x00usb_initialize
-rt2500usb: Unknown symbol rt2x00mac_bss_info_changed
-cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
-mac80211: Unknown symbol wiphy_register
-mac80211: Unknown symbol wiphy_new
-mac80211: Unknown symbol wiphy_unregister
-mac80211: Unknown symbol ieee80211_radiotap_iterator_init
-mac80211: Unknown symbol __ieee80211_get_channel
-mac80211: Unknown symbol ieee80211_radiotap_iterator_next
-mac80211: Unknown symbol ieee80211_channel_to_frequency
-mac80211: Unknown symbol ieee80211_frequency_to_channel
-mac80211: Unknown symbol wiphy_free
-rt2x00lib: Unknown symbol ieee80211_register_hw
-rt2x00lib: Unknown symbol ieee80211_get_hdrlen_from_skb
-rt2x00lib: Unknown symbol ieee80211_wake_queue
-rt2x00lib: Unknown symbol ieee80211_tx_status_irqsafe
-rt2x00lib: Unknown symbol ieee80211_ctstoself_get
-rt2x00lib: Unknown symbol ieee80211_wake_queues
-rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces
-rt2x00lib: Unknown symbol ieee80211_stop_queue
-rt2x00lib: Unknown symbol ieee80211_stop_queues
-rt2x00lib: Unknown symbol ieee80211_iterate_active_interfaces_atomic
-rt2x00lib: Unknown symbol ieee80211_channel_to_frequency
-rt2x00lib: Unknown symbol ieee80211_unregister_hw
-rt2x00lib: Unknown symbol ieee80211_rts_get
-rt2x00lib: Unknown symbol ieee80211_beacon_get
-rt2x00lib: Unknown symbol ieee80211_rx_irqsafe
-rt2x00usb: Unknown symbol rt2x00lib_suspend
-rt2x00usb: Unknown symbol rt2x00lib_probe_dev
-rt2x00usb: Unknown symbol ieee80211_free_hw
-rt2x00usb: Unknown symbol ieee80211_alloc_hw
-rt2x00usb: Unknown symbol rt2x00lib_rxdone
-rt2x00usb: Unknown symbol rt2x00lib_remove_dev
-rt2x00usb: Unknown symbol rt2x00lib_txdone
-rt2x00usb: Unknown symbol rt2x00queue_get_queue
-rt2x00usb: Unknown symbol rt2x00lib_resume
-rt73usb: Unknown symbol rt2x00mac_add_interface
-rt73usb: Unknown symbol rt2x00mac_get_stats
-rt73usb: Unknown symbol rt2x00usb_init_rxentry
-rt73usb: Unknown symbol rt2x00usb_disable_radio
-rt73usb: Unknown symbol rt2x00usb_init_txentry
-rt73usb: Unknown symbol rt2x00usb_vendor_request_buff
-rt73usb: Unknown symbol rt2x00usb_kick_tx_queue
-rt73usb: Unknown symbol rt2x00usb_write_tx_data
-rt73usb: Unknown symbol rt2x00mac_config_interface
-rt73usb: Unknown symbol rt2x00mac_remove_interface
-rt73usb: Unknown symbol rt2x00usb_vendor_request
-rt73usb: Unknown symbol rt2x00usb_probe
-rt73usb: Unknown symbol rt2x00mac_config
-rt73usb: Unknown symbol rt2x00usb_suspend
-rt73usb: Unknown symbol rt2x00mac_conf_tx
-rt73usb: Unknown symbol rt2x00mac_start
-rt73usb: Unknown symbol rt2x00mac_stop
-rt73usb: Unknown symbol rt2x00mac_configure_filter
-rt73usb: Unknown symbol rt2x00usb_disconnect
-rt73usb: Unknown symbol rt2x00mac_tx
-rt73usb: Unknown symbol rt2x00usb_vendor_req_buff_lock
-rt73usb: Unknown symbol rt2x00mac_get_tx_stats
-rt73usb: Unknown symbol rt2x00usb_resume
-rt73usb: Unknown symbol rt2x00usb_uninitialize
-rt73usb: Unknown symbol rt2x00usb_initialize
-rt73usb: Unknown symbol rt2x00mac_bss_info_changed
-usbcore: registered new interface driver cdc_ether
-usbcore: registered new interface driver rndis_host
-usbcore: registered new interface driver rndis_wlan
-cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
-mac80211: Unknown symbol wiphy_register
-mac80211: Unknown symbol wiphy_new
-mac80211: Unknown symbol wiphy_unregister
-mac80211: Unknown symbol ieee80211_radiotap_iterator_init
-mac80211: Unknown symbol __ieee80211_get_channel
-mac80211: Unknown symbol ieee80211_radiotap_iterator_next
-mac80211: Unknown symbol ieee80211_channel_to_frequency
-mac80211: Unknown symbol ieee80211_frequency_to_channel
-mac80211: Unknown symbol wiphy_free
-at76_usb: Unknown symbol ieee80211_free_hw
-at76_usb: Unknown symbol ieee80211_alloc_hw
-at76_usb: Unknown symbol ieee80211_register_hw
-at76_usb: Unknown symbol ieee80211_tx_status_irqsafe
-at76_usb: Unknown symbol ieee80211_wake_queues
-at76_usb: Unknown symbol ieee80211_stop_queues
-at76_usb: Unknown symbol ieee80211_scan_completed
-at76_usb: Unknown symbol ieee80211_unregister_hw
-at76_usb: Unknown symbol ieee80211_rx_irqsafe
-cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
-mac80211: Unknown symbol wiphy_register
-mac80211: Unknown symbol wiphy_new
-mac80211: Unknown symbol wiphy_unregister
-mac80211: Unknown symbol ieee80211_radiotap_iterator_init
-mac80211: Unknown symbol __ieee80211_get_channel
-mac80211: Unknown symbol ieee80211_radiotap_iterator_next
-mac80211: Unknown symbol ieee80211_channel_to_frequency
-mac80211: Unknown symbol ieee80211_frequency_to_channel
-mac80211: Unknown symbol wiphy_free
-ath5k: Unknown symbol ieee80211_free_hw
-ath5k: Unknown symbol ieee80211_alloc_hw
-ath5k: Unknown symbol ieee80211_register_hw
-ath5k: Unknown symbol ieee80211_get_hdrlen_from_skb
-ath5k: Unknown symbol ieee80211_generic_frame_duration
-ath5k: Unknown symbol __ieee80211_get_tx_led_name
-ath5k: Unknown symbol __ieee80211_get_rx_led_name
-ath5k: Unknown symbol ieee80211_wake_queues
-ath5k: Unknown symbol __ieee80211_rx
-ath5k: Unknown symbol ieee80211_tx_status
-ath5k: Unknown symbol ieee80211_stop_queue
-ath5k: Unknown symbol ieee80211_stop_queues
-ath5k: Unknown symbol ieee80211_unregister_hw
-ath5k: Unknown symbol ieee80211_beacon_get
-ath5k: Unknown symbol ieee80211_frequency_to_channel
-cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
-mac80211: Unknown symbol wiphy_register
-mac80211: Unknown symbol wiphy_new
-mac80211: Unknown symbol wiphy_unregister
-mac80211: Unknown symbol ieee80211_radiotap_iterator_init
-mac80211: Unknown symbol __ieee80211_get_channel
-mac80211: Unknown symbol ieee80211_radiotap_iterator_next
-mac80211: Unknown symbol ieee80211_channel_to_frequency
-mac80211: Unknown symbol ieee80211_frequency_to_channel
-mac80211: Unknown symbol wiphy_free
-ACPI: PCI Interrupt 0000:03:00.0[A] -> Link [LK4E] -> GSI 19 (level,
-high) -> IRQ 19
-PCI: Setting latency timer of device 0000:03:00.0 to 64
-ssb: Sonics Silicon Backplane found on PCI device 0000:03:00.0
-b43: Unknown symbol ieee80211_free_hw
-b43: Unknown symbol ieee80211_alloc_hw
-b43: Unknown symbol ieee80211_register_hw
-b43: Unknown symbol ieee80211_generic_frame_duration
-b43: Unknown symbol ieee80211_wake_queue
-b43: Unknown symbol __ieee80211_get_tx_led_name
-b43: Unknown symbol ieee80211_tx_status_irqsafe
-b43: Unknown symbol __ieee80211_get_rx_led_name
-b43: Unknown symbol ieee80211_ctstoself_get
-b43: Unknown symbol ieee80211_stop_queue
-b43: Unknown symbol __ieee80211_get_assoc_led_name
-b43: Unknown symbol ieee80211_unregister_hw
-b43: Unknown symbol ieee80211_hdrlen
-b43: Unknown symbol ieee80211_rts_get
-b43: Unknown symbol ieee80211_beacon_get
-b43: Unknown symbol ieee80211_rx_irqsafe
-cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
-mac80211: Unknown symbol wiphy_register
-mac80211: Unknown symbol wiphy_new
-mac80211: Unknown symbol wiphy_unregister
-mac80211: Unknown symbol ieee80211_radiotap_iterator_init
-mac80211: Unknown symbol __ieee80211_get_channel
-mac80211: Unknown symbol ieee80211_radiotap_iterator_next
-mac80211: Unknown symbol ieee80211_channel_to_frequency
-mac80211: Unknown symbol ieee80211_frequency_to_channel
-mac80211: Unknown symbol wiphy_free
-b43legacy: Unknown symbol ieee80211_free_hw
-b43legacy: Unknown symbol ieee80211_alloc_hw
-b43legacy: Unknown symbol ieee80211_register_hw
-b43legacy: Unknown symbol ieee80211_generic_frame_duration
-b43legacy: Unknown symbol ieee80211_wake_queue
-b43legacy: Unknown symbol __ieee80211_get_tx_led_name
-b43legacy: Unknown symbol ieee80211_tx_status_irqsafe
-b43legacy: Unknown symbol __ieee80211_get_rx_led_name
-b43legacy: Unknown symbol ieee80211_ctstoself_get
-b43legacy: Unknown symbol ieee80211_stop_queue
-b43legacy: Unknown symbol ieee80211_stop_queues
-b43legacy: Unknown symbol ieee80211_get_hdrlen
-b43legacy: Unknown symbol __ieee80211_get_assoc_led_name
-b43legacy: Unknown symbol ieee80211_unregister_hw
-b43legacy: Unknown symbol ieee80211_hdrlen
-b43legacy: Unknown symbol ieee80211_rts_get
-b43legacy: Unknown symbol ieee80211_beacon_get
-b43legacy: Unknown symbol ieee80211_rx_irqsafe
-cfg80211: exports duplicate symbol rfkill_force_state (owned by rfkill)
-mac80211: Unknown symbol wiphy_register
-mac80211: Unknown symbol wiphy_new
-mac80211: Unknown symbol wiphy_unregister
-mac80211: Unknown symbol ieee80211_radiotap_iterator_init
-mac80211: Unknown symbol __ieee80211_get_channel
-mac80211: Unknown symbol ieee80211_radiotap_iterator_next
-mac80211: Unknown symbol ieee80211_channel_to_frequency
-mac80211: Unknown symbol ieee80211_frequency_to_channel
-mac80211: Unknown symbol wiphy_free
-b43: Unknown symbol ieee80211_free_hw
-b43: Unknown symbol ieee80211_alloc_hw
-b43: Unknown symbol ieee80211_register_hw
-b43: Unknown symbol ieee80211_generic_frame_duration
-b43: Unknown symbol ieee80211_wake_queue
-b43: Unknown symbol __ieee80211_get_tx_led_name
-b43: Unknown symbol ieee80211_tx_status_irqsafe
-b43: Unknown symbol __ieee80211_get_rx_led_name
-b43: Unknown symbol ieee80211_ctstoself_get
-b43: Unknown symbol ieee80211_stop_queue
-b43: Unknown symbol __ieee80211_get_assoc_led_name
-b43: Unknown symbol ieee80211_unregister_hw
-b43: Unknown symbol ieee80211_hdrlen
-b43: Unknown symbol ieee80211_rts_get
-b43: Unknown symbol ieee80211_beacon_get
-b43: Unknown symbol ieee80211_rx_irqsafe
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index b8178c7..227fa4b 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -2716,6 +2716,11 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
+ 		ret = -EOPNOTSUPP;
+ 		goto end;
+ 	}
++
++	/* Set to a reasonable value. Note that this will
++	 * be set to mac80211's value at ath5k_config(). */
++	sc->bintval = 1000;
++
+ 	ret = 0;
+ end:
+ 	mutex_unlock(&sc->lock);
+@@ -2760,9 +2765,6 @@ ath5k_config_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	struct ath5k_hw *ah = sc->ah;
+ 	int ret;
+ 
+-	/* Set to a reasonable value. Note that this will
+-	 * be set to mac80211's value at ath5k_config(). */
+-	sc->bintval = 1000;
+ 	mutex_lock(&sc->lock);
+ 	if (sc->vif != vif) {
+ 		ret = -EIO;
+-- 
+1.5.6.5
 
