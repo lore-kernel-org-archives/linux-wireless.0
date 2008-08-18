@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34772
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754449AbYGBVd0 (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.191]:57642 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751156AbYHRIRH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jul 2008 17:33:26 -0400
-Date: Wed, 02 Jul 2008 14:33:27 -0700 (PDT)
-Message-Id: <20080702.143327.183259418.davem@davemloft.net> (sfid-20080702_233346_272315_13FA710A)
-To: linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2008-07-02
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080702202653.GA10719@tuxdriver.com>
-References: <20080630215651.GA666@tuxdriver.com>
-	<20080702193710.GA4682@tuxdriver.com>
-	<20080702202653.GA10719@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 18 Aug 2008 04:17:07 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so2091017fkq.5
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Aug 2008 01:17:06 -0700 (PDT)
+Message-ID: <1ba2fa240808180117n37e412cbx1b11c50914dd5710@mail.gmail.com> (sfid-20080818_101711_641518_723F9F9D)
+Date: Mon, 18 Aug 2008 11:17:06 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Russell Senior" <seniorr@aracnet.com>
+Subject: Re: [ipw3945-devel] Few questions about the wireless stack
+Cc: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <86r68magid.fsf@coulee.tdb.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <48A07709.80306@gmail.com> <48A206A0.6020709@gmail.com>
+	 <48A224E3.90307@telenet.be> <861w0mbwxd.fsf@coulee.tdb.com>
+	 <1ba2fa240808180046k2d281a0fqc2617eb75092787e@mail.gmail.com>
+	 <86r68magid.fsf@coulee.tdb.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 2 Jul 2008 16:26:53 -0400
+On Mon, Aug 18, 2008 at 11:12 AM, Russell Senior <seniorr@aracnet.com> wrote:
+>>>>>> "Tomas" == Tomas Winkler <tomasw@gmail.com> writes:
+>
+> Russell> FWIW, the PC Engines Alix.6* boards has or will include a
+> Russell> miniPCI express slot.
+>
+> Russell> http://pcengines.ch/alix.htm
+>
+> Russell> As someone building stuff from these and similar boards, I
+> Russell> appreciate having options.
+>
+> Tomas> 3945 runs on mini PCIe ___wx__ bus not regular miniPCIe. There
+> Tomas> is no real problem that 3945 will run in AP/master mode I just
+> Tomas> don't think than anyone will make embedded device from it.
+>
+> Okay.  I have no idea what difference there is between wx bus and
+> regular mini PCI express.
 
-> NOTE: This is the same as the request posted on 2008-06-30 except for
-> dropping two iwlwifi patches that were sent for 2.6.26 instead.
-> 
-> Dave,
-> 
-> Here is another slew of updates for 2.6.27.  The bulk of this batch is
-> for iwlwifi, with some mac80211 and other bits thrown-in.
-> 
-> Let me know if there are problems!
-
-Thanks John.  I think I'll pull this in after Linus pulls
-net-2.6, I pull in your net-2.6 pull, and then do a merge
-of net-2.6 into net-next-2.6
-
-Thanks!
+wx runs of 1/3 of frequency of regular pcie bus. It was one time
+adventure and further product uses regular pcie bus.
+Tomas
