@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:39428 "EHLO hostap.isc.org"
+Received: from bu3sch.de ([62.75.166.246]:47024 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751069AbYHLPnM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Aug 2008 11:43:12 -0400
-Date: Tue, 12 Aug 2008 18:42:23 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Helmut Schaa <hschaa@suse.de>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Pondering: how to improve mac80211 roaming ...
-Message-ID: <20080812154223.GE4981@jm.kir.nu> (sfid-20080812_174316_009634_83474186)
-References: <200808120838.52888.hs4233@mail.mn-solutions.de> <20080812082246.GD4981@jm.kir.nu> <200808121440.24098.hschaa@suse.de>
+	id S1751188AbYHRNBv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Aug 2008 09:01:51 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Ehud Gavron <gavron@wetwork.net>
+Subject: Re: [PATCH RFT] b43: Rewrite PHY API for N-PHY/LP-PHY  -- good on 4311
+Date: Mon, 18 Aug 2008 15:01:29 +0200
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+References: <200808160029.56876.mb@bu3sch.de> <48A87B5D.7010402@wetwork.net>
+In-Reply-To: <48A87B5D.7010402@wetwork.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200808121440.24098.hschaa@suse.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200808181501.30057.mb@bu3sch.de> (sfid-20080818_150154_782511_4681A2BE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 12, 2008 at 02:40:23PM +0200, Helmut Schaa wrote:
-
-> JFYI I already started to rework the existing scan code in mac80211
-> (software scan) to do something like background scanning:
+On Sunday 17 August 2008 21:26:21 Ehud Gavron wrote:
+> Works fine here.  iperf same results as prior to patch. 
 > 
-> 1) notify current AP about leaving the channel
-> 2) scan one channel
+> b43-phy0: Broadcom 4311 WLAN found
+> b43-phy0 debug: Found PHY: Analog 4, Type 2, Revision 8
+> b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2
 
-It might be useful to leave this "one" as a parameter to allow easy
-experiments with scanning more than one channel at a time to reduce
-latency. Ideally, this--along the interval for background scans--could
-be something that is dynamically changed based on the expected traffic
-pattern. Whenever there is lot of data traffic being (mostly
-successfully) transmitted, it would be beneficial not to jump to other
-channels as frequently or for as long a time. If there has not been any
-data transmission for some time, it may be more acceptable to scan more
-frequently and to remain away from the operational channel for longer
-periods of time. Though, we should also keep in mind that background
-scans are going to increase power consumption on otherwise inactive
-situation, so setting a suitable policy for this can get quite complex.
+Thanks a lot for testing.
 
-If we can somehow figure out whether there is periodic need for some
-traffic (e.g., VoIP), it would also be nice to be able to schedule the
-background scans to happen when there is no expected packet being sent
-or received at the time. Obviously, this gets much more complex, so this
-is not really something that would need to be included in the first
-version ;-). Anyway, it would be useful to keep in mind that there may
-be needs for making the background scan parameters change dynamically
-and there is need to be able to configure a suitable policy from user
-space.
+I want to encourage people again to test this patch.
+This really needs a lot of testing, because a regression caused by this
+would really really be a bad thing.
+Even if you think your card was already tested by somebody else, please test
+it anyway. There are so many different cards with matching revision numbers
+that really are slightly different.
+
+Get wireless-testing.git:
+git clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+
+and apply the patch
+http://bu3sch.de/patches/wireless-testing/20080816-0023/patches/002-b43-phy-ops.patch
+
+Please test basic features, throughput and longterm stability of the connection.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Greetings Michael.
