@@ -1,66 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:19707 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754197AbYH0Lmq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2008 07:42:46 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so1078427nfc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Aug 2008 04:42:43 -0700 (PDT)
-Message-ID: <1ba2fa240808270442k20f70e69n6a6203d236376f5@mail.gmail.com> (sfid-20080827_134252_444662_16EFA7C4)
-Date: Wed, 27 Aug 2008 14:42:43 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "David Miller" <davem@davemloft.net>
-Subject: Re: pull request: wireless-2.6 2008-08-26
-Cc: holtmann@linux.intel.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <20080827.033237.236091327.davem@davemloft.net>
+Received: from hostap.isc.org ([149.20.54.63]:43123 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751500AbYHRJvA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Aug 2008 05:51:00 -0400
+Date: Mon, 18 Aug 2008 12:50:08 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211/cfg80211: Add vif configuration options
+Message-ID: <20080818095008.GM7998@jm.kir.nu> (sfid-20080818_115104_910213_CEB44D84)
+References: <20080815193324.GH7998@jm.kir.nu> <1218829424.3197.2.camel@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080827.014041.230100807.davem@davemloft.net>
-	 <1219835410.5359.24.camel@californication>
-	 <1ba2fa240808270305m7f505efak9fd0d36d5db09a1e@mail.gmail.com>
-	 <20080827.033237.236091327.davem@davemloft.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1218829424.3197.2.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 27, 2008 at 1:32 PM, David Miller <davem@davemloft.net> wrote:
-> From: "Tomas Winkler" <tomasw@gmail.com>
-> Date: Wed, 27 Aug 2008 13:05:23 +0300
->
->> There is a central problem here, since I cannot really adjust driver
->> development progress from obvious reason with Linux merging window.
->
-> Indeed, that's exactly what your core problem is.
->
-> You think it's OK to contaminate upstream just because of the
-> way you have choosen to maintain your driver.
->
+On Fri, Aug 15, 2008 at 09:43:44PM +0200, Johannes Berg wrote:
+> On Fri, 2008-08-15 at 22:33 +0300, Jouni Malinen wrote:
 
-I don't think I contaminate upstream I'm just trying to fix bugs so
-people can work with the HW.
+> >   * @change_bss: Modify parameters for a given BSS.
+> > + *
+> > + * @change_vif: Modify parameters for a given virtual interface.
+> 
+> That reminds me, we should probably include the "bridge packets" thing
+> in the BSS parameters (or here?)
 
-> Well guess what, it's not OK to do that, and it's absolutely not our
-> problem that you choose to do your development in the most anti-social
-> way possible wrt. upstream.
->
-> Anyways, keep defending yourself.
+Yes.. Since it is AP only feature, I would add it to change_bss. This
+variable is currently per-radio, but it might be reasonable to move it
+to sdata. Though, it may be needed for IEEE80211_IF_TYPE_VLAN, too, and
+change_bss is now IEEE80211_IF_TYPE_AP-only.. change_vif allows any type
+to go through, so maybe that would be easier after all (and then either
+just ignore the value for other iface types or make the configuration
+attempt fail if this particular attribute is changed for non-AP/VLAN
+iftype).
 
-I'm not defending myself I'm explaining myself.
-
-> If you persist, I can certainly make things _really_ easy, such that
-> if there isn't a regression list entry for the bug you are fixing and
-> it isn't mentioned explicitly in your commit message, I simply will
-> refuse to take your changes outside of the merge window.
->
-> It's that simple.
->
-> Would you like things to work that way, where I'm a hard ass, or would
-> you like to stop defending yourself endlessly, and instead start to be
-> reasonable?
-
-I'm not sure why you are so militant, you cut out form my email sentences
-like 'Yes' and 'Understood'
-Is this personal ?
-
-Tomas
+-- 
+Jouni Malinen                                            PGP id EFC895FA
