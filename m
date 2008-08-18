@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45171 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761240AbYHOURY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Aug 2008 16:17:24 -0400
-Subject: Re: [PATCH] p54: Fix for TX sequence number problem that resulted
-	from commit 741b4fbc44
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chr <chunkeey@web.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200808152215.05761.chunkeey@web.de>
-References: <48987e74.ct5+sLOpTbiTPPHq%Larry.Finger@lwfinger.net>
-	 <200808152034.46346.chunkeey@web.de> <1218828375.3197.0.camel@localhost>
-	 <200808152215.05761.chunkeey@web.de>
-Content-Type: text/plain
-Date: Fri, 15 Aug 2008 22:17:16 +0200
-Message-Id: <1218831437.3197.5.camel@localhost> (sfid-20080815_221743_121251_BABD8019)
-Mime-Version: 1.0
+Received: from mail.tdb.com ([216.99.214.4]:57243 "HELO mail.tdb.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751051AbYHRIM1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Aug 2008 04:12:27 -0400
+To: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: Re: [ipw3945-devel] Few questions about the wireless stack
+References: <48A07709.80306@gmail.com> <48A206A0.6020709@gmail.com>
+	<48A224E3.90307@telenet.be> <861w0mbwxd.fsf@coulee.tdb.com>
+	<1ba2fa240808180046k2d281a0fqc2617eb75092787e@mail.gmail.com>
+From: Russell Senior <seniorr@aracnet.com>
+Date: 18 Aug 2008 01:12:26 -0700
+In-Reply-To: <1ba2fa240808180046k2d281a0fqc2617eb75092787e@mail.gmail.com>
+Message-ID: <86r68magid.fsf@coulee.tdb.com> (sfid-20080818_101229_936692_C088A58C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-08-15 at 22:15 +0200, Chr wrote:
+>>>>> "Tomas" == Tomas Winkler <tomasw@gmail.com> writes:
 
-> hmm? has this something to do with the per STA TID in 
-> 7.1.3.4.1 (802.11-2007) ?
+Russell> FWIW, the PC Engines Alix.6* boards has or will include a
+Russell> miniPCI express slot.
 
-yes
+Russell> http://pcengines.ch/alix.htm
 
-> Well the firmware (aka: LowerMAC) has some sort station
-> database so there could be some room for that... maybe.
+Russell> As someone building stuff from these and similar boards, I
+Russell> appreciate having options.
 
-makes little sense since we don't tell it about stations, well, I dunno.
+Tomas> 3945 runs on mini PCIe ___wx__ bus not regular miniPCIe. There
+Tomas> is no real problem that 3945 will run in AP/master mode I just
+Tomas> don't think than anyone will make embedded device from it.
 
-> (But yes, when I was playing with the AP/IBSS, 
-> all beacon frames had a running sequence counter...
+Okay.  I have no idea what difference there is between wx bus and
+regular mini PCI express.
 
-Maybe only non-QoS frames?
 
-> maybe you can see this with a cx3110x in IBSS mode too?!)
-
-we're supposed to be getting documentation on the lmac in there...
-
-johannes
-
+-- 
+Russell Senior         ``I have nine fingers; you have ten.''
+seniorr@aracnet.com
