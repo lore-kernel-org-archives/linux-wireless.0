@@ -1,43 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:38872 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752092AbYHBCLc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 22:11:32 -0400
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <B9DE28E5-3777-4FB2-8521-CA128614BC21@holtmann.org> (sfid-20080802_041137_790979_3ED3E3C6)
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Pavel Roskin <proski@gnu.org>
-In-Reply-To: <1217634358.2731.8.camel@dv>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v928.1)
-Subject: Re: Resignation from orinoco and at76_usb
-Date: Sat, 2 Aug 2008 04:11:26 +0200
-References: <1217634358.2731.8.camel@dv>
+Received: from mout4.freenet.de ([195.4.92.94]:38382 "EHLO mout4.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752464AbYHSVz6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Aug 2008 17:55:58 -0400
+Received: from [195.4.92.22] (helo=12.mx.freenet.de)
+	by mout4.freenet.de with esmtpa (ID niklas@wulf-home.de) (port 25) (Exim 4.69 #19)
+	id 1KVZBE-0002LG-PM
+	for linux-wireless@vger.kernel.org; Tue, 19 Aug 2008 23:55:56 +0200
+Received: from i53871248.versanet.de ([83.135.18.72]:58571 helo=niklas-mac.local)
+	by 12.mx.freenet.de with esmtpsa (ID niklas@wulf-home.de) (TLSv1:AES256-SHA:256) (port 465) (Exim 4.69 #12)
+	id 1KVZBE-0006Iy-Jq
+	for linux-wireless@vger.kernel.org; Tue, 19 Aug 2008 23:55:56 +0200
+Message-ID: <48AB5D89.5090705@wulf-home.de> (sfid-20080819_235602_387940_A1BD9119)
+Date: Wed, 20 Aug 2008 01:55:53 +0200
+From: Niklas Wulf <niklas@wulf-home.de>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH RFT] b43: Rewrite PHY API for N-PHY/LP-PHY  -- good on
+ 4311
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Pavel,
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-> I would like to resign as maintainer of orinoco and at76_usb  
-> drivers.  I
-> was genuinely interested in getting most of the hardware supported by
-> those drivers, but as it stands now, I simple cannot find time for
-> either of them.  I believe it is harmful for both projects to have an
-> unresponsive maintainer who does not have time to review patches and
-> answer questions about the project.  Perhaps it's better not to have  
-> any
-> maintainer, so that an interested person could step in.
->
-> Please let me know what steps I should take.  I believe it should be a
-> patch removing my name from the MAINTAINERS file.  Anything else?
+I tested this one on my Macbook Pro (3,1).
 
-do you have any pending patches that are not in wireless-testing? I at  
-least remember that I have seen some Orinoco WPA stuff going on. It  
-would be good to get at least these things sorted out before you  
-resign from both drivers.
+# lspci -v
+0b:00.0 Network controller: Broadcom Corporation BCM4328 802.11a/b/g/n
+(rev 05)
+Subsystem: Apple Computer Inc. Device 008c
+Flags: bus master, fast devsel, latency 0, IRQ 16
+Memory at 97300000 (64-bit, non-prefetchable) [size=16K]
+Capabilities: [40] Power Management version 3
+Capabilities: [58] Vendor Specific Information <?>
+Capabilities: [e8] Message Signalled Interrupts: Mask- 64bit+ Queue=0/0
+Enable-
+Capabilities: [d0] Express Endpoint, MSI 00
+Kernel driver in use: b43-pci-bridge
+Kernel modules: ssb
 
-Regards
+It is not recognized by the driver... should it? I don't get a wireless
+device listed in ifconfig nor does dmesg show any device.
 
-Marcel
+# ifconfig
+eth0 [...]
+lo [...]
 
+# dmesg
+[...]
+Broadcom 43xx driver loaded [ Features: PMLR, Firmware-ID: FW13 ]
+[...]
+
+I'm kind of new to all this wireless stuff. Linuxwireless.org tells me
+4328 does not work because of missing N Phys support, so I hoped this
+patch would make some difference.
+
+A problem could be the wrong firmware version. OS X says the Chip has
+4.150.10.__6__ but I can only find 4.150.10.5. Is this important?
+
+PS: This is my first mail-list-post. Tell me if something's not okay,
+please ;-)
+
+Greetings Niklas
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (Darwin)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFIq12JmLNpi6N88eMRApqkAKC+HIt4LDcKcBJVywv5rQsRxpZUcACeI2OF
+IoTteOy1itgYu1qtHQfgvbU=
+=wM1s
+-----END PGP SIGNATURE-----
