@@ -1,56 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:18345 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754058AbYHOMty (ORCPT
+Received: from toronto053.server4you.de ([62.75.220.53]:44490 "EHLO
+	toronto053.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750889AbYHSOKs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Aug 2008 08:49:54 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so644039nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Aug 2008 05:49:53 -0700 (PDT)
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 5/5] rt2x00: Need to set wiphy->interface_modes
-Date: Fri, 15 Aug 2008 14:49:18 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	Stephen Blackheath <tramp.enshrine.stephen@blacksapphire.com>
-References: <200808151445.07795.IvDoorn@gmail.com> <200808151446.01043.IvDoorn@gmail.com> <200808151446.34060.IvDoorn@gmail.com>
-In-Reply-To: <200808151446.34060.IvDoorn@gmail.com>
+	Tue, 19 Aug 2008 10:10:48 -0400
+Date: Tue, 19 Aug 2008 16:10:46 +0200
+From: Daniel Wagner <wagi@monom.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Use only precedence level of DSCP field for frame
+	classification
+Message-ID: <20080819141046.GA5946@notlob.celestrius.com> (sfid-20080819_161051_733274_F105F5B4)
+References: <48AA887D.5090307@monom.org> <ee101a74bd16a9467853b5ac049c5da4.squirrel@secure.sipsolutions.net> <48AA8E2C.4060303@monom.org> <48AAAD30.2080207@monom.org> <48AAB70A.4090402@monom.org> <20080819134435.GB11660@notlob.celestrius.com> <1219154378.3476.6.camel@johannes.berg>
 MIME-Version: 1.0
-Message-Id: <200808151449.18412.IvDoorn@gmail.com> (sfid-20080815_144958_829313_0719F23D)
-Content-Type: text/plain;
-  charset="utf-8"
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1219154378.3476.6.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stephen Blackheath <tramp.enshrine.stephen@blacksapphire.com>
+On Tue, Aug 19, 2008 at 03:59:38PM +0200, Johannes Berg wrote:
+> On Tue, 2008-08-19 at 15:44 +0200, Daniel Wagner wrote:
+> > Bit 4-5 of DSCP should not be considered by classify_d1. The
+> > 802.11 QoS Priority field is only depending on the precedence level.
+> 
+> Mind explaining a bit more? I don't even know what DSCP really is, any
+> good reference?
 
-One day I will understand the patching process. This patch is needed to
-meet a requirement of Linux 2.6.27 drivers. Without it, userspace fails
-to set the device to AP mode.
+Sure. Cisco has a nice summery:
 
-Signed-off-by: Stephen Blackheath <tramp.enshrine.stephen@blacksapphire.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
-John, this one is for 2.6.28
----
- drivers/net/wireless/rt2x00/rt2x00dev.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+http://www.cisco.com/en/US/tech/tk543/tk757/technologies_tech_note09186a00800949f2.shtml
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 5278ae2..b363fad 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -1052,6 +1052,11 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
- 	 */
- 	rt2x00dev->hw->vif_data_size = sizeof(struct rt2x00_intf);
- 
-+	rt2x00dev->hw->wiphy->interface_modes =
-+	    BIT(NL80211_IFTYPE_AP) |
-+	    BIT(NL80211_IFTYPE_STATION) |
-+	    BIT(NL80211_IFTYPE_ADHOC);
-+
- 	/*
- 	 * Let the driver probe the device to detect the capabilities.
- 	 */
--- 
-1.5.6.1
+In short DSCP supercedes the 'Type of Service' field in the IP header. 
+It is backwarts compatible, that means prescedence field in TOS
+maps to the DSCP precedence level.
 
+The current code checks if the other bits of the TOS are all zero. This
+ok for configuration which do only set the precedence level. But
+RFC 2598 introduces the Expeddited Forwarding (EF) which sets some
+of those lower bits. I think this test is not necessary and in the
+case for EF even wrong.
+
+daniel
