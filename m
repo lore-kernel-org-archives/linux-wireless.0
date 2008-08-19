@@ -1,693 +1,1115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:58253 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759546AbYHUW3J (ORCPT
+Received: from mo-p05-ob.rzone.de ([81.169.146.180]:23578 "EHLO
+	mo-p05-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751160AbYHSRqk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Aug 2008 18:29:09 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so81281nfc.21
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2008 15:29:08 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-Subject: [PATCH v2 12/19] orinoco: Use extended Agere scans available on 9.x series firmwares
-Date: Thu, 21 Aug 2008 23:27:58 +0100
-Message-Id: <dc5df8328be19728aec203304d9c265368c2b876.1219352675.git.kilroyd@gmail.com> (sfid-20080822_005042_080946_BFCB6B3B)
-In-Reply-To: <5e42f22bf794bbefae50fa2a3e5b4ff6e36c7096.1219352675.git.kilroyd@gmail.com>
-References: <1219357685-24731-1-git-send-email-kilroyd@gmail.com>
- <3bd1799afef838bfc6eb688b1e0cf6b0f4949f1b.1219352674.git.kilroyd@gmail.com>
- <24148627bbab77e1365aa43c22a7f24ded1bed7a.1219352674.git.kilroyd@gmail.com>
- <6e9e9826934e0256adbe561e587f93212e042bf2.1219352674.git.kilroyd@gmail.com>
- <77df696e5b53b5e4db3b8c8e70b23cf5aaa2aca2.1219352674.git.kilroyd@gmail.com>
- <ac0da2799e97f5256019ad669f5a6c461bd0d82a.1219352674.git.kilroyd@gmail.com>
- <d792f6b1d5853becf1b1488e6572a4c3244eb769.1219352674.git.kilroyd@gmail.com>
- <6c4f63d9cc1bec763719e18ea8282919b6604503.1219352674.git.kilroyd@gmail.com>
- <9a54acb1147a2c0a7c1cf9b07b9ac756366d0877.1219352674.git.kilroyd@gmail.com>
- <889676c2c8c53b8193620e51d81017ade21e593c.1219352674.git.kilroyd@gmail.com>
- <889676c2c8c53b8193620e51d81017ade21e593c.1219352674.git.kilroyd@gmail.com>
- <347f1ce011aaeeb9b4d8f805fdfb6eb58fc467ca.1219352675.git.kilroyd@gmail.com>
- <5e42f22bf794bbefae50fa2a3e5b4ff6e36c7096.1219352675.git.kilroyd@gmail.com>
-In-Reply-To: <3bd1799afef838bfc6eb688b1e0cf6b0f4949f1b.1219352674.git.kilroyd@gmail.com>
-References: <3bd1799afef838bfc6eb688b1e0cf6b0f4949f1b.1219352674.git.kilroyd@gmail.com>
-From: kilroyd@googlemail.com
+	Tue, 19 Aug 2008 13:46:40 -0400
+Date: Tue, 19 Aug 2008 19:35:24 +0200
+From: Alex Riesen <raa.lkml@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	Ivo van Doorn <IvDoorn@gmail.com>
+Subject: rt2500pci: rt2500pci_bbp_read: Error - BBPCSR register busy. Read
+	failed.
+Message-ID: <20080819173524.GA4708@steel.home> (sfid-20080819_194646_270555_05AFF75A)
+Reply-To: Alex Riesen <raa.lkml@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This provides more information than the standard Agere scan, including
-the WPA IE.
+The rt2500 driver in 2.6.27-rc3 (v2.6.27-rc3-552-g3c3a15a) constantly
+produces a lot of this messages in log (slowdown quite noticable):
 
-Signed-off-by: David Kilroy <kilroyd@gmail.com>
----
- drivers/net/wireless/hermes.h     |   34 +++
- drivers/net/wireless/hermes_rid.h |    1 +
- drivers/net/wireless/orinoco.c    |  448 +++++++++++++++++++++++++++++++++----
- drivers/net/wireless/orinoco.h    |    9 +-
- 4 files changed, 448 insertions(+), 44 deletions(-)
+    kernel: phy0 -> rt2500pci_bbp_read: Error - BBPCSR register busy. Read failed.
+    kernel: phy0 -> rt2500pci_bbp_write: Error - BBPCSR register busy. Write failed.
+    last message repeated 40 times
+    kernel: phy0 -> rt2500pci_rf_write: Error - RFCSR register busy. Write failed.
+    last message repeated 7 times
+    kernel: phy0 -> rt2500pci_bbp_write: Error - BBPCSR register busy. Write failed.
 
-diff --git a/drivers/net/wireless/hermes.h b/drivers/net/wireless/hermes.h
-index 1d0c584..113f3f6 100644
---- a/drivers/net/wireless/hermes.h
-+++ b/drivers/net/wireless/hermes.h
-@@ -303,6 +303,40 @@ union hermes_scan_info {
- 	struct symbol_scan_apinfo	s;
- };
- 
-+/* Extended scan struct for HERMES_INQ_CHANNELINFO.
-+ * wl_lkm calls this an ACS scan (Automatic Channel Select).
-+ * Keep out of union hermes_scan_info because it is much bigger than
-+ * the older scan structures. */
-+struct agere_ext_scan_info {
-+	__le16	reserved0;
-+
-+	u8	noise;
-+	u8	level;
-+	u8	rx_flow;
-+	u8	rate;
-+	__le16	reserved1[2];
-+
-+	__le16	frame_control;
-+	__le16	dur_id;
-+	u8	addr1[ETH_ALEN];
-+	u8	addr2[ETH_ALEN];
-+	u8	bssid[ETH_ALEN];
-+	__le16	sequence;
-+	u8	addr4[ETH_ALEN];
-+
-+	__le16	data_length;
-+
-+	/* Next 3 fields do not get filled in. */
-+	u8	daddr[ETH_ALEN];
-+	u8	saddr[ETH_ALEN];
-+	__le16	len_type;
-+
-+	__le64	timestamp;
-+	__le16	beacon_interval;
-+	__le16	capabilities;
-+	u8	data[316];
-+} __attribute__ ((packed));
-+
- #define HERMES_LINKSTATUS_NOT_CONNECTED   (0x0000)  
- #define HERMES_LINKSTATUS_CONNECTED       (0x0001)
- #define HERMES_LINKSTATUS_DISCONNECTED    (0x0002)
-diff --git a/drivers/net/wireless/hermes_rid.h b/drivers/net/wireless/hermes_rid.h
-index 4f46b48..bcd9c82 100644
---- a/drivers/net/wireless/hermes_rid.h
-+++ b/drivers/net/wireless/hermes_rid.h
-@@ -85,6 +85,7 @@
- #define HERMES_RID_CNFSCANSSID_AGERE		0xFCB2
- #define HERMES_RID_CNFBASICRATES		0xFCB3
- #define HERMES_RID_CNFSUPPORTEDRATES		0xFCB4
-+#define HERMES_RID_CNFSCANCHANNELS2GHZ		0xFCC2
- #define HERMES_RID_CNFTICKTIME			0xFCE0
- #define HERMES_RID_CNFSCANREQUEST		0xFCE1
- #define HERMES_RID_CNFJOINREQUEST		0xFCE2
-diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
-index 3d5570d..22718e8 100644
---- a/drivers/net/wireless/orinoco.c
-+++ b/drivers/net/wireless/orinoco.c
-@@ -275,13 +275,19 @@ static inline void set_port_type(struct orinoco_private *priv)
- #define ORINOCO_MAX_BSS_COUNT	64
- static int orinoco_bss_data_allocate(struct orinoco_private *priv)
- {
--	if (priv->bss_data)
-+	if (priv->bss_xbss_data)
- 		return 0;
- 
--	priv->bss_data =
--	    kzalloc(ORINOCO_MAX_BSS_COUNT * sizeof(struct bss_element),
--		    GFP_KERNEL);
--	if (!priv->bss_data) {
-+	if (priv->has_ext_scan)
-+		priv->bss_xbss_data = kzalloc(ORINOCO_MAX_BSS_COUNT *
-+					      sizeof(struct xbss_element),
-+					      GFP_KERNEL);
-+	else
-+		priv->bss_xbss_data = kzalloc(ORINOCO_MAX_BSS_COUNT *
-+					      sizeof(struct bss_element),
-+					      GFP_KERNEL);
-+
-+	if (!priv->bss_xbss_data) {
- 		printk(KERN_WARNING "Out of memory allocating beacons");
- 		return -ENOMEM;
- 	}
-@@ -290,18 +296,53 @@ static int orinoco_bss_data_allocate(struct orinoco_private *priv)
- 
- static void orinoco_bss_data_free(struct orinoco_private *priv)
- {
--	kfree(priv->bss_data);
--	priv->bss_data = NULL;
-+	kfree(priv->bss_xbss_data);
-+	priv->bss_xbss_data = NULL;
- }
- 
-+#define PRIV_BSS	((struct bss_element *)priv->bss_xbss_data)
-+#define PRIV_XBSS	((struct xbss_element *)priv->bss_xbss_data)
- static void orinoco_bss_data_init(struct orinoco_private *priv)
- {
- 	int i;
- 
- 	INIT_LIST_HEAD(&priv->bss_free_list);
- 	INIT_LIST_HEAD(&priv->bss_list);
--	for (i = 0; i < ORINOCO_MAX_BSS_COUNT; i++)
--		list_add_tail(&priv->bss_data[i].list, &priv->bss_free_list);
-+	if (priv->has_ext_scan)
-+		for (i = 0; i < ORINOCO_MAX_BSS_COUNT; i++)
-+			list_add_tail(&(PRIV_XBSS[i].list),
-+				      &priv->bss_free_list);
-+	else
-+		for (i = 0; i < ORINOCO_MAX_BSS_COUNT; i++)
-+			list_add_tail(&(PRIV_BSS[i].list),
-+				      &priv->bss_free_list);
-+
-+}
-+
-+static inline u8 *orinoco_get_ie(u8 *data, size_t len,
-+				 enum ieee80211_mfie eid)
-+{
-+	u8 *p = data;
-+	while ((p + 2) < (data + len)) {
-+		if (p[0] == eid)
-+			return p;
-+		p += p[1] + 2;
-+	}
-+	return NULL;
-+}
-+
-+#define WPA_OUI_TYPE	"\x00\x50\xF2\x01"
-+#define WPA_SELECTOR_LEN 4
-+static inline u8 *orinoco_get_wpa_ie(u8 *data, size_t len)
-+{
-+	u8 *p = data;
-+	while ((p + 2 + WPA_SELECTOR_LEN) < (data + len)) {
-+		if ((p[0] == MFIE_TYPE_GENERIC) &&
-+		    (memcmp(&p[2], WPA_OUI_TYPE, WPA_SELECTOR_LEN) == 0))
-+			return p;
-+		p += p[1] + 2;
-+	}
-+	return NULL;
- }
- 
- 
-@@ -1414,18 +1455,72 @@ static void orinoco_send_wevents(struct work_struct *work)
- static inline void orinoco_clear_scan_results(struct orinoco_private *priv,
- 					      unsigned long scan_age)
- {
--	struct bss_element *bss;
--	struct bss_element *tmp_bss;
--
--	/* Blow away current list of scan results */
--	list_for_each_entry_safe(bss, tmp_bss, &priv->bss_list, list) {
--		if (!scan_age ||
--		    time_after(jiffies, bss->last_scanned + scan_age)) {
--			list_move_tail(&bss->list, &priv->bss_free_list);
--			/* Don't blow away ->list, just BSS data */
--			memset(bss, 0, sizeof(bss->bss));
--			bss->last_scanned = 0;
-+	if (priv->has_ext_scan) {
-+		struct xbss_element *bss;
-+		struct xbss_element *tmp_bss;
-+
-+		/* Blow away current list of scan results */
-+		list_for_each_entry_safe(bss, tmp_bss, &priv->bss_list, list) {
-+			if (!scan_age ||
-+			    time_after(jiffies, bss->last_scanned + scan_age)) {
-+				list_move_tail(&bss->list,
-+					       &priv->bss_free_list);
-+				/* Don't blow away ->list, just BSS data */
-+				memset(&bss->bss, 0, sizeof(bss->bss));
-+				bss->last_scanned = 0;
-+			}
- 		}
-+	} else {
-+		struct bss_element *bss;
-+		struct bss_element *tmp_bss;
-+
-+		/* Blow away current list of scan results */
-+		list_for_each_entry_safe(bss, tmp_bss, &priv->bss_list, list) {
-+			if (!scan_age ||
-+			    time_after(jiffies, bss->last_scanned + scan_age)) {
-+				list_move_tail(&bss->list,
-+					       &priv->bss_free_list);
-+				/* Don't blow away ->list, just BSS data */
-+				memset(&bss->bss, 0, sizeof(bss->bss));
-+				bss->last_scanned = 0;
-+			}
-+		}
-+	}
-+}
-+
-+static void orinoco_add_ext_scan_result(struct orinoco_private *priv,
-+					struct agere_ext_scan_info *atom)
-+{
-+	struct xbss_element *bss = NULL;
-+	int found = 0;
-+
-+	/* Try to update an existing bss first */
-+	list_for_each_entry(bss, &priv->bss_list, list) {
-+		if (compare_ether_addr(bss->bss.bssid, atom->bssid))
-+			continue;
-+		/* ESSID lengths */
-+		if (bss->bss.data[1] != atom->data[1])
-+			continue;
-+		if (memcmp(&bss->bss.data[2], &atom->data[2],
-+			   atom->data[1]))
-+			continue;
-+		found = 1;
-+		break;
-+	}
-+
-+	/* Grab a bss off the free list */
-+	if (!found && !list_empty(&priv->bss_free_list)) {
-+		bss = list_entry(priv->bss_free_list.next,
-+				 struct xbss_element, list);
-+		list_del(priv->bss_free_list.next);
-+
-+		list_add_tail(&bss->list, &priv->bss_list);
-+	}
-+
-+	if (bss) {
-+		/* Always update the BSS to get latest beacon info */
-+		memcpy(&bss->bss, atom, sizeof(bss->bss));
-+		bss->last_scanned = jiffies;
- 	}
- }
- 
-@@ -1700,6 +1795,63 @@ static void __orinoco_ev_info(struct net_device *dev, hermes_t *hw)
- 		kfree(buf);
- 	}
- 	break;
-+	case HERMES_INQ_CHANNELINFO:
-+	{
-+		struct agere_ext_scan_info *bss;
-+
-+		if (!priv->scan_inprogress) {
-+			printk(KERN_DEBUG "%s: Got chaninfo without scan, "
-+			       "len=%d\n", dev->name, len);
-+			break;
-+		}
-+
-+		/* An empty result indicates that the scan is complete */
-+		if (len == 0) {
-+			union iwreq_data	wrqu;
-+
-+			/* Scan is no longer in progress */
-+			priv->scan_inprogress = 0;
-+
-+			wrqu.data.length = 0;
-+			wrqu.data.flags = 0;
-+			wireless_send_event(dev, SIOCGIWSCAN, &wrqu, NULL);
-+			break;
-+		}
-+
-+		/* Sanity check */
-+		else if (len > sizeof(*bss)) {
-+			printk(KERN_WARNING
-+			       "%s: Ext scan results too large (%d bytes). "
-+			       "Truncating results to %zd bytes.\n",
-+			       dev->name, len, sizeof(*bss));
-+			len = sizeof(*bss);
-+		} else if (len < (offsetof(struct agere_ext_scan_info,
-+					   data) + 2)) {
-+			/* Drop this result now so we don't have to
-+			 * keep checking later */
-+			printk(KERN_WARNING
-+			       "%s: Ext scan results too short (%d bytes)\n",
-+			       dev->name, len);
-+			break;
-+		}
-+
-+		bss = kmalloc(sizeof(*bss), GFP_ATOMIC);
-+		if (bss == NULL)
-+			break;
-+
-+		/* Read scan data */
-+		err = hermes_bap_pread(hw, IRQ_BAP, (void *) bss, len,
-+				       infofid, sizeof(info));
-+		if (err) {
-+			kfree(bss);
-+			break;
-+		}
-+
-+		orinoco_add_ext_scan_result(priv, bss);
-+
-+		kfree(bss);
-+		break;
-+	}
- 	case HERMES_INQ_SEC_STAT_AGERE:
- 		/* Security status (Agere specific) */
- 		/* Ignore this frame for now */
-@@ -2557,6 +2709,7 @@ static int determine_firmware(struct net_device *dev)
- 	priv->has_wep = 0;
- 	priv->has_big_wep = 0;
- 	priv->has_alt_txcntl = 0;
-+	priv->has_ext_scan = 0;
- 	priv->do_fw_download = 0;
- 
- 	/* Determine capabilities from the firmware version */
-@@ -2580,7 +2733,7 @@ static int determine_firmware(struct net_device *dev)
- 		priv->do_fw_download = 1;
- 		priv->broken_monitor = (firmver >= 0x80000);
- 		priv->has_alt_txcntl = (firmver >= 0x90000); /* All 9.x ? */
--
-+		priv->has_ext_scan = (firmver >= 0x90000); /* All 9.x ? */
- 		/* Tested with Agere firmware :
- 		 *	1.16 ; 4.08 ; 4.52 ; 6.04 ; 6.16 ; 7.28 => Jean II
- 		 * Tested CableTron firmware : 4.32 => Anton */
-@@ -2735,6 +2888,12 @@ static int orinoco_init(struct net_device *dev)
- 			printk("40-bit key\n");
- 	}
- 
-+	/* Now we have the firmware capabilities, allocate appropiate
-+	 * sized scan buffers */
-+	if (orinoco_bss_data_allocate(priv))
-+		goto out;
-+	orinoco_bss_data_init(priv);
-+
- 	/* Get the MAC address */
- 	err = hermes_read_ltv(hw, USER_BAP, HERMES_RID_CNFOWNMACADDR,
- 			      ETH_ALEN, NULL, dev->dev_addr);
-@@ -2885,10 +3044,6 @@ struct net_device
- 		priv->card = NULL;
- 	priv->dev = device;
- 
--	if (orinoco_bss_data_allocate(priv))
--		goto err_out_free;
--	orinoco_bss_data_init(priv);
--
- 	/* Setup / override net_device fields */
- 	dev->init = orinoco_init;
- 	dev->hard_start_xmit = orinoco_xmit;
-@@ -2924,10 +3079,6 @@ struct net_device
- 	priv->last_linkstatus = 0xffff;
- 
- 	return dev;
--
--err_out_free:
--	free_netdev(dev);
--	return NULL;
- }
- 
- void free_orinocodev(struct net_device *dev)
-@@ -4375,7 +4526,25 @@ static int orinoco_ioctl_setscan(struct net_device *dev,
- 			if (err)
- 				break;
- 
--			err = hermes_inquire(hw, HERMES_INQ_SCAN);
-+			if (priv->has_ext_scan) {
-+				/* Clear scan results at the start of
-+				 * an extended scan */
-+				orinoco_clear_scan_results(priv,
-+						msecs_to_jiffies(15000));
-+
-+				/* TODO: Is this available on older firmware?
-+				 *   Can we use it to scan specific channels
-+				 *   for IW_SCAN_THIS_FREQ? */
-+				err = hermes_write_wordrec(hw, USER_BAP,
-+						HERMES_RID_CNFSCANCHANNELS2GHZ,
-+						0x7FFF);
-+				if (err)
-+					goto out;
-+
-+				err = hermes_inquire(hw,
-+						     HERMES_INQ_CHANNELINFO);
-+			} else
-+				err = hermes_inquire(hw, HERMES_INQ_SCAN);
- 			break;
- 		}
- 	} else
-@@ -4541,6 +4710,171 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
- 	return current_ev;
- }
- 
-+static inline char *orinoco_translate_ext_scan(struct net_device *dev,
-+					       struct iw_request_info *info,
-+					       char *current_ev,
-+					       char *end_buf,
-+					       struct agere_ext_scan_info *bss,
-+					       unsigned int last_scanned)
-+{
-+	u16			capabilities;
-+	u16			channel;
-+	struct iw_event		iwe;		/* Temporary buffer */
-+	char custom[MAX_CUSTOM_LEN];
-+	u8 *ie;
-+
-+	memset(&iwe, 0, sizeof(iwe));
-+
-+	/* First entry *MUST* be the AP MAC address */
-+	iwe.cmd = SIOCGIWAP;
-+	iwe.u.ap_addr.sa_family = ARPHRD_ETHER;
-+	memcpy(iwe.u.ap_addr.sa_data, bss->bssid, ETH_ALEN);
-+	current_ev = iwe_stream_add_event(info, current_ev, end_buf,
-+					  &iwe, IW_EV_ADDR_LEN);
-+
-+	/* Other entries will be displayed in the order we give them */
-+
-+	/* Add the ESSID */
-+	ie = bss->data;
-+	iwe.u.data.length = ie[1];
-+	if (iwe.u.data.length) {
-+		if (iwe.u.data.length > 32)
-+			iwe.u.data.length = 32;
-+		iwe.cmd = SIOCGIWESSID;
-+		iwe.u.data.flags = 1;
-+		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
-+						  &iwe, &ie[2]);
-+	}
-+
-+	/* Add mode */
-+	capabilities = le16_to_cpu(bss->capabilities);
-+	if (capabilities & (WLAN_CAPABILITY_ESS | WLAN_CAPABILITY_IBSS)) {
-+		iwe.cmd = SIOCGIWMODE;
-+		if (capabilities & WLAN_CAPABILITY_ESS)
-+			iwe.u.mode = IW_MODE_MASTER;
-+		else
-+			iwe.u.mode = IW_MODE_ADHOC;
-+		current_ev = iwe_stream_add_event(info, current_ev, end_buf,
-+						  &iwe, IW_EV_UINT_LEN);
-+	}
-+
-+	ie = orinoco_get_ie(bss->data, sizeof(bss->data), MFIE_TYPE_DS_SET);
-+	channel = ie ? ie[2] : 0;
-+	if ((channel >= 1) && (channel <= NUM_CHANNELS)) {
-+		/* Add channel and frequency */
-+		iwe.cmd = SIOCGIWFREQ;
-+		iwe.u.freq.m = channel;
-+		iwe.u.freq.e = 0;
-+		current_ev = iwe_stream_add_event(info, current_ev, end_buf,
-+						  &iwe, IW_EV_FREQ_LEN);
-+
-+		iwe.u.freq.m = channel_frequency[channel-1] * 100000;
-+		iwe.u.freq.e = 1;
-+		current_ev = iwe_stream_add_event(info, current_ev, end_buf,
-+						  &iwe, IW_EV_FREQ_LEN);
-+	}
-+
-+	/* Add quality statistics. level and noise in dB. No link quality */
-+	iwe.cmd = IWEVQUAL;
-+	iwe.u.qual.updated = IW_QUAL_DBM | IW_QUAL_QUAL_INVALID;
-+	iwe.u.qual.level = bss->level - 0x95;
-+	iwe.u.qual.noise = bss->noise - 0x95;
-+	/* Wireless tools prior to 27.pre22 will show link quality
-+	 * anyway, so we provide a reasonable value. */
-+	if (iwe.u.qual.level > iwe.u.qual.noise)
-+		iwe.u.qual.qual = iwe.u.qual.level - iwe.u.qual.noise;
-+	else
-+		iwe.u.qual.qual = 0;
-+	current_ev = iwe_stream_add_event(info, current_ev, end_buf,
-+					  &iwe, IW_EV_QUAL_LEN);
-+
-+	/* Add encryption capability */
-+	iwe.cmd = SIOCGIWENCODE;
-+	if (capabilities & WLAN_CAPABILITY_PRIVACY)
-+		iwe.u.data.flags = IW_ENCODE_ENABLED | IW_ENCODE_NOKEY;
-+	else
-+		iwe.u.data.flags = IW_ENCODE_DISABLED;
-+	iwe.u.data.length = 0;
-+	current_ev = iwe_stream_add_point(info, current_ev, end_buf,
-+					  &iwe, NULL);
-+
-+	/* WPA IE */
-+	ie = orinoco_get_wpa_ie(bss->data, sizeof(bss->data));
-+	if (ie) {
-+		iwe.cmd = IWEVGENIE;
-+		iwe.u.data.length = ie[1] + 2;
-+		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
-+						  &iwe, ie);
-+	}
-+
-+	/* RSN IE */
-+	ie = orinoco_get_ie(bss->data, sizeof(bss->data), MFIE_TYPE_RSN);
-+	if (ie) {
-+		iwe.cmd = IWEVGENIE;
-+		iwe.u.data.length = ie[1] + 2;
-+		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
-+						  &iwe, ie);
-+	}
-+
-+	ie = orinoco_get_ie(bss->data, sizeof(bss->data), MFIE_TYPE_RATES);
-+	if (ie) {
-+		char *p = current_ev + iwe_stream_lcp_len(info);
-+		int i;
-+
-+		iwe.cmd = SIOCGIWRATE;
-+		/* Those two flags are ignored... */
-+		iwe.u.bitrate.fixed = iwe.u.bitrate.disabled = 0;
-+
-+		for (i = 2; i < (ie[1] + 2); i++) {
-+			iwe.u.bitrate.value = ((ie[i] & 0x7F) * 500000);
-+			p = iwe_stream_add_value(info, current_ev, p, end_buf,
-+						 &iwe, IW_EV_PARAM_LEN);
-+		}
-+		/* Check if we added any event */
-+		if (p > (current_ev + iwe_stream_lcp_len(info)))
-+			current_ev = p;
-+	}
-+
-+	/* Timestamp */
-+	iwe.cmd = IWEVCUSTOM;
-+	iwe.u.data.length = snprintf(custom, MAX_CUSTOM_LEN,
-+				     "tsf=%016llx",
-+				     le64_to_cpu(bss->timestamp));
-+	if (iwe.u.data.length)
-+		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
-+						  &iwe, custom);
-+
-+	/* Beacon interval */
-+	iwe.cmd = IWEVCUSTOM;
-+	iwe.u.data.length = snprintf(custom, MAX_CUSTOM_LEN,
-+				     "bcn_int=%d",
-+				     le16_to_cpu(bss->beacon_interval));
-+	if (iwe.u.data.length)
-+		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
-+						  &iwe, custom);
-+
-+	/* Capabilites */
-+	iwe.cmd = IWEVCUSTOM;
-+	iwe.u.data.length = snprintf(custom, MAX_CUSTOM_LEN,
-+				     "capab=0x%04x",
-+				     capabilities);
-+	if (iwe.u.data.length)
-+		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
-+						  &iwe, custom);
-+
-+	/* Add EXTRA: Age to display seconds since last beacon/probe response
-+	 * for given network. */
-+	iwe.cmd = IWEVCUSTOM;
-+	iwe.u.data.length = snprintf(custom, MAX_CUSTOM_LEN,
-+				     " Last beacon: %dms ago",
-+				     jiffies_to_msecs(jiffies - last_scanned));
-+	if (iwe.u.data.length)
-+		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
-+						  &iwe, custom);
-+
-+	return current_ev;
-+}
-+
- /* Return results of a scan */
- static int orinoco_ioctl_getscan(struct net_device *dev,
- 				 struct iw_request_info *info,
-@@ -4548,7 +4882,6 @@ static int orinoco_ioctl_getscan(struct net_device *dev,
- 				 char *extra)
- {
- 	struct orinoco_private *priv = netdev_priv(dev);
--	struct bss_element *bss;
- 	int err = 0;
- 	unsigned long flags;
- 	char *current_ev = extra;
-@@ -4568,18 +4901,47 @@ static int orinoco_ioctl_getscan(struct net_device *dev,
- 		goto out;
- 	}
- 
--	list_for_each_entry(bss, &priv->bss_list, list) {
--		/* Translate to WE format this entry */
--		current_ev = orinoco_translate_scan(dev, info, current_ev,
--						    extra + srq->length,
--						    &bss->bss,
--						    bss->last_scanned);
--
--		/* Check if there is space for one more entry */
--		if ((extra + srq->length - current_ev) <= IW_EV_ADDR_LEN) {
--			/* Ask user space to try again with a bigger buffer */
--			err = -E2BIG;
--			goto out;
-+	if (priv->has_ext_scan) {
-+		struct xbss_element *bss;
-+
-+		list_for_each_entry(bss, &priv->bss_list, list) {
-+			/* Translate this entry to WE format */
-+			current_ev =
-+				orinoco_translate_ext_scan(dev, info,
-+							   current_ev,
-+							   extra + srq->length,
-+							   &bss->bss,
-+							   bss->last_scanned);
-+
-+			/* Check if there is space for one more entry */
-+			if ((extra + srq->length - current_ev)
-+			    <= IW_EV_ADDR_LEN) {
-+				/* Ask user space to try again with a
-+				 * bigger buffer */
-+				err = -E2BIG;
-+				goto out;
-+			}
-+		}
-+
-+	} else {
-+		struct bss_element *bss;
-+
-+		list_for_each_entry(bss, &priv->bss_list, list) {
-+			/* Translate this entry to WE format */
-+			current_ev = orinoco_translate_scan(dev, info,
-+							    current_ev,
-+							    extra + srq->length,
-+							    &bss->bss,
-+							    bss->last_scanned);
-+
-+			/* Check if there is space for one more entry */
-+			if ((extra + srq->length - current_ev)
-+			    <= IW_EV_ADDR_LEN) {
-+				/* Ask user space to try again with a
-+				 * bigger buffer */
-+				err = -E2BIG;
-+				goto out;
-+			}
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/orinoco.h b/drivers/net/wireless/orinoco.h
-index 584d8c9..f510994 100644
---- a/drivers/net/wireless/orinoco.h
-+++ b/drivers/net/wireless/orinoco.h
-@@ -42,6 +42,12 @@ struct bss_element {
- 	struct list_head list;
- };
- 
-+struct xbss_element {
-+	struct agere_ext_scan_info bss;
-+	unsigned long last_scanned;
-+	struct list_head list;
-+};
-+
- struct orinoco_private {
- 	void *card;	/* Pointer to card dependent structure */
- 	struct device *dev;
-@@ -86,6 +92,7 @@ struct orinoco_private {
- 	unsigned int has_sensitivity:1;
- 	unsigned int has_hostscan:1;
- 	unsigned int has_alt_txcntl:1;
-+	unsigned int has_ext_scan:1;
- 	unsigned int do_fw_download:1;
- 	unsigned int broken_disableport:1;
- 	unsigned int broken_monitor:1;
-@@ -117,7 +124,7 @@ struct orinoco_private {
- 	/* Scanning support */
- 	struct list_head bss_list;
- 	struct list_head bss_free_list;
--	struct bss_element *bss_data;
-+	void *bss_xbss_data;
- 
- 	int	scan_inprogress;	/* Scan pending... */
- 	u32	scan_mode;		/* Type of scan done */
--- 
-1.5.6.4
+The card is a RaLink RT2500 PCI (not mini-PCI, it is a normal desktop
+system, Gigabyte GA-8IPE1000 motherboard):
 
+    02:04.0 Ethernet controller: RaLink RT2500 802.11g Cardbus/mini-PCI (rev 01)
+	    Subsystem: Micro-Star International Co., Ltd. Unknown device 6834
+	    Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	    Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort- <TAbort- <MAbort- >SERR- <PERR+
+	    Latency: 32, Cache Line Size: 32 bytes
+	    Interrupt: pin A routed to IRQ 11
+	    Region 0: Memory at fa000000 (32-bit, non-prefetchable) [size=8K]
+	    Capabilities: [40] Power Management version 2
+		    Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		    Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+
+The system is a P4 with HT enabled (and active). The .config is below:
+
+CONFIG_X86_32=y
+CONFIG_X86=y
+CONFIG_ARCH_DEFCONFIG="arch/x86/configs/i386_defconfig"
+CONFIG_GENERIC_TIME=y
+CONFIG_GENERIC_CMOS_UPDATE=y
+CONFIG_CLOCKSOURCE_WATCHDOG=y
+CONFIG_GENERIC_CLOCKEVENTS=y
+CONFIG_GENERIC_CLOCKEVENTS_BROADCAST=y
+CONFIG_LOCKDEP_SUPPORT=y
+CONFIG_STACKTRACE_SUPPORT=y
+CONFIG_HAVE_LATENCYTOP_SUPPORT=y
+CONFIG_FAST_CMPXCHG_LOCAL=y
+CONFIG_MMU=y
+CONFIG_ZONE_DMA=y
+CONFIG_GENERIC_ISA_DMA=y
+CONFIG_GENERIC_IOMAP=y
+CONFIG_GENERIC_BUG=y
+CONFIG_GENERIC_HWEIGHT=y
+CONFIG_GENERIC_GPIO=y
+CONFIG_ARCH_MAY_HAVE_PC_FDC=y
+CONFIG_RWSEM_XCHGADD_ALGORITHM=y
+CONFIG_ARCH_HAS_CPU_IDLE_WAIT=y
+CONFIG_GENERIC_CALIBRATE_DELAY=y
+CONFIG_ARCH_HAS_CPU_RELAX=y
+CONFIG_ARCH_HAS_CACHE_LINE_SIZE=y
+CONFIG_HAVE_SETUP_PER_CPU_AREA=y
+CONFIG_ARCH_HIBERNATION_POSSIBLE=y
+CONFIG_ARCH_SUSPEND_POSSIBLE=y
+CONFIG_ARCH_POPULATES_NODE_MAP=y
+CONFIG_ARCH_SUPPORTS_AOUT=y
+CONFIG_ARCH_SUPPORTS_OPTIMIZED_INLINING=y
+CONFIG_GENERIC_HARDIRQS=y
+CONFIG_GENERIC_IRQ_PROBE=y
+CONFIG_GENERIC_PENDING_IRQ=y
+CONFIG_X86_SMP=y
+CONFIG_X86_32_SMP=y
+CONFIG_X86_HT=y
+CONFIG_X86_BIOS_REBOOT=y
+CONFIG_X86_TRAMPOLINE=y
+CONFIG_KTIME_SCALAR=y
+CONFIG_DEFCONFIG_LIST="/lib/modules/$UNAME_RELEASE/.config"
+CONFIG_EXPERIMENTAL=y
+CONFIG_LOCK_KERNEL=y
+CONFIG_INIT_ENV_ARG_LIMIT=32
+CONFIG_LOCALVERSION="-t"
+CONFIG_SWAP=y
+CONFIG_SYSVIPC=y
+CONFIG_SYSVIPC_SYSCTL=y
+CONFIG_POSIX_MQUEUE=y
+CONFIG_BSD_PROCESS_ACCT=y
+CONFIG_BSD_PROCESS_ACCT_V3=y
+CONFIG_IKCONFIG=m
+CONFIG_IKCONFIG_PROC=y
+CONFIG_LOG_BUF_SHIFT=15
+CONFIG_CGROUPS=y
+CONFIG_HAVE_UNSTABLE_SCHED_CLOCK=y
+CONFIG_CGROUP_CPUACCT=y
+CONFIG_RESOURCE_COUNTERS=y
+CONFIG_SYSFS_DEPRECATED=y
+CONFIG_SYSFS_DEPRECATED_V2=y
+CONFIG_RELAY=y
+CONFIG_NAMESPACES=y
+CONFIG_CC_OPTIMIZE_FOR_SIZE=y
+CONFIG_SYSCTL=y
+CONFIG_UID16=y
+CONFIG_SYSCTL_SYSCALL=y
+CONFIG_KALLSYMS=y
+CONFIG_KALLSYMS_ALL=y
+CONFIG_HOTPLUG=y
+CONFIG_PRINTK=y
+CONFIG_BUG=y
+CONFIG_ELF_CORE=y
+CONFIG_PCSPKR_PLATFORM=y
+CONFIG_COMPAT_BRK=y
+CONFIG_BASE_FULL=y
+CONFIG_FUTEX=y
+CONFIG_ANON_INODES=y
+CONFIG_EPOLL=y
+CONFIG_SIGNALFD=y
+CONFIG_TIMERFD=y
+CONFIG_EVENTFD=y
+CONFIG_SHMEM=y
+CONFIG_VM_EVENT_COUNTERS=y
+CONFIG_SLUB_DEBUG=y
+CONFIG_SLUB=y
+CONFIG_PROFILING=y
+CONFIG_OPROFILE=m
+CONFIG_HAVE_OPROFILE=y
+CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS=y
+CONFIG_HAVE_IOREMAP_PROT=y
+CONFIG_HAVE_KPROBES=y
+CONFIG_HAVE_KRETPROBES=y
+CONFIG_USE_GENERIC_SMP_HELPERS=y
+CONFIG_PROC_PAGE_MONITOR=y
+CONFIG_HAVE_GENERIC_DMA_COHERENT=y
+CONFIG_SLABINFO=y
+CONFIG_RT_MUTEXES=y
+CONFIG_BASE_SMALL=0
+CONFIG_MODULES=y
+CONFIG_MODULE_UNLOAD=y
+CONFIG_MODULE_FORCE_UNLOAD=y
+CONFIG_KMOD=y
+CONFIG_STOP_MACHINE=y
+CONFIG_BLOCK=y
+CONFIG_LBD=y
+CONFIG_BLK_DEV_IO_TRACE=y
+CONFIG_LSF=y
+CONFIG_BLK_DEV_BSG=y
+CONFIG_IOSCHED_NOOP=y
+CONFIG_IOSCHED_CFQ=y
+CONFIG_DEFAULT_CFQ=y
+CONFIG_DEFAULT_IOSCHED="cfq"
+CONFIG_TICK_ONESHOT=y
+CONFIG_NO_HZ=y
+CONFIG_HIGH_RES_TIMERS=y
+CONFIG_GENERIC_CLOCKEVENTS_BUILD=y
+CONFIG_SMP=y
+CONFIG_X86_PC=y
+CONFIG_SCHED_NO_NO_OMIT_FRAME_POINTER=y
+CONFIG_MEMTEST=y
+CONFIG_MPENTIUM4=y
+CONFIG_X86_CPU=y
+CONFIG_X86_CMPXCHG=y
+CONFIG_X86_L1_CACHE_SHIFT=7
+CONFIG_X86_XADD=y
+CONFIG_X86_WP_WORKS_OK=y
+CONFIG_X86_INVLPG=y
+CONFIG_X86_BSWAP=y
+CONFIG_X86_POPAD_OK=y
+CONFIG_X86_INTEL_USERCOPY=y
+CONFIG_X86_USE_PPRO_CHECKSUM=y
+CONFIG_X86_P6_NOP=y
+CONFIG_X86_TSC=y
+CONFIG_X86_CMOV=y
+CONFIG_X86_MINIMUM_CPU_FAMILY=6
+CONFIG_X86_DEBUGCTLMSR=y
+CONFIG_DMI=y
+CONFIG_NR_CPUS=2
+CONFIG_SCHED_SMT=y
+CONFIG_PREEMPT=y
+CONFIG_PREEMPT_RCU=y
+CONFIG_X86_LOCAL_APIC=y
+CONFIG_X86_IO_APIC=y
+CONFIG_X86_MCE=y
+CONFIG_X86_MCE_NONFATAL=y
+CONFIG_X86_MCE_P4THERMAL=y
+CONFIG_VM86=y
+CONFIG_MICROCODE=m
+CONFIG_MICROCODE_OLD_INTERFACE=y
+CONFIG_X86_MSR=m
+CONFIG_X86_CPUID=m
+CONFIG_HIGHMEM4G=y
+CONFIG_PAGE_OFFSET=0xC0000000
+CONFIG_HIGHMEM=y
+CONFIG_ARCH_FLATMEM_ENABLE=y
+CONFIG_ARCH_SPARSEMEM_ENABLE=y
+CONFIG_ARCH_SELECT_MEMORY_MODEL=y
+CONFIG_SELECT_MEMORY_MODEL=y
+CONFIG_FLATMEM_MANUAL=y
+CONFIG_FLATMEM=y
+CONFIG_FLAT_NODE_MEM_MAP=y
+CONFIG_SPARSEMEM_STATIC=y
+CONFIG_PAGEFLAGS_EXTENDED=y
+CONFIG_SPLIT_PTLOCK_CPUS=4
+CONFIG_ZONE_DMA_FLAG=1
+CONFIG_BOUNCE=y
+CONFIG_VIRT_TO_BUS=y
+CONFIG_MTRR=y
+CONFIG_MTRR_SANITIZER=y
+CONFIG_MTRR_SANITIZER_ENABLE_DEFAULT=0
+CONFIG_MTRR_SANITIZER_SPARE_REG_NR_DEFAULT=1
+CONFIG_X86_PAT=y
+CONFIG_IRQBALANCE=y
+CONFIG_SECCOMP=y
+CONFIG_HZ_300=y
+CONFIG_HZ=300
+CONFIG_SCHED_HRTICK=y
+CONFIG_PHYSICAL_START=0x100000
+CONFIG_PHYSICAL_ALIGN=0x100000
+CONFIG_HOTPLUG_CPU=y
+CONFIG_ARCH_ENABLE_MEMORY_HOTPLUG=y
+CONFIG_PM=y
+CONFIG_PM_SLEEP_SMP=y
+CONFIG_PM_SLEEP=y
+CONFIG_SUSPEND=y
+CONFIG_SUSPEND_FREEZER=y
+CONFIG_ACPI=y
+CONFIG_ACPI_SLEEP=y
+CONFIG_ACPI_PROCFS_POWER=y
+CONFIG_ACPI_SYSFS_POWER=y
+CONFIG_ACPI_PROC_EVENT=y
+CONFIG_ACPI_BUTTON=y
+CONFIG_ACPI_FAN=y
+CONFIG_ACPI_DOCK=y
+CONFIG_ACPI_PROCESSOR=y
+CONFIG_ACPI_HOTPLUG_CPU=y
+CONFIG_ACPI_THERMAL=y
+CONFIG_ACPI_BLACKLIST_YEAR=0
+CONFIG_ACPI_EC=y
+CONFIG_ACPI_PCI_SLOT=m
+CONFIG_ACPI_POWER=y
+CONFIG_ACPI_SYSTEM=y
+CONFIG_X86_PM_TIMER=y
+CONFIG_ACPI_CONTAINER=y
+CONFIG_CPU_FREQ=y
+CONFIG_CPU_FREQ_TABLE=y
+CONFIG_CPU_FREQ_STAT=y
+CONFIG_CPU_FREQ_STAT_DETAILS=y
+CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE=y
+CONFIG_CPU_FREQ_GOV_PERFORMANCE=y
+CONFIG_CPU_FREQ_GOV_POWERSAVE=m
+CONFIG_CPU_FREQ_GOV_USERSPACE=m
+CONFIG_CPU_FREQ_GOV_ONDEMAND=y
+CONFIG_CPU_FREQ_GOV_CONSERVATIVE=m
+CONFIG_X86_ACPI_CPUFREQ=m
+CONFIG_X86_P4_CLOCKMOD=m
+CONFIG_X86_SPEEDSTEP_LIB=m
+CONFIG_CPU_IDLE=y
+CONFIG_CPU_IDLE_GOV_LADDER=y
+CONFIG_CPU_IDLE_GOV_MENU=y
+CONFIG_PCI=y
+CONFIG_PCI_GOANY=y
+CONFIG_PCI_BIOS=y
+CONFIG_PCI_DIRECT=y
+CONFIG_PCI_MMCONFIG=y
+CONFIG_PCI_DOMAINS=y
+CONFIG_PCIEPORTBUS=y
+CONFIG_PCIEAER=y
+CONFIG_ARCH_SUPPORTS_MSI=y
+CONFIG_PCI_MSI=y
+CONFIG_HT_IRQ=y
+CONFIG_ISA_DMA_API=y
+CONFIG_BINFMT_ELF=y
+CONFIG_BINFMT_MISC=m
+CONFIG_NET=y
+CONFIG_PACKET=y
+CONFIG_PACKET_MMAP=y
+CONFIG_UNIX=y
+CONFIG_XFRM=y
+CONFIG_XFRM_USER=m
+CONFIG_XFRM_IPCOMP=m
+CONFIG_NET_KEY=m
+CONFIG_INET=y
+CONFIG_IP_MULTICAST=y
+CONFIG_IP_FIB_HASH=y
+CONFIG_NET_IPIP=m
+CONFIG_NET_IPGRE=m
+CONFIG_NET_IPGRE_BROADCAST=y
+CONFIG_IP_MROUTE=y
+CONFIG_IP_PIMSM_V1=y
+CONFIG_IP_PIMSM_V2=y
+CONFIG_SYN_COOKIES=y
+CONFIG_INET_AH=m
+CONFIG_INET_ESP=m
+CONFIG_INET_IPCOMP=m
+CONFIG_INET_XFRM_TUNNEL=m
+CONFIG_INET_TUNNEL=m
+CONFIG_INET_XFRM_MODE_TRANSPORT=m
+CONFIG_INET_XFRM_MODE_TUNNEL=m
+CONFIG_INET_XFRM_MODE_BEET=y
+CONFIG_INET_LRO=m
+CONFIG_INET_DIAG=m
+CONFIG_INET_TCP_DIAG=m
+CONFIG_TCP_CONG_ADVANCED=y
+CONFIG_TCP_CONG_BIC=y
+CONFIG_TCP_CONG_CUBIC=m
+CONFIG_TCP_CONG_WESTWOOD=m
+CONFIG_TCP_CONG_HTCP=m
+CONFIG_TCP_CONG_HSTCP=m
+CONFIG_TCP_CONG_HYBLA=m
+CONFIG_TCP_CONG_VEGAS=m
+CONFIG_TCP_CONG_SCALABLE=m
+CONFIG_TCP_CONG_LP=m
+CONFIG_TCP_CONG_VENO=m
+CONFIG_TCP_CONG_YEAH=m
+CONFIG_TCP_CONG_ILLINOIS=m
+CONFIG_DEFAULT_BIC=y
+CONFIG_DEFAULT_TCP_CONG="bic"
+CONFIG_IPV6=m
+CONFIG_IPV6_PRIVACY=y
+CONFIG_INET6_AH=m
+CONFIG_INET6_ESP=m
+CONFIG_INET6_IPCOMP=m
+CONFIG_INET6_XFRM_TUNNEL=m
+CONFIG_INET6_TUNNEL=m
+CONFIG_INET6_XFRM_MODE_TRANSPORT=m
+CONFIG_INET6_XFRM_MODE_TUNNEL=m
+CONFIG_INET6_XFRM_MODE_BEET=m
+CONFIG_IPV6_SIT=m
+CONFIG_IPV6_NDISC_NODETYPE=y
+CONFIG_IPV6_TUNNEL=m
+CONFIG_IPV6_MULTIPLE_TABLES=y
+CONFIG_IPV6_SUBTREES=y
+CONFIG_NETFILTER=y
+CONFIG_NETFILTER_ADVANCED=y
+CONFIG_NETFILTER_NETLINK=m
+CONFIG_NETFILTER_NETLINK_QUEUE=m
+CONFIG_NETFILTER_NETLINK_LOG=m
+CONFIG_NF_CONNTRACK=m
+CONFIG_NF_CT_ACCT=y
+CONFIG_NF_CONNTRACK_MARK=y
+CONFIG_NF_CONNTRACK_EVENTS=y
+CONFIG_NF_CT_PROTO_SCTP=m
+CONFIG_NF_CT_PROTO_UDPLITE=m
+CONFIG_NF_CONNTRACK_FTP=m
+CONFIG_NF_CONNTRACK_H323=m
+CONFIG_NF_CONNTRACK_IRC=m
+CONFIG_NF_CONNTRACK_NETBIOS_NS=m
+CONFIG_NF_CONNTRACK_SIP=m
+CONFIG_NF_CT_NETLINK=m
+CONFIG_NETFILTER_XTABLES=m
+CONFIG_NETFILTER_XT_TARGET_CLASSIFY=m
+CONFIG_NETFILTER_XT_TARGET_CONNMARK=m
+CONFIG_NETFILTER_XT_TARGET_DSCP=m
+CONFIG_NETFILTER_XT_TARGET_MARK=m
+CONFIG_NETFILTER_XT_TARGET_NFQUEUE=m
+CONFIG_NETFILTER_XT_TARGET_NFLOG=m
+CONFIG_NETFILTER_XT_TARGET_NOTRACK=m
+CONFIG_NETFILTER_XT_TARGET_RATEEST=m
+CONFIG_NETFILTER_XT_TARGET_TRACE=m
+CONFIG_NETFILTER_XT_TARGET_TCPMSS=m
+CONFIG_NETFILTER_XT_TARGET_TCPOPTSTRIP=m
+CONFIG_NETFILTER_XT_MATCH_COMMENT=m
+CONFIG_NETFILTER_XT_MATCH_CONNBYTES=m
+CONFIG_NETFILTER_XT_MATCH_CONNLIMIT=m
+CONFIG_NETFILTER_XT_MATCH_CONNMARK=m
+CONFIG_NETFILTER_XT_MATCH_CONNTRACK=m
+CONFIG_NETFILTER_XT_MATCH_DCCP=m
+CONFIG_NETFILTER_XT_MATCH_DSCP=m
+CONFIG_NETFILTER_XT_MATCH_ESP=m
+CONFIG_NETFILTER_XT_MATCH_HELPER=m
+CONFIG_NETFILTER_XT_MATCH_IPRANGE=m
+CONFIG_NETFILTER_XT_MATCH_LENGTH=m
+CONFIG_NETFILTER_XT_MATCH_LIMIT=m
+CONFIG_NETFILTER_XT_MATCH_MAC=m
+CONFIG_NETFILTER_XT_MATCH_MARK=m
+CONFIG_NETFILTER_XT_MATCH_OWNER=m
+CONFIG_NETFILTER_XT_MATCH_POLICY=m
+CONFIG_NETFILTER_XT_MATCH_MULTIPORT=m
+CONFIG_NETFILTER_XT_MATCH_PKTTYPE=m
+CONFIG_NETFILTER_XT_MATCH_QUOTA=m
+CONFIG_NETFILTER_XT_MATCH_RATEEST=m
+CONFIG_NETFILTER_XT_MATCH_REALM=m
+CONFIG_NETFILTER_XT_MATCH_SCTP=m
+CONFIG_NETFILTER_XT_MATCH_STATE=m
+CONFIG_NETFILTER_XT_MATCH_STATISTIC=m
+CONFIG_NETFILTER_XT_MATCH_STRING=m
+CONFIG_NETFILTER_XT_MATCH_TCPMSS=m
+CONFIG_NETFILTER_XT_MATCH_TIME=m
+CONFIG_NETFILTER_XT_MATCH_U32=m
+CONFIG_NETFILTER_XT_MATCH_HASHLIMIT=m
+CONFIG_NF_CONNTRACK_IPV4=m
+CONFIG_NF_CONNTRACK_PROC_COMPAT=y
+CONFIG_IP_NF_IPTABLES=m
+CONFIG_IP_NF_MATCH_RECENT=m
+CONFIG_IP_NF_MATCH_ECN=m
+CONFIG_IP_NF_MATCH_AH=m
+CONFIG_IP_NF_MATCH_TTL=m
+CONFIG_IP_NF_MATCH_ADDRTYPE=m
+CONFIG_IP_NF_FILTER=m
+CONFIG_IP_NF_TARGET_REJECT=m
+CONFIG_IP_NF_TARGET_LOG=m
+CONFIG_IP_NF_TARGET_ULOG=m
+CONFIG_NF_NAT=m
+CONFIG_NF_NAT_NEEDED=y
+CONFIG_IP_NF_TARGET_MASQUERADE=m
+CONFIG_IP_NF_TARGET_REDIRECT=m
+CONFIG_IP_NF_TARGET_NETMAP=m
+CONFIG_NF_NAT_PROTO_UDPLITE=m
+CONFIG_NF_NAT_PROTO_SCTP=m
+CONFIG_NF_NAT_FTP=m
+CONFIG_NF_NAT_IRC=m
+CONFIG_NF_NAT_H323=m
+CONFIG_NF_NAT_SIP=m
+CONFIG_IP_NF_MANGLE=m
+CONFIG_IP_NF_TARGET_ECN=m
+CONFIG_IP_NF_TARGET_TTL=m
+CONFIG_IP_NF_TARGET_CLUSTERIP=m
+CONFIG_IP_NF_RAW=m
+CONFIG_IP_NF_SECURITY=m
+CONFIG_NF_CONNTRACK_IPV6=m
+CONFIG_IP6_NF_IPTABLES=m
+CONFIG_IP6_NF_MATCH_RT=m
+CONFIG_IP6_NF_MATCH_OPTS=m
+CONFIG_IP6_NF_MATCH_FRAG=m
+CONFIG_IP6_NF_MATCH_HL=m
+CONFIG_IP6_NF_MATCH_IPV6HEADER=m
+CONFIG_IP6_NF_MATCH_AH=m
+CONFIG_IP6_NF_MATCH_MH=m
+CONFIG_IP6_NF_MATCH_EUI64=m
+CONFIG_IP6_NF_FILTER=m
+CONFIG_IP6_NF_TARGET_LOG=m
+CONFIG_IP6_NF_TARGET_REJECT=m
+CONFIG_IP6_NF_MANGLE=m
+CONFIG_IP6_NF_TARGET_HL=m
+CONFIG_IP6_NF_RAW=m
+CONFIG_IP6_NF_SECURITY=m
+CONFIG_IP_DCCP=m
+CONFIG_INET_DCCP_DIAG=m
+CONFIG_IP_DCCP_ACKVEC=y
+CONFIG_IP_DCCP_CCID2=m
+CONFIG_IP_DCCP_CCID3=m
+CONFIG_IP_DCCP_CCID3_RTO=100
+CONFIG_IP_DCCP_TFRC_LIB=m
+CONFIG_IP_SCTP=m
+CONFIG_SCTP_HMAC_SHA1=y
+CONFIG_NET_SCHED=y
+CONFIG_NET_SCH_CBQ=m
+CONFIG_NET_SCH_HTB=m
+CONFIG_NET_SCH_HFSC=m
+CONFIG_NET_SCH_PRIO=m
+CONFIG_NET_SCH_RED=m
+CONFIG_NET_SCH_SFQ=m
+CONFIG_NET_SCH_TEQL=m
+CONFIG_NET_SCH_TBF=m
+CONFIG_NET_SCH_GRED=m
+CONFIG_NET_SCH_DSMARK=m
+CONFIG_NET_SCH_NETEM=m
+CONFIG_NET_SCH_INGRESS=m
+CONFIG_NET_CLS=y
+CONFIG_NET_CLS_BASIC=m
+CONFIG_NET_CLS_TCINDEX=m
+CONFIG_NET_CLS_ROUTE4=m
+CONFIG_NET_CLS_ROUTE=y
+CONFIG_NET_CLS_FW=m
+CONFIG_NET_CLS_U32=m
+CONFIG_CLS_U32_PERF=y
+CONFIG_CLS_U32_MARK=y
+CONFIG_NET_CLS_RSVP=m
+CONFIG_NET_CLS_RSVP6=m
+CONFIG_NET_CLS_FLOW=m
+CONFIG_NET_EMATCH=y
+CONFIG_NET_EMATCH_STACK=32
+CONFIG_NET_EMATCH_CMP=m
+CONFIG_NET_EMATCH_NBYTE=m
+CONFIG_NET_EMATCH_U32=m
+CONFIG_NET_EMATCH_META=m
+CONFIG_NET_EMATCH_TEXT=m
+CONFIG_NET_CLS_ACT=y
+CONFIG_NET_ACT_POLICE=m
+CONFIG_NET_ACT_GACT=m
+CONFIG_GACT_PROB=y
+CONFIG_NET_ACT_MIRRED=m
+CONFIG_NET_ACT_IPT=m
+CONFIG_NET_ACT_PEDIT=m
+CONFIG_NET_ACT_SIMP=m
+CONFIG_NET_CLS_IND=y
+CONFIG_NET_SCH_FIFO=y
+CONFIG_NET_PKTGEN=m
+CONFIG_BT=m
+CONFIG_BT_L2CAP=m
+CONFIG_BT_RFCOMM=m
+CONFIG_BT_RFCOMM_TTY=y
+CONFIG_BT_BNEP=m
+CONFIG_BT_BNEP_MC_FILTER=y
+CONFIG_BT_BNEP_PROTO_FILTER=y
+CONFIG_BT_HIDP=m
+CONFIG_BT_HCIUSB=m
+CONFIG_BT_HCIUSB_SCO=y
+CONFIG_FIB_RULES=y
+CONFIG_CFG80211=y
+CONFIG_NL80211=y
+CONFIG_WIRELESS_EXT=y
+CONFIG_WIRELESS_EXT_SYSFS=y
+CONFIG_MAC80211=m
+CONFIG_MAC80211_RC_PID=y
+CONFIG_MAC80211_RC_DEFAULT_PID=y
+CONFIG_MAC80211_RC_DEFAULT="pid"
+CONFIG_MAC80211_MESH=y
+CONFIG_MAC80211_LEDS=y
+CONFIG_RFKILL=m
+CONFIG_RFKILL_INPUT=m
+CONFIG_RFKILL_LEDS=y
+CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
+CONFIG_STANDALONE=y
+CONFIG_PREVENT_FIRMWARE_BUILD=y
+CONFIG_FW_LOADER=y
+CONFIG_EXTRA_FIRMWARE=""
+CONFIG_CONNECTOR=m
+CONFIG_MTD=m
+CONFIG_MTD_CONCAT=m
+CONFIG_MTD_CHAR=m
+CONFIG_MTD_BLKDEVS=m
+CONFIG_MTD_MAP_BANK_WIDTH_1=y
+CONFIG_MTD_MAP_BANK_WIDTH_2=y
+CONFIG_MTD_MAP_BANK_WIDTH_4=y
+CONFIG_MTD_CFI_I1=y
+CONFIG_MTD_CFI_I2=y
+CONFIG_MTD_ROM=m
+CONFIG_MTD_SLRAM=m
+CONFIG_MTD_PHRAM=m
+CONFIG_MTD_BLOCK2MTD=m
+CONFIG_PARPORT=m
+CONFIG_PARPORT_PC=m
+CONFIG_PARPORT_SERIAL=m
+CONFIG_PARPORT_PC_FIFO=y
+CONFIG_PARPORT_PC_SUPERIO=y
+CONFIG_PARPORT_1284=y
+CONFIG_PNP=y
+CONFIG_PNPACPI=y
+CONFIG_BLK_DEV=y
+CONFIG_BLK_DEV_LOOP=m
+CONFIG_BLK_DEV_CRYPTOLOOP=m
+CONFIG_CDROM_PKTCDVD=m
+CONFIG_CDROM_PKTCDVD_BUFFERS=8
+CONFIG_MISC_DEVICES=y
+CONFIG_EEPROM_93CX6=m
+CONFIG_HAVE_IDE=y
+CONFIG_IDE=m
+CONFIG_BLK_DEV_IDE=m
+CONFIG_BLK_DEV_IDEDISK=m
+CONFIG_IDEDISK_MULTI_MODE=y
+CONFIG_BLK_DEV_IDECD=m
+CONFIG_BLK_DEV_IDECD_VERBOSE_ERRORS=y
+CONFIG_IDE_TASK_IOCTL=y
+CONFIG_IDE_PROC_FS=y
+CONFIG_IDE_GENERIC=m
+CONFIG_BLK_DEV_IDEDMA_SFF=y
+CONFIG_BLK_DEV_IDEPCI=y
+CONFIG_BLK_DEV_GENERIC=m
+CONFIG_BLK_DEV_IDEDMA_PCI=y
+CONFIG_BLK_DEV_PIIX=m
+CONFIG_BLK_DEV_IDEDMA=y
+CONFIG_SCSI=y
+CONFIG_SCSI_DMA=y
+CONFIG_SCSI_TGT=m
+CONFIG_BLK_DEV_SD=y
+CONFIG_BLK_DEV_SR=m
+CONFIG_CHR_DEV_SG=m
+CONFIG_CHR_DEV_SCH=m
+CONFIG_SCSI_MULTI_LUN=y
+CONFIG_SCSI_CONSTANTS=y
+CONFIG_SCSI_WAIT_SCAN=m
+CONFIG_SCSI_LOWLEVEL=y
+CONFIG_ATA=y
+CONFIG_ATA_ACPI=y
+CONFIG_ATA_SFF=y
+CONFIG_ATA_PIIX=y
+CONFIG_ATA_GENERIC=y
+CONFIG_MD=y
+CONFIG_BLK_DEV_MD=m
+CONFIG_MD_LINEAR=m
+CONFIG_MD_RAID0=m
+CONFIG_MD_RAID1=m
+CONFIG_MD_RAID456=m
+CONFIG_MD_RAID5_RESHAPE=y
+CONFIG_MD_MULTIPATH=m
+CONFIG_BLK_DEV_DM=m
+CONFIG_DM_CRYPT=m
+CONFIG_DM_SNAPSHOT=m
+CONFIG_DM_MIRROR=m
+CONFIG_DM_ZERO=m
+CONFIG_DM_MULTIPATH=m
+CONFIG_DM_DELAY=m
+CONFIG_DM_UEVENT=y
+CONFIG_I2O=m
+CONFIG_I2O_LCT_NOTIFY_ON_CHANGES=y
+CONFIG_I2O_EXT_ADAPTEC=y
+CONFIG_I2O_CONFIG=m
+CONFIG_I2O_BUS=m
+CONFIG_I2O_BLOCK=m
+CONFIG_I2O_SCSI=m
+CONFIG_I2O_PROC=m
+CONFIG_NETDEVICES=y
+CONFIG_IFB=m
+CONFIG_DUMMY=m
+CONFIG_BONDING=m
+CONFIG_EQUALIZER=m
+CONFIG_TUN=m
+CONFIG_VETH=m
+CONFIG_PHYLIB=m
+CONFIG_LXT_PHY=m
+CONFIG_REALTEK_PHY=m
+CONFIG_NET_ETHERNET=y
+CONFIG_MII=y
+CONFIG_NET_TULIP=y
+CONFIG_DE2104X=m
+CONFIG_TULIP=m
+CONFIG_TULIP_MWI=y
+CONFIG_TULIP_MMIO=y
+CONFIG_DE4X5=m
+CONFIG_NET_PCI=y
+CONFIG_EEPRO100=m
+CONFIG_E100=m
+CONFIG_NATSEMI=m
+CONFIG_8139TOO=m
+CONFIG_8139TOO_TUNE_TWISTER=y
+CONFIG_8139TOO_8129=y
+CONFIG_VIA_RHINE=m
+CONFIG_VIA_RHINE_MMIO=y
+CONFIG_NETDEV_1000=y
+CONFIG_VIA_VELOCITY=m
+CONFIG_WLAN_80211=y
+CONFIG_USB_NET_RNDIS_WLAN=m
+CONFIG_RTL8180=m
+CONFIG_RTL8187=m
+CONFIG_RT2X00=m
+CONFIG_RT2X00_LIB=m
+CONFIG_RT2X00_LIB_PCI=m
+CONFIG_RT2X00_LIB_RFKILL=y
+CONFIG_RT2X00_LIB_LEDS=y
+CONFIG_RT2500PCI=m
+CONFIG_RT2500PCI_RFKILL=y
+CONFIG_RT2500PCI_LEDS=y
+CONFIG_USB_USBNET=m
+CONFIG_USB_NET_AX8817X=m
+CONFIG_USB_HSO=m
+CONFIG_USB_NET_CDCETHER=m
+CONFIG_USB_NET_RNDIS_HOST=m
+CONFIG_USB_NET_CDC_SUBSET=m
+CONFIG_USB_ARMLINUX=y
+CONFIG_INPUT=y
+CONFIG_INPUT_MOUSEDEV=y
+CONFIG_INPUT_MOUSEDEV_SCREEN_X=1024
+CONFIG_INPUT_MOUSEDEV_SCREEN_Y=768
+CONFIG_INPUT_EVDEV=m
+CONFIG_INPUT_KEYBOARD=y
+CONFIG_KEYBOARD_ATKBD=y
+CONFIG_INPUT_MOUSE=y
+CONFIG_MOUSE_PS2=m
+CONFIG_MOUSE_PS2_ALPS=y
+CONFIG_MOUSE_PS2_LOGIPS2PP=y
+CONFIG_MOUSE_PS2_SYNAPTICS=y
+CONFIG_MOUSE_PS2_LIFEBOOK=y
+CONFIG_MOUSE_PS2_TRACKPOINT=y
+CONFIG_INPUT_MISC=y
+CONFIG_INPUT_UINPUT=m
+CONFIG_SERIO=y
+CONFIG_SERIO_I8042=y
+CONFIG_SERIO_SERPORT=m
+CONFIG_SERIO_LIBPS2=y
+CONFIG_SERIO_RAW=m
+CONFIG_VT=y
+CONFIG_CONSOLE_TRANSLATIONS=y
+CONFIG_VT_CONSOLE=y
+CONFIG_HW_CONSOLE=y
+CONFIG_VT_HW_CONSOLE_BINDING=y
+CONFIG_DEVKMEM=y
+CONFIG_SERIAL_8250=y
+CONFIG_SERIAL_8250_CONSOLE=y
+CONFIG_FIX_EARLYCON_MEM=y
+CONFIG_SERIAL_8250_PCI=y
+CONFIG_SERIAL_8250_PNP=y
+CONFIG_SERIAL_8250_NR_UARTS=4
+CONFIG_SERIAL_8250_RUNTIME_UARTS=4
+CONFIG_SERIAL_CORE=y
+CONFIG_SERIAL_CORE_CONSOLE=y
+CONFIG_UNIX98_PTYS=y
+CONFIG_PRINTER=m
+CONFIG_HW_RANDOM=y
+CONFIG_HW_RANDOM_INTEL=m
+CONFIG_DEVPORT=y
+CONFIG_I2C=y
+CONFIG_I2C_BOARDINFO=y
+CONFIG_I2C_CHARDEV=m
+CONFIG_I2C_HELPER_AUTO=y
+CONFIG_I2C_I801=m
+CONFIG_I2C_TINY_USB=m
+CONFIG_SENSORS_EEPROM=m
+CONFIG_ARCH_WANT_OPTIONAL_GPIOLIB=y
+CONFIG_GPIOLIB=y
+CONFIG_GPIO_SYSFS=y
+CONFIG_POWER_SUPPLY=y
+CONFIG_HWMON=y
+CONFIG_HWMON_VID=m
+CONFIG_SENSORS_IT87=m
+CONFIG_THERMAL=y
+CONFIG_THERMAL_HWMON=y
+CONFIG_SSB_POSSIBLE=y
+CONFIG_VIDEO_DEV=m
+CONFIG_VIDEO_V4L2_COMMON=m
+CONFIG_VIDEO_ALLOW_V4L1=y
+CONFIG_VIDEO_V4L1_COMPAT=y
+CONFIG_DVB_CORE=m
+CONFIG_VIDEO_MEDIA=m
+CONFIG_MEDIA_ATTACH=y
+CONFIG_MEDIA_TUNER=m
+CONFIG_MEDIA_TUNER_CUSTOMIZE=y
+CONFIG_MEDIA_TUNER_SIMPLE=m
+CONFIG_MEDIA_TUNER_TDA8290=m
+CONFIG_MEDIA_TUNER_TDA827X=m
+CONFIG_MEDIA_TUNER_TDA18271=m
+CONFIG_MEDIA_TUNER_TDA9887=m
+CONFIG_MEDIA_TUNER_TEA5761=m
+CONFIG_MEDIA_TUNER_TEA5767=m
+CONFIG_MEDIA_TUNER_MT20XX=m
+CONFIG_MEDIA_TUNER_MT2060=m
+CONFIG_MEDIA_TUNER_MT2266=m
+CONFIG_MEDIA_TUNER_MT2131=m
+CONFIG_MEDIA_TUNER_QT1010=m
+CONFIG_MEDIA_TUNER_XC2028=m
+CONFIG_MEDIA_TUNER_XC5000=m
+CONFIG_MEDIA_TUNER_MXL5005S=m
+CONFIG_MEDIA_TUNER_MXL5007T=m
+CONFIG_VIDEO_V4L2=m
+CONFIG_VIDEO_V4L1=m
+CONFIG_VIDEOBUF_GEN=m
+CONFIG_VIDEOBUF_VMALLOC=m
+CONFIG_VIDEOBUF_DVB=m
+CONFIG_VIDEO_IR=m
+CONFIG_VIDEO_TVEEPROM=m
+CONFIG_VIDEO_TUNER=m
+CONFIG_VIDEO_CAPTURE_DRIVERS=y
+CONFIG_VIDEO_HELPER_CHIPS_AUTO=y
+CONFIG_VIDEO_IR_I2C=m
+CONFIG_VIDEO_MSP3400=m
+CONFIG_VIDEO_SAA711X=m
+CONFIG_VIDEO_TVP5150=m
+CONFIG_VIDEO_VIVI=m
+CONFIG_V4L_USB_DRIVERS=y
+CONFIG_USB_VIDEO_CLASS=m
+CONFIG_USB_VIDEO_CLASS_INPUT_EVDEV=y
+CONFIG_USB_GSPCA=m
+CONFIG_VIDEO_EM28XX=m
+CONFIG_VIDEO_EM28XX_ALSA=m
+CONFIG_VIDEO_EM28XX_DVB=m
+CONFIG_USB_OV511=m
+CONFIG_DVB_CAPTURE_DRIVERS=y
+CONFIG_DVB_USB=m
+CONFIG_DVB_USB_DEBUG=y
+CONFIG_DVB_FE_CUSTOMISE=y
+CONFIG_DVB_CX24110=m
+CONFIG_DVB_CX24123=m
+CONFIG_DVB_MT312=m
+CONFIG_DVB_S5H1420=m
+CONFIG_DVB_STV0299=m
+CONFIG_DVB_TDA8083=m
+CONFIG_DVB_TDA10086=m
+CONFIG_DVB_VES1X93=m
+CONFIG_DVB_TUNER_ITD1000=m
+CONFIG_DVB_TDA826X=m
+CONFIG_DVB_TUA6100=m
+CONFIG_DVB_SP8870=m
+CONFIG_DVB_SP887X=m
+CONFIG_DVB_CX22700=m
+CONFIG_DVB_CX22702=m
+CONFIG_DVB_DRX397XD=m
+CONFIG_DVB_L64781=m
+CONFIG_DVB_TDA1004X=m
+CONFIG_DVB_NXT6000=m
+CONFIG_DVB_MT352=m
+CONFIG_DVB_ZL10353=m
+CONFIG_DVB_DIB3000MB=m
+CONFIG_DVB_DIB3000MC=m
+CONFIG_DVB_DIB7000M=m
+CONFIG_DVB_DIB7000P=m
+CONFIG_DVB_TDA10048=m
+CONFIG_DVB_VES1820=m
+CONFIG_DVB_TDA10021=m
+CONFIG_DVB_TDA10023=m
+CONFIG_DVB_STV0297=m
+CONFIG_DVB_NXT200X=m
+CONFIG_DVB_OR51211=m
+CONFIG_DVB_OR51132=m
+CONFIG_DVB_BCM3510=m
+CONFIG_DVB_LGDT330X=m
+CONFIG_DVB_S5H1409=m
+CONFIG_DVB_AU8522=m
+CONFIG_DVB_S5H1411=m
+CONFIG_DVB_PLL=m
+CONFIG_DVB_TUNER_DIB0070=m
+CONFIG_DVB_LNBP21=m
+CONFIG_DVB_ISL6405=m
+CONFIG_DVB_ISL6421=m
+CONFIG_DAB=y
+CONFIG_USB_DABUSB=m
+CONFIG_AGP=m
+CONFIG_AGP_INTEL=m
+CONFIG_DRM=m
+CONFIG_DRM_RADEON=m
+CONFIG_VIDEO_OUTPUT_CONTROL=m
+CONFIG_VGA_CONSOLE=y
+CONFIG_VIDEO_SELECT=y
+CONFIG_DUMMY_CONSOLE=y
+CONFIG_SOUND=m
+CONFIG_SND=m
+CONFIG_SND_TIMER=m
+CONFIG_SND_PCM=m
+CONFIG_SND_SEQUENCER=m
+CONFIG_SND_OSSEMUL=y
+CONFIG_SND_MIXER_OSS=m
+CONFIG_SND_PCM_OSS=m
+CONFIG_SND_PCM_OSS_PLUGINS=y
+CONFIG_SND_SEQUENCER_OSS=y
+CONFIG_SND_DYNAMIC_MINORS=y
+CONFIG_SND_SUPPORT_OLD_API=y
+CONFIG_SND_VMASTER=y
+CONFIG_SND_AC97_CODEC=m
+CONFIG_SND_DRIVERS=y
+CONFIG_SND_DUMMY=m
+CONFIG_SND_AC97_POWER_SAVE=y
+CONFIG_SND_AC97_POWER_SAVE_DEFAULT=2
+CONFIG_SND_PCI=y
+CONFIG_SND_BT87X=m
+CONFIG_SND_BT87X_OVERCLOCK=y
+CONFIG_SND_INTEL8X0=m
+CONFIG_SND_USB=y
+CONFIG_AC97_BUS=m
+CONFIG_HID_SUPPORT=y
+CONFIG_HID=y
+CONFIG_HIDRAW=y
+CONFIG_USB_HID=y
+CONFIG_USB_HIDDEV=y
+CONFIG_USB_SUPPORT=y
+CONFIG_USB_ARCH_HAS_HCD=y
+CONFIG_USB_ARCH_HAS_OHCI=y
+CONFIG_USB_ARCH_HAS_EHCI=y
+CONFIG_USB=y
+CONFIG_USB_ANNOUNCE_NEW_DEVICES=y
+CONFIG_USB_DEVICEFS=y
+CONFIG_USB_DEVICE_CLASS=y
+CONFIG_USB_SUSPEND=y
+CONFIG_USB_MON=y
+CONFIG_USB_EHCI_HCD=m
+CONFIG_USB_EHCI_ROOT_HUB_TT=y
+CONFIG_USB_UHCI_HCD=m
+CONFIG_USB_ACM=m
+CONFIG_USB_PRINTER=m
+CONFIG_USB_WDM=m
+CONFIG_USB_STORAGE=m
+CONFIG_USB_STORAGE_DATAFAB=y
+CONFIG_USB_STORAGE_FREECOM=y
+CONFIG_USB_STORAGE_ISD200=y
+CONFIG_USB_STORAGE_DPCM=y
+CONFIG_USB_STORAGE_USBAT=y
+CONFIG_USB_STORAGE_SDDR09=y
+CONFIG_USB_STORAGE_SDDR55=y
+CONFIG_USB_STORAGE_JUMPSHOT=y
+CONFIG_USB_STORAGE_ALAUDA=y
+CONFIG_USB_STORAGE_KARMA=y
+CONFIG_USB_STORAGE_CYPRESS_ATACB=y
+CONFIG_USB_LIBUSUAL=y
+CONFIG_USB_SERIAL=m
+CONFIG_USB_SERIAL_GENERIC=y
+CONFIG_USB_SERIAL_CYPRESS_M8=m
+CONFIG_USB_SERIAL_FTDI_SIO=m
+CONFIG_USB_SERIAL_GARMIN=m
+CONFIG_USB_SERIAL_MOTOROLA=m
+CONFIG_USB_SERIAL_PL2303=m
+CONFIG_USB_GADGET=m
+CONFIG_USB_GADGET_SELECTED=y
+CONFIG_USB_GADGET_AMD5536UDC=y
+CONFIG_USB_AMD5536UDC=m
+CONFIG_USB_GADGET_DUALSPEED=y
+CONFIG_USB_ETH=m
+CONFIG_USB_FILE_STORAGE=m
+CONFIG_USB_FILE_STORAGE_TEST=y
+CONFIG_USB_G_SERIAL=m
+CONFIG_NEW_LEDS=y
+CONFIG_LEDS_CLASS=m
+CONFIG_LEDS_TRIGGERS=y
+CONFIG_LEDS_TRIGGER_TIMER=m
+CONFIG_LEDS_TRIGGER_IDE_DISK=y
+CONFIG_LEDS_TRIGGER_HEARTBEAT=m
+CONFIG_LEDS_TRIGGER_DEFAULT_ON=m
+CONFIG_RTC_LIB=y
+CONFIG_RTC_CLASS=y
+CONFIG_RTC_HCTOSYS=y
+CONFIG_RTC_HCTOSYS_DEVICE="rtc0"
+CONFIG_RTC_DEBUG=y
+CONFIG_RTC_INTF_SYSFS=y
+CONFIG_RTC_INTF_PROC=y
+CONFIG_RTC_INTF_DEV=y
+CONFIG_RTC_INTF_DEV_UIE_EMUL=y
+CONFIG_RTC_DRV_CMOS=y
+CONFIG_UIO=m
+CONFIG_UIO_PDRV=m
+CONFIG_EDD=y
+CONFIG_FIRMWARE_MEMMAP=y
+CONFIG_DMIID=y
+CONFIG_EXT2_FS=y
+CONFIG_EXT2_FS_XATTR=y
+CONFIG_EXT3_FS=y
+CONFIG_EXT3_FS_XATTR=y
+CONFIG_JBD=y
+CONFIG_FS_MBCACHE=y
+CONFIG_REISERFS_FS=m
+CONFIG_REISERFS_FS_XATTR=y
+CONFIG_XFS_FS=m
+CONFIG_INOTIFY=y
+CONFIG_INOTIFY_USER=y
+CONFIG_FUSE_FS=m
+CONFIG_ISO9660_FS=m
+CONFIG_JOLIET=y
+CONFIG_ZISOFS=y
+CONFIG_UDF_FS=m
+CONFIG_UDF_NLS=y
+CONFIG_FAT_FS=m
+CONFIG_MSDOS_FS=m
+CONFIG_VFAT_FS=m
+CONFIG_FAT_DEFAULT_CODEPAGE=437
+CONFIG_FAT_DEFAULT_IOCHARSET="iso8859-1"
+CONFIG_PROC_FS=y
+CONFIG_PROC_KCORE=y
+CONFIG_PROC_SYSCTL=y
+CONFIG_SYSFS=y
+CONFIG_TMPFS=y
+CONFIG_CONFIGFS_FS=m
+CONFIG_JFFS2_FS=m
+CONFIG_JFFS2_FS_DEBUG=0
+CONFIG_JFFS2_FS_WRITEBUFFER=y
+CONFIG_JFFS2_SUMMARY=y
+CONFIG_JFFS2_FS_XATTR=y
+CONFIG_JFFS2_COMPRESSION_OPTIONS=y
+CONFIG_JFFS2_ZLIB=y
+CONFIG_JFFS2_LZO=y
+CONFIG_JFFS2_RTIME=y
+CONFIG_JFFS2_RUBIN=y
+CONFIG_JFFS2_CMODE_NONE=y
+CONFIG_NETWORK_FILESYSTEMS=y
+CONFIG_NFS_FS=m
+CONFIG_NFS_V3=y
+CONFIG_NFS_V4=y
+CONFIG_NFSD=m
+CONFIG_NFSD_V3=y
+CONFIG_LOCKD=m
+CONFIG_LOCKD_V4=y
+CONFIG_EXPORTFS=m
+CONFIG_NFS_COMMON=y
+CONFIG_SUNRPC=m
+CONFIG_SUNRPC_GSS=m
+CONFIG_RPCSEC_GSS_KRB5=m
+CONFIG_MSDOS_PARTITION=y
+CONFIG_NLS=y
+CONFIG_NLS_DEFAULT="iso8859-1"
+CONFIG_NLS_CODEPAGE_437=y
+CONFIG_NLS_CODEPAGE_850=m
+CONFIG_NLS_CODEPAGE_852=m
+CONFIG_NLS_CODEPAGE_855=m
+CONFIG_NLS_CODEPAGE_866=m
+CONFIG_NLS_CODEPAGE_1250=m
+CONFIG_NLS_CODEPAGE_1251=m
+CONFIG_NLS_ASCII=y
+CONFIG_NLS_ISO8859_1=m
+CONFIG_NLS_ISO8859_2=m
+CONFIG_NLS_ISO8859_5=m
+CONFIG_NLS_ISO8859_15=m
+CONFIG_NLS_KOI8_R=m
+CONFIG_NLS_KOI8_U=m
+CONFIG_NLS_UTF8=m
+CONFIG_DLM=m
+CONFIG_TRACE_IRQFLAGS_SUPPORT=y
+CONFIG_ENABLE_WARN_DEPRECATED=y
+CONFIG_ENABLE_MUST_CHECK=y
+CONFIG_FRAME_WARN=1024
+CONFIG_MAGIC_SYSRQ=y
+CONFIG_DEBUG_FS=y
+CONFIG_HEADERS_CHECK=y
+CONFIG_DEBUG_KERNEL=y
+CONFIG_DEBUG_SHIRQ=y
+CONFIG_DETECT_SOFTLOCKUP=y
+CONFIG_BOOTPARAM_SOFTLOCKUP_PANIC_VALUE=0
+CONFIG_SCHED_DEBUG=y
+CONFIG_SCHEDSTATS=y
+CONFIG_TIMER_STATS=y
+CONFIG_DEBUG_RT_MUTEXES=y
+CONFIG_DEBUG_PI_LIST=y
+CONFIG_DEBUG_SPINLOCK=y
+CONFIG_DEBUG_MUTEXES=y
+CONFIG_STACKTRACE=y
+CONFIG_DEBUG_BUGVERBOSE=y
+CONFIG_DEBUG_MEMORY_INIT=y
+CONFIG_FRAME_POINTER=y
+CONFIG_LATENCYTOP=y
+CONFIG_SYSCTL_SYSCALL_CHECK=y
+CONFIG_HAVE_FTRACE=y
+CONFIG_HAVE_DYNAMIC_FTRACE=y
+CONFIG_HAVE_ARCH_KGDB=y
+CONFIG_STRICT_DEVMEM=y
+CONFIG_X86_VERBOSE_BOOTUP=y
+CONFIG_EARLY_PRINTK=y
+CONFIG_X86_PTDUMP=y
+CONFIG_4KSTACKS=y
+CONFIG_DOUBLEFAULT=y
+CONFIG_IO_DELAY_TYPE_0X80=0
+CONFIG_IO_DELAY_TYPE_0XED=1
+CONFIG_IO_DELAY_TYPE_UDELAY=2
+CONFIG_IO_DELAY_TYPE_NONE=3
+CONFIG_IO_DELAY_0X80=y
+CONFIG_DEFAULT_IO_DELAY_TYPE=0
+CONFIG_KEYS=y
+CONFIG_KEYS_DEBUG_PROC_KEYS=y
+CONFIG_SECURITY=y
+CONFIG_SECURITY_NETWORK=y
+CONFIG_SECURITY_NETWORK_XFRM=y
+CONFIG_SECURITY_FILE_CAPABILITIES=y
+CONFIG_SECURITY_DEFAULT_MMAP_MIN_ADDR=0
+CONFIG_XOR_BLOCKS=m
+CONFIG_ASYNC_CORE=m
+CONFIG_ASYNC_MEMCPY=m
+CONFIG_ASYNC_XOR=m
+CONFIG_CRYPTO=y
+CONFIG_CRYPTO_ALGAPI=y
+CONFIG_CRYPTO_AEAD=m
+CONFIG_CRYPTO_BLKCIPHER=m
+CONFIG_CRYPTO_HASH=m
+CONFIG_CRYPTO_MANAGER=y
+CONFIG_CRYPTO_GF128MUL=m
+CONFIG_CRYPTO_NULL=m
+CONFIG_CRYPTO_CRYPTD=m
+CONFIG_CRYPTO_AUTHENC=m
+CONFIG_CRYPTO_CCM=m
+CONFIG_CRYPTO_GCM=m
+CONFIG_CRYPTO_SEQIV=m
+CONFIG_CRYPTO_CBC=m
+CONFIG_CRYPTO_CTR=m
+CONFIG_CRYPTO_CTS=m
+CONFIG_CRYPTO_ECB=m
+CONFIG_CRYPTO_LRW=m
+CONFIG_CRYPTO_PCBC=m
+CONFIG_CRYPTO_XTS=m
+CONFIG_CRYPTO_HMAC=m
+CONFIG_CRYPTO_XCBC=m
+CONFIG_CRYPTO_CRC32C=m
+CONFIG_CRYPTO_MD4=m
+CONFIG_CRYPTO_MD5=m
+CONFIG_CRYPTO_MICHAEL_MIC=m
+CONFIG_CRYPTO_RMD128=m
+CONFIG_CRYPTO_RMD160=m
+CONFIG_CRYPTO_RMD256=m
+CONFIG_CRYPTO_RMD320=m
+CONFIG_CRYPTO_SHA1=m
+CONFIG_CRYPTO_SHA256=m
+CONFIG_CRYPTO_SHA512=m
+CONFIG_CRYPTO_TGR192=m
+CONFIG_CRYPTO_WP512=m
+CONFIG_CRYPTO_AES=m
+CONFIG_CRYPTO_AES_586=m
+CONFIG_CRYPTO_ANUBIS=m
+CONFIG_CRYPTO_ARC4=m
+CONFIG_CRYPTO_BLOWFISH=m
+CONFIG_CRYPTO_CAMELLIA=m
+CONFIG_CRYPTO_CAST5=m
+CONFIG_CRYPTO_CAST6=m
+CONFIG_CRYPTO_DES=m
+CONFIG_CRYPTO_FCRYPT=m
+CONFIG_CRYPTO_KHAZAD=m
+CONFIG_CRYPTO_SALSA20=m
+CONFIG_CRYPTO_SALSA20_586=m
+CONFIG_CRYPTO_SEED=m
+CONFIG_CRYPTO_SERPENT=m
+CONFIG_CRYPTO_TEA=m
+CONFIG_CRYPTO_TWOFISH=m
+CONFIG_CRYPTO_TWOFISH_COMMON=m
+CONFIG_CRYPTO_TWOFISH_586=m
+CONFIG_CRYPTO_DEFLATE=m
+CONFIG_CRYPTO_LZO=m
+CONFIG_HAVE_KVM=y
+CONFIG_BITREVERSE=y
+CONFIG_GENERIC_FIND_FIRST_BIT=y
+CONFIG_GENERIC_FIND_NEXT_BIT=y
+CONFIG_CRC_CCITT=y
+CONFIG_CRC16=m
+CONFIG_CRC_T10DIF=y
+CONFIG_CRC_ITU_T=m
+CONFIG_CRC32=y
+CONFIG_LIBCRC32C=y
+CONFIG_ZLIB_INFLATE=m
+CONFIG_ZLIB_DEFLATE=m
+CONFIG_LZO_COMPRESS=m
+CONFIG_LZO_DECOMPRESS=m
+CONFIG_TEXTSEARCH=y
+CONFIG_TEXTSEARCH_KMP=m
+CONFIG_TEXTSEARCH_BM=m
+CONFIG_TEXTSEARCH_FSM=m
+CONFIG_PLIST=y
+CONFIG_HAS_IOMEM=y
+CONFIG_HAS_IOPORT=y
+CONFIG_HAS_DMA=y
