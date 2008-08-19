@@ -1,39 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:10329 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752137AbYH0UW7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2008 16:22:59 -0400
-Received: by ug-out-1314.google.com with SMTP id c2so1002847ugf.37
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Aug 2008 13:22:56 -0700 (PDT)
-To: "rt2400-devel" <rt2400-devel@lists.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Subject: [rt2x00] rt2800 progress update (bad news)
-Date: Wed, 27 Aug 2008 22:22:53 +0200
-Cc: John Linville <linville@tuxdriver.com>
+Received: from hostap.isc.org ([149.20.54.63]:39214 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751665AbYHSRjt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Aug 2008 13:39:49 -0400
+Date: Tue, 19 Aug 2008 20:38:42 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Lars Ericsson <Lars_Ericsson@telia.com>,
+	'Ivo van Doorn' <ivdoorn@gmail.com>, hostap@lists.shmoo.com,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+Subject: Re: [Rt2400-devel] mac80211 / rt2x00 / rt61 and adhoc status
+Message-ID: <20080819173842.GD4805@jm.kir.nu> (sfid-20080819_193955_254392_D9668119)
+References: <000001c90168$703248e0$0b3ca8c0@gotws1589> <1219088136.2154.11.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200808272222.53719.IvDoorn@gmail.com> (sfid-20080827_222302_546002_E3F8FAB4)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1219088136.2154.11.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, Aug 18, 2008 at 03:35:36PM -0400, Dan Williams wrote:
+> On Mon, 2008-08-18 at 21:27 +0200, Lars Ericsson wrote:
+> > I have backported the patches to 0.5.9 and they works fine, as far as I can
+> > tell on 2.6.26.
+> > I can drop them here if they are of interest. I also vote for putting them
+> > into 0.5.x 
+> > 
+> > Jouni; would that be possible ?
 
-Several weeks after the deadline for the initial rt2800 version,
-I regret to inform everybody that I still do not have a working driver.
+Sure. I'm usually merging all bug fixes from 0.6.x into the 0.5.x
+releases.
 
-rt2800pci is still incomplete since I have put a lot of focus on the rt2800usb
-driver to get at least a single working driver out. Unfortunately rt2800usb
-remains very stubborn and refuses. The only success I have had so far is
-when I first load the legacy driver and switch to rt2800usb afterwards.
-This means I am missing a register initialization or there is a problem with
-the register initialization ordering.
+> Jouni, if you like I could run through current git HEAD and identify
+> some easy candidates for backporting to 0.5.x, and send the 0.6 commit
+> ids to the hostap lists for you along with what needs to be done to
+> backport the patch.
 
-The result is that it looks like I will cancel all previously announced deadlines,
-and at this time can't give a indication when the first version can be released.
-What I can promise is that rt2800usb will be released first, since that driver is most
-complete, and I am putting all focus on that driver first.
+If the commit messages are clear, i.e., it is obvious that the changes
+are bug fixes, I should be able to find these without problems. If there
+is any unclarity on the status of the changes, a list could be helpful.
 
-Ivo
+Whenever I'm preparing a new release from a stable branch, I will go
+through the git tree and pick all changes that look like bug fixes (with
+more filtering for 0.4.x and 0.3.x to only get critical fixes). With
+that list, I'm going to be merging the changes in order into the stable
+branch. I would expect that the changes discussed here would fall into
+this process for automatic (well, with some manual labor ;-) inclusion
+into 0.5.x.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
