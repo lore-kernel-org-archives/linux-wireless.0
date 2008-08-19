@@ -1,122 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:36671 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755504AbYHNGm3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2008 02:42:29 -0400
-To: "Holger Schurig" <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Pondering: how to improve mac80211 roaming ...
-References: <200808120838.52888.hs4233@mail.mn-solutions.de>
-From: Kalle Valo <kalle.valo@nokia.com>
-In-Reply-To: <200808120838.52888.hs4233@mail.mn-solutions.de> (ext Holger Schurig's message of "Tue\, 12 Aug 2008 08\:38\:52 +0200")
-Date: Thu, 14 Aug 2008 09:42:10 +0300
-Message-ID: <877iak85dp.fsf@nokia.com> (sfid-20080814_084236_161697_82AA0999)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from chilli.pcug.org.au ([203.10.76.44]:47791 "EHLO smtps.tip.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750991AbYHSE1x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Aug 2008 00:27:53 -0400
+Date: Tue, 19 Aug 2008 14:27:39 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: David Miller <davem@davemloft.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-08-18
+Message-Id: <20080819142739.aee40461.sfr@canb.auug.org.au> (sfid-20080819_062805_919499_E94213B8)
+In-Reply-To: <20080818.211632.251536898.davem@davemloft.net>
+References: <20080817185605.GC30679@tuxdriver.com>
+	<20080817.151251.204370966.davem@davemloft.net>
+	<20080818151551.GA5524@tuxdriver.com>
+	<20080818.211632.251536898.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Tue__19_Aug_2008_14_27_39_+1000_TomPPdzDZIhuXn4u"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Holger Schurig <hs4233@mail.mn-solutions.de> writes:
+--Signature=_Tue__19_Aug_2008_14_27_39_+1000_TomPPdzDZIhuXn4u
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> Hi !
+Hi Dave,
 
-Hello,
-
-> The last days I looked a bit at mac80211 and how it works. While
-> doing this, I detected that mac80211 does virtually no roaming.
-> That is, it is very usable for a hot-spot setup (Office, Home,
-> Starbucks), but not for a place where you have 20 Access-Points
-> and move between them.
-
-Yes, the current implementation is far from perfect. I will be working
-on with roaming as well and want to improve it.
-
-[...]
-
-> How to detect missed beacons?
-> -----------------------------
-> When I know the beacon period, I could setup a timer
-> with "beacon_period + beacon_period*0.5". In the timer function I
-> could then increase a missed beacon counter and act accordingly,
-> e.g. search for APs, roam etc.
+On Mon, 18 Aug 2008 21:16:32 -0700 (PDT) David Miller <davem@davemloft.net>=
+ wrote:
 >
-> But how would I determine the beacon period?
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Mon, 18 Aug 2008 11:15:51 -0400
+>=20
+> > (Revision 2, commit references in changelogs augmented w/ subject text.)
+> >=20
+> > Here is the latest round of wireless fixes for 2.6.27.  The silliest one
+> > is the one from Adrian Bunk, which applies the gcc-related fix to ath9k
+> > again because there were two identical pieces of code to fix -- I guess
+> > I didn't get the joke *facepalm*...
+> >=20
+> > I don't think there is anything else remarkable, although I think we fix
+> > a couple of the current regressions on LKML.
+>=20
+> Pulled thanks John.
+>=20
+> Assuming nothing shows up in my build testing I'll push this out
+> to kernel.org shortly.
 
-Jouni answered this one already.
+Just as an extra datapoint, this has already merged into linux-next and
+built fine for a powerpc ppc64_defconfig and x86_64 allmodconfig this
+morning.  And yesterday's linux-next had the previous version of these
+patches (only commit comment differences as far as I am aware) and the
+build logs are at http://kisskb.ellerman.id.au/linux-next .
 
-> Is detection of missed beacons good enought?
-> --------------------------------------------
-> For me this approach seems like driving a car into the wall of a
-> house. Then crash-detection notifies me and I'd search for a new
-> way to drive.
->
-> Certainly it's better to act before the accident happens, so I'd
-> rather do it differently. With a fullmac driver I looked at the
-> RSSI and, when it fell below a certain threshhold, started the
-> roaming.
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
 
-Yes, we definitely need background scanning which is triggered, at
-least, based on a RSSI threshold and possibly some other parameters,
-for example number of failed transmissions.
+--Signature=_Tue__19_Aug_2008_14_27_39_+1000_TomPPdzDZIhuXn4u
+Content-Type: application/pgp-signature
 
-> In-kernel or in-userspace?   --- or hybrid?
-> -------------------------------------------
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-This is the question.
+iEYEARECAAYFAkiqS7sACgkQjjKRsyhoI8zOiACdGJnVh2E+UkQOhHwYCqwdwjTv
+R4UAoICe1FKj5b0I4N133k2IYqT/0feV
+=qC4V
+-----END PGP SIGNATURE-----
 
-> Some people say that in-userspace roaming is the way to go.
-
-In my opinion we should move roaming logic to the user space as much
-as possible.
-
-> Maybe. But in-kernel, I have more information.
-
-Yes, kernel has more information. But kernel can send an event to the
-user space whenever where is need to bacground scan or roam.
-
-> In the mac80211 case, the above quoted code is executed whenever I
-> receive a beacon. So I can very quickly react to declining SNR.
-
-It wouln't be that much slower to send an event to userspace and let
-userspace initiate scanning. This isn't in hotpath.
-
-> Userspace would have to issue periodically scan requests and process
-> them, quite a bit of overhead.
-
-Do you mean the overhead of creating the scan results and sending them
-to the user space? Is that really so high that we need to optimize it?
-Remember that the interval between scans is measured in seconds, so it
-doesn't happen very often.
-
-> But there is existing user-space code that does roaming, e.g. WPA
-> Supplicant and (probably, not sure) Network-Manager.
->
-> So I think I'd opt to a hybrid approach. Userspace uses cfg80211
-> to configure some roaming threshold to mac80211. mac80211 would
-> gain AP-is-about-to-fail detection and, if it detects this, it
-> would signal via cfg80211 (is this possible?) to user-space that
-> it should now roam.
-
-I think we need to support Wireless Extensions as well, because
-cfg80211 is not widely used yet.
-
-> Userspace then could, while still associated, scan for other APs
-> (e.g. first on preferred channels, like 1,6,11, then on all
-> channels) and if it finds something, trigger association to
-> another AP.
-
-This sounds just what I have been thinking.
-
-> For a WEP or non-encrypted environment a in-kernel-roaming would
-> be possible, this would bring a similar behavior to mac80211 that
-> common fullmac drivers exhibit. But my first goal would not be in
-> this area.
-
-My view is that in kernel roaming is not worth the effort, I would
-prefer to keep the implementation simple and not complicate mac80211
-unnecessarily. If we have the scan logic in one place, ie. in user
-space, implementation and testing is a lot simpler.
-
--- 
-Kalle Valo
+--Signature=_Tue__19_Aug_2008_14_27_39_+1000_TomPPdzDZIhuXn4u--
