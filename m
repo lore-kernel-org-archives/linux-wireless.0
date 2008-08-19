@@ -1,58 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from courier.cs.helsinki.fi ([128.214.9.1]:59474 "EHLO
-	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751304AbYHAIGp (ORCPT
+Received: from toronto053.server4you.de ([62.75.220.53]:43276 "EHLO
+	toronto053.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751258AbYHSNoh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 04:06:45 -0400
-Message-ID: <4892C359.9000304@cs.helsinki.fi> (sfid-20080801_100653_133499_75461D17)
-Date: Fri, 01 Aug 2008 11:03:37 +0300
-From: Pekka Enberg <penberg@cs.helsinki.fi>
+	Tue, 19 Aug 2008 09:44:37 -0400
+Date: Tue, 19 Aug 2008 15:44:35 +0200
+From: Daniel Wagner <wagi@monom.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] Use only precedence level of DSCP field for frame
+	classification
+Message-ID: <20080819134435.GB11660@notlob.celestrius.com> (sfid-20080819_154443_067597_CEF40621)
+References: <48AA887D.5090307@monom.org> <ee101a74bd16a9467853b5ac049c5da4.squirrel@secure.sipsolutions.net> <48AA8E2C.4060303@monom.org> <48AAAD30.2080207@monom.org> <48AAB70A.4090402@monom.org>
 MIME-Version: 1.0
-To: Jiri Slaby <jirislaby@gmail.com>
-CC: Dave Young <hidave.darkstar@gmail.com>, johannes@sipsolutions.net,
-	akpm@linux-foundation.org, tomasw@gmail.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, me@bobcopeland.com,
-	linville@tuxdriver.com
-Subject: Re: [PATCH] ath5k : ath5k_config_interface deadlock fix
-References: <20080801074014.GA3341@darkstar> <4892C2CA.7010003@gmail.com>
-In-Reply-To: <4892C2CA.7010003@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <48AAB70A.4090402@monom.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri Slaby wrote:
-> Dave Young napsal(a):
->> In the drivers/net/wireless/ath5k/base.c, there's recursive locking of 
->> sc->lock
->> This casue the kernel stuck
->>
->> Bug report please see:
->> http://lkml.org/lkml/2008/7/29/32
->>
->> Fixed it by remove the lock in sub routine "ath5k_beacon_update",
->> The ath5k_config_interface is the only caller to it.
->>
->> [  171.430207] =============================================
->> [  171.432140] [ INFO: possible recursive locking detected ]
->> [  171.433113] 2.6.27-rc1-smp #4
->> [  171.434079] ---------------------------------------------
->> [  171.435039] ath5k_pci/2447 is trying to acquire lock:
->> [  171.435990]  (&sc->lock){--..}, at: [<f89ee9b5>] 
->> ath5k_config_interface+0xd5/0x340 [ath5k]
->> [  171.437046] [  171.437048] but task is already holding lock:
->> [  171.438903]  (&sc->lock){--..}, at: [<f89ee91d>] 
->> ath5k_config_interface+0x3d/0x340 [ath5k]
->> [  171.439953] [  171.439954] other info that might help us debug this:
->> [  171.441795] 3 locks held by ath5k_pci/2447:
->> [  171.442729]  #0:  ((name)){--..}, at: [<c013a122>] 
->> run_workqueue+0x102/0x1d0
->> [  171.443800]  #1:  (&(&local->scan_work)->work){--..}, at: 
->> [<c013a122>] run_workqueue+0x102/0x1d0
->> [  171.444859]  #2:  (&sc->lock){--..}, at: [<f89ee91d>] 
->> ath5k_config_interface+0x3d/0x340 [ath5k]
-> 
-> Should be fixed already:
-> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-2.6.git;a=commitdiff_plain;h=bc05116ab33d30342e2b4b1bcc6d6e1184e9df97 
+Bit 4-5 of DSCP should not be considered by classify_d1. The
+802.11 QoS Priority field is only depending on the precedence level.
 
-I guess that didn't make it to -stable?
+Signed-off-by: Daniel Wagner <wagi@monom.org>
+---
+ net/mac80211/wme.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 4310e2f..7229e95 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -47,8 +47,6 @@ static unsigned int classify_1d(struct sk_buff *skb)
+ 		return 0;
+ 	}
+ 
+-	if (dscp & 0x1c)
+-		return 0;
+ 	return dscp >> 5;
+ }
+ 
+-- 
+1.5.6.2
+
