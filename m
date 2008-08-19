@@ -1,67 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:64099 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752894AbYHMWss (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Aug 2008 18:48:48 -0400
-From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
-To: wimax@linuxwimax.org
-Subject: [ANN] WiMAX stack and drivers for Intel WiMAX Link 5050 v1.2.5
-Date: Wed, 13 Aug 2008 15:48:32 -0700
-Cc: linux-wireless@vger.kernel.org
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:40691 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751609AbYHSWSZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Aug 2008 18:18:25 -0400
+Message-ID: <48AB46AC.3090703@lwfinger.net> (sfid-20080820_001829_940545_B953A0FA)
+Date: Tue, 19 Aug 2008 17:18:20 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200808131548.32207.inaky@linux.intel.com> (sfid-20080814_004851_907952_6E16132B)
+To: Niklas Wulf <niklas@wulf-home.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH RFT] b43: Rewrite PHY API for N-PHY/LP-PHY  -- good on
+ 4311
+References: <48AB5D89.5090705@wulf-home.de>
+In-Reply-To: <48AB5D89.5090705@wulf-home.de>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All
+Niklas Wulf wrote:
+> I tested this one on my Macbook Pro (3,1).
+> 
+> # lspci -v
+> 0b:00.0 Network controller: Broadcom Corporation BCM4328 802.11a/b/g/n
+> (rev 05)
+> Subsystem: Apple Computer Inc. Device 008c
+> Flags: bus master, fast devsel, latency 0, IRQ 16
+> Memory at 97300000 (64-bit, non-prefetchable) [size=16K]
+> Capabilities: [40] Power Management version 3
+> Capabilities: [58] Vendor Specific Information <?>
+> Capabilities: [e8] Message Signalled Interrupts: Mask- 64bit+ Queue=0/0
+> Enable-
+> Capabilities: [d0] Express Endpoint, MSI 00
+> Kernel driver in use: b43-pci-bridge
+> Kernel modules: ssb
+> 
+> It is not recognized by the driver... should it? I don't get a wireless
+> device listed in ifconfig nor does dmesg show any device.
 
+No, the driver is not loading correctly because the N PHY is not yet 
+supported. The reverse engineering for that device is barely started.
 
-Intel would like to announce the 1.2.5 release of the Linux WiMAX common
-stack and drivers for its WiMAX devices (eg: Intel(r) WiMAX/WiFi Link 5050).
+> # ifconfig
+> eth0 [...]
+> lo [...]
+> 
+> # dmesg
+> [...]
+> Broadcom 43xx driver loaded [ Features: PMLR, Firmware-ID: FW13 ]
+> [...]
+> 
+> I'm kind of new to all this wireless stuff. Linuxwireless.org tells me
+> 4328 does not work because of missing N Phys support, so I hoped this
+> patch would make some difference.
 
-You can find the code and additional information at http://linuxwimax.org.
+No, that patch is just preparation for what will happen in the future 
+when both LP and N PHYs are supported.
 
-This is a maintenance release; the changes from release 1.2 to 1.2.5 are:
+> A problem could be the wrong firmware version. OS X says the Chip has
+> 4.150.10.__6__ but I can only find 4.150.10.5. Is this important?
 
-* WiMAX network service:*
+Driver 4.150.10.5 is a MIPS driver for Linux. Obviously 4.150.10.6 is 
+an OS X driver. I wouldn't expect any difference in the embedded 
+firmware between them.
 
-Miscellaneous fixes:
+Larry
 
-- Unable to connect using eap-tls authentication (workaround fix with
-  host side tls)
-
-- SW RF state is not restored across wimax service restarts.
-
-- Repeat connect/disconnect sequence causes the device and wimax
-  service to reset.
-
-- Switching HW radio on/off crashes the wimax service.
-
-- CINR/RSSI values are not reported correctly.
-
-- NDnSAgentConfig_forDriver.xml sometimes get corrupted during wimax
-  service shutdown.
-
-- Disconnecting from auto-connect mode does not change mode to manual.
-
-- wimaxcu crashes when launched without wimax service 
-
-- Not all information or some information is incorrectly reported on
-  querying device info.
-
-- Device state cotinues to be reported as connected after losing
-  connection for extended period.
-
-
-* WiMAX kernel stack and drivers:
-
-Miscellaneous fixes
-
-- fix memory corruption caused by race condition on freed skb
-
-- use skb_end_pointer() instead of skb->end so we work properly on 64 bits
-
--- 
-Inaky
