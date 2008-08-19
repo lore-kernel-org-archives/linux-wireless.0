@@ -1,48 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:45768 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759484AbYHDVOv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 17:14:51 -0400
-Date: Mon, 04 Aug 2008 16:14:51 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
+Received: from hostap.isc.org ([149.20.54.63]:55152 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753083AbYHSHzZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Aug 2008 03:55:25 -0400
+Date: Tue, 19 Aug 2008 10:54:32 +0300
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] p54: Fix regression due to commit b19fa1f
-Message-ID: <4897714b.z7H23Rca9Z4lOo4Q%Larry.Finger@lwfinger.net> (sfid-20080804_231456_051077_1A4A941D)
+Subject: [PATCH] mac80211: Use IWEVASSOCREQIE instead of IWEVCUSTOM
+Message-ID: <20080819075431.GA4805@jm.kir.nu> (sfid-20080819_095529_999484_8A58C7F8)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit b19fa1fa91845234961c64dbd564671aa7c0fd27, the configuration
-parameter NETDEVICES_MULTIQUEUE was eliminated making multiple TX queues
-the normal behavior. For p54usb, enabling multiple queues broke the driver.
+The previous code was using IWEVCUSTOM to report IEs from AssocReq and
+AssocResp frames into user space. This can easily hit the 256 byte
+limit (IW_CUSTOM_MAX) with APs that include number of vendor IEs in
+AssocResp. This results in the event message not being sent and dmesg
+showing "wlan0 (WE) : Wireless Event too big (366)" type of errors.
 
-The real failure is not known, but a temporary hack that forces only one
-queue is presented here.
+Convert mac80211 to use IWEVASSOCREQIE/IWEVASSOCRESPIE to avoid the
+issue of being unable to send association IEs as wireless events. These
+newer event types use binary encoding and larger maximum size
+(IW_GENERIC_IE_MAX = 1024), so the likelyhood of not being able to send
+the IEs is much smaller than with IWEVCUSTOM. As an extra benefit, the
+code is also quite a bit simpler since there is no need to allocate an
+extra buffer for hex encoding.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
-
-John,
-
-This is clearly not the best fix, but there has been no action so far, and
-it does fix the b19fa1f regression. Let's push this up to 2.6.27.
-
-Larry
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
 
-Index: linux-2.6/drivers/net/wireless/p54/p54common.c
+Index: wireless-testing/net/mac80211/mlme.c
 ===================================================================
---- linux-2.6.orig/drivers/net/wireless/p54/p54common.c
-+++ linux-2.6/drivers/net/wireless/p54/p54common.c
-@@ -150,7 +150,7 @@ void p54_parse_firmware(struct ieee80211
- 		priv->tx_stats[1].limit = 4;
- 		priv->tx_stats[2].limit = 3;
- 		priv->tx_stats[3].limit = 1;
--		dev->queues = 4;
-+		dev->queues = 1; /* temp. hack, set to 1 as 4 breaks p54usb */
+--- wireless-testing.orig/net/mac80211/mlme.c
++++ wireless-testing/net/mac80211/mlme.c
+@@ -501,51 +501,21 @@ int ieee80211_ht_addt_info_ie_to_ht_bss_
+ static void ieee80211_sta_send_associnfo(struct net_device *dev,
+ 					 struct ieee80211_if_sta *ifsta)
+ {
+-	char *buf;
+-	size_t len;
+-	int i;
+ 	union iwreq_data wrqu;
+ 
+-	if (!ifsta->assocreq_ies && !ifsta->assocresp_ies)
+-		return;
+-
+-	buf = kmalloc(50 + 2 * (ifsta->assocreq_ies_len +
+-				ifsta->assocresp_ies_len), GFP_KERNEL);
+-	if (!buf)
+-		return;
+-
+-	len = sprintf(buf, "ASSOCINFO(");
+ 	if (ifsta->assocreq_ies) {
+-		len += sprintf(buf + len, "ReqIEs=");
+-		for (i = 0; i < ifsta->assocreq_ies_len; i++) {
+-			len += sprintf(buf + len, "%02x",
+-				       ifsta->assocreq_ies[i]);
+-		}
++		memset(&wrqu, 0, sizeof(wrqu));
++		wrqu.data.length = ifsta->assocreq_ies_len;
++		wireless_send_event(dev, IWEVASSOCREQIE, &wrqu,
++				    ifsta->assocreq_ies);
  	}
++
+ 	if (ifsta->assocresp_ies) {
+-		if (ifsta->assocreq_ies)
+-			len += sprintf(buf + len, " ");
+-		len += sprintf(buf + len, "RespIEs=");
+-		for (i = 0; i < ifsta->assocresp_ies_len; i++) {
+-			len += sprintf(buf + len, "%02x",
+-				       ifsta->assocresp_ies[i]);
+-		}
+-	}
+-	len += sprintf(buf + len, ")");
+-
+-	if (len > IW_CUSTOM_MAX) {
+-		len = sprintf(buf, "ASSOCRESPIE=");
+-		for (i = 0; i < ifsta->assocresp_ies_len; i++) {
+-			len += sprintf(buf + len, "%02x",
+-				       ifsta->assocresp_ies[i]);
+-		}
++		memset(&wrqu, 0, sizeof(wrqu));
++		wrqu.data.length = ifsta->assocresp_ies_len;
++		wireless_send_event(dev, IWEVASSOCRESPIE, &wrqu,
++				    ifsta->assocresp_ies);
+ 	}
+-
+-	memset(&wrqu, 0, sizeof(wrqu));
+-	wrqu.data.length = len;
+-	wireless_send_event(dev, IWEVCUSTOM, &wrqu, buf);
+-
+-	kfree(buf);
  }
- EXPORT_SYMBOL_GPL(p54_parse_firmware);
+ 
+ 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
