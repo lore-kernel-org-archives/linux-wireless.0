@@ -1,33 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tur.go2.pl ([193.17.41.50]:40654 "EHLO tur.go2.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751286AbYHWQTW convert rfc822-to-8bit (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57157
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751107AbYHSEQd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2008 12:19:22 -0400
-Received: from mailout1.go2.pl (mailout1.go2.pl [193.17.41.11])
-	by tur.go2.pl (o2.pl Mailer 2.0.1) with ESMTP id 3A2D3233D70
-	for <linux-wireless@vger.kernel.org>; Sat, 23 Aug 2008 18:19:20 +0200 (CEST)
-Received: from o2.pl (unknown [10.0.0.38])
-	by mailout1.go2.pl (Postfix) with SMTP id DB7133000E
-	for <linux-wireless@vger.kernel.org>; Sat, 23 Aug 2008 18:17:46 +0200 (CEST)
-Subject: =?UTF-8?Q?BUG=3F?=
-From: =?UTF-8?Q?Mateyko?= <mateyko5@o2.pl>
-To: linux-wireless@vger.kernel.org
+	Tue, 19 Aug 2008 00:16:33 -0400
+Date: Mon, 18 Aug 2008 21:16:32 -0700 (PDT)
+Message-Id: <20080818.211632.251536898.davem@davemloft.net> (sfid-20080819_061638_780453_020F6B44)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-08-18
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080818151551.GA5524@tuxdriver.com>
+References: <20080817185605.GC30679@tuxdriver.com>
+	<20080817.151251.204370966.davem@davemloft.net>
+	<20080818151551.GA5524@tuxdriver.com>
 Mime-Version: 1.0
-Message-ID: <708b5462.3a2f801e.48b0382a.d8795@o2.pl> (sfid-20080823_181926_245940_1F19B51C)
-Date: Sat, 23 Aug 2008 18:17:46 +0200
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here is output from console after typing "make"
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 18 Aug 2008 11:15:51 -0400
 
+> (Revision 2, commit references in changelogs augmented w/ subject text.)
+> 
+> Here is the latest round of wireless fixes for 2.6.27.  The silliest one
+> is the one from Adrian Bunk, which applies the gcc-related fix to ath9k
+> again because there were two identical pieces of code to fix -- I guess
+> I didn't get the joke *facepalm*...
+> 
+> I don't think there is anything else remarkable, although I think we fix
+> a couple of the current regressions on LKML.
 
-mateyko@********:~/Pulpit/compat-wireless-2008-08-06$ make
-/home/mateyko/Pulpit/compat-wireless-2008-08-06/config.mk:30: *** "ERROR: There is a bug with compat-wireless on 2.6.22. Remove me if you want to fix me". Stop.
-mateyko@********:~/Pulpit/compat-wireless-2008-08-06$ make install
-/home/mateyko/Pulpit/compat-wireless-2008-08-06/config.mk:30: *** "ERROR: There is a bug with compat-wireless on 2.6.22. Remove me if you want to fix me". Stop.
-mateyko@********:~/Pulpit/compat-wireless-2008-08-06$ 
+Pulled thanks John.
 
+Assuming nothing shows up in my build testing I'll push this out
+to kernel.org shortly.
 
-Btw i don't know how to use mailing list so any reply send to: mateyko5(at)o2.pl or mateyko(at)mateyko.net
+Thanks again!
