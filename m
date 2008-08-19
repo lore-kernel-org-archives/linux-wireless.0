@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:53569 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:58145 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764706AbYHEUV7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 16:21:59 -0400
-Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id m75KLrZb010122
-	for <linux-wireless@vger.kernel.org>; Tue, 5 Aug 2008 16:21:53 -0400
-Received: from mail.boston.redhat.com (mail.boston.redhat.com [10.16.255.12])
-	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id m75KLpYb002728
-	for <linux-wireless@vger.kernel.org>; Tue, 5 Aug 2008 16:21:52 -0400
-Received: from [10.16.3.195] (dhcp-100-3-195.bos.redhat.com [10.16.3.195])
-	by mail.boston.redhat.com (8.13.1/8.13.1) with ESMTP id m75KLnUl004986
-	for <linux-wireless@vger.kernel.org>; Tue, 5 Aug 2008 16:21:49 -0400
-Subject: hostap: handling device renames better
+	id S1754100AbYHSTm6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Aug 2008 15:42:58 -0400
+Subject: Re: [PATCH 3/4] libertas: check for old, unsupported hardware
 From: Dan Williams <dcbw@redhat.com>
-To: linux-wireless@vger.kernel.org
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <200806051402.39736.hs4233@mail.mn-solutions.de>
+References: <200806051308.35863.hs4233@mail.mn-solutions.de>
+	 <1212666420.25730.4.camel@localhost.localdomain>
+	 <200806051402.39736.hs4233@mail.mn-solutions.de>
 Content-Type: text/plain
-Date: Tue, 05 Aug 2008 16:23:41 -0400
-Message-Id: <1217967821.29886.4.camel@localhost.localdomain> (sfid-20080805_222207_764541_7BCED377)
+Date: Tue, 19 Aug 2008 15:44:05 -0400
+Message-Id: <1219175045.23157.25.camel@localhost.localdomain> (sfid-20080819_214302_718046_346428B9)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, 2008-06-05 at 14:02 +0200, Holger Schurig wrote:
+> I got this piece of code from the 5.0.16 GPL driver, but 
+> implemented it differently. I mainly put it in to find out if 
+> YOU have such an old silicon. When people yell "my card isn't 
+> supported, I get this kernel error" we can still add the 
+> necessary support.
+> 
+> I don't want to add the support right now because I don't have 
+> this old hardware and don't know anyone with it. So no-one could 
+> test this.
 
-While trying to flash my Prism 2.5 card today, I ran into a problem
-that'll probably hit quite a few drivers (mostly older ones).
+So it turns out I have two of these cards, which are the ones I've been
+using for testing since last year.  Which might explain why I've been
+having so many problems that you're not having.  They are AmbiCom
+WL54-CF rev 1.0 cards which I believe are B0 revision looking at the FCC
+internal photos.  The card returns 0x10 as the revision.
 
-udev renames the interface after probing, but anything the driver set up
-manually at probe/init time (in this case /proc/net/hostap/wifi0/pda)
-will still be using the old device name.  Thus the prism2_srec tool
-refused to work because it needs both the PDA from /proc/net/hostap/...
-as well as some ioctls on the device.  Unfortunately, the device names
-are different due to udev's renaming.
+> The 5.0.16 source mentions two things needed for this old 
+> hardware:
+> 
+> * doing read-modify-write instead of just setting bits, this
+>   applies to IF_CS_HOST_STATUS and IF_CS_HOST_INT_CAUSE
 
-How are drivers made aware that their device's name has changed so they
-could potentially update things they stick in /proc or wherever?  hostap
-and airo come to mind as current users of /proc.
+Any chance you could whip up a quick test patch for this one?
+
+> * and an interrupt workaround
+
+I'll try to figure out what needs to happen for this, lack of it might
+be the cause of the hangs I've been seeing with my B0 hardware.
 
 Dan
 
-(ideally this stuff should be migrated to the device's sysfs directory,
-not live in /proc/net)
 
