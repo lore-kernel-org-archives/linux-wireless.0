@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx03.syneticon.net ([87.79.32.166]:2834 "EHLO
-	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753861AbYHBSug (ORCPT
+Received: from toronto053.server4you.de ([62.75.220.53]:53318 "EHLO
+	toronto053.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754360AbYHSMFc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 14:50:36 -0400
-Received: from localhost (filter1.syneticon.net [192.168.113.3])
-	by mx03.syneticon.net (Postfix) with ESMTP id 1EF12932A
-	for <linux-wireless@vger.kernel.org>; Sat,  2 Aug 2008 20:50:35 +0200 (CEST)
-Received: from mx03.syneticon.net ([192.168.113.4])
-	by localhost (mx03.syneticon.net [192.168.113.3]) (amavisd-new, port 10025)
-	with ESMTP id dT7KOBFEd0Ll for <linux-wireless@vger.kernel.org>;
-	Sat,  2 Aug 2008 20:50:32 +0200 (CEST)
-Received: from [192.168.10.145] (koln-4db4093a.pool.einsundeins.de [77.180.9.58])
-	by mx03.syneticon.net (Postfix) with ESMTP
-	for <linux-wireless@vger.kernel.org>; Sat,  2 Aug 2008 20:50:32 +0200 (CEST)
-Message-ID: <4894AC77.5060801@wpkg.org> (sfid-20080802_205039_831097_4B33BB73)
-Date: Sat, 02 Aug 2008 20:50:31 +0200
-From: Tomasz Chmielewski <mangoo@wpkg.org>
+	Tue, 19 Aug 2008 08:05:32 -0400
+Message-ID: <48AAB70A.4090402@monom.org> (sfid-20080819_140554_098124_B40935FB)
+Date: Tue, 19 Aug 2008 14:05:30 +0200
+From: Daniel Wagner <wagi@monom.org>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: wireless USB adapters recommendations?
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: QoS and DSCP
+References: <48AA887D.5090307@monom.org> <ee101a74bd16a9467853b5ac049c5da4.squirrel@secure.sipsolutions.net> <48AA8E2C.4060303@monom.org> <48AAAD30.2080207@monom.org>
+In-Reply-To: <48AAAD30.2080207@monom.org>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm looking for a USB wireless adapter which is well supported under Linux.
+> Together with some printks I see that the code in wme.c classify_1d does
+> exactly the thing which it should. It returns the dscp value correctly.
+> Using --set-dscp 0x18 classify_1d returns 3 and with --set-dscp-class 
+> EF, classify_1d returns 5. 
 
-Requirements:
+Crap, that's not correct. I think I found the problem:
 
-- WPA2
-- should support ad-hoc and access point modes
-- should work under mipsel (I had once a prism54 mini-PCI card which 
-didn't work under mipsel)
+static unsigned int classify_1d(struct sk_buff *skb)
+{
+        ...
 
-It would be also nice to to get the hardware from a producer which 
-cooperates with Linux community.
+	if (dscp & 0x1c)
+		return 0;
 
-Do you guys have any recommendations?
+	return dscp >> 5;
+}
 
+--set-dscp 0x28 (precendence level 5) classify_1d returns the correct
+value 5. 
 
--- 
-Tomasz Chmielewski
-http://wpkg.org
+Setting with --set-dscp-class EF the TOS field it will have value 0xb8 (10111000b)
+which maps to 
+Bit 7-2: DSCP
+Bit 1-0: ECN (expliliciet congestion notifaction)
+
+So the question is what the 'if' is for? 
+
+stay tuned!
+
+daniel
