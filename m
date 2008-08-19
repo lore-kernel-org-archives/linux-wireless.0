@@ -1,74 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:37929 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752273AbYHHSSB (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.174]:32032 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751952AbYHSMfp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Aug 2008 14:18:01 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so441220nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Aug 2008 11:18:00 -0700 (PDT)
-To: Jochen Friedrich <jochen@scram.de>
-Subject: Re: [PATCH] rt2x00: Fix txdone_entry_desc_flags
-Date: Fri, 8 Aug 2008 20:44:30 +0200
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <489C65B7.9020305@scram.de>
-In-Reply-To: <489C65B7.9020305@scram.de>
+	Tue, 19 Aug 2008 08:35:45 -0400
+Received: by ug-out-1314.google.com with SMTP id c2so471373ugf.37
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Aug 2008 05:35:43 -0700 (PDT)
+Message-ID: <1ba2fa240808190535g513cd0das37f436e756d0bc60@mail.gmail.com> (sfid-20080819_143552_037824_2E98BAB4)
+Date: Tue, 19 Aug 2008 15:35:42 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Jouni Malinen" <j@w1.fi>
+Subject: Re: Userspace client MLME and BSSID-mismatch filtering for scans
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080818190829.GB4809@jm.kir.nu>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200808082044.31123.IvDoorn@gmail.com> (sfid-20080808_201807_093271_43D9FFD8)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080818164741.GA4809@jm.kir.nu> <20080818190829.GB4809@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 08 August 2008, Jochen Friedrich wrote:
-> txdone_entry_desc_flags is used with __set_bit and test_bit which
-> bit-shift the values, so don't bit-shift the flags in the enum.
-> Also make sure flags are initialized before being used.
+On Mon, Aug 18, 2008 at 10:08 PM, Jouni Malinen <j@w1.fi> wrote:
+> On Mon, Aug 18, 2008 at 07:47:42PM +0300, Jouni Malinen wrote:
+>> I'm trying to get userspace client MLME working again and the next
+>> blocker seems to be in Probe Response frames being dropped during
+>> scanning
+>
+> I got the userspace client MLME working with the current wpa_supplicant
+> 0.6.x git version and using -Dnl80211. mac80211 needs two changes for
+> this to work: cfg80211 vif configuration option for enabling userspace
+> MLME (I'll send an updated patch for this) and workaround/fix for
+> ProbeResp frames (BSSID-mismatch) dropping during scan (works with the
+> patch I sent in the previous message in this thread or alternatively,
+> could add a mechanism for letting mac80211 know when userspace MLME is
+> doing scanning if that is considered more preferable; that extension
+> would add on top of the vif configuration patch to bring in extra
+> parameters for indicating scan state).
+>
 
-Good catch,
-
-Applied to rt2x00.git
-
-Thanks,
-
-Ivo
-
-> Signed-off-by: Jochen Friedrich <jochen@scram.de>
-> ---
->  drivers/net/wireless/rt2x00/rt2x00queue.h |    8 ++++----
->  drivers/net/wireless/rt2x00/rt2x00usb.c   |    1 +
->  2 files changed, 5 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-> index 01a6567..37f3f98 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-> @@ -191,10 +191,10 @@ struct rxdone_entry_desc {
->   *	frame transmission failed due to excessive retries.
->   */
->  enum txdone_entry_desc_flags {
-> -	TXDONE_UNKNOWN = 1 << 0,
-> -	TXDONE_SUCCESS = 1 << 1,
-> -	TXDONE_FAILURE = 1 << 2,
-> -	TXDONE_EXCESSIVE_RETRY = 1 << 3,
-> +	TXDONE_UNKNOWN,
-> +	TXDONE_SUCCESS,
-> +	TXDONE_FAILURE,
-> +	TXDONE_EXCESSIVE_RETRY,
->  };
-> 
->  /**
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-> index 8d76bb2..2050227 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-> @@ -181,6 +181,7 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
->  	 * (Only indirectly by looking at the failed TX counters
->  	 * in the register).
->  	 */
-> +	txdesc.flags = 0;
->  	if (!urb->status)
->  		__set_bit(TXDONE_UNKNOWN, &txdesc.flags);
->  	else
-
-
+What are benefits this type of scanning?  Is this sultion you are
+looking for or this just should bridge temporal lack of  nl80211 API
+for scanning?
+Thanks
+Tomas
