@@ -1,46 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:52571 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750836AbYH2CAj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 22:00:39 -0400
-Subject: Re: [PATCH 08/11] iwlwifi: call apm stop on exit
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marcel Holtmann <holtmann@linux.intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org,
-	Gregory Greenman <gregory.greenman@intel.com>,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-In-Reply-To: <1219921546.25321.8.camel@johannes.berg>
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-8-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-9-git-send-email-yi.zhu@intel.com>
-	 <1219927149.6064.25.camel@californication>
-	 (sfid-20080828_123916_214502_EDFC473D)  <1219920741.25321.4.camel@johannes.berg>
-	 <1219928195.6064.43.camel@californication>
-	 <1219921546.25321.8.camel@johannes.berg>
-Content-Type: text/plain
-Date: Fri, 29 Aug 2008 09:58:13 +0800
-Message-Id: <1219975093.3107.770.camel@debian.sh.intel.com> (sfid-20080829_040057_695580_D6251846)
+Received: from xc.sipsolutions.net ([83.246.72.84]:47841 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753246AbYHSNzf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Aug 2008 09:55:35 -0400
+Subject: Re: [PATCH] mac80211/cfg80211: Add vif configuration options
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni.malinen@atheros.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080818191036.GC4809@jm.kir.nu>
+References: <20080818191036.GC4809@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-D+BgLANQ9Iimr7eBpsJe"
+Date: Tue, 19 Aug 2008 15:54:45 +0200
+Message-Id: <1219154085.3476.4.camel@johannes.berg> (sfid-20080819_155554_170017_7D6327F5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-08-28 at 13:05 +0200, Johannes Berg wrote:
-> Also, this is another victim of the "oh we post patches when we think
-> it's convenient" rule, I took a minute to dig and the patch has been
-> in the iwlwifi repository on kernel.org for six days already.
 
-Hey, if you also search linux-wireless archive, you'll find it has been
-on the list for 6 days as well.
-http://marc.info/?l=linux-wireless&m=121937039517264&w=2
+--=-D+BgLANQ9Iimr7eBpsJe
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
--yi
+On Mon, 2008-08-18 at 22:10 +0300, Jouni Malinen wrote:
+
+> + * @drop_unencrypted: Whether to drop unencrypted frames
+> + *	(0 =3D no, 1 =3D yes, -1 =3D do not change)
+
+Should that be part of some encryption settings instead? Not really
+sure.
+
+> + * @userspace_mlme: Whether to use userspace MLME
+> + *	(0 =3D no, 1 =3D yes, -1 =3D do not change)
+
+I don't really like this much, it feels like a specific hack to get
+wpa_supplicant and mac80211 play together, rather than an API to do this
+generically.
+
+What I've been thinking and talking about for quite a long time is to
+make cfg80211 more agnostic as to where the MLME lives, and let nl80211
+still be able to configure the interface when a userspace MLME is
+active. That way, all tools could continue to work regardless of where
+the MLME is.
+
+That would, of course, require to finally put wext into cfg80211, make
+the wext code capable of sending nl80211 messages to the userspace MLME
+and also have nl80211 divert messages to the MLME back to the userspace
+MLME unless they are coming from the userspace MLME.
+
+Ultimately, that would allow the userspace MLME to have much more
+control while users are still able to use the regular tools for many
+things.
+
+Unless, of course, those guys really put d-bus into the kernel and we
+can just have the MLME service for a specific interface bound
+anywhere...
+
+johannes
+
+--=-D+BgLANQ9Iimr7eBpsJe
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIqtChAAoJEKVg1VMiehFYu00P/0C48wt03febmkk/Ih7PswCl
+FoTEvrEc6Fae2UpDonuea1CQ3OmdCgcMlD5oSUzqk8ZyO2nX9jM3Y+6ektd+aynY
+pmxzZ9JEWk+AoJ8UaYJn+KajUYJu7dXp6ht9r6L2lPDd0B6XhNBMcd4/oPzCFHMX
+Xy0++U7WWjyA1C3BJegWkGaKUgCx0gqp66Gdhxp8jr67aNwFkpXSCe5yFgm56A8M
+5qKlzAisQyjvfWv+tgdcvjBk1TNXtD7fxOvPlPYvMLZoYifqeMz0Rfapesrvz6+6
+ZsxNf+Mk6yprtb4mI2euU9/YwzzmcO3asFuF8Z6oM6GJgPo3ojTlJY+rBnxJCHCK
+Z+NdwNx9c5QKB13RreyU1tp3Fzh4xVsuknHNOh8Fa5vvaYBIO3+6Uc/56Rn5/8eV
+7ZYczlXxC5V7iyx3veawesXmiAVWnX5Hsz5fRPuj1lEuCpJUQD6VEk32k/u4x9AZ
+rmfXbbNzBSkkDWBZQzRd9ldDks8KoQtxHqgJaaG+V/Tyx09bWISgNtZeg06/wPs7
+8erqLC/Zd34AixTpP5dStBtXPeWbZoFtsRNvHRk/pQ4aAo/MiOmkKUObHZrdGelg
+WzNd1+RC4csLMbhsx+WT2rR92R9ksK9w+HxxFXssswdj+3MRfQHTZ3fzLpzhoLX0
+9L4LiuS6jPKbCLwwA804
+=kOdR
+-----END PGP SIGNATURE-----
+
+--=-D+BgLANQ9Iimr7eBpsJe--
 
