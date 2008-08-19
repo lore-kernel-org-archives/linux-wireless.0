@@ -1,79 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39210 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752061AbYH2H43 convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:57127 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753588AbYHSSDt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2008 03:56:29 -0400
-From: Ganesh Narayanan <Jaiganesh.Narayanan@Atheros.com>
-To: Mattias Nissler <mattias.nissler@gmx.de>,
-	Ivo van Doorn <ivdoorn@gmail.com>
-CC: rt2400-devel <rt2400-devel@lists.sourceforge.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Date: Fri, 29 Aug 2008 13:26:28 +0530
-Subject: RE: [Rt2400-devel] [rt2x00] rt2800 progress update (bad news)
-Message-ID: <44EE5C37ADC36343B0625A05DD408C484101ACA809@CHEXMB-01.global.atheros.com> (sfid-20080829_095632_762544_6BC55569)
-References: <200808272222.53719.IvDoorn@gmail.com>
- <1219955962.4508.43.camel@localhost>
-In-Reply-To: <1219955962.4508.43.camel@localhost>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 19 Aug 2008 14:03:49 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so67155fgg.17
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Aug 2008 11:03:48 -0700 (PDT)
+To: Alex Riesen <raa.lkml@gmail.com>
+Subject: Re: rt2500pci: rt2500pci_bbp_read: Error - BBPCSR register busy. Read failed.
+Date: Tue, 19 Aug 2008 20:03:44 +0200
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	rt2400-devel@lists.sourceforge.net
+References: <20080819173524.GA4708@steel.home>
+In-Reply-To: <20080819173524.GA4708@steel.home>
 MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200808192003.45072.IvDoorn@gmail.com> (sfid-20080819_200354_418517_1019742C)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mattias,
+Hi,
 
-I remember the Buffalo WLI-UC-G300N USB Station dongle
-which apparently is based on RT2800F.
+> The rt2500 driver in 2.6.27-rc3 (v2.6.27-rc3-552-g3c3a15a) constantly
+> produces a lot of this messages in log (slowdown quite noticable):
+> 
+>     kernel: phy0 -> rt2500pci_bbp_read: Error - BBPCSR register busy. Read failed.
+>     kernel: phy0 -> rt2500pci_bbp_write: Error - BBPCSR register busy. Write failed.
+>     last message repeated 40 times
+>     kernel: phy0 -> rt2500pci_rf_write: Error - RFCSR register busy. Write failed.
+>     last message repeated 7 times
+>     kernel: phy0 -> rt2500pci_bbp_write: Error - BBPCSR register busy. Write failed.
 
-Ganesh.
+This is a bad sign, the slowdown is expected since the driver is continuously looping
+waiting for the registers to become available. Did this PCI card work in the past, and
+if so with what driver?
 
------Original Message-----
-From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Mattias Nissler
-Sent: Friday, August 29, 2008 2:09 AM
-To: Ivo van Doorn
-Cc: rt2400-devel; linux-wireless@vger.kernel.org; John Linville
-Subject: Re: [Rt2400-devel] [rt2x00] rt2800 progress update (bad news)
+Does this card work on another PC, or does the windows or legacy driver work with
+this card?
 
-Hi Ivo,
+(Yes, all suggestions above imply suspicion about the hardware itself rather then the driver)
 
-I'll have some spare time during September, and I'd be happy to help you with this. Problem is I don't have rt2800 hardware, but I'd consider to get me a device. Do you have a list of hardware that contains the chip?
-Unfortunately the rt2x00 hardware page currently doesn't have information on rt2800 devices.
+Ivo
 
-Cheers,
-
-Mattias
-
-On Wed, 2008-08-27 at 22:22 +0200, Ivo van Doorn wrote:
-> Hi,
->
-> Several weeks after the deadline for the initial rt2800 version, I
-> regret to inform everybody that I still do not have a working driver.
->
-> rt2800pci is still incomplete since I have put a lot of focus on the
-> rt2800usb driver to get at least a single working driver out.
-> Unfortunately rt2800usb remains very stubborn and refuses. The only
-> success I have had so far is when I first load the legacy driver and switch to rt2800usb afterwards.
-> This means I am missing a register initialization or there is a
-> problem with the register initialization ordering.
->
-> The result is that it looks like I will cancel all previously
-> announced deadlines, and at this time can't give a indication when the first version can be released.
-> What I can promise is that rt2800usb will be released first, since
-> that driver is most complete, and I am putting all focus on that driver first.
->
-> Ivo
->
-> ----------------------------------------------------------------------
-> --- This SF.Net email is sponsored by the Moblin Your Move Developer's
-> challenge Build the coolest Linux based applications with Moblin SDK &
-> win great prizes Grand prize is a trip for two to an Open Source event
-> anywhere in the world
-> http://moblin-contest.org/redirect.php?banner_id=100&url=/
-> _______________________________________________
-> Rt2400-devel mailing list
-> Rt2400-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/rt2400-devel
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The card is a RaLink RT2500 PCI (not mini-PCI, it is a normal desktop
+> system, Gigabyte GA-8IPE1000 motherboard):
+> 
+>     02:04.0 Ethernet controller: RaLink RT2500 802.11g Cardbus/mini-PCI (rev 01)
+> 	    Subsystem: Micro-Star International Co., Ltd. Unknown device 6834
+> 	    Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+> 	    Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort- <TAbort- <MAbort- >SERR- <PERR+
+> 	    Latency: 32, Cache Line Size: 32 bytes
+> 	    Interrupt: pin A routed to IRQ 11
+> 	    Region 0: Memory at fa000000 (32-bit, non-prefetchable) [size=8K]
+> 	    Capabilities: [40] Power Management version 2
+> 		    Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+> 		    Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+> 
+> The system is a P4 with HT enabled (and active). The .config is below:
