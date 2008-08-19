@@ -1,81 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51497 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751828AbYH1MXm (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.187]:6258 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751260AbYHSST5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 08:23:42 -0400
-Subject: Re: [PATCH 06/11] iwlwifi: fix apm_stop
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>, Zhu Yi <yi.zhu@intel.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Mohamed Abbas <mohamed.abbas@intel.com>
-In-Reply-To: <1ba2fa240808280421g642ddc62j7541837f874f79df@mail.gmail.com> (sfid-20080828_132132_415958_8B7C22C7)
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
-	 <1219926807.6064.17.camel@californication>
-	 <1ba2fa240808280421g642ddc62j7541837f874f79df@mail.gmail.com>
-	 (sfid-20080828_132132_415958_8B7C22C7)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IsRBUGCUjgqLM9sV/mAu"
-Date: Thu, 28 Aug 2008 14:23:02 +0200
-Message-Id: <1219926182.25321.14.camel@johannes.berg> (sfid-20080828_142345_987008_6092C978)
-Mime-Version: 1.0
+	Tue, 19 Aug 2008 14:19:57 -0400
+Received: by rn-out-0910.google.com with SMTP id k40so70540rnd.17
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Aug 2008 11:19:57 -0700 (PDT)
+Message-ID: <81b0412b0808191119y3fe473bbi43ca5524ff4d20ac@mail.gmail.com> (sfid-20080819_202002_040563_69907531)
+Date: Tue, 19 Aug 2008 20:19:56 +0200
+From: "Alex Riesen" <raa.lkml@gmail.com>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Subject: Re: rt2500pci: rt2500pci_bbp_read: Error - BBPCSR register busy. Read failed.
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <200808192003.45072.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080819173524.GA4708@steel.home>
+	 <200808192003.45072.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2008/8/19 Ivo van Doorn <ivdoorn@gmail.com>:
+>> The rt2500 driver in 2.6.27-rc3 (v2.6.27-rc3-552-g3c3a15a) constantly
+>> produces a lot of this messages in log (slowdown quite noticable):
+>>
+>>     kernel: phy0 -> rt2500pci_bbp_read: Error - BBPCSR register busy. Read failed.
+>>     kernel: phy0 -> rt2500pci_bbp_write: Error - BBPCSR register busy. Write failed.
+>>     last message repeated 40 times
+>>     kernel: phy0 -> rt2500pci_rf_write: Error - RFCSR register busy. Write failed.
+>>     last message repeated 7 times
+>>     kernel: phy0 -> rt2500pci_bbp_write: Error - BBPCSR register busy. Write failed.
+>
+> This is a bad sign, the slowdown is expected since the driver is continuously looping
+> waiting for the registers to become available. Did this PCI card work in the past, and
+> if so with what driver?
 
---=-IsRBUGCUjgqLM9sV/mAu
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+It surely did, but I honestly don't remember what with. I'll try to bisect.
 
-On Thu, 2008-08-28 at 14:21 +0300, Tomas Winkler wrote:
-> On Thu, Aug 28, 2008 at 3:33 PM, Marcel Holtmann <marcel@holtmann.org> wr=
-ote:
-> > Hi Yi,
-> >
-> >> The patch fixes CSR_GP_CNTRL_REG_FLAG_INIT_DONE was set instead of
-> >> cleared which disabled moving device to D0U state.
-> >
-> > when was this mistake introduced. Is it a regression compared to what w=
-e
-> > have in 2.6.26?
->=20
-> Again. think of global warming.
+> Does this card work on another PC, or does the windows or legacy driver work with
+> this card?
 
-If you're so concerned about global warming, why didn't you fix this,
-umm, months ago? :)
+No Windows here, but see below
 
-Frankly, this sounds like a "quick, somebody help me come up with a good
-argument" argument.
+> (Yes, all suggestions above imply suspicion about the hardware itself rather then the driver)
 
-johannes
+Well, it used to crash some industrial board (I believe it was some
+Boser, HS-series, with
+this card in a PCI slot of its backplane). So you're not alone in your
+suspicions (OTOH,
+that board was known to misbehave itself).
 
---=-IsRBUGCUjgqLM9sV/mAu
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIbBAABAgAGBQJItpijAAoJEKVg1VMiehFY/0YP910EWb557y9wr3UqbTWBN7XJ
-p53E08NN96kyWa4TxTxqvPSkI0OCGNDZgOrAnlJAMT9+5dQ9VTC5TLAwP3C5RJSd
-RmpZruk/Quszr7C3/jE/YCbNm4YYejz30Ar9lfA34q7VwGI6gDgDL7H8Cx8ICgMm
-7AufLRji5mCINrESjK4xNMoKVrohubklj2i0X1a9Z+5ED/WsMym/rzkTAHnID/P6
-I4cF99iWEa3qXZXA5gA43eihPFRyCTUmsEoZDiRJ2vTJ8olQBeORumyMBP//kfuV
-X1o4x0/mjl3RYq+nzAAhDNaYyMh5qLpOfiRZAOdSETVvGS9hJh27CsH1G4/aB3nv
-lw+iLbhdfwqkTnXECM1BCzqDHTOf9X9Xzk3upWe6uoDuGzmKOIW60GvWVaIepmMX
-W/Q3OMA3WO6KxzbeVysarK8EgjypVc2yPP71S9mTWX/E+uqu7SQrTKRKI5s7XCJs
-s6h6Dr01YwOF8kHTFHwCLGtrX3mmY61rnmPSKUvD45pboeLvdmTAGX31NDKydTOw
-8M8ZvYBlr8e8K33cWAdcmDN4SeFhZORJQmx8uT69AXQDM3xUwApG3zfTB/SMvi6J
-tNpZe18e37nuVPkpVV+9PcQ1PzpAUAPlfCkefHBG+8VVVlNdlHsD483QBSon0kPe
-ZL72xG1wSBABekjAOWE=
-=qMy5
------END PGP SIGNATURE-----
-
---=-IsRBUGCUjgqLM9sV/mAu--
-
+I have no particular need for that card, so if someone wants it for
+testing I gladly
+part with it (and if you happen be in Germany, I'll just mail it).
