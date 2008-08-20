@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:43936 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750758AbYHEGgv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 02:36:51 -0400
-Subject: Re: [PATCH 00/10] iwlwifi driver 08/04 updates
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1217836848-24288-1-git-send-email-yi.zhu@intel.com>
-References: <1217836848-24288-1-git-send-email-yi.zhu@intel.com>
-Content-Type: text/plain
-Date: Tue, 05 Aug 2008 14:36:37 +0800
-Message-Id: <1217918197.3107.64.camel@debian.sh.intel.com> (sfid-20080805_083656_697318_D69B2DF7)
-Mime-Version: 1.0
+Received: from nf-out-0910.google.com ([64.233.182.187]:39621 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752723AbYHTXIU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Aug 2008 19:08:20 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so333158nfc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Aug 2008 16:08:18 -0700 (PDT)
+Message-ID: <48ACA3CB.1070106@gmail.com> (sfid-20080821_010825_155480_CFD9644B)
+Date: Thu, 21 Aug 2008 00:07:55 +0100
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Larry.Finger@lwfinger.net,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, proski@gnu.org
+Subject: Re: [PATCH 00/19] orinoco: WPA for Agere based cards
+References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>	 <20080820192812.GA1746@tuxdriver.com>  <48AC836B.2020207@gmail.com>	 (sfid-20080820_225002_112959_7EFB2137)  <1219266476.3502.19.camel@johannes.berg>	 (sfid-20080820_230839_000050_1BDBB04E) <1219267346.3502.20.camel@johannes.berg>
+In-Reply-To: <1219267346.3502.20.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-08-04 at 16:00 +0800, Zhu Yi wrote:
-> Hi John,
+Johannes Berg wrote:
+> On Wed, 2008-08-20 at 23:07 +0200, Johannes Berg wrote:
+>>> At the moment this is only documented in email threads (on
+>>> orinoco-devel) - I lack access to any web/file hosting to put
+>>> something more permanent up. This obviously ought to be corrected.
+>> *points to wireless.kernel.org*
+>>
+>> feel free to create a driver page (though I'd prefer to not host
+>> firmware of unclear origin and would probably just delete such files if
+>> you upload them, talk to the firmware tree if you can redistribute it
+>> legally)
 > 
-> Here is another series of iwlwifi driver update. Note, the patch 10/10 fixes
-> a merge problem for wireless-testing GIT with upstream.
-> 
-> Thanks,
-> -yi
-> 
-> [PATCH 01/10] iwlwifi: HW bug fixes
-> [PATCH 02/10] iwlwifi: memory allocation optimization
-> [PATCH 03/10] iwlwifi: kill struct iwl4965_lq_mngr
-> [PATCH 04/10] iwlwifi: implement iwl5000_calc_rssi
-> [PATCH 05/10] iwlwifi: fix unhandled interrupt when HW rfkill is on
-> [PATCH 06/10] iwlwifi: cleanup iwl_tx_skb
-> [PATCH 07/10] iwlwifi: add level for debugging host command
-> [PATCH 08/10] iwlwifi: decrement rx skb counter in scan abort handler
-> [PATCH 09/10] iwlwifi: grap nic access before accessing periphery registers
-> [PATCH 10/10] iwl3945: fix merge mistake for packet injection
+> Oh and if you go create a new driver page, say
+> http://wireless.kernel.org/en/users/Drivers/orinoco, it gives you a
+> template in the left column that you can use (the DriverPageTemplate) to
+> get a page that looks similar to all the other ones.
 
-Hi John,
+Thanks Larry/Johannes. I thought that might be where it should go, but it looks quite mac80211 oriented at the moment.
 
-I see you merged only partial of this series. What's happen to the
-patches 03, 06 and 07?
+Anyway, I've added an initial orinoco page <http://wireless.kernel.org/en/users/Drivers/orinoco> and linked to it on <http://wireless.kernel.org/en/users/Drivers>.
 
-Thanks,
--yi
+I have avoided attaching anything for now.
 
+
+Regards,
+
+Dave.
