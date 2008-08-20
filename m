@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.237]:27176 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752623AbYHCIHL (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60830 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751990AbYHTVIf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 04:07:11 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1680991rvb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2008 01:07:10 -0700 (PDT)
-Message-ID: <1ba2fa240808030107m64b1bc6dxc639665a2a7cc4af@mail.gmail.com> (sfid-20080803_100718_815228_108D233B)
-Date: Sun, 3 Aug 2008 11:07:10 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Subject: Re: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
-Cc: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200808031012.06554.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
-	 <1217703723.8621.50.camel@johannes.berg>
-	 <20080802192704.GB24253@khazad-dum.debian.net>
-	 <200808031012.06554.IvDoorn@gmail.com>
+	Wed, 20 Aug 2008 17:08:35 -0400
+Subject: Re: [PATCH 00/19] orinoco: WPA for Agere based cards
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dave <kilroyd@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, proski@gnu.org,
+	orinoco-devel@lists.sourceforge.net
+In-Reply-To: <48AC836B.2020207@gmail.com> (sfid-20080820_225002_112959_7EFB2137)
+References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
+	 <20080820192812.GA1746@tuxdriver.com>  <48AC836B.2020207@gmail.com>
+	 (sfid-20080820_225002_112959_7EFB2137)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5ly+deV/mVRh1XmSAaOC"
+Date: Wed, 20 Aug 2008 23:07:55 +0200
+Message-Id: <1219266476.3502.19.camel@johannes.berg> (sfid-20080820_230839_000050_1BDBB04E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 3, 2008 at 11:12 AM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> On Saturday 02 August 2008, Henrique de Moraes Holschuh wrote:
->> Hi Johannes!
->>
->> On Sat, 02 Aug 2008, Johannes Berg wrote:
->>
->> > On Sat, 2008-08-02 at 15:11 -0300, Henrique de Moraes Holschuh wrote:
->> > > Currently, rfkill would stand in the way of properly supporting wireless
->> > > devices that are capable of waking the system up from sleep or hibernation
->> > > when they receive a special wireless message.
->> > >
->> > > Since rfkill attempts to soft-block any transmitters during class suspend,
->> >
->> > why does it interfere with suspend anyway?
->>
->> The class makes sure that all transmitters are blocked on suspend.  You'd
->> have to ask Ivo for the reason, but AFAIK, it is for both safety and to help
->> conserve power.
->
-> I think that handler was added by Dmitry, but I see no real reason for
-> issuing the BLOCK event during suspend. However the handlers should
-> be used to prevent state changes to drivers after they have been suspended.
 
-Sounds reasonable.
-Thanks
-Tomas
+--=-5ly+deV/mVRh1XmSAaOC
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+
+> At the moment this is only documented in email threads (on
+> orinoco-devel) - I lack access to any web/file hosting to put
+> something more permanent up. This obviously ought to be corrected.
+
+*points to wireless.kernel.org*
+
+feel free to create a driver page (though I'd prefer to not host
+firmware of unclear origin and would probably just delete such files if
+you upload them, talk to the firmware tree if you can redistribute it
+legally)
+
+johannes
+
+--=-5ly+deV/mVRh1XmSAaOC
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIrIemAAoJEKVg1VMiehFYfPoP/1BPwRZVf70Z3xBcSo6G7wip
+UR7CoFBGi+3NBixnetNMvcs6H29KjkpQZ/QpySG1I9YOK7w9+cMHBkH20GrXnrJj
+yhGr9X6yZ9zi/MGyNwTf3uhVHvE5BH5SVG6s/iOX42qM6CdQqZaSJn1O081LmqG3
+uaCmfpLjmEmyE8tGwnakSlv1czQcG8ByUpCiZd3TpTQNjW/VpgyR+Xado5ZVQzbc
+fsYPjp1gcb7JhicQVfq4HH9r3BOGzMkci4Y0CYfQN2grkDZU+InZNp+H6tDI9bbP
+c/rwTPhAkCEWCiX8lWv+JPA+5W2dQJpXTliVUAr/QSyZVyzCiDiIybTB3zfby3qU
+9hDkOuX1JTYVHAX2PZcX1sXQAt1P7otXWJlgxKW2XJZ7Jq3EVg+NAw7t7w3PyRo5
+9PxGdN0X2XgYnjPS/+moAjvFETPyiaFF6rr/C084aozYYud1YZc/UFE/QsTTe56G
+L5vuaQgNQGA6u+jkYo5fhiFwLaQRw/sNTo7Lf87J4tmaiAJL6TPAy0HkVijD/o6R
+PjUk58s3sYHZPjA1EeHhGlFM2eF30dWT6EI0BVlCr6xn5B9gEFsIasSR4dIZ3bwO
+FU9QmnLCBofZGprFb3Xi4CJIUOKYOC96sdXZZUDgNSyNXlu17cb2T5eueAV7I/1B
+2N3CivKmksJdNjDn+iIj
+=zs6i
+-----END PGP SIGNATURE-----
+
+--=-5ly+deV/mVRh1XmSAaOC--
+
