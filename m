@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:41859 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753238AbYHDQ11 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 12:27:27 -0400
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Message-Id: <6064CD72-8B4A-4F23-BCFA-4D656729E60D@holtmann.org> (sfid-20080804_182735_091275_8FD40F29)
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1217866765.1299.9.camel@johannes.berg>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v928.1)
-Subject: Re: [RFC] cfg80211: add PM hooks
-Date: Mon, 4 Aug 2008 18:27:23 +0200
-References: <1217853236.4721.32.camel@johannes.berg> <99AFB2EC-AECE-419A-B014-8391E45DF6C4@holtmann.org> <1217866765.1299.9.camel@johannes.berg>
+Received: from usul.saidi.cx ([204.11.33.34]:60932 "EHLO usul.overt.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753295AbYHTRAc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Aug 2008 13:00:32 -0400
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 1/1] =?UTF-8?Q?toshiba=5Facpi=3A=20Add=20support=20for=20bluet?=
+ =?UTF-8?Q?ooth=20toggling=20through=20rfkill=20=28v=36=29?=
+MIME-Version: 1.0
+Date: Wed, 20 Aug 2008 13:01:09 -0400
+From: Philip Langdale <philipl@overt.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	toshiba_acpi@memebeam.org, linux-wireless@vger.kernel.org
+In-Reply-To: <200808201757.04501.IvDoorn@gmail.com>
+References: <200808201757.04501.IvDoorn@gmail.com>
+Message-ID: <8a2829c23d0739b82cf8bb7c7b80e6c4@localhost> (sfid-20080820_190038_289533_0C0DBC4E)
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
 
->>> +	.suspend = wiphy_suspend,
->>> +	.resume = wiphy_resume,
->>> };
->>
->> this needs to be wrapped into CONFIG_PM, because otherwise the build
->> will fail when CONFIG_PM is not enabled.
->
-> I thought so too, but then I looked at include/linux/device.h
+On Wed, 20 Aug 2008 17:57:04 +0200, Ivo van Doorn <ivdoorn@gmail.com>
+wrote:
+> 
+> This looks very nice, but is the switch really toggling between
+> soft and hard blocked only? ;)
+> 
+> I mean shouldn't there be some unblock signal at some point?
 
-when did this got changed? And more to the point, why nobody bothered  
-to remove all the CONFIG_PM and CONFIG_HOTPLUG ifdefs splattered  
-around the kernel. It must be part of Greg's changes to remove class  
-devices. I am not sure this is all the right approach since  
-potentially it blots the kernel.
+Nope :-)
 
-This would also means that the CONFIG_HOTPLUG for dev_uevent can go  
-away.
+There is no hardware mechanism to actually turn the bluetooth adapter on;
+that's
+why driver support has been so important for poor toshiba users; without it
+the
+adapter is completely useless. On windows, toshiba provide a special
+program to
+do this as well. It's all very odd.
 
-Regards
-
-Marcel
+--phil
 
