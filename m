@@ -1,43 +1,248 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:58383 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752852AbYHJOTV (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:35470 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752579AbYHTX6o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Aug 2008 10:19:21 -0400
-Message-ID: <489EF8DE.5030801@lwfinger.net> (sfid-20080810_161924_653588_2A7037C0)
-Date: Sun, 10 Aug 2008 09:19:10 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Chr <chunkeey@web.de>
-CC: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] p54: Fix for TX sequence number problem that resulted
- from commit 741b4fbc44
-References: <48987e74.ct5+sLOpTbiTPPHq%Larry.Finger@lwfinger.net> <200808081026.49041.chunkeey@web.de> <489C5833.2080009@lwfinger.net> <200808082038.48840.chunkeey@web.de>
-In-Reply-To: <200808082038.48840.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 20 Aug 2008 19:58:44 -0400
+Message-Id: <200808202356.m7KNusjp006352@imap1.linux-foundation.org> (sfid-20080821_015849_682921_ED86565E)
+Subject: [patch 1/3] ath5k: unify resets
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	jirislaby@gmail.com, mcgrof@gmail.com, me@bobcopeland.com,
+	mickflemm@gmail.com
+From: akpm@linux-foundation.org
+Date: Wed, 20 Aug 2008 16:56:54 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chr wrote:
-> the next one is at line 27188... and so down to end of packages at line 329241.
-> there isn't one single package where the sequence number is not zero!
-> 
-> So the problem must be somewhere else! what happens when:
-> if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
-> 	if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
-> 		priv->seqno += 0x10;
-> 
-> 	ieee80211hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-> 	ieee80211hdr->seq_ctrl |= cpu_to_le16(priv->seqno);
-> 	ieee80211hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-> }
-> (yeah a new definition for idiotic! but it's about the same amount of of clock cycles).
+From: Jiri Slaby <jirislaby@gmail.com>
 
-There must be some situation where the firmware fails to assign a 
-proper sequence number to some packets. With this patch in place, the 
-device failed after 2 hours. Restoring my original patch, it has been 
-up for 15 hours and still going.
+There were 3 code copy and pastes of reset.  Unify the resets and place in
+separate function.
 
-Larry
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+Cc: "Bob Copeland" <me@bobcopeland.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
+ drivers/net/wireless/ath5k/base.c |  124 +++++++++-------------------
+ 1 file changed, 42 insertions(+), 82 deletions(-)
+
+diff -puN drivers/net/wireless/ath5k/base.c~ath5k-unify-resets drivers/net/wireless/ath5k/base.c
+--- a/drivers/net/wireless/ath5k/base.c~ath5k-unify-resets
++++ a/drivers/net/wireless/ath5k/base.c
+@@ -162,7 +162,8 @@ static struct pci_driver ath5k_pci_drive
+  * Prototypes - MAC 802.11 stack related functions
+  */
+ static int ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb);
+-static int ath5k_reset(struct ieee80211_hw *hw);
++static int ath5k_reset(struct ath5k_softc *sc, bool stop, bool change_channel);
++static int ath5k_reset_wake(struct ath5k_softc *sc);
+ static int ath5k_start(struct ieee80211_hw *hw);
+ static void ath5k_stop(struct ieee80211_hw *hw);
+ static int ath5k_add_interface(struct ieee80211_hw *hw,
+@@ -977,9 +978,6 @@ ath5k_getchannels(struct ieee80211_hw *h
+ static int
+ ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+ {
+-	struct ath5k_hw *ah = sc->ah;
+-	int ret;
+-
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "(%u MHz) -> (%u MHz)\n",
+ 		sc->curchan->center_freq, chan->center_freq);
+ 
+@@ -995,41 +993,7 @@ ath5k_chan_set(struct ath5k_softc *sc, s
+ 		 * hardware at the new frequency, and then re-enable
+ 		 * the relevant bits of the h/w.
+ 		 */
+-		ath5k_hw_set_intr(ah, 0);	/* disable interrupts */
+-		ath5k_txq_cleanup(sc);		/* clear pending tx frames */
+-		ath5k_rx_stop(sc);		/* turn off frame recv */
+-		ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, true);
+-		if (ret) {
+-			ATH5K_ERR(sc, "%s: unable to reset channel "
+-				"(%u Mhz)\n", __func__, chan->center_freq);
+-			return ret;
+-		}
+-
+-		ath5k_hw_set_txpower_limit(sc->ah, 0);
+-
+-		/*
+-		 * Re-enable rx framework.
+-		 */
+-		ret = ath5k_rx_start(sc);
+-		if (ret) {
+-			ATH5K_ERR(sc, "%s: unable to restart recv logic\n",
+-					__func__);
+-			return ret;
+-		}
+-
+-		/*
+-		 * Change channels and update the h/w rate map
+-		 * if we're switching; e.g. 11a to 11b/g.
+-		 *
+-		 * XXX needed?
+-		 */
+-/*		ath5k_chan_change(sc, chan); */
+-
+-		ath5k_beacon_config(sc);
+-		/*
+-		 * Re-enable interrupts.
+-		 */
+-		ath5k_hw_set_intr(ah, sc->imask);
++		return ath5k_reset(sc, true, true);
+ 	}
+ 
+ 	return 0;
+@@ -2216,36 +2180,13 @@ ath5k_init(struct ath5k_softc *sc)
+ 	 */
+ 	sc->curchan = sc->hw->conf.channel;
+ 	sc->curband = &sc->sbands[sc->curchan->band];
+-	ret = ath5k_hw_reset(sc->ah, sc->opmode, sc->curchan, false);
+-	if (ret) {
+-		ATH5K_ERR(sc, "unable to reset hardware: %d\n", ret);
+-		goto done;
+-	}
+-	/*
+-	 * This is needed only to setup initial state
+-	 * but it's best done after a reset.
+-	 */
+-	ath5k_hw_set_txpower_limit(sc->ah, 0);
+-
+-	/*
+-	 * Setup the hardware after reset: the key cache
+-	 * is filled as needed and the receive engine is
+-	 * set going.  Frame transmit is handled entirely
+-	 * in the frame output path; there's nothing to do
+-	 * here except setup the interrupt mask.
+-	 */
+-	ret = ath5k_rx_start(sc);
+-	if (ret)
+-		goto done;
+-
+-	/*
+-	 * Enable interrupts.
+-	 */
+ 	sc->imask = AR5K_INT_RX | AR5K_INT_TX | AR5K_INT_RXEOL |
+ 		AR5K_INT_RXORN | AR5K_INT_FATAL | AR5K_INT_GLOBAL |
+ 		AR5K_INT_MIB;
++	ret = ath5k_reset(sc, false, false);
++	if (ret)
++		goto done;
+ 
+-	ath5k_hw_set_intr(sc->ah, sc->imask);
+ 	/* Set ack to be sent at low bit-rates */
+ 	ath5k_hw_set_ack_bitrate_high(sc->ah, false);
+ 
+@@ -2445,7 +2386,7 @@ ath5k_tasklet_reset(unsigned long data)
+ {
+ 	struct ath5k_softc *sc = (void *)data;
+ 
+-	ath5k_reset(sc->hw);
++	ath5k_reset_wake(sc);
+ }
+ 
+ /*
+@@ -2468,7 +2409,7 @@ ath5k_calibrate(unsigned long data)
+ 		 * to load new gain values.
+ 		 */
+ 		ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "calibration, resetting\n");
+-		ath5k_reset(sc->hw);
++		ath5k_reset_wake(sc);
+ 	}
+ 	if (ath5k_hw_phy_calibrate(ah, sc->curchan))
+ 		ATH5K_ERR(sc, "calibration of channel %u failed\n",
+@@ -2669,48 +2610,67 @@ ath5k_tx(struct ieee80211_hw *hw, struct
+ }
+ 
+ static int
+-ath5k_reset(struct ieee80211_hw *hw)
++ath5k_reset(struct ath5k_softc *sc, bool stop, bool change_channel)
+ {
+-	struct ath5k_softc *sc = hw->priv;
+ 	struct ath5k_hw *ah = sc->ah;
+ 	int ret;
+ 
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "resetting\n");
+ 
+-	ath5k_hw_set_intr(ah, 0);
+-	ath5k_txq_cleanup(sc);
+-	ath5k_rx_stop(sc);
+-
++	if (stop) {
++		ath5k_hw_set_intr(ah, 0);
++		ath5k_txq_cleanup(sc);
++		ath5k_rx_stop(sc);
++	}
+ 	ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, true);
+-	if (unlikely(ret)) {
++	if (ret) {
+ 		ATH5K_ERR(sc, "can't reset hardware (%d)\n", ret);
+ 		goto err;
+ 	}
++
++	/*
++	 * This is needed only to setup initial state
++	 * but it's best done after a reset.
++	 */
+ 	ath5k_hw_set_txpower_limit(sc->ah, 0);
+ 
+ 	ret = ath5k_rx_start(sc);
+-	if (unlikely(ret)) {
++	if (ret) {
+ 		ATH5K_ERR(sc, "can't start recv logic\n");
+ 		goto err;
+ 	}
++
+ 	/*
+-	 * We may be doing a reset in response to an ioctl
+-	 * that changes the channel so update any state that
+-	 * might change as a result.
++	 * Change channels and update the h/w rate map if we're switching;
++	 * e.g. 11a to 11b/g.
++	 *
++	 * We may be doing a reset in response to an ioctl that changes the
++	 * channel so update any state that might change as a result.
+ 	 *
+ 	 * XXX needed?
+ 	 */
+ /*	ath5k_chan_change(sc, c); */
+-	ath5k_beacon_config(sc);
+-	/* intrs are started by ath5k_beacon_config */
+ 
+-	ieee80211_wake_queues(hw);
++	ath5k_beacon_config(sc);
++	/* intrs are enabled by ath5k_beacon_config */
+ 
+ 	return 0;
+ err:
+ 	return ret;
+ }
+ 
++static int
++ath5k_reset_wake(struct ath5k_softc *sc)
++{
++	int ret;
++
++	ret = ath5k_reset(sc, true, true);
++	if (!ret)
++		ieee80211_wake_queues(sc->hw);
++
++	return ret;
++}
++
+ static int ath5k_start(struct ieee80211_hw *hw)
+ {
+ 	return ath5k_init(hw->priv);
+@@ -2819,7 +2779,7 @@ ath5k_config_interface(struct ieee80211_
+ 
+ 	mutex_unlock(&sc->lock);
+ 
+-	return ath5k_reset(hw);
++	return ath5k_reset_wake(sc);
+ unlock:
+ 	mutex_unlock(&sc->lock);
+ 	return ret;
+_
