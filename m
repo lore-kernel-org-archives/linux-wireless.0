@@ -1,63 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from orca.ele.uri.edu ([131.128.51.63]:42244 "EHLO orca.ele.uri.edu"
+Received: from mga11.intel.com ([192.55.52.93]:3175 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751173AbYHYEh2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2008 00:37:28 -0400
-Date: Mon, 25 Aug 2008 00:37:05 -0400
-From: Will Simoneau <simoneau@ele.uri.edu>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Yousaf Jindal <yousaf.jindal@pi.edu.pk>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ANNOUNCE] Wifi Link 5300 and 5100 Series
-Message-ID: <20080825043705.GA16061@ele.uri.edu> (sfid-20080825_063733_261826_657E93AB)
-References: <e700089d0808151307j27d6c61dw3a1dd174e4e8610c@mail.gmail.com> <e700089d0808160326k337cec2dm65271b38812a4263@mail.gmail.com> <1ba2fa240808180112l284086f4x64168d994743398@mail.gmail.com> <e700089d0808180315s4851ed0fqea6b64c83eb570f@mail.gmail.com> <1ba2fa240808180547md32b43au7b1beaccab1f5fd6@mail.gmail.com> <e700089d0808180943m1bc403d4v3ee578a81e2d96cf@mail.gmail.com> <1ba2fa240808181642h61fb2d74ja96dd3860fb5d4e6@mail.gmail.com> <20080821073140.GA18961@ele.uri.edu>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="/04w6evG8XlLl3ft"
-In-Reply-To: <20080821073140.GA18961@ele.uri.edu>
+	id S1751758AbYHTCFG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Aug 2008 22:05:06 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 2/7] iwlwifi: clean up hw scan handler
+Date: Wed, 20 Aug 2008 10:01:28 +0800
+Message-Id: <1219197693-21407-3-git-send-email-yi.zhu@intel.com> (sfid-20080820_040512_529329_729885EA)
+In-Reply-To: <1219197693-21407-2-git-send-email-yi.zhu@intel.com>
+References: <1219197693-21407-1-git-send-email-yi.zhu@intel.com>
+ <1219197693-21407-2-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Tomas Winkler <tomas.winkler@intel.com>
 
---/04w6evG8XlLl3ft
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This patch cleans up iwl_mac_hw_scan handler.
 
-> > It will take a while till I get this Laptop so one more request which
-> > I should  actually start with is to send me your kernel config file.
-> > (personally I prefer attachment instead of inline mail)
-> >=20
-> > Thanks
-> > Tomas
->=20
-> The patch does not help in my case either. .config attached.
->=20
-> # cat /sys/class/net/wlan0/device/version=20
-> fw not loaded
-> EEPROM version: 0x11f
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |   35 ++++++++++++++-----------------
+ 1 files changed, 16 insertions(+), 19 deletions(-)
 
-[snip .config]
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 479fd72..b9a4440 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3182,9 +3182,9 @@ static void iwl4965_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ }
+ 
+-static int iwl4965_mac_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t len)
++static int iwl_mac_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t ssid_len)
+ {
+-	int rc = 0;
++	int ret;
+ 	unsigned long flags;
+ 	struct iwl_priv *priv = hw->priv;
+ 
+@@ -3194,41 +3194,38 @@ static int iwl4965_mac_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t len)
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 
+ 	if (!iwl_is_ready_rf(priv)) {
+-		rc = -EIO;
++		ret = -EIO;
+ 		IWL_DEBUG_MAC80211("leave - not ready or exit pending\n");
+ 		goto out_unlock;
+ 	}
+ 
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_AP) {	/* APs don't scan */
+-		rc = -EIO;
++		ret = -EIO;
+ 		IWL_ERROR("ERROR: APs don't scan\n");
+ 		goto out_unlock;
+ 	}
+ 
+ 	/* we don't schedule scan within next_scan_jiffies period */
+ 	if (priv->next_scan_jiffies &&
+-			time_after(priv->next_scan_jiffies, jiffies)) {
+-		rc = -EAGAIN;
++	    time_after(priv->next_scan_jiffies, jiffies)) {
++		ret = -EAGAIN;
+ 		goto out_unlock;
+ 	}
+ 	/* if we just finished scan ask for delay */
+-	if (priv->last_scan_jiffies && time_after(priv->last_scan_jiffies +
+-				IWL_DELAY_NEXT_SCAN, jiffies)) {
+-		rc = -EAGAIN;
++	if (priv->last_scan_jiffies &&
++	    time_after(priv->last_scan_jiffies + IWL_DELAY_NEXT_SCAN, jiffies)) {
++		ret = -EAGAIN;
+ 		goto out_unlock;
+ 	}
+-	if (len) {
+-		IWL_DEBUG_SCAN("direct scan for %s [%d]\n ",
+-			       iwl_escape_essid(ssid, len), (int)len);
+-
++	if (ssid_len) {
+ 		priv->one_direct_scan = 1;
+-		priv->direct_ssid_len = (u8)
+-		    min((u8) len, (u8) IW_ESSID_MAX_SIZE);
++		priv->direct_ssid_len =  min_t(u8, ssid_len, IW_ESSID_MAX_SIZE);
+ 		memcpy(priv->direct_ssid, ssid, priv->direct_ssid_len);
+-	} else
++	} else {
+ 		priv->one_direct_scan = 0;
++	}
+ 
+-	rc = iwl_scan_initiate(priv);
++	ret = iwl_scan_initiate(priv);
+ 
+ 	IWL_DEBUG_MAC80211("leave\n");
+ 
+@@ -3236,7 +3233,7 @@ out_unlock:
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 	mutex_unlock(&priv->mutex);
+ 
+-	return rc;
++	return ret;
+ }
+ 
+ static void iwl4965_mac_update_tkip_key(struct ieee80211_hw *hw,
+@@ -4143,7 +4140,7 @@ static struct ieee80211_ops iwl4965_hw_ops = {
+ 	.reset_tsf = iwl4965_mac_reset_tsf,
+ 	.bss_info_changed = iwl4965_bss_info_changed,
+ 	.ampdu_action = iwl4965_mac_ampdu_action,
+-	.hw_scan = iwl4965_mac_hw_scan
++	.hw_scan = iwl_mac_hw_scan
+ };
+ 
+ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+-- 
+1.5.3.6
 
-I was just playing around with the driver a bit, and I turned on debug
-mode. Somehow, the interface came up and scanning worked - once. It
-hasn't worked again, with debugging both on and off. I have the log
-messages from when it worked, let me know if they might be useful.
-
-I was testing without the additional patch, BTW. Just the vanilla
-version from the git tree, iwl5000 branch.
-
---/04w6evG8XlLl3ft
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEARECAAYFAkiyNvEACgkQLYBaX8VDLLVwiQCeKVIXBq6TPAp7Hko0KLRMTrLJ
-yNgAoL7Ic0LsmqTWNNDlmRXWNlrV0A7r
-=QFaG
------END PGP SIGNATURE-----
-
---/04w6evG8XlLl3ft--
