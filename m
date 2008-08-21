@@ -1,97 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:40779 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752786AbYHROcz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2008 10:32:55 -0400
-Subject: RE: [Rt2400-devel] mac80211 / rt2x00 / rt61 and adhoc status
-From: Dan Williams <dcbw@redhat.com>
-To: Lars Ericsson <Lars_Ericsson@telia.com>
-Cc: "'Ivo van Doorn'" <ivdoorn@gmail.com>, hostap@lists.shmoo.com,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-In-Reply-To: <059801c900a9$c9eee740$0b3ca8c0@gotws1589>
-References: <059801c900a9$c9eee740$0b3ca8c0@gotws1589>
-Content-Type: text/plain; charset=utf-8
-Date: Mon, 18 Aug 2008 10:34:08 -0400
-Message-Id: <1219070048.5013.40.camel@localhost.localdomain> (sfid-20080818_163259_813183_9E7C447F)
-Mime-Version: 1.0
+Received: from nf-out-0910.google.com ([64.233.182.185]:58253 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759110AbYHUW2R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Aug 2008 18:28:17 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so81281nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2008 15:28:17 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>
+Subject: [PATCH v2 02/19] orinoco: Update scan translation
+Date: Thu, 21 Aug 2008 23:27:47 +0100
+Message-Id: <24148627bbab77e1365aa43c22a7f24ded1bed7a.1219352674.git.kilroyd@gmail.com> (sfid-20080822_002820_610266_C52B95E7)
+In-Reply-To: <3bd1799afef838bfc6eb688b1e0cf6b0f4949f1b.1219352674.git.kilroyd@gmail.com>
+References: <1219357685-24731-1-git-send-email-kilroyd@gmail.com>
+ <3bd1799afef838bfc6eb688b1e0cf6b0f4949f1b.1219352674.git.kilroyd@gmail.com>
+In-Reply-To: <3bd1799afef838bfc6eb688b1e0cf6b0f4949f1b.1219352674.git.kilroyd@gmail.com>
+References: <3bd1799afef838bfc6eb688b1e0cf6b0f4949f1b.1219352674.git.kilroyd@gmail.com>
+From: kilroyd@googlemail.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2008-08-17 at 22:42 +0200, Lars Ericsson wrote:
-> > > > > > Two tests cases, but same behaviour:
-> > > > > > 1) Linx.git: 2.6.26 and wpa_supplicant 0.5.9
-> > > > > > 2) rt2x00.git: Version 2.2.0 and wpa_supplicant 0.5.9
-> > > > >=20
-> > > > > Are any beacons going out? Is there anything in the logs whic=
-h
-> > > > > indicates what is happening?
-> > > > >=20
-> > > >=20
-> > > > As you can se in the trace below, the configuration=20
-> > > proceeds and the adhoc
-> > > > is created.
-> > > > The warnon might give some clues.
-> > >=20
-> > > So how about those beacons? are they getting out?
-> > >=20
-> >=20
-> > After patching the wpa_suplicant (0.5.9) adhoc works.
-> > When first started, as the only part in the adhoc net, the=20
-> > driver just scans
-> > around for other adhoc members.
-> > This happen in mac80211 state 4 and no beacons are sent, as=20
-> > far as I can
-> > tell. Only probe requests are sent.
-> >=20
-> > When an other node (N2) shows up in the same adhoc net work, N2 sta=
-rts
-> > sending beacons immediately.
-> > The RT61 catch that and merge that ibss, switch to state 5=20
-> > and all is fine.
-> > At this time ping works in both directions.
-> >=20
-> > When removing the second note, leaving the RT61 alone, RT61=20
-> > starts sending
-> > beacons, still in state 5.
->=20
-> The reason for the above behaviour are timeouts.
-> - Mac80211 will create an ibss after 20 seconds probing for existing =
-ibss.
-> - Wpa_supplicant will restart this timer every 5 second ....
->=20
-> Changing the wpa timer will make the rt61 start sending beacons even =
-if no
-> other STA is available.
->=20
-> I think that wpa_supplicant 0.5.10 addresses this issue, I will check=
- and
-> come back.
+Report channel, beacon interval and capabilities.
+Use WEXT defines instead of magic numbers.
+State quality stats in dB.
+Also a few changes to keep line length less than 80.
 
-If fixed your issues about a month or two ago.  Either use
-wpa_supplicant 0.6.4 and a 2.6.26 kernel, or else grab the following
-patches and apply locally:
+Signed-off-by: David Kilroy <kilroyd@gmail.com>
+---
+ drivers/net/wireless/orinoco.c |   71 ++++++++++++++++++++++++++--------------
+ 1 files changed, 46 insertions(+), 25 deletions(-)
 
-wpa_supplicant (committed to 0.6.x):
-[PATCH] wpa_supplicant: give adhoc associations a bit more time
-=EF=BB=BF[PATCH v2] wext: handle mode switches correctly for mac80211
+diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
+index a60b459..00b1d59 100644
+--- a/drivers/net/wireless/orinoco.c
++++ b/drivers/net/wireless/orinoco.c
+@@ -3948,7 +3948,7 @@ static int orinoco_ioctl_getrid(struct net_device *dev,
+ 	return err;
+ }
+ 
+-/* Trigger a scan (look for other cells in the vicinity */
++/* Trigger a scan (look for other cells in the vicinity) */
+ static int orinoco_ioctl_setscan(struct net_device *dev,
+ 				 struct iw_request_info *info,
+ 				 struct iw_param *srq,
+@@ -3988,7 +3988,6 @@ static int orinoco_ioctl_setscan(struct net_device *dev,
+ 	 * we access scan variables in priv is critical.
+ 	 *	o scan_inprogress : not touched by irq handler
+ 	 *	o scan_mode : not touched by irq handler
+-	 *	o scan_len : synchronised with scan_result
+ 	 * Before modifying anything on those variables, please think hard !
+ 	 * Jean II */
+ 
+@@ -4054,8 +4053,7 @@ static int orinoco_ioctl_setscan(struct net_device *dev,
+ #define MAX_CUSTOM_LEN 64
+ 
+ /* Translate scan data returned from the card to a card independant
+- * format that the Wireless Tools will understand - Jean II
+- * Return message length or -errno for fatal errors */
++ * format that the Wireless Tools will understand - Jean II */
+ static inline char *orinoco_translate_scan(struct net_device *dev,
+ 					   struct iw_request_info *info,
+ 					   char *current_ev,
+@@ -4067,9 +4065,10 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
+ 	u16			capabilities;
+ 	u16			channel;
+ 	struct iw_event		iwe;		/* Temporary buffer */
+-	char                   *p;
+ 	char custom[MAX_CUSTOM_LEN];
+ 
++	memset(&iwe, 0, sizeof(iwe));
++
+ 	/* First entry *MUST* be the AP MAC address */
+ 	iwe.cmd = SIOCGIWAP;
+ 	iwe.u.ap_addr.sa_family = ARPHRD_ETHER;
+@@ -4091,8 +4090,8 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
+ 	/* Add mode */
+ 	iwe.cmd = SIOCGIWMODE;
+ 	capabilities = le16_to_cpu(bss->a.capabilities);
+-	if (capabilities & 0x3) {
+-		if (capabilities & 0x1)
++	if (capabilities & (WLAN_CAPABILITY_ESS | WLAN_CAPABILITY_IBSS)) {
++		if (capabilities & WLAN_CAPABILITY_ESS)
+ 			iwe.u.mode = IW_MODE_MASTER;
+ 		else
+ 			iwe.u.mode = IW_MODE_ADHOC;
+@@ -4102,17 +4101,22 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
+ 
+ 	channel = bss->s.channel;
+ 	if ((channel >= 1) && (channel <= NUM_CHANNELS)) {
+-		/* Add frequency */
++		/* Add channel and frequency */
+ 		iwe.cmd = SIOCGIWFREQ;
++		iwe.u.freq.m = channel;
++		iwe.u.freq.e = 0;
++		current_ev = iwe_stream_add_event(info, current_ev, end_buf,
++						  &iwe, IW_EV_FREQ_LEN);
++
+ 		iwe.u.freq.m = channel_frequency[channel-1] * 100000;
+ 		iwe.u.freq.e = 1;
+ 		current_ev = iwe_stream_add_event(info, current_ev, end_buf,
+ 						  &iwe, IW_EV_FREQ_LEN);
+ 	}
+ 
+-	/* Add quality statistics */
++	/* Add quality statistics. level and noise in dB. No link quality */
+ 	iwe.cmd = IWEVQUAL;
+-	iwe.u.qual.updated = 0x10;	/* no link quality */
++	iwe.u.qual.updated = IW_QUAL_DBM | IW_QUAL_QUAL_INVALID;
+ 	iwe.u.qual.level = (__u8) le16_to_cpu(bss->a.level) - 0x95;
+ 	iwe.u.qual.noise = (__u8) le16_to_cpu(bss->a.noise) - 0x95;
+ 	/* Wireless tools prior to 27.pre22 will show link quality
+@@ -4126,25 +4130,13 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
+ 
+ 	/* Add encryption capability */
+ 	iwe.cmd = SIOCGIWENCODE;
+-	if (capabilities & 0x10)
++	if (capabilities & WLAN_CAPABILITY_PRIVACY)
+ 		iwe.u.data.flags = IW_ENCODE_ENABLED | IW_ENCODE_NOKEY;
+ 	else
+ 		iwe.u.data.flags = IW_ENCODE_DISABLED;
+ 	iwe.u.data.length = 0;
+ 	current_ev = iwe_stream_add_point(info, current_ev, end_buf,
+-					  &iwe, bss->a.essid);
+-
+-	/* Add EXTRA: Age to display seconds since last beacon/probe response
+-	 * for given network. */
+-	iwe.cmd = IWEVCUSTOM;
+-	p = custom;
+-	p += snprintf(p, MAX_CUSTOM_LEN - (p - custom),
+-		      " Last beacon: %dms ago",
+-		      jiffies_to_msecs(jiffies - last_scanned));
+-	iwe.u.data.length = p - custom;
+-	if (iwe.u.data.length)
+-		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
+-						  &iwe, custom);
++					  &iwe, NULL);
+ 
+ 	/* Bit rate is not available in Lucent/Agere firmwares */
+ 	if (priv->firmware_type != FIRMWARE_TYPE_AGERE) {
+@@ -4166,7 +4158,8 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
+ 			if (bss->p.rates[i] == 0x0)
+ 				break;
+ 			/* Bit rate given in 500 kb/s units (+ 0x80) */
+-			iwe.u.bitrate.value = ((bss->p.rates[i] & 0x7f) * 500000);
++			iwe.u.bitrate.value =
++				((bss->p.rates[i] & 0x7f) * 500000);
+ 			current_val = iwe_stream_add_value(info, current_ev,
+ 							   current_val,
+ 							   end_buf, &iwe,
+@@ -4177,6 +4170,34 @@ static inline char *orinoco_translate_scan(struct net_device *dev,
+ 			current_ev = current_val;
+ 	}
+ 
++	/* Beacon interval */
++	iwe.cmd = IWEVCUSTOM;
++	iwe.u.data.length = snprintf(custom, MAX_CUSTOM_LEN,
++				     "bcn_int=%d",
++				     le16_to_cpu(bss->a.beacon_interv));
++	if (iwe.u.data.length)
++		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
++						  &iwe, custom);
++
++	/* Capabilites */
++	iwe.cmd = IWEVCUSTOM;
++	iwe.u.data.length = snprintf(custom, MAX_CUSTOM_LEN,
++				     "capab=0x%04x",
++				     capabilities);
++	if (iwe.u.data.length)
++		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
++						  &iwe, custom);
++
++	/* Add EXTRA: Age to display seconds since last beacon/probe response
++	 * for given network. */
++	iwe.cmd = IWEVCUSTOM;
++	iwe.u.data.length = snprintf(custom, MAX_CUSTOM_LEN,
++				     " Last beacon: %dms ago",
++				     jiffies_to_msecs(jiffies - last_scanned));
++	if (iwe.u.data.length)
++		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
++						  &iwe, custom);
++
+ 	return current_ev;
+ }
+ 
+-- 
+1.5.6.4
 
-kernel (SHA1s from wireless-testing.git, both in 2.6.26):
-872ba53395b2a8be08c3ea2d39e225e5b4a8cb40 mac80211: decrease IBSS creati=
-on latency
-507b06d0622480f8026d49a94f86068bb0fd6ed6 mac80211: send association eve=
-nt on IBSS create
-
-You'd need to backport the wpa_supplicant patches to 0.5.x, or else pok=
-e
-Jouni and maybe he'll backport them for you.  I do want to get them int=
-o
-0.5.x as well.
-
-Dan
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
