@@ -1,42 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:65503 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751822AbYH2R4q (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.185]:58253 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759042AbYHUW2O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2008 13:56:46 -0400
-Message-ID: <48B8385D.5020008@lwfinger.net> (sfid-20080829_195650_848116_0EAA2142)
-Date: Fri, 29 Aug 2008 12:56:45 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Susan Higashi <susanhigashi@gmail.com>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Wireless Problems - Ubuntu 8.04
-References: <b81ef96c0808271712t6ba1124cs6597a0efb8b6f0ea@mail.gmail.com>	 <14b026160808280046h5c9787c9m4eee1c6cccbad949@mail.gmail.com>	 <b81ef96c0808280444g2be951efxe9c6704db7f1f4fc@mail.gmail.com>	 <48B6C1FD.6060001@lwfinger.net>	 <b81ef96c0808281034g4360a9f9n261a55fda221e5b0@mail.gmail.com>	 <48B6E8D5.5050003@lwfinger.net> <b81ef96c0808291040m669c1f66t6c60f199e4cb4bcf@mail.gmail.com>
-In-Reply-To: <b81ef96c0808291040m669c1f66t6c60f199e4cb4bcf@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 21 Aug 2008 18:28:14 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so81281nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2008 15:28:13 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>
+Subject: [PATCH v2 01/19] orinoco: Add ESSID specific scanning for Agere fw
+Date: Thu, 21 Aug 2008 23:27:46 +0100
+Message-Id: <3bd1799afef838bfc6eb688b1e0cf6b0f4949f1b.1219352674.git.kilroyd@gmail.com> (sfid-20080822_002817_862023_E19D2409)
+In-Reply-To: <1219357685-24731-1-git-send-email-kilroyd@gmail.com>
+References: <1219357685-24731-1-git-send-email-kilroyd@gmail.com>
+From: kilroyd@googlemail.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Susan Higashi wrote:
-> I tried  'sudo /sbin/modprobe -rv rtl8180', and the message appered: 
-> "FATAL: Module rtl8180 not found."
+Pass the ESSID to the card.
 
-Obviously, Ubuntu did not configure your device, thus the rtl8180 
-driver is not available. First of all, you need to conttact Ubuntu to 
-discover if this has been changed for Hardy kernels, or if this driver 
-is enabled in the Intrepid alpha kernels. If not, then you need to 
-either build compat-wireless, or apt-get the parts needed to build a 
-kernel so that you can add this driver to the configuration. The 
-instructions on how to build and install your own kernel for Ubuntu 
-and any other Debian-based system are well covered on the Web, and are 
-way off topic for this mailing list.
+This allows 'iwlist eth1 scan essid <essid>' to work, and will help
+with routers setup not to broadcast the ESSID.
 
-> So, I tried iwconfig the following happened: "lo        no wireless 
-> extensions." and "eth0      no wireless extensions."
-> I also tried the steps in this link:  
-> http://rtl-wifi.sourceforge.net/wiki/Installing, which looked to work, 
-> but it didn't work.... =(
+Signed-off-by: David Kilroy <kilroyd@gmail.com>
+---
+ drivers/net/wireless/orinoco.c |   20 +++++++++++++++++++-
+ 1 files changed, 19 insertions(+), 1 deletions(-)
 
-All of the above are expected.
+diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
+index 1ebcafe..a60b459 100644
+--- a/drivers/net/wireless/orinoco.c
++++ b/drivers/net/wireless/orinoco.c
+@@ -2982,6 +2982,11 @@ static int orinoco_ioctl_getiwrange(struct net_device *dev,
+ 	range->min_r_time = 0;
+ 	range->max_r_time = 65535 * 1000;	/* ??? */
+ 
++	if (priv->firmware_type == FIRMWARE_TYPE_AGERE)
++		range->scan_capa = IW_SCAN_CAPA_ESSID;
++	else
++		range->scan_capa = IW_SCAN_CAPA_NONE;
++
+ 	/* Event capability (kernel) */
+ 	IW_EVENT_CAPA_SET_KERNEL(range->event_capa);
+ 	/* Event capability (driver) */
+@@ -3951,6 +3956,7 @@ static int orinoco_ioctl_setscan(struct net_device *dev,
+ {
+ 	struct orinoco_private *priv = netdev_priv(dev);
+ 	hermes_t *hw = &priv->hw;
++	struct iw_scan_req *si = (struct iw_scan_req *) extra;
+ 	int err = 0;
+ 	unsigned long flags;
+ 
+@@ -4012,7 +4018,19 @@ static int orinoco_ioctl_setscan(struct net_device *dev,
+ 		}
+ 		break;
+ 		case FIRMWARE_TYPE_AGERE:
+-			err = hermes_write_wordrec(hw, USER_BAP,
++			if (priv->scan_mode & IW_SCAN_THIS_ESSID) {
++				struct hermes_idstring idbuf;
++				size_t len = min(sizeof(idbuf.val),
++						 (size_t) si->essid_len);
++				idbuf.len = cpu_to_le16(len);
++				memcpy(idbuf.val, si->essid, len);
++
++				err = hermes_write_ltv(hw, USER_BAP,
++					       HERMES_RID_CNFSCANSSID_AGERE,
++					       HERMES_BYTES_TO_RECLEN(len + 2),
++					       &idbuf);
++			} else
++				err = hermes_write_wordrec(hw, USER_BAP,
+ 						   HERMES_RID_CNFSCANSSID_AGERE,
+ 						   0);	/* Any ESSID */
+ 			if (err)
+-- 
+1.5.6.4
 
-Larry
