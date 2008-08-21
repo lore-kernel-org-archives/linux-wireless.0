@@ -1,38 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from usul.saidi.cx ([204.11.33.34]:37733 "EHLO usul.overt.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753086AbYHVWZF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2008 18:25:05 -0400
-To: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/1] =?UTF-8?Q?toshiba=5Facpi=3A=20Add=20support=20for=20bluet?=
- =?UTF-8?Q?ooth=20togglingthrough=20rfkill=20=28v=36=29?=
-MIME-Version: 1.0
-Date: Fri, 22 Aug 2008 18:25:21 -0400
-From: Philip Langdale <philipl@overt.org>
-Cc: linux-kernel@vger.kernel.org, hmh@hmh.eng.br, mjg59@srcf.ucam.org,
-	toshiba_acpi@memebeam.org, ivdoorn@gmail.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080822141045.488f9334.akpm@linux-foundation.org>
-References: <20080822141045.488f9334.akpm@linux-foundation.org>
-Message-ID: <59d2acb71f1f1976de4a1202bb93670c@localhost> (sfid-20080823_002510_608942_9C443219)
-Content-Type: text/plain; charset="UTF-8"
+Received: from mi0.bluebottle.com ([206.188.25.15]:44195 "EHLO
+	mi0.bluebottle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750851AbYHURsO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Aug 2008 13:48:14 -0400
+Received: from localhost.localdomain (localhost.localdomain [127.0.0.1])
+	by mi0.bluebottle.com (8.13.1/8.13.1) with ESMTP id m7LGhuap002925
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2008 16:43:56 GMT
+Message-Id: <200808211643.m7LGhuap002925@mi0.bluebottle.com> (sfid-20080821_194818_985899_69B39A22)
+Subject: Re: [PATCH RFT] b43: Rewrite PHY API for N-PHY/LP-PHY
+From: Sean Hodges <seanhodges@bluebottle.com>
+Reply-To: seanhodges@bluebottle.com
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+In-Reply-To: <200808160029.56876.mb@bu3sch.de>
+References: <200808160029.56876.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Thu, 21 Aug 2008 17:16:23 +0100
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On Fri, 22 Aug 2008 14:10:45 -0700, Andrew Morton
-<akpm@linux-foundation.org> wrote:
+On Sat, 2008-08-16 at 00:29 +0200, Michael Buesch wrote:
+> This is the first part for the rewrite of the b43 PHY API.
+> This is needed in order to make development of N and LP code possible.
 > 
-> your email client is performing space-stuffing.  Please see
-> Documentation/email-clients.txt.
+> PLEASE TEST TEST TEST TEST TEST
+> 
+> Lots of testing on lots of different devices is needed to ensure this
+> doesn't introduce regressions due to typos.
+> 95% of the patch just moves large parts of the PHY code from one file
+> to another. More move-patches will follow.
+> 5% of the patch introduces an "ops" based PHY API.
+> 
+> Please test on all of your devices.
+> 
+> http://bu3sch.de/patches/wireless-testing/20080816-0023/patches/002-b43-phy-ops.patch
+> Apply against wireless-testing.git
 
-Hrmf. I beat thunderbird into submission previously so I'm not sure why did
-decided
-to crap out on me now. I've resent the diff using a more cooperative client
-and updated
-it to reflect your comments.
+As a novice to driver development, is there some way I can help with
+testing this?
 
-Thanks,
+I have no experience of driver development/testing, but have an N-PHY
+BCM4328 wireless NIC that is just itching to be eventually freed from
+ndiswrapper :) I'd be happy to lend some help testing new patches and
+feeding back results, if I could get a few pointers on where to get
+started...
 
---phil
+I'm running 2.6.24-19 kernel release, and my card is listed by lspci as:
+
+06:00.0 Network controller: Broadcom Corporation BCM4328 802.11a/b/g/n
+(rev 03)
+
+
+Sean
+
+
+
+
+
 
