@@ -1,58 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:36242 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752547AbYHLAzw (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:47164 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751020AbYHUSgq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2008 20:55:52 -0400
-Subject: Re: [PATCH 1/1] iwlwifi: fix printk newlines
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
-	Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-In-Reply-To: <1218491381-1313-1-git-send-email-jirislaby@gmail.com>
-References: <1218491381-1313-1-git-send-email-jirislaby@gmail.com>
-Content-Type: text/plain
-Date: Tue, 12 Aug 2008 02:55:55 +0200
-Message-Id: <1218502555.25524.22.camel@californication> (sfid-20080812_025557_691349_3AC3B58E)
-Mime-Version: 1.0
+	Thu, 21 Aug 2008 14:36:46 -0400
+Message-ID: <48ADB5C2.2020203@lwfinger.net> (sfid-20080821_203650_315741_A8D72175)
+Date: Thu, 21 Aug 2008 13:36:50 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: PHY TRANSMISSION ERRORS
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jiri,
+I recently switched from a BCM4312/1 to a BCM4311/2 PCIe card. Running 
+the latest from wireless-testing, I began seeing the PHY TRANSMISSION 
+ERROR storms. None had ever been seen for the BCM4312/1. Since booting 
+2.6.26 from wireless-testing, none have been observed.
 
-> Add newlines at printk outputs to not break dmesg.
-> 
-> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-> Cc: Zhu Yi <yi.zhu@intel.com>
-> Cc: Reinette Chatre <reinette.chatre@intel.com>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 +-
->  drivers/net/wireless/iwlwifi/iwl-eeprom.c   |    6 +++---
->  drivers/net/wireless/iwlwifi/iwl-sta.c      |    4 ++--
->  drivers/net/wireless/iwlwifi/iwl-tx.c       |    4 ++--
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 +++---
->  5 files changed, 11 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-> index 22bb269..4a0cc78 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-> @@ -967,7 +967,7 @@ static int iwl4965_interpolate_chan(struct iwl_priv *priv, u32 channel,
->  
->  	s = iwl4965_get_sub_band(priv, channel);
->  	if (s >= EEPROM_TX_POWER_BANDS) {
-> -		IWL_ERROR("Tx Power can not find channel %d ", channel);
-> +		IWL_ERROR("Tx Power can not find channel %d\n", channel);
->  		return -1;
->  	}
+Is this a regression since 2.6.26, or are these errors really 
+intermittent? If you see these, please tell me how frequently they 
+occur, and as much about the behavior with kernel version as you know.
 
-can we not just fix IWL_ERROR to always append the newline?
+Thanks,
 
-Regards
-
-Marcel
-
-
+Larry
