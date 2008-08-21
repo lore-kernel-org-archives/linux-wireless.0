@@ -1,717 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:36055 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750722AbYH3AK0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2008 20:10:26 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Move remaining code from phy.c to phy_a.c
-Date: Sat, 30 Aug 2008 02:09:08 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200808300209.08805.mb@bu3sch.de> (sfid-20080830_021031_533921_C7E5E06C)
+Received: from nf-out-0910.google.com ([64.233.182.185]:58253 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759631AbYHUW3U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Aug 2008 18:29:20 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so81281nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2008 15:29:20 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>
+Subject: [PATCH v2 15/19] orinoco: Use a macro to define wireless handlers
+Date: Thu, 21 Aug 2008 23:28:01 +0100
+Message-Id: <50585fbee314ce11734e09b9c342c94d2f84c8bc.1219352676.git.kilroyd@gmail.com> (sfid-20080822_005043_996892_B02FC702)
+In-Reply-To: <bbb15e90927ee20492ec6d76000ee6b95ce69bd9.1219352676.git.kilroyd@gmail.com>
+References: <1219357685-24731-1-git-send-email-kilroyd@gmail.com>
+ <3bd1799afef838bfc6eb688b1e0cf6b0f4949f1b.1219352674.git.kilroyd@gmail.com>
+ <24148627bbab77e1365aa43c22a7f24ded1bed7a.1219352674.git.kilroyd@gmail.com>
+ <6e9e9826934e0256adbe561e587f93212e042bf2.1219352674.git.kilroyd@gmail.com>
+ <77df696e5b53b5e4db3b8c8e70b23cf5aaa2aca2.1219352674.git.kilroyd@gmail.com>
+ <ac0da2799e97f5256019ad669f5a6c461bd0d82a.1219352674.git.kilroyd@gmail.com>
+ <d792f6b1d5853becf1b1488e6572a4c3244eb769.1219352674.git.kilroyd@gmail.com>
+ <6c4f63d9cc1bec763719e18ea8282919b6604503.1219352674.git.kilroyd@gmail.com>
+ <9a54acb1147a2c0a7c1cf9b07b9ac756366d0877.1219352674.git.kilroyd@gmail.com>
+ <889676c2c8c53b8193620e51d81017ade21e593c.1219352674.git.kilroyd@gmail.com>
+ <889676c2c8c53b8193620e51d81017ade21e593c.1219352674.git.kilroyd@gmail.com>
+ <347f1ce011aaeeb9b4d8f805fdfb6eb58fc467ca.1219352675.git.kilroyd@gmail.com>
+ <5e42f22bf794bbefae50fa2a3e5b4ff6e36c7096.1219352675.git.kilroyd@gmail.com>
+ <dc5df8328be19728aec203304d9c265368c2b876.1219352675.git.kilroyd@gmail.com>
+ <09ee16c27766ca779c63a0e82df7e4aa723f4fdf.1219352676.git.kilroyd@gmail.com>
+ <bbb15e90927ee20492ec6d76000ee6b95ce69bd9.1219352676.git.kilroyd@gmail.com>
+In-Reply-To: <3bd1799afef838bfc6eb688b1e0cf6b0f4949f1b.1219352674.git.kilroyd@gmail.com>
+References: <3bd1799afef838bfc6eb688b1e0cf6b0f4949f1b.1219352674.git.kilroyd@gmail.com>
+From: kilroyd@googlemail.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This moves the remaining code from phy.c to phy_a.c
-phy.c is removed.
-No functional change. Just moving code and removing dead code.
+The macro identifiers for the various ioctls required for WPA support
+are longer than those currently used by the driver. This makes it messy
+to keep line length below 80 character.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+By defining a macro to initialise the handler table, we recover the
+common text.
 
+Signed-off-by: David Kilroy <kilroyd@gmail.com>
 ---
+ drivers/net/wireless/orinoco.c |   66 ++++++++++++++++++++-------------------
+ 1 files changed, 34 insertions(+), 32 deletions(-)
 
-Please queue for the next merge window.
-
-Index: wireless-testing/drivers/net/wireless/b43/phy.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/phy.c	2008-08-29 00:55:14.000000000 +0200
-+++ /dev/null	1970-01-01 00:00:00.000000000 +0000
-@@ -1,489 +0,0 @@
--/*
--
--  Broadcom B43 wireless driver
--
--  Copyright (c) 2005 Martin Langer <martin-langer@gmx.de>,
--  Copyright (c) 2005-2007 Stefano Brivio <stefano.brivio@polimi.it>
--  Copyright (c) 2005, 2006 Michael Buesch <mb@bu3sch.de>
--  Copyright (c) 2005, 2006 Danny van Dyk <kugelfang@gentoo.org>
--  Copyright (c) 2005, 2006 Andreas Jaggi <andreas.jaggi@waterwave.ch>
--
--  This program is free software; you can redistribute it and/or modify
--  it under the terms of the GNU General Public License as published by
--  the Free Software Foundation; either version 2 of the License, or
--  (at your option) any later version.
--
--  This program is distributed in the hope that it will be useful,
--  but WITHOUT ANY WARRANTY; without even the implied warranty of
--  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--  GNU General Public License for more details.
--
--  You should have received a copy of the GNU General Public License
--  along with this program; see the file COPYING.  If not, write to
--  the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
--  Boston, MA 02110-1301, USA.
--
--*/
--
--#include <linux/delay.h>
--#include <linux/io.h>
--#include <linux/types.h>
--#include <linux/bitrev.h>
--
--#include "b43.h"
--#include "phy.h"
--#include "nphy.h"
--#include "main.h"
--#include "tables.h"
--#include "lo.h"
--#include "wa.h"
--
--
--static void b43_shm_clear_tssi(struct b43_wldev *dev)
--{
--	struct b43_phy *phy = &dev->phy;
--
--	switch (phy->type) {
--	case B43_PHYTYPE_A:
--		b43_shm_write16(dev, B43_SHM_SHARED, 0x0068, 0x7F7F);
--		b43_shm_write16(dev, B43_SHM_SHARED, 0x006a, 0x7F7F);
--		break;
--	case B43_PHYTYPE_B:
--	case B43_PHYTYPE_G:
--		b43_shm_write16(dev, B43_SHM_SHARED, 0x0058, 0x7F7F);
--		b43_shm_write16(dev, B43_SHM_SHARED, 0x005a, 0x7F7F);
--		b43_shm_write16(dev, B43_SHM_SHARED, 0x0070, 0x7F7F);
--		b43_shm_write16(dev, B43_SHM_SHARED, 0x0072, 0x7F7F);
--		break;
--	}
--}
--
--/* http://bcm-specs.sipsolutions.net/EstimatePowerOut
-- * This function converts a TSSI value to dBm in Q5.2
-- */
--static s8 b43_phy_estimate_power_out(struct b43_wldev *dev, s8 tssi)
--{
--	struct b43_phy *phy = &dev->phy;
--	s8 dbm = 0;
--	s32 tmp;
--
--	tmp = (phy->tgt_idle_tssi - phy->cur_idle_tssi + tssi);
--
--	switch (phy->type) {
--	case B43_PHYTYPE_A:
--		tmp += 0x80;
--		tmp = clamp_val(tmp, 0x00, 0xFF);
--		dbm = phy->tssi2dbm[tmp];
--		//TODO: There's a FIXME on the specs
--		break;
--	case B43_PHYTYPE_B:
--	case B43_PHYTYPE_G:
--		tmp = clamp_val(tmp, 0x00, 0x3F);
--		dbm = phy->tssi2dbm[tmp];
--		break;
--	default:
--		B43_WARN_ON(1);
--	}
--
--	return dbm;
--}
--
--void b43_put_attenuation_into_ranges(struct b43_wldev *dev,
--				     int *_bbatt, int *_rfatt)
--{
--	int rfatt = *_rfatt;
--	int bbatt = *_bbatt;
--	struct b43_txpower_lo_control *lo = dev->phy.lo_control;
--
--	/* Get baseband and radio attenuation values into their permitted ranges.
--	 * Radio attenuation affects power level 4 times as much as baseband. */
--
--	/* Range constants */
--	const int rf_min = lo->rfatt_list.min_val;
--	const int rf_max = lo->rfatt_list.max_val;
--	const int bb_min = lo->bbatt_list.min_val;
--	const int bb_max = lo->bbatt_list.max_val;
--
--	while (1) {
--		if (rfatt > rf_max && bbatt > bb_max - 4)
--			break;	/* Can not get it into ranges */
--		if (rfatt < rf_min && bbatt < bb_min + 4)
--			break;	/* Can not get it into ranges */
--		if (bbatt > bb_max && rfatt > rf_max - 1)
--			break;	/* Can not get it into ranges */
--		if (bbatt < bb_min && rfatt < rf_min + 1)
--			break;	/* Can not get it into ranges */
--
--		if (bbatt > bb_max) {
--			bbatt -= 4;
--			rfatt += 1;
--			continue;
--		}
--		if (bbatt < bb_min) {
--			bbatt += 4;
--			rfatt -= 1;
--			continue;
--		}
--		if (rfatt > rf_max) {
--			rfatt -= 1;
--			bbatt += 4;
--			continue;
--		}
--		if (rfatt < rf_min) {
--			rfatt += 1;
--			bbatt -= 4;
--			continue;
--		}
--		break;
--	}
--
--	*_rfatt = clamp_val(rfatt, rf_min, rf_max);
--	*_bbatt = clamp_val(bbatt, bb_min, bb_max);
--}
--
--/* http://bcm-specs.sipsolutions.net/RecalculateTransmissionPower */
--void b43_phy_xmitpower(struct b43_wldev *dev)
--{
--	struct ssb_bus *bus = dev->dev->bus;
--	struct b43_phy *phy = &dev->phy;
--
--	if (phy->cur_idle_tssi == 0)
--		return;
--	if ((bus->boardinfo.vendor == SSB_BOARDVENDOR_BCM) &&
--	    (bus->boardinfo.type == SSB_BOARD_BU4306))
--		return;
--#ifdef CONFIG_B43_DEBUG
--	if (phy->manual_txpower_control)
--		return;
--#endif
--
--	switch (phy->type) {
--	case B43_PHYTYPE_A:{
--
--			//TODO: Nothing for A PHYs yet :-/
--
--			break;
--		}
--	case B43_PHYTYPE_B:
--	case B43_PHYTYPE_G:{
--			u16 tmp;
--			s8 v0, v1, v2, v3;
--			s8 average;
--			int max_pwr;
--			int desired_pwr, estimated_pwr, pwr_adjust;
--			int rfatt_delta, bbatt_delta;
--			int rfatt, bbatt;
--			u8 tx_control;
--
--			tmp = b43_shm_read16(dev, B43_SHM_SHARED, 0x0058);
--			v0 = (s8) (tmp & 0x00FF);
--			v1 = (s8) ((tmp & 0xFF00) >> 8);
--			tmp = b43_shm_read16(dev, B43_SHM_SHARED, 0x005A);
--			v2 = (s8) (tmp & 0x00FF);
--			v3 = (s8) ((tmp & 0xFF00) >> 8);
--			tmp = 0;
--
--			if (v0 == 0x7F || v1 == 0x7F || v2 == 0x7F
--			    || v3 == 0x7F) {
--				tmp =
--				    b43_shm_read16(dev, B43_SHM_SHARED, 0x0070);
--				v0 = (s8) (tmp & 0x00FF);
--				v1 = (s8) ((tmp & 0xFF00) >> 8);
--				tmp =
--				    b43_shm_read16(dev, B43_SHM_SHARED, 0x0072);
--				v2 = (s8) (tmp & 0x00FF);
--				v3 = (s8) ((tmp & 0xFF00) >> 8);
--				if (v0 == 0x7F || v1 == 0x7F || v2 == 0x7F
--				    || v3 == 0x7F)
--					return;
--				v0 = (v0 + 0x20) & 0x3F;
--				v1 = (v1 + 0x20) & 0x3F;
--				v2 = (v2 + 0x20) & 0x3F;
--				v3 = (v3 + 0x20) & 0x3F;
--				tmp = 1;
--			}
--			b43_shm_clear_tssi(dev);
--
--			average = (v0 + v1 + v2 + v3 + 2) / 4;
--
--			if (tmp
--			    && (b43_shm_read16(dev, B43_SHM_SHARED, 0x005E) &
--				0x8))
--				average -= 13;
--
--			estimated_pwr =
--			    b43_phy_estimate_power_out(dev, average);
--
--			max_pwr = dev->dev->bus->sprom.maxpwr_bg;
--			if ((dev->dev->bus->sprom.boardflags_lo
--			    & B43_BFL_PACTRL) && (phy->type == B43_PHYTYPE_G))
--				max_pwr -= 0x3;
--			if (unlikely(max_pwr <= 0)) {
--				b43warn(dev->wl,
--					"Invalid max-TX-power value in SPROM.\n");
--				max_pwr = 60;	/* fake it */
--				dev->dev->bus->sprom.maxpwr_bg = max_pwr;
--			}
--
--			/*TODO:
--			   max_pwr = min(REG - dev->dev->bus->sprom.antennagain_bgphy - 0x6, max_pwr)
--			   where REG is the max power as per the regulatory domain
--			 */
--
--			/* Get desired power (in Q5.2) */
--			desired_pwr = INT_TO_Q52(phy->power_level);
--			/* And limit it. max_pwr already is Q5.2 */
--			desired_pwr = clamp_val(desired_pwr, 0, max_pwr);
--			if (b43_debug(dev, B43_DBG_XMITPOWER)) {
--				b43dbg(dev->wl,
--				       "Current TX power output: " Q52_FMT
--				       " dBm, " "Desired TX power output: "
--				       Q52_FMT " dBm\n", Q52_ARG(estimated_pwr),
--				       Q52_ARG(desired_pwr));
--			}
--
--			/* Calculate the adjustment delta. */
--			pwr_adjust = desired_pwr - estimated_pwr;
--
--			/* RF attenuation delta. */
--			rfatt_delta = ((pwr_adjust + 7) / 8);
--			/* Lower attenuation => Bigger power output. Negate it. */
--			rfatt_delta = -rfatt_delta;
--
--			/* Baseband attenuation delta. */
--			bbatt_delta = pwr_adjust / 2;
--			/* Lower attenuation => Bigger power output. Negate it. */
--			bbatt_delta = -bbatt_delta;
--			/* RF att affects power level 4 times as much as
--			 * Baseband attennuation. Subtract it. */
--			bbatt_delta -= 4 * rfatt_delta;
--
--			/* So do we finally need to adjust something? */
--			if ((rfatt_delta == 0) && (bbatt_delta == 0))
--				return;
--
--			/* Calculate the new attenuation values. */
--			bbatt = phy->bbatt.att;
--			bbatt += bbatt_delta;
--			rfatt = phy->rfatt.att;
--			rfatt += rfatt_delta;
--
--			b43_put_attenuation_into_ranges(dev, &bbatt, &rfatt);
--			tx_control = phy->tx_control;
--			if ((phy->radio_ver == 0x2050) && (phy->radio_rev == 2)) {
--				if (rfatt <= 1) {
--					if (tx_control == 0) {
--						tx_control =
--						    B43_TXCTL_PA2DB |
--						    B43_TXCTL_TXMIX;
--						rfatt += 2;
--						bbatt += 2;
--					} else if (dev->dev->bus->sprom.
--						   boardflags_lo &
--						   B43_BFL_PACTRL) {
--						bbatt += 4 * (rfatt - 2);
--						rfatt = 2;
--					}
--				} else if (rfatt > 4 && tx_control) {
--					tx_control = 0;
--					if (bbatt < 3) {
--						rfatt -= 3;
--						bbatt += 2;
--					} else {
--						rfatt -= 2;
--						bbatt -= 2;
--					}
--				}
--			}
--			/* Save the control values */
--			phy->tx_control = tx_control;
--			b43_put_attenuation_into_ranges(dev, &bbatt, &rfatt);
--			phy->rfatt.att = rfatt;
--			phy->bbatt.att = bbatt;
--
--			/* Adjust the hardware */
--			b43_phy_lock(dev);
--			b43_radio_lock(dev);
--			b43_set_txpower_g(dev, &phy->bbatt, &phy->rfatt,
--					  phy->tx_control);
--			b43_radio_unlock(dev);
--			b43_phy_unlock(dev);
--			break;
--		}
--	case B43_PHYTYPE_N:
--		b43_nphy_xmitpower(dev);
--		break;
--	default:
--		B43_WARN_ON(1);
--	}
--}
--
--static inline s32 b43_tssi2dbm_ad(s32 num, s32 den)
--{
--	if (num < 0)
--		return num / den;
--	else
--		return (num + den / 2) / den;
--}
--
--static inline
--    s8 b43_tssi2dbm_entry(s8 entry[], u8 index, s16 pab0, s16 pab1, s16 pab2)
--{
--	s32 m1, m2, f = 256, q, delta;
--	s8 i = 0;
--
--	m1 = b43_tssi2dbm_ad(16 * pab0 + index * pab1, 32);
--	m2 = max(b43_tssi2dbm_ad(32768 + index * pab2, 256), 1);
--	do {
--		if (i > 15)
--			return -EINVAL;
--		q = b43_tssi2dbm_ad(f * 4096 -
--				    b43_tssi2dbm_ad(m2 * f, 16) * f, 2048);
--		delta = abs(q - f);
--		f = q;
--		i++;
--	} while (delta >= 2);
--	entry[index] = clamp_val(b43_tssi2dbm_ad(m1 * f, 8192), -127, 128);
--	return 0;
--}
--
--/* http://bcm-specs.sipsolutions.net/TSSI_to_DBM_Table */
--int b43_phy_init_tssi2dbm_table(struct b43_wldev *dev)
--{
--	struct b43_phy *phy = &dev->phy;
--	s16 pab0, pab1, pab2;
--	u8 idx;
--	s8 *dyn_tssi2dbm;
--
--	if (phy->type == B43_PHYTYPE_A) {
--		pab0 = (s16) (dev->dev->bus->sprom.pa1b0);
--		pab1 = (s16) (dev->dev->bus->sprom.pa1b1);
--		pab2 = (s16) (dev->dev->bus->sprom.pa1b2);
--	} else {
--		pab0 = (s16) (dev->dev->bus->sprom.pa0b0);
--		pab1 = (s16) (dev->dev->bus->sprom.pa0b1);
--		pab2 = (s16) (dev->dev->bus->sprom.pa0b2);
--	}
--
--	if ((dev->dev->bus->chip_id == 0x4301) && (phy->radio_ver != 0x2050)) {
--		phy->tgt_idle_tssi = 0x34;
--		phy->tssi2dbm = b43_tssi2dbm_b_table;
--		return 0;
--	}
--
--	if (pab0 != 0 && pab1 != 0 && pab2 != 0 &&
--	    pab0 != -1 && pab1 != -1 && pab2 != -1) {
--		/* The pabX values are set in SPROM. Use them. */
--		if (phy->type == B43_PHYTYPE_A) {
--			if ((s8) dev->dev->bus->sprom.itssi_a != 0 &&
--			    (s8) dev->dev->bus->sprom.itssi_a != -1)
--				phy->tgt_idle_tssi =
--				    (s8) (dev->dev->bus->sprom.itssi_a);
--			else
--				phy->tgt_idle_tssi = 62;
--		} else {
--			if ((s8) dev->dev->bus->sprom.itssi_bg != 0 &&
--			    (s8) dev->dev->bus->sprom.itssi_bg != -1)
--				phy->tgt_idle_tssi =
--				    (s8) (dev->dev->bus->sprom.itssi_bg);
--			else
--				phy->tgt_idle_tssi = 62;
--		}
--		dyn_tssi2dbm = kmalloc(64, GFP_KERNEL);
--		if (dyn_tssi2dbm == NULL) {
--			b43err(dev->wl, "Could not allocate memory "
--			       "for tssi2dbm table\n");
--			return -ENOMEM;
--		}
--		for (idx = 0; idx < 64; idx++)
--			if (b43_tssi2dbm_entry
--			    (dyn_tssi2dbm, idx, pab0, pab1, pab2)) {
--				phy->tssi2dbm = NULL;
--				b43err(dev->wl, "Could not generate "
--				       "tssi2dBm table\n");
--				kfree(dyn_tssi2dbm);
--				return -ENODEV;
--			}
--		phy->tssi2dbm = dyn_tssi2dbm;
--		phy->dyn_tssi_tbl = 1;
--	} else {
--		/* pabX values not set in SPROM. */
--		switch (phy->type) {
--		case B43_PHYTYPE_A:
--			/* APHY needs a generated table. */
--			phy->tssi2dbm = NULL;
--			b43err(dev->wl, "Could not generate tssi2dBm "
--			       "table (wrong SPROM info)!\n");
--			return -ENODEV;
--		case B43_PHYTYPE_B:
--			phy->tgt_idle_tssi = 0x34;
--			phy->tssi2dbm = b43_tssi2dbm_b_table;
--			break;
--		case B43_PHYTYPE_G:
--			phy->tgt_idle_tssi = 0x34;
--			phy->tssi2dbm = b43_tssi2dbm_g_table;
--			break;
--		}
--	}
--
--	return 0;
--}
--
--void b43_radio_turn_on(struct b43_wldev *dev)
--{
--	struct b43_phy *phy = &dev->phy;
--	int err;
--	u8 channel;
--
--	might_sleep();
--
--	if (phy->radio_on)
--		return;
--
--	switch (phy->type) {
--	case B43_PHYTYPE_A:
--		b43_radio_write16(dev, 0x0004, 0x00C0);
--		b43_radio_write16(dev, 0x0005, 0x0008);
--		b43_phy_write(dev, 0x0010, b43_phy_read(dev, 0x0010) & 0xFFF7);
--		b43_phy_write(dev, 0x0011, b43_phy_read(dev, 0x0011) & 0xFFF7);
--		b43_radio_init2060(dev);
--		break;
--	case B43_PHYTYPE_B:
--	case B43_PHYTYPE_G:
--		//XXX
--		break;
--	case B43_PHYTYPE_N:
--		b43_nphy_radio_turn_on(dev);
--		break;
--	default:
--		B43_WARN_ON(1);
--	}
--	phy->radio_on = 1;
--}
--
--void b43_radio_turn_off(struct b43_wldev *dev, bool force)
--{
--	struct b43_phy *phy = &dev->phy;
--
--	if (!phy->radio_on && !force)
--		return;
--
--	switch (phy->type) {
--	case B43_PHYTYPE_N:
--		b43_nphy_radio_turn_off(dev);
--		break;
--	case B43_PHYTYPE_A:
--		b43_radio_write16(dev, 0x0004, 0x00FF);
--		b43_radio_write16(dev, 0x0005, 0x00FB);
--		b43_phy_write(dev, 0x0010, b43_phy_read(dev, 0x0010) | 0x0008);
--		b43_phy_write(dev, 0x0011, b43_phy_read(dev, 0x0011) | 0x0008);
--		break;
--	case B43_PHYTYPE_G: {
--		//XXX
--		break;
--	}
--	default:
--		B43_WARN_ON(1);
--	}
--	phy->radio_on = 0;
--}
-Index: wireless-testing/drivers/net/wireless/b43/phy_a.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/phy_a.c	2008-08-29 00:55:16.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/phy_a.c	2008-08-30 02:02:55.000000000 +0200
-@@ -55,12 +55,31 @@ static inline u16 freq_r3A_value(u16 fre
- 	else
- 		value = 0x0040;
+diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
+index 21bed6c..e91e240 100644
+--- a/drivers/net/wireless/orinoco.c
++++ b/drivers/net/wireless/orinoco.c
+@@ -5043,39 +5043,41 @@ static const struct iw_priv_args orinoco_privtab[] = {
+  * Structures to export the Wireless Handlers
+  */
  
- 	return value;
- }
- 
-+#if 0
-+/* This function converts a TSSI value to dBm in Q5.2 */
-+static s8 b43_aphy_estimate_power_out(struct b43_wldev *dev, s8 tssi)
-+{
-+	struct b43_phy *phy = &dev->phy;
-+	struct b43_phy_a *aphy = phy->a;
-+	s8 dbm = 0;
-+	s32 tmp;
-+
-+	tmp = (aphy->tgt_idle_tssi - aphy->cur_idle_tssi + tssi);
-+	tmp += 0x80;
-+	tmp = clamp_val(tmp, 0x00, 0xFF);
-+	dbm = aphy->tssi2dbm[tmp];
-+	//TODO: There's a FIXME on the specs
-+
-+	return dbm;
-+}
-+#endif
-+
- void b43_radio_set_tx_iq(struct b43_wldev *dev)
- {
- 	static const u8 data_high[5] = { 0x00, 0x40, 0x80, 0x90, 0xD0 };
- 	static const u8 data_low[5] = { 0x00, 0x01, 0x05, 0x06, 0x0A };
- 	u16 tmp = b43_radio_read16(dev, 0x001E);
- 	int i, j;
-@@ -323,24 +342,71 @@ void b43_phy_inita(struct b43_wldev *dev
- 		b43_phy_write(dev, B43_PHY_OFDM(0x6E),
- 				  (b43_phy_read(dev, B43_PHY_OFDM(0x6E))
- 				   & 0xE000) | 0x3CF);
- 	}
- }
- 
-+/* Initialise the TSSI->dBm lookup table */
-+static int b43_aphy_init_tssi2dbm_table(struct b43_wldev *dev)
-+{
-+	struct b43_phy *phy = &dev->phy;
-+	struct b43_phy_a *aphy = phy->a;
-+	s16 pab0, pab1, pab2;
-+
-+	pab0 = (s16) (dev->dev->bus->sprom.pa1b0);
-+	pab1 = (s16) (dev->dev->bus->sprom.pa1b1);
-+	pab2 = (s16) (dev->dev->bus->sprom.pa1b2);
-+
-+	if (pab0 != 0 && pab1 != 0 && pab2 != 0 &&
-+	    pab0 != -1 && pab1 != -1 && pab2 != -1) {
-+		/* The pabX values are set in SPROM. Use them. */
-+		if ((s8) dev->dev->bus->sprom.itssi_a != 0 &&
-+		    (s8) dev->dev->bus->sprom.itssi_a != -1)
-+			aphy->tgt_idle_tssi =
-+			    (s8) (dev->dev->bus->sprom.itssi_a);
-+		else
-+			aphy->tgt_idle_tssi = 62;
-+		aphy->tssi2dbm = b43_generate_dyn_tssi2dbm_tab(dev, pab0,
-+							       pab1, pab2);
-+		if (!aphy->tssi2dbm)
-+			return -ENOMEM;
-+	} else {
-+		/* pabX values not set in SPROM,
-+		 * but APHY needs a generated table. */
-+		aphy->tssi2dbm = NULL;
-+		b43err(dev->wl, "Could not generate tssi2dBm "
-+		       "table (wrong SPROM info)!\n");
-+		return -ENODEV;
-+	}
-+
-+	return 0;
-+}
-+
- static int b43_aphy_op_allocate(struct b43_wldev *dev)
- {
- 	struct b43_phy_a *aphy;
-+	int err;
- 
- 	aphy = kzalloc(sizeof(*aphy), GFP_KERNEL);
- 	if (!aphy)
- 		return -ENOMEM;
- 	dev->phy.a = aphy;
- 
- 	//TODO init struct b43_phy_a
- 
-+	err = b43_aphy_init_tssi2dbm_table(dev);
-+	if (err)
-+		goto err_free_aphy;
-+
- 	return 0;
-+
-+err_free_aphy:
-+	kfree(aphy);
-+	dev->phy.a = NULL;
-+
-+	return err;
- }
- 
- static int b43_aphy_op_init(struct b43_wldev *dev)
- {
- 	struct b43_phy_a *aphy = dev->phy.a;
- 
-@@ -356,12 +422,13 @@ static void b43_aphy_op_exit(struct b43_
- 
- 	if (aphy->initialised) {
- 		//TODO
- 		aphy->initialised = 0;
- 	}
- 	//TODO
-+	kfree(aphy->tssi2dbm);
- 	kfree(aphy);
- 	dev->phy.a = NULL;
- }
- 
- static inline u16 adjust_phyreg(struct b43_wldev *dev, u16 offset)
- {
-@@ -427,13 +494,29 @@ static bool b43_aphy_op_supports_hwpctl(
- {
- 	return (dev->phy.rev >= 5);
- }
- 
- static void b43_aphy_op_software_rfkill(struct b43_wldev *dev,
- 					enum rfkill_state state)
--{//TODO
-+{
-+	struct b43_phy *phy = &dev->phy;
-+
-+	if (state == RFKILL_STATE_UNBLOCKED) {
-+		if (phy->radio_on)
-+			return;
-+		b43_radio_write16(dev, 0x0004, 0x00C0);
-+		b43_radio_write16(dev, 0x0005, 0x0008);
-+		b43_phy_write(dev, 0x0010, b43_phy_read(dev, 0x0010) & 0xFFF7);
-+		b43_phy_write(dev, 0x0011, b43_phy_read(dev, 0x0011) & 0xFFF7);
-+		b43_radio_init2060(dev);
-+	} else {
-+		b43_radio_write16(dev, 0x0004, 0x00FF);
-+		b43_radio_write16(dev, 0x0005, 0x00FB);
-+		b43_phy_write(dev, 0x0010, b43_phy_read(dev, 0x0010) | 0x0008);
-+		b43_phy_write(dev, 0x0011, b43_phy_read(dev, 0x0011) | 0x0008);
-+	}
- }
- 
- static int b43_aphy_op_switch_channel(struct b43_wldev *dev,
- 				      unsigned int new_channel)
- {
- 	if (new_channel > 200)
-Index: wireless-testing/drivers/net/wireless/b43/phy_a.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/phy_a.h	2008-08-29 00:55:14.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/phy_a.h	2008-08-30 02:00:52.000000000 +0200
-@@ -102,12 +102,20 @@ void b43_ofdmtab_write32(struct b43_wlde
- 			 u16 offset, u32 value);
- 
- 
- struct b43_phy_a {
- 	bool initialised;
- 
-+	/* Pointer to the table used to convert a
-+	 * TSSI value to dBm-Q5.2 */
-+	const s8 *tssi2dbm;
-+	/* Target idle TSSI */
-+	int tgt_idle_tssi;
-+	/* Current idle TSSI */
-+	int cur_idle_tssi;//FIXME value currently not set
-+
- 	/* A-PHY TX Power control value. */
- 	u16 txpwr_offset;
- 
- 	//TODO lots of missing stuff
++#define STD_IW_HANDLER(id, func) \
++	[IW_IOCTL_IDX(id)] = (iw_handler) func
+ static const iw_handler	orinoco_handler[] = {
+-	[SIOCSIWCOMMIT-SIOCIWFIRST] = (iw_handler) orinoco_ioctl_commit,
+-	[SIOCGIWNAME  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getname,
+-	[SIOCSIWFREQ  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setfreq,
+-	[SIOCGIWFREQ  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getfreq,
+-	[SIOCSIWMODE  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setmode,
+-	[SIOCGIWMODE  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getmode,
+-	[SIOCSIWSENS  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setsens,
+-	[SIOCGIWSENS  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getsens,
+-	[SIOCGIWRANGE -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getiwrange,
+-	[SIOCSIWSPY   -SIOCIWFIRST] = (iw_handler) iw_handler_set_spy,
+-	[SIOCGIWSPY   -SIOCIWFIRST] = (iw_handler) iw_handler_get_spy,
+-	[SIOCSIWTHRSPY-SIOCIWFIRST] = (iw_handler) iw_handler_set_thrspy,
+-	[SIOCGIWTHRSPY-SIOCIWFIRST] = (iw_handler) iw_handler_get_thrspy,
+-	[SIOCSIWAP    -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setwap,
+-	[SIOCGIWAP    -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getwap,
+-	[SIOCSIWSCAN  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setscan,
+-	[SIOCGIWSCAN  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getscan,
+-	[SIOCSIWESSID -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setessid,
+-	[SIOCGIWESSID -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getessid,
+-	[SIOCSIWNICKN -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setnick,
+-	[SIOCGIWNICKN -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getnick,
+-	[SIOCSIWRATE  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setrate,
+-	[SIOCGIWRATE  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getrate,
+-	[SIOCSIWRTS   -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setrts,
+-	[SIOCGIWRTS   -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getrts,
+-	[SIOCSIWFRAG  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setfrag,
+-	[SIOCGIWFRAG  -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getfrag,
+-	[SIOCGIWRETRY -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getretry,
+-	[SIOCSIWENCODE-SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setiwencode,
+-	[SIOCGIWENCODE-SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getiwencode,
+-	[SIOCSIWPOWER -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_setpower,
+-	[SIOCGIWPOWER -SIOCIWFIRST] = (iw_handler) orinoco_ioctl_getpower,
++	STD_IW_HANDLER(SIOCSIWCOMMIT,	orinoco_ioctl_commit),
++	STD_IW_HANDLER(SIOCGIWNAME,	orinoco_ioctl_getname),
++	STD_IW_HANDLER(SIOCSIWFREQ,	orinoco_ioctl_setfreq),
++	STD_IW_HANDLER(SIOCGIWFREQ,	orinoco_ioctl_getfreq),
++	STD_IW_HANDLER(SIOCSIWMODE,	orinoco_ioctl_setmode),
++	STD_IW_HANDLER(SIOCGIWMODE,	orinoco_ioctl_getmode),
++	STD_IW_HANDLER(SIOCSIWSENS,	orinoco_ioctl_setsens),
++	STD_IW_HANDLER(SIOCGIWSENS,	orinoco_ioctl_getsens),
++	STD_IW_HANDLER(SIOCGIWRANGE,	orinoco_ioctl_getiwrange),
++	STD_IW_HANDLER(SIOCSIWSPY,	iw_handler_set_spy),
++	STD_IW_HANDLER(SIOCGIWSPY,	iw_handler_get_spy),
++	STD_IW_HANDLER(SIOCSIWTHRSPY,	iw_handler_set_thrspy),
++	STD_IW_HANDLER(SIOCGIWTHRSPY,	iw_handler_get_thrspy),
++	STD_IW_HANDLER(SIOCSIWAP,	orinoco_ioctl_setwap),
++	STD_IW_HANDLER(SIOCGIWAP,	orinoco_ioctl_getwap),
++	STD_IW_HANDLER(SIOCSIWSCAN,	orinoco_ioctl_setscan),
++	STD_IW_HANDLER(SIOCGIWSCAN,	orinoco_ioctl_getscan),
++	STD_IW_HANDLER(SIOCSIWESSID,	orinoco_ioctl_setessid),
++	STD_IW_HANDLER(SIOCGIWESSID,	orinoco_ioctl_getessid),
++	STD_IW_HANDLER(SIOCSIWNICKN,	orinoco_ioctl_setnick),
++	STD_IW_HANDLER(SIOCGIWNICKN,	orinoco_ioctl_getnick),
++	STD_IW_HANDLER(SIOCSIWRATE,	orinoco_ioctl_setrate),
++	STD_IW_HANDLER(SIOCGIWRATE,	orinoco_ioctl_getrate),
++	STD_IW_HANDLER(SIOCSIWRTS,	orinoco_ioctl_setrts),
++	STD_IW_HANDLER(SIOCGIWRTS,	orinoco_ioctl_getrts),
++	STD_IW_HANDLER(SIOCSIWFRAG,	orinoco_ioctl_setfrag),
++	STD_IW_HANDLER(SIOCGIWFRAG,	orinoco_ioctl_getfrag),
++	STD_IW_HANDLER(SIOCGIWRETRY,	orinoco_ioctl_getretry),
++	STD_IW_HANDLER(SIOCSIWENCODE,	orinoco_ioctl_setiwencode),
++	STD_IW_HANDLER(SIOCGIWENCODE,	orinoco_ioctl_getiwencode),
++	STD_IW_HANDLER(SIOCSIWPOWER,	orinoco_ioctl_setpower),
++	STD_IW_HANDLER(SIOCGIWPOWER,	orinoco_ioctl_getpower),
  };
  
-Index: wireless-testing/drivers/net/wireless/b43/phy_g.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/phy_g.h	2008-08-29 00:55:16.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/phy_g.h	2008-08-30 01:49:15.000000000 +0200
-@@ -199,11 +199,13 @@ struct b43_phy_g {
  
- void b43_gphy_set_baseband_attenuation(struct b43_wldev *dev,
- 				       u16 baseband_attenuation);
- void b43_gphy_channel_switch(struct b43_wldev *dev,
- 			     unsigned int channel,
- 			     bool synthetic_pu_workaround);
-+u8 * b43_generate_dyn_tssi2dbm_tab(struct b43_wldev *dev,
-+				   s16 pab0, s16 pab1, s16 pab2);
- 
- struct b43_phy_operations;
- extern const struct b43_phy_operations b43_phyops_g;
- 
- #endif /* LINUX_B43_PHY_G_H_ */
+-- 
+1.5.6.4
+
