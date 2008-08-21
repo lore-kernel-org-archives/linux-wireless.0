@@ -1,139 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:33050 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754097AbYHBSLP (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46756 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753815AbYHUGnY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 14:11:15 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
-Date: Sat,  2 Aug 2008 15:11:04 -0300
-Message-Id: <1217700664-20792-9-git-send-email-hmh@hmh.eng.br> (sfid-20080802_201122_064360_071330B0)
-In-Reply-To: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
-References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
+	Thu, 21 Aug 2008 02:43:24 -0400
+Subject: Re: [PATCH 00/19] orinoco: WPA for Agere based cards
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dave <kilroyd@googlemail.com>
+Cc: Larry.Finger@lwfinger.net,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, proski@gnu.org
+In-Reply-To: <48ACA3CB.1070106@gmail.com> (sfid-20080821_010823_323586_913DECA7)
+References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
+	 <20080820192812.GA1746@tuxdriver.com>  <48AC836B.2020207@gmail.com>
+	 (sfid-20080820_225002_112959_7EFB2137)  <1219266476.3502.19.camel@johannes.berg>
+	 (sfid-20080820_230839_000050_1BDBB04E) <1219267346.3502.20.camel@johannes.berg>
+	 <48ACA3CB.1070106@gmail.com> (sfid-20080821_010823_323586_913DECA7)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IOrUHJ1ievBowVL8AjWO"
+Date: Thu, 21 Aug 2008 08:42:44 +0200
+Message-Id: <1219300964.3502.25.camel@johannes.berg> (sfid-20080821_084328_224277_00068A81)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, rfkill would stand in the way of properly supporting wireless
-devices that are capable of waking the system up from sleep or hibernation
-when they receive a special wireless message.
 
-Since rfkill attempts to soft-block any transmitters during class suspend,
-it would be difficult for the wireless device driver to know whether it is
-allowed to keep the transmitter active or not, and since the state of the
-transmitter might impact on functionality needed by the device to be able
-to know it has to wake the system, this is not good.
+--=-IOrUHJ1ievBowVL8AjWO
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-In order to properly support these devices, add a flag that requests the
-class suspend handlers to NOT attempt to block the transmitter on suspend.
-This way, the wireless device driver can be sure that if it is in any of
-the blocked states when entering suspend it MUST keep its transmitter
-disabled (even if that breaks wake-on-wireless-packet).
+On Thu, 2008-08-21 at 00:07 +0100, Dave wrote:
 
-Note that if the transmitter does not need to be functioning for
-wake-on-wireless-packet, the new flag should not be used.  If the
-wake-on-wireless-packet is not enabled for the current suspend or
-hibernation cycle, and the wireless driver requested that rfkill do not
-block the transmitter, it MUST block the transmitter by itself when the
-system attempts to enter the suspend/hibernation state.
+> Thanks Larry/Johannes. I thought that might be where it should go, but
+> it looks quite mac80211 oriented at the moment.
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
----
- Documentation/rfkill.txt |   29 ++++++++++++++++++++++++++++-
- include/linux/rfkill.h   |    4 ++++
- net/rfkill/rfkill.c      |    3 ++-
- 3 files changed, 34 insertions(+), 2 deletions(-)
+It is, but mostly because all the new drivers except libertas are
+mac80211 drivers, and all the old drivers used to already have
+information somewhere...
 
-diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
-index 6fcb306..888d756 100644
---- a/Documentation/rfkill.txt
-+++ b/Documentation/rfkill.txt
-@@ -341,6 +341,8 @@ key that does nothing by itself, as well as any hot key that is type-specific
- 3.1 Guidelines for wireless device drivers
- ------------------------------------------
- 
-+(in this text, rfkill->foo means the foo field of struct rfkill).
-+
- 1. Each independent transmitter in a wireless device (usually there is only one
- transmitter per device) should have a SINGLE rfkill class attached to it.
- 
-@@ -364,10 +366,35 @@ when possible) the overall transmitter rfkill state, not of a particular rfkill
- line.
- 
- 5. During suspend, the rfkill class will attempt to soft-block the radio
--through a call to rfkill->toggle_radio, and will try to restore its previous
-+through a call to the rfkill->toggle_radio callback (unless the
-+rfkill->no_block_on_pm_sleep flag set), and will try to restore its previous
- state during resume.  After a rfkill class is suspended, it will *not* call
- rfkill->toggle_radio until it is resumed.
- 
-+rfkill->no_block_on_pm_sleep is to be used by devices that need to handle
-+suspend by themselves (e.g. due to wake-on-wireless-packet functionality) in
-+such a way that the automated soft-block would get in the way.
-+
-+The wireless device driver MUST NOT leave the transmitter enabled during
-+suspend and hibernation unless:
-+
-+	5.1. The transmitter has to be enabled for the
-+	wake-on-wireless-packet functionality to work, and that
-+	functionality is enabled for this suspend/hibernation cycle.
-+
-+AND
-+
-+	5.2. The device was not on a user-requested BLOCKED state before
-+	the suspend (i.e. the driver must NOT unblock a device, not even
-+	to support wake-on-wireless-packet).
-+
-+In other words, there is absolutely no allowed scenario where a driver can
-+automatically take action to unblock a rfkill controller (obviously, this deals
-+with scenarios where soft-blocking or both soft and hard blocking is happening.
-+Scenarios where hardware rfkill lines are the only ones blocking the
-+transmitter are outside of this rule, since the wireless device driver does not
-+control its input hardware rfkill lines in the first place).
-+
- Example of a WLAN wireless driver connected to the rfkill subsystem:
- --------------------------------------------------------------------
- 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index 4cd64b0..97b767b 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -84,6 +84,8 @@ enum rfkill_state {
-  * @dev: Device structure integrating the switch into device tree.
-  * @node: Used to place switch into list of all switches known to the
-  *	the system.
-+ * @no_block_on_pm_sleep: Whether the rfkill class should block
-+ *	the wireless transmitter during suspend.
-  *
-  * This structure represents a RF switch located on a network device.
-  */
-@@ -108,6 +110,8 @@ struct rfkill {
- 
- 	struct device dev;
- 	struct list_head node;
-+
-+	bool no_block_on_pm_sleep;
- };
- #define to_rfkill(d)	container_of(d, struct rfkill, dev)
- 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 22da6e8..e92828b 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -514,7 +514,8 @@ static int rfkill_suspend(struct device *dev, pm_message_t state)
- 	struct rfkill *rfkill = to_rfkill(dev);
- 
- 	if (dev->power.power_state.event != state.event) {
--		if (state.event & PM_EVENT_SLEEP) {
-+		if (state.event & PM_EVENT_SLEEP &&
-+		    !rfkill->no_block_on_pm_sleep) {
- 			/* Stop transmitter, keep state, no notifies */
- 			update_rfkill_state(rfkill);
- 
--- 
-1.5.6.3
+> Anyway, I've added an initial orinoco page
+> <http://wireless.kernel.org/en/users/Drivers/orinoco> and linked to it
+> on <http://wireless.kernel.org/en/users/Drivers>.
+
+Great. I've just removed all the italics, I think I need to change my
+template :) If you want, you can sign up for notifications on that page
+to keep track of changes others make.
+
+johannes
+
+--=-IOrUHJ1ievBowVL8AjWO
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIrQ5gAAoJEKVg1VMiehFYbEwQAIFVdZe2udAdu1bnRTOflPye
+J/s135Z9FtPOTvL+9OMiWgJrlVFui1bQsMxsUC3ylPWu3jS+NJ8acks7SYcm+LvY
+16E5TbNOGMbT28fk4cz+NcdgqYGihoqv65FdXp/U1VDsO22nZdW+zr7HVbjUH5nc
+vjhBWLrCzZtlFI55NA3SB1Vp7T/q81/qekwMvYWTYPBFkaFUqF0iXCkqxzE1tZX/
+TNO95cnl8HiYq6ymazRreXzDj81ORI4CE/v5/5Om4gvc6iC6/VmZnQXvI4LxJeUR
+O6D4vzNIyKs/qlAHboEmGj+6yPKa9SX6BOu9ifLRUJkGQ8aJ2GydZmnO9dEVl3Xf
+qv8G/mJj4G+f9m1P2V3q0bPQQJVg2ACGphNPw9hLCKl7uTy2wXyh7C9sL57q0uvh
+iq5LcLTDWqA7Dd10r55quB9cIvT9dEY2tGCKscu7loER/A1yhbvYVgRwhRD2s8n4
+8KkI6lp25oQLSxv/BYyTXzj11j8hI2igC46GpoNmfuep74t2pWa8KW42w8J8aZJw
+V5FF8ecLwg6gpqdPGROic1xw4Kk74Q5UhJ0KFsafqSbiR5Yi18q+5WMfpj6UQzp3
+rJzXaHIQZV9vPZ/UDvFD5TtBFPf6FkTm4oyvoZjDTOCnYwuBJQNbpL3Yb+v0tllU
+gONpb7437xYmOxrQj81a
+=Pd09
+-----END PGP SIGNATURE-----
+
+--=-IOrUHJ1ievBowVL8AjWO--
 
