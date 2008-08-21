@@ -1,58 +1,753 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.229]:56574 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761323AbYHEPgt (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.176]:15324 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759365AbYHUW2f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 11:36:49 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so2649612rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Aug 2008 08:36:49 -0700 (PDT)
-Message-ID: <1ba2fa240808050836k225fd3ecu632177394b1fd42a@mail.gmail.com> (sfid-20080805_173718_428869_8CECDB81)
-Date: Tue, 5 Aug 2008 18:36:49 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 00/10] iwlwifi driver 08/04 updates
-Cc: "Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20080805130320.GA4276@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1217836848-24288-1-git-send-email-yi.zhu@intel.com>
-	 <1217918197.3107.64.camel@debian.sh.intel.com>
-	 <20080805130320.GA4276@tuxdriver.com>
+	Thu, 21 Aug 2008 18:28:35 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so104766ika.5
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2008 15:28:34 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>
+Subject: [PATCH v2 06/19] orinoco: Move firmware download functionality into new module
+Date: Thu, 21 Aug 2008 23:27:51 +0100
+Message-Id: <d792f6b1d5853becf1b1488e6572a4c3244eb769.1219352674.git.kilroyd@gmail.com> (sfid-20080822_002839_220855_066549D0)
+In-Reply-To: <ac0da2799e97f5256019ad669f5a6c461bd0d82a.1219352674.git.kilroyd@gmail.com>
+References: <1219357685-24731-1-git-send-email-kilroyd@gmail.com>
+ <3bd1799afef838bfc6eb688b1e0cf6b0f4949f1b.1219352674.git.kilroyd@gmail.com>
+ <24148627bbab77e1365aa43c22a7f24ded1bed7a.1219352674.git.kilroyd@gmail.com>
+ <6e9e9826934e0256adbe561e587f93212e042bf2.1219352674.git.kilroyd@gmail.com>
+ <77df696e5b53b5e4db3b8c8e70b23cf5aaa2aca2.1219352674.git.kilroyd@gmail.com>
+ <ac0da2799e97f5256019ad669f5a6c461bd0d82a.1219352674.git.kilroyd@gmail.com>
+In-Reply-To: <3bd1799afef838bfc6eb688b1e0cf6b0f4949f1b.1219352674.git.kilroyd@gmail.com>
+References: <3bd1799afef838bfc6eb688b1e0cf6b0f4949f1b.1219352674.git.kilroyd@gmail.com>
+From: kilroyd@googlemail.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 5, 2008 at 4:03 PM, John W. Linville <linville@tuxdriver.com> wrote:
-> On Tue, Aug 05, 2008 at 02:36:37PM +0800, Zhu Yi wrote:
->> On Mon, 2008-08-04 at 16:00 +0800, Zhu Yi wrote:
->> > Hi John,
->> >
->> > Here is another series of iwlwifi driver update. Note, the patch 10/10 fixes
->> > a merge problem for wireless-testing GIT with upstream.
->> >
->> > Thanks,
->> > -yi
->> >
->> > [PATCH 01/10] iwlwifi: HW bug fixes
->> > [PATCH 02/10] iwlwifi: memory allocation optimization
->> > [PATCH 03/10] iwlwifi: kill struct iwl4965_lq_mngr
->> > [PATCH 04/10] iwlwifi: implement iwl5000_calc_rssi
->> > [PATCH 05/10] iwlwifi: fix unhandled interrupt when HW rfkill is on
->> > [PATCH 06/10] iwlwifi: cleanup iwl_tx_skb
->> > [PATCH 07/10] iwlwifi: add level for debugging host command
->> > [PATCH 08/10] iwlwifi: decrement rx skb counter in scan abort handler
->> > [PATCH 09/10] iwlwifi: grap nic access before accessing periphery registers
->> > [PATCH 10/10] iwl3945: fix merge mistake for packet injection
->>
->> Hi John,
->>
->> I see you merged only partial of this series. What's happen to the
->> patches 03, 06 and 07?
->
-> I don't see those as fixes, only cleanups.  The merge window is closed
-> for 2.6.27.  If those are in fact fixes then please explain.
+Move the functionality from spectrum_cs to hermes_dld in preparation for
+making it more generic and usable by other orinoco drivers.
 
-Fine with me, I just would ask you to include 06 anyway I see we have
-problem with queues in this code I would like to make fixes on top if
-it.
-Thanks
-Tomas
+Signed-off-by: David Kilroy <kilroyd@gmail.com>
+---
+ drivers/net/wireless/Makefile      |    2 +-
+ drivers/net/wireless/hermes_dld.c  |  338 ++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/hermes_dld.h  |   45 +++++
+ drivers/net/wireless/spectrum_cs.c |  274 +-----------------------------
+ 4 files changed, 385 insertions(+), 274 deletions(-)
+ create mode 100644 drivers/net/wireless/hermes_dld.c
+ create mode 100644 drivers/net/wireless/hermes_dld.h
+
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index ac3faa8..ba41bce 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -16,7 +16,7 @@ obj-$(CONFIG_WAVELAN)		+= wavelan.o
+ obj-$(CONFIG_PCMCIA_NETWAVE)	+= netwave_cs.o
+ obj-$(CONFIG_PCMCIA_WAVELAN)	+= wavelan_cs.o
+ 
+-obj-$(CONFIG_HERMES)		+= orinoco.o hermes.o
++obj-$(CONFIG_HERMES)		+= orinoco.o hermes.o hermes_dld.o
+ obj-$(CONFIG_PCMCIA_HERMES)	+= orinoco_cs.o
+ obj-$(CONFIG_APPLE_AIRPORT)	+= airport.o
+ obj-$(CONFIG_PLX_HERMES)	+= orinoco_plx.o
+diff --git a/drivers/net/wireless/hermes_dld.c b/drivers/net/wireless/hermes_dld.c
+new file mode 100644
+index 0000000..9a8ef30
+--- /dev/null
++++ b/drivers/net/wireless/hermes_dld.c
+@@ -0,0 +1,338 @@
++/*
++ * Hermes download helper driver.
++ *
++ * This could be entirely merged into hermes.c.
++ *
++ * I'm keeping it separate to minimise the amount of merging between
++ * kernel upgrades. It also means the memory overhead for drivers that
++ * don't need firmware download low.
++ *
++ * This driver:
++ *  - is capable of writing to the volatile area of the hermes device
++ *  - is currently not capable of writing to non-volatile areas
++ *  - provide helpers to identify and update plugin data
++ *  - is not capable of interpreting a fw image directly. That is up to
++ *    the main card driver.
++ *  - deals with Hermes I devices. It can probably be modified to deal
++ *    with Hermes II devices
++ *
++ * Copyright (C) 2007, David Kilroy
++ *
++ * Plug data code slightly modified from spectrum_cs driver
++ *    Copyright (C) 2002-2005 Pavel Roskin <proski@gnu.org>
++ * Portions based on information in wl_lkm_718 Agere driver
++ *    COPYRIGHT (C) 2001-2004 by Agere Systems Inc. All Rights Reserved
++ *
++ * The contents of this file are subject to the Mozilla Public License
++ * Version 1.1 (the "License"); you may not use this file except in
++ * compliance with the License. You may obtain a copy of the License
++ * at http://www.mozilla.org/MPL/
++ *
++ * Software distributed under the License is distributed on an "AS IS"
++ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
++ * the License for the specific language governing rights and
++ * limitations under the License.
++ *
++ * Alternatively, the contents of this file may be used under the
++ * terms of the GNU General Public License version 2 (the "GPL"), in
++ * which case the provisions of the GPL are applicable instead of the
++ * above.  If you wish to allow the use of your version of this file
++ * only under the terms of the GPL and not to allow others to use your
++ * version of this file under the MPL, indicate your decision by
++ * deleting the provisions above and replace them with the notice and
++ * other provisions required by the GPL.  If you do not delete the
++ * provisions above, a recipient may use your version of this file
++ * under either the MPL or the GPL.
++ */
++
++#include <linux/module.h>
++#include <linux/delay.h>
++#include "hermes.h"
++#include "hermes_dld.h"
++
++MODULE_DESCRIPTION("Download helper for Lucent Hermes chipset");
++MODULE_AUTHOR("David Kilroy <kilroyd@gmail.com>");
++MODULE_LICENSE("Dual MPL/GPL");
++
++#define PFX "hermes_dld: "
++
++/*
++ * AUX port access.  To unlock the AUX port write the access keys to the
++ * PARAM0-2 registers, then write HERMES_AUX_ENABLE to the HERMES_CONTROL
++ * register.  Then read it and make sure it's HERMES_AUX_ENABLED.
++ */
++#define HERMES_AUX_ENABLE	0x8000	/* Enable auxiliary port access */
++#define HERMES_AUX_DISABLE	0x4000	/* Disable to auxiliary port access */
++#define HERMES_AUX_ENABLED	0xC000	/* Auxiliary port is open */
++
++#define HERMES_AUX_PW0	0xFE01
++#define HERMES_AUX_PW1	0xDC23
++#define HERMES_AUX_PW2	0xBA45
++
++/* End markers */
++#define PDI_END		0x00000000	/* End of PDA */
++#define BLOCK_END	0xFFFFFFFF	/* Last image block */
++
++/*
++ * The following structures have little-endian fields denoted by
++ * the leading underscore.  Don't access them directly - use inline
++ * functions defined below.
++ */
++
++/*
++ * The binary image to be downloaded consists of series of data blocks.
++ * Each block has the following structure.
++ */
++struct dblock {
++	__le32 addr;		/* adapter address where to write the block */
++	__le16 len;		/* length of the data only, in bytes */
++	char data[0];		/* data to be written */
++} __attribute__ ((packed));
++
++/*
++ * Plug Data References are located in in the image after the last data
++ * block.  They refer to areas in the adapter memory where the plug data
++ * items with matching ID should be written.
++ */
++struct pdr {
++	__le32 id;		/* record ID */
++	__le32 addr;		/* adapter address where to write the data */
++	__le32 len;		/* expected length of the data, in bytes */
++	char next[0];		/* next PDR starts here */
++} __attribute__ ((packed));
++
++/*
++ * Plug Data Items are located in the EEPROM read from the adapter by
++ * primary firmware.  They refer to the device-specific data that should
++ * be plugged into the secondary firmware.
++ */
++struct pdi {
++	__le16 len;		/* length of ID and data, in words */
++	__le16 id;		/* record ID */
++	char data[0];		/* plug data */
++} __attribute__ ((packed));
++
++/* Functions for access to little-endian data */
++static inline u32
++dblock_addr(const struct dblock *blk)
++{
++	return le32_to_cpu(blk->addr);
++}
++
++static inline u32
++dblock_len(const struct dblock *blk)
++{
++	return le16_to_cpu(blk->len);
++}
++
++static inline u32
++pdr_id(const struct pdr *pdr)
++{
++	return le32_to_cpu(pdr->id);
++}
++
++static inline u32
++pdr_addr(const struct pdr *pdr)
++{
++	return le32_to_cpu(pdr->addr);
++}
++
++static inline u32
++pdr_len(const struct pdr *pdr)
++{
++	return le32_to_cpu(pdr->len);
++}
++
++static inline u32
++pdi_id(const struct pdi *pdi)
++{
++	return le16_to_cpu(pdi->id);
++}
++
++/* Return length of the data only, in bytes */
++static inline u32
++pdi_len(const struct pdi *pdi)
++{
++	return 2 * (le16_to_cpu(pdi->len) - 1);
++}
++
++/* Set address of the auxiliary port */
++static inline void
++spectrum_aux_setaddr(hermes_t *hw, u32 addr)
++{
++	hermes_write_reg(hw, HERMES_AUXPAGE, (u16) (addr >> 7));
++	hermes_write_reg(hw, HERMES_AUXOFFSET, (u16) (addr & 0x7F));
++}
++
++/* Open access to the auxiliary port */
++static int
++spectrum_aux_open(hermes_t *hw)
++{
++	int i;
++
++	/* Already open? */
++	if (hermes_read_reg(hw, HERMES_CONTROL) == HERMES_AUX_ENABLED)
++		return 0;
++
++	hermes_write_reg(hw, HERMES_PARAM0, HERMES_AUX_PW0);
++	hermes_write_reg(hw, HERMES_PARAM1, HERMES_AUX_PW1);
++	hermes_write_reg(hw, HERMES_PARAM2, HERMES_AUX_PW2);
++	hermes_write_reg(hw, HERMES_CONTROL, HERMES_AUX_ENABLE);
++
++	for (i = 0; i < 20; i++) {
++		udelay(10);
++		if (hermes_read_reg(hw, HERMES_CONTROL) ==
++		    HERMES_AUX_ENABLED)
++			return 0;
++	}
++
++	return -EBUSY;
++}
++
++/*
++ * Scan PDR for the record with the specified RECORD_ID.
++ * If it's not found, return NULL.
++ */
++static struct pdr *
++spectrum_find_pdr(struct pdr *first_pdr, u32 record_id)
++{
++	struct pdr *pdr = first_pdr;
++
++	while (pdr_id(pdr) != PDI_END) {
++		/*
++		 * PDR area is currently not terminated by PDI_END.
++		 * It's followed by CRC records, which have the type
++		 * field where PDR has length.  The type can be 0 or 1.
++		 */
++		if (pdr_len(pdr) < 2)
++			return NULL;
++
++		/* If the record ID matches, we are done */
++		if (pdr_id(pdr) == record_id)
++			return pdr;
++
++		pdr = (struct pdr *) pdr->next;
++	}
++	return NULL;
++}
++
++/* Process one Plug Data Item - find corresponding PDR and plug it */
++static int
++spectrum_plug_pdi(hermes_t *hw, struct pdr *first_pdr, struct pdi *pdi)
++{
++	struct pdr *pdr;
++
++	/* Find the PDI corresponding to this PDR */
++	pdr = spectrum_find_pdr(first_pdr, pdi_id(pdi));
++
++	/* No match is found, safe to ignore */
++	if (!pdr)
++		return 0;
++
++	/* Lengths of the data in PDI and PDR must match */
++	if (pdi_len(pdi) != pdr_len(pdr))
++		return -EINVAL;
++
++	/* do the actual plugging */
++	spectrum_aux_setaddr(hw, pdr_addr(pdr));
++	hermes_write_bytes(hw, HERMES_AUXDATA, pdi->data, pdi_len(pdi));
++
++	return 0;
++}
++
++/* Read PDA from the adapter */
++int
++spectrum_read_pda(hermes_t *hw, __le16 *pda, int pda_len)
++{
++	int ret;
++	int pda_size;
++
++	/* Issue command to read EEPROM */
++	ret = hermes_docmd_wait(hw, HERMES_CMD_READMIF, 0, NULL);
++	if (ret)
++		return ret;
++
++	/* Open auxiliary port */
++	ret = spectrum_aux_open(hw);
++	if (ret)
++		return ret;
++
++	/* read PDA from EEPROM */
++	spectrum_aux_setaddr(hw, PDA_ADDR);
++	hermes_read_words(hw, HERMES_AUXDATA, pda, pda_len / 2);
++
++	/* Check PDA length */
++	pda_size = le16_to_cpu(pda[0]);
++	if (pda_size > pda_len)
++		return -EINVAL;
++
++	return 0;
++}
++EXPORT_SYMBOL(spectrum_read_pda);
++
++/* Parse PDA and write the records into the adapter */
++int
++spectrum_apply_pda(hermes_t *hw, const struct dblock *first_block,
++		   __le16 *pda)
++{
++	int ret;
++	struct pdi *pdi;
++	struct pdr *first_pdr;
++	const struct dblock *blk = first_block;
++
++	/* Skip all blocks to locate Plug Data References */
++	while (dblock_addr(blk) != BLOCK_END)
++		blk = (struct dblock *) &blk->data[dblock_len(blk)];
++
++	first_pdr = (struct pdr *) blk;
++
++	/* Go through every PDI and plug them into the adapter */
++	pdi = (struct pdi *) (pda + 2);
++	while (pdi_id(pdi) != PDI_END) {
++		ret = spectrum_plug_pdi(hw, first_pdr, pdi);
++		if (ret)
++			return ret;
++
++		/* Increment to the next PDI */
++		pdi = (struct pdi *) &pdi->data[pdi_len(pdi)];
++	}
++	return 0;
++}
++EXPORT_SYMBOL(spectrum_apply_pda);
++
++/* Load firmware blocks into the adapter */
++int
++spectrum_load_blocks(hermes_t *hw, const struct dblock *first_block)
++{
++	const struct dblock *blk;
++	u32 blkaddr;
++	u32 blklen;
++
++	blk = first_block;
++	blkaddr = dblock_addr(blk);
++	blklen = dblock_len(blk);
++
++	while (dblock_addr(blk) != BLOCK_END) {
++		spectrum_aux_setaddr(hw, blkaddr);
++		hermes_write_bytes(hw, HERMES_AUXDATA, blk->data,
++				   blklen);
++
++		blk = (struct dblock *) &blk->data[blklen];
++		blkaddr = dblock_addr(blk);
++		blklen = dblock_len(blk);
++	}
++	return 0;
++}
++EXPORT_SYMBOL(spectrum_load_blocks);
++
++static int __init init_hermes_dld(void)
++{
++	return 0;
++}
++
++static void __exit exit_hermes_dld(void)
++{
++}
++
++module_init(init_hermes_dld);
++module_exit(exit_hermes_dld);
+diff --git a/drivers/net/wireless/hermes_dld.h b/drivers/net/wireless/hermes_dld.h
+new file mode 100644
+index 0000000..2c8892a
+--- /dev/null
++++ b/drivers/net/wireless/hermes_dld.h
+@@ -0,0 +1,45 @@
++/*
++ * Copyright (C) 2007, David Kilroy
++ *
++ * The contents of this file are subject to the Mozilla Public License
++ * Version 1.1 (the "License"); you may not use this file except in
++ * compliance with the License. You may obtain a copy of the License
++ * at http://www.mozilla.org/MPL/
++ *
++ * Software distributed under the License is distributed on an "AS IS"
++ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
++ * the License for the specific language governing rights and
++ * limitations under the License.
++ *
++ * Alternatively, the contents of this file may be used under the
++ * terms of the GNU General Public License version 2 (the "GPL"), in
++ * which case the provisions of the GPL are applicable instead of the
++ * above.  If you wish to allow the use of your version of this file
++ * only under the terms of the GPL and not to allow others to use your
++ * version of this file under the MPL, indicate your decision by
++ * deleting the provisions above and replace them with the notice and
++ * other provisions required by the GPL.  If you do not delete the
++ * provisions above, a recipient may use your version of this file
++ * under either the MPL or the GPL.
++ */
++#ifndef _HERMES_DLD_H
++#define _HERMES_DLD_H
++
++#include "hermes.h"
++
++/* Position of PDA in the adapter memory */
++#define EEPROM_ADDR	0x3000
++#define EEPROM_LEN	0x200
++#define PDA_OFFSET	0x100
++
++#define PDA_ADDR	(EEPROM_ADDR + PDA_OFFSET)
++#define PDA_WORDS	((EEPROM_LEN - PDA_OFFSET) / 2)
++
++struct dblock;
++
++int spectrum_read_pda(hermes_t *hw, __le16 *pda, int pda_len);
++int spectrum_apply_pda(hermes_t *hw, const struct dblock *first_block,
++		       __le16 *pda);
++int spectrum_load_blocks(hermes_t *hw, const struct dblock *first_block);
++
++#endif /* _HERMES_DLD_H */
+diff --git a/drivers/net/wireless/spectrum_cs.c b/drivers/net/wireless/spectrum_cs.c
+index 98df9bc..579873d 100644
+--- a/drivers/net/wireless/spectrum_cs.c
++++ b/drivers/net/wireless/spectrum_cs.c
+@@ -33,6 +33,7 @@
+ #include <pcmcia/ds.h>
+ 
+ #include "orinoco.h"
++#include "hermes_dld.h"
+ 
+ static const char primary_fw_name[] = "symbol_sp24t_prim_fw";
+ static const char secondary_fw_name[] = "symbol_sp24t_sec_fw";
+@@ -88,144 +89,9 @@ static void spectrum_cs_release(struct pcmcia_device *link);
+ #define HCR_IDLE	0x0E	/* don't run firmware after reset */
+ #define HCR_MEM16	0x10	/* memory width bit, should be preserved */
+ 
+-/*
+- * AUX port access.  To unlock the AUX port write the access keys to the
+- * PARAM0-2 registers, then write HERMES_AUX_ENABLE to the HERMES_CONTROL
+- * register.  Then read it and make sure it's HERMES_AUX_ENABLED.
+- */
+-#define HERMES_AUX_ENABLE	0x8000	/* Enable auxiliary port access */
+-#define HERMES_AUX_DISABLE	0x4000	/* Disable to auxiliary port access */
+-#define HERMES_AUX_ENABLED	0xC000	/* Auxiliary port is open */
+-
+-#define HERMES_AUX_PW0	0xFE01
+-#define HERMES_AUX_PW1	0xDC23
+-#define HERMES_AUX_PW2	0xBA45
+-
+ /* End markers */
+-#define PDI_END		0x00000000	/* End of PDA */
+-#define BLOCK_END	0xFFFFFFFF	/* Last image block */
+ #define TEXT_END	0x1A		/* End of text header */
+ 
+-/*
+- * The following structures have little-endian fields denoted by
+- * the leading underscore.  Don't access them directly - use inline
+- * functions defined below.
+- */
+-
+-/*
+- * The binary image to be downloaded consists of series of data blocks.
+- * Each block has the following structure.
+- */
+-struct dblock {
+-	__le32 addr;		/* adapter address where to write the block */
+-	__le16 len;		/* length of the data only, in bytes */
+-	char data[0];		/* data to be written */
+-} __attribute__ ((packed));
+-
+-/*
+- * Plug Data References are located in in the image after the last data
+- * block.  They refer to areas in the adapter memory where the plug data
+- * items with matching ID should be written.
+- */
+-struct pdr {
+-	__le32 id;		/* record ID */
+-	__le32 addr;		/* adapter address where to write the data */
+-	__le32 len;		/* expected length of the data, in bytes */
+-	char next[0];		/* next PDR starts here */
+-} __attribute__ ((packed));
+-
+-
+-/*
+- * Plug Data Items are located in the EEPROM read from the adapter by
+- * primary firmware.  They refer to the device-specific data that should
+- * be plugged into the secondary firmware.
+- */
+-struct pdi {
+-	__le16 len;		/* length of ID and data, in words */
+-	__le16 id;		/* record ID */
+-	char data[0];		/* plug data */
+-} __attribute__ ((packed));
+-
+-
+-/* Functions for access to little-endian data */
+-static inline u32
+-dblock_addr(const struct dblock *blk)
+-{
+-	return le32_to_cpu(blk->addr);
+-}
+-
+-static inline u32
+-dblock_len(const struct dblock *blk)
+-{
+-	return le16_to_cpu(blk->len);
+-}
+-
+-static inline u32
+-pdr_id(const struct pdr *pdr)
+-{
+-	return le32_to_cpu(pdr->id);
+-}
+-
+-static inline u32
+-pdr_addr(const struct pdr *pdr)
+-{
+-	return le32_to_cpu(pdr->addr);
+-}
+-
+-static inline u32
+-pdr_len(const struct pdr *pdr)
+-{
+-	return le32_to_cpu(pdr->len);
+-}
+-
+-static inline u32
+-pdi_id(const struct pdi *pdi)
+-{
+-	return le16_to_cpu(pdi->id);
+-}
+-
+-/* Return length of the data only, in bytes */
+-static inline u32
+-pdi_len(const struct pdi *pdi)
+-{
+-	return 2 * (le16_to_cpu(pdi->len) - 1);
+-}
+-
+-
+-/* Set address of the auxiliary port */
+-static inline void
+-spectrum_aux_setaddr(hermes_t *hw, u32 addr)
+-{
+-	hermes_write_reg(hw, HERMES_AUXPAGE, (u16) (addr >> 7));
+-	hermes_write_reg(hw, HERMES_AUXOFFSET, (u16) (addr & 0x7F));
+-}
+-
+-
+-/* Open access to the auxiliary port */
+-static int
+-spectrum_aux_open(hermes_t *hw)
+-{
+-	int i;
+-
+-	/* Already open? */
+-	if (hermes_read_reg(hw, HERMES_CONTROL) == HERMES_AUX_ENABLED)
+-		return 0;
+-
+-	hermes_write_reg(hw, HERMES_PARAM0, HERMES_AUX_PW0);
+-	hermes_write_reg(hw, HERMES_PARAM1, HERMES_AUX_PW1);
+-	hermes_write_reg(hw, HERMES_PARAM2, HERMES_AUX_PW2);
+-	hermes_write_reg(hw, HERMES_CONTROL, HERMES_AUX_ENABLE);
+-
+-	for (i = 0; i < 20; i++) {
+-		udelay(10);
+-		if (hermes_read_reg(hw, HERMES_CONTROL) ==
+-		    HERMES_AUX_ENABLED)
+-			return 0;
+-	}
+-
+-	return -EBUSY;
+-}
+-
+ 
+ #define CS_CHECK(fn, ret) \
+   do { last_fn = (fn); if ((last_ret = (ret)) != 0) goto cs_failed; } while (0)
+@@ -294,144 +160,6 @@ spectrum_reset(struct pcmcia_device *link, int idle)
+ 
+ 
+ /*
+- * Scan PDR for the record with the specified RECORD_ID.
+- * If it's not found, return NULL.
+- */
+-static struct pdr *
+-spectrum_find_pdr(struct pdr *first_pdr, u32 record_id)
+-{
+-	struct pdr *pdr = first_pdr;
+-
+-	while (pdr_id(pdr) != PDI_END) {
+-		/*
+-		 * PDR area is currently not terminated by PDI_END.
+-		 * It's followed by CRC records, which have the type
+-		 * field where PDR has length.  The type can be 0 or 1.
+-		 */
+-		if (pdr_len(pdr) < 2)
+-			return NULL;
+-
+-		/* If the record ID matches, we are done */
+-		if (pdr_id(pdr) == record_id)
+-			return pdr;
+-
+-		pdr = (struct pdr *) pdr->next;
+-	}
+-	return NULL;
+-}
+-
+-
+-/* Process one Plug Data Item - find corresponding PDR and plug it */
+-static int
+-spectrum_plug_pdi(hermes_t *hw, struct pdr *first_pdr, struct pdi *pdi)
+-{
+-	struct pdr *pdr;
+-
+-	/* Find the PDI corresponding to this PDR */
+-	pdr = spectrum_find_pdr(first_pdr, pdi_id(pdi));
+-
+-	/* No match is found, safe to ignore */
+-	if (!pdr)
+-		return 0;
+-
+-	/* Lengths of the data in PDI and PDR must match */
+-	if (pdi_len(pdi) != pdr_len(pdr))
+-		return -EINVAL;
+-
+-	/* do the actual plugging */
+-	spectrum_aux_setaddr(hw, pdr_addr(pdr));
+-	hermes_write_bytes(hw, HERMES_AUXDATA, pdi->data, pdi_len(pdi));
+-
+-	return 0;
+-}
+-
+-
+-/* Read PDA from the adapter */
+-static int
+-spectrum_read_pda(hermes_t *hw, __le16 *pda, int pda_len)
+-{
+-	int ret;
+-	int pda_size;
+-
+-	/* Issue command to read EEPROM */
+-	ret = hermes_docmd_wait(hw, HERMES_CMD_READMIF, 0, NULL);
+-	if (ret)
+-		return ret;
+-
+-	/* Open auxiliary port */
+-	ret = spectrum_aux_open(hw);
+-	if (ret)
+-		return ret;
+-
+-	/* read PDA from EEPROM */
+-	spectrum_aux_setaddr(hw, PDA_ADDR);
+-	hermes_read_words(hw, HERMES_AUXDATA, pda, pda_len / 2);
+-
+-	/* Check PDA length */
+-	pda_size = le16_to_cpu(pda[0]);
+-	if (pda_size > pda_len)
+-		return -EINVAL;
+-
+-	return 0;
+-}
+-
+-
+-/* Parse PDA and write the records into the adapter */
+-static int
+-spectrum_apply_pda(hermes_t *hw, const struct dblock *first_block,
+-		   __le16 *pda)
+-{
+-	int ret;
+-	struct pdi *pdi;
+-	struct pdr *first_pdr;
+-	const struct dblock *blk = first_block;
+-
+-	/* Skip all blocks to locate Plug Data References */
+-	while (dblock_addr(blk) != BLOCK_END)
+-		blk = (struct dblock *) &blk->data[dblock_len(blk)];
+-
+-	first_pdr = (struct pdr *) blk;
+-
+-	/* Go through every PDI and plug them into the adapter */
+-	pdi = (struct pdi *) (pda + 2);
+-	while (pdi_id(pdi) != PDI_END) {
+-		ret = spectrum_plug_pdi(hw, first_pdr, pdi);
+-		if (ret)
+-			return ret;
+-
+-		/* Increment to the next PDI */
+-		pdi = (struct pdi *) &pdi->data[pdi_len(pdi)];
+-	}
+-	return 0;
+-}
+-
+-
+-/* Load firmware blocks into the adapter */
+-static int
+-spectrum_load_blocks(hermes_t *hw, const struct dblock *first_block)
+-{
+-	const struct dblock *blk;
+-	u32 blkaddr;
+-	u32 blklen;
+-
+-	blk = first_block;
+-	blkaddr = dblock_addr(blk);
+-	blklen = dblock_len(blk);
+-
+-	while (dblock_addr(blk) != BLOCK_END) {
+-		spectrum_aux_setaddr(hw, blkaddr);
+-		hermes_write_bytes(hw, HERMES_AUXDATA, blk->data,
+-				   blklen);
+-
+-		blk = (struct dblock *) &blk->data[blklen];
+-		blkaddr = dblock_addr(blk);
+-		blklen = dblock_len(blk);
+-	}
+-	return 0;
+-}
+-
+-
+-/*
+  * Process a firmware image - stop the card, load the firmware, reset
+  * the card and make sure it responds.  For the secondary firmware take
+  * care of the PDA - read it and then write it on top of the firmware.
+-- 
+1.5.6.4
+
