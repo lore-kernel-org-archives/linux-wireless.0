@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:53955 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755372AbYHNX5L (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.176]:15324 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758980AbYHUW2K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2008 19:57:11 -0400
-Date: Thu, 14 Aug 2008 18:57:11 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: tim.gardner@canonical.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] b43: Fix for another Bluetooth Coexistence SPROM
- Programming error for BCM4306
-Message-ID: <48a4c657.3Vw2yJT7Y4Gu6f4D%Larry.Finger@lwfinger.net> (sfid-20080815_015730_473682_0210AAAD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 21 Aug 2008 18:28:10 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so104766ika.5
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2008 15:28:08 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>
+Subject: [PATCH v2 00/19] orinoco: WPA for Agere based cards
+Date: Thu, 21 Aug 2008 23:27:45 +0100
+Message-Id: <1219357685-24731-1-git-send-email-kilroyd@gmail.com> (sfid-20080822_002815_101452_4D25B377)
+From: kilroyd@googlemail.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In trying to help users on the Ubuntu Bugzilla, I discovered another
-BCM4306 with the Bluetooth Coexistence programming error in the SPROM.
+This patch series enables WPA on Agere based orinoco devices.
 
-This patch is contingent on the one that added the Linksys device with
-subdevice code of 0x0014.
+Patchset overview
+1-2: General scanning updates
+3-9: Agere firmware download to RAM
+10-12: Update orinoco to work with new firmware
+13-19: WPA functionality
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@kernel.org>
----
+This patchset addresses a few issues raised the last time it was
+submitted:
+ * fix compile/sparse warnings on 64 bit
+ * scan buffer size increased
 
-John,
+The patchset is against wireless-testing (master-2008-08-20), is
+sparse clean (UP), and should be bisectable. It is almost checkpatch
+clean - the single warning looks like a false positive to me.
 
-This is more 2.6.27 material.
-
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c
-+++ wireless-testing/drivers/net/wireless/b43/main.c
-@@ -4615,6 +4615,7 @@ static void b43_sprom_fixup(struct ssb_b
- 	if (bus->bustype == SSB_BUSTYPE_PCI) {
- 		pdev = bus->host_pci;
- 		if (IS_PDEV(pdev, BROADCOM, 0x4318, ASUSTEK, 0x100F) ||
-+		    IS_PDEV(pdev, BROADCOM, 0x4320,    DELL, 0x0003) ||
- 		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0015) ||
- 		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0014) ||
- 		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0013))
+To use WPA, you will need an Agere firmware image. You can get the
+necessary file at
+<http://marc.info/?l=orinoco-devel&m=121078835610877>, just extract
+and rename orinoco.fw to agere_sta_fw.bin and place it in
+/lib/firmware (or distro equivalent). Alternatively you can try
+extract firmware from a Windows driver using the program in
+<http://marc.info/?l=orinoco-devel&m=120846933719051>.
 
 
+
+Regards,
+
+Dave.
