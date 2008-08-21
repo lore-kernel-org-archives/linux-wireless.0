@@ -1,51 +1,386 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:16430 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.185]:58253 "EHLO
 	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750813AbYHGSny (ORCPT
+	with ESMTP id S1759464AbYHUW2o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 14:43:54 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so254699nfc.21
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2008 11:43:53 -0700 (PDT)
-Message-ID: <489B425F.5060704@gmail.com> (sfid-20080807_204359_635471_22EB3AE9)
-Date: Thu, 07 Aug 2008 19:43:43 +0100
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net
-Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere
- fw
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>	 <1217825304.10989.20.camel@dv>	 <1217864060.3139.10.camel@localhost.localdomain>	 <1217970944.2908.11.camel@dv>	 <1217973349.30531.1.camel@localhost.localdomain>	 <1217976491.2908.36.camel@dv>	 <1218028414.16977.5.camel@localhost.localdomain>	 <4899FB91.8070501@gmail.com>	 <1218056165.12240.0.camel@localhost.localdomain>	 <489A12E2.8060909@gmail.com> <1218077300.30724.10.camel@localhost.localdomain>
-In-Reply-To: <1218077300.30724.10.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-From: Dave <kilroyd@googlemail.com>
+	Thu, 21 Aug 2008 18:28:44 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so81281nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2008 15:28:44 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>
+Subject: [PATCH v2 08/19] orinoco: Extend hermes_dld routines for Agere firmware
+Date: Thu, 21 Aug 2008 23:27:53 +0100
+Message-Id: <9a54acb1147a2c0a7c1cf9b07b9ac756366d0877.1219352674.git.kilroyd@gmail.com> (sfid-20080822_002848_472973_4AF46A46)
+In-Reply-To: <6c4f63d9cc1bec763719e18ea8282919b6604503.1219352674.git.kilroyd@gmail.com>
+References: <1219357685-24731-1-git-send-email-kilroyd@gmail.com>
+ <3bd1799afef838bfc6eb688b1e0cf6b0f4949f1b.1219352674.git.kilroyd@gmail.com>
+ <24148627bbab77e1365aa43c22a7f24ded1bed7a.1219352674.git.kilroyd@gmail.com>
+ <6e9e9826934e0256adbe561e587f93212e042bf2.1219352674.git.kilroyd@gmail.com>
+ <77df696e5b53b5e4db3b8c8e70b23cf5aaa2aca2.1219352674.git.kilroyd@gmail.com>
+ <ac0da2799e97f5256019ad669f5a6c461bd0d82a.1219352674.git.kilroyd@gmail.com>
+ <d792f6b1d5853becf1b1488e6572a4c3244eb769.1219352674.git.kilroyd@gmail.com>
+ <6c4f63d9cc1bec763719e18ea8282919b6604503.1219352674.git.kilroyd@gmail.com>
+In-Reply-To: <3bd1799afef838bfc6eb688b1e0cf6b0f4949f1b.1219352674.git.kilroyd@gmail.com>
+References: <3bd1799afef838bfc6eb688b1e0cf6b0f4949f1b.1219352674.git.kilroyd@gmail.com>
+From: kilroyd@googlemail.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> On Wed, 2008-08-06 at 22:08 +0100, Dave wrote:
->> Dan Williams wrote:
->>> Well, since the driver supports SSID scanning, we can use ap_scan=1
->>> anyway.  ap_scan=2 is actually pretty evil since it depends on WEXT
->>> ordering and whatnot.
->>
->> ap_scan=1 requires the use of SIOCSIWWAP (to set desired BSSID), which
->> the Agere firmware doesn't support. The firmware only supports setting a
->> desired SSID (via SIOCSIWESSID), so Agere based orinoco is stuck with
->> ap_scan=2 :(
->>
->> Symbol and Intersil don't have this problem.
-> 
-> In practice that shouldn't be a problem because drivers (at least
-> ipw2200 does this) usually roam BSSIDs anyway.  Technically a bug I
-> think.  But honestly, the driver needs to work with ap_scan=1 and I
-> don't see why it couldn't.
+Add programming initialisation and termination functions.
+Add checks to avoid overrunning the firmware image or PDA areas.
+Extra algorithm to program PDA values using defaults where necessary.
 
-I had a reread of <http://hostap.epitest.fi/wpa_supplicant/devel/driver_wrapper.html>. 
+Signed-off-by: David Kilroy <kilroyd@gmail.com>
+---
+ drivers/net/wireless/hermes_dld.c |  285 +++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/hermes_dld.h |    5 +
+ 2 files changed, 290 insertions(+), 0 deletions(-)
 
-As a FullMAC driver without support for selecting the BSSID to associate with (or frequency in Managed mode), the only way I can see to make the driver work with ap_scan=1 is to silently ignore the SIOCSIWFREQ and SIOCSIWAP. I don't think this is an approach I would want to pursue.
+diff --git a/drivers/net/wireless/hermes_dld.c b/drivers/net/wireless/hermes_dld.c
+index 22ae79d..d8c626e 100644
+--- a/drivers/net/wireless/hermes_dld.c
++++ b/drivers/net/wireless/hermes_dld.c
+@@ -70,6 +70,12 @@ MODULE_LICENSE("Dual MPL/GPL");
+ #define HERMES_AUX_PW1	0xDC23
+ #define HERMES_AUX_PW2	0xBA45
+ 
++/* HERMES_CMD_DOWNLD */
++#define HERMES_PROGRAM_DISABLE             (0x0000 | HERMES_CMD_DOWNLD)
++#define HERMES_PROGRAM_ENABLE_VOLATILE     (0x0100 | HERMES_CMD_DOWNLD)
++#define HERMES_PROGRAM_ENABLE_NON_VOLATILE (0x0200 | HERMES_CMD_DOWNLD)
++#define HERMES_PROGRAM_NON_VOLATILE        (0x0300 | HERMES_CMD_DOWNLD)
++
+ /* End markers used in dblocks */
+ #define PDI_END		0x00000000	/* End of PDA */
+ #define BLOCK_END	0xFFFFFFFF	/* Last image block */
+@@ -247,6 +253,23 @@ hermes_find_pdr(struct pdr *first_pdr, u32 record_id)
+ 	return NULL;
+ }
+ 
++/* Scan production data items for a particular entry */
++static struct pdi *
++hermes_find_pdi(struct pdi *first_pdi, u32 record_id)
++{
++	struct pdi *pdi = first_pdi;
++
++	while (pdi_id(pdi) != PDI_END) {
++
++		/* If the record ID matches, we are done */
++		if (pdi_id(pdi) == record_id)
++			return pdi;
++
++		pdi = (struct pdi *) &pdi->data[pdi_len(pdi)];
++	}
++	return NULL;
++}
++
+ /* Process one Plug Data Item - find corresponding PDR and plug it */
+ static int
+ hermes_plug_pdi(hermes_t *hw, struct pdr *first_pdr, const struct pdi *pdi)
+@@ -290,6 +313,15 @@ int hermes_read_pda(hermes_t *hw,
+ 		ret = hermes_docmd_wait(hw, HERMES_CMD_READMIF, 0, NULL);
+ 		if (ret)
+ 			return ret;
++	} else {
++		/* wl_lkm does not include PDA size in the PDA area.
++		 * We will pad the information into pda, so other routines
++		 * don't have to be modified */
++		pda[0] = cpu_to_le16(pda_len - 2);
++			/* Includes CFG_PROD_DATA but not itself */
++		pda[1] = cpu_to_le16(0x0800); /* CFG_PROD_DATA */
++		data_len = pda_len - 4;
++		data = pda + 2;
+ 	}
+ 
+ 	/* Open auxiliary port */
+@@ -370,6 +402,94 @@ EXPORT_SYMBOL(hermes_blocks_length);
+ 
+ /*** Hermes programming ***/
+ 
++/* About to start programming data (Hermes I)
++ * offset is the entry point
++ *
++ * Spectrum_cs' Symbol fw does not require this
++ * wl_lkm Agere fw does
++ * Don't know about intersil
++ */
++int hermesi_program_init(hermes_t *hw, u32 offset)
++{
++	int err;
++
++	/* Disable interrupts?*/
++	/*hw->inten = 0x0;*/
++	/*hermes_write_regn(hw, INTEN, 0);*/
++	/*hermes_set_irqmask(hw, 0);*/
++
++	/* Acknowledge any outstanding command */
++	hermes_write_regn(hw, EVACK, 0xFFFF);
++
++	/* Using doicmd_wait rather than docmd_wait */
++	err = hermes_doicmd_wait(hw,
++				 0x0100 | HERMES_CMD_INIT,
++				 0, 0, 0, NULL);
++	if (err)
++		return err;
++
++	err = hermes_doicmd_wait(hw,
++				 0x0000 | HERMES_CMD_INIT,
++				 0, 0, 0, NULL);
++	if (err)
++		return err;
++
++	err = hermes_aux_control(hw, 1);
++	printk(KERN_DEBUG PFX "AUX enable returned %d\n", err);
++
++	if (err)
++		return err;
++
++	printk(KERN_DEBUG PFX "Enabling volatile, EP 0x%08x\n", offset);
++	err = hermes_doicmd_wait(hw,
++				 HERMES_PROGRAM_ENABLE_VOLATILE,
++				 offset & 0xFFFFu,
++				 offset >> 16,
++				 0,
++				 NULL);
++	printk(KERN_DEBUG PFX "PROGRAM_ENABLE returned %d\n",
++	       err);
++
++	return err;
++}
++EXPORT_SYMBOL(hermesi_program_init);
++
++/* Done programming data (Hermes I)
++ *
++ * Spectrum_cs' Symbol fw does not require this
++ * wl_lkm Agere fw does
++ * Don't know about intersil
++ */
++int hermesi_program_end(hermes_t *hw)
++{
++	struct hermes_response resp;
++	int rc = 0;
++	int err;
++
++	rc = hermes_docmd_wait(hw, HERMES_PROGRAM_DISABLE, 0, &resp);
++
++	printk(KERN_DEBUG PFX "PROGRAM_DISABLE returned %d, "
++	       "r0 0x%04x, r1 0x%04x, r2 0x%04x\n",
++	       rc, resp.resp0, resp.resp1, resp.resp2);
++
++	if ((rc == 0) &&
++	    ((resp.status & HERMES_STATUS_CMDCODE) != HERMES_CMD_DOWNLD))
++		rc = -EIO;
++
++	err = hermes_aux_control(hw, 0);
++	printk(KERN_DEBUG PFX "AUX disable returned %d\n", err);
++
++	/* Acknowledge any outstanding command */
++	hermes_write_regn(hw, EVACK, 0xFFFF);
++
++	/* Reinitialise, ignoring return */
++	(void) hermes_doicmd_wait(hw, 0x0000 | HERMES_CMD_INIT,
++				  0, 0, 0, NULL);
++
++	return rc ? rc : err;
++}
++EXPORT_SYMBOL(hermesi_program_end);
++
+ /* Program the data blocks */
+ int hermes_program(hermes_t *hw, const char *first_block, const char *end)
+ {
+@@ -443,3 +563,168 @@ static void __exit exit_hermes_dld(void)
+ 
+ module_init(init_hermes_dld);
+ module_exit(exit_hermes_dld);
++
++/*** Default plugging data for Hermes I ***/
++/* Values from wl_lkm_718/hcf/dhf.c */
++
++#define DEFINE_DEFAULT_PDR(pid, length, data)				\
++static const struct {							\
++	__le16 len;							\
++	__le16 id;							\
++	u8 val[length];							\
++} __attribute__ ((packed)) default_pdr_data_##pid = {			\
++	__constant_cpu_to_le16((sizeof(default_pdr_data_##pid)/		\
++				sizeof(__le16)) - 1),			\
++	__constant_cpu_to_le16(pid),					\
++	data								\
++}
++
++#define DEFAULT_PDR(pid) default_pdr_data_##pid
++
++/*  HWIF Compatiblity */
++DEFINE_DEFAULT_PDR(0x0005, 10, "\x00\x00\x06\x00\x01\x00\x01\x00\x01\x00");
++
++/* PPPPSign */
++DEFINE_DEFAULT_PDR(0x0108, 4, "\x00\x00\x00\x00");
++
++/* PPPPProf */
++DEFINE_DEFAULT_PDR(0x0109, 10, "\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00");
++
++/* Antenna diversity */
++DEFINE_DEFAULT_PDR(0x0150, 2, "\x00\x3F");
++
++/* Modem VCO band Set-up */
++DEFINE_DEFAULT_PDR(0x0160, 28,
++		   "\x00\x00\x00\x00\x00\x00\x00\x00"
++		   "\x00\x00\x00\x00\x00\x00\x00\x00"
++		   "\x00\x00\x00\x00\x00\x00\x00\x00"
++		   "\x00\x00\x00\x00");
++
++/* Modem Rx Gain Table Values */
++DEFINE_DEFAULT_PDR(0x0161, 256,
++		   "\x3F\x01\x3F\01\x3F\x01\x3F\x01"
++		   "\x3F\x01\x3F\01\x3F\x01\x3F\x01"
++		   "\x3F\x01\x3F\01\x3F\x01\x3F\x01"
++		   "\x3F\x01\x3F\01\x3F\x01\x3F\x01"
++		   "\x3F\x01\x3E\01\x3E\x01\x3D\x01"
++		   "\x3D\x01\x3C\01\x3C\x01\x3B\x01"
++		   "\x3B\x01\x3A\01\x3A\x01\x39\x01"
++		   "\x39\x01\x38\01\x38\x01\x37\x01"
++		   "\x37\x01\x36\01\x36\x01\x35\x01"
++		   "\x35\x01\x34\01\x34\x01\x33\x01"
++		   "\x33\x01\x32\x01\x32\x01\x31\x01"
++		   "\x31\x01\x30\x01\x30\x01\x7B\x01"
++		   "\x7B\x01\x7A\x01\x7A\x01\x79\x01"
++		   "\x79\x01\x78\x01\x78\x01\x77\x01"
++		   "\x77\x01\x76\x01\x76\x01\x75\x01"
++		   "\x75\x01\x74\x01\x74\x01\x73\x01"
++		   "\x73\x01\x72\x01\x72\x01\x71\x01"
++		   "\x71\x01\x70\x01\x70\x01\x68\x01"
++		   "\x68\x01\x67\x01\x67\x01\x66\x01"
++		   "\x66\x01\x65\x01\x65\x01\x57\x01"
++		   "\x57\x01\x56\x01\x56\x01\x55\x01"
++		   "\x55\x01\x54\x01\x54\x01\x53\x01"
++		   "\x53\x01\x52\x01\x52\x01\x51\x01"
++		   "\x51\x01\x50\x01\x50\x01\x48\x01"
++		   "\x48\x01\x47\x01\x47\x01\x46\x01"
++		   "\x46\x01\x45\x01\x45\x01\x44\x01"
++		   "\x44\x01\x43\x01\x43\x01\x42\x01"
++		   "\x42\x01\x41\x01\x41\x01\x40\x01"
++		   "\x40\x01\x40\x01\x40\x01\x40\x01"
++		   "\x40\x01\x40\x01\x40\x01\x40\x01"
++		   "\x40\x01\x40\x01\x40\x01\x40\x01"
++		   "\x40\x01\x40\x01\x40\x01\x40\x01");
++
++/* Write PDA according to certain rules.
++ *
++ * For every production data record, look for a previous setting in
++ * the pda, and use that.
++ *
++ * For certain records, use defaults if they are not found in pda.
++ */
++int hermes_apply_pda_with_defaults(hermes_t *hw,
++				   const char *first_pdr,
++				   const __le16 *pda)
++{
++	const struct pdr *pdr = (const struct pdr *) first_pdr;
++	struct pdi *first_pdi = (struct pdi *) &pda[2];
++	struct pdi *pdi;
++	struct pdi *default_pdi = NULL;
++	struct pdi *outdoor_pdi;
++	void *end = (void *)first_pdr + MAX_PDA_SIZE;
++	int record_id;
++
++	while (((void *)pdr < end) &&
++	       (pdr_id(pdr) != PDI_END)) {
++		/*
++		 * For spectrum_cs firmwares,
++		 * PDR area is currently not terminated by PDI_END.
++		 * It's followed by CRC records, which have the type
++		 * field where PDR has length.  The type can be 0 or 1.
++		 */
++		if (pdr_len(pdr) < 2)
++			break;
++		record_id = pdr_id(pdr);
++
++		pdi = hermes_find_pdi(first_pdi, record_id);
++		if (pdi)
++			printk(KERN_DEBUG PFX "Found record 0x%04x at %p\n",
++			       record_id, pdi);
++
++		switch (record_id) {
++		case 0x110: /* Modem REFDAC values */
++		case 0x120: /* Modem VGDAC values */
++			outdoor_pdi = hermes_find_pdi(first_pdi, record_id + 1);
++			default_pdi = NULL;
++			if (outdoor_pdi) {
++				pdi = outdoor_pdi;
++				printk(KERN_DEBUG PFX
++				       "Using outdoor record 0x%04x at %p\n",
++				       record_id + 1, pdi);
++			}
++			break;
++		case 0x5: /*  HWIF Compatiblity */
++			default_pdi = (struct pdi *) &DEFAULT_PDR(0x0005);
++			break;
++		case 0x108: /* PPPPSign */
++			default_pdi = (struct pdi *) &DEFAULT_PDR(0x0108);
++			break;
++		case 0x109: /* PPPPProf */
++			default_pdi = (struct pdi *) &DEFAULT_PDR(0x0109);
++			break;
++		case 0x150: /* Antenna diversity */
++			default_pdi = (struct pdi *) &DEFAULT_PDR(0x0150);
++			break;
++		case 0x160: /* Modem VCO band Set-up */
++			default_pdi = (struct pdi *) &DEFAULT_PDR(0x0160);
++			break;
++		case 0x161: /* Modem Rx Gain Table Values */
++			default_pdi = (struct pdi *) &DEFAULT_PDR(0x0161);
++			break;
++		default:
++			default_pdi = NULL;
++			break;
++		}
++		if (!pdi && default_pdi) {
++			/* Use default */
++			pdi = default_pdi;
++			printk(KERN_DEBUG PFX
++			       "Using default record 0x%04x at %p\n",
++			       record_id, pdi);
++		}
++
++		if (pdi) {
++			/* Lengths of the data in PDI and PDR must match */
++			if (pdi_len(pdi) == pdr_len(pdr)) {
++				/* do the actual plugging */
++				hermes_aux_setaddr(hw, pdr_addr(pdr));
++				hermes_write_bytes(hw, HERMES_AUXDATA,
++						   pdi->data, pdi_len(pdi));
++			}
++		}
++
++		pdr++;
++	}
++	return 0;
++}
++EXPORT_SYMBOL(hermes_apply_pda_with_defaults);
+diff --git a/drivers/net/wireless/hermes_dld.h b/drivers/net/wireless/hermes_dld.h
+index af75c03..6fcb262 100644
+--- a/drivers/net/wireless/hermes_dld.h
++++ b/drivers/net/wireless/hermes_dld.h
+@@ -27,6 +27,8 @@
+ 
+ #include "hermes.h"
+ 
++int hermesi_program_init(hermes_t *hw, u32 offset);
++int hermesi_program_end(hermes_t *hw);
+ int hermes_program(hermes_t *hw, const char *first_block, const char *end);
+ 
+ int hermes_read_pda(hermes_t *hw,
+@@ -37,6 +39,9 @@ int hermes_read_pda(hermes_t *hw,
+ int hermes_apply_pda(hermes_t *hw,
+ 		     const char *first_pdr,
+ 		     const __le16 *pda);
++int hermes_apply_pda_with_defaults(hermes_t *hw,
++				   const char *first_pdr,
++				   const __le16 *pda);
+ 
+ size_t hermes_blocks_length(const char *first_block);
+ 
+-- 
+1.5.6.4
 
-That said, what's wrong with the ap_scan=2 mode? You've stated it's not great (and I'm prepared to believe it), but what is the actual problem?
-
-
-
-Dave.
