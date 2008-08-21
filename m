@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:62080 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753243AbYHAG4d (ORCPT
+Received: from 166-70-238-42.ip.xmission.com ([166.70.238.42]:33372 "EHLO
+	ns1.wolfmountaingroup.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751566AbYHUE7X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 02:56:33 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so377898nfc.21
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Jul 2008 23:56:31 -0700 (PDT)
-Date: Fri, 1 Aug 2008 07:01:50 +0000
-From: Jarek Poplawski <jarkao2@gmail.com>
-To: David Miller <davem@davemloft.net>
-Cc: johannes@sipsolutions.net, netdev@axxeo.de, peterz@infradead.org,
-	Larry.Finger@lwfinger.net, kaber@trash.net,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, mingo@redhat.com
-Subject: Re: Kernel WARNING: at net/core/dev.c:1330
-	__netif_schedule+0x2c/0x98()
-Message-ID: <20080801070150.GB4435@ff.dom.local> (sfid-20080801_085644_025473_45359270)
-References: <20080726131838.GA2873@ami.dom.local> <20080726.173434.48036095.davem@davemloft.net> <20080727203757.GA2527@ami.dom.local> <20080731.052932.110299354.davem@davemloft.net> <20080801064810.GA4435@ff.dom.local>
+	Thu, 21 Aug 2008 00:59:23 -0400
+Message-ID: <47238.166.70.238.46.1219292835.squirrel@webmail.wolfmountaingroup.com> (sfid-20080821_065939_487549_815358B7)
+In-Reply-To: <20080820175054.0795eecb.akpm@linux-foundation.org>
+References: <1749.69.2.248.210.1219253222.squirrel@webmail.wolfmountaingroup.com>
+    <20080820175054.0795eecb.akpm@linux-foundation.org>
+Date: Wed, 20 Aug 2008 22:27:15 -0600 (MDT)
+Subject: Re: 2.6.27-rc3-git6 iwl3945 driver drops packets with WEP  enabled
+From: jmerkey@wolfmountaingroup.com
+To: "Andrew Morton" <akpm@linux-foundation.org>
+Cc: jmerkey@wolfmountaingroup.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080801064810.GA4435@ff.dom.local>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 01, 2008 at 06:48:10AM +0000, Jarek Poplawski wrote:
-> On Thu, Jul 31, 2008 at 05:29:32AM -0700, David Miller wrote:
-...
-> > diff --git a/net/core/dev.c b/net/core/dev.c
-> > index 63d6bcd..69320a5 100644
-> > --- a/net/core/dev.c
-> > +++ b/net/core/dev.c
-> > @@ -4200,6 +4200,7 @@ static void netdev_init_queues(struct net_device *dev)
-> >  {
-> >  	netdev_init_one_queue(dev, &dev->rx_queue, NULL);
-> >  	netdev_for_each_tx_queue(dev, netdev_init_one_queue, NULL);
-> > +	spin_lock_init(&dev->tx_global_lock);
-> 
-> This will probably need some lockdep annotations similar to
-> _xmit_lock.
+> On Wed, 20 Aug 2008 11:27:02 -0600 (MDT)
+> jmerkey@wolfmountaingroup.com wrote:
+>
+>>
+>> On an Acer 9410 laptop with dual core processors, the iwl3945 driver has
+>> intermittment receiver lockup problems (stops receiving packets) using
+>> the
+>> Linux iwl3945 drivers with WEP encryption enbaled.  The adapter works
+>> fine
+>> without WEP or WPA.   If the same system is booted to Windows Vista
+>> (which
+>> takes about 15 minutes to boot because Vista is a fat slow pig) the
+>> wireless drivers work fine with WEP under Vista on the same system.
+>>
+>> If the system copies the ndis .sys drivers and I build ndiswrapper
+>> (which
+>> has to be really hacked up to build on 2.6.27) and use the ndis drivers
+>> on
+>> 2.6.27-rc3 with a modified ndiswrapper, they work fine.
+>>
+>> I suspect the firmware or an interaction with the firmware settings
+>> since
+>> when the system is booted to Vista after running 2.6.27-rc3 with the
+>> iwl3945 drivers, I have to power cycle the system periodically after
+>> running the iwl3945 driver to get the drivers under Vista to work again,
+>> but not always.
+>>
+>
+> (cc linux-wireless)
+>
+> Was 2.6.26 OK?
+>
 
-...BTW, we probably could also consider some optimization here: the
-xmit_lock of the first queue could be treated as special, and only
-the owner could do such a freezing. This would save changes of
-functionality to non mq devices. On the other hand, it would need
-remembering about this special treatment (so, eg. a separate lockdep
-initialization than all the others).
+No.  2.6.26 It was actually a little worse, and the git6 was an
+improvement since I was at least able to get past DHCP and obtain an
+address, after which is died.  The failure is the driver stops receiving
+packets, and if you rmmod/modprobe (reload) the driver , then it will work
+again and lock up immediately following 'dhclient <interface>'.   tcpdump
+-n -i <if> will work hit or miss before the lockup.
 
-Jarek P.
+Jeff
+
