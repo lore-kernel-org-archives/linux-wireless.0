@@ -1,97 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:53272 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751136AbYHBSCg (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.236]:39823 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752429AbYHVNnr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 14:02:36 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so566020nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 11:02:34 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH 2/2] rfkill: use strict_strtoul
-Date: Sat, 2 Aug 2008 20:25:19 +0200
-Cc: John Linville <linville@tuxdriver.com>,
+	Fri, 22 Aug 2008 09:43:47 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so440387rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2008 06:43:46 -0700 (PDT)
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
+	RCU.
+From: jamal <hadi@cyberus.ca>
+Reply-To: hadi@cyberus.ca
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: David Miller <davem@davemloft.net>, kaber@trash.net,
+	netdev@vger.kernel.org, johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org
-References: <1217699786-20672-1-git-send-email-hmh@hmh.eng.br> <1217699786-20672-3-git-send-email-hmh@hmh.eng.br>
-In-Reply-To: <1217699786-20672-3-git-send-email-hmh@hmh.eng.br>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200808022025.19323.IvDoorn@gmail.com> (sfid-20080802_200238_141016_BD56A2D7)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <20080822065655.GA18471@gondor.apana.org.au>
+References: <20080721164306.GA13131@gondor.apana.org.au>
+	 <20080721.095124.89249903.davem@davemloft.net>
+	 <20080721170233.GA13417@gondor.apana.org.au>
+	 <20080721.100821.38432201.davem@davemloft.net>
+	 <20080721171141.GA13573@gondor.apana.org.au>
+	 <20080822065655.GA18471@gondor.apana.org.au>
+Content-Type: text/plain
+Date: Fri, 22 Aug 2008 09:43:42 -0400
+Message-Id: <1219412622.4672.34.camel@localhost> (sfid-20080822_154354_252031_859C5A26)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 02 August 2008, Henrique de Moraes Holschuh wrote:
-> Switch sysfs parsing to something that actually works properly.
+On Fri, 2008-22-08 at 16:56 +1000, Herbert Xu wrote:
+> On Tue, Jul 22, 2008 at 01:11:41AM +0800, Herbert Xu wrote:
+> > On Mon, Jul 21, 2008 at 10:08:21AM -0700, David Miller wrote:
+
+> I haven't had a chance to do the test yet but I've just had an
+> idea of how we can get the best of both worlds.
 > 
-> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> The problem with always directing traffic based on the CPU alone
+> is that processes move around and we don't want to introduce packet
+> reordering because to that.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Assuming multi-rx queues with configurable MSI or otherwise to map
+to a receive processor, then in the case of routing/bridging or
+otherfavoriteformofforwarding:
+If you tie static filters to a specific cpu that will always work.
+So no reordering there.
+Local traffic i can see migration/reordering happening.
 
-> ---
->  net/rfkill/rfkill.c |   16 ++++++++++++----
->  1 files changed, 12 insertions(+), 4 deletions(-)
-> 
-> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-> index 35a9994..2ec6312 100644
-> --- a/net/rfkill/rfkill.c
-> +++ b/net/rfkill/rfkill.c
-> @@ -352,12 +352,16 @@ static ssize_t rfkill_state_store(struct device *dev,
->  				  const char *buf, size_t count)
->  {
->  	struct rfkill *rfkill = to_rfkill(dev);
-> -	unsigned int state = simple_strtoul(buf, NULL, 0);
-> +	unsigned long state;
->  	int error;
->  
->  	if (!capable(CAP_NET_ADMIN))
->  		return -EPERM;
->  
-> +	error = strict_strtoul(buf, 0, &state);
-> +	if (error)
-> +		return error;
-> +
->  	/* RFKILL_STATE_HARD_BLOCKED is illegal here... */
->  	if (state != RFKILL_STATE_UNBLOCKED &&
->  	    state != RFKILL_STATE_SOFT_BLOCKED)
-> @@ -385,7 +389,7 @@ static ssize_t rfkill_claim_store(struct device *dev,
->  				  const char *buf, size_t count)
->  {
->  	struct rfkill *rfkill = to_rfkill(dev);
-> -	bool claim = !!simple_strtoul(buf, NULL, 0);
-> +	unsigned long claim;
->  	int error;
->  
->  	if (!capable(CAP_NET_ADMIN))
-> @@ -394,6 +398,10 @@ static ssize_t rfkill_claim_store(struct device *dev,
->  	if (rfkill->user_claim_unsupported)
->  		return -EOPNOTSUPP;
->  
-> +	error = strict_strtoul(buf, 0, &claim);
-> +	if (error)
-> +		return error;
-> +
->  	/*
->  	 * Take the global lock to make sure the kernel is not in
->  	 * the middle of rfkill_switch_all
-> @@ -402,7 +410,7 @@ static ssize_t rfkill_claim_store(struct device *dev,
->  	if (error)
->  		return error;
->  
-> -	if (rfkill->user_claim != claim) {
-> +	if (!!rfkill->user_claim != !!claim) {
->  		if (!claim) {
->  			mutex_lock(&rfkill->mutex);
->  			rfkill_toggle_radio(rfkill,
-> @@ -410,7 +418,7 @@ static ssize_t rfkill_claim_store(struct device *dev,
->  					    0);
->  			mutex_unlock(&rfkill->mutex);
->  		}
-> -		rfkill->user_claim = claim;
-> +		rfkill->user_claim = !!claim;
->  	}
->  
->  	mutex_unlock(&rfkill_mutex);
+> The problem with hashing based on packet headers alone is that
+> it doesn't take CPU affinity into account at all so we may end
+> up with a situation where one thread out of a thread pool (e.g.,
+> a web server) has n sockets which are hashed to n different
+> queues.
 
+Indeed. In the forwarding case, the problem is not reordering rather
+all flows will always end up in the same cpu. So if you may end up
+just overloading one cpu while the other 1023 stayed idle.
+My earlier statement was you could cook traffic scenarios where all
+1024 are being fully utilized (the operative term is "cook");->
+
+> So here's the idea, we determine the tx queue for a flow based
+> on the CPU on which we saw its first packet.  Once we have decided
+> on a queue we store that in a dst object (see below).  This
+> ensures that all subsequent packets of that flow ends up in
+> the same queue so there is no reordering.  It also avoids the
+> problem where traffic genreated by one CPU gets scattered across
+> queues.
+
+Wont work with static multi-rx nic; iirc, changing those filters is
+_expensive_. so you want it to stay static.
+
+cheers,
+jamal
 
