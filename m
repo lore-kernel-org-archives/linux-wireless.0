@@ -1,79 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:24839 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754152AbYH0M0T (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2008 08:26:19 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so1084659nfc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Aug 2008 05:26:17 -0700 (PDT)
-Message-ID: <1ba2fa240808270526g163f8c0an3c5d220cce69466c@mail.gmail.com> (sfid-20080827_142624_337083_2FB3D871)
-Date: Wed, 27 Aug 2008 15:26:17 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "David Miller" <davem@davemloft.net>
-Subject: Re: pull request: wireless-2.6 2008-08-26
-Cc: johannes@sipsolutions.net, holtmann@linux.intel.com,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20080827.044551.102233262.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1ba2fa240808270305m7f505efak9fd0d36d5db09a1e@mail.gmail.com>
-	 <1219831828.3891.3.camel@johannes.berg>
-	 <1ba2fa240808270434y1589761xd2ff0a48c2e99033@mail.gmail.com>
-	 <20080827.044551.102233262.davem@davemloft.net>
+Received: from mga11.intel.com ([192.55.52.93]:12033 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754856AbYHVB7Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Aug 2008 21:59:16 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 1/3] iwlwifi: fix apm_stop function
+Date: Fri, 22 Aug 2008 09:55:38 +0800
+Message-Id: <1219370140-21481-2-git-send-email-yi.zhu@intel.com> (sfid-20080822_035921_484418_62CAC0C1)
+In-Reply-To: <1219370140-21481-1-git-send-email-yi.zhu@intel.com>
+References: <1219370140-21481-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 27, 2008 at 2:45 PM, David Miller <davem@davemloft.net> wrote:
-> From: "Tomas Winkler" <tomasw@gmail.com>
-> Date: Wed, 27 Aug 2008 14:34:28 +0300
->
->> Unfortunately fixing bugs on stable branch take precedence  of
->> adjusting to new API on development branch that someone decided to do.
->>  I wanted to work directly on wireless testing but it was broken over
->> an over and I have only limited resources more in testing then in
->> development I just had to branch out to be ready with the driver when
->> HW is out. People just check the immediate impact of they fix the
->> don't test for collateral damage and this is understandable an
->> individual developer doesn't have lab with IBSS, BSS, AP, etc setups.
->
-> But think about this from the other perspective.
->
-> When you queue up tons of things, especially in infrastructure level
-> code such as mac80211, and on top of it you do your work on the stable
-> branch and do not do you work against the development tree, guess what
-> happens?
+From: Mohamed Abbas <mohamed.abbas@intel.com>
 
-> You show up with accumulated piles of non-trivial patches for people
-> to review.  And then you'll get upset when they suggest that things be
-> implemented differently.
+The patch fixes CSR_GP_CNTRL_REG_FLAG_INIT_DONE was set instead of
+cleared which disabled move device to D0U state.
 
-I never worked that way I've published immediately what I had. I don't
-know where  did you get this impression
- If I didn't publish something it's just too reasons.
-The code was made dirty and I didn't like design myself (for example
-our 11h implementation), even though it's publicly available.
-or just simply didn't have time because I have to satisfy first thous
-who pays my check ( everybody to feed their children after all:) )
-(e.g. rfkill fixes)
-Almost every driver has it's own development branch, we didn't do
-something different here, this is just classical divide and conquer
-strategy.
+Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    3 ++-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-> It's all because of the gap in time.
->
-> And during this time, if you had submitted earlier, you would end up
-> doing smaller and mode gradual modifications to your design.  And
-> you'd take care of them before they effect subsequent pieces of work
-> you want to do which depend upon the earlier bits.
->
-> The longer you queue stuff up, the more painful having to change stuff
-> at the beginning of that queue becomes.  It can invalidate everything
-> else you worked on.
->
-> The only sane way to operate is to post your work early and often, or
-> else you'll live in a world of hurt, and it will be nobody's fault but
-> your own.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index aba173d..6747850 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -475,8 +475,8 @@ static void iwl4965_apm_stop(struct iwl_priv *priv)
+ 	iwl_set_bit(priv, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
+ 
+ 	udelay(10);
+-
+-	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++	/* clear "init complete"  move adapter D0A* --> D0U state */
++	iwl_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index f194447..c648638 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -146,7 +146,8 @@ static void iwl5000_apm_stop(struct iwl_priv *priv)
+ 
+ 	udelay(10);
+ 
+-	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++	/* clear "init complete"  move adapter D0A* --> D0U state */
++	iwl_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
+ 
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ }
+-- 
+1.5.3.6
 
-This is all understood and this would be indeed the ideal case.
-Tomas
