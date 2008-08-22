@@ -1,40 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:37381 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751776AbYH1Kda (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 06:33:30 -0400
-Subject: Re: [PATCH 06/11] iwlwifi: fix apm_stop
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-In-Reply-To: <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
-Content-Type: text/plain
-Date: Thu, 28 Aug 2008 14:33:27 +0200
-Message-Id: <1219926807.6064.17.camel@californication> (sfid-20080828_123332_548291_DF2DF791)
-Mime-Version: 1.0
+Received: from lirone.symas.net ([64.71.152.235]:44522 "EHLO lirone.symas.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752689AbYHVVFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Aug 2008 17:05:53 -0400
+Message-ID: <48AF209A.4080805@symas.com> (sfid-20080822_230607_820820_7CAC7BD0)
+Date: Fri, 22 Aug 2008 13:24:58 -0700
+From: Howard Chu <hyc@symas.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+CC: linux-wireless@vger.kernel.org
+Subject: compat-2.6: ath9k driver
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Yi,
+I just got a new HP dv5z laptop with a/b/g/n wifi adapter; it claims to be an 
+AR5009. Googling for the PCI ID (0x002a) matched it up with AR9280, which led 
+me to the ath9k driver. It's not currently provided with the compat-2.6 tree 
+but I pulled a copy from the wireless-testing branch and added it to my compat 
+tree.
 
-> The patch fixes CSR_GP_CNTRL_REG_FLAG_INIT_DONE was set instead of
-> cleared which disabled moving device to D0U state.
-
-when was this mistake introduced. Is it a regression compared to what we
-have in 2.6.26?
-
-Regards
-
-Marcel
-
-
+It needed 3-4 definitions to be added to <linux/list.h> but otherwise compiled 
+OK and it's now working fine for me in 2.6.26.3. Did you already have plans to 
+include this driver, should I post my diffs?
+-- 
+   -- Howard Chu
+   CTO, Symas Corp.           http://www.symas.com
+   Director, Highland Sun     http://highlandsun.com/hyc/
+   Chief Architect, OpenLDAP  http://www.openldap.org/project/
