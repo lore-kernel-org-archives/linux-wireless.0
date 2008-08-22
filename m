@@ -1,50 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:4482 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755577AbYHECcV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 22:32:21 -0400
-Date: Mon, 4 Aug 2008 22:17:10 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-08-04
-Message-ID: <20080805021710.GA21731@tuxdriver.com> (sfid-20080805_043226_579982_B28DE13C)
-References: <20080804193753.GA30345@tuxdriver.com> <20080804.150147.78586437.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080804.150147.78586437.davem@davemloft.net>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45603 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758668AbYHVVLe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Aug 2008 17:11:34 -0400
+Date: Fri, 22 Aug 2008 14:10:45 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Philip Langdale <philipl@overt.org>
+Cc: linux-kernel@vger.kernel.org, hmh@hmh.eng.br, mjg59@srcf.ucam.org,
+	toshiba_acpi@memebeam.org, ivdoorn@gmail.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
+ through rfkill (v6)
+Message-Id: <20080822141045.488f9334.akpm@linux-foundation.org> (sfid-20080822_231146_788254_68078B26)
+In-Reply-To: <48AB8902.3010406@overt.org>
+References: <48AB8902.3010406@overt.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 04, 2008 at 03:01:47PM -0700, David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Mon, 4 Aug 2008 15:37:53 -0400
+
+> User-Agent: Thunderbird 2.0.0.16 (X11/20080707)
+
+uh-oh.
+
+On Tue, 19 Aug 2008 20:01:22 -0700
+Philip Langdale <philipl@overt.org> wrote:
+
+> There's been a patch floating around for toshiba_acpi that exports an ad-hoc
+> /proc interface to toggle the bluetooth adapter in a large number of Toshiba
+> laptops. I'm not sure if it's still relevant for the latest models, but it is
+> still required for older models such as my Tecra M3.
 > 
-> > Another big round of fixes for 2.6.27.  Included is also a renaming
-> > patch and some related patches that rename iwl4965 to iwlagn (reflecting
-> > that is supports iwl5000 as well).
-> > 
-> > The other big(ger) thing here is the new ath9k driver.  It is probably
-> > still far from perfect, but I'm hearing good reports on its
-> > functionality and the Atheros team (and others) have already been quite
-> > responsive on comments, etc.  I think it is best to go ahead and get it
-> > into 2.6.27.
-> > 
-> > Please let me know if there are problems!
+> This change pulls in the low level Toshiba-specific code from the old patch and
+> sets up an rfkill device and a polled input device to track the state of the
+> hardware kill-switch.
 > 
-> I'm holding off on this pull until the list.h changes get so me lkml
-> ACKs.
+> Signed-off-by: Philip Langdale <philipl@overt.org>
+> ---
+>   Kconfig        |    1
+>   toshiba_acpi.c |  263 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+> 
+> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+> index 735f5ea..047829c 100644
+> --- a/drivers/acpi/Kconfig
+> +++ b/drivers/acpi/Kconfig
+> @@ -260,6 +260,7 @@ config ACPI_ASUS
+>   config ACPI_TOSHIBA
+>   	tristate "Toshiba Laptop Extras"
+>   	depends on X86
+> +	select INPUT_POLLDEV
+>   	select BACKLIGHT_CLASS_DEVICE
+>   	---help---
+>   	  This driver adds support for access to certain system settings
+> diff --git a/drivers/acpi/toshiba_acpi.c b/drivers/acpi/toshiba_acpi.c
+> index 0a43c8e..5723019 100644
+> --- a/drivers/acpi/toshiba_acpi.c
+> +++ b/drivers/acpi/toshiba_acpi.c
+> @@ -3,6 +3,7 @@
+>    *
+>    *
+>    *  Copyright (C) 2002-2004 John Belmonte
+> + *  Copyright (C) 2008 Philip Langdale
 
-Sure, np.  I created a "no-ath9k" branch in case you are feeling
-frisky -- it is the same except for omitting the list.h changes,
-the ath5k pci table change, and the new ath9k driver.
+your email client is performing space-stuffing.  Please see
+Documentation/email-clients.txt.
 
-	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git no-ath9k
+Please pass the patch through scripts/checkpatch.pl.  It finds a large
+number of errors.
 
-Hth!
+Please consistently put a single blank line between end-of-locals and
+start-of-code.  Avoid randomness like:
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+> +static void bt_poll_rfkill(struct input_polled_dev *poll_dev)
+> +{
+> +	bool state_changed;
+> +	bool new_rfk_state;
+> +	bool value;
+> +	u32 hci_result;
+> +
+> +	struct toshiba_acpi_dev *dev = poll_dev->private;
+> +
+> +	hci_result = hci_get_radio_state(&value);
+>
+
+The code uses new-style `bool' but it also adds at least one usage of
+the old-style `FALSE'.
+
