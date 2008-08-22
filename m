@@ -1,66 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:30518 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751273AbYHDEs2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 00:48:28 -0400
-Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere fw
-From: Pavel Roskin <proski@gnu.org>
-To: kilroyd@googlemail.com
-Cc: linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>,
-	Jean Tourrilhes <jt@hpl.hp.com>
-In-Reply-To: <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
-	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
-Content-Type: text/plain
-Date: Mon, 04 Aug 2008 00:48:24 -0400
-Message-Id: <1217825304.10989.20.camel@dv> (sfid-20080804_064851_344698_51407067)
-Mime-Version: 1.0
+Received: from rhun.apana.org.au ([64.62.148.172]:45015 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753399AbYHVG5L (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Aug 2008 02:57:11 -0400
+Date: Fri, 22 Aug 2008 16:56:55 +1000
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: David Miller <davem@davemloft.net>
+Cc: hadi@cyberus.ca, kaber@trash.net, netdev@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in RCU.
+Message-ID: <20080822065655.GA18471@gondor.apana.org.au> (sfid-20080822_085717_627429_C7EE1B15)
+References: <20080721164306.GA13131@gondor.apana.org.au> <20080721.095124.89249903.davem@davemloft.net> <20080721170233.GA13417@gondor.apana.org.au> <20080721.100821.38432201.davem@davemloft.net> <20080721171141.GA13573@gondor.apana.org.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080721171141.GA13573@gondor.apana.org.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-08-02 at 11:14 +0100, kilroyd@googlemail.com wrote:
-> Pass the ESSID to the card.
+On Tue, Jul 22, 2008 at 01:11:41AM +0800, Herbert Xu wrote:
+> On Mon, Jul 21, 2008 at 10:08:21AM -0700, David Miller wrote:
+> >
+> > Can I at least get some commitment that someone will test
+> > that this really is necessary before we add the CPU ID
+> > hash option?
 > 
-> This allows 'iwlist eth1 scan essid <essid>' to work, and will help
-> with routers setup not to broadcast the ESSID.
+> Sure, I'll be testing some related things on this front so I'll
+> try to produce some results that compare these two cases.
 
-That's a nice thing to have, but it doesn't seem to work on x86_64 (I
-didn't try other platforms).  I tried wireless-tools 30.pre6 instead of
-29, but it broke the output completely:
+I haven't had a chance to do the test yet but I've just had an
+idea of how we can get the best of both worlds.
 
-# iwlist eth1 scan 
-*** Please report to jt@hpl.hp.com your platform details
-*** and the following line :
-*** IW_EV_LCP_PK2_LEN = 4 ; IW_EV_POINT_PK2_LEN = 8
+The problem with always directing traffic based on the CPU alone
+is that processes move around and we don't want to introduce packet
+reordering because to that.
 
-eth1      Scan completed :
-          Cell 01 - Address: 00:19:5B:56:FC:73
-                    ESSID:off/any/hidden
-                    Mode:Master
-                    Frequency=2.437 GHz (Channel 6)
-                    Signal level:-29 dBm  Noise level:-81 dBm
-                    Encryption key:E0
-                    Extra:
-          Cell 02 - Address: 00:15:6D:53:9A:CA
-                    ESSID:off/any/hidden
-                    Mode:Master
-                    Frequency:2.462 GHz (Channel 11)
-                    Signal level:-49 dBm  Noise level:-80 dBm
-                    Encryption key:E0
-                    Extra:
+The problem with hashing based on packet headers alone is that
+it doesn't take CPU affinity into account at all so we may end
+up with a situation where one thread out of a thread pool (e.g.,
+a web server) has n sockets which are hashed to n different
+queues.
 
+So here's the idea, we determine the tx queue for a flow based
+on the CPU on which we saw its first packet.  Once we have decided
+on a queue we store that in a dst object (see below).  This
+ensures that all subsequent packets of that flow ends up in
+the same queue so there is no reordering.  It also avoids the
+problem where traffic genreated by one CPU gets scattered across
+queues.
 
-> +			if (priv->scan_mode & IW_SCAN_THIS_ESSID) {
+Of course to make this work we need to restart the flow cache
+project so that we have somewhere to store this txq assignment.
 
-The debug output shows that the about condition is never true with
-either version of iwlist.  The command is:
+The good thing is that a flow cache would be of benefit for IPsec
+users too and I hear that there is some interest in doing that
+in the immediate future.  So perhaps we can combine efforts and
+use it for txq assignment as well.
 
-iwlist eth1 scan essid foo
-
-Copying Jean regarding the message.
-
+Cheers,
 -- 
-Regards,
-Pavel Roskin
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
