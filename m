@@ -1,52 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.184]:46637 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752751AbYHROxc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2008 10:53:32 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so2177185fkq.5
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Aug 2008 07:53:30 -0700 (PDT)
-To: rt2400-devel@lists.sourceforge.net
-Subject: Re: [rt2x00] rt2800 progress update
-Date: Mon, 18 Aug 2008 16:53:26 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200808181526.16974.IvDoorn@gmail.com>
-In-Reply-To: <200808181526.16974.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200808181653.27080.IvDoorn@gmail.com> (sfid-20080818_165335_471064_1B0EB977)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:12033 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757363AbYHVB7U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Aug 2008 21:59:20 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Gregory Greenman <gregory.greenman@intel.com>,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 3/3] iwlwifi: call apm stop on exit
+Date: Fri, 22 Aug 2008 09:55:40 +0800
+Message-Id: <1219370140-21481-4-git-send-email-yi.zhu@intel.com> (sfid-20080822_035941_920289_8699AB28)
+In-Reply-To: <1219370140-21481-3-git-send-email-yi.zhu@intel.com>
+References: <1219370140-21481-1-git-send-email-yi.zhu@intel.com>
+ <1219370140-21481-2-git-send-email-yi.zhu@intel.com>
+ <1219370140-21481-3-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 18 August 2008, Ivo van Doorn wrote:
-> Hi,
-> 
-> Just a small information mail regarding the current status of the rt2800 drivers,
-> The initial schedule was that last week or at the latest this week, the initial
-> version of the rt2800 drivers would be released.
-> 
-> But as you might have noticed, this has not happened, which means the project
-> is behind schedule. The current status is that rt2800usb is capable of
-> receiving frames (only when using the legacy driver first), and rt2800pci isn't
-> capable of anything yet.
-> 
-> I am currently putting all focus on rt2800usb because the queue management
-> is the easiest for that driver, and having that driver working will help in debugging
-> rt2800pci later.
-> 
-> The fact that rt2800usb is capable of receiving frames after the legacy driver
-> has been loaded first, means that I am missing one or two instructions which
-> must be send to the hardware before it will kick in. Unfortunately I have made
-> little progress in tracking that required instruction. :(
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-Well found it. Apparently the frames are only received when the BSSID is
-written to the device. I currently get only 1 scan result now (the BSSID written
-to the register), but in monitor mode I can see 2 AP's and a bunch of data going
-through the air.
+This patch calls apm stop on exit and suspend and sets STATUS_EXIT_PENDING
+accordingly.
 
-Well this is at least a start in the right direction, hopefully TX will work soon
-as well.
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |   16 +++++++++++-----
+ 1 files changed, 11 insertions(+), 5 deletions(-)
 
-Ivo
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 11f8cc2..3cec88e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2190,7 +2190,10 @@ static void __iwl4965_down(struct iwl_priv *priv)
+ 	udelay(5);
+ 
+ 	/* FIXME: apm_ops.suspend(priv) */
+-	priv->cfg->ops->lib->apm_ops.reset(priv);
++	if (exit_pending || test_bit(STATUS_IN_SUSPEND, &priv->status))
++		priv->cfg->ops->lib->apm_ops.stop(priv);
++	else
++		priv->cfg->ops->lib->apm_ops.reset(priv);
+ 	priv->cfg->ops->lib->free_shared_mem(priv);
+ 
+  exit:
+@@ -4372,15 +4375,18 @@ static void __devexit iwl4965_pci_remove(struct pci_dev *pdev)
+ 	iwl_dbgfs_unregister(priv);
+ 	sysfs_remove_group(&pdev->dev.kobj, &iwl4965_attribute_group);
+ 
++	/* ieee80211_unregister_hw call wil cause iwl4965_mac_stop to
++	 * to be called and iwl4965_down since we are removing the device
++	 * we need to set STATUS_EXIT_PENDING bit.
++	 */
++	set_bit(STATUS_EXIT_PENDING, &priv->status);
+ 	if (priv->mac80211_registered) {
+ 		ieee80211_unregister_hw(priv->hw);
+ 		priv->mac80211_registered = 0;
++	} else {
++		iwl4965_down(priv);
+ 	}
+ 
+-	set_bit(STATUS_EXIT_PENDING, &priv->status);
+-
+-	iwl4965_down(priv);
+-
+ 	/* make sure we flush any pending irq or
+ 	 * tasklet for the driver
+ 	 */
+-- 
+1.5.3.6
+
