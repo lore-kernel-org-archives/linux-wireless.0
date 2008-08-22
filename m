@@ -1,48 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:13414 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755218AbYHDHQs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 03:16:48 -0400
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 04 Aug 2008 00:16:48 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 3/4] ath5k: remove Atheros 11n devices from supported list
-Date: Mon, 4 Aug 2008 00:16:40 -0700
-Message-ID: <1217834201-14680-4-git-send-email-lrodriguez@atheros.com> (sfid-20080804_091651_333677_2E090AA9)
-In-Reply-To: <1217834201-14680-3-git-send-email-lrodriguez@atheros.com>
-References: <1217834201-14680-1-git-send-email-lrodriguez@atheros.com>
- <1217834201-14680-2-git-send-email-lrodriguez@atheros.com>
- <1217834201-14680-3-git-send-email-lrodriguez@atheros.com>
+Received: from fmmailgate03.web.de ([217.72.192.234]:40234 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754611AbYHVTy5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Aug 2008 15:54:57 -0400
+From: Chr <chunkeey@web.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] p54: Fix potential concurrent access to private data
+Date: Fri, 22 Aug 2008 21:57:55 +0200
+Cc: John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <4896381c.abQmtcnBFB3TpLyf%Larry.Finger@lwfinger.net> <200808062321.53120.chunkeey@web.de> <489A4829.5080704@lwfinger.net>
+In-Reply-To: <489A4829.5080704@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200808222157.55851.chunkeey@web.de> (sfid-20080822_215502_884694_F0D82010)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove Atheros 11n devices from being claimed by ath5k as its
-now handled by ath9k.
+On Thursday 07 August 2008 02:56:09 Larry Finger wrote:
+> Chr wrote:
+> > Well the reason why there isn't any bug report about it is maybe
+> > because unlike most other devices we don't program one single
+> > setting per time, but always a "group of similar ones" at once so
+> > the device should always be in a sane state in theory.
+> >
+> > So as long as mac80211 provides at least some kind of protection
+> > against it's own concurrency, we are in save waters even without
+> > any fancy kind of locking.
+> >
+> > Regards,
+> > 	Chr
+>
+> For the config callback, mac80211 does not protect against concurrency. We
+> learned that with rtl8187, where this routine ran somewhat longer. After
+> the power setting routine was added to the wext interface in mac80211, the
+> driver broke due to concurrent calls to the config routine and was fixed by
+> just this kind of mutex, which is why I added this protection for p54.
+>
+I just got a reply from an anonymous p54pci (2.6.27-rc4) user, with the 
+following problem:
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath5k/base.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+INFO: task prism54pci:10881 blocked for more than 120 seconds.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+prism54pci    D 0000000000000001     0 10881      2
+ffff8800780dbde0 0000000000000046 0000000000000000 ffffffff802375cb
+ffffffff80778740 0000000000000286 ffff88007c632f38 ffff88007c5d8b40
+ffffffff806c2330 ffff88007c5d8d70 0000000001018740 ffff88007c5d8d70
+Call Trace:
+[<ffffffff802375cb>] __mod_timer+0xb7/0xc5
+[<ffffffff802297d7>] dequeue_task_fair+0x4d/0xce
+[<ffffffff805446ff>] __mutex_lock_slowpath+0x6a/0xa0
+[<ffffffff805445a9>] mutex_lock+0x1a/0x1e
+[<ffffffffa01d48f0>] p54_config+0x1a/0x46 [p54common]
+[<ffffffffa01a7e73>] ieee80211_sta_scan_work+0xf8/0x1b8 [mac80211]
+[<ffffffffa01a7d7b>] ieee80211_sta_scan_work+0x0/0x1b8 [mac80211]
+[<ffffffff8023d158>] run_workqueue+0x79/0xfe
+[<ffffffff8023d42e>] worker_thread+0x96/0xa5
+[<ffffffff8024056c>] autoremove_wake_function+0x0/0x2e
+[<ffffffff8023d398>] worker_thread+0x0/0xa5
+[<ffffffff8024025a>] kthread+0x47/0x73
+[<ffffffff8022c919>] schedule_tail+0x27/0x5f
+[<ffffffff8020c279>] child_rip+0xa/0x11
+[<ffffffff80240213>] kthread+0x0/0x73
+[<ffffffff8020c26f>] child_rip+0x0/0x11
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 0c948ca..b362c48 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -95,8 +95,6 @@ static struct pci_device_id ath5k_pci_id_table[] __devinitdata = {
- 	{ PCI_VDEVICE(ATHEROS, 0x001a), .driver_data = AR5K_AR5212 }, /* 2413 Griffin-lite */
- 	{ PCI_VDEVICE(ATHEROS, 0x001b), .driver_data = AR5K_AR5212 }, /* 5413 Eagle */
- 	{ PCI_VDEVICE(ATHEROS, 0x001c), .driver_data = AR5K_AR5212 }, /* 5424 Condor (PCI-E)*/
--	{ PCI_VDEVICE(ATHEROS, 0x0023), .driver_data = AR5K_AR5212 }, /* 5416 */
--	{ PCI_VDEVICE(ATHEROS, 0x0024), .driver_data = AR5K_AR5212 }, /* 5418 */
- 	{ 0 }
- };
- MODULE_DEVICE_TABLE(pci, ath5k_pci_id_table);
--- 
-1.5.6.rc2.15.g457bb.dirty
+I have no idea going on here since locking is so simple here that it
+shouldn't misbehave at all!?!
 
+Regards,
+	Chr
