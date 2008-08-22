@@ -1,80 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:38321 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753203AbYHNRlL (ORCPT
+Received: from rhun.apana.org.au ([64.62.148.172]:48278 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751611AbYHVHlY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2008 13:41:11 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so461794fgg.17
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Aug 2008 10:41:11 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net, dcbw@redhat.com
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Subject: [PATCHv2 6/6] libertas_tf: config and makefile
-Date: Thu, 14 Aug 2008 10:41:10 -0700 (PDT)
-Message-ID: <48a46e36.1438560a.295d.ffff8e22@mx.google.com> (sfid-20080814_194115_243602_0FD587A7)
+	Fri, 22 Aug 2008 03:41:24 -0400
+Date: Fri, 22 Aug 2008 17:41:15 +1000
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: David Miller <davem@davemloft.net>
+Cc: hadi@cyberus.ca, kaber@trash.net, netdev@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in RCU.
+Message-ID: <20080822074115.GB25615@gondor.apana.org.au> (sfid-20080822_094128_778599_3D3F4C64)
+References: <20080721.100821.38432201.davem@davemloft.net> <20080721171141.GA13573@gondor.apana.org.au> <20080822065655.GA18471@gondor.apana.org.au> <20080822.001620.141235108.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080822.001620.141235108.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Aug 22, 2008 at 12:16:20AM -0700, David Miller wrote:
+> 
+> I suppose you're talking about the grand unified flow cache
+> that never gets implemented right?  I classify that in the
+> same category as net channels at the moment, theoretically
+> very interesting but no practical implementation in sight.
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
----
- drivers/net/wireless/Kconfig              |   13 +++++++++++++
- drivers/net/wireless/Makefile             |    2 ++
- drivers/net/wireless/libertas_tf/Makefile |    6 ++++++
- 3 files changed, 21 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/libertas_tf/Makefile
+In any case, we could implement what I suggested even without
+a flow cache, by simply storing the info in the dst.  This means
+that all flows on the same dst will end up in the same queue, which
+is not as good as what a flow cache could give, but it's useful
+enough to be an option.
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index fcbd2cf..2405c54 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -300,6 +300,19 @@ config LIBERTAS_DEBUG
- 	---help---
- 	  Debugging support.
- 
-+config LIBERTAS_THINFIRM
-+	tristate "Marvell 8xxx Libertas WLAN driver support with thin firmware"
-+	depends on WLAN_80211 && MAC80211
-+	select FW_LOADER
-+	---help---
-+	  A library for Marvell Libertas 8xxx devices using thinfirm.
-+
-+config LIBERTAS_THINFIRM_USB
-+	tristate "Marvell Libertas 8388 USB 802.11b/g cards with thin firmware"
-+	depends on LIBERTAS_THINFIRM && USB
-+	---help---
-+	  A driver for Marvell Libertas 8388 USB devices using thinfirm.
-+
- config AIRO
- 	tristate "Cisco/Aironet 34X/35X/4500/4800 ISA and PCI cards"
- 	depends on ISA_DMA_API && WLAN_80211 && (PCI || BROKEN)
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 4a53d1d..ac3faa8 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -50,6 +50,8 @@ obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
- obj-$(CONFIG_USB_ZD1201)	+= zd1201.o
- obj-$(CONFIG_LIBERTAS)		+= libertas/
- 
-+obj-$(CONFIG_LIBERTAS_THINFIRM)	+= libertas_tf/
-+
- rtl8180-objs		:= rtl8180_dev.o rtl8180_rtl8225.o rtl8180_sa2400.o rtl8180_max2820.o rtl8180_grf5101.o
- rtl8187-objs		:= rtl8187_dev.o rtl8187_rtl8225.o
- 
-diff --git a/drivers/net/wireless/libertas_tf/Makefile b/drivers/net/wireless/libertas_tf/Makefile
-new file mode 100644
-index 0000000..ff5544d
---- /dev/null
-+++ b/drivers/net/wireless/libertas_tf/Makefile
-@@ -0,0 +1,6 @@
-+libertas_tf-objs := main.o cmd.o
-+
-+libertas_tf_usb-objs += if_usb.o
-+
-+obj-$(CONFIG_LIBERTAS_THINFIRM) += libertas_tf.o
-+obj-$(CONFIG_LIBERTAS_THINFIRM_USB) += libertas_tf_usb.o
+Cheers,
 -- 
-1.5.4.3
-
-
-
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
