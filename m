@@ -1,62 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.236]:40508 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761AbYHVNwJ (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:49164 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752748AbYHVLGG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2008 09:52:09 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so443507rvb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2008 06:52:08 -0700 (PDT)
-Subject: Re: [PATCH 20/31]: pkt_sched: Perform bulk of qdisc destruction in
-	RCU.
-From: jamal <hadi@cyberus.ca>
-Reply-To: hadi@cyberus.ca
-To: David Miller <davem@davemloft.net>
-Cc: herbert@gondor.apana.org.au, kaber@trash.net,
-	netdev@vger.kernel.org, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080822.034217.135152551.davem@davemloft.net>
-References: <20080822065655.GA18471@gondor.apana.org.au>
-	 <20080822.001620.141235108.davem@davemloft.net>
-	 <20080822074115.GB25615@gondor.apana.org.au>
-	 <20080822.034217.135152551.davem@davemloft.net>
-Content-Type: text/plain
-Date: Fri, 22 Aug 2008 09:52:05 -0400
-Message-Id: <1219413125.4672.39.camel@localhost> (sfid-20080822_155214_562659_6EAB93E9)
-Mime-Version: 1.0
+	Fri, 22 Aug 2008 07:06:06 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so33540eyi.37
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2008 04:06:05 -0700 (PDT)
+Message-ID: <14b026160808220406q51069496u98de6ed57c7f13a4@mail.gmail.com> (sfid-20080822_130611_727206_3359D6A5)
+Date: Fri, 22 Aug 2008 13:06:05 +0200
+From: "=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?=" <zajec5polish@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: [PATCH RFT] b43: Rewrite PHY API for N-PHY/LP-PHY
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+In-Reply-To: <200808160029.56876.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <200808160029.56876.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-22-08 at 03:42 -0700, David Miller wrote:
-
-> I had another idea in the back of my head that I wanted to mention.
-> 
-> The SKB has a hash, and sources set the hash.  It doesn't matter
-> where in the stack it comes from.
-> 
-> At transmit time, the select queue logic in dev_queue_xmit() will use
-> the SKB hash if one has been set already.  Otherwise it will do the
-> hashing it does currently.
-> 
-> So in the simplest case for forwarding, the RX side puts the RSS
-> hash or whatever into this SKB hash location.
-> 
-
-Makes sense. 
-In the case Herbert described, I am assuming that the RSS side could be
-configured to select a processor statically (MSI or otherwise). And that
-the hash value will be that of the processorid ego the tx queue
-selected.
-
-> Then, taking things to the next level, protocols set hashes for
-> locally created packets.  And this leads to being able to delete
-> the simple_tx_hash() code entirely and also we won't have to add
-> support for every protocol on the planet to that function. :)
-> 
-
-Well, conntrack could be useful (as long as you dont make it mandatory)
-since it already keeps track of flows.
-When unresolved, one could add it to some default queue.
-
-cheers,
-jamal
-
+MjAwOC84LzE2IE1pY2hhZWwgQnVlc2NoIDxtYkBidTNzY2guZGU+Ogo+IFRoaXMgaXMgdGhlIGZp
+cnN0IHBhcnQgZm9yIHRoZSByZXdyaXRlIG9mIHRoZSBiNDMgUEhZIEFQSS4KPiBUaGlzIGlzIG5l
+ZWRlZCBpbiBvcmRlciB0byBtYWtlIGRldmVsb3BtZW50IG9mIE4gYW5kIExQIGNvZGUgcG9zc2li
+bGUuCj4KPiBQTEVBU0UgVEVTVCBURVNUIFRFU1QgVEVTVCBURVNUCj4KPiBMb3RzIG9mIHRlc3Rp
+bmcgb24gbG90cyBvZiBkaWZmZXJlbnQgZGV2aWNlcyBpcyBuZWVkZWQgdG8gZW5zdXJlIHRoaXMK
+PiBkb2Vzbid0IGludHJvZHVjZSByZWdyZXNzaW9ucyBkdWUgdG8gdHlwb3MuCj4gOTUlIG9mIHRo
+ZSBwYXRjaCBqdXN0IG1vdmVzIGxhcmdlIHBhcnRzIG9mIHRoZSBQSFkgY29kZSBmcm9tIG9uZSBm
+aWxlCj4gdG8gYW5vdGhlci4gTW9yZSBtb3ZlLXBhdGNoZXMgd2lsbCBmb2xsb3cuCj4gNSUgb2Yg
+dGhlIHBhdGNoIGludHJvZHVjZXMgYW4gIm9wcyIgYmFzZWQgUEhZIEFQSS4KPgo+IFBsZWFzZSB0
+ZXN0IG9uIGFsbCBvZiB5b3VyIGRldmljZXMuCj4KPiBodHRwOi8vYnUzc2NoLmRlL3BhdGNoZXMv
+d2lyZWxlc3MtdGVzdGluZy8yMDA4MDgxNi0wMDIzL3BhdGNoZXMvMDAyLWI0My1waHktb3BzLnBh
+dGNoCj4gQXBwbHkgYWdhaW5zdCB3aXJlbGVzcy10ZXN0aW5nLmdpdAoKQXBwbGllZCB0byB0b2Rh
+eSB3aXJlbGVzcy10ZXN0aW5nIGdpdC4gQ29ubmVjdGVkIHRvIG15IEFQIHdpdGhvdXQKcHJvYmxl
+bSwgY29ubmVjdGlvbiBzdGFibGUgZm9yIDkwbWluIGFuZCA2MDBNQiBvZiBkb3dubG9hZC4gSSBk
+aWRuJ3QKdGVzdCBzcGVlZCBwZXJmb3JtYW5jZSBhcyBteSBhbnRlbm5hIGluIGJyb2tlbi4gU28g
+ZXZlcnl0aGluZyBzZWVtcyB0bwp3b3JrIGZpbmUgZm9yIG1lLgoKYjQzLXBjaS1icmlkZ2UgMDAw
+MDowNjowNS4wOiBQQ0kgSU5UIEEgLT4gR1NJIDIxIChsZXZlbCwgbG93KSAtPiBJUlEgMjEKYjQz
+LXBoeTA6IEJyb2FkY29tIDQzMTggV0xBTiBmb3VuZApiNDMtcGh5MCBkZWJ1ZzogRm91bmQgUEhZ
+OiBBbmFsb2cgMywgVHlwZSAyLCBSZXZpc2lvbiA3CmI0My1waHkwIGRlYnVnOiBGb3VuZCBSYWRp
+bzogTWFudWYgMHgxN0YsIFZlcnNpb24gMHgyMDUwLCBSZXZpc2lvbiA4CmlucHV0OiBiNDMtcGh5
+MCBhcyAvZGV2aWNlcy92aXJ0dWFsL2lucHV0L2lucHV0OApmaXJtd2FyZTogcmVxdWVzdGluZyBi
+NDMvdWNvZGU1LmZ3CmZpcm13YXJlOiByZXF1ZXN0aW5nIGI0My9wY201LmZ3CmZpcm13YXJlOiBy
+ZXF1ZXN0aW5nIGI0My9iMGcwaW5pdHZhbHM1LmZ3CmZpcm13YXJlOiByZXF1ZXN0aW5nIGI0My9i
+MGcwYnNpbml0dmFsczUuZncKYjQzLXBoeTA6IExvYWRpbmcgZmlybXdhcmUgdmVyc2lvbiA0MTAu
+MjE2MCAoMjAwNy0wNS0yNiAxNTozMjoxMCkKYjQzLXBoeTAgZGVidWc6IENoaXAgaW5pdGlhbGl6
+ZWQKYjQzLXBoeTAgZGVidWc6IDMyLWJpdCBETUEgaW5pdGlhbGl6ZWQKUmVnaXN0ZXJlZCBsZWQg
+ZGV2aWNlOiBiNDMtcGh5MDo6dHgKUmVnaXN0ZXJlZCBsZWQgZGV2aWNlOiBiNDMtcGh5MDo6cngK
+UmVnaXN0ZXJlZCBsZWQgZGV2aWNlOiBiNDMtcGh5MDo6cmFkaW8KYjQzLXBoeTAgZGVidWc6IFdp
+cmVsZXNzIGludGVyZmFjZSBzdGFydGVkCmI0My1waHkwIGRlYnVnOiBBZGRpbmcgSW50ZXJmYWNl
+IHR5cGUgMgpiNDMtcGh5MDogUmFkaW8gdHVybmVkIG9uIGJ5IHNvZnR3YXJlCgotLSAKUmFmYcWC
+IE1pxYJlY2tpCg==
