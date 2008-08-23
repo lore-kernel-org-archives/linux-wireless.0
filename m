@@ -1,420 +1,307 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from usul.saidi.cx ([204.11.33.34]:33933 "EHLO usul.overt.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752505AbYH3P4n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Aug 2008 11:56:43 -0400
-Message-ID: <42593.67.164.5.76.1220111859.squirrel@overt.org> (sfid-20080830_175648_258342_98094F35)
-Date: Sat, 30 Aug 2008 11:57:39 -0400 (EDT)
-Subject: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
-     through rfkill (v8)
-From: philipl@overt.org
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	"LKML" <linux-kernel@vger.kernel.org>, toshiba_acpi@memebeam.org
-Cc: "Ivo van Doorn" <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
-	"Matthew Garrett" <mjg59@srcf.ucam.org>
+Received: from fmmailgate02.web.de ([217.72.192.227]:59548 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755567AbYHWUM0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Aug 2008 16:12:26 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] p54: fix rssi auto calibration
+Date: Sat, 23 Aug 2008 22:15:25 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200808232215.26360.chunkeey@web.de> (sfid-20080823_221246_368582_483004D8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's been a patch floating around for toshiba_acpi that exports an ad-hoc
-/proc interface to toggle the bluetooth adapter in a large number of Toshiba
-laptops. I'm not sure if it's still relevant for the latest models, but it is
-still required for older models such as my Tecra M3.
+Ever wondered why the signal was so bad with p54 compared to madwifi, or intel?
 
-This change pulls in the low level Toshiba-specific code from the old patch and
-sets up an rfkill device and a polled input device to track the state of the
-hardware kill-switch.
+Well, if you have revision 1 rssi calibration curve points in your EEPROM, then wonder no more.
+The firmware wants a extra 1 byte padding for every curve point. But someone forgot to put 
+them into the EEPROM's data structure...
 
-Signed-off-by: Philip Langdale <philipl@overt.org>
-Acked-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+So now, big question: what happens when we blindly "memcpy" these data points?
+
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 ---
- Kconfig        |    3
- toshiba_acpi.c |  261 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 256 insertions(+), 8 deletions(-)
+John,
 
-diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-index 735f5ea..12cf5d4 100644
---- a/drivers/acpi/Kconfig
-+++ b/drivers/acpi/Kconfig
-@@ -260,6 +260,9 @@ config ACPI_ASUS
- config ACPI_TOSHIBA
- 	tristate "Toshiba Laptop Extras"
- 	depends on X86
-+	select INPUT_POLLDEV
-+	select NET
-+	select RFKILL
- 	select BACKLIGHT_CLASS_DEVICE
- 	---help---
- 	  This driver adds support for access to certain system settings
-diff --git a/drivers/acpi/toshiba_acpi.c b/drivers/acpi/toshiba_acpi.c
-index 0a43c8e..8a649f4 100644
---- a/drivers/acpi/toshiba_acpi.c
-+++ b/drivers/acpi/toshiba_acpi.c
-@@ -3,6 +3,7 @@
-  *
-  *
-  *  Copyright (C) 2002-2004 John Belmonte
-+ *  Copyright (C) 2008 Philip Langdale
-  *
-  *  This program is free software; you can redistribute it and/or modify
-  *  it under the terms of the GNU General Public License as published by
-@@ -33,7 +34,7 @@
-  *
-  */
-
--#define TOSHIBA_ACPI_VERSION	"0.18"
-+#define TOSHIBA_ACPI_VERSION	"0.19"
- #define PROC_INTERFACE_VERSION	1
-
- #include <linux/kernel.h>
-@@ -42,6 +43,9 @@
- #include <linux/types.h>
- #include <linux/proc_fs.h>
- #include <linux/backlight.h>
-+#include <linux/platform_device.h>
-+#include <linux/rfkill.h>
-+#include <linux/input-polldev.h>
-
- #include <asm/uaccess.h>
-
-@@ -90,6 +94,7 @@ MODULE_LICENSE("GPL");
- #define HCI_VIDEO_OUT			0x001c
- #define HCI_HOTKEY_EVENT		0x001e
- #define HCI_LCD_BRIGHTNESS		0x002a
-+#define HCI_WIRELESS			0x0056
-
- /* field definitions */
- #define HCI_LCD_BRIGHTNESS_BITS		3
-@@ -98,9 +103,14 @@ MODULE_LICENSE("GPL");
- #define HCI_VIDEO_OUT_LCD		0x1
- #define HCI_VIDEO_OUT_CRT		0x2
- #define HCI_VIDEO_OUT_TV		0x4
-+#define HCI_WIRELESS_KILL_SWITCH	0x01
-+#define HCI_WIRELESS_BT_PRESENT		0x0f
-+#define HCI_WIRELESS_BT_ATTACH		0x40
-+#define HCI_WIRELESS_BT_POWER		0x80
-
- static const struct acpi_device_id toshiba_device_ids[] = {
- 	{"TOS6200", 0},
-+	{"TOS6208", 0},
- 	{"TOS1900", 0},
- 	{"", 0},
- };
-@@ -193,7 +203,7 @@ static acpi_status hci_raw(const u32 in[HCI_WORDS], u32 out[HCI_WORDS])
- 	return status;
+I think you should put this into -next... since the bug sounds more terrifying than it really is.
+---
+diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+--- a/drivers/net/wireless/p54/p54common.c	2008-08-23 21:11:07.000000000 +0200
++++ b/drivers/net/wireless/p54/p54common.c	2008-08-23 21:13:37.000000000 +0200
+@@ -155,14 +155,14 @@ void p54_parse_firmware(struct ieee80211
  }
-
--/* common hci tasks (get or set one value)
-+/* common hci tasks (get or set one or two value)
-  *
-  * In addition to the ACPI status, the HCI system returns a result which
-  * may be useful (such as "not supported").
-@@ -218,6 +228,152 @@ static acpi_status hci_read1(u32 reg, u32 * out1, u32 * result)
- 	return status;
- }
-
-+static acpi_status hci_write2(u32 reg, u32 in1, u32 in2, u32 *result)
-+{
-+	u32 in[HCI_WORDS] = { HCI_SET, reg, in1, in2, 0, 0 };
-+	u32 out[HCI_WORDS];
-+	acpi_status status = hci_raw(in, out);
-+	*result = (status == AE_OK) ? out[0] : HCI_FAILURE;
-+	return status;
-+}
-+
-+static acpi_status hci_read2(u32 reg, u32 *out1, u32 *out2, u32 *result)
-+{
-+	u32 in[HCI_WORDS] = { HCI_GET, reg, *out1, *out2, 0, 0 };
-+	u32 out[HCI_WORDS];
-+	acpi_status status = hci_raw(in, out);
-+	*out1 = out[2];
-+	*out2 = out[3];
-+	*result = (status == AE_OK) ? out[0] : HCI_FAILURE;
-+	return status;
-+}
-+
-+struct toshiba_acpi_dev {
-+	struct platform_device *p_dev;
-+	struct rfkill *rfk_dev;
-+	struct input_polled_dev *poll_dev;
-+
-+	const char *bt_name;
-+	const char *rfk_name;
-+
-+	bool last_rfk_state;
-+
-+	struct mutex mutex;
-+};
-+
-+static struct toshiba_acpi_dev toshiba_acpi = {
-+	.bt_name = "Toshiba Bluetooth",
-+	.rfk_name = "Toshiba RFKill Switch",
-+	.last_rfk_state = false,
-+};
-+
-+/* Bluetooth rfkill handlers */
-+
-+static u32 hci_get_bt_present(bool *present)
-+{
-+	u32 hci_result;
-+	u32 value, value2;
-+
-+	value = 0;
-+	value2 = 0;
-+	hci_read2(HCI_WIRELESS, &value, &value2, &hci_result);
-+	if (hci_result == HCI_SUCCESS)
-+		*present = (value & HCI_WIRELESS_BT_PRESENT) ? true : false;
-+
-+	return hci_result;
-+}
-+
-+static u32 hci_get_bt_on(bool *on)
-+{
-+	u32 hci_result;
-+	u32 value, value2;
-+
-+	value = 0;
-+	value2 = 0x0001;
-+	hci_read2(HCI_WIRELESS, &value, &value2, &hci_result);
-+	if (hci_result == HCI_SUCCESS)
-+		*on = (value & HCI_WIRELESS_BT_POWER) &&
-+		      (value & HCI_WIRELESS_BT_ATTACH);
-+
-+	return hci_result;
-+}
-+
-+static u32 hci_get_radio_state(bool *radio_state)
-+{
-+	u32 hci_result;
-+	u32 value, value2;
-+
-+	value = 0;
-+	value2 = 0x0001;
-+	hci_read2(HCI_WIRELESS, &value, &value2, &hci_result);
-+
-+	*radio_state = value & HCI_WIRELESS_KILL_SWITCH;
-+	return hci_result;
-+}
-+
-+static int bt_rfkill_toggle_radio(void *data, enum rfkill_state state)
-+{
-+	u32 result1, result2;
-+	u32 value;
-+	bool radio_state;
-+	struct toshiba_acpi_dev *dev = data;
-+
-+	value = (state == RFKILL_STATE_UNBLOCKED);
-+
-+	if (hci_get_radio_state(&radio_state) != HCI_SUCCESS)
-+		return -EFAULT;
-+
-+	switch (state) {
-+	case RFKILL_STATE_UNBLOCKED:
-+		if (!radio_state)
-+			return -EPERM;
-+		break;
-+	case RFKILL_STATE_SOFT_BLOCKED:
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	mutex_lock(&dev->mutex);
-+	hci_write2(HCI_WIRELESS, value, HCI_WIRELESS_BT_POWER, &result1);
-+	hci_write2(HCI_WIRELESS, value, HCI_WIRELESS_BT_ATTACH, &result2);
-+	mutex_unlock(&dev->mutex);
-+
-+	if (result1 != HCI_SUCCESS || result2 != HCI_SUCCESS)
-+		return -EFAULT;
-+
-+	return 0;
-+}
-+
-+static void bt_poll_rfkill(struct input_polled_dev *poll_dev)
-+{
-+	bool state_changed;
-+	bool new_rfk_state;
-+	bool value;
-+	u32 hci_result;
-+	struct toshiba_acpi_dev *dev = poll_dev->private;
-+
-+	hci_result = hci_get_radio_state(&value);
-+	if (hci_result != HCI_SUCCESS)
-+		return; /* Can't do anything useful */
-+
-+	new_rfk_state = value;
-+
-+	mutex_lock(&dev->mutex);
-+	state_changed = new_rfk_state != dev->last_rfk_state;
-+	dev->last_rfk_state = new_rfk_state;
-+	mutex_unlock(&dev->mutex);
-+
-+	if (unlikely(state_changed)) {
-+		rfkill_force_state(dev->rfk_dev,
-+				   new_rfk_state ?
-+				   RFKILL_STATE_SOFT_BLOCKED :
-+				   RFKILL_STATE_HARD_BLOCKED);
-+		input_report_switch(poll_dev->input, SW_RFKILL_ALL,
-+				    new_rfk_state);
-+	}
-+}
-+
- static struct proc_dir_entry *toshiba_proc_dir /*= 0*/ ;
- static struct backlight_device *toshiba_backlight_device;
- static int force_fan;
-@@ -547,6 +703,14 @@ static struct backlight_ops toshiba_backlight_data = {
-
- static void toshiba_acpi_exit(void)
+ EXPORT_SYMBOL_GPL(p54_parse_firmware);
+ 
+-static int p54_convert_rev0_to_rev1(struct ieee80211_hw *dev,
+-				    struct pda_pa_curve_data *curve_data)
++static int p54_convert_rev0(struct ieee80211_hw *dev,
++			    struct pda_pa_curve_data *curve_data)
  {
-+	if (toshiba_acpi.poll_dev) {
-+		input_unregister_polled_device(toshiba_acpi.poll_dev);
-+		input_free_polled_device(toshiba_acpi.poll_dev);
-+	}
-+
-+	if (toshiba_acpi.rfk_dev)
-+		rfkill_unregister(toshiba_acpi.rfk_dev);
-+
- 	if (toshiba_backlight_device)
- 		backlight_device_unregister(toshiba_backlight_device);
-
-@@ -555,6 +719,8 @@ static void toshiba_acpi_exit(void)
- 	if (toshiba_proc_dir)
- 		remove_proc_entry(PROC_TOSHIBA, acpi_root_dir);
-
-+	platform_device_unregister(toshiba_acpi.p_dev);
-+
- 	return;
+ 	struct p54_common *priv = dev->priv;
+-	struct pda_pa_curve_data_sample_rev1 *rev1;
+-	struct pda_pa_curve_data_sample_rev0 *rev0;
++	struct p54_pa_curve_data_sample *dst;
++	struct pda_pa_curve_data_sample_rev0 *src;
+ 	size_t cd_len = sizeof(*curve_data) +
+-		(curve_data->points_per_channel*sizeof(*rev1) + 2) *
++		(curve_data->points_per_channel*sizeof(*dst) + 2) *
+ 		 curve_data->channels;
+ 	unsigned int i, j;
+ 	void *source, *target;
+@@ -180,27 +180,63 @@ static int p54_convert_rev0_to_rev1(stru
+ 		*((__le16 *)target) = *freq;
+ 		target += sizeof(__le16);
+ 		for (j = 0; j < curve_data->points_per_channel; j++) {
+-			rev1 = target;
+-			rev0 = source;
++			dst = target;
++			src = source;
+ 
+-			rev1->rf_power = rev0->rf_power;
+-			rev1->pa_detector = rev0->pa_detector;
+-			rev1->data_64qam = rev0->pcv;
++			dst->rf_power = src->rf_power;
++			dst->pa_detector = src->pa_detector;
++			dst->data_64qam = src->pcv;
+ 			/* "invent" the points for the other modulations */
+ #define SUB(x,y) (u8)((x) - (y)) > (x) ? 0 : (x) - (y)
+-			rev1->data_16qam = SUB(rev0->pcv, 12);
+-			rev1->data_qpsk  = SUB(rev1->data_16qam, 12);
+-			rev1->data_bpsk  = SUB(rev1->data_qpsk, 12);
+-			rev1->data_barker= SUB(rev1->data_bpsk, 14);
++			dst->data_16qam = SUB(src->pcv, 12);
++			dst->data_qpsk = SUB(dst->data_16qam, 12);
++			dst->data_bpsk = SUB(dst->data_qpsk, 12);
++			dst->data_barker = SUB(dst->data_bpsk, 14);
+ #undef SUB
+-			target += sizeof(*rev1);
+-			source += sizeof(*rev0);
++			target += sizeof(*dst);
++			source += sizeof(*src);
+ 		}
+ 	}
+ 
+ 	return 0;
  }
-
-@@ -562,6 +728,10 @@ static int __init toshiba_acpi_init(void)
- {
- 	acpi_status status = AE_OK;
- 	u32 hci_result;
-+	bool bt_present;
-+	bool bt_on;
-+	bool radio_on;
-+	int ret = 0;
-
- 	if (acpi_disabled)
- 		return -ENODEV;
-@@ -578,6 +748,18 @@ static int __init toshiba_acpi_init(void)
- 	       TOSHIBA_ACPI_VERSION);
- 	printk(MY_INFO "    HCI method: %s\n", method_hci);
-
-+	mutex_init(&toshiba_acpi.mutex);
+ 
++static int p54_convert_rev1(struct ieee80211_hw *dev,
++			    struct pda_pa_curve_data *curve_data)
++{
++	struct p54_common *priv = dev->priv;
++	struct p54_pa_curve_data_sample *dst;
++	struct pda_pa_curve_data_sample_rev1 *src;
++	size_t cd_len = sizeof(*curve_data) +
++		(curve_data->points_per_channel*sizeof(*dst) + 2) *
++		 curve_data->channels;
++	unsigned int i, j;
++	void *source, *target;
 +
-+	toshiba_acpi.p_dev = platform_device_register_simple("toshiba_acpi",
-+							      -1, NULL, 0);
-+	if (IS_ERR(toshiba_acpi.p_dev)) {
-+		ret = PTR_ERR(toshiba_acpi.p_dev);
-+		printk(MY_ERR "unable to register platform device\n");
-+		toshiba_acpi.p_dev = NULL;
-+		toshiba_acpi_exit();
-+		return ret;
-+	}
-+
- 	force_fan = 0;
- 	key_event_valid = 0;
-
-@@ -586,19 +768,23 @@ static int __init toshiba_acpi_init(void)
-
- 	toshiba_proc_dir = proc_mkdir(PROC_TOSHIBA, acpi_root_dir);
- 	if (!toshiba_proc_dir) {
--		status = AE_ERROR;
-+		toshiba_acpi_exit();
-+		return -ENODEV;
- 	} else {
- 		toshiba_proc_dir->owner = THIS_MODULE;
- 		status = add_device();
--		if (ACPI_FAILURE(status))
--			remove_proc_entry(PROC_TOSHIBA, acpi_root_dir);
-+		if (ACPI_FAILURE(status)) {
-+			toshiba_acpi_exit();
-+			return -ENODEV;
-+		}
- 	}
-
--	toshiba_backlight_device = backlight_device_register("toshiba",NULL,
-+	toshiba_backlight_device = backlight_device_register("toshiba",
-+						&toshiba_acpi.p_dev->dev,
- 						NULL,
- 						&toshiba_backlight_data);
-         if (IS_ERR(toshiba_backlight_device)) {
--		int ret = PTR_ERR(toshiba_backlight_device);
-+		ret = PTR_ERR(toshiba_backlight_device);
-
- 		printk(KERN_ERR "Could not register toshiba backlight device\n");
- 		toshiba_backlight_device = NULL;
-@@ -607,7 +793,66 @@ static int __init toshiba_acpi_init(void)
- 	}
-         toshiba_backlight_device->props.max_brightness = HCI_LCD_BRIGHTNESS_LEVELS - 1;
-
--	return (ACPI_SUCCESS(status)) ? 0 : -ENODEV;
-+	/* Register rfkill switch for Bluetooth */
-+	if (hci_get_bt_present(&bt_present) == HCI_SUCCESS && bt_present) {
-+		toshiba_acpi.rfk_dev = rfkill_allocate(&toshiba_acpi.p_dev->dev,
-+							RFKILL_TYPE_BLUETOOTH);
-+		if (!toshiba_acpi.rfk_dev) {
-+			printk(MY_ERR "unable to allocate rfkill device\n");
-+			toshiba_acpi_exit();
-+			return -ENOMEM;
-+		}
-+
-+		toshiba_acpi.rfk_dev->name = toshiba_acpi.bt_name;
-+		toshiba_acpi.rfk_dev->toggle_radio = bt_rfkill_toggle_radio;
-+		toshiba_acpi.rfk_dev->user_claim_unsupported = 1;
-+		toshiba_acpi.rfk_dev->data = &toshiba_acpi;
-+
-+		if (hci_get_bt_on(&bt_on) == HCI_SUCCESS && bt_on) {
-+			toshiba_acpi.rfk_dev->state = RFKILL_STATE_UNBLOCKED;
-+		} else if (hci_get_radio_state(&radio_on) == HCI_SUCCESS &&
-+			   radio_on) {
-+			toshiba_acpi.rfk_dev->state = RFKILL_STATE_SOFT_BLOCKED;
-+		} else {
-+			toshiba_acpi.rfk_dev->state = RFKILL_STATE_HARD_BLOCKED;
-+		}
-+
-+		ret = rfkill_register(toshiba_acpi.rfk_dev);
-+		if (ret) {
-+			printk(MY_ERR "unable to register rfkill device\n");
-+			toshiba_acpi_exit();
-+			return -ENOMEM;
-+		}
-+	}
-+
-+	/* Register input device for kill switch */
-+	toshiba_acpi.poll_dev = input_allocate_polled_device();
-+	if (!toshiba_acpi.poll_dev) {
-+		printk(MY_ERR "unable to allocate kill-switch input device\n");
-+		toshiba_acpi_exit();
++	priv->curve_data = kmalloc(cd_len, GFP_KERNEL);
++	if (!priv->curve_data)
 +		return -ENOMEM;
-+	}
-+	toshiba_acpi.poll_dev->private = &toshiba_acpi;
-+	toshiba_acpi.poll_dev->poll = bt_poll_rfkill;
-+	toshiba_acpi.poll_dev->poll_interval = 1000; /* msecs */
 +
-+	toshiba_acpi.poll_dev->input->name = toshiba_acpi.rfk_name;
-+	toshiba_acpi.poll_dev->input->id.bustype = BUS_HOST;
-+	toshiba_acpi.poll_dev->input->id.vendor = 0x0930; /* Toshiba USB ID */
-+	set_bit(EV_SW, toshiba_acpi.poll_dev->input->evbit);
-+	set_bit(SW_RFKILL_ALL, toshiba_acpi.poll_dev->input->swbit);
-+	input_report_switch(toshiba_acpi.poll_dev->input, SW_RFKILL_ALL, TRUE);
++	memcpy(priv->curve_data, curve_data, sizeof(*curve_data));
++	source = curve_data->data;
++	target = priv->curve_data->data;
++	for (i = 0; i < curve_data->channels; i++) {
++		__le16 *freq = source;
++		source += sizeof(__le16);
++		*((__le16 *)target) = *freq;
++		target += sizeof(__le16);
++		for (j = 0; j < curve_data->points_per_channel; j++) {
++			memcpy(target, source, sizeof(*src));
 +
-+	ret = input_register_polled_device(toshiba_acpi.poll_dev);
-+	if (ret) {
-+		printk(MY_ERR "unable to register kill-switch input device\n");
-+		rfkill_free(toshiba_acpi.rfk_dev);
-+		toshiba_acpi.rfk_dev = NULL;
-+		toshiba_acpi_exit();
-+		return ret;
++			target += sizeof(*dst);
++			source += sizeof(*src);
++		}
++		source++;
 +	}
 +
 +	return 0;
- }
-
- module_init(toshiba_acpi_init);
++}
++
+ int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
+ {
+ 	struct p54_common *priv = dev->priv;
+@@ -250,27 +286,32 @@ int p54_parse_eeprom(struct ieee80211_hw
+ 			       entry->data[1]*sizeof(*priv->output_limit));
+ 			priv->output_limit_len = entry->data[1];
+ 			break;
+-		case PDR_PRISM_PA_CAL_CURVE_DATA:
+-			if (data_len < sizeof(struct pda_pa_curve_data)) {
++		case PDR_PRISM_PA_CAL_CURVE_DATA: {
++			struct pda_pa_curve_data *curve_data =
++				(struct pda_pa_curve_data *)entry->data;
++			if (data_len < sizeof(*curve_data)) {
+ 				err = -EINVAL;
+ 				goto err;
+ 			}
+ 
+-			if (((struct pda_pa_curve_data *)entry->data)->cal_method_rev) {
+-				priv->curve_data = kmalloc(data_len, GFP_KERNEL);
+-				if (!priv->curve_data) {
+-					err = -ENOMEM;
+-					goto err;
+-				}
+-
+-				memcpy(priv->curve_data, entry->data, data_len);
+-			} else {
+-				err = p54_convert_rev0_to_rev1(dev, (struct pda_pa_curve_data *)entry->data);
+-				if (err)
+-					goto err;
++			switch (curve_data->cal_method_rev) {
++			case 0:
++				err = p54_convert_rev0(dev, curve_data);
++				break;
++			case 1:
++				err = p54_convert_rev1(dev, curve_data);
++				break;
++			default:
++				printk(KERN_ERR "p54: unknown curve data "
++						"revision %d\n",
++						curve_data->cal_method_rev);
++				err = -ENODEV;
++				break;
+ 			}
++			if (err)
++				goto err;
+ 
+-			break;
++		}
+ 		case PDR_PRISM_ZIF_TX_IQ_CALIBRATION:
+ 			priv->iq_autocal = kmalloc(data_len, GFP_KERNEL);
+ 			if (!priv->iq_autocal) {
+@@ -672,12 +713,9 @@ static int p54_set_freq(struct ieee80211
+ 	struct p54_control_hdr *hdr;
+ 	struct p54_tx_control_channel *chan;
+ 	unsigned int i;
+-	size_t payload_len = sizeof(*chan) + sizeof(u32)*2 +
+-			     sizeof(*chan->curve_data) *
+-			     priv->curve_data->points_per_channel;
+ 	void *entry;
+ 
+-	hdr = kzalloc(sizeof(*hdr) + payload_len +
++	hdr = kzalloc(sizeof(*hdr) + sizeof(*chan) +
+ 		      priv->tx_hdr_len, GFP_KERNEL);
+ 	if (!hdr)
+ 		return -ENOMEM;
+@@ -689,10 +727,10 @@ static int p54_set_freq(struct ieee80211
+ 	hdr->magic1 = cpu_to_le16(0x8001);
+ 	hdr->len = cpu_to_le16(sizeof(*chan));
+ 	hdr->type = cpu_to_le16(P54_CONTROL_TYPE_CHANNEL_CHANGE);
+-	p54_assign_address(dev, NULL, hdr, sizeof(*hdr) + payload_len);
++	p54_assign_address(dev, NULL, hdr, sizeof(*hdr) + sizeof(*chan));
+ 
+-	chan->magic1 = cpu_to_le16(0x1);
+-	chan->magic2 = cpu_to_le16(0x0);
++	chan->flags = cpu_to_le16(0x1);
++	chan->dwell = cpu_to_le16(0x0);
+ 
+ 	for (i = 0; i < priv->iq_autocal_len; i++) {
+ 		if (priv->iq_autocal[i].freq != freq)
+@@ -710,35 +748,41 @@ static int p54_set_freq(struct ieee80211
+ 			continue;
+ 
+ 		chan->val_barker = 0x38;
+-		chan->val_bpsk = priv->output_limit[i].val_bpsk;
+-		chan->val_qpsk = priv->output_limit[i].val_qpsk;
+-		chan->val_16qam = priv->output_limit[i].val_16qam;
+-		chan->val_64qam = priv->output_limit[i].val_64qam;
++		chan->val_bpsk = chan->dup_bpsk =
++			priv->output_limit[i].val_bpsk;
++		chan->val_qpsk = chan->dup_qpsk =
++			priv->output_limit[i].val_qpsk;
++		chan->val_16qam = chan->dup_16qam =
++			priv->output_limit[i].val_16qam;
++		chan->val_64qam = chan->dup_64qam =
++			priv->output_limit[i].val_64qam;
+ 		break;
+ 	}
+ 	if (i == priv->output_limit_len)
+ 		goto err;
+ 
+-	chan->pa_points_per_curve = priv->curve_data->points_per_channel;
+-
+ 	entry = priv->curve_data->data;
+ 	for (i = 0; i < priv->curve_data->channels; i++) {
+ 		if (*((__le16 *)entry) != freq) {
+ 			entry += sizeof(__le16);
+-			entry += sizeof(struct pda_pa_curve_data_sample_rev1) *
+-				 chan->pa_points_per_curve;
++			entry += sizeof(struct p54_pa_curve_data_sample) *
++				 priv->curve_data->points_per_channel;
+ 			continue;
+ 		}
+ 
+ 		entry += sizeof(__le16);
++		chan->pa_points_per_curve =
++			min(priv->curve_data->points_per_channel, (u8) 8);
++
+ 		memcpy(chan->curve_data, entry, sizeof(*chan->curve_data) *
+ 		       chan->pa_points_per_curve);
+ 		break;
+ 	}
+ 
+-	memcpy(hdr->data + payload_len - 4, &chan->val_bpsk, 4);
++	chan->rssical_mul = cpu_to_le16(130);
++	chan->rssical_add = cpu_to_le16(0xfe70);	/* -400 */
+ 
+-	priv->tx(dev, hdr, sizeof(*hdr) + payload_len, 1);
++	priv->tx(dev, hdr, sizeof(*hdr) + sizeof(*chan), 1);
+ 	return 0;
+ 
+  err:
+diff -Nurp a/drivers/net/wireless/p54/p54common.h b/drivers/net/wireless/p54/p54common.h
+--- a/drivers/net/wireless/p54/p54common.h	2008-08-23 21:11:26.000000000 +0200
++++ b/drivers/net/wireless/p54/p54common.h	2008-08-23 21:10:49.000000000 +0200
+@@ -89,6 +89,16 @@ struct pda_pa_curve_data_sample_rev1 {
+ 	u8 data_qpsk;
+ 	u8 data_16qam;
+ 	u8 data_64qam;
++} __attribute__ ((packed));
++
++struct p54_pa_curve_data_sample {
++	u8 rf_power;
++	u8 pa_detector;
++	u8 data_barker;
++	u8 data_bpsk;
++	u8 data_qpsk;
++	u8 data_16qam;
++	u8 data_64qam;
+ 	u8 padding;
+ } __attribute__ ((packed));
+ 
+@@ -212,8 +222,8 @@ struct p54_tx_control_filter {
+ } __attribute__ ((packed));
+ 
+ struct p54_tx_control_channel {
+-	__le16 magic1;
+-	__le16 magic2;
++	__le16 flags;
++	__le16 dwell;
+ 	u8 padding1[20];
+ 	struct pda_iq_autocal_entry iq_autocal;
+ 	u8 pa_points_per_curve;
+@@ -222,8 +232,13 @@ struct p54_tx_control_channel {
+ 	u8 val_qpsk;
+ 	u8 val_16qam;
+ 	u8 val_64qam;
+-	struct pda_pa_curve_data_sample_rev1 curve_data[0];
+-	/* additional padding/data after curve_data */
++	struct pda_pa_curve_data_sample_rev1 curve_data[8];
++	u8 dup_bpsk;
++	u8 dup_qpsk;
++	u8 dup_16qam;
++	u8 dup_64qam;
++	__le16 rssical_mul;
++	__le16 rssical_add;
+ } __attribute__ ((packed));
+ 
+ struct p54_tx_control_led {
 
