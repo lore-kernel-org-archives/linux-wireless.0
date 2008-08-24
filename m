@@ -1,103 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:29186 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752433AbYHOCEz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2008 22:04:55 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Esti Kummer <ester.kummer@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 09/15] mac80211: change number of pre-assoc scans
-Date: Fri, 15 Aug 2008 10:01:14 +0800
-Message-Id: <1218765680-8378-10-git-send-email-yi.zhu@intel.com> (sfid-20080815_040459_672500_3DBDE9FB)
-In-Reply-To: <1218765680-8378-9-git-send-email-yi.zhu@intel.com>
-References: <1218765680-8378-1-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-2-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-3-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-4-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-5-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-6-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-7-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-8-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-9-git-send-email-yi.zhu@intel.com>
+Received: from fmmailgate02.web.de ([217.72.192.227]:52082 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753052AbYHXTaZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Aug 2008 15:30:25 -0400
+From: Chr <chunkeey@web.de>
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: [PATCH 1/2] p54: take tx_queue's lock in rx_frame_sent
+Date: Sun, 24 Aug 2008 21:32:48 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>
+References: <200808240315.07032.chunkeey@web.de> <48B1874F.2050005@lwfinger.net> <200808241955.05666.mb@bu3sch.de>
+In-Reply-To: <200808241955.05666.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200808242132.49004.chunkeey@web.de> (sfid-20080824_213030_071820_186608F0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+On Sunday 24 August 2008 19:55:05 Michael Buesch wrote:
+> On Sunday 24 August 2008 18:07:43 Larry Finger wrote:
+> > Chr wrote:
+> > > p54_rx_frame_sent will alter the tx_queue. Therefore we should hold
+> > > the lock to protect against concurrent p54_assign_address calls.
+> > >
+> > > Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> > > ---
+> > > hmm,
+> > >
+> > > (looking at [GIT]: Networking debate)
+> > > linux-next. since there is no known regression that this patch could
+> > > possibly fix... ---
+> > > diff -Nurp a/drivers/net/wireless/p54/p54common.c
+> > > b/drivers/net/wireless/p54/p54common.c ---
+> > > a/drivers/net/wireless/p54/p54common.c	2008-08-23 21:13:37.000000000
+> > > +0200 +++ b/drivers/net/wireless/p54/p54common.c	2008-08-24
+> > > 02:11:35.000000000 +0200 @@ -432,7 +432,9 @@ static void
+> > > p54_rx_frame_sent(struct iee
+> > >  	struct memrecord *range = NULL;
+> > >  	u32 freed = 0;
+> > >  	u32 last_addr = priv->rx_start;
+> > > +	unsigned long flags;
+> > >
+> > > +	spin_lock_irqsave(&priv->tx_queue.lock, flags);
+> > >  	while (entry != (struct sk_buff *)&priv->tx_queue) {
+> > >  		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(entry);
+> > >  		range = (void *)info->driver_data;
+> > > @@ -453,6 +455,8 @@ static void p54_rx_frame_sent(struct iee
+> > >
+> > >  			last_addr = range->end_addr;
+> > >  			__skb_unlink(entry, &priv->tx_queue);
+> > > +			spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+> > > +
+> > >  			memset(&info->status, 0, sizeof(info->status));
+> > >  			entry_hdr = (struct p54_control_hdr *) entry->data;
+> > >  			entry_data = (struct p54_tx_control_allocdata *) entry_hdr->data;
+> > > @@ -470,12 +474,14 @@ static void p54_rx_frame_sent(struct iee
+> > >  			info->status.ack_signal = le16_to_cpu(payload->ack_rssi);
+> > >  			skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
+> > >  			ieee80211_tx_status_irqsafe(dev, entry);
+> > > -			break;
+> > > +			goto out;
+> > >  		} else
+> > >  			last_addr = range->end_addr;
+> > >  		entry = entry->next;
+> > >  	}
+> > > +	spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+> > >
+> > > +out:
+> > >  	if (freed >= IEEE80211_MAX_RTS_THRESHOLD + 0x170 +
+> > >  	    sizeof(struct p54_control_hdr))
+> > >  		p54_wake_free_queues(dev);
+> >
+> > I have a question about this. The code is OK, but I wonder if it might
+> > not be clearer if the spin_unlock_irqrestore() in the second hunk were
+> > deleted, and the label for "out" in the third hunk were moved up one
+> > statement. That way the matching lock/unlock pair would be more obvious.
+>
+> Well, that way a lot more code is inside of the critical section.
+> I'd say it's worth the "obfuscation", as this is a hotpath.
+indeed... that's what I thought would be a better trade-off between
+- formal / function correctness
+- (locking) guide-lines conformance
+- (patch-)size
 
-This patch fixes noticed problem in noisy environments of 50+ APs.
-That scan fails to find the requested AP on first try, which leads
-to connection refusal. Second scan has empirically proven to fix
-this problem in almost all cases.
+But yes, originally I planned to spend a extra empty line right about the 
+spin_unlock_irqrestore (the one inside the _while_ block), for
+"eye friendliness"...
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Esti Kummer <ester.kummer@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- net/mac80211/ieee80211_i.h |    4 +++-
- net/mac80211/mlme.c        |    9 +++++++--
- 2 files changed, 10 insertions(+), 3 deletions(-)
+but I stuffed that on a second thought. I thought this extra
+empty line would be waste of valuable resources, maybe someone
+would complain about the amount of "cheese holes" in the code ;-).
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index d19f67e..f71785e 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -369,7 +369,9 @@ struct ieee80211_if_sta {
- 
- 	struct sk_buff_head skb_queue;
- 
--	int auth_tries, assoc_tries;
-+	int assoc_scan_tries; /* number of scans done pre-association */
-+	int auth_tries; /* retries for auth req */
-+	int assoc_tries; /* retries for assoc req */
- 
- 	unsigned long request;
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 784ccd5..e1368f6 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -34,6 +34,7 @@
- #include "led.h"
- #include "mesh.h"
- 
-+#define IEEE80211_ASSOC_SCANS_MAX_TRIES 2
- #define IEEE80211_AUTH_TIMEOUT (HZ / 5)
- #define IEEE80211_AUTH_MAX_TRIES 3
- #define IEEE80211_ASSOC_TIMEOUT (HZ / 5)
-@@ -599,6 +600,7 @@ static void ieee80211_set_disassoc(struct net_device *dev,
- {
- 	if (deauth)
- 		ifsta->auth_tries = 0;
-+	ifsta->assoc_scan_tries = 0;
- 	ifsta->assoc_tries = 0;
- 	ieee80211_set_associated(dev, ifsta, 0);
- }
-@@ -3437,7 +3439,9 @@ static void ieee80211_sta_reset_auth(struct net_device *dev,
- 		ifsta->auth_alg = WLAN_AUTH_OPEN;
- 	ifsta->auth_transaction = -1;
- 	ifsta->flags &= ~IEEE80211_STA_ASSOCIATED;
--	ifsta->auth_tries = ifsta->assoc_tries = 0;
-+	ifsta->assoc_scan_tries = 0;
-+	ifsta->auth_tries = 0;
-+	ifsta->assoc_tries = 0;
- 	netif_carrier_off(dev);
- }
- 
-@@ -3544,7 +3548,8 @@ static int ieee80211_sta_config_auth(struct net_device *dev,
- 		ieee80211_sta_reset_auth(dev, ifsta);
- 		return 0;
- 	} else {
--		if (ifsta->state != IEEE80211_STA_MLME_AUTHENTICATE) {
-+		if (ifsta->assoc_scan_tries < IEEE80211_ASSOC_SCANS_MAX_TRIES) {
-+			ifsta->assoc_scan_tries++;
- 			if (ifsta->flags & IEEE80211_STA_AUTO_SSID_SEL)
- 				ieee80211_sta_start_scan(dev, NULL, 0);
- 			else
--- 
-1.5.3.6
-
+Regards,
+	Chr
