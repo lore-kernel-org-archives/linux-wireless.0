@@ -1,48 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:41944 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750929AbYHEV6w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 17:58:52 -0400
-Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere fw
-From: Dan Williams <dcbw@redhat.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: kilroyd@googlemail.com, linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>,
-	Jean Tourrilhes <jt@hpl.hp.com>
-In-Reply-To: <1217970944.2908.11.camel@dv>
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
-	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
-	 <1217825304.10989.20.camel@dv>
-	 <1217864060.3139.10.camel@localhost.localdomain>
-	 <1217970944.2908.11.camel@dv>
-Content-Type: text/plain
-Date: Tue, 05 Aug 2008 17:55:49 -0400
-Message-Id: <1217973349.30531.1.camel@localhost.localdomain> (sfid-20080805_235855_026403_94C2D41A)
-Mime-Version: 1.0
+Received: from wr-out-0506.google.com ([64.233.184.229]:63663 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753032AbYHXLuV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Aug 2008 07:50:21 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so921143wri.5
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Aug 2008 04:50:20 -0700 (PDT)
+Message-ID: <99175ee40808240450k7423691bu3ee81cbdba60acda@mail.gmail.com> (sfid-20080824_135026_347529_F1D87E79)
+Date: Sun, 24 Aug 2008 19:50:20 +0800
+From: Chris <dchris@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: intel 4965agn 54Mbps on Linux but 130Mbps on Windows
+In-Reply-To: <99175ee40808240438o75c18f3ayd0c98db87a7c8561@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <99175ee40808240438o75c18f3ayd0c98db87a7c8561@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-08-05 at 17:15 -0400, Pavel Roskin wrote:
-> On Mon, 2008-08-04 at 11:34 -0400, Dan Williams wrote:
-> 
-> > Maybe the wireless-tools breakage you're experiencing is causing this to
-> > fail on x86-64?  Are you using 64-bit wireless-tools and a 64-bit
-> > kernel, or 32-bit wireless tools with a 64-bit kernel?
-> 
-> I'm using 64-bit kernel with 64-bit userspace.
-> 
-> If I use 32-bit kernel with 32-bit userspace, essid filtering works, but
-> only to a degree.  Old scan results are cached somewhere, so if I scan
-> with essid and then without essid, I get filtered results.  Likewise, If
-> I don't use filtering the first time, but use it the second time, I get
-> unfiltered results.
+Could it come from the fact that the kernel in Ubuntu Hardy does not
+have CONFIG_NETDEVICES_MULTIQUEUE enabled ?
 
-Scanning for a specific SSID never has "filtered" the results, nor
-should it.  It just probe-scans the requested SSID and return any new
-results in with the cached ones.  You requested an SSID scan, thus you
-must know the SSID, thus you can do the filtering yourself?
+I got this warning when I installed compat-wireless but I don't know
+if it is required to get 802.11n working.
 
-Dan
+Best regards,
+Chris.
 
-
+On 8/24/08, Chris <dchris@gmail.com> wrote:
+> Hi,
+>
+> I'm using compat-wireless-2008-08-06.tar.bz2 on Ubuntu Hardy (kernel
+> 2.6.24) for my intel 4965agn card in order to connect using 802.11n to
+> my router (TL-WR841N from TP-LINK).
+> Unfortunately, I'm only able to connect in 802.11g mode under Linux :
+> $ iwconfig wlan1
+> wlan1     IEEE 802.11abgn  ESSID:"chris"
+>           Mode:Managed  Frequency:2.437 GHz  Access Point: 00:1D:0F:33:7E:EC
+>           Bit Rate=54 Mb/s   Tx-Power=15 dBm
+>           Retry min limit:7   RTS thr:off   Fragment thr=2352 B
+>           Power Management:off
+>           Link Quality=100/100  Signal level:-30 dBm  Noise level=-95 dBm
+>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+>
+> $ sudo iwlist wlan1 scan
+> wlan1     Scan completed :
+>           Cell 01 - Address: 00:1D:0F:33:7E:EC
+>                     ESSID:"chris"
+>                     Mode:Master
+>                     Channel:6
+>                     Frequency:2.437 GHz (Channel 6)
+>                     Quality=100/100  Signal level:-30 dBm  Noise level=-94
+> dBm
+>                     Encryption key:on
+>                     IE: IEEE 802.11i/WPA2 Version 1
+>                         Group Cipher : CCMP
+>                         Pairwise Ciphers (1) : CCMP
+>                         Authentication Suites (1) : PSK
+>                     IE: Unknown:
+> 2D1A4C1003FFFF000000000000000000000000000000000000000000
+>                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 6 Mb/s
+>                               9 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s; 36 Mb/s
+>                               48 Mb/s; 54 Mb/s
+>                     Extra:tsf=000000003aefe580
+>                     Extra: Last beacon: 12ms ago
+>
+> As you can see, no bit rate greater than 54Mbps is detected. I tried
+> under Windows with latest intel driver and it connects at 130Mbps.
+> Does the Linux driver support 802.11n? If so, do you have any
+> suggestion to make this work here? I will be happy to provide any
+> information you may require.
+>
+> In dmesg output, I simply get this:
+> [   95.465080] wlan1: authenticate with AP 00:1d:0f:33:7e:ec
+> [   95.467416] wlan1: authenticated
+> [   95.467421] wlan1: associate with AP 00:1d:0f:33:7e:ec
+> [   95.471491] wlan1: RX AssocResp from 00:1d:0f:33:7e:ec (capab=0x431
+> status=0 aid=1)
+> [   95.471496] wlan1: associated
+> [   95.471533] wlan1 (WE) : Wireless Event too big (314)
+>
+> Best regards,
+> Chris.
+>
