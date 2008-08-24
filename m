@@ -1,172 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:40757 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933222AbYHRTbd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2008 15:31:33 -0400
-Subject: [PATCH] atmel: return ENOENT on request_firmware failure
-From: Dan Williams <dcbw@redhat.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	simon@thekelleys.org.uk
-Content-Type: text/plain
-Date: Mon, 18 Aug 2008 15:32:39 -0400
-Message-Id: <1219087959.2154.6.camel@localhost.localdomain> (sfid-20080818_213142_778851_34CD331D)
-Mime-Version: 1.0
+Received: from wr-out-0506.google.com ([64.233.184.226]:62194 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752882AbYHXLix (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Aug 2008 07:38:53 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so919421wri.5
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Aug 2008 04:38:52 -0700 (PDT)
+Message-ID: <99175ee40808240438o75c18f3ayd0c98db87a7c8561@mail.gmail.com> (sfid-20080824_133910_975965_9CA5DA54)
+Date: Sun, 24 Aug 2008 19:38:51 +0800
+From: Chris <dchris@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: intel 4965agn 54Mbps on Linux but 130Mbps on Windows
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return errors from request_firmware() (like other drivers that do
-firmware load on device open) and make up plausible codes for other
-error conditions.  Gives userspace tools like NetworkManager a clue that
-firmware may be missing when the result of setting IFF_UP is ENOENT.
+Hi,
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+I'm using compat-wireless-2008-08-06.tar.bz2 on Ubuntu Hardy (kernel
+2.6.24) for my intel 4965agn card in order to connect using 802.11n to
+my router (TL-WR841N from TP-LINK).
+Unfortunately, I'm only able to connect in 802.11g mode under Linux :
+$ iwconfig wlan1
+wlan1     IEEE 802.11abgn  ESSID:"chris"
+          Mode:Managed  Frequency:2.437 GHz  Access Point: 00:1D:0F:33:7E:EC
+          Bit Rate=54 Mb/s   Tx-Power=15 dBm
+          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
+          Power Management:off
+          Link Quality=100/100  Signal level:-30 dBm  Noise level=-95 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
 
-diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
-index 28b6ff3..ad742c8 100644
---- a/drivers/net/wireless/atmel.c
-+++ b/drivers/net/wireless/atmel.c
-@@ -1304,7 +1304,7 @@ EXPORT_SYMBOL(atmel_open);
- int atmel_open(struct net_device *dev)
- {
- 	struct atmel_private *priv = netdev_priv(dev);
--	int i, channel;
-+	int i, channel, err;
- 
- 	/* any scheduled timer is no longer needed and might screw things up.. */
- 	del_timer_sync(&priv->management_timer);
-@@ -1328,8 +1328,9 @@ int atmel_open(struct net_device *dev)
- 	priv->site_survey_state = SITE_SURVEY_IDLE;
- 	priv->station_is_associated = 0;
- 
--	if (!reset_atmel_card(dev))
--		return -EAGAIN;
-+	err = reset_atmel_card(dev);
-+	if (err)
-+		return err;
- 
- 	if (priv->config_reg_domain) {
- 		priv->reg_domain = priv->config_reg_domain;
-@@ -3580,12 +3581,12 @@ static int atmel_wakeup_firmware(struct atmel_private *priv)
- 
- 	if (i == 0) {
- 		printk(KERN_ALERT "%s: MAC failed to boot.\n", priv->dev->name);
--		return 0;
-+		return -EIO;
- 	}
- 
- 	if ((priv->host_info_base = atmel_read16(priv->dev, MR2)) == 0xffff) {
- 		printk(KERN_ALERT "%s: card missing.\n", priv->dev->name);
--		return 0;
-+		return -ENODEV;
- 	}
- 
- 	/* now check for completion of MAC initialization through
-@@ -3609,19 +3610,19 @@ static int atmel_wakeup_firmware(struct atmel_private *priv)
- 	if (i == 0) {
- 		printk(KERN_ALERT "%s: MAC failed to initialise.\n",
- 				priv->dev->name);
--		return 0;
-+		return -EIO;
- 	}
- 
- 	/* Check for MAC_INIT_OK only on the register that the MAC_INIT_OK was set */
- 	if ((mr3 & MAC_INIT_COMPLETE) &&
- 	    !(atmel_read16(priv->dev, MR3) & MAC_INIT_OK)) {
- 		printk(KERN_ALERT "%s: MAC failed MR3 self-test.\n", priv->dev->name);
--		return 0;
-+		return -EIO;
- 	}
- 	if ((mr1 & MAC_INIT_COMPLETE) &&
- 	    !(atmel_read16(priv->dev, MR1) & MAC_INIT_OK)) {
- 		printk(KERN_ALERT "%s: MAC failed MR1 self-test.\n", priv->dev->name);
--		return 0;
-+		return -EIO;
- 	}
- 
- 	atmel_copy_to_host(priv->dev, (unsigned char *)iface,
-@@ -3642,7 +3643,7 @@ static int atmel_wakeup_firmware(struct atmel_private *priv)
- 	iface->func_ctrl = le16_to_cpu(iface->func_ctrl);
- 	iface->mac_status = le16_to_cpu(iface->mac_status);
- 
--	return 1;
-+	return 0;
- }
- 
- /* determine type of memory and MAC address */
-@@ -3693,7 +3694,7 @@ static int probe_atmel_card(struct net_device *dev)
- 		/* Standard firmware in flash, boot it up and ask
- 		   for the Mac Address */
- 		priv->card_type = CARD_TYPE_SPI_FLASH;
--		if (atmel_wakeup_firmware(priv)) {
-+		if (atmel_wakeup_firmware(priv) != 0) {
- 			atmel_get_mib(priv, Mac_Address_Mib_Type, 0, dev->dev_addr, 6);
- 
- 			/* got address, now squash it again until the network
-@@ -3835,6 +3836,7 @@ static int reset_atmel_card(struct net_device *dev)
- 	struct atmel_private *priv = netdev_priv(dev);
- 	u8 configuration;
- 	int old_state = priv->station_state;
-+	int err = 0;
- 
- 	/* data to add to the firmware names, in priority order
- 	   this implemenents firmware versioning */
-@@ -3868,11 +3870,12 @@ static int reset_atmel_card(struct net_device *dev)
- 					       dev->name);
- 					strcpy(priv->firmware_id, "atmel_at76c502.bin");
- 				}
--				if (request_firmware(&fw_entry, priv->firmware_id, priv->sys_dev) != 0) {
-+				err = request_firmware(&fw_entry, priv->firmware_id, priv->sys_dev);
-+				if (err != 0) {
- 					printk(KERN_ALERT
- 					       "%s: firmware %s is missing, cannot continue.\n",
- 					       dev->name, priv->firmware_id);
--					return 0;
-+					return err;
- 				}
- 			} else {
- 				int fw_index = 0;
-@@ -3901,7 +3904,7 @@ static int reset_atmel_card(struct net_device *dev)
- 					       "%s: firmware %s is missing, cannot start.\n",
- 					       dev->name, priv->firmware_id);
- 					priv->firmware_id[0] = '\0';
--					return 0;
-+					return -ENOENT;
- 				}
- 			}
- 
-@@ -3926,8 +3929,9 @@ static int reset_atmel_card(struct net_device *dev)
- 			release_firmware(fw_entry);
- 	}
- 
--	if (!atmel_wakeup_firmware(priv))
--		return 0;
-+	err = atmel_wakeup_firmware(priv);
-+	if (err != 0)
-+		return err;
- 
- 	/* Check the version and set the correct flag for wpa stuff,
- 	   old and new firmware is incompatible.
-@@ -3968,10 +3972,9 @@ static int reset_atmel_card(struct net_device *dev)
- 	if (!priv->radio_on_broken) {
- 		if (atmel_send_command_wait(priv, CMD_EnableRadio, NULL, 0) ==
- 		    CMD_STATUS_REJECTED_RADIO_OFF) {
--			printk(KERN_INFO
--			       "%s: cannot turn the radio on. (Hey radio, you're beautiful!)\n",
-+			printk(KERN_INFO "%s: cannot turn the radio on.\n",
- 			       dev->name);
--                        return 0;
-+                        return -EIO;
- 		}
- 	}
- 
-@@ -4006,7 +4009,7 @@ static int reset_atmel_card(struct net_device *dev)
- 		wireless_send_event(priv->dev, SIOCGIWAP, &wrqu, NULL);
- 	}
- 
--	return 1;
-+	return 0;
- }
- 
- static void atmel_send_command(struct atmel_private *priv, int command,
+$ sudo iwlist wlan1 scan
+wlan1     Scan completed :
+          Cell 01 - Address: 00:1D:0F:33:7E:EC
+                    ESSID:"chris"
+                    Mode:Master
+                    Channel:6
+                    Frequency:2.437 GHz (Channel 6)
+                    Quality=100/100  Signal level:-30 dBm  Noise level=-94 dBm
+                    Encryption key:on
+                    IE: IEEE 802.11i/WPA2 Version 1
+                        Group Cipher : CCMP
+                        Pairwise Ciphers (1) : CCMP
+                        Authentication Suites (1) : PSK
+                    IE: Unknown:
+2D1A4C1003FFFF000000000000000000000000000000000000000000
+                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 6 Mb/s
+                              9 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s; 36 Mb/s
+                              48 Mb/s; 54 Mb/s
+                    Extra:tsf=000000003aefe580
+                    Extra: Last beacon: 12ms ago
 
+As you can see, no bit rate greater than 54Mbps is detected. I tried
+under Windows with latest intel driver and it connects at 130Mbps.
+Does the Linux driver support 802.11n? If so, do you have any
+suggestion to make this work here? I will be happy to provide any
+information you may require.
+
+In dmesg output, I simply get this:
+[   95.465080] wlan1: authenticate with AP 00:1d:0f:33:7e:ec
+[   95.467416] wlan1: authenticated
+[   95.467421] wlan1: associate with AP 00:1d:0f:33:7e:ec
+[   95.471491] wlan1: RX AssocResp from 00:1d:0f:33:7e:ec (capab=0x431
+status=0 aid=1)
+[   95.471496] wlan1: associated
+[   95.471533] wlan1 (WE) : Wireless Event too big (314)
+
+Best regards,
+Chris.
