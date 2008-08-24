@@ -1,39 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:43123 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751500AbYHRJvA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2008 05:51:00 -0400
-Date: Mon, 18 Aug 2008 12:50:08 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
+Received: from fg-out-1718.google.com ([72.14.220.157]:36190 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751010AbYHXO0U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Aug 2008 10:26:20 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so726312fgg.17
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Aug 2008 07:26:18 -0700 (PDT)
+Message-ID: <1ba2fa240808240726m539aa30am162b242f5d089d5e@mail.gmail.com> (sfid-20080824_162636_464651_1BDC0ADD)
+Date: Sun, 24 Aug 2008 17:26:18 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: Chris <dchris@gmail.com>
+Subject: Re: intel 4965agn 54Mbps on Linux but 130Mbps on Windows
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211/cfg80211: Add vif configuration options
-Message-ID: <20080818095008.GM7998@jm.kir.nu> (sfid-20080818_115104_910213_CEB44D84)
-References: <20080815193324.GH7998@jm.kir.nu> <1218829424.3197.2.camel@localhost>
+In-Reply-To: <99175ee40808240450k7423691bu3ee81cbdba60acda@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1218829424.3197.2.camel@localhost>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <99175ee40808240438o75c18f3ayd0c98db87a7c8561@mail.gmail.com>
+	 <99175ee40808240450k7423691bu3ee81cbdba60acda@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 15, 2008 at 09:43:44PM +0200, Johannes Berg wrote:
-> On Fri, 2008-08-15 at 22:33 +0300, Jouni Malinen wrote:
+On Sun, Aug 24, 2008 at 2:50 PM, Chris <dchris@gmail.com> wrote:
+>
+> Could it come from the fact that the kernel in Ubuntu Hardy does not
+> have CONFIG_NETDEVICES_MULTIQUEUE enabled ?
+>
+> I got this warning when I installed compat-wireless but I don't know
+> if it is required to get 802.11n working.
+>
+Definitely CONFIG_NETDEVICES_MULTIQUEUE must be enabled.
+HT rates are no reported in wireless-tools.
 
-> >   * @change_bss: Modify parameters for a given BSS.
-> > + *
-> > + * @change_vif: Modify parameters for a given virtual interface.
-> 
-> That reminds me, we should probably include the "bridge packets" thing
-> in the BSS parameters (or here?)
+Regards
+Tomas
 
-Yes.. Since it is AP only feature, I would add it to change_bss. This
-variable is currently per-radio, but it might be reasonable to move it
-to sdata. Though, it may be needed for IEEE80211_IF_TYPE_VLAN, too, and
-change_bss is now IEEE80211_IF_TYPE_AP-only.. change_vif allows any type
-to go through, so maybe that would be easier after all (and then either
-just ignore the value for other iface types or make the configuration
-attempt fail if this particular attribute is changed for non-AP/VLAN
-iftype).
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+>
+> On 8/24/08, Chris <dchris@gmail.com> wrote:
+> > Hi,
+> >
+> > I'm using compat-wireless-2008-08-06.tar.bz2 on Ubuntu Hardy (kernel
+> > 2.6.24) for my intel 4965agn card in order to connect using 802.11n to
+> > my router (TL-WR841N from TP-LINK).
+> > Unfortunately, I'm only able to connect in 802.11g mode under Linux :
+> > $ iwconfig wlan1
+> > wlan1     IEEE 802.11abgn  ESSID:"chris"
+> >           Mode:Managed  Frequency:2.437 GHz  Access Point: 00:1D:0F:33:7E:EC
+> >           Bit Rate=54 Mb/s   Tx-Power=15 dBm
+> >           Retry min limit:7   RTS thr:off   Fragment thr=2352 B
+> >           Power Management:off
+> >           Link Quality=100/100  Signal level:-30 dBm  Noise level=-95 dBm
+> >           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+> >           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+> >
+> > $ sudo iwlist wlan1 scan
+> > wlan1     Scan completed :
+> >           Cell 01 - Address: 00:1D:0F:33:7E:EC
+> >                     ESSID:"chris"
+> >                     Mode:Master
+> >                     Channel:6
+> >                     Frequency:2.437 GHz (Channel 6)
+> >                     Quality=100/100  Signal level:-30 dBm  Noise level=-94
+> > dBm
+> >                     Encryption key:on
+> >                     IE: IEEE 802.11i/WPA2 Version 1
+> >                         Group Cipher : CCMP
+> >                         Pairwise Ciphers (1) : CCMP
+> >                         Authentication Suites (1) : PSK
+> >                     IE: Unknown:
+> > 2D1A4C1003FFFF000000000000000000000000000000000000000000
+> >                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 6 Mb/s
+> >                               9 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s; 36 Mb/s
+> >                               48 Mb/s; 54 Mb/s
+> >                     Extra:tsf=000000003aefe580
+> >                     Extra: Last beacon: 12ms ago
+> >
+> > As you can see, no bit rate greater than 54Mbps is detected. I tried
+> > under Windows with latest intel driver and it connects at 130Mbps.
+> > Does the Linux driver support 802.11n? If so, do you have any
+> > suggestion to make this work here? I will be happy to provide any
+> > information you may require.
+> >
+> > In dmesg output, I simply get this:
+> > [   95.465080] wlan1: authenticate with AP 00:1d:0f:33:7e:ec
+> > [   95.467416] wlan1: authenticated
+> > [   95.467421] wlan1: associate with AP 00:1d:0f:33:7e:ec
+> > [   95.471491] wlan1: RX AssocResp from 00:1d:0f:33:7e:ec (capab=0x431
+> > status=0 aid=1)
+> > [   95.471496] wlan1: associated
+> > [   95.471533] wlan1 (WE) : Wireless Event too big (314)
+> >
+> > Best regards,
+> > Chris.
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
