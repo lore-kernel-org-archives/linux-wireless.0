@@ -1,827 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:57407 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083AbYHRIMP (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:63966 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753683AbYHYNnz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2008 04:12:15 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1583535fgg.17
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Aug 2008 01:12:13 -0700 (PDT)
-Message-ID: <1ba2fa240808180112l284086f4x64168d994743398@mail.gmail.com> (sfid-20080818_101222_924737_4A60D525)
-Date: Mon, 18 Aug 2008 11:12:13 +0300
+	Mon, 25 Aug 2008 09:43:55 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so122106ywe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Aug 2008 06:43:54 -0700 (PDT)
+Message-ID: <1ba2fa240808250643r33640595iacddf0fb2ec5c5aa@mail.gmail.com> (sfid-20080825_154359_319390_CCED6663)
+Date: Mon, 25 Aug 2008 16:43:48 +0300
 From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Yousaf Jindal" <yousaf.jindal@pi.edu.pk>, simoneau@ele.uri.edu
-Subject: Re: [ANNOUNCE] Wifi Link 5300 and 5100 Series
-Cc: ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <e700089d0808160326k337cec2dm65271b38812a4263@mail.gmail.com>
+To: "Jouni Malinen" <j@w1.fi>
+Subject: Re: [PATCH] mac80211/cfg80211: HT capabilities for NEW_STA
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <20080825085858.GB9415@jm.kir.nu>
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_6620_8274955.1219047133604"
-References: <e700089d0808151307j27d6c61dw3a1dd174e4e8610c@mail.gmail.com>
-	 <e700089d0808160326k337cec2dm65271b38812a4263@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080825085858.GB9415@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------=_Part_6620_8274955.1219047133604
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-On Sat, Aug 16, 2008 at 1:26 PM, Yousaf Jindal <yousaf.jindal@pi.edu.pk> wrote:
-> On Fri, Aug 15, 2008 at 4:07 PM, Yousaf Jindal <yousaf.jindal@pi.edu.pk> wrote:
->>> On 00:11 Thu 14 Aug     , Tomas Winkler wrote:
->>>> Intel would like to announce Linux support  for Wifi Link 5000 and
->>>> 5100 Series Adapters under iwlwifi driver (iwlagn.ko)
->>>>
->>> ...
->>>> The best known working driver can be located in iwl500 branch of
->>>> iwlwifi-2.6.git
->>>> git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git iwl5000
->>
->>
->>
->> I am using the iwl500 branch from the above git repository and I am
->> also receiving the timeout error. This is on a Wifi Link 5100 on an
->> Asus M50VM laptop.
->>
->> $ dmesg|grep iw
->>
->>
->> -- Yousaf
->>
->> --
->> Yousaf Jindal
->> Director of Technology
->> Pakistani Institute
->>
+On Mon, Aug 25, 2008 at 11:58 AM, Jouni Malinen <j@w1.fi> wrote:
+> Allow userspace (e.g., hostapd) to set HT capabilities for associated
+> STAs. This is based on a patch from Zhu Yi <yi.zhu@intel.com> (only
+> the NL80211_ATTR_HT_CAPABILITY for NEW_STA part is included here).
 >
-> Here is a kernel log with full debugging output enabled for the iwl drivers:
+> Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 >
-> [    8.881684] asus-laptop:   M50Vm model detected
-> [    8.901015] acpi device:1e: registered as cooling_device2
-> [    8.901307] input: Video Bus as /class/input/input7
-> [    8.902500] Registered led device: asus::mail
-> [    8.902689] Registered led device: asus::touchpad
-> [    8.964753] ACPI: Video Device [VGA] (multi-head: yes  rom: no  post: no)
-> [    9.030505] iwlagn: Intel(R) Wireless WiFi Link AGN driver for
-> Linux, 1.3.27kds
-> [    9.030709] iwlagn: Copyright(c) 2003-2008 Intel Corporation
-> [    9.030944] ieee80211 phy0: U iwl4965_pci_probe *** LOAD DRIVER ***
-> [    9.031165] iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> [    9.031378] iwlagn 0000:03:00.0: setting latency timer to 64
-> [    9.031403] ieee80211 phy0: U iwl4965_pci_probe pci_resource_len = 0x00002000
-> [    9.031588] ieee80211 phy0: U iwl4965_pci_probe pci_resource_base =
-> ffffc2000065c000
-> [    9.031821] iwlagn: Detected Intel Wireless WiFi Link 5100AGN REV=0x54
-> [    9.032029] ieee80211 phy0: U __iwl_set_bit set_bit(0x00000100,
-> 0x20000000) = 0x27800200
-> [    9.032252] ieee80211 phy0: U __iwl_set_bit set_bit(0x00000100,
-> 0x00800000) = 0x27800200
-> [    9.032508] ieee80211 phy0: U __iwl_set_bit set_bit(0x00000240,
-> 0xFFFF0000) = 0xFFFF0500
-> [    9.032736] ieee80211 phy0: U __iwl_set_bit set_bit(0x00000000,
-> 0x00080000) = 0x00080000
-> [    9.032972] ieee80211 phy0: U __iwl_set_bit set_bit(0x0000020C,
-> 0x00880300) = 0x00880300
-> [    9.033215] ieee80211 phy0: U __iwl_set_bit set_bit(0x00000024,
-> 0x00000004) = 0x080003D4
-> [    9.043384] ieee80211 phy0: U __iwl_poll_bit poll_bit(0x00000024,
-> 0x00000001, 0x00000001) - - drivers/net/wireless/iwlwifi/iwl-5000.c
-> 112
-> [    9.043590] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-5000.c 118
-> [    9.043868] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-5000.c 131
-> [    9.044076] ieee80211 phy0: U __iwl_read32
-> read_direct32(0x00000030) - drivers/net/wireless/iwlwifi/iwl-eeprom.c
-> 213
-> [    9.044286] ieee80211 phy0: U __iwl_read32
-> read_direct32(0x00000030) - drivers/net/wireless/iwlwifi/iwl-eeprom.c
-> 147
-> [    9.044496] ieee80211 phy0: U __iwl_set_bit set_bit(0x00000000,
-> 0x00200000) = 0x00280000
-> [    9.044702] ieee80211 phy0: U __iwl_poll_bit poll_bit(0x00000000,
-> 0x00200000, 0x00200000) - - drivers/net/wireless/iwlwifi/iwl-eeprom.c
-> 176
-> [    9.044913] ieee80211 phy0: U iwlcore_eeprom_acquire_semaphore
-> Acquired semaphore after 1 tries.
-> [    9.067496] ieee80211 phy0: U __iwl_clear_bit clear_bit(0x00000000,
-> 0x00200000) = 0x00080000
-> [    9.067700] ieee80211 phy0: U iwl4965_pci_probe MAC address:
-> 00:16:ea:65:05:b8
-> [    9.067900] ieee80211 phy0: U iwl_set_rxon_chain rx chain 2806
-> [    9.068082] ieee80211 phy0: U iwl_reset_qos set QoS to default
-> [    9.068267] ieee80211 phy0: U iwl_init_channel_map Initializing
-> regulatory info from EEPROM
-> [    9.068467] ieee80211 phy0: U iwl_init_channel_map Parsing data for
-> 56 channels.
-> [    9.068668] ieee80211 phy0: U iwl_init_channel_map Ch. 1 [2.4GHz]
-> VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.068874] ieee80211 phy0: U iwl_init_channel_map Ch. 2 [2.4GHz]
-> VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.069085] ieee80211 phy0: U iwl_init_channel_map Ch. 3 [2.4GHz]
-> VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.069289] ieee80211 phy0: U iwl_init_channel_map Ch. 4 [2.4GHz]
-> VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.069492] ieee80211 phy0: U iwl_init_channel_map Ch. 5 [2.4GHz]
-> VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.069696] ieee80211 phy0: U iwl_init_channel_map Ch. 6 [2.4GHz]
-> VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.069899] ieee80211 phy0: U iwl_init_channel_map Ch. 7 [2.4GHz]
-> VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.070181] ieee80211 phy0: U iwl_init_channel_map Ch. 8 [2.4GHz]
-> VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.070385] ieee80211 phy0: U iwl_init_channel_map Ch. 9 [2.4GHz]
-> VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.070588] ieee80211 phy0: U iwl_init_channel_map Ch. 10 [2.4GHz]
-> VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.070792] ieee80211 phy0: U iwl_init_channel_map Ch. 11 [2.4GHz]
-> VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.070998] ieee80211 phy0: U iwl_init_channel_map Ch. 12 [2.4GHz]
-> VALID WIDE (0x61 15dBm): Ad-Hoc not supported
-> [    9.071200] ieee80211 phy0: U iwl_init_channel_map Ch. 13 [2.4GHz]
-> VALID WIDE (0x61 15dBm): Ad-Hoc not supported
-> [    9.071403] ieee80211 phy0: U iwl_init_channel_map Ch. 14 Flags 0
-> [2.4GHz] - No traffic
-> [    9.071601] ieee80211 phy0: U iwl_init_channel_map Ch. 183 Flags 0
-> [5.2GHz] - No traffic
-> [    9.071800] ieee80211 phy0: U iwl_init_channel_map Ch. 184 Flags 0
-> [5.2GHz] - No traffic
-> [    9.072001] ieee80211 phy0: U iwl_init_channel_map Ch. 185 Flags 0
-> [5.2GHz] - No traffic
-> [    9.072201] ieee80211 phy0: U iwl_init_channel_map Ch. 187 Flags 0
-> [5.2GHz] - No traffic
-> [    9.082868] ieee80211 phy0: U iwl_init_channel_map Ch. 188 Flags 0
-> [5.2GHz] - No traffic
-> [    9.098864] ieee80211 phy0: U iwl_init_channel_map Ch. 189 Flags 0
-> [5.2GHz] - No traffic
-> [    9.099063] ieee80211 phy0: U iwl_init_channel_map Ch. 192 Flags 0
-> [5.2GHz] - No traffic
-> [    9.099262] ieee80211 phy0: U iwl_init_channel_map Ch. 196 Flags 0
-> [5.2GHz] - No traffic
-> [    9.099461] ieee80211 phy0: U iwl_init_channel_map Ch. 7 Flags 0
-> [5.2GHz] - No traffic
-> [    9.099660] ieee80211 phy0: U iwl_init_channel_map Ch. 8 Flags 0
-> [5.2GHz] - No traffic
-> [    9.099858] ieee80211 phy0: U iwl_init_channel_map Ch. 11 Flags 0
-> [5.2GHz] - No traffic
-> [    9.100059] ieee80211 phy0: U iwl_init_channel_map Ch. 12 Flags 0
-> [5.2GHz] - No traffic
-> [    9.100258] ieee80211 phy0: U iwl_init_channel_map Ch. 16 Flags 0
-> [5.2GHz] - No traffic
-> [    9.100457] ieee80211 phy0: U iwl_init_channel_map Ch. 34 Flags 0
-> [5.2GHz] - No traffic
-> [    9.100656] ieee80211 phy0: U iwl_init_channel_map Ch. 36 [5.2GHz]
-> VALID WIDE DFS (0xe1 15dBm): Ad-Hoc not supported
-> [    9.100861] ieee80211 phy0: U iwl_init_channel_map Ch. 38 Flags 0
-> [5.2GHz] - No traffic
-> [    9.101060] ieee80211 phy0: U iwl_init_channel_map Ch. 40 [5.2GHz]
-> VALID WIDE DFS (0xe1 15dBm): Ad-Hoc not supported
-> [    9.101265] ieee80211 phy0: U iwl_init_channel_map Ch. 42 Flags 0
-> [5.2GHz] - No traffic
-> [    9.101465] ieee80211 phy0: U iwl_init_channel_map Ch. 44 [5.2GHz]
-> VALID WIDE DFS (0xe1 15dBm): Ad-Hoc not supported
-> [    9.101670] ieee80211 phy0: U iwl_init_channel_map Ch. 46 Flags 0
-> [5.2GHz] - No traffic
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 48 [5.2GHz]
-> VALID WIDE DFS (0xe1 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 52 [5.2GHz]
-> VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 56 [5.2GHz]
-> VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 60 [5.2GHz]
-> VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 64 [5.2GHz]
-> VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 100 [5.2GHz]
-> VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 104 [5.2GHz]
-> VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 108 [5.2GHz]
-> VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 112 [5.2GHz]
-> VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 116 [5.2GHz]
-> VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 120 [5.2GHz]
-> VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 124 [5.2GHz]
-> VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 128 [5.2GHz]
-> VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 132 [5.2GHz]
-> VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 136 [5.2GHz]
-> VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 140 [5.2GHz]
-> VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 145 Flags 0
-> [5.2GHz] - No traffic
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 149 [5.2GHz]
-> VALID WIDE DFS (0xa1 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 153 [5.2GHz]
-> VALID WIDE DFS (0xa1 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 157 [5.2GHz]
-> VALID WIDE DFS (0xa1 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 161 [5.2GHz]
-> VALID WIDE DFS (0xa1 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_init_channel_map Ch. 165 [5.2GHz]
-> VALID WIDE DFS (0xa1 15dBm): Ad-Hoc not supported
-> [    9.101871] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 1
-> [2.4GHz] IBSS ACTIVE WIDE (0x6f 10dBm): Ad-Hoc supported
-> [    9.101871] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 5
-> [2.4GHz] IBSS ACTIVE WIDE (0x6f 10dBm): Ad-Hoc supported
-> [    9.101871] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 2
-> [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.102085] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 6
-> [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.102288] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 3
-> [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.102492] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 7
-> [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.102697] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 4
-> [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.102900] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 8
-> [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.103103] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 5
-> [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.103306] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 9
-> [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.103510] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 6
-> [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.103717] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 10
-> [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-> [    9.103920] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 7
-> [2.4GHz] IBSS ACTIVE WIDE (0x6f 13dBm): Ad-Hoc supported
-> [    9.104033] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 11
-> [2.4GHz] IBSS ACTIVE WIDE (0x6f 13dBm): Ad-Hoc supported
-> [    9.104033] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 36
-> [5.2GHz] WIDE DFS (0xe1 14dBm): Ad-Hoc not supported
-> [    9.104033] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 40
-> [5.2GHz] WIDE DFS (0xe1 14dBm): Ad-Hoc not supported
-> [    9.104033] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 44
-> [5.2GHz] WIDE DFS (0xe1 15dBm): Ad-Hoc not supported
-> [    9.104036] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 48
-> [5.2GHz] WIDE DFS (0xe1 15dBm): Ad-Hoc not supported
-> [    9.104128] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 52
-> [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.104128] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 56
-> [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.104128] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 60
-> [5.2GHz] RADAR WIDE (0x31 14dBm): Ad-Hoc not supported
-> [    9.104128] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 64
-> [5.2GHz] RADAR WIDE (0x31 14dBm): Ad-Hoc not supported
-> [    9.104337] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 100
-> [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.104541] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 104
-> [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.104744] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 108
-> [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.104948] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 112
-> [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.105153] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 116
-> [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.105357] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 120
-> [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.105560] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 124
-> [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.105764] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 128
-> [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.105968] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 132
-> [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.106174] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 136
-> [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-> [    9.106544] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 149
-> [5.2GHz] WIDE (0x61 15dBm): Ad-Hoc not supported
-> [    9.106749] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 153
-> [5.2GHz] WIDE (0x61 15dBm): Ad-Hoc not supported
-> [    9.106955] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 157
-> [5.2GHz] WIDE (0x61 15dBm): Ad-Hoc not supported
-> [    9.107160] ieee80211 phy0: U iwl_set_fat_chan_info FAT Ch. 161
-> [5.2GHz] WIDE (0x61 15dBm): Ad-Hoc not supported
-> [    9.107370] ieee80211 phy0: U iwlcore_init_geos Channel 1
-> Freq=2412[2.4GHz] valid flag=0x20
-> [    9.107583] ieee80211 phy0: U iwlcore_init_geos Channel 2
-> Freq=2417[2.4GHz] valid flag=0x20
-> [    9.107782] ieee80211 phy0: U iwlcore_init_geos Channel 3
-> Freq=2422[2.4GHz] valid flag=0x20
-> [    9.107985] ieee80211 phy0: U iwlcore_init_geos Channel 4
-> Freq=2427[2.4GHz] valid flag=0x20
-> [    9.108192] ieee80211 phy0: U iwlcore_init_geos Channel 5
-> Freq=2432[2.4GHz] valid flag=0x0
-> [    9.108392] ieee80211 phy0: U iwlcore_init_geos Channel 6
-> Freq=2437[2.4GHz] valid flag=0x0
-> [    9.108591] ieee80211 phy0: U iwlcore_init_geos Channel 7
-> Freq=2442[2.4GHz] valid flag=0x0
-> [    9.108791] ieee80211 phy0: U iwlcore_init_geos Channel 8
-> Freq=2447[2.4GHz] valid flag=0x10
-> [    9.108991] ieee80211 phy0: U iwlcore_init_geos Channel 9
-> Freq=2452[2.4GHz] valid flag=0x10
-> [    9.109192] ieee80211 phy0: U iwlcore_init_geos Channel 10
-> Freq=2457[2.4GHz] valid flag=0x10
-> [    9.109392] ieee80211 phy0: U iwlcore_init_geos Channel 11
-> Freq=2462[2.4GHz] valid flag=0x10
-> [    9.109591] ieee80211 phy0: U iwlcore_init_geos Channel 12
-> Freq=2467[2.4GHz] valid flag=0x36
-> [    9.109791] ieee80211 phy0: U iwlcore_init_geos Channel 13
-> Freq=2472[2.4GHz] valid flag=0x36
-> [    9.109993] ieee80211 phy0: U iwlcore_init_geos Channel 36
-> Freq=5180[5.2GHz] valid flag=0x26
-> [    9.110194] ieee80211 phy0: U iwlcore_init_geos Channel 40
-> Freq=5200[5.2GHz] valid flag=0x16
-> [    9.110394] ieee80211 phy0: U iwlcore_init_geos Channel 44
-> Freq=5220[5.2GHz] valid flag=0x26
-> [    9.124490] ieee80211 phy0: U iwlcore_init_geos Channel 48
-> Freq=5240[5.2GHz] valid flag=0x16
-> [    9.124690] ieee80211 phy0: U iwlcore_init_geos Channel 52
-> Freq=5260[5.2GHz] valid flag=0x2E
-> [    9.124889] ieee80211 phy0: U iwlcore_init_geos Channel 56
-> Freq=5280[5.2GHz] valid flag=0x1E
-> [    9.125089] ieee80211 phy0: U iwlcore_init_geos Channel 60
-> Freq=5300[5.2GHz] valid flag=0x2E
-> [    9.125288] ieee80211 phy0: U iwlcore_init_geos Channel 64
-> Freq=5320[5.2GHz] valid flag=0x1E
-> [    9.125311] ieee80211 phy0: U iwlcore_init_geos Channel 100
-> Freq=5500[5.2GHz] valid flag=0x2E
-> [    9.125311] ieee80211 phy0: U iwlcore_init_geos Channel 104
-> Freq=5520[5.2GHz] valid flag=0x1E
-> [    9.125311] ieee80211 phy0: U iwlcore_init_geos Channel 108
-> Freq=5540[5.2GHz] valid flag=0x2E
-> [    9.125311] ieee80211 phy0: U iwlcore_init_geos Channel 112
-> Freq=5560[5.2GHz] valid flag=0x1E
-> [    9.125311] ieee80211 phy0: U iwlcore_init_geos Channel 116
-> Freq=5580[5.2GHz] valid flag=0x2E
-> [    9.125311] ieee80211 phy0: U iwlcore_init_geos Channel 120
-> Freq=5600[5.2GHz] valid flag=0x1E
-> [    9.125311] ieee80211 phy0: U iwlcore_init_geos Channel 124
-> Freq=5620[5.2GHz] valid flag=0x2E
-> [    9.125311] ieee80211 phy0: U iwlcore_init_geos Channel 128
-> Freq=5640[5.2GHz] valid flag=0x1E
-> [    9.125311] ieee80211 phy0: U iwlcore_init_geos Channel 132
-> Freq=5660[5.2GHz] valid flag=0x2E
-> [    9.125314] ieee80211 phy0: U iwlcore_init_geos Channel 136
-> Freq=5680[5.2GHz] valid flag=0x1E
-> [    9.125515] ieee80211 phy0: U iwlcore_init_geos Channel 140
-> Freq=5700[5.2GHz] valid flag=0x3E
-> [    9.125715] ieee80211 phy0: U iwlcore_init_geos Channel 149
-> Freq=5745[5.2GHz] valid flag=0x26
-> [    9.125920] ieee80211 phy0: U iwlcore_init_geos Channel 153
-> Freq=5765[5.2GHz] valid flag=0x16
-> [    9.126123] ieee80211 phy0: U iwlcore_init_geos Channel 157
-> Freq=5785[5.2GHz] valid flag=0x26
-> [    9.126344] ieee80211 phy0: U iwlcore_init_geos Channel 161
-> Freq=5805[5.2GHz] valid flag=0x16
-> [    9.126544] ieee80211 phy0: U iwlcore_init_geos Channel 165
-> Freq=5825[5.2GHz] valid flag=0x36
-> [    9.126743] iwlagn: Tunable channels: 13 802.11bg, 24 802.11a channels
-> [    9.126928] ieee80211 phy0: U __iwl_write32 write32(0x0000000C,
-> 0x00000000) - drivers/net/wireless/iwlwifi/iwl-agn.c 1511
-> [    9.127131] ieee80211 phy0: U __iwl_write32 write32(0x00000008,
-> 0xFFFFFFFF) - drivers/net/wireless/iwlwifi/iwl-agn.c 1515
-> [    9.127335] ieee80211 phy0: U __iwl_write32 write32(0x00000010,
-> 0xFFFFFFFF) - drivers/net/wireless/iwlwifi/iwl-agn.c 1516
-> [    9.127538] ieee80211 phy0: U iwl4965_disable_interrupts Disabled interrupts
-> [    9.128536] iwlagn 0000:03:00.0: PCI INT A disabled
-> [    9.128965] phy0: Selected rate control algorithm 'iwl-agn-rs'
-> [    9.201198] HDA Intel 0000:00:1b.0: PCI INT A -> GSI 22 (level,
-> low) -> IRQ 22
-> [    9.201443] HDA Intel 0000:00:1b.0: setting latency timer to 64
-> [    9.235420] ieee80211 phy0: U iwl_rfkill_init Initializing RFKILL.
-> [    9.235628] ieee80211 phy0: U iwl_rfkill_init RFKILL initialization complete.
-> [    9.235841] ieee80211 phy0: U iwl_power_init_handle Initialize power
-> [    9.236031] ieee80211 phy0: U iwl_power_init_handle adjust power
-> command flags
-> [    9.233802] hda_codec: Unknown model for ALC662, trying auto-probe
-> from BIOS...
-> [   10.925499] EXT3 FS on sda2, internal journal
-> [   11.445609] loop: module loaded
-> [   12.904663] r8169: eth0: link down
-> [   16.274090] pnp: the driver 'parport_pc' has been registered
-> [   16.294503] lp: driver loaded but no devices found
-> [   16.326502] ppdev: user-space parallel port driver
-> [   16.921526] NET: Registered protocol family 10
-> [   16.922076] lo: Disabled Privacy Extensions
-> [   16.922614] ADDRCONF(NETDEV_UP): eth0: link is not ready
-> [   17.408019] warning: `avahi-daemon' uses 32-bit capabilities
-> (legacy support in use)
-> [   19.102741] Bluetooth: L2CAP ver 2.10
-> [   19.102928] Bluetooth: L2CAP socket layer initialized
-> [   19.159165] Bluetooth: RFCOMM socket layer initialized
-> [   19.159378] Bluetooth: RFCOMM TTY layer initialized
-> [   19.159568] Bluetooth: RFCOMM ver 1.10
-> [   19.541239] ieee80211 phy0: U iwl4965_mac_start enter
-> [   19.541436] iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> [   19.541781] iwlagn 0000:03:00.0: restoring config space at offset
-> 0x1 (was 0x100002, writing 0x100006)
-> [   19.541974] firmware: requesting iwlwifi-5000-1.ucode
-> [   19.686248] ieee80211 phy0: U iwl4965_read_ucode Got firmware
-> 'iwlwifi-5000-1.ucode' file (345008 bytes) from disk
-> [   19.686458] ieee80211 phy0: U iwl4965_read_ucode f/w package hdr
-> ucode version = 0x5040110
-> [   19.686691] ieee80211 phy0: U iwl4965_read_ucode f/w package hdr
-> runtime inst size = 128504
-> [   19.686990] ieee80211 phy0: U iwl4965_read_ucode f/w package hdr
-> runtime data size = 49152
-> [   19.687297] ieee80211 phy0: U iwl4965_read_ucode f/w package hdr
-> init inst size = 118176
-> [   19.687533] ieee80211 phy0: U iwl4965_read_ucode f/w package hdr
-> init data size = 49152
-> [   19.687771] ieee80211 phy0: U iwl4965_read_ucode f/w package hdr
-> boot inst size = 0
-> [   19.688090] ieee80211 phy0: U iwl4965_read_ucode Copying (but not
-> loading) uCode instr len 128504
-> [   19.688362] ieee80211 phy0: U iwl4965_read_ucode uCode instr buf
-> vaddr = 0xffff88013e500000, paddr = 0x3e500000
-> [   19.688607] ieee80211 phy0: U iwl4965_read_ucode Copying (but not
-> loading) uCode data len 49152
-> [   19.688859] ieee80211 phy0: U iwl4965_read_ucode Copying (but not
-> loading) init instr len 118176
-> [   19.689114] ieee80211 phy0: U iwl4965_read_ucode Copying (but not
-> loading) init data len 49152
-> [   19.689361] ieee80211 phy0: U iwl4965_read_ucode Copying (but not
-> loading) boot instr len 0
-> [   19.689634] ieee80211 phy0: U __iwl_read32
-> read_direct32(0x00000024) - drivers/net/wireless/iwlwifi/iwl-agn.c
-> 2235
-> [   19.689848] ieee80211 phy0: U __iwl_write32 write32(0x00000008,
-> 0xFFFFFFFF) - drivers/net/wireless/iwlwifi/iwl-agn.c 2247
-> [   19.690144] ieee80211 phy0: U __iwl_set_bit set_bit(0x00000100,
-> 0x20000000) = 0x27800200
-> [   19.690391] ieee80211 phy0: U __iwl_set_bit set_bit(0x00000100,
-> 0x00800000) = 0x27800200
-> [   19.690641] ieee80211 phy0: U __iwl_set_bit set_bit(0x00000240,
-> 0xFFFF0000) = 0xFFFF0000
-> [   19.690911] ieee80211 phy0: U __iwl_set_bit set_bit(0x00000000,
-> 0x00080000) = 0x00080000
-> [   19.691159] ieee80211 phy0: U __iwl_set_bit set_bit(0x0000020C,
-> 0x00880300) = 0x00880300
-> [   19.691411] ieee80211 phy0: U __iwl_set_bit set_bit(0x00000024,
-> 0x00000004) = 0x080403C5
-> [   19.691660] ieee80211 phy0: U __iwl_poll_bit poll_bit(0x00000024,
-> 0x00000001, 0x00000001) - - drivers/net/wireless/iwlwifi/iwl-5000.c
-> 112
-> [   19.691915] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-5000.c 118
-> [   19.692190] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-5000.c 131
-> [   19.692399] ieee80211 phy0: U __iwl_write32 write32(0x00000004,
-> 0x00000010) - drivers/net/wireless/iwlwifi/iwl-core.c 236
-> [   19.692702] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-agn.c 1271
-> [   19.692981] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-agn.c 1290
-> [   19.693239] ieee80211 phy0: U __iwl_set_bit set_bit(0x0000003C,
-> 0x00000002) = 0x00080046
-> [   19.693477] ieee80211 phy0: U __iwl_set_bit set_bit(0x00000000,
-> 0x00000003) = 0x00080003
-> [   19.693725] ieee80211 phy0: U __iwl_set_bit set_bit(0x00000000,
-> 0x00000300) = 0x00080303
-> [   19.693968] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-5000.c 244
-> [   19.694221] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-5000.c 248
-> [   19.694813] ieee80211 phy0: U __iwl_write32 write32(0x00001BC8,
-> 0x000000F8) - drivers/net/wireless/iwlwifi/iwl-rx.c 159
-> [   19.695037] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-rx.c 382
-> [   19.695324] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-rx.c 420
-> [   19.695541] ieee80211 phy0: U __iwl_write32 write32(0x00001BC8,
-> 0x000000F8) - drivers/net/wireless/iwlwifi/iwl-rx.c 159
-> [   19.695838] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 500
-> [   19.696094] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 509
-> [   19.696345] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-core.c 188
-> [   19.696600] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-core.c 194
-> [   19.696886] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.697098] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.697426] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.697636] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.697977] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.698188] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.698513] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.698725] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.699042] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.699260] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.699585] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.699796] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.700134] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.700345] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.700670] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.700881] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.701237] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.701449] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.701795] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.702006] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.702331] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.702542] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.702913] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.703125] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.703458] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.703668] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.704000] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.704212] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.704551] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.704793] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.705112] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.705324] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.705657] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.720006] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.720354] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.720567] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.720917] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.721131] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.721457] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-tx.c 381
-> [   19.721670] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-tx.c 396
-> [   19.721971] ieee80211 phy0: U __iwl_write32 write32(0x0000005C,
-> 0x00000002) - drivers/net/wireless/iwlwifi/iwl-agn.c 2262
-> [   19.722218] ieee80211 phy0: U __iwl_write32 write32(0x0000005C,
-> 0x00000004) - drivers/net/wireless/iwlwifi/iwl-agn.c 2264
-> [   19.722471] ieee80211 phy0: U __iwl_write32 write32(0x00000008,
-> 0xFFFFFFFF) - drivers/net/wireless/iwlwifi/iwl-agn.c 2267
-> [   19.722709] ieee80211 phy0: U iwl4965_enable_interrupts Enabling interrupts
-> [   19.722952] ieee80211 phy0: U __iwl_write32 write32(0x0000000C,
-> 0xAA00008B) - drivers/net/wireless/iwlwifi/iwl-agn.c 1495
-> [   19.723183] ieee80211 phy0: U __iwl_write32 write32(0x0000005C,
-> 0x00000002) - drivers/net/wireless/iwlwifi/iwl-agn.c 2271
-> [   19.723423] ieee80211 phy0: U __iwl_write32 write32(0x0000005C,
-> 0x00000002) - drivers/net/wireless/iwlwifi/iwl-agn.c 2272
-> [   19.723676] ieee80211 phy0: U iwl5000_load_ucode Init ucode found.
-> Loading init ucode...
-> [   19.723910] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-5000.c 564
-> [   19.724160] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-5000.c 601
-> [   19.724411] ieee80211 phy0: U iwl5000_load_given_ucode INST uCode
-> section being loaded...
-> [   19.723452] ieee80211 phy0: I __iwl_read32
-> read_direct32(0x0000000C) - drivers/net/wireless/iwlwifi/iwl-agn.c
-> 1753
-> [   19.723662] ieee80211 phy0: I __iwl_write32 write32(0x0000000C,
-> 0x00000000) - drivers/net/wireless/iwlwifi/iwl-agn.c 1754
-> [   19.723866] ieee80211 phy0: I __iwl_read32
-> read_direct32(0x00000008) - drivers/net/wireless/iwlwifi/iwl-agn.c
-> 1757
-> [   19.724073] ieee80211 phy0: I __iwl_read32
-> read_direct32(0x00000010) - drivers/net/wireless/iwlwifi/iwl-agn.c
-> 1758
-> [   19.724298] ieee80211 phy0: I iwl4965_isr ISR inta 0x08000000,
-> enabled 0xaa00008b, fh 0x00000001
-> [   19.724500] ieee80211 phy0: I __iwl_read32
-> read_direct32(0x00000008) - drivers/net/wireless/iwlwifi/iwl-agn.c
-> 1591
-> [   19.724706] ieee80211 phy0: I __iwl_write32 write32(0x00000008,
-> 0x08000000) - drivers/net/wireless/iwlwifi/iwl-agn.c 1592
-> [   19.724910] ieee80211 phy0: I __iwl_read32
-> read_direct32(0x00000010) - drivers/net/wireless/iwlwifi/iwl-agn.c
-> 1597
-> [   19.725117] ieee80211 phy0: I __iwl_write32 write32(0x00000010,
-> 0x00000001) - drivers/net/wireless/iwlwifi/iwl-agn.c 1598
-> [   19.725320] ieee80211 phy0: I iwl4965_irq_tasklet Tx interrupt
-> [   19.725505] ieee80211 phy0: I iwl4965_enable_interrupts Enabling interrupts
-> [   19.725696] ieee80211 phy0: I __iwl_write32 write32(0x0000000C,
-> 0xAA00008B) - drivers/net/wireless/iwlwifi/iwl-agn.c 1495
-> [   19.728437] ieee80211 phy0: U __iwl_grab_nic_access grabbing nic
-> access - drivers/net/wireless/iwlwifi/iwl-5000.c 564
-> [   19.728722] ieee80211 phy0: U __iwl_release_nic_access releasing
-> nic access - drivers/net/wireless/iwlwifi/iwl-5000.c 601
-> [   19.729005] ieee80211 phy0: U iwl5000_load_given_ucode DATA uCode
-> section being loaded...
-> [   19.729819] ieee80211 phy0: I __iwl_read32
-> read_direct32(0x0000000C) - drivers/net/wireless/iwlwifi/iwl-agn.c
-> 1753
-> [   19.730044] ieee80211 phy0: I __iwl_write32 write32(0x0000000C,
-> 0x00000000) - drivers/net/wireless/iwlwifi/iwl-agn.c 1754
-> [   19.730248] ieee80211 phy0: I __iwl_read32
-> read_direct32(0x00000008) - drivers/net/wireless/iwlwifi/iwl-agn.c
-> 1757
-> [   19.730454] ieee80211 phy0: I __iwl_read32
-> read_direct32(0x00000010) - drivers/net/wireless/iwlwifi/iwl-agn.c
-> 1758
-> [   19.730663] ieee80211 phy0: I iwl4965_isr ISR inta 0x08000000,
-> enabled 0xaa00008b, fh 0x00000001
-> [   19.730886] ieee80211 phy0: I __iwl_read32
-> read_direct32(0x00000008) - drivers/net/wireless/iwlwifi/iwl-agn.c
-> 1591
-> [   19.731094] ieee80211 phy0: I __iwl_write32 write32(0x00000008,
-> 0x08000000) - drivers/net/wireless/iwlwifi/iwl-agn.c 1592
-> [   19.731297] ieee80211 phy0: I __iwl_read32
-> read_direct32(0x00000010) - drivers/net/wireless/iwlwifi/iwl-agn.c
-> 1597
-> [   19.731504] ieee80211 phy0: I __iwl_write32 write32(0x00000010,
-> 0x00000001) - drivers/net/wireless/iwlwifi/iwl-agn.c 1598
-> [   19.731706] ieee80211 phy0: I iwl4965_irq_tasklet Tx interrupt
-> [   19.731893] ieee80211 phy0: I iwl4965_enable_interrupts Enabling interrupts
-> [   19.732078] ieee80211 phy0: I __iwl_write32 write32(0x0000000C,
-> 0xAA00008B) - drivers/net/wireless/iwlwifi/iwl-agn.c 1495
-> [   19.729832] ieee80211 phy0: U iwl5000_load_ucode Init ucode load complete.
-> [   19.730041] ieee80211 phy0: U __iwl_write32 write32(0x00000020,
-> 0x00000000) - drivers/net/wireless/iwlwifi/iwl-agn.c 1816
-> [   19.730274] ieee80211 phy0: U __iwl4965_up iwlagn is coming up
-> [   19.730492] ieee80211 phy0: U iwl4965_mac_start Start UP work done.
-> [   23.727121] iwlagn: START_ALIVE timeout after 4000ms.
-> [   23.727262] iwlagn 0000:03:00.0: PCI INT A disabled
-> [   23.727264] ieee80211 phy0: U iwl4965_mac_start leave - failed
 >
 
-Please try attached patch (not sure it will help tough)
-I also will need output of
- >cat /sys/class/net/wlan0/devices/version
-
-
-Thanks
+Looks good
 Tomas
 
-
-
-> Yousaf Jindal
-> Director of Technology
-> Pakistani Institute
+> Index: wireless-testing/include/linux/nl80211.h
+> ===================================================================
+> --- wireless-testing.orig/include/linux/nl80211.h
+> +++ wireless-testing/include/linux/nl80211.h
+> @@ -207,6 +207,9 @@ enum nl80211_commands {
+>  * @NL80211_ATTR_BSS_SHORT_SLOT_TIME: whether short slot time enabled
+>  *     (u8, 0 or 1)
+>  *
+> + * @NL80211_ATTR_HT_CAPABILITY: HT Capability information element (from
+> + *     association request when used with NL80211_CMD_NEW_STATION)
+> + *
+>  * @NL80211_ATTR_MAX: highest attribute number currently defined
+>  * @__NL80211_ATTR_AFTER_LAST: internal use
+>  */
+> @@ -254,16 +257,25 @@ enum nl80211_attrs {
+>        NL80211_ATTR_BSS_SHORT_PREAMBLE,
+>        NL80211_ATTR_BSS_SHORT_SLOT_TIME,
+>
+> +       NL80211_ATTR_HT_CAPABILITY,
+> +
+>        /* add attributes here, update the policy in nl80211.c */
+>
+>        __NL80211_ATTR_AFTER_LAST,
+>        NL80211_ATTR_MAX = __NL80211_ATTR_AFTER_LAST - 1
+>  };
+>
+> +/*
+> + * Allow user space programs to use #ifdef on new attributes by defining them
+> + * here
+> + */
+> +#define NL80211_ATTR_HT_CAPABILITY NL80211_ATTR_HT_CAPABILITY
+> +
+>  #define NL80211_MAX_SUPP_RATES                 32
+>  #define NL80211_TKIP_DATA_OFFSET_ENCR_KEY      0
+>  #define NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY    16
+>  #define NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY    24
+> +#define NL80211_HT_CAPABILITY_LEN              26
+>
+>  /**
+>  * enum nl80211_iftype - (virtual) interface types
+> Index: wireless-testing/include/net/cfg80211.h
+> ===================================================================
+> --- wireless-testing.orig/include/net/cfg80211.h
+> +++ wireless-testing/include/net/cfg80211.h
+> @@ -152,6 +152,7 @@ struct station_parameters {
+>        u16 aid;
+>        u8 supported_rates_len;
+>        u8 plink_action;
+> +       struct ieee80211_ht_cap *ht_capa;
+>  };
+>
+>  /**
+> Index: wireless-testing/net/mac80211/cfg.c
+> ===================================================================
+> --- wireless-testing.orig/net/mac80211/cfg.c
+> +++ wireless-testing/net/mac80211/cfg.c
+> @@ -674,6 +674,11 @@ static void sta_apply_parameters(struct
+>                sta->supp_rates[local->oper_channel->band] = rates;
+>        }
+>
+> +       if (params->ht_capa) {
+> +               ieee80211_ht_cap_ie_to_ht_info(params->ht_capa,
+> +                                              &sta->ht_info);
+> +       }
+> +
+>        if (ieee80211_vif_is_mesh(&sdata->vif) && params->plink_action) {
+>                switch (params->plink_action) {
+>                case PLINK_ACTION_OPEN:
+> Index: wireless-testing/net/wireless/nl80211.c
+> ===================================================================
+> --- wireless-testing.orig/net/wireless/nl80211.c
+> +++ wireless-testing/net/wireless/nl80211.c
+> @@ -91,6 +91,9 @@ static struct nla_policy nl80211_policy[
+>        [NL80211_ATTR_BSS_CTS_PROT] = { .type = NLA_U8 },
+>        [NL80211_ATTR_BSS_SHORT_PREAMBLE] = { .type = NLA_U8 },
+>        [NL80211_ATTR_BSS_SHORT_SLOT_TIME] = { .type = NLA_U8 },
+> +
+> +       [NL80211_ATTR_HT_CAPABILITY] = { .type = NLA_BINARY,
+> +                                        .len = NL80211_HT_CAPABILITY_LEN },
+>  };
+>
+>  /* message building helper */
+> @@ -1129,6 +1132,10 @@ static int nl80211_set_station(struct sk
+>                params.listen_interval =
+>                    nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
+>
+> +       if (info->attrs[NL80211_ATTR_HT_CAPABILITY])
+> +               params.ht_capa =
+> +                       nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
+> +
+>        if (parse_station_flags(info->attrs[NL80211_ATTR_STA_FLAGS],
+>                                &params.station_flags))
+>                return -EINVAL;
+> @@ -1192,6 +1199,9 @@ static int nl80211_new_station(struct sk
+>        params.listen_interval =
+>                nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
+>        params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
+> +       if (info->attrs[NL80211_ATTR_HT_CAPABILITY])
+> +               params.ht_capa =
+> +                       nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
+>
+>        if (parse_station_flags(info->attrs[NL80211_ATTR_STA_FLAGS],
+>                                &params.station_flags))
+>
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> Jouni Malinen                                            PGP id EFC895FA
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
 >
-
-------=_Part_6620_8274955.1219047133604
-Content-Type: application/octet-stream; name=pci.patch
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fk0t3og30
-Content-Disposition: attachment; filename=pci.patch
-
-Y29tbWl0IGFhOTk1MTQ0MGU5YzMxY2YzZTIxZGUwNDkwOTU4NGJiM2IyYzc5OWUKQXV0aG9yOiBU
-b21hcyBXaW5rbGVyIDx0b21hcy53aW5rbGVyQGludGVsLmNvbT4KRGF0ZTogICBTYXQgQXVnIDE2
-IDA0OjIwOjQ0IDIwMDggKzAzMDAKCiAgICBpd2x3aWZpOiBjbGVhbnVwIFBDSSByZWdpc3RlciBo
-YW5kbGluZwogICAgCiAgICBUaGlzIHBhdGNoIGNsZWFucyB1cCBwY2kgcmVnaXN0ZXJzIGhhbmRs
-aW5nCiAgICBJdCBhbHNvIGFkZHMgc29tZSB3b3JrIGFyb3VuZCBmb3IgaW50ZXJydXB0IGhhbmRs
-aW5nIG9uIHNvbWUKICAgIHBsYXRmb3JtcwogICAgCiAgICBTaWduZWQtb2ZmLWJ5OiBUb21hcyBX
-aW5rbGVyIDx0b21hcy53aW5rbGVyQGludGVsLmNvbT4KCmRpZmYgLS1naXQgYS9kcml2ZXJzL25l
-dC93aXJlbGVzcy9pd2x3aWZpL2l3bC00OTY1LWh3LmggYi9kcml2ZXJzL25ldC93aXJlbGVzcy9p
-d2x3aWZpL2l3bC00OTY1LWh3LmgKaW5kZXggZmNlOTUwZi4uZjQ3OTNhNiAxMDA2NDQKLS0tIGEv
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtNDk2NS1ody5oCisrKyBiL2RyaXZlcnMv
-bmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLTQ5NjUtaHcuaApAQCAtOTgsMTYgKzk4LDE3IEBACiAj
-ZGVmaW5lIElXTF9SU1NJX09GRlNFVAk0NAogCiAKLSNpbmNsdWRlICJpd2wtY29tbWFuZHMuaCIK
-IAogLyogUENJIHJlZ2lzdGVycyAqLwotI2RlZmluZSBQQ0lfTElOS19DVFJMICAgICAgMHgwRjAJ
-LyogMSBieXRlICovCi0jZGVmaW5lIFBDSV9QT1dFUl9TT1VSQ0UgICAweDBDOAotI2RlZmluZSBQ
-Q0lfUkVHX1dVTTggICAgICAgMHgwRTgKKyNkZWZpbmUgUENJX0NGR19SRVRSWV9USU1FT1VUCTB4
-MDQxCisjZGVmaW5lIFBDSV9DRkdfUE9XRVJfU09VUkNFCTB4MEM4CisjZGVmaW5lIFBDSV9SRUdf
-V1VNOAkJMHgwRTgKKyNkZWZpbmUgUENJX0NGR19MSU5LX0NUUkwJMHgwRjAKIAogLyogUENJIHJl
-Z2lzdGVyIHZhbHVlcyAqLwotI2RlZmluZSBQQ0lfTElOS19WQUxfTDBTX0VOCTB4MDEKLSNkZWZp
-bmUgUENJX0xJTktfVkFMX0wxX0VOCTB4MDIKKyNkZWZpbmUgUENJX0NGR19MSU5LX0NUUkxfVkFM
-X0wwU19FTgkweDAxCisjZGVmaW5lIFBDSV9DRkdfTElOS19DVFJMX1ZBTF9MMV9FTgkweDAyCisj
-ZGVmaW5lIFBDSV9DRkdfQ01EX1JFR19JTlRfRElTX01TSwkweDA0CiAjZGVmaW5lIFBDSV9DRkdf
-UE1DX1BNRV9GUk9NX0QzQ09MRF9TVVBQT1JUICAgICAgICAgKDB4ODAwMDAwMDApCiAKICNkZWZp
-bmUgVEZEX1FVRVVFX1NJWkVfTUFYICAgICAgKDI1NikKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL2l3bHdpZmkvaXdsLTQ5NjUuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdp
-ZmkvaXdsLTQ5NjUuYwppbmRleCBhZGY0Y2EyLi4xNDMwZTY2IDEwMDY0NAotLS0gYS9kcml2ZXJz
-L25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC00OTY1LmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxl
-c3MvaXdsd2lmaS9pd2wtNDk2NS5jCkBAIC0zOTksNyArMzk5LDcgQEAgc3RhdGljIHZvaWQgaXds
-NDk2NV9uaWNfY29uZmlnKHN0cnVjdCBpd2xfcHJpdiAqcHJpdikKIAl1bnNpZ25lZCBsb25nIGZs
-YWdzOwogCXUzMiB2YWw7CiAJdTE2IHJhZGlvX2NmZzsKLQl1OCB2YWxfbGluazsKKwl1MTYgbGlu
-azsKIAogCXNwaW5fbG9ja19pcnFzYXZlKCZwcml2LT5sb2NrLCBmbGFncyk7CiAKQEAgLTQxMCwx
-MCArNDEwLDEwIEBAIHN0YXRpYyB2b2lkIGl3bDQ5NjVfbmljX2NvbmZpZyhzdHJ1Y3QgaXdsX3By
-aXYgKnByaXYpCiAJCQkJICAgICAgIHZhbCAmIH4oMSA8PCAxMSkpOwogCX0KIAotCXBjaV9yZWFk
-X2NvbmZpZ19ieXRlKHByaXYtPnBjaV9kZXYsIFBDSV9MSU5LX0NUUkwsICZ2YWxfbGluayk7CisJ
-cGNpX3JlYWRfY29uZmlnX3dvcmQocHJpdi0+cGNpX2RldiwgUENJX0NGR19MSU5LX0NUUkwsICZs
-aW5rKTsKIAogCS8qIEwxIGlzIGVuYWJsZWQgYnkgQklPUyAqLwotCWlmICgodmFsX2xpbmsgJiBQ
-Q0lfTElOS19WQUxfTDFfRU4pID09IFBDSV9MSU5LX1ZBTF9MMV9FTikKKwlpZiAoKGxpbmsgJiBQ
-Q0lfQ0ZHX0xJTktfQ1RSTF9WQUxfTDFfRU4pID09IFBDSV9DRkdfTElOS19DVFJMX1ZBTF9MMV9F
-TikKIAkJLyogZGlhYmxlIEwwUyBkaXNhYmxlZCBMMUEgZW5hYmxlZCAqLwogCQlpd2xfc2V0X2Jp
-dChwcml2LCBDU1JfR0lPX1JFRywgQ1NSX0dJT19SRUdfVkFMX0wwU19FTkFCTEVEKTsKIAllbHNl
-CmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC01MDAwLmMgYi9k
-cml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC01MDAwLmMKaW5kZXggYjMxNDgwMS4uMDhm
-ZmU2MSAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtNTAwMC5j
-CisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLTUwMDAuYwpAQCAtMjA5LDE0
-ICsyMDksMTQgQEAgc3RhdGljIHZvaWQgaXdsNTAwMF9uaWNfY29uZmlnKHN0cnVjdCBpd2xfcHJp
-diAqcHJpdikKIHsKIAl1bnNpZ25lZCBsb25nIGZsYWdzOwogCXUxNiByYWRpb19jZmc7Ci0JdTgg
-dmFsX2xpbms7CisJdTE2IGxpbms7CiAKIAlzcGluX2xvY2tfaXJxc2F2ZSgmcHJpdi0+bG9jaywg
-ZmxhZ3MpOwogCi0JcGNpX3JlYWRfY29uZmlnX2J5dGUocHJpdi0+cGNpX2RldiwgUENJX0xJTktf
-Q1RSTCwgJnZhbF9saW5rKTsKKwlwY2lfcmVhZF9jb25maWdfd29yZChwcml2LT5wY2lfZGV2LCBQ
-Q0lfQ0ZHX0xJTktfQ1RSTCwgJmxpbmspOwogCiAJLyogTDEgaXMgZW5hYmxlZCBieSBCSU9TICov
-Ci0JaWYgKCh2YWxfbGluayAmIFBDSV9MSU5LX1ZBTF9MMV9FTikgPT0gUENJX0xJTktfVkFMX0wx
-X0VOKQorCWlmICgobGluayAmIFBDSV9DRkdfTElOS19DVFJMX1ZBTF9MMV9FTikgPT0gUENJX0NG
-R19MSU5LX0NUUkxfVkFMX0wxX0VOKQogCQkvKiBkaWFibGUgTDBTIGRpc2FibGVkIEwxQSBlbmFi
-bGVkICovCiAJCWl3bF9zZXRfYml0KHByaXYsIENTUl9HSU9fUkVHLCBDU1JfR0lPX1JFR19WQUxf
-TDBTX0VOQUJMRUQpOwogCWVsc2UKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3
-bHdpZmkvaXdsLWFnbi5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtYWduLmMK
-aW5kZXggNDFjMmU2ZS4uMDgwZjE5ZiAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-aXdsd2lmaS9pd2wtYWduLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wt
-YWduLmMKQEAgLTEyNzQsNyArMTI3NCw3IEBAIGludCBpd2w0OTY1X3NldF9wd3Jfc3JjKHN0cnVj
-dCBpd2xfcHJpdiAqcHJpdiwgZW51bSBpd2xfcHdyX3NyYyBzcmMpCiAKIAlpZiAoc3JjID09IElX
-TF9QV1JfU1JDX1ZBVVgpIHsKIAkJdTMyIHZhbDsKLQkJcmV0ID0gcGNpX3JlYWRfY29uZmlnX2R3
-b3JkKHByaXYtPnBjaV9kZXYsIFBDSV9QT1dFUl9TT1VSQ0UsCisJCXJldCA9IHBjaV9yZWFkX2Nv
-bmZpZ19kd29yZChwcml2LT5wY2lfZGV2LCBQQ0lfQ0ZHX1BPV0VSX1NPVVJDRSwKIAkJCQkJICAg
-ICZ2YWwpOwogCiAJCWlmICh2YWwgJiBQQ0lfQ0ZHX1BNQ19QTUVfRlJPTV9EM0NPTERfU1VQUE9S
-VCkKQEAgLTI1NzgsNiArMjU3OCw3IEBAIHN0YXRpYyBpbnQgaXdsNDk2NV9tYWNfc3RhcnQoc3Ry
-dWN0IGllZWU4MDIxMV9odyAqaHcpCiB7CiAJc3RydWN0IGl3bF9wcml2ICpwcml2ID0gaHctPnBy
-aXY7CiAJaW50IHJldDsKKwl1MTYgcGNpX2NtZDsKIAogCUlXTF9ERUJVR19NQUM4MDIxMSgiZW50
-ZXJcbiIpOwogCkBAIC0yNTg4LDYgKzI1ODksMTMgQEAgc3RhdGljIGludCBpd2w0OTY1X21hY19z
-dGFydChzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodykKIAlwY2lfcmVzdG9yZV9zdGF0ZShwcml2LT5w
-Y2lfZGV2KTsKIAlwY2lfZW5hYmxlX21zaShwcml2LT5wY2lfZGV2KTsKIAorCS8qIGVuYWJsZSBp
-bnRlcnJ1cHRzIGlmIG5lZWRlZDogaHcgYnVnIHcvYSAqLworCXBjaV9yZWFkX2NvbmZpZ193b3Jk
-KHByaXYtPnBjaV9kZXYsIFBDSV9DT01NQU5ELCAmcGNpX2NtZCk7CisJaWYgKHBjaV9jbWQgJiBQ
-Q0lfQ09NTUFORF9JTlRYX0RJU0FCTEUpIHsKKwkJcGNpX2NtZCAmPSB+UENJX0NPTU1BTkRfSU5U
-WF9ESVNBQkxFOworCQlwY2lfd3JpdGVfY29uZmlnX3dvcmQocHJpdi0+cGNpX2RldiwgUENJX0NP
-TU1BTkQsIHBjaV9jbWQpOworCX0KKwogCXJldCA9IHJlcXVlc3RfaXJxKHByaXYtPnBjaV9kZXYt
-PmlycSwgaXdsNDk2NV9pc3IsIElSUUZfU0hBUkVELAogCQkJICBEUlZfTkFNRSwgcHJpdik7CiAJ
-aWYgKHJldCkgewpAQCAtNDIwNSw5ICs0MjEzLDYgQEAgc3RhdGljIGludCBpd2w0OTY1X3BjaV9w
-cm9iZShzdHJ1Y3QgcGNpX2RldiAqcGRldiwgY29uc3Qgc3RydWN0IHBjaV9kZXZpY2VfaWQgKmUK
-IAogCXBjaV9zZXRfZHJ2ZGF0YShwZGV2LCBwcml2KTsKIAotCS8qIFdlIGRpc2FibGUgdGhlIFJF
-VFJZX1RJTUVPVVQgcmVnaXN0ZXIgKDB4NDEpIHRvIGtlZXAKLQkgKiBQQ0kgVHggcmV0cmllcyBm
-cm9tIGludGVyZmVyaW5nIHdpdGggQzMgQ1BVIHN0YXRlICovCi0JcGNpX3dyaXRlX2NvbmZpZ19i
-eXRlKHBkZXYsIDB4NDEsIDB4MDApOwogCiAJLyoqKioqKioqKioqKioqKioqKioqKioqCiAJICog
-My4gUmVhZCBSRVYgcmVnaXN0ZXIKQEAgLTQyMjcsNiArNDIzMiwxMCBAQCBzdGF0aWMgaW50IGl3
-bDQ5NjVfcGNpX3Byb2JlKHN0cnVjdCBwY2lfZGV2ICpwZGV2LCBjb25zdCBzdHJ1Y3QgcGNpX2Rl
-dmljZV9pZCAqZQogCQkiOiBEZXRlY3RlZCBJbnRlbCBXaXJlbGVzcyBXaUZpIExpbmsgJXMgUkVW
-PTB4JVhcbiIsCiAJCXByaXYtPmNmZy0+bmFtZSwgcHJpdi0+aHdfcmV2KTsKIAorCS8qIFdlIGRp
-c2FibGUgdGhlIFJFVFJZX1RJTUVPVVQgcmVnaXN0ZXIgKDB4NDEpIHRvIGtlZXAKKwkgKiBQQ0kg
-VHggcmV0cmllcyBmcm9tIGludGVyZmVyaW5nIHdpdGggQzMgQ1BVIHN0YXRlICovCisJcGNpX3dy
-aXRlX2NvbmZpZ19ieXRlKHBkZXYsIFBDSV9DRkdfUkVUUllfVElNRU9VVCwgMHgwMCk7CisKIAkv
-KiBhbXAgaW5pdCAqLwogCWVyciA9IHByaXYtPmNmZy0+b3BzLT5saWItPmFwbV9vcHMuaW5pdChw
-cml2KTsKIAlpZiAoZXJyIDwgMCkgewpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-aXdsd2lmaS9pd2wtY29tbWFuZHMuaCBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXds
-LWNvbW1hbmRzLmgKaW5kZXggOTNjNWFjYy4uYTA2MDcxMSAxMDA2NDQKLS0tIGEvZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtY29tbWFuZHMuaAorKysgYi9kcml2ZXJzL25ldC93aXJl
-bGVzcy9pd2x3aWZpL2l3bC1jb21tYW5kcy5oCkBAIC0yMDc0LDggKzIwNzQsOCBAQCBzdHJ1Y3Qg
-aXdsNDk2NV9zcGVjdHJ1bV9ub3RpZmljYXRpb24gewogICogICBiaXQgMiAtICcwJyBQTSBoYXZl
-IHRvIHdhbGsgdXAgZXZlcnkgRFRJTQogICogICAgICAgICAgICcxJyBQTSBjb3VsZCBzbGVlcCBv
-dmVyIERUSU0gdGlsbCBsaXN0ZW4gSW50ZXJ2YWwuCiAgKiBQQ0kgcG93ZXIgbWFuYWdlZAotICog
-ICBiaXQgMyAtICcwJyAoUENJX0xJTktfQ1RSTCAmIDB4MSkKLSAqICAgICAgICAgICAnMScgIShQ
-Q0lfTElOS19DVFJMICYgMHgxKQorICogICBiaXQgMyAtICcwJyAoUENJX0NGR19MSU5LX0NUUkwg
-JiAweDEpCisgKiAgICAgICAgICAgJzEnICEoUENJX0NGR19MSU5LX0NUUkwgJiAweDEpCiAgKiBG
-b3JjZSBzbGVlcCBNb2RlcwogICogICBiaXQgMzEvMzAtICcwMCcgdXNlIGJvdGggbWFjL3h0YWwg
-c2xlZXBzCiAgKiAgICAgICAgICAgICAgJzAxJyBmb3JjZSBNYWMgc2xlZXAKZGlmZiAtLWdpdCBh
-L2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLXBvd2VyLmMgYi9kcml2ZXJzL25ldC93
-aXJlbGVzcy9pd2x3aWZpL2l3bC1wb3dlci5jCmluZGV4IDE1YWVlOGIuLjk4Zjg3NDUgMTAwNjQ0
-Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLXBvd2VyLmMKKysrIGIvZHJp
-dmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtcG93ZXIuYwpAQCAtMTUzLDkgKzE1MywxMCBA
-QCBzdGF0aWMgdTE2IGl3bF9nZXRfYXV0b19wb3dlcl9tb2RlKHN0cnVjdCBpd2xfcHJpdiAqcHJp
-dikKIC8qIGluaXRpYWxpemUgdG8gZGVmYXVsdCAqLwogc3RhdGljIGludCBpd2xfcG93ZXJfaW5p
-dF9oYW5kbGUoc3RydWN0IGl3bF9wcml2ICpwcml2KQogewotCWludCByZXQgPSAwLCBpOwogCXN0
-cnVjdCBpd2xfcG93ZXJfbWdyICpwb3dfZGF0YTsKIAlpbnQgc2l6ZSA9IHNpemVvZihzdHJ1Y3Qg
-aXdsX3Bvd2VyX3ZlY19lbnRyeSkgKiBJV0xfUE9XRVJfTUFYOworCXN0cnVjdCBpd2xfcG93ZXJ0
-YWJsZV9jbWQgKmNtZDsKKwlpbnQgaTsKIAl1MTYgcGNpX3BtOwogCiAJSVdMX0RFQlVHX1BPV0VS
-KCJJbml0aWFsaXplIHBvd2VyIFxuIik7CkBAIC0xNjgsMjUgKzE2OSwxOSBAQCBzdGF0aWMgaW50
-IGl3bF9wb3dlcl9pbml0X2hhbmRsZShzdHJ1Y3QgaXdsX3ByaXYgKnByaXYpCiAJbWVtY3B5KCZw
-b3dfZGF0YS0+cHdyX3JhbmdlXzFbMF0sICZyYW5nZV8xWzBdLCBzaXplKTsKIAltZW1jcHkoJnBv
-d19kYXRhLT5wd3JfcmFuZ2VfMlswXSwgJnJhbmdlXzJbMF0sIHNpemUpOwogCi0JcmV0ID0gcGNp
-X3JlYWRfY29uZmlnX3dvcmQocHJpdi0+cGNpX2RldiwKLQkJCQkgIFBDSV9MSU5LX0NUUkwsICZw
-Y2lfcG0pOwotCWlmIChyZXQgIT0gMCkKLQkJcmV0dXJuIDA7Ci0JZWxzZSB7Ci0JCXN0cnVjdCBp
-d2xfcG93ZXJ0YWJsZV9jbWQgKmNtZDsKKwlwY2lfcmVhZF9jb25maWdfd29yZChwcml2LT5wY2lf
-ZGV2LCBQQ0lfQ0ZHX0xJTktfQ1RSTCwgJnBjaV9wbSk7CiAKLQkJSVdMX0RFQlVHX1BPV0VSKCJh
-ZGp1c3QgcG93ZXIgY29tbWFuZCBmbGFnc1xuIik7CisJSVdMX0RFQlVHX1BPV0VSKCJhZGp1c3Qg
-cG93ZXIgY29tbWFuZCBmbGFnc1xuIik7CiAKLQkJZm9yIChpID0gMDsgaSA8IElXTF9QT1dFUl9N
-QVg7IGkrKykgewotCQkJY21kID0gJnBvd19kYXRhLT5wd3JfcmFuZ2VfMFtpXS5jbWQ7CisJZm9y
-IChpID0gMDsgaSA8IElXTF9QT1dFUl9NQVg7IGkrKykgeworCQljbWQgPSAmcG93X2RhdGEtPnB3
-cl9yYW5nZV8wW2ldLmNtZDsKIAotCQkJaWYgKHBjaV9wbSAmIDB4MSkKLQkJCQljbWQtPmZsYWdz
-ICY9IH5JV0xfUE9XRVJfUENJX1BNX01TSzsKLQkJCWVsc2UKLQkJCQljbWQtPmZsYWdzIHw9IElX
-TF9QT1dFUl9QQ0lfUE1fTVNLOwotCQl9CisJCWlmIChwY2lfcG0gJiBQQ0lfQ0ZHX0xJTktfQ1RS
-TF9WQUxfTDBTX0VOKQorCQkJY21kLT5mbGFncyAmPSB+SVdMX1BPV0VSX1BDSV9QTV9NU0s7CisJ
-CWVsc2UKKwkJCWNtZC0+ZmxhZ3MgfD0gSVdMX1BPV0VSX1BDSV9QTV9NU0s7CiAJfQotCXJldHVy
-biByZXQ7CisJcmV0dXJuIDA7CiB9CiAKIC8qIGFkanVzdCBwb3dlciBjb21tYW5kIGFjY29yZGlu
-ZyB0byBkdGltIHBlcmlvZCBhbmQgcG93ZXIgbGV2ZWwqLwo=
-------=_Part_6620_8274955.1219047133604--
