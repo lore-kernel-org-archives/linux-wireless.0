@@ -1,78 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:34984 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752898AbYHGURt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 16:17:49 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so275102nfc.21
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2008 13:17:47 -0700 (PDT)
-Message-ID: <489B5868.2010400@gmail.com> (sfid-20080807_221754_223087_FCA49C03)
-Date: Thu, 07 Aug 2008 21:17:44 +0100
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Dave <kilroyd@googlemail.com>, Pavel Roskin <proski@gnu.org>,
-	linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere
- fw
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>	 <1217825304.10989.20.camel@dv>	 <1217864060.3139.10.camel@localhost.localdomain>	 <1217970944.2908.11.camel@dv>	 <1217973349.30531.1.camel@localhost.localdomain>	 <1217976491.2908.36.camel@dv>	 <1218028414.16977.5.camel@localhost.localdomain>	 <4899FB91.8070501@gmail.com>	 <1218056165.12240.0.camel@localhost.localdomain>	 <489A12E2.8060909@gmail.com>	 <1218077300.30724.10.camel@localhost.localdomain>	 <489B425F.5060704@gmail.com> <1218138129.32083.14.camel@localhost.localdomain>
-In-Reply-To: <1218138129.32083.14.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-From: Dave <kilroyd@googlemail.com>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:47039 "EHLO e2.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753299AbYHYVAr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Aug 2008 17:00:47 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m7PL0gVo031663
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Aug 2008 17:00:42 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m7PL0gfq054874
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Aug 2008 17:00:42 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m7PL0gHZ005726
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Aug 2008 17:00:42 -0400
+Subject: [TESTING] Wireless mesh networking (802.11s) draft support
+From: Subrata Modak <subrata@linux.vnet.ibm.com>
+Reply-To: subrata@linux.vnet.ibm.com
+To: Luis Carlos Cobo <luisca@cozybit.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: ltp-list <ltp-list@lists.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Tue, 26 Aug 2008 02:30:31 +0530
+Message-Id: <1219698032.5434.6.camel@subratamodak.linux.ibm.com> (sfid-20080825_230051_269932_DC7D066F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> On Thu, 2008-08-07 at 19:43 +0100, Dave wrote:
->> That said, what's wrong with the ap_scan=2 mode? You've stated it's
->> not great (and I'm prepared to believe it), but what is the actual problem?
+Hi Luis/Johannes/John,
 
-<snip explanation>
+The Wireless mesh networking (802.11s) draft support has been added to
+Linux 2.6.26. We at LTP (http://ltp.sourceforge.net/,
+https://sourceforge.net/projects/ltp/) are trying to expand the test
+coverage of all the untouched areas of kernel. With this drive in mind,
+may i know if the testing infrastructure of Wireless mesh networking can
+be shared with LTP under GPLv2. It would be a shot-in-the-arm for Linux
+testing community, and, we can decide on how this can be best integrated
+into LTP.
 
-Thanks for that.
+Regards--
+Subrata
 
->> I had a reread of <http://hostap.epitest.fi/wpa_supplicant/devel/driver_wrapper.html>. 
->>
->> As a FullMAC driver without support for selecting the BSSID to associate
->> with (or frequency in Managed mode), the only way I can see to make the
->> driver work with ap_scan=1 is to silently ignore the SIOCSIWFREQ and
->> SIOCSIWAP. I don't think this is an approach I would want to pursue.
-> 
-> Well, the current orinoco driver returns "success" (0) for SIOCSIWAP on
-> Agere firmware.
-
-borken dkilroy # dmesg | grep eth1
-eth1: Hardware identity 0001:0001:0004:0002
-eth1: Station identity  001f:0001:0008:0048
-eth1: Firmware determined as Lucent/Agere 8.72
-eth1: Attempting to download firmware agere_sta_fw.bin
-  <snip fw download>
-eth1: Hardware identity 0001:0001:0004:0002
-eth1: Station identity  001f:0002:0009:0030
-eth1: Firmware determined as Lucent/Agere 9.48
-  <snip capabilities>
-eth1: ready
-eth1: orinoco_cs at 0.0, irq 11, io 0x0100-0x013f
-eth1: New link status: Connected (0001)
-
-borken dkilroy # iwlist eth1 scan essid MONTY
-eth1      Scan completed :
-          Cell 01 - Address: 00:18:4D:06:45:76
-                    ESSID:"MONTY"
-                    Mode:Master
-                    Channel:5
-         <snip detail>
-
-borken dkilroy # iwconfig eth1 ap 00:18:4d:06:45:76
-Error for wireless request "Set AP Address" (8B14) :
-    SET failed on device eth1 ; Operation not supported.
-
-borken dkilroy # iwconfig eth1 ap off              
-borken dkilroy #
-
-
-The above is running with my patchset, but I haven't touched the SIOCSIWAP handler. Honest.
-
-I'll have a think.
-
-
-Dave.
