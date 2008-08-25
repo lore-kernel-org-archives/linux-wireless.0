@@ -1,345 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:32034 "EHLO mga09.intel.com"
+Received: from hostap.isc.org ([149.20.54.63]:51583 "EHLO hostap.isc.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751815AbYH1J3J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 05:29:09 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 07/11] iwlwifi: generic init calibrations framework
-Date: Thu, 28 Aug 2008 17:25:06 +0800
-Message-Id: <1219915510-3647-8-git-send-email-yi.zhu@intel.com> (sfid-20080828_112920_422119_2882AB0D)
-In-Reply-To: <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
+	id S1753530AbYHYI7q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Aug 2008 04:59:46 -0400
+Date: Mon, 25 Aug 2008 11:58:58 +0300
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211/cfg80211: HT capabilities for NEW_STA
+Message-ID: <20080825085858.GB9415@jm.kir.nu> (sfid-20080825_105949_841886_824F5401)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+Allow userspace (e.g., hostapd) to set HT capabilities for associated
+STAs. This is based on a patch from Zhu Yi <yi.zhu@intel.com> (only
+the NL80211_ATTR_HT_CAPABILITY for NEW_STA part is included here).
 
-This patch fixes a critical bug that only the last calibration result
-was applied. On reception of one calibration result all the calibration
-was freed. The patch fixes this problem by introducing a generic init
-calibration framework which allows variable number of init calibrations
-and allows addition new HW.
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-5000-hw.h |    7 +++
- drivers/net/wireless/iwlwifi/iwl-5000.c    |   63 ++++------------------------
- drivers/net/wireless/iwlwifi/iwl-calib.c   |   60 ++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.c    |   19 +--------
- drivers/net/wireless/iwlwifi/iwl-core.h    |    8 +++-
- drivers/net/wireless/iwlwifi/iwl-dev.h     |   14 +++----
- 6 files changed, 90 insertions(+), 81 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000-hw.h b/drivers/net/wireless/iwlwifi/iwl-5000-hw.h
-index 17d4f31..c479ee2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000-hw.h
-@@ -129,6 +129,13 @@ struct iwl5000_shared {
- 	__le32 padding2;
- } __attribute__ ((packed));
+Index: wireless-testing/include/linux/nl80211.h
+===================================================================
+--- wireless-testing.orig/include/linux/nl80211.h
++++ wireless-testing/include/linux/nl80211.h
+@@ -207,6 +207,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_BSS_SHORT_SLOT_TIME: whether short slot time enabled
+  *	(u8, 0 or 1)
+  *
++ * @NL80211_ATTR_HT_CAPABILITY: HT Capability information element (from
++ *	association request when used with NL80211_CMD_NEW_STATION)
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -254,16 +257,25 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_BSS_SHORT_PREAMBLE,
+ 	NL80211_ATTR_BSS_SHORT_SLOT_TIME,
  
-+/* calibrations defined for 5000 */
-+/* defines the order in which results should be sent to the runtime uCode */
-+enum iwl5000_calib {
-+	IWL5000_CALIB_LO,
-+	IWL5000_CALIB_TX_IQ,
-+	IWL5000_CALIB_TX_IQ_PERD,
-+};
++	NL80211_ATTR_HT_CAPABILITY,
++
+ 	/* add attributes here, update the policy in nl80211.c */
  
- #endif /* __iwl_5000_hw_h__ */
+ 	__NL80211_ATTR_AFTER_LAST,
+ 	NL80211_ATTR_MAX = __NL80211_ATTR_AFTER_LAST - 1
+ };
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index d95fb42..e04a26f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -445,48 +445,6 @@ static int iwl5000_send_Xtal_calib(struct iwl_priv *priv)
- 				sizeof(cal_cmd), &cal_cmd);
- }
++/*
++ * Allow user space programs to use #ifdef on new attributes by defining them
++ * here
++ */
++#define NL80211_ATTR_HT_CAPABILITY NL80211_ATTR_HT_CAPABILITY
++
+ #define NL80211_MAX_SUPP_RATES			32
+ #define NL80211_TKIP_DATA_OFFSET_ENCR_KEY	0
+ #define NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY	16
+ #define NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY	24
++#define NL80211_HT_CAPABILITY_LEN		26
  
--static int iwl5000_send_calib_results(struct iwl_priv *priv)
--{
--	int ret = 0;
--
--	struct iwl_host_cmd hcmd = {
--		.id = REPLY_PHY_CALIBRATION_CMD,
--		.meta.flags = CMD_SIZE_HUGE,
--	};
--
--	if (priv->calib_results.lo_res) {
--		hcmd.len = priv->calib_results.lo_res_len;
--		hcmd.data = priv->calib_results.lo_res;
--		ret = iwl_send_cmd_sync(priv, &hcmd);
--
--		if (ret)
--			goto err;
--	}
--
--	if (priv->calib_results.tx_iq_res) {
--		hcmd.len = priv->calib_results.tx_iq_res_len;
--		hcmd.data = priv->calib_results.tx_iq_res;
--		ret = iwl_send_cmd_sync(priv, &hcmd);
--
--		if (ret)
--			goto err;
--	}
--
--	if (priv->calib_results.tx_iq_perd_res) {
--		hcmd.len = priv->calib_results.tx_iq_perd_res_len;
--		hcmd.data = priv->calib_results.tx_iq_perd_res;
--		ret = iwl_send_cmd_sync(priv, &hcmd);
--
--		if (ret)
--			goto err;
--	}
--
--	return 0;
--err:
--	IWL_ERROR("Error %d\n", ret);
--	return ret;
--}
--
- static int iwl5000_send_calib_cfg(struct iwl_priv *priv)
- {
- 	struct iwl5000_calib_cfg_cmd calib_cfg_cmd;
-@@ -511,33 +469,30 @@ static void iwl5000_rx_calib_result(struct iwl_priv *priv,
- 	struct iwl_rx_packet *pkt = (void *)rxb->skb->data;
- 	struct iwl5000_calib_hdr *hdr = (struct iwl5000_calib_hdr *)pkt->u.raw;
- 	int len = le32_to_cpu(pkt->len) & FH_RSCSR_FRAME_SIZE_MSK;
--
--	iwl_free_calib_results(priv);
-+	int index;
+ /**
+  * enum nl80211_iftype - (virtual) interface types
+Index: wireless-testing/include/net/cfg80211.h
+===================================================================
+--- wireless-testing.orig/include/net/cfg80211.h
++++ wireless-testing/include/net/cfg80211.h
+@@ -152,6 +152,7 @@ struct station_parameters {
+ 	u16 aid;
+ 	u8 supported_rates_len;
+ 	u8 plink_action;
++	struct ieee80211_ht_cap *ht_capa;
+ };
  
- 	/* reduce the size of the length field itself */
- 	len -= 4;
- 
-+	/* Define the order in which the results will be sent to the runtime
-+	 * uCode. iwl_send_calib_results sends them in a row according to their
-+	 * index. We sort them here */
- 	switch (hdr->op_code) {
- 	case IWL5000_PHY_CALIBRATE_LO_CMD:
--		priv->calib_results.lo_res = kzalloc(len, GFP_ATOMIC);
--		priv->calib_results.lo_res_len = len;
--		memcpy(priv->calib_results.lo_res, pkt->u.raw, len);
-+		index = IWL5000_CALIB_LO;
- 		break;
- 	case IWL5000_PHY_CALIBRATE_TX_IQ_CMD:
--		priv->calib_results.tx_iq_res = kzalloc(len, GFP_ATOMIC);
--		priv->calib_results.tx_iq_res_len = len;
--		memcpy(priv->calib_results.tx_iq_res, pkt->u.raw, len);
-+		index = IWL5000_CALIB_TX_IQ;
- 		break;
- 	case IWL5000_PHY_CALIBRATE_TX_IQ_PERD_CMD:
--		priv->calib_results.tx_iq_perd_res = kzalloc(len, GFP_ATOMIC);
--		priv->calib_results.tx_iq_perd_res_len = len;
--		memcpy(priv->calib_results.tx_iq_perd_res, pkt->u.raw, len);
-+		index = IWL5000_CALIB_TX_IQ_PERD;
- 		break;
- 	default:
- 		IWL_ERROR("Unknown calibration notification %d\n",
- 			  hdr->op_code);
- 		return;
+ /**
+Index: wireless-testing/net/mac80211/cfg.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/cfg.c
++++ wireless-testing/net/mac80211/cfg.c
+@@ -674,6 +674,11 @@ static void sta_apply_parameters(struct 
+ 		sta->supp_rates[local->oper_channel->band] = rates;
  	}
-+	iwl_calib_set(&priv->calib_results[index], pkt->u.raw, len);
- }
  
- static void iwl5000_rx_calib_complete(struct iwl_priv *priv,
-@@ -835,7 +790,7 @@ static int iwl5000_alive_notify(struct iwl_priv *priv)
- 	iwl5000_send_Xtal_calib(priv);
- 
- 	if (priv->ucode_type == UCODE_RT)
--		iwl5000_send_calib_results(priv);
-+		iwl_send_calib_results(priv);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-calib.c b/drivers/net/wireless/iwlwifi/iwl-calib.c
-index ef49440..35fb4a4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-calib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-calib.c
-@@ -66,6 +66,66 @@
- #include "iwl-core.h"
- #include "iwl-calib.h"
- 
-+/*****************************************************************************
-+ * INIT calibrations framework
-+ *****************************************************************************/
-+
-+ int iwl_send_calib_results(struct iwl_priv *priv)
-+{
-+	int ret = 0;
-+	int i = 0;
-+
-+	struct iwl_host_cmd hcmd = {
-+		.id = REPLY_PHY_CALIBRATION_CMD,
-+		.meta.flags = CMD_SIZE_HUGE,
-+	};
-+
-+	for (i = 0; i < IWL_CALIB_MAX; i++)
-+		if (priv->calib_results[i].buf) {
-+			hcmd.len = priv->calib_results[i].buf_len;
-+			hcmd.data = priv->calib_results[i].buf;
-+			ret = iwl_send_cmd_sync(priv, &hcmd);
-+			if (ret)
-+				goto err;
-+		}
-+
-+	return 0;
-+err:
-+	IWL_ERROR("Error %d iteration %d\n", ret, i);
-+	return ret;
-+}
-+EXPORT_SYMBOL(iwl_send_calib_results);
-+
-+int iwl_calib_set(struct iwl_calib_result *res, const u8 *buf, int len)
-+{
-+	if (res->buf_len != len) {
-+		kfree(res->buf);
-+		res->buf = kzalloc(len, GFP_ATOMIC);
++	if (params->ht_capa) {
++		ieee80211_ht_cap_ie_to_ht_info(params->ht_capa,
++					       &sta->ht_info);
 +	}
-+	if (unlikely(res->buf == NULL))
-+		return -ENOMEM;
 +
-+	res->buf_len = len;
-+	memcpy(res->buf, buf, len);
-+	return 0;
-+}
-+EXPORT_SYMBOL(iwl_calib_set);
+ 	if (ieee80211_vif_is_mesh(&sdata->vif) && params->plink_action) {
+ 		switch (params->plink_action) {
+ 		case PLINK_ACTION_OPEN:
+Index: wireless-testing/net/wireless/nl80211.c
+===================================================================
+--- wireless-testing.orig/net/wireless/nl80211.c
++++ wireless-testing/net/wireless/nl80211.c
+@@ -91,6 +91,9 @@ static struct nla_policy nl80211_policy[
+ 	[NL80211_ATTR_BSS_CTS_PROT] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_BSS_SHORT_PREAMBLE] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_BSS_SHORT_SLOT_TIME] = { .type = NLA_U8 },
 +
-+void iwl_calib_free_results(struct iwl_priv *priv)
-+{
-+	int i;
-+
-+	for (i = 0; i < IWL_CALIB_MAX; i++) {
-+		kfree(priv->calib_results[i].buf);
-+		priv->calib_results[i].buf = NULL;
-+		priv->calib_results[i].buf_len = 0;
-+	}
-+}
-+
-+/*****************************************************************************
-+ * RUNTIME calibrations framework
-+ *****************************************************************************/
-+
- /* "false alarms" are signals that our DSP tries to lock onto,
-  *   but then determines that they are either noise, or transmissions
-  *   from a distant wireless network (also "noise", really) that get
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 09a677c..2b89c7b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -934,22 +934,6 @@ err:
- }
- EXPORT_SYMBOL(iwl_init_drv);
- 
--void iwl_free_calib_results(struct iwl_priv *priv)
--{
--	kfree(priv->calib_results.lo_res);
--	priv->calib_results.lo_res = NULL;
--	priv->calib_results.lo_res_len = 0;
--
--	kfree(priv->calib_results.tx_iq_res);
--	priv->calib_results.tx_iq_res = NULL;
--	priv->calib_results.tx_iq_res_len = 0;
--
--	kfree(priv->calib_results.tx_iq_perd_res);
--	priv->calib_results.tx_iq_perd_res = NULL;
--	priv->calib_results.tx_iq_perd_res_len = 0;
--}
--EXPORT_SYMBOL(iwl_free_calib_results);
--
- int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
- {
- 	int ret = 0;
-@@ -977,10 +961,9 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
- }
- EXPORT_SYMBOL(iwl_set_tx_power);
- 
--
- void iwl_uninit_drv(struct iwl_priv *priv)
- {
--	iwl_free_calib_results(priv);
-+	iwl_calib_free_results(priv);
- 	iwlcore_free_geos(priv);
- 	iwl_free_channel_map(priv);
- 	kfree(priv->scan);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index ff86abc..b5db050 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -186,7 +186,6 @@ struct ieee80211_hw *iwl_alloc_all(struct iwl_cfg *cfg,
- void iwl_hw_detect(struct iwl_priv *priv);
- 
- void iwl_clear_stations_table(struct iwl_priv *priv);
--void iwl_free_calib_results(struct iwl_priv *priv);
- void iwl_reset_qos(struct iwl_priv *priv);
- void iwl_set_rxon_chain(struct iwl_priv *priv);
- int iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch);
-@@ -289,6 +288,13 @@ int iwl_scan_initiate(struct iwl_priv *priv);
- void iwl_setup_rx_scan_handlers(struct iwl_priv *priv);
- void iwl_setup_scan_deferred_work(struct iwl_priv *priv);
- 
-+/*******************************************************************************
-+ * Calibrations - implemented in iwl-calib.c
-+ ******************************************************************************/
-+int iwl_send_calib_results(struct iwl_priv *priv);
-+int iwl_calib_set(struct iwl_calib_result *res, const u8 *buf, int len);
-+void iwl_calib_free_results(struct iwl_priv *priv);
-+
- /*****************************************************
-  *   S e n d i n g     H o s t     C o m m a n d s   *
-  *****************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index c19db43..b00acf4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -746,13 +746,10 @@ struct statistics_general_data {
- 	u32 beacon_energy_c;
++	[NL80211_ATTR_HT_CAPABILITY] = { .type = NLA_BINARY,
++					 .len = NL80211_HT_CAPABILITY_LEN },
  };
  
--struct iwl_calib_results {
--	void *tx_iq_res;
--	void *tx_iq_perd_res;
--	void *lo_res;
--	u32 tx_iq_res_len;
--	u32 tx_iq_perd_res_len;
--	u32 lo_res_len;
-+/* Opaque calibration results */
-+struct iwl_calib_result {
-+	void *buf;
-+	size_t buf_len;
- };
+ /* message building helper */
+@@ -1129,6 +1132,10 @@ static int nl80211_set_station(struct sk
+ 		params.listen_interval =
+ 		    nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
  
- enum ucode_type {
-@@ -814,6 +811,7 @@ enum {
++	if (info->attrs[NL80211_ATTR_HT_CAPABILITY])
++		params.ht_capa =
++			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
++
+ 	if (parse_station_flags(info->attrs[NL80211_ATTR_STA_FLAGS],
+ 				&params.station_flags))
+ 		return -EINVAL;
+@@ -1192,6 +1199,9 @@ static int nl80211_new_station(struct sk
+ 	params.listen_interval =
+ 		nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
+ 	params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
++	if (info->attrs[NL80211_ATTR_HT_CAPABILITY])
++		params.ht_capa =
++			nla_data(info->attrs[NL80211_ATTR_HT_CAPABILITY]);
  
- 
- #define IWL_MAX_NUM_QUEUES	20 /* FIXME: do dynamic allocation */
-+#define IWL_CALIB_MAX  3
- 
- struct iwl_priv {
- 
-@@ -858,7 +856,7 @@ struct iwl_priv {
- 	s32 last_temperature;
- 
- 	/* init calibration results */
--	struct iwl_calib_results calib_results;
-+	struct iwl_calib_result calib_results[IWL_CALIB_MAX];
- 
- 	/* Scan related variables */
- 	unsigned long last_scan_jiffies;
--- 
-1.5.3.6
+ 	if (parse_station_flags(info->attrs[NL80211_ATTR_STA_FLAGS],
+ 				&params.station_flags))
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
