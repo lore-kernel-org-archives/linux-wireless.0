@@ -1,64 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:6391 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753350AbYH2Leo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Aug 2008 07:34:44 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so255103eyi.37
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Aug 2008 04:34:43 -0700 (PDT)
-From: Jose Ignacio Naranjo =?iso-8859-1?q?Hern=E1ndez?=
-	<joseignacio.naranjo@gmail.com>
-To: Jouni Malinen <j@w1.fi>
-Subject: Re: VLAN testing (and mac80211_hwsim test cases in general)
-Date: Fri, 29 Aug 2008 13:34:31 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <20080617154008.883383150@localhost> <1219995211.25321.24.camel@johannes.berg> <20080829083740.GA6083@jm.kir.nu>
-In-Reply-To: <20080829083740.GA6083@jm.kir.nu>
+Received: from mail.atheros.com ([12.36.123.2]:39740 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753375AbYHYTbL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Aug 2008 15:31:11 -0400
+Date: Mon, 25 Aug 2008 12:31:09 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Tomas Winkler <tomasw@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Mirco Tischler <mt-ml@gmx.de>,
+	Leonid Podolny <leonidp.lists@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"yi.zhu@intel.com" <yi.zhu@intel.com>,
+	"reinette.chatre@intel.com" <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"IvDoorn@gmail.com" <IvDoorn@gmail.com>
+Subject: Re: CPU load after killing iwlagn with RF kill switch
+Message-ID: <20080825193109.GE6007@tesla> (sfid-20080825_213115_766155_6C4EB1F8)
+References: <48A5EC02.4070303@gmail.com> <20080817035921.4d35ae0e@mtlp.12thdimension> <1ba2fa240808170004p63b76db1l1fdfb1cf1cb41636@mail.gmail.com> <20080817150242.GA23926@tuxdriver.com> <1ba2fa240808170920r67e11567h2da8b396b18729dd@mail.gmail.com> <20080817170714.GA29938@tuxdriver.com> <1ba2fa240808171101j8a7a94dn6be58fe1a8f46dbd@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200808291334.32148.joseignacio.naranjo@gmail.com> (sfid-20080829_133450_926516_CF8A3EA8)
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1ba2fa240808171101j8a7a94dn6be58fe1a8f46dbd@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 29 August 2008 10:37:41 Jouni Malinen wrote:
->
-> debugfs provides some help for things like VLAN (or well, would provide,
-> if we actually showed that information there ;-), but that can be easily
-> added). As far as data packets are concerned, we could implement a
-> simple "ping" program that uses packet sockets to send some data (and
-> reply to specific messages). This can then by-pass the issues with IP
-> and local interface.
->
+On Sun, Aug 17, 2008 at 11:01:26AM -0700, Tomas Winkler wrote:
+> On Sun, Aug 17, 2008 at 8:07 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > On Sun, Aug 17, 2008 at 07:20:54PM +0300, Tomas Winkler wrote:
+> >> On Sun, Aug 17, 2008 at 6:02 PM, John W. Linville
+> >> <linville@tuxdriver.com> wrote:
+> >> > On Sun, Aug 17, 2008 at 10:04:12AM +0300, Tomas Winkler wrote:
+> >> >
+> >> >> There is gap in current rfkill implementation that we didn't close
+> >> >> yet.  There were also few patches that were not signed by Intel and
+> >> >> are apparently wrong.
+> >> >
+> >> > Can you be more specific?  Do you know which patches are wrong (even
+> >> > if you don't know how to fix them)?
+> >> >
+> >>
+> >> 80fcc9e28cf3a209fbfb39a7bbddc313c59c7424
+> >> This one  is wrong and there are more then are not acked even though
+> >> they cause no problem. In general I would prefer that patches will be
+> >> acked by Yi or me.
+> >
+> > And in general, they are.  In general I would prefer if you would
+> > work upstream instead of working in iwlwifi-2.6 and periodically
+> > dumping a dozen or more patches on me all at once.  C'est la vie...
+> 
+> We cannot because no OSV or OEM ships latest kernel and mac80211 is
+> periodically broken.  There is a reason why compat-wireless was
+> brought to life. The  innovation to stabilization and testing ratio is
+> not good. This is of course more complex than that and I didn't find
+> the golden way yet.
 
-Hello all, I saw the test driver project in kernelnewbies.org, posted by 
-Johannes, so I was working a little bit on the subject.
+compat-wireless came to life to prevent alternative tree solutions, to
+prevent patch hogging in separate trees and to try to help with backward
+compatibility. That was my main motivation. If mac80211 is broken I see
+no one but ourselves to blame.
 
-I am an absolute newbie, but I would like to share my thoughts while I was 
-working on this and seeing mac80211_hwsim. Again, probably most of them are 
-useless, but give me a try :). This is gonna be a little bit off-topic... 
-sorry.
+OEMs should rely on stock kernels distributions pick. If patches are needed
+on top of that then patch *fixes* should be supplied on top of the stable
+kernel. Development work (cleanups, etc) can go onto wireless-testing
+then.
 
-First of all, I built a fool bus, just for plugging and unplugging the devices 
-on it (using debugfs for this task). I think it was the better way for 
-simulate a real device structure, but in fact is totally useless :$. 
-
-> It would be useful to have a tool that processes hwsim0 dump, though,
-> and provides a language for writing "expect scripts" for 802.11
-> (+radiotap) frames.. For example, something like "EXPECT ProbeReq CHAN=1
-> SRC=<mac> DST=<bcast>; EXPECT ProbeResp CHAN=1 SRC=<bssid> DST=<mac>"
-> and so on.. That tool would then write a report on what happened and
-> provided pass/fail result based on requirements in the script.
-
-Then, every device has debugfs I/O files (well, writing isn't working properly 
-yet). I tought it was the best way to allow an user tool to handle 
-configurations and communication with devices. I mean, the 'air' would be these 
-debugfs files next to an user tool to simulate what you want using them.
-
-Well, the next two weeks are my exams period, so i will be out of service, but 
-I would like to help with this. Therefore, I'll pay attention to the list just 
-in case I could help with this stuff.
-
-Regards,
-Jose Ignacio.
+  Luis
