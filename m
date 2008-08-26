@@ -1,68 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46731 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758654AbYHEMXG (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.232]:47756 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753231AbYHZSvH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 08:23:06 -0400
-Subject: Re: iwl5000 oopses (was: iwl5000 oopses with Linus's tree)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1217937364.3603.37.camel@johannes.berg> (sfid-20080805_135654_962503_852A6EC4)
-References: <1217937364.3603.37.camel@johannes.berg>
-	 (sfid-20080805_135654_962503_852A6EC4)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-vVOIL/lWh5Ab9Ky4C/mi"
-Date: Tue, 05 Aug 2008 14:22:07 +0200
-Message-Id: <1217938927.3603.40.camel@johannes.berg> (sfid-20080805_142312_551539_9FE6C352)
-Mime-Version: 1.0
+	Tue, 26 Aug 2008 14:51:07 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so1817496wri.5
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Aug 2008 11:51:06 -0700 (PDT)
+Message-ID: <43e72e890808261151u5e7075a3p8532b57b011d3a20@mail.gmail.com> (sfid-20080826_205113_054811_B6A0F740)
+Date: Tue, 26 Aug 2008 11:51:05 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Compat-wireless - will start fresh on 2.6.27
+Cc: compat-masters@lists.madwifi.org,
+	"Tomas Winkler" <tomasw@gmail.com>,
+	"Rindjunsky, Ron" <ron.rindjunsky@intel.com>,
+	"Jiri Benc" <jbenc@suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is to let you know I've decided to not work on back porting TX MQ
+changes on compat-wireless. I just haven't found the time and don't
+think its worth it. When 2.6.27 comes out though I will start fresh on
+compat-wireless for newer kernels. I'll keep around the old tarball
+and if someone wants to take over that work it would be welcomed but
+just keep in mind you'll need to backport TX MQ :)
 
---=-vVOIL/lWh5Ab9Ky4C/mi
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Moving forward I expect compat-wireless to only support the last 3
+kernel releases. Unless of course we hit another major issue with back
+porting like TX MQ changes. Anything prior to 3 kernel release I just
+will ignore but feel free to send patches (you know who you are
+distribution people).
 
+So to be clear, compat-wireless will support soon only >= 2.6.27. For
+older kernels you can rely on the latest updated tarball:
 
-> This is kernel 2.6.27-rc1-00504-g2b12a4c-dirty
+http://www.orbit-lab.org/kernel/compat-wireless-2.6/2008/08/compat-wireless-2008-08-06.tar.bz2
 
-Same happens with a newer kernel, I merged together wireless-testing and
-linux-2.6 (because powerpc won't build in -rc1) and get this:
-
-[  126.826663] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.=
-3.27kds
-[  126.826947] iwlagn: Copyright(c) 2003-2008 Intel Corporation
-[  126.828369] iwlagn: Detected Intel Wireless WiFi Link 5350AGN REV=3D0x24
-[  126.848680] iwlagn: Tunable channels: 13 802.11bg, 24 802.11a channels
-[  127.014564] firmware: requesting iwlwifi-5000-1.ucode
-[  127.170640] iwlagn: Error wrong command queue 43 command id 0x6B
-[  127.170832] ------------[ cut here ]------------
-[  127.170884] kernel BUG at drivers/net/wireless/iwlwifi/iwl-tx.c:1163!
-[  127.170941] Oops: Exception in kernel mode, sig: 5 [#1]
-
-johannes
-
---=-vVOIL/lWh5Ab9Ky4C/mi
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJImEXrAAoJEKVg1VMiehFYjHQP/2MShBk3KvLE7/XK0uPLM9VS
-kSQGYiadHYGUelGZJxY3S3QjPbd8QBVDFn9uGagEZ5eep3eUVxGcMTdVofOt1mlJ
-OsjVnj42xyxtG5c7RFJJYZ4ZSegGvCDIdlqROwlDKKvVhwnUx+hjHvJiguFxcCVf
-+zm5XBjXa2VHAQE13p0ix41twoJDBRB0Kz5gSo8ZXZ46HKIpn5D3CJbxY6ni6RTT
-tRS2R9OWJ7/FISFXi67S0tWorevFRlRxcYp6eMVvM/sbHRNB9MFMF4KlYHPhT6pb
-+ZWlKeXIcue6r0vxmwW06i/7lOGSJyZBAA4cs05eg7XEvbS/UdKnCIums5aTSJ55
-RFmlvyL0FNwpcYbNO+u4oMNE72FGsEUeDuUZ1famurd2nUh6x4D6jI6wkf91kd9R
-EFcaZs/UXr66q9iguNMcDubfGCYuHgHK7WmLNcjYvJwQu63QsnKiYiI1hrKZdSTM
-HlIOoyulcRwB7abrwQMzsd8ZzZLfTO5SYtth5KYWMTZv1b5UuCFk1fRziJzlQT1j
-7zx7PZsWhgJiaRpinIkBp2+5QekR5ULhamfDkdQtoo4uBlanMQSp5l45Ec8H2+yv
-ThS2lnY+/x+4PN+w1SDduDZoZH9I4TgFEyOKY2VWohEVyLxk8i2+euo4cMszYYco
-YrnGvMZG4dU1LJf8oydm
-=6VWo
------END PGP SIGNATURE-----
-
---=-vVOIL/lWh5Ab9Ky4C/mi--
-
+  Luis
