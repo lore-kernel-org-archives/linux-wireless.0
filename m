@@ -1,60 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:46348 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751613AbYH1MeO (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:40713 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754524AbYHZO6H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 08:34:14 -0400
-Subject: Re: [PATCH 06/11] iwlwifi: fix apm_stop
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org,
-	Mohamed Abbas <mohamed.abbas@intel.com>
-In-Reply-To: <1ba2fa240808280421g642ddc62j7541837f874f79df@mail.gmail.com>
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
-	 <1219926807.6064.17.camel@californication>
-	 <1ba2fa240808280421g642ddc62j7541837f874f79df@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 28 Aug 2008 16:34:10 +0200
-Message-Id: <1219934050.6064.89.camel@californication> (sfid-20080828_143418_626653_68319CF9)
-Mime-Version: 1.0
+	Tue, 26 Aug 2008 10:58:07 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: [GIT PATCH] rfkill changes for 2.6.28, set 1a
+Date: Tue, 26 Aug 2008 11:57:56 -0300
+Message-Id: <1219762681-26911-1-git-send-email-hmh@hmh.eng.br> (sfid-20080826_165814_654723_B4CD14E9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tomas,
 
-> >> The patch fixes CSR_GP_CNTRL_REG_FLAG_INIT_DONE was set instead of
-> >> cleared which disabled moving device to D0U state.
-> >
-> > when was this mistake introduced. Is it a regression compared to what we
-> > have in 2.6.26?
-> 
-> Again. think of global warming.
+This is the current set of rfkill changes that I'd like to see
+merged for submission in the next merge window (2.6.28).
 
-I fully get why we wanna fix that. That was not my questions. Is this a
-regression compared to what we have in 2.6.26? Yes or no. A clear yes
-make this a regression and we will not even discuss this any further.
-That patch should go in then. In the no case you have to come up with
-some good argument.
+It contains revised versions of the patches from set 1 [just the ones
+that were not merged into wireless-testing yet] as per the comments
+received. 
 
-Remember that I reviewed all patches under the strict after merge window
-rules. There is always a gray area, but please give good argumentation
-for it in the commit message.
+I have included Felipe Balbi's patch as well, to keep them all in one
+place.  I have removed the "net: " from Felipe's patch *title* to keep
+it in line with the prefix that is being used for rfkill (just
+"rfkill: ").
 
-And again, if I would be in Dave shoes, I would reject this one.
+If there are no problems with the patches and Ivo is okay with them, I'd
+like to see them merged into wireless-testing.
 
-Also it would be a bad idea to just keep sending patches and then have
-John forward them to Dave. At some point this backfires. Just split
-these up into 2.6.27 and 2.6.28 patches and give them to John.
+Shortlog:
 
-Regards
+Felipe Balbi (1):
+      rfkill: add missing line break
 
-Marcel
+Henrique de Moraes Holschuh (3):
+      rfkill: add WARN and BUG_ON paranoia (v2)
+      rfkill: rename rfkill_mutex to rfkill_global_mutex
+      rfkill: remove transmitter blocking on suspend
 
+Also available for PULL from:
+git://repo.or.cz/linux-2.6/linux-acpi-2.6/ibm-acpi-2.6.git rfkill
 
+The patches are based on the latest wireless-testing master.
+
+Thank you.
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
