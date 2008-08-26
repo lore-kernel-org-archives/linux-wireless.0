@@ -1,99 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout1-sn2.hy.skanova.net ([81.228.8.83]:57994 "EHLO
-	pne-smtpout1-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751516AbYHQKZE (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:52753 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754775AbYHZO6H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Aug 2008 06:25:04 -0400
-From: "Lars Ericsson" <Lars_Ericsson@telia.com>
-To: "'Ivo van Doorn'" <ivdoorn@gmail.com>
-Cc: <rt2400-devel@lists.sourceforge.net>,
-	<linux-wireless@vger.kernel.org>, <hostap@lists.shmoo.com>
-Subject: RE: [Rt2400-devel] mac80211 / rt2x00 / rt61 and adhoc status
-Date: Sun, 17 Aug 2008 12:25:09 +0200
-Message-ID: <059301c90053$86f182f0$0b3ca8c0@gotws1589> (sfid-20080817_122509_943936_1843F7AD)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-In-Reply-To: <200808171158.25501.IvDoorn@gmail.com>
+	Tue, 26 Aug 2008 10:58:07 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 3/5] rfkill: add WARN and BUG_ON paranoia (v2)
+Date: Tue, 26 Aug 2008 11:57:59 -0300
+Message-Id: <1219762681-26911-4-git-send-email-hmh@hmh.eng.br> (sfid-20080826_165817_782383_F6BC4D3F)
+In-Reply-To: <1219762681-26911-1-git-send-email-hmh@hmh.eng.br>
+References: <1219762681-26911-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Sunday 17 August 2008, Lars Ericsson wrote:
-> > > > 
-> > > > Have tried using the wpa_supplicant and got the -EBUSY from
-> > > > ieee80211_ioctl_siwmode().
-> > > 
-> > > As usual: The interface must be down when changing working mode.
-> > > 
-> > 
-> > The initial mode is 2. I do not know the source of that 
-> mode, might be a
-> > default.
-> > <7>[   85.713782] LaE: ieee80211_ioctl_siwmode: type=2, 
-> sdata->vif.type=2 
-> 
-> that is managed mode.
-> 
-> > Between 85.713698 and 85.821832 device is opened 
-> (1=netif_running(dev))
-> > <7>[   85.713698] LaE: ieee80211_ioctl_siwmode: 0=netif_running(dev)
-> > <7>[   85.713752] LaE: ieee80211_ioctl_siwmode: mode=2 
-> > <7>[   85.713782] LaE: ieee80211_ioctl_siwmode: type=2, 
-> sdata->vif.type=2 
-> > <6>[   85.713938] phy0 -> rt2x00lib_request_firmware: Info - Loading
-> > firmware file 'rt2561s.bin'.
-> > <6>[   85.724265] firmware: requesting rt2561s.bin
-> > <6>[   85.779042] phy0 -> rt2x00lib_request_firmware: Info 
-> - Firmware
-> > detected - version: 0.8.
-> > <7>[   85.821654] LaE: ieee80211_ioctl_giwrange: enter; 
-> > <7>[   85.821832] LaE: ieee80211_ioctl_giwrange: 
-> 1=netif_running(dev)
-> > 
-> > When wpa supplicant set the adhoc mode=1/type=3 the device 
-> is running and
-> > fails
-> 
-> to quota myself: "The interface must be down when changing 
-> working mode."
+BUG_ON() and WARN() the heck out of buggy drivers calling into the rfkill
+subsystem.
 
-OK, I got that ;)
+Also switch from WARN_ON(1) to the new descriptive WARN().
 
-> 
-> > <7>[   85.947991] LaE: ieee80211_ioctl_siwmode: mode=1 
-> > <7>[   85.948134] LaE: ieee80211_ioctl_siwmode: type=3, 
-> sdata->vif.type=2 
-> > <7>[   85.948433] LaE: ieee80211_ioctl_siwmode: type=3 
-> > 
-> > My work around was to ignore this situation and continue 
-> the mode change.
-> 
-> that is not correct, as I've stated already: The interface 
-> must be down when changing working mode.
-> 
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/rfkill/rfkill.c |   50 +++++++++++++++++++++++++++++++++++++-------------
+ 1 files changed, 37 insertions(+), 13 deletions(-)
 
-I have to check if it is the mac80211 or the wpa_supplicant that is doing
-wrong.
-
-> > > > Two tests cases, but same behaviour:
-> > > > 1) Linx.git: 2.6.26 and wpa_supplicant 0.5.9
-> > > > 2) rt2x00.git: Version 2.2.0 and wpa_supplicant 0.5.9
-> > > 
-> > > Are any beacons going out? Is there anything in the logs which
-> > > indicates what is happening?
-> > > 
-> > 
-> > As you can se in the trace below, the configuration 
-> proceeds and the adhoc
-> > is created.
-> > The warnon might give some clues.
-> 
-> So how about those beacons? are they getting out?
-> 
-
-I will check that and come back as soon as the first issue is sorted out.
-I might broke some logic when I was trying to change mode for an open
-interface.
-
-/Lars
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index b630f35..910699c 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -76,6 +76,7 @@ static BLOCKING_NOTIFIER_HEAD(rfkill_notifier_list);
+  */
+ int register_rfkill_notifier(struct notifier_block *nb)
+ {
++	BUG_ON(!nb);
+ 	return blocking_notifier_chain_register(&rfkill_notifier_list, nb);
+ }
+ EXPORT_SYMBOL_GPL(register_rfkill_notifier);
+@@ -91,6 +92,7 @@ EXPORT_SYMBOL_GPL(register_rfkill_notifier);
+  */
+ int unregister_rfkill_notifier(struct notifier_block *nb)
+ {
++	BUG_ON(!nb);
+ 	return blocking_notifier_chain_unregister(&rfkill_notifier_list, nb);
+ }
+ EXPORT_SYMBOL_GPL(unregister_rfkill_notifier);
+@@ -202,6 +204,9 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
+ 		 * RFKILL_STATE_HARD_BLOCKED */
+ 		break;
+ 	default:
++		WARN(1, KERN_WARNING
++			"rfkill: illegal state %d passed as parameter "
++			"to rfkill_toggle_radio\n", state);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -236,7 +241,11 @@ static void __rfkill_switch_all(const enum rfkill_type type,
+ {
+ 	struct rfkill *rfkill;
+ 
+-	if (unlikely(state >= RFKILL_STATE_MAX))
++	if (WARN((state >= RFKILL_STATE_MAX || type >= RFKILL_TYPE_MAX),
++			KERN_WARNING
++			"rfkill: illegal state %d or type %d "
++			"passed as parameter to __rfkill_switch_all\n",
++			state, type))
+ 		return;
+ 
+ 	rfkill_global_states[type].current_state = state;
+@@ -334,7 +343,11 @@ int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state)
+ {
+ 	enum rfkill_state oldstate;
+ 
+-	if (unlikely(state >= RFKILL_STATE_MAX))
++	BUG_ON(!rfkill);
++	if (WARN((state >= RFKILL_STATE_MAX),
++			KERN_WARNING
++			"rfkill: illegal state %d passed as parameter "
++			"to rfkill_force_state\n", state))
+ 		return -EINVAL;
+ 
+ 	mutex_lock(&rfkill->mutex);
+@@ -593,10 +606,10 @@ static int rfkill_check_duplicity(const struct rfkill *rfkill)
+ 	memset(seen, 0, sizeof(seen));
+ 
+ 	list_for_each_entry(p, &rfkill_list, node) {
+-		if (p == rfkill) {
+-			WARN_ON(1);
++		if (WARN((p == rfkill), KERN_WARNING
++				"rfkill: illegal attempt to register "
++				"an already registered rfkill struct\n"))
+ 			return -EEXIST;
+-		}
+ 		set_bit(p->type, seen);
+ 	}
+ 
+@@ -664,6 +677,12 @@ struct rfkill * __must_check rfkill_allocate(struct device *parent,
+ 	struct rfkill *rfkill;
+ 	struct device *dev;
+ 
++	if (WARN((type >= RFKILL_TYPE_MAX),
++			KERN_WARNING
++			"rfkill: illegal type %d passed as parameter "
++			"to rfkill_allocate\n", type))
++		return NULL;
++
+ 	rfkill = kzalloc(sizeof(struct rfkill), GFP_KERNEL);
+ 	if (!rfkill)
+ 		return NULL;
+@@ -736,11 +755,12 @@ int __must_check rfkill_register(struct rfkill *rfkill)
+ 	struct device *dev = &rfkill->dev;
+ 	int error;
+ 
+-	if (!rfkill->toggle_radio)
+-		return -EINVAL;
+-	if (rfkill->type >= RFKILL_TYPE_MAX)
+-		return -EINVAL;
+-	if (rfkill->state >= RFKILL_STATE_MAX)
++	if (WARN((!rfkill || !rfkill->toggle_radio ||
++			rfkill->type >= RFKILL_TYPE_MAX ||
++			rfkill->state >= RFKILL_STATE_MAX),
++			KERN_WARNING
++			"rfkill: attempt to register a "
++			"badly initialized rfkill struct\n"))
+ 		return -EINVAL;
+ 
+ 	snprintf(dev->bus_id, sizeof(dev->bus_id),
+@@ -775,6 +795,7 @@ EXPORT_SYMBOL(rfkill_register);
+  */
+ void rfkill_unregister(struct rfkill *rfkill)
+ {
++	BUG_ON(!rfkill);
+ 	device_del(&rfkill->dev);
+ 	rfkill_remove_switch(rfkill);
+ 	rfkill_led_trigger_unregister(rfkill);
+@@ -811,9 +832,12 @@ int rfkill_set_default(enum rfkill_type type, enum rfkill_state state)
+ {
+ 	int error;
+ 
+-	if (type >= RFKILL_TYPE_MAX ||
+-	    (state != RFKILL_STATE_SOFT_BLOCKED &&
+-	     state != RFKILL_STATE_UNBLOCKED))
++	if (WARN((type >= RFKILL_TYPE_MAX ||
++			(state != RFKILL_STATE_SOFT_BLOCKED &&
++			 state != RFKILL_STATE_UNBLOCKED)),
++			KERN_WARNING
++			"rfkill: illegal state %d or type %d passed as "
++			"parameter to rfkill_set_default\n", state, type))
+ 		return -EINVAL;
+ 
+ 	mutex_lock(&rfkill_mutex);
+-- 
+1.5.6.3
 
