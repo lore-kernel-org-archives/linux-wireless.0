@@ -1,39 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38997
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751586AbYHBFQE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 01:16:04 -0400
-Date: Fri, 01 Aug 2008 22:16:04 -0700 (PDT)
-Message-Id: <20080801.221604.149076257.davem@davemloft.net> (sfid-20080802_071611_183960_F8591CD4)
+Received: from mga01.intel.com ([192.55.52.88]:18520 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753562AbYHZCiO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Aug 2008 22:38:14 -0400
+From: Zhu Yi <yi.zhu@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-08-01
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080801205830.GA10071@tuxdriver.com>
-References: <20080801205830.GA10071@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 2.6.27 1/2] iwlwifi: fix rx_chain computation
+Date: Tue, 26 Aug 2008 10:34:30 +0800
+Message-Id: <1219718071-13587-1-git-send-email-yi.zhu@intel.com> (sfid-20080826_043819_937700_B4382CFD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 1 Aug 2008 16:58:30 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-> Another big batch of wireless fixes for 2.6.27.  The ath5k series is
-> more than fixes, but I included it because it enables new ath5k
-> hardware.  (The ath5k.h changes in particular are documentation cleanups
-> for registers based on info gleaned from the newly posted ath9k driver.)
-> The others patches are fixes, some more obvious than others. :-)
-> 
-> Let me know if there are any problems!
+This patch fixes and simplifies rx_chain computation.
 
-Pulled and pushed out to net-2.6 on kernel.org
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   77 ++++++++++++++++++------------
+ 1 files changed, 46 insertions(+), 31 deletions(-)
 
-If someone could fix up this warning I'd appreciate it:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index a5b5c09..91487c2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -593,12 +593,11 @@ static void iwlcore_free_geos(struct iwl_priv *priv)
+ 	clear_bit(STATUS_GEO_CONFIGURED, &priv->status);
+ }
+ 
+-static u8 is_single_rx_stream(struct iwl_priv *priv)
++static bool is_single_rx_stream(struct iwl_priv *priv)
+ {
+ 	return !priv->current_ht_config.is_ht ||
+ 	       ((priv->current_ht_config.supp_mcs_set[1] == 0) &&
+-		(priv->current_ht_config.supp_mcs_set[2] == 0)) ||
+-	       priv->ps_mode == IWL_MIMO_PS_STATIC;
++		(priv->current_ht_config.supp_mcs_set[2] == 0));
+ }
+ 
+ static u8 iwl_is_channel_extension(struct iwl_priv *priv,
+@@ -705,33 +704,39 @@ EXPORT_SYMBOL(iwl_set_rxon_ht);
+  * MIMO (dual stream) requires at least 2, but works better with 3.
+  * This does not determine *which* chains to use, just how many.
+  */
+-static int iwlcore_get_rx_chain_counter(struct iwl_priv *priv,
+-					u8 *idle_state, u8 *rx_state)
++static int iwl_get_active_rx_chain_count(struct iwl_priv *priv)
+ {
+-	u8 is_single = is_single_rx_stream(priv);
+-	u8 is_cam = test_bit(STATUS_POWER_PMI, &priv->status) ? 0 : 1;
++	bool is_single = is_single_rx_stream(priv);
++	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
+ 
+ 	/* # of Rx chains to use when expecting MIMO. */
+ 	if (is_single || (!is_cam && (priv->ps_mode == IWL_MIMO_PS_STATIC)))
+-		*rx_state = 2;
++		return 2;
+ 	else
+-		*rx_state = 3;
++		return 3;
++}
+ 
++static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
++{
++	int idle_cnt;
++	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
+ 	/* # Rx chains when idling and maybe trying to save power */
+ 	switch (priv->ps_mode) {
+ 	case IWL_MIMO_PS_STATIC:
+ 	case IWL_MIMO_PS_DYNAMIC:
+-		*idle_state = (is_cam) ? 2 : 1;
++		idle_cnt = (is_cam) ? 2 : 1;
+ 		break;
+ 	case IWL_MIMO_PS_NONE:
+-		*idle_state = (is_cam) ? *rx_state : 1;
++		idle_cnt = (is_cam) ? active_cnt : 1;
+ 		break;
++	case IWL_MIMO_PS_INVALID:
+ 	default:
+-		*idle_state = 1;
++		IWL_ERROR("invalide mimo ps mode %d\n", priv->ps_mode);
++		WARN_ON(1);
++		idle_cnt = -1;
+ 		break;
+ 	}
+-
+-	return 0;
++	return idle_cnt;
+ }
+ 
+ /**
+@@ -742,34 +747,44 @@ static int iwlcore_get_rx_chain_counter(struct iwl_priv *priv,
+  */
+ void iwl_set_rxon_chain(struct iwl_priv *priv)
+ {
+-	u8 is_single = is_single_rx_stream(priv);
+-	u8 idle_state, rx_state;
+-
+-	priv->staging_rxon.rx_chain = 0;
+-	rx_state = idle_state = 3;
++	bool is_single = is_single_rx_stream(priv);
++	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
++	u8 idle_rx_cnt, active_rx_cnt;
++	u16 rx_chain;
+ 
+ 	/* Tell uCode which antennas are actually connected.
+ 	 * Before first association, we assume all antennas are connected.
+ 	 * Just after first association, iwl_chain_noise_calibration()
+ 	 *    checks which antennas actually *are* connected. */
+-	priv->staging_rxon.rx_chain |=
+-		    cpu_to_le16(priv->hw_params.valid_rx_ant <<
+-						 RXON_RX_CHAIN_VALID_POS);
++	rx_chain = priv->hw_params.valid_rx_ant << RXON_RX_CHAIN_VALID_POS;
+ 
+ 	/* How many receivers should we use? */
+-	iwlcore_get_rx_chain_counter(priv, &idle_state, &rx_state);
+-	priv->staging_rxon.rx_chain |=
+-		cpu_to_le16(rx_state << RXON_RX_CHAIN_MIMO_CNT_POS);
+-	priv->staging_rxon.rx_chain |=
+-		cpu_to_le16(idle_state << RXON_RX_CHAIN_CNT_POS);
+-
+-	if (!is_single && (rx_state >= 2) &&
+-	    !test_bit(STATUS_POWER_PMI, &priv->status))
++	active_rx_cnt = iwl_get_active_rx_chain_count(priv);
++	idle_rx_cnt = iwl_get_idle_rx_chain_count(priv, active_rx_cnt);
++
++	/* correct rx chain count accoridng hw settings */
++	if (priv->hw_params.rx_chains_num < active_rx_cnt)
++		active_rx_cnt = priv->hw_params.rx_chains_num;
++
++	if (priv->hw_params.rx_chains_num < idle_rx_cnt)
++		idle_rx_cnt = priv->hw_params.rx_chains_num;
++
++	rx_chain |= active_rx_cnt << RXON_RX_CHAIN_MIMO_CNT_POS;
++	rx_chain |= idle_rx_cnt  << RXON_RX_CHAIN_CNT_POS;
++
++	priv->staging_rxon.rx_chain = cpu_to_le16(rx_chain);
++
++	if (!is_single && (active_rx_cnt >= 2) && is_cam)
+ 		priv->staging_rxon.rx_chain |= RXON_RX_CHAIN_MIMO_FORCE_MSK;
+ 	else
+ 		priv->staging_rxon.rx_chain &= ~RXON_RX_CHAIN_MIMO_FORCE_MSK;
+ 
+-	IWL_DEBUG_ASSOC("rx chain %X\n", priv->staging_rxon.rx_chain);
++	IWL_DEBUG_ASSOC("rx_chain=0x%Xi active=%d idle=%d\n",
++			priv->staging_rxon.rx_chain,
++			active_rx_cnt, idle_rx_cnt);
++
++	WARN_ON(active_rx_cnt == 0 || idle_rx_cnt == 0 ||
++		active_rx_cnt < idle_rx_cnt);
+ }
+ EXPORT_SYMBOL(iwl_set_rxon_chain);
+ 
+-- 
+1.5.3.6
 
-drivers/net/wireless/rt2x00/rt73usb.c: In function 'rt73usb_load_firmware':
-drivers/net/wireless/rt2x00/rt73usb.c:916: warning: passing argument 5 of 'rt2x00usb_vendor_request_large_buff' discards qualifiers from pointer target type
-
-Thanks.
