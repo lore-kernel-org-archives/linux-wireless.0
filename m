@@ -1,358 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.183]:7041 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754528AbYHESdQ (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:59882 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754848AbYHZO6J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 14:33:16 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so3163257ika.5
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Aug 2008 11:33:14 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Luis Carlos Cobo <luisca@cozybit.com>
-Date: Tue, 5 Aug 2008 19:34:52 +0200
-Subject: [PATCH] mac80211: fix use of skb->cb for mesh forwarding
-Message-ID: <48989ce7.2533440a.381b.ffff88f4@mx.google.com> (sfid-20080805_203321_417358_2008E391)
+	Tue, 26 Aug 2008 10:58:09 -0400
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Andrew Bird <ajb@spheresystems.co.uk>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Cezary Jackiewicz <cezary.jackiewicz@gmail.com>,
+	Philip Langdale <philipl@overt.org>
+Subject: [PATCH 5/5] rfkill: remove transmitter blocking on suspend
+Date: Tue, 26 Aug 2008 11:58:01 -0300
+Message-Id: <1219762681-26911-6-git-send-email-hmh@hmh.eng.br> (sfid-20080826_165819_293820_AC12167D)
+In-Reply-To: <1219762681-26911-1-git-send-email-hmh@hmh.eng.br>
+References: <1219762681-26911-1-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now we deal with mesh forwarding before the 802.11->802.3 conversion, thus
-eliminating a few unnecessary steps. The next hop lookup is called from
-ieee80211_master_start_xmit() instead of subif_start_xmit(). Until the next hop
-is found, RA in the frame will be all zeroes for frames originating from the
-device. For forwarded frames, RA will contain the TA of the received frame,
-which will be necessary to send a path error if a next hop is not found.
+Currently, rfkill would stand in the way of properly supporting wireless
+devices that are capable of waking the system up from sleep or hibernation
+when they receive a special wireless message.  It would also get in the way
+of mesh devices that need to remain operational even during platform
+suspend.
 
-Signed-off-by: Luis Carlos Cobo <luisca@cozybit.com>
+To avoid that, stop trying to block the transmitters on the rfkill class
+suspend handler.
+
+Drivers that need rfkill's older behaviour will have to implement it by
+themselves in their own suspend handling.
+
+Do note that rfkill *will* attempt to restore the transmitter state on
+resume in any situation.  This happens after the driver's resume method is
+called by the suspend core (class devices resume after the devices they are
+attached to have been resumed).
+
+The following drivers need to check if they need to explicitly block
+their transmitters in their own suspend handlers (maintainers Cc'd):
+	arch/arm/mach-pxa/tosa-bt.c
+	drivers/net/usb/hso.c
+	drivers/net/wireless/rt2x00/* (USB might need it?)
+	drivers/net/wireless/b43/ (SSB over USB might need it?)
+	drivers/misc/hp-wmi.c
+	eeepc-laptop w/rfkill support (not in mainline yet)
+	Compal laptop w/rfkill support (not in mainline yet)
+	toshiba-acpi w/rfkill support (not in mainline yet)
+
+Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Matthew Garrett <mjg@redhat.com>
+Cc: Andrew Bird <ajb@spheresystems.co.uk>
+Cc: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: Cezary Jackiewicz <cezary.jackiewicz@gmail.com>
+Cc: Philip Langdale <philipl@overt.org>
 ---
- net/mac80211/mesh.h         |    5 +--
- net/mac80211/mesh_hwmp.c    |   19 ++++----
- net/mac80211/mesh_pathtbl.c |   11 ++---
- net/mac80211/rx.c           |  106 +++++++++++++++++++++++++------------------
- net/mac80211/tx.c           |   46 ++++++++++---------
- 5 files changed, 101 insertions(+), 86 deletions(-)
+ Documentation/rfkill.txt |   32 ++++++++++++++++++++++++++++----
+ net/rfkill/rfkill.c      |   16 ++--------------
+ 2 files changed, 30 insertions(+), 18 deletions(-)
 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 669eafa..7495fbb 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -214,8 +214,7 @@ void ieee80211s_stop(void);
- void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata);
+diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
+index 6fcb306..b65f079 100644
+--- a/Documentation/rfkill.txt
++++ b/Documentation/rfkill.txt
+@@ -341,6 +341,8 @@ key that does nothing by itself, as well as any hot key that is type-specific
+ 3.1 Guidelines for wireless device drivers
+ ------------------------------------------
  
- /* Mesh paths */
--int mesh_nexthop_lookup(u8 *next_hop, struct sk_buff *skb,
--		struct net_device *dev);
-+int mesh_nexthop_lookup(struct sk_buff *skb, struct net_device *dev);
- void mesh_path_start_discovery(struct net_device *dev);
- struct mesh_path *mesh_path_lookup(u8 *dst, struct net_device *dev);
- struct mesh_path *mesh_path_lookup_by_idx(int idx, struct net_device *dev);
-@@ -286,6 +285,4 @@ static inline void mesh_path_activate(struct mesh_path *mpath)
- #define mesh_allocated	0
- #endif
++(in this text, rfkill->foo means the foo field of struct rfkill).
++
+ 1. Each independent transmitter in a wireless device (usually there is only one
+ transmitter per device) should have a SINGLE rfkill class attached to it.
  
--#define MESH_PREQ(skb)	(skb->cb + 30)
--
- #endif /* IEEE80211S_H */
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 7fa149e..08aca44 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -758,29 +758,30 @@ enddiscovery:
- /**
-  * ieee80211s_lookup_nexthop - put the appropriate next hop on a mesh frame
-  *
-- * @next_hop: output argument for next hop address
-- * @skb: frame to be sent
-+ * @skb: 802.11 frame to be sent
-  * @dev: network device the frame will be sent through
-+ * @fwd_frame: true if this frame was originally from a different host
-  *
-  * Returns: 0 if the next hop was found. Nonzero otherwise. If no next hop is
-  * found, the function will start a path discovery and queue the frame so it is
-  * sent when the path is resolved. This means the caller must not free the skb
-  * in this case.
-  */
--int mesh_nexthop_lookup(u8 *next_hop, struct sk_buff *skb,
--		struct net_device *dev)
-+int mesh_nexthop_lookup(struct sk_buff *skb, struct net_device *dev)
+@@ -363,10 +365,32 @@ This rule exists because users of the rfkill subsystem expect to get (and set,
+ when possible) the overall transmitter rfkill state, not of a particular rfkill
+ line.
+ 
+-5. During suspend, the rfkill class will attempt to soft-block the radio
+-through a call to rfkill->toggle_radio, and will try to restore its previous
+-state during resume.  After a rfkill class is suspended, it will *not* call
+-rfkill->toggle_radio until it is resumed.
++5. The wireless device driver MUST NOT leave the transmitter enabled during
++suspend and hibernation unless:
++
++	5.1. The transmitter has to be enabled for some sort of functionality
++	like wake-on-wireless-packet or autonomous packed forwarding in a mesh
++	network, and that functionality is enabled for this suspend/hibernation
++	cycle.
++
++AND
++
++	5.2. The device was not on a user-requested BLOCKED state before
++	the suspend (i.e. the driver must NOT unblock a device, not even
++	to support wake-on-wireless-packet or remain in the mesh).
++
++In other words, there is absolutely no allowed scenario where a driver can
++automatically take action to unblock a rfkill controller (obviously, this deals
++with scenarios where soft-blocking or both soft and hard blocking is happening.
++Scenarios where hardware rfkill lines are the only ones blocking the
++transmitter are outside of this rule, since the wireless device driver does not
++control its input hardware rfkill lines in the first place).
++
++6. During resume, rfkill will try to restore its previous state.
++
++7. After a rfkill class is suspended, it will *not* call rfkill->toggle_radio
++until it is resumed.
++
+ 
+ Example of a WLAN wireless driver connected to the rfkill subsystem:
+ --------------------------------------------------------------------
+diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+index d573579..ea0dc04 100644
+--- a/net/rfkill/rfkill.c
++++ b/net/rfkill/rfkill.c
+@@ -512,21 +512,9 @@ static void rfkill_release(struct device *dev)
+ #ifdef CONFIG_PM
+ static int rfkill_suspend(struct device *dev, pm_message_t state)
  {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct sk_buff *skb_to_free = NULL;
- 	struct mesh_path *mpath;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	u8 *dst_addr = hdr->addr3;
- 	int err = 0;
- 
- 	rcu_read_lock();
--	mpath = mesh_path_lookup(skb->data, dev);
-+	mpath = mesh_path_lookup(dst_addr, dev);
- 
- 	if (!mpath) {
--		mesh_path_add(skb->data, dev);
--		mpath = mesh_path_lookup(skb->data, dev);
-+		mesh_path_add(dst_addr, dev);
-+		mpath = mesh_path_lookup(dst_addr, dev);
- 		if (!mpath) {
- 			dev_kfree_skb(skb);
- 			sdata->u.sta.mshstats.dropped_frames_no_route++;
-@@ -792,13 +793,13 @@ int mesh_nexthop_lookup(u8 *next_hop, struct sk_buff *skb,
- 	if (mpath->flags & MESH_PATH_ACTIVE) {
- 		if (time_after(jiffies, mpath->exp_time -
- 			msecs_to_jiffies(sdata->u.sta.mshcfg.path_refresh_time))
--				&& skb->pkt_type != PACKET_OTHERHOST
-+				&& !memcmp(dev->dev_addr, hdr->addr4, ETH_ALEN)
- 				&& !(mpath->flags & MESH_PATH_RESOLVING)
- 				&& !(mpath->flags & MESH_PATH_FIXED)) {
- 			mesh_queue_preq(mpath,
- 					PREQ_Q_F_START | PREQ_Q_F_REFRESH);
- 		}
--		memcpy(next_hop, mpath->next_hop->addr,
-+		memcpy(hdr->addr1, mpath->next_hop->addr,
- 				ETH_ALEN);
- 	} else {
- 		if (!(mpath->flags & MESH_PATH_RESOLVING)) {
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 5f88a2e..838ee60 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -388,18 +388,15 @@ void mesh_path_tx_pending(struct mesh_path *mpath)
- void mesh_path_discard_frame(struct sk_buff *skb, struct net_device *dev)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	struct mesh_path *mpath;
- 	u32 dsn = 0;
- 
--	if (skb->pkt_type == PACKET_OTHERHOST) {
--		struct ieee80211s_hdr *prev_meshhdr;
--		int mshhdrlen;
-+	if (memcmp(hdr->addr4, dev->dev_addr, ETH_ALEN) != 0) {
- 		u8 *ra, *da;
- 
--		prev_meshhdr = ((struct ieee80211s_hdr *)skb->cb);
--		mshhdrlen = ieee80211_get_mesh_hdrlen(prev_meshhdr);
--		da = skb->data;
--		ra = MESH_PREQ(skb);
-+		da = hdr->addr3;
-+		ra = hdr->addr2;
- 		mpath = mesh_path_lookup(da, dev);
- 		if (mpath)
- 			dsn = ++mpath->dsn;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index a67ded3..c1f5319 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1114,20 +1114,9 @@ ieee80211_data_to_8023(struct ieee80211_rx_data *rx)
- 
- 	hdrlen = ieee80211_get_hdrlen(fc);
- 
--	if (ieee80211_vif_is_mesh(&sdata->vif)) {
--		int meshhdrlen = ieee80211_get_mesh_hdrlen(
-+	if (ieee80211_vif_is_mesh(&sdata->vif))
-+		hdrlen += ieee80211_get_mesh_hdrlen(
- 				(struct ieee80211s_hdr *) (skb->data + hdrlen));
--		/* Copy on cb:
--		 *  - mesh header: to be used for mesh forwarding
--		 * decision. It will also be used as mesh header template at
--		 * tx.c:ieee80211_subif_start_xmit() if interface
--		 * type is mesh and skb->pkt_type == PACKET_OTHERHOST
--		 *  - ta: to be used if a RERR needs to be sent.
--		 */
--		memcpy(skb->cb, skb->data + hdrlen, meshhdrlen);
--		memcpy(MESH_PREQ(skb), hdr->addr2, ETH_ALEN);
--		hdrlen += meshhdrlen;
--	}
- 
- 	/* convert IEEE 802.11 header + possible LLC headers into Ethernet
- 	 * header
-@@ -1274,38 +1263,6 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
- 		}
- 	}
- 
--	/* Mesh forwarding */
--	if (ieee80211_vif_is_mesh(&sdata->vif)) {
--		u8 *mesh_ttl = &((struct ieee80211s_hdr *)skb->cb)->ttl;
--		(*mesh_ttl)--;
+-	struct rfkill *rfkill = to_rfkill(dev);
 -
--		if (is_multicast_ether_addr(skb->data)) {
--			if (*mesh_ttl > 0) {
--				xmit_skb = skb_copy(skb, GFP_ATOMIC);
--				if (xmit_skb)
--					xmit_skb->pkt_type = PACKET_OTHERHOST;
--				else if (net_ratelimit())
--					printk(KERN_DEBUG "%s: failed to clone "
--					       "multicast frame\n", dev->name);
--			} else
--				IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.sta,
--							     dropped_frames_ttl);
--		} else if (skb->pkt_type != PACKET_OTHERHOST &&
--			compare_ether_addr(dev->dev_addr, skb->data) != 0) {
--			if (*mesh_ttl == 0) {
--				IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.sta,
--							     dropped_frames_ttl);
--				dev_kfree_skb(skb);
--				skb = NULL;
--			} else {
--				xmit_skb = skb;
--				xmit_skb->pkt_type = PACKET_OTHERHOST;
--				if (!(dev->flags & IFF_PROMISC))
--					skb  = NULL;
--			}
+-	if (dev->power.power_state.event != state.event) {
+-		if (state.event & PM_EVENT_SLEEP) {
+-			/* Stop transmitter, keep state, no notifies */
+-			update_rfkill_state(rfkill);
+-
+-			mutex_lock(&rfkill->mutex);
+-			rfkill->toggle_radio(rfkill->data,
+-						RFKILL_STATE_SOFT_BLOCKED);
+-			mutex_unlock(&rfkill->mutex);
 -		}
--	}
 -
- 	if (skb) {
- 		/* deliver to local stack */
- 		skb->protocol = eth_type_trans(skb, dev);
-@@ -1436,6 +1393,63 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
++	/* mark class device as suspended */
++	if (dev->power.power_state.event != state.event)
+ 		dev->power.power_state = state;
+-	}
+ 
+ 	return 0;
  }
- 
- static ieee80211_rx_result debug_noinline
-+ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
-+{
-+	struct ieee80211_hdr *hdr;
-+	struct ieee80211s_hdr *mesh_hdr;
-+	unsigned int hdrlen;
-+	struct sk_buff *skb = rx->skb, *fwd_skb;
-+
-+	hdr = (struct ieee80211_hdr *) skb->data;
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	mesh_hdr = (struct ieee80211s_hdr *) (skb->data + hdrlen);
-+
-+	if (!ieee80211_is_data(hdr->frame_control))
-+		return RX_CONTINUE;
-+
-+	if (!mesh_hdr->ttl)
-+		/* illegal frame */
-+		return RX_DROP_MONITOR;
-+
-+	if (compare_ether_addr(rx->dev->dev_addr, hdr->addr3) == 0)
-+		return RX_CONTINUE;
-+
-+	mesh_hdr->ttl--;
-+
-+	if (rx->flags & IEEE80211_RX_RA_MATCH) {
-+		if (!mesh_hdr->ttl)
-+			IEEE80211_IFSTA_MESH_CTR_INC(&rx->sdata->u.sta,
-+						     dropped_frames_ttl);
-+		else {
-+			struct ieee80211_hdr *fwd_hdr;
-+			fwd_skb = skb_copy(skb, GFP_ATOMIC);
-+
-+			if (!fwd_skb && net_ratelimit())
-+				printk(KERN_DEBUG "%s: failed to clone mesh frame\n",
-+						   rx->dev->name);
-+
-+			fwd_hdr =  (struct ieee80211_hdr *) fwd_skb->data;
-+			/*
-+			 * Save TA to addr1 to send TA a path error if a
-+			 * suitable next hop is not found
-+			 */
-+			memcpy(fwd_hdr->addr1, fwd_hdr->addr2, ETH_ALEN);
-+			memcpy(fwd_hdr->addr2, rx->dev->dev_addr, ETH_ALEN);
-+			fwd_skb->dev = rx->local->mdev;
-+			fwd_skb->iif = rx->dev->ifindex;
-+			dev_queue_xmit(fwd_skb);
-+		}
-+	}
-+
-+	if (is_multicast_ether_addr(hdr->addr3) ||
-+	    rx->dev->flags & IFF_PROMISC)
-+		return RX_CONTINUE;
-+	else
-+		return RX_DROP_MONITOR;
-+}
-+
-+
-+static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
- {
- 	struct net_device *dev = rx->dev;
-@@ -1683,6 +1697,8 @@ static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
- 	/* must be after MMIC verify so header is counted in MPDU mic */
- 	CALL_RXH(ieee80211_rx_h_remove_qos_control)
- 	CALL_RXH(ieee80211_rx_h_amsdu)
-+	if (ieee80211_vif_is_mesh(&sdata->vif))
-+		CALL_RXH(ieee80211_rx_h_mesh_fwding);
- 	CALL_RXH(ieee80211_rx_h_data)
- 	CALL_RXH(ieee80211_rx_h_ctrl)
- 	CALL_RXH(ieee80211_rx_h_mgmt)
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 771ec68..fb035f9 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1328,6 +1328,22 @@ int ieee80211_master_start_xmit(struct sk_buff *skb,
- 
- 	osdata = IEEE80211_DEV_TO_SUB_IF(odev);
- 
-+#define skb_get_80211_fc(skb) (((struct ieee80211_hdr *) skb->data) \
-+				->frame_control)
-+	if (ieee80211_vif_is_mesh(&osdata->vif) &&
-+	    ieee80211_is_data(skb_get_80211_fc(skb))) {
-+		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+		if (ieee80211_is_data(hdr->frame_control)) {
-+			if (is_multicast_ether_addr(hdr->addr3))
-+				memcpy(hdr->addr1, hdr->addr3, ETH_ALEN);
-+			else
-+				if (mesh_nexthop_lookup(skb, odev))
-+					return  0;
-+			if (memcmp(odev->dev_addr, hdr->addr4, ETH_ALEN) != 0)
-+				osdata->u.sta.mshstats.fwded_frames++;
-+		}
-+	}
-+
- 	may_encrypt = !skb->do_not_encrypt;
- 
- 	headroom = osdata->local->tx_headroom;
-@@ -1472,30 +1488,17 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	case IEEE80211_IF_TYPE_MESH_POINT:
- 		fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
- 		/* RA TA DA SA */
--		if (is_multicast_ether_addr(skb->data))
--			memcpy(hdr.addr1, skb->data, ETH_ALEN);
--		else if (mesh_nexthop_lookup(hdr.addr1, skb, dev))
--				return 0;
-+		memset(hdr.addr1, 0, ETH_ALEN);
- 		memcpy(hdr.addr2, dev->dev_addr, ETH_ALEN);
- 		memcpy(hdr.addr3, skb->data, ETH_ALEN);
- 		memcpy(hdr.addr4, skb->data + ETH_ALEN, ETH_ALEN);
--		if (skb->pkt_type == PACKET_OTHERHOST) {
--			/* Forwarded frame, keep mesh ttl and seqnum */
--			struct ieee80211s_hdr *prev_meshhdr;
--			prev_meshhdr = ((struct ieee80211s_hdr *)skb->cb);
--			meshhdrlen = ieee80211_get_mesh_hdrlen(prev_meshhdr);
--			memcpy(&mesh_hdr, prev_meshhdr, meshhdrlen);
--			sdata->u.sta.mshstats.fwded_frames++;
--		} else {
--			if (!sdata->u.sta.mshcfg.dot11MeshTTL) {
--				/* Do not send frames with mesh_ttl == 0 */
--				sdata->u.sta.mshstats.dropped_frames_ttl++;
--				ret = 0;
--				goto fail;
--			}
--			meshhdrlen = ieee80211_new_mesh_header(&mesh_hdr,
--							       sdata);
-+		if (!sdata->u.sta.mshcfg.dot11MeshTTL) {
-+			/* Do not send frames with mesh_ttl == 0 */
-+			sdata->u.sta.mshstats.dropped_frames_ttl++;
-+			ret = 0;
-+			goto fail;
- 		}
-+		meshhdrlen = ieee80211_new_mesh_header(&mesh_hdr, sdata);
- 		hdrlen = 30;
- 		break;
- #endif
-@@ -1543,7 +1546,8 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	 * Drop unicast frames to unauthorised stations unless they are
- 	 * EAPOL frames from the local station.
- 	 */
--	if (unlikely(!is_multicast_ether_addr(hdr.addr1) &&
-+	if (!ieee80211_vif_is_mesh(&sdata->vif) &&
-+		unlikely(!is_multicast_ether_addr(hdr.addr1) &&
- 		      !(sta_flags & WLAN_STA_AUTHORIZED) &&
- 		      !(ethertype == ETH_P_PAE &&
- 		       compare_ether_addr(dev->dev_addr,
 -- 
-1.5.4.3
-
-
+1.5.6.3
 
