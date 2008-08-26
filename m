@@ -1,58 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:38812 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753538AbYH0PX2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2008 11:23:28 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: pull request: wireless-2.6 2008-08-26
-Date: Wed, 27 Aug 2008 17:22:55 +0200
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Marcel Holtmann" <holtmann@linux.intel.com>,
-	"David Miller" <davem@davemloft.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-References: <20080827013009.GA15781@tuxdriver.com> <200808271510.35950.mb@bu3sch.de> <1ba2fa240808270755t2f3d0c28rcb874011f5540ef3@mail.gmail.com>
-In-Reply-To: <1ba2fa240808270755t2f3d0c28rcb874011f5540ef3@mail.gmail.com>
+Received: from usul.saidi.cx ([204.11.33.34]:42442 "EHLO usul.overt.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751837AbYHZWzd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Aug 2008 18:55:33 -0400
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH 5/5] rfkill: remove transmitter blocking on suspend
 MIME-Version: 1.0
-Message-Id: <200808271722.55627.mb@bu3sch.de> (sfid-20080827_172337_719799_E58BE8F3)
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Date: Tue, 26 Aug 2008 18:56:27 -0400
+From: Philip Langdale <philipl@overt.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Andrew Bird <ajb@spheresystems.co.uk>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Cezary Jackiewicz <cezary.jackiewicz@gmail.com>
+In-Reply-To: <1219762681-26911-6-git-send-email-hmh@hmh.eng.br>
+References: <1219762681-26911-6-git-send-email-hmh@hmh.eng.br>
+Message-ID: <0039aef27a50f39669ac0b03c80d2071@localhost> (sfid-20080827_005538_319503_AFEB4665)
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 27 August 2008 16:55:15 Tomas Winkler wrote:
-> I'm not sure what you are taking about, we did post patches to
-> wireless-testing, the driver for 5000 HW  is working in 2.6.27-rc4 I
-> personally use it every day.  I'm sending bug fixes, like this seris
-> of patches is direct answer to bugs that were discovered very
-> recently, I'm not sure what's everybody problem here.
 
-The problem is that these patches are posted in huge batches.
-There are three problems (probably more) with that:
-1) "Oh, one of these 15 patches recently merged broke my hw"
-   instead of
-   "This patch XXX recently merged broke my hw"
-2) It's a _lot_ harder to review. I do not have the time to review
-   a lot of patches at once. I bet other people won't either.
-3) If somebody has any objections against one patch, you'll probably
-   have to rebase them all (See recent pull request vs cleanups).
-   That's additional work for you.
+On Tue, 26 Aug 2008 11:58:01 -0300, Henrique de Moraes Holschuh
+<hmh@hmh.eng.br> wrote:
+> Currently, rfkill would stand in the way of properly supporting wireless
+> devices that are capable of waking the system up from sleep or
+hibernation
+> when they receive a special wireless message.  It would also get in the
+> way
+> of mesh devices that need to remain operational even during platform
+> suspend.
+> 
+> To avoid that, stop trying to block the transmitters on the rfkill class
+> suspend handler.
+> 
+> Drivers that need rfkill's older behaviour will have to implement it by
+> themselves in their own suspend handling.
+> 
+> Do note that rfkill *will* attempt to restore the transmitter state on
+> resume in any situation.  This happens after the driver's resume method
+is
+> called by the suspend core (class devices resume after the devices they
+> are
+> attached to have been resumed).
+> 
+> The following drivers need to check if they need to explicitly block
+> their transmitters in their own suspend handlers (maintainers Cc'd):
 
-What's the problem with sending patches upstream as soon as you finished
-them, instead of piling them up locally and sending them alltogether?
+> 	toshiba-acpi w/rfkill support (not in mainline yet)
 
-> We fixed bugs in wireless-testing/mac80211 that were there for months
-> just because we are only one that do any comprehensive validation. I
-> don't  want insult anyone and I really exaggeration here but
-> sometimes I have feeling that more people are breaking the code.
+The toshiba bluetooth device is automatically disconnected and powered down
+at suspend - and I'm glad to know that rfkill will still attempt to restore
+the state - because the hardware definitely won't. :-)
 
-If you work directly upstream, you will discover these bugs even faster.
-If you maintain your local fork of mac80211, you will have a delay. But
-you will have to handle them _anyway_. It's just delayed.
+So, no new work here.
 
-And please, don't act like you don't add bugs to mac80211. There were several
-bugs that broke connections on b43 (and probably other hw, too) in the past.
+--phil
 
--- 
-Greetings Michael.
