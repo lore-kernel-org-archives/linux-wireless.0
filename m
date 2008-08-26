@@ -1,221 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:34148 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751246AbYHAXao (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.179]:54078 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754436AbYHZP4R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 19:30:44 -0400
-Message-ID: <48939C97.5030608@imap.cc> (sfid-20080802_013050_843746_C55A39B4)
-Date: Sat, 02 Aug 2008 01:30:31 +0200
-From: Tilman Schmidt <tilman@imap.cc>
+	Tue, 26 Aug 2008 11:56:17 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so1787674ika.5
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Aug 2008 08:56:16 -0700 (PDT)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH 3/5] rfkill: add WARN and BUG_ON paranoia (v2)
+Date: Tue, 26 Aug 2008 17:56:06 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <1219762681-26911-1-git-send-email-hmh@hmh.eng.br> <1219762681-26911-4-git-send-email-hmh@hmh.eng.br>
+In-Reply-To: <1219762681-26911-4-git-send-email-hmh@hmh.eng.br>
 MIME-Version: 1.0
-To: Eugeniy Meshcheryakov <eugen@debian.org>
-CC: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Q: support for AVM Fritz! WLAN USB in kernel 2.6.25+
-References: <4891D1B9.70703@imap.cc> <1217517915.10489.143.camel@johannes.berg> <4891E97C.1060302@imap.cc> <20080731165054.GA14485@tuxdriver.com> <4892391D.2010305@imap.cc> <20080731224357.GA9741@localhost.localdomain>
-In-Reply-To: <20080731224357.GA9741@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig7426AC847552304538D43EA5"
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200808261756.06759.IvDoorn@gmail.com> (sfid-20080826_175622_001711_679EFC07)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig7426AC847552304538D43EA5
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: quoted-printable
+On Tuesday 26 August 2008, Henrique de Moraes Holschuh wrote:
+> BUG_ON() and WARN() the heck out of buggy drivers calling into the rfkill
+> subsystem.
+> 
+> Also switch from WARN_ON(1) to the new descriptive WARN().
 
-On Fri, 1 Aug 2008 00:43:57 +0200, Eugeniy Meshcheryakov wrote:
-> If you see some new device like /dev/cdrom? or /dev/sr? after inserting=
+The below usage of WARN() were correct when used as WARN_ON(),
+(I only complained about the litteral WARN_ON(1) usage.
+But apparently the WARN arguments are now the same as WARN_ON(),
+so I have no objections against this patch.
+ 
+> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> Cc: Johannes Berg <johannes@sipsolutions.net>
 
-> the stick (and without closed source driver),
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-I do. The stick initially announces itself as:
-
-Aug  2 01:00:21 compaq kernel: usb 2-4: New USB device found, idVendor=3D=
-057c, idProduct=3D62ff
-Aug  2 01:00:21 compaq kernel: usb 2-4: New USB device strings: Mfr=3D3, =
-Product=3D2, SerialNumber=3D1
-Aug  2 01:00:21 compaq kernel: usb 2-4: Product: WLAN USB Device
-Aug  2 01:00:21 compaq kernel: usb 2-4: Manufacturer: AVM GmbH
-Aug  2 01:00:21 compaq kernel: usb 2-4: SerialNumber: 001C4AF1E469
-Aug  2 01:00:21 compaq kernel: usb-storage: device found at 7
-Aug  2 01:00:21 compaq kernel: usb-storage: waiting for device to settle =
-before scanning
-Aug  2 01:00:22 compaq kernel: scsi 3:0:0:0: CD-ROM            FRITZ!   W=
-LAN selfinstall 1.00 PQ: 0 ANSI: 0 CCS
-Aug  2 01:00:22 compaq kernel: sr1: scsi3-mmc drive: 52x/52x cd/rw xa/for=
-m2 cdda tray
-Aug  2 01:00:22 compaq kernel: sr 3:0:0:0: Attached scsi CD-ROM sr1
-Aug  2 01:00:22 compaq kernel: sr 3:0:0:0: Attached scsi generic sg2 type=
- 5
-Aug  2 01:00:22 compaq kernel: usb-storage: device scan complete
-
-and gets automounted by hal:
-
-Aug  2 01:00:23 compaq gnome-keyring-daemon[3186]: adding removable locat=
-ion: volume_label_FRITZ_WLAN_USB_Stick_selfinstall at /media/FRITZ!WLAN U=
-SB Stick selfinstall
-Aug  2 01:00:23 compaq hald: mounted /dev/sr1 on behalf of uid 1000
-
-> try to run 'eject' on it.
-> Hopefully this device will disappear and stick will switch to WLAN mode=
-=2E
-
-I don't even have to eject it. After about 90 secs it disconnects all by
-itself:
-
-Aug  2 01:01:52 compaq kernel: usb 2-4: USB disconnect, address 7
-Aug  2 01:01:52 compaq hald[1667]: forcibly attempting to lazy unmount /d=
-ev/sr1 as enclosing drive was disconnected
-Aug  2 01:01:52 compaq kernel: scsi 3:0:0:0: rejecting I/O to dead device=
-
-Aug  2 01:01:52 compaq gnome-keyring-daemon[3186]: removing removable loc=
-ation: volume_label_FRITZ_WLAN_USB_Stick_selfinstall
-Aug  2 01:01:52 compaq hald: unmounted /dev/sr1 from '/media/FRITZ!WLAN U=
-SB Stick selfinstall' on behalf of uid 0
-
-and then reconnects as:
-
-Aug  2 01:01:54 compaq kernel: usb 2-4: New USB device found, idVendor=3D=
-057c, idProduct=3D6201
-Aug  2 01:01:54 compaq kernel: usb 2-4: New USB device strings: Mfr=3D3, =
-Product=3D2, SerialNumber=3D1
-Aug  2 01:01:54 compaq kernel: usb 2-4: Product: WLAN USB Device
-Aug  2 01:01:54 compaq kernel: usb 2-4: Manufacturer: AVM GmbH
-Aug  2 01:01:54 compaq kernel: usb 2-4: SerialNumber: 001C4AF1E469
-
-> Then try to load acx module. If it works, then it is possible to do thi=
-s
-> automatically with udev. This works with my UMTS modem.
-
-The acx module also loads all by itself, but complains about missing
-firmware and throws two backtraces:
-
-Aug  2 01:01:54 compaq kernel: acx: this driver is still EXPERIMENTAL
-Aug  2 01:01:54 compaq kernel: acx: reading README file and/or Craig's HO=
-WTO is recommended, visit http://acx100.sf.net in case of further questio=
-ns/discussion
-Aug  2 01:01:54 compaq kernel: acx: compiled to use 32bit I/O access. I/O=
- timing issues might occur, such as non-working firmware upload. Report t=
-hem
-Aug  2 01:01:54 compaq kernel: acx: running on a little-endian CPU
-Aug  2 01:01:54 compaq kernel: acx: PCI/VLYNQ module v0.3.37 initialized,=
- waiting for cards to probe...
-Aug  2 01:01:54 compaq kernel: USB module v0.3.37 initialized, probing fo=
-r devices...
-Aug  2 01:01:54 compaq kernel: wait for device ready
-Aug  2 01:01:54 compaq kernel: requesting firmware image 'tiacx111usbc1B'=
-
-Aug  2 01:01:54 compaq kernel: acx: firmware image 'tiacx111usbc1B' was n=
-ot provided. Check your hotplug scripts
-Aug  2 01:01:54 compaq kernel: acx: issue_cmd(cmd:ACX1xx_CMD_WAKE) FAILED=
-
-Aug  2 01:01:54 compaq kernel: Pid: 3739, comm: modprobe Tainted: G      =
-  N 2.6.25.11-0.1-default #1
-Aug  2 01:01:54 compaq kernel:  [<c01071d9>] dump_trace+0x63/0x227
-Aug  2 01:01:54 compaq kernel:  [<c0107c8a>] show_trace+0x15/0x29
-Aug  2 01:01:54 compaq kernel:  [<c02e66d8>] _etext+0x5b/0x65
-Aug  2 01:01:54 compaq kernel:  [<e0bd1bed>] acxusb_s_issue_cmd_timeo_deb=
-ug+0x2e7/0x31c [acx]
-Aug  2 01:01:54 compaq kernel:  [<e0bd2042>] acxusb_e_probe+0x420/0x602 [=
-acx]
-Aug  2 01:01:54 compaq kernel:  [<e088ccec>] usb_probe_interface+0xc6/0x1=
-08 [usbcore]
-Aug  2 01:01:54 compaq kernel:  [<c024c315>] driver_probe_device+0xa0/0x1=
-36
-Aug  2 01:01:54 compaq kernel:  [<c024c406>] __driver_attach+0x5b/0x91
-Aug  2 01:01:54 compaq kernel:  [<c024bcf1>] bus_for_each_dev+0x36/0x5e
-Aug  2 01:01:54 compaq kernel:  [<c024c1ba>] driver_attach+0x14/0x16
-Aug  2 01:01:54 compaq kernel:  [<c024b6f6>] bus_add_driver+0x9d/0x1ba
-Aug  2 01:01:54 compaq kernel:  [<c024c57c>] driver_register+0x47/0xa7
-Aug  2 01:01:54 compaq kernel:  [<e088cee1>] usb_register_driver+0x66/0xc=
-0 [usbcore]
-Aug  2 01:01:54 compaq kernel:  [<e07af0bd>] acxusb_e_init_module+0x2b/0x=
-2d [acx]
-Aug  2 01:01:54 compaq kernel:  [<e07af01a>] acx_e_init_module+0x1a/0x2a =
-[acx]
-Aug  2 01:01:54 compaq kernel:  [<c01434d1>] sys_init_module+0x198b/0x1ab=
-8
-Aug  2 01:01:54 compaq kernel:  [<c01059e4>] sysenter_past_esp+0x6d/0xa9
-Aug  2 01:01:54 compaq kernel:  [<ffffe430>] 0xffffe430
-Aug  2 01:01:54 compaq kernel:  =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D
-Aug  2 01:01:54 compaq kernel: initializing max packet templates
-Aug  2 01:01:54 compaq kernel: acx: issue_cmd(cmd:cmd) FAILED
-Aug  2 01:01:54 compaq kernel: Pid: 3739, comm: modprobe Tainted: G      =
-  N 2.6.25.11-0.1-default #1
-Aug  2 01:01:54 compaq kernel:  [<c01071d9>] dump_trace+0x63/0x227
-Aug  2 01:01:54 compaq kernel:  [<c0107c8a>] show_trace+0x15/0x29
-Aug  2 01:01:54 compaq kernel:  [<c02e66d8>] _etext+0x5b/0x65
-Aug  2 01:01:54 compaq kernel:  [<e0bd1bed>] acxusb_s_issue_cmd_timeo_deb=
-ug+0x2e7/0x31c [acx]
-Aug  2 01:01:54 compaq kernel:  [<e0bc6d70>] acx_s_init_max_template_gene=
-ric+0x75/0x80 [acx]
-Aug  2 01:01:54 compaq kernel:  [<e0bc6dc0>] acx_s_init_packet_templates+=
-0x45/0x183 [acx]
-Aug  2 01:01:54 compaq kernel:  [<e0bccf50>] acx_s_init_mac+0x8c/0x6c0 [a=
-cx]
-Aug  2 01:01:54 compaq kernel:  [<e0bd204d>] acxusb_e_probe+0x42b/0x602 [=
-acx]
-Aug  2 01:01:54 compaq kernel:  [<e088ccec>] usb_probe_interface+0xc6/0x1=
-08 [usbcore]
-Aug  2 01:01:54 compaq kernel:  [<c024c315>] driver_probe_device+0xa0/0x1=
-36
-Aug  2 01:01:54 compaq kernel:  [<c024c406>] __driver_attach+0x5b/0x91
-Aug  2 01:01:54 compaq kernel:  [<c024bcf1>] bus_for_each_dev+0x36/0x5e
-Aug  2 01:01:54 compaq kernel:  [<c024c1ba>] driver_attach+0x14/0x16
-Aug  2 01:01:54 compaq kernel:  [<c024b6f6>] bus_add_driver+0x9d/0x1ba
-Aug  2 01:01:54 compaq kernel:  [<c024c57c>] driver_register+0x47/0xa7
-Aug  2 01:01:54 compaq kernel:  [<e088cee1>] usb_register_driver+0x66/0xc=
-0 [usbcore]
-Aug  2 01:01:54 compaq kernel:  [<e07af0bd>] acxusb_e_init_module+0x2b/0x=
-2d [acx]
-Aug  2 01:01:54 compaq kernel:  [<e07af01a>] acx_e_init_module+0x1a/0x2a =
-[acx]
-Aug  2 01:01:54 compaq kernel:  [<c01434d1>] sys_init_module+0x198b/0x1ab=
-8
-Aug  2 01:01:54 compaq kernel:  [<c01059e4>] sysenter_past_esp+0x6d/0xa9
-Aug  2 01:01:54 compaq kernel:  [<ffffe430>] 0xffffe430
-Aug  2 01:01:54 compaq kernel:  =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D
-Aug  2 01:01:54 compaq kernel: wlan%d: acx_s_init_packet_templates() FAIL=
-ED
-Aug  2 01:01:54 compaq kernel: acx: init_mac() FAILED
-Aug  2 01:01:54 compaq kernel: acx_usb: probe of 2-4:1.0 failed with erro=
-r 1
-Aug  2 01:01:54 compaq kernel: usbcore: registered new interface driver a=
-cx_usb
-Aug  2 01:01:54 compaq firmware.sh[3744]: Cannot find  firmware file 'tia=
-cx111usbc1B'
-
-Ok, next step I guess is trying to find that firmware image 'tiacx111usbc=
-1B' on
-the temporarily appearing pseudo CD-ROM drive or on the real CD-ROM that =
-came
-with the device. Trouble is I don't really know what I am looking for. Th=
-e
-real CD-ROM contains several instances of a file named Fwusb1b.bin, could=
- that
-be it? And if so, where should I copy it so that the acx driver will find=
- it?
-
-Thanks,
-Tilman
+> ---
+>  net/rfkill/rfkill.c |   50 +++++++++++++++++++++++++++++++++++++-------------
+>  1 files changed, 37 insertions(+), 13 deletions(-)
+> 
+> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+> index b630f35..910699c 100644
+> --- a/net/rfkill/rfkill.c
+> +++ b/net/rfkill/rfkill.c
+> @@ -76,6 +76,7 @@ static BLOCKING_NOTIFIER_HEAD(rfkill_notifier_list);
+>   */
+>  int register_rfkill_notifier(struct notifier_block *nb)
+>  {
+> +	BUG_ON(!nb);
+>  	return blocking_notifier_chain_register(&rfkill_notifier_list, nb);
+>  }
+>  EXPORT_SYMBOL_GPL(register_rfkill_notifier);
+> @@ -91,6 +92,7 @@ EXPORT_SYMBOL_GPL(register_rfkill_notifier);
+>   */
+>  int unregister_rfkill_notifier(struct notifier_block *nb)
+>  {
+> +	BUG_ON(!nb);
+>  	return blocking_notifier_chain_unregister(&rfkill_notifier_list, nb);
+>  }
+>  EXPORT_SYMBOL_GPL(unregister_rfkill_notifier);
+> @@ -202,6 +204,9 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
+>  		 * RFKILL_STATE_HARD_BLOCKED */
+>  		break;
+>  	default:
+> +		WARN(1, KERN_WARNING
+> +			"rfkill: illegal state %d passed as parameter "
+> +			"to rfkill_toggle_radio\n", state);
+>  		return -EINVAL;
+>  	}
+>  
+> @@ -236,7 +241,11 @@ static void __rfkill_switch_all(const enum rfkill_type type,
+>  {
+>  	struct rfkill *rfkill;
+>  
+> -	if (unlikely(state >= RFKILL_STATE_MAX))
+> +	if (WARN((state >= RFKILL_STATE_MAX || type >= RFKILL_TYPE_MAX),
+> +			KERN_WARNING
+> +			"rfkill: illegal state %d or type %d "
+> +			"passed as parameter to __rfkill_switch_all\n",
+> +			state, type))
+>  		return;
+>  
+>  	rfkill_global_states[type].current_state = state;
+> @@ -334,7 +343,11 @@ int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state)
+>  {
+>  	enum rfkill_state oldstate;
+>  
+> -	if (unlikely(state >= RFKILL_STATE_MAX))
+> +	BUG_ON(!rfkill);
+> +	if (WARN((state >= RFKILL_STATE_MAX),
+> +			KERN_WARNING
+> +			"rfkill: illegal state %d passed as parameter "
+> +			"to rfkill_force_state\n", state))
+>  		return -EINVAL;
+>  
+>  	mutex_lock(&rfkill->mutex);
+> @@ -593,10 +606,10 @@ static int rfkill_check_duplicity(const struct rfkill *rfkill)
+>  	memset(seen, 0, sizeof(seen));
+>  
+>  	list_for_each_entry(p, &rfkill_list, node) {
+> -		if (p == rfkill) {
+> -			WARN_ON(1);
+> +		if (WARN((p == rfkill), KERN_WARNING
+> +				"rfkill: illegal attempt to register "
+> +				"an already registered rfkill struct\n"))
+>  			return -EEXIST;
+> -		}
+>  		set_bit(p->type, seen);
+>  	}
+>  
+> @@ -664,6 +677,12 @@ struct rfkill * __must_check rfkill_allocate(struct device *parent,
+>  	struct rfkill *rfkill;
+>  	struct device *dev;
+>  
+> +	if (WARN((type >= RFKILL_TYPE_MAX),
+> +			KERN_WARNING
+> +			"rfkill: illegal type %d passed as parameter "
+> +			"to rfkill_allocate\n", type))
+> +		return NULL;
+> +
+>  	rfkill = kzalloc(sizeof(struct rfkill), GFP_KERNEL);
+>  	if (!rfkill)
+>  		return NULL;
+> @@ -736,11 +755,12 @@ int __must_check rfkill_register(struct rfkill *rfkill)
+>  	struct device *dev = &rfkill->dev;
+>  	int error;
+>  
+> -	if (!rfkill->toggle_radio)
+> -		return -EINVAL;
+> -	if (rfkill->type >= RFKILL_TYPE_MAX)
+> -		return -EINVAL;
+> -	if (rfkill->state >= RFKILL_STATE_MAX)
+> +	if (WARN((!rfkill || !rfkill->toggle_radio ||
+> +			rfkill->type >= RFKILL_TYPE_MAX ||
+> +			rfkill->state >= RFKILL_STATE_MAX),
+> +			KERN_WARNING
+> +			"rfkill: attempt to register a "
+> +			"badly initialized rfkill struct\n"))
+>  		return -EINVAL;
+>  
+>  	snprintf(dev->bus_id, sizeof(dev->bus_id),
+> @@ -775,6 +795,7 @@ EXPORT_SYMBOL(rfkill_register);
+>   */
+>  void rfkill_unregister(struct rfkill *rfkill)
+>  {
+> +	BUG_ON(!rfkill);
+>  	device_del(&rfkill->dev);
+>  	rfkill_remove_switch(rfkill);
+>  	rfkill_led_trigger_unregister(rfkill);
+> @@ -811,9 +832,12 @@ int rfkill_set_default(enum rfkill_type type, enum rfkill_state state)
+>  {
+>  	int error;
+>  
+> -	if (type >= RFKILL_TYPE_MAX ||
+> -	    (state != RFKILL_STATE_SOFT_BLOCKED &&
+> -	     state != RFKILL_STATE_UNBLOCKED))
+> +	if (WARN((type >= RFKILL_TYPE_MAX ||
+> +			(state != RFKILL_STATE_SOFT_BLOCKED &&
+> +			 state != RFKILL_STATE_UNBLOCKED)),
+> +			KERN_WARNING
+> +			"rfkill: illegal state %d or type %d passed as "
+> +			"parameter to rfkill_set_default\n", state, type))
+>  		return -EINVAL;
+>  
+>  	mutex_lock(&rfkill_mutex);
 
 
-
---------------enig7426AC847552304538D43EA5
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
-Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
-
-iD8DBQFIk5ygQ3+did9BuFsRAh4EAJ91xRnyKHzAOdfb5ebMkbY+J7MaQwCeOSO0
-PDnFdXCyXeTkOrqxrEEZoLM=
-=1xte
------END PGP SIGNATURE-----
-
---------------enig7426AC847552304538D43EA5--
