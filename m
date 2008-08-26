@@ -1,92 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:34813 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751772AbYHDIDx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 04:03:53 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 05/10] iwlwifi: fix unhandled interrupt when HW rfkill is on
-Date: Mon,  4 Aug 2008 16:00:43 +0800
-Message-Id: <1217836848-24288-6-git-send-email-yi.zhu@intel.com> (sfid-20080804_100359_055394_2A7E6A36)
-In-Reply-To: <1217836848-24288-5-git-send-email-yi.zhu@intel.com>
-References: <1217836848-24288-1-git-send-email-yi.zhu@intel.com>
- <1217836848-24288-2-git-send-email-yi.zhu@intel.com>
- <1217836848-24288-3-git-send-email-yi.zhu@intel.com>
- <1217836848-24288-4-git-send-email-yi.zhu@intel.com>
- <1217836848-24288-5-git-send-email-yi.zhu@intel.com>
+Received: from mail3.webfaction.com ([70.85.44.146]:43152 "EHLO
+	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758202AbYHZTZE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Aug 2008 15:25:04 -0400
+Date: Tue, 26 Aug 2008 15:27:31 -0400
+From: Forest Bond <forest@alittletooquiet.net>
+To: drago01 <drago01@gmail.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: Are these Ralink chips supported?
+Message-ID: <20080826192731.GC26037@storm.local.network> (sfid-20080826_212508_844290_9BEF3D31)
+References: <20080805163234.GA22429@storm.local.network> <200808061014.10483.IvDoorn@gmail.com> <20080826191654.GB26037@storm.local.network> <f6ca9fed0808261218w20334033h7eef71dba8400ac8@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="qlTNgmc+xy1dBmNv"
+In-Reply-To: <f6ca9fed0808261218w20334033h7eef71dba8400ac8@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
 
-This patch fixes unhandled interrupt when HW rfkill is on during
-devices start up. The behavior changes, now open is successful even
-when rfkill is on. This is to align with the situation when rfkill
-is set on after opening.
+--qlTNgmc+xy1dBmNv
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |   18 ++++++++----------
- 1 files changed, 8 insertions(+), 10 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 9c9eb21..8a9feba 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2232,17 +2232,16 @@ static int __iwl4965_up(struct iwl_priv *priv)
- 	}
- 
- 	/* If platform's RF_KILL switch is NOT set to KILL */
--	if (iwl_read32(priv, CSR_GP_CNTRL) &
--				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
-+	if (iwl_read32(priv, CSR_GP_CNTRL) & CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
- 		clear_bit(STATUS_RF_KILL_HW, &priv->status);
- 	else
- 		set_bit(STATUS_RF_KILL_HW, &priv->status);
- 
--	if (!test_bit(STATUS_IN_SUSPEND, &priv->status) &&
--	    iwl_is_rfkill(priv)) {
-+	if (iwl_is_rfkill(priv)) {
-+		iwl4965_enable_interrupts(priv);
- 		IWL_WARNING("Radio disabled by %s RF Kill switch\n",
- 		    test_bit(STATUS_RF_KILL_HW, &priv->status) ? "HW" : "SW");
--		return -ENODEV;
-+		return 0;
- 	}
- 
- 	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
-@@ -2278,11 +2277,6 @@ static int __iwl4965_up(struct iwl_priv *priv)
- 	memcpy(priv->ucode_data_backup.v_addr, priv->ucode_data.v_addr,
- 	       priv->ucode_data.len);
- 
--	/* We return success when we resume from suspend and rf_kill is on. */
--	if (test_bit(STATUS_RF_KILL_HW, &priv->status) ||
--	    test_bit(STATUS_RF_KILL_SW, &priv->status))
--		return 0;
--
- 	for (i = 0; i < MAX_HW_RESTARTS; i++) {
- 
- 		iwl_clear_stations_table(priv);
-@@ -2651,6 +2645,9 @@ static int iwl4965_mac_start(struct ieee80211_hw *hw)
- 	if (ret)
- 		goto out_release_irq;
- 
-+	if (iwl_is_rfkill(priv))
-+		goto out;
-+
- 	IWL_DEBUG_INFO("Start UP work done.\n");
- 
- 	if (test_bit(STATUS_IN_SUSPEND, &priv->status))
-@@ -2670,6 +2667,7 @@ static int iwl4965_mac_start(struct ieee80211_hw *hw)
- 		}
- 	}
- 
-+out:
- 	priv->is_open = 1;
- 	IWL_DEBUG_MAC80211("leave\n");
- 	return 0;
--- 
-1.5.3.6
+On Tue, Aug 26, 2008 at 09:18:59PM +0200, drago01 wrote:
+> On Tue, Aug 26, 2008 at 9:16 PM, Forest Bond <forest@alittletooquiet.net>=
+ wrote:
+> > On Wed, Aug 06, 2008 at 10:14:10AM +0200, Ivo van Doorn wrote:
+> >> On Tuesday 05 August 2008, Forest Bond wrote:
+> >> > I'm having a hard time figuring out if the following wireless chips =
+are
+> >> > supported:
+> >> >
+> >> >  * RT2770 + RT2720
+> >>
+> >> I *think* this is the rt2870 driver. The in-kernel driver is under dev=
+elopment
+> >
+> > Okay, the RT2870 driver from Ralink works with this device, but it seem=
+s to be a
+> > bit quirky:
+> >
+> >  * The device has to be brought up and down a few times before NetworkM=
+anager
+> >   sees it.  I'm not sure what NetworkManager is cueing off of.
+> >
+> >  * I was unable to get the thing to associate and come up using
+> >   iwconfig/ifconfig.  Might have been my range on that AP, though, sinc=
+e I was
+> >   shooting for an unencrypted network that is a not the closest network=
+ in my
+> >   building.
+> >
+> >  * Usual odd bits with vendor drivers like odd build system subtleties =
+and
+> >   seemingly unnecessary configuration files (does anyone really care to=
+ fiddle
+> >   with those, or doesn't everyone just want things to work with the sta=
+ndard
+> >   configuration mechanisms like I do?).
+> >
+> > Is there an effort to move this driver in-tree?  The license is GPL.
+>=20
+> Thats what Ivo is doing, port the driver to rt2x00 to make it
+> acceptable for merging.
 
+Okay, sorry if I misunderstood.  Is this driver usable and, if so, where ca=
+n the
+code be found?
+
+Thanks,
+Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+http://www.pytagsfs.org
+
+--qlTNgmc+xy1dBmNv
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFItFkjRO4fQQdv5AwRAkMZAJ9YsWP8O/NqjvyjazcbJ5lKB/IBBgCeOL1Y
+Ei54iG1Nie+mrOWNPpchV/w=
+=Jxca
+-----END PGP SIGNATURE-----
+
+--qlTNgmc+xy1dBmNv--
