@@ -1,66 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60830 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751990AbYHTVIf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Aug 2008 17:08:35 -0400
-Subject: Re: [PATCH 00/19] orinoco: WPA for Agere based cards
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dave <kilroyd@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, proski@gnu.org,
-	orinoco-devel@lists.sourceforge.net
-In-Reply-To: <48AC836B.2020207@gmail.com> (sfid-20080820_225002_112959_7EFB2137)
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
-	 <20080820192812.GA1746@tuxdriver.com>  <48AC836B.2020207@gmail.com>
-	 (sfid-20080820_225002_112959_7EFB2137)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5ly+deV/mVRh1XmSAaOC"
-Date: Wed, 20 Aug 2008 23:07:55 +0200
-Message-Id: <1219266476.3502.19.camel@johannes.berg> (sfid-20080820_230839_000050_1BDBB04E)
-Mime-Version: 1.0
+Received: from mx1.suse.de ([195.135.220.2]:55962 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754151AbYHZPkj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Aug 2008 11:40:39 -0400
+Date: Tue, 26 Aug 2008 08:39:48 -0700
+From: Greg KH <gregkh@suse.de>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Andrew Bird <ajb@spheresystems.co.uk>,
+	Cezary Jackiewicz <cezary.jackiewicz@gmail.com>,
+	Philip Langdale <philipl@overt.org>
+Subject: Re: [PATCH 5/5] rfkill: remove transmitter blocking on suspend
+Message-ID: <20080826153948.GA18563@suse.de> (sfid-20080826_174043_971831_FBFF5D5A)
+References: <1219762681-26911-1-git-send-email-hmh@hmh.eng.br> <1219762681-26911-6-git-send-email-hmh@hmh.eng.br>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1219762681-26911-6-git-send-email-hmh@hmh.eng.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Aug 26, 2008 at 11:58:01AM -0300, Henrique de Moraes Holschuh wrote:
+> Currently, rfkill would stand in the way of properly supporting wireless
+> devices that are capable of waking the system up from sleep or hibernation
+> when they receive a special wireless message.  It would also get in the way
+> of mesh devices that need to remain operational even during platform
+> suspend.
+> 
+> To avoid that, stop trying to block the transmitters on the rfkill class
+> suspend handler.
+> 
+> Drivers that need rfkill's older behaviour will have to implement it by
+> themselves in their own suspend handling.
+> 
+> Do note that rfkill *will* attempt to restore the transmitter state on
+> resume in any situation.  This happens after the driver's resume method is
+> called by the suspend core (class devices resume after the devices they are
+> attached to have been resumed).
+> 
+> The following drivers need to check if they need to explicitly block
+> their transmitters in their own suspend handlers (maintainers Cc'd):
 
---=-5ly+deV/mVRh1XmSAaOC
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Normally when you change a kernel-api to operate differently, you also
+fix up the relevant parts of the kernel as well.  Have you looked into
+these drivers to see if they do have this problem or not?
 
+thanks,
 
-> At the moment this is only documented in email threads (on
-> orinoco-devel) - I lack access to any web/file hosting to put
-> something more permanent up. This obviously ought to be corrected.
-
-*points to wireless.kernel.org*
-
-feel free to create a driver page (though I'd prefer to not host
-firmware of unclear origin and would probably just delete such files if
-you upload them, talk to the firmware tree if you can redistribute it
-legally)
-
-johannes
-
---=-5ly+deV/mVRh1XmSAaOC
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIrIemAAoJEKVg1VMiehFYfPoP/1BPwRZVf70Z3xBcSo6G7wip
-UR7CoFBGi+3NBixnetNMvcs6H29KjkpQZ/QpySG1I9YOK7w9+cMHBkH20GrXnrJj
-yhGr9X6yZ9zi/MGyNwTf3uhVHvE5BH5SVG6s/iOX42qM6CdQqZaSJn1O081LmqG3
-uaCmfpLjmEmyE8tGwnakSlv1czQcG8ByUpCiZd3TpTQNjW/VpgyR+Xado5ZVQzbc
-fsYPjp1gcb7JhicQVfq4HH9r3BOGzMkci4Y0CYfQN2grkDZU+InZNp+H6tDI9bbP
-c/rwTPhAkCEWCiX8lWv+JPA+5W2dQJpXTliVUAr/QSyZVyzCiDiIybTB3zfby3qU
-9hDkOuX1JTYVHAX2PZcX1sXQAt1P7otXWJlgxKW2XJZ7Jq3EVg+NAw7t7w3PyRo5
-9PxGdN0X2XgYnjPS/+moAjvFETPyiaFF6rr/C084aozYYud1YZc/UFE/QsTTe56G
-L5vuaQgNQGA6u+jkYo5fhiFwLaQRw/sNTo7Lf87J4tmaiAJL6TPAy0HkVijD/o6R
-PjUk58s3sYHZPjA1EeHhGlFM2eF30dWT6EI0BVlCr6xn5B9gEFsIasSR4dIZ3bwO
-FU9QmnLCBofZGprFb3Xi4CJIUOKYOC96sdXZZUDgNSyNXlu17cb2T5eueAV7I/1B
-2N3CivKmksJdNjDn+iIj
-=zs6i
------END PGP SIGNATURE-----
-
---=-5ly+deV/mVRh1XmSAaOC--
-
+greg k-h
