@@ -1,57 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:41550 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752425AbYH0UZn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2008 16:25:43 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: pull request: wireless-2.6 2008-08-26
-Date: Wed, 27 Aug 2008 22:25:09 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-References: <20080827013009.GA15781@tuxdriver.com> <1ba2fa240808271226i95a7789k481a68b09dc60164@mail.gmail.com>
-In-Reply-To: <1ba2fa240808271226i95a7789k481a68b09dc60164@mail.gmail.com>
+Received: from nf-out-0910.google.com ([64.233.182.189]:17571 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757694AbYHZUGY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Aug 2008 16:06:24 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so998589nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Aug 2008 13:06:23 -0700 (PDT)
+Message-ID: <1ba2fa240808261306s58ffe82dyf8d217bfa37c06d5@mail.gmail.com> (sfid-20080826_220629_551987_9ACD6575)
+Date: Tue, 26 Aug 2008 23:06:22 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 2.6.27 2/2] iwlwifi: fix 64bit platform firmware loading
+Cc: linux-wireless@vger.kernel.org,
+	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
+In-Reply-To: <1219718071-13587-2-git-send-email-yi.zhu@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200808272225.10557.mb@bu3sch.de> (sfid-20080827_222547_947696_4453D216)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1219718071-13587-1-git-send-email-yi.zhu@intel.com>
+	 <1219718071-13587-2-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 27 August 2008, Tomas Winkler wrote:
-> > John W. Linville (1):
-> >      mac80211: quiet chatty IBSS merge message
-> 
-> This patch is correct yet it suppresses an important warning, meaning
-> that you have constant IBSS reconnection, remove all connected station
-> and adding them again, This greatly degraded performance. This is
-> caused by inability to adjust to TSF of the IBSS leader
-> 
-> <snipt>
-> static int ieee80211_sta_join_ibss(struct net_device *dev,
-> 				   struct ieee80211_if_sta *ifsta,
-> 				   struct ieee80211_sta_bss *bss)
-> .....
-> /* Remove possible STA entries from other IBSS networks. */
-> 	sta_info_flush_delayed(sdata);
-> </snip>
+On Tue, Aug 26, 2008 at 5:34 AM, Zhu Yi <yi.zhu@intel.com> wrote:
+> From: Tomas Winkler <tomas.winkler@intel.com>
+>
+> This patch fixes loading firmware from memory above 34bit.
 
-I fail to see how the TSF could be related to an ever reconnecting
-station. Can you elaborate on what happens?
-
-I was under the impression that the firmware would handle TSF stuff.
-Also the "IBSS leader" is a new thing to me. I remember from the specs
-that the device should accept the TSF from _any_ beacon. Not just a
-"leader". Am I mislead? :)
-
-I also fail to see how we could _ever_ set the TSF to something remotely
-correct from the driver because of the FIFO delay.
-
-> 
-> > Assaf Krauss (1):
-> >      iwlwifi: W/A for the TSF correction in IBSS
-
-I cannot find this patch in wireless-testing and I don't
-have a copy of wireless-2.6 here. Can you send me the patch, or
-explain what it does?
+         ^^ - John,  please fix this little typo when merging
+Thanks
+Tomas
