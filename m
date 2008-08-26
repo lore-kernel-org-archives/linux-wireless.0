@@ -1,55 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.238]:15647 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751583AbYHFWFy (ORCPT
+Received: from mail3.webfaction.com ([70.85.44.146]:40857 "EHLO
+	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756171AbYHZTOZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Aug 2008 18:05:54 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so133461rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Aug 2008 15:05:54 -0700 (PDT)
-Message-ID: <1ba2fa240808061505u37d4f300n48d0d45918b34a35@mail.gmail.com> (sfid-20080807_000601_987230_310CF7C9)
-Date: Thu, 7 Aug 2008 01:05:53 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: iwlwifi aggregation info
-Cc: Friedrich.Beckmann@infineon.com, linux-wireless@vger.kernel.org,
-	j@w1.fi
-In-Reply-To: <1218059104.23048.81.camel@johannes.berg>
+	Tue, 26 Aug 2008 15:14:25 -0400
+Date: Tue, 26 Aug 2008 15:16:54 -0400
+From: Forest Bond <forest@alittletooquiet.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Are these Ralink chips supported?
+Message-ID: <20080826191654.GB26037@storm.local.network> (sfid-20080826_211429_492411_30A7F8BA)
+References: <20080805163234.GA22429@storm.local.network> <200808061014.10483.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1217331138.10489.24.camel@johannes.berg>
-	 <1ba2fa240807300908x5489e3f8g54ff83e7e5912c0b@mail.gmail.com>
-	 <1217509511.10489.140.camel@johannes.berg>
-	 <1ba2fa240807311114t3e1b4fb3oe6643fbe28f2c2ac@mail.gmail.com>
-	 <1217528597.10489.150.camel@johannes.berg>
-	 <1ba2fa240807311216u1a45cf22j219046ab357b0910@mail.gmail.com>
-	 <1217592554.8621.23.camel@johannes.berg>
-	 <1ba2fa240808010540g660cdaa9p1158a27061e3fcd@mail.gmail.com>
-	 <1217595279.8621.38.camel@johannes.berg>
-	 <1218059104.23048.81.camel@johannes.berg>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="0F1p//8PRICkK4MW"
+In-Reply-To: <200808061014.10483.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 7, 2008 at 12:45 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->> When that is not the case, however, we disagree. I think that because
->> aggregation isn't a QoS mechanism, it should behave the same way as in
->> the case where no stations have aggregation enabled, and stall the whole
->> queue. On the other hand, you think it is a QoS mechanism, and let
->> streams for the fast stations be interleaved with the slow station,
->> leaving only frames for the slow station piling up.
->
-> I just found IEEE 802.11-2007 subclause 9.10 which actually explains all
-> the block-ack business without aggregation, but I assume that
-> aggregation now just means that instead of sending
->        mpdu + sifs + (mpdu + sifs)* + blockackreq
-> you send simply
->        a-mpdu
->
-> I see nothing in 9.10 that supports the view that aggregation/block-ack
-> should create a new traffic stream.
 
-It doesn't have to be spelled, it's clear from the fact that traffic
-is defined by <TID,RA>  pair.
-A-MPDU stuff is simplified version of what you've read there.
-Tomas
+--0F1p//8PRICkK4MW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi,
+
+On Wed, Aug 06, 2008 at 10:14:10AM +0200, Ivo van Doorn wrote:
+> On Tuesday 05 August 2008, Forest Bond wrote:
+> > I'm having a hard time figuring out if the following wireless chips are
+> > supported:
+> >=20
+> >  * RT2770 + RT2720
+>=20
+> I *think* this is the rt2870 driver. The in-kernel driver is under develo=
+pment
+
+Okay, the RT2870 driver from Ralink works with this device, but it seems to=
+ be a
+bit quirky:
+
+ * The device has to be brought up and down a few times before NetworkManag=
+er
+   sees it.  I'm not sure what NetworkManager is cueing off of.
+
+ * I was unable to get the thing to associate and come up using
+   iwconfig/ifconfig.  Might have been my range on that AP, though, since I=
+ was
+   shooting for an unencrypted network that is a not the closest network in=
+ my
+   building.
+
+ * Usual odd bits with vendor drivers like odd build system subtleties and
+   seemingly unnecessary configuration files (does anyone really care to fi=
+ddle
+   with those, or doesn't everyone just want things to work with the standa=
+rd
+   configuration mechanisms like I do?).
+
+Is there an effort to move this driver in-tree?  The license is GPL.
+
+Thanks,
+Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+http://www.pytagsfs.org
+
+--0F1p//8PRICkK4MW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFItFamRO4fQQdv5AwRAoq0AKCqUhaNvqbB+AJji6GvJmuoexTpPgCeNozr
+2i86HhfaPx9THu7WNE0h1lc=
+=rgwq
+-----END PGP SIGNATURE-----
+
+--0F1p//8PRICkK4MW--
