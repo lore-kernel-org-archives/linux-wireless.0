@@ -1,79 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:32034 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751112AbYH1J3P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 05:29:15 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 11/11] iwlwifi: fix 64bit platform firmware loading
-Date: Thu, 28 Aug 2008 17:25:10 +0800
-Message-Id: <1219915510-3647-12-git-send-email-yi.zhu@intel.com> (sfid-20080828_115053_319626_3B0530A3)
-In-Reply-To: <1219915510-3647-11-git-send-email-yi.zhu@intel.com>
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-8-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-9-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-10-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-11-git-send-email-yi.zhu@intel.com>
+Received: from ik-out-1112.google.com ([66.249.90.177]:45351 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753799AbYH0KF0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Aug 2008 06:05:26 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so2077278ika.5
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Aug 2008 03:05:23 -0700 (PDT)
+Message-ID: <1ba2fa240808270305m7f505efak9fd0d36d5db09a1e@mail.gmail.com> (sfid-20080827_120532_961620_59DBABFA)
+Date: Wed, 27 Aug 2008 13:05:23 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Marcel Holtmann" <holtmann@linux.intel.com>
+Subject: Re: pull request: wireless-2.6 2008-08-26
+Cc: "David Miller" <davem@davemloft.net>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <1219835410.5359.24.camel@californication>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080827013009.GA15781@tuxdriver.com>
+	 <1ba2fa240808270038r24d5eeb9l36fd70ef5ae904f5@mail.gmail.com>
+	 <20080827.014041.230100807.davem@davemloft.net>
+	 <1219835410.5359.24.camel@californication>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Wed, Aug 27, 2008 at 2:10 PM, Marcel Holtmann
+<holtmann@linux.intel.com> wrote:
+> Hi Dave,
+>
+>> > Afther massive ath9k merge I didn't see it was a conceptual problem.
+>>
+>> Stop right there.
+>>
+>> You don't see it as a problem because you're not the one who has to
+>> explain all of this shit to Linus and ends up getting flamed by him
+>> when inappropriate changes are in my tree outside of the merge window.
+>
+> I did a quick review of the offending patch queue. And some of them
+> should go in since they are fixing real bugs (as far as I can tell from
+> a quick review). Others have to clearly wait for the next merge window.
+>
+> Thomas, please go through the list of patches and pick the real bug
+> fixes. The cleanup patches can't go in since they are after the merge
+> window.
 
-This patch fixes loading firmware from memory above 32bit.
+I just repeat myself again, for the current series except the scanning
+cleaning patches these patches
+are must. This particular patch is there just because the hidden AP
+connectivity fixes were stacked above it.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-5000.c |   11 ++++-------
- drivers/net/wireless/iwlwifi/iwl-fh.h   |    1 +
- 2 files changed, 5 insertions(+), 7 deletions(-)
+ And being one of the offenders why Dave got flamed by Linus,
+> there is no way to get these through. And my big offender was a
+> regression that broke userspace and came with a lengthy commit message.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index e04a26f..79ff288 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -533,14 +533,11 @@ static int iwl5000_load_section(struct iwl_priv *priv,
- 		FH_TFDIB_CTRL0_REG(FH_SRVC_CHNL),
- 		phy_addr & FH_MEM_TFDIB_DRAM_ADDR_LSB_MSK);
- 
--	/* FIME: write the MSB of the phy_addr in CTRL1
--	 * iwl_write_direct32(priv,
--		IWL_FH_TFDIB_CTRL1_REG(IWL_FH_SRVC_CHNL),
--		((phy_addr & MSB_MSK)
--			<< FH_MEM_TFDIB_REG1_ADDR_BITSHIFT) | byte_count);
--	 */
- 	iwl_write_direct32(priv,
--		FH_TFDIB_CTRL1_REG(FH_SRVC_CHNL), byte_cnt);
-+		FH_TFDIB_CTRL1_REG(FH_SRVC_CHNL),
-+		(iwl_get_dma_hi_address(phy_addr)
-+			<< FH_MEM_TFDIB_REG1_ADDR_BITSHIFT) | byte_cnt);
-+
- 	iwl_write_direct32(priv,
- 		FH_TCSR_CHNL_TX_BUF_STS_REG(FH_SRVC_CHNL),
- 		1 << FH_TCSR_CHNL_TX_BUF_STS_REG_POS_TB_NUM |
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
-index 9446424..cd11c0c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
-@@ -287,6 +287,7 @@
- 
- #define FH_RSSR_CHNL0_RX_STATUS_CHNL_IDLE	(0x01000000)
- 
-+#define FH_MEM_TFDIB_REG1_ADDR_BITSHIFT	28
- 
- /**
-  * Transmit DMA Channel Control/Status Registers (TCSR)
--- 
-1.5.3.6
+There is a central problem here, since I cannot really adjust driver
+development progress from obvious reason with Linux merging window.
+Upstream kernel is unfortunately not the only customer I report to. So
+actually stable versions got half backed drivers depending on some
+arbitrary time cut from my (selfish) development point of view.
+In this particular point we are really only cleaning bug database, our
+mistake here is that we didn't export these bug to external bugzilla.
 
+> Speaking of which, you better have a more convincing commit message if
+> you wanna get something in after the merge window. It should make clear
+> why this is a bug or a regression and why it can't wait until the next
+> merge window.
+
+Yes, I've already got this message on 3 channels already :)
+
+> Please take this into account for any future patches since Linus now set
+> a really high bar for patches after the merge window.
+
+Understood.
+Tomas
