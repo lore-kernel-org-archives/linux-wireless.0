@@ -1,74 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42487 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752255AbYHGTpt (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:49934 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754445AbYH0JKO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 15:45:49 -0400
-Subject: Re: [RFC] cfg80211: keep track of supported interface modes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890808071102t281f3c4ctb9d1f1c5822dbc8f@mail.gmail.com> (sfid-20080807_200211_500676_B1F52107)
-References: <1218122495.3630.2.camel@johannes.berg>
-	 <43e72e890808071102t281f3c4ctb9d1f1c5822dbc8f@mail.gmail.com>
-	 (sfid-20080807_200211_500676_B1F52107)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZNjX8c87FnDegkHzeDpo"
-Date: Thu, 07 Aug 2008 21:45:23 +0200
-Message-Id: <1218138323.3630.57.camel@johannes.berg> (sfid-20080807_214552_902265_81095E0C)
+	Wed, 27 Aug 2008 05:10:14 -0400
+Subject: Re: pull request: wireless-2.6 2008-08-26
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: David Miller <davem@davemloft.net>
+Cc: tomasw@gmail.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <20080827.014041.230100807.davem@davemloft.net>
+References: <20080827013009.GA15781@tuxdriver.com>
+	 <1ba2fa240808270038r24d5eeb9l36fd70ef5ae904f5@mail.gmail.com>
+	 <20080827.014041.230100807.davem@davemloft.net>
+Content-Type: text/plain
+Date: Wed, 27 Aug 2008 13:10:10 +0200
+Message-Id: <1219835410.5359.24.camel@californication> (sfid-20080827_111037_601191_FC78705D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Dave,
 
---=-ZNjX8c87FnDegkHzeDpo
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > Afther massive ath9k merge I didn't see it was a conceptual problem.
+> 
+> Stop right there.
+> 
+> You don't see it as a problem because you're not the one who has to
+> explain all of this shit to Linus and ends up getting flamed by him
+> when inappropriate changes are in my tree outside of the merge window.
 
+I did a quick review of the offending patch queue. And some of them
+should go in since they are fixing real bugs (as far as I can tell from
+a quick review). Others have to clearly wait for the next merge window.
 
-> > --- everything.orig/drivers/net/wireless/b43/main.c     2008-08-07 16:4=
-9:57.000000000 +0200
-> > +++ everything/drivers/net/wireless/b43/main.c  2008-08-07 16:57:12.000=
-000000 +0200
-> > @@ -4165,11 +4165,11 @@ static int b43_op_add_interface(struct i
-> >
-> >        /* TODO: allow WDS/AP devices to coexist */
-> >
-> > -       if (conf->type !=3D IEEE80211_IF_TYPE_AP &&
-> > -           conf->type !=3D IEEE80211_IF_TYPE_MESH_POINT &&
-> > -           conf->type !=3D IEEE80211_IF_TYPE_STA &&
-> > -           conf->type !=3D IEEE80211_IF_TYPE_WDS &&
-> > -           conf->type !=3D IEEE80211_IF_TYPE_IBSS)
-> > +       if (WARN_ON(conf->type !=3D IEEE80211_IF_TYPE_AP &&
->=20
-> When would we hit the WARN_ON() ?
+Thomas, please go through the list of patches and pick the real bug
+fixes. The cleanup patches can't go in since they are after the merge
+window. And being one of the offenders why Dave got flamed by Linus,
+there is no way to get these through. And my big offender was a
+regression that broke userspace and came with a lengthy commit message.
 
-When I make a mistake in mac80211 :) Might as well leave it out.
+Speaking of which, you better have a more convincing commit message if
+you wanna get something in after the merge window. It should make clear
+why this is a bug or a regression and why it can't wait until the next
+merge window.
 
-johannes
+Please take this into account for any future patches since Linus now set
+a really high bar for patches after the merge window.
 
---=-ZNjX8c87FnDegkHzeDpo
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Regards
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Marcel
 
-iQIcBAABAgAGBQJIm1DPAAoJEKVg1VMiehFY5cMP/RZk9j5l1u1nQBvn3Xe8TsYQ
-7hTwgrJPZgt3y6+dx0Tosq44f6hs4YgCTfIHE3L9HMVMdh/6LvA6gasttR1dAMVZ
-oEXtx4r3NWGxEgWrEbCTvdpzpdAr9tmjaPifWgAMV+YMn5NDhCEx77XaswMvg/qZ
-qfpC7bySLBhfzRpEwxIQ8I6YFan+fcnLKaT00FfNF9+/EZNUq3/QyeIYS+q3wVmi
-NsViw0TzQzH1cC/KJnbEOAtGQ9lNM4RmhCBjQnr1UotAlVBqsXox2sE8ata8qGHd
-N4gRtZCgzaertlF0cZdmQSE6IQ5lfkkDuk68vjWfjSPi6qVhF8bXwWJ+eQK5vI25
-F3WzRirBbrKV087/NzRjyfmwQ/2lftXpW0UK/V4tDO4uHzju63Kv4bwNtaLNrHBK
-12g8CjcVZotq6MxRzilPkb9A9TKS16grDUlCa6/rm5naO/LA9DJ3gESQCXawRGxD
-t6nv8yhVJj8UKct6K5KKA70GLmgdpXvewbyTk4hw0s2qkb/SK+5xQYSjV7FDL6Iq
-GIUc3s3VNw7g/74tHYsVuTQXmkaaIprlC8ujjW4NE/6sTGbNaFimaiPdfNAEmbeI
-3VURw1KbvR2N1gYA63VWg+4v/8nqIox00HhwuTuXmVe8/C9OnH33SAuet7HXQEka
-XDsqq/0gyf02UvJLxitf
-=ibS7
------END PGP SIGNATURE-----
-
---=-ZNjX8c87FnDegkHzeDpo--
 
