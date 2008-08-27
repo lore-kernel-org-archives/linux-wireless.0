@@ -1,64 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45530 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753952AbYHDQkb (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.172]:10329 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752137AbYH0UW7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 12:40:31 -0400
-Subject: Re: [RFC] cfg80211: add PM hooks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1217867815.1299.13.camel@johannes.berg> (sfid-20080804_183740_875620_7179922F)
-References: <1217853236.4721.32.camel@johannes.berg>
-	 <99AFB2EC-AECE-419A-B014-8391E45DF6C4@holtmann.org>
-	 <1217866765.1299.9.camel@johannes.berg>
-	 <6064CD72-8B4A-4F23-BCFA-4D656729E60D@holtmann.org>
-	 <1217867815.1299.13.camel@johannes.berg>
-	 (sfid-20080804_183740_875620_7179922F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FTfU0dWV9PUZuIFa4hlp"
-Date: Mon, 04 Aug 2008 18:39:54 +0200
-Message-Id: <1217867994.1299.15.camel@johannes.berg> (sfid-20080804_184034_662420_2FEF60DB)
-Mime-Version: 1.0
+	Wed, 27 Aug 2008 16:22:59 -0400
+Received: by ug-out-1314.google.com with SMTP id c2so1002847ugf.37
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Aug 2008 13:22:56 -0700 (PDT)
+To: "rt2400-devel" <rt2400-devel@lists.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Subject: [rt2x00] rt2800 progress update (bad news)
+Date: Wed, 27 Aug 2008 22:22:53 +0200
+Cc: John Linville <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200808272222.53719.IvDoorn@gmail.com> (sfid-20080827_222302_546002_E3F8FAB4)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-FTfU0dWV9PUZuIFa4hlp
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Several weeks after the deadline for the initial rt2800 version,
+I regret to inform everybody that I still do not have a working driver.
 
+rt2800pci is still incomplete since I have put a lot of focus on the rt2800usb
+driver to get at least a single working driver out. Unfortunately rt2800usb
+remains very stubborn and refuses. The only success I have had so far is
+when I first load the legacy driver and switch to rt2800usb afterwards.
+This means I am missing a register initialization or there is a problem with
+the register initialization ordering.
 
-> The more interesting question I guess is: are we now required to have
-> these callbacks even if CONFIG_PM(_SLEEP) is not defined? I'm not all
-> that interested in trying to find answers right now though.
+The result is that it looks like I will cancel all previously announced deadlines,
+and at this time can't give a indication when the first version can be released.
+What I can promise is that rt2800usb will be released first, since that driver is most
+complete, and I am putting all focus on that driver first.
 
-In fact, I don't even want this patch merged. I just think that it'd be
-the right approach for anyone trying to implement suspend/resume support
-for mac80211.
-
-johannes
-
---=-FTfU0dWV9PUZuIFa4hlp
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIlzDWAAoJEKVg1VMiehFYeM8QAJApH3tEydJLjBCzjIwDeHuZ
-KqwLCGnlqYLV6PTjBk1j4lez3c+OEYmB/0IFyT1aQyGOqi0XoFU8WFuzRnH/Hy9n
-zZa6ZzvHaTmRbiwXT9HhzQVGQis82jcjXbZVLFlGzCZWX70WR6TwzUcquM5pEdq7
-J2eM0clcpv7TquEgtzagIpxQyrWHmxIWuxPIWv86HJCz/05kvQ9DW1WEMQiEHUww
-6DmnoWPwqXQsW4/7drJKihZX5pwTH1qpMyw73MwpgrwBiI4+wBlzIWB9Wdv0wu+R
-q7RiXjXQMbk0DqMV+iXie8XXHQHEchdVw+aW+wp3Ur7JkxBvHDsfnvRZDUskSLVn
-0C1u+HV/bJZjnB2uFIvA2GcG7XfvCG74K+njmNJOZPIFGxB4RdfkquOlu2/nyKVb
-mLecJz7L54hvdwDebFcBrDX+I+DS2Y3NjTCP7ub5IVAmj1oVSpalMB1kPjbt31qk
-CSeFNWhq2/1S0EJDxgfYwDxDw9goOZeqFaeetFX20x9pypOB9fPFOqAU5koO/7Gd
-/LMJ6PsyhhIXRHcR2YtuAVeegjc97FDFAtgte6REdL9u+fK8ElguVlQp7oEAnjy0
-TkLgqI8+NKDFLChKc1+7uRWD6iK+0GJ9jw+NtXH/xAkrfWTbwAfXP1SnNqvy+Exa
-3ZOEEezvd9C7CpnXp0I8
-=qRkl
------END PGP SIGNATURE-----
-
---=-FTfU0dWV9PUZuIFa4hlp--
-
+Ivo
