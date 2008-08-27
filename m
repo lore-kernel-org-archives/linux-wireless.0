@@ -1,76 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:43471 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([66.187.233.31]:55970 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751530AbYH1J3H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 05:29:07 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 04/11] iwlwifi: remove false rxon if rx chain changes
-Date: Thu, 28 Aug 2008 17:25:03 +0800
-Message-Id: <1219915510-3647-5-git-send-email-yi.zhu@intel.com> (sfid-20080828_112914_669664_F8C51C0D)
-In-Reply-To: <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
+	id S1751646AbYH0BUe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Aug 2008 21:20:34 -0400
+Subject: Re: Are these Ralink chips supported?
+From: Dan Williams <dcbw@redhat.com>
+To: Forest Bond <forest@alittletooquiet.net>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <20080826191654.GB26037@storm.local.network>
+References: <20080805163234.GA22429@storm.local.network>
+	 <200808061014.10483.IvDoorn@gmail.com>
+	 <20080826191654.GB26037@storm.local.network>
+Content-Type: text/plain
+Date: Tue, 26 Aug 2008 21:21:46 -0400
+Message-Id: <1219800106.3112.4.camel@localhost.localdomain> (sfid-20080827_032053_760901_D4123C4B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohamed Abbas <mohamed.abbas@intel.com>
+On Tue, 2008-08-26 at 15:16 -0400, Forest Bond wrote:
+> Hi,
+> 
+> On Wed, Aug 06, 2008 at 10:14:10AM +0200, Ivo van Doorn wrote:
+> > On Tuesday 05 August 2008, Forest Bond wrote:
+> > > I'm having a hard time figuring out if the following wireless chips are
+> > > supported:
+> > > 
+> > >  * RT2770 + RT2720
+> > 
+> > I *think* this is the rt2870 driver. The in-kernel driver is under development
+> 
+> Okay, the RT2870 driver from Ralink works with this device, but it seems to be a
+> bit quirky:
+> 
+>  * The device has to be brought up and down a few times before NetworkManager
+>    sees it.  I'm not sure what NetworkManager is cueing off of.
 
-Rx chain might change during power save transitions but it doesn't
-requires full rxon. The patch avoids the rxon by removing the rx_chain
-check.
+HAL events.  If the device doesn't show up in HAL and doesn't have a
+network interface with the "net.80211" capability, NM won't see it.  A
+dump of 'lshal' when you're having the problem would be useful.  If that
+shows the device correctly, then it might be that the device isn't
+responding correctly to an SIOCSIWSCAN or SIOCGIWRANGE command in a
+manner which NM is expecting.
 
-Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+Dan
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 93af115..e35db85 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -181,14 +181,14 @@ static int iwl4965_check_rxon_cmd(struct iwl_rxon_cmd *rxon)
- }
- 
- /**
-- * iwl4965_full_rxon_required - check if full RXON (vs RXON_ASSOC) cmd is needed
-+ * iwl_full_rxon_required - check if full RXON (vs RXON_ASSOC) cmd is needed
-  * @priv: staging_rxon is compared to active_rxon
-  *
-  * If the RXON structure is changing enough to require a new tune,
-  * or is clearing the RXON_FILTER_ASSOC_MSK, then return 1 to indicate that
-  * a new tune (full RXON command, rather than RXON_ASSOC cmd) is required.
-  */
--static int iwl4965_full_rxon_required(struct iwl_priv *priv)
-+static int iwl_full_rxon_required(struct iwl_priv *priv)
- {
- 
- 	/* These items are only settable from the full RXON command */
-@@ -207,7 +207,6 @@ static int iwl4965_full_rxon_required(struct iwl_priv *priv)
- 	     priv->active_rxon.ofdm_ht_single_stream_basic_rates) ||
- 	    (priv->staging_rxon.ofdm_ht_dual_stream_basic_rates !=
- 	     priv->active_rxon.ofdm_ht_dual_stream_basic_rates) ||
--	    (priv->staging_rxon.rx_chain != priv->active_rxon.rx_chain) ||
- 	    (priv->staging_rxon.assoc_id != priv->active_rxon.assoc_id))
- 		return 1;
- 
-@@ -263,7 +262,7 @@ static int iwl4965_commit_rxon(struct iwl_priv *priv)
- 	/* If we don't need to send a full RXON, we can use
- 	 * iwl4965_rxon_assoc_cmd which is used to reconfigure filter
- 	 * and other flags for the current radio configuration. */
--	if (!iwl4965_full_rxon_required(priv)) {
-+	if (!iwl_full_rxon_required(priv)) {
- 		ret = iwl_send_rxon_assoc(priv);
- 		if (ret) {
- 			IWL_ERROR("Error setting RXON_ASSOC (%d)\n", ret);
--- 
-1.5.3.6
+>  * I was unable to get the thing to associate and come up using
+>    iwconfig/ifconfig.  Might have been my range on that AP, though, since I was
+>    shooting for an unencrypted network that is a not the closest network in my
+>    building.
+> 
+>  * Usual odd bits with vendor drivers like odd build system subtleties and
+>    seemingly unnecessary configuration files (does anyone really care to fiddle
+>    with those, or doesn't everyone just want things to work with the standard
+>    configuration mechanisms like I do?).
+> 
+> Is there an effort to move this driver in-tree?  The license is GPL.
+> 
+> Thanks,
+> Forest
 
