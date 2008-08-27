@@ -1,71 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54142 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757693AbYHEJNM (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.186]:18635 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754069AbYH0XLR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 05:13:12 -0400
-Subject: Re: [PATCH 8/8] rfkill: add support for wake-on-wireless-packet
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <20080804233525.GI24927@khazad-dum.debian.net>
-References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
-	 <1217700664-20792-9-git-send-email-hmh@hmh.eng.br>
-	 <1217703723.8621.50.camel@johannes.berg>
-	 <20080802192704.GB24253@khazad-dum.debian.net>
-	 <1217864565.3139.17.camel@localhost.localdomain>
-	 <20080804223052.GG24927@khazad-dum.debian.net>
-	 <1217890611.17793.17.camel@localhost.localdomain>
-	 <20080804233525.GI24927@khazad-dum.debian.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5fK/lWKqQUibMKlMCLKv"
-Date: Tue, 05 Aug 2008 11:12:21 +0200
-Message-Id: <1217927541.3603.32.camel@johannes.berg> (sfid-20080805_111315_400900_90ADDBE0)
-Mime-Version: 1.0
+	Wed, 27 Aug 2008 19:11:17 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so32897nfc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Aug 2008 16:11:16 -0700 (PDT)
+Message-ID: <1ba2fa240808271611v382631ecn2a24e2816562d434@mail.gmail.com> (sfid-20080828_011122_631270_1D6696BF)
+Date: Thu, 28 Aug 2008 02:11:15 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: pull request: wireless-2.6 2008-08-26
+Cc: "John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <200808272225.10557.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080827013009.GA15781@tuxdriver.com>
+	 <1ba2fa240808271226i95a7789k481a68b09dc60164@mail.gmail.com>
+	 <200808272225.10557.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Aug 27, 2008 at 11:25 PM, Michael Buesch <mb@bu3sch.de> wrote:
+> On Wednesday 27 August 2008, Tomas Winkler wrote:
+>> > John W. Linville (1):
+>> >      mac80211: quiet chatty IBSS merge message
+>>
+>> This patch is correct yet it suppresses an important warning, meaning
+>> that you have constant IBSS reconnection, remove all connected station
+>> and adding them again, This greatly degraded performance. This is
+>> caused by inability to adjust to TSF of the IBSS leader
+>>
+>> <snipt>
+>> static int ieee80211_sta_join_ibss(struct net_device *dev,
+>>                                  struct ieee80211_if_sta *ifsta,
+>>                                  struct ieee80211_sta_bss *bss)
+>> .....
+>> /* Remove possible STA entries from other IBSS networks. */
+>>       sta_info_flush_delayed(sdata);
+>> </snip>
+>
+> I fail to see how the TSF could be related to an ever reconnecting
+> station. Can you elaborate on what happens?
+>
+> I was under the impression that the firmware would handle TSF stuff.
+> Also the "IBSS leader" is a new thing to me. I remember from the specs
+> that the device should accept the TSF from _any_ beacon. Not just a
+> "leader". Am I mislead? :)
 
---=-5fK/lWKqQUibMKlMCLKv
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+What is happening that IBSS station should adopt TSF of  the oldest
+station i.e. with highest
+TSF. This is also leader of the IBSS (this is not spec definition just
+local jargon)  Adaptation
+mean we adjust to the same clock
 
-On Mon, 2008-08-04 at 20:35 -0300, Henrique de Moraes Holschuh wrote:
+if (beacon_timestamp > rx_timestamp)
+    merge
 
-> And it is already damn clear that what we currently have (rfkill always
-> blocks on suspend) is not the correct way to go about it.  WHAT I want to
-> know now is whether there are any drivers out there which need the curren=
-t
-> behaviour.
+beacon_timestamp (what STA advertise in the beacon ) is bigger then
+time reception of the beacon according our local TSF.  If this is true
+then there is merging
+  meaing we call reset_tsf, remove all the stations form the list and
+add the leader.
 
-No. There are no drivers that rely on that. Seriously, all drivers
-implement some form of suspend by simply turning off the hardware.
-There's no reason to believe that rfkill is needed to turn off the radio
-in any way when drivers except libertas turn off the hardware anyway.
+In IBSS all the station race on sending beacon. so adjusting clock is
+important for power save.
 
-johannes
+> I also fail to see how we could _ever_ set the TSF to something remotely
+> correct from the driver because of the FIFO delay.
+>
+Exactly also iwlwifi driver is not able to really adjust TSF and
+always lag behind we've really tried to make it work...no success.
+The result is you are constantly removing and joining the same station.
 
---=-5fK/lWKqQUibMKlMCLKv
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+The patch from Assaf just disable reporting RX timestamp to mac and
+thus disabling merging which gives incorrect spec behavior but smooth
+traffic.
+Actually we've checked few cards including broadcom and various
+windows NICs and non of them implements this correctly so this WA is
+probably the solution.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Other solution would be to mark leader with highest TSF and not
+reconnecting to the same station again and again.
 
-iQIcBAABAgAGBQJImBlxAAoJEKVg1VMiehFYTPcP/jBTMZrTBlYxbRbzg6dhVG8f
-qbZXASyp/qu9jCUwN9N+20hAJKKELgK3tBHyVOa247XWpa2TDaCpiLIoH6mvqLjh
-tb/wJrs6KGLkpUE/RBRG5y6YFUc+PG68S54RL1BAJh5SLV4+BhKa7Rp0rfNhG2Hw
-HHEUFtOjORvd5cx/psk4pkhtvKUWIVu7xCXSjX2p9VfQ2MdphbMMd9aPnZ4HJ73p
-GK8jFay1EvoXeCLcqDq/oUgfTK9TTwpXRihAvQkUsGkZXcEBy7f4ayZwrcP5O2q4
-p+NcDOn4gFzNeOxHEz525+FMw1aLbENpzDbYS+xjj8Y1Km3FJy18/3aT4NNbAIbN
-HXCqa6eDzf302xhvOSkkRArA4Zlu0/m9NYyR8n2QR3ffeHC7pxLqBTYQze3GWenY
-oBF27PuHQzGXd/RdoKSfQEcg43u+fP1bYrv1umFUxVViJpmdKGKqm/tPm3TWDymC
-yXU0d6Qc3MxhI1Gcd6tbHkqK3HI4dM0Fv9HZ4MZReEHI7hiZTnGz5GGORbxgHenJ
-LVJRAcPz8JyqixTbyUHhB0mZAWpsGm021zV1s3mOj1zp7Nn3s76CW4cJwVJxix4S
-XJe7LRRSNlu+qUbR+27M4IrW9y1wQVyvBwNo+Ot8GsUj8AUzcP2dCVbrUg7YOJgG
-t0ZAWQLUof0ivP/dKydz
-=igPr
------END PGP SIGNATURE-----
+Last solution would be to remove this merging all together but then
+I'm not sure if Bruno added this code just implement the spec or
+really tested it with any hardware. I'm not sure if any vendor
+implements PS in IBSS so this merging is probably not important
+anyway.
 
---=-5fK/lWKqQUibMKlMCLKv--
+>>
+>> > Assaf Krauss (1):
+>> >      iwlwifi: W/A for the TSF correction in IBSS
+>
+> I cannot find this patch in wireless-testing and I don't
+> have a copy of wireless-2.6 here. Can you send me the patch, or
+> explain what it does?
+>
 
+Explained above just disable get_tsf and also report to mac
+by removing line rx_status.flag |= RX_FLAG_TSFT;
+
+Tomas
