@@ -1,53 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:17686 "EHLO mga02.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:39464 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752576AbYHOCEq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2008 22:04:46 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 04/15] iwlwifi: remove obsolete 4965 forward declarations
-Date: Fri, 15 Aug 2008 10:01:09 +0800
-Message-Id: <1218765680-8378-5-git-send-email-yi.zhu@intel.com> (sfid-20080815_040451_398341_D5167A51)
-In-Reply-To: <1218765680-8378-4-git-send-email-yi.zhu@intel.com>
-References: <1218765680-8378-1-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-2-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-3-git-send-email-yi.zhu@intel.com>
- <1218765680-8378-4-git-send-email-yi.zhu@intel.com>
+	id S1753563AbYH0XbI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Aug 2008 19:31:08 -0400
+Date: Wed, 27 Aug 2008 16:31:03 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Tomas Winkler <tomasw@gmail.com>
+CC: Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Bruno Randolf <bruno@thinktube.com>
+Subject: Re: pull request: wireless-2.6 2008-08-26
+Message-ID: <20080827233103.GE5927@tesla> (sfid-20080828_013113_832234_D0471CBB)
+References: <20080827013009.GA15781@tuxdriver.com> <1ba2fa240808271226i95a7789k481a68b09dc60164@mail.gmail.com> <200808272225.10557.mb@bu3sch.de> <1ba2fa240808271611v382631ecn2a24e2816562d434@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1ba2fa240808271611v382631ecn2a24e2816562d434@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+On Wed, Aug 27, 2008 at 04:11:15PM -0700, Tomas Winkler wrote:
+> if (beacon_timestamp > rx_timestamp)
+>     merge
+> 
+> The patch from Assaf just disable reporting RX timestamp to mac and
+> thus disabling merging which gives incorrect spec behavior but smooth
+> traffic.
 
-This patch removes unused forward declarations functions.
+We *should follow the spec*.
 
-Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h |    6 ------
- 1 files changed, 0 insertions(+), 6 deletions(-)
+> Actually we've checked few cards including broadcom and various
+> windows NICs
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index f46e9cd..0711b35 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -637,12 +637,6 @@ static inline u8 get_cmd_index(struct iwl_queue *q, u32 index, int is_huge)
- 
- struct iwl_priv;
- 
--/*
-- * Forward declare iwl-4965.c functions for iwl-base.c
-- */
--extern void iwl4965_rf_kill_ct_config(struct iwl_priv *priv);
--int iwl4965_check_empty_hw_queue(struct iwl_priv *priv, int sta_id,
--					u8 tid, int txq_id);
- 
- /* Structures, enum, and defines specific to the 4965 */
- 
--- 
-1.5.3.6
+What are windows NICs?
 
+> and non of them implements this correctly so this WA is
+> probably the solution.
+
+Disagreed! If there is hardware which is not capable of handling this
+we should simply have a HW flag which specifies this to handle this as a
+work around (WA). Just because some cards are not capable it doesn't
+mean it should impose that on the rest.
+
+> Other solution would be to mark leader with highest TSF and not
+> reconnecting to the same station again and again.
+> 
+> Last solution would be to remove this merging all together but then
+> I'm not sure if Bruno added this code just implement the spec or
+> really tested it with any hardware. I'm not sure if any vendor
+> implements PS in IBSS so this merging is probably not important
+> anyway.
+
+Absolutely not! IBSS merge is per spec, otherwise you don't really have
+a real IBSS.
+
+  Luis
