@@ -1,39 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:27314 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751903AbYHLV6S (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52530 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753904AbYH0KKs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Aug 2008 17:58:18 -0400
-Received: by ug-out-1314.google.com with SMTP id h2so27402ugf.16
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Aug 2008 14:58:16 -0700 (PDT)
-Message-ID: <48A20776.80302@gmail.com> (sfid-20080812_235822_757375_8DFC5A5F)
-Date: Tue, 12 Aug 2008 23:58:14 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
+	Wed, 27 Aug 2008 06:10:48 -0400
+Subject: Re: pull request: wireless-2.6 2008-08-26
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Tomas Winkler <tomasw@gmail.com>
-CC: yi.zhu@intel.com, reinette.chatre@intel.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: iwl + iomap + readl/writel
-References: <48A1F734.7040801@gmail.com>	 <1ba2fa240808121449j4c04039bu2fc9b58129dc6027@mail.gmail.com>	 <48A20686.5080402@gmail.com> <1ba2fa240808121457j33a83effo44110a0423d83f@mail.gmail.com>
-In-Reply-To: <1ba2fa240808121457j33a83effo44110a0423d83f@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Cc: Marcel Holtmann <holtmann@linux.intel.com>,
+	David Miller <davem@davemloft.net>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <1ba2fa240808270305m7f505efak9fd0d36d5db09a1e@mail.gmail.com> (sfid-20080827_120532_961620_59DBABFA)
+References: <20080827013009.GA15781@tuxdriver.com>
+	 <1ba2fa240808270038r24d5eeb9l36fd70ef5ae904f5@mail.gmail.com>
+	 <20080827.014041.230100807.davem@davemloft.net>
+	 <1219835410.5359.24.camel@californication>
+	 <1ba2fa240808270305m7f505efak9fd0d36d5db09a1e@mail.gmail.com>
+	 (sfid-20080827_120532_961620_59DBABFA)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LLjGWuXI6+0CCO3/QRhf"
+Date: Wed, 27 Aug 2008 12:10:28 +0200
+Message-Id: <1219831828.3891.3.camel@johannes.berg> (sfid-20080827_121055_543196_FE132D8E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/12/2008 11:57 PM, Tomas Winkler wrote:
-> On Wed, Aug 13, 2008 at 12:54 AM, Jiri Slaby <jirislaby@gmail.com> wrote:
->> On 08/12/2008 11:49 PM, Tomas Winkler wrote:
->>> On Tue, Aug 12, 2008 at 11:48 PM, Jiri Slaby <jirislaby@gmail.com> wrote:
->>>> Hi,
->>>>
->>>> I spotted that iwl drivers use readl method on an iomap space. IIRC some
->>>> archs might return a tag instead of an address expected by readl/writel.
->>>>
->>>> I think you should either switch to ioread32/iowrite32 or to ioremap.
->>> Can you give me reading material  on this?
->> No, google will (you can even feel lucky).
-> 
-> I didn't ask for obvious answers :)
 
-Sorry, I don't remember where/when this was discussed, you have to search for it.
+--=-LLjGWuXI6+0CCO3/QRhf
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, 2008-08-27 at 13:05 +0300, Tomas Winkler wrote:
+
+> There is a central problem here, since I cannot really adjust driver
+> development progress from obvious reason with Linux merging window.
+> Upstream kernel is unfortunately not the only customer I report to. So
+> actually stable versions got half backed drivers depending on some
+> arbitrary time cut from my (selfish) development point of view.
+
+FWIW, many people including myself think you should work the other way
+around, that is develop things in the mainline/wireless-testing tree
+rather than developing a stable version internally and then dumping a
+big pile of patches whenever it's convenient for you. IOW, we think you
+should use Linux upstream as your development tree and then branch off
+of that for the internal stabilisation trees you need for other
+customers, rather than having some sort of internal development tree and
+branching out Linux upstream as you appear to work.
+
+That would also avoid the nasty surprises you've gotten a few times
+where other people managed to get patches to iwlwifi drivers into the
+Linux tree without you noticing.
+
+johannes
+
+--=-LLjGWuXI6+0CCO3/QRhf
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJItSgQAAoJEKVg1VMiehFYuJYP/1ItS9+xEGT6O7Dgm2eathlO
+K/SaRUm7J1fTS1b1WS5ti5onPGur0p5XwsSKetIkV7buncabtes9vyEQTPBabxya
+5tIVTqimnVjw+PacbAER0kKTNcwynYu3hF+50N4EaytisR37rq1SOGLxJUH8KduJ
+E2rHcaosXtZe/ZuO5X3GVfpd8z5uyanMKqPbDt050iACqknXaz2i/tKNt4Lrc7Pz
+eoDlz7O8gj3/SlXmDL5iq1l9Mtr/k1RuM4dxVN26KfbBgmdg9laf6dgsPCa29Dnj
+NM5BbDnnP79Wt1f61NZ530MJJeQd3JFJHdCjtMmC1V+7wM06IqrjeM9pi4wV2CKw
+6qnGIqLnZ4pd2w11RWVdPmOyRm7p8a4Gn5ryPvAxpNzD6oikPaqaB8W5JAUbu6PQ
+4vAIdDnmZIS1EvtSr3UzYIRNOFeAGCZj8hBmnSfj4m11DWN8jWZYYmh+4tAlm6Jq
+KwSAHfOHJksexa6g6/KnCSFshP7Y2ZwGcPo613peVqCjahVun11MERi/zpk7c1rS
+QGjpMf6lYCIClJgH3m0dEdB7tRqowRMwqacn+vvm/w4oQoZkOHwqSPZy8mSWva2v
+1iMD97VFbgDhqmjZ5VzRIZtOByn5rbeh12Y0PLkRdipHp8MVCcaDv9Z8qw9nrDuq
+Zc+aIMh34yfLOJa4EhiH
+=KkbX
+-----END PGP SIGNATURE-----
+
+--=-LLjGWuXI6+0CCO3/QRhf--
+
