@@ -1,35 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:38857 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752804AbYHMWMf (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:36390
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754153AbYH0Lp4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Aug 2008 18:12:35 -0400
-From: Chr <chunkeey@web.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] p54: Fix for TX sequence number problem that resulted from commit 741b4fbc44
-Date: Thu, 14 Aug 2008 00:15:23 +0200
-Cc: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <48987e74.ct5+sLOpTbiTPPHq%Larry.Finger@lwfinger.net> <200808110027.59918.chunkeey@web.de> <489F7410.3000507@lwfinger.net>
-In-Reply-To: <489F7410.3000507@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200808140015.24055.chunkeey@web.de> (sfid-20080814_001243_096045_3FCCAAB7)
+	Wed, 27 Aug 2008 07:45:56 -0400
+Date: Wed, 27 Aug 2008 04:45:51 -0700 (PDT)
+Message-Id: <20080827.044551.102233262.davem@davemloft.net> (sfid-20080827_134600_633892_6E8623A3)
+To: tomasw@gmail.com
+Cc: johannes@sipsolutions.net, holtmann@linux.intel.com,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-08-26
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1ba2fa240808270434y1589761xd2ff0a48c2e99033@mail.gmail.com>
+References: <1ba2fa240808270305m7f505efak9fd0d36d5db09a1e@mail.gmail.com>
+	<1219831828.3891.3.camel@johannes.berg>
+	<1ba2fa240808270434y1589761xd2ff0a48c2e99033@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 11 August 2008 01:04:48 Larry Finger wrote:
-> Chr wrote:
->
-> The packet size of 1408 problem is fixed here with an 'ifconfig wlan2
-> mtu 1300' command. With it I can ping any length.
->
-well, seems to be a firmware problem.
-2.13.3.0 has no problems with all kinds of big frames on my 3887...
+From: "Tomas Winkler" <tomasw@gmail.com>
+Date: Wed, 27 Aug 2008 14:34:28 +0300
 
-So, is there any knob to tell mac80211 about fragmentation from
-the driver side? I'm a bit lost here what to do.
+> Unfortunately fixing bugs on stable branch take precedence  of
+> adjusting to new API on development branch that someone decided to do.
+>  I wanted to work directly on wireless testing but it was broken over
+> an over and I have only limited resources more in testing then in
+> development I just had to branch out to be ready with the driver when
+> HW is out. People just check the immediate impact of they fix the
+> don't test for collateral damage and this is understandable an
+> individual developer doesn't have lab with IBSS, BSS, AP, etc setups.
 
-Regards,
-	Chr
+But think about this from the other perspective.
+
+When you queue up tons of things, especially in infrastructure level
+code such as mac80211, and on top of it you do your work on the stable
+branch and do not do you work against the development tree, guess what
+happens?
+
+You show up with accumulated piles of non-trivial patches for people
+to review.  And then you'll get upset when they suggest that things be
+implemented differently.
+
+It's all because of the gap in time.
+
+And during this time, if you had submitted earlier, you would end up
+doing smaller and mode gradual modifications to your design.  And
+you'd take care of them before they effect subsequent pieces of work
+you want to do which depend upon the earlier bits.
+
+The longer you queue stuff up, the more painful having to change stuff
+at the beginning of that queue becomes.  It can invalidate everything
+else you worked on.
+
+The only sane way to operate is to post your work early and often, or
+else you'll live in a world of hurt, and it will be nobody's fault but
+your own.
+
