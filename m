@@ -1,59 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:50740 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752951AbYHNLJu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2008 07:09:50 -0400
-Date: Thu, 14 Aug 2008 14:09:03 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Improvement in mac80211 to move to a proper state when channel
-	is set from user space
-Message-ID: <20080814110902.GA4864@jm.kir.nu> (sfid-20080814_130954_064034_673E9678)
-References: <20080814100501.GA5486@vasanth-lnx.users.atheros.com>
+Received: from nf-out-0910.google.com ([64.233.182.184]:24839 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754152AbYH0M0T (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Aug 2008 08:26:19 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so1084659nfc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Aug 2008 05:26:17 -0700 (PDT)
+Message-ID: <1ba2fa240808270526g163f8c0an3c5d220cce69466c@mail.gmail.com> (sfid-20080827_142624_337083_2FB3D871)
+Date: Wed, 27 Aug 2008 15:26:17 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "David Miller" <davem@davemloft.net>
+Subject: Re: pull request: wireless-2.6 2008-08-26
+Cc: johannes@sipsolutions.net, holtmann@linux.intel.com,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20080827.044551.102233262.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080814100501.GA5486@vasanth-lnx.users.atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1ba2fa240808270305m7f505efak9fd0d36d5db09a1e@mail.gmail.com>
+	 <1219831828.3891.3.camel@johannes.berg>
+	 <1ba2fa240808270434y1589761xd2ff0a48c2e99033@mail.gmail.com>
+	 <20080827.044551.102233262.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 14, 2008 at 03:35:01PM +0530, Vasanthakumar Thiagarajan wrote:
+On Wed, Aug 27, 2008 at 2:45 PM, David Miller <davem@davemloft.net> wrote:
+> From: "Tomas Winkler" <tomasw@gmail.com>
+> Date: Wed, 27 Aug 2008 14:34:28 +0300
+>
+>> Unfortunately fixing bugs on stable branch take precedence  of
+>> adjusting to new API on development branch that someone decided to do.
+>>  I wanted to work directly on wireless testing but it was broken over
+>> an over and I have only limited resources more in testing then in
+>> development I just had to branch out to be ready with the driver when
+>> HW is out. People just check the immediate impact of they fix the
+>> don't test for collateral damage and this is understandable an
+>> individual developer doesn't have lab with IBSS, BSS, AP, etc setups.
+>
+> But think about this from the other perspective.
+>
+> When you queue up tons of things, especially in infrastructure level
+> code such as mac80211, and on top of it you do your work on the stable
+> branch and do not do you work against the development tree, guess what
+> happens?
 
-> The problem with the current behaviour of mac80211 when setting a
-> new channel from user space while interface is in associated state
-> is, it is still maintainig the associated state even after the h/w 
-> is set to a different channel and it is sending packets destined 
-> to the connected AP/STA which is operating in a different freq/band 
-> in the new channel before detecting that the AP is no more in the 
-> channel
+> You show up with accumulated piles of non-trivial patches for people
+> to review.  And then you'll get upset when they suggest that things be
+> implemented differently.
 
-Please note that AP may change channels with associated STA remaining
-associated on the new channel (see Channel Switch Announcement).
+I never worked that way I've published immediately what I had. I don't
+know where  did you get this impression
+ If I didn't publish something it's just too reasons.
+The code was made dirty and I didn't like design myself (for example
+our 11h implementation), even though it's publicly available.
+or just simply didn't have time because I have to satisfy first thous
+who pays my check ( everybody to feed their children after all:) )
+(e.g. rfkill fixes)
+Almost every driver has it's own development branch, we didn't do
+something different here, this is just classical divide and conquer
+strategy.
 
-> Handle proper state transition in wireless handler (ieee80211_ioctl_siwfreq):
-> For STA mode, move the interface to disassociated state with the associated AP 
-> in the current channel and move it to scan state to find an appropriate 
-> AP in the new channel.
+> It's all because of the gap in time.
+>
+> And during this time, if you had submitted earlier, you would end up
+> doing smaller and mode gradual modifications to your design.  And
+> you'd take care of them before they effect subsequent pieces of work
+> you want to do which depend upon the earlier bits.
+>
+> The longer you queue stuff up, the more painful having to change stuff
+> at the beginning of that queue becomes.  It can invalidate everything
+> else you worked on.
+>
+> The only sane way to operate is to post your work early and often, or
+> else you'll live in a world of hurt, and it will be nobody's fault but
+> your own.
 
-If client MLME is in user space, siwfreq could be used to handle channel
-switch announcement from the AP and in this case the STA should not be
-moved into disassociated state.
-
-> For IBSS, mark all the joined ibss stations as not joined in the
-> current chanel and move the inteface state to scan in the new channel.
-
-IBSS can also use channel switch announcement and in addition, merging
-of separate IBSSes into a single one may end up changing channels for
-some STAs. If this is managed from user space, siwfreq should not
-tricker this type of changes.
-
-> For AP mode, move the interface to disassociated state with all
-> associated stations in current channel and start a BSS in the new
-> channel.
-
-Same here and taken into account that we only support AP MLME in user
-space (i.e., hostapd), I would say it is up to userspace to do this.
-mac80211 should not start marking STAs disassociated in AP mode.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+This is all understood and this would be indeed the ideal case.
+Tomas
