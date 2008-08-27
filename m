@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:50175 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751688AbYH1Kkj (ORCPT
+Received: from gv-out-0910.google.com ([216.239.58.185]:39949 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752399AbYH0T0d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 06:40:39 -0400
-Subject: Re: [PATCH 09/11] iwlwifi: fix station mimo power save values
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Ron Rindjunsky <ron.rindjunsky@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-In-Reply-To: <1219915510-3647-10-git-send-email-yi.zhu@intel.com>
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-8-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-9-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-10-git-send-email-yi.zhu@intel.com>
-Content-Type: text/plain
-Date: Thu, 28 Aug 2008 14:40:36 +0200
-Message-Id: <1219927236.6064.27.camel@californication> (sfid-20080828_124041_438310_FF0B49E4)
-Mime-Version: 1.0
+	Wed, 27 Aug 2008 15:26:33 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so6775gvc.37
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Aug 2008 12:26:31 -0700 (PDT)
+Message-ID: <1ba2fa240808271226i95a7789k481a68b09dc60164@mail.gmail.com> (sfid-20080827_212645_877870_2F235D95)
+Date: Wed, 27 Aug 2008 22:26:31 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	"Michael Buesch" <mb@bu3sch.de>
+Subject: Re: pull request: wireless-2.6 2008-08-26
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20080827013009.GA15781@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080827013009.GA15781@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Yi,
+> John W. Linville (1):
+>      mac80211: quiet chatty IBSS merge message
 
-> This patch fixes the wrong use of self mimo power save values instead of
-> peer's mimo power save values.
+This patch is correct yet it suppresses an important warning, meaning
+that you have constant IBSS reconnection, remove all connected station
+and adding them again, This greatly degraded performance. This is
+caused by inability to adjust to TSF of the IBSS leader
 
-please state the impact of not fixing this. When does this matter. Does
-the both sides have to enable this feature and things like this.
+<snipt>
+static int ieee80211_sta_join_ibss(struct net_device *dev,
+				   struct ieee80211_if_sta *ifsta,
+				   struct ieee80211_sta_bss *bss)
+.....
+/* Remove possible STA entries from other IBSS networks. */
+	sta_info_flush_delayed(sdata);
+</snip>
 
-Regards
+> Assaf Krauss (1):
+>      iwlwifi: W/A for the TSF correction in IBSS
+>
 
-Marcel
+This patch fixes this problem in iwlwifi
 
+We've observed same problem with the broadcom card
 
+Tomas
