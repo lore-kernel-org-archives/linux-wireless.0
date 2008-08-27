@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:50162 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751266AbYH1KjN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 06:39:13 -0400
-Subject: Re: [PATCH 08/11] iwlwifi: call apm stop on exit
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Gregory Greenman <gregory.greenman@intel.com>,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-In-Reply-To: <1219915510-3647-9-git-send-email-yi.zhu@intel.com>
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-8-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-9-git-send-email-yi.zhu@intel.com>
-Content-Type: text/plain
-Date: Thu, 28 Aug 2008 14:39:09 +0200
-Message-Id: <1219927149.6064.25.camel@californication> (sfid-20080828_123916_214502_EDFC473D)
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:41550 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752425AbYH0UZn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Aug 2008 16:25:43 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: pull request: wireless-2.6 2008-08-26
+Date: Wed, 27 Aug 2008 22:25:09 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+References: <20080827013009.GA15781@tuxdriver.com> <1ba2fa240808271226i95a7789k481a68b09dc60164@mail.gmail.com>
+In-Reply-To: <1ba2fa240808271226i95a7789k481a68b09dc60164@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200808272225.10557.mb@bu3sch.de> (sfid-20080827_222547_947696_4453D216)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Yi,
+On Wednesday 27 August 2008, Tomas Winkler wrote:
+> > John W. Linville (1):
+> >      mac80211: quiet chatty IBSS merge message
+> 
+> This patch is correct yet it suppresses an important warning, meaning
+> that you have constant IBSS reconnection, remove all connected station
+> and adding them again, This greatly degraded performance. This is
+> caused by inability to adjust to TSF of the IBSS leader
+> 
+> <snipt>
+> static int ieee80211_sta_join_ibss(struct net_device *dev,
+> 				   struct ieee80211_if_sta *ifsta,
+> 				   struct ieee80211_sta_bss *bss)
+> .....
+> /* Remove possible STA entries from other IBSS networks. */
+> 	sta_info_flush_delayed(sdata);
+> </snip>
 
-> This patch calls apm stop on exit and suspend and sets STATUS_EXIT_PENDING
-> accordingly. Without this patch hardware consumes power even after driver
-> is removed or suspended.
+I fail to see how the TSF could be related to an ever reconnecting
+station. Can you elaborate on what happens?
 
-is this a regression to 2.6.26? That is always the important question
-here since that will determine if the patch should go in. If the 2.6.26
-version did this better (even if not prefect), then this patch should go
-on, otherwise it could wait until next merge window.
+I was under the impression that the firmware would handle TSF stuff.
+Also the "IBSS leader" is a new thing to me. I remember from the specs
+that the device should accept the TSF from _any_ beacon. Not just a
+"leader". Am I mislead? :)
 
-Regards
+I also fail to see how we could _ever_ set the TSF to something remotely
+correct from the driver because of the FIFO delay.
 
-Marcel
+> 
+> > Assaf Krauss (1):
+> >      iwlwifi: W/A for the TSF correction in IBSS
 
-
+I cannot find this patch in wireless-testing and I don't
+have a copy of wireless-2.6 here. Can you send me the patch, or
+explain what it does?
