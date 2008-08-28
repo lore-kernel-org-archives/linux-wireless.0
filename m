@@ -1,78 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:58253 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759042AbYHUW2O (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:60329 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752500AbYH1Mnz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Aug 2008 18:28:14 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so81281nfc.21
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2008 15:28:13 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-Subject: [PATCH v2 01/19] orinoco: Add ESSID specific scanning for Agere fw
-Date: Thu, 21 Aug 2008 23:27:46 +0100
-Message-Id: <3bd1799afef838bfc6eb688b1e0cf6b0f4949f1b.1219352674.git.kilroyd@gmail.com> (sfid-20080822_002817_862023_E19D2409)
-In-Reply-To: <1219357685-24731-1-git-send-email-kilroyd@gmail.com>
-References: <1219357685-24731-1-git-send-email-kilroyd@gmail.com>
-From: kilroyd@googlemail.com
+	Thu, 28 Aug 2008 08:43:55 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so106228eyi.37
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2008 05:43:54 -0700 (PDT)
+Message-ID: <1ba2fa240808280543qbcb769n74fc8fa733d951a2@mail.gmail.com> (sfid-20080828_144414_963990_80D07298)
+Date: Thu, 28 Aug 2008 15:43:54 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 06/11] iwlwifi: fix apm_stop
+Cc: "Marcel Holtmann" <marcel@holtmann.org>,
+	"Zhu Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	"Mohamed Abbas" <mohamed.abbas@intel.com>
+In-Reply-To: <1219926182.25321.14.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
+	 <1219926807.6064.17.camel@californication>
+	 <1ba2fa240808280421g642ddc62j7541837f874f79df@mail.gmail.com>
+	 <1219926182.25321.14.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pass the ESSID to the card.
+On Thu, Aug 28, 2008 at 3:23 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2008-08-28 at 14:21 +0300, Tomas Winkler wrote:
+>> On Thu, Aug 28, 2008 at 3:33 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
+>> > Hi Yi,
+>> >
+>> >> The patch fixes CSR_GP_CNTRL_REG_FLAG_INIT_DONE was set instead of
+>> >> cleared which disabled moving device to D0U state.
+>> >
+>> > when was this mistake introduced. Is it a regression compared to what we
+>> > have in 2.6.26?
+>>
+>> Again. think of global warming.
+>
+> If you're so concerned about global warming, why didn't you fix this,
+> umm, months ago? :)
 
-This allows 'iwlist eth1 scan essid <essid>' to work, and will help
-with routers setup not to broadcast the ESSID.
+Why I didn't fix everything in the single point of time. 'In the
+beginning there was a driver'
+>
+> Frankly, this sounds like a "quick, somebody help me come up with a good
+> argument" argument.
 
-Signed-off-by: David Kilroy <kilroyd@gmail.com>
----
- drivers/net/wireless/orinoco.c |   20 +++++++++++++++++++-
- 1 files changed, 19 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
-index 1ebcafe..a60b459 100644
---- a/drivers/net/wireless/orinoco.c
-+++ b/drivers/net/wireless/orinoco.c
-@@ -2982,6 +2982,11 @@ static int orinoco_ioctl_getiwrange(struct net_device *dev,
- 	range->min_r_time = 0;
- 	range->max_r_time = 65535 * 1000;	/* ??? */
- 
-+	if (priv->firmware_type == FIRMWARE_TYPE_AGERE)
-+		range->scan_capa = IW_SCAN_CAPA_ESSID;
-+	else
-+		range->scan_capa = IW_SCAN_CAPA_NONE;
-+
- 	/* Event capability (kernel) */
- 	IW_EVENT_CAPA_SET_KERNEL(range->event_capa);
- 	/* Event capability (driver) */
-@@ -3951,6 +3956,7 @@ static int orinoco_ioctl_setscan(struct net_device *dev,
- {
- 	struct orinoco_private *priv = netdev_priv(dev);
- 	hermes_t *hw = &priv->hw;
-+	struct iw_scan_req *si = (struct iw_scan_req *) extra;
- 	int err = 0;
- 	unsigned long flags;
- 
-@@ -4012,7 +4018,19 @@ static int orinoco_ioctl_setscan(struct net_device *dev,
- 		}
- 		break;
- 		case FIRMWARE_TYPE_AGERE:
--			err = hermes_write_wordrec(hw, USER_BAP,
-+			if (priv->scan_mode & IW_SCAN_THIS_ESSID) {
-+				struct hermes_idstring idbuf;
-+				size_t len = min(sizeof(idbuf.val),
-+						 (size_t) si->essid_len);
-+				idbuf.len = cpu_to_le16(len);
-+				memcpy(idbuf.val, si->essid, len);
-+
-+				err = hermes_write_ltv(hw, USER_BAP,
-+					       HERMES_RID_CNFSCANSSID_AGERE,
-+					       HERMES_BYTES_TO_RECLEN(len + 2),
-+					       &idbuf);
-+			} else
-+				err = hermes_write_wordrec(hw, USER_BAP,
- 						   HERMES_RID_CNFSCANSSID_AGERE,
- 						   0);	/* Any ESSID */
- 			if (err)
--- 
-1.5.6.4
-
+So how can I really reason this :)
+Tomas
