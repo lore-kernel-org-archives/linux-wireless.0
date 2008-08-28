@@ -1,29 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:24318 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751043AbYHDMUK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 08:20:10 -0400
-Subject: Re: Resignation from orinoco and at76_usb
-From: Pavel Roskin <proski@gnu.org>
-To: Kalle Valo <Kalle.Valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <87bq09rnr2.fsf@litku.valot.fi>
-References: <1217634358.2731.8.camel@dv> <87bq099npy.fsf@nokia.com>
-	 <1217850574.21772.19.camel@dv>  <87bq09rnr2.fsf@litku.valot.fi>
-Content-Type: text/plain
-Date: Mon, 04 Aug 2008 08:20:08 -0400
-Message-Id: <1217852408.25732.0.camel@dv> (sfid-20080804_142014_304473_4305E511)
-Mime-Version: 1.0
+Received: from ey-out-2122.google.com ([74.125.78.27]:52140 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752118AbYH1Lly (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 07:41:54 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so100074eyi.37
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2008 04:41:52 -0700 (PDT)
+Message-ID: <1ba2fa240808280441v2a1f1014t52c4bacf69f901af@mail.gmail.com> (sfid-20080828_134156_865075_EB0380E2)
+Date: Thu, 28 Aug 2008 14:41:52 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: [PATCH 06/11] iwlwifi: fix apm_stop
+Cc: "Marcel Holtmann" <marcel@holtmann.org>,
+	"Zhu Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	"Mohamed Abbas" <mohamed.abbas@intel.com>
+In-Reply-To: <200808281338.46894.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
+	 <1219926807.6064.17.camel@californication>
+	 <200808281338.46894.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-08-04 at 15:03 +0300, Kalle Valo wrote:
+On Thu, Aug 28, 2008 at 2:38 PM, Michael Buesch <mb@bu3sch.de> wrote:
+> On Thursday 28 August 2008, Marcel Holtmann wrote:
+>> Hi Yi,
+>>
+>> > The patch fixes CSR_GP_CNTRL_REG_FLAG_INIT_DONE was set instead of
+>> > cleared which disabled moving device to D0U state.
+>>
+>> when was this mistake introduced. Is it a regression compared to what we
+>> have in 2.6.26?
+>
+> I think you are overstretching the regression-fixes-only rule a little bit...
+> It will help nobody, if we don't fix actual _bugs_ and push such fixes
+> into the next merge window.
+>
+> Our goal is to have a stable kernel on release. We don't get to that goal, if
+> we defer bugfixes to the next merge window.
 
-> Sounds good to me. Most probably I can do this only late September or
-> so, I hope that's ok?
-
-Yes, that's fine.
-
--- 
-Regards,
-Pavel Roskin
+Oh, good I have friends after all :)
+Tomas
