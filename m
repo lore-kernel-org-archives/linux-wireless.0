@@ -1,44 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from usul.saidi.cx ([204.11.33.34]:50282 "EHLO usul.overt.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751682AbYHNG66 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2008 02:58:58 -0400
-Message-ID: <48A3D7A0.7010704@overt.org> (sfid-20080814_085904_285621_B5CE28A6)
-Date: Wed, 13 Aug 2008 23:58:40 -0700
-From: Philip Langdale <philipl@overt.org>
-MIME-Version: 1.0
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-CC: LKML <linux-kernel@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	toshiba_acpi@memebeam.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
- through rfkill (v2)
-References: <4894B1B4.6050003@overt.org> <20080803042613.GC6053@khazad-dum.debian.net> <48965716.6020508@overt.org> <20080805212416.GB21738@khazad-dum.debian.net> <489A7CCF.1090407@overt.org> <20080807134530.GB17062@khazad-dum.debian.net> <48A06BBC.7060007@overt.org> <20080813092908.GA6806@khazad-dum.debian.net>
-In-Reply-To: <20080813092908.GA6806@khazad-dum.debian.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:43471 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751530AbYH1J3H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 05:29:07 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 04/11] iwlwifi: remove false rxon if rx chain changes
+Date: Thu, 28 Aug 2008 17:25:03 +0800
+Message-Id: <1219915510-3647-5-git-send-email-yi.zhu@intel.com> (sfid-20080828_112914_669664_F8C51C0D)
+In-Reply-To: <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+ <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
+ <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
+ <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Henrique de Moraes Holschuh wrote:
-> 
-> Looks like either rfkill-input is inactive, or something is binding to the
-> toshiba_acpi input device and setting it to exclusive mode (X evdev does
-> this).
+From: Mohamed Abbas <mohamed.abbas@intel.com>
 
-Almost. Turns out there were two problems:
+Rx chain might change during power save transitions but it doesn't
+requires full rxon. The patch avoids the rxon by removing the rx_chain
+check.
 
-1) I was setting SW_RFKILL_ALL as a keybit instead of an swbit - so no
-events reported. Whoops. :-)
+Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-2) Maybe this shouldn't surprise me, but the expected switch semantics
-are that '1' means radios are on and 0 means they are killed - I thought
-it was the other way round.
-
-Now, when I release the kill switch, rfkill-input does indeed turn the
-radio on. Great. The remaining problem is that rfkill-input is setting
-it to soft-blocked when the switch is registered. I'm not sure why it's
-deciding to do that. Anyway, I'm almost there. Thanks.
-
---phil
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 93af115..e35db85 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -181,14 +181,14 @@ static int iwl4965_check_rxon_cmd(struct iwl_rxon_cmd *rxon)
+ }
+ 
+ /**
+- * iwl4965_full_rxon_required - check if full RXON (vs RXON_ASSOC) cmd is needed
++ * iwl_full_rxon_required - check if full RXON (vs RXON_ASSOC) cmd is needed
+  * @priv: staging_rxon is compared to active_rxon
+  *
+  * If the RXON structure is changing enough to require a new tune,
+  * or is clearing the RXON_FILTER_ASSOC_MSK, then return 1 to indicate that
+  * a new tune (full RXON command, rather than RXON_ASSOC cmd) is required.
+  */
+-static int iwl4965_full_rxon_required(struct iwl_priv *priv)
++static int iwl_full_rxon_required(struct iwl_priv *priv)
+ {
+ 
+ 	/* These items are only settable from the full RXON command */
+@@ -207,7 +207,6 @@ static int iwl4965_full_rxon_required(struct iwl_priv *priv)
+ 	     priv->active_rxon.ofdm_ht_single_stream_basic_rates) ||
+ 	    (priv->staging_rxon.ofdm_ht_dual_stream_basic_rates !=
+ 	     priv->active_rxon.ofdm_ht_dual_stream_basic_rates) ||
+-	    (priv->staging_rxon.rx_chain != priv->active_rxon.rx_chain) ||
+ 	    (priv->staging_rxon.assoc_id != priv->active_rxon.assoc_id))
+ 		return 1;
+ 
+@@ -263,7 +262,7 @@ static int iwl4965_commit_rxon(struct iwl_priv *priv)
+ 	/* If we don't need to send a full RXON, we can use
+ 	 * iwl4965_rxon_assoc_cmd which is used to reconfigure filter
+ 	 * and other flags for the current radio configuration. */
+-	if (!iwl4965_full_rxon_required(priv)) {
++	if (!iwl_full_rxon_required(priv)) {
+ 		ret = iwl_send_rxon_assoc(priv);
+ 		if (ret) {
+ 			IWL_ERROR("Error setting RXON_ASSOC (%d)\n", ret);
+-- 
+1.5.3.6
 
