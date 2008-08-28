@@ -1,70 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.251]:33942 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751741AbYHHSYg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Aug 2008 14:24:36 -0400
-Received: by an-out-0708.google.com with SMTP id d40so180697and.103
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Aug 2008 11:24:35 -0700 (PDT)
-Message-ID: <43e72e890808081124q2244b7f4k257b85d93e144f76@mail.gmail.com> (sfid-20080808_202439_556746_A22A72AA)
-Date: Fri, 8 Aug 2008 11:24:35 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
-Subject: Re: [PATCH 1/2] mac80211: change number of pre-assoc scans
-Cc: "Winkler, Tomas" <tomas.winkler@intel.com>, linville@tuxdriver.com,
-	johannes@sipsolutions.net, "Zhu, Yi" <yi.zhu@intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1879838866982C46A9CB3D56BA49ADEB0542F64C@hasmsx411.ger.corp.intel.com>
+Received: from bu3sch.de ([62.75.166.246]:60930 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752299AbYH1Ibg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 04:31:36 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: pull request: wireless-2.6 2008-08-26
+Date: Thu, 28 Aug 2008 10:31:05 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+References: <20080827013009.GA15781@tuxdriver.com> <200808272225.10557.mb@bu3sch.de> <1ba2fa240808271611v382631ecn2a24e2816562d434@mail.gmail.com>
+In-Reply-To: <1ba2fa240808271611v382631ecn2a24e2816562d434@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1218149447-28968-1-git-send-email-tomas.winkler@intel.com>
-	 <43e72e890808071559k207a34e3we21cb2633f5e248d@mail.gmail.com>
-	 <1879838866982C46A9CB3D56BA49ADEB0542F64C@hasmsx411.ger.corp.intel.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200808281031.06529.mb@bu3sch.de> (sfid-20080828_103141_681350_F5D687A9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 8, 2008 at 7:18 AM, Rindjunsky, Ron
-<ron.rindjunsky@intel.com> wrote:
->
->>> -       int auth_tries, assoc_tries;
->>> +       int assoc_scan_tries; /* number of scans done pre-association
-> */
->>> +       int auth_tries; /* retries for auth req */
->>> +       int assoc_tries; /* retries for assoc req */
->>
->> This last variable seems unused.
->>
->
-> If you mean auth_tries or assoc_tries they are being used in other
-> flows.
+On Thursday 28 August 2008, Tomas Winkler wrote:
+> On Wed, Aug 27, 2008 at 11:25 PM, Michael Buesch <mb@bu3sch.de> wrote:
+> > On Wednesday 27 August 2008, Tomas Winkler wrote:
+> >> > John W. Linville (1):
+> >> >      mac80211: quiet chatty IBSS merge message
+> >>
+> >> This patch is correct yet it suppresses an important warning, meaning
+> >> that you have constant IBSS reconnection, remove all connected station
+> >> and adding them again, This greatly degraded performance. This is
+> >> caused by inability to adjust to TSF of the IBSS leader
+> >>
+> >> <snipt>
+> >> static int ieee80211_sta_join_ibss(struct net_device *dev,
+> >>                                  struct ieee80211_if_sta *ifsta,
+> >>                                  struct ieee80211_sta_bss *bss)
+> >> .....
+> >> /* Remove possible STA entries from other IBSS networks. */
+> >>       sta_info_flush_delayed(sdata);
+> >> </snip>
+> >
+> > I fail to see how the TSF could be related to an ever reconnecting
+> > station. Can you elaborate on what happens?
+> >
+> > I was under the impression that the firmware would handle TSF stuff.
+> > Also the "IBSS leader" is a new thing to me. I remember from the specs
+> > that the device should accept the TSF from _any_ beacon. Not just a
+> > "leader". Am I mislead? :)
+> 
+> What is happening that IBSS station should adopt TSF of  the oldest
+> station i.e. with highest
+> TSF. This is also leader of the IBSS (this is not spec definition just
+> local jargon)  Adaptation
+> mean we adjust to the same clock
+> 
+> if (beacon_timestamp > rx_timestamp)
+>     merge
 
-Oh sorry, yes I see.
+Well, I was pretty sure the firmware did this for us.
+I can recheck that later.
 
->>>                ieee80211_sta_reset_auth(dev, ifsta);
->>>                return 0;
->>>        } else {
->>> -               if (ifsta->state != IEEE80211_STA_MLME_AUTHENTICATE)
-> {
->>> +               if (ifsta->assoc_scan_tries <
-> IEEE80211_ASSOC_SCANS_MAX_TRIES) {
->>> +                       ifsta->assoc_scan_tries++;
->>>                        if (ifsta->flags &
-> IEEE80211_STA_AUTO_SSID_SEL)
->>>                                ieee80211_sta_start_scan(dev, NULL,
-> 0);
->>>                        else
->>
->> Interesting, is there a race then?
->>
->
-> Not more then before this patch :).. if you mean protecting the mlme
-> states
-
-Yeah that's what I meant.
-
->  I think this should be carefully handled, for sure not under this
-> patch
-
-Sure.
-
-  Luis
+In any case, I will accept patches that are _well_ _tested_ to workaround this
+issue. I don't have the time work work on IBSS by myself. My pile already is
+big enough. :)
