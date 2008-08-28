@@ -1,69 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25763 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752027AbYHBXt2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 19:49:28 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 16:49:28 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	<jouni.malinen@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	Jack Howarth <howarth@bromo.msbb.uc.edu>
-Subject: [PATCH 10/12] ath9k: Port to new skb->cb mac80211 changes
-Date: Sat, 2 Aug 2008 16:49:02 -0700
-Message-ID: <1217720944-23234-11-git-send-email-lrodriguez@atheros.com> (sfid-20080803_014935_952867_5991A579)
-In-Reply-To: <1217720944-23234-10-git-send-email-lrodriguez@atheros.com>
-References: <1217720944-23234-1-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-2-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-3-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-4-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-5-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-6-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-7-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-8-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-9-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-10-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+Received: from senator.holtmann.net ([87.106.208.187]:52552 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751287AbYH1K0v (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 06:26:51 -0400
+Subject: Re: [PATCH 01/11] iwlwifi: W/A for the TSF correction in IBSS
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Assaf Krauss <assaf.krauss@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+In-Reply-To: <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
 Content-Type: text/plain
+Date: Thu, 28 Aug 2008 14:26:47 +0200
+Message-Id: <1219926408.6064.7.camel@californication> (sfid-20080828_122704_434588_B32C2E5B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change settings as per skb->cb fix patch which removed
-IEEE80211_TX_CTL_DO_NOT_ENCRYPT and IEEE80211_TX_CTL_EAPOL_FRAME.
+Hi Yi,
 
-Signed-off-by: Jack Howarth <howarth@bromo.msbb.uc.edu>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/xmit.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+> This patch is a W/A for the TSF sync issue, in which the ucode's timestamp
+> is constantly a little behind incoming beacons' timestamps (in IBSS cells).
+> The W/A simply stops the driver from declaring it has a reliable TSF value.
 
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index c136517..c6992f3 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -248,7 +248,8 @@ static void fill_min_rates(struct sk_buff *skb, struct ath_tx_control *txctl)
- 		txctl->min_rate = tx_info_priv->min_rate;
- 	} else if (ieee80211_is_data(fc)) {
- 		if (ieee80211_is_nullfunc(fc) ||
--		    (tx_info->flags & IEEE80211_TX_CTL_EAPOL_FRAME)) {
-+			/* Port Access Entity (IEEE 802.1X) */
-+			(skb->protocol == cpu_to_be16(0x888E))) {
- 			txctl->use_minrate = 1;
- 			txctl->min_rate = tx_info_priv->min_rate;
- 		}
-@@ -310,7 +311,7 @@ static int ath_tx_prepare(struct ath_softc *sc,
- 	txctl->keytype = ATH9K_KEY_TYPE_CLEAR;
- 	txctl->keyix = ATH9K_TXKEYIX_INVALID;
- 
--	if (!(tx_info->flags & IEEE80211_TX_CTL_DO_NOT_ENCRYPT)) {
-+	if (tx_info->control.hw_key) {
- 		txctl->keyix = tx_info->control.hw_key->hw_key_idx;
- 		txctl->frmlen += tx_info->control.icv_len;
- 
--- 
-1.5.6.rc2.15.g457bb.dirty
+this is not a proper commit message for something that should go in
+after the merge window. Besides the description of what the patch is
+doing and why, you also need to justify its inclusion. So add a
+paragraph that explain the impact if this patch doesn't gets merged and
+why that is a regression.
+
+If I would be in Dave's shoes, this looks like something that is not
+really critical.
+
+Regards
+
+Marcel
+
 
