@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:48126 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753779AbYHNI0I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2008 04:26:08 -0400
-Date: Thu, 14 Aug 2008 11:25:19 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Pondering: how to improve mac80211 roaming ...
-Message-ID: <20080814082519.GI4981@jm.kir.nu> (sfid-20080814_102613_154812_8E00B044)
-References: <200808120838.52888.hs4233@mail.mn-solutions.de> <20080812082246.GD4981@jm.kir.nu> <87skt86pqg.fsf@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87skt86pqg.fsf@nokia.com>
+Received: from senator.holtmann.net ([87.106.208.187]:37395 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751815AbYH1KgT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 06:36:19 -0400
+Subject: Re: [PATCH 07/11] iwlwifi: generic init calibrations framework
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+In-Reply-To: <1219915510-3647-8-git-send-email-yi.zhu@intel.com>
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-8-git-send-email-yi.zhu@intel.com>
+Content-Type: text/plain
+Date: Thu, 28 Aug 2008 14:36:17 +0200
+Message-Id: <1219926977.6064.21.camel@californication> (sfid-20080828_123622_664754_988FC89C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 14, 2008 at 10:05:27AM +0300, Kalle Valo wrote:
+Hi Yi,
 
-> What about PMKSA caching? Shouldn't user space need to provide PMKIDs
-> (or the IEs) to mac80211 before association?
+> This patch fixes a critical bug that only the last calibration result
+> was applied. On reception of one calibration result all the calibration
+> was freed. The patch fixes this problem by introducing a generic init
+> calibration framework which allows variable number of init calibrations
+> and allows addition new HW.
 
-There are two possible designs for this. In wpa_supplicant terms,
-ap_scan=2 would most likely mean that driver is responsible for
-generating the RSN IE, including PMKID list, and wpa_supplicant is
-providing the driver a list of currently available PMKs (PMKIDs for
-them). In ap_scan=1, there is option for the driver to use the RSN IE
-from wpa_supplicant (which is something that mac80211 is doing at the
-moment) and in that case, yes, PMKIDs would indeed need to be updated
-in the RSN IE just before association.
- 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+a lot of code changes in -rc4 phase. Please give more details since the
+patch changes a lot and even introduces a new EXPORT.
+
+Regards
+
+Marcel
+
+
