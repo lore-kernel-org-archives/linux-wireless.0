@@ -1,98 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:36190 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751010AbYHXO0U (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Aug 2008 10:26:20 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so726312fgg.17
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Aug 2008 07:26:18 -0700 (PDT)
-Message-ID: <1ba2fa240808240726m539aa30am162b242f5d089d5e@mail.gmail.com> (sfid-20080824_162636_464651_1BDC0ADD)
-Date: Sun, 24 Aug 2008 17:26:18 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: Chris <dchris@gmail.com>
-Subject: Re: intel 4965agn 54Mbps on Linux but 130Mbps on Windows
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <99175ee40808240450k7423691bu3ee81cbdba60acda@mail.gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:58407 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751223AbYH1RRZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 13:17:25 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Don't use memcpy for overlapping areas
+Date: Thu, 28 Aug 2008 19:13:51 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <99175ee40808240438o75c18f3ayd0c98db87a7c8561@mail.gmail.com>
-	 <99175ee40808240450k7423691bu3ee81cbdba60acda@mail.gmail.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200808281913.52260.mb@bu3sch.de> (sfid-20080828_191732_539411_41E783F6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 24, 2008 at 2:50 PM, Chris <dchris@gmail.com> wrote:
->
-> Could it come from the fact that the kernel in Ubuntu Hardy does not
-> have CONFIG_NETDEVICES_MULTIQUEUE enabled ?
->
-> I got this warning when I installed compat-wireless but I don't know
-> if it is required to get 802.11n working.
->
-Definitely CONFIG_NETDEVICES_MULTIQUEUE must be enabled.
-HT rates are no reported in wireless-tools.
+It is valid to pass &gphy->rfatt and &gphy->bbatt as rfatt and bbatt
+pointer arguments to the function. So we have to use memmove for the
+possibly overlapping memory areas.
 
-Regards
-Tomas
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
->
-> On 8/24/08, Chris <dchris@gmail.com> wrote:
-> > Hi,
-> >
-> > I'm using compat-wireless-2008-08-06.tar.bz2 on Ubuntu Hardy (kernel
-> > 2.6.24) for my intel 4965agn card in order to connect using 802.11n to
-> > my router (TL-WR841N from TP-LINK).
-> > Unfortunately, I'm only able to connect in 802.11g mode under Linux :
-> > $ iwconfig wlan1
-> > wlan1     IEEE 802.11abgn  ESSID:"chris"
-> >           Mode:Managed  Frequency:2.437 GHz  Access Point: 00:1D:0F:33:7E:EC
-> >           Bit Rate=54 Mb/s   Tx-Power=15 dBm
-> >           Retry min limit:7   RTS thr:off   Fragment thr=2352 B
-> >           Power Management:off
-> >           Link Quality=100/100  Signal level:-30 dBm  Noise level=-95 dBm
-> >           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-> >           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-> >
-> > $ sudo iwlist wlan1 scan
-> > wlan1     Scan completed :
-> >           Cell 01 - Address: 00:1D:0F:33:7E:EC
-> >                     ESSID:"chris"
-> >                     Mode:Master
-> >                     Channel:6
-> >                     Frequency:2.437 GHz (Channel 6)
-> >                     Quality=100/100  Signal level:-30 dBm  Noise level=-94
-> > dBm
-> >                     Encryption key:on
-> >                     IE: IEEE 802.11i/WPA2 Version 1
-> >                         Group Cipher : CCMP
-> >                         Pairwise Ciphers (1) : CCMP
-> >                         Authentication Suites (1) : PSK
-> >                     IE: Unknown:
-> > 2D1A4C1003FFFF000000000000000000000000000000000000000000
-> >                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 6 Mb/s
-> >                               9 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s; 36 Mb/s
-> >                               48 Mb/s; 54 Mb/s
-> >                     Extra:tsf=000000003aefe580
-> >                     Extra: Last beacon: 12ms ago
-> >
-> > As you can see, no bit rate greater than 54Mbps is detected. I tried
-> > under Windows with latest intel driver and it connects at 130Mbps.
-> > Does the Linux driver support 802.11n? If so, do you have any
-> > suggestion to make this work here? I will be happy to provide any
-> > information you may require.
-> >
-> > In dmesg output, I simply get this:
-> > [   95.465080] wlan1: authenticate with AP 00:1d:0f:33:7e:ec
-> > [   95.467416] wlan1: authenticated
-> > [   95.467421] wlan1: associate with AP 00:1d:0f:33:7e:ec
-> > [   95.471491] wlan1: RX AssocResp from 00:1d:0f:33:7e:ec (capab=0x431
-> > status=0 aid=1)
-> > [   95.471496] wlan1: associated
-> > [   95.471533] wlan1 (WE) : Wireless Event too big (314)
-> >
-> > Best regards,
-> > Chris.
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---
+
+John, since we have new policies for bugfixes and I can't prove that this
+will actually fix something for somebody in real life, please queue for
+the next merge window.
+
+
+Index: wireless-testing/drivers/net/wireless/b43/phy_g.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/phy_g.c	2008-08-28 19:03:11.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/phy_g.c	2008-08-28 19:08:13.000000000 +0200
+@@ -229,17 +229,18 @@ void b43_set_txpower_g(struct b43_wldev 
+ 	rf = rfatt->att;
+ 	tx_bias = lo->tx_bias;
+ 	tx_magn = lo->tx_magn;
+ 	if (unlikely(tx_bias == 0xFF))
+ 		tx_bias = 0;
+ 
+-	/* Save the values for later */
++	/* Save the values for later. Use memmove, because it's valid
++	 * to pass &gphy->rfatt as rfatt pointer argument. Same for bbatt. */
+ 	gphy->tx_control = tx_control;
+-	memcpy(&gphy->rfatt, rfatt, sizeof(*rfatt));
++	memmove(&gphy->rfatt, rfatt, sizeof(*rfatt));
+ 	gphy->rfatt.with_padmix = !!(tx_control & B43_TXCTL_TXMIX);
+-	memcpy(&gphy->bbatt, bbatt, sizeof(*bbatt));
++	memmove(&gphy->bbatt, bbatt, sizeof(*bbatt));
+ 
+ 	if (b43_debug(dev, B43_DBG_XMITPOWER)) {
+ 		b43dbg(dev->wl, "Tuning TX-power to bbatt(%u), "
+ 		       "rfatt(%u), tx_control(0x%02X), "
+ 		       "tx_bias(0x%02X), tx_magn(0x%02X)\n",
+ 		       bb, rf, tx_control, tx_bias, tx_magn);
