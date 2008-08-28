@@ -1,69 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:43471 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751737AbYH1J3I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 05:29:08 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 06/11] iwlwifi: fix apm_stop
-Date: Thu, 28 Aug 2008 17:25:05 +0800
-Message-Id: <1219915510-3647-7-git-send-email-yi.zhu@intel.com> (sfid-20080828_112918_237130_3F7D938E)
-In-Reply-To: <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
+Received: from senator.holtmann.net ([87.106.208.187]:58997 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751287AbYH1Ktf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 06:49:35 -0400
+Subject: Re: [PATCH 03/11] iwlwifi: fix hidden ssid discovery in passive
+	channels
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Cahill Ben <ben.m.cahill@intel.com>
+In-Reply-To: <1ba2fa240808280340o216da98dwbf84541aa7bfd2e6@mail.gmail.com>
 References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
- <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
+	 <1219926558.6064.11.camel@californication>
+	 <1ba2fa240808280340o216da98dwbf84541aa7bfd2e6@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 28 Aug 2008 14:49:31 +0200
+Message-Id: <1219927771.6064.39.camel@californication> (sfid-20080828_124938_406733_00CA623B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohamed Abbas <mohamed.abbas@intel.com>
+Hi Thomas,
 
-The patch fixes CSR_GP_CNTRL_REG_FLAG_INIT_DONE was set instead of
-cleared which disabled moving device to D0U state.
+> >> This patch gives the HW the possibility to send direct probes in passive
+> >> channels (as long as traffic was detected in that channel) if such ssid
+> >> was requested, so hidden ssid can be found now in those channels as well.
+> >
+> > this also doesn't sound like a regression to me. Nice to have for sure,
+> > but not acceptable according to the merge window rules.
+> 
+> If you cannot scan your AP you also not able to connect to it, drawing
+> your card useless.
+> 
+> > Question here is was the driver supporting this before and we broke it
+> > in the 2.6.27 phase or not.
+> 
+> Irrelevant, this is fixing show stopper bug.
 
-Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-5000.c |    3 ++-
- 2 files changed, 4 insertions(+), 3 deletions(-)
+it is relevant. So I read this commit message as, that now we can also
+find hidden SSIDs in passive channels. Question that you should ask then
+is if that was supported before. Yes or no. If yes, then it is a
+regression, no then it is a feature. And regression fixes go in features
+wait for the next merge window.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index e258122..23fed32 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -474,8 +474,8 @@ static void iwl4965_apm_stop(struct iwl_priv *priv)
- 	iwl_set_bit(priv, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
- 
- 	udelay(10);
--
--	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
-+	/* clear "init complete"  move adapter D0A* --> D0U state */
-+	iwl_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
- 	spin_unlock_irqrestore(&priv->lock, flags);
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index cbc01a0..d95fb42 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -145,7 +145,8 @@ static void iwl5000_apm_stop(struct iwl_priv *priv)
- 
- 	udelay(10);
- 
--	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
-+	/* clear "init complete"  move adapter D0A* --> D0U state */
-+	iwl_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
- 
- 	spin_unlock_irqrestore(&priv->lock, flags);
- }
--- 
-1.5.3.6
+The term show stopper bug is irrelevant when it comes to merge window
+rules.
+
+Regards
+
+Marcel
+
 
