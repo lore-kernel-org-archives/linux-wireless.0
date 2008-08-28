@@ -1,72 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:27777 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932421AbYHRTCf convert rfc822-to-8bit (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:30336 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751725AbYH1J3k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Aug 2008 15:02:35 -0400
+	Thu, 28 Aug 2008 05:29:40 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so87405eyi.37
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2008 02:29:38 -0700 (PDT)
+Message-ID: <1ba2fa240808280229t112639a8re10dc93c778aaf7d@mail.gmail.com> (sfid-20080828_115051_677190_920F044E)
+Date: Thu, 28 Aug 2008 12:29:38 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: pull request: wireless-2.6 2008-08-26
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200808281031.06529.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: Ath5k missing led_classdev
-Date: Mon, 18 Aug 2008 12:02:33 -0700
-Message-ID: <BAD036B67C739F45BE062D0A03D1928603710018@orsmsx414.amr.corp.intel.com> (sfid-20080818_210252_820564_8C7B8580)
-In-Reply-To: <b6c5339f0808180742r3fdc06dfo15ef5bb352333251@mail.gmail.com>
-References: <Acj9Zps6uV6WabtPRwGUkFptNakABgAAr94gAAAgTxA=> <BAD036B67C739F45BE062D0A03D19286036D35BB@orsmsx414.amr.corp.intel.com> <b6c5339f0808180742r3fdc06dfo15ef5bb352333251@mail.gmail.com>
-From: "Lupusoru, Razvan A" <razvan.a.lupusoru@intel.com>
-To: "Bob Copeland" <me@bobcopeland.com>
-Cc: <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080827013009.GA15781@tuxdriver.com>
+	 <200808272225.10557.mb@bu3sch.de>
+	 <1ba2fa240808271611v382631ecn2a24e2816562d434@mail.gmail.com>
+	 <200808281031.06529.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The problem was that inside my .config file I also had
-# CONFIG_NEW_LEDS is not set
-And
-CONFIG_NEW_LEDS=y
-
-And for some reason, it seems that when I compiled the kernel, it parsed
-the first line also. After I removed the part that said that it is not
-set, I had no problems with ath5k.
-
-Razvan A. Lupusoru
-
------Original Message-----
-From: bcopeland@gmail.com [mailto:bcopeland@gmail.com] On Behalf Of Bob
-Copeland
-Sent: Monday, August 18, 2008 7:43 AM
-To: Lupusoru, Razvan A
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Ath5k missing led_classdev
-
-On Wed, Aug 13, 2008 at 1:28 PM, Lupusoru, Razvan A
-<razvan.a.lupusoru@intel.com> wrote:
-> Hello,
+On Thu, Aug 28, 2008 at 11:31 AM, Michael Buesch <mb@bu3sch.de> wrote:
+> On Thursday 28 August 2008, Tomas Winkler wrote:
+>> On Wed, Aug 27, 2008 at 11:25 PM, Michael Buesch <mb@bu3sch.de> wrote:
+>> > On Wednesday 27 August 2008, Tomas Winkler wrote:
+>> >> > John W. Linville (1):
+>> >> >      mac80211: quiet chatty IBSS merge message
+>> >>
+>> >> This patch is correct yet it suppresses an important warning, meaning
+>> >> that you have constant IBSS reconnection, remove all connected station
+>> >> and adding them again, This greatly degraded performance. This is
+>> >> caused by inability to adjust to TSF of the IBSS leader
+>> >>
+>> >> <snipt>
+>> >> static int ieee80211_sta_join_ibss(struct net_device *dev,
+>> >>                                  struct ieee80211_if_sta *ifsta,
+>> >>                                  struct ieee80211_sta_bss *bss)
+>> >> .....
+>> >> /* Remove possible STA entries from other IBSS networks. */
+>> >>       sta_info_flush_delayed(sdata);
+>> >> </snip>
+>> >
+>> > I fail to see how the TSF could be related to an ever reconnecting
+>> > station. Can you elaborate on what happens?
+>> >
+>> > I was under the impression that the firmware would handle TSF stuff.
+>> > Also the "IBSS leader" is a new thing to me. I remember from the specs
+>> > that the device should accept the TSF from _any_ beacon. Not just a
+>> > "leader". Am I mislead? :)
+>>
+>> What is happening that IBSS station should adopt TSF of  the oldest
+>> station i.e. with highest
+>> TSF. This is also leader of the IBSS (this is not spec definition just
+>> local jargon)  Adaptation
+>> mean we adjust to the same clock
+>>
+>> if (beacon_timestamp > rx_timestamp)
+>>     merge
 >
-> I compiled the package compat-wireless-2008-08-06 against 2.6.23
-kernel.
-> After it is done compiling, I get some warnings. The relevant ones
-are:
-> WARNING: "led_classdev_register"
->
-[/kernel2623/compat-wireless-2008-08-06/drivers/net/wireless/ath5k/ath5k
-> .ko] undefined!
-> WARNING: "led_classdev_unregister"
->
-[/kernel2623/compat-wireless-2008-08-06/drivers/net/wireless/ath5k/ath5k
-> .ko] undefined!
->
-> What options in the kernel do I need to enable to get rid of these
-> warnings? I try to "modprobe ath5k" but it tells me it is missing
-those
-> so it cannot load.
+> Well, I was pretty sure the firmware did this for us.
+> I can recheck that later.
 
-CONFIG_LEDS_CLASS should provide those symbols.  Are you still having
-that issue after installing the kernel?  The Kconfig for the in-tree
-version selects MAC80211_LEDS, LEDS_CLASS, and NEW_LEDS (and by
-extension LEDS_TRIGGERS).
-
-I suppose ath5k should be able to configure all of the LED stuff out
-like other drivers; I only didn't do that because there wasn't a knob
-before and I didn't want to add new ifdefs to base.c.
-
--- 
-Bob Copeland %% www.bobcopeland.com
+Other option might that rx_timestamp is just not computed correctly
+for your HW in the first place and then this code is triggered in the
+mac.
+Tomas
