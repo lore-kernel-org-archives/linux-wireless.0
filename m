@@ -1,112 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:55578 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753821AbYHBSLN (ORCPT
+Received: from winston.telenet-ops.be ([195.130.137.75]:45900 "EHLO
+	winston.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751947AbYH1X6u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 14:11:13 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: [PATCH 6/8] rfkill: use the new WARN()
-Date: Sat,  2 Aug 2008 15:11:02 -0300
-Message-Id: <1217700664-20792-7-git-send-email-hmh@hmh.eng.br> (sfid-20080802_201119_084163_4C71F8D4)
-In-Reply-To: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
-References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br>
+	Thu, 28 Aug 2008 19:58:50 -0400
+Message-ID: <48B73BB8.7000302@telenet.be> (sfid-20080829_015855_122802_4553C790)
+Date: Fri, 29 Aug 2008 01:58:48 +0200
+From: Ian Schram <ischram@telenet.be>
+MIME-Version: 1.0
+To: Tomas Winkler <tomasw@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: iwl5000 oopses
+References: <1217937364.3603.37.camel@johannes.berg>	 <1217938927.3603.40.camel@johannes.berg>	 <1ba2fa240808050820j1aa0ae7cj11f2758caa5ba4df@mail.gmail.com>	 <1219919760.8434.5.camel@johannes.berg>	 <1ba2fa240808280439m3524d17cm63deebdfc0d5b9dd@mail.gmail.com>	 <1219925859.25321.10.camel@johannes.berg>	 <1ba2fa240808280752t4b41996au43bf4cb1a61b7967@mail.gmail.com>	 <48B6C7EA.7080606@telenet.be> <1ba2fa240808281430q7be3bb1eg8724af7247372efb@mail.gmail.com>
+In-Reply-To: <1ba2fa240808281430q7be3bb1eg8724af7247372efb@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Switch use of WARN_ON(1) to the new WARN() macro.  Do this on a separate
-patch to make rfkill backports easier on trees like wireless-compat.
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
----
- net/rfkill/rfkill.c |   28 +++++++++++++++++++++-------
- 1 files changed, 21 insertions(+), 7 deletions(-)
 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index d5f95cb..88368c4 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -204,7 +204,9 @@ static int rfkill_toggle_radio(struct rfkill *rfkill,
- 		 * RFKILL_STATE_HARD_BLOCKED */
- 		break;
- 	default:
--		WARN_ON(1);
-+		WARN(1, KERN_WARNING
-+			"rfkill: illegal state %d passed as parameter "
-+			"to rfkill_toggle_radio\n", state);
- 		return -EINVAL;
- 	}
- 
-@@ -240,7 +242,9 @@ static void __rfkill_switch_all(const enum rfkill_type type,
- 	struct rfkill *rfkill;
- 
- 	if (unlikely(state >= RFKILL_STATE_MAX || type >= RFKILL_TYPE_MAX)) {
--		WARN_ON(1);
-+		WARN(1, KERN_WARNING
-+			"rfkill: illegal state %d or type %d passed as "
-+			"parameter to __rfkill_switch_all\n", state, type);
- 		return;
- 	}
- 
-@@ -341,7 +345,9 @@ int rfkill_force_state(struct rfkill *rfkill, enum rfkill_state state)
- 
- 	BUG_ON(!rfkill);
- 	if (unlikely(state >= RFKILL_STATE_MAX)) {
--		WARN_ON(1);
-+		WARN(1, KERN_WARNING
-+			"rfkill: illegal state %d passed as parameter "
-+			"to rfkill_force_state\n", state);
- 		return -EINVAL;
- 	}
- 
-@@ -600,7 +606,9 @@ static int rfkill_check_duplicity(const struct rfkill *rfkill)
- 
- 	list_for_each_entry(p, &rfkill_list, node) {
- 		if (p == rfkill) {
--			WARN_ON(1);
-+			WARN(1, KERN_WARNING
-+				"rfkill: illegal attempt to register "
-+				"an already registered rfkill struct\n");
- 			return -EEXIST;
- 		}
- 		set_bit(p->type, seen);
-@@ -671,7 +679,9 @@ struct rfkill * __must_check rfkill_allocate(struct device *parent,
- 	struct device *dev;
- 
- 	if (type >= RFKILL_TYPE_MAX) {
--		WARN_ON(1);
-+		WARN(1, KERN_WARNING
-+			"rfkill: illegal type %d passed as parameter "
-+			"to rfkill_allocate\n", type);
- 		return NULL;
- 	}
- 
-@@ -751,7 +761,9 @@ int __must_check rfkill_register(struct rfkill *rfkill)
- 		     !rfkill->toggle_radio ||
- 		     rfkill->type >= RFKILL_TYPE_MAX ||
- 		     rfkill->state >= RFKILL_STATE_MAX)) {
--		WARN_ON(1);
-+		WARN(1, KERN_WARNING
-+			"rfkill: attempt to register a "
-+			"badly initialized rfkill struct\n");
- 		return -EINVAL;
- 	}
- 
-@@ -827,7 +839,9 @@ int rfkill_set_default(enum rfkill_type type, enum rfkill_state state)
- 	if (type >= RFKILL_TYPE_MAX ||
- 	    (state != RFKILL_STATE_SOFT_BLOCKED &&
- 	     state != RFKILL_STATE_UNBLOCKED)) {
--		WARN_ON(1);
-+		WARN(1, KERN_WARNING
-+			"rfkill: illegal state %d or type %d passed as "
-+			"parameter to rfkill_set_default\n", state, type);
- 		return -EINVAL;
- 	}
- 
--- 
-1.5.6.3
+Tomas Winkler wrote:
+> On Thu, Aug 28, 2008 at 6:44 PM, Ian Schram <ischram@telenet.be> wrote:
+>>
+>> Tomas Winkler wrote:
+>>> On Thu, Aug 28, 2008 at 3:17 PM, Johannes Berg
+>>> <johannes@sipsolutions.net> wrote:
+>>>> On Thu, 2008-08-28 at 14:39 +0300, Tomas Winkler wrote:
+>>>>> On Thu, Aug 28, 2008 at 1:36 PM, Johannes Berg
+>>>>> <johannes@sipsolutions.net> wrote:
+>>>>>> On Tue, 2008-08-05 at 18:20 +0300, Tomas Winkler wrote:
+>>>>>>> On Tue, Aug 5, 2008 at 3:22 PM, Johannes Berg
+>>>>>>> <johannes@sipsolutions.net> wrote:
+>>>>>>>>> This is kernel 2.6.27-rc1-00504-g2b12a4c-dirty
+>>>>>>>> [  126.826663] iwlagn: Intel(R) Wireless WiFi Link AGN driver for
+>>>>>>>> Linux, 1.3.27kds
+>>>>>>>> [  126.826947] iwlagn: Copyright(c) 2003-2008 Intel Corporation
+>>>>>>>> [  126.828369] iwlagn: Detected Intel Wireless WiFi Link 5350AGN
+>>>>>>>> REV=0x24
+>>>>>>>> [  126.848680] iwlagn: Tunable channels: 13 802.11bg, 24 802.11a
+>>>>>>>> channels
+>>>>>>>> [  127.014564] firmware: requesting iwlwifi-5000-1.ucode
+>>>>>>>> [  127.170640] iwlagn: Error wrong command queue 43 command id 0x6B
+>>>>>>>> [  127.170832] ------------[ cut here ]------------
+>>>>>>>> [  127.170884] kernel BUG at
+>>>>>>>> drivers/net/wireless/iwlwifi/iwl-tx.c:1163!
+>>>>>>>> [  127.170941] Oops: Exception in kernel mode, sig: 5 [#1]
+>>>>>> This is still happening with -rc4.
+>>>>> I know, at least one regression.
+>>>> Well, I guess for me the addition of the 5000 series code to the kernel
+>>>> is the regression, without it I can use the machine just fine, just have
+>>>> no wireless ;)
+>>> And when I say that driver is half backed because I'm not done
+>>> cleaning bugs it's somehow not understood
+>>> Instead of chasing bugs I have to spend time to fitght the system.
+>>> Tomas
+>>> --
+>> Probably a good idea to not see this as
+>> ,,you vs system'' ..  Anyways that discussion is going on in other threads
+>> perhaps we can focus on what has to be done about this bug.
+>>
+>> what's known about this bug? ad where does it trigger? reproducible?
+>>
+>> the error message clearly shows an invalid queue id (43 or 0x2b) where it
+>> should be
+>> a number in the range of [0,4], this is multiqueue related?
+>>
+>> the value in this error message was set by the driver, and then relayed by
+>> the ucode
+>> in order to know which "command" this is a response to.
+>>
+>> assuming there is no memory corruption, and the ucode is correct, ...
+>>
+>> It might be set wrong. The value that is set is either the command queue, or
+>> a
+>> tx_command queue which is determined by a call to skb_get_queue_mapping(skb)
+>>
+>> might be nice to add some debug output documenting what this function is
+>> returning.
+>>
+>>
+>>
+>> finally can i quickly ask why these macro's (that "encode" this queue id to
+>> the field in which it's passed to the ucode):
+>> #define SEQ_TO_QUEUE(x)  ((x >> 8) & 0xbf)
+>> #define QUEUE_TO_SEQ(x)  ((x & 0xbf) << 8)
+>> use 0xbf, when according to the sourcecode comments it only uses the last 6
+>> bits, hence i would
+>> expect 0x3f. In QUEUE_TO_SEQ this msb should never be set .. so i wonder if
+>> there is a hack
+>> i'm missing somewhere.
+> 
+> Actually this is the correct settings (there is still a lot of old
+> days junk in the code)
+> 
+> +#define SEQ_TO_QUEUE(s)        (((s) >> 8) & 0x1f)
+> +#define QUEUE_TO_SEQ(q)        (((q) & 0x1f) << 8)
+> +#define SEQ_TO_INDEX(s)        ((s) & 0xff)
+> +#define INDEX_TO_SEQ(i)        ((i) & 0xff)
+> 
+> Yet this is not it an issue first of all it works pretty well I never
 
+True. 0x1f seems slightly inconsistent with  the iwl-command.h, but
+that's not really the issue right now.
+
+> hit this one if not under load.
+> ' Error wrong command queue 43 command id ___0x6B___'  6b looks more
+> like slub poison -- accessing already freed skb
+> 
+> Thanks
+> Tomas
+
+hmm, 0x6B indeed is not a documented command ID...
+Only triggering under load must point to some overflow or race i guess.
+
+I should get myself a new laptop to be able to play with this...
+The best i can do now, is wonder if this patch
+"[PATCH 08/10] iwlwifi: decrement rx skb counter in scan abort handler"
+might be responsible, but that's just fuzzy string matching "recent patches" with
+"freed skb" ;-)
