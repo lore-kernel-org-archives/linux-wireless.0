@@ -1,93 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:39648 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751437AbYHKLDW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2008 07:03:22 -0400
-Message-Id: <20080811110238.358118211@localhost> (sfid-20080811_130324_679915_2ABD5CB3)
-References: <20080811110146.877112595@localhost>
-Date: Mon, 11 Aug 2008 14:01:47 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/5] ath9k: Allow AP mode to be enabled
+Received: from senator.holtmann.net ([87.106.208.187]:45197 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752170AbYH1MSk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 08:18:40 -0400
+Subject: Re: [PATCH 06/11] iwlwifi: fix apm_stop
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>, Zhu Yi <yi.zhu@intel.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Mohamed Abbas <mohamed.abbas@intel.com>
+In-Reply-To: <1ba2fa240808280441v2a1f1014t52c4bacf69f901af@mail.gmail.com>
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
+	 <1219926807.6064.17.camel@californication>
+	 <200808281338.46894.mb@bu3sch.de>
+	 <1ba2fa240808280441v2a1f1014t52c4bacf69f901af@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 28 Aug 2008 16:18:38 +0200
+Message-Id: <1219933118.6064.76.camel@californication> (sfid-20080828_141902_381878_A41FEC1F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Tomas,
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+> >> > The patch fixes CSR_GP_CNTRL_REG_FLAG_INIT_DONE was set instead of
+> >> > cleared which disabled moving device to D0U state.
+> >>
+> >> when was this mistake introduced. Is it a regression compared to what we
+> >> have in 2.6.26?
+> >
+> > I think you are overstretching the regression-fixes-only rule a little bit...
+> > It will help nobody, if we don't fix actual _bugs_ and push such fixes
+> > into the next merge window.
+> >
+> > Our goal is to have a stable kernel on release. We don't get to that goal, if
+> > we defer bugfixes to the next merge window.
+> 
+> Oh, good I have friends after all :)
+
+this is not about that and you don't have to convince me to get these
+patches included. The line of command is John -> Dave -> Linus. I
+mentioned it in the other email, that I don't see any problem with these
+patches at all. They look all good, but the question here is if they are
+suitable for -rc4 or not.
+
+If we keep sending bug fixes that are no clear regression after -rc4,
+then we likely have -rc5, -rc6, -rc7 and more. Instead -rc5 could have
+been the last. Linus point was clear here. After the merge window it
+goes to regression fixing with the goal to release the next kernel
+quickly.
+
+Personally I would take all patches, but if I would be in the position
+to explain them to Linus, I would reject them. Just see this review as
+Linus asking the trick question why he should take it.
+
+Regards
+
+Marcel
 
 
-Index: wireless-testing/drivers/net/wireless/ath9k/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/ath9k/main.c
-+++ wireless-testing/drivers/net/wireless/ath9k/main.c
-@@ -426,10 +426,13 @@ static int ath9k_add_interface(struct ie
- 	case IEEE80211_IF_TYPE_IBSS:
- 		ic_opmode = ATH9K_M_IBSS;
- 		break;
-+	case IEEE80211_IF_TYPE_AP:
-+		ic_opmode = ATH9K_M_HOSTAP;
-+		break;
- 	default:
- 		DPRINTF(sc, ATH_DBG_FATAL,
--			"%s: Only STA and IBSS are supported currently\n",
--			__func__);
-+			"%s: Interface type %d not yet supported\n",
-+			__func__, conf->type);
- 		return -EOPNOTSUPP;
- 	}
- 
-@@ -530,6 +533,7 @@ static int ath9k_config_interface(struct
- 				  struct ieee80211_if_conf *conf)
- {
- 	struct ath_softc *sc = hw->priv;
-+	struct ath_hal *ah = sc->sc_ah;
- 	struct ath_vap *avp;
- 	u32 rfilt = 0;
- 	int error, i;
-@@ -542,6 +546,17 @@ static int ath9k_config_interface(struct
- 		return -EINVAL;
- 	}
- 
-+	/* TODO: Need to decide which hw opmode to use for multi-interface
-+	 * cases */
-+	if (vif->type == IEEE80211_IF_TYPE_AP &&
-+	    ah->ah_opmode != ATH9K_M_HOSTAP) {
-+		ah->ah_opmode = ATH9K_M_HOSTAP;
-+		ath9k_hw_setopmode(ah);
-+		ath9k_hw_write_associd(ah, sc->sc_myaddr, 0);
-+		/* Request full reset to get hw opmode changed properly */
-+		sc->sc_flags |= SC_OP_FULL_RESET;
-+	}
-+
- 	if ((conf->changed & IEEE80211_IFCC_BSSID) &&
- 	    !is_zero_ether_addr(conf->bssid)) {
- 		switch (vif->type) {
-Index: wireless-testing/drivers/net/wireless/ath9k/core.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/ath9k/core.c
-+++ wireless-testing/drivers/net/wireless/ath9k/core.c
-@@ -549,9 +549,15 @@ int ath_vap_listen(struct ath_softc *sc,
- 	 * XXXX
- 	 * Disable BMISS interrupt when we're not associated
- 	 */
--	ath9k_hw_set_interrupts(ah,
--		sc->sc_imask & ~(ATH9K_INT_SWBA | ATH9K_INT_BMISS));
--	sc->sc_imask &= ~(ATH9K_INT_SWBA | ATH9K_INT_BMISS);
-+	if (sc->sc_ah->ah_opmode == ATH9K_M_HOSTAP) {
-+		ath9k_hw_set_interrupts(ah, sc->sc_imask & ~ATH9K_INT_BMISS);
-+		sc->sc_imask &= ~ATH9K_INT_BMISS;
-+	} else {
-+		ath9k_hw_set_interrupts(
-+			ah,
-+			sc->sc_imask & ~(ATH9K_INT_SWBA | ATH9K_INT_BMISS));
-+		sc->sc_imask &= ~(ATH9K_INT_SWBA | ATH9K_INT_BMISS);
-+	}
- 	/* need to reconfigure the beacons when it moves to RUN */
- 	sc->sc_flags &= ~SC_OP_BEACONS;
- 
-
---
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
