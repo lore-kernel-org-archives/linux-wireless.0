@@ -1,55 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.229]:2013 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751559AbYHAQnA (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51497 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751828AbYH1MXm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 12:43:00 -0400
-Received: by qb-out-0506.google.com with SMTP id a16so1115495qbd.17
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 09:42:59 -0700 (PDT)
-Message-ID: <4893399E.8080503@tuffmail.co.uk> (sfid-20080801_184303_698404_31314DA7)
-Date: Fri, 01 Aug 2008 17:28:14 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: Jiri Slaby <jirislaby@gmail.com>, tomasw@gmail.com,
-	Dave Young <hidave.darkstar@gmail.com>, stable@kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linville@tuxdriver.com, Pekka Enberg <penberg@cs.helsinki.fi>,
-	ath5k-devel@venema.h4ckr.net, johannes@sipsolutions.net,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [ath5k-devel] [PATCH] ath5k : ath5k_config_interface deadlock
- fix
-References: <20080801074014.GA3341@darkstar> <4892C2CA.7010003@gmail.com>	<4892C359.9000304@cs.helsinki.fi>	<20080801011415.ff4821a3.akpm@linux-foundation.org>	<b6c5339f0808010643i58dbb2a7jf459359451061ae4@mail.gmail.com>	<4893257C.1020907@gmail.com> <b6c5339f0808010823o434298ecn7b274c46fe857aba@mail.gmail.com>
-In-Reply-To: <b6c5339f0808010823o434298ecn7b274c46fe857aba@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 28 Aug 2008 08:23:42 -0400
+Subject: Re: [PATCH 06/11] iwlwifi: fix apm_stop
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>, Zhu Yi <yi.zhu@intel.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Mohamed Abbas <mohamed.abbas@intel.com>
+In-Reply-To: <1ba2fa240808280421g642ddc62j7541837f874f79df@mail.gmail.com> (sfid-20080828_132132_415958_8B7C22C7)
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
+	 <1219926807.6064.17.camel@californication>
+	 <1ba2fa240808280421g642ddc62j7541837f874f79df@mail.gmail.com>
+	 (sfid-20080828_132132_415958_8B7C22C7)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-IsRBUGCUjgqLM9sV/mAu"
+Date: Thu, 28 Aug 2008 14:23:02 +0200
+Message-Id: <1219926182.25321.14.camel@johannes.berg> (sfid-20080828_142345_987008_6092C978)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland wrote:
-> On Fri, Aug 1, 2008 at 11:02 AM, Jiri Slaby <jirislaby@gmail.com> wrote:
->   
->>> Not to worry, the commit that introduced it was
->>> 9d139c810a2aa17365cc548d0cd2a189d8433c65, which as far as I can tell
->>> came in after 2.6.26.
->>>       
->> git-describe 9d139c810a2aa17365cc548d0cd2a189d8433c65
->> v2.6.26-rc8-1219-g9d139c8
->>     
->
-> I'm not that expert in git, what does that mean?  Some other commits
-> for 2.6.27 also show a 2.6.26-rc from git-describe (e.g. my
-> 3a078876caee).
->
-> For my own investigation, I did a 'git-checkout v2.6.26' and looked at
-> the code to see the patch had not been applied yet.  Is there an
-> easier way to definitively say commit X is/is not in tagged release Y?
->
->   
 
-Aha!  I think we want git-describe --contains.
+--=-IsRBUGCUjgqLM9sV/mAu
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-$ git-describe --contains 2b142900784c6e38c8d39fa57d5f95ef08e735d8
-v2.6.27-rc1~55^2~1
+On Thu, 2008-08-28 at 14:21 +0300, Tomas Winkler wrote:
+> On Thu, Aug 28, 2008 at 3:33 PM, Marcel Holtmann <marcel@holtmann.org> wr=
+ote:
+> > Hi Yi,
+> >
+> >> The patch fixes CSR_GP_CNTRL_REG_FLAG_INIT_DONE was set instead of
+> >> cleared which disabled moving device to D0U state.
+> >
+> > when was this mistake introduced. Is it a regression compared to what w=
+e
+> > have in 2.6.26?
+>=20
+> Again. think of global warming.
 
-Alan
+If you're so concerned about global warming, why didn't you fix this,
+umm, months ago? :)
+
+Frankly, this sounds like a "quick, somebody help me come up with a good
+argument" argument.
+
+johannes
+
+--=-IsRBUGCUjgqLM9sV/mAu
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIbBAABAgAGBQJItpijAAoJEKVg1VMiehFY/0YP910EWb557y9wr3UqbTWBN7XJ
+p53E08NN96kyWa4TxTxqvPSkI0OCGNDZgOrAnlJAMT9+5dQ9VTC5TLAwP3C5RJSd
+RmpZruk/Quszr7C3/jE/YCbNm4YYejz30Ar9lfA34q7VwGI6gDgDL7H8Cx8ICgMm
+7AufLRji5mCINrESjK4xNMoKVrohubklj2i0X1a9Z+5ED/WsMym/rzkTAHnID/P6
+I4cF99iWEa3qXZXA5gA43eihPFRyCTUmsEoZDiRJ2vTJ8olQBeORumyMBP//kfuV
+X1o4x0/mjl3RYq+nzAAhDNaYyMh5qLpOfiRZAOdSETVvGS9hJh27CsH1G4/aB3nv
+lw+iLbhdfwqkTnXECM1BCzqDHTOf9X9Xzk3upWe6uoDuGzmKOIW60GvWVaIepmMX
+W/Q3OMA3WO6KxzbeVysarK8EgjypVc2yPP71S9mTWX/E+uqu7SQrTKRKI5s7XCJs
+s6h6Dr01YwOF8kHTFHwCLGtrX3mmY61rnmPSKUvD45pboeLvdmTAGX31NDKydTOw
+8M8ZvYBlr8e8K33cWAdcmDN4SeFhZORJQmx8uT69AXQDM3xUwApG3zfTB/SMvi6J
+tNpZe18e37nuVPkpVV+9PcQ1PzpAUAPlfCkefHBG+8VVVlNdlHsD483QBSon0kPe
+ZL72xG1wSBABekjAOWE=
+=qMy5
+-----END PGP SIGNATURE-----
+
+--=-IsRBUGCUjgqLM9sV/mAu--
 
