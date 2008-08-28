@@ -1,33 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:5395 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750852AbYHLBV2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2008 21:21:28 -0400
-Subject: Re: [PATCH 1/1] iwlwifi: fix printk newlines
-From: Zhu Yi <yi.zhu@intel.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-In-Reply-To: <1218491381-1313-1-git-send-email-jirislaby@gmail.com>
-References: <1218491381-1313-1-git-send-email-jirislaby@gmail.com>
-Content-Type: text/plain
-Date: Tue, 12 Aug 2008 09:20:35 +0800
-Message-Id: <1218504035.3107.198.camel@debian.sh.intel.com> (sfid-20080812_032133_396671_9E852F97)
-Mime-Version: 1.0
+Received: from mx51.mymxserver.com ([85.199.173.110]:11805 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750780AbYH1JMO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 05:12:14 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [RFC: 2.6 patch] wireless/libertas/if_cs.c: fix memory leaks
+Date: Thu, 28 Aug 2008 11:12:03 +0200
+Cc: Adrian Bunk <bunk@kernel.org>, dcbw@redhat.com,
+	linville@tuxdriver.com, libertas-dev@lists.infradead.org,
+	netdev@vger.kernel.org
+References: <20080827220508.GQ11734@cs181140183.pp.htv.fi>
+In-Reply-To: <20080827220508.GQ11734@cs181140183.pp.htv.fi>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200808281112.04312.hs4233@mail.mn-solutions.de> (sfid-20080828_111217_836813_988E3004)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-08-11 at 23:49 +0200, Jiri Slaby wrote:
-> Add newlines at printk outputs to not break dmesg.
-> 
-> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-> Cc: Zhu Yi <yi.zhu@intel.com>
-> Cc: Reinette Chatre <reinette.chatre@intel.com>
-> Cc: John W. Linville <linville@tuxdriver.com>
+> It looks a bit as if not freeing "fw" in if_cs_prog_real() was
+> done intentionally, but I'm not seeing why it shouldn't be
+> freed.
 
-Ack.
+No, it wasn't made intentionally, thanks for finding out.
 
-Thanks,
--yi
-
+Acked-by: Holger Schurig <hs4233@mail.mn-solutions.de>
