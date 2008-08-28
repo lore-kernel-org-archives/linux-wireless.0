@@ -1,39 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:52559 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751776AbYH1K2B (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.182]:12056 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755365AbYH1Vaa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Aug 2008 06:28:01 -0400
-Subject: Re: [PATCH 02/11] iwlwifi: use mac80211 band and channel settings
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-In-Reply-To: <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
-References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
-	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
-Content-Type: text/plain
-Date: Thu, 28 Aug 2008 14:27:58 +0200
-Message-Id: <1219926478.6064.9.camel@californication> (sfid-20080828_122808_137449_5AB9EAE8)
-Mime-Version: 1.0
+	Thu, 28 Aug 2008 17:30:30 -0400
+Received: by ik-out-1112.google.com with SMTP id c28so323106ika.5
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2008 14:30:26 -0700 (PDT)
+Message-ID: <1ba2fa240808281430q7be3bb1eg8724af7247372efb@mail.gmail.com> (sfid-20080828_233034_666186_A451EF27)
+Date: Fri, 29 Aug 2008 00:30:26 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Ian Schram" <ischram@telenet.be>
+Subject: Re: iwl5000 oopses
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <48B6C7EA.7080606@telenet.be>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1217937364.3603.37.camel@johannes.berg>
+	 <1217938927.3603.40.camel@johannes.berg>
+	 <1ba2fa240808050820j1aa0ae7cj11f2758caa5ba4df@mail.gmail.com>
+	 <1219919760.8434.5.camel@johannes.berg>
+	 <1ba2fa240808280439m3524d17cm63deebdfc0d5b9dd@mail.gmail.com>
+	 <1219925859.25321.10.camel@johannes.berg>
+	 <1ba2fa240808280752t4b41996au43bf4cb1a61b7967@mail.gmail.com>
+	 <48B6C7EA.7080606@telenet.be>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Yi,
+On Thu, Aug 28, 2008 at 6:44 PM, Ian Schram <ischram@telenet.be> wrote:
+>
+>
+> Tomas Winkler wrote:
+>>
+>> On Thu, Aug 28, 2008 at 3:17 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>>>
+>>> On Thu, 2008-08-28 at 14:39 +0300, Tomas Winkler wrote:
+>>>>
+>>>> On Thu, Aug 28, 2008 at 1:36 PM, Johannes Berg
+>>>> <johannes@sipsolutions.net> wrote:
+>>>>>
+>>>>> On Tue, 2008-08-05 at 18:20 +0300, Tomas Winkler wrote:
+>>>>>>
+>>>>>> On Tue, Aug 5, 2008 at 3:22 PM, Johannes Berg
+>>>>>> <johannes@sipsolutions.net> wrote:
+>>>>>>>>
+>>>>>>>> This is kernel 2.6.27-rc1-00504-g2b12a4c-dirty
+>>>>>>>
+>>>>>>> [  126.826663] iwlagn: Intel(R) Wireless WiFi Link AGN driver for
+>>>>>>> Linux, 1.3.27kds
+>>>>>>> [  126.826947] iwlagn: Copyright(c) 2003-2008 Intel Corporation
+>>>>>>> [  126.828369] iwlagn: Detected Intel Wireless WiFi Link 5350AGN
+>>>>>>> REV=0x24
+>>>>>>> [  126.848680] iwlagn: Tunable channels: 13 802.11bg, 24 802.11a
+>>>>>>> channels
+>>>>>>> [  127.014564] firmware: requesting iwlwifi-5000-1.ucode
+>>>>>>> [  127.170640] iwlagn: Error wrong command queue 43 command id 0x6B
+>>>>>>> [  127.170832] ------------[ cut here ]------------
+>>>>>>> [  127.170884] kernel BUG at
+>>>>>>> drivers/net/wireless/iwlwifi/iwl-tx.c:1163!
+>>>>>>> [  127.170941] Oops: Exception in kernel mode, sig: 5 [#1]
+>>>>>
+>>>>> This is still happening with -rc4.
+>>>>
+>>>> I know, at least one regression.
+>>>
+>>> Well, I guess for me the addition of the 5000 series code to the kernel
+>>> is the regression, without it I can use the machine just fine, just have
+>>> no wireless ;)
+>>
+>> And when I say that driver is half backed because I'm not done
+>> cleaning bugs it's somehow not understood
+>> Instead of chasing bugs I have to spend time to fitght the system.
+>> Tomas
+>> --
+>
+> Probably a good idea to not see this as
+> ,,you vs system'' ..  Anyways that discussion is going on in other threads
+> perhaps we can focus on what has to be done about this bug.
+>
+> what's known about this bug? ad where does it trigger? reproducible?
+>
+> the error message clearly shows an invalid queue id (43 or 0x2b) where it
+> should be
+> a number in the range of [0,4], this is multiqueue related?
+>
+> the value in this error message was set by the driver, and then relayed by
+> the ucode
+> in order to know which "command" this is a response to.
+>
+> assuming there is no memory corruption, and the ucode is correct, ...
+>
+> It might be set wrong. The value that is set is either the command queue, or
+> a
+> tx_command queue which is determined by a call to skb_get_queue_mapping(skb)
+>
+> might be nice to add some debug output documenting what this function is
+> returning.
+>
+>
+>
+> finally can i quickly ask why these macro's (that "encode" this queue id to
+> the field in which it's passed to the ucode):
+> #define SEQ_TO_QUEUE(x)  ((x >> 8) & 0xbf)
+> #define QUEUE_TO_SEQ(x)  ((x & 0xbf) << 8)
+> use 0xbf, when according to the sourcecode comments it only uses the last 6
+> bits, hence i would
+> expect 0x3f. In QUEUE_TO_SEQ this msb should never be set .. so i wonder if
+> there is a hack
+> i'm missing somewhere.
 
-> This patch makes use of mac80211 defaults for channel and band settings
-> instead of setting them by the driver own. The iwlwifi driver used to
-> set G band channel 6 as the default channel.
+Actually this is the correct settings (there is still a lot of old
+days junk in the code)
 
-that is not a regression. The driver has been doing this until now and
-thus it can keep doing it until the next merge window.
++#define SEQ_TO_QUEUE(s)        (((s) >> 8) & 0x1f)
++#define QUEUE_TO_SEQ(q)        (((q) & 0x1f) << 8)
++#define SEQ_TO_INDEX(s)        ((s) & 0xff)
++#define INDEX_TO_SEQ(i)        ((i) & 0xff)
 
-If you disagree, then please explain the regression in the commit
-message.
+Yet this is not it an issue first of all it works pretty well I never
+hit this one if not under load.
+' Error wrong command queue 43 command id ___0x6B___'  6b looks more
+like slub poison -- accessing already freed skb
 
-Regards
+Thanks
+Tomas
 
-Marcel
 
 
+>
