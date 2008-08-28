@@ -1,38 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.180]:6935 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751973AbYHBJwj (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:52573 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751782AbYH1Ka5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 05:52:39 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so1569610ika.5
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 02:52:38 -0700 (PDT)
-Message-ID: <48942E5E.9000508@gmail.com> (sfid-20080802_115242_947032_AFB54A93)
-Date: Sat, 02 Aug 2008 10:52:30 +0100
-MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Resignation from orinoco and at76_usb
-References: <1217634358.2731.8.camel@dv>	<B9DE28E5-3777-4FB2-8521-CA128614BC21@holtmann.org> <20080802010317.7q5vloyt1wsscc4w-cebfxv@webmail.spamcop.net>
-In-Reply-To: <20080802010317.7q5vloyt1wsscc4w-cebfxv@webmail.spamcop.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-From: Dave <kilroyd@googlemail.com>
+	Thu, 28 Aug 2008 06:30:57 -0400
+Subject: Re: [PATCH 04/11] iwlwifi: remove false rxon if rx chain changes
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+In-Reply-To: <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
+Content-Type: text/plain
+Date: Thu, 28 Aug 2008 14:30:53 +0200
+Message-Id: <1219926653.6064.13.camel@californication> (sfid-20080828_123059_157500_F0CC2923)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Roskin wrote:
-> Quoting Marcel Holtmann <marcel@holtmann.org>:
-> 
->> do you have any pending patches that are not in wireless-testing? I at
->> least remember that I have seen some Orinoco WPA stuff going on. It
->> would be good to get at least these things sorted out before you resign
->> from both drivers.
-> 
-> I asked the authors of those patches to post everything here.
+Hi Yi,
 
-Since there hasn't been any testing feedback, I'll be reposting the Orinoco WPA patches with a few modifications to ensure they don't negatively impact the cards that I'm unable to test.
+> Rx chain might change during power save transitions but it doesn't
+> requires full rxon. The patch avoids the rxon by removing the rx_chain
+> check.
+
+and again. Is this a regression. What is the down side or impact from
+not doing this. Did we used to do it different in 2.6.26?
+
+Regards
+
+Marcel
 
 
-Regards,
-
-Dave.
