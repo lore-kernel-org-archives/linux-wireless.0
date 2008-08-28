@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from usul.saidi.cx ([204.11.33.34]:50522 "EHLO usul.overt.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1761504AbYHFDdj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 23:33:39 -0400
-Message-ID: <48991B83.5030607@overt.org> (sfid-20080806_053346_187182_D41F0FD5)
-Date: Tue, 05 Aug 2008 20:33:23 -0700
-From: Philip Langdale <philipl@overt.org>
-MIME-Version: 1.0
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-CC: LKML <linux-kernel@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	toshiba_acpi@memebeam.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
- through rfkill (v2)
-References: <4894B1B4.6050003@overt.org> <20080803042613.GC6053@khazad-dum.debian.net> <48965716.6020508@overt.org> <20080805212416.GB21738@khazad-dum.debian.net>
-In-Reply-To: <20080805212416.GB21738@khazad-dum.debian.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from senator.holtmann.net ([87.106.208.187]:50162 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751266AbYH1KjN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 06:39:13 -0400
+Subject: Re: [PATCH 08/11] iwlwifi: call apm stop on exit
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Gregory Greenman <gregory.greenman@intel.com>,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+In-Reply-To: <1219915510-3647-9-git-send-email-yi.zhu@intel.com>
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-8-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-9-git-send-email-yi.zhu@intel.com>
+Content-Type: text/plain
+Date: Thu, 28 Aug 2008 14:39:09 +0200
+Message-Id: <1219927149.6064.25.camel@californication> (sfid-20080828_123916_214502_EDFC473D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Henrique de Moraes Holschuh wrote:
-> 
-> rfkill-input (now) or userspace (someday) will take care of kicking the
-> radio to RFKILL_STATE_UNBLOCKED when (1) issues an event that signals that
-> radios don't have to remain blocked.  Maybe this is why you see the WLAN
-> going on when you deactivate the radio kill switch?
+Hi Yi,
 
-It's all done behind the scenes I think (it's an ipw2200 device). There's
-no rfkill integration from that driver.
+> This patch calls apm stop on exit and suspend and sets STATUS_EXIT_PENDING
+> accordingly. Without this patch hardware consumes power even after driver
+> is removed or suspended.
 
-> And rfkill-input will soon be enhanced to let the user configure it to do
-> something different if he wants.  Your driver doesn't (and shouldn't)
-> hardcode policy about it.
+is this a regression to 2.6.26? That is always the important question
+here since that will determine if the patch should go in. If the 2.6.26
+version did this better (even if not prefect), then this patch should go
+on, otherwise it could wait until next merge window.
 
-Ok, that makes things much easier for me :-) But it means that for now the
-user will have to manually kick the device.
+Regards
 
-> 
-> Thanks.  Please take note that rfkill will, right now, try to BLOCK all
-> radios on suspend.  That will be changed soon (2.6.28 at the latest), and
-> your driver will have to handle blocking radios on suspend directly if it is
-> needed for toshibas.
+Marcel
 
-Why is this necessary? Doesn't the radio power down as part of the suspend
-process? How would I tell what the hardware is doing?
 
-I'll update the diff when I can.
-
---phil
