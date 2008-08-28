@@ -1,56 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:49934 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754445AbYH0JKO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2008 05:10:14 -0400
-Subject: Re: pull request: wireless-2.6 2008-08-26
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: David Miller <davem@davemloft.net>
-Cc: tomasw@gmail.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <20080827.014041.230100807.davem@davemloft.net>
-References: <20080827013009.GA15781@tuxdriver.com>
-	 <1ba2fa240808270038r24d5eeb9l36fd70ef5ae904f5@mail.gmail.com>
-	 <20080827.014041.230100807.davem@davemloft.net>
-Content-Type: text/plain
-Date: Wed, 27 Aug 2008 13:10:10 +0200
-Message-Id: <1219835410.5359.24.camel@californication> (sfid-20080827_111037_601191_FC78705D)
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:32034 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751123AbYH1J3H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 05:29:07 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Assaf Krauss <assaf.krauss@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 01/11] iwlwifi: W/A for the TSF correction in IBSS
+Date: Thu, 28 Aug 2008 17:25:00 +0800
+Message-Id: <1219915510-3647-2-git-send-email-yi.zhu@intel.com> (sfid-20080828_112912_525856_BDB22C8D)
+In-Reply-To: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+From: Assaf Krauss <assaf.krauss@intel.com>
 
-> > Afther massive ath9k merge I didn't see it was a conceptual problem.
-> 
-> Stop right there.
-> 
-> You don't see it as a problem because you're not the one who has to
-> explain all of this shit to Linus and ends up getting flamed by him
-> when inappropriate changes are in my tree outside of the merge window.
+This patch is a W/A for the TSF sync issue, in which the ucode's timestamp
+is constantly a little behind incoming beacons' timestamps (in IBSS cells).
+The W/A simply stops the driver from declaring it has a reliable TSF value.
 
-I did a quick review of the offending patch queue. And some of them
-should go in since they are fixing real bugs (as far as I can tell from
-a quick review). Others have to clearly wait for the next merge window.
+Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-rx.c  |    5 ++++-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-Thomas, please go through the list of patches and pick the real bug
-fixes. The cleanup patches can't go in since they are after the merge
-window. And being one of the offenders why Dave got flamed by Linus,
-there is no way to get these through. And my big offender was a
-regression that broke userspace and came with a lengthy commit message.
-
-Speaking of which, you better have a more convincing commit message if
-you wanna get something in after the merge window. It should make clear
-why this is a bug or a regression and why it can't wait until the next
-merge window.
-
-Please take this into account for any future patches since Linus now set
-a really high bar for patches after the merge window.
-
-Regards
-
-Marcel
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 061ffba..d44587f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3580,7 +3580,7 @@ static int iwl4965_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *sk
+ 
+ 	priv->assoc_id = 0;
+ 	timestamp = ((struct ieee80211_mgmt *)skb->data)->u.beacon.timestamp;
+-	priv->timestamp = le64_to_cpu(timestamp) +  (priv->beacon_int * 1000);
++	priv->timestamp = le64_to_cpu(timestamp);
+ 
+ 	IWL_DEBUG_MAC80211("leave\n");
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index f3f6ea4..e81bfc4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -1173,7 +1173,10 @@ void iwl_rx_reply_rx(struct iwl_priv *priv,
+ 
+ 	rx_status.antenna = 0;
+ 	rx_status.flag = 0;
+-	rx_status.flag |= RX_FLAG_TSFT;
++
++	/* TSF isn't reliable. In order to allow smooth user experience,
++	 * this W/A doesn't propagate it to the mac80211 */
++	/*rx_status.flag |= RX_FLAG_TSFT;*/
+ 
+ 	if ((unlikely(rx_start->cfg_phy_cnt > 20))) {
+ 		IWL_DEBUG_DROP("dsp size out of range [0,20]: %d/n",
+-- 
+1.5.3.6
 
