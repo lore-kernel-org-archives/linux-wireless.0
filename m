@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:28121 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750801AbYHAIBO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 04:01:14 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so464338fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 01:01:12 -0700 (PDT)
-Message-ID: <4892C2CA.7010003@gmail.com> (sfid-20080801_100130_061165_22ACC60D)
-Date: Fri, 01 Aug 2008 10:01:14 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: Dave Young <hidave.darkstar@gmail.com>
-CC: johannes@sipsolutions.net, akpm@linux-foundation.org,
-	penberg@cs.helsinki.fi, tomasw@gmail.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-Subject: Re: [PATCH] ath5k : ath5k_config_interface deadlock fix
-References: <20080801074014.GA3341@darkstar>
-In-Reply-To: <20080801074014.GA3341@darkstar>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:4482 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751515AbYH1J3H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 05:29:07 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Cahill Ben <ben.m.cahill@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 03/11] iwlwifi: fix hidden ssid discovery in passive channels
+Date: Thu, 28 Aug 2008 17:25:02 +0800
+Message-Id: <1219915510-3647-4-git-send-email-yi.zhu@intel.com> (sfid-20080828_112913_181113_D6104E90)
+In-Reply-To: <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+ <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
+ <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave Young napsal(a):
-> In the drivers/net/wireless/ath5k/base.c, there's recursive locking of sc->lock
-> This casue the kernel stuck
-> 
-> Bug report please see:
-> http://lkml.org/lkml/2008/7/29/32
-> 
-> Fixed it by remove the lock in sub routine "ath5k_beacon_update",
-> The ath5k_config_interface is the only caller to it.
-> 
-> [  171.430207] =============================================
-> [  171.432140] [ INFO: possible recursive locking detected ]
-> [  171.433113] 2.6.27-rc1-smp #4
-> [  171.434079] ---------------------------------------------
-> [  171.435039] ath5k_pci/2447 is trying to acquire lock:
-> [  171.435990]  (&sc->lock){--..}, at: [<f89ee9b5>] ath5k_config_interface+0xd5/0x340 [ath5k]
-> [  171.437046] 
-> [  171.437048] but task is already holding lock:
-> [  171.438903]  (&sc->lock){--..}, at: [<f89ee91d>] ath5k_config_interface+0x3d/0x340 [ath5k]
-> [  171.439953] 
-> [  171.439954] other info that might help us debug this:
-> [  171.441795] 3 locks held by ath5k_pci/2447:
-> [  171.442729]  #0:  ((name)){--..}, at: [<c013a122>] run_workqueue+0x102/0x1d0
-> [  171.443800]  #1:  (&(&local->scan_work)->work){--..}, at: [<c013a122>] run_workqueue+0x102/0x1d0
-> [  171.444859]  #2:  (&sc->lock){--..}, at: [<f89ee91d>] ath5k_config_interface+0x3d/0x340 [ath5k]
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-Should be fixed already:
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-2.6.git;a=commitdiff_plain;h=bc05116ab33d30342e2b4b1bcc6d6e1184e9df97
+This patch gives the HW the possibility to send direct probes in passive
+channels (as long as traffic was detected in that channel) if such ssid
+was requested, so hidden ssid can be found now in those channels as well.
+
+Signed-off-by: Cahill Ben <ben.m.cahill@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 9bb6adb..6c8ac3a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -421,7 +421,7 @@ static int iwl_get_channels_for_scan(struct iwl_priv *priv,
+ 		else
+ 			scan_ch->type = SCAN_CHANNEL_TYPE_ACTIVE;
+ 
+-		if ((scan_ch->type & SCAN_CHANNEL_TYPE_ACTIVE) && n_probes)
++		if (n_probes)
+ 			scan_ch->type |= IWL_SCAN_PROBE_MASK(n_probes);
+ 
+ 		scan_ch->active_dwell = cpu_to_le16(active_dwell);
+-- 
+1.5.3.6
+
