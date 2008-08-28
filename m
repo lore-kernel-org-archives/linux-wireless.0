@@ -1,38 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:23171 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193AbYHKRaB (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:40143 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751947AbYH1MCL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2008 13:30:01 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so707803nfc.21
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2008 10:30:00 -0700 (PDT)
-Message-ID: <48A07709.80306@gmail.com> (sfid-20080811_193008_561505_E8FE5C9F)
-Date: Mon, 11 Aug 2008 20:29:45 +0300
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-MIME-Version: 1.0
-To: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Few questions about the wireless stack
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 28 Aug 2008 08:02:11 -0400
+Subject: Re: [PATCH 09/11] iwlwifi: fix station mimo power save values
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <1ba2fa240808280411l4b229cfdnbcb24b3ad5cae1cd@mail.gmail.com>
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-8-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-9-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-10-git-send-email-yi.zhu@intel.com>
+	 <1219927236.6064.27.camel@californication>
+	 <1ba2fa240808280411l4b229cfdnbcb24b3ad5cae1cd@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 28 Aug 2008 16:02:08 +0200
+Message-Id: <1219932128.6064.57.camel@californication> (sfid-20080828_140214_935660_EA612DE6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Tomas,
 
-I am trying to understand the relationship between
-wireless interfaces (wlan0, mon0,..) and wireless driver.
+> >> This patch fixes the wrong use of self mimo power save values instead of
+> >> peer's mimo power save values.
+> >
+> > please state the impact of not fixing this. When does this matter. Does
+> > the both sides have to enable this feature and things like this.
+> 
+> Okay, we might not be able to do any traffic to the [peer station
+> because by mistake we configured TX to according our RX capability not
+> RX capability of the peer station.
 
-The most important question I am after, is what types of interfaces I can
-run simultaneously? 
-(I know that I can run station and monitor, but what are other  combinations ?)
+that would have been a good addition to the commit message. That the
+result of this issue is no TX, belongs in it.
 
-I noticed that in monitor mode iwl3945 appends so called 
-'radiotap' header to received packets, but
-it seems that mac80211 strips this header, and appends its own,
-for monitor interfaces, if so, then why to append it?
+Regards
+
+Marcel
 
 
-And lastly, when you expect AP code to be released?
-
-
-Best regards,
-	Maxim Levitsky
