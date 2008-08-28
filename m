@@ -1,43 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.178]:64199 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754755AbYHCNah (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43468
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753427AbYH1TPq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 09:30:37 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so2111627ika.5
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2008 06:30:35 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH 5/8] rfkill: add WARN_ON and BUG_ON paranoia
-Date: Sun, 3 Aug 2008 15:53:57 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <1217700664-20792-1-git-send-email-hmh@hmh.eng.br> <200808031207.08446.IvDoorn@gmail.com> <20080803132816.GC12118@khazad-dum.debian.net>
-In-Reply-To: <20080803132816.GC12118@khazad-dum.debian.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200808031553.58030.IvDoorn@gmail.com> (sfid-20080803_153040_072146_C8E1C8F7)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 28 Aug 2008 15:15:46 -0400
+Date: Thu, 28 Aug 2008 12:15:41 -0700 (PDT)
+Message-Id: <20080828.121541.171337900.davem@davemloft.net> (sfid-20080828_211551_066060_CF2FF408)
+To: tomasw@gmail.com
+Cc: holtmann@linux.intel.com, johannes@sipsolutions.net,
+	yi.zhu@intel.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, gregory.greenman@intel.com,
+	mohamed.abbas@intel.com
+Subject: Re: [PATCH 08/11] iwlwifi: call apm stop on exit
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1ba2fa240808280358u6523bc8ga758c0acf4f2ec4c@mail.gmail.com>
+References: <1219920741.25321.4.camel@johannes.berg>
+	<1219928195.6064.43.camel@californication>
+	<1ba2fa240808280358u6523bc8ga758c0acf4f2ec4c@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 03 August 2008, Henrique de Moraes Holschuh wrote:
-> On Sun, 03 Aug 2008, Ivo van Doorn wrote:
-> > > BUG() never returns. Same for all the other places you pointed out.
-> > 
-> > Ah right, that doesn't sound too good. I don't think rfkill should
-> > become a blocker like that. WARN_ON should be sufficient. :)
-> 
-> It would, if anyone ever tested the return from notify chain registering.
-> But the core kernel doesn't do any checking when registering notifiers to
-> the chains, and always either return zero or OOPS outright when it attempts
-> to dereference a NULL pointer (at least on 2.6.25)...
-> 
-> So, I went with BUG().  Given the above, do you still want me to WARN() and
-> return -EINVAL instead?  I can certainly do that, it would be more correct
-> than what the core kernel is doing, anyway.
+From: "Tomas Winkler" <tomasw@gmail.com>
+Date: Thu, 28 Aug 2008 13:58:59 +0300
 
-No, if  notify chain doesn't check, and convention is to use BUG() in this case,
-then BUG() is fine with me.
+> Regression or not, this is an important bug fix.  With millions of
+> laptops sold this is significant contribution to global worming.
 
-Ivo
+Indeed, the worm population is out of control these days.
