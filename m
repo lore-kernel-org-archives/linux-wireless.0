@@ -1,38 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from usul.saidi.cx ([204.11.33.34]:57507 "EHLO usul.overt.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751680AbYHKQlw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2008 12:41:52 -0400
-Message-ID: <48A06BBC.7060007@overt.org> (sfid-20080811_184158_469091_98C0630E)
-Date: Mon, 11 Aug 2008 09:41:32 -0700
-From: Philip Langdale <philipl@overt.org>
-MIME-Version: 1.0
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-CC: LKML <linux-kernel@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	toshiba_acpi@memebeam.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] toshiba_acpi: Add support for bluetooth toggling
- through rfkill (v2)
-References: <4894B1B4.6050003@overt.org> <20080803042613.GC6053@khazad-dum.debian.net> <48965716.6020508@overt.org> <20080805212416.GB21738@khazad-dum.debian.net> <489A7CCF.1090407@overt.org> <20080807134530.GB17062@khazad-dum.debian.net>
-In-Reply-To: <20080807134530.GB17062@khazad-dum.debian.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:4482 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751112AbYH1J3I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 05:29:08 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 05/11] iwlwifi: workaround interrupt handling no some platforms
+Date: Thu, 28 Aug 2008 17:25:04 +0800
+Message-Id: <1219915510-3647-6-git-send-email-yi.zhu@intel.com> (sfid-20080828_112917_000593_E9415FD1)
+In-Reply-To: <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+ <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
+ <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
+ <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
+ <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Henrique de Moraes Holschuh wrote:
-> 
-> Hmm?  UNBLOCKED means it is not being rfkilled.  Why is not working?  Put
-> some debug printks on your toggle_radio callback, that might help fix the
-> issue...
-> 
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Well, what I see is this:
+This patch adds workaround for an interrupt related hardware bug on
+some platforms.
 
-At modprobe, I get an explicit unblock request. When I modify 'state' in sysfs,
-I see appropriate requests to soft block and unblock. When I activate the hardware
-kill switch, the rfkill state goes to hard_block but no one calls toggle_radio
-and when I release the kill switch, the state goes to soft_block and no one
-calls toggle_radio.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
---phil
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index e35db85..4986137 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2601,6 +2601,7 @@ static int iwl4965_mac_start(struct ieee80211_hw *hw)
+ {
+ 	struct iwl_priv *priv = hw->priv;
+ 	int ret;
++	u16 pci_cmd;
+ 
+ 	IWL_DEBUG_MAC80211("enter\n");
+ 
+@@ -2611,6 +2612,13 @@ static int iwl4965_mac_start(struct ieee80211_hw *hw)
+ 	pci_restore_state(priv->pci_dev);
+ 	pci_enable_msi(priv->pci_dev);
+ 
++	/* enable interrupts if needed: hw bug w/a */
++	pci_read_config_word(priv->pci_dev, PCI_COMMAND, &pci_cmd);
++	if (pci_cmd & PCI_COMMAND_INTX_DISABLE) {
++		pci_cmd &= ~PCI_COMMAND_INTX_DISABLE;
++		pci_write_config_word(priv->pci_dev, PCI_COMMAND, pci_cmd);
++	}
++
+ 	ret = request_irq(priv->pci_dev->irq, iwl4965_isr, IRQF_SHARED,
+ 			  DRV_NAME, priv);
+ 	if (ret) {
+-- 
+1.5.3.6
+
