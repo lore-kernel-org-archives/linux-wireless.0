@@ -1,69 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25764 "EHLO mail.atheros.com"
+Received: from mga09.intel.com ([134.134.136.24]:43471 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752173AbYHBXta (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 19:49:30 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 16:49:30 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	<jouni.malinen@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 11/12] ath9k: Add initial link quality reporting
-Date: Sat, 2 Aug 2008 16:49:03 -0700
-Message-ID: <1217720944-23234-12-git-send-email-lrodriguez@atheros.com> (sfid-20080803_014937_301961_3B7D8CDF)
-In-Reply-To: <1217720944-23234-11-git-send-email-lrodriguez@atheros.com>
-References: <1217720944-23234-1-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-2-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-3-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-4-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-5-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-6-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-7-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-8-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-9-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-10-git-send-email-lrodriguez@atheros.com>
- <1217720944-23234-11-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751112AbYH1J3H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 05:29:07 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 00/11] iwlwifi driver fixes for 2.6.27
+Date: Thu, 28 Aug 2008 17:24:59 +0800
+Message-Id: <1219915510-3647-1-git-send-email-yi.zhu@intel.com> (sfid-20080828_112911_951937_5D111D19)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index effcce9..7222a42 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -282,10 +282,11 @@ static void ath9k_rx_prepare(struct ath_softc *sc,
- 	rx_status->mactime = status->tsf;
- 	rx_status->band = curchan->band;
- 	rx_status->freq =  curchan->center_freq;
--	rx_status->signal = (status->rssi * 64) / 100;
- 	rx_status->noise = ATH_DEFAULT_NOISE_FLOOR;
-+	rx_status->signal = rx_status->noise + status->rssi;
- 	rx_status->rate_idx = ath_rate2idx(sc, (status->rateKbps / 100));
- 	rx_status->antenna = status->antenna;
-+	rx_status->qual = status->rssi * 100 / 64;
- 
- 	if (status->flags & ATH_RX_MIC_ERROR)
- 		rx_status->flag |= RX_FLAG_MMIC_ERROR;
-@@ -1402,6 +1403,9 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto bad2;
- 	}
- 
-+	hw->flags = IEEE80211_HW_SIGNAL_DBM |
-+		IEEE80211_HW_NOISE_DBM;
-+
- 	SET_IEEE80211_DEV(hw, &pdev->dev);
- 	pci_set_drvdata(pdev, hw);
- 
--- 
-1.5.6.rc2.15.g457bb.dirty
+Here are the iwlwifi patches vital for 2.6.27. Please apply.
 
+Thanks,
+-yi
+
+[PATCH 01/11] iwlwifi: W/A for the TSF correction in IBSS
+[PATCH 02/11] iwlwifi: use mac80211 band and channel settings
+[PATCH 03/11] iwlwifi: fix hidden ssid discovery in passive channels
+[PATCH 04/11] iwlwifi: remove false rxon if rx chain changes
+[PATCH 05/11] iwlwifi: workaround interrupt handling no some platforms
+[PATCH 06/11] iwlwifi: fix apm_stop
+[PATCH 07/11] iwlwifi: generic init calibrations framework
+[PATCH 08/11] iwlwifi: call apm stop on exit
+[PATCH 09/11] iwlwifi: fix station mimo power save values
+[PATCH 10/11] iwlwifi: fix rx_chain computation
+[PATCH 11/11] iwlwifi: fix 64bit platform firmware loading
