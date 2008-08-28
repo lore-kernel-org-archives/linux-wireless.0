@@ -1,35 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sorrow.cyrius.com ([65.19.161.204]:1577 "EHLO sorrow.cyrius.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752615AbYHYL5b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2008 07:57:31 -0400
-Date: Mon, 25 Aug 2008 14:57:15 +0300
-From: Martin Michlmayr <tbm@cyrius.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Subject: ath5k: bad udelay call, build failure on ARM
-Message-ID: <20080825115715.GA13506@deprecation.cyrius.com> (sfid-20080825_135735_091143_E99A8630)
+Received: from ey-out-2122.google.com ([74.125.78.25]:16115 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753430AbYH1H7W (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 03:59:22 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so78619eyi.37
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2008 00:59:21 -0700 (PDT)
+Message-ID: <1ba2fa240808280059i24d2ee56rd7a3c37150e1c03c@mail.gmail.com> (sfid-20080828_095927_988007_DBE40087)
+Date: Thu, 28 Aug 2008 10:59:20 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: pull request: wireless-2.6 2008-08-26
+Cc: "Michael Buesch" <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Bruno Randolf" <bruno@thinktube.com>
+In-Reply-To: <43e72e890808271830k6e0a9e65j790ee1e0d6d52d36@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080827013009.GA15781@tuxdriver.com>
+	 <1ba2fa240808271226i95a7789k481a68b09dc60164@mail.gmail.com>
+	 <200808272225.10557.mb@bu3sch.de>
+	 <1ba2fa240808271611v382631ecn2a24e2816562d434@mail.gmail.com>
+	 <20080827233103.GE5927@tesla>
+	 <1ba2fa240808271719o2a3617e7re0499670de785b2f@mail.gmail.com>
+	 <43e72e890808271830k6e0a9e65j790ee1e0d6d52d36@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath5k fails to build on ARM with:
+On Thu, Aug 28, 2008 at 4:30 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Wed, Aug 27, 2008 at 5:19 PM, Tomas Winkler <tomasw@gmail.com> wrote:
+>> This patch is marked as W/A and should have
+>> probably some cleaner solution in 2.6.28
+>
+> OK
+>
+>>>> Last solution would be to remove this merging all together
+>>>
+>>> Absolutely not! IBSS merge is per spec, otherwise you don't really have
+>>> a real IBSS.
+>>
+>> I'm all for following spec and we've tried really hard to make it work.
+>> Anyhow I'm not sure what you call real IBSS. nobody has checked it for
+>> 1.5 year this patch  is in and now is suddenly so important...
+>
+> I don't care about your work around, I was replying due to your insane
+> comments about considering removing IBSS merge support because your
+> hardware does not support it well.
 
-__bad_udelay is specifically designed on ARM to fail when udelay is
-called in a bad way.  arch/arm/include/asm/delay.h has this to say
-about __bad_udelay:
+Insane?!, watch your language mister I will catch you on next year OLS
+:) This is definitely
+not any highlighted proposal in my message
 
-/*
- * This function intentionally does not exist; if you see references to
- * it, it means that you're calling udelay() with an out of range value.
- *
- * With currently imposed limits, this means that we support a max delay
- * of 2000us. Further limits: HZ<=1000 and bogomips<=3355
- */
-extern void __bad_udelay(void);
+>> I would like to see if there is any  HW under mac80211 that actually
+>> work with this.
+>
+> Atheros hardware supports IBSS merge, please consider a proper work
+> around instead for hardware which does not support this.
 
-Can you check why your driver is calling udelay() with a value > 2000?
-
--- 
-Martin Michlmayr
-http://www.cyrius.com/
+So how do set TSF from the beacon, I'm asking because there is
+currently no interface from mac80211 to driver do that.
+Thanks
+Tomas
