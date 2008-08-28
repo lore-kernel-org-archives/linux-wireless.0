@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:47324 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752314AbYHVLfR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Aug 2008 07:35:17 -0400
-Message-ID: <48AEA460.2000400@gmx.de> (sfid-20080822_133522_545636_7455DE3C)
-Date: Fri, 22 Aug 2008 13:34:56 +0200
-From: Benjamin Schulz <Benjamin_Schulz@gmx.de>
+Received: from ey-out-2122.google.com ([74.125.78.27]:42877 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751677AbYH1KkX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 06:40:23 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so94082eyi.37
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2008 03:40:21 -0700 (PDT)
+Message-ID: <1ba2fa240808280340o216da98dwbf84541aa7bfd2e6@mail.gmail.com> (sfid-20080828_124026_367459_1C4B24C5)
+Date: Thu, 28 Aug 2008 13:40:21 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Marcel Holtmann" <holtmann@linux.intel.com>
+Subject: Re: [PATCH 03/11] iwlwifi: fix hidden ssid discovery in passive channels
+Cc: "Zhu Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>,
+	"Cahill Ben" <ben.m.cahill@intel.com>
+In-Reply-To: <1219926558.6064.11.camel@californication>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: cannot build compat-wireless
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
+	 <1219926558.6064.11.camel@californication>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-I have currently a 2.6.24 kernel on the distribution gentoo 
-(http://www.gentoo.org). Unfortunately, I can't build compat wireless, 
-getting the following error:
-
-> r165184 compat-wireless-2008-08-06 # make
-> ./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
-> make -C /lib/modules/2.6.24-gentoo-r8/build M=/compat-wireless-2008-08-06
-> modules
-> make[1]: Entering directory `/usr/src/linux-2.6.24-gentoo-r8'
+On Thu, Aug 28, 2008 at 3:29 PM, Marcel Holtmann
+<holtmann@linux.intel.com> wrote:
+> Hi Yi,
 >
->   WARNING: Symbol version dump /usr/src/linux-2.6.24-gentoo-r8/Module.symvers
->            is missing; modules will have no dependencies and modversions.
+>> This patch gives the HW the possibility to send direct probes in passive
+>> channels (as long as traffic was detected in that channel) if such ssid
+>> was requested, so hidden ssid can be found now in those channels as well.
 >
->   LD      /compat-wireless-2008-08-06/drivers/misc/built-in.o
->   CC [M]  /compat-wireless-2008-08-06/drivers/misc/eeprom_93cx6.o
-> /bin/sh: scripts/genksyms/genksyms: File or directory not found
-> make[3]: *** [/compat-wireless-2008-08-06/drivers/misc/eeprom_93cx6.o] Error 1
-> make[2]: *** [/compat-wireless-2008-08-06/drivers/misc] Error 2
-> make[1]: *** [_module_/compat-wireless-2008-08-06] Error 2
-> make[1]: Leaving directory `/usr/src/linux-2.6.24-gentoo-r8'
-> make: *** [modules] Error 2
-> r165184 compat-wireless-2008-08-06 #
-Other users of the distribution gentoo have the same error, see
+> this also doesn't sound like a regression to me. Nice to have for sure,
+> but not acceptable according to the merge window rules.
 
-> http://bugs.gentoo.org/show_bug.cgi?id=234139#c4
-comment 4
-> hmm, I can't even get this stupid thing to build with sudo make && sudo make
-> install. errors all over the place.
-comment 5
-> I got it to compile by commenting out some line in the code, but iwl4965
-> wouldn't modprobe.  
-with best wishes,
+If you cannot scan your AP you also not able to connect to it, drawing
+your card useless.
 
-Benjamin
+> Question here is was the driver supporting this before and we broke it
+> in the 2.6.27 phase or not.
 
+Irrelevant, this is fixing show stopper bug.
 
+Tomas
