@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:26960 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751613AbYHAPZo (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:52559 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751776AbYH1K2B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Aug 2008 11:25:44 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so546916fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Aug 2008 08:25:42 -0700 (PDT)
-Message-ID: <48932AFA.5020903@gmail.com> (sfid-20080801_172548_706905_EAB36A85)
-Date: Fri, 01 Aug 2008 17:25:46 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-CC: Bob Copeland <me@bobcopeland.com>, tomasw@gmail.com,
-	Dave Young <hidave.darkstar@gmail.com>, stable@kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linville@tuxdriver.com, Pekka Enberg <penberg@cs.helsinki.fi>,
-	ath5k-devel@venema.h4ckr.net, johannes@sipsolutions.net,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: git-describe [Was: ath5k_config_interface deadlock fix]
-References: <20080801074014.GA3341@darkstar> <4892C2CA.7010003@gmail.com>		<4892C359.9000304@cs.helsinki.fi>		<20080801011415.ff4821a3.akpm@linux-foundation.org>	<b6c5339f0808010643i58dbb2a7jf459359451061ae4@mail.gmail.com> <4893257C.1020907@gmail.com> <48932A10.8080004@tuffmail.co.uk>
-In-Reply-To: <48932A10.8080004@tuffmail.co.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 28 Aug 2008 06:28:01 -0400
+Subject: Re: [PATCH 02/11] iwlwifi: use mac80211 band and channel settings
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+In-Reply-To: <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
+Content-Type: text/plain
+Date: Thu, 28 Aug 2008 14:27:58 +0200
+Message-Id: <1219926478.6064.9.camel@californication> (sfid-20080828_122808_137449_5AB9EAE8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alan Jenkins napsal(a):
-> There must be a better way (for efficient merges, right?).  But all I
-> can think of is comparing the files in question against the diff.  I
-> checked myself and the changes don't appear to have been included in
-> v2.6.26.
+Hi Yi,
 
-Ah, I see. Is this a git-describe bug or my misunderstanding of the tool?
+> This patch makes use of mac80211 defaults for channel and band settings
+> instead of setting them by the driver own. The iwlwifi driver used to
+> set G band channel 6 as the default channel.
 
-Sorry for the noise, it's not in 2.6.26.
+that is not a regression. The driver has been doing this until now and
+thus it can keep doing it until the next merge window.
+
+If you disagree, then please explain the regression in the commit
+message.
+
+Regards
+
+Marcel
+
+
