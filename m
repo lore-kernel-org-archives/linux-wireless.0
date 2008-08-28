@@ -1,78 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.190]:59891 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753934AbYHWF41 (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:50175 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751688AbYH1Kkj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Aug 2008 01:56:27 -0400
-Received: by ti-out-0910.google.com with SMTP id b6so452807tic.23
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Aug 2008 22:56:26 -0700 (PDT)
-Date: Sat, 23 Aug 2008 13:56:25 +0800
-From: Huang Weiyi <weiyi.huang@gmail.com>
-To: linville@tuxdriver.com
-Subject: wireless: remove unused #include <version.h>
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <20080823132819.1286.WEIYI.HUANG@gmail.com> (sfid-20080823_075639_708977_E8754A46)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+	Thu, 28 Aug 2008 06:40:39 -0400
+Subject: Re: [PATCH 09/11] iwlwifi: fix station mimo power save values
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+In-Reply-To: <1219915510-3647-10-git-send-email-yi.zhu@intel.com>
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-8-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-9-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-10-git-send-email-yi.zhu@intel.com>
+Content-Type: text/plain
+Date: Thu, 28 Aug 2008 14:40:36 +0200
+Message-Id: <1219927236.6064.27.camel@californication> (sfid-20080828_124041_438310_FF0B49E4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver(s) below do not use LINUX_VERSION_CODE nor KERNEL_VERSION.
-  drivers/net/wireless/b43legacy/main.c
-  drivers/net/wireless/iwlwifi/iwl-3945-led.c
-  drivers/net/wireless/iwlwifi/iwl-led.c
-  drivers/net/wireless/iwlwifi/iwl-rfkill.c
+Hi Yi,
 
-This patch removes the said #include <version.h>.
+> This patch fixes the wrong use of self mimo power save values instead of
+> peer's mimo power save values.
 
-Signed-off-by: Huang Weiyi <weiyi.huang@gmail.com>
+please state the impact of not fixing this. When does this matter. Does
+the both sides have to enable this feature and things like this.
 
-diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
-index 2541c81..1cb77db 100644
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -34,7 +34,6 @@
- #include <linux/moduleparam.h>
- #include <linux/if_arp.h>
- #include <linux/etherdevice.h>
--#include <linux/version.h>
- #include <linux/firmware.h>
- #include <linux/wireless.h>
- #include <linux/workqueue.h>
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-led.c b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-index d333696..705c65b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-@@ -27,7 +27,6 @@
+Regards
 
- #include <linux/kernel.h>
- #include <linux/module.h>
--#include <linux/version.h>
- #include <linux/init.h>
- #include <linux/pci.h>
- #include <linux/dma-mapping.h>
-diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
-index cb11c4a..4eee1b1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-led.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-led.c
-@@ -27,7 +27,6 @@
+Marcel
 
- #include <linux/kernel.h>
- #include <linux/module.h>
--#include <linux/version.h>
- #include <linux/init.h>
- #include <linux/pci.h>
- #include <linux/dma-mapping.h>
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.c b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-index e5e5846..5d64229 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-@@ -27,7 +27,6 @@
-  *****************************************************************************/
- #include <linux/kernel.h>
- #include <linux/module.h>
--#include <linux/version.h>
- #include <linux/init.h>
-
- #include <net/mac80211.h>
 
