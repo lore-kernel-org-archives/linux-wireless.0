@@ -1,82 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:55239 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763824AbYHEWik (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 18:38:40 -0400
-Subject: Re: [Orinoco-devel] [PATCH 00/19] orinoco: WPA for Agere based
-	cards
-From: Pavel Roskin <proski@gnu.org>
-To: Dave <kilroyd@googlemail.com>
-Cc: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-In-Reply-To: <48978C25.601@gmail.com>
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
-	 <1217822232.10989.13.camel@dv>  <48978C25.601@gmail.com>
-Content-Type: text/plain
-Date: Tue, 05 Aug 2008 18:38:37 -0400
-Message-Id: <1217975917.2908.27.camel@dv> (sfid-20080806_003854_284826_E1854E06)
-Mime-Version: 1.0
+Received: from nf-out-0910.google.com ([64.233.182.184]:57810 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753016AbYH1Oii (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 10:38:38 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so69457nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2008 07:38:37 -0700 (PDT)
+Message-ID: <1ba2fa240808280738v17024954wcd4b77be0e2c1238@mail.gmail.com> (sfid-20080828_163841_123832_B4D3EFDC)
+Date: Thu, 28 Aug 2008 17:38:37 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Marcel Holtmann" <holtmann@linux.intel.com>
+Subject: Re: [PATCH 09/11] iwlwifi: fix station mimo power save values
+Cc: "Zhu Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	"Ron Rindjunsky" <ron.rindjunsky@intel.com>
+In-Reply-To: <1219932128.6064.57.camel@californication>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-8-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-9-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-10-git-send-email-yi.zhu@intel.com>
+	 <1219927236.6064.27.camel@californication>
+	 <1ba2fa240808280411l4b229cfdnbcb24b3ad5cae1cd@mail.gmail.com>
+	 <1219932128.6064.57.camel@californication>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-08-05 at 00:09 +0100, Dave wrote:
-> > However,
-> > sparse finds two issues on x86_64, both due to sizeof() returning
-> > size_t, which is wider than int.
-> > 
-> > Here's the fix.  Please integrate it into the patches that introduce the
-> > code.
-> 
-> Will do. I obviously need to upgrade my version of sparse, since it isn't complaining to me :(
+On Thu, Aug 28, 2008 at 5:02 PM, Marcel Holtmann
+<holtmann@linux.intel.com> wrote:
+> Hi Tomas,
+>
+>> >> This patch fixes the wrong use of self mimo power save values instead of
+>> >> peer's mimo power save values.
+>> >
+>> > please state the impact of not fixing this. When does this matter. Does
+>> > the both sides have to enable this feature and things like this.
+>>
+>> Okay, we might not be able to do any traffic to the [peer station
+>> because by mistake we configured TX to according our RX capability not
+>> RX capability of the peer station.
+>
+> that would have been a good addition to the commit message. That the
+> result of this issue is no TX, belongs in it.
 
-It's not just sparse.  gcc will complain too.  But you'll need to
-compile for a 64-bit kernel to see it.
-
-> >> To use WPA, you will need an Agere firmware image. You can get the
-> >> necessary file at
-> >> <http://marc.info/?l=orinoco-devel&m=121078835610877>
-> > I tested it on my WPA2 AP and could not associate:
-> 
-> I'm not familiar with the difference between WPA/WPA2. Is that expected to work?
-
-WPA2 uses a different IE format.  It is also required to support CCMP,
-unlike WPA1, which defaults to TKIP.
-
-I could associate to a WPA1 AP with TKIP, but only on a 32-bit system.
-It still fails on the 64-bit system.  wpa_supplicant prints this in a
-loop:
-
-RTM_NEWLINK: operstate=0 ifi_flags=0x11003 ([UP][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
-RTM_NEWLINK: operstate=0 ifi_flags=0x11003 ([UP][LOWER_UP])
-Wireless event: cmd=0x8c07 len=40
-AssocReq IE wireless event - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 02 01 00 00 50 f2 02 01 00 00 50 f2 02
-RTM_NEWLINK: operstate=0 ifi_flags=0x11003 ([UP][LOWER_UP])
-Wireless event: cmd=0x8b15 len=24
-Wireless event: new AP: 00:0f:66:2f:ef:59
-Association info event
-req_ies - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 02 01 00 00 50 f2 02 01 00 00 50 f2 02
-WPA: set own WPA/RSN IE - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 02 01 00 00 50 f2 02 01 00 00 50 f2 02
-State: ASSOCIATED -> ASSOCIATED
-wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
-WEXT: Operstate: linkmode=-1, operstate=5
-Associated with 00:0f:66:2f:ef:59
-WPA: Association event - clear replay counter
-WPA: Clear old PTK
-Setting authentication timeout: 10 sec 0 usec
-Cancelling scan request
-
-And the kernel log is:
-
-[ 7729.202964] eth1: New link status: Connected (0001)
-[ 7738.072382] eth1: New link status: Disconnected (0002)
-[ 7739.238773] eth1: New link status: Connected (0001)
-[ 7748.527988] eth1: New link status: Disconnected (0002)
-[ 7749.683346] eth1: New link status: Connected (0001)
-[ 7758.983565] eth1: New link status: Disconnected (0002)
-
-I'm sorry, I'm really limited in time right now to do more tests, and
-I'm afraid I'll be mostly offline for the next 3 weeks.
-
--- 
-Regards,
-Pavel Roskin
+But isn't it stating obvious.
+Tomas
+>
