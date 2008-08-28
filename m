@@ -1,80 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:34874 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756881AbYHCV4X (ORCPT
+Received: from pne-smtpout2-sn1.fre.skanova.net ([81.228.11.159]:46720 "EHLO
+	pne-smtpout2-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751471AbYH1PvG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 17:56:23 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so634254nfc.21
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2008 14:56:21 -0700 (PDT)
-Message-ID: <48962982.1000000@gmail.com> (sfid-20080803_235627_489383_7AEE2CB7)
-Date: Mon, 04 Aug 2008 00:56:18 +0300
-From: Maxim Levitsky <maximlevitsky@gmail.com>
+	Thu, 28 Aug 2008 11:51:06 -0400
+From: "Lars Ericsson" <Lars_Ericsson@telia.com>
+To: <linux-wireless@vger.kernel.org>,
+	<rt2400-devel@lists.sourceforge.net>
+Subject: Race problem in mac80211/mlme.c and rt2x00
+Date: Thu, 28 Aug 2008 17:51:08 +0200
+Message-ID: <017001c90925$e31d54c0$0b3ca8c0@gotws1589> (sfid-20080828_175109_886660_8E4D73FA)
 MIME-Version: 1.0
-To: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: [BUG] IWL3945: Led doesn't blink in monitor mode
-References: <48942C35.6020400@gmail.com>
-In-Reply-To: <48942C35.6020400@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maxim Levitsky wrote:
-> After fixing super annoying bug about garbage scan results,
-> I noticed smaller bug:
-> 
-> My wireless leds stop blinking if I enable monitor mode
-> (Note that this time this doesn't happen if I enable promisc mode)
+Hi,
 
-Ok, now I understand how its leds work.
+I have found a race problem in mac80211/mlme.c and rt2x00
 
-the STATISTICS_NOTIFICATION reply from microcode drives all the led 
-blinking code. on each such notification the handler decides based on
-traffic whenever to turn led solid or blink it.
+When the wpa_supplicant trigs an AP scan, mlme saves current configuration
+and start scanning.
+When the scan is complete, a SIOCGIWSCAN is sent and the saved configuration
+is restored.
 
-the handler for 3945 actually counts recieved and transmitted packets!:
+Since the SIOCGIWSCAN signal is send before the restore, a wpa_supplicant
+initiated SIWFREQ may hit the restore operation.
+The result is that local->ops->config() may be called by two different
+processes at the 'same' time.
 
-> static inline u8 get_blink_rate(struct iwl3945_priv *priv)
-> {
-> 	int index;
-> 	u64 current_tpt = priv->rxtxpackets;
-> 	s64 tpt = current_tpt - priv->led_tpt;
-> 
-> 	if (tpt < 0)
-> 		tpt = -tpt;
-> 	priv->led_tpt = current_tpt;
+In the rt2x00 driver, rt2x00mac_config() may 'optimise' (skip) the channel
+set operation.
+The ultimate result/error is that the first authentication will happen on
+wrong (old) channel.
+
+I have moved the SIOCGIWSCAN code section after the restore operation and it
+seems to work.
+There is most likely a better solution but I leave that for the experts :)
 
 
-in iwl3945-led.c
+/Lars
 
-priv->rxtxpackets is updated each time a packet is recieved/transmitted 
-by iwl3945_pass_packet_to_mac80211:
-
-> #ifdef CONFIG_IWL3945_LEDS
-> 	if (ieee80211_is_data(hdr->frame_control))
-> 		priv->rxtxpackets += len;
-> #endif
-
-
-and iwl3945_build_tx_cmd_basic:
-
-> #ifdef CONFIG_IWL3945_LEDS
-> 		priv->rxtxpackets += le16_to_cpu(cmd->cmd.tx.len);
-> #endif
-
-
-
-
-now the problem is that as soon as the firmware enters the monitor mode
-it stops sending STATISTICS_NOTIFICATION.
-
-
-So ether I need a way to tell firmware to continue sending this message,
-or use a timer instead in monitor mode.
-
-How I can tell the firmware to send STATISTICS_NOTIFICATION in monitor mode?
-Intel developers, can you comment on this?
-
-Btw, the led code really should be shared between 3945/4965.
-
-Best regards,
-	Maxim Levitsky
