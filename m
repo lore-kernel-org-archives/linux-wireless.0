@@ -1,77 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:16328 "EHLO mail.atheros.com"
+Received: from hostap.isc.org ([149.20.54.63]:49650 "EHLO hostap.isc.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751386AbYHKIpo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Aug 2008 04:45:44 -0400
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 11 Aug 2008 01:45:44 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+	id S1751750AbYH1Q52 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 12:57:28 -0400
+Date: Thu, 28 Aug 2008 19:56:18 +0300
+From: Jouni Malinen <j@w1.fi>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Subrata Modak <subrata@linux.vnet.ibm.com>,
+	Luis Carlos Cobo <luisca@cozybit.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	ltp-list <ltp-list@lists.sourceforge.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni.Malinen@atheros.com
+Subject: Re: [TESTING] Wireless mesh networking (802.11s) draft support
+Message-ID: <20080828165618.GK4863@jm.kir.nu> (sfid-20080828_185732_888236_D479B241)
+References: <1219698032.5434.6.camel@subratamodak.linux.ibm.com> <20080825214625.GL6007@tesla>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18591.63877.567100.267045@localhost.localdomain> (sfid-20080811_104546_165487_3C6C1048)
-Date: Mon, 11 Aug 2008 14:04:13 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	<Jouni.Malinen@Atheros.com>, <Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 05/10] ath9k: Remove ar5416hal and assign default values directly
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080825214625.GL6007@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/hw.c |   28 +++-------------------------
- 1 files changed, 3 insertions(+), 25 deletions(-)
+On Mon, Aug 25, 2008 at 02:46:25PM -0700, Luis R. Rodriguez wrote:
 
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index bde162f..b294485 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -85,29 +85,6 @@ static const struct hal_percal_data adc_init_dc_cal = {
- 	ath9k_hw_adc_dccal_calibrate
- };
- 
--static const struct ath_hal ar5416hal = {
--	AR5416_MAGIC,
--	0,
--	0,
--	NULL,
--	NULL,
--	CTRY_DEFAULT,
--	0,
--	0,
--	0,
--	0,
--	0,
--	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
--	 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
--	 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
--	 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
--	 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
--	 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
--	 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
--	 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
--	},
--};
--
- static struct ath9k_rate_table ar5416_11a_table = {
- 	8,
- 	{0},
-@@ -1196,11 +1173,12 @@ static struct ath_hal_5416 *ath9k_hw_newstate(u16 devid,
- 
- 	ah = &ahp->ah;
- 
--	memcpy(&ahp->ah, &ar5416hal, sizeof(struct ath_hal));
--
- 	ah->ah_sc = sc;
- 	ah->ah_sh = mem;
- 
-+	ah->ah_magic = AR5416_MAGIC;
-+	ah->ah_countryCode = CTRY_DEFAULT;
-+
- 	ah->ah_devid = devid;
- 	ah->ah_subvendorid = 0;
- 
+> Mesh code is GPLv2 right now. What I'd recommend is to get mesh support
+> added into mac80211_hwsim driver and then you can test mesh code without
+> even having any wireless hardware.
+
+That would be quite useful addition for automated tests that anyone can
+run.
+
+> At the third Linux wireless summit in Ottawa we briefly spoke about
+> automating testing for wireless. We should try to automate this first
+> with mac80211_hwsim and some scripts to do basic tests. Mesh testing can
+> be added once mac8021_hwsim gets support for Mesh.
+
+I've started collecting test cases for mac80211_hwsim. It would be
+interesting to see whether these could be integrated into LTP somehow
+and allow people to run a set of tests in fully scripted way. These
+tests are described in hostap.git tree mac80211_hwsim/tests
+subdirectories:
+http://w1.fi/gitweb/gitweb.cgi?p=hostap.git;a=tree;f=mac80211_hwsim/tests
+
+The current instructions for running the commands (*/test.txt) are more
+for a person than a script, but the changes to get test running would be
+trivial (i.e., just run hostapd and wpa_supplicant on background).
+Larger task is in adding some functionality to verify that the test
+passed and then finish with cleaning up (killing daemons from background
+and unload mac80211_hwsim).
+
 -- 
-1.5.6.5
-
+Jouni Malinen                                            PGP id EFC895FA
