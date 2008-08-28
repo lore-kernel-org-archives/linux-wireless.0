@@ -1,74 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:49674 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693AbYHMViy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Aug 2008 17:38:54 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] p54: move p54_vdcf_init to the right place.
-Date: Wed, 13 Aug 2008 23:41:45 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	navilein@hotmail.com
+Received: from hostap.isc.org ([149.20.54.63]:58725 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751646AbYH1QEz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 12:04:55 -0400
+Date: Thu, 28 Aug 2008 19:04:01 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: VLAN testing (and mac80211_hwsim test cases in general)
+Message-ID: <20080828160401.GG4863@jm.kir.nu> (sfid-20080828_180458_932748_C3E6131D)
+References: <20080617154008.883383150@localhost> <1215625246.3246.40.camel@johannes.berg> <1215626936.3246.45.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200808132341.45874.chunkeey@web.de> (sfid-20080813_233858_533074_D0DAD000)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1215626936.3246.45.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-priv->tx_hdr_len is set by the driver _after_ it called p54_init_common.
-While this isn't much a problem for any PCI or ISL3887 cards/sticks,
-because they don't need any extra header and therefore tx_hdr_len is
-zero for them...
+On Wed, Jul 09, 2008 at 08:08:56PM +0200, Johannes Berg wrote:
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
+> Just realised that it doesn't handle VLANs properly. Could you add a
+> static MAC/VLAN mapping to hostapd to make VLANs possible without
+> setting up radius? :)
 
-Larry, do you have any comments?
-Because this series will eventually go to stable@kernel.org too... 
+In order to get more people testing this, I finally gave in and added
+that option into hostapd ;-), so now you can do this without having to
+set up a RADIUS server. To make things even easier, I made an example
+configuration and test instructions for mac80211_hwsim available:
 
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-08-13 20:50:03.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54common.c	2008-08-13 20:55:42.000000000 +0200
-@@ -834,10 +834,21 @@ static int p54_start(struct ieee80211_hw
- 	struct p54_common *priv = dev->priv;
- 	int err;
- 
-+	if (!priv->cached_vdcf) {
-+		priv->cached_vdcf = kzalloc(sizeof(struct p54_tx_control_vdcf)+
-+			priv->tx_hdr_len + sizeof(struct p54_control_hdr),
-+			GFP_KERNEL);
-+
-+		if (!priv->cached_vdcf)
-+			return -ENOMEM;
-+	}
-+
- 	err = priv->open(dev);
- 	if (!err)
- 		priv->mode = IEEE80211_IF_TYPE_MNTR;
- 
-+	p54_init_vdcf(dev);
-+
- 	return err;
- }
- 
-@@ -1017,15 +1028,6 @@ struct ieee80211_hw *p54_init_common(siz
- 	dev->extra_tx_headroom = sizeof(struct p54_control_hdr) + 4 +
- 				 sizeof(struct p54_tx_control_allocdata);
- 
--        priv->cached_vdcf = kzalloc(sizeof(struct p54_tx_control_vdcf) +
--              priv->tx_hdr_len + sizeof(struct p54_control_hdr), GFP_KERNEL);
--
--	if (!priv->cached_vdcf) {
--		ieee80211_free_hw(dev);
--		return NULL;
--	}
--
--	p54_init_vdcf(dev);
- 	mutex_init(&priv->conf_mutex);
- 
- 	return dev;
+http://w1.fi/gitweb/gitweb.cgi?p=hostap.git;a=tree;f=mac80211_hwsim/tests/0002-vlan
 
+
+I started collecting mac80211_hwsim test cases into mac80211_hwsim/tests
+directory in hostap.git. I hope this will make it easy for developers to
+test mac80211 features. For the time being, this is for manual testing,
+but hopefully at some point these tests can be run automatically with a
+script (e.g., daily or whenever wireless-testing changes, etc.). The
+test.txt file includes the commands needed to run both the AP and
+client(s). Some additional infrastructure would be needed to validate
+the end results and start/stop wpa_supplicant and hostapd in the
+background.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
