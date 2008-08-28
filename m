@@ -1,108 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:17943 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752497AbYHBKPE (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:46348 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751613AbYH1MeO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 06:15:04 -0400
-Received: by nf-out-0910.google.com with SMTP id d3so537527nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 03:15:03 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: proski@gnu.org, orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-Subject: [PATCH 04/19] orinoco: Move EXPORT_SYMBOL declarations next to exported function
-Date: Sat,  2 Aug 2008 11:14:18 +0100
-Message-Id: <1217672073-7094-5-git-send-email-kilroyd@gmail.com> (sfid-20080802_121507_829911_1548CCE0)
-In-Reply-To: <1217672073-7094-4-git-send-email-kilroyd@gmail.com>
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-3-git-send-email-kilroyd@gmail.com>
- <1217672073-7094-4-git-send-email-kilroyd@gmail.com>
-From: kilroyd@googlemail.com
+	Thu, 28 Aug 2008 08:34:14 -0400
+Subject: Re: [PATCH 06/11] iwlwifi: fix apm_stop
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	Mohamed Abbas <mohamed.abbas@intel.com>
+In-Reply-To: <1ba2fa240808280421g642ddc62j7541837f874f79df@mail.gmail.com>
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
+	 <1219926807.6064.17.camel@californication>
+	 <1ba2fa240808280421g642ddc62j7541837f874f79df@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 28 Aug 2008 16:34:10 +0200
+Message-Id: <1219934050.6064.89.camel@californication> (sfid-20080828_143418_626653_68319CF9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: David Kilroy <kilroyd@gmail.com>
----
- drivers/net/wireless/hermes.c |   17 +++++++----------
- 1 files changed, 7 insertions(+), 10 deletions(-)
+Hi Tomas,
 
-diff --git a/drivers/net/wireless/hermes.c b/drivers/net/wireless/hermes.c
-index 5504155..aa95349 100644
---- a/drivers/net/wireless/hermes.c
-+++ b/drivers/net/wireless/hermes.c
-@@ -122,6 +122,7 @@ void hermes_struct_init(hermes_t *hw, void __iomem *address, int reg_spacing)
- 	hw->reg_spacing = reg_spacing;
- 	hw->inten = 0x0;
- }
-+EXPORT_SYMBOL(hermes_struct_init);
- 
- int hermes_init(hermes_t *hw)
- {
-@@ -202,6 +203,7 @@ int hermes_init(hermes_t *hw)
-  out:
- 	return err;
- }
-+EXPORT_SYMBOL(hermes_init);
- 
- /* Issue a command to the chip, and (busy!) wait for it to
-  * complete.
-@@ -272,6 +274,7 @@ int hermes_docmd_wait(hermes_t *hw, u16 cmd, u16 parm0,
-  out:
- 	return err;
- }
-+EXPORT_SYMBOL(hermes_docmd_wait);
- 
- int hermes_allocate(hermes_t *hw, u16 size, u16 *fid)
- {
-@@ -314,7 +317,7 @@ int hermes_allocate(hermes_t *hw, u16 size, u16 *fid)
- 	
- 	return 0;
- }
--
-+EXPORT_SYMBOL(hermes_allocate);
- 
- /* Set up a BAP to read a particular chunk of data from card's internal buffer.
-  *
-@@ -398,6 +401,7 @@ int hermes_bap_pread(hermes_t *hw, int bap, void *buf, int len,
-  out:
- 	return err;
- }
-+EXPORT_SYMBOL(hermes_bap_pread);
- 
- /* Write a block of data to the chip's buffer, via the
-  * BAP. Synchronization/serialization is the caller's problem.
-@@ -423,6 +427,7 @@ int hermes_bap_pwrite(hermes_t *hw, int bap, const void *buf, int len,
-  out:	
- 	return err;
- }
-+EXPORT_SYMBOL(hermes_bap_pwrite);
- 
- /* Read a Length-Type-Value record from the card.
-  *
-@@ -476,6 +481,7 @@ int hermes_read_ltv(hermes_t *hw, int bap, u16 rid, unsigned bufsize,
- 
- 	return 0;
- }
-+EXPORT_SYMBOL(hermes_read_ltv);
- 
- int hermes_write_ltv(hermes_t *hw, int bap, u16 rid, 
- 		     u16 length, const void *value)
-@@ -503,15 +509,6 @@ int hermes_write_ltv(hermes_t *hw, int bap, u16 rid,
- 
- 	return err;
- }
--
--EXPORT_SYMBOL(hermes_struct_init);
--EXPORT_SYMBOL(hermes_init);
--EXPORT_SYMBOL(hermes_docmd_wait);
--EXPORT_SYMBOL(hermes_allocate);
--
--EXPORT_SYMBOL(hermes_bap_pread);
--EXPORT_SYMBOL(hermes_bap_pwrite);
--EXPORT_SYMBOL(hermes_read_ltv);
- EXPORT_SYMBOL(hermes_write_ltv);
- 
- static int __init init_hermes(void)
--- 
-1.5.4.5
+> >> The patch fixes CSR_GP_CNTRL_REG_FLAG_INIT_DONE was set instead of
+> >> cleared which disabled moving device to D0U state.
+> >
+> > when was this mistake introduced. Is it a regression compared to what we
+> > have in 2.6.26?
+> 
+> Again. think of global warming.
+
+I fully get why we wanna fix that. That was not my questions. Is this a
+regression compared to what we have in 2.6.26? Yes or no. A clear yes
+make this a regression and we will not even discuss this any further.
+That patch should go in then. In the no case you have to come up with
+some good argument.
+
+Remember that I reviewed all patches under the strict after merge window
+rules. There is always a gray area, but please give good argumentation
+for it in the commit message.
+
+And again, if I would be in Dave shoes, I would reject this one.
+
+Also it would be a bad idea to just keep sending patches and then have
+John forward them to Dave. At some point this backfires. Just split
+these up into 2.6.27 and 2.6.28 patches and give them to John.
+
+Regards
+
+Marcel
+
 
