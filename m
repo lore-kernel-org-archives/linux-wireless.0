@@ -1,147 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:32496 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751388AbYHGSBN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 14:01:13 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so181554yxm.1
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Aug 2008 11:01:12 -0700 (PDT)
-Message-ID: <40f31dec0808071101j2e63614at44d4f9fc4bb1694e@mail.gmail.com> (sfid-20080807_200117_925833_143CD20B)
-Date: Thu, 7 Aug 2008 21:01:11 +0300
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Michael Karcher" <kernel@mkarcher.dialup.fu-berlin.de>
-Subject: Re: [PATCH] ath5k: Don't fiddle with MSI on suspend/resume.
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, linux-kernel@vger.kernel.org,
-	jirislaby@gmail.com, mcgrof@gmail.com
-In-Reply-To: <1218130441.18466.150.camel@hermes2.karcher.local>
+Received: from bu3sch.de ([62.75.166.246]:53421 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752083AbYH1LjZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 07:39:25 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Marcel Holtmann <marcel@holtmann.org>
+Subject: Re: [PATCH 06/11] iwlwifi: fix apm_stop
+Date: Thu, 28 Aug 2008 13:38:45 +0200
+Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com> <1219915510-3647-7-git-send-email-yi.zhu@intel.com> <1219926807.6064.17.camel@californication>
+In-Reply-To: <1219926807.6064.17.camel@californication>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1218130441.18466.150.camel@hermes2.karcher.local>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200808281338.46894.mb@bu3sch.de> (sfid-20080828_133927_064971_49877D03)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2008/8/7 Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>:
-> Commit 256b152b005e319f985f50f2a910a75ba0def74f has removed msi support,
-> but overlooked the suspend/resume code. This patch completes msi removal.
->
-> I don't consider this patch copyrightable, and thus put it into the
-> public domain. The result is of course a base.c file dual-licensed under
-> 3-clause-BSD and GPL.
->
-> Signed-off-by: Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>
->
-> ---
->  drivers/net/wireless/ath5k/base.c |    8 ++------
->  1 files changed, 2 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> index ebf19bc..d092a23 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -589,7 +589,6 @@ ath5k_pci_suspend(struct pci_dev *pdev, pm_message_t state)
->        ath5k_stop_hw(sc);
->
->        free_irq(pdev->irq, sc);
-> -       pci_disable_msi(pdev);
->        pci_save_state(pdev);
->        pci_disable_device(pdev);
->        pci_set_power_state(pdev, PCI_D3hot);
-> @@ -618,12 +617,10 @@ ath5k_pci_resume(struct pci_dev *pdev)
->         */
->        pci_write_config_byte(pdev, 0x41, 0);
->
-> -       pci_enable_msi(pdev);
-> -
->        err = request_irq(pdev->irq, ath5k_intr, IRQF_SHARED, "ath", sc);
->        if (err) {
->                ATH5K_ERR(sc, "request_irq failed\n");
-> -               goto err_msi;
-> +               goto err_no_irq;
->        }
->
->        err = ath5k_init(sc);
-> @@ -644,8 +641,7 @@ ath5k_pci_resume(struct pci_dev *pdev)
->        return 0;
->  err_irq:
->        free_irq(pdev->irq, sc);
-> -err_msi:
-> -       pci_disable_msi(pdev);
-> +err_no_irq:
->        pci_disable_device(pdev);
->        return err;
->  }
-> --
-> 1.5.5.4
->
->
+On Thursday 28 August 2008, Marcel Holtmann wrote:
+> Hi Yi,
+> 
+> > The patch fixes CSR_GP_CNTRL_REG_FLAG_INIT_DONE was set instead of
+> > cleared which disabled moving device to D0U state.
+> 
+> when was this mistake introduced. Is it a regression compared to what we
+> have in 2.6.26?
 
-> Don't sync
-> - coherent mapping (descriptors)
-> - before unmap, it's useless
-> - (wrongly anyway -- for_cpu) beacon skb, it's just mapped,
->  so by the device yet
->
-> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-> Cc: Nick Kossifidis <mickflemm@gmail.com>
-> Cc: Luis R. Rodriguez <mcgrof@gmail.com>
-> ---
->  drivers/net/wireless/ath5k/base.c |   11 -----------
->  1 files changed, 0 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-> index 4874a6f..713ee99 100644
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -1705,10 +1705,6 @@ ath5k_tasklet_rx(unsigned long data)
->                skb = bf->skb;
->                ds = bf->desc;
->
-> -               /* TODO only one segment */
-> -               pci_dma_sync_single_for_cpu(sc->pdev, sc->desc_daddr,
-> -                               sc->desc_len, PCI_DMA_FROMDEVICE);
-> -
->                /*
->                 * last buffer must not be freed to ensure proper hardware
->                 * function. When the hardware finishes also a packet next to
-> @@ -1772,8 +1768,6 @@ ath5k_tasklet_rx(unsigned long data)
->                                goto next;
->                }
->  accept:
-> -               pci_dma_sync_single_for_cpu(sc->pdev, bf->skbaddr,
-> -                               rs.rs_datalen, PCI_DMA_FROMDEVICE);
->                pci_unmap_single(sc->pdev, bf->skbaddr, sc->rxbufsize,
->                                PCI_DMA_FROMDEVICE);
->                bf->skb = NULL;
-> @@ -1861,9 +1855,6 @@ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
->        list_for_each_entry_safe(bf, bf0, &txq->q, list) {
->                ds = bf->desc;
->
-> -               /* TODO only one segment */
-> -               pci_dma_sync_single_for_cpu(sc->pdev, sc->desc_daddr,
-> -                               sc->desc_len, PCI_DMA_FROMDEVICE);
->                ret = sc->ah->ah_proc_tx_desc(sc->ah, ds, &ts);
->                if (unlikely(ret == -EINPROGRESS))
->                        break;
-> @@ -2036,8 +2027,6 @@ ath5k_beacon_send(struct ath5k_softc *sc)
->                ATH5K_WARN(sc, "beacon queue %u didn't stop?\n", sc->bhalq);
->                /* NB: hw still stops DMA, so proceed */
->        }
-> -       pci_dma_sync_single_for_cpu(sc->pdev, bf->skbaddr, bf->skb->len,
-> -                       PCI_DMA_TODEVICE);
->
->        ath5k_hw_put_tx_buf(ah, sc->bhalq, bf->daddr);
->        ath5k_hw_tx_start(ah, sc->bhalq);
-> --
-> 1.5.6.2
->
->
+I think you are overstretching the regression-fixes-only rule a little bit...
+It will help nobody, if we don't fix actual _bugs_ and push such fixes
+into the next merge window.
 
-Thanks ;-)
-
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Our goal is to have a stable kernel on release. We don't get to that goal, if
+we defer bugfixes to the next merge window.
