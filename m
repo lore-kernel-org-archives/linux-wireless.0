@@ -1,62 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:54575 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750785AbYHHOSu convert rfc822-to-8bit (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.227]:45830 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754257AbYH2U7U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Aug 2008 10:18:50 -0400
+	Fri, 29 Aug 2008 16:59:20 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so884271wri.5
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Aug 2008 13:59:19 -0700 (PDT)
+Message-ID: <43e72e890808291359q6076224ehe0f57bb3e18617dd@mail.gmail.com> (sfid-20080829_225922_976063_E6A7AAE5)
+Date: Fri, 29 Aug 2008 13:59:19 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] iw: Add support to send a request to set the regulatory domain
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080829202654.GA11718@tuxdriver.com>
 MIME-Version: 1.0
-Subject: RE: [PATCH 1/2] mac80211: change number of pre-assoc scans
-Date: Fri, 8 Aug 2008 17:18:45 +0300
-Message-ID: <1879838866982C46A9CB3D56BA49ADEB0542F64C@hasmsx411.ger.corp.intel.com> (sfid-20080808_161853_391051_E89B69ED)
-In-Reply-To: <43e72e890808071559k207a34e3we21cb2633f5e248d@mail.gmail.com>
-References: <1218149447-28968-1-git-send-email-tomas.winkler@intel.com> <43e72e890808071559k207a34e3we21cb2633f5e248d@mail.gmail.com>
-From: "Rindjunsky, Ron" <ron.rindjunsky@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>
-Cc: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
-	"Zhu, Yi" <yi.zhu@intel.com>, <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
+References: <1220032919-6821-1-git-send-email-lrodriguez@atheros.com>
+	 <1220038740.25321.39.camel@johannes.berg>
+	 <43e72e890808291311h6b2d0584t9cf643b98cc0814b@mail.gmail.com>
+	 <20080829202654.GA11718@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
->> -       int auth_tries, assoc_tries;
->> +       int assoc_scan_tries; /* number of scans done pre-association
-*/
->> +       int auth_tries; /* retries for auth req */
->> +       int assoc_tries; /* retries for assoc req */
+On Fri, Aug 29, 2008 at 1:26 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Fri, Aug 29, 2008 at 01:11:33PM -0700, Luis R. Rodriguez wrote:
+>> On Fri, Aug 29, 2008 at 12:39 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> >
+>> >> +     genlmsg_put(msg, 0, 0, genl_family_get_id(state->nl80211), 0,
+>> >> +                 0, NL80211_CMD_ASK_SET_REG, 0);
+>> >
+>> > ASK_SET?
+>>
+>> Have a better idea? I was going to use NEW for the current SET_REGDOM
+>> but that just didn't seem right. ASK_SET seems more clear to me as its
+>> asking to set it, not actually giving a specific regdomain to set.
 >
-> This last variable seems unused.
->
+> REQ_SET?  Sounds a bit more "serious" anyway... :-)
 
-If you mean auth_tries or assoc_tries they are being used in other
-flows.
+OK, sounds good, I'll repost with this both the iw patch, and patch #4.
 
->>                ieee80211_sta_reset_auth(dev, ifsta);
->>                return 0;
->>        } else {
->> -               if (ifsta->state != IEEE80211_STA_MLME_AUTHENTICATE)
-{
->> +               if (ifsta->assoc_scan_tries <
-IEEE80211_ASSOC_SCANS_MAX_TRIES) {
->> +                       ifsta->assoc_scan_tries++;
->>                        if (ifsta->flags &
-IEEE80211_STA_AUTO_SSID_SEL)
->>                                ieee80211_sta_start_scan(dev, NULL,
-0);
->>                        else
->
-> Interesting, is there a race then?
->
-
-Not more then before this patch :).. if you mean protecting the mlme
-states I think this should be carefully handled, for sure not under this
-patch 
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+  Luis
