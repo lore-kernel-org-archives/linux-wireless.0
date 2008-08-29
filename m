@@ -1,61 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:39094 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751786AbYHOAHT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Aug 2008 20:07:19 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] b43: Fix for another Bluetooth Coexistence SPROM Programming error for BCM4306
-Date: Fri, 15 Aug 2008 02:06:42 +0200
-Cc: John W Linville <linville@tuxdriver.com>,
-	tim.gardner@canonical.com, linux-wireless@vger.kernel.org
-References: <48a4c657.3Vw2yJT7Y4Gu6f4D%Larry.Finger@lwfinger.net>
-In-Reply-To: <48a4c657.3Vw2yJT7Y4Gu6f4D%Larry.Finger@lwfinger.net>
+Received: from ey-out-2122.google.com ([74.125.78.25]:61799 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753798AbYH2THy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Aug 2008 15:07:54 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so320107eyi.37
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Aug 2008 12:07:53 -0700 (PDT)
+To: John Linville <linville@tuxdriver.com>
+Subject: Please pull 'upstream' branch of rt2x00
+Date: Fri, 29 Aug 2008 21:03:53 +0200
+Cc: "rt2400-devel" <rt2400-devel@lists.sourceforge.net>,
+	linux-wireless@vger.kernel.org
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200808150206.43088.mb@bu3sch.de> (sfid-20080815_020723_596298_F7ACC8C5)
+  charset="utf-8"
+Message-Id: <200808292103.53179.IvDoorn@gmail.com> (sfid-20080829_210758_288789_AD6A575A)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 15 August 2008 01:57:11 Larry Finger wrote:
-> In trying to help users on the Ubuntu Bugzilla, I discovered another
-> BCM4306 with the Bluetooth Coexistence programming error in the SPROM.
-> 
-> This patch is contingent on the one that added the Linksys device with
-> subdevice code of 0x0014.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@kernel.org>
-> ---
-> 
-> John,
-> 
-> This is more 2.6.27 material.
+Hi John,
 
-ACK
+Here is another rt2x00 update for the 2.6.28 kernel,
+I believe some patches have been send earlier, but
+I lost my overview on my patches, so this bunch will
+get rt2x00 completely up to date.
 
-> Larry
-> ---
-> 
-> Index: wireless-testing/drivers/net/wireless/b43/main.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/main.c
-> +++ wireless-testing/drivers/net/wireless/b43/main.c
-> @@ -4615,6 +4615,7 @@ static void b43_sprom_fixup(struct ssb_b
->  	if (bus->bustype == SSB_BUSTYPE_PCI) {
->  		pdev = bus->host_pci;
->  		if (IS_PDEV(pdev, BROADCOM, 0x4318, ASUSTEK, 0x100F) ||
-> +		    IS_PDEV(pdev, BROADCOM, 0x4320,    DELL, 0x0003) ||
->  		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0015) ||
->  		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0014) ||
->  		    IS_PDEV(pdev, BROADCOM, 0x4320, LINKSYS, 0x0013))
-> 
-> 
-> 
-> 
+A few patches are needed for rt2800, but they are small,
+and clean enough to be merged early.
 
+Ivo
 
+---
+The following changes since commit b51f3c6077d59b41e3f9d2af33e2e2f94ecbbc39:
+  John W. Linville (1):
+        at76_usb: fix for removal of IEEE80211_TX_CTL_DO_NOT_ENCRYPT
 
--- 
-Greetings Michael.
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/ivd/rt2x00.git/ upstream
+
+Ivo van Doorn (5):
+      rt2x00: Fix race conditions in flag handling
+      rt2x00: Map extra_tx_headroom to DMA
+      rt2x00: Initialize txop during conf_tx() callback
+      rt2x00: Add Signal type flag
+      rt2x00: Release rt2x00 2.2.1
+
+Mattias Nissler (2):
+      rt2x00: Only configure hardware when radio is enabled
+      rt2x00: skb->data pointer should not include TX descriptor
+
+ drivers/net/wireless/rt2x00/rt2400pci.c    |    2 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c    |    4 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c    |    7 ++-
+ drivers/net/wireless/rt2x00/rt2x00.h       |   17 +++---
+ drivers/net/wireless/rt2x00/rt2x00config.c |    4 +-
+ drivers/net/wireless/rt2x00/rt2x00dev.c    |   68 +++++++++++--------------
+ drivers/net/wireless/rt2x00/rt2x00mac.c    |   75 ++++++++++++++--------------
+ drivers/net/wireless/rt2x00/rt2x00queue.c  |   31 +++++++++--
+ drivers/net/wireless/rt2x00/rt2x00queue.h  |    9 ++-
+ drivers/net/wireless/rt2x00/rt2x00rfkill.c |    6 +-
+ drivers/net/wireless/rt2x00/rt2x00usb.c    |   21 ++++----
+ drivers/net/wireless/rt2x00/rt61pci.c      |   73 ++++++++++++++++++++++-----
+ drivers/net/wireless/rt2x00/rt73usb.c      |   74 ++++++++++++++++++++++-----
+ 13 files changed, 253 insertions(+), 138 deletions(-)
