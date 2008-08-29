@@ -1,78 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.178]:8775 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752465AbYHBKOw (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.232]:44967 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752879AbYH2UMO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Aug 2008 06:14:52 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so1578395ika.5
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Aug 2008 03:14:51 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: proski@gnu.org, orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-Subject: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere fw
-Date: Sat,  2 Aug 2008 11:14:15 +0100
-Message-Id: <1217672073-7094-2-git-send-email-kilroyd@gmail.com> (sfid-20080802_121454_383664_94CBE31F)
-In-Reply-To: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
-From: kilroyd@googlemail.com
+	Fri, 29 Aug 2008 16:12:14 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so870583wri.5
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Aug 2008 13:12:14 -0700 (PDT)
+Message-ID: <43e72e890808291312t38345db5tb9bb4115ac7d0f29@mail.gmail.com> (sfid-20080829_221218_325333_9C64FC80)
+Date: Fri, 29 Aug 2008 13:12:13 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] rt2x00: Need to set wiphy->interface_modes
+Cc: "Ivo van Doorn" <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	rt2400-devel <rt2400-devel@lists.sourceforge.net>,
+	"Stephen Blackheath" <tramp.enshrine.stephen@blacksapphire.com>
+In-Reply-To: <1220038676.25321.37.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <200808292025.16870.IvDoorn@gmail.com>
+	 <1220038676.25321.37.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pass the ESSID to the card.
+On Fri, Aug 29, 2008 at 12:37 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2008-08-29 at 20:25 +0200, Ivo van Doorn wrote:
+>> Hi Johannes,
+>>
+>> Below patch was created by Stephen Blackheath.
+>>
+>> Could you merge this patch with your patch: 008-cfg80211-interface-types.patch
+>> This is the required rt2x00 change for registering the supported interface types.
+>
+> Thanks, I'd hoped somebody else would pick it up, but if not I'll do it
+> in a week.
 
-This allows 'iwlist eth1 scan essid <essid>' to work, and will help
-with routers setup not to broadcast the ESSID.
+I picked it up, and sent it all together as *one* patch.
 
-Signed-off-by: David Kilroy <kilroyd@gmail.com>
----
- drivers/net/wireless/orinoco.c |   20 +++++++++++++++++++-
- 1 files changed, 19 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/orinoco.c b/drivers/net/wireless/orinoco.c
-index b047306..e9dca96 100644
---- a/drivers/net/wireless/orinoco.c
-+++ b/drivers/net/wireless/orinoco.c
-@@ -2989,6 +2989,11 @@ static int orinoco_ioctl_getiwrange(struct net_device *dev,
- 	range->min_r_time = 0;
- 	range->max_r_time = 65535 * 1000;	/* ??? */
- 
-+	if (priv->firmware_type == FIRMWARE_TYPE_AGERE)
-+		range->scan_capa = IW_SCAN_CAPA_ESSID;
-+	else
-+		range->scan_capa = IW_SCAN_CAPA_NONE;
-+
- 	/* Event capability (kernel) */
- 	IW_EVENT_CAPA_SET_KERNEL(range->event_capa);
- 	/* Event capability (driver) */
-@@ -3958,6 +3963,7 @@ static int orinoco_ioctl_setscan(struct net_device *dev,
- {
- 	struct orinoco_private *priv = netdev_priv(dev);
- 	hermes_t *hw = &priv->hw;
-+	struct iw_scan_req *si = (struct iw_scan_req *) extra;
- 	int err = 0;
- 	unsigned long flags;
- 
-@@ -4019,7 +4025,19 @@ static int orinoco_ioctl_setscan(struct net_device *dev,
- 		}
- 		break;
- 		case FIRMWARE_TYPE_AGERE:
--			err = hermes_write_wordrec(hw, USER_BAP,
-+			if (priv->scan_mode & IW_SCAN_THIS_ESSID) {
-+				struct hermes_idstring idbuf;
-+				size_t len = min(sizeof(idbuf.val),
-+						 (size_t) si->essid_len);
-+				idbuf.len = cpu_to_le16(len);
-+				memcpy(idbuf.val, si->essid, len);
-+
-+				err = hermes_write_ltv(hw, USER_BAP,
-+					       HERMES_RID_CNFSCANSSID_AGERE,
-+					       HERMES_BYTES_TO_RECLEN(len + 2),
-+					       &idbuf);
-+			} else
-+				err = hermes_write_wordrec(hw, USER_BAP,
- 						   HERMES_RID_CNFSCANSSID_AGERE,
- 						   0);	/* Any ESSID */
- 			if (err)
--- 
-1.5.4.5
-
+  Luis
