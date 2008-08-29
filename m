@@ -1,34 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52363
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753131AbYHHBvx (ORCPT
+Received: from wr-out-0506.google.com ([64.233.184.238]:42921 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752436AbYH2UI7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Aug 2008 21:51:53 -0400
-Date: Thu, 07 Aug 2008 18:51:54 -0700 (PDT)
-Message-Id: <20080807.185154.54355800.davem@davemloft.net> (sfid-20080808_035203_377580_3B2134C1)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-08-07
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20080807142520.GA27762@tuxdriver.com>
-References: <20080807142520.GA27762@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 29 Aug 2008 16:08:59 -0400
+Received: by wr-out-0506.google.com with SMTP id 69so869524wri.5
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Aug 2008 13:08:57 -0700 (PDT)
+Message-ID: <43e72e890808291308x29358544t802107c9c682cb4c@mail.gmail.com> (sfid-20080829_220903_728887_3332EF10)
+Date: Fri, 29 Aug 2008 13:08:57 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com
+Subject: Re: [PATCH] ath5k: HW code cleanup
+In-Reply-To: <20080829194539.GA8017@makis>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080829194539.GA8017@makis>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 7 Aug 2008 10:25:20 -0400
+On Fri, Aug 29, 2008 at 12:45 PM, Nick Kossifidis <mick@madwifi.org> wrote:
 
-> A few more patches for 2.6.27.  Also included is an iwlwifi cleanup that
-> the Intel guys really wanted -- obviously I'm too soft...well, it seems
-> harmless enough.
-> 
-> I'll be out of town through the weekend celebrating my 10th wedding
-> anniversary -- woohoo!  I'll be away from email until Monday or so --
-> FYI...
-> 
-> Still, let me know if there are problems!
+>  Changes-licensed-under: ISC
+>  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Pulled and pushed back out, thanks John.
+Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+
+  Luis
