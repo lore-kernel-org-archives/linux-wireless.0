@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:47039 "EHLO e2.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753299AbYHYVAr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Aug 2008 17:00:47 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m7PL0gVo031663
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Aug 2008 17:00:42 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v9.0) with ESMTP id m7PL0gfq054874
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Aug 2008 17:00:42 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m7PL0gHZ005726
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Aug 2008 17:00:42 -0400
-Subject: [TESTING] Wireless mesh networking (802.11s) draft support
-From: Subrata Modak <subrata@linux.vnet.ibm.com>
-Reply-To: subrata@linux.vnet.ibm.com
-To: Luis Carlos Cobo <luisca@cozybit.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: ltp-list <ltp-list@lists.sourceforge.net>,
+Received: from ey-out-2122.google.com ([74.125.78.24]:63275 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755104AbYH2TIH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Aug 2008 15:08:07 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so320138eyi.37
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Aug 2008 12:08:06 -0700 (PDT)
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 7/7] rt2x00: Release rt2x00 2.2.1
+Date: Fri, 29 Aug 2008 21:07:22 +0200
+Cc: "rt2400-devel" <rt2400-devel@lists.sourceforge.net>,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Tue, 26 Aug 2008 02:30:31 +0530
-Message-Id: <1219698032.5434.6.camel@subratamodak.linux.ibm.com> (sfid-20080825_230051_269932_DC7D066F)
-Mime-Version: 1.0
+References: <200808292103.53179.IvDoorn@gmail.com> <200808292106.01403.IvDoorn@gmail.com> <200808292106.18171.IvDoorn@gmail.com>
+In-Reply-To: <200808292106.18171.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Message-Id: <200808292107.22535.IvDoorn@gmail.com> (sfid-20080829_210813_747470_7BD6DA41)
+Content-Type: text/plain;
+  charset="utf-8"
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis/Johannes/John,
 
-The Wireless mesh networking (802.11s) draft support has been added to
-Linux 2.6.26. We at LTP (http://ltp.sourceforge.net/,
-https://sourceforge.net/projects/ltp/) are trying to expand the test
-coverage of all the untouched areas of kernel. With this drive in mind,
-may i know if the testing infrastructure of Wireless mesh networking can
-be shared with LTP under GPLv2. It would be a shot-in-the-arm for Linux
-testing community, and, we can decide on how this can be best integrated
-into LTP.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Regards--
-Subrata
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 5e4f783..6f296ce 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -44,7 +44,7 @@
+ /*
+  * Module information.
+  */
+-#define DRV_VERSION	"2.2.0"
++#define DRV_VERSION	"2.2.1"
+ #define DRV_PROJECT	"http://rt2x00.serialmonkey.com"
+ 
+ /*
+-- 
+1.5.6.1
 
