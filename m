@@ -1,33 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:6052 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752392AbYHCSNa (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50109 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750984AbYH2TjG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Aug 2008 14:13:30 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so2742415wfd.4
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Aug 2008 11:13:30 -0700 (PDT)
-Message-ID: <69e28c910808031113u2f5ff20dq672e8a801224e35c@mail.gmail.com> (sfid-20080803_201332_942399_9786FF55)
-Date: Sun, 3 Aug 2008 20:13:30 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Subject: Re: [PATCH] rt2x00: Disable link tuning in rt2500usb
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-In-Reply-To: <200808031657.27710.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200808031657.27710.IvDoorn@gmail.com>
+	Fri, 29 Aug 2008 15:39:06 -0400
+Subject: Re: [PATCH] iw: Add support to send a request to set the
+	regulatory domain
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1220032919-6821-1-git-send-email-lrodriguez@atheros.com>
+References: <1220032919-6821-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/VdSYqkRE6wDiDwHF4a0"
+Date: Fri, 29 Aug 2008 21:39:00 +0200
+Message-Id: <1220038740.25321.39.camel@johannes.berg> (sfid-20080829_213913_077881_803B7C82)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 3, 2008 at 4:57 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> + * in TX capabilities only untill association kicks in. Immediately
 
-typo - until
+--=-/VdSYqkRE6wDiDwHF4a0
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> + * after the successfull association all TX frames will be kept in the
 
-typo - successful
+> +	genlmsg_put(msg, 0, 0, genl_family_get_id(state->nl80211), 0,
+> +		    0, NL80211_CMD_ASK_SET_REG, 0);
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+ASK_SET?
+
+johannes
+
+--=-/VdSYqkRE6wDiDwHF4a0
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIuFBRAAoJEKVg1VMiehFYS/4P/25MHvFQqCs3z3sjLjtaYt/j
+TtWMigDHChLJIZt5F20y0kG/LCVpXqLrKDgu3eFeU8vznAjoO2AKZTNMGIXR03zg
+iJ8fPPOOKsiENHdWnc6Wl4YvjlR3pRet3QLvH6Ajd4u+tNuoGWyrKOWfqsXl0l4+
+LzdICWyKkP7TBJV4clONv+QB6yluO2SOwbnt40+q8LC4SWHsSxSCypQQoGVjHE49
+CHCvcveE4ZD3xFXqgV+GPPC3lEI1N18wahvWSYUCGmKZj1gNQvU4b6qI+E/P8b1K
+jLDPxrkHnZJbUAbO5lGFqB54yOBwq4N8hATJBXAeEh7WLRCVDdv0YPw6LukOaucs
+ztmru6xizJJKL6eERuiQnk/yCnWTmM3Z0yJpuXtd9Dos9cJvfbODtU8JTSTusmuw
+vgqhPYTojwEvODKndQpHlbTCygOwXATzCqruHwv+EGeYYrk1gPLloiyaZJLbLrHs
+/5qH5hCY0a8avX6fqQ1S6Thlh19OECXsQs9HETY5d293mTF5F2ObeTJDkTtiZwkt
+JRfbBBDN+z76d83rh2JryOZDEuRdNXD/PYAd2m46L6JduClMQk4d+YBSpk8ZQITL
+SjUnx2WAqcj+KUAGCVoqe7kr+kfTx09bnuWTczFIZX8J4AY0AlazTuS9Ct88q9u4
+w1scdyFFANkEOrbqS2Gj
+=KTEo
+-----END PGP SIGNATURE-----
+
+--=-/VdSYqkRE6wDiDwHF4a0--
+
