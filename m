@@ -1,57 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ra.tuxdriver.com ([70.61.120.52]:3078 "EHLO ra.tuxdriver.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754083AbYHEOc0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Aug 2008 10:32:26 -0400
-Date: Tue, 5 Aug 2008 10:05:17 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2008-08-04
-Message-ID: <20080805140517.GA7819@tuxdriver.com> (sfid-20080805_163231_097431_7ED38B86)
-References: <20080804193753.GA30345@tuxdriver.com> <20080804.150147.78586437.davem@davemloft.net> <20080805021710.GA21731@tuxdriver.com> <20080805.012814.215633850.davem@davemloft.net> <20080805232839.95235680.sfr@canb.auug.org.au>
+Received: from nf-out-0910.google.com ([64.233.182.189]:45677 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753175AbYH2APr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Aug 2008 20:15:47 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so157480nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2008 17:15:46 -0700 (PDT)
+Message-ID: <1ba2fa240808281715u7a0a5bc6w286e3905afe181ac@mail.gmail.com> (sfid-20080829_021551_702592_6E235774)
+Date: Fri, 29 Aug 2008 03:15:46 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Ian Schram" <ischram@telenet.be>
+Subject: Re: iwl5000 oopses
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <48B73BB8.7000302@telenet.be>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080805232839.95235680.sfr@canb.auug.org.au>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1217937364.3603.37.camel@johannes.berg>
+	 <1217938927.3603.40.camel@johannes.berg>
+	 <1ba2fa240808050820j1aa0ae7cj11f2758caa5ba4df@mail.gmail.com>
+	 <1219919760.8434.5.camel@johannes.berg>
+	 <1ba2fa240808280439m3524d17cm63deebdfc0d5b9dd@mail.gmail.com>
+	 <1219925859.25321.10.camel@johannes.berg>
+	 <1ba2fa240808280752t4b41996au43bf4cb1a61b7967@mail.gmail.com>
+	 <48B6C7EA.7080606@telenet.be>
+	 <1ba2fa240808281430q7be3bb1eg8724af7247372efb@mail.gmail.com>
+	 <48B73BB8.7000302@telenet.be>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 05, 2008 at 11:28:39PM +1000, Stephen Rothwell wrote:
-> Hi David,
-> 
-> On Tue, 05 Aug 2008 01:28:14 -0700 (PDT) David Miller
-> <davem@davemloft.net> wrote:
-> >
-> > From: "John W. Linville" <linville@tuxdriver.com>
-> > Date: Mon, 4 Aug 2008 22:17:10 -0400
-> > 
-> > > On Mon, Aug 04, 2008 at 03:01:47PM -0700, David Miller wrote:
-> > > > I'm holding off on this pull until the list.h changes get so me lkml
-> > > > ACKs.
-> > > 
-> > > Sure, np.  I created a "no-ath9k" branch in case you are feeling
-> > > frisky -- it is the same except for omitting the list.h changes,
-> > > the ath5k pci table change, and the new ath9k driver.
-> > > 
-> > > 	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git no-ath9k
-> > > 
-> > > Hth!
-> > 
-> > Due to the powerpc build failures the list.h stuff causes, I'm going
->              ^^^^^^^
-> It was a sparc64 defconfig that failed due to the list.h changes.  The
-> powerpc build only failed when I added an include of <linux/bug.h> to
-> list.h.
-> 
-> The powerpc compiler got an internal error trying to compile the ath9k
-> code - but I don't know if there is anything we can to do to the source
-> to work around that.
+On Fri, Aug 29, 2008 at 2:58 AM, Ian Schram <ischram@telenet.be> wrote:
+>
+>
+> Tomas Winkler wrote:
+>>
+>> On Thu, Aug 28, 2008 at 6:44 PM, Ian Schram <ischram@telenet.be> wrote:
+>>>
+>>> Tomas Winkler wrote:
+>>>>
+>>>> On Thu, Aug 28, 2008 at 3:17 PM, Johannes Berg
+>>>> <johannes@sipsolutions.net> wrote:
+>>>>>
+>>>>> On Thu, 2008-08-28 at 14:39 +0300, Tomas Winkler wrote:
+>>>>>>
+>>>>>> On Thu, Aug 28, 2008 at 1:36 PM, Johannes Berg
+>>>>>> <johannes@sipsolutions.net> wrote:
+>>>>>>>
+>>>>>>> On Tue, 2008-08-05 at 18:20 +0300, Tomas Winkler wrote:
+>>>>>>>>
+>>>>>>>> On Tue, Aug 5, 2008 at 3:22 PM, Johannes Berg
+>>>>>>>> <johannes@sipsolutions.net> wrote:
+>>>>>>>>>>
+>>>>>>>>>> This is kernel 2.6.27-rc1-00504-g2b12a4c-dirty
+>>>>>>>>>
+>>>>>>>>> [  126.826663] iwlagn: Intel(R) Wireless WiFi Link AGN driver for
+>>>>>>>>> Linux, 1.3.27kds
+>>>>>>>>> [  126.826947] iwlagn: Copyright(c) 2003-2008 Intel Corporation
+>>>>>>>>> [  126.828369] iwlagn: Detected Intel Wireless WiFi Link 5350AGN
+>>>>>>>>> REV=0x24
+>>>>>>>>> [  126.848680] iwlagn: Tunable channels: 13 802.11bg, 24 802.11a
+>>>>>>>>> channels
+>>>>>>>>> [  127.014564] firmware: requesting iwlwifi-5000-1.ucode
+>>>>>>>>> [  127.170640] iwlagn: Error wrong command queue 43 command id 0x6B
+>>>>>>>>> [  127.170832] ------------[ cut here ]------------
+>>>>>>>>> [  127.170884] kernel BUG at
+>>>>>>>>> drivers/net/wireless/iwlwifi/iwl-tx.c:1163!
+>>>>>>>>> [  127.170941] Oops: Exception in kernel mode, sig: 5 [#1]
+>>>>>>>
+>>>>>>> This is still happening with -rc4.
+>>>>>>
+>>>>>> I know, at least one regression.
+>>>>>
+>>>>> Well, I guess for me the addition of the 5000 series code to the kernel
+>>>>> is the regression, without it I can use the machine just fine, just
+>>>>> have
+>>>>> no wireless ;)
+>>>>
+>>>> And when I say that driver is half backed because I'm not done
+>>>> cleaning bugs it's somehow not understood
+>>>> Instead of chasing bugs I have to spend time to fitght the system.
+>>>> Tomas
+>>>> --
+>>>
+>>> Probably a good idea to not see this as
+>>> ,,you vs system'' ..  Anyways that discussion is going on in other
+>>> threads
+>>> perhaps we can focus on what has to be done about this bug.
+>>>
+>>> what's known about this bug? ad where does it trigger? reproducible?
+>>>
+>>> the error message clearly shows an invalid queue id (43 or 0x2b) where it
+>>> should be
+>>> a number in the range of [0,4], this is multiqueue related?
+>>>
+>>> the value in this error message was set by the driver, and then relayed
+>>> by
+>>> the ucode
+>>> in order to know which "command" this is a response to.
+>>>
+>>> assuming there is no memory corruption, and the ucode is correct, ...
+>>>
+>>> It might be set wrong. The value that is set is either the command queue,
+>>> or
+>>> a
+>>> tx_command queue which is determined by a call to
+>>> skb_get_queue_mapping(skb)
+>>>
+>>> might be nice to add some debug output documenting what this function is
+>>> returning.
+>>>
+>>>
+>>>
+>>> finally can i quickly ask why these macro's (that "encode" this queue id
+>>> to
+>>> the field in which it's passed to the ucode):
+>>> #define SEQ_TO_QUEUE(x)  ((x >> 8) & 0xbf)
+>>> #define QUEUE_TO_SEQ(x)  ((x & 0xbf) << 8)
+>>> use 0xbf, when according to the sourcecode comments it only uses the last
+>>> 6
+>>> bits, hence i would
+>>> expect 0x3f. In QUEUE_TO_SEQ this msb should never be set .. so i wonder
+>>> if
+>>> there is a hack
+>>> i'm missing somewhere.
+>>
+>> Actually this is the correct settings (there is still a lot of old
+>> days junk in the code)
+>>
+>> +#define SEQ_TO_QUEUE(s)        (((s) >> 8) & 0x1f)
+>> +#define QUEUE_TO_SEQ(q)        (((q) & 0x1f) << 8)
+>> +#define SEQ_TO_INDEX(s)        ((s) & 0xff)
+>> +#define INDEX_TO_SEQ(i)        ((i) & 0xff)
+>>
+>> Yet this is not it an issue first of all it works pretty well I never
+>
+> True. 0x1f seems slightly inconsistent with  the iwl-command.h, but
+> that's not really the issue right now.
 
-FWIW I fixed-up the wireless-2.6 tree to reflect what davem pulled -- a
-noop, but at least those patches shouldn't pollute -next tomorrow. :-)
+Also the comment is wrong. It should be 0x1f (bits 8:12 >> 8) 13 is
+reserved. Will post a patch.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+>> hit this one if not under load.
+>> ' Error wrong command queue 43 command id ___0x6B___'  6b looks more
+>> like slub poison -- accessing already freed skb
+>>
+
+>
+> hmm, 0x6B indeed is not a documented command ID...
+> Only triggering under load must point to some overflow or race i guess.
+>
+Yep.
+
+> I should get myself a new laptop to be able to play with this...
+> The best i can do now, is wonder if this patch
+> "[PATCH 08/10] iwlwifi: decrement rx skb counter in scan abort handler"
+> might be responsible, but that's just fuzzy string matching "recent patches"
+> with
+> "freed skb" ;-)
+
+No, that's a good patch.. Johannes failure looks like he got it right
+in the begining before scanning.
+We need open more logs and check what slub allocator is in use
+
+Tomas
