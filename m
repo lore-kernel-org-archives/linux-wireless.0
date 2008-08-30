@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mi0.bluebottle.com ([206.188.25.15]:44195 "EHLO
-	mi0.bluebottle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750851AbYHURsO (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:10485 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750971AbYH3Onh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Aug 2008 13:48:14 -0400
-Received: from localhost.localdomain (localhost.localdomain [127.0.0.1])
-	by mi0.bluebottle.com (8.13.1/8.13.1) with ESMTP id m7LGhuap002925
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2008 16:43:56 GMT
-Message-Id: <200808211643.m7LGhuap002925@mi0.bluebottle.com> (sfid-20080821_194818_985899_69B39A22)
-Subject: Re: [PATCH RFT] b43: Rewrite PHY API for N-PHY/LP-PHY
-From: Sean Hodges <seanhodges@bluebottle.com>
-Reply-To: seanhodges@bluebottle.com
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-In-Reply-To: <200808160029.56876.mb@bu3sch.de>
-References: <200808160029.56876.mb@bu3sch.de>
-Content-Type: text/plain
-Date: Thu, 21 Aug 2008 17:16:23 +0100
-Mime-Version: 1.0
+	Sat, 30 Aug 2008 10:43:37 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so482098eyi.37
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Aug 2008 07:43:36 -0700 (PDT)
+Message-ID: <48B95CE2.20007@ritirata.org> (sfid-20080830_164341_963137_171A03EA)
+Date: Sat, 30 Aug 2008 16:44:50 +0200
+From: Antonio Quartulli <ordex@ritirata.org>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Next compat-wireless release?
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-08-16 at 00:29 +0200, Michael Buesch wrote:
-> This is the first part for the rewrite of the b43 PHY API.
-> This is needed in order to make development of N and LP code possible.
-> 
-> PLEASE TEST TEST TEST TEST TEST
-> 
-> Lots of testing on lots of different devices is needed to ensure this
-> doesn't introduce regressions due to typos.
-> 95% of the patch just moves large parts of the PHY code from one file
-> to another. More move-patches will follow.
-> 5% of the patch introduces an "ops" based PHY API.
-> 
-> Please test on all of your devices.
-> 
-> http://bu3sch.de/patches/wireless-testing/20080816-0023/patches/002-b43-phy-ops.patch
-> Apply against wireless-testing.git
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-As a novice to driver development, is there some way I can help with
-testing this?
+Why is the last compat-wireless release even the 20080806?
+The last fix of 28/29 should be very interesting..but compat-wireless is
+too delayed to test
+regards
+- --
+Antonio Quartulli,
+~ Student of Computer Science at University of Pisa
+~ Web: www.ritirata.org/ordex
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-I have no experience of driver development/testing, but have an N-PHY
-BCM4328 wireless NIC that is just itching to be eventually freed from
-ndiswrapper :) I'd be happy to lend some help testing new patches and
-feeding back results, if I could get a few pointers on where to get
-started...
-
-I'm running 2.6.24-19 kernel release, and my card is listed by lspci as:
-
-06:00.0 Network controller: Broadcom Corporation BCM4328 802.11a/b/g/n
-(rev 03)
-
-
-Sean
-
-
-
-
-
-
+iQIcBAEBAgAGBQJIuVziAAoJEFh7RLUM2aoaZocP+weFIC6c8A1xKy1vebbcHBxp
+UOeG262ZVo0xzDgaOpaKsgjI0SZorJkG4ypQiDWWj6WjwZkKu4zR/7hhU2menf2t
+NM9P/Z+s/RNTWPfP6Xj2t3JFHHnsNlFzHV/egvvRD1ukDH2YRD5WRG+MgsOqN+pn
+01sdtZ+HMQ2F3tcYTtqv7fjY/WXSVNRziNPj7jZCJkXhXm2P2QKhj4bGjNlE+6Lc
+czOf908/adcep7JmjB+2NJ2UIZKdEmDG9tuM3ybNr71fmkAGUWXi6sK5xFqe1uQw
+BDBgontEhdalTSFwTQSb3xdhgvo3gdc+RORkzAJLDB5z7uZUy6nucqrpJJBNPCgN
+uUI33kbrHNEYIy1AFF7wZNuTLNdAvjEP/vNwn2hycUfKExcMLcsspCvC78n+Ozj9
+AeXho58Ax3qxUJKDfwQ8gSzBA5Y8j5GXZ2SRanb3trKci+zyLMDU/zBWWnHlcwHE
+T4zPrdK2JcySP/7VYSvyO+VedOVTp5NKtAXiXyCFC+eS6mJ94iXv544Cf8XOKq1q
+2llV6nIIBRcqUzrazRQ/KQCFB1NeSf+ufE5L/UMgR+EAJXQXwmSDNgUDERG4bR7t
+FVTbDULgg57w6Crt0cdv8ua2+6OBNKl9ag9w5usWzelaCN+eLXoM0/XoULpQTReA
+yv6xtpnunH24TvcJBJFZ
+=CdSZ
+-----END PGP SIGNATURE-----
