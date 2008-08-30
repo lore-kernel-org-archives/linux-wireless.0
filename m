@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:39214 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751665AbYHSRjt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Aug 2008 13:39:49 -0400
-Date: Tue, 19 Aug 2008 20:38:42 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Lars Ericsson <Lars_Ericsson@telia.com>,
-	'Ivo van Doorn' <ivdoorn@gmail.com>, hostap@lists.shmoo.com,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-Subject: Re: [Rt2400-devel] mac80211 / rt2x00 / rt61 and adhoc status
-Message-ID: <20080819173842.GD4805@jm.kir.nu> (sfid-20080819_193955_254392_D9668119)
-References: <000001c90168$703248e0$0b3ca8c0@gotws1589> <1219088136.2154.11.camel@localhost.localdomain>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44212 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752019AbYH3NA3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Aug 2008 09:00:29 -0400
+Date: Sat, 30 Aug 2008 08:58:33 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2008-08-29
+Message-ID: <20080830125833.GC11718@tuxdriver.com> (sfid-20080830_150034_903276_81A646B4)
+References: <20080829205414.GB11718@tuxdriver.com> <20080829.140303.71048853.davem@davemloft.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1219088136.2154.11.camel@localhost.localdomain>
+In-Reply-To: <20080829.140303.71048853.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 18, 2008 at 03:35:36PM -0400, Dan Williams wrote:
-> On Mon, 2008-08-18 at 21:27 +0200, Lars Ericsson wrote:
-> > I have backported the patches to 0.5.9 and they works fine, as far as I can
-> > tell on 2.6.26.
-> > I can drop them here if they are of interest. I also vote for putting them
-> > into 0.5.x 
+On Fri, Aug 29, 2008 at 02:03:03PM -0700, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Fri, 29 Aug 2008 16:54:14 -0400
+> 
+> > Here is this week's supply of stuff for -next -- mostly cleanups and
+> > other driver updates.  Please let me know if there are problems!
+>  ...
+> > are available in the git repository at:
 > > 
-> > Jouni; would that be possible ?
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
+> 
+> I'm pulling this, thanks John.
+> 
+> I hope to get a chance tonight to deal with that net-2.6 vs. net-next-2.6
+> wireless conflict by doing a merge.  It had to do with that IBSS message
+> your ifdef'd out in net-2.6
 
-Sure. I'm usually merging all bug fixes from 0.6.x into the 0.5.x
-releases.
+Ah, yes...it looks trivial to fix, but the trivial fix won't build!
 
-> Jouni, if you like I could run through current git HEAD and identify
-> some easy candidates for backporting to 0.5.x, and send the 0.6 commit
-> ids to the hostap lists for you along with what needs to be done to
-> backport the patch.
+I have it fixed here:
 
-If the commit messages are clear, i.e., it is obvious that the changes
-are bug fixes, I should be able to find these without problems. If there
-is any unclarity on the status of the changes, a list could be helpful.
+	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git merged-test
 
-Whenever I'm preparing a new release from a stable branch, I will go
-through the git tree and pick all changes that look like bug fixes (with
-more filtering for 0.4.x and 0.3.x to only get critical fixes). With
-that list, I'm going to be merging the changes in order into the stable
-branch. I would expect that the changes discussed here would fall into
-this process for automatic (well, with some manual labor ;-) inclusion
-into 0.5.x.
+And the fixed file is the same as what is in wireless-testing.
 
+Hth!
+
+John
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+John W. Linville
+linville@tuxdriver.com
