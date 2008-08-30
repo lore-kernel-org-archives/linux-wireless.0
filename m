@@ -1,82 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.179]:31448 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752240AbYHMDha (ORCPT
+Received: from phoenix.slamd64.com ([217.10.145.2]:44781 "EHLO
+	phoenix.slamd64.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751163AbYH3LVO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Aug 2008 23:37:30 -0400
-Received: by ik-out-1112.google.com with SMTP id c28so3172168ika.5
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Aug 2008 20:37:28 -0700 (PDT)
-Message-ID: <48A256F4.2000506@gmail.com> (sfid-20080813_053753_768138_0D388664)
-Date: Wed, 13 Aug 2008 06:37:24 +0300
-From: Maxim Levitsky <maximlevitsky@gmail.com>
+	Sat, 30 Aug 2008 07:21:14 -0400
+From: Carlos Corbacho <carlos@strangeworlds.co.uk>
+To: linux-acpi@vger.kernel.org
+Subject: [RFC] acer-wmi: Add rfkill support for wireless and bluetooth
+Date: Sat, 30 Aug 2008 12:06:55 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Ivo van Doorn <ivdoorn@gmail.com>
 MIME-Version: 1.0
-To: Ian Schram <ischram@telenet.be>
-CC: ipw3945-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: Re: [ipw3945-devel] Few questions about the wireless stack
-References: <48A07709.80306@gmail.com> <48A206A0.6020709@gmail.com> <48A224E3.90307@telenet.be>
-In-Reply-To: <48A224E3.90307@telenet.be>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200808301206.56279.carlos@strangeworlds.co.uk> (sfid-20080830_132118_401170_0D4FCEF0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ian Schram wrote:
-> 
-> 
-> Maxim Levitsky wrote:
->> Maxim Levitsky wrote:
->>> Hi,
->>>
->>> I am trying to understand the relationship between
->>> wireless interfaces (wlan0, mon0,..) and wireless driver.
->>>
->>> The most important question I am after, is what types of interfaces I 
->>> can
->>> run simultaneously? (I know that I can run station and monitor, but 
->>> what are other  combinations ?)
->>>
->>> I noticed that in monitor mode iwl3945 appends so called 'radiotap' 
->>> header to received packets, but
->>> it seems that mac80211 strips this header, and appends its own,
->>> for monitor interfaces, if so, then why to append it?
->>>
->>>
->>> And lastly, when you expect AP code to be released?
->>>
->>
->> I would be glad to hear about this, I have absolutely no free time to 
->> dig that out.
->>
-> 
-> Last i can remember about the subject was Tomas
-> some months ago.
-> 
-> iirc the statement was something similar to:
-> - 3945 is a mini PCIe card, and hence not deployed in embedded? devices,
-> therefore master mode support isn't planned for 3945
-> - patches are welcome
-> 
-> http://osdir.com/ml/linux.drivers.ipw3945.devel/2007-11/threads.html#00177
-> 
-> cheers
->>
->> Maxim Levitsky
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe 
->> linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
+This patch implements rfkill support for the wireless and bluetooth devices
+commonly found on Acer laptops.
+
+For now, we will always poll these devices once a second to guarantee we can
+catch state changes. On newer Acer laptops, it may be possible to rely on WMI
+events to do this instead, and experimental support for this will be added in
+a later patch.
+
+3G has been deliberately left off for now, as we still have no way to detect
+it, (nor, AFAIK, has any Linux user tried the code) and on laptops that don't
+support 3G, trying to poll for the status will leave the logs full of ACPI
+tracebacks.
+
+The old sysfs interface for wireless and 3G will be removed in a later patch.
+
+Signed-off-by: Carlos Corbacho <carlos@strangeworlds.co.uk>
+---
+
+ drivers/misc/Kconfig    |    1 +
+ drivers/misc/acer-wmi.c |   89 +++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 90 insertions(+), 0 deletions(-)
 
 
-What do we need from the hardware to enable master mode?
-
-I think that the best solution is to unite 3945 and rest of the driver code, 
-since it is all the same.
-
-You say that 4965 is pci express. does that mean I can buy a standalone version of it?
-
-
-Regards,
-	Maxim Levitsky
-
+diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+index a726f3b..6abb959 100644
+--- a/drivers/misc/Kconfig
++++ b/drivers/misc/Kconfig
+@@ -145,6 +145,7 @@ config ACER_WMI
+ 	depends on NEW_LEDS
+ 	depends on BACKLIGHT_CLASS_DEVICE
+ 	depends on SERIO_I8042
++	depends on RFKILL
+ 	select ACPI_WMI
+ 	---help---
+ 	  This is a driver for newer Acer (and Wistron) laptops. It adds
+diff --git a/drivers/misc/acer-wmi.c b/drivers/misc/acer-wmi.c
+index b2d9878..e30d349 100644
+--- a/drivers/misc/acer-wmi.c
++++ b/drivers/misc/acer-wmi.c
+@@ -33,6 +33,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/acpi.h>
+ #include <linux/i8042.h>
++#include <linux/rfkill.h>
++#include <linux/workqueue.h>
+ #include <linux/debugfs.h>
+ 
+ #include <acpi/acpi_drivers.h>
+@@ -157,6 +159,9 @@ struct acer_debug {
+ 	u32 wmid_devices;
+ };
+ 
++static struct rfkill *wireless_rfkill;
++static struct rfkill *bluetooth_rfkill;
++
+ /* Each low-level interface must define at least some of the following */
+ struct wmi_interface {
+ 	/* The WMI device type */
+@@ -930,6 +935,82 @@ static void acer_backlight_exit(void)
+ }
+ 
+ /*
++ * Rfkill devices
++ */
++static struct workqueue_struct *rfkill_workqueue;
++
++#define ACER_RFKILL(device, cap) \
++static void device##_rfkill_update(struct work_struct *ignored); \
++static int device##_rfkill_set(void *data, enum rfkill_state state) \
++{ \
++	acpi_status status; \
++ 	status = set_u32((u32) (state == RFKILL_STATE_UNBLOCKED), cap); \
++	if (ACPI_FAILURE(status)) \
++		return -ENODEV; \
++	return 0; \
++} \
++static DECLARE_DELAYED_WORK(device##_rfkill_work, device##_rfkill_update); \
++static void device##_rfkill_update(struct work_struct *ignored) \
++{ \
++	u32 state; \
++	acpi_status status; \
++	status = get_u32(&state, cap); \
++	\
++	if (ACPI_SUCCESS(status)) \
++		rfkill_force_state(device##_rfkill, state); \
++	queue_delayed_work(rfkill_workqueue, &device##_rfkill_work, \
++		round_jiffies_relative(HZ)); \
++}
++
++ACER_RFKILL(wireless, ACER_CAP_WIRELESS);
++ACER_RFKILL(bluetooth, ACER_CAP_BLUETOOTH);
++
++static int acer_rfkill_init(struct device *dev)
++{
++	u32 state;
++
++	wireless_rfkill = rfkill_allocate(dev, RFKILL_TYPE_WLAN);
++	wireless_rfkill->name = "acer-wireless";
++	get_u32(&state, ACER_CAP_WIRELESS);
++	wireless_rfkill->state = state;
++	wireless_rfkill->toggle_radio = wireless_rfkill_set;
++	wireless_rfkill->user_claim_unsupported = 1;
++
++	bluetooth_rfkill = rfkill_allocate(dev, RFKILL_TYPE_BLUETOOTH);
++	bluetooth_rfkill->name = "acer-bluetooth";
++	get_u32(&state, ACER_CAP_BLUETOOTH);
++	bluetooth_rfkill->state = state;
++	bluetooth_rfkill->toggle_radio = bluetooth_rfkill_set;
++	bluetooth_rfkill->user_claim_unsupported = 1;
++
++	rfkill_register(wireless_rfkill);
++	if (has_cap(ACER_CAP_BLUETOOTH))
++		rfkill_register(bluetooth_rfkill);
++
++	rfkill_workqueue = create_singlethread_workqueue("rfkill_workqueue");
++	if (!rfkill_workqueue)
++		goto error_rfkill_workqueue;
++	queue_delayed_work(rfkill_workqueue, &wireless_rfkill_work, HZ);
++	queue_delayed_work(rfkill_workqueue, &bluetooth_rfkill_work, HZ);
++
++	return 0;
++
++error_rfkill_workqueue:
++	return -ENODEV;
++}
++
++static void acer_rfkill_exit(void)
++{
++	cancel_delayed_work_sync(&wireless_rfkill_work);
++	cancel_delayed_work_sync(&bluetooth_rfkill_work);
++	destroy_workqueue(rfkill_workqueue);
++	rfkill_unregister(wireless_rfkill);
++	if (has_cap(ACER_CAP_BLUETOOTH))
++		rfkill_unregister(bluetooth_rfkill);
++	return;
++}
++
++/*
+  * Read/ write bool sysfs macro
+  */
+ #define show_set_bool(value, cap) \
+@@ -1023,8 +1104,14 @@ static int __devinit acer_platform_probe(struct platform_device *device)
+ 			goto error_brightness;
+ 	}
+ 
++	err = acer_rfkill_init(&device->dev);
++	if (err)
++		goto error_rfkill;
++
+ 	return 0;
+ 
++error_rfkill:
++	acer_rfkill_exit();
+ error_brightness:
+ 	acer_led_exit();
+ error_mailled:
+@@ -1037,6 +1124,8 @@ static int acer_platform_remove(struct platform_device *device)
+ 		acer_led_exit();
+ 	if (has_cap(ACER_CAP_BRIGHTNESS))
+ 		acer_backlight_exit();
++
++	acer_rfkill_exit();
+ 	return 0;
+ }
+ 
