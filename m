@@ -1,77 +1,717 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:26306 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754752AbYH0Lea (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Aug 2008 07:34:30 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1533870fgg.17
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Aug 2008 04:34:29 -0700 (PDT)
-Message-ID: <1ba2fa240808270434y1589761xd2ff0a48c2e99033@mail.gmail.com> (sfid-20080827_133444_188175_1261A6F7)
-Date: Wed, 27 Aug 2008 14:34:28 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: pull request: wireless-2.6 2008-08-26
-Cc: "Marcel Holtmann" <holtmann@linux.intel.com>,
-	"David Miller" <davem@davemloft.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <1219831828.3891.3.camel@johannes.berg>
+Received: from bu3sch.de ([62.75.166.246]:36055 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750722AbYH3AK0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Aug 2008 20:10:26 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Move remaining code from phy.c to phy_a.c
+Date: Sat, 30 Aug 2008 02:09:08 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080827013009.GA15781@tuxdriver.com>
-	 <1ba2fa240808270038r24d5eeb9l36fd70ef5ae904f5@mail.gmail.com>
-	 <20080827.014041.230100807.davem@davemloft.net>
-	 <1219835410.5359.24.camel@californication>
-	 <1ba2fa240808270305m7f505efak9fd0d36d5db09a1e@mail.gmail.com>
-	 <1219831828.3891.3.camel@johannes.berg>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200808300209.08805.mb@bu3sch.de> (sfid-20080830_021031_533921_C7E5E06C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 27, 2008 at 1:10 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2008-08-27 at 13:05 +0300, Tomas Winkler wrote:
->
->> There is a central problem here, since I cannot really adjust driver
->> development progress from obvious reason with Linux merging window.
->> Upstream kernel is unfortunately not the only customer I report to. So
->> actually stable versions got half backed drivers depending on some
->> arbitrary time cut from my (selfish) development point of view.
->
-> FWIW, many people including myself think you should work the other way
-> around, that is develop things in the mainline/wireless-testing tree
-> rather than developing a stable version internally
-> big pile of patches whenever it's convenient for you.
+This moves the remaining code from phy.c to phy_a.c
+phy.c is removed.
+No functional change. Just moving code and removing dead code.
 
-We put big pile once the driver was functional and nobody expected it
-to be merged into stable kernel from that point
-we post everything that is mergable. The patches are sent out each
-Friday after they got through internal review there is nothing, there
-is nothing magical about it.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-IOW, we think you
-> should use Linux upstream as your development tree and then branch off
-> of that for the internal stabilisation trees you need for other
-> customers, rather than having some sort of internal development tree and
-> branching out Linux upstream as you appear to work.
+---
 
-Unfortunately fixing bugs on stable branch take precedence  of
-adjusting to new API on development branch that someone decided to do.
- I wanted to work directly on wireless testing but it was broken over
-an over and I have only limited resources more in testing then in
-development I just had to branch out to be ready with the driver when
-HW is out. People just check the immediate impact of they fix the
-don't test for collateral damage and this is understandable an
-individual developer doesn't have lab with IBSS, BSS, AP, etc setups.
+Please queue for the next merge window.
 
-> That would also avoid the nasty surprises you've gotten a few times
-> where other people managed to get patches to iwlwifi drivers into the
-> Linux tree without you noticing.
-
-I've noticed just deferred to fixing it.
-
-In summary
-This was my first Linux project, it was first project that was done on
-new HW (nobody could test it but us)  and I don't deny I did a lot of
-mistake in development process  I don't deny that and we are learning
-from them.
-Tomas
+Index: wireless-testing/drivers/net/wireless/b43/phy.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/phy.c	2008-08-29 00:55:14.000000000 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,489 +0,0 @@
+-/*
+-
+-  Broadcom B43 wireless driver
+-
+-  Copyright (c) 2005 Martin Langer <martin-langer@gmx.de>,
+-  Copyright (c) 2005-2007 Stefano Brivio <stefano.brivio@polimi.it>
+-  Copyright (c) 2005, 2006 Michael Buesch <mb@bu3sch.de>
+-  Copyright (c) 2005, 2006 Danny van Dyk <kugelfang@gentoo.org>
+-  Copyright (c) 2005, 2006 Andreas Jaggi <andreas.jaggi@waterwave.ch>
+-
+-  This program is free software; you can redistribute it and/or modify
+-  it under the terms of the GNU General Public License as published by
+-  the Free Software Foundation; either version 2 of the License, or
+-  (at your option) any later version.
+-
+-  This program is distributed in the hope that it will be useful,
+-  but WITHOUT ANY WARRANTY; without even the implied warranty of
+-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-  GNU General Public License for more details.
+-
+-  You should have received a copy of the GNU General Public License
+-  along with this program; see the file COPYING.  If not, write to
+-  the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
+-  Boston, MA 02110-1301, USA.
+-
+-*/
+-
+-#include <linux/delay.h>
+-#include <linux/io.h>
+-#include <linux/types.h>
+-#include <linux/bitrev.h>
+-
+-#include "b43.h"
+-#include "phy.h"
+-#include "nphy.h"
+-#include "main.h"
+-#include "tables.h"
+-#include "lo.h"
+-#include "wa.h"
+-
+-
+-static void b43_shm_clear_tssi(struct b43_wldev *dev)
+-{
+-	struct b43_phy *phy = &dev->phy;
+-
+-	switch (phy->type) {
+-	case B43_PHYTYPE_A:
+-		b43_shm_write16(dev, B43_SHM_SHARED, 0x0068, 0x7F7F);
+-		b43_shm_write16(dev, B43_SHM_SHARED, 0x006a, 0x7F7F);
+-		break;
+-	case B43_PHYTYPE_B:
+-	case B43_PHYTYPE_G:
+-		b43_shm_write16(dev, B43_SHM_SHARED, 0x0058, 0x7F7F);
+-		b43_shm_write16(dev, B43_SHM_SHARED, 0x005a, 0x7F7F);
+-		b43_shm_write16(dev, B43_SHM_SHARED, 0x0070, 0x7F7F);
+-		b43_shm_write16(dev, B43_SHM_SHARED, 0x0072, 0x7F7F);
+-		break;
+-	}
+-}
+-
+-/* http://bcm-specs.sipsolutions.net/EstimatePowerOut
+- * This function converts a TSSI value to dBm in Q5.2
+- */
+-static s8 b43_phy_estimate_power_out(struct b43_wldev *dev, s8 tssi)
+-{
+-	struct b43_phy *phy = &dev->phy;
+-	s8 dbm = 0;
+-	s32 tmp;
+-
+-	tmp = (phy->tgt_idle_tssi - phy->cur_idle_tssi + tssi);
+-
+-	switch (phy->type) {
+-	case B43_PHYTYPE_A:
+-		tmp += 0x80;
+-		tmp = clamp_val(tmp, 0x00, 0xFF);
+-		dbm = phy->tssi2dbm[tmp];
+-		//TODO: There's a FIXME on the specs
+-		break;
+-	case B43_PHYTYPE_B:
+-	case B43_PHYTYPE_G:
+-		tmp = clamp_val(tmp, 0x00, 0x3F);
+-		dbm = phy->tssi2dbm[tmp];
+-		break;
+-	default:
+-		B43_WARN_ON(1);
+-	}
+-
+-	return dbm;
+-}
+-
+-void b43_put_attenuation_into_ranges(struct b43_wldev *dev,
+-				     int *_bbatt, int *_rfatt)
+-{
+-	int rfatt = *_rfatt;
+-	int bbatt = *_bbatt;
+-	struct b43_txpower_lo_control *lo = dev->phy.lo_control;
+-
+-	/* Get baseband and radio attenuation values into their permitted ranges.
+-	 * Radio attenuation affects power level 4 times as much as baseband. */
+-
+-	/* Range constants */
+-	const int rf_min = lo->rfatt_list.min_val;
+-	const int rf_max = lo->rfatt_list.max_val;
+-	const int bb_min = lo->bbatt_list.min_val;
+-	const int bb_max = lo->bbatt_list.max_val;
+-
+-	while (1) {
+-		if (rfatt > rf_max && bbatt > bb_max - 4)
+-			break;	/* Can not get it into ranges */
+-		if (rfatt < rf_min && bbatt < bb_min + 4)
+-			break;	/* Can not get it into ranges */
+-		if (bbatt > bb_max && rfatt > rf_max - 1)
+-			break;	/* Can not get it into ranges */
+-		if (bbatt < bb_min && rfatt < rf_min + 1)
+-			break;	/* Can not get it into ranges */
+-
+-		if (bbatt > bb_max) {
+-			bbatt -= 4;
+-			rfatt += 1;
+-			continue;
+-		}
+-		if (bbatt < bb_min) {
+-			bbatt += 4;
+-			rfatt -= 1;
+-			continue;
+-		}
+-		if (rfatt > rf_max) {
+-			rfatt -= 1;
+-			bbatt += 4;
+-			continue;
+-		}
+-		if (rfatt < rf_min) {
+-			rfatt += 1;
+-			bbatt -= 4;
+-			continue;
+-		}
+-		break;
+-	}
+-
+-	*_rfatt = clamp_val(rfatt, rf_min, rf_max);
+-	*_bbatt = clamp_val(bbatt, bb_min, bb_max);
+-}
+-
+-/* http://bcm-specs.sipsolutions.net/RecalculateTransmissionPower */
+-void b43_phy_xmitpower(struct b43_wldev *dev)
+-{
+-	struct ssb_bus *bus = dev->dev->bus;
+-	struct b43_phy *phy = &dev->phy;
+-
+-	if (phy->cur_idle_tssi == 0)
+-		return;
+-	if ((bus->boardinfo.vendor == SSB_BOARDVENDOR_BCM) &&
+-	    (bus->boardinfo.type == SSB_BOARD_BU4306))
+-		return;
+-#ifdef CONFIG_B43_DEBUG
+-	if (phy->manual_txpower_control)
+-		return;
+-#endif
+-
+-	switch (phy->type) {
+-	case B43_PHYTYPE_A:{
+-
+-			//TODO: Nothing for A PHYs yet :-/
+-
+-			break;
+-		}
+-	case B43_PHYTYPE_B:
+-	case B43_PHYTYPE_G:{
+-			u16 tmp;
+-			s8 v0, v1, v2, v3;
+-			s8 average;
+-			int max_pwr;
+-			int desired_pwr, estimated_pwr, pwr_adjust;
+-			int rfatt_delta, bbatt_delta;
+-			int rfatt, bbatt;
+-			u8 tx_control;
+-
+-			tmp = b43_shm_read16(dev, B43_SHM_SHARED, 0x0058);
+-			v0 = (s8) (tmp & 0x00FF);
+-			v1 = (s8) ((tmp & 0xFF00) >> 8);
+-			tmp = b43_shm_read16(dev, B43_SHM_SHARED, 0x005A);
+-			v2 = (s8) (tmp & 0x00FF);
+-			v3 = (s8) ((tmp & 0xFF00) >> 8);
+-			tmp = 0;
+-
+-			if (v0 == 0x7F || v1 == 0x7F || v2 == 0x7F
+-			    || v3 == 0x7F) {
+-				tmp =
+-				    b43_shm_read16(dev, B43_SHM_SHARED, 0x0070);
+-				v0 = (s8) (tmp & 0x00FF);
+-				v1 = (s8) ((tmp & 0xFF00) >> 8);
+-				tmp =
+-				    b43_shm_read16(dev, B43_SHM_SHARED, 0x0072);
+-				v2 = (s8) (tmp & 0x00FF);
+-				v3 = (s8) ((tmp & 0xFF00) >> 8);
+-				if (v0 == 0x7F || v1 == 0x7F || v2 == 0x7F
+-				    || v3 == 0x7F)
+-					return;
+-				v0 = (v0 + 0x20) & 0x3F;
+-				v1 = (v1 + 0x20) & 0x3F;
+-				v2 = (v2 + 0x20) & 0x3F;
+-				v3 = (v3 + 0x20) & 0x3F;
+-				tmp = 1;
+-			}
+-			b43_shm_clear_tssi(dev);
+-
+-			average = (v0 + v1 + v2 + v3 + 2) / 4;
+-
+-			if (tmp
+-			    && (b43_shm_read16(dev, B43_SHM_SHARED, 0x005E) &
+-				0x8))
+-				average -= 13;
+-
+-			estimated_pwr =
+-			    b43_phy_estimate_power_out(dev, average);
+-
+-			max_pwr = dev->dev->bus->sprom.maxpwr_bg;
+-			if ((dev->dev->bus->sprom.boardflags_lo
+-			    & B43_BFL_PACTRL) && (phy->type == B43_PHYTYPE_G))
+-				max_pwr -= 0x3;
+-			if (unlikely(max_pwr <= 0)) {
+-				b43warn(dev->wl,
+-					"Invalid max-TX-power value in SPROM.\n");
+-				max_pwr = 60;	/* fake it */
+-				dev->dev->bus->sprom.maxpwr_bg = max_pwr;
+-			}
+-
+-			/*TODO:
+-			   max_pwr = min(REG - dev->dev->bus->sprom.antennagain_bgphy - 0x6, max_pwr)
+-			   where REG is the max power as per the regulatory domain
+-			 */
+-
+-			/* Get desired power (in Q5.2) */
+-			desired_pwr = INT_TO_Q52(phy->power_level);
+-			/* And limit it. max_pwr already is Q5.2 */
+-			desired_pwr = clamp_val(desired_pwr, 0, max_pwr);
+-			if (b43_debug(dev, B43_DBG_XMITPOWER)) {
+-				b43dbg(dev->wl,
+-				       "Current TX power output: " Q52_FMT
+-				       " dBm, " "Desired TX power output: "
+-				       Q52_FMT " dBm\n", Q52_ARG(estimated_pwr),
+-				       Q52_ARG(desired_pwr));
+-			}
+-
+-			/* Calculate the adjustment delta. */
+-			pwr_adjust = desired_pwr - estimated_pwr;
+-
+-			/* RF attenuation delta. */
+-			rfatt_delta = ((pwr_adjust + 7) / 8);
+-			/* Lower attenuation => Bigger power output. Negate it. */
+-			rfatt_delta = -rfatt_delta;
+-
+-			/* Baseband attenuation delta. */
+-			bbatt_delta = pwr_adjust / 2;
+-			/* Lower attenuation => Bigger power output. Negate it. */
+-			bbatt_delta = -bbatt_delta;
+-			/* RF att affects power level 4 times as much as
+-			 * Baseband attennuation. Subtract it. */
+-			bbatt_delta -= 4 * rfatt_delta;
+-
+-			/* So do we finally need to adjust something? */
+-			if ((rfatt_delta == 0) && (bbatt_delta == 0))
+-				return;
+-
+-			/* Calculate the new attenuation values. */
+-			bbatt = phy->bbatt.att;
+-			bbatt += bbatt_delta;
+-			rfatt = phy->rfatt.att;
+-			rfatt += rfatt_delta;
+-
+-			b43_put_attenuation_into_ranges(dev, &bbatt, &rfatt);
+-			tx_control = phy->tx_control;
+-			if ((phy->radio_ver == 0x2050) && (phy->radio_rev == 2)) {
+-				if (rfatt <= 1) {
+-					if (tx_control == 0) {
+-						tx_control =
+-						    B43_TXCTL_PA2DB |
+-						    B43_TXCTL_TXMIX;
+-						rfatt += 2;
+-						bbatt += 2;
+-					} else if (dev->dev->bus->sprom.
+-						   boardflags_lo &
+-						   B43_BFL_PACTRL) {
+-						bbatt += 4 * (rfatt - 2);
+-						rfatt = 2;
+-					}
+-				} else if (rfatt > 4 && tx_control) {
+-					tx_control = 0;
+-					if (bbatt < 3) {
+-						rfatt -= 3;
+-						bbatt += 2;
+-					} else {
+-						rfatt -= 2;
+-						bbatt -= 2;
+-					}
+-				}
+-			}
+-			/* Save the control values */
+-			phy->tx_control = tx_control;
+-			b43_put_attenuation_into_ranges(dev, &bbatt, &rfatt);
+-			phy->rfatt.att = rfatt;
+-			phy->bbatt.att = bbatt;
+-
+-			/* Adjust the hardware */
+-			b43_phy_lock(dev);
+-			b43_radio_lock(dev);
+-			b43_set_txpower_g(dev, &phy->bbatt, &phy->rfatt,
+-					  phy->tx_control);
+-			b43_radio_unlock(dev);
+-			b43_phy_unlock(dev);
+-			break;
+-		}
+-	case B43_PHYTYPE_N:
+-		b43_nphy_xmitpower(dev);
+-		break;
+-	default:
+-		B43_WARN_ON(1);
+-	}
+-}
+-
+-static inline s32 b43_tssi2dbm_ad(s32 num, s32 den)
+-{
+-	if (num < 0)
+-		return num / den;
+-	else
+-		return (num + den / 2) / den;
+-}
+-
+-static inline
+-    s8 b43_tssi2dbm_entry(s8 entry[], u8 index, s16 pab0, s16 pab1, s16 pab2)
+-{
+-	s32 m1, m2, f = 256, q, delta;
+-	s8 i = 0;
+-
+-	m1 = b43_tssi2dbm_ad(16 * pab0 + index * pab1, 32);
+-	m2 = max(b43_tssi2dbm_ad(32768 + index * pab2, 256), 1);
+-	do {
+-		if (i > 15)
+-			return -EINVAL;
+-		q = b43_tssi2dbm_ad(f * 4096 -
+-				    b43_tssi2dbm_ad(m2 * f, 16) * f, 2048);
+-		delta = abs(q - f);
+-		f = q;
+-		i++;
+-	} while (delta >= 2);
+-	entry[index] = clamp_val(b43_tssi2dbm_ad(m1 * f, 8192), -127, 128);
+-	return 0;
+-}
+-
+-/* http://bcm-specs.sipsolutions.net/TSSI_to_DBM_Table */
+-int b43_phy_init_tssi2dbm_table(struct b43_wldev *dev)
+-{
+-	struct b43_phy *phy = &dev->phy;
+-	s16 pab0, pab1, pab2;
+-	u8 idx;
+-	s8 *dyn_tssi2dbm;
+-
+-	if (phy->type == B43_PHYTYPE_A) {
+-		pab0 = (s16) (dev->dev->bus->sprom.pa1b0);
+-		pab1 = (s16) (dev->dev->bus->sprom.pa1b1);
+-		pab2 = (s16) (dev->dev->bus->sprom.pa1b2);
+-	} else {
+-		pab0 = (s16) (dev->dev->bus->sprom.pa0b0);
+-		pab1 = (s16) (dev->dev->bus->sprom.pa0b1);
+-		pab2 = (s16) (dev->dev->bus->sprom.pa0b2);
+-	}
+-
+-	if ((dev->dev->bus->chip_id == 0x4301) && (phy->radio_ver != 0x2050)) {
+-		phy->tgt_idle_tssi = 0x34;
+-		phy->tssi2dbm = b43_tssi2dbm_b_table;
+-		return 0;
+-	}
+-
+-	if (pab0 != 0 && pab1 != 0 && pab2 != 0 &&
+-	    pab0 != -1 && pab1 != -1 && pab2 != -1) {
+-		/* The pabX values are set in SPROM. Use them. */
+-		if (phy->type == B43_PHYTYPE_A) {
+-			if ((s8) dev->dev->bus->sprom.itssi_a != 0 &&
+-			    (s8) dev->dev->bus->sprom.itssi_a != -1)
+-				phy->tgt_idle_tssi =
+-				    (s8) (dev->dev->bus->sprom.itssi_a);
+-			else
+-				phy->tgt_idle_tssi = 62;
+-		} else {
+-			if ((s8) dev->dev->bus->sprom.itssi_bg != 0 &&
+-			    (s8) dev->dev->bus->sprom.itssi_bg != -1)
+-				phy->tgt_idle_tssi =
+-				    (s8) (dev->dev->bus->sprom.itssi_bg);
+-			else
+-				phy->tgt_idle_tssi = 62;
+-		}
+-		dyn_tssi2dbm = kmalloc(64, GFP_KERNEL);
+-		if (dyn_tssi2dbm == NULL) {
+-			b43err(dev->wl, "Could not allocate memory "
+-			       "for tssi2dbm table\n");
+-			return -ENOMEM;
+-		}
+-		for (idx = 0; idx < 64; idx++)
+-			if (b43_tssi2dbm_entry
+-			    (dyn_tssi2dbm, idx, pab0, pab1, pab2)) {
+-				phy->tssi2dbm = NULL;
+-				b43err(dev->wl, "Could not generate "
+-				       "tssi2dBm table\n");
+-				kfree(dyn_tssi2dbm);
+-				return -ENODEV;
+-			}
+-		phy->tssi2dbm = dyn_tssi2dbm;
+-		phy->dyn_tssi_tbl = 1;
+-	} else {
+-		/* pabX values not set in SPROM. */
+-		switch (phy->type) {
+-		case B43_PHYTYPE_A:
+-			/* APHY needs a generated table. */
+-			phy->tssi2dbm = NULL;
+-			b43err(dev->wl, "Could not generate tssi2dBm "
+-			       "table (wrong SPROM info)!\n");
+-			return -ENODEV;
+-		case B43_PHYTYPE_B:
+-			phy->tgt_idle_tssi = 0x34;
+-			phy->tssi2dbm = b43_tssi2dbm_b_table;
+-			break;
+-		case B43_PHYTYPE_G:
+-			phy->tgt_idle_tssi = 0x34;
+-			phy->tssi2dbm = b43_tssi2dbm_g_table;
+-			break;
+-		}
+-	}
+-
+-	return 0;
+-}
+-
+-void b43_radio_turn_on(struct b43_wldev *dev)
+-{
+-	struct b43_phy *phy = &dev->phy;
+-	int err;
+-	u8 channel;
+-
+-	might_sleep();
+-
+-	if (phy->radio_on)
+-		return;
+-
+-	switch (phy->type) {
+-	case B43_PHYTYPE_A:
+-		b43_radio_write16(dev, 0x0004, 0x00C0);
+-		b43_radio_write16(dev, 0x0005, 0x0008);
+-		b43_phy_write(dev, 0x0010, b43_phy_read(dev, 0x0010) & 0xFFF7);
+-		b43_phy_write(dev, 0x0011, b43_phy_read(dev, 0x0011) & 0xFFF7);
+-		b43_radio_init2060(dev);
+-		break;
+-	case B43_PHYTYPE_B:
+-	case B43_PHYTYPE_G:
+-		//XXX
+-		break;
+-	case B43_PHYTYPE_N:
+-		b43_nphy_radio_turn_on(dev);
+-		break;
+-	default:
+-		B43_WARN_ON(1);
+-	}
+-	phy->radio_on = 1;
+-}
+-
+-void b43_radio_turn_off(struct b43_wldev *dev, bool force)
+-{
+-	struct b43_phy *phy = &dev->phy;
+-
+-	if (!phy->radio_on && !force)
+-		return;
+-
+-	switch (phy->type) {
+-	case B43_PHYTYPE_N:
+-		b43_nphy_radio_turn_off(dev);
+-		break;
+-	case B43_PHYTYPE_A:
+-		b43_radio_write16(dev, 0x0004, 0x00FF);
+-		b43_radio_write16(dev, 0x0005, 0x00FB);
+-		b43_phy_write(dev, 0x0010, b43_phy_read(dev, 0x0010) | 0x0008);
+-		b43_phy_write(dev, 0x0011, b43_phy_read(dev, 0x0011) | 0x0008);
+-		break;
+-	case B43_PHYTYPE_G: {
+-		//XXX
+-		break;
+-	}
+-	default:
+-		B43_WARN_ON(1);
+-	}
+-	phy->radio_on = 0;
+-}
+Index: wireless-testing/drivers/net/wireless/b43/phy_a.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/phy_a.c	2008-08-29 00:55:16.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/phy_a.c	2008-08-30 02:02:55.000000000 +0200
+@@ -55,12 +55,31 @@ static inline u16 freq_r3A_value(u16 fre
+ 	else
+ 		value = 0x0040;
+ 
+ 	return value;
+ }
+ 
++#if 0
++/* This function converts a TSSI value to dBm in Q5.2 */
++static s8 b43_aphy_estimate_power_out(struct b43_wldev *dev, s8 tssi)
++{
++	struct b43_phy *phy = &dev->phy;
++	struct b43_phy_a *aphy = phy->a;
++	s8 dbm = 0;
++	s32 tmp;
++
++	tmp = (aphy->tgt_idle_tssi - aphy->cur_idle_tssi + tssi);
++	tmp += 0x80;
++	tmp = clamp_val(tmp, 0x00, 0xFF);
++	dbm = aphy->tssi2dbm[tmp];
++	//TODO: There's a FIXME on the specs
++
++	return dbm;
++}
++#endif
++
+ void b43_radio_set_tx_iq(struct b43_wldev *dev)
+ {
+ 	static const u8 data_high[5] = { 0x00, 0x40, 0x80, 0x90, 0xD0 };
+ 	static const u8 data_low[5] = { 0x00, 0x01, 0x05, 0x06, 0x0A };
+ 	u16 tmp = b43_radio_read16(dev, 0x001E);
+ 	int i, j;
+@@ -323,24 +342,71 @@ void b43_phy_inita(struct b43_wldev *dev
+ 		b43_phy_write(dev, B43_PHY_OFDM(0x6E),
+ 				  (b43_phy_read(dev, B43_PHY_OFDM(0x6E))
+ 				   & 0xE000) | 0x3CF);
+ 	}
+ }
+ 
++/* Initialise the TSSI->dBm lookup table */
++static int b43_aphy_init_tssi2dbm_table(struct b43_wldev *dev)
++{
++	struct b43_phy *phy = &dev->phy;
++	struct b43_phy_a *aphy = phy->a;
++	s16 pab0, pab1, pab2;
++
++	pab0 = (s16) (dev->dev->bus->sprom.pa1b0);
++	pab1 = (s16) (dev->dev->bus->sprom.pa1b1);
++	pab2 = (s16) (dev->dev->bus->sprom.pa1b2);
++
++	if (pab0 != 0 && pab1 != 0 && pab2 != 0 &&
++	    pab0 != -1 && pab1 != -1 && pab2 != -1) {
++		/* The pabX values are set in SPROM. Use them. */
++		if ((s8) dev->dev->bus->sprom.itssi_a != 0 &&
++		    (s8) dev->dev->bus->sprom.itssi_a != -1)
++			aphy->tgt_idle_tssi =
++			    (s8) (dev->dev->bus->sprom.itssi_a);
++		else
++			aphy->tgt_idle_tssi = 62;
++		aphy->tssi2dbm = b43_generate_dyn_tssi2dbm_tab(dev, pab0,
++							       pab1, pab2);
++		if (!aphy->tssi2dbm)
++			return -ENOMEM;
++	} else {
++		/* pabX values not set in SPROM,
++		 * but APHY needs a generated table. */
++		aphy->tssi2dbm = NULL;
++		b43err(dev->wl, "Could not generate tssi2dBm "
++		       "table (wrong SPROM info)!\n");
++		return -ENODEV;
++	}
++
++	return 0;
++}
++
+ static int b43_aphy_op_allocate(struct b43_wldev *dev)
+ {
+ 	struct b43_phy_a *aphy;
++	int err;
+ 
+ 	aphy = kzalloc(sizeof(*aphy), GFP_KERNEL);
+ 	if (!aphy)
+ 		return -ENOMEM;
+ 	dev->phy.a = aphy;
+ 
+ 	//TODO init struct b43_phy_a
+ 
++	err = b43_aphy_init_tssi2dbm_table(dev);
++	if (err)
++		goto err_free_aphy;
++
+ 	return 0;
++
++err_free_aphy:
++	kfree(aphy);
++	dev->phy.a = NULL;
++
++	return err;
+ }
+ 
+ static int b43_aphy_op_init(struct b43_wldev *dev)
+ {
+ 	struct b43_phy_a *aphy = dev->phy.a;
+ 
+@@ -356,12 +422,13 @@ static void b43_aphy_op_exit(struct b43_
+ 
+ 	if (aphy->initialised) {
+ 		//TODO
+ 		aphy->initialised = 0;
+ 	}
+ 	//TODO
++	kfree(aphy->tssi2dbm);
+ 	kfree(aphy);
+ 	dev->phy.a = NULL;
+ }
+ 
+ static inline u16 adjust_phyreg(struct b43_wldev *dev, u16 offset)
+ {
+@@ -427,13 +494,29 @@ static bool b43_aphy_op_supports_hwpctl(
+ {
+ 	return (dev->phy.rev >= 5);
+ }
+ 
+ static void b43_aphy_op_software_rfkill(struct b43_wldev *dev,
+ 					enum rfkill_state state)
+-{//TODO
++{
++	struct b43_phy *phy = &dev->phy;
++
++	if (state == RFKILL_STATE_UNBLOCKED) {
++		if (phy->radio_on)
++			return;
++		b43_radio_write16(dev, 0x0004, 0x00C0);
++		b43_radio_write16(dev, 0x0005, 0x0008);
++		b43_phy_write(dev, 0x0010, b43_phy_read(dev, 0x0010) & 0xFFF7);
++		b43_phy_write(dev, 0x0011, b43_phy_read(dev, 0x0011) & 0xFFF7);
++		b43_radio_init2060(dev);
++	} else {
++		b43_radio_write16(dev, 0x0004, 0x00FF);
++		b43_radio_write16(dev, 0x0005, 0x00FB);
++		b43_phy_write(dev, 0x0010, b43_phy_read(dev, 0x0010) | 0x0008);
++		b43_phy_write(dev, 0x0011, b43_phy_read(dev, 0x0011) | 0x0008);
++	}
+ }
+ 
+ static int b43_aphy_op_switch_channel(struct b43_wldev *dev,
+ 				      unsigned int new_channel)
+ {
+ 	if (new_channel > 200)
+Index: wireless-testing/drivers/net/wireless/b43/phy_a.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/phy_a.h	2008-08-29 00:55:14.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/phy_a.h	2008-08-30 02:00:52.000000000 +0200
+@@ -102,12 +102,20 @@ void b43_ofdmtab_write32(struct b43_wlde
+ 			 u16 offset, u32 value);
+ 
+ 
+ struct b43_phy_a {
+ 	bool initialised;
+ 
++	/* Pointer to the table used to convert a
++	 * TSSI value to dBm-Q5.2 */
++	const s8 *tssi2dbm;
++	/* Target idle TSSI */
++	int tgt_idle_tssi;
++	/* Current idle TSSI */
++	int cur_idle_tssi;//FIXME value currently not set
++
+ 	/* A-PHY TX Power control value. */
+ 	u16 txpwr_offset;
+ 
+ 	//TODO lots of missing stuff
+ };
+ 
+Index: wireless-testing/drivers/net/wireless/b43/phy_g.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/phy_g.h	2008-08-29 00:55:16.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/phy_g.h	2008-08-30 01:49:15.000000000 +0200
+@@ -199,11 +199,13 @@ struct b43_phy_g {
+ 
+ void b43_gphy_set_baseband_attenuation(struct b43_wldev *dev,
+ 				       u16 baseband_attenuation);
+ void b43_gphy_channel_switch(struct b43_wldev *dev,
+ 			     unsigned int channel,
+ 			     bool synthetic_pu_workaround);
++u8 * b43_generate_dyn_tssi2dbm_tab(struct b43_wldev *dev,
++				   s16 pab0, s16 pab1, s16 pab2);
+ 
+ struct b43_phy_operations;
+ extern const struct b43_phy_operations b43_phyops_g;
+ 
+ #endif /* LINUX_B43_PHY_G_H_ */
