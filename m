@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:65325 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752350AbYHDIli (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Aug 2008 04:41:38 -0400
-To: "Pavel Roskin" <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Resignation from orinoco and at76_usb
-References: <1217634358.2731.8.camel@dv>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Mon, 04 Aug 2008 11:41:13 +0300
-In-Reply-To: <1217634358.2731.8.camel@dv> (ext Pavel Roskin's message of "Fri\, 01 Aug 2008 19\:45\:58 -0400")
-Message-ID: <87bq099npy.fsf@nokia.com> (sfid-20080804_104141_342605_D3AE93EC)
+Received: from mail.gmx.net ([213.165.64.20]:36502 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751027AbYHaIFj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Aug 2008 04:05:39 -0400
+Message-ID: <48BA50CF.9030601@gmx.net> (sfid-20080831_100555_737564_C99DA302)
+Date: Sun, 31 Aug 2008 10:05:35 +0200
+From: Eric <plukje@gmx.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: linux-wireless@vger.kernel.org
+CC: Eric <plukje@gmx.net>
+Subject: rt2500 probe responses with wep and fragmented bit set
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Roskin <proski@gnu.org> writes:
+Hello everybody,
 
-> I would like to resign as maintainer of orinoco and at76_usb drivers.  I
-> was genuinely interested in getting most of the hardware supported by
-> those drivers, but as it stands now, I simple cannot find time for
-> either of them.  I believe it is harmful for both projects to have an
-> unresponsive maintainer who does not have time to review patches and
-> answer questions about the project.  Perhaps it's better not to have any
-> maintainer, so that an interested person could step in.
+I'm trying to get master mode to work with a pci rt2500 card, running 
+ubuntu, git wl kernel, git hostapd and libnl1.1.
+Runningt hostapd in verbose mode screams MGMT (TX callback) fail (in 
+fact, it manages to do 1 ack, the rest are failures).
+Now, for the record, hostapd is configured to run as an open AP, the 
+most basic configuration you can think of.
+When analyzing the actual responses (tcpdumping on the mon.wlan0 iface, 
+using wireshark to disect), I discovered that the probe responses for a 
+SSID broadcast
+had the WEP bit and the Fragmentation bit set, consistently, for all 
+probe responses.
 
-I would be very interested to maintain at76_usb. I broke it, so I
-should (and will) fix it as well. But due to real life issues, I can
-start actively working on it only at the end of September. I hope
-that's not a problem.
+Somehow I dont think that frame of 81 bytes needs either bits set.
+Does anyone know wether this falls in the category mac80211, hostapd 
+bug, or rt2x00 bug?
 
--- 
-Kalle Valo
+kind regards,
+
+Eric
+
+N.B.
+According to the rt2x00 project admin, rt2x00 doesnt touch the ieee80211 
+header.  (see 
+http://rt2x00.serialmonkey.com/phpBB/viewtopic.php?f=5&t=4969 ).
+
+N.B2.
+I'm currently not subscribed to the mailinglist, please keep me in the 
+cc, thank you.
