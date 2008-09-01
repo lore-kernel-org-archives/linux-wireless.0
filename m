@@ -1,47 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:41046 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751863AbYIMQuj (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.227]:36401 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751628AbYIAQHL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Sep 2008 12:50:39 -0400
-Subject: Re: The new regulatory code kills my wireless
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1221294810.3700.3.camel@johannes.berg>
-References: <48CAA8D6.1030605@lwfinger.net> <20080912174036.GC6134@tesla>
-	 <48CAB90C.5090302@lwfinger.net>  <20080912191919.GA7722@tesla>
-	 (sfid-20080912_211933_280898_C5E534CA)  <1221250959.5576.10.camel@johannes.berg>
-	 <1221272779.6695.22.camel@californication>
-	 <1221294810.3700.3.camel@johannes.berg>
-Content-Type: text/plain
-Date: Sat, 13 Sep 2008 18:51:13 +0200
-Message-Id: <1221324673.6695.31.camel@californication> (sfid-20080913_185045_278177_A87FEAAA)
-Mime-Version: 1.0
+	Mon, 1 Sep 2008 12:07:11 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so1856409rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Sep 2008 09:07:10 -0700 (PDT)
+Date: Mon, 1 Sep 2008 19:07:01 +0300
+From: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: LKML <linux-kernel@vger.kernel.org>, yi.zhu@intel.com,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net,
+	Jan-Espen Pettersen <sigsegv@radiotube.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: new: regression iwl3945/mac80211 endless after suspend
+	associate/deassociate loop
+Message-ID: <20080901160658.GA11063@google.com> (sfid-20080901_180718_999161_B816BE77)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Starting with 2.6.27-rc5, my T60p sometimes fails to associate
+with an access point after suspend to ram/resume.
 
-> > I am pretty happy that you caught it, because that was my whole point
-> > from the discussion we had at OLS. The userspace part might not be in
-> > place and we must ensure that everything still works as before :)
-> 
-> I thought your point was that you wanted regulatory_hint_regdom(...)
-> that the driver can use to tell us what the EEPROM regulatory is, which
-> wouldn't have been affected by this bug :) But anyway, yeah, it's a bug.
+This does not seem to ever happen on 2.6.27-rc4.
 
-of course I want regulatory_hint_regdom :)
+When this happens, I observe the following messages in dmesg:
+(AP mac masked out with XX):
 
-I was just trying to make clear how important it is to make sure we work
-with a broken userspace or without userspace support at all
 
-Regards
+[16433.458084] iwl3945 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+[16433.502490] PM: Adding info for No Bus:iwl-phy4:radio
+[16433.502666] Registered led device: iwl-phy4:radio
+[16433.502764] PM: Adding info for No Bus:iwl-phy4:assoc
+[16433.502822] Registered led device: iwl-phy4:assoc
+[16433.502870] PM: Adding info for No Bus:iwl-phy4:RX
+[16433.503006] Registered led device: iwl-phy4:RX
+[16433.503055] PM: Adding info for No Bus:iwl-phy4:TX
+[16433.503111] Registered led device: iwl-phy4:TX
+[16433.505268] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
+[16433.522344] ADDRCONF(NETDEV_UP): eth1: link is not ready
+[16433.704125] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
+[16433.705986] eth1: authenticated
+[16433.705997] eth1: associate with AP XX:XX:XX:XX:XX:XX
+[16433.708406] eth1: RX AssocResp from XX:XX:XX:XX:XX:XX (capab=0x411 status=0 aid=1)
+[16433.708412] eth1: associated
+[16433.709659] ADDRCONF(NETDEV_CHANGE): eth1: link becomes ready
+[16443.712280] eth1: disassociating by local choice (reason=3)
+[16443.712902] eth1: disassociating by local choice (reason=3)
+[16444.692059] eth1: no IPv6 routers present
+[16445.997384] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
+[16445.999304] eth1: authenticated
+[16445.999312] eth1: associate with AP XX:XX:XX:XX:XX:XX
+[16446.001784] eth1: RX ReassocResp from XX:XX:XX:XX:XX:XX (capab=0x411 status=0 aid=1)
+[16446.001790] eth1: associated
+[16446.008222] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
+[16446.009539] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
+[16446.012433] eth1: authenticated
+[16446.012440] eth1: associate with AP XX:XX:XX:XX:XX:XX
+[16446.015149] eth1: RX ReassocResp from XX:XX:XX:XX:XX:XX (capab=0x411 status=0 aid=1)
+[16446.015155] eth1: associated
+[16456.017223] eth1: disassociating by local choice (reason=3)
+[16456.019751] eth1: disassociating by local choice (reason=3)
+[16458.298346] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
+[16458.300319] eth1: authenticated
+[16458.300339] eth1: associate with AP XX:XX:XX:XX:XX:XX
+[16458.305557] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
+[16458.314765] eth1: authenticated
+[16458.314781] eth1: associate with AP XX:XX:XX:XX:XX:XX
+[16458.318666] eth1: RX ReassocResp from XX:XX:XX:XX:XX:XX (capab=0x411 status=0 aid=1)
+[16458.318673] eth1: associated
+[16468.321210] eth1: disassociating by local choice (reason=3)
+[16470.604081] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
+[16470.606122] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
+[16470.608330] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
+[16470.608367] eth1: authenticated
+[16470.608374] eth1: associate with AP XX:XX:XX:XX:XX:XX
+[16470.614629] eth1: RX ReassocResp from XX:XX:XX:XX:XX:XX (capab=0x411 status=0 aid=1)
+[16470.614648] eth1: associated
+[16480.617268] eth1: disassociating by local choice (reason=3)
+[16480.619939] eth1: disassociating by local choice (reason=3)
+[16482.896840] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
+[16482.899593] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
+[16482.899626] eth1: authenticated
+[16482.899633] eth1: associate with AP XX:XX:XX:XX:XX:XX
+[16482.906006] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
+[16482.906048] eth1: authenticated
+[16482.906055] eth1: associate with AP XX:XX:XX:XX:XX:XX
+[16482.907625] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
+[16482.909446] eth1: authenticated
+[16482.909453] eth1: associate with AP XX:XX:XX:XX:XX:XX
+[16482.918553] eth1: RX ReassocResp from XX:XX:XX:XX:XX:XX (capab=0x411 status=0 aid=1)
+[16482.918564] eth1: associated
+[16492.920224] eth1: disassociating by local choice (reason=3)
+[16492.920986] eth1: disassociating by local choice (reason=3)
 
-Marcel
 
+Reverting 8ab65b03b7893da4a49009e7e356e36e27b0c407 seems to make
+the card associate properly after suspend, for me.
+
+-- 
+MST
 
