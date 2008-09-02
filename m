@@ -1,47 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:52772 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750991AbYI2TTe (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45593 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751383AbYIBASj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 15:19:34 -0400
-Date: Mon, 29 Sep 2008 14:19:29 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] b43: Increase loop tries in do_dummy_tx
-Message-ID: <48e12a41.fSr2FmkheZiPQYjZ%Larry.Finger@lwfinger.net> (sfid-20080929_211937_509837_5B320AAC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 1 Sep 2008 20:18:39 -0400
+Date: Mon, 1 Sep 2008 17:18:17 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: linux-wireless@vger.kernel.org
+Cc: bugme-daemon@bugzilla.kernel.org,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, m.s.tsirkin@gmail.com
+Subject: Re: [Bugme-new] [Bug 11476] New: failure to associate after resume
+ from suspend to ram
+Message-Id: <20080901171817.48743179.akpm@linux-foundation.org> (sfid-20080902_021855_251687_0E5D67DA)
+In-Reply-To: <bug-11476-10286@http.bugzilla.kernel.org/>
+References: <bug-11476-10286@http.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-One of the spin-on-condition loops in routine do_dummy_tx always exits before
-the condition is satisfied. The hardware might be left in an inconsistent
-state that might be the cause of the PHY transmission errors seen by some
-users.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+(switched to email.  Please respond via emailed reply-to-all, not via the
+bugzilla web interface).
 
-John,
+On Mon,  1 Sep 2008 13:33:47 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
 
-This is 2.6.28 material.
+> http://bugzilla.kernel.org/show_bug.cgi?id=11476
+> 
+>            Summary: failure to associate after resume from suspend to ram
+>            Product: Networking
+>            Version: 2.5
+>      KernelVersion: 2.6.25-rc5
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: Wireless
+>         AssignedTo: networking_wireless@kernel-bugs.osdl.org
+>         ReportedBy: m.s.tsirkin@gmail.com
+> 
+> 
+> Latest working kernel version: 2.6.25-rc4
+> Earliest failing kernel version: 2.6.25-rc5
 
-Larry
----
+A very recent regression.
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 7205a93..af60122 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -814,7 +814,7 @@ void b43_dummy_transmission(struct b43_wldev *dev)
- 			break;
- 		udelay(10);
- 	}
--	for (i = 0x00; i < 0x0A; i++) {
-+	for (i = 0x00; i < 0x19; i++) {
- 		value = b43_read16(dev, 0x0690);
- 		if (!(value & 0x0100))
- 			break;
+> Distribution: ubuntu gutsy
+> Hardware Environment: T60p
+> Software Environment: self-built kernel, .config attached
+> Problem Description:
+> 
+> Starting with 2.6.27-rc5, my T60p sometimes fails to associate
+> with an access point after suspend to ram/resume.
+> 
+> This does not seem to happen on 2.6.27-rc4.
+> 
+> Steps to reproduce:
+> suspend and resume several times.
+> At some point the card fails to associate with
+> the AP.
 
+Which device driver is that machine using?
