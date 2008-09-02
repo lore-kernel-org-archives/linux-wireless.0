@@ -1,39 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60110 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754033AbYIYUNh (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.190]:55924 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751695AbYIBUue (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2008 16:13:37 -0400
-Date: Thu, 25 Sep 2008 16:12:44 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2008-09-24
-Message-ID: <20080925201244.GF3277@tuxdriver.com> (sfid-20080925_221341_366122_92E085B5)
-References: <20080925192943.GC3277@tuxdriver.com>
+	Tue, 2 Sep 2008 16:50:34 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so1958905fkq.5
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Sep 2008 13:50:32 -0700 (PDT)
+Date: Tue, 2 Sep 2008 23:50:23 +0300
+From: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Zhu Yi <yi.zhu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	LKML <linux-kernel@vger.kernel.org>, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org,
+	Jan-Espen Pettersen <sigsegv@radiotube.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: new: regression iwl3945/mac80211 endless after suspend
+	associate/deassociate loop
+Message-ID: <20080902205022.GA8230@google.com> (sfid-20080902_225103_106826_A42E45EC)
+References: <20080901160658.GA11063@google.com> <1220319536.28282.128.camel@debian.sh.intel.com> <4b0be9b641de902cb7de4ad50686f6e1.squirrel@secure.sipsolutions.net> <20080902130429.GB19172@google.com> <1220362201.3176.4.camel@borkbork.foobar.com> <20080902145840.GE19172@google.com> <1220368238.8041.4.camel@borkbork.foobar.com> <20080902172409.GJ17345@jm.kir.nu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080925192943.GC3277@tuxdriver.com>
+In-Reply-To: <20080902172409.GJ17345@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 25, 2008 at 03:29:44PM -0400, John W. Linville wrote:
-> (Again, I know it is 2008-09-25, but I let this one cook overnight...)
+On Tue, Sep 02, 2008 at 08:24:09PM +0300, Jouni Malinen wrote:
+> On Tue, Sep 02, 2008 at 11:10:38AM -0400, Dan Williams wrote:
+> > On Tue, 2008-09-02 at 17:58 +0300, Michael S. Tsirkin wrote:
+> > > On Tue, Sep 02, 2008 at 09:30:01AM -0400, Dan Williams wrote:
+> > > > On Tue, 2008-09-02 at 16:04 +0300, Michael S. Tsirkin wrote:
 > 
-> Dave,
+> > > > > On Tue, Sep 02, 2008 at 08:10:09AM +0200, Johannes Berg wrote:
+> > > > > > "by local choice" means wext requested this, not a kernel bug.
 > 
-> Another batch intended for 2.6.28...mostly a hodgepodge, including
-> another bunch of bits from Johannes...
+> Well.. The disassociation part not, but what is trickering that
+> (association/authentication timeout) may still be ;-).
 > 
-> Let me know if there are problems!
+> 
+> > > I put up a (sanitized) -dd output here
+> > > http://bugzilla.kernel.org/show_bug.cgi?id=11476
+> 
+> Would it be possible to get unsanitized version and with -t (i.e.,
+> timestamps)? If you don't want to post it publicly, feel free to send
+> one directly to me. The one attached to that bug removed quite a bit of
+> information that would have been useful in figuring out what happened.
 
-Dave,
+Could you tell me which bits are needed, and don't include
+security info? I wouldn't want to post the PSK, etc.
 
-You may want to hold-off on this request -- just got an oops report
-from someone upgrading to the latest wireless-testing... :-(
+> > Logs seem to indicate a normal failure of the 4 way handshake; are you
+> > sure your PSK is correct?  It actually looks like the AP doesn't ever
+> > get message #2 from your machine, and just retransmits message #1 of the
+> > handshake.  I'm pretty sure that if
+> > 8ab65b03b7893da4a49009e7e356e36e27b0c407 had anything to do with it, you
+> > wouldn't be getting this far and the AP would have denied association in
+> > the first place.
+> 
+> There are more than one different types of issues shown in the log. I'm
+> not sure which one would be the key one here. Anyway, I would agree that
+> the commit that removed an empty ext. supp rates IE has nothing to do
+> with this.
+> 
+> 
+> As far as suspend is concerned, which distro is used here?
 
-John
+ubuntu gutsy
 
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+> Does it
+> unload the driver (i.e., remove the netdev) on suspend? If yes, you will
+> need to update wpa_supplicant 0.6.4 which handles that disappearing and
+> reappearing interface.
+
+Hmm, since it manages to reassociate with -rc4 I would guess not.
+In any case killing wpa_supplicant after reboot and restarting it does not
+seem to help.
+
+> If this is something else, I would need to get
+> more complete debug log from wpa_supplicant..
+> 
+> -- 
+> Jouni Malinen                                            PGP id EFC895FA
