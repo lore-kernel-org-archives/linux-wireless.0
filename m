@@ -1,162 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37455 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752505AbYIKAEF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2008 20:04:05 -0400
-Subject: [PATCH 19/18] mac80211: small rate control changes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080910220145.707263000@sipsolutions.net> (sfid-20080911_001619_033062_98BAB5F3)
-References: <20080910220145.707263000@sipsolutions.net>
-	 (sfid-20080911_001619_033062_98BAB5F3)
-Content-Type: text/plain
-Date: Thu, 11 Sep 2008 02:03:28 +0200
-Message-Id: <1221091408.3804.58.camel@johannes.berg> (sfid-20080911_020408_173289_410A83FA)
-Mime-Version: 1.0
+Received: from hostap.isc.org ([149.20.54.63]:53214 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753289AbYIBRZ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 13:25:28 -0400
+Date: Tue, 2 Sep 2008 20:24:09 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Zhu Yi <yi.zhu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	LKML <linux-kernel@vger.kernel.org>, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org,
+	Jan-Espen Pettersen <sigsegv@radiotube.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: new: regression iwl3945/mac80211 endless after suspend
+	associate/deassociate loop
+Message-ID: <20080902172409.GJ17345@jm.kir.nu> (sfid-20080902_192535_924050_EB23F715)
+References: <20080901160658.GA11063@google.com> <1220319536.28282.128.camel@debian.sh.intel.com> <4b0be9b641de902cb7de4ad50686f6e1.squirrel@secure.sipsolutions.net> <20080902130429.GB19172@google.com> <1220362201.3176.4.camel@borkbork.foobar.com> <20080902145840.GE19172@google.com> <1220368238.8041.4.camel@borkbork.foobar.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1220368238.8041.4.camel@borkbork.foobar.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes mac80211 to not rely on the rate control
-algorithm to update sta->tx_retry_failed and sta->tx_retry_count
-(even if we don't currently use them), removes a number of
-completely unused values we don't even show in debugfs and
-changes the code in ieee80211_tx_status() to not look up the
-sta_info repeatedly.
+On Tue, Sep 02, 2008 at 11:10:38AM -0400, Dan Williams wrote:
+> On Tue, 2008-09-02 at 17:58 +0300, Michael S. Tsirkin wrote:
+> > On Tue, Sep 02, 2008 at 09:30:01AM -0400, Dan Williams wrote:
+> > > On Tue, 2008-09-02 at 16:04 +0300, Michael S. Tsirkin wrote:
 
-The only behaviour change here would be not calling the rate
-control function rate_control_tx_status() when no sta_info is
-found, but all rate control algorithms ignore such calls anyway.
+> > > > On Tue, Sep 02, 2008 at 08:10:09AM +0200, Johannes Berg wrote:
+> > > > > "by local choice" means wext requested this, not a kernel bug.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Now we can also change it to pass in the actual rate control information
-to the algorithm, saving all the lookups there and the cross-dir header
-inclusion! :)
-
- net/mac80211/main.c             |   50 ++++++++++++++++++++--------------------
- net/mac80211/rc80211_pid_algo.c |   11 --------
- net/mac80211/sta_info.h         |    7 -----
- 3 files changed, 25 insertions(+), 43 deletions(-)
-
---- everything.orig/net/mac80211/sta_info.h	2008-09-11 01:51:51.000000000 +0200
-+++ everything/net/mac80211/sta_info.h	2008-09-11 01:51:51.000000000 +0200
-@@ -195,9 +195,6 @@ struct sta_ampdu_mlme {
-  * @tx_filtered_count: TBD
-  * @tx_retry_failed: TBD
-  * @tx_retry_count: TBD
-- * @tx_num_consecutive_failures: TBD
-- * @tx_num_mpdu_ok: TBD
-- * @tx_num_mpdu_fail: TBD
-  * @fail_avg: moving percentage of failed MSDUs
-  * @tx_packets: number of RX/TX MSDUs
-  * @tx_bytes: TBD
-@@ -273,10 +270,6 @@ struct sta_info {
- 	/* Updated from TX status path only, no locking requirements */
- 	unsigned long tx_filtered_count;
- 	unsigned long tx_retry_failed, tx_retry_count;
--	/* TODO: update in generic code not rate control? */
--	u32 tx_num_consecutive_failures;
--	u32 tx_num_mpdu_ok;
--	u32 tx_num_mpdu_fail;
- 	/* moving percentage of failed MSDUs */
- 	unsigned int fail_avg;
- 
---- everything.orig/net/mac80211/rc80211_pid_algo.c	2008-09-11 01:51:50.000000000 +0200
-+++ everything/net/mac80211/rc80211_pid_algo.c	2008-09-11 01:51:51.000000000 +0200
-@@ -282,17 +282,6 @@ static void rate_control_pid_tx_status(v
- 		spinfo->tx_num_xmit++;
- 	}
- 
--	if (info->status.excessive_retries) {
--		sta->tx_retry_failed++;
--		sta->tx_num_consecutive_failures++;
--		sta->tx_num_mpdu_fail++;
--	} else {
--		sta->tx_num_consecutive_failures = 0;
--		sta->tx_num_mpdu_ok++;
--	}
--	sta->tx_retry_count += info->status.retry_count;
--	sta->tx_num_mpdu_fail += info->status.retry_count;
--
- 	/* Update PID controller state. */
- 	period = (HZ * pinfo->sampling_period + 500) / 1000;
- 	if (!period)
---- everything.orig/net/mac80211/main.c	2008-09-11 01:51:51.000000000 +0200
-+++ everything/net/mac80211/main.c	2008-09-11 01:51:51.000000000 +0200
-@@ -546,29 +546,27 @@ void ieee80211_tx_status(struct ieee8021
- 
- 	rcu_read_lock();
- 
--	if (info->status.excessive_retries) {
--		sta = sta_info_get(local, hdr->addr1);
--		if (sta) {
--			if (test_sta_flags(sta, WLAN_STA_PS)) {
--				/*
--				 * The STA is in power save mode, so assume
--				 * that this TX packet failed because of that.
--				 */
--				ieee80211_handle_filtered_frame(local, sta, skb);
--				rcu_read_unlock();
--				return;
--			}
-+	sta = sta_info_get(local, hdr->addr1);
-+
-+	if (sta) {
-+		if (info->status.excessive_retries &&
-+		    test_sta_flags(sta, WLAN_STA_PS)) {
-+			/*
-+			 * The STA is in power save mode, so assume
-+			 * that this TX packet failed because of that.
-+			 */
-+			ieee80211_handle_filtered_frame(local, sta, skb);
-+			rcu_read_unlock();
-+			return;
- 		}
--	}
- 
--	fc = hdr->frame_control;
-+		fc = hdr->frame_control;
-+
-+		if ((info->flags & IEEE80211_TX_STAT_AMPDU_NO_BACK) &&
-+		    (ieee80211_is_data_qos(fc))) {
-+			u16 tid, ssn;
-+			u8 *qc;
- 
--	if ((info->flags & IEEE80211_TX_STAT_AMPDU_NO_BACK) &&
--	    (ieee80211_is_data_qos(fc))) {
--		u16 tid, ssn;
--		u8 *qc;
--		sta = sta_info_get(local, hdr->addr1);
--		if (sta) {
- 			qc = ieee80211_get_qos_ctl(hdr);
- 			tid = qc[0] & 0xf;
- 			ssn = ((le16_to_cpu(hdr->seq_ctrl) + 0x10)
-@@ -576,17 +574,19 @@ void ieee80211_tx_status(struct ieee8021
- 			ieee80211_send_bar(sta->sdata, hdr->addr1,
- 					   tid, ssn);
- 		}
--	}
- 
--	if (info->flags & IEEE80211_TX_STAT_TX_FILTERED) {
--		sta = sta_info_get(local, hdr->addr1);
--		if (sta) {
-+		if (info->flags & IEEE80211_TX_STAT_TX_FILTERED) {
- 			ieee80211_handle_filtered_frame(local, sta, skb);
- 			rcu_read_unlock();
- 			return;
-+		} else {
-+			if (info->status.excessive_retries)
-+				sta->tx_retry_failed++;
-+			sta->tx_retry_count += info->status.retry_count;
- 		}
--	} else
-+
- 		rate_control_tx_status(local->mdev, skb);
-+	}
- 
- 	rcu_read_unlock();
- 
+Well.. The disassociation part not, but what is trickering that
+(association/authentication timeout) may still be ;-).
 
 
+> > I put up a (sanitized) -dd output here
+> > http://bugzilla.kernel.org/show_bug.cgi?id=11476
+
+Would it be possible to get unsanitized version and with -t (i.e.,
+timestamps)? If you don't want to post it publicly, feel free to send
+one directly to me. The one attached to that bug removed quite a bit of
+information that would have been useful in figuring out what happened.
+
+> Logs seem to indicate a normal failure of the 4 way handshake; are you
+> sure your PSK is correct?  It actually looks like the AP doesn't ever
+> get message #2 from your machine, and just retransmits message #1 of the
+> handshake.  I'm pretty sure that if
+> 8ab65b03b7893da4a49009e7e356e36e27b0c407 had anything to do with it, you
+> wouldn't be getting this far and the AP would have denied association in
+> the first place.
+
+There are more than one different types of issues shown in the log. I'm
+not sure which one would be the key one here. Anyway, I would agree that
+the commit that removed an empty ext. supp rates IE has nothing to do
+with this.
+
+
+As far as suspend is concerned, which distro is used here? Does it
+unload the driver (i.e., remove the netdev) on suspend? If yes, you will
+need to update wpa_supplicant 0.6.4 which handles that disappearing and
+reappearing interface. If this is something else, I would need to get
+more complete debug log from wpa_supplicant..
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
