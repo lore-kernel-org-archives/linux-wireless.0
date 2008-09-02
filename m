@@ -1,231 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:28171 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752353AbYICUmb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2008 16:42:31 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 3/3] mac80211: Fix rate scale initialization in IBSS
-Date: Wed,  3 Sep 2008 23:42:20 +0300
-Message-Id: <1220474540-16737-4-git-send-email-tomas.winkler@intel.com> (sfid-20080903_224234_479499_BDB95EAC)
-In-Reply-To: <1220474540-16737-3-git-send-email-tomas.winkler@intel.com>
-References: <1220474540-16737-1-git-send-email-tomas.winkler@intel.com>
- <1220474540-16737-2-git-send-email-tomas.winkler@intel.com>
- <1220474540-16737-3-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:34153 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751755AbYIBTal (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 15:30:41 -0400
+Date: Tue, 2 Sep 2008 12:29:38 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Cc: bugme-daemon@bugzilla.kernel.org, karthikg@deccantechnosoft.com
+Subject: Re: [Bugme-new] [Bug 11483] New: Raw socket tx/rx program for
+ "ath0" shows "sending: : No buffer space available"
+Message-Id: <20080902122938.f3858d6d.akpm@linux-foundation.org> (sfid-20080902_213052_726990_87D4F3CC)
+In-Reply-To: <bug-11483-10286@http.bugzilla.kernel.org/>
+References: <bug-11483-10286@http.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This patch address some IBSS rate issues introduced
-or not covered by
-6bc37c06bc424bcf3f944e6a79e2d5bb537e02ed
-and 8318d78a44d49ac1edf2bdec7299de3617c4232e patches.
+(switched to email.  Please respond via emailed reply-to-all, not via the
+bugzilla web interface).
 
-This patch:
-1. Moves addition of IBSS station from
-prepare_for_handlers to ieee80211_rx_bss_info when triggered from beacon
-eliminating bogus supported rates.
-2. Initialize properly supported rates also in IBSS merging
-3. Ensure that mandatory rates are always added into supported
-rates. This is needed in case when station addition is triggered from
-non beacon/probe packet. Some management frames need to be sent
-4. Remove initialization of supported rates from self rates. This path
-was dead code after 6bc37c06bc4 and in general incorrect.
+I assume this is an atheros driver problem, not a core networking
+problem..
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Cc: Vladimir Koutny <vlado@work.ksp.sk>
----
- net/mac80211/mlme.c |   90 ++++++++++++++++++++++++++++++++++++---------------
- net/mac80211/rx.c   |    4 --
- 2 files changed, 64 insertions(+), 30 deletions(-)
+On Tue,  2 Sep 2008 12:07:51 -0700 (PDT)
+bugme-daemon@bugzilla.kernel.org wrote:
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 75510a9..c396c35 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2557,6 +2557,33 @@ u64 ieee80211_sta_get_rates(struct ieee80211_local *local,
- 	return supp_rates;
- }
- 
-+static u64 ieee80211_sta_get_mandatory_rates(struct ieee80211_local *local,
-+					enum ieee80211_band band)
-+{
-+	struct ieee80211_supported_band *sband;
-+	struct ieee80211_rate *bitrates;
-+	u64 mandatory_rates;
-+	enum ieee80211_rate_flags mandatory_flag;
-+	int i;
-+
-+	sband = local->hw.wiphy->bands[band];
-+	if (!sband) {
-+		WARN_ON(1);
-+		sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+	}
-+
-+	if (band == IEEE80211_BAND_2GHZ)
-+		mandatory_flag = IEEE80211_RATE_MANDATORY_B;
-+	else
-+		mandatory_flag = IEEE80211_RATE_MANDATORY_A;
-+
-+	bitrates = sband->bitrates;
-+	mandatory_rates = 0;
-+	for (i = 0; i < sband->n_bitrates; i++)
-+		if (bitrates[i].flags & mandatory_flag)
-+			mandatory_rates |= BIT(i);
-+	return mandatory_rates;
-+}
- 
- static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 				  struct ieee80211_mgmt *mgmt,
-@@ -2568,9 +2595,11 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 	int freq, clen;
- 	struct ieee80211_sta_bss *bss;
- 	struct sta_info *sta;
--	u64 beacon_timestamp, rx_timestamp;
- 	struct ieee80211_channel *channel;
-+	u64 beacon_timestamp, rx_timestamp;
-+	u64 supp_rates = 0;
- 	bool beacon = ieee80211_is_beacon(mgmt->frame_control);
-+	enum ieee80211_band band = rx_status->band;
- 	DECLARE_MAC_BUF(mac);
- 	DECLARE_MAC_BUF(mac2);
- 
-@@ -2578,30 +2607,41 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 
- 	if (ieee80211_vif_is_mesh(&sdata->vif) && elems->mesh_id &&
- 	    elems->mesh_config && mesh_matches_local(elems, sdata)) {
--		u64 rates = ieee80211_sta_get_rates(local, elems,
--						rx_status->band);
-+		supp_rates = ieee80211_sta_get_rates(local, elems, band);
- 
--		mesh_neighbour_update(mgmt->sa, rates, sdata,
-+		mesh_neighbour_update(mgmt->sa, supp_rates, sdata,
- 				      mesh_peer_accepts_plinks(elems));
- 	}
- 
- 	rcu_read_lock();
- 
- 	if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS && elems->supp_rates &&
--	    memcmp(mgmt->bssid, sdata->u.sta.bssid, ETH_ALEN) == 0 &&
--	    (sta = sta_info_get(local, mgmt->sa))) {
--		u64 prev_rates;
--		u64 supp_rates = ieee80211_sta_get_rates(local, elems,
--							rx_status->band);
--
--		prev_rates = sta->supp_rates[rx_status->band];
--		sta->supp_rates[rx_status->band] = supp_rates;
--		if (sta->supp_rates[rx_status->band] == 0) {
--			/* No matching rates - this should not really happen.
--			 * Make sure that at least one rate is marked
--			 * supported to avoid issues with TX rate ctrl. */
--			sta->supp_rates[rx_status->band] =
--				sdata->u.sta.supp_rates_bits[rx_status->band];
-+	    memcmp(mgmt->bssid, sdata->u.sta.bssid, ETH_ALEN) == 0) {
-+
-+		supp_rates = ieee80211_sta_get_rates(local, elems, band);
-+
-+		sta = sta_info_get(local, mgmt->sa);
-+		if (sta) {
-+			u64 prev_rates;
-+
-+			prev_rates = sta->supp_rates[band];
-+			/* make sure mandatory rates are always added */
-+			sta->supp_rates[band] = supp_rates |
-+				ieee80211_sta_get_mandatory_rates(local, band);
-+
-+#ifdef CONFIG_MAC80211_IBSS_DEBUG
-+			if (sta->supp_rates[band] != prev_rates)
-+				printk(KERN_DEBUG "%s: updated supp_rates set "
-+				    "for %s based on beacon info (0x%llx | "
-+				    "0x%llx -> 0x%llx)\n",
-+				    sdata->dev->name, print_mac(mac, sta->addr),
-+				    (unsigned long long) prev_rates,
-+				    (unsigned long long) supp_rates,
-+				    (unsigned long long) sta->supp_rates[band]);
-+#endif
-+		} else {
-+			ieee80211_ibss_add_sta(sdata, NULL, mgmt->bssid,
-+					       mgmt->sa, supp_rates);
- 		}
- 	}
- 
-@@ -2683,7 +2723,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 		bss->supp_rates_len += clen;
- 	}
- 
--	bss->band = rx_status->band;
-+	bss->band = band;
- 
- 	bss->timestamp = beacon_timestamp;
- 	bss->last_update = jiffies;
-@@ -2738,7 +2778,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 			 * e.g: at 1 MBit that means mactime is 192 usec earlier
- 			 * (=24 bytes * 8 usecs/byte) than the beacon timestamp.
- 			 */
--			int rate = local->hw.wiphy->bands[rx_status->band]->
-+			int rate = local->hw.wiphy->bands[band]->
- 					bitrates[rx_status->rate_idx].bitrate;
- 			rx_timestamp = rx_status->mactime + (24 * 8 * 10 / rate);
- 		} else if (local && local->ops && local->ops->get_tsf)
-@@ -2766,7 +2806,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 			ieee80211_sta_join_ibss(sdata, &sdata->u.sta, bss);
- 			ieee80211_ibss_add_sta(sdata, NULL,
- 					       mgmt->bssid, mgmt->sa,
--					       BIT(rx_status->rate_idx));
-+					       supp_rates);
- 		}
- 	}
- 
-@@ -3032,7 +3072,6 @@ void ieee80211_sta_rx_mgmt(struct ieee80211_sub_if_data *sdata, struct sk_buff *
- 	kfree_skb(skb);
- }
- 
--
- static void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 					 struct sk_buff *skb)
- {
-@@ -4316,10 +4355,9 @@ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
- 
- 	set_sta_flags(sta, WLAN_STA_AUTHORIZED);
- 
--	if (supp_rates)
--		sta->supp_rates[band] = supp_rates;
--	else
--		sta->supp_rates[band] = sdata->u.sta.supp_rates_bits[band];
-+	/* make sure mandatory rates are always added */
-+	sta->supp_rates[band] = supp_rates |
-+			ieee80211_sta_get_mandatory_rates(local, band);
- 
- 	rate_control_rate_init(sta, local);
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index fd83ef7..7e09b30 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1743,10 +1743,6 @@ static int prepare_for_handlers(struct ieee80211_sub_if_data *sdata,
- 		if (!bssid)
- 			return 0;
- 		if (ieee80211_is_beacon(hdr->frame_control)) {
--			if (!rx->sta)
--				rx->sta = ieee80211_ibss_add_sta(sdata,
--						rx->skb, bssid, hdr->addr2,
--						BIT(rx->status->rate_idx));
- 			return 1;
- 		}
- 		else if (!ieee80211_bssid_match(bssid, sdata->u.sta.bssid)) {
--- 
-1.5.4.1
+> http://bugzilla.kernel.org/show_bug.cgi?id=11483
+> 
+>            Summary: Raw socket tx/rx program for "ath0" shows "sending: : No
+>                     buffer space available"
+>            Product: Networking
+>            Version: 2.5
+>      KernelVersion: Linux 2.6.26.3 armv5teb
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: high
+>           Priority: P1
+>          Component: IPV4
+>         AssignedTo: shemminger@linux-foundation.org
+>         ReportedBy: karthikg@deccantechnosoft.com
+> 
+> 
+> Latest working kernel version:Linux 2.6.26.3 armv5teb
+> Earliest failing kernel version:Linux 2.6.26.3 armv5teb
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+That is contradictory.  What we're asking is "is this a regression?  If
+so, when did we break it?" I don't think the atheros driver is old
+enough to have regressed.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+
+> Distribution:OpenWrt Kamikaze 7.09, madwifi
+> Hardware Environment: GW2348-4 board with ARM (IXP425 processor) + Ubiquiti SR5
+> radios at miniPCI slots
+> Software Environment:Socket programming with Iperf
+> Problem Description:
+> Message, "sending: : No buffer space available", is shown when bulk IP traffic
+> is transmitted or received, using raw socket transmission program
+> 
+> Also, some kernel network module crash message is displayed. Please find the
+> attached crash message encountered
+> 
+> Steps to reproduce:
+> 1. start the User level socket program for routing custom IP packets, (by using
+> raw transmission and reception socket) in "ath0" interface.
+> 2. Now start the testing using Iperf for testing routing of the user program
+> 
+> 
+> --
+> Also refer to the attachment
+> 
+
+: in mcmp_snmp_smtx function 
+: 
+:  SNMP Packets sending..........
+:  SNMP Packets sending. over.........NETDEV WATCHDOG: wifi1: transmit timed out
+: ------------[ cut here ]------------
+: WARNING: at net/sched/sch_generic.c:223 ()
+: Modules linked in: prism54 orinoco_plx orinoco_pci ipw2200 ipw2100 orinoco hermes ath_pci wlan_xauth wlan_wep wlan_tkip wlan_ccmp wlan_acl ath_rate_minstrel ath_hal(P) wlan_scan_ap wlan nf_nat_tftp nf_conntrack_tftp nf_nat_irc nf_conntrack_irc nf_nat_ftp nf_conntrack_ftp ipt_TTL xt_MARK ipt_ECN xt_CLASSIFY ipt_ttl xt_time ipt_time xt_tcpmss xt_statistic xt_mark xt_mac xt_length ipt_ecn xt_DSCP xt_dscp ipt_LOG xt_CHAOS xt_DELUDE xt_TARPIT xt_quota xt_portscan xt_pkttype xt_physdev iptable_raw ip6t_REJECT ip6t_mh ip6t_ah ip6table_raw ip6_queue ip6table_filter ip6_tables nf_conntrack_ipv6 ppp_async ppp_generic slhc crc_ccitt ath9k usbcore mac80211 cfg80211 ipv6 ieee80211_crypt_ccmp ieee80211_crypt_tkip ieee80211_crypt_wep ieee80211 ieee80211_crypt michael_mic arc4 aes_generic deflate ecb cbc crypto_blkcipher crypto_hash cryptomgr crypto_algapi [last unloaded: wlan_scan_sta]
+: Function entered at [<c0025890>] from [<c0032128>]
+: Function entered at [<c00320e4>] from [<c0152c00>]
+:  r6:c0221aa0 r5:c3090000 r4:c022c45c
+: Function entered at [<c0152b54>] from [<c003b13c>]
+:  r5:c0152b54 r4:00000100
+: Function entered at [<c003aff4>] from [<c0036ff4>]
+:  r8:0001cea8 r7:c0206058 r6:0000000a r5:c02218ac r4:00000001
+: Function entered at [<c0036f98>] from [<c0037380>]
+:  r6:00000000 r5:c020fc8c r4:00000005
+: Function entered at [<c003733c>] from [<c0021048>]
+: Function entered at [<c0021000>] from [<c0021664>]
+: Exception stack(0xc0203f64 to 0xc0203fac)
+: 3f60:          c3d48000 c3c1a8a0 a0000013 60000013 c0022ae4 c0202000 c001eef8 
+: 3f80: c0206058 0001cea8 690541c2 0001cd3c c0203fc0 c0203fac c0203fac c00229a8 
+: 3fa0: c00229a8 60000013 ffffffff                                              
+:  r6:00000020 r5:0000001f r4:ffffffff
+: Function entered at [<c0022970>] from [<c01bb3a4>]
+:  r5:c021c230 r4:c0224310
+: Function entered at [<c01bb350>] from [<c0008b80>]
+: Function entered at [<c00088fc>] from [<00008034>]
+: ---[ end trace 9e368de2b60a35e4 ]---
+: 
+
+I suspect that testing 2.6.27-rc5 would be useful - quite a few fixes
+are flowing into that driver.
+
+Thanks.
+
 
