@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35550 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752242AbYIENAg (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33267 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752002AbYIBGK5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2008 09:00:36 -0400
-Date: Fri, 5 Sep 2008 08:56:27 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Wang Chen <wangchen@cn.fujitsu.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	NETDEV <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 16/18] netdevice zd1201: Convert directly reference of
-	netdev->priv to netdev->ml_priv
-Message-ID: <20080905125626.GB3027@tuxdriver.com> (sfid-20080905_150047_487558_4CA2B388)
-References: <48C0A219.2030004@cn.fujitsu.com> <48C0A7A0.9030200@cn.fujitsu.com>
+	Tue, 2 Sep 2008 02:10:57 -0400
+Message-ID: <4b0be9b641de902cb7de4ad50686f6e1.squirrel@secure.sipsolutions.net>
+In-Reply-To: <1220319536.28282.128.camel@debian.sh.intel.com>
+References: <20080901160658.GA11063@google.com>
+    <1220319536.28282.128.camel@debian.sh.intel.com>
+Date: Tue, 2 Sep 2008 08:10:09 +0200 (CEST)
+Subject: Re: new: regression iwl3945/mac80211 endless after suspend
+     associate/deassociate loop
+From: "Johannes Berg" <johannes@sipsolutions.net>
+To: "Zhu Yi" <yi.zhu@intel.com>
+Cc: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"LKML" <linux-kernel@vger.kernel.org>, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org,
+	"Jan-Espen Pettersen" <sigsegv@radiotube.org>,
+	"John W. Linville" <linville@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <48C0A7A0.9030200@cn.fujitsu.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 05, 2008 at 11:29:36AM +0800, Wang Chen wrote:
-> We have some reasons to kill netdev->priv:
-> 1. netdev->priv is equal to netdev_priv().
-> 2. netdev_priv() wraps the calculation of netdev->priv's offset, obviously
->    netdev_priv() is more flexible than netdev->priv.
-> But we cann't kill netdev->priv, because so many drivers reference to it
-> directly.
-> 
-> OK, becasue Dave S. Miller said, "every direct netdev->priv usage is a bug",
-> and I want to kill netdev->priv later, I decided to convert all the direct
-> reference of netdev->priv first.
-> 
-> Different to readonly reference of netdev->priv, in this driver, netdev->priv
-> was changed. I use netdev->ml_priv to replace netdev->priv.
-> 
-> Signed-off-by: Wang Chen <wangchen@cn.fujitsu.com>
+Zhu Yi wrote:
+> On Mon, 2008-09-01 at 19:07 +0300, Michael S. Tsirkin wrote:
+>> [16482.909453] eth1: associate with AP XX:XX:XX:XX:XX:XX
+>> [16482.918553] eth1: RX ReassocResp from XX:XX:XX:XX:XX:XX
+>> (capab=0x411 status=0 aid=1)
+>> [16482.918564] eth1: associated
+>> [16492.920224] eth1: disassociating by local choice (reason=3)
+>> [16492.920986] eth1: disassociating by local choice (reason=3)
+>
+> It is exactly 10 seconds the local STA sends the deauth_leaving frame
+> before associated everytime. I wonder if it is the timeout for some
+> wireless config tools. NM?
 
-Same comment as the other patch.
+"by local choice" means wext requested this, not a kernel bug.
 
-Also, I have to be honest and say that I had never been aware of
-dev->ml_priv before, so I'm not entirely sure what it is.  However,
-from the comment at it's definision ("mid-layer private") and it's
-usage in qeth, loopback, and ppp, I'm not at all sure that you are
-using it as intended.
+johannes
 
-Can you explain?
-
-Thanks,
-
-John
--- 
-John W. Linville
-linville@tuxdriver.com
