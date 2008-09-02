@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:49400 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754219AbYIVV7k (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42826 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751325AbYIBPPf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 17:59:40 -0400
-From: Chr <chunkeey@web.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: prism54 stopped working after upgrade from kernel 2.6.25.14-69.fc8 to 2.6.26.3-14.fc8
-Date: Mon, 22 Sep 2008 23:59:40 +0200
-Cc: Philippe Waroquiers <philippe.waroquiers@skynet.be>,
-	linux-wireless@vger.kernel.org
-References: <CB9B2237C21D46F3B852E45F75E91C52@soleil> <200809222332.00500.chunkeey@web.de> <1221947069.11865.11.camel@localhost.localdomain>
-In-Reply-To: <1221947069.11865.11.camel@localhost.localdomain>
+	Tue, 2 Sep 2008 11:15:35 -0400
+Date: Tue, 2 Sep 2008 11:06:25 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Zhu Yi <yi.zhu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	LKML <linux-kernel@vger.kernel.org>, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org,
+	Jan-Espen Pettersen <sigsegv@radiotube.org>
+Subject: Re: new: regression iwl3945/mac80211 endless after suspend
+	associate/deassociate loop
+Message-ID: <20080902150625.GC3050@tuxdriver.com> (sfid-20080902_171539_982317_42ABAB5C)
+References: <20080901160658.GA11063@google.com> <1220319536.28282.128.camel@debian.sh.intel.com> <4b0be9b641de902cb7de4ad50686f6e1.squirrel@secure.sipsolutions.net> <20080902130429.GB19172@google.com> <1220362201.3176.4.camel@borkbork.foobar.com> <20080902145840.GE19172@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200809222359.40354.chunkeey@web.de> (sfid-20080922_235950_863585_299DAED8)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080902145840.GE19172@google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 20 September 2008 23:44:29 Dan Williams wrote:
-> On Mon, 2008-09-22 at 23:32 +0200, Chr wrote:
-> > > > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=co
-> > > >mmit ;h=aaa1553512b9105699113ea7e2ea726f3d9d4de2
-> > >
-> > > Is that commit not in stable 2.6.26 yet or something?
-> >
-> > Hmm, no? AFAIK The mac80211 multiqueue changes went in somewhere in the
-> > 2.6.27-rc cycle. so 2.6.26.stable doesn't need any extra patches, right?
->
-> Ah yeah right; I guess I don't understand the link you posted then.  I'd
-> thought it was something like "you need this patch which Fedora doesn't
-> have in their kernel".
-Hmm? I though fedora backported multiqueue back into their 2.6.26?
+On Tue, Sep 02, 2008 at 05:58:41PM +0300, Michael S. Tsirkin wrote:
+> On Tue, Sep 02, 2008 at 09:30:01AM -0400, Dan Williams wrote:
+> > On Tue, 2008-09-02 at 16:04 +0300, Michael S. Tsirkin wrote:
 
-Atleast, the original (but with a buggy p54) multiqueue patch seems to be in 
-the linux-wirless-2.6-pending.diff/patch file... but this fix is nowhere to 
-be found inside fedora's kernel source?
+> > > But it happens to work fine without 8ab65b03b7893da4a49009e7e356e36e27b0c407.
+> > 
+> > That's really odd; that patch (the don't-send-empty-extended-rates-IE
+> > patch) shouldn't have anything to do with this behavior, if it did you
+> > wouldn't get associated to the AP in the first place I think.  You're
+> > 100% sure that this patch is causing the problem?
+> 
+> No, not sure. But reverting it seems to have helped.
+> And there does not seem to be anything else relevant between rc4 and
+> rc5.
 
-So, Dan? can you add that patch to the next fedora's 2.6.26 kernel release? 
+So you determined that commit by eye rather than by git bisect?
+Any chance I could talk you into confirming that using git bisect?
 
-Regards,
-	Chr
+Thanks,
 
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
