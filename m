@@ -1,32 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:59057 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752717AbYIRO00 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:5721 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751554AbYIBWtK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 10:26:26 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so3389968fkq.5
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 07:26:24 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
-Date: Thu, 18 Sep 2008 16:26:21 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809181553.29140.IvDoorn@gmail.com> <20080918142133.GF1583@khazad-dum.debian.net>
-In-Reply-To: <20080918142133.GF1583@khazad-dum.debian.net>
+	Tue, 2 Sep 2008 18:49:10 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so2211949fgg.17
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Sep 2008 15:49:09 -0700 (PDT)
+Message-ID: <1ba2fa240809021549g32bb4182r416b4114394ec1bb@mail.gmail.com> (sfid-20080903_004915_205160_65AD4387)
+Date: Wed, 3 Sep 2008 01:49:08 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 08/11] iwlwifi: call apm stop on exit
+Cc: "Zhu Yi" <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	"Gregory Greenman" <gregory.greenman@intel.com>,
+	"Mohamed Abbas" <mohamed.abbas@intel.com>
+In-Reply-To: <20080902210101.GE3050@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809181626.21945.IvDoorn@gmail.com> (sfid-20080918_162629_585231_715DDA8B)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-2-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-3-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-4-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-5-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-6-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-7-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-8-git-send-email-yi.zhu@intel.com>
+	 <1219915510-3647-9-git-send-email-yi.zhu@intel.com>
+	 <20080902210101.GE3050@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> I don't know enough about the mac80211 layer and b43 to know whether
-> dev->phy.radio_on matches the hardware or not.
-
-It is the software request from mac80211 which ultimately comes from the user.
-
-Ivo
-
+On Wed, Sep 3, 2008 at 12:01 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Thu, Aug 28, 2008 at 05:25:07PM +0800, Zhu Yi wrote:
+>> From: Gregory Greenman <gregory.greenman@intel.com>
+>>
+>> This patch calls apm stop on exit and suspend and sets STATUS_EXIT_PENDING
+>> accordingly. Without this patch hardware consumes power even after driver
+>> is removed or suspended.
+>>
+>> Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+>> Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
+>> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+>> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+>
+> The two hunks of this patch seem like two different fixes, and the
+> changelog only matches the first hunk.  When you resubmit this series
+> (which I presume you will be doing with better changelogs after
+> Marcel's commentary), please split this into two patches.
+>
+It's not so obvious form the reading the patch but these two hunks
+belongs together. Without the second hunk the exit flow is not correct
+and first hunk fix has no effect.  Although I don't mind to split them
+providing it's easier to swallow.
+Thanks
+Tomas
