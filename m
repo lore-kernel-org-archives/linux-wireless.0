@@ -1,62 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:51793 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:47173 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754051AbYIOP2L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 11:28:11 -0400
-Subject: Re: [RFC] mac80211: notify the user space about low signal quality
+	id S1751121AbYIBNaL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 09:30:11 -0400
+Subject: Re: new: regression iwl3945/mac80211 endless after suspend
+	associate/deassociate loop
 From: Dan Williams <dcbw@redhat.com>
-To: Helmut Schaa <hschaa@suse.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200809151634.06448.hschaa@suse.de>
-References: <200809151416.07552.hschaa@suse.de>
-	 <200809151435.28933.hschaa@suse.de>
-	 <1221487652.10177.23.camel@localhost.localdomain>
-	 <200809151634.06448.hschaa@suse.de>
+To: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Zhu Yi <yi.zhu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	LKML <linux-kernel@vger.kernel.org>, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org,
+	Jan-Espen Pettersen <sigsegv@radiotube.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20080902130429.GB19172@google.com>
+References: <20080901160658.GA11063@google.com>
+	 <1220319536.28282.128.camel@debian.sh.intel.com>
+	 <4b0be9b641de902cb7de4ad50686f6e1.squirrel@secure.sipsolutions.net>
+	 <20080902130429.GB19172@google.com>
 Content-Type: text/plain
-Date: Mon, 15 Sep 2008 11:28:49 -0400
-Message-Id: <1221492529.10177.76.camel@localhost.localdomain> (sfid-20080915_172816_252391_61B52C2C)
+Date: Tue, 02 Sep 2008 09:30:01 -0400
+Message-Id: <1220362201.3176.4.camel@borkbork.foobar.com> (sfid-20080902_153016_096638_E55A8494)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-09-15 at 16:34 +0200, Helmut Schaa wrote:
-> Am Montag, 15. September 2008 16:07:31 schrieb Dan Williams:
-> > On Mon, 2008-09-15 at 14:35 +0200, Helmut Schaa wrote:
-> > > This patch adds a new wext event that notifies the user space about a low
-> > > signal quality. The currently used indicator is as follows: If three
-> > > successive beacons are received with a signal quality lower then 40%
-> > > user space gets informed.
+On Tue, 2008-09-02 at 16:04 +0300, Michael S. Tsirkin wrote:
+> On Tue, Sep 02, 2008 at 08:10:09AM +0200, Johannes Berg wrote:
+> > Zhu Yi wrote:
+> > > On Mon, 2008-09-01 at 19:07 +0300, Michael S. Tsirkin wrote:
+> > >> [16482.909453] eth1: associate with AP XX:XX:XX:XX:XX:XX
+> > >> [16482.918553] eth1: RX ReassocResp from XX:XX:XX:XX:XX:XX
+> > >> (capab=0x411 status=0 aid=1)
+> > >> [16482.918564] eth1: associated
+> > >> [16492.920224] eth1: disassociating by local choice (reason=3)
+> > >> [16492.920986] eth1: disassociating by local choice (reason=3)
 > > >
-> > > Any ideas about which indicators should be used? Comments?
-> >
-> > So why does this need a new event?  Can't wpa_supplicant monitor the
-> > signal quality (or level/noise if the driver doesn't provide "quality")
-> > and do what it needs to do without any changes to the kernel at all?
+> > > It is exactly 10 seconds the local STA sends the deauth_leaving frame
+> > > before associated everytime. I wonder if it is the timeout for some
+> > > wireless config tools. NM?
+> > 
+> > "by local choice" means wext requested this, not a kernel bug.
+> > 
+> > johannes
 > 
-> I thought about that as well but I'm not sure if the signal quality/strength 
-> is a well enough indicator.
+> Sure, it's wpa_supplicant in ubuntu gutsy doing it.
+> 
+> $wpa_supplicant -version
+>  wpa_supplicant v0.5.8
+>  Copyright (c) 2003-2007, Jouni Malinen <j@w1.fi> and contributors
+> 
+> But it happens to work fine without 8ab65b03b7893da4a49009e7e356e36e27b0c407.
 
-Beacon misses should be a factor in quality, just like failed
-decryptions or excessive retries.  Any of these are indications that the
-"link" sucks and you might want to try finding a better AP.  Beacon
-misses are just one piece of the whole quality thing.
-
-> For example if we want to consider the number of missed beacons the current 
-> IWEVQUAL event is not enough to expose this information.
-> Additionally some devices can report missed beacons. Maybe even the quality 
-> values reported by the drivers are not comparable at all (although they are 
-> normalized to be between 0 and 100). Hence my intention was that mac80211 and 
-> the driver might know better which indicators matter.
-
-So if the values aren't comparable, we _make_ them comparable.  The
-drivers can certainly tell mac80211 which things they are capable of
-reporting for quality and the stack can figure them in to the final
-"quality" measurement.  However, I do agree that having separate
-indicators for the different factors is a good thing.  Thus something
-like what Holger suggests would be better from my perspective than an
-ethereal concept like a "roaming threshold".  Maybe just a poor choice
-of terms?
+That's really odd; that patch (the don't-send-empty-extended-rates-IE
+patch) shouldn't have anything to do with this behavior, if it did you
+wouldn't get associated to the AP in the first place I think.  You're
+100% sure that this patch is causing the problem?  Can you post the
+output of running wpa_supplicant with the "-dddt" flags and also post
+the 'iwlist scan' output for your AP?
 
 Dan
-
 
