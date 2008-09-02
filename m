@@ -1,102 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:36929 "EHLO
+Received: from ey-out-2122.google.com ([74.125.78.26]:52147 "EHLO
 	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753892AbYIRPYK (ORCPT
+	with ESMTP id S1752813AbYIBNEj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 11:24:10 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so1657440eyi.37
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 08:24:09 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [PATCH] rfkill: clarify usage of rfkill_force_state() and rfkill->get_state()
-Date: Thu, 18 Sep 2008 17:24:03 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-References: <20080918145236.GJ1583@khazad-dum.debian.net> <1221751166-9927-1-git-send-email-hmh@hmh.eng.br>
-In-Reply-To: <1221751166-9927-1-git-send-email-hmh@hmh.eng.br>
+	Tue, 2 Sep 2008 09:04:39 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so1170720eyi.37
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Sep 2008 06:04:36 -0700 (PDT)
+Date: Tue, 2 Sep 2008 16:04:31 +0300
+From: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Zhu Yi <yi.zhu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	LKML <linux-kernel@vger.kernel.org>, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org,
+	Jan-Espen Pettersen <sigsegv@radiotube.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: new: regression iwl3945/mac80211 endless after suspend
+	associate/deassociate loop
+Message-ID: <20080902130429.GB19172@google.com> (sfid-20080902_150501_409380_08323539)
+References: <20080901160658.GA11063@google.com> <1220319536.28282.128.camel@debian.sh.intel.com> <4b0be9b641de902cb7de4ad50686f6e1.squirrel@secure.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200809181724.03723.IvDoorn@gmail.com> (sfid-20080918_172415_657434_96B02FF3)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4b0be9b641de902cb7de4ad50686f6e1.squirrel@secure.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 18 September 2008, Henrique de Moraes Holschuh wrote:
-> rfkill_force_state() is used to update the rfkill core's idea of what is
-> really happening RIGHT NOW to the transmitter hardware in a PUSH model.
+On Tue, Sep 02, 2008 at 08:10:09AM +0200, Johannes Berg wrote:
+> Zhu Yi wrote:
+> > On Mon, 2008-09-01 at 19:07 +0300, Michael S. Tsirkin wrote:
+> >> [16482.909453] eth1: associate with AP XX:XX:XX:XX:XX:XX
+> >> [16482.918553] eth1: RX ReassocResp from XX:XX:XX:XX:XX:XX
+> >> (capab=0x411 status=0 aid=1)
+> >> [16482.918564] eth1: associated
+> >> [16492.920224] eth1: disassociating by local choice (reason=3)
+> >> [16492.920986] eth1: disassociating by local choice (reason=3)
+> >
+> > It is exactly 10 seconds the local STA sends the deauth_leaving frame
+> > before associated everytime. I wonder if it is the timeout for some
+> > wireless config tools. NM?
 > 
-> rfkill->get_state() does the same, in a PULL model.
+> "by local choice" means wext requested this, not a kernel bug.
 > 
-> Neither of them change the real hardware radio state through a call to
-> rfkill->toggle_radio() or anything of the sort, so they must deal with the
-> real, current state of the hardware.
-> 
-> Change some documentation to make that more clear (I hope).
-> 
-> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> johannes
 
-See my other mail I just send out.
-But I don't quite agree on this change of rfkill event interpretation.
+Sure, it's wpa_supplicant in ubuntu gutsy doing it.
 
-Ivo
+$wpa_supplicant -version
+ wpa_supplicant v0.5.8
+ Copyright (c) 2003-2007, Jouni Malinen <j@w1.fi> and contributors
 
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->  Documentation/rfkill.txt |   10 ++++++++++
->  include/linux/rfkill.h   |    3 +++
->  net/rfkill/rfkill.c      |    3 +++
->  3 files changed, 16 insertions(+), 0 deletions(-)
-> 
-> diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
-> index b65f079..0143f1e 100644
-> --- a/Documentation/rfkill.txt
-> +++ b/Documentation/rfkill.txt
-> @@ -461,6 +461,16 @@ mandatory when the device has a hardware rfkill line, or when something else
->  like the firmware could cause its state to be changed without going through the
->  rfkill class.
->  
-> +**** ATTENTION ****
-> +Both the state returned by the rfkill->get_state() hook, and the state
-> +passed to rfkill_force_state() MUST BE THE REAL, CURRENT STATE OF THE
-> +HARDWARE TRANSMITTER.  Never use for these functions the "desired" state,
-> +"user requested" state, or anything of the sort.
-> +
-> +Also, be warned that rfkill_force_state() cannot be called from atomic context,
-> +so interrupt handlers will have to make use of a workqueue to do it.
-> +**** ATTENTION ****
-> +
->  Some hardware provides events when its status changes.  In these cases, it is
->  best for the driver to not provide a get_state hook, and instead register the
->  rfkill class *already* with the correct status, and keep it updated using
-> diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-> index 4cd64b0..92b9c72 100644
-> --- a/include/linux/rfkill.h
-> +++ b/include/linux/rfkill.h
-> @@ -80,6 +80,9 @@ enum rfkill_state {
->   *      may be called from atomic context, should return 0 on success.
->   *      Either this handler OR judicious use of rfkill_force_state() is
->   *      MANDATORY for any driver capable of RFKILL_STATE_HARD_BLOCKED.
-> + *      THIS HOOK MUST RETURN THE CURRENT, REAL STATE OF THE HARDWARE
-> + *      TRANSMITTER, and not the "desired state", "user requested state"
-> + *      or anything of the sort.
->   * @led_trigger: A LED trigger for this button's LED.
->   * @dev: Device structure integrating the switch into device tree.
->   * @node: Used to place switch into list of all switches known to the
-> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-> index f949a48..64a53f1 100644
-> --- a/net/rfkill/rfkill.c
-> +++ b/net/rfkill/rfkill.c
-> @@ -333,6 +333,9 @@ EXPORT_SYMBOL_GPL(rfkill_restore_states);
->   * a notification by the firmware/hardware of the current *real*
->   * state of the radio rfkill switch.
->   *
-> + * The state passed to this function MUST MATCH THE CURRENT,
-> + * REAL HARDWARE STATE OF THE TRANSMITTER.
-> + *
->   * Devices which are subject to external changes on their rfkill
->   * state (such as those caused by a hardware rfkill line) MUST
->   * have their driver arrange to call rfkill_force_state() as soon
+But it happens to work fine without 8ab65b03b7893da4a49009e7e356e36e27b0c407.
 
-
+So yes, this could be some assumption that wpa_supplicant makes and that
+fails now. I guess I will try the latest version from source and report.
