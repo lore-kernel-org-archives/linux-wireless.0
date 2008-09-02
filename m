@@ -1,75 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58654 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752150AbYIFTmB (ORCPT
+Received: from gv-out-0910.google.com ([216.239.58.188]:3887 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751726AbYIBO65 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 15:42:01 -0400
-Subject: Re: [PATCH] b43legacy: Fix failure in rate-adjustment mechanism
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	John W Linville <linville@tuxdriver.com>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <48C2DBCB.1030706@lwfinger.net>
-References: <48c2cd1a.pA60sTEK0WsW6wtt%Larry.Finger@lwfinger.net>
-	 <200809062055.51797.mb@bu3sch.de> <1220727470.10102.9.camel@johannes.berg>
-	 <200809062104.15274.mb@bu3sch.de>  <48C2DBCB.1030706@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-k4cyUyQ4Z+2NGGg3PUBl"
-Date: Sat, 06 Sep 2008 21:41:55 +0200
-Message-Id: <1220730115.10102.15.camel@johannes.berg> (sfid-20080906_214207_051861_3653CFA7)
-Mime-Version: 1.0
+	Tue, 2 Sep 2008 10:58:57 -0400
+Received: by gv-out-0910.google.com with SMTP id e6so59392gvc.37
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Sep 2008 07:58:52 -0700 (PDT)
+Date: Tue, 2 Sep 2008 17:58:41 +0300
+From: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Zhu Yi <yi.zhu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	LKML <linux-kernel@vger.kernel.org>, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org,
+	Jan-Espen Pettersen <sigsegv@radiotube.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: new: regression iwl3945/mac80211 endless after suspend
+	associate/deassociate loop
+Message-ID: <20080902145840.GE19172@google.com> (sfid-20080902_165903_228546_BDB901C4)
+References: <20080901160658.GA11063@google.com> <1220319536.28282.128.camel@debian.sh.intel.com> <4b0be9b641de902cb7de4ad50686f6e1.squirrel@secure.sipsolutions.net> <20080902130429.GB19172@google.com> <1220362201.3176.4.camel@borkbork.foobar.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1220362201.3176.4.camel@borkbork.foobar.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Sep 02, 2008 at 09:30:01AM -0400, Dan Williams wrote:
+> On Tue, 2008-09-02 at 16:04 +0300, Michael S. Tsirkin wrote:
+> > On Tue, Sep 02, 2008 at 08:10:09AM +0200, Johannes Berg wrote:
+> > > Zhu Yi wrote:
+> > > > On Mon, 2008-09-01 at 19:07 +0300, Michael S. Tsirkin wrote:
+> > > >> [16482.909453] eth1: associate with AP XX:XX:XX:XX:XX:XX
+> > > >> [16482.918553] eth1: RX ReassocResp from XX:XX:XX:XX:XX:XX
+> > > >> (capab=0x411 status=0 aid=1)
+> > > >> [16482.918564] eth1: associated
+> > > >> [16492.920224] eth1: disassociating by local choice (reason=3)
+> > > >> [16492.920986] eth1: disassociating by local choice (reason=3)
+> > > >
+> > > > It is exactly 10 seconds the local STA sends the deauth_leaving frame
+> > > > before associated everytime. I wonder if it is the timeout for some
+> > > > wireless config tools. NM?
+> > > 
+> > > "by local choice" means wext requested this, not a kernel bug.
+> > > 
+> > > johannes
+> > 
+> > Sure, it's wpa_supplicant in ubuntu gutsy doing it.
+> > 
+> > $wpa_supplicant -version
+> >  wpa_supplicant v0.5.8
+> >  Copyright (c) 2003-2007, Jouni Malinen <j@w1.fi> and contributors
+> > 
+> > But it happens to work fine without 8ab65b03b7893da4a49009e7e356e36e27b0c407.
+> 
+> That's really odd; that patch (the don't-send-empty-extended-rates-IE
+> patch) shouldn't have anything to do with this behavior, if it did you
+> wouldn't get associated to the AP in the first place I think.  You're
+> 100% sure that this patch is causing the problem?
 
---=-k4cyUyQ4Z+2NGGg3PUBl
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+No, not sure. But reverting it seems to have helped.
+And there does not seem to be anything else relevant between rc4 and
+rc5.
 
-On Sat, 2008-09-06 at 14:36 -0500, Larry Finger wrote:
+>  Can you post the
+> output of running wpa_supplicant with the "-dddt" flags
 
-> What I see are lots of
->=20
-> b43legacy: In b43legacy_handle_hwtxstatus, hw->flags =3D 0x1
->=20
-> and this is the only one that ever triggered. ATM, I'm not sure why=20
-> handle_irq_transmit_status() is not called.
+I put up a (sanitized) -dd output here
+http://bugzilla.kernel.org/show_bug.cgi?id=11476
 
-The mechanism depends on the card revision, but according to
-drivers/net/wireless/b43legacy/dma.c it's always via the dma/pio
-mechanism for legacy cards:
+> and also post
+> the 'iwlist scan' output for your AP?
+> 
+> Dan
 
-        if (dev->dev->id.revision < 5) {
-                ring =3D b43legacy_setup_dmaring(dev, 3, 0, type);
-                if (!ring)
-                        goto err_destroy_rx0;
-                dma->rx_ring3 =3D ring;
-        }
-
-johannes
-
---=-k4cyUyQ4Z+2NGGg3PUBl
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIwtz/AAoJEKVg1VMiehFYoUYP/jNHgfkW6yUj4OC3LwRbyPsS
-UxOV7suWUcjwB2DsnpBwVnkCzBWxlIh74qDVXrY9vBxUXiMKbcLTVbaBnlJ5tIE+
-/jH8AaX6xfCdJdzkI61SJ61cfnG7ePzXDUpjx8p6fSg/RE6Czt8D0vOfvtQRGfjY
-RAwn6hKCYiKEdF4qZFjwt02I0FbVGzscY4BaQifZmNBt+y2x5znNtqd1tiepF5bn
-1nwRmJ0jU5lyLvwFUyvLGsfjIuFUsPsi5FmjB/bUFHDuonxVKWpfTaJNMf02tuHK
-Voo8mHRWIlZlxcG8vNCtCET6nV8vMt94ExrRNHGGpIacSrPZUshfX/Bf9sMPemMZ
-1vVHAMwJ5YC/MZNlR0JsPQCRL25ibb+WSe3akpl2k5Sg7E5qCplHNddag9Ohk6+H
-xszu9mS9zuktMr5NXEyhyTnhbASG8vist4e0zSTIu4oO3kaVnFUGm8MMf9h9MFOZ
-K2DMx4Tv8I5j0nlyq1rCY7suDfVtm+/a5mZx2fX4v0zwczxyVbkhD4XclqD3KBhq
-nhk5Ud6store+weHiLvtD+GbKRSrkdS1Qkj/EMxglS9zawT1KBOqyCqrXAzGDc47
-EqlF02d/+sk92NT8G27XcJE0NRQzqRABkthBvHLGjHBEiaaAZ8LumeUd3o0eCWSP
-9IlEQQBK8YYvw4JSSY24
-=Z3LW
------END PGP SIGNATURE-----
-
---=-k4cyUyQ4Z+2NGGg3PUBl--
+OK, I will look into collecting this data.
 
