@@ -1,76 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.anarazel.de ([217.115.131.40]:47413 "EHLO smtp.anarazel.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751954AbYI2IfE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 04:35:04 -0400
-From: Andres Freund <andres@anarazel.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: bad DMAR interaction with iwlagn and SATA
-Date: Mon, 29 Sep 2008 10:26:15 +0200
-Cc: linux-kernel@vger.kernel.org,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Tomas Winkler <tomasw@gmail.com>
-References: <200809251511.20132.andres@anarazel.de> <1222441833.3798.10.camel@johannes.berg>
-In-Reply-To: <1222441833.3798.10.camel@johannes.berg>
+Received: from nf-out-0910.google.com ([64.233.182.190]:35096 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751152AbYIBNTK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 09:19:10 -0400
+Received: by nf-out-0910.google.com with SMTP id d3so334194nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Sep 2008 06:19:07 -0700 (PDT)
+Date: Tue, 2 Sep 2008 16:18:58 +0300
+From: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	LKML <linux-kernel@vger.kernel.org>, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	Jan-Espen Pettersen <sigsegv@radiotube.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: new: regression iwl3945/mac80211 endless after suspend
+	associate/deassociate loop
+Message-ID: <20080902131856.GC19172@google.com> (sfid-20080902_151918_277559_0BAB7733)
+References: <20080901160658.GA11063@google.com> <1220319536.28282.128.camel@debian.sh.intel.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1671546.fHiBhP5sPO";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200809291026.16394.andres@anarazel.de> (sfid-20080929_103509_921270_8FE20C17)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1220319536.28282.128.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1671546.fHiBhP5sPO
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Tue, Sep 02, 2008 at 09:38:56AM +0800, Zhu Yi wrote:
+> On Mon, 2008-09-01 at 19:07 +0300, Michael S. Tsirkin wrote:
+> > [16482.909453] eth1: associate with AP XX:XX:XX:XX:XX:XX
+> > [16482.918553] eth1: RX ReassocResp from XX:XX:XX:XX:XX:XX
+> > (capab=0x411 status=0 aid=1)
+> > [16482.918564] eth1: associated
+> > [16492.920224] eth1: disassociating by local choice (reason=3)
+> > [16492.920986] eth1: disassociating by local choice (reason=3)
+> 
+> It is exactly 10 seconds the local STA sends the deauth_leaving frame
+> before associated everytime. I wonder if it is the timeout for some
+> wireless config tools. NM?
 
-Hi,
+Not network manager, I'm using wpa_supplicant.
 
-On Friday 26 September 2008, you wrote in "Re: bad DMAR interaction with=20
-iwlagn and SATA":
-> > [ 4184.617392] DMAR:[DMA Read] Request device [03:00.0] fault addr
-> > fa946000 [ 4184.617393] DMAR:[fault reason 06] PTE Read access is not s=
-et
-> > [ 4184.644081] iwlagn: Microcode HW error detected.  Restarting. [
-> > 4186.646000] psmouse.c: TouchPad at isa0060/serio1/input0 lost
-> > synchronization, throwing 1 bytes away. [ 4186.683034] Registered led
-> > device: iwl-phy0:radio
-> > [ 4186.683478] Registered led device: iwl-phy0:assoc
-> > [ 4186.683793] Registered led device: iwl-phy0:RX
-> > [ 4186.684094] Registered led device: iwl-phy0:TX
-> > [ 4186.689749] wlan0: authenticate with AP 00:1d:7e:42:fe:42
-> > [ 4186.691691] wlan0: authenticated
-> > [ 4186.691705] wlan0: associate with AP 00:1d:7e:42:fe:42
-> > [ 4186.696380] wlan0: RX ReassocResp from 00:1d:7e:42:fe:42 (capab=3D0x=
-411
-> > status=3D0 aid=3D2) [ 4186.696392] wlan0: associated
+> What did you do to make it reassociate after resume? If you are using
+> some automatic config tools,
 
-> > Most of the time when this happened, the machine wasnt reacting for 1-3
-> > seconds and had audio buffer underruns, but I also had a hard lockup
-> > which I couldnt diagnose so far.
-> I suspect the hard lockup was due to a BUG_ON in the iwlagn driver, if
-> you can reproduce this either try applying the patch here [1] or going
-> to a VC to see if it crashes there. It's a BUG_ON in iwl-tx.c.
-Could not reproduce so far - it is rather hard working on the machine with=
-=20
-DMAR enabled because I get 1-5s lockups all the time like described above...
+I think that resume scripts try to do is up the interface, and
+network scripts run wpa supplicant (or rather, wpa_cli which talks to
+wpa_supplicant).
+Same thing happens if I run wpa_supplicant manually as well.
 
-Andres
+> can you try iwconfig manually instead?
+> 
+> Thanks,
+> -yi
 
-
---nextPart1671546.fHiBhP5sPO
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkjgkSgACgkQporPraT14ii4cACfQBehnutTOVuJiZ2XqKgldTrH
-fwMAnitB5D7h0bnzHmoqlCAFY2iU3ixp
-=Xg1+
------END PGP SIGNATURE-----
-
---nextPart1671546.fHiBhP5sPO--
+I could try, but I have wpa ...
+-- 
+MST
