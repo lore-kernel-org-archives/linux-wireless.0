@@ -1,30 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:4365 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756226AbYIMDD0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2008 23:03:26 -0400
-Subject: Re: [PATCH] orinoco: Fix compile warnings
-From: Pavel Roskin <proski@gnu.org>
-To: David Kilroy <kilroyd@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1221254898-10820-1-git-send-email-kilroyd@googlemail.com>
-References: <1221254898-10820-1-git-send-email-kilroyd@googlemail.com>
-Content-Type: text/plain
-Date: Fri, 12 Sep 2008 23:03:23 -0400
-Message-Id: <1221275003.5477.2.camel@dv> (sfid-20080913_050349_448750_B8AF1749)
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37772 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751518AbYIBTpq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 15:45:46 -0400
+Date: Tue, 2 Sep 2008 15:41:14 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	bugme-daemon@bugzilla.kernel.org, karthikg@deccantechnosoft.com
+Subject: Re: [Bugme-new] [Bug 11483] New: Raw socket tx/rx program for
+	"ath0" shows "sending: : No buffer space available"
+Message-ID: <20080902194114.GD3050@tuxdriver.com> (sfid-20080902_214550_414388_E25AA9EF)
+References: <bug-11483-10286@http.bugzilla.kernel.org/> <20080902122938.f3858d6d.akpm@linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080902122938.f3858d6d.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-09-12 at 22:28 +0100, David Kilroy wrote:
-> Use min_t to avoid warnings when the typesafe version is used.
+On Tue, Sep 02, 2008 at 12:29:38PM -0700, Andrew Morton wrote:
 > 
-> Explicitly cast u64s to unsigned long long when being passed to printk.
+> (switched to email.  Please respond via emailed reply-to-all, not via the
+> bugzilla web interface).
 > 
-> Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+> I assume this is an atheros driver problem, not a core networking
+> problem..
 
-Acked-by: Pavel Roskin <proski@gnu.org>
+ath_pci -- looks like madwifi to me...
 
 -- 
-Regards,
-Pavel Roskin
+John W. Linville
+linville@tuxdriver.com
