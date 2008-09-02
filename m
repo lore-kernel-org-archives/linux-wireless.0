@@ -1,61 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34289 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754235AbYIRS3P (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47415 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751469AbYIBVPa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 14:29:15 -0400
-Subject: Re: temorarily out of range -> no TCP?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Anders Eriksson <aeriksson@fastmail.fm>
+	Tue, 2 Sep 2008 17:15:30 -0400
+Date: Tue, 2 Sep 2008 17:05:42 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Zhu Yi <yi.zhu@intel.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080918141955.0119E93CCA7@tippex.mynet.homeunix.org> (sfid-20080918_162007_153222_33378A12)
-References: <20080918141955.0119E93CCA7@tippex.mynet.homeunix.org>
-	 (sfid-20080918_162007_153222_33378A12)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JNA5DtQRBah4xRF3UZ+j"
-Date: Thu, 18 Sep 2008 20:28:40 +0200
-Message-Id: <1221762520.20772.2.camel@johannes.berg> (sfid-20080918_202919_507273_68C8E316)
-Mime-Version: 1.0
+Subject: Re: [PATCH 00/11] iwlwifi driver fixes for 2.6.27
+Message-ID: <20080902210542.GF3050@tuxdriver.com> (sfid-20080902_231534_379885_2543540E)
+References: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1219915510-3647-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Aug 28, 2008 at 05:24:59PM +0800, Zhu Yi wrote:
+> Hi,
+> 
+> Here are the iwlwifi patches vital for 2.6.27. Please apply.
+> 
+> Thanks,
+> -yi
+> 
+> [PATCH 01/11] iwlwifi: W/A for the TSF correction in IBSS
+> [PATCH 02/11] iwlwifi: use mac80211 band and channel settings
+> [PATCH 03/11] iwlwifi: fix hidden ssid discovery in passive channels
+> [PATCH 04/11] iwlwifi: remove false rxon if rx chain changes
+> [PATCH 05/11] iwlwifi: workaround interrupt handling no some platforms
+> [PATCH 06/11] iwlwifi: fix apm_stop
+> [PATCH 07/11] iwlwifi: generic init calibrations framework
+> [PATCH 08/11] iwlwifi: call apm stop on exit
+> [PATCH 09/11] iwlwifi: fix station mimo power save values
+> [PATCH 10/11] iwlwifi: fix rx_chain computation
+> [PATCH 11/11] iwlwifi: fix 64bit platform firmware loading
 
---=-JNA5DtQRBah4xRF3UZ+j
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks to Marcel for going through this stack of patches and
+reinforcing the point about offering better changelogs and about
+giving more careful consideration to differentiating fixes from
+features/cleanups/etc.
 
-On Thu, 2008-09-18 at 16:19 +0200, Anders Eriksson wrote:
+FWIW, I think that "regressions only" is a bit too strict for a hard
+rule.  Also, I think that many of these patches are still mergeable
+for 2.6.27 if we are given more thorough explanations of the actual
+problems they are meant to address and the actual solutions they
+apply to those problems.
 
-> Sep 17 12:22:07 tippex wlan0: No ProbeResp from current AP 00:18:39:c0:5f=
-:50 - assume out of range
+I hope you will resubmit this series (more or less) with more thorough
+changelogs in the near future.
 
+Thanks!
 
-> Am I missing something?
-
-For one, telling us which driver you're using.
-
-johannes
-
---=-JNA5DtQRBah4xRF3UZ+j
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI0p3VAAoJEKVg1VMiehFYxGIQALqsyXM8ignwGn/41eJrFzvA
-j075Qjje+LpZvuHFX7tV0cFiIlde2Ry7YQYrKRB67S1oGTR1sPn5GAlqOhkMq5Hc
-iB9X3cG4u8gQAo6tUsmaGFUDi6JvokyBvsBdWRMvhO54TmhPPveLtbdQ4gjKyPJP
-82hZlEwptmCq0k8pes9eTm3UW5uzeWXcCDRbMENbgyHq8c6/Z1Nq1Rs5RzqGVMR5
-aek52684tNzN8rIqAUYPshXXwOsl3vZ+OS4pSSDsrGGfWSx4Cj29R6h4pxmaVVjS
-R3qRlgN7USZ8rhlKRmyTKn0/KAxGpfri87JMt3sA3YRTfoyecp6GnK3IeebjTMWD
-n1R1x5vZRhpnrPyPJzOL2POLHaV+YM9jCNMByawfQmds+HFIs9QHnsRY4Ina3nl1
-ivljUwCStmD3dWpfOwo8ZYidx+yQ9GdvOEz2rr6Gu0Nc20FOT8LowOLL3RdDhNAn
-0pCNsCpecgjPvvaSRjTahhHb76mlshOg44FiS0LyV0XXQ7ka4KLVaDwUm2umb3W+
-haUZrgC0wA0/5yQHjZvgyeRYhDZrDRXY7gYOzsGgFkNKY27JYuygEZrwEMpyXhOa
-djqBRjzcv8JwPjIW3sUFrn02Qyj44fGo6KbMMkDhTDGbX946hU+HvTd+j/lxDEZf
-gzXkgXKrEWjzhhv3gc1N
-=5zxD
------END PGP SIGNATURE-----
-
---=-JNA5DtQRBah4xRF3UZ+j--
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
