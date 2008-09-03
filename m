@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web34808.mail.mud.yahoo.com ([209.191.68.172]:34447 "HELO
-	web34808.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751284AbYIMQQw convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Sep 2008 12:16:52 -0400
-Date: Sat, 13 Sep 2008 09:10:10 -0700 (PDT)
-From: Edgar Velasco <ingeideas@yahoo.com>
-Reply-To: ingeideas@yahoo.com
-To: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-ID: <657598.13074.qm@web34808.mail.mud.yahoo.com> (sfid-20080913_181701_606606_F999A650)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53770
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752359AbYICXYv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2008 19:24:51 -0400
+Date: Wed, 03 Sep 2008 16:24:44 -0700 (PDT)
+Message-Id: <20080903.162444.150409734.davem@davemloft.net> (sfid-20080904_012456_874659_CB3487B1)
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	tomasw@gmail.com, yi.zhu@intel.com, linville@tuxdriver.com
+Subject: Re: [GIT]: Networking
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <alpine.LFD.1.10.0809031615450.3515@nehalem.linux-foundation.org>
+References: <20080903.161341.239039051.davem@davemloft.net>
+	<alpine.LFD.1.10.0809031615450.3515@nehalem.linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm reporting a bug.=20
-Went I make, this is what I get:
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Wed, 3 Sep 2008 16:20:43 -0700 (PDT)
 
-compat-wireless-2.6-old # make
-/root/compat-wireless-2.6-old/config.mk:30: *** "ERROR: There is a bug =
-with compat-wireless on 2.6.22. Remove me if you want to fix me".  Stop=
-=2E
+> 
+> 
+> On Wed, 3 Sep 2008, David Miller wrote:
+> > 
+> > 4) Several iwlwifi fixes:
+> 
+> Are these really regressions?
+> 
+> And if they aren't, why are they here and now?
+> 
+> Are people really so _stupid_ that they think that no fixes ever cause new 
+> regressions, so that they think that because they are "fixes" they are 
+> safe?
+> 
+> Please, guys. I complained once about this already. What's so hard to 
+> understand?
 
-How can I fix it?
-Edgar Velasco.
+I pushed back on these guys a lot, so did John Linville.
 
+But you're right, I'll just stop taking things from the Intel wireless
+people.
 
+I'm fucking tired of their shit too.
 
-      _________________________________________________________________=
-___________________
-Yahoo! MTV Blog & Rock &gt;=A1Cu=E9ntanos tu historia, inspira una canc=
-i=F3n y g=E1nate un viaje a los Premios MTV! Participa aqu=ED http://mt=
-vla.yahoo.com/
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Maybe now they'll learn.
