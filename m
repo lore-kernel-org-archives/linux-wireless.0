@@ -1,56 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:58794 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752814AbYIHUdv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 16:33:51 -0400
-Subject: [RFC PATCH] libertas_tf: clear current command on remove
-From: Dan Williams <dcbw@redhat.com>
-To: Luis Carlos Cobo <luisca@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Mon, 08 Sep 2008 16:34:42 -0400
-Message-Id: <1220906082.1618.22.camel@localhost.localdomain> (sfid-20080908_223355_015142_DB10C3A3)
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52840 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751888AbYICNPb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2008 09:15:31 -0400
+Date: Wed, 3 Sep 2008 09:04:40 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Kalle Valo <kalle.valo@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: at76_usb.[ch] gone fishing from wireless-testing ?
+Message-ID: <20080903130439.GJ3050@tuxdriver.com> (sfid-20080903_151535_796206_8150204D)
+References: <43e72e890809021953o29c6ba53wcdf7630d4ff10b30@mail.gmail.com> <87vdxedje8.fsf@nokia.com> <43e72e890809022003gfd462d2ma8d68f032754c121@mail.gmail.com> <20080903125352.GI3050@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080903125352.GI3050@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ensure that the current command is torn down when cleaning up.
+On Wed, Sep 03, 2008 at 08:53:52AM -0400, John W. Linville wrote:
+> On Tue, Sep 02, 2008 at 08:03:32PM -0700, Luis R. Rodriguez wrote:
+> > On Tue, Sep 2, 2008 at 7:59 PM, Kalle Valo <kalle.valo@nokia.com> wrote:
+> > > Luis R. Rodriguez <mcgrof@gmail.com> writes:
+> > >
+> > >> A few times now I've git-fetch'd origin and noticed at76_usb.[ch]
+> > >> missing on origin/master. Strange, wondering if you're aware of any
+> > >> such type of issues or its just me.
+> > >
+> > > Good point, I don't see it either. But at76_usb is quite broken
+> > > currently, so maybe John decided just to drop it? Good choice, at
+> > > least for now.
+> > >
+> > > And it's not just that, also -wl suffix is missing from the version.
+> > >
+> > > My HEAD is currently:
+> > >
+> > > commit 18c8adeb0244f823ba78a51e23f813fe68bc3c54
+> > > Author: Michael Buesch <mb@bu3sch.de>
+> > > Date:   Thu Aug 28 19:33:40 2008 +0200
+> > >
+> > >    b43: Rewrite TX power adjustment
+> > 
+> > I'm at:
+> > 
+> > commit 908dd0b965e64fcc2eb64152bac65f2876c34e0b
+> > Author: Senthil Balasubramanian <senthilkumar@atheros.com>
+> > Date:   Mon Sep 1 19:58:20 2008 +0530
+> >     ath9: Fix ath_rx_flush_tid() for IRQs disabled kernel warning message.
+> > 
+> > Reason I find it strange is on one box it went through and I still see
+> > history for it, and in another I don't. I was going to do a fresh pull
+> > to test but figure I rather ask as bandwidth is crummy at work.
+> 
+> Crap, I botched my lastest update.  I'll pull in the part that adds
+> -wl to the version for sure.  Anyone want to talk me out of pulling-in
+> the at76 parts?
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
----
+Hmmm...upon further review, both my local copy and the one at
+kernel.org seem to have the proper bits AFAICT...?
 
-Completely untested but based on the libertas patch for the same
-problem.  Luis, can you give it a shot and make sure there aren't any
-regressions when pulling the card or rmmod-ing the driver?
-
-diff --git a/drivers/net/wireless/libertas_tf/main.c b/drivers/net/wireless/libertas_tf/main.c
-index c948021..5f7bf04 100644
---- a/drivers/net/wireless/libertas_tf/main.c
-+++ b/drivers/net/wireless/libertas_tf/main.c
-@@ -296,8 +296,8 @@ static void lbtf_op_stop(struct ieee80211_hw *hw)
- 	struct lbtf_private *priv = hw->priv;
- 	unsigned long flags;
- 	struct sk_buff *skb;
--
- 	struct cmd_ctrl_node *cmdnode;
-+
- 	/* Flush pending command nodes */
- 	spin_lock_irqsave(&priv->driver_lock, flags);
- 	list_for_each_entry(cmdnode, &priv->cmdpendingq, list) {
-@@ -306,7 +306,14 @@ static void lbtf_op_stop(struct ieee80211_hw *hw)
- 		wake_up_interruptible(&cmdnode->cmdwait_q);
- 	}
- 
-+	/* Flush the command the card is currently processing */
-+	if (priv->cur_cmd) {
-+		priv->cur_cmd->result = -ENOENT;
-+		priv->cur_cmd->cmdwaitqwoken = 1;
-+		wake_up_interruptible(&priv->cur_cmd->cmdwait_q);
-+	}
- 	spin_unlock_irqrestore(&priv->driver_lock, flags);
-+
- 	cancel_work_sync(&priv->cmd_work);
- 	cancel_work_sync(&priv->tx_work);
- 	while ((skb = skb_dequeue(&priv->bc_ps_buf)))
-
-
+-- 
+John W. Linville
+linville@tuxdriver.com
