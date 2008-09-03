@@ -1,67 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:47425 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753429AbYIUUfE (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46672
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752607AbYICVdw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 16:35:04 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1148412fgg.17
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Sep 2008 13:35:02 -0700 (PDT)
-Date: Mon, 22 Sep 2008 00:35:03 +0400
-From: Cyrill Gorcunov <gorcunov@gmail.com>
-To: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arjan van de Ven <arjan@infradead.org>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ipw2100-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, jgarzik@pobox.com,
-	linville@tuxdriver.com, davem@davemloft.net
-Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware
-	restart.
-Message-ID: <20080921203503.GL7736@localhost> (sfid-20080921_223519_820500_A1398EEE)
-References: <20080921172316.GA6306@2ka.mipt.ru> <20080921110422.1d010b96@infradead.org> <20080921182835.GA11473@2ka.mipt.ru> <20080921113513.16677c4e@infradead.org> <20080921190050.GA20484@2ka.mipt.ru> <1222024444.3023.53.camel@johannes.berg> <20080921193809.GA8735@2ka.mipt.ru> <20080921200518.GK7736@localhost> <20080921202656.GC25052@2ka.mipt.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080921202656.GC25052@2ka.mipt.ru>
+	Wed, 3 Sep 2008 17:33:52 -0400
+Date: Wed, 03 Sep 2008 14:33:45 -0700 (PDT)
+Message-Id: <20080903.143345.265568912.davem@davemloft.net> (sfid-20080903_233356_528781_2A1E42FD)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-09-03
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080903203239.GA21704@tuxdriver.com>
+References: <20080903203239.GA21704@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[Evgeniy Polyakov - Mon, Sep 22, 2008 at 12:26:56AM +0400]
-| On Mon, Sep 22, 2008 at 12:05:18AM +0400, Cyrill Gorcunov (gorcunov@gmail.com) wrote:
-| > Since it's that serious maybe we should change
-| > 
-| > 		IPW_DEBUG_INFO("%s: Fatal error value: 0x%08X\n",
-| > 			       priv->net_dev->name, priv->fatal_error);
-| > 
-| > to printk(KERN_WARN)? And here is why - as I see now we can't say what
-| > exactly is wrong - Evgeniy said he has a suspicious about firmware so
-| > this WARNS will be collected by Arjan thru kerneloops and we could not
-| > ask users to change debug level and repost problem - oops will have it
-| > by default - and if it really firmware problem - firmware engineers could
-| > find this _additional_ info usefull and resolve it (probably).
-| 
-| The only reason for this change is to make a mark at the kerneloops.
-| I.e. users know, there is a bug. Developers know, there is a bug.
-| Everyone knows that there is a bug, but until it is at the special place
-| we look to each other just like there is no bug.
-| 
-| Here are dumps for example:
-| http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=245
-| 
-| Bug existed even with 1.2 firmware and .11 kernel.
-| Intel, that's a great marketing slogan: stability everywhere!
-| 
-| -- 
-| 	Evgeniy Polyakov
-| 
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 3 Sep 2008 16:32:40 -0400
 
->From dump:
-> Sep 25 11:31:39 suino wlan0: TX timed out.  Scheduling firmware restart.
+> Another quick round of fixes for 2.6.27...the iwlwifi ones should be
+> familiar to you.  The ath9k ones are already in net-next-2.6, but I
+> think they are good fixes and they may play a part in eventually solving
+> bug 11394 at bugzilla.kernel.org.
+> 
+> Please let me know if there are problems!
 
-yes Evgeniy - all could know that but this register info could help
-firmware engineers to distinguish problems (without additional efforts
-like ask users to pass debug argument - kerneloops will have it
-by default) if there not only one exist. I mean I don't think anyone
-would reject additional info about problem ever :)
-
-		- Cyrill -
+Pulled, thanks a lot John.
