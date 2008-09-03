@@ -1,82 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:47522 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751913AbYIFAw6 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60338 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751632AbYICNA3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2008 20:52:58 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] p54: add more rx filters
-Date: Sat, 6 Sep 2008 02:56:12 +0200
-Cc: John W Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 3 Sep 2008 09:00:29 -0400
+Date: Wed, 3 Sep 2008 08:53:52 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Kalle Valo <kalle.valo@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: at76_usb.[ch] gone fishing from wireless-testing ?
+Message-ID: <20080903125352.GI3050@tuxdriver.com> (sfid-20080903_150035_044068_FDCA231E)
+References: <43e72e890809021953o29c6ba53wcdf7630d4ff10b30@mail.gmail.com> <87vdxedje8.fsf@nokia.com> <43e72e890809022003gfd462d2ma8d68f032754c121@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200809060256.12896.chunkeey@web.de> (sfid-20080906_025303_812159_ED8650CB)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890809022003gfd462d2ma8d68f032754c121@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds new filters settings to make the card more useful in monitor mode.
+On Tue, Sep 02, 2008 at 08:03:32PM -0700, Luis R. Rodriguez wrote:
+> On Tue, Sep 2, 2008 at 7:59 PM, Kalle Valo <kalle.valo@nokia.com> wrote:
+> > Luis R. Rodriguez <mcgrof@gmail.com> writes:
+> >
+> >> A few times now I've git-fetch'd origin and noticed at76_usb.[ch]
+> >> missing on origin/master. Strange, wondering if you're aware of any
+> >> such type of issues or its just me.
+> >
+> > Good point, I don't see it either. But at76_usb is quite broken
+> > currently, so maybe John decided just to drop it? Good choice, at
+> > least for now.
+> >
+> > And it's not just that, also -wl suffix is missing from the version.
+> >
+> > My HEAD is currently:
+> >
+> > commit 18c8adeb0244f823ba78a51e23f813fe68bc3c54
+> > Author: Michael Buesch <mb@bu3sch.de>
+> > Date:   Thu Aug 28 19:33:40 2008 +0200
+> >
+> >    b43: Rewrite TX power adjustment
+> 
+> I'm at:
+> 
+> commit 908dd0b965e64fcc2eb64152bac65f2876c34e0b
+> Author: Senthil Balasubramanian <senthilkumar@atheros.com>
+> Date:   Mon Sep 1 19:58:20 2008 +0530
+>     ath9: Fix ath_rx_flush_tid() for IRQs disabled kernel warning message.
+> 
+> Reason I find it strange is on one box it went through and I still see
+> history for it, and in another I don't. I was going to do a fresh pull
+> to test but figure I rather ask as bandwidth is crummy at work.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-09-05 21:02:22.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54common.c	2008-09-06 01:57:59.000000000 +0200
-@@ -433,6 +433,13 @@ static int p54_rx_data(struct ieee80211_
- 	size_t header_len = sizeof(*hdr);
- 	u32 tsf32;
- 
-+	if (!(hdr->magic & cpu_to_le16(0x0001))) {
-+		if (priv->filter_flags & FIF_FCSFAIL)
-+			rx_status.flag |= RX_FLAG_FAILED_FCS_CRC;
-+		else
-+			return 0;
-+	}
-+
- 	rx_status.signal = hdr->rssi;
- 	/* XX correct? */
- 	rx_status.qual = (100 * hdr->rssi) / 127;
-@@ -1127,13 +1134,26 @@ static void p54_configure_filter(struct 
- {
- 	struct p54_common *priv = dev->priv;
- 
--	*total_flags &= FIF_BCN_PRBRESP_PROMISC;
-+	*total_flags &= FIF_BCN_PRBRESP_PROMISC |
-+			FIF_PROMISC_IN_BSS |
-+			FIF_FCSFAIL;
-+
-+	priv->filter_flags = *total_flags;
- 
- 	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
- 		if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
--			p54_set_filter(dev, 0, NULL);
-+			p54_set_filter(dev, priv->filter_type, NULL);
-+		else
-+			p54_set_filter(dev, priv->filter_type, priv->bssid);
-+	}
-+
-+	if (changed_flags & FIF_PROMISC_IN_BSS) {
-+		if (*total_flags & FIF_PROMISC_IN_BSS)
-+			p54_set_filter(dev, priv->filter_type |
-+				cpu_to_le16(0x8), NULL);
- 		else
--			p54_set_filter(dev, 0, priv->bssid);
-+			p54_set_filter(dev, priv->filter_type &
-+				~cpu_to_le16(0x8), priv->bssid);
- 	}
- }
- 
-diff -Nurp a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
---- a/drivers/net/wireless/p54/p54.h	2008-09-04 14:43:07.000000000 +0200
-+++ b/drivers/net/wireless/p54/p54.h	2008-09-04 14:56:25.000000000 +0200
-@@ -80,6 +80,7 @@ struct p54_common {
- 	struct pda_channel_output_limit *output_limit;
- 	unsigned int output_limit_len;
- 	struct pda_pa_curve_data *curve_data;
-+	unsigned int filter_flags;
- 	u16 rxhw;
- 	u8 version;
- 	u8 rx_antenna;
+Crap, I botched my lastest update.  I'll pull in the part that adds
+-wl to the version for sure.  Anyone want to talk me out of pulling-in
+the at76 parts?
 
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
