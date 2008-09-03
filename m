@@ -1,55 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:48350 "EHLO vs166246.vserver.de"
+Received: from mga01.intel.com ([192.55.52.88]:41622 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751418AbYIFTEk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 15:04:40 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] b43legacy: Fix failure in rate-adjustment mechanism
-Date: Sat, 6 Sep 2008 21:04:15 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	bcm43xx-dev@lists.berlios.de,
-	John W Linville <linville@tuxdriver.com>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	linux-wireless@vger.kernel.org
-References: <48c2cd1a.pA60sTEK0WsW6wtt%Larry.Finger@lwfinger.net> <200809062055.51797.mb@bu3sch.de> <1220727470.10102.9.camel@johannes.berg>
-In-Reply-To: <1220727470.10102.9.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200809062104.15274.mb@bu3sch.de> (sfid-20080906_210443_956400_8F0DEB28)
+	id S1754265AbYICDa6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:30:58 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Assaf Krauss <assaf.krauss@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 02/39] iwlwifi: W/A for the TSF correction in IBSS
+Date: Wed,  3 Sep 2008 11:26:22 +0800
+Message-Id: <1220412419-15404-3-git-send-email-yi.zhu@intel.com> (sfid-20080903_053101_325229_094A804C)
+In-Reply-To: <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
+References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 06 September 2008 20:57:50 Johannes Berg wrote:
-> On Sat, 2008-09-06 at 20:55 +0200, Michael Buesch wrote:
-> > On Saturday 06 September 2008 20:52:53 Larry Finger wrote:
-> > > Michael Buesch wrote:
-> > > > On Saturday 06 September 2008 20:34:02 Larry Finger wrote:
-> > > >> A coding error present since b43legacy was incorporated into the
-> > > >> kernel has prevented the driver from using the rate-setting mechanism
-> > > >> of mac80211. The driver has been forced to remain at a 1 Mb/s rate.
-> > > > 
-> > > > Does version3 firmware have a different bitlayout for the status?
-> > > 
-> > > It seems so. I found this because I was not getting any acks back to 
-> > > net/mac80211/rc80211_pid_algo.c. I then reviewed the V3 specs, found 
-> > > that bit 0, not bit 1, contained the ack. Test prints confirmed that 
-> > > result. With this patch, both my BCM4306/2 and BCM4303 reach the 
-> > > maximum rate. With the current code, 54 Mb/s is not as fast as 36 
-> > > Mb/s, but at least the algorithm is working.
-> > 
-> > Yeah ok. I just asked, because it seems the _whole_ flags bitfield
-> > is rightshifted by one (so the other flags are wrong, too. See the
-> > intermediate flag)
-> 
-> It is, this isn't really a difference between the two but a result of
-> you shifting it up/down due to the tx status via dma queue vs. tx status
-> via registers thing.
+From: Assaf Krauss <assaf.krauss@intel.com>
 
-Yeah, that's the point. larry's patch modified both the register and dmaqueue
-mechanism. I think the register mechanism might be correct as-is (Or is it even
-dead code and it's not used by any legacy device?)
+This patch is a W/A for the TSF sync issue, in which the ucode's timestamp
+is constantly a little behind incoming beacons' timestamps (in IBSS cells).
+The W/A simply stops the driver from declaring it has a reliable TSF value.
 
+Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-rx.c  |    5 ++++-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 676fc0a..1badcf3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3578,7 +3578,7 @@ static int iwl4965_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *sk
+ 
+ 	priv->assoc_id = 0;
+ 	timestamp = ((struct ieee80211_mgmt *)skb->data)->u.beacon.timestamp;
+-	priv->timestamp = le64_to_cpu(timestamp) +  (priv->beacon_int * 1000);
++	priv->timestamp = le64_to_cpu(timestamp);
+ 
+ 	IWL_DEBUG_MAC80211("leave\n");
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index b92a580..faad4d3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -1068,7 +1068,10 @@ void iwl_rx_reply_rx(struct iwl_priv *priv,
+ 		rx_status.rate_idx -= IWL_FIRST_OFDM_RATE;
+ 
+ 	rx_status.flag = 0;
+-	rx_status.flag |= RX_FLAG_TSFT;
++
++	/* TSF isn't reliable. In order to allow smooth user experience,
++	 * this W/A doesn't propagate it to the mac80211 */
++	/*rx_status.flag |= RX_FLAG_TSFT;*/
+ 
+ 	if ((unlikely(rx_start->cfg_phy_cnt > 20))) {
+ 		IWL_DEBUG_DROP("dsp size out of range [0,20]: %d/n",
 -- 
-Greetings Michael.
+1.5.3.6
+
