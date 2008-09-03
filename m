@@ -1,94 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36428 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752195AbYIHIaM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 04:30:12 -0400
-Subject: Re: [RFC PATCH 0/3] mac80211 dissasociation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240809080118p26b4d984k57ce0b20a5d2c36a@mail.gmail.com> (sfid-20080908_101843_062010_878B2F97)
-References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
-	 <1220794765.31304.8.camel@johannes.berg>
-	 <1ba2fa240809070724n362d5850t653ca5746b87eb48@mail.gmail.com>
-	 <1220798432.31304.13.camel@johannes.berg>
-	 <1ba2fa240809070750k1683f410icf2a82be0f533b4f@mail.gmail.com>
-	 <1ba2fa240809071614v66235658w1768e31d31c2d0f8@mail.gmail.com>
-	 <1220860709.31304.19.camel@johannes.berg>
-	 <1ba2fa240809080118p26b4d984k57ce0b20a5d2c36a@mail.gmail.com>
-	 (sfid-20080908_101843_062010_878B2F97)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0GQC3/oMOPZAgFABamXn"
-Date: Mon, 08 Sep 2008 10:30:04 +0200
-Message-Id: <1220862604.31304.27.camel@johannes.berg> (sfid-20080908_103017_215937_0F16C34A)
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:56324 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754418AbYICDbX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:31:23 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 21/39] iwlwifi: fix rx_chain computation
+Date: Wed,  3 Sep 2008 11:26:41 +0800
+Message-Id: <1220412419-15404-22-git-send-email-yi.zhu@intel.com> (sfid-20080903_055042_628842_A9536B32)
+In-Reply-To: <1220412419-15404-21-git-send-email-yi.zhu@intel.com>
+References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-9-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-10-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-11-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-12-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-13-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-14-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-15-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-16-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-17-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-18-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-19-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-20-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-21-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Tomas Winkler <tomas.winkler@intel.com>
 
---=-0GQC3/oMOPZAgFABamXn
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch fixes and simplifies rx_chain computation.
 
-On Mon, 2008-09-08 at 11:18 +0300, Tomas Winkler wrote:
-> On Mon, Sep 8, 2008 at 10:58 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Mon, 2008-09-08 at 02:14 +0300, Tomas Winkler wrote:
-> >
-> >> why I'm hitting unathorized prot messag for subif_start_xmit.
-> >> Shouldn't carrier_off(stada->dev) stop the queue?  I haven't seen this
-> >
-> > and no, netif_carrier_off() doesn't immediately stop the queues, it jus=
-t
-> > schedules the link watch which will _eventually_ remove the qdiscs and
-> > attach the noop qdisc.
->=20
-> So what you are saying this is expected behavior?
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   77 ++++++++++++++++++------------
+ 1 files changed, 46 insertions(+), 31 deletions(-)
 
-Sort of, yes.
-
-> Please remember I'm testing the disassociation
-> 1. AP is should down
-> 2. Switching to another AP -> Legacy <-> HT
-> 3. WPA supplicnat (it uses ieee80211_ioctl_siwmlme)
-> 4. The BA tear down will be unfortunately untested, for now
-
-When you shut down the AP, it probably sends you a deauth. Frames we
-want to send out for it might still be pending in our queue. Since
-you're removing the sta_info for it right away and not stopping queues,
-you get the "unauthorized port" message because there's no sta_info
-struct.
-
-The reason you haven't seen that before is that the sta_info wasn't
-deleted, so we could still send out a few frames before
-netif_carrier_down took effect.
-
-To fix it, we probably want to simply stop the queue for that subif too.
-
-johannes
-
---=-0GQC3/oMOPZAgFABamXn
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIxOKJAAoJEKVg1VMiehFYndQP/j1vMERmp4ylU5v57dgt3M2j
-IBoPqN6JqBGRHtUTE3ugwNoxhZ//FQ9RaDyg6+DdC4Xp3N3qkYXiIp5ia0K/k+ij
-gZb/XgzA4tQF43NvRuIVBpkpW/njT+H2TzslP9Y7vHqRy9Swjwn1CVPjUyaAf+7/
-mpKKtX3rd3wo701OVkeu5EIKjfm9YJby5FPeFuVD4JNpYMI49bRpfAVKsjHsckBR
-sNekLeQOu3kB4o066SDn349MsOGGsGXiN+rm9yACbs9dBer+sVdwi7tS8v41cFXn
-KAaxUwA+gACkSguMbC1S5W+7p8A02fbTtNRe8XanJJEZm7NbEDGJIulbZWsdgWgg
-SoY7derpZR7baQk76hZRVHLKZ+QQrQ1nfHjNBin4K2ogTeV0ya4nG82WzyiPVZvu
-imyq8gySpuF1PzAIiWCK8Q3k8ny+ttjA/E9ujljIoNJgb5k74yy4huFnobs53Z9u
-Ez3vvTGtCmZy2kqJzdkheqQMHxdk5rUbMwl6K4jGSzMWDHtit2JjvnpDH92uxpSf
-XwpfU29DvGLh0+oFk+vxBGF80tIgboq6emaaU/NrsCuYHZAo32LBo8/v4DDHW5hc
-jxoNX3mrRAE48FCvHGLEq6QhnIgjGaHq+rLrw4uT5TCnTThfTUqspd58U+kLFAYa
-zAmzuHVYt3e/iROGlQR5
-=472g
------END PGP SIGNATURE-----
-
---=-0GQC3/oMOPZAgFABamXn--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 129b0a3..e55a62d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -592,12 +592,11 @@ static void iwlcore_free_geos(struct iwl_priv *priv)
+ 	clear_bit(STATUS_GEO_CONFIGURED, &priv->status);
+ }
+ 
+-static u8 is_single_rx_stream(struct iwl_priv *priv)
++static bool is_single_rx_stream(struct iwl_priv *priv)
+ {
+ 	return !priv->current_ht_config.is_ht ||
+ 	       ((priv->current_ht_config.supp_mcs_set[1] == 0) &&
+-		(priv->current_ht_config.supp_mcs_set[2] == 0)) ||
+-	       priv->ps_mode == IWL_MIMO_PS_STATIC;
++		(priv->current_ht_config.supp_mcs_set[2] == 0));
+ }
+ 
+ static u8 iwl_is_channel_extension(struct iwl_priv *priv,
+@@ -704,33 +703,39 @@ EXPORT_SYMBOL(iwl_set_rxon_ht);
+  * MIMO (dual stream) requires at least 2, but works better with 3.
+  * This does not determine *which* chains to use, just how many.
+  */
+-static int iwlcore_get_rx_chain_counter(struct iwl_priv *priv,
+-					u8 *idle_state, u8 *rx_state)
++static int iwl_get_active_rx_chain_count(struct iwl_priv *priv)
+ {
+-	u8 is_single = is_single_rx_stream(priv);
+-	u8 is_cam = test_bit(STATUS_POWER_PMI, &priv->status) ? 0 : 1;
++	bool is_single = is_single_rx_stream(priv);
++	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
+ 
+ 	/* # of Rx chains to use when expecting MIMO. */
+ 	if (is_single || (!is_cam && (priv->ps_mode == IWL_MIMO_PS_STATIC)))
+-		*rx_state = 2;
++		return 2;
+ 	else
+-		*rx_state = 3;
++		return 3;
++}
+ 
++static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
++{
++	int idle_cnt;
++	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
+ 	/* # Rx chains when idling and maybe trying to save power */
+ 	switch (priv->ps_mode) {
+ 	case IWL_MIMO_PS_STATIC:
+ 	case IWL_MIMO_PS_DYNAMIC:
+-		*idle_state = (is_cam) ? 2 : 1;
++		idle_cnt = (is_cam) ? 2 : 1;
+ 		break;
+ 	case IWL_MIMO_PS_NONE:
+-		*idle_state = (is_cam) ? *rx_state : 1;
++		idle_cnt = (is_cam) ? active_cnt : 1;
+ 		break;
++	case IWL_MIMO_PS_INVALID:
+ 	default:
+-		*idle_state = 1;
++		IWL_ERROR("invalide mimo ps mode %d\n", priv->ps_mode);
++		WARN_ON(1);
++		idle_cnt = -1;
+ 		break;
+ 	}
+-
+-	return 0;
++	return idle_cnt;
+ }
+ 
+ /**
+@@ -741,34 +746,44 @@ static int iwlcore_get_rx_chain_counter(struct iwl_priv *priv,
+  */
+ void iwl_set_rxon_chain(struct iwl_priv *priv)
+ {
+-	u8 is_single = is_single_rx_stream(priv);
+-	u8 idle_state, rx_state;
+-
+-	priv->staging_rxon.rx_chain = 0;
+-	rx_state = idle_state = 3;
++	bool is_single = is_single_rx_stream(priv);
++	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
++	u8 idle_rx_cnt, active_rx_cnt;
++	u16 rx_chain;
+ 
+ 	/* Tell uCode which antennas are actually connected.
+ 	 * Before first association, we assume all antennas are connected.
+ 	 * Just after first association, iwl_chain_noise_calibration()
+ 	 *    checks which antennas actually *are* connected. */
+-	priv->staging_rxon.rx_chain |=
+-		    cpu_to_le16(priv->hw_params.valid_rx_ant <<
+-						 RXON_RX_CHAIN_VALID_POS);
++	rx_chain = priv->hw_params.valid_rx_ant << RXON_RX_CHAIN_VALID_POS;
+ 
+ 	/* How many receivers should we use? */
+-	iwlcore_get_rx_chain_counter(priv, &idle_state, &rx_state);
+-	priv->staging_rxon.rx_chain |=
+-		cpu_to_le16(rx_state << RXON_RX_CHAIN_MIMO_CNT_POS);
+-	priv->staging_rxon.rx_chain |=
+-		cpu_to_le16(idle_state << RXON_RX_CHAIN_CNT_POS);
+-
+-	if (!is_single && (rx_state >= 2) &&
+-	    !test_bit(STATUS_POWER_PMI, &priv->status))
++	active_rx_cnt = iwl_get_active_rx_chain_count(priv);
++	idle_rx_cnt = iwl_get_idle_rx_chain_count(priv, active_rx_cnt);
++
++	/* correct rx chain count accoridng hw settings */
++	if (priv->hw_params.rx_chains_num < active_rx_cnt)
++		active_rx_cnt = priv->hw_params.rx_chains_num;
++
++	if (priv->hw_params.rx_chains_num < idle_rx_cnt)
++		idle_rx_cnt = priv->hw_params.rx_chains_num;
++
++	rx_chain |= active_rx_cnt << RXON_RX_CHAIN_MIMO_CNT_POS;
++	rx_chain |= idle_rx_cnt  << RXON_RX_CHAIN_CNT_POS;
++
++	priv->staging_rxon.rx_chain = cpu_to_le16(rx_chain);
++
++	if (!is_single && (active_rx_cnt >= 2) && is_cam)
+ 		priv->staging_rxon.rx_chain |= RXON_RX_CHAIN_MIMO_FORCE_MSK;
+ 	else
+ 		priv->staging_rxon.rx_chain &= ~RXON_RX_CHAIN_MIMO_FORCE_MSK;
+ 
+-	IWL_DEBUG_ASSOC("rx chain %X\n", priv->staging_rxon.rx_chain);
++	IWL_DEBUG_ASSOC("rx_chain=0x%Xi active=%d idle=%d\n",
++			priv->staging_rxon.rx_chain,
++			active_rx_cnt, idle_rx_cnt);
++
++	WARN_ON(active_rx_cnt == 0 || idle_rx_cnt == 0 ||
++		active_rx_cnt < idle_rx_cnt);
+ }
+ EXPORT_SYMBOL(iwl_set_rxon_chain);
+ 
+-- 
+1.5.3.6
 
