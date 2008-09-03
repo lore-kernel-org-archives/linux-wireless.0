@@ -1,148 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from jcdc-m02.simsmm.com ([65.165.161.15]:20520 "EHLO
-	mail.ap.simsmm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751280AbYIXFMV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2008 01:12:21 -0400
-From: Ron Daniel <Ron.Daniel@simsmm.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 24 Sep 2008 15:12:16 +1000
-Subject: Q. How do I get Ubuntu to do WIreless Networking on my IBM laptop
- with Netgear WG511V2
-Message-ID: <5BEFFDFA85231C4294591C394F810CA31FC46519@JC0365.AsiaPacific.pangaea.lcl> (sfid-20080924_071225_879266_41DBC32A)
-Content-Type: text/plain; charset="us-ascii"
+Received: from hostap.isc.org ([149.20.54.63]:37849 "EHLO hostap.isc.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755691AbYICOGR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2008 10:06:17 -0400
+Date: Wed, 3 Sep 2008 17:05:17 +0300
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Kalle Valo <kalle.valo@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: at76_usb.[ch] gone fishing from wireless-testing ?
+Message-ID: <20080903140517.GU17345@jm.kir.nu> (sfid-20080903_160643_709149_040F4EC3)
+References: <43e72e890809021953o29c6ba53wcdf7630d4ff10b30@mail.gmail.com> <87vdxedje8.fsf@nokia.com> <43e72e890809022003gfd462d2ma8d68f032754c121@mail.gmail.com> <20080903125352.GI3050@tuxdriver.com> <20080903130439.GJ3050@tuxdriver.com> <20080903132448.GT17345@jm.kir.nu> <20080903133802.GK3050@tuxdriver.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080903133802.GK3050@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am writing to ask for help to get my wireless network card working on my IBM Thinkpad T30
-
-
-Here is what I have so far
-
-
-
-IBM Thinkpad T30
-
-Netgear PCMCIA WG511 V2 wireless card
-
-UBUNTU version 2.6.27-3-generic (aka Intrepid Ibex)
-
-
-
-I have not been able to  find any straightforward instructions that I can follow that will establish wireless connection for my home laptop.
-
-
-
-I started by doing this from the the http://www.linuxforums.org/forum/linux-tutorials-howtos-reference-material/13199-netgear-wg511-wireless-card-yoper-v2.html
-
-
-
-TUTORIAL: INSTALLING THE NETGEAR WG511
-
-1)Open up Mozilla, Konqueror, Internet Explorer(yikes!) or whatever your favorite browser is
-2)Go to http://prism54.org <http://prism54.org/>
-3)Download the Latest Tarball
-4)Extract the patch:
-
-
-Code:
- tar xvfj tarball.tar.bz2
-
-
-This worked OK
-
-
-
-5)
-
-Code:
-cd tarball
-
-
-Now's where you can't just go by the README anymore! You need some information first! To patch the kernel to support Prism54 Wireless (well, actually, to patch the kernel anytime), you need to have the kernel source installed! If you don't have it, then:
-6)(a)1.
-
-apt-get install kernel-source
-
-or if you have Red Hat:
-2. Code:
-yum install kernel-source
-
-
-or for Gentoo:
-3. Code:
-emerge kernel-source
-
-or something similar, replacing "kernel-source" with the appropriate name for the kernel source package.
-(b)After you have the kernel source installed, you need to find out where it is installed to. Once you have this information, proceed to Step 7.
-
-7)(a)Make sure that you are logged in as root. If you are not, then:
-
-
-Code:
-su -
-
-
-I did not do any of this as I believe I  already have the source its in /usr/src/linux-headers-2.6.27-3-generic
-
-
-
-(b)In the directory where the tarball was extracted to, enter the following into the command shell:
-
-
-Code:
-make KDIR=/path/to/kernel/source/here clean modules
-
-
-I became root and then I went to the place where I untarred the tar ball to and put in
-
-Make KDIR=/usr/src/linux-headers-2.6.27-3-generic clean modules
-
-
-This is where it started to go wrong. I get a warning message that I am running a later version of the kernel and that I should enable the 80211 thing in CONFIG_NETDEVICES-MULTIQUEUE for 802.11[ne] support"
-
-Q. Where /how is this enabling activity achieved. ? What do I run ? What command ? What GUI ? Where ?
-
-
-Then I looked at http://wireless/kernel.org/en/users/Drivers/p54#mailinglist
-
-It told me that I have to enable mac80211 :
-
-Networking --->
-
-   Wireless --->
-
-        <M> Improved wireless configuration API
-
-        <M> Generic IEEE 802.11 Networking Stack (Mac80211)
-
-I can't find where or how to do this.
-
-Now I am stuck. Seems like I don't have to do much more to get this to work.
-
-
-
-Any help would be appreciated hugely.
-
-
-Kind Regards
-
-Ron Daniel
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+On Wed, Sep 03, 2008 at 09:38:03AM -0400, John W. Linville wrote:
+> On Wed, Sep 03, 2008 at 04:24:48PM +0300, Jouni Malinen wrote:
+> > I don't see -wl in EXTRAVERSION in kernel.org version (1) or my own
+> > clone. Both are at commit 908dd0b965e64fcc2eb64152bac65f2876c34e0b. I
+> > noticed this disappearing at one of the updates since I had to add a
+> > local patch to be able to update my modules without rebooting..
+
+> The -wl comes from localversion-wireless in the kernel's root
+> directory.  Has something changed recently to break that mechanism?
+
+Interesting.. I tried it now and it does indeed work, i.e., I get -wl
+from localversion-wireless. I have no idea what happened earlier, but
+'make modules; sudo make modules_install' ended up installing modules
+into 2.6.27-rc4, not 2.6.27-rc4-wl after one of the git tree updates. I
+did not look at details at that point and just added -wl to Makefile
+EXTRAVERSION. Anyway, it is not needed anymore.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
