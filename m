@@ -1,110 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53789 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752449AbYIPMz6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 08:55:58 -0400
-Subject: [PATCH] cfg80211: show interface type
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 16 Sep 2008 14:55:09 +0200
-Message-Id: <1221569709.8916.36.camel@johannes.berg> (sfid-20080916_145601_935520_348A7127)
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:43814 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754418AbYICDbG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:31:06 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 08/39] iwl3945: replace association and beacon hooks with bss_info_changed cb
+Date: Wed,  3 Sep 2008 11:26:28 +0800
+Message-Id: <1220412419-15404-9-git-send-email-yi.zhu@intel.com> (sfid-20080903_053112_984921_AFC1F0BC)
+In-Reply-To: <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
+References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch makes cfg80211 show the interface in the nl80211
-information about a specific interface. API users are required
-to keep the type updated (everything else is fairly complicated)
-but you will get a warning if you fail to keep it updated.
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Let mac80211 and bss_info_changed callback handle the association and
+beacon changes.
+
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
-NB: This depends on "mac80211: make master interface not wireless"!
+ drivers/net/wireless/iwlwifi/iwl-3945.c |   81 -------------------------------
+ 1 files changed, 0 insertions(+), 81 deletions(-)
 
- include/net/cfg80211.h |    6 ++++--
- include/net/wireless.h |    2 ++
- net/mac80211/iface.c   |    1 +
- net/wireless/core.c    |    2 ++
- net/wireless/nl80211.c |    6 +++++-
- 5 files changed, 14 insertions(+), 3 deletions(-)
-
---- everything.orig/include/net/wireless.h	2008-09-16 14:12:43.000000000 +0200
-+++ everything/include/net/wireless.h	2008-09-16 14:14:30.000000000 +0200
-@@ -223,9 +223,11 @@ struct wiphy {
-  * the netdev.)
-  *
-  * @wiphy: pointer to hardware description
-+ * @iftype: interface type
-  */
- struct wireless_dev {
- 	struct wiphy *wiphy;
-+	enum nl80211_iftype iftype;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 8dc26ad..1377c81 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -688,87 +688,6 @@ static void iwl3945_rx_reply_rx(struct iwl3945_priv *priv,
  
- 	/* private to the generic wireless code */
- 	struct list_head list;
---- everything.orig/net/wireless/core.c	2008-09-16 14:12:40.000000000 +0200
-+++ everything/net/wireless/core.c	2008-09-16 14:14:30.000000000 +0200
-@@ -384,6 +384,8 @@ static int cfg80211_netdev_notifier_call
- 
- 	rdev = wiphy_to_dev(dev->ieee80211_ptr->wiphy);
- 
-+	WARN_ON(dev->ieee80211_ptr->iftype == NL80211_IFTYPE_UNSPECIFIED);
-+
- 	switch (state) {
- 	case NETDEV_REGISTER:
- 		mutex_lock(&rdev->devlist_mtx);
---- everything.orig/include/net/cfg80211.h	2008-09-16 14:11:35.000000000 +0200
-+++ everything/include/net/cfg80211.h	2008-09-16 14:14:30.000000000 +0200
-@@ -363,11 +363,13 @@ struct wiphy;
-  * wireless extensions but this is subject to reevaluation as soon as this
-  * code is used more widely and we have a first user without wext.
-  *
-- * @add_virtual_intf: create a new virtual interface with the given name
-+ * @add_virtual_intf: create a new virtual interface with the given name,
-+ *	must set the struct wireless_dev's iftype.
-  *
-  * @del_virtual_intf: remove the virtual interface determined by ifindex.
-  *
-- * @change_virtual_intf: change type of virtual interface
-+ * @change_virtual_intf: change type/configuration of virtual interface,
-+ *	keep the struct wireless_dev's iftype updated.
-  *
-  * @add_key: add a key with the given parameters. @mac_addr will be %NULL
-  *	when adding a group key.
---- everything.orig/net/mac80211/iface.c	2008-09-16 14:11:36.000000000 +0200
-+++ everything/net/mac80211/iface.c	2008-09-16 14:14:30.000000000 +0200
-@@ -624,6 +624,7 @@ static void ieee80211_setup_sdata(struct
- 	/* and set some type-dependent values */
- 	sdata->vif.type = type;
- 	sdata->dev->hard_start_xmit = ieee80211_subif_start_xmit;
-+	sdata->wdev.iftype = type;
- 
- 	/* only monitor differs */
- 	sdata->dev->type = ARPHRD_ETHER;
---- everything.orig/net/wireless/nl80211.c	2008-09-16 14:11:35.000000000 +0200
-+++ everything/net/wireless/nl80211.c	2008-09-16 14:23:45.000000000 +0200
-@@ -299,7 +299,7 @@ static int nl80211_send_iface(struct sk_
- 
- 	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, dev->ifindex);
- 	NLA_PUT_STRING(msg, NL80211_ATTR_IFNAME, dev->name);
--	/* TODO: interface type */
-+	NLA_PUT_U32(msg, NL80211_ATTR_IFTYPE, dev->ieee80211_ptr->iftype);
- 	return genlmsg_end(msg, hdr);
- 
-  nla_put_failure:
-@@ -453,6 +453,10 @@ static int nl80211_set_interface(struct 
- 				  &flags);
- 	err = drv->ops->change_virtual_intf(&drv->wiphy, ifindex,
- 					    type, err ? NULL : &flags, &params);
-+
-+	dev = __dev_get_by_index(&init_net, ifindex);
-+	WARN_ON(!dev || (!err && dev->ieee80211_ptr->iftype != type));
-+
- 	rtnl_unlock();
- 
-  unlock:
-
+ 	switch (le16_to_cpu(header->frame_control) & IEEE80211_FCTL_FTYPE) {
+ 	case IEEE80211_FTYPE_MGMT:
+-		switch (le16_to_cpu(header->frame_control) &
+-			IEEE80211_FCTL_STYPE) {
+-		case IEEE80211_STYPE_PROBE_RESP:
+-		case IEEE80211_STYPE_BEACON:{
+-				/* If this is a beacon or probe response for
+-				 * our network then cache the beacon
+-				 * timestamp */
+-				if ((((priv->iw_mode == IEEE80211_IF_TYPE_STA)
+-				      && !compare_ether_addr(header->addr2,
+-							     priv->bssid)) ||
+-				     ((priv->iw_mode == IEEE80211_IF_TYPE_IBSS)
+-				      && !compare_ether_addr(header->addr3,
+-							     priv->bssid)))) {
+-					struct ieee80211_mgmt *mgmt =
+-					    (struct ieee80211_mgmt *)header;
+-					__le32 *pos;
+-					pos = (__le32 *)&mgmt->u.beacon.
+-					    timestamp;
+-					priv->timestamp0 = le32_to_cpu(pos[0]);
+-					priv->timestamp1 = le32_to_cpu(pos[1]);
+-					priv->beacon_int = le16_to_cpu(
+-					    mgmt->u.beacon.beacon_int);
+-					if (priv->call_post_assoc_from_beacon &&
+-					    (priv->iw_mode ==
+-						IEEE80211_IF_TYPE_STA))
+-						queue_work(priv->workqueue,
+-						    &priv->post_associate.work);
+-
+-					priv->call_post_assoc_from_beacon = 0;
+-				}
+-
+-				break;
+-			}
+-
+-		case IEEE80211_STYPE_ACTION:
+-			/* TODO: Parse 802.11h frames for CSA... */
+-			break;
+-
+-			/*
+-			 * TODO: Use the new callback function from
+-			 * mac80211 instead of sniffing these packets.
+-			 */
+-		case IEEE80211_STYPE_ASSOC_RESP:
+-		case IEEE80211_STYPE_REASSOC_RESP:{
+-				struct ieee80211_mgmt *mgnt =
+-				    (struct ieee80211_mgmt *)header;
+-
+-				/* We have just associated, give some
+-				 * time for the 4-way handshake if
+-				 * any. Don't start scan too early. */
+-				priv->next_scan_jiffies = jiffies +
+-					IWL_DELAY_NEXT_SCAN_AFTER_ASSOC;
+-
+-				priv->assoc_id = (~((1 << 15) | (1 << 14)) &
+-						  le16_to_cpu(mgnt->u.
+-							      assoc_resp.aid));
+-				priv->assoc_capability =
+-				    le16_to_cpu(mgnt->u.assoc_resp.capab_info);
+-				if (priv->beacon_int)
+-					queue_work(priv->workqueue,
+-					    &priv->post_associate.work);
+-				else
+-					priv->call_post_assoc_from_beacon = 1;
+-				break;
+-			}
+-
+-		case IEEE80211_STYPE_PROBE_REQ:{
+-				DECLARE_MAC_BUF(mac1);
+-				DECLARE_MAC_BUF(mac2);
+-				DECLARE_MAC_BUF(mac3);
+-				if (priv->iw_mode == IEEE80211_IF_TYPE_IBSS)
+-					IWL_DEBUG_DROP
+-					    ("Dropping (non network): %s"
+-					     ", %s, %s\n",
+-					     print_mac(mac1, header->addr1),
+-					     print_mac(mac2, header->addr2),
+-					     print_mac(mac3, header->addr3));
+-				return;
+-			}
+-		}
+-
+ 	case IEEE80211_FTYPE_DATA:
+ 		/* fall through */
+ 	default:
+-- 
+1.5.3.6
 
