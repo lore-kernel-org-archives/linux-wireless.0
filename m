@@ -1,58 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.187]:55383 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752294AbYIKS4t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 14:56:49 -0400
-Received: by mu-out-0910.google.com with SMTP id g7so317182muf.1
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2008 11:56:48 -0700 (PDT)
-Message-ID: <aa050c750809111156s41d4cfcbnc79ed65687f97348@mail.gmail.com> (sfid-20080911_205652_812983_7E69B266)
-Date: Thu, 11 Sep 2008 11:56:47 -0700
-From: "Anna Neal" <anna@cozybit.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] libertas: Improvements on automatic tx power control via SIOCSIWTXPOW.
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <1221158234.6986.50.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <48c964bf.1b018e0a.75a0.0ecf@mx.google.com>
-	 <1221158234.6986.50.camel@johannes.berg>
+Received: from mga01.intel.com ([192.55.52.88]:43814 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754649AbYICDbP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:31:15 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 15/39] iwlwifi: remove rfkill warning from iwl-io
+Date: Wed,  3 Sep 2008 11:26:35 +0800
+Message-Id: <1220412419-15404-16-git-send-email-yi.zhu@intel.com> (sfid-20080903_053123_793622_FEA87BAD)
+In-Reply-To: <1220412419-15404-15-git-send-email-yi.zhu@intel.com>
+References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-9-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-10-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-11-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-12-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-13-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-14-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-15-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 11, 2008 at 11:37 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2008-09-11 at 11:17 -0700, Anna Neal wrote:
->
->> +/**
->> + * @brief Configures the transmission power control functionality.
->> + *
->> + * @param priv               A pointer to struct lbs_private structure
->> + * @param enable     Transmission power control enable
->> + * @param p0         Power level when link quality is good (dBm).
->> + * @param p1         Power level when link quality is fair (dBm).
->> + * @param p2         Power level when link quality is poor (dBm).
->> + * @param usesnr     Use Signal to Noise Ratio in TPC
->> + *
->> + * @return 0 on success
->
-> What doc tools are you using? This isn't kernel-doc notation, is it?
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Thanks for the feedback,
+The patch removes the warning since registers might be accessed also
+during rfkill.
 
-I was just trying to be consistent with the rest of the file. I am not
-currently using kernel-doc.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945-io.h |   18 ------------------
+ drivers/net/wireless/iwlwifi/iwl-io.h      |   18 ------------------
+ 2 files changed, 0 insertions(+), 36 deletions(-)
 
-Maybe its worth it, in a subsequent patch, to convert the whole file
-to kernel-doc notation?
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-io.h b/drivers/net/wireless/iwlwifi/iwl-3945-io.h
+index 98740e8..b3fe48d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-io.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-io.h
+@@ -153,28 +153,10 @@ static inline void __iwl3945_clear_bit(const char *f, u32 l,
+ static inline int _iwl3945_grab_nic_access(struct iwl3945_priv *priv)
+ {
+ 	int ret;
+-	u32 gp_ctl;
+-
+ #ifdef CONFIG_IWL3945_DEBUG
+ 	if (atomic_read(&priv->restrict_refcnt))
+ 		return 0;
+ #endif
+-	if (test_bit(STATUS_RF_KILL_HW, &priv->status) ||
+-	    test_bit(STATUS_RF_KILL_SW, &priv->status)) {
+-		IWL_WARNING("WARNING: Requesting MAC access during RFKILL "
+-			"wakes up NIC\n");
+-
+-		/* 10 msec allows time for NIC to complete its data save */
+-		gp_ctl = _iwl3945_read32(priv, CSR_GP_CNTRL);
+-		if (gp_ctl & CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY) {
+-			IWL_DEBUG_RF_KILL("Wait for complete power-down, "
+-				"gpctl = 0x%08x\n", gp_ctl);
+-			mdelay(10);
+-		} else
+-			IWL_DEBUG_RF_KILL("power-down complete, "
+-					  "gpctl = 0x%08x\n", gp_ctl);
+-	}
+-
+ 	/* this bit wakes up the NIC */
+ 	_iwl3945_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+ 	ret = _iwl3945_poll_bit(priv, CSR_GP_CNTRL,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
+index 17fb4e2..9740fcc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.h
++++ b/drivers/net/wireless/iwlwifi/iwl-io.h
+@@ -155,28 +155,10 @@ static inline void __iwl_clear_bit(const char *f, u32 l,
+ static inline int _iwl_grab_nic_access(struct iwl_priv *priv)
+ {
+ 	int ret;
+-	u32 gp_ctl;
+-
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 	if (atomic_read(&priv->restrict_refcnt))
+ 		return 0;
+ #endif
+-	if (test_bit(STATUS_RF_KILL_HW, &priv->status) ||
+-	    test_bit(STATUS_RF_KILL_SW, &priv->status)) {
+-		IWL_WARNING("WARNING: Requesting MAC access during RFKILL "
+-			"wakes up NIC\n");
+-
+-		/* 10 msec allows time for NIC to complete its data save */
+-		gp_ctl = _iwl_read32(priv, CSR_GP_CNTRL);
+-		if (gp_ctl & CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY) {
+-			IWL_DEBUG_RF_KILL("Wait for complete power-down, "
+-				"gpctl = 0x%08x\n", gp_ctl);
+-			mdelay(10);
+-		} else
+-			IWL_DEBUG_RF_KILL("power-down complete, "
+-					  "gpctl = 0x%08x\n", gp_ctl);
+-	}
+-
+ 	/* this bit wakes up the NIC */
+ 	_iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+ 	ret = _iwl_poll_bit(priv, CSR_GP_CNTRL,
+-- 
+1.5.3.6
 
-Any volunteers?
-
-Anna
-
->
-> [not that I think that should prevent the patch from going in, at this
-> point, since I don't think the file is read by kernel-doc anyway]
->
-> johannes
->
