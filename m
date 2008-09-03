@@ -1,62 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out02.mta.xmission.com ([166.70.13.232]:59673 "EHLO
-	out02.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751323AbYI2Fpk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 01:45:40 -0400
-From: ebiederm@xmission.com (Eric W. Biederman)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, Jouni Malinen <j@w1.fi>
-References: <1222509685.3798.59.camel@johannes.berg>
-	<m1r675aw0l.fsf@frodo.ebiederm.org>
-	<1222587651.3798.72.camel@johannes.berg>
-Date: Sun, 28 Sep 2008 22:44:14 -0700
-In-Reply-To: <1222587651.3798.72.camel@johannes.berg> (Johannes Berg's message
-	of "Sun, 28 Sep 2008 09:40:51 +0200")
-Message-ID: <m1y71b8q1d.fsf@frodo.ebiederm.org> (sfid-20080929_074546_441441_94791274)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Subject: Re: wireless vs. network namespaces (part II)
+Received: from mga01.intel.com ([192.55.52.88]:56324 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755033AbYICDbW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:31:22 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 20/39] iwlwifi: use station's mimo power save values
+Date: Wed,  3 Sep 2008 11:26:40 +0800
+Message-Id: <1220412419-15404-21-git-send-email-yi.zhu@intel.com> (sfid-20080903_055040_300075_05B8A060)
+In-Reply-To: <1220412419-15404-20-git-send-email-yi.zhu@intel.com>
+References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-9-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-10-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-11-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-12-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-13-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-14-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-15-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-16-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-17-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-18-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-19-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-20-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
->> >  * ensure that all netdevs created for this wiphy will have the right
->> >    netns.
->> >
->> > The latter part I'm unsure on, alloc_netdev_mq seems to always use
->> > init_net so I can't put them into the right namespace to start with, but
->> > because they're all "in there together" I can't allow switching
->> > namespaces either.. Ideas?
->> 
->> alloc_netdev_mq doesn't register the device, so it is a matter of simply
->> changing the network device pointer after allocation and before registration.
->> 
->> We do this by default when we dynamically create network devices using
->> netlink.  see rtnl_create_link for an example.
->
-> Ok. So I guess I'd want to write a wrapper for registering the netdev
-> that puts it into the right namespace for the wireless hardware and sets
-> the NETIF_F_NETNS_LOCAL flag.
+This patch fixes the wrong use of self mimo power save values instead of
+peer's mimo power save values.
 
-> I'll have to experiment a bit I guess.
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    3 ++-
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |    2 --
+ drivers/net/wireless/iwlwifi/iwl-dev.h    |    1 -
+ 3 files changed, 2 insertions(+), 4 deletions(-)
 
-So you are looking at using NETIF_F_NETNS_LOCAL to indicate that you can't move
-one of the devices?
-
-There is an UNREGISTER_NETDEV event and a REGISTER_NETDEV event sent when a device
-is moved between namespaces.  See:  dev_change_net_namespace.
-
-I think you would want to look onto those and move one network device when you
-move the other, without using NETIF_F_NETNS_LOCAL.
-
-Deletion and creation we have definitely done with paired veth devices.  I haven't
-looked at the migration case, but I with a little bit of guarding against recursion
-it looks like it probably can be handled.  
-
-Say trigger when your parnter device calls REGISTER_NETDEV in a different network
-namespace?
-
-Eric
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 754fef5..90a2b6d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -1153,7 +1153,8 @@ static int rs_switch_to_mimo2(struct iwl_priv *priv,
+ 	    !sta->ht_info.ht_supported)
+ 		return -1;
+ 
+-	if (priv->current_ht_config.tx_mimo_ps_mode == IWL_MIMO_PS_STATIC)
++	if (((sta->ht_info.cap & IEEE80211_HT_CAP_MIMO_PS) >> 2)
++						== IWL_MIMO_PS_STATIC)
+ 		return -1;
+ 
+ 	/* Need both Tx chains/antennas to support MIMO */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index f3c96ad..326ab01 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -586,8 +586,6 @@ static void iwl4965_ht_conf(struct iwl_priv *priv,
+ 		iwl_conf->supported_chan_width = 0;
+ 	}
+ 
+-	iwl_conf->tx_mimo_ps_mode =
+-		(u8)((ht_conf->cap & IEEE80211_HT_CAP_MIMO_PS) >> 2);
+ 	memcpy(iwl_conf->supp_mcs_set, ht_conf->supp_mcs_set, 16);
+ 
+ 	iwl_conf->control_channel = ht_bss_conf->primary_channel;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 5a55c87..ee38697 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -412,7 +412,6 @@ struct iwl_ht_info {
+ 	/* self configuration data */
+ 	u8 is_ht;
+ 	u8 supported_chan_width;
+-	u16 tx_mimo_ps_mode;
+ 	u8 is_green_field;
+ 	u8 sgf;			/* HT_SHORT_GI_* short guard interval */
+ 	u8 max_amsdu_size;
+-- 
+1.5.3.6
 
