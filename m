@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.227]:44388 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753607AbYIITlt (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43373
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1755311AbYICDhj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2008 15:41:49 -0400
-Received: by wx-out-0506.google.com with SMTP id h27so663968wxd.4
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Sep 2008 12:41:48 -0700 (PDT)
-Message-ID: <4219988b0809091241l565fa8fcpebe2fb552782c4d4@mail.gmail.com> (sfid-20080909_214159_592567_5757953E)
-Date: Tue, 9 Sep 2008 22:41:48 +0300
-From: "Nadav Kavalerchik" <nadavkav@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: BMC4310 support (03f0:171d)
-In-Reply-To: <4219988b0809091240s970c580k763054a56ef740b3@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <4219988b0809011331j4acb1582u3239218c6b7ff573@mail.gmail.com>
-	 <4219988b0809011349i640d36e0p497eb8cefe303d0@mail.gmail.com>
-	 <200809012333.58897.mb@bu3sch.de>
-	 <4219988b0809091240s970c580k763054a56ef740b3@mail.gmail.com>
+	Tue, 2 Sep 2008 23:37:39 -0400
+Date: Tue, 02 Sep 2008 20:37:32 -0700 (PDT)
+Message-Id: <20080902.203732.01926986.davem@davemloft.net> (sfid-20080903_053741_685505_0A2D93E7)
+To: yi.zhu@intel.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	tomas.winkler@intel.com, mohamed.abbas@intel.com
+Subject: Re: [PATCH 6/9] iwlwifi: fix rx_chain computation
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1220411930-15216-7-git-send-email-yi.zhu@intel.com>
+References: <1220411930-15216-5-git-send-email-yi.zhu@intel.com>
+	<1220411930-15216-6-git-send-email-yi.zhu@intel.com>
+	<1220411930-15216-7-git-send-email-yi.zhu@intel.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- anything i can do to help ?
+From: Zhu Yi <yi.zhu@intel.com>
+Date: Wed,  3 Sep 2008 11:18:47 +0800
 
- ndiswrapper can handle the vista drivers ver 6.1 so i am stuck :-(
+> From: Tomas Winkler <tomas.winkler@intel.com>
+> 
+> This patch fixes rx_chain computation. The code that adjusts number of
+> rx chains to number supported by HW was missing. Miss configuration
+> causes firmware error.  Note: iwlwifi supports HW with up to 3 RX
+> chains (2x2, 2x3, 1x2, and 3x3 MIMO). This patch also simplifies the
+> whole RX chain computation.
+> 
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
+> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 
- throw me a bone :-)
-
-
-> On Tue, Sep 2, 2008 at 12:33 AM, Michael Buesch <mb@bu3sch.de> wrote:
->>
->> On Monday 01 September 2008 22:49:20 Nadav Kavalerchik wrote:
->> > i just got a new HP tx2520ej tablet laptop with a BCM4310 wlan
->> > it is identified as Vendor : 03f0  , Product : 171d
->> >
->> > any chance i can try a development version that might work ?
->>
->> no
->>
->>
->> --
->> Greetings Michael.
->
+Acked-by: David S. Miller <davem@davemloft.net>
