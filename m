@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:54710 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752118AbYIFVvW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 17:51:22 -0400
-Date: Sat, 06 Sep 2008 16:51:22 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Tim Gardner <tim.gardner@canonical.com>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH V2] b43legacy: Fix failure in rate-adjustment mechanism
-Message-ID: <48c2fb5a.JqLELi8PJxjxmDaY%Larry.Finger@lwfinger.net> (sfid-20080906_235126_219334_7538E008)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga01.intel.com ([192.55.52.88]:41622 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754297AbYICDbB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:31:01 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 04/39] iwlwifi: remove obsolete 4965 forward declarations
+Date: Wed,  3 Sep 2008 11:26:24 +0800
+Message-Id: <1220412419-15404-5-git-send-email-yi.zhu@intel.com> (sfid-20080903_053106_123623_395EFFCC)
+In-Reply-To: <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
+References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A coding error present since b43legacy was incorporated into the
-kernel has prevented the driver from using the rate-setting mechanism
-of mac80211. The driver has been forced to remain at a 1 Mb/s rate.
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@kernel.org>		[2.6.26], [2.6.25]
+This patch removes unused forward declarations functions.
+
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-dev.h |    6 ------
+ 1 files changed, 0 insertions(+), 6 deletions(-)
 
-John,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index f46e9cd..0711b35 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -637,12 +637,6 @@ static inline u8 get_cmd_index(struct iwl_queue *q, u32 index, int is_huge)
+ 
+ struct iwl_priv;
+ 
+-/*
+- * Forward declare iwl-4965.c functions for iwl-base.c
+- */
+-extern void iwl4965_rf_kill_ct_config(struct iwl_priv *priv);
+-int iwl4965_check_empty_hw_queue(struct iwl_priv *priv, int sta_id,
+-					u8 tid, int txq_id);
+ 
+ /* Structures, enum, and defines specific to the 4965 */
+ 
+-- 
+1.5.3.6
 
-This is a bug, not a regression. I guess under the new rules that it
-is 2.6.28 material.
-
-Thanks,
-
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/b43legacy/xmit.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43legacy/xmit.c
-+++ wireless-testing/drivers/net/wireless/b43legacy/xmit.c
-@@ -624,7 +624,7 @@ void b43legacy_handle_hwtxstatus(struct
- 	tmp = hw->count;
- 	status.frame_count = (tmp >> 4);
- 	status.rts_count = (tmp & 0x0F);
--	tmp = hw->flags;
-+	tmp = hw->flags << 1;
- 	status.supp_reason = ((tmp & 0x1C) >> 2);
- 	status.pm_indicated = !!(tmp & 0x80);
- 	status.intermediate = !!(tmp & 0x40);
