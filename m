@@ -1,62 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:52195 "EHLO ogre.sisk.pl"
+Received: from mga01.intel.com ([192.55.52.88]:5684 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752346AbYIDIVP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Sep 2008 04:21:15 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: David Miller <davem@davemloft.net>
-Subject: Re: [GIT]: Networking
-Date: Thu, 4 Sep 2008 10:25:14 +0200
-Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, tomasw@gmail.com, yi.zhu@intel.com,
-	linville@tuxdriver.com, Jeff Garzik <jeff@garzik.org>
-References: <20080903.161341.239039051.davem@davemloft.net> <alpine.LFD.1.10.0809031621160.3515@nehalem.linux-foundation.org> <20080903.162603.27086959.davem@davemloft.net>
-In-Reply-To: <20080903.162603.27086959.davem@davemloft.net>
+	id S1755250AbYICDbo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:31:44 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 37/39] iwlwifi: fix compile warning
+Date: Wed,  3 Sep 2008 11:26:57 +0800
+Message-Id: <1220412419-15404-38-git-send-email-yi.zhu@intel.com> (sfid-20080903_055043_042210_96857163)
+In-Reply-To: <1220412419-15404-37-git-send-email-yi.zhu@intel.com>
+References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-9-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-10-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-11-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-12-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-13-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-14-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-15-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-16-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-17-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-18-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-19-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-20-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-21-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-22-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-23-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-24-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-25-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-26-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-27-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-28-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-29-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-30-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-31-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-32-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-33-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-34-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-35-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-36-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-37-git-send-email-yi.zhu@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809041025.15277.rjw@sisk.pl> (sfid-20080904_102134_055580_97E101BD)
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, 4 of September 2008, David Miller wrote:
-> From: Linus Torvalds <torvalds@linux-foundation.org>
-> Date: Wed, 3 Sep 2008 16:24:16 -0700 (PDT)
-> 
-> > On Wed, 3 Sep 2008, Linus Torvalds wrote:
-> > > 
-> > > What's so hard to understand about this?
-> > 
-> > Here's a simple rule of thumb:
-> >  - if it's not on the regression list
-> >  - if it's not a reported security hole
-> >  - if it's not on the reported oopses list
-> > then why are people sending it to me?
-> > 
-> > IOW, if it's just another random improvement, and you send it to me 
-> > outside of the merge window, then what is the point of the merge window? 
-> 
-> This is exactly what I've been trying to tell the Intel wireless folks
-> but they refuse to listen.
-> 
-> I just won't take their stuff until they get their act in gear.
-> 
-> No problem.
+The patch fixes compile warning for =E2=80=98iwl4965_hw_channel_switch=E2=
+=80=99 defined
+but not used.
 
-BTW, there are two regression fixes for forcedeth:
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-http://marc.info/?l=linux-kernel&m=121894389018584&w=4
-http://marc.info/?l=linux-kernel&m=121917167232014&w=4
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wire=
+less/iwlwifi/iwl-4965.c
+index d2569a2..9838de5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -1607,6 +1607,7 @@ static int iwl4965_send_rxon_assoc(struct iwl_pri=
+v *priv)
+ 	return ret;
+ }
+=20
++#ifdef IEEE80211_CONF_CHANNEL_SWITCH
+ static int iwl4965_hw_channel_switch(struct iwl_priv *priv, u16 channe=
+l)
+ {
+ 	int rc;
+@@ -1647,6 +1648,7 @@ static int iwl4965_hw_channel_switch(struct iwl_p=
+riv *priv, u16 channel)
+ 	rc =3D iwl_send_cmd_pdu(priv, REPLY_CHANNEL_SWITCH, sizeof(cmd), &cmd=
+);
+ 	return rc;
+ }
++#endif
+=20
+ static int iwl4965_shared_mem_rx_idx(struct iwl_priv *priv)
+ {
+--=20
+1.5.3.6
 
-that fix the regressions tracked as:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=11358
-http://bugzilla.kernel.org/show_bug.cgi?id=11361
-
-respectively and both are more than 2 weeks old now.
-
-Is there any chance to push them upstream or is there anything wrong with them?
-
-Thanks,
-Rafael
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
