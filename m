@@ -1,41 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:26076 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753392AbYIOPRr (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43364
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1755309AbYICDgl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 11:17:47 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: notify the user space about low signal quality
-Date: Mon, 15 Sep 2008 17:17:24 +0200
-Cc: Dan Williams <dcbw@redhat.com>, Helmut Schaa <hschaa@suse.de>
-References: <200809151416.07552.hschaa@suse.de> <200809151435.28933.hschaa@suse.de> <1221487652.10177.23.camel@localhost.localdomain>
-In-Reply-To: <1221487652.10177.23.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200809151717.24978.hs4233@mail.mn-solutions.de> (sfid-20080915_171750_893672_0629C113)
+	Tue, 2 Sep 2008 23:36:41 -0400
+Date: Tue, 02 Sep 2008 20:36:34 -0700 (PDT)
+Message-Id: <20080902.203634.127434142.davem@davemloft.net> (sfid-20080903_053700_116690_FBA2DB98)
+To: yi.zhu@intel.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	tomas.winkler@intel.com, emmanuel.grumbach@intel.com
+Subject: Re: [PATCH 4/9] iwlwifi: generic init calibrations framework
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1220411930-15216-5-git-send-email-yi.zhu@intel.com>
+References: <1220411930-15216-3-git-send-email-yi.zhu@intel.com>
+	<1220411930-15216-4-git-send-email-yi.zhu@intel.com>
+	<1220411930-15216-5-git-send-email-yi.zhu@intel.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> If you're concerned about polling or something, we could fix
-> that by  sending periodic quality events (which would rock!
-> then I don't have to poll in NM) on a standardized basis with a
-> sliding scale of frequency based on the signal strength
-> reported by the card like so:
+From: Zhu Yi <yi.zhu@intel.com>
+Date: Wed,  3 Sep 2008 11:18:45 +0800
 
-Ah, I wrote me previous e-mail before I read the rest of your 
-mail. A thing one, errm, I, shouldn't do :-)
+> From: Tomas Winkler <tomas.winkler@intel.com>
+> 
+> This patch fixes a critical bug that only the last calibration result
+> was applied. On reception of one calibration result all the calibration
+> results were freed therefore only last was applied. The patch fixes this
+> problem by introducing a generic init calibration framework which allows
+> variable number of init calibrations and allows addition new HW.
+> 
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 
-
-The event that Helmut's code could send could be containing the 
-current quality. For now, it could be just sent in case of "lost 
-AP" condition, but we, errm, you, could later submit a patch 
-that would periodically send this event according to your 
-suggested schedule or something more cleverer (e.g. only send it 
-when it significantly changes from the last-sent value, there's 
-no need to have periodicity here).
-
-A flag would could then define other things beside the quality, 
-e.g. a FLAG_LOST_AP or FLAG_LOST_BEACON or whatever fit's into 
-the nl80211 model (which I'm don't know in detail).
+This is borderline, I would rather hold off on such a sizable change
+for 2.6.27 as I'll have a hard time justifying it.
