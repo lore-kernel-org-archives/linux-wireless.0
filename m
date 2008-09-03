@@ -1,64 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.slamd64.com ([217.10.145.2]:45832 "EHLO
-	phoenix.slamd64.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751203AbYIPUod (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43356
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1755257AbYICDfJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 16:44:33 -0400
-Message-ID: <39295.87.81.255.5.1221597846.squirrel@phoenix.slamd64.com> (sfid-20080916_224451_491715_88F0E904)
-In-Reply-To: <20080916195134.GB14879@srcf.ucam.org>
-References: <48CFC03A.8020708@lwfinger.net> <200809161742.15527.mb@bu3sch.de>
-    <48CFE820.7010305@lwfinger.net>
-    <20080916195134.GB14879@srcf.ucam.org>
-Date: Tue, 16 Sep 2008 20:44:06 -0000 (UTC)
-Subject: Re: Regression in 2.6.27-rcX caused by commit
-     bc19d6e0b74ef03a3baf035412c95192b54dfc6f
-From: "Carlos Corbacho" <carlos@strangeworlds.co.uk>
-To: "Matthew Garrett" <mjg59@srcf.ucam.org>
-Cc: "Larry Finger" <larry.finger@lwfinger.net>,
-	"Adel Gadllah" <adel.gadllah@gmail.com>,
-	"wireless" <linux-wireless@vger.kernel.org>,
-	"LKML" <linux-kernel@vger.kernel.org>,
-	"Michael Buesch" <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 2 Sep 2008 23:35:09 -0400
+Date: Tue, 02 Sep 2008 20:35:02 -0700 (PDT)
+Message-Id: <20080902.203502.46334170.davem@davemloft.net> (sfid-20080903_055041_205697_1657A68B)
+To: yi.zhu@intel.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ron.rindjunsky@intel.com, ben.m.cahill@intel.com,
+	tomas.winkler@intel.com
+Subject: Re: [PATCH 2/9] iwlwifi: fix hidden ssid discovery in passive
+ channels
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1220411930-15216-3-git-send-email-yi.zhu@intel.com>
+References: <1220411930-15216-1-git-send-email-yi.zhu@intel.com>
+	<1220411930-15216-2-git-send-email-yi.zhu@intel.com>
+	<1220411930-15216-3-git-send-email-yi.zhu@intel.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> diff --git a/drivers/net/wireless/b43/rfkill.c
-> b/drivers/net/wireless/b43/rfkill.c
-> index fec5645..e8b2acb 100644
-> --- a/drivers/net/wireless/b43/rfkill.c
-> +++ b/drivers/net/wireless/b43/rfkill.c
-> @@ -49,21 +49,18 @@ static void b43_rfkill_update_state(struct b43_wldev
-> *dev)
->  	struct b43_rfkill *rfk = &(dev->wl->rfkill);
->
->  	if (!dev->radio_hw_enable) {
-> -		rfk->rfkill->state = RFKILL_STATE_HARD_BLOCKED;
-> +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_HARD_BLOCKED);
->  		return;
->  	}
->
->  	if (!dev->phy.radio_on)
-> -		rfk->rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
-> +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_SOFT_BLOCKED);
->  	else
-> -		rfk->rfkill->state = RFKILL_STATE_UNBLOCKED;
-> -
-> +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_UNBLOCKED);
->  }
+From: Zhu Yi <yi.zhu@intel.com>
+Date: Wed,  3 Sep 2008 11:18:43 +0800
 
-Just this should be enough to fix the regression for 2.6.27 (and should be
-trivial to port to b43legacy) in the immediate term (I was planning to
-send something similar).
+> From: Ron Rindjunsky <ron.rindjunsky@intel.com>
+> 
+> This enables sending of direct probes on passive channels, as long as
+> traffic was detected on that channel. This enables connectivity to
+> hidden/non broadcasting SSIDs APs on passive channels. Note 5000 HW
+> declares all 5.2 spectrum as passive.
+> 
+> Signed-off-by: Cahill Ben <ben.m.cahill@intel.com>
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 
-The rest of the patch is out-of-scope for 2.6.27, but is definitely along
-he right lines, IMHO (and it would be good if we can get a working version
-of it in to 2.6.28). I may try and look at it later, as I do have my b43
-hardware handy.
-
--Carlos
--- 
-E-Mail: carlos@strangeworlds.co.uk
-Web: strangeworlds.co.uk
-GPG Key ID: 0x23EE722D
+Acked-by: David S. Miller <davem@davemloft.net>
