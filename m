@@ -1,67 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:53318 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753106AbYIYWFr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2008 18:05:47 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so436887fgg.17
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2008 15:05:45 -0700 (PDT)
-Message-ID: <1ba2fa240809251505p342d8a6do51cf870624e0c8dd@mail.gmail.com> (sfid-20080926_000551_846070_AD8B43A0)
-Date: Fri, 26 Sep 2008 01:05:45 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Subject: Re: [PATCH RFC] mac80211: notify mac80211 about rfkill events
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	yi.zhu@intel.com, hmh@hmh.eng.br, linux-wireless@vger.kernel.org,
-	"Emmanuel Grumbach" <emmanuel.grumbach@intel.com>
-In-Reply-To: <200809252310.21320.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1222357719-26294-1-git-send-email-tomas.winkler@intel.com>
-	 <200809252310.21320.IvDoorn@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:22294 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754113AbYICDXA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:23:00 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Gregory Greenman <gregory.greenman@intel.com>,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 8/9] iwlwifi: call apm stop on exit
+Date: Wed,  3 Sep 2008 11:18:49 +0800
+Message-Id: <1220411930-15216-9-git-send-email-yi.zhu@intel.com> (sfid-20080903_052310_165087_6792E508)
+In-Reply-To: <1220411930-15216-8-git-send-email-yi.zhu@intel.com>
+References: <1220411930-15216-1-git-send-email-yi.zhu@intel.com>
+ <1220411930-15216-2-git-send-email-yi.zhu@intel.com>
+ <1220411930-15216-3-git-send-email-yi.zhu@intel.com>
+ <1220411930-15216-4-git-send-email-yi.zhu@intel.com>
+ <1220411930-15216-5-git-send-email-yi.zhu@intel.com>
+ <1220411930-15216-6-git-send-email-yi.zhu@intel.com>
+ <1220411930-15216-7-git-send-email-yi.zhu@intel.com>
+ <1220411930-15216-8-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 26, 2008 at 12:10 AM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> Hi,
->
->> Currently mac80211 is not notified about rfill state of low level driver
->> and doesn't now when it's disconnected and when to restart connection
->> There also there is conflict or no synchronization between 'wext txpower
->> disable' and rfkill events coming from rfkill subsystem
->>
->> This patch is just a sketch of possible solution, it probably even doesn't
->> compile
->
-> I am not sure if registring a notifier would be the best solution,
-> persionally I was thinking of implementing the rfkill structure into ieee80211_local
-> and make it listen to events directly.
->
-> Through a small callback function drivers can easily report their rfkill events
-> to mac80211 which in turn will call rfkill_force_state().
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-> On the other hand, perhaps notifications might work better, depends on what
-> the drivers like better.
+This patch calls apm stop on exit and suspend. Without this patch
+hardware consumes power even after driver is removed or suspended.
 
-That's definitely other option we wanted to suggest that mac80211
-would register itself to rfkill subsystem and will provide to driver
-appropriate callbacks.  The question is how  drivers vary in the rfkil
-implementation and whether it wouldn't be more complex, in that case
-the notification is quite clean solution.
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-> As mentioned in a discussion on the list a few days ago, SOFT_BLOCKED
-> is not for 'iwconfig txpower off' commands or any other commands coming
-> from userspace. Those are not HW triggered rfkill events.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 34928c8..4e3d6c7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2187,7 +2187,10 @@ static void __iwl4965_down(struct iwl_priv *priv)
+ 	udelay(5);
+ 
+ 	/* FIXME: apm_ops.suspend(priv) */
+-	priv->cfg->ops->lib->apm_ops.reset(priv);
++	if (exit_pending || test_bit(STATUS_IN_SUSPEND, &priv->status))
++		priv->cfg->ops->lib->apm_ops.stop(priv);
++	else
++		priv->cfg->ops->lib->apm_ops.reset(priv);
+ 	priv->cfg->ops->lib->free_shared_mem(priv);
+ 
+  exit:
+-- 
+1.5.3.6
 
-> That means that the only change needed in ieee80211_ioctl_siwtxpower() is
-> only allowing the enabling of the radio when RFKILL is not set to BLOCKED.
-
-That's just complicates everything and moving the policy  decisions to
-the driver after all even
-form txpower off you implement it as soft rfkill.
-
-I would suggest just remove the support for txpower off in mac80211
-now when appropriate or sync it with soft block after all it coming
-from user space as a software event.
-
-Tomas
