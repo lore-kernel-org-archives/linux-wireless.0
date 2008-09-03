@@ -1,224 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:39427 "EHLO ds10.mine.nu"
+Received: from mga09.intel.com ([134.134.136.24]:22294 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751907AbYI3LZp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2008 07:25:45 -0400
-Message-ID: <48E20CAC.9020800@openwrt.org> (sfid-20080930_132548_125980_84D4F24B)
-Date: Tue, 30 Sep 2008 13:25:32 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 3/3] ath5k: implement multi-rate retry support and fix tx
- status reporting
-References: <48E20B7C.2040405@openwrt.org> <48E20BFC.6040904@openwrt.org> <48E20C5B.4000900@openwrt.org>
-In-Reply-To: <48E20C5B.4000900@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1754076AbYICDW6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:22:58 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Ian Schram <ischram@telenet.be>, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 7/9] iwlwifi: fix Tx cmd memory allocation failure handling
+Date: Wed,  3 Sep 2008 11:18:48 +0800
+Message-Id: <1220411930-15216-8-git-send-email-yi.zhu@intel.com> (sfid-20080903_052308_744240_8B3ACC02)
+In-Reply-To: <1220411930-15216-7-git-send-email-yi.zhu@intel.com>
+References: <1220411930-15216-1-git-send-email-yi.zhu@intel.com>
+ <1220411930-15216-2-git-send-email-yi.zhu@intel.com>
+ <1220411930-15216-3-git-send-email-yi.zhu@intel.com>
+ <1220411930-15216-4-git-send-email-yi.zhu@intel.com>
+ <1220411930-15216-5-git-send-email-yi.zhu@intel.com>
+ <1220411930-15216-6-git-send-email-yi.zhu@intel.com>
+ <1220411930-15216-7-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Clean up the tx status reporting, fix retry counters (short retries are
-virtual collisions, not actual retries). Implement multi-rate retry
-support.
-This also fixes strong throughput fluctuations with rc80211_pid
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+This patch "iwlwifi: do not use GFP_DMA in iwl_tx_queue_init" removes
+GFP_DMA from allocation tx command buffers. GFP_DMA allows allocation
+only for memory under 16M which causes allocation problems
+suspend/resume flows.
 
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -583,6 +583,11 @@
- 		}
- 	}
- 
-+	/* set up multi-rate retry capabilities */
-+	if (sc->ah->ah_version == AR5K_AR5212) {
-+		hw->max_altrates = 3;
-+		hw->max_altrate_tries = 15;
-+	}
- 
- 	/* ready to process interrupts */
- 	__clear_bit(ATH_STAT_INVALID, sc->status);
-@@ -1149,7 +1154,9 @@
- 	struct sk_buff *skb = bf->skb;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	unsigned int pktlen, flags, keyidx = AR5K_TXKEYIX_INVALID;
--	int ret;
-+	struct ieee80211_rate *rate;
-+	unsigned int mrr_rate[3], mrr_tries[3];
-+	int i, ret;
- 
- 	flags = AR5K_TXDESC_INTREQ | AR5K_TXDESC_CLRDMASK;
- 
-@@ -1174,6 +1181,21 @@
- 	if (ret)
- 		goto err_unmap;
- 
-+	for (i = 0; i < 3; i++) {
-+		rate = ieee80211_get_alt_retry_rate(sc->hw, info, i);
-+		if (rate) {
-+			mrr_rate[i] = rate->hw_value;
-+			mrr_tries[i] = info->control.retries[i].limit;
-+		} else {
-+			mrr_rate[i] = 0;
-+			mrr_tries[i] = 0;
-+		}
-+	}
-+	ah->ah_setup_mrr_tx_desc(ah, ds,
-+		mrr_rate[0], mrr_tries[0],
-+		mrr_rate[1], mrr_tries[1],
-+		mrr_rate[2], mrr_tries[2]);
-+
- 	ds->ds_link = 0;
- 	ds->ds_data = bf->skbaddr;
- 
-@@ -1790,7 +1812,7 @@
- 	struct ath5k_desc *ds;
- 	struct sk_buff *skb;
- 	struct ieee80211_tx_info *info;
--	int ret;
-+	int i, ret;
- 
- 	spin_lock(&txq->lock);
- 	list_for_each_entry_safe(bf, bf0, &txq->q, list) {
-@@ -1812,7 +1834,23 @@
- 		pci_unmap_single(sc->pdev, bf->skbaddr, skb->len,
- 				PCI_DMA_TODEVICE);
- 
--		info->status.retry_count = ts.ts_shortretry + ts.ts_longretry / 6;
-+		info->tx_rate_idx = ath5k_hw_to_driver_rix(sc,
-+				ts.ts_rate[ts.ts_final_idx]);
-+		info->status.retry_count = ts.ts_longretry;
-+
-+		for (i = 0; i < 4; i++) {
-+			struct ieee80211_tx_altrate *r =
-+				&info->status.retries[i];
-+
-+			if (ts.ts_rate[i]) {
-+				r->rate_idx = ath5k_hw_to_driver_rix(sc, ts.ts_rate[i]);
-+				r->limit = ts.ts_retry[i];
-+			} else {
-+				r->rate_idx = -1;
-+				r->limit = 0;
-+			}
-+		}
-+
- 		if (unlikely(ts.ts_status)) {
- 			sc->ll_stats.dot11ACKFailureCount++;
- 			if (ts.ts_status & AR5K_TXERR_XRETRY)
---- a/drivers/net/wireless/ath5k/desc.c
-+++ b/drivers/net/wireless/ath5k/desc.c
-@@ -318,6 +318,15 @@
- 	return 0;
- }
- 
-+/* no mrr support for cards older than 5212 */
-+static int
-+ath5k_hw_setup_no_mrr(struct ath5k_hw *ah, struct ath5k_desc *desc,
-+	unsigned int tx_rate1, u_int tx_tries1, u_int tx_rate2,
-+	u_int tx_tries2, unsigned int tx_rate3, u_int tx_tries3)
-+{
-+	return 0;
-+}
-+
- /*
-  * Proccess the tx status descriptor on 5210/5211
+Using kmalloc is temporal solution and some consistent/coherent
+allocation schema will be more correct. Since iwlwifi hardware
+supports 64bit address this solution should work on x86 (32 and
+64bit) for now.
+
+This patch fixes memory freeing problem in the previous patch.
+
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Ian Schram <ischram@telenet.be>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-tx.c |   27 +++++++++++++++++----------
+ 1 files changed, 17 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index ff879d4..78b1a7a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -402,12 +402,11 @@ static int iwl_hw_tx_queue_init(struct iwl_priv *priv,
+ /**
+  * iwl_tx_queue_init - Allocate and initialize one tx/cmd queue
   */
-@@ -352,8 +361,10 @@
- 		AR5K_DESC_TX_STATUS1_ACK_SIG_STRENGTH);
- 	ts->ts_antenna = 1;
- 	ts->ts_status = 0;
--	ts->ts_rate = AR5K_REG_MS(tx_ctl->tx_control_0,
-+	ts->ts_rate[0] = AR5K_REG_MS(tx_ctl->tx_control_0,
- 		AR5K_2W_TX_DESC_CTL0_XMIT_RATE);
-+	ts->ts_retry[0] = ts->ts_longretry;
-+	ts->ts_final_idx = 0;
+-static int iwl_tx_queue_init(struct iwl_priv *priv,
+-			     struct iwl_tx_queue *txq,
++static int iwl_tx_queue_init(struct iwl_priv *priv, struct iwl_tx_queue *txq,
+ 			     int slots_num, u32 txq_id)
+ {
+ 	int i, len;
+-	int rc = 0;
++	int ret;
  
- 	if (!(tx_status->tx_status_0 & AR5K_DESC_TX_STATUS0_FRAME_XMIT_OK)) {
- 		if (tx_status->tx_status_0 &
-@@ -405,29 +416,43 @@
- 		AR5K_DESC_TX_STATUS1_XMIT_ANTENNA) ? 2 : 1;
- 	ts->ts_status = 0;
+ 	/*
+ 	 * Alloc buffer array for commands (Tx or other types of commands).
+@@ -428,17 +427,14 @@ static int iwl_tx_queue_init(struct iwl_priv *priv,
  
--	switch (AR5K_REG_MS(tx_status->tx_status_1,
--			AR5K_DESC_TX_STATUS1_FINAL_TS_INDEX)) {
--	case 0:
--		ts->ts_rate = tx_ctl->tx_control_3 &
--			AR5K_4W_TX_DESC_CTL3_XMIT_RATE0;
--		break;
-+	ts->ts_final_idx = AR5K_REG_MS(tx_status->tx_status_1,
-+			AR5K_DESC_TX_STATUS1_FINAL_TS_INDEX);
-+
-+	/* The longretry counter has the number of un-acked retries
-+	 * for the final rate. To get the total number of retries
-+	 * we have to add the retry counters for the other rates
-+	 * as well
-+	 */
-+	ts->ts_retry[ts->ts_final_idx] = ts->ts_longretry;
-+	switch (ts->ts_final_idx) {
-+	case 3:
-+		ts->ts_rate[3] = AR5K_REG_MS(tx_ctl->tx_control_3,
-+			AR5K_4W_TX_DESC_CTL3_XMIT_RATE3);
-+
-+		ts->ts_retry[2] = AR5K_REG_MS(tx_ctl->tx_control_2,
-+			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES2);
-+		ts->ts_longretry += ts->ts_retry[2];
-+		/* fall through */
-+	case 2:
-+		ts->ts_rate[2] = AR5K_REG_MS(tx_ctl->tx_control_3,
-+			AR5K_4W_TX_DESC_CTL3_XMIT_RATE2);
-+
-+		ts->ts_retry[1] = AR5K_REG_MS(tx_ctl->tx_control_2,
-+			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES1);
-+		ts->ts_longretry += ts->ts_retry[1];
-+		/* fall through */
- 	case 1:
--		ts->ts_rate = AR5K_REG_MS(tx_ctl->tx_control_3,
-+		ts->ts_rate[1] = AR5K_REG_MS(tx_ctl->tx_control_3,
- 			AR5K_4W_TX_DESC_CTL3_XMIT_RATE1);
--		ts->ts_longretry += AR5K_REG_MS(tx_ctl->tx_control_2,
-+
-+		ts->ts_retry[0] = AR5K_REG_MS(tx_ctl->tx_control_2,
- 			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES1);
--		break;
--	case 2:
--		ts->ts_rate = AR5K_REG_MS(tx_ctl->tx_control_3,
--			AR5K_4W_TX_DESC_CTL3_XMIT_RATE2);
--		ts->ts_longretry += AR5K_REG_MS(tx_ctl->tx_control_2,
--			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES2);
--		break;
--	case 3:
--		ts->ts_rate = AR5K_REG_MS(tx_ctl->tx_control_3,
--			AR5K_4W_TX_DESC_CTL3_XMIT_RATE3);
--		ts->ts_longretry += AR5K_REG_MS(tx_ctl->tx_control_2,
--			AR5K_4W_TX_DESC_CTL2_XMIT_TRIES3);
-+		ts->ts_longretry += ts->ts_retry[0];
-+		/* fall through */
-+	case 0:
-+		ts->ts_rate[0] = tx_ctl->tx_control_3 &
-+			AR5K_4W_TX_DESC_CTL3_XMIT_RATE0;
- 		break;
+ 		txq->cmd[i] = kmalloc(len, GFP_KERNEL);
+ 		if (!txq->cmd[i])
+-			return -ENOMEM;
++			goto err;
  	}
  
-@@ -653,7 +678,7 @@
- 	} else {
- 		ah->ah_setup_rx_desc = ath5k_hw_setup_rx_desc;
- 		ah->ah_setup_tx_desc = ath5k_hw_setup_2word_tx_desc;
--		ah->ah_setup_mrr_tx_desc = ath5k_hw_setup_mrr_tx_desc;
-+		ah->ah_setup_mrr_tx_desc = ath5k_hw_setup_no_mrr;
- 		ah->ah_proc_tx_desc = ath5k_hw_proc_2word_tx_status;
- 	}
+ 	/* Alloc driver data array and TFD circular buffer */
+-	rc = iwl_tx_queue_alloc(priv, txq, txq_id);
+-	if (rc) {
+-		for (i = 0; i < slots_num; i++)
+-			kfree(txq->cmd[i]);
++	ret = iwl_tx_queue_alloc(priv, txq, txq_id);
++	if (ret)
++		goto err;
  
---- a/drivers/net/wireless/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath5k/ath5k.h
-@@ -418,7 +418,9 @@
- 	u16	ts_seqnum;
- 	u16	ts_tstamp;
- 	u8	ts_status;
--	u8	ts_rate;
-+	u8	ts_rate[4];
-+	u8	ts_retry[4];
-+	u8	ts_final_idx;
- 	s8	ts_rssi;
- 	u8	ts_shortretry;
- 	u8	ts_longretry;
+-		return -ENOMEM;
+-	}
+ 	txq->need_update = 0;
+ 
+ 	/* TFD_QUEUE_SIZE_MAX must be power-of-two size, otherwise
+@@ -452,6 +448,17 @@ static int iwl_tx_queue_init(struct iwl_priv *priv,
+ 	iwl_hw_tx_queue_init(priv, txq);
+ 
+ 	return 0;
++err:
++	for (i = 0; i < slots_num; i++) {
++		kfree(txq->cmd[i]);
++		txq->cmd[i] = NULL;
++	}
++
++	if (txq_id == IWL_CMD_QUEUE_NUM) {
++		kfree(txq->cmd[slots_num]);
++		txq->cmd[slots_num] = NULL;
++	}
++	return -ENOMEM;
+ }
+ /**
+  * iwl_hw_txq_ctx_free - Free TXQ Context
+-- 
+1.5.3.6
 
