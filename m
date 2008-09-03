@@ -1,46 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55239 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752926AbYIQWH4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 18:07:56 -0400
-Subject: Re: iw packaging
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Davide Pesavento <davidepesa@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <69e28c910809171506o3ed21d2bucfbbc616d5472e6e@mail.gmail.com> (sfid-20080918_000642_648058_2CC050EB)
-References: <1221596962.9262.12.camel@johannes.berg>
-	 <1221649638.9262.50.camel@johannes.berg> <48D0E5CE.8050401@le-vert.net>
-	 <1221650286.9262.57.camel@johannes.berg>
-	 <69e28c910809171319r30d763cse24744a198e41f92@mail.gmail.com>
-	 <1221683467.7412.6.camel@localhost>
-	 <2da21fe50809171446y56cd5b2ctc864650be6030621@mail.gmail.com>
-	 <1221688366.7412.13.camel@localhost>
-	 <69e28c910809171458q70763189lde2e2710c64fc70c@mail.gmail.com>
-	 <43e72e890809171503i50bd86d5h5adef88f6214ef27@mail.gmail.com>
-	 <69e28c910809171506o3ed21d2bucfbbc616d5472e6e@mail.gmail.com>
-	 (sfid-20080918_000642_648058_2CC050EB)
-Content-Type: text/plain; charset=utf-8
-Date: Thu, 18 Sep 2008 00:07:47 +0200
-Message-Id: <1221689267.7412.20.camel@localhost> (sfid-20080918_000759_767203_9BAF79DA)
+Received: from mga11.intel.com ([192.55.52.93]:3123 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752792AbYICHJc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2008 03:09:32 -0400
+Subject: Re: kernel crash during suspend using iwl3945 driver 1.2.26k on
+	ubuntu hardy
+From: Zhu Yi <yi.zhu@intel.com>
+To: Karol Szkudlarek <karol@mikronika.com.pl>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <48BC47C5.2070807@mikronika.com.pl>
+References: <48BC47C5.2070807@mikronika.com.pl>
+Content-Type: multipart/mixed; boundary="=-l7FOLB2ef6/FSzZE/0do"
+Date: Wed, 03 Sep 2008 15:06:38 +0800
+Message-Id: <1220425598.28282.190.camel@debian.sh.intel.com> (sfid-20080903_090944_961017_C9158D0A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-09-18 at 00:06 +0200, Stefanik G=C3=A1bor wrote:
 
-> We want distros to ship iw, and for that we must not require using
-> extra files from a development repository.
+--=-l7FOLB2ef6/FSzZE/0do
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-"Must not" is a pretty strong wording. I'll wait for comments from
-somebody actually doing packaging and ignore you, thanks.
+On Mon, 2008-09-01 at 21:51 +0200, Karol Szkudlarek wrote:
+> I'm using Ubuntu 8.04 with compiled 1.2.26k linux wireless driver for 
+> iwl3945 network card on my hp6710b laptop.
+> Script during suspend trying to remove the iwl3945 module and I
+> receive kernel crash.
+> This is repeatable. I attached screenshot of kernel stack. Has
+> somebody of iwl3945 developers can look on it?
 
-johannes
+Please try attached patch.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+-yi
+
+--=-l7FOLB2ef6/FSzZE/0do
+Content-Disposition: attachment; filename=iwl3945_remove.patch
+Content-Type: text/x-patch; name=iwl3945_remove.patch; charset=GB2312
+Content-Transfer-Encoding: 7bit
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 53e234d..e312e93 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -8117,9 +8117,15 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
+ 
+ 	IWL_DEBUG_INFO("*** UNLOAD DRIVER ***\n");
+ 
++	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
++
+ 	set_bit(STATUS_EXIT_PENDING, &priv->status);
+ 
+-	iwl3945_down(priv);
++	if (priv->mac80211_registered) {
++		ieee80211_unregister_hw(priv->hw);
++		priv->mac80211_registered = 0;
++	} else
++		iwl3945_down(priv);
+ 
+ 	/* make sure we flush any pending irq or
+ 	 * tasklet for the driver
+@@ -8130,8 +8136,6 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
+ 
+ 	iwl_synchronize_irq(priv);
+ 
+-	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
+-
+ 	iwl3945_rfkill_unregister(priv);
+ 	iwl3945_dealloc_ucode_pci(priv);
+ 
+@@ -8142,9 +8146,6 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
+ 	iwl3945_unset_hw_setting(priv);
+ 	iwl3945_clear_stations_table(priv);
+ 
+-	if (priv->mac80211_registered)
+-		ieee80211_unregister_hw(priv->hw);
+-
+ 	/*netif_stop_queue(dev); */
+ 	flush_workqueue(priv->workqueue);
+ 
+
+--=-l7FOLB2ef6/FSzZE/0do--
+
