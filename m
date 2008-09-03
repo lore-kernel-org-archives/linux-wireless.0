@@ -1,178 +1,262 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47415 "EHLO mx1.redhat.com"
+Received: from bu3sch.de ([62.75.166.246]:34503 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751767AbYIJNGZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2008 09:06:25 -0400
-Subject: Re: [PATCH] libertas: Enable/disable automatic tx power control
-	via SIOCSIWTXPOW.
-From: Dan Williams <dcbw@redhat.com>
-To: Anna Neal <anna@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <aa050c750809091614r612cc8a9q5e635153cce0d713@mail.gmail.com>
-References: <48c1c0c1.1b068e0a.343f.ffffcb0d@mx.google.com>
-	 <1220996373.25237.18.camel@localhost.localdomain>
-	 <aa050c750809091614r612cc8a9q5e635153cce0d713@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 10 Sep 2008 09:07:11 -0400
-Message-Id: <1221052031.4648.6.camel@localhost.localdomain> (sfid-20080910_150629_480703_40139C7D)
-Mime-Version: 1.0
+	id S1751150AbYICKOh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2008 06:14:37 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Move Analog switching into phy code
+Date: Wed, 3 Sep 2008 12:12:20 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200809031212.21143.mb@bu3sch.de> (sfid-20080903_121443_656382_D4CC1FC9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-09-09 at 16:14 -0700, Anna Neal wrote:
-> Hello,
-> 
-> Thanks for the great feedback.
-> 
-> On Tue, Sep 9, 2008 at 2:39 PM, Dan Williams <dcbw@redhat.com> wrote:
-> > On Fri, 2008-09-05 at 15:56 -0700, Anna Neal wrote:
-> >> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-> >> index 802547e..6cc4858 100644
-> >> --- a/drivers/net/wireless/libertas/cmd.c
-> >> +++ b/drivers/net/wireless/libertas/cmd.c
-> >> +int lbs_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
-> >> +             int8_t p2, int usesnr)
-> >
-> > Can we rename this to lbs_set_tpc_cfg()?  It's a setter, and there could
-> > be a getter later, best to be clear about this.
-> 
-> Definitely.
-> 
-> >> +int lbs_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
-> >> +             int8_t p1, int8_t p2)
-> >
-> > Same here, can we change this to lbs_set_pa_cfg() or
-> > lbs_set_power_adapt_cfg() ?
-> 
-> Makes sense.
-> 
-> >> +{
-> >> +     struct cmd_ds_802_11_pa_cfg cmd;
-> >> +     int ret;
-> >> +
-> >> +     memset(&cmd, 0, sizeof(cmd));
-> >> +     cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-> >> +     cmd.action = cpu_to_le16(CMD_ACT_SET);
-> >> +     cmd.enable = !!enable;
-> >> +     cmd.P0 = p0;
-> >> +     cmd.P1 = p1;
-> >> +     cmd.P2 = p2;
-> >
-> > And this isn't compatible with the V9 and later firmware, which uses the
-> > PowerAdapt_Group_t Marvell IE.  I'd suggest defining two different
-> > commands, one for V8 and below which uses the format you have here, and
-> > one for V9 and above which uses the new format.  I have no idea what the
-> > fields in PA_Group_t are, but I'm sure you can find out since you're
-> > from CozyBit :)
-> 
-> We don't have V{9,10} hardware nor access to a final published spec.
-> How about if we wrap our changes around version checks and leave
-> things unchanged for other versions?
+This moves the Analog switching code into the PHY files.
 
-Odd.  In any case, your suggestion sounds fine.  I'll do the V9+ bits
-when there's time.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Thanks!
-Dan
+---
 
-> >> diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
-> >> index da618fc..a916bb9 100644
-> >> --- a/drivers/net/wireless/libertas/host.h
-> >> +++ b/drivers/net/wireless/libertas/host.h
-> >> @@ -83,6 +83,7 @@
-> >>  #define CMD_802_11_INACTIVITY_TIMEOUT                0x0067
-> >>  #define CMD_802_11_SLEEP_PERIOD                      0x0068
-> >>  #define CMD_802_11_TPC_CFG                   0x0072
-> >> +#define CMD_802_11_PA_CFG                    0x0073
-> >
-> > Should also:
-> >
-> > #define CMD_802_11_POWER_ADAPT_CFG_EXT  0x0073   /* v9 firmware and above */
-> >
-> > and use that in the v9+ lbs_set_power_adapt_cfg_ext() function.
-> 
-> Again, without hardware or the final spec implementation of this may
-> need to wait on my end.
-> 
-> >> +struct cmd_ds_802_11_pa_cfg {
-> >> +     struct cmd_header hdr;
-> >> +
-> >> +     __le16 action;
-> >> +     uint8_t enable;
-> >> +     int8_t P0;
-> >> +     int8_t P1;
-> >> +     int8_t P2;
-> >> +} __attribute__ ((packed));
-> >> +
-> >> +
-> >
-> > And for v9:
-> >
-> > struct pa_group {
-> >        u16 level;
-> >        u16 rate_map;
-> >        u32 reserved;
-> > }
-> >
-> > struct mrvl_ie_pa_group {
-> >        mrvlietypes_header hdr;
-> >        struct pa_group groups[5];
-> > }
-> >
-> > struct cmd_ds_802_11_pa_cfg_ext {
-> >        struct cmd_header hdr;
-> >
-> >        __le16 action;
-> >        u16 enable;
-> >        struct mrvl_ie_pa_group pa_groups;
-> > }
-> >
-> > note that there isn't an existing GPL implementation of
-> > POWER_ADAPT_CFG_EXT either at moblin or anywhere else, so I can't
-> > suggest what to fill in for the rate_map and level of struct pa_group in
-> > the implementation.  Ask Luis or Javier I guess since they probably have
-> > access to that information.
-> 
-> Javier just confirmed that we don't have access to this.
-> 
-> >>  struct cmd_ds_802_11_led_ctrl {
-> >>       __le16 action;
-> >>       __le16 numled;
-> >> diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-> >> index 426f1fe..b08bad8 100644
-> >> --- a/drivers/net/wireless/libertas/wext.c
-> >> +++ b/drivers/net/wireless/libertas/wext.c
-> >> @@ -1820,7 +1820,17 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
-> >>       }
-> >>
-> >>       if (vwrq->fixed == 0) {
-> >> -             /* Auto power control */
-> >> +             /* User requests automatic tx power control, however there are
-> >> +              * many auto tx settings.  For now use firmware defaults until
-> >> +              * we come up with a good way to expose these to the user. */
-> >> +             ret = lbs_power_adapt_cfg(priv, 1, POW_ADAPT_DEFAULT_P0,
-> >> +                             POW_ADAPT_DEFAULT_P1, POW_ADAPT_DEFAULT_P2);
-> >
-> > and do the firmware check right here and call lbs_set_power_adapt_cfg()
-> > for V8 and lower, and lbs_set_power_adapt_cfg_ext() for v9 and higher
-> > like so:
-> >
-> > if (priv->fwrelease >= 0x09000000) {
-> >        ret = lbs_power_adapt_cfg_ext(...);
-> > } else {
-> >        ret = lbs_power_adapt_cfg(...);
-> > }
-> 
-> So, to summarize, what I can do is...
-> 
-> > if (priv->fwrelease < 0x09000000) {
-> >        ret = lbs_power_adapt_cfg(...);
-> > }
-> 
-> ...would this be acceptable?  After all, it is still an improvement
-> over what's currently in the driver.
-> 
-> Thanks again!
-> 
-> Anna
+John, please queue for the next merge window.
 
+
+Index: wireless-testing/drivers/net/wireless/b43/phy_a.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/phy_a.c	2008-09-02 12:39:53.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/phy_a.c	2008-09-03 11:53:47.000000000 +0200
+@@ -629,12 +629,13 @@ const struct b43_phy_operations b43_phyo
+ 	.phy_read		= b43_aphy_op_read,
+ 	.phy_write		= b43_aphy_op_write,
+ 	.radio_read		= b43_aphy_op_radio_read,
+ 	.radio_write		= b43_aphy_op_radio_write,
+ 	.supports_hwpctl	= b43_aphy_op_supports_hwpctl,
+ 	.software_rfkill	= b43_aphy_op_software_rfkill,
++	.switch_analog		= b43_phyop_switch_analog_generic,
+ 	.switch_channel		= b43_aphy_op_switch_channel,
+ 	.get_default_chan	= b43_aphy_op_get_default_chan,
+ 	.set_rx_antenna		= b43_aphy_op_set_rx_antenna,
+ 	.recalc_txpower		= b43_aphy_op_recalc_txpower,
+ 	.adjust_txpower		= b43_aphy_op_adjust_txpower,
+ 	.pwork_15sec		= b43_aphy_op_pwork_15sec,
+Index: wireless-testing/drivers/net/wireless/b43/phy_common.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/phy_common.c	2008-09-02 02:37:28.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/phy_common.c	2008-09-03 11:52:50.000000000 +0200
+@@ -371,6 +371,11 @@ int b43_phy_shm_tssi_read(struct b43_wld
+ 		    & B43_HF_CCKBOOST)
+ 			average = (average >= 13) ? (average - 13) : 0;
+ 	}
+ 
+ 	return average;
+ }
++
++void b43_phyop_switch_analog_generic(struct b43_wldev *dev, bool on)
++{
++	b43_write16(dev, B43_MMIO_PHY0, on ? 0 : 0xF4);
++}
+Index: wireless-testing/drivers/net/wireless/b43/phy_common.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/phy_common.h	2008-09-02 02:37:28.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/phy_common.h	2008-09-03 11:51:53.000000000 +0200
+@@ -105,12 +105,14 @@ enum b43_txpwr_result {
+  * 			If NULL, hwpctl is assumed to be never supported.
+  * @software_rfkill:	Turn the radio ON or OFF.
+  * 			Possible state values are
+  * 			RFKILL_STATE_SOFT_BLOCKED or
+  * 			RFKILL_STATE_UNBLOCKED
+  * 			Must not be NULL.
++ * @switch_analog:	Turn the Analog on/off.
++ * 			Must not be NULL.
+  * @switch_channel:	Switch the radio to another channel.
+  * 			Must not be NULL.
+  * @get_default_chan:	Just returns the default channel number.
+  * 			Must not be NULL.
+  * @set_rx_antenna:	Set the antenna used for RX.
+  * 			Can be NULL, if not supported.
+@@ -155,12 +157,13 @@ struct b43_phy_operations {
+ 	u16 (*radio_read)(struct b43_wldev *dev, u16 reg);
+ 	void (*radio_write)(struct b43_wldev *dev, u16 reg, u16 value);
+ 
+ 	/* Radio */
+ 	bool (*supports_hwpctl)(struct b43_wldev *dev);
+ 	void (*software_rfkill)(struct b43_wldev *dev, enum rfkill_state state);
++	void (*switch_analog)(struct b43_wldev *dev, bool on);
+ 	int (*switch_channel)(struct b43_wldev *dev, unsigned int new_channel);
+ 	unsigned int (*get_default_chan)(struct b43_wldev *dev);
+ 	void (*set_rx_antenna)(struct b43_wldev *dev, int antenna);
+ 	int (*interf_mitigation)(struct b43_wldev *dev,
+ 				 enum b43_interference_mitigation new_mode);
+ 
+@@ -394,8 +397,17 @@ void b43_phy_txpower_adjust_work(struct 
+  * @shm_offset:		The SHM address to read the values from.
+  *
+  * Returns the average of the 4 TSSI values, or a negative error code.
+  */
+ int b43_phy_shm_tssi_read(struct b43_wldev *dev, u16 shm_offset);
+ 
++/**
++ * b43_phy_switch_analog_generic - Generic PHY operation for switching the Analog.
++ *
++ * It does the switching based on the PHY0 core register.
++ * Do _not_ call this directly. Only use it as a switch_analog callback
++ * for struct b43_phy_operations.
++ */
++void b43_phyop_switch_analog_generic(struct b43_wldev *dev, bool on);
++
+ 
+ #endif /* LINUX_B43_PHY_COMMON_H_ */
+Index: wireless-testing/drivers/net/wireless/b43/phy_g.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/phy_g.c	2008-09-02 12:40:51.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/phy_g.c	2008-09-03 11:54:09.000000000 +0200
+@@ -3268,12 +3268,13 @@ const struct b43_phy_operations b43_phyo
+ 	.phy_read		= b43_gphy_op_read,
+ 	.phy_write		= b43_gphy_op_write,
+ 	.radio_read		= b43_gphy_op_radio_read,
+ 	.radio_write		= b43_gphy_op_radio_write,
+ 	.supports_hwpctl	= b43_gphy_op_supports_hwpctl,
+ 	.software_rfkill	= b43_gphy_op_software_rfkill,
++	.switch_analog		= b43_phyop_switch_analog_generic,
+ 	.switch_channel		= b43_gphy_op_switch_channel,
+ 	.get_default_chan	= b43_gphy_op_get_default_chan,
+ 	.set_rx_antenna		= b43_gphy_op_set_rx_antenna,
+ 	.interf_mitigation	= b43_gphy_op_interf_mitigation,
+ 	.recalc_txpower		= b43_gphy_op_recalc_txpower,
+ 	.adjust_txpower		= b43_gphy_op_adjust_txpower,
+Index: wireless-testing/drivers/net/wireless/b43/phy_lp.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/phy_lp.c	2008-09-02 02:37:28.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/phy_lp.c	2008-09-03 11:54:30.000000000 +0200
+@@ -143,12 +143,13 @@ const struct b43_phy_operations b43_phyo
+ 	.init			= b43_lpphy_op_init,
+ 	.phy_read		= b43_lpphy_op_read,
+ 	.phy_write		= b43_lpphy_op_write,
+ 	.radio_read		= b43_lpphy_op_radio_read,
+ 	.radio_write		= b43_lpphy_op_radio_write,
+ 	.software_rfkill	= b43_lpphy_op_software_rfkill,
++	.switch_analog		= b43_phyop_switch_analog_generic,
+ 	.switch_channel		= b43_lpphy_op_switch_channel,
+ 	.get_default_chan	= b43_lpphy_op_get_default_chan,
+ 	.set_rx_antenna		= b43_lpphy_op_set_rx_antenna,
+ 	.recalc_txpower		= b43_lpphy_op_recalc_txpower,
+ 	.adjust_txpower		= b43_lpphy_op_adjust_txpower,
+ };
+Index: wireless-testing/drivers/net/wireless/b43/phy_n.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/phy_n.c	2008-09-02 02:37:28.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/phy_n.c	2008-09-03 11:55:35.000000000 +0200
+@@ -580,12 +580,18 @@ static void b43_nphy_op_radio_write(stru
+ 
+ static void b43_nphy_op_software_rfkill(struct b43_wldev *dev,
+ 					enum rfkill_state state)
+ {//TODO
+ }
+ 
++static void b43_nphy_op_switch_analog(struct b43_wldev *dev, bool on)
++{
++	b43_phy_write(dev, B43_NPHY_AFECTL_OVER,
++		      on ? 0 : 0x7FFF);
++}
++
+ static int b43_nphy_op_switch_channel(struct b43_wldev *dev,
+ 				      unsigned int new_channel)
+ {
+ 	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
+ 		if ((new_channel < 1) || (new_channel > 14))
+ 			return -EINVAL;
+@@ -611,11 +617,12 @@ const struct b43_phy_operations b43_phyo
+ 	.init			= b43_nphy_op_init,
+ 	.phy_read		= b43_nphy_op_read,
+ 	.phy_write		= b43_nphy_op_write,
+ 	.radio_read		= b43_nphy_op_radio_read,
+ 	.radio_write		= b43_nphy_op_radio_write,
+ 	.software_rfkill	= b43_nphy_op_software_rfkill,
++	.switch_analog		= b43_nphy_op_switch_analog,
+ 	.switch_channel		= b43_nphy_op_switch_channel,
+ 	.get_default_chan	= b43_nphy_op_get_default_chan,
+ 	.recalc_txpower		= b43_nphy_op_recalc_txpower,
+ 	.adjust_txpower		= b43_nphy_op_adjust_txpower,
+ };
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-09-02 12:13:57.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2008-09-03 11:58:23.000000000 +0200
+@@ -1049,29 +1049,12 @@ void b43_power_saving_ctl_bits(struct b4
+ 				break;
+ 			udelay(10);
+ 		}
+ 	}
+ }
+ 
+-/* Turn the Analog ON/OFF */
+-static void b43_switch_analog(struct b43_wldev *dev, int on)
+-{
+-	switch (dev->phy.type) {
+-	case B43_PHYTYPE_A:
+-	case B43_PHYTYPE_G:
+-		b43_write16(dev, B43_MMIO_PHY0, on ? 0 : 0xF4);
+-		break;
+-	case B43_PHYTYPE_N:
+-		b43_phy_write(dev, B43_NPHY_AFECTL_OVER,
+-			      on ? 0 : 0x7FFF);
+-		break;
+-	default:
+-		B43_WARN_ON(1);
+-	}
+-}
+-
+ void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags)
+ {
+ 	u32 tmslow;
+ 	u32 macctl;
+ 
+ 	flags |= B43_TMSLOW_PHYCLKEN;
+@@ -1093,13 +1076,13 @@ void b43_wireless_core_reset(struct b43_
+ 
+ 	/* Turn Analog ON, but only if we already know the PHY-type.
+ 	 * This protects against very early setup where we don't know the
+ 	 * PHY-type, yet. wireless_core_reset will be called once again later,
+ 	 * when we know the PHY-type. */
+ 	if (dev->phy.ops)
+-		b43_switch_analog(dev, 1);
++		dev->phy.ops->switch_analog(dev, 1);
+ 
+ 	macctl = b43_read32(dev, B43_MMIO_MACCTL);
+ 	macctl &= ~B43_MACCTL_GMODE;
+ 	if (flags & B43_TMSLOW_GMODE)
+ 		macctl |= B43_MACCTL_GMODE;
+ 	macctl |= B43_MACCTL_IHR_ENABLED;
+@@ -3949,13 +3932,13 @@ static void b43_wireless_core_exit(struc
+ 		b43_leds_exit(dev);
+ 		b43_rng_exit(dev->wl);
+ 	}
+ 	b43_dma_free(dev);
+ 	b43_pio_free(dev);
+ 	b43_chip_exit(dev);
+-	b43_switch_analog(dev, 0);
++	dev->phy.ops->switch_analog(dev, 0);
+ 	if (dev->wl->current_beacon) {
+ 		dev_kfree_skb_any(dev->wl->current_beacon);
+ 		dev->wl->current_beacon = NULL;
+ 	}
+ 
+ 	ssb_device_disable(dev->dev, 0);
+@@ -4434,13 +4417,13 @@ static int b43_wireless_core_attach(stru
+ 
+ 	/* Now set some default "current_dev" */
+ 	if (!wl->current_dev)
+ 		wl->current_dev = dev;
+ 	INIT_WORK(&dev->restart_work, b43_chip_reset);
+ 
+-	b43_switch_analog(dev, 0);
++	dev->phy.ops->switch_analog(dev, 0);
+ 	ssb_device_disable(dev->dev, 0);
+ 	ssb_bus_may_powerdown(bus);
+ 
+ out:
+ 	return err;
+ 
