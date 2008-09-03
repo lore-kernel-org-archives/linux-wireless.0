@@ -1,52 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:52570 "EHLO c60.cesmail.net"
+Received: from mga01.intel.com ([192.55.52.88]:56324 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753736AbYIRPNg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 11:13:36 -0400
-Subject: Re: [PATCH] iw: add kernel version checks for pending upstream
-	kernel features
-From: Pavel Roskin <proski@gnu.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1221748533-11000-1-git-send-email-linville@tuxdriver.com>
-References: <>  <1221748533-11000-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain
-Date: Thu, 18 Sep 2008 11:13:33 -0400
-Message-Id: <1221750813.5565.12.camel@dv> (sfid-20080918_171340_043885_B2DCC427)
-Mime-Version: 1.0
+	id S1755140AbYICDb3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:31:29 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 25/39] ath9k: change MIMO_PS to SM_PS
+Date: Wed,  3 Sep 2008 11:26:45 +0800
+Message-Id: <1220412419-15404-26-git-send-email-yi.zhu@intel.com> (sfid-20080903_055042_461720_890E77A6)
+In-Reply-To: <1220412419-15404-25-git-send-email-yi.zhu@intel.com>
+References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-9-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-10-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-11-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-12-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-13-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-14-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-15-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-16-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-17-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-18-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-19-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-20-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-21-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-22-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-23-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-24-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-25-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-09-18 at 10:35 -0400, John W. Linville wrote:
-> Add checks for kernel version to enable features in the iw tool.  This
-> allows packagers to get pre-package the tool without requiring precise
-> timing to stage the tool into their distributions.
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-I'm afraid it's not a good approach.  Suppose a distro takes this
-version of iw and Linux 2.6.27.  Later it issues an update for the
-kernel that updates it to 2.6.28.  Userspace tools don't normally depend
-on the specific version of the kernel, and that's a good thing.  But in
-this case, it means that iw won't be recompiled and updated unless the
-distro has some mechanism in place to detect such need.  Since the
-kernel version detection is done on the compiler level, I suspect such
-need won't be detected.
+This patch follows 11n spec naming more accurately, replacing MIMO_PS
+with SM_PS (Spatial Multiplexing Power Save).
 
-The end result is that iw won't be able to access all functionality of
-the kernel.
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/ath9k/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-I believe userspace tools should always do the best effort to support
-all functionality they can support, but fail gracefully if any kernel
-functionality is not available.
-
-Keeping a local version of nl80211.h in iw sources seems the most
-sensible solution to me.  It has its downsides, but the upside is that
-there is a clear separation between the userspace and the kernel code.
-
-I know something about Fedora packaging and I assisted developers of
-other userspace tools with similar issues.  Of course, opinions of the
-actual package maintainers would have more weight.
-
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index dc45eef..6ca4b89 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -223,7 +223,7 @@ static void setup_ht_cap(struct ieee80211_ht_info *ht_info)
+ 
+ 	ht_info->ht_supported = 1;
+ 	ht_info->cap = (u16)IEEE80211_HT_CAP_SUP_WIDTH
+-			|(u16)IEEE80211_HT_CAP_MIMO_PS
++			|(u16)IEEE80211_HT_CAP_SM_PS
+ 			|(u16)IEEE80211_HT_CAP_SGI_40
+ 			|(u16)IEEE80211_HT_CAP_DSSSCCK40;
+ 
 -- 
-Regards,
-Pavel Roskin
+1.5.3.6
+
