@@ -1,113 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51823 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751241AbYIOIak (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 04:30:40 -0400
-Subject: [PATCH] cfg80211: fix static regdomains
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 15 Sep 2008 10:30:34 +0200
-Message-Id: <1221467435.3700.27.camel@johannes.berg> (sfid-20080915_103044_560057_24DB1061)
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:56324 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754981AbYICDbZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:31:25 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 23/39] mac80211: change MIMO_PS to SM_PS
+Date: Wed,  3 Sep 2008 11:26:43 +0800
+Message-Id: <1220412419-15404-24-git-send-email-yi.zhu@intel.com> (sfid-20080903_055043_784408_739B6FCA)
+In-Reply-To: <1220412419-15404-23-git-send-email-yi.zhu@intel.com>
+References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-9-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-10-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-11-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-12-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-13-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-14-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-15-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-16-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-17-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-18-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-19-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-20-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-21-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-22-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-23-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When Luis added the static regdomains back he used +/-20
-of the centre frequencies to account for 40MHz bandwidth
-neglecting the fact that 40MHz bandwidth cannot be used
-on the channels close to the allowed band edges.
+From: Ron Rindjunsky <ron.rindjunsky@intel.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+This patch follows 11n spec naming more rigorously replacing MIMO_PS
+with SM_PS (Spatial Multiplexing Power Save).
+
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
-Maybe this bandwidth vs. centre frequency and band use is
-just too complicated?
+ include/linux/ieee80211.h |   12 ++++++------
+ net/mac80211/main.c       |    4 ++--
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
- net/wireless/core.c |   32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
-
---- everything.orig/net/wireless/core.c	2008-09-15 10:23:47.000000000 +0200
-+++ everything/net/wireless/core.c	2008-09-15 10:24:27.000000000 +0200
-@@ -41,7 +41,7 @@ const struct ieee80211_regdomain world_r
- 	.n_reg_rules = 1,
- 	.alpha2 =  "00",
- 	.reg_rules = {
--		REG_RULE(2402, 2472, 40, 6, 20,
-+		REG_RULE(2412-10, 2462+10, 40, 6, 20,
- 			NL80211_RRF_PASSIVE_SCAN |
- 			NL80211_RRF_NO_IBSS),
- 	}
-@@ -64,17 +64,17 @@ const struct ieee80211_regdomain us_regd
- 	.alpha2 =  "US",
- 	.reg_rules = {
- 		/* IEEE 802.11b/g, channels 1..11 */
--		REG_RULE(2412-20, 2462+20, 40, 6, 27, 0),
-+		REG_RULE(2412-10, 2462+10, 40, 6, 27, 0),
- 		/* IEEE 802.11a, channel 36 */
--		REG_RULE(5180-20, 5180+20, 40, 6, 23, 0),
-+		REG_RULE(5180-10, 5180+10, 40, 6, 23, 0),
- 		/* IEEE 802.11a, channel 40 */
--		REG_RULE(5200-20, 5200+20, 40, 6, 23, 0),
-+		REG_RULE(5200-10, 5200+10, 40, 6, 23, 0),
- 		/* IEEE 802.11a, channel 44 */
--		REG_RULE(5220-20, 5220+20, 40, 6, 23, 0),
-+		REG_RULE(5220-10, 5220+10, 40, 6, 23, 0),
- 		/* IEEE 802.11a, channels 48..64 */
--		REG_RULE(5240-20, 5320+20, 40, 6, 23, 0),
-+		REG_RULE(5240-10, 5320+10, 40, 6, 23, 0),
- 		/* IEEE 802.11a, channels 149..165, outdoor */
--		REG_RULE(5745-20, 5825+20, 40, 6, 30, 0),
-+		REG_RULE(5745-10, 5825+10, 40, 6, 30, 0),
- 	}
- };
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index be45645..333d3ae 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -708,7 +708,7 @@ struct ieee80211_ht_addt_info {
  
-@@ -83,12 +83,12 @@ const struct ieee80211_regdomain jp_regd
- 	.alpha2 =  "JP",
- 	.reg_rules = {
- 		/* IEEE 802.11b/g, channels 1..14 */
--		REG_RULE(2412-20, 2484+20, 40, 6, 20, 0),
-+		REG_RULE(2412-10, 2484+10, 40, 6, 20, 0),
- 		/* IEEE 802.11a, channels 34..48 */
--		REG_RULE(5170-20, 5240+20, 40, 6, 20,
-+		REG_RULE(5170-10, 5240+10, 40, 6, 20,
- 			NL80211_RRF_PASSIVE_SCAN),
- 		/* IEEE 802.11a, channels 52..64 */
--		REG_RULE(5260-20, 5320+20, 40, 6, 20,
-+		REG_RULE(5260-10, 5320+10, 40, 6, 20,
- 			NL80211_RRF_NO_IBSS |
- 			NL80211_RRF_DFS),
- 	}
-@@ -101,22 +101,22 @@ const struct ieee80211_regdomain eu_regd
- 	.alpha2 =  "EU",
- 	.reg_rules = {
- 		/* IEEE 802.11b/g, channels 1..13 */
--		REG_RULE(2412-20, 2472+20, 40, 6, 20, 0),
-+		REG_RULE(2412-10, 2472+10, 40, 6, 20, 0),
- 		/* IEEE 802.11a, channel 36 */
--		REG_RULE(5180-20, 5180+20, 40, 6, 23,
-+		REG_RULE(5180-10, 5180+10, 40, 6, 23,
- 			NL80211_RRF_PASSIVE_SCAN),
- 		/* IEEE 802.11a, channel 40 */
--		REG_RULE(5200-20, 5200+20, 40, 6, 23,
-+		REG_RULE(5200-10, 5200+10, 40, 6, 23,
- 			NL80211_RRF_PASSIVE_SCAN),
- 		/* IEEE 802.11a, channel 44 */
--		REG_RULE(5220-20, 5220+20, 40, 6, 23,
-+		REG_RULE(5220-10, 5220+10, 40, 6, 23,
- 			NL80211_RRF_PASSIVE_SCAN),
- 		/* IEEE 802.11a, channels 48..64 */
--		REG_RULE(5240-20, 5320+20, 40, 6, 20,
-+		REG_RULE(5240-10, 5320+10, 40, 6, 20,
- 			NL80211_RRF_NO_IBSS |
- 			NL80211_RRF_DFS),
- 		/* IEEE 802.11a, channels 100..140 */
--		REG_RULE(5500-20, 5700+20, 40, 6, 30,
-+		REG_RULE(5500-10, 5700+10, 40, 6, 30,
- 			NL80211_RRF_NO_IBSS |
- 			NL80211_RRF_DFS),
- 	}
-
+ /* 802.11n HT capabilities masks */
+ #define IEEE80211_HT_CAP_SUP_WIDTH		0x0002
+-#define IEEE80211_HT_CAP_MIMO_PS		0x000C
++#define IEEE80211_HT_CAP_SM_PS			0x000C
+ #define IEEE80211_HT_CAP_GRN_FLD		0x0010
+ #define IEEE80211_HT_CAP_SGI_20			0x0020
+ #define IEEE80211_HT_CAP_SGI_40			0x0040
+@@ -737,11 +737,11 @@ struct ieee80211_ht_addt_info {
+ #define IEEE80211_HT_IE_NON_GF_STA_PRSNT	0x0004
+ #define IEEE80211_HT_IE_NON_HT_STA_PRSNT	0x0010
+ 
+-/* MIMO Power Save Modes */
+-#define WLAN_HT_CAP_MIMO_PS_STATIC	0
+-#define WLAN_HT_CAP_MIMO_PS_DYNAMIC	1
+-#define WLAN_HT_CAP_MIMO_PS_INVALID	2
+-#define WLAN_HT_CAP_MIMO_PS_DISABLED	3
++/* Spatial Multiplexing Power Save Modes */
++#define WLAN_HT_CAP_SM_PS_STATIC	0
++#define WLAN_HT_CAP_SM_PS_DYNAMIC	1
++#define WLAN_HT_CAP_SM_PS_INVALID	2
++#define WLAN_HT_CAP_SM_PS_DISABLED	3
+ 
+ /* Authentication algorithms */
+ #define WLAN_AUTH_OPEN 0
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 638b75f..804a875 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1140,8 +1140,8 @@ u32 ieee80211_handle_ht(struct ieee80211_local *local, int enable_ht,
+ 	ht_conf.ht_supported = 1;
+ 
+ 	ht_conf.cap = req_ht_cap->cap & sband->ht_info.cap;
+-	ht_conf.cap &= ~(IEEE80211_HT_CAP_MIMO_PS);
+-	ht_conf.cap |= sband->ht_info.cap & IEEE80211_HT_CAP_MIMO_PS;
++	ht_conf.cap &= ~(IEEE80211_HT_CAP_SM_PS);
++	ht_conf.cap |= sband->ht_info.cap & IEEE80211_HT_CAP_SM_PS;
+ 	ht_bss_conf.primary_channel = req_bss_cap->primary_channel;
+ 	ht_bss_conf.bss_cap = req_bss_cap->bss_cap;
+ 	ht_bss_conf.bss_op_mode = req_bss_cap->bss_op_mode;
+-- 
+1.5.3.6
 
