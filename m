@@ -1,32 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:34168 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753081AbYIHTFb (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51371
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751599AbYICARM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 15:05:31 -0400
-Message-ID: <48C5777B.9070106@lwfinger.net> (sfid-20080908_210535_126987_CBBD3D7B)
-Date: Mon, 08 Sep 2008 14:05:31 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: feldmaus <feldmann_markus@gmx.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Do not get BCM4303 to work
-References: <ga2fra$9q$1@ger.gmane.org>
-In-Reply-To: <ga2fra$9q$1@ger.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+	Tue, 2 Sep 2008 20:17:12 -0400
+Date: Tue, 02 Sep 2008 17:17:06 -0700 (PDT)
+Message-Id: <20080902.171706.135252299.davem@davemloft.net> (sfid-20080903_021718_992726_6634091C)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2008-09-02
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20080902221511.GH3050@tuxdriver.com>
+References: <20080902221511.GH3050@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-feldmaus wrote:
-> Hi All,
-> 
-> i do not get my Wlan Card with BCM4303 Chip to work.
-> 
-> I am not sure whether this Card is active, because <dmesg> show me,
-> [  409.752921] b43legacy-phy0: Radio hardware status changed to DISABLED
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 2 Sep 2008 18:15:11 -0400
 
-Your card can receive, but not transmit due to a problem with the 
-rfkill switch handling in b43legacy. I'm working on this problem with 
-a Ubuntu user, and will post patches as soon as the problem is fixed.
+> Here is this week's round of fixes.  Admittedly not all of them are
+> regressions with entries at bugzilla.kernel.org -- hopefully that is not
+> a hard and fast requirement. :-)
+> 
+> I think everything here is suitable for 2.6.27.  Please let me know if
+> there are problems.
 
-Larry
+Pulled and I'll push back out to kernel.org after my build tests complete.
