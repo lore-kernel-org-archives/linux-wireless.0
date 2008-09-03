@@ -1,76 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34377 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751004AbYIIJzx (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:47249 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752010AbYICVUa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2008 05:55:53 -0400
-Subject: Re: HT action frame code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Jouni Malinen <j@w1.fi>, Ron Rindjunsky <rindjon@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1ba2fa240809090252u44c5a016m98845379ac213df9@mail.gmail.com> (sfid-20080909_115204_233180_2C2D2255)
-References: <1220883730.31304.60.camel@johannes.berg>
-	 <48C5868B.8060103@w1.fi> <1220942004.31304.101.camel@johannes.berg>
-	 <1ba2fa240809090114u67086f2duc5cc9addd384e30d@mail.gmail.com>
-	 <1220948427.31304.107.camel@johannes.berg>
-	 <1ba2fa240809090146p612083aclf3a2a924a81e75e9@mail.gmail.com>
-	 <1220950358.31304.112.camel@johannes.berg>
-	 <1ba2fa240809090241g2604e3ddhfd39359fd8eb0f8b@mail.gmail.com>
-	 <1220953379.31304.124.camel@johannes.berg>
-	 <1ba2fa240809090252u44c5a016m98845379ac213df9@mail.gmail.com>
-	 (sfid-20080909_115204_233180_2C2D2255)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HYSIoukj14MB+Yx9+z1I"
-Date: Tue, 09 Sep 2008 11:55:45 +0200
-Message-Id: <1220954146.31304.127.camel@johannes.berg> (sfid-20080909_115556_231835_347D4BD8)
-Mime-Version: 1.0
+	Wed, 3 Sep 2008 17:20:30 -0400
+Date: Wed, 3 Sep 2008 18:20:21 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Andrew Bird <ajb@spheresystems.co.uk>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Cezary Jackiewicz <cezary.jackiewicz@gmail.com>,
+	Philip Langdale <philipl@overt.org>
+Subject: Re: [PATCH 5/5] rfkill: remove transmitter blocking on suspend
+Message-ID: <20080903212020.GA14620@khazad-dum.debian.net> (sfid-20080903_232033_373901_AD803DAD)
+References: <1219762681-26911-1-git-send-email-hmh@hmh.eng.br> <1219762681-26911-6-git-send-email-hmh@hmh.eng.br> <20080903190559.GO3050@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080903190559.GO3050@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 03 Sep 2008, John W. Linville wrote:
+> > The following drivers need to check if they need to explicitly block
+> > their transmitters in their own suspend handlers (maintainers Cc'd):
+> > 	arch/arm/mach-pxa/tosa-bt.c
+> > 	drivers/net/usb/hso.c
+> > 	drivers/net/wireless/rt2x00/* (USB might need it?)
+> > 	drivers/net/wireless/b43/ (SSB over USB might need it?)
+> > 	drivers/misc/hp-wmi.c
+> > 	eeepc-laptop w/rfkill support (not in mainline yet)
+> > 	Compal laptop w/rfkill support (not in mainline yet)
+> > 	toshiba-acpi w/rfkill support (not in mainline yet)
+> 
+> Are we now satisfied that the in-kernel drivers above are all prepared
+> for this patch?
 
---=-HYSIoukj14MB+Yx9+z1I
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I didn't receive a single response stating that a driver would need special
+care, but then, I didn't receive many responses at all...
 
-On Tue, 2008-09-09 at 12:52 +0300, Tomas Winkler wrote:
-
-> > Well yes, but that just triggers when aggregation on our end, what I'd
-> > been thinking about was when the remote side wants to start aggregation=
-.
->=20
-> There is some misunderstanding. I hope I'm explaining the problematic
-> part.  Aggregation is always initialized by TX side it's one direction
-> only. So if there AP and STA wants to start aggregation. Both will
-> open a stream. The streams are independent.
-
-Right. And if mac80211 is the AP, then I don't see how the STA can start
-aggregation since I couldn't find where the relevant action frames are
-handled. But you said it's not part of the code now, so I couldn't find
-it anyway.
-
-johannes
-
---=-HYSIoukj14MB+Yx9+z1I
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIxkgeAAoJEKVg1VMiehFYTSAP/22Z9jNg61gDs5b4pKdMR6IT
-vb6n9NKsC6NkfBWKIGRZFcQ+ZRPxxuufTeby7uKeZG5P/ElCvbxP3Egfyq6hHRxX
-0cYDIJAK3Ot/oAnQQIW6aq6eQ42vh6tx6HwkFgAD9d3aGZJfri8/l5uBA//rQmoK
-susxm7lSSqflIMGn66TWC0RI55WIlng8fE9Tk3vqpuDet0NabSRVIOU0Ovd/SBAY
-fDVWFsTX7hrarGISU0y5syqsvmrZOrHLS78vmzsAZTKUDYLYedNu3B5kmQd9Q/m6
-FqiEBTQT4631q55vCmVfQAmSk+c/UqScnlTvzNjmfjnzxeIhTlsT5vYMUcWnzqgP
-2Ia+PTlF1yNLk4odkWmsq9469wHUze6jq7upPyCdna7RV3LOk3qEQGElDUlbrFCK
-FGHi3sh5l3ufimqdWXSzeGtJaE9ORzfBzGSlzHrednMPa0ca3uP3EBe64nEMVduC
-xN+Yuy2Zc4VJcuz3sQuuzkYJBm3cQI77i7YTOQvvUm+e+qOqxM2va79bO70Pa7Hi
-G+fkKbo17NorjSYy9LakUF7xskYvnpTtDMDkjbqPSDRoK0XKAhziBQeya7VFATih
-6H5vjYrrQtGhDxPfJynImE3TFoohdZJJeFsN7QKBXGYLp1iSAFoMeXUKnAT+Zisa
-/Y0/dmic7VwmDoij/Rk/
-=Zflk
------END PGP SIGNATURE-----
-
---=-HYSIoukj14MB+Yx9+z1I--
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
