@@ -1,63 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35403 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753683AbYIGNjd (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:34496 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751047AbYICPZP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Sep 2008 09:39:33 -0400
-Subject: Re: [RFC PATCH 0/3] mac80211 dissasociation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
-References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dJJPXxQ2O2S1Y6JMAXo1"
-Date: Sun, 07 Sep 2008 15:39:25 +0200
-Message-Id: <1220794765.31304.8.camel@johannes.berg> (sfid-20080907_153937_976752_6A38CE0A)
-Mime-Version: 1.0
+	Wed, 3 Sep 2008 11:25:15 -0400
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: at76_usb.[ch] gone fishing from wireless-testing ?
+References: <43e72e890809021953o29c6ba53wcdf7630d4ff10b30@mail.gmail.com>
+	<87vdxedje8.fsf@nokia.com>
+	<43e72e890809022003gfd462d2ma8d68f032754c121@mail.gmail.com>
+	<20080903125352.GI3050@tuxdriver.com> <87zlmpuwmc.fsf@nokia.com>
+	<20080903145007.GL3050@tuxdriver.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 03 Sep 2008 18:25:09 +0300
+In-Reply-To: <20080903145007.GL3050@tuxdriver.com> (John W. Linville's message of "Wed\, 3 Sep 2008 10\:50\:07 -0400")
+Message-ID: <8763pdfe0a.fsf@litku.valot.fi> (sfid-20080903_172519_955340_6F3A66A3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+John W. Linville <linville@tuxdriver.com> writes:
 
---=-dJJPXxQ2O2S1Y6JMAXo1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> On Wed, Sep 03, 2008 at 05:34:03PM +0300, Kalle Valo wrote:
+>> John W. Linville <linville@tuxdriver.com> writes:
+>> 
+>> > Anyone want to talk me out of pulling-in the at76 parts?
+>> 
+>> Sorry, I don't quite understand what pulling-in means here.
+>
+> I just mean making sure it is (and continues to be) in
+> wireless-testing's master branch.
 
-On Sun, 2008-09-07 at 01:14 +0300, Tomas Winkler wrote:
-> This series should fix mac problems in disassociation
-> There are two basic problems disassociation in current implementation.
-> The order of steps in the dissociation flow and missing proper
-> disassociation when moving from one AP to another.=20
+Ok, thanks for the explanation.
 
-Mind if I adopt this patch series? I've done only slight modifications
-so far (the int->bool thing I asked for) and have rebased all the
-patches I had already posted on top of it. The arguments to
-ieee80211_set_disassoc are changing a lot in my patch series anyway so
-I'll just work on top of the bool/bool thing and  then fix it up, ok?
+>> But personally I don't mind, choose which one is best in your opinion.
+>> If you drop it, I can always resubmit it when it's properly working.
+>
+> Leaving it in has encouraged people to keep it up-to-date (or at least
+> compiling) across mac80211 driver API changes.  Whether or not this
+> has been worthwhile is, of course, debatable.
 
-johannes
+>From my perspective it has been worthwhile, but at the same time I
+realise how much work it means for you. And as I know how busy you are
+I really would not want to cause you any extra work.
 
---=-dJJPXxQ2O2S1Y6JMAXo1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+> P.S.  For the record, I _would_ like to see a working at76 driver
+> make it upstream at some point.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Me too. Fortunately starting from September I will have some free time
+(yay!) and I can start working with at76 again.
 
-iQIcBAABAgAGBQJIw9mKAAoJEKVg1VMiehFYcdYP/0e1H78FYAvHbpxFzKwDuHLq
-bUbpcEo/NuogL+GNahznvPDB+9nMvMeEO5y5djiccAAvoWSOCmnIvS9YL3Ahz+TK
-bFpz7ddl62LtjDoNJdoP8DmSK7qiF8Z+5/d65GD8ClEPT1qFMLqlrw0b9K0cz6RS
-Dm8ftMaBaBPBqzA2uvK1Pg2XDBCcV4GimD/fE3kwpCx3Qt/qG3Yv/sqmDJYEA+8U
-UAMG6WPF7gOcAzalvO8gvCD5cCwlc+fi914+K0S34ZqNzAnCnNdmEgc69mhzsX//
-i2N9t4Jd/1BGkDnTZsVmJ/71Jc10pGRTD0YkmZFFF121Th0hZrh54wzFmQ1ADhUL
-HmTkcZ2596hlInIjxW+WTexG5qOCMBZWrIQcXLHzEvlzTOazKkogimNesU2Y6TK6
-hdE4wOjn2Vh3iZvBYyPLK5Hve4UBrAJ2213F1W61W2cFBTo06h9M9LKb8yxEwgb8
-iBVFbAprmKnoWKYEawtlWLB/BPJ7NPOcezdsAk7a2HAn3sD2VQKQXlbml5RRihnP
-Jlil5rwkpjr3JaDfw62eo7OjkfKNv2sLDe/zmz3zcyI3zCOoYnoQ1aq6o4ZRb9Lg
-o5NkE7yB5FNmZaAGll/CFoRbKbLJN/A9LAmZjREwbUK87J+T606L2UHTw5XtKH/L
-PWG58+iQ4gsbAkOrH0FP
-=ONJa
------END PGP SIGNATURE-----
-
---=-dJJPXxQ2O2S1Y6JMAXo1--
-
+-- 
+Kalle Valo
