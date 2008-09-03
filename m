@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:50092 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750939AbYIMER6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Sep 2008 00:17:58 -0400
-Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere fw
-From: Pavel Roskin <proski@gnu.org>
-To: jt@hpl.hp.com
-Cc: Dan Williams <dcbw@redhat.com>, kilroyd@googlemail.com,
-	linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@gmail.com>
-In-Reply-To: <20080908183203.GA7090@bougret.hpl.hp.com>
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
-	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
-	 <1217825304.10989.20.camel@dv>
-	 <1217864060.3139.10.camel@localhost.localdomain>
-	 <20080805162238.GA6294@bougret.hpl.hp.com>
-	 <20080902230621.GA28885@bougret.hpl.hp.com> <1220878110.2369.3.camel@dv>
-	 <20080908183203.GA7090@bougret.hpl.hp.com>
-Content-Type: text/plain
-Date: Sat, 13 Sep 2008 00:17:55 -0400
-Message-Id: <1221279475.14059.29.camel@dv> (sfid-20080913_061818_614674_041DC2AF)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:55617
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1755325AbYICDiZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:38:25 -0400
+Date: Tue, 02 Sep 2008 20:38:18 -0700 (PDT)
+Message-Id: <20080902.203818.42437021.davem@davemloft.net> (sfid-20080903_053827_720792_B8E34449)
+To: yi.zhu@intel.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	tomas.winkler@intel.com, ischram@telenet.be
+Subject: Re: [PATCH 7/9] iwlwifi: fix Tx cmd memory allocation failure
+ handling
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1220411930-15216-8-git-send-email-yi.zhu@intel.com>
+References: <1220411930-15216-6-git-send-email-yi.zhu@intel.com>
+	<1220411930-15216-7-git-send-email-yi.zhu@intel.com>
+	<1220411930-15216-8-git-send-email-yi.zhu@intel.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-09-08 at 11:32 -0700, Jean Tourrilhes wrote:
+From: Zhu Yi <yi.zhu@intel.com>
+Date: Wed,  3 Sep 2008 11:18:48 +0800
 
-> 	Try the attached patch.
+> From: Tomas Winkler <tomas.winkler@intel.com>
+> 
+> This patch "iwlwifi: do not use GFP_DMA in iwl_tx_queue_init" removes
+> GFP_DMA from allocation tx command buffers. GFP_DMA allows allocation
+> only for memory under 16M which causes allocation problems
+> suspend/resume flows.
+> 
+> Using kmalloc is temporal solution and some consistent/coherent
+> allocation schema will be more correct. Since iwlwifi hardware
+> supports 64bit address this solution should work on x86 (32 and
+> 64bit) for now.
+> 
+> This patch fixes memory freeing problem in the previous patch.
+> 
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> Signed-off-by: Ian Schram <ischram@telenet.be>
+> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 
-It's working on x86_64!  Thank you!
-
-> diff -u -p linux/drivers/net/wireless/orinoco.p1.c linux/drivers/net/wireless/orinoco.c
-> --- linux/drivers/net/wireless/orinoco.p1.c	2008-09-08 11:28:01.000000000 -0700
-> +++ linux/drivers/net/wireless/orinoco.c	2008-09-08 11:29:59.000000000 -0700
-> @@ -3953,7 +3953,7 @@ static int orinoco_ioctl_getrid(struct n
->  /* Trigger a scan (look for other cells in the vicinity */
->  static int orinoco_ioctl_setscan(struct net_device *dev,
->  				 struct iw_request_info *info,
-> -				 struct iw_param *srq,
-> +				 struct iw_point *srq,
->  				 char *extra)
-
-The same problem exists in airo and atmel, but they don't use that
-argument.  Several drivers, including mac80211 use union iwreq_data,
-which is fragile.  Fortunately, most drivers don't use that argument or
-use the "data" field, which is correct.
-
-The only incorrect use of union iwreq_data is in rndis_wlan.  It would
-ignore ESSID on x86_64.
-
-I think the use of union iwreq_data is dangerous and should be avoided.
-
--- 
-Regards,
-Pavel Roskin
+Acked-by: David S. Miller <davem@davemloft.net>
