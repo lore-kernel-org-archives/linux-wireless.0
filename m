@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36327 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751603AbYI0Ohy (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:47671 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751212AbYICIKD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Sep 2008 10:37:54 -0400
-Date: Sat, 27 Sep 2008 10:38:53 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org, linux-kernel@vger.kernel.org
-Subject: Re: Release of Atheros 802.11abg HAL under the ISC
-Message-ID: <20080927143852.GB3392@tuxdriver.com> (sfid-20080927_163812_332030_0B84519D)
-References: <20080926215701.GC5972@tesla>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080926215701.GC5972@tesla>
+	Wed, 3 Sep 2008 04:10:03 -0400
+Subject: Re: [PATCH 4/9] iwlwifi: generic init calibrations framework
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: David Miller <davem@davemloft.net>
+Cc: yi.zhu@intel.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, tomas.winkler@intel.com,
+	emmanuel.grumbach@intel.com
+In-Reply-To: <20080902.203634.127434142.davem@davemloft.net>
+References: <1220411930-15216-3-git-send-email-yi.zhu@intel.com>
+	 <1220411930-15216-4-git-send-email-yi.zhu@intel.com>
+	 <1220411930-15216-5-git-send-email-yi.zhu@intel.com>
+	 <20080902.203634.127434142.davem@davemloft.net>
+Content-Type: text/plain
+Date: Wed, 03 Sep 2008 10:10:11 +0200
+Message-Id: <1220429411.6714.17.camel@californication> (sfid-20080903_101009_141777_41477F45)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 26, 2008 at 02:57:01PM -0700, Luis R. Rodriguez wrote:
-> As part of our commitment to help support all of our Atheros devices
-> under Linux we'd like to announce the release of our Atheros HAL for
-> our 802.11abg chipsets under the ISC license.
+Hi Tomas,
+
+> > This patch fixes a critical bug that only the last calibration result
+> > was applied. On reception of one calibration result all the calibration
+> > results were freed therefore only last was applied. The patch fixes this
+> > problem by introducing a generic init calibration framework which allows
+> > variable number of init calibrations and allows addition new HW.
+> > 
+> > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> > Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 > 
-> You can find it here:
-> 
-> http://www.kernel.org/pub/linux/kernel/people/mcgrof/legacy-hal.tar.bz2
-> 
-> This can be used as a source of documentation to help ath5k move
-> forward to support our 802.11abg chipsets as best as possible in
-> the Linux kernel. We look forward to keep working strongly with the
-> community on advancing support of all our Atheros chipsets under Linux.
+> This is borderline, I would rather hold off on such a sizable change
+> for 2.6.27 as I'll have a hard time justifying it.
 
-Awesome...simply, awesome!
+do you see any way for fixing (or improving) this with the current code
+and hold the whole framework change off until the next merge window.
 
-I hereby nominate Atheros for this year's "Most Improved Open Source
-Corporate Citizen" award! :-)
+Maybe instead of iwl_free_calib_results(priv); just freeing them
+individually in their case statements.
 
-Great job, Luis!
+You know the hardware better than I do, but that should just work
+(judging from the code).
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Regards
+
+Marcel
+
+
