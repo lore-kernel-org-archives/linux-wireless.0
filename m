@@ -1,94 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54760 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751389AbYISN4g (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 09:56:36 -0400
-Subject: Re: ACK matching [was: TX status reporting with help of an ack
-	queue]
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mattias Nissler <mattias.nissler@gmx.de>
-Cc: Mikko =?ISO-8859-1?Q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	rt2400-devel@lists.sourceforge.net,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>, dsd@gentoo.org,
-	kune@deine-taler.de
-In-Reply-To: <1221832302.4514.6.camel@localhost> (sfid-20080919_155215_459241_3CF3BD6F)
-References: <1221494693.14102.22.camel@virkkmi-linux>
-	 <1221505251.4511.77.camel@localhost>
-	 <1221541089.14102.44.camel@virkkmi-linux>
-	 <200809162018.42576.IvDoorn@gmail.com>  <1221770220.4563.3.camel@localhost>
-	 <1221776990.4563.19.camel@localhost>
-	 <1221815294.19539.15.camel@virkkmi-linux>
-	 <1221817584.4491.29.camel@localhost>
-	 (sfid-20080919_114701_416600_478C4255)  <1221818057.10419.58.camel@johannes.berg>
-	 <1221819579.4491.34.camel@localhost>
-	 (sfid-20080919_122011_765612_F53F8EFC)  <1221820265.10419.78.camel@johannes.berg>
-	 <1221832302.4514.6.camel@localhost> (sfid-20080919_155215_459241_3CF3BD6F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mclMJJ/FzHlRIHGrIBnZ"
-Date: Fri, 19 Sep 2008 15:55:47 +0200
-Message-Id: <1221832547.12059.14.camel@johannes.berg> (sfid-20080919_155639_964161_BBA99161)
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:56324 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755015AbYICDbY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:31:24 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 22/39] iwlwifi: fix 64bit platform firmware loading
+Date: Wed,  3 Sep 2008 11:26:42 +0800
+Message-Id: <1220412419-15404-23-git-send-email-yi.zhu@intel.com> (sfid-20080903_055043_293663_8CEAD5B0)
+In-Reply-To: <1220412419-15404-22-git-send-email-yi.zhu@intel.com>
+References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-9-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-10-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-11-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-12-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-13-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-14-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-15-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-16-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-17-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-18-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-19-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-20-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-21-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-22-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Tomas Winkler <tomas.winkler@intel.com>
 
---=-mclMJJ/FzHlRIHGrIBnZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This patch fixes loading firmware from memory above 34bit.
 
-On Fri, 2008-09-19 at 15:51 +0200, Mattias Nissler wrote:
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   11 ++++-------
+ drivers/net/wireless/iwlwifi/iwl-fh.h   |    1 +
+ 2 files changed, 5 insertions(+), 7 deletions(-)
 
-> Well, I understand that we need synchronization of the state machines,
-> maybe we can advance optimistically and detect in the next state that
-> the STA didn't receive the last message? Just some random thoughts, I
-> see it'll at least be tricky, I just wanted your opinion on whether you
-> see a chance :-) As I said, I'll look into it when I find some time.
-
-To be honest, I'm not familiar enough with it to be able to answer that
-question. I know it's currently needed and I vaguely remember seeing and
-discussing that it's pretty important (and the stuff I already wrote),
-but that's about it.
-
-> > However, I do think that if the hardware just isn't up to the job you
-> > should probably buy new hardware, after all, it's dirt cheap. :)
->=20
-> I totally agree with you. I'm just curious to see whether there is a
-> chance to help our users. I'm perfectly fine if it turns out there is no
-> chance to do it properly, and I'll rather accept that fact instead of
-> trying to introduce workarounds that are known to be incorrect. The sad
-> thing is that if we controlled the firmware, we could probably arrange
-> to have the necessary information passed to the driver.
-
-Indeed; at least for those cards where there is firmware. But I guess
-you always only get as much out of the hardware as the vendor wants you
-to, rt61pci for example doesn't report frame timestamps so it's fairly
-useless for monitoring.
-
-johannes
-
---=-mclMJJ/FzHlRIHGrIBnZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI069gAAoJEKVg1VMiehFYGFwP/A+bHwFDNypr8eY5r+1fAWLF
-0mqwm0J2uVCwRfUEOsdWs5zkB66h0nGAXQYSzKq5p8Gmr/UtByMxyjq6OihDAJFt
-B1HLYTw3lA7vO/nyng6hBu77ywlBy0Lun8CQFcq1BFsyrq/ZXKQIxnjXZyr41NWV
-+TJw8xL3+6s76YGLbPeYc+DTwXxnmIv2WIB6wUVbGtMjjjObyqFBMV/lhnAJMP7Z
-fSvVQ4Bl3uzDRbUMpwhOwCV7ldF4rCTYUVGPqI2z01kUfmZGa7q/vv4+x3XIHYr4
-A8x3rcynuCMxcYMlomDNZaGJtFjlQZc5ns6ct7nSWQ+pJkgo6O7C+N/pXyUG0TeK
-oXLXnC04xtCp5OiixkO1abO9mc/wenGSJdIzdV1wQSSylnGB87X0Ll5P40XNaMDh
-BHEn5Cf7K+MSgWJ0cUABAGK5jtTq2evLfiCU4H4NLcSiXz7IFObOIyo6jbNZDUix
-QiYKuyoV8zrJ/asSd+l6oDlCqLPrIRgaBW1BqpkTaoO2Ctaac2XG0yDlwoTb+o6v
-tgbi+BWtTEqqR3yMptZh2gxpfLY2ykcZf76Shvl04y8VRu+G7xBacMpkvor/YASR
-TGfHot7H3JN+IYuviJtubvZ8It/Fw6n8A4zy5CC0Gj57fHwjSbQQZppXYNrBAztp
-L7T9SDKvlBtN6mff988g
-=NYDY
------END PGP SIGNATURE-----
-
---=-mclMJJ/FzHlRIHGrIBnZ--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index e04a26f..79ff288 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -533,14 +533,11 @@ static int iwl5000_load_section(struct iwl_priv *priv,
+ 		FH_TFDIB_CTRL0_REG(FH_SRVC_CHNL),
+ 		phy_addr & FH_MEM_TFDIB_DRAM_ADDR_LSB_MSK);
+ 
+-	/* FIME: write the MSB of the phy_addr in CTRL1
+-	 * iwl_write_direct32(priv,
+-		IWL_FH_TFDIB_CTRL1_REG(IWL_FH_SRVC_CHNL),
+-		((phy_addr & MSB_MSK)
+-			<< FH_MEM_TFDIB_REG1_ADDR_BITSHIFT) | byte_count);
+-	 */
+ 	iwl_write_direct32(priv,
+-		FH_TFDIB_CTRL1_REG(FH_SRVC_CHNL), byte_cnt);
++		FH_TFDIB_CTRL1_REG(FH_SRVC_CHNL),
++		(iwl_get_dma_hi_address(phy_addr)
++			<< FH_MEM_TFDIB_REG1_ADDR_BITSHIFT) | byte_cnt);
++
+ 	iwl_write_direct32(priv,
+ 		FH_TCSR_CHNL_TX_BUF_STS_REG(FH_SRVC_CHNL),
+ 		1 << FH_TCSR_CHNL_TX_BUF_STS_REG_POS_TB_NUM |
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
+index 9446424..cd11c0c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fh.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
+@@ -287,6 +287,7 @@
+ 
+ #define FH_RSSR_CHNL0_RX_STATUS_CHNL_IDLE	(0x01000000)
+ 
++#define FH_MEM_TFDIB_REG1_ADDR_BITSHIFT	28
+ 
+ /**
+  * Transmit DMA Channel Control/Status Registers (TCSR)
+-- 
+1.5.3.6
 
