@@ -1,123 +1,232 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:34187 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752270AbYI0Upz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Sep 2008 16:45:55 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so1415416fkq.5
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Sep 2008 13:45:53 -0700 (PDT)
-Message-ID: <7d553cf40809271345n3a945091u6c341e65c51811d5@mail.gmail.com> (sfid-20080927_224600_143322_52A4BF5F)
-Date: Sat, 27 Sep 2008 16:45:53 -0400
-From: Paul <paul14075@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] Working packet injection patch for ipw2200 - enables aireplay-ng and others to work
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_37429_5949446.1222548353789"
+Received: from mga01.intel.com ([192.55.52.88]:43275 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755140AbYICDbg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:31:36 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 30/39] iwlwifi: allow association on radar channel in power save
+Date: Wed,  3 Sep 2008 11:26:50 +0800
+Message-Id: <1220412419-15404-31-git-send-email-yi.zhu@intel.com> (sfid-20080903_055043_908921_A126E8FA)
+In-Reply-To: <1220412419-15404-30-git-send-email-yi.zhu@intel.com>
+References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-9-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-10-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-11-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-12-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-13-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-14-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-15-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-16-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-17-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-18-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-19-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-20-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-21-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-22-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-23-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-24-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-25-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-26-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-27-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-28-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-29-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-30-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------=_Part_37429_5949446.1222548353789
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-I made this patch using bits and pieces from various other "ipw2200
-injection patches".  I can not take credit for the content, as I
-basically just changed the line numbers in the .diff files.  However I
-applied this patch to the version of ipw2200 included in kernel
-2.6.27-rc6  (i believe it's ipw2200-1.2.2) and it worked like a charm.
+This patch disables power save upon association and enables it back
+after association. This allows to associate to AP on a radar channel
+if power save is enabled.
 
-Previously I was unable to inject wifi packets using aireplay-ng due
-to this error:
+Radar and passive channels are not allowed for TX (required for association)
+unless RX is received but PS may close the radio and no RX will be received
+effectively failing association.
 
-"ARP linktype is set to 1 (Ethernet) - expected ARPHRD_IEEE80211 or
-ARPHRD_IEEE80211_PRISM instead.  Make sure RFMON is enabled: run
-'ifconfig wifi0 up; iwconfig wifi0 mode Monitor channel <#>' Sysfs
-injection support was not found either."
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c   |   24 ++++++++++++++----
+ drivers/net/wireless/iwlwifi/iwl-dev.h   |    1 +
+ drivers/net/wireless/iwlwifi/iwl-power.c |   39 +++++++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-power.h |    4 ++-
+ 4 files changed, 61 insertions(+), 7 deletions(-)
 
-However, after switching to Monitor mode, even though aireplay would
-ACT AS IF it was working, it wasn't.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 3743e4b..42cb3dd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2486,6 +2486,7 @@ static void iwl4965_post_associate(struct iwl_priv *priv)
+ 	if (!priv->vif || !priv->is_open)
+ 		return;
+ 
++	iwl_power_cancel_timeout(priv);
+ 	iwl_scan_cancel_timeout(priv, 200);
+ 
+ 	conf = ieee80211_get_hw_conf(priv->hw);
+@@ -2550,10 +2551,6 @@ static void iwl4965_post_associate(struct iwl_priv *priv)
+ 		break;
+ 	}
+ 
+-	/* Enable Rx differential gain and sensitivity calibrations */
+-	iwl_chain_noise_reset(priv);
+-	priv->start_calib = 1;
+-
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_IBSS)
+ 		priv->assoc_station_added = 1;
+ 
+@@ -2561,7 +2558,12 @@ static void iwl4965_post_associate(struct iwl_priv *priv)
+ 	iwl_activate_qos(priv, 0);
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+-	iwl_power_update_mode(priv, 0);
++	iwl_power_enable_management(priv);
++
++	/* Enable Rx differential gain and sensitivity calibrations */
++	iwl_chain_noise_reset(priv);
++	priv->start_calib = 1;
++
+ 	/* we have just associated, don't start scan too early */
+ 	priv->next_scan_jiffies = jiffies + IWL_DELAY_NEXT_SCAN;
+ }
+@@ -3543,6 +3545,16 @@ static void iwl4965_mac_reset_tsf(struct ieee80211_hw *hw)
+ 	/* Per mac80211.h: This is only used in IBSS mode... */
+ 	if (priv->iw_mode != IEEE80211_IF_TYPE_IBSS) {
+ 
++		/* switch to CAM during association period.
++		 * the ucode will block any association/authentication
++		 * frome during assiciation period if it can not hear
++		 * the AP because of PM. the timer enable PM back is
++		 * association do not complete
++		 */
++		if (priv->hw->conf.channel->flags & (IEEE80211_CHAN_PASSIVE_SCAN |
++						     IEEE80211_CHAN_RADAR))
++				iwl_power_disable_management(priv, 3000);
++
+ 		IWL_DEBUG_MAC80211("leave - not in IBSS\n");
+ 		mutex_unlock(&priv->mutex);
+ 		return;
+@@ -4095,6 +4107,7 @@ static void iwl_setup_deferred_work(struct iwl_priv *priv)
+ 	/* FIXME : remove when resolved PENDING */
+ 	INIT_WORK(&priv->scan_completed, iwl_bg_scan_completed);
+ 	iwl_setup_scan_deferred_work(priv);
++	iwl_setup_power_deferred_work(priv);
+ 
+ 	if (priv->cfg->ops->lib->setup_deferred_work)
+ 		priv->cfg->ops->lib->setup_deferred_work(priv);
+@@ -4114,6 +4127,7 @@ static void iwl_cancel_deferred_work(struct iwl_priv *priv)
+ 
+ 	cancel_delayed_work_sync(&priv->init_alive_start);
+ 	cancel_delayed_work(&priv->scan_check);
++	cancel_delayed_work_sync(&priv->set_power_save);
+ 	cancel_delayed_work(&priv->alive_start);
+ 	cancel_work_sync(&priv->beacon_update);
+ 	del_timer_sync(&priv->statistics_periodic);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 45ae68a..8daeafd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1018,6 +1018,7 @@ struct iwl_priv {
+ 
+ 	struct tasklet_struct irq_tasklet;
+ 
++	struct delayed_work set_power_save;
+ 	struct delayed_work init_alive_start;
+ 	struct delayed_work alive_start;
+ 	struct delayed_work scan_check;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
+index eb6312d..16f834d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.c
++++ b/drivers/net/wireless/iwlwifi/iwl-power.c
+@@ -319,7 +319,7 @@ EXPORT_SYMBOL(iwl_power_update_mode);
+  * this will be usefull for rate scale to disable PM during heavy
+  * Tx/Rx activities
+  */
+-int iwl_power_disable_management(struct iwl_priv *priv)
++int iwl_power_disable_management(struct iwl_priv *priv, u32 ms)
+ {
+ 	u16 prev_mode;
+ 	int ret = 0;
+@@ -332,6 +332,11 @@ int iwl_power_disable_management(struct iwl_priv *priv)
+ 	ret = iwl_power_update_mode(priv, 0);
+ 	priv->power_data.power_disabled = 1;
+ 	priv->power_data.user_power_setting = prev_mode;
++	cancel_delayed_work(&priv->set_power_save);
++	if (ms)
++		queue_delayed_work(priv->workqueue, &priv->set_power_save,
++				   msecs_to_jiffies(ms));
++
+ 
+ 	return ret;
+ }
+@@ -426,3 +431,35 @@ int iwl_power_temperature_change(struct iwl_priv *priv)
+ 	return ret;
+ }
+ EXPORT_SYMBOL(iwl_power_temperature_change);
++
++static void iwl_bg_set_power_save(struct work_struct *work)
++{
++	struct iwl_priv *priv = container_of(work,
++				struct iwl_priv, set_power_save.work);
++	IWL_DEBUG(IWL_DL_STATE, "update power\n");
++
++	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
++		return;
++
++	mutex_lock(&priv->mutex);
++
++	/* on starting association we disable power managment
++	 * until association, if association failed then this
++	 * timer will expire and enable PM again.
++	 */
++	if (!iwl_is_associated(priv))
++		iwl_power_enable_management(priv);
++
++	mutex_unlock(&priv->mutex);
++}
++void iwl_setup_power_deferred_work(struct iwl_priv *priv)
++{
++	INIT_DELAYED_WORK(&priv->set_power_save, iwl_bg_set_power_save);
++}
++EXPORT_SYMBOL(iwl_setup_power_deferred_work);
++
++void iwl_power_cancel_timeout(struct iwl_priv *priv)
++{
++	cancel_delayed_work(&priv->set_power_save);
++}
++EXPORT_SYMBOL(iwl_power_cancel_timeout);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.h b/drivers/net/wireless/iwlwifi/iwl-power.h
+index abcbbf9..aa99f36 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.h
++++ b/drivers/net/wireless/iwlwifi/iwl-power.h
+@@ -78,8 +78,10 @@ struct iwl_power_mgr {
+ 	u8 power_disabled; /* flag to disable using power saving level */
+ };
+ 
++void iwl_setup_power_deferred_work(struct iwl_priv *priv);
++void iwl_power_cancel_timeout(struct iwl_priv *priv);
+ int iwl_power_update_mode(struct iwl_priv *priv, u8 refresh);
+-int iwl_power_disable_management(struct iwl_priv *priv);
++int iwl_power_disable_management(struct iwl_priv *priv, u32 ms);
+ int iwl_power_enable_management(struct iwl_priv *priv);
+ int iwl_power_set_user_mode(struct iwl_priv *priv, u16 mode);
+ int iwl_power_set_system_mode(struct iwl_priv *priv, u16 mode);
+-- 
+1.5.3.6
 
-After applying this patch, everything worked great.
-
-I don't see why this patch isnt already included in ipw2200.
-
-Thanks,
-- Paul
-
-------=_Part_37429_5949446.1222548353789
-Content-Type: application/octet-stream;
- name=ipw2200-1.2.2-inject-patch.patch
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_flmppmfa0
-Content-Disposition: attachment; filename=ipw2200-1.2.2-inject-patch.patch
-
-LS0tIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2lwdzIyMDAuYwkyMDA4LTA5LTA5IDE5OjI3OjQ5LjAw
-MDAwMDAwMCAtMDQwMAorKysgZHJpdmVycy9uZXQvd2lyZWxlc3MvaXB3MjIwMC1uZXcuYwkyMDA4
-LTA5LTI3IDE1OjQ4OjAzLjAwMDAwMDAwMCAtMDQwMApAQCAtMTc5LDcgKzE3OSw3IEBAIHN0YXRp
-YyBpbnQgaXB3X3F1ZXVlX3Jlc2V0KHN0cnVjdCBpcHdfcHIKIAogc3RhdGljIGludCBpcHdfcXVl
-dWVfdHhfaGNtZChzdHJ1Y3QgaXB3X3ByaXYgKnByaXYsIGludCBoY21kLCB2b2lkICpidWYsCiAJ
-CQkgICAgIGludCBsZW4sIGludCBzeW5jKTsKLQorc3RhdGljIGludCBpcHdfdHhfc2tiKHN0cnVj
-dCBpcHdfcHJpdiAqcHJpdiwgc3RydWN0IGllZWU4MDIxMV90eGIgKnR4YiwgaW50IHByaSk7CiBz
-dGF0aWMgdm9pZCBpcHdfdHhfcXVldWVfZnJlZShzdHJ1Y3QgaXB3X3ByaXYgKik7CiAKIHN0YXRp
-YyBzdHJ1Y3QgaXB3X3J4X3F1ZXVlICppcHdfcnhfcXVldWVfYWxsb2Moc3RydWN0IGlwd19wcml2
-ICopOwpAQCAtMTg2Miw2ICsxODYyLDYyIEBAIHN0YXRpYyBzc2l6ZV90IHN0b3JlX25ldF9zdGF0
-cyhzdHJ1Y3QgZGUKIHN0YXRpYyBERVZJQ0VfQVRUUihuZXRfc3RhdHMsIFNfSVdVU1IgfCBTX0lS
-VUdPLAogCQkgICBzaG93X25ldF9zdGF0cywgc3RvcmVfbmV0X3N0YXRzKTsKIAorLyogU1lTRlMg
-SU5KRUNUICovCitzdGF0aWMgc3NpemVfdCBzdG9yZV9pbmplY3Qoc3RydWN0IGRldmljZSAqZCwK
-KyAgICAgICAgc3RydWN0IGRldmljZV9hdHRyaWJ1dGUgKmF0dHIsCisgICAgICAgIGNvbnN0IGNo
-YXIgKmJ1Ziwgc2l6ZV90IGNvdW50KQoreworICAgICAgICBzdHJ1Y3QgaXB3X3ByaXYgKnByaXYg
-PSAoc3RydWN0IGlwd19wcml2ICopZC0+ZHJpdmVyX2RhdGE7CisgICAgICAgIHN0cnVjdCBpZWVl
-ODAyMTFfZGV2aWNlICppZWVlID0gcHJpdi0+aWVlZTsKKyAgICAgICAgc3RydWN0IGllZWU4MDIx
-MV90eGIgKiB0eGI7CisgICAgICAgIHN0cnVjdCBza19idWZmICpza2JfZnJhZzsKKyAgICAgICAg
-dW5zaWduZWQgY2hhciAqIG5ld2J1ZjsKKyAgICAgICAgdW5zaWduZWQgbG9uZyBmbGFnczsKKwor
-ICAgICAgICAvLyBzaG91bGQgdGVzdCAoaWVlZS0+aXNfcXVldWVfZnVsbCkKKworICAgICAgICAv
-LyBGdyBvbmx5IGFjY2VwdHMgZGF0YSwgc28gYXZvaWQgYWNjaWRlbnRhbCBmdyBlcnJvcnMuCisg
-ICAgICAgIGlmICggKGJ1ZlswXSYweDBjKSAhPSAnXHgwOCcpIHsKKyAgICAgICAgICAgICAgLy9w
-cmludGsoImlwdzIyMDA6IGluamVjdDogZGlzY2FyZGluZyBub24tZGF0YSBmcmFtZSAodHlwZT0l
-MDJYKVxuIiwoaW50KSh1bnNpZ25lZCBjaGFyKWJ1ZlswXSk7CisgICAgICAgICAgICAgIHJldHVy
-biBjb3VudDsKKyAgICAgICAgfQorCisgICAgICAgIGlmIChjb3VudD4xNTAwKSB7CisgICAgICAg
-ICAgICAgIGNvdW50PTE1MDA7CisgICAgICAgICAgICAgIHByaW50aygiaXB3MjIwMDogaW5qZWN0
-OiBjdXR0aW5nIGRvd24gZnJhbWUgdG8gMTUwMCBieXRlc1xuIik7CisgICAgICAgIH0KKworICAg
-ICAgICBzcGluX2xvY2tfaXJxc2F2ZSgmcHJpdi0+bG9jaywgZmxhZ3MpOworCisgICAgICAgIC8v
-IENyZWF0ZSBhIHR4YiB3aXRoIG9uZSBza2IKKyAgICAgICAgdHhiID0ga21hbGxvYyhzaXplb2Yo
-c3RydWN0IGllZWU4MDIxMV90eGIpICsgc2l6ZW9mKHU4ICopLCBHRlBfQVRPTUlDKTsKKyAgICAg
-ICAgaWYgKCF0eGIpCisgICAgICAgICAgICAgIGdvdG8gbm9zZXB1ZWRlOworICAgICAgICB0eGIt
-Pm5yX2ZyYWdzPTE7CisgICAgICAgIHR4Yi0+ZnJhZ19zaXplID0gaWVlZS0+dHhfaGVhZHJvb207
-CisgICAgICAgIHR4Yi0+ZnJhZ21lbnRzWzBdPV9fZGV2X2FsbG9jX3NrYihjb3VudCArIGllZWUt
-PnR4X2hlYWRyb29tLCBHRlBfQVRPTUlDKTsKKyAgICAgICAgaWYgKCF0eGItPmZyYWdtZW50c1sw
-XSkgeworICAgICAgICAgICAgICBrZnJlZSh0eGIpOworICAgICAgICAgICAgICBnb3RvIG5vc2Vw
-dWVkZTsKKyAgICAgICAgfQorICAgICAgICBza2JfcmVzZXJ2ZSh0eGItPmZyYWdtZW50c1swXSwg
-aWVlZS0+dHhfaGVhZHJvb20pOworICAgICAgICB0eGItPmVuY3J5cHRlZD0wOworICAgICAgICB0
-eGItPnBheWxvYWRfc2l6ZT1jb3VudDsKKyAgICAgICAgc2tiX2ZyYWcgPSB0eGItPmZyYWdtZW50
-c1swXTsKKyAgICAgICAgbmV3YnVmPXNrYl9wdXQoc2tiX2ZyYWcsIGNvdW50KTsKKworICAgICAg
-ICAvLyBjb3B5IGRhdGEgaW50byB0eGItPnNrYiBhbmQgc2VuZCBpdAorICAgICAgICBtZW1jcHko
-bmV3YnVmLCBidWYsIGNvdW50KTsKKworICAgICAgICBpcHdfdHhfc2tiKHByaXYsIHR4YiwgMCk7
-CisKK25vc2VwdWVkZToKKyAgICAgICAgc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmcHJpdi0+bG9j
-aywgZmxhZ3MpOworICAgICAgICByZXR1cm4gY291bnQ7Cit9CisKK3N0YXRpYyBERVZJQ0VfQVRU
-UihpbmplY3QsIFNfSVdVU1IsIE5VTEwsIHN0b3JlX2luamVjdCk7CisKIHN0YXRpYyBzc2l6ZV90
-IHNob3dfY2hhbm5lbHMoc3RydWN0IGRldmljZSAqZCwKIAkJCSAgICAgc3RydWN0IGRldmljZV9h
-dHRyaWJ1dGUgKmF0dHIsCiAJCQkgICAgIGNoYXIgKmJ1ZikKQEAgLTEwNTEyLDYgKzEwNTY4LDEw
-IEBAIHN0YXRpYyBpbnQgaXB3X25ldF9zZXRfbWFjX2FkZHJlc3Moc3RydWMKIAltdXRleF9sb2Nr
-KCZwcml2LT5tdXRleCk7CiAJcHJpdi0+Y29uZmlnIHw9IENGR19DVVNUT01fTUFDOwogCW1lbWNw
-eShwcml2LT5tYWNfYWRkciwgYWRkci0+c2FfZGF0YSwgRVRIX0FMRU4pOworCisgICAgICAgIGlm
-IChydGFwX2lmYWNlKQorICAgICAgICAgICAgICAgbWVtY3B5KHByaXYtPnByb21fbmV0X2Rldi0+
-ZGV2X2FkZHIsIGFkZHItPnNhX2RhdGEsIEVUSF9BTEVOKTsKKwogCXByaW50ayhLRVJOX0lORk8g
-IiVzOiBTZXR0aW5nIE1BQyB0byAlc1xuIiwKIAkgICAgICAgcHJpdi0+bmV0X2Rldi0+bmFtZSwg
-cHJpbnRfbWFjKG1hYywgcHJpdi0+bWFjX2FkZHIpKTsKIAlxdWV1ZV93b3JrKHByaXYtPndvcmtx
-dWV1ZSwgJnByaXYtPmFkYXB0ZXJfcmVzdGFydCk7CkBAIC0xMTQ3OCw2ICsxMTUzOCw3IEBAIHN0
-YXRpYyBzdHJ1Y3QgYXR0cmlidXRlICppcHdfc3lzZnNfZW50cmkKICNpZmRlZiBDT05GSUdfSVBX
-MjIwMF9QUk9NSVNDVU9VUwogCSZkZXZfYXR0cl9ydGFwX2lmYWNlLmF0dHIsCiAJJmRldl9hdHRy
-X3J0YXBfZmlsdGVyLmF0dHIsCisJJmRldl9hdHRyX2luamVjdC5hdHRyLAogI2VuZGlmCiAJTlVM
-TAogfTsKLS0tIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2lwdzIyMDAuaAkyMDA4LTA5LTA5IDE5OjI3
-OjQ5LjAwMDAwMDAwMCAtMDQwMAorKysgZHJpdmVycy9uZXQvd2lyZWxlc3MvaXB3MjIwMC1uZXcu
-aAkyMDA4LTA5LTI3IDE1OjMyOjIzLjAwMDAwMDAwMCAtMDQwMApAQCAtMjAwNyw0ICsyMDA3LDEz
-IEBAIHN0cnVjdCBpcHdfY21kX2xvZyB7CiAKICNkZWZpbmUgSVBXX01BWF9DT05GSUdfUkVUUklF
-UyAxMAogCisvKgorICogSGhhY2sgdG8gZ2V0IGNvZGUgY29tcGlsaW5nIG9uIG5ldyBrZXJuZWxz
-LCB0aGUgZGVmaW5lIGJlbG93CisgKiBzZWVtIHRvIGJlIHJlbW92ZWQgZnJvbSB0aGUgbGludXgg
-aGVhZGVycy4KKyAqLworI2lmbmRlZiBNQUNfQVJHCisjZGVmaW5lIE1BQ19BUkcoeCkgKCh1OCop
-KHgpKVswXSwoKHU4KikoeCkpWzFdLCgodTgqKSh4KSlbMl0sKCh1OCopKHgpKVszXSwoKHU4Kiko
-eCkpWzRdLCgodTgqKSh4KSlbNV0KKyNlbmRpZgorCisKICNlbmRpZgkJCQkvKiBfX2lwdzIyMDBf
-aF9fICovCg==
-------=_Part_37429_5949446.1222548353789--
