@@ -1,68 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54562 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753392AbYIHPr1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 11:47:27 -0400
-Subject: [PATCH 9/8] mac80211: clarify scan request
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080908154421.216772000@sipsolutions.net> (sfid-20080908_174606_739824_DD7A31F6)
-References: <20080908154421.216772000@sipsolutions.net>
-	 (sfid-20080908_174606_739824_DD7A31F6)
-Content-Type: text/plain
-Date: Mon, 08 Sep 2008 17:47:23 +0200
-Message-Id: <1220888843.31304.76.camel@johannes.berg> (sfid-20080908_174741_420172_A261D7CF)
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:15586 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755272AbYICDbl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:31:41 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 35/39] iwlwifi: remove bad language from the comments
+Date: Wed,  3 Sep 2008 11:26:55 +0800
+Message-Id: <1220412419-15404-36-git-send-email-yi.zhu@intel.com> (sfid-20080903_055043_408896_F12CC812)
+In-Reply-To: <1220412419-15404-35-git-send-email-yi.zhu@intel.com>
+References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-9-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-10-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-11-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-12-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-13-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-14-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-15-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-16-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-17-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-18-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-19-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-20-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-21-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-22-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-23-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-24-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-25-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-26-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-27-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-28-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-29-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-30-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-31-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-32-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-33-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-34-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-35-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a scan is requested for non-STA interfaces, we simply fire
-off a scan, but for STA interfaces we shouldn't because they
-could be in the middle of an association. This clarifies the
-corresponding code.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+This patch removes bad language in the comments in iwl-agn-rs.c.
+
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- net/mac80211/scan.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
---- everything.orig/net/mac80211/scan.c	2008-09-08 17:01:21.000000000 +0200
-+++ everything/net/mac80211/scan.c	2008-09-08 17:23:59.000000000 +0200
-@@ -674,23 +674,32 @@ int ieee80211_sta_start_scan(struct ieee
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 169c548..4fc3a0f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -2218,8 +2218,7 @@ static void rs_rate_init(void *priv_rate, void *priv_sta,
+ 			sta->txrate_idx = i;
  
- int ieee80211_sta_req_scan(struct ieee80211_sub_if_data *sdata, u8 *ssid, size_t ssid_len)
- {
--	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
- 	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_if_sta *ifsta;
+ 	sta->last_txrate_idx = sta->txrate_idx;
+-	/* WTF is with this bogus comment? A doesn't have cck rates */
+-	/* For MODE_IEEE80211A, cck rates are at end of rate table */
++	/* For MODE_IEEE80211A, skip over cck rates in global rate table */
+ 	if (local->hw.conf.channel->band == IEEE80211_BAND_5GHZ)
+ 		sta->last_txrate_idx += IWL_FIRST_OFDM_RATE;
  
- 	if (sdata->vif.type != IEEE80211_IF_TYPE_STA)
- 		return ieee80211_sta_start_scan(sdata, ssid, ssid_len);
- 
-+	/*
-+	 * STA has a state machine that might need to defer scanning
-+	 * while it's trying to associate/authenticate, therefore we
-+	 * queue it up to the state machine in that case.
-+	 */
-+
- 	if (local->sta_sw_scanning || local->sta_hw_scanning) {
- 		if (local->scan_sdata == sdata)
- 			return 0;
- 		return -EBUSY;
- 	}
- 
-+	ifsta = &sdata->u.sta;
-+
- 	ifsta->scan_ssid_len = ssid_len;
- 	if (ssid_len)
- 		memcpy(ifsta->scan_ssid, ssid, ssid_len);
- 	set_bit(IEEE80211_STA_REQ_SCAN, &ifsta->request);
- 	queue_work(local->hw.workqueue, &ifsta->work);
-+
- 	return 0;
- }
- 
-
+-- 
+1.5.3.6
 
