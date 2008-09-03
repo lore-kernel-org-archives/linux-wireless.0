@@ -1,59 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.184]:61518 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061AbYIBUx7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 16:53:59 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so1959917fkq.5
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Sep 2008 13:53:57 -0700 (PDT)
-Date: Tue, 2 Sep 2008 23:53:52 +0300
-From: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Zhu Yi <yi.zhu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	LKML <linux-kernel@vger.kernel.org>, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org,
-	Jan-Espen Pettersen <sigsegv@radiotube.org>
-Subject: Re: new: regression iwl3945/mac80211 endless after suspend
-	associate/deassociate loop
-Message-ID: <20080902205351.GB8230@google.com> (sfid-20080902_225404_566029_ADCBEB1C)
-References: <20080901160658.GA11063@google.com> <1220319536.28282.128.camel@debian.sh.intel.com> <4b0be9b641de902cb7de4ad50686f6e1.squirrel@secure.sipsolutions.net> <20080902130429.GB19172@google.com> <1220362201.3176.4.camel@borkbork.foobar.com> <20080902145840.GE19172@google.com> <20080902150625.GC3050@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080902150625.GC3050@tuxdriver.com>
+Received: from mga09.intel.com ([134.134.136.24]:22294 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754145AbYICDW5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:22:57 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 6/9] iwlwifi: fix rx_chain computation
+Date: Wed,  3 Sep 2008 11:18:47 +0800
+Message-Id: <1220411930-15216-7-git-send-email-yi.zhu@intel.com> (sfid-20080903_052307_576657_53D51554)
+In-Reply-To: <1220411930-15216-6-git-send-email-yi.zhu@intel.com>
+References: <1220411930-15216-1-git-send-email-yi.zhu@intel.com>
+ <1220411930-15216-2-git-send-email-yi.zhu@intel.com>
+ <1220411930-15216-3-git-send-email-yi.zhu@intel.com>
+ <1220411930-15216-4-git-send-email-yi.zhu@intel.com>
+ <1220411930-15216-5-git-send-email-yi.zhu@intel.com>
+ <1220411930-15216-6-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 02, 2008 at 11:06:25AM -0400, John W. Linville wrote:
-> On Tue, Sep 02, 2008 at 05:58:41PM +0300, Michael S. Tsirkin wrote:
-> > On Tue, Sep 02, 2008 at 09:30:01AM -0400, Dan Williams wrote:
-> > > On Tue, 2008-09-02 at 16:04 +0300, Michael S. Tsirkin wrote:
-> 
-> > > > But it happens to work fine without 8ab65b03b7893da4a49009e7e356e36e27b0c407.
-> > > 
-> > > That's really odd; that patch (the don't-send-empty-extended-rates-IE
-> > > patch) shouldn't have anything to do with this behavior, if it did you
-> > > wouldn't get associated to the AP in the first place I think.  You're
-> > > 100% sure that this patch is causing the problem?
-> > 
-> > No, not sure. But reverting it seems to have helped.
-> > And there does not seem to be anything else relevant between rc4 and
-> > rc5.
-> 
-> So you determined that commit by eye rather than by git bisect?
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Yes.
+This patch fixes rx_chain computation. The code that adjusts number of
+rx chains to number supported by HW was missing. Miss configuration
+causes firmware error.  Note: iwlwifi supports HW with up to 3 RX
+chains (2x2, 2x3, 1x2, and 3x3 MIMO). This patch also simplifies the
+whole RX chain computation.
 
-> Any chance I could talk you into confirming that using git bisect?
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   77 ++++++++++++++++++------------
+ 1 files changed, 46 insertions(+), 31 deletions(-)
 
-It's a bit time consuming because the bug triggers often, but not in
-100% of suspends. So you need to fiddle with it a bit after each
-bisect to figure out whether it's there.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 390fa1d..444e262 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -592,12 +592,11 @@ static void iwlcore_free_geos(struct iwl_priv *priv)
+ 	clear_bit(STATUS_GEO_CONFIGURED, &priv->status);
+ }
+ 
+-static u8 is_single_rx_stream(struct iwl_priv *priv)
++static bool is_single_rx_stream(struct iwl_priv *priv)
+ {
+ 	return !priv->current_ht_config.is_ht ||
+ 	       ((priv->current_ht_config.supp_mcs_set[1] == 0) &&
+-		(priv->current_ht_config.supp_mcs_set[2] == 0)) ||
+-	       priv->ps_mode == IWL_MIMO_PS_STATIC;
++		(priv->current_ht_config.supp_mcs_set[2] == 0));
+ }
+ 
+ static u8 iwl_is_channel_extension(struct iwl_priv *priv,
+@@ -704,33 +703,39 @@ EXPORT_SYMBOL(iwl_set_rxon_ht);
+  * MIMO (dual stream) requires at least 2, but works better with 3.
+  * This does not determine *which* chains to use, just how many.
+  */
+-static int iwlcore_get_rx_chain_counter(struct iwl_priv *priv,
+-					u8 *idle_state, u8 *rx_state)
++static int iwl_get_active_rx_chain_count(struct iwl_priv *priv)
+ {
+-	u8 is_single = is_single_rx_stream(priv);
+-	u8 is_cam = test_bit(STATUS_POWER_PMI, &priv->status) ? 0 : 1;
++	bool is_single = is_single_rx_stream(priv);
++	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
+ 
+ 	/* # of Rx chains to use when expecting MIMO. */
+ 	if (is_single || (!is_cam && (priv->ps_mode == IWL_MIMO_PS_STATIC)))
+-		*rx_state = 2;
++		return 2;
+ 	else
+-		*rx_state = 3;
++		return 3;
++}
+ 
++static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
++{
++	int idle_cnt;
++	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
+ 	/* # Rx chains when idling and maybe trying to save power */
+ 	switch (priv->ps_mode) {
+ 	case IWL_MIMO_PS_STATIC:
+ 	case IWL_MIMO_PS_DYNAMIC:
+-		*idle_state = (is_cam) ? 2 : 1;
++		idle_cnt = (is_cam) ? 2 : 1;
+ 		break;
+ 	case IWL_MIMO_PS_NONE:
+-		*idle_state = (is_cam) ? *rx_state : 1;
++		idle_cnt = (is_cam) ? active_cnt : 1;
+ 		break;
++	case IWL_MIMO_PS_INVALID:
+ 	default:
+-		*idle_state = 1;
++		IWL_ERROR("invalide mimo ps mode %d\n", priv->ps_mode);
++		WARN_ON(1);
++		idle_cnt = -1;
+ 		break;
+ 	}
+-
+-	return 0;
++	return idle_cnt;
+ }
+ 
+ /**
+@@ -741,34 +746,44 @@ static int iwlcore_get_rx_chain_counter(struct iwl_priv *priv,
+  */
+ void iwl_set_rxon_chain(struct iwl_priv *priv)
+ {
+-	u8 is_single = is_single_rx_stream(priv);
+-	u8 idle_state, rx_state;
+-
+-	priv->staging_rxon.rx_chain = 0;
+-	rx_state = idle_state = 3;
++	bool is_single = is_single_rx_stream(priv);
++	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
++	u8 idle_rx_cnt, active_rx_cnt;
++	u16 rx_chain;
+ 
+ 	/* Tell uCode which antennas are actually connected.
+ 	 * Before first association, we assume all antennas are connected.
+ 	 * Just after first association, iwl_chain_noise_calibration()
+ 	 *    checks which antennas actually *are* connected. */
+-	priv->staging_rxon.rx_chain |=
+-		    cpu_to_le16(priv->hw_params.valid_rx_ant <<
+-						 RXON_RX_CHAIN_VALID_POS);
++	rx_chain = priv->hw_params.valid_rx_ant << RXON_RX_CHAIN_VALID_POS;
+ 
+ 	/* How many receivers should we use? */
+-	iwlcore_get_rx_chain_counter(priv, &idle_state, &rx_state);
+-	priv->staging_rxon.rx_chain |=
+-		cpu_to_le16(rx_state << RXON_RX_CHAIN_MIMO_CNT_POS);
+-	priv->staging_rxon.rx_chain |=
+-		cpu_to_le16(idle_state << RXON_RX_CHAIN_CNT_POS);
+-
+-	if (!is_single && (rx_state >= 2) &&
+-	    !test_bit(STATUS_POWER_PMI, &priv->status))
++	active_rx_cnt = iwl_get_active_rx_chain_count(priv);
++	idle_rx_cnt = iwl_get_idle_rx_chain_count(priv, active_rx_cnt);
++
++	/* correct rx chain count accoridng hw settings */
++	if (priv->hw_params.rx_chains_num < active_rx_cnt)
++		active_rx_cnt = priv->hw_params.rx_chains_num;
++
++	if (priv->hw_params.rx_chains_num < idle_rx_cnt)
++		idle_rx_cnt = priv->hw_params.rx_chains_num;
++
++	rx_chain |= active_rx_cnt << RXON_RX_CHAIN_MIMO_CNT_POS;
++	rx_chain |= idle_rx_cnt  << RXON_RX_CHAIN_CNT_POS;
++
++	priv->staging_rxon.rx_chain = cpu_to_le16(rx_chain);
++
++	if (!is_single && (active_rx_cnt >= 2) && is_cam)
+ 		priv->staging_rxon.rx_chain |= RXON_RX_CHAIN_MIMO_FORCE_MSK;
+ 	else
+ 		priv->staging_rxon.rx_chain &= ~RXON_RX_CHAIN_MIMO_FORCE_MSK;
+ 
+-	IWL_DEBUG_ASSOC("rx chain %X\n", priv->staging_rxon.rx_chain);
++	IWL_DEBUG_ASSOC("rx_chain=0x%Xi active=%d idle=%d\n",
++			priv->staging_rxon.rx_chain,
++			active_rx_cnt, idle_rx_cnt);
++
++	WARN_ON(active_rx_cnt == 0 || idle_rx_cnt == 0 ||
++		active_rx_cnt < idle_rx_cnt);
+ }
+ EXPORT_SYMBOL(iwl_set_rxon_chain);
+ 
+-- 
+1.5.3.6
 
-> Thanks,
-> 
-> John
-> -- 
-> John W. Linville
-> linville@tuxdriver.com
