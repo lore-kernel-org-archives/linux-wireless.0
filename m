@@ -1,64 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:11100 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750908AbYISIDD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 04:03:03 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so298072fkq.5
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 01:03:02 -0700 (PDT)
-Message-ID: <1ba2fa240809190103i69c66978he4762fd350ab2e5d@mail.gmail.com> (sfid-20080919_100312_773600_994670A4)
-Date: Fri, 19 Sep 2008 11:03:02 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: technology preview: scan with cfg80211
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Dan Williams" <dcbw@redhat.com>
-In-Reply-To: <1221795715.10419.15.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1221794329.10419.9.camel@johannes.berg>
-	 <1221795715.10419.15.camel@johannes.berg>
+Received: from mga01.intel.com ([192.55.52.88]:43814 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754418AbYICDbQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:31:16 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 16/39] iwlwifi: fix apm_stop function
+Date: Wed,  3 Sep 2008 11:26:36 +0800
+Message-Id: <1220412419-15404-17-git-send-email-yi.zhu@intel.com> (sfid-20080903_053125_200205_859DD008)
+In-Reply-To: <1220412419-15404-16-git-send-email-yi.zhu@intel.com>
+References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-9-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-10-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-11-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-12-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-13-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-14-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-15-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-16-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 19, 2008 at 6:41 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2008-09-19 at 05:18 +0200, Johannes Berg wrote:
->> This is totally incomplete:
->>
->> cfg80211 needs to
->>  * actually hash on the BSSID instead of putting things into a list
->>  * provide BSS list functions so mac80211 need not keep track
->>  * allow a "private" area in each scan result with hw-provided size
->>  * handle mesh properly
->>  * provide a way for the hw to limit the number of SSIDs in a scan
-Don't understand this requirement?
+From: Mohamed Abbas <mohamed.abbas@intel.com>
 
-  * provide a way to limit the number of channels in a scan (for
-faster roaming candidate search)
+The patch fixes CSR_GP_CNTRL_REG_FLAG_INIT_DONE was set instead of
+cleared which disabled move device to D0U state.
 
->
->  * provide a function to just pass in the whole beacon/probe response
->   frame and pick it apart itself
->  * handle aging
->  * provide a wext "set scan" hook that creates a request and passes it
->   off to ->scan(), provide wext "get scan" hook
->  * parse the supported rates into a bitmap like mac80211 does now, based
->   on the bitrate information the wiphy provides
->
->> in mac80211, we need to
->>  * pass the scan request to the hardware offload
->>  * handle multiple SSIDs in a scan
->>  * use BSS list stuff cfg80211 needs to provide
->>  * handle active/passive properly
->
->  * use all those helpers I mentioned above
->
-> Also, we need to think about
->  * how fullmac stuff can integrate, can it provide this IE-based
->   information, and if not, is it feasible to just synthesize it?
->  * whether this should really be per wiphy as it is now, or somehow more
->   per netdev, or not related to a netdev at all...
->
-> johannes
->
+Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    3 ++-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index e258122..23fed32 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -474,8 +474,8 @@ static void iwl4965_apm_stop(struct iwl_priv *priv)
+ 	iwl_set_bit(priv, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
+ 
+ 	udelay(10);
+-
+-	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++	/* clear "init complete"  move adapter D0A* --> D0U state */
++	iwl_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index cbc01a0..d95fb42 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -145,7 +145,8 @@ static void iwl5000_apm_stop(struct iwl_priv *priv)
+ 
+ 	udelay(10);
+ 
+-	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++	/* clear "init complete"  move adapter D0A* --> D0U state */
++	iwl_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
+ 
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ }
+-- 
+1.5.3.6
+
