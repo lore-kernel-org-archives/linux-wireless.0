@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37797 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752373AbYIPLHS (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:57989 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753667AbYICDDe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 07:07:18 -0400
-Subject: Re: [RFC] Implement basic background scanning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <hschaa@suse.de>
-Cc: Kalle Valo <kalle.valo@nokia.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <200809161120.09728.hschaa@suse.de>
-References: <200809151416.07552.hschaa@suse.de> <877i9czdjd.fsf@nokia.com>
-	 <b2d017be9e6908538faef3d96845500c.squirrel@secure.sipsolutions.net>
-	 <200809161120.09728.hschaa@suse.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-uhQOpwr2nuLVwlEwts+D"
-Date: Tue, 16 Sep 2008 13:06:36 +0200
-Message-Id: <1221563196.8916.21.camel@johannes.berg> (sfid-20080916_130723_782603_0E78F827)
-Mime-Version: 1.0
+	Tue, 2 Sep 2008 23:03:34 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so1524605yxm.1
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Sep 2008 20:03:32 -0700 (PDT)
+Message-ID: <43e72e890809022003gfd462d2ma8d68f032754c121@mail.gmail.com> (sfid-20080903_050336_399636_2155B31B)
+Date: Tue, 2 Sep 2008 20:03:32 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Kalle Valo" <kalle.valo@nokia.com>
+Subject: Re: at76_usb.[ch] gone fishing from wireless-testing ?
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <87vdxedje8.fsf@nokia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890809021953o29c6ba53wcdf7630d4ff10b30@mail.gmail.com>
+	 <87vdxedje8.fsf@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Sep 2, 2008 at 7:59 PM, Kalle Valo <kalle.valo@nokia.com> wrote:
+> Luis R. Rodriguez <mcgrof@gmail.com> writes:
+>
+>> A few times now I've git-fetch'd origin and noticed at76_usb.[ch]
+>> missing on origin/master. Strange, wondering if you're aware of any
+>> such type of issues or its just me.
+>
+> Good point, I don't see it either. But at76_usb is quite broken
+> currently, so maybe John decided just to drop it? Good choice, at
+> least for now.
+>
+> And it's not just that, also -wl suffix is missing from the version.
+>
+> My HEAD is currently:
+>
+> commit 18c8adeb0244f823ba78a51e23f813fe68bc3c54
+> Author: Michael Buesch <mb@bu3sch.de>
+> Date:   Thu Aug 28 19:33:40 2008 +0200
+>
+>    b43: Rewrite TX power adjustment
 
---=-uhQOpwr2nuLVwlEwts+D
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm at:
 
-On Tue, 2008-09-16 at 11:20 +0200, Helmut Schaa wrote:
+commit 908dd0b965e64fcc2eb64152bac65f2876c34e0b
+Author: Senthil Balasubramanian <senthilkumar@atheros.com>
+Date:   Mon Sep 1 19:58:20 2008 +0530
+    ath9: Fix ath_rx_flush_tid() for IRQs disabled kernel warning message.
 
-> Ok, would you accept a hardware flag that indicates if a card is able to
-> do background scanning? And if the flag is not set we could just use a=20
-> software background scan as fallback?
+Reason I find it strange is on one box it went through and I still see
+history for it, and in another I don't. I was going to do a fresh pull
+to test but figure I rather ask as bandwidth is crummy at work.
 
-No, I'd think that it the scan offload is incapable of doing background
-scanning then it's useless and shouldn't be used.
-
-johannes
-
---=-uhQOpwr2nuLVwlEwts+D
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIz5M5AAoJEKVg1VMiehFYv28QAKHHowPXmMkogoVj0Q9kTtYb
-VYl0+89k+Qv65Qbvv0cOx3OK7dYPwsbGtj/hCf7yUER3cQPs6rruLFZTeMbXjpeG
-vPtZ/5E8RUFy59C/M+t37KTkZFB9OUPdns01Woo/cD+QVu9HOV9K+7KI+zacxvtb
-Vh5qEBSUks5Hcx7bacL7Ntpau2ydw4nETSyaAA6HSEm3i8Lchm8Im6vFURe7k0oQ
-+7sPrGdkMuL3dIYMJsyFt+H/En/COe+FdQHEH9s+ldV8cP90YoG3rMwjBN1whZRj
-fgPxiKjt9W51bwyqvVOjEi8KKTtQPkArTXjEdRFUmZkOFzgXqRqu5dSiA1XLLyso
-G3Yid6R13SXdJBaOlBIhZrmp/BADmdVZX31tCdxVHknnfdAg5OAwdCH05Hlj29GU
-KPwqeOuo3aMsYAmxVC3fsN5rY4Rqiml2KLpgDV3nV6TOhVEc+STGPOfv9I6l1UKQ
-8hyZKdOZwFlh8aDk76U870VsZIBPw14QUZkk02RA1FKzHi/3j7OC9M460IZgN95q
-ZvAZYGyPWexsQpoTFyz9xdhB6ZaL4oyEtuHbQ8QzeNXCJdtZ+ufHowrnrFj7v07p
-oQ6/ifk1eAU2flEixHo+blTy/NJNPFvRsOVhOP5SX9zZvEl+k10b4bQDThw/8aNQ
-GDNbyz0P0DZxgKEaF8n8
-=Yi9u
------END PGP SIGNATURE-----
-
---=-uhQOpwr2nuLVwlEwts+D--
-
+  Luis
