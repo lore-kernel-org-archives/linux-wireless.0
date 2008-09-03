@@ -1,43 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:48837 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751896AbYIIFsJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2008 01:48:09 -0400
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
-Subject: Re: wireless-testing rebased again?
-References: <1220858698.28282.324.camel@debian.sh.intel.com>
-	<20080908142117.GA24557@tuxdriver.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Tue, 09 Sep 2008 08:47:34 +0300
-In-Reply-To: <20080908142117.GA24557@tuxdriver.com> (ext John W. Linville's message of "Mon\, 8 Sep 2008 10\:21\:17 -0400")
-Message-ID: <873ak9hnux.fsf@nokia.com> (sfid-20080909_074813_389516_164FF828)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga01.intel.com ([192.55.52.88]:41622 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754381AbYICDbE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:31:04 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 06/39] iwlwifi: align set channel with mac80211
+Date: Wed,  3 Sep 2008 11:26:26 +0800
+Message-Id: <1220412419-15404-7-git-send-email-yi.zhu@intel.com> (sfid-20080903_053109_203875_2D44885A)
+In-Reply-To: <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
+References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville <linville@tuxdriver.com> writes:
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-> On Mon, Sep 08, 2008 at 03:24:58PM +0800, Zhu Yi wrote:
->
->> I find the wireless-testing GIT has been rebased twice in less than one
->> month. Does it mean you give up making it a long lived merge-able tree?
->> This may affect to the downstream wireless drivers code management. At
->> least for iwlwifi, we'd expect to merge with wireless-testing everytime.
->
-> There must be some mistake, it has not been rebased at all -- at
-> least not as far as git is concerned.  I have done my now customary
-> "revert everything, pull from Linus re-apply" thing that I call a
-> virtual rebase, but the history has remained continuous.
->
-> The non-master branches do get rebased of course.  Perhaps you saw
-> that and thought that master had been rebased as well?
+This patch makes use of mac80211 defaults for channel and band.
+Older code that uses G band channel 6 was removed. This patch also
+changes iwl_set_rxon_channel signature.
 
-FWIW, I also have had conflicts while pulling wireless-testing#master
-and I similarly thought that you have rebased it. But if you didn't I
-don't know what happened.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c |   11 +++++------
+ drivers/net/wireless/iwlwifi/iwl-core.h |    4 +---
+ 3 files changed, 7 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 08ca2a3..f1a5225 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2841,7 +2841,7 @@ static int iwl4965_mac_config(struct ieee80211_hw *hw, struct ieee80211_conf *co
+ 	)
+ 		priv->staging_rxon.flags = 0;
+ 
+-	iwl_set_rxon_channel(priv, conf->channel->band, channel);
++	iwl_set_rxon_channel(priv, conf->channel);
+ 
+ 	iwl_set_flags_for_band(priv, conf->channel->band);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index fbf75a6..bb03032 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -773,7 +773,7 @@ void iwl_set_rxon_chain(struct iwl_priv *priv)
+ EXPORT_SYMBOL(iwl_set_rxon_chain);
+ 
+ /**
+- * iwlcore_set_rxon_channel - Set the phymode and channel values in staging RXON
++ * iwl_set_rxon_channel - Set the phymode and channel values in staging RXON
+  * @phymode: MODE_IEEE80211A sets to 5.2GHz; all else set to 2.4GHz
+  * @channel: Any channel valid for the requested phymode
+ 
+@@ -782,10 +782,11 @@ EXPORT_SYMBOL(iwl_set_rxon_chain);
+  * NOTE:  Does not commit to the hardware; it sets appropriate bit fields
+  * in the staging RXON flag structure based on the phymode
+  */
+-int iwl_set_rxon_channel(struct iwl_priv *priv,
+-				enum ieee80211_band band,
+-				u16 channel)
++int iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch)
+ {
++	enum ieee80211_band band = ch->band;
++	u16 channel = ieee80211_frequency_to_channel(ch->center_freq);
++
+ 	if (!iwl_get_channel_info(priv, band, channel)) {
+ 		IWL_DEBUG_INFO("Could not set channel to %d [%d]\n",
+ 			       channel, band);
+@@ -906,8 +907,6 @@ int iwl_init_drv(struct iwl_priv *priv)
+ 	priv->qos_data.qos_active = 0;
+ 	priv->qos_data.qos_cap.val = 0;
+ 
+-	iwl_set_rxon_channel(priv, IEEE80211_BAND_2GHZ, 6);
+-
+ 	priv->rates_mask = IWL_RATES_MASK;
+ 	/* If power management is turned on, default to AC mode */
+ 	priv->power_mode = IWL_POWER_AC;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 64f139e..ff86abc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -189,9 +189,7 @@ void iwl_clear_stations_table(struct iwl_priv *priv);
+ void iwl_free_calib_results(struct iwl_priv *priv);
+ void iwl_reset_qos(struct iwl_priv *priv);
+ void iwl_set_rxon_chain(struct iwl_priv *priv);
+-int iwl_set_rxon_channel(struct iwl_priv *priv,
+-				enum ieee80211_band band,
+-				u16 channel);
++int iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch);
+ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_info *ht_info);
+ u8 iwl_is_fat_tx_allowed(struct iwl_priv *priv,
+ 			 struct ieee80211_ht_info *sta_ht_inf);
 -- 
-Kalle Valo
+1.5.3.6
+
