@@ -1,71 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:43057 "EHLO vs166246.vserver.de"
+Received: from mga01.intel.com ([192.55.52.88]:41622 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752325AbYIQOT7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 10:19:59 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: Regression in 2.6.27-rcX caused by commit bc19d6e0b74ef03a3baf035412c95192b54dfc6f
-Date: Wed, 17 Sep 2008 16:19:33 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de
-References: <48CFC03A.8020708@lwfinger.net> <48D0183E.9010301@lwfinger.net> <20080916210920.GC16470@srcf.ucam.org>
-In-Reply-To: <20080916210920.GC16470@srcf.ucam.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809171619.33377.mb@bu3sch.de> (sfid-20080917_162006_289798_3F5EB9D7)
+	id S1754297AbYICDbA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:31:00 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 03/39] iwlwifi: clean up hw scan handler
+Date: Wed,  3 Sep 2008 11:26:23 +0800
+Message-Id: <1220412419-15404-4-git-send-email-yi.zhu@intel.com> (sfid-20080903_053104_517322_953B7612)
+In-Reply-To: <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
+References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 16 September 2008 23:09:20 Matthew Garrett wrote:
-> Oh, hey, I suck. This one might stand a better chance of not falling 
-> over.
-> 
-> diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
-> index fec5645..991e318 100644
-> --- a/drivers/net/wireless/b43/rfkill.c
-> +++ b/drivers/net/wireless/b43/rfkill.c
-> @@ -49,21 +49,18 @@ static void b43_rfkill_update_state(struct b43_wldev *dev)
->  	struct b43_rfkill *rfk = &(dev->wl->rfkill);
->  
->  	if (!dev->radio_hw_enable) {
-> -		rfk->rfkill->state = RFKILL_STATE_HARD_BLOCKED;
-> +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_HARD_BLOCKED);
->  		return;
->  	}
->  
->  	if (!dev->phy.radio_on)
-> -		rfk->rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
-> +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_SOFT_BLOCKED);
->  	else
-> -		rfk->rfkill->state = RFKILL_STATE_UNBLOCKED;
-> -
-> +		rfkill_force_state(rfk->rfkill, RFKILL_STATE_UNBLOCKED);
->  }
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-I still thing that it is really wrong to check and change the software
-rfkill state from within the _hardware_ rfkill state handler.
-So let's say this handler sets the state to SOFT_BLOCKED. Who is going
-to set it back to unblocked, if the user unblocks the radio?
+This patch cleans up iwl_mac_hw_scan handler.
 
-We can turn the radio on/off from the mac80211 config callback. Possibly
-we must tell rfkill about it (I'm not sure. I don't understand the API).
-I think this is pretty hard to get right, actually. HW-block and SW-block
-are two completely independent states in b43. You can HW-block and SW-block
-the device at the same time. So one must make sure that at any time the rfkill
-is in a sane state if _either_ HW-block or SW-block changes. Currently I think
-we only change rfkill state if HW-block state changes. Which is wrong.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |   35 ++++++++++++++-----------------
+ 1 files changed, 16 insertions(+), 19 deletions(-)
 
-
-In the end, I do not care about this crap anymore.
-Feel free to remove my copyright notice from that file and put yours in
-there. So feel free to send any patch to the rfkill code to john, but please
-handle any regressions resulting from it. If not, I will handle them by reverting
-patches until it starts to work again. ;)
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 1badcf3..1073fa0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3179,9 +3179,9 @@ static void iwl4965_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ }
+ 
+-static int iwl4965_mac_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t len)
++static int iwl_mac_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t ssid_len)
+ {
+-	int rc = 0;
++	int ret;
+ 	unsigned long flags;
+ 	struct iwl_priv *priv = hw->priv;
+ 
+@@ -3191,41 +3191,38 @@ static int iwl4965_mac_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t len)
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 
+ 	if (!iwl_is_ready_rf(priv)) {
+-		rc = -EIO;
++		ret = -EIO;
+ 		IWL_DEBUG_MAC80211("leave - not ready or exit pending\n");
+ 		goto out_unlock;
+ 	}
+ 
+ 	if (priv->iw_mode == IEEE80211_IF_TYPE_AP) {	/* APs don't scan */
+-		rc = -EIO;
++		ret = -EIO;
+ 		IWL_ERROR("ERROR: APs don't scan\n");
+ 		goto out_unlock;
+ 	}
+ 
+ 	/* we don't schedule scan within next_scan_jiffies period */
+ 	if (priv->next_scan_jiffies &&
+-			time_after(priv->next_scan_jiffies, jiffies)) {
+-		rc = -EAGAIN;
++	    time_after(priv->next_scan_jiffies, jiffies)) {
++		ret = -EAGAIN;
+ 		goto out_unlock;
+ 	}
+ 	/* if we just finished scan ask for delay */
+-	if (priv->last_scan_jiffies && time_after(priv->last_scan_jiffies +
+-				IWL_DELAY_NEXT_SCAN, jiffies)) {
+-		rc = -EAGAIN;
++	if (priv->last_scan_jiffies &&
++	    time_after(priv->last_scan_jiffies + IWL_DELAY_NEXT_SCAN, jiffies)) {
++		ret = -EAGAIN;
+ 		goto out_unlock;
+ 	}
+-	if (len) {
+-		IWL_DEBUG_SCAN("direct scan for %s [%d]\n ",
+-			       iwl_escape_essid(ssid, len), (int)len);
+-
++	if (ssid_len) {
+ 		priv->one_direct_scan = 1;
+-		priv->direct_ssid_len = (u8)
+-		    min((u8) len, (u8) IW_ESSID_MAX_SIZE);
++		priv->direct_ssid_len =  min_t(u8, ssid_len, IW_ESSID_MAX_SIZE);
+ 		memcpy(priv->direct_ssid, ssid, priv->direct_ssid_len);
+-	} else
++	} else {
+ 		priv->one_direct_scan = 0;
++	}
+ 
+-	rc = iwl_scan_initiate(priv);
++	ret = iwl_scan_initiate(priv);
+ 
+ 	IWL_DEBUG_MAC80211("leave\n");
+ 
+@@ -3233,7 +3230,7 @@ out_unlock:
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 	mutex_unlock(&priv->mutex);
+ 
+-	return rc;
++	return ret;
+ }
+ 
+ static void iwl4965_mac_update_tkip_key(struct ieee80211_hw *hw,
+@@ -4140,7 +4137,7 @@ static struct ieee80211_ops iwl4965_hw_ops = {
+ 	.reset_tsf = iwl4965_mac_reset_tsf,
+ 	.bss_info_changed = iwl4965_bss_info_changed,
+ 	.ampdu_action = iwl4965_mac_ampdu_action,
+-	.hw_scan = iwl4965_mac_hw_scan
++	.hw_scan = iwl_mac_hw_scan
+ };
+ 
+ static int iwl4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 -- 
-Greetings Michael.
+1.5.3.6
+
