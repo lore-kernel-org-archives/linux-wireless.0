@@ -1,119 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:56720 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750876AbYISJq2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 05:46:28 -0400
-Subject: Re: ACK matching [was: TX status reporting with help of an ack
-	queue]
-From: Mattias Nissler <mattias.nissler@gmx.de>
-To: Mikko =?ISO-8859-1?Q?Virkkil=E4?= <mikko.virkkila@bluegiga.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	rt2400-devel@lists.sourceforge.net,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>, dsd@gentoo.org,
-	kune@deine-taler.de
-In-Reply-To: <1221815294.19539.15.camel@virkkmi-linux>
-References: <1221494693.14102.22.camel@virkkmi-linux>
-	 <1221505251.4511.77.camel@localhost>
-	 <1221541089.14102.44.camel@virkkmi-linux>
-	 <200809162018.42576.IvDoorn@gmail.com>  <1221770220.4563.3.camel@localhost>
-	 <1221776990.4563.19.camel@localhost>
-	 <1221815294.19539.15.camel@virkkmi-linux>
-Content-Type: text/plain; charset=ISO-8859-1
-Date: Fri, 19 Sep 2008 11:46:24 +0200
-Message-Id: <1221817584.4491.29.camel@localhost> (sfid-20080919_114636_227625_740F4185)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:28171 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752142AbYICUm0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2008 16:42:26 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/3] iwlwifi: rs - take a fresh set of supported rates at each cycle
+Date: Wed,  3 Sep 2008 23:42:18 +0300
+Message-Id: <1220474540-16737-2-git-send-email-tomas.winkler@intel.com> (sfid-20080903_224230_367973_87585B6A)
+In-Reply-To: <1220474540-16737-1-git-send-email-tomas.winkler@intel.com>
+References: <1220474540-16737-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-09-19 at 12:08 +0300, Mikko Virkkil=E4 wrote:
-> On Thu, 2008-09-18 at 22:29 +0000, Mattias Nissler wrote:
-> > [I've added the zd1211rw maintainers to the CC, I hope they can she=
-d
-> > some light on the question whether the ack queue mechanism that dri=
-ver
-> > has is actually correct]
-> >=20
-> > I've had a closer look at the idea of deciding whether a frame has
-> > been
-> > transmitted succesfully by monitoring incoming ACK frames and I've =
-hit
-> > a
-> > fundamental problem: How do you correlate incoming ACK frames to th=
-e
-> > frames that were actually transmitted? The ACK frame only carries t=
-he
-> > address of the station that transmitted the frame being acked, no
-> > further information. Now this means if you have the hardware TX two
-> > frames and receive one ACK frame in the RX path, you cannot know wh=
-ich
-> > TX frame the ACK belongs to, because they will be identical, right?
-> >=20
-> > The hardware, however, knows, because the ACKs are required to be
-> > transmitted directly after the corresponding frame is received, but=
- we
-> > don't know in the driver about this timing information, at least no=
-t for
-> > rt2x00.
-> >=20
-> > I wonder whether the ack queue idea Mikko found in the zd1211rw dri=
-ver
-> > is actually working correctly for that driver? I've only had a shor=
-t
-> > look, but found that incoming ACKs are only matched against transmi=
-tted
-> > frames by means of the address carried within the ACK. So I'd think=
- in
-> > the situation I outlined above, the zd1211rw driver will also be un=
-able
-> > to match the ACK to the correct frame. Any comments on this?
-> >=20
-> > Mattiass
-> >=20
->=20
-> AFAIK your analysis is correct and I think this is somewhat of a know=
-n
-> problem with the implementation in zd1211rw driver. I haven't come
-> across a way of getting around the problem. I read some suggestions
-> about stopping all transmission to a certain address until we get a
-> status update for the previous packet sent to that address, but iirc
-> this was deemed impractical. On the other hand the current
-> implementation in zd1211rw (and hopefully soon in rt2x00) doesn't rea=
-lly
-> break anything that works without it and on rt2x00 it gets AP-mode in=
- a
-> somewhat more usable state.=20
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Well, as long as nothing vitally depends on the transmissions status
-(i.e. MAC layer acknowledgements in 802.11 lingo), you are right that i=
-t
-won't break anything. Nevertheless, it is code that is known to be
-working incorrectly and non-fixable, so I'd vote against it (I'd rather
-live with the approach of always reporting successful tx status as you
-have proposed earlier if I had to choose from the two of them). Maybe w=
-e
-just have to accept that there is hardware that cannot report MAC layer
-acknowledgements back to the driver. Unless somebody comes up with a
-feasible idea how to do it. Ivo, do we have a contact at Ralink to ask
-about this?
+Regression iwl-agn-rs IBSS: work in single rate.
 
-This brings up the question whether we can do without tx status
-reporting. Does anyone know why hostapd requires the tx status? As far
-as I understand, mac80211 only uses the tx status reporting only for th=
-e
-tx rate control. Rate control algos that don't use tx status are
-definitely feasible (and in fact we'll need one for rt73).
+This patch fixes regression in iwlwifi IBSS rate scaling caused by patch:
 
-I'll look into hostapd to figure out whether the tx status reporting is
-really required when I find some time. However, I've just received
-rt2800 hardware, so getting the rt2800 driver going is my top priority
-for the next weeks.
+commit 6bc37c06bc424bcf3f944e6a79e2d5bb537e02ed
+Author: Vladimir Koutny <vlado@work.ksp.sk>
+Date:   Fri Jun 13 16:50:44 2008 +0200
 
-Mattias
+    mac80211: eliminate IBSS warning in rate_lowest_index()
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+An IBSS station might added on reception of a packet that doesn't
+carry rate information (beacon, probe resp). In that case the rate
+scaling was initialized only with single rate matching the received packet
+rate with the hope that correct rate scale information will be updated
+when beacon or probe for that station will arrive.
+
+iwl-agn-rs copied supported rates on initialization and was never updated
+again.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Tomas Winkler <tomas.winkler@intel.com>
+Cc: Vladimir Koutny <vlado@work.ksp.sk>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 754fef5..3dc57f5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -1668,6 +1668,7 @@ static void rs_rate_scale_perform(struct iwl_priv *priv,
+ 		return;
+ 
+ 	lq_sta = (struct iwl_lq_sta *)sta->rate_ctrl_priv;
++	lq_sta->supp_rates = sta->supp_rates[lq_sta->band];
+ 
+ 	tid = rs_tl_add_packet(lq_sta, hdr);
+ 
+-- 
+1.5.4.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
