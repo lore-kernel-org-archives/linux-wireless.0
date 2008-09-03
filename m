@@ -1,67 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:40087 "EHLO mx3.mail.elte.hu"
+Received: from mga01.intel.com ([192.55.52.88]:43814 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751235AbYISIv0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 04:51:26 -0400
-Date: Fri, 19 Sep 2008 10:51:06 +0200
-From: Ingo Molnar <mingo@elte.hu>
-To: Steven Noonan <steven@uplinklabs.net>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Steven Rostedt <rostedt@goodmis.org>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27
-	(rc5, rc6, probably others)
-Message-ID: <20080919085105.GG17592@elte.hu> (sfid-20080919_105130_594486_747B310B)
-References: <20080918220102.GE7408@tesla> <43e72e890809181508w5232a14ewbf2bf18fe90a92d5@mail.gmail.com> <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com> <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com> <f488382f0809181952g628ab5a4nd86f396a08f4d6c8@mail.gmail.com> <20080919030125.GG7408@tesla> <f488382f0809190029n13b87ad1s153e5b983f301f31@mail.gmail.com> <20080919081733.GC19491@elte.hu> <f488382f0809190122k1b30cd9q22fd076c1e3eaa18@mail.gmail.com> <f488382f0809190145s1b5407d4s9d97ae594bcc3379@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f488382f0809190145s1b5407d4s9d97ae594bcc3379@mail.gmail.com>
+	id S1754322AbYICDbF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:31:05 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 07/39] iwl3945: fix unbalanced mutex
+Date: Wed,  3 Sep 2008 11:26:27 +0800
+Message-Id: <1220412419-15404-8-git-send-email-yi.zhu@intel.com> (sfid-20080903_053110_704663_FFA2ABA7)
+In-Reply-To: <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
+References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
+ <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-* Steven Noonan <steven@uplinklabs.net> wrote:
+The patch removes unlocking of mutex from post_associate.
 
-> On Fri, Sep 19, 2008 at 1:22 AM, Steven Noonan <steven@uplinklabs.net> wrote:
-> > On Fri, Sep 19, 2008 at 1:17 AM, Ingo Molnar <mingo@elte.hu> wrote:
-> >> in tip/master there's an ftrace_printk() facility. You can just replace
-> >> the verbose printk()s with ftrace_printk() and see the result in
-> >> /debug/tracing/trace.
-> >>
-> >> This sort of tracing has very low overhead and can be used in an easy
-> >> ad-hoc manner with no extra infrastructure. Here's a few quick-start
-> >> links about how to enable the scheduler tracer:
-> >>
-> >>  http://redhat.com/~mingo/sched-devel.git/readme-tracer.txt
-> >>  http://redhat.com/~mingo/sched-devel.git/howto-trace-latencies.txt
-> >>
-> >> any ftrace_printk() you add in the kernel will show up in that trace.
-> >>
-> >> (If the scheduling events are uninteresting and clutter the output then
-> >> you might want to remove the scheduler tracing entries from kernel/*.c
-> >> by removing the trace_sched_*() calls or use a less noisy tracer.)
-> >>
-> >> to get enough of a trace history you might want to increase the number
-> >> of trace entries in /debug/tracing/trace_entries from 16K to 128K or so.
-> >>
-> >
-> > Thanks for the suggestion, I'll do that. :)
-> >
-> 
-> It'd be extremely convenient to have a tracer that did absolutely 
-> nothing but display ftrace_printk()s.
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-yeah, had the same thought.
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 6d27264..85581b6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -6339,10 +6339,9 @@ static void iwl3945_post_associate(struct iwl3945_priv *priv)
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+ 		return;
+ 
+-	if (!priv->vif || !priv->is_open) {
+-		mutex_unlock(&priv->mutex);
++	if (!priv->vif || !priv->is_open)
+ 		return;
+-	}
++
+ 	iwl3945_scan_cancel_timeout(priv, 200);
+ 
+ 	conf = ieee80211_get_hw_conf(priv->hw);
+-- 
+1.5.3.6
 
-Could you please contribute one? :) I'd suggest you take the smallest 
-tracer as a template: trace_sched_switch.c and turn that into 
-trace_nop.c - and change all the function names and ASCII and kconfig 
-glue to 'nop'/'NOP'?
-
-That can then be used as a basis for additional ftrace plugins, or for 
-ad-hoc temporary tracing.
-
-	Ingo
