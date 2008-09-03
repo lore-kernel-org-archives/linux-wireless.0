@@ -1,216 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:57878 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:41622 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752035AbYIERMV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2008 13:12:21 -0400
-Subject: Re: [PATCH 15/18] netdevice libertas: Fix directly reference of
-	netdev->priv
-From: Dan Williams <dcbw@redhat.com>
-To: Wang Chen <wangchen@cn.fujitsu.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	NETDEV <netdev@vger.kernel.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <48C0A76F.8090706@cn.fujitsu.com>
-References: <48C0A219.2030004@cn.fujitsu.com>
-	 <48C0A76F.8090706@cn.fujitsu.com>
-Content-Type: text/plain
-Date: Fri, 05 Sep 2008 13:07:45 -0400
-Message-Id: <1220634465.6430.16.camel@localhost.localdomain> (sfid-20080905_191226_500860_A73E63B3)
-Mime-Version: 1.0
+	id S1754035AbYICDa5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:30:57 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 01/39] iwlwifi : Added bss_info_changed callback to 3945
+Date: Wed,  3 Sep 2008 11:26:21 +0800
+Message-Id: <1220412419-15404-2-git-send-email-yi.zhu@intel.com> (sfid-20080903_053100_346231_F5B62584)
+In-Reply-To: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
+References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-09-05 at 11:28 +0800, Wang Chen wrote:
-> We have some reasons to kill netdev->priv:
-> 1. netdev->priv is equal to netdev_priv().
-> 2. netdev_priv() wraps the calculation of netdev->priv's offset, obviously
->    netdev_priv() is more flexible than netdev->priv.
-> But we cann't kill netdev->priv, because so many drivers reference to it
-> directly.
-> 
-> OK, becasue Dave S. Miller said, "every direct netdev->priv usage is a bug",
-> and I want to kill netdev->priv later, I decided to convert all the direct
-> reference of netdev->priv first.
-> 
-> Different to readonly reference of netdev->priv, in this driver, netdev->priv
-> was changed. I use netdev->ml_priv to replace netdev->priv.
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-Same comment as the other two; any reason we can't use netdev_priv()
-instead of ->ml_priv?  That would be preferable.
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   74 ++++++++++++++++++++++++--
+ 1 files changed, 68 insertions(+), 6 deletions(-)
 
-Thanks!
-Dan
-
-> Signed-off-by: Wang Chen <wangchen@cn.fujitsu.com>
-> ---
->  drivers/net/wireless/libertas/main.c |   36 +++++++++++++++++-----------------
->  1 files changed, 18 insertions(+), 18 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-> index bd32ac0..71c4bd8 100644
-> --- a/drivers/net/wireless/libertas/main.c
-> +++ b/drivers/net/wireless/libertas/main.c
-> @@ -223,7 +223,7 @@ u8 lbs_data_rate_to_fw_index(u32 rate)
->  static ssize_t lbs_anycast_get(struct device *dev,
->  		struct device_attribute *attr, char * buf)
->  {
-> -	struct lbs_private *priv = to_net_dev(dev)->priv;
-> +	struct lbs_private *priv = netdev_priv(to_net_dev(dev));
->  	struct cmd_ds_mesh_access mesh_access;
->  	int ret;
->  
-> @@ -242,7 +242,7 @@ static ssize_t lbs_anycast_get(struct device *dev,
->  static ssize_t lbs_anycast_set(struct device *dev,
->  		struct device_attribute *attr, const char * buf, size_t count)
->  {
-> -	struct lbs_private *priv = to_net_dev(dev)->priv;
-> +	struct lbs_private *priv = netdev_priv(to_net_dev(dev));
->  	struct cmd_ds_mesh_access mesh_access;
->  	uint32_t datum;
->  	int ret;
-> @@ -270,7 +270,7 @@ static void lbs_remove_mesh(struct lbs_private *priv);
->  static ssize_t lbs_rtap_get(struct device *dev,
->  		struct device_attribute *attr, char * buf)
->  {
-> -	struct lbs_private *priv = to_net_dev(dev)->priv;
-> +	struct lbs_private *priv = netdev_priv(to_net_dev(dev));
->  	return snprintf(buf, 5, "0x%X\n", priv->monitormode);
->  }
->  
-> @@ -281,7 +281,7 @@ static ssize_t lbs_rtap_set(struct device *dev,
->  		struct device_attribute *attr, const char * buf, size_t count)
->  {
->  	int monitor_mode;
-> -	struct lbs_private *priv = to_net_dev(dev)->priv;
-> +	struct lbs_private *priv = netdev_priv(to_net_dev(dev));
->  
->  	sscanf(buf, "%x", &monitor_mode);
->  	if (monitor_mode) {
-> @@ -330,7 +330,7 @@ static DEVICE_ATTR(lbs_rtap, 0644, lbs_rtap_get, lbs_rtap_set );
->  static ssize_t lbs_mesh_get(struct device *dev,
->  		struct device_attribute *attr, char * buf)
->  {
-> -	struct lbs_private *priv = to_net_dev(dev)->priv;
-> +	struct lbs_private *priv = netdev_priv(to_net_dev(dev));
->  	return snprintf(buf, 5, "0x%X\n", !!priv->mesh_dev);
->  }
->  
-> @@ -340,7 +340,7 @@ static ssize_t lbs_mesh_get(struct device *dev,
->  static ssize_t lbs_mesh_set(struct device *dev,
->  		struct device_attribute *attr, const char * buf, size_t count)
->  {
-> -	struct lbs_private *priv = to_net_dev(dev)->priv;
-> +	struct lbs_private *priv = netdev_priv(to_net_dev(dev));
->  	int enable;
->  	int ret, action = CMD_ACT_MESH_CONFIG_STOP;
->  
-> @@ -391,7 +391,7 @@ static struct attribute_group lbs_mesh_attr_group = {
->   */
->  static int lbs_dev_open(struct net_device *dev)
->  {
-> -	struct lbs_private *priv = (struct lbs_private *) dev->priv ;
-> +	struct lbs_private *priv = netdev_priv(dev) ;
->  	int ret = 0;
->  
->  	lbs_deb_enter(LBS_DEB_NET);
-> @@ -433,7 +433,7 @@ static int lbs_dev_open(struct net_device *dev)
->   */
->  static int lbs_mesh_stop(struct net_device *dev)
->  {
-> -	struct lbs_private *priv = (struct lbs_private *) (dev->priv);
-> +	struct lbs_private *priv = dev->ml_priv;
->  
->  	lbs_deb_enter(LBS_DEB_MESH);
->  	spin_lock_irq(&priv->driver_lock);
-> @@ -460,7 +460,7 @@ static int lbs_mesh_stop(struct net_device *dev)
->   */
->  static int lbs_eth_stop(struct net_device *dev)
->  {
-> -	struct lbs_private *priv = (struct lbs_private *) dev->priv;
-> +	struct lbs_private *priv = netdev_priv(dev);
->  
->  	lbs_deb_enter(LBS_DEB_NET);
->  
-> @@ -477,7 +477,7 @@ static int lbs_eth_stop(struct net_device *dev)
->  
->  static void lbs_tx_timeout(struct net_device *dev)
->  {
-> -	struct lbs_private *priv = (struct lbs_private *) dev->priv;
-> +	struct lbs_private *priv = netdev_priv(dev);
->  
->  	lbs_deb_enter(LBS_DEB_TX);
->  
-> @@ -529,7 +529,7 @@ EXPORT_SYMBOL_GPL(lbs_host_to_card_done);
->   */
->  static struct net_device_stats *lbs_get_stats(struct net_device *dev)
->  {
-> -	struct lbs_private *priv = (struct lbs_private *) dev->priv;
-> +	struct lbs_private *priv = netdev_priv(dev);
->  
->  	lbs_deb_enter(LBS_DEB_NET);
->  	return &priv->stats;
-> @@ -538,7 +538,7 @@ static struct net_device_stats *lbs_get_stats(struct net_device *dev)
->  static int lbs_set_mac_address(struct net_device *dev, void *addr)
->  {
->  	int ret = 0;
-> -	struct lbs_private *priv = (struct lbs_private *) dev->priv;
-> +	struct lbs_private *priv = netdev_priv(dev);
->  	struct sockaddr *phwaddr = addr;
->  	struct cmd_ds_802_11_mac_address cmd;
->  
-> @@ -672,7 +672,7 @@ static void lbs_set_mcast_worker(struct work_struct *work)
->  
->  static void lbs_set_multicast_list(struct net_device *dev)
->  {
-> -	struct lbs_private *priv = dev->priv;
-> +	struct lbs_private *priv = netdev_priv(dev);
->  
->  	schedule_work(&priv->mcast_work);
->  }
-> @@ -688,7 +688,7 @@ static void lbs_set_multicast_list(struct net_device *dev)
->  static int lbs_thread(void *data)
->  {
->  	struct net_device *dev = data;
-> -	struct lbs_private *priv = dev->priv;
-> +	struct lbs_private *priv = netdev_priv(dev);
->  	wait_queue_t wait;
->  
->  	lbs_deb_enter(LBS_DEB_THREAD);
-> @@ -1116,7 +1116,7 @@ struct lbs_private *lbs_add_card(void *card, struct device *dmdev)
->  		lbs_pr_err("init ethX device failed\n");
->  		goto done;
->  	}
-> -	priv = dev->priv;
-> +	priv = netdev_priv(dev);
->  
->  	if (lbs_init_adapter(priv)) {
->  		lbs_pr_err("failed to initialize adapter structure.\n");
-> @@ -1351,7 +1351,7 @@ static int lbs_add_mesh(struct lbs_private *priv)
->  		ret = -ENOMEM;
->  		goto done;
->  	}
-> -	mesh_dev->priv = priv;
-> +	mesh_dev->ml_priv = priv;
->  	priv->mesh_dev = mesh_dev;
->  
->  	mesh_dev->open = lbs_dev_open;
-> @@ -1564,7 +1564,7 @@ static int lbs_rtap_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
->  
->  static struct net_device_stats *lbs_rtap_get_stats(struct net_device *dev)
->  {
-> -	struct lbs_private *priv = dev->priv;
-> +	struct lbs_private *priv = dev->ml_priv;
->  	lbs_deb_enter(LBS_DEB_NET);
->  	return &priv->stats;
->  }
-> @@ -1605,7 +1605,7 @@ static int lbs_add_rtap(struct lbs_private *priv)
->  	rtap_dev->stop = lbs_rtap_stop;
->  	rtap_dev->get_stats = lbs_rtap_get_stats;
->  	rtap_dev->hard_start_xmit = lbs_rtap_hard_start_xmit;
-> -	rtap_dev->priv = priv;
-> +	rtap_dev->ml_priv = priv;
->  	SET_NETDEV_DEV(rtap_dev, priv->dev->dev.parent);
->  
->  	ret = register_netdev(rtap_dev);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index a622fc3..6d27264 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -6320,11 +6320,8 @@ static void iwl3945_bg_rx_replenish(struct work_struct *data)
+ 
+ #define IWL_DELAY_NEXT_SCAN (HZ*2)
+ 
+-static void iwl3945_bg_post_associate(struct work_struct *data)
++static void iwl3945_post_associate(struct iwl3945_priv *priv)
+ {
+-	struct iwl3945_priv *priv = container_of(data, struct iwl3945_priv,
+-					     post_associate.work);
+-
+ 	int rc = 0;
+ 	struct ieee80211_conf *conf = NULL;
+ 	DECLARE_MAC_BUF(mac);
+@@ -6342,8 +6339,6 @@ static void iwl3945_bg_post_associate(struct work_struct *data)
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+ 		return;
+ 
+-	mutex_lock(&priv->mutex);
+-
+ 	if (!priv->vif || !priv->is_open) {
+ 		mutex_unlock(&priv->mutex);
+ 		return;
+@@ -6419,6 +6414,15 @@ static void iwl3945_bg_post_associate(struct work_struct *data)
+ 
+ 	/* we have just associated, don't start scan too early */
+ 	priv->next_scan_jiffies = jiffies + IWL_DELAY_NEXT_SCAN;
++}
++
++static void iwl3945_bg_post_associate(struct work_struct *data)
++{
++	struct iwl3945_priv *priv = container_of(data, struct iwl3945_priv,
++					     post_associate.work);
++
++	mutex_lock(&priv->mutex);
++	iwl3945_post_associate(priv);
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
+@@ -6948,6 +6952,63 @@ static void iwl3945_mac_remove_interface(struct ieee80211_hw *hw,
+ 	IWL_DEBUG_MAC80211("leave\n");
+ }
+ 
++#define IWL_DELAY_NEXT_SCAN_AFTER_ASSOC (HZ*6)
++
++static void iwl3945_bss_info_changed(struct ieee80211_hw *hw,
++				     struct ieee80211_vif *vif,
++				     struct ieee80211_bss_conf *bss_conf,
++				     u32 changes)
++{
++	struct iwl3945_priv *priv = hw->priv;
++
++	IWL_DEBUG_MAC80211("changes = 0x%X\n", changes);
++
++	if (changes & BSS_CHANGED_ERP_PREAMBLE) {
++		IWL_DEBUG_MAC80211("ERP_PREAMBLE %d\n",
++				   bss_conf->use_short_preamble);
++		if (bss_conf->use_short_preamble)
++			priv->staging_rxon.flags |= RXON_FLG_SHORT_PREAMBLE_MSK;
++		else
++			priv->staging_rxon.flags &= ~RXON_FLG_SHORT_PREAMBLE_MSK;
++	}
++
++	if (changes & BSS_CHANGED_ERP_CTS_PROT) {
++		IWL_DEBUG_MAC80211("ERP_CTS %d\n", bss_conf->use_cts_prot);
++		if (bss_conf->use_cts_prot && (priv->band != IEEE80211_BAND_5GHZ))
++			priv->staging_rxon.flags |= RXON_FLG_TGG_PROTECT_MSK;
++		else
++			priv->staging_rxon.flags &= ~RXON_FLG_TGG_PROTECT_MSK;
++	}
++
++	if (changes & BSS_CHANGED_ASSOC) {
++		IWL_DEBUG_MAC80211("ASSOC %d\n", bss_conf->assoc);
++		/* This should never happen as this function should
++		 * never be called from interrupt context. */
++		if (WARN_ON_ONCE(in_interrupt()))
++			return;
++		if (bss_conf->assoc) {
++			priv->assoc_id = bss_conf->aid;
++			priv->beacon_int = bss_conf->beacon_int;
++			priv->timestamp0 = bss_conf->timestamp & 0xFFFFFFFF;
++			priv->timestamp1 = (bss_conf->timestamp >> 32) &
++					     0xFFFFFFFF;
++			priv->assoc_capability = bss_conf->assoc_capability;
++			priv->next_scan_jiffies = jiffies +
++					IWL_DELAY_NEXT_SCAN_AFTER_ASSOC;
++			mutex_lock(&priv->mutex);
++			iwl3945_post_associate(priv);
++			mutex_unlock(&priv->mutex);
++		} else {
++			priv->assoc_id = 0;
++			IWL_DEBUG_MAC80211("DISASSOC %d\n", bss_conf->assoc);
++		}
++	} else if (changes && iwl3945_is_associated(priv) && priv->assoc_id) {
++			IWL_DEBUG_MAC80211("Associated Changes %d\n", changes);
++			iwl3945_send_rxon_assoc(priv);
++	}
++
++}
++
+ static int iwl3945_mac_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t len)
+ {
+ 	int rc = 0;
+@@ -7828,6 +7889,7 @@ static struct ieee80211_ops iwl3945_hw_ops = {
+ 	.conf_tx = iwl3945_mac_conf_tx,
+ 	.get_tsf = iwl3945_mac_get_tsf,
+ 	.reset_tsf = iwl3945_mac_reset_tsf,
++	.bss_info_changed = iwl3945_bss_info_changed,
+ 	.hw_scan = iwl3945_mac_hw_scan
+ };
+ 
+-- 
+1.5.3.6
 
