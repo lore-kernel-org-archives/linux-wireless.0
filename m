@@ -1,65 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:28171 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752318AbYICUm2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2008 16:42:28 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 2/3] mac80211: Fix low bit rate in IBSS
-Date: Wed,  3 Sep 2008 23:42:19 +0300
-Message-Id: <1220474540-16737-3-git-send-email-tomas.winkler@intel.com> (sfid-20080903_224231_265676_AF22540C)
-In-Reply-To: <1220474540-16737-2-git-send-email-tomas.winkler@intel.com>
-References: <1220474540-16737-1-git-send-email-tomas.winkler@intel.com>
- <1220474540-16737-2-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from senator.holtmann.net ([87.106.208.187]:40105 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751398AbYICN7I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2008 09:59:08 -0400
+Subject: Re: [PATCH 4/9] iwlwifi: generic init calibrations framework
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: David Miller <davem@davemloft.net>, yi.zhu@intel.com,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	emmanuel.grumbach@intel.com
+In-Reply-To: <1ba2fa240809030223m56ce47aqf9f41fab7d3453ca@mail.gmail.com>
+References: <1220411930-15216-3-git-send-email-yi.zhu@intel.com>
+	 <1220411930-15216-4-git-send-email-yi.zhu@intel.com>
+	 <1220411930-15216-5-git-send-email-yi.zhu@intel.com>
+	 <20080902.203634.127434142.davem@davemloft.net>
+	 <1220429411.6714.17.camel@californication>
+	 <1ba2fa240809030223m56ce47aqf9f41fab7d3453ca@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 03 Sep 2008 15:59:15 +0200
+Message-Id: <1220450355.6714.26.camel@californication> (sfid-20080903_155912_521035_0BB1035D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes regression in iwlwifi IBSS rate scaling caused by patch:
+Hi Tomas,
 
-    commit 6bc37c06bc424bcf3f944e6a79e2d5bb537e02ed
-    Author: Vladimir Koutny <vlado@work.ksp.sk>
-    Date:   Fri Jun 13 16:50:44 2008 +0200
+> >> > This patch fixes a critical bug that only the last calibration result
+> >> > was applied. On reception of one calibration result all the calibration
+> >> > results were freed therefore only last was applied. The patch fixes this
+> >> > problem by introducing a generic init calibration framework which allows
+> >> > variable number of init calibrations and allows addition new HW.
+> >> >
+> >> > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> >> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> >> > Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+> >>
+> >> This is borderline, I would rather hold off on such a sizable change
+> >> for 2.6.27 as I'll have a hard time justifying it.
+> >
+> > do you see any way for fixing (or improving) this with the current code
+> > and hold the whole framework change off until the next merge window.
+> >
+> > Maybe instead of iwl_free_calib_results(priv); just freeing them
+> > individually in their case statements.
+> > You know the hardware better than I do, but that should just work
+> > (judging from the code).
+> 
+> In general it's possible, but we've already tested this fix. Because
+> this is sensitive, even if the code looks okay I cannot approve it
+> until we run the whole validation cycle and measurements in the lab so
+> it will take some time. Last time we broke it code also looked good :)
 
-        mac80211: eliminate IBSS warning in rate_lowest_index()
+if I understood Dave correctly, then we either come up with a temporary
+fix that is small and simple (even if it is not a long term solution) or
+no fix for this issue is going into 2.6.27 at all. The fix that I have
+in mind removes one line and adds 6 new ones.
 
-An IBSS station is added in prepare_for_handlers where the rate scaling was
-initialized only with single rate matching the received packet.
-The correct rate scale information should be updated only in
-ieee80211_rx_bss_info function where beacon is parsed. Because
-of coding error the rate info was left untouched.
-If a beacon has triggered the connection the rate remined 1Mbps.
-This patch fixes this coding error
+And of course it needs to be tested, but that should be true for
+everything that goes into the kernel. I can write the temporary patch
+for it, but you guys are the experts with this hardware. So I leave it
+up to you.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Cc: Vladimir Koutny <vlado@work.ksp.sk>
----
- net/mac80211/mlme.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Regards
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7d53382..75510a9 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2595,7 +2595,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 							rx_status->band);
- 
- 		prev_rates = sta->supp_rates[rx_status->band];
--		sta->supp_rates[rx_status->band] &= supp_rates;
-+		sta->supp_rates[rx_status->band] = supp_rates;
- 		if (sta->supp_rates[rx_status->band] == 0) {
- 			/* No matching rates - this should not really happen.
- 			 * Make sure that at least one rate is marked
--- 
-1.5.4.1
+Marcel
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
 
