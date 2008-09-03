@@ -1,52 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([198.107.51.143]:3015 "EHLO mail.tpi.com"
+Received: from mga09.intel.com ([134.134.136.24]:22294 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751996AbYIEQdX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2008 12:33:23 -0400
-Message-ID: <48C15A5E.6000301@canonical.com> (sfid-20080905_183343_254494_23A4302E)
-Date: Fri, 05 Sep 2008 10:12:14 -0600
-From: Tim Gardner <tim.gardner@canonical.com>
-MIME-Version: 1.0
-To: Karol Szkudlarek <karol@mikronika.com.pl>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
-Subject: Re: kernel crash during suspend using iwl3945 driver 1.2.26k	on	ubuntu
- hardy
-References: <48BC47C5.2070807@mikronika.com.pl>	 <1220425598.28282.190.camel@debian.sh.intel.com>	 <loom.20080903T181136-957@post.gmane.org> <1220601300.28282.291.camel@debian.sh.intel.com> <48C0EA41.5050103@mikronika.com.pl> <48C14AA2.1040202@lwfinger.net>
-In-Reply-To: <48C14AA2.1040202@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1753266AbYICDWt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Sep 2008 23:22:49 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Assaf Krauss <assaf.krauss@intel.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 1/9] iwlwifi: W/A for the TSF correction in IBSS
+Date: Wed,  3 Sep 2008 11:18:42 +0800
+Message-Id: <1220411930-15216-2-git-send-email-yi.zhu@intel.com> (sfid-20080903_052303_600454_63E57A04)
+In-Reply-To: <1220411930-15216-1-git-send-email-yi.zhu@intel.com>
+References: <1220411930-15216-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> Karol Szkudlarek wrote:
->> Hello Zhu!
->>
->> It will be tough to see in 2.6.27-rc kernels beacuse I use Ubuntu 8.04
->> LTS
->> which uses 2.6.24 linux kernel. :-(
->>
-> 
-> The Ubuntu team has a 2.6.27 kernel available. To quote the text of a
-> message in a BCM4306 thread "1)  If you are comfortable installing
-> packages on your own, the linux-image-2.6.27-* package is currently
-> available for you to install and test."
-> 
-> Larry
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+From: Assaf Krauss <assaf.krauss@intel.com>
 
-There is a Hardy package for the 2.6.27 kernel at
+This patch is a W/A for the TSF sync issue in IBSS merging. HW is not
+capable to sync TSF (it's constantly little behind). This creates
+constant IBSS merging upon reception of each beacon, adding and removing
+station which in turn creates above 50% packet loss and thus dramatically
+degrade the throughput. The W/A simply stops the driver from declaring it
+has a reliable TSF value and thus eliminates IBSS merging.
 
-http://ppa.launchpad.net/timg-tpi/ubuntu
+Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-rx.c  |    5 ++++-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-It is currently based on -rc5. I'll be updating it throughout the .27
-development and stable cycle.
-
-rtg
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index c0b73c4..2afa1fb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3588,7 +3588,7 @@ static int iwl4965_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *sk
+ 
+ 	priv->assoc_id = 0;
+ 	timestamp = ((struct ieee80211_mgmt *)skb->data)->u.beacon.timestamp;
+-	priv->timestamp = le64_to_cpu(timestamp) +  (priv->beacon_int * 1000);
++	priv->timestamp = le64_to_cpu(timestamp);
+ 
+ 	IWL_DEBUG_MAC80211("leave\n");
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index f3f6ea4..e81bfc4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -1173,7 +1173,10 @@ void iwl_rx_reply_rx(struct iwl_priv *priv,
+ 
+ 	rx_status.antenna = 0;
+ 	rx_status.flag = 0;
+-	rx_status.flag |= RX_FLAG_TSFT;
++
++	/* TSF isn't reliable. In order to allow smooth user experience,
++	 * this W/A doesn't propagate it to the mac80211 */
++	/*rx_status.flag |= RX_FLAG_TSFT;*/
+ 
+ 	if ((unlikely(rx_start->cfg_phy_cnt > 20))) {
+ 		IWL_DEBUG_DROP("dsp size out of range [0,20]: %d/n",
 -- 
-Tim Gardner tim.gardner@canonical.com
+1.5.3.6
+
