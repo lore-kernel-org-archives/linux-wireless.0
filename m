@@ -1,70 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40697 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756016AbYIJWTU (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.188]:35838 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751352AbYICJXu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2008 18:19:20 -0400
-Message-Id: <20080910220413.187494000@sipsolutions.net> (sfid-20080911_001939_805755_E17C6492)
-References: <20080910220145.707263000@sipsolutions.net>
-Date: Thu, 11 Sep 2008 00:01:50 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 05/18] mac80211: fix work race
-Mime-Version: 1.0
+	Wed, 3 Sep 2008 05:23:50 -0400
+Received: by fk-out-0910.google.com with SMTP id 18so2137660fkq.5
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2008 02:23:48 -0700 (PDT)
+Message-ID: <1ba2fa240809030223m56ce47aqf9f41fab7d3453ca@mail.gmail.com> (sfid-20080903_112355_739239_63D4237F)
+Date: Wed, 3 Sep 2008 12:23:48 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Marcel Holtmann" <holtmann@linux.intel.com>
+Subject: Re: [PATCH 4/9] iwlwifi: generic init calibrations framework
+Cc: "David Miller" <davem@davemloft.net>, yi.zhu@intel.com,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	emmanuel.grumbach@intel.com
+In-Reply-To: <1220429411.6714.17.camel@californication>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1220411930-15216-3-git-send-email-yi.zhu@intel.com>
+	 <1220411930-15216-4-git-send-email-yi.zhu@intel.com>
+	 <1220411930-15216-5-git-send-email-yi.zhu@intel.com>
+	 <20080902.203634.127434142.davem@davemloft.net>
+	 <1220429411.6714.17.camel@californication>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we stop an interface, the work on it may still be pending
-or running. We do cancel the timer, but we do not currently
-protect against the work struct. The race is very unlikely to
-hit -- it'll happen only when the driver is using mac80211's
-workqueue to run long-running tasks and the sta/mesh works are
-delayed for quite a bit.
+On Wed, Sep 3, 2008 at 11:10 AM, Marcel Holtmann
+<holtmann@linux.intel.com> wrote:
+> Hi Tomas,
+>
+>> > This patch fixes a critical bug that only the last calibration result
+>> > was applied. On reception of one calibration result all the calibration
+>> > results were freed therefore only last was applied. The patch fixes this
+>> > problem by introducing a generic init calibration framework which allows
+>> > variable number of init calibrations and allows addition new HW.
+>> >
+>> > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+>> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> > Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+>>
+>> This is borderline, I would rather hold off on such a sizable change
+>> for 2.6.27 as I'll have a hard time justifying it.
+>
+> do you see any way for fixing (or improving) this with the current code
+> and hold the whole framework change off until the next merge window.
+>
+> Maybe instead of iwl_free_calib_results(priv); just freeing them
+> individually in their case statements.
+> You know the hardware better than I do, but that should just work
+> (judging from the code).
+>
+> Regards
+>
+> Marcel
 
-This patch fixes it by cancelling the work explicitly.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/main.c |    8 ++++++++
- net/mac80211/mesh.c |    9 +++++++++
- 2 files changed, 17 insertions(+)
-
---- everything.orig/net/mac80211/main.c	2008-09-10 23:57:55.000000000 +0200
-+++ everything/net/mac80211/main.c	2008-09-10 23:57:57.000000000 +0200
-@@ -548,6 +548,14 @@ static int ieee80211_stop(struct net_dev
- 		memset(sdata->u.sta.bssid, 0, ETH_ALEN);
- 		del_timer_sync(&sdata->u.sta.timer);
- 		/*
-+		 * If the timer fired while we waited for it, it will have
-+		 * requeued the work. Now the work will be running again
-+		 * but will not rearm the timer again because it checks
-+		 * whether the interface is running, which, at this point,
-+		 * it no longer is.
-+		 */
-+		cancel_work_sync(&sdata->u.sta.work);
-+		/*
- 		 * When we get here, the interface is marked down.
- 		 * Call synchronize_rcu() to wait for the RX path
- 		 * should it be using the interface and enqueuing
---- everything.orig/net/mac80211/mesh.c	2008-09-10 23:57:55.000000000 +0200
-+++ everything/net/mac80211/mesh.c	2008-09-10 23:57:57.000000000 +0200
-@@ -449,6 +449,15 @@ void ieee80211_stop_mesh(struct ieee8021
- {
- 	del_timer_sync(&sdata->u.mesh.housekeeping_timer);
- 	/*
-+	 * If the timer fired while we waited for it, it will have
-+	 * requeued the work. Now the work will be running again
-+	 * but will not rearm the timer again because it checks
-+	 * whether the interface is running, which, at this point,
-+	 * it no longer is.
-+	 */
-+	cancel_work_sync(&sdata->u.mesh.work);
-+
-+	/*
- 	 * When we get here, the interface is marked down.
- 	 * Call synchronize_rcu() to wait for the RX path
- 	 * should it be using the interface and enqueuing
-
--- 
-
+In general it's possible, but we've already tested this fix. Because
+this is sensitive, even if the code looks okay I cannot approve it
+until we run the whole validation cycle and measurements in the lab so
+it will take some time. Last time we broke it code also looked good :)
+Tomas
