@@ -1,86 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:49988 "EHLO mga14.intel.com"
+Received: from bu3sch.de ([62.75.166.246]:33427 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751540AbYIPGF3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 02:05:29 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 2/2] iwlwifi: make PS use named constants
-Date: Tue, 16 Sep 2008 14:01:04 +0800
-Message-Id: <1221544864-9494-2-git-send-email-yi.zhu@intel.com> (sfid-20080916_080535_808236_7AF3D2D3)
-In-Reply-To: <1221544864-9494-1-git-send-email-yi.zhu@intel.com>
-References: <1221544864-9494-1-git-send-email-yi.zhu@intel.com>
+	id S1751757AbYICVcQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2008 17:32:16 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [PATCH 5/5] rfkill: remove transmitter blocking on suspend
+Date: Wed, 3 Sep 2008 23:31:38 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Andrew Bird <ajb@spheresystems.co.uk>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Cezary Jackiewicz <cezary.jackiewicz@gmail.com>,
+	Philip Langdale <philipl@overt.org>
+References: <1219762681-26911-1-git-send-email-hmh@hmh.eng.br> <20080903190559.GO3050@tuxdriver.com> <20080903212020.GA14620@khazad-dum.debian.net>
+In-Reply-To: <20080903212020.GA14620@khazad-dum.debian.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809032331.38963.mb@bu3sch.de> (sfid-20080903_233219_953210_08331081)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Wednesday 03 September 2008 23:20:21 Henrique de Moraes Holschuh wrote:
+> On Wed, 03 Sep 2008, John W. Linville wrote:
+> > > The following drivers need to check if they need to explicitly block
+> > > their transmitters in their own suspend handlers (maintainers Cc'd):
+> > > 	arch/arm/mach-pxa/tosa-bt.c
+> > > 	drivers/net/usb/hso.c
+> > > 	drivers/net/wireless/rt2x00/* (USB might need it?)
+> > > 	drivers/net/wireless/b43/ (SSB over USB might need it?)
+> > > 	drivers/misc/hp-wmi.c
+> > > 	eeepc-laptop w/rfkill support (not in mainline yet)
+> > > 	Compal laptop w/rfkill support (not in mainline yet)
+> > > 	toshiba-acpi w/rfkill support (not in mainline yet)
+> > 
+> > Are we now satisfied that the in-kernel drivers above are all prepared
+> > for this patch?
 
-This patch adds named constants for configuring MIMO power save
-chain settings.
+The b43/b43legacy chips are completely shutdown on suspend and all
+clocks are disabled (Including PHY/radio). We don't support WoL.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |   19 ++++++++++++-------
- 1 files changed, 12 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index d80184e..8203887 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -697,8 +697,12 @@ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_info *ht_info)
- }
- EXPORT_SYMBOL(iwl_set_rxon_ht);
- 
--/*
-- * Determine how many receiver/antenna chains to use.
-+#define IWL_NUM_RX_CHAINS_MULTIPLE	3
-+#define IWL_NUM_RX_CHAINS_SINGLE	2
-+#define IWL_NUM_IDLE_CHAINS_DUAL	2
-+#define IWL_NUM_IDLE_CHAINS_SINGLE	1
-+
-+/* Determine how many receiver/antenna chains to use.
-  * More provides better reception via diversity.  Fewer saves power.
-  * MIMO (dual stream) requires at least 2, but works better with 3.
-  * This does not determine *which* chains to use, just how many.
-@@ -711,9 +715,9 @@ static int iwl_get_active_rx_chain_count(struct iwl_priv *priv)
- 	/* # of Rx chains to use when expecting MIMO. */
- 	if (is_single || (!is_cam && (priv->current_ht_config.sm_ps ==
- 						 WLAN_HT_CAP_SM_PS_STATIC)))
--		return 2;
-+		return IWL_NUM_RX_CHAINS_SINGLE;
- 	else
--		return 3;
-+		return IWL_NUM_RX_CHAINS_MULTIPLE;
- }
- 
- static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
-@@ -724,10 +728,11 @@ static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
- 	switch (priv->current_ht_config.sm_ps) {
- 	case WLAN_HT_CAP_SM_PS_STATIC:
- 	case WLAN_HT_CAP_SM_PS_DYNAMIC:
--		idle_cnt = (is_cam) ? 2 : 1;
-+		idle_cnt = (is_cam) ? IWL_NUM_IDLE_CHAINS_DUAL :
-+					IWL_NUM_IDLE_CHAINS_SINGLE;
- 		break;
- 	case WLAN_HT_CAP_SM_PS_DISABLED:
--		idle_cnt = (is_cam) ? active_cnt : 1;
-+		idle_cnt = (is_cam) ? active_cnt : IWL_NUM_IDLE_CHAINS_SINGLE;
- 		break;
- 	case WLAN_HT_CAP_SM_PS_INVALID:
- 	default:
-@@ -796,7 +801,7 @@ void iwl_set_rxon_chain(struct iwl_priv *priv)
- 
- 	priv->staging_rxon.rx_chain = cpu_to_le16(rx_chain);
- 
--	if (!is_single && (active_rx_cnt >= 2) && is_cam)
-+	if (!is_single && (active_rx_cnt >= IWL_NUM_RX_CHAINS_SINGLE) && is_cam)
- 		priv->staging_rxon.rx_chain |= RXON_RX_CHAIN_MIMO_FORCE_MSK;
- 	else
- 		priv->staging_rxon.rx_chain &= ~RXON_RX_CHAIN_MIMO_FORCE_MSK;
 -- 
-1.5.3.6
-
+Greetings Michael.
