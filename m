@@ -1,32 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:16932 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753885AbYIPSme (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 14:42:34 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so844595ywe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Sep 2008 11:42:33 -0700 (PDT)
-Message-ID: <43e72e890809161142t7d16b042gb179e126db14df9@mail.gmail.com> (sfid-20080916_204237_352821_83C191D5)
-Date: Tue, 16 Sep 2008 11:42:33 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Tomas Winkler" <tomas.winkler@intel.com>
-Subject: Re: [RFC V2] mac80211: re-enable aggregation on 2.6.27
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	yi.zhu@intel.com, ron.rindjunsky@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1221550508-3338-1-git-send-email-tomas.winkler@intel.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:35599 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752326AbYIDJfl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Sep 2008 05:35:41 -0400
+Message-ID: <48BFABE0.6050505@garzik.org> (sfid-20080904_113547_630468_4A4BA54C)
+Date: Thu, 04 Sep 2008 05:35:28 -0400
+From: Jeff Garzik <jeff@garzik.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1221550508-3338-1-git-send-email-tomas.winkler@intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Ayaz Abdulla <aabdulla@nvidia.com>
+CC: David Miller <davem@davemloft.net>, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	tomasw@gmail.com, yi.zhu@intel.com, linville@tuxdriver.com
+Subject: Re: [GIT]: Networking
+References: <20080903.161341.239039051.davem@davemloft.net> <alpine.LFD.1.10.0809031621160.3515@nehalem.linux-foundation.org> <20080903.162603.27086959.davem@davemloft.net> <200809041025.15277.rjw@sisk.pl>
+In-Reply-To: <200809041025.15277.rjw@sisk.pl>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 16, 2008 at 12:35 AM, Tomas Winkler <tomas.winkler@intel.com> wrote:
+Rafael J. Wysocki wrote:
+> On Thursday, 4 of September 2008, David Miller wrote:
+>> From: Linus Torvalds <torvalds@linux-foundation.org>
+>> Date: Wed, 3 Sep 2008 16:24:16 -0700 (PDT)
+>>
+>>> On Wed, 3 Sep 2008, Linus Torvalds wrote:
+>>>> What's so hard to understand about this?
+>>> Here's a simple rule of thumb:
+>>>  - if it's not on the regression list
+>>>  - if it's not a reported security hole
+>>>  - if it's not on the reported oopses list
+>>> then why are people sending it to me?
+>>>
+>>> IOW, if it's just another random improvement, and you send it to me 
+>>> outside of the merge window, then what is the point of the merge window? 
+>> This is exactly what I've been trying to tell the Intel wireless folks
+>> but they refuse to listen.
+>>
+>> I just won't take their stuff until they get their act in gear.
+>>
+>> No problem.
+> 
+> BTW, there are two regression fixes for forcedeth:
+> 
+> http://marc.info/?l=linux-kernel&m=121894389018584&w=4
+> http://marc.info/?l=linux-kernel&m=121917167232014&w=4
+> 
+> that fix the regressions tracked as:
+> 
+> http://bugzilla.kernel.org/show_bug.cgi?id=11358
+> http://bugzilla.kernel.org/show_bug.cgi?id=11361
+> 
+> respectively and both are more than 2 weeks old now.
+> 
+> Is there any chance to push them upstream or is there anything wrong with them?
 
-> V2:
->  1. removed skbuff ->is_part_ampdu
->  2. fixed compilation warnings
+Your patch is fine.  Since DaveM and I are gone this weekend, feel free 
+to add "acked-by: jgarzik@redhat" and forward upstream to Linus and Andrew.
 
-Very nice indeed, I'll work on top of this one.
+I thought there was some discussion about Yinghai Lu's MAC addr patch, 
+though.  I'll look into it Monday, but maybe Ayaz (maintainer @ nv) 
+could ack it sooner than that?
 
-  Luis
+	Jeff
+
+
+
