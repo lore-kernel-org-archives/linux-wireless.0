@@ -1,93 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41158 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750810AbYIEUBh (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:43451 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751124AbYIDRXU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2008 16:01:37 -0400
-Subject: Re: [PATCH 1/2 v5] cfg80211: Add new wireless regulatory
-	infrastructure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <1220643824-11398-1-git-send-email-lrodriguez@atheros.com>
-References: <1220643824-11398-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dzoN3VCCPsUMlxidCWdd"
-Date: Fri, 05 Sep 2008 22:01:32 +0200
-Message-Id: <1220644892.11109.18.camel@johannes.berg> (sfid-20080905_220142_970084_D9F82827)
+	Thu, 4 Sep 2008 13:23:20 -0400
+Date: Thu, 4 Sep 2008 10:21:56 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Jeff Garzik <jeff@garzik.org>, Ayaz Abdulla <aabdulla@nvidia.com>,
+	David Miller <davem@davemloft.net>,
+	torvalds@linux-foundation.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	tomasw@gmail.com, yi.zhu@intel.com, linville@tuxdriver.com
+Subject: Re: [GIT]: Networking
+Message-Id: <20080904102156.a40ec447.akpm@linux-foundation.org> (sfid-20080904_192330_491903_FC8A5436)
+In-Reply-To: <200809041158.19929.rjw@sisk.pl>
+References: <20080903.161341.239039051.davem@davemloft.net>
+	<200809041025.15277.rjw@sisk.pl>
+	<48BFABE0.6050505@garzik.org>
+	<200809041158.19929.rjw@sisk.pl>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 4 Sep 2008 11:58:18 +0200 "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
 
---=-dzoN3VCCPsUMlxidCWdd
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > > BTW, there are two regression fixes for forcedeth:
+> > > 
+> > > http://marc.info/?l=linux-kernel&m=121894389018584&w=4
+> > > http://marc.info/?l=linux-kernel&m=121917167232014&w=4
+> > > 
+> > > that fix the regressions tracked as:
+> > > 
+> > > http://bugzilla.kernel.org/show_bug.cgi?id=11358
+> > > http://bugzilla.kernel.org/show_bug.cgi?id=11361
+> > > 
+> > > respectively and both are more than 2 weeks old now.
+> > > 
+> > > Is there any chance to push them upstream or is there anything wrong with them?
+> > 
+> > Your patch is fine.  Since DaveM and I are gone this weekend, feel free 
+> > to add "acked-by: jgarzik@redhat" and forward upstream to Linus and Andrew.
+> 
+> OK, thanks.
+> 
+> Andrew, this patch is currently in -mm as forcedeth-fix-kexec-regression.patch
+> Could you please add the Jeff's ACK to it and push it to Linus?
 
-On Fri, 2008-09-05 at 12:43 -0700, Luis R. Rodriguez wrote:
-> This adds the new wireless regulatory infrastructure. The
-> main motiviation behind this was to centralize regulatory
-> code as each driver was implementing their own regulatory solution,
-> and to replace the initial centralized code we have where:
->=20
-> * only 3 regulatory domains are supported: US, JP and EU
-> * regulatory domains can only be changed through a module parameter
-> * all rules are built statically in the kernel
->=20
-> We now have support for regulatory domains for many countries
-> and regulatory domains are now queried through a userspace agent
-> (CRDA) through udev allowing distributions to update regulatory rules
-> without updating the kernel. Updates on regulatory rules can
-> now be left as an independent effort.
->=20
-> Each driver can regulatory_hint() a regulatory domain
-> based on either their EEPROM mapped regulatory domain value to a
-> respective ISO/IEC 3166-1 country code or pass an internally built
-> regulatory domain. We also add support to let the user set the
-> regulatory domain through userspace in case of faulty EEPROMs to
-> further help compliance.
->=20
-> Support for world roaming will be added soon for cards capable of
-> this.
->=20
-> For more information see:
->=20
-> http://wireless.kernel.org/en/developers/Regulatory/CRDA
->=20
-> For now we leave an option to enable the old module parameter,
-> ieee80211_regdom, and to build the 3 old regdomains statically
-> (US, JP and EU). This option is CONFIG_WIRELESS_OLD_REGULATORY.
-> These old static definitions and the module parameter is being
-> scheduled for removal for 2.6.29.
->=20
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-
-Looks fine to me now, as far as I've looked, I guess there'll be some
-odd fixes required etc. but we can figure that out.
-
-johannes
-
---=-dzoN3VCCPsUMlxidCWdd
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIwZAZAAoJEKVg1VMiehFYIkMP/3XN+1i3IGU1ugoJeIW+ypiK
-ZeIlc9XQkpg2LqTzyFAw6gUXR3yAKXUkWARVc/7FYKXsUKBgBZGOW5LYa8TqA5E0
-EIF3N+4V47sV+14Hyc3zEfp582Ogyq3rZIKFrNR7PaReWYA0KrSr5TVN96UomjB4
-YlnYrzOT9Uq2LlZAusPpywqADSTH3PCh/thgsAXzf2uQPMfP+klvFccnBoeZLUlh
-3Rl6nRI4Q1UhCPMpYt62pBzSstBREgE4YXu4dYOljZRe8i44mYfvTwSQz3xyPenz
-dlU5h/tQ8ClLekVD9sTqptT6DrCZnqw+Ytk95m/PSpxa3dVpXatZG2VbkltzhjWR
-B7t6BW4DSzNFl5xO3nuo5/06Sosg+kQ4v+XsBApmCke4sdwdHDaQRxMnzGFs2gyl
-LZ6DuNiE9MlDf8x6naq2d5BfClJgHS3UJhmfHeheLKk32T/djKBf+43Hq6OrmE/0
-UzybuMPoaP3Kx6raDkXAsHCvPTUkCk/g1oMGGuZ32+HGdgvdK2nb8zeMLFtgt9xy
-oA8XcB993QAhRmyg4/kCrFFphj6dXSyDvQPjeZL054FWj5pyr8JhyjvnWYr+ep2o
-VSLGf7spmzngsVi8VIY42imKBotPLvUZdNXsizjaVLsY/342+GN3HDEu4QxW7cKI
-Ds+8Oc91Gw9KRBJ3h53n
-=EI7k
------END PGP SIGNATURE-----
-
---=-dzoN3VCCPsUMlxidCWdd--
-
+yup, thanks.
