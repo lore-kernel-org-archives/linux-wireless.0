@@ -1,133 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:53343 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:39885 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750808AbYIQEM1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 00:12:27 -0400
-Subject: Re: [PATCH v2] libertas: Reduce the WPA key installation time.
-From: Dan Williams <dcbw@redhat.com>
-To: Javier Cardona <javier@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <48d05b30.09038e0a.6b12.ffffb982@mx.google.com>
-References: <48d05b30.09038e0a.6b12.ffffb982@mx.google.com>
-Content-Type: text/plain
-Date: Wed, 17 Sep 2008 00:12:34 -0400
-Message-Id: <1221624754.23335.8.camel@localhost.localdomain> (sfid-20080917_061230_833050_28974C50)
-Mime-Version: 1.0
+	id S1752114AbYIDABK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2008 20:01:10 -0400
+Date: Wed, 3 Sep 2008 17:01:03 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: David Miller <davem@davemloft.net>
+CC: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"tomasw@gmail.com" <tomasw@gmail.com>,
+	"yi.zhu@intel.com" <yi.zhu@intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [GIT]: Networking
+Message-ID: <20080904000103.GF5967@tesla> (sfid-20080904_020117_418218_EDD02EB0)
+References: <20080903.161341.239039051.davem@davemloft.net> <alpine.LFD.1.10.0809031615450.3515@nehalem.linux-foundation.org> <alpine.LFD.1.10.0809031621160.3515@nehalem.linux-foundation.org> <20080903.162603.27086959.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20080903.162603.27086959.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-09-16 at 18:08 -0700, Javier Cardona wrote:
-> WPA requires that the PTK is installed immediately after the 4-way handshake
-> in order to properly decrypt the subsequent incoming EAPOL-GTK frame.  If the
-> PTK is not enabled by the time the EAPOL-GTK frame arrives, the frame is
-> dropped and the supplicant does not receive the group key.
+On Wed, Sep 03, 2008 at 04:26:03PM -0700, David Miller wrote:
+> From: Linus Torvalds <torvalds@linux-foundation.org>
+> Date: Wed, 3 Sep 2008 16:24:16 -0700 (PDT)
 > 
-> This will happen with fast Access Points that send the EAPOL-GTK frame before
-> the suplicant has successfully installed and enabled the PTK.  To mitigate
-> this situation, this patch simplifies and accelerates the SIOCSIWENCODEEXT
-> execution.
+> > On Wed, 3 Sep 2008, Linus Torvalds wrote:
+> > >
+> > > What's so hard to understand about this?
+> >
+> > Here's a simple rule of thumb:
+> >  - if it's not on the regression list
+> >  - if it's not a reported security hole
+> >  - if it's not on the reported oopses list
+> > then why are people sending it to me?
+> >
+> > IOW, if it's just another random improvement, and you send it to me
+> > outside of the merge window, then what is the point of the merge window?
 > 
-> This patch resolves OLPC ticket 7825 (http://dev.laptop.org/ticket/7825)
+> This is exactly what I've been trying to tell the Intel wireless folks
+> but they refuse to listen.
+
+What I think really happens here IMHO is communication needs to be
+enhanced. I only recently noticed that "regression only" policy for
+2.6.27 for example. I think some of us were rather surprised by it too.
+
+Before snapping at people for not following "orders" we need a clear
+guideline for what should or not be sent. We're all at fault if we are
+not getting this through people. Most likely not many of us subscribe to
+linux-kernel so I would think the next best thing we can do is to get our
+maintainers to communicate to us of new rules and give a few examples of
+what can go in or not.
+
+I trust that should this had been done *well* none of these issue would have
+come up and we can avoid angry exchanges.
+
+> I just won't take their stuff until they get their act in gear.
 > 
-> Signed-off-by: Javier Cardona <javier@cozybit.com>
+> No problem.
 
-If this works for you, then:
+On the other side of the spectrum, and to try to understand this better,
+since ath9k is new we obviously cannot get regressions, this means
+unless we find a security hole in our driver or if we can generate an
+oops with 2.6.27 we cannot send patches for ath9k for 2.6.27?
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+It seems to make sense to me for purposes of stabalizing the kernel for
+sure, however, on the other hand it does also make 2.6.27 miss out on a
+few possible small fixes which may appear here and there.
 
-> ---
->  drivers/net/wireless/libertas/dev.h  |    1 +
->  drivers/net/wireless/libertas/wext.c |   36 +++++++++++++++++++++++++++++++--
->  2 files changed, 34 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-> index acb889e..f6f3753 100644
-> --- a/drivers/net/wireless/libertas/dev.h
-> +++ b/drivers/net/wireless/libertas/dev.h
-> @@ -58,6 +58,7 @@ struct lbs_802_11_security {
->  	u8 WPA2enabled;
->  	u8 wep_enabled;
->  	u8 auth_mode;
-> +	u32 key_mgmt;
->  };
->  
->  /** Current Basic Service Set State Structure */
-> diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-> index d86fcf0..5436b34 100644
-> --- a/drivers/net/wireless/libertas/wext.c
-> +++ b/drivers/net/wireless/libertas/wext.c
-> @@ -30,6 +30,14 @@ static inline void lbs_postpone_association_work(struct lbs_private *priv)
->  	queue_delayed_work(priv->work_thread, &priv->assoc_work, HZ / 2);
->  }
->  
-> +static inline void lbs_do_association_work(struct lbs_private *priv)
-> +{
-> +	if (priv->surpriseremoved)
-> +		return;
-> +	cancel_delayed_work(&priv->assoc_work);
-> +	queue_delayed_work(priv->work_thread, &priv->assoc_work, 0);
-> +}
-> +
->  static inline void lbs_cancel_association_work(struct lbs_private *priv)
->  {
->  	cancel_delayed_work(&priv->assoc_work);
-> @@ -1585,12 +1593,26 @@ static int lbs_set_encodeext(struct net_device *dev,
->  			set_bit(ASSOC_FLAG_SECINFO, &assoc_req->flags);
->  		}
->  
-> -		disable_wep (assoc_req);
-> +		/* Only disable wep if necessary: can't waste time here. */
-> +		if (priv->mac_control & CMD_ACT_MAC_WEP_ENABLE)
-> +			disable_wep(assoc_req);
->  	}
->  
->  out:
->  	if (ret == 0) {
-> -		lbs_postpone_association_work(priv);
-> +		/* 802.1x and WPA rekeying must happen as quickly as possible,
-> +		 * especially during the 4-way handshake; thus if in
-> +		 * infrastructure mode, and either (a) 802.1x is enabled or
-> +		 * (b) WPA is being used, set the key right away.
-> +		 */
-> +		if (assoc_req->mode == IW_MODE_INFRA &&
-> +		    ((assoc_req->secinfo.key_mgmt & IW_AUTH_KEY_MGMT_802_1X) ||
-> +		     (assoc_req->secinfo.key_mgmt & IW_AUTH_KEY_MGMT_PSK) ||
-> +		      assoc_req->secinfo.WPAenabled ||
-> +		      assoc_req->secinfo.WPA2enabled)) {
-> +			lbs_do_association_work(priv);
-> +		} else
-> +			lbs_postpone_association_work(priv);
->  	} else {
->  		lbs_cancel_association_work(priv);
->  	}
-> @@ -1698,13 +1720,17 @@ static int lbs_set_auth(struct net_device *dev,
->  	case IW_AUTH_TKIP_COUNTERMEASURES:
->  	case IW_AUTH_CIPHER_PAIRWISE:
->  	case IW_AUTH_CIPHER_GROUP:
-> -	case IW_AUTH_KEY_MGMT:
->  	case IW_AUTH_DROP_UNENCRYPTED:
->  		/*
->  		 * libertas does not use these parameters
->  		 */
->  		break;
->  
-> +	case IW_AUTH_KEY_MGMT:
-> +		assoc_req->secinfo.key_mgmt = dwrq->value;
-> +		updated = 1;
-> +		break;
-> +
->  	case IW_AUTH_WPA_VERSION:
->  		if (dwrq->value & IW_AUTH_WPA_VERSION_DISABLED) {
->  			assoc_req->secinfo.WPAenabled = 0;
-> @@ -1784,6 +1810,10 @@ static int lbs_get_auth(struct net_device *dev,
->  	lbs_deb_enter(LBS_DEB_WEXT);
->  
->  	switch (dwrq->flags & IW_AUTH_INDEX) {
-> +	case IW_AUTH_KEY_MGMT:
-> +		dwrq->value = priv->secinfo.key_mgmt;
-> +		break;
-> +
->  	case IW_AUTH_WPA_VERSION:
->  		dwrq->value = 0;
->  		if (priv->secinfo.WPAenabled)
+What will happen then is distributions will end up using their own
+patches on top of the kernel, or users using something like
+compat-wireless to get more bleeding edge stuff. This is exactly what we
+want to avoid.
 
+To avoid it I do think another exception needs to be made for patches:
+
+* Small fixes which make something that was not working, which was
+  supposed to work work
+
+If these type of patches cannot be submitted we will have a stable
+kernel for sure but yet buggy leaving people to opt for alternatives
+for small fixes or driver updates.
+
+  Luis
