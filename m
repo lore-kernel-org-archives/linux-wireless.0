@@ -1,75 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:58735 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756140AbYIRTXa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 15:23:30 -0400
-Date: Thu, 18 Sep 2008 16:23:23 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
-Message-ID: <20080918192323.GP1583@khazad-dum.debian.net> (sfid-20080918_212349_352078_DBF7FF33)
-References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809182017.12685.mb@bu3sch.de> <200809182023.21751.IvDoorn@gmail.com> <200809182034.00801.mb@bu3sch.de>
+Received: from mail.lang.hm ([64.81.33.126]:54413 "EHLO bifrost.lang.hm"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752887AbYIDAKw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2008 20:10:52 -0400
+Date: Wed, 3 Sep 2008 17:10:54 -0700 (PDT)
+From: david@lang.hm
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+cc: David Miller <davem@davemloft.net>,
+	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"tomasw@gmail.com" <tomasw@gmail.com>,
+	"yi.zhu@intel.com" <yi.zhu@intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [GIT]: Networking
+In-Reply-To: <20080904000103.GF5967@tesla>
+Message-ID: <alpine.DEB.1.10.0809031703550.30743@asgard.lang.hm> (sfid-20080904_021100_988455_CE1C6BF7)
+References: <20080903.161341.239039051.davem@davemloft.net> <alpine.LFD.1.10.0809031615450.3515@nehalem.linux-foundation.org> <alpine.LFD.1.10.0809031621160.3515@nehalem.linux-foundation.org> <20080903.162603.27086959.davem@davemloft.net>
+ <20080904000103.GF5967@tesla>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200809182034.00801.mb@bu3sch.de>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 18 Sep 2008, Michael Buesch wrote:
-> Nono. I will try to explain it once again. It's really easy.
+On Wed, 3 Sep 2008, Luis R. Rodriguez wrote:
 
-It is also a textbook design for rfkill input lines, and handled in the
-obvious way by rfkill.  If it is not, I don't get what Ivo means either.
+> On Wed, Sep 03, 2008 at 04:26:03PM -0700, David Miller wrote:
+>> From: Linus Torvalds <torvalds@linux-foundation.org>
+>> Date: Wed, 3 Sep 2008 16:24:16 -0700 (PDT)
+>>
+>>> On Wed, 3 Sep 2008, Linus Torvalds wrote:
+>>>>
+>>>> What's so hard to understand about this?
+>>>
+>>> Here's a simple rule of thumb:
+>>>  - if it's not on the regression list
+>>>  - if it's not a reported security hole
+>>>  - if it's not on the reported oopses list
+>>> then why are people sending it to me?
+>>>
+>>> IOW, if it's just another random improvement, and you send it to me
+>>> outside of the merge window, then what is the point of the merge window?
+>>
+>> This is exactly what I've been trying to tell the Intel wireless folks
+>> but they refuse to listen.
+>
+> What I think really happens here IMHO is communication needs to be
+> enhanced. I only recently noticed that "regression only" policy for
+> 2.6.27 for example. I think some of us were rather surprised by it too.
 
-> Think of b43 having two independent registers for rfkill. (the actual hardware
-> is different, but that doesn't matter. It's a driver internal implementation detail).
+the policy has been the same for quite a while, it's not new for 2.6.27
 
-> One of these registers is readonly and it does indicate the physical rfkill button state.
-> If that register indicates BLOCK, we can't do anything about it. The radio is blocked.
-> However, we can still write to the second register and turn the radio off through
-> that, too. We can also write to the second register to turn the radio on, _but_ it won't
-> physically turn on until the physical button is pressed and the first register changes
-> to Unblocked.
+>> I just won't take their stuff until they get their act in gear.
+>>
+>> No problem.
+>
+> On the other side of the spectrum, and to try to understand this better,
+> since ath9k is new we obviously cannot get regressions, this means
+> unless we find a security hole in our driver or if we can generate an
+> oops with 2.6.27 we cannot send patches for ath9k for 2.6.27?
+>
+> It seems to make sense to me for purposes of stabalizing the kernel for
+> sure, however, on the other hand it does also make 2.6.27 miss out on a
+> few possible small fixes which may appear here and there.
+>
+> What will happen then is distributions will end up using their own
+> patches on top of the kernel, or users using something like
+> compat-wireless to get more bleeding edge stuff. This is exactly what we
+> want to avoid.
 
-Then you use the standard function I posted elsewhere in this thread:
+no, if it's that bad it can go into the -stable kernel patches. but the 
+next release kernel will be out in just a couple of months, so it only 
+matters for that short window.
 
-if (any_of_the_hw_rfkill_lines_is_active_RIGHT_NOW)
-	return RFKILL_STATE_HARD_BLOCKED;
-else if (any_of_the_sw_rfkill_lines_is_active_RIGHT_NOW)
-	return RFKILL_STATE_SOFT_BLOCKED;
-else
-	return RFKILL_STATE_UNBLOCKED;
+> To avoid it I do think another exception needs to be made for patches:
+>
+> * Small fixes which make something that was not working, which was
+>  supposed to work work
 
-You can use that as your rfkill->get_state() if you need it, and it is what
-you should send to rfkill_force_state when
-"any_of_the_hw_rfkill_lines_is_active_RIGHT_NOW" or
-"any_of_the_sw_rfkill_lines_is_active_RIGHT_NOW" could have changed.
+but you can't prove that this patch doesn't break something else (if only 
+by altering the timing just enough to expose a race condition somewhere)
 
-The devil is in the details of how you get
-any_of_the_hw_rfkill_lines_is_active_RIGHT_NOW, and
-any_of_the_sw_rfkill_lines_is_active_RIGHT_NOW.
+> If these type of patches cannot be submitted we will have a stable
+> kernel for sure but yet buggy leaving people to opt for alternatives
+> for small fixes or driver updates.
 
-You have to make sure "set txpower off" and such non-rfkill stuff doesn't
-interfere with them, and Ivo will be happy :-)   You should also query the
-hardware to make sure nothing poked it while you were looking elsewhere, but
-that is impossible if the hardware is write-only.
+but if you are changing the continuously, why should people test anything? 
+you're going to change it in unpredictable ways before the release anyway.
 
-I posted a sample code fragment to do that too, for drivers that implement
-txpower off and rfkill SOFT_BLOCKED through the same hardware register.
 
-> So you say that rfkill should only be notified about changes in the first read-only
-> hardware intication bit? If that's the case, it would be possible to turn the radio off
+it may be valid to tinker with a new driver that didn't exist before, but 
+this far into the release cycle even that's highly questionable, and if 
+you are asking for something to be included becouse of that you need to 
+spell it when submiting the patch (and possibly in the changelog)
 
-Well, it only needs to be notified of changes due to the SW bit, if they can
-happen because of external factors (such as laptop firmware).
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+David Lang
