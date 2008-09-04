@@ -1,55 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:48991 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751823AbYIQU4N (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41104 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751784AbYIDATR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 16:56:13 -0400
-Message-ID: <48D16EDB.8090700@lwfinger.net> (sfid-20080917_225618_887060_F07494FA)
-Date: Wed, 17 Sep 2008 15:55:55 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 3 Sep 2008 20:19:17 -0400
+Date: Wed, 3 Sep 2008 17:18:15 -0700 (PDT)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
+cc: David Miller <davem@davemloft.net>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"tomasw@gmail.com" <tomasw@gmail.com>,
+	"yi.zhu@intel.com" <yi.zhu@intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [GIT]: Networking
+In-Reply-To: <20080904000103.GF5967@tesla>
+Message-ID: <alpine.LFD.1.10.0809031703480.3515@nehalem.linux-foundation.org> (sfid-20080904_021926_141882_7B308FC2)
+References: <20080903.161341.239039051.davem@davemloft.net> <alpine.LFD.1.10.0809031615450.3515@nehalem.linux-foundation.org> <alpine.LFD.1.10.0809031621160.3515@nehalem.linux-foundation.org> <20080903.162603.27086959.davem@davemloft.net>
+ <20080904000103.GF5967@tesla>
 MIME-Version: 1.0
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: Re: [PATCH] rfkill: update LEDs for all state changes
-References: <20080917023334.GA1187@khazad-dum.debian.net> <1221682077-21170-1-git-send-email-hmh@hmh.eng.br>
-In-Reply-To: <1221682077-21170-1-git-send-email-hmh@hmh.eng.br>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Henrique de Moraes Holschuh wrote:
-> The LED state was not being updated by rfkill_force_state(), which will
-> cause regressions in wireless drivers that had old-style rfkill support and
-> are updated to use rfkill_force_state().
-> 
-> The LED state was not being updated when a change was detected through the
-> rfkill->get_state() hook, either.
-> 
-> Move the LED trigger update calls into notify_rfkill_state_change(), where
-> it should have been in the first place.  This takes care of both issues.
-> 
-> Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> ---
->  net/rfkill/rfkill.c |    5 ++---
->  1 files changed, 2 insertions(+), 3 deletions(-)
-> 
->  John, this one is quite likely something that should be sent for
->  merge in mainline BEFORE 2.6.27 is released.
-> 
->  I am NOT sure it fixes regressions, that depends on whether the drivers
->  using rfkill that are in 2.6.27 had working LED support before rfkill
->  support was added to them.  Unfortunately, it cannot fix the b43
->  regression by itself.
-
-The b43 regression is not fixed with this patch and the one from
-Matthew that starts out with "Oh, hey, I suck. This one might stand a
-better chance of not falling over."
-
-Larry
 
 
+On Wed, 3 Sep 2008, Luis R. Rodriguez wrote:
+> 
+> What I think really happens here IMHO is communication needs to be
+> enhanced. I only recently noticed that "regression only" policy for
+> 2.6.27 for example. I think some of us were rather surprised by it too.
+
+It's really not a "2.6.27" policy, it's always been a "merge window" vs 
+"-rc" policy. It's just that I've started making more noise about it, 
+since many people don't seem to see what the point of the merge window is.
+
+And no, the problem isn't new either. But it does seem to have been 
+getting somewhat worse lately. Possibly simply because we have more code 
+(ie releases have grown, which has made the problem more visible, even if 
+it hasn't necessarily changed in any other way).
+
+> Before snapping at people for not following "orders" we need a clear
+> guideline for what should or not be sent.
+
+The basic rule really should be:
+
+ - *any* new development should target the merge window. 
+
+   I think some of the driver people in particular have been mislead by 
+   the fact that we have actually accepted new drivers even after the 
+   merge window ("they can't regress"), and that in turn has probably 
+   de-sensitized people a bit to the whole merge window.
+
+   Similarly, drivers (and other wholly self-contained modules like 
+   filesystems etc) that didn't exist before - even if they were then
+   merged _during_ the merge window - have also been getting leeway in the 
+   -rc code, since again they cannot regress.
+
+And it really does appear like a lot of driver people just get very comfy 
+and used to that _first_ release, when we allow almost anything. And then 
+they just continue with it.
+
+> To avoid it I do think another exception needs to be made for patches:
+> 
+> * Small fixes which make something that was not working, which was
+>   supposed to work work
+
+Not really.
+
+The thing is, if it's a driver that has been around for more than a single 
+release, then those "small fixes" really can't be worth all that much. And 
+yes, they may be small, and yes, they may be "obvious", but the fact is, 
+they definitely can regress.
+
+Sure, if some driver really haven't been around for very long, I can see 
+your point. Not very many people have used it, and I can well imagine that 
+there are lots of those "small fixes" that really do matter.
+
+but if the driver has been in active use for a few kernel versions, there 
+really is almost no excuse to say "this fix is so important that it needs 
+to go in even though it's not a regression/security/oops fix".
+
+So I would agree that the very first release a new driver (or filesystem) 
+is in is special. Almost anything goes during the -rc releases leading up 
+to that. And yes, I can well imagine that during the -rc for the second 
+release it perhaps makes sense to be a _bit_ more relaxed, simply because 
+it's young and as more people use it, silly (but serious) issues can just 
+become more obvious.
+
+But in the long run? No. Drivers are not different from any other code, 
+and the -rc rules should be "regressions only".
+
+In fact, in many ways we should be even _more_ careful with drivers than 
+with most other things, because driver changes are seldom "obvious". Even 
+really trivial stuff can interact with hardware in odd ways, in ways that 
+is seldom true of normal code that you can think about and analyze (since 
+we assume that the CPU itself doesn't have subtle timing etc bugs, of 
+course).
+
+			Linus
