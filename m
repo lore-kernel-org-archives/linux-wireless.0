@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:46396 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752084AbYIFT75 (ORCPT
+Received: from mailgw1.uni-kl.de ([131.246.120.220]:46585 "EHLO
+	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751472AbYIDPkU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 15:59:57 -0400
-Message-ID: <48C2E13B.9020203@lwfinger.net> (sfid-20080906_220010_232966_4A0F92CA)
-Date: Sat, 06 Sep 2008 14:59:55 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43legacy: Fix failure in rate-adjustment mechanism
-References: <48c2cd1a.pA60sTEK0WsW6wtt%Larry.Finger@lwfinger.net>	 <200809062055.51797.mb@bu3sch.de> <1220727470.10102.9.camel@johannes.berg>	 <200809062104.15274.mb@bu3sch.de>  <48C2DBCB.1030706@lwfinger.net> <1220730115.10102.15.camel@johannes.berg>
-In-Reply-To: <1220730115.10102.15.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 4 Sep 2008 11:40:20 -0400
+Received: from [172.16.4.205] (zmk199.eit.uni-kl.de [131.246.73.199])
+	by mailgw1.uni-kl.de (8.13.8/8.13.8/Debian-3) with ESMTP id m84FPQfD020226
+	for <linux-wireless@vger.kernel.org>; Thu, 4 Sep 2008 17:25:26 +0200
+Subject: minimum payload size for FEC
+From: Thomas Ilnseher <illth@gmx.de>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Thu, 04 Sep 2008 17:25:26 +0200
+Message-Id: <1220541926.17106.46.camel@pcmik05.zmk.uni-kl.de> (sfid-20080904_174027_932095_32D01E62)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> 
-> The mechanism depends on the card revision, but according to
-> drivers/net/wireless/b43legacy/dma.c it's always via the dma/pio
-> mechanism for legacy cards:
-> 
->         if (dev->dev->id.revision < 5) {
->                 ring = b43legacy_setup_dmaring(dev, 3, 0, type);
->                 if (!ring)
->                         goto err_destroy_rx0;
->                 dma->rx_ring3 = ring;
->         }
+Sorry Guys,
 
-In the V3 specs, I found
+I'm too lazy, I know it! But please don't respond with RTFM and the
+such, thx! Reading a standard is a huge pain in the A**, so I hope
+somebody knows the answer already.
 
-"Transmit Status
+So here is my question:
 
-When this interrupt is set, the retrieve the TransmitStatus. Note that 
-on cores with revision < 5, the last DMA controller or PIO queue can 
-also also get the DMA recieve done interrupt, which also triggers the 
-TransmitStatus retrieval process. The driver should be prepared to 
-deal with both interrupts at any time, on any revision. In AP mode, 
-this interrupt also initiates the sending of powersave responses."
+Is there any situation where the payload to the Viterbi FEC is less than
+256 bits (= 32 bytes) ? (ie. a beacon and such stuff?)
 
-The implication is that the interrupt will only be generated if we use 
-the last (i.e. #5) DMA controller. As we are only using #3, no 
-interrupts and handle_irq_status() is dead code.
+It can't be the case for an IP packet (IP header + 2 MAC addresses = 32
+bytes)
 
-Larry
+This matters only for the ofdm modulation of agn, no b, no wired
+TI-mode.
+
+Thank you in advance! 
+
+Tom.
+
+PS: plz CC my email-address.
+-- 
+Thomas Ilnseher <illth@gmx.de>
+
