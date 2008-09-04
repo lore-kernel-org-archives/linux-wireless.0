@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:4503 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752321AbYIHJcQ (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:43002 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752725AbYIDUNh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 05:32:16 -0400
-Received: by yw-out-2324.google.com with SMTP id 9so146328ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2008 02:32:15 -0700 (PDT)
-Message-ID: <1ba2fa240809080232n42d6caefs6c3a1f5afef46cb4@mail.gmail.com> (sfid-20080908_113220_558913_B23ACAE8)
-Date: Mon, 8 Sep 2008 12:32:14 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC PATCH 0/3] mac80211 dissasociation
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1220865843.31304.48.camel@johannes.berg>
+	Thu, 4 Sep 2008 16:13:37 -0400
+Received: by gxk9 with SMTP id 9so6717714gxk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Sep 2008 13:13:35 -0700 (PDT)
+Message-ID: <43e72e890809041313x421afedfx64c25b16c5e20ba4@mail.gmail.com> (sfid-20080904_221340_262813_A87255EC)
+Date: Thu, 4 Sep 2008 13:13:35 -0700
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "=?UTF-8?Q?Lars_R=C3=A6der_Clausen?=" <lrc@amplex.dk>
+Subject: Re: Documentation errors
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <fec9d0970809041307w5eb74ff2r62062a6016bed1c3@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
-	 <1ba2fa240809070724n362d5850t653ca5746b87eb48@mail.gmail.com>
-	 <1220798432.31304.13.camel@johannes.berg>
-	 <1ba2fa240809070750k1683f410icf2a82be0f533b4f@mail.gmail.com>
-	 <1ba2fa240809071614v66235658w1768e31d31c2d0f8@mail.gmail.com>
-	 <1220863139.31304.33.camel@johannes.berg>
-	 <1ba2fa240809080146o93200eetcf8e142f6ef4a2b1@mail.gmail.com>
-	 <1220864314.31304.38.camel@johannes.berg>
-	 <1ba2fa240809080206u42908ef6yc6641435d747155a@mail.gmail.com>
-	 <1220865843.31304.48.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <fec9d0970809041307w5eb74ff2r62062a6016bed1c3@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 8, 2008 at 12:24 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-09-08 at 12:06 +0300, Tomas Winkler wrote:
->
->> > How exactly are you triggering that "unauthorized port" message? I can't
->> > seem to reproduce to see if stopping the queue helps, but I'm fairly
->> > sure, try the patch below that fixes this.
->>
->> Powering off AP, I think I've seen only Cisco AP that are able to send
->> deauth packet on power off. So this was without.
->
-> Alright, I have an AP where I can log in and turn off the radio :))
->
-> I've been able to trigger the message _without_ your patches, but not
-> _with_ your patches so far!
->
-> I still think we should add the queue stopping so we can't run into the
-> messages. Do you want me to send them out then?
-
-I've added new commit message to the first patch and the new hunk
-otherwise no changes.
-I want to test your stopping queue stuff in my environment  but I get
-to the lab only very late today.
-Thanks for your effort
-Tomas
+T24gVGh1LCBTZXAgNCwgMjAwOCBhdCAxOjA3IFBNLCBMYXJzIFLDpmRlciBDbGF1c2VuIDxscmNA
+YW1wbGV4LmRrPiB3cm90ZToKPiBJIGZvdW5kIGEgY291cGxlIGRvY3VtZW50YXRpb24gcHJvYmxl
+bXMgd2hpbGUgZm9sbG93aW5nIHRoZQo+IGluc3RydWN0aW9ucyBvbiBodHRwOi8vd2lyZWxlc3Mu
+a2VybmVsLm9yZy9lbi91c2Vycy9Eb3dubG9hZCBmb3IgYQo+IDIuNi4yNCBrZXJuZWwgb24gYSBJ
+Qk0gVGhpbmtQYWQgVDYwcCAoMzk0NUFCRyBjb250cm9sbGVyKToKPgo+IFRoZSAtb2xkIHRhcmJh
+bGwgcmVmZXJlbmNlZCBoYXMgYSBmaWxlIGluY2x1ZGUvbGludXgvY29tcGF0X2F1dG9jb25mLmgK
+PiB3aGljaCBjb250YWlucyAiWW91IG5lZWQgZ2l0IHRvIGdlbmVyYXRlIGNvbXBhdC1yZWxlYXNl
+IGZpbGUiLCBjYXVzaW5nCj4gbWFrZSAob24gVWJ1bnR1IEhhcmR5IEhlcm9uKSB0byBmYWlsIHdp
+dGg6Cj4KPiAvaG9tZS9sYXJzL1NvZnR3YXJlL2NvbXBhdC13aXJlbGVzcy0yLjYtb2xkLTIwMDgt
+MDktMDQvaW5jbHVkZS9saW51eC9jb21wYXRfYXV0b2NvbmYuaDoxOgo+IGVycm9yOiBleHBlY3Rl
+ZCAnPScsICcsJywgJzsnLCAnYXNtJyBvciAnX19hdHRyaWJ1dGVfXycgYmVmb3JlICduZWVkJwo+
+IG1ha2VbM106ICoqKiBbL2hvbWUvbGFycy9Tb2Z0d2FyZS9jb21wYXQtd2lyZWxlc3MtMi42LW9s
+ZC0yMDA4LTA5LTA0L2RyaXZlcnMvbWlzYy9lZXByb21fOTNjeDYub10KPiBFcnJvciAxCj4gbWFr
+ZVsyXTogKioqIFsvaG9tZS9sYXJzL1NvZnR3YXJlL2NvbXBhdC13aXJlbGVzcy0yLjYtb2xkLTIw
+MDgtMDktMDQvZHJpdmVycy9taXNjXQo+IEVycm9yIDIKPiBtYWtlWzFdOiAqKiogW19tb2R1bGVf
+L2hvbWUvbGFycy9Tb2Z0d2FyZS9jb21wYXQtd2lyZWxlc3MtMi42LW9sZC0yMDA4LTA5LTA0XQo+
+IEVycm9yIDIKPiBtYWtlWzFdOiBMZWF2aW5nIGRpcmVjdG9yeSBgL3Vzci9zcmMvbGludXgtaGVh
+ZGVycy0yLjYuMjQtMTktZ2VuZXJpYycKPiBtYWtlOiAqKiogW21vZHVsZXNdIEVycm9yIDIKPgo+
+IEVpdGhlciB0aGF0IGZpbGUgc2hvdWxkIGJlIGZpeGVkIGluIHRoZSB0YXJiYWxsLCBvciBpdCBz
+aG91bGQgYmUKPiBtZW50aW9uZWQgdGhhdCBkb3dubG9hZCB1c2luZyBnaXQgaXMgcmVxdWlyZWQu
+CgpIbSwgSSBnb3R0YSBmaXggdGhhdC4KCj4gQWxzbywgaXMgdGhlcmUgbm8gYXJjaGl2ZSBvZiB0
+aGUgLW9sZCB0YXJiYWxscyBsaWtlIHRoZSBpcyBvZiB0aGUKPiByZWd1bGFyIG9uZXM/IEkgdHVy
+bmVkIG91dCBub3QgdG8gbmVlZCBpdCBhZnRlciBhbGwsIGJ1dCBvdGhlcnMgbWlnaHQKPiBsaWtl
+IGl0LgoKSSBoYXZlIHRvIHNldCBhcmNoaXZpbmcgZm9yIHRoZSAtb2xkIHRhcmJhbGxzLiBJJ2xs
+IGRvIHNvIHNvb24uCgogIEx1aXMK
