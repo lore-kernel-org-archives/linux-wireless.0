@@ -1,66 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:22692 "EHLO
+Received: from yx-out-2324.google.com ([74.125.44.29]:38937 "EHLO
 	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752367AbYIHQmF (ORCPT
+	with ESMTP id S1753483AbYIDUHc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 12:42:05 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so874848yxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2008 09:42:04 -0700 (PDT)
-Message-ID: <1ba2fa240809080942l19ae8deeq7eedd146e8c244c@mail.gmail.com> (sfid-20080908_184210_506769_5A32B5AA)
-Date: Mon, 8 Sep 2008 19:42:02 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/1] mac80211: scan on IBSS mode like on STA mode
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	"Ester Kummer" <ester.kummer@intel.com>,
-	"Luis Carlos Cobo" <luisca@cozybit.com>
-In-Reply-To: <1220885742.31304.67.camel@johannes.berg>
+	Thu, 4 Sep 2008 16:07:32 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so72163yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Sep 2008 13:07:31 -0700 (PDT)
+Message-ID: <fec9d0970809041307w5eb74ff2r62062a6016bed1c3@mail.gmail.com> (sfid-20080904_220736_823221_1E74B15B)
+Date: Thu, 4 Sep 2008 15:07:30 -0500
+From: "=?ISO-8859-1?Q?Lars_R=E6der_Clausen?=" <lrc@amplex.dk>
+To: linux-wireless@vger.kernel.org
+Subject: Documentation errors
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <1220880686-5620-1-git-send-email-tomas.winkler@intel.com>
-	 <1220885742.31304.67.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 8, 2008 at 5:55 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2008-09-08 at 16:31 +0300, Tomas Winkler wrote:
->> From: Ester Kummer <ester.kummer@intel.com>
->>
->> This patch handle scanning on IBSS mode like on STA mode.
->> When queuing the scan work we don't refer to the return value of
->> ieee80211_sta_start_scan so if we are in the last scan period, we will
->> return 0 to ieee80211_ioctl_siwscan and not -EAGAIN, and then iwlist will
->> call ieee80211_ioctl_giwscan to get the scan results and will not fail.
->
->
-> Can you explain why? Or can anybody else explain why we do this
-> difference at all? And how should mesh behave?
->
->> Signed-off-by: Ester Kummer <ester.kummer@intel.com>
->> Acked-by: Tomas Winkler <tomas.winkler@intel.com>
->> ---
->>  net/mac80211/mlme.c |    3 ++-
->>  1 files changed, 2 insertions(+), 1 deletions(-)
->>
->> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
->> index 2564553..72d5fe2 100644
->> --- a/net/mac80211/mlme.c
->> +++ b/net/mac80211/mlme.c
->> @@ -4090,7 +4090,8 @@ int ieee80211_sta_req_scan(struct ieee80211_sub_if_data *sdata, u8 *ssid, size_t
->>       struct ieee80211_if_sta *ifsta = &sdata->u.sta;
->>       struct ieee80211_local *local = sdata->local;
->>
->> -     if (sdata->vif.type != IEEE80211_IF_TYPE_STA)
->> +     if (sdata->vif.type != IEEE80211_IF_TYPE_STA ||
->> +         sdata->vif.type != IEEE80211_IF_TYPE_IBSS)
->>               return ieee80211_sta_start_scan(sdata, ssid, ssid_len);
->
-> This is wrong.
->
-> a != 1 || a != 2
->
-> has to be true at all times, I think you mean &&.
+I found a couple documentation problems while following the
+instructions on http://wireless.kernel.org/en/users/Download for a
+2.6.24 kernel on a IBM ThinkPad T60p (3945ABG controller):
 
-It definitely should be &&. Copied it wrongly from the original patch.
-Tomas
+The -old tarball referenced has a file include/linux/compat_autoconf.h
+which contains "You need git to generate compat-release file", causing
+make (on Ubuntu Hardy Heron) to fail with:
+
+/home/lars/Software/compat-wireless-2.6-old-2008-09-04/include/linux/compat_autoconf.h:1:
+error: expected '=', ',', ';', 'asm' or '__attribute__' before 'need'
+make[3]: *** [/home/lars/Software/compat-wireless-2.6-old-2008-09-04/drivers/misc/eeprom_93cx6.o]
+Error 1
+make[2]: *** [/home/lars/Software/compat-wireless-2.6-old-2008-09-04/drivers/misc]
+Error 2
+make[1]: *** [_module_/home/lars/Software/compat-wireless-2.6-old-2008-09-04]
+Error 2
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.24-19-generic'
+make: *** [modules] Error 2
+
+Either that file should be fixed in the tarball, or it should be
+mentioned that download using git is required.
+
+When I went to download with git, I found that the link for the -old
+branch actually points to the same place as the normal branch. I
+cloned with -old added and got a working copy, so I assume the docs
+should point to that?
+
+With the git copy, it compiled, installed and loaded, but now I can't
+get onto the network I could get onto with the regular drivers:(
+
+Also, is there no archive of the -old tarballs like the is of the
+regular ones? I turned out not to need it after all, but others might
+like it.
+
+Finally, newbies may want to have a hint as to how to re-load the old
+modules after unloading and uninstalling these.
+
+Thanks,
+-Lars
