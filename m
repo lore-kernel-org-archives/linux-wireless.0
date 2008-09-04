@@ -1,80 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36283 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753783AbYIVWLz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 18:11:55 -0400
-Subject: Re: Progress on aggregation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Tomas Winkler <tomas.winkler@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890809221233l4dc446e9hdf71fc94270020dc@mail.gmail.com> (sfid-20080922_213349_977364_DF7C63D6)
-References: <20080922174103.GF6048@tesla>
-	 <43e72e890809221233l4dc446e9hdf71fc94270020dc@mail.gmail.com>
-	 (sfid-20080922_213349_977364_DF7C63D6)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Mpk73CApmrvZehb/WgmM"
-Date: Tue, 23 Sep 2008 00:11:07 +0200
-Message-Id: <1222121467.3023.89.camel@johannes.berg> (sfid-20080923_001200_276551_BBDEE926)
-Mime-Version: 1.0
+Received: from ogre.sisk.pl ([217.79.144.158]:52195 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752346AbYIDIVP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Sep 2008 04:21:15 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: David Miller <davem@davemloft.net>
+Subject: Re: [GIT]: Networking
+Date: Thu, 4 Sep 2008 10:25:14 +0200
+Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, tomasw@gmail.com, yi.zhu@intel.com,
+	linville@tuxdriver.com, Jeff Garzik <jeff@garzik.org>
+References: <20080903.161341.239039051.davem@davemloft.net> <alpine.LFD.1.10.0809031621160.3515@nehalem.linux-foundation.org> <20080903.162603.27086959.davem@davemloft.net>
+In-Reply-To: <20080903.162603.27086959.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809041025.15277.rjw@sisk.pl> (sfid-20080904_102134_055580_97E101BD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday, 4 of September 2008, David Miller wrote:
+> From: Linus Torvalds <torvalds@linux-foundation.org>
+> Date: Wed, 3 Sep 2008 16:24:16 -0700 (PDT)
+> 
+> > On Wed, 3 Sep 2008, Linus Torvalds wrote:
+> > > 
+> > > What's so hard to understand about this?
+> > 
+> > Here's a simple rule of thumb:
+> >  - if it's not on the regression list
+> >  - if it's not a reported security hole
+> >  - if it's not on the reported oopses list
+> > then why are people sending it to me?
+> > 
+> > IOW, if it's just another random improvement, and you send it to me 
+> > outside of the merge window, then what is the point of the merge window? 
+> 
+> This is exactly what I've been trying to tell the Intel wireless folks
+> but they refuse to listen.
+> 
+> I just won't take their stuff until they get their act in gear.
+> 
+> No problem.
 
---=-Mpk73CApmrvZehb/WgmM
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+BTW, there are two regression fixes for forcedeth:
 
-On Mon, 2008-09-22 at 12:33 -0700, Luis R. Rodriguez wrote:
-> On Mon, Sep 22, 2008 at 10:41 AM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
-> > Just a quick note on the progress of aggregation. It works but we still
-> > need to hanld the rtnl_lock() in a sane way. Johannes we proposing we
-> > use a workqueue for this.
-> >
-> > * iwl4965 has been tested to work
-> > * ath9k *does* xmit aggregate frames but throughput is low
-> >
-> > Since ath9k still needs some work we are looking into it.
-> > Tomas, have you had a chance to consider the workqueue usage
-> > for the rtnl_lock()? I figure to leave that to you as we
-> > are still looking into the throughput issues with aggreation with
-> > ath9k.
->=20
-> Also, we currently handle aggregation buffering internally in our
-> driver so the whole amdpu_queue stuff is not required for us as we
-> don't have internal aggregation schedulers in hardware. For now we'll
-> use it though as we just want to get it working and for 2.6.27 we have
-> not alternative. For us, what will the ampdu_queues represent then? We
-> don't exactly have a limit on this except for the standard limitations
-> of 16 TIDs per station so what do you recommend to set this to?
+http://marc.info/?l=linux-kernel&m=121894389018584&w=4
+http://marc.info/?l=linux-kernel&m=121917167232014&w=4
 
-You've only enabled STA mode (and maybe IBSS but there it rarely
-matters) so anything like 8-16 would probably be fine.
+that fix the regressions tracked as:
 
-johannes
+http://bugzilla.kernel.org/show_bug.cgi?id=11358
+http://bugzilla.kernel.org/show_bug.cgi?id=11361
 
---=-Mpk73CApmrvZehb/WgmM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+respectively and both are more than 2 weeks old now.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Is there any chance to push them upstream or is there anything wrong with them?
 
-iQIcBAABAgAGBQJI2Bf4AAoJEKVg1VMiehFYLIUP/0vpGcem09UqBwkFTBKNgBNH
-+I7m4NSKuKGItc8ErZphp+q3qvofZUJlng3x/D0qjz9D/0gIW91WboK5QH3dnjXo
-7YmuzP0BJimlIYcnN4PPcByg8mEQznWv/iRS91k8z/tCUy2boCGO8Y5EJXfLC2nu
-EFE4oMGkNo6s7asFBLNARTbIJ40PnM4Uyjbl/9uKkd21bfDdeSN+ehDcZ0rcQ2l7
-KvhY49sq1GldDDzebai8fMuh1YM4Iup2ob7zl2oXyNZVIDrAeIePQiDDIEDTpV5k
-zbS3KDp6NXverM44m5mcMkvs9CFd+Of4MRVeb+NdL8o8T1wqYHlq35syx18Cfrcq
-qsFv0vjDbPKRzuoyL8VeDlem5/+mzaq85xwMBuG9Bq1ugsvPJRJUBUym8A/VALYG
-WpwXK2Df9KpZmMoyomFGlgZfqDzhXZP9vSbh520K8YOnYnZP6LjilRL9fczifwDj
-KcKMltDhcFm6NGJ36vfIJWoLfDZRIJeN2z7Fb7slwplq6N6SyVm/vX5IkaKPyv+1
-ZQfhhzJ5Sb+i9uODK7An6KMTkTcoy0bMECT8+8nt8+xYFSGtT3mYDRBVJc6gBRvK
-BjuzxSbamdWFknKMJv6KOU4l7nzAIQdoRHrofFO82pJdgEaWIQzqiT9DLseQJVOi
-SSabuWnZpFn9F88rJRsq
-=HsLg
------END PGP SIGNATURE-----
-
---=-Mpk73CApmrvZehb/WgmM--
-
+Thanks,
+Rafael
