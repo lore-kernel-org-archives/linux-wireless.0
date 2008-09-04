@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33153 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751367AbYI2Ooi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 10:44:38 -0400
-Date: Mon, 29 Sep 2008 10:44:02 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: johannes@sipsolutions.net, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: Re: [PATCH 1/1] mac80211: send action frame when toggling SM PS
-	mode
-Message-ID: <20080929144402.GB3295@tuxdriver.com> (sfid-20080929_164442_845981_0752F401)
-References: <1222618493-19019-1-git-send-email-tomas.winkler@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1222618493-19019-1-git-send-email-tomas.winkler@intel.com>
+Received: from c60.cesmail.net ([216.154.195.49]:60678 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752772AbYIDBoZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Sep 2008 21:44:25 -0400
+Subject: Re: [PATCH] p54usb: support LM87 firmwares
+From: Pavel Roskin <proski@gnu.org>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: Tomas Winkler <tomasw@gmail.com>, linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <200809030200.50745.chunkeey@web.de>
+References: <200809022139.12969.chunkeey@web.de>
+	 <1ba2fa240809021614t4dfb1422sa82efeae8869ff6b@mail.gmail.com>
+	 <200809030200.50745.chunkeey@web.de>
+Content-Type: text/plain
+Date: Wed, 03 Sep 2008 21:44:22 -0400
+Message-Id: <1220492662.7700.21.camel@dv> (sfid-20080904_034429_392088_26FF85C0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 28, 2008 at 07:14:53PM +0300, Tomas Winkler wrote:
+On Wed, 2008-09-03 at 02:00 +0200, Christian Lamparter wrote:
 
-> @@ -963,6 +969,7 @@ enum ieee80211_category {
->  	WLAN_CATEGORY_SPECTRUM_MGMT = 0,
->  	WLAN_CATEGORY_QOS = 1,
->  	WLAN_CATEGORY_DLS = 2,
-> +	WLAN_CATEGORY_HT = 7,
->  	WLAN_CATEGORY_BACK = 3,
->  	WLAN_CATEGORY_WMM = 17,
->  };
+> whats the main difference between be32_to_cpu vs be32_to_cpus vs be32_to_cpup?
+> Does the extra p just stand for something like "pointer"?
 
-That would look nicer (to me) if it were in numerical order. :-)
+Yes.  See include/linux/byteorder/generic.h
+> 
+> hmm,
+> if yes, >>*<<(__be32 *)bootrec->data.
+> if no, please tell me more about it ;-). 
 
-John
+The pointer versions take the pointer.  They do the cast and the
+dereference for you.  The cast in your code should be unnecessary.
+
+The in-situ version don't return anything; they put the result into the
+original variable.
+
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Regards,
+Pavel Roskin
