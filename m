@@ -1,84 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37479 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:59471 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750916AbYIHI6l (ORCPT
+	with ESMTP id S1752483AbYIEVO3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 04:58:41 -0400
-Subject: Re: [RFC PATCH 0/3] mac80211 dissasociation
+	Fri, 5 Sep 2008 17:14:29 -0400
+Subject: Re: [PATCH 08/39] iwl3945: replace association and beacon hooks
+	with bss_info_changed cb
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240809080146o93200eetcf8e142f6ef4a2b1@mail.gmail.com> (sfid-20080908_104643_170771_40C2D2B7)
-References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
-	 <1220794765.31304.8.camel@johannes.berg>
-	 <1ba2fa240809070724n362d5850t653ca5746b87eb48@mail.gmail.com>
-	 <1220798432.31304.13.camel@johannes.berg>
-	 <1ba2fa240809070750k1683f410icf2a82be0f533b4f@mail.gmail.com>
-	 <1ba2fa240809071614v66235658w1768e31d31c2d0f8@mail.gmail.com>
-	 <1220863139.31304.33.camel@johannes.berg>
-	 <1ba2fa240809080146o93200eetcf8e142f6ef4a2b1@mail.gmail.com>
-	 (sfid-20080908_104643_170771_40C2D2B7)
-Content-Type: text/plain
-Date: Mon, 08 Sep 2008 10:58:34 +0200
-Message-Id: <1220864314.31304.38.camel@johannes.berg> (sfid-20080908_105845_013960_5EF5B9F1)
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+In-Reply-To: <1220412419-15404-9-git-send-email-yi.zhu@intel.com> (sfid-20080903_053112_984921_AFC1F0BC)
+References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
+	 <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
+	 <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
+	 <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
+	 <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
+	 <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
+	 <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
+	 <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
+	 <1220412419-15404-9-git-send-email-yi.zhu@intel.com>
+	 (sfid-20080903_053112_984921_AFC1F0BC)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fNM3OSJW5VSJpewrjLo0"
+Date: Fri, 05 Sep 2008 23:14:25 +0200
+Message-Id: <1220649265.11109.29.camel@johannes.berg> (sfid-20080905_231433_824485_FB5F0E5A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-09-08 at 11:46 +0300, Tomas Winkler wrote:
-> On Mon, Sep 8, 2008 at 11:38 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Mon, 2008-09-08 at 02:14 +0300, Tomas Winkler wrote:
-> >
-> >> Shouldn't carrier_off(stada->dev) stop the queue?  I haven't seen this
-> >> before.
-> >
-> > The other question is whether we should be doing netif_carrier_off() at
-> > all since that throws away frames from the queue and attaches a noop
-> > qdisc. When we're roaming quickly between two APs, we don't necessarily
-> > want that, but we don't actually know whether or not we'll be able to
-> > get back to an AP quickly when we disassociate for whatever reason.
-> >
-> we should stop the wlan0 not the master device. Only data frames
-> should be stopped.
 
-That's what we're doing of course, but should we really drop all the
-frames that might still be in the queue? If we're just roaming we could
-send them out via the next AP, but it's hard to know, and since it's
-working let's not touch it for now.
+--=-fNM3OSJW5VSJpewrjLo0
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-How exactly are you triggering that "unauthorized port" message? I can't
-seem to reproduce to see if stopping the queue helps, but I'm fairly
-sure, try the patch below that fixes this.
+On Wed, 2008-09-03 at 11:26 +0800, Zhu Yi wrote:
+> From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+>=20
+> Let mac80211 and bss_info_changed callback handle the association and
+> beacon changes.
+
+Nice.
+
+
+> @@ -688,87 +688,6 @@ static void iwl3945_rx_reply_rx(struct iwl3945_priv =
+*priv,
+> =20
+>  	switch (le16_to_cpu(header->frame_control) & IEEE80211_FCTL_FTYPE) {
+>  	case IEEE80211_FTYPE_MGMT:
+
+You can, umm, simplify all this code a bit now:
+
+        if (priv->iw_mode =3D=3D IEEE80211_IF_TYPE_MNTR) {
+                iwl3945_pass_packet_to_mac80211(priv, rxb, &rx_status);
+                return;
+        }
+
+        switch (le16_to_cpu(header->frame_control) & IEEE80211_FCTL_FTYPE) =
+{
+        case IEEE80211_FTYPE_MGMT:
+        case IEEE80211_FTYPE_DATA:
+                /* fall through */
+        default:
+                iwl3945_pass_packet_to_mac80211(priv, rxb, &rx_status);
+                break;
+        }
+
+
+a single line can express the same :)
 
 johannes
 
---- everything.orig/net/mac80211/mlme.c	2008-09-08 10:54:28.000000000 +0200
-+++ everything/net/mac80211/mlme.c	2008-09-08 10:57:30.000000000 +0200
-@@ -574,6 +574,7 @@ static void ieee80211_set_associated(str
- 	sdata->bss_conf.assoc = 1;
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 
-+	netif_tx_start_all_queues(sdata->dev);
- 	netif_carrier_on(sdata->dev);
- 
- 	ieee80211_sta_send_apinfo(sdata, ifsta);
-@@ -995,6 +996,7 @@ static void ieee80211_set_disassoc(struc
- 	ifsta->assoc_scan_tries = 0;
- 	ifsta->assoc_tries = 0;
- 
-+	netif_tx_stop_all_queues(sdata->dev);
- 	netif_carrier_off(sdata->dev);
- 
- 	ieee80211_sta_tear_down_BA_sessions(sdata, sta->addr);
-@@ -3413,6 +3415,7 @@ static void ieee80211_sta_reset_auth(str
- 	ifsta->direct_probe_tries = 0;
- 	ifsta->auth_tries = 0;
- 	ifsta->assoc_tries = 0;
-+	netif_tx_stop_all_queues(sdata->dev);
- 	netif_carrier_off(sdata->dev);
- }
- 
+--=-fNM3OSJW5VSJpewrjLo0
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIwaEtAAoJEKVg1VMiehFY/YcP/3Io+ocVE9dzM57zUQtYMsmD
+CQ3c8FBKEB33K44zXWsWIoZZUtsC3YdnaXH/S7eXT9qHbhzhyvpAIiMsqYXWTPmP
+6/WBR00bFV7mYMWNU2nSPx1rM0Z9VffQ2i8d0GOrsrzJbPxYpPohRxy52z2naN9K
+hYnyhQw9DCjnidkllRSP/iH11SqZiMCSl/2YXGAzM48gBQYabrNSJJtj4B4lm9nz
+GqiK6LN9zB5anO/q3+fNrOP6N6x/vEncH3pGuEtkCygQNUoH+YYmIGyRtO4GYGEy
++qMr/6oMPkBJgJEO6Zmxx6DE4ApqV+Sp2XGBFyGVWfUho9HdfpwVfjuTcd8D9avu
+dvJrNSHTSsB63GzZDYh94cyHeglBNAI/aiNAJ9y/mAFl66VemO8Yucva6O4q3z6X
+tsb8PjDPfY2SaC5hzzuQrFf8wAkF5FVmarrSNyH+zcJjznlSSVCDW9ZiGTmt1T8S
+F3aogy4uSdIInupowB7n/2ZUL+YMum/IiyjC03Zims6xbLVNVF7BfpegCToUEZmc
+iuNEklS9lmjOKtQhXKK1WFdD193m+D8iIyW2Zh4J/o08AsSzuDeKH3OY0E6SUz2y
+sxPl83HrpP8ak7HKtab5l89Bw6q4gNk8uNbKy7QztBmF5DlUUMAMjoPIRRs9oV1o
+CkQ95ejuNYHOqT2Ink00
+=g+hH
+-----END PGP SIGNATURE-----
+
+--=-fNM3OSJW5VSJpewrjLo0--
 
