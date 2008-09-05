@@ -1,65 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dmz4.indranet.co.nz ([203.97.93.68]:56498 "EHLO
-	XServe-2.services.indranet.co.nz" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752153AbYI1Utv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Sep 2008 16:49:51 -0400
-Date: Mon, 29 Sep 2008 09:45:20 +1300 (NZDT)
-From: Derek Smithies <derek@indranet.co.nz>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org, linux-kernel@vger.kernel.org
-Subject: Re: [ath5k-devel] Release of Atheros 802.11abg HAL under the ISC
-In-Reply-To: <20080926215701.GC5972@tesla>
-Message-ID: <alpine.DEB.1.00.0809290934160.15291@kauri.acheron.indranet.co.nz> (sfid-20080928_224955_536729_9AB2E0FE)
-References: <20080926215701.GC5972@tesla>
+Received: from cn.fujitsu.com ([222.73.24.84]:60961 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1752609AbYIEDbQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Sep 2008 23:31:16 -0400
+Message-ID: <48C0A76F.8090706@cn.fujitsu.com> (sfid-20080905_053119_619784_57834051)
+Date: Fri, 05 Sep 2008 11:28:47 +0800
+From: Wang Chen <wangchen@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+To: "David S. Miller" <davem@davemloft.net>
+CC: Jeff Garzik <jgarzik@pobox.com>, NETDEV <netdev@vger.kernel.org>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 15/18] netdevice libertas: Fix directly reference of netdev->priv
+References: <48C0A219.2030004@cn.fujitsu.com>
+In-Reply-To: <48C0A219.2030004@cn.fujitsu.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis,
-On Fri, 26 Sep 2008, Luis R. Rodriguez wrote:
+We have some reasons to kill netdev->priv:
+1. netdev->priv is equal to netdev_priv().
+2. netdev_priv() wraps the calculation of netdev->priv's offset, obviously
+   netdev_priv() is more flexible than netdev->priv.
+But we cann't kill netdev->priv, because so many drivers reference to it
+directly.
 
-> As part of our commitment to help support all of our Atheros devices
-> under Linux we'd like to announce the release of our Atheros HAL for
-> our 802.11abg chipsets under the ISC license.
->
-> You can find it here:
->
-> http://www.kernel.org/pub/linux/kernel/people/mcgrof/legacy-hal.tar.bz2
->
-> This can be used as a source of documentation to help ath5k move
-> forward to support our 802.11abg chipsets as best as possible in
-> the Linux kernel. We look forward to keep working strongly with the
-> community on advancing support of all our Atheros chipsets under Linux.
->
->  Luis
+OK, becasue Dave S. Miller said, "every direct netdev->priv usage is a bug",
+and I want to kill netdev->priv later, I decided to convert all the direct
+reference of netdev->priv first.
 
-A huge vote of thanks and congratulations are due to Atheros for 
-taking the step of releasing the HAL. There will be many in the open 
-source community celebrating this move.
+Different to readonly reference of netdev->priv, in this driver, netdev->priv
+was changed. I use netdev->ml_priv to replace netdev->priv.
 
-Much Kudos is due to Atheros for taking this step.
+Signed-off-by: Wang Chen <wangchen@cn.fujitsu.com>
+---
+ drivers/net/wireless/libertas/main.c |   36 +++++++++++++++++-----------------
+ 1 files changed, 18 insertions(+), 18 deletions(-)
 
-The ath5k community is going to benefit hugely from being able to optimise 
-the driver based on a more accurate knowledge of the workings of the HAL.
-
-Patches like
-https://lists.ath5k.org/pipermail/ath5k-devel/2008-September/001311.html
-will improve the reliability, and are only possible because of the release
-of the HAL.
-
-Thanks are due to Luis also, for taking his part in getting the HAL 
-released.
-
-Perhaps we can all now work together on getting a stable driver for 
-Atheros cards under Linux. - Ath5k or Ath9k (don't care which).
-
-Derek.
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index bd32ac0..71c4bd8 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -223,7 +223,7 @@ u8 lbs_data_rate_to_fw_index(u32 rate)
+ static ssize_t lbs_anycast_get(struct device *dev,
+ 		struct device_attribute *attr, char * buf)
+ {
+-	struct lbs_private *priv = to_net_dev(dev)->priv;
++	struct lbs_private *priv = netdev_priv(to_net_dev(dev));
+ 	struct cmd_ds_mesh_access mesh_access;
+ 	int ret;
+ 
+@@ -242,7 +242,7 @@ static ssize_t lbs_anycast_get(struct device *dev,
+ static ssize_t lbs_anycast_set(struct device *dev,
+ 		struct device_attribute *attr, const char * buf, size_t count)
+ {
+-	struct lbs_private *priv = to_net_dev(dev)->priv;
++	struct lbs_private *priv = netdev_priv(to_net_dev(dev));
+ 	struct cmd_ds_mesh_access mesh_access;
+ 	uint32_t datum;
+ 	int ret;
+@@ -270,7 +270,7 @@ static void lbs_remove_mesh(struct lbs_private *priv);
+ static ssize_t lbs_rtap_get(struct device *dev,
+ 		struct device_attribute *attr, char * buf)
+ {
+-	struct lbs_private *priv = to_net_dev(dev)->priv;
++	struct lbs_private *priv = netdev_priv(to_net_dev(dev));
+ 	return snprintf(buf, 5, "0x%X\n", priv->monitormode);
+ }
+ 
+@@ -281,7 +281,7 @@ static ssize_t lbs_rtap_set(struct device *dev,
+ 		struct device_attribute *attr, const char * buf, size_t count)
+ {
+ 	int monitor_mode;
+-	struct lbs_private *priv = to_net_dev(dev)->priv;
++	struct lbs_private *priv = netdev_priv(to_net_dev(dev));
+ 
+ 	sscanf(buf, "%x", &monitor_mode);
+ 	if (monitor_mode) {
+@@ -330,7 +330,7 @@ static DEVICE_ATTR(lbs_rtap, 0644, lbs_rtap_get, lbs_rtap_set );
+ static ssize_t lbs_mesh_get(struct device *dev,
+ 		struct device_attribute *attr, char * buf)
+ {
+-	struct lbs_private *priv = to_net_dev(dev)->priv;
++	struct lbs_private *priv = netdev_priv(to_net_dev(dev));
+ 	return snprintf(buf, 5, "0x%X\n", !!priv->mesh_dev);
+ }
+ 
+@@ -340,7 +340,7 @@ static ssize_t lbs_mesh_get(struct device *dev,
+ static ssize_t lbs_mesh_set(struct device *dev,
+ 		struct device_attribute *attr, const char * buf, size_t count)
+ {
+-	struct lbs_private *priv = to_net_dev(dev)->priv;
++	struct lbs_private *priv = netdev_priv(to_net_dev(dev));
+ 	int enable;
+ 	int ret, action = CMD_ACT_MESH_CONFIG_STOP;
+ 
+@@ -391,7 +391,7 @@ static struct attribute_group lbs_mesh_attr_group = {
+  */
+ static int lbs_dev_open(struct net_device *dev)
+ {
+-	struct lbs_private *priv = (struct lbs_private *) dev->priv ;
++	struct lbs_private *priv = netdev_priv(dev) ;
+ 	int ret = 0;
+ 
+ 	lbs_deb_enter(LBS_DEB_NET);
+@@ -433,7 +433,7 @@ static int lbs_dev_open(struct net_device *dev)
+  */
+ static int lbs_mesh_stop(struct net_device *dev)
+ {
+-	struct lbs_private *priv = (struct lbs_private *) (dev->priv);
++	struct lbs_private *priv = dev->ml_priv;
+ 
+ 	lbs_deb_enter(LBS_DEB_MESH);
+ 	spin_lock_irq(&priv->driver_lock);
+@@ -460,7 +460,7 @@ static int lbs_mesh_stop(struct net_device *dev)
+  */
+ static int lbs_eth_stop(struct net_device *dev)
+ {
+-	struct lbs_private *priv = (struct lbs_private *) dev->priv;
++	struct lbs_private *priv = netdev_priv(dev);
+ 
+ 	lbs_deb_enter(LBS_DEB_NET);
+ 
+@@ -477,7 +477,7 @@ static int lbs_eth_stop(struct net_device *dev)
+ 
+ static void lbs_tx_timeout(struct net_device *dev)
+ {
+-	struct lbs_private *priv = (struct lbs_private *) dev->priv;
++	struct lbs_private *priv = netdev_priv(dev);
+ 
+ 	lbs_deb_enter(LBS_DEB_TX);
+ 
+@@ -529,7 +529,7 @@ EXPORT_SYMBOL_GPL(lbs_host_to_card_done);
+  */
+ static struct net_device_stats *lbs_get_stats(struct net_device *dev)
+ {
+-	struct lbs_private *priv = (struct lbs_private *) dev->priv;
++	struct lbs_private *priv = netdev_priv(dev);
+ 
+ 	lbs_deb_enter(LBS_DEB_NET);
+ 	return &priv->stats;
+@@ -538,7 +538,7 @@ static struct net_device_stats *lbs_get_stats(struct net_device *dev)
+ static int lbs_set_mac_address(struct net_device *dev, void *addr)
+ {
+ 	int ret = 0;
+-	struct lbs_private *priv = (struct lbs_private *) dev->priv;
++	struct lbs_private *priv = netdev_priv(dev);
+ 	struct sockaddr *phwaddr = addr;
+ 	struct cmd_ds_802_11_mac_address cmd;
+ 
+@@ -672,7 +672,7 @@ static void lbs_set_mcast_worker(struct work_struct *work)
+ 
+ static void lbs_set_multicast_list(struct net_device *dev)
+ {
+-	struct lbs_private *priv = dev->priv;
++	struct lbs_private *priv = netdev_priv(dev);
+ 
+ 	schedule_work(&priv->mcast_work);
+ }
+@@ -688,7 +688,7 @@ static void lbs_set_multicast_list(struct net_device *dev)
+ static int lbs_thread(void *data)
+ {
+ 	struct net_device *dev = data;
+-	struct lbs_private *priv = dev->priv;
++	struct lbs_private *priv = netdev_priv(dev);
+ 	wait_queue_t wait;
+ 
+ 	lbs_deb_enter(LBS_DEB_THREAD);
+@@ -1116,7 +1116,7 @@ struct lbs_private *lbs_add_card(void *card, struct device *dmdev)
+ 		lbs_pr_err("init ethX device failed\n");
+ 		goto done;
+ 	}
+-	priv = dev->priv;
++	priv = netdev_priv(dev);
+ 
+ 	if (lbs_init_adapter(priv)) {
+ 		lbs_pr_err("failed to initialize adapter structure.\n");
+@@ -1351,7 +1351,7 @@ static int lbs_add_mesh(struct lbs_private *priv)
+ 		ret = -ENOMEM;
+ 		goto done;
+ 	}
+-	mesh_dev->priv = priv;
++	mesh_dev->ml_priv = priv;
+ 	priv->mesh_dev = mesh_dev;
+ 
+ 	mesh_dev->open = lbs_dev_open;
+@@ -1564,7 +1564,7 @@ static int lbs_rtap_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
+ 
+ static struct net_device_stats *lbs_rtap_get_stats(struct net_device *dev)
+ {
+-	struct lbs_private *priv = dev->priv;
++	struct lbs_private *priv = dev->ml_priv;
+ 	lbs_deb_enter(LBS_DEB_NET);
+ 	return &priv->stats;
+ }
+@@ -1605,7 +1605,7 @@ static int lbs_add_rtap(struct lbs_private *priv)
+ 	rtap_dev->stop = lbs_rtap_stop;
+ 	rtap_dev->get_stats = lbs_rtap_get_stats;
+ 	rtap_dev->hard_start_xmit = lbs_rtap_hard_start_xmit;
+-	rtap_dev->priv = priv;
++	rtap_dev->ml_priv = priv;
+ 	SET_NETDEV_DEV(rtap_dev, priv->dev->dev.parent);
+ 
+ 	ret = register_netdev(rtap_dev);
 -- 
-Derek Smithies Ph.D.
-IndraNet Technologies Ltd.
-Email: derek@indranet.co.nz
-ph +64 3 365 6485
-Web: http://www.indranet-technologies.com/
+1.5.3.4
+
+
