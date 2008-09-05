@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.anarazel.de ([217.115.131.40]:47414 "EHLO smtp.anarazel.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752116AbYI2IfE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 04:35:04 -0400
-From: Andres Freund <andres@anarazel.de>
-To: "Tomas Winkler" <tomasw@gmail.com>
-Subject: Re: bad DMAR interaction with iwlagn and SATA
-Date: Mon, 29 Sep 2008 10:27:49 +0200
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Muli Ben-Yehuda" <muli@il.ibm.com>,
-	"Jeff Garzik" <jeff@garzik.org>, linux-kernel@vger.kernel.org,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <200809251511.20132.andres@anarazel.de> <1222441955.3798.13.camel@johannes.berg> <1ba2fa240809261630y7a8e5f20g75ab47ff98a1e614@mail.gmail.com>
-In-Reply-To: <1ba2fa240809261630y7a8e5f20g75ab47ff98a1e614@mail.gmail.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35548 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752206AbYIENAg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Sep 2008 09:00:36 -0400
+Date: Fri, 5 Sep 2008 08:50:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Wang Chen <wangchen@cn.fujitsu.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	NETDEV <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 14/18] netdevice airo: Convert directly reference of
+	netdev->priv to netdev->ml_priv
+Message-ID: <20080905125036.GA3027@tuxdriver.com> (sfid-20080905_150042_121812_4FC1845E)
+References: <48C0A219.2030004@cn.fujitsu.com> <48C0A72B.9050407@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1577835.l5VFPfxJ2h";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200809291027.50453.andres@anarazel.de> (sfid-20080929_103509_209488_62F5C33A)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <48C0A72B.9050407@cn.fujitsu.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1577835.l5VFPfxJ2h
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Fri, Sep 05, 2008 at 11:27:39AM +0800, Wang Chen wrote:
+> We have some reasons to kill netdev->priv:
+> 1. netdev->priv is equal to netdev_priv().
+> 2. netdev_priv() wraps the calculation of netdev->priv's offset, obviously
+>    netdev_priv() is more flexible than netdev->priv.
+> But we cann't kill netdev->priv, because so many drivers reference to it
+> directly.
+> 
+> OK, becasue Dave S. Miller said, "every direct netdev->priv usage is a bug",
+> and I want to kill netdev->priv later, I decided to convert all the direct
+> reference of netdev->priv first.
+> 
+> Different to readonly reference of netdev->priv, in this driver, netdev->priv
+> was changed. I use netdev->ml_priv to replace netdev->priv.
+> 
+> Signed-off-by: Wang Chen <wangchen@cn.fujitsu.com>
 
-Hi,
+Thank you for your patch.  However, I do not understand why you didn't
+simply replace netdev->priv with netdev_priv()?  Can you explain?
 
-On Saturday 27 September 2008, Tomas Winkler wrote in "Re: bad DMAR=20
-interaction with iwlagn and SATA":
-> Meanwhile it all reported bugs in this case points to 64 bit
-> installations, I'll give it more testing
-Would it help to test on 32bit? I have some dissk with 32bit system install=
-ed=20
-lying around somewhere...
+Thanks,
 
-Any other patches to try?
-
-Andres
-
---nextPart1577835.l5VFPfxJ2h
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkjgkYYACgkQporPraT14ih2MwCfSIgBIgsrNfWIhpQh/bzMNsX9
-u68An1P8oc0Ar347iHUA49Vmg0IhSLGS
-=hT7l
------END PGP SIGNATURE-----
-
---nextPart1577835.l5VFPfxJ2h--
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
