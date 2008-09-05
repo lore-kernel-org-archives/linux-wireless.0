@@ -1,124 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:10863 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752011AbYISL6F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 07:58:05 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so541638fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 04:58:02 -0700 (PDT)
-Date: Fri, 19 Sep 2008 15:57:58 +0400
-From: Cyrill Gorcunov <gorcunov@gmail.com>
-To: Ingo Molnar <mingo@elte.hu>,
-	Suresh Siddha <suresh.b.siddha@intel.com>
-Cc: LWML <linux-wireless@vger.kernel.org>,
-	"Maciej W. Rozycki" <macro@linux-mips.org>
-Subject: [PATCH -tip/master] x86: io-apic - interrupt remapping fix
-Message-ID: <20080919115758.GD7222@lenovo> (sfid-20080919_135810_966871_A18CC967)
+Received: from mail.tpi.com ([198.107.51.143]:3015 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751996AbYIEQdX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Sep 2008 12:33:23 -0400
+Message-ID: <48C15A5E.6000301@canonical.com> (sfid-20080905_183343_254494_23A4302E)
+Date: Fri, 05 Sep 2008 10:12:14 -0600
+From: Tim Gardner <tim.gardner@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Karol Szkudlarek <karol@mikronika.com.pl>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
+Subject: Re: kernel crash during suspend using iwl3945 driver 1.2.26k	on	ubuntu
+ hardy
+References: <48BC47C5.2070807@mikronika.com.pl>	 <1220425598.28282.190.camel@debian.sh.intel.com>	 <loom.20080903T181136-957@post.gmane.org> <1220601300.28282.291.camel@debian.sh.intel.com> <48C0EA41.5050103@mikronika.com.pl> <48C14AA2.1040202@lwfinger.net>
+In-Reply-To: <48C14AA2.1040202@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Interrupt remapping could lead to NULL dereference in case of
-kzalloc failed and memory leak in other way. So fix the
-both cases.
+Larry Finger wrote:
+> Karol Szkudlarek wrote:
+>> Hello Zhu!
+>>
+>> It will be tough to see in 2.6.27-rc kernels beacuse I use Ubuntu 8.04
+>> LTS
+>> which uses 2.6.24 linux kernel. :-(
+>>
+> 
+> The Ubuntu team has a 2.6.27 kernel available. To quote the text of a
+> message in a BCM4306 thread "1)  If you are comfortable installing
+> packages on your own, the linux-image-2.6.27-* package is currently
+> available for you to install and test."
+> 
+> Larry
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Signed-off-by: Cyrill Gorcunov <gorcunov@gmail.com>
----
+There is a Hardy package for the 2.6.27 kernel at
 
-Ingo, the patch is on top of applied one.
+http://ppa.launchpad.net/timg-tpi/ubuntu
 
-If I remember correctly Suresh was involved in
-this - so I think he could take a look and review
-the patch (please).
+It is currently based on -rc5. I'll be updating it throughout the .27
+development and stable cycle.
 
-Index: linux-2.6.git/arch/x86/kernel/apic.c
-===================================================================
---- linux-2.6.git.orig/arch/x86/kernel/apic.c	2008-09-19 12:12:54.000000000 +0400
-+++ linux-2.6.git/arch/x86/kernel/apic.c	2008-09-19 13:57:04.000000000 +0400
-@@ -1360,7 +1360,12 @@ void enable_IR_x2apic(void)
- 
- 	local_irq_save(flags);
- 	mask_8259A();
--	save_mask_IO_APIC_setup();
-+
-+	ret = save_mask_IO_APIC_setup();
-+	if (ret) {
-+		printk(KERN_INFO "Saving IO-APIC state failed: %d\n", ret);
-+		goto end;
-+	}
- 
- 	ret = enable_intr_remapping(1);
- 
-@@ -1370,14 +1375,15 @@ void enable_IR_x2apic(void)
- 	}
- 
- 	if (ret)
--		goto end;
-+		goto end_restore;
- 
- 	if (!x2apic) {
- 		x2apic = 1;
- 		apic_ops = &x2apic_ops;
- 		enable_x2apic();
- 	}
--end:
-+
-+end_restore:
- 	if (ret)
- 		/*
- 		 * IR enabling failed
-@@ -1386,6 +1392,7 @@ end:
- 	else
- 		reinit_intr_remapped_IO_APIC(x2apic_preenabled);
- 
-+end:
- 	unmask_8259A();
- 	local_irq_restore(flags);
- 
-Index: linux-2.6.git/arch/x86/kernel/io_apic.c
-===================================================================
---- linux-2.6.git.orig/arch/x86/kernel/io_apic.c	2008-09-19 12:12:54.000000000 +0400
-+++ linux-2.6.git/arch/x86/kernel/io_apic.c	2008-09-19 13:33:01.000000000 +0400
-@@ -831,7 +831,7 @@ int save_mask_IO_APIC_setup(void)
- 			kzalloc(sizeof(struct IO_APIC_route_entry) *
- 				nr_ioapic_registers[apic], GFP_KERNEL);
- 		if (!early_ioapic_entries[apic])
--			return -ENOMEM;
-+			goto nomem;
- 	}
- 
- 	for (apic = 0; apic < nr_ioapics; apic++)
-@@ -845,7 +845,17 @@ int save_mask_IO_APIC_setup(void)
- 				ioapic_write_entry(apic, pin, entry);
- 			}
- 		}
-+
- 	return 0;
-+
-+nomem:
-+	for (; apic > 0; apic--)
-+		kfree(early_ioapic_entries[apic]);
-+	kfree(early_ioapic_entries[apic]);
-+	memset(early_ioapic_entries, 0,
-+		ARRAY_SIZE(early_ioapic_entries));
-+
-+	return -ENOMEM;
- }
- 
- void restore_IO_APIC_setup(void)
-@@ -853,12 +863,13 @@ void restore_IO_APIC_setup(void)
- 	int apic, pin;
- 
- 	for (apic = 0; apic < nr_ioapics; apic++) {
--		/* FIXME: it should be handled at allocation time --cvg */
- 		if (!early_ioapic_entries[apic])
- 			break;
- 		for (pin = 0; pin < nr_ioapic_registers[apic]; pin++)
- 			ioapic_write_entry(apic, pin,
- 					   early_ioapic_entries[apic][pin]);
-+		kfree(early_ioapic_entries[apic]);
-+		early_ioapic_entries[apic] = NULL;
- 	}
- }
- 
+rtg
+-- 
+Tim Gardner tim.gardner@canonical.com
