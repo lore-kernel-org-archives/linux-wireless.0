@@ -1,54 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:51405 "EHLO hostap.isc.org"
+Received: from mga11.intel.com ([192.55.52.93]:15204 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751440AbYI2Qco (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 12:32:44 -0400
-Date: Mon, 29 Sep 2008 19:31:47 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Thomas Graf <tgraf@suug.ch>
-Subject: Re: NL80211_CMD_GET_WIPHY reply doesn't fit into nl message buffer
-Message-ID: <20080929163147.GC4853@jm.kir.nu> (sfid-20080929_183246_814188_64FBC655)
-References: <48E0A65A.2060102@gmail.com> <1222682480.7064.16.camel@johannes.berg> <20080929102021.GE10429@jm.kir.nu> <1222683923.7064.18.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1222683923.7064.18.camel@johannes.berg>
+	id S1752511AbYIEH6G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Sep 2008 03:58:06 -0400
+Subject: Re: kernel crash during suspend using iwl3945 driver 1.2.26k
+	on	ubuntu hardy
+From: Zhu Yi <yi.zhu@intel.com>
+To: Karol Szkudlarek <karol@mikronika.com.pl>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <loom.20080903T181136-957@post.gmane.org>
+References: <48BC47C5.2070807@mikronika.com.pl>
+	 <1220425598.28282.190.camel@debian.sh.intel.com>
+	 <loom.20080903T181136-957@post.gmane.org>
+Content-Type: text/plain
+Date: Fri, 05 Sep 2008 15:55:00 +0800
+Message-Id: <1220601300.28282.291.camel@debian.sh.intel.com> (sfid-20080905_095810_624638_D1CEA0E2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 29, 2008 at 12:25:23PM +0200, Johannes Berg wrote:
+On Wed, 2008-09-03 at 18:22 +0000, Karol Szkudlarek wrote:
+> Tests I performed with
+> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2 which
+> is
+> compat-wireless-2008-08-06 and git-describe v2.6.26-rc9-14214-g9cb3010
+> and compat-wireless-2008-07-25 and git-describe
+> v2.6.26-rc9-14207-ga520bdb
+> with the same result...
 
-> > Isn't ath5k reporting quite a large set of channels that would never
-> > really be used? 26 channels on 2.4 GHz and 194(huh!) on 5 GHz.. First
-> > workaround could be to just limit those to somewhat more common set of
-> > channels.
-> 
-> Well, this is what the hw supports I guess, most channels will actually
-> reported to userspace with the DISABLED flag set.
+Please see if 2.6.27-rc kernels fix this problem. The wme_qdisc stuff is
+removed in .27.
 
-Well.. It reports channels like 2732 MHz or 6100 MHz and 5 GHz center
-frequencies for every possible multiple of 5 MHz. If someone is really
-using those properly, they are on a licensed band and this types of
-lists are not really needed for normal users. Whether the hardware
-really supports them or well, more exactly, whether all selected
-components can handle these frequencies and whether the radios have been
-calibrated for all of these areas is another question.
+Thanks,
+-yi
 
-> > > > There is also a bug in hostapd which waits for ACK forever when this error occur
-> > > > in i802_get_hw_feature_data().
-
-For some reason, I do not seem to be able to reproduce this. Both iw and
-hostapd were able to fetch the data using the current wireless-testing
-tree..
-
-> I recently rewrote the handling in iw completely to make it easier to
-> follow, will post an equivalent patch for hostapd in a minute.
-
-Anyway, cleanup for nl send/recv processing is certainly welcome. I've
-never fully understood the steps that are used there and what to do if
-anything went wrong..
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
