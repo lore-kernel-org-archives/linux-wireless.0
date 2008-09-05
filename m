@@ -1,60 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:29812 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751875AbYISCwS (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35550 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752242AbYIENAg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 22:52:18 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so71388eyi.37
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 19:52:16 -0700 (PDT)
-Message-ID: <f488382f0809181952g628ab5a4nd86f396a08f4d6c8@mail.gmail.com> (sfid-20080919_045231_207195_CEBC0A8A)
-Date: Thu, 18 Sep 2008 19:52:16 -0700
-From: "Steven Noonan" <steven@uplinklabs.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
-Cc: "Ingo Molnar" <mingo@elte.hu>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
-In-Reply-To: <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com>
+	Fri, 5 Sep 2008 09:00:36 -0400
+Date: Fri, 5 Sep 2008 08:56:27 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Wang Chen <wangchen@cn.fujitsu.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	NETDEV <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 16/18] netdevice zd1201: Convert directly reference of
+	netdev->priv to netdev->ml_priv
+Message-ID: <20080905125626.GB3027@tuxdriver.com> (sfid-20080905_150047_487558_4CA2B388)
+References: <48C0A219.2030004@cn.fujitsu.com> <48C0A7A0.9030200@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f488382f0809181123n55a4979eg1996bbc30fa47d54@mail.gmail.com>
-	 <43e72e890809181134ybbec8fdxcb2a466aa17fe390@mail.gmail.com>
-	 <43e72e890809181142n7738cd99g522e6688e68d11ce@mail.gmail.com>
-	 <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com>
-	 <43e72e890809181344q416b5944w3332ee5a33db048c@mail.gmail.com>
-	 <f488382f0809181449x7343aa7endff066cb5836a73c@mail.gmail.com>
-	 <20080918220102.GE7408@tesla>
-	 <43e72e890809181508w5232a14ewbf2bf18fe90a92d5@mail.gmail.com>
-	 <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
-	 <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <48C0A7A0.9030200@cn.fujitsu.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This IRQ debugging is lots of fun. My /var/log/messages jumped in size
-to 241MB. :)
+On Fri, Sep 05, 2008 at 11:29:36AM +0800, Wang Chen wrote:
+> We have some reasons to kill netdev->priv:
+> 1. netdev->priv is equal to netdev_priv().
+> 2. netdev_priv() wraps the calculation of netdev->priv's offset, obviously
+>    netdev_priv() is more flexible than netdev->priv.
+> But we cann't kill netdev->priv, because so many drivers reference to it
+> directly.
+> 
+> OK, becasue Dave S. Miller said, "every direct netdev->priv usage is a bug",
+> and I want to kill netdev->priv later, I decided to convert all the direct
+> reference of netdev->priv first.
+> 
+> Different to readonly reference of netdev->priv, in this driver, netdev->priv
+> was changed. I use netdev->ml_priv to replace netdev->priv.
+> 
+> Signed-off-by: Wang Chen <wangchen@cn.fujitsu.com>
 
-My test case was a file transfer that basically copies 50MB from a
-remote machine's /dev/urandom and writes it to /dev/null locally. That
-should be a pretty nice large RX. And jeez, I'm seeing tremendous
-download speeds now and I have no idea what is different about my
-configuration. I'm getting up to 24 megabit per second transfer rates
-(actual), which is incredibly unusual for ath9k.
+Same comment as the other patch.
 
-I wasn't able to reproduce the IRQ problems on -tip or Linus' current
-tree (both with the group rekeying fix applied, which may or may not
-be a good idea for reproducing the issue). Even tried doing
-rmmod/modprobe in fast succession multiple times. Couldn't get it to
-throw up.
+Also, I have to be honest and say that I had never been aware of
+dev->ml_priv before, so I'm not entirely sure what it is.  However,
+from the comment at it's definision ("mid-layer private") and it's
+usage in qeth, loopback, and ppp, I'm not at all sure that you are
+using it as intended.
 
-I wonder... My rmmod/modprobe originally was used after the improper
-group rekeying before in order to get it back to normal. Perhaps the
-encryption has to go wonky before this IRQ issue surfaces? Another
-possibility is the earlier mentioned "ACPI: EC: GPE storm detected,
-disabling EC GPE". I don't know if it's related or not, but I haven't
-waited for it to show up before testing.
+Can you explain?
 
-Oh well, if the IRQ problem resurfaces (or if I get a ridiculous
-latency tomorrow morning with irqpoll off), I'll try to get some
-useful data to help debug it.
+Thanks,
+
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
