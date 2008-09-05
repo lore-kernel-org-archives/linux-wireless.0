@@ -1,39 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:58942 "EHLO hostap.isc.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751521AbYIKUdi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 16:33:38 -0400
-Message-ID: <48C9811A.7070206@w1.fi> (sfid-20080911_223340_638486_63BED5F9)
-Date: Thu, 11 Sep 2008 23:35:38 +0300
-From: Jouni Malinen <j@w1.fi>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Dan Williams <dcbw@redhat.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>, j@w1.fi
-Subject: Re: [PATCH] mac80211: add pre- and post-scan hooks
-References: <1214149401.8585.2.camel@localhost.localdomain>	 (sfid-20080622_174624_286344_54D543FD)  <1221033061.12266.10.camel@johannes.berg>	 (sfid-20080910_095115_515502_30A213FC) <1221159194.6986.57.camel@johannes.berg>
-In-Reply-To: <1221159194.6986.57.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from xc.sipsolutions.net ([83.246.72.84]:41158 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750810AbYIEUBh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Sep 2008 16:01:37 -0400
+Subject: Re: [PATCH 1/2 v5] cfg80211: Add new wireless regulatory
+	infrastructure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <1220643824-11398-1-git-send-email-lrodriguez@atheros.com>
+References: <1220643824-11398-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dzoN3VCCPsUMlxidCWdd"
+Date: Fri, 05 Sep 2008 22:01:32 +0200
+Message-Id: <1220644892.11109.18.camel@johannes.berg> (sfid-20080905_220142_970084_D9F82827)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> The beaconing API in total is a bit strange, we tell the driver when the
-> beacon changes and it can then request one, but we never tell it when to
-> start/stop beaconing, which means that currently your driver has to
-> figure to start out beaconing on the first beacon change, and then
-> cannot possibly stop again... We can return NULL from the beacon get
-> function but that could be an error condition too...
 
-The original design was for AP mode only and the assumption was that
-Beacon transmission is enabled pretty much all the time. Returning NULL
-was used if ever needed to stop Beacon transmission for some period of
-time.
+--=-dzoN3VCCPsUMlxidCWdd
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> I think we just need to add start/stop beacon bits, and then we can use
-> them around a scan too, thoughts?
+On Fri, 2008-09-05 at 12:43 -0700, Luis R. Rodriguez wrote:
+> This adds the new wireless regulatory infrastructure. The
+> main motiviation behind this was to centralize regulatory
+> code as each driver was implementing their own regulatory solution,
+> and to replace the initial centralized code we have where:
+>=20
+> * only 3 regulatory domains are supported: US, JP and EU
+> * regulatory domains can only be changed through a module parameter
+> * all rules are built statically in the kernel
+>=20
+> We now have support for regulatory domains for many countries
+> and regulatory domains are now queried through a userspace agent
+> (CRDA) through udev allowing distributions to update regulatory rules
+> without updating the kernel. Updates on regulatory rules can
+> now be left as an independent effort.
+>=20
+> Each driver can regulatory_hint() a regulatory domain
+> based on either their EEPROM mapped regulatory domain value to a
+> respective ISO/IEC 3166-1 country code or pass an internally built
+> regulatory domain. We also add support to let the user set the
+> regulatory domain through userspace in case of faulty EEPROMs to
+> further help compliance.
+>=20
+> Support for world roaming will be added soon for cards capable of
+> this.
+>=20
+> For more information see:
+>=20
+> http://wireless.kernel.org/en/developers/Regulatory/CRDA
+>=20
+> For now we leave an option to enable the old module parameter,
+> ieee80211_regdom, and to build the 3 old regdomains statically
+> (US, JP and EU). This option is CONFIG_WIRELESS_OLD_REGULATORY.
+> These old static definitions and the module parameter is being
+> scheduled for removal for 2.6.29.
+>=20
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-That sounds reasonable.
+Looks fine to me now, as far as I've looked, I guess there'll be some
+odd fixes required etc. but we can figure that out.
 
-- Jouni
+johannes
+
+--=-dzoN3VCCPsUMlxidCWdd
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIwZAZAAoJEKVg1VMiehFYIkMP/3XN+1i3IGU1ugoJeIW+ypiK
+ZeIlc9XQkpg2LqTzyFAw6gUXR3yAKXUkWARVc/7FYKXsUKBgBZGOW5LYa8TqA5E0
+EIF3N+4V47sV+14Hyc3zEfp582Ogyq3rZIKFrNR7PaReWYA0KrSr5TVN96UomjB4
+YlnYrzOT9Uq2LlZAusPpywqADSTH3PCh/thgsAXzf2uQPMfP+klvFccnBoeZLUlh
+3Rl6nRI4Q1UhCPMpYt62pBzSstBREgE4YXu4dYOljZRe8i44mYfvTwSQz3xyPenz
+dlU5h/tQ8ClLekVD9sTqptT6DrCZnqw+Ytk95m/PSpxa3dVpXatZG2VbkltzhjWR
+B7t6BW4DSzNFl5xO3nuo5/06Sosg+kQ4v+XsBApmCke4sdwdHDaQRxMnzGFs2gyl
+LZ6DuNiE9MlDf8x6naq2d5BfClJgHS3UJhmfHeheLKk32T/djKBf+43Hq6OrmE/0
+UzybuMPoaP3Kx6raDkXAsHCvPTUkCk/g1oMGGuZ32+HGdgvdK2nb8zeMLFtgt9xy
+oA8XcB993QAhRmyg4/kCrFFphj6dXSyDvQPjeZL054FWj5pyr8JhyjvnWYr+ep2o
+VSLGf7spmzngsVi8VIY42imKBotPLvUZdNXsizjaVLsY/342+GN3HDEu4QxW7cKI
+Ds+8Oc91Gw9KRBJ3h53n
+=EI7k
+-----END PGP SIGNATURE-----
+
+--=-dzoN3VCCPsUMlxidCWdd--
+
