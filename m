@@ -1,46 +1,246 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:56024 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751983AbYI3VcK (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:50365 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752095AbYIEX3H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2008 17:32:10 -0400
-From: Christian Lamparter <chunkeey@web.de>
+	Fri, 5 Sep 2008 19:29:07 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so651093wfd.4
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Sep 2008 16:29:07 -0700 (PDT)
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH] p54: report appropriate rate and band values for 802.11a
-Date: Tue, 30 Sep 2008 23:36:00 +0200
-Cc: John W Linville <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200809302336.00992.chunkeey@web.de> (sfid-20080930_233215_197595_E4470677)
+Cc: libertas-dev@lists.infradead.org
+From: Anna Neal <anna@cozybit.com>
+Date: Fri, 5 Sep 2008 15:56:47 -0700
+Subject: [PATCH] libertas: Enable/disable automatic tx power control via SIOCSIWTXPOW.
+Message-ID: <48c1c0c1.1b068e0a.343f.ffffcb0d@mx.google.com> (sfid-20080906_012913_235952_F3F8A940)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the a few lines that went missing in
-"p54: 802.11a 5GHz phy support"
-commit: cce69c09b98c3bcb95b55fad3f84ccceaf245316
+iwconfig txpower can now be used to set tx power to fixed or auto. If set to
+auto the default firmware settings are used.
 
-Essentially: the rx-code wasn't updated and therefore reported the wrong band,
-but more importantly the rate index was off as well, since 802.11a doesn't
-allow the "four" 802.11b rates...
-
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
+Signed-off-by: Anna Neal <anna@cozybit.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
-diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-index de5e8f4..1994aa1 100644
---- a/drivers/net/wireless/p54/p54common.c
-+++ b/drivers/net/wireless/p54/p54common.c
-@@ -507,9 +507,10 @@ static int p54_rx_data(struct ieee80211_hw *dev, struct sk_buff *skb)
- 	rx_status.noise = priv->noise;
- 	/* XX correct? */
- 	rx_status.qual = (100 * hdr->rssi) / 127;
--	rx_status.rate_idx = hdr->rate & 0xf;
-+	rx_status.rate_idx = (dev->conf.channel->band == IEEE80211_BAND_2GHZ ?
-+			hdr->rate : (hdr->rate - 4)) & 0xf;
- 	rx_status.freq = freq;
--	rx_status.band = IEEE80211_BAND_2GHZ;
-+	rx_status.band =  dev->conf.channel->band;
- 	rx_status.antenna = hdr->antenna;
+ drivers/net/wireless/libertas/cmd.c     |   64 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/libertas/cmd.h     |    6 +++
+ drivers/net/wireless/libertas/defs.h    |    9 ++++
+ drivers/net/wireless/libertas/host.h    |    1 +
+ drivers/net/wireless/libertas/hostcmd.h |   24 +++++++++--
+ drivers/net/wireless/libertas/wext.c    |   23 ++++++++++-
+ 6 files changed, 120 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 802547e..6cc4858 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -1971,6 +1971,70 @@ void lbs_ps_confirm_sleep(struct lbs_private *priv)
+ }
  
- 	tsf32 = le32_to_cpu(hdr->tsf32);
+ 
++/**
++ * @brief Configures the transmission power control functionality.
++ *
++ * @param priv		A pointer to struct lbs_private structure
++ * @param enable	Transmission power control enable
++ * @param p0		Power level when link quality is good (dBm).
++ * @param p1		Power level when link quality is fair (dBm).
++ * @param p2		Power level when link quality is poor (dBm).
++ * @param usesnr	Use Signal to Noise Ratio in TPC
++ *
++ * @return 0 on success
++ */
++int lbs_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
++		int8_t p2, int usesnr)
++{
++	struct cmd_ds_802_11_tpc_cfg cmd;
++	int ret;
++
++	memset(&cmd, 0, sizeof(cmd));
++	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
++	cmd.action = cpu_to_le16(CMD_ACT_SET);
++	cmd.enable = !!enable;
++	cmd.usesnr = !!enable;
++	cmd.P0 = p0;
++	cmd.P1 = p1;
++	cmd.P2 = p2;
++
++	ret = lbs_cmd_with_response(priv, CMD_802_11_TPC_CFG, &cmd);
++
++	return ret;
++}
++
++/**
++ * @brief Configures the power adaptation settings.
++ *
++ * @param priv		A pointer to struct lbs_private structure
++ * @param enable	Power adaptation enable
++ * @param p0		Power level for 1, 2, 5.5 and 11 Mbps (dBm).
++ * @param p1		Power level for 6, 9, 12, 18, 22, 24 and 36 Mbps (dBm).
++ * @param p2		Power level for 48 and 54 Mbps (dBm).
++ *
++ * @return 0 on Success
++ */
++
++int lbs_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
++		int8_t p1, int8_t p2)
++{
++	struct cmd_ds_802_11_pa_cfg cmd;
++	int ret;
++
++	memset(&cmd, 0, sizeof(cmd));
++	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
++	cmd.action = cpu_to_le16(CMD_ACT_SET);
++	cmd.enable = !!enable;
++	cmd.P0 = p0;
++	cmd.P1 = p1;
++	cmd.P2 = p2;
++
++	ret = lbs_cmd_with_response(priv, CMD_802_11_PA_CFG , &cmd);
++
++	return ret;
++}
++
++
+ static struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv,
+ 	uint16_t command, struct cmd_header *in_cmd, int in_cmd_size,
+ 	int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
+diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
+index 11ac996..77bd070 100644
+--- a/drivers/net/wireless/libertas/cmd.h
++++ b/drivers/net/wireless/libertas/cmd.h
+@@ -26,6 +26,12 @@ int __lbs_cmd(struct lbs_private *priv, uint16_t command,
+ 	      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
+ 	      unsigned long callback_arg);
+ 
++int lbs_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
++		int8_t p1, int8_t p2);
++
++int lbs_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
++		int8_t p2, int usesnr);
++
+ int lbs_cmd_copyback(struct lbs_private *priv, unsigned long extra,
+ 		     struct cmd_header *resp);
+ 
+diff --git a/drivers/net/wireless/libertas/defs.h b/drivers/net/wireless/libertas/defs.h
+index 4b2428a..c89d7a1 100644
+--- a/drivers/net/wireless/libertas/defs.h
++++ b/drivers/net/wireless/libertas/defs.h
+@@ -189,6 +189,15 @@ static inline void lbs_deb_hex(unsigned int grp, const char *prompt, u8 *buf, in
+ #define MRVDRV_CMD_UPLD_RDY		0x0008
+ #define MRVDRV_CARDEVENT		0x0010
+ 
++
++/* Automatic TX control default levels */
++#define POW_ADAPT_DEFAULT_P0 13
++#define POW_ADAPT_DEFAULT_P1 15
++#define POW_ADAPT_DEFAULT_P2 18
++#define TPC_DEFAULT_P0 5
++#define TPC_DEFAULT_P1 10
++#define TPC_DEFAULT_P2 13
++
+ /** TxPD status */
+ 
+ /*	Station firmware use TxPD status field to report final Tx transmit
+diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
+index da618fc..a916bb9 100644
+--- a/drivers/net/wireless/libertas/host.h
++++ b/drivers/net/wireless/libertas/host.h
+@@ -83,6 +83,7 @@
+ #define CMD_802_11_INACTIVITY_TIMEOUT		0x0067
+ #define CMD_802_11_SLEEP_PERIOD			0x0068
+ #define CMD_802_11_TPC_CFG			0x0072
++#define CMD_802_11_PA_CFG			0x0073
+ #define CMD_802_11_FW_WAKE_METHOD		0x0074
+ #define CMD_802_11_SUBSCRIBE_EVENT		0x0075
+ #define CMD_802_11_RATE_ADAPT_RATESET		0x0076
+diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
+index d27c276..630b799 100644
+--- a/drivers/net/wireless/libertas/hostcmd.h
++++ b/drivers/net/wireless/libertas/hostcmd.h
+@@ -607,14 +607,28 @@ struct cmd_ds_802_11_eeprom_access {
+ } __attribute__ ((packed));
+ 
+ struct cmd_ds_802_11_tpc_cfg {
++	struct cmd_header hdr;
++
+ 	__le16 action;
+-	u8 enable;
+-	s8 P0;
+-	s8 P1;
+-	s8 P2;
+-	u8 usesnr;
++	uint8_t enable;
++	int8_t P0;
++	int8_t P1;
++	int8_t P2;
++	uint8_t usesnr;
+ } __attribute__ ((packed));
+ 
++
++struct cmd_ds_802_11_pa_cfg {
++	struct cmd_header hdr;
++
++	__le16 action;
++	uint8_t enable;
++	int8_t P0;
++	int8_t P1;
++	int8_t P2;
++} __attribute__ ((packed));
++
++
+ struct cmd_ds_802_11_led_ctrl {
+ 	__le16 action;
+ 	__le16 numled;
+diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
+index 426f1fe..b08bad8 100644
+--- a/drivers/net/wireless/libertas/wext.c
++++ b/drivers/net/wireless/libertas/wext.c
+@@ -1820,7 +1820,17 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
+ 	}
+ 
+ 	if (vwrq->fixed == 0) {
+-		/* Auto power control */
++		/* User requests automatic tx power control, however there are
++		 * many auto tx settings.  For now use firmware defaults until
++		 * we come up with a good way to expose these to the user. */
++		ret = lbs_power_adapt_cfg(priv, 1, POW_ADAPT_DEFAULT_P0,
++				POW_ADAPT_DEFAULT_P1, POW_ADAPT_DEFAULT_P2);
++		if (ret)
++			goto out;
++		ret = lbs_tpc_cfg(priv, 0, TPC_DEFAULT_P0, TPC_DEFAULT_P1,
++				TPC_DEFAULT_P2, 1);
++		if (ret)
++			goto out;
+ 		dbm = priv->txpower_max;
+ 	} else {
+ 		/* Userspace check in iwrange if it should use dBm or mW,
+@@ -1830,7 +1840,8 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
+ 			goto out;
+ 		}
+ 
+-		/* Validate requested power level against firmware allowed levels */
++		/* Validate requested power level against firmware allowed
++		 * levels */
+ 		if (priv->txpower_min && (dbm < priv->txpower_min)) {
+ 			ret = -EINVAL;
+ 			goto out;
+@@ -1840,6 +1851,14 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
+ 			ret = -EINVAL;
+ 			goto out;
+ 		}
++		ret = lbs_power_adapt_cfg(priv, 0, POW_ADAPT_DEFAULT_P0,
++				POW_ADAPT_DEFAULT_P1, POW_ADAPT_DEFAULT_P2);
++		if (ret)
++			goto out;
++		ret = lbs_tpc_cfg(priv, 0, TPC_DEFAULT_P0, TPC_DEFAULT_P1,
++				TPC_DEFAULT_P2, 1);
++		if (ret)
++			goto out;
+ 	}
+ 
+ 	/* If the radio was off, turn it on */
+-- 
+1.5.4.3
+
+
 
