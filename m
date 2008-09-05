@@ -1,57 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:62824 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751671AbYIQW51 (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:61396 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753266AbYIEPEl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 18:57:27 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so3082924fkq.5
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2008 15:57:25 -0700 (PDT)
-Message-ID: <1ba2fa240809171557i498cb5e1rcacb5961d8e1c3c6@mail.gmail.com> (sfid-20080918_005737_471067_1A033227)
-Date: Thu, 18 Sep 2008 01:57:25 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [PATCH v2] mac80211: re-enable aggregation
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890809171545k5aeaa52dje2223bdbeb97ce7e@mail.gmail.com>
+	Fri, 5 Sep 2008 11:04:41 -0400
+Message-ID: <48C14AA2.1040202@lwfinger.net> (sfid-20080905_170446_522391_04EBA6FF)
+Date: Fri, 05 Sep 2008 10:05:06 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1221535073-6937-1-git-send-email-lrodriguez@atheros.com>
-	 <1221547036.8916.1.camel@johannes.berg>
-	 <1ba2fa240809171357p1b190760h19c3e521e100f7e4@mail.gmail.com>
-	 <43e72e890809171545k5aeaa52dje2223bdbeb97ce7e@mail.gmail.com>
+To: Karol Szkudlarek <karol@mikronika.com.pl>
+CC: Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
+Subject: Re: kernel crash during suspend using iwl3945 driver 1.2.26k	on	ubuntu
+ hardy
+References: <48BC47C5.2070807@mikronika.com.pl>	 <1220425598.28282.190.camel@debian.sh.intel.com>	 <loom.20080903T181136-957@post.gmane.org> <1220601300.28282.291.camel@debian.sh.intel.com> <48C0EA41.5050103@mikronika.com.pl>
+In-Reply-To: <48C0EA41.5050103@mikronika.com.pl>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 18, 2008 at 1:45 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Wed, Sep 17, 2008 at 1:57 PM, Tomas Winkler <tomasw@gmail.com> wrote:
->> On Tue, Sep 16, 2008 at 9:37 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->>> On Mon, 2008-09-15 at 20:17 -0700, Luis R. Rodriguez wrote:
->>>
->>>> +/**
->>>> + * is_part_ampdu - tells us whether this buffer is part of an AMPDU
->>>> + *
->>>> + * @skb: the buffer we want to check
->>>> + * @hw: the &struct ieee80211_hw to check the queue mapping on
->>>> + */
->>>> +static inline bool is_part_ampdu(struct sk_buff *skb, struct ieee80211_hw *hw)
->>>> +{
->>>> +     return (skb_get_queue_mapping(skb) >=
->>>> +             ieee80211_num_regular_queues(hw));
->>>> +}
->>>> +
->>>
->>> This is making the patch needlessly large and makes it change drivers
->>> etc, please just keep the flag and set it based on this in master xmit
->>> after we've cleared the info.
->>>
->> Yes, please keep the flag. Otherwise our rate scale algorithm won't work
->
-> OK -- you can ignore this I like the path you took better.
+Karol Szkudlarek wrote:
+> Hello Zhu!
+> 
+> It will be tough to see in 2.6.27-rc kernels beacuse I use Ubuntu 8.04 LTS
+> which uses 2.6.24 linux kernel. :-(
+> 
 
-What I need to next is to add is rtnl_lock
-qdisc_root_lock requires this. This root lock is held during requeuing
-which can be triggered by removal or addition of an aggregation queue.
-Tomas
+The Ubuntu team has a 2.6.27 kernel available. To quote the text of a 
+message in a BCM4306 thread "1)  If you are comfortable installing 
+packages on your own, the linux-image-2.6.27-* package is currently 
+available for you to install and test."
+
+Larry
