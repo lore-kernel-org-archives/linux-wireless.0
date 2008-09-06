@@ -1,83 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Viola.Opus1.COM ([192.245.12.8]:3348 "EHLO Viola.Opus1.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750823AbYIFEiH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 00:38:07 -0400
-Received: from [172.17.0.188] ([61.8.118.66])
- by Opus1.COM (PMDF V6.2-X27 #9830) with ESMTPSA id
- <01MZ7U16R87K8YG025@Opus1.COM> for linux-wireless@vger.kernel.org; Fri,
- 05 Sep 2008 21:38:03 -0700 (MST)
-Date: Fri, 05 Sep 2008 21:38:00 -0700
-From: gavron@wetwork.net
-Subject: Re: Speed enhancement for BCM4306/2
-In-reply-to: <48C1BA91.7050106@lwfinger.net>
+Received: from xc.sipsolutions.net ([83.246.72.84]:42747 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751418AbYIFUCo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Sep 2008 16:02:44 -0400
+Subject: Re: [PATCH] b43legacy: Fix failure in rate-adjustment mechanism
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Broadcom Wireless <bcm43xx-dev@berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Message-id: <48C20928.10202@wetwork.net> (sfid-20080906_063820_556844_9FAEB4A9)
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
-References: <48C1BA91.7050106@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
+	John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <48C2E13B.9020203@lwfinger.net>
+References: <48c2cd1a.pA60sTEK0WsW6wtt%Larry.Finger@lwfinger.net>
+	 <200809062055.51797.mb@bu3sch.de> <1220727470.10102.9.camel@johannes.berg>
+	 <200809062104.15274.mb@bu3sch.de>  <48C2DBCB.1030706@lwfinger.net>
+	 <1220730115.10102.15.camel@johannes.berg>  <48C2E13B.9020203@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UdZx3vX4oInH1CMBbny2"
+Date: Sat, 06 Sep 2008 22:02:39 +0200
+Message-Id: <1220731359.10102.16.camel@johannes.berg> (sfid-20080906_220248_434255_CA0D8F51)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is this close? 
 
-E
---- /tmp/phy_g.c    2008-09-05 21:06:57.000000000 -0700
-+++ phy_g.c    2008-09-05 21:36:18.000000000 -0700
-@@ -2198,7 +2198,7 @@
-     else
-         b43_phy_initb6(dev);
- 
--    if (phy->rev >= 2 || phy->gmode)
-+    if (phy->rev >= 2 && phy->gmode)
-         b43_phy_inita(dev);
- 
-     if (phy->rev >= 2) {
-@@ -2216,9 +2216,9 @@
-     if (phy->gmode || phy->rev >= 2) {
-         tmp = b43_phy_read(dev, B43_PHY_VERSION_OFDM);
-         tmp &= B43_PHYVER_VERSION;
--        if (tmp == 3 || tmp == 5) {
-+        if (tmp == 4 || tmp == 5) {
-             b43_phy_write(dev, B43_PHY_OFDM(0xC2), 0x1816);
--            b43_phy_write(dev, B43_PHY_OFDM(0xC3), 0x8006);
-+            b43_phy_write(dev, B43_PHY_OFDM(0xC3), 0x8606);
-         }
-         if (tmp == 5) {
-             b43_phy_write(dev, B43_PHY_OFDM(0xCC),
-@@ -2226,7 +2226,7 @@
-                        & 0x00FF) | 0x1F00);
-         }
-     }
--    if ((phy->rev <= 2 && phy->gmode) || phy->rev >= 2)
-+    if ((phy->rev >=2)
-         b43_phy_write(dev, B43_PHY_OFDM(0x7E), 0x78);
-     if (phy->radio_rev == 8) {
-         b43_phy_write(dev, B43_PHY_EXTG(0x01),
+--=-UdZx3vX4oInH1CMBbny2
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Sat, 2008-09-06 at 14:59 -0500, Larry Finger wrote:
 
-Larry Finger wrote:
-> I recently found some places where the G-PHY initialization 
-> specifications were wrong. I updated the relevant parts of the V3 
-> specifications at http://bcm-specs.sipsolutions.net - the pages for 
-> GPHY, B6PHY and B5PHY were changed.
->
-> When I prepared a patch containing these changes, the speed of the 
-> BCM4306/2 for OFDM rates more than doubled. As an example, when 
-> iwconfig is used to set the rate at 36M, the TX rate increased from 
-> 6.8 to 15.8 Mb/s.
->
-> Unfortunately, direct submission of my patch would violate the 
-> clean-room rules. Michael Buesch has other things that are more 
-> important. As a result, we need someone to look at the changes on the 
-> web page and prepare a patch for submission. I will be happy to test 
-> your submission.
->
-> Larry
-> _______________________________________________
-> Bcm43xx-dev mailing list
-> Bcm43xx-dev@lists.berlios.de
-> https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
->   
+> In the V3 specs, I found
+>=20
+> "Transmit Status
+>=20
+> When this interrupt is set, the retrieve the TransmitStatus. Note that=20
+> on cores with revision < 5, the last DMA controller or PIO queue can=20
+> also also get the DMA recieve done interrupt, which also triggers the=20
+> TransmitStatus retrieval process. The driver should be prepared to=20
+> deal with both interrupts at any time, on any revision. In AP mode,=20
+> this interrupt also initiates the sending of powersave responses."
+
+Yeah, this isn't entirely correct, when the core revision is < 5 then
+the register-based TX status doesn't actually exist and the firmware
+always uses the FIFO-based mechanism.
+
+> The implication is that the interrupt will only be generated if we use=20
+> the last (i.e. #5) DMA controller. As we are only using #3, no=20
+> interrupts and handle_irq_status() is dead code.
+
+Right, only core revisions 2 and 4 are supported here.
+
+johannes
+
+--=-UdZx3vX4oInH1CMBbny2
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIwuHbAAoJEKVg1VMiehFYdt8QAJpPjc71W/xus6Op1qK7c58c
+ghCY1c0NPQR/LfmsRB/oofQNHklWEiXIM7IFiZfmhb3CQZOdUULAgx446bBuhjeX
+JDoXGPvdA8i6NQ3T/JiCQ2dlt6LoPtG1tFT7yHJsiO/3UhOs3pg/2OFLtfHmgWt2
+x7n1vOHcv/5puVqETqPk53gswy+Uu16VGP/Q+ezfLJ0OjhnCe6/IY6/tMGqP9rIf
+XMUuO2WPr2sTYrJgIluPUwMPYuYTDvV9cG04EppRGe4Q3QniNYo+57xbaNf/3GFa
+FlmI80TXXRPhHDA6AW3a4113DdjiGDAYd+000p6k97ofj5OwfR6WqjiujSEHX1cP
+W+G8cmuUUkLlzjHc4XI0P8pvsSx81h/ADrPy03JGhZtasr/UuFtv7iHzGlQiRBLf
+soGk38qla8wT3NKvIeFXrSzfvKIvl3j/RnMZy3gKgac9EPuS2X4dqeJRx2j5A60p
+rtgOzTE+ncbG4AYNTkHx+lhdhJQJPIJHk005UiN36rwjcJInm0ZM/monU4BIuR5A
+XUGc7+cZNisOSvGY88kGSzjF0jf4E+ZTnT9xOG+eHo832u2FH6Jlizsylo1cDfWV
+vYx5rQPHDevyWhKp62O5A7stu5sRI7Z7t2pjxqx2H9JQw0EG4R4NuZdrEoiE+es4
+ih7HMM8biJ8fOVlaqas2
+=EORO
+-----END PGP SIGNATURE-----
+
+--=-UdZx3vX4oInH1CMBbny2--
+
