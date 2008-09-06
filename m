@@ -1,83 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39831 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750847AbYIQErj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 00:47:39 -0400
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18640.35696.421614.964818@gargle.gargle.HOWL> (sfid-20080917_064742_362588_8DE235BE)
-Date: Wed, 17 Sep 2008 10:15:36 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 2/3] ath9k: Fix nexttbtt calculation
+Received: from xc.sipsolutions.net ([83.246.72.84]:40731 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752380AbYIFUFw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Sep 2008 16:05:52 -0400
+Subject: [PATCH] mac80211: BSS info: check channel first
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Sat, 06 Sep 2008 22:05:49 +0200
+Message-Id: <1220731549.10102.18.camel@johannes.berg> (sfid-20080906_220555_416927_E644579A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-nexttbtt has to be obtained from the timestamp of the beacon
-obtained from mac80211. Fix this.
-And <asm/unaligned.h> is not needed anymore.
+When we receive information about a BSS we check at some point
+whether or not we think we're allowed to use the channel it is
+on, but we do that fairly late. I don't think we should do it
+that late, so do it earlier to avoid doing IBSS/mesh stuff on
+that channel and then getting confused because it's disabled.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath9k/beacon.c |    9 ++++++---
- drivers/net/wireless/ath9k/core.h   |    1 +
- 2 files changed, 7 insertions(+), 3 deletions(-)
+ net/mac80211/mlme.c |   22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/beacon.c b/drivers/net/wireless/ath9k/beacon.c
-index f8d952c..eedb465 100644
---- a/drivers/net/wireless/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath9k/beacon.c
-@@ -16,7 +16,6 @@
+--- everything.orig/net/mac80211/mlme.c	2008-09-06 21:43:57.000000000 +0200
++++ everything/net/mac80211/mlme.c	2008-09-06 21:53:11.000000000 +0200
+@@ -2430,7 +2430,15 @@ static void ieee80211_rx_bss_info(struct
+ 	DECLARE_MAC_BUF(mac);
+ 	DECLARE_MAC_BUF(mac2);
  
-  /* Implementation of beacon processing. */
+-	beacon_timestamp = le64_to_cpu(mgmt->u.beacon.timestamp);
++	if (elems->ds_params && elems->ds_params_len == 1)
++		freq = ieee80211_channel_to_frequency(elems->ds_params[0]);
++	else
++		freq = rx_status->freq;
++
++	channel = ieee80211_get_channel(local->hw.wiphy, freq);
++
++	if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
++		return;
  
--#include <asm/unaligned.h>
- #include "core.h"
- 
- /*
-@@ -305,6 +304,7 @@ int ath_beacon_alloc(struct ath_softc *sc, int if_id)
- 	struct ieee80211_hdr *hdr;
- 	struct ath_buf *bf;
- 	struct sk_buff *skb;
-+	__le64 tstamp;
- 
- 	avp = sc->sc_vaps[if_id];
- 	ASSERT(avp);
-@@ -370,6 +370,9 @@ int ath_beacon_alloc(struct ath_softc *sc, int if_id)
- 		return -ENOMEM;
+ 	if (ieee80211_vif_is_mesh(&sdata->vif) && elems->mesh_id &&
+ 	    elems->mesh_config && mesh_matches_local(elems, sdata)) {
+@@ -2473,16 +2481,6 @@ static void ieee80211_rx_bss_info(struct
+ 		rcu_read_unlock();
  	}
  
-+	tstamp = ((struct ieee80211_mgmt *)skb->data)->u.beacon.timestamp;
-+	sc->bc_tstamp = le64_to_cpu(tstamp);
-+
- 	/*
- 	 * Calculate a TSF adjustment factor required for
- 	 * staggered beacons.  Note that we assume the format
-@@ -669,8 +672,8 @@ void ath_beacon_config(struct ath_softc *sc, int if_id)
- 	conf.bmiss_timeout = ATH_DEFAULT_BMISS_LIMIT * conf.beacon_interval;
+-	if (elems->ds_params && elems->ds_params_len == 1)
+-		freq = ieee80211_channel_to_frequency(elems->ds_params[0]);
+-	else
+-		freq = rx_status->freq;
+-
+-	channel = ieee80211_get_channel(local->hw.wiphy, freq);
+-
+-	if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
+-		return;
+-
+ #ifdef CONFIG_MAC80211_MESH
+ 	if (elems->mesh_config)
+ 		bss = ieee80211_rx_mesh_bss_get(local, elems->mesh_id,
+@@ -2551,6 +2549,8 @@ static void ieee80211_rx_bss_info(struct
  
- 	/* extract tstamp from last beacon and convert to TU */
--	nexttbtt = TSF_TO_TU(get_unaligned_le32(conf.u.last_tstamp + 4),
--			     get_unaligned_le32(conf.u.last_tstamp));
-+	nexttbtt = TSF_TO_TU(sc->bc_tstamp >> 32, sc->bc_tstamp);
-+
- 	/* XXX conditionalize multi-bss support? */
- 	if (sc->sc_ah->ah_opmode == ATH9K_M_HOSTAP) {
- 		/*
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index b66de29..6ff3bef 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -1001,6 +1001,7 @@ struct ath_softc {
- 	u32 sc_bhalq;
- 	u32 sc_bmisscount;
- 	u32 ast_be_xmit;	/* beacons transmitted */
-+	u64 bc_tstamp;
+ 	bss->band = band;
  
- 	/* Rate */
- 	struct ieee80211_rate rates[IEEE80211_NUM_BANDS][ATH_RATE_MAX];
--- 
-1.6.0.2
++	beacon_timestamp = le64_to_cpu(mgmt->u.beacon.timestamp);
++
+ 	bss->timestamp = beacon_timestamp;
+ 	bss->last_update = jiffies;
+ 	bss->signal = rx_status->signal;
+
 
