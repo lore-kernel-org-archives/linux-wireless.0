@@ -1,311 +1,250 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:48780 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752301AbYI3JqL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Sep 2008 05:46:11 -0400
-Received: from 16.121.113.82.net.de.o2.com ([82.113.121.16] helo=pi.local)
-	by ds10.mine.nu with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.63)
-	(envelope-from <nbd@openwrt.org>)
-	id 1Kkbny-0003Dc-1B
-	for linux-wireless@vger.kernel.org; Tue, 30 Sep 2008 11:46:08 +0200
-Message-ID: <48E1F554.5030700@openwrt.org> (sfid-20080930_114621_415973_341ED20E)
-Date: Tue, 30 Sep 2008 11:45:56 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from fmmailgate03.web.de ([217.72.192.234]:49541 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750848AbYIFAxK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Sep 2008 20:53:10 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] p54: add lots of useful rx/tx statistics
+Date: Sat, 6 Sep 2008 02:56:23 +0200
+Cc: John W Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] mac80211: change rate control API to allow multi-rate
- retry
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200809060256.23944.chunkeey@web.de> (sfid-20080906_025315_870942_884C6825)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adjusts the rate control API to allow multi-rate retry
-if supported by the driver. The ieee80211_hw struct specifies how
-many alternate rate selections the driver supports.
-Moves iv_len and icv_len out of the CB into ieee80211_key_conf
-to make room for the extra rate retry data.
+The firmware can provide lots of useful statistics about noise floor, 
+mac time and lots of numbers about successful transfers and dropped
+frames.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -292,6 +292,20 @@
- #define IEEE80211_TX_INFO_DRIVER_DATA_PTRS \
- 	(IEEE80211_TX_INFO_DRIVER_DATA_SIZE / sizeof(void *))
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+--- a/drivers/net/wireless/p54/p54common.c	2008-09-06 01:57:59.000000000 +0200
++++ b/drivers/net/wireless/p54/p54common.c	2008-09-06 02:44:35.000000000 +0200
+@@ -424,6 +424,12 @@ int p54_parse_eeprom(struct ieee80211_hw
+ }
+ EXPORT_SYMBOL_GPL(p54_parse_eeprom);
  
-+/* maximum number of alternate rate retry stages */
-+#define IEEE80211_TX_MAX_ALTRATE	3
++static int p54_rssi_to_dbm(struct ieee80211_hw *dev, int rssi)
++{
++	/* TODO: get the rssi_add & rssi_mul data from the eeprom */
++	return ((rssi * 0x83) / 64 - 400) / 4;
++}
 +
-+/**
-+ * struct ieee80211_tx_altrate - alternate rate selection/status
-+ *
-+ * @rate_idx: rate index to attempt to send with
-+ * @limit: number of retries before fallback
-+ */
-+struct ieee80211_tx_altrate {
-+	s8 rate_idx;
-+	u8 limit;
-+};
-+
- /**
-  * struct ieee80211_tx_info - skb transmit information
-  *
-@@ -335,14 +349,14 @@
- 			struct ieee80211_key_conf *hw_key;
- 			struct ieee80211_sta *sta;
- 			unsigned long jiffies;
--			s8 rts_cts_rate_idx, alt_retry_rate_idx;
-+			s8 rts_cts_rate_idx;
- 			u8 retry_limit;
--			u8 icv_len;
--			u8 iv_len;
-+			struct ieee80211_tx_altrate retries[IEEE80211_TX_MAX_ALTRATE];
- 		} control;
- 		struct {
- 			u64 ampdu_ack_map;
- 			int ack_signal;
-+			struct ieee80211_tx_altrate retries[IEEE80211_TX_MAX_ALTRATE + 1];
- 			u8 retry_count;
- 			bool excessive_retries;
- 			u8 ampdu_ack_len;
-@@ -635,6 +649,8 @@
-  */
- struct ieee80211_key_conf {
- 	enum ieee80211_key_alg alg;
-+	u8 icv_len;
-+	u8 iv_len;
- 	u8 hw_key_idx;
- 	u8 flags;
- 	s8 keyidx;
-@@ -828,6 +844,9 @@
-  *	within &struct ieee80211_vif.
-  * @sta_data_size: size (in bytes) of the drv_priv data area
-  *	within &struct ieee80211_sta.
-+ *
-+ * @max_altrates: maximum number of alternate rate retry stages
-+ * @max_altrate_tries: maximum number of tries for each stage
-  */
- struct ieee80211_hw {
- 	struct ieee80211_conf conf;
-@@ -844,6 +863,8 @@
- 	u16 ampdu_queues;
- 	u16 max_listen_interval;
- 	s8 max_signal;
-+	u8 max_altrates;
-+	u8 max_altrate_tries;
- };
- 
- struct ieee80211_hw *wiphy_to_hw(struct wiphy *wiphy);
-@@ -900,11 +921,11 @@
- 
- static inline struct ieee80211_rate *
- ieee80211_get_alt_retry_rate(const struct ieee80211_hw *hw,
--			     const struct ieee80211_tx_info *c)
-+			     const struct ieee80211_tx_info *c, int idx)
+ static int p54_rx_data(struct ieee80211_hw *dev, struct sk_buff *skb)
  {
--	if (c->control.alt_retry_rate_idx < 0)
-+	if (c->control.retries[idx].rate_idx < 0)
- 		return NULL;
--	return &hw->wiphy->bands[c->band]->bitrates[c->control.alt_retry_rate_idx];
-+	return &hw->wiphy->bands[c->band]->bitrates[c->control.retries[idx].rate_idx];
+ 	struct p54_common *priv = dev->priv;
+@@ -440,7 +446,8 @@ static int p54_rx_data(struct ieee80211_
+ 			return 0;
+ 	}
+ 
+-	rx_status.signal = hdr->rssi;
++	rx_status.signal = p54_rssi_to_dbm(dev, hdr->rssi);
++	rx_status.noise = priv->noise;
+ 	/* XX correct? */
+ 	rx_status.qual = (100 * hdr->rssi) / 127;
+ 	rx_status.rate_idx = hdr->rate & 0xf;
+@@ -526,7 +533,8 @@ static void p54_rx_frame_sent(struct iee
+ 					info->status.excessive_retries = 1;
+ 			}
+ 			info->status.retry_count = payload->retries - 1;
+-			info->status.ack_signal = le16_to_cpu(payload->ack_rssi);
++			info->status.ack_signal = p54_rssi_to_dbm(dev,
++					le16_to_cpu(payload->ack_rssi));
+ 			skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
+ 			ieee80211_tx_status_irqsafe(dev, entry);
+ 			goto out;
+@@ -557,6 +565,27 @@ static void p54_rx_eeprom_readback(struc
+ 	complete(&priv->eeprom_comp);
  }
  
- /**
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -208,7 +208,7 @@
- 	txrate = ieee80211_get_tx_rate(dev->wl->hw, info);
- 	rate = txrate ? txrate->hw_value : B43_CCK_RATE_1MB;
- 	rate_ofdm = b43_is_ofdm_rate(rate);
--	fbrate = ieee80211_get_alt_retry_rate(dev->wl->hw, info) ? : txrate;
-+	fbrate = ieee80211_get_alt_retry_rate(dev->wl->hw, info, 0) ? : txrate;
- 	rate_fb = fbrate->hw_value;
- 	rate_fb_ofdm = b43_is_ofdm_rate(rate_fb);
- 
-@@ -252,7 +252,7 @@
- 		}
- 
- 		/* Hardware appends ICV. */
--		plcp_fragment_len += info->control.icv_len;
-+		plcp_fragment_len += info->control.hw_key->icv_len;
- 
- 		key_idx = b43_kidx_to_fw(dev, key_idx);
- 		mac_ctl |= (key_idx << B43_TXH_MAC_KEYIDX_SHIFT) &
-@@ -260,7 +260,7 @@
- 		mac_ctl |= (key->algorithm << B43_TXH_MAC_KEYALG_SHIFT) &
- 			   B43_TXH_MAC_KEYALG;
- 		wlhdr_len = ieee80211_hdrlen(fctl);
--		iv_len = min((size_t) info->control.iv_len,
-+		iv_len = min((size_t) info->control.hw_key->iv_len,
- 			     ARRAY_SIZE(txhdr->iv));
- 		memcpy(txhdr->iv, ((u8 *) wlhdr) + wlhdr_len, iv_len);
- 	}
---- a/drivers/net/wireless/b43legacy/xmit.c
-+++ b/drivers/net/wireless/b43legacy/xmit.c
-@@ -210,7 +210,7 @@
- 
- 	rate = tx_rate->hw_value;
- 	rate_ofdm = b43legacy_is_ofdm_rate(rate);
--	rate_fb = ieee80211_get_alt_retry_rate(dev->wl->hw, info) ? : tx_rate;
-+	rate_fb = ieee80211_get_alt_retry_rate(dev->wl->hw, info, 0) ? : tx_rate;
- 	rate_fb_ofdm = b43legacy_is_ofdm_rate(rate_fb->hw_value);
- 
- 	txhdr->mac_frame_ctl = wlhdr->frame_control;
-@@ -243,7 +243,7 @@
- 
- 		if (key->enabled) {
- 			/* Hardware appends ICV. */
--			plcp_fragment_len += info->control.icv_len;
-+			plcp_fragment_len += info->control.hw_key->icv_len;
- 
- 			key_idx = b43legacy_kidx_to_fw(dev, key_idx);
- 			mac_ctl |= (key_idx << B43legacy_TX4_MAC_KEYIDX_SHIFT) &
-@@ -252,7 +252,7 @@
- 				   B43legacy_TX4_MAC_KEYALG_SHIFT) &
- 				   B43legacy_TX4_MAC_KEYALG;
- 			wlhdr_len = ieee80211_hdrlen(wlhdr->frame_control);
--			iv_len = min((size_t)info->control.iv_len,
-+			iv_len = min((size_t)info->control.hw_key->iv_len,
- 				     ARRAY_SIZE(txhdr->iv));
- 			memcpy(txhdr->iv, ((u8 *)wlhdr) + wlhdr_len, iv_len);
- 		} else {
---- a/drivers/net/wireless/rtl8180_dev.c
-+++ b/drivers/net/wireless/rtl8180_dev.c
-@@ -292,8 +292,8 @@
- 	entry->plcp_len = cpu_to_le16(plcp_len);
- 	entry->tx_buf = cpu_to_le32(mapping);
- 	entry->frame_len = cpu_to_le32(skb->len);
--	entry->flags2 = info->control.alt_retry_rate_idx >= 0 ?
--		ieee80211_get_alt_retry_rate(dev, info)->bitrate << 4 : 0;
-+	entry->flags2 = info->control.retries[0].rate_idx >= 0 ?
-+		ieee80211_get_alt_retry_rate(dev, info, 0)->bitrate << 4 : 0;
- 	entry->retry_limit = info->control.retry_limit;
- 	entry->flags = cpu_to_le32(tx_flags);
- 	__skb_queue_tail(&ring->queue, skb);
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -454,15 +454,16 @@
- 		if (unlikely(rsel.probe_idx >= 0)) {
- 			info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
- 			tx->flags |= IEEE80211_TX_PROBE_LAST_FRAG;
--			info->control.alt_retry_rate_idx = tx->rate_idx;
-+			info->control.retries[0].rate_idx = tx->rate_idx;
-+			info->control.retries[0].limit = tx->local->hw.max_altrate_tries;
- 			tx->rate_idx = rsel.probe_idx;
--		} else
--			info->control.alt_retry_rate_idx = -1;
-+		} else if (info->control.retries[0].limit == 0)
-+			info->control.retries[0].rate_idx = -1;
- 
- 		if (unlikely(tx->rate_idx < 0))
- 			return TX_DROP;
- 	} else
--		info->control.alt_retry_rate_idx = -1;
-+		info->control.retries[0].rate_idx = -1;
- 
- 	if (tx->sdata->bss_conf.use_cts_prot &&
- 	    (tx->flags & IEEE80211_TX_FRAGMENTED) && (rsel.nonerp_idx >= 0)) {
-@@ -521,7 +522,7 @@
- 		 * frames.
- 		 * TODO: The last fragment could still use multiple retry
- 		 * rates. */
--		info->control.alt_retry_rate_idx = -1;
-+		info->control.retries[0].rate_idx = -1;
- 	}
- 
- 	/* Use CTS protection for unicast frames sent using extended rates if
-@@ -551,7 +552,7 @@
- 		int idx;
- 
- 		/* Do not use multiple retry rates when using RTS/CTS */
--		info->control.alt_retry_rate_idx = -1;
-+		info->control.retries[0].rate_idx = -1;
- 
- 		/* Use min(data rate, max base rate) as CTS/RTS rate */
- 		rate = &sband->bitrates[tx->rate_idx];
---- a/net/mac80211/wep.c
-+++ b/net/mac80211/wep.c
-@@ -313,8 +313,8 @@
++static void p54_rx_stats(struct ieee80211_hw *dev, struct sk_buff *skb)
++{
++	struct p54_common *priv = dev->priv;
++	struct p54_control_hdr *hdr = (struct p54_control_hdr *) skb->data;
++	struct p54_statistics *stats = (struct p54_statistics *) hdr->data;
++	u32 tsf32 = le32_to_cpu(stats->tsf32);
++
++	if (tsf32 < priv->tsf_low32)
++		priv->tsf_high32++;
++	priv->tsf_low32 = tsf32;
++
++	priv->stats.dot11RTSFailureCount = le32_to_cpu(stats->rts_fail);
++	priv->stats.dot11RTSSuccessCount = le32_to_cpu(stats->rts_success);
++	priv->stats.dot11FCSErrorCount = le32_to_cpu(stats->rx_bad_fcs);
++
++	priv->noise = p54_rssi_to_dbm(dev, le32_to_cpu(stats->noise));
++	complete(&priv->stats_comp);
++
++	mod_timer(&priv->stats_timer, jiffies + 5 * HZ);
++}
++
+ static int p54_rx_control(struct ieee80211_hw *dev, struct sk_buff *skb)
  {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 
--	info->control.iv_len = WEP_IV_LEN;
--	info->control.icv_len = WEP_ICV_LEN;
-+	info->control.hw_key->iv_len = WEP_IV_LEN;
-+	info->control.hw_key->icv_len = WEP_ICV_LEN;
- 
- 	if (!(tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
- 		if (ieee80211_wep_encrypt(tx->local, skb, tx->key))
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -152,8 +152,8 @@
- 	int len, tail;
- 	u8 *pos;
- 
--	info->control.icv_len = TKIP_ICV_LEN;
--	info->control.iv_len = TKIP_IV_LEN;
-+	info->control.hw_key->icv_len = TKIP_ICV_LEN;
-+	info->control.hw_key->iv_len = TKIP_IV_LEN;
- 
- 	if ((tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) &&
- 	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
-@@ -374,8 +374,8 @@
- 	u8 *pos, *pn;
- 	int i;
- 
--	info->control.icv_len = CCMP_MIC_LEN;
--	info->control.iv_len = CCMP_HDR_LEN;
-+	info->control.hw_key->icv_len = CCMP_MIC_LEN;
-+	info->control.hw_key->iv_len = CCMP_HDR_LEN;
- 
- 	if ((tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) &&
- 	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1164,7 +1164,7 @@
- 
- 	if (info->control.hw_key) {
- 		keyidx = info->control.hw_key->hw_key_idx;
--		pktlen += info->control.icv_len;
-+		pktlen += info->control.hw_key->icv_len;
+ 	struct p54_control_hdr *hdr = (struct p54_control_hdr *) skb->data;
+@@ -567,6 +596,9 @@ static int p54_rx_control(struct ieee802
+ 		break;
+ 	case P54_CONTROL_TYPE_BBP:
+ 		break;
++	case P54_CONTROL_TYPE_STAT_READBACK:
++		p54_rx_stats(dev, skb);
++		break;
+ 	case P54_CONTROL_TYPE_EEPROM_READBACK:
+ 		p54_rx_eeprom_readback(dev, skb);
+ 		break;
+@@ -1036,12 +1068,25 @@ static int p54_start(struct ieee80211_hw
+ 			return -ENOMEM;
  	}
- 	ret = ah->ah_setup_tx_desc(ah, ds, pktlen,
- 		ieee80211_get_hdrlen_from_skb(skb), AR5K_PKT_TYPE_NORMAL,
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -237,7 +237,7 @@
  
- 	if (tx_info->control.hw_key) {
- 		txctl->keyix = tx_info->control.hw_key->hw_key_idx;
--		txctl->frmlen += tx_info->control.icv_len;
-+		txctl->frmlen += tx_info->control.hw_key->icv_len;
++	if (!priv->cached_stats) {
++		priv->cached_stats = kzalloc(sizeof(struct p54_statistics) +
++			priv->tx_hdr_len + sizeof(struct p54_control_hdr),
++			GFP_KERNEL);
++
++		if (!priv->cached_stats) {
++			kfree(priv->cached_vdcf);
++			priv->cached_vdcf = NULL;
++			return -ENOMEM;
++		}
++	}
++
+ 	err = priv->open(dev);
+ 	if (!err)
+ 		priv->mode = IEEE80211_IF_TYPE_MNTR;
  
- 		if (tx_info->control.hw_key->alg == ALG_WEP)
- 			txctl->keytype = ATH9K_KEY_TYPE_WEP;
---- a/drivers/net/wireless/rt2x00/rt2x00crypto.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00crypto.c
-@@ -56,10 +56,10 @@
- 	 * note that these lengths should only be added when
- 	 * mac80211 does not generate it.
- 	 */
--	overhead += tx_info->control.icv_len;
-+	overhead += tx_info->control.hw_key->icv_len;
+ 	p54_init_vdcf(dev);
  
- 	if (!(key->flags & IEEE80211_KEY_FLAG_GENERATE_IV))
--		overhead += tx_info->control.iv_len;
-+		overhead += tx_info->control.hw_key->iv_len;
++	mod_timer(&priv->stats_timer, jiffies + HZ);
+ 	return err;
+ }
  
- 	if (!(key->flags & IEEE80211_KEY_FLAG_GENERATE_MMIC)) {
- 		if (key->alg == ALG_TKIP)
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -374,7 +374,7 @@
- 	struct queue_entry *entry = rt2x00queue_get_entry(queue, Q_INDEX);
- 	struct txentry_desc txdesc;
- 	struct skb_frame_desc *skbdesc;
--	unsigned int iv_len = IEEE80211_SKB_CB(skb)->control.iv_len;
-+	unsigned int iv_len = IEEE80211_SKB_CB(skb)->control.hw_key->iv_len;
+@@ -1049,6 +1094,8 @@ static void p54_stop(struct ieee80211_hw
+ {
+ 	struct p54_common *priv = dev->priv;
+ 	struct sk_buff *skb;
++
++	del_timer(&priv->stats_timer);
+ 	while ((skb = skb_dequeue(&priv->tx_queue)))
+ 		kfree_skb(skb);
+ 	priv->stop(dev);
+@@ -1177,10 +1224,40 @@ static int p54_conf_tx(struct ieee80211_
+ 	return 0;
+ }
  
- 	if (unlikely(rt2x00queue_full(queue)))
- 		return -EINVAL;
++static void p54_statistics_timer(unsigned long data)
++{
++	struct ieee80211_hw *dev = (struct ieee80211_hw *) data;
++	struct p54_common *priv = dev->priv;
++	struct p54_control_hdr *hdr;
++	struct p54_statistics *stats;
++
++	BUG_ON(!priv->cached_stats);
++
++	hdr = (void *)priv->cached_stats + priv->tx_hdr_len;
++	hdr->magic1 = cpu_to_le16(0x8000);
++	hdr->len = cpu_to_le16(sizeof(*stats));
++	hdr->type = cpu_to_le16(P54_CONTROL_TYPE_STAT_READBACK);
++	p54_assign_address(dev, NULL, hdr, sizeof(*hdr) + sizeof(*stats));
++
++	priv->tx(dev, hdr, sizeof(*hdr) + sizeof(*stats), 0);
++}
++
+ static int p54_get_stats(struct ieee80211_hw *dev,
+ 			 struct ieee80211_low_level_stats *stats)
+ {
+-	/* TODO */
++	struct p54_common *priv = dev->priv;
++
++	del_timer(&priv->stats_timer);
++	p54_statistics_timer((unsigned long)dev);
++
++	if (!wait_for_completion_interruptible_timeout(&priv->stats_comp, HZ)) {
++		printk(KERN_ERR "%s: device does not respond!\n",
++			wiphy_name(dev->wiphy));
++		return -EBUSY;
++	}
++
++	memcpy(stats, &priv->stats, sizeof(*stats));
++
+ 	return 0;
+ }
+ 
+@@ -1222,9 +1299,9 @@ struct ieee80211_hw *p54_init_common(siz
+ 	skb_queue_head_init(&priv->tx_queue);
+ 	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING | /* not sure */
+ 		     IEEE80211_HW_RX_INCLUDES_FCS |
+-		     IEEE80211_HW_SIGNAL_UNSPEC;
++		     IEEE80211_HW_SIGNAL_DBM |
++		     IEEE80211_HW_NOISE_DBM;
+ 	dev->channel_change_time = 1000;	/* TODO: find actual value */
+-	dev->max_signal = 127;
+ 
+ 	priv->tx_stats[0].limit = 1;
+ 	priv->tx_stats[1].limit = 1;
+@@ -1232,11 +1309,15 @@ struct ieee80211_hw *p54_init_common(siz
+ 	priv->tx_stats[3].limit = 1;
+ 	priv->tx_stats[4].limit = 5;
+ 	dev->queues = 1;
++	priv->noise = -94;
+ 	dev->extra_tx_headroom = sizeof(struct p54_control_hdr) + 4 +
+ 				 sizeof(struct p54_tx_control_allocdata);
+ 
+ 	mutex_init(&priv->conf_mutex);
+ 	init_completion(&priv->eeprom_comp);
++	init_completion(&priv->stats_comp);
++	setup_timer(&priv->stats_timer, p54_statistics_timer,
++		(unsigned long)dev);
+ 
+ 	return dev;
+ }
+@@ -1245,6 +1326,7 @@ EXPORT_SYMBOL_GPL(p54_init_common);
+ void p54_free_common(struct ieee80211_hw *dev)
+ {
+ 	struct p54_common *priv = dev->priv;
++	kfree(priv->cached_stats);
+ 	kfree(priv->iq_autocal);
+ 	kfree(priv->output_limit);
+ 	kfree(priv->curve_data);
+diff -Nurp a/drivers/net/wireless/p54/p54common.h b/drivers/net/wireless/p54/p54common.h
+--- a/drivers/net/wireless/p54/p54common.h	2008-09-04 14:56:25.000000000 +0200
++++ b/drivers/net/wireless/p54/p54common.h	2008-09-06 02:04:25.000000000 +0200
+@@ -301,4 +301,17 @@ struct p54_tx_control_vdcf {
+ 	__le16 frameburst;
+ } __attribute__ ((packed));
+ 
++struct p54_statistics {
++	__le32 rx_success;
++	__le32 rx_bad_fcs;
++	__le32 rx_abort;
++	__le32 rx_abort_phy;
++	__le32 rts_success;
++	__le32 rts_fail;
++	__le32 tsf32;
++	__le32 airtime;
++	__le32 noise;
++	__le32 unkn[10]; /* CCE / CCA / RADAR */
++} __attribute__ ((packed));
++
+ #endif /* P54COMMON_H */
+diff -Nurp a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
+--- a/drivers/net/wireless/p54/p54.h	2008-09-04 14:56:25.000000000 +0200
++++ b/drivers/net/wireless/p54/p54.h	2008-09-05 21:11:06.000000000 +0200
+@@ -91,6 +91,11 @@ struct p54_common {
+ 	u32 tsf_low32;
+ 	u32 tsf_high32;
+ 	struct ieee80211_tx_queue_stats tx_stats[8];
++	struct ieee80211_low_level_stats stats;
++	struct timer_list stats_timer;
++	struct completion stats_comp;
++	void *cached_stats;
++	int noise;
+ 	void *eeprom;
+ 	struct completion eeprom_comp;
+ };
+
+
