@@ -1,55 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.186]:26026 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751926AbYIWTFk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2008 15:05:40 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so2209095fkq.5
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2008 12:05:38 -0700 (PDT)
-Message-ID: <1ba2fa240809231205x7bf0000ci7ad307a54497bed4@mail.gmail.com> (sfid-20080923_210544_917610_9CD0802E)
-Date: Tue, 23 Sep 2008 22:05:38 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] iwlagn: downgrade BUG_ON in interrupt
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1222190323.18015.36.camel@johannes.berg>
+Received: from cn.fujitsu.com ([222.73.24.84]:55689 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1752235AbYIFJkj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Sep 2008 05:40:39 -0400
+Message-ID: <48C24F66.1090803@cn.fujitsu.com> (sfid-20080906_114054_754626_832B15D7)
+Date: Sat, 06 Sep 2008 17:37:42 +0800
+From: Wang Chen <wangchen@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1222190062.18015.34.camel@johannes.berg>
-	 <1222190323.18015.36.camel@johannes.berg>
+To: Dan Williams <dcbw@redhat.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	NETDEV <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 14/18] netdevice airo: Convert directly reference of	netdev->priv
+ to netdev->ml_priv
+References: <48C0A219.2030004@cn.fujitsu.com>	 <48C0A72B.9050407@cn.fujitsu.com>  <20080905125036.GA3027@tuxdriver.com> <1220634383.6430.14.camel@localhost.localdomain>
+In-Reply-To: <1220634383.6430.14.camel@localhost.localdomain>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 23, 2008 at 8:18 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> This BUG_ON really shouldn't trigger, but if it does, as on my machine,
-> it leaves you wondering what happened because you won't see it. Let's
-> instead leak a bit of state and memory and at least make it possible to
-> report it to the kerneloops project to track it.
->
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->
-> --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-tx.c 2008-09-23 13:00:01.096489715 +0200
-> +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-tx.c      2008-09-23 19:07:14.107323109 +0200
-> @@ -1200,10 +1200,9 @@ void iwl_tx_cmd_complete(struct iwl_priv
->        /* If a Tx command is being handled and it isn't in the actual
->         * command queue then there a command routing bug has been introduced
->         * in the queue management code. */
-> -       if (txq_id != IWL_CMD_QUEUE_NUM)
-> -               IWL_ERROR("Error wrong command queue %d command id 0x%X\n",
-> -                         txq_id, pkt->hdr.cmd);
-> -       BUG_ON(txq_id != IWL_CMD_QUEUE_NUM);
-> +       if (WARN(txq_id != IWL_CMD_QUEUE_NUM,
-> +                "wrong command queue %d, command id 0x%X\n", txq_id, pkt->hdr.cmd))
-> +               return;
->
->        cmd_index = get_cmd_index(&priv->txq[IWL_CMD_QUEUE_NUM].q, index, huge);
->        cmd = priv->txq[IWL_CMD_QUEUE_NUM].cmd[cmd_index];
->
->
->
+Dan Williams said the following on 2008-9-6 1:06:
+> On Fri, 2008-09-05 at 08:50 -0400, John W. Linville wrote:
+>> On Fri, Sep 05, 2008 at 11:27:39AM +0800, Wang Chen wrote:
+>>> We have some reasons to kill netdev->priv:
+>>> 1. netdev->priv is equal to netdev_priv().
+>>> 2. netdev_priv() wraps the calculation of netdev->priv's offset, obviously
+>>>    netdev_priv() is more flexible than netdev->priv.
+>>> But we cann't kill netdev->priv, because so many drivers reference to it
+>>> directly.
+>>>
+>>> OK, becasue Dave S. Miller said, "every direct netdev->priv usage is a bug",
+>>> and I want to kill netdev->priv later, I decided to convert all the direct
+>>> reference of netdev->priv first.
+>>>
+>>> Different to readonly reference of netdev->priv, in this driver, netdev->priv
+>>> was changed. I use netdev->ml_priv to replace netdev->priv.
+>>>
+>>> Signed-off-by: Wang Chen <wangchen@cn.fujitsu.com>
+>> Thank you for your patch.  However, I do not understand why you didn't
+>> simply replace netdev->priv with netdev_priv()?  Can you explain?
+> 
+> Yeah, that would have been my first choice too...
+> 
 
-Find with me
-Tomas
+1. Why I don't use netdev_priv() to replace netdev->priv here?
+Because, here
+> @@ -2665,7 +2666,7 @@ static struct net_device *init_wifidev(struct airo_info *ai,
+>  	struct net_device *dev = alloc_netdev(0, "wifi%d", wifi_setup);
+>  	if (!dev)
+>  		return NULL;
+> -	dev->priv = ethdev->priv;
+> +	dev->ml_priv = ethdev->ml_priv;
+> @@ -2766,7 +2767,7 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+>  		return NULL;
+>  	}
+>  
+> -	ai = dev->priv;
+> +	ai = dev->ml_priv = netdev_priv(dev);
+netdev->priv was changed here, but it shouldn't, the memory was allocated when alloc_netdev and
+netdev->priv should always pointed to that memory.
+
+2. Why I use netdev->ml_priv here to replace netdev->priv?
+In this driver, netdev->priv are shared by multi wifidevs, that means wifidevs need
+mid-layer private data, which are all same as their parent netdev.
+This usage is same as Dave's commit "syncppp: Fix crashes."
+
