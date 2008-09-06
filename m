@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50453 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751697AbYILUWs (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:41858 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751013AbYIFXYg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2008 16:22:48 -0400
-Subject: Re: The new regulatory code kills my wireless
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20080912191919.GA7722@tesla> (sfid-20080912_211933_280898_C5E534CA)
-References: <48CAA8D6.1030605@lwfinger.net> <20080912174036.GC6134@tesla>
-	 <48CAB90C.5090302@lwfinger.net>  <20080912191919.GA7722@tesla>
-	 (sfid-20080912_211933_280898_C5E534CA)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-29V1QiV77m2/TayKeXdp"
-Date: Fri, 12 Sep 2008 22:22:38 +0200
-Message-Id: <1221250959.5576.10.camel@johannes.berg> (sfid-20080912_222250_848753_C6F3AD14)
-Mime-Version: 1.0
+	Sat, 6 Sep 2008 19:24:36 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1037475fgg.17
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Sep 2008 16:24:34 -0700 (PDT)
+Message-ID: <1ba2fa240809061624n2ec9537n6f280c5ef6641181@mail.gmail.com> (sfid-20080907_012440_004625_7680B732)
+Date: Sun, 7 Sep 2008 02:24:34 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC PATCH 1/3] mac80211: restructure disassoc/deauth flows
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1220740939.21016.19.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
+	 <1220739259-16918-2-git-send-email-tomas.winkler@intel.com>
+	 <1220739930.21016.6.camel@johannes.berg>
+	 <1ba2fa240809061532s4f8e08c1xe59f99768ce440c0@mail.gmail.com>
+	 <1220740939.21016.19.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Sep 7, 2008 at 1:42 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Sun, 2008-09-07 at 01:32 +0300, Tomas Winkler wrote:
+>> On Sun, Sep 7, 2008 at 1:25 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> >
+>> >>
+>> >> +static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+>> >> +                                  struct ieee80211_if_sta *ifsta, int deauth,
+>> >> +                                  int self_disconnected, u16 reason)
+>> >
+>> > I think you should use bool for those two (deauth, self)
+>>
+>> I'm thinking rather using some enum values just for readability
+>> foo(DEAUTH, ORIGIN_SELF) vs foo(tree,true)
+>> foo(DISASSOC, ORIGIN_PEER)  vs foo(false, false)
+>
+> That works too, sure, though seems a little overkill, the function is
+> called what, three times? Anyway, whatever you prefer, I just don't like
+> bare "int" as a bool.
 
---=-29V1QiV77m2/TayKeXdp
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 2008-09-12 at 12:19 -0700, Luis R. Rodriguez wrote:
-> Well no, IMHO people *should not* use the old regulatory stuff if
-> possible, the idea is to kill it ASAP, you should only use the old
-> regulatory stuff if you *need* to, meaning you have some dependency
-> on the old module parameter for some strange odd ball reason or if
-> you cannot compile and install crda or iw.
-
-Well, TBH, I was just too lazy to do that ;)
-
-johannes
-
---=-29V1QiV77m2/TayKeXdp
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIys+LAAoJEKVg1VMiehFYbY0QAKVDJg+Eehj20Hk8cnyAl1kj
-Vk5abVDGK2sPF1OvIYTCCoOrdwAxmRtyotHXCNpORTWmocuJX+DIStcY1mfKgOIF
-xlVYrG+FS6nqJL/mt0kTmUeUPZuU02RqX+DApHZVwkX+jZ626CuLqWTSihFTJwQQ
-p0nD0izkA2Y4IWlrBmDgfbTVfVHaTGKhR7UI+Dd1TzdCbthzFvBHtX+BcfNB+boC
-kn7W9DOCI6e9t09ITZLtfW77buuZ1S0/v/C4A3fyXl+ewTeRwOQdb0SLJVBN500y
-R3ryMdYX20hi/VMRn5+N/kTC2g9RvSZvGTxPhD0Bq5MZo6w3jcDwCV8l6YJBJ8tz
-CCFN+aZC+B3H/a2XZRgW749K5MepZlIwaIpM7lk+p+h+74XB+Xt5Uaj9j9sul7vA
-04mp2rL+iiiKNQ6RrDxICuKAdgw88uv/OyhTyx1lcqNQ363J/tOTkbDhUXBMlqiO
-V//yKwZF/OM67g2nazcwXauOT2GRVFpmmDA6GJhDtAw4bXirGFyn9Ikni6EOAwUn
-o42JiTZgZygOCQWVgbISPe1xAKZp0tRkcRyBnYqvDwH0oM00uQyZMj0+gFCRBmht
-Oz3VAKWhXMMuHGIZjdQ4G7MdVyuYs+/7mN+0PerNMqxEHWMFnGYJF5RF9lIylCG5
-c3MgCOXrMcw1tGpHXfhb
-=xydG
------END PGP SIGNATURE-----
-
---=-29V1QiV77m2/TayKeXdp--
-
+Do u think it is sane using IEEE80211_STYPE_DISASSOC and
+IEEE80211_STYPE_DEAUTH for this?
+Thanks
+Tomas
