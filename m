@@ -1,62 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39597 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753482AbYIPDaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 23:30:23 -0400
-Date: Mon, 15 Sep 2008 20:30:10 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] mac80211: re-enable aggregation
-Message-ID: <20080916033010.GF659@tesla> (sfid-20080916_053028_624728_D4A096C4)
-References: <1221535073-6937-1-git-send-email-lrodriguez@atheros.com>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:54710 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752118AbYIFVvW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Sep 2008 17:51:22 -0400
+Date: Sat, 06 Sep 2008 16:51:22 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Tim Gardner <tim.gardner@canonical.com>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH V2] b43legacy: Fix failure in rate-adjustment mechanism
+Message-ID: <48c2fb5a.JqLELi8PJxjxmDaY%Larry.Finger@lwfinger.net> (sfid-20080906_235126_219334_7538E008)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1221535073-6937-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 15, 2008 at 08:17:53PM -0700, Luis Rodriguez wrote:
-> Re-enable aggregation by addressing skb->cb overwrites
-> after insertion into the qdisc. Aggregation was disabled
-> after the new TX multiqueue changes were introduced. Instead
-> of relying on the skb->cb we use a new skb->requeue flag
-> and an internal mac80211 is_part_amdu().
-> 
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
-> 
-> I haven't tested this patch as its late and I should go home already.
-> 
->  drivers/net/wireless/ath9k/main.c         |    2 +-
->  drivers/net/wireless/ath9k/xmit.c         |    2 +-
->  drivers/net/wireless/iwlwifi/iwl-4965.c   |    6 ++++--
->  drivers/net/wireless/iwlwifi/iwl-5000.c   |    6 ++++--
->  drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    8 ++++----
->  drivers/net/wireless/iwlwifi/iwl-tx.c     |    4 ++--
->  include/linux/skbuff.h                    |    4 ++++
->  include/net/mac80211.h                    |   15 ++++++++++++---
->  net/mac80211/main.c                       |    7 ++-----
->  net/mac80211/rx.c                         |    7 ++-----
->  net/mac80211/tx.c                         |    6 ++----
->  net/mac80211/wme.c                        |   19 ++++---------------
->  12 files changed, 42 insertions(+), 44 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-> index c5107f2..878e45f 100644
-> --- a/drivers/net/wireless/ath9k/main.c
-> +++ b/drivers/net/wireless/ath9k/main.c
-> @@ -1241,7 +1241,7 @@ static int ath_attach(u16 devid,
->         /* FIXME: Have to figure out proper hw init values later */
-> 
->         hw->queues = 4;
-> -       hw->ampdu_queues = 1;
-> +       hw->ampdu_queues = 8;
+A coding error present since b43legacy was incorporated into the
+kernel has prevented the driver from using the rate-setting mechanism
+of mac80211. The driver has been forced to remain at a 1 Mb/s rate.
 
-Ignore this hunk ;) We just have to figure out why we are using a
-tid for the AP after we assign our IP address. This is also why this
-"ampdu queue" for aggregation is kind of ackward.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@kernel.org>		[2.6.26], [2.6.25]
+---
 
-  Luis
+John,
+
+This is a bug, not a regression. I guess under the new rules that it
+is 2.6.28 material.
+
+Thanks,
+
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/b43legacy/xmit.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43legacy/xmit.c
++++ wireless-testing/drivers/net/wireless/b43legacy/xmit.c
+@@ -624,7 +624,7 @@ void b43legacy_handle_hwtxstatus(struct
+ 	tmp = hw->count;
+ 	status.frame_count = (tmp >> 4);
+ 	status.rts_count = (tmp & 0x0F);
+-	tmp = hw->flags;
++	tmp = hw->flags << 1;
+ 	status.supp_reason = ((tmp & 0x1C) >> 2);
+ 	status.pm_indicated = !!(tmp & 0x80);
+ 	status.intermediate = !!(tmp & 0x40);
