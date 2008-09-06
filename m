@@ -1,65 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:37163 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752868AbYIYPwl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2008 11:52:41 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so471205fkq.5
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Sep 2008 08:52:39 -0700 (PDT)
-Message-ID: <1ba2fa240809250852k62266473o7a8ac858c587213d@mail.gmail.com> (sfid-20080925_175246_364807_02B7213E)
-Date: Thu, 25 Sep 2008 18:52:39 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: pull request: wireless-2.6 2008-09-24
-Cc: "Zhu Yi" <yi.zhu@intel.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <20080925154753.GA3277@tuxdriver.com>
+Received: from bu3sch.de ([62.75.166.246]:52621 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751948AbYIFO0v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Sep 2008 10:26:51 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Fix QoS defaults
+Date: Sat, 6 Sep 2008 16:21:47 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Lorenzo Nava <pipe1984@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20080924231720.GD3639@tuxdriver.com>
-	 <1222321622.2510.455.camel@debian.sh.intel.com>
-	 <20080925114133.GA5044@tuxdriver.com>
-	 <1ba2fa240809250757x32aa450k523d71e555c221e4@mail.gmail.com>
-	 <20080925154753.GA3277@tuxdriver.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200809061621.48449.mb@bu3sch.de> (sfid-20080906_162656_925402_BA486F0A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 25, 2008 at 6:47 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Thu, Sep 25, 2008 at 05:57:33PM +0300, Tomas Winkler wrote:
->> On Thu, Sep 25, 2008 at 2:41 PM, John W. Linville
->> <linville@tuxdriver.com> wrote:
->> > On Thu, Sep 25, 2008 at 01:47:02PM +0800, Zhu Yi wrote:
->> >> On Wed, 2008-09-24 at 17:17 -0600, John W. Linville wrote:
->> >> > Dave,
->> >> >
->> >> > One more for 2.6.27 -- a fix for a possible interrupt storm.  There is
->> >> > even a link in the commit log to a youtube video of the storm in
->> >> > progress. :-)
->> >> >
->> >> > Let me know if there are problems!
->> >>
->> >> Can you also add this one? It doesn't panic the kernel when a frame from
->> >> firmware is invalid.
->> >>
->> >> http://marc.info/?l=linux-wireless&m=122219037706528&w=2
->> >
->> > Is there an open bug report for that anywhere?  Is this something
->> > that real users (no offense to Johannes) are likely to hit?
->>
->> I'm just exporting the major bugs from our internal database to
->> buzilla, 5000 is new so
->> we are hitting the problems during testing  before users report them.
->>
->> Now I don't know if it was good idea to push the driver upstream same
->> time as it hits the market.
->
-> You're right -- pushing it sooner rather than sitting on it internally
-> probably would have helped to give it more visibility sooner.
+This fixes the initialization of the default QoS parameters.
+This got broken by 0b57664cf2393bc1eff594ff7e5ff26533843fe6
 
- I think it was pushed on time it would not bring the fixes sooner.
-But we are getting again to the same arguments
-Tomas
+Reported-by: Lorenzo Nava
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
+---
+
+John, please queue for the next merge window, as I'm not interested
+in finding explanations for applying this to 2.6.27 (2.6.27 already has
+this bug)
+
+
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-09-06 15:09:16.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2008-09-06 15:45:09.000000000 +0200
+@@ -3056,37 +3056,40 @@ static void b43_qos_params_upload(struct
+ 					shm_offset + (i * 2),
+ 					params[i]);
+ 		}
+ 	}
+ }
+ 
++/* Mapping of mac80211 queue numbers to b43 QoS SHM offsets. */
++static const u16 b43_qos_shm_offsets[] = {
++	/* [mac80211-queue-nr] = SHM_OFFSET, */
++	[0] = B43_QOS_VOICE,
++	[1] = B43_QOS_VIDEO,
++	[2] = B43_QOS_BESTEFFORT,
++	[3] = B43_QOS_BACKGROUND,
++};
++
+ /* Update the QOS parameters in hardware. */
+ static void b43_qos_update(struct b43_wldev *dev)
+ {
+ 	struct b43_wl *wl = dev->wl;
+ 	struct b43_qos_params *params;
+ 	unsigned long flags;
+ 	unsigned int i;
+ 
+-	/* Mapping of mac80211 queues to b43 SHM offsets. */
+-	static const u16 qos_shm_offsets[] = {
+-		[0] = B43_QOS_VOICE,
+-		[1] = B43_QOS_VIDEO,
+-		[2] = B43_QOS_BESTEFFORT,
+-		[3] = B43_QOS_BACKGROUND,
+-	};
+-	BUILD_BUG_ON(ARRAY_SIZE(qos_shm_offsets) != ARRAY_SIZE(wl->qos_params));
++	BUILD_BUG_ON(ARRAY_SIZE(b43_qos_shm_offsets) !=
++		     ARRAY_SIZE(wl->qos_params));
+ 
+ 	b43_mac_suspend(dev);
+ 	spin_lock_irqsave(&wl->irq_lock, flags);
+ 
+ 	for (i = 0; i < ARRAY_SIZE(wl->qos_params); i++) {
+ 		params = &(wl->qos_params[i]);
+ 		if (params->need_hw_update) {
+ 			b43_qos_params_upload(dev, &(params->p),
+-					      qos_shm_offsets[i]);
++					      b43_qos_shm_offsets[i]);
+ 			params->need_hw_update = 0;
+ 		}
+ 	}
+ 
+ 	spin_unlock_irqrestore(&wl->irq_lock, flags);
+ 	b43_mac_enable(dev);
+@@ -3094,17 +3097,48 @@ static void b43_qos_update(struct b43_wl
+ 
+ static void b43_qos_clear(struct b43_wl *wl)
+ {
+ 	struct b43_qos_params *params;
+ 	unsigned int i;
+ 
++	/* Initialize QoS parameters to sane defaults. */
++
++	BUILD_BUG_ON(ARRAY_SIZE(b43_qos_shm_offsets) !=
++		     ARRAY_SIZE(wl->qos_params));
++
+ 	for (i = 0; i < ARRAY_SIZE(wl->qos_params); i++) {
+ 		params = &(wl->qos_params[i]);
+ 
+-		memset(&(params->p), 0, sizeof(params->p));
+-		params->p.aifs = -1;
++		switch (b43_qos_shm_offsets[i]) {
++		case B43_QOS_VOICE:
++			params->p.txop = 0;
++			params->p.aifs = 2;
++			params->p.cw_min = 0x0001;
++			params->p.cw_max = 0x0001;
++			break;
++		case B43_QOS_VIDEO:
++			params->p.txop = 0;
++			params->p.aifs = 2;
++			params->p.cw_min = 0x0001;
++			params->p.cw_max = 0x0001;
++			break;
++		case B43_QOS_BESTEFFORT:
++			params->p.txop = 0;
++			params->p.aifs = 3;
++			params->p.cw_min = 0x0001;
++			params->p.cw_max = 0x03FF;
++			break;
++		case B43_QOS_BACKGROUND:
++			params->p.txop = 0;
++			params->p.aifs = 7;
++			params->p.cw_min = 0x0001;
++			params->p.cw_max = 0x03FF;
++			break;
++		default:
++			B43_WARN_ON(1);
++		}
+ 		params->need_hw_update = 1;
+ 	}
+ }
+ 
+ /* Initialize the core's QOS capabilities */
+ static void b43_qos_init(struct b43_wldev *dev)
