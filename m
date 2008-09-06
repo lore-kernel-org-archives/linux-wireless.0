@@ -1,184 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:53714 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754195AbYIROHz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 10:07:55 -0400
-Date: Thu, 18 Sep 2008 09:07:51 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: ivdoorn@gmail.com
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [RFC V2] b43: A patch for control of the radio LED using rfkill
-Message-ID: <48d260b7.SG5SGntEQ00lxFKi%Larry.Finger@lwfinger.net> (sfid-20080918_160759_313282_792038D2)
+Received: from bay0-omc3-s25.bay0.hotmail.com ([65.54.246.225]:52596 "EHLO
+	bay0-omc3-s25.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750741AbYIFAkQ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Sep 2008 20:40:16 -0400
+Message-ID: <BAY118-W272ED23066D58EE95965A6DB5B0@phx.gbl> (sfid-20080906_024022_401255_D8343B1F)
+From: Greg White <pcguy11@live.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: rt2x00 and packet injection
+Date: Fri, 5 Sep 2008 19:34:04 -0500
+Content-Type: text/plain; charset=Windows-1252
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The changes below, along with Henriques patch "[PATCH] rfkill: update
-LEDs for all state changes", and the reversion of commit bc19d6e make
-the wireless LED toggle correctly.
 
-This version passes UNBLOCKED to rfkill when the hardware switch enables the radio.
+Hi,
 
-Most of this material comes from Matthew Garrett.
+What is the status of packet injection in the rt2x00 driver?  From my t=
+esting of 2.6.27 rc3 and reading 2.6.27 doesn't seem likely.  Is there =
+a todo list in priority order?
 
-Larry
+Thanks,
 
-Index: wireless-testing/drivers/net/wireless/b43/rfkill.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/rfkill.c
-+++ wireless-testing/drivers/net/wireless/b43/rfkill.c
-@@ -44,13 +44,11 @@ static bool b43_is_hw_radio_enabled(stru
- 	return 0;
- }
- 
--/* The poll callback for the hardware button. */
--static void b43_rfkill_poll(struct input_polled_dev *poll_dev)
-+static void b43_rfkill_update(struct b43_wldev *dev)
- {
--	struct b43_wldev *dev = poll_dev->private;
- 	struct b43_wl *wl = dev->wl;
- 	bool enabled;
--	bool report_change = 0;
-+	struct b43_rfkill *rfk = &(dev->wl->rfkill);
- 
- 	mutex_lock(&wl->mutex);
- 	if (unlikely(b43_status(dev) < B43_STAT_INITIALIZED)) {
-@@ -60,18 +58,35 @@ static void b43_rfkill_poll(struct input
- 	enabled = b43_is_hw_radio_enabled(dev);
- 	if (unlikely(enabled != dev->radio_hw_enable)) {
- 		dev->radio_hw_enable = enabled;
--		report_change = 1;
- 		b43info(wl, "Radio hardware status changed to %s\n",
- 			enabled ? "ENABLED" : "DISABLED");
-+		if (!enabled)
-+			rfkill_force_state(rfk->rfkill,
-+					   RFKILL_STATE_HARD_BLOCKED);
-+		else
-+			rfkill_force_state(rfk->rfkill,
-+					   RFKILL_STATE_UNBLOCKED);
- 	}
- 	mutex_unlock(&wl->mutex);
-+}
- 
--	/* send the radio switch event to the system - note both a key press
--	 * and a release are required */
--	if (unlikely(report_change)) {
--		input_report_key(poll_dev->input, KEY_WLAN, 1);
--		input_report_key(poll_dev->input, KEY_WLAN, 0);
--	}
-+static void b43_rfkill_poll(unsigned long data)
-+{
-+	struct b43_rfkill *rfkill = (struct b43_rfkill *)data;
-+	schedule_work(&rfkill->poll_queue);
-+}
-+
-+static void b43_rfkill_work(struct work_struct *work)
-+{
-+	struct b43_rfkill *rfk = container_of(work, struct b43_rfkill,
-+					      poll_queue);
-+	struct b43_wl *wl = container_of(rfk, struct b43_wl, rfkill);
-+	struct b43_wldev *dev = wl->current_dev;
-+
-+	b43_rfkill_update(dev);
-+	rfk->poll_timer.function = b43_rfkill_poll;
-+	rfk->poll_timer.expires = round_jiffies(jiffies + HZ);
-+	add_timer(&rfk->poll_timer);
- }
- 
- /* Called when the RFKILL toggled in software. */
-@@ -141,48 +156,23 @@ void b43_rfkill_init(struct b43_wldev *d
- 	rfk->rfkill->toggle_radio = b43_rfkill_soft_toggle;
- 	rfk->rfkill->user_claim_unsupported = 1;
- 
--	rfk->poll_dev = input_allocate_polled_device();
--	if (!rfk->poll_dev) {
--		rfkill_free(rfk->rfkill);
--		goto err_freed_rfk;
--	}
--
--	rfk->poll_dev->private = dev;
--	rfk->poll_dev->poll = b43_rfkill_poll;
--	rfk->poll_dev->poll_interval = 1000; /* msecs */
--
--	rfk->poll_dev->input->name = rfk->name;
--	rfk->poll_dev->input->id.bustype = BUS_HOST;
--	rfk->poll_dev->input->id.vendor = dev->dev->bus->boardinfo.vendor;
--	rfk->poll_dev->input->evbit[0] = BIT(EV_KEY);
--	set_bit(KEY_WLAN, rfk->poll_dev->input->keybit);
--
- 	err = rfkill_register(rfk->rfkill);
- 	if (err)
--		goto err_free_polldev;
-+		goto err_free_rfk;
- 
--#ifdef CONFIG_RFKILL_INPUT_MODULE
--	/* B43 RF-kill isn't useful without the rfkill-input subsystem.
--	 * Try to load the module. */
--	err = request_module("rfkill-input");
--	if (err)
--		b43warn(wl, "Failed to load the rfkill-input module. "
--			"The built-in radio LED will not work.\n");
--#endif /* CONFIG_RFKILL_INPUT */
-+	rfk->registered = 1;
- 
--	err = input_register_polled_device(rfk->poll_dev);
--	if (err)
--		goto err_unreg_rfk;
-+	INIT_WORK(&rfk->poll_queue, b43_rfkill_work);
- 
--	rfk->registered = 1;
-+	init_timer(&rfk->poll_timer);
-+	rfk->poll_timer.function = b43_rfkill_poll;
-+	rfk->poll_timer.expires = round_jiffies(jiffies + HZ);
-+	rfk->poll_timer.data = (unsigned long)rfk;
-+	add_timer(&rfk->poll_timer);
- 
- 	return;
--err_unreg_rfk:
--	rfkill_unregister(rfk->rfkill);
--err_free_polldev:
--	input_free_polled_device(rfk->poll_dev);
--	rfk->poll_dev = NULL;
--err_freed_rfk:
-+err_free_rfk:
-+	rfkill_free(rfk->rfkill);
- 	rfk->rfkill = NULL;
- out_error:
- 	rfk->registered = 0;
-@@ -197,9 +187,8 @@ void b43_rfkill_exit(struct b43_wldev *d
- 		return;
- 	rfk->registered = 0;
- 
--	input_unregister_polled_device(rfk->poll_dev);
-+	del_timer(&rfk->poll_timer);
-+
- 	rfkill_unregister(rfk->rfkill);
--	input_free_polled_device(rfk->poll_dev);
--	rfk->poll_dev = NULL;
- 	rfk->rfkill = NULL;
- }
-Index: wireless-testing/drivers/net/wireless/b43/rfkill.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/rfkill.h
-+++ wireless-testing/drivers/net/wireless/b43/rfkill.h
-@@ -7,14 +7,14 @@ struct b43_wldev;
- #ifdef CONFIG_B43_RFKILL
- 
- #include <linux/rfkill.h>
--#include <linux/input-polldev.h>
--
- 
- struct b43_rfkill {
- 	/* The RFKILL subsystem data structure */
- 	struct rfkill *rfkill;
--	/* The poll device for the RFKILL input button */
--	struct input_polled_dev *poll_dev;
-+	/* The timer list for the RFKILL polling */
-+	struct timer_list poll_timer;
-+	/* Workqueue for the RFKILL polling */
-+	struct work_struct poll_queue;
- 	/* Did initialization succeed? Used for freeing. */
- 	bool registered;
- 	/* The unique name of this rfkill switch */
+
+_________________________________________________________________
+See how Windows Mobile brings your life together=97at home, work, or on=
+ the go.
+http://clk.atdmt.com/MRT/go/msnnkwxp1020093182mrt/direct/01/--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
