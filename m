@@ -1,98 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out01.mta.xmission.com ([166.70.13.231]:37040 "EHLO
-	out01.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751073AbYI1Bph (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56776 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752620AbYIFW13 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Sep 2008 21:45:37 -0400
-From: ebiederm@xmission.com (Eric W. Biederman)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, Jouni Malinen <j@w1.fi>
-References: <1222509685.3798.59.camel@johannes.berg>
-Date: Sat, 27 Sep 2008 18:39:54 -0700
-In-Reply-To: <1222509685.3798.59.camel@johannes.berg> (Johannes Berg's message
-	of "Sat, 27 Sep 2008 12:01:25 +0200")
-Message-ID: <m1r675aw0l.fsf@frodo.ebiederm.org> (sfid-20080928_034549_058298_D455D37E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Subject: Re: wireless vs. network namespaces (part II)
+	Sat, 6 Sep 2008 18:27:29 -0400
+Subject: Re: [RFC PATCH 1/3] mac80211: restructure disassoc/deauth flows
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1220739930.21016.6.camel@johannes.berg> (sfid-20080907_002542_014456_D81314E0)
+References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
+	 <1220739259-16918-2-git-send-email-tomas.winkler@intel.com>
+	 <1220739930.21016.6.camel@johannes.berg>
+	 (sfid-20080907_002542_014456_D81314E0)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-riOctpPr7V5E7B1oNsaT"
+Date: Sun, 07 Sep 2008 00:27:24 +0200
+Message-Id: <1220740044.21016.10.camel@johannes.berg> (sfid-20080907_002731_668301_443D0647)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
 
-> Eric,
->
-> You wrote, over a year ago:
->
->> 2) Advanced routing.  Where someone is doing some weird thing like 
->>    testing sending packets and receiving them on the same machine.
->
-> and I was just thinking of doing exactly that :)
+--=-riOctpPr7V5E7B1oNsaT
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Sounds like a fun way to test the wireless stack.
-Have both a client and an access point on the same box talking
-to each other ;)
+On Sun, 2008-09-07 at 00:25 +0200, Johannes Berg wrote:
 
-> When looking into it, though, I noticed that you can generate some
-> breakage with wireless and network namespaces: you can move a wireless
-> netdev to a different namespace and then things will break down because
-> we internally use init_net to find it.
+> > +       ieee80211_set_associated(sdata, ifsta, 0);
+>=20
+> This whole set_associated(0) vs. ieee80211_set_disassoc() business seems
+> fishy to me, can't we just move the set_associated(0) code into
+> set_disassoc? AFAICT there's only one caller now that calls with (0),
+> and that's in set_disassoc().
 
-> What I'd like to do in wireless is not allow moving netdevs between
-> namespaces, but rather move entire hardware devices between namespaces,
-> I see little value and great pain in trying to support virtual
-> interfaces from a single physical device showing up in different
-> namespaces, but I do see value in binding a physical device (wiphy) to a
-> namespace.
+Ah, I see you're doing that in 3/3
 
-At the moment I don't understand the distinction very well.  Why do we
-have both a wireless master device and a wireless device that we
-actually use?
+johannes
 
-In the wired ethernet world there is a lot of value in moving just
-a vlan interface or just one mac address with mac vlan into a network
-namespace.  Allowing full speed access to the hardware that can do
-just about anything while functionally restricting what user space
-can do with the hardware.
+--=-riOctpPr7V5E7B1oNsaT
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> As far as I understand, to disallow moving them, I should set the
-> NETIF_F_NETNS_LOCAL flag on all devices, although that is sort of a
-> misnomer then because I'd be using it to indicate 'cannot switch
-> namespace'. 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-In this case yes.   It is designed for devices like the loo back
-device and other virtual devices that we use for creating virtual
-devices.  Although the recent support for creating new network
-devices with netlink removes much of the need for the second use case.
+iQIcBAABAgAGBQJIwwPIAAoJEKVg1VMiehFYp/8P/2knAppc5Jp1AXK6dlKyQ1ej
+Xf5si45hzm4p2MXR0+b0pAgWzn8FwRZIhj7qDwe+TBrle5Wv18h0MDIhGbZKbiMG
+Kk7HS2goQIyHkSOJCAHFGtVEpL+C4nbjvdYMt1MVsdVg+Q0IH//zKbxzqmiV0MHN
+AfZBQ1lx/pCyioa/vXl3bcXonxNqd2rpcuYt5fFX8VU8THDF0GcPCrITWQ3/Gtjk
+D7lP7O6DYuP3TuDx8aCKlwbVbflrdBsdXvpNqP2YWhW4YUYKW7HskguPntwDL0hJ
+juctBBP5W0UCINmeAEjwzLyGHjuUH5C4oZ9dZJ1Y/ig90Jf2TTJFQBTB3PEWpYKZ
+sY65qE7oSC21RW19c1QJi5Uy5ED41fl+r1+GdwhyJFJ88tHFrE90SWNolZBPP+AT
+O2c4kU6/BT8nusA0CWfJMZj1ZMKJzn5UdGWzqkiF6ClB1ry2FfPHyt3SXxBhKK8T
+ZGsezH3cYVyjGQas3oXC17Ba/wRz0fC8jd8eUPiHhRY04Z+sNFRwprpamGT9d4Fa
+YagrSiwtxBr00PTuN1wvTRIfxtH7Gp4cAuJi5dM2dqkP/dOkVJw3JZ/melxlI9Et
+tvPBbc7Zx+OXpgvMj8oOGB43lOwJ28Flf5OV76cH7PtUa3dgGhVITk/1/I5aqfns
+YjWcGiyAHUtzyUsVUaYx
+=XWNb
+-----END PGP SIGNATURE-----
 
-It was also designed to handle the case if we do find a network
-device that just can't handle being moved between network namespaces.
-
-> To really support this though, it seems we need to
->  * put the wiphy list into struct net (this is currently a simple
->    list_head, no fancy hashing)
-
-Reasonable.
-
->  * give each struct wiphy a backpointer to the struct net, like netdev
->    in the netdev struct
-
-Reasonable
-
->  * ensure that all netdevs created for this wiphy will have the right
->    netns.
->
-> The latter part I'm unsure on, alloc_netdev_mq seems to always use
-> init_net so I can't put them into the right namespace to start with, but
-> because they're all "in there together" I can't allow switching
-> namespaces either.. Ideas?
-
-alloc_netdev_mq doesn't register the device, so it is a matter of simply
-changing the network device pointer after allocation and before registration.
-
-We do this by default when we dynamically create network devices using
-netlink.  see rtnl_create_link for an example.
-
-Eric
+--=-riOctpPr7V5E7B1oNsaT--
 
