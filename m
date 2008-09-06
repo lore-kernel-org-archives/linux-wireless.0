@@ -1,257 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:57178 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756282AbYIKSen (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 14:34:43 -0400
-Received: by gxk9 with SMTP id 9so17173413gxk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2008 11:34:42 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: libertas-dev@lists.infradead.org
-From: Anna Neal <anna@cozybit.com>
-Date: Thu, 11 Sep 2008 11:17:25 -0700
-Subject: [PATCH] libertas: Improvements on automatic tx power control via SIOCSIWTXPOW.
-Message-ID: <48c964bf.1b018e0a.75a0.0ecf@mx.google.com> (sfid-20080911_203455_684983_F378BE81)
+Received: from Viola.Opus1.COM ([192.245.12.8]:4652 "EHLO Viola.Opus1.COM"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752658AbYIFSHa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Sep 2008 14:07:30 -0400
+Received: from [172.17.0.188] ([61.8.118.66])
+ by Opus1.COM (PMDF V6.2-X27 #9830) with ESMTPSA id
+ <01MZ8MAJRY808X4NGL@Opus1.COM> for linux-wireless@vger.kernel.org; Sat,
+ 06 Sep 2008 11:07:28 -0700 (MST)
+Date: Sat, 06 Sep 2008 11:07:15 -0700
+From: gavron@wetwork.net
+Subject: Re: Speed enhancement for BCM4306/2
+In-reply-to: <48C2A1F5.6020607@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Broadcom Wireless <bcm43xx-dev@berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Message-id: <48C2C6D3.3030601@wetwork.net> (sfid-20080906_200757_261272_063C090C)
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1; format=flowed
+References: <48C1BA91.7050106@lwfinger.net> <48C20928.10202@wetwork.net>
+ <48C20BD7.6080605@lwfinger.net> <48C20F64.1000700@wetwork.net>
+ <48C2A1F5.6020607@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwconfig txpower can now be used to set tx power to fixed or auto. If set to
-auto the default firmware settings are used.
-
-The command CMD_802_11_PA_CFG is only sent to older firmware, as Dan Williams
-noted the command was no longer supported in firmware V9+.
-
-Signed-off-by: Anna Neal <anna@cozybit.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- drivers/net/wireless/libertas/cmd.c     |   64 +++++++++++++++++++++++++++++++
- drivers/net/wireless/libertas/cmd.h     |    6 +++
- drivers/net/wireless/libertas/defs.h    |    9 ++++
- drivers/net/wireless/libertas/host.h    |    1 +
- drivers/net/wireless/libertas/hostcmd.h |   24 +++++++++--
- drivers/net/wireless/libertas/wext.c    |   31 ++++++++++++++-
- 6 files changed, 128 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 802547e..5fef05f 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1971,6 +1971,70 @@ void lbs_ps_confirm_sleep(struct lbs_private *priv)
- }
- 
- 
-+/**
-+ * @brief Configures the transmission power control functionality.
-+ *
-+ * @param priv		A pointer to struct lbs_private structure
-+ * @param enable	Transmission power control enable
-+ * @param p0		Power level when link quality is good (dBm).
-+ * @param p1		Power level when link quality is fair (dBm).
-+ * @param p2		Power level when link quality is poor (dBm).
-+ * @param usesnr	Use Signal to Noise Ratio in TPC
-+ *
-+ * @return 0 on success
-+ */
-+int lbs_set_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
-+		int8_t p2, int usesnr)
-+{
-+	struct cmd_ds_802_11_tpc_cfg cmd;
-+	int ret;
-+
-+	memset(&cmd, 0, sizeof(cmd));
-+	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-+	cmd.action = cpu_to_le16(CMD_ACT_SET);
-+	cmd.enable = !!enable;
-+	cmd.usesnr = !!enable;
-+	cmd.P0 = p0;
-+	cmd.P1 = p1;
-+	cmd.P2 = p2;
-+
-+	ret = lbs_cmd_with_response(priv, CMD_802_11_TPC_CFG, &cmd);
-+
-+	return ret;
-+}
-+
-+/**
-+ * @brief Configures the power adaptation settings.
-+ *
-+ * @param priv		A pointer to struct lbs_private structure
-+ * @param enable	Power adaptation enable
-+ * @param p0		Power level for 1, 2, 5.5 and 11 Mbps (dBm).
-+ * @param p1		Power level for 6, 9, 12, 18, 22, 24 and 36 Mbps (dBm).
-+ * @param p2		Power level for 48 and 54 Mbps (dBm).
-+ *
-+ * @return 0 on Success
-+ */
-+
-+int lbs_set_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
-+		int8_t p1, int8_t p2)
-+{
-+	struct cmd_ds_802_11_pa_cfg cmd;
-+	int ret;
-+
-+	memset(&cmd, 0, sizeof(cmd));
-+	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-+	cmd.action = cpu_to_le16(CMD_ACT_SET);
-+	cmd.enable = !!enable;
-+	cmd.P0 = p0;
-+	cmd.P1 = p1;
-+	cmd.P2 = p2;
-+
-+	ret = lbs_cmd_with_response(priv, CMD_802_11_PA_CFG , &cmd);
-+
-+	return ret;
-+}
-+
-+
- static struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv,
- 	uint16_t command, struct cmd_header *in_cmd, int in_cmd_size,
- 	int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
-diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
-index 11ac996..336a181 100644
---- a/drivers/net/wireless/libertas/cmd.h
-+++ b/drivers/net/wireless/libertas/cmd.h
-@@ -26,6 +26,12 @@ int __lbs_cmd(struct lbs_private *priv, uint16_t command,
- 	      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
- 	      unsigned long callback_arg);
- 
-+int lbs_set_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
-+		int8_t p1, int8_t p2);
-+
-+int lbs_set_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
-+		int8_t p2, int usesnr);
-+
- int lbs_cmd_copyback(struct lbs_private *priv, unsigned long extra,
- 		     struct cmd_header *resp);
- 
-diff --git a/drivers/net/wireless/libertas/defs.h b/drivers/net/wireless/libertas/defs.h
-index 4b2428a..c89d7a1 100644
---- a/drivers/net/wireless/libertas/defs.h
-+++ b/drivers/net/wireless/libertas/defs.h
-@@ -189,6 +189,15 @@ static inline void lbs_deb_hex(unsigned int grp, const char *prompt, u8 *buf, in
- #define MRVDRV_CMD_UPLD_RDY		0x0008
- #define MRVDRV_CARDEVENT		0x0010
- 
-+
-+/* Automatic TX control default levels */
-+#define POW_ADAPT_DEFAULT_P0 13
-+#define POW_ADAPT_DEFAULT_P1 15
-+#define POW_ADAPT_DEFAULT_P2 18
-+#define TPC_DEFAULT_P0 5
-+#define TPC_DEFAULT_P1 10
-+#define TPC_DEFAULT_P2 13
-+
- /** TxPD status */
- 
- /*	Station firmware use TxPD status field to report final Tx transmit
-diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
-index da618fc..a916bb9 100644
---- a/drivers/net/wireless/libertas/host.h
-+++ b/drivers/net/wireless/libertas/host.h
-@@ -83,6 +83,7 @@
- #define CMD_802_11_INACTIVITY_TIMEOUT		0x0067
- #define CMD_802_11_SLEEP_PERIOD			0x0068
- #define CMD_802_11_TPC_CFG			0x0072
-+#define CMD_802_11_PA_CFG			0x0073
- #define CMD_802_11_FW_WAKE_METHOD		0x0074
- #define CMD_802_11_SUBSCRIBE_EVENT		0x0075
- #define CMD_802_11_RATE_ADAPT_RATESET		0x0076
-diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
-index d27c276..630b799 100644
---- a/drivers/net/wireless/libertas/hostcmd.h
-+++ b/drivers/net/wireless/libertas/hostcmd.h
-@@ -607,14 +607,28 @@ struct cmd_ds_802_11_eeprom_access {
- } __attribute__ ((packed));
- 
- struct cmd_ds_802_11_tpc_cfg {
-+	struct cmd_header hdr;
-+
- 	__le16 action;
--	u8 enable;
--	s8 P0;
--	s8 P1;
--	s8 P2;
--	u8 usesnr;
-+	uint8_t enable;
-+	int8_t P0;
-+	int8_t P1;
-+	int8_t P2;
-+	uint8_t usesnr;
- } __attribute__ ((packed));
- 
-+
-+struct cmd_ds_802_11_pa_cfg {
-+	struct cmd_header hdr;
-+
-+	__le16 action;
-+	uint8_t enable;
-+	int8_t P0;
-+	int8_t P1;
-+	int8_t P2;
-+} __attribute__ ((packed));
-+
-+
- struct cmd_ds_802_11_led_ctrl {
- 	__le16 action;
- 	__le16 numled;
-diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-index 426f1fe..e8cadad 100644
---- a/drivers/net/wireless/libertas/wext.c
-+++ b/drivers/net/wireless/libertas/wext.c
-@@ -1820,7 +1820,21 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
- 	}
- 
- 	if (vwrq->fixed == 0) {
--		/* Auto power control */
-+		/* User requests automatic tx power control, however there are
-+		 * many auto tx settings.  For now use firmware defaults until
-+		 * we come up with a good way to expose these to the user. */
-+		if (priv->fwrelease < 0x09000000) {
-+			ret = lbs_set_power_adapt_cfg(priv, 1,
-+					POW_ADAPT_DEFAULT_P0,
-+					POW_ADAPT_DEFAULT_P1,
-+					POW_ADAPT_DEFAULT_P2);
-+			if (ret)
-+				goto out;
-+		}
-+		ret = lbs_set_tpc_cfg(priv, 0, TPC_DEFAULT_P0, TPC_DEFAULT_P1,
-+				TPC_DEFAULT_P2, 1);
-+		if (ret)
-+			goto out;
- 		dbm = priv->txpower_max;
- 	} else {
- 		/* Userspace check in iwrange if it should use dBm or mW,
-@@ -1830,7 +1844,8 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
- 			goto out;
- 		}
- 
--		/* Validate requested power level against firmware allowed levels */
-+		/* Validate requested power level against firmware allowed
-+		 * levels */
- 		if (priv->txpower_min && (dbm < priv->txpower_min)) {
- 			ret = -EINVAL;
- 			goto out;
-@@ -1840,6 +1855,18 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
- 			ret = -EINVAL;
- 			goto out;
- 		}
-+		if (priv->fwrelease < 0x09000000) {
-+			ret = lbs_set_power_adapt_cfg(priv, 0,
-+					POW_ADAPT_DEFAULT_P0,
-+					POW_ADAPT_DEFAULT_P1,
-+					POW_ADAPT_DEFAULT_P2);
-+			if (ret)
-+				goto out;
-+		}
-+		ret = lbs_set_tpc_cfg(priv, 0, TPC_DEFAULT_P0, TPC_DEFAULT_P1,
-+				TPC_DEFAULT_P2, 1);
-+		if (ret)
-+			goto out;
- 	}
- 
- 	/* If the radio was off, turn it on */
--- 
-1.5.4.3
 
 
+Larry Finger wrote:
+> gavron@wetwork.net wrote:
+>>
+>>
+>>
+>> Ok, here's try #2.
+>> E
+>> /home/2.6.27/rc4-wl/drivers/net/wireless/b43legacy# diff -uN 
+>> /tmp/phy.c phy.c
+>> --- /tmp/phy.c    2008-09-05 21:56:20.000000000 -0700
+>> +++ phy.c    2008-09-05 22:03:28.000000000 -0700
+>
+> For kernel patches, you need to be working in the base directory of 
+> the kernel sources. For your tree, that would be in 
+> /home/2.6.27/rc4-wl. That way the patches will apply with the 
+> effective command of 'patch -p1 < patch_file'. For kernel patches, I 
+> use quilt so that patches are easy to apply and remove.
+>
+>> @@ -1010,7 +1010,7 @@
+>>         b43legacy_phy_initb5(dev);
+>>     else
+>>         b43legacy_phy_initb6(dev);
+>> -    if (phy->rev >= 2 || phy->gmode)
+>> +    if (phy->rev >= 2 && phy->gmode)
+>>         b43legacy_phy_inita(dev);
+>>
+>>     if (phy->rev >= 2) {
+>
+> The above hunk is correct.
+>
+>> @@ -1027,15 +1027,17 @@
+>>     }
+>>     if (phy->rev >= 2 || phy->gmode) {
+>
+> This does not match step 7 of the specs. It was not changed recently, 
+> but the code did not match what was on the web site. No, I don't know 
+> why.
+>
+>>         tmp = b43legacy_phy_read(dev, 0x0400) & 0xFF;
+>> -        if (tmp == 3 || tmp == 5) {
+>> +        if (tmp == 4 || tmp == 5) {
+>>             b43legacy_phy_write(dev, 0x04C2, 0x1816);
+>> -            b43legacy_phy_write(dev, 0x04C3, 0x8006);
+>> +            b43legacy_phy_write(dev, 0x04C3, 0x8606);
+>>             if (tmp == 5)
+>>                 b43legacy_phy_write(dev, 0x04CC,
+>>                             (b43legacy_phy_read(dev,
+>>                              0x04CC) & 0x00FF) |
+>>                              0x1F00);
+>>         }
+>> +    }
+>> +    if (phy->rev >= 2)
+>>         b43legacy_phy_write(dev, 0x047E, 0x0078);
+>>     }
+>>     if (phy->radio_rev == 8) {
+>
+> This hunk does not match the specs. In addition, I think there are too 
+> many right-hand curly braces for it to compile.
+>
+> Larry
+>
+I've been sitting on a git clone that refuses to proceed faster than 6 
+KiB/s (it's a problem here in Melbourne).  Should it complete I will 
+correct these issues.   I did see several other ways in which the code 
+does not match the specs.  Should that be documented in the code or 
+should the code be conformed to the specs even if that ends up breaking 
+the driver?
 
+Without getting into specifics it's cases where the specs will say "When 
+something=value" but the code says "when variable >=(value -1)".
+
+Ehud
