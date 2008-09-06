@@ -1,144 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.181]:2994 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755581AbYIRVtr (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48847 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751913AbYIFXo2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 17:49:47 -0400
-Received: by ik-out-1112.google.com with SMTP id c30so95356ika.5
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 14:49:45 -0700 (PDT)
-Message-ID: <f488382f0809181449x7343aa7endff066cb5836a73c@mail.gmail.com> (sfid-20080918_235002_925159_78BA31A5)
-Date: Thu, 18 Sep 2008 14:49:45 -0700
-From: "Steven Noonan" <steven@uplinklabs.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
-Cc: "Ingo Molnar" <mingo@elte.hu>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-In-Reply-To: <43e72e890809181344q416b5944w3332ee5a33db048c@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f488382f0809181123n55a4979eg1996bbc30fa47d54@mail.gmail.com>
-	 <43e72e890809181134ybbec8fdxcb2a466aa17fe390@mail.gmail.com>
-	 <43e72e890809181142n7738cd99g522e6688e68d11ce@mail.gmail.com>
-	 <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com>
-	 <43e72e890809181344q416b5944w3332ee5a33db048c@mail.gmail.com>
+	Sat, 6 Sep 2008 19:44:28 -0400
+Subject: Re: [PATCH 2/2 V2] mac80211: add direct probe before association
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <1218240139-5009-1-git-send-email-tomas.winkler@intel.com> (sfid-20080809_020228_145527_D912EB5F)
+References: <1218240139-5009-1-git-send-email-tomas.winkler@intel.com>
+	 (sfid-20080809_020228_145527_D912EB5F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mnb7SDM3wEu0o3yTInQC"
+Date: Sun, 07 Sep 2008 01:44:23 +0200
+Message-Id: <1220744663.21016.28.camel@johannes.berg> (sfid-20080907_014444_613375_E2172763)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 18, 2008 at 1:44 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Thu, Sep 18, 2008 at 12:00 PM, Steven Noonan <steven@uplinklabs.net> wrote:
->> On Thu, Sep 18, 2008 at 11:42 AM, Luis R. Rodriguez
->> <lrodriguez@atheros.com> wrote:
->>> On Thu, Sep 18, 2008 at 11:34 AM, Luis R. Rodriguez
->>>> irqpoll is a monster of evil and that should make your system crawl to
->>>> its knees. I would advise instead we work with you fixing the the
->>>> missed interrupts issue upon rmmod.
->>>
->>> Also, please provide the output of
->>>
->>> cat /proc/interrupts
->>
->> Note that the problem necessitating use of irqpoll in the first place
->> seems to only happen under certain conditions. I am unsure what these
->> conditions are. Before 'ath9k: connectivity is lost after Group
->> rekeying is done',
->
-> You mean this patch:
->
-> [PATCH] ath9k: connectivity is lost after Group rekeying is done
-> http://marc.info/?l=linux-wireless&m=122163541519736&w=2
->
-> So let me get this straight -- you applied this new patch, and haven't
-> tried disabling irqpoll now?
 
-I hadn't at the time of that writing, no. I saw it as a fix for future
-ignored IRQs, and hadn't noticed any difference with it on or off. So
-it seemed like since there was no consequence having it enabled, why
-not leave it enabled all the time?
+--=-mnb7SDM3wEu0o3yTInQC
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Now that I'm aware it's the spawn of satan, I'm trying with it off. So
-far, so good. But I haven't had need to reload ath9k so frequently,
-and even when I do, I can't reproduce the specific conditions which
-caused the problem in the first place.
+Hi,
 
->> I had used rmmod/modprobe as my solution to the
->> issue, which triggered the IRQ issue.
->
-> Understood, but I also have used this before with ath9k and I got
-> exactly the same results you did -- I just refused to use it again and
-> just try to fix the issues present.
->
-> ath9k issues tons of interrupts, not sure why irqpoll option would
-> cause latency so bad as the interrupts *are* handled. Not sure
-> *exactly* how irqpoll works but its description mentions using it
-> forces each interrupt handler on the IRQ line to check the interrupt
-> is for it. You have to keep in mind that not only are ath9k interrupts
-> then being sent to the devices on its line but it would seem that all
-> other devices on each line would suffer from the interrupts of the
-> other guys. Why ath9k would be the *only* culprit of causing latency
-> when using irqpoll if the irq line it son is clean? Beats me.
+I was just pondering rewriting parts of the state machine (and you've
+already seen the other cleanups I did today) and found this:
 
-I'm guessing there's at least one interrupt that wasn't accounted for somehow.
+> +	/* Direct probe is sent to broadcast address as some APs
+> +	 * will not answer to direct packet in unassociated state.
+> +	 */
+> +	ieee80211_send_probe_req(dev, NULL,
+> +				 ifsta->ssid, ifsta->ssid_len);
 
->
->> alcarin steven # cat /proc/interrupts
->>           CPU0       CPU1
->> 0x0:      63227          0   IO-APIC-edge      hpet
->> 0x8:          1          0   IO-APIC-edge      rtc0
->> 0x9:      13080          0   IO-APIC-fasteoi   acpi
->> 0xe:       8195          0   IO-APIC-edge      ide0
->> 0xf:          0          0   IO-APIC-edge      ide1
->> 0x10:         36          0   IO-APIC-fasteoi   uhci_hcd:usb5
->> 0x11:      10645          0   IO-APIC-fasteoi   ath
->
-> In this case your 11n Atheros device is on a clean line.
->
->> 0x12:         42          0   IO-APIC-fasteoi   uhci_hcd:usb4
->> 0x17:        919          0   IO-APIC-fasteoi   ehci_hcd:usb1, uhci_hcd:usb2
->
-> But it was this interrupt line which had an interrupt not handled.
+> +	/* direct probe may be part of the association flow */
+> +	if (test_and_clear_bit(IEEE80211_STA_REQ_DIRECT_PROBE,
+> +							&ifsta->request)) {
+> +		printk(KERN_DEBUG "%s direct probe responded\n", dev->name);
+> +		ieee80211_authenticate(dev, ifsta);
 
-No, it's in hex. 0x17 = 23, 0x11 = 17. IRQ 17 is the one that pooped
-in my case, which is my wireless chipset.
+Doesn't the latter code have to check that the sender is the correct
+one? First we broadcast the probe request, and then we may be getting
+one from a different AP but still clear our direct probe association
+flow step, no?
 
->> 0x13:      32885          0   IO-APIC-fasteoi   uhci_hcd:usb3,
->> ata_piix, ohci1394
->> 0x200100:          1          0   PCI-MSI-edge      eth0
->> 0x16:        223          0   IO-APIC-fasteoi   HDA Intel
->> NMI:          0          0   Non-maskable interrupts
->> LOC:      78087      95718   Local timer interrupts
->> RES:      11576      16384   Rescheduling interrupts
->> CAL:       6862       8889   Function call interrupts
->> TLB:         54         41   TLB shootdowns
->> TRM:          0          0   Thermal event interrupts
->> THR:          0          0   Threshold APIC interrupts
->> SPU:          0          0   Spurious interrupts
->> ERR:          0
->
-> Can you try to reproduce the irq not handled again?
+johannes
 
-If I do, I'll need to know what precisely to do about it. What debug
-info should I collect before rebooting?
+--=-mnb7SDM3wEu0o3yTInQC
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
->
->>>
->>> and also please do not cross post to all these lists, just use
->>> linux-wireless or ath9k.
->>>
->>
->> Sorry, but in the past I've posted to linux-wireless, ath9k-devel, and
->> all the maintainers of ath9k and didn't get a single response (except
->> a 'me too' from a fellow ath9k user). I didn't just want to hear
->> crickets this time.
->
-> Patches speak more than words, but yeah sorry, we should have
-> addressed this there. I've personally have just been busy with
-> tackling aggregation.
->
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Which is far more important, I agree. It's annoying to get speeds
-<802.11b on my pre-802.11n capable chipset and network. ;)
+iQIcBAABAgAGBQJIwxXTAAoJEKVg1VMiehFYLYkQAInupEzS3B3NGimkFPzqZiTr
+r7HVdLkyciQBqtAnIZqFvhYlPwHEQ0xKY8rAvIjag5LJubO+9hvwSojubWSV6oOT
+5PsSDPfTnZf6xp5dWJ7Bgprf3srGrljFmqGW88LBLRMiMhjkMnOHR64krLLxdqk/
+HMYR/6b0E3SvDuhMS0XQxeXUr3bfaFNrNY2eTB55K0rxroZUpXBvW0gaR2fWSV/e
+AhruONA2TzrMU6A9Hdo/gGLZvVojY8Ey9TzjQDXSgtBUe4zqKqIVT45XfSRZjLmj
+tKKmezEQtv6bftZfgvSJTg9ogI+WhtrpsOgjmLW2OgduC7BdKA+qMPsLMBS3VdtM
+NZnR8ri4Z3QHgoacoexoYXJiaVbICIJxiuiCIvkpb8dfrJ5nX/BN2WltPjGp75+1
+g0QR6B6EBtrFG4u7MraVFmQ4kzkKMkzXPWYU7IxX9t62ege8IrXPUruJ2zBMK3zg
+E2tbuVl6bW8HBzLcCTM46c+Rq8UAJWDaHUp2/RcfMoGSHUwWu873oSrZorhgsHmW
+5oK1SFi3btEICaXZrduxH/SIN2+DgevExh/mGSGIcOKYJ917yQmdJl+LXGPknPC+
+RRWi1QoDOfRvvV+HO2q0yys9Yqv1FnxOWm8O4Iht8DHyP5Vu9+OjDcetKtvKMGp7
+4c6dE6iQrYijUgGPy3y6
+=KZkL
+-----END PGP SIGNATURE-----
 
-- Steven
+--=-mnb7SDM3wEu0o3yTInQC--
+
