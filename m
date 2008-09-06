@@ -1,50 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from winston.telenet-ops.be ([195.130.137.75]:49959 "EHLO
-	winston.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751754AbYIXXAU (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:5967 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752844AbYIFWoF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2008 19:00:20 -0400
-Message-ID: <48DAC681.9010305@telenet.be> (sfid-20080925_010026_499308_ACB8D668)
-Date: Thu, 25 Sep 2008 01:00:17 +0200
-From: Ian Schram <ischram@telenet.be>
-MIME-Version: 1.0
+	Sat, 6 Sep 2008 18:44:05 -0400
+Received: by ey-out-2122.google.com with SMTP id 6so429481eyi.37
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Sep 2008 15:44:03 -0700 (PDT)
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: Marcel Holtmann <holtmann@linux.intel.com>,
+Subject: Re: [PATCH] mac80211: make conf_tx non-atomic
+Date: Sun, 7 Sep 2008 00:43:59 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
-References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>	 (sfid-20080911_100535_000722_EE099914) <1222287287.4257.49.camel@johannes.berg>
-In-Reply-To: <1222287287.4257.49.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <1220717588.5376.0.camel@johannes.berg> <200809061950.36213.IvDoorn@gmail.com> <1220725734.10102.7.camel@johannes.berg>
+In-Reply-To: <1220725734.10102.7.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200809070044.00074.IvDoorn@gmail.com> (sfid-20080907_004408_975009_E3309192)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-Johannes Berg wrote:
-> On Thu, 2008-09-11 at 10:04 +0200, Marcel Holtmann wrote:
+On Saturday 06 September 2008, Johannes Berg wrote:
+> On Sat, 2008-09-06 at 19:50 +0200, Ivo van Doorn wrote:
+> > On Saturday 06 September 2008, Johannes Berg wrote:
+> > > The conf_tx callback currently needs to be atomic, this requirement
+> > > is just because it can be called from scanning. This rearranges it
+> > > slightly to only update while not scanning (which is fine, we'll be
+> > > getting beacons when associated) and thus removes the atomic
+> > > requirement.
+> > 
+> > Oops. Ehm how many oopses were reported since I submitted patch:
+> > 	47909b24a7e6c67ad635f36f5312839e04c7617c
+> > 	rt2x00: Initialize txop during conf_tx() callback
+> > 
+> > Because apparently that patch broke rt73usb (I completely overlooked
+> > the conf_tx() atomic requirements). :S
 > 
->> So the best I got was the attached screenshot of an oops. It is  
->> clearly the iwlwifi driver crashing here and killing the machine, but  
->> I have no idea why.
+> Heh, I don't know.
 > 
-> Incidentally, if this really is the same bug I have, you might want to
-> remove the iwlagn module completely, even loading it once is a bad
-> thing, it has started to corrupt things here entirely by making DMA go
-> to random locations.
-
-with the release of -rc7 i was starting to wonder what had happened to this bug,
-i'm not affected by it(other hardware) but from what i gather it's a serious problem?
-
-i have always wondered what people affected by this find if they revert the
-"memory allocation optimization" patch
-
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=da99c4b6c25964b90c79f19beccda208df1a865a
-
-apologies if this is a too random stab in the dark, just sounds like we might want to fix this
-before .27. And since there seems to be no git bisects that pinpoint the problem ..
-i figured i might as well send this.
-
-ian
-
+> > Fortunately this patch would fix it again. :)
 > 
-> johannes
+> :)
+> 
+> > >  	/* Do not send changes to driver if we are scanning. This removes
+> > > -	 * requirement that driver's bss_info_changed function needs to be
+> > > -	 * atomic. */
+> > > +	 * requirement that a driver's bss_info_changed/conf_tx functions
+> > > +	 * need to be atomic.
+> > > +	 * This is really ugly code, we should rewrite scanning and make
+> > > +	 * all this more understandable for humans.
+> > > +	 */
+> > 
+> > So bss_info_changed() is now non-atomic as well? Because that would be
+> > very useful for rt2x00. :)
+> 
+> Yeah, it's been for a while, in fact.
+
+Ah ok. Well I'll create a oatch to cleanup rt2x00 then. :)
+
+Thanks,
+
+Ivo
