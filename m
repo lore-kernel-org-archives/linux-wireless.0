@@ -1,40 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.230]:21820 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753460AbYIQVq5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 17:46:57 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so3364456rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2008 14:46:56 -0700 (PDT)
-Message-ID: <2da21fe50809171446y56cd5b2ctc864650be6030621@mail.gmail.com> (sfid-20080917_234703_985692_C15FAADA)
-Date: Wed, 17 Sep 2008 23:46:56 +0200
-From: "Davide Pesavento" <davidepesa@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: iw packaging
-Cc: "=?UTF-8?Q?Stefanik_G=C3=A1bor?=" <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1221683467.7412.6.camel@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1221596962.9262.12.camel@johannes.berg>
-	 <48D0DEF0.2060407@scram.de> <1221648205.9262.48.camel@johannes.berg>
-	 <48D0E463.70008@le-vert.net> <1221649638.9262.50.camel@johannes.berg>
-	 <48D0E5CE.8050401@le-vert.net>
-	 <1221650286.9262.57.camel@johannes.berg>
-	 <69e28c910809171319r30d763cse24744a198e41f92@mail.gmail.com>
-	 <1221683467.7412.6.camel@localhost>
+Received: from mga11.intel.com ([192.55.52.93]:33865 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752667AbYIFWO0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Sep 2008 18:14:26 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [RFC PATCH 2/3] mac80211: disassociate when moving to new BSS
+Date: Sun,  7 Sep 2008 01:14:18 +0300
+Message-Id: <1220739259-16918-3-git-send-email-tomas.winkler@intel.com> (sfid-20080907_001429_993465_AD472C8D)
+In-Reply-To: <1220739259-16918-2-git-send-email-tomas.winkler@intel.com>
+References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
+ <1220739259-16918-2-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-$ make
- GEN  version.h
- CC   iw.o
- CC   info.o
-info.c: In function 'print_phy_handler':
-info.c:108: error: 'NL80211_ATTR_SUPPORTED_IFTYPES' undeclared (first
-use in this function)
-info.c:108: error: (Each undeclared identifier is reported only once
-info.c:108: error: for each function it appears in.)
-make: *** [info.o] Error 1
+This patch cleans current association when leaving to new BSS. this is
+needed as old configuration and data were still stored in station table
+and in low level driver, causing problems (e.g. 11n mlme) in new BSS
 
-I guess I have to build iw against >=2.6.27-rcX kernel headers, right?
+Signed-off-by: Ron Rindjunsky <ron.rindjunsky@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ net/mac80211/mlme.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index ba255e2..aa5367e 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3414,9 +3414,14 @@ void ieee80211_sta_req_auth(struct ieee80211_sub_if_data *sdata,
+ 		return;
+ 
+ 	if ((ifsta->flags & (IEEE80211_STA_BSSID_SET |
+-				IEEE80211_STA_AUTO_BSSID_SEL)) &&
++			     IEEE80211_STA_AUTO_BSSID_SEL)) &&
+ 	    (ifsta->flags & (IEEE80211_STA_SSID_SET |
+-				IEEE80211_STA_AUTO_SSID_SEL))) {
++			     IEEE80211_STA_AUTO_SSID_SEL))) {
++
++		if (ifsta->state == IEEE80211_STA_MLME_ASSOCIATED)
++			ieee80211_set_disassoc(sdata, ifsta, 1, 1,
++					       WLAN_REASON_DEAUTH_LEAVING);
++
+ 		set_bit(IEEE80211_STA_REQ_AUTH, &ifsta->request);
+ 		queue_work(local->hw.workqueue, &ifsta->work);
+ 	}
+-- 
+1.5.4.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
