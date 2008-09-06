@@ -1,47 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:49439 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752352AbYIQU5t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 16:57:49 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2122474fgg.17
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2008 13:57:47 -0700 (PDT)
-Message-ID: <1ba2fa240809171357p1b190760h19c3e521e100f7e4@mail.gmail.com> (sfid-20080917_225753_426599_893D453D)
-Date: Wed, 17 Sep 2008 23:57:47 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] mac80211: re-enable aggregation
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1221547036.8916.1.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1221535073-6937-1-git-send-email-lrodriguez@atheros.com>
-	 <1221547036.8916.1.camel@johannes.berg>
+Received: from Viola.Opus1.COM ([192.245.12.8]:3348 "EHLO Viola.Opus1.COM"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750823AbYIFEiH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Sep 2008 00:38:07 -0400
+Received: from [172.17.0.188] ([61.8.118.66])
+ by Opus1.COM (PMDF V6.2-X27 #9830) with ESMTPSA id
+ <01MZ7U16R87K8YG025@Opus1.COM> for linux-wireless@vger.kernel.org; Fri,
+ 05 Sep 2008 21:38:03 -0700 (MST)
+Date: Fri, 05 Sep 2008 21:38:00 -0700
+From: gavron@wetwork.net
+Subject: Re: Speed enhancement for BCM4306/2
+In-reply-to: <48C1BA91.7050106@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Broadcom Wireless <bcm43xx-dev@berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Message-id: <48C20928.10202@wetwork.net> (sfid-20080906_063820_556844_9FAEB4A9)
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1; format=flowed
+References: <48C1BA91.7050106@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 16, 2008 at 9:37 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-09-15 at 20:17 -0700, Luis R. Rodriguez wrote:
+Is this close? 
+
+E
+--- /tmp/phy_g.c    2008-09-05 21:06:57.000000000 -0700
++++ phy_g.c    2008-09-05 21:36:18.000000000 -0700
+@@ -2198,7 +2198,7 @@
+     else
+         b43_phy_initb6(dev);
+ 
+-    if (phy->rev >= 2 || phy->gmode)
++    if (phy->rev >= 2 && phy->gmode)
+         b43_phy_inita(dev);
+ 
+     if (phy->rev >= 2) {
+@@ -2216,9 +2216,9 @@
+     if (phy->gmode || phy->rev >= 2) {
+         tmp = b43_phy_read(dev, B43_PHY_VERSION_OFDM);
+         tmp &= B43_PHYVER_VERSION;
+-        if (tmp == 3 || tmp == 5) {
++        if (tmp == 4 || tmp == 5) {
+             b43_phy_write(dev, B43_PHY_OFDM(0xC2), 0x1816);
+-            b43_phy_write(dev, B43_PHY_OFDM(0xC3), 0x8006);
++            b43_phy_write(dev, B43_PHY_OFDM(0xC3), 0x8606);
+         }
+         if (tmp == 5) {
+             b43_phy_write(dev, B43_PHY_OFDM(0xCC),
+@@ -2226,7 +2226,7 @@
+                        & 0x00FF) | 0x1F00);
+         }
+     }
+-    if ((phy->rev <= 2 && phy->gmode) || phy->rev >= 2)
++    if ((phy->rev >=2)
+         b43_phy_write(dev, B43_PHY_OFDM(0x7E), 0x78);
+     if (phy->radio_rev == 8) {
+         b43_phy_write(dev, B43_PHY_EXTG(0x01),
+
+
+Larry Finger wrote:
+> I recently found some places where the G-PHY initialization 
+> specifications were wrong. I updated the relevant parts of the V3 
+> specifications at http://bcm-specs.sipsolutions.net - the pages for 
+> GPHY, B6PHY and B5PHY were changed.
 >
->> +/**
->> + * is_part_ampdu - tells us whether this buffer is part of an AMPDU
->> + *
->> + * @skb: the buffer we want to check
->> + * @hw: the &struct ieee80211_hw to check the queue mapping on
->> + */
->> +static inline bool is_part_ampdu(struct sk_buff *skb, struct ieee80211_hw *hw)
->> +{
->> +     return (skb_get_queue_mapping(skb) >=
->> +             ieee80211_num_regular_queues(hw));
->> +}
->> +
+> When I prepared a patch containing these changes, the speed of the 
+> BCM4306/2 for OFDM rates more than doubled. As an example, when 
+> iwconfig is used to set the rate at 36M, the TX rate increased from 
+> 6.8 to 15.8 Mb/s.
 >
-> This is making the patch needlessly large and makes it change drivers
-> etc, please just keep the flag and set it based on this in master xmit
-> after we've cleared the info.
+> Unfortunately, direct submission of my patch would violate the 
+> clean-room rules. Michael Buesch has other things that are more 
+> important. As a result, we need someone to look at the changes on the 
+> web page and prepare a patch for submission. I will be happy to test 
+> your submission.
 >
-Yes, please keep the flag. Otherwise our rate scale algorithm won't work
-Thanks
-Tomas
+> Larry
+> _______________________________________________
+> Bcm43xx-dev mailing list
+> Bcm43xx-dev@lists.berlios.de
+> https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
+>   
