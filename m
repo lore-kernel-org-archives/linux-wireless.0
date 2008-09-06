@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:38290 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752462AbYIFSwz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 14:52:55 -0400
-Message-ID: <48C2D185.4000003@lwfinger.net> (sfid-20080906_205259_160788_7DE05075)
-Date: Sat, 06 Sep 2008 13:52:53 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: bcm43xx-dev@lists.berlios.de,
-	John W Linville <linville@tuxdriver.com>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43legacy: Fix failure in rate-adjustment mechanism
-References: <48c2cd1a.pA60sTEK0WsW6wtt%Larry.Finger@lwfinger.net> <200809062041.06035.mb@bu3sch.de>
-In-Reply-To: <200809062041.06035.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:33865 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752598AbYIFWOW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Sep 2008 18:14:22 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC PATCH 0/3] mac80211 dissasociation
+Date: Sun,  7 Sep 2008 01:14:16 +0300
+Message-Id: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com> (sfid-20080907_001426_567852_EB9B55D8)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Saturday 06 September 2008 20:34:02 Larry Finger wrote:
->> A coding error present since b43legacy was incorporated into the
->> kernel has prevented the driver from using the rate-setting mechanism
->> of mac80211. The driver has been forced to remain at a 1 Mb/s rate.
-> 
-> Does version3 firmware have a different bitlayout for the status?
+This series should fix mac problems in disassociation
+There are two basic problems disassociation in current implementation.
+The order of steps in the dissociation flow and missing proper
+disassociation when moving from one AP to another. 
+ 
+One more missing piece not addressed by these patches is how
+to notify mac80211 about rfkill. It can be done via mac_notify callback
+or by rf kill notification chain. I didn't explore the later yet.
+ 
+I'm releasing this as RFC because I didn't tested it after rebasing
+to current wireless-testing. (Will do soon)
+ 
+Tomas
 
-It seems so. I found this because I was not getting any acks back to 
-net/mac80211/rc80211_pid_algo.c. I then reviewed the V3 specs, found 
-that bit 0, not bit 1, contained the ack. Test prints confirmed that 
-result. With this patch, both my BCM4306/2 and BCM4303 reach the 
-maximum rate. With the current code, 54 Mb/s is not as fast as 36 
-Mb/s, but at least the algorithm is working.
 
-Larry
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
