@@ -1,66 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.184]:53765 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752391AbYI1UGp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Sep 2008 16:06:45 -0400
-Received: by mu-out-0910.google.com with SMTP id g7so1466435muf.1
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Sep 2008 13:06:44 -0700 (PDT)
-Date: Sun, 28 Sep 2008 22:06:36 +0200
-From: Davide Pesavento <davidepesa@gmail.com>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [CRDA PATCH 1/4] Do not initialize gcrypt twice.
-Message-ID: <20080928200636.GA5657@PesaBook.pesa.homelinux.org> (sfid-20080928_220649_557552_75B1468D)
+Received: from bu3sch.de ([62.75.166.246]:48350 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751418AbYIFTEk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Sep 2008 15:04:40 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] b43legacy: Fix failure in rate-adjustment mechanism
+Date: Sat, 6 Sep 2008 21:04:15 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	bcm43xx-dev@lists.berlios.de,
+	John W Linville <linville@tuxdriver.com>,
+	Tim Gardner <tim.gardner@canonical.com>,
+	linux-wireless@vger.kernel.org
+References: <48c2cd1a.pA60sTEK0WsW6wtt%Larry.Finger@lwfinger.net> <200809062055.51797.mb@bu3sch.de> <1220727470.10102.9.camel@johannes.berg>
+In-Reply-To: <1220727470.10102.9.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200809062104.15274.mb@bu3sch.de> (sfid-20080906_210443_956400_8F0DEB28)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Davide Pesavento <davidepesa@gmail.com>
+On Saturday 06 September 2008 20:57:50 Johannes Berg wrote:
+> On Sat, 2008-09-06 at 20:55 +0200, Michael Buesch wrote:
+> > On Saturday 06 September 2008 20:52:53 Larry Finger wrote:
+> > > Michael Buesch wrote:
+> > > > On Saturday 06 September 2008 20:34:02 Larry Finger wrote:
+> > > >> A coding error present since b43legacy was incorporated into the
+> > > >> kernel has prevented the driver from using the rate-setting mechanism
+> > > >> of mac80211. The driver has been forced to remain at a 1 Mb/s rate.
+> > > > 
+> > > > Does version3 firmware have a different bitlayout for the status?
+> > > 
+> > > It seems so. I found this because I was not getting any acks back to 
+> > > net/mac80211/rc80211_pid_algo.c. I then reviewed the V3 specs, found 
+> > > that bit 0, not bit 1, contained the ack. Test prints confirmed that 
+> > > result. With this patch, both my BCM4306/2 and BCM4303 reach the 
+> > > maximum rate. With the current code, 54 Mb/s is not as fast as 36 
+> > > Mb/s, but at least the algorithm is working.
+> > 
+> > Yeah ok. I just asked, because it seems the _whole_ flags bitfield
+> > is rightshifted by one (so the other flags are wrong, too. See the
+> > intermediate flag)
+> 
+> It is, this isn't really a difference between the two but a result of
+> you shifting it up/down due to the tx status via dma queue vs. tx status
+> via registers thing.
 
----
- crda.c |    8 +++-----
- 1 files changed, 3 insertions(+), 5 deletions(-)
+Yeah, that's the point. larry's patch modified both the register and dmaqueue
+mechanism. I think the register mechanism might be correct as-is (Or is it even
+dead code and it's not used by any legacy device?)
 
-diff --git a/crda.c b/crda.c
-index 98d80f5..4c7681c 100644
---- a/crda.c
-+++ b/crda.c
-@@ -14,7 +14,7 @@
- 
- #include <netlink/genl/genl.h>
- #include <netlink/genl/family.h>
--#include <netlink/genl/ctrl.h>  
-+#include <netlink/genl/ctrl.h>
- #include <netlink/msg.h>
- #include <netlink/attr.h>
- #include <linux/nl80211.h>
-@@ -192,14 +192,12 @@ int main(int argc, char **argv)
- 	int ok = 0;
- #endif
- #ifdef USE_GCRYPT
--	/* initialise */
--	gcry_check_version(NULL);
--
- 	gcry_mpi_t mpi_e, mpi_n;
- 	gcry_sexp_t rsa, signature, data;
- 	__u8 hash[20];
- 	int ok = 0;
- #endif
-+
- 	char *regdb = "/usr/lib/crda/regulatory.bin";
- 
- 	if (argc != 1) {
-@@ -213,7 +211,7 @@ int main(int argc, char **argv)
- 		return -EINVAL;
- 	}
- 
--	
-+
- 	if (!is_alpha2(env_country) && !is_world_regdom(env_country)) {
- 		fprintf(stderr, "Invalid alpha2 set in COUNTRY\n");
- 		return -EINVAL;
 -- 
-1.6.0.2
-
+Greetings Michael.
