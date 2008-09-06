@@ -1,53 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:43715 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750745AbYIJWGm (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.169]:12493 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752065AbYIFQhM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2008 18:06:42 -0400
-Subject: Re: [PATCH 1/2 v6] cfg80211: Add new wireless regulatory
-	infrastructure
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <43e72e890809101318o771100f0jcac9bbea6b863ccb@mail.gmail.com>
-References: <1221027589-19203-1-git-send-email-lrodriguez@atheros.com>
-	 <1221027589-19203-2-git-send-email-lrodriguez@atheros.com>
-	 <1221070650.13336.20.camel@californication>
-	 <43e72e890809101318o771100f0jcac9bbea6b863ccb@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 11 Sep 2008 00:07:09 +0200
-Message-Id: <1221084429.13336.23.camel@californication> (sfid-20080911_000652_046785_FE532195)
-Mime-Version: 1.0
+	Sat, 6 Sep 2008 12:37:12 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so905083wfd.4
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Sep 2008 09:37:11 -0700 (PDT)
+Message-ID: <69e28c910809060937h5d484f4fsdfe93c350d78c28d@mail.gmail.com> (sfid-20080906_183718_056078_B65A1B9C)
+Date: Sat, 6 Sep 2008 18:37:11 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Greg White" <pcguy11@live.com>
+Subject: Re: rt2x00 and packet injection
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <BAY118-W272ED23066D58EE95965A6DB5B0@phx.gbl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <BAY118-W272ED23066D58EE95965A6DB5B0@phx.gbl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+On Sat, Sep 6, 2008 at 2:34 AM, Greg White <pcguy11@live.com> wrote:
+>
+> Hi,
+>
+> What is the status of packet injection in the rt2x00 driver?  From my testing of 2.6.27 rc3 and reading 2.6.27 doesn't seem likely.  Is there a todo list in priority order?
+>
+> Thanks,
+>
 
-> > While reading through it, I came to think about regulatory_hint(). So is
-> > there a use case where would give it the alpha2 code and the domain
-> > itself at the same time? If not, then it would make more sense to split
-> > this into two functions.
-> 
-> Nope, you either pass an alpha2 or an rd domain which is built by you
-> (and in that rd structure you can set the alpha2 to your iso3166
-> alpha2 or "99" if unknown).
-> 
-> > Maybe something regulatory_alpha2_hint() and
-> > regulatory_domain_hint(). Just a thought.
-> 
-> That's how I had it originally but decided to condense it to one
-> routine since as you could see they pretty much do the same thing
-> except the case where the rd is provided it calls set_regdom().
-> Setting it back to use two routines if fine by me too. What is better?
-> Can we just get this merged and then we can flip it around if
-> necessary? :) I'm tired of carrying this around.
+I don't know about other sub-drivers, but rt73usb has no problems with
+packet injection whatsoever. As with all other mac80211-based drivers,
+an injector application with Radiotap header support is required.
 
-my take on this is that if from an API perspective you can only use one
-parameter or the other, then it should be two functions.
-
-Regards
-
-Marcel
-
-
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
