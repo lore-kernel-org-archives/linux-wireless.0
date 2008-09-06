@@ -1,32 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:37428 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753185AbYIGMC0 convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56715 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752668AbYIFWZi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Sep 2008 08:02:26 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: Broadcom Corporation BCM4310 USB Controller
-Date: Sun, 7 Sep 2008 14:01:56 +0200
-Cc: "Guennadi Liakhovetski" <g.liakhovetski@gmx.de>,
+	Sat, 6 Sep 2008 18:25:38 -0400
+Subject: Re: [RFC PATCH 1/3] mac80211: restructure disassoc/deauth flows
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
 	linux-wireless@vger.kernel.org
-References: <Pine.LNX.4.64.0809071146590.3981@axis700.grange> <69e28c910809070453h7264f599hc829b9e1bebdf1f1@mail.gmail.com>
-In-Reply-To: <69e28c910809070453h7264f599hc829b9e1bebdf1f1@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200809071401.57018.mb@bu3sch.de> (sfid-20080907_140236_678818_6682B03C)
+In-Reply-To: <1220739259-16918-2-git-send-email-tomas.winkler@intel.com>
+References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
+	 <1220739259-16918-2-git-send-email-tomas.winkler@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8rDBHwrQGp6Fw/EpTp5W"
+Date: Sun, 07 Sep 2008 00:25:30 +0200
+Message-Id: <1220739930.21016.6.camel@johannes.berg> (sfid-20080907_002542_014456_D81314E0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 07 September 2008 13:53:37 Stefanik G=E1bor wrote:
-> (Hopefully it will make 2.6.28 or .29.)
 
-No way. There's no published specs and no code.
+--=-8rDBHwrQGp6Fw/EpTp5W
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---=20
-Greetings Michael.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+>=20
+> +static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+> +                                  struct ieee80211_if_sta *ifsta, int de=
+auth,
+> +                                  int self_disconnected, u16 reason)
+
+I think you should use bool for those two (deauth, self)
+
+> +	rcu_read_unlock();
+> +
+> +	sta_info_unlink(&sta);
+
+Those need to be the other way around.
+
+
+> +       ieee80211_set_associated(sdata, ifsta, 0);
+
+This whole set_associated(0) vs. ieee80211_set_disassoc() business seems
+fishy to me, can't we just move the set_associated(0) code into
+set_disassoc? AFAICT there's only one caller now that calls with (0),
+and that's in set_disassoc().
+
+johannes
+
+--=-8rDBHwrQGp6Fw/EpTp5W
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIwwNXAAoJEKVg1VMiehFYJ08P/1+XbczK4VID7+tSso50ynnL
+0VjWcKE4Tymfs+217kTcWpmLW1fmfIx9bfeC5La6RtL3IJ6M7HrX16TnnOigr/hd
+fcfTfqRs7P2ZbuubSdGAdBBYq2XyRqYUyOWwpkPDtTehldFqh+PXYG8LzU+KLLJN
+ndooL4TaA7GCQQB3fHFkBObIpMxI0Z2x1I9jdxMXHAEhQ3J17hhMhdi7jcCvEiy6
+YUT79QtTdEXgGrIauu5hDs8L8CLZktxsOtimkCpkjrhySt7X9CvYOlYZomA2Ki3w
+MlNTxgh2SJk9sly0pA10dJyeSxYGgab92qL6JELrYPYkLouoz2rPeOXWWAXhPyGW
+MtPVat55OxTjdvoFzVdcykbQpCcZ1y46I5zcsJKiD10++QqbkzTpXx0GhOFFYTAP
+JTjBp8h3DTqAfko/3cz/tVdWSMV1Ti/VE11hJDwybatiRcd+crsAwdsrF75Nno6j
+UwFioRX/S3cL27uBhvDwT92iPQjmoE2uoDTJfKrhj4dAQ9O84zzFcVZfcFBJcdY9
+F4GG2iE0T+Sdt6TvFDLGi+97DdkXs9xX+YyKDftLV57Qi9bUqe9K8pMZep4+i8pe
+CsKXlJCuUpSMofSCi5JteHhf7v3qL0TT5fQLIjSz82kHX7CpuBZab27tPXN/+2s5
+ThDC16Yvq64H2ZEkubW8
+=dq4Y
+-----END PGP SIGNATURE-----
+
+--=-8rDBHwrQGp6Fw/EpTp5W--
+
