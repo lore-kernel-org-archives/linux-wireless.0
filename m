@@ -1,39 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hostap.isc.org ([149.20.54.63]:37849 "EHLO hostap.isc.org"
+Received: from bu3sch.de ([62.75.166.246]:39914 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755691AbYICOGR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2008 10:06:17 -0400
-Date: Wed, 3 Sep 2008 17:05:17 +0300
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Kalle Valo <kalle.valo@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: at76_usb.[ch] gone fishing from wireless-testing ?
-Message-ID: <20080903140517.GU17345@jm.kir.nu> (sfid-20080903_160643_709149_040F4EC3)
-References: <43e72e890809021953o29c6ba53wcdf7630d4ff10b30@mail.gmail.com> <87vdxedje8.fsf@nokia.com> <43e72e890809022003gfd462d2ma8d68f032754c121@mail.gmail.com> <20080903125352.GI3050@tuxdriver.com> <20080903130439.GJ3050@tuxdriver.com> <20080903132448.GT17345@jm.kir.nu> <20080903133802.GK3050@tuxdriver.com>
+	id S1752451AbYIFSlq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Sep 2008 14:41:46 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] b43legacy: Fix failure in rate-adjustment mechanism
+Date: Sat, 6 Sep 2008 20:41:05 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	Tim Gardner <tim.gardner@canonical.com>,
+	linux-wireless@vger.kernel.org
+References: <48c2cd1a.pA60sTEK0WsW6wtt%Larry.Finger@lwfinger.net>
+In-Reply-To: <48c2cd1a.pA60sTEK0WsW6wtt%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080903133802.GK3050@tuxdriver.com>
+Message-Id: <200809062041.06035.mb@bu3sch.de> (sfid-20080906_204149_605477_EAD0EDFF)
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 03, 2008 at 09:38:03AM -0400, John W. Linville wrote:
-> On Wed, Sep 03, 2008 at 04:24:48PM +0300, Jouni Malinen wrote:
-> > I don't see -wl in EXTRAVERSION in kernel.org version (1) or my own
-> > clone. Both are at commit 908dd0b965e64fcc2eb64152bac65f2876c34e0b. I
-> > noticed this disappearing at one of the updates since I had to add a
-> > local patch to be able to update my modules without rebooting..
+On Saturday 06 September 2008 20:34:02 Larry Finger wrote:
+> A coding error present since b43legacy was incorporated into the
+> kernel has prevented the driver from using the rate-setting mechanism
+> of mac80211. The driver has been forced to remain at a 1 Mb/s rate.
 
-> The -wl comes from localversion-wireless in the kernel's root
-> directory.  Has something changed recently to break that mechanism?
+Does version3 firmware have a different bitlayout for the status?
 
-Interesting.. I tried it now and it does indeed work, i.e., I get -wl
-from localversion-wireless. I have no idea what happened earlier, but
-'make modules; sudo make modules_install' ended up installing modules
-into 2.6.27-rc4, not 2.6.27-rc4-wl after one of the git tree updates. I
-did not look at details at that point and just added -wl to Makefile
-EXTRAVERSION. Anyway, it is not needed anymore.
+> Although this is not strictly a regression, it is a bug. I hope
+> it can be sent to 2.6.27.
+
+The new rules don't allow us to fix bugs after the merge window.
+Only regressions.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Greetings Michael.
