@@ -1,119 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:37255 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753016AbYIYQtN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2008 12:49:13 -0400
-Subject: Re: [PATCH] wireless: consolidate on a single escape_essid
-	implementation
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+Received: from xc.sipsolutions.net ([83.246.72.84]:41698 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752720AbYIFWag (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Sep 2008 18:30:36 -0400
+Subject: Re: [RFC PATCH 3/3] mac80211: remove disassociation code from
+	ieee80211_set_associated
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <1222317983.10563.20.camel@johannes.berg>
-References: <>  <1222294536-24367-1-git-send-email-linville@tuxdriver.com>
-	 (sfid-20080925_010455_582253_D66BE03B)  <1222317983.10563.20.camel@johannes.berg>
-Content-Type: text/plain
-Date: Thu, 25 Sep 2008 12:48:12 -0400
-Message-Id: <1222361292.14444.7.camel@localhost.localdomain> (sfid-20080925_184917_786459_7F5889BA)
+In-Reply-To: <1220739259-16918-4-git-send-email-tomas.winkler@intel.com>
+References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
+	 <1220739259-16918-2-git-send-email-tomas.winkler@intel.com>
+	 <1220739259-16918-3-git-send-email-tomas.winkler@intel.com>
+	 <1220739259-16918-4-git-send-email-tomas.winkler@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7drt48AXwc8YKuIHm8Zv"
+Date: Sun, 07 Sep 2008 00:30:31 +0200
+Message-Id: <1220740231.21016.13.camel@johannes.berg> (sfid-20080907_003039_961510_711C0078)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2008-09-25 at 06:46 +0200, Johannes Berg wrote:
-> On Wed, 2008-09-24 at 18:15 -0400, John W. Linville wrote:
-> > This is also an excuse to create the long rumored lib80211 module...
-> 
-> Let's also take the chance to clean up the mess Intel has, once again,
-> created here.
-> 
-> >  		switch (info_element->id) {
-> >  		case MFIE_TYPE_SSID:
-> > -			if (ieee80211_is_empty_essid(info_element->data,
-> > -						     info_element->len)) {
-> > +			if (is_empty_essid(info_element->data,
-> > +					   info_element->len)) {
-> >  				network->flags |= NETWORK_EMPTY_ESSID;
-> >  				break;
-> >  			}
-> 
-> You can remove the whole NETWORK_EMPTY_ESSID flag and this whole test;
-> the code slightly below needs to take care to actually escape the SSID
-> for the debug output.
-> 
-> > @@ -1411,7 +1412,7 @@ static int ieee80211_handle_assoc_resp(struct ieee80211_device *ieee, struct iee
-> >  			network->mode |= IEEE_B;
-> >  	}
-> >  
-> > -	if (ieee80211_is_empty_essid(network->ssid, network->ssid_len))
-> > +	if (is_empty_essid(network->ssid, network->ssid_len))
-> >  		network->flags |= NETWORK_EMPTY_ESSID;
-> 
-> drop the whole if
->  
-> >  
-> > -	if (ieee80211_is_empty_essid(network->ssid, network->ssid_len))
-> > +	if (is_empty_essid(network->ssid, network->ssid_len))
-> >  		network->flags |= NETWORK_EMPTY_ESSID;
-> 
-> ditto.
-> 
-> that leaves once place using the NETWORK_EMPTY_ESSID flag, in
-> ieee80211_wx.c:
-> 
->         /* Add the ESSID */
->         iwe.cmd = SIOCGIWESSID;
->         iwe.u.data.flags = 1;
->         if (network->flags & NETWORK_EMPTY_ESSID) {
->                 iwe.u.data.length = sizeof("<hidden>");
->                 start = iwe_stream_add_point(info, start, stop,
->                                              &iwe, "<hidden>");
->         } else {
->                 iwe.u.data.length = min(network->ssid_len, (u8) 32);
->                 start = iwe_stream_add_point(info, start, stop,
->                                              &iwe, network->ssid);
->         }
-> 
-> which is of course *completely* *wrong*. There's no excuse for messing
-> up the values passed to userspace like that.
-> 
-> > +const char *escape_essid(const char *essid, u8 essid_len)
-> > +{
-> > +	static char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
-> > +	const char *s = essid;
-> > +	char *d = escaped;
-> > +
-> > +	if (is_empty_essid(essid, essid_len)) {
-> > +		memcpy(escaped, "<hidden>", sizeof("<hidden>"));
-> > +		return escaped;
-> > +	}
-> 
-> Once you've done the above, is_empty_essid is only used here. I'll leave
-> it to you whether you want to print <hidden> or not, I'd prefer if the
-> function was to just escape the ASCII-NULs as normal since then you can
-> actually distinguish the various forms of hidden SSIDs which might help.
-> Maybe that needs quotes around the escaped SSID then.
-> 
-> > +	essid_len = min(essid_len, (u8) IW_ESSID_MAX_SIZE);
-> > +	while (essid_len--) {
-> > +		if (*s == '\0') {
-> > +			*d++ = '\\';
-> > +			*d++ = '0';
-> > +			s++;
-> > +		} else {
-> > +			*d++ = *s++;
-> > +		}
-> > +	}
-> > +	*d = '\0';
-> > +	return escaped;
-> > +}
-> > +EXPORT_SYMBOL(escape_essid);
-> 
-> Also, we could take the chance to stop making Jean's mistake in calling
-> this thing the _E_SSID, there's no such thing, it's Jean's invention,
-> based on his misguided thought that this might somehow be less confusing
-> to the user.
 
-+1
+--=-7drt48AXwc8YKuIHm8Zv
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Dan
+On Sun, 2008-09-07 at 01:14 +0300, Tomas Winkler wrote:
+
+> -	ieee80211_led_assoc(local, assoc);
+> +	ieee80211_led_assoc(local, 1);
+> =20
+> -	sdata->bss_conf.assoc =3D assoc;
+> +	sdata->bss_conf.assoc =3D 1;
+
+I think you should use "true" at least for the latter "1"
+
+> +	sdata->bss_conf.assoc =3D 0;
+
+and "false" here, and if the LED interface uses "bool" then for that
+too.
+
+The actual patch looks good to me though.
+
+johannes
+
+--=-7drt48AXwc8YKuIHm8Zv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIwwSDAAoJEKVg1VMiehFYgJAQALm37cysmU0qhu7V3AIV6whn
+/f1T5xYdXFjb83I2HJptVWa4dDERYePRQz3K8RwyEmoSjofi5xiVo0LuoEImhCnX
+HYAiIJ4I2UMzpqeJoAtE7GwlL3Qr+H8EZFu5kwqdgVk3lAr23TSZrZ0c9KtoxTiT
+GoiqilIDtfsLtYQoOvxWt4qHsMltmDBrOomnMvOAK39xqyzLvJgFzVsptcyV11Gn
+r2kjtC3DxljmGaLH9CKvlUm4tCop4KQARJC1yY/QsWTPKYs1o0sqjNwfjNbol/7B
+UvKBUy6rWxMPSyAwF6jZwKklU4h+eDKASUIr3BNHkB67Ig9eIPMt/cGuU4x3XXQh
+yF7woFDVO9gbA3tz0iFX5gzgdjZ4ab9VNxpA1Vbsfm9Ec8RUIlJM0vtB1a25O22M
+vGx7/36xun3XiryMsj8Z3gh+h20kJ+1Q0aQo84pOFHlwIVucwrG8O/GfcPBbvfTS
+gHF+f78s4HnDPRaeESJU7SJbWwno4nEKzl2M8O3q9UMptekFVhS82TWDdfSW/oII
+ja7j4R70sQmzVG40C90TXYrUr0Sw2+AAsEumNl7vx7fEzM67SnS4DX1K7dE1a6hc
+qFRHB+alnOr9VcZqgRGw4eruy20Y19jPEd2r90tqLTf5habF1e2+G5ddeF0CQHjy
+fF20tH8JMR02RV1zAALi
+=8skX
+-----END PGP SIGNATURE-----
+
+--=-7drt48AXwc8YKuIHm8Zv--
 
