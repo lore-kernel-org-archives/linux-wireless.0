@@ -1,72 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:22587 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752667AbYIQCOb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 22:14:31 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH] iwlwifi: remove HT flags from RXON when not in HT anymore
-Date: Wed, 17 Sep 2008 10:10:05 +0800
-Message-Id: <1221617405-14583-1-git-send-email-yi.zhu@intel.com> (sfid-20080917_041458_867336_C6FEBD5E)
+Received: from bay0-omc3-s9.bay0.hotmail.com ([65.54.246.209]:36541 "EHLO
+	bay0-omc3-s9.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752150AbYIFThX convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Sep 2008 15:37:23 -0400
+Message-ID: <BAY118-W35E84AAD3187213E9B24F6DB5B0@phx.gbl> (sfid-20080906_213729_319379_FBAE820F)
+From: Greg White <pcguy11@live.com>
+To: =?iso-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: rt2x00 and packet injection
+Date: Sat, 6 Sep 2008 14:37:22 -0500
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This patch removes the HT flags from RXON when moving from HT to legacy.
-This avoids keeping those flags set and possibly miss configuring firmware.
+> On Sat, Sep 6, 2008 at 2:34 AM, Greg wrote:
+>>
+>> Hi,
+>>
+>> What is the status of packet injection in the rt2x00 driver? From my testing of 2.6.27 rc3 and reading 2.6.27 doesn't seem likely. Is there a todo list in priority order?
+>>
+>> Thanks,
+>>
+>
+> I don't know about other sub-drivers, but rt73usb has no problems with
+> packet injection whatsoever. As with all other mac80211-based drivers,
+> an injector application with Radiotap header support is required.
+>
+> --
+> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
 
-If we are configured in HT, fat channel: channel 1 above, and move later
-to legacy channel 11, we need to clear the FAT channel control flags in
-RXON. If we don't, the firmware will understand this as channel 11 above
-which is not possible due to regulatory constraints, leading to firmware
-crash.
+I tried aircrack-ng and 2.6.27-rc3 and the two don't want to work together.  Yes I dowloaded and compiled iw and libnl.  I have to use the driver from http://homepages.tu-darmstadt.de/~p_larbig/wlan/ to get aircrack-ng to work right.  Any suggestions?
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reviewed-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c  |    3 +--
- drivers/net/wireless/iwlwifi/iwl-core.c |    8 +++++++-
- 2 files changed, 8 insertions(+), 3 deletions(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 2652672..c31adf6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2504,8 +2504,7 @@ static void iwl4965_post_associate(struct iwl_priv *priv)
- 
- 	priv->staging_rxon.filter_flags |= RXON_FILTER_ASSOC_MSK;
- 
--	if (priv->current_ht_config.is_ht)
--		iwl_set_rxon_ht(priv, &priv->current_ht_config);
-+	iwl_set_rxon_ht(priv, &priv->current_ht_config);
- 
- 	iwl_set_rxon_chain(priv);
- 	priv->staging_rxon.assoc_id = cpu_to_le16(priv->assoc_id);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 8203887..4c312c5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -646,8 +646,14 @@ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_info *ht_info)
- 	struct iwl_rxon_cmd *rxon = &priv->staging_rxon;
- 	u32 val;
- 
--	if (!ht_info->is_ht)
-+	if (!ht_info->is_ht) {
-+		rxon->flags &= ~(RXON_FLG_CHANNEL_MODE_MIXED_MSK |
-+			RXON_FLG_CHANNEL_MODE_PURE_40_MSK |
-+			RXON_FLG_CTRL_CHANNEL_LOC_HI_MSK |
-+			RXON_FLG_FAT_PROT_MSK |
-+			RXON_FLG_HT_PROT_MSK);
- 		return;
-+	}
- 
- 	/* Set up channel bandwidth:  20 MHz only, or 20/40 mixed if fat ok */
- 	if (iwl_is_fat_tx_allowed(priv, NULL))
--- 
-1.5.3.6
-
+_________________________________________________________________
+Get more out of the Web. Learn 10 hidden secrets of Windows Live.
+http://windowslive.com/connect/post/jamiethomson.spaces.live.com-Blog-cns!550F681DAD532637!5295.entry?ocid=TXT_TAGLM_WL_domore_092008
