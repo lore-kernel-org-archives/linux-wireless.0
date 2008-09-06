@@ -1,42 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:6448 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752860AbYIHGpZ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55794 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751418AbYIFQNS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 02:45:25 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2 v4] cfg80211: Add new wireless regulatory infrastructure
-Date: Mon, 8 Sep 2008 08:44:58 +0200
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>, linville@tuxdriver.com
-References: <1220636669-8153-1-git-send-email-lrodriguez@atheros.com> <1220640389.11109.15.camel@johannes.berg> <43e72e890809051211r3db3ca12m671c9ed9615b9e1b@mail.gmail.com>
-In-Reply-To: <43e72e890809051211r3db3ca12m671c9ed9615b9e1b@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200809080844.59098.hs4233@mail.mn-solutions.de> (sfid-20080908_084529_568532_5C126507)
+	Sat, 6 Sep 2008 12:13:18 -0400
+Subject: [PATCH] mac80211: make conf_tx non-atomic
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain
+Date: Sat, 06 Sep 2008 18:13:08 +0200
+Message-Id: <1220717588.5376.0.camel@johannes.berg> (sfid-20080906_181322_345780_C344134A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 05 September 2008 21:11:49 Luis R. Rodriguez wrote:
-> >> +struct ieee80211_freq_range {
-> >> +     u32 start_freq;
-> >> +     u32 end_freq;
-> >> +     u32 max_bandwidth;
-> >
-> > u32 seems excessive for the bandwidth, no?
->
-> I think its fine, remember this is in KHz.
+The conf_tx callback currently needs to be atomic, this requirement
+is just because it can be called from scanning. This rearranges it
+slightly to only update while not scanning (which is fine, we'll be
+getting beacons when associated) and thus removes the atomic
+requirement.
 
-max_bandwitth_khz ???
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/mac80211.h |    2 +-
+ net/mac80211/mlme.c    |   13 ++++++++-----
+ 2 files changed, 9 insertions(+), 6 deletions(-)
+
+--- everything.orig/include/net/mac80211.h	2008-09-06 17:05:53.000000000 +0200
++++ everything/include/net/mac80211.h	2008-09-06 17:05:58.000000000 +0200
+@@ -1142,7 +1142,7 @@ enum ieee80211_ampdu_mlme_action {
+  *	of assocaited station or AP.
+  *
+  * @conf_tx: Configure TX queue parameters (EDCF (aifs, cw_min, cw_max),
+- *	bursting) for a hardware TX queue. Must be atomic.
++ *	bursting) for a hardware TX queue.
+  *
+  * @get_tx_stats: Get statistics of the current TX queue status. This is used
+  *	to get number of currently queued packets (queue length), maximum queue
+--- everything.orig/net/mac80211/mlme.c	2008-09-06 17:06:00.000000000 +0200
++++ everything/net/mac80211/mlme.c	2008-09-06 17:07:13.000000000 +0200
+@@ -2701,15 +2701,18 @@ static void ieee80211_rx_mgmt_beacon(str
+ 	    memcmp(ifsta->bssid, mgmt->bssid, ETH_ALEN) != 0)
+ 		return;
+ 
+-	ieee80211_sta_wmm_params(local, ifsta, elems.wmm_param,
+-				 elems.wmm_param_len);
+-
+ 	/* Do not send changes to driver if we are scanning. This removes
+-	 * requirement that driver's bss_info_changed function needs to be
+-	 * atomic. */
++	 * requirement that a driver's bss_info_changed/conf_tx functions
++	 * need to be atomic.
++	 * This is really ugly code, we should rewrite scanning and make
++	 * all this more understandable for humans.
++	 */
+ 	if (local->sta_sw_scanning || local->sta_hw_scanning)
+ 		return;
+ 
++	ieee80211_sta_wmm_params(local, ifsta, elems.wmm_param,
++				 elems.wmm_param_len);
++
+ 	if (elems.erp_info && elems.erp_info_len >= 1)
+ 		changed |= ieee80211_handle_erp_ie(sdata, elems.erp_info[0]);
+ 	else {
 
 
-> >>       u16 center_freq;
-> >> +     u8 max_bandwidth;
-> >
-> > and here you're using u8 anyway :)
->
-> and this is in MHz
-
-max_bandwidth_mhz ???
