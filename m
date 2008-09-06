@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56701 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751848AbYIKD2R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2008 23:28:17 -0400
-Subject: [PATCH 25/18] mac80211: pass AP vif pointer for VLANs
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from bu3sch.de ([62.75.166.246]:40367 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752367AbYIFRaE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Sep 2008 13:30:04 -0400
+From: Michael Buesch <mb@bu3sch.de>
 To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080910220145.707263000@sipsolutions.net> (sfid-20080911_001619_033062_98BAB5F3)
-References: <20080910220145.707263000@sipsolutions.net>
-	 (sfid-20080911_001619_033062_98BAB5F3)
-Content-Type: text/plain
-Date: Thu, 11 Sep 2008 05:27:40 +0200
-Message-Id: <1221103660.3804.86.camel@johannes.berg> (sfid-20080911_052820_916922_8A0AF194)
-Mime-Version: 1.0
+Subject: [PATCH] b43 G-PHY: Remove mmiowb()
+Date: Sat, 6 Sep 2008 19:28:55 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200809061928.56550.mb@bu3sch.de> (sfid-20080906_193012_461841_5E2487D2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We cannot pass a VLAN vif pointer to the driver since those are
-entirely virtual and we never tell the driver.
+It causes compile errors on m68k and it is not needed.
+Remove it.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
 ---
- net/mac80211/tx.c |    4 ++++
- 1 file changed, 4 insertions(+)
 
---- everything.orig/net/mac80211/tx.c	2008-09-11 05:22:58.000000000 +0200
-+++ everything/net/mac80211/tx.c	2008-09-11 05:25:16.000000000 +0200
-@@ -1351,6 +1351,10 @@ int ieee80211_master_start_xmit(struct s
- 		return 0;
- 	}
+John, please queue for the next merge window.
+
+
+Index: wireless-testing/drivers/net/wireless/b43/phy_g.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/phy_g.c	2008-09-06 15:06:56.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/phy_g.c	2008-09-06 19:24:35.000000000 +0200
+@@ -383,13 +383,12 @@ static void b43_set_original_gains(struc
+ }
  
-+	if (osdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+		osdata = container_of(osdata->bss,
-+				      struct ieee80211_sub_if_data,
-+				      u.ap);
- 	info->control.vif = &osdata->vif;
- 	ret = ieee80211_tx(odev, skb);
- 	dev_put(odev);
-
-
+ /* http://bcm-specs.sipsolutions.net/NRSSILookupTable */
+ void b43_nrssi_hw_write(struct b43_wldev *dev, u16 offset, s16 val)
+ {
+ 	b43_phy_write(dev, B43_PHY_NRSSILT_CTRL, offset);
+-	mmiowb();
+ 	b43_phy_write(dev, B43_PHY_NRSSILT_DATA, (u16) val);
+ }
+ 
+ /* http://bcm-specs.sipsolutions.net/NRSSILookupTable */
+ s16 b43_nrssi_hw_read(struct b43_wldev *dev, u16 offset)
+ {
