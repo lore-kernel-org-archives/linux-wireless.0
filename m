@@ -1,90 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39092 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751649AbYIFXej (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 19:34:39 -0400
-Subject: Re: [RFC PATCH 1/3] mac80211: restructure disassoc/deauth flows
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linville@tuxdriver.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240809061624n2ec9537n6f280c5ef6641181@mail.gmail.com> (sfid-20080907_012434_987506_58CE68B5)
-References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
-	 <1220739259-16918-2-git-send-email-tomas.winkler@intel.com>
-	 <1220739930.21016.6.camel@johannes.berg>
-	 <1ba2fa240809061532s4f8e08c1xe59f99768ce440c0@mail.gmail.com>
-	 <1220740939.21016.19.camel@johannes.berg>
-	 <1ba2fa240809061624n2ec9537n6f280c5ef6641181@mail.gmail.com>
-	 (sfid-20080907_012434_987506_58CE68B5)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LSXIIzcIOBDbgflXjFGS"
-Date: Sun, 07 Sep 2008 01:34:31 +0200
-Message-Id: <1220744071.21016.25.camel@johannes.berg> (sfid-20080907_013442_579479_458772D4)
-Mime-Version: 1.0
+Received: from Viola.Opus1.COM ([192.245.12.8]:3394 "EHLO Viola.Opus1.COM"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751239AbYIFFEl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Sep 2008 01:04:41 -0400
+Received: from [172.17.0.188] ([61.8.118.66])
+ by Opus1.COM (PMDF V6.2-X27 #9830) with ESMTPSA id
+ <01MZ7UY6B0EK8YG025@Opus1.COM> for linux-wireless@vger.kernel.org; Fri,
+ 05 Sep 2008 22:04:39 -0700 (MST)
+Date: Fri, 05 Sep 2008 22:04:36 -0700
+From: gavron@wetwork.net
+Subject: Re: Speed enhancement for BCM4306/2
+In-reply-to: <48C20BD7.6080605@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Broadcom Wireless <bcm43xx-dev@berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Message-id: <48C20F64.1000700@wetwork.net> (sfid-20080906_070456_494108_2B309741)
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1; format=flowed
+References: <48C1BA91.7050106@lwfinger.net> <48C20928.10202@wetwork.net>
+ <48C20BD7.6080605@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-LSXIIzcIOBDbgflXjFGS
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2008-09-07 at 02:24 +0300, Tomas Winkler wrote:
-> On Sun, Sep 7, 2008 at 1:42 AM, Johannes Berg <johannes@sipsolutions.net>=
- wrote:
-> > On Sun, 2008-09-07 at 01:32 +0300, Tomas Winkler wrote:
-> >> On Sun, Sep 7, 2008 at 1:25 AM, Johannes Berg <johannes@sipsolutions.n=
-et> wrote:
-> >> >
-> >> >>
-> >> >> +static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *s=
-data,
-> >> >> +                                  struct ieee80211_if_sta *ifsta, =
-int deauth,
-> >> >> +                                  int self_disconnected, u16 reaso=
-n)
-> >> >
-> >> > I think you should use bool for those two (deauth, self)
-> >>
-> >> I'm thinking rather using some enum values just for readability
-> >> foo(DEAUTH, ORIGIN_SELF) vs foo(tree,true)
-> >> foo(DISASSOC, ORIGIN_PEER)  vs foo(false, false)
-> >
-> > That works too, sure, though seems a little overkill, the function is
-> > called what, three times? Anyway, whatever you prefer, I just don't lik=
-e
-> > bare "int" as a bool.
->=20
-> Do u think it is sane using IEEE80211_STYPE_DISASSOC and
-> IEEE80211_STYPE_DEAUTH for this?
+Larry Finger wrote:
+> gavron@wetwork.net wrote:
+>> Is this close?
+>> E
+>>
+>
+> It is close, but I think you are working on b43. My changes are for 
+> b43legacy and all changes will be in drivers/net/wireless/b43legacy/phy.c
+>
+> Larry
 
-Dunno, were you thinking of unifying ieee80211_send_disassoc and
-ieee80211_send_deauth into a single function? That might be worthwhile
-anyway, the frames are identical...
+Ok, here's try #2. 
 
-johannes
-
---=-LSXIIzcIOBDbgflXjFGS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIwxOEAAoJEKVg1VMiehFYoUYP/1ROHSrAcyXdK6BoNRWH78cI
-OkBtsBUwmEXKpACXlFQA54GHQioGETrHE1p4SONulS0qHWYW8Utewjqp184LlLCg
-JTxrAOp37N4eRO1MOIqR3C1d/qnWHnphskGHEtsUjTjCXyLFKyDtfQtRKKgHYC8M
-mL4eFojX4/RtwLgbg0CYqdvvjGJAHnlJmayYSF+aLiAjkhuMjvZEdYYO3V7jrZOY
-7NqV6cp7MXKHnURZhVeIR699WQUBe8gmIDUqWWjEQ7WcQkhFads6a2xnQNh1JCgF
-wgVt0BK9Q0euXXE/B+LfGO64IJqUUfM0a2B4qRF04VcEtxNPivKMWNXKdXOqTps5
-yUUaSomp9A5h5qO0OBZU8ZM9UidVd3rzD7Xy6xpIvaDrDp8ZZPHELgK8lheuSNMe
-oiY8e3T9+TmyA0BeLBfYBSQw66CKBfgXBtaz//dOonnlzjaAq+KUc1aMoPufj38J
-7R4d/1o7ANkUYBTxmkMPge16jjNVmbXtuMF1LZh/dTwsYN19rktq2xn599fmdxes
-NVuRIcV1Fg1K4xI9CZZADIBEpqIq6BPdhdq6id7A3gJ4zbBDuDfI4/9R7OGJZeo8
-5yl9gogdAyoHMLr0uMtA5MtfHIyOIjW4mswDXUXDDP7xtyg/HQMVIIyTEiyqcZPv
-xx3LXMEtHCUlGf2Nj/z7
-=uY6e
------END PGP SIGNATURE-----
-
---=-LSXIIzcIOBDbgflXjFGS--
+E
+/home/2.6.27/rc4-wl/drivers/net/wireless/b43legacy# diff -uN /tmp/phy.c 
+phy.c
+--- /tmp/phy.c    2008-09-05 21:56:20.000000000 -0700
++++ phy.c    2008-09-05 22:03:28.000000000 -0700
+@@ -1010,7 +1010,7 @@
+         b43legacy_phy_initb5(dev);
+     else
+         b43legacy_phy_initb6(dev);
+-    if (phy->rev >= 2 || phy->gmode)
++    if (phy->rev >= 2 && phy->gmode)
+         b43legacy_phy_inita(dev);
+ 
+     if (phy->rev >= 2) {
+@@ -1027,15 +1027,17 @@
+     }
+     if (phy->rev >= 2 || phy->gmode) {
+         tmp = b43legacy_phy_read(dev, 0x0400) & 0xFF;
+-        if (tmp == 3 || tmp == 5) {
++        if (tmp == 4 || tmp == 5) {
+             b43legacy_phy_write(dev, 0x04C2, 0x1816);
+-            b43legacy_phy_write(dev, 0x04C3, 0x8006);
++            b43legacy_phy_write(dev, 0x04C3, 0x8606);
+             if (tmp == 5)
+                 b43legacy_phy_write(dev, 0x04CC,
+                             (b43legacy_phy_read(dev,
+                              0x04CC) & 0x00FF) |
+                              0x1F00);
+         }
++    }
++    if (phy->rev >= 2)
+         b43legacy_phy_write(dev, 0x047E, 0x0078);
+     }
+     if (phy->radio_rev == 8) {
 
