@@ -1,81 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57658 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:47850 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753452AbYIRQqT (ORCPT
+	with ESMTP id S1752516AbYIFRXK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 12:46:19 -0400
-Subject: Re: [PATCH] rfkill: clarify usage of rfkill_force_state() and
-	rfkill->get_state()
+	Sat, 6 Sep 2008 13:23:10 -0400
+Subject: Re: [PATCH] Ath9k: Add RF kill support.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <20080918164339.GM1583@khazad-dum.debian.net> (sfid-20080918_184349_935626_1261357F)
-References: <20080918145236.GJ1583@khazad-dum.debian.net>
-	 <1221751166-9927-1-git-send-email-hmh@hmh.eng.br>
-	 <200809181724.03723.IvDoorn@gmail.com>
-	 <20080918164339.GM1583@khazad-dum.debian.net>
-	 (sfid-20080918_184349_935626_1261357F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-b7eJR4XjKi7of7rMOJqF"
-Date: Thu, 18 Sep 2008 18:45:39 +0200
-Message-Id: <1221756339.9262.86.camel@johannes.berg> (sfid-20080918_184623_462256_259FF26B)
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+In-Reply-To: <1220721572.10102.0.camel@johannes.berg> (sfid-20080906_192003_595621_9791F144)
+References: <20080906123842.GA27504@vasanth-lnx.users.atheros.com>
+	 <1220721347.6714.114.camel@californication>
+	 (sfid-20080906_191538_728310_1EC0FE5D)  <1220721572.10102.0.camel@johannes.berg>
+	 (sfid-20080906_192003_595621_9791F144)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ivoudtRfgz6WIl2qFLg3"
+Date: Sat, 06 Sep 2008 19:23:08 +0200
+Message-Id: <1220721788.10102.3.camel@johannes.berg> (sfid-20080906_192314_597964_10EBA16C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-b7eJR4XjKi7of7rMOJqF
+--=-ivoudtRfgz6WIl2qFLg3
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2008-09-18 at 13:43 -0300, Henrique de Moraes Holschuh wrote:
+On Sat, 2008-09-06 at 19:19 +0200, Johannes Berg wrote:
+> On Sat, 2008-09-06 at 19:15 +0200, Marcel Holtmann wrote:
+> > Hi Vasanthakumar,
+> >=20
+> > > CONFIG_ATH9K_RFKILL needs to be set
+> > > to enable this support.
+> >=20
+> > why do we have to introduce yet another config option for this? What is
+> > the advantage of disabling RFKILL support? I really don't see it and al=
+l
+> > these extra config options are rather confusing than useful.
+>=20
+> "if EMBEDDED", I think you may want to build a router without rfkill
+> stuff.
 
-> Now it must do something like this in pseudo-code:
->=20
-> 	1. if (the bit is disabled (i.e. SW rfkill is NOT ACTIVE)) {
-> 		rfkill-SW-status =3D disabled;
-> 	   }  else if (the bit is enabled (i.e. SW rfkill is ACTIVE)) {
-> 		if (tx power off is NOT ACTIVE)
-> 			rfkill-SW-status =3D enabled;
-> 		else
-> 			rfkill-SW-status =3D whatever the user asked
-> 	   }
->=20
-> THEN, it should use rfkill-sw-status, along with the hw rfkill line statu=
-s,
-> to synthesize the state it must pass to rfkill_force_status().
->=20
-> ICK.  Of course, if the driver has another way to implement txpower off t=
-hat
-> does not clash with sw rfkill, the above is unneeded.
-
-Why are we not handling soft-rfkill in mac80211 entirely?
+Although I don't like all the select business, can't we just have this
+be an invisible option and make it depend on RFKILL? That way, when
+RFKILL isn't selected, ath9k-rfkill won't be compiled, but if it is, it
+will be, and RFKILL can be "default y" and "if EMBEDDED"
 
 johannes
 
---=-b7eJR4XjKi7of7rMOJqF
+--=-ivoudtRfgz6WIl2qFLg3
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI0oWuAAoJEKVg1VMiehFYmg4P/R2ix8QvQ8C/Tc5HVbwk2k8r
-HxcdL7ksGsZzKRi6RU/fkap+JHqHlTEOJDlFo8Bm/1rg+JydMHweSCGWjPJKYNTe
-XLQf1CymVg4Y07NwYdLfi2AZyxzaegIH1PPV63aAYCM5kVaTXY6+n7z7bofeD5fa
-TLb2ET3Y7IJChiGbvMa7kK5a8cSYiGm5vWTct64/XAOLyHxODzwhu+vTnGqMb351
-XoEhCT44H93X/MIFeJk/4jsxaPglAGZn/iJe5n1a83x1/t02stBFtObTSSJnIyhf
-/8qxvHpUCaSnAnc3EGHYv37JLqxWWPwfahs45T7Hiau87uVpl2LIRaZfDQidGp6y
-EZdw1kLyVfpcCfZaK4dW1Pk2OumZZsDSw9F5HHGnKA4yrcWmQvU6CgkdF2G12Luv
-7vhgTrCtg+9SFvzpYiHpnPJoaB2PD4Mr4qvZepUuyDnq3BlpVIJroON1XriBXGZn
-+8TOBSJGdImtf/Bh/i538ZBm3H//2YiNaUyKrueDW9jEuUZUUg8JFx+KfKJWn2Hc
-sycxOt+CZFfFejYQBPceMRZkx4ifM2Wfsy4SCz5vvoLsJ7ex4ZiCvRNaLBz8jHhM
-RpcsFzkzewRB+D4nivdArhbH+L6Q1FA5ri/sStB+C5SaG2V8SX34Kl+HyANlwjMt
-IBZ7rCI+EgD+Z61HUfNm
-=oaZO
+iQIcBAABAgAGBQJIwrx4AAoJEKVg1VMiehFYqvYP/RPjRqQvfT9NP/aNiefdDobQ
+5+ybjKFCGsGxV2PhK08NbLJam3Yj4D3JdJDkpubldeAJGEO/mjis1TakWYdOb7PB
+h35UcI/fnfPv+FxxZHIkW4GK45ZrFmeDTDh1Q87iC7zF+L+Oe0vFJvwJZyY4nWzl
+JiOw0Gi9YuAhlzhs8jjpfXnxoQjxNo6Y+cTT74ZAdjFvH5/PvRMcoNIqRqB++f1o
+/MBusQXmH6aNeOHlusOErnPWoAjEmnJ2qhZ66+KZ9uMbsUWClMQGMAczURfQjwiD
+8wgnGUxfyZ3dD95l3AFWpOa995w8nUXTOCEsMrwbPhTdry07+vC1IEl2AszUEXUZ
+bro6OtgGqnUvtSAy61SmZ+ix5pLBHTz0UVDtM6U2Bf4/uBv73t+jTLL2po+HaJHq
+o+W/DkDf3SDkCwx+PDIJ9cgWnOrvR8Y3bbTuH5VGxUkkPOeO1xpMefSBM/pFDcgv
+SXau0aBOgMk+BXLPNyspR2iUuhpkDilDV5zSQUZ2mR4q/QHUmjWWtkKwSH8D6vnp
+zTSnrAvViJodjXAczmf/xpje7t8yEZvuZyoXX+hp9nKuX6bZp8bGd7ydfIusmtuD
+oV075EOLTNLPpvNzOeHKDFGcWRk71KDi25FHJDwFabrzdDE+6tk4b0x9bv7Z6r88
+2JbT4aL/abKBENfYzbm7
+=u+6L
 -----END PGP SIGNATURE-----
 
---=-b7eJR4XjKi7of7rMOJqF--
+--=-ivoudtRfgz6WIl2qFLg3--
 
