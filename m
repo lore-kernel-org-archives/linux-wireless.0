@@ -1,85 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57594 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:33678 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751132AbYIYE3n (ORCPT
+	with ESMTP id S1752158AbYIGHRN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2008 00:29:43 -0400
-Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
+	Sun, 7 Sep 2008 03:17:13 -0400
+Subject: Re: [PATCH] Ath9k: Add RF kill support.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ian Schram <ischram@telenet.be>
-Cc: Marcel Holtmann <holtmann@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <48DAC681.9010305@telenet.be>
-References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
-	 (sfid-20080911_100535_000722_EE099914) <1222287287.4257.49.camel@johannes.berg>
-	 <48DAC681.9010305@telenet.be>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FHdQTOAFlZ9d6ddXmk99"
-Date: Thu, 25 Sep 2008 06:28:51 +0200
-Message-Id: <1222316931.10563.7.camel@johannes.berg> (sfid-20080925_062947_844100_429512F5)
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+In-Reply-To: <1220749216.6714.122.camel@californication>
+References: <20080906123842.GA27504@vasanth-lnx.users.atheros.com>
+	 <1220721347.6714.114.camel@californication>
+	 (sfid-20080906_191538_728310_1EC0FE5D)  <1220721572.10102.0.camel@johannes.berg>
+	 (sfid-20080906_192003_595621_9791F144)  <1220721788.10102.3.camel@johannes.berg>
+	 <1220749216.6714.122.camel@californication>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-831E8SyoDXDeZ+FtRyFu"
+Date: Sun, 07 Sep 2008 09:17:04 +0200
+Message-Id: <1220771824.31304.2.camel@johannes.berg> (sfid-20080907_091716_981119_4368F818)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-FHdQTOAFlZ9d6ddXmk99
+--=-831E8SyoDXDeZ+FtRyFu
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2008-09-25 at 01:00 +0200, Ian Schram wrote:
+Hi Marcel,
 
-> > Incidentally, if this really is the same bug I have, you might want to
-> > remove the iwlagn module completely, even loading it once is a bad
-> > thing, it has started to corrupt things here entirely by making DMA go
-> > to random locations.
+> so what overhead is it to have RFKILL just enabled all the time. It is a
+> small subsystem and the extra code inside the drivers is also not that
+> much. So what are we really trying to save here?
 >=20
-> with the release of -rc7 i was starting to wonder what had happened to th=
-is bug,
-> i'm not affected by it(other hardware) but from what i gather it's a seri=
-ous problem?
->=20
-> i have always wondered what people affected by this find if they revert t=
-he
-> "memory allocation optimization" patch
->=20
-> http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3Dco=
-mmit;h=3Dda99c4b6c25964b90c79f19beccda208df1a865a
->=20
-> apologies if this is a too random stab in the dark, just sounds like we m=
-ight want to fix this
-> before .27. And since there seems to be no git bisects that pinpoint the =
-problem ..
-> i figured i might as well send this.
+> I can see your router point, but does it really matter? I don't think so
+> and some routers allow to switch WiFi off and then they want the RFKILL
+> switch again. Also what about the LEDS subsystem. The same would apply
+> and we are not bothering in just enabling it.
 
-I haven't really pondered bisecting since it happens for me with iwl5000
-hardware which wasn't supported before... Because this bug was affecting
-my machine quite a bit I've now removed the wireless card from it for
-the time being. I still think it should be easy to reproduce by using a
-machine with a good amount of memory (I have 6.5G) and enabling
-CONFIG_SLUB_DEBUG, which seems to have at least some part in it.
+Yeah I mostly agree with you, but those things do add up. Two kb .text
+saved means we can handle a few more stations ;)
+
+> > Although I don't like all the select business, can't we just have this
+> > be an invisible option and make it depend on RFKILL? That way, when
+> > RFKILL isn't selected, ath9k-rfkill won't be compiled, but if it is, it
+> > will be, and RFKILL can be "default y" and "if EMBEDDED"
+>=20
+> that would be a good compromise. I hate all these extra options that are
+> basically useless since we enable them anyway. There have already been
+> various complains about useless options. So at least hide them inside
+> CONFIG_EMBEDDED if you really think it is worth it. My personal opinion
+> is that RFKILL support should not be optional. If the hardware supports
+> it then it should be enabled.
+
+Then we'd be back at select, but I don't really care much either way. I
+agree that this particular option and other driver options for this are
+fairly useless.
+
+On the other hand, if rfkill isn't optional but selected, I lose, udev
+has been so buggy that I've had to disable rfkill to avoid having it go
+into an endless loop on some rfkill (re-/de-?)registrations.
 
 johannes
 
---=-FHdQTOAFlZ9d6ddXmk99
+--=-831E8SyoDXDeZ+FtRyFu
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI2xN/AAoJEKVg1VMiehFYZhoQALUFNodZJ2L5/UKAA4CMJ0PO
-zzLWYCDC6mbH5i8OZt0NetcNn4qIwYZ7TG5GhbbxQY0onsSjS6rgmE8C2OzAD/Tc
-7N2GeHKlOpidbPnDeYBXn8LxktDo5wjGswbW8Aatmt3ZmnCZlCPgHDvjpEPMoGwd
-eKxr9w9WKtIvcg2yqwsG2gpOERfO8QbNShHdLjmbn3tXVD7IFqOlnzB59lKF+OnB
-3gIkciKwU2GCEfsxI86gCIPhwwkTR5ja0VYQeJk0YSIPpJva38Bb3cNFHTwOFCjJ
-NtWhcfm1RKjpS0rs6MNxISkHjBZ5QTxIXhF1Xzfsu0ns6bwoAn9cvFaos4lnRDcx
-pu1Vsd8iXlq+D+ztxbIFesC8iayj2KfKElrva9DAkDPn4XTEKQ/4rvLAY3TrEXlW
-TF6r0ulYm/WT9XjiFyVmVRm7seCBOwOh8fcn+vBM12Jcv+cSbDdBQv80vzeFFqTk
-5JOOGUKpAqzQyWWQhJYyWT6fX+5yUzqG5AruW+ozsmRwTL1xXbFgapOO2Q/32xp+
-MsQ9cg3ZW/edtl0uK3z/leD+bpQPHKsjpDln8aA6POiGW3rhnTlz4UZeYMy5Jih8
-sBImN5+jGEgsjc1OLNC53yMiM4ubgszsFkjxDjFHTYboeUINRYCBq6hgPXv/bKd+
-KdvPUHYmuQ36c5WDqUUU
-=E7u+
+iQIcBAABAgAGBQJIw3/sAAoJEKVg1VMiehFYReMP/3HgQIdBDov2KAtGxu02TCt3
+FtOBJ5j1kfDyv9EppPe3YNdWHo5FJWL9j9KIBUAAEXzHk7YvQyiGCgtG0s+huOo8
+ILJlBYc5Q6IQHWpQpVdfM/zafy0hZcM4bmHDfFrnpMETOeiU9UmEoFtx+ib1YO/+
+VIjpZ2+mSWj5TUj/ElJXXF52rW29J6+9cx0PjNXgtcbKJhD8rpRJRibXZ0AkL8Sb
+H/xdVkA2ICTgZWMRNEHk6SpqihXaZ4P4mQ92QVkxEiun4Bu1ooZsbTngYC2W4dJc
+kld5SU0f9xZVL3TjOKPxgldZeReid4Im5B+q5Tn1CrAnNaAHwbUCrprpxBNS3b2O
+EajQ97TH9+zINFMzFnbyw9vRV21Yplrhdv5ilHnYCzVEEZfIm5JsqYc5q5KzUci4
+jOYb2Et2qmJPQaW0cIVPHXTXsybbUVPNUv9hqymzqUxsrltUjwHH2Qe3aZu0PYqC
+T4ELHQu+jvzfjab08SUrp/INY1k5ka+B6xA/Zm0XS1YDP8s8Ume2HrVM8fEktiL6
+hCPZ6MwGT1/pwlcN/hDVLn+6BsCAjL5a0IydH/vx0+PqJKCjqOEclGe8Clgdt5VT
+FCLUw84i/oKWDIQoYaN8od+GgpycyCgGp9G4EuLljRDXzSDKzAtJf/Fh/J1DerdF
+4PH+mNPB6PfjwYIosKbX
+=G7vC
 -----END PGP SIGNATURE-----
 
---=-FHdQTOAFlZ9d6ddXmk99--
+--=-831E8SyoDXDeZ+FtRyFu--
 
