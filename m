@@ -1,124 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Viola.Opus1.COM ([192.245.12.8]:1201 "EHLO Viola.Opus1.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752197AbYIFXqS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 19:46:18 -0400
-Received: from [172.17.0.188] ([61.8.118.66])
- by Opus1.COM (PMDF V6.2-X27 #9830) with ESMTPSA id
- <01MZ8Y4SLDB08X4NGL@Opus1.COM> for linux-wireless@vger.kernel.org; Sat,
- 06 Sep 2008 16:46:17 -0700 (MST)
-Date: Sat, 06 Sep 2008 16:46:14 -0700
-From: gavron@wetwork.net
-Subject: Re: Speed enhancement for BCM4306/2
-In-reply-to: <48C3121C.9090309@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Broadcom Wireless <bcm43xx-dev@berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Message-id: <48C31646.2020205@wetwork.net> (sfid-20080907_014625_136925_821B20D0)
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
-References: <48C1BA91.7050106@lwfinger.net> <48C20928.10202@wetwork.net>
- <48C20BD7.6080605@lwfinger.net> <48C20F64.1000700@wetwork.net>
- <48C2A1F5.6020607@lwfinger.net> <48C30B3E.2040302@wetwork.net>
- <48C3121C.9090309@lwfinger.net>
+Received: from mail.gmx.net ([213.165.64.20]:55034 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752908AbYIGKZO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Sep 2008 06:25:14 -0400
+Received: from lyakh (helo=localhost)
+	by axis700.grange with local-esmtp (Exim 4.63)
+	(envelope-from <g.liakhovetski@gmx.de>)
+	id 1KcHZo-0001FY-D9
+	for linux-wireless@vger.kernel.org; Sun, 07 Sep 2008 12:33:04 +0200
+Date: Sun, 7 Sep 2008 12:33:04 +0200 (CEST)
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+To: linux-wireless@vger.kernel.org
+Subject: Broadcom Corporation BCM4310 USB Controller
+Message-ID: <Pine.LNX.4.64.0809071146590.3981@axis700.grange> (sfid-20080907_122524_883926_343CF12F)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi
 
+The above adapter is installed in my ACER Extensa 5220, googling around I 
+found various references to this chip, the main resume seems to be "works 
+only with ndiswrapper." Is it true and if it is ATM, is it going to 
+change?:-) Any work in progress or plans to support it natively? lspci -vv 
+output is at http://home.arcor.de/g.liakhovetski/extensa5220/.
 
-Larry Finger wrote:
-> gavron@wetwork.net wrote:
->> I haven't tried a build yet, but please let me know if I'm on the 
->> right track.
->>
->> E
->> # diff -uN /tmp/phy.c drivers/net/wireless/b43legacy/phy.c
->> --- /tmp/phy.c    2008-09-06 15:13:33.000000000 -0700
->> +++ drivers/net/wireless/b43legacy/phy.c    2008-09-06 
->> 15:54:03.000000000 -0700
->> @@ -1010,7 +1010,7 @@
->>         b43legacy_phy_initb5(dev);
->>     else
->>         b43legacy_phy_initb6(dev);
->> -    if (phy->rev >= 2 || phy->gmode)
->> +    if (phy->rev >= 2 && phy->gmode)
->>         b43legacy_phy_inita(dev);
->>
->>     if (phy->rev >= 2) {
->> @@ -1021,21 +1021,26 @@
->>         b43legacy_phy_write(dev, 0x0811, 0x0000);
->>         b43legacy_phy_write(dev, 0x0015, 0x00C0);
->>     }
->> -    if (phy->rev > 5) {
->> +    if (phy->rev >= 3) {
->
-> AFAIK, this change is an error in the specs. I have since changed it. 
-> Sorry I didn't catch it earlier.
->
-> Otherwise, this patch seems to be correct. All you need now are the 
-> fixes for b43legacy_phy_initb5() and b43legacy_phy_initb6().
->
-> Larry
+Tried brutally adding the PCI ID to the ssb driver and ssb ID to the b43 
+driver. Here's the result:
 
-Ok, I've re-looked at the specs and made the appropriate corrections.  
-I've also gone through all of the PHY specs and found one other 
-correction.  It's enclosed below for review.
-
-Where do I go to find the stuff for ...initb5() and ...initb6()?
+ACPI: PCI interrupt for device 0000:04:00.0 disabled
+ACPI: PCI Interrupt 0000:04:00.0[A] -> GSI 17 (level, low) -> IRQ 17
+PCI: Setting latency timer of device 0000:04:00.0 to 64
+ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x16, vendor 0x4243)
+ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0F, vendor 0x4243)
+ssb: Core 2 found: PCMCIA (cc 0x80D, rev 0x0A, vendor 0x4243)
+ssb: Core 3 found: PCI-E (cc 0x820, rev 0x09, vendor 0x4243)
+ssb: WARNING: Invalid SPROM CRC (corrupt SPROM)
+ssb: SPROM revision 255 detected.
+ssb: Unsupported SPROM revision 255 detected. Will extract v1
+ssb: Sonics Silicon Backplane found on PCI device 0000:04:00.0
+b43-phy1: Broadcom 4312 WLAN found
+b43-phy1 ERROR: FOUND UNSUPPORTED PHY (Analog 6, Type 5, Revision 1)
+b43: probe of ssb0:0 failed with error -95
+Broadcom 43xx driver loaded [ Features: P, Firmware-ID: FW13 ]
 
 Thanks
-
-E
-# diff -uN /tmp/phy.c drivers/net/wireless/b43legacy/phy.c
---- /tmp/phy.c    2008-09-06 15:13:33.000000000 -0700
-+++ drivers/net/wireless/b43legacy/phy.c    2008-09-06 
-16:42:40.000000000 -0700
-@@ -1010,7 +1010,7 @@
-         b43legacy_phy_initb5(dev);
-     else
-         b43legacy_phy_initb6(dev);
--    if (phy->rev >= 2 || phy->gmode)
-+    if (phy->rev >= 2 && phy->gmode)
-         b43legacy_phy_inita(dev);
- 
-     if (phy->rev >= 2) {
-@@ -1025,17 +1025,22 @@
-         b43legacy_phy_write(dev, 0x0811, 0x0400);
-         b43legacy_phy_write(dev, 0x0015, 0x00C0);
-     }
--    if (phy->rev >= 2 || phy->gmode) {
-+    if (phy->gmode) {
-         tmp = b43legacy_phy_read(dev, 0x0400) & 0xFF;
--        if (tmp == 3 || tmp == 5) {
-+        if (tmp == 3) {
-+            b43legacy_phy_write(dev, 0x04C2, 0x1816);
-+            b43legacy_phy_write(dev, 0x04C3, 0x8606);
-+        }
-+        if (tmp == 4 || tmp == 5) {
-             b43legacy_phy_write(dev, 0x04C2, 0x1816);
-             b43legacy_phy_write(dev, 0x04C3, 0x8006);
--            if (tmp == 5)
--                b43legacy_phy_write(dev, 0x04CC,
--                            (b43legacy_phy_read(dev,
--                             0x04CC) & 0x00FF) |
--                             0x1F00);
-+            b43legacy_phy_write(dev, 0x04CC,
-+                        (b43legacy_phy_read(dev,
-+                        0x04CC) & 0x00FF) |
-+                        0x1F00);
-         }
-+    }
-+    if (phy-->rev >= 2)
-         b43legacy_phy_write(dev, 0x047E, 0x0078);
-     }
-     if (phy->radio_rev == 8) {
-@@ -1092,7 +1097,7 @@
-          */
-         b43legacy_nrssi_hw_update(dev, 0xFFFF);
-         b43legacy_calc_nrssi_threshold(dev);
--    } else if (phy->gmode || phy->rev >= 2) {
-+    } else if (phy->gmode) {
-         if (phy->nrssi[0] == -1000) {
-             B43legacy_WARN_ON(phy->nrssi[1] != -1000);
-             b43legacy_calc_nrssi_slope(dev);
-
+Guennadi
+---
+Guennadi Liakhovetski, Ph.D.
+Freelance Open-Source Software Developer
