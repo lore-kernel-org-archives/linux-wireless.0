@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43210 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751309AbYISORx (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:60303 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753165AbYIGA5d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 10:17:53 -0400
-Subject: Re: technology preview: scan with cfg80211 (v2)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Dan Williams <dcbw@redhat.com>
-In-Reply-To: <1221830207.12059.10.camel@johannes.berg> (sfid-20080919_151730_930583_57949476)
-References: <1221794329.10419.9.camel@johannes.berg>
-	 (sfid-20080919_052010_602864_D520EF40)  <1221830207.12059.10.camel@johannes.berg>
-	 (sfid-20080919_151730_930583_57949476)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-lz166cEeaHDlbpJnwXXt"
-Date: Fri, 19 Sep 2008 16:17:18 +0200
-Message-Id: <1221833838.12059.17.camel@johannes.berg> (sfid-20080919_161757_939682_A433BA97)
+	Sat, 6 Sep 2008 20:57:33 -0400
+Subject: Re: [PATCH] Ath9k: Add RF kill support.
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+In-Reply-To: <1220721572.10102.0.camel@johannes.berg>
+References: <20080906123842.GA27504@vasanth-lnx.users.atheros.com>
+	 <1220721347.6714.114.camel@californication>
+	 (sfid-20080906_191538_728310_1EC0FE5D)  <1220721572.10102.0.camel@johannes.berg>
+Content-Type: text/plain
+Date: Sun, 07 Sep 2008 02:57:50 +0200
+Message-Id: <1220749070.6714.118.camel@californication> (sfid-20080907_025746_918322_1CBD8424)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Johannes,
 
---=-lz166cEeaHDlbpJnwXXt
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > > CONFIG_ATH9K_RFKILL needs to be set
+> > > to enable this support.
+> > 
+> > why do we have to introduce yet another config option for this? What is
+> > the advantage of disabling RFKILL support? I really don't see it and all
+> > these extra config options are rather confusing than useful.
+> 
+> "if EMBEDDED", I think you may want to build a router without rfkill
+> stuff.
 
+so what overhead is it to have RFKILL just enabled all the time. It is a
+small subsystem and the extra code inside the drivers is also not that
+much. So what are we really trying to save here?
 
-> +struct cfg80211_ssid {
-> +	u8 *ssid;
-> +	u8 ssid_len;
-> +};
+I can see your router point, but does it really matter? I don't think so
+and some routers allow to switch WiFi off and then they want the RFKILL
+switch again. Also what about the LEDS subsystem. The same would apply
+and we are not bothering in just enabling it.
 
-Don't try to do directed scans for SSIDs with length > 0 with this,
-it'll crash. Update on my patch dir.
+Regards
 
-johannes
+Marcel
 
---=-lz166cEeaHDlbpJnwXXt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI07RrAAoJEKVg1VMiehFYTTQP/1VrftG/GfJoaUU36LUzH28T
-FmpIjXBcOohu6XtW3DX7eoFIBzVFymIQUIgZ5Tync+APg1ukHp/qy7OXAnWn+R2A
-W0EhdzurjeUa10ygdVpitMCaa3w1Yk6FHqTRD82t33i/3qoqOSnC+rfvRmJerDSZ
-l2F/pznPOH/DbUGl2Ekg/Y3F3X58jhl4MlLIlcGv93EP9dgGysF92WoQuxCuwOon
-wgvgwzfQ1YbEMSUbrKiG7zTj5aHnxa3NkWRLoqf4oZ23hc2CkeyCFbuZ0WmYtTK5
-b1iJgDq3ekNM5mLnPKLDbcwD96Ar2OWSDpqBhhKj2JedMRFChRtSAO9nibc6SFpW
-CQxJz3ClMH0lS1AADcVnfAQyhvwclmMOBzTAqfKGgWG0qcj3ybLX3SI7qPGTrm3D
-C4RppXT/MobNPZK02j9RKFd0CwR30PA07wmrzV2Z7jJ3ucMy3D+25zIlFs0Diomd
-ArRnA2HPfdM38U/9r4AViQnNvkU69MxpudfgSW07Cv8jhnPpYFZR6IAHoyLG+q//
-3oinXLf5IXJAKfyFEFdNof1Nhhk+qLlZI3y/G59JVI08r5JM3BjCGxC5xUiWk29L
-QnA+IGMXJB0QPzVLR/QeF5LHoh6ZJBIf7St2HfbGtT0wP/FBvSTaRL+xdLtCwQLY
-DKUnJ+kO7E6lhQdjd68e
-=X68I
------END PGP SIGNATURE-----
-
---=-lz166cEeaHDlbpJnwXXt--
 
