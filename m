@@ -1,69 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:46542 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750831AbYIURgt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 13:36:49 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
-Date: Sun, 21 Sep 2008 19:36:00 +0200
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ipw2100-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, jgarzik@pobox.com,
-	linville@tuxdriver.com, davem@davemloft.net
-References: <20080921172316.GA6306@2ka.mipt.ru>
-In-Reply-To: <20080921172316.GA6306@2ka.mipt.ru>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809211936.00414.mb@bu3sch.de> (sfid-20080921_193654_426660_E511CA09)
+Received: from xc.sipsolutions.net ([83.246.72.84]:48949 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753683AbYIGNtG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Sep 2008 09:49:06 -0400
+Subject: Re: [PATCH 2/2 V2] mac80211: add direct probe before association
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	Ron Rindjunsky <ron.rindjunsky@intel.com>
+In-Reply-To: <1ba2fa240809061721k2082d038j63c272f5b29a66c6@mail.gmail.com> (sfid-20080907_022142_614088_FF8C10FE)
+References: <1218240139-5009-1-git-send-email-tomas.winkler@intel.com>
+	 <1220744663.21016.28.camel@johannes.berg>
+	 <1ba2fa240809061721k2082d038j63c272f5b29a66c6@mail.gmail.com>
+	 (sfid-20080907_022142_614088_FF8C10FE)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8UilL9GR3V/bgzmwwOyP"
+Date: Sun, 07 Sep 2008 15:49:00 +0200
+Message-Id: <1220795340.31304.10.camel@johannes.berg> (sfid-20080907_154918_366016_44B598D0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 21 September 2008 19:23:17 Evgeniy Polyakov wrote:
-> Hi.
-> 
-> Following bug exists in the ipw2100 driver/firmware for years and Intel
-> folks never responded to zillions bugzilla entries and forum notices in
-> the internet with some patch or firmware update (although did request
-> dmesg and debug info, and received them).
-> 
-> ipw2100: Fatal interrupt. Scheduling firmware restart.
-> 
-> I believe it is a firmware bug because after driver is unloaded and
-> loaded back again wireless adapter usually starts working (for small
-> amount of time though). My conspiracy feeling can suggest, that it may
-> be kind of a force to buy a new one, or trivial error in the firmware,
-> when it writes to the same place in the flash and essentially given cell
-> became dead or whatever else.
-> 
-> Intel folks, please fix this problem, I see no other way to force you to do
-> this than to mark ipw2100 driver as broken, since that is what it is.
 
-You are pretty funny, actually. :)
+--=-8UilL9GR3V/bgzmwwOyP
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I think the bug should be fixed, but what makes _you_ think you can _force_
-anybody to do so?
+On Sun, 2008-09-07 at 03:21 +0300, Tomas Winkler wrote:
+> On Sun, Sep 7, 2008 at 2:44 AM, Johannes Berg <johannes@sipsolutions.net>=
+ wrote:
+> > Hi,
+> >
+> > I was just pondering rewriting parts of the state machine (and you've
+> > already seen the other cleanups I did today) and found this:
+> >
+> >> +     /* Direct probe is sent to broadcast address as some APs
+> >> +      * will not answer to direct packet in unassociated state.
+> >> +      */
+> >> +     ieee80211_send_probe_req(dev, NULL,
+> >> +                              ifsta->ssid, ifsta->ssid_len);
+> >
+> >> +     /* direct probe may be part of the association flow */
+> >> +     if (test_and_clear_bit(IEEE80211_STA_REQ_DIRECT_PROBE,
+> >> +                                                     &ifsta->request)=
+) {
+> >> +             printk(KERN_DEBUG "%s direct probe responded\n", dev->na=
+me);
+> >> +             ieee80211_authenticate(dev, ifsta);
+> >
+> > Doesn't the latter code have to check that the sender is the correct
+> > one? First we broadcast the probe request, and then we may be getting
+> > one from a different AP but still clear our direct probe association
+> > flow step, no?
+>=20
+> Yep, this is not covered. Don't remember why it wasn't straight
+> forward to implement...will look at it again after sunrise.
 
-> Signed-off-by: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-> 
-> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-> index 9931b5a..c24fc6a 100644
-> --- a/drivers/net/wireless/Kconfig
-> +++ b/drivers/net/wireless/Kconfig
-> @@ -125,7 +125,7 @@ config PCMCIA_RAYCS
->  
->  config IPW2100
->  	tristate "Intel PRO/Wireless 2100 Network Connection"
-> -	depends on PCI && WLAN_80211
-> +	depends on PCI && WLAN_80211 && BROKEN
->  	select WIRELESS_EXT
->  	select FW_LOADER
->  	select IEEE80211
-> 
+Actually, don't bother, I'm fixing it, was just trying to see if I was
+missing anything and it was correct already.
 
+johannes
 
+--=-8UilL9GR3V/bgzmwwOyP
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--- 
-Greetings Michael.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIw9vIAAoJEKVg1VMiehFYd28QAJRF9FhLjlqX2WqXh7Fj/xMj
+QLPprOWv7akU3tUC0vFswH2wL0GXe1DzYhA1qsolLcmeP9dU3LN8SwtsOQ/C1xIe
+62r3hFHVIOXAy8NuseAkFKUF8YfcvrTuYI3pdOkKPw15RPWfka7H+wnCt8INl5A9
+oHFuXoEI5iD0/+qMYKcpHoatzDnm+PstP5fbBAZed/23LuqnprkF0zrLCNFUx1kq
+JkkdjtcjVO4kN0QtBDIzfSDHoLEMPkEXMYdSnyFWAftZSlVFaQyYNuZyNCu2MqxR
+gcHjERA+WT4DCBetIjW6cHB8aGtg6jMxz03zfSFJwneW0VRVAHkvY2fo8NRRdUG4
+h82kWla2kX3aiLu3MQdAsZcjre4M7lu5qCn5+7Yg8aRklHpGJlhI4Kjy6fSrtMSR
+rq/HXDQu/LpvLDtDN5JEpKu5ZqgrIGyYAZh7Fl6Ub/HXST5LK3EdFtMjhbVaAzgh
+/pht9ynK+X+5Xx3ECKFQYl8407CWLyUcsx+BO4cx6w2++UFSJtVHsfIDZ3Eewiao
+blY2yoO5xrkGodugLuEG2hdP72+k2sO9/9OkxYVPphEsta6auLMc6FzSs7SPIovT
+J52RSI5H7tOS60+On/TlWrs7ntEkzrjmWhJk1HX3NBj5IHJ/5lk436+eURabBMso
+s2gaFqTLwCqthvqK28xS
+=+xIC
+-----END PGP SIGNATURE-----
+
+--=-8UilL9GR3V/bgzmwwOyP--
+
