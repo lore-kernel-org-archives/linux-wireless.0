@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57398 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752266AbYIQOPD (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:52194 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751607AbYIGBI0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 10:15:03 -0400
-Date: Wed, 17 Sep 2008 09:23:07 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Carlos Corbacho <carlos@strangeworlds.co.uk>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Regression in 2.6.27-rcX caused by commit
-	bc19d6e0b74ef03a3baf035412c95192b54dfc6f
-Message-ID: <20080917132305.GA5407@tuxdriver.com> (sfid-20080917_161509_681961_314FC829)
-References: <48CFC03A.8020708@lwfinger.net> <200809161742.15527.mb@bu3sch.de> <48CFE820.7010305@lwfinger.net> <200809162018.28548.carlos@strangeworlds.co.uk> <48D0095B.40403@lwfinger.net> <20080916233240.GA18574@srcf.ucam.org> <20080917023334.GA1187@khazad-dum.debian.net> <48D070DC.80007@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <48D070DC.80007@lwfinger.net>
+	Sat, 6 Sep 2008 21:08:26 -0400
+Subject: Re: [RFC PATCH 0/3] mac80211 dissasociation
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	yi.zhu@intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
+References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain
+Date: Sun, 07 Sep 2008 03:08:44 +0200
+Message-Id: <1220749724.6714.128.camel@californication> (sfid-20080907_030843_528482_D2A23C81)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 16, 2008 at 09:52:12PM -0500, Larry Finger wrote:
+Hi Tomas,
 
-> I admit that I never tested any of the RFKILL patches as they went in.
-> One of the reasons is that the development process seemed rather
-> untidy to an outsider, and I wasn't sure that any of the code would
-> ever be in the kernel. As such, it snuck up on me. I'll not let that
-> happen again. After the reversion, I will again test any suggested
-> code changes, but do not expect me to work out any of the changes. I
-> have enough to do.
+> This series should fix mac problems in disassociation
+> There are two basic problems disassociation in current implementation.
+> The order of steps in the dissociation flow and missing proper
+> disassociation when moving from one AP to another. 
 
-FWIW, Henrique has been very persistant with driving rfkill.  He has
-posted and reposted his patch series many times.  I'm sorry that it
-snuck-up on you but it was on the list for quite a while.
+it would be nice if you add the problem description into the commit
+messages of the actual patches. This helps to actually figure out the
+reason for these kind of changes and they are then stored together with
+the patch. We really have to be more verbose why we are doing things. If
+anyone has to go through one year old kernels and figure out why a
+change has been made, they are basically lost. I had to go through 7
+years old kernels in the past and every extra piece of information is so
+useful then.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Regards
+
+Marcel
+
+
