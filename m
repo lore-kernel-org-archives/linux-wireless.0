@@ -1,71 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34066 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752852AbYILHqN (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.169]:47987 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753127AbYIGLxi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2008 03:46:13 -0400
-Subject: Re: [PATCH 00/18] mac80211 cleanups and fixes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <18633.57010.19741.838935@gargle.gargle.HOWL>
-References: <20080910220145.707263000@sipsolutions.net>
-	 <18632.55008.411078.289830@gargle.gargle.HOWL>
-	 <1221139351.6986.26.camel@johannes.berg>
-	 <18633.57010.19741.838935@gargle.gargle.HOWL>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hHPWiB2GkjZlyIP7UMC/"
-Date: Fri, 12 Sep 2008 09:45:24 +0200
-Message-Id: <1221205524.11204.0.camel@johannes.berg> (sfid-20080912_094617_801527_602468BF)
-Mime-Version: 1.0
+	Sun, 7 Sep 2008 07:53:38 -0400
+Received: by wf-out-1314.google.com with SMTP id 27so1150685wfd.4
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Sep 2008 04:53:37 -0700 (PDT)
+Message-ID: <69e28c910809070453h7264f599hc829b9e1bebdf1f1@mail.gmail.com> (sfid-20080907_135342_680451_41543687)
+Date: Sun, 7 Sep 2008 13:53:37 +0200
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Guennadi Liakhovetski" <g.liakhovetski@gmx.de>
+Subject: Re: Broadcom Corporation BCM4310 USB Controller
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.64.0809071146590.3981@axis700.grange>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <Pine.LNX.4.64.0809071146590.3981@axis700.grange>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Sep 7, 2008 at 12:33 PM, Guennadi Liakhovetski
+<g.liakhovetski@gmx.de> wrote:
+> Hi
+>
+> The above adapter is installed in my ACER Extensa 5220, googling around I
+> found various references to this chip, the main resume seems to be "works
+> only with ndiswrapper." Is it true and if it is ATM, is it going to
+> change?:-) Any work in progress or plans to support it natively? lspci -vv
+> output is at http://home.arcor.de/g.liakhovetski/extensa5220/.
+>
+> Tried brutally adding the PCI ID to the ssb driver and ssb ID to the b43
+> driver. Here's the result:
+>
+> ACPI: PCI interrupt for device 0000:04:00.0 disabled
+> ACPI: PCI Interrupt 0000:04:00.0[A] -> GSI 17 (level, low) -> IRQ 17
+> PCI: Setting latency timer of device 0000:04:00.0 to 64
+> ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x16, vendor 0x4243)
+> ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0F, vendor 0x4243)
+> ssb: Core 2 found: PCMCIA (cc 0x80D, rev 0x0A, vendor 0x4243)
+> ssb: Core 3 found: PCI-E (cc 0x820, rev 0x09, vendor 0x4243)
+> ssb: WARNING: Invalid SPROM CRC (corrupt SPROM)
+> ssb: SPROM revision 255 detected.
+> ssb: Unsupported SPROM revision 255 detected. Will extract v1
+> ssb: Sonics Silicon Backplane found on PCI device 0000:04:00.0
+> b43-phy1: Broadcom 4312 WLAN found
+> b43-phy1 ERROR: FOUND UNSUPPORTED PHY (Analog 6, Type 5, Revision 1)
+> b43: probe of ssb0:0 failed with error -95
+> Broadcom 43xx driver loaded [ Features: P, Firmware-ID: FW13 ]
+>
+> Thanks
+> Guennadi
+> ---
+> Guennadi Liakhovetski, Ph.D.
+> Freelance Open-Source Software Developer
 
---=-hHPWiB2GkjZlyIP7UMC/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This card (BCM4310/4312) is a new low-power (LP-PHY) card, which is
+not yet supported. Work on this card is ongoing, but no official
+timeframe exists. (Hopefully it will make 2.6.28 or .29.)
 
-On Fri, 2008-09-12 at 08:44 +0530, Sujith wrote:
-> Johannes Berg wrote:
->  > I had actually tried
->  > (http://johannes.sipsolutions.net/patches/kernel/ath9k-sta-node.patch)
->  > but you're using refcounting for the nodes while mac80211 RCU-protects
->  > them, so I didn't get very far. It needs a bit more effort to make sur=
-e
->  > you don't have node pointers stick around in some tx descriptor after
->  > mac80211 decides to remove a node (which may very well happen while
->  > frames are queued)
->=20
-> Well, the node stuff is sprinkled throughout ath9k right now, I'll start
-> cleaning up all that and revamp the aggregation logic in the process too.
-> Do you mind if I build on this patch ?
-
-Not at all, feel free to use it for whatever you want.
-
-johannes
-
---=-hHPWiB2GkjZlyIP7UMC/
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIyh4PAAoJEKVg1VMiehFYpEsP/0GhpGHXIyCNPTlZib/sKvUx
-VCry4QVGoMCpcdN6A1nuzXosxNYujnwSSiIGoGfz1RJLUAGBDVr3eAmiwT8NvVEC
-SBFbAgeEbbbX4giWNl0aUJssbVTjKEd93nYHqLaetZXXKh4NFv+/K9Cc/PiCb8Q8
-nawCBm0+LjFI1hhSW/VNW1O2pV+uRp7fvDe2E1jPZXL4XnTh0humojF/0kEZxGjX
-K5HPUsnkwVw60P8c9KrRI3W3e0elc8kNZ06qAB/hzk9PbPyLCY4F/yquBbplEfAW
-8v09NMOwfeaHr5jz9/uwBHnBhNBpiJAL3r2dnKy7505YKA6uC45eAtZHvmrlOo8l
-KJJ1y+WLaA//9RO2v6p+/oXsodU0X7M435Xis/zW1zT4mNvje1ObXbIIwBA7l13i
-dXV8xfO5sOg8iNZm9hJba58Y3UNyK+sI2NT0bNPg7aZFgE7Tt1diYztDB7foOFKI
-7RIlsfzFNsfIBFF9jpVWzd4Fd70lW5Dk2OPMJDkj7ZaAv2VfkGDGp3XIvAtd7aWq
-uIvvqEVCYE6yIFSAD+LIpZ7Qy1QgKQu0DeCXn3PWtRk44EmeJGPwHIA9RJYoVjF/
-YufZnv4/4pWPumoYKtJtNqSZ8m2OcTLkfYvbfpjTsneK+qMwypISsYIiOKjQwkR/
-jzTROGwSfv5l0d8sqBlu
-=wbxr
------END PGP SIGNATURE-----
-
---=-hHPWiB2GkjZlyIP7UMC/--
-
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
