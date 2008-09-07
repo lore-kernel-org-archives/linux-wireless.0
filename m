@@ -1,129 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:11720 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754997AbYICO2K (ORCPT
+Received: from phoenix.slamd64.com ([217.10.145.2]:59748 "EHLO
+	phoenix.slamd64.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753891AbYIGRNa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2008 10:28:10 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so2220204fkq.5
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Sep 2008 07:28:08 -0700 (PDT)
-Message-ID: <1ba2fa240809030728p612f268fi718719df34f845c4@mail.gmail.com> (sfid-20080903_162823_417384_E6AA392B)
-Date: Wed, 3 Sep 2008 17:28:08 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Zhu Yi" <yi.zhu@intel.com>, linville@tuxdriver.com
-Subject: Re: [PATCH 31/39] iwlwifi: fix memory allocation of TX command
-Cc: linux-wireless@vger.kernel.org, "Ian Schram" <ischram@telenet.be>
-In-Reply-To: <1220412419-15404-32-git-send-email-yi.zhu@intel.com>
+	Sun, 7 Sep 2008 13:13:30 -0400
+From: Carlos Corbacho <carlos@strangeworlds.co.uk>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: [RFC] acer-wmi: Add rfkill support for wireless and bluetooth (v3)
+Date: Sun, 7 Sep 2008 18:13:22 +0100
+Cc: linux-acpi@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Ivo van Doorn <ivdoorn@gmail.com>
+References: <200808301206.56279.carlos@strangeworlds.co.uk> <200808301654.03329.carlos@strangeworlds.co.uk> <20080831133631.GA9794@khazad-dum.debian.net>
+In-Reply-To: <20080831133631.GA9794@khazad-dum.debian.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
-	 <1220412419-15404-24-git-send-email-yi.zhu@intel.com>
-	 <1220412419-15404-25-git-send-email-yi.zhu@intel.com>
-	 <1220412419-15404-26-git-send-email-yi.zhu@intel.com>
-	 <1220412419-15404-27-git-send-email-yi.zhu@intel.com>
-	 <1220412419-15404-28-git-send-email-yi.zhu@intel.com>
-	 <1220412419-15404-29-git-send-email-yi.zhu@intel.com>
-	 <1220412419-15404-30-git-send-email-yi.zhu@intel.com>
-	 <1220412419-15404-31-git-send-email-yi.zhu@intel.com>
-	 <1220412419-15404-32-git-send-email-yi.zhu@intel.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809071813.23730.carlos@strangeworlds.co.uk> (sfid-20080907_191337_680144_1F39619D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 3, 2008 at 6:26 AM, Zhu Yi <yi.zhu@intel.com> wrote:
-> From: Tomas Winkler <tomas.winkler@intel.com>
->
-> This patch removes GFP_DMA from allocation tx command buffers
-> GFP_DMA allows allocation only for memory under 16M which causes
-> allocation problems suspend/resume flows.
->
-> Using kmalloc is temporal solution and some consistent/coherent
-> allocation schema will be more correct. Since iwlwifi hardware
-> supports 64bit address this solution should work on x86 (32 and
-> 64bit) for now. This patch also fixes memory freeing in error path.
->
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> Signed-off-by: Ian Schram <ischram@telenet.be>
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+acer-wmi: Add rfkill support for wireless and bluetooth
 
-Note: this address the same fix as
+From: Carlos Corbacho <carlos@strangeworlds.co.uk>
 
-commit 49898852e6aa8a6de9a5bc0bab2cf305b3583bbf
-Author: John W. Linville <linville@tuxdriver.com>
-Date:   Tue Sep 2 15:07:18 2008 -0400
+This patch implements rfkill support for the wireless and bluetooth devices
+commonly found on Acer laptops.
 
-One line conflicts. Need just to merge the error path handling.
-Tomas
+For now, we will always poll these devices once a second to guarantee we can
+catch state changes. On newer Acer laptops, it may be possible to rely on WMI
+events to do this instead, and experimental support for this will be added in
+a later patch.
+
+3G has been deliberately left off for now, as we still have no way to detect
+it, (nor, AFAIK, has any Linux user tried the code) and on laptops that don't
+support 3G, trying to poll for the status will leave the logs full of ACPI
+tracebacks.
+
+The old sysfs interface for wireless and 3G will be removed in a later patch.
+
+Signed-off-by: Carlos Corbacho <carlos@strangeworlds.co.uk>
+---
+
+ drivers/misc/Kconfig    |    1 
+ drivers/misc/acer-wmi.c |  128 +++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 128 insertions(+), 1 deletions(-)
 
 
->  drivers/net/wireless/iwlwifi/iwl-tx.c |   29 ++++++++++++++++++-----------
->  1 files changed, 18 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-> index 6cba5e9..68567fa 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-> @@ -402,12 +402,11 @@ static int iwl_hw_tx_queue_init(struct iwl_priv *priv,
->  /**
->  * iwl_tx_queue_init - Allocate and initialize one tx/cmd queue
->  */
-> -static int iwl_tx_queue_init(struct iwl_priv *priv,
-> -                            struct iwl_tx_queue *txq,
-> +static int iwl_tx_queue_init(struct iwl_priv *priv, struct iwl_tx_queue *txq,
->                             int slots_num, u32 txq_id)
->  {
->        int i, len;
-> -       int rc = 0;
-> +       int ret;
->
->        /*
->         * Alloc buffer array for commands (Tx or other types of commands).
-> @@ -426,19 +425,16 @@ static int iwl_tx_queue_init(struct iwl_priv *priv,
->                                continue;
->                }
->
-> -               txq->cmd[i] = kmalloc(len, GFP_KERNEL | GFP_DMA);
-> +               txq->cmd[i] = kmalloc(len, GFP_KERNEL);
->                if (!txq->cmd[i])
-> -                       return -ENOMEM;
-> +                       goto err;
->        }
->
->        /* Alloc driver data array and TFD circular buffer */
-> -       rc = iwl_tx_queue_alloc(priv, txq, txq_id);
-> -       if (rc) {
-> -               for (i = 0; i < slots_num; i++)
-> -                       kfree(txq->cmd[i]);
-> +       ret = iwl_tx_queue_alloc(priv, txq, txq_id);
-> +       if (ret)
-> +               goto err;
->
-> -               return -ENOMEM;
-> -       }
->        txq->need_update = 0;
->
->        /* TFD_QUEUE_SIZE_MAX must be power-of-two size, otherwise
-> @@ -452,6 +448,17 @@ static int iwl_tx_queue_init(struct iwl_priv *priv,
->        iwl_hw_tx_queue_init(priv, txq);
->
->        return 0;
-> +err:
-> +       for (i = 0; i < slots_num; i++) {
-> +               kfree(txq->cmd[i]);
-> +               txq->cmd[i] = NULL;
-> +       }
-> +
-> +       if (txq_id == IWL_CMD_QUEUE_NUM) {
-> +               kfree(txq->cmd[slots_num]);
-> +               txq->cmd[slots_num] = NULL;
-> +       }
-> +       return -ENOMEM;
->  }
->  /**
->  * iwl_hw_txq_ctx_free - Free TXQ Context
-> --
-> 1.5.3.6
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+index a726f3b..6abb959 100644
+--- a/drivers/misc/Kconfig
++++ b/drivers/misc/Kconfig
+@@ -145,6 +145,7 @@ config ACER_WMI
+ 	depends on NEW_LEDS
+ 	depends on BACKLIGHT_CLASS_DEVICE
+ 	depends on SERIO_I8042
++	depends on RFKILL
+ 	select ACPI_WMI
+ 	---help---
+ 	  This is a driver for newer Acer (and Wistron) laptops. It adds
+diff --git a/drivers/misc/acer-wmi.c b/drivers/misc/acer-wmi.c
+index b2d9878..860c34d 100644
+--- a/drivers/misc/acer-wmi.c
++++ b/drivers/misc/acer-wmi.c
+@@ -33,6 +33,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/acpi.h>
+ #include <linux/i8042.h>
++#include <linux/rfkill.h>
++#include <linux/workqueue.h>
+ #include <linux/debugfs.h>
+ 
+ #include <acpi/acpi_drivers.h>
+@@ -157,6 +159,9 @@ struct acer_debug {
+ 	u32 wmid_devices;
+ };
+ 
++static struct rfkill *wireless_rfkill;
++static struct rfkill *bluetooth_rfkill;
++
+ /* Each low-level interface must define at least some of the following */
+ struct wmi_interface {
+ 	/* The WMI device type */
+@@ -930,6 +935,123 @@ static void acer_backlight_exit(void)
+ }
+ 
+ /*
++ * Rfkill devices
++ */
++static struct workqueue_struct *rfkill_workqueue;
++
++static void acer_rfkill_update(struct work_struct *ignored);
++static DECLARE_DELAYED_WORK(acer_rfkill_work, acer_rfkill_update);
++static void acer_rfkill_update(struct work_struct *ignored)
++{
++	u32 state;
++	acpi_status status;
++
++	status = get_u32(&state, ACER_CAP_WIRELESS);
++	if (ACPI_SUCCESS(status))
++		rfkill_force_state(wireless_rfkill, state);
++
++	if (has_cap(ACER_CAP_BLUETOOTH)) {
++		status = get_u32(&state, ACER_CAP_BLUETOOTH);
++		if (ACPI_SUCCESS(status))
++			rfkill_force_state(bluetooth_rfkill, state);
++	}
++
++	queue_delayed_work(rfkill_workqueue, &acer_rfkill_work,
++		round_jiffies_relative(HZ));
++}
++
++static int acer_rfkill_set(void *data, enum rfkill_state state)
++{
++	acpi_status status;
++	u32 *cap = data;
++	status = set_u32((u32) (state == RFKILL_STATE_UNBLOCKED), *cap);
++	if (ACPI_FAILURE(status))
++		return -ENODEV;
++	return 0;
++}
++
++static int acer_rfkill_register(struct device *dev, struct rfkill **rfkill_dev,
++enum rfkill_type type, char *name, u32 cap)
++{
++	int err;
++	u32 state;
++	u32 *data;
++
++	*rfkill_dev = rfkill_allocate(dev, type);
++	if (!*rfkill_dev)
++		return -ENOMEM;
++	(*rfkill_dev)->name = name;
++	get_u32(&state, cap);
++	(*rfkill_dev)->state = state ? RFKILL_STATE_UNBLOCKED :
++		RFKILL_STATE_SOFT_BLOCKED;
++	data = kzalloc(sizeof(u32), GFP_KERNEL);
++	if (!data) {
++		rfkill_free(*rfkill_dev);
++		return -ENOMEM;
++	}
++	*data = cap;
++	(*rfkill_dev)->data = data;
++	(*rfkill_dev)->toggle_radio = acer_rfkill_set;
++	(*rfkill_dev)->user_claim_unsupported = 1;
++
++	err = rfkill_register(*rfkill_dev);
++	if (err) {
++		kfree((*rfkill_dev)->data);
++		rfkill_free(*rfkill_dev);
++		return err;
++	}
++	return 0;
++}
++
++static int acer_rfkill_init(struct device *dev)
++{
++	int err;
++
++	err = acer_rfkill_register(dev, &wireless_rfkill, RFKILL_TYPE_WLAN,
++		"acer-wireless", ACER_CAP_WIRELESS);
++	if (err)
++		return err;
++
++	if (has_cap(ACER_CAP_BLUETOOTH)) {
++		err = acer_rfkill_register(dev, &bluetooth_rfkill,
++			RFKILL_TYPE_BLUETOOTH, "acer-bluetooth",
++			ACER_CAP_BLUETOOTH);
++		if (err) {
++			kfree(wireless_rfkill->data);
++			rfkill_unregister(wireless_rfkill);
++			return err;
++		}
++	}
++
++	rfkill_workqueue = create_singlethread_workqueue("rfkill_workqueue");
++	if (!rfkill_workqueue) {
++		if (has_cap(ACER_CAP_BLUETOOTH)) {
++			kfree(bluetooth_rfkill->data);
++			rfkill_unregister(bluetooth_rfkill);
++		}
++		kfree(wireless_rfkill->data);
++		rfkill_unregister(wireless_rfkill);
++		return -ENOMEM;
++	}
++	queue_delayed_work(rfkill_workqueue, &acer_rfkill_work, HZ);
++
++	return 0;
++}
++
++static void acer_rfkill_exit(void)
++{
++	cancel_delayed_work_sync(&acer_rfkill_work);
++	destroy_workqueue(rfkill_workqueue);
++	kfree(wireless_rfkill->data);
++	rfkill_unregister(wireless_rfkill);
++	if (has_cap(ACER_CAP_BLUETOOTH)) {
++		kfree(wireless_rfkill->data);
++		rfkill_unregister(bluetooth_rfkill);
++	}
++	return;
++}
++
++/*
+  * Read/ write bool sysfs macro
+  */
+ #define show_set_bool(value, cap) \
+@@ -1023,7 +1145,9 @@ static int __devinit acer_platform_probe(struct platform_device *device)
+ 			goto error_brightness;
+ 	}
+ 
+-	return 0;
++	err = acer_rfkill_init(&device->dev);
++
++	return err;
+ 
+ error_brightness:
+ 	acer_led_exit();
+@@ -1037,6 +1161,8 @@ static int acer_platform_remove(struct platform_device *device)
+ 		acer_led_exit();
+ 	if (has_cap(ACER_CAP_BRIGHTNESS))
+ 		acer_backlight_exit();
++
++	acer_rfkill_exit();
+ 	return 0;
+ }
+ 
