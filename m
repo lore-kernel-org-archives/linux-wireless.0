@@ -1,103 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:41104 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751784AbYIDATR (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:62404 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753095AbYIGASF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2008 20:19:17 -0400
-Date: Wed, 3 Sep 2008 17:18:15 -0700 (PDT)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
-cc: David Miller <davem@davemloft.net>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"tomasw@gmail.com" <tomasw@gmail.com>,
-	"yi.zhu@intel.com" <yi.zhu@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [GIT]: Networking
-In-Reply-To: <20080904000103.GF5967@tesla>
-Message-ID: <alpine.LFD.1.10.0809031703480.3515@nehalem.linux-foundation.org> (sfid-20080904_021926_141882_7B308FC2)
-References: <20080903.161341.239039051.davem@davemloft.net> <alpine.LFD.1.10.0809031615450.3515@nehalem.linux-foundation.org> <alpine.LFD.1.10.0809031621160.3515@nehalem.linux-foundation.org> <20080903.162603.27086959.davem@davemloft.net>
- <20080904000103.GF5967@tesla>
+	Sat, 6 Sep 2008 20:18:05 -0400
+Message-ID: <48C31DBB.6000709@lwfinger.net> (sfid-20080907_021815_827192_A607F9C2)
+Date: Sat, 06 Sep 2008 19:18:03 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: gavron@wetwork.net
+CC: Broadcom Wireless <bcm43xx-dev@berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Speed enhancement for BCM4306/2
+References: <48C1BA91.7050106@lwfinger.net> <48C20928.10202@wetwork.net> <48C20BD7.6080605@lwfinger.net> <48C20F64.1000700@wetwork.net> <48C2A1F5.6020607@lwfinger.net> <48C30B3E.2040302@wetwork.net> <48C3121C.9090309@lwfinger.net> <48C31646.2020205@wetwork.net>
+In-Reply-To: <48C31646.2020205@wetwork.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On Wed, 3 Sep 2008, Luis R. Rodriguez wrote:
+gavron@wetwork.net wrote:
 > 
-> What I think really happens here IMHO is communication needs to be
-> enhanced. I only recently noticed that "regression only" policy for
-> 2.6.27 for example. I think some of us were rather surprised by it too.
-
-It's really not a "2.6.27" policy, it's always been a "merge window" vs 
-"-rc" policy. It's just that I've started making more noise about it, 
-since many people don't seem to see what the point of the merge window is.
-
-And no, the problem isn't new either. But it does seem to have been 
-getting somewhat worse lately. Possibly simply because we have more code 
-(ie releases have grown, which has made the problem more visible, even if 
-it hasn't necessarily changed in any other way).
-
-> Before snapping at people for not following "orders" we need a clear
-> guideline for what should or not be sent.
-
-The basic rule really should be:
-
- - *any* new development should target the merge window. 
-
-   I think some of the driver people in particular have been mislead by 
-   the fact that we have actually accepted new drivers even after the 
-   merge window ("they can't regress"), and that in turn has probably 
-   de-sensitized people a bit to the whole merge window.
-
-   Similarly, drivers (and other wholly self-contained modules like 
-   filesystems etc) that didn't exist before - even if they were then
-   merged _during_ the merge window - have also been getting leeway in the 
-   -rc code, since again they cannot regress.
-
-And it really does appear like a lot of driver people just get very comfy 
-and used to that _first_ release, when we allow almost anything. And then 
-they just continue with it.
-
-> To avoid it I do think another exception needs to be made for patches:
 > 
-> * Small fixes which make something that was not working, which was
->   supposed to work work
+> Larry Finger wrote:
+>> gavron@wetwork.net wrote:
+>>> I haven't tried a build yet, but please let me know if I'm on the 
+>>> right track.
+>>>
+>>> E
+>>> # diff -uN /tmp/phy.c drivers/net/wireless/b43legacy/phy.c
+>>> --- /tmp/phy.c    2008-09-06 15:13:33.000000000 -0700
+>>> +++ drivers/net/wireless/b43legacy/phy.c    2008-09-06 
+>>> 15:54:03.000000000 -0700
+>>> @@ -1010,7 +1010,7 @@
+>>>         b43legacy_phy_initb5(dev);
+>>>     else
+>>>         b43legacy_phy_initb6(dev);
+>>> -    if (phy->rev >= 2 || phy->gmode)
+>>> +    if (phy->rev >= 2 && phy->gmode)
+>>>         b43legacy_phy_inita(dev);
+>>>
+>>>     if (phy->rev >= 2) {
+>>> @@ -1021,21 +1021,26 @@
+>>>         b43legacy_phy_write(dev, 0x0811, 0x0000);
+>>>         b43legacy_phy_write(dev, 0x0015, 0x00C0);
+>>>     }
+>>> -    if (phy->rev > 5) {
+>>> +    if (phy->rev >= 3) {
+>>
+>> AFAIK, this change is an error in the specs. I have since changed it. 
+>> Sorry I didn't catch it earlier.
+>>
+>> Otherwise, this patch seems to be correct. All you need now are the 
+>> fixes for b43legacy_phy_initb5() and b43legacy_phy_initb6().
+>>
+>> Larry
+> 
+> Ok, I've re-looked at the specs and made the appropriate corrections.  
+> I've also gone through all of the PHY specs and found one other 
+> correction.  It's enclosed below for review.
+> 
+> Where do I go to find the stuff for ...initb5() and ...initb6()?
 
-Not really.
+That one was also an error in the specs - fixed now.
 
-The thing is, if it's a driver that has been around for more than a single 
-release, then those "small fixes" really can't be worth all that much. And 
-yes, they may be small, and yes, they may be "obvious", but the fact is, 
-they definitely can regress.
+On the V3 specifications site, click on the RecentChanges button and 
+select B5PHY and B6PHY to get the specs for the other routines. I 
+rechecked the specs, and all agree with my current (revised) routines.
 
-Sure, if some driver really haven't been around for very long, I can see 
-your point. Not very many people have used it, and I can well imagine that 
-there are lots of those "small fixes" that really do matter.
 
-but if the driver has been in active use for a few kernel versions, there 
-really is almost no excuse to say "this fix is so important that it needs 
-to go in even though it's not a regression/security/oops fix".
-
-So I would agree that the very first release a new driver (or filesystem) 
-is in is special. Almost anything goes during the -rc releases leading up 
-to that. And yes, I can well imagine that during the -rc for the second 
-release it perhaps makes sense to be a _bit_ more relaxed, simply because 
-it's young and as more people use it, silly (but serious) issues can just 
-become more obvious.
-
-But in the long run? No. Drivers are not different from any other code, 
-and the -rc rules should be "regressions only".
-
-In fact, in many ways we should be even _more_ careful with drivers than 
-with most other things, because driver changes are seldom "obvious". Even 
-really trivial stuff can interact with hardware in odd ways, in ways that 
-is seldom true of normal code that you can think about and analyze (since 
-we assume that the CPU itself doesn't have subtle timing etc bugs, of 
-course).
-
-			Linus
+Larry
