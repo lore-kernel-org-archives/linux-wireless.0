@@ -1,87 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39885 "EHLO mail.atheros.com"
+Received: from Viola.Opus1.COM ([192.245.12.8]:1504 "EHLO Viola.Opus1.COM"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752114AbYIDABK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Sep 2008 20:01:10 -0400
-Date: Wed, 3 Sep 2008 17:01:03 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: David Miller <davem@davemloft.net>
-CC: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"tomasw@gmail.com" <tomasw@gmail.com>,
-	"yi.zhu@intel.com" <yi.zhu@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [GIT]: Networking
-Message-ID: <20080904000103.GF5967@tesla> (sfid-20080904_020117_418218_EDD02EB0)
-References: <20080903.161341.239039051.davem@davemloft.net> <alpine.LFD.1.10.0809031615450.3515@nehalem.linux-foundation.org> <alpine.LFD.1.10.0809031621160.3515@nehalem.linux-foundation.org> <20080903.162603.27086959.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20080903.162603.27086959.davem@davemloft.net>
+	id S1750715AbYIGEaG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Sep 2008 00:30:06 -0400
+Received: from [172.17.0.188] ([61.8.118.66])
+ by Opus1.COM (PMDF V6.2-X27 #9830) with ESMTPSA id
+ <01MZ981M7C4A8YGH3N@Opus1.COM> for linux-wireless@vger.kernel.org; Sat,
+ 06 Sep 2008 21:30:04 -0700 (MST)
+Date: Sat, 06 Sep 2008 21:30:00 -0700
+From: gavron@wetwork.net
+Subject: [PATCH] b43legacy: Fix to enhance TX speed
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <larry.finger@lwfinger.net>
+Message-id: <48C358C8.3080607@wetwork.net> (sfid-20080907_063023_482963_D98AEC5B)
+MIME-version: 1.0
+Content-type: multipart/mixed; boundary="Boundary_(ID_NZLWqnidqKmz8VQwCGCoiA)"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 03, 2008 at 04:26:03PM -0700, David Miller wrote:
-> From: Linus Torvalds <torvalds@linux-foundation.org>
-> Date: Wed, 3 Sep 2008 16:24:16 -0700 (PDT)
-> 
-> > On Wed, 3 Sep 2008, Linus Torvalds wrote:
-> > >
-> > > What's so hard to understand about this?
-> >
-> > Here's a simple rule of thumb:
-> >  - if it's not on the regression list
-> >  - if it's not a reported security hole
-> >  - if it's not on the reported oopses list
-> > then why are people sending it to me?
-> >
-> > IOW, if it's just another random improvement, and you send it to me
-> > outside of the merge window, then what is the point of the merge window?
-> 
-> This is exactly what I've been trying to tell the Intel wireless folks
-> but they refuse to listen.
+This is a multi-part message in MIME format.
 
-What I think really happens here IMHO is communication needs to be
-enhanced. I only recently noticed that "regression only" policy for
-2.6.27 for example. I think some of us were rather surprised by it too.
+--Boundary_(ID_NZLWqnidqKmz8VQwCGCoiA)
+Content-type: text/plain; format=flowed; charset=ISO-8859-1
+Content-transfer-encoding: 7bit
 
-Before snapping at people for not following "orders" we need a clear
-guideline for what should or not be sent. We're all at fault if we are
-not getting this through people. Most likely not many of us subscribe to
-linux-kernel so I would think the next best thing we can do is to get our
-maintainers to communicate to us of new rules and give a few examples of
-what can go in or not.
 
-I trust that should this had been done *well* none of these issue would have
-come up and we can avoid angry exchanges.
+--Boundary_(ID_NZLWqnidqKmz8VQwCGCoiA)
+Content-type: text/plain; CHARSET=us-ascii; name=b43legacy_speed_enhancement
+Content-transfer-encoding: 7bit
+Content-disposition: inline; filename=b43legacy_speed_enhancement
 
-> I just won't take their stuff until they get their act in gear.
-> 
-> No problem.
+Recent changes in the specifications have improved the performance
+of the BCM4306/2 devices that use b43legacy as the driver. These
+"errors" in the specs have been present from the very first implementation
+of bcm43xx.
 
-On the other side of the spectrum, and to try to understand this better,
-since ath9k is new we obviously cannot get regressions, this means
-unless we find a security hole in our driver or if we can generate an
-oops with 2.6.27 we cannot send patches for ath9k for 2.6.27?
+Signed-off-by: Ehud Gavron <gavron@wetwork.net>
+Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-It seems to make sense to me for purposes of stabalizing the kernel for
-sure, however, on the other hand it does also make 2.6.27 miss out on a
-few possible small fixes which may appear here and there.
+John,
 
-What will happen then is distributions will end up using their own
-patches on top of the kernel, or users using something like
-compat-wireless to get more bleeding edge stuff. This is exactly what we
-want to avoid.
+This is 2.6.28.material.
 
-To avoid it I do think another exception needs to be made for patches:
+Ehud
+---
 
-* Small fixes which make something that was not working, which was
-  supposed to work work
+Index: linux-2.6/drivers/net/wireless/b43legacy/phy.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/b43legacy/phy.c
++++ linux-2.6/drivers/net/wireless/b43legacy/phy.c
+@@ -595,12 +595,14 @@ static void b43legacy_phy_initb5(struct
+ 				    0x0035) & 0xFFC0) | 0x0064);
+ 		b43legacy_phy_write(dev, 0x005D, (b43legacy_phy_read(dev,
+ 				    0x005D) & 0xFF80) | 0x000A);
++		b43legacy_phy_write(dev, 0x5B, 0x0000);
++		b43legacy_phy_write(dev, 0x5C, 0x0000);
+ 	}
+ 
+ 	if (dev->bad_frames_preempt)
+ 		b43legacy_phy_write(dev, B43legacy_PHY_RADIO_BITFIELD,
+ 				    b43legacy_phy_read(dev,
+-				    B43legacy_PHY_RADIO_BITFIELD) | (1 << 11));
++				    B43legacy_PHY_RADIO_BITFIELD) | (1 << 12));
+ 
+ 	if (phy->analog == 1) {
+ 		b43legacy_phy_write(dev, 0x0026, 0xCE00);
+@@ -753,7 +755,7 @@ static void b43legacy_phy_initb6(struct
+ 		b43legacy_radio_write16(dev, 0x0050, 0x0020);
+ 	}
+ 	if (phy->radio_rev <= 2) {
+-		b43legacy_radio_write16(dev, 0x007C, 0x0020);
++		b43legacy_radio_write16(dev, 0x0050, 0x0020);
+ 		b43legacy_radio_write16(dev, 0x005A, 0x0070);
+ 		b43legacy_radio_write16(dev, 0x005B, 0x007B);
+ 		b43legacy_radio_write16(dev, 0x005C, 0x00B0);
+@@ -771,7 +773,7 @@ static void b43legacy_phy_initb6(struct
+ 		b43legacy_phy_write(dev, 0x002A, 0x8AC0);
+ 	b43legacy_phy_write(dev, 0x0038, 0x0668);
+ 	b43legacy_radio_set_txpower_bg(dev, 0xFFFF, 0xFFFF, 0xFFFF);
+-	if (phy->radio_rev <= 5)
++	if (phy->radio_rev == 4 || phy->radio_rev == 5)
+ 		b43legacy_phy_write(dev, 0x005D, (b43legacy_phy_read(dev,
+ 				    0x005D) & 0xFF80) | 0x0003);
+ 	if (phy->radio_rev <= 2)
+@@ -1010,7 +1012,7 @@ static void b43legacy_phy_initg(struct b
+ 		b43legacy_phy_initb5(dev);
+ 	else
+ 		b43legacy_phy_initb6(dev);
+-	if (phy->rev >= 2 || phy->gmode)
++	if (phy->rev >= 2 && phy->gmode)
+ 		b43legacy_phy_inita(dev);
+ 
+ 	if (phy->rev >= 2) {
+@@ -1025,18 +1027,22 @@ static void b43legacy_phy_initg(struct b
+ 		b43legacy_phy_write(dev, 0x0811, 0x0400);
+ 		b43legacy_phy_write(dev, 0x0015, 0x00C0);
+ 	}
+-	if (phy->rev >= 2 || phy->gmode) {
++	if (phy->gmode) {
+ 		tmp = b43legacy_phy_read(dev, 0x0400) & 0xFF;
+-		if (tmp == 3 || tmp == 5) {
++		if (tmp == 3) {
++			b43legacy_phy_write(dev, 0x04C2, 0x1816);
++			b43legacy_phy_write(dev, 0x04C3, 0x8606);
++		}
++		if (tmp == 4 || tmp == 5) {
+ 			b43legacy_phy_write(dev, 0x04C2, 0x1816);
+ 			b43legacy_phy_write(dev, 0x04C3, 0x8006);
+-			if (tmp == 5)
+-				b43legacy_phy_write(dev, 0x04CC,
+-						    (b43legacy_phy_read(dev,
+-						     0x04CC) & 0x00FF) |
+-						     0x1F00);
++			b43legacy_phy_write(dev, 0x04CC,
++					    (b43legacy_phy_read(dev,
++					     0x04CC) & 0x00FF) |
++					     0x1F00);
+ 		}
+-		b43legacy_phy_write(dev, 0x047E, 0x0078);
++		if (phy->rev >= 2)
++			b43legacy_phy_write(dev, 0x047E, 0x0078);
+ 	}
+ 	if (phy->radio_rev == 8) {
+ 		b43legacy_phy_write(dev, 0x0801, b43legacy_phy_read(dev, 0x0801)
+@@ -1078,7 +1084,7 @@ static void b43legacy_phy_initg(struct b
+ 		else
+ 			b43legacy_phy_write(dev, 0x002F, 0x0202);
+ 	}
+-	if (phy->gmode || phy->rev >= 2) {
++	if (phy->gmode) {
+ 		b43legacy_phy_lo_adjust(dev, 0);
+ 		b43legacy_phy_write(dev, 0x080F, 0x8078);
+ 	}
 
-If these type of patches cannot be submitted we will have a stable
-kernel for sure but yet buggy leaving people to opt for alternatives
-for small fixes or driver updates.
 
-  Luis
+--Boundary_(ID_NZLWqnidqKmz8VQwCGCoiA)--
