@@ -1,202 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:42506 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753022AbYILSQH (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44088 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752008AbYIHJhL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2008 14:16:07 -0400
-Date: Fri, 12 Sep 2008 13:16:03 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>, chunkeey@web.de
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC/RFT] p54: Fix sparse warnings
-Message-ID: <48cab1e3.m0lac7LoL3DFxIu6%Larry.Finger@lwfinger.net> (sfid-20080912_201612_457625_29302D45)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 8 Sep 2008 05:37:11 -0400
+Subject: Re: [RFC PATCH 0/3] mac80211 dissasociation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240809080232n42d6caefs6c3a1f5afef46cb4@mail.gmail.com> (sfid-20080908_113216_032675_8751A8F4)
+References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
+	 <1ba2fa240809070724n362d5850t653ca5746b87eb48@mail.gmail.com>
+	 <1220798432.31304.13.camel@johannes.berg>
+	 <1ba2fa240809070750k1683f410icf2a82be0f533b4f@mail.gmail.com>
+	 <1ba2fa240809071614v66235658w1768e31d31c2d0f8@mail.gmail.com>
+	 <1220863139.31304.33.camel@johannes.berg>
+	 <1ba2fa240809080146o93200eetcf8e142f6ef4a2b1@mail.gmail.com>
+	 <1220864314.31304.38.camel@johannes.berg>
+	 <1ba2fa240809080206u42908ef6yc6641435d747155a@mail.gmail.com>
+	 <1220865843.31304.48.camel@johannes.berg>
+	 <1ba2fa240809080232n42d6caefs6c3a1f5afef46cb4@mail.gmail.com>
+	 (sfid-20080908_113216_032675_8751A8F4)
+Content-Type: text/plain
+Date: Mon, 08 Sep 2008 11:37:03 +0200
+Message-Id: <1220866623.31304.53.camel@johannes.berg> (sfid-20080908_113715_870373_9B03E042)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When this patch is ready, I will use the commit message below.
+On Mon, 2008-09-08 at 12:32 +0300, Tomas Winkler wrote:
 
-Question: Does anyone use either p54pci or p54usb on a big-endian machine?
+> I want to test your stopping queue stuff in my environment  but I get
+> to the lab only very late today.
 
-Thanks,
+Ok, sure, works for me. I decided to do the stopping in a separate patch
+as I have verified that it was already "wrong" before your changes,
+patch inlined below (it's more a cosmetic thing, but still wrong).
 
-Larry
+Subject: mac80211: stop queues before carrier off
 
-=====================================================================
+During testing of the disassociation fixes, Tomas noticed that it
+was possible to run into a situation where you'd suddenly get a
+few "wlan0: dropped frame to <AP> (unauthorized port)" messages
+and I found this to be due to the AP's sta_info having been
+removed but netif_carrier_off not having removed/stopped traffic
+yet. To avoid that, stop the queue for the interface (and avoid
+bringing them up when another vif scans when they weren't up.)
 
-The command
-
-make C=2 CF="-D__CHECK_ENDIAN__" drivers/net/wireless/p54/
-
-generates the following warnings:
-
-.../p54common.c:152:38: warning: incorrect type in argument 1 (different base types)
-.../p54common.c:152:38:    expected restricted __be32 const [usertype] *p
-.../p54common.c:152:38:    got unsigned int *<noident>
-.../p54common.c:184:15: warning: restricted __le32 degrades to integer
-.../p54common.c:185:29: warning: cast to restricted __le16
-.../p54common.c:309:11: warning: symbol 'p54_rf_chips' was not declared.
-		        Should it be static?
-.../p54common.c:313:5: warning: symbol 'p54_parse_eeprom' was not declared.
-		       Should it be static?
-.../p54common.c:620:43: warning: incorrect type in argument 3 (different base types)
-.../p54common.c:620:43:    expected unsigned long [unsigned] [usertype] len
-.../p54common.c:620:43:    got restricted __le16 [usertype] len
-.../p54common.c:780:41: warning: restricted __le16 degrades to integer
-.../p54common.c:781:32: warning: restricted __le16 degrades to integer
-.../p54common.c:1250:28: warning: incorrect type in argument 2 (different base types)
-.../p54common.c:1250:28:    expected unsigned short [unsigned] [usertype] filter_type
-.../p54common.c:1250:28:    got restricted __le16 [usertype] filter_type
-.../p54common.c:1252:28: warning: incorrect type in argument 2 (different base types)
-.../p54common.c:1252:28:    expected unsigned short [unsigned] [usertype] filter_type
-.../p54common.c:1252:28:    got restricted __le16 [usertype] filter_type
-.../p54common.c:1257:42: warning: incorrect type in argument 2 (different base types)
-.../p54common.c:1257:42:    expected unsigned short [unsigned] [usertype] filter_type
-.../p54common.c:1257:42:    got restricted __le16
-.../p54common.c:1260:42: warning: incorrect type in argument 2 (different base types)
-.../p54common.c:1260:42:    expected unsigned short [unsigned] [usertype] filter_type
-.../p54common.c:1260:42:    got restricted __le16
-.../p54usb.c:228:10: warning: restricted __le32 degrades to integer
-.../p54usb.c:228:23: warning: restricted __le32 degrades to integer
-.../p54usb.c:228:7: warning: incorrect type in assignment (different base types)
-.../p54usb.c:228:7:    expected restricted __le32 [assigned] [usertype] chk
-.../p54usb.c:228:7:    got unsigned int
-.../p54usb.c:221:8: warning: symbol 'p54u_lm87_chksum' was not declared.
-		    Should it be static?
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
+ net/mac80211/mlme.c |   26 +++++++++++++++++---------
+ 1 file changed, 17 insertions(+), 9 deletions(-)
 
-Index: wireless-testing/drivers/net/wireless/p54/p54usb.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/p54/p54usb.c
-+++ wireless-testing/drivers/net/wireless/p54/p54usb.c
-@@ -218,17 +218,17 @@ static void p54u_tx_3887(struct ieee8021
- 	usb_submit_urb(data_urb, GFP_ATOMIC);
+--- everything.orig/net/mac80211/mlme.c	2008-09-08 11:27:39.000000000 +0200
++++ everything/net/mac80211/mlme.c	2008-09-08 11:30:41.000000000 +0200
+@@ -574,6 +574,7 @@ static void ieee80211_set_associated(str
+ 	sdata->bss_conf.assoc = 1;
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ 
++	netif_tx_start_all_queues(sdata->dev);
+ 	netif_carrier_on(sdata->dev);
+ 
+ 	ieee80211_sta_send_apinfo(sdata, ifsta);
+@@ -995,6 +996,7 @@ static void ieee80211_set_disassoc(struc
+ 	ifsta->assoc_scan_tries = 0;
+ 	ifsta->assoc_tries = 0;
+ 
++	netif_tx_stop_all_queues(sdata->dev);
+ 	netif_carrier_off(sdata->dev);
+ 
+ 	ieee80211_sta_tear_down_BA_sessions(sdata, sta->addr);
+@@ -3413,6 +3415,7 @@ static void ieee80211_sta_reset_auth(str
+ 	ifsta->direct_probe_tries = 0;
+ 	ifsta->auth_tries = 0;
+ 	ifsta->assoc_tries = 0;
++	netif_tx_stop_all_queues(sdata->dev);
+ 	netif_carrier_off(sdata->dev);
  }
  
--__le32 p54u_lm87_chksum(const u32 *data, size_t length)
-+static __le32 p54u_lm87_chksum(const u32 *data, size_t length)
- {
--	__le32 chk = 0;
-+	u32 chk = 0;
+@@ -3889,13 +3892,15 @@ void ieee80211_scan_completed(struct iee
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 		/* Tell AP we're back */
+-		if (sdata->vif.type == IEEE80211_IF_TYPE_STA &&
+-		    sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED)
+-			ieee80211_send_nullfunc(local, sdata, 0);
++		if (sdata->vif.type == IEEE80211_IF_TYPE_STA) {
++			if (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED) {
++				ieee80211_send_nullfunc(local, sdata, 0);
++				netif_tx_wake_all_queues(sdata->dev);
++			}
++		} else
++			netif_tx_wake_all_queues(sdata->dev);
  
- 	length >>= 2;
- 	while (length--) {
--		chk ^= cpu_to_le32(*data++);
-+		chk ^= *data++;
- 		chk = (chk >> 5) ^ (chk << 3);
+ 		ieee80211_restart_sta_timer(sdata);
+-
+-		netif_wake_queue(sdata->dev);
  	}
+ 	rcu_read_unlock();
  
--	return chk;
-+	return cpu_to_le32(chk);
- }
+@@ -4053,10 +4058,13 @@ static int ieee80211_sta_start_scan(stru
  
- static void p54u_tx_lm87(struct ieee80211_hw *dev,
-Index: wireless-testing/drivers/net/wireless/p54/p54common.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/p54/p54common.c
-+++ wireless-testing/drivers/net/wireless/p54/p54common.c
-@@ -149,7 +149,7 @@ int p54_parse_firmware(struct ieee80211_
- 		u32 code = le32_to_cpu(bootrec->code);
- 		switch (code) {
- 		case BR_CODE_COMPONENT_ID:
--			priv->fw_interface = be32_to_cpup(bootrec->data);
-+			priv->fw_interface = be32_to_cpup((const __be32 *)bootrec->data);
- 			switch (priv->fw_interface) {
- 			case FW_FMAC:
- 				printk(KERN_INFO "p54: FreeMAC firmware\n");
-@@ -181,9 +181,8 @@ int p54_parse_firmware(struct ieee80211_
- 			priv->rx_end = le32_to_cpu(desc->rx_end) - 0x3500;
- 			priv->headroom = desc->headroom;
- 			priv->tailroom = desc->tailroom;
--			if (bootrec->len == 11)
--				priv->rx_mtu = (size_t) le16_to_cpu(
--					(__le16)bootrec->data[10]);
-+			if (le32_to_cpu(bootrec->len) == 11)
-+				priv->rx_mtu = le16_to_cpu(bootrec->data16[20]);
- 			else
- 				priv->rx_mtu = (size_t)
- 					0x620 - priv->tx_hdr_len;
-@@ -306,11 +305,11 @@ static int p54_convert_rev1(struct ieee8
- 	return 0;
- }
- 
--const char* p54_rf_chips[] = { "NULL", "Indigo?", "Duette",
-+static const char *p54_rf_chips[] = { "NULL", "Indigo?", "Duette",
-                               "Frisbee", "Xbow", "Longbow" };
- static int p54_init_xbow_synth(struct ieee80211_hw *dev);
- 
--int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
-+static int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
- {
- 	struct p54_common *priv = dev->priv;
- 	struct eeprom_pda_wrap *wrap = NULL;
-@@ -617,7 +616,7 @@ static void p54_rx_eeprom_readback(struc
- 	if (!priv->eeprom)
- 		return ;
- 
--	memcpy(priv->eeprom, eeprom->data, eeprom->len);
-+	memcpy(priv->eeprom, eeprom->data, le16_to_cpu(eeprom->len));
- 
- 	complete(&priv->eeprom_comp);
- }
-@@ -777,8 +776,9 @@ int p54_read_eeprom(struct ieee80211_hw
- 		hdr->len = cpu_to_le16(blocksize + sizeof(*eeprom_hdr));
- 		eeprom_hdr->offset = cpu_to_le16(offset);
- 		eeprom_hdr->len = cpu_to_le16(blocksize);
--		p54_assign_address(dev, NULL, hdr, hdr->len + sizeof(*hdr));
--	        priv->tx(dev, hdr, hdr->len + sizeof(*hdr), 0);
-+		p54_assign_address(dev, NULL, hdr, le16_to_cpu(hdr->len) +
-+				   sizeof(*hdr));
-+		priv->tx(dev, hdr, le16_to_cpu(hdr->len) + sizeof(*hdr), 0);
- 
- 		if (!wait_for_completion_interruptible_timeout(&priv->eeprom_comp, HZ)) {
- 			printk(KERN_ERR "%s: device does not respond!\n",
-@@ -1247,18 +1247,20 @@ static void p54_configure_filter(struct
- 
- 	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
- 		if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
--			p54_set_filter(dev, priv->filter_type, NULL);
-+			p54_set_filter(dev, le16_to_cpu(priv->filter_type),
-+				 NULL);
- 		else
--			p54_set_filter(dev, priv->filter_type, priv->bssid);
-+			p54_set_filter(dev, le16_to_cpu(priv->filter_type),
-+				 priv->bssid);
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+-		netif_stop_queue(sdata->dev);
+-		if (sdata->vif.type == IEEE80211_IF_TYPE_STA &&
+-		    (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED))
+-			ieee80211_send_nullfunc(local, sdata, 1);
++		if (sdata->vif.type == IEEE80211_IF_TYPE_STA) {
++			if (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED) {
++				netif_tx_stop_all_queues(sdata->dev);
++				ieee80211_send_nullfunc(local, sdata, 1);
++			}
++		} else
++			netif_tx_stop_all_queues(sdata->dev);
  	}
+ 	rcu_read_unlock();
  
- 	if (changed_flags & FIF_PROMISC_IN_BSS) {
- 		if (*total_flags & FIF_PROMISC_IN_BSS)
--			p54_set_filter(dev, priv->filter_type |
--				cpu_to_le16(0x8), NULL);
-+			p54_set_filter(dev, le16_to_cpu(priv->filter_type) |
-+				0x8, NULL);
- 		else
--			p54_set_filter(dev, priv->filter_type &
--				~cpu_to_le16(0x8), priv->bssid);
-+			p54_set_filter(dev, le16_to_cpu(priv->filter_type) &
-+				~0x8, priv->bssid);
- 	}
- }
- 
-Index: wireless-testing/drivers/net/wireless/p54/p54common.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/p54/p54common.h
-+++ wireless-testing/drivers/net/wireless/p54/p54common.h
-@@ -18,7 +18,13 @@
- struct bootrec {
- 	__le32 code;
- 	__le32 len;
--	u32 data[0];
-+	/* Most references to the data section that follows are for u32
-+	 * quantities; however, one is for an le16 quantity. The union
-+	 * below avoids a cast and makes the usage clearer. */
-+	union {
-+		u32 data[0];
-+		__le16 data16[0];
-+	};
- } __attribute__((packed));
- 
- struct bootrec_exp_if {
+
+
