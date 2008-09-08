@@ -1,132 +1,765 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.177]:14091 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754195AbYIOVuS (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54514 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754598AbYIHPqF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 17:50:18 -0400
-Received: by ik-out-1112.google.com with SMTP id c30so2101140ika.5
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 14:50:16 -0700 (PDT)
-Message-ID: <f488382f0809151450u2f5501cbt14ef9f4ce19a9eb3@mail.gmail.com> (sfid-20080915_235022_203106_F18976FF)
-Date: Mon, 15 Sep 2008 14:50:16 -0700
-From: "Steven Noonan" <steven@uplinklabs.net>
-To: ath9k-devel@lists.ath9k.org,
-	wireless <linux-wireless@vger.kernel.org>, jmalinen@atheros.com,
-	lrodriguez@atheros.com
-Subject: Fwd: frustrating ath9k issues
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 8 Sep 2008 11:46:05 -0400
+Message-Id: <20080908154443.899627000@sipsolutions.net> (sfid-20080908_174626_797473_E3058CA9)
+References: <20080908154421.216772000@sipsolutions.net>
+Date: Mon, 08 Sep 2008 17:44:28 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 7/8] mac80211: move some HT code out of mlme.c
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I sent this message to the linux-kernel list 3 days ago and then
-realized I'd probably get more replies if I'd actually sent it to the
-right people. I've updated this message with anything that's changed
-since I sent it, and -hopefully- I'm sending to all the right people.
+Some of the HT code in mlme.c is misplaced:
+ * constants/definitions belong to the ieee80211.h header
+ * code being used in other modes as well shouldn't be there
 
-And before I go on, I want to say that I -much- appreciate the
-development of this driver. Being forced to use ndiswrapper on a
-32-bit Linux install was getting on my nerves!
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/linux/ieee80211.h |   18 ++
+ net/mac80211/Makefile     |    1 
+ net/mac80211/ht.c         |  328 ++++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/mlme.c       |  321 ---------------------------------------------
+ 4 files changed, 347 insertions(+), 321 deletions(-)
 
+--- everything.orig/include/linux/ieee80211.h	2008-09-08 16:05:28.000000000 +0200
++++ everything/include/linux/ieee80211.h	2008-09-08 16:05:29.000000000 +0200
+@@ -643,6 +643,9 @@ struct ieee80211_mgmt {
+ 	} u;
+ } __attribute__ ((packed));
+ 
++/* mgmt header + 1 byte category code */
++#define IEEE80211_MIN_ACTION_SIZE offsetof(struct ieee80211_mgmt, u.action.u)
++
+ 
+ /* Control frames */
+ struct ieee80211_rts {
+@@ -737,6 +740,21 @@ struct ieee80211_ht_addt_info {
+ #define IEEE80211_HT_IE_NON_GF_STA_PRSNT	0x0004
+ #define IEEE80211_HT_IE_NON_HT_STA_PRSNT	0x0010
+ 
++/* block-ack parameters */
++#define IEEE80211_ADDBA_PARAM_POLICY_MASK 0x0002
++#define IEEE80211_ADDBA_PARAM_TID_MASK 0x003C
++#define IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK 0xFFA0
++#define IEEE80211_DELBA_PARAM_TID_MASK 0xF000
++#define IEEE80211_DELBA_PARAM_INITIATOR_MASK 0x0800
++
++/*
++ * A-PMDU buffer sizes
++ * According to IEEE802.11n spec size varies from 8K to 64K (in powers of 2)
++ */
++#define IEEE80211_MIN_AMPDU_BUF 0x8
++#define IEEE80211_MAX_AMPDU_BUF 0x40
++
++
+ /* Spatial Multiplexing Power Save Modes */
+ #define WLAN_HT_CAP_SM_PS_STATIC	0
+ #define WLAN_HT_CAP_SM_PS_DYNAMIC	1
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ everything/net/mac80211/ht.c	2008-09-08 16:10:05.000000000 +0200
+@@ -0,0 +1,328 @@
++/*
++ * HT handling
++ *
++ * Copyright 2003, Jouni Malinen <jkmaline@cc.hut.fi>
++ * Copyright 2004, Instant802 Networks, Inc.
++ * Copyright 2005, Devicescape Software, Inc.
++ * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
++ * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
++ * Copyright 2007-2008, Intel Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/ieee80211.h>
++#include <net/wireless.h>
++#include <net/mac80211.h>
++#include "ieee80211_i.h"
++#include "sta_info.h"
++
++int ieee80211_ht_cap_ie_to_ht_info(struct ieee80211_ht_cap *ht_cap_ie,
++				   struct ieee80211_ht_info *ht_info)
++{
++
++	if (ht_info == NULL)
++		return -EINVAL;
++
++	memset(ht_info, 0, sizeof(*ht_info));
++
++	if (ht_cap_ie) {
++		u8 ampdu_info = ht_cap_ie->ampdu_params_info;
++
++		ht_info->ht_supported = 1;
++		ht_info->cap = le16_to_cpu(ht_cap_ie->cap_info);
++		ht_info->ampdu_factor =
++			ampdu_info & IEEE80211_HT_CAP_AMPDU_FACTOR;
++		ht_info->ampdu_density =
++			(ampdu_info & IEEE80211_HT_CAP_AMPDU_DENSITY) >> 2;
++		memcpy(ht_info->supp_mcs_set, ht_cap_ie->supp_mcs_set, 16);
++	} else
++		ht_info->ht_supported = 0;
++
++	return 0;
++}
++
++int ieee80211_ht_addt_info_ie_to_ht_bss_info(
++			struct ieee80211_ht_addt_info *ht_add_info_ie,
++			struct ieee80211_ht_bss_info *bss_info)
++{
++	if (bss_info == NULL)
++		return -EINVAL;
++
++	memset(bss_info, 0, sizeof(*bss_info));
++
++	if (ht_add_info_ie) {
++		u16 op_mode;
++		op_mode = le16_to_cpu(ht_add_info_ie->operation_mode);
++
++		bss_info->primary_channel = ht_add_info_ie->control_chan;
++		bss_info->bss_cap = ht_add_info_ie->ht_param;
++		bss_info->bss_op_mode = (u8)(op_mode & 0xff);
++	}
++
++	return 0;
++}
++
++void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata, const u8 *da,
++				u16 tid, u8 dialog_token, u16 start_seq_num,
++				u16 agg_size, u16 timeout)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
++	struct sk_buff *skb;
++	struct ieee80211_mgmt *mgmt;
++	u16 capab;
++
++	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom);
++
++	if (!skb) {
++		printk(KERN_ERR "%s: failed to allocate buffer "
++				"for addba request frame\n", sdata->dev->name);
++		return;
++	}
++	skb_reserve(skb, local->hw.extra_tx_headroom);
++	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
++	memset(mgmt, 0, 24);
++	memcpy(mgmt->da, da, ETH_ALEN);
++	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
++	if (sdata->vif.type == IEEE80211_IF_TYPE_AP)
++		memcpy(mgmt->bssid, sdata->dev->dev_addr, ETH_ALEN);
++	else
++		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
++
++	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
++					  IEEE80211_STYPE_ACTION);
++
++	skb_put(skb, 1 + sizeof(mgmt->u.action.u.addba_req));
++
++	mgmt->u.action.category = WLAN_CATEGORY_BACK;
++	mgmt->u.action.u.addba_req.action_code = WLAN_ACTION_ADDBA_REQ;
++
++	mgmt->u.action.u.addba_req.dialog_token = dialog_token;
++	capab = (u16)(1 << 1);		/* bit 1 aggregation policy */
++	capab |= (u16)(tid << 2); 	/* bit 5:2 TID number */
++	capab |= (u16)(agg_size << 6);	/* bit 15:6 max size of aggergation */
++
++	mgmt->u.action.u.addba_req.capab = cpu_to_le16(capab);
++
++	mgmt->u.action.u.addba_req.timeout = cpu_to_le16(timeout);
++	mgmt->u.action.u.addba_req.start_seq_num =
++					cpu_to_le16(start_seq_num << 4);
++
++	ieee80211_sta_tx(sdata, skb, 0);
++}
++
++void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata, const u8 *da, u16 tid,
++			  u16 initiator, u16 reason_code)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
++	struct sk_buff *skb;
++	struct ieee80211_mgmt *mgmt;
++	u16 params;
++
++	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom);
++
++	if (!skb) {
++		printk(KERN_ERR "%s: failed to allocate buffer "
++					"for delba frame\n", sdata->dev->name);
++		return;
++	}
++
++	skb_reserve(skb, local->hw.extra_tx_headroom);
++	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
++	memset(mgmt, 0, 24);
++	memcpy(mgmt->da, da, ETH_ALEN);
++	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
++	if (sdata->vif.type == IEEE80211_IF_TYPE_AP)
++		memcpy(mgmt->bssid, sdata->dev->dev_addr, ETH_ALEN);
++	else
++		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
++	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
++					  IEEE80211_STYPE_ACTION);
++
++	skb_put(skb, 1 + sizeof(mgmt->u.action.u.delba));
++
++	mgmt->u.action.category = WLAN_CATEGORY_BACK;
++	mgmt->u.action.u.delba.action_code = WLAN_ACTION_DELBA;
++	params = (u16)(initiator << 11); 	/* bit 11 initiator */
++	params |= (u16)(tid << 12); 		/* bit 15:12 TID number */
++
++	mgmt->u.action.u.delba.params = cpu_to_le16(params);
++	mgmt->u.action.u.delba.reason_code = cpu_to_le16(reason_code);
++
++	ieee80211_sta_tx(sdata, skb, 0);
++}
++
++void ieee80211_send_bar(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid, u16 ssn)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct sk_buff *skb;
++	struct ieee80211_bar *bar;
++	u16 bar_control = 0;
++
++	skb = dev_alloc_skb(sizeof(*bar) + local->hw.extra_tx_headroom);
++	if (!skb) {
++		printk(KERN_ERR "%s: failed to allocate buffer for "
++			"bar frame\n", sdata->dev->name);
++		return;
++	}
++	skb_reserve(skb, local->hw.extra_tx_headroom);
++	bar = (struct ieee80211_bar *)skb_put(skb, sizeof(*bar));
++	memset(bar, 0, sizeof(*bar));
++	bar->frame_control = cpu_to_le16(IEEE80211_FTYPE_CTL |
++					 IEEE80211_STYPE_BACK_REQ);
++	memcpy(bar->ra, ra, ETH_ALEN);
++	memcpy(bar->ta, sdata->dev->dev_addr, ETH_ALEN);
++	bar_control |= (u16)IEEE80211_BAR_CTRL_ACK_POLICY_NORMAL;
++	bar_control |= (u16)IEEE80211_BAR_CTRL_CBMTID_COMPRESSED_BA;
++	bar_control |= (u16)(tid << 12);
++	bar->control = cpu_to_le16(bar_control);
++	bar->start_seq_num = cpu_to_le16(ssn);
++
++	ieee80211_sta_tx(sdata, skb, 0);
++}
++
++void ieee80211_sta_stop_rx_ba_session(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid,
++					u16 initiator, u16 reason)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_hw *hw = &local->hw;
++	struct sta_info *sta;
++	int ret, i;
++	DECLARE_MAC_BUF(mac);
++
++	rcu_read_lock();
++
++	sta = sta_info_get(local, ra);
++	if (!sta) {
++		rcu_read_unlock();
++		return;
++	}
++
++	/* check if TID is in operational state */
++	spin_lock_bh(&sta->lock);
++	if (sta->ampdu_mlme.tid_state_rx[tid]
++				!= HT_AGG_STATE_OPERATIONAL) {
++		spin_unlock_bh(&sta->lock);
++		rcu_read_unlock();
++		return;
++	}
++	sta->ampdu_mlme.tid_state_rx[tid] =
++		HT_AGG_STATE_REQ_STOP_BA_MSK |
++		(initiator << HT_AGG_STATE_INITIATOR_SHIFT);
++	spin_unlock_bh(&sta->lock);
++
++	/* stop HW Rx aggregation. ampdu_action existence
++	 * already verified in session init so we add the BUG_ON */
++	BUG_ON(!local->ops->ampdu_action);
++
++#ifdef CONFIG_MAC80211_HT_DEBUG
++	printk(KERN_DEBUG "Rx BA session stop requested for %s tid %u\n",
++				print_mac(mac, ra), tid);
++#endif /* CONFIG_MAC80211_HT_DEBUG */
++
++	ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_STOP,
++					ra, tid, NULL);
++	if (ret)
++		printk(KERN_DEBUG "HW problem - can not stop rx "
++				"aggregation for tid %d\n", tid);
++
++	/* shutdown timer has not expired */
++	if (initiator != WLAN_BACK_TIMER)
++		del_timer_sync(&sta->ampdu_mlme.tid_rx[tid]->session_timer);
++
++	/* check if this is a self generated aggregation halt */
++	if (initiator == WLAN_BACK_RECIPIENT || initiator == WLAN_BACK_TIMER)
++		ieee80211_send_delba(sdata, ra, tid, 0, reason);
++
++	/* free the reordering buffer */
++	for (i = 0; i < sta->ampdu_mlme.tid_rx[tid]->buf_size; i++) {
++		if (sta->ampdu_mlme.tid_rx[tid]->reorder_buf[i]) {
++			/* release the reordered frames */
++			dev_kfree_skb(sta->ampdu_mlme.tid_rx[tid]->reorder_buf[i]);
++			sta->ampdu_mlme.tid_rx[tid]->stored_mpdu_num--;
++			sta->ampdu_mlme.tid_rx[tid]->reorder_buf[i] = NULL;
++		}
++	}
++	/* free resources */
++	kfree(sta->ampdu_mlme.tid_rx[tid]->reorder_buf);
++	kfree(sta->ampdu_mlme.tid_rx[tid]);
++	sta->ampdu_mlme.tid_rx[tid] = NULL;
++	sta->ampdu_mlme.tid_state_rx[tid] = HT_AGG_STATE_IDLE;
++
++	rcu_read_unlock();
++}
++
++
++/*
++ * After sending add Block Ack request we activated a timer until
++ * add Block Ack response will arrive from the recipient.
++ * If this timer expires sta_addba_resp_timer_expired will be executed.
++ */
++void sta_addba_resp_timer_expired(unsigned long data)
++{
++	/* not an elegant detour, but there is no choice as the timer passes
++	 * only one argument, and both sta_info and TID are needed, so init
++	 * flow in sta_info_create gives the TID as data, while the timer_to_id
++	 * array gives the sta through container_of */
++	u16 tid = *(u8 *)data;
++	struct sta_info *temp_sta = container_of((void *)data,
++		struct sta_info, timer_to_tid[tid]);
++
++	struct ieee80211_local *local = temp_sta->local;
++	struct ieee80211_hw *hw = &local->hw;
++	struct sta_info *sta;
++	u8 *state;
++
++	rcu_read_lock();
++
++	sta = sta_info_get(local, temp_sta->addr);
++	if (!sta) {
++		rcu_read_unlock();
++		return;
++	}
++
++	state = &sta->ampdu_mlme.tid_state_tx[tid];
++	/* check if the TID waits for addBA response */
++	spin_lock_bh(&sta->lock);
++	if (!(*state & HT_ADDBA_REQUESTED_MSK)) {
++		spin_unlock_bh(&sta->lock);
++		*state = HT_AGG_STATE_IDLE;
++#ifdef CONFIG_MAC80211_HT_DEBUG
++		printk(KERN_DEBUG "timer expired on tid %d but we are not "
++				"expecting addBA response there", tid);
++#endif
++		goto timer_expired_exit;
++	}
++
++#ifdef CONFIG_MAC80211_HT_DEBUG
++	printk(KERN_DEBUG "addBA response timer expired on tid %d\n", tid);
++#endif
++
++	/* go through the state check in stop_BA_session */
++	*state = HT_AGG_STATE_OPERATIONAL;
++	spin_unlock_bh(&sta->lock);
++	ieee80211_stop_tx_ba_session(hw, temp_sta->addr, tid,
++				     WLAN_BACK_INITIATOR);
++
++timer_expired_exit:
++	rcu_read_unlock();
++}
++
++void ieee80211_sta_tear_down_BA_sessions(struct ieee80211_sub_if_data *sdata, u8 *addr)
++{
++	struct ieee80211_local *local = sdata->local;
++	int i;
++
++	for (i = 0; i <  STA_TID_NUM; i++) {
++		ieee80211_stop_tx_ba_session(&local->hw, addr, i,
++					     WLAN_BACK_INITIATOR);
++		ieee80211_sta_stop_rx_ba_session(sdata, addr, i,
++						 WLAN_BACK_RECIPIENT,
++						 WLAN_REASON_QSTA_LEAVE_QBSS);
++	}
++}
++
+--- everything.orig/net/mac80211/mlme.c	2008-09-08 16:05:28.000000000 +0200
++++ everything/net/mac80211/mlme.c	2008-09-08 16:07:05.000000000 +0200
+@@ -48,20 +48,6 @@
+ #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
+ 
+ 
+-/* mgmt header + 1 byte category code */
+-#define IEEE80211_MIN_ACTION_SIZE (24 + 1)
+-
+-#define IEEE80211_ADDBA_PARAM_POLICY_MASK 0x0002
+-#define IEEE80211_ADDBA_PARAM_TID_MASK 0x003C
+-#define IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK 0xFFA0
+-#define IEEE80211_DELBA_PARAM_TID_MASK 0xF000
+-#define IEEE80211_DELBA_PARAM_INITIATOR_MASK 0x0800
+-
+-/* next values represent the buffer size for A-MPDU frame.
+- * According to IEEE802.11n spec size varies from 8K to 64K (in powers of 2) */
+-#define IEEE80211_MIN_AMPDU_BUF 0x8
+-#define IEEE80211_MAX_AMPDU_BUF 0x40
+-
+ /* utils */
+ static int ecw2cw(int ecw)
+ {
+@@ -389,52 +375,6 @@ static u32 ieee80211_handle_bss_capabili
+ 	return changed;
+ }
+ 
+-int ieee80211_ht_cap_ie_to_ht_info(struct ieee80211_ht_cap *ht_cap_ie,
+-				   struct ieee80211_ht_info *ht_info)
+-{
+-
+-	if (ht_info == NULL)
+-		return -EINVAL;
+-
+-	memset(ht_info, 0, sizeof(*ht_info));
+-
+-	if (ht_cap_ie) {
+-		u8 ampdu_info = ht_cap_ie->ampdu_params_info;
+-
+-		ht_info->ht_supported = 1;
+-		ht_info->cap = le16_to_cpu(ht_cap_ie->cap_info);
+-		ht_info->ampdu_factor =
+-			ampdu_info & IEEE80211_HT_CAP_AMPDU_FACTOR;
+-		ht_info->ampdu_density =
+-			(ampdu_info & IEEE80211_HT_CAP_AMPDU_DENSITY) >> 2;
+-		memcpy(ht_info->supp_mcs_set, ht_cap_ie->supp_mcs_set, 16);
+-	} else
+-		ht_info->ht_supported = 0;
+-
+-	return 0;
+-}
+-
+-int ieee80211_ht_addt_info_ie_to_ht_bss_info(
+-			struct ieee80211_ht_addt_info *ht_add_info_ie,
+-			struct ieee80211_ht_bss_info *bss_info)
+-{
+-	if (bss_info == NULL)
+-		return -EINVAL;
+-
+-	memset(bss_info, 0, sizeof(*bss_info));
+-
+-	if (ht_add_info_ie) {
+-		u16 op_mode;
+-		op_mode = le16_to_cpu(ht_add_info_ie->operation_mode);
+-
+-		bss_info->primary_channel = ht_add_info_ie->control_chan;
+-		bss_info->bss_cap = ht_add_info_ie->ht_param;
+-		bss_info->bss_op_mode = (u8)(op_mode & 0xff);
+-	}
+-
+-	return 0;
+-}
+-
+ static void ieee80211_sta_send_apinfo(struct ieee80211_sub_if_data *sdata,
+ 					struct ieee80211_if_sta *ifsta)
+ {
+@@ -1119,55 +1059,6 @@ static void ieee80211_send_addba_resp(st
+ 	return;
+ }
+ 
+-void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata, const u8 *da,
+-				u16 tid, u8 dialog_token, u16 start_seq_num,
+-				u16 agg_size, u16 timeout)
+-{
+-	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+-	struct sk_buff *skb;
+-	struct ieee80211_mgmt *mgmt;
+-	u16 capab;
+-
+-	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom);
+-
+-	if (!skb) {
+-		printk(KERN_ERR "%s: failed to allocate buffer "
+-				"for addba request frame\n", sdata->dev->name);
+-		return;
+-	}
+-	skb_reserve(skb, local->hw.extra_tx_headroom);
+-	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
+-	memset(mgmt, 0, 24);
+-	memcpy(mgmt->da, da, ETH_ALEN);
+-	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
+-	if (sdata->vif.type == IEEE80211_IF_TYPE_AP)
+-		memcpy(mgmt->bssid, sdata->dev->dev_addr, ETH_ALEN);
+-	else
+-		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
+-
+-	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+-					  IEEE80211_STYPE_ACTION);
+-
+-	skb_put(skb, 1 + sizeof(mgmt->u.action.u.addba_req));
+-
+-	mgmt->u.action.category = WLAN_CATEGORY_BACK;
+-	mgmt->u.action.u.addba_req.action_code = WLAN_ACTION_ADDBA_REQ;
+-
+-	mgmt->u.action.u.addba_req.dialog_token = dialog_token;
+-	capab = (u16)(1 << 1);		/* bit 1 aggregation policy */
+-	capab |= (u16)(tid << 2); 	/* bit 5:2 TID number */
+-	capab |= (u16)(agg_size << 6);	/* bit 15:6 max size of aggergation */
+-
+-	mgmt->u.action.u.addba_req.capab = cpu_to_le16(capab);
+-
+-	mgmt->u.action.u.addba_req.timeout = cpu_to_le16(timeout);
+-	mgmt->u.action.u.addba_req.start_seq_num =
+-					cpu_to_le16(start_seq_num << 4);
+-
+-	ieee80211_sta_tx(sdata, skb, 0);
+-}
+-
+ /*
+  * After accepting the AddBA Request we activated a timer,
+  * resetting it after each frame that arrives from the originator.
+@@ -1397,149 +1288,6 @@ addba_resp_exit:
+ 	rcu_read_unlock();
+ }
+ 
+-void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata, const u8 *da, u16 tid,
+-			  u16 initiator, u16 reason_code)
+-{
+-	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+-	struct sk_buff *skb;
+-	struct ieee80211_mgmt *mgmt;
+-	u16 params;
+-
+-	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom);
+-
+-	if (!skb) {
+-		printk(KERN_ERR "%s: failed to allocate buffer "
+-					"for delba frame\n", sdata->dev->name);
+-		return;
+-	}
+-
+-	skb_reserve(skb, local->hw.extra_tx_headroom);
+-	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
+-	memset(mgmt, 0, 24);
+-	memcpy(mgmt->da, da, ETH_ALEN);
+-	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
+-	if (sdata->vif.type == IEEE80211_IF_TYPE_AP)
+-		memcpy(mgmt->bssid, sdata->dev->dev_addr, ETH_ALEN);
+-	else
+-		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
+-	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+-					  IEEE80211_STYPE_ACTION);
+-
+-	skb_put(skb, 1 + sizeof(mgmt->u.action.u.delba));
+-
+-	mgmt->u.action.category = WLAN_CATEGORY_BACK;
+-	mgmt->u.action.u.delba.action_code = WLAN_ACTION_DELBA;
+-	params = (u16)(initiator << 11); 	/* bit 11 initiator */
+-	params |= (u16)(tid << 12); 		/* bit 15:12 TID number */
+-
+-	mgmt->u.action.u.delba.params = cpu_to_le16(params);
+-	mgmt->u.action.u.delba.reason_code = cpu_to_le16(reason_code);
+-
+-	ieee80211_sta_tx(sdata, skb, 0);
+-}
+-
+-void ieee80211_send_bar(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid, u16 ssn)
+-{
+-	struct ieee80211_local *local = sdata->local;
+-	struct sk_buff *skb;
+-	struct ieee80211_bar *bar;
+-	u16 bar_control = 0;
+-
+-	skb = dev_alloc_skb(sizeof(*bar) + local->hw.extra_tx_headroom);
+-	if (!skb) {
+-		printk(KERN_ERR "%s: failed to allocate buffer for "
+-			"bar frame\n", sdata->dev->name);
+-		return;
+-	}
+-	skb_reserve(skb, local->hw.extra_tx_headroom);
+-	bar = (struct ieee80211_bar *)skb_put(skb, sizeof(*bar));
+-	memset(bar, 0, sizeof(*bar));
+-	bar->frame_control = cpu_to_le16(IEEE80211_FTYPE_CTL |
+-					 IEEE80211_STYPE_BACK_REQ);
+-	memcpy(bar->ra, ra, ETH_ALEN);
+-	memcpy(bar->ta, sdata->dev->dev_addr, ETH_ALEN);
+-	bar_control |= (u16)IEEE80211_BAR_CTRL_ACK_POLICY_NORMAL;
+-	bar_control |= (u16)IEEE80211_BAR_CTRL_CBMTID_COMPRESSED_BA;
+-	bar_control |= (u16)(tid << 12);
+-	bar->control = cpu_to_le16(bar_control);
+-	bar->start_seq_num = cpu_to_le16(ssn);
+-
+-	ieee80211_sta_tx(sdata, skb, 0);
+-}
+-
+-void ieee80211_sta_stop_rx_ba_session(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid,
+-					u16 initiator, u16 reason)
+-{
+-	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_hw *hw = &local->hw;
+-	struct sta_info *sta;
+-	int ret, i;
+-	DECLARE_MAC_BUF(mac);
+-
+-	rcu_read_lock();
+-
+-	sta = sta_info_get(local, ra);
+-	if (!sta) {
+-		rcu_read_unlock();
+-		return;
+-	}
+-
+-	/* check if TID is in operational state */
+-	spin_lock_bh(&sta->lock);
+-	if (sta->ampdu_mlme.tid_state_rx[tid]
+-				!= HT_AGG_STATE_OPERATIONAL) {
+-		spin_unlock_bh(&sta->lock);
+-		rcu_read_unlock();
+-		return;
+-	}
+-	sta->ampdu_mlme.tid_state_rx[tid] =
+-		HT_AGG_STATE_REQ_STOP_BA_MSK |
+-		(initiator << HT_AGG_STATE_INITIATOR_SHIFT);
+-	spin_unlock_bh(&sta->lock);
+-
+-	/* stop HW Rx aggregation. ampdu_action existence
+-	 * already verified in session init so we add the BUG_ON */
+-	BUG_ON(!local->ops->ampdu_action);
+-
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-	printk(KERN_DEBUG "Rx BA session stop requested for %s tid %u\n",
+-				print_mac(mac, ra), tid);
+-#endif /* CONFIG_MAC80211_HT_DEBUG */
+-
+-	ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_STOP,
+-					ra, tid, NULL);
+-	if (ret)
+-		printk(KERN_DEBUG "HW problem - can not stop rx "
+-				"aggregation for tid %d\n", tid);
+-
+-	/* shutdown timer has not expired */
+-	if (initiator != WLAN_BACK_TIMER)
+-		del_timer_sync(&sta->ampdu_mlme.tid_rx[tid]->session_timer);
+-
+-	/* check if this is a self generated aggregation halt */
+-	if (initiator == WLAN_BACK_RECIPIENT || initiator == WLAN_BACK_TIMER)
+-		ieee80211_send_delba(sdata, ra, tid, 0, reason);
+-
+-	/* free the reordering buffer */
+-	for (i = 0; i < sta->ampdu_mlme.tid_rx[tid]->buf_size; i++) {
+-		if (sta->ampdu_mlme.tid_rx[tid]->reorder_buf[i]) {
+-			/* release the reordered frames */
+-			dev_kfree_skb(sta->ampdu_mlme.tid_rx[tid]->reorder_buf[i]);
+-			sta->ampdu_mlme.tid_rx[tid]->stored_mpdu_num--;
+-			sta->ampdu_mlme.tid_rx[tid]->reorder_buf[i] = NULL;
+-		}
+-	}
+-	/* free resources */
+-	kfree(sta->ampdu_mlme.tid_rx[tid]->reorder_buf);
+-	kfree(sta->ampdu_mlme.tid_rx[tid]);
+-	sta->ampdu_mlme.tid_rx[tid] = NULL;
+-	sta->ampdu_mlme.tid_state_rx[tid] = HT_AGG_STATE_IDLE;
+-
+-	rcu_read_unlock();
+-}
+-
+-
+ static void ieee80211_sta_process_delba(struct ieee80211_sub_if_data *sdata,
+ 			struct ieee80211_mgmt *mgmt, size_t len)
+ {
+@@ -1583,75 +1331,6 @@ static void ieee80211_sta_process_delba(
+ 	rcu_read_unlock();
+ }
+ 
+-/*
+- * After sending add Block Ack request we activated a timer until
+- * add Block Ack response will arrive from the recipient.
+- * If this timer expires sta_addba_resp_timer_expired will be executed.
+- */
+-void sta_addba_resp_timer_expired(unsigned long data)
+-{
+-	/* not an elegant detour, but there is no choice as the timer passes
+-	 * only one argument, and both sta_info and TID are needed, so init
+-	 * flow in sta_info_create gives the TID as data, while the timer_to_id
+-	 * array gives the sta through container_of */
+-	u16 tid = *(u8 *)data;
+-	struct sta_info *temp_sta = container_of((void *)data,
+-		struct sta_info, timer_to_tid[tid]);
+-
+-	struct ieee80211_local *local = temp_sta->local;
+-	struct ieee80211_hw *hw = &local->hw;
+-	struct sta_info *sta;
+-	u8 *state;
+-
+-	rcu_read_lock();
+-
+-	sta = sta_info_get(local, temp_sta->addr);
+-	if (!sta) {
+-		rcu_read_unlock();
+-		return;
+-	}
+-
+-	state = &sta->ampdu_mlme.tid_state_tx[tid];
+-	/* check if the TID waits for addBA response */
+-	spin_lock_bh(&sta->lock);
+-	if (!(*state & HT_ADDBA_REQUESTED_MSK)) {
+-		spin_unlock_bh(&sta->lock);
+-		*state = HT_AGG_STATE_IDLE;
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-		printk(KERN_DEBUG "timer expired on tid %d but we are not "
+-				"expecting addBA response there", tid);
+-#endif
+-		goto timer_expired_exit;
+-	}
+-
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-	printk(KERN_DEBUG "addBA response timer expired on tid %d\n", tid);
+-#endif
+-
+-	/* go through the state check in stop_BA_session */
+-	*state = HT_AGG_STATE_OPERATIONAL;
+-	spin_unlock_bh(&sta->lock);
+-	ieee80211_stop_tx_ba_session(hw, temp_sta->addr, tid,
+-				     WLAN_BACK_INITIATOR);
+-
+-timer_expired_exit:
+-	rcu_read_unlock();
+-}
+-
+-void ieee80211_sta_tear_down_BA_sessions(struct ieee80211_sub_if_data *sdata, u8 *addr)
+-{
+-	struct ieee80211_local *local = sdata->local;
+-	int i;
+-
+-	for (i = 0; i <  STA_TID_NUM; i++) {
+-		ieee80211_stop_tx_ba_session(&local->hw, addr, i,
+-					     WLAN_BACK_INITIATOR);
+-		ieee80211_sta_stop_rx_ba_session(sdata, addr, i,
+-						 WLAN_BACK_RECIPIENT,
+-						 WLAN_REASON_QSTA_LEAVE_QBSS);
+-	}
+-}
+-
+ static void ieee80211_send_refuse_measurement_request(struct ieee80211_sub_if_data *sdata,
+ 					struct ieee80211_msrment_ie *request_ie,
+ 					const u8 *da, const u8 *bssid,
+--- everything.orig/net/mac80211/Makefile	2008-09-08 16:05:28.000000000 +0200
++++ everything/net/mac80211/Makefile	2008-09-08 16:05:29.000000000 +0200
+@@ -8,6 +8,7 @@ mac80211-y := \
+ 	wep.o \
+ 	wpa.o \
+ 	scan.o \
++	ht.o \
+ 	mlme.o \
+ 	iface.o \
+ 	rate.o \
 
+-- 
 
-I'm having some problems with ath9k in the 2.6.27-rc6 kernel, -tip
-kernel, etc (all the latest code). First of all, it incorrectly
-reports the connection bitrate as 1 megabit per second, which is more
-of a cosmetic issue:
-
-wlan0     IEEE 802.11abgn  ESSID:"Introversion"
-         Mode:Managed  Frequency:2.437 GHz  Access Point: 00:1E:52:79:4D:01
-         Bit Rate=1 Mb/s   Tx-Power=23 dBm
-         Retry min limit:7   RTS thr:off   Fragment thr=2352 B
-         Encryption key: [snip]   Security mode:open
-         Power Management:off
-         Link Quality=67/100  Signal level:-52 dBm  Noise level=-95 dBm
-         Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-         Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-Second, it frequently drops the connection (could it possibly be
-related to the message 'wlan0 (WE) : Wireless Event too big (320)'?).
-One time, the connection dropped and I couldn't get it to reassociate,
-and the dmesg showed the following:
-
-[53963.201797] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[53964.809889] wlan0: authenticate with AP 00:1e:52:79:4d:01
-[53964.811598] wlan0: authenticated
-[53964.811742] wlan0: associate with AP 00:1e:52:79:4d:01
-[53965.011340] wlan0: associate with AP 00:1e:52:79:4d:01
-[53965.211343] wlan0: associate with AP 00:1e:52:79:4d:01
-[53965.411345] wlan0: association with AP 00:1e:52:79:4d:01 timed out
-[53976.532464] wlan0: authenticate with AP 00:1e:52:79:4d:01
-[53976.542516] wlan0: authenticate with AP 00:1e:52:79:4d:01
-[53976.751331] wlan0: authenticate with AP 00:1e:52:79:4d:01
-[53976.752757] wlan0: authenticated
-[53976.752762] wlan0: associate with AP 00:1e:52:79:4d:01
-[53976.760374] wlan0: RX AssocResp from 00:1e:52:79:4d:01 (capab=0x431
-status=0 aid=1)
-[53976.760380] wlan0: associated
-[53976.760721] wlan0 (WE) : Wireless Event too big (320)
-[53976.772243] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-
-Despite -saying- it associated, I couldn't get 'route' to print a
-table (it just decided to hang), and I couldn't get an IP address.
-
-So I figured I'd try unloading and reloading the ath9k module. This
-was the result:
-
-[53997.493777] ath9k: driver unloaded
-[54001.098532] ath9k: 0.1
-[54001.098833] ath9k 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-[54001.099013] ath9k 0000:03:00.0: setting latency timer to 64
-[54001.233825] phy1: Selected rate control algorithm 'ath9k_rate_control'
-[54001.236980] phy1: Atheros 5416: mem=0xffffc20000060000, irq=17
-[54002.136218] irq 17: nobody cared (try booting with the "irqpoll" option)
-[54002.136229] Pid: 0, comm: swapper Tainted: P
-2.6.27-rc6-00036-ga551b98 #2
-[54002.136234]
-[54002.136235] Call Trace:
-[54002.136241]  <IRQ>  [<ffffffff80265231>] __report_bad_irq+0x3d/0x81
-[54002.136258]  [<ffffffff80265477>] note_interrupt+0x202/0x267
-[54002.136265]  [<ffffffff80265bfc>] handle_fasteoi_irq+0xba/0xe4
-[54002.136273]  [<ffffffff8020e7ff>] do_IRQ+0x115/0x191
-[54002.136279]  [<ffffffff8020bc01>] ret_from_intr+0x0/0xa
-[54002.136283]  <EOI>  [<ffffffff802541bb>] ?
-tick_nohz_stop_sched_tick+0x2c5/0x2d4
-[54002.136296]  [<ffffffff8020a69f>] ? cpu_idle+0x2d/0xed
-[54002.136304]  [<ffffffff8060d741>] ? rest_init+0x75/0x77
-[54002.136309]
-[54002.136312] handlers:
-[54002.136315] [<ffffffffa0209016>] (ath_isr+0x0/0x160 [ath9k])
-[54002.136340] Disabling IRQ #17
-
-I could unload and reload the driver multiple times but got the same
-IRQ issue at that point. As a result of the 'nobody cared', I'm now
-using irqpoll at boot. Not sure what sort of impact this has had on
-anything, except I haven't seen a single 'nobody cared' in my dmesg
-since.
-
-More recently, I had another incident where it disassociated and
-refused to reassociate. I got about 100 of these in my dmesg (fixed by
-unloading and reloading ath9k):
-
-[...]
-[ 1279.031033] ath_set_channel: unable to reset channel 149 (5745Mhz)
-flags 0x30142 hal status 4294967277
-[ 1279.031203] ath9k_config: Unable to set channel
-[ 1279.323427] ath_set_channel: unable to reset channel 153 (5765Mhz)
-flags 0x50142 hal status 4294967277
-[ 1279.323577] ath9k_config: Unable to set channel
-[ 1279.624562] ath_set_channel: unable to reset channel 157 (5785Mhz)
-flags 0x30142 hal status 4294967277
-[ 1279.624687] ath9k_config: Unable to set channel
-[ 1279.916441] ath_set_channel: unable to reset channel 161 (5805Mhz)
-flags 0x50142 hal status 4294967277
-[ 1279.916586] ath9k_config: Unable to set channel
-[ 1280.207274] ath_set_channel: unable to reset channel 165 (5825Mhz)
-flags 0x10142 hal status 4294967277
-[ 1280.207387] ath9k_config: Unable to set channel
-[...]
-
-And finally, I'm most certainly not getting 802.11n connection speeds
-with this driver. The connection speed seems to be about equivalent to
-802.11g (54mb/s), but I can't tell for certain with the messed up
-bitrate reporting from iwconfig.
