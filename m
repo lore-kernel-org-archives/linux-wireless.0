@@ -1,67 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:3051 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751464AbYI1QKI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Sep 2008 12:10:08 -0400
-Date: Sun, 28 Sep 2008 12:09:43 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: ath5k-devel@lists.ath5k.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath5k: write beacon control register twice when resetting tsf
-Message-ID: <20080928160943.GA30901@hash.localnet> (sfid-20080928_181019_117330_6EA85D54)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([66.187.233.31]:58811 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753131AbYIHUeI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Sep 2008 16:34:08 -0400
+Subject: [PATCH] libertas: clear current command on card removal
+From: Dan Williams <dcbw@redhat.com>
+To: John W Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, cjb@laptop.org, stable@kernel.org
+Content-Type: text/plain
+Date: Mon, 08 Sep 2008 16:34:40 -0400
+Message-Id: <1220906080.1618.20.camel@localhost.localdomain> (sfid-20080908_223411_121270_A8BCA75B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to the newly-released Atheros HAL code, asserting the
-TSF reset bit will toggle a hardware internal state, resulting in a
-spurious reset on the next chip reset.  Whenever we force a TSF bit,
-write the bit twice to clear the internal signal.
+If certain commands were in-flight when the card was pulled or the
+driver rmmod-ed, cleanup would block on the work queue stopping, but the
+work queue was in turn blocked on the current command being canceled,
+which didn't happen.  Fix that.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 ---
+John, this is 2.6.27 material if there's still time.
 
-This was the only major difference I found between code we're currently
-using in pcu.c and its equivalents in the HAL.  See comment in 
-ar5212ResetTsf.  This is only compile-tested.
-
-(There are other differences but they are in the key setup code or
-beacon setup code that we are not using right now.)  
-
- drivers/net/wireless/ath5k/pcu.c |   14 +++++++++++++-
- 1 files changed, 13 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/pcu.c b/drivers/net/wireless/ath5k/pcu.c
-index c77cee2..c8f9170 100644
---- a/drivers/net/wireless/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath5k/pcu.c
-@@ -633,8 +633,20 @@ u64 ath5k_hw_get_tsf64(struct ath5k_hw *ah)
-  */
- void ath5k_hw_reset_tsf(struct ath5k_hw *ah)
- {
-+	u32 val;
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 2436634..73dc8c7 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -1205,7 +1205,13 @@ void lbs_remove_card(struct lbs_private *priv)
+ 	cancel_delayed_work_sync(&priv->scan_work);
+ 	cancel_delayed_work_sync(&priv->assoc_work);
+ 	cancel_work_sync(&priv->mcast_work);
 +
- 	ATH5K_TRACE(ah->ah_sc);
--	AR5K_REG_ENABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_RESET_TSF);
-+
-+	val = ath5k_hw_reg_read(ah, AR5K_BEACON) | AR5K_BEACON_RESET_TSF;
-+
-+	/* 
-+ 	 * Each write to the RESET_TSF bit toggles a hardware internal
-+ 	 * signal to reset TSF, but if left high it will cause a TSF reset
-+ 	 * on the next chip reset as well.  Thus we always write the value
-+ 	 * twice to clear the signal.
-+ 	 */
-+	ath5k_hw_reg_write(ah, val, AR5K_BEACON);
-+	ath5k_hw_reg_write(ah, val, AR5K_BEACON);
- }
++	/* worker thread destruction blocks on the in-flight command which
++	 * should have been cleared already in lbs_stop_card().
++	 */
++	lbs_deb_main("destroying worker thread\n");
+ 	destroy_workqueue(priv->work_thread);
++	lbs_deb_main("done destroying worker thread\n");
  
- /*
--- 
-1.5.4.2.182.gb3092
+ 	if (priv->psmode == LBS802_11POWERMODEMAX_PSP) {
+ 		priv->psmode = LBS802_11POWERMODECAM;
+@@ -1323,14 +1329,26 @@ void lbs_stop_card(struct lbs_private *priv)
+ 		device_remove_file(&dev->dev, &dev_attr_lbs_rtap);
+ 	}
+ 
+-	/* Flush pending command nodes */
++	/* Delete the timeout of the currently processing command */
+ 	del_timer_sync(&priv->command_timer);
++
++	/* Flush pending command nodes */
+ 	spin_lock_irqsave(&priv->driver_lock, flags);
++	lbs_deb_main("clearing pending commands\n");
+ 	list_for_each_entry(cmdnode, &priv->cmdpendingq, list) {
+ 		cmdnode->result = -ENOENT;
+ 		cmdnode->cmdwaitqwoken = 1;
+ 		wake_up_interruptible(&cmdnode->cmdwait_q);
+ 	}
++
++	/* Flush the command the card is currently processing */
++	if (priv->cur_cmd) {
++		lbs_deb_main("clearing current command\n");
++		priv->cur_cmd->result = -ENOENT;
++		priv->cur_cmd->cmdwaitqwoken = 1;
++		wake_up_interruptible(&priv->cur_cmd->cmdwait_q);
++	}
++	lbs_deb_main("done clearing commands\n");
+ 	spin_unlock_irqrestore(&priv->driver_lock, flags);
+ 
+ 	unregister_netdev(dev);
 
--- 
-Bob Copeland %% www.bobcopeland.com
 
