@@ -1,44 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lirone.symas.net ([64.71.152.235]:59909 "EHLO lirone.symas.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751445AbYIVLbj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 07:31:39 -0400
-Message-ID: <48D78215.1050403@symas.com> (sfid-20080922_133143_625980_0973629D)
-Date: Mon, 22 Sep 2008 04:31:33 -0700
-From: Howard Chu <hyc@symas.com>
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:49358 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752625AbYIHQWv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Sep 2008 12:22:51 -0400
+Message-ID: <48C55153.3070309@lwfinger.net> (sfid-20080908_182255_961826_D92D4D19)
+Date: Mon, 08 Sep 2008 11:22:43 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k problems
-References: <48D5CAD0.1080909@symas.com>	 <f488382f0809202122v4c77bc96r54edd24bdf365724@mail.gmail.com>	 <20080922064831.GB19580@tesla> <48D760D8.3050501@symas.com> <43e72e890809220245j77dcf385mb31e505308225ba9@mail.gmail.com>
-In-Reply-To: <43e72e890809220245j77dcf385mb31e505308225ba9@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Greg KH <greg@kroah.com>
+CC: Michael Buesch <mb@bu3sch.de>,
+	John W Linville <linville@tuxdriver.com>,
+	Tim Gardner <tim.gardner@canonical.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH V2] b43legacy: Fix failure in rate-adjustment mechanism
+References: <48c2fb5a.JqLELi8PJxjxmDaY%Larry.Finger@lwfinger.net> <200809070040.04300.mb@bu3sch.de> <20080908053155.GI4099@kroah.com>
+In-Reply-To: <20080908053155.GI4099@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Mon, Sep 22, 2008 at 2:09 AM, Howard Chu<hyc@symas.com>  wrote:
->> >  For example - I added DPRINTFs to all the places that called ath9_hw_reset()
->> >  to see why the ForceXPAon message was occurring so often, and got the
->> >  attached log. I note that ForceXPAon doesn't occur on every call to
->> >  hw_reset, and sometimes there are repeated identical calls to set the
->> >  channel (e.g. at 22:06:36 in the log).
->> >
->> >  It associates successfully with my AP on channel 8, but shortly thereafter
->> >  loses the association, scans again, and starts over again, ad nauseam. This
->> >  behavior was made even worse when I upgraded my freeradius server (was
->> >  authenticating with WPA EAP/PEAP) and configured TLS session caching - there
->> >  seems to be a bug in freeradius there so subsequent reassociation attempts
->> >  would always fail until I turned off session caching. (Haven't had time to
->> >  chase that down yet.)
->
-> Howard, did you apply the pending group key patch yet?
+Greg KH wrote:
+> 
+> Bug fixes, not new features, it's pretty simple :)
 
-Yes, the patch didn't improve the situation on my wireless-testing build. It 
-works fine on my 2.6.27-rc6 build though.
+Just bug fixes, or does it have to be a regression?
 
--- 
-   -- Howard Chu
-   CTO, Symas Corp.           http://www.symas.com
-   Director, Highland Sun     http://highlandsun.com/hyc/
-   Chief Architect, OpenLDAP  http://www.openldap.org/project/
+Larry
+
