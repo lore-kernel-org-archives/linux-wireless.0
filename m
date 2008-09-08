@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50123 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751652AbYIXUPb (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:44772 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752749AbYIHPLE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Sep 2008 16:15:31 -0400
-Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com> (sfid-20080911_100535_000722_EE099914)
-References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
-	 (sfid-20080911_100535_000722_EE099914)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nLkJNH1YfX5z544T/w48"
-Date: Wed, 24 Sep 2008 22:14:47 +0200
-Message-Id: <1222287287.4257.49.camel@johannes.berg> (sfid-20080924_221535_429438_C9A4086A)
-Mime-Version: 1.0
+	Mon, 8 Sep 2008 11:11:04 -0400
+Date: Mon, 8 Sep 2008 12:10:57 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH] Ath9k: Add RF kill support.
+Message-ID: <20080908151057.GB22081@khazad-dum.debian.net> (sfid-20080908_171109_964447_9A3D9855)
+References: <20080906123842.GA27504@vasanth-lnx.users.atheros.com> <1220721347.6714.114.camel@californication> <20080908045926.GA28149@vasanth-lnx.users.atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20080908045926.GA28149@vasanth-lnx.users.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 08 Sep 2008, Vasanthakumar Thiagarajan wrote:
+> On Sat, Sep 06, 2008 at 10:45:47PM +0530, Marcel Holtmann wrote:
+> > > CONFIG_ATH9K_RFKILL needs to be set
+> > > to enable this support.
+> > 
+> > why do we have to introduce yet another config option for this? What is
+> > the advantage of disabling RFKILL support? I really don't see it and all
+> > these extra config options are rather confusing than useful.
+> Normally home users may not hit a situation where they have to
+> disable the radio, so they can compile out the rf kill support
+> and essentially disable the periodic run of the work queue 
+> (rfkill_poll ,runs for every 2 secs).If this does not make 
+> any sense, I will remove this config option.
 
---=-nLkJNH1YfX5z544T/w48
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+What doesn't make sense at all is to have it manually selectable.  Just
+define it to the same value of CONFIG_RFKILL, or use CONFIG_RFKILL directly
+outright.
 
-On Thu, 2008-09-11 at 10:04 +0200, Marcel Holtmann wrote:
-
-> So the best I got was the attached screenshot of an oops. It is =20
-> clearly the iwlwifi driver crashing here and killing the machine, but =20
-> I have no idea why.
-
-Incidentally, if this really is the same bug I have, you might want to
-remove the iwlagn module completely, even loading it once is a bad
-thing, it has started to corrupt things here entirely by making DMA go
-to random locations.
-
-johannes
-
---=-nLkJNH1YfX5z544T/w48
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI2p+zAAoJEKVg1VMiehFYgqEP/2L6+IUqm8DQpryAsEJJ/Zs8
-olzi8kXHBI4d4LUTFc4EMmyPE5a3+GLPYbna9vzP2phFtlNlygHyng8ZCtVmswGg
-nNVCKaGvPnvZpOWv4bZNEljmo6GBz9nXKNmCs0Vt6nBGkqDEMUmJjJqbGTb/Ucvs
-3gvKekbroV/rp+O2II/p0JeFaz7os3JWrAh+b4T/9D1DC9ZzI+XdSTufBxVA1QgV
-gh6dWsSfeBZ/1RfMmsjPOIxJ0dl0FYNhjniUYoKytdfnb/ukMBIYEqxlZqtMaPLV
-Jlx8GTguomUInQVyPa7tb/ZPh9J+NHVn8PI+BODSxSXeHa7gmJk9I3RD2L2EdLtG
-gX0qGk/5gHcF3ZDdOFdkvscJrffKX3BdEYx8QRnTRfr0ULh2qOqy/DyZg8ij4KIL
-/MK9e1G/AB83n8wAgxqonzPnoBp2GcjXPMWrgJkAhp6wWfe6aIBavnvmagSw7drn
-ba387DoIMz53DfN3fZYO+Dta51r/Jxc69hXYzmdeLuoUHQnxgGWXIB5qSMjMiKrM
-aB+5fM5kY7M2crtPNjpuXffcu/ln+0j/ILmH/D9Sw8uNzgAjqYTvzRRBG0NfCyWb
-mNVZCFF0wIG53D0h6iKeJjFlvIEpsp98+Bw+yXnzOl8NvILOXJkKqbtgk57mXVbN
-3H47Ryvp70/OI7krcKnL
-=bgFj
------END PGP SIGNATURE-----
-
---=-nLkJNH1YfX5z544T/w48--
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
