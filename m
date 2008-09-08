@@ -1,62 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:43477 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751539AbYIUAVW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Sep 2008 20:21:22 -0400
-Subject: Re: [PATCH] b43: Fix Bluetooth coexistence SPROM coding error for
-	Motorola 7010 variant of BCM4306
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Michael Buesch <mb@bu3sch.de>, bbullins@triad.rr.com,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <1221945075.3023.14.camel@johannes.berg>
-References: <48d401da.Q+F4HRESoxeIVa3r%Larry.Finger@lwfinger.net>
-	 <200809201744.55571.mb@bu3sch.de> <1221943895.3023.1.camel@johannes.berg>
-	 <43e72e890809201359kb65f3d3qb618129ae6b528f4@mail.gmail.com>
-	 <1221944575.3023.10.camel@johannes.berg>
-	 <43e72e890809201405u63f57680u63ce0329c8cd31a2@mail.gmail.com>
-	 (sfid-20080920_230522_937343_EF72BDF9)  <1221945075.3023.14.camel@johannes.berg>
-Content-Type: text/plain
-Date: Sat, 20 Sep 2008 17:19:11 -0700
-Message-Id: <1221956351.15866.1.camel@localhost.localdomain> (sfid-20080921_022127_596403_D90B994F)
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57263 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755246AbYIHTPc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Sep 2008 15:15:32 -0400
+Date: Mon, 8 Sep 2008 15:04:32 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next-2.6 2008-09-08
+Message-ID: <20080908190431.GB24557@tuxdriver.com> (sfid-20080908_211555_260449_2F4E8794)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-09-20 at 23:11 +0200, Johannes Berg wrote:
-> On Sat, 2008-09-20 at 14:05 -0700, Luis R. Rodriguez wrote:
-> 
-> > >> > Does anyone actually make laptops that use these bluetooth coexistence
-> > >> > pins? All CSR bluetooth chips do it automatically I'm told, maybe we
-> > >> > should just kill them completely.
-> > >>
-> > >> Regardless of the wireless card? Or just for bcm?
-> > >
-> > > Well just for b43(legacy), but out of curiosity, does any BT chip use
-> > > these pins anyway? Well I guess _somebody_ has to buy BCMs BT chips,
-> > > but ...
-> > 
-> > BCM BT chips? I thought you said CSR?
-> 
-> Well the thing is, BCM wifi chips have these IO pins that tell the BT
-> chip what the wifi chip is doing. But CSR chips for instance don't care,
-> they just check what the wifi chip is doing on the antenna. So those
-> don't use those IO pins.
+Dave,
 
-Marvell SD 8686 have these pins too; I have at least one sample of such
-a setup.  Not that I have had time yet to implement it...  but this sort
-of thing exists of course.
+Here is another round intended for 2.6.28.  There are some
+big cleanups, etc. for ath5k and b43 as well as a smattering of
+fixes/updates for p54 and iwlwifi, and a few other bits.  There is
+also a toshiba_acpi patch that depends on some of the rfkill patches
+that have come through my tree.
 
-Dan
+Please let me know if there are problems!
 
-> Hence, I'm wondering if there's any use in the IO pins at all. But they
-> must have added them for a reason, presumably because their own BT chips
-> can use those inputs...
-> 
-> Anyway, mostly just idly wondering, since most of the time it works fine
-> and the EEPROM is actually done right I guess we should keep them on.
-> 
-> johannes
+Thanks,
 
+John
+
+---
+
+Individual patches are available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2=
+=2E6/
+
+---
+
+The following changes since commit a505f4ff49ff05ca9030069fab7de229dae7=
+c819:
+  Ilpo J=E4rvinen (1):
+        s2io: reindented misleading for loop
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-=
+2.6.git master
+
+Abhijeet Kolekar (6):
+      iwlwifi : Added bss_info_changed callback to 3945
+      iwl3945: fix unbalanced mutex
+      iwl3945: replace association and beacon hooks with bss_info_chang=
+ed cb
+      iwl3945: removed bg_post_associate work
+      iwl3945: avoid redundant iwl3945_get_active_dwell_time
+      iwl3945: enable active scanning on active channels
+
+Christian Lamparter (6):
+      p54pci: increase ring buffer index counter when skipping
+      p54: enhance firmware parser to reduce memory waste
+      p54: move eeprom code into common library
+      p54usb: support LM87 firmwares
+      p54: set_filter refactoring
+      p54: better firmware support
+
+Emmanuel Grumbach (4):
+      mac80211: Fix rate scale initialization in IBSS
+      iwlwifi: fix strict_strtoul error checking
+      iwlwifi: allow association on radar channel in power save
+      iwlwifi: take a fresh set of supported rates at each cycle
+
+Luis R. Rodriguez (1):
+      cfg80211: keep track of supported interface modes
+
+Michael Buesch (9):
+      b43: Don't use memcpy for overlapping areas
+      b43: Move remaining code from phy.c to phy_a.c
+      b43: Move code from nphy.* to phy_n.*
+      b43: Add LP-PHY template
+      b43: Add LP-PHY read/write phyops
+      b43: Add LP-PHY radio register definitions
+      b43: Split PHY alloc and init
+      b43: Move Analog switching into phy code
+      b43: Replace hardcoded Analog switch
+
+Nick Kossifidis (1):
+      ath5k: HW code cleanup
+
+Randy Dunlap (2):
+      ath9k: uses/needs led_classdev_[un]register
+      mac80211: add missing kernel-doc
+
+Ron Rindjunsky (2):
+      iwlwifi: remove obsolete 4965 forward declarations
+      iwlwifi: allow consecutive scans in unassociated state
+
+Stefanik G=E1bor (1):
+      iwlwifi: enable packet injection for iwlagn
+
+Tomas Winkler (10):
+      mac80211: Fix low bit rate in IBSS
+      iwlwifi: clean up hw scan handler
+      iwlwifi: align set channel with mac80211
+      iwlwifi: use strict_strtoul instead of simple_strtoul
+      iwlwifi: replace readl and writel with io/read/write/32
+      iwlwifi: remove rfkill warning from iwl-io
+      iwlwifi: generic init calibrations framework
+      iwlwifi: cleanup PCI register handling
+      iwlwifi: fix host command header according the HW spec
+      iwlwifi: remove bad language from the comments
+
+philipl@overt.org (1):
+      toshiba_acpi: Add support for bluetooth toggling through rfkill (=
+v8)
+
+ drivers/acpi/Kconfig                         |    3 +
+ drivers/acpi/toshiba_acpi.c                  |  261 ++-
+ drivers/net/wireless/adm8211.c               |    1 +
+ drivers/net/wireless/ath5k/Makefile          |   12 +-
+ drivers/net/wireless/ath5k/ath5k.h           |  390 ++-
+ drivers/net/wireless/ath5k/attach.c          |  315 ++
+ drivers/net/wireless/ath5k/base.c            |   38 +-
+ drivers/net/wireless/ath5k/caps.c            |  193 ++
+ drivers/net/wireless/ath5k/debug.c           |    4 +-
+ drivers/net/wireless/ath5k/desc.c            |  667 ++++
+ drivers/net/wireless/ath5k/desc.h            |  332 ++
+ drivers/net/wireless/ath5k/dma.c             |  566 ++++
+ drivers/net/wireless/ath5k/eeprom.c          |  466 +++
+ drivers/net/wireless/ath5k/eeprom.h          |  215 ++
+ drivers/net/wireless/ath5k/gpio.c            |  176 +
+ drivers/net/wireless/ath5k/hw.c              | 4492 ------------------=
+--------
+ drivers/net/wireless/ath5k/hw.h              |  616 ----
+ drivers/net/wireless/ath5k/initvals.c        |   22 +-
+ drivers/net/wireless/ath5k/pcu.c             | 1002 ++++++
+ drivers/net/wireless/ath5k/phy.c             |   10 +-
+ drivers/net/wireless/ath5k/qcu.c             |  488 +++
+ drivers/net/wireless/ath5k/reg.h             |  102 +-
+ drivers/net/wireless/ath5k/reset.c           |  925 ++++++
+ drivers/net/wireless/ath9k/Kconfig           |    3 +
+ drivers/net/wireless/ath9k/main.c            |    5 +
+ drivers/net/wireless/b43/Kconfig             |   12 +
+ drivers/net/wireless/b43/Makefile            |    3 +-
+ drivers/net/wireless/b43/main.c              |   69 +-
+ drivers/net/wireless/b43/phy.c               |  489 ---
+ drivers/net/wireless/b43/phy_a.c             |  130 +-
+ drivers/net/wireless/b43/phy_a.h             |    8 +-
+ drivers/net/wireless/b43/phy_common.c        |   20 +-
+ drivers/net/wireless/b43/phy_common.h        |   44 +-
+ drivers/net/wireless/b43/phy_g.c             |  104 +-
+ drivers/net/wireless/b43/phy_g.h             |    4 +-
+ drivers/net/wireless/b43/phy_lp.c            |  155 +
+ drivers/net/wireless/b43/phy_lp.h            |  540 ++++
+ drivers/net/wireless/b43/{nphy.c =3D> phy_n.c} |   44 +-
+ drivers/net/wireless/b43/{nphy.h =3D> phy_n.h} |    2 -
+ drivers/net/wireless/b43/tables_nphy.c       |    2 +-
+ drivers/net/wireless/b43legacy/main.c        |    5 +
+ drivers/net/wireless/iwlwifi/iwl-3945-io.h   |   24 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.c      |   81 -
+ drivers/net/wireless/iwlwifi/iwl-3945.h      |    1 -
+ drivers/net/wireless/iwlwifi/iwl-4965-hw.h   |   13 +-
+ drivers/net/wireless/iwlwifi/iwl-4965.c      |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-5000-hw.h   |    7 +
+ drivers/net/wireless/iwlwifi/iwl-5000.c      |   69 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c    |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c       |  127 +-
+ drivers/net/wireless/iwlwifi/iwl-calib.c     |   60 +
+ drivers/net/wireless/iwlwifi/iwl-commands.h  |   24 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c      |   34 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h      |   12 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h       |   27 +-
+ drivers/net/wireless/iwlwifi/iwl-io.h        |   22 +-
+ drivers/net/wireless/iwlwifi/iwl-power.c     |   66 +-
+ drivers/net/wireless/iwlwifi/iwl-power.h     |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-sta.c       |    5 +
+ drivers/net/wireless/iwlwifi/iwl-tx.c        |   17 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c  |  145 +-
+ drivers/net/wireless/mac80211_hwsim.c        |    3 +
+ drivers/net/wireless/p54/p54.h               |   38 +-
+ drivers/net/wireless/p54/p54common.c         |  293 ++-
+ drivers/net/wireless/p54/p54common.h         |   75 +-
+ drivers/net/wireless/p54/p54pci.c            |  173 +-
+ drivers/net/wireless/p54/p54usb.c            |  180 +-
+ drivers/net/wireless/p54/p54usb.h            |    5 +
+ drivers/net/wireless/rt2x00/rt2x00dev.c      |    5 +
+ drivers/net/wireless/rtl8187_dev.c           |    2 +
+ drivers/net/wireless/zd1211rw/zd_mac.c       |    5 +
+ include/linux/nl80211.h                      |    6 +
+ include/net/wireless.h                       |    3 +
+ net/mac80211/main.c                          |    7 +
+ net/mac80211/mlme.c                          |   90 +-
+ net/mac80211/rx.c                            |    4 -
+ net/mac80211/sta_info.h                      |    1 +
+ net/wireless/core.c                          |    9 +-
+ net/wireless/nl80211.c                       |   22 +-
+ 79 files changed, 7906 insertions(+), 6698 deletions(-)
+ create mode 100644 drivers/net/wireless/ath5k/attach.c
+ create mode 100644 drivers/net/wireless/ath5k/caps.c
+ create mode 100644 drivers/net/wireless/ath5k/desc.c
+ create mode 100644 drivers/net/wireless/ath5k/desc.h
+ create mode 100644 drivers/net/wireless/ath5k/dma.c
+ create mode 100644 drivers/net/wireless/ath5k/eeprom.c
+ create mode 100644 drivers/net/wireless/ath5k/eeprom.h
+ create mode 100644 drivers/net/wireless/ath5k/gpio.c
+ delete mode 100644 drivers/net/wireless/ath5k/hw.c
+ delete mode 100644 drivers/net/wireless/ath5k/hw.h
+ create mode 100644 drivers/net/wireless/ath5k/pcu.c
+ create mode 100644 drivers/net/wireless/ath5k/qcu.c
+ create mode 100644 drivers/net/wireless/ath5k/reset.c
+ delete mode 100644 drivers/net/wireless/b43/phy.c
+ create mode 100644 drivers/net/wireless/b43/phy_lp.c
+ create mode 100644 drivers/net/wireless/b43/phy_lp.h
+ rename drivers/net/wireless/b43/{nphy.c =3D> phy_n.c} (96%)
+ rename drivers/net/wireless/b43/{nphy.h =3D> phy_n.h} (99%)
+
+Omnibus patch is available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2=
+=2E6-2008-09-08.patch.bz2
+
+--=20
+John W. Linville
+linville@tuxdriver.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
