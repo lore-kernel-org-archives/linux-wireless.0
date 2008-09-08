@@ -1,40 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:48520 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751376AbYIPWkp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 18:40:45 -0400
-Date: Tue, 16 Sep 2008 19:40:37 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Carlos Corbacho <carlos@strangeworlds.co.uk>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: Regression in 2.6.27-rcX caused by commit
-	bc19d6e0b74ef03a3baf035412c95192b54dfc6f
-Message-ID: <20080916224036.GD26035@khazad-dum.debian.net> (sfid-20080917_004048_783720_9E70EB69)
-References: <48CFC03A.8020708@lwfinger.net> <200809161742.15527.mb@bu3sch.de> <48CFE820.7010305@lwfinger.net> <20080916195134.GB14879@srcf.ucam.org> <39295.87.81.255.5.1221597846.squirrel@phoenix.slamd64.com> <48D01FFB.1010302@lwfinger.net>
+Received: from bu3sch.de ([62.75.166.246]:43511 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751605AbYIHMy3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Sep 2008 08:54:29 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH V2] b43legacy: Fix failure in rate-adjustment mechanism
+Date: Mon, 8 Sep 2008 14:53:55 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	Tim Gardner <tim.gardner@canonical.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Linus Torvalds <torvalds@linux-foundation.org>
+References: <48c2fb5a.JqLELi8PJxjxmDaY%Larry.Finger@lwfinger.net> <200809070040.04300.mb@bu3sch.de> <20080908053155.GI4099@kroah.com>
+In-Reply-To: <20080908053155.GI4099@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <48D01FFB.1010302@lwfinger.net>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200809081453.56241.mb@bu3sch.de> (sfid-20080908_145443_511424_2EADBC28)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 16 Sep 2008, Larry Finger wrote:
-> This one doesn't crash, but it doesn't turn the light off.
+On Monday 08 September 2008 07:31:55 Greg KH wrote:
+> On Sun, Sep 07, 2008 at 12:40:04AM +0200, Michael Buesch wrote:
+> > On Saturday 06 September 2008 23:51:22 Larry Finger wrote:
+> > > A coding error present since b43legacy was incorporated into the
+> > > kernel has prevented the driver from using the rate-setting mechanism
+> > > of mac80211. The driver has been forced to remain at a 1 Mb/s rate.
+> > > 
+> > > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> > > Cc: Stable <stable@kernel.org>		[2.6.26], [2.6.25]
+> > 
+> > Reviewed-by: Michael Buesch <mb@bu3sch.de>
+> > 
+> > > ---
+> > > 
+> > > John,
+> > > 
+> > > This is a bug, not a regression. I guess under the new rules that it
+> > > is 2.6.28 material.
+> > 
+> > I wonder what the -stable rules are.
+> 
+> Bug fixes, not new features, it's pretty simple :)
 
-Hmm... if this lack of LED control when HARD_BLOCKED is a problem in rfkill,
-I will track it down and fix it.
+Yeah, well. My concern was:
+- We put it into .25-stable and .26-stable, because it's a bugfix.
+  That's perfectly fine.
+- We do _not_ put it into .27 mainline, because it is just a simple
+  bug, but not a regression. Instead we wait for .27-stable.
 
-The rest of the stuff (b43's usage of rfkill), is a problem for the people
-who know the b43 driver to fix, I don't dare touch it and break it further.
+Doesn't make a lot sense to me. :)
+
+So I'd like to see it in .27, too, despite the strict regressions-only
+rule. A general regressions-only rule simply doesn't always make sense, IMO.
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Greetings Michael.
