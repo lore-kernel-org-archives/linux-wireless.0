@@ -1,76 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ro.mikronika.com.pl ([213.17.224.85]:51869 "EHLO
-	cluster1.mikronika.com.pl" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750932AbYIIIBJ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60659 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752404AbYIHIjF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2008 04:01:09 -0400
-Message-ID: <48C62D3C.8080907@mikronika.com.pl> (sfid-20080909_100113_271742_4F693AD1)
-Date: Tue, 09 Sep 2008 10:01:00 +0200
-From: Karol Szkudlarek <karol@mikronika.com.pl>
-MIME-Version: 1.0
-To: Tim Gardner <tim.gardner@canonical.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
-Subject: Re: kernel crash during suspend using iwl3945 driver 1.2.26k	on	ubuntu
- hardy
-References: <48BC47C5.2070807@mikronika.com.pl>	 <1220425598.28282.190.camel@debian.sh.intel.com>	 <loom.20080903T181136-957@post.gmane.org> <1220601300.28282.291.camel@debian.sh.intel.com> <48C0EA41.5050103@mikronika.com.pl> <48C14AA2.1040202@lwfinger.net> <48C15A5E.6000301@canonical.com>
-In-Reply-To: <48C15A5E.6000301@canonical.com>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+	Mon, 8 Sep 2008 04:39:05 -0400
+Subject: Re: [RFC PATCH 0/3] mac80211 dissasociation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240809071614v66235658w1768e31d31c2d0f8@mail.gmail.com> (sfid-20080908_011417_213526_BE6D478D)
+References: <1220739259-16918-1-git-send-email-tomas.winkler@intel.com>
+	 <1220794765.31304.8.camel@johannes.berg>
+	 <1ba2fa240809070724n362d5850t653ca5746b87eb48@mail.gmail.com>
+	 <1220798432.31304.13.camel@johannes.berg>
+	 <1ba2fa240809070750k1683f410icf2a82be0f533b4f@mail.gmail.com>
+	 <1ba2fa240809071614v66235658w1768e31d31c2d0f8@mail.gmail.com>
+	 (sfid-20080908_011417_213526_BE6D478D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UYLLlAhoxb+M1DS+LFY6"
+Date: Mon, 08 Sep 2008 10:38:59 +0200
+Message-Id: <1220863139.31304.33.camel@johannes.berg> (sfid-20080908_103910_345877_3B623B07)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tim Gardner pisze:
-> Larry Finger wrote:
->> Karol Szkudlarek wrote:
->>> Hello Zhu!
->>>
->>> It will be tough to see in 2.6.27-rc kernels beacuse I use Ubuntu 8=
-=2E04
->>> LTS
->>> which uses 2.6.24 linux kernel. :-(
->>>
->> The Ubuntu team has a 2.6.27 kernel available. To quote the text of =
-a
->> message in a BCM4306 thread "1)  If you are comfortable installing
->> packages on your own, the linux-image-2.6.27-* package is currently
->> available for you to install and test."
->>
->> Larry
->> --=20
->> To unsubscribe from this list: send the line "unsubscribe
->> linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->=20
-> There is a Hardy package for the 2.6.27 kernel at
->=20
-> http://ppa.launchpad.net/timg-tpi/ubuntu
->=20
-> It is currently based on -rc5. I'll be updating it throughout the .27
-> development and stable cycle.
->=20
-> rtg
 
-I would like try 2.6.27 so today I checked=20
-http://ppa.launchpad.net/timg-tpi/ubuntu/dists/hardy/main/binary-i386/P=
-ackages
-and I don't see any 2.6.27 packages...
+--=-UYLLlAhoxb+M1DS+LFY6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Second question: do you precompiled also all modules? I need them to=20
-perform an upgrade and got the running system.
+On Mon, 2008-09-08 at 02:14 +0300, Tomas Winkler wrote:
 
---=20
-Karol Szkudlarek
-Mikronika
-ul. Wykopy 2/4
-60-001 POZNA=D1
-tel. +48 61 6655600
-fax +48 61 6655602
-e-mail karol@mikronika.com.pl
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Shouldn't carrier_off(stada->dev) stop the queue?  I haven't seen this
+> before.
+
+The other question is whether we should be doing netif_carrier_off() at
+all since that throws away frames from the queue and attaches a noop
+qdisc. When we're roaming quickly between two APs, we don't necessarily
+want that, but we don't actually know whether or not we'll be able to
+get back to an AP quickly when we disassociate for whatever reason.
+
+johannes
+
+--=-UYLLlAhoxb+M1DS+LFY6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIxOSfAAoJEKVg1VMiehFYazEP+gL1MDPUqNfyAxHWM4xcrcdR
+lmnH3jjGSBk867F5mlBPxCITRwrKv9kD4p5RHufBrwkI4HL5HLE2m5RblLOXPNam
+T8gpJIVIy7lAon89JWpndjfbJ9wVM7Qp/XNBCLwvL+YrfLqemC0UGoSyv6mtwAJT
+JkhJwTJHC6UleRgiAOCdTTFQJn8firiEfMkpJ+qq4nfaQNVxe6EV6ggHKUKwyMTn
+QqiuX9MpAaWRAZ/z+SoirxsffmbcaTvsOkkPIam9iEHLKl0t2pR+wLXj1pZqhuaR
+y+4KuAbrvbr5xSL8BlLps1lUhDKcwBh31duK6Ebm492M36AiMi4twP6W92wNIuYh
+HKRCSGPEAuZRw0A67sYCx3rgnSU78Gr4fS1dgJQUQ4d3OyA9vnA9mNMyywxtiC1m
+ECINa9OG4YJ+4dV3iNjvun/9TMxzolj40RLuPyHa+iqtkjY2QwgKHDxpQNhuowHC
+AzhOxvreH5hqHuJLoJN7NhCySJwovdrQmC85VvbRtUJ7WJPOvwZhi0saDcsPVMG6
+OkZ52Lhz3Udp+JjOa6kuvEoFoGFNSCpU4HwFN91dJFvTLGpWiRtlgBH8D21RDfed
+Kwh229YduWU5+8FuOjENemdDHKds8bNQpZaLUWXMU05LoE5O5DtaXTFNEjhxVCA/
+k6VocVHTZNmzrgmbgcsm
+=umLx
+-----END PGP SIGNATURE-----
+
+--=-UYLLlAhoxb+M1DS+LFY6--
+
