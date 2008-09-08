@@ -1,62 +1,22 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.226]:49298 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750960AbYISIpP (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54510 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754048AbYIHPqA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 04:45:15 -0400
-Received: by qb-out-0506.google.com with SMTP id f11so263278qba.17
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 01:45:12 -0700 (PDT)
-Message-ID: <f488382f0809190145s1b5407d4s9d97ae594bcc3379@mail.gmail.com> (sfid-20080919_104521_745577_F6431BA5)
-Date: Fri, 19 Sep 2008 01:45:11 -0700
-From: "Steven Noonan" <steven@uplinklabs.net>
-To: "Ingo Molnar" <mingo@elte.hu>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-In-Reply-To: <f488382f0809190122k1b30cd9q22fd076c1e3eaa18@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com>
-	 <20080918220102.GE7408@tesla>
-	 <43e72e890809181508w5232a14ewbf2bf18fe90a92d5@mail.gmail.com>
-	 <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
-	 <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com>
-	 <f488382f0809181952g628ab5a4nd86f396a08f4d6c8@mail.gmail.com>
-	 <20080919030125.GG7408@tesla>
-	 <f488382f0809190029n13b87ad1s153e5b983f301f31@mail.gmail.com>
-	 <20080919081733.GC19491@elte.hu>
-	 <f488382f0809190122k1b30cd9q22fd076c1e3eaa18@mail.gmail.com>
+	Mon, 8 Sep 2008 11:46:00 -0400
+Message-Id: <20080908154421.216772000@sipsolutions.net> (sfid-20080908_174606_739824_DD7A31F6)
+Date: Mon, 08 Sep 2008 17:44:21 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/8] mac80211 mlme cleanups
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 19, 2008 at 1:22 AM, Steven Noonan <steven@uplinklabs.net> wrote:
-> On Fri, Sep 19, 2008 at 1:17 AM, Ingo Molnar <mingo@elte.hu> wrote:
->> in tip/master there's an ftrace_printk() facility. You can just replace
->> the verbose printk()s with ftrace_printk() and see the result in
->> /debug/tracing/trace.
->>
->> This sort of tracing has very low overhead and can be used in an easy
->> ad-hoc manner with no extra infrastructure. Here's a few quick-start
->> links about how to enable the scheduler tracer:
->>
->>  http://redhat.com/~mingo/sched-devel.git/readme-tracer.txt
->>  http://redhat.com/~mingo/sched-devel.git/howto-trace-latencies.txt
->>
->> any ftrace_printk() you add in the kernel will show up in that trace.
->>
->> (If the scheduling events are uninteresting and clutter the output then
->> you might want to remove the scheduler tracing entries from kernel/*.c
->> by removing the trace_sched_*() calls or use a less noisy tracer.)
->>
->> to get enough of a trace history you might want to increase the number
->> of trace entries in /debug/tracing/trace_entries from 16K to 128K or so.
->>
->
-> Thanks for the suggestion, I'll do that. :)
->
+Mostly cleanups and moving code into two new files,
+scan.c and ht.c. mlme.c and main.c each lose a few
+hundred lines making them more maintainable.
 
-It'd be extremely convenient to have a tracer that did absolutely
-nothing but display ftrace_printk()s.
+johannes
+
