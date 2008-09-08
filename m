@@ -1,42 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:45108 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752769AbYIQPsE (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54490 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752064AbYIHPpk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 11:48:04 -0400
-Message-ID: <48D1269C.4060301@lwfinger.net> (sfid-20080917_174812_573988_5CF4FDD8)
-Date: Wed, 17 Sep 2008 10:47:40 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-CC: Michael Buesch <mb@bu3sch.de>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Carlos Corbacho <carlos@strangeworlds.co.uk>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: Regression in 2.6.27-rcX caused by commit	bc19d6e0b74ef03a3baf035412c95192b54dfc6f
-References: <48CFC03A.8020708@lwfinger.net> <48D0095B.40403@lwfinger.net> <20080916233240.GA18574@srcf.ucam.org> <200809171622.55882.mb@bu3sch.de> <20080917145007.GA5186@khazad-dum.debian.net> <48D1221B.1000601@lwfinger.net> <20080917153637.GD5186@khazad-dum.debian.net>
-In-Reply-To: <20080917153637.GD5186@khazad-dum.debian.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 8 Sep 2008 11:45:40 -0400
+Message-Id: <20080908154441.770355000@sipsolutions.net> (sfid-20080908_174544_422002_F2C9BE27)
+References: <20080908154421.216772000@sipsolutions.net>
+Date: Mon, 08 Sep 2008 17:44:24 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/8] mac80211: remove useless non-NULL tests from scan
+	results code
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Henrique de Moraes Holschuh wrote:
-> 
-> Sorry, it can't fix that regression by itself, since b43 is not using
-> rfkill_force_state() in mainline.
-> 
-> It will fix the same issue you are experiencing on b43 in anything that uses
-> rfkill_force_state(), which means (for mainline): iwlwifi, rt2x00,
-> thinkpad-acpi and hp-wmi.
-> 
-> It is a regression only on b43 and thinkpad-acpi, as the other drivers above
-> didn't use rfkill_force_state() in 2.6.26.
-> 
-> To fix the regression in b43, you'd be faced with the need of both my simple
-> patch AND Matthew's more complex one.
+I'm surprised nobody complained about these before. What a waste.
 
-I don't expect that the more complex one will be accepted into 2.6.27.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/mlme.c |   40 ++++++++++++++++++----------------------
+ 1 file changed, 18 insertions(+), 22 deletions(-)
 
-Larry
+--- everything.orig/net/mac80211/mlme.c	2008-09-08 15:42:38.000000000 +0200
++++ everything/net/mac80211/mlme.c	2008-09-08 15:42:40.000000000 +0200
+@@ -3823,6 +3823,7 @@ ieee80211_sta_scan_result(struct ieee802
+ 			  char *current_ev, char *end_buf)
+ {
+ 	struct iw_event iwe;
++	char *buf;
+ 
+ 	if (time_after(jiffies,
+ 		       bss->last_update + IEEE80211_SCAN_RESULT_EXPIRE))
+@@ -3897,7 +3898,7 @@ ieee80211_sta_scan_result(struct ieee802
+ 
+ 	ieee80211_sta_add_scan_ies(info, bss, &current_ev, end_buf);
+ 
+-	if (bss && bss->supp_rates_len > 0) {
++	if (bss->supp_rates_len > 0) {
+ 		/* display all supported rates in readable format */
+ 		char *p = current_ev + iwe_stream_lcp_len(info);
+ 		int i;
+@@ -3916,30 +3917,25 @@ ieee80211_sta_scan_result(struct ieee802
+ 		current_ev = p;
+ 	}
+ 
+-	if (bss) {
+-		char *buf;
+-		buf = kmalloc(30, GFP_ATOMIC);
+-		if (buf) {
+-			memset(&iwe, 0, sizeof(iwe));
+-			iwe.cmd = IWEVCUSTOM;
+-			sprintf(buf, "tsf=%016llx", (unsigned long long)(bss->timestamp));
+-			iwe.u.data.length = strlen(buf);
+-			current_ev = iwe_stream_add_point(info, current_ev,
+-							  end_buf,
+-							  &iwe, buf);
+-			memset(&iwe, 0, sizeof(iwe));
+-			iwe.cmd = IWEVCUSTOM;
+-			sprintf(buf, " Last beacon: %dms ago",
+-				jiffies_to_msecs(jiffies - bss->last_update));
+-			iwe.u.data.length = strlen(buf);
+-			current_ev = iwe_stream_add_point(info, current_ev,
+-							  end_buf, &iwe, buf);
+-			kfree(buf);
+-		}
++	buf = kmalloc(30, GFP_ATOMIC);
++	if (buf) {
++		memset(&iwe, 0, sizeof(iwe));
++		iwe.cmd = IWEVCUSTOM;
++		sprintf(buf, "tsf=%016llx", (unsigned long long)(bss->timestamp));
++		iwe.u.data.length = strlen(buf);
++		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
++						  &iwe, buf);
++		memset(&iwe, 0, sizeof(iwe));
++		iwe.cmd = IWEVCUSTOM;
++		sprintf(buf, " Last beacon: %dms ago",
++			jiffies_to_msecs(jiffies - bss->last_update));
++		iwe.u.data.length = strlen(buf);
++		current_ev = iwe_stream_add_point(info, current_ev,
++						  end_buf, &iwe, buf);
++		kfree(buf);
+ 	}
+ 
+ 	if (bss_mesh_cfg(bss)) {
+-		char *buf;
+ 		u8 *cfg = bss_mesh_cfg(bss);
+ 		buf = kmalloc(50, GFP_ATOMIC);
+ 		if (buf) {
+
+-- 
+
