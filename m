@@ -1,146 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51124 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:57109 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751556AbYIYErK (ORCPT
+	with ESMTP id S1751646AbYIHPsd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Sep 2008 00:47:10 -0400
-Subject: Re: [PATCH] wireless: consolidate on a single escape_essid
-	implementation
+	Mon, 8 Sep 2008 11:48:33 -0400
+Subject: Re: [PATCH 4/4] mac80211: stop queues before carrier off
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1222294536-24367-1-git-send-email-linville@tuxdriver.com> (sfid-20080925_010455_582253_D66BE03B)
-References: <>  <1222294536-24367-1-git-send-email-linville@tuxdriver.com>
-	 (sfid-20080925_010455_582253_D66BE03B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eO5pxeOY4qUVuNxXQt8+"
-Date: Thu, 25 Sep 2008 06:46:23 +0200
-Message-Id: <1222317983.10563.20.camel@johannes.berg> (sfid-20080925_064714_797821_C549800C)
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, tomasw@gmail.com
+In-Reply-To: <20080908153510.167807000@sipsolutions.net> (sfid-20080908_173726_285754_4F1FC0CD)
+References: <20080908153336.891710000@sipsolutions.net>
+	 <20080908153510.167807000@sipsolutions.net>
+	 (sfid-20080908_173726_285754_4F1FC0CD)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7TUpwc4ZqUKf4vds22Fe"
+Date: Mon, 08 Sep 2008 17:48:28 +0200
+Message-Id: <1220888908.31304.78.camel@johannes.berg> (sfid-20080908_174839_188317_F9C9ADFC)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-eO5pxeOY4qUVuNxXQt8+
+--=-7TUpwc4ZqUKf4vds22Fe
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2008-09-24 at 18:15 -0400, John W. Linville wrote:
-> This is also an excuse to create the long rumored lib80211 module...
+Oops, sorry, quilt ate the attribution (From header line), can you add
+those for the first three patches? I had
 
-Let's also take the chance to clean up the mess Intel has, once again,
-created here.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
->  		switch (info_element->id) {
->  		case MFIE_TYPE_SSID:
-> -			if (ieee80211_is_empty_essid(info_element->data,
-> -						     info_element->len)) {
-> +			if (is_empty_essid(info_element->data,
-> +					   info_element->len)) {
->  				network->flags |=3D NETWORK_EMPTY_ESSID;
->  				break;
->  			}
-
-You can remove the whole NETWORK_EMPTY_ESSID flag and this whole test;
-the code slightly below needs to take care to actually escape the SSID
-for the debug output.
-
-> @@ -1411,7 +1412,7 @@ static int ieee80211_handle_assoc_resp(struct ieee8=
-0211_device *ieee, struct iee
->  			network->mode |=3D IEEE_B;
->  	}
-> =20
-> -	if (ieee80211_is_empty_essid(network->ssid, network->ssid_len))
-> +	if (is_empty_essid(network->ssid, network->ssid_len))
->  		network->flags |=3D NETWORK_EMPTY_ESSID;
-
-drop the whole if
-=20
-> =20
-> -	if (ieee80211_is_empty_essid(network->ssid, network->ssid_len))
-> +	if (is_empty_essid(network->ssid, network->ssid_len))
->  		network->flags |=3D NETWORK_EMPTY_ESSID;
-
-ditto.
-
-that leaves once place using the NETWORK_EMPTY_ESSID flag, in
-ieee80211_wx.c:
-
-        /* Add the ESSID */
-        iwe.cmd =3D SIOCGIWESSID;
-        iwe.u.data.flags =3D 1;
-        if (network->flags & NETWORK_EMPTY_ESSID) {
-                iwe.u.data.length =3D sizeof("<hidden>");
-                start =3D iwe_stream_add_point(info, start, stop,
-                                             &iwe, "<hidden>");
-        } else {
-                iwe.u.data.length =3D min(network->ssid_len, (u8) 32);
-                start =3D iwe_stream_add_point(info, start, stop,
-                                             &iwe, network->ssid);
-        }
-
-which is of course *completely* *wrong*. There's no excuse for messing
-up the values passed to userspace like that.
-
-> +const char *escape_essid(const char *essid, u8 essid_len)
-> +{
-> +	static char escaped[IW_ESSID_MAX_SIZE * 2 + 1];
-> +	const char *s =3D essid;
-> +	char *d =3D escaped;
-> +
-> +	if (is_empty_essid(essid, essid_len)) {
-> +		memcpy(escaped, "<hidden>", sizeof("<hidden>"));
-> +		return escaped;
-> +	}
-
-Once you've done the above, is_empty_essid is only used here. I'll leave
-it to you whether you want to print <hidden> or not, I'd prefer if the
-function was to just escape the ASCII-NULs as normal since then you can
-actually distinguish the various forms of hidden SSIDs which might help.
-Maybe that needs quotes around the escaped SSID then.
-
-> +	essid_len =3D min(essid_len, (u8) IW_ESSID_MAX_SIZE);
-> +	while (essid_len--) {
-> +		if (*s =3D=3D '\0') {
-> +			*d++ =3D '\\';
-> +			*d++ =3D '0';
-> +			s++;
-> +		} else {
-> +			*d++ =3D *s++;
-> +		}
-> +	}
-> +	*d =3D '\0';
-> +	return escaped;
-> +}
-> +EXPORT_SYMBOL(escape_essid);
-
-Also, we could take the chance to stop making Jean's mistake in calling
-this thing the _E_SSID, there's no such thing, it's Jean's invention,
-based on his misguided thought that this might somehow be less confusing
-to the user.
+as in the original mails Tomas sent. Alternatively, I can resend?
 
 johannes
 
---=-eO5pxeOY4qUVuNxXQt8+
+--=-7TUpwc4ZqUKf4vds22Fe
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI2xebAAoJEKVg1VMiehFYySUP/2LDuuM1RK0Jk0kAgW10NvNk
-kLMs4f6RK5lpXdiKyo/EPn0PoisGsuZKeDi9bZfRqko3kjwePngFRsNXDKRJHH1i
-ufgOC6VE0oBjjupG8Z65YcVf3L83X3IW381VOIOWUmMf2RKaqG66J28sn8D8u5fu
-3e+JT1vpE9+JyuLDxj58aK8VHZe0PC6z2kEokaBuxSN1l7bUV8X6b0druRqHSFN/
-KhyTGpJoOA+oZFR1ucPJKbqasykOyAdblNe0Np1afo0tZDQlxw7+movguuGd2vJs
-WKBKGpOo8Jt/ETdCDQUPt4ALyVfMegGdfhpUAT7iiS0ppZ7eSDLdGLrPrvyzM074
-h+44YT9PfTa4WK3JEs+gZ31mcbda1I7zJ0mZVbUwsY1YTFFuHbNwda1WX2hfIKG5
-CJyeX0Wh40sjyDubm6rgG/unsSM1ktpu9uKjXDtbgiRaSDcI1EV+R4ZXTUoECZgu
-u+imzWFE2mrGrLKZPijlptM51P1VutPXYPdHQJ7EdK8tRKVKzknQJYqD8a7ZZgww
-9CD1slGm0VchH1vScVbxL3af9GX4JcuMZyQySHZ8EZbWfBvwwg8xEBDxRVwrB0wm
-qR2gHfJJe72pAi/7EjPVv0SqLSQQ/X1f/jpCOx/QPnoVYoButQRE9YT8c1AT6wYj
-O4tGFmjZVrhRv02zSOrv
-=aKDt
+iQIcBAABAgAGBQJIxUlJAAoJEKVg1VMiehFYJgkP/RYdRlGbIXPQks40njBAsBKU
+z4voytQ1NGWXD8y6BfM9qwdkLLXhIUtYIL2LNa5hTtb1dEEYECdH1Qp9NMLGJpvd
+MEmOyulpoNV6fp66tMnTZt2Q3Hb18ju6TEnSRNNlz8fJ4tiDnHgjofBmjhZnVZgi
+bL/TlHlH6Mo/2c5bGskVHL/KKmEqlMZLlzAzu8AsQdsawjvMRnzhMDGiQoY4haIM
+fIex/h4P2tBI7Dhk0nnDZYCQeVHekH6lp0ywfo1f2cozx970rxIQDpoYgZXd1CRR
+U6zMQ8swiHt9anUwiH1+Hh/nO0V+eOlozYzlcBp2JF9RWIx3rokXGkbuze6xoggM
+ah8fugO3Qm8JuBk6Dyi5w4SUgyQX5gwTnk4KFepXgNV11fK/pIRa9XGMN0nfW2+3
++TVSYZFZ7X925kMzqzXKoPaJzzATJuyIs60L7idsMvHSxJmTgs84/yLJ5J8HIrdc
+wD5Xn6muNSJLhDoSA24yHG4Uhi6TGn7JN6WIJq9OTMcPF8ECLvHt2OF773F4sszM
+0UTP/ZqHok30p2yHz3LMXmeGxFwwTS2t9gam5qipWg0aJPV+4vzbHiKgxCk5GUUE
+pmiln2rzZo8V0z2Ml4D1J6XI/Uu7Rz+XY0bOG38pKDNQbcyDF+/Y3Kjk32WVKuUp
+mrJ/Sx/3oUIuLYxF6bXs
+=i5az
 -----END PGP SIGNATURE-----
 
---=-eO5pxeOY4qUVuNxXQt8+--
+--=-7TUpwc4ZqUKf4vds22Fe--
 
