@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:21886 "EHLO c60.cesmail.net"
+Received: from mga11.intel.com ([192.55.52.93]:20772 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752478AbYILBDK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 21:03:10 -0400
-Subject: Re: BMC4310 support (03f0:171d)
-From: Pavel Roskin <proski@gnu.org>
-To: Nadav Kavalerchik <nadavkav@gmail.com>
+	id S1751516AbYIHBfY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Sep 2008 21:35:24 -0400
+Subject: Re: iwl4965 and 802.11a
+From: Zhu Yi <yi.zhu@intel.com>
+To: Jon Wesgate <jon@fsck.tv>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4219988b0809091241l565fa8fcpebe2fb552782c4d4@mail.gmail.com>
-References: <4219988b0809011331j4acb1582u3239218c6b7ff573@mail.gmail.com>
-	 <4219988b0809011349i640d36e0p497eb8cefe303d0@mail.gmail.com>
-	 <200809012333.58897.mb@bu3sch.de>
-	 <4219988b0809091240s970c580k763054a56ef740b3@mail.gmail.com>
-	 <4219988b0809091241l565fa8fcpebe2fb552782c4d4@mail.gmail.com>
+In-Reply-To: <48C3F74D.7020005@fsck.tv>
+References: <48C3F74D.7020005@fsck.tv>
 Content-Type: text/plain
-Date: Thu, 11 Sep 2008 21:03:07 -0400
-Message-Id: <1221181387.1351.6.camel@dv> (sfid-20080912_030316_904116_3F429AA7)
+Date: Mon, 08 Sep 2008 09:32:04 +0800
+Message-Id: <1220837524.28282.300.camel@debian.sh.intel.com> (sfid-20080908_033539_570254_C161388B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-09-09 at 22:41 +0300, Nadav Kavalerchik wrote:
-> anything i can do to help ?
-> 
->  ndiswrapper can handle the vista drivers ver 6.1 so i am stuck :-(
+On Sun, 2008-09-07 at 16:46 +0100, Jon Wesgate wrote:
+> using your latest compat-2.6-old drivers I'm unable to see my 802.11a 
+> network.
+> It used to work ok but has been problematic since kernel 2.6.24.
+> on 2.6.24 it would show up but I could only connect to it if I turned 
+> wpa off.
+> 2.6.25 was hopeless and so was 2.6.26 till I updated the Ucode now
+> b/g 
+> works fine other than having to try twice on encrypted connections
+> and 
+> the interface going down when the link was reset.
+> It looks like your latest drivers have fixed that but 802.11a is still
+> nowhere to be seen.
 
-I guess that you mean that it cannot.
+Which A band channel is your AP on? Please attach your dmesg with
+"modprobe iwlagn debug=1". And make sure you are using the correct
+regdomain for cfg80211.
 
->  throw me a bone :-)
+Thanks,
+-yi
 
-svn co https://ndiswrapper.svn.sourceforge.net/svnroot/ndiswrapper/branches/ndisv6/ndiswrapper
-
-That's an experimental version of ndiswrapper that supports NDIS v6
-only.  As far as I know, it's not fully functional, but at least you
-don't have to wait for reverse engineering.  NDIS is documented.  I
-believe x86_64 has better chances to work than i386.
-
-Just a reminder - please don't discuss issues with ndiswrapper in this
-list.  It has a list of its own.
-
--- 
-Regards,
-Pavel Roskin
