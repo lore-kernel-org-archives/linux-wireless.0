@@ -1,125 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36052 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753233AbYIJWNv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Sep 2008 18:13:51 -0400
-Message-Id: <20080910220408.031956000@sipsolutions.net> (sfid-20080911_001357_454746_5F711703)
-References: <20080910220145.707263000@sipsolutions.net>
-Date: Thu, 11 Sep 2008 00:01:46 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+Received: from mx1.redhat.com ([66.187.233.31]:58794 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752814AbYIHUdv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Sep 2008 16:33:51 -0400
+Subject: [RFC PATCH] libertas_tf: clear current command on remove
+From: Dan Williams <dcbw@redhat.com>
+To: Luis Carlos Cobo <luisca@cozybit.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 01/18] mac80211: move ieee80211_sta_expire
+Content-Type: text/plain
+Date: Mon, 08 Sep 2008 16:34:42 -0400
+Message-Id: <1220906082.1618.22.camel@localhost.localdomain> (sfid-20080908_223355_015142_DB10C3A3)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_sta_expire uses the internal __sta_info_unlink
-function which can become static if this function is moved
-to sta_info.c.
+Ensure that the current command is torn down when cleaning up.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 ---
- net/mac80211/mlme.c     |   26 --------------------------
- net/mac80211/sta_info.c |   28 +++++++++++++++++++++++++++-
- net/mac80211/sta_info.h |    3 ++-
- 3 files changed, 29 insertions(+), 28 deletions(-)
 
---- everything.orig/net/mac80211/mlme.c	2008-09-10 23:57:19.000000000 +0200
-+++ everything/net/mac80211/mlme.c	2008-09-10 23:57:50.000000000 +0200
-@@ -1944,32 +1944,6 @@ static int ieee80211_sta_active_ibss(str
- }
- 
- 
--static void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata, unsigned long exp_time)
--{
--	struct ieee80211_local *local = sdata->local;
--	struct sta_info *sta, *tmp;
--	LIST_HEAD(tmp_list);
--	DECLARE_MAC_BUF(mac);
--	unsigned long flags;
--
--	spin_lock_irqsave(&local->sta_lock, flags);
--	list_for_each_entry_safe(sta, tmp, &local->sta_list, list)
--		if (time_after(jiffies, sta->last_rx + exp_time)) {
--#ifdef CONFIG_MAC80211_IBSS_DEBUG
--			printk(KERN_DEBUG "%s: expiring inactive STA %s\n",
--			       sdata->dev->name, print_mac(mac, sta->addr));
--#endif
--			__sta_info_unlink(&sta);
--			if (sta)
--				list_add(&sta->list, &tmp_list);
--		}
--	spin_unlock_irqrestore(&local->sta_lock, flags);
--
--	list_for_each_entry_safe(sta, tmp, &tmp_list, list)
--		sta_info_destroy(sta);
--}
--
--
- static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata,
- 				     struct ieee80211_if_sta *ifsta)
- {
---- everything.orig/net/mac80211/sta_info.c	2008-09-10 23:50:30.000000000 +0200
-+++ everything/net/mac80211/sta_info.c	2008-09-10 23:57:50.000000000 +0200
-@@ -424,7 +424,7 @@ void sta_info_clear_tim_bit(struct sta_i
- 	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
- }
- 
--void __sta_info_unlink(struct sta_info **sta)
-+static void __sta_info_unlink(struct sta_info **sta)
- {
- 	struct ieee80211_local *local = (*sta)->local;
- 	struct ieee80211_sub_if_data *sdata = (*sta)->sdata;
-@@ -802,3 +802,29 @@ void sta_info_flush_delayed(struct ieee8
- 		schedule_work(&local->sta_flush_work);
- 	spin_unlock_irqrestore(&local->sta_lock, flags);
- }
-+
-+void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
-+			  unsigned long exp_time)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct sta_info *sta, *tmp;
-+	LIST_HEAD(tmp_list);
-+	DECLARE_MAC_BUF(mac);
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&local->sta_lock, flags);
-+	list_for_each_entry_safe(sta, tmp, &local->sta_list, list)
-+		if (time_after(jiffies, sta->last_rx + exp_time)) {
-+#ifdef CONFIG_MAC80211_IBSS_DEBUG
-+			printk(KERN_DEBUG "%s: expiring inactive STA %s\n",
-+			       sdata->dev->name, print_mac(mac, sta->addr));
-+#endif
-+			__sta_info_unlink(&sta);
-+			if (sta)
-+				list_add(&sta->list, &tmp_list);
-+		}
-+	spin_unlock_irqrestore(&local->sta_lock, flags);
-+
-+	list_for_each_entry_safe(sta, tmp, &tmp_list, list)
-+		sta_info_destroy(sta);
-+}
---- everything.orig/net/mac80211/sta_info.h	2008-09-10 23:50:30.000000000 +0200
-+++ everything/net/mac80211/sta_info.h	2008-09-10 23:57:50.000000000 +0200
-@@ -452,7 +452,6 @@ int sta_info_insert(struct sta_info *sta
-  * has already unlinked it.
-  */
- void sta_info_unlink(struct sta_info **sta);
--void __sta_info_unlink(struct sta_info **sta);
- 
- void sta_info_destroy(struct sta_info *sta);
- void sta_info_set_tim_bit(struct sta_info *sta);
-@@ -464,5 +463,7 @@ void sta_info_stop(struct ieee80211_loca
- int sta_info_flush(struct ieee80211_local *local,
- 		    struct ieee80211_sub_if_data *sdata);
- void sta_info_flush_delayed(struct ieee80211_sub_if_data *sdata);
-+void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
-+			  unsigned long exp_time);
- 
- #endif /* STA_INFO_H */
+Completely untested but based on the libertas patch for the same
+problem.  Luis, can you give it a shot and make sure there aren't any
+regressions when pulling the card or rmmod-ing the driver?
 
--- 
+diff --git a/drivers/net/wireless/libertas_tf/main.c b/drivers/net/wireless/libertas_tf/main.c
+index c948021..5f7bf04 100644
+--- a/drivers/net/wireless/libertas_tf/main.c
++++ b/drivers/net/wireless/libertas_tf/main.c
+@@ -296,8 +296,8 @@ static void lbtf_op_stop(struct ieee80211_hw *hw)
+ 	struct lbtf_private *priv = hw->priv;
+ 	unsigned long flags;
+ 	struct sk_buff *skb;
+-
+ 	struct cmd_ctrl_node *cmdnode;
++
+ 	/* Flush pending command nodes */
+ 	spin_lock_irqsave(&priv->driver_lock, flags);
+ 	list_for_each_entry(cmdnode, &priv->cmdpendingq, list) {
+@@ -306,7 +306,14 @@ static void lbtf_op_stop(struct ieee80211_hw *hw)
+ 		wake_up_interruptible(&cmdnode->cmdwait_q);
+ 	}
+ 
++	/* Flush the command the card is currently processing */
++	if (priv->cur_cmd) {
++		priv->cur_cmd->result = -ENOENT;
++		priv->cur_cmd->cmdwaitqwoken = 1;
++		wake_up_interruptible(&priv->cur_cmd->cmdwait_q);
++	}
+ 	spin_unlock_irqrestore(&priv->driver_lock, flags);
++
+ 	cancel_work_sync(&priv->cmd_work);
+ 	cancel_work_sync(&priv->tx_work);
+ 	while ((skb = skb_dequeue(&priv->bc_ps_buf)))
+
 
