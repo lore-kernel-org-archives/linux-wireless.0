@@ -1,59 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:55626 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752118AbYIFCdE (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:29792 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754148AbYIHUsg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Sep 2008 22:33:04 -0400
-Subject: Re: [PATCH 1/2 v5] cfg80211: Add new wireless regulatory
-	infrastructure
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <1220643824-11398-1-git-send-email-lrodriguez@atheros.com>
-References: <1220643824-11398-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: text/plain
-Date: Sat, 06 Sep 2008 04:33:14 +0200
-Message-Id: <1220668394.6714.109.camel@californication> (sfid-20080906_043320_781981_8E3892D9)
-Mime-Version: 1.0
+	Mon, 8 Sep 2008 16:48:36 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so928794yxm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2008 13:48:35 -0700 (PDT)
+Message-ID: <1ba2fa240809081348n17a3b4c5o4d67e989dfd79030@mail.gmail.com> (sfid-20080908_224840_644464_7C71AE31)
+Date: Mon, 8 Sep 2008 23:48:34 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Jouni Malinen" <j@w1.fi>
+Subject: Re: HT action frame code
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"Ron Rindjunsky" <rindjon@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <48C5868B.8060103@w1.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1220883730.31304.60.camel@johannes.berg> <48C5868B.8060103@w1.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
-
-> This adds the new wireless regulatory infrastructure. The
-> main motiviation behind this was to centralize regulatory
-> code as each driver was implementing their own regulatory solution,
-> and to replace the initial centralized code we have where:
-> 
-> * only 3 regulatory domains are supported: US, JP and EU
-> * regulatory domains can only be changed through a module parameter
-> * all rules are built statically in the kernel
-> 
-> We now have support for regulatory domains for many countries
-> and regulatory domains are now queried through a userspace agent
-> (CRDA) through udev allowing distributions to update regulatory rules
-> without updating the kernel. Updates on regulatory rules can
-> now be left as an independent effort.
-
-can we get a small document in Documentation/ that describes what has to
-be done for CRDA. That would help to ease the adaption and would allow
-us to point people to it. Nothing fancy, but some quick notes where to
-find it and what to put where.
-
-> Each driver can regulatory_hint() a regulatory domain
-> based on either their EEPROM mapped regulatory domain value to a
-> respective ISO/IEC 3166-1 country code or pass an internally built
-> regulatory domain. We also add support to let the user set the
-> regulatory domain through userspace in case of faulty EEPROMs to
-> further help compliance.
-
-Do we have an example for all the possible ways? I think about something
-to help driver maintainers to move over and use the infrastructure the
-right way.
-
-Regards
-
-Marcel
-
-
+On Mon, Sep 8, 2008 at 11:09 PM, Jouni Malinen <j@w1.fi> wrote:
+> Johannes Berg wrote:
+>>
+>> When we're an AP, shouldn't we also in some way honour the block-ack
+>> action frames? Or will that be done in hostapd, which then sets up
+>> block-ack via some unspecified way?
+>
+> The current design assumes that hostapd takes care of all management frames,
+> so eyes, these would need to go to hostapd for processing and then setup
+> back to mac80211 through some new command..
+>
+Enable BA in AP mode is really trivial. It definitely worked in our AP project.
+Tomas
