@@ -1,44 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39275 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:54282 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752691AbYIHP62 (ORCPT
+	with ESMTP id S1752042AbYIHSNW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 11:58:28 -0400
-Subject: [PATCH 10/8] mac80211: simplify scan start
+	Mon, 8 Sep 2008 14:13:22 -0400
+Subject: Re: [PATCH 1/1] mac80211: scan on IBSS mode like on STA mode
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20080908154421.216772000@sipsolutions.net> (sfid-20080908_174606_739824_DD7A31F6)
-References: <20080908154421.216772000@sipsolutions.net>
-	 (sfid-20080908_174606_739824_DD7A31F6)
-Content-Type: text/plain
-Date: Mon, 08 Sep 2008 17:58:23 +0200
-Message-Id: <1220889503.31304.80.camel@johannes.berg> (sfid-20080908_175835_874836_5139DE4A)
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	Ester Kummer <ester.kummer@intel.com>,
+	Luis Carlos Cobo <luisca@cozybit.com>
+In-Reply-To: <1ba2fa240809080953mfe2ab86l5417679e4cb29df1@mail.gmail.com> (sfid-20080908_185305_511506_7FC46CC6)
+References: <1220880686-5620-1-git-send-email-tomas.winkler@intel.com>
+	 <1220885742.31304.67.camel@johannes.berg>
+	 <1220886337.31304.71.camel@johannes.berg>
+	 <1220887018.31304.74.camel@johannes.berg>
+	 <1ba2fa240809080953mfe2ab86l5417679e4cb29df1@mail.gmail.com>
+	 (sfid-20080908_185305_511506_7FC46CC6)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-O3d5Kbe9ihXLU6wty7by"
+Date: Mon, 08 Sep 2008 20:13:14 +0200
+Message-Id: <1220897594.31304.83.camel@johannes.berg> (sfid-20080908_201326_712726_15619D11)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_sta_start_scan() can very well take a non-NULL
-ssid pointer with a zero ssid_len.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/mlme.c |    5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+--=-O3d5Kbe9ihXLU6wty7by
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- everything.orig/net/mac80211/mlme.c	2008-09-08 17:56:39.000000000 +0200
-+++ everything/net/mac80211/mlme.c	2008-09-08 17:56:54.000000000 +0200
-@@ -3053,10 +3053,7 @@ void ieee80211_sta_work(struct work_stru
- 	    ifsta->state != IEEE80211_STA_MLME_AUTHENTICATE &&
- 	    ifsta->state != IEEE80211_STA_MLME_ASSOCIATE &&
- 	    test_and_clear_bit(IEEE80211_STA_REQ_SCAN, &ifsta->request)) {
--		if (ifsta->scan_ssid_len)
--			ieee80211_sta_start_scan(sdata, ifsta->scan_ssid, ifsta->scan_ssid_len);
--		else
--			ieee80211_sta_start_scan(sdata, NULL, 0);
-+		ieee80211_sta_start_scan(sdata, ifsta->scan_ssid, ifsta->scan_ssid_len);
- 		return;
- 	}
- 
+On Mon, 2008-09-08 at 19:53 +0300, Tomas Winkler wrote:
 
+> The bug is that scan can be triggered in STA and IBSS internally. If
+> you request scan from the application (iwlist) while
+> internally scan is running application won't fetch scan results
+> because the -EBUSY is returned on scan request.
+
+But -EBUSY won't be returned if that same interface is already scanning,
+then 0 will be returned, so I don't understand?
+
+johannes
+
+--=-O3d5Kbe9ihXLU6wty7by
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIxWs3AAoJEKVg1VMiehFY0C8P/iMyQVzVfmDKwPQvMC0yvd20
+j2p/46ESnO5ULI6/TmA1Fuoeyu+6gQfkgGhMAWVnSvS9d07Hl5yKvrGlSu719c8D
+QHxjGQTFNyzGeLjRKY8rE11ozVewfEVQ7JuXaBQeRIZFUXx+aQpPug6kFies4x+n
+wRuIlbtoG14q+Z8csbfUt+AIf6QuyjKmmo12YR8njFsAD23Qp8pD5+7JIy67vh2a
+a8Qa/3TXgAtfhddrcEq5SK5tM6iccAtPt8VNSRJ9eigWdvWiIoKYcRPfFBYNgdis
+LWp0ZK+B757ADo3pRdy8FDPBZK1QgbwThM0BAMtrzLZ4GO+taCsdcQsurZVEhFmq
+lLuQwhgsWHbC6cKh8RiAqLiHvwNFJpwd2YYxeKBkcUZK5NtEU3PP3v9IjzbaPZIN
+Xl+tj5SfV352E2sDcb7FdbZDuLyk5RAk+DQyToFYsL27g1Ur9o8G08DNXmbhBl2y
+Fnu5okg095+3dP85iiZvYBxvA+Vj3DXMAAdHmCNqi7PBySk5OSPJq+Ga1yJQjBdq
+UPkrfNAH9vIQlmTqljaWy8xbONXVY9h0vatTjmfQ7TF8kwEl9h6Q239AisrwoVTV
+QXpHR2PZDTMly3E31AIUGyU2wSuSo/6B7ynfdtFTctsSulPXbWJpMv/SELExJ7i5
+6SptgfcnSVEeFxjkNwKx
+=G+b5
+-----END PGP SIGNATURE-----
+
+--=-O3d5Kbe9ihXLU6wty7by--
 
