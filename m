@@ -1,71 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42643 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752720AbYIKShv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 14:37:51 -0400
-Subject: Re: [PATCH] libertas: Improvements on automatic tx power control
-	via SIOCSIWTXPOW.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Anna Neal <anna@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <48c964bf.1b018e0a.75a0.0ecf@mx.google.com> (sfid-20080911_203455_684983_F378BE81)
-References: <48c964bf.1b018e0a.75a0.0ecf@mx.google.com>
-	 (sfid-20080911_203455_684983_F378BE81)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2qKm/nWkXNs8sr2RXeiI"
-Date: Thu, 11 Sep 2008 20:37:14 +0200
-Message-Id: <1221158234.6986.50.camel@johannes.berg> (sfid-20080911_203754_962661_F81F5E42)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:39145 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752270AbYIHFoQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Sep 2008 01:44:16 -0400
+Date: Mon, 8 Sep 2008 11:08:51 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH] Ath9k: Add RF kill support.
+Message-ID: <20080908053851.GC28149@vasanth-lnx.users.atheros.com> (sfid-20080908_074424_415864_35998CB6)
+References: <20080906123842.GA27504@vasanth-lnx.users.atheros.com> <1220721347.6714.114.camel@californication> <20080908045926.GA28149@vasanth-lnx.users.atheros.com> <1220851340.6714.132.camel@californication>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1220851340.6714.132.camel@californication>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Sep 08, 2008 at 10:52:20AM +0530, Marcel Holtmann wrote:
+> Hi Vasanthakumar,
+> 
+> > > > CONFIG_ATH9K_RFKILL needs to be set
+> > > > to enable this support.
+> > >
+> > > why do we have to introduce yet another config option for this? What is
+> > > the advantage of disabling RFKILL support? I really don't see it and all
+> > > these extra config options are rather confusing than useful.
+> > Normally home users may not hit a situation where they have to
+> > disable the radio, so they can compile out the rf kill support
+> > and essentially disable the periodic run of the work queue
+> > (rfkill_poll ,runs for every 2 secs).If this does not make
+> > any sense, I will remove this config option.
+> 
+> I don't know about the actual implementation, but if you use a polling
+> mechanism then it is wrong. Can't you make this interrupt driven.
+There is some issue in GPIO intrrupt genenration, we can't make it
+interrupt driven.
+> 
+> The desktop use case needs RFKILL support, because that will be used for
+> switching off the radio. Just think about the flight mode case. So the
+> only case where disabling RFKILL support makes sense would be an
+> embedded system with specific constraints. However even in the embedded
+> case, I don't see that usefulness.
+> 
+Yeah, I understand.
+> Regards
+> 
+> Marcel
+> 
 
---=-2qKm/nWkXNs8sr2RXeiI
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Regards
 
-On Thu, 2008-09-11 at 11:17 -0700, Anna Neal wrote:
+Vasanth
 
-> +/**
-> + * @brief Configures the transmission power control functionality.
-> + *
-> + * @param priv		A pointer to struct lbs_private structure
-> + * @param enable	Transmission power control enable
-> + * @param p0		Power level when link quality is good (dBm).
-> + * @param p1		Power level when link quality is fair (dBm).
-> + * @param p2		Power level when link quality is poor (dBm).
-> + * @param usesnr	Use Signal to Noise Ratio in TPC
-> + *
-> + * @return 0 on success
-
-What doc tools are you using? This isn't kernel-doc notation, is it?
-
-[not that I think that should prevent the patch from going in, at this
-point, since I don't think the file is read by kernel-doc anyway]
-
-johannes
-
---=-2qKm/nWkXNs8sr2RXeiI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIyWVUAAoJEKVg1VMiehFYyxUQALRKrcwHUm7dA4WeHje8uqdb
-2gAllpOnR95QZcckkljLmb5CG7YE6I48XzHLlYiJWEOFBjsMnwWUvOGoOW5AzRB1
-JfRrk0f3Avdca8hpEsUqsetsGToFKBAwKwXPbF28bQzqtcmVGsdxqxehVU6JKD1R
-P9iJtWYdr7fJfGFY/GAFhWMyF2HqWNP+VRVd6BcekIoCvQAegqDxu6iYUrSeeaxq
-nwUZInPqwpnSj5gwIWeCvwcPuiP2UfvIUTdFt8ljZOdx57+EnKaIa7ZPKWloRhO3
-2iWdw5l/EDfpaXvdfBceb282HEgpIIBkBLOxVgNxO18t6PUCbJOED1H0XtuBaPV6
-zGOjxRM9EAk2e6ZYqtBAdYD9aXkhgmYD9fFWVt0Cngys8HY4bTQjGHGXzDfh7eye
-G9gOK45vauL0InfFMzXsBNGD0uBSvtBV8VPwqq/Flw6MwcrA4dL3sJ32fAPQsW75
-EudELy6sHKUfOn+ekwFMdZyBlRLe+IuHSvubjbuo8KaZFRwKOJMUw9hLC5SrLTiO
-8IG4xmScA5KA46BVW5O0aLcynIgximnRDHaH42h9olbhVnWAceoJaR7sk6QqQOnq
-yPE13qlE+rBmVD3yC0+Tf13oogReWy+WS8EQDOK/hQnLNkLx7nhuAfMveBZDIXn2
-xywnS0c8QjWUVwVqDL9D
-=bNHJ
------END PGP SIGNATURE-----
-
---=-2qKm/nWkXNs8sr2RXeiI--
-
+> 
