@@ -1,68 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:60474 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750996AbYIUSEX (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:53888 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754881AbYIHXch (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 14:04:23 -0400
-Date: Sun, 21 Sep 2008 11:04:22 -0700
-From: Arjan van de Ven <arjan@infradead.org>
-To: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ipw2100-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, jgarzik@pobox.com,
-	linville@tuxdriver.com, davem@davemloft.net
-Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware
- restart.
-Message-ID: <20080921110422.1d010b96@infradead.org> (sfid-20080921_200432_584960_D4ED3950)
-In-Reply-To: <20080921172316.GA6306@2ka.mipt.ru>
-References: <20080921172316.GA6306@2ka.mipt.ru>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 8 Sep 2008 19:32:37 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so961590yxm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2008 16:32:36 -0700 (PDT)
+Message-ID: <1ba2fa240809081632j6816f059s30cc3b4ea5dcc2ed@mail.gmail.com> (sfid-20080909_013257_427151_3BFFA28D)
+Date: Tue, 9 Sep 2008 02:32:35 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Matthew Garrett" <mjg@redhat.com>
+Subject: Re: [PATCH 4/4] mac80211: stop queues before carrier off
+Cc: "Dan Williams" <dcbw@redhat.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20080908222859.GA6153@srcf.ucam.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080908153336.891710000@sipsolutions.net>
+	 <20080908153510.167807000@sipsolutions.net>
+	 <1ba2fa240809081440o2c88eaa7o1e120fe75c018b9e@mail.gmail.com>
+	 <1220910240.9427.10.camel@localhost.localdomain>
+	 <1ba2fa240809081508jd762ac6q9d8505879711d151@mail.gmail.com>
+	 <20080908222859.GA6153@srcf.ucam.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 21 Sep 2008 21:23:17 +0400
-Evgeniy Polyakov <johnpol@2ka.mipt.ru> wrote:
+On Tue, Sep 9, 2008 at 1:29 AM, Matthew Garrett <mjg@redhat.com> wrote:
+> On Tue, Sep 09, 2008 at 01:08:17AM +0300, Tomas Winkler wrote:
+>> It has to be other way around.
+>
+> [Citation needed]\
 
-> Hi.
-> 
-> Following bug exists in the ipw2100 driver/firmware for years and
-> Intel folks never responded to zillions bugzilla entries and forum
-> notices in the internet with some patch or firmware update (although
-> did request dmesg and debug info, and received them).
-> 
-> ipw2100: Fatal interrupt. Scheduling firmware restart.
-> 
-> I believe it is a firmware bug because after driver is unloaded and
-> loaded back again wireless adapter usually starts working (for small
-> amount of time though). 
-\
-> diff --git a/drivers/net/wireless/Kconfig
-> b/drivers/net/wireless/Kconfig index 9931b5a..c24fc6a 100644
-> --- a/drivers/net/wireless/Kconfig
-> +++ b/drivers/net/wireless/Kconfig
-> @@ -125,7 +125,7 @@ config PCMCIA_RAYCS
->  
->  config IPW2100
->  	tristate "Intel PRO/Wireless 2100 Network Connection"
-> -	depends on PCI && WLAN_80211
-> +	depends on PCI && WLAN_80211 && BROKEN
->  	select WIRELESS_EXT
->  	select FW_LOADER
->  	select IEEE80211
-> 
-
-so now you go from an occasional burp to having nothing at all.
-How about you run with this patch on your own machine only?
-
-or.. since you say a reload of the driver fixes it.. why don't you make
-a patch for the driver that does basically the actions of a reload
-automatically when the driver detects the issue?
-(and stick a WARN_ON in for good measure so that kerneloops.org can
-start tracking these burps)
-
--- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+This is how any other connection manager I know works. Maybe I'm
+trapped in old concepts but I don't find current NM paradigm
+friendly.
+Tomas
