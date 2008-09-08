@@ -1,69 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:16832 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751974AbYI2MBN (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:52678 "EHLO
+	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753579AbYIHXhM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 08:01:13 -0400
-Received: by ey-out-2122.google.com with SMTP id 6so546994eyi.37
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Sep 2008 05:01:11 -0700 (PDT)
-Message-ID: <48E0C384.3000903@gmail.com> (sfid-20080929_140116_421937_DA5031A7)
-Date: Mon, 29 Sep 2008 14:01:08 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+	Mon, 8 Sep 2008 19:37:12 -0400
+Date: Tue, 9 Sep 2008 00:37:06 +0100
+From: Matthew Garrett <mjg@redhat.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/4] mac80211: stop queues before carrier off
+Message-ID: <20080908233706.GA7465@srcf.ucam.org> (sfid-20080909_013716_701666_DAC1160D)
+References: <20080908153336.891710000@sipsolutions.net> <20080908153510.167807000@sipsolutions.net> <1ba2fa240809081440o2c88eaa7o1e120fe75c018b9e@mail.gmail.com> <1220910240.9427.10.camel@localhost.localdomain> <1ba2fa240809081508jd762ac6q9d8505879711d151@mail.gmail.com> <20080908222859.GA6153@srcf.ucam.org> <1ba2fa240809081632j6816f059s30cc3b4ea5dcc2ed@mail.gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Thomas Graf <tgraf@suug.ch>
-Subject: Re: NL80211_CMD_GET_WIPHY reply doesn't fit into nl message buffer
-References: <48E0A65A.2060102@gmail.com>	 <1222682480.7064.16.camel@johannes.berg> <20080929102021.GE10429@jm.kir.nu>	 <1222683923.7064.18.camel@johannes.berg> <48E0C185.6070705@gmail.com>	 (sfid-20080929_135242_032949_BF501638) <1222689340.7064.26.camel@johannes.berg>
-In-Reply-To: <1222689340.7064.26.camel@johannes.berg>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240809081632j6816f059s30cc3b4ea5dcc2ed@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/29/2008 01:55 PM, Johannes Berg wrote:
-> On Mon, 2008-09-29 at 13:52 +0200, Jiri Slaby wrote:
+On Tue, Sep 09, 2008 at 02:32:35AM +0300, Tomas Winkler wrote:
+> On Tue, Sep 9, 2008 at 1:29 AM, Matthew Garrett <mjg@redhat.com> wrote:
+> > On Tue, Sep 09, 2008 at 01:08:17AM +0300, Tomas Winkler wrote:
+> >> It has to be other way around.
+> >
+> > [Citation needed]\
 > 
->> --- a/net/wireless/nl80211.c
->> +++ b/net/wireless/nl80211.c
->> @@ -246,16 +246,26 @@ static int nl80211_get_wiphy(struct sk_buff *skb, struct
->> genl_info *info)
->>  {
->>         struct sk_buff *msg;
->>         struct cfg80211_registered_device *dev;
->> +       size_t bufsize = NLMSG_GOODSIZE;
->> +       unsigned int tries = 0;
->> +       int ret;
->>
->>         dev = cfg80211_get_dev_from_info(info);
->>         if (IS_ERR(dev))
->>                 return PTR_ERR(dev);
->>
->> -       msg = nlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
->> +retry:
->> +       msg = nlmsg_new(bufsize, GFP_KERNEL);
->>         if (!msg)
->>                 goto out_err;
->>
->> -       if (nl80211_send_wiphy(msg, info->snd_pid, info->snd_seq, 0, dev) < 0)
->> +       ret = nl80211_send_wiphy(msg, info->snd_pid, info->snd_seq, 0, dev);
->> +       if (ret == -EMSGSIZE && ++tries < 2) {
->> +               bufsize *= 2;
->> +               nlmsg_free(msg);
->> +               goto retry;
->> +       }
->> +       if (ret < 0)
->>                 goto out_free;
->>
->>         cfg80211_put_dev(dev);
->>
-> 
-> Works for me. Not the greatest way to do this I guess, but hey, it
-> works.
+> This is how any other connection manager I know works. Maybe I'm
+> trapped in old concepts but I don't find current NM paradigm
+> friendly.
 
-Anyway it is wrong. NLMSG_GOODSIZE * x for x > 1 doesn't give skb aligned to a
-page boundary. bufsize should start with PAGE_SIZE or 8192 and be multiplied
-then and the parameter used for nlmsg_new SKB_WITH_OVERHEAD(bufsize).
+It's the way it's been in NM since 2004, so I think changing it at this 
+point would be unfriendly. The aim isn't to build a Windows clone.
 
-But it's ugly as hell, I agree -- and quite a temporary solution until somebody
-decides to add channels, another channel info or whatever.
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
