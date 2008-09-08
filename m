@@ -1,61 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56535 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:43832 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750908AbYISMOi (ORCPT
+	with ESMTP id S1752768AbYIHPRF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 08:14:38 -0400
-Subject: Re: [PATCH -tip/master] x86: io-apic - interrupt remapping fix
+	Mon, 8 Sep 2008 11:17:05 -0400
+Subject: Re: [PATCH 1/1] mac80211: scan on IBSS mode like on STA mode
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Cyrill Gorcunov <gorcunov@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	LWML <linux-wireless@vger.kernel.org>,
-	"Maciej W. Rozycki" <macro@linux-mips.org>
-In-Reply-To: <20080919115758.GD7222@lenovo> (sfid-20080919_135810_966871_A18CC967)
-References: <20080919115758.GD7222@lenovo>
-	 (sfid-20080919_135810_966871_A18CC967)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xG5PfX11UmlXEEuvsG44"
-Date: Fri, 19 Sep 2008 14:13:57 +0200
-Message-Id: <1221826437.10419.86.camel@johannes.berg> (sfid-20080919_141441_628501_7A836778)
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: linville@tuxdriver.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org,
+	Ester Kummer <ester.kummer@intel.com>,
+	Luis Carlos Cobo <luisca@cozybit.com>
+In-Reply-To: <1220886337.31304.71.camel@johannes.berg> (sfid-20080908_170546_243399_2C0B190E)
+References: <1220880686-5620-1-git-send-email-tomas.winkler@intel.com>
+	 <1220885742.31304.67.camel@johannes.berg>
+	 (sfid-20080908_165552_656021_8FF20D03)  <1220886337.31304.71.camel@johannes.berg>
+	 (sfid-20080908_170546_243399_2C0B190E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-f6fPKnA7Ebw1wYNDruQD"
+Date: Mon, 08 Sep 2008 17:16:58 +0200
+Message-Id: <1220887018.31304.74.camel@johannes.berg> (sfid-20080908_171710_772361_C3B2980E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-xG5PfX11UmlXEEuvsG44
+--=-f6fPKnA7Ebw1wYNDruQD
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2008-09-19 at 15:57 +0400, Cyrill Gorcunov wrote:
-> Interrupt remapping could lead to NULL dereference in case of
-> kzalloc failed and memory leak in other way. So fix the
-> both cases.
+On Mon, 2008-09-08 at 17:05 +0200, Johannes Berg wrote:
 
-wireless? Wrong mailing list?
+> > Can you explain why? Or can anybody else explain why we do this
+> > difference at all? And how should mesh behave?
+>=20
+> Actually, I do understand the difference now (explanation added below)
+> and if I'm guessing the problem you're having correctly your patch is
+> wrong. I think you want something like the patch below (never mind the
+> fact that it's against scan.c, I'm shuffling code)
+
+>  	if (local->sta_sw_scanning || local->sta_hw_scanning) {
+>  		if (local->scan_sdata =3D=3D sdata)
+>  			return 0;
+>  		return -EBUSY;
+>  	}
+
+Then again, ieee80211_sta_start_scan does that check as well, so now I'm
+confused.
 
 johannes
 
---=-xG5PfX11UmlXEEuvsG44
+--=-f6fPKnA7Ebw1wYNDruQD
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI05eCAAoJEKVg1VMiehFYTUsP/i6Deh3KyT3FAxBuI+qMbBKR
-kdYDnuUXMl1BuxQxcyi6IeLXdOQ5454fseX0ZYRCeThKTJAiTYX0DTZYViiXvG26
-5CJ9b5Zrqp7kvixHtT7Id7UQ8l///7FNN8SIkBdqzwYLpnOlqNKfgVgG50kvoElA
-0EKj8K2/YKHtPEuKoc3UgfPwMx0bAHXVaH3VKs9S0bEAt0REvGbfa3VWCse02lCj
-C90H+FWHenSmu9RSyp+Xd7rJlJ6jOg5iRhZ+09w9NxqZbe2fJbWJAvUmwhuI/wf1
-K+3MXNvDaDppMSwO8gAESiO+PPDkrh0wuhM6uibKxcity6KEkfXioIiQMoN+yF+V
-k7EOca6UCo1VqnJjnZVMqPAXfkBUIkEy64BKz810AmCBSmyFyqOEUYpdNvqGiMPp
-blWC1b+3jjUfXxqDTVSnNCOHCujiYMkhjeo6Bfa260SAyNsmDOoRkTaOAmf+elRP
-6BidgSD74UTuXMloZZt9BgcCm8aMmG2TwVomRxNe+3Xj5ZQ631JHgRpgMZP9TkhM
-fRMzZjOGT7xoiapg+3l/Rl9qrGjZwevGxE3LLOwf5/wwww+6BnVIZ4lH//wQWgKn
-L/CQSXG/WptCUTQYeIJQQ+L2sDi9ahV35eQCN+yGoGwyPIfGkKC5x4aWnPTEu1T0
-V5cmy+CO+7wbdLyJmhLT
-=Ubdq
+iQIcBAABAgAGBQJIxUHmAAoJEKVg1VMiehFYt+AQALOhdSapbHZ4JHFSzkt2zM1j
+eQNqcuMXc6y1qLEQYvnjeRtPDaFr8D3wsowfFIFqSRVAtePJwZUc0iC+AVp9o/0D
+BfeCfVm+CgvrsQEMaIRq0zUQz+1N+678zX3f+q9frMcnB0F9yTargsEiLdto5lIK
+HL0uEiKMYm9omxowIttD+eiKS9HqJQTHQKj9qnImsLr5ZtDAw3OXZVQH5ie2Zjkp
+o7p5qsESvYEUgP73vvrvnjDFkvidQjuHSWwA7eKym9yhwt2B647GmP1AB6mJ6+Bq
+SQITAK7li7VENHDLrkSJbPt+wzruxQAwSQwuPm5TT2rnf1gxS192ALDB29Hd02Os
+40l1BjQxCPtslEOnY4CX1Pk/3Bu57I0Uf4FsX9LwwRXiLfXJ1eM5hbV1GobnB+/A
+tKYJy+YuHAAsgLMdpEg18YbYqxVsCilHtBXTWJBgGM2kOd76BBNXzJzLSD6+SD0g
+PixN4PU1zesSnr0HQU+0+BV9Oz8MlyK5sjYo3Jr/pfTuqV8tdPWBxgaRlnoBC13D
+f9LJYjuMtPbCHGODwWFQbJs/p+OhuV03i683xfxVesEPwolDO7Nex7qr+oGZdsFO
+PcPeUXXV3W9M/gevPXN/yUsHxWI1tQ7HFmXVHPKQ+x7xgIXZ6Irgfuro9Fxymxq/
+1tjyS9Eq/DZneQrRCLFR
+=RRXK
 -----END PGP SIGNATURE-----
 
---=-xG5PfX11UmlXEEuvsG44--
+--=-f6fPKnA7Ebw1wYNDruQD--
 
