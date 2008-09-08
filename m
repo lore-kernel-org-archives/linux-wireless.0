@@ -1,53 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:39931 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752332AbYIHFWA (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54694 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752037AbYIHJIP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 01:22:00 -0400
-Subject: Re: [PATCH] Ath9k: Add RF kill support.
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-In-Reply-To: <20080908045926.GA28149@vasanth-lnx.users.atheros.com>
-References: <20080906123842.GA27504@vasanth-lnx.users.atheros.com>
-	 <1220721347.6714.114.camel@californication>
-	 <20080908045926.GA28149@vasanth-lnx.users.atheros.com>
-Content-Type: text/plain
-Date: Mon, 08 Sep 2008 07:22:20 +0200
-Message-Id: <1220851340.6714.132.camel@californication> (sfid-20080908_072205_891833_FD49730F)
+	Mon, 8 Sep 2008 05:08:15 -0400
+Message-Id: <20080908090633.843025000@sipsolutions.net> (sfid-20080908_110818_578568_68E88D7F)
+References: <20080908090507.641740000@sipsolutions.net>
+Date: Mon, 08 Sep 2008 11:05:08 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] mac80211: move some RCU locking into an if branch
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Vasanthakumar,
+The if itself doesn't need to be protected, so move in the RCU
+locking to avoid doing anything at all when the condition isn't
+true.
 
-> > > CONFIG_ATH9K_RFKILL needs to be set
-> > > to enable this support.
-> > 
-> > why do we have to introduce yet another config option for this? What is
-> > the advantage of disabling RFKILL support? I really don't see it and all
-> > these extra config options are rather confusing than useful.
-> Normally home users may not hit a situation where they have to
-> disable the radio, so they can compile out the rf kill support
-> and essentially disable the periodic run of the work queue 
-> (rfkill_poll ,runs for every 2 secs).If this does not make 
-> any sense, I will remove this config option.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/mlme.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-I don't know about the actual implementation, but if you use a polling
-mechanism then it is wrong. Can't you make this interrupt driven.
+--- everything.orig/net/mac80211/mlme.c	2008-09-08 10:20:25.000000000 +0200
++++ everything/net/mac80211/mlme.c	2008-09-08 10:21:09.000000000 +0200
+@@ -2613,13 +2613,12 @@ static void ieee80211_rx_bss_info(struct
+ 				      mesh_peer_accepts_plinks(elems));
+ 	}
+ 
+-	rcu_read_lock();
+-
+ 	if (sdata->vif.type == IEEE80211_IF_TYPE_IBSS && elems->supp_rates &&
+ 	    memcmp(mgmt->bssid, sdata->u.sta.bssid, ETH_ALEN) == 0) {
+-
+ 		supp_rates = ieee80211_sta_get_rates(local, elems, band);
+ 
++		rcu_read_lock();
++
+ 		sta = sta_info_get(local, mgmt->sa);
+ 		if (sta) {
+ 			u64 prev_rates;
+@@ -2643,9 +2642,9 @@ static void ieee80211_rx_bss_info(struct
+ 			ieee80211_ibss_add_sta(sdata, NULL, mgmt->bssid,
+ 					       mgmt->sa, supp_rates);
+ 		}
+-	}
+ 
+-	rcu_read_unlock();
++		rcu_read_unlock();
++	}
+ 
+ 	if (elems->ds_params && elems->ds_params_len == 1)
+ 		freq = ieee80211_channel_to_frequency(elems->ds_params[0]);
 
-The desktop use case needs RFKILL support, because that will be used for
-switching off the radio. Just think about the flight mode case. So the
-only case where disabling RFKILL support makes sense would be an
-embedded system with specific constraints. However even in the embedded
-case, I don't see that usefulness.
-
-Regards
-
-Marcel
-
+-- 
 
