@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:40781 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751345AbYI2I6t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 04:58:49 -0400
-Message-ID: <1504.194.45.26.221.1222678723.squirrel@webmail.madwifi.org> (sfid-20080929_105852_636702_81450B72)
-In-Reply-To: <200809282216.46416.pete@petezilla.co.uk>
-References: <200809281734.01027.pete@petezilla.co.uk>
-    <40f31dec0809281018l6a2fdacwf03ddf0f2876c1a2@mail.gmail.com>
-    <200809282216.46416.pete@petezilla.co.uk>
-Date: Mon, 29 Sep 2008 10:58:43 +0200 (CEST)
-Subject: Re: SMC wireless card, unknown Atheros/Accton chipset?
-From: "Michael Renzmann" <mrenzmann@madwifi.org>
-To: "Peter Chant" <pete@petezilla.co.uk>
-Cc: "Nick Kossifidis" <mickflemm@gmail.com>,
-	linux-wireless@vger.kernel.org
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50446 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753929AbYIHOaa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Sep 2008 10:30:30 -0400
+Date: Mon, 8 Sep 2008 10:21:17 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: wireless-testing rebased again?
+Message-ID: <20080908142117.GA24557@tuxdriver.com> (sfid-20080908_163044_248743_28CC3FB8)
+References: <1220858698.28282.324.camel@debian.sh.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1220858698.28282.324.camel@debian.sh.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
+On Mon, Sep 08, 2008 at 03:24:58PM +0800, Zhu Yi wrote:
 
-Peter Chant wrote:
-> I'm a bit of a wireless newbie.  Do you mind me asking whether it is
-> likely to support being an access point?  I noticed that in general
-> cards don't work as access points, is it a chipset limitation or is
-> it just a whole load of work for something that is not much in demand?
+> I find the wireless-testing GIT has been rebased twice in less than one
+> month. Does it mean you give up making it a long lived merge-able tree?
+> This may affect to the downstream wireless drivers code management. At
+> least for iwlwifi, we'd expect to merge with wireless-testing everytime.
 
-It's currently a limitation of mac80211. Changing that is work in progress
-for mac80211, and there is an experimental patch available for ath5k that
-enable the driver part of AP support. The patch was posted here just a few
-days ago [1].
+There must be some mistake, it has not been rebased at all -- at
+least not as far as git is concerned.  I have done my now customary
+"revert everything, pull from Linus re-apply" thing that I call a
+virtual rebase, but the history has remained continuous.
 
-Bye, Mike
+The non-master branches do get rebased of course.  Perhaps you saw
+that and thought that master had been rebased as well?
 
-[1] http://thread.gmane.org/gmane.linux.drivers.ath5k.devel/1240
-
+John
+-- 
+John W. Linville
+linville@tuxdriver.com
