@@ -1,97 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:29041 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752970AbYISS1w (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54689 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751975AbYIHJIN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 14:27:52 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so520454fkq.5
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 11:27:49 -0700 (PDT)
-Date: Fri, 19 Sep 2008 14:27:40 -0400
-From: Celejar <celejar@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
-Subject: Re: Can't connect to AP with hidden essid with 2.6.27-rc6
-Message-Id: <20080919142740.60e2c0e8.celejar@gmail.com> (sfid-20080919_202755_966541_49674DAD)
-In-Reply-To: <43e72e890809191105p26841666l50a4a139a7177590@mail.gmail.com>
-References: <20080916220904.75283811.celejar@gmail.com>
-	<48D06B9E.70307@lwfinger.net>
-	<20080918004509.23a4bdc9.celejar@gmail.com>
-	<48D1E42C.70904@lwfinger.net>
-	<20080918015202.8c5f6381.celejar@gmail.com>
-	<48D24911.80101@lwfinger.net>
-	<20080918160957.94ea063d.celejar@gmail.com>
-	<48D2D728.6070105@lwfinger.net>
-	<20080919001050.d9ed273a.celejar@gmail.com>
-	<48D3CFBC.6070504@lwfinger.net>
-	<43e72e890809191105p26841666l50a4a139a7177590@mail.gmail.com>
+	Mon, 8 Sep 2008 05:08:13 -0400
+Message-Id: <20080908090635.149921000@sipsolutions.net> (sfid-20080908_110816_332644_D0E18CDC)
+References: <20080908090507.641740000@sipsolutions.net>
+Date: Mon, 08 Sep 2008 11:05:10 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] mac80211: BSS info: check channel first
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 19 Sep 2008 11:05:35 -0700
-"Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
+When we receive information about a BSS we check at some point
+whether or not we think we're allowed to use the channel it is
+on, but we do that fairly late. I don't think we should do it
+that late, so do it earlier to avoid doing IBSS/mesh stuff on
+that channel and then getting confused because it's disabled.
 
-> On Fri, Sep 19, 2008 at 9:13 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> 
-> > I do not think a bisection is necessary. Your successful test of the
-> > old regulatory code suggests to me that there is some kind of problem
-> > with the CRDA database.
-> 
-> BTW the "old regulatory code" is actually not "old regulatory code"
-> but instead static regulatory definitions slapped in the kernel just
-> as they were before but under the new regulatory infrastructure guise.
-> 
-> > Luis - to fill you in, he can connect to an AP with a hidden essid
-> > using the old regulatory code, but not using CRDA. There seems to be
-> > some critical difference between them.
-> 
-> Thanks for bringing this up Larry.
-> 
-> If by old regulatory code you mean with CONFIG_WIRELESS_OLD_REGULATORY
-> then I would narrow the search down to testing as follows:
-> 
-> --- Without crda:
-> 
-> mv /sbin/crda /sbin/crda-foo
-> sudo rmmod your_driver mac80211 cfg80211
-> sudo modprobe your_driver
-> 
-> # Check channels using iw
-> 
-> --- With crda:
-> mv /sbin/crda-foo /sbin/crda
-> sudo rmmod your_driver mac80211 cfg80211
-> sudo modprobe your_driver
-> 
-> # check channels using iw
-> ---
-> 
-> By default when CONFIG_WIRELESS_OLD_REGULATORY is set the built-in
-> "US" static regulatory domain is used. If crda is present though a new
-> regulatory domain will be updated onto the kernel, so we'll get the
-> new regulatory domain built by crda from the original db.txt. Without
-> crda present the static regulatory domain shall be used.
-> 
-> What frequency is the AP on?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/mlme.c |   22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
-I (the user) am currently connecting successfully with CRDA to a hidden
-essid AP.  I previously had claimed that it was still not working, even
-though the iw channel output looked good, but it currently seems to be
-okay.  I may have previously done something wrong, such as not
-rebuilding CRDA for the current kernel, although in that case I'm not
-sure why the iw output would have been correct.  In any event, at this
-point it seems that it may have been some mistake on my part.  Thanks
-for the help, sorry for the noise, and I'll report back if I see any
-more trouble.
+--- everything.orig/net/mac80211/mlme.c	2008-09-08 10:21:17.000000000 +0200
++++ everything/net/mac80211/mlme.c	2008-09-08 10:21:25.000000000 +0200
+@@ -2603,7 +2603,15 @@ static void ieee80211_rx_bss_info(struct
+ 	DECLARE_MAC_BUF(mac);
+ 	DECLARE_MAC_BUF(mac2);
+ 
+-	beacon_timestamp = le64_to_cpu(mgmt->u.beacon.timestamp);
++	if (elems->ds_params && elems->ds_params_len == 1)
++		freq = ieee80211_channel_to_frequency(elems->ds_params[0]);
++	else
++		freq = rx_status->freq;
++
++	channel = ieee80211_get_channel(local->hw.wiphy, freq);
++
++	if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
++		return;
+ 
+ 	if (ieee80211_vif_is_mesh(&sdata->vif) && elems->mesh_id &&
+ 	    elems->mesh_config && mesh_matches_local(elems, sdata)) {
+@@ -2646,16 +2654,6 @@ static void ieee80211_rx_bss_info(struct
+ 		rcu_read_unlock();
+ 	}
+ 
+-	if (elems->ds_params && elems->ds_params_len == 1)
+-		freq = ieee80211_channel_to_frequency(elems->ds_params[0]);
+-	else
+-		freq = rx_status->freq;
+-
+-	channel = ieee80211_get_channel(local->hw.wiphy, freq);
+-
+-	if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
+-		return;
+-
+ #ifdef CONFIG_MAC80211_MESH
+ 	if (elems->mesh_config)
+ 		bss = ieee80211_rx_mesh_bss_get(local, elems->mesh_id,
+@@ -2724,6 +2722,8 @@ static void ieee80211_rx_bss_info(struct
+ 
+ 	bss->band = band;
+ 
++	beacon_timestamp = le64_to_cpu(mgmt->u.beacon.timestamp);
++
+ 	bss->timestamp = beacon_timestamp;
+ 	bss->last_update = jiffies;
+ 	bss->signal = rx_status->signal;
 
->   Luis
-
-Celejar
---
-mailmin.sourceforge.net - remote access via secure (OpenPGP) email
-ssuds.sourceforge.net - A Simple Sudoku Solver and Generator
+-- 
 
