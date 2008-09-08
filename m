@@ -1,106 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.227]:36401 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751628AbYIAQHL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2008 12:07:11 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so1856409rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Sep 2008 09:07:10 -0700 (PDT)
-Date: Mon, 1 Sep 2008 19:07:01 +0300
-From: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: LKML <linux-kernel@vger.kernel.org>, yi.zhu@intel.com,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net,
-	Jan-Espen Pettersen <sigsegv@radiotube.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: new: regression iwl3945/mac80211 endless after suspend
-	associate/deassociate loop
-Message-ID: <20080901160658.GA11063@google.com> (sfid-20080901_180718_999161_B816BE77)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:38969 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751447AbYIHNb3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Sep 2008 09:31:29 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net, yi.zhu@intel.com
+Cc: linux-wireless@vger.kernel.org,
+	Ester Kummer <ester.kummer@intel.com>
+Subject: [PATCH 1/1] mac80211: scan on IBSS mode like on STA mode
+Date: Mon,  8 Sep 2008 16:31:26 +0300
+Message-Id: <1220880686-5620-1-git-send-email-tomas.winkler@intel.com> (sfid-20080908_153133_681427_F36FAEAB)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Starting with 2.6.27-rc5, my T60p sometimes fails to associate
-with an access point after suspend to ram/resume.
+From: Ester Kummer <ester.kummer@intel.com>
 
-This does not seem to ever happen on 2.6.27-rc4.
+This patch handle scanning on IBSS mode like on STA mode.
+When queuing the scan work we don't refer to the return value of
+ieee80211_sta_start_scan so if we are in the last scan period, we will
+return 0 to ieee80211_ioctl_siwscan and not -EAGAIN, and then iwlist will
+call ieee80211_ioctl_giwscan to get the scan results and will not fail.
 
-When this happens, I observe the following messages in dmesg:
-(AP mac masked out with XX):
+Signed-off-by: Ester Kummer <ester.kummer@intel.com>
+Acked-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ net/mac80211/mlme.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-
-[16433.458084] iwl3945 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-[16433.502490] PM: Adding info for No Bus:iwl-phy4:radio
-[16433.502666] Registered led device: iwl-phy4:radio
-[16433.502764] PM: Adding info for No Bus:iwl-phy4:assoc
-[16433.502822] Registered led device: iwl-phy4:assoc
-[16433.502870] PM: Adding info for No Bus:iwl-phy4:RX
-[16433.503006] Registered led device: iwl-phy4:RX
-[16433.503055] PM: Adding info for No Bus:iwl-phy4:TX
-[16433.503111] Registered led device: iwl-phy4:TX
-[16433.505268] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
-[16433.522344] ADDRCONF(NETDEV_UP): eth1: link is not ready
-[16433.704125] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
-[16433.705986] eth1: authenticated
-[16433.705997] eth1: associate with AP XX:XX:XX:XX:XX:XX
-[16433.708406] eth1: RX AssocResp from XX:XX:XX:XX:XX:XX (capab=0x411 status=0 aid=1)
-[16433.708412] eth1: associated
-[16433.709659] ADDRCONF(NETDEV_CHANGE): eth1: link becomes ready
-[16443.712280] eth1: disassociating by local choice (reason=3)
-[16443.712902] eth1: disassociating by local choice (reason=3)
-[16444.692059] eth1: no IPv6 routers present
-[16445.997384] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
-[16445.999304] eth1: authenticated
-[16445.999312] eth1: associate with AP XX:XX:XX:XX:XX:XX
-[16446.001784] eth1: RX ReassocResp from XX:XX:XX:XX:XX:XX (capab=0x411 status=0 aid=1)
-[16446.001790] eth1: associated
-[16446.008222] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
-[16446.009539] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
-[16446.012433] eth1: authenticated
-[16446.012440] eth1: associate with AP XX:XX:XX:XX:XX:XX
-[16446.015149] eth1: RX ReassocResp from XX:XX:XX:XX:XX:XX (capab=0x411 status=0 aid=1)
-[16446.015155] eth1: associated
-[16456.017223] eth1: disassociating by local choice (reason=3)
-[16456.019751] eth1: disassociating by local choice (reason=3)
-[16458.298346] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
-[16458.300319] eth1: authenticated
-[16458.300339] eth1: associate with AP XX:XX:XX:XX:XX:XX
-[16458.305557] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
-[16458.314765] eth1: authenticated
-[16458.314781] eth1: associate with AP XX:XX:XX:XX:XX:XX
-[16458.318666] eth1: RX ReassocResp from XX:XX:XX:XX:XX:XX (capab=0x411 status=0 aid=1)
-[16458.318673] eth1: associated
-[16468.321210] eth1: disassociating by local choice (reason=3)
-[16470.604081] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
-[16470.606122] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
-[16470.608330] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
-[16470.608367] eth1: authenticated
-[16470.608374] eth1: associate with AP XX:XX:XX:XX:XX:XX
-[16470.614629] eth1: RX ReassocResp from XX:XX:XX:XX:XX:XX (capab=0x411 status=0 aid=1)
-[16470.614648] eth1: associated
-[16480.617268] eth1: disassociating by local choice (reason=3)
-[16480.619939] eth1: disassociating by local choice (reason=3)
-[16482.896840] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
-[16482.899593] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
-[16482.899626] eth1: authenticated
-[16482.899633] eth1: associate with AP XX:XX:XX:XX:XX:XX
-[16482.906006] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
-[16482.906048] eth1: authenticated
-[16482.906055] eth1: associate with AP XX:XX:XX:XX:XX:XX
-[16482.907625] eth1: authenticate with AP XX:XX:XX:XX:XX:XX
-[16482.909446] eth1: authenticated
-[16482.909453] eth1: associate with AP XX:XX:XX:XX:XX:XX
-[16482.918553] eth1: RX ReassocResp from XX:XX:XX:XX:XX:XX (capab=0x411 status=0 aid=1)
-[16482.918564] eth1: associated
-[16492.920224] eth1: disassociating by local choice (reason=3)
-[16492.920986] eth1: disassociating by local choice (reason=3)
-
-
-Reverting 8ab65b03b7893da4a49009e7e356e36e27b0c407 seems to make
-the card associate properly after suspend, for me.
-
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 2564553..72d5fe2 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4090,7 +4090,8 @@ int ieee80211_sta_req_scan(struct ieee80211_sub_if_data *sdata, u8 *ssid, size_t
+ 	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+ 	struct ieee80211_local *local = sdata->local;
+ 
+-	if (sdata->vif.type != IEEE80211_IF_TYPE_STA)
++	if (sdata->vif.type != IEEE80211_IF_TYPE_STA ||
++	    sdata->vif.type != IEEE80211_IF_TYPE_IBSS)
+ 		return ieee80211_sta_start_scan(sdata, ssid, ssid_len);
+ 
+ 	if (local->sta_sw_scanning || local->sta_hw_scanning) {
 -- 
-MST
+1.5.4.1
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
