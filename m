@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:17995 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751724AbYIIJlO (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:61251 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751628AbYIHS4w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2008 05:41:14 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so1086314yxm.1
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Sep 2008 02:41:13 -0700 (PDT)
-Message-ID: <1ba2fa240809090241g2604e3ddhfd39359fd8eb0f8b@mail.gmail.com> (sfid-20080909_114119_470019_5165195A)
-Date: Tue, 9 Sep 2008 12:41:12 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: HT action frame code
-Cc: "Jouni Malinen" <j@w1.fi>,
-	"Ron Rindjunsky" <rindjon@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1220950358.31304.112.camel@johannes.berg>
+	Mon, 8 Sep 2008 14:56:52 -0400
+Received: by gxk9 with SMTP id 9so8623496gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2008 11:56:51 -0700 (PDT)
+Message-ID: <43e72e890809081156y5fa034e0vb1b5b6ce35698391@mail.gmail.com> (sfid-20080908_205657_141140_44502D79)
+Date: Mon, 8 Sep 2008 11:56:51 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Holger Schurig" <hs4233@mail.mn-solutions.de>
+Subject: Re: [PATCH 1/2 v4] cfg80211: Add new wireless regulatory infrastructure
+Cc: linux-wireless@vger.kernel.org,
+	"Johannes Berg" <johannes@sipsolutions.net>, linville@tuxdriver.com
+In-Reply-To: <200809080844.59098.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1220883730.31304.60.camel@johannes.berg> <48C5868B.8060103@w1.fi>
-	 <1220942004.31304.101.camel@johannes.berg>
-	 <1ba2fa240809090114u67086f2duc5cc9addd384e30d@mail.gmail.com>
-	 <1220948427.31304.107.camel@johannes.berg>
-	 <1ba2fa240809090146p612083aclf3a2a924a81e75e9@mail.gmail.com>
-	 <1220950358.31304.112.camel@johannes.berg>
+Content-Type: text/plain; charset=UTF-8
+References: <1220636669-8153-1-git-send-email-lrodriguez@atheros.com>
+	 <1220640389.11109.15.camel@johannes.berg>
+	 <43e72e890809051211r3db3ca12m671c9ed9615b9e1b@mail.gmail.com>
+	 <200809080844.59098.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 9, 2008 at 11:52 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2008-09-09 at 11:46 +0300, Tomas Winkler wrote:
->
->> Meaning that other management frames are forward to user space while
->> BA action frames
->> are treated inside mac80211.
->
-> Can you point out where? I don't see it.
-It's should be visible in AP code Yi has posted, unfortunately don't
-have it open right now. Anyhow since then the rx flow has changed a
-lot as you know :) so it has to be reinvented.
-
->
->
->> > Also, I'm not talking about the AP triggering the aggregation session,
->> > this is entirely done with the rate scaling right now, but about an
->> > associated STA wanting to start an aggregation session. Aren't
->> > aggregation sessions always triggered by whoever wants to send? So if a
->> > STA notices it has lots of upload going on it could want to trigger a BA
->> > session, which is something we don't currently support afaict.
+On Sun, Sep 7, 2008 at 11:44 PM, Holger Schurig
+<hs4233@mail.mn-solutions.de> wrote:
+> On Friday 05 September 2008 21:11:49 Luis R. Rodriguez wrote:
+>> >> +struct ieee80211_freq_range {
+>> >> +     u32 start_freq;
+>> >> +     u32 end_freq;
+>> >> +     u32 max_bandwidth;
+>> >
+>> > u32 seems excessive for the bandwidth, no?
 >>
->> In iwl-agn-rs.c There is not difference if the peer is STA or AP. So
->> we support this already.
+>> I think its fine, remember this is in KHz.
 >
-> Not sure what this has to do with the Intel RS algorithm?
+> max_bandwitth_khz ???
 
-Just the trigger for aggregation is implemented there. Otherwise
-nothing special.
+Seems reasonable here.
 
-Tomas
+>> >>       u16 center_freq;
+>> >> +     u8 max_bandwidth;
+>> >
+>> > and here you're using u8 anyway :)
+>>
+>> and this is in MHz
+>
+> max_bandwidth_mhz ???
+
+I'm in favor but then center_freq_mhz should also be used, but lets
+not go there and simply just add _khz for the freq_range.
+
+  Luis
