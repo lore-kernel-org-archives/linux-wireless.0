@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f16.google.com ([209.85.217.16]:59852 "EHLO
-	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899AbYIVTdq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 15:33:46 -0400
-Received: by gxk9 with SMTP id 9so3513338gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Sep 2008 12:33:45 -0700 (PDT)
-Message-ID: <43e72e890809221233l4dc446e9hdf71fc94270020dc@mail.gmail.com> (sfid-20080922_213349_977364_DF7C63D6)
-Date: Mon, 22 Sep 2008 12:33:44 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Tomas Winkler" <tomas.winkler@intel.com>
-Subject: Re: Progress on aggregation
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20080922174103.GF6048@tesla>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20080922174103.GF6048@tesla>
+Received: from c60.cesmail.net ([216.154.195.49]:8660 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751925AbYIHMsd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Sep 2008 08:48:33 -0400
+Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere fw
+From: Pavel Roskin <proski@gnu.org>
+To: jt@hpl.hp.com
+Cc: Dan Williams <dcbw@redhat.com>, kilroyd@googlemail.com,
+	linux-wireless@vger.kernel.org,
+	orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@gmail.com>
+In-Reply-To: <20080902230621.GA28885@bougret.hpl.hp.com>
+References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com>
+	 <1217672073-7094-2-git-send-email-kilroyd@gmail.com>
+	 <1217825304.10989.20.camel@dv>
+	 <1217864060.3139.10.camel@localhost.localdomain>
+	 <20080805162238.GA6294@bougret.hpl.hp.com>
+	 <20080902230621.GA28885@bougret.hpl.hp.com>
+Content-Type: text/plain
+Date: Mon, 08 Sep 2008 08:48:30 -0400
+Message-Id: <1220878110.2369.3.camel@dv> (sfid-20080908_144838_599219_67C1E88C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 22, 2008 at 10:41 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> Just a quick note on the progress of aggregation. It works but we still
-> need to hanld the rtnl_lock() in a sane way. Johannes we proposing we
-> use a workqueue for this.
->
-> * iwl4965 has been tested to work
-> * ath9k *does* xmit aggregate frames but throughput is low
->
-> Since ath9k still needs some work we are looking into it.
-> Tomas, have you had a chance to consider the workqueue usage
-> for the rtnl_lock()? I figure to leave that to you as we
-> are still looking into the throughput issues with aggreation with
-> ath9k.
+On Tue, 2008-09-02 at 16:06 -0700, Jean Tourrilhes wrote:
 
-Also, we currently handle aggregation buffering internally in our
-driver so the whole amdpu_queue stuff is not required for us as we
-don't have internal aggregation schedulers in hardware. For now we'll
-use it though as we just want to get it working and for 2.6.27 we have
-not alternative. For us, what will the ampdu_queues represent then? We
-don't exactly have a limit on this except for the standard limitations
-of 16 TIDs per station so what do you recommend to set this to?
+> 	By the way, the breakage of iwlist scan in Wireless Tools 30
+> on 64 bits should be fixed in 30.pre7.
 
-  Luis
+No, it's still not fixed on x86_64.  scanflags in print_scanning_info()
+in iwlist.c is 2, but srq->flags is 0 in orinoco_ioctl_setscan() in
+orinoco.c.
+
+On i386,  srq->flags is 2 as expected and the scan results are correctly
+influenced by the ESSID.
+
+-- 
+Regards,
+Pavel Roskin
