@@ -1,82 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.233]:60932 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752364AbYIUBsJ (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:39931 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752332AbYIHFWA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Sep 2008 21:48:09 -0400
-Received: by qb-out-0506.google.com with SMTP id f11so770230qba.17
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Sep 2008 18:48:08 -0700 (PDT)
-Message-ID: <f488382f0809201848w1e59cc19i8235c7c74c44fc10@mail.gmail.com> (sfid-20080921_034846_544861_D10B8048)
-Date: Sat, 20 Sep 2008 18:48:05 -0700
-From: "Steven Noonan" <steven@uplinklabs.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Senthilkumar Balasubramanian"
-	<Senthilkumar.Balasubramanian@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Ingo Molnar" <mingo@elte.hu>
-In-Reply-To: <f488382f0809201448l21434f11n12311e308f9952d7@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com>
-	 <43e72e890809191813n95579f5h83e92b0ba1f95a44@mail.gmail.com>
-	 <f488382f0809192029w601e0e72x5c3affc3dbe65118@mail.gmail.com>
-	 <f488382f0809200821m6fe355feu2d9fb99ac3c7f712@mail.gmail.com>
-	 <43e72e890809201357y1413a151r85aad7cc16440cf4@mail.gmail.com>
-	 <1221944338.3023.8.camel@johannes.berg>
-	 <43e72e890809201403w2c4511fdv2fe26bbcf49ccdd7@mail.gmail.com>
-	 <f488382f0809201422rdabeff4g435bf3d4a7e9fa3@mail.gmail.com>
-	 <43e72e890809201426x61c94bfej2dcda1c178be81b@mail.gmail.com>
-	 <f488382f0809201448l21434f11n12311e308f9952d7@mail.gmail.com>
+	Mon, 8 Sep 2008 01:22:00 -0400
+Subject: Re: [PATCH] Ath9k: Add RF kill support.
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+In-Reply-To: <20080908045926.GA28149@vasanth-lnx.users.atheros.com>
+References: <20080906123842.GA27504@vasanth-lnx.users.atheros.com>
+	 <1220721347.6714.114.camel@californication>
+	 <20080908045926.GA28149@vasanth-lnx.users.atheros.com>
+Content-Type: text/plain
+Date: Mon, 08 Sep 2008 07:22:20 +0200
+Message-Id: <1220851340.6714.132.camel@californication> (sfid-20080908_072205_891833_FD49730F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 20, 2008 at 2:48 PM, Steven Noonan <steven@uplinklabs.net> wrote:
-> On Sat, Sep 20, 2008 at 2:26 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> On Sat, Sep 20, 2008 at 2:22 PM, Steven Noonan <steven@uplinklabs.net> wrote:
->>
->>> Heh. I don't have an Xbox 360 or PS3 (sad, I know). Do have several
->>> 2.4GHz phones. ;)
->>
->> Microwaves are the best to make the signal wet poop BTW, if you have
->> that option available. Not sure if we can trigger the device that way
->> but I'm just brainstorming here.
->>
->
-> Well, I've got the thing set to ATH_DBG_ANY (I want this damn bug
-> found!), which will certainly be *interesting*. In 5 minutes, the log
-> has jumped 9 megabytes.
->
-> I've also got sadc monitoring IRQs so I know for certain when the
-> interrupt storm starts.
->
-> I'll let you know how this goes.
+Hi Vasanthakumar,
 
-OK, here's the time index at which it b0rked:
+> > > CONFIG_ATH9K_RFKILL needs to be set
+> > > to enable this support.
+> > 
+> > why do we have to introduce yet another config option for this? What is
+> > the advantage of disabling RFKILL support? I really don't see it and all
+> > these extra config options are rather confusing than useful.
+> Normally home users may not hit a situation where they have to
+> disable the radio, so they can compile out the rf kill support
+> and essentially disable the periodic run of the work queue 
+> (rfkill_poll ,runs for every 2 secs).If this does not make 
+> any sense, I will remove this config option.
 
-18:28:38          sum   1106.00
-18:28:39          sum   1037.62
-18:28:40          sum   1069.00
-18:28:41          sum   1167.00
-18:28:42          sum   1155.00
-18:28:43          sum   1339.00
-18:28:44          sum  18355.00
-18:28:45          sum  17845.45
-18:28:46          sum  15285.00
-18:28:47          sum  17511.00
-18:28:48          sum  17568.69
-18:28:49          sum  17704.04
-18:28:50          sum  18566.67
-18:28:51          sum  18913.13
+I don't know about the actual implementation, but if you use a polling
+mechanism then it is wrong. Can't you make this interrupt driven.
 
-And the entire log of the minute 18:28 is here:
-http://www.uplinklabs.net/~tycho/linux/18.28.00-59.log.gz
+The desktop use case needs RFKILL support, because that will be used for
+switching off the radio. Just think about the flight mode case. So the
+only case where disabling RFKILL support makes sense would be an
+embedded system with specific constraints. However even in the embedded
+case, I don't see that usefulness.
 
-It looks pretty crazy.
+Regards
 
-- Steven
+Marcel
+
+
