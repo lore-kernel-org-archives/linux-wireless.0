@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:4307 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751734AbYIZHGQ (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:6448 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752860AbYIHGpZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 03:06:16 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so142019yxm.1
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Sep 2008 00:06:15 -0700 (PDT)
-Message-ID: <43e72e890809260006kfc833fdsccbe3f22b3ad4c56@mail.gmail.com> (sfid-20080926_090620_873947_CBB0BF41)
-Date: Fri, 26 Sep 2008 00:06:15 -0700
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: Re: Kernel panic in wireless-testing-2008-09-24 with rtl8187
-Cc: "Tomas Winkler" <tomasw@gmail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Hauke Mehrtens" <hauke@hauke-m.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <48DC51AF.6000900@lwfinger.net>
+	Mon, 8 Sep 2008 02:45:25 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2 v4] cfg80211: Add new wireless regulatory infrastructure
+Date: Mon, 8 Sep 2008 08:44:58 +0200
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>, linville@tuxdriver.com
+References: <1220636669-8153-1-git-send-email-lrodriguez@atheros.com> <1220640389.11109.15.camel@johannes.berg> <43e72e890809051211r3db3ca12m671c9ed9615b9e1b@mail.gmail.com>
+In-Reply-To: <43e72e890809051211r3db3ca12m671c9ed9615b9e1b@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <48DBE5E8.2000507@hauke-m.de> <48DC0008.2070802@lwfinger.net>
-	 <1ba2fa240809251436j500e1435ldf165b43451aa628@mail.gmail.com>
-	 <48DC51AF.6000900@lwfinger.net>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200809080844.59098.hs4233@mail.mn-solutions.de> (sfid-20080908_084529_568532_5C126507)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 25, 2008 at 8:06 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Tomas Winkler wrote:
->> wild guess try to revert:
->> 'mac80211: make master iface not wireless'
+On Friday 05 September 2008 21:11:49 Luis R. Rodriguez wrote:
+> >> +struct ieee80211_freq_range {
+> >> +     u32 start_freq;
+> >> +     u32 end_freq;
+> >> +     u32 max_bandwidth;
+> >
+> > u32 seems excessive for the bandwidth, no?
 >
-> You win the prize. Bisection shows that
-> 84b0ba8ed0423a3c56a28e701b735daae3e15766 is first bad commit
->
-> commit 84b0ba8ed0423a3c56a28e701b735daae3e15766
-> Author: Johannes Berg <johannes@sipsolutions.net>
-> Date:   Tue Sep 16 14:18:59 2008 +0200
->
->    mac80211: make master iface not wireless
->
->
-> The actual crash is in the following routine from include/net/wireless.h:
->
-> /**
->  * wiphy_priv - return priv from wiphy
->  */
-> static inline void *wiphy_priv(struct wiphy *wiphy)
-> {
->        BUG_ON(!wiphy);
->        return &wiphy->priv;
-> }
->
-> I'm still looking to see where it goes wrong.
+> I think its fine, remember this is in KHz.
 
-Actually wouldn't you get a stack trace here?
+max_bandwitth_khz ???
 
-  Luis
+
+> >>       u16 center_freq;
+> >> +     u8 max_bandwidth;
+> >
+> > and here you're using u8 anyway :)
+>
+> and this is in MHz
+
+max_bandwidth_mhz ???
