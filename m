@@ -1,39 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:53888 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754881AbYIHXch (ORCPT
+Received: from qb-out-0506.google.com ([72.14.204.224]:62434 "EHLO
+	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754473AbYIIXOD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Sep 2008 19:32:37 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so961590yxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Sep 2008 16:32:36 -0700 (PDT)
-Message-ID: <1ba2fa240809081632j6816f059s30cc3b4ea5dcc2ed@mail.gmail.com> (sfid-20080909_013257_427151_3BFFA28D)
-Date: Tue, 9 Sep 2008 02:32:35 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Matthew Garrett" <mjg@redhat.com>
-Subject: Re: [PATCH 4/4] mac80211: stop queues before carrier off
-Cc: "Dan Williams" <dcbw@redhat.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"John Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20080908222859.GA6153@srcf.ucam.org>
+	Tue, 9 Sep 2008 19:14:03 -0400
+Received: by qb-out-0506.google.com with SMTP id o24so880176qba.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Sep 2008 16:14:02 -0700 (PDT)
+Message-ID: <aa050c750809091614r612cc8a9q5e635153cce0d713@mail.gmail.com> (sfid-20080910_011408_804711_CB48AA1B)
+Date: Tue, 9 Sep 2008 16:14:01 -0700
+From: "Anna Neal" <anna@cozybit.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: [PATCH] libertas: Enable/disable automatic tx power control via SIOCSIWTXPOW.
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <1220996373.25237.18.camel@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <20080908153336.891710000@sipsolutions.net>
-	 <20080908153510.167807000@sipsolutions.net>
-	 <1ba2fa240809081440o2c88eaa7o1e120fe75c018b9e@mail.gmail.com>
-	 <1220910240.9427.10.camel@localhost.localdomain>
-	 <1ba2fa240809081508jd762ac6q9d8505879711d151@mail.gmail.com>
-	 <20080908222859.GA6153@srcf.ucam.org>
+References: <48c1c0c1.1b068e0a.343f.ffffcb0d@mx.google.com>
+	 <1220996373.25237.18.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 9, 2008 at 1:29 AM, Matthew Garrett <mjg@redhat.com> wrote:
-> On Tue, Sep 09, 2008 at 01:08:17AM +0300, Tomas Winkler wrote:
->> It has to be other way around.
->
-> [Citation needed]\
+Hello,
 
-This is how any other connection manager I know works. Maybe I'm
-trapped in old concepts but I don't find current NM paradigm
-friendly.
-Tomas
+Thanks for the great feedback.
+
+On Tue, Sep 9, 2008 at 2:39 PM, Dan Williams <dcbw@redhat.com> wrote:
+> On Fri, 2008-09-05 at 15:56 -0700, Anna Neal wrote:
+>> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+>> index 802547e..6cc4858 100644
+>> --- a/drivers/net/wireless/libertas/cmd.c
+>> +++ b/drivers/net/wireless/libertas/cmd.c
+>> +int lbs_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
+>> +             int8_t p2, int usesnr)
+>
+> Can we rename this to lbs_set_tpc_cfg()?  It's a setter, and there could
+> be a getter later, best to be clear about this.
+
+Definitely.
+
+>> +int lbs_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
+>> +             int8_t p1, int8_t p2)
+>
+> Same here, can we change this to lbs_set_pa_cfg() or
+> lbs_set_power_adapt_cfg() ?
+
+Makes sense.
+
+>> +{
+>> +     struct cmd_ds_802_11_pa_cfg cmd;
+>> +     int ret;
+>> +
+>> +     memset(&cmd, 0, sizeof(cmd));
+>> +     cmd.hdr.size = cpu_to_le16(sizeof(cmd));
+>> +     cmd.action = cpu_to_le16(CMD_ACT_SET);
+>> +     cmd.enable = !!enable;
+>> +     cmd.P0 = p0;
+>> +     cmd.P1 = p1;
+>> +     cmd.P2 = p2;
+>
+> And this isn't compatible with the V9 and later firmware, which uses the
+> PowerAdapt_Group_t Marvell IE.  I'd suggest defining two different
+> commands, one for V8 and below which uses the format you have here, and
+> one for V9 and above which uses the new format.  I have no idea what the
+> fields in PA_Group_t are, but I'm sure you can find out since you're
+> from CozyBit :)
+
+We don't have V{9,10} hardware nor access to a final published spec.
+How about if we wrap our changes around version checks and leave
+things unchanged for other versions?
+
+>> diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
+>> index da618fc..a916bb9 100644
+>> --- a/drivers/net/wireless/libertas/host.h
+>> +++ b/drivers/net/wireless/libertas/host.h
+>> @@ -83,6 +83,7 @@
+>>  #define CMD_802_11_INACTIVITY_TIMEOUT                0x0067
+>>  #define CMD_802_11_SLEEP_PERIOD                      0x0068
+>>  #define CMD_802_11_TPC_CFG                   0x0072
+>> +#define CMD_802_11_PA_CFG                    0x0073
+>
+> Should also:
+>
+> #define CMD_802_11_POWER_ADAPT_CFG_EXT  0x0073   /* v9 firmware and above */
+>
+> and use that in the v9+ lbs_set_power_adapt_cfg_ext() function.
+
+Again, without hardware or the final spec implementation of this may
+need to wait on my end.
+
+>> +struct cmd_ds_802_11_pa_cfg {
+>> +     struct cmd_header hdr;
+>> +
+>> +     __le16 action;
+>> +     uint8_t enable;
+>> +     int8_t P0;
+>> +     int8_t P1;
+>> +     int8_t P2;
+>> +} __attribute__ ((packed));
+>> +
+>> +
+>
+> And for v9:
+>
+> struct pa_group {
+>        u16 level;
+>        u16 rate_map;
+>        u32 reserved;
+> }
+>
+> struct mrvl_ie_pa_group {
+>        mrvlietypes_header hdr;
+>        struct pa_group groups[5];
+> }
+>
+> struct cmd_ds_802_11_pa_cfg_ext {
+>        struct cmd_header hdr;
+>
+>        __le16 action;
+>        u16 enable;
+>        struct mrvl_ie_pa_group pa_groups;
+> }
+>
+> note that there isn't an existing GPL implementation of
+> POWER_ADAPT_CFG_EXT either at moblin or anywhere else, so I can't
+> suggest what to fill in for the rate_map and level of struct pa_group in
+> the implementation.  Ask Luis or Javier I guess since they probably have
+> access to that information.
+
+Javier just confirmed that we don't have access to this.
+
+>>  struct cmd_ds_802_11_led_ctrl {
+>>       __le16 action;
+>>       __le16 numled;
+>> diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
+>> index 426f1fe..b08bad8 100644
+>> --- a/drivers/net/wireless/libertas/wext.c
+>> +++ b/drivers/net/wireless/libertas/wext.c
+>> @@ -1820,7 +1820,17 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
+>>       }
+>>
+>>       if (vwrq->fixed == 0) {
+>> -             /* Auto power control */
+>> +             /* User requests automatic tx power control, however there are
+>> +              * many auto tx settings.  For now use firmware defaults until
+>> +              * we come up with a good way to expose these to the user. */
+>> +             ret = lbs_power_adapt_cfg(priv, 1, POW_ADAPT_DEFAULT_P0,
+>> +                             POW_ADAPT_DEFAULT_P1, POW_ADAPT_DEFAULT_P2);
+>
+> and do the firmware check right here and call lbs_set_power_adapt_cfg()
+> for V8 and lower, and lbs_set_power_adapt_cfg_ext() for v9 and higher
+> like so:
+>
+> if (priv->fwrelease >= 0x09000000) {
+>        ret = lbs_power_adapt_cfg_ext(...);
+> } else {
+>        ret = lbs_power_adapt_cfg(...);
+> }
+
+So, to summarize, what I can do is...
+
+> if (priv->fwrelease < 0x09000000) {
+>        ret = lbs_power_adapt_cfg(...);
+> }
+
+...would this be acceptable?  After all, it is still an improvement
+over what's currently in the driver.
+
+Thanks again!
+
+Anna
