@@ -1,77 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43253 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:57718 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754352AbYIRR3c (ORCPT
+	with ESMTP id S1753059AbYIIPqQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 13:29:32 -0400
-Subject: Re: [PATCH] iw: add kernel version checks for pending upstream
-	kernel features
+	Tue, 9 Sep 2008 11:46:16 -0400
+Subject: Re: [PATCH] ath9k: Add RF kill support
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1221758783.6782.29.camel@californication>
-References: <>  <1221748533-11000-1-git-send-email-linville@tuxdriver.com>
-	 <1221752489.9262.81.camel@johannes.berg>
-	 <1221758783.6782.29.camel@californication>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dbIUxST91flkfo4k+Boc"
-Date: Thu, 18 Sep 2008 19:28:54 +0200
-Message-Id: <1221758934.9262.89.camel@johannes.berg> (sfid-20080918_192935_606145_21164576)
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+In-Reply-To: <20080909153422.GA7651@vasanth-lnx.users.atheros.com> (sfid-20080909_173954_277503_9881BAF1)
+References: <20080909153422.GA7651@vasanth-lnx.users.atheros.com>
+	 (sfid-20080909_173954_277503_9881BAF1)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-isAae4iNyllMa/LN92m5"
+Date: Tue, 09 Sep 2008 17:46:10 +0200
+Message-Id: <1220975170.31304.184.camel@johannes.berg> (sfid-20080909_174619_979342_73BFE9C6)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-dbIUxST91flkfo4k+Boc
+--=-isAae4iNyllMa/LN92m5
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Hi Marcel,
 
-On Thu, 2008-09-18 at 19:26 +0200, Marcel Holtmann wrote:
+> +#ifdef CONFIG_RFKILL
+> +	u16 ah_rfsilent;
+> +	u32 ah_rfkill_gpio ;
 
-> if the numbers you are planning to use are stable, then please use the
-> above approach to just add the missing defines to it. Like adding a
-> compat.h file with
->=20
-> #ifndef NL80211_ATTR_SUPPORTED_IFTYPES
-> #define NL80211_ATTR_SUPPORTED_IFTYPES boo
-> #endif
+small typo, space too much.
 
-Well, at that point I can also just copy nl80211.h from wireless-testing
-whenever I think the numbers will remain stable, no? And that doesn't
-work as-is anyway since nl80211.h uses an enum to define the numbers,
-not #defines.
+> --- a/drivers/net/wireless/ath9k/core.h
+> +++ b/drivers/net/wireless/ath9k/core.h
+> @@ -40,6 +40,9 @@
+>  #include <asm/page.h>
+>  #include <net/mac80211.h>
+>  #include <linux/leds.h>
+> +#ifdef CONFIG_RFKILL
+> +#include <linux/rfkill.h>
+> +#endif
+> =20
+>  #include "ath9k.h"
+>  #include "rc.h"
+> @@ -823,6 +826,17 @@ struct ath_led {
+>  	bool registered;
+>  };
+> =20
+> +#ifdef CONFIG_RFKILL
+> +/* Rfkill */
+> +#define ATH_RFKILL_POLL_INTERVAL	2000 /* msecs */
+> +
+> +struct ath_rfkill {
+> +	struct rfkill *rfkill;
+> +	struct delayed_work rfkill_poll;
+> +	char rfkill_name[32];
+> +};
+> +#endif
+> +
 
-I guess it's the lesser of all the evils. I'm not too fond of copying in
-the header file, it creates more work and doesn't make all that much
-sense, but all the other proposals take even more work, and as long as
-we don't change the numbers after putting things into wireless-testing
-we should be fine.
+No need to protect any of this with an #ifdef.
+
+> +#ifdef CONFIG_RFKILL
+> +#define SC_OP_RFKILL_REGISTERED	BIT(11)
+> +#define SC_OP_RFKILL_SW_BLOCKED	BIT(12)
+> +#define SC_OP_RFKILL_HW_BLOCKED	BIT(13)
+> +#endif
+
+Nor that.
+=20
+> +static void ath9k_ht_conf(struct ath_softc *sc,
+> +			  struct ieee80211_bss_conf *bss_conf)
+> +{
+> +#define IEEE80211_HT_CAP_40MHZ_INTOLERANT BIT(14)
+> +	struct ath_ht_info *ht_info =3D &sc->sc_ht_info;
+
+All that doesn't seem to belong into this patch?
 
 johannes
 
---=-dbIUxST91flkfo4k+Boc
+--=-isAae4iNyllMa/LN92m5
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJI0o/TAAoJEKVg1VMiehFYvjMP/iudPA9qCpR2LjVcdcsM5y8X
-cIWcLfHWMv7srwXd3yBjaYpiWJAqIu5Bn1sIeoXg/Ivxe/vb0eFlz3qKy0+oRSrV
-+iNqDhyuGR9UDfSFrKQHcppBBufMxoNoxXMAthQAnzezBK0cXtK86jah/8TYdPP2
-CIwkTMs0+Z8ZtZ5SdWJPFNOZDdUWmNzaxrfXIIQ9RSOZdwt1limc79QxlC8lpiN3
-U52VZP2MBeDN61NeSmRYrExaxeQKf24X4h/c+SkCZ+3lfi4qsfylpj0ixpGxlAjN
-NChwkLlEya0DxB/P2LGMw4lxFqn7oAgWIBCSrgKuTh5z8GlBVPJZVGG0XTexiqs7
-qKriUjyp7kTRZQ0Okj1Gc+42kmNhSB/3lpalsxf3Rvi54D2GySbiG6kEqQeSisrE
-iqecAeLJWi282KJokqrwX1uzLGMYG4AsOuogiPXgZQSHAAziuUhK+yrLSk6G1wy6
-Riccms+A6cijwpvfyUH8LBYNRhFcSMEZ54A6DXSeOP8C0Zk71mS1Asl/1YbMqoEp
-WUJBJYzIxno6xYBUAyy5Ztv9IXDHPzgi8TueFUdflvJKdPzNflhRLnny8P+yjsuF
-t0oG/LmN3ssS2RCDrVm6QWC7JOT/Ra7fuEWacO7mVYI7WEw6teNiWhCGLLqcmFS6
-PtM1V3bZRrh3sMI5G3YW
-=nsMt
+iQIcBAABAgAGBQJIxpo+AAoJEKVg1VMiehFY3BAQAL8Wa/i1WOLjWN12heIpcdv7
+DQ8wuAebCSElx32BtlrakZBj9JapCaANxo2tXW6Xt+9kqcdRfSYDQeKTlS8dagUd
+Lr3Fgp4oNks1f/d9BuzHNffxmQcv0q7vzN3ki/cpeM8g+7mVNikNmxK1XzZbjOx9
+2eTtSf4zFZzm2ckMgZqkXXQdIMSi1ol/3kvCX4KOnu4gRiOVLg/DLEt+oBjb8PAA
+VZRuV/eAD82/vopZ1jx3CK2Vo5eSOreFIecSUeBW2gAXRC4oiyxZgqIimu8nWU53
+Nax+J9cn/bkrJkwPLwLvhQr++Io3bWDiR5l/Awd40b3uMLBwQ9EVVAzU+bl/i0t+
+gIj3jTFmpoAHUzodHSZwZHff32gpBiA6LeWzBhWBTFK7/iB8snoL3LtneCXMcYZG
+G+pyRVeBjeyYjpUggPDHKE1Cl2mY4RovxIjfVVYLv5t4eI2vZIjYzeTa5dx3IqGD
+6sO45Iuo14ynyXZ9fqwzKbSbeigWcucrb1zt7q2kj7gLXJMCkaJrcvB0jqErnWpX
+0/dSrjpu/auz8uShGOoHR+Amq17rFbnAH0Js5Q3rm5qx8qYYP1zDFY8uDclgxKpL
+pr0caxwELFnLr0yFRWvK3Oad4njc0zGgeg747C9GRWYJibSGiGx2Kjts6o14fUPQ
+Z+sh2R283VcfJmy+y7YK
+=Sc0z
 -----END PGP SIGNATURE-----
 
---=-dbIUxST91flkfo4k+Boc--
+--=-isAae4iNyllMa/LN92m5--
 
