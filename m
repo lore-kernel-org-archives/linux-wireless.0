@@ -1,73 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay.2ka.mipt.ru ([194.85.80.65]:40999 "EHLO 2ka.mipt.ru"
+Received: from mail.atheros.com ([12.36.123.2]:39555 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752192AbYIUUYh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Sep 2008 16:24:37 -0400
-Date: Mon, 22 Sep 2008 00:20:57 +0400
-From: Evgeniy Polyakov <johnpol@2ka.mipt.ru>
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ipw2100-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, jgarzik@pobox.com,
-	linville@tuxdriver.com, davem@davemloft.net
-Subject: Re: Mark IPW2100 as BROKEN: Fatal interrupt. Scheduling firmware restart.
-Message-ID: <20080921202057.GB25052@2ka.mipt.ru> (sfid-20080921_222445_596906_6FE86126)
-References: <20080921172316.GA6306@2ka.mipt.ru> <20080921110422.1d010b96@infradead.org> <20080921182835.GA11473@2ka.mipt.ru> <20080921113513.16677c4e@infradead.org> <20080921190050.GA20484@2ka.mipt.ru> <1222024444.3023.53.camel@johannes.berg> <20080921193809.GA8735@2ka.mipt.ru> <20080921124332.67ddc13a@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20080921124332.67ddc13a@infradead.org>
+	id S1753370AbYIIQ3d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Sep 2008 12:29:33 -0400
+Message-ID: <48C6A2B7.8030601@atheros.com> (sfid-20080909_182937_643844_07355C7B)
+Date: Tue, 9 Sep 2008 21:52:15 +0530
+From: vasanthakumar thiagarajan <vasanth.thiagarajan@atheros.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH] ath9k: Add RF kill support
+References: <20080909153422.GA7651@vasanth-lnx.users.atheros.com>	 (sfid-20080909_173954_277503_9881BAF1) <1220974942.31304.180.camel@johannes.berg>
+In-Reply-To: <1220974942.31304.180.camel@johannes.berg>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 21, 2008 at 12:43:32PM -0700, Arjan van de Ven (arjan@infradead.org) wrote:
-> > @@ -3174,6 +3176,10 @@ static void ipw2100_irq_tasklet(struct
-> > ipw2100_priv *priv) if (inta & IPW2100_INTA_FATAL_ERROR) {
-> >  		printk(KERN_WARNING DRV_NAME
-> >  		       ": Fatal interrupt. Scheduling firmware
-> > restart.\n");
-> > +		WARN_ON(1);
-> > +
-> > +		BUG_ON(ipw2100_max_fatal_ints-- <= 0);
-> 
-> BUG_ON in interrupt context is just extremely hostile, since it means
-> the box is dead.
+Johannes Berg wrote:
+> On Tue, 2008-09-09 at 21:04 +0530, Vasanthakumar Thiagarajan wrote:
+>   
+>> This support is compiled in if CONFIG_RFKILL
+>> option is set.
+>>     
 >
-> also I would suggest using WARN_ON_ONCE() 
+>   
+>> +++ b/drivers/net/wireless/ath9k/Kconfig
+>> @@ -4,6 +4,7 @@ config ATH9K
+>>  	select MAC80211_LEDS
+>>  	select LEDS_CLASS
+>>  	select NEW_LEDS
+>> +	select RFKILL
+>>     
+>
+> You really want to drop that then though.
+>
+> johannes
+>   
+Yeah, I missed this one. Thanks.
 
-Well, I actually wanted to have a bug there because of it, but now I
-think that annoying repeated warning is enough to bring attention to the
-problem by putting bug information into some magic special place called
-kerneloops collection.
-
-Consider for inclusing for the upcoming kernel to get wider
-notifications. Yes, it is not a bugfix, I know.
-
-diff --git a/drivers/net/wireless/ipw2100.c b/drivers/net/wireless/ipw2100.c
-index 19a401c..6599211 100644
---- a/drivers/net/wireless/ipw2100.c
-+++ b/drivers/net/wireless/ipw2100.c
-@@ -206,6 +206,9 @@ MODULE_PARM_DESC(disable, "manually disable the radio (default 0 [radio on])");
- 
- static u32 ipw2100_debug_level = IPW_DL_NONE;
- 
-+static int ipw2100_max_fatal_ints = 10;
-+module_param(ipw2100_max_fatal_ints, int, 0644);
-+
- #ifdef CONFIG_IPW2100_DEBUG
- #define IPW_DEBUG(level, message...) \
- do { \
-@@ -3174,6 +3177,9 @@ static void ipw2100_irq_tasklet(struct ipw2100_priv *priv)
- 	if (inta & IPW2100_INTA_FATAL_ERROR) {
- 		printk(KERN_WARNING DRV_NAME
- 		       ": Fatal interrupt. Scheduling firmware restart.\n");
-+
-+		WARN_ON(ipw2100_max_fatal_ints-- >= 0);
-+
- 		priv->inta_other++;
- 		write_register(dev, IPW_REG_INTA, IPW2100_INTA_FATAL_ERROR);
- 
-
-
--- 
-	Evgeniy Polyakov
+Vasanth
