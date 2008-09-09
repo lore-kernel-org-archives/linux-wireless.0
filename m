@@ -1,49 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.182]:44560 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752554AbYIQWGM (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51444 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751731AbYIII6a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 18:06:12 -0400
-Received: by py-out-1112.google.com with SMTP id p76so2564249pyb.10
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2008 15:06:11 -0700 (PDT)
-Message-ID: <69e28c910809171506o3ed21d2bucfbbc616d5472e6e@mail.gmail.com> (sfid-20080918_000615_624704_D81FC910)
-Date: Thu, 18 Sep 2008 00:06:10 +0200
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: iw packaging
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Davide Pesavento" <davidepesa@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890809171503i50bd86d5h5adef88f6214ef27@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1221596962.9262.12.camel@johannes.berg>
-	 <1221649638.9262.50.camel@johannes.berg>
-	 <48D0E5CE.8050401@le-vert.net>
-	 <1221650286.9262.57.camel@johannes.berg>
-	 <69e28c910809171319r30d763cse24744a198e41f92@mail.gmail.com>
-	 <1221683467.7412.6.camel@localhost>
-	 <2da21fe50809171446y56cd5b2ctc864650be6030621@mail.gmail.com>
-	 <1221688366.7412.13.camel@localhost>
-	 <69e28c910809171458q70763189lde2e2710c64fc70c@mail.gmail.com>
-	 <43e72e890809171503i50bd86d5h5adef88f6214ef27@mail.gmail.com>
+	Tue, 9 Sep 2008 04:58:30 -0400
+Subject: [PATCH 13/8] mac80211: consolidate deauth/disassoc
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080908154421.216772000@sipsolutions.net> (sfid-20080908_174606_739824_DD7A31F6)
+References: <20080908154421.216772000@sipsolutions.net>
+	 (sfid-20080908_174606_739824_DD7A31F6)
+Content-Type: text/plain
+Date: Tue, 09 Sep 2008 10:58:25 +0200
+Message-Id: <1220950705.31304.121.camel@johannes.berg> (sfid-20080909_105833_730947_E8877A11)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 18, 2008 at 12:03 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> People wanting to test bleeding edge and not compile their own kernel
-> simply can use compat-wireless crap and that has its own nl80211.h. We
-> can modify iw to let COMPAT_TREE be defined and if so look there
-> first. This is what CRDA does for example.
->
-> I don't see why packages should ship their own nl80211.h unless you
-> are replacing or providing a new cfg80211.ko.
->
->  Luis
->
+deauth and disassoc frames are completely identical so there's
+little point in having two functions to send them rather than
+one that gets a parameter. This same a bit of code size.
 
-We want distros to ship iw, and for that we must not require using
-extra files from a development repository.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/mlme.c |   47 +++++++++++------------------------------------
+ 1 file changed, 11 insertions(+), 36 deletions(-)
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--- everything.orig/net/mac80211/mlme.c	2008-09-09 09:47:27.000000000 +0200
++++ everything/net/mac80211/mlme.c	2008-09-09 09:50:07.000000000 +0200
+@@ -416,17 +416,18 @@ static void ieee80211_send_assoc(struct 
+ }
+ 
+ 
+-static void ieee80211_send_deauth(struct ieee80211_sub_if_data *sdata,
+-				  struct ieee80211_if_sta *ifsta, u16 reason)
++static void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
++					   u16 stype, u16 reason)
+ {
+ 	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_mgmt *mgmt;
+ 
+ 	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*mgmt));
+ 	if (!skb) {
+-		printk(KERN_DEBUG "%s: failed to allocate buffer for deauth "
+-		       "frame\n", sdata->dev->name);
++		printk(KERN_DEBUG "%s: failed to allocate buffer for "
++		       "deauth/disassoc frame\n", sdata->dev->name);
+ 		return;
+ 	}
+ 	skb_reserve(skb, local->hw.extra_tx_headroom);
+@@ -436,42 +437,14 @@ static void ieee80211_send_deauth(struct
+ 	memcpy(mgmt->da, ifsta->bssid, ETH_ALEN);
+ 	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
+ 	memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
+-	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+-					  IEEE80211_STYPE_DEAUTH);
++	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT | stype);
+ 	skb_put(skb, 2);
++	/* u.deauth.reason_code == u.disassoc.reason_code */
+ 	mgmt->u.deauth.reason_code = cpu_to_le16(reason);
+ 
+ 	ieee80211_sta_tx(sdata, skb, 0);
+ }
+ 
+-static void ieee80211_send_disassoc(struct ieee80211_sub_if_data *sdata,
+-				    struct ieee80211_if_sta *ifsta, u16 reason)
+-{
+-	struct ieee80211_local *local = sdata->local;
+-	struct sk_buff *skb;
+-	struct ieee80211_mgmt *mgmt;
+-
+-	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*mgmt));
+-	if (!skb) {
+-		printk(KERN_DEBUG "%s: failed to allocate buffer for disassoc "
+-		       "frame\n", sdata->dev->name);
+-		return;
+-	}
+-	skb_reserve(skb, local->hw.extra_tx_headroom);
+-
+-	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
+-	memset(mgmt, 0, 24);
+-	memcpy(mgmt->da, ifsta->bssid, ETH_ALEN);
+-	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
+-	memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
+-	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+-					  IEEE80211_STYPE_DISASSOC);
+-	skb_put(skb, 2);
+-	mgmt->u.disassoc.reason_code = cpu_to_le16(reason);
+-
+-	ieee80211_sta_tx(sdata, skb, 0);
+-}
+-
+ static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *da, u16 tid,
+ 					u8 dialog_token, u16 status, u16 policy,
+ 					u16 buf_size, u16 timeout)
+@@ -920,9 +893,11 @@ static void ieee80211_set_disassoc(struc
+ 
+ 	if (self_disconnected) {
+ 		if (deauth)
+-			ieee80211_send_deauth(sdata, ifsta, reason);
++			ieee80211_send_deauth_disassoc(sdata,
++				IEEE80211_STYPE_DEAUTH, reason);
+ 		else
+-			ieee80211_send_disassoc(sdata, ifsta, reason);
++			ieee80211_send_deauth_disassoc(sdata,
++				IEEE80211_STYPE_DISASSOC, reason);
+ 	}
+ 
+ 	ifsta->flags &= ~IEEE80211_STA_ASSOCIATED;
+
+
