@@ -1,58 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from queueout03-winn.ispmail.ntl.com ([81.103.221.33]:55214 "EHLO
-	queueout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751606AbYI1QiE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Sep 2008 12:38:04 -0400
-Received: from aamtaout01-winn.ispmail.ntl.com ([81.103.221.35])
-          by mtaout02-winn.ispmail.ntl.com with ESMTP
-          id <20080928162951.FANN21103.mtaout02-winn.ispmail.ntl.com@aamtaout01-winn.ispmail.ntl.com>
-          for <linux-wireless@vger.kernel.org>;
-          Sun, 28 Sep 2008 17:29:51 +0100
-Received: from phoenix.fire ([86.15.232.188])
-          by aamtaout01-winn.ispmail.ntl.com with ESMTP
-          id <20080928162951.WLCF5827.aamtaout01-winn.ispmail.ntl.com@phoenix.fire>
-          for <linux-wireless@vger.kernel.org>;
-          Sun, 28 Sep 2008 17:29:51 +0100
-Received: from phoenix.fire (localhost [127.0.0.1])
-	by phoenix.fire (8.14.2/8.14.2) with ESMTP id m8SGY1Yq028765
-	for <linux-wireless@vger.kernel.org>; Sun, 28 Sep 2008 17:34:01 +0100
-Received: from localhost (localhost [[UNIX: localhost]])
-	by phoenix.fire (8.14.2/8.14.2/Submit) id m8SGY1n3028764
-	for linux-wireless@vger.kernel.org; Sun, 28 Sep 2008 17:34:01 +0100
-From: Peter Chant <pete@petezilla.co.uk>
-To: linux-wireless@vger.kernel.org
-Subject: SMC wireless card, unknown Atheros/Accton chipset?
-Date: Sun, 28 Sep 2008 17:34:00 +0100
+Received: from mail.atheros.com ([12.36.123.2]:39687 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757488AbYIIQKH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Sep 2008 12:10:07 -0400
+Message-ID: <48C69E11.5090102@atheros.com> (sfid-20080909_181035_567706_69C0CB59)
+Date: Tue, 9 Sep 2008 21:32:25 +0530
+From: vasanthakumar thiagarajan <vasanth.thiagarajan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200809281734.01027.pete@petezilla.co.uk> (sfid-20080928_183823_642076_231C7051)
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH] ath9k: Add RF kill support
+References: <20080909153422.GA7651@vasanth-lnx.users.atheros.com>	 (sfid-20080909_173954_277503_9881BAF1) <1220975170.31304.184.camel@johannes.berg>
+In-Reply-To: <1220975170.31304.184.camel@johannes.berg>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chaps,
+Johannes Berg wrote:
+>> +#ifdef CONFIG_RFKILL
+>> +	u16 ah_rfsilent;
+>> +	u32 ah_rfkill_gpio ;
+>>     
+>
+> small typo, space too much.
+>
+>   
+ok, thanks.
+>> --- a/drivers/net/wireless/ath9k/core.h
+>> +++ b/drivers/net/wireless/ath9k/core.h
+>> @@ -40,6 +40,9 @@
+>>  #include <asm/page.h>
+>>  #include <net/mac80211.h>
+>>  #include <linux/leds.h>
+>> +#ifdef CONFIG_RFKILL
+>> +#include <linux/rfkill.h>
+>> +#endif
+>>  
+>>  #include "ath9k.h"
+>>  #include "rc.h"
+>> @@ -823,6 +826,17 @@ struct ath_led {
+>>  	bool registered;
+>>  };
+>>  
+>> +#ifdef CONFIG_RFKILL
+>> +/* Rfkill */
+>> +#define ATH_RFKILL_POLL_INTERVAL	2000 /* msecs */
+>> +
+>> +struct ath_rfkill {
+>> +	struct rfkill *rfkill;
+>> +	struct delayed_work rfkill_poll;
+>> +	char rfkill_name[32];
+>> +};
+>> +#endif
+>> +
+>>     
+>
+> No need to protect any of this with an #ifdef.
+>
+>   
+>> +#ifdef CONFIG_RFKILL
+>> +#define SC_OP_RFKILL_REGISTERED	BIT(11)
+>> +#define SC_OP_RFKILL_SW_BLOCKED	BIT(12)
+>> +#define SC_OP_RFKILL_HW_BLOCKED	BIT(13)
+>> +#endif
+>>     
+>
+> Nor that.
+>  
+>   
+ok.
+>> +static void ath9k_ht_conf(struct ath_softc *sc,
+>> +			  struct ieee80211_bss_conf *bss_conf)
+>> +{
+>> +#define IEEE80211_HT_CAP_40MHZ_INTOLERANT BIT(14)
+>> +	struct ath_ht_info *ht_info = &sc->sc_ht_info;
+>>     
+>
+> All that doesn't seem to belong into this patch?
+>
+> johannes
+>   
+I just rearranged (purely change in the location of few static functions
+in the file) the code to avoid
+the prototype declaration of the functions which are called (before
+their definition) in case of any
+failure during rfkill_register().
 
-hope this is the right place.  I have a SMCWPCI-G2 EU wireless card (PCI) that 
-does not seem to be recognised by the ath5k driver.  It is a 802.11g card but 
-I tried the ath9k driver for luck, that did not work nor did the madwifi 
-drivers.
+Thanks for your comments.
 
-Output from lspci -v:
+Regards
 
-00:0b.0 Ethernet controller: Atheros Communications Inc. Unknown device 001d 
-(rev 01)
-        Subsystem: Accton Technology Corporation Unknown device b203
-        Flags: bus master, medium devsel, latency 32, IRQ 5
-        Memory at e2010000 (32-bit, non-prefetchable) [size=64K]
-        Capabilities: [44] Power Management version 2
+Vasanth
 
-
-Thoughts?
-
-Pete
-
-
--- 
-Peter Chant
-http://www.petezilla.co.uk
