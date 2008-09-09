@@ -1,54 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39769 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755944AbYISDBk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 23:01:40 -0400
-Date: Thu, 18 Sep 2008 20:01:25 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Steven Noonan <steven@uplinklabs.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27
-	(rc5, rc6, probably others)
-Message-ID: <20080919030125.GG7408@tesla> (sfid-20080919_050144_201244_05F40CC2)
-References: <43e72e890809181134ybbec8fdxcb2a466aa17fe390@mail.gmail.com> <43e72e890809181142n7738cd99g522e6688e68d11ce@mail.gmail.com> <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com> <43e72e890809181344q416b5944w3332ee5a33db048c@mail.gmail.com> <f488382f0809181449x7343aa7endff066cb5836a73c@mail.gmail.com> <20080918220102.GE7408@tesla> <43e72e890809181508w5232a14ewbf2bf18fe90a92d5@mail.gmail.com> <f488382f0809181604l105535bkceecd44c590bc88b@mail.gmail.com> <43e72e890809181610h3a7729d8s4c8484d97b21932e@mail.gmail.com> <f488382f0809181952g628ab5a4nd86f396a08f4d6c8@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <f488382f0809181952g628ab5a4nd86f396a08f4d6c8@mail.gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:40980 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751708AbYIIGaV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Sep 2008 02:30:21 -0400
+Subject: Re: [PATCH 5/3] mac80211: fix typo in action frame handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240809081358h45b63b89xa02e17bd017b2dbc@mail.gmail.com> (sfid-20080908_225840_582731_C75C34EB)
+References: <20080908090507.641740000@sipsolutions.net>
+	 <1220884308.31304.62.camel@johannes.berg>
+	 <1ba2fa240809081358h45b63b89xa02e17bd017b2dbc@mail.gmail.com>
+	 (sfid-20080908_225840_582731_C75C34EB)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ng4z67jTaKThkie4+2vA"
+Date: Tue, 09 Sep 2008 08:30:16 +0200
+Message-Id: <1220941816.31304.96.camel@johannes.berg> (sfid-20080909_083024_992385_99C58278)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 18, 2008 at 07:52:16PM -0700, Steven Noonan wrote:
-> This IRQ debugging is lots of fun. My /var/log/messages jumped in size
-> to 241MB. :)
-> 
-> My test case was a file transfer that basically copies 50MB from a
-> remote machine's /dev/urandom and writes it to /dev/null locally. That
-> should be a pretty nice large RX. And jeez, I'm seeing tremendous
-> download speeds now and I have no idea what is different about my
-> configuration. I'm getting up to 24 megabit per second transfer rates
-> (actual), which is incredibly unusual for ath9k.
-> 
-> I wasn't able to reproduce the IRQ problems on -tip or Linus' current
-> tree (both with the group rekeying fix applied, which may or may not
-> be a good idea for reproducing the issue). Even tried doing
-> rmmod/modprobe in fast succession multiple times. Couldn't get it to
-> throw up.
-> 
-> I wonder... My rmmod/modprobe originally was used after the improper
-> group rekeying before in order to get it back to normal. Perhaps the
-> encryption has to go wonky before this IRQ issue surfaces? Another
-> possibility is the earlier mentioned "ACPI: EC: GPE storm detected,
-> disabling EC GPE". I don't know if it's related or not, but I haven't
-> waited for it to show up before testing.
-> 
-> Oh well, if the IRQ problem resurfaces (or if I get a ridiculous
-> latency tomorrow morning with irqpoll off), I'll try to get some
-> useful data to help debug it.
 
-Thanks for testing, and glad to see this is resolved.
+--=-Ng4z67jTaKThkie4+2vA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Mon, 2008-09-08 at 23:58 +0300, Tomas Winkler wrote:
+
+> It doesn't really matter on which action code you doing the switch.
+
+Oh, I know, but I think it's confusing.
+
+> The full code looks like that
+>=20
+> switch (mgmt->u.action.u.chan_switch.action_code) {
+> 		case WLAN_ACTION_SPCT_MSR_REQ:
+> 			if (len < (IEEE80211_MIN_ACTION_SIZE +
+> 				   sizeof(mgmt->u.action.u.msrment_req)))
+> 				break;
+> 			ieee80211_sta_process_measurement_req(dev, mgmt);
+> 			break;
+> 		case WLAN_ACTION_SPCT_CHL_SWITCH:
+> 			if (len < (IEEE80211_MIN_ACTION_SIZE +
+> 				   sizeof(mgmt->u.action.u.chan_switch)))
+> 				break;
+> 			ieee80211_sta_process_channel_switch(dev, ifsta,
+> 				&mgmt->u.action.u.chan_switch.sw_elem);
+> 			break;
+> 		case WLAN_ACTION_SPCT_TPC_REQ:
+> 			ieee80211_sta_process_tpc_req(dev, mgmt, rx_status);
+> 			break;
+> 		default:
+> 			break;
+
+Does channel switch and measurement have the same category? Can't we
+better reflect that in the structure? I thought the union in the struct
+had one sub-structure per category.
+
+johannes
+
+--=-Ng4z67jTaKThkie4+2vA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIxhf0AAoJEKVg1VMiehFYEUEQAKom5GvvwLk6JUOWs91hL0c2
+K970gKifA4UEn6rWqjwWrjsn6GL2zA5sdrwoMstLLd7js6ke1LfLNT95iRVk2OAG
+38tPJKZyTgL5KY1KiO2tp+nHOw/RZGrbJW4RCDV9QXM4V+Djhg11Rb/Dvo0gBf/x
+nIKW13yiYVqz2cyQBL987mMEdIlD+wdRJ3YVE7uUs31890JS0AiBtGSY6uN5cyo3
+zBLplJ5z7gw/mbdY/jmDc4X/YEQPAJabU86YjkH9QxOlb3v8pDwYaH9I91uhE3uj
+eQhx76OoCttvjisBqvngLmF2YDzNEt3tIx7/rYhI9s+Qn+XMMlIFOTnUqKyxAIGO
+sxLsVMpNZMr85QCUhRuh7WP8cj45M2gIzaSFGuIGtvMLddtE2VDFXvpJeuw25tdV
+pjhTDW2cGQrlGhkswhUe46RcaVM8EEZw6oyJ5l4ru4+O+N8FwUN9t/c/etPwcg3+
+qCFYjfgJ0qDT5NlCaWso9TzbOg0vvmm/6umKjfaXUrUBWD4CO9kpvYcba6as2W0W
+php48PLEO6XL8YaSpiKo/4BiCJruQ5QH15WmR5JoQT53uNWbzvBApsoY6ayjyR2B
+P+zIHif6/gHa4COKxGFYf6BI4LAr/3L8vCJOAEqwtvkBoHFCkAFXDJXRgYHQwNsd
+FpYvaexQHZKkr9awbd2N
+=+U/+
+-----END PGP SIGNATURE-----
+
+--=-Ng4z67jTaKThkie4+2vA--
+
