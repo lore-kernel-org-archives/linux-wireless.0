@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:48935 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752361AbYIQOeG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Sep 2008 10:34:06 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Regression in 2.6.27-rcX caused by commit bc19d6e0b74ef03a3baf035412c95192b54dfc6f
-Date: Wed, 17 Sep 2008 16:33:41 +0200
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Adel Gadllah <adel.gadllah@gmail.com>,
+Received: from bombadil.infradead.org ([18.85.46.34]:40567 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753388AbYIIAhY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Sep 2008 20:37:24 -0400
+Subject: Re: [PATCH] b43legacy: Fix to enhance TX speed
+From: David Woodhouse <dwmw2@infradead.org>
+To: gavron@wetwork.net
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
 	wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de,
-	Larry Finger <Larry.Finger@lwfinger.net>
-References: <48CFC03A.8020708@lwfinger.net> <200809171626.28782.mb@bu3sch.de> <20080917142931.GF5407@tuxdriver.com>
-In-Reply-To: <20080917142931.GF5407@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809171633.41397.mb@bu3sch.de> (sfid-20080917_163417_574872_413674D0)
+	Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
+	Larry Finger <larry.finger@lwfinger.net>
+In-Reply-To: <48C358C8.3080607@wetwork.net>
+References: <48C358C8.3080607@wetwork.net>
+Content-Type: text/plain
+Date: Mon, 08 Sep 2008 19:37:23 -0500
+Message-Id: <1220920643.5748.22.camel@shinybook.infradead.org> (sfid-20080909_023728_962253_C7E2F555)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 17 September 2008 16:29:31 John W. Linville wrote:
-> On Wed, Sep 17, 2008 at 04:26:28PM +0200, Michael Buesch wrote:
-> > On Wednesday 17 September 2008 00:37:29 Henrique de Moraes Holschuh wrote:
-> > > On Tue, 16 Sep 2008, Michael Buesch wrote:
-> > > > But I don't know how to tell the rfkill subsystem about the states and
-> > > 
-> > > rfkill_force_state().  Must NOT be called from within atomic contextes,
-> > > something I haven't got around to find a proper way of fixing, and nobody
-> > > else seems to be on a rfkill coding frenzy right now.
-> > 
-> > That's a showstopper for us, as we have to change the state from
-> > within an interrupt tasklet.
-> 
-> Workqueue?
+On Sat, 2008-09-06 at 21:30 -0700, gavron@wetwork.net wrote:
+> Recent changes in the specifications have improved the performance
+> of the BCM4306/2 devices that use b43legacy as the driver. These
+> "errors" in the specs have been present from the very first
+> implementation of bcm43xx.
 
-Yeah, that's possible to implement yet another workaround using a workqueue.
-However it would be nice to have rfkill either support atomic context
-or implement the workaround in the rfkill core, as I'm sure there are more
-devices that report rfkill changes via interrupt.
+I haven't verified any speed improvement, but certainly this patch (when
+applied on top of the Fedora 9 kernel) doesn't make my shinybook get bus
+errors, which has been a common problem when updating this part of the
+code to match the specs.
 
 -- 
-Greetings Michael.
+David Woodhouse                            Open Source Technology Centre
+David.Woodhouse@intel.com                              Intel Corporation
+
