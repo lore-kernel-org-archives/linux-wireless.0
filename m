@@ -1,62 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:51164 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753107AbYIROKP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 10:10:15 -0400
-Date: Thu, 18 Sep 2008 11:10:06 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
-Message-ID: <20080918141006.GE1583@khazad-dum.debian.net> (sfid-20080918_161018_998563_75EC087F)
-References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809181519.12366.IvDoorn@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:39651 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752682AbYIIFsL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Sep 2008 01:48:11 -0400
+Date: Mon, 8 Sep 2008 22:48:05 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/2 v5] cfg80211: Add new wireless regulatory
+	infrastructure
+Message-ID: <20080909054805.GB15742@tesla> (sfid-20080909_074815_743116_EBCE2F72)
+References: <1220643824-11398-1-git-send-email-lrodriguez@atheros.com> <1220668394.6714.109.camel@californication>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200809181519.12366.IvDoorn@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1220668394.6714.109.camel@californication>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 18 Sep 2008, Ivo van Doorn wrote:
-> If it is something coming from mac80211, then you do not want
-> to send a SOFT_BLOCKED event since that will cause all other radios
-> to be switched off simply because the b43 interface has not been
-> enabled.
+On Fri, Sep 05, 2008 at 07:33:14PM -0700, Marcel Holtmann wrote:
+> can we get a small document in Documentation/ that describes what has to
+> be done for CRDA. That would help to ease the adaption and would allow
+> us to point people to it. Nothing fancy, but some quick notes where to
+> find it and what to put where.
 
-Drivers ARE supposed to be able to set their radio state to their heart's
-content, without messing with any other devices.  There are no constraints
-to calls to rfkill_force_state(), other than the current issue that it must
-not be done from an atomic context.
+Sure, I'm putting this together now.
 
-OTOH, rfkill_force_state() does NOT change anything in the radio, so you
-must always call it to match the REAL state of the hardware.
+> > Each driver can regulatory_hint() a regulatory domain
+> > based on either their EEPROM mapped regulatory domain value to a
+> > respective ISO/IEC 3166-1 country code or pass an internally built
+> > regulatory domain. We also add support to let the user set the
+> > regulatory domain through userspace in case of faulty EEPROMs to
+> > further help compliance.
+> 
+> Do we have an example for all the possible ways? I think about something
+> to help driver maintainers to move over and use the infrastructure the
+> right way.
 
-What CAN mess with other radios are INPUT EVENTS.  Which b43 has no business
-generating by itself by default, since it is used both on platforms where it
-is just a wireless device, and also on platforms where its hardware rfkill
-input line is THE only way to know the state of THE hardware slider RFKILL
-switch.
+The only case I didn't test was the case for Intel's drivers, all other
+drivers would use regulatory_hint() based on an alpha2 and that worked
+swell. I found some issues with the case of providing a built regulatory
+domain so I'm updating it now and am also updating some other parts of the
+code for the old regulatory infrastructure, it seems there were a few
+obvious issues we didn't catch there yet.
 
-And, frankly, it shouldn't be the job of b43 to care to know what platform
-is it in.
+I hope to have the new doc for you with a few fixes and an example as to
+what Intel drivers can do soon. I was hoping to get it all done by today but
+that didn't happen.
 
-Now, with Larry's patch, b43 has no input device mess dragging it down
-anymore.  So, any platforms that need input events from b43 are to generate
-them in userspace, or through a separate kernel module.   We already have
-all the APIs needed for that, and they work.
-
-This *DOES* mean the fixed b43 will be noticed by userspace, since it won't
-issue KEY_WLAN anymore.   However, that has been broken in rfkill (the
-input-polldev stuff) and b43 (use of EV_KEY instead of EV_SW) since day one
-anyway, so I personally can't see that as anything but a required bug fix
-that userspace would have to adapt to.
-
-If this is much too confusing, I am all ears on how we could improve it.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+  Luis
