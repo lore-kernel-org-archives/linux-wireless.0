@@ -1,168 +1,297 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:62236 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752458AbYI0U5H (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56898 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756247AbYIIMtK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Sep 2008 16:57:07 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1000836fgg.17
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Sep 2008 13:57:05 -0700 (PDT)
-Message-ID: <7d553cf40809271357r54c2b717lae637a4393c286c6@mail.gmail.com> (sfid-20080927_225713_667305_8F4CB1C8)
-Date: Sat, 27 Sep 2008 16:57:05 -0400
-From: Paul <paul14075@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Working packet injection patch for ipw2200 - enables aireplay-ng and others to work
-In-Reply-To: <7d553cf40809271343m57b8d64er99c979fdc8c35e61@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <7d553cf40809271343m57b8d64er99c979fdc8c35e61@mail.gmail.com>
+	Tue, 9 Sep 2008 08:49:10 -0400
+Subject: [PATCH] mac80211: move spectrum management code out
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 09 Sep 2008 14:49:03 +0200
+Message-Id: <1220964543.31304.169.camel@johannes.berg> (sfid-20080909_144928_636862_371B24FB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here is the patch, in text form:
+Like the HT code, this doesn't depend on the STA-mode implementation
+and can be handled entirely independently. There's only stub code
+for now, but when it gets filled having it in its own file will be
+beneficial.
 
---- drivers/net/wireless/ipw2200.c      2008-09-09 19:27:49.000000000
--0400
-+++ drivers/net/wireless/ipw2200-new.c  2008-09-27 15:48:03.000000000
--0400
-@@ -179,7 +179,7 @@ static int ipw_queue_reset(struct ipw_pr
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/Makefile      |    1 
+ net/mac80211/ieee80211_i.h |    5 ++
+ net/mac80211/mlme.c        |   89 ++-------------------------------------------
+ net/mac80211/rx.c          |   22 +++++++++--
+ net/mac80211/spectmgmt.c   |   86 +++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 114 insertions(+), 89 deletions(-)
 
- static int ipw_queue_tx_hcmd(struct ipw_priv *priv, int hcmd, void
-*buf,
-                             int len, int sync);
+--- everything.orig/net/mac80211/mlme.c	2008-09-09 14:43:15.000000000 +0200
++++ everything/net/mac80211/mlme.c	2008-09-09 14:44:21.000000000 +0200
+@@ -445,53 +445,6 @@ static void ieee80211_send_deauth_disass
+ 	ieee80211_sta_tx(sdata, skb, 0);
+ }
+ 
+-static void ieee80211_send_refuse_measurement_request(struct ieee80211_sub_if_data *sdata,
+-					struct ieee80211_msrment_ie *request_ie,
+-					const u8 *da, const u8 *bssid,
+-					u8 dialog_token)
+-{
+-	struct ieee80211_local *local = sdata->local;
+-	struct sk_buff *skb;
+-	struct ieee80211_mgmt *msr_report;
 -
-+static int ipw_tx_skb(struct ipw_priv *priv, struct ieee80211_txb
-*txb, int pri);
- static void ipw_tx_queue_free(struct ipw_priv *);
-
- static struct ipw_rx_queue *ipw_rx_queue_alloc(struct ipw_priv *);
-@@ -1862,6 +1862,62 @@ static ssize_t store_net_stats(struct de
- static DEVICE_ATTR(net_stats, S_IWUSR | S_IRUGO,
-                   show_net_stats, store_net_stats);
-
-+/* SYSFS INJECT */
-+static ssize_t store_inject(struct device *d,
-+        struct device_attribute *attr,
-+        const char *buf, size_t count)
+-	skb = dev_alloc_skb(sizeof(*msr_report) + local->hw.extra_tx_headroom +
+-				sizeof(struct ieee80211_msrment_ie));
+-
+-	if (!skb) {
+-		printk(KERN_ERR "%s: failed to allocate buffer for "
+-				"measurement report frame\n", sdata->dev->name);
+-		return;
+-	}
+-
+-	skb_reserve(skb, local->hw.extra_tx_headroom);
+-	msr_report = (struct ieee80211_mgmt *)skb_put(skb, 24);
+-	memset(msr_report, 0, 24);
+-	memcpy(msr_report->da, da, ETH_ALEN);
+-	memcpy(msr_report->sa, sdata->dev->dev_addr, ETH_ALEN);
+-	memcpy(msr_report->bssid, bssid, ETH_ALEN);
+-	msr_report->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+-						IEEE80211_STYPE_ACTION);
+-
+-	skb_put(skb, 1 + sizeof(msr_report->u.action.u.measurement));
+-	msr_report->u.action.category = WLAN_CATEGORY_SPECTRUM_MGMT;
+-	msr_report->u.action.u.measurement.action_code =
+-				WLAN_ACTION_SPCT_MSR_RPRT;
+-	msr_report->u.action.u.measurement.dialog_token = dialog_token;
+-
+-	msr_report->u.action.u.measurement.element_id = WLAN_EID_MEASURE_REPORT;
+-	msr_report->u.action.u.measurement.length =
+-			sizeof(struct ieee80211_msrment_ie);
+-
+-	memset(&msr_report->u.action.u.measurement.msr_elem, 0,
+-		sizeof(struct ieee80211_msrment_ie));
+-	msr_report->u.action.u.measurement.msr_elem.token = request_ie->token;
+-	msr_report->u.action.u.measurement.msr_elem.mode |=
+-			IEEE80211_SPCT_MSR_RPRT_MODE_REFUSED;
+-	msr_report->u.action.u.measurement.msr_elem.type = request_ie->type;
+-
+-	ieee80211_sta_tx(sdata, skb, 0);
+-}
+-
+ /* MLME */
+ static void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
+ 					 struct ieee80211_sta_bss *bss)
+@@ -1012,24 +965,6 @@ static void ieee80211_auth_challenge(str
+ 			    elems.challenge_len + 2, 1);
+ }
+ 
+-static void ieee80211_sta_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+-						struct ieee80211_mgmt *mgmt,
+-						size_t len)
+-{
+-	/*
+-	 * Ignoring measurement request is spec violation.
+-	 * Mandatory measurements must be reported optional
+-	 * measurements might be refused or reported incapable
+-	 * For now just refuse
+-	 * TODO: Answer basic measurement as unmeasured
+-	 */
+-	ieee80211_send_refuse_measurement_request(sdata,
+-			&mgmt->u.action.u.measurement.msr_elem,
+-			mgmt->sa, mgmt->bssid,
+-			mgmt->u.action.u.measurement.dialog_token);
+-}
+-
+-
+ static void ieee80211_rx_mgmt_auth(struct ieee80211_sub_if_data *sdata,
+ 				   struct ieee80211_if_sta *ifsta,
+ 				   struct ieee80211_mgmt *mgmt,
+@@ -1871,32 +1806,16 @@ static void ieee80211_rx_mgmt_action(str
+ 				     size_t len,
+ 				     struct ieee80211_rx_status *rx_status)
+ {
+-	struct ieee80211_local *local = sdata->local;
+-
+-	/* all categories we currently handle have action_code */
+-	if (len < IEEE80211_MIN_ACTION_SIZE + 1)
++	/* currently we only handle mesh interface action frames here */
++	if (!ieee80211_vif_is_mesh(&sdata->vif))
+ 		return;
+ 
+ 	switch (mgmt->u.action.category) {
+-	case WLAN_CATEGORY_SPECTRUM_MGMT:
+-		if (local->hw.conf.channel->band != IEEE80211_BAND_5GHZ)
+-			break;
+-		switch (mgmt->u.action.u.measurement.action_code) {
+-		case WLAN_ACTION_SPCT_MSR_REQ:
+-			if (len < (IEEE80211_MIN_ACTION_SIZE +
+-				   sizeof(mgmt->u.action.u.measurement)))
+-				break;
+-			ieee80211_sta_process_measurement_req(sdata, mgmt, len);
+-			break;
+-		}
+-		break;
+ 	case PLINK_CATEGORY:
+-		if (ieee80211_vif_is_mesh(&sdata->vif))
+-			mesh_rx_plink_frame(sdata, mgmt, len, rx_status);
++		mesh_rx_plink_frame(sdata, mgmt, len, rx_status);
+ 		break;
+ 	case MESH_PATH_SEL_CATEGORY:
+-		if (ieee80211_vif_is_mesh(&sdata->vif))
+-			mesh_rx_path_sel_frame(sdata, mgmt, len);
++		mesh_rx_path_sel_frame(sdata, mgmt, len);
+ 		break;
+ 	}
+ }
+--- everything.orig/net/mac80211/rx.c	2008-09-09 14:43:15.000000000 +0200
++++ everything/net/mac80211/rx.c	2008-09-09 14:44:41.000000000 +0200
+@@ -1561,12 +1561,26 @@ ieee80211_rx_h_action(struct ieee80211_r
+ 			ieee80211_process_delba(sdata, rx->sta, mgmt, len);
+ 			break;
+ 		}
+-		rx->sta->rx_packets++;
+-		dev_kfree_skb(rx->skb);
+-		return RX_QUEUED;
++		break;
++	case WLAN_CATEGORY_SPECTRUM_MGMT:
++		if (local->hw.conf.channel->band != IEEE80211_BAND_5GHZ)
++			return RX_DROP_MONITOR;
++		switch (mgmt->u.action.u.measurement.action_code) {
++		case WLAN_ACTION_SPCT_MSR_REQ:
++			if (len < (IEEE80211_MIN_ACTION_SIZE +
++				   sizeof(mgmt->u.action.u.measurement)))
++				return RX_DROP_MONITOR;
++			ieee80211_process_measurement_req(sdata, mgmt, len);
++			break;
++		}
++		break;
++	default:
++		return RX_CONTINUE;
+ 	}
+ 
+-	return RX_CONTINUE;
++	rx->sta->rx_packets++;
++	dev_kfree_skb(rx->skb);
++	return RX_QUEUED;
+ }
+ 
+ static ieee80211_rx_result debug_noinline
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ everything/net/mac80211/spectmgmt.c	2008-09-09 14:44:57.000000000 +0200
+@@ -0,0 +1,86 @@
++/*
++ * spectrum management
++ *
++ * Copyright 2003, Jouni Malinen <jkmaline@cc.hut.fi>
++ * Copyright 2002-2005, Instant802 Networks, Inc.
++ * Copyright 2005-2006, Devicescape Software, Inc.
++ * Copyright 2006-2007  Jiri Benc <jbenc@suse.cz>
++ * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
++ * Copyright 2007-2008, Intel Corporation
++ * Copyright 2008, Johannes Berg <johannes@sipsolutions.net>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/ieee80211.h>
++#include <net/wireless.h>
++#include <net/mac80211.h>
++#include "ieee80211_i.h"
++#include "sta_info.h"
++#include "wme.h"
++
++static void ieee80211_send_refuse_measurement_request(struct ieee80211_sub_if_data *sdata,
++					struct ieee80211_msrment_ie *request_ie,
++					const u8 *da, const u8 *bssid,
++					u8 dialog_token)
 +{
-+        struct ipw_priv *priv = (struct ipw_priv *)d->driver_data;
-+        struct ieee80211_device *ieee = priv->ieee;
-+        struct ieee80211_txb * txb;
-+        struct sk_buff *skb_frag;
-+        unsigned char * newbuf;
-+        unsigned long flags;
++	struct ieee80211_local *local = sdata->local;
++	struct sk_buff *skb;
++	struct ieee80211_mgmt *msr_report;
 +
-+        // should test (ieee->is_queue_full)
++	skb = dev_alloc_skb(sizeof(*msr_report) + local->hw.extra_tx_headroom +
++				sizeof(struct ieee80211_msrment_ie));
 +
-+        // Fw only accepts data, so avoid accidental fw errors.
-+        if ( (buf[0]&0x0c) != '\x08') {
-+              //printk("ipw2200: inject: discarding non-data frame
-(type=%02X)\n",(int)(unsigned char)buf[0]);
-+              return count;
-+        }
++	if (!skb) {
++		printk(KERN_ERR "%s: failed to allocate buffer for "
++				"measurement report frame\n", sdata->dev->name);
++		return;
++	}
 +
-+        if (count>1500) {
-+              count=1500;
-+              printk("ipw2200: inject: cutting down frame to 1500
-bytes\n");
-+        }
++	skb_reserve(skb, local->hw.extra_tx_headroom);
++	msr_report = (struct ieee80211_mgmt *)skb_put(skb, 24);
++	memset(msr_report, 0, 24);
++	memcpy(msr_report->da, da, ETH_ALEN);
++	memcpy(msr_report->sa, sdata->dev->dev_addr, ETH_ALEN);
++	memcpy(msr_report->bssid, bssid, ETH_ALEN);
++	msr_report->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
++						IEEE80211_STYPE_ACTION);
 +
-+        spin_lock_irqsave(&priv->lock, flags);
++	skb_put(skb, 1 + sizeof(msr_report->u.action.u.measurement));
++	msr_report->u.action.category = WLAN_CATEGORY_SPECTRUM_MGMT;
++	msr_report->u.action.u.measurement.action_code =
++				WLAN_ACTION_SPCT_MSR_RPRT;
++	msr_report->u.action.u.measurement.dialog_token = dialog_token;
 +
-+        // Create a txb with one skb
-+        txb = kmalloc(sizeof(struct ieee80211_txb) + sizeof(u8 *),
-GFP_ATOMIC);
-+        if (!txb)
-+              goto nosepuede;
-+        txb->nr_frags=1;
-+        txb->frag_size = ieee->tx_headroom;
-+        txb->fragments[0]=__dev_alloc_skb(count + ieee->tx_headroom,
-GFP_ATOMIC);
-+        if (!txb->fragments[0]) {
-+              kfree(txb);
-+              goto nosepuede;
-+        }
-+        skb_reserve(txb->fragments[0], ieee->tx_headroom);
-+        txb->encrypted=0;
-+        txb->payload_size=count;
-+        skb_frag = txb->fragments[0];
-+        newbuf=skb_put(skb_frag, count);
++	msr_report->u.action.u.measurement.element_id = WLAN_EID_MEASURE_REPORT;
++	msr_report->u.action.u.measurement.length =
++			sizeof(struct ieee80211_msrment_ie);
 +
-+        // copy data into txb->skb and send it
-+        memcpy(newbuf, buf, count);
++	memset(&msr_report->u.action.u.measurement.msr_elem, 0,
++		sizeof(struct ieee80211_msrment_ie));
++	msr_report->u.action.u.measurement.msr_elem.token = request_ie->token;
++	msr_report->u.action.u.measurement.msr_elem.mode |=
++			IEEE80211_SPCT_MSR_RPRT_MODE_REFUSED;
++	msr_report->u.action.u.measurement.msr_elem.type = request_ie->type;
 +
-+        ipw_tx_skb(priv, txb, 0);
-+
-+nosepuede:
-+        spin_unlock_irqrestore(&priv->lock, flags);
-+        return count;
++	ieee80211_sta_tx(sdata, skb, 0);
 +}
 +
-+static DEVICE_ATTR(inject, S_IWUSR, NULL, store_inject);
++void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
++				       struct ieee80211_mgmt *mgmt,
++				       size_t len)
++{
++	/*
++	 * Ignoring measurement request is spec violation.
++	 * Mandatory measurements must be reported optional
++	 * measurements might be refused or reported incapable
++	 * For now just refuse
++	 * TODO: Answer basic measurement as unmeasured
++	 */
++	ieee80211_send_refuse_measurement_request(sdata,
++			&mgmt->u.action.u.measurement.msr_elem,
++			mgmt->sa, mgmt->bssid,
++			mgmt->u.action.u.measurement.dialog_token);
++}
+--- everything.orig/net/mac80211/ieee80211_i.h	2008-09-09 14:45:08.000000000 +0200
++++ everything/net/mac80211/ieee80211_i.h	2008-09-09 14:45:25.000000000 +0200
+@@ -984,6 +984,11 @@ void ieee80211_process_addba_request(str
+ 				     struct ieee80211_mgmt *mgmt,
+ 				     size_t len);
+ 
++/* Spectrum management */
++void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
++				       struct ieee80211_mgmt *mgmt,
++				       size_t len);
 +
- static ssize_t show_channels(struct device *d,
-                             struct device_attribute *attr,
-                             char *buf)
-@@ -10512,6 +10568,10 @@ static int ipw_net_set_mac_address(struc
-        mutex_lock(&priv->mutex);
-        priv->config |= CFG_CUSTOM_MAC;
-        memcpy(priv->mac_addr, addr->sa_data, ETH_ALEN);
-+
-+        if (rtap_iface)
-+               memcpy(priv->prom_net_dev->dev_addr, addr->sa_data,
-ETH_ALEN);
-+
-        printk(KERN_INFO "%s: Setting MAC to %s\n",
-               priv->net_dev->name, print_mac(mac, priv->mac_addr));
-        queue_work(priv->workqueue, &priv->adapter_restart);
-@@ -11478,6 +11538,7 @@ static struct attribute *ipw_sysfs_entri
- #ifdef CONFIG_IPW2200_PROMISCUOUS
-        &dev_attr_rtap_iface.attr,
-        &dev_attr_rtap_filter.attr,
-+       &dev_attr_inject.attr,
- #endif
-        NULL
- };
---- drivers/net/wireless/ipw2200.h      2008-09-09 19:27:49.000000000 -0400
-+++ drivers/net/wireless/ipw2200-new.h  2008-09-27 15:32:23.000000000 -0400
-@@ -2007,4 +2007,13 @@ struct ipw_cmd_log {
-
- #define IPW_MAX_CONFIG_RETRIES 10
-
-+/*
-+ * Hhack to get code compiling on new kernels, the define below
-+ * seem to be removed from the linux headers.
-+ */
-+#ifndef MAC_ARG
-+#define MAC_ARG(x)
-((u8*)(x))[0],((u8*)(x))[1],((u8*)(x))[2],((u8*)(x))[3],((u8*)(x))[4],((u8*)(x))[5]
-+#endif
-+
-+
- #endif                         /* __ipw2200_h__ */
+ /* utility functions/constants */
+ extern void *mac80211_wiphy_privid; /* for wiphy privid */
+ extern const unsigned char rfc1042_header[6];
+--- everything.orig/net/mac80211/Makefile	2008-09-09 14:46:44.000000000 +0200
++++ everything/net/mac80211/Makefile	2008-09-09 14:46:51.000000000 +0200
+@@ -17,6 +17,7 @@ mac80211-y := \
+ 	aes_ccm.o \
+ 	cfg.o \
+ 	rx.o \
++	spectmgmt.o \
+ 	tx.o \
+ 	key.o \
+ 	util.o \
 
 
-On Sat, Sep 27, 2008 at 4:43 PM, Paul <paul14075@gmail.com> wrote:
-> I made this patch using bits and pieces from various other "ipw2200
-> injection patches".  I can not take credit for the content, as I
-> basically just changed the line numbers in the .diff files.  However I
-> applied this patch to the version of ipw2200 included in kernel
-> 2.6.27-rc6  (i believe it's ipw2200-1.2.2) and it worked like a charm.
->
-> Previously I was unable to inject wifi packets using aireplay-ng due
-> to this error:
->
-> "ARP linktype is set to 1 (Ethernet) - expected ARPHRD_IEEE80211 or
-> ARPHRD_IEEE80211_PRISM instead.  Make sure RFMON is enabled: run
-> 'ifconfig wifi0 up; iwconfig wifi0 mode Monitor channel <#>' Sysfs
-> injection support was not found either."
->
-> However, after switching to Monitor mode, even though aireplay would
-> ACT AS IF it was working, it wasn't.
->
-> After applying this patch, everything worked great.
->
-> I don't see why this patch isnt already included in ipw2200.
->
-> Thanks,
-> - Paul
->
