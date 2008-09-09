@@ -1,270 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:42121 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753240AbYIOM3u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 08:29:50 -0400
-Received: from Relay2.suse.de (mail2.suse.de [195.135.221.8])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx1.suse.de (Postfix) with ESMTP id EA0B3418FA
-	for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 14:29:48 +0200 (CEST)
-From: Helmut Schaa <hschaa@suse.de>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC] Implement basic background scanning
-Date: Mon, 15 Sep 2008 14:29:46 +0200
-References: <200809151416.07552.hschaa@suse.de>
-In-Reply-To: <200809151416.07552.hschaa@suse.de>
+Received: from ro.mikronika.com.pl ([213.17.224.85]:4617 "EHLO
+	cluster1.mikronika.com.pl" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751606AbYIINiK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Sep 2008 09:38:10 -0400
+Message-ID: <48C67C3A.5090806@mikronika.com.pl> (sfid-20080909_153814_801775_AAC89983)
+Date: Tue, 09 Sep 2008 15:38:02 +0200
+From: Karol Szkudlarek <karol@mikronika.com.pl>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809151429.46638.hschaa@suse.de> (sfid-20080915_142954_498790_4E509226)
+To: Tim Gardner <tim.gardner@canonical.com>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org
+Subject: Re: kernel crash during suspend using iwl3945 driver 1.2.26k	on	ubuntu
+ hardy
+References: <48BC47C5.2070807@mikronika.com.pl>	 <1220425598.28282.190.camel@debian.sh.intel.com>	 <loom.20080903T181136-957@post.gmane.org> <1220601300.28282.291.camel@debian.sh.intel.com> <48C0EA41.5050103@mikronika.com.pl> <48C14AA2.1040202@lwfinger.net> <48C15A5E.6000301@canonical.com> <48C62D3C.8080907@mikronika.com.pl> <48C6696F.7070004@canonical.com>
+In-Reply-To: <48C6696F.7070004@canonical.com>
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Basic implementation of software background scanning functionality.
+Tim Gardner pisze:
+> Karol Szkudlarek wrote:
+>> Tim Gardner pisze:
+>>> Larry Finger wrote:
+>>>> Karol Szkudlarek wrote:
+>>>>> Hello Zhu!
+>>>>>
+>>>>> It will be tough to see in 2.6.27-rc kernels beacuse I use Ubuntu=
+ 8.04
+>>>>> LTS
+>>>>> which uses 2.6.24 linux kernel. :-(
+>>>>>
+>>>> The Ubuntu team has a 2.6.27 kernel available. To quote the text o=
+f a
+>>>> message in a BCM4306 thread "1)  If you are comfortable installing
+>>>> packages on your own, the linux-image-2.6.27-* package is currentl=
+y
+>>>> available for you to install and test."
+>>>>
+>>>> Larry
+>>>> --=20
+>>>> To unsubscribe from this list: send the line "unsubscribe
+>>>> linux-wireless" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>
+>>> There is a Hardy package for the 2.6.27 kernel at
+>>>
+>>> http://ppa.launchpad.net/timg-tpi/ubuntu
+>>>
+>>> It is currently based on -rc5. I'll be updating it throughout the .=
+27
+>>> development and stable cycle.
+>>>
+>>> rtg
+>> I would like try 2.6.27 so today I checked
+>> http://ppa.launchpad.net/timg-tpi/ubuntu/dists/hardy/main/binary-i38=
+6/Packages
+>>
+>> and I don't see any 2.6.27 packages...
+>>
+>> Second question: do you precompiled also all modules? I need them to
+>> perform an upgrade and got the running system.
+>>
+>=20
+> I found I could not have 2 packages with the same name but different
+> versions in one PPA, so I moved the 2.6.27 package to the kernel team
+> PPA at:
+>=20
+> http://ppa.launchpad.net/kernel-ppa/ubuntu
+>=20
+> Sorry for the confusion.
+>=20
+> rtg
+>=20
+OK. I downloaded the packages and during installation I got the=20
+following error, please help me: :-)
 
-The patch basically enhances the scanning state machine by two further
-states (SCAN_DEFER, SCAN_OPERATION). In state SCAN_DEFER the driver is advised
-to switch back to the operating channel while SCAN_OPERATION tells the access
-point about being back from power saving and restarts the tx queue. Just before
-SCAN_SET_CHANNEL sets the next channel to scan it notifies the access point
-about going to power save state and stops the tx queue.
+# apt-get install linux-headers-2.6.27-3 linux-image-2.6.27-3-generic
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+linux-headers-2.6.27-3 is already the newest version.
+linux-image-2.6.27-3-generic is already the newest version.
+0 upgraded, 0 newly installed, 0 to remove and 8 not upgraded.
+1 not fully installed or removed.
+After this operation, 0B of additional disk space will be used.
+Setting up linux-image-2.6.27-3-generic (2.6.27-3.4) ...
+Running depmod.
+update-initramfs: Generating /boot/initrd.img-2.6.27-3-generic
+cpio: not implemented or invalid option --
 
-However one (still unresolved) issue is that the code does not wait for the
-appropriate ACK from the access point after notifying the new power state.
+gzip: stdin: unexpected end of file
+update-initramfs: failed for /boot/initrd.img-2.6.27-3-generic
+=46ailed to create initrd image.
+dpkg: error processing linux-image-2.6.27-3-generic (--configure):
+  subprocess post-installation script returned error exit status 2
+Errors were encountered while processing:
+  linux-image-2.6.27-3-generic
+E: Sub-process /usr/bin/dpkg returned an error code (1)
 
-Any thoughts or comments?
 
-Signed-off-by: Helmut Schaa <hschaa@suse.de>
----
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index c05f70c..91eac0b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -647,11 +647,11 @@ struct ieee80211_local {
- 
- 
- 	/* Scanning and BSS list */
--	bool sw_scanning, hw_scanning;
-+	bool sw_scanning, hw_scanning, bg_scanning;
- 	int scan_channel_idx;
- 	enum ieee80211_band scan_band;
- 
--	enum { SCAN_SET_CHANNEL, SCAN_SEND_PROBE } scan_state;
-+	enum { SCAN_SET_CHANNEL, SCAN_SEND_PROBE, SCAN_DEFER, SCAN_OPERATION } scan_state;
- 	unsigned long last_scan_completed;
- 	struct delayed_work scan_work;
- 	struct ieee80211_sub_if_data *scan_sdata;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 92d898b..49b5c29 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -414,7 +414,7 @@ ieee80211_rx_h_passive_scan(struct ieee80211_rx_data *rx)
- 		return RX_QUEUED;
- 	}
- 
--	if (unlikely(rx->flags & IEEE80211_RX_IN_SCAN)) {
-+	if (unlikely(rx->flags & IEEE80211_RX_IN_SCAN && !local->bg_scanning)) {
- 		/* scanning finished during invoking of handlers */
- 		I802_DEBUG_INC(local->rx_handlers_drop_passive_scan);
- 		return RX_DROP_UNUSABLE;
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 8e6685e..4a9cdfe 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -29,6 +29,7 @@
- #define IEEE80211_PROBE_DELAY (HZ / 33)
- #define IEEE80211_CHANNEL_TIME (HZ / 33)
- #define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 5)
-+#define IEEE80211_BG_SCAN_INTERRUPT (HZ / 4)
- 
- void ieee80211_rx_bss_list_init(struct ieee80211_local *local)
- {
-@@ -455,6 +456,7 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
- 	}
- 
- 	local->sw_scanning = false;
-+	local->bg_scanning = false;
- 	if (ieee80211_hw_config(local))
- 		printk(KERN_DEBUG "%s: failed to restore operational "
- 		       "channel after scan\n", wiphy_name(local->hw.wiphy));
-@@ -510,6 +512,37 @@ void ieee80211_scan_work(struct work_struct *work)
- 
- 	switch (local->scan_state) {
- 	case SCAN_SET_CHANNEL:
-+		if (local->bg_scanning) {
-+			/*
-+			 * background scan is in progress, notify all associated 
-+			 * access points about us leaving the channel and
-+			 * update the filter flags
-+			 */
-+			local->sw_scanning = 1;
-+
-+			rcu_read_lock();
-+			list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+				if (sdata->vif.type == NL80211_IFTYPE_STATION &&
-+				    (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED)) {
-+					ieee80211_send_nullfunc(local, sdata, 1);
-+					netif_tx_stop_all_queues(sdata->dev);
-+				}
-+			}
-+			rcu_read_unlock();
-+
-+			/* TODO: start scan as soon as all nullfunc frames are ACKed */
-+			msleep(1);
-+
-+			netif_tx_lock_bh(local->mdev);
-+			local->filter_flags |= FIF_BCN_PRBRESP_PROMISC;
-+			local->ops->configure_filter(local_to_hw(local),
-+						     FIF_BCN_PRBRESP_PROMISC,
-+						     &local->filter_flags,
-+						     local->mdev->mc_count,
-+						     local->mdev->mc_list);
-+			netif_tx_unlock_bh(local->mdev);
-+		}
-+
- 		/*
- 		 * Get current scan band. scan_band may be IEEE80211_NUM_BANDS
- 		 * after we successfully scanned the last channel of the last
-@@ -574,7 +607,10 @@ void ieee80211_scan_work(struct work_struct *work)
- 		break;
- 	case SCAN_SEND_PROBE:
- 		next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
--		local->scan_state = SCAN_SET_CHANNEL;
-+		if (!local->bg_scanning)
-+			local->scan_state = SCAN_SET_CHANNEL;
-+		else
-+			local->scan_state = SCAN_DEFER;
- 
- 		if (local->scan_channel->flags & IEEE80211_CHAN_PASSIVE_SCAN)
- 			break;
-@@ -582,6 +618,50 @@ void ieee80211_scan_work(struct work_struct *work)
- 					 local->scan_ssid_len);
- 		next_delay = IEEE80211_CHANNEL_TIME;
- 		break;
-+	case SCAN_DEFER:
-+		local->scan_state = SCAN_OPERATION;
-+		/* interrupt the current scan */
-+		local->sw_scanning = 0;
-+
-+		/* switch back to the operating channel */
-+		if (ieee80211_hw_config(local))
-+			printk(KERN_DEBUG "%s: failed to restore operational "
-+			       "channel after scan\n", sdata->dev->name);
-+
-+		/* reconfigure filter flags*/
-+		netif_tx_lock_bh(local->mdev);
-+		local->filter_flags &= ~FIF_BCN_PRBRESP_PROMISC;
-+		local->ops->configure_filter(local_to_hw(local),
-+					     FIF_BCN_PRBRESP_PROMISC,
-+					     &local->filter_flags,
-+					     local->mdev->mc_count,
-+					     local->mdev->mc_list);
-+
-+		netif_tx_unlock_bh(local->mdev);
-+
-+		/* wait for the channel switch */
-+		next_delay = usecs_to_jiffies(local->hw.channel_change_time);
-+		break;
-+
-+	case SCAN_OPERATION:	
-+		rcu_read_lock();
-+		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+			/* Tell AP we're back */
-+			if (sdata->vif.type == NL80211_IFTYPE_STATION &&
-+			    sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED) {
-+				ieee80211_send_nullfunc(local, sdata, 0);
-+				netif_tx_wake_all_queues(sdata->dev);
-+			}
-+		}
-+		rcu_read_unlock();
-+
-+		/* TODO: start scan as soon as all nullfunc frames are ACKed */
-+		msleep(1);
-+
-+		next_delay = IEEE80211_BG_SCAN_INTERRUPT;
-+		local->scan_state = SCAN_SET_CHANNEL;
-+
-+		break;
- 	}
- 
- 	queue_delayed_work(local->hw.workqueue, &local->scan_work,
-@@ -615,7 +695,7 @@ int ieee80211_start_scan(struct ieee80211_sub_if_data *scan_sdata,
- 	  * ResultCode: SUCCESS, INVALID_PARAMETERS
- 	 */
- 
--	if (local->sw_scanning || local->hw_scanning) {
-+	if (local->sw_scanning || local->hw_scanning || local->bg_scanning) {
- 		if (local->scan_sdata == scan_sdata)
- 			return 0;
- 		return -EBUSY;
-@@ -636,18 +716,28 @@ int ieee80211_start_scan(struct ieee80211_sub_if_data *scan_sdata,
- 
- 	local->sw_scanning = true;
- 
-+	/*
-+	 * if at least one station interface is associated start a background scan
-+	 * instead of a common software scan
-+	 */
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
- 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
- 			if (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED) {
--				netif_tx_stop_all_queues(sdata->dev);
--				ieee80211_send_nullfunc(local, sdata, 1);
-+				/*
-+				 * no need to stop station interaces here, that will be done in
-+				 * the scan handler
-+				 */
-+				local->bg_scanning = true;
- 			}
- 		} else
- 			netif_tx_stop_all_queues(sdata->dev);
- 	}
- 	rcu_read_unlock();
- 
-+	if (!local->bg_scanning)
-+		local->sw_scanning = true;
-+
- 	if (ssid) {
- 		local->scan_ssid_len = ssid_len;
- 		memcpy(local->scan_ssid, ssid, ssid_len);
-@@ -658,14 +748,16 @@ int ieee80211_start_scan(struct ieee80211_sub_if_data *scan_sdata,
- 	local->scan_band = IEEE80211_BAND_2GHZ;
- 	local->scan_sdata = scan_sdata;
- 
--	netif_addr_lock_bh(local->mdev);
--	local->filter_flags |= FIF_BCN_PRBRESP_PROMISC;
--	local->ops->configure_filter(local_to_hw(local),
--				     FIF_BCN_PRBRESP_PROMISC,
--				     &local->filter_flags,
--				     local->mdev->mc_count,
--				     local->mdev->mc_list);
--	netif_addr_unlock_bh(local->mdev);
-+	if (!local->bg_scanning) {
-+		netif_addr_lock_bh(local->mdev);
-+		local->filter_flags |= FIF_BCN_PRBRESP_PROMISC;
-+		local->ops->configure_filter(local_to_hw(local),
-+					     FIF_BCN_PRBRESP_PROMISC,
-+					     &local->filter_flags,
-+					     local->mdev->mc_count,
-+					     local->mdev->mc_list);
-+		netif_addr_unlock_bh(local->mdev);
-+	}
- 
- 	/* TODO: start scan as soon as all nullfunc frames are ACKed */
- 	queue_delayed_work(local->hw.workqueue, &local->scan_work,
-diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-index 7e0d53a..fd7783a 100644
---- a/net/mac80211/wext.c
-+++ b/net/mac80211/wext.c
-@@ -566,7 +566,7 @@ static int ieee80211_ioctl_giwscan(struct net_device *dev,
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	if (local->sw_scanning || local->hw_scanning)
-+	if (local->sw_scanning || local->hw_scanning || local->bg_scanning)
- 		return -EAGAIN;
- 
- 	res = ieee80211_scan_results(local, info, extra, data->length);
+--=20
+Karol Szkudlarek
+Mikronika
+ul. Wykopy 2/4
+60-001 POZNA=D1
+tel. +48 61 6655600
+fax +48 61 6655602
+e-mail karol@mikronika.com.pl
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
