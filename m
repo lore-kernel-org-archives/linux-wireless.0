@@ -1,88 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36707 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752989AbYIRSOa (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:17993 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752305AbYIIJnn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 14:14:30 -0400
-Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <200809182006.58620.IvDoorn@gmail.com> (sfid-20080918_200703_023992_1E2D0C69)
-References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net>
-	 <200809181952.15770.IvDoorn@gmail.com>
-	 <1221760449.9262.96.camel@johannes.berg>
-	 <200809182006.58620.IvDoorn@gmail.com>
-	 (sfid-20080918_200703_023992_1E2D0C69)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eH5XxzepH8qRiK/0x7T6"
-Date: Thu, 18 Sep 2008 20:13:46 +0200
-Message-Id: <1221761626.20772.0.camel@johannes.berg> (sfid-20080918_201434_323193_919282A5)
-Mime-Version: 1.0
+	Tue, 9 Sep 2008 05:43:43 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so1086808yxm.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Sep 2008 02:43:42 -0700 (PDT)
+Message-ID: <1ba2fa240809090243m443c87f2xab50d7f2ec0c9d07@mail.gmail.com> (sfid-20080909_114345_890190_6ADADCC2)
+Date: Tue, 9 Sep 2008 12:43:41 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 13/8] mac80211: consolidate deauth/disassoc
+Cc: "John Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1220950705.31304.121.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20080908154421.216772000@sipsolutions.net>
+	 <1220950705.31304.121.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Sep 9, 2008 at 11:58 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> deauth and disassoc frames are completely identical so there's
+> little point in having two functions to send them rather than
+> one that gets a parameter. This same a bit of code size.
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Sounds good. Ack
 
---=-eH5XxzepH8qRiK/0x7T6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2008-09-18 at 20:06 +0200, Ivo van Doorn wrote:
-> On Thursday 18 September 2008, Johannes Berg wrote:
-> > On Thu, 2008-09-18 at 19:52 +0200, Ivo van Doorn wrote:
-> >=20
-> > > From rfkill.h:
-> > > 	RFKILL_STATE_SOFT_BLOCKED =3D 0,	/* Radio output blocked */
-> > > 	RFKILL_STATE_UNBLOCKED    =3D 1,	/* Radio output allowed */
-> > > 	RFKILL_STATE_HARD_BLOCKED =3D 2,	/* Output blocked, non-overrideable=
- */
-> > >=20
-> > > Since b43 has a rfkill mechanism that does switch of the radio when R=
-FKILL is set to BLOCK
-> > > after a key press, it should send RFKILL_STATE_HARD_BLOCKED because r=
-fkill cannot override
-> > > it.
-> > >=20
-> > > rt2x00 hardware does not change the radio state when RFKILL is set to=
- BLOCK after a key press,
-> > > the state is therefor overridable and it can send RFKILL_STATE_SOFT_B=
-LOCKED to rfkill.
-> >=20
-> > If rt2x00 has no meaning of "hardware blocked", why is the button not a
-> > simple input device?
->=20
-> Because I had that discussion with Henrique and that ended with a "it isn=
-'t a input device"...
-
-Why isn't it? If it doesn't affect the hardware itself it might as well
-be connected to the ps/2 port for all I care.
-
-johannes
-
---=-eH5XxzepH8qRiK/0x7T6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI0ppWAAoJEKVg1VMiehFYEgIP/0Y+TtcHUfSMyH3pJSIj4oh1
-ukuURiPOfFZkUIVk35jW5X5zzY/aPQTQltVoV3PlV50Xt66B84V/SXD9/HzVq0P+
-eSnyrvuOX/bUh0WVLAstXL1G5M984amokjBPYpsoDZ8fqfbp3x5QEjBMBvPoJMMm
-sMC2HO/hQ9/IvY4otVbmqk9FFt3rYjhEPtqzRttQkS9jBTiEZZMiPCR1I2WLecti
-1H83Zwqv9Bf0zukIVz1Xu+Z5REIWJU/WAf7/8O8EeUnOXjY7XMoR+GuzlIymCXQw
-KsWU4gxrBwt2SSZDjf9WWQLtxvzohGW1eFHvDpK0MLYofaRBjsqJSSgFimmjpiS4
-mQwkZmKMaSAtMTz7X0xjrxctD0Eg1Qy1Tp04zgxxiXBk+l1h1Gsynp0QLHzT3spa
-YcafrKQz5jHeb1/siETggq/0Ld/Aw0IN61x1kI0zRG3oVcOJBLgFaiUVohskLclC
-ZMVEeJOR15kRTykTJB0o64ofYALP5c5EvIZxr7dLeEwola6IphhRrourDq2/Dur3
-umhFXjhuI/FmvF9/xA3GEtJO0iClmo1uY0O3XTpzCeg2CYIwDobCwsDg26X+ahGX
-Ul54S3YVIWCYKkQ8k/yhEkXc8+5ZJNgErgEeedeLxJwxYz8IaIGCgg3TIeSZh/RT
-mJDnQcvsoTiw1sCPxF5w
-=z2yE
------END PGP SIGNATURE-----
-
---=-eH5XxzepH8qRiK/0x7T6--
-
+> ---
+>  net/mac80211/mlme.c |   47 +++++++++++------------------------------------
+>  1 file changed, 11 insertions(+), 36 deletions(-)
+>
+> --- everything.orig/net/mac80211/mlme.c 2008-09-09 09:47:27.000000000 +0200
+> +++ everything/net/mac80211/mlme.c      2008-09-09 09:50:07.000000000 +0200
+> @@ -416,17 +416,18 @@ static void ieee80211_send_assoc(struct
+>  }
+>
+>
+> -static void ieee80211_send_deauth(struct ieee80211_sub_if_data *sdata,
+> -                                 struct ieee80211_if_sta *ifsta, u16 reason)
+> +static void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
+> +                                          u16 stype, u16 reason)
+>  {
+>        struct ieee80211_local *local = sdata->local;
+> +       struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+>        struct sk_buff *skb;
+>        struct ieee80211_mgmt *mgmt;
+>
+>        skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*mgmt));
+>        if (!skb) {
+> -               printk(KERN_DEBUG "%s: failed to allocate buffer for deauth "
+> -                      "frame\n", sdata->dev->name);
+> +               printk(KERN_DEBUG "%s: failed to allocate buffer for "
+> +                      "deauth/disassoc frame\n", sdata->dev->name);
+>                return;
+>        }
+>        skb_reserve(skb, local->hw.extra_tx_headroom);
+> @@ -436,42 +437,14 @@ static void ieee80211_send_deauth(struct
+>        memcpy(mgmt->da, ifsta->bssid, ETH_ALEN);
+>        memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
+>        memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
+> -       mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+> -                                         IEEE80211_STYPE_DEAUTH);
+> +       mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT | stype);
+>        skb_put(skb, 2);
+> +       /* u.deauth.reason_code == u.disassoc.reason_code */
+>        mgmt->u.deauth.reason_code = cpu_to_le16(reason);
+>
+>        ieee80211_sta_tx(sdata, skb, 0);
+>  }
+>
+> -static void ieee80211_send_disassoc(struct ieee80211_sub_if_data *sdata,
+> -                                   struct ieee80211_if_sta *ifsta, u16 reason)
+> -{
+> -       struct ieee80211_local *local = sdata->local;
+> -       struct sk_buff *skb;
+> -       struct ieee80211_mgmt *mgmt;
+> -
+> -       skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*mgmt));
+> -       if (!skb) {
+> -               printk(KERN_DEBUG "%s: failed to allocate buffer for disassoc "
+> -                      "frame\n", sdata->dev->name);
+> -               return;
+> -       }
+> -       skb_reserve(skb, local->hw.extra_tx_headroom);
+> -
+> -       mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
+> -       memset(mgmt, 0, 24);
+> -       memcpy(mgmt->da, ifsta->bssid, ETH_ALEN);
+> -       memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
+> -       memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
+> -       mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+> -                                         IEEE80211_STYPE_DISASSOC);
+> -       skb_put(skb, 2);
+> -       mgmt->u.disassoc.reason_code = cpu_to_le16(reason);
+> -
+> -       ieee80211_sta_tx(sdata, skb, 0);
+> -}
+> -
+>  static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *da, u16 tid,
+>                                        u8 dialog_token, u16 status, u16 policy,
+>                                        u16 buf_size, u16 timeout)
+> @@ -920,9 +893,11 @@ static void ieee80211_set_disassoc(struc
+>
+>        if (self_disconnected) {
+>                if (deauth)
+> -                       ieee80211_send_deauth(sdata, ifsta, reason);
+> +                       ieee80211_send_deauth_disassoc(sdata,
+> +                               IEEE80211_STYPE_DEAUTH, reason);
+>                else
+> -                       ieee80211_send_disassoc(sdata, ifsta, reason);
+> +                       ieee80211_send_deauth_disassoc(sdata,
+> +                               IEEE80211_STYPE_DISASSOC, reason);
+>        }
+>
+>        ifsta->flags &= ~IEEE80211_STA_ASSOCIATED;
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
