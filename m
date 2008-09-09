@@ -1,68 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:55689 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1752235AbYIFJkj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Sep 2008 05:40:39 -0400
-Message-ID: <48C24F66.1090803@cn.fujitsu.com> (sfid-20080906_114054_754626_832B15D7)
-Date: Sat, 06 Sep 2008 17:37:42 +0800
-From: Wang Chen <wangchen@cn.fujitsu.com>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	NETDEV <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 14/18] netdevice airo: Convert directly reference of	netdev->priv
- to netdev->ml_priv
-References: <48C0A219.2030004@cn.fujitsu.com>	 <48C0A72B.9050407@cn.fujitsu.com>  <20080905125036.GA3027@tuxdriver.com> <1220634383.6430.14.camel@localhost.localdomain>
-In-Reply-To: <1220634383.6430.14.camel@localhost.localdomain>
-Content-Type: text/plain; charset=UTF-8
+Received: from xc.sipsolutions.net ([83.246.72.84]:49262 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755474AbYIIM2t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Sep 2008 08:28:49 -0400
+Subject: Re: [RFC] mac80211: make BA session handling independent of STA
+	mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Jouni Malinen <j@w1.fi>, Ron Rindjunsky <rindjon@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1220959762.31304.156.camel@johannes.berg> (sfid-20080909_132937_322957_7D7DFA14)
+References: <1220883730.31304.60.camel@johannes.berg>
+	 <1ba2fa240809090146p612083aclf3a2a924a81e75e9@mail.gmail.com>
+	 <1220950358.31304.112.camel@johannes.berg>
+	 <1ba2fa240809090241g2604e3ddhfd39359fd8eb0f8b@mail.gmail.com>
+	 <1220953379.31304.124.camel@johannes.berg>
+	 <1ba2fa240809090252u44c5a016m98845379ac213df9@mail.gmail.com>
+	 <1220954146.31304.127.camel@johannes.berg>
+	 <1ba2fa240809090321w4d2f3780g32e9507fac45f95e@mail.gmail.com>
+	 <1220955934.31304.133.camel@johannes.berg>
+	 <1220956032.31304.135.camel@johannes.berg>
+	 <1ba2fa240809090353o1ab1340ck82a9208dd364587a@mail.gmail.com>
+	 (sfid-20080909_125320_013382_134F778C)  <1220958109.31304.153.camel@johannes.berg>
+	 (sfid-20080909_130159_755464_34E4D68B)  <1220959762.31304.156.camel@johannes.berg>
+	 (sfid-20080909_132937_322957_7D7DFA14)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CyVFpFTbHGLtRHa1DXYi"
+Date: Tue, 09 Sep 2008 14:28:40 +0200
+Message-Id: <1220963320.31304.159.camel@johannes.berg> (sfid-20080909_142907_060859_3EC03653)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams said the following on 2008-9-6 1:06:
-> On Fri, 2008-09-05 at 08:50 -0400, John W. Linville wrote:
->> On Fri, Sep 05, 2008 at 11:27:39AM +0800, Wang Chen wrote:
->>> We have some reasons to kill netdev->priv:
->>> 1. netdev->priv is equal to netdev_priv().
->>> 2. netdev_priv() wraps the calculation of netdev->priv's offset, obviously
->>>    netdev_priv() is more flexible than netdev->priv.
->>> But we cann't kill netdev->priv, because so many drivers reference to it
->>> directly.
->>>
->>> OK, becasue Dave S. Miller said, "every direct netdev->priv usage is a bug",
->>> and I want to kill netdev->priv later, I decided to convert all the direct
->>> reference of netdev->priv first.
->>>
->>> Different to readonly reference of netdev->priv, in this driver, netdev->priv
->>> was changed. I use netdev->ml_priv to replace netdev->priv.
->>>
->>> Signed-off-by: Wang Chen <wangchen@cn.fujitsu.com>
->> Thank you for your patch.  However, I do not understand why you didn't
->> simply replace netdev->priv with netdev_priv()?  Can you explain?
-> 
-> Yeah, that would have been my first choice too...
-> 
 
-1. Why I don't use netdev_priv() to replace netdev->priv here?
-Because, here
-> @@ -2665,7 +2666,7 @@ static struct net_device *init_wifidev(struct airo_info *ai,
->  	struct net_device *dev = alloc_netdev(0, "wifi%d", wifi_setup);
->  	if (!dev)
->  		return NULL;
-> -	dev->priv = ethdev->priv;
-> +	dev->ml_priv = ethdev->ml_priv;
-> @@ -2766,7 +2767,7 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
->  		return NULL;
->  	}
->  
-> -	ai = dev->priv;
-> +	ai = dev->ml_priv = netdev_priv(dev);
-netdev->priv was changed here, but it shouldn't, the memory was allocated when alloc_netdev and
-netdev->priv should always pointed to that memory.
+--=-CyVFpFTbHGLtRHa1DXYi
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-2. Why I use netdev->ml_priv here to replace netdev->priv?
-In this driver, netdev->priv are shared by multi wifidevs, that means wifidevs need
-mid-layer private data, which are all same as their parent netdev.
-This usage is same as Dave's commit "syncppp: Fix crashes."
+On Tue, 2008-09-09 at 13:29 +0200, Johannes Berg wrote:
+> This is what I have in mind, thoughts?
+>=20
+> Subject: mac80211: make BA session handling independent of STA mode
+> From: Johannes Berg <johannes@sipsolutions.net>
+>=20
+> An AP has to be able to handle aggregation sessions as well, and
+> I guess there's nothing strictly preventing WDS interfaces from
+> having aggregation sessions.
+
+Ok I think this is a win in terms of code quality, so I'll post this
+patch with a slight adjustment to process BA frames only in STA/IBSS
+modes as currently (MESH doesn't use 11n yet at all).
+
+johannes
+
+--=-CyVFpFTbHGLtRHa1DXYi
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIxmvzAAoJEKVg1VMiehFYVMEQALMnt5v1yeiY4LiJGEZv0UvF
+7UNu8y8eL7xQmBzZdcbFqilQ84PsIdfszndxUfv4hRknI92RgRW9JN/TDgQwHkXt
+IsYvr1dJDH8RFA48jSPprGm79JmxJ478IDRiiqrvqWoAlZN5oMG4JIDhgkplFVvS
+lZn+Lrn5XKtZ7UnH8spCvu/PDRQkCsU41KLEHlI9Oc+ooetPN+/XDUHRpONuZmUz
+YqKrCPpQckiSgMFjdNpRLdp+7sEDWqP9SXcnyw7Eyvn0Rmm0gKhsUFt1KyaEQ7Zk
+7m49eyOkWLpXeOITYZXxSrGFD3b8zPKKJM6aPtyutky2kgw8pJTSHHX0YsbpswuY
+q/tCid8S8jXagwRQdQOAtnl9byI6no4gWlL8nCzQ1qjlPwt+4Vq2v4BDD4YzQL++
+zrTmO0b4U0WA8gWeW6iYSctWTqxRwYTIZpmDb0v7rHYzykwtBKdOiDydq+nfluGA
+rInqfQI/C8Np4ClBok/NvbPIiVcJjanR+CfA0+sEGeGBQqYZafuq+dXC2UXh+nju
+LWifNXq9JFCUBgLJadk1NAHCTAgsMknPdjTP8YwyIEkeqcFceAA4nxSCsF7ZSwLy
+b98TgZpXgv0WRCHrUS/2W+fup+jwjjxWMppX5hM/H9iIiF2xW1PzT1+Qw+8psqiW
+zQYotTRZIE8Ns+heCSkU
+=Pz7K
+-----END PGP SIGNATURE-----
+
+--=-CyVFpFTbHGLtRHa1DXYi--
 
