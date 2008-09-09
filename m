@@ -1,61 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33418 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752864AbYIOOSZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 10:18:25 -0400
-From: Helmut Schaa <hschaa@suse.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: More thoughts about roaming ...
-Date: Mon, 15 Sep 2008 16:18:18 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200809151416.07552.hschaa@suse.de> <1221487160.10177.14.camel@localhost.localdomain>
-In-Reply-To: <1221487160.10177.14.camel@localhost.localdomain>
+Received: from yx-out-2324.google.com ([74.125.44.28]:46936 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751731AbYIIIqZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Sep 2008 04:46:25 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so1075396yxm.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Sep 2008 01:46:23 -0700 (PDT)
+Message-ID: <1ba2fa240809090146p612083aclf3a2a924a81e75e9@mail.gmail.com> (sfid-20080909_104629_131131_AA2FF544)
+Date: Tue, 9 Sep 2008 11:46:23 +0300
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: HT action frame code
+Cc: "Jouni Malinen" <j@w1.fi>,
+	"Ron Rindjunsky" <rindjon@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1220948427.31304.107.camel@johannes.berg>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200809151618.19161.hschaa@suse.de> (sfid-20080915_161830_084429_6120D1D7)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1220883730.31304.60.camel@johannes.berg> <48C5868B.8060103@w1.fi>
+	 <1220942004.31304.101.camel@johannes.berg>
+	 <1ba2fa240809090114u67086f2duc5cc9addd384e30d@mail.gmail.com>
+	 <1220948427.31304.107.camel@johannes.berg>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Montag, 15. September 2008 15:59:20 schrieb Dan Williams:
-> On Mon, 2008-09-15 at 14:16 +0200, Helmut Schaa wrote:
-> > Hi,
-> >
-> > As a result of the thread "Pondering: how to improve mac80211 roaming
-> > ..." I thought a bit more about that topic. Here is a quick suggestion
-> > for a first version:
-> >
-> > * Enhance mac80211 software scan to interrupt the current scan and switch
-> >   back to the operating channel every once in a while (only if at least
-> > one STA interface is associated) => background scan.
-> >
-> > * Enhance mac80211 to check the signal quality frequently (or any other
-> >   indicator like beacon misses) and decide when the signal quality is too
-> > low. Indicate that to the user space.
-> >
-> > * wpa_supplicant (or any other user space application) gets notified
-> > about the low signal quality and triggers a scan in order to find a
-> > better AP. wpa_supplicant already chooses the AP with the best signal
-> > strength.
+On Tue, Sep 9, 2008 at 11:20 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2008-09-09 at 11:14 +0300, Tomas Winkler wrote:
 >
-> I'm pretty sure it doesn't.  The code in wpa_supplicant_select_bss()
-> doesn't have any logic to detect signal strength, nor does any driver
-> report signal strength to the supplicant.  Drivers set the level (well,
-> only wext/nl80211, ndis, iphone/osx, and bsd) but I'm pretty sure
-> nothing in the supplicant uses it.
+>> >> The current design assumes that hostapd takes care of all management
+>> >> frames, so eyes, these would need to go to hostapd for processing and
+>> >> then setup back to mac80211 through some new command..
+>> >
+>> > Well we can always pick out those action frames in the kernel if we want
+>> > to, that's not the problem, is it?
+>>
+>> We've indeed has kept inside just BA session action frames.
+>
+> Hmm? I don't think I understand what you're trying to say.
 
-Once the supplicant receives the actual scan results it orders them by
-security, rate, signal level and finally quality (see 
-src/drivers/scan_helpers.c, wpa_scan_sort_results). Hence if multiple APs
-have the same SSID the one with the best signal level (or quality) will
-be the first in the scan results and wpa_supplicant just selects the first
-matching AP. Works fine here ;)
+Meaning that other management frames are forward to user space while
+BA action frames
+are treated inside mac80211.
 
-> Maybe now is the time to switch that on.  That needs to be coupled with
-> some additions to cfg80211 to turn firmware/driver roaming on and off,
-> along with a capability bit somewhere to indicate that the
-> driver/firmware support turning roaming on/off.
+>
+>> > Should the design be changed? It seems that this is more related to the
+>> > rate scale algorithm and the "can we support aggregation for this STA"
+>> > question, both of which we currently have information about in the
+>> > kernel and not hostapd.
+>>
+>> The decision might come both from RS and hostapd. RS just have more
+>> info whether there will be gain from aggregation. When throughput is
+>> not high enough it's just an overhead. Though some APs open session
+>> immediately uppon association without and RS decision.
+>> Our design is that BA can be triggered not only for RS.
+>
+> Well yeah, but I'm not sure we really want to add API to cfg80211 for
+> this. It's not exactly hard to, but right now I don't see how hostapd
+> would influence the decision.
+>
+> Also, I'm not talking about the AP triggering the aggregation session,
+> this is entirely done with the rate scaling right now, but about an
+> associated STA wanting to start an aggregation session. Aren't
+> aggregation sessions always triggered by whoever wants to send? So if a
+> STA notices it has lots of upload going on it could want to trigger a BA
+> session, which is something we don't currently support afaict.
 
-True. Which cards that can do roaming in driver/firmware?
-
-Helmut
+In iwl-agn-rs.c There is not difference if the peer is STA or AP. So
+we support this already.
+Thanks
+Tomas
