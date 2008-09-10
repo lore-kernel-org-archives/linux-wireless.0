@@ -1,43 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33784 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752295AbYIPHlq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 03:41:46 -0400
-From: Helmut Schaa <hschaa@suse.de>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [RFC] mac80211: notify the user space about low signal quality
-Date: Tue, 16 Sep 2008 09:41:41 +0200
-Cc: "Dan Williams" <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Jouni Malinen" <j@w1.fi>
-References: <200809151416.07552.hschaa@suse.de> <200809151845.35841.hschaa@suse.de> <43e72e890809151821h5d40e750q10c78f4d20d27c79@mail.gmail.com>
-In-Reply-To: <43e72e890809151821h5d40e750q10c78f4d20d27c79@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200809160941.42154.hschaa@suse.de> (sfid-20080916_094150_031844_D1EB3BBC)
+Received: from senator.holtmann.net ([87.106.208.187]:49554 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751939AbYIJWZJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2008 18:25:09 -0400
+Subject: Re: [PATCH 1/2 v6] cfg80211: Add new wireless regulatory
+	infrastructure
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <43e72e890809101518k35047191hac8b796383a5638@mail.gmail.com>
+References: <1221027589-19203-1-git-send-email-lrodriguez@atheros.com>
+	 <1221027589-19203-2-git-send-email-lrodriguez@atheros.com>
+	 <1221070650.13336.20.camel@californication>
+	 <43e72e890809101318o771100f0jcac9bbea6b863ccb@mail.gmail.com>
+	 <1221084429.13336.23.camel@californication>
+	 <43e72e890809101518k35047191hac8b796383a5638@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 11 Sep 2008 00:25:37 +0200
+Message-Id: <1221085537.13336.34.camel@californication> (sfid-20080911_002517_051309_F4CFCD35)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag, 16. September 2008 03:21:17 schrieb Luis R. Rodriguez:
-> On Mon, Sep 15, 2008 at 9:45 AM, Helmut Schaa <hschaa@suse.de> wrote:
-> > Ok, I'll sum that up. Moving the policy into user space is a good thing
-> > if the quality values are comparable. Once mac80211 recognices a
-> > noticable quality change we could use IWEVQUAL to notify user space about
-> > it. Furthermore (if desired) the signal could be extended to not only
-> > report a value between 0 and 100 but could also contain flags indicating
-> > lost beacons, excessive retries etc.
->
-> If you are going to add a new sort of notification can you please use
-> nl80211? No need to keep wireless extensions on life support.
+Hi Luis,
 
-Sure. Nevertheless I'd like to use the already existing IWEVQUAL (without 
-modifications) too. Hence the supplicant's wext-driver could use the plain 
-quality value to decide when it is time to trigger a scan while the 
-nl80211-driver could use more indicators.
+> >> > While reading through it, I came to think about regulatory_hint(). So is
+> >> > there a use case where would give it the alpha2 code and the domain
+> >> > itself at the same time? If not, then it would make more sense to split
+> >> > this into two functions.
+> >>
+> >> Nope, you either pass an alpha2 or an rd domain which is built by you
+> >> (and in that rd structure you can set the alpha2 to your iso3166
+> >> alpha2 or "99" if unknown).
+> >>
+> >> > Maybe something regulatory_alpha2_hint() and
+> >> > regulatory_domain_hint(). Just a thought.
+> >>
+> >> That's how I had it originally but decided to condense it to one
+> >> routine since as you could see they pretty much do the same thing
+> >> except the case where the rd is provided it calls set_regdom().
+> >> Setting it back to use two routines if fine by me too. What is better?
+> >> Can we just get this merged and then we can flip it around if
+> >> necessary? :) I'm tired of carrying this around.
+> >
+> > my take on this is that if from an API perspective you can only use one
+> > parameter or the other, then it should be two functions.
+> 
+> This is reasonable, I'll respin, yet once again...
 
-Arguments for or against moving the decision to user space (by notifying the 
-supplicant only about signal quality changes without rating the values)?
+get an agreement with Johannes on the naming. Either _alpha2_hint() or
+_hint_alpha2(). Not sure what the others are preferring.
 
-Thanks,
-Helmut
+Regards
+
+Marcel
+
+
