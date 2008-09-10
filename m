@@ -1,56 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:39873 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753061AbYIKPGM (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.30]:44815 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754781AbYIJUSh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 11:06:12 -0400
-Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1221123779.2513.88.camel@debian.sh.intel.com>
-References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
-	 <1221123779.2513.88.camel@debian.sh.intel.com>
-Content-Type: text/plain
-Date: Thu, 11 Sep 2008 17:06:42 +0200
-Message-Id: <1221145602.6309.17.camel@californication> (sfid-20080911_170622_013731_ED651A13)
-Mime-Version: 1.0
+	Wed, 10 Sep 2008 16:18:37 -0400
+Received: by yw-out-2324.google.com with SMTP id 9so9422ywe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Sep 2008 13:18:36 -0700 (PDT)
+Message-ID: <43e72e890809101318o771100f0jcac9bbea6b863ccb@mail.gmail.com> (sfid-20080910_221844_245575_CED9B720)
+Date: Wed, 10 Sep 2008 13:18:36 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Marcel Holtmann" <holtmann@linux.intel.com>
+Subject: Re: [PATCH 1/2 v6] cfg80211: Add new wireless regulatory infrastructure
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1221070650.13336.20.camel@californication>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1221027589-19203-1-git-send-email-lrodriguez@atheros.com>
+	 <1221027589-19203-2-git-send-email-lrodriguez@atheros.com>
+	 <1221070650.13336.20.camel@californication>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Yi,
+On Wed, Sep 10, 2008 at 11:17 AM, Marcel Holtmann
+<holtmann@linux.intel.com> wrote:
+> Hi Luis,
+>
+>> This adds the new wireless regulatory infrastructure. The
+>> main motiviation behind this was to centralize regulatory
+>> code as each driver was implementing their own regulatory solution,
+>> and to replace the initial centralized code we have where:
+>>
+>> * only 3 regulatory domains are supported: US, JP and EU
+>> * regulatory domains can only be changed through module parameter
+>> * all rules were built statically in the kernel
+>>
+>> We now have support for regulatory domains for many countries
+>> and regulatory domains are now queried through a userspace agent
+>> through udev allowing distributions to update regulatory rules
+>> without updating the kernel.
+>>
+>> Each driver can regulatory_hint() a regulatory domain
+>> based on either their EEPROM mapped regulatory domain value to a
+>> respective ISO/IEC 3166-1 country code or pass an internally built
+>> regulatory domain. We also add support to let the user set the
+>> regulatory domain through userspace in case of faulty EEPROMs to
+>> further help compliance.
+>
+> thanks for the write-up and examples. I like it a lot and gives driver
+> maintainers a nice understanding what to do.
 
-> > However I tried to reproduce it without Bluetooth enabled, it didn't  
-> > show or I didn't wait long enough. Once I started bluetoothd it showed  
-> > within a few minutes.
-> > 
-> > So the best I got was the attached screenshot of an oops. It is  
-> > clearly the iwlwifi driver crashing here and killing the machine, but  
-> > I have no idea why.
-> 
-> >From the screenshot line:
-> 
-> iwl_tx_cmd_complete+0x43/0x245
-> 
-> It should be triggered by the BUG_ON() in the function. Are you able to
-> confirm it with netconsole or maybe even a frame buffer enabled console
-> (it just shows more lines)? If this is the culprit, Tomas has been
-> already working on it. But your BT coexist finding should help us
-> reproducing the bug.
-> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1703
+Thanks :)
 
-right now the screenshot is the best I can do. This is a X61 and so I am
-limited in what I can give you. Getting the screenshot was tricky enough
-since most of the times is just crashes in the background and getting
-this re-produced on the console is not as simple as I thought. When
-working inside GNOME, it crashes from between 30 minutes or 2 hours
-without any warning.
+> While reading through it, I came to think about regulatory_hint(). So is
+> there a use case where would give it the alpha2 code and the domain
+> itself at the same time? If not, then it would make more sense to split
+> this into two functions.
 
-I am not sure if I am the only with this issue, but it looks like a
-serious regression that needs to be fixed before 2.6.27 goes out.
+Nope, you either pass an alpha2 or an rd domain which is built by you
+(and in that rd structure you can set the alpha2 to your iso3166
+alpha2 or "99" if unknown).
 
-Regards
+> Maybe something regulatory_alpha2_hint() and
+> regulatory_domain_hint(). Just a thought.
 
-Marcel
+That's how I had it originally but decided to condense it to one
+routine since as you could see they pretty much do the same thing
+except the case where the rd is provided it calls set_regdom().
+Setting it back to use two routines if fine by me too. What is better?
+Can we just get this merged and then we can flip it around if
+necessary? :) I'm tired of carrying this around.
 
-
+  Luis
