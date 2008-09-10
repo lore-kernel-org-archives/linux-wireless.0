@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.225]:52766 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754979AbYISQ2C (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Sep 2008 12:28:02 -0400
-Received: by qb-out-0506.google.com with SMTP id f11so423035qba.17
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2008 09:28:00 -0700 (PDT)
-Date: Fri, 19 Sep 2008 09:27:48 -0700 (PDT)
-From: Steven Noonan <steven@uplinklabs.net>
-To: Robert Hancock <hancockr@shaw.ca>
-cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5,
- rc6, probably others)
-In-Reply-To: <48D3BB5B.7060003@shaw.ca>
-Message-ID: <alpine.LNX.2.00.0809190925250.22158@alcarin.uplinklabs.net> (sfid-20080919_182821_447858_B64ECD6C)
-References: <fa.jQQm4Iwb0lkAWxV+5FAfTMHY4m4@ifi.uio.no> <fa.zGA6t2p+jJeMRIaZFOqy1I8En1c@ifi.uio.no> <fa.AGi3s2gpyC3T3KuCJ8cYQ30teak@ifi.uio.no> <fa.59AlSLNBuMx/BjQSvR6whwGydbU@ifi.uio.no> <fa.NwYDTAB59VZjr1quzgR4OU0+8eQ@ifi.uio.no> <fa.tRre/FoeQKwChGwdusnYJgwjRmw@ifi.uio.no>
- <48D3BB5B.7060003@shaw.ca>
+Received: from mail.atheros.com ([12.36.123.2]:39835 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751049AbYIJGT4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2008 02:19:56 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH 0/2 v6] New regulatory infrastructure for cfg80211 and drivers
+Date: Tue, 9 Sep 2008 23:19:47 -0700
+Message-ID: <1221027589-19203-1-git-send-email-lrodriguez@atheros.com> (sfid-20080910_082000_331016_CF4EFAA4)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This series adds the new regulatory infrastructure for
+cfg80211. Since it has not been merged yet and there were
+a few more pending comments I've taken the time to address them
+but also do one *big* review over this and scrubbed it a bit,
+enhanced documentation even more and even tested corner cases
+I wasn't considering yet.
 
+The more important changes:
 
-On Fri, 19 Sep 2008, Robert Hancock wrote:
+ * New Documentation/networking/regulatory.txt
+   This provides driver developers with examples of how to use this
+   new infrastructure.
+ * Actually made use of old static regdomains via
+   CONFIG_WIRELESS_OLD_REGULATORY, and addressed a few updates in the
+   regulatory code path for it. Also if you enable this option we
+   disable the use of a world regulatory domain as it becomes pointless.
+ * Use bool
+ * Instead of REGDOM_SET_BY_80211D use REGDOM_SET_BY_COUNTRY_IE
+ * Allow drivers to use REG_RULE() macro helper should they need it.
+   Also fix REG_RULE() by putting values in parenthesis, this lets you
+   pass values such as 2412+20.
+ * Our reg_rule now has _khz suffix to clarify its not the usual MHz
+   we're used to dealing with in the wireless code.
+ * If the *built* regulatory domain supplied by driver is unknown
+   have the driver set the alpha2 to "99" so we can treat it as such
+   in the regulatory code
+ * removed cfg80211_reg_mutex, turns out its existance was just a
+   waste of electrons as we can easily just lock over cfg80211_drv_mutex
+   as we end up needing to lock over it anyway when we update regulatory
+   domains. This made it possible to simplify the code and makes, it should
+   be a lot easier to follow now.
+ * __regulatory_hint() no longer calls set_regdom() in the case where
+   a built regulatory domain was passed, instead we now leave that to the
+   caller. Right now this means regulatory_hint() now calls set_regdom()
+   when a built regulatory domain is passed. It is expected Country IE
+   parsing code will do something similar in the future.
 
-> Steven Noonan wrote:
-> > Second of all, I'm looking at the ath9k interrupt handler right now,
-> > and there are a few cases where it returns IRQ_NONE. And here's where
-> > I'm a bit fuzzy. Since there could be any number of things using IRQ
-> > 17 (though in my case, ath9k is on its own dedicated IRQ), it seems
-> > odd that you check the value of sc->sc_invalid, since the cookie
-> > passed to the handler might not actually be ath9k's cookie if multiple
-> > drivers have registered IRQ handlers for that particular IRQ. Who
-> > knows if what you're reading is even valid? Heck, what if some driver
-> > uses a NULL for their cookie (however unlikely)? You'd get a
-> > segmentation fault on the second line of the interrupt handler. Of
-> > course, I could be completely wrong: does parent interrupt handler
-> > check to see which device driver owns the particular device signaling
-> > an IRQ and then call the appropriate handler?
-> 
-> All the IRQ handlers registered on that interrupt will get called. The cookie
-> will always be the right one for that handler however.
+The only thing I'm not too proud of is how clumsy ignore_request() 
+looks but we can fix this as we go.
 
-Thank you! I appreciate the explanation.
-
-> The bug is presumably that it returns IRQ_NONE in some cases where the device
-> is actually generating an interrupt. The advice to turn on irqpoll is rather
-> useless in this case - that's mainly useful where the IRQ routing is messed up
-> and the device can't receive any interrupts at all.
-
-Strange, though, that irqpoll solved the connectivity issues (but of 
-course created the ridiculous latency that this thread's all about).
-
+  Luis
