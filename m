@@ -1,40 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52195 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752842AbYIPSXo (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:38605 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751898AbYIJUpk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Sep 2008 14:23:44 -0400
-Subject: [PATCH] mac80211: allow interface settings changes only when down
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 16 Sep 2008 20:22:21 +0200
-Message-Id: <1221589341.8916.48.camel@johannes.berg> (sfid-20080916_202348_022661_03CAA616)
-Mime-Version: 1.0
+	Wed, 10 Sep 2008 16:45:40 -0400
+Received: by gxk9 with SMTP id 9so14825157gxk.13
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Sep 2008 13:45:39 -0700 (PDT)
+Message-ID: <43e72e890809101345i7b5ded8bnb7a8a4e7c16470ff@mail.gmail.com> (sfid-20080910_224544_602156_28B7FF6F)
+Date: Wed, 10 Sep 2008 13:45:39 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Vasanthakumar Thiagarajan" <vasanth@atheros.com>
+Subject: Re: [PATCH 1/2] ath9k: Re-order functions in main.c
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	"Jouni Malinen" <Jouni.Malinen@atheros.com>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>
+In-Reply-To: <20080910131927.GA7779@vasanth-lnx.users.atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20080910131927.GA7779@vasanth-lnx.users.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We currently allow monitor flags changes and mesh ID changes when
-the interface is up, which can lead to trouble. Change it to only
-allow when down.
+On Wed, Sep 10, 2008 at 6:19 AM, Vasanthakumar Thiagarajan
+<vasanth@atheros.com> wrote:
+> Some of the functions in main.c are re-ordered in such
+> a way that all local functions are defined before mac80211
+> and pci callbacks.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/cfg.c |    3 +++
- 1 file changed, 3 insertions(+)
+Please split the re-ordering of functions into a separate patch to
+make it easier for review.
 
---- everything.orig/net/mac80211/cfg.c	2008-09-16 20:19:48.000000000 +0200
-+++ everything/net/mac80211/cfg.c	2008-09-16 20:20:37.000000000 +0200
-@@ -102,6 +102,9 @@ static int ieee80211_change_iface(struct
- 	if (ret)
- 		return ret;
- 
-+	if (netif_running(sdata->dev))
-+		return -EBUSY;
-+
- 	if (ieee80211_vif_is_mesh(&sdata->vif) && params->mesh_id_len)
- 		ieee80211_sdata_set_mesh_id(sdata,
- 					    params->mesh_id_len,
-
-
+  Luis
