@@ -1,75 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.184]:54027 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752115AbYI1UJN (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40697 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756016AbYIJWTU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Sep 2008 16:09:13 -0400
-Received: by mu-out-0910.google.com with SMTP id g7so1467056muf.1
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Sep 2008 13:09:11 -0700 (PDT)
-Date: Sun, 28 Sep 2008 22:09:04 +0200
-From: Davide Pesavento <davidepesa@gmail.com>
-To: mcgrof@gmail.com
+	Wed, 10 Sep 2008 18:19:20 -0400
+Message-Id: <20080910220413.187494000@sipsolutions.net> (sfid-20080911_001939_805755_E17C6492)
+References: <20080910220145.707263000@sipsolutions.net>
+Date: Thu, 11 Sep 2008 00:01:50 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [CRDA PATCH 4/4] Makefile: add support for DESTDIR.
-Message-ID: <20080928200904.GA5988@PesaBook.pesa.homelinux.org> (sfid-20080928_220915_900579_39A8876D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH 05/18] mac80211: fix work race
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When we stop an interface, the work on it may still be pending
+or running. We do cancel the timer, but we do not currently
+protect against the work struct. The race is very unlikely to
+hit -- it'll happen only when the driver is using mac80211's
+workqueue to run long-running tasks and the sta/mesh works are
+delayed for quite a bit.
 
-Signed-off-by: Davide Pesavento <davidepesa@gmail.com>
+This patch fixes it by cancelling the work explicitly.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- Makefile |   19 +++++++++++--------
- 1 files changed, 11 insertions(+), 8 deletions(-)
+ net/mac80211/main.c |    8 ++++++++
+ net/mac80211/mesh.c |    9 +++++++++
+ 2 files changed, 17 insertions(+)
 
-diff --git a/Makefile b/Makefile
-index c57e06c..de74bd5 100644
---- a/Makefile
-+++ b/Makefile
-@@ -1,7 +1,7 @@
- ifeq ($(origin $(KLIB)), undefined)
--KLIB:=          /lib/modules/$(shell uname -r)
-+KLIB := /lib/modules/$(shell uname -r)
- endif
--KLIB_BUILD ?=   $(KLIB)/build
-+KLIB_BUILD ?= $(KLIB)/build
- 
- CFLAGS += -Wall -g3
- #CFLAGS += -DUSE_OPENSSL
-@@ -12,7 +12,10 @@ endif
- CFLAGS += -I$(KLIB_BUILD)/include -DUSE_GCRYPT
- LDFLAGS += -lgcrypt
- 
--CRDA_LIB="/usr/lib//crda/"
-+MKDIR ?= mkdir -p
-+INSTALL ?= install
+--- everything.orig/net/mac80211/main.c	2008-09-10 23:57:55.000000000 +0200
++++ everything/net/mac80211/main.c	2008-09-10 23:57:57.000000000 +0200
+@@ -548,6 +548,14 @@ static int ieee80211_stop(struct net_dev
+ 		memset(sdata->u.sta.bssid, 0, ETH_ALEN);
+ 		del_timer_sync(&sdata->u.sta.timer);
+ 		/*
++		 * If the timer fired while we waited for it, it will have
++		 * requeued the work. Now the work will be running again
++		 * but will not rearm the timer again because it checks
++		 * whether the interface is running, which, at this point,
++		 * it no longer is.
++		 */
++		cancel_work_sync(&sdata->u.sta.work);
++		/*
+ 		 * When we get here, the interface is marked down.
+ 		 * Call synchronize_rcu() to wait for the RX path
+ 		 * should it be using the interface and enqueuing
+--- everything.orig/net/mac80211/mesh.c	2008-09-10 23:57:55.000000000 +0200
++++ everything/net/mac80211/mesh.c	2008-09-10 23:57:57.000000000 +0200
+@@ -449,6 +449,15 @@ void ieee80211_stop_mesh(struct ieee8021
+ {
+ 	del_timer_sync(&sdata->u.mesh.housekeeping_timer);
+ 	/*
++	 * If the timer fired while we waited for it, it will have
++	 * requeued the work. Now the work will be running again
++	 * but will not rearm the timer again because it checks
++	 * whether the interface is running, which, at this point,
++	 * it no longer is.
++	 */
++	cancel_work_sync(&sdata->u.mesh.work);
 +
-+CRDA_LIB = "/usr/lib/crda/"
- 
- all:	regulatory.bin warn crda
- 	@$(MAKE) --no-print-directory -f Makefile verify
-@@ -20,7 +23,7 @@ all:	regulatory.bin warn crda
- regulatory.bin:	db2bin.py key.priv.pem db.txt dbparse.py
- 	@./db2bin.py regulatory.bin db.txt key.priv.pem
- 
--crda: keys-gcrypt.c crda.c regdb.h
-+crda: keys-gcrypt.c keys-ssl.c crda.c regdb.h
- 	$(CC) $(CFLAGS) $(LDFLAGS) -lnl -o $@ crda.c
- 
- clean:
-@@ -53,7 +56,7 @@ verify: dump
- 	@./dump regulatory.bin >/dev/null
- 
- install: regulatory.bin crda
--	mkdir -p $(CRDA_LIB)
--	install regulatory.bin $(CRDA_LIB)
--	install crda /sbin/
--	install regulatory.rules /etc/udev/rules.d/
-+	$(MKDIR) $(DESTDIR)$(CRDA_LIB)
-+	$(INSTALL) -m 644 -t $(DESTDIR)$(CRDA_LIB) regulatory.bin
-+	$(INSTALL) -m 755 -t $(DESTDIR)/sbin/ crda
-+	$(INSTALL) -m 644 -t $(DESTDIR)/etc/udev/rules.d/ regulatory.rules
++	/*
+ 	 * When we get here, the interface is marked down.
+ 	 * Call synchronize_rcu() to wait for the RX path
+ 	 * should it be using the interface and enqueuing
+
 -- 
-1.6.0.2
 
