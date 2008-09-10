@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38603 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752026AbYIAI1b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Sep 2008 04:27:31 -0400
-Subject: Re: frequent iwl3945 microcode errors
-From: Zhu Yi <yi.zhu@intel.com>
-To: Brian Crowley <brian@abtrafco.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:35934 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751596AbYIJWHM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2008 18:07:12 -0400
+Message-Id: <20080910220410.722573000@sipsolutions.net> (sfid-20080911_000716_571673_C4A2F2CE)
+References: <20080910220145.707263000@sipsolutions.net>
+Date: Thu, 11 Sep 2008 00:01:48 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <2b4fb6bd0808300132m86c493eib19c9a2b29151ee9@mail.gmail.com>
-References: <2b4fb6bd0808291719n6cb86dc3j307d63038b651a3@mail.gmail.com>
-	 <2b4fb6bd0808300132m86c493eib19c9a2b29151ee9@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 01 Sep 2008 16:24:47 +0800
-Message-Id: <1220257487.28282.100.camel@debian.sh.intel.com> (sfid-20080901_102752_932628_9A6C8C9C)
+Subject: [PATCH 03/18] mac80211: dont set REQ_RUN when scan finishes
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2008-08-30 at 10:32 +0200, Brian Crowley wrote:
-> 
-> Getting a bunch of microcode errors, every few minutes, sometimes
-> leading to a hung system.  Seems to begin with psmouse failed resync..
-> noticed resync problem happens when the network card is doing
-> something like scanning or reestablishing link and am quite certain is
-> related.. no resync failures when wireless card turned off. Here two
-> iterations that ended up with a hang, ultimately degrading and forcing
-> me to do a hard restart:
+The timer restart is done wrongly, we shouldn't set the REQ_RUN
+bit when the scan has finished if it hadn't been set before the
+scan started. If the timer fires during the scan, it will set
+REQ_RUN and then we can run the work for it, if it didn't fire
+then we shouldn't run its work either.
 
-We have just released a new uCode for 3945 today. Maybe you want to try
-it. Also, please load the module with debug=0x43fff when you attach the
-dmesg. It dumps more uCode debug info.
-http://intellinuxwireless.org/index.php?n=Downloads
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/mlme.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Thanks,
--yi
+--- everything.orig/net/mac80211/mlme.c	2008-09-10 23:57:52.000000000 +0200
++++ everything/net/mac80211/mlme.c	2008-09-10 23:57:55.000000000 +0200
+@@ -2629,7 +2629,8 @@ static void ieee80211_restart_sta_timer(
+ {
+ 	if (sdata->vif.type == IEEE80211_IF_TYPE_STA ||
+ 	    ieee80211_vif_is_mesh(&sdata->vif))
+-		ieee80211_sta_timer((unsigned long)sdata);
++		queue_work(sdata->local->hw.workqueue,
++			   &sdata->u.sta.work);
+ }
+ 
+ void ieee80211_mlme_notify_scan_completed(struct ieee80211_local *local)
+
+-- 
 
