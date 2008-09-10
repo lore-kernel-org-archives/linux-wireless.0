@@ -1,44 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39555 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753370AbYIIQ3d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2008 12:29:33 -0400
-Message-ID: <48C6A2B7.8030601@atheros.com> (sfid-20080909_182937_643844_07355C7B)
-Date: Tue, 9 Sep 2008 21:52:15 +0530
-From: vasanthakumar thiagarajan <vasanth.thiagarajan@atheros.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH] ath9k: Add RF kill support
-References: <20080909153422.GA7651@vasanth-lnx.users.atheros.com>	 (sfid-20080909_173954_277503_9881BAF1) <1220974942.31304.180.camel@johannes.berg>
-In-Reply-To: <1220974942.31304.180.camel@johannes.berg>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from senator.holtmann.net ([87.106.208.187]:39338 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750745AbYIJSRF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2008 14:17:05 -0400
+Subject: Re: [PATCH 1/2 v6] cfg80211: Add new wireless regulatory
+	infrastructure
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1221027589-19203-2-git-send-email-lrodriguez@atheros.com>
+References: <1221027589-19203-1-git-send-email-lrodriguez@atheros.com>
+	 <1221027589-19203-2-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain
+Date: Wed, 10 Sep 2008 20:17:30 +0200
+Message-Id: <1221070650.13336.20.camel@californication> (sfid-20080910_201710_268530_48CBC48F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Tue, 2008-09-09 at 21:04 +0530, Vasanthakumar Thiagarajan wrote:
->   
->> This support is compiled in if CONFIG_RFKILL
->> option is set.
->>     
->
->   
->> +++ b/drivers/net/wireless/ath9k/Kconfig
->> @@ -4,6 +4,7 @@ config ATH9K
->>  	select MAC80211_LEDS
->>  	select LEDS_CLASS
->>  	select NEW_LEDS
->> +	select RFKILL
->>     
->
-> You really want to drop that then though.
->
-> johannes
->   
-Yeah, I missed this one. Thanks.
+Hi Luis,
 
-Vasanth
+> This adds the new wireless regulatory infrastructure. The
+> main motiviation behind this was to centralize regulatory
+> code as each driver was implementing their own regulatory solution,
+> and to replace the initial centralized code we have where:
+> 
+> * only 3 regulatory domains are supported: US, JP and EU
+> * regulatory domains can only be changed through module parameter
+> * all rules were built statically in the kernel
+> 
+> We now have support for regulatory domains for many countries
+> and regulatory domains are now queried through a userspace agent
+> through udev allowing distributions to update regulatory rules
+> without updating the kernel.
+> 
+> Each driver can regulatory_hint() a regulatory domain
+> based on either their EEPROM mapped regulatory domain value to a
+> respective ISO/IEC 3166-1 country code or pass an internally built
+> regulatory domain. We also add support to let the user set the
+> regulatory domain through userspace in case of faulty EEPROMs to
+> further help compliance.
+
+thanks for the write-up and examples. I like it a lot and gives driver
+maintainers a nice understanding what to do.
+
+While reading through it, I came to think about regulatory_hint(). So is
+there a use case where would give it the alpha2 code and the domain
+itself at the same time? If not, then it would make more sense to split
+this into two functions. Maybe something regulatory_alpha2_hint() and
+regulatory_domain_hint(). Just a thought.
+
+Regards
+
+Marcel
+
+
