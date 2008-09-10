@@ -1,74 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52568 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752087AbYIKR02 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53275 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752390AbYIJVjs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 13:26:28 -0400
-Date: Thu, 11 Sep 2008 13:24:07 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Anna Neal <anna@cozybit.com>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-Subject: Re: [PATCH] libertas: Improvements on automatic tx power control
-	via SIOCSIWTXPOW.
-Message-ID: <20080911172406.GG3423@tuxdriver.com> (sfid-20080911_192632_851371_34725339)
-References: <48c86ed3.16be600a.2bc8.4c4e@mx.google.com> <1221147299.771.24.camel@localhost.localdomain> <aa050c750809111003i77e8fb3flc68424e7c81a97c2@mail.gmail.com> <aa050c750809111013r4c941ed4l250c5ae5e019c720@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <aa050c750809111013r4c941ed4l250c5ae5e019c720@mail.gmail.com>
+	Wed, 10 Sep 2008 17:39:48 -0400
+Subject: Re: [PATCH 1/2] ath9k: Re-order functions in main.c
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>
+In-Reply-To: <43e72e890809101345i7b5ded8bnb7a8a4e7c16470ff@mail.gmail.com> (sfid-20080910_224544_602156_28B7FF6F)
+References: <20080910131927.GA7779@vasanth-lnx.users.atheros.com>
+	 <43e72e890809101345i7b5ded8bnb7a8a4e7c16470ff@mail.gmail.com>
+	 (sfid-20080910_224544_602156_28B7FF6F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-047yzPLQsVpEhx5IGddx"
+Date: Wed, 10 Sep 2008 23:39:13 +0200
+Message-Id: <1221082753.3804.47.camel@johannes.berg> (sfid-20080910_233951_772809_9FF5B80B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 11, 2008 at 10:13:20AM -0700, Anna Neal wrote:
-> On Thu, Sep 11, 2008 at 10:03 AM, Anna Neal <anna@cozybit.com> wrote:
-> > On Thu, Sep 11, 2008 at 8:34 AM, Dan Williams <dcbw@redhat.com> wrote:
-> >> On Wed, 2008-09-10 at 16:45 -0700, Anna Neal wrote:
-> >>> Improved the tx power control configuration per Dan Williams suggestions. Added
-> >>> a firmware version check because the current implementation will only work for
-> >>> below version 9.
-> >>>
-> >>> Signed-off-by: Anna Neal <anna@cozybit.com>
-> >>
-> >> One more round, sorry! :)
-> >>
-> >> First, until the patch has actually been applied, could you post
-> >> complete diffs?  This is a patch against the previous patch, but it's
-> >> best to keep the whole patch together until it's committed by John to
-> >> the master wireless tree.
-> >>
-> >> Second, since you get to respin the patch anyway for this, the TPC
-> >> Config stuff should be just fine on V9+ firmware, only the
-> >> POWER_ADAPT_CFG command is incompatible on V9+.  I probably wasn't clear
-> >> enough about this yesterday.  Any chance you could move the TPC config
-> >> commands out of the firmware check and just the PACFG ones < V9?
-> >>
-> >> Thanks!
-> >> Dan
-> >
-> > No problem, will send a new patch later today.
-> >
-> > I just wanted to point out that it seems the original patch was
-> > already committed by John.
-> >
-> > Here is the link:
-> > http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commith=cdd799f13e3a2a47b501286551ba9386e8936272
-> >
-> > Thanks,
-> > Anna
-> 
-> I'm sorry, I sent a bad link.
-> 
-> Here is a good one.
-> 
-> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit&h=cdd799f13e3a2a47b501286551ba9386e8936272
 
-FWIW, it hasn't been sent to Dave M. yet -- it's only in
-wireless-testing.
+--=-047yzPLQsVpEhx5IGddx
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-That said, I'm fine with either a whole new patch or the incremental
-one.  But if Dan wants a new one and you don't mind...
+On Wed, 2008-09-10 at 13:45 -0700, Luis R. Rodriguez wrote:
+> On Wed, Sep 10, 2008 at 6:19 AM, Vasanthakumar Thiagarajan
+> <vasanth@atheros.com> wrote:
+> > Some of the functions in main.c are re-ordered in such
+> > a way that all local functions are defined before mac80211
+> > and pci callbacks.
+>=20
+> Please split the re-ordering of functions into a separate patch to
+> make it easier for review.
 
-John
--- 
-John W. Linville
-linville@tuxdriver.com
+Huh? Wasn't this just the separate patch?
+
+johannes
+
+--=-047yzPLQsVpEhx5IGddx
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIyD59AAoJEKVg1VMiehFY19QQAKd4gWBrOvCcsvyWZmd+MPNa
+Ghe4R5LQPiOtFabd0F6g5g4hQ14BsRmc0kSkxIkOdVvVtZsHNW3q27fcMPIs8zzO
+wk3J+gOGYWoJaxZvVaU3df2anzlFiWQaERgkt0FsMPQfzl7NpE1OXlryfXa4Iang
+5pdqWwVCbWnlKsyQJj8GwmPJ2p7guI7g82P7TIsCi6BRZYFPzrGk3EhZAFW81iGg
+K6nWNe/tB9xjHZwP7nm/g+dIdjGkmu6RE/qgOVa5hnRowV/nKYuAsXTXgj30i6RT
+H/uJai0by2WRf5EYe/oPXMopFJiGGy2eVJ4DHY8vhNOzHHuNxPjl2WLdKWS+xvqs
+eNAXk4M3l7KX0NMjKGpmx3MNtYeYT7pxcbYi50c4dYHsZ28oxKIJipBS06dTveLi
+g1tvDqwzZArhANQfZpGmTpFTgLB0JIxtwWkK+OVHaMg0BFQ1d/SXDAE5Lj9P3MJP
+3facnZ0RO6n9C9AwWjz0g/5vkAB71qQp90WFdLrZ5IdPjV5/qTWGCvLl5gttyad3
+EOMtC6VTWkF/NipsXy5QZqlaeBkzZvsgffuYDJUarYjHlRjEr/fpmHnQulIRW96+
+/VkjJp1vAFujXmi6pyO2/8NgiJYSYhk1UqAkmCtMOPZZNzGJGwZt924szDnpltBO
+mHG20mN9+CJE51OTl0LL
+=pF57
+-----END PGP SIGNATURE-----
+
+--=-047yzPLQsVpEhx5IGddx--
+
