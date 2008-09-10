@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:32932 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751380AbYIKVXr (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:43715 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750745AbYIJWGm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Sep 2008 17:23:47 -0400
-Subject: [PATCH] mac80211: fix build failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Davide Pesavento <davidepesa@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+	Wed, 10 Sep 2008 18:06:42 -0400
+Subject: Re: [PATCH 1/2 v6] cfg80211: Add new wireless regulatory
+	infrastructure
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <43e72e890809101318o771100f0jcac9bbea6b863ccb@mail.gmail.com>
+References: <1221027589-19203-1-git-send-email-lrodriguez@atheros.com>
+	 <1221027589-19203-2-git-send-email-lrodriguez@atheros.com>
+	 <1221070650.13336.20.camel@californication>
+	 <43e72e890809101318o771100f0jcac9bbea6b863ccb@mail.gmail.com>
 Content-Type: text/plain
-Date: Thu, 11 Sep 2008 23:23:11 +0200
-Message-Id: <1221168191.3742.2.camel@johannes.berg> (sfid-20080911_232350_621932_A8CC383F)
+Date: Thu, 11 Sep 2008 00:07:09 +0200
+Message-Id: <1221084429.13336.23.camel@californication> (sfid-20080911_000652_046785_FE532195)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The two patches
-	mac80211: share sta->supp_rates
-and
-	mac80211: share STA information with driver
+Hi Luis,
 
-caused a build failure in some debugging code, this fixes it.
-Thanks to Davide Pesavento for bringing the issue to my attention.
+> > While reading through it, I came to think about regulatory_hint(). So is
+> > there a use case where would give it the alpha2 code and the domain
+> > itself at the same time? If not, then it would make more sense to split
+> > this into two functions.
+> 
+> Nope, you either pass an alpha2 or an rd domain which is built by you
+> (and in that rd structure you can set the alpha2 to your iso3166
+> alpha2 or "99" if unknown).
+> 
+> > Maybe something regulatory_alpha2_hint() and
+> > regulatory_domain_hint(). Just a thought.
+> 
+> That's how I had it originally but decided to condense it to one
+> routine since as you could see they pretty much do the same thing
+> except the case where the rd is provided it calls set_regdom().
+> Setting it back to use two routines if fine by me too. What is better?
+> Can we just get this merged and then we can flip it around if
+> necessary? :) I'm tired of carrying this around.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Davide Pesavento <davidepesa@gmail.com>
----
- net/mac80211/mlme.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+my take on this is that if from an API perspective you can only use one
+parameter or the other, then it should be two functions.
 
---- everything.orig/net/mac80211/mlme.c	2008-09-11 23:20:53.000000000 +0200
-+++ everything/net/mac80211/mlme.c	2008-09-11 23:21:11.000000000 +0200
-@@ -1534,14 +1534,15 @@ static void ieee80211_rx_bss_info(struct
- 				ieee80211_mandatory_rates(local, band);
- 
- #ifdef CONFIG_MAC80211_IBSS_DEBUG
--			if (sta->supp_rates[band] != prev_rates)
-+			if (sta->sta.supp_rates[band] != prev_rates)
- 				printk(KERN_DEBUG "%s: updated supp_rates set "
- 				    "for %s based on beacon info (0x%llx | "
- 				    "0x%llx -> 0x%llx)\n",
--				    sdata->dev->name, print_mac(mac, sta->addr),
-+				    sdata->dev->name,
-+				    print_mac(mac, sta->sta.addr),
- 				    (unsigned long long) prev_rates,
- 				    (unsigned long long) supp_rates,
--				    (unsigned long long) sta->supp_rates[band]);
-+				    (unsigned long long) sta->sta.supp_rates[band]);
- #endif
- 		} else {
- 			ieee80211_ibss_add_sta(sdata, NULL, mgmt->bssid,
+Regards
+
+Marcel
 
 
