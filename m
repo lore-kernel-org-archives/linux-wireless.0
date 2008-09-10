@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48268 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753130AbYIVWO3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Sep 2008 18:14:29 -0400
-Date: Mon, 22 Sep 2008 18:13:59 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: akpm@linux-foundation.org
-Cc: linux-wireless@vger.kernel.org, born.into.silence@gmail.com,
-	dsd@gentoo.org, johannes@sipsolutions.net, kune@deine-taler.de
-Subject: Re: [patch 1/1] wireless: zd1211rw: add device ID fix wifi dongle
-	"trust nw-3100"
-Message-ID: <20080922221359.GG3660@tuxdriver.com> (sfid-20080923_001432_088438_68869EC6)
-References: <200809222201.m8MM1pBH032706@imap1.linux-foundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200809222201.m8MM1pBH032706@imap1.linux-foundation.org>
+Received: from mx1.redhat.com ([66.187.233.31]:44529 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752108AbYIJNKM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2008 09:10:12 -0400
+Subject: Re: [PATCH] mac80211: add pre- and post-scan hooks
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1221033061.12266.10.camel@johannes.berg>
+References: <1214149401.8585.2.camel@localhost.localdomain>
+	 (sfid-20080622_174624_286344_54D543FD)  <1221033061.12266.10.camel@johannes.berg>
+Content-Type: text/plain
+Date: Wed, 10 Sep 2008 09:09:27 -0400
+Message-Id: <1221052167.4648.9.camel@localhost.localdomain> (sfid-20080910_151017_369906_7A8E63AC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 22, 2008 at 03:01:51PM -0700, akpm@linux-foundation.org wrote:
-> From: <born.into.silence@gmail.com>
+On Wed, 2008-09-10 at 09:51 +0200, Johannes Berg wrote:
+> On Sun, 2008-06-22 at 11:43 -0400, Dan Williams wrote:
+> > mrv8k has commands that get called before and after the scan has been
+> > done to save and restore hardware state.  Add optional callbacks to
+> > mac80211 to enable low-level drivers to know when the stack is about to
+> > start scanning, and when it's done.
 > 
-> akpm: taken from http://bugzilla.kernel.org/show_bug.cgi?id=11587
-> 
-> I bought the wifi dongle trust nw-3100 wich is in fact a zd1211rw.  Its
-> hardware id was missing in the sources, adding it made it work flawlessly.
-> 
-> Cc: Daniel Drake <dsd@gentoo.org>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Cc: Ulrich Kunitz <kune@deine-taler.de>
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> Was just talking to Sujith about something on IRC and realised that
+> maybe this is required to turn off IBSS beaconing when leaving the
+> channel for a scan?
 
-Just sent a pull request to Dave with this one in it...thanks!
+Most cards to the beaconing in hardware/firmware with a given template,
+right?  If so this sounds quite plausible.  Does beaconing not get
+paused now?
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Dan
+
