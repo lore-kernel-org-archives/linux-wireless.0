@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:34365 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754173AbYIPAFu (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:39873 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753061AbYIKPGM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Sep 2008 20:05:50 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so2172800fkq.5
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2008 17:05:48 -0700 (PDT)
-Message-ID: <1ba2fa240809151705k5b868c88j9151f04e485b542a@mail.gmail.com> (sfid-20080916_020554_154264_D5538439)
-Date: Tue, 16 Sep 2008 03:05:48 +0300
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [RFC] mac80211: re-enable aggregation on 2.6.27
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890809151624g3540f308r90808e281b22314e@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1221503192-28502-1-git-send-email-lrodriguez@atheros.com>
-	 <43e72e890809151555u3a79bd89h763fa0a6ba07e752@mail.gmail.com>
-	 <43e72e890809151624g3540f308r90808e281b22314e@mail.gmail.com>
+	Thu, 11 Sep 2008 11:06:12 -0400
+Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1221123779.2513.88.camel@debian.sh.intel.com>
+References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
+	 <1221123779.2513.88.camel@debian.sh.intel.com>
+Content-Type: text/plain
+Date: Thu, 11 Sep 2008 17:06:42 +0200
+Message-Id: <1221145602.6309.17.camel@californication> (sfid-20080911_170622_013731_ED651A13)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 16, 2008 at 2:24 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Mon, Sep 15, 2008 at 3:55 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->
-> With iwlagn (Intel 4965) on HT40 5GHz using iperf over TCP I get much
-> more convincing results (still noisy environment):
->
-> mcgrof@pogo ~ $ iperf -s -i1
-> ------------------------------------------------------------
-> Server listening on TCP port 5001
-> TCP window size: 85.3 KByte (default)
-> ------------------------------------------------------------
-> [  4] local 192.168.1.5 port 5001 connected with 192.168.1.3 port 41403
-> [  4]  0.0- 1.0 sec  3.61 MBytes  30.3 Mbits/sec
-> [  4]  1.0- 2.0 sec  1.88 MBytes  15.8 Mbits/sec
-> [  4]  2.0- 3.0 sec  7.56 MBytes  63.4 Mbits/sec
-> [  4]  3.0- 4.0 sec  11.4 MBytes  96.0 Mbits/sec
-> [  4]  4.0- 5.0 sec  10.2 MBytes  85.3 Mbits/sec
-> [  4]  5.0- 6.0 sec  10.4 MBytes  87.0 Mbits/sec
-> [  4]  6.0- 7.0 sec  10.3 MBytes  86.5 Mbits/sec
-> [  4]  7.0- 8.0 sec  10.6 MBytes  88.9 Mbits/sec
-> [  4]  8.0- 9.0 sec  10.3 MBytes  86.5 Mbits/sec
-> [  4]  9.0-10.0 sec  10.6 MBytes  89.0 Mbits/sec
-> [  4]  0.0-10.2 sec  88.6 MBytes  73.1 Mbits/sec
->
-Are you sure there is aggregation on the air? In 40Mhz with
-aggregation we should be at least 110Mbit or better something around
-150Mbits. This looks like HT rates but no aggregation.
+Hi Yi,
 
-Tomas
+> > However I tried to reproduce it without Bluetooth enabled, it didn't  
+> > show or I didn't wait long enough. Once I started bluetoothd it showed  
+> > within a few minutes.
+> > 
+> > So the best I got was the attached screenshot of an oops. It is  
+> > clearly the iwlwifi driver crashing here and killing the machine, but  
+> > I have no idea why.
+> 
+> >From the screenshot line:
+> 
+> iwl_tx_cmd_complete+0x43/0x245
+> 
+> It should be triggered by the BUG_ON() in the function. Are you able to
+> confirm it with netconsole or maybe even a frame buffer enabled console
+> (it just shows more lines)? If this is the culprit, Tomas has been
+> already working on it. But your BT coexist finding should help us
+> reproducing the bug.
+> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1703
+
+right now the screenshot is the best I can do. This is a X61 and so I am
+limited in what I can give you. Getting the screenshot was tricky enough
+since most of the times is just crashes in the background and getting
+this re-produced on the console is not as simple as I thought. When
+working inside GNOME, it crashes from between 30 minutes or 2 hours
+without any warning.
+
+I am not sure if I am the only with this issue, but it looks like a
+serious regression that needs to be fixed before 2.6.27 goes out.
+
+Regards
+
+Marcel
+
+
