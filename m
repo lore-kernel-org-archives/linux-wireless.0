@@ -1,89 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51158 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:38371 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751300AbYI2Qpk (ORCPT
+	with ESMTP id S1752007AbYIKKqx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 12:45:40 -0400
-Subject: Re: NL80211_CMD_GET_WIPHY reply doesn't fit into nl message buffer
+	Thu, 11 Sep 2008 06:46:53 -0400
+Subject: sparse warnings
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Thomas Graf <tgraf@suug.ch>
-In-Reply-To: <20080929163147.GC4853@jm.kir.nu>
-References: <48E0A65A.2060102@gmail.com>
-	 <1222682480.7064.16.camel@johannes.berg> <20080929102021.GE10429@jm.kir.nu>
-	 <1222683923.7064.18.camel@johannes.berg>  <20080929163147.GC4853@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4wIvLQihfGuCRWWz8rdP"
-Date: Mon, 29 Sep 2008 18:45:34 +0200
-Message-Id: <1222706734.7064.40.camel@johannes.berg> (sfid-20080929_184543_558849_F5CAB841)
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Michael Buesch <mb@bu3sch.de>, Chr <chunkeey@web.de>,
+	Daniel Drake <dsd@gentoo.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Content-Type: text/plain
+Date: Thu, 11 Sep 2008 12:46:14 +0200
+Message-Id: <1221129974.6986.8.camel@johannes.berg> (sfid-20080911_124656_975268_BEAFFBED)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Please fix at your leisure:
 
---=-4wIvLQihfGuCRWWz8rdP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+drivers/net/wireless/ath9k/hw.c:4773:17: warning: symbol 'tmp' shadows an earlier one
+drivers/net/wireless/ath9k/hw.c:4636:6: originally declared here
+drivers/net/wireless/ath9k/hw.c:4975:17: warning: symbol 'tmp' shadows an earlier one
+drivers/net/wireless/ath9k/hw.c:4885:6: originally declared here
+drivers/net/wireless/ath9k/main.c:1557:28: warning: incorrect type in argument 2 (different base types)
+drivers/net/wireless/ath9k/main.c:1557:28:    expected restricted pci_power_t [usertype] state
+drivers/net/wireless/ath9k/main.c:1557:28:    got int
 
-On Mon, 2008-09-29 at 19:31 +0300, Jouni Malinen wrote:
+drivers/net/wireless/iwlwifi/iwl3945-base.c:4886:18: warning: invalid assignment: |=
+drivers/net/wireless/iwlwifi/iwl3945-base.c:4886:18:    left side has type unsigned char
+drivers/net/wireless/iwlwifi/iwl3945-base.c:4886:18:    right side has type restricted __le32
+[and some more I have ignored because they seem to be bogus]
 
-> Well.. It reports channels like 2732 MHz or 6100 MHz and 5 GHz center
-> frequencies for every possible multiple of 5 MHz. If someone is really
-> using those properly, they are on a licensed band and this types of
-> lists are not really needed for normal users. Whether the hardware
-> really supports them or well, more exactly, whether all selected
-> components can handle these frequencies and whether the radios have been
-> calibrated for all of these areas is another question.
+drivers/net/wireless/b43/phy_g.c:57:10: warning: symbol 'b43_radio_channel_codes_bg' was not declared. Should it be static?
+drivers/net/wireless/b43/phy_g.c:218:6: warning: symbol 'b43_set_txpower_g' was not declared. Should it be static?
+drivers/net/wireless/b43/phy_g.c:386:6: warning: symbol 'b43_nrssi_hw_write' was not declared. Should it be static?
+drivers/net/wireless/b43/phy_g.c:393:5: warning: symbol 'b43_nrssi_hw_read' was not declared. Should it be static?
+drivers/net/wireless/b43/phy_g.c:404:6: warning: symbol 'b43_nrssi_hw_update' was not declared. Should it be static?
+drivers/net/wireless/b43/phy_g.c:418:6: warning: symbol 'b43_nrssi_mem_update' was not declared. Should it be static?
+drivers/net/wireless/b43/phy_g.c:592:6: warning: symbol 'b43_calc_nrssi_slope' was not declared. Should it be static?
+drivers/net/wireless/b43/phy_g.c:1357:5: warning: symbol 'b43_radio_init2050' was not declared. Should it be static?
+drivers/net/wireless/b43/phy_a.c:80:6: warning: symbol 'b43_radio_set_tx_iq' was not declared. Should it be static?
+drivers/net/wireless/b43/phy_a.c:150:6: warning: symbol 'b43_radio_init2060' was not declared. Should it be static?
+drivers/net/wireless/b43/phy_n.c:33:6: warning: symbol 'b43_nphy_set_rxantenna' was not declared. Should it be static?
+drivers/net/wireless/b43/phy_n.c:188:6: warning: symbol 'b43_nphy_radio_turn_on' was not declared. Should it be static?
+drivers/net/wireless/b43/phy_n.c:193:6: warning: symbol 'b43_nphy_radio_turn_off' was not declared. Should it be static?
+drivers/net/wireless/b43/phy_n.c:419:5: warning: symbol 'b43_phy_initn' was not declared. Should it be static?
 
-Good points. I hadn't looked at the list at all.
+drivers/net/wireless/p54/p54common.c:152:38: warning: incorrect type in argument 1 (different base types)
+drivers/net/wireless/p54/p54common.c:152:38:    expected restricted __be32 const [usertype] *p
+drivers/net/wireless/p54/p54common.c:152:38:    got unsigned int *<noident>
+drivers/net/wireless/p54/p54common.c:184:15: warning: restricted __le32 degrades to integer
+drivers/net/wireless/p54/p54common.c:185:29: warning: cast to restricted __le16
+drivers/net/wireless/p54/p54common.c:185:29: warning: cast to restricted __le16
+drivers/net/wireless/p54/p54common.c:185:29: warning: cast to restricted __le16
+drivers/net/wireless/p54/p54common.c:185:29: warning: cast to restricted __le16
+drivers/net/wireless/p54/p54common.c:309:11: warning: symbol 'p54_rf_chips' was not declared. Should it be static?
+drivers/net/wireless/p54/p54common.c:313:5: warning: symbol 'p54_parse_eeprom' was not declared. Should it be static?
+drivers/net/wireless/p54/p54common.c:620:43: warning: incorrect type in argument 3 (different base types)
+drivers/net/wireless/p54/p54common.c:620:43:    expected unsigned int [unsigned] [usertype] <noident>
+drivers/net/wireless/p54/p54common.c:620:43:    got restricted __le16 [usertype] len
+drivers/net/wireless/p54/p54common.c:780:41: warning: restricted __le16 degrades to integer
+drivers/net/wireless/p54/p54common.c:781:32: warning: restricted __le16 degrades to integer
+drivers/net/wireless/p54/p54common.c:1250:28: warning: incorrect type in argument 2 (different base types)
+drivers/net/wireless/p54/p54common.c:1250:28:    expected unsigned short [unsigned] [usertype] filter_type
+drivers/net/wireless/p54/p54common.c:1250:28:    got restricted __le16 [usertype] filter_type
+drivers/net/wireless/p54/p54common.c:1252:28: warning: incorrect type in argument 2 (different base types)
+drivers/net/wireless/p54/p54common.c:1252:28:    expected unsigned short [unsigned] [usertype] filter_type
+drivers/net/wireless/p54/p54common.c:1252:28:    got restricted __le16 [usertype] filter_type
+drivers/net/wireless/p54/p54common.c:1257:42: warning: incorrect type in argument 2 (different base types)
+drivers/net/wireless/p54/p54common.c:1257:42:    expected unsigned short [unsigned] [usertype] filter_type
+drivers/net/wireless/p54/p54common.c:1257:42:    got restricted __le16
+drivers/net/wireless/p54/p54common.c:1260:42: warning: incorrect type in argument 2 (different base types)
+drivers/net/wireless/p54/p54common.c:1260:42:    expected unsigned short [unsigned] [usertype] filter_type
+drivers/net/wireless/p54/p54common.c:1260:42:    got restricted __le16
+drivers/net/wireless/p54/p54usb.c:228:10: warning: restricted __le32 degrades to integer
+drivers/net/wireless/p54/p54usb.c:228:23: warning: restricted __le32 degrades to integer
+drivers/net/wireless/p54/p54usb.c:228:7: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/p54/p54usb.c:228:7:    expected restricted __le32 [assigned] [usertype] chk
+drivers/net/wireless/p54/p54usb.c:228:7:    got unsigned int
+drivers/net/wireless/p54/p54usb.c:221:8: warning: symbol 'p54u_lm87_chksum' was not declared. Should it be static?
 
-> > > > > There is also a bug in hostapd which waits for ACK forever when t=
-his error occur
-> > > > > in i802_get_hw_feature_data().
->=20
-> For some reason, I do not seem to be able to reproduce this. Both iw and
-> hostapd were able to fetch the data using the current wireless-testing
-> tree..
-
-Probably depends on something about alignment or whatever, not sure. Or
-you have different hardware and the driver reports different things for
-different hw? Anyway, it shouldn't wait forever, and my patch fixes
-that.
-
-> > I recently rewrote the handling in iw completely to make it easier to
-> > follow, will post an equivalent patch for hostapd in a minute.
->=20
-> Anyway, cleanup for nl send/recv processing is certainly welcome. I've
-> never fully understood the steps that are used there and what to do if
-> anything went wrong..
-
-I see you applied that, it should be ported to the wpa_supplicant driver
-too, I think.
+drivers/net/wireless/zd1211rw/zd_mac.c:756:6: warning: symbol 'zd_process_intr' was not declared. Should it be static?
+drivers/net/wireless/zd1211rw/zd_usb.c:358:17: warning: implicit cast from nocast type
+drivers/net/wireless/zd1211rw/zd_usb.c:358:17: warning: implicit cast from nocast type
 
 johannes
-
---=-4wIvLQihfGuCRWWz8rdP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJI4QYqAAoJEKVg1VMiehFYgIQQALpnzDXfuZfCJbkWJr0IOP0E
-v0aKNTri6rRVOft0BXsMZWQjyLL4Ahu9bOLCKdfbdDd9hKatFi50qpfvRUHR+paB
-bd6u8MCj905Gi6Be0inE7nCAyqtvrtMwiZNiEsSo8GjRFtlJE+2i3kY95BwtdgnS
-543jAiBBT5FhwjEwb5w1rHJ7OfO9KqlEitOnG6JHyagFc1hdFR/2bW3BkIQmdyX9
-B10qtMeMrpSUFiFPOR4gr5u4f9UeC/tAM55W1zyPOgatQHbGaYAW3WNKBiYaDo6N
-ryyOF2jxCAtN0rc9SdmxpRHb+DtZZC0ZCbzF4gBAwEqBG+3y1RthXTEcOuuZ0SPh
-0PC+tb32kRQe0Hht09lk6WGMgm4sU2WrauhqsQUiNhpyt1kkcfD2KCy44S0yMaoo
-tB4NpUC0WMe31cq/QXwnPdN6O5GXpvrqlUsclNDopdN/roD9lydTLYFnHHqMEjmR
-PZEh78oYg46CKYIaTFWkpAUieWAuL8d1pD3AsF4d63oJ9IhJouxkw8GEMkCDChkf
-44TXnwCUJIrvuLS9ESamjCSMRYpIwDnHHa5wm166SqYYmQTBDQxYAkzYgIe1Kao4
-iehhd7OYlvEqcXVHtQRsR8te2ogbVteP9I5MaZMgWKZwLq8HFnIiUz0WVHaufRkb
-ej4E+K9EK6Rvuit6ehPO
-=WkU7
------END PGP SIGNATURE-----
-
---=-4wIvLQihfGuCRWWz8rdP--
 
