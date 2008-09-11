@@ -1,53 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:36275 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751723AbYITNUf (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39315 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752960AbYIKWPz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Sep 2008 09:20:35 -0400
-Received: by ug-out-1314.google.com with SMTP id k3so1146238ugf.37
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Sep 2008 06:20:33 -0700 (PDT)
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: [RFC] b43: A patch for control of the radio LED using rfkill
-Date: Sat, 20 Sep 2008 15:20:27 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <48d1e227.AmBwRnEuhx6kxlHv%Larry.Finger@lwfinger.net> <200809191902.03467.IvDoorn@gmail.com> <20080920131010.GB16430@khazad-dum.debian.net>
-In-Reply-To: <20080920131010.GB16430@khazad-dum.debian.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200809201520.28717.IvDoorn@gmail.com> (sfid-20080920_152051_725120_63A4D01E)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 11 Sep 2008 18:15:55 -0400
+Subject: [PATCH] mac80211: fix build failure without mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Davide Pesavento <davidepesa@gmail.com>
+Content-Type: text/plain
+Date: Fri, 12 Sep 2008 00:15:19 +0200
+Message-Id: <1221171319.5956.5.camel@johannes.berg> (sfid-20080912_001558_918687_D13089F0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 20 September 2008, Henrique de Moraes Holschuh wrote:
-> On Fri, 19 Sep 2008, Ivo van Doorn wrote:
-> > > Even if that means a need to 
-> > > get EV_SW SW_WLAN out of Dmitry...  I don't know if rt2x000 wants SW_WLAN or
-> > > SW_RFKILL_ALL.
-> > 
-> > Not sure either, there is no way to determine which of the 2 should be used.
-> 
-> Should be an module parameter or runtime (sysfs?) parameter, then...
+The mesh split-off patch introduced a build failure when
+mesh isn't selected. Unfortunately, there's no way to
+really fix this without adding an #ifdef, so do that.
 
-Module parameter sounds best, I doubt people would want to change the value
-at runtime (when it is just easier to do it at loadtime).
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Davide Pesavento <davidepesa@gmail.com>
+---
+ net/mac80211/tx.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-> > Oh an to make sure I get it completely right this time:
-> > When I implement the input polldev, I no longer have to use rfkill_force_state() right?
-> 
-> Correct.  It has nothing to do with the rfkill class part of your driver at
-> all, since there is no effect on the hardware.  It is just an input device
-> that issues EV_SW events.
+--- everything.orig/net/mac80211/tx.c	2008-09-12 00:11:56.000000000 +0200
++++ everything/net/mac80211/tx.c	2008-09-12 00:12:47.000000000 +0200
+@@ -1854,10 +1854,8 @@ struct sk_buff *ieee80211_beacon_get(str
+ 	struct rate_selection rsel;
+ 	struct beacon_data *beacon;
+ 	struct ieee80211_supported_band *sband;
+-	struct ieee80211_mgmt *mgmt;
+ 	int *num_beacons;
+ 	enum ieee80211_band band = local->hw.conf.channel->band;
+-	u8 *pos;
+ 
+ 	sband = local->hw.wiphy->bands[band];
+ 
+@@ -1924,7 +1922,11 @@ struct sk_buff *ieee80211_beacon_get(str
+ 						 IEEE80211_STYPE_BEACON);
+ 
+ 		num_beacons = &ifsta->num_beacons;
++#ifdef CONFIG_MAC80211_MESH
+ 	} else if (ieee80211_vif_is_mesh(&sdata->vif)) {
++		struct ieee80211_mgmt *mgmt;
++		u8 *pos;
++
+ 		/* headroom, head length, tail length and maximum TIM length */
+ 		skb = dev_alloc_skb(local->tx_headroom + 400);
+ 		if (!skb)
+@@ -1950,6 +1952,7 @@ struct sk_buff *ieee80211_beacon_get(str
+ 		mesh_mgmt_ies_add(skb, sdata);
+ 
+ 		num_beacons = &sdata->u.mesh.num_beacons;
++#endif
+ 	} else {
+ 		WARN_ON(1);
+ 		goto out;
 
-Ok, thanks. :)
 
-I'll remove rfkill from rt2x00, implement input_polldev as seperate module,
-move rfkill support into mac80211 to make mac80211 drivers automatically
-detect the rfkill notifications.
-
-Ivo
