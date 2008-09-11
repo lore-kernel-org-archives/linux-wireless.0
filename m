@@ -1,47 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.175]:18526 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752762AbYIIShd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Sep 2008 14:37:33 -0400
-Received: by ug-out-1314.google.com with SMTP id k3so249497ugf.37
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Sep 2008 11:37:31 -0700 (PDT)
-Message-ID: <48C6C262.7010803@gmail.com> (sfid-20080909_203739_382445_B5AE011A)
-Date: Tue, 09 Sep 2008 19:37:22 +0100
-MIME-Version: 1.0
-To: jt@hpl.hp.com
-CC: Pavel Roskin <proski@gnu.org>, Dan Williams <dcbw@redhat.com>,
-	linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Subject: Re: [PATCH 01/19] orinoco: Add ESSID specific scanning for Agere
- fw
-References: <1217672073-7094-1-git-send-email-kilroyd@gmail.com> <1217672073-7094-2-git-send-email-kilroyd@gmail.com> <1217825304.10989.20.camel@dv> <1217864060.3139.10.camel@localhost.localdomain> <20080805162238.GA6294@bougret.hpl.hp.com> <20080902230621.GA28885@bougret.hpl.hp.com> <1220878110.2369.3.camel@dv> <20080908183203.GA7090@bougret.hpl.hp.com>
-In-Reply-To: <20080908183203.GA7090@bougret.hpl.hp.com>
-Content-Type: text/plain; charset=us-ascii; format=flowed
-From: Dave <kilroyd@googlemail.com>
+Received: from mga14.intel.com ([143.182.124.37]:19305 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752612AbYIKDtj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2008 23:49:39 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 3/3] iwl3945: add MODULE_FIRMWARE for 3945 HW
+Date: Thu, 11 Sep 2008 11:45:22 +0800
+Message-Id: <1221104722-8771-4-git-send-email-yi.zhu@intel.com> (sfid-20080911_054942_469181_6DE4EFF0)
+In-Reply-To: <1221104722-8771-3-git-send-email-yi.zhu@intel.com>
+References: <1221104722-8771-1-git-send-email-yi.zhu@intel.com>
+ <1221104722-8771-2-git-send-email-yi.zhu@intel.com>
+ <1221104722-8771-3-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jean Tourrilhes wrote:
-> On Mon, Sep 08, 2008 at 08:48:30AM -0400, Pavel Roskin wrote:
->> No, it's still not fixed on x86_64.  scanflags in print_scanning_info()
->> in iwlist.c is 2, but srq->flags is 0 in orinoco_ioctl_setscan() in
->> orinoco.c.
->>
->> On i386,  srq->flags is 2 as expected and the scan results are correctly
->> influenced by the ESSID.
-> 
-> 	Try the attached patch.
-> 
->  static int orinoco_ioctl_setscan(struct net_device *dev,
->  				 struct iw_request_info *info,
-> -				 struct iw_param *srq,
-> +				 struct iw_point *srq,
->  				 char *extra)
+This patch adds MODULE_FIRMWARE statement for 3945 HW.
 
-Thanks for finding that Jean! I've double checked, and agree it's the right fix.
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-FWIW, I've verified this compiles and (still) works as expected on my 32 bit system.
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index cbbe73a..1834fa8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -8376,6 +8376,8 @@ static void __exit iwl3945_exit(void)
+ 	iwl3945_rate_control_unregister();
+ }
+ 
++MODULE_FIRMWARE("iwlwifi-3945" IWL3945_UCODE_API ".ucode");
++
+ module_param_named(antenna, iwl3945_param_antenna, int, 0444);
+ MODULE_PARM_DESC(antenna, "select antenna (1=Main, 2=Aux, default 0 [both])");
+ module_param_named(disable, iwl3945_param_disable, int, 0444);
+-- 
+1.5.3.6
 
-
-
-Dave.
