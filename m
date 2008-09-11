@@ -1,150 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:21506 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755250AbYICDbi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Sep 2008 23:31:38 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 32/39] iwlwifi: fix host command header according the HW spec
-Date: Wed,  3 Sep 2008 11:26:52 +0800
-Message-Id: <1220412419-15404-33-git-send-email-yi.zhu@intel.com> (sfid-20080903_055044_432776_3E54F32B)
-In-Reply-To: <1220412419-15404-32-git-send-email-yi.zhu@intel.com>
-References: <1220412419-15404-1-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-2-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-3-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-4-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-5-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-6-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-7-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-8-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-9-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-10-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-11-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-12-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-13-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-14-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-15-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-16-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-17-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-18-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-19-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-20-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-21-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-22-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-23-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-24-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-25-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-26-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-27-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-28-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-29-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-30-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-31-git-send-email-yi.zhu@intel.com>
- <1220412419-15404-32-git-send-email-yi.zhu@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:48362 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751057AbYIKAXf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2008 20:23:35 -0400
+Subject: [PATCH 20/18] mac80211: move last_txrate_idx into RC algorithms
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080910220145.707263000@sipsolutions.net> (sfid-20080911_001619_033062_98BAB5F3)
+References: <20080910220145.707263000@sipsolutions.net>
+	 (sfid-20080911_001619_033062_98BAB5F3)
+Content-Type: text/plain
+Date: Thu, 11 Sep 2008 02:22:58 +0200
+Message-Id: <1221092578.3804.66.camel@johannes.berg> (sfid-20080911_022339_112521_23CB86B3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+This variable in sta_info is only used in a meaningful way
+by the Intel RC algorithms, so move it into those.
 
-This patch aligns definition of host command with the spec. The
-inaccuracies weren't critical though.
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-commands.h |   20 ++++++++++++++------
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    6 ------
- drivers/net/wireless/iwlwifi/iwl-tx.c       |    4 ++--
- 3 files changed, 16 insertions(+), 14 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c |   20 ++++++++++++--------
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |   15 +++++++++------
+ net/mac80211/rc80211_pid_algo.c            |    2 --
+ net/mac80211/sta_info.h                    |    2 --
+ 4 files changed, 21 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index fbd8cc1..8d04e96 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -163,6 +163,13 @@ enum {
- /* iwl_cmd_header flags value */
- #define IWL_CMD_FAILED_MSK 0x40
- 
-+#define SEQ_TO_QUEUE(s)	(((s) >> 8) & 0x1f)
-+#define QUEUE_TO_SEQ(q)	(((q) & 0x1f) << 8)
-+#define SEQ_TO_INDEX(s)	((s) & 0xff)
-+#define INDEX_TO_SEQ(i)	((i) & 0xff)
-+#define SEQ_HUGE_FRAME	__constant_cpu_to_le16(0x4000)
-+#define SEQ_RX_FRAME	__constant_cpu_to_le16(0x8000)
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-agn-rs.c	2008-09-11 02:15:29.000000000 +0200
++++ everything/drivers/net/wireless/iwlwifi/iwl-agn-rs.c	2008-09-11 02:19:12.000000000 +0200
+@@ -163,6 +163,9 @@ struct iwl_lq_sta {
+ 	u32 dbg_fixed_rate;
+ #endif
+ 	struct iwl_priv *drv;
 +
- /**
-  * struct iwl_cmd_header
-  *
-@@ -171,7 +178,7 @@ enum {
-  */
- struct iwl_cmd_header {
- 	u8 cmd;		/* Command ID:  REPLY_RXON, etc. */
--	u8 flags;	/* IWL_CMD_* */
-+	u8 flags;	/* 0:5 reserved, 6 abort, 7 internal */
- 	/*
- 	 * The driver sets up the sequence number to values of its chosing.
- 	 * uCode does not use this value, but passes it back to the driver
-@@ -187,11 +194,12 @@ struct iwl_cmd_header {
- 	 *
- 	 * The Linux driver uses the following format:
- 	 *
--	 *  0:7    index/position within Tx queue
--	 *  8:13   Tx queue selection
--	 * 14:14   driver sets this to indicate command is in the 'huge'
--	 *         storage at the end of the command buffers, i.e. scan cmd
--	 * 15:15   uCode sets this in uCode-originated response/notification
-+	 *  0:7		tfd index - position within TX queue
-+	 *  8:12	TX queue id
-+	 *  13		reserved
-+	 *  14		huge - driver sets this to indicate command is in the
-+	 *  		'huge' storage at the end of the command buffers
-+	 *  15		unsolicited RX or uCode-originated notification
- 	 */
- 	__le16 sequence;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 8daeafd..7934f56 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -225,12 +225,6 @@ struct iwl_frame {
- 	struct list_head list;
++	/* used to be in sta_info */
++	int last_txrate_idx;
  };
  
--#define SEQ_TO_QUEUE(x)  ((x >> 8) & 0xbf)
--#define QUEUE_TO_SEQ(x)  ((x & 0xbf) << 8)
--#define SEQ_TO_INDEX(x) ((u8)(x & 0xff))
--#define INDEX_TO_SEQ(x) ((u8)(x & 0xff))
--#define SEQ_HUGE_FRAME  (0x4000)
--#define SEQ_RX_FRAME    __constant_cpu_to_le16(0x8000)
- #define SEQ_TO_SN(seq) (((seq) & IEEE80211_SCTL_SEQ) >> 4)
- #define SN_TO_SEQ(ssn) (((ssn) << 4) & IEEE80211_SCTL_SEQ)
- #define MAX_SN ((IEEE80211_SCTL_SEQ) >> 4)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 68567fa..4b4a2bc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -1064,7 +1064,7 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 	out_cmd->hdr.sequence = cpu_to_le16(QUEUE_TO_SEQ(IWL_CMD_QUEUE_NUM) |
- 			INDEX_TO_SEQ(q->write_ptr));
- 	if (out_cmd->meta.flags & CMD_SIZE_HUGE)
--		out_cmd->hdr.sequence |= cpu_to_le16(SEQ_HUGE_FRAME);
-+		out_cmd->hdr.sequence |= SEQ_HUGE_FRAME;
- 	len = (idx == TFD_CMD_SLOTS) ?
- 			IWL_MAX_SCAN_SIZE : sizeof(struct iwl_cmd);
- 	phys_addr = pci_map_single(priv->pci_dev, out_cmd, len,
-@@ -1199,8 +1199,8 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
- 	u16 sequence = le16_to_cpu(pkt->hdr.sequence);
- 	int txq_id = SEQ_TO_QUEUE(sequence);
- 	int index = SEQ_TO_INDEX(sequence);
--	int huge = sequence & SEQ_HUGE_FRAME;
- 	int cmd_index;
-+	bool huge = !!(pkt->hdr.sequence & SEQ_HUGE_FRAME);
- 	struct iwl_cmd *cmd;
+ static void rs_rate_scale_perform(struct iwl_priv *priv,
+@@ -1746,7 +1749,7 @@ static void rs_rate_scale_perform(struct
+ 	is_green = lq_sta->is_green;
  
- 	/* If a Tx command is being handled and it isn't in the actual
--- 
-1.5.3.6
+ 	/* current tx rate */
+-	index = sta->last_txrate_idx;
++	index = lq_sta->last_txrate_idx;
+ 
+ 	IWL_DEBUG_RATE("Rate scale index %d for type %d\n", index,
+ 		       tbl->lq_type);
+@@ -2059,7 +2062,7 @@ lq_update:
+ out:
+ 	tbl->current_rate = rate_n_flags_from_tbl(tbl, index, is_green);
+ 	i = index;
+-	sta->last_txrate_idx = i;
++	lq_sta->last_txrate_idx = i;
+ 
+ 	/* sta->txrate_idx is an index to A mode rates which start
+ 	 * at IWL_FIRST_OFDM_RATE
+@@ -2090,7 +2093,7 @@ static void rs_initialize_lq(struct iwl_
+ 		goto out;
+ 
+ 	lq_sta = (struct iwl_lq_sta *)sta->rate_ctrl_priv;
+-	i = sta->last_txrate_idx;
++	i = lq_sta->last_txrate_idx;
+ 
+ 	if ((lq_sta->lq.sta_id == 0xff) &&
+ 	    (priv->iw_mode == NL80211_IFTYPE_ADHOC))
+@@ -2161,7 +2164,7 @@ static void rs_get_rate(void *priv_rate,
+ 	}
+ 
+ 	lq_sta = (struct iwl_lq_sta *)sta->rate_ctrl_priv;
+-	i = sta->last_txrate_idx;
++	i = lq_sta->last_txrate_idx;
+ 
+ 	if ((priv->iw_mode == NL80211_IFTYPE_ADHOC) &&
+ 	    !lq_sta->ibss_sta_added) {
+@@ -2270,10 +2273,10 @@ static void rs_rate_init(void *priv_rate
+ 		if (sta->supp_rates[sband->band] & BIT(i))
+ 			sta->txrate_idx = i;
+ 
+-	sta->last_txrate_idx = sta->txrate_idx;
++	lq_sta->last_txrate_idx = sta->txrate_idx;
+ 	/* For MODE_IEEE80211A, skip over cck rates in global rate table */
+ 	if (local->hw.conf.channel->band == IEEE80211_BAND_5GHZ)
+-		sta->last_txrate_idx += IWL_FIRST_OFDM_RATE;
++		lq_sta->last_txrate_idx += IWL_FIRST_OFDM_RATE;
+ 
+ 	lq_sta->is_dup = 0;
+ 	lq_sta->is_green = rs_use_green(priv, conf);
+--- everything.orig/net/mac80211/rc80211_pid_algo.c	2008-09-11 02:19:12.000000000 +0200
++++ everything/net/mac80211/rc80211_pid_algo.c	2008-09-11 02:19:12.000000000 +0200
+@@ -329,8 +329,6 @@ static void rate_control_pid_get_rate(vo
+ 	if (rateidx >= sband->n_bitrates)
+ 		rateidx = sband->n_bitrates - 1;
+ 
+-	sta->last_txrate_idx = rateidx;
+-
+ 	rcu_read_unlock();
+ 
+ 	sel->rate_idx = rateidx;
+--- everything.orig/net/mac80211/sta_info.h	2008-09-11 02:19:12.000000000 +0200
++++ everything/net/mac80211/sta_info.h	2008-09-11 02:19:12.000000000 +0200
+@@ -200,7 +200,6 @@ struct sta_ampdu_mlme {
+  * @tx_bytes: TBD
+  * @tx_fragments: number of transmitted MPDUs
+  * @txrate_idx: TBD
+- * @last_txrate_idx: TBD
+  * @tid_seq: TBD
+  * @wme_tx_queue: TBD
+  * @ampdu_mlme: TBD
+@@ -278,7 +277,6 @@ struct sta_info {
+ 	unsigned long tx_bytes;
+ 	unsigned long tx_fragments;
+ 	int txrate_idx;
+-	int last_txrate_idx;
+ 	u16 tid_seq[IEEE80211_QOS_CTL_TID_MASK + 1];
+ #ifdef CONFIG_MAC80211_DEBUG_COUNTERS
+ 	unsigned int wme_tx_queue[NUM_RX_DATA_QUEUES];
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-3945-rs.c	2008-09-11 02:15:08.000000000 +0200
++++ everything/drivers/net/wireless/iwlwifi/iwl-3945-rs.c	2008-09-11 02:19:12.000000000 +0200
+@@ -65,6 +65,9 @@ struct iwl3945_rs_sta {
+ 	u8 ibss_sta_added;
+ 	struct timer_list rate_scale_flush;
+ 	struct iwl3945_rate_scale_data win[IWL_RATE_COUNT];
++
++	/* used to be in sta_info */
++	int last_txrate_idx;
+ };
+ 
+ static s32 iwl3945_expected_tpt_g[IWL_RATE_COUNT] = {
+@@ -319,6 +322,7 @@ static void iwl3945_collect_tx_data(stru
+ static void rs_rate_init(void *priv_rate, void *priv_sta,
+ 			 struct ieee80211_local *local, struct sta_info *sta)
+ {
++	struct iwl3945_rs_sta *rs_sta = (void *)sta->rate_ctrl_priv;
+ 	int i;
+ 
+ 	IWL_DEBUG_RATE("enter\n");
+@@ -335,11 +339,11 @@ static void rs_rate_init(void *priv_rate
+ 		}
+ 	}
+ 
+-	sta->last_txrate_idx = sta->txrate_idx;
++	rs_sta->last_txrate_idx = sta->txrate_idx;
+ 
+ 	/* For 5 GHz band it start at IWL_FIRST_OFDM_RATE */
+ 	if (local->hw.conf.channel->band == IEEE80211_BAND_5GHZ)
+-		sta->last_txrate_idx += IWL_FIRST_OFDM_RATE;
++		rs_sta->last_txrate_idx += IWL_FIRST_OFDM_RATE;
+ 
+ 	IWL_DEBUG_RATE("leave\n");
+ }
+@@ -674,14 +678,14 @@ static void rs_get_rate(void *priv_rate,
+ 		return;
+ 	}
+ 
++	rs_sta = (void *)sta->rate_ctrl_priv;
++
+ 	rate_mask = sta->supp_rates[sband->band];
+-	index = min(sta->last_txrate_idx & 0xffff, IWL_RATE_COUNT - 1);
++	index = min(rs_sta->last_txrate_idx & 0xffff, IWL_RATE_COUNT - 1);
+ 
+ 	if (sband->band == IEEE80211_BAND_5GHZ)
+ 		rate_mask = rate_mask << IWL_FIRST_OFDM_RATE;
+ 
+-	rs_sta = (void *)sta->rate_ctrl_priv;
+-
+ 	if ((priv->iw_mode == NL80211_IFTYPE_ADHOC) &&
+ 	    !rs_sta->ibss_sta_added) {
+ 		u8 sta_id = iwl3945_hw_find_station(priv, hdr->addr1);
+@@ -803,11 +807,11 @@ static void rs_get_rate(void *priv_rate,
+ 
+  out:
+ 
+-	sta->last_txrate_idx = index;
++	rs_sta->last_txrate_idx = index;
+ 	if (sband->band == IEEE80211_BAND_5GHZ)
+-		sta->txrate_idx = sta->last_txrate_idx - IWL_FIRST_OFDM_RATE;
++		sta->txrate_idx = rs_sta->last_txrate_idx - IWL_FIRST_OFDM_RATE;
+ 	else
+-		sta->txrate_idx = sta->last_txrate_idx;
++		sta->txrate_idx = rs_sta->last_txrate_idx;
+ 
+ 	rcu_read_unlock();
+ 
+
 
