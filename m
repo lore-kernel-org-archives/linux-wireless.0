@@ -1,62 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33523 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752217AbYILHu1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Sep 2008 03:50:27 -0400
-Subject: Re: Crash with 2.6.27-rc6 with iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1221185432.6695.0.camel@californication> (sfid-20080912_041007_653566_F8146EC3)
-References: <E3A88D93-F0D2-476E-B162-08687FC602E3@linux.intel.com>
-	 <1221123779.2513.88.camel@debian.sh.intel.com>
-	 <1221184060.11498.3.camel@californication>
-	 <1221185432.6695.0.camel@californication>
-	 (sfid-20080912_041007_653566_F8146EC3)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gxYnUcUeel+t3X25jK5C"
-Date: Fri, 12 Sep 2008 09:49:48 +0200
-Message-Id: <1221205789.11204.4.camel@johannes.berg> (sfid-20080912_095030_848979_3AFDB965)
+Received: from mx1.redhat.com ([66.187.233.31]:34290 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752656AbYIKPeO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2008 11:34:14 -0400
+Subject: Re: [PATCH] libertas: Improvements on automatic tx power control
+	via SIOCSIWTXPOW.
+From: Dan Williams <dcbw@redhat.com>
+To: Anna Neal <anna@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <48c86ed3.16be600a.2bc8.4c4e@mx.google.com>
+References: <48c86ed3.16be600a.2bc8.4c4e@mx.google.com>
+Content-Type: text/plain
+Date: Thu, 11 Sep 2008 11:34:59 -0400
+Message-Id: <1221147299.771.24.camel@localhost.localdomain> (sfid-20080911_173419_091055_192E3942)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2008-09-10 at 16:45 -0700, Anna Neal wrote:
+> Improved the tx power control configuration per Dan Williams suggestions. Added
+> a firmware version check because the current implementation will only work for
+> below version 9.
+> 
+> Signed-off-by: Anna Neal <anna@cozybit.com>
 
---=-gxYnUcUeel+t3X25jK5C
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+One more round, sorry! :)
 
-On Fri, 2008-09-12 at 04:10 +0200, Marcel Holtmann wrote:
+First, until the patch has actually been applied, could you post
+complete diffs?  This is a patch against the previous patch, but it's
+best to keep the whole patch together until it's committed by John to
+the master wireless tree.
 
-> I take this back. It took a couple of hours, but it crashed again.
+Second, since you get to respin the patch anyway for this, the TPC
+Config stuff should be just fine on V9+ firmware, only the
+POWER_ADAPT_CFG command is incompatible on V9+.  I probably wasn't clear
+enough about this yesterday.  Any chance you could move the TPC config
+commands out of the firmware check and just the PACFG ones < V9?
 
-That's kinda weird, for me it crashes instantly on the first packet. The
-oops still looks similar though.
+Thanks!
+Dan
 
-johannes
-
---=-gxYnUcUeel+t3X25jK5C
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJIyh8ZAAoJEKVg1VMiehFY8GQP/iAZp9vheUp2x70NSuPN9vWq
-oM69p7pv1yG4P+q4p/xaO7xGVtilSWSCuAZn6SgkAJ7ddFur9dcq+6BG7D+zaFPL
-SDkRw9+3pANOHZVyn7I0cMVB8jLQQUF5DKzLRVgUFPQzGx31/+Tq/ogIhX30OgPT
-LIbKdOehZCNnrkwbd9/0SgRdhQJU/IU4kN7YHL/6iG6yca0ri2vfu7RsnaNEouD+
-cq3w1NsWMeNW++QVnKFowFv4cjHisgzM+bNtB8dd9I0Ddmr1L774NW9OQolQDQsH
-EQvMtBcv+9tWLpeG2Gf9OYg5OVGSvO8PsyUBMYAEBnHMDDCHdS9/KreBO1s8J8jm
-BiesHFqXhj1gUB+Typs31KPWJv/d8/2OPiAMWmHxkuLifmGrYiIdec512kxiI8C4
-FW1nSl0liS63W6M8GA7BqVRZLKuI/hCFKv8HTb6fdVlLv/rvShzt3/XFPTZIxBlN
-WKZe5Oa+SrCkb6n6wYT0A1zSG9RMnitYW/Lu7tcwdR9T9CCL0t1Ow/CJnm7wpZFC
-5rQbXuXMt6+Sx0WDI3N6pDDw9HlxCbE9uQ0EgM1WGPtqs7v6jDKZiDJrLlXxBZ1F
-3fYX+rjoq/CnWl78ChaHwhCPBwao1ry3sRnAKJMt7mQzumnxEHtVjezRPiHbyG3s
-G0g8ZaP6+xJkd9zc21a2
-=d2V7
------END PGP SIGNATURE-----
-
---=-gxYnUcUeel+t3X25jK5C--
+> ---
+>  drivers/net/wireless/libertas/cmd.c  |    4 +-
+>  drivers/net/wireless/libertas/cmd.h  |    4 +-
+>  drivers/net/wireless/libertas/wext.c |   44 +++++++++++++++++++++------------
+>  3 files changed, 32 insertions(+), 20 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+> index 6cc4858..5fef05f 100644
+> --- a/drivers/net/wireless/libertas/cmd.c
+> +++ b/drivers/net/wireless/libertas/cmd.c
+> @@ -1983,7 +1983,7 @@ void lbs_ps_confirm_sleep(struct lbs_private *priv)
+>   *
+>   * @return 0 on success
+>   */
+> -int lbs_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
+> +int lbs_set_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
+>  		int8_t p2, int usesnr)
+>  {
+>  	struct cmd_ds_802_11_tpc_cfg cmd;
+> @@ -2015,7 +2015,7 @@ int lbs_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
+>   * @return 0 on Success
+>   */
+>  
+> -int lbs_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
+> +int lbs_set_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
+>  		int8_t p1, int8_t p2)
+>  {
+>  	struct cmd_ds_802_11_pa_cfg cmd;
+> diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
+> index 77bd070..336a181 100644
+> --- a/drivers/net/wireless/libertas/cmd.h
+> +++ b/drivers/net/wireless/libertas/cmd.h
+> @@ -26,10 +26,10 @@ int __lbs_cmd(struct lbs_private *priv, uint16_t command,
+>  	      int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
+>  	      unsigned long callback_arg);
+>  
+> -int lbs_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
+> +int lbs_set_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
+>  		int8_t p1, int8_t p2);
+>  
+> -int lbs_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
+> +int lbs_set_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
+>  		int8_t p2, int usesnr);
+>  
+>  int lbs_cmd_copyback(struct lbs_private *priv, unsigned long extra,
+> diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
+> index b08bad8..8a81aca 100644
+> --- a/drivers/net/wireless/libertas/wext.c
+> +++ b/drivers/net/wireless/libertas/wext.c
+> @@ -1823,14 +1823,20 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
+>  		/* User requests automatic tx power control, however there are
+>  		 * many auto tx settings.  For now use firmware defaults until
+>  		 * we come up with a good way to expose these to the user. */
+> -		ret = lbs_power_adapt_cfg(priv, 1, POW_ADAPT_DEFAULT_P0,
+> -				POW_ADAPT_DEFAULT_P1, POW_ADAPT_DEFAULT_P2);
+> -		if (ret)
+> -			goto out;
+> -		ret = lbs_tpc_cfg(priv, 0, TPC_DEFAULT_P0, TPC_DEFAULT_P1,
+> -				TPC_DEFAULT_P2, 1);
+> -		if (ret)
+> -			goto out;
+> +		if (priv->fwrelease < 0x09000000) {
+> +			ret = lbs_set_power_adapt_cfg(priv, 1,
+> +					POW_ADAPT_DEFAULT_P0,
+> +					POW_ADAPT_DEFAULT_P1,
+> +					POW_ADAPT_DEFAULT_P2);
+> +			if (ret)
+> +				goto out;
+> +			ret = lbs_set_tpc_cfg(priv, 0,
+> +					TPC_DEFAULT_P0,
+> +					TPC_DEFAULT_P1,
+> +					TPC_DEFAULT_P2, 1);
+> +			if (ret)
+> +				goto out;
+> +		}
+>  		dbm = priv->txpower_max;
+>  	} else {
+>  		/* Userspace check in iwrange if it should use dBm or mW,
+> @@ -1851,14 +1857,20 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
+>  			ret = -EINVAL;
+>  			goto out;
+>  		}
+> -		ret = lbs_power_adapt_cfg(priv, 0, POW_ADAPT_DEFAULT_P0,
+> -				POW_ADAPT_DEFAULT_P1, POW_ADAPT_DEFAULT_P2);
+> -		if (ret)
+> -			goto out;
+> -		ret = lbs_tpc_cfg(priv, 0, TPC_DEFAULT_P0, TPC_DEFAULT_P1,
+> -				TPC_DEFAULT_P2, 1);
+> -		if (ret)
+> -			goto out;
+> +		if (priv->fwrelease < 0x09000000) {
+> +			ret = lbs_set_power_adapt_cfg(priv, 0,
+> +					POW_ADAPT_DEFAULT_P0,
+> +					POW_ADAPT_DEFAULT_P1,
+> +					POW_ADAPT_DEFAULT_P2);
+> +			if (ret)
+> +				goto out;
+> +			ret = lbs_set_tpc_cfg(priv, 0,
+> +					TPC_DEFAULT_P0,
+> +					TPC_DEFAULT_P1,
+> +					TPC_DEFAULT_P2, 1);
+> +			if (ret)
+> +				goto out;
+> +		}
+>  	}
+>  
+>  	/* If the radio was off, turn it on */
 
