@@ -1,90 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:32376 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751468AbYIWQ1z (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59581 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752475AbYIKRrm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Sep 2008 12:27:55 -0400
-Message-ID: <48D9188A.2090003@oracle.com> (sfid-20080923_182759_437133_5BB6A130)
-Date: Tue, 23 Sep 2008 09:25:46 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-MIME-Version: 1.0
-To: Ivo van Doorn <ivdoorn@gmail.com>
-CC: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	linville@tuxdriver.com, akpm <akpm@linux-foundation.org>
-Subject: Re: [PATCH -mm] rt2x00: fix Kconfig dependencies
-References: <48D82A43.7040604@oracle.com> <200809230907.46130.IvDoorn@gmail.com>
-In-Reply-To: <200809230907.46130.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=iso-8859-1
+	Thu, 11 Sep 2008 13:47:42 -0400
+Subject: Re: [PATCH 00/18] mac80211 cleanups and fixes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
+	John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1221154941.6986.46.camel@johannes.berg> (sfid-20080911_194301_979620_DD1EC47A)
+References: <20080910220145.707263000@sipsolutions.net>
+	 <18632.55008.411078.289830@gargle.gargle.HOWL>
+	 <1221139351.6986.26.camel@johannes.berg> <20080911165011.GA6049@tesla>
+	 <1221151995.6986.33.camel@johannes.berg>  <20080911173335.GD6049@tesla>
+	 <1221154777.6986.43.camel@johannes.berg>
+	 (sfid-20080911_194024_972872_166E0270)  <1221154941.6986.46.camel@johannes.berg>
+	 (sfid-20080911_194301_979620_DD1EC47A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mRxxy1Cs89y/GbPe+6w3"
+Date: Thu, 11 Sep 2008 19:47:05 +0200
+Message-Id: <1221155225.6986.49.camel@johannes.berg> (sfid-20080911_194745_607518_23F5C2CC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ivo van Doorn wrote:
-> On Tuesday 23 September 2008, Randy Dunlap wrote:
->> From: Randy Dunlap <randy.dunlap@oracle.com>
->>
->> If RT2X00=y but RFKILL=m, these build errors happen:
->>
->> (.text+0x7c7d6): undefined reference to `rfkill_free'
->> rt2x00rfkill.c:(.text+0x7c830): undefined reference to `rfkill_force_state'
->> (.text+0x7c88d): undefined reference to `rfkill_unregister'
->> (.text+0x7c8cd): undefined reference to `rfkill_register'
->> (.text+0x7ca1a): undefined reference to `rfkill_allocate'
->>
->> so restrict RT2X00's RFKILL config level to that of the main RFKILL option.
->> This is done by making the former a tristate instead of a bool
->> config option.
->>
->>
->> If RT2X00=y but LEDS_CLASS=m, these build errors happen:
->>
->> (.text+0x11859f): undefined reference to `led_classdev_resume'
->> (.text+0x1185b3): undefined reference to `led_classdev_resume'
->> (.text+0x1185c7): undefined reference to `led_classdev_resume'
->> (.text+0x1185e4): undefined reference to `led_classdev_suspend'
->> (.text+0x1185f8): undefined reference to `led_classdev_suspend'
->> (.text+0x11860c): undefined reference to `led_classdev_suspend'
->> rt2x00leds.c:(.text+0x118620): undefined reference to `led_classdev_unregister'
->> rt2x00leds.c:(.text+0x118695): undefined reference to `led_classdev_register'
->>
->> so restrict RT2X00's LEDS config level to that of the main LEDS_CLASS option.
->> This is done by making the former a tristate instead of a bool
->> config option.
-> 
-> Is that really going to work correctly?
-> rfkill and leds support should be compiled into rt2x00lib.ko, which means that
-> should become a module instead of the rfkill/leds support part only.
 
-I wondered about that lib.ko.  Any working build fix is OK with me.
-What do you suggest?
+--=-mRxxy1Cs89y/GbPe+6w3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Currently kconfig is converting an =m to =y because of tristate -> boolean.
-This is not good.  It breaks things, as demonstrated here.
-The Kconfig cannot stay like this AFAIK.
+On Thu, 2008-09-11 at 19:42 +0200, Johannes Berg wrote:
+> On Thu, 2008-09-11 at 19:39 +0200, Johannes Berg wrote:
+>=20
+> > Well take the larger bit of code:
+> >=20
+> > 	struct something *an =3D NULL;
+> >=20
+> > ...
+> >=20
+> > 	rcu_read_lock();
+> > 	sta =3D ieee80211_find_sta(hw, hdr->addr2);
+> > 	if (sta)
+> > 		an =3D (void *) sta->drv_priv;
+> > =20
+> >  	if (an) {
+> >  		ath_rx_input(sc, an,
+> >  			     hw->conf.ht_conf.ht_supported,
+> >  			     skb, status, &st);
+> >  	}
+> > 	rcu_read_unlock();
+> >=20
+> > 	/* the "!an" here is fine even outside RCU lock */
+> >  	if (!an || (st !=3D ATH_RX_CONSUMED))
+> >  		__ieee80211_rx(hw, skb, &rx_status);
+> >=20
+> >=20
+> > So at this point it's only checking whether above it had a pointer, it'=
+s
+> > not accessing it. Think of the "an" variable, after rcu_read_unlock(),
+> > as a bool indicating whether or not the code that just happened had
+> > access to the node or not.
+>=20
+> That said, here it's probably smarter to just initialise "st" to
+> something other than _RX_CONSUMED and remove that !an condition
+> entirely.
 
-> Ivo
-> 
->> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
->> ---
->>  drivers/net/wireless/rt2x00/Kconfig |    4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> --- mmotm-2008-0922-0136.orig/drivers/net/wireless/rt2x00/Kconfig
->> +++ mmotm-2008-0922-0136/drivers/net/wireless/rt2x00/Kconfig
->> @@ -38,13 +38,13 @@ config RT2X00_LIB_CRYPTO
->>  	depends on RT2X00_LIB
->>  
->>  config RT2X00_LIB_RFKILL
->> -	boolean
->> +	tristate
->>  	depends on RT2X00_LIB
->>  	depends on RFKILL
->>  	default y
->>  
->>  config RT2X00_LIB_LEDS
->> -	boolean
->> +	tristate
->>  	depends on RT2X00_LIB
->>  	depends on NEW_LEDS
->>  	depends on LEDS_CLASS
->>
->> --
+And why is that not the return value of ath_rx_input? Anyway, I'm
+getting off-topic here :)
+
+johannes
+
+--=-mRxxy1Cs89y/GbPe+6w3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIyVmVAAoJEKVg1VMiehFY9xcQAKF9CLZYvI2kp793SJo3EeSF
+Uxb1+Vgt7GyMorGlg+FdKSyg7vlyRjriZEUa42WYDTfwGEKjEOh0v7zrMwNDunGd
+SRj5cqG0/sgMeIoTXN7nyUSCXWQZGeRXnQWTeG6qV6yq38ZASeoxNwcWU+5q5Fde
+1zPZuWAMPU7Q58iXOY2aCRfXvzLwbjIXmKamqbqeHAfNOKq8KcA+lTSc+IuE8JDe
+KIiXKgnQL+b96IqiHZ2dXeITsKwhrJ1dHtfRhnrhsxEjVV9zVsdqzk5FvbFWGCtL
+Za9qZcgQGuRdkWbFe/bTRaFXBTpv+fm0IoZZomrdQL5/BW2x/zWbx1SbAkcHLj7U
+t9ShKGCyh2NUsCp8vkPeO9DHlD3uBj/QLErhjEwYnx6v1Wo4WlASMOufrKVgeh3Y
+qoxfZ7lDVdYYPKtbPRShkwcDuy7i/Jy3x1G/EzZuYlgc+B6mHaW8ZthNFEQOxLti
+ShfJDOO7n3PrFoLa7V1A37R/FKQ61sHDC2wHPnz9bC9IfTAoqoKJyV2UJ/vZ3Xqz
+WAoVo92Iha5KvtPjzmC6dW4v79VWPHmeHth7qcPOCuwlJlycfyh2iHAMMmzvWEkA
+lmGNLiSToHtrWIYQ5GW+wup6rX9Bd1bzFLp5neOdvVqza6AtlJYNrJdV/GI0ngw0
+TpCFn2Jt0epdCil9+hJh
+=jqP9
+-----END PGP SIGNATURE-----
+
+--=-mRxxy1Cs89y/GbPe+6w3--
+
