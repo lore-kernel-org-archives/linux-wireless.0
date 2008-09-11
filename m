@@ -1,103 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35563 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:35792 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751461AbYIZLfA (ORCPT
+	with ESMTP id S1754537AbYIKAKL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Sep 2008 07:35:00 -0400
-Subject: [PATCH] mac80211: fixups for "make master iface not wireless"
+	Wed, 10 Sep 2008 20:10:11 -0400
+Subject: Re: [PATCH 16/18] mac80211 hwsim: verify vif pointers
 From: Johannes Berg <johannes@sipsolutions.net>
 To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1222419687-7106-1-git-send-email-lrodriguez@atheros.com> (sfid-20080926_110153_430052_F995BFEF)
-References: <1222419687-7106-1-git-send-email-lrodriguez@atheros.com>
-	 (sfid-20080926_110153_430052_F995BFEF)
-Content-Type: text/plain
-Date: Fri, 26 Sep 2008 13:34:54 +0200
-Message-Id: <1222428894.10563.115.camel@johannes.berg> (sfid-20080926_133511_943908_6A302BB4)
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20080911000630.GC20358@tesla>
+References: <20080910220145.707263000@sipsolutions.net>
+	 <20080910220426.564761000@sipsolutions.net>  <20080911000630.GC20358@tesla>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6QUhHDGJx0vL2BcCbxdn"
+Date: Thu, 11 Sep 2008 02:09:33 +0200
+Message-Id: <1221091773.3804.60.camel@johannes.berg> (sfid-20080911_021018_173547_51FE380B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In "mac80211: make master iface not wireless" I accidentally
-forgot to include these changes ... leading to the expected
-BUG_ON errors.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-The wme.c change is pretty much identical to Luis's fix,
-the iface.c change is not strictly required, it's just an
-additional cleanup.
+--=-6QUhHDGJx0vL2BcCbxdn
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Sorry I goofed this, it seems I simply forgot to 'quilt edit' the two
-files in question, this is the diff I had in my tree after quilt pop -a.
+On Wed, 2008-09-10 at 17:06 -0700, Luis R. Rodriguez wrote:
+> On Wed, Sep 10, 2008 at 03:02:01PM -0700, Johannes Berg wrote:
+> > --- everything.orig/drivers/net/wireless/mac80211_hwsim.c       2008-09=
+-10 23:58:05.000000000 +0200
+> > +++ everything/drivers/net/wireless/mac80211_hwsim.c    2008-09-10 23:5=
+8:11.000000000 +0200
+> > @@ -28,6 +28,29 @@ static int radios =3D 2;
+> >  module_param(radios, int, 0444);
+> >  MODULE_PARM_DESC(radios, "Number of simulated radios");
+> >=20
+> > +struct hwsim_vif_priv {
+> > +       u32 magic;
+> > +};
+> > +
+> > +#define HWSIM_VIF_MAGIC        0x69537748
+> > +
+> > +static inline void hwsim_check_magic(struct ieee80211_vif *vif)
+> > +{
+> > +       struct hwsim_vif_priv *vp =3D (void *)vif->drv_priv;
+> > +       BUG_ON(vp->magic !=3D HWSIM_VIF_MAGIC);
+>=20
+> If its a debugging tool then better WARN_ON instead no?
 
- net/mac80211/iface.c |    9 ++++-----
- net/mac80211/wme.c   |    8 ++++----
- 2 files changed, 8 insertions(+), 9 deletions(-)
+I don't know, yeah, maybe. I can change it.
 
---- everything.orig/net/mac80211/iface.c	2008-09-26 13:31:28.000000000 +0200
-+++ everything/net/mac80211/iface.c	2008-09-26 13:31:32.000000000 +0200
-@@ -58,8 +58,9 @@ static inline int identical_mac_addr_all
- 
- static int ieee80211_open(struct net_device *dev)
- {
--	struct ieee80211_sub_if_data *sdata, *nsdata;
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_sub_if_data *nsdata;
-+	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
- 	struct ieee80211_if_init_conf conf;
- 	u32 changed = 0;
-@@ -67,8 +68,6 @@ static int ieee80211_open(struct net_dev
- 	bool need_hw_reconfig = 0;
- 	u8 null_addr[ETH_ALEN] = {0};
- 
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--
- 	/* fail early if user set an invalid address */
- 	if (compare_ether_addr(dev->dev_addr, null_addr) &&
- 	    !is_valid_ether_addr(dev->dev_addr))
-@@ -512,8 +511,8 @@ static int ieee80211_stop(struct net_dev
- 
- static void ieee80211_set_multicast_list(struct net_device *dev)
- {
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
- 	int allmulti, promisc, sdata_allmulti, sdata_promisc;
- 
- 	allmulti = !!(dev->flags & IFF_ALLMULTI);
---- everything.orig/net/mac80211/wme.c	2008-09-26 13:31:28.000000000 +0200
-+++ everything/net/mac80211/wme.c	2008-09-26 13:31:32.000000000 +0200
-@@ -73,9 +73,8 @@ static int wme_downgrade_ac(struct sk_bu
- 
- 
- /* Indicate which queue to use.  */
--static u16 classify80211(struct sk_buff *skb, struct net_device *dev)
-+static u16 classify80211(struct ieee80211_local *local, struct sk_buff *skb)
- {
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 
- 	if (!ieee80211_is_data(hdr->frame_control)) {
-@@ -113,14 +112,15 @@ static u16 classify80211(struct sk_buff 
- 
- u16 ieee80211_select_queue(struct net_device *dev, struct sk_buff *skb)
- {
-+	struct ieee80211_master_priv *mpriv = netdev_priv(dev);
-+	struct ieee80211_local *local = mpriv->local;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct sta_info *sta;
- 	u16 queue;
- 	u8 tid;
- 
--	queue = classify80211(skb, dev);
-+	queue = classify80211(local, skb);
- 	if (unlikely(queue >= local->hw.queues))
- 		queue = local->hw.queues - 1;
- 
+johannes
 
+--=-6QUhHDGJx0vL2BcCbxdn
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJIyGG5AAoJEKVg1VMiehFYeiUP/2ZLCUIhMLNXtRvq/6aWmeop
+OVJv1sH6AAkXc6sD5dK2wqag+cCbrRxE0kCEuHia7JrAIiQm4y9V4n/EPgIoykH9
+cy4Likpu2oz0yN9oA8X33V24wb3Nfajl5RZ7mbuw3pKVK2+qWvvaPDZDtyfKAxUE
++9B0WxXxjdNBuUVkD0HhmBj5MA32/El6vzZUPRNMJRShoExsRouryhARmaQx0dQc
+s6in3cGTw1QYLvk33Do33pJ7Ru3b3xf8tIxfzDCI9j1qQO3hnXeyBXo20hxUKtcG
+9m6xW1TsDMACT0XUvZDYPz7pHtcjzLFIxTfJbH1SbdrsVaDyhBaLNy/xs2zGyvNO
+HjS0XJiIxFozEw5AzscTDy8OeOB+Bsj2PFQaJmRsvWU99er45v9QfyuFzwqeLuXD
+jBOSckvrw1K5tVPwR3o3ZCnwiiiAjJsS/UGUbUJHvVhCQyvYhS3LGehE65ZRrhLw
+L87AweWkI+xWEERvmOfAb6v8QB21BikI53zBPqjHUVqB85cGWPBKdmwVtQ3Owb4U
+yhl2fvXL3TYkYwdmINx38WGbVLHGwT/tDz72tYOCzmp7QeFYE7zogkxJOmKHbPdZ
+/D2fa2Z1ekSS0gk+4RvKO4N7XSavkU6M5xg/UH+AzuFET4ahvIWfZ3UL36r5+XLS
+3Ve2wdYbT9TCXyHxaMaT
+=GDv3
+-----END PGP SIGNATURE-----
+
+--=-6QUhHDGJx0vL2BcCbxdn--
 
