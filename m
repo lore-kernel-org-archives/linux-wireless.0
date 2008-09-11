@@ -1,30 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:55826 "EHLO venema.h4ckr.net"
+Received: from mail.atheros.com ([12.36.123.2]:39812 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750909AbYI2EXA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Sep 2008 00:23:00 -0400
-Message-ID: <1086.92.50.127.85.1222660252.squirrel@webmail.madwifi.org> (sfid-20080929_062305_874638_54FF24B1)
-In-Reply-To: <48DF8412.2010304@foomagic.org>
-References: <20080926215701.GC5972@tesla> <48DF8412.2010304@foomagic.org>
-Date: Mon, 29 Sep 2008 05:50:52 +0200 (CEST)
-Subject: Re: Release of Atheros 802.11abg HAL under the ISC
-From: "Michael Renzmann" <mrenzmann@madwifi.org>
-To: "Glenn Saberton" <gsaberton@foomagic.org>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org, linux-kernel@vger.kernel.org
+	id S1752269AbYIKAGi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Sep 2008 20:06:38 -0400
+Date: Wed, 10 Sep 2008 17:06:30 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 16/18] mac80211 hwsim: verify vif pointers
+Message-ID: <20080911000630.GC20358@tesla> (sfid-20080911_020640_575400_E3D03E76)
+References: <20080910220145.707263000@sipsolutions.net> <20080910220426.564761000@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20080910220426.564761000@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
+On Wed, Sep 10, 2008 at 03:02:01PM -0700, Johannes Berg wrote:
+> --- everything.orig/drivers/net/wireless/mac80211_hwsim.c       2008-09-10 23:58:05.000000000 +0200
+> +++ everything/drivers/net/wireless/mac80211_hwsim.c    2008-09-10 23:58:11.000000000 +0200
+> @@ -28,6 +28,29 @@ static int radios = 2;
+>  module_param(radios, int, 0444);
+>  MODULE_PARM_DESC(radios, "Number of simulated radios");
+> 
+> +struct hwsim_vif_priv {
+> +       u32 magic;
+> +};
+> +
+> +#define HWSIM_VIF_MAGIC        0x69537748
+> +
+> +static inline void hwsim_check_magic(struct ieee80211_vif *vif)
+> +{
+> +       struct hwsim_vif_priv *vp = (void *)vif->drv_priv;
+> +       BUG_ON(vp->magic != HWSIM_VIF_MAGIC);
 
-Glenn Saberton wrote:
-> Why is #ath9k invite only?
+If its a debugging tool then better WARN_ON instead no?
 
-It's not particularly on-topic here, so just a short note: #ath9k should
-not be invite-only (but I will check again). It forwards to #madwifi,
-which is used for discussion about MadWifi, ath5k and ath9k.
-
-Bye, Mike
+  Luis
