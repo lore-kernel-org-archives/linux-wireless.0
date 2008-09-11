@@ -1,141 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Viola.Opus1.COM ([192.245.12.8]:1504 "EHLO Viola.Opus1.COM"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750715AbYIGEaG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Sep 2008 00:30:06 -0400
-Received: from [172.17.0.188] ([61.8.118.66])
- by Opus1.COM (PMDF V6.2-X27 #9830) with ESMTPSA id
- <01MZ981M7C4A8YGH3N@Opus1.COM> for linux-wireless@vger.kernel.org; Sat,
- 06 Sep 2008 21:30:04 -0700 (MST)
-Date: Sat, 06 Sep 2008 21:30:00 -0700
-From: gavron@wetwork.net
-Subject: [PATCH] b43legacy: Fix to enhance TX speed
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: Broadcom Linux <bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <larry.finger@lwfinger.net>
-Message-id: <48C358C8.3080607@wetwork.net> (sfid-20080907_063023_482963_D98AEC5B)
-MIME-version: 1.0
-Content-type: multipart/mixed; boundary="Boundary_(ID_NZLWqnidqKmz8VQwCGCoiA)"
+Received: from xc.sipsolutions.net ([83.246.72.84]:42759 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754669AbYIKX1k (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Sep 2008 19:27:40 -0400
+Subject: Re: [PATCH] mac80211: add pre- and post-scan hooks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Dan Williams <dcbw@redhat.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <48C9811A.7070206@w1.fi>
+References: <1214149401.8585.2.camel@localhost.localdomain>
+	 (sfid-20080622_174624_286344_54D543FD)  <1221033061.12266.10.camel@johannes.berg>
+	 (sfid-20080910_095115_515502_30A213FC) <1221159194.6986.57.camel@johannes.berg>
+	 <48C9811A.7070206@w1.fi>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jGTRwZqMJ9s3QIWWLW/q"
+Date: Fri, 12 Sep 2008 01:26:35 +0200
+Message-Id: <1221175595.5956.17.camel@johannes.berg> (sfid-20080912_012744_704729_E22DE93F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
 
---Boundary_(ID_NZLWqnidqKmz8VQwCGCoiA)
-Content-type: text/plain; format=flowed; charset=ISO-8859-1
-Content-transfer-encoding: 7bit
+--=-jGTRwZqMJ9s3QIWWLW/q
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Thu, 2008-09-11 at 23:35 +0300, Jouni Malinen wrote:
+> Johannes Berg wrote:
+> > The beaconing API in total is a bit strange, we tell the driver when th=
+e
+> > beacon changes and it can then request one, but we never tell it when t=
+o
+> > start/stop beaconing, which means that currently your driver has to
+> > figure to start out beaconing on the first beacon change, and then
+> > cannot possibly stop again... We can return NULL from the beacon get
+> > function but that could be an error condition too...
+>=20
+> The original design was for AP mode only and the assumption was that
+> Beacon transmission is enabled pretty much all the time. Returning NULL
+> was used if ever needed to stop Beacon transmission for some period of
+> time.
 
---Boundary_(ID_NZLWqnidqKmz8VQwCGCoiA)
-Content-type: text/plain; CHARSET=us-ascii; name=b43legacy_speed_enhancement
-Content-transfer-encoding: 7bit
-Content-disposition: inline; filename=b43legacy_speed_enhancement
+That can only work with some hardware though, if the hardware doesn't
+beacon from a template.
 
-Recent changes in the specifications have improved the performance
-of the BCM4306/2 devices that use b43legacy as the driver. These
-"errors" in the specs have been present from the very first implementation
-of bcm43xx.
+> > I think we just need to add start/stop beacon bits, and then we can use
+> > them around a scan too, thoughts?
+>=20
+> That sounds reasonable.
 
-Signed-off-by: Ehud Gavron <gavron@wetwork.net>
-Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+I'll take a look sometime.
 
-John,
+johannes
 
-This is 2.6.28.material.
+--=-jGTRwZqMJ9s3QIWWLW/q
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Ehud
----
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Index: linux-2.6/drivers/net/wireless/b43legacy/phy.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/b43legacy/phy.c
-+++ linux-2.6/drivers/net/wireless/b43legacy/phy.c
-@@ -595,12 +595,14 @@ static void b43legacy_phy_initb5(struct
- 				    0x0035) & 0xFFC0) | 0x0064);
- 		b43legacy_phy_write(dev, 0x005D, (b43legacy_phy_read(dev,
- 				    0x005D) & 0xFF80) | 0x000A);
-+		b43legacy_phy_write(dev, 0x5B, 0x0000);
-+		b43legacy_phy_write(dev, 0x5C, 0x0000);
- 	}
- 
- 	if (dev->bad_frames_preempt)
- 		b43legacy_phy_write(dev, B43legacy_PHY_RADIO_BITFIELD,
- 				    b43legacy_phy_read(dev,
--				    B43legacy_PHY_RADIO_BITFIELD) | (1 << 11));
-+				    B43legacy_PHY_RADIO_BITFIELD) | (1 << 12));
- 
- 	if (phy->analog == 1) {
- 		b43legacy_phy_write(dev, 0x0026, 0xCE00);
-@@ -753,7 +755,7 @@ static void b43legacy_phy_initb6(struct
- 		b43legacy_radio_write16(dev, 0x0050, 0x0020);
- 	}
- 	if (phy->radio_rev <= 2) {
--		b43legacy_radio_write16(dev, 0x007C, 0x0020);
-+		b43legacy_radio_write16(dev, 0x0050, 0x0020);
- 		b43legacy_radio_write16(dev, 0x005A, 0x0070);
- 		b43legacy_radio_write16(dev, 0x005B, 0x007B);
- 		b43legacy_radio_write16(dev, 0x005C, 0x00B0);
-@@ -771,7 +773,7 @@ static void b43legacy_phy_initb6(struct
- 		b43legacy_phy_write(dev, 0x002A, 0x8AC0);
- 	b43legacy_phy_write(dev, 0x0038, 0x0668);
- 	b43legacy_radio_set_txpower_bg(dev, 0xFFFF, 0xFFFF, 0xFFFF);
--	if (phy->radio_rev <= 5)
-+	if (phy->radio_rev == 4 || phy->radio_rev == 5)
- 		b43legacy_phy_write(dev, 0x005D, (b43legacy_phy_read(dev,
- 				    0x005D) & 0xFF80) | 0x0003);
- 	if (phy->radio_rev <= 2)
-@@ -1010,7 +1012,7 @@ static void b43legacy_phy_initg(struct b
- 		b43legacy_phy_initb5(dev);
- 	else
- 		b43legacy_phy_initb6(dev);
--	if (phy->rev >= 2 || phy->gmode)
-+	if (phy->rev >= 2 && phy->gmode)
- 		b43legacy_phy_inita(dev);
- 
- 	if (phy->rev >= 2) {
-@@ -1025,18 +1027,22 @@ static void b43legacy_phy_initg(struct b
- 		b43legacy_phy_write(dev, 0x0811, 0x0400);
- 		b43legacy_phy_write(dev, 0x0015, 0x00C0);
- 	}
--	if (phy->rev >= 2 || phy->gmode) {
-+	if (phy->gmode) {
- 		tmp = b43legacy_phy_read(dev, 0x0400) & 0xFF;
--		if (tmp == 3 || tmp == 5) {
-+		if (tmp == 3) {
-+			b43legacy_phy_write(dev, 0x04C2, 0x1816);
-+			b43legacy_phy_write(dev, 0x04C3, 0x8606);
-+		}
-+		if (tmp == 4 || tmp == 5) {
- 			b43legacy_phy_write(dev, 0x04C2, 0x1816);
- 			b43legacy_phy_write(dev, 0x04C3, 0x8006);
--			if (tmp == 5)
--				b43legacy_phy_write(dev, 0x04CC,
--						    (b43legacy_phy_read(dev,
--						     0x04CC) & 0x00FF) |
--						     0x1F00);
-+			b43legacy_phy_write(dev, 0x04CC,
-+					    (b43legacy_phy_read(dev,
-+					     0x04CC) & 0x00FF) |
-+					     0x1F00);
- 		}
--		b43legacy_phy_write(dev, 0x047E, 0x0078);
-+		if (phy->rev >= 2)
-+			b43legacy_phy_write(dev, 0x047E, 0x0078);
- 	}
- 	if (phy->radio_rev == 8) {
- 		b43legacy_phy_write(dev, 0x0801, b43legacy_phy_read(dev, 0x0801)
-@@ -1078,7 +1084,7 @@ static void b43legacy_phy_initg(struct b
- 		else
- 			b43legacy_phy_write(dev, 0x002F, 0x0202);
- 	}
--	if (phy->gmode || phy->rev >= 2) {
-+	if (phy->gmode) {
- 		b43legacy_phy_lo_adjust(dev, 0);
- 		b43legacy_phy_write(dev, 0x080F, 0x8078);
- 	}
+iQIcBAABAgAGBQJIyakmAAoJEKVg1VMiehFY/b4QAKVme/2wSmqe0IP2+duQ/c3t
+9z5R3JDTTirCcN5MqPngNntrP8n5i6ZUhRio5orJhkdtSo+/ocf70JXXiVoPiU/U
+yQMeNDVhWhWkHVWwtQurB19neX6o/k6iYygjpKHhsmDQx+SbG9mAKMBP+M1wDI2Z
+bgS5d3bmr7h8avBN5SPr59qjIh5YusLQSZfcf1UmLfUDFZr47MhCWNFNDcmi3wGw
+GTjhhzSDFpD3gl17OP+PErRXL6sCEOq0lJ/BVb7xk53BUC35V8ee+BFbBzXJT72B
+tG1xNjeIZPxmKHFXL6TbO3hV7SLD06x+ZUKLRLZLRx6n6aCmVf1td8xpoRS7qzoT
+UWwsRJArhSyTNs6nSkK1JMMSL6b7J1qDbirQHMuGSXEQ/UTtXyB2ImApGOoheCIC
+8wu4u5kQlpPkkdNLkVZlH9jcoh9mMwQ4qhJI5BOnBgSo2J7yt5dmPHV8v5p4yFR9
+OPFDMOC6irYau27VwMSy6f/f8jVRvG/RD1PAK+btSu6GfgfP1Hak+jmsUeC+UGuq
+zrseZnzBypK5cek+32L2kY3c88UbySIf72Yb+jvVSJQP/W1jQql6SOtmXKgYOufL
+NuJc3mEj0NMzO8wDVcwdfrYyV/W7Xk9SvsuITfEINsY59Mut5ppZdYhq9sEr/1dk
+iCuu9aaaUhwWOZKu7YCD
+=wxbO
+-----END PGP SIGNATURE-----
 
+--=-jGTRwZqMJ9s3QIWWLW/q--
 
---Boundary_(ID_NZLWqnidqKmz8VQwCGCoiA)--
