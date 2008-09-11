@@ -1,139 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:53617 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753368AbYIRVbF (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44237 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752168AbYIKApt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Sep 2008 17:31:05 -0400
-Received: by wf-out-1314.google.com with SMTP id 27so118981wfd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Sep 2008 14:31:04 -0700 (PDT)
-Message-ID: <dd18b0c30809181431j605faffu41d436145fd0d732@mail.gmail.com> (sfid-20080918_233110_723350_60935E5E)
-Date: Thu, 18 Sep 2008 14:31:04 -0700
-From: "Justin Mattock" <justinmattock@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [ath9k-devel] ath9k: massive unexplained latency in 2.6.27 (rc5, rc6, probably others)
-Cc: "Steven Noonan" <steven@uplinklabs.net>,
-	"Ingo Molnar" <mingo@elte.hu>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-In-Reply-To: <43e72e890809181344q416b5944w3332ee5a33db048c@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <f488382f0809181123n55a4979eg1996bbc30fa47d54@mail.gmail.com>
-	 <43e72e890809181134ybbec8fdxcb2a466aa17fe390@mail.gmail.com>
-	 <43e72e890809181142n7738cd99g522e6688e68d11ce@mail.gmail.com>
-	 <f488382f0809181200u9aa03fcv4fc70bd1be7acc71@mail.gmail.com>
-	 <43e72e890809181344q416b5944w3332ee5a33db048c@mail.gmail.com>
+	Wed, 10 Sep 2008 20:45:49 -0400
+Subject: [PATCH 21/18] mac80211: share sta->supp_rates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20080910220145.707263000@sipsolutions.net> (sfid-20080911_001619_033062_98BAB5F3)
+References: <20080910220145.707263000@sipsolutions.net>
+	 (sfid-20080911_001619_033062_98BAB5F3)
+Content-Type: text/plain
+Date: Thu, 11 Sep 2008 02:45:11 +0200
+Message-Id: <1221093911.3804.69.camel@johannes.berg> (sfid-20080911_024553_233842_6D2143AF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 18, 2008 at 1:44 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Thu, Sep 18, 2008 at 12:00 PM, Steven Noonan <steven@uplinklabs.net> wrote:
->> On Thu, Sep 18, 2008 at 11:42 AM, Luis R. Rodriguez
->> <lrodriguez@atheros.com> wrote:
->>> On Thu, Sep 18, 2008 at 11:34 AM, Luis R. Rodriguez
->>>> irqpoll is a monster of evil and that should make your system crawl to
->>>> its knees. I would advise instead we work with you fixing the the
->>>> missed interrupts issue upon rmmod.
->>>
->>> Also, please provide the output of
->>>
->>> cat /proc/interrupts
->>
->> Note that the problem necessitating use of irqpoll in the first place
->> seems to only happen under certain conditions. I am unsure what these
->> conditions are. Before 'ath9k: connectivity is lost after Group
->> rekeying is done',
->
-> You mean this patch:
->
-> [PATCH] ath9k: connectivity is lost after Group rekeying is done
-> http://marc.info/?l=linux-wireless&m=122163541519736&w=2
->
-> So let me get this straight -- you applied this new patch, and haven't
-> tried disabling irqpoll now?
->
->> I had used rmmod/modprobe as my solution to the
->> issue, which triggered the IRQ issue.
->
-> Understood, but I also have used this before with ath9k and I got
-> exactly the same results you did -- I just refused to use it again and
-> just try to fix the issues present.
->
-> ath9k issues tons of interrupts, not sure why irqpoll option would
-> cause latency so bad as the interrupts *are* handled. Not sure
-> *exactly* how irqpoll works but its description mentions using it
-> forces each interrupt handler on the IRQ line to check the interrupt
-> is for it. You have to keep in mind that not only are ath9k interrupts
-> then being sent to the devices on its line but it would seem that all
-> other devices on each line would suffer from the interrupts of the
-> other guys. Why ath9k would be the *only* culprit of causing latency
-> when using irqpoll if the irq line it son is clean? Beats me.
->
->> alcarin steven # cat /proc/interrupts
->>           CPU0       CPU1
->> 0x0:      63227          0   IO-APIC-edge      hpet
->> 0x8:          1          0   IO-APIC-edge      rtc0
->> 0x9:      13080          0   IO-APIC-fasteoi   acpi
->> 0xe:       8195          0   IO-APIC-edge      ide0
->> 0xf:          0          0   IO-APIC-edge      ide1
->> 0x10:         36          0   IO-APIC-fasteoi   uhci_hcd:usb5
->> 0x11:      10645          0   IO-APIC-fasteoi   ath
->
-> In this case your 11n Atheros device is on a clean line.
->
->> 0x12:         42          0   IO-APIC-fasteoi   uhci_hcd:usb4
->> 0x17:        919          0   IO-APIC-fasteoi   ehci_hcd:usb1, uhci_hcd:usb2
->
-> But it was this interrupt line which had an interrupt not handled.
->
-> I'm not sure why this would happen. Can't we rule out ath9k then since
-> its on a different interrupt line?
->
->> 0x13:      32885          0   IO-APIC-fasteoi   uhci_hcd:usb3,
->> ata_piix, ohci1394
->> 0x200100:          1          0   PCI-MSI-edge      eth0
->> 0x16:        223          0   IO-APIC-fasteoi   HDA Intel
->> NMI:          0          0   Non-maskable interrupts
->> LOC:      78087      95718   Local timer interrupts
->> RES:      11576      16384   Rescheduling interrupts
->> CAL:       6862       8889   Function call interrupts
->> TLB:         54         41   TLB shootdowns
->> TRM:          0          0   Thermal event interrupts
->> THR:          0          0   Threshold APIC interrupts
->> SPU:          0          0   Spurious interrupts
->> ERR:          0
->
-> Can you try to reproduce the irq not handled again?
->
->>>
->>> and also please do not cross post to all these lists, just use
->>> linux-wireless or ath9k.
->>>
->>
->> Sorry, but in the past I've posted to linux-wireless, ath9k-devel, and
->> all the maintainers of ath9k and didn't get a single response (except
->> a 'me too' from a fellow ath9k user). I didn't just want to hear
->> crickets this time.
->
-> Patches speak more than words, but yeah sorry, we should have
-> addressed this there. I've personally have just been busy with
-> tackling aggregation.
->
->  Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
+As more preparation for a saner rate control algorithm API,
+share the supported rates bitmap in the public API.
 
-Appologize about that, I'm wondering
-what is or was the main commit that might be causing
-all of these disable irq #'s in usb, wireless, etc..
-just doing a quick search one cant help but to think
-maybe this is something with tick.(but could be wrong);
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/ath9k/rc.c            |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |    6 +++---
+ include/net/mac80211.h                     |    2 ++
+ net/mac80211/cfg.c                         |    2 +-
+ net/mac80211/mesh_plink.c                  |    4 ++--
+ net/mac80211/mlme.c                        |    8 ++++----
+ net/mac80211/rate.h                        |    2 +-
+ net/mac80211/sta_info.h                    |    2 --
+ 9 files changed, 16 insertions(+), 16 deletions(-)
 
--- 
-Justin P. Mattock
+--- everything.orig/include/net/mac80211.h	2008-09-11 02:28:09.000000000 +0200
++++ everything/include/net/mac80211.h	2008-09-11 02:28:23.000000000 +0200
+@@ -666,10 +666,12 @@ enum set_key_cmd {
+  *
+  * @addr: MAC address
+  * @aid: AID we assigned to the station if we're an AP
++ * @supp_rates: Bitmap of supported rates (per band)
+  * @drv_priv: data area for driver use, will always be aligned to
+  *	sizeof(void *), size is determined in hw information.
+  */
+ struct ieee80211_sta {
++	u64 supp_rates[IEEE80211_NUM_BANDS];
+ 	u8 addr[ETH_ALEN];
+ 	u16 aid;
+ 
+--- everything.orig/net/mac80211/cfg.c	2008-09-11 02:30:18.000000000 +0200
++++ everything/net/mac80211/cfg.c	2008-09-11 02:30:24.000000000 +0200
+@@ -662,7 +662,7 @@ static void sta_apply_parameters(struct 
+ 					rates |= BIT(j);
+ 			}
+ 		}
+-		sta->supp_rates[local->oper_channel->band] = rates;
++		sta->sta.supp_rates[local->oper_channel->band] = rates;
+ 	}
+ 
+ 	if (params->ht_capa) {
+--- everything.orig/net/mac80211/mlme.c	2008-09-11 02:29:22.000000000 +0200
++++ everything/net/mac80211/mlme.c	2008-09-11 02:29:58.000000000 +0200
+@@ -1332,7 +1332,7 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 		}
+ 	}
+ 
+-	sta->supp_rates[local->hw.conf.channel->band] = rates;
++	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
+ 	sdata->bss_conf.basic_rates = basic_rates;
+ 
+ 	/* cf. IEEE 802.11 9.2.12 */
+@@ -1528,9 +1528,9 @@ static void ieee80211_rx_bss_info(struct
+ 		if (sta) {
+ 			u64 prev_rates;
+ 
+-			prev_rates = sta->supp_rates[band];
++			prev_rates = sta->sta.supp_rates[band];
+ 			/* make sure mandatory rates are always added */
+-			sta->supp_rates[band] = supp_rates |
++			sta->sta.supp_rates[band] = supp_rates |
+ 				ieee80211_mandatory_rates(local, band);
+ 
+ #ifdef CONFIG_MAC80211_IBSS_DEBUG
+@@ -2369,7 +2369,7 @@ struct sta_info *ieee80211_ibss_add_sta(
+ 	set_sta_flags(sta, WLAN_STA_AUTHORIZED);
+ 
+ 	/* make sure mandatory rates are always added */
+-	sta->supp_rates[band] = supp_rates |
++	sta->sta.supp_rates[band] = supp_rates |
+ 			ieee80211_mandatory_rates(local, band);
+ 
+ 	rate_control_rate_init(sta, local);
+--- everything.orig/net/mac80211/rate.h	2008-09-11 02:28:54.000000000 +0200
++++ everything/net/mac80211/rate.h	2008-09-11 02:28:59.000000000 +0200
+@@ -134,7 +134,7 @@ static inline int rate_supported(struct 
+ 				 enum ieee80211_band band,
+ 				 int index)
+ {
+-	return (sta == NULL || sta->supp_rates[band] & BIT(index));
++	return (sta == NULL || sta->sta.supp_rates[band] & BIT(index));
+ }
+ 
+ static inline s8
+--- everything.orig/net/mac80211/sta_info.h	2008-09-11 02:27:55.000000000 +0200
++++ everything/net/mac80211/sta_info.h	2008-09-11 02:28:05.000000000 +0200
+@@ -168,7 +168,6 @@ struct sta_ampdu_mlme {
+  *	in the header file.
+  * @flaglock: spinlock for flags accesses
+  * @ht_info: HT capabilities of this STA
+- * @supp_rates: Bitmap of supported rates (per band)
+  * @addr: MAC address of this STA
+  * @aid: STA's unique AID (1..2007, 0 = not assigned yet),
+  *	only used in AP (and IBSS?) mode
+@@ -228,7 +227,6 @@ struct sta_info {
+ 	spinlock_t lock;
+ 	spinlock_t flaglock;
+ 	struct ieee80211_ht_info ht_info;
+-	u64 supp_rates[IEEE80211_NUM_BANDS];
+ 
+ 	u16 listen_interval;
+ 
+--- everything.orig/net/mac80211/mesh_plink.c	2008-09-11 02:31:19.000000000 +0200
++++ everything/net/mac80211/mesh_plink.c	2008-09-11 02:31:30.000000000 +0200
+@@ -106,7 +106,7 @@ static struct sta_info *mesh_plink_alloc
+ 		return NULL;
+ 
+ 	sta->flags = WLAN_STA_AUTHORIZED;
+-	sta->supp_rates[local->hw.conf.channel->band] = rates;
++	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
+ 
+ 	return sta;
+ }
+@@ -243,7 +243,7 @@ void mesh_neighbour_update(u8 *hw_addr, 
+ 	}
+ 
+ 	sta->last_rx = jiffies;
+-	sta->supp_rates[local->hw.conf.channel->band] = rates;
++	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
+ 	if (peer_accepting_plinks && sta->plink_state == PLINK_LISTEN &&
+ 			sdata->u.mesh.accepting_plinks &&
+ 			sdata->u.mesh.mshcfg.auto_open_plinks)
+--- everything.orig/drivers/net/wireless/ath9k/rc.c	2008-09-11 02:33:17.000000000 +0200
++++ everything/drivers/net/wireless/ath9k/rc.c	2008-09-11 02:33:22.000000000 +0200
+@@ -1825,7 +1825,7 @@ static void ath_setup_rates(struct ieee8
+ 
+ 	sband =  local->hw.wiphy->bands[local->hw.conf.channel->band];
+ 	for (i = 0; i < sband->n_bitrates; i++) {
+-		if (sta->supp_rates[local->hw.conf.channel->band] & BIT(i)) {
++		if (sta->sta.supp_rates[local->hw.conf.channel->band] & BIT(i)) {
+ 			rc_priv->neg_rates.rs_rates[j]
+ 				= (sband->bitrates[i].bitrate * 2) / 10;
+ 			j++;
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-3945-rs.c	2008-09-11 02:32:31.000000000 +0200
++++ everything/drivers/net/wireless/iwlwifi/iwl-3945-rs.c	2008-09-11 02:32:44.000000000 +0200
+@@ -333,7 +333,7 @@ static void rs_rate_init(void *priv_rate
+ 	 * after assoc.. */
+ 
+ 	for (i = IWL_RATE_COUNT - 1; i >= 0; i--) {
+-		if (sta->supp_rates[local->hw.conf.channel->band] & (1 << i)) {
++		if (sta->sta.supp_rates[local->hw.conf.channel->band] & (1 << i)) {
+ 			sta->txrate_idx = i;
+ 			break;
+ 		}
+@@ -680,7 +680,7 @@ static void rs_get_rate(void *priv_rate,
+ 
+ 	rs_sta = (void *)sta->rate_ctrl_priv;
+ 
+-	rate_mask = sta->supp_rates[sband->band];
++	rate_mask = sta->sta.supp_rates[sband->band];
+ 	index = min(rs_sta->last_txrate_idx & 0xffff, IWL_RATE_COUNT - 1);
+ 
+ 	if (sband->band == IEEE80211_BAND_5GHZ)
+--- everything.orig/drivers/net/wireless/iwlwifi/iwl-agn-rs.c	2008-09-11 02:32:31.000000000 +0200
++++ everything/drivers/net/wireless/iwlwifi/iwl-agn-rs.c	2008-09-11 02:33:05.000000000 +0200
+@@ -1731,7 +1731,7 @@ static void rs_rate_scale_perform(struct
+ 		return;
+ 
+ 	lq_sta = (struct iwl_lq_sta *)sta->rate_ctrl_priv;
+-	lq_sta->supp_rates = sta->supp_rates[lq_sta->band];
++	lq_sta->supp_rates = sta->sta.supp_rates[lq_sta->band];
+ 
+ 	tid = rs_tl_add_packet(lq_sta, hdr);
+ 
+@@ -2233,7 +2233,7 @@ static void rs_rate_init(void *priv_rate
+ 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+ 
+ 	lq_sta->flush_timer = 0;
+-	lq_sta->supp_rates = sta->supp_rates[sband->band];
++	lq_sta->supp_rates = sta->sta.supp_rates[sband->band];
+ 	sta->txrate_idx = 3;
+ 	for (j = 0; j < LQ_SIZE; j++)
+ 		for (i = 0; i < IWL_RATE_COUNT; i++)
+@@ -2270,7 +2270,7 @@ static void rs_rate_init(void *priv_rate
+ 
+ 	/* Find highest tx rate supported by hardware and destination station */
+ 	for (i = 0; i < sband->n_bitrates; i++)
+-		if (sta->supp_rates[sband->band] & BIT(i))
++		if (sta->sta.supp_rates[sband->band] & BIT(i))
+ 			sta->txrate_idx = i;
+ 
+ 	lq_sta->last_txrate_idx = sta->txrate_idx;
+
+
